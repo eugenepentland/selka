@@ -1,0 +1,28 @@
+# counting-build counters, base (main 35df839be) vs final (ceb4291ed); per run of each cell
+lox-vm-step.10000000
+   base {'unique_test': 260000342, 'retain': 30002114, 'release': 30002215, 'bounds_check': 1120000858, 'overflow_check': 1140000476, 'list_copy': 128, 'record_copy': 810}
+   final {'unique_test': 160000336, 'retain': 30002114, 'release': 30002216, 'bounds_check': 970000842, 'overflow_check': 1140000476, 'list_copy': 129, 'record_copy': 810}
+lox-vm-fib.34
+   base {'unique_test': 387553829, 'retain': 535195028, 'release': 535195126, 'bounds_check': 1743991437, 'overflow_check': 1633261512, 'list_copy': 127, 'record_copy': 73820472}
+   final {'unique_test': 322961576, 'retain': 535195028, 'release': 535195127, 'bounds_check': 1559442142, 'overflow_check': 1633261512, 'list_copy': 128, 'record_copy': 73820472}
+lox-vm-string_equality.100000
+   base {'unique_test': 835431302, 'retain': 782583, 'release': 800695, 'bounds_check': 3215277864, 'overflow_check': 2703824365, 'list_copy': 15576, 'record_copy': 73027}
+   final {'unique_test': 322231291, 'retain': 782583, 'release': 800696, 'bounds_check': 2701277841, 'overflow_check': 2703824365, 'list_copy': 15577, 'record_copy': 73027}
+lox-vm-invocation.1500000
+   base {'unique_test': 475502828, 'retain': 1378514560, 'release': 1378515660, 'bounds_check': 2293506271, 'overflow_check': 1599003113, 'list_copy': 1006, 'record_copy': 180005602}
+   final {'unique_test': 382502851, 'retain': 1378514560, 'release': 1378515690, 'bounds_check': 2053506193, 'overflow_check': 1599003113, 'list_copy': 1036, 'record_copy': 180005602}
+lox-vm-method_call.500000
+   base {'unique_test': 490669404, 'retain': 920349278, 'release': 933683851, 'bounds_check': 2422006951, 'overflow_check': 1840336859, 'list_copy': 13334466, 'record_copy': 86672923}
+   final {'unique_test': 395669374, 'retain': 920349278, 'release': 933683854, 'bounds_check': 2183340205, 'overflow_check': 1840336859, 'list_copy': 13334469, 'record_copy': 86672923}
+lox-tree-invocation.150000
+   base {'unique_test': 92082447, 'retain': 119408259, 'release': 133050045, 'bounds_check': 255444029, 'overflow_check': 134230341, 'list_copy': 4500064, 'record_copy': 23105661}
+   final {'unique_test': 92082447, 'retain': 119408259, 'release': 133050045, 'bounds_check': 255444029, 'overflow_check': 134230341, 'list_copy': 4500064, 'record_copy': 23105661}
+lox-tree-equality.300000
+   base {'unique_test': 36280311, 'retain': 210007250, 'release': 210596616, 'bounds_check': 155869089, 'overflow_check': 89081137, 'list_copy': 6, 'record_copy': 8106773}
+   final {'unique_test': 36280311, 'retain': 210007250, 'release': 210596616, 'bounds_check': 155869089, 'overflow_check': 89081137, 'list_copy': 6, 'record_copy': 8106773}
+eda-rds3+flat
+   base {'unique_test': 430327, 'retain': 2207254, 'release': 3079081, 'bounds_check': 16318717, 'overflow_check': 7548131, 'list_copy': 801, 'record_copy': 1798849}
+   final {'unique_test': 304606, 'retain': 2207254, 'release': 3079081, 'bounds_check': 16318669, 'overflow_check': 7548131, 'list_copy': 801, 'record_copy': 1796445}
+eda-labstation
+   base {'unique_test': 313242, 'retain': 2013607, 'release': 2791723, 'bounds_check': 11803520, 'overflow_check': 6553770, 'list_copy': 1040, 'record_copy': 983148}
+   final {'unique_test': 256462, 'retain': 2013607, 'release': 2791723, 'bounds_check': 11803503, 'overflow_check': 6553770, 'list_copy': 1040, 'record_copy': 981001}

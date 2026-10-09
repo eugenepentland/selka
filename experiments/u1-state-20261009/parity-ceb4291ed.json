@@ -1,0 +1,3500 @@
+{
+ "cpu": 6,
+ "rounds": 5,
+ "programs": {
+  "scan_count": {
+   "median": {
+    "base": {
+     "instructions": 1440107597,
+     "cycles": 477585995
+    },
+    "final": {
+     "instructions": 1440109390,
+     "cycles": 476370671
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 1440107597,
+      "cycles": 473605907
+     },
+     {
+      "status": 0,
+      "instructions": 1440107599,
+      "cycles": 475853437
+     },
+     {
+      "status": 0,
+      "instructions": 1440107596,
+      "cycles": 477585995
+     },
+     {
+      "status": 0,
+      "instructions": 1440107593,
+      "cycles": 478658764
+     },
+     {
+      "status": 0,
+      "instructions": 1440107610,
+      "cycles": 477649886
+     }
+    ],
+    "final": [
+     {
+      "status": 0,
+      "instructions": 1440109369,
+      "cycles": 476464173
+     },
+     {
+      "status": 0,
+      "instructions": 1440109390,
+      "cycles": 474589248
+     },
+     {
+      "status": 0,
+      "instructions": 1440109390,
+      "cycles": 476370671
+     },
+     {
+      "status": 0,
+      "instructions": 1440109398,
+      "cycles": 475066581
+     },
+     {
+      "status": 0,
+      "instructions": 1440109403,
+      "cycles": 482020811
+     }
+    ]
+   }
+  },
+  "scan_replace": {
+   "median": {
+    "base": {
+     "instructions": 950323336,
+     "cycles": 278985414
+    },
+    "final": {
+     "instructions": 950325128,
+     "cycles": 277889808
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 950323336,
+      "cycles": 280862591
+     },
+     {
+      "status": 0,
+      "instructions": 950323338,
+      "cycles": 278985414
+     },
+     {
+      "status": 0,
+      "instructions": 950323337,
+      "cycles": 280108998
+     },
+     {
+      "status": 0,
+      "instructions": 950323328,
+      "cycles": 278052920
+     },
+     {
+      "status": 0,
+      "instructions": 950323326,
+      "cycles": 277712126
+     }
+    ],
+    "final": [
+     {
+      "status": 0,
+      "instructions": 950325126,
+      "cycles": 277010617
+     },
+     {
+      "status": 0,
+      "instructions": 950325129,
+      "cycles": 280585732
+     },
+     {
+      "status": 0,
+      "instructions": 950325125,
+      "cycles": 277889808
+     },
+     {
+      "status": 0,
+      "instructions": 950325128,
+      "cycles": 277604570
+     },
+     {
+      "status": 0,
+      "instructions": 950325135,
+      "cycles": 279743656
+     }
+    ]
+   }
+  },
+  "scan_split": {
+   "median": {
+    "base": {
+     "instructions": 839812186,
+     "cycles": 249820031
+    },
+    "final": {
+     "instructions": 839813978,
+     "cycles": 248965092
+    },
+    "zig-safe": {
+     "instructions": 717599838,
+     "cycles": 218604593
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 839812189,
+      "cycles": 249953107
+     },
+     {
+      "status": 0,
+      "instructions": 839812186,
+      "cycles": 250338150
+     },
+     {
+      "status": 0,
+      "instructions": 839812185,
+      "cycles": 247207320
+     },
+     {
+      "status": 0,
+      "instructions": 839812193,
+      "cycles": 249820031
+     },
+     {
+      "status": 0,
+      "instructions": 839812184,
+      "cycles": 248975260
+     }
+    ],
+    "final": [
+     {
+      "status": 0,
+      "instructions": 839813981,
+      "cycles": 244631334
+     },
+     {
+      "status": 0,
+      "instructions": 839813978,
+      "cycles": 248315016
+     },
+     {
+      "status": 0,
+      "instructions": 839813976,
+      "cycles": 248965092
+     },
+     {
+      "status": 0,
+      "instructions": 839813987,
+      "cycles": 249054824
+     },
+     {
+      "status": 0,
+      "instructions": 839813978,
+      "cycles": 250865216
+     }
+    ],
+    "zig-safe": [
+     {
+      "status": 0,
+      "instructions": 717599830,
+      "cycles": 218810211
+     },
+     {
+      "status": 0,
+      "instructions": 717599832,
+      "cycles": 218747755
+     },
+     {
+      "status": 0,
+      "instructions": 717599839,
+      "cycles": 217794911
+     },
+     {
+      "status": 0,
+      "instructions": 717599841,
+      "cycles": 217084959
+     },
+     {
+      "status": 0,
+      "instructions": 717599838,
+      "cycles": 218604593
+     }
+    ]
+   }
+  },
+  "alloc_churn": {
+   "median": {
+    "base": {
+     "instructions": 244181632,
+     "cycles": 236989701
+    },
+    "final": {
+     "instructions": 244181634,
+     "cycles": 236987310
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 244181641,
+      "cycles": 236989701
+     },
+     {
+      "status": 0,
+      "instructions": 244181640,
+      "cycles": 237001546
+     },
+     {
+      "status": 0,
+      "instructions": 244181632,
+      "cycles": 236989985
+     },
+     {
+      "status": 0,
+      "instructions": 244181631,
+      "cycles": 236987012
+     },
+     {
+      "status": 0,
+      "instructions": 244181631,
+      "cycles": 236987448
+     }
+    ],
+    "final": [
+     {
+      "status": 0,
+      "instructions": 244181628,
+      "cycles": 236980220
+     },
+     {
+      "status": 0,
+      "instructions": 244181636,
+      "cycles": 236987310
+     },
+     {
+      "status": 0,
+      "instructions": 244181634,
+      "cycles": 237024955
+     },
+     {
+      "status": 0,
+      "instructions": 244181633,
+      "cycles": 237108962
+     },
+     {
+      "status": 0,
+      "instructions": 244181635,
+      "cycles": 236980794
+     }
+    ]
+   }
+  },
+  "alloc_churn_arena": {
+   "median": {
+    "base": {
+     "instructions": 244181682,
+     "cycles": 236996266
+    },
+    "final": {
+     "instructions": 244181686,
+     "cycles": 236994073
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 244181682,
+      "cycles": 236984007
+     },
+     {
+      "status": 0,
+      "instructions": 244181675,
+      "cycles": 236985302
+     },
+     {
+      "status": 0,
+      "instructions": 244181682,
+      "cycles": 236998188
+     },
+     {
+      "status": 0,
+      "instructions": 244181694,
+      "cycles": 237099845
+     },
+     {
+      "status": 0,
+      "instructions": 244181682,
+      "cycles": 236996266
+     }
+    ],
+    "final": [
+     {
+      "status": 0,
+      "instructions": 244181688,
+      "cycles": 236999887
+     },
+     {
+      "status": 0,
+      "instructions": 244181685,
+      "cycles": 236992260
+     },
+     {
+      "status": 0,
+      "instructions": 244181686,
+      "cycles": 236993168
+     },
+     {
+      "status": 0,
+      "instructions": 244181681,
+      "cycles": 237102455
+     },
+     {
+      "status": 0,
+      "instructions": 244181692,
+      "cycles": 236994073
+     }
+    ]
+   }
+  },
+  "bytes_scan": {
+   "median": {
+    "base": {
+     "instructions": 195498123,
+     "cycles": 55401242
+    },
+    "final": {
+     "instructions": 194573148,
+     "cycles": 51438736
+    },
+    "zig-safe": {
+     "instructions": 389315051,
+     "cycles": 174168044
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 195498122,
+      "cycles": 55273732
+     },
+     {
+      "status": 0,
+      "instructions": 195498123,
+      "cycles": 55401242
+     },
+     {
+      "status": 0,
+      "instructions": 195498124,
+      "cycles": 55421078
+     },
+     {
+      "status": 0,
+      "instructions": 195498129,
+      "cycles": 55443391
+     },
+     {
+      "status": 0,
+      "instructions": 195498123,
+      "cycles": 55040500
+     }
+    ],
+    "final": [
+     {
+      "status": 0,
+      "instructions": 194573153,
+      "cycles": 52343681
+     },
+     {
+      "status": 0,
+      "instructions": 194573148,
+      "cycles": 51438736
+     },
+     {
+      "status": 0,
+      "instructions": 194573148,
+      "cycles": 51219388
+     },
+     {
+      "status": 0,
+      "instructions": 194573147,
+      "cycles": 51291231
+     },
+     {
+      "status": 0,
+      "instructions": 194573150,
+      "cycles": 52128595
+     }
+    ],
+    "zig-safe": [
+     {
+      "status": 0,
+      "instructions": 389315047,
+      "cycles": 185827878
+     },
+     {
+      "status": 0,
+      "instructions": 389315051,
+      "cycles": 176944338
+     },
+     {
+      "status": 0,
+      "instructions": 389315051,
+      "cycles": 174082429
+     },
+     {
+      "status": 0,
+      "instructions": 389315045,
+      "cycles": 171492009
+     },
+     {
+      "status": 0,
+      "instructions": 389315053,
+      "cycles": 174168044
+     }
+    ]
+   }
+  },
+  "bytes_scan_wrapping": {
+   "median": {
+    "base": {
+     "instructions": 195498172,
+     "cycles": 55540957
+    },
+    "final": {
+     "instructions": 194573195,
+     "cycles": 51570569
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 195498176,
+      "cycles": 55540957
+     },
+     {
+      "status": 0,
+      "instructions": 195498172,
+      "cycles": 56059997
+     },
+     {
+      "status": 0,
+      "instructions": 195498170,
+      "cycles": 54989794
+     },
+     {
+      "status": 0,
+      "instructions": 195498171,
+      "cycles": 55181092
+     },
+     {
+      "status": 0,
+      "instructions": 195498172,
+      "cycles": 55543234
+     }
+    ],
+    "final": [
+     {
+      "status": 0,
+      "instructions": 194573200,
+      "cycles": 51388018
+     },
+     {
+      "status": 0,
+      "instructions": 194573195,
+      "cycles": 51570569
+     },
+     {
+      "status": 0,
+      "instructions": 194573193,
+      "cycles": 51417139
+     },
+     {
+      "status": 0,
+      "instructions": 194573195,
+      "cycles": 51633466
+     },
+     {
+      "status": 0,
+      "instructions": 194573195,
+      "cycles": 51766938
+     }
+    ]
+   }
+  },
+  "calls": {
+   "median": {
+    "base": {
+     "instructions": 465181723,
+     "cycles": 472481826
+    },
+    "final": {
+     "instructions": 465181719,
+     "cycles": 472494197
+    },
+    "zig-safe": {
+     "instructions": 690013644,
+     "cycles": 477042347
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 465181730,
+      "cycles": 472489492
+     },
+     {
+      "status": 0,
+      "instructions": 465181723,
+      "cycles": 472566865
+     },
+     {
+      "status": 0,
+      "instructions": 465181713,
+      "cycles": 472457050
+     },
+     {
+      "status": 0,
+      "instructions": 465181724,
+      "cycles": 472474426
+     },
+     {
+      "status": 0,
+      "instructions": 465181721,
+      "cycles": 472481826
+     }
+    ],
+    "final": [
+     {
+      "status": 0,
+      "instructions": 465181730,
+      "cycles": 472502545
+     },
+     {
+      "status": 0,
+      "instructions": 465181726,
+      "cycles": 472494197
+     },
+     {
+      "status": 0,
+      "instructions": 465181719,
+      "cycles": 472500737
+     },
+     {
+      "status": 0,
+      "instructions": 465181704,
+      "cycles": 472469933
+     },
+     {
+      "status": 0,
+      "instructions": 465181717,
+      "cycles": 472481714
+     }
+    ],
+    "zig-safe": [
+     {
+      "status": 0,
+      "instructions": 690013644,
+      "cycles": 477042347
+     },
+     {
+      "status": 0,
+      "instructions": 690013639,
+      "cycles": 477683981
+     },
+     {
+      "status": 0,
+      "instructions": 690013646,
+      "cycles": 476755947
+     },
+     {
+      "status": 0,
+      "instructions": 690013643,
+      "cycles": 477068040
+     },
+     {
+      "status": 0,
+      "instructions": 690013653,
+      "cycles": 476720474
+     }
+    ]
+   }
+  },
+  "dict_count": {
+   "median": {
+    "base": {
+     "instructions": 167132065,
+     "cycles": 37017619
+    },
+    "final": {
+     "instructions": 165133055,
+     "cycles": 36796062
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 167132069,
+      "cycles": 35560670
+     },
+     {
+      "status": 0,
+      "instructions": 167132065,
+      "cycles": 36792529
+     },
+     {
+      "status": 0,
+      "instructions": 167132062,
+      "cycles": 37666593
+     },
+     {
+      "status": 0,
+      "instructions": 167132067,
+      "cycles": 37268051
+     },
+     {
+      "status": 0,
+      "instructions": 167132064,
+      "cycles": 37017619
+     }
+    ],
+    "final": [
+     {
+      "status": 0,
+      "instructions": 165133057,
+      "cycles": 35505168
+     },
+     {
+      "status": 0,
+      "instructions": 165133053,
+      "cycles": 40475050
+     },
+     {
+      "status": 0,
+      "instructions": 165133053,
+      "cycles": 36796062
+     },
+     {
+      "status": 0,
+      "instructions": 165133055,
+      "cycles": 36694509
+     },
+     {
+      "status": 0,
+      "instructions": 165133058,
+      "cycles": 41166347
+     }
+    ]
+   }
+  },
+  "fib": {
+   "median": {
+    "base": {
+     "instructions": 749073958,
+     "cycles": 252793155
+    },
+    "final": {
+     "instructions": 749073954,
+     "cycles": 253555674
+    },
+    "zig-safe": {
+     "instructions": 748905897,
+     "cycles": 243875337
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 749073958,
+      "cycles": 252791951
+     },
+     {
+      "status": 0,
+      "instructions": 749073958,
+      "cycles": 252802743
+     },
+     {
+      "status": 0,
+      "instructions": 749073954,
+      "cycles": 252789310
+     },
+     {
+      "status": 0,
+      "instructions": 749073960,
+      "cycles": 252793155
+     },
+     {
+      "status": 0,
+      "instructions": 749073959,
+      "cycles": 252808371
+     }
+    ],
+    "final": [
+     {
+      "status": 0,
+      "instructions": 749073958,
+      "cycles": 253572519
+     },
+     {
+      "status": 0,
+      "instructions": 749073948,
+      "cycles": 253551442
+     },
+     {
+      "status": 0,
+      "instructions": 749073954,
+      "cycles": 253531317
+     },
+     {
+      "status": 0,
+      "instructions": 749073953,
+      "cycles": 253555674
+     },
+     {
+      "status": 0,
+      "instructions": 749073956,
+      "cycles": 253568329
+     }
+    ],
+    "zig-safe": [
+     {
+      "status": 0,
+      "instructions": 748905897,
+      "cycles": 243876037
+     },
+     {
+      "status": 0,
+      "instructions": 748905890,
+      "cycles": 243858089
+     },
+     {
+      "status": 0,
+      "instructions": 748905901,
+      "cycles": 243875337
+     },
+     {
+      "status": 0,
+      "instructions": 748905900,
+      "cycles": 243876999
+     },
+     {
+      "status": 0,
+      "instructions": 748905891,
+      "cycles": 243861401
+     }
+    ]
+   }
+  },
+  "float_loop": {
+   "median": {
+    "base": {
+     "instructions": 104181612,
+     "cycles": 140723770
+    },
+    "final": {
+     "instructions": 104181605,
+     "cycles": 140633946
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 104181618,
+      "cycles": 140723770
+     },
+     {
+      "status": 0,
+      "instructions": 104181611,
+      "cycles": 140675623
+     },
+     {
+      "status": 0,
+      "instructions": 104181609,
+      "cycles": 140752211
+     },
+     {
+      "status": 0,
+      "instructions": 104181612,
+      "cycles": 140724015
+     },
+     {
+      "status": 0,
+      "instructions": 104181613,
+      "cycles": 140710498
+     }
+    ],
+    "final": [
+     {
+      "status": 0,
+      "instructions": 104181600,
+      "cycles": 140624873
+     },
+     {
+      "status": 0,
+      "instructions": 104181605,
+      "cycles": 140633946
+     },
+     {
+      "status": 0,
+      "instructions": 104181605,
+      "cycles": 140630719
+     },
+     {
+      "status": 0,
+      "instructions": 104181607,
+      "cycles": 140651981
+     },
+     {
+      "status": 0,
+      "instructions": 104181616,
+      "cycles": 140782907
+     }
+    ]
+   }
+  },
+  "intloop": {
+   "median": {
+    "base": {
+     "instructions": 480181737,
+     "cycles": 466364780
+    },
+    "final": {
+     "instructions": 480181733,
+     "cycles": 466358508
+    },
+    "zig-safe": {
+     "instructions": 510013648,
+     "cycles": 454330915
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 480181737,
+      "cycles": 466364780
+     },
+     {
+      "status": 0,
+      "instructions": 480181731,
+      "cycles": 466355845
+     },
+     {
+      "status": 0,
+      "instructions": 480181729,
+      "cycles": 466356251
+     },
+     {
+      "status": 0,
+      "instructions": 480181749,
+      "cycles": 466380182
+     },
+     {
+      "status": 0,
+      "instructions": 480181745,
+      "cycles": 466370347
+     }
+    ],
+    "final": [
+     {
+      "status": 0,
+      "instructions": 480181738,
+      "cycles": 466368160
+     },
+     {
+      "status": 0,
+      "instructions": 480181732,
+      "cycles": 466356108
+     },
+     {
+      "status": 0,
+      "instructions": 480181731,
+      "cycles": 466358508
+     },
+     {
+      "status": 0,
+      "instructions": 480181739,
+      "cycles": 466385950
+     },
+     {
+      "status": 0,
+      "instructions": 480181733,
+      "cycles": 466355151
+     }
+    ],
+    "zig-safe": [
+     {
+      "status": 0,
+      "instructions": 510013651,
+      "cycles": 454348286
+     },
+     {
+      "status": 0,
+      "instructions": 510013638,
+      "cycles": 454325449
+     },
+     {
+      "status": 0,
+      "instructions": 510013660,
+      "cycles": 454358848
+     },
+     {
+      "status": 0,
+      "instructions": 510013642,
+      "cycles": 454330915
+     },
+     {
+      "status": 0,
+      "instructions": 510013648,
+      "cycles": 454328287
+     }
+    ]
+   }
+  },
+  "list_append_sum": {
+   "median": {
+    "base": {
+     "instructions": 151219186,
+     "cycles": 76396479
+    },
+    "final": {
+     "instructions": 135219227,
+     "cycles": 60371440
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 151219182,
+      "cycles": 76017374
+     },
+     {
+      "status": 0,
+      "instructions": 151219177,
+      "cycles": 76065349
+     },
+     {
+      "status": 0,
+      "instructions": 151219186,
+      "cycles": 76396479
+     },
+     {
+      "status": 0,
+      "instructions": 151219187,
+      "cycles": 76690653
+     },
+     {
+      "status": 0,
+      "instructions": 151219190,
+      "cycles": 76536839
+     }
+    ],
+    "final": [
+     {
+      "status": 0,
+      "instructions": 135219222,
+      "cycles": 60055054
+     },
+     {
+      "status": 0,
+      "instructions": 135219231,
+      "cycles": 60811128
+     },
+     {
+      "status": 0,
+      "instructions": 135219259,
+      "cycles": 60371440
+     },
+     {
+      "status": 0,
+      "instructions": 135219227,
+      "cycles": 60654560
+     },
+     {
+      "status": 0,
+      "instructions": 135219226,
+      "cycles": 59959740
+     }
+    ]
+   }
+  },
+  "list_records": {
+   "median": {
+    "base": {
+     "instructions": 178203166,
+     "cycles": 146973634
+    },
+    "final": {
+     "instructions": 162203221,
+     "cycles": 148964856
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 178203171,
+      "cycles": 146973634
+     },
+     {
+      "status": 0,
+      "instructions": 178203166,
+      "cycles": 149784121
+     },
+     {
+      "status": 0,
+      "instructions": 178203159,
+      "cycles": 151695860
+     },
+     {
+      "status": 0,
+      "instructions": 178203159,
+      "cycles": 146425615
+     },
+     {
+      "status": 0,
+      "instructions": 178203170,
+      "cycles": 146009261
+     }
+    ],
+    "final": [
+     {
+      "status": 0,
+      "instructions": 162203222,
+      "cycles": 148567895
+     },
+     {
+      "status": 0,
+      "instructions": 162203218,
+      "cycles": 151015783
+     },
+     {
+      "status": 0,
+      "instructions": 162203216,
+      "cycles": 158505656
+     },
+     {
+      "status": 0,
+      "instructions": 162203225,
+      "cycles": 148964856
+     },
+     {
+      "status": 0,
+      "instructions": 162203221,
+      "cycles": 148715801
+     }
+    ]
+   }
+  },
+  "list_records_wrapping": {
+   "median": {
+    "base": {
+     "instructions": 68203853,
+     "cycles": 104960873
+    },
+    "final": {
+     "instructions": 62203897,
+     "cycles": 105026069
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 68203851,
+      "cycles": 106365311
+     },
+     {
+      "status": 0,
+      "instructions": 68203851,
+      "cycles": 104512049
+     },
+     {
+      "status": 0,
+      "instructions": 68203853,
+      "cycles": 105557019
+     },
+     {
+      "status": 0,
+      "instructions": 68203853,
+      "cycles": 104289346
+     },
+     {
+      "status": 0,
+      "instructions": 68203855,
+      "cycles": 104960873
+     }
+    ],
+    "final": [
+     {
+      "status": 0,
+      "instructions": 62203897,
+      "cycles": 105026069
+     },
+     {
+      "status": 0,
+      "instructions": 62203900,
+      "cycles": 104623391
+     },
+     {
+      "status": 0,
+      "instructions": 62203902,
+      "cycles": 106853475
+     },
+     {
+      "status": 0,
+      "instructions": 62203897,
+      "cycles": 105029766
+     },
+     {
+      "status": 0,
+      "instructions": 62203894,
+      "cycles": 104113820
+     }
+    ]
+   }
+  },
+  "records": {
+   "median": {
+    "base": {
+     "instructions": 324181717,
+     "cycles": 281111306
+    },
+    "final": {
+     "instructions": 324181716,
+     "cycles": 281113140
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 324181717,
+      "cycles": 281106769
+     },
+     {
+      "status": 0,
+      "instructions": 324181717,
+      "cycles": 281111816
+     },
+     {
+      "status": 0,
+      "instructions": 324181719,
+      "cycles": 281112462
+     },
+     {
+      "status": 0,
+      "instructions": 324181710,
+      "cycles": 281111228
+     },
+     {
+      "status": 0,
+      "instructions": 324181718,
+      "cycles": 281111306
+     }
+    ],
+    "final": [
+     {
+      "status": 0,
+      "instructions": 324181719,
+      "cycles": 281113140
+     },
+     {
+      "status": 0,
+      "instructions": 324181716,
+      "cycles": 281133518
+     },
+     {
+      "status": 0,
+      "instructions": 324181713,
+      "cycles": 281106246
+     },
+     {
+      "status": 0,
+      "instructions": 324181718,
+      "cycles": 281205108
+     },
+     {
+      "status": 0,
+      "instructions": 324181714,
+      "cycles": 281110291
+     }
+    ]
+   }
+  },
+  "str_build": {
+   "median": {
+    "base": {
+     "instructions": 255184070,
+     "cycles": 142168513
+    },
+    "final": {
+     "instructions": 130227200,
+     "cycles": 41450242
+    },
+    "zig-safe": {
+     "instructions": 339069962,
+     "cycles": 87872946
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 255184083,
+      "cycles": 143394253
+     },
+     {
+      "status": 0,
+      "instructions": 255184070,
+      "cycles": 141554856
+     },
+     {
+      "status": 0,
+      "instructions": 255184077,
+      "cycles": 142510384
+     },
+     {
+      "status": 0,
+      "instructions": 255184070,
+      "cycles": 142060763
+     },
+     {
+      "status": 0,
+      "instructions": 255184062,
+      "cycles": 142168513
+     }
+    ],
+    "final": [
+     {
+      "status": 0,
+      "instructions": 130227198,
+      "cycles": 41156007
+     },
+     {
+      "status": 0,
+      "instructions": 130227201,
+      "cycles": 41331912
+     },
+     {
+      "status": 0,
+      "instructions": 130227197,
+      "cycles": 41450242
+     },
+     {
+      "status": 0,
+      "instructions": 130227200,
+      "cycles": 41699598
+     },
+     {
+      "status": 0,
+      "instructions": 130227200,
+      "cycles": 41520183
+     }
+    ],
+    "zig-safe": [
+     {
+      "status": 0,
+      "instructions": 339069962,
+      "cycles": 87912492
+     },
+     {
+      "status": 0,
+      "instructions": 339069958,
+      "cycles": 87872946
+     },
+     {
+      "status": 0,
+      "instructions": 339069967,
+      "cycles": 88002069
+     },
+     {
+      "status": 0,
+      "instructions": 339069956,
+      "cycles": 87870415
+     },
+     {
+      "status": 0,
+      "instructions": 339069965,
+      "cycles": 87754833
+     }
+    ]
+   }
+  },
+  "binary_trees": {
+   "median": {
+    "base": {
+     "instructions": 3191111693,
+     "cycles": 831171575
+    },
+    "final": {
+     "instructions": 3191111680,
+     "cycles": 812893539
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 3191111696,
+      "cycles": 831171575
+     },
+     {
+      "status": 0,
+      "instructions": 3191111693,
+      "cycles": 833498284
+     },
+     {
+      "status": 0,
+      "instructions": 3191111701,
+      "cycles": 828598716
+     },
+     {
+      "status": 0,
+      "instructions": 3191111682,
+      "cycles": 824461389
+     },
+     {
+      "status": 0,
+      "instructions": 3191111687,
+      "cycles": 838867689
+     }
+    ],
+    "final": [
+     {
+      "status": 0,
+      "instructions": 3191111680,
+      "cycles": 812893539
+     },
+     {
+      "status": 0,
+      "instructions": 3191111670,
+      "cycles": 806412134
+     },
+     {
+      "status": 0,
+      "instructions": 3191111687,
+      "cycles": 826280940
+     },
+     {
+      "status": 0,
+      "instructions": 3191111674,
+      "cycles": 803389854
+     },
+     {
+      "status": 0,
+      "instructions": 3191111687,
+      "cycles": 828556530
+     }
+    ]
+   }
+  },
+  "binary_trees_arena": {
+   "median": {
+    "base": {
+     "instructions": 3191111636,
+     "cycles": 819940592
+    },
+    "final": {
+     "instructions": 3191111637,
+     "cycles": 826535819
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 3191111643,
+      "cycles": 809564137
+     },
+     {
+      "status": 0,
+      "instructions": 3191111623,
+      "cycles": 819940592
+     },
+     {
+      "status": 0,
+      "instructions": 3191111636,
+      "cycles": 824458681
+     },
+     {
+      "status": 0,
+      "instructions": 3191111654,
+      "cycles": 826205157
+     },
+     {
+      "status": 0,
+      "instructions": 3191111627,
+      "cycles": 815102986
+     }
+    ],
+    "final": [
+     {
+      "status": 0,
+      "instructions": 3191111643,
+      "cycles": 811740050
+     },
+     {
+      "status": 0,
+      "instructions": 3191111637,
+      "cycles": 838225309
+     },
+     {
+      "status": 0,
+      "instructions": 3191111629,
+      "cycles": 826535819
+     },
+     {
+      "status": 0,
+      "instructions": 3191111628,
+      "cycles": 824340519
+     },
+     {
+      "status": 0,
+      "instructions": 3191111640,
+      "cycles": 830496854
+     }
+    ]
+   }
+  },
+  "binary_trees_recursive": {
+   "median": {
+    "base": {
+     "instructions": 1764440186,
+     "cycles": 461071582
+    },
+    "final": {
+     "instructions": 1764440188,
+     "cycles": 457145025
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 1764440179,
+      "cycles": 461071582
+     },
+     {
+      "status": 0,
+      "instructions": 1764440192,
+      "cycles": 466969231
+     },
+     {
+      "status": 0,
+      "instructions": 1764440189,
+      "cycles": 460934518
+     },
+     {
+      "status": 0,
+      "instructions": 1764440186,
+      "cycles": 459323916
+     },
+     {
+      "status": 0,
+      "instructions": 1764440185,
+      "cycles": 472059645
+     }
+    ],
+    "final": [
+     {
+      "status": 0,
+      "instructions": 1764440176,
+      "cycles": 457145025
+     },
+     {
+      "status": 0,
+      "instructions": 1764440188,
+      "cycles": 464112705
+     },
+     {
+      "status": 0,
+      "instructions": 1764440192,
+      "cycles": 456184424
+     },
+     {
+      "status": 0,
+      "instructions": 1764440192,
+      "cycles": 464800667
+     },
+     {
+      "status": 0,
+      "instructions": 1764440180,
+      "cycles": 456626107
+     }
+    ]
+   }
+  },
+  "fannkuch_redux": {
+   "median": {
+    "base": {
+     "instructions": 1201217142,
+     "cycles": 669008717
+    },
+    "final": {
+     "instructions": 1201217142,
+     "cycles": 669600970
+    },
+    "zig-safe": {
+     "instructions": 1594895791,
+     "cycles": 925097842
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 1201217142,
+      "cycles": 669008717
+     },
+     {
+      "status": 0,
+      "instructions": 1201217136,
+      "cycles": 666986596
+     },
+     {
+      "status": 0,
+      "instructions": 1201217142,
+      "cycles": 668234667
+     },
+     {
+      "status": 0,
+      "instructions": 1201217118,
+      "cycles": 669633166
+     },
+     {
+      "status": 0,
+      "instructions": 1201217147,
+      "cycles": 669688824
+     }
+    ],
+    "final": [
+     {
+      "status": 0,
+      "instructions": 1201217142,
+      "cycles": 668281629
+     },
+     {
+      "status": 0,
+      "instructions": 1201217166,
+      "cycles": 669600970
+     },
+     {
+      "status": 0,
+      "instructions": 1201217141,
+      "cycles": 669083607
+     },
+     {
+      "status": 0,
+      "instructions": 1201217147,
+      "cycles": 669884823
+     },
+     {
+      "status": 0,
+      "instructions": 1201217137,
+      "cycles": 671758385
+     }
+    ],
+    "zig-safe": [
+     {
+      "status": 0,
+      "instructions": 1594895791,
+      "cycles": 923635963
+     },
+     {
+      "status": 0,
+      "instructions": 1594895784,
+      "cycles": 924133117
+     },
+     {
+      "status": 0,
+      "instructions": 1594895765,
+      "cycles": 925097842
+     },
+     {
+      "status": 0,
+      "instructions": 1594895801,
+      "cycles": 927845140
+     },
+     {
+      "status": 0,
+      "instructions": 1594895796,
+      "cycles": 927580183
+     }
+    ]
+   }
+  },
+  "fannkuch_redux_array": {
+   "median": {
+    "base": {
+     "instructions": 7960929850,
+     "cycles": 2556642373
+    },
+    "final": {
+     "instructions": 7960929855,
+     "cycles": 2554053128
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 7960929857,
+      "cycles": 2556642373
+     },
+     {
+      "status": 0,
+      "instructions": 7960929824,
+      "cycles": 2556459769
+     },
+     {
+      "status": 0,
+      "instructions": 7960929856,
+      "cycles": 2561470000
+     },
+     {
+      "status": 0,
+      "instructions": 7960929845,
+      "cycles": 2571655617
+     },
+     {
+      "status": 0,
+      "instructions": 7960929850,
+      "cycles": 2550847025
+     }
+    ],
+    "final": [
+     {
+      "status": 0,
+      "instructions": 7960929855,
+      "cycles": 2570071442
+     },
+     {
+      "status": 0,
+      "instructions": 7960929863,
+      "cycles": 2569901877
+     },
+     {
+      "status": 0,
+      "instructions": 7960929892,
+      "cycles": 2549698690
+     },
+     {
+      "status": 0,
+      "instructions": 7960929854,
+      "cycles": 2550846050
+     },
+     {
+      "status": 0,
+      "instructions": 7960929841,
+      "cycles": 2554053128
+     }
+    ]
+   }
+  },
+  "fannkuch_redux_tuned": {
+   "median": {
+    "base": {
+     "instructions": 6788407291,
+     "cycles": 2117692976
+    },
+    "final": {
+     "instructions": 6788407282,
+     "cycles": 2117554190
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 6788407214,
+      "cycles": 2116740995
+     },
+     {
+      "status": 0,
+      "instructions": 6788407277,
+      "cycles": 2116696184
+     },
+     {
+      "status": 0,
+      "instructions": 6788407291,
+      "cycles": 2138724980
+     },
+     {
+      "status": 0,
+      "instructions": 6788407307,
+      "cycles": 2137990115
+     },
+     {
+      "status": 0,
+      "instructions": 6788407313,
+      "cycles": 2117692976
+     }
+    ],
+    "final": [
+     {
+      "status": 0,
+      "instructions": 6788407282,
+      "cycles": 2118089858
+     },
+     {
+      "status": 0,
+      "instructions": 6788407266,
+      "cycles": 2117881832
+     },
+     {
+      "status": 0,
+      "instructions": 6788407267,
+      "cycles": 2117386650
+     },
+     {
+      "status": 0,
+      "instructions": 6788407307,
+      "cycles": 2116190632
+     },
+     {
+      "status": 0,
+      "instructions": 6788407296,
+      "cycles": 2117554190
+     }
+    ]
+   }
+  },
+  "knucleotide": {
+   "median": {
+    "base": {
+     "instructions": 1189724192,
+     "cycles": 387992330
+    },
+    "final": {
+     "instructions": 1189724201,
+     "cycles": 390622403
+    },
+    "zig-safe": {
+     "instructions": 1377192320,
+     "cycles": 413349795
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 1189724202,
+      "cycles": 386634263
+     },
+     {
+      "status": 0,
+      "instructions": 1189724192,
+      "cycles": 394729014
+     },
+     {
+      "status": 0,
+      "instructions": 1189724197,
+      "cycles": 389681277
+     },
+     {
+      "status": 0,
+      "instructions": 1189724183,
+      "cycles": 387204493
+     },
+     {
+      "status": 0,
+      "instructions": 1189724190,
+      "cycles": 387992330
+     }
+    ],
+    "final": [
+     {
+      "status": 0,
+      "instructions": 1189724196,
+      "cycles": 386660510
+     },
+     {
+      "status": 0,
+      "instructions": 1189724213,
+      "cycles": 390622403
+     },
+     {
+      "status": 0,
+      "instructions": 1189724201,
+      "cycles": 391641485
+     },
+     {
+      "status": 0,
+      "instructions": 1189724200,
+      "cycles": 388452216
+     },
+     {
+      "status": 0,
+      "instructions": 1189724202,
+      "cycles": 391294528
+     }
+    ],
+    "zig-safe": [
+     {
+      "status": 0,
+      "instructions": 1377192323,
+      "cycles": 413349795
+     },
+     {
+      "status": 0,
+      "instructions": 1377192322,
+      "cycles": 414563461
+     },
+     {
+      "status": 0,
+      "instructions": 1377192317,
+      "cycles": 413128053
+     },
+     {
+      "status": 0,
+      "instructions": 1377192311,
+      "cycles": 418586685
+     },
+     {
+      "status": 0,
+      "instructions": 1377192320,
+      "cycles": 413340841
+     }
+    ]
+   }
+  },
+  "knucleotide_arena": {
+   "median": {
+    "base": {
+     "instructions": 1189722892,
+     "cycles": 388732170
+    },
+    "final": {
+     "instructions": 1189722892,
+     "cycles": 389035542
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 1189722892,
+      "cycles": 388593645
+     },
+     {
+      "status": 0,
+      "instructions": 1189722880,
+      "cycles": 388732170
+     },
+     {
+      "status": 0,
+      "instructions": 1189722899,
+      "cycles": 388633923
+     },
+     {
+      "status": 0,
+      "instructions": 1189722890,
+      "cycles": 389347205
+     },
+     {
+      "status": 0,
+      "instructions": 1189722893,
+      "cycles": 389879431
+     }
+    ],
+    "final": [
+     {
+      "status": 0,
+      "instructions": 1189722894,
+      "cycles": 389035542
+     },
+     {
+      "status": 0,
+      "instructions": 1189722892,
+      "cycles": 389786187
+     },
+     {
+      "status": 0,
+      "instructions": 1189722893,
+      "cycles": 389988646
+     },
+     {
+      "status": 0,
+      "instructions": 1189722890,
+      "cycles": 387884414
+     },
+     {
+      "status": 0,
+      "instructions": 1189722883,
+      "cycles": 386878738
+     }
+    ]
+   }
+  },
+  "knucleotide_tuned": {
+   "median": {
+    "base": {
+     "instructions": 586100314,
+     "cycles": 255336005
+    },
+    "final": {
+     "instructions": 586100296,
+     "cycles": 256016147
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 586100314,
+      "cycles": 255336005
+     },
+     {
+      "status": 0,
+      "instructions": 586100313,
+      "cycles": 254107892
+     },
+     {
+      "status": 0,
+      "instructions": 586100314,
+      "cycles": 255628880
+     },
+     {
+      "status": 0,
+      "instructions": 586100319,
+      "cycles": 256514232
+     },
+     {
+      "status": 0,
+      "instructions": 586100313,
+      "cycles": 255233257
+     }
+    ],
+    "final": [
+     {
+      "status": 0,
+      "instructions": 586100296,
+      "cycles": 257351261
+     },
+     {
+      "status": 0,
+      "instructions": 586100297,
+      "cycles": 254538878
+     },
+     {
+      "status": 0,
+      "instructions": 586100296,
+      "cycles": 254653968
+     },
+     {
+      "status": 0,
+      "instructions": 586100293,
+      "cycles": 256016147
+     },
+     {
+      "status": 0,
+      "instructions": 586100293,
+      "cycles": 256066747
+     }
+    ]
+   }
+  },
+  "mandelbrot": {
+   "median": {
+    "base": {
+     "instructions": 869221899,
+     "cycles": 526630858
+    },
+    "final": {
+     "instructions": 869221897,
+     "cycles": 526704743
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 869221894,
+      "cycles": 526444810
+     },
+     {
+      "status": 0,
+      "instructions": 869221918,
+      "cycles": 526730751
+     },
+     {
+      "status": 0,
+      "instructions": 869221915,
+      "cycles": 526734720
+     },
+     {
+      "status": 0,
+      "instructions": 869221897,
+      "cycles": 526598021
+     },
+     {
+      "status": 0,
+      "instructions": 869221899,
+      "cycles": 526630858
+     }
+    ],
+    "final": [
+     {
+      "status": 0,
+      "instructions": 869221897,
+      "cycles": 526640682
+     },
+     {
+      "status": 0,
+      "instructions": 869221889,
+      "cycles": 526869744
+     },
+     {
+      "status": 0,
+      "instructions": 869221903,
+      "cycles": 526704743
+     },
+     {
+      "status": 0,
+      "instructions": 869221895,
+      "cycles": 526807431
+     },
+     {
+      "status": 0,
+      "instructions": 869221901,
+      "cycles": 526551346
+     }
+    ]
+   }
+  },
+  "matmul": {
+   "median": {
+    "base": {
+     "instructions": 142687700,
+     "cycles": 71337716
+    },
+    "final": {
+     "instructions": 142685721,
+     "cycles": 71560054
+    },
+    "zig-safe": {
+     "instructions": 1010563667,
+     "cycles": 229575521
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 142687704,
+      "cycles": 81429911
+     },
+     {
+      "status": 0,
+      "instructions": 142687703,
+      "cycles": 72501296
+     },
+     {
+      "status": 0,
+      "instructions": 142687700,
+      "cycles": 71337716
+     },
+     {
+      "status": 0,
+      "instructions": 142687700,
+      "cycles": 71053399
+     },
+     {
+      "status": 0,
+      "instructions": 142687700,
+      "cycles": 71260053
+     }
+    ],
+    "final": [
+     {
+      "status": 0,
+      "instructions": 142685721,
+      "cycles": 71068302
+     },
+     {
+      "status": 0,
+      "instructions": 142685720,
+      "cycles": 70855403
+     },
+     {
+      "status": 0,
+      "instructions": 142685719,
+      "cycles": 72186828
+     },
+     {
+      "status": 0,
+      "instructions": 142685721,
+      "cycles": 71560054
+     },
+     {
+      "status": 0,
+      "instructions": 142685721,
+      "cycles": 71827675
+     }
+    ],
+    "zig-safe": [
+     {
+      "status": 0,
+      "instructions": 1010563666,
+      "cycles": 229575521
+     },
+     {
+      "status": 0,
+      "instructions": 1010563661,
+      "cycles": 230223488
+     },
+     {
+      "status": 0,
+      "instructions": 1010563672,
+      "cycles": 229833356
+     },
+     {
+      "status": 0,
+      "instructions": 1010563667,
+      "cycles": 229513933
+     },
+     {
+      "status": 0,
+      "instructions": 1010563669,
+      "cycles": 229542099
+     }
+    ]
+   }
+  },
+  "matmul_flat": {
+   "median": {
+    "base": {
+     "instructions": 1389957956,
+     "cycles": 277302598
+    },
+    "final": {
+     "instructions": 1389457992,
+     "cycles": 277600001
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 1389957955,
+      "cycles": 277254450
+     },
+     {
+      "status": 0,
+      "instructions": 1389957957,
+      "cycles": 277302598
+     },
+     {
+      "status": 0,
+      "instructions": 1389957958,
+      "cycles": 277302235
+     },
+     {
+      "status": 0,
+      "instructions": 1389957956,
+      "cycles": 277681001
+     },
+     {
+      "status": 0,
+      "instructions": 1389957955,
+      "cycles": 277380495
+     }
+    ],
+    "final": [
+     {
+      "status": 0,
+      "instructions": 1389457984,
+      "cycles": 277600001
+     },
+     {
+      "status": 0,
+      "instructions": 1389457997,
+      "cycles": 277528678
+     },
+     {
+      "status": 0,
+      "instructions": 1389457990,
+      "cycles": 277685235
+     },
+     {
+      "status": 0,
+      "instructions": 1389457992,
+      "cycles": 277575014
+     },
+     {
+      "status": 0,
+      "instructions": 1389457993,
+      "cycles": 278125016
+     }
+    ]
+   }
+  },
+  "matmul_tuned": {
+   "median": {
+    "base": {
+     "instructions": 2071691044,
+     "cycles": 387766167
+    },
+    "final": {
+     "instructions": 2071688577,
+     "cycles": 391115359
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 2071691046,
+      "cycles": 388126808
+     },
+     {
+      "status": 0,
+      "instructions": 2071691043,
+      "cycles": 385591552
+     },
+     {
+      "status": 0,
+      "instructions": 2071691040,
+      "cycles": 384311737
+     },
+     {
+      "status": 0,
+      "instructions": 2071691044,
+      "cycles": 388507669
+     },
+     {
+      "status": 0,
+      "instructions": 2071691053,
+      "cycles": 387766167
+     }
+    ],
+    "final": [
+     {
+      "status": 0,
+      "instructions": 2071688574,
+      "cycles": 394510236
+     },
+     {
+      "status": 0,
+      "instructions": 2071688581,
+      "cycles": 390503640
+     },
+     {
+      "status": 0,
+      "instructions": 2071688577,
+      "cycles": 390093369
+     },
+     {
+      "status": 0,
+      "instructions": 2071688601,
+      "cycles": 391444162
+     },
+     {
+      "status": 0,
+      "instructions": 2071688574,
+      "cycles": 391115359
+     }
+    ]
+   }
+  },
+  "nbody": {
+   "median": {
+    "base": {
+     "instructions": 3485183702,
+     "cycles": 935116396
+    },
+    "final": {
+     "instructions": 2700183667,
+     "cycles": 771482575
+    },
+    "zig-safe": {
+     "instructions": 1435014841,
+     "cycles": 577342509
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 3485183713,
+      "cycles": 950268049
+     },
+     {
+      "status": 0,
+      "instructions": 3485183705,
+      "cycles": 935116396
+     },
+     {
+      "status": 0,
+      "instructions": 3485183696,
+      "cycles": 935004357
+     },
+     {
+      "status": 0,
+      "instructions": 3485183702,
+      "cycles": 943197029
+     },
+     {
+      "status": 0,
+      "instructions": 3485183699,
+      "cycles": 935001121
+     }
+    ],
+    "final": [
+     {
+      "status": 0,
+      "instructions": 2700183680,
+      "cycles": 771518636
+     },
+     {
+      "status": 0,
+      "instructions": 2700183667,
+      "cycles": 771496316
+     },
+     {
+      "status": 0,
+      "instructions": 2700183664,
+      "cycles": 771460382
+     },
+     {
+      "status": 0,
+      "instructions": 2700183647,
+      "cycles": 771403583
+     },
+     {
+      "status": 0,
+      "instructions": 2700183672,
+      "cycles": 771482575
+     }
+    ],
+    "zig-safe": [
+     {
+      "status": 0,
+      "instructions": 1435014841,
+      "cycles": 577342509
+     },
+     {
+      "status": 0,
+      "instructions": 1435014838,
+      "cycles": 577338721
+     },
+     {
+      "status": 0,
+      "instructions": 1435014832,
+      "cycles": 577420688
+     },
+     {
+      "status": 0,
+      "instructions": 1435014843,
+      "cycles": 577339160
+     },
+     {
+      "status": 0,
+      "instructions": 1435014865,
+      "cycles": 577370539
+     }
+    ]
+   }
+  },
+  "nbody_class": {
+   "median": {
+    "base": {
+     "instructions": 3485183676,
+     "cycles": 929994473
+    },
+    "final": {
+     "instructions": 2700183635,
+     "cycles": 771473995
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 3485183676,
+      "cycles": 929769766
+     },
+     {
+      "status": 0,
+      "instructions": 3485183674,
+      "cycles": 930184036
+     },
+     {
+      "status": 0,
+      "instructions": 3485183682,
+      "cycles": 930042507
+     },
+     {
+      "status": 0,
+      "instructions": 3485183671,
+      "cycles": 929994473
+     },
+     {
+      "status": 0,
+      "instructions": 3485183690,
+      "cycles": 929874117
+     }
+    ],
+    "final": [
+     {
+      "status": 0,
+      "instructions": 2700183627,
+      "cycles": 771413001
+     },
+     {
+      "status": 0,
+      "instructions": 2700183652,
+      "cycles": 771520667
+     },
+     {
+      "status": 0,
+      "instructions": 2700183635,
+      "cycles": 771473995
+     },
+     {
+      "status": 0,
+      "instructions": 2700183651,
+      "cycles": 771506313
+     },
+     {
+      "status": 0,
+      "instructions": 2700183627,
+      "cycles": 771451482
+     }
+    ]
+   }
+  },
+  "raytrace": {
+   "median": {
+    "base": {
+     "instructions": 766895152,
+     "cycles": 306392275
+    },
+    "final": {
+     "instructions": 766894542,
+     "cycles": 306380296
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 766895152,
+      "cycles": 306391028
+     },
+     {
+      "status": 0,
+      "instructions": 766895142,
+      "cycles": 306386785
+     },
+     {
+      "status": 0,
+      "instructions": 766895152,
+      "cycles": 306408410
+     },
+     {
+      "status": 0,
+      "instructions": 766895159,
+      "cycles": 306399676
+     },
+     {
+      "status": 0,
+      "instructions": 766895140,
+      "cycles": 306392275
+     }
+    ],
+    "final": [
+     {
+      "status": 0,
+      "instructions": 766894541,
+      "cycles": 306384179
+     },
+     {
+      "status": 0,
+      "instructions": 766894544,
+      "cycles": 306379636
+     },
+     {
+      "status": 0,
+      "instructions": 766894550,
+      "cycles": 306380296
+     },
+     {
+      "status": 0,
+      "instructions": 766894542,
+      "cycles": 306356936
+     },
+     {
+      "status": 0,
+      "instructions": 766894529,
+      "cycles": 306447273
+     }
+    ]
+   }
+  },
+  "raytrace_tuned": {
+   "median": {
+    "base": {
+     "instructions": 766895167,
+     "cycles": 307372227
+    },
+    "final": {
+     "instructions": 766894587,
+     "cycles": 307373595
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 766895162,
+      "cycles": 307369388
+     },
+     {
+      "status": 0,
+      "instructions": 766895172,
+      "cycles": 307363563
+     },
+     {
+      "status": 0,
+      "instructions": 766895178,
+      "cycles": 307407258
+     },
+     {
+      "status": 0,
+      "instructions": 766895167,
+      "cycles": 307372227
+     },
+     {
+      "status": 0,
+      "instructions": 766895154,
+      "cycles": 307397548
+     }
+    ],
+    "final": [
+     {
+      "status": 0,
+      "instructions": 766894587,
+      "cycles": 307351461
+     },
+     {
+      "status": 0,
+      "instructions": 766894583,
+      "cycles": 307328569
+     },
+     {
+      "status": 0,
+      "instructions": 766894589,
+      "cycles": 307397463
+     },
+     {
+      "status": 0,
+      "instructions": 766894591,
+      "cycles": 307373891
+     },
+     {
+      "status": 0,
+      "instructions": 766894578,
+      "cycles": 307373595
+     }
+    ]
+   }
+  },
+  "sieve": {
+   "median": {
+    "base": {
+     "instructions": 510135738,
+     "cycles": 240400955
+    },
+    "final": {
+     "instructions": 490136956,
+     "cycles": 221178934
+    },
+    "zig-safe": {
+     "instructions": 337420512,
+     "cycles": 281824139
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 510135734,
+      "cycles": 239538509
+     },
+     {
+      "status": 0,
+      "instructions": 510135738,
+      "cycles": 240400955
+     },
+     {
+      "status": 0,
+      "instructions": 510135731,
+      "cycles": 239877940
+     },
+     {
+      "status": 0,
+      "instructions": 510135738,
+      "cycles": 240649190
+     },
+     {
+      "status": 0,
+      "instructions": 510135740,
+      "cycles": 241047668
+     }
+    ],
+    "final": [
+     {
+      "status": 0,
+      "instructions": 490136956,
+      "cycles": 221724324
+     },
+     {
+      "status": 0,
+      "instructions": 490136965,
+      "cycles": 223218122
+     },
+     {
+      "status": 0,
+      "instructions": 490136950,
+      "cycles": 220278825
+     },
+     {
+      "status": 0,
+      "instructions": 490136955,
+      "cycles": 219476153
+     },
+     {
+      "status": 0,
+      "instructions": 490136960,
+      "cycles": 221178934
+     }
+    ],
+    "zig-safe": [
+     {
+      "status": 0,
+      "instructions": 337420510,
+      "cycles": 281902665
+     },
+     {
+      "status": 0,
+      "instructions": 337420524,
+      "cycles": 283142496
+     },
+     {
+      "status": 0,
+      "instructions": 337420511,
+      "cycles": 281269385
+     },
+     {
+      "status": 0,
+      "instructions": 337420520,
+      "cycles": 281824139
+     },
+     {
+      "status": 0,
+      "instructions": 337420512,
+      "cycles": 281720902
+     }
+    ]
+   }
+  },
+  "sieve_tuned": {
+   "median": {
+    "base": {
+     "instructions": 510135711,
+     "cycles": 240669751
+    },
+    "final": {
+     "instructions": 490136926,
+     "cycles": 221153846
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 510135711,
+      "cycles": 240669751
+     },
+     {
+      "status": 0,
+      "instructions": 510135715,
+      "cycles": 242603583
+     },
+     {
+      "status": 0,
+      "instructions": 510135708,
+      "cycles": 240145537
+     },
+     {
+      "status": 0,
+      "instructions": 510135703,
+      "cycles": 238997681
+     },
+     {
+      "status": 0,
+      "instructions": 510135716,
+      "cycles": 243095846
+     }
+    ],
+    "final": [
+     {
+      "status": 0,
+      "instructions": 490136926,
+      "cycles": 219881926
+     },
+     {
+      "status": 0,
+      "instructions": 490136922,
+      "cycles": 220170738
+     },
+     {
+      "status": 0,
+      "instructions": 490136933,
+      "cycles": 223887459
+     },
+     {
+      "status": 0,
+      "instructions": 490136930,
+      "cycles": 221187002
+     },
+     {
+      "status": 0,
+      "instructions": 490136923,
+      "cycles": 221153846
+     }
+    ]
+   }
+  },
+  "sort_builtin": {
+   "median": {
+    "base": {
+     "instructions": 713301267,
+     "cycles": 400124273
+    },
+    "final": {
+     "instructions": 711301290,
+     "cycles": 400822134
+    },
+    "zig-safe": {
+     "instructions": 1577991585,
+     "cycles": 933585343
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 713301260,
+      "cycles": 400622897
+     },
+     {
+      "status": 0,
+      "instructions": 713301269,
+      "cycles": 400033458
+     },
+     {
+      "status": 0,
+      "instructions": 713301267,
+      "cycles": 399614340
+     },
+     {
+      "status": 0,
+      "instructions": 713301270,
+      "cycles": 400124273
+     },
+     {
+      "status": 0,
+      "instructions": 713301267,
+      "cycles": 400957422
+     }
+    ],
+    "final": [
+     {
+      "status": 0,
+      "instructions": 711301292,
+      "cycles": 398771904
+     },
+     {
+      "status": 0,
+      "instructions": 711301282,
+      "cycles": 400822134
+     },
+     {
+      "status": 0,
+      "instructions": 711301290,
+      "cycles": 401537394
+     },
+     {
+      "status": 0,
+      "instructions": 711301303,
+      "cycles": 401074194
+     },
+     {
+      "status": 0,
+      "instructions": 711301284,
+      "cycles": 400575616
+     }
+    ],
+    "zig-safe": [
+     {
+      "status": 0,
+      "instructions": 1577991669,
+      "cycles": 933585343
+     },
+     {
+      "status": 0,
+      "instructions": 1577991582,
+      "cycles": 933765587
+     },
+     {
+      "status": 0,
+      "instructions": 1577991579,
+      "cycles": 933321113
+     },
+     {
+      "status": 0,
+      "instructions": 1577991585,
+      "cycles": 939158839
+     },
+     {
+      "status": 0,
+      "instructions": 1577991586,
+      "cycles": 932302882
+     }
+    ]
+   }
+  },
+  "sort_quick": {
+   "median": {
+    "base": {
+     "instructions": 1109527191,
+     "cycles": 853370715
+    },
+    "final": {
+     "instructions": 968321605,
+     "cycles": 837758389
+    },
+    "zig-safe": {
+     "instructions": 1221662102,
+     "cycles": 772683252
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 1109527191,
+      "cycles": 853333074
+     },
+     {
+      "status": 0,
+      "instructions": 1109527184,
+      "cycles": 851915570
+     },
+     {
+      "status": 0,
+      "instructions": 1109527189,
+      "cycles": 854089304
+     },
+     {
+      "status": 0,
+      "instructions": 1109527197,
+      "cycles": 854907477
+     },
+     {
+      "status": 0,
+      "instructions": 1109527196,
+      "cycles": 853370715
+     }
+    ],
+    "final": [
+     {
+      "status": 0,
+      "instructions": 968321605,
+      "cycles": 838675332
+     },
+     {
+      "status": 0,
+      "instructions": 968321612,
+      "cycles": 837873251
+     },
+     {
+      "status": 0,
+      "instructions": 968321608,
+      "cycles": 837758389
+     },
+     {
+      "status": 0,
+      "instructions": 968321600,
+      "cycles": 834723559
+     },
+     {
+      "status": 0,
+      "instructions": 968321583,
+      "cycles": 834182083
+     }
+    ],
+    "zig-safe": [
+     {
+      "status": 0,
+      "instructions": 1221662129,
+      "cycles": 775229913
+     },
+     {
+      "status": 0,
+      "instructions": 1221662102,
+      "cycles": 771446887
+     },
+     {
+      "status": 0,
+      "instructions": 1221662106,
+      "cycles": 772338297
+     },
+     {
+      "status": 0,
+      "instructions": 1221662100,
+      "cycles": 772683252
+     },
+     {
+      "status": 0,
+      "instructions": 1221662089,
+      "cycles": 773862413
+     }
+    ]
+   }
+  },
+  "sort_records": {
+   "median": {
+    "base": {
+     "instructions": 141336414,
+     "cycles": 79842187
+    },
+    "final": {
+     "instructions": 137336442,
+     "cycles": 79215238
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 141336418,
+      "cycles": 80694648
+     },
+     {
+      "status": 0,
+      "instructions": 141336414,
+      "cycles": 79686696
+     },
+     {
+      "status": 0,
+      "instructions": 141336415,
+      "cycles": 80448702
+     },
+     {
+      "status": 0,
+      "instructions": 141336410,
+      "cycles": 79647755
+     },
+     {
+      "status": 0,
+      "instructions": 141336413,
+      "cycles": 79842187
+     }
+    ],
+    "final": [
+     {
+      "status": 0,
+      "instructions": 137336440,
+      "cycles": 79338376
+     },
+     {
+      "status": 0,
+      "instructions": 137336443,
+      "cycles": 79132130
+     },
+     {
+      "status": 0,
+      "instructions": 137336444,
+      "cycles": 78946405
+     },
+     {
+      "status": 0,
+      "instructions": 137336441,
+      "cycles": 79215238
+     },
+     {
+      "status": 0,
+      "instructions": 137336442,
+      "cycles": 79280035
+     }
+    ]
+   }
+  },
+  "sort_records_keyed": {
+   "median": {
+    "base": {
+     "instructions": 146336454,
+     "cycles": 80765622
+    },
+    "final": {
+     "instructions": 142336542,
+     "cycles": 79728042
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 146336454,
+      "cycles": 79927982
+     },
+     {
+      "status": 0,
+      "instructions": 146336457,
+      "cycles": 80299048
+     },
+     {
+      "status": 0,
+      "instructions": 146336458,
+      "cycles": 81378940
+     },
+     {
+      "status": 0,
+      "instructions": 146336454,
+      "cycles": 81248154
+     },
+     {
+      "status": 0,
+      "instructions": 146336453,
+      "cycles": 80765622
+     }
+    ],
+    "final": [
+     {
+      "status": 0,
+      "instructions": 142336542,
+      "cycles": 79890302
+     },
+     {
+      "status": 0,
+      "instructions": 142336540,
+      "cycles": 79532578
+     },
+     {
+      "status": 0,
+      "instructions": 142336544,
+      "cycles": 79728042
+     },
+     {
+      "status": 0,
+      "instructions": 142336537,
+      "cycles": 79143595
+     },
+     {
+      "status": 0,
+      "instructions": 142336544,
+      "cycles": 80338621
+     }
+    ]
+   }
+  },
+  "sort_records_sorted": {
+   "median": {
+    "base": {
+     "instructions": 146336456,
+     "cycles": 80816003
+    },
+    "final": {
+     "instructions": 142336539,
+     "cycles": 79519689
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 146336456,
+      "cycles": 81065024
+     },
+     {
+      "status": 0,
+      "instructions": 146336449,
+      "cycles": 80816003
+     },
+     {
+      "status": 0,
+      "instructions": 146336499,
+      "cycles": 81116723
+     },
+     {
+      "status": 0,
+      "instructions": 146336451,
+      "cycles": 80572386
+     },
+     {
+      "status": 0,
+      "instructions": 146336459,
+      "cycles": 80224659
+     }
+    ],
+    "final": [
+     {
+      "status": 0,
+      "instructions": 142336539,
+      "cycles": 79869955
+     },
+     {
+      "status": 0,
+      "instructions": 142336538,
+      "cycles": 80391103
+     },
+     {
+      "status": 0,
+      "instructions": 142336536,
+      "cycles": 78487975
+     },
+     {
+      "status": 0,
+      "instructions": 142336539,
+      "cycles": 78628205
+     },
+     {
+      "status": 0,
+      "instructions": 142336544,
+      "cycles": 79519689
+     }
+    ]
+   }
+  },
+  "spectral_norm": {
+   "median": {
+    "base": {
+     "instructions": 2641518275,
+     "cycles": 640649299
+    },
+    "final": {
+     "instructions": 2641398401,
+     "cycles": 640581930
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 2641518275,
+      "cycles": 640721869
+     },
+     {
+      "status": 0,
+      "instructions": 2641518285,
+      "cycles": 640649299
+     },
+     {
+      "status": 0,
+      "instructions": 2641518281,
+      "cycles": 640618637
+     },
+     {
+      "status": 0,
+      "instructions": 2641518267,
+      "cycles": 640746858
+     },
+     {
+      "status": 0,
+      "instructions": 2641518259,
+      "cycles": 640538207
+     }
+    ],
+    "final": [
+     {
+      "status": 0,
+      "instructions": 2641398407,
+      "cycles": 640581930
+     },
+     {
+      "status": 0,
+      "instructions": 2641398400,
+      "cycles": 640542824
+     },
+     {
+      "status": 0,
+      "instructions": 2641398407,
+      "cycles": 640531264
+     },
+     {
+      "status": 0,
+      "instructions": 2641398401,
+      "cycles": 640625340
+     },
+     {
+      "status": 0,
+      "instructions": 2641398392,
+      "cycles": 640589587
+     }
+    ]
+   }
+  },
+  "spectral_norm_tuned": {
+   "median": {
+    "base": {
+     "instructions": 2001558419,
+     "cycles": 640506538
+    },
+    "final": {
+     "instructions": 2001358507,
+     "cycles": 640531899
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 2001558431,
+      "cycles": 640514641
+     },
+     {
+      "status": 0,
+      "instructions": 2001558419,
+      "cycles": 640491062
+     },
+     {
+      "status": 0,
+      "instructions": 2001558427,
+      "cycles": 640506538
+     },
+     {
+      "status": 0,
+      "instructions": 2001558413,
+      "cycles": 640507257
+     },
+     {
+      "status": 0,
+      "instructions": 2001558419,
+      "cycles": 640505996
+     }
+    ],
+    "final": [
+     {
+      "status": 0,
+      "instructions": 2001358511,
+      "cycles": 640531899
+     },
+     {
+      "status": 0,
+      "instructions": 2001358502,
+      "cycles": 640592516
+     },
+     {
+      "status": 0,
+      "instructions": 2001358507,
+      "cycles": 640525250
+     },
+     {
+      "status": 0,
+      "instructions": 2001358506,
+      "cycles": 640531451
+     },
+     {
+      "status": 0,
+      "instructions": 2001358515,
+      "cycles": 640544886
+     }
+    ]
+   }
+  },
+  "text_ops": {
+   "median": {
+    "base": {
+     "instructions": 720077925,
+     "cycles": 181610621
+    },
+    "final": {
+     "instructions": 719792186,
+     "cycles": 182057586
+    },
+    "zig-safe": {
+     "instructions": 367474195,
+     "cycles": 71594005
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 720077925,
+      "cycles": 181610621
+     },
+     {
+      "status": 0,
+      "instructions": 720077924,
+      "cycles": 181492007
+     },
+     {
+      "status": 0,
+      "instructions": 720077932,
+      "cycles": 181775749
+     },
+     {
+      "status": 0,
+      "instructions": 720077926,
+      "cycles": 182454455
+     },
+     {
+      "status": 0,
+      "instructions": 720077925,
+      "cycles": 181024139
+     }
+    ],
+    "final": [
+     {
+      "status": 0,
+      "instructions": 719792186,
+      "cycles": 183556332
+     },
+     {
+      "status": 0,
+      "instructions": 719792189,
+      "cycles": 182036033
+     },
+     {
+      "status": 0,
+      "instructions": 719792188,
+      "cycles": 184394695
+     },
+     {
+      "status": 0,
+      "instructions": 719792179,
+      "cycles": 182057586
+     },
+     {
+      "status": 0,
+      "instructions": 719792183,
+      "cycles": 181927875
+     }
+    ],
+    "zig-safe": [
+     {
+      "status": 0,
+      "instructions": 367474193,
+      "cycles": 71658373
+     },
+     {
+      "status": 0,
+      "instructions": 367474187,
+      "cycles": 71594005
+     },
+     {
+      "status": 0,
+      "instructions": 367474195,
+      "cycles": 71045236
+     },
+     {
+      "status": 0,
+      "instructions": 367474197,
+      "cycles": 74062662
+     },
+     {
+      "status": 0,
+      "instructions": 367474200,
+      "cycles": 70934472
+     }
+    ]
+   }
+  },
+  "text_ops_tuned": {
+   "median": {
+    "base": {
+     "instructions": 269653463,
+     "cycles": 66827362
+    },
+    "final": {
+     "instructions": 241447718,
+     "cycles": 61474543
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 269653465,
+      "cycles": 67011782
+     },
+     {
+      "status": 0,
+      "instructions": 269653466,
+      "cycles": 66803676
+     },
+     {
+      "status": 0,
+      "instructions": 269653463,
+      "cycles": 66827362
+     },
+     {
+      "status": 0,
+      "instructions": 269653458,
+      "cycles": 66798004
+     },
+     {
+      "status": 0,
+      "instructions": 269653462,
+      "cycles": 66884997
+     }
+    ],
+    "final": [
+     {
+      "status": 0,
+      "instructions": 241447715,
+      "cycles": 61525175
+     },
+     {
+      "status": 0,
+      "instructions": 241447715,
+      "cycles": 61548970
+     },
+     {
+      "status": 0,
+      "instructions": 241447718,
+      "cycles": 61329743
+     },
+     {
+      "status": 0,
+      "instructions": 241447720,
+      "cycles": 61474543
+     },
+     {
+      "status": 0,
+      "instructions": 241447720,
+      "cycles": 61114189
+     }
+    ]
+   }
+  }
+ }
+}
