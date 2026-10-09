@@ -1,4 +1,4 @@
-module f2_header
+
 
 # Checks made on every edge into a loop header (lane F2, NEW-CORE-F2-INDEX-5): `run` reads
 # `m.items[m.top - 1]` before its loop and at the end of each pass, so the same read at the
@@ -8,13 +8,13 @@ module f2_header
 
 
 record Machine:
-    items: list[int]
+    items: int[]
     top: int
 
 
-def run(m: mut Machine, steps: int) -> int:
-    total = m.items[m.top - 1]
-    k = 0
+func run(mut m: Machine, steps: int) -> int:
+    mut total = m.items[m.top - 1]
+    mut k = 0
     while k < steps:
         total = total + m.items[m.top - 1]
         if total % 2 == 0:
@@ -24,9 +24,9 @@ def run(m: mut Machine, steps: int) -> int:
     return total
 
 
-def unguarded(m: mut Machine, steps: int) -> int:
-    total = 0
-    k = 0
+func unguarded(mut m: Machine, steps: int) -> int:
+    mut total = 0
+    mut k = 0
     while k < steps:
         total = total + m.items[m.top - 1]
         if total % 2 == 0:
@@ -36,9 +36,9 @@ def unguarded(m: mut Machine, steps: int) -> int:
     return total
 
 
-def main(args: list[str], out: Stream) -> int:
-    m = Machine(items=[1, 2, 3, 4, 5, 6, 7, 8], top=8)
+func main(args: str[], out: Stream) -> int:
+    mut m = Machine(items=[1, 2, 3, 4, 5, 6, 7, 8], top=8)
     out.print(run(mut m, 3 + len(args)), m.top)
-    m2 = Machine(items=[1, 2, 3, 4, 5, 6, 7, 8], top=8)
+    mut m2 = Machine(items=[1, 2, 3, 4, 5, 6, 7, 8], top=8)
     out.print(unguarded(mut m2, 3 + len(args)), m2.top)
     return 0

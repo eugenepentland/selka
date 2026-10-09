@@ -1,4 +1,4 @@
-module u1_sink
+
 
 # A store ahead of an if-elif ladder sinks to the arms that observe it
 # (NEW-CORE-U1-SINK-1): `vm.frames[vm.count - 1] = frame` runs only on the paths where
@@ -9,46 +9,46 @@ module u1_sink
 
 
 record Frame:
-    code: list[int]
+    code: int[]
     ip: int
     base: int
 
 
 record Machine:
-    frames: list[Frame]
+    frames: Frame[]
     count: int
-    log: list[int]
+    log: int[]
     acc: int
 
 
-def read(frame: mut Frame) -> int:
-    op = frame.code[frame.ip]
+func read(mut frame: Frame) -> int:
+    mut op = frame.code[frame.ip]
     frame.ip = frame.ip + 1
     return op
 
 
 # Reads the frames list: the store must have run before it.
-def observe(m: mut Machine) -> None:
+func observe(mut m: Machine) -> Unit:
     m.log.append(m.frames[m.count - 1].ip * 100 + m.acc)
 
 
 # Pushes a frame: the caller reads it back.
-def enter(m: mut Machine, code: list[int]) -> None:
+func enter(mut m: Machine, code: int[]) -> Unit:
     m.frames.append(Frame(code=code, ip=0, base=m.acc))
     m.count = m.count + 1
 
 
-def leave(m: mut Machine) -> None:
+func leave(mut m: Machine) -> Unit:
     _ = m.frames.pop()
     m.count = m.count - 1
 
 
 # 0 halt, 1 add one, 2 add the next word, 3 observe, 4 call a nested code, 5 return
 # from it, 6 jump to the next word, 7 trap when the accumulator passes the next word.
-def run(m: mut Machine, nested: list[int]) -> int:
-    frame = m.frames[m.count - 1]
+func run(mut m: Machine, nested: int[]) -> int:
+    mut frame = m.frames[m.count - 1]
     while True:
-        op = read(mut frame)
+        mut op = read(mut frame)
         m.frames[m.count - 1] = frame
         if op == 1:
             m.acc = m.acc + 1
@@ -69,7 +69,7 @@ def run(m: mut Machine, nested: list[int]) -> int:
         elif op == 6:
             frame.ip = frame.code[frame.ip]
         elif op == 7:
-            limit = frame.code[frame.ip]
+            mut limit = frame.code[frame.ip]
             frame.ip = frame.ip + 1
             if m.acc > limit:
                 m.log.append(m.frames[m.count + 5].ip)
@@ -77,21 +77,21 @@ def run(m: mut Machine, nested: list[int]) -> int:
     return m.acc * 1000 + frame.ip
 
 
-def machine(code: list[int]) -> Machine:
+func machine(code: int[]) -> Machine:
     return Machine(frames=[Frame(code=code, ip=0, base=0)], count=1, log=[], acc=0)
 
 
-def main(args: list[str], out: Stream) -> int:
-    nested = [1, 3, 2, 10, 3, 5]
-    code = [1, 1, 3, 2, 5, 4, 3, 1, 1, 1, 3, 6, 14, 9, 1, 3, 0]
-    m = machine(code)
+func main(args: str[], out: Stream) -> int:
+    mut nested = [1, 3, 2, 10, 3, 5]
+    mut code = [1, 1, 3, 2, 5, 4, 3, 1, 1, 1, 3, 6, 14, 9, 1, 3, 0]
+    mut m = machine(code)
     out.print(run(mut m, nested), m.count, len(m.log), m.frames[0].ip)
-    total = 0
+    mut total = 0
     for v in m.log:
         total = total * 7 + v
     out.print(total)
     # A loop of 1000 dispatches with one observation: the store runs once.
-    looped: list[int] = []
+    mut looped: int[] = []
     for i in range(200):
         looped.append(1)
         looped.append(1)
@@ -100,11 +100,11 @@ def main(args: list[str], out: Stream) -> int:
         looped.append(1)
     looped.append(3)
     looped.append(0)
-    m2 = machine(looped)
+    mut m2 = machine(looped)
     out.print(run(mut m2, nested), len(m2.log), m2.log[0])
-    limit = 1000
+    mut limit = 1000
     if len(args) > 0:
         limit = 5
-    m3 = machine([1, 1, 7, limit, 1, 1, 1, 1, 7, limit, 0])
+    mut m3 = machine([1, 1, 7, limit, 1, 1, 1, 1, 7, limit, 0])
     out.print(run(mut m3, nested))
     return 0

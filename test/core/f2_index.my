@@ -1,4 +1,4 @@
-module f2_index
+
 
 # Index facts (lane F2, NEW-CORE-F2-*): a written index tested as written before its
 # normalization from the end, a fill loop's length only after the loop, a dominating
@@ -13,48 +13,48 @@ record Point:
 
 
 record Stack:
-    items: list[int]
+    items: int[]
     top: int
 
 
-def at(xs: list[int], i: int) -> int:
+func at(xs: int[], i: int) -> int:
     return xs[i]
 
 
-def put(xs: mut list[int], i: int, v: int):
+func put(mut xs: int[], i: int, v: int):
     xs[i] = v
 
 
-def shift(ps: mut list[Point], i: int, dx: int) -> int:
+func shift(mut ps: Point[], i: int, dx: int) -> int:
     ps[i].x = ps[i].x + dx
     return ps[i].x * 100 + ps[i].y
 
 
 # Negative indexes count from the end, read, written, and in element fields.
-def wraps(size: int) -> int:
-    xs = [10, 20, 30, 40 + size]
-    total = at(xs, 0) + at(xs, -1) * 10 + at(xs, -4) * 100
+func wraps(size: int) -> int:
+    mut xs = [10, 20, 30, 40 + size]
+    mut total = at(xs, 0) + at(xs, -1) * 10 + at(xs, -4) * 100
     put(mut xs, -2, 7)
     put(mut xs, 1, 9)
-    ps = [Point(x=1, y=2), Point(x=3, y=4)]
-    moved = shift(mut ps, -1, 5) + shift(mut ps, -2, size)
+    mut ps = [Point(x=1, y=2), Point(x=3, y=4)]
+    mut moved = shift(mut ps, -1, 5) + shift(mut ps, -2, size)
     return total * 1000000 + xs[1] * 10000 + xs[2] * 100 + moved
 
 
 # An index that is negative on one path only: both reads see the same element.
-def one_path(xs: list[int], negative: bool, size: int) -> int:
-    i = 1
+func one_path(xs: int[], negative: bool, size: int) -> int:
+    mut i = 1
     if negative:
         i = -1 - size
-    a = xs[i]
-    b = xs[i]
+    mut a = xs[i]
+    mut b = xs[i]
     return a * 10 + b
 
 
 # A list read inside the loop that fills it: shorter than the fill bound there.
-def fill_inside(n: int) -> int:
-    zs: list[int] = []
-    total = 0
+func fill_inside(n: int) -> int:
+    mut zs: int[] = []
+    mut total = 0
     for i in range(n):
         total = total + zs[i]
         zs.append(i)
@@ -62,31 +62,31 @@ def fill_inside(n: int) -> int:
 
 
 # The same list read after its fill loop has exited: in range.
-def fill_after(n: int) -> int:
-    ys: list[int] = []
+func fill_after(n: int) -> int:
+    mut ys: int[] = []
     for i in range(n):
         ys.append(i * 3)
-    total = 0
+    mut total = 0
     for i in range(n):
         total = total + ys[i]
     return total
 
 
 # A pop between two reads of one index: the second read is checked again.
-def shrink(xs: mut list[int], i: int) -> int:
-    a = xs[i]
+func shrink(mut xs: int[], i: int) -> int:
+    mut a = xs[i]
     _ = xs.pop()
-    b = xs[i]
+    mut b = xs[i]
     return a * 100 + b
 
 
-def drop(xs: mut list[int]):
+func drop(mut xs: int[]):
     _ = xs.pop()
 
 
 # A loop whose list loses elements in the body, directly or through a `mut` callee.
-def loop_shrink(xs: mut list[int], through_callee: bool) -> int:
-    total = 0
+func loop_shrink(mut xs: int[], through_callee: bool) -> int:
+    mut total = 0
     for i in range(len(xs)):
         total = total + xs[i]
         if i == 1:
@@ -98,26 +98,26 @@ def loop_shrink(xs: mut list[int], through_callee: bool) -> int:
 
 
 # A field written between two reads: the second index is another value.
-def bump(s: mut Stack) -> int:
-    a = s.items[s.top]
+func bump(mut s: Stack) -> int:
+    mut a = s.items[s.top]
     s.top = s.top + 1
-    b = s.items[s.top]
+    mut b = s.items[s.top]
     return a * 100 + b
 
 
 # Hoare partition's swap after its scans (sort_quick's shape), and a list of the same
 # length written through a copy.
-def partition(xs: mut list[int], lo: int, hi: int) -> int:
-    pivot = xs[lo + (hi - lo) // 2]
-    i = lo
-    j = hi
+func partition(mut xs: int[], lo: int, hi: int) -> int:
+    mut pivot = xs[lo + (hi - lo) // 2]
+    mut i = lo
+    mut j = hi
     while i <= j:
         while xs[i] < pivot:
             i = i + 1
         while xs[j] > pivot:
             j = j - 1
         if i <= j:
-            temp = xs[i]
+            mut temp = xs[i]
             xs[i] = xs[j]
             xs[j] = temp
             i = i + 1
@@ -125,11 +125,11 @@ def partition(xs: mut list[int], lo: int, hi: int) -> int:
     return i * 1000 + j
 
 
-def same_length(xs: list[int], extra: int) -> int:
-    ys = xs
+func same_length(xs: int[], extra: int) -> int:
+    mut ys = xs
     ys[0] = 99
-    zs = [1 for _ in range(extra)]
-    total = 0
+    mut zs = [for _ in range(extra) yield 1]
+    mut total = 0
     for i in range(len(xs)):
         total = total + ys[i] * 10 + xs[i]
     for i in range(len(zs)):
@@ -138,13 +138,13 @@ def same_length(xs: list[int], extra: int) -> int:
 
 
 # A stack as the Lox VM keeps it: a top field and a frame count read before each write.
-def machine(steps: int) -> int:
-    s = Stack(items=[0 for _ in range(8)], top=0)
-    frames = [Point(x=0, y=0), Point(x=0, y=0)]
-    count = 1
-    acc = 0
+func machine(steps: int) -> int:
+    mut s = Stack(items=[for _ in range(8) yield 0], top=0)
+    mut frames = [Point(x=0, y=0), Point(x=0, y=0)]
+    mut count = 1
+    mut acc = 0
     for k in range(steps):
-        frame = frames[count - 1]
+        mut frame = frames[count - 1]
         frame.x = frame.x + 1
         frames[count - 1] = frame
         s.items[s.top] = k
@@ -158,14 +158,14 @@ def machine(steps: int) -> int:
 
 
 # The next index after a checked one: in range only while `i + 1 < len(xs)`.
-def next_index(xs: list[int], i: int) -> int:
-    a = xs[i]
-    b = xs[i + 1]
+func next_index(xs: int[], i: int) -> int:
+    mut a = xs[i]
+    mut b = xs[i + 1]
     return a * 100 + b
 
 
-def scenario(name: str, size: int, out: Stream) -> int:
-    xs = [5, 3, 8, 1, 9, 2, 7 + size]
+func scenario(name: str, size: int, out: Stream) -> int:
+    mut xs = [5, 3, 8, 1, 9, 2, 7 + size]
     if name == "wraps" or name == "all":
         out.print(wraps(size))
     if name == "one_path" or name == "all":
@@ -175,22 +175,22 @@ def scenario(name: str, size: int, out: Stream) -> int:
     if name == "fill_inside":
         out.print(fill_inside(3 + size))
     if name == "shrink" or name == "all":
-        ys = [1, 2, 3, 4 + size]
+        mut ys = [1, 2, 3, 4 + size]
         out.print(shrink(mut ys, 1), shrink(mut ys, -1))
     if name == "shrink_trap":
-        ys = [1, 2, 3, 4 + size]
+        mut ys = [1, 2, 3, 4 + size]
         out.print(shrink(mut ys, 3))
     if name == "loop_shrink":
-        ys = [1, 2, 3, 4 + size]
+        mut ys = [1, 2, 3, 4 + size]
         out.print(loop_shrink(mut ys, size > 0))
     if name == "bump" or name == "all":
-        s = Stack(items=[4, 5, 6 + size], top=0)
+        mut s = Stack(items=[4, 5, 6 + size], top=0)
         out.print(bump(mut s), s.top)
     if name == "bump_trap":
-        s = Stack(items=[4, 5, 6 + size], top=2 + size)
+        mut s = Stack(items=[4, 5, 6 + size], top=2 + size)
         out.print(bump(mut s))
     if name == "partition" or name == "all":
-        ys = [5, 3, 8, 1, 9, 2, 7 + size, 4, 6]
+        mut ys = [5, 3, 8, 1, 9, 2, 7 + size, 4, 6]
         out.print(partition(mut ys, 0, len(ys) - 1), ys[0], ys[8])
     if name == "same_length" or name == "all":
         out.print(same_length(xs, 3 + size))
@@ -205,7 +205,7 @@ def scenario(name: str, size: int, out: Stream) -> int:
     return 0
 
 
-def main(args: list[str], out: Stream) -> int:
+func main(args: str[], out: Stream) -> int:
     if len(args) == 0:
         return scenario("all", 0, out)
     return scenario(args[0], len(args) - 1, out)

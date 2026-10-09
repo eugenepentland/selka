@@ -63,15 +63,16 @@ fn leakChecked(arena: std.mem.Allocator, root: []const u8, name: []const u8, fla
 }
 
 /// Debug, release, and release with the facts verified.
-const modes = [_][]const []const u8{ &.{}, &.{"--release"}, &.{ "--release", "--verify-facts" } };
+// Optimized debug (`--optimize-debug`) runs the same passes as release over module units.
+const modes = [_][]const []const u8{ &.{}, &.{"--release"}, &.{ "--release", "--verify-facts" }, &.{"--optimize-debug"}, &.{ "--verify-facts", "--optimize-debug" } };
 
 const written_index =
-    \\def at(xs: list[int], i: int) -> int:
+    \\func at(xs: int[], i: int) -> int:
     \\    return xs[i]
     \\
     \\
-    \\def main(out: Stream) -> int:
-    \\    xs = [1, 2, 3]
+    \\func main(out: Stream) -> int:
+    \\    mut xs = [1, 2, 3]
     \\    out.print(at(xs, 1), at(xs, -1))
     \\    return 0
     \\
@@ -111,44 +112,44 @@ test "F2 index: written indexes keep every answer and trap where they must: nega
         try std.testing.expectEqual(@as(u8, 0), more.status);
         const next = try leakChecked(a, root, "f2_index", flags, &.{"next_trap"});
         try std.testing.expectEqual(@as(u8, 1), next.status);
-        try std.testing.expect(contains(next.stderr, "f2_index.my:163:9: error[R_LIST_BOUNDS]: native execution failed (index 7, length 7)"));
+        try std.testing.expect(contains(next.stderr, "f2_index.my:163:13: error[R_LIST_BOUNDS]: native execution failed (index 7, length 7)"));
     }
 }
 
 const fill_loops =
-    \\def inside(n: int) -> int:
-    \\    zs: list[int] = []
-    \\    total = 0
+    \\func inside(n: int) -> int:
+    \\    mut zs: int[] = []
+    \\    mut total = 0
     \\    for i in range(n):
     \\        total = total + zs[i]
     \\        zs.append(i)
     \\    return total
     \\
     \\
-    \\def after(n: int) -> int:
-    \\    ys: list[int] = []
+    \\func after(n: int) -> int:
+    \\    mut ys: int[] = []
     \\    for i in range(n):
     \\        ys.append(i)
-    \\    total = 0
+    \\    mut total = 0
     \\    for i in range(n):
     \\        total = total + ys[i]
     \\    return total
     \\
     \\
-    \\def sieve(n: int) -> int:
-    \\    flags = [True for _ in range(n + 1)]
-    \\    j = 4
+    \\func sieve(n: int) -> int:
+    \\    mut flags = [for _ in range(n + 1) yield True]
+    \\    mut j = 4
     \\    while j <= n:
     \\        flags[j] = False
     \\        j = j + 2
-    \\    count = 0
+    \\    mut count = 0
     \\    for flag in flags:
     \\        if flag:
     \\            count += 1
     \\    return count
     \\
     \\
-    \\def main(args: list[str], out: Stream) -> int:
+    \\func main(args: str[], out: Stream) -> int:
     \\    out.print(inside(len(args)), after(4), sieve(20000))
     \\    return 0
     \\
@@ -186,35 +187,35 @@ test "F2 index: a list read inside its own fill loop traps in every build mode" 
 
 const same_lengths =
     \\record Stack:
-    \\    items: list[int]
+    \\    items: int[]
     \\    top: int
     \\
     \\
-    \\def scale(xs: list[int]) -> int:
-    \\    ys = xs
+    \\func scale(xs: int[]) -> int:
+    \\    mut ys = xs
     \\    ys[0] = 7
-    \\    total = 0
+    \\    mut total = 0
     \\    for i in range(len(xs)):
     \\        total = total + ys[i]
     \\    return total
     \\
     \\
-    \\def tally(flags: list[bool]) -> int:
-    \\    count = 0
+    \\func tally(flags: bool[]) -> int:
+    \\    mut count = 0
     \\    for flag in flags:
     \\        if flag:
     \\            count += 1
     \\    return count
     \\
     \\
-    \\def peek_all(s: Stack) -> int:
-    \\    total = 0
+    \\func peek_all(s: Stack) -> int:
+    \\    mut total = 0
     \\    for i in range(len(s.items)):
     \\        total = total + s.items[i]
     \\    return total
     \\
     \\
-    \\def main(out: Stream) -> int:
+    \\func main(out: Stream) -> int:
     \\    out.print(scale([1, 2]), tally([True, False]), peek_all(Stack(items=[3, 4], top=0)))
     \\    return 0
     \\
@@ -233,23 +234,23 @@ test "F2 index: a dominating `i < len(other)` proves an access to a list of the 
 }
 
 const dominating =
-    \\def swap(xs: mut list[int], i: int, j: int) -> int:
-    \\    a = xs[i]
-    \\    b = xs[j]
+    \\func swap(mut xs: int[], i: int, j: int) -> int:
+    \\    mut a = xs[i]
+    \\    mut b = xs[j]
     \\    xs[i] = b
     \\    xs[j] = a
     \\    return a - b
     \\
     \\
-    \\def shrink(xs: mut list[int], i: int) -> int:
-    \\    a = xs[i]
+    \\func shrink(mut xs: int[], i: int) -> int:
+    \\    mut a = xs[i]
     \\    _ = xs.pop()
     \\    return a + xs[i]
     \\
     \\
-    \\def main(args: list[str], out: Stream) -> int:
-    \\    xs = [1, 2, 3]
-    \\    n = len(args)
+    \\func main(args: str[], out: Stream) -> int:
+    \\    mut xs = [1, 2, 3]
+    \\    mut n = len(args)
     \\    out.print(swap(mut xs, n, 0 - n), shrink(mut xs, n))
     \\    return 0
     \\
@@ -280,13 +281,13 @@ test "F2 index: dominating checks keep every answer and trap where they must: a 
     for (modes) |flags| {
         const shrink = try leakChecked(a, root, "f2_index", flags, &.{"shrink_trap"});
         try std.testing.expectEqual(@as(u8, 1), shrink.status);
-        try std.testing.expect(contains(shrink.stderr, "f2_index.my:79:9: error[R_LIST_BOUNDS]: native execution failed (index 3, length 3)"));
+        try std.testing.expect(contains(shrink.stderr, "f2_index.my:79:13: error[R_LIST_BOUNDS]: native execution failed (index 3, length 3)"));
         const loop = try leakChecked(a, root, "f2_index", flags, &.{ "loop_shrink", "x" });
         try std.testing.expectEqual(@as(u8, 1), loop.status);
         try std.testing.expect(contains(loop.stderr, "f2_index.my:91:25: error[R_LIST_BOUNDS]: native execution failed (index 3, length 3)"));
         const bump = try leakChecked(a, root, "f2_index", flags, &.{"bump_trap"});
         try std.testing.expectEqual(@as(u8, 1), bump.status);
-        try std.testing.expect(contains(bump.stderr, "f2_index.my:104:9: error[R_LIST_BOUNDS]: native execution failed (index 3, length 3)"));
+        try std.testing.expect(contains(bump.stderr, "f2_index.my:104:13: error[R_LIST_BOUNDS]: native execution failed (index 3, length 3)"));
         const shorter = try leakChecked(a, root, "f2_index", flags, &.{"same_length_trap"});
         try std.testing.expectEqual(@as(u8, 1), shorter.status);
         try std.testing.expect(contains(shorter.stderr, "f2_index.my:136:25: error[R_LIST_BOUNDS]: native execution failed (index 7, length 7)"));
@@ -303,7 +304,7 @@ test "F2 index: a verify build catches a dominating check taken to cover the nex
     const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
     const ran = try leakChecked(a, root, "f2_index", &.{ "--release", "--sabotage-facts=index" }, &.{"next_trap"});
     try std.testing.expectEqual(@as(u8, 1), ran.status);
-    try std.testing.expect(contains(ran.stderr, "f2_index.my:163:9: error[R_CORE_FACT]: native execution failed (index: value 7, other 7)"));
+    try std.testing.expect(contains(ran.stderr, "f2_index.my:163:13: error[R_CORE_FACT]: native execution failed (index: value 7, other 7)"));
     // Unsabotaged, the same program traps on the index itself.
     const plain = try leakChecked(a, root, "f2_index", &.{ "--release", "--verify-facts" }, &.{"next_trap"});
     try std.testing.expect(contains(plain.stderr, "error[R_LIST_BOUNDS]"));
@@ -318,23 +319,23 @@ const field_writes =
     \\    v: int
     \\
     \\
-    \\def pick(s: Slot) -> int:
-    \\    table = [5, 6, 7, 8]
+    \\func pick(s: Slot) -> int:
+    \\    mut table = [5, 6, 7, 8]
     \\    return table[s.index]
     \\
     \\
-    \\def use(b: Loose) -> int:
-    \\    table = [5, 6]
+    \\func use(b: Loose) -> int:
+    \\    mut table = [5, 6]
     \\    return table[b.v]
     \\
     \\
-    \\def main(args: list[str], out: Stream) -> int:
-    \\    s = Slot(index=0)
-    \\    total = 0
+    \\func main(args: str[], out: Stream) -> int:
+    \\    mut s = Slot(index=0)
+    \\    mut total = 0
     \\    for k in range(len(args) + 3):
     \\        s.index = k % 4
     \\        total = total + pick(s)
-    \\    reader = use
+    \\    mut reader = use
     \\    out.print(total, reader(Loose(v=1)), use(Loose(v=0)))
     \\    return 0
     \\
@@ -402,7 +403,7 @@ test "F2 index: a verify build catches a field interval that lost its top" {
     // there, so the wrong interval [3, 6] is caught where it reaches an asserted value: the read
     // itself, or `s.v * 2` with [6, 12]. Either way verify traps in `small`, on line 101.
     try std.testing.expect(contains(small.stderr, "error[R_CORE_FACT]: native execution failed (range ["));
-    try std.testing.expect(contains(small.stderr, "in f2_fields::small at f2_fields.my:101:"));
+    try std.testing.expect(contains(small.stderr, "in small at f2_fields.my:101:"));
 }
 
 const element_writes =
@@ -411,15 +412,15 @@ const element_writes =
     \\    v: float
     \\
     \\
-    \\def advance(bodies: mut list[Body], dt: float):
-    \\    n = len(bodies)
+    \\func advance(mut bodies: Body[], dt: float):
+    \\    mut n = len(bodies)
     \\    for i in range(n):
     \\        for j in range(i + 1, n):
     \\            bodies[j].v = bodies[j].v + bodies[j].x * dt
     \\
     \\
-    \\def flips(perm: mut list[int], n: int) -> int:
-    \\    total = 0
+    \\func flips(mut perm: int[], n: int) -> int:
+    \\    mut total = 0
     \\    while True:
     \\        for i in range(n):
     \\            perm[i] = perm[i] + 1
@@ -428,10 +429,10 @@ const element_writes =
     \\            return total
     \\
     \\
-    \\def main(args: list[str], out: Stream) -> int:
-    \\    bodies = [Body(x=1.0, v=0.0), Body(x=2.0, v=0.0)]
+    \\func main(args: str[], out: Stream) -> int:
+    \\    mut bodies = [Body(x=1.0, v=0.0), Body(x=2.0, v=0.0)]
     \\    advance(mut bodies, 0.5)
-    \\    perm = [1, 2, 3]
+    \\    mut perm = [1, 2, 3]
     \\    out.print(bodies[0].v, flips(mut perm, len(args)))
     \\    return 0
     \\
@@ -450,27 +451,27 @@ test "F2 index: a list written only element by element across nested loops keeps
 }
 
 const versioned_loops =
-    \\def window(xs: list[int], off: int, n: int) -> int:
-    \\    total = 0
+    \\func window(xs: int[], off: int, n: int) -> int:
+    \\    mut total = 0
     \\    for i in range(n):
     \\        total = total + xs[off + i]
     \\    return total
     \\
     \\
-    \\def weigh(x: int) -> int:
+    \\func weigh(x: int) -> int:
     \\    return x * 3 + 1
     \\
     \\
-    \\def called(xs: list[int], n: int) -> int:
-    \\    total = 0
+    \\func called(xs: int[], n: int) -> int:
+    \\    mut total = 0
     \\    for i in range(n):
     \\        total = total + weigh(xs[i])
     \\    return total
     \\
     \\
-    \\def main(args: list[str], out: Stream) -> int:
-    \\    xs = [1, 2, 3, 4]
-    \\    n = len(args)
+    \\func main(args: str[], out: Stream) -> int:
+    \\    mut xs = [1, 2, 3, 4]
+    \\    mut n = len(args)
     \\    out.print(window(xs, n, 2), called(xs, n))
     \\    return 0
     \\
@@ -533,13 +534,13 @@ test "F2 index: a verify build catches a bounds guard that admits one index past
 
 const header_edges =
     \\record Machine:
-    \\    items: list[int]
+    \\    items: int[]
     \\    top: int
     \\
     \\
-    \\def run(m: mut Machine, steps: int) -> int:
-    \\    total = m.items[m.top - 1]
-    \\    k = 0
+    \\func run(mut m: Machine, steps: int) -> int:
+    \\    mut total = m.items[m.top - 1]
+    \\    mut k = 0
     \\    while k < steps:
     \\        total = total + m.items[m.top - 1]
     \\        if total % 2 == 0:
@@ -549,9 +550,9 @@ const header_edges =
     \\    return total
     \\
     \\
-    \\def unguarded(m: mut Machine, steps: int) -> int:
-    \\    total = 0
-    \\    k = 0
+    \\func unguarded(mut m: Machine, steps: int) -> int:
+    \\    mut total = 0
+    \\    mut k = 0
     \\    while k < steps:
     \\        total = total + m.items[m.top - 1]
     \\        if total % 2 == 0:
@@ -561,10 +562,10 @@ const header_edges =
     \\    return total
     \\
     \\
-    \\def main(args: list[str], out: Stream) -> int:
-    \\    m = Machine(items=[1, 2, 3, 4, 5, 6, 7, 8], top=8)
+    \\func main(args: str[], out: Stream) -> int:
+    \\    mut m = Machine(items=[1, 2, 3, 4, 5, 6, 7, 8], top=8)
     \\    out.print(run(mut m, 3 + len(args)), m.top)
-    \\    m2 = Machine(items=[1, 2, 3, 4, 5, 6, 7, 8], top=8)
+    \\    mut m2 = Machine(items=[1, 2, 3, 4, 5, 6, 7, 8], top=8)
     \\    out.print(unguarded(mut m2, 3 + len(args)), m2.top)
     \\    return 0
     \\

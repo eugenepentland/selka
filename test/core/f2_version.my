@@ -1,4 +1,4 @@
-module f2_version
+
 
 # Bounds versioning (lane F2, NEW-CORE-F2-VERSION-1): a small flat counted loop whose list
 # indexes move with the counter gets a copy with those checks proven, behind one guard that
@@ -9,24 +9,24 @@ module f2_version
 
 
 # `I + i`, `i - I` and `I - i` over a list of unknown length.
-def forms(xs: list[int], off: int, top: int, n: int) -> int:
-    total = 0
+func forms(xs: int[], off: int, top: int, n: int) -> int:
+    mut total = 0
     for i in range(n):
         total = total + xs[off + i] * 3 + xs[i - off] + xs[top - i] * 7
     return total
 
 
 # A row of a flat matrix: the invariant `r * n` is computed in the loop.
-def row_sum(m: list[int], r: int, n: int) -> int:
-    total = 0
+func row_sum(m: int[], r: int, n: int) -> int:
+    mut total = 0
     for j in range(n):
         total = total + m[r * n + j]
     return total
 
 
 # The list is written in the loop (its length stays), with an early exit.
-def scale_until(xs: mut list[int], n: int, stop: int) -> int:
-    count = 0
+func scale_until(mut xs: int[], n: int, stop: int) -> int:
+    mut count = 0
     for i in range(n):
         if xs[i] == stop:
             break
@@ -36,8 +36,8 @@ def scale_until(xs: mut list[int], n: int, stop: int) -> int:
 
 
 # A print in the body before the access: the output before a trap is the base's.
-def show(xs: list[int], n: int, out: Stream) -> int:
-    total = 0
+func show(xs: int[], n: int, out: Stream) -> int:
+    mut total = 0
     for i in range(n):
         out.print(i)
         total = total + xs[i]
@@ -45,25 +45,25 @@ def show(xs: list[int], n: int, out: Stream) -> int:
 
 
 # A list that grows in the loop is not versioned.
-def grow(n: int) -> int:
-    ys = [1]
-    total = 0
+func grow(n: int) -> int:
+    mut ys = [1]
+    mut total = 0
     for i in range(n):
         ys.append(i)
         total = total + ys[i]
     return total
 
 
-def scenario(name: str, size: int, out: Stream) -> int:
-    xs = [3, 1, 4, 1, 5, 9, 2, 6 + size]
+func scenario(name: str, size: int, out: Stream) -> int:
+    mut xs = [3, 1, 4, 1, 5, 9, 2, 6 + size]
     if name == "forms" or name == "all":
         # Every trip in range; then `i - off` negative on early trips (it wraps).
         out.print(forms(xs, 1, 7, 3 + size), forms(xs, 2, 6, 4))
     if name == "row" or name == "all":
-        m = [k * k for k in range(12)]
+        mut m = [for k in range(12) yield k * k]
         out.print(row_sum(m, 1 + size, 4), row_sum(m, 2, 3))
     if name == "scale" or name == "all":
-        ys = [5, 6, 7, 8, 9]
+        mut ys = [5, 6, 7, 8, 9]
         out.print(scale_until(mut ys, 5, 8 - size), ys[0], ys[3])
     if name == "grow" or name == "all":
         out.print(grow(5 + size))
@@ -72,14 +72,14 @@ def scenario(name: str, size: int, out: Stream) -> int:
     if name == "forms_trap":
         out.print(forms(xs, 3, 7, 6 + size))
     if name == "row_trap":
-        m = [k for k in range(12)]
+        mut m = [for k in range(12) yield k]
         out.print(row_sum(m, 3, 4 + size))
     if name == "huge":
         out.print(forms(xs, 4611686018427387904 + size, 7, 2))
     return 0
 
 
-def main(args: list[str], out: Stream) -> int:
+func main(args: str[], out: Stream) -> int:
     if len(args) == 0:
         return scenario("all", 0, out)
     return scenario(args[0], len(args) - 1, out)

@@ -55,7 +55,8 @@ fn succeeded(ran: std.process.RunResult) bool {
 }
 
 /// Debug, release, and release with the facts verified.
-const modes = [_][]const []const u8{ &.{}, &.{"--release"}, &.{ "--release", "--verify-facts" } };
+// Optimized debug (`--optimize-debug`) runs the same passes as release over module units.
+const modes = [_][]const []const u8{ &.{}, &.{"--release"}, &.{ "--release", "--verify-facts" }, &.{"--optimize-debug"}, &.{ "--verify-facts", "--optimize-debug" } };
 
 // spec: NEW-CORE-U1-GROW-1
 test "a large byte buffer grows with realloc, and every append, reserve and shared append keeps its answer" {
@@ -79,11 +80,11 @@ test "a large byte buffer grows with realloc, and every append, reserve and shar
     const ran = try leakChecked(a, root, "u1_growth", &counting, &.{});
     try std.testing.expectEqualStrings("407375991 70000851576\n7822122 916196 1005004\n0\n1 1\n", ran.stdout);
     const counts = try countsOf(a, root, "u1_growth", &counting);
-    try std.testing.expect(functionCounter(counts, "u1_growth::byte_appends", "reallocs") >= 6);
-    try std.testing.expect(functionCounter(counts, "u1_growth::byte_appends", "buffer_grow_bytes") < 1024);
+    try std.testing.expect(functionCounter(counts, "byte_appends", "reallocs") >= 6);
+    try std.testing.expect(functionCounter(counts, "byte_appends", "buffer_grow_bytes") < 1024);
     // A large list keeps growing with realloc as before.
-    try std.testing.expect(functionCounter(counts, "u1_growth::list_growth", "reallocs") >= 4);
-    try std.testing.expectEqual(@as(i64, 0), functionCounter(counts, "u1_growth::list_growth", "buffer_grows"));
+    try std.testing.expect(functionCounter(counts, "list_growth", "reallocs") >= 4);
+    try std.testing.expectEqual(@as(i64, 0), functionCounter(counts, "list_growth", "buffer_grows"));
 }
 
 /// The sum of `name` over the sites of `kind` emitted in `function`.
@@ -114,16 +115,16 @@ test "a loop's updates of a value nothing in the loop shares test its count once
         const counts = try countsOf(a, root, "u1_hoist", flags);
         // `nested_mut` updates the `mut` list its caller shares 2 * (1 + 2 + 3 + 4) times in
         // its inner loop: one test, which finds it shared, before the outer loop.
-        try std.testing.expectEqual(@as(i64, 1), siteSum(counts, "unique_test", "u1_hoist::nested_mut", "count"));
-        try std.testing.expectEqual(@as(i64, 0), siteSum(counts, "unique_test", "u1_hoist::nested_mut", "extra"));
+        try std.testing.expectEqual(@as(i64, 1), siteSum(counts, "unique_test", "nested_mut", "count"));
+        try std.testing.expectEqual(@as(i64, 0), siteSum(counts, "unique_test", "nested_mut", "extra"));
         // A list a call returned: one test, which finds it unique, for 20 appends.
-        try std.testing.expectEqual(@as(i64, 1), siteSum(counts, "unique_test", "u1_hoist::from_call", "count"));
-        try std.testing.expectEqual(@as(i64, 1), siteSum(counts, "unique_test", "u1_hoist::from_call", "extra"));
+        try std.testing.expectEqual(@as(i64, 1), siteSum(counts, "unique_test", "from_call", "count"));
+        try std.testing.expectEqual(@as(i64, 1), siteSum(counts, "unique_test", "from_call", "extra"));
         // Two loops over a shared `mut` list: one test, before the first.
-        try std.testing.expectEqual(@as(i64, 1), siteSum(counts, "unique_test", "u1_hoist::two_loops", "count"));
+        try std.testing.expectEqual(@as(i64, 1), siteSum(counts, "unique_test", "two_loops", "count"));
         // An alias held until the loop's third iteration: the entering list is still needed,
         // so each of the 20 appends keeps its test.
-        try std.testing.expectEqual(@as(i64, 20), siteSum(counts, "unique_test", "u1_hoist::dropped_alias", "count"));
+        try std.testing.expectEqual(@as(i64, 20), siteSum(counts, "unique_test", "dropped_alias", "count"));
     }
 }
 
@@ -154,23 +155,23 @@ test "a scalar field a loop carries in a record is read from SSA values, not fro
     const a = arena.allocator();
     const llvm = try support.releaseLlvmText(a,
         \\record Frame:
-        \\    code: list[int]
+        \\    code: int[]
         \\    ip: int
         \\    base: int
         \\    name: str
         \\    hits: int
         \\
         \\
-        \\def run(frame: mut Frame, n: int) -> int:
-        \\    total = 0
+        \\func run(mut frame: Frame, n: int) -> int:
+        \\    mut total = 0
         \\    while frame.ip < n:
         \\        total = total + frame.code[frame.ip % 4]
         \\        frame.ip = frame.ip + 1
         \\    return total
         \\
         \\
-        \\def main(args: list[str], out: Stream) -> int:
-        \\    frame = Frame(code=[1, 2, 3, 4], ip=0, base=0, name="f", hits=0)
+        \\func main(args: str[], out: Stream) -> int:
+        \\    mut frame = Frame(code=[1, 2, 3, 4], ip=0, base=0, name="f", hits=0)
         \\    out.print(run(mut frame, 10 + len(args)), frame.ip)
         \\    return 0
         \\
@@ -196,21 +197,21 @@ test "a field the loop only passes through stays a read; a field it writes becom
     const a = arena.allocator();
     const text = try support.optimizedText(a,
         \\record Frame:
-        \\    code: list[int]
+        \\    code: int[]
         \\    ip: int
         \\    base: int
         \\    name: str
         \\    hits: int
         \\
         \\
-        \\def run(frame: mut Frame, n: int) -> int:
+        \\func run(mut frame: Frame, n: int) -> int:
         \\    while frame.ip < n:
         \\        frame.ip = frame.ip + frame.base
         \\    return frame.ip
         \\
         \\
-        \\def main(args: list[str], out: Stream) -> int:
-        \\    frame = Frame(code=[1], ip=0, base=1 + len(args), name="f", hits=0)
+        \\func main(args: str[], out: Stream) -> int:
+        \\    mut frame = Frame(code=[1], ip=0, base=1 + len(args), name="f", hits=0)
         \\    out.print(run(mut frame, 10), frame.ip)
         \\    return 0
         \\
@@ -270,7 +271,7 @@ test "a store ahead of an if-elif ladder runs only in the arms that observe it" 
         // The frames store after each of the 1031 dispatches (line 52) is tested and made
         // only where an arm reads the frames: the observations, calls, returns and the exit.
         // Sunk one level (main's rule) it ran 216 times.
-        try std.testing.expect(lineSum(counts, "unique_test", "u1_sink::run", 52) <= 16);
+        try std.testing.expect(lineSum(counts, "unique_test", "run", 52) <= 16);
     }
 }
 
@@ -320,21 +321,21 @@ test "a list or buffer a loop appends to keeps its length and capacity in slots;
     defer arena.deinit();
     const a = arena.allocator();
     const llvm = try support.releaseLlvmText(a,
-        \\def fill(n: int) -> list[int]:
-        \\    xs = [n, 1]
+        \\func fill(n: int) -> int[]:
+        \\    mut xs = [n, 1]
         \\    for i in range(n):
         \\        xs.append(i * 3)
         \\    return xs
         \\
         \\
-        \\def bounded(n: int) -> list[int]:
-        \\    xs: list[int] = []
+        \\func bounded(n: int) -> int[]:
+        \\    mut xs: int[] = []
         \\    while len(xs) < n:
         \\        xs.append(len(xs))
         \\    return xs
         \\
         \\
-        \\def main(args: list[str], out: Stream) -> int:
+        \\func main(args: str[], out: Stream) -> int:
         \\    out.print(len(fill(10 + len(args))), len(bounded(5)))
         \\    return 0
         \\
