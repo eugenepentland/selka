@@ -1,5 +1,3 @@
-
-
 record RenderBox:
     n: int
 

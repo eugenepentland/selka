@@ -1,5 +1,3 @@
-
-
 func span_of(data: bytes, start: int, end: int) -> bytes:
     return data.view(start, end)
 

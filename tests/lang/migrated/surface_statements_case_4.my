@@ -1,5 +1,3 @@
-
-
 result R:
     ok: i64,
     err: i64

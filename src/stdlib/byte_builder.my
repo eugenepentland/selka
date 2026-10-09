@@ -1,4 +1,3 @@
-
 # Mutable assembly state for an immutable byte string. The buffer is one managed
 # `byte_buffer`: its header keeps spare capacity, so every append writes straight
 # into that capacity, doubling it when it runs out. Appending a fragment therefore

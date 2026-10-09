@@ -1,4 +1,3 @@
-
 func select(cubes: int[][][], i: int, j: int, k: int, mut output: int[]) -> int:
     mut value = cubes[i][j][k]
     output.append(value)

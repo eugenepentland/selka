@@ -1,5 +1,3 @@
-
-
 func parse_ranges(raw: bytes) -> bool noalloc:
     match raw.parse_int_range(2, 4):
         case Some(value):
@@ -19,6 +17,7 @@ func parse_ranges(raw: bytes) -> bool noalloc:
         case None:
             pass
     return True
+
 
 func main() -> int:
     if not parse_ranges(b"xx42=2.5abc"):

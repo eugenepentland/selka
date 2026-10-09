@@ -14,8 +14,6 @@
 # Alternatives measured (rough, E-core): inner j loop moved to a helper that
 # writes in place 0.78 s; dot products over a transposed B (reads only in the
 # inner loop) 0.51 s; hoisting `ci = c[i]` / `bk = b[k]` alone 2.44 s.
-
-
 func lcg(seed: int) -> int:
     return (seed * 3877 + 29573) % 139968
 

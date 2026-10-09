@@ -1,10 +1,7 @@
-
 # `_` is the discard name: a loop, comprehension or `with` scope may bind it
 # again inside another one without shadowing anything, and `for _, _ in ...`
 # names nothing at all. Every other loop name still may not reuse an active
 # local's name.
-
-
 func nested_ranges() -> int:
     mut total = 0
     for _ in range(2):

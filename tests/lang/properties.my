@@ -1,11 +1,9 @@
-
 # Property tests: a `test_` function with data parameters and no cases-file
 # `arguments` runs against generated inputs. `mylang test` draws each input
 # from the parameter types, seeded from the test's name, and every one of the
 # (by default 100) inputs must return True. A precondition, or an invariant of
 # a generated record, discards the inputs that break it instead of failing.
 import random
-
 
 @invariant(self.low <= self.high, "a span never runs backwards")
 public record PropertySpan:

@@ -1,6 +1,4 @@
 # bytes_scan: index an 8 MiB immutable bytes value and count one octet value, sixteen times.
-
-
 func main(out: Stream) -> int:
     mut empty: int[] = []
     mut buffer = byte_buffer(empty)

@@ -4,8 +4,6 @@ import shapes
 # composite type: a list element, a dictionary value, an Option payload, a
 # class field and a union payload. A change to `Inner` must change this
 # module's interface hash as well as `shapes`'s.
-
-
 public func firsts(h: shapes.Holder) -> shapes.Inner[]:
     return h.items
 

@@ -1,8 +1,5 @@
-
 # Copy on write narrowed to what is shared (NEW-CORE-CE-LISTS-3, -4): the Lox
 # interpreter's and VM's shapes. Every answer here is the base compiler's.
-
-
 record Klass:
     name: str
     methods: int[]

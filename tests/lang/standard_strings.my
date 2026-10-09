@@ -1,6 +1,4 @@
-
 import strings
-
 
 func is_ord(text: str, expected: int) -> bool:
     match strings.ord(text):

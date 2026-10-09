@@ -1,15 +1,12 @@
-
 # Deterministic stand-in capabilities (SPEC.md TEST-CAPS-1, TEST-CAPS-3,
 # TEST-CAPS-4). The helpers below take a capability the way application code
 # does; the tests hand them stand-ins built in place, or the ones `mylang test`
 # supplies to a test that declares a capability parameter.
-
 import environment
 import filesystem
 import network
 import random
 import time
-
 
 # Unix nanoseconds the clock reads, or -1 when it cannot be read.
 func stamp(clock: Clock) -> int:

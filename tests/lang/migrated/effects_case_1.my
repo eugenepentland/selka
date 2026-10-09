@@ -1,5 +1,3 @@
-
-
 func touch(mut values: int[]) -> Unit effects(mutation):
     values[0] = 42
 

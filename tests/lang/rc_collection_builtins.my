@@ -1,4 +1,3 @@
-
 public func test_nested_list_mutators_publish_owned_results() -> bool:
     mut values = [[1], [2]]
     mut first = values.pop(0)

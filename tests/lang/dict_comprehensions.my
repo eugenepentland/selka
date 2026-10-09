@@ -1,9 +1,6 @@
-
 # Dict comprehensions and the comprehensions that lower through their own
 # loops: two iteration names, several `for` clauses and several filters. Every
 # expected value below is the answer CPython 3 gives for the same program.
-
-
 # spec: PY-GATHER-1
 public func test_a_dict_comprehension_over_a_range() -> bool:
     mut squares = {x: x * x for x in range(4)}

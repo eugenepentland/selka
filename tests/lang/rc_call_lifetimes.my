@@ -1,10 +1,11 @@
 # Returned values retain their lifetime across direct and indirect call frames.
-
 func selected(items: int[]) -> int[]:
     return items
 
+
 func apply(f: func(int[]) -> int[], items: int[]) -> int[]:
     return f(items)
+
 
 func descend(items: int[], depth: int) -> int[]:
     if depth == 0:
@@ -13,17 +14,20 @@ func descend(items: int[], depth: int) -> int[]:
     assert len(previous) == len(items)
     return previous
 
+
 public func test_indirect_owned_return_survives_original_replacement() -> bool:
     mut source = [11, 22]
     mut result = apply(selected, source)
     source = [44]
     return result[1] == 22 and source[0] == 44
 
+
 public func test_non_tail_recursive_owned_return_survives_call_frames() -> bool:
     mut source = [11, 22, 33]
     mut result = descend(source, 32)
     source = [44]
     return result[1] == 22 and source[0] == 44
+
 
 public func test_short_circuit_temporary_returns_keep_independent_owners() -> bool:
     mut items = [1, 2, 3]

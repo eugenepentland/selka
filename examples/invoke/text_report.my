@@ -1,4 +1,3 @@
-
 # A text/list transformation that returns a typed report, callable through
 # `mylang invoke` with no handwritten JSON plumbing:
 #

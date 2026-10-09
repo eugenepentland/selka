@@ -12,8 +12,10 @@ func adjacent(times: int) -> int:
     assert len(keys) == 2
     return total + counts.get("alpha", 0)
 
+
 public func test_adjacent_dictionary_and_byte_loops_keep_their_own_guard_context() -> bool:
     return adjacent(20) == 220 and adjacent(0) == 210
+
 
 func main(out: Stream) -> int:
     assert test_adjacent_dictionary_and_byte_loops_keep_their_own_guard_context()

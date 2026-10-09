@@ -1,7 +1,8 @@
-
 # Constants that constant_methods.my reads through an import.
 public const WORDS: str = "one two  three"
 
+
 public const OCTETS: bytes = b"\x01\x02\x03"
+
 
 public const LINES: bytes = embed_bytes("embed_fixtures/lines.txt")

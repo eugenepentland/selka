@@ -1,5 +1,3 @@
-
-
 record Payload:
     items: int[]
     number: int

@@ -1,5 +1,5 @@
-
 extern func runtime_bench_now(host: Host) -> i64 effects(host)
+
 
 func batch_result(size: int, batch: int, seed: int, values: int[], keys: str[], lookup: dict[int, int], lookup_str: dict[str, int]) -> int:
     mut total = 0
@@ -7,6 +7,7 @@ func batch_result(size: int, batch: int, seed: int, values: int[], keys: str[], 
         mut key = (seed + j * 17 + batch) % (size * 2)
         total += lookup.get(key, 17)
     return total
+
 
 func parse_number(text: str) -> int:
     match parse_int(text):

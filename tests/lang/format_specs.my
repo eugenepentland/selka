@@ -1,10 +1,7 @@
-
 # f-string format specifications and `round(x, n)`, each expected value the one
 # CPython 3.14 prints for the same expression. The exhaustive CPython oracle
 # (about 7,700 rows) runs in src/format_spec_test.zig; these tests pin the
 # language path end to end: parsing, checking, lowering and the native runtime.
-
-
 func money(x: float) -> str:
     return f"{x:.2f}"
 

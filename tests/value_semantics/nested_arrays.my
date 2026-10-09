@@ -1,4 +1,3 @@
-
 record ArrayField:
     entries: FixedArray[dict[str, int[]], 1]
 

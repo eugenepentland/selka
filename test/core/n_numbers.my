@@ -1,10 +1,10 @@
-
 func parsed(text: str, expected: int) -> bool:
     match parse_int(text):
         case Some(value):
             return value == expected
         case None:
             return False
+
 
 func rejected(text: str) -> bool:
     match parse_int(text):
@@ -13,14 +13,18 @@ func rejected(text: str) -> bool:
         case None:
             return True
 
+
 public func test_short_words_and_signs() -> bool:
     return parsed("0", 0) and parsed("12", 12) and parsed("123", 123) and parsed("1234", 1234) and parsed("12345", 12345) and parsed("123456", 123456) and parsed("1234567", 1234567) and parsed("12345678", 12345678) and parsed("123456789", 123456789) and parsed("1234567890123456", 1234567890123456) and parsed("-1234567890123456", -1234567890123456) and parsed("+1234567890123456", 1234567890123456)
+
 
 public func test_full_grammar_and_overflow() -> bool:
     return parsed(" \t+001_023\r\n", 1023) and parsed("9223372036854775807", 9223372036854775807) and parsed("-9223372036854775808", -9223372036854775808) and parsed("0000000000000000000000000000000000000001", 1) and rejected("9223372036854775808") and rejected("-9223372036854775809") and rejected("18446744073709551616") and rejected("1__2") and rejected("_1") and rejected("1_") and rejected("+") and rejected("") and rejected("12x") and rejected("é12")
 
+
 public func test_two_digit_formatting_edges() -> bool:
     return str(0) == "0" and str(9) == "9" and str(10) == "10" and str(99) == "99" and str(100) == "100" and str(-1) == "-1" and str(-100) == "-100" and str(9223372036854775807) == "9223372036854775807" and str(-9223372036854775808) == "-9223372036854775808" and str(18446744073709551615u64) == "18446744073709551615"
+
 
 func main() -> int:
     assert test_short_words_and_signs()

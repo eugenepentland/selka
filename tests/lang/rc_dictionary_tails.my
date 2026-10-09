@@ -9,6 +9,7 @@ func test_repeated_string_key_insert_and_overwrite() -> bool:
     assert counts["key39"] == 7
     return True
 
+
 # RC-DICTIONARY-TAIL-1 control
 func test_preexisting_snapshot_keeps_first_uniqueness() -> bool:
     mut counts = {1: 7}
@@ -19,10 +20,12 @@ func test_preexisting_snapshot_keeps_first_uniqueness() -> bool:
     assert counts[key] == 13
     return True
 
+
 func callback(mut counts: dict[int, int], mut seen: int[], tag: int) -> int:
     seen.append(tag)
     counts[2] = tag
     return 1
+
 
 # RC-DICTIONARY-TAIL-1 control
 func test_completed_key_and_rhs_callbacks_keep_order() -> bool:
@@ -36,6 +39,7 @@ func test_completed_key_and_rhs_callbacks_keep_order() -> bool:
     assert counts[2] == 13
     return True
 
+
 # RC-DICTIONARY-TAIL-1 control
 func test_call_completes_before_dictionary_key_selection() -> bool:
     mut counts = {1: 7}
@@ -46,6 +50,7 @@ func test_call_completes_before_dictionary_key_selection() -> bool:
     assert counts[1] == 13
     assert counts[2] == 11
     return True
+
 
 # RC-DICTIONARY-TAIL-1 control
 func test_live_view_and_managed_value_keep_general_paths() -> bool:
@@ -60,6 +65,7 @@ func test_live_view_and_managed_value_keep_general_paths() -> bool:
     assert saved[key] == [7]
     assert nested[key] == [13]
     return True
+
 
 # RC-DICTIONARY-TAIL-1 control
 func test_function_wide_string_iteration_keeps_key_load_roles() -> bool:

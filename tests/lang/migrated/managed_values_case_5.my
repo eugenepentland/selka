@@ -1,5 +1,3 @@
-
-
 public func program() -> i64:
     mut a: i64[] = []
     mut b: i64[] = []

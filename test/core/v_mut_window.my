@@ -1,4 +1,3 @@
-
 record Box:
     tag: int
     names: int[]

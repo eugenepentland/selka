@@ -2,7 +2,6 @@
 # release build's unswitching makes) whose only uses are field reads still takes its
 # operands on their edges; it is never emptied. `b.items` is shared with `xs` at the first
 # append, read after the loop, and replaced by `b = c`.
-
 record Bucket:
     count: int
     items: int[]

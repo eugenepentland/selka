@@ -6,6 +6,20 @@ const Span = @import("source.zig").Span;
 const diagnostic = @import("diagnostic.zig");
 const number_literal = @import("number_literal.zig");
 
+/// Diagnose a legacy text conversion, offering a callee edit only when its target is unclaimed.
+pub fn rejectTextConversion(sink: *diagnostic.Sink, span: Span, target: []const u8, claimed: bool) diagnostic.Error {
+    if (claimed) {
+        const message = std.fmt.allocPrint(
+            sink.allocator,
+            "cannot automatically replace this text conversion with {s}: {s} resolves to a user declaration or binding; " ++
+                "rename that binding to expose the builtin, or edit the parsing call explicitly",
+            .{ target, target },
+        ) catch return error.OutOfMemory;
+        return sink.fail("E_NUMERIC_PARSE", span, message);
+    }
+    return sink.failFix("E_NUMERIC_PARSE", span, "parse text explicitly with parse_int or parse_float; int and float convert numbers", .{ .span = span, .text = target });
+}
+
 /// Ordinary float is a compiler-created binary64 domain, independent of user domains.
 pub fn isFloat(ty: typed.Type, records: []const typed.Record) bool {
     if (!ty.isAggregate()) return false;

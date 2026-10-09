@@ -1,5 +1,3 @@
-
-
 func published() -> int:
     mut items = [1]
     mut saved: int[][] = []

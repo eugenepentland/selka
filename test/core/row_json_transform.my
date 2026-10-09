@@ -1,8 +1,8 @@
 import json
 
 # Split from benchmarks/runtime/expanded/text/main.my; identical timed work.
-
 extern func runtime_bench_now(host: Host) -> i64 effects(host)
+
 
 record Inputs:
     raw: bytes
@@ -11,6 +11,7 @@ record Inputs:
     numbers: int[]
     fragments: str[]
 
+
 func number(text: str) -> int:
     match int(text):
         case Some(value):
@@ -18,8 +19,10 @@ func number(text: str) -> int:
         case None:
             return 0
 
+
 func row_name(j: int) -> str:
     return (if (j % 2 == 0) then ("café,\"item\"") else ("naïve,item")) + str(j)
+
 
 func score(text: str) -> int:
     mut raw = text.encode()
@@ -28,6 +31,7 @@ func score(text: str) -> int:
         result += value
     return result
 
+
 func json_integer(value: json.Json) -> int:
     match json.as_int(value):
         case Some(n):
@@ -35,12 +39,14 @@ func json_integer(value: json.Json) -> int:
         case None:
             return 0
 
+
 func json_active(value: json.Json) -> bool:
     match json.as_bool(value):
         case Some(flag):
             return flag
         case None:
             return False
+
 
 func json_job(text: str, bump: int) -> int:
     mut output: json.Json[] = []
@@ -62,6 +68,7 @@ func json_job(text: str, bump: int) -> int:
             return 0
     return score(json.dumps(json.array(output)))
 
+
 func inputs(kind: str, size: int, seed: int) -> Inputs:
     mut raw = b""
     mut texts: str[] = []
@@ -75,6 +82,7 @@ func inputs(kind: str, size: int, seed: int) -> Inputs:
     texts = [json.dumps(json.array(rows))]
     return Inputs(raw=raw, texts=texts, other=other, numbers=numbers, fragments=fragments)
 
+
 func kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:
     mut checksum = 0
     for step in range(iterations):
@@ -82,6 +90,7 @@ func kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:
         mut value = json_job(data.texts[0], cursor % 17)
         checksum = (checksum + value) % 1000000007
     return checksum
+
 
 func main(args: str[], host: Host, out: Stream) -> int:
     if len(args) != 3:

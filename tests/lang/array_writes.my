@@ -1,11 +1,8 @@
-
 # `replace` on a fixed array yields a new value, and the backend writes the
 # element straight into the local when the result lands back in the array it
 # read (QBE-ARRAYWRITE-1). These cases pin the value semantics that write must
 # not move: a copy taken before it, an array inside a record, an array a callee
 # was handed, a nested array, a traced element type and an enum-keyed table.
-
-
 enum Status:
     ok
     missing
@@ -98,6 +95,6 @@ public func test_a_traced_element_type_survives_an_element_write() -> bool:
 
 
 public func test_an_enum_keyed_table_replaces_the_entry_its_key_names() -> bool:
-    mut codes: [Status]i64 = {Status.failed: 500, Status.ok: 200, Status.missing: 404}
+    mut codes: [Status] i64 = {Status.failed: 500, Status.ok: 200, Status.missing: 404}
     codes = replace(codes, Status.ok, 201)
     return codes[Status.ok] == 201 and codes[Status.missing] == 404 and codes[Status.failed] == 500

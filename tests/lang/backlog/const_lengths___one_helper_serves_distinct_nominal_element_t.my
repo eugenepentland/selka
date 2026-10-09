@@ -1,4 +1,3 @@
-
 record A:
     value: i64
 
@@ -20,6 +19,7 @@ func main() -> i64:
     mut a = first[A, 2](FixedArray[A, 2]([A(value=40), A(value=0)]))
     mut b = first[B, 1](FixedArray[B, 1]([B(value=2)]))
     return a.value + b.value + i64(count[A, 0](FixedArray[A, 0]([])))
+
 
 public func test_one_helper_serves_distinct_nominal_element_t() -> bool:
     return main() == 42

@@ -1,8 +1,6 @@
 # RC-INTERVAL-ANCHOR-2: values read out of a `mut` list parameter or a named
 # list local are read in place while nothing writes the list; a value that is
 # still live when the list is written keeps its own copy.
-
-
 record Span:
     source: bytes
     start: int

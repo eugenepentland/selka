@@ -1,5 +1,3 @@
-
-
 func canonical(raw: bytes) -> bool noalloc:
     match raw[2:4].parse_int():
         case Some(value):

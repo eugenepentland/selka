@@ -124,9 +124,12 @@ pub const Names = struct {
     }
     /// Check whether a name belongs to the originating module's declarations or import aliases.
     pub fn topLevel(self: Names, span: source.Span) error{InternalError}!bool {
+        return self.topLevelSpelling(span, self.src.text(span));
+    }
+    /// Inspect a proposed replacement spelling in the source location's module before offering a fix.
+    pub fn topLevelSpelling(self: Names, span: source.Span, name: []const u8) error{InternalError}!bool {
         const original = self.src.originalSpan(span) catch return error.InternalError;
         if (original.input >= self.index.units.len or original.input >= self.index.project.modules.items.len) return error.InternalError;
-        const name = self.src.text(span);
         if (self.index.units[original.input].names.contains(name)) return true;
         // A dotted spelling is a qualified module/type/domain reference, never a
         // bare declaration, so it is top-level without reserving its prefix.

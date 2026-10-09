@@ -7,7 +7,6 @@
 # budget.
 import sort
 
-
 record Keyed:
     key: int
     position: int

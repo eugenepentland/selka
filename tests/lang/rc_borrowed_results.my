@@ -2,6 +2,7 @@ record Span:
     source: bytes
     start: int
 
+
 record Node:
     span: Span
     next: int

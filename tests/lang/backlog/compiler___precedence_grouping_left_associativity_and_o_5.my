@@ -1,7 +1,7 @@
-
 # spec-case: CORE-1
 public func test_precedence_grouping_left_associativity_and_o_5() -> bool:
     return 00 == 0 and 1_2 == 12
+
 
 func main() -> int:
     return 0

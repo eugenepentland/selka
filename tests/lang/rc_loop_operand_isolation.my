@@ -8,6 +8,7 @@ func scan(count: int, repeats: int) -> int:
                 hits += 1
     return hits
 
+
 func real_iterator() -> int:
     mut data = b"mylang micro benchmark kernel payload 0123456789 abcdefghijklmno" + bytes([109])
     mut saved = data
@@ -21,11 +22,14 @@ func real_iterator() -> int:
     assert saved == data
     return hits
 
+
 public func test_isolated_words_cover_zero_both_branches_and_outer_reentry() -> bool:
     return scan(0, 4) == 0 and scan(1, 3) == 3 and scan(64, 3) == 12
 
+
 public func test_isolated_words_keep_real_iterator_tokens_and_snapshots() -> bool:
     return real_iterator() == 10
+
 
 func main(out: Stream) -> int:
     assert test_isolated_words_cover_zero_both_branches_and_outer_reentry()

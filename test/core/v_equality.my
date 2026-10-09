@@ -1,4 +1,3 @@
-
 record Flt:
     x: float
     n: int

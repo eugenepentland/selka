@@ -1,8 +1,7 @@
-
-
 record Buffer:
     len: int
     replace: int
+
 
 public func program() -> int:
     mut held = Buffer(len=20, replace=22)

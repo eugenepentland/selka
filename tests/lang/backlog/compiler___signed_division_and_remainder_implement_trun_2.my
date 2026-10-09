@@ -1,6 +1,6 @@
-
 public func test_signed_division_and_remainder_implement_trun_2() -> bool:
     return divtrunc(7, -3) == -2
+
 
 func main() -> int:
     return 0

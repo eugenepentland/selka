@@ -1,10 +1,7 @@
-
 # A bare `*` makes every parameter after it keyword-only: the operand binds by
 # name, operands may appear in any order, and a defaulted keyword-only parameter
 # may precede a required one. These cases pin the binding rule and the boundary
 # the interface listing publishes.
-
-
 func issue(host: int, named code: int, named file: int, named position: int) -> int:
     return host * 1000 + code * 100 + file * 10 + position
 

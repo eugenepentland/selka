@@ -651,8 +651,8 @@ test "native execution separates the build's warnings from the program's standar
     var compilation = try language.Compilation.init(std.testing.allocator, "warned.my",
         \\func main(err: Stream) -> i64:
         \\    mut x = 1
-        \\    with arena():
-        \\        x = 2
+        \\    const unused = 3
+        \\    x = 2
         \\    err.print("to err")
         \\    return x
     );

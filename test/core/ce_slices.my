@@ -1,8 +1,5 @@
-
 # Slices used only as a loop source (NEW-CORE-CE-LISTS-5): every answer here is the
 # base compiler's.
-
-
 record Box:
     x0: int
     x1: int

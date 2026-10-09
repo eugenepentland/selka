@@ -1,5 +1,3 @@
-
-
 record Count:
     n: i64
     keep: i64

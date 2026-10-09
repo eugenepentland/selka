@@ -1,5 +1,3 @@
-
-
 public func program() -> i64:
     mut values: i64[] = []
     values.append(42)

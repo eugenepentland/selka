@@ -1,4 +1,3 @@
-
 # spec-case: PY-REPEAT-2
 public func test_dynamic_repeat_list_context_and_cow() -> bool:
     mut width = 3
@@ -14,8 +13,10 @@ public func test_dynamic_repeat_list_context_and_cow() -> bool:
     rows[1][2] = 7
     return len(negative) == 0 and small == [0, 1, 2] and len(large) == 4097 and large[4096] == 4096 and a == b and len(octets) == 3 and len(empty) == 0 and rows[0][2] == 0 and rows[1][2] == 7 and rows[2][2] == 0 and saved[1][2] == 0
 
+
 func filled(count: int) -> int[]:
     return [for j in range(count) yield j]
+
 
 func main() -> int:
     return 0

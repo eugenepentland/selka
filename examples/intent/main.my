@@ -1,4 +1,3 @@
-
 func configured_limit() -> int:
     return 7
 

@@ -1,5 +1,3 @@
-
-
 record Outer:
     inner: Inner
     flag: bool

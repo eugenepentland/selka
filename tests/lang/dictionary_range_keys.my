@@ -1,4 +1,3 @@
-
 # A slice read only as the key of a `str`-keyed dictionary is described rather
 # than built (SPEC.md DICT-RANGE-KEY-1..2). None of that is observable: every
 # answer below is compared with the same work done on slices that are built,
@@ -6,8 +5,6 @@
 # opens no arena, so the lowering applies to every function in it. The runner
 # collects at every allocation (`--gc-stress`), so each key a write inserts is
 # read back after many collections of the text it was cut from.
-
-
 # The slice itself, as a value with a reader other than a dictionary: the
 # reference spelling every described key is checked against.
 func built(text: str, start: int, stop: int) -> str:
@@ -83,7 +80,7 @@ public func test_every_key_spelling_answers_as_the_built_slice() -> bool:
     mut d: dict[str, int] = {"bc": 1, "ab": 2, "cd": 3, "bcd": 4}
     mut total = d[s[1:3]] + d.get(s[0:2], 50) + d.get(s[3:5], 60)
     mut ok = total == 1 + 2 + 60
-    ok = ok and s[2:4] in d and not (s[3:5] in d) and s[3:5] not in d
+    ok = ok and s[2:4] in d and not (s[3:5] in d) and s[3:5]not in d
     d[s[0:3]] = d.get(s[0:3], 0) + 1
     d[s[1:4]] += 2
     d[s[2:5]] = 7
@@ -108,7 +105,7 @@ public func test_described_slices_clamp_and_count_like_built_ones() -> bool:
             reference[piece] = reference.get(piece, 0) + 1
     mut ok = same_counts(d, reference) and d[""] == reference[""]
     ok = ok and d[s[1:2]] == reference["é"] and d[s[15:16]] == reference["o"]
-    return ok and s[12:13] not in d and d.get(s[12:13], 0) == 0 and d[s[5:15]] == reference[" wörld €ur"]
+    return ok and s[12:13]not in d and d.get(s[12:13], 0) == 0 and d[s[5:15]] == reference[" wörld €ur"]
 
 
 public func test_inserted_keys_outlive_the_text_they_were_cut_from() -> bool:
@@ -126,7 +123,7 @@ public func test_described_and_owned_keys_hash_and_compare_alike() -> bool:
     mut text = "the quick brown fox jumps over the lazy dog"
     mut d: dict[str, int] = {"quick": 1, "the lazy dog": 2, "": 3, "x": 4}
     mut ok = d[text[4:9]] == 1 and d[text[31:43]] == 2 and d[text[5:5]] == 3
-    ok = ok and text[16:19] not in d and d.get(text[16:19], 9) == 9
+    ok = ok and text[16:19]not in d and d.get(text[16:19], 9) == 9
     d[text[16:19]] = 5
     return ok and d["fox"] == 5 and "fox" in d and d[built(text, 16, 19)] == 5
 
@@ -157,7 +154,7 @@ public func test_an_absence_is_not_believed_across_a_pop_or_clear() -> bool:
     mut miss = d.get(s[2:4], 0)
     mut popped = d.pop("xy")
     d[s[2:4]] = 7
-    mut ok = miss == 0 and popped == 1 and d["zx"] == 7 and s[0:2] not in d
+    mut ok = miss == 0 and popped == 1 and d["zx"] == 7 and s[0:2]not in d
     d.clear()
     ok = ok and d.get(s[0:2], 0) == 0
     d[s[0:2]] = 8

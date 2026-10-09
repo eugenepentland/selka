@@ -1366,12 +1366,8 @@ fn warningLess(_: void, a: diagnostic.Diagnostic, b: diagnostic.Diagnostic) bool
 // source diagnostic once, ordered independently of specialization discovery.
 fn normalizeDiagnostics(sink: *diagnostic.Sink) void {
     std.mem.sort(diagnostic.Diagnostic, sink.items.items, {}, warningLess);
-    // NEW-CORE-S5-ARENA-1: a rejected program reports its errors as before; the
-    // retired-arena advice is for a program that otherwise checks.
-    const rejected = reportedError(sink.items.items);
     var count: usize = 0;
     for (sink.items.items) |item| {
-        if (rejected and std.mem.eql(u8, item.code, @import("arena_fix.zig").retired_code)) continue;
         if (count != 0) {
             const previous = sink.items.items[count - 1];
             if (previous.span.start == item.span.start and previous.span.end == item.span.end and
@@ -1735,6 +1731,17 @@ const CheckOptions = struct {
 
 fn checkCore(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, options: CheckOptions) Error!typed.Program {
     defer normalizeDiagnostics(sink);
+    const checked = checkProgram(allocator, src, program, sink, options) catch |err| {
+        // Removal repairs remain available even when an unrelated body fails.
+        if (err == error.SourceError) try @import("arena_fix.zig").reject(allocator, src, program, sink);
+        return err;
+    };
+    try @import("arena_fix.zig").reject(allocator, src, program, sink);
+    if (reportedError(sink.items.items)) return error.SourceError;
+    return checked;
+}
+
+fn checkProgram(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, options: CheckOptions) Error!typed.Program {
     const cache = options.cache;
     const module_names = options.names;
     const timing = activeTiming(cache);
@@ -1859,7 +1866,6 @@ fn checkCore(allocator: std.mem.Allocator, src: source.Source, program: ast.Prog
     const warnings_start = timingStart(timing);
     try warnBindings(allocator, functions, stubs, sink);
     try warnImports(module_names, sink);
-    try @import("arena_fix.zig").warn(allocator, src, program, sink);
     const pass_items: []const diagnostic.Diagnostic = if (plan != null) try allocator.dupe(diagnostic.Diagnostic, sink.items.items[pass_start..]) else &.{};
     std.mem.sort(diagnostic.Diagnostic, sink.items.items, {}, warningLess);
     timingAdd(timing, "warning_derivation", warnings_start);

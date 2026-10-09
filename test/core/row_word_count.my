@@ -1,7 +1,6 @@
-
 # Split from benchmarks/runtime/expanded/text/main.my; identical timed work.
-
 extern func runtime_bench_now(host: Host) -> i64 effects(host)
+
 
 record Inputs:
     raw: bytes
@@ -10,6 +9,7 @@ record Inputs:
     numbers: int[]
     fragments: str[]
 
+
 func number(text: str) -> int:
     match parse_int(text):
         case Some(value):
@@ -17,12 +17,14 @@ func number(text: str) -> int:
         case None:
             return 0
 
+
 func score(text: str) -> int:
     mut raw = text.encode()
     mut result = len(raw)
     for value in raw:
         result += value
     return result
+
 
 func word_job(text: str) -> int:
     mut counts: dict[str, int] = {}
@@ -35,7 +37,6 @@ func word_job(text: str) -> int:
 
 
 # Fixture CSV subset: quoted commas/doubled quotes; LF records; no embedded LF.
-
 func inputs(kind: str, size: int, seed: int) -> Inputs:
     mut raw = b""
     mut texts: str[] = []
@@ -49,6 +50,7 @@ func inputs(kind: str, size: int, seed: int) -> Inputs:
     texts = [document + "red", document + "blue"]
     return Inputs(raw=raw, texts=texts, other=other, numbers=numbers, fragments=fragments)
 
+
 func kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:
     mut checksum = 0
     for step in range(iterations):
@@ -56,6 +58,7 @@ func kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:
         mut value = word_job(data.texts[cursor % 2])
         checksum = (checksum + value) % 1000000007
     return checksum
+
 
 func main(args: str[], host: Host, out: Stream) -> int:
     if len(args) != 3:

@@ -1,18 +1,21 @@
-
 func selected_key(mut log: int[]) -> Unit:
     log.append(1)
+
 
 func selected_default(mut log: int[]) -> int:
     log.append(2)
     return 99
 
+
 func grow(mut value: int[]) -> Unit:
     value.append(7)
+
 
 record UnitKey:
     number: u64
     small: i16
     empty: Unit
+
 
 # spec: NEW-CORE-S3-VALUES-1
 # spec-case: HASH-KEYS-1
@@ -30,6 +33,7 @@ public func test_none_keys_replace_lookup_and_evaluate_operands_once() -> bool:
     mut inserted = mapping.setdefault((), 23)
     return log == [1, 1, 2] and removed == 8 and absent == 17 and inserted == 23 and mapping[()] == 23 and saved == {(): 8} and () in saved
 
+
 # spec-case: NEW-CORE-S3-VALUES-1
 # spec-case: COW-MUT-ARGUMENT-1
 public func test_none_key_mut_values_preserve_parent_and_readonly_snapshots() -> bool:
@@ -42,6 +46,7 @@ public func test_none_key_mut_values_preserve_parent_and_readonly_snapshots() ->
     mapping[()] = removed
     mapping.update({(): [4, 5]})
     return saved == {(): [1]} and removed == [1, 7, 9, 7] and mapping == {(): [4, 5]}
+
 
 # spec-case: NEW-CORE-S3-VALUES-1
 # spec-case: HASH-KEYS-1
@@ -62,6 +67,7 @@ public func test_none_key_and_value_collections_keep_source_unit_spelling() -> b
     units.discard(())
     return len(mapping) == 1 and () in mapping and f"{mapping[()]}" == "None" and len(saved) == 1 and len(units) == 0
 
+
 # spec-case: NEW-CORE-S3-VALUES-1
 # spec-case: HASH-KEYS-1
 public func test_structural_unit_keys_hash_equal_without_padding() -> bool:
@@ -79,6 +85,7 @@ public func test_structural_unit_keys_hash_equal_without_padding() -> bool:
     mut other: FixedArray[Unit, 2] = FixedArray[Unit, 2]([(), ()])
     return len(mapping) == 100 and total == 5050 and len(options) == 2 and options[some] == 11 and options[absent] == 13 and arrays[other] == 17
 
+
 # spec-case: NEW-CORE-S3-VALUES-1
 # spec-case: HASH-KEYS-1
 public func test_none_key_remove_reinsert_tombstones_and_defaults() -> bool:
@@ -95,6 +102,7 @@ public func test_none_key_remove_reinsert_tombstones_and_defaults() -> bool:
     mut saved = mapping
     mapping.clear()
     return empty == [0] and saved == {(): [100]} and len(mapping) == 0
+
 
 # spec-case: NEW-CORE-S3-VALUES-1
 public func test_missing_none_key_traps() -> bool:

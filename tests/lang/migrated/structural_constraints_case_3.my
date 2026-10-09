@@ -1,8 +1,12 @@
-
-
 constraint A[T] = copy + field(f0: int) + field(f1: int) + field(f2: int) + field(f3: int) + field(f4: int) + field(f5: int) + field(f6: int) + field(f7: int)
+
+
 constraint B[T] = copy + field(f0: int) + field(f1: int) + field(f2: int) + field(f3: int) + field(f4: int) + field(f5: int) + field(f6: int) + field(f7: int)
+
+
 func f[T: A + B](x: T) -> int:
     return 0
+
+
 public func program() -> int:
     return 0

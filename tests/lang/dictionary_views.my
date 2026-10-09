@@ -1,5 +1,3 @@
-
-
 func total(values: int[]) -> int noalloc:
     mut result = 0
     for value in values:
@@ -111,7 +109,7 @@ public func test_direct_projection_membership_and_snapshots() -> bool:
     mut mapping = {1: [7, 8], 2: [9]}
     if 1 not in mapping.keys() or 3 in mapping.keys():
         return False
-    if [7, 8] not in mapping.values() or [8] in mapping.values():
+    if [7, 8]not in mapping.values() or [8] in mapping.values():
         return False
     for item in mapping.items():
         if item not in mapping.items():

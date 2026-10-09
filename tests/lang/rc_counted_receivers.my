@@ -1,4 +1,3 @@
-
 # Storing or appending a counted element through a list held by a stable
 # owner needs no receiver scope under RC when the element type cannot reach
 # the list's own type (RC-INERT-COUNTED-RECEIVER-1). Every test also runs

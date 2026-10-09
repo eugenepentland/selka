@@ -1,7 +1,6 @@
-
 # Split from benchmarks/runtime/expanded/text/main.my; identical timed work.
-
 extern func runtime_bench_now(host: Host) -> i64 effects(host)
+
 
 record Inputs:
     raw: bytes
@@ -11,13 +10,13 @@ record Inputs:
     fragments: str[]
 
 
-
 func number(text: str) -> int:
     match parse_int(text):
         case Some(value):
             return value
         case None:
             return 0
+
 
 func repeated(text: str, count: int) -> str:
     mut result = ""
@@ -36,6 +35,7 @@ func inputs(kind: str, size: int, seed: int) -> Inputs:
     other = ["a", "needle", "absentΩ", "é"]
     return Inputs(raw=raw, texts=texts, other=other, numbers=numbers, fragments=fragments)
 
+
 func kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:
     mut checksum = 0
     for step in range(iterations):
@@ -43,6 +43,7 @@ func kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:
         mut value = data.texts[0].find(data.other[cursor % 4]) + 1
         checksum = (checksum + value) % 1000000007
     return checksum
+
 
 func main(args: str[], host: Host, out: Stream) -> int:
     if len(args) != 3:

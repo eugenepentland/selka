@@ -1,6 +1,4 @@
 # alloc_churn: build, fold and drop a 16-element list[int] once per batch.
-
-
 func main(out: Stream) -> int:
     mut total = 0
     for batch in range(1000000):

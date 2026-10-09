@@ -1,5 +1,3 @@
-
-
 func find_first(xs: int[], target: int) -> int:
     mut at = 0
     while True:

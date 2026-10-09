@@ -1,10 +1,7 @@
-
 # The value-semantics probe for QBE-AGGREF-1. Every line it prints is produced
 # by an aggregate crossing a call boundary: a written parameter, a returned
 # record stored into a local, a returned record passed straight into another
 # call, and a record read out of a list by an instantiated generic body.
-
-
 public record Point:
     x: i64
     y: i64
@@ -55,20 +52,15 @@ func classify(slot: Slot) -> i64:
 func main(out: Stream) -> int:
     mut original = Point(x=1, y=2)
     out.print("1 written-parameter inside", absorb(original), "caller", original.x, original.y)
-
     mut stored = shifted(original)
     out.print("2 returned-then-stored", stored.x, stored.y, "source", original.x, original.y)
-
     mut packed = pack(Pair(left=shifted(Point(x=1, y=2)), right=shifted(Point(x=3, y=4))))
     out.print("3 returned-into-call", packed)
-
     mut items: Point[] = [Point(x=11, y=12), Point(x=13, y=14)]
     mut held = pick_first[Point](items)
     out.print("4 generic-list", held.x, held.y, "list", items[0].x, items[1].x)
-
     mut slot = Slot.filled(point=shifted(Point(x=2, y=3)), tag=9)
     out.print("5 union-payload", classify(slot))
-
     mut many: Pair[] = []
     mut index = 0
     while index < 64:

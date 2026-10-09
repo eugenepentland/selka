@@ -59,7 +59,8 @@ const Pass = struct {
             }
             for (variant.cases, 0..) |case, index| {
                 if (case.payload) |payload| {
-                    const replacement = try std.fmt.allocPrint(self.sink.allocator, "(value: {s})", .{self.src.text(payload)});
+                    const rendered = try @import("frontend_migration_types.zig").renderType(self.sink.allocator, self.src, self.program.types.expressions, payload);
+                    const replacement = try std.fmt.allocPrint(self.sink.allocator, "(value: {s})", .{rendered});
                     try self.repair(.{ .start = case.name.end, .end = payload.end }, replacement, "declare a variant payload as a named field");
                 }
                 const end = if (index + 1 < variant.cases.len) variant.cases[index + 1].name.start else self.declarationEnd(variant.name);

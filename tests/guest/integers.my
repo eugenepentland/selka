@@ -1,5 +1,3 @@
-
-
 public func test_width_conversions() -> bool effects():
     mut byte: u8 = 255u8
     mut signed_byte: i8 = -128i8

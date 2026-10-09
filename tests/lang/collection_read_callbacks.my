@@ -1,5 +1,3 @@
-
-
 func change_index(mut values: int[]) -> int:
     values.clear()
     values.append(91)

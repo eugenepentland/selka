@@ -1,8 +1,6 @@
-
 import byte_builder
 import network
 import pool
-
 
 # spec-case: VALUE-SEMANTICS-10
 public func test_builder_is_a_value_and_mut_updates_only_the_target() -> bool:

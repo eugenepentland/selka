@@ -1,4 +1,3 @@
-
 # An `Option` of a managed reference is stored as the reference word alone:
 # null is `None`. Nothing a program can observe changes, so these cases walk
 # every operation over such an optional — construction, `is None`, `match`,
@@ -6,8 +5,6 @@
 # arena escape — and an optional optional, which keeps its tag. Under
 # `--gc-stress` every allocation collects, so a `Some` whose reference the
 # collector failed to trace, or a `None` it tried to follow, fails here.
-
-
 record Node:
     value: int
     left: Node?
@@ -208,10 +205,9 @@ public func test_a_user_union_of_the_same_shape_matches_like_an_option() -> bool
 
 public func test_an_escaped_graph_keeps_its_optional_links() -> bool:
     mut kept: int[]?[] = []
-    with arena() as scratch:
-        mut shared: int[] = [3, 4]
-        mut working: int[]?[] = [Some(shared.copy()), None, Some(shared.copy())]
-        kept = scratch.escape(working)
+    mut shared: int[] = [3, 4]
+    mut working: int[]?[] = [Some(shared.copy()), None, Some(shared.copy())]
+    kept = working
     _ = churn(10)
     match kept[0]:
         case Some(first):

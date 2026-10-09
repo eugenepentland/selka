@@ -1,4 +1,3 @@
-
 func nested(mut items: int[], depth: int) -> int:
     mut before = items
     if depth > 0:

@@ -1089,7 +1089,7 @@
     "generators": "generator expressions only as the argument of sum, any, all, min, max, sorted, list, set, dict or str.join; no suspended generator functions or stored generator values; yield belongs to source-first array comprehensions and match-expression arms",
     "native_tests": "one native process per test; exported test_ functions returning bool or Result[bool, E]; positive deterministic receipts keyed by the test program's Core IR, settings, toolchain and outcome-relevant environment; a run with --link or --verify-facts never reuses a receipt; directory runs share one worker budget (--jobs, MYLANG_JOBS or CPUs)",
     "standard_library": "fourteen embedded modules using the canonical frontend: math, strings, sort, path, hex, base64, json, pool, random, time, byte_builder, filesystem, network, environment",
-    "memory": "one-count reference counting with copy-on-write; no tracing collector; value semantics prevents cycles, and identity graphs use pool handles; `with arena()` is a retired plain block"
+    "memory": "one-count reference counting with copy-on-write; no tracing collector; value semantics prevents cycles, and identity graphs use pool handles; `with arena()` is removed; its diagnostic carries a migration fix"
   },
   "removed": {
     "explicit-storage-tier": {
@@ -1162,7 +1162,7 @@
     },
     "managed-arenas": {
       "date": "2026-10-08",
-      "note": "Retired with the old back end in new-core stage S5 (2026-10): `with arena() as name:` regions and their escape checks (`E_ARENA_ESCAPE`). The block still runs as an ordinary block and warns `W_ARENA_RETIRED`."
+      "note": "Retired with the old back end in new-core stage S5 (2026-10): `with arena() as name:` regions and their escape checks (`E_ARENA_ESCAPE`). The spelling is rejected with `E_ARENA_REMOVED`; `mylang fix` removes the block and unwraps escapes."
     },
     "managed-class-records": {
       "date": "2026-10-08",

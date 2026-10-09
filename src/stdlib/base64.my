@@ -1,5 +1,3 @@
-
-
 # The sixty-four symbols of RFC 4648 section 4, in value order.
 public func standard_alphabet() -> bytes:
     return b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"

@@ -1,8 +1,8 @@
-
 func main() -> int:
     mut flag = True
     const chosen = if flag then 5 else 9
     return chosen
+
 
 # spec-case: PY-SCOPE-1
 public func test_py_scope_1_predeclared_loop_state_and_comple_2() -> bool:

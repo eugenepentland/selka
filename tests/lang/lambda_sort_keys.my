@@ -1,12 +1,9 @@
-
 # A sort-key lambda's key type is its body's ordinary type (SPEC.md
 # LAMBDA-KEY-INFER-1): a method call, a call to a declared function, a
 # conversion, a slice, a conditional expression. Before, any body the key
 # reader did not recognise was typed `int`, so a `str` or `float` key failed
 # with "expected int, found str". Keys are built under `--gc-stress`, so the
 # text keys must stay rooted while the sort allocates.
-
-
 record Person:
     name: str
     score: int

@@ -1,5 +1,3 @@
-
-
 # An expression tree: each recursive case is stored behind one box.
 public enum Expr:
     num(value: int)

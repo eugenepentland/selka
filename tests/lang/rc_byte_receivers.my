@@ -1,7 +1,5 @@
 # RC-INERT-BYTES-RECEIVER-1 and RC-OPERAND-ANCHOR-2: a byte buffer held in a
 # `mut` record is appended to and measured in place, with value semantics kept.
-
-
 record Output:
     buffer: byte_buffer
     failed: bool

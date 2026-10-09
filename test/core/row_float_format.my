@@ -1,4 +1,3 @@
-
 extern func runtime_bench_now(host: Host) -> i64 effects(host)
 
 

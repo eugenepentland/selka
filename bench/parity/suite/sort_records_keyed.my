@@ -2,8 +2,6 @@
 # records.sort(key=lambda r: r.key), instead of the sort module's
 # sort_by_key. Same data, same stable order, same output; the list is sorted in
 # place, so no second list of records exists (plan §5.5, wave 3).
-
-
 record Rec:
     key: int
     id: int

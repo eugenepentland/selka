@@ -1,8 +1,6 @@
 # sort_quick: two million xorshift values sorted in place by the SUITE.md
 # recursive Hoare quicksort (recurse on the smaller side, loop on the larger);
 # prints three order statistics and a checksum.
-
-
 func xorshift(input: u64) -> u64:
     mut x = input
     x = bit_xor(x, shift_left(x, 13u64))

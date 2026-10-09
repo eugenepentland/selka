@@ -1,5 +1,3 @@
-
-
 public func program() -> i64:
     mut text: str = b"hé🙂"
     mut needle: str = b"é🙂"

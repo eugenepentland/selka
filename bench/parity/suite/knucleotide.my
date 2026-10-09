@@ -1,7 +1,5 @@
 # knucleotide: every k-letter substring of a generated DNA sequence counted in a
 # dict[str, int] keyed by slices of one str (SUITE.md section 6).
-
-
 record Entry:
     key: str
     count: int

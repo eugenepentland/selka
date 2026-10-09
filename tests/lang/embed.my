@@ -1,13 +1,16 @@
-
 import embed_support
 
 const NUL: bytes = embed_bytes("embed_fixtures/nul.bin")
 
+
 const BINARY: bytes = embed_bytes("embed_fixtures/binary.bin")
+
 
 const MULTI: str = embed_str("embed_fixtures/multi.txt")
 
+
 const EMPTY: bytes = embed_bytes("embed_fixtures/empty.bin")
+
 
 func inline_bytes() -> bytes:
     return embed_bytes("embed_fixtures/nul.bin")

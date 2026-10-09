@@ -1,9 +1,6 @@
-
 # Generic records and templates a dependent instantiates from this module's
 # interface alone: the templates call a private helper whose body the
 # interface replaces, take a callback, and carry declared effect bounds.
-
-
 public record Store[T: copy + storable]:
     values: T[]
     generations: int[]

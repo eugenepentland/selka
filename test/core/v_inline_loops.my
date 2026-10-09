@@ -1,10 +1,10 @@
-
 func find(mut parent: int[], start: int) -> int:
     mut x = start
     while parent[x] != x:
         parent[x] = parent[parent[x]]
         x = parent[x]
     return x
+
 
 func pick(mut values: int[], count: int) -> int:
     mut n = count
@@ -16,6 +16,7 @@ func pick(mut values: int[], count: int) -> int:
         n -= 1
     return values[0]
 
+
 # spec-case: NEW-CORE-INLINE-S4-1
 public func test_mut_loop_returns_and_shared_snapshots() -> bool:
     mut parent = [0, 0, 1]
@@ -25,6 +26,7 @@ public func test_mut_loop_returns_and_shared_snapshots() -> bool:
     mut empty_arm = pick(mut values, 0)
     mut loop_arm = pick(mut values, 3)
     return root == 0 and parent[2] == 0 and saved[2] == 1 and empty_arm == 7 and loop_arm == 9 and values[0] == 9
+
 
 func main() -> int:
     return 0

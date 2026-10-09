@@ -1,5 +1,3 @@
-
-
 func append_one(mut candidate: int[]?, item: int) -> int:
     if candidate is None:
         return 0

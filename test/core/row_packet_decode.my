@@ -1,12 +1,12 @@
-
 # Split from benchmarks/runtime/expanded/compute/main.my; identical timed work.
-
 extern func runtime_bench_now(host: Host) -> i64 effects(host)
+
 
 record Packet:
     identifier: int
     payload_sum: int
     length: int
+
 
 func parse_number(text: str) -> int:
     match parse_int(text):
@@ -14,6 +14,7 @@ func parse_number(text: str) -> int:
             return value
         case None:
             return 0
+
 
 func make_frame(j: int, seed: int) -> bytes:
     mut identifier = (seed + j * 17) % 65536
@@ -31,6 +32,7 @@ func make_frame(j: int, seed: int) -> bytes:
     elif j % 4 == 3:
         raw[4] = 5
     return bytes(raw)
+
 
 func decode(raw: bytes) -> Result[Packet, int]:
     if len(raw) < 6:
@@ -51,6 +53,7 @@ func decode(raw: bytes) -> Result[Packet, int]:
     for i in range(5, len(raw) - 1):
         total += raw[i]
     return Ok(Packet(identifier=raw[2] * 256 + raw[3], payload_sum=total, length=length))
+
 
 func main(args: str[], host: Host, out: Stream) -> int:
     if len(args) != 3:

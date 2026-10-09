@@ -1,11 +1,10 @@
-
 extern func runtime_bench_now(host: Host) -> i64 effects(host)
+
 
 # The S0 kinds of benchmarks/runtime/expanded/compute/main.my in one program, with
 # the same per-element dispatch on an invariant `kind` inside the timed loop.
 # Kinds: 0 integer_math, 1 float_math, 2 branch_predictable, 3 branch_mixed,
 # 6 call_direct, 10 binary_search (the benchmark's numbering).
-
 func parse_number(text: str) -> int:
     match parse_int(text):
         case Some(value):

@@ -1,7 +1,6 @@
-
 # Split from benchmarks/runtime/expanded/text/main.my; identical timed work.
-
 extern func runtime_bench_now(host: Host) -> i64 effects(host)
+
 
 record Inputs:
     raw: bytes
@@ -11,7 +10,6 @@ record Inputs:
     fragments: str[]
 
 
-
 func number(text: str) -> int:
     match parse_int(text):
         case Some(value):
@@ -19,11 +17,13 @@ func number(text: str) -> int:
         case None:
             return 0
 
+
 func repeated(text: str, count: int) -> str:
     mut result = ""
     for j in range(count):
         result += text
     return result
+
 
 func score(text: str) -> int:
     mut raw = text.encode()
@@ -31,6 +31,7 @@ func score(text: str) -> int:
     for value in raw:
         result += value
     return result
+
 
 func inputs(kind: str, size: int, seed: int) -> Inputs:
     mut raw = b""
@@ -43,6 +44,7 @@ func inputs(kind: str, size: int, seed: int) -> Inputs:
     texts = ["|".join(fragments), "::".join(fragments)]
     return Inputs(raw=raw, texts=texts, other=other, numbers=numbers, fragments=fragments)
 
+
 func kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:
     mut checksum = 0
     for step in range(iterations):
@@ -50,6 +52,7 @@ func kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:
         mut value = score((if (cursor % 2 == 0) then ("|") else ("::")).join(data.fragments))
         checksum = (checksum + value) % 1000000007
     return checksum
+
 
 func main(args: str[], host: Host, out: Stream) -> int:
     if len(args) != 3:

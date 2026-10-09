@@ -1,7 +1,7 @@
-
 enum Choice:
     first
     second
+
 
 func main() -> int:
     mut answer = 0
@@ -11,6 +11,7 @@ func main() -> int:
         case Choice.second:
             pass
     return answer
+
 
 # spec-case: PY-SCOPE-3
 public func test_match_merges_definite_assignment_across_cont_2() -> bool:

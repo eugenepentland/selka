@@ -1,5 +1,3 @@
-
-
 func build() -> int[]:
     mut values: int[] = []
     values.append(1)

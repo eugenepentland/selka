@@ -8,6 +8,7 @@ func show(out: Stream, result: Result[str, str]):
         case Err(message):
             out.print(message)
 
+
 func main(fs: Filesystem, env: Environment, entropy: Entropy, clock: Clock, out: Stream) -> int:
     # Fixture directory, environment allowlist and entropy seed are explicit.
     show(out, fs.read_text("input.txt"))

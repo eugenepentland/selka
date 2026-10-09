@@ -1,4 +1,3 @@
-
 # Scalar lookup in a long text that is not ASCII (SPEC.md TEXT-INDEX-1..3). Such
 # a text finds a scalar by walking from the nearest known place instead of from
 # the start of its payload, and none of that is observable: every answer below is
@@ -7,8 +6,6 @@
 # every scalar has a known place in every text made of whole blocks, and a text of
 # 30 blocks or more holds the 256 octets an index needs. The runner collects at
 # every allocation (`--gc-stress`) and runs the suite under both runtimes.
-
-
 const BLOCK: str = "aé中😀b"
 
 

@@ -1,4 +1,3 @@
-
 # Inline list publication (RC-PUBLISH-FAST-1) and inline drops of flat
 # records of list fields (RC-FLAT-DROP-1) keep value semantics and counts.
 # Every test also runs under GC and `--gc-stress`.

@@ -8,8 +8,6 @@
 # which then match the Zig and Rust loops instruction for instruction apart
 # from one bounds check, one NaN check per float operation and position stores.
 # `a` is still a separate function. See SUITE.md section 3.
-
-
 func a(i: int, j: int) -> float:
     mut ij = wrapping_add(i, j)
     return 1.0 / float(wrapping_add(wrapping_add(wrapping_mul(ij, wrapping_add(ij, 1)) // 2, i), 1))

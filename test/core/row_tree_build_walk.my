@@ -1,11 +1,9 @@
-
 extern func runtime_bench_now(host: Host) -> i64 effects(host)
+
 
 # Row `tree_build_walk` (S4 CONTRACT.md): build a balanced binary tree of SIZE nodes as a recursive
 # union, walk it with a depth-weighted sum, and release it with the batch. Arguments `size iterations
 # seed`, output `checksum elapsed`.
-
-
 enum Tree:
     leaf
     node(left: Tree, value: int, right: Tree)

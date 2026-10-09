@@ -1,4 +1,3 @@
-
 func replace_alias(mut value: dict[str, FixedArray[int[], 1]]) -> int:
     mut copied = value["k"]
     value["k"] = copied

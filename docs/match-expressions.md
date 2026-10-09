@@ -32,10 +32,10 @@ result-bearing payload must be handled or transferred; ignoring it does not eras
 its obligation, and the ownership state an arm leaves behind must agree with
 every other arm's.
 
-`?` propagation inside an arm retains the enclosing statement's pending
-obligations, so an earlier fallible argument cannot be abandoned by a later arm
-propagating an error. Arena dependencies follow the produced value, so returning
-a scratch-backed owned value out of a match still rejects.
+Boundary `try` inside an arm propagates a declared failure while preserving
+pending result obligations. Extract a fallible call into a declaration before
+using its successful value in a larger expression. `with arena()` regions are
+removed; ordinary value ownership and cleanup apply to match results.
 
 Ordinary and generic functions share these rules. Lowering uses exhaustive
 variant dispatch, owned payload cleanup included.

@@ -1,9 +1,6 @@
-
-
 domain D: i64:
     func make(n: i64) -> D:
         return wrap[D](n)
-
     func score(v: D) -> i64 effects():
         return unwrap(v)
 

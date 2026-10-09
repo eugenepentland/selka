@@ -1,26 +1,27 @@
-
-
 import records_case_1 as c1
 import records_case_2 as c2
 import records_case_3 as c3
 import records_case_4 as c4
 
-
 # spec: CORE-5
 public func test_record_construction_nesting_named_order_fiel_1() -> bool:
     return c1.program() == 13
+
 
 # spec-case: CORE-5
 public func test_record_construction_nesting_named_order_fiel_2() -> bool:
     return c2.program() == 7
 
+
 # spec-case: CORE-5
 public func test_record_construction_nesting_named_order_fiel_3() -> bool:
     return c3.program() == 10007
 
+
 # spec-case: CORE-5
 public func test_record_construction_nesting_named_order_fiel_4() -> bool:
     return c4.program() == 6
+
 
 func main() -> int:
     return 0

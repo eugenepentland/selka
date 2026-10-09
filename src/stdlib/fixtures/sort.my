@@ -1,6 +1,5 @@
 import sort
 
-
 record Entry:
     name: str
     score: int

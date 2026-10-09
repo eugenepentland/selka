@@ -1445,12 +1445,12 @@ const Checker = struct {
     fn numericParse(self: *Checker, invocation: Call, input: Symbolic, floating: bool, span: source.Span) Error!?Symbolic {
         const parses = std.mem.startsWith(u8, self.src.text(invocation.name), "parse_");
         if (self.shapes().collectionKind(input) == .string) {
-            if (!parses) return self.sink.failFix(
-                "E_NUMERIC_PARSE",
-                invocation.name,
-                "parse text explicitly with parse_int or parse_float; int and float convert numbers",
-                .{ .span = invocation.name, .text = if (floating) "parse_float" else "parse_int" },
-            );
+            if (!parses) {
+                const target = if (floating) "parse_float" else "parse_int";
+                const claimed = self.active.contains(target) or self.functions.contains(target) or self.catalog.names.contains(target) or self.catalog.templates.names.contains(target) or
+                    if (self.module_names) |names| try names.topLevelSpelling(invocation.name, target) else false;
+                return numeric_surface.rejectTextConversion(self.sink, invocation.name, target, claimed);
+            }
             const parsed = try self.optionType(if (floating) self.floatType() else .{ .concrete = .i64 });
             return parsed;
         }

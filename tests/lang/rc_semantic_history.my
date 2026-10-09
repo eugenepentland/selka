@@ -1,4 +1,3 @@
-
 # spec-case: D2-VIEW-STORAGE-1
 public func test_explicit_snapshot_preserves_prior_values() -> bool:
     mut mapping = {1: 7}
@@ -6,6 +5,7 @@ public func test_explicit_snapshot_preserves_prior_values() -> bool:
     mapping[1] = 9
     mapping[2] = 11
     return saved == [7] and list(mapping.values()) == [9, 11]
+
 
 # spec-case: D2-VIEW-STORAGE-1
 public func test_snapshots_before_and_after_replacement_capture_each_history() -> bool:

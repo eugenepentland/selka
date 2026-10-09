@@ -1,12 +1,11 @@
-
 # rc_fuzz.py seed 62 case 26: an alias read across a loop that appends to the original,
 # where only one of several paths into the loop carries a shared block (NEW-CORE-RC-9).
-
 func make_ints(n: int) -> int[]:
     mut out: int[] = []
     for i in range(n):
         out.append(i)
     return out
+
 
 func grow_int(xs: int[], n: int) -> int[]:
     mut ys = xs
@@ -15,6 +14,7 @@ func grow_int(xs: int[], n: int) -> int[]:
     ys.append(n)
     return ys
 
+
 func grow_str(xs: str[], n: int) -> str[]:
     mut ys = xs
     if n > 1:
@@ -22,12 +22,14 @@ func grow_str(xs: str[], n: int) -> str[]:
     ys.append("a")
     return ys
 
+
 func grow_row(xs: int[][], n: int) -> int[][]:
     mut ys = xs
     if n > 1:
         return xs
     ys.append(make_ints(2))
     return ys
+
 
 func body(seed: int, out: Stream) -> int:
     mut acc = 0
@@ -67,6 +69,7 @@ func body(seed: int, out: Stream) -> int:
     acc = acc + len(sl2)
     acc = acc + len(rl3)
     return acc
+
 
 func main(args: str[], out: Stream) -> int:
     out.print(body(len(args), out))

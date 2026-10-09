@@ -1,4 +1,3 @@
-
 func grow(xs: int[]) -> int:
     mut copy = xs
     copy.append(1)

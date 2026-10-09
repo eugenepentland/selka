@@ -1,6 +1,5 @@
 import json
 
-
 func roundtrip(source: str) -> str:
     match json.loads(source):
         case Ok(value):

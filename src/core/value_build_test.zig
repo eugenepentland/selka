@@ -585,16 +585,15 @@ test "str == and != call the authorized runtime byte comparison declared once" {
 const arena_scopes =
     \\func main(out: Stream) -> int:
     \\    mut kept: int[] = []
-    \\    with arena() as scratch:
-    \\        mut built = [1, 2, 3]
-    \\        kept = scratch.escape(built)
+    \\    mut built = [1, 2, 3]
+    \\    kept = built
     \\    out.print(len(kept))
     \\    return 0
     \\
 ;
 
 // spec: NEW-CORE-ARENA-1
-test "a with arena() block is a plain block and n.escape(v) is v: no region operation reaches the IR" {
+test "migrated arena values lower without region operations" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const text = try support.irText(arena.allocator(), arena_scopes);

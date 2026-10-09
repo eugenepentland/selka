@@ -63,7 +63,7 @@ pub fn publish(src: source.Source, program: ast.Program, tokens: []const lex.Tok
     };
     // Unwrap retired arena blocks before deciding which legacy locals need a
     // lexical-scope rewrite. Their certain edits can accompany syntax repairs.
-    if (pass.changed) try @import("arena_fix.zig").warn(sink.allocator, src, program, sink);
+    if (pass.changed) try @import("arena_fix.zig").reject(sink.allocator, src, program, sink);
     return pass.changed;
 }
 
@@ -105,6 +105,14 @@ const Pass = struct {
         var spans: std.ArrayList(Span) = .empty;
         defer spans.deinit(self.sink.allocator);
         const expressions = self.program.types.expressions;
+        // Variant payload repairs already replace and canonicalize their whole type.
+        // A nested repair would overlap that edit and invalidate its source offsets.
+        for (self.program.types.variants) |variant| {
+            if (variant.fallible) continue;
+            for (variant.cases) |case| {
+                if (case.payload) |payload| try self.covered.append(self.sink.allocator, payload);
+            }
+        }
         for (expressions.applications) |application| try spans.append(self.sink.allocator, application.span);
         for (expressions.arrays) |array| try spans.append(self.sink.allocator, array.span);
         for (expressions.suffixes) |suffix| try spans.append(self.sink.allocator, suffix.span);
@@ -177,55 +185,5 @@ fn largerFirst(_: void, left: Span, right: Span) bool {
     return left.end - left.start > right.end - right.start;
 }
 
-fn same(left: Span, right: Span) bool {
-    return left.start == right.start and left.end == right.end;
-}
-
-/// Render one parsed type with canonical collection suffixes. Type identities,
-/// argument order and optional nesting are preserved; only spelling changes.
-pub fn renderType(allocator: std.mem.Allocator, src: source.Source, expressions: ast.TypeExpressions, span: Span) std.mem.Allocator.Error![]const u8 {
-    const original = src.text(span);
-    if (std.mem.eql(u8, original, "None")) return "Unit";
-    for (expressions.suffixes) |suffix| {
-        if (!same(suffix.span, span)) continue;
-        const base = try renderType(allocator, src, expressions, suffix.base);
-        if (std.mem.eql(u8, base, src.text(suffix.base))) return original;
-        return std.mem.concat(allocator, u8, &.{ base, if (suffix.kind == .growable) "[]" else "?" });
-    }
-    for (expressions.arrays) |array| {
-        if (!same(array.span, span)) continue;
-        const length = switch (array.index) {
-            .length => |length| length,
-            .enum_type => return original,
-        };
-        const element = try renderType(allocator, src, expressions, array.element);
-        if (original.len > 0 and original[0] != '[' and std.mem.eql(u8, element, src.text(array.element))) return original;
-        return std.fmt.allocPrint(allocator, "FixedArray[{s}, {s}]", .{ element, src.text(length) });
-    }
-    for (expressions.applications) |application| {
-        if (!same(application.span, span)) continue;
-        const name = src.text(application.name);
-        if (application.arguments.len == 1 and (std.mem.eql(u8, name, "list") or std.mem.eql(u8, name, "Option"))) {
-            const element = try renderType(allocator, src, expressions, application.arguments[0]);
-            return std.mem.concat(allocator, u8, &.{ element, if (std.mem.eql(u8, name, "list")) "[]" else "?" });
-        }
-        var out: std.ArrayList(u8) = .empty;
-        errdefer out.deinit(allocator);
-        var changed = false;
-        try out.appendSlice(allocator, name);
-        try out.append(allocator, '[');
-        for (application.arguments, 0..) |argument, index| {
-            if (index != 0) try out.appendSlice(allocator, ", ");
-            const rendered = try renderType(allocator, src, expressions, argument);
-            changed = changed or !std.mem.eql(u8, rendered, src.text(argument));
-            try out.appendSlice(allocator, rendered);
-        }
-        try out.append(allocator, ']');
-        if (!changed) {
-            out.deinit(allocator);
-            return original;
-        }
-        return out.toOwnedSlice(allocator);
-    }
-    return original;
-}
+/// Render one parsed type with canonical collection suffixes, preserving identity.
+pub const renderType = @import("frontend_migration_types.zig").renderType;

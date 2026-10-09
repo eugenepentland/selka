@@ -7,7 +7,6 @@
 # parameter `key: func(T) -> int effects()`).
 import sort
 
-
 record Rec:
     key: int
     id: int

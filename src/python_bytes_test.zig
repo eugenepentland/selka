@@ -537,3 +537,39 @@ test "PY-BYTES-FUSED-RANGE-1 generic noalloc bodies accept immediate ranges" {
             "    return generic[int](b\"xx42\", 0)\n",
     ));
 }
+
+// spec: FRONTEND-BYTES-PARENS-1
+test "frontend parenthesized byte literals retain bytes identity through inferred conditionals" {
+    try run(
+        \\func choose(flag: bool) -> bytes:
+        \\    const value = b"prefix" + (if flag then ((b"not_allowed")) else ((b"allowed")))
+        \\    return value
+        \\func main() -> int:
+        \\    if choose(True) != b"prefixnot_allowed" or choose(False) != b"prefixallowed":
+        \\        return 1
+        \\    const raw = ((b"ab"))
+        \\    return if raw == b"ab" then 42 else 2
+    , 42);
+}
+
+// spec-case: FRONTEND-BYTES-PARENS-1
+test "frontend parenthesized byte conditional arms respect contextual bytes and optional bytes" {
+    try run(
+        \\func choose(flag: bool) -> bytes:
+        \\    return if flag then ((b"a")) else ((b"long"))
+        \\func optional(flag: bool) -> bytes?:
+        \\    return if flag then ((b"present")) else None
+        \\func main() -> int:
+        \\    const raw: bytes = if False then ((b"a")) else ((b"long"))
+        \\    const present = optional(True)
+        \\    if present is None:
+        \\        return 1
+        \\    return if raw == choose(False) and present == b"present" and optional(False) is None then 42 else 2
+    , 42);
+}
+
+// spec-case: FRONTEND-BYTES-PARENS-1
+test "frontend byte conditional fix preserves fixed array lengths and incompatible arm rejection" {
+    try rejected("func main() -> int:\n    const values = if True then FixedArray[u8, 1]([1u8]) else FixedArray[u8, 2]([1u8, 2u8])\n    return len(values)\n", "E_TYPE");
+    try rejected("func main() -> int:\n    const raw: bytes = if True then ((b\"a\")) else \"text\"\n    return len(raw)\n", "E_TYPE");
+}

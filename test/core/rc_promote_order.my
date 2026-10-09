@@ -1,8 +1,6 @@
-
 # A list field read after its record was already consumed by an earlier update
 # (a copy's field rebound through `mut`) is borrowed, not promoted: updating it
 # while a snapshot of the record is still live copies (NEW-CORE-RC-13).
-
 record Bucket:
     count: int
     items: int[]

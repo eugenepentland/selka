@@ -1,11 +1,9 @@
-
-
 record ValuesBox:
-    values: dict[str,int]
+    values: dict[str, int]
 
 
-func package[T:copy+storable](value: T) -> dict[str,T]:
-    mut values: dict[str,T] = {}
+func package[T: copy + storable](value: T) -> dict[str, T]:
+    mut values: dict[str, T] = {}
     values["key"] = value
     for key in values:
         if key not in values:
@@ -13,7 +11,7 @@ func package[T:copy+storable](value: T) -> dict[str,T]:
     return values
 
 
-func label[T:integer](number: T) -> str:
+func label[T: integer](number: T) -> str:
     return "n=" + str(number)
 
 
@@ -39,12 +37,12 @@ public func test_python_values_dictionary_snapshot_and_arbitrary_method_receiver
         return False
     if list(box.values.keys())[0] != "one":
         return False
-    return box.values.get("two",0) + {"fallback": 2}.get("fallback",0) == 42
+    return box.values.get("two", 0) + {"fallback": 2}.get("fallback", 0) == 42
 
 
 # spec-case: PY-DICT-1
 public func test_python_values_dictionary_and_unicode_text_iteration_preserve_order() -> bool:
-    mut values = {"a": 10,"b": 20}
+    mut values = {"a": 10, "b": 20}
     mut total = 0
     for key in values:
         total += values[key]

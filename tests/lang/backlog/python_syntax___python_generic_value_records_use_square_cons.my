@@ -1,10 +1,11 @@
-
 record Box[T]:
     value: T
+
 
 func main() -> int:
     mut box = Box[int](value=42)
     return box.value
+
 
 # spec-case: PYTHON-3
 public func test_python_generic_value_records_use_square_cons() -> bool:

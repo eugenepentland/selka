@@ -132,3 +132,28 @@ pub const tooling_isolation = [_][]const u8{"tests/tooling_cache_isolation.py"};
 
 /// The bootstrap lexer source and live-compiler numeric extent oracle.
 pub const selfhost_numeric = [_][]const u8{"selfhost/"};
+
+/// The live .my formatting corpus, selection script and deliberate exclusions.
+pub const my_format = [_][]const u8{
+    "scripts/check_my_format.py",
+    "scripts/my_format_exclusions.json",
+    "bench/**/*.my",
+    "benchmarks/**/*.my",
+    "docs/**/*.my",
+    "examples/**/*.my",
+    "selfhost/**/*.my",
+    "src/**/*.my",
+    "test/**/*.my",
+    "tests/**/*.my",
+    "velocity/**/*.my",
+};
+
+/// Synthetic corpus selection and real formatter failure propagation.
+pub const my_format_self = [_][]const u8{ "scripts/check_my_format.py", "tests/test_my_format.py" };
+
+/// Embedded migration extraction, census evidence and atomic staging checks.
+pub const embedded_migration = [_][]const u8{
+    "scripts/migrate_embedded.py",
+    "scripts/spelling_census.py",
+    "tests/test_migrate_embedded.py",
+};

@@ -3,7 +3,6 @@
 # indexed, iterated, copied and rewritten. Stdout and stderr match the old core's.
 import filesystem
 
-
 record Grid:
     ports: FixedArray[Stream, 2]
     label: str

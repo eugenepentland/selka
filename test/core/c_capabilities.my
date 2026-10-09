@@ -10,9 +10,11 @@ public func test_clock() -> bool:
         case Err(_):
             return False
 
+
 public func test_environment() -> bool:
     mut env = environment.fixed({"LANG": "C", "HOME": "/home/test"})
     return env.names() == ["HOME", "LANG"] and env.get("PATH") is None
+
 
 public func test_files() -> bool:
     mut fs = filesystem.memory()
@@ -23,6 +25,7 @@ public func test_files() -> bool:
             return False
     with fs.open("data.txt", "r") as f:
         return f.read() == "hello"
+
 
 func main() -> int:
     return 0

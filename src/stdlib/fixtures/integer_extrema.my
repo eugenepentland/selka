@@ -1,6 +1,5 @@
 import math
 
-
 func bounds[T: integer](low: T, high: T) -> bool:
     if math.min(low, high) != low or math.min(high, low) != low:
         return False

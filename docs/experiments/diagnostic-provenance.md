@@ -1,5 +1,11 @@
 # Ownership diagnostic provenance and repair fixtures
 
+Historical experiment: the borrow, returned-reference and arena lifetime model
+below predates the current core. Arena syntax is now rejected with
+`E_ARENA_REMOVED`; current ordinary data uses value semantics and reference
+counting. See [managed memory](../managed-memory.md) and
+[value semantics](../value-semantics.md).
+
 Whole-value and partial-field transfer errors, conflicting borrows and suspended
 parent references report the invalid use, the earlier operation and the value
 declaration. Arena escapes and invalid returned references now explain their

@@ -1,4 +1,3 @@
-
 record Box:
     items: int[]
     number: int

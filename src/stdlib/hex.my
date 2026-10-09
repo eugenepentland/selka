@@ -1,6 +1,5 @@
 import strings
 
-
 # Lowercase hexadecimal text for a byte string, two digits per octet.
 public func encode(data: bytes) -> str:
     return data.hex()

@@ -104,18 +104,28 @@ one step. They were retired in stage S5 of the new compiler core (2026-10): ever
 object is now released as soon as its last owner goes away, so a region has nothing
 left to free early.
 
-A `with arena():` or `with arena() as name:` block still checks and runs as an
-ordinary block, so existing programs keep their output, and it warns
-`W_ARENA_RETIRED` at the `with` (a program with an error does not carry the
-warning). The block has no rules of its own: the old escape checks
-(`E_ARENA_ESCAPE`, `E_ARENA_BINDING`) are gone, and `name.escape(value)` is `value`.
+A `with arena():` or `with arena() as name:` block is rejected with
+`E_ARENA_REMOVED`. Use ordinary statements. The diagnostic keeps its structured
+repair even when another semantic error is present. The old escape checks
+(`E_ARENA_ESCAPE`, `E_ARENA_BINDING`) are gone.
 `mylang fix` migrates a file: it deletes the `with arena():` line, dedents the
 block's body by one level and rewrites `name.escape(value)` to `value`
 ([fix](tooling/fix.md)).
 
+```mylang
+# doc: expect-error E_ARENA_REMOVED
+func main() -> int:
+    with arena():
+        return 0
+```
+
+When removing the scope would collide with another binding, or an arena name
+is shadowed, the diagnostic leaves the repair to the author. It does not guess
+which variable an escape call meant.
+
 ## Managed lists
 
-`list[T]` is the growable sequence application code reaches for. Its storage is
+`T[]` is the growable sequence application code reaches for. Its storage is
 managed, so there is no allocator argument to thread and no free to write. Assignment and argument passing preserve the value independently, with
 copy-on-write backing where possible. Elements must be
 copyable storable values — scalars, records, strings, byte strings and other

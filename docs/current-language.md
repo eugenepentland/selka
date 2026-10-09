@@ -16,19 +16,19 @@ intend to use; historical counts are not current verification receipts.
 
 | Area | Supported surface | Executable example / restriction |
 | --- | --- | --- |
-| Values | `int`, binary64 `float`, booleans, managed Unicode strings/dictionaries/lists, byte literals, value records, checked Result/Option, domains/arrays, scalar and literal `str`/`bytes` constants and transparent aliases | [constants](module-constants.md), [aliases](type-aliases.md); [bounded scalar source evaluation](source-evaluation.md) |
+| Values | `int`, binary64 `float`, booleans, managed Unicode strings/dictionaries/lists, byte literals, value records, checked results and optional values, domains/arrays, scalar and literal `str`/`bytes` constants and transparent aliases | [constants](module-constants.md), [aliases](type-aliases.md); [bounded scalar source evaluation](source-evaluation.md) |
 | Control flow | Indented if/elif/else, while, foreach/enumerate/range (with an optional step), break/continue and match/case | [range iteration](range-iteration.md), [stepped ranges](range-iteration.md#stepped-ranges), [matching a variant](match-expressions.md); conservative outer ownership on loop exits |
 | Python expressions | Chained comparisons, `str`/`bytes` ordering, `*` repetition of text and lists, `round(x, n)`, and CPython format specifications in `f"{value:spec}"` | [operators Python has](python-syntax.md#operators-python-has), [ordering and repetition](text.md#ordering-and-repetition), [format specifications](text.md#format-specifications); `round` breaks ties away from zero (a declared divergence); `**` stays rejected |
 | Generics | Functions and nominal records/unions/results/enums; structural field/operation contracts and const length parameters | [structural contracts](../examples/structural-constraints.my); [inferred call type arguments](generic-inference.md) |
 | Managed memory | Value semantics: lists, dictionaries, sets and byte buffers are independent values; one-count reference counting with copy-on-write releases each value when its last owner goes away; no collector and no runtime choice | [Value semantics](value-semantics.md), [releasing memory](managed-memory.md#releasing-memory); `class` and builtin `Cell` are rejected |
-| Managed arenas | Retired: `with arena():` runs as an ordinary block and warns `W_ARENA_RETIRED`; remove the line and dedent its body | [Retired arenas](managed-memory.md#retired-arenas) records the retirement |
+| Managed arenas | Retired: `with arena():` is rejected with `E_ARENA_REMOVED`; `mylang fix` removes the line and dedents its body | [Retired arenas](managed-memory.md#retired-arenas) records the retirement |
 | Managed bytes | Immutable reference-counted byte strings with Python indexing, slicing, membership, split/join and text/hex conversions | [Managed byte strings](bytes.md); byte strings are rejected at JSON and C boundaries like `str` |
-| Ordinary I/O | `print` with Python rendering and an `output` effect; `with open(...)`, handle methods and whole-path file helpers over granted directories | [printing, files and authority](io.md) |
-| Program boundary | `main(args: list[str], ...)` receives guest arguments after `--` from `run`/`build --run` or after `argv[0]` from an installed executable; an `err: Stream` parameter writes diagnostics; explicit `Environment` access and `main -> Result[int, str]` are supported | [arguments](io.md#arguments); [exit results](io.md#what-mylang-run-prints-and-returns); a synthetic program name is never placed in the list |
+| Ordinary I/O | `Stream.print` with Python rendering and an `output` effect; `with open(...)`, handle methods and whole-path file helpers over granted directories | [printing, files and authority](io.md) |
+| Program boundary | `main(args: str[], ...)` receives guest arguments after `--` from `run`/`build --run` or after `argv[0]` from an installed executable; an `err: Stream` parameter writes diagnostics; explicit `Environment` access and `main -> int fails str` are supported | [arguments](io.md#arguments); [exit results](io.md#what-mylang-run-prints-and-returns); a synthetic program name is never placed in the list |
 | Resources | External resource owners, explicit completion and deterministic cleanup | [source resources](experiments/source-resources.md) and [resource reads and writes](experiments/resource-io.md), with runnable [`examples/resources.my`](../examples/resources.my) and [`examples/resource-io.my`](../examples/resource-io.my); no ambient operating-system authority |
 | Authority | Explicit host capabilities and transitive effect ceilings; `mylang run` grants them all, and `--restrict` plus `--allow-*` withholds and narrows them | [capability effects](effects.md); [command-line grants](io.md#capabilities); [scoped directory/endpoint grants](experiments/scoped-providers.md) |
-| Modules | Disk imports, explicit exports, nominal identity and embedded standard modules | [domain codecs](../examples/domain-codecs/main.my); [local locked package roots](experiments/local-packages.md); no network version resolver |
-| Standard library | Ten embedded Python-syntax modules over managed types: `math`, `strings`, `sort`, `path`, `hex`, `base64`, `json`, `pool`, `random`, `time` | [standard library](standard-library.md); no transcendental functions, no ordering contract for a generic sort, no filesystem or network module |
+| Modules | Path-based disk imports, `public` declarations, nominal identity and embedded standard modules | [domain codecs](../examples/domain-codecs/main.my); [local locked package roots](experiments/local-packages.md); no network version resolver |
+| Standard library | Fourteen embedded modules over managed types: `math`, `strings`, `sort`, `path`, `hex`, `base64`, `byte_builder`, `json`, `pool`, `network`, `random`, `time`, `filesystem`, `environment` | [standard library](standard-library.md); no transcendental functions, generic sorting uses an explicit key callback; filesystem and network operations require capabilities |
 | Data interchange | Typed JSON codecs for exported types (`schema-project`, `mylang test --cases`), and managed byte strings | [managed byte strings](bytes.md); `bytes` is not a Unicode string type; guest-source JSON operations were removed with the explicit storage tier |
 | Development | Independent function diagnostics, navigation, parse-only declaration listing, formatting, syntax/exact-verdict/function-body caches, symbolic-template and concrete-specialization reuse, receipt-first native-test result and preparation reuse, affected verification | [navigation](experiments/navigation-client.md); [declaration listing](experiments/list-declarations.md) reports kinds and byte ranges without checking; [checked-body and specialization reuse](tooling/caches.md#persistent-checked-body-store) keeps fresh global effect/mutation checks and conservative fallbacks; [guest tests](tooling/guest-tests.md#reusing-unaffected-results) reuse receipts and a reduced preparation graph |
 | Documentation | Every fenced `mylang` example in README, SPEC and docs is run, type-checked or explicitly skipped by the default test gate | [executable documentation](experiments/doc-examples.md); directives pin expected output, expected diagnostics and explicit skips |
@@ -44,14 +44,15 @@ stored reference lifetimes and unrestricted source compile-time execution. The [
 extensions; their presence in that backlog does not claim implementation.
 
 Memory safety combines automatic reclamation (one-count reference counting) with
-the runtime's checked pool handles and generations. The guest runtime is single-threaded and the language
-has no spawn syntax: parallelism is one guest process per task, arranged by the host.
+the runtime's checked pool handles and generations. The language has no guest spawn syntax. The native runtime can use a bounded
+worker pool for compiler-selected collection work; independent guest programs and
+tests can also run in separate processes.
 `noalloc` restricts managed guest allocation, not all compiler/runtime/host allocation.
 C functions called through `extern func` are trusted implementations of their
 declared signatures. These limits are
 part of the current model, not guarantees supplied by a future thread system.
 
-`float` provides decimal literals and ordinary numeric operators over IEEE binary64; the standard `math` module adds classification, rounding, roots and integer helpers, and the raw `f64_*` intrinsics over `u64` representations remain available. See [floating-point.md](floating-point.md).
+`float` provides decimal literals and ordinary numeric operators over IEEE binary64; the standard `math` module adds classification, rounding, roots and integer helpers, and the raw `f64_*` spellings over `u64` representations are rejected with `E_REMOVED_SPELLING`. See [floating-point.md](floating-point.md).
 
 `str` and `bytes` constants require matching literals and their reads contribute `managed_allocation`; see [module-constants.md](module-constants.md#string-and-byte-literal-constants).
 
@@ -67,13 +68,21 @@ Generic functions and nominal declarations support explicit `const N:u64` length
 
 [Typed noncapturing callbacks](experiments/callbacks.md) support reusable sorting and visitors with explicit signatures and effect ceilings. Captures remain excluded.
 
-The [standard library guide](standard-library.md) lists the ten embedded modules that ship with the compiler, their signatures and their bounded contracts. They are ordinary guest source over `list`, `dict`, `str`, `bytes`, `Option` and `Result`, so nothing in them needs an allocator argument or a storage annotation.
+The [standard library guide](standard-library.md) lists the fourteen embedded modules that ship with the compiler, their signatures and their bounded contracts. They are ordinary guest source over growable arrays (`T[]`), `dict`, `str`, `bytes`, optional values (`T?`) and checked results, so nothing in them needs an allocator argument or a storage annotation.
 
-Python-style procedures omit their return annotation or use `-> None`, bare `return`, and natural fallthrough; ordinary calls may stand alone only when returning unit. See [unit procedures](functions.md#unit-procedures).
+Procedures omit their return annotation or use `-> Unit`, bare `return`, and natural fallthrough; ordinary calls may stand alone only when returning unit. See [unit procedures](functions.md#unit-procedures).
 
-A statement ends at its newline, at the dedent that closes its suite, or at end of file. A `;` separates two statements written on one line, as it does in Python. A new line ends a completed expression; a delimiter continues it, so parentheses also allow multiline calls and indexing. Use an explicit `;` to end the previous statement when a following operator, such as unary minus, must not continue its expression. Module, import, export and type declarations follow the same newline rule.
+Statements end at newlines, at the dedent that closes a suite, or at end of file.
+Semicolon-separated statements are rejected. Parentheses and other delimiters allow
+multiline expressions, calls and indexing. Module identity comes from file paths;
+redundant source `module` headers are rejected. The `module` line in a generated
+`.api` interface is metadata, not source syntax.
 
-`None` and `()` both spell the unit type and unit value. `return` followed by a newline or a dedent returns unit. Postfix `expression?` propagates a failed result to the caller, with postfix precedence. Calls and parameter lists accept trailing commas.
+`Unit` spells the unit type and `()` its value; `None` is an absent optional value.
+A bare `return` returns unit. A fallible function declares `-> T fails E`, returns
+its successful value with `return`, and returns an error with `fail`. Boundary
+`try` propagates a failure; postfix expression `?` is rejected, while the type
+suffix `T?` spells an optional value. Calls and parameter lists accept trailing commas.
 
 The brace dialect this language grew out of was removed on 2026-09-13, together with the `migrate` tool that converted it; [the removed-features index](legacy/README.md) records what each spelling became.
 

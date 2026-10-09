@@ -1,9 +1,6 @@
-
 # Stores into fields, elements, dictionary values, tuples and payloads, and
 # the operations that build a new collection from an old one's elements, give
 # the destination its own value (VALUE-SEMANTICS-2).
-
-
 record Bag:
     items: int[]
     tags: dict[str, int[]]

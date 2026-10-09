@@ -1,12 +1,10 @@
 func gcd(a: int, b: int) -> int:
     mut x = a
     mut y = b
-
     while y != 0:
         mut remainder = remtrunc(x, y)
         x = y
         y = remainder
-
     return x
 
 

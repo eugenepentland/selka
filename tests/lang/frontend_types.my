@@ -4,9 +4,11 @@ enum ParseError:
     invalid
     empty
 
+
 enum Message:
     pair(left: int, right: int)
     empty
+
 
 func parse(value: int) -> int fails ParseError:
     if value < 0:
@@ -15,19 +17,24 @@ func parse(value: int) -> int fails ParseError:
         fail ParseError.empty
     return value + 1
 
+
 func forward(value: int) -> int fails ParseError:
     return try parse(value)
+
 
 func optional(value: int) -> int?:
     if value == 0:
         return None
     return value
 
+
 func nested_optional(value: int) -> int??:
     return optional(value)
 
+
 func nothing() -> Unit:
     return
+
 
 # spec: FRONTEND-TYPES-1
 public func test_frontend_array_optional() -> bool:
@@ -38,6 +45,7 @@ public func test_frontend_array_optional() -> bool:
         return False
     return len(values) == 3 and present == 3
 
+
 # spec-case: FRONTEND-TYPES-1
 public func test_frontend_nested_optional() -> bool:
     const outer = nested_optional(0)
@@ -47,6 +55,7 @@ public func test_frontend_nested_optional() -> bool:
         case None:
             return False
 
+
 # spec: FRONTEND-FAILURES-1
 public func test_frontend_failure_success() -> bool:
     match forward(4):
@@ -54,6 +63,7 @@ public func test_frontend_failure_success() -> bool:
             return value == 5
         case Err(error):
             return False
+
 
 # spec-case: FRONTEND-FAILURES-1
 public func test_frontend_nested_failure() -> bool:
@@ -65,6 +75,7 @@ public func test_frontend_nested_failure() -> bool:
         case Err(ParseError.empty):
             return False
 
+
 # spec: FRONTEND-MATCH-1
 public func test_frontend_named_enum_pattern() -> bool:
     const message = Message.pair(right=8, left=3)
@@ -73,6 +84,7 @@ public func test_frontend_named_enum_pattern() -> bool:
             return left == 3 and right == 8
         case Message.empty:
             return False
+
 
 # spec-case: FRONTEND-MATCH-1
 public func test_frontend_match_value() -> bool:
@@ -83,17 +95,21 @@ public func test_frontend_match_value() -> bool:
             yield 0
     return number == 11
 
+
 # spec-case: FRONTEND-TYPES-1
 public func test_frontend_fixed_array() -> bool:
     const values: FixedArray[int, 2] = FixedArray[int, 2]([3, 4])
     return values[0] == 3 and values[1] == 4
 
+
 enum Bit:
     low
     high
 
+
 enum Product:
     pair(left: Bit, right: Bit)
+
 
 # spec-case: FRONTEND-MATCH-1
 public func test_frontend_nested_product() -> bool:
@@ -109,8 +125,10 @@ public func test_frontend_nested_product() -> bool:
             yield 3
     return value == 2
 
+
 func unit_optional() -> Unit?:
     return ()
+
 
 # spec-case: FRONTEND-TYPES-1
 public func test_frontend_optional_unit() -> bool:
@@ -120,6 +138,7 @@ public func test_frontend_optional_unit() -> bool:
         case None:
             return False
 
+
 # spec-case: FRONTEND-TYPES-1
 public func test_frontend_dynamic_fixed_array() -> bool:
     const source: int[] = [3, 4]
@@ -128,6 +147,7 @@ public func test_frontend_dynamic_fixed_array() -> bool:
             return values[0] == 3 and values[1] == 4
         case Err(error):
             return False
+
 
 # spec-case: FRONTEND-TYPES-1
 public func test_frontend_dynamic_fixed_array_mismatch() -> bool:
@@ -145,12 +165,15 @@ public func test_frontend_imported_nominal_suffix() -> bool:
     const copied = frontend_type_helpers.generic_rows(values)
     return copied[0].value == 3
 
+
 enum Number:
     present(value: int)
     absent
 
+
 enum NumberProduct:
     pair(left: Number, right: Bit)
+
 
 # spec-case: FRONTEND-MATCH-1
 public func test_frontend_product_row_binders() -> bool:
@@ -166,12 +189,15 @@ public func test_frontend_product_row_binders() -> bool:
             yield 1
     return result == 8
 
+
 enum NestedBit:
     wrapped(value: Bit)
     absent
 
+
 enum NestedProduct:
     pair(left: NestedBit, right: Bit)
+
 
 # spec-case: FRONTEND-MATCH-1
 public func test_frontend_deep_product() -> bool:
@@ -195,8 +221,10 @@ public func test_frontend_deep_product() -> bool:
 enum Singleton:
     only
 
+
 enum DisjointProduct:
     pair(left: Singleton, right: Bit)
+
 
 # spec-case: FRONTEND-MATCH-1
 public func test_frontend_disjoint_wildcard_product() -> bool:
@@ -208,7 +236,8 @@ public func test_frontend_disjoint_wildcard_product() -> bool:
 
 
 func grouped_optional(found: bool) -> int?:
-    return if(found) then(Some(7)) else(((None)))
+    return if (found) then (Some(7)) else (((None)))
+
 
 # spec-case: FRONTEND-TYPES-1
 public func test_frontend_grouped_none() -> bool:

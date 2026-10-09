@@ -1,5 +1,3 @@
-
-
 record PlainKey:
     high: u64
     low: i16

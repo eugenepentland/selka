@@ -1,8 +1,6 @@
 # Byte-string slices copy their octets without an ASCII scan; one of an ASCII block keeps
 # the flag (NEW-CORE-S1-ASCII-1). Every answer here is the base compiler's (`main`
 # cafe7fea7): lengths, decoding, equality, search and dictionary keys.
-
-
 func decoded(raw: bytes) -> str:
     match raw.decode():
         case Ok(value):

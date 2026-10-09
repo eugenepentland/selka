@@ -1,6 +1,4 @@
-
 import byte_builder
-
 
 record Sink:
     buffer: byte_buffer

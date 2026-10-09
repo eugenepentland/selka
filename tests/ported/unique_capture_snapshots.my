@@ -1,4 +1,3 @@
-
 # A list named twice in adjacent statements: the second statement's write must
 # leave the first name's snapshot alone, a held element copied out of a list of
 # lists stays a copy, and loops that rewrite one element keep their totals. These
@@ -7,8 +6,6 @@
 # `once`, `snapshot` and `held` natively, the others by their lowering only. The
 # traps that test also pinned (the bounds trap of `once(13, 2)` and a one-step
 # budget) cannot be expected from a guest test.
-
-
 func plain(times: int, index: int) -> int:
     mut values = [7, 11]
     for at in range(times):

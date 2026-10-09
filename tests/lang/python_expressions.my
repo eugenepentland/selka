@@ -1,9 +1,6 @@
-
 # Python expression idioms, each checked against the answer CPython gives for the
 # same expression (the expected values below were produced by CPython 3). The
 # f-string format specifications and `round(x, n)` live in format_specs.my.
-
-
 func ordered(a: str, b: str) -> bool[]:
     return [a < b, a <= b, a > b, a >= b]
 
@@ -55,6 +52,8 @@ public func test_bytes_order_by_octet_with_a_prefix_first() -> bool:
 
 
 const IN_RANGE: bool = 0 < 5 <= 5
+
+
 # The false first link leaves `1 // 0` unevaluated, as it does at run time.
 const SKIPPED: bool = 1 < 0 < 1 // 0
 

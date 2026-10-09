@@ -1,9 +1,9 @@
-
 func main() -> int:
     mut total = 0
     for i in range(5):
         total = total + i
     return total
+
 
 # spec-case: PY-SCOPE-1
 public func test_py_scope_1_predeclared_loop_state_and_comple_4() -> bool:
