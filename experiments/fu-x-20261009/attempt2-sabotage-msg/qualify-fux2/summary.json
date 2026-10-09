@@ -1,0 +1,42 @@
+{
+  "source_commit": "1d257723c28586bf21fc144ad999ec5dd5d70afa",
+  "references_sha256": "b6703c9fc0f135844131130cab4c0c8e263d2966ac5e85d24d380ae5deece3bc",
+  "compiler": "zig-out/bin/mylang",
+  "core_shards": 64,
+  "results": [
+    {
+      "command": [
+        "scripts/build-slot.sh",
+        "gate",
+        "--",
+        "bash",
+        "-c",
+        "\"$@\"; result=$?; exit \"$result\"",
+        "--",
+        "scripts/build-slot.sh",
+        "build",
+        "--",
+        "python3",
+        "experiments/new-core-s3-20261006/wave-a/exclusive_core.py",
+        "--",
+        "/usr/bin/time",
+        "-f",
+        "%e",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/experiments/fu-x-20261009/qualify-fux2/install-core.seconds",
+        "zig",
+        "build",
+        "install",
+        "--summary",
+        "all"
+      ],
+      "log": "experiments/fu-x-20261009/qualify-fux2/install-core.log",
+      "status": 0,
+      "seconds": 0.96,
+      "wall_including_admission": 50.634805157082155
+    }
+  ],
+  "qualified": false,
+  "core_sha256": "1f6a00b9a8a1b634671b38057280d9993fc9e7ec5ff98655b109c9da0b87b16e",
+  "error": "could not convert string to float: 'Command exited with non-zero status 1\\n45.90\\n'"
+}

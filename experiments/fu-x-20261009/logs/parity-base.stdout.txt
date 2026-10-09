@@ -1,0 +1,94 @@
+| group | benchmark | zig ms | zig-safe | rust | rust-checked | my | limit | variants | check |
+|---|---|---:|---:|---:|---:|---:|---:|---|---|
+| suite | binary_trees | 255.1 |  |  |  | 1.04 | 0.54 | arena 1.04 | FAIL my, FAIL my-arena |
+| suite | binary_trees_recursive |  |  |  |  |  |  |  | no qualified zig-fast |
+| suite | fannkuch_redux | 230.7 |  |  |  | 0.88 | 1.31 | array 3.20, tuned 2.68 | my improved, FAIL my-array, FAIL my-tuned |
+| suite | knucleotide | 120.5 |  |  |  | 1.01 | 1.71 | arena 1.01, tuned 0.66 | my improved, my-arena improved, my-tuned improved |
+| suite | mandelbrot | 146.9 |  |  |  | 0.99 | 1.17 |  | ok |
+| suite | matmul | 50.6 |  |  |  | 0.54 | 4.40 | flat 1.87, tuned 2.70 | my improved, my-flat improved, my-tuned improved |
+| suite | nbody | 191.1 |  |  |  | 1.61 | 2.29 | class 1.61 | my improved |
+| suite | raytrace | 95.6 |  |  |  | 1.07 | 1.64 | tuned 1.09 | my improved |
+| suite | sieve | 89.9 |  |  |  | 1.07 | 2.06 | tuned 1.16 | my improved, my-tuned improved |
+| suite | sort_builtin | 270.4 |  |  |  | 0.53 | 0.57 |  | ok |
+| suite | sort_quick | 226.3 |  |  |  | 1.27 | 1.48 |  | ok |
+| suite | sort_records | 149.9 |  |  |  | 0.28 | 0.30 | keyed 0.27, sorted 0.28 | my-keyed improved |
+| suite | spectral_norm | 214.7 |  |  |  | 1.01 | 1.30 | tuned 1.01 | ok |
+| suite | text_ops | 32.0 |  |  |  | 2.13 | 4.32 | tuned 0.83 | my improved, FAIL my-tuned |
+| lib | scan_count | 102.6 |  |  |  | 1.41 | 1.01 |  | FAIL my |
+| lib | scan_replace | 186.2 |  |  |  | 0.48 | 0.40 |  | FAIL my |
+| lib | scan_split | 40.9 |  |  |  | 2.11 | 3.95 |  | my improved |
+| micro | alloc_churn | 80.3 |  |  |  | 0.83 | 2.22 | arena 0.83 | my improved, my-arena improved |
+| micro | bytes_scan | 43.2 |  |  |  | 0.50 | 1.55 | wrapping 0.49 | my improved, my-wrapping improved |
+| micro | calls | 127.9 |  |  |  | 1.01 | 1.15 |  | ok |
+| micro | dict_count | 31.1 |  |  |  | 0.38 | 1.28 |  | my improved |
+| micro | fib | 37.5 |  |  |  | 1.79 | 2.43 |  | ok |
+| micro | float_loop | 38.5 |  |  |  | 1.02 | 1.16 |  | ok |
+| micro | intloop | 126.4 |  |  |  | 1.03 | 1.08 |  | ok |
+| micro | list_append_sum | 50.5 |  |  |  | 1.06 | 1.34 |  | ok |
+| micro | list_records | 48.9 |  |  |  | 1.08 | 1.58 | wrapping 0.92 | my-wrapping improved |
+| micro | records | 102.6 |  |  |  | 0.82 | 1.07 |  | ok |
+| micro | str_build | 44.7 |  |  |  | 2.33 | 1.34 |  | FAIL my |
+
+geomean suite my              0.93x over 13 benchmark(s)  (plan target <= 1.2)
+worst   suite my              2.13x  (plan target <= 1.5)
+geomean lib   my              1.12x over 3 benchmark(s)
+geomean micro my              0.96x over 11 benchmark(s)
+
+| group | benchmark | instr my/zig | instr my/rust | IPC my | IPC zig | IPC rust | br-miss/ki my | br-miss/ki zig | cache-miss/ki my | cache-miss/ki zig |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| suite | binary_trees | 2.06 |  | 4.19 | 1.57 |  | 0.34 | 0.06 | 0.31 | 0.05 |
+| suite | fannkuch_redux | 0.85 |  | 1.79 | 1.84 |  | 13.43 | 9.15 | 0.01 | 0.00 |
+| suite | knucleotide | 1.12 |  | 3.02 | 2.89 |  | 1.08 | 3.16 | 1.32 | 0.23 |
+| suite | mandelbrot | 1.02 |  | 1.65 | 1.63 |  | 0.42 | 0.28 | 0.00 | 0.00 |
+| suite | matmul | 0.29 |  | 1.97 | 3.24 |  | 0.10 | 0.05 | 0.75 | 0.25 |
+| suite | nbody | 2.43 |  | 3.72 | 2.48 |  | 0.00 | 0.00 | 0.00 | 0.00 |
+| suite | raytrace | 1.38 |  | 2.49 | 1.94 |  | 0.02 | 0.02 | 0.01 | 0.00 |
+| suite | sieve | 2.17 |  | 1.87 | 0.99 |  | 0.01 | 0.01 | 17.06 | 37.42 |
+| suite | sort_builtin | 0.77 |  | 1.79 | 1.17 |  | 5.15 | 22.18 | 1.53 | 2.99 |
+| suite | sort_quick | 1.23 |  | 1.30 | 1.34 |  | 17.35 | 21.54 | 0.62 | 0.84 |
+| suite | sort_records | 0.22 |  | 1.77 | 1.50 |  | 0.09 | 14.56 | 10.23 | 4.38 |
+| suite | spectral_norm | 1.16 |  | 4.12 | 3.56 |  | 0.03 | 0.04 | 0.00 | 0.00 |
+| suite | text_ops | 2.61 |  | 3.95 | 3.08 |  | 0.19 | 0.36 | 1.64 | 0.27 |
+| lib | scan_count | 1.27 |  | 2.99 | 2.13 |  | 0.65 | 0.30 | 0.10 | 0.17 |
+| lib | scan_replace | 0.67 |  | 3.38 | 2.39 |  | 0.33 | 0.22 | 0.84 | 0.17 |
+| lib | scan_split | 3.97 |  | 3.65 | 1.67 |  | 0.29 | 0.07 | 4.18 | 0.38 |
+| micro | alloc_churn | 0.45 |  | 1.03 | 1.88 |  | 0.01 | 0.00 | 0.02 | 0.00 |
+| micro | bytes_scan | 0.33 |  | 3.45 | 3.22 |  | 0.02 | 0.00 | 1.65 | 1.08 |
+| micro | calls | 0.62 |  | 0.98 | 1.60 |  | 0.01 | 0.00 | 0.01 | 0.00 |
+| micro | dict_count | 0.37 |  | 4.52 | 4.53 |  | 0.05 | 0.45 | 0.03 | 0.00 |
+| micro | fib | 1.50 |  | 3.36 | 4.19 |  | 0.03 | 0.51 | 0.00 | 0.00 |
+| micro | float_loop | 0.99 |  | 0.74 | 0.75 |  | 0.03 | 0.00 | 0.05 | 0.00 |
+| micro | intloop | 0.89 |  | 1.03 | 1.20 |  | 0.01 | 0.00 | 0.01 | 0.00 |
+| micro | list_append_sum | 1.13 |  | 2.03 | 2.12 |  | 0.02 | 0.00 | 12.55 | 13.15 |
+| micro | list_records | 3.18 |  | 1.13 | 0.46 |  | 0.02 | 0.00 | 52.51 | 155.32 |
+| micro | records | 0.93 |  | 1.15 | 1.02 |  | 0.01 | 0.00 | 0.02 | 0.00 |
+| micro | str_build | 1.67 |  | 1.91 | 3.62 |  | 0.07 | 0.00 | 5.52 | 0.90 |
+improved   fannkuch_redux my: ratio 0.88x (95% CI 0.88-0.89) is below its baseline 1.14x by more than the tolerance; rebaseline to lock the gain in
+improved   knucleotide my: ratio 1.01x (95% CI 0.97-1.02) is below its baseline 1.49x by more than the tolerance; rebaseline to lock the gain in
+improved   knucleotide my-arena: ratio 1.01x (95% CI 1.00-1.03) is below its baseline 3.21x by more than the tolerance; rebaseline to lock the gain in
+improved   knucleotide my-tuned: ratio 0.66x (95% CI 0.64-0.68) is below its baseline 1.36x by more than the tolerance; rebaseline to lock the gain in
+improved   matmul my: ratio 0.54x (95% CI 0.53-0.57) is below its baseline 3.83x by more than the tolerance; rebaseline to lock the gain in
+improved   matmul my-flat: ratio 1.87x (95% CI 1.78-1.95) is below its baseline 2.73x by more than the tolerance; rebaseline to lock the gain in
+improved   matmul my-tuned: ratio 2.70x (95% CI 2.51-2.76) is below its baseline 4.46x by more than the tolerance; rebaseline to lock the gain in
+improved   nbody my: ratio 1.61x (95% CI 1.60-1.63) is below its baseline 1.99x by more than the tolerance; rebaseline to lock the gain in
+improved   raytrace my: ratio 1.07x (95% CI 1.03-1.08) is below its baseline 1.43x by more than the tolerance; rebaseline to lock the gain in
+improved   sieve my: ratio 1.07x (95% CI 1.04-1.14) is below its baseline 1.79x by more than the tolerance; rebaseline to lock the gain in
+improved   sieve my-tuned: ratio 1.16x (95% CI 1.07-1.28) is below its baseline 1.82x by more than the tolerance; rebaseline to lock the gain in
+improved   sort_records my-keyed: ratio 0.27x (95% CI 0.27-0.28) is below its baseline 0.34x by more than the tolerance; rebaseline to lock the gain in
+improved   text_ops my: ratio 2.13x (95% CI 2.06-2.22) is below its baseline 3.76x by more than the tolerance; rebaseline to lock the gain in
+improved   scan_split my: ratio 2.11x (95% CI 1.90-2.29) is below its baseline 3.43x by more than the tolerance; rebaseline to lock the gain in
+improved   alloc_churn my: ratio 0.83x (95% CI 0.82-0.85) is below its baseline 1.93x by more than the tolerance; rebaseline to lock the gain in
+improved   alloc_churn my-arena: ratio 0.83x (95% CI 0.82-0.87) is below its baseline 1.58x by more than the tolerance; rebaseline to lock the gain in
+improved   bytes_scan my: ratio 0.50x (95% CI 0.50-0.51) is below its baseline 1.35x by more than the tolerance; rebaseline to lock the gain in
+improved   bytes_scan my-wrapping: ratio 0.49x (95% CI 0.49-0.51) is below its baseline 1.35x by more than the tolerance; rebaseline to lock the gain in
+improved   dict_count my: ratio 0.38x (95% CI 0.35-0.40) is below its baseline 1.11x by more than the tolerance; rebaseline to lock the gain in
+improved   list_records my-wrapping: ratio 0.92x (95% CI 0.90-0.99) is below its baseline 1.17x by more than the tolerance; rebaseline to lock the gain in
+REGRESSION binary_trees my: ratio 1.04x to zig-fast (95% CI 1.02-1.05) exceeds threshold 0.54x (baseline 0.47x + 15%); re-measured 0.96x (95% CI 0.94-0.99)
+REGRESSION binary_trees my-arena: ratio 1.04x to zig-fast (95% CI 1.03-1.06) exceeds threshold 0.88x (baseline 0.77x + 15%); re-measured 0.96x (95% CI 0.95-1.00)
+REGRESSION fannkuch_redux my-array: ratio 3.20x to zig-fast (95% CI 3.17-3.32) exceeds threshold 1.00x (baseline 0.87x + 15%); re-measured 3.21x (95% CI 3.18-3.39)
+REGRESSION fannkuch_redux my-tuned: ratio 2.68x to zig-fast (95% CI 2.64-2.70) exceeds threshold 1.11x (baseline 0.96x + 15%); re-measured 2.67x (95% CI 2.65-2.77)
+REGRESSION text_ops my-tuned: ratio 0.83x to zig-fast (95% CI 0.82-0.87) exceeds threshold 0.75x (baseline 0.66x + 15%); re-measured 0.86x (95% CI 0.85-0.88)
+REGRESSION scan_count my: ratio 1.41x to zig-fast (95% CI 0.90-1.42) exceeds threshold 1.01x (baseline 0.68x + 50%); re-measured 1.44x (95% CI 0.81-1.46)
+REGRESSION scan_replace my: ratio 0.48x to zig-fast (95% CI 0.45-0.48) exceeds threshold 0.40x (baseline 0.35x + 15%); re-measured 0.49x (95% CI 0.49-0.50)
+REGRESSION str_build my: ratio 2.33x to zig-fast (95% CI 2.29-2.41) exceeds threshold 1.34x (baseline 1.17x + 15%); re-measured 2.32x (95% CI 2.29-2.35)
+bench-parity: FAIL — 44 thresholded arm(s) checked, 8 failure(s); result /home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/experiments/fu-x-20261009/results/parity-base.json

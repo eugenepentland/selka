@@ -1,0 +1,13 @@
+commit f1ddb9baf1f9ccf66683a388a552fad41f465c4a start 12:25:09 load 1.37 2.41 4.05
+gate=1 12:27:55
+
+Command exited with non-zero status 1
+gate wall 166.04 s
+Build Summary: 87/91 steps succeeded (2 failed); 2178/22256 tests passed (20077 skipped, 1 failed)
+fmt=0
+qualify=1 12:29:05
+  "qualified": false,
+grep: experiments/fu-x-20261009/qualify-fux/full-conformance.log: No such file or directory
+fuzz200=0 12:37:13
+number: PASS; 144.6364441839978s s1: PASS; 145.9964616948273s s0: PASS; 107.06311031617224s rc: PASS; 71.66552834096365s rebinding: PASS; 115.79140005796216s iteration: PASS; 186.4836330160033s text: PASS; 130.23005454987288s functions: PASS; 104.52845313120633s dict: PASS; 269.9194349448662s 
+part1a done 12:37:13

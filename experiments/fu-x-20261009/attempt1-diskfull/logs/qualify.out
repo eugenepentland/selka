@@ -1,0 +1,13 @@
+install-core: /home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/experiments/fu-x-20261009/qualify-fux/install-core.log
+test-core: /home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/experiments/fu-x-20261009/qualify-fux/test-core.log
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/experiments/new-core-s5-20261007/tools/qualify_merge.py", line 61, in <module>
+    if __name__=='__main__': main()
+                             ~~~~^^
+  File "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/experiments/new-core-s5-20261007/tools/qualify_merge.py", line 45, in main
+    report,test=run('test-core',['zig','build','test-core',f'-Dcore-shards={a.shards}','--summary','all'])
+                ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/experiments/new-core-s5-20261007/tools/qualify_merge.py", line 36, in run
+    report=log.read_text(); seconds=float(timer.read_text()) if timer.exists() else None
+                                    ~~~~~^^^^^^^^^^^^^^^^^^^
+ValueError: could not convert string to float: 'Command exited with non-zero status 1\n44.12\n'
