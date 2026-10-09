@@ -709,5 +709,67 @@
     "failures": [],
     "log_sha256": "d2d6f0f04ab876636365da5752b5e7a25a7faef37e268ea4670d780155c4bb92",
     "log_bytes": 397419
+  },
+  {
+    "phase": "F10-red",
+    "command": "zig build test-units -Dtest-filter=F10 specialization --summary all",
+    "source_commit": "78bbf1918f5259d88bd4b6ac397420473a192fd8",
+    "status": 1,
+    "summary": "Build Summary: 6/8 steps succeeded (1 failed); 7/8 tests passed (1 failed)",
+    "test_verdicts": {
+      "passed": 7,
+      "failed": 1,
+      "skipped": 0
+    },
+    "failures": [
+      "semantic_cache_test.test.F10 specialization record name work is linear in each fresh catalog"
+    ],
+    "log_sha256": "6369d522b331853586397d1956edf574489da68d00f594555eacda617360bd00",
+    "log_bytes": 2579
+  },
+  {
+    "phase": "F10-focused",
+    "command": "zig build test-units -Dtest-filter=F10 specialization --summary all",
+    "source_commit": "78bbf1918f5259d88bd4b6ac397420473a192fd8",
+    "status": 0,
+    "summary": "Build Summary: 8/8 steps succeeded; 9/9 tests passed",
+    "test_verdicts": {
+      "passed": 9,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "5fe0d91a833e85a0aebc9c5a7aff9ee0fe72423cfd1f9cc75a819221113c8773",
+    "log_bytes": 1967
+  },
+  {
+    "phase": "final-format",
+    "command": "zig build fmt-check --summary all",
+    "source_commit": "78bbf1918f5259d88bd4b6ac397420473a192fd8",
+    "status": 0,
+    "summary": "Build Summary: 15/15 steps succeeded",
+    "test_verdicts": {
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "732d6892e806be6e1a2af9d5c1567b52f432f03917a608b0b15877d8ca34f426",
+    "log_bytes": 3374
+  },
+  {
+    "phase": "F10-full",
+    "command": "scripts/build-slot.sh gate zig build test --summary all",
+    "source_commit": "78bbf1918f5259d88bd4b6ac397420473a192fd8",
+    "status": 0,
+    "summary": "Build Summary: 95/95 steps succeeded; 2314/23733 tests passed (21419 skipped)",
+    "test_verdicts": {
+      "passed": 2314,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "a1131fa439bdccfd3abc7d37ed12753df9e6dfadbbf05073d300f3496e494711",
+    "log_bytes": 395103
   }
 ]

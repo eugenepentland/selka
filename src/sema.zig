@@ -175,7 +175,7 @@ const Checker = struct {
     spec_fresh: std.ArrayList(usize) = .empty,
     ordinary_instance_by_key: std.StringHashMapUnmanaged(usize) = .empty,
     record_by_name: std.StringHashMapUnmanaged(usize) = .empty,
-    initial_record_count: usize = 0,
+    indexed_record_count: usize = 0,
     ordinary_ids: []?typed.FunctionId,
     ordinary_count: usize = 0,
     current_function: ?typed.FunctionId = null,
@@ -1446,21 +1446,15 @@ fn deinitSpecialization(session: *?generic_specializations.Session) void {
 fn initSpecializationReuse(
     checker: *Checker,
     allocator: std.mem.Allocator,
-    catalog_records: []const typed.Record,
     session: *?semantic_cache.Session,
     spec_session: *?generic_specializations.Session,
 ) Error!void {
     checker.prepared = if (session.*) |*queries| &queries.prepared else null;
     checker.spec_build = if (spec_session.*) |*reuse| reuse.backend.build else "";
-    checker.initial_record_count = catalog_records.len;
     if (checker.prepared) |prepared| for (prepared.ordinary_ast, 0..) |ast_index, instance| {
         const entry = try checker.ordinary_instance_by_key.getOrPut(allocator, prepared.keys[ast_index]);
         if (entry.found_existing) entry.value_ptr.* = std.math.maxInt(usize) else entry.value_ptr.* = instance;
     };
-    for (catalog_records, 0..) |record, index| {
-        const entry = try checker.record_by_name.getOrPut(allocator, record.name);
-        if (entry.found_existing) entry.value_ptr.* = std.math.maxInt(usize) else entry.value_ptr.* = index;
-    }
 }
 /// Active opt-in phase recorder, if any. Timing never changes semantic results.
 fn activeTiming(cache: ?*semantic_cache.Cache) ?*timings.Profile {
@@ -1799,7 +1793,7 @@ fn checkProgram(allocator: std.mem.Allocator, src: source.Source, program: ast.P
     }
     // C3 reuse: prepared declaration facts and fresh identity maps are
     // per-request; only populated when a semantic cache is attached.
-    try initSpecializationReuse(&checker, allocator, catalog.records, &session, &spec_session);
+    try initSpecializationReuse(&checker, allocator, &session, &spec_session);
     for (program.functions, 0..) |function, i| {
         const name = if (module_names) |names| try names.functionDeclaration(function.policy.owner, function.name) else try functionName(allocator, src, function.policy.owner, function.name);
         // The builtin `set` type is new beside programs that already declare a

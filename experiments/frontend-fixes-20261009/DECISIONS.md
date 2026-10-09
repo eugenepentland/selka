@@ -138,3 +138,14 @@ Choice: ignore another with_scope binder when neither statement contains the oth
 Reversibility: fix eligibility only; the retired arena syntax remains rejected.
 
 F9 gate follow-up: Guardian rejects the combined containment condition's four boolean operators (cap three). Name the containment predicate inside the with_scope branch; retain the same logic and threshold. Update the existing tagged arena-fix SPEC bullet with the disjoint-scope contract, and correct its stale W_ARENA_RETIRED/post-check wording to the already-established E_ARENA_REMOVED/syntax-derived behavior. No diagnostic behavior is changed by that documentation correction.
+
+## D17 — F10 measures catalog work and extends one request index
+
+Question: how can a performance-only regression fail deterministically without relying on quiet hardware?
+Options: elapsed thresholds, or count actual catalog name visits at the existing scans.
+Evidence: instrument the unchanged scans with a specialization statistic, then run the new eight-record/16-specialization reproducer: it fails the linear-work assertion with 467 name visits for 19 final catalog records. Freeze the uninstrumented F9 ReleaseFast compiler before that test for the elapsed baseline.
+Choice: reuse Checker's existing record_by_name map and rename its unused initial-count field to an incremental cursor. Populate lazily for lookup/publication and append only newly materialized records. Duplicate names remain maxInt; provider-shape checks and conservative misses are unchanged. The counter stays in in-memory specialization statistics and changes no cache format. The regression now reports 19 visits on each request, 16 fresh specializations initially and 16 reused on the warm request; both execute to 28. A separate index regression proves late duplicates stay ambiguous and a settled catalog is not rescanned.
+Measurement: use the same five-sample private EDA fixture and equivalent edits as F1. Before medians are 332.750 ms (bounded edit) and 326.910 ms (unrelated edit), on shared hardware. Record after timings and body counts even if the elapsed result is small or negative.
+Reversibility: local lookup algorithm and work counter only; no type identity, cache format, runtime semantics or numeric gate threshold changes.
+
+F10 after measurement: medians are 312.181 ms (bounded edit) and 308.275 ms (unrelated edit), versus 332.750 / 326.910 ms before. All five samples in both arms still perform 1,205 ordinary bodies and reuse 8, and perform 11 specialization bodies and reuse 8. These shared-machine elapsed observations are not a quiet-hardware speedup claim (the before arm overlapped a focused debug build). The deterministic publication reproducer is the algorithmic evidence: 467 catalog visits fall to 19; warm lookup/publication also visits 19 and reuses all 16 bodies.
