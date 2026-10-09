@@ -1,0 +1,20 @@
+[] dict_comprehensions: 10 passed, 0 cached, 0 failed, 0 skipped
+[] frontend_mut: 10 passed, 0 cached, 0 failed, 0 skipped
+[] frontend_numbers: 3 passed, 0 cached, 0 failed, 0 skipped
+[] frontend_type_helpers: 0 passed, 0 cached, 0 failed, 0 skipped
+[] frontend_types: 16 passed, 0 cached, 0 failed, 0 skipped
+[--release] dict_comprehensions: 10 passed, 0 cached, 0 failed, 0 skipped
+[--release] frontend_mut: 10 passed, 0 cached, 0 failed, 0 skipped
+[--release] frontend_numbers: 3 passed, 0 cached, 0 failed, 0 skipped
+[--release] frontend_type_helpers: 0 passed, 0 cached, 0 failed, 0 skipped
+[--release] frontend_types: 16 passed, 0 cached, 0 failed, 0 skipped
+[--release --verify-facts] dict_comprehensions: 10 passed, 0 cached, 0 failed, 0 skipped
+[--release --verify-facts] frontend_mut: 10 passed, 0 cached, 0 failed, 0 skipped
+[--release --verify-facts] frontend_numbers: 3 passed, 0 cached, 0 failed, 0 skipped
+[--release --verify-facts] frontend_type_helpers: 0 passed, 0 cached, 0 failed, 0 skipped
+[--release --verify-facts] frontend_types: 16 passed, 0 cached, 0 failed, 0 skipped
+[--optimize-debug] dict_comprehensions: 10 passed, 0 cached, 0 failed, 0 skipped
+[--optimize-debug] frontend_mut: 10 passed, 0 cached, 0 failed, 0 skipped
+[--optimize-debug] frontend_numbers: 3 passed, 0 cached, 0 failed, 0 skipped
+[--optimize-debug] frontend_type_helpers: 0 passed, 0 cached, 0 failed, 0 skipped
+[--optimize-debug] frontend_types: 16 passed, 0 cached, 0 failed, 0 skipped

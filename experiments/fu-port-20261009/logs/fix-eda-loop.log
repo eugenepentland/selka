@@ -1129,3 +1129,4 @@ round 12: fixed design_model_test.my: 15 edits (E_BINDING_DECLARATION)
 round 12: fixed main.my: 26 edits (E_BINDING_DECLARATION, E_NONE_UNIT)
 round 12: fixed main_test.my: 3 edits (E_BINDING_DECLARATION)
 clean after 13 fix runs; fix edits 45
+hand: support_parse.my: the fixer's E_NUMERIC_PARSE rewrote int(s)/float(s) inside the module's own parse_int/parse_float to parse_int(s)/parse_float(s), which now call themselves (infinite recursion: every EDA case trapped). -> s.parse_int() / s.parse_float() (the builtin; same Core IR as parse_int(s) on a probe)
