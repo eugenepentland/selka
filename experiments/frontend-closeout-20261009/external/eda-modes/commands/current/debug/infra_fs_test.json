@@ -1,0 +1,179 @@
+{
+  "actual_tests": 9,
+  "command": [
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/artifacts/mylang-final",
+    "test",
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/infra_fs_test.my",
+    "--json",
+    "--force",
+    "--jobs",
+    "1",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/external/eda-modes/cache",
+    "--max-frames=30000",
+    "--max-steps=4000000000",
+    "--max-memory=2G"
+  ],
+  "complete_report_exact": false,
+  "cwd": "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda",
+  "elapsed_seconds": 0.3260934459976852,
+  "expected_statuses_equal": true,
+  "functional_membership_pass": true,
+  "membership_equal_after_explicit_module_mapping": true,
+  "nonpassing": 0,
+  "process_status_equal": true,
+  "reference_command": [
+    "/home/epentland/.cache/mylang/frontend-20261008/mylang-s5-pin/bin/mylang",
+    "test",
+    "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/infra_fs_test.my",
+    "--json",
+    "--force",
+    "--jobs",
+    "1",
+    "--cache-dir",
+    "/home/epentland/.cache/mylang/frontend-current-eda-oracle-20261008",
+    "--max-frames=30000",
+    "--max-steps=4000000000",
+    "--max-memory=2G"
+  ],
+  "reference_receipt_sha256": "7e55e0d56e0e4b8f16ad9681faa2b6d4943bb93b8d7d09d6355f66eb2968f8a4",
+  "reference_returncode": 0,
+  "reference_tests": 9,
+  "report_changes": [
+    {
+      "candidate": [
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/infra_fs_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/infra_fs.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/support_sha256.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/support_expect.my"
+      ],
+      "field": "sources",
+      "reference": [
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/infra_fs_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/infra_fs.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/support_sha256.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/support_expect.my"
+      ]
+    },
+    {
+      "candidate": [
+        {
+          "at": "",
+          "name": "src.infra_fs_test::test_cache_probe_leaves_the_closure_alone_without_weakening_the_tamper_guard",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.infra_fs_test::test_cache_probe_rejects_an_end_call_away_from_its_owner_thread",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.infra_fs_test::test_nested_read_traces_invalidate_both_scopes_without_stealing_reads",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.infra_fs_test::test_read_trace_binds_child_dir_bytes_and_detects_aba_consumption",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.infra_fs_test::test_read_trace_digest_sorts_canonical_paths",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.infra_fs_test::test_read_trace_rejects_an_end_call_away_from_its_owner_thread",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.infra_fs_test::test_read_trace_rejects_directory_and_negative_dependency_aba",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.infra_fs_test::test_read_trace_rejects_symlink_removal_and_retargeting",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.infra_fs_test::test_read_trace_reports_retained_evidence_memory",
+          "reason": "",
+          "status": "passed"
+        }
+      ],
+      "field": "tests",
+      "reference": [
+        {
+          "at": "",
+          "name": "infra_fs_test::test_cache_probe_leaves_the_closure_alone_without_weakening_the_tamper_guard",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "infra_fs_test::test_cache_probe_rejects_an_end_call_away_from_its_owner_thread",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "infra_fs_test::test_nested_read_traces_invalidate_both_scopes_without_stealing_reads",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "infra_fs_test::test_read_trace_binds_child_dir_bytes_and_detects_aba_consumption",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "infra_fs_test::test_read_trace_digest_sorts_canonical_paths",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "infra_fs_test::test_read_trace_rejects_an_end_call_away_from_its_owner_thread",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "infra_fs_test::test_read_trace_rejects_directory_and_negative_dependency_aba",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "infra_fs_test::test_read_trace_rejects_symlink_removal_and_retargeting",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "infra_fs_test::test_read_trace_reports_retained_evidence_memory",
+          "reason": "",
+          "status": "passed"
+        }
+      ]
+    }
+  ],
+  "returncode": 0,
+  "stderr_exact": true,
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stdout_sha256": "160bdd6ca8f4d2c5ad6292c70596cfe94217dcedcd6b7c7822c398c62532b4b7",
+  "timeout": false
+}
