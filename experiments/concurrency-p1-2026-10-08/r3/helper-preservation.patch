@@ -1,0 +1,27 @@
+--- a/src/core/runtime/core_rt.c
++++ b/src/core/runtime/core_rt.c
+@@ -115,7 +115,7 @@
+ 
+ /* Drop a shared owner; only the thread that removed the last one may free.
+    The acquire fence makes every prior owner's release visible to destruction. */
+-__attribute__((cold, noinline)) static bool count_release_shared(myl_block *block) {
++__attribute__((cold, noinline, preserve_most)) static bool count_release_shared(myl_block *block) {
+     uint32_t count = count_load(block);
+     while (count != MYL_SATURATED) {
+         if (__atomic_compare_exchange_n(&block->count, &count, count - 1, true,
+@@ -149,8 +149,14 @@
+ }
+ 
+ __attribute__((cold)) void myl_core_free_block(myl_block *block);
++/* Keep an immortal release from paying the ordinary free call's register save.
++   The last shared owner alone crosses this second preserve-most boundary. */
++__attribute__((cold, noinline, preserve_most)) static void count_free_shared(myl_block *block) {
++    myl_core_free_block(block);
++}
++
+ __attribute__((cold, noinline, preserve_most)) void myl_core_release_slow(myl_block *block) {
+-    if (count_release_shared(block)) myl_core_free_block(block);
++    if (count_release_shared(block)) count_free_shared(block);
+ }
+ 
+ static unsigned char *block_data(myl_block *block) { return (unsigned char *)block + MYL_HEADER; }

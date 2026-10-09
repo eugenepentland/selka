@@ -52,7 +52,7 @@
 
 - **Question:** Which approved preserve-most slow path should remain?
 - **Options:** B: one cold call for every nonplain count, including immortals; C: inline the immortal test before the same call.
-- **Evidence:** CPU-10 locked, seven interleaved samples per cell at each K=4,5,6: B five-cell geomean 0.9970614425, C 0.9977732714, neither with a median cell above 1.03. B JSON/4096 is 1.02608 and JSON/64 is 1.01787; C is 1.02178 and 1.02153. `json::read_value` sizes at K=4/5/6 are baseline 7068/7052/7020 bytes, B 8061/8061/8061, C 8472/8472/8472. Full samples and every alignment ratio are in `r3/results/five-cell.json` and `.md`; sizes are in `json-read-value-size.json`.
+- **Evidence:** CPU-10 locked, seven interleaved samples per cell at each K=4,5,6: B five-cell geomean 0.9970614425, C 0.9977732714, neither with a median cell above 1.03. B JSON/4096 is 1.02608 and JSON/64 is 1.01787; C is 1.02178 and 1.02153. `json::read_value` sizes at K=4/5/6 are baseline 7068/7052/7020 bytes, B 8061/8061/8061, C 8472/8472/8472. Full samples and every alignment ratio are in `r3/results/five-cell.json.gz` and `.md`; sizes are in `json-read-value-size.json`.
 - **Choice:** Keep B, as R9 directs for the better five-cell geomean. The difference between variants is small, but no extra tie-break rule is needed. The existing full gate and fmt result cover this selected code. Continue with all 92 row cells, 34 EDA cases, 26 Lox cells and 45 parity arms, then the remaining P1-1 correctness gates.
 - **Reversibility:** Easy; `r3/variant-C.patch` reproduces C against B and both compiler hashes and install paths are retained.
 
@@ -63,3 +63,29 @@
 - **Evidence:** Qualification passed on unchanged `42041fa45` code: 509 Core tests and conformance 1518/0/0 in both modes. The first fuzz launch refused to start because report/harness edits were tracked and uncommitted; it executed no cases.
 - **Choice:** Commit the completed checkpoint now, then run 9×50 followed by 9×200 without changing HEAD or tracked files. Keep currently written build logs out of the index until completed. No gate is bypassed; the qualification compiler's SHA-256 is retained and the implementation remains identical to the qualified merge.
 - **Reversibility:** Easy; this changes only evidence scheduling.
+
+## 2026-10-09 · P1-1 redo — optimized native fixtures must keep assertions
+
+- **Question:** Why did the first isolated P1-2 thread probe exit successfully with no output and no `pthread_create` symbol?
+- **Options:** Treat the empty output as a runtime bug; inspect the fixture's compiled execution; trust its zero exit status.
+- **Evidence:** `zig cc -O2 -dM -E -x c /dev/null` reports `#define NDEBUG 1`. Both the earlier P1 shared-count fixture and the new isolated probe used `assert(pthread_create(...))`, so optimized compilation removed the thread creation and validation. Adding `#undef NDEBUG` before `<assert.h>` restores `pthread_create` in the binary. With live assertions the staged 8-thread probe passes cross-thread frees, retired-thread leak accounting, TLS trace/site isolation, signal masks/stacks, 8,000 serialized clock updates and 16 noninterleaved 70,001-byte print units.
+- **Choice:** Add the same explicit assertion enablement to `shared_counts_test.zig` and all new native fixtures. Rerun the full gate with the real shared-count contention and saturation checks. Earlier native-C contention/TSan claims are superseded and are not evidence for final P1. The frozen fuzz matrices are independent: both 9×50 and 9×200 completed successfully with unchanged compiler/source identities before this test-only fix; compiler implementation and timing binaries did not change.
+- **Reversibility:** Do not remove the assertion enablement. The isolated P1-2 prototype is still outside the package implementation and will be applied only after the P1-1 checkpoint; its tests will then be integrated into the Core suite.
+
+## 2026-10-09 · P1-1 investigation — internal release-call preservation
+
+- **Question:** What explains the remaining tax misses, and what should be tried before P1-2?
+- **Options:** Stop at a cell miss; accept it without investigation; inspect the emitted/runtime count paths and measure a local refinement.
+- **Evidence:** The complete initial B sweep gives rows 1.001778, EDA 1.029827, Lox tree 1.021800, Lox VM 1.010745, and parity 0.999173. No corpus crosses 1.03. `string_join/64` is 1.295063; disassembly shows an immortal separator released each iteration and B's helper saving nine registers before calling ordinary-convention `count_release_shared`. The selected R9 helper itself already uses preserve-most. An isolated internal preserve-most boundary reduces that outer save to RAX plus stack alignment.
+- **Choice:** Test internal preservation for `count_release_shared` and a last-owner-only preserve-most free adapter. R9's emitted B/C paths and R11's CAS loops remain unchanged. Build both variants with this common runtime refinement and compare the five cells again, then examine full rows and EDA/Lox. Keep every initial failure in the report. The staged P1-2 runtime has not been adopted during this investigation.
+- **Reversibility:** Easy; the experiment is an isolated archive plus `r3/helper-preservation.patch` until measured and chosen.
+
+## 2026-10-09 · P1-1 evidence and slow-step investigation
+
+- **Question:** How should repeated long corpus checks and the 10 MB evidence limit be handled?
+- **Options:** Drop raw samples or shorten gate inputs; retain exact inputs and samples with verified compression; rerun every corpus for each diagnostic.
+- **Evidence:** Recorded process samples account for 985.3 seconds of the Lox sweep and 395.7 seconds of parity, versus 152.8 for rows and 98.3 for EDA. Lox VM invocation, properties and method calls account for 275.6 seconds. These are timed workload execution under the mandated rounds, not a stuck compiler or harness. All own build jobs finished before the sweep. Raw fuzz text and repeated per-program counter JSON dominate evidence size.
+- **Choice:** Keep gate workloads/rounds intact; use focused diagnostics before a changed implementation's full checkpoint. Compress completed logs/fuzz to xz, timing JSON to gzip, and aggregate decoded counter JSON into one xz archive. Verify file bytes against the source before moving unpacked copies into the private worktree cache. Preserve failure evidence and hashes. Package size at this checkpoint is 9,819,740 bytes before the updated report; further compression will precede later evidence commits.
+- **Reversibility:** Easy; archives extract to original package-relative paths. Counter JSON is byte-identical to the original output; only its gzip container is removed.
+
+The historical fuzz archives were also transcoded from gzip to xz with identical uncompressed tar bytes, and historical `.log` files were gzip-compressed with verified contents. Report links were updated and `r3/historical-recompression.json` records the tar hashes. This reduces the package to 7.78 MB and leaves room for the remaining steps without dropping evidence.

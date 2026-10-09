@@ -1,5 +1,0 @@
-guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 1b6c13222675)
-guardian: diff-scoped vs cafe7fea76d280e8b224a6aae27cbac738d63ff1: 0/526 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
-guardian: file-size: 14 finding(s), none in scope — report-only (--verbose for detail)
-guardian: type-size: 1 finding(s) — report-only (--verbose for detail)
-guardian: run-all: 88 check(s) passed — diff-scoped vs cafe7fea76d280e8b224a6aae27cbac738d63ff1, 0 file(s) in scope

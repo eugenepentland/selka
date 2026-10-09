@@ -1,3 +1,0 @@
-["/home/epentland/.cache/mylang/conc-p1-p1-1/bin/mylang", "build", "/home/epentland/ai/canopy/mylang-concurrency-p1/test/core/row_record_update.my", "--release", "-o", "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/tax-rows/p1/record_update", "--cache-dir", "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/tax-rows/p1/cache", "--link", "/home/epentland/ai/canopy/mylang-concurrency-p1/benchmarks/runtime/ports/native_clock.c"]
-
-exit=0

@@ -1,7 +1,0 @@
-build-slot: all 3 build slot(s) busy; waiting (0s so far)
-build-slot: all 3 build slot(s) busy; waiting (60s so far)
-build-slot: build slot 1 after 85s (all 3 build slot(s) busy)
-Build Summary: 2/2 steps succeeded
-fmt-check success
-+- zig fmt --check success
-

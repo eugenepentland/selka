@@ -1,0 +1,23 @@
+{
+  "r3/p1-1-fuzz50": {
+    "archive": "r3/p1-1-fuzz50.tar.xz",
+    "sha256": "b20837810cf993240d952c5fe4b92c8ce2d443f7c3851e9ff02b5f3233d603b2",
+    "bytes": 435244
+  },
+  "r3/p1-1-fuzz200": {
+    "archive": "r3/p1-1-fuzz200.tar.xz",
+    "sha256": "876b25ca09ee02b6278d8a3e45e6768178efdb9ddd7222ae1b8bd00a0347a74a",
+    "bytes": 1655404
+  },
+  "raw/r3-p1-1": {
+    "archive": "raw/r3-p1-1.tar.xz",
+    "sha256": "9caf1d66ee37a1bb3feeadcf9fdd63d00efd4263f6522c0cf0d3b5a6fe9a3ca1",
+    "bytes": 1060460,
+    "format": "Exact original counter JSON bytes; .gz members decoded before xz aggregation"
+  },
+  "r3/p1-1-logs": {
+    "archive": "r3/p1-1-logs.tar.xz",
+    "sha256": "f9c1edfe9b23c1682c5859ffe8a4733721cd688d016f067ac9153779601e93c3",
+    "bytes": 86232
+  }
+}

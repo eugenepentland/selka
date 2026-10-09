@@ -9,12 +9,15 @@ const Error = error{ OutOfMemory, Unexpected, TestUnexpectedResult, TestExpected
 const harness =
     \\#include "core_rt.c"
     \\#include <pthread.h>
+    \\#undef NDEBUG
     \\#include <assert.h>
+    \\static int workers_started;
     \\static myl_block shared = {MYL_SHARED + 1, 0, 0, 0, 0};
     \\static myl_block saturated = {MYL_SATURATED - 100, 0, 0, 0, 0};
     \\static const myl_block immortal = {MYL_SATURATED, 0, 0, 0, 0};
     \\static void *count_worker(void *unused) {
     \\    (void)unused;
+    \\    __atomic_add_fetch(&workers_started, 1, __ATOMIC_RELAXED);
     \\    for (int i = 0; i < 200000; ++i) {
     \\        count_retain(&shared);
     \\        assert(!count_is_unique(&shared));
@@ -68,7 +71,7 @@ const harness =
     \\    myl_core_release_slow(head);
     \\    myl_core_release(copy);
     \\    assert(live_count() == 0);
-    \\    puts("shared counts ok");
+    \\    printf("shared counts ok (%d workers)\n", workers_started);
     \\    return 0;
     \\}
 ;
@@ -96,7 +99,7 @@ fn runHarness(a: std.mem.Allocator) Error![]const u8 {
 test "shared counts saturate permanently, update atomically and free shared children iteratively" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
-    try std.testing.expectEqualStrings("shared counts ok\n", try runHarness(arena.allocator()));
+    try std.testing.expectEqualStrings("shared counts ok (8 workers)\n", try runHarness(arena.allocator()));
 }
 
 // spec-case: SHARED-COUNTS-1

@@ -18,16 +18,20 @@ def render(path):
     for tag in data['tags'][1:]:
         summary = data['summary'][tag]
         lines.append(f"| {data.get('corpus', 'rows')} / {tag} | {len(data['rows'])} | {summary['geomean']:.6f} | {len(summary['rows_over_1_03'])} | {'PASS' if summary['pass'] else 'MISS'} |")
-    lines += ['', '| cell | arm | K=4 | K=5 | K=6 | median |', '|---|---|---:|---:|---:|---:|']
+    lines += ['', f"[Raw samples, wall times, load and hashes]({path.name}). Times below are milliseconds; ratios use each batch's paired medians.", '',
+              '| cell | arm | K4 base → arm | K4 ratio | K5 base → arm | K5 ratio | K6 base → arm | K6 ratio | median ratio |',
+              '|---|---|---:|---:|---:|---:|---:|---:|---:|']
     for key, row in data['rows'].items():
         for tag in data['tags'][1:]:
-            ratios = []
+            ratios, columns = [], []
             for batch in row['batches']:
                 medians = batch['medians']
                 metric = lambda v: v['elapsed_ns'] if isinstance(v, dict) else v
                 ratios.append(metric(medians[tag]) / metric(medians['base']))
+                scale = 1e-6 if isinstance(medians[tag], dict) else 1000
+                columns.extend([f"{metric(medians['base']) * scale:.4f} → {metric(medians[tag]) * scale:.4f}", f"{ratios[-1]:.5f}"])
             assert len(ratios) == 3
-            lines.append('| ' + key + ' | ' + tag + ' | ' + ' | '.join(f'{r:.5f}' for r in [*ratios, statistics.median(ratios)]) + ' |')
+            lines.append('| ' + key + ' | ' + tag + ' | ' + ' | '.join([*columns, f'{statistics.median(ratios):.5f}']) + ' |')
     return '\n'.join(lines) + '\n'
 
 

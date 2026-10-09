@@ -2,10 +2,33 @@
 
 ## Current progress — 2026-10-09
 
-- **Done:** Fast-forwarded to `0ee93b396`. R9/R10 code is committed at `9477f7673`. Merged moved main `cafe7fea7` through real merge `42041fa45`; updated comparison baseline is `94dc1c3a2` (a separate merge of `54eda9012` and the same main). No main or Claude branch/worktree was changed.
-- **Measured:** R9 five-cell geomean: B **0.997061×**, C **0.997773×**, both pass all median cell limits. B `json::read_value` is 8,061 bytes versus C's 8,472; baseline is 7,068/7,052/7,020 at K=4/5/6. [All alignment ratios and cells](r3/results/five-cell.md). Selected-B full Debug gate: **88/88 steps, 2,100 passed**; formatting passes. Qualification passes **509 Core tests** and **1518/0/0 conformance in both Debug and ReleaseFast**. The pre-merge focused layout/shared-count run passed 10 tests, and the full integrated gate includes them. Guardian's whole-tree commit gate passed 88 checks.
-- **Decided:** Keep B, the variant R9's criterion selects. Both clang compile paths and all native cache identities include the layout switch. Use exact CE-X inputs/rounds with paired K=4,5,6, all Lox cells and all mylang parity variants. See [DECISIONS.md](DECISIONS.md).
-- **Next:** Complete the P1-1 tax and correctness checkpoint, then P1-2 through P1-6 and P2-0. Results below are the preserved historical pre-revision-2 report, not this run's final verdict.
+- **Done:** Fast-forwarded to `0ee93b396`. R9/R10 is committed at `9477f7673`; moved main `cafe7fea7` was merged with real merge `42041fa45`. The corresponding comparison merge is `94dc1c3a2`. No push, main merge, or Claude worktree/branch modification occurred.
+- **Measured:** R9 initially selects B: five-cell geomean **0.997061×**, C **0.997773×**. Both pass median cell limits; B/C `json::read_value` sizes are 8,061/8,472 bytes, versus baseline 7,068/7,052/7,020 at K=4/5/6. [All five-cell alignment ratios](r3/results/five-cell.md). The complete initial tax results are below. All correctness gates required at P1-1 passed.
+- **Decided:** Keep B pending the bounded tax investigation. The four row misses and EDA/Lox geomean misses trigger investigation under §9.1, not a stop. Disassembly identifies a needless ordinary-call register-save cost inside B's immortal release helper. `r3/helper-preservation.patch` is an isolated experiment, not yet adopted. The per-thread runtime is also still staged outside the implementation tree.
+- **Next:** Complete that investigation and P1-1 checkpoint, then P1-2 through P1-6 and read-only P2-0. **P1 is not complete.**
+
+### Revision-3 correctness checkpoint
+
+The integrated B implementation passes the full Debug gate (**88/88 steps, 2,100 executed tests**), fmt, and qualification (**509 Core tests; conformance 1518/0/0 in both modes**). Frozen fuzz **9×50 and 9×200** passed with source/oracles unchanged and complete qualified matrices. Lox passes **246/246 VM and 241/241 tree** in both normal and stress runs, plus **65 port tests**. EDA passes **310 tests** and all **34 goldens**. All **45 parity arms** match expected outputs. All **132 counted/plain cells** have equal output and zero status: 48 Lox, 34 EDA, 4 parity, 46 row programs.
+
+**Native fixture correction:** `zig cc -O2` defines `NDEBUG`, and the historical shared-count fixture put thread creation and validation inside `assert`. Those prior native contention/TSan claims are superseded. The fixture now explicitly enables assertions and reports **8 workers**; the rerun full gate passes **88/88 steps, 2,093 executed tests**, with the remaining seven tests cached. Its real contention and near-saturation checks passed. Final P1 will require fresh, asserted C and emitted-IR TSan evidence.
+
+Raw logs, including failed attempts, are in [the P1-1 log archive](r3/p1-1-logs.tar.xz). [Qualification](r3/p1-1-qualify/), [fuzz 50](r3/p1-1-fuzz50.tar.xz), [fuzz 200](r3/p1-1-fuzz200.tar.xz), [counter JSON](raw/r3-p1-1.tar.xz) and [counted/plain summaries](results/r3-p1-1/) retain the underlying evidence. Archives retain paths relative to this package; counter members contain the original JSON bytes with their individual gzip layer removed. [Archive hashes](r3/evidence-archives.json) document the verified compression. Unpacked copies remain in this worktree's private cache.
+
+### Revision-3 initial tax — selected B
+
+Each cell uses the median of paired K=4,5,6 ratios, with CE-X's rounds and inputs, CPU 10 under `cpu10.lock`, and no own build jobs during timing. All output/checksum comparisons pass. The one-minute load range comes from all samples, including startup/warmups. EDA is close to the **1.03 hard-stop boundary** but below it; its result is not rounded into a pass. The target remains geomean ≤1.010 and every cell ≤1.03.
+
+| corpus | cells | geomean | cells >1.03 | load range | detail |
+|---|---:|---:|---:|---|---|
+| rows | 92 | 1.001778 | 4 | 2.11–3.17 | [all cells / alignments](r3/results/p1-1-tax-rows.md) |
+| EDA | 34 | 1.029827 | 19 | 3.08–29.25 | [all cells / alignments](r3/results/p1-1-tax-eda.md) |
+| Lox, both engines | 26 | 1.016258 | 10 | 2.37–31.68 | [all cells / alignments](r3/results/p1-1-tax-lox.md) |
+| Lox tree | 13 | 1.021800 | 4 | same run | same detail |
+| Lox VM | 13 | 1.010745 | 6 | same run | same detail |
+| parity | 45 | 0.999173 | 0 | 1.65–20.54 | [all cells / alignments](r3/results/p1-1-tax-parity.md) |
+
+The row misses are `string_search/64` **1.044908**, `string_join/64` **1.295063**, `csv_aggregate/4096` **1.070642**, and `csv_aggregate/64` **1.082134**. Every table links to raw `.json.gz` samples in the same directory; these retain base and package wall times, all rounds, startup samples, load and binary hashes. The initial five-cell comparison and this full sweep are both retained; later measurements do not erase either.
 
 ## Historical P1-1 report (before revisions 2 and 3)
 
@@ -279,15 +302,15 @@ and end-to-end confirmation remain pending after this P1-1 tax stop.
 
 | Check | Result |
 |---|---|
-| `zig build test --summary all` | PASS, 88/88 steps; [retry log](logs/p1-1-gate-retry.log) |
+| `zig build test --summary all` | PASS, 88/88 steps; [retry log](logs/p1-1-gate-retry.log.gz) |
 | `zig build fmt-check` | PASS, exit 0 after the full gate |
 | `qualify_merge.py`, 64 Core shards | PASS, 505 tests; 32.68 s |
 | Frozen full conformance with verification/leak checks | Debug 1518 matching / 0 mismatching / 0 unsupported; Release 1518/0/0; 23.16 s |
-| Frozen fuzz 9×50 | PASS, all nine kinds, 450 accepted cases; [matrix](evidence/fuzz50.json), [full evidence archive](fuzz50.tar.gz) |
-| Frozen fuzz 9×200 | PASS, all nine kinds, 1,800 accepted cases; [matrix](evidence/fuzz200.json), [full evidence archive](fuzz200.tar.gz) |
+| Frozen fuzz 9×50 | PASS, all nine kinds, 450 accepted cases; [matrix](evidence/fuzz50.json), [full evidence archive](fuzz50.tar.xz) |
+| Frozen fuzz 9×200 | PASS, all nine kinds, 1,800 accepted cases; [matrix](evidence/fuzz200.json), [full evidence archive](fuzz200.tar.xz) |
 | Compiler/source identity during fuzz | Both matrices confirm unchanged source and oracle hashes |
 | New shared-count tests | PASS, boundary/encoding, emitted paths and typed source guard; included in the full/Core gates |
-| Current C count harness under TSan | PASS, one run with 8 workers, 0 reports, `shared counts ok`; [manifest](evidence/counts-tsan.json), [log](logs/counts-tsan-run.log) |
+| Current C count harness under TSan | PASS, one run with 8 workers, 0 reports, `shared counts ok`; [manifest](evidence/counts-tsan.json), [log](logs/counts-tsan-run.log.gz) |
 | P1-0/R1 atomic-load probes | Historical evidence retained: monotonic and unordered each 100/100 without reports; ordinary load reproduced a race |
 | Timing checksum agreement | All arms agree in every measured startup and timed sample |
 | Counting output correctness | Existing counting tests pass in the full/Core gates; CE-X's complete ordinary/counting corpus comparison was not run |
@@ -305,11 +328,11 @@ assertion. The RC expectation was updated. The timeout test passed unchanged
 on the complete retry (2.41 s versus 218.17 s initially); a standalone baseline
 probe also produced the expected timeout. Its initial failure remains an
 unexplained transient, not a claimed fixed runtime defect. Both full logs and
-[the baseline probe](logs/property-timeout-base.log) are retained.
+[the baseline probe](logs/property-timeout-base.log.gz) are retained.
 
 The first baseline archive build could not resolve the relative Guardian
 dependency; linking the scratch sibling path to the existing Guardian checkout
-resolved it. [The retry](logs/build-base-retry.log) completed successfully.
+resolved it. [The retry](logs/build-base-retry.log.gz) completed successfully.
 
 Every build used `scripts/build-slot.sh`, with disk-backed temporary and cache
 paths. The full gate and fuzz matrix did not overlap. Timing waited for this

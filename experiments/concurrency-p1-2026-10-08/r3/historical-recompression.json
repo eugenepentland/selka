@@ -1,0 +1,12 @@
+{
+  "fuzz50.tar.gz": {
+    "replacement": "fuzz50.tar.xz",
+    "uncompressed_tar_sha256": "c7c873a9460319e9a9a316f2e52f27fb2a112f30747fc831794e4e3985a04c41",
+    "bytes": 434960
+  },
+  "fuzz200.tar.gz": {
+    "replacement": "fuzz200.tar.xz",
+    "uncompressed_tar_sha256": "b6dfc388bb08407aae12f9c4069ff1bcc9c0ffe0e7ceb0d7e1a4eee1daf971c5",
+    "bytes": 1652080
+  }
+}
