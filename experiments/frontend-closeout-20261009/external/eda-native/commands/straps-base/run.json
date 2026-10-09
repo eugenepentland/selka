@@ -1,0 +1,35 @@
+{
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/external/artifacts/eda-release",
+    "--model",
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/golden/cases/straps-base/model.sexp",
+    "--project-dir",
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/golden/projects/designs",
+    "--out-dir",
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/external/eda-native/outputs/straps-base"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda",
+  "exit_code": 0,
+  "elapsed_seconds": 0.08327594702132046,
+  "timeout_seconds": 600,
+  "affinity": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "stdout_sha256": "4dde0110caa99f8dbbf01e744aad4ce0bc950a4ada5ab6176e50304593a97903",
+  "stderr_sha256": "664ac5edc6cd87ba6a4ff309410facbdb99d8bcbb94adbf2f9114890e3284d9b"
+}

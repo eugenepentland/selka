@@ -1,0 +1,107 @@
+current/debug/chunk functional_membership_pass
+current/debug/ast functional_membership_pass
+current/debug/compiler functional_membership_pass
+current/debug/driver functional_membership_pass
+current/debug/compiler_test functional_membership_pass
+current/debug/heap functional_membership_pass
+current/debug/heap_test functional_membership_pass
+current/debug/lox_strings functional_membership_pass
+current/debug/interpreter functional_membership_pass
+current/debug/lox_strings_test functional_membership_pass
+current/debug/natives functional_membership_pass
+current/debug/object functional_membership_pass
+current/debug/output functional_membership_pass
+current/debug/main functional_membership_pass
+current/debug/parser functional_membership_pass
+current/debug/driver_tests functional_membership_pass
+current/debug/resolver functional_membership_pass
+current/debug/scanner functional_membership_pass
+current/debug/parser_test functional_membership_pass
+current/debug/table functional_membership_pass
+current/debug/scanner_test functional_membership_pass
+current/debug/value functional_membership_pass
+current/debug/table_test functional_membership_pass
+current/debug/value_test functional_membership_pass
+current/release/ast functional_membership_pass
+current/release/chunk functional_membership_pass
+current/debug/resolver_test functional_membership_pass
+current/debug/vm functional_membership_pass
+current/release/compiler functional_membership_pass
+current/release/compiler_test functional_membership_pass
+current/release/driver functional_membership_pass
+current/release/heap functional_membership_pass
+current/release/heap_test functional_membership_pass
+current/release/lox_strings functional_membership_pass
+current/release/interpreter functional_membership_pass
+current/release/lox_strings_test functional_membership_pass
+current/release/natives functional_membership_pass
+current/release/object functional_membership_pass
+current/release/output functional_membership_pass
+current/release/main functional_membership_pass
+current/release/driver_tests functional_membership_pass
+current/release/parser functional_membership_pass
+current/release/resolver functional_membership_pass
+current/release/scanner functional_membership_pass
+current/release/scanner_test functional_membership_pass
+current/release/table functional_membership_pass
+current/release/table_test functional_membership_pass
+current/release/parser_test functional_membership_pass
+current/release/value functional_membership_pass
+current/release/value_test functional_membership_pass
+current/verify/ast functional_membership_pass
+current/verify/chunk functional_membership_pass
+current/release/vm functional_membership_pass
+current/verify/compiler functional_membership_pass
+current/release/resolver_test functional_membership_pass
+current/verify/driver functional_membership_pass
+current/verify/heap functional_membership_pass
+current/verify/compiler_test functional_membership_pass
+current/verify/heap_test functional_membership_pass
+current/verify/lox_strings functional_membership_pass
+current/verify/interpreter functional_membership_pass
+current/verify/lox_strings_test functional_membership_pass
+current/verify/natives functional_membership_pass
+current/verify/object functional_membership_pass
+current/verify/output functional_membership_pass
+current/verify/main functional_membership_pass
+current/verify/parser functional_membership_pass
+current/verify/driver_tests functional_membership_pass
+current/verify/resolver functional_membership_pass
+current/verify/scanner functional_membership_pass
+current/verify/scanner_test functional_membership_pass
+current/verify/table functional_membership_pass
+current/verify/table_test functional_membership_pass
+current/verify/value functional_membership_pass
+current/verify/parser_test functional_membership_pass
+current/verify/value_test functional_membership_pass
+current/verify/resolver_test functional_membership_pass
+current/verify/vm functional_membership_pass
+configured/release/driver_tests functional_membership_pass
+configured/debug/driver_tests functional_membership_pass
+configured/verify/driver_tests functional_membership_pass
+directory/debug functional_membership_pass
+directory/release functional_membership_pass
+directory/verify functional_membership_pass
+	Command being timed: "python3 experiments/frontend-followthrough-20261009/external/qualify_modes.py lox --compiler experiments/frontend-closeout-20261009/artifacts/mylang-final --output experiments/frontend-closeout-20261009/external/lox-modes --jobs 3"
+	User time (seconds): 54.87
+	System time (seconds): 3.65
+	Percent of CPU this job got: 371%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:15.77
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 272552
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 229
+	Minor (reclaiming a frame) page faults: 1418375
+	Voluntary context switches: 10325
+	Involuntary context switches: 855
+	Swaps: 0
+	File system inputs: 28312
+	File system outputs: 171136
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
