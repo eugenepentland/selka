@@ -61,7 +61,7 @@ class Lane:
         self.compiler = pathlib.Path(compiler).resolve() if compiler else None
         self.tag = tag
         self.bins = CACHE / "bin" / tag
-        self.raw = AREA / "raw" / tag
+        self.raw = CACHE / "raw" / tag
         self.cache = CACHE / "cache" / tag
 
     def build(self, label, source, output, cwd, counting, links=()):
@@ -361,7 +361,7 @@ LANES = {"vp3": VP3 / "raw",
 
 
 def raw_dir(tag):
-    return LANES.get(tag, AREA / "raw" / tag)
+    return LANES.get(tag, CACHE / "raw" / tag)
 
 
 def function_bytes(tag, label, predicate):

@@ -27,7 +27,7 @@ def main():
         script = scripts / (engine + "-" + name + ".lox")
         script.write_text("var N = " + str(sizes[name][engine]) + ";\n" + rest)
         cases += ["--case", engine + "/" + name + "=" + json.dumps(["--engine=" + engine, str(script)])]
-    command = [sys.executable, str(AREA / "tools/cf.py"), "--program", str(lox / "ports/mylang/main.my"),
+    command = [sys.executable, str(AREA / "tools/cf_current.py"), "--program", str(lox / "ports/mylang/main.my"),
                "--mylang", COMPILER, "--work", str(WORK), "--name", "lox", "--cwd", str(lox),
                "--variants", "base,norc,checks+norc", "--rounds", "5", "--cpu", "8", "--keep", *cases]
     with (ROOT / ".tmp/rp3/cf-lox.log").open("w") as log:
@@ -40,7 +40,7 @@ def main():
         args = ["--model", str(eda / "golden/cases" / name / "model.sexp"),
                 "--project-dir", str(eda / "golden/projects" / case["project"]),
                 "--out-dir", str(output), *case["flags"]]
-        command = [sys.executable, str(AREA / "tools/cf.py"), "--program", str(ROOT / ".mylang-cache/eda-src/src/main.my"),
+        command = [sys.executable, str(AREA / "tools/cf_current.py"), "--program", str(ROOT / ".mylang-cache/eda-src/src/main.my"),
                    "--mylang", COMPILER, "--work", str(WORK), "--name", "eda-" + name,
                    "--cwd", str(ROOT / ".mylang-cache/eda-src"), "--variants", "base,norc,checks+norc,reference-inline",
                    "--rounds", "5", "--cpu", "8", "--keep", "--outdir-check", str(output),

@@ -1,0 +1,9 @@
+{
+ "reason": "quadratic whole-tail count matcher on 52 MiB EDA LLVM; no EDA samples produced",
+ "terminated_owned_pids": [
+  1110085,
+  1651067
+ ],
+ "Lox_samples_retained": true,
+ "replacement": "cf_current.py; exact Lox LLVM equivalence receipt retained"
+}

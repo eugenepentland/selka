@@ -1,0 +1,73 @@
+{
+ "program": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/eda-src/src/main.my",
+ "name": "eda-rds3+flat",
+ "cases": {
+  "rds3+flat": {
+   "args": [
+    "--model",
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/rds3+flat/model.sexp",
+    "--project-dir",
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/designs",
+    "--out-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/counterfactuals-v2/eda-output-rds3+flat",
+    "--flat"
+   ],
+   "variants": {
+    "real": {
+     "median": {
+      "instructions": 983137488,
+      "cycles": 463246731,
+      "branch-misses": 712870,
+      "L1-dcache-load-misses": 3073637
+     },
+     "status": 0,
+     "output_matches_real": true
+    },
+    "base": {
+     "median": {
+      "instructions": 983137326,
+      "cycles": 468859594,
+      "branch-misses": 713440,
+      "L1-dcache-load-misses": 3099332
+     },
+     "status": 0,
+     "output_matches_real": true,
+     "llvm_lines_changed": 0
+    },
+    "norc": {
+     "median": {
+      "instructions": 38708254,
+      "cycles": 21551700,
+      "branch-misses": 46258,
+      "L1-dcache-load-misses": 123366
+     },
+     "status": -6,
+     "output_matches_real": false,
+     "llvm_lines_changed": 50206
+    },
+    "checks+norc": {
+     "median": {
+      "instructions": 37433470,
+      "cycles": 20649047,
+      "branch-misses": 43288,
+      "L1-dcache-load-misses": 118513
+     },
+     "status": -6,
+     "output_matches_real": false,
+     "llvm_lines_changed": 53508
+    },
+    "reference-inline": {
+     "median": {
+      "instructions": 949395375,
+      "cycles": 454338397,
+      "branch-misses": 695559,
+      "L1-dcache-load-misses": 3020141
+     },
+     "status": 0,
+     "output_matches_real": true,
+     "llvm_lines_changed": 0
+    }
+   }
+  }
+ }
+}

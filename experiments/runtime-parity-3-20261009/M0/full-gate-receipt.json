@@ -1,0 +1,10 @@
+{
+ "source_base": "41ed360fb361c49938488ad111795bad8a726b73",
+ "source_unchanged": true,
+ "status": 0,
+ "command": "scripts/build-slot.sh gate zig build test --summary all",
+ "summary": "Build Summary: 95/95 steps succeeded; 2323/23829 tests passed (21506 skipped)",
+ "skips": "21506 are shard-routing skips",
+ "log_sha256": "d02e0bb74b7fcfe1966612ea93be99e97f5c7d775cf404bf44531a048bf0e73e",
+ "scratch_log": ".tmp/rp3/gate-base-test.log"
+}

@@ -55,3 +55,35 @@
 - Evidence: every first Lox `norc` result reports zero changed LLVM lines and unchanged instruction counts. P1 now branches through `rc.inc/dec` and `rc.slow` instead of PM's old skip shape.
 - Choice: reject the entire first counterfactual set, preserve a small invalid-attempt receipt, redirect both count paths to their existing continuation in owned probe LLVM, and fail immediately if zero count branches change. Rerun in a fresh v2 work directory. Production compiler/runtime and count encoding are untouched.
 - Reversibility: diagnostic measurement adapter only; outputs remain mandatory checks for every probe. Generated per-layout release has no existing cf.py stub; only the requested reference_at-inlining probe can be measured before U2 implements generation.
+
+## M0-008 — make EDA output ownership explicit before timing
+
+- Question: the inherited EDA runner launches each executable in the read-only EDA reference repository; a relative --work would resolve output directories there.
+- Options: let the queued command run or stop it before admission and use an absolute owned path.
+- Evidence: the timing log was empty, the quiet lock had not been acquired, and no child EDA program had started.
+- Choice: terminate only the owned queued quiet process and relaunch with an absolute --work under the integration worktree. No reference-worktree write occurred. This narrowly avoided the outside-worktree hard stop.
+- Reversibility: command-line path correction only.
+
+## M0-009 — cover the current full-size Lox corpus in counts
+
+- Question: inherited VP3 counting cases cover 48 historical engine/size combinations, omitting current zoo_batch cells and some current full sizes.
+- Options: keep the historical subset or extend it without dropping cases.
+- Evidence: current bench/sizes.json contains 13 scripts for each engine; the historical VP3 result table contains 48 older combinations.
+- Choice: corpus_counts.py keeps every VP3 cell and adds every missing full-size engine/script combination. corpus_perf.py measures all 45 parity arms, all 46 rows, all 26 full-size Lox cells and all 34 EDA designs for instruction regression comparisons.
+- Reversibility: evidence tooling only; no thresholds or workloads changed.
+
+## M0-010 — scale the corrected count matcher to EDA
+
+- Question: the corrected P1 matcher repeatedly copied and scanned the remaining 52 MiB EDA LLVM file for each count branch.
+- Options: let quadratic probe generation consume minutes per variant, or build each function's slow-block successor map once.
+- Evidence: EDA spent over two CPU minutes in Python before producing a norc file; no EDA samples existed. The replacement produced byte-for-byte identical norc and checks+norc LLVM for the completed Lox probe in 0.12/0.19 seconds (`counterfactual-matcher-equivalence.json`).
+- Choice: use cf_current.py for current P1 branches; stop only the owned unfinished EDA probe and driver, retain all completed Lox measurements, and rerun EDA through the same compiler/linker recipes. CPU-10 confirmation checks every output and EDA output file on every sample.
+- Reversibility: tooling-only lookup optimization; production counts and compiler unchanged.
+
+## M0-011 — reject invalid EDA count-removal bounds
+
+- Question: the requested inline-count-removal probes abort on both EDA designs, while the production base and reference_at-inlining variants match output.
+- Options: report their apparent 0.04× instruction ratios as speedups (invalid), invent a changed-workload probe, or report the bound as unavailable and preserve the actual failure.
+- Evidence: both norc and checks+norc exit by SIGABRT on both designs. An owned diagnostic runtime with the C retain/release helpers stubbed removes the abort but produces `WireNotOrthogonal` instead of the rds3+flat golden output. Count removal changes copy-on-write decisions, so this diagnostic does not preserve EDA's answer. Production source and all correctness oracles remain unchanged; the counting-on/off EDA gate passes 34/34.
+- Choice: keep both CPU-8 attempts as invalid, omit their bogus ratios from the bound table, and confirm every valid arm on CPU 10. No required U2 cell exit is lost: its four norc-based exits are Lox cells with matching outputs; EDA retains its explicit 0.93×-base exit and the valid reference_at-inline bound. CPU-10 confirmation applies to cells that set exits; the invalid EDA probes set none. This is diagnostic invalidity, not a correctness-gate waiver.
+- Reversibility: evidence-only decision. A valid count-removal EDA probe can be added later without changing any gate or compiler behavior.
