@@ -15,19 +15,19 @@ fn run(source: []const u8, expected: i64) !void {
 }
 // spec: PY-LAMBDA-2
 test "lambdas reject missing context wrong results effects and local captures" {
-    try reject("def main() -> int:\n    f = lambda value: value\n    return 0\n", "E_LAMBDA_CONTEXT");
+    try reject("func main() -> int:\n    mut f = lambda value: value\n    return 0\n", "E_LAMBDA_CONTEXT");
     try reject(
-        "def apply(f: def(int) -> bool effects()) -> int:\n    return 0\n\ndef main() -> int:\n    return apply(lambda value: value + 1)\n",
+        "func apply(f: func(int) -> bool effects()) -> int:\n    return 0\n\nfunc main() -> int:\n    return apply(lambda value: value + 1)\n",
         "E_TYPE",
     );
     try reject(
-        "def apply(f: def(int) -> None effects()) -> int:\n    return 0\n\ndef main() -> int:\n    return apply(lambda value: print(value))\n",
+        "func apply(f: func(int) -> Unit effects()) -> int:\n    return 0\n\nfunc main() -> int:\n    return apply(lambda value: print(value))\n",
         "E_OUTPUT_CAPABILITY",
     );
     var capture = try language.Compilation.init(
         t.allocator,
         "lambda-capture.my",
-        "def apply(f: def(int) -> int effects()) -> int:\n    return f(1)\n\ndef main() -> int:\n    offset = 2\n    return apply(lambda value: value + offset)\n",
+        "func apply(f: func(int) -> int effects()) -> int:\n    return f(1)\n\nfunc main() -> int:\n    mut offset = 2\n    return apply(lambda value: value + offset)\n",
     );
     defer capture.deinit();
     try t.expectError(error.SourceError, capture.check());
@@ -38,17 +38,17 @@ test "lambdas reject missing context wrong results effects and local captures" {
 // spec-case: CALLBACK-1
 test "a callback type names itself the way the surface writes it" {
     var c = try language.Compilation.init(t.allocator, "callback-name.my",
-        \\def apply(f: def(i64) -> i64 effects(), x: i64) -> i64:
+        \\func apply(f: func(i64) -> i64 effects(), x: i64) -> i64:
         \\    return f(x)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return apply(7, 8)
     );
     defer c.deinit();
     try t.expectError(error.SourceError, c.check());
     try t.expectEqualStrings("E_TYPE", c.diagnostics.items[0].code);
-    try t.expect(std.mem.indexOf(u8, c.diagnostics.items[0].message, "def(int) -> int effects()") != null);
+    try t.expect(std.mem.indexOf(u8, c.diagnostics.items[0].message, "func(int) -> int effects()") != null);
     try t.expect(std.mem.indexOf(u8, c.diagnostics.items[0].message, "fn") == null);
     try t.expect(std.mem.indexOf(u8, c.diagnostics.items[0].message, "def@") == null);
 }
@@ -56,8 +56,8 @@ test "a callback type names itself the way the surface writes it" {
 fn reject(source: []const u8, code: []const u8) !void {
     const complete = try std.mem.concat(t.allocator, u8, &.{
         source,
-        if (std.mem.indexOf(u8, source, "def main") == null)
-            \\def main() -> i64:
+        if (std.mem.indexOf(u8, source, "func main") == null)
+            \\func main() -> i64:
             \\    return 0
         else
             "",
@@ -71,22 +71,22 @@ fn reject(source: []const u8, code: []const u8) !void {
 
 const allocation_source =
     \\record Box:
-    \\    value: [2]i64
+    \\    value: FixedArray[i64, 2]
     \\
     \\
-    \\def make(ctx: i64, n: i64) -> Box effects():
-    \\    return Box(value=[n + ctx, n + 1])
+    \\func make(ctx: i64, n: i64) -> Box effects():
+    \\    return Box(value=FixedArray[int, 2]([n + ctx, n + 1]))
     \\
     \\
-    \\def apply[T](f: def(T, i64) -> Box effects(), ctx: T, n: i64) -> Box:
+    \\func apply[T](f: func(T, i64) -> Box effects(), ctx: T, n: i64) -> Box:
     \\    return f(ctx, n)
     \\
     \\
-    \\def main() -> i64:
-    \\    context = 0
-    \\    a = apply[i64](make, context, 7)
-    \\    f = make
-    \\    b = f(context, 9)
+    \\func main() -> i64:
+    \\    mut context = 0
+    \\    mut a = apply[i64](make, context, 7)
+    \\    mut f = make
+    \\    mut b = f(context, 9)
     \\    return a.value[0] + b.value[1]
 ;
 
@@ -107,36 +107,34 @@ test "callbacks compile format execute and emit under every failed allocation" {
 }
 
 const module_source =
-    \\module main
     \\import helpers as c
     \\
     \\
-    \\def descending(a: i64, b: i64) -> bool effects():
+    \\func descending(a: i64, b: i64) -> bool effects():
     \\    return a > b
     \\
     \\
-    \\def twice(x: i64) -> i64 effects():
+    \\func twice(x: i64) -> i64 effects():
     \\    return x * 2
     \\
     \\
-    \\def main() -> i64:
-    \\    a: [4]i64 = [3, 1, 4, 2]
-    \\    sorted = c.sort_by(a, descending)
-    \\    doubled = c.transform(sorted, twice)
+    \\func main() -> i64:
+    \\    mut a: FixedArray[i64, 4] = FixedArray[i64, 4]([3, 1, 4, 2])
+    \\    mut sorted = c.sort_by(a, descending)
+    \\    mut doubled = c.transform(sorted, twice)
     \\    return doubled[0] * 10 + doubled[3]
 ;
 const helpers_source =
-    \\module helpers
     \\
     \\
-    \\public def sort_by(a: [4]i64, less: def(i64, i64) -> bool effects()) -> [4]i64 effects():
-    \\    v = a
-    \\    i = 0
+    \\public func sort_by(a: FixedArray[i64, 4], less: func(i64, i64) -> bool effects()) -> FixedArray[i64, 4] effects():
+    \\    mut v = a
+    \\    mut i = 0
     \\    while i < 4:
-    \\        j = 0
+    \\        mut j = 0
     \\        while j < 3:
     \\            if less(v[j + 1], v[j]):
-    \\                tmp = v[j]
+    \\                mut tmp = v[j]
     \\                v = replace(v, j, v[j + 1])
     \\                v = replace(v, j + 1, tmp)
     \\            j += 1
@@ -144,9 +142,9 @@ const helpers_source =
     \\    return v
     \\
     \\
-    \\public def transform(a: [4]i64, f: def(i64) -> i64 effects()) -> [4]i64 effects():
-    \\    v = a
-    \\    i = 0
+    \\public func transform(a: FixedArray[i64, 4], f: func(i64) -> i64 effects()) -> FixedArray[i64, 4] effects():
+    \\    mut v = a
+    \\    mut i = 0
     \\    while i < 4:
     \\        v = replace(v, i, f(v[i]))
     \\        i += 1
@@ -166,14 +164,13 @@ test "callbacks drive sorting and visitor helpers across module boundaries" {
 }
 
 const module_lambda_source =
-    \\module main
     \\
     \\
-    \\def apply(f: def(int) -> int effects(), value: int) -> int:
+    \\func apply(f: func(int) -> int effects(), value: int) -> int:
     \\    return f(value)
     \\
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return apply(lambda value: value * 2, 21)
 ;
 fn moduleLambdaRead(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) language.project.ReadError![]u8 {
@@ -192,53 +189,53 @@ test "module projects preserve expression lambdas through merging and execution"
 // spec-case: CALLBACK-1
 test "E1 pure callbacks enter output-permitting slots and the reverse direction rejects" {
     try run(
-        \\def pure(x: i64) -> i64 effects():
+        \\func pure(x: i64) -> i64 effects():
         \\    return x + 1
         \\
         \\
-        \\def apply(f: def(i64) -> i64 effects(output), x: i64) -> i64:
+        \\func apply(f: func(i64) -> i64 effects(output), x: i64) -> i64:
         \\    return f(x)
         \\
         \\
-        \\def main(out: Stream) -> i64:
+        \\func main(out: Stream) -> i64:
         \\    _ = out
         \\    return apply(pure, 41)
     , 42);
 
     const reverse =
-        \\def impure(out: Stream, x: i64) -> i64 effects(output):
+        \\func impure(out: Stream, x: i64) -> i64 effects(output):
         \\    out.print(x)
         \\    return x
         \\
         \\
-        \\def apply(f: def(Stream, i64) -> i64 effects(), out: Stream, x: i64) -> i64:
+        \\func apply(f: func(Stream, i64) -> i64 effects(), out: Stream, x: i64) -> i64:
         \\    return f(out, x)
         \\
         \\
-        \\def main(out: Stream) -> i64:
+        \\func main(out: Stream) -> i64:
         \\    return apply(impure, out, 1)
     ;
     var c = try language.Compilation.init(t.allocator, "effect-reverse.my", reverse);
     defer c.deinit();
     try t.expectError(error.SourceError, c.check());
     try t.expectEqualStrings("E_TYPE", c.diagnostics.items[0].code);
-    try t.expect(std.mem.indexOf(u8, c.diagnostics.items[0].message, "expected def(stream_cap, int) -> int effects()") != null);
-    try t.expect(std.mem.indexOf(u8, c.diagnostics.items[0].message, "found def(stream_cap, int) -> int effects(output)") != null);
+    try t.expect(std.mem.indexOf(u8, c.diagnostics.items[0].message, "expected func(stream_cap, int) -> int effects()") != null);
+    try t.expect(std.mem.indexOf(u8, c.diagnostics.items[0].message, "found func(stream_cap, int) -> int effects(output)") != null);
     try t.expect(std.mem.indexOf(u8, c.diagnostics.items[0].message, "def@") == null);
     try t.expect(std.mem.indexOf(u8, c.diagnostics.items[0].message, "effects(0)") == null);
 
     // The destination ceiling still governs the call inside `apply`, even though
     // the concrete target is pure.
     try reject(
-        \\def pure(x: i64) -> i64 effects():
+        \\func pure(x: i64) -> i64 effects():
         \\    return x + 1
         \\
         \\
-        \\def apply(f: def(i64) -> i64 effects(output), x: i64) -> i64 effects():
+        \\func apply(f: func(i64) -> i64 effects(output), x: i64) -> i64 effects():
         \\    return f(x)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return apply(pure, 41)
     , "E_EFFECT_BOUND");
 }
@@ -246,38 +243,38 @@ test "E1 pure callbacks enter output-permitting slots and the reverse direction 
 // spec-case: CALLBACK-1
 test "E1 unused declarations and unrelated callback shapes stay rejected" {
     try reject(
-        \\def impure(out: Stream, x: i64) -> i64 effects(output):
+        \\func impure(out: Stream, x: i64) -> i64 effects(output):
         \\    out.print(x)
         \\    return x
         \\
         \\
-        \\def unused(out: Stream) -> i64:
-        \\    f: def(Stream, i64) -> i64 effects() = impure
+        \\func unused(out: Stream) -> i64:
+        \\    mut f: func(Stream, i64) -> i64 effects() = impure
         \\    return f(out, 0)
         \\
     , "E_TYPE");
     try reject(
-        \\def wrong_parameter(x: bool) -> i64 effects():
+        \\func wrong_parameter(x: bool) -> i64 effects():
         \\    return 0
         \\
         \\
-        \\def apply(f: def(i64) -> i64 effects(output), x: i64) -> i64:
+        \\func apply(f: func(i64) -> i64 effects(output), x: i64) -> i64:
         \\    return f(x)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return apply(wrong_parameter, 1)
     , "E_TYPE");
     try reject(
-        \\def wrong_result(x: i64) -> bool effects():
+        \\func wrong_result(x: i64) -> bool effects():
         \\    return True
         \\
         \\
-        \\def apply(f: def(i64) -> i64 effects(output), x: i64) -> i64:
+        \\func apply(f: func(i64) -> i64 effects(output), x: i64) -> i64:
         \\    return f(x)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return apply(wrong_result, 1)
     , "E_TYPE");
 }
@@ -285,17 +282,17 @@ test "E1 unused declarations and unrelated callback shapes stay rejected" {
 // spec-case: CALLBACK-1
 test "E1 unused generic declarations use the directional callback relation" {
     try run(
-        \\def unused[T](f: def(T) -> T effects(), value: T) -> T:
-        \\    g: def(T) -> T effects(output) = f
+        \\func unused[T](f: func(T) -> T effects(), value: T) -> T:
+        \\    mut g: func(T) -> T effects(output) = f
         \\    return value
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , 0);
     try reject(
-        \\def unused[T](f: def(T) -> T effects(output), value: T) -> T:
-        \\    g: def(T) -> T effects() = f
+        \\func unused[T](f: func(T) -> T effects(output), value: T) -> T:
+        \\    mut g: func(T) -> T effects() = f
         \\    return value
         \\
     , "E_GENERIC_TYPE");

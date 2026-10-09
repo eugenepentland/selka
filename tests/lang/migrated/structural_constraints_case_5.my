@@ -1,41 +1,40 @@
-module structural_constraints_case_5
 
 
 constraint Prices[P] = copy + op(price(policy: P, subtotal: int) -> int effects())
 
-def checkout[P: Prices](policy: P, subtotal: int) -> int effects():
+func checkout[P: Prices](policy: P, subtotal: int) -> int effects():
     return P.price(policy, subtotal) + 500
 
-def forward[Q: Prices](policy: Q, subtotal: int) -> int effects():
+func forward[Q: Prices](policy: Q, subtotal: int) -> int effects():
     return checkout[Q](policy, subtotal)
 
-def inline_checkout[P: copy + op(price(policy: P, subtotal: int) -> int effects())](policy: P, subtotal: int) -> int effects():
+func inline_checkout[P: copy + op(price(policy: P, subtotal: int) -> int effects())](policy: P, subtotal: int) -> int effects():
     return P.price(policy, subtotal) + 500
 
-def named_to_inline[P: Prices](policy: P, subtotal: int) -> int effects():
+func named_to_inline[P: Prices](policy: P, subtotal: int) -> int effects():
     return inline_checkout[P](policy, subtotal)
 
-def inline_to_named[P: copy + op(price(policy: P, subtotal: int) -> int effects())](policy: P, subtotal: int) -> int effects():
+func inline_to_named[P: copy + op(price(policy: P, subtotal: int) -> int effects())](policy: P, subtotal: int) -> int effects():
     return forward[P](policy, subtotal)
 
 domain DiscountPrices: int:
-    def make(discount: int) -> DiscountPrices:
+    func make(discount: int) -> DiscountPrices:
         return wrap[DiscountPrices](discount)
 
-    def price(policy: DiscountPrices, subtotal: int) -> int effects():
+    func price(policy: DiscountPrices, subtotal: int) -> int effects():
         return subtotal - unwrap(policy)
 
 domain FixedPrices: int:
-    def make(amount: int) -> FixedPrices:
+    func make(amount: int) -> FixedPrices:
         return wrap[FixedPrices](amount)
 
-    def price(policy: FixedPrices, subtotal: int) -> int effects():
+    func price(policy: FixedPrices, subtotal: int) -> int effects():
         _ = subtotal
         return unwrap(policy)
 
-public def program() -> int:
-    real = DiscountPrices.make(250)
-    fake = FixedPrices.make(1750)
+public func program() -> int:
+    mut real = DiscountPrices.make(250)
+    mut fake = FixedPrices.make(1750)
     assert forward(real, 2000) == 2250
     assert named_to_inline(fake, 2000) == 2250
     assert inline_to_named(real, 2000) == 2250

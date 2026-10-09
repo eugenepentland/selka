@@ -31,22 +31,20 @@ const Files = struct {
     }
 };
 const units =
-    \\module units
     \\
     \\
     \\public domain Distance: i64:
-    \\    private def raw(x: i64) -> Distance:
+    \\    private func raw(x: i64) -> Distance:
     \\        return wrap[Distance](x)
     \\
-    \\    def make(x: i64) -> Distance effects():
+    \\    func make(x: i64) -> Distance effects():
     \\        return Distance.raw(x)
     \\
     \\
-    \\def hidden() -> i64:
+    \\func hidden() -> i64:
     \\    return 9
 ;
 const entry =
-    \\module main
     \\import units
     \\
     \\
@@ -54,12 +52,12 @@ const entry =
     \\    distance: units.Distance
     \\
     \\
-    \\public def echo(x: [2]units.Distance) -> [2]units.Distance effects():
+    \\public func echo(x: FixedArray[units.Distance, 2]) -> FixedArray[units.Distance, 2] effects():
     \\    return x
     \\
     \\
-    \\def main() -> i64:
-    \\    x = units.Distance.make(2)
+    \\func main() -> i64:
+    \\    mut x = units.Distance.make(2)
     \\    return 0
 ;
 fn scenario(allocator: std.mem.Allocator) !void {
@@ -97,16 +95,15 @@ test "module interfaces resolve nominal identities and exported domain methods w
 // spec: INTERFACE-SIGNATURE-1
 test "default interface listing renders the whole signature with Python capability spellings" {
     const body =
-        \\module main
         \\
         \\
-        \\public def main(fs: Filesystem, clock: Clock) -> int:
+        \\public func main(fs: Filesystem, clock: Clock) -> int:
         \\    _ = fs
         \\    _ = clock
         \\    return 0
         \\
         \\
-        \\public def bump(values: mut list[int]) -> int effects(mutation):
+        \\public func bump(mut values: int[]) -> int effects(mutation):
         \\    values[0] = values[0] + 1
         \\    return values[0]
     ;
@@ -120,25 +117,24 @@ test "default interface listing renders the whole signature with Python capabili
     index.program = compilation.program.?;
     const text = try index.render(t.allocator);
     defer t.allocator.free(text);
-    try t.expect(std.mem.indexOf(u8, text, "def(fs:Filesystem,clock:Clock)->i64") != null);
+    try t.expect(std.mem.indexOf(u8, text, "func(fs:Filesystem,clock:Clock)->i64") != null);
     try t.expect(std.mem.indexOf(u8, text, "filesystem_cap") == null);
     try t.expect(std.mem.indexOf(u8, text, "clock_cap") == null);
     try t.expect(std.mem.indexOf(u8, text, "effects()") != null);
-    try t.expect(std.mem.indexOf(u8, text, "def(values:mut list[i64])->i64") != null);
+    try t.expect(std.mem.indexOf(u8, text, "func(mut values:i64[])->i64") != null);
     try t.expect(std.mem.indexOf(u8, text, "ceiling(mutation)") != null);
 }
 
 // spec: KEYWORD-ONLY-3
-test "an interface signature prints the bare star that makes later parameters keyword-only" {
+test "an interface signature prints individual named parameter markers" {
     const body =
-        \\module main
         \\
         \\
-        \\public def issue(host: int, *, code: int, file: int = 0) -> int effects():
+        \\public func issue(host: int, named code: int, named file: int = 0) -> int effects():
         \\    return host + code + file
         \\
         \\
-        \\public def main() -> int:
+        \\public func main() -> int:
         \\    return 0
     ;
     var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = body }} };
@@ -151,21 +147,20 @@ test "an interface signature prints the bare star that makes later parameters ke
     index.program = compilation.program.?;
     const text = try index.render(t.allocator);
     defer t.allocator.free(text);
-    try t.expect(std.mem.indexOf(u8, text, "def(host:i64,*,code:i64,file:i64=0)->i64") != null);
+    try t.expect(std.mem.indexOf(u8, text, "func(host:i64,named code:i64,named file:i64=0)->i64") != null);
 }
 
 // spec-case: TUPLE-7
 test "list-interfaces spells a tuple signature back in source form" {
     const body =
-        \\module main
         \\
         \\
-        \\public def split(text: str, sep: str) -> tuple[str, str]:
+        \\public func split(text: str, sep: str) -> tuple[str, str]:
         \\    return text, sep
         \\
         \\
-        \\public def main() -> int:
-        \\    head, rest = split("key=value", "=")
+        \\public func main() -> int:
+        \\    const head, rest = split("key=value", "=")
         \\    return len(head) + len(rest)
     ;
     var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = body }} };
@@ -200,7 +195,6 @@ fn reject(body: []const u8, code: []const u8) !void {
 // spec-case: DOC-1
 test "list-interfaces prints a declaration's first docstring line" {
     const body =
-        \\module main
         \\
         \\
         \\public record Point:
@@ -208,7 +202,7 @@ test "list-interfaces prints a declaration's first docstring line" {
         \\    x: int
         \\
         \\
-        \\public def area(width: int, height: int) -> int:
+        \\public func area(width: int, height: int) -> int:
         \\    """The rectangle's area.
         \\
         \\    Long detail that the listing drops.
@@ -229,17 +223,14 @@ test "list-interfaces prints a declaration's first docstring line" {
 // spec: PROJ-3
 test "module interfaces reject duplicate exports missing symbols and private type leaks" {
     try reject(
-        \\module main
         \\export Missing
     , "E_EXPORT_REMOVED");
     try reject(
-        \\module main
         \\import units
         \\export units.Missing
         \\export units.Missing
     , "E_DUPLICATE_EXPORT");
     try reject(
-        \\module main
         \\import units
         \\
         \\
@@ -247,29 +238,26 @@ test "module interfaces reject duplicate exports missing symbols and private typ
         \\    pass
     , "E_IMPORT_ALIAS");
     try reject(
-        \\module main
         \\
         \\
         \\record X:
         \\    pass
         \\
         \\
-        \\def X() -> i64:
+        \\func X() -> i64:
         \\    return 0
     , "E_DUPLICATE_SYMBOL");
     try reject(
-        \\module main
         \\
         \\
         \\record Secret:
         \\    pass
         \\
         \\
-        \\public def f(x: Secret) -> i64:
+        \\public func f(x: Secret) -> i64:
         \\    return 0
     , "E_PRIVATE_INTERFACE");
     try reject(
-        \\module main
         \\
         \\
         \\record Secret:
@@ -277,42 +265,38 @@ test "module interfaces reject duplicate exports missing symbols and private typ
         \\
         \\
         \\public record Box:
-        \\    value: [2]Secret
+        \\    value: FixedArray[Secret, 2]
     , "E_PRIVATE_INTERFACE");
     try reject(
-        \\module main
         \\
         \\
         \\record Secret:
         \\    pass
         \\
         \\
-        \\public union Box:
-        \\    value: Secret
+        \\public enum Box:
+        \\    value(value: Secret)
     , "E_PRIVATE_INTERFACE");
     try reject(
-        \\module main
         \\
         \\
-        \\public def f(x: Missing) -> i64:
+        \\public func f(x: Missing) -> i64:
         \\    return 0
     , "E_UNKNOWN_SYMBOL");
     try reject(
-        \\module main
-        \\def broken(
+        \\func broken(
     , "E_SYNTAX");
 }
 // spec-case: DIAG-ORACLE-1
 test "module interfaces suggest close function names for unknown symbols" {
     var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes =
-        \\module main
         \\
         \\
-        \\def twice(x: i64) -> i64:
+        \\func twice(x: i64) -> i64:
         \\    return x + x
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     }} };
     var project = graph.Project.init(t.allocator);
@@ -349,7 +333,7 @@ test "module privacy rejects direct private access wrong kinds and transitive im
     }
 }
 
-const scanner_module = "module scanner\n\n\ndef helper() -> int:\n    return 7\n\n\npublic def scan() -> int:\n    return helper()\n";
+const scanner_module = "\n\nfunc helper() -> int:\n    return 7\n\n\npublic func scan() -> int:\n    return helper()\n";
 /// Resolve `scanner.helper` from the entry module `entry` whose source is
 /// `text`, beside `scanner.my`, and answer the privacy problem code or null.
 fn privateHelperProblem(module: []const u8, text: []const u8, extra: ?File) !?[]const u8 {
@@ -371,25 +355,24 @@ fn privateHelperProblem(module: []const u8, text: []const u8, extra: ?File) !?[]
 
 // spec: TEST-PRIVATE-ACCESS-1
 test "a module's test file resolves its private declarations and nothing else does" {
-    const tester = "module scanner_test\nimport scanner\n\n\npublic def test_helper() -> bool:\n    return scanner.helper() == 7\n";
+    const tester = "import scanner\n\n\npublic func test_helper() -> bool:\n    return scanner.helper() == 7\n";
     try t.expectEqual(@as(?[]const u8, null), try privateHelperProblem("scanner_test", tester, null));
-    const other = "module parser_test\nimport scanner\n\n\npublic def test_helper() -> bool:\n    return scanner.helper() == 7\n";
+    const other = "import scanner\n\n\npublic func test_helper() -> bool:\n    return scanner.helper() == 7\n";
     try t.expectEqualStrings("E_PRIVATE_SYMBOL", (try privateHelperProblem("parser_test", other, null)).?);
     // A `scanner_test` another module imports is a library, not a test file,
     // so it could hand the private helper on: it sees only the public surface.
-    const importer = "module main\nimport scanner_test\n\n\ndef main() -> int:\n    return 0\n";
+    const importer = "import scanner_test\n\n\nfunc main() -> int:\n    return 0\n";
     try t.expectEqualStrings("E_PRIVATE_SYMBOL", (try privateHelperProblem("main", importer, .{ .path = "scanner_test.my", .bytes = tester })).?);
 }
 
 test "module grammar parses qualified variant match constructors and free calls" {
     const text =
-        \\module main
         \\import units
         \\
         \\
-        \\def main() -> i64:
-        \\    x = units.Choice.a
-        \\    y = units.helper()
+        \\func main() -> i64:
+        \\    mut x = units.Choice.a
+        \\    mut y = units.helper()
         \\    match x:
         \\        case units.Choice.a:
         \\            return y
@@ -397,14 +380,13 @@ test "module grammar parses qualified variant match constructors and free calls"
     var files: Files = .{ .entries = &.{
         .{ .path = "main.my", .bytes = text },
         .{ .path = units_path, .bytes =
-        \\module units
         \\
         \\
         \\public enum Choice:
         \\    a
         \\
         \\
-        \\public def helper() -> i64 effects():
+        \\public func helper() -> i64 effects():
         \\    return 1
         },
     } };
@@ -450,26 +432,24 @@ test "module AST relocation retains source spelling namespace ownership and node
 fn checkedScenario(allocator: std.mem.Allocator) !void {
     var files: Files = .{ .entries = &.{
         .{ .path = "main.my", .bytes =
-        \\module main
         \\import units
         \\
         \\
-        \\def main() -> i64:
-        \\    x = units.Distance.make(12)
+        \\func main() -> i64:
+        \\    mut x = units.Distance.make(12)
         \\    return units.Distance.number(x)
         },
         .{ .path = units_path, .bytes =
-        \\module units
         \\
         \\
         \\public domain Distance: i64:
-        \\    private def raw(x: i64) -> Distance:
+        \\    private func raw(x: i64) -> Distance:
         \\        return wrap[Distance](x)
         \\
-        \\    def make(x: i64) -> Distance effects():
+        \\    func make(x: i64) -> Distance effects():
         \\        return Distance.raw(x)
         \\
-        \\    def number(x: Distance) -> i64 effects():
+        \\    func number(x: Distance) -> i64 effects():
         \\        return unwrap(x)
         },
     } };
@@ -504,36 +484,34 @@ fn rejectChecked(main: []const u8, dependency: []const u8, code: []const u8) !vo
 test "shared record types cross module boundaries and hidden names do not shadow caller locals" {
     var files: Files = .{ .entries = &.{
         .{ .path = "main.my", .bytes =
-        \\module main
         \\import units
         \\
         \\
-        \\def main() -> i64:
-        \\    hidden = 7
-        \\    x = units.make(hidden)
+        \\func main() -> i64:
+        \\    mut hidden = 7
+        \\    mut x = units.make(hidden)
         \\    return units.value(x)
         },
         .{ .path = units_path, .bytes =
-        \\module units
         \\
         \\
         \\public record X:
         \\    number: i64
         \\
         \\
-        \\def hidden() -> i64:
+        \\func hidden() -> i64:
         \\    return 99
         \\
         \\
-        \\public def make(n: i64) -> X effects():
+        \\public func make(n: i64) -> X effects():
         \\    return X(number=n)
         \\
         \\
-        \\public def value(x: X) -> i64 effects():
+        \\public func value(x: X) -> i64 effects():
         \\    return x.number
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 88
         },
     } };
@@ -563,16 +541,14 @@ fn grouped(analysis: duplicates_module.Analysis, program: @import("typed.zig").P
 fn discoveryScenario(allocator: std.mem.Allocator) !void {
     var files: Files = .{ .entries = &.{
         .{ .path = "main.my", .bytes =
-        \\module main
         \\import left
         \\import right
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
         },
         .{ .path = "left.my", .bytes =
-        \\module left
         \\import shared as s
         \\
         \\
@@ -580,27 +556,26 @@ fn discoveryScenario(allocator: std.mem.Allocator) !void {
         \\    n: i64
         \\
         \\
-        \\def pure(x: i64) -> i64:
+        \\func pure(x: i64) -> i64:
         \\    return x * 2 + 3
         \\
         \\
-        \\def nominal(x: Box) -> Box:
+        \\func nominal(x: Box) -> Box:
         \\    return x
         \\
         \\
-        \\def helper(x: i64) -> i64:
+        \\func helper(x: i64) -> i64:
         \\    return x + 1
         \\
         \\
-        \\def wrapper(x: i64) -> i64:
+        \\func wrapper(x: i64) -> i64:
         \\    return helper(x)
         \\
         \\
-        \\def shared_use(x: s.Box) -> i64:
+        \\func shared_use(x: s.Box) -> i64:
         \\    return s.number(x)
         },
         .{ .path = "right.my", .bytes =
-        \\module right
         \\import shared as q
         \\
         \\
@@ -608,34 +583,33 @@ fn discoveryScenario(allocator: std.mem.Allocator) !void {
         \\    n: i64
         \\
         \\
-        \\def pure(value: i64) -> i64:
+        \\func pure(value: i64) -> i64:
         \\    return value * 2 + 3
         \\
         \\
-        \\def nominal(value: Box) -> Box:
+        \\func nominal(value: Box) -> Box:
         \\    return value
         \\
         \\
-        \\def helper(value: i64) -> i64:
+        \\func helper(value: i64) -> i64:
         \\    return value + 1
         \\
         \\
-        \\def wrapper(value: i64) -> i64:
+        \\func wrapper(value: i64) -> i64:
         \\    return helper(value)
         \\
         \\
-        \\def shared_use(value: q.Box) -> i64:
+        \\func shared_use(value: q.Box) -> i64:
         \\    return q.number(value)
         },
         .{ .path = "shared.my", .bytes =
-        \\module shared
         \\
         \\
         \\public record Box:
         \\    n: i64
         \\
         \\
-        \\public def number(x: Box) -> i64 effects():
+        \\public func number(x: Box) -> i64 effects():
         \\    return x.n
         },
     } };
@@ -653,7 +627,7 @@ fn discoveryScenario(allocator: std.mem.Allocator) !void {
     try t.expect(!grouped(analysis, compilation.program.?, "left::wrapper", "right::wrapper"));
     const text = try duplicates_module.render(allocator, analysis, compilation.program.?, compilation.src);
     defer allocator.free(text);
-    for ([_][]const u8{ "left.my:9:", "right.my:9:", "left::pure", "right::pure", "approximate near-v3" }) |part| try t.expect(std.mem.indexOf(u8, text, part) != null);
+    for ([_][]const u8{ "left.my:8:", "right.my:8:", "left::pure", "right::pure", "approximate near-v3" }) |part| try t.expect(std.mem.indexOf(u8, text, part) != null);
 }
 test "module duplicate discovery preserves nominal types and callees while normalizing shared import aliases" {
     try discoveryScenario(t.allocator);
@@ -664,46 +638,44 @@ test "module duplicate discovery preserves nominal types and callees while norma
 fn qualityScenario(allocator: std.mem.Allocator) !void {
     var files: Files = .{ .entries = &.{
         .{ .path = "main.my", .bytes =
-        \\module main
         \\import api
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return api.used()
         },
         .{ .path = "api.my", .bytes =
-        \\module api
         \\
         \\
-        \\public def used() -> i64 effects():
+        \\public func used() -> i64 effects():
         \\    return 7
         \\
         \\
-        \\public def unused() -> i64 effects():
+        \\public func unused() -> i64 effects():
         \\    return helper()
         \\
         \\
-        \\def helper() -> i64:
+        \\func helper() -> i64:
         \\    return 2
         \\
         \\
-        \\def isolated() -> i64:
+        \\func isolated() -> i64:
         \\    return 3
         \\
         \\
-        \\def cycle_a() -> i64:
+        \\func cycle_a() -> i64:
         \\    return cycle_b()
         \\
         \\
-        \\def cycle_b() -> i64:
+        \\func cycle_b() -> i64:
         \\    return cycle_a()
         \\
         \\
         \\public domain D: i64:
-        \\    private def raw(x: i64) -> D:
+        \\    private func raw(x: i64) -> D:
         \\        return wrap[D](x)
         \\
-        \\    def make(x: i64) -> D effects():
+        \\    func make(x: i64) -> D effects():
         \\        return D.raw(x)
         },
     } };
@@ -771,10 +743,9 @@ fn expectQualifiedSyntax(syntax: @import("ast.zig").Program, src: @import("sourc
 
 test "AST relocation rejects dangling expression and statement identities" {
     var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes =
-        \\module main
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     }} };
     var project = graph.Project.init(t.allocator);
@@ -791,14 +762,13 @@ test "AST relocation rejects dangling expression and statement identities" {
 }
 test "public type selection rejects private and unknown nominal types" {
     var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes =
-        \\module main
         \\
         \\
         \\record Hidden:
         \\    n: i64
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     }} };
     var project = graph.Project.init(t.allocator);
@@ -812,14 +782,13 @@ test "public type selection rejects private and unknown nominal types" {
 
 test "schema rendering rejects an exported declaration missing its checked type" {
     var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes =
-        \\module main
         \\
         \\
         \\public record Visible:
         \\    n: i64
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     }} };
     var project = graph.Project.init(t.allocator);
@@ -834,18 +803,17 @@ test "schema rendering rejects an exported declaration missing its checked type"
 
 test "public schema renders normalized mutates metadata and callback contracts" {
     var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes =
-        \\module main
         \\
         \\
-        \\public def touch(values: mut list[int]) -> None effects(mutation):
+        \\public func touch(mut values: int[]) -> Unit effects(mutation):
         \\    values[0] = 1
         \\
         \\
-        \\public def apply(f: def(values: mut list[int]) -> None effects(mutation)) -> None effects():
+        \\public func apply(f: func(mut values: int[]) -> Unit effects(mutation)) -> Unit effects():
         \\    _ = f
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     }} };
     var project = graph.Project.init(t.allocator);
@@ -862,25 +830,23 @@ test "public schema renders normalized mutates metadata and callback contracts" 
 
 test "generic syntax module interfaces retain scoped type names without hiding private concrete types" {
     try reject(
-        \\module main
         \\
         \\
         \\record Secret:
         \\    pass
         \\
         \\
-        \\public def f[T](x: T, y: [2]Secret) -> T:
+        \\public func f[T](x: T, y: FixedArray[Secret, 2]) -> T:
         \\    return x
     , "E_PRIVATE_INTERFACE");
     const text =
-        \\module main
         \\
         \\
-        \\public def echo[T: copy](x: [2]T) -> [2]T effects():
+        \\public func echo[T: copy](x: FixedArray[T, 2]) -> FixedArray[T, 2] effects():
         \\    return x
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     ;
     var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = text }} };
@@ -901,34 +867,31 @@ test "generic syntax module interfaces retain scoped type names without hiding p
 
 test "generic requirements checkGenericRequirements validates exported and uncalled private templates" {
     try reject(
-        \\module main
         \\
         \\
-        \\public def f[T: unknown](x: T) -> T:
+        \\public func f[T: unknown](x: T) -> T:
         \\    return x
     , "E_GENERIC_REQUIREMENT");
     try reject(
-        \\module main
         \\
         \\
-        \\def private_template[T: unknown](x: T) -> T:
+        \\func private_template[T: unknown](x: T) -> T:
         \\    return x
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_GENERIC_REQUIREMENT");
 }
 
 fn namedConstraintIndexScenario(allocator: std.mem.Allocator) !void {
     const text =
-        \\module main
         \\
         \\
         \\public constraint Prices[P] = copy + op(price(policy: P, subtotal: int) -> int effects())
         \\
         \\
-        \\public def total[P: Prices](policy: P, subtotal: int) -> int effects():
+        \\public func total[P: Prices](policy: P, subtotal: int) -> int effects():
         \\    return P.price(policy, subtotal)
     ;
     var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = text }} };
@@ -956,15 +919,13 @@ fn namedConstraintIndexScenario(allocator: std.mem.Allocator) !void {
 fn namedConstraintImportScenario(allocator: std.mem.Allocator) !void {
     var files: Files = .{ .entries = &.{
         .{ .path = "main.my", .bytes =
-        \\module main
         \\import contracts
         \\
         \\
-        \\public def total[P: contracts.Prices](policy: P, subtotal: int) -> int effects():
+        \\public func total[P: contracts.Prices](policy: P, subtotal: int) -> int effects():
         \\    return P.price(policy, subtotal)
         },
         .{ .path = contracts_module, .bytes =
-        \\module contracts
         \\
         \\
         \\public constraint Prices[P] = copy + op(price(policy: P, subtotal: int) -> int effects())
@@ -995,7 +956,6 @@ test "named constraints index export render and accept function bounds" {
 // spec: NAMED-CONSTRAINT-MODULE-2
 test "named constraints reject nominal bounds and wrong kinds" {
     try reject(
-        \\module main
         \\
         \\
         \\constraint Prices[P] = copy
@@ -1005,33 +965,30 @@ test "named constraints reject nominal bounds and wrong kinds" {
         \\    pass
     , "E_GENERIC_REQUIREMENT");
     try reject(
-        \\module main
         \\
         \\
         \\constraint Prices[P] = copy
         \\
         \\
-        \\public union Box[T: Prices]:
-        \\    item: T
+        \\public enum Box[T: Prices]:
+        \\    item(value: T)
     , "E_GENERIC_REQUIREMENT");
     try reject(
-        \\module main
         \\
         \\
         \\constraint Prices[P] = copy
         \\
         \\
-        \\public def f(x: Prices) -> int:
+        \\public func f(x: Prices) -> int:
         \\    return 0
     , "E_SYMBOL_KIND");
     try reject(
-        \\module main
         \\
         \\
         \\constraint Prices[P] = copy
         \\
         \\
-        \\public def f(x: Prices[int]) -> int:
+        \\public func f(x: Prices[int]) -> int:
         \\    return 0
     , "E_SYMBOL_KIND");
 }
@@ -1039,24 +996,21 @@ test "named constraints reject nominal bounds and wrong kinds" {
 // spec: NAMED-CONSTRAINT-MODULE-3
 test "named constraints enforce private interface exposure and unknown names" {
     try reject(
-        \\module main
         \\
         \\
         \\constraint Prices[P] = copy
         \\
         \\
-        \\public def f[T: Prices](x: T) -> T:
+        \\public func f[T: Prices](x: T) -> T:
         \\    return x
     , "E_PRIVATE_INTERFACE");
     try reject(
-        \\module main
         \\
         \\
-        \\public def f[T: unknown](x: T) -> T:
+        \\public func f[T: unknown](x: T) -> T:
         \\    return x
     , "E_GENERIC_REQUIREMENT");
     try reject(
-        \\module main
         \\
         \\
         \\record Secret:
@@ -1070,7 +1024,6 @@ test "named constraints enforce private interface exposure and unknown names" {
 // spec: NAMED-CONSTRAINT-MODULE-4
 test "named constraints participate in duplicate declaration checks" {
     try reject(
-        \\module main
         \\
         \\
         \\record Prices:
@@ -1084,7 +1037,6 @@ test "named constraints participate in duplicate declaration checks" {
 // spec: NAMED-CONSTRAINT-MODULE-6
 test "named constraints reject subject shadowing declarations imports and builtins" {
     try reject(
-        \\module main
         \\
         \\
         \\record P:
@@ -1094,22 +1046,20 @@ test "named constraints reject subject shadowing declarations imports and builti
         \\constraint Prices[P] = copy
         \\
         \\
-        \\public def f(x: i64) -> int:
+        \\public func f(x: i64) -> int:
         \\    return 0
     , "E_SHADOWING");
     try reject(
-        \\module main
         \\import units
         \\
         \\
         \\constraint Prices[units] = copy
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_SHADOWING");
     try reject(
-        \\module main
         \\
         \\
         \\constraint Prices[int] = copy
@@ -1119,10 +1069,9 @@ test "named constraints reject subject shadowing declarations imports and builti
 // spec: NAMED-CONSTRAINT-MODULE-5
 test "named constraints constraintIdentity reports unmapped sources as internal errors" {
     const text =
-        \\module main
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     ;
     var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = text }} };
@@ -1139,14 +1088,12 @@ test "named constraints constraintIdentity reports unmapped sources as internal 
 
 fn expectNamedConstraintLocatedErrors() !void {
     try reject(
-        \\module main
         \\
         \\
-        \\public def f[T: unknown](x: T) -> T:
+        \\public func f[T: unknown](x: T) -> T:
         \\    return x
     , "E_GENERIC_REQUIREMENT");
     try reject(
-        \\module main
         \\
         \\
         \\constraint Prices[P] = field(tag: P)
@@ -1186,22 +1133,20 @@ fn rejectNamedConstraintModule(main: []const u8, contracts: []const u8, code: []
 // spec-case: NAMED-CONSTRAINT-MODULE-7
 test "named constraints accept an imported exported bound when the defining module has more declarations" {
     try acceptNamedConstraintModule(
-        \\module main
         \\import contracts
         \\
         \\
-        \\public def f[T: contracts.C](x: T) -> T effects():
+        \\public func f[T: contracts.C](x: T) -> T effects():
         \\    return x
         \\
         \\
-        \\public def g[T: contracts.C](x: T) -> T effects():
+        \\public func g[T: contracts.C](x: T) -> T effects():
         \\    return x
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     ,
-        \\module contracts
         \\
         \\
         \\record One:
@@ -1223,18 +1168,16 @@ test "named constraints accept an imported exported bound when the defining modu
 // spec-case: NAMED-CONSTRAINT-MODULE-7
 test "named constraints accept an imported exported bound when the defining module is smaller" {
     try acceptNamedConstraintModule(
-        \\module main
         \\import contracts
         \\
         \\
-        \\public def f[T: contracts.C](x: T) -> T effects():
+        \\public func f[T: contracts.C](x: T) -> T effects():
         \\    return x
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     ,
-        \\module contracts
         \\
         \\
         \\record One:
@@ -1248,18 +1191,16 @@ test "named constraints accept an imported exported bound when the defining modu
 // spec-case: NAMED-CONSTRAINT-MODULE-3
 test "named constraints reject an unexported constraint imported from another module" {
     try rejectNamedConstraintModule(
-        \\module main
         \\import contracts
         \\
         \\
-        \\public def f[T: contracts.C](x: T) -> T:
+        \\public func f[T: contracts.C](x: T) -> T:
         \\    return x
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     ,
-        \\module contracts
         \\
         \\
         \\constraint C[T] = copy
@@ -1269,13 +1210,12 @@ test "named constraints reject an unexported constraint imported from another mo
 // spec-case: NAMED-CONSTRAINT-MODULE-3
 test "named constraints reject a same-module unexported constraint exposed by an exported generic" {
     try reject(
-        \\module main
         \\
         \\
         \\constraint C[T] = copy
         \\
         \\
-        \\public def f[T: C](x: T) -> T:
+        \\public func f[T: C](x: T) -> T:
         \\    return x
     , "E_PRIVATE_INTERFACE");
 }
@@ -1283,18 +1223,16 @@ test "named constraints reject a same-module unexported constraint exposed by an
 // spec-case: NAMED-CONSTRAINT-SEMANTICS-1
 test "named constraints supply copy from an imported constraint to a structural field bound" {
     try acceptNamedConstraintModule(
-        \\module main
         \\import contracts
         \\
         \\
-        \\def value[T: contracts.C + field(value: int)](x: T) -> int:
+        \\func value[T: contracts.C + field(value: int)](x: T) -> int:
         \\    return x.value
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     ,
-        \\module contracts
         \\
         \\
         \\public constraint C[T] = copy
@@ -1304,143 +1242,130 @@ test "named constraints supply copy from an imported constraint to a structural 
 // spec-case: NAMED-CONSTRAINT-SEMANTICS-5
 test "named constraints accept implied copy from equality with a structural field" {
     try acceptChecked(
-        \\module main
         \\
         \\
-        \\def value[T: equality + field(value: int)](x: T) -> int:
+        \\func value[T: equality + field(value: int)](x: T) -> int:
         \\    return x.value
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
-    , "module units\n");
+    , "");
 }
 
 // spec-case: NAMED-CONSTRAINT-SEMANTICS-7
 test "named constraints reject a structural field bound without copy" {
     try reject(
-        \\module main
         \\
         \\
-        \\def value[T: field(value: int)](x: T) -> int:
+        \\func value[T: field(value: int)](x: T) -> int:
         \\    return x.value
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_GENERIC_REQUIREMENT");
 }
 
 test "generic body contracts respect module-local declaration and import scopes" {
     try rejectChecked(
-        \\module main
         \\import units
         \\
         \\
-        \\def f[T](x: T) -> T:
-        \\    units = x
+        \\func f[T](x: T) -> T:
+        \\    mut units = x
         \\    return units
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
-    , "module units\n", "E_SHADOWING");
+    , "", "E_SHADOWING");
     try acceptChecked(
-        \\module main
         \\import units
         \\
         \\
-        \\def f[T](x: T) -> T:
+        \\func f[T](x: T) -> T:
         \\    return x
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     ,
-        \\module units
         \\
         \\
         \\record T:
         \\    pass
     );
     try rejectChecked(
-        \\module main
         \\import units
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     ,
-        \\module units
         \\
         \\
-        \\def bad[T](x: T, y: T) -> T:
+        \\func bad[T](x: T, y: T) -> T:
         \\    return x + y
     , "E_GENERIC_OPERATION");
 }
 
 test "generic calls preserve imported declaration identity and private boundaries" {
     const main =
-        \\module main
         \\import units
         \\
         \\
-        \\def identity[T: integer](x: T) -> T:
+        \\func identity[T: integer](x: T) -> T:
         \\    return x
         \\
         \\
-        \\def forward[T](x: T) -> T:
+        \\func forward[T](x: T) -> T:
         \\    return units.identity[T](x)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     ;
     const dependency =
-        \\module units
         \\
         \\
-        \\public def identity[U](x: U) -> U effects():
+        \\public func identity[U](x: U) -> U effects():
         \\    return x
     ;
     try acceptChecked(main, dependency);
     // A domain member names its type arguments through its owner: `m.D.make[T](x)`.
     const domain_main =
-        \\module main
         \\import units
         \\
         \\
-        \\def forward[T](x: T) -> T:
+        \\func forward[T](x: T) -> T:
         \\    return units.D.make[T](x)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     ;
     const domain_dependency =
-        \\module units
         \\
         \\
         \\public domain D: i64:
-        \\    private def hidden[T](x: T) -> T:
+        \\    private func hidden[T](x: T) -> T:
         \\        return x
         \\
-        \\    def make[U](x: U) -> U effects():
+        \\    func make[U](x: U) -> U effects():
         \\        return D.hidden[U](x)
     ;
     try acceptChecked(domain_main, domain_dependency);
     try rejectChecked(main,
-        \\module units
         \\
         \\
-        \\def identity[U](x: U) -> U:
+        \\func identity[U](x: U) -> U:
         \\    return x
     , "E_PRIVATE_SYMBOL");
     try rejectChecked(main,
-        \\module units
         \\
         \\
-        \\public def identity[U: integer](x: U) -> U effects():
+        \\public func identity[U: integer](x: U) -> U effects():
         \\    return x
     , "E_GENERIC_ARGUMENT");
 }
@@ -1448,27 +1373,25 @@ test "generic calls preserve imported declaration identity and private boundarie
 fn genericCallsScenario(allocator: std.mem.Allocator) !void {
     var files: Files = .{ .entries = &.{
         .{ .path = "main.my", .bytes =
-        \\module main
         \\import units
         \\
         \\
-        \\def forward[T: integer](x: T) -> T:
+        \\func forward[T: integer](x: T) -> T:
         \\    return units.identity[T](x)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
         },
         .{ .path = units_path, .bytes =
-        \\module units
         \\
         \\
-        \\public def identity[U](x: U) -> U effects():
+        \\public func identity[U](x: U) -> U effects():
         \\    _ = helper(1)
         \\    return x
         \\
         \\
-        \\def helper(x: i64) -> i64:
+        \\func helper(x: i64) -> i64:
         \\    return x + 1
         },
     } };
@@ -1491,22 +1414,20 @@ test "generic calls module resolution and signature substitution release allocat
 test "generic calls requirement diagnostics link caller and imported declaration locations" {
     var files: Files = .{ .entries = &.{
         .{ .path = "main.my", .bytes =
-        \\module main
         \\import units
         \\
         \\
-        \\def forward[T](x: T) -> T:
+        \\func forward[T](x: T) -> T:
         \\    return units.identity[T](x)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
         },
         .{ .path = units_path, .bytes =
-        \\module units
         \\
         \\
-        \\public def identity[U: integer](x: U) -> U effects():
+        \\public func identity[U: integer](x: U) -> U effects():
         \\    return x
         },
     } };
@@ -1539,48 +1460,46 @@ fn acceptChecked(main: []const u8, dependency: []const u8) !void {
 fn genericExecutionScenario(allocator: std.mem.Allocator) !void {
     var files: Files = .{ .entries = &.{
         .{ .path = "main.my", .bytes =
-        \\module main
         \\import units
         \\
         \\
-        \\def id[T: integer](x: T) -> T:
+        \\func id[T: integer](x: T) -> T:
         \\    return x
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    _ = units.id[units.Box](units.Box(value=1))
-        \\    x = 0
+        \\    mut x = 0
         \\    x = units.set[i64](x, 2)
-        \\    values: [1]i64 = [x]
+        \\    mut values: FixedArray[i64, 1] = FixedArray[i64, 1]([x])
         \\    return units.run() + id[i64](units.head[i64](values))
         },
         .{ .path = units_path, .bytes =
-        \\module units
         \\
         \\
         \\public record Box:
         \\    value: i64
         \\
         \\
-        \\public def view[T](v: [1]T) -> [1]T effects():
+        \\public func view[T](v: FixedArray[T, 1]) -> FixedArray[T, 1] effects():
         \\    return v
         \\
         \\
-        \\public def head[T](v: [1]T) -> T effects():
-        \\    seen = view[T](v)
+        \\public func head[T](v: FixedArray[T, 1]) -> T effects():
+        \\    mut seen = view[T](v)
         \\    return seen[0]
         \\
         \\
-        \\public def set[T](x: T, y: T) -> T effects():
+        \\public func set[T](x: T, y: T) -> T effects():
         \\    _ = x
         \\    return y
         \\
         \\
-        \\public def id[T](x: T) -> T effects():
+        \\public func id[T](x: T) -> T effects():
         \\    return x
         \\
         \\
-        \\public def run() -> i64 effects():
+        \\public func run() -> i64 effects():
         \\    if id[bool](True):
         \\        return id[i64](5)
         \\    return 0
@@ -1617,64 +1536,56 @@ test "generic execution retains module identities and ordinary public schema roo
 // spec: EXPORT-PLACEMENT-1
 test "exports after declarations retain interface validation and scope boundaries" {
     try acceptChecked(
-        \\module main
         \\import units
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return units.value() - 42
     ,
-        \\module units
         \\
         \\
-        \\public def value() -> i64 effects():
+        \\public func value() -> i64 effects():
         \\    return 42
         \\
         \\
     );
     try reject(
-        \\module main
         \\export Missing
     , "E_EXPORT_REMOVED");
     try reject(
-        \\module main
         \\import units
         \\export units.value
         \\export units.value
     , "E_DUPLICATE_EXPORT");
     try reject(
-        \\module main
         \\
         \\
         \\record Secret:
         \\    pass
         \\
         \\
-        \\public def value(x: Secret) -> i64:
+        \\public func value(x: Secret) -> i64:
         \\    return 0
         \\
         \\
     , "E_PRIVATE_INTERFACE");
     try reject(
-        \\module main
         \\
         \\
-        \\def value() -> i64:
+        \\func value() -> i64:
         \\    export value
         \\    return 0
     , "E_SYNTAX");
     try reject(
-        \\module main
         \\
         \\
         \\record Value:
         \\    export Value
     , "E_SYNTAX");
     try reject(
-        \\module main
         \\
         \\
-        \\def value() -> i64:
+        \\func value() -> i64:
         \\    return 0
         \\
         \\
@@ -1684,7 +1595,6 @@ test "exports after declarations retain interface validation and scope boundarie
 
 fn scatteredExports(allocator: std.mem.Allocator) !void {
     const body =
-        \\module main
         \\
         \\
         \\public record Value:
@@ -1693,8 +1603,8 @@ fn scatteredExports(allocator: std.mem.Allocator) !void {
         \\
         \\
         \\
-        \\public def value() -> i64 effects():
-        \\    export = 42
+        \\public func value() -> i64 effects():
+        \\    mut export = 42
         \\    return export
         \\
         \\
@@ -1708,7 +1618,7 @@ fn scatteredExports(allocator: std.mem.Allocator) !void {
         \\
         \\
         \\
-        \\public def main() -> i64 effects():
+        \\public func main() -> i64 effects():
         \\    return value() - answer
         \\
         \\
@@ -1744,7 +1654,6 @@ test "scattered exports preserve source order and spans through compilation and 
 
 test "late duplicate re-export diagnostics locate both original directives" {
     const body =
-        \\module main
         \\import units
         \\export units.value
         \\
@@ -1762,38 +1671,35 @@ test "late duplicate re-export diagnostics locate both original directives" {
 }
 
 const facade_units =
-    \\module shared.units
     \\
     \\
     \\public record Distance:
     \\    value: i64
     \\
     \\
-    \\public def make(value: i64) -> Distance effects():
+    \\public func make(value: i64) -> Distance effects():
     \\    return Distance(value=value)
     \\
     \\
-    \\public def metres(distance: Distance) -> i64 effects():
+    \\public func metres(distance: Distance) -> i64 effects():
     \\    return distance.value
     \\
     \\
-    \\def secret() -> i64 effects():
+    \\func secret() -> i64 effects():
     \\    return 1
 ;
 const facade_module =
-    \\module facade
     \\import shared.units
     \\export shared.units.Distance
     \\export shared.units.make
     \\export shared.units.metres
 ;
 const facade_entry =
-    \\module main
     \\import facade
     \\
     \\
-    \\def main() -> i64:
-    \\    distance: facade.Distance = facade.make(42)
+    \\func main() -> i64:
+    \\    mut distance: facade.Distance = facade.make(42)
     \\    return facade.metres(distance)
 ;
 /// A facade module publishes imported declarations under its own local names,
@@ -1820,7 +1726,7 @@ fn facadeScenario(allocator: std.mem.Allocator) !void {
     const text = try index.render(allocator);
     defer allocator.free(text);
     try t.expect(std.mem.indexOf(u8, text, "module facade\n  export type Distance\n") != null);
-    try t.expect(std.mem.indexOf(u8, text, "  export function make def(value:i64)->shared.units::Distance") != null);
+    try t.expect(std.mem.indexOf(u8, text, "  export function make func(value:i64)->shared.units::Distance") != null);
     var compilation = try project_compile_module.Compilation.init(&index);
     try compilation.check();
     const result = try native.run(&compilation);
@@ -1833,17 +1739,14 @@ test "re-export facade publishes an imported declaration and a third module reso
 // spec: REEXPORT-2
 test "re-export rejects an unimported qualifier an unknown target and a private declaration" {
     try reject(
-        \\module main
         \\import units
         \\export missing.Distance
     , "E_UNKNOWN_EXPORT");
     try reject(
-        \\module main
         \\import units
         \\export units.Missing
     , "E_UNKNOWN_EXPORT");
     try reject(
-        \\module main
         \\import units
         \\export units.hidden
     , "E_PRIVATE_SYMBOL");
@@ -1851,39 +1754,34 @@ test "re-export rejects an unimported qualifier an unknown target and a private 
 
 test "cross module bodies enforce private functions private types nominal identity and local shadowing" {
     try rejectChecked(
-        \\module main
         \\import units
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return units.hidden()
     , units, "E_PRIVATE_SYMBOL");
     try rejectChecked(
-        \\module main
         \\import units
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    _ = units.Distance.raw(1)
         \\    return 0
     , units, "E_PRIVATE_SYMBOL");
     try rejectChecked(
-        \\module main
         \\import units
         \\
         \\
-        \\def main() -> i64:
-        \\    x = units.Hidden()
+        \\func main() -> i64:
+        \\    mut x = units.Hidden()
         \\    return 0
     ,
-        \\module units
         \\
         \\
         \\record Hidden:
         \\    pass
     , "E_PRIVATE_SYMBOL");
     try rejectChecked(
-        \\module main
         \\import units
         \\
         \\
@@ -1891,59 +1789,52 @@ test "cross module bodies enforce private functions private types nominal identi
         \\    pass
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return units.take(X())
     ,
-        \\module units
         \\
         \\
         \\public record X:
         \\    pass
         \\
         \\
-        \\public def take(x: X) -> i64 effects():
+        \\public func take(x: X) -> i64 effects():
         \\    return 0
     , "E_TYPE");
     try rejectChecked(
-        \\module main
         \\import units
         \\
         \\
-        \\def main() -> i64:
-        \\    units = 1
+        \\func main() -> i64:
+        \\    mut units = 1
         \\    return units
     , units, "E_SHADOWING");
     try rejectChecked(
-        \\module main
         \\import units
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return hidden()
     , units, "E_UNKNOWN_SYMBOL");
     try rejectChecked(
-        \\module main
         \\import units
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     ,
-        \\module units
         \\
         \\
-        \\def bad() -> i64:
+        \\func bad() -> i64:
         \\    return True
     , "E_TYPE");
     try rejectChecked(
-        \\module main
         \\import units
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     ,
-        \\module units
         \\
         \\
         \\record Recursive:
@@ -1953,82 +1844,75 @@ test "cross module bodies enforce private functions private types nominal identi
 
 test "generic calls concrete helpers retain imported identity and private domain boundaries" {
     const caller =
-        \\module main
         \\import units
         \\
         \\
-        \\def helper(x: i64) -> bool:
+        \\func helper(x: i64) -> bool:
         \\    return x == 0
         \\
         \\
-        \\def f[T](x: T) -> i64:
+        \\func f[T](x: T) -> i64:
         \\    _ = x
         \\    return units.helper(1)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     ;
     try acceptChecked(caller,
-        \\module units
         \\
         \\
-        \\public def helper(x: i64) -> i64 effects():
+        \\public func helper(x: i64) -> i64 effects():
         \\    return leaf(x)
         \\
         \\
-        \\def leaf(x: i64) -> i64:
+        \\func leaf(x: i64) -> i64:
         \\    return x + 1
     );
     try rejectChecked(caller,
-        \\module units
         \\
         \\
-        \\def helper(x: i64) -> i64:
+        \\func helper(x: i64) -> i64:
         \\    return x
     , "E_PRIVATE_SYMBOL");
     const domain_caller =
-        \\module main
         \\import units
         \\
         \\
-        \\def f[T](x: T) -> i64:
+        \\func f[T](x: T) -> i64:
         \\    _ = x
         \\    return units.D.helper(1)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     ;
     try acceptChecked(domain_caller,
-        \\module units
         \\
         \\
         \\public domain D: i64:
-        \\    def helper(x: i64) -> i64 effects():
+        \\    func helper(x: i64) -> i64 effects():
         \\        return D.leaf(x)
         \\
-        \\    private def leaf(x: i64) -> i64:
+        \\    private func leaf(x: i64) -> i64:
         \\        return x + 1
     );
     try rejectChecked(domain_caller,
-        \\module units
         \\
         \\
         \\public domain D: i64:
-        \\    def helper(x: i64) -> i64:
+        \\    func helper(x: i64) -> i64:
         \\        return E.leaf(x)
         \\
         \\
         \\domain E: i64:
-        \\    private def leaf(x: i64) -> i64:
+        \\    private func leaf(x: i64) -> i64:
         \\        return x
     , "E_PRIVATE_FUNCTION");
 }
 
 test "interface closure includes domain backing and enum table keys" {
     try reject(
-        \\module main
         \\
         \\
         \\domain Hidden: i64:
@@ -2039,11 +1923,10 @@ test "interface closure includes domain backing and enum table keys" {
         \\    pass
     , "E_PRIVATE_INTERFACE");
     try reject(
-        \\module main
         \\
         \\
         \\enum Key:
-        \\    a,
+        \\    a
         \\    b
         \\
         \\
@@ -2051,7 +1934,6 @@ test "interface closure includes domain backing and enum table keys" {
         \\    values: [Key]i64
     , "E_PRIVATE_INTERFACE");
     try reject(
-        \\module main
         \\export units
         \\import units
     , "E_EXPORT_REMOVED");
@@ -2060,31 +1942,27 @@ test "interface closure includes domain backing and enum table keys" {
 // spec: ERGONOMIC-INTEGRATION-1
 test "cross module effect and recoverable result obligations are enforced" {
     try rejectChecked(
-        \\module main
         \\import units
         \\
         \\
-        \\def main() -> i64 noalloc:
+        \\func main() -> i64 noalloc:
         \\    return units.allocate()
     ,
-        \\module units
         \\
         \\
-        \\public def allocate() -> i64 effects(managed_allocation):
-        \\    values: list[i64] = []
+        \\public func allocate() -> i64 effects(managed_allocation):
+        \\    mut values: i64[] = []
         \\    values.append(1)
         \\    return values[0u64]
     , "E_EFFECT_BOUND");
     try rejectChecked(
-        \\module main
         \\import units
         \\
         \\
-        \\def main() -> i64:
-        \\    pending = units.fallible()
+        \\func main() -> i64:
+        \\    mut pending = units.fallible()
         \\    return 0
     ,
-        \\module units
         \\
         \\
         \\public result R:
@@ -2092,7 +1970,7 @@ test "cross module effect and recoverable result obligations are enforced" {
         \\    err: i64
         \\
         \\
-        \\public def fallible() -> R effects():
+        \\public func fallible() -> R effects():
         \\    return Ok(7)
     , "E_RESULT_UNHANDLED");
 }
@@ -2116,14 +1994,13 @@ fn projectDiagnostic(index: *interfaces.Index, code: []const u8) !?diagnostic_mo
 test "exported functions publish their inferred ceiling while explicit ceilings stay upper bounds" {
     // A pure export checks without an author ceiling and publishes effects=.
     const pure =
-        \\module main
         \\
         \\
-        \\public def value(x: i64) -> i64:
+        \\public func value(x: i64) -> i64:
         \\    return x + 1
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return value(41)
     ;
     var files_pure: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = pure }} };
@@ -2141,16 +2018,15 @@ test "exported functions publish their inferred ceiling while explicit ceilings 
 
     // An allocating export publishes the derived managed_allocation ceiling.
     const allocating =
-        \\module main
         \\
         \\
-        \\public def value() -> i64:
-        \\    items: list[i64] = []
+        \\public func value() -> i64:
+        \\    mut items: i64[] = []
         \\    items.append(7)
         \\    return items[0]
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return value()
     ;
     var files_alloc: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = allocating }} };
@@ -2168,14 +2044,13 @@ test "exported functions publish their inferred ceiling while explicit ceilings 
 
     // An exported generic template and a public domain operation also check and publish.
     const generic =
-        \\module main
         \\
         \\
-        \\public def identity[T](x: T) -> T:
+        \\public func identity[T](x: T) -> T:
         \\    return x
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return identity[i64](41)
     ;
     var files_generic: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = generic }} };
@@ -2192,18 +2067,17 @@ test "exported functions publish their inferred ceiling while explicit ceilings 
     try t.expect(std.mem.indexOf(u8, generic_contracts, "\"permissions\":\"effects=managed_allocation;mutates=;origin=unknown\"") != null);
 
     const domain =
-        \\module main
         \\
         \\
         \\public domain Distance: i64:
-        \\    private def raw(x: i64) -> Distance:
+        \\    private func raw(x: i64) -> Distance:
         \\        return wrap[Distance](x)
         \\
-        \\    def make(x: i64) -> Distance:
+        \\    func make(x: i64) -> Distance:
         \\        return Distance.raw(x)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     ;
     var files_domain: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = domain }} };
@@ -2221,16 +2095,15 @@ test "exported functions publish their inferred ceiling while explicit ceilings 
 
     // An explicit ceiling is still an opt-in narrowing and still rejects excess.
     const narrowed =
-        \\module main
         \\
         \\
-        \\public def value() -> i64 noalloc:
-        \\    items: list[i64] = []
+        \\public func value() -> i64 noalloc:
+        \\    mut items: i64[] = []
         \\    items.append(7)
         \\    return items[0]
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return value()
     ;
     var files_narrow: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = narrowed }} };
@@ -2258,20 +2131,19 @@ fn contractTestMarker(allocator: std.mem.Allocator, contracts: []const u8, name:
 // spec: ATTR-2
 test "@test declarations publish a discovery marker in the contract manifest" {
     const body =
-        \\module main
         \\
         \\
-        \\public def helper(x: i64) -> i64 effects():
+        \\public func helper(x: i64) -> i64 effects():
         \\    return x
         \\
         \\
         \\@test
-        \\def takes_param(x: i64) -> i64 effects():
+        \\func takes_param(x: i64) -> i64 effects():
         \\    return x
         \\
         \\
         \\@test
-        \\def checks() -> bool effects():
+        \\func checks() -> bool effects():
         \\    return True
     ;
     var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = body }} };
@@ -2289,10 +2161,9 @@ test "@test declarations publish a discovery marker in the contract manifest" {
 // spec: PUBLIC-DECL-1
 test "a public declaration crosses the module boundary while an unmarked one stays private" {
     const dependency =
-        \\module units
         \\
         \\
-        \\public def answer() -> i64:
+        \\public func answer() -> i64:
         \\    return 42
         \\
         \\
@@ -2300,16 +2171,15 @@ test "a public declaration crosses the module boundary while an unmarked one sta
         \\    value: i64
         \\
         \\
-        \\def hidden() -> i64:
+        \\func hidden() -> i64:
         \\    return 7
     ;
     const main =
-        \\module main
         \\import units
         \\
         \\
-        \\def main() -> i64:
-        \\    reading: units.Reading = units.Reading(value=units.answer())
+        \\func main() -> i64:
+        \\    mut reading: units.Reading = units.Reading(value=units.answer())
         \\    return reading.value
     ;
     var files: Files = .{ .entries = &.{ .{ .path = "main.my", .bytes = main }, .{ .path = units_path, .bytes = dependency } } };
@@ -2320,11 +2190,10 @@ test "a public declaration crosses the module boundary while an unmarked one sta
     var compilation = try project_compile_module.Compilation.init(&index);
     try compilation.check();
     try rejectChecked(
-        \\module main
         \\import units
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return units.hidden()
     , dependency, "E_PRIVATE_SYMBOL");
 }
@@ -2334,33 +2203,31 @@ test "a public declaration crosses the module boundary while an unmarked one sta
 /// body check fail, which is the state `mylang list-interfaces` renders after it
 /// ignores the body diagnostic.
 const checked_ceiling_fixture =
-    \\module main
     \\
     \\
-    \\public def double(x: i64) -> i64 effects(managed_allocation):
+    \\public func double(x: i64) -> i64 effects(managed_allocation):
     \\    return x * 2
     \\
     \\
-    \\public def pure(x: i64) -> i64:
+    \\public func pure(x: i64) -> i64:
     \\    return x + 1
     \\
     \\
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    return double(2)
 ;
 const hole_fixture =
-    \\module main
     \\
     \\
-    \\public def double(x: i64) -> i64 effects(managed_allocation):
+    \\public func double(x: i64) -> i64 effects(managed_allocation):
     \\    return x * 2
     \\
     \\
-    \\public def unfinished(x: i64) -> i64:
+    \\public func unfinished(x: i64) -> i64:
     \\    return todo[i64]()
     \\
     \\
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    return double(2)
 ;
 
@@ -2382,8 +2249,8 @@ test "an unchecked listing reports an unavailable inferred set and keeps a decla
     index.program = compilation.program;
     const text = try index.render(t.allocator);
     defer t.allocator.free(text);
-    try t.expect(std.mem.indexOf(u8, text, "export function double def(x:i64)->i64 effects(unavailable) analysis(declaration-only) ceiling(managed_allocation) tests(unavailable)") != null);
-    try t.expect(std.mem.indexOf(u8, text, "export function unfinished def(x:i64)->i64 effects(unavailable) analysis(declaration-only) ceiling(managed_allocation) tests(unavailable)") != null);
+    try t.expect(std.mem.indexOf(u8, text, "export function double func(x:i64)->i64 effects(unavailable) analysis(declaration-only) ceiling(managed_allocation) tests(unavailable)") != null);
+    try t.expect(std.mem.indexOf(u8, text, "export function unfinished func(x:i64)->i64 effects(unavailable) analysis(declaration-only) ceiling(managed_allocation) tests(unavailable)") != null);
     // The internal conservative mask is a bound, never a published inference.
     try t.expect(std.mem.indexOf(u8, text, "filesystem") == null);
 }
@@ -2399,8 +2266,8 @@ test "a checked listing publishes the inferred set with no analysis clause" {
     index.program = compilation.program.?;
     const text = try index.render(t.allocator);
     defer t.allocator.free(text);
-    try t.expect(std.mem.indexOf(u8, text, "export function double def(x:i64)->i64 effects() ceiling(managed_allocation) tests(0)") != null);
-    try t.expect(std.mem.indexOf(u8, text, "export function pure def(x:i64)->i64 effects() ceiling(managed_allocation) tests(0)") != null);
+    try t.expect(std.mem.indexOf(u8, text, "export function double func(x:i64)->i64 effects() ceiling(managed_allocation) tests(0)") != null);
+    try t.expect(std.mem.indexOf(u8, text, "export function pure func(x:i64)->i64 effects() ceiling(managed_allocation) tests(0)") != null);
     try t.expect(std.mem.indexOf(u8, text, "analysis(") == null);
     try t.expect(std.mem.indexOf(u8, text, "unavailable") == null);
 }
@@ -2408,16 +2275,15 @@ test "a checked listing publishes the inferred set with no analysis clause" {
 // spec: INTERFACE-FACTS-2
 test "an uninstantiated generic publishes an unavailable template summary" {
     const body =
-        \\module main
         \\
         \\
-        \\public def build[T](x: T) -> i64:
-        \\    items: list[i64] = []
+        \\public func build[T](x: T) -> i64:
+        \\    mut items: i64[] = []
         \\    items.append(1)
         \\    return items[0]
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     ;
     var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = body }} };
@@ -2432,7 +2298,7 @@ test "an uninstantiated generic publishes an unavailable template summary" {
     index.program = compilation.program.?;
     const text = try index.render(t.allocator);
     defer t.allocator.free(text);
-    try t.expect(std.mem.indexOf(u8, text, "export function build def(x:$0)->i64 effects(unavailable) analysis(template)") != null);
+    try t.expect(std.mem.indexOf(u8, text, "export function build func(x:$0)->i64 effects(unavailable) analysis(template)") != null);
     try t.expect(std.mem.indexOf(u8, text, "filesystem") == null);
     // The reachability index exists here, so no tests column is published and
     // none is claimed unavailable.
@@ -2485,12 +2351,11 @@ test "the shared fact-status vocabulary spells the statuses the reference publis
 // spec-case: DERIVED-EFFECTS-4
 test "a Filesystem, Clock or Environment parameter reaches the published ceiling" {
     var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes =
-        \\module main
         \\
-        \\public def stamp(fs: Filesystem, clock: Clock, env: Environment, net: Network, random: Entropy) -> int:
+        \\public func stamp(fs: Filesystem, clock: Clock, env: Environment, net: Network, random: Entropy) -> int:
         \\    return 0
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
         \\
     }} };
@@ -2506,11 +2371,10 @@ test "a Filesystem, Clock or Environment parameter reaches the published ceiling
 // spec-case: NUM-LITERAL-4
 test "constant hints inspect declaration policy without recording project problems" {
     var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes =
-        \\module main
         \\public const VALUE: int = 42
-        \\def ordinary() -> int:
+        \\func ordinary() -> int:
         \\    return 1
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return VALUE
     }} };
     var project = graph.Project.init(t.allocator);

@@ -4,24 +4,24 @@ const std = @import("std");
 const support = @import("test_support.zig");
 
 const nested_lengths =
-    \\def uniform(w: int, h: int) -> int:
-    \\    grid: list[list[int]] = []
+    \\func uniform(w: int, h: int) -> int:
+    \\    mut grid: int[][] = []
     \\    for i in range(h):
-    \\        grid.append([j for j in range(w)])
-    \\    total = 0
+    \\        grid.append([for j in range(w) yield j])
+    \\    mut total = 0
     \\    for j in range(w):
     \\        total += grid[0][j]
     \\    return total
     \\
-    \\def ragged(w: int) -> int:
-    \\    grid = [[j for j in range(w)], [j for j in range(w)]]
+    \\func ragged(w: int) -> int:
+    \\    mut grid = [[for j in range(w) yield j], [for j in range(w) yield j]]
     \\    _ = grid[1].pop()
-    \\    total = 0
+    \\    mut total = 0
     \\    for j in range(w - 1):
     \\        total += grid[1][j]
     \\    return total
     \\
-    \\def main(out: Stream) -> int:
+    \\func main(out: Stream) -> int:
     \\    out.print(uniform(3, 2), ragged(3))
     \\    return 0
 ;
@@ -52,13 +52,13 @@ const record_fields =
     \\    z: int
     \\
     \\
-    \\def fields(n: int) -> int:
-    \\    p = P(x=n % 5, y=7, z=n % 3)
+    \\func fields(n: int) -> int:
+    \\    mut p = P(x=n % 5, y=7, z=n % 3)
     \\    p.y = p.y + 2
     \\    return p.x * 1000000000000 + p.z * 1000000000000 + p.y * 1000000000000
     \\
     \\
-    \\def main(out: Stream) -> int:
+    \\func main(out: Stream) -> int:
     \\    out.print(fields(7))
     \\    return 0
     \\
@@ -77,31 +77,31 @@ test "a record's field intervals flow through record_make, record_set and record
 }
 
 const list_facts =
-    \\def literal() -> int:
-    \\    xs = [10, 20, 30]
+    \\func literal() -> int:
+    \\    mut xs = [10, 20, 30]
     \\    return xs[2] + xs[0] + len(xs)
     \\
     \\
-    \\def hull() -> int:
-    \\    xs = [1, 2, 3]
+    \\func hull() -> int:
+    \\    mut xs = [1, 2, 3]
     \\    xs[1] = 100
     \\    xs[0] = 5
     \\    return xs[0] * 900000000000000000 + xs[1]
     \\
     \\
-    \\def pops() -> int:
-    \\    xs = [1, 2]
-    \\    a = xs.pop()
-    \\    b = xs.pop()
+    \\func pops() -> int:
+    \\    mut xs = [1, 2]
+    \\    mut a = xs.pop()
+    \\    mut b = xs.pop()
     \\    return a + b
     \\
     \\
-    \\def parameter(xs: list[int], i: int) -> int:
-    \\    ys = xs
+    \\func parameter(xs: int[], i: int) -> int:
+    \\    mut ys = xs
     \\    return ys.pop() + ys[i]
     \\
     \\
-    \\def main(out: Stream) -> int:
+    \\func main(out: Stream) -> int:
     \\    out.print(literal(), hull(), pops(), parameter([1, 2, 3], 0))
     \\    return 0
     \\
@@ -140,19 +140,19 @@ test "a verify build asserts every list length interval and record field interva
 }
 
 const rewritten_list =
-    \\def churn(size: int, rounds: int, seed: int) -> int:
+    \\func churn(size: int, rounds: int, seed: int) -> int:
     \\    if size < 2 or rounds < 1 or seed < 1 or seed > 1000000:
     \\        return -1
-    \\    values = [(seed + j * 13) % 1009 for j in range(size)]
-    \\    checksum = 0
+    \\    mut values = [for j in range(size) yield (seed + j * 13) % 1009]
+    \\    mut checksum = 0
     \\    for batch in range(rounds):
-    \\        index = (seed + batch * 17) % size
+    \\        mut index = (seed + batch * 17) % size
     \\        values[index] = (values[index] + batch + 1) % 1000003
     \\        checksum = (checksum + values[index]) % 1000000007
     \\    return checksum
     \\
     \\
-    \\def main(out: Stream) -> int:
+    \\func main(out: Stream) -> int:
     \\    out.print(churn(64, 100, 7))
     \\    return 0
     \\
@@ -173,13 +173,13 @@ test "a list rewritten in a loop has the hull of its entry and its writes, and a
 }
 
 const either_or =
-    \\def guarded(size: int, n: int) -> int:
+    \\func guarded(size: int, n: int) -> int:
     \\    if size < 2 or n < 1:
     \\        return 0
     \\    return 100 % size + n // size
     \\
     \\
-    \\def main(out: Stream) -> int:
+    \\func main(out: Stream) -> int:
     \\    out.print(guarded(5, 7))
     \\    return 0
     \\
@@ -198,14 +198,14 @@ test "an or of comparisons is control flow, so what each failed test says about 
 }
 
 const plain_condition_loop =
-    \\def f(xs: list[int]) -> int:
-    \\    i = 0
+    \\func f(xs: int[]) -> int:
+    \\    mut i = 0
     \\    while xs[i] != 0:
     \\        i += 1
     \\    return i
     \\
     \\
-    \\def main(out: Stream) -> int:
+    \\func main(out: Stream) -> int:
     \\    out.print(f([1, 2, 0]))
     \\    return 0
     \\

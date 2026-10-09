@@ -31,10 +31,10 @@ pub const Error = error{ OutOfMemory, InternalError, SourceError };
 /// under check is not the project's entry: it imports that module and has an
 /// empty `main`, so the module is checked as an ordinary imported module.
 pub const root_module = "mylang_interface_root";
-const root_text = "module " ++ root_module ++ "\nimport {s}\n\n\ndef main() -> int:\n    return 0\n";
+const root_text = "import {s}\n\n\nfunc main() -> int:\n    return 0\n";
 /// Appended to an entry with no `main`, as `mylang test` does, so a library or
 /// test module checks as a project.
-pub const main_stub = "\n\ndef main() -> int:\n    return 0\n";
+pub const main_stub = "\n\nfunc main() -> int:\n    return 0\n";
 
 /// One source path served from memory instead of disk.
 pub const Override = struct { path: []const u8, bytes: []const u8 };

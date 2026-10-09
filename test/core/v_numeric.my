@@ -1,29 +1,28 @@
-module v_numeric
 
-def noop() -> unit:
+func noop() -> unit:
     pass
 
 
-def take(u: unit, x: int) -> int:
+func take(u: unit, x: int) -> int:
     return x + 1
 
 
-def narrow(f: float) -> int:
+func narrow(f: float) -> int:
     return int(i8(f))
 
 
-def wide(f: float) -> int:
+func wide(f: float) -> int:
     return int(f)
 
 
-def main(out: Stream) -> int:
+func main(out: Stream) -> int:
     out.print(take(noop(), 4))
-    xs = list(range(-2i16, 3i16))
-    total = 0
+    mut xs = list(range(-2i16, 3i16))
+    mut total = 0
     for x in xs:
         total += int(x)
     out.print(total, len(xs))
-    ys = list(range(250u8, 255u8))
+    mut ys = list(range(250u8, 255u8))
     out.print(len(ys), int(ys[4]))
     out.print(narrow(-128.5), narrow(127.9), narrow(-0.5), narrow(-128.0))
     out.print(wide(-9223372036854775808.0), wide(9223372036854774784.0), wide(-0.99))

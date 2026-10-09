@@ -151,13 +151,13 @@ runs gets the caller's limit back before applying its own.
 
 ```console
 $ cat grow.my
-def grow(values: mut list[int], rounds: int) -> int:
+func grow(values: mut list[int], rounds: int) -> int:
     for r in range(rounds):
         values.append(r)
     return len(values)
 
 
-def main() -> int:
+func main() -> int:
     values: list[int] = []
     return grow(mut values, 100000000)
 $ mylang build grow.my --run --max-memory=64M

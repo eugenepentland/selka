@@ -20,6 +20,7 @@ const eResultOperation = diagnostic.result_operation;
 const eResultPath = diagnostic.result_path;
 const eEnvironmentName = sema_shared.eEnvironmentName;
 const std = @import("std");
+const frontend_fixed_arrays = @import("frontend_fixed_arrays.zig");
 const numeric_surface = @import("numeric_surface.zig");
 const dictionary_views = @import("dictionary_views.zig");
 const bufferOperation = sema_shared.bufferOperation;
@@ -120,6 +121,21 @@ fn hintRecordFields(comptime Checker: type, self: *Checker, record: @FieldType(@
         try self.hint(field.value, schema.fields[index].ty);
     }
 }
+fn hintCallbackArguments(comptime Checker: type, self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!void {
+    const local = self.locals.items[@backingInt(self.active.get(self.src.text(call.name)).?)];
+    if (callables.signature(local.ty, self.catalog.records)) |contract| {
+        for (call.arguments, 0..) |argument, source_index| {
+            var position = source_index;
+            if (call.argument_names.len != 0) if (call.argument_names[source_index]) |name| {
+                for (contract.labels, 0..) |label, target| if (std.mem.eql(u8, label, self.src.text(name))) {
+                    position = target;
+                    break;
+                };
+            };
+            if (position < contract.parameters.len) try self.hint(argument, contract.parameters[position]);
+        }
+    }
+}
 fn hintCallArguments(
     comptime Checker: type,
     self: *Checker,
@@ -163,6 +179,24 @@ fn queuePrintArguments(comptime Checker: type, self: *Checker, work: *std.ArrayL
         if (call.argument_names.len != 0 and call.argument_names[index] != null) try self.hint(call.arguments[index], text_type.?);
         try work.append(self.allocator, .{ .id = call.arguments[index] });
     }
+}
+fn fixedArrayConstructor(comptime Checker: type, self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) ?source.Span {
+    if (call.owner != null) return null;
+    for (self.syntax.types.expressions.applications) |application| {
+        if (application.span.start == call.name.start and application.span.end == call.name.end and std.mem.eql(u8, self.src.text(application.name), "FixedArray")) return application.span;
+    }
+    return null;
+}
+fn checkFixedArrayConstructor(comptime Checker: type, self: *Checker, node: ast.Node, temporaries: []const typed.Type, spelling: source.Span) Error!typed.Node {
+    const call = node.data.call;
+    try call_arguments.positional(call, self.sink);
+    if (call.arguments.len != 1) return self.sink.fail("E_ARITY", node.span, "FixedArray construction takes one array literal");
+    const input = self.syntax.nodes.items[@backingInt(call.arguments[0])];
+    if (input.data != .list_literal) {
+        const value = try self.expression(call.arguments[0]);
+        return frontend_fixed_arrays.convert(Checker, self, value, try self.ty(spelling), node.span);
+    }
+    return self.checkFixedArray(node, input.data.list_literal, temporaries, try self.ty(spelling));
 }
 fn queueBuiltinCall(comptime Checker: type, self: *Checker, work: *std.ArrayList(Work), call_id: ast.NodeId, call: @FieldType(@FieldType(ast.Node, "data"), "call"), node: ast.Node) Error!bool {
     if (try self.queueListSort(work, call)) return true;
@@ -312,13 +346,18 @@ fn queueVariant(comptime Checker: type, self: *Checker, work: *std.ArrayList(Wor
 /// come from the shared record-construction path.
 fn caseInitializers(comptime Checker: type, self: *Checker, record: typed.Record, values: []const ast.NodeId, names: []const ?source.Span, span: source.Span) Error![]const ast.FieldInit {
     if (values.len > record.fields.len) return self.sink.fail("E_ARITY", span, "too many field arguments for this variant case");
+    const labels = try self.allocator.alloc([]const u8, record.fields.len);
+    for (record.fields, labels) |field, *label| label.* = field.name;
+    const sites = try self.allocator.alloc(source.Span, values.len);
+    for (values, sites) |value, *site| site.* = self.syntax.nodes.items[@backingInt(value)].span;
+    try @import("frontend_named_fields.zig").require(self.sink, span, "E_NAMED_FIELDS", .{ .labels = labels, .sites = sites, .names = names });
     var initializers: std.ArrayList(ast.FieldInit) = .empty;
     const supplied = try self.allocator.alloc(bool, record.fields.len);
     defer self.allocator.free(supplied);
     @memset(supplied, false);
     for (values, 0..) |value, source_index| {
         const keyword = if (names.len == 0) null else names[source_index];
-        const index = if (keyword) |name| try self.catalog.field(record.id, self.src, name, self.sink) else source_index;
+        const index = if (keyword) |name| try self.catalog.field(record.id, self.src, name, self.sink) else return self.sink.fail("E_NAMED_FIELDS", span, "variant fields must be supplied by name");
         if (supplied[index]) return self.sink.fail("E_DUPLICATE_FIELD", keyword orelse span, "field is initialized more than once");
         supplied[index] = true;
         try initializers.append(self.allocator, .{ .name = if (keyword) |name| name else record.fields[index].declaration, .value = value });
@@ -407,6 +446,7 @@ fn queueExpression(comptime Checker: type, self: *Checker, work: *std.ArrayList(
             }
             return true;
         },
+        .match_expression => return false,
         .variant => |variant| return queueVariant(Checker, self, work, id, variant),
         .index => |access| {
             try work.append(self.allocator, .{ .id = id, .emit = true });
@@ -488,6 +528,7 @@ fn queueExpression(comptime Checker: type, self: *Checker, work: *std.ArrayList(
             return true;
         },
         .call => |call| {
+            if (fixedArrayConstructor(Checker, self, call) != null) return false;
             if (self.narrowedCollection(call) != null) return false;
             // An intrinsic `Option` method on a named local is checked in
             // place, like a narrowed collection method: its receiver and its
@@ -519,6 +560,7 @@ fn queueExpression(comptime Checker: type, self: *Checker, work: *std.ArrayList(
                 return true;
             }
             if (call.owner == null and self.active.contains(self.src.text(call.name))) {
+                try hintCallbackArguments(Checker, self, call);
                 var index = call.arguments.len;
                 while (index > 0) {
                     index -= 1;
@@ -598,6 +640,51 @@ fn checkReceiverMethod(comptime Checker: type, self: *Checker, node: ast.Node, t
     }
     return null;
 }
+fn checkExpressionCall(comptime Checker: type, self: *Checker, node: ast.Node, temporaries: []const typed.Type) Error!typed.Node {
+    const call = node.data.call;
+    if (fixedArrayConstructor(Checker, self, call)) |spelling| return checkFixedArrayConstructor(Checker, self, node, temporaries, spelling);
+    if (try checkReceiverMethod(Checker, self, node, temporaries)) |checked| return checked;
+    var out: typed.Node = .{ .span = node.span, .ty = .unit, .data = undefined };
+    try self.checkCall(node, call, &out);
+    return out;
+}
+fn checkSurfaceUnit(comptime Checker: type, self: *Checker, node: ast.Node) Error!typed.Node {
+    if (!@import("frontend_units.zig").isNone(self.src, node.span))
+        return .{ .span = node.span, .ty = .unit, .data = .unit };
+    if (self.expected_types.get(node.span)) |expected| {
+        if (prelude.optionShape(expected, self.catalog.records) != null) return self.checkUnit(node);
+        if (expected == .unit) return self.sink.failFix(
+            "E_NONE_UNIT",
+            node.span,
+            "None means optional absence; write () for the Unit value",
+            .{ .span = node.span, .text = "()" },
+        );
+    }
+    return self.sink.fail("E_NONE_CONTEXT", node.span, "None requires an expected optional type");
+}
+fn checkPropagation(comptime Checker: type, self: *Checker, node: ast.Node, operand: ast.NodeId, temporaries: []const typed.Type) Error!typed.Node {
+    const value = self.resolved[@backingInt(operand)].?;
+    const input_ty = self.nodes.items[@backingInt(value)].ty;
+    var element: typed.Type = undefined;
+    if (typed.resultShape(input_ty, self.catalog.records)) |input| {
+        const output = typed.resultShape(self.return_type, self.catalog.records) orelse return self.sink.fail("E_TRY_RETURN", node.span, "try requires a function returning a declared result type");
+        // The error converts implicitly when the enclosing union carries it as a case payload.
+        if (input.error_type != output.error_type and typed.wrappingCase(self.catalog.records, output.error_type, input.error_type) == null)
+            try self.require(input.error_type, output.error_type, node.span);
+        element = input.ok_type;
+    } else if (prelude.optionShape(input_ty, self.catalog.records)) |input| {
+        if (prelude.optionShape(self.return_type, self.catalog.records) == null)
+            return self.sink.fail("E_TRY_RETURN", node.span, "optional try requires an optional return type");
+        element = input.element;
+    } else return self.sink.fail("E_TRY_TYPE", node.span, "try requires a Result or optional value");
+    try self.requireHandled(0, node.span);
+    for (temporaries[0 .. temporaries.len - 1]) |temporary| if (self.requiresHandling(temporary)) return self.sink.fail(
+        "E_RESULT_PROPAGATION",
+        node.span,
+        "propagation could drop a pending result temporary; handle or transfer it before this expression",
+    );
+    return .{ .span = node.span, .ty = element, .data = .{ .propagate = .{ .value = value, .output = self.return_type } } };
+}
 fn checkedExpression(comptime Checker: type, self: *Checker, node: ast.Node, minimum_literal: ?Literal, temporaries: []const typed.Type) Error!typed.Node {
     try rejectInContract(Checker, self, node);
     var out: typed.Node = .{ .span = node.span, .ty = .i64, .data = undefined };
@@ -667,31 +754,8 @@ fn checkedExpression(comptime Checker: type, self: *Checker, node: ast.Node, min
             out.data = .{ .external_read = .{ .kind = read.kind, .capability = capability } };
         },
         .stand_in => |stand| try checkStandIn(Checker, self, stand, &out),
-        .propagate => |operand| {
-            const value = self.resolved[@backingInt(operand)].?;
-            const input_ty = self.nodes.items[@backingInt(value)].ty;
-            var element: typed.Type = undefined;
-            if (typed.resultShape(input_ty, self.catalog.records)) |input| {
-                const output = typed.resultShape(self.return_type, self.catalog.records) orelse return self.sink.fail("E_TRY_RETURN", node.span, "try requires a function returning a declared result type");
-                // The error converts implicitly when the enclosing union carries it as a case payload.
-                if (input.error_type != output.error_type and typed.wrappingCase(self.catalog.records, output.error_type, input.error_type) == null)
-                    try self.require(input.error_type, output.error_type, node.span);
-                element = input.ok_type;
-            } else if (prelude.optionShape(input_ty, self.catalog.records)) |input| {
-                // OPTION-TRY-3: `None` carries no payload, so it propagates
-                // into any enclosing `Option[U]`, whatever the operand's `T`.
-                _ = prelude.optionShape(self.return_type, self.catalog.records) orelse return self.sink.fail("E_TRY_RETURN", node.span, "try requires a function returning an Option type");
-                element = input.element;
-            } else return self.sink.fail("E_TRY_TYPE", node.span, "try requires a declared result or option");
-            try self.requireHandled(0, node.span);
-            for (temporaries[0 .. temporaries.len - 1]) |temporary| if (self.requiresHandling(temporary)) return self.sink.fail(
-                "E_RESULT_PROPAGATION",
-                node.span,
-                "propagation could drop a pending result temporary; handle or transfer it before this expression",
-            );
-            out.ty = element;
-            out.data = .{ .propagate = .{ .value = value, .output = self.return_type } };
-        },
+        .match_expression => return @import("sema_statements.zig").Checks(Checker).matchExpression(self, node),
+        .propagate => |operand| return checkPropagation(Checker, self, node, operand, temporaries),
         .variant => |variant| {
             out.ty = try variantType(Checker, self, variant, node.span);
             const tag = try self.catalog.variant(out.ty, self.src, variant.name, self.sink);
@@ -780,16 +844,26 @@ fn checkedExpression(comptime Checker: type, self: *Checker, node: ast.Node, min
             try self.requireInteger(self.nodes.items[@backingInt(value)].ty, node.span);
             out.data = .{ .cast = value };
         },
-        .unit => return self.checkUnit(node),
+        .unit => return checkSurfaceUnit(Checker, self, node),
         .boolean => |value| {
             out.ty = .bool;
             out.data = .{ .boolean = value };
         },
-        .name => |name| try self.checkName(node, name, &out),
-        .call => |call| {
-            if (try checkReceiverMethod(Checker, self, node, temporaries)) |checked| return checked;
-            try self.checkCall(node, call, &out);
+        .synthetic_name => |name| {
+            const slot = self.active.get(name) orelse return error.InternalError;
+            try self.requireReadable(slot, node.span);
+            const local = &self.locals.items[@backingInt(slot)];
+            if (self.transfers(local.ty)) {
+                if (!local.ownership.transfer_available) return self.sink.fail("E_RESULT_CONSUMED", node.span, "pattern value was already transferred");
+                local.ownership.transfer_available = false;
+                local.ownership.transfer_span = node.span;
+            }
+            self.locals.items[@backingInt(slot)].usage.reads += 1;
+            out.ty = self.locals.items[@backingInt(slot)].ty;
+            out.data = .{ .local = slot };
         },
+        .name => |name| try self.checkName(node, name, &out),
+        .call => return checkExpressionCall(Checker, self, node, temporaries),
         .unary => |u| return self.checkUnary(node, u),
         .binary => |b| try self.checkValueBinary(b, &out),
         .tuple => |elements| try self.checkTuple(node, elements, temporaries, &out),
@@ -908,13 +982,14 @@ fn callTemporaries(comptime Checker: type, self: *Checker, call: @FieldType(@Fie
     return null;
 }
 fn consumedTemporaries(comptime Checker: type, self: *Checker, node: ast.Node, out: typed.Node) Error!usize {
+    if (node.data == .call and fixedArrayConstructor(Checker, self, node.data.call) != null) return 0;
     switch (node.data) {
         // The transparent marker reuses its target's typed data, but that target
         // has already consumed its own operands and left exactly one temporary.
         .mut_argument => return 1,
         // A name reads a binding or folds a constant, including a `float` constant's
         // wrapped bit pattern, and takes no operand from the stack.
-        .bytes, .text, .integer, .name => return 0,
+        .bytes, .text, .integer, .name, .synthetic_name => return 0,
         // These forms check their contents in place; dictionary literals queue
         // every key and value, whether they construct a dictionary or a table.
         .list_literal, .set_literal, .format, .comprehension, .gather => return 0,
@@ -1017,15 +1092,29 @@ fn expressionWithTemporaries(comptime Checker: type, self: *Checker, root: ast.N
         if (!task.emit and minimum_literal == null) {
             if (try queueExpression(Checker, self, &work, task.id)) continue;
         }
+        const original_expected = self.expected_types.get(node.span);
+        const payload_literal = switch (node.data) {
+            .integer, .text, .bytes, .list_literal, .dictionary_literal, .format, .comprehension => true,
+            else => false,
+        };
+        if (payload_literal) if (original_expected) |expected| {
+            var payload = expected;
+            while (prelude.optionShape(payload, self.catalog.records)) |shape| payload = shape.element;
+            try self.expected_types.put(self.allocator, node.span, payload);
+        };
         const out = try checkedExpression(Checker, self, node, minimum_literal, temporaries.items);
+        if (original_expected) |expected| try self.expected_types.put(self.allocator, node.span, expected);
         try dictionary_views.validateUse(Checker, self, task.id, out.ty);
         const consumed = try consumedTemporaries(Checker, self, node, out);
         std.debug.assert(temporaries.items.len >= consumed);
         temporaries.shrinkRetainingCapacity(temporaries.items.len - consumed);
         try temporaries.append(self.allocator, out.ty);
         try self.resolved_nodes.append(self.allocator, index);
-        self.resolved[index] = @fromBackingInt(self.nodes.items.len);
+        const checked: typed.NodeId = @fromBackingInt(self.nodes.items.len);
         try self.nodes.append(self.allocator, out);
+        const injected = if (original_expected) |expected| try @import("frontend_failures.zig").injectOptional(Checker, self, checked, expected, node.span) else checked;
+        self.resolved[index] = injected;
+        temporaries.items[temporaries.items.len - 1] = self.nodes.items[@backingInt(injected)].ty;
     }
     return self.resolved[@backingInt(root)].?;
 }

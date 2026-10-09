@@ -1,6 +1,6 @@
 enum Color:
-    red,
-    green,
+    red
+    green
     blue
 
 
@@ -9,23 +9,23 @@ record Point:
     y: int
 
 
-union Shape:
-    point: Point,
-    radius: int,
+enum Shape:
+    point(value: Point)
+    radius(value: int)
     empty
 
 
-def score(shape: Shape) -> int:
+func score(shape: Shape) -> int:
     match shape:
         case Shape.empty:
             return 0
-        case Shape.radius(r):
+        case Shape.radius(value=r):
             return r * r
-        case Shape.point(p):
+        case Shape.point(value=p):
             return p.x + p.y
 
 
-def color_score(color: Color) -> int:
+func color_score(color: Color) -> int:
     match color:
         case Color.red:
             return 1
@@ -35,6 +35,6 @@ def color_score(color: Color) -> int:
             return 3
 
 
-def main() -> int:
-    shapes: [3]Shape = [Shape.point(Point(x=2, y=3)), Shape.radius(4), Shape.empty]
+func main() -> int:
+    mut shapes: FixedArray[Shape, 3] = FixedArray[Shape, 3]([Shape.point(value=Point(x=2, y=3)), Shape.radius(value=4), Shape.empty])
     return score(shapes[0]) + score(shapes[1]) + score(shapes[2]) + color_score(Color.blue)

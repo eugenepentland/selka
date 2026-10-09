@@ -19,26 +19,26 @@ fn evaluate(bytes: []const u8, expected: i64) !void {
 test "list syntax rejects invalid methods element types and indices" {
     const cases = [_]struct { text: []const u8, code: []const u8 }{
         .{ .text =
-        \\def main() -> i64:
-        \\    values: list[i64] = []
+        \\func main() -> i64:
+        \\    mut values: i64[] = []
         \\    values.append()
         \\    return 0
         , .code = "E_ARITY" },
         .{ .text =
-        \\def main() -> i64:
-        \\    values: list[i64] = []
+        \\func main() -> i64:
+        \\    mut values: i64[] = []
         \\    values.append(True)
         \\    return 0
         , .code = "E_TYPE" },
         .{ .text =
-        \\def main() -> i64:
-        \\    values: list[i64] = []
+        \\func main() -> i64:
+        \\    mut values: i64[] = []
         \\    values[False] = 1
         \\    return 0
         , .code = "E_TYPE" },
         .{ .text =
-        \\def main() -> i64:
-        \\    values: list[i64] = []
+        \\func main() -> i64:
+        \\    mut values: i64[] = []
         \\    values.remove(True)
         \\    return 0
         , .code = "E_TYPE" },

@@ -1,15 +1,15 @@
 record Link:
-    next: Option[Link]
+    next: Link?
     value: int
 
 
-def optional(depth: int) -> Option[Link]:
+func optional(depth: int) -> Link?:
     if depth == 0:
         return None
-    return Some(Link(optional(depth - 1), depth))
+    return Some(Link(next=optional(depth - 1), value=depth))
 
 
-def total(chain: Option[Link]) -> int:
+func total(chain: Link?) -> int:
     match chain:
         case Some(link):
             return link.value + total(link.next)
@@ -17,32 +17,31 @@ def total(chain: Option[Link]) -> int:
             return 0
 
 
-def caller_arena() -> Option[Link]:
-    with arena() as scratch:
-        chain = optional(12)
-        assert total(chain) == 78
-        return scratch.escape(chain)
+func caller_arena() -> Link?:
+    mut chain = optional(12)
+    assert total(chain) == 78
+    return chain
 
 
-def aliased(depth: int) -> Link:
-    child = optional(depth)
-    return Link(child, total(child))
+func aliased(depth: int) -> Link:
+    mut child = optional(depth)
+    return Link(next=child, value=total(child))
 
 
-public def test_recursive_nullable_return_keeps_every_fresh_box_alive() -> bool:
-    first = optional(12)
-    second = optional(8)
+public func test_recursive_nullable_return_keeps_every_fresh_box_alive() -> bool:
+    mut first = optional(12)
+    mut second = optional(8)
     return total(first) == 78 and total(second) == 36 and total(optional(0)) == 0
 
 
-public def test_managed_locals_and_unknown_callees_keep_generic_cleanup() -> bool:
-    value = aliased(6)
-    before = value
+public func test_managed_locals_and_unknown_callees_keep_generic_cleanup() -> bool:
+    mut value = aliased(6)
+    mut before = value
     value.next = None
     return total(before.next) == 21 and before.value == 21 and total(value.next) == 0
 
 
-def main() -> int:
+func main() -> int:
     assert test_recursive_nullable_return_keeps_every_fresh_box_alive()
     assert test_managed_locals_and_unknown_callees_keep_generic_cleanup()
     return 0

@@ -17,21 +17,21 @@ record Body:
     mass: float
 
 
-def pi() -> float:
+func pi() -> float:
     return 3.141592653589793
 
 
-def solar_mass() -> float:
+func solar_mass() -> float:
     return 4.0 * pi() * pi()
 
 
-def days_per_year() -> float:
+func days_per_year() -> float:
     return 365.24
 
 
-def initial_bodies() -> list[Body]:
-    dpy = days_per_year()
-    sm = solar_mass()
+func initial_bodies() -> Body[]:
+    mut dpy = days_per_year()
+    mut sm = solar_mass()
     return [
         Body(x=0.0, y=0.0, z=0.0, vx=0.0, vy=0.0, vz=0.0, mass=sm),
         Body(
@@ -73,10 +73,10 @@ def initial_bodies() -> list[Body]:
     ]
 
 
-def offset_momentum(bodies: mut list[Body]) -> None:
-    px = 0.0
-    py = 0.0
-    pz = 0.0
+func offset_momentum(mut bodies: Body[]) -> Unit:
+    mut px = 0.0
+    mut py = 0.0
+    mut pz = 0.0
     for b in bodies:
         px = px + b.vx * b.mass
         py = py + b.vy * b.mass
@@ -86,30 +86,30 @@ def offset_momentum(bodies: mut list[Body]) -> None:
     bodies[0].vz = (0.0 - pz) / solar_mass()
 
 
-def energy(bodies: list[Body]) -> float:
-    e = 0.0
-    n = len(bodies)
+func energy(bodies: Body[]) -> float:
+    mut e = 0.0
+    mut n = len(bodies)
     for i in range(n):
-        b = bodies[i]
+        mut b = bodies[i]
         e = e + 0.5 * b.mass * (b.vx * b.vx + b.vy * b.vy + b.vz * b.vz)
         for j in range(i + 1, n):
-            c = bodies[j]
-            dx = b.x - c.x
-            dy = b.y - c.y
-            dz = b.z - c.z
+            mut c = bodies[j]
+            mut dx = b.x - c.x
+            mut dy = b.y - c.y
+            mut dz = b.z - c.z
             e = e - (b.mass * c.mass) / sqrt(dx * dx + dy * dy + dz * dz)
     return e
 
 
-def advance(bodies: mut list[Body], dt: float) -> None:
-    n = len(bodies)
+func advance(mut bodies: Body[], dt: float) -> Unit:
+    mut n = len(bodies)
     for i in range(n):
         for j in range(i + 1, n):
-            dx = bodies[i].x - bodies[j].x
-            dy = bodies[i].y - bodies[j].y
-            dz = bodies[i].z - bodies[j].z
-            d2 = dx * dx + dy * dy + dz * dz
-            mag = dt / (d2 * sqrt(d2))
+            mut dx = bodies[i].x - bodies[j].x
+            mut dy = bodies[i].y - bodies[j].y
+            mut dz = bodies[i].z - bodies[j].z
+            mut d2 = dx * dx + dy * dy + dz * dz
+            mut mag = dt / (d2 * sqrt(d2))
             bodies[i].vx = bodies[i].vx - dx * bodies[j].mass * mag
             bodies[i].vy = bodies[i].vy - dy * bodies[j].mass * mag
             bodies[i].vz = bodies[i].vz - dz * bodies[j].mass * mag
@@ -122,10 +122,10 @@ def advance(bodies: mut list[Body], dt: float) -> None:
         bodies[i].z = bodies[i].z + dt * bodies[i].vz
 
 
-def main(out: Stream) -> int:
-    steps = 5000000
-    dt = 0.01
-    bodies = initial_bodies()
+func main(out: Stream) -> int:
+    mut steps = 5000000
+    mut dt = 0.01
+    mut bodies = initial_bodies()
     offset_momentum(mut bodies)
     out.print(int(energy(bodies) * 1e9))
     for _ in range(steps):

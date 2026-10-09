@@ -90,212 +90,199 @@ fn sameOptional(a: ?[]const u8, b: ?[]const u8) bool {
 }
 
 const base_main =
-    \\module main
     \\
     \\
-    \\def helper(n: i64) -> i64:
+    \\func helper(n: i64) -> i64:
     \\    return n + 1
     \\
     \\
-    \\public def api(n: i64) -> i64 effects():
+    \\public func api(n: i64) -> i64 effects():
     \\    return helper(n)
     \\
     \\
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    return api(41)
 ;
 
 const whitespace_outside =
-    \\module main
     \\
     \\
-    \\def helper(n: i64) -> i64:
+    \\func helper(n: i64) -> i64:
     \\    return n + 1
     \\
     \\
     \\
-    \\public def api(n: i64) -> i64 effects():
+    \\public func api(n: i64) -> i64 effects():
     \\    return helper(n)
     \\
     \\
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    return api(41)
 ;
 
 const whitespace_inside =
-    \\module main
     \\
     \\
-    \\def helper(n: i64) -> i64:
+    \\func helper(n: i64) -> i64:
     \\    return  n + 1
     \\
     \\
-    \\public def api(n: i64) -> i64 effects():
+    \\public func api(n: i64) -> i64 effects():
     \\    return helper(n)
     \\
     \\
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    return api(41)
 ;
 
 const comment_outside =
-    \\module main
     \\
     \\
-    \\def helper(n: i64) -> i64:
+    \\func helper(n: i64) -> i64:
     \\    return n + 1
     \\
     \\
     \\# a comment between declarations
-    \\public def api(n: i64) -> i64 effects():
+    \\public func api(n: i64) -> i64 effects():
     \\    return helper(n)
     \\
     \\
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    return api(41)
 ;
 
 const comment_inside =
-    \\module main
     \\
     \\
-    \\def helper(n: i64) -> i64:
+    \\func helper(n: i64) -> i64:
     \\    # a comment inside the helper body
     \\    return n + 1
     \\
     \\
-    \\public def api(n: i64) -> i64 effects():
+    \\public func api(n: i64) -> i64 effects():
     \\    return helper(n)
     \\
     \\
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    return api(41)
 ;
 
 const private_body =
-    \\module main
     \\
     \\
-    \\def helper(n: i64) -> i64:
+    \\func helper(n: i64) -> i64:
     \\    return n + 2
     \\
     \\
-    \\public def api(n: i64) -> i64 effects():
+    \\public func api(n: i64) -> i64 effects():
     \\    return helper(n)
     \\
     \\
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    return api(41)
 ;
 
 const rejected_signature =
-    \\module main
     \\
     \\
-    \\def helper(n: i64) -> i64:
+    \\func helper(n: i64) -> i64:
     \\    return n + 1
     \\
     \\
-    \\public def api(n: bool) -> i64:
+    \\public func api(n: bool) -> i64:
     \\    return helper(n)
     \\
     \\
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    return api(41)
 ;
 
 const exported_signature =
-    \\module main
     \\
     \\
-    \\def helper(n: i64) -> i64:
+    \\func helper(n: i64) -> i64:
     \\    return n + 1
     \\
     \\
-    \\public def api(n: i64, scale: i64) -> i64 effects():
+    \\public func api(n: i64, scale: i64) -> i64 effects():
     \\    return helper(n) * scale
     \\
     \\
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    return api(41, 2)
 ;
 
 const effect_bound =
-    \\module main
     \\
     \\
-    \\def helper(n: i64) -> i64:
+    \\func helper(n: i64) -> i64:
     \\    return n + 1
     \\
     \\
-    \\public def api(clock: Clock, n: i64) -> i64 effects(clock):
+    \\public func api(clock: Clock, n: i64) -> i64 effects(clock):
     \\    _ = clock
     \\    return helper(n)
     \\
     \\
-    \\def main(clock: Clock) -> i64:
+    \\func main(clock: Clock) -> i64:
     \\    return api(clock, 41)
 ;
 
 const constant_base =
-    \\module main
     \\
     \\
     \\const STEP: i64 = 1
     \\
-    \\def helper(n: i64) -> i64:
+    \\func helper(n: i64) -> i64:
     \\    return n + STEP
     \\
     \\
-    \\public def api(n: i64) -> i64 effects():
+    \\public func api(n: i64) -> i64 effects():
     \\    return helper(n)
     \\
     \\
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    return api(41)
 ;
 
 const constant_edited =
-    \\module main
     \\
     \\
     \\const STEP: i64 = 2
     \\
-    \\def helper(n: i64) -> i64:
+    \\func helper(n: i64) -> i64:
     \\    return n + STEP
     \\
     \\
-    \\public def api(n: i64) -> i64 effects():
+    \\public func api(n: i64) -> i64 effects():
     \\    return helper(n)
     \\
     \\
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    return api(41)
 ;
 
 const record_base =
-    \\module main
     \\
     \\
     \\record Point:
     \\    x: i64
     \\
     \\
-    \\def helper(n: i64) -> i64:
-    \\    p = Point(x=n)
+    \\func helper(n: i64) -> i64:
+    \\    mut p = Point(x=n)
     \\    return p.x + 1
     \\
     \\
-    \\public def api(n: i64) -> i64 effects():
+    \\public func api(n: i64) -> i64 effects():
     \\    return helper(n)
     \\
     \\
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    return api(41)
 ;
 
 const record_edited =
-    \\module main
     \\
     \\
     \\record Point:
@@ -303,29 +290,28 @@ const record_edited =
     \\    y: i64
     \\
     \\
-    \\def helper(n: i64) -> i64:
-    \\    p = Point(x=n, y=n)
+    \\func helper(n: i64) -> i64:
+    \\    mut p = Point(x=n, y=n)
     \\    return p.x + p.y
     \\
     \\
-    \\public def api(n: i64) -> i64 effects():
+    \\public func api(n: i64) -> i64 effects():
     \\    return helper(n)
     \\
     \\
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    return api(41)
 ;
 
 const union_base =
-    \\module main
     \\
     \\
     \\public enum Choice:
-    \\    first,
+    \\    first
     \\    second
     \\
     \\
-    \\def helper(c: Choice) -> i64:
+    \\func helper(c: Choice) -> i64:
     \\    match c:
     \\        case Choice.first:
     \\            return 1
@@ -333,25 +319,24 @@ const union_base =
     \\            return 2
     \\
     \\
-    \\public def api(c: Choice) -> i64 effects():
+    \\public func api(c: Choice) -> i64 effects():
     \\    return helper(c)
     \\
     \\
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    return api(Choice.first)
 ;
 
 const union_edited =
-    \\module main
     \\
     \\
     \\public enum Choice:
-    \\    first,
-    \\    second,
+    \\    first
+    \\    second
     \\    third
     \\
     \\
-    \\def helper(c: Choice) -> i64:
+    \\func helper(c: Choice) -> i64:
     \\    match c:
     \\        case Choice.first:
     \\            return 1
@@ -361,111 +346,103 @@ const union_edited =
     \\            return 3
     \\
     \\
-    \\public def api(c: Choice) -> i64 effects():
+    \\public func api(c: Choice) -> i64 effects():
     \\    return helper(c)
     \\
     \\
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    return api(Choice.first)
 ;
 
 const import_base_data =
-    \\module data
     \\
     \\
-    \\public def value() -> i64 effects():
+    \\public func value() -> i64 effects():
     \\    return 42
 ;
 
 const import_base_main =
-    \\module main
     \\import data
     \\
     \\
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    return data.value()
 ;
 
 const import_extra =
-    \\module extra
     \\
     \\
-    \\public def one() -> i64 effects():
+    \\public func one() -> i64 effects():
     \\    return 1
 ;
 
 const import_edited_main =
-    \\module main
     \\import data
     \\import extra
     \\
     \\
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    return data.value() + extra.one()
 ;
 
 const generic_base =
-    \\module main
     \\
     \\
-    \\def id[T](n: T) -> T:
+    \\func id[T](n: T) -> T:
     \\    return n
     \\
     \\
-    \\public def api(n: i64) -> i64 effects():
+    \\public func api(n: i64) -> i64 effects():
     \\    return id[i64](n)
     \\
     \\
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    return api(41)
 ;
 
 const generic_edited =
-    \\module main
     \\
     \\
-    \\def id[T](n: T) -> T:
-    \\    value = n
+    \\func id[T](n: T) -> T:
+    \\    mut value = n
     \\    return value
     \\
     \\
-    \\public def api(n: i64) -> i64 effects():
+    \\public func api(n: i64) -> i64 effects():
     \\    return id[i64](n)
     \\
     \\
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    return api(41)
 ;
 
 const specialization_base =
-    \\module main
     \\
     \\
-    \\def size[const N: u64]() -> u64:
+    \\func size[const N: u64]() -> u64:
     \\    return N
     \\
     \\
-    \\public def api() -> i64 effects():
+    \\public func api() -> i64 effects():
     \\    return i64(size[2]())
     \\
     \\
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    return api()
 ;
 
 const specialization_edited =
-    \\module main
     \\
     \\
-    \\def size[const N: u64]() -> u64:
+    \\func size[const N: u64]() -> u64:
     \\    return N
     \\
     \\
-    \\public def api() -> i64 effects():
+    \\public func api() -> i64 effects():
     \\    return i64(size[3]())
     \\
     \\
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    return api()
 ;
 
@@ -559,15 +536,15 @@ test "invalidation matrix clean and warm results agree with exact reuse deltas" 
 }
 
 const single_source =
-    \\def helper(n: i64) -> i64:
+    \\func helper(n: i64) -> i64:
     \\    return n + 1
     \\
     \\
-    \\def api(n: i64) -> i64:
+    \\func api(n: i64) -> i64:
     \\    return helper(n)
     \\
     \\
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    return api(41)
 ;
 

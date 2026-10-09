@@ -1,10 +1,9 @@
-module packed_calls
 
 
 # More than 128 parameters use the packed guest call ABI.
-def packed(
-    target: mut list[int],
-    source: list[int],
+func packed(
+    mut target: int[],
+    source: int[],
     p0: int,
     p1: int,
     p2: int,
@@ -138,9 +137,9 @@ def packed(
 
 
 # spec-case: VALUE-SEMANTICS-5
-public def test_packed_mut_argument_receives_the_redirected_value() -> bool:
-    items = [1, 2]
-    seen = packed(
+public func test_packed_mut_argument_receives_the_redirected_value() -> bool:
+    mut items = [1, 2]
+    mut seen = packed(
         mut items,
         items,
         0,

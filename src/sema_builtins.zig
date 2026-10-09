@@ -88,8 +88,8 @@ pub fn Checks(comptime Checker: type) type {
         pub fn checkMethodListSort(self: *Checker, node: ast.Node, base: typed.NodeId, temporaries: []const typed.Type) Error!typed.Node {
             return impl.checkMethodListSort(Checker, self, node, base, temporaries);
         }
-        /// Check `int(x)` or `float(x)`: a numeric conversion, or an Option-returning parse
-        /// when the argument is text.
+        /// Check numeric `int(x)`/`float(x)` conversions and optional-returning
+        /// `parse_int(text)`/`parse_float(text)` operations.
         pub fn checkNumericConversion(self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), floating: bool, out: *typed.Node) Error!void {
             return impl.checkNumericConversion(Checker, self, node, call, floating, out);
         }
@@ -232,8 +232,10 @@ fn checkFloatIntrinsic(comptime Checker: type, self: *Checker, node: ast.Node, c
 fn numericConversion(comptime Checker: type, self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!?bool {
     if (call.owner != null or call.type_arguments.len != 0) return null;
     const name = self.src.text(call.name);
-    const floating = std.mem.eql(u8, name, "float");
-    if (!floating and !std.mem.eql(u8, name, "int")) return null;
+    const floating = std.mem.eql(u8, name, "float") or std.mem.eql(u8, name, "parse_float");
+    if (!floating) {
+        if (!std.mem.eql(u8, name, "int") and !std.mem.eql(u8, name, "parse_int")) return null;
+    }
     if (self.active.contains(name) or self.functions.contains(name)) return null;
     if (self.catalog.module_names) |names| if (try names.topLevel(call.name)) return null;
     return floating;
@@ -242,13 +244,22 @@ fn checkNumericConversion(comptime Checker: type, self: *Checker, node: ast.Node
     const value = self.resolved[@backingInt(call.arguments[0])].?;
     const ty_value = self.nodes.items[@backingInt(value)].ty;
     const input_float = numeric_surface.isFloat(ty_value, self.catalog.records);
-    // `int(text)` and `float(text)` parse rather than convert, so they answer an Option.
+    const parses = std.mem.startsWith(u8, self.src.text(call.name), "parse_");
     if (ty_value.isAggregate() and self.catalog.records[ty_value.recordIndex()].collection.kind == .string) {
+        if (!parses) {
+            try self.sink.appendFix(.{
+                .code = "E_NUMERIC_PARSE",
+                .span = call.name,
+                .message = "parse text explicitly with parse_int or parse_float; int and float convert numbers",
+            }, .{ .span = call.name, .text = if (floating) "parse_float" else "parse_int" });
+            return error.SourceError;
+        }
         const builder: collections.Builder(Checker) = .{ .checker = self, .span = node.span };
         out.* = try builder.access(value, if (floating) .parse_float else .parse_int, &.{}, false);
         return;
     }
-    if (!input_float and !ty_value.isInteger()) return self.sink.fail("E_TYPE", node.span, "numeric conversion requires an integer, float or str");
+    if (parses) return self.sink.fail("E_TYPE", node.span, "parse_int and parse_float require a str argument");
+    if (!input_float and !ty_value.isInteger()) return self.sink.fail("E_TYPE", node.span, "numeric conversion requires an integer or float");
     if (floating) {
         out.* = if (input_float) self.nodes.items[@backingInt(value)] else try self.numericBuilder(node.span).fromInteger(value);
     } else if (input_float) {

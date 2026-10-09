@@ -92,10 +92,10 @@ test "the verifier checks each operation's operand and result types" {
 }
 
 const reduction =
-    \\def main(args: list[str], out: Stream) -> int:
-    \\    n = len(args) + 4096
-    \\    values = [j % 100 for j in range(n)]
-    \\    total = 0
+    \\func main(args: str[], out: Stream) -> int:
+    \\    mut n = len(args) + 4096
+    \\    mut values = [for j in range(n) yield j % 100]
+    \\    mut total = 0
     \\    for j in range(n):
     \\        total += values[j] * 3
     \\    out.print(total)

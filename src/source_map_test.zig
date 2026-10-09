@@ -17,11 +17,11 @@ fn mappedCompilation(allocator: std.mem.Allocator, texts: []const []const u8) !l
 }
 fn scenario(allocator: std.mem.Allocator) !void {
     var compilation = try mappedCompilation(allocator, &.{
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return helper()
         ,
         // CRLF line ends and an inline tab still map back to this input's own offsets.
-        "def helper() -> i64:\r\n    return divtrunc(1,\t0)",
+        "func helper() -> i64:\r\n    return divtrunc(1,\t0)",
     });
     defer compilation.deinit();
     const result = try @import("native_execute.zig").run(&compilation);
@@ -33,10 +33,10 @@ fn scenario(allocator: std.mem.Allocator) !void {
 // spec: PROJ-4
 test "mapped related diagnostics identify each original declaration" {
     var compilation = try mappedCompilation(t.allocator, &.{
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
         ,
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 1
     });
     defer compilation.deinit();
@@ -85,10 +85,10 @@ test "mapped sources distinguish empty inputs EOF boundaries CRLF tabs and check
 }
 test "quality metrics use combined line indices while reports use original paths" {
     var compilation = try mappedCompilation(t.allocator, &.{
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return helper() # the entry source has a much longer line than any helper line
         ,
-        \\def helper() -> i64:
+        \\func helper() -> i64:
         \\    return 1
         ,
     });

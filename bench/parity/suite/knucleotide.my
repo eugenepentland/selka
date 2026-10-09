@@ -7,33 +7,33 @@ record Entry:
     count: int
 
 
-def generate(length: int) -> str:
-    bases = "ACGT"
-    parts: list[str] = []
-    seed = 42
+func generate(length: int) -> str:
+    mut bases = "ACGT"
+    mut parts: str[] = []
+    mut seed = 42
     for _ in range(length):
         seed = (seed * 3877 + 29573) % 139968
         parts.append(bases[seed * 4 // 139968])
     return "".join(parts)
 
 
-def frequencies(seq: str, k: int) -> dict[str, int]:
-    counts: dict[str, int] = {}
+func frequencies(seq: str, k: int) -> dict[str, int]:
+    mut counts: dict[str, int] = {}
     for i in range(len(seq) - k + 1):
-        key = seq[i:i + k]
+        mut key = seq[i:i + k]
         counts[key] = counts.get(key, 0) + 1
     return counts
 
 
-def main(out: Stream) -> int:
-    seq = generate(1000000)
+func main(out: Stream) -> int:
+    mut seq = generate(1000000)
     for k in [1, 2]:
-        counts = frequencies(seq, k)
+        mut counts = frequencies(seq, k)
         # Two stable passes: key ascending, then count descending.
-        by_key = [Entry(key=key, count=counts[key]) for key in sorted(list(counts.keys()))]
+        mut by_key = [for key in sorted(list(counts.keys())) yield Entry(key=key, count=counts[key])]
         for entry in sorted(by_key, key=lambda entry: -entry.count):
             out.print(entry.key, entry.count)
     for key in ["GGT", "GGTA", "GGTATT", "GGTATTTTAATT", "GGTATTTTAATTTATAGT"]:
-        counts = frequencies(seq, len(key))
+        const counts = frequencies(seq, len(key))
         out.print(f"{counts.get(key, 0)}\t{key}")
     return 0

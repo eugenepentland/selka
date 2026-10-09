@@ -1,9 +1,8 @@
-module generic_arrays_case_2
 
 
-def empty[T]() -> [0]T:
-    return []
+func empty[T]() -> FixedArray[T, 0]:
+    return FixedArray[T, 0]([])
 
 
-public def program() -> i64:
+public func program() -> i64:
     return i64(len(empty[bool]()))

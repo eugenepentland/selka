@@ -1,4 +1,3 @@
-module tests.parser_test
 
 # Tests for sexpr.parser, ported from the Zig suite in eda/src/sexpr/parser.zig.
 #
@@ -19,12 +18,12 @@ import sexpr.view as view
 
 # A view of a test literal's own spelling, and the text it spells. Hand-built
 # trees and parsed trees now carry a source range rather than a decoded string.
-def view_of_text(text: str) -> view.View:
-    data = text.encode()
+func view_of_text(text: str) -> view.View:
+    mut data = text.encode()
     return view.View(source=data, start=0, end=len(data))
 
 
-def text_in(found: view.View) -> str:
+func text_in(found: view.View) -> str:
     match view.text_of(found):
         case Ok(text):
             return text
@@ -32,54 +31,54 @@ def text_in(found: view.View) -> str:
             return "<none>"
 
 
-def parse_nodes(src: bytes) -> list[ast.Node]:
+func parse_nodes(src: bytes) -> ast.Node[]:
     match parser.parse(src):
         case Ok(nodes):
             return nodes
         case Err(_):
-            empty: list[ast.Node] = []
+            mut empty: ast.Node[] = []
             return empty
 
 
-def node_count(src: bytes) -> int:
+func node_count(src: bytes) -> int:
     return len(parse_nodes(src))
 
 
-def form(src: bytes, form_index: int) -> ast.Node:
-    forms = parse_nodes(src)
+func form(src: bytes, form_index: int) -> ast.Node:
+    mut forms = parse_nodes(src)
     return forms[form_index]
 
 
-def child(src: bytes, form_index: int, child_index: int) -> ast.Node:
+func child(src: bytes, form_index: int, child_index: int) -> ast.Node:
     return ast.children(form(src, form_index))[child_index]
 
 
-def child_count(src: bytes, form_index: int) -> int:
+func child_count(src: bytes, form_index: int) -> int:
     return len(ast.children(form(src, form_index)))
 
 
-def is_form_at(src: bytes, form_index: int, name: str) -> bool:
+func is_form_at(src: bytes, form_index: int, name: str) -> bool:
     return ast.is_form(form(src, form_index), name)
 
 
 # AST union case tags, so a test can assert which node kind the parser built.
-def kind_of(node: ast.Node) -> int:
+func kind_of(node: ast.Node) -> int:
     match node:
-        case ast.Node.form(_, _):
+        case ast.Node.form(items=_, span=_):
             return 0
-        case ast.Node.atom(_, _):
+        case ast.Node.atom(text=_, span=_):
             return 1
-        case ast.Node.string(_, _):
+        case ast.Node.string(text=_, span=_):
             return 2
-        case ast.Node.integer(_, _):
+        case ast.Node.integer(value=_, span=_):
             return 3
-        case ast.Node.decimal(_, _, _):
+        case ast.Node.decimal(value=_, span=_, literal=_):
             return 4
-        case ast.Node.measure(_, _):
+        case ast.Node.measure(value=_, span=_):
             return 5
 
 
-def text_of(node: ast.Node) -> str:
+func text_of(node: ast.Node) -> str:
     match ast.as_text(node):
         case Some(value):
             return text_in(value)
@@ -87,7 +86,7 @@ def text_of(node: ast.Node) -> str:
             return "<none>"
 
 
-def number_of(node: ast.Node) -> float:
+func number_of(node: ast.Node) -> float:
     match ast.as_number(node):
         case Some(value):
             return value
@@ -95,20 +94,20 @@ def number_of(node: ast.Node) -> float:
             return -1.0
 
 
-def child_kind(src: bytes, form_index: int, child_index: int) -> int:
+func child_kind(src: bytes, form_index: int, child_index: int) -> int:
     return kind_of(child(src, form_index, child_index))
 
 
-def child_text(src: bytes, form_index: int, child_index: int) -> str:
+func child_text(src: bytes, form_index: int, child_index: int) -> str:
     return text_of(child(src, form_index, child_index))
 
 
-def child_number(src: bytes, form_index: int, child_index: int) -> float:
+func child_number(src: bytes, form_index: int, child_index: int) -> float:
     return number_of(child(src, form_index, child_index))
 
 
 # A suffixed literal's source spelling, via ast.value_text.
-def child_value_text(src: bytes, form_index: int, child_index: int) -> str:
+func child_value_text(src: bytes, form_index: int, child_index: int) -> str:
     match ast.value_text(child(src, form_index, child_index)):
         case Some(value):
             return text_in(value)
@@ -118,17 +117,17 @@ def child_value_text(src: bytes, form_index: int, child_index: int) -> str:
 
 # Relative-tolerance float comparison: exact for the small values and loose
 # enough for `4.7k`-style products that are not exactly representable.
-def close(actual: float, expected: float) -> bool:
-    diff = actual - expected
+func close(actual: float, expected: float) -> bool:
+    mut diff = actual - expected
     if diff < 0.0:
         diff = -diff
-    magnitude = expected
+    mut magnitude = expected
     if magnitude < 0.0:
         magnitude = -magnitude
     return diff <= 0.000001 + 0.000000001 * magnitude
 
 
-def error_message(src: bytes) -> str:
+func error_message(src: bytes) -> str:
     match parser.parse(src):
         case Ok(_):
             return "<ok>"
@@ -136,7 +135,7 @@ def error_message(src: bytes) -> str:
             return problem.message
 
 
-def error_line(src: bytes) -> int:
+func error_line(src: bytes) -> int:
     match parser.parse(src):
         case Ok(_):
             return -1
@@ -144,7 +143,7 @@ def error_line(src: bytes) -> int:
             return problem.line
 
 
-def error_col(src: bytes) -> int:
+func error_col(src: bytes) -> int:
     match parser.parse(src):
         case Ok(_):
             return -1
@@ -152,7 +151,7 @@ def error_col(src: bytes) -> int:
             return problem.col
 
 
-def error_offset(src: bytes) -> int:
+func error_offset(src: bytes) -> int:
     match parser.parse(src):
         case Ok(_):
             return -1
@@ -160,7 +159,7 @@ def error_offset(src: bytes) -> int:
             return problem.offset
 
 
-def has_error(src: bytes) -> bool:
+func has_error(src: bytes) -> bool:
     match parser.parse(src):
         case Ok(_):
             return False
@@ -168,7 +167,7 @@ def has_error(src: bytes) -> bool:
             return True
 
 
-def capped_message(src: bytes, cap: int) -> str:
+func capped_message(src: bytes, cap: int) -> str:
     match parser.parse_with_depth_cap(src, cap):
         case Ok(_):
             return "<ok>"
@@ -176,7 +175,7 @@ def capped_message(src: bytes, cap: int) -> str:
             return problem.message
 
 
-def capped_error(src: bytes, cap: int) -> parser.ParseError:
+func capped_error(src: bytes, cap: int) -> parser.ParseError:
     match parser.parse_with_depth_cap(src, cap):
         case Ok(_):
             return parser.ParseError(message="<ok>", line=0, col=0, offset=0)
@@ -184,10 +183,10 @@ def capped_error(src: bytes, cap: int) -> parser.ParseError:
             return problem
 
 
-def deep_source(depth: int) -> bytes:
+func deep_source(depth: int) -> bytes:
     # Doubling keeps construction linear-ish: `(((…` of 10_016 bytes would cost
     # O(n²) byte copies built one byte at a time.
-    out: bytes = b"("
+    mut out: bytes = b"("
     while len(out) < depth:
         out = out + out
     return out[0:depth]
@@ -195,73 +194,73 @@ def deep_source(depth: int) -> bytes:
 
 # ── structure (independent of numeric classification) ─────────────────
 
-public def test_parse_atom() -> bool:
+public func test_parse_atom() -> bool:
     return node_count(b"(hello)") == 1 and child_kind(b"(hello)", 0, 0) == 1 and child_text(b"(hello)", 0, 0) == "hello"
 
 
-public def test_parse_string() -> bool:
+public func test_parse_string() -> bool:
     return child_kind(b"(a \"world\")", 0, 1) == 2 and child_text(b"(a \"world\")", 0, 1) == "world"
 
 
-public def test_parse_empty_list() -> bool:
+public func test_parse_empty_list() -> bool:
     return node_count(b"()") == 1 and child_count(b"()", 0) == 0
 
 
-public def test_parse_nested_lists() -> bool:
-    src = b"(a (b c) (d (e)))"
+public func test_parse_nested_lists() -> bool:
+    mut src = b"(a (b c) (d (e)))"
     return node_count(src) == 1 and child_count(src, 0) == 3 and child_kind(src, 0, 1) == 0 and child_kind(src, 0, 2) == 0
 
 
-public def test_parse_deeply_nested_shape() -> bool:
-    src = b"(a (b c) (d (e)))"
-    middle = ast.children(form(src, 0))[1]
-    last = ast.children(form(src, 0))[2]
+public func test_parse_deeply_nested_shape() -> bool:
+    mut src = b"(a (b c) (d (e)))"
+    mut middle = ast.children(form(src, 0))[1]
+    mut last = ast.children(form(src, 0))[2]
     return len(ast.children(middle)) == 2 and len(ast.children(last)) == 2
 
 
-public def test_parse_multiple_top_level() -> bool:
-    src = b"(import a) (import b)"
+public func test_parse_multiple_top_level() -> bool:
+    mut src = b"(import a) (import b)"
     return node_count(src) == 2 and is_form_at(src, 0, "import") and is_form_at(src, 1, "import")
 
 
-public def test_parse_comments() -> bool:
-    src = b"; top comment\n(pin 1 \"VIN\" power-in left 1)\n; another comment\n"
+public func test_parse_comments() -> bool:
+    mut src = b"; top comment\n(pin 1 \"VIN\" power-in left 1)\n; another comment\n"
     return node_count(src) == 1 and child_count(src, 0) == 6 and child_text(src, 0, 0) == "pin"
 
 
-public def test_parse_empty_input() -> bool:
+public func test_parse_empty_input() -> bool:
     return node_count(b"") == 0 and node_count(b"   ; only a comment\n") == 0
 
 
-public def test_parse_is_form_helper() -> bool:
-    src = b"(net \"VIN\" (pin \"U1\" 6))"
+public func test_parse_is_form_helper() -> bool:
+    mut src = b"(net \"VIN\" (pin \"U1\" 6))"
     return is_form_at(src, 0, "net") and is_form_at(src, 0, "pin") == False
 
 
-public def test_parse_hand_written_board_form() -> bool:
-    src = b"(design-block \"X\" (instance \"R1\" (res-0402 \"10k\") (pin 1 \"A\") (pin 2 \"B\")))"
+public func test_parse_hand_written_board_form() -> bool:
+    mut src = b"(design-block \"X\" (instance \"R1\" (res-0402 \"10k\") (pin 1 \"A\") (pin 2 \"B\")))"
     return node_count(src) == 1 and is_form_at(src, 0, "design-block") and child_count(src, 0) == 3
 
 
 # ── located diagnostics ───────────────────────────────────────────────
 
-public def test_unexpected_rparen_location() -> bool:
+public func test_unexpected_rparen_location() -> bool:
     # The top form closes on line 3 (first ')'), leaving a stray ')' at 3:4.
-    src = b"(a\n  (b c)\n  ))"
+    mut src = b"(a\n  (b c)\n  ))"
     return has_error(src) and error_line(src) == 3 and error_col(src) == 4 and error_offset(src) == 14 and error_message(src).find("unexpected ')'") >= 0
 
 
-public def test_unclosed_list_points_at_open_paren() -> bool:
+public func test_unclosed_list_points_at_open_paren() -> bool:
     # Reported at the inner '(' (2:3), the innermost list left unclosed.
-    src = b"(outer\n  (inner 1 2\n"
+    mut src = b"(outer\n  (inner 1 2\n"
     return has_error(src) and error_line(src) == 2 and error_col(src) == 3 and error_offset(src) == 9 and error_message(src).find("unexpected end of input") >= 0
 
 
-public def test_unclosed_list_error_text_mentions_open_paren() -> bool:
+public func test_unclosed_list_error_text_mentions_open_paren() -> bool:
     return error_message(b"(outer\n  (inner 1 2\n").find("never closed") >= 0
 
 
-public def test_depth_cap_rejects_runaway_nesting() -> bool:
+public func test_depth_cap_rejects_runaway_nesting() -> bool:
     # The real cap is 10000 (parse() passes it), but a test child gets
     # 1,000,000 steps and 1,024 frames, so a 10_016-byte run of `(` cannot even
     # be tokenized here. The guard is the same code at any cap: the k-th `(`
@@ -270,84 +269,84 @@ public def test_depth_cap_rejects_runaway_nesting() -> bool:
     return capped_message(deep_source(9), 8).find("too deep") >= 0 and capped_message(deep_source(8), 8).find("never closed") >= 0
 
 
-public def test_depth_cap_error_is_located() -> bool:
+public func test_depth_cap_error_is_located() -> bool:
     # Under the real 10000 cap a 9-deep run is nowhere near the limit, so the
     # public parse reports the unclosed list instead of the depth guard.
-    problem = capped_error(deep_source(9), 8)
+    mut problem = capped_error(deep_source(9), 8)
     return error_message(deep_source(9)).find("never closed") >= 0 and problem.message.find("too deep") >= 0 and problem.line == 1 and problem.col == 9 and problem.offset == 8
 
 
-public def test_lex_unterminated_string_is_located() -> bool:
+public func test_lex_unterminated_string_is_located() -> bool:
     # The opening quote sits at offset 3, line 1, column 4.
-    src = b"(a \"oops"
+    mut src = b"(a \"oops"
     return has_error(src) and error_line(src) == 1 and error_col(src) == 4 and len(error_message(src)) > 0
 
 
-public def test_lex_unexpected_character_is_located() -> bool:
+public func test_lex_unexpected_character_is_located() -> bool:
     # `]` is not a legal token start; the Zig lexer rejects it at 1:6.
-    src = b"(bad ]x)"
+    mut src = b"(bad ]x)"
     return has_error(src) and error_line(src) == 1 and error_col(src) == 6
 
 
 # ── numeric conversion (depends on the real tokenizer) ────────────────
 
-public def test_parse_integer() -> bool:
+public func test_parse_integer() -> bool:
     return child_kind(b"(n 42)", 0, 1) == 3 and child_number(b"(n 42)", 0, 1) == 42.0
 
 
-public def test_parse_negative_integer() -> bool:
+public func test_parse_negative_integer() -> bool:
     return child_kind(b"(n -5)", 0, 1) == 3 and child_number(b"(n -5)", 0, 1) == -5.0
 
 
-public def test_parse_float() -> bool:
+public func test_parse_float() -> bool:
     return child_kind(b"(n 3.3)", 0, 1) == 4 and child_number(b"(n 3.3)", 0, 1) == 3.3
 
 
-public def test_parse_measure_mm() -> bool:
+public func test_parse_measure_mm() -> bool:
     return child_kind(b"(pos 1.0mm 0.5mm)", 0, 1) == 5 and close(child_number(b"(pos 1.0mm 0.5mm)", 0, 1), 1.0) and close(child_number(b"(pos 1.0mm 0.5mm)", 0, 2), 0.5)
 
 
-public def test_parse_measure_mil() -> bool:
+public func test_parse_measure_mil() -> bool:
     # 10 mil = 0.254 mm.
     return child_kind(b"(pos 10mil)", 0, 1) == 5 and close(child_number(b"(pos 10mil)", 0, 1), 0.254)
 
 
-public def test_parse_si_scales() -> bool:
-    src = b"(vals 220k 4.7k 1M 2G 10u 100n 22p)"
+public func test_parse_si_scales() -> bool:
+    mut src = b"(vals 220k 4.7k 1M 2G 10u 100n 22p)"
     return child_kind(src, 0, 1) == 4 and close(child_number(src, 0, 1), 220000.0) and close(child_number(src, 0, 2), 4700.0) and close(child_number(src, 0, 3), 1e6) and close(child_number(src, 0, 4), 2e9) and close(child_number(src, 0, 5), 1e-5) and close(child_number(src, 0, 6), 1e-7) and close(child_number(src, 0, 7), 22e-12) and child_value_text(src, 0, 1) == "220k"
 
 
-public def test_parse_si_unit_letters_carry_no_scale() -> bool:
+public func test_parse_si_unit_letters_carry_no_scale() -> bool:
     # 100nF == 100n, 1uH == 1u, 10mA == 10m, 3.3V == 3.3, 47R == 47.
-    src = b"(vals 100nF 1uH 10mA 100mV 3.3V 0.5A 47R)"
+    mut src = b"(vals 100nF 1uH 10mA 100mV 3.3V 0.5A 47R)"
     return close(child_number(src, 0, 1), 1e-7) and close(child_number(src, 0, 2), 1e-6) and close(child_number(src, 0, 3), 0.01) and close(child_number(src, 0, 4), 0.1) and close(child_number(src, 0, 5), 3.3) and close(child_number(src, 0, 6), 0.5) and close(child_number(src, 0, 7), 47.0)
 
 
-public def test_parse_percent_carries_no_scale() -> bool:
+public func test_parse_percent_carries_no_scale() -> bool:
     return child_kind(b"(t 10%)", 0, 1) == 4 and close(child_number(b"(t 10%)", 0, 1), 10.0) and child_value_text(b"(t 10%)", 0, 1) == "10%"
 
 
-public def test_invalid_number_literal_is_rejected() -> bool:
+public func test_invalid_number_literal_is_rejected() -> bool:
     # An integer literal past i64 range still classifies as int_val, so the
     # conversion is what rejects it.
-    src = b"(n 99999999999999999999999999)"
+    mut src = b"(n 99999999999999999999999999)"
     return has_error(src) and error_message(src).find("invalid number literal") >= 0
 
 
 # ── the fuzz corpus's malformed entries must not crash ────────────────
 
-public def test_malformed_inputs_return_errors_not_crashes() -> bool:
+public func test_malformed_inputs_return_errors_not_crashes() -> bool:
     return has_error(b"(unterminated") and has_error(b")") and has_error(b"\"oops") and has_error(b"(bad ]char)")
 
 
 # The former parser lexed the whole source first. Streaming keeps that visible
 # behavior by draining after an early syntax failure and preferring this later
 # lexical rejection.
-public def test_later_lex_error_precedes_early_syntax_error() -> bool:
-    src = b") ?"
+public func test_later_lex_error_precedes_early_syntax_error() -> bool:
+    mut src = b") ?"
     return error_message(src) == "unexpected character" and error_offset(src) == 2
 
 
-public def test_syntax_error_survives_clean_remainder_drain() -> bool:
-    src = b") trailing atoms"
+public func test_syntax_error_survives_clean_remainder_drain() -> bool:
+    mut src = b") trailing atoms"
     return error_message(src).find("unexpected ')'") >= 0 and error_offset(src) == 0

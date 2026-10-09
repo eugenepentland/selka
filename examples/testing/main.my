@@ -1,20 +1,19 @@
-module main
 
-def square(value: int) -> int:
+func square(value: int) -> int:
     return value * value
 
 
-def sum(left: int, right: int) -> int:
+func sum(left: int, right: int) -> int:
     return left + right
 
 
-public def test_square() -> bool:
+public func test_square() -> bool:
     return square(7) == 49
 
 
-public def test_sum() -> bool:
+public func test_sum() -> bool:
     return sum(20, 22) == 42
 
 
-def main() -> int:
+func main() -> int:
     return 0

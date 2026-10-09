@@ -1,6 +1,6 @@
-def main() -> int:
-    xs = [3, 8, 1]
-    total = 0
+func main() -> int:
+    mut xs = [3, 8, 1]
+    mut total = 0
     if any(x > 7 for x in xs):
         total += 10
     if all(x > 0 for x in xs):

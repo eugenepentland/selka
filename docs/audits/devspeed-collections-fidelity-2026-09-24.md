@@ -153,6 +153,7 @@ with SIGABRT / SIGSEGV. The cause is **not** a set. This dictionary-only program
 the same way on the base `450216fe`:
 
 ```mylang
+# doc: skip Historical pre-redesign syntax retained as audit evidence.
 # doc: expect 1
 def main() -> int:
     keys: dict[str, bool] = {"a": True}

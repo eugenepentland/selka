@@ -1,20 +1,19 @@
-module rc_contract_results
 import filesystem
 
 @ensures(len(result) == 2)
-def checked(fail: bool) -> Result[list[str], str]:
+func checked(fail: bool) -> Result[str[], str]:
     if fail:
         return Err("skip the postcondition")
     return Ok([str(17), str(23)])
 
 
-def forwarded(fail: bool) -> Result[list[str], str]:
-    values = checked(fail)?
+func forwarded(fail: bool) -> Result[str[], str]:
+    mut values = try checked(fail)
     return Ok(values)
 
 
-public def test_postcondition_keeps_the_managed_success_payload() -> bool:
-    count = 0
+public func test_postcondition_keeps_the_managed_success_payload() -> bool:
+    mut count = 0
     while count < 40:
         match forwarded(False):
             case Ok(values):
@@ -26,7 +25,7 @@ public def test_postcondition_keeps_the_managed_success_payload() -> bool:
     return True
 
 
-public def test_postcondition_preserves_the_propagated_error() -> bool:
+public func test_postcondition_preserves_the_propagated_error() -> bool:
     match forwarded(True):
         case Ok(_):
             return False
@@ -35,19 +34,19 @@ public def test_postcondition_preserves_the_propagated_error() -> bool:
 
 
 @ensures(True)
-def opened(fs: Filesystem) -> Result[TextFile, str]:
+func opened(fs: Filesystem) -> Result[TextFile, str]:
     return fs.open("data", "w")
 
 
-def unique_roundtrip() -> Result[bool, str]:
-    fs = filesystem.memory()
-    with opened(fs)? as file:
+func unique_roundtrip() -> Result[bool, str]:
+    mut fs = filesystem.memory()
+    with try opened(fs) as file:
         _ = file.write("hello")
-    text = fs.read_text("data")?
+    mut text = try fs.read_text("data")
     return Ok(text == "hello")
 
 
-public def test_postcondition_keeps_the_unique_file_payload() -> bool:
+public func test_postcondition_keeps_the_unique_file_payload() -> bool:
     match unique_roundtrip():
         case Ok(correct):
             return correct
@@ -55,7 +54,7 @@ public def test_postcondition_keeps_the_unique_file_payload() -> bool:
             return False
 
 
-def main() -> int:
+func main() -> int:
     assert test_postcondition_keeps_the_managed_success_payload()
     assert test_postcondition_preserves_the_propagated_error()
     assert test_postcondition_keeps_the_unique_file_payload()

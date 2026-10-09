@@ -40,9 +40,9 @@ def invoice(counts):
 
 def invoice_inputs(counts):
     names = ('books', 'cables', 'adapters')
-    exports = ''.join(f'export {n}\n' for n in names)
-    bodies = '\n\n'.join(f'def {name}() -> i64:\n    return {value}\n' for name, value in zip(names, counts))
-    return 'module inputs\n' + exports + '\n\n' + bodies
+    exports = ''
+    bodies = '\n\n'.join(f'public func {name}() -> i64:\n    return {value}\n' for name, value in zip(names, counts))
+    return '' + exports + '\n\n' + bodies
 
 
 def frame(kind, sequence, value=0):
@@ -67,9 +67,9 @@ def packet(data, size):
 
 def packet_inputs(data, size):
     values = ', '.join(str(n) + 'u8' for n in data)
-    return ('module inputs\n\n\n\n\n'
-            f'def bytes() -> [9]u8:\n    return [{values}]\n\n\n'
-            f'def size() -> u64:\n    return {size}u64\n')
+    return ('\n\n\n\n'
+            f'public func bytes() -> FixedArray[u8, 9]:\n    return FixedArray[u8, 9]([{values}])\n\n\n'
+            f'public func size() -> u64:\n    return {size}u64\n')
 
 
 def cases(name):

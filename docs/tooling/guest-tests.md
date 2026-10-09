@@ -81,9 +81,9 @@ $ echo $?
 
 ### Test entries
 
-A test entry is a `.my` file, not necessarily a program. A file with no `def
+A test entry is a `.my` file, not necessarily a program. A file with no `func
 main(` line of its own, such as a library module or a standalone `*_test.my`,
-is checked with a stub `def main() -> int: return 0` appended, so its exported
+is checked with a stub `func main() -> int: return 0` appended, so its exported
 `test_` functions run without editing the source. A file without a `module`
 header is module `<stem>`: `solo_test.my` holds `solo_test::test_alone`. Such a
 file may import only standard modules; one that imports a project module must
@@ -177,7 +177,7 @@ import random
 import time
 
 # Whole seconds since `start`, as a caller of the clock sees them.
-def uptime(clock: Clock, start: time.Instant) -> int:
+func uptime(clock: Clock, start: time.Instant) -> int:
     match time.now(clock):
         case Ok(current):
             match time.elapsed(start, current):
@@ -189,10 +189,10 @@ def uptime(clock: Clock, start: time.Instant) -> int:
             return -1
 
 # A die roll drawn from the entropy a caller supplies.
-def roll(entropy: Entropy) -> int:
+func roll(entropy: Entropy) -> int:
     match random.from_entropy(entropy):
         case Ok(sampled):
-            generator = sampled
+            mut generator = sampled
             match random.randint(mut generator, 1, 6):
                 case Ok(value):
                     return value
@@ -201,17 +201,17 @@ def roll(entropy: Entropy) -> int:
         case Err(_):
             return 0
 
-public def test_uptime_counts_whole_seconds(clock: Clock) -> bool:
-    start = time.from_unix_nanoseconds(946684800000000000)
+public func test_uptime_counts_whole_seconds(clock: Clock) -> bool:
+    mut start = time.from_unix_nanoseconds(946684800000000000)
     _ = time.advance(clock, time.nanoseconds(90500000000))
     return uptime(clock, start) == 90
 
-public def test_roll_stays_on_the_die(entropy: Entropy) -> bool:
-    value = roll(entropy)
+public func test_roll_stays_on_the_die(entropy: Entropy) -> bool:
+    mut value = roll(entropy)
     return value >= 1 and value <= 6
 
-def main(out: Stream) -> int:
-    clock = time.simulated_clock(time.from_unix_nanoseconds(946684800000000000))
+func main(out: Stream) -> int:
+    mut clock = time.simulated_clock(time.from_unix_nanoseconds(946684800000000000))
     out.print(test_uptime_counts_whole_seconds(clock), test_roll_stays_on_the_die(random.seeded_entropy(1)))
     return 0
 ```
@@ -252,37 +252,36 @@ because a property's verdict is its `bool` result.
 
 ```mylang
 # doc: check
-module main
 
 @invariant(self.low <= self.high, "a span never runs backwards")
 public record Span:
     low: int
     high: int
 
-def total(xs: list[int]) -> int:
-    sum = 0
+func total(xs: int[]) -> int:
+    mut sum = 0
     for x in xs:
         sum = sum + x
     return sum
 
-public def test_reversing_twice_is_the_identity(xs: list[int]) -> bool:
-    ys = xs.copy()
+public func test_reversing_twice_is_the_identity(xs: int[]) -> bool:
+    mut ys = xs.copy()
     ys.reverse()
     ys.reverse()
     return ys == xs
 
 @requires(len(xs) > 0, "an average needs a value")
-public def test_average_is_within_range(xs: list[i32]) -> bool:
-    mean = total([int(x) for x in xs]) // len(xs)
+public func test_average_is_within_range(xs: i32[]) -> bool:
+    mut mean = total([for x in xs yield int(x)]) // len(xs)
     return int(min(xs)) <= mean and mean <= int(max(xs))
 
-public def test_a_span_is_ordered(span: Span) -> bool:
+public func test_a_span_is_ordered(span: Span) -> bool:
     return span.low <= span.high
 
-public def test_budget_stays_below_100(costs: list[int]) -> bool:
+public func test_budget_stays_below_100(costs: int[]) -> bool:
     return total(costs) < 100
 
-def main() -> int:
+func main() -> int:
     return 0
 ```
 
@@ -330,11 +329,11 @@ A `domain` (built only through its own constructors), a function value and
 `Host` are never generated: a property test with a parameter whose type reaches
 one fails, naming the parameter and the type, and so does one whose result is
 not `bool` or `Result[bool, E]`. With a
-`test_callbacks(callbacks: list[def(int) -> int effects()]) -> bool`:
+`test_callbacks(callbacks: list[func(int) -> int effects()]) -> bool`:
 
 ```console
 $ mylang test app/main.my --filter test_callbacks
-failed main::test_callbacks: property test parameter `callbacks: List<def(i64) -> i64 effects()>` cannot be generated: a function value cannot be generated
+failed main::test_callbacks: property test parameter `callbacks: List<func(i64) -> i64 effects()>` cannot be generated: a function value cannot be generated
 0 passed, 0 cached, 1 failed, 0 skipped
 ```
 
@@ -641,7 +640,7 @@ failed main::test_reading: expected true, got false
 $ cat cases.json
 {
   "main::test_reading": {
-    "providers": {"reading.my": "module reading\n\npublic def sample() -> int:\n    return 42\n"}
+    "providers": {"reading.my": "module reading\n\npublic func sample() -> int:\n    return 42\n"}
   }
 }
 $ mylang test app/main.my --cases cases.json
@@ -657,7 +656,7 @@ cached main::test_reading
 A test runs with no ambient authority. The runner grants a test process no
 clock, entropy, filesystem, network or environment of the machine: a capability
 parameter gets a [deterministic stand-in](#capability-parameters), and a `Host`
-parameter, which `extern def` C calls need, is never supplied. A test's outcome is therefore a function of its sources, its
+parameter, which `extern func` C calls need, is never supplied. A test's outcome is therefore a function of its sources, its
 cases-file entry and the keyed settings, which is what lets a receipt stand in
 for it.
 
@@ -693,14 +692,14 @@ $ cat scanner.my
 module scanner
 
 
-def is_digit(c: str) -> bool:
+func is_digit(c: str) -> bool:
     return c in "0123456789"
 $ cat scanner_test.my
 module scanner_test
 import scanner
 
 
-public def test_is_digit() -> bool:
+public func test_is_digit() -> bool:
     return scanner.is_digit("7") and not scanner.is_digit("x")
 $ mylang test .
 passed scanner_test::test_is_digit
@@ -743,6 +742,6 @@ The runner on the compiler's core dropped the old runner's features below
 | `--max-calls` | `--max-steps` and `--max-frames` |
 | `--bench`, `--bench-only`, `--bench-output`, `--bench-baseline`, `--bench-policy`, `--bench-profile`, `--bench-warmup`, `--bench-batches`, `--bench-batch-ms`, `--bench-timeout-ms`, and `mylang bench-promote` | none: `bench_` functions, baselines and policies were dropped; time a built program instead |
 | `--gc-stress`, `--gc-runtime`, `--rc-runtime`, `--legacy-sharing`, `--value-semantics` | none: one-count reference counting and value semantics are the only modes |
-| `--library`, `--provider`, `--link-library`, `--library-path` | `extern def` with `--link FILE.c` |
+| `--library`, `--provider`, `--link-library`, `--library-path` | `extern func` with `--link FILE.c` |
 
 `--whole-program` is accepted and ignored, and `--qbe PATH` is ignored.

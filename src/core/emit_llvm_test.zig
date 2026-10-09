@@ -3,11 +3,11 @@ const std = @import("std");
 const support = @import("test_support.zig");
 
 const checked =
-    \\def scale(x: int, d: int) -> int:
+    \\func scale(x: int, d: int) -> int:
     \\    return (x * 3 + 1) // d
     \\
     \\
-    \\def main(args: list[str], out: Stream) -> int:
+    \\func main(args: str[], out: Stream) -> int:
     \\    out.print(scale(len(args), 2))
     \\    return 0
     \\
@@ -129,11 +129,11 @@ test "an instruction or entry signature the emitter cannot lower is an error, no
 }
 
 const searching =
-    \\def search(values: list[int], key: int) -> int:
-    \\    low = 0
-    \\    high = len(values)
+    \\func search(values: int[], key: int) -> int:
+    \\    mut low = 0
+    \\    mut high = len(values)
     \\    while low < high:
-    \\        middle = (low + high) // 2
+    \\        mut middle = (low + high) // 2
     \\        if values[middle] < key:
     \\            low = middle + 1
     \\        else:
@@ -141,7 +141,7 @@ const searching =
     \\    return low
     \\
     \\
-    \\def main(args: list[str], out: Stream) -> int:
+    \\func main(args: str[], out: Stream) -> int:
     \\    out.print(search([1, 3, 5], len(args)))
     \\    return 0
     \\
@@ -190,22 +190,22 @@ test "a verify build asserts each length bound and gives LLVM no unsigned promis
 }
 
 const narrow_extern =
-    \\extern def pack(host: Host, a: i8, b: u16, c: bool, d: i32) -> i64 effects(host)
+    \\extern func pack(host: Host, a: i8, b: u16, c: bool, d: i32) -> i64 effects(host)
     \\
     \\
-    \\def main(args: list[str], host: Host, out: Stream) -> int:
-    \\    flag = len(args) > 1
+    \\func main(args: str[], host: Host, out: Stream) -> int:
+    \\    mut flag = len(args) > 1
     \\    out.print(pack(host, i8(len(args)), 7u16, flag, -1i32))
     \\    return 0
     \\
 ;
 
 const from_end_index =
-    \\def pick(xs: list[int], i: int) -> int:
+    \\func pick(xs: int[], i: int) -> int:
     \\    return xs[i]
     \\
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return pick([1, 2, 3], -1)
     \\
 ;
@@ -230,8 +230,8 @@ test "a bounds trap recovers the index the program wrote on the trap's cold path
 }
 
 const runtime_bool_helpers =
-    \\def main(out: Stream) -> int:
-    \\    word = "Mixed"
+    \\func main(out: Stream) -> int:
+    \\    mut word = "Mixed"
     \\    out.print(word.upper(), word.lower(), repr(word))
     \\    return 0
     \\

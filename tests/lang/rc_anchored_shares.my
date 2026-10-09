@@ -4,27 +4,27 @@
 # journal (RC-ANCHORED-SHARE-1). Answers match the collector; RC counting
 # builds balance.
 record Frame:
-    items: list[int]
+    items: int[]
     name: str
     n: int
 
 
-def touch(frame: mut Frame, v: int) -> int:
+func touch(mut frame: Frame, v: int) -> int:
     frame.n = frame.n + v
     return 0
 
 
-def grow(frame: mut Frame, v: int) -> int:
+func grow(mut frame: Frame, v: int) -> int:
     frame.items.append(v)
     return 1
 
 
-def read_touched(frame: mut Frame) -> int:
+func read_touched(mut frame: Frame) -> int:
     return frame.items[touch(mut frame, 7) % len(frame.items)]
 
 
-def read_both(frame: mut Frame) -> int:
-    total = 0
+func read_both(mut frame: Frame) -> int:
+    mut total = 0
     if len(frame.items) > 0:
         total = total + frame.items[touch(mut frame, 7) % len(frame.items)]
     if len(frame.items) > 0:
@@ -32,20 +32,20 @@ def read_both(frame: mut Frame) -> int:
     return total
 
 
-public def test_a_receiver_read_across_a_count_free_update_is_read_in_place() -> bool:
-    frame = Frame([1, 2], "nm" + "x", 1)
-    first = read_touched(mut frame)
+public func test_a_receiver_read_across_a_count_free_update_is_read_in_place() -> bool:
+    mut frame = Frame(items=[1, 2], name="nm" + "x", n=1)
+    mut first = read_touched(mut frame)
     return first == 1 and frame.items == [1, 2] and frame.n == 8
 
 
-public def test_count_free_and_growing_index_calls_mix_in_one_frame() -> bool:
-    frame = Frame([1, 2], "nm" + "x", 1)
-    first = read_both(mut frame)
-    second = read_both(mut frame)
+public func test_count_free_and_growing_index_calls_mix_in_one_frame() -> bool:
+    mut frame = Frame(items=[1, 2], name="nm" + "x", n=1)
+    mut first = read_both(mut frame)
+    mut second = read_both(mut frame)
     return first == 3 and second == 3 and frame.items == [1, 2, 8, 15] and frame.n == 15
 
 
-def main(out: Stream) -> int:
+func main(out: Stream) -> int:
     out.print(test_a_receiver_read_across_a_count_free_update_is_read_in_place())
     out.print(test_count_free_and_growing_index_calls_mix_in_one_frame())
     return 0

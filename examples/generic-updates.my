@@ -1,28 +1,28 @@
 record Pair:
-    values: [2]int
+    values: FixedArray[int, 2]
     flag: bool
 
 
 enum Key:
-    first,
+    first
     second
 
 
-def change[T: integer](pair: Pair, index: T, value: int) -> Pair:
-    changed = pair
+func change[T: integer](pair: Pair, index: T, value: int) -> Pair:
+    mut changed = pair
     changed.values = replace(pair.values, index, value)
     return changed
 
 
-def put[T: integer](table: [Key]int, key: Key, value: T) -> [Key]int:
+func put[T: integer](table: [Key]int, key: Key, value: T) -> [Key]int:
     return replace(table, key, int(value))
 
 
-def main() -> int:
-    original = Pair(values=[7, 8], flag=True)
-    changed = change[u8](original, 0u8, 20)
-    old: [Key]int = {Key.first: 1, Key.second: 2}
-    table = put[u8](old, Key.first, 8u8)
+func main() -> int:
+    mut original = Pair(values=FixedArray[int, 2]([7, 8]), flag=True)
+    mut changed = change[u8](original, 0u8, 20)
+    mut old: [Key]int = {Key.first: 1, Key.second: 2}
+    mut table = put[u8](old, Key.first, 8u8)
     if changed.flag:
         return original.values[0] + changed.values[0] + changed.values[1] + old[Key.first] + table[Key.first]
     return 0

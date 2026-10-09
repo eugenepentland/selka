@@ -1,48 +1,47 @@
-module row_result_propagate
 
-extern def runtime_bench_now(host: Host) -> i64 effects(host)
+extern func runtime_bench_now(host: Host) -> i64 effects(host)
 
 # Row `result_propagate` of benchmarks/runtime/expanded/compute/main.my as a program of its own, like compute_s0.my: arguments
 # `size iterations seed` (the original takes the row name first), the same setup, kernel,
 # checksum and output `checksum elapsed`. The frames, flags, ordered values and function value other rows need are left out; none of them reaches this checksum.
 
 
-def checked(x: int, phase: int) -> Result[int, int]:
+func checked(x: int, phase: int) -> Result[int, int]:
     if x % 5 == 0:
         return Err(1)
     return Ok(x + phase)
 
 
-def forwarded(x: int, phase: int) -> Result[int, int]:
-    value = checked(x, phase)?
+func forwarded(x: int, phase: int) -> Result[int, int]:
+    mut value = try checked(x, phase)
     return Ok(value * 3 + 1)
 
 
-def parse_number(text: str) -> int:
-    match int(text):
+func parse_number(text: str) -> int:
+    match parse_int(text):
         case Some(value):
             return value
         case None:
             return 0
 
 
-def main(args: list[str], host: Host, out: Stream) -> int:
+func main(args: str[], host: Host, out: Stream) -> int:
     if len(args) != 3:
         return 2
-    size = parse_number(args[0])
-    iterations = parse_number(args[1])
-    seed = parse_number(args[2])
+    mut size = parse_number(args[0])
+    mut iterations = parse_number(args[1])
+    mut seed = parse_number(args[2])
     if size < 2 or iterations < 1 or seed < 1 or seed > 1000000:
         return 2
-    values = [(seed + j * 37) % 1009 for j in range(size)]
-    checksum = 0
-    start = runtime_bench_now(host)
+    mut values = [for j in range(size) yield (seed + j * 37) % 1009]
+    mut checksum = 0
+    mut start = runtime_bench_now(host)
     for batch in range(iterations):
-        phase = batch % 17
-        pass_total = 0
+        mut phase = batch % 17
+        mut pass_total = 0
         for j in range(size):
-            x = values[j]
-            value = 0
+            mut x = values[j]
+            mut value = 0
             match forwarded(x, phase):
                 case Ok(number):
                     value = number
@@ -50,6 +49,6 @@ def main(args: list[str], host: Host, out: Stream) -> int:
                     value = error * 7
             pass_total += value
         checksum = (checksum + pass_total) % 1000000007
-    elapsed = runtime_bench_now(host) - start
+    mut elapsed = runtime_bench_now(host) - start
     out.print(checksum, elapsed)
     return 0

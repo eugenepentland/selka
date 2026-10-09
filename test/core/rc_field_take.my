@@ -1,56 +1,55 @@
-module rc_field_take
 
 
 record Runtime:
-    objects: list[int]
+    objects: int[]
     count: int
 
 
 # The Lox heap's shape: the slot is the length read before the append.
-def allocate(rt: mut Runtime, obj: int) -> int:
-    slot = len(rt.objects)
+func allocate(mut rt: Runtime, obj: int) -> int:
+    mut slot = len(rt.objects)
     rt.objects.append(obj)
     rt.count = rt.count + 1
     return slot
 
 
 # An earlier read of the same field reaches its element before the append.
-def bump_last(rt: mut Runtime, obj: int) -> int:
-    last = rt.objects[len(rt.objects) - 1]
+func bump_last(mut rt: Runtime, obj: int) -> int:
+    mut last = rt.objects[len(rt.objects) - 1]
     rt.objects.append(obj + last)
     return last
 
 
 # A write through an index: a negative index's branch puts the read and the write-back
 # in different blocks.
-def put(rt: mut Runtime, at: int, v: int):
+func put(mut rt: Runtime, at: int, v: int):
     rt.objects[at] = v
 
 
 # A copy of the field taken before the append is still read after it: it keeps the
 # list as it was.
-def keep(rt: mut Runtime, obj: int) -> int:
-    before = rt.objects
+func keep(mut rt: Runtime, obj: int) -> int:
+    mut before = rt.objects
     rt.objects.append(obj)
     return len(before)
 
 
 record Marker:
-    marks: list[bool]
-    gray: list[int]
+    marks: bool[]
+    gray: int[]
 
 
 record Heap:
-    objects: list[int]
+    objects: int[]
     marker: Marker
-    free_slots: list[int]
+    free_slots: int[]
     allocations: int
 
 
 # The Lox heap: one arm reuses a free slot, the other grows the list and, through a
 # nested field, the marks with it.
-def heap_allocate(h: mut Heap, obj: int) -> int:
-    slot = len(h.objects)
+func heap_allocate(mut h: Heap, obj: int) -> int:
+    mut slot = len(h.objects)
     if len(h.free_slots) > 0:
         slot = h.free_slots.pop()
         h.objects[slot] = obj
@@ -61,47 +60,47 @@ def heap_allocate(h: mut Heap, obj: int) -> int:
     return slot
 
 
-def heap_free(h: mut Heap, slot: int):
+func heap_free(mut h: Heap, slot: int):
     h.free_slots.append(slot)
 
 
 record Shelf:
-    rows: list[list[int]]
+    rows: int[][]
 
 
 # A row read before the write-back, which sits in another block, is read again after it:
 # it keeps its own count, so replacing that very row in place does not free it.
-def replace_row(s: mut Shelf, at: int, row: list[int]) -> int:
-    old = s.rows[at]
+func replace_row(mut s: Shelf, at: int, row: int[]) -> int:
+    mut old = s.rows[at]
     if at != 5:
         s.rows[at] = row
     return len(old) * 100 + old[0]
 
 
-def main(args: list[str], out: Stream) -> int:
-    rt = Runtime(objects=[], count=0)
-    n = len(args) * 50000
-    last = 0
-    i = 0
+func main(args: str[], out: Stream) -> int:
+    mut rt = Runtime(objects=[], count=0)
+    mut n = len(args) * 50000
+    mut last = 0
+    mut i = 0
     while i < n:
         last = allocate(mut rt, i)
         put(mut rt, -1, i * 2)
         i = i + 1
-    previous = bump_last(mut rt, 7)
-    kept = keep(mut rt, -1)
+    mut previous = bump_last(mut rt, 7)
+    mut kept = keep(mut rt, -1)
     out.print(rt.count, len(rt.objects), last, previous, rt.objects[n], kept, rt.objects[n + 1])
-    h = Heap(objects=[], marker=Marker(marks=[], gray=[]), free_slots=[], allocations=0)
-    total = 0
-    j = 0
+    mut h = Heap(objects=[], marker=Marker(marks=[], gray=[]), free_slots=[], allocations=0)
+    mut total = 0
+    mut j = 0
     while j < n:
-        s = heap_allocate(mut h, j)
+        mut s = heap_allocate(mut h, j)
         if j % 3 == 0:
             heap_free(mut h, s)
         total = total + s
         j = j + 1
     out.print(len(h.objects), len(h.marker.marks), h.allocations, total, h.objects[0], h.objects[len(h.objects) - 1])
-    shelf = Shelf(rows=[[1, 2, 3], [4, 5]])
-    first = replace_row(mut shelf, 0, [9])
-    second = replace_row(mut shelf, -1, [7, 7, 7, 7])
+    mut shelf = Shelf(rows=[[1, 2, 3], [4, 5]])
+    mut first = replace_row(mut shelf, 0, [9])
+    mut second = replace_row(mut shelf, -1, [7, 7, 7, 7])
     out.print(first, second, len(shelf.rows[0]), len(shelf.rows[1]), shelf.rows[0][0])
     return 0

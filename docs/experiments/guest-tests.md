@@ -65,8 +65,8 @@ A failed forced rerun removes its previous successful receipt.
 
 A case may set `providers` to an object mapping existing dependency `.my` paths
 to replacement source strings. For example, replace a dependency's
-`host def sample(x: int) -> int effects(host)` with
-`def sample(x: int) -> int effects(): return x + 35` while retaining its module
+`host func sample(x: int) -> int effects(host)` with
+`func sample(x: int) -> int effects(): return x + 35` while retaining its module
 and exports.
 
 The command copies a bounded source inventory into a private directory, applies

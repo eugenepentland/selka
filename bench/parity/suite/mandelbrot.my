@@ -3,33 +3,33 @@
 # written out. See SUITE.md section 5.
 
 
-def mix(c: int, v: int) -> int:
+func mix(c: int, v: int) -> int:
     return (c * 31 + v) % 1000000007
 
 
-def main(out: Stream) -> int:
-    size = 1600
-    iterations = 50
-    limit = 4.0
-    checksum = 0
+func main(out: Stream) -> int:
+    mut size = 1600
+    mut iterations = 50
+    mut limit = 4.0
+    mut checksum = 0
     for y in range(size):
-        ci = 2.0 * float(y) / float(size) - 1.0
-        byte = 0
-        bits = 0
+        mut ci = 2.0 * float(y) / float(size) - 1.0
+        mut byte = 0
+        mut bits = 0
         for x in range(size):
-            cr = 2.0 * float(x) / float(size) - 1.5
-            zr = 0.0
-            zi = 0.0
-            tr = 0.0
-            ti = 0.0
-            i = 0
+            mut cr = 2.0 * float(x) / float(size) - 1.5
+            mut zr = 0.0
+            mut zi = 0.0
+            mut tr = 0.0
+            mut ti = 0.0
+            mut i = 0
             while i < iterations and tr + ti <= limit:
                 zi = 2.0 * zr * zi + ci
                 zr = tr - ti + cr
                 tr = zr * zr
                 ti = zi * zi
                 i = i + 1
-            byte = byte * 2 + (1 if tr + ti <= limit else 0)
+            byte = byte * 2 + (if (tr + ti <= limit) then (1) else (0))
             bits = bits + 1
             if bits == 8:
                 checksum = mix(checksum, byte)

@@ -12,9 +12,9 @@ reach the same collection. A function changes its caller's value only through a
 
 ```mylang
 # doc: expect 12
-def main() -> int:
-    a = [1]
-    b = a
+func main() -> int:
+    mut a = [1]
+    mut b = a
     b.append(2)
     return len(a) * 10 + len(b)
 ```
@@ -35,14 +35,14 @@ aliases an argument:
 
 ```mylang
 # doc: expect 21
-def appended(xs: list[int]) -> list[int]:
-    ys = xs
+func appended(xs: int[]) -> int[]:
+    mut ys = xs
     ys.append(9)
     return ys
 
-def main() -> int:
-    a = [1]
-    b = appended(a)
+func main() -> int:
+    mut a = [1]
+    mut b = appended(a)
     return len(a) + len(b) * 10
 ```
 
@@ -58,14 +58,14 @@ write and a rebinding of the whole parameter all reach the caller.
 # doc: expect 22
 record Counter:
     n: int
-    items: list[int]
+    items: int[]
 
-def bump(c: mut Counter) -> None:
+func bump(mut c: Counter) -> Unit:
     c.n = c.n + 1
     c.items.append(c.n)
 
-def main() -> int:
-    c = Counter(n=0, items=[])
+func main() -> int:
+    mut c = Counter(n=0, items=[])
     bump(mut c)
     bump(mut c)
     return c.n * 10 + len(c.items)
@@ -94,27 +94,27 @@ the callee publishes its final value into that entry.
 ```mylang
 # doc: expect 27
 
-def replace(items: mut list[int], source: list[int], choose: bool):
+func replace(mut items: int[], source: int[], choose: bool):
     if choose:
         items = source
     items.append(7)
 
-def main() -> int:
-    items = [1]
-    source = [2]
+func main() -> int:
+    mut items = [1]
+    mut source = [2]
     replace(mut items, source, True)
     return items[0] * 10 + items[1]
 ```
 
 **Loop variables and match bindings are copies, so writing through one is an
 error.** `for row in grid: row.append(0)` would change a copy that is gone when
-the iteration ends: it is `E_VALUE_BINDING_WRITE`. The same holds for
+the iteration ends: it is `E_IMMUTABLE`. The same holds for
 `enumerate`, `zip`, `reversed`, `d.values()`, `d.items()` and a named `match`
 payload binding of a value another name holds.
 
 ```mylang
-# doc: expect-error E_VALUE_BINDING_WRITE
-def pad(grid: mut list[list[int]]) -> None:
+# doc: expect-error E_IMMUTABLE
+func pad(mut grid: int[][]) -> Unit:
     for row in grid:
         row.append(0)
 ```
@@ -124,17 +124,17 @@ local if the change is meant to stay local:
 
 ```mylang
 # doc: expect 22
-def pad(grid: mut list[list[int]]) -> None:
+func pad(mut grid: int[][]) -> Unit:
     for i in range(len(grid)):
         grid[i].append(0)
 
-def main() -> int:
-    grid = [[1], [2]]
+func main() -> int:
+    mut grid = [[1], [2]]
     pad(mut grid)
     return len(grid[0]) + len(grid[1]) * 10
 ```
 
-A `match` on a call result binds the result itself, which nothing else holds.
+Match payloads are read-only too; make an explicit `mut` local copy to edit one.
 A `class` declaration is `E_VALUE_CLASS`: use a record or recursive union for
 finite values, or a pool handle for stable graph identity.
 
@@ -149,13 +149,13 @@ compiler passes a copy taken before the call:
 
 ```mylang
 # doc: expect 23
-def touch(target: mut list[int], source: list[int]) -> int:
+func touch(mut target: int[], source: int[]) -> int:
     target.append(len(source))
     return len(source)
 
-def main() -> int:
-    a = [1, 2]
-    seen = touch(mut a, a)
+func main() -> int:
+    mut a = [1, 2]
+    mut seen = touch(mut a, a)
     return seen * 10 + len(a)
 ```
 
@@ -174,13 +174,13 @@ Save the call's result first, then select the receiver from its current value:
 ```mylang
 # doc: expect 19
 
-def selected(items: mut list[int]) -> int:
+func selected(mut items: int[]) -> int:
     items.append(2)
     return 1
 
-def main() -> int:
-    items = [1]
-    index = selected(mut items)
+func main() -> int:
+    mut items = [1]
+    mut index = selected(mut items)
     items[index] = 9
     return items[0] * 10 + items[index]
 ```
@@ -193,28 +193,27 @@ choice of order.
 place: a variable plus a path of fields, indices and dictionary keys. Two `mut`
 arguments of one call may not name the same place, and one may not be part of
 the other, so `f(mut b, mut b)`, `f(mut a, mut a[0])` and `f(mut r, mut r.rows)`
-are `E_MUTATION_OVERLAP`. Two indices or keys count as different places only
-when both are constants that differ. `f(mut xs[i], mut xs[j])` is rejected
-because `i` and `j` may be equal. `f(mut xs[-1], mut xs[2])` is rejected
-because a negative index counts back from the end. Different fields, different
-constant indices of one sign and different constant keys are disjoint:
+are `E_MUTATION_OVERLAP`. Different fields and distinct known indices or keys are disjoint. For dynamic
+indices, keys or negative indices, the compiler captures each place once and
+checks overlap before the function runs. `f(mut xs[i], mut xs[j])` is allowed
+when the resolved elements differ and traps before the callee when they coincide:
 
 ```mylang
 # doc: expect 1 2 1 2 1 2
 record Pair:
-    left: list[int]
-    right: list[int]
+    left: int[]
+    right: int[]
 
-def fill(a: mut list[int], b: mut list[int]) -> None:
+func fill(mut a: int[], mut b: int[]) -> Unit:
     a.append(1)
     b.append(2)
 
-def main(out: Stream) -> int:
-    p = Pair([], [])
+func main(out: Stream) -> int:
+    mut p = Pair(left=[], right=[])
     fill(mut p.left, mut p.right)
-    rows = [[0], [0], [0]]
+    mut rows = [[0], [0], [0]]
     fill(mut rows[0], mut rows[2])
-    table = {"a": [0], "b": [0]}
+    mut table = {"a": [0], "b": [0]}
     fill(mut table["a"], mut table["b"])
     out.print(p.left[0], p.right[0], rows[0][1], rows[2][1], table["a"][1], table["b"][1])
     return 0
@@ -222,12 +221,12 @@ def main(out: Stream) -> int:
 
 ```mylang
 # doc: expect-error E_MUTATION_OVERLAP
-def fill(a: mut list[int], b: mut list[list[int]]) -> None:
+func fill(mut a: int[], mut b: int[][]) -> Unit:
     a.append(1)
     b.append([2])
 
-def main() -> int:
-    rows = [[0]]
+func main() -> int:
+    mut rows = [[0]]
     fill(mut rows[0], mut rows)
     return len(rows)
 ```
@@ -242,7 +241,7 @@ both parts through it:
 error[E_MUTATION_OVERLAP]: `fill` receives overlapping `mut` arguments
 `mut rows[0]` and `mut rows`: `rows[0]` is part of `rows`, and two `mut`
 arguments of one call must name disjoint places. Copy one into a local, pass
-`mut` that local and store it back (`copy = rows[0]`, pass `mut copy`, then
+`mut` that local and store it back (`mut copy = rows[0]`, pass `mut copy`, then
 `rows[0] = copy`), or pass the enclosing value `mut rows` once
 ```
 
@@ -253,17 +252,10 @@ still gets its snapshot, and a `mut` call nested inside another argument
 `mut` parameters never name the same storage, a callee can read one while it
 writes the other.
 
-**A `mut` parameter changed only through a copy.** When the only change to a
-`mut` parameter went to a local copy of it, the parameter is never written;
-the error says how the change reaches the caller instead of suggesting to drop
-`mut`:
-
-```text
-# doc: not-mylang
-error[E_MUTATION_MARKER]: `rows` is declared `mut` but never written: the only
-change goes to `row`, a copy of `rows[i]`; store the copy back after changing it
-(`rows[i] = row`) so the change reaches the caller
-```
+**A change through a copy stays local.** A `mut` parameter permits updates to
+the caller but does not require them. If the function copies `rows[i]` into a
+local `mut row`, changing `row` leaves `rows` unchanged. Store the result back
+with `rows[i] = row` when the update should reach the caller.
 
 ## Explicit identity and immutable sharing
 
@@ -279,12 +271,12 @@ change goes to `row`, a copy of `rows[i]`; store the copy back after changing it
 ```mylang
 # doc: expect-error E_VALUE_CLASS
 class Node:
-    next: Option[Node]
+    next: Node?
 ```
 
 ```mylang
 # doc: expect-error E_VALUE_CELL
-def read(slot: Cell[int]) -> int:
+func read(slot: Cell[int]) -> int:
     return slot.value
 ```
 

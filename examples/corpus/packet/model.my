@@ -1,20 +1,19 @@
-module model
 
 public record Reading:
     sequence: u8
     value: u32
 
 
-public union Message:
-    heartbeat: u8,
-    reading: Reading
+public enum Message:
+    heartbeat(value: u8)
+    reading(value: Reading)
 
 
 public enum Error:
-    frame_length,
-    version,
-    kind,
-    payload_length,
+    frame_length
+    version
+    kind
+    payload_length
     checksum
 
 
@@ -23,6 +22,6 @@ public result Decoded:
     err: Error
 
 
-public def error_code(error: Error) -> int effects():
-    codes: [Error]int = {Error.frame_length: -1, Error.version: -2, Error.kind: -3, Error.payload_length: -4, Error.checksum: -5}
+public func error_code(error: Error) -> int effects():
+    mut codes: [Error]int = {Error.frame_length: -1, Error.version: -2, Error.kind: -3, Error.payload_length: -4, Error.checksum: -5}
     return codes[error]

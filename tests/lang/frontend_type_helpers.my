@@ -1,0 +1,8 @@
+public record Row:
+    value: int
+
+public func rows(values: Row[]) -> Row[]:
+    return values
+
+public func generic_rows[T](values: T[]) -> T[]:
+    return values

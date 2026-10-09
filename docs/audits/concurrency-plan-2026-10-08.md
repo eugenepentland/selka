@@ -21,7 +21,8 @@ Status: **P1 and read-only P2-0 are complete (2026-10-09), with merged-source el
 
 ## 1. Where it starts
 
-Facts on `main` `1edeef830`.
+Historical starting-point facts on `main` `1edeef830`. This section records the
+pre-P1 baseline; it does not describe the completed runtime on current main.
 
 **No concurrency exists.**
 - `src/features.json` lists `guest-shared-memory-threads` as unsupported.
@@ -109,27 +110,28 @@ Facts on `main` `1edeef830`.
 
 ### 3.1 The surface
 
-```python
+```mylang
+# doc: skip proposed P2 guest API; P1 implements the runtime only
 import parallel
 
-def score_all(sheets: list[Sheet], rules: Rules) -> list[int]:
-    return parallel.map(score, sheets, rules)      # == [score(s, rules) for s in sheets]
+func score_all(sheets: Sheet[], rules: Rules) -> int[]:
+    return parallel.map(score, sheets, rules)      # == [for s in sheets yield score(s, rules)]
 
-def totals(board: Board) -> int:
+func totals(board: Board) -> int:
     with parallel.group() as g:
-        nets = g.submit(count_nets, board)
-        parts = g.submit(count_parts, board)
-    return nets.result() + parts.result()           # the block waited for both
+        const nets = g.submit(count_nets, board)
+        const parts = g.submit(count_parts, board)
+        return nets.result() + parts.result()     # the group joins before returning
 ```
 
 - **`parallel` is an embedded standard module** (`import parallel`), typed by the checker the way the prelude builtins are. mylang has no variadic parameters, so `map` and `submit` cannot be ordinary generic functions.
 - **`parallel.map(fn, items, *context)`.**
-  - `items` is a `list[T]`, and there are 0 to 5 `context` arguments.
+  - `items` is a `T[]`, and there are 0 to 5 `context` arguments.
   - `fn` takes `(T, *context)` and returns `R`.
-  - The result is a `list[R]` **equal to `[fn(x, *context) for x in items]`**.
-  - There is no special error handling: a `Result`-returning `fn` gives a `list[Result[R, E]]`.
+  - The result is an `R[]` **equal to `[for x in items yield fn(x, *context)]`**.
+  - There is no special error handling: a `Result`-returning `fn` gives a `Result[R, E][]`.
 - **`parallel.group()`** is valid only as a `with` item.
-  - The block's end waits for every task submitted in it, on every exit path: falling off the end, `return`, `break`, `continue` and `?`.
+  - The block's end waits for every task submitted in it, on every exit path: falling off the end, `return`, `break`, `continue` and `try`.
 - **`g.submit(fn, *args)`** takes 0 to 6 arguments and returns a `parallel.Task[R]`.
   - `t.result()` returns `R`, **equal to `fn(*args)`**.
   - Inside the block, `result()` waits for the task, running other tasks meanwhile. After the block it returns at once.

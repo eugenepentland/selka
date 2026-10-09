@@ -1,9 +1,8 @@
-module managed_values_case_5
 
 
-public def program() -> i64:
-    a: list[i64] = []
-    b: list[i64] = []
+public func program() -> i64:
+    mut a: i64[] = []
+    mut b: i64[] = []
     a.append(42)
     b.append(42)
     if a == b:

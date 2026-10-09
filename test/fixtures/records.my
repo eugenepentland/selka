@@ -9,15 +9,15 @@ record Segment:
     visible: bool
 
 
-def move(point: Point, dx: int) -> Point:
-    moved = point
+func move(point: Point, dx: int) -> Point:
+    mut moved = point
     moved.x = point.x + dx
     return moved
 
 
-def main() -> int:
-    origin = Point(y=2, x=3)
-    segment = Segment(start=origin, end=move(origin, 4), visible=True)
+func main() -> int:
+    mut origin = Point(y=2, x=3)
+    mut segment = Segment(start=origin, end=move(origin, 4), visible=True)
     if segment.visible:
         return segment.start.x + segment.end.x + segment.end.y
     return 0

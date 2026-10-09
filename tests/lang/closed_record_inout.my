@@ -1,5 +1,5 @@
 record Runtime:
-    data: list[int]
+    data: int[]
     top: int
 
 
@@ -8,33 +8,33 @@ record Interpreter:
     tag: int
 
 
-def update(rt: mut Runtime, index: int, value: int):
+func update(mut rt: Runtime, index: int, value: int):
     rt.data[index] = value
     rt.top += 1
 
 
-def carrier(it: mut Interpreter, index: int, value: int):
-    rt = it.rt
+func carrier(mut it: Interpreter, index: int, value: int):
+    mut rt = it.rt
     update(mut rt, index, value)
     it.rt = rt
 
 
-def replace(rt: mut Runtime, value: int):
+func replace(mut rt: Runtime, value: int):
     if value < 0:
         return
-    rt = Runtime([value], 2)
+    rt = Runtime(data=[value], top=2)
 
 
-def replacement(it: mut Interpreter, value: int):
-    rt = it.rt
+func replacement(mut it: Interpreter, value: int):
+    mut rt = it.rt
     replace(mut rt, value)
     it.rt = rt
 
 
-public def test_closed_carrier_preserves_snapshots_detached_aliases_and_record_rebinding() -> bool:
-    it = Interpreter(Runtime([1, 2], 0), 9)
-    saved = it
-    alias = it.rt.data
+public func test_closed_carrier_preserves_snapshots_detached_aliases_and_record_rebinding() -> bool:
+    mut it = Interpreter(rt=Runtime(data=[1, 2], top=0), tag=9)
+    mut saved = it
+    mut alias = it.rt.data
     carrier(mut it, -1, 7)
     assert it.rt.data == [1, 7] and it.rt.top == 1
     assert saved.rt.data == [1, 2] and saved.rt.top == 0
@@ -44,6 +44,6 @@ public def test_closed_carrier_preserves_snapshots_detached_aliases_and_record_r
     return it.rt.data == [11] and it.rt.top == 2 and alias == [1, 2]
 
 
-def main() -> int:
+func main() -> int:
     assert test_closed_carrier_preserves_snapshots_detached_aliases_and_record_rebinding()
     return 0

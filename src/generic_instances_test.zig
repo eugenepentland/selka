@@ -40,7 +40,7 @@ test "generic instances distinguish nominal types with identical representation"
         \\    pass
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     );
     defer compilation.deinit();

@@ -7,15 +7,15 @@ const options = @import("core_test_options");
 const report = std.debug.print;
 
 const selected =
-    \\def scan(text: str) -> str:
-    \\    out = ""
+    \\func scan(text: str) -> str:
+    \\    mut out = ""
     \\    for ch in text:
     \\        if ch == "é" or "\0" == ch:
     \\            out += ch
     \\        elif ch != "🙂":
     \\            out += ch
     \\    return out
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return len(scan("aé\0🙂"))
 ;
 
@@ -87,11 +87,11 @@ test "scalar fusion decodes valid literals but preserves extern authority and ma
 
 const fallback = [_][]const u8{
     "    return ch\n",
-    "    values = [ch]\n    return values[0]\n",
+    "    const values = [ch]\n    return values[0]\n",
     "    return identity(ch)\n",
-    "    selected = ch if len(text) > 1 else \"!\"\n    return selected\n",
+    "    const selected = if len(text) > 1 then ch else \"!\"\n    return selected\n",
     "    text += ch\n    return text\n",
-    "    return \"yes\" if ch == \"éx\" else \"no\"\n",
+    "    return if ch == \"éx\" then \"yes\" else \"no\"\n",
 };
 
 // spec-case: NEW-CORE-TEXT-BYTES-1
@@ -100,7 +100,8 @@ test "scalar fusion leaves storage calls returns phis self appends and multiscal
     defer arena.deinit();
     const a = arena.allocator();
     for (fallback) |body| {
-        const source = try std.fmt.allocPrint(a, "def identity(text: str) -> str:\n    return text\ndef scan(text: str) -> str:\n    ch = text[0]\n{s}def main() -> int:\n    return len(scan(\"éx\"))\n", .{body});
+        const source = try std.fmt.allocPrint(a, "func identity(text: str) -> str:\n    return text\nfunc scan(source: str) -> str:\n    mut text = source\n    const ch = text[0]\n" ++
+            "{s}func main() -> int:\n    return len(scan(\"éx\"))\n", .{body});
         var refusal: @import("build.zig").Refusal = .{};
         const module = try support.buildSource(a, source, &refusal);
         try std.testing.expectEqual(@as(usize, 1), count(&module, .str_char));

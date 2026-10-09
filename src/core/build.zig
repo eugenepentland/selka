@@ -213,10 +213,10 @@ const ModuleBuilder = struct {
     /// a record of that value (unless it is `unit`) followed by each `mut` parameter's final
     /// value in parameter order. The caller writes those values back into its places, which
     /// is the `inout` of a `mut` parameter done by value (docs/design/new-core-s1.md §7).
-    fn returnType(self: *ModuleBuilder, function: typed.Function, declared: ir.Type, params: []const ir.Type, span: u32) Error!ir.Type {
+    fn returnType(self: *ModuleBuilder, function: typed.Function, declared: ir.Type, params: []const ir.Type, _: u32) Error!ir.Type {
         const mutated = function.signature.declared_mutates;
         if (mutated.len == 0) return declared;
-        if (function.signature.mutates.len != mutated.len) return self.refuse("inferred mut parameter", span);
+        // Declared permissions define inout even when a branch performs no write.
         var parts: std.ArrayList(ir.Type) = .empty;
         defer parts.deinit(self.allocator);
         if (declared != .void) try parts.append(self.allocator, declared);
@@ -1274,7 +1274,7 @@ const FnBuilder = struct {
                 if (self.function.inst(value).ty == .f64 or self.function.inst(value).ty == try self.typeOf(id)) return value;
                 return self.mb.refuse("unwrap", span);
             },
-            .call => |c| return self.call(c.function, c.arguments, if (c.evaluation) |e| e.body else null, span),
+            .call => |c| return self.call(c.function, c.arguments, if (c.evaluation) |e| e.body else null, c.evaluation_order, span),
             .buffer_operation => |operation| return self.bufferOperation(operation, try self.typeOf(id), span, out),
             .acquire_buffer => |acquire| {
                 var capacity = try self.expression(acquire.capacity);
@@ -1314,7 +1314,7 @@ const FnBuilder = struct {
                 const index = try self.mb.functionIndex(callee);
                 return self.detached(.{ .op = .func_ref, .ty = try self.typeOf(id), .data = index, .span = span });
             },
-            .invoke => |invocation| return self.invoke(invocation.callee, invocation.arguments, span),
+            .invoke => |invocation| return self.invoke(invocation.callee, invocation.arguments, if (invocation.evaluation) |evaluation| evaluation.body else null, invocation.evaluation_order, span),
             .replace => |replacement| return self.arrayReplace(replacement, span),
             .propagate => |try_value| return self.tryValue(try_value.value, try_value.output, span),
             .print => |print| return self.printNode(print, span),
@@ -1496,6 +1496,12 @@ const FnBuilder = struct {
             _ = try self.emit(.{ .op = .err_trace, .ty = .void, .a = naming, .data = @backingInt(if (converted) ir.TraceMode.converted else ir.TraceMode.append), .span = span });
             var error_value = try self.payloadOf(input, shape.error_tag, span);
             if (converted) {
+                if (typed.wrappingRecord(records, wanted.error_type, case, shape.error_type)) |record| {
+                    const payload_type = try self.mb.mapType(record, span);
+                    const field_type = self.mb.module.compound(payload_type).record[0];
+                    const field = try self.boxFor(field_type, error_value, span);
+                    error_value = try self.emit(.{ .op = .record_make, .ty = payload_type, .data = try self.extraSlice(&.{field}), .span = span });
+                }
                 const union_type = try self.mb.mapType(wanted.error_type, span);
                 const stored = self.mb.module.compound(union_type).@"union"[case];
                 error_value = try self.emit(.{ .op = .union_make, .ty = union_type, .a = try self.boxFor(stored, error_value, span), .data = case, .span = span });
@@ -1910,18 +1916,18 @@ const FnBuilder = struct {
 
     /// A call. `evaluation` is the checker's block that binds the arguments of a keyword call
     /// to temporaries in source order; it runs first and the arguments read the temporaries.
-    fn call(self: *FnBuilder, callee: typed.FunctionId, argument_nodes: []const typed.NodeId, evaluation: ?typed.StatementId, span: u32) Error!ir.Ref {
+    fn call(self: *FnBuilder, callee: typed.FunctionId, argument_nodes: []const typed.NodeId, evaluation: ?typed.StatementId, order: []const usize, span: u32) Error!ir.Ref {
         const checked_function = self.mb.input.program.functions[@backingInt(callee)];
         if (checked_function.policy.host != null and !checked_function.policy.c_abi) return @import("build_host.zig").call(self, checked_function, argument_nodes, evaluation, span);
         const index = try self.mb.functionIndex(callee);
         const declared = self.mb.input.program.functions[@backingInt(callee)].signature;
         const target: ir.Inst = .{ .op = .call, .a = @fromBackingInt(index), .ty = self.mb.module.functions.items[index].signature.ret };
-        const contract: CallContract = .{ .evaluation = evaluation, .mutated = declared.declared_mutates, .declared = declared.return_type };
+        const contract: CallContract = .{ .evaluation = evaluation, .order = order, .mutated = declared.declared_mutates, .declared = declared.return_type };
         return self.callTarget(target, argument_nodes, contract, span);
     }
 
     /// Invoke a top-level function value with the same copy-in/copy-out mut ABI.
-    fn invoke(self: *FnBuilder, callee: typed.NodeId, arguments: []const typed.NodeId, span: u32) Error!ir.Ref {
+    fn invoke(self: *FnBuilder, callee: typed.NodeId, arguments: []const typed.NodeId, evaluation: ?typed.StatementId, order: []const usize, span: u32) Error!ir.Ref {
         const target = try self.expression(callee);
         if (self.current == null) return .none;
         const checked_ty = self.nodeOf(callee).ty;
@@ -1929,10 +1935,39 @@ const FnBuilder = struct {
         const signature = self.mb.module.compound(self.typeOfRef(target)).@"fn";
         var inst: ir.Inst = .{ .op = .call_indirect, .a = target, .ty = signature.ret };
         build_fn.directTarget(&self.function, &inst);
-        return self.callTarget(inst, arguments, .{ .mutated = callback.mutates, .declared = callback.return_type }, span);
+        return self.callTarget(inst, arguments, .{ .evaluation = evaluation, .order = order, .mutated = callback.mutates, .declared = callback.return_type }, span);
     }
 
-    const CallContract = struct { evaluation: ?typed.StatementId = null, mutated: []const u16, declared: typed.Type };
+    const CallContract = struct { order: []const usize = &.{}, evaluation: ?typed.StatementId = null, mutated: []const u16, declared: typed.Type };
+
+    /// Guard captured mut paths after argument evaluation, before entering the callee.
+    fn guardMutPlaces(self: *FnBuilder, places: []const Place, span: u32) Error!void {
+        for (places, 0..) |first, index| {
+            for (places[index + 1 ..]) |second| {
+                if (first.root != second.root) continue;
+                var overlaps = try self.constant(.bool, 1);
+                for (first.steps[0..@min(first.steps.len, second.steps.len)], second.steps[0..@min(first.steps.len, second.steps.len)]) |a, b| {
+                    const same = switch (a) {
+                        .field => |field| if (b == .field) try self.constant(.bool, @intFromBool(field == b.field)) else try self.constant(.bool, 1),
+                        .payload => |tag| if (b == .payload) try self.constant(.bool, @intFromBool(tag == b.payload)) else try self.constant(.bool, 1),
+                        .element => |element| if (b == .element) try self.equal(element, b.element, span) else try self.constant(.bool, 1),
+                        .mapping => |mapping_key| if (b == .mapping) try self.equal(mapping_key, b.mapping, span) else try self.constant(.bool, 1),
+                    };
+                    overlaps = try self.emit(.{ .op = .bit_and, .ty = .bool, .a = overlaps, .b = same, .span = span });
+                }
+                const failed = try self.newBlock();
+                const passed = try self.newBlock();
+                try self.branch(overlaps, failed, passed, span);
+                try self.seal(failed);
+                try self.seal(passed);
+                self.current = failed;
+                const message = self.mb.module.strings.items.len;
+                try self.mb.module.strings.append(self.allocator(), "overlapping mut arguments");
+                _ = try self.emit(.{ .op = .@"unreachable", .ty = .void, .data = flags.assertion_trap | message, .span = span });
+                self.current = passed;
+            }
+        }
+    }
 
     /// Lower arguments in source order and write mut results back to their captured places.
     fn callTarget(self: *FnBuilder, target: ir.Inst, argument_nodes: []const typed.NodeId, contract: CallContract, span: u32) Error!ir.Ref {
@@ -1955,7 +1990,10 @@ const FnBuilder = struct {
         // A later whole-root mutation supersedes publication even if its body preserves the leaf.
         const places = try self.allocator().alloc(Place, mutated.len);
         const values = try self.allocator().alloc(ir.Ref, argument_nodes.len);
-        for (argument_nodes, values, 0..) |argument, *value, position| {
+        for (0..argument_nodes.len) |written_position| {
+            const position = if (contract.order.len == 0) written_position else contract.order[written_position];
+            const argument = argument_nodes[position];
+            const value = &values[position];
             const slot = std.mem.indexOfScalar(u16, mutated, @intCast(position));
             if (slot != null and self.isView(self.nodeOf(argument).ty)) return self.mb.refuse("mut live dictionary view argument", span);
             var place: ?Place = null;
@@ -1975,6 +2013,7 @@ const FnBuilder = struct {
                 values[position] = try build_capture.refresh(@TypeOf(self), self, place, values[position], span);
             } else values[position] = try self.readPlace(place.*, span);
         }
+        try self.guardMutPlaces(places, span);
         self.captures.items.len = first_capture;
         self.capture_slots.items.len = first_slot;
         // A `unit` argument is evaluated for its effects and not passed.

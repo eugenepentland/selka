@@ -5,9 +5,9 @@ const language = @import("compiler.zig");
 const native = @import("native_execute.zig");
 const fixture = @import("stdlib_fixture.zig");
 const source =
-    "module main\nimport sort\n" ++
-    "def main() -> int:\n" ++
-    "    ordered = sort.sort_ints([9, 1, 4])\n" ++
+    "import sort\n" ++
+    "func main() -> int:\n" ++
+    "    mut ordered = sort.sort_ints([9, 1, 4])\n" ++
     "    return ordered[0] + ordered[2]\n";
 fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) language.project.ReadError![]u8 {
     if (!std.mem.eql(u8, path, "main.my")) return error.NotFound;
@@ -33,34 +33,36 @@ test "standard modules remain inside the total project byte budget" {
 
 // spec: STANDARD-MODULES-7
 test "standard generic results cannot be silently ignored" {
-    try fixture.reject(t.allocator, "module main\nimport strings\ndef main() -> int:\n    strings.repeat(\"a\", 2)\n    return 0\n");
-    try fixture.reject(t.allocator, "module main\nimport time\ndef main() -> int:\n    time.seconds(1)\n    return 0\n");
+    try fixture.reject(t.allocator, "import strings\nfunc main() -> int:\n    strings.repeat(\"a\", 2)\n    return 0\n");
+    try fixture.reject(t.allocator, "import time\nfunc main() -> int:\n    time.seconds(1)\n    return 0\n");
 }
 
 // spec-case: STANDARD-MODULES-1
 test "standard fixture helpers report every assertion failure through declared errors" {
-    const ordering = "module main\nimport sort\ndef main() -> int:\n    return sort.sort_ints([1, 2])[0]\n";
+    const ordering = "import sort\nfunc main() -> int:\n    return sort.sort_ints([1, 2])[0]\n";
     try t.expectError(error.TestExpectedEqual, fixture.run(t.allocator, ordering, 41));
-    const bounds = "module main\nimport sort\ndef main() -> int:\n    return sort.sort_ints([1])[5]\n";
+    const bounds = "import sort\nfunc main() -> int:\n    return sort.sort_ints([1])[5]\n";
     try t.expectError(error.TestUnexpectedResult, fixture.run(t.allocator, bounds, 0));
     try t.expectError(error.TestExpectedError, fixture.reject(t.allocator, ordering));
-    try fixture.reject(t.allocator, "module main\nimport sort\ndef main() -> int:\n    return sort.sort_ints([1])\n");
+    try fixture.reject(t.allocator, "import sort\nfunc main() -> int:\n    return sort.sort_ints([1])\n");
 }
 
 // spec-case: STANDARD-MODULES-1
 test "standard modules compose with one another inside a single project" {
-    try fixture.run(t.allocator, "module main\nimport json\nimport base64\nimport path\n" ++
-        "def main() -> int:\n" ++
-        "    encoded = base64.b64encode(path.basename(\"/tmp/answer.txt\").encode())\n" ++
+    try fixture.run(t.allocator, "import json\n" ++
+        "import base64\n" ++
+        "import path\n" ++
+        "func main() -> int:\n" ++
+        "    mut encoded = base64.b64encode(path.basename(\"/tmp/answer.txt\").encode())\n" ++
         "    match encoded.decode():\n" ++
         "        case Ok(text):\n" ++
-        "            fields: dict[str, json.Json] = {}\n" ++
+        "            mut fields: dict[str, json.Json] = {}\n" ++
         "            return rendered(text, mut fields)\n" ++
         "        case Err(_):\n" ++
         "            return 1\n" ++
-        "def rendered(text: str, fields: mut dict[str, json.Json]) -> int:\n" ++
+        "func rendered(text: str, mut fields: dict[str, json.Json]) -> int:\n" ++
         "    fields[\"name\"] = json.text(text)\n" ++
-        "    document = json.dumps(json.object(fields))\n" ++
+        "    mut document = json.dumps(json.object(fields))\n" ++
         "    if document != \"{\\\"name\\\":\\\"YW5zd2VyLnR4dA==\\\"}\":\n" ++
         "        return 2\n" ++
         "    return len(document) + 15\n", 42);
@@ -69,13 +71,12 @@ test "standard modules compose with one another inside a single project" {
 // spec: NETWORK-SURFACE-1
 test "the network module wraps acquisition and one linear I/O operation" {
     const program_text =
-        \\module main
         \\import network
-        \\def main(net: Network) -> int:
-        \\    scoped = net.host("127.0.0.1:8000")
+        \\func main(net: Network) -> int:
+        \\    mut scoped = net.host("127.0.0.1:8000")
         \\    match network.connect(scoped):
         \\        case network.Connected.ok(connection):
-        \\            payload: [4]u8 = b"ping"
+        \\            mut payload: FixedArray[u8, 4] = b"ping"
         \\            match network.write(connection, payload):
         \\                case network.Written.ok(_):
         \\                    return 0

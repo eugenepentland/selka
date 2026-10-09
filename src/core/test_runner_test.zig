@@ -12,33 +12,33 @@ const report = @import("test_runner_report.zig");
 const runner = @import("test_runner.zig");
 
 const discovery_source =
-    \\public def test_public_with_a_parameter(x: int) -> bool:
+    \\public func test_public_with_a_parameter(x: int) -> bool:
     \\    return x == x
     \\
     \\
-    \\def test_private_with_a_parameter(x: int) -> bool:
+    \\func test_private_with_a_parameter(x: int) -> bool:
     \\    return x == x
     \\
     \\
-    \\def test_private_zero_arguments() -> bool:
+    \\func test_private_zero_arguments() -> bool:
     \\    return True
     \\
     \\
-    \\def test_private_result() -> Result[bool, str]:
+    \\func test_private_result() -> Result[bool, str]:
     \\    return Ok(True)
     \\
     \\
     \\@test
-    \\def marked_result() -> Result[bool, str]:
+    \\func marked_result() -> Result[bool, str]:
     \\    return Ok(True)
     \\
     \\
-    \\public def test_stream_stand_in(err: Stream) -> bool:
+    \\public func test_stream_stand_in(err: Stream) -> bool:
     \\    err.print(1)
     \\    return True
     \\
     \\
-    \\def helper() -> bool:
+    \\func helper() -> bool:
     \\    return True
     \\
 ;
@@ -81,11 +81,11 @@ test "a filter without a wildcard is a substring of the qualified name, otherwis
 }
 
 const two_tests =
-    \\def test_first() -> bool:
+    \\func test_first() -> bool:
     \\    return 1 + 1 == 2
     \\
     \\
-    \\def test_second(out: Stream) -> bool:
+    \\func test_second(out: Stream) -> bool:
     \\    out.print(2)
     \\    return True
     \\

@@ -3,17 +3,17 @@ const std = @import("std");
 const support = @import("test_support.zig");
 
 const numeric_source =
-    \\def shifted(x: u8, count: u8) -> u8:
+    \\func shifted(x: u8, count: u8) -> u8:
     \\    return shift_right(x, count)
-    \\def saturated(x: i8) -> i8:
+    \\func saturated(x: i8) -> i8:
     \\    return saturating_add(x, 100i8)
-    \\def multiplied(x: i8) -> i8:
+    \\func multiplied(x: i8) -> i8:
     \\    return saturating_mul(x, -100i8)
-    \\def subtracted(x: u64) -> u64:
+    \\func subtracted(x: u64) -> u64:
     \\    return saturating_sub(x, 100u64)
-    \\def transformed(x: float) -> float:
+    \\func transformed(x: float) -> float:
     \\    return sqrt(abs(x)) + trunc(x) + floor(x) + ceil(x)
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return int(transformed(float(shifted(200u8, 2u8)))) + int(saturated(40i8)) + int(multiplied(2i8)) + int(subtracted(5u64))
 ;
 

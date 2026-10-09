@@ -179,7 +179,7 @@ fn byteLiteralType(comptime Checker: type, self: *Checker, node: ast.Node) Error
     return collections.preludeType(&self.catalog, "bytes", node.span);
 }
 fn checkTextLiteral(comptime Checker: type, self: *Checker, node: ast.Node, bytes: []const u8, out: *typed.Node) Error!void {
-    out.ty = if (node.data == .text) try self.ty(node.span) else self.expected_types.get(node.span) orelse try byteLiteralType(Checker, self, node);
+    out.ty = if (node.data == .text) try collections.preludeType(&self.catalog, "str", node.span) else self.expected_types.get(node.span) orelse try byteLiteralType(Checker, self, node);
     if (out.ty.isAggregate() and self.catalog.records[out.ty.recordIndex()].collection.kind == .bytes) {
         out.data = .{ .array = try byteValues(Checker, self, bytes, node.span) };
         return;

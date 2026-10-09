@@ -1,2 +1,2 @@
-def main(fs: Filesystem) -> Result[None, str]:
+func main(fs: Filesystem) -> Result[Unit, str]:
     return Err("bad")

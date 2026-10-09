@@ -8,6 +8,7 @@
 const sema_shared = @import("sema_shared.zig");
 const collections = @import("collection_lower.zig");
 const option_flow = @import("option_flow.zig");
+const frontend_failures = @import("frontend_failures.zig");
 const call_arguments = @import("call_arguments.zig");
 const external_resources = @import("external_resources.zig");
 const file_operations = @import("file_operations.zig");
@@ -163,9 +164,8 @@ fn functionValue(comptime Checker: type, self: *Checker, name: source.Span, out:
     for (function.signature.parameters, parameters) |input, *parameter| {
         parameter.* = try self.catalog.resolve(self.src, input.ty, self.sink);
     }
-    for (function.signature.mut_positions) |position| if (position < parameters.len and typed.referenceMut(self.catalog.records, parameters[position]))
-        return self.sink.fail(callback_type_code, name, "a function with a `mut` fixed-array or record parameter writes the caller's own variable and cannot be used as a value; call it directly");
-    const result = try self.catalog.resolve(self.src, function.signature.return_type, self.sink);
+    const success = try self.catalog.resolve(self.src, function.signature.return_type, self.sink);
+    const result = if (function.signature.failure_type) |failure| try frontend_failures.resultType(&self.catalog, self.allocator, success, try self.catalog.resolve(self.src, failure, self.sink), name, self.sink) else success;
     const expected_type = self.expected_types.get(name);
     const destination = if (expected_type) |expected| callables.signature(expected, self.catalog.records) else null;
     // An unannotated function value fills any callback slot: use the declared
@@ -176,6 +176,7 @@ fn functionValue(comptime Checker: type, self: *Checker, name: source.Span, out:
         if (slot.return_type == result and std.mem.eql(typed.Type, slot.parameters, parameters)) allowed = slot.effects;
     };
     const implementation: typed.Callable = .{
+        .labels = try callables.functionLabels(self.allocator, self.src, function.signature.parameters),
         .parameters = parameters,
         .return_type = result,
         .effects = allowed,
@@ -197,23 +198,62 @@ fn functionValue(comptime Checker: type, self: *Checker, name: source.Span, out:
     out.data = .{ .function_value = self.ordinary_ids[@backingInt(declaration)] orelse return error.InternalError };
     return true;
 }
+const CallbackBinding = struct { call: @FieldType(@FieldType(ast.Node, "data"), "call"), parameters: []const ast.Parameter };
+fn bindCallback(comptime Checker: type, self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call"), contract: typed.Callable) Error!CallbackBinding {
+    if (call.type_arguments.len != 0 or call.arguments.len != contract.parameters.len) return self.sink.fail("E_ARITY", call.name, "callback argument count must match its signature");
+    const values = try self.allocator.alloc(ast.NodeId, call.arguments.len);
+    const order = try self.allocator.alloc(usize, call.arguments.len);
+    const parameters = try self.allocator.alloc(ast.Parameter, call.arguments.len);
+    const filled = try self.allocator.alloc(bool, call.arguments.len);
+    @memset(filled, false);
+    for (parameters, 0..) |*parameter, index| parameter.* = .{
+        .name = call.name,
+        .ty = call.name,
+        .mut = markerPositionDeclared(contract.mutates, @intCast(index)),
+        .named = index < contract.labels.len and contract.labels[index].len != 0,
+    };
+    for (call.arguments, 0..) |argument, index| {
+        const label = if (call.argument_names.len != 0) call.argument_names[index] else null;
+        const target = if (label) |name| blk: {
+            for (contract.labels, 0..) |candidate, position| if (candidate.len != 0 and std.mem.eql(u8, candidate, self.src.text(name))) break :blk position;
+            return self.sink.fail("E_CALL_ARGUMENT", name, "keyword names no named callback parameter");
+        } else index;
+        if (target >= parameters.len or filled[target]) return self.sink.fail("E_CALL_ARGUMENT", call.name, "callback parameter receives more than one argument");
+        if (label == null and parameters[target].named) return self.sink.fail("E_KEYWORD_ONLY", self.syntax.nodes.items[@backingInt(argument)].span, "callback parameter must be supplied by name");
+        filled[target] = true;
+        values[target] = argument;
+        order[index] = target;
+    }
+    var bound = call;
+    bound.arguments = values;
+    bound.argument_names = &.{};
+    bound.evaluation_order = order;
+    return .{ .call = bound, .parameters = parameters };
+}
 fn indirectCall(comptime Checker: type, self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), out: *typed.Node) Error!void {
     const slot = try self.resolve(call.name);
     const contract = callables.signature(self.locals.items[@backingInt(slot)].ty, self.catalog.records) orelse return self.sink.fail(callback_type_code, call.name, "called local is not a function value");
-    if (call.type_arguments.len != 0 or call.arguments.len != contract.parameters.len) return self.sink.fail("E_ARITY", call.name, "callback argument count must match its signature");
-    try checkMutationMarkers(Checker, self, call.name, call.arguments, contract.mutates);
+    const binding = try bindCallback(Checker, self, call, contract);
+    try checkMutationMarkers(Checker, self, call.name, binding.call.arguments, contract.mutates);
     self.locals.items[@backingInt(slot)].usage.reads += 1;
     const callee: typed.NodeId = @fromBackingInt(self.nodes.items.len);
     try self.nodes.append(self.allocator, .{ .span = call.name, .ty = self.locals.items[@backingInt(slot)].ty, .data = .{ .local = slot } });
-    var arguments: std.ArrayList(typed.NodeId) = .empty;
-    for (call.arguments, contract.parameters) |input, expected| {
-        const value = self.resolved[@backingInt(input)].?;
-        try self.require(self.nodes.items[@backingInt(value)].ty, expected, node.span);
-        try arguments.append(self.allocator, value);
+    const arguments = try self.allocator.alloc(typed.NodeId, contract.parameters.len);
+    for (binding.call.arguments, contract.parameters, arguments) |input, expected, *argument| {
+        const value = try self.expressionExpected(input, expected);
+        try self.require(self.nodes.items[@backingInt(value)].ty, expected, self.syntax.nodes.items[@backingInt(input)].span);
+        argument.* = value;
     }
     out.ty = contract.return_type;
-    out.data = .{ .invoke = .{ .callee = callee, .arguments = try arguments.toOwnedSlice(self.allocator) } };
+    out.data = .{ .invoke = .{ .callee = callee, .arguments = arguments } };
+    try (@import("call_evaluation.zig").Context{
+        .storage = .{ .nodes = &self.nodes, .locals = &self.locals, .statements = &self.statements },
+        .span = node.span,
+        .call = binding.call,
+        .parameters = binding.parameters,
+    }).apply(self.allocator, &out.data.invoke);
 }
+
 /// Check a bare name: a constant-length type parameter, a local read (rejecting an
 /// arena binding or a consumed owned value), or a function used as a value.
 fn checkName(comptime Checker: type, self: *Checker, node: ast.Node, name: @FieldType(@FieldType(ast.Node, "data"), "name"), out: *typed.Node) Error!void {
@@ -226,7 +266,7 @@ fn checkName(comptime Checker: type, self: *Checker, node: ast.Node, name: @Fiel
             return;
         }
     }
-    if (self.active.get(self.src.text(name))) |bound| if (self.locals.items[@backingInt(bound)].ty.isFile()) return self.sink.fail(
+    if (self.active.get(self.src.text(name))) |bound| if (self.locals.items[@backingInt(bound)].ownership.scoped_file) return self.sink.fail(
         eWithResource,
         name,
         "an open file binding cannot be stored, passed or returned; call its methods instead, and iterate lines with `for line in name.readlines():`",
@@ -329,7 +369,7 @@ fn checkByteConversion(comptime Checker: type, self: *Checker, node: ast.Node, c
     }
     const integer_list = schema != null and schema.?.managed and schema.?.collection.kind == .list and schema.?.shape.buffer == .i64;
     if (conversion == .buffer_from_list) {
-        if (!integer_list) return self.sink.fail(eByteConversion, node.span, "byte_buffer() requires a list[int] argument");
+        if (!integer_list) return self.sink.fail(eByteConversion, node.span, "byte_buffer() requires an int[] argument");
         out.ty = try collections.preludeType(&self.catalog, byte_buffer_name, node.span);
         out.data = .{ .cast = value };
         return;
@@ -342,7 +382,7 @@ fn checkByteConversion(comptime Checker: type, self: *Checker, node: ast.Node, c
         out.data = .{ .cast = value };
         return;
     }
-    if (!integer_list) return self.sink.fail(eByteConversion, node.span, "bytes() requires a list[int] or byte_buffer argument");
+    if (!integer_list) return self.sink.fail(eByteConversion, node.span, "bytes() requires an int[] or byte_buffer argument");
     out.ty = self.catalog.names.get("bytes") orelse return error.InternalError;
     out.data = .{ .cast = value };
 }
@@ -611,13 +651,24 @@ fn checkRecordUpdate(comptime Checker: type, self: *Checker, node: ast.Node, inp
     out.ty = record_type;
     out.data = .{ .update = .{ .base = base, .fields = try self.fields(record_type, initializers, false, node.span) } };
 }
+fn callReturnType(comptime Checker: type, self: *Checker, function: typed.FunctionId, signature: ast.Function, success: typed.Type) Error!typed.Type {
+    const failure = signature.signature.failure_type orelse return success;
+    return frontend_failures.resultType(&self.catalog, self.allocator, success, try self.functionType(function, failure), signature.name, self.sink);
+}
+const SortInput = struct { node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), slot: typed.LocalId };
+fn checkWritableSort(comptime Checker: type, self: *Checker, input: SortInput, out: *typed.Node) Error!void {
+    if (!self.locals.items[@backingInt(input.slot)].mutable) return self.sink.fail(eImmutable, input.call.owner.?, "sorting requires a writable collection binding");
+    self.option_facts.forget(@backingInt(input.slot));
+    return self.checkListSort(input.node, input.call, input.slot, out);
+}
+
 fn checkCall(comptime Checker: type, self: *Checker, node: ast.Node, input: @FieldType(@FieldType(ast.Node, "data"), "call"), out: *typed.Node) Error!void {
     // A call carrying a `mut` marker must resolve to a declared function or a
     // callable value: only those expose a `mut` parameter set. Skipping the
     // builtin and constructor dispatch for such a call routes it through the
     // ordinary resolution below, where the marker is checked positionally
     // instead of silently accepted and dropped.
-    if (self.listSortOwner(input)) |slot| return self.checkListSort(node, input, slot, out);
+    if (self.listSortOwner(input)) |slot| return checkWritableSort(Checker, self, .{ .node = node, .call = input, .slot = slot }, out);
     const markers_present = callCarriesMutMarker(Checker, self, input);
     if (!markers_present) {
         if (try checkCapabilityNarrowing(Checker, self, node, input, out)) return;
@@ -660,10 +711,8 @@ fn checkCall(comptime Checker: type, self: *Checker, node: ast.Node, input: @Fie
         }
     }
     if (try recordUpdateCall(Checker, self, input)) return checkRecordUpdate(Checker, self, node, input, out);
-    if (input.owner == null and self.active.contains(self.src.text(input.name))) {
-        try call_arguments.positional(input, self.sink);
+    if (input.owner == null and self.active.contains(self.src.text(input.name)))
         return indirectCall(Checker, self, node, input, out);
-    }
     const target = try self.callDeclaration(input, node.span);
     const call = target.call;
     const function = try self.specialize(target.declaration, call, node.span);
@@ -679,7 +728,8 @@ fn checkCall(comptime Checker: type, self: *Checker, node: ast.Node, input: @Fie
         try self.require(self.nodes.items[@backingInt(value)].ty, expected, argument.span);
         try arguments.append(self.allocator, value);
     }
-    out.ty = try self.functionType(function, signature.signature.return_type);
+    const success = try self.functionType(function, signature.signature.return_type);
+    out.ty = try callReturnType(Checker, self, function, signature, success);
     out.data = .{ .call = .{ .function = function, .arguments = try arguments.toOwnedSlice(self.allocator) } };
     try (@import("call_evaluation.zig").Context{
         .storage = .{ .nodes = &self.nodes, .locals = &self.locals, .statements = &self.statements },
@@ -771,19 +821,8 @@ fn checkMutationMarkers(comptime Checker: type, self: *Checker, call_name: sourc
 /// `mut` array parameter being passed on. A field or element is a part of
 /// some other value, and the call would have nowhere of its own to write.
 fn requireArrayMarkerTarget(comptime Checker: type, self: *Checker, argument: ast.NodeId, target: ast.Node) Error!void {
-    const checked = self.resolved[@backingInt(argument)] orelse return;
-    const node = self.nodes.items[@backingInt(checked)];
-    if (!typed.referenceMut(self.catalog.records, node.ty)) return;
-    // VALUE-SEMANTICS-3: a `mut` record crosses as the caller's variable too.
-    const what = if (typed.referenceArray(self.catalog.records, node.ty)) "a fixed array" else "a record";
-    if (target.data != .name or node.data != .local) return self.sink.fail(
-        mutation_marker_code,
-        target.span,
-        try std.fmt.allocPrint(self.allocator, "`mut` on {s} passes a variable itself; copy the field or element into a local, pass `mut` that local, and store it back", .{what}),
-    );
-    if (!self.locals.items[@backingInt(node.data.local)].mutable) return self.sink.fail(eImmutable, target.span, try std.fmt.allocPrint(self.allocator, "`mut` on {s} requires a mutable binding", .{what}));
-    // The callee writes the variable itself (`PY-ARRAY-ITER-2` reads this).
-    self.locals.items[@backingInt(node.data.local)].usage.writes += 1;
+    try self.requireWritableRoot(argument);
+    if (target.data == .name) self.option_facts.forget(@backingInt(try self.resolve(target.data.name)));
 }
 /// The call's own source text with `mut ` inserted before argument `target`,
 /// so a missing-marker diagnostic carries the whole corrected call rather

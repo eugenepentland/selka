@@ -1,50 +1,49 @@
-module row_float_format
 
-extern def runtime_bench_now(host: Host) -> i64 effects(host)
+extern func runtime_bench_now(host: Host) -> i64 effects(host)
 
 
 # Row `float_format` of the S4 contract: every value becomes a fresh text with
 # `str(x)`, is folded byte by byte and released inside the batch.
-def fold(text: str) -> int:
-    h = 0
+func fold(text: str) -> int:
+    mut h = 0
     for c in text.encode():
         h = (h * 131 + c) % 1000000007
     return h
 
 
-def batch_result(size: int, batch: int, seed: int) -> int:
-    part = 0
+func batch_result(size: int, batch: int, seed: int) -> int:
+    mut part = 0
     for j in range(size):
-        k = (seed + batch + 13 * j) % 100003
-        x = k + 0.125 * (1 + j % 7)
-        text = str(x)
+        mut k = (seed + batch + 13 * j) % 100003
+        mut x = k + 0.125 * (1 + j % 7)
+        mut text = str(x)
         part = (part + fold(text) + len(text)) % 1000000007
     return part
 
 
-def parse_number(text: str) -> int:
-    match int(text):
+func parse_number(text: str) -> int:
+    match parse_int(text):
         case Some(n):
             return n
         case None:
             return 0
 
 
-def main(args: list[str], host: Host, out: Stream) -> int:
+func main(args: str[], host: Host, out: Stream) -> int:
     if len(args) != 3:
         return 2
-    size = parse_number(args[0])
-    iterations = parse_number(args[1])
-    seed = parse_number(args[2])
+    mut size = parse_number(args[0])
+    mut iterations = parse_number(args[1])
+    mut seed = parse_number(args[2])
     if size < 2 or iterations < 1 or seed < 1 or seed > 1000000:
         return 2
-    checksum = 0
-    start = runtime_bench_now(host)
+    mut checksum = 0
+    mut start = runtime_bench_now(host)
     for batch in range(iterations):
-        part = batch_result(size, batch, seed)
+        mut part = batch_result(size, batch, seed)
         if part < 0:
             return 2
         checksum = (checksum + part) % 1000000007
-    elapsed = runtime_bench_now(host) - start
+    mut elapsed = runtime_bench_now(host) - start
     out.print(checksum, elapsed)
     return 0

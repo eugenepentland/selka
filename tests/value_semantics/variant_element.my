@@ -1,52 +1,51 @@
-module variant_element
 
 
 record Payload:
-    items: list[int]
+    items: int[]
     number: int
 
 
-union Item:
-    payload: Payload,
+enum Item:
+    payload(value: Payload)
     empty
 
 
-def replace_after_match(items: mut list[Item], index: int) -> list[int]:
+func replace_after_match(mut items: Item[], index: int) -> int[]:
     match items[index]:
-        case Item.payload(old):
+        case Item.payload(value=old):
             items[index] = Item.empty
-            i = 0
+            mut i = 0
             while i < 80:
-                items.append(Item.payload(Payload([i], i)))
+                items.append(Item.payload(value=Payload(items=[i], number=i)))
                 i += 1
-            saved = old.items
+            mut saved = old.items
             saved.append(old.number)
             return saved
         case Item.empty:
             return []
 
 
-public def test_payload_survives_parent_replacement_growth_and_collection() -> bool:
-    items = [Item.payload(Payload([1, 2], 9))]
-    saved = replace_after_match(mut items, -1)
+public func test_payload_survives_parent_replacement_growth_and_collection() -> bool:
+    mut items = [Item.payload(value=Payload(items=[1, 2], number=9))]
+    mut saved = replace_after_match(mut items, -1)
     return saved == [1, 2, 9] and len(items) == 81 and items[0] == Item.empty
 
 
-def read_saved_after_replacement(items: mut list[Item]) -> int:
-    saved = items[0]
+func read_saved_after_replacement(mut items: Item[]) -> int:
+    mut saved = items[0]
     items[0] = Item.empty
     match saved:
-        case Item.payload(old):
+        case Item.payload(value=old):
             return old.number
         case Item.empty:
             return -1
 
 
-public def test_nonadjacent_dispatch_keeps_its_original_snapshot() -> bool:
-    items = [Item.payload(Payload([1], 7))]
+public func test_nonadjacent_dispatch_keeps_its_original_snapshot() -> bool:
+    mut items = [Item.payload(value=Payload(items=[1], number=7))]
     return read_saved_after_replacement(mut items) == 7 and items[0] == Item.empty
 
 
-public def test_empty_arm_copies_no_payload() -> bool:
-    items = [Item.empty]
+public func test_empty_arm_copies_no_payload() -> bool:
+    mut items = [Item.empty]
     return len(replace_after_match(mut items, 0)) == 0 and len(items) == 1

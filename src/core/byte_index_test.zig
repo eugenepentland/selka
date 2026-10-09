@@ -8,13 +8,13 @@ const facts = @import("facts.zig");
 const byte_index = @import("byte_index.zig");
 
 const program =
-    \\def indexed(raw: bytes, index: int) -> int:
+    \\func indexed(raw: bytes, index: int) -> int:
     \\    return raw[index]
-    \\def mutable_indexed(raw: byte_buffer, index: int) -> int:
+    \\func mutable_indexed(raw: byte_buffer, index: int) -> int:
     \\    return raw[index]
-    \\def main(args: list[str], out: Stream) -> int:
-    \\    index = 0
-    \\    match int(args[0]):
+    \\func main(args: str[], out: Stream) -> int:
+    \\    mut index = 0
+    \\    match parse_int(args[0]):
     \\        case Some(value):
     \\            index = value
     \\        case None:
@@ -45,8 +45,8 @@ test "a source extern byte index lookalike is rejected by the reserved runtime n
     var state = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer state.deinit();
     const source =
-        \\extern def myl_core_bytes_index_offset(host: Host, raw: int, index: int) -> u64 effects(host)
-        \\def main(host: Host, out: Stream) -> int:
+        \\extern func myl_core_bytes_index_offset(host: Host, raw: int, index: int) -> u64 effects(host)
+        \\func main(host: Host, out: Stream) -> int:
         \\    out.print(myl_core_bytes_index_offset(host, 3, 1))
         \\    return 0
     ;
@@ -139,12 +139,12 @@ test "bytes and buffers normalize negative and extreme signed indices before the
 }
 
 const reduction =
-    \\def total(raw: bytes) -> int:
-    \\    value = 0
+    \\func total(raw: bytes) -> int:
+    \\    mut value = 0
     \\    for index in range(len(raw)):
     \\        value += raw[index]
     \\    return value
-    \\def main(out: Stream) -> int:
+    \\func main(out: Stream) -> int:
     \\    out.print(total(b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"))
     \\    return 0
 ;
@@ -229,11 +229,12 @@ test "the exact nonnegative byte index premise traps R_CORE_FACT when an injecte
     defer state.deinit();
     const a = state.allocator();
     const source =
-        \\def read(raw: bytes, index: int) -> int:
+        \\func read(raw: bytes, initial: int) -> int:
+        \\    mut index = initial
         \\    for ignored in range(1):
         \\        index += 0
         \\    return raw[index]
-        \\def main(out: Stream) -> int:
+        \\func main(out: Stream) -> int:
         \\    out.print(read(b"abc", -1))
         \\    return 0
     ;

@@ -290,12 +290,11 @@ test "publicSchema refuses an invalid checked type catalog and propagates alloca
     var temporary = std.testing.tmpDir(.{});
     defer temporary.cleanup();
     const root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a);
-    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "app.my", .data = "module app\n\npublic record Cell:\n    value: int\n\ndef main() -> int:\n    return 0\n" });
-    const path = try std.fs.path.join(a, &.{ root, "app.my" });
+    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "app.my", .data = "\npublic record Cell:\n    value: int\n\nfunc main() -> int:\n    return 0\n" });
     var diagnostics: std.ArrayList(u8) = .empty;
     var session = frontend.Session.init(std.testing.allocator, std.testing.io, root);
     defer session.deinit();
-    const checked = try session.checkFile(a, path, &diagnostics);
+    const checked = try session.check(a, "app", &diagnostics);
     var damaged = checked;
     damaged.program.records = &.{};
     try std.testing.expectError(error.ProviderSignatureChanged, publicSchema(a, &session, damaged));

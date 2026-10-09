@@ -31,13 +31,13 @@ test "nominal typed results handle success and failure through exhaustive matche
         \\    ok: i64
         \\
         \\
-        \\def make(ok: bool) -> R:
+        \\func make(ok: bool) -> R:
         \\    if ok:
         \\        return Ok(7)
         \\    return Err(E.missing)
         \\
         \\
-        \\def handle(r: R) -> i64:
+        \\func handle(r: R) -> i64:
         \\    match r:
         \\        case R.ok(n):
         \\            return n
@@ -47,7 +47,7 @@ test "nominal typed results handle success and failure through exhaustive matche
         \\                    return 3
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return handle(make(True)) + handle(make(False))
     , 10);
     try result(
@@ -56,12 +56,12 @@ test "nominal typed results handle success and failure through exhaustive matche
         \\    err: bool
         \\
         \\
-        \\def forward(r: R) -> R:
+        \\func forward(r: R) -> R:
         \\    return r
         \\
         \\
-        \\def main() -> i64:
-        \\    result = forward(Err(True))
+        \\func main() -> i64:
+        \\    mut result = forward(Err(True))
         \\    match result:
         \\        case R.ok(n):
         \\            return n
@@ -75,7 +75,7 @@ test "nominal typed results handle success and failure through exhaustive matche
         \\    ok: i64
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_RESULT_SCHEMA");
     try reject(
@@ -84,7 +84,7 @@ test "nominal typed results handle success and failure through exhaustive matche
         \\    err
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_RESULT_SCHEMA");
     try reject(
@@ -93,11 +93,11 @@ test "nominal typed results handle success and failure through exhaustive matche
         \\    err: i64
         \\
         \\
-        \\def f(r: R) -> Other:
+        \\func f(r: R) -> Other:
         \\    return r
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_TYPE");
 }
@@ -112,16 +112,16 @@ const owned_source =
     \\    err: i64
     \\
     \\
-    \\def fallible(flag: bool) -> R:
-    \\    x = Item(n=3)
+    \\func fallible(flag: bool) -> R:
+    \\    mut x = Item(n=3)
     \\    if flag:
     \\        x = Item(n=9)
     \\        return Ok(x)
     \\    return Err(7)
     \\
     \\
-    \\def main() -> i64:
-    \\    r = fallible(False)
+    \\func main() -> i64:
+    \\    mut r = fallible(False)
     \\    match r:
     \\        case R.ok(item):
     \\            return item.n
@@ -158,20 +158,20 @@ test "binding transfer and explicit release cannot silently drop results" {
         \\    err: i64
         \\
         \\
-        \\def main() -> i64:
-        \\    first: R = Err(7)
-        \\    second = first
+        \\func main() -> i64:
+        \\    mut first: R = Err(7)
+        \\    mut second = first
         \\    _ = second
         \\    return 1
     , 1);
     try reject(
-        \\def main() -> i64:
-        \\    ignored = R.err(7)
+        \\func main() -> i64:
+        \\    mut ignored = R.err(7)
         \\    return 0
     , "E_RESULT_UNHANDLED");
     try reject(
-        \\def main() -> i64:
-        \\    ignored = R.ok(7)
+        \\func main() -> i64:
+        \\    mut ignored = R.ok(7)
         \\    return 0
     , "E_RESULT_UNHANDLED");
     try result(
@@ -180,29 +180,29 @@ test "binding transfer and explicit release cannot silently drop results" {
         \\    err: i64
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    _ = R.err(7)
         \\    return 0
     , 0);
     try reject(
-        \\def main() -> i64:
-        \\    r = R.ok(7)
-        \\    copied = r
+        \\func main() -> i64:
+        \\    mut r = R.ok(7)
+        \\    mut copied = r
         \\    _ = r
         \\    _ = copied
         \\    return 0
     , "E_RESULT_CONSUMED");
     try reject(
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    R.err(7)
         \\    return 0
     , "E_EXPLICIT_DISCARD_REQUIRED");
     try reject(
-        \\def swallow(r: R) -> i64:
+        \\func swallow(r: R) -> i64:
         \\    return 0
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return swallow(R.err(7))
     , "E_RESULT_UNHANDLED");
     try result(
@@ -211,19 +211,19 @@ test "binding transfer and explicit release cannot silently drop results" {
         \\    err: i64
         \\
         \\
-        \\def swallow(r: R) -> i64:
+        \\func swallow(r: R) -> i64:
         \\    _ = r
         \\    return 3
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return swallow(Err(7))
     , 3);
     // The Python surface releases and rejects the same way.
-    try result("def fail() -> Result[int, int]:\n    return Err(7)\n\ndef main() -> int:\n    _ = fail()\n    return 0\n", 0);
-    try result("def swallow(r: Result[int, int]) -> int:\n    _ = r\n    return 3\n\ndef main() -> int:\n    return swallow(Err(7))\n", 3);
-    try pythonReject("def fail() -> Result[int, int]:\n    return Err(7)\n\ndef main() -> int:\n    fail()\n    return 0\n", "E_EXPLICIT_DISCARD_REQUIRED");
-    try pythonReject("def fail() -> Result[int, int]:\n    return Err(7)\n\ndef main() -> int:\n    pending = fail()\n    return 0\n", "E_RESULT_UNHANDLED");
+    try result("func attempt() -> Result[int, int]:\n    return Err(7)\n\nfunc main() -> int:\n    _ = attempt()\n    return 0\n", 0);
+    try result("func swallow(r: Result[int, int]) -> int:\n    _ = r\n    return 3\n\nfunc main() -> int:\n    return swallow(Err(7))\n", 3);
+    try pythonReject("func attempt() -> Result[int, int]:\n    return Err(7)\n\nfunc main() -> int:\n    attempt()\n    return 0\n", "E_EXPLICIT_DISCARD_REQUIRED");
+    try pythonReject("func attempt() -> Result[int, int]:\n    return Err(7)\n\nfunc main() -> int:\n    mut pending = attempt()\n    return 0\n", "E_RESULT_UNHANDLED");
 }
 
 test "result obligations must agree across all continuing branch and match paths" {
@@ -233,7 +233,7 @@ test "result obligations must agree across all continuing branch and match paths
         \\    err: i64
         \\
         \\
-        \\def handle(flag: bool, r: R) -> i64:
+        \\func handle(flag: bool, r: R) -> i64:
         \\    if flag:
         \\        _ = r
         \\    else:
@@ -241,7 +241,7 @@ test "result obligations must agree across all continuing branch and match paths
         \\    return 7
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return handle(False, Err(3))
     , 7);
     try result(
@@ -250,7 +250,7 @@ test "result obligations must agree across all continuing branch and match paths
         \\    err: i64
         \\
         \\
-        \\def handle(flag: bool, r: R) -> i64:
+        \\func handle(flag: bool, r: R) -> i64:
         \\    if flag:
         \\        _ = r
         \\        return 1
@@ -258,37 +258,37 @@ test "result obligations must agree across all continuing branch and match paths
         \\    return 2
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return handle(False, Err(3))
     , 2);
     try reject(
-        \\def f(flag: bool, r: R) -> i64:
+        \\func f(flag: bool, r: R) -> i64:
         \\    if flag:
         \\        _ = r
         \\    return 0
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_RESULT_PATH");
     try reject(
-        \\def f(flag: bool, r: R) -> i64:
+        \\func f(flag: bool, r: R) -> i64:
         \\    if flag:
         \\        return 0
         \\    _ = r
         \\    return 1
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_RESULT_UNHANDLED");
     try reject(
         \\enum E:
-        \\    a,
+        \\    a
         \\    b
         \\
         \\
-        \\def f(e: E, r: R) -> i64:
+        \\func f(e: E, r: R) -> i64:
         \\    match e:
         \\        case E.a:
         \\            _ = r
@@ -297,7 +297,7 @@ test "result obligations must agree across all continuing branch and match paths
         \\    return 0
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_RESULT_PATH");
     try result(
@@ -307,11 +307,11 @@ test "result obligations must agree across all continuing branch and match paths
         \\
         \\
         \\enum E:
-        \\    a,
+        \\    a
         \\    b
         \\
         \\
-        \\def f(e: E, r: R) -> i64:
+        \\func f(e: E, r: R) -> i64:
         \\    match e:
         \\        case E.a:
         \\            _ = r
@@ -322,50 +322,50 @@ test "result obligations must agree across all continuing branch and match paths
         \\    return 2
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return f(E.b, Ok(3))
     , 2);
 }
 
 test "loops and short circuit evaluation cannot conditionally lose result obligations" {
     try reject(
-        \\def main() -> i64:
-        \\    r = R.err(1)
+        \\func main() -> i64:
+        \\    mut r = R.err(1)
         \\    while False:
         \\        _ = r
         \\    return 0
     , "E_RESULT_LOOP");
     try reject(
-        \\def consume(r: R) -> bool:
+        \\func consume(r: R) -> bool:
         \\    _ = r
         \\    return False
         \\
         \\
-        \\def main() -> i64:
-        \\    r = R.err(1)
+        \\func main() -> i64:
+        \\    mut r = R.err(1)
         \\    while consume(r):
         \\        pass
         \\    return 0
     , "E_RESULT_LOOP");
     try reject(
-        \\def consume(r: R) -> bool:
+        \\func consume(r: R) -> bool:
         \\    _ = r
         \\    return True
         \\
         \\
-        \\def main() -> i64:
-        \\    r = R.err(1)
+        \\func main() -> i64:
+        \\    mut r = R.err(1)
         \\    _ = False and consume(r)
         \\    return 0
     , "E_RESULT_PATH");
     try reject(
-        \\def consume(r: R) -> bool:
+        \\func consume(r: R) -> bool:
         \\    _ = r
         \\    return True
         \\
         \\
-        \\def main() -> i64:
-        \\    r = R.err(1)
+        \\func main() -> i64:
+        \\    mut r = R.err(1)
         \\    _ = True or consume(r)
         \\    return 0
     , "E_RESULT_PATH");
@@ -375,13 +375,13 @@ test "loops and short circuit evaluation cannot conditionally lose result obliga
         \\    err: i64
         \\
         \\
-        \\def consume(r: R) -> bool:
+        \\func consume(r: R) -> bool:
         \\    _ = r
         \\    return True
         \\
         \\
-        \\def main() -> i64:
-        \\    r: R = Err(1)
+        \\func main() -> i64:
+        \\    mut r: R = Err(1)
         \\    _ = consume(r) and False
         \\    _ = False and consume(Err(7))
         \\    return 1
@@ -392,9 +392,9 @@ test "loops and short circuit evaluation cannot conditionally lose result obliga
         \\    err: i64
         \\
         \\
-        \\def main() -> i64:
-        \\    n = 0
-        \\    r: R = Ok(0)
+        \\func main() -> i64:
+        \\    mut n = 0
+        \\    mut r: R = Ok(0)
         \\    while n < 3:
         \\        _ = r
         \\        r = Err(n)
@@ -406,8 +406,8 @@ test "loops and short circuit evaluation cannot conditionally lose result obliga
 
 test "mutable result slots require handling before replacement and permit explicit transfer" {
     try reject(
-        \\def main() -> i64:
-        \\    r = R.err(1)
+        \\func main() -> i64:
+        \\    mut r = R.err(1)
         \\    r = R.ok(2)
         \\    _ = r
         \\    return 0
@@ -418,9 +418,9 @@ test "mutable result slots require handling before replacement and permit explic
         \\    err: i64
         \\
         \\
-        \\def main() -> i64:
-        \\    r: R = Err(1)
-        \\    old = r
+        \\func main() -> i64:
+        \\    mut r: R = Err(1)
+        \\    mut old = r
         \\    r = Ok(2)
         \\    _ = old
         \\    match r:
@@ -435,8 +435,8 @@ test "mutable result slots require handling before replacement and permit explic
         \\    err: i64
         \\
         \\
-        \\def main() -> i64:
-        \\    r: R = Err(1)
+        \\func main() -> i64:
+        \\    mut r: R = Err(1)
         \\    r = r
         \\    _ = r
         \\    return 7
@@ -451,7 +451,7 @@ test "recoverable error returns and explicit acknowledgement preserve evaluation
         \\    err: i64
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    _ = R.ok(divtrunc(1, 0))
         \\    return 0
     );
@@ -466,17 +466,17 @@ test "duplicate identity retains explicit acknowledgement and fallible result ty
         \\    err: i64
         \\
         \\
-        \\def a(r: R) -> i64:
+        \\func a(r: R) -> i64:
         \\    _ = r
         \\    return 1
         \\
         \\
-        \\def b(other: R) -> i64:
+        \\func b(other: R) -> i64:
         \\    _ = other
         \\    return 1
         \\
         \\
-        \\def c(r: R) -> i64:
+        \\func c(r: R) -> i64:
         \\    match r:
         \\        case R.ok(_):
         \\            pass
@@ -485,7 +485,7 @@ test "duplicate identity retains explicit acknowledgement and fallible result ty
         \\    return 1
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     );
     defer compilation.deinit();

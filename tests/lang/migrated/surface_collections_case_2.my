@@ -1,9 +1,8 @@
-module surface_collections_case_2
 
 
-public def program() -> i64:
-    values: list[i64] = []
-    alias = values
+public func program() -> i64:
+    mut values: i64[] = []
+    mut alias = values
     alias.append(10)
     values = alias
     values[0] = 41

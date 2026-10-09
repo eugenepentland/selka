@@ -1,25 +1,24 @@
-module byte_iteration_sums
 
 # Ported from the retired QBE byte-iteration tests: exact sums across lengths,
 # masks beyond a byte and extreme seeds.
 
 
-def reduce(raw: bytes, mask: int, seed: int) -> int:
-    total = seed
+func reduce(raw: bytes, mask: int, seed: int) -> int:
+    mut total = seed
     for value in raw:
         total += value ^ mask
     return total
 
 
-def pattern_sum(length: int, mask: int, seed: int) -> int:
-    raw = bytes([(i * 37) % 256 for i in range(length)])
-    total = seed
+func pattern_sum(length: int, mask: int, seed: int) -> int:
+    mut raw = bytes([for i in range(length) yield (i * 37) % 256])
+    mut total = seed
     for value in raw:
         total += value ^ mask
     return total
 
 
-public def test_byte_iteration_sums_keep_exact_values_across_lengths() -> bool:
+public func test_byte_iteration_sums_keep_exact_values_across_lengths() -> bool:
     assert reduce(b"abcd", 7, 13) == 415
     assert pattern_sum(0, 255, 13) == 13
     assert pattern_sum(1, 255, 13) == 268
@@ -31,7 +30,7 @@ public def test_byte_iteration_sums_keep_exact_values_across_lengths() -> bool:
     return True
 
 
-public def test_byte_iteration_keeps_exact_values_for_masks_beyond_a_byte_and_extreme_seeds() -> bool:
+public func test_byte_iteration_keeps_exact_values_for_masks_beyond_a_byte_and_extreme_seeds() -> bool:
     assert pattern_sum(32, -1, 0) == -3536
     assert pattern_sum(32, 256, 0) == 11696
     assert pattern_sum(1, -9223372036854775807 - 1, 0) == -9223372036854775807 - 1

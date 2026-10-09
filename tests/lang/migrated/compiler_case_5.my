@@ -1,7 +1,6 @@
-module compiler_case_5
 
 
-public def program() -> i64:
+public func program() -> i64:
     while True:
         return 5
     return 6

@@ -1,4 +1,3 @@
-module main
 import shapes
 import reach
 import lib
@@ -6,11 +5,11 @@ import api
 import dom
 
 
-def main() -> int:
-    h = reach.holder()
-    values: list[int] = [1, 2, 3]
+func main() -> int:
+    mut h = reach.holder()
+    mut values: int[] = [1, 2, 3]
     lib.grow(mut values, 4)
-    found = reach.firsts(h)[0].x + reach.table(h)["a"].y
+    mut found = reach.firsts(h)[0].x + reach.table(h)["a"].y
     match reach.maybe(h):
         case Some(inner):
             found += inner.x
@@ -19,14 +18,14 @@ def main() -> int:
     # The payloads other than `to` are bound but unread, so the harness can
     # retype them without breaking this module.
     match reach.event():
-        case shapes.Event.moved(to, steps):
+        case shapes.Event.moved(to=to, steps=steps):
             found += to.x
-        case shapes.Event.tagged(inner):
+        case shapes.Event.tagged(value=inner):
             found += 1
         case shapes.Event.idle:
             found += 0
-    point: api.Inner = shapes.origin()
-    meters = dom.Meters.from(5u32)
+    mut point: api.Inner = shapes.origin()
+    mut meters = dom.Meters.from(5u32)
     found += lib.total(h) + lib.double(point.x) + lib.pick(values, 0) + lib.STEPS + lib.old_total(h)
     found += i64(dom.Meters.number(meters)) + len(values)
     return found % 256

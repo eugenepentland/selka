@@ -3,9 +3,10 @@
 /// reach the front end through `compiler_root`.
 pub const compiler_language = @import("compiler.zig");
 test {
+    _ = @import("frontend_migration_test.zig");
     _ = @import("iteration_place_test.zig");
     _ = @import("input_probe_test.zig");
-    _ = @import("module_syntax.zig");
+    _ = @import("compiler.zig").module_syntax;
     _ = @import("view_cycles_test.zig");
 
     _ = @import("doc_coverage.zig");

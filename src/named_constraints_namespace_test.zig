@@ -26,15 +26,15 @@ test "standalone named constraints namespace rejects duplicate declarations used
     try reject(
         \\constraint C[T] = copy
         \\constraint C[T] = equality
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     , "E_DUPLICATE_SYMBOL");
     try reject(
         \\constraint C[T] = copy
         \\constraint C[T] = integer
-        \\def identity[T: C](x: T) -> T:
+        \\func identity[T: C](x: T) -> T:
         \\    return x
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     , "E_DUPLICATE_SYMBOL");
 }
@@ -45,47 +45,47 @@ test "standalone named constraints namespace rejects nominal and function collis
         \\record C:
         \\    value: int
         \\constraint C[T] = copy
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     , "E_DUPLICATE_SYMBOL");
     try reject(
         \\constraint C[T] = copy
         \\record C:
         \\    value: int
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     , "E_DUPLICATE_SYMBOL");
     try reject(
         \\constraint C[T] = copy
-        \\union C:
-        \\    item: int
-        \\def main() -> int:
+        \\enum C:
+        \\    item(value: int)
+        \\func main() -> int:
         \\    return 0
     , "E_DUPLICATE_SYMBOL");
     try reject(
         \\constraint C[T] = copy
         \\domain C: int:
         \\    pass
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     , "E_DUPLICATE_SYMBOL");
     try reject(
         \\constraint C[T] = copy
-        \\resource C: int;
-        \\def main() -> int:
+        \\resource C: int
+        \\func main() -> int:
         \\    return 0
     , "E_DUPLICATE_SYMBOL");
     try reject(
         \\constraint C[T] = copy
         \\type C = int
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     , "E_DUPLICATE_SYMBOL");
     try reject(
         \\constraint C[T] = copy
-        \\def C[T](x: T) -> T:
+        \\func C[T](x: T) -> T:
         \\    return x
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     , "E_DUPLICATE_SYMBOL");
 }
@@ -112,15 +112,15 @@ test "standalone named constraints namespace lookup rejects duplicate matches" {
 test "standalone named constraints namespace accepts unused and multi-constraint programs" {
     try accept(
         \\constraint Unused[T] = copy
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     );
     try accept(
         \\constraint HasValue[T] = copy + field(value: int)
         \\constraint HasTag[T] = copy + field(tag: bool)
-        \\def read[T: HasValue + HasTag](x: T) -> int:
+        \\func read[T: HasValue + HasTag](x: T) -> int:
         \\    return x.value
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     );
 }
@@ -131,23 +131,23 @@ test "standalone named constraints reject subject shadowing before use" {
         \\record Item:
         \\    value: int
         \\constraint C[Item] = copy
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     , "E_SHADOWING");
     try reject(
         \\constraint C[Item] = copy
         \\record Item:
         \\    value: int
-        \\def use[T: C](item: T) -> T:
+        \\func use[T: C](item: T) -> T:
         \\    return item
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     , "E_SHADOWING");
     try reject(
         \\constraint C[helper] = copy
-        \\def helper() -> int:
+        \\func helper() -> int:
         \\    return 1
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     , "E_SHADOWING");
     try reject(
@@ -164,7 +164,7 @@ test "standalone named constraints reject subject shadowing before use" {
     try accept(
         \\constraint First[T] = copy
         \\constraint Second[T] = equality
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     );
 }

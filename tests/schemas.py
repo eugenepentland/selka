@@ -14,11 +14,12 @@ def main():
     with tempfile.TemporaryDirectory(prefix='mylang-schema-') as temporary:
         root = Path(temporary)
         entry = root / 'main.my'
-        entry.write_text('module main\nimport data\nimport other\n\ndef main() -> i64:\n    return 0\n')
+        entry.write_text('import data\nimport other\n\nfunc main() -> i64:\n    return 0\n')
         other = root / 'other.my'
-        other.write_text('module other\n\n\npublic class Point:\n    x: bool\n')
+        other.write_text('\n\npublic record Point:\n    x: bool\n')
         data = root / 'data.my'
-        source = '''module data
+        source = '''
+import time
 
 
 
@@ -28,48 +29,47 @@ def main():
 
 
 
-
-public class Point:
+public record Point:
     x: u64
-    y: [2]bool
+    y: FixedArray[bool, 2]
     table: [Status]u16
 
 public enum Status:
-    ready,
+    ready
     failed
 
-public union Choice:
-    empty,
-    point: Point
+public enum Choice:
+    empty
+    point(value: Point)
 
 public result Outcome:
     ok: Choice,
     err: Status
 
 public domain Identity: i8:
-    private def raw(x: i8) -> Identity:
+    private func raw(x: i8) -> Identity:
         return wrap[Identity](x)
 
-public class Node:
+public record Node:
     next: Identity
 
 public resource File: filesystem
 
-public def copy(x: Point) -> Point:
+public func copy(x: Point) -> Point:
     return x
 
 result Time:
     ok: i64,
     err: i64
 
-public def sample(clock: clock_cap) -> i64:
-    match clock_now[Time](clock):
-        case Time.ok(x):
-            return x
-        case Time.err(code):
-            return code
+public func sample(clock: Clock) -> i64:
+    match time.now(clock):
+        case Ok(value):
+            return value.unix_nanoseconds
+        case Err(_):
+            return 0
 
-class Hidden:
+record Hidden:
     secret: i32
 '''
         data.write_text(source)
@@ -119,17 +119,17 @@ class Hidden:
                     assert case['payload'] in types
         # Private declaration order, source comments, and import discovery order
         # do not change the public contract or expose internal numeric type IDs.
-        data.write_text(source.replace('class Hidden:\n    secret: i32\n', '# changed\nclass Secret:\n    bits: i32\n'))
-        entry.write_text('module main\nimport other as o\nimport data as d\n\ndef main() -> i64:\n    return 1\n')
+        data.write_text(source.replace('record Hidden:\n    secret: i32\n', '# changed\nrecord Secret:\n    bits: i32\n'))
+        entry.write_text('import other as o\nimport data as d\n\nfunc main() -> i64:\n    return 1\n')
         assert run() == raw
-        data.write_text(source.replace('y: [2]bool', 'y: [3]bool'))
+        data.write_text(source.replace('y: FixedArray[bool, 2]', 'y: FixedArray[bool, 3]'))
         assert run() != raw
         # Every body must check, including an unexported and uncalled function.
-        data.write_text(source + '\ndef broken() -> i64:\n    return True\n')
+        data.write_text(source + '\nfunc broken() -> i64:\n    return True\n')
         assert 'E_TYPE' in run(1)
         data.write_text(source.replace('    x: u64\n    y:', '    x: u64\n    x:'))
         assert 'duplicate' in run(1).lower()
-        data.write_text(source.replace('public class Point:', 'class Point:'))
+        data.write_text(source.replace('public record Point:', 'record Point:'))
         assert 'E_PRIVATE_INTERFACE' in run(1)
         data.write_text(source)
         run(2, '--evaluation-request')
@@ -151,7 +151,7 @@ class Hidden:
         execution = subprocess.run([compiler, 'run-project', str(entry), '--print-result'], capture_output=True, text=True)
         assert execution.returncode == 0 and execution.stdout == '7\n', execution.stderr
         data.write_text(codec_source.replace('decode: from_wire', 'decode: alternate').replace(
-            '    private def raw', '    def alternate(x: Wire) -> Decoded:\n        return Positive.from_wire(x)\n\n    private def raw'))
+            '    private func raw', '    func alternate(x: Wire) -> Decoded:\n        return Positive.from_wire(x)\n\n    private func raw'))
         changed = json.loads(run())
         changed_domain = next(d for d in changed['types'] if d['name'] == 'data::Positive')
         assert changed_domain['codec']['decode'] == 'data::Positive.alternate'
@@ -168,7 +168,7 @@ class Hidden:
             assert code in diagnostic and 'data.my:' in diagnostic, diagnostic
         data.write_text(codec_source)
         # An empty public interface remains empty even though main uses integers.
-        entry.write_text('module main\n\n\ndef main() -> i64:\n    return 0\n')
+        entry.write_text('\n\nfunc main() -> i64:\n    return 0\n')
         empty = json.loads(run())
         assert empty['exports'] == empty['functions'] == empty['types'] == []
     print('schema acceptance: public structure, nominal identity, privacy, cyclic handle graph, effects, borrowing, explicit domain codec contracts, determinism, and rejection passed')

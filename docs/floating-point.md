@@ -8,10 +8,10 @@ for angles in radians.
 
 ```mylang
 # doc: expect 42
-def main() -> int:
+func main() -> int:
     if 0.1 + 0.2 == 0.3:
         return 1
-    nan = 0.0 / 0.0
+    mut nan = 0.0 / 0.0
     if nan == nan or not (nan != nan):
         return 2
     if 1.0 / 0.0 <= 1.7976931348623157e308:
@@ -33,7 +33,7 @@ literal.
 
 ```mylang
 # doc: expect 42
-def main() -> int:
+func main() -> int:
     if .5 + .25 != 0.75 or 5. != 5.0:
         return 1
     if 1_000.5 != 1000.5 or 1e1_0 != 10000000000.0 or 1.e2 != 100.0:
@@ -68,7 +68,7 @@ is the same conversion as `i64(value)`, with signed 64-bit bounds.
 
 ```mylang
 # doc: expect 42
-def main() -> int:
+func main() -> int:
     if i8(-128.5) != -128i8 or u8(-0.5) != 0u8:
         return 1
     return int(u64(42.75))
@@ -76,16 +76,15 @@ def main() -> int:
 
 ```mylang
 # doc: expect 42
-module main
 import math
 
-def main() -> int:
-    root = math.sqrt(1764.0)
+func main() -> int:
+    mut root = math.sqrt(1764.0)
     if math.is_nan(root) or not math.is_finite(root):
         return 1
     if math.floor(root + 0.5) != root or math.trunc(0.0 - 1.9) != 0.0 - 1.0:
         return 2
-    negative = 0.0 - 5.0
+    mut negative = 0.0 - 5.0
     if negative // 2.0 != 0.0 - 3.0 or negative % 2.0 != 1.0:
         return 3
     return int(math.round(41.5))
@@ -102,7 +101,7 @@ leave the value sees the canonical quiet NaN `0x7ff8000000000000`:
 
 - text: `str`, `print`, f-strings and `byte_buffer.append_float` spell every NaN
   `nan`, never `-nan`;
-- a float argument passed to an `extern def` crosses as the canonical pattern, so
+- a float argument passed to an `extern func` crosses as the canonical pattern, so
   `copysign(1.0, -(0.0 / 0.0))` in C answers `1.0`;
 - equality of lists, records, fixed arrays and options compares floats
   numerically, and sorting orders every NaN after the ordered values whatever its
@@ -119,10 +118,10 @@ payloads.
 
 ```mylang
 # doc: expect nan nan True False
-def main(out: Stream) -> int:
-    zero = 0.0
-    nan = zero / zero
-    flipped = -nan
+func main(out: Stream) -> int:
+    mut zero = 0.0
+    mut nan = zero / zero
+    mut flipped = -nan
     out.print(str(nan), f"{flipped}", flipped != flipped, [nan] == [flipped])
     return 0
 ```
@@ -177,7 +176,7 @@ classification predicates and the rounding modes not listed here live in the
 
 ```mylang
 # doc: expect 42
-def main() -> int:
+func main() -> int:
     if sqrt(2.25) != 1.5:
         return 1
     if floor(-1.5) != -2.0 or ceil(-1.5) != -1.0:

@@ -1,8 +1,8 @@
-def main() -> int:
-    x = 48
-    y = 18
+func main() -> int:
+    mut x = 48
+    mut y = 18
     while y != 0:
-        remainder = remtrunc(x, y)
+        mut remainder = remtrunc(x, y)
         x = y
         y = remainder
     return x

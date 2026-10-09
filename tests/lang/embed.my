@@ -1,4 +1,3 @@
-module embed
 
 import embed_support
 
@@ -10,20 +9,20 @@ const MULTI: str = embed_str("embed_fixtures/multi.txt")
 
 const EMPTY: bytes = embed_bytes("embed_fixtures/empty.bin")
 
-def inline_bytes() -> bytes:
+func inline_bytes() -> bytes:
     return embed_bytes("embed_fixtures/nul.bin")
 
 
-def pure_length() -> int noalloc:
+func pure_length() -> int noalloc:
     return len(NUL) + len(BINARY) + len(embed_bytes("embed_fixtures/support.txt"))
 
 
-def generic_length[T](value: T) -> int noalloc:
+func generic_length[T](value: T) -> int noalloc:
     return len(embed_bytes("embed_fixtures/binary.bin"))
 
 
 # spec-case: EMBED-1
-public def test_embed_bytes_keeps_every_byte_including_nul() -> bool:
+public func test_embed_bytes_keeps_every_byte_including_nul() -> bool:
     if len(NUL) != 5:
         return False
     if NUL[0] != 97 or NUL[2] != 0 or NUL[4] != 100:
@@ -32,14 +31,14 @@ public def test_embed_bytes_keeps_every_byte_including_nul() -> bool:
 
 
 # spec-case: EMBED-1
-public def test_embed_bytes_carries_bytes_that_are_not_utf8() -> bool:
+public func test_embed_bytes_carries_bytes_that_are_not_utf8() -> bool:
     if len(BINARY) != 5:
         return False
     if BINARY[0] != 255 or BINARY[1] != 254 or BINARY[2] != 128:
         return False
     if BINARY[3] != 0 or BINARY[4] != 127:
         return False
-    raw = BINARY
+    mut raw = BINARY
     match raw.decode():
         case Ok(_):
             return False
@@ -48,34 +47,34 @@ public def test_embed_bytes_carries_bytes_that_are_not_utf8() -> bool:
 
 
 # spec-case: EMBED-1
-public def test_embed_str_reads_multibyte_text_as_scalars() -> bool:
+public func test_embed_str_reads_multibyte_text_as_scalars() -> bool:
     if MULTI != "héllo 🙂 日本":
         return False
     if len(MULTI) != 10:
         return False
-    text = MULTI
+    mut text = MULTI
     return len(text.encode()) == 18 and text[1] == "é"
 
 
 # spec-case: EMBED-1
-public def test_embed_of_an_empty_file_is_empty() -> bool:
+public func test_embed_of_an_empty_file_is_empty() -> bool:
     if len(EMPTY) != 0 or EMPTY != b"":
         return False
     return len(embed_str("embed_fixtures/empty.bin")) == 0
 
 
 # spec-case: EMBED-1
-public def test_embed_call_and_constant_read_the_same_bytes() -> bool:
+public func test_embed_call_and_constant_read_the_same_bytes() -> bool:
     return inline_bytes() == NUL and embed_bytes("embed_fixtures/nul.bin") == NUL
 
 
 # spec-case: EMBED-1
-public def test_embed_is_allowed_where_allocation_is_not() -> bool:
+public func test_embed_is_allowed_where_allocation_is_not() -> bool:
     return pure_length() == 25 and generic_length(3) == 5 and generic_length(NUL) == 5
 
 
 # spec-case: EMBED-1
-public def test_embedded_constants_are_readable_from_another_module() -> bool:
+public func test_embedded_constants_are_readable_from_another_module() -> bool:
     if embed_support.SUPPORT != b"shared fixture\n":
         return False
     if embed_support.support_length() != 15:
@@ -84,9 +83,9 @@ public def test_embedded_constants_are_readable_from_another_module() -> bool:
 
 
 # spec-case: EMBED-1
-public def test_one_file_embeds_as_bytes_and_as_text() -> bool:
-    raw = embed_bytes("embed_fixtures/multi.txt")
-    text = embed_str("embed_fixtures/multi.txt")
+public func test_one_file_embeds_as_bytes_and_as_text() -> bool:
+    mut raw = embed_bytes("embed_fixtures/multi.txt")
+    mut text = embed_str("embed_fixtures/multi.txt")
     if len(raw) != 18 or len(text) != 10:
         return False
     return text.encode() == raw and embed_support.GREETING == text

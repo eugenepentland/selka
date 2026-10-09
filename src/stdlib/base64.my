@@ -1,44 +1,43 @@
-module base64
 
 
 # The sixty-four symbols of RFC 4648 section 4, in value order.
-public def standard_alphabet() -> bytes:
+public func standard_alphabet() -> bytes:
     return b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 
 
 # The sixty-four symbols of RFC 4648 section 5, in value order.
-public def urlsafe_alphabet() -> bytes:
+public func urlsafe_alphabet() -> bytes:
     return b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
 
 
 # The padding octet that completes a four-symbol group.
-def padding() -> int:
+func padding() -> int:
     return 61
 
 
 # Bytes encoded with an explicit alphabet and canonical trailing padding.
-def encode_with(data: bytes, alphabet: bytes) -> bytes:
-    out: list[int] = []
-    index = 0
+func encode_with(data: bytes, alphabet: bytes) -> bytes:
+    mut out: int[] = []
+    mut index = 0
     while index + 3 <= len(data):
-        chunk = data[index] * 65536 + data[index + 1] * 256 + data[index + 2]
-        second = chunk // 4096 % 64
-        third = chunk // 64 % 64
+        const chunk = data[index] * 65536 + data[index + 1] * 256 + data[index + 2]
+        mut second = chunk // 4096 % 64
+        mut third = chunk // 64 % 64
         out.append(alphabet[chunk // 262144])
         out.append(alphabet[second])
         out.append(alphabet[third])
         out.append(alphabet[chunk % 64])
         index += 3
-    remaining = len(data) - index
+    mut remaining = len(data) - index
     if remaining == 1:
-        chunk = data[index] * 16
+        const chunk = data[index] * 16
         out.append(alphabet[chunk // 64])
         out.append(alphabet[chunk % 64])
         out.append(padding())
         out.append(padding())
     elif remaining == 2:
-        chunk = data[index] * 1024 + data[index + 1] * 4
-        middle = chunk // 64 % 64
+        const chunk = data[index] * 1024 + data[index + 1] * 4
+        mut middle = chunk // 64 % 64
         out.append(alphabet[chunk // 4096])
         out.append(alphabet[middle])
         out.append(alphabet[chunk % 64])
@@ -47,27 +46,27 @@ def encode_with(data: bytes, alphabet: bytes) -> bytes:
 
 
 # Reverse lookup from an alphabet symbol to its six-bit value.
-def reverse(alphabet: bytes) -> dict[int, int]:
-    table: dict[int, int] = {}
+func reverse(alphabet: bytes) -> dict[int, int]:
+    mut table: dict[int, int] = {}
     for value, symbol in enumerate(alphabet):
         table[symbol] = value
     return table
 
 
 # Bytes decoded with an explicit alphabet, rejecting every noncanonical form.
-def decode_with(data: bytes, alphabet: bytes) -> Result[bytes, str]:
+func decode_with(data: bytes, alphabet: bytes) -> Result[bytes, str]:
     if len(data) % 4 != 0:
         return Err("base64 input length must be a multiple of four")
-    table = reverse(alphabet)
-    out: list[int] = []
-    index = 0
+    mut table = reverse(alphabet)
+    mut out: int[] = []
+    mut index = 0
     while index < len(data):
-        final = index + 4 == len(data)
-        pad = 0
-        values: list[int] = []
-        position = 0
+        mut final = index + 4 == len(data)
+        mut pad = 0
+        mut values: int[] = []
+        mut position = 0
         while position < 4:
-            symbol = data[index + position]
+            mut symbol = data[index + position]
             if symbol == padding():
                 if not final or position < 2:
                     return Err("base64 padding may only end the final group")
@@ -80,7 +79,7 @@ def decode_with(data: bytes, alphabet: bytes) -> Result[bytes, str]:
             else:
                 values.append(table[symbol])
             position += 1
-        chunk = values[0] * 262144 + values[1] * 4096 + values[2] * 64 + values[3]
+        mut chunk = values[0] * 262144 + values[1] * 4096 + values[2] * 64 + values[3]
         if pad == 0:
             out.append(chunk // 65536)
             out.append((chunk // 256) % 256)
@@ -99,20 +98,20 @@ def decode_with(data: bytes, alphabet: bytes) -> Result[bytes, str]:
 
 
 # Bytes encoded with the standard alphabet and canonical padding.
-public def b64encode(data: bytes) -> bytes:
+public func b64encode(data: bytes) -> bytes:
     return encode_with(data, standard_alphabet())
 
 
 # Standard-alphabet base64 decoded, rejecting invalid symbols and padding.
-public def b64decode(data: bytes) -> Result[bytes, str]:
+public func b64decode(data: bytes) -> Result[bytes, str]:
     return decode_with(data, standard_alphabet())
 
 
 # Bytes encoded with the URL and filename safe alphabet.
-public def urlsafe_b64encode(data: bytes) -> bytes:
+public func urlsafe_b64encode(data: bytes) -> bytes:
     return encode_with(data, urlsafe_alphabet())
 
 
 # URL-safe base64 decoded, rejecting invalid symbols and padding.
-public def urlsafe_b64decode(data: bytes) -> Result[bytes, str]:
+public func urlsafe_b64decode(data: bytes) -> Result[bytes, str]:
     return decode_with(data, urlsafe_alphabet())

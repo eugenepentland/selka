@@ -22,23 +22,22 @@ value survives a JSON client whose native numbers cannot represent it.
 
 ```mylang
 # doc: check
-module main
 
 public enum Status:
-    ready,
+    ready
     failed
 
 public record Sample:
     sequence: u64
     status: Status
 
-public def sequence_of(sample: Sample) -> u64 effects():
+public func sequence_of(sample: Sample) -> u64 effects():
     return sample.sequence
 
-public def test_sequence(sample: Sample) -> u64 effects():
+public func test_sequence(sample: Sample) -> u64 effects():
     return sequence_of(sample)
 
-def main() -> int:
+func main() -> int:
     return 0
 ```
 

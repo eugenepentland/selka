@@ -281,6 +281,7 @@ state types; the consumer does not know either representation. The local `get`
 binding is the current workaround for calling a callback field.
 
 ```mylang
+# doc: skip Historical pre-redesign syntax retained as audit evidence.
 # doc: expect 0
 record Store[S]:
     state: S

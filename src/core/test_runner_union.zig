@@ -51,12 +51,11 @@ pub fn childrenOnly(environment: *const std.process.Environ.Map) bool {
 /// The module a directory run's shared load and check enter through.
 pub const entry_name = "mylang_directory_run";
 
-/// The synthetic entry's text: a header importing each of `modules`, and a `main`.
+/// The synthetic path-named entry imports each module and declares a `main`.
 pub fn entryText(a: std.mem.Allocator, modules: []const []const u8) error{OutOfMemory}![]const u8 {
     var text: std.ArrayList(u8) = .empty;
-    try text.print(a, "module {s}\n", .{entry_name});
     for (modules, 0..) |name, position| try text.print(a, "import {s} as root_{d}\n", .{ name, position });
-    try text.appendSlice(a, "\ndef main() -> int:\n    return 0\n");
+    try text.appendSlice(a, "\nfunc main() -> int:\n    return 0\n");
     return text.items;
 }
 
@@ -116,7 +115,7 @@ fn eligibility(init: std.process.Init, controls: options.Options, path: []const 
     const bytes = std.Io.Dir.cwd().readFileAlloc(init.io, path, a, .limited(64 << 20)) catch return null;
     // A root checked alone is the entry: its `main`, when it declares one, is checked
     // as the program's. In a shared check it is one import among many, so it stays alone.
-    if (!language.opensAsModule(bytes) or !headed(bytes)) return null;
+    if (!headed(bytes)) return null;
     if (language.project_config.declaresMain(bytes)) return null;
     var problems: std.ArrayList(u8) = .empty;
     const located = project_entry.resolve(a, init.io, path, &problems) catch |err| {
@@ -136,13 +135,13 @@ fn eligibility(init: std.process.Init, controls: options.Options, path: []const 
     return .{ .located = located };
 }
 
-/// Whether the file's first line that is not blank or a comment is its `module` header.
+/// Whether a source has a non-comment opening suitable for project loading.
 pub fn headed(bytes: []const u8) bool {
     var lines = std.mem.splitScalar(u8, bytes, '\n');
     while (lines.next()) |raw| {
         const line = std.mem.trim(u8, raw, " \t\r");
         if (line.len == 0 or line[0] == '#') continue;
-        return std.mem.startsWith(u8, line, "module ");
+        return !std.mem.startsWith(u8, line, "module ");
     }
     return false;
 }
@@ -250,9 +249,9 @@ fn rooted(a: std.mem.Allocator, checked: frontend.Checked, path: []const u8) err
 }
 
 // spec-case: NEW-CORE-TEST-UNION-1
-test "headed asks for a module header on the first line that is not blank or a comment" {
-    try std.testing.expect(headed("# about\n\nmodule app\nimport dep\n"));
-    try std.testing.expect(!headed("import dep\nmodule app\n"));
+test "headed accepts headerless source and rejects a legacy module opening" {
+    try std.testing.expect(headed("# about\n\nimport dep\n"));
+    try std.testing.expect(!headed("module app\nimport dep\n"));
     try std.testing.expect(!headed("# only a comment\n"));
 }
 
@@ -291,12 +290,12 @@ test "plan checks eligible roots together after their replays miss (eligibility,
     const root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a);
     try writeFiles(temporary.dir, &.{
         .{ "mylang.json", "{\"version\": 1}\n" },
-        .{ "dep.my", "module dep\n\npublic def value() -> int:\n    return 3\n" },
-        .{ "other.my", "module other\n\npublic def unused() -> int:\n    return 4\n" },
-        .{ "a_test.my", "module a_test\nimport dep\n\npublic def test_a() -> bool:\n    return dep.value() == 3\n" },
-        .{ "b_test.my", "module b_test\nimport other\n\npublic def test_b() -> bool:\n    return other.unused() == 4\n" },
-        .{ "c_test.my", "import dep\n\npublic def test_c() -> bool:\n    return dep.value() == 3\n" },
-        .{ "app.my", "module app\nimport dep\n\ndef main() -> int:\n    return dep.value()\n\npublic def test_app() -> bool:\n    return True\n" },
+        .{ "dep.my", "\npublic func value() -> int:\n    return 3\n" },
+        .{ "other.my", "\npublic func unused() -> int:\n    return 4\n" },
+        .{ "a_test.my", "import dep\n\npublic func test_a() -> bool:\n    return dep.value() == 3\n" },
+        .{ "b_test.my", "import other\n\npublic func test_b() -> bool:\n    return other.unused() == 4\n" },
+        .{ "c_test.my", "import dep\n\npublic func test_c() -> bool:\n    return dep.value() == 3\n" },
+        .{ "app.my", "import dep\n\nfunc main() -> int:\n    return dep.value()\n\npublic func test_app() -> bool:\n    return True\n" },
     });
     var environment = try std.testing.environ.createMap(a);
     const init: std.process.Init = .{ .minimal = .{ .environ = .empty, .args = .{ .vector = &.{} } }, .arena = &arena, .gpa = std.testing.allocator, .io = std.testing.io, .environ_map = &environment, .preopens = .empty };
@@ -310,9 +309,9 @@ test "plan checks eligible roots together after their replays miss (eligibility,
     var plans: [names.len]Plan = undefined;
     var checks = try plan(context, &paths, &outcomes, &plans);
     defer checks.deinit();
-    // `app` declares `main` and `c_test` has no header: each keeps its own check.
-    try std.testing.expect(plans[0] == .together and plans[2] == .together);
-    try std.testing.expect(plans[1] == .child and plans[3] == .child);
+    // `app` declares `main` and keeps its own check; headerless test roots share.
+    try std.testing.expect(plans[0] == .together and plans[2] == .together and plans[3] == .together);
+    try std.testing.expect(plans[1] == .child);
     // Each root's share holds only its own graph.
     try std.testing.expect(holds(plans[0].together, "dep") and !holds(plans[0].together, "other") and !holds(plans[0].together, "b_test"));
     try std.testing.expect(holds(plans[2].together, "other") and !holds(plans[2].together, "dep"));
@@ -320,7 +319,7 @@ test "plan checks eligible roots together after their replays miss (eligibility,
     try std.testing.expectEqualStrings("a_test.my", frontend.position(plans[0].together.checked.src, .{ .start = 0, .end = 0 }).path);
     try std.testing.expectEqualStrings("b_test.my", frontend.position(plans[2].together.checked.src, .{ .start = 0, .end = 0 }).path);
     // A shared check that fails leaves every root of the project to its own child.
-    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "b_test.my", .data = "module b_test\nimport other\n\npublic def test_b() -> bool:\n    return other.unused() == \"four\"\n" });
+    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "b_test.my", .data = "import other\n\npublic func test_b() -> bool:\n    return other.unused() == \"four\"\n" });
     var failed_plans: [names.len]Plan = undefined;
     var failed = try plan(context, &paths, &outcomes, &failed_plans);
     defer failed.deinit();

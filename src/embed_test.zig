@@ -62,11 +62,11 @@ test "embed_bytes and embed_str read a file as a constant, inline and where allo
         \\const TEXT: str = embed_str("text.txt")
         \\
         \\
-        \\def total() -> int noalloc:
+        \\func total() -> int noalloc:
         \\    return len(DATA) + len(embed_bytes("data.bin"))
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return total() + len(TEXT) * 100 + DATA[1]
     );
     defer compilation.deinit();
@@ -81,7 +81,7 @@ test "an embedded empty file is an empty value and an edited file changes the pr
     try temporary.dir.writeFile(t.io, .{ .sub_path = "data.bin", .data = "" });
     const root = try rootOf(&temporary);
     defer t.allocator.free(root);
-    const text = "def main() -> int:\n    return len(embed_bytes(\"data.bin\")) + 40\n";
+    const text = "func main() -> int:\n    return len(embed_bytes(\"data.bin\")) + 40\n";
     var empty = try compile(t.allocator, root, text);
     defer empty.deinit();
     try t.expectEqual(@as(i64, 40), (try native.run(&empty)).value);
@@ -98,7 +98,7 @@ test "an embed call inside an f-string interpolation is read like any other" {
     try temporary.dir.writeFile(t.io, .{ .sub_path = "data.bin", .data = "abcdefghij" });
     const root = try rootOf(&temporary);
     defer t.allocator.free(root);
-    var compilation = try compile(t.allocator, root, "def main() -> int:\n    label = f\"n={len(embed_bytes('data.bin'))}\"\n    return len(label)\n");
+    var compilation = try compile(t.allocator, root, "func main() -> int:\n    mut label = f\"n={len(embed_bytes('data.bin'))}\"\n    return len(label)\n");
     defer compilation.deinit();
     try t.expectEqual(@as(usize, 1), compilation.src.embeds.len);
     try t.expectEqual(@as(i64, 4), (try native.run(&compilation)).value);
@@ -120,18 +120,18 @@ test "every embed error is a located diagnostic with its own code" {
     try temporary.dir.writeFile(t.io, .{ .sub_path = "project/data.bin", .data = "\xff\xfe" });
     try temporary.dir.createDirPath(t.io, "project/folder");
     try expectCodes(root, &.{
-        .{ .text = "def main() -> int:\n    path = \"inside.bin\"\n    return len(embed_bytes(path))\n", .code = "E_EMBED_ARGUMENT" },
-        .{ .text = "def main() -> int:\n    return len(embed_bytes(b\"inside.bin\"))\n", .code = "E_EMBED_ARGUMENT" },
-        .{ .text = "def main() -> int:\n    return len(embed_bytes(\"inside.bin\", \"other\"))\n", .code = "E_EMBED_ARGUMENT" },
-        .{ .text = "def main() -> int:\n    return len(embed_bytes(\"missing.bin\"))\n", .code = "E_EMBED_MISSING" },
-        .{ .text = "def main() -> int:\n    return len(embed_bytes(\"folder\"))\n", .code = "E_EMBED_DIRECTORY" },
-        .{ .text = "def main() -> int:\n    return len(embed_bytes(\"/etc/hostname\"))\n", .code = "E_EMBED_ABSOLUTE" },
-        .{ .text = "def main() -> int:\n    return len(embed_bytes(\"../outside.bin\"))\n", .code = "E_EMBED_ESCAPE" },
-        .{ .text = "def main() -> int:\n    return len(embed_bytes(\"link.bin\"))\n", .code = "E_EMBED_ESCAPE" },
-        .{ .text = "def main() -> int:\n    return len(embed_str(\"data.bin\"))\n", .code = "E_EMBED_UTF8" },
-        .{ .text = "def main() -> int:\n    return len(embed_bytes(\"\"))\n", .code = "E_EMBED_PATH" },
-        .{ .text = "const BAD: bytes = embed_str(\"inside.bin\")\n\ndef main() -> int:\n    return len(BAD)\n", .code = "E_TYPE" },
-        .{ .text = "def main() -> int:\n    return len(embed_bytes(\"alias.bin\")) + len(embed_bytes(\"./inside.bin\")) + len(embed_bytes(\"folder/../inside.bin\")) - 3\n", .code = "accepted" },
+        .{ .text = "func main() -> int:\n    mut path = \"inside.bin\"\n    return len(embed_bytes(path))\n", .code = "E_EMBED_ARGUMENT" },
+        .{ .text = "func main() -> int:\n    return len(embed_bytes(b\"inside.bin\"))\n", .code = "E_EMBED_ARGUMENT" },
+        .{ .text = "func main() -> int:\n    return len(embed_bytes(\"inside.bin\", \"other\"))\n", .code = "E_EMBED_ARGUMENT" },
+        .{ .text = "func main() -> int:\n    return len(embed_bytes(\"missing.bin\"))\n", .code = "E_EMBED_MISSING" },
+        .{ .text = "func main() -> int:\n    return len(embed_bytes(\"folder\"))\n", .code = "E_EMBED_DIRECTORY" },
+        .{ .text = "func main() -> int:\n    return len(embed_bytes(\"/etc/hostname\"))\n", .code = "E_EMBED_ABSOLUTE" },
+        .{ .text = "func main() -> int:\n    return len(embed_bytes(\"../outside.bin\"))\n", .code = "E_EMBED_ESCAPE" },
+        .{ .text = "func main() -> int:\n    return len(embed_bytes(\"link.bin\"))\n", .code = "E_EMBED_ESCAPE" },
+        .{ .text = "func main() -> int:\n    return len(embed_str(\"data.bin\"))\n", .code = "E_EMBED_UTF8" },
+        .{ .text = "func main() -> int:\n    return len(embed_bytes(\"\"))\n", .code = "E_EMBED_PATH" },
+        .{ .text = "const BAD: bytes = embed_str(\"inside.bin\")\n\nfunc main() -> int:\n    return len(BAD)\n", .code = "E_TYPE" },
+        .{ .text = "func main() -> int:\n    return len(embed_bytes(\"alias.bin\")) + len(embed_bytes(\"./inside.bin\")) + len(embed_bytes(\"folder/../inside.bin\")) - 3\n", .code = "accepted" },
     });
 }
 
@@ -146,11 +146,11 @@ test "an invalid embed_str names the byte offset and an oversized file is refuse
     try temporary.dir.writeFile(t.io, .{ .sub_path = "huge.bin", .data = oversized });
     const root = try rootOf(&temporary);
     defer t.allocator.free(root);
-    var text = try compile(t.allocator, root, "def main() -> int:\n    return len(embed_str(\"bad.txt\"))\n");
+    var text = try compile(t.allocator, root, "func main() -> int:\n    return len(embed_str(\"bad.txt\"))\n");
     defer text.deinit();
     try t.expectError(error.SourceError, text.check());
     try t.expect(std.mem.indexOf(u8, text.diagnostics.items[0].message, "offset 2") != null);
-    var huge = try compile(t.allocator, root, "def main() -> int:\n    return len(embed_bytes(\"huge.bin\"))\n");
+    var huge = try compile(t.allocator, root, "func main() -> int:\n    return len(embed_bytes(\"huge.bin\"))\n");
     defer huge.deinit();
     try t.expectError(error.SourceError, huge.check());
     try t.expectEqualStrings("E_EMBED_TOO_LARGE", huge.diagnostics.items[0].code);
@@ -159,7 +159,7 @@ test "an invalid embed_str names the byte offset and an oversized file is refuse
 
 // spec-case: EMBED-2
 test "a source loaded without a directory reports that embeds need one" {
-    var compilation = try language.Compilation.init(t.allocator, "memory.my", "def main() -> int:\n    return len(embed_bytes(\"data.bin\"))\n");
+    var compilation = try language.Compilation.init(t.allocator, "memory.my", "func main() -> int:\n    return len(embed_bytes(\"data.bin\"))\n");
     defer compilation.deinit();
     try t.expectError(error.SourceError, compilation.check());
     try t.expectEqualStrings("E_EMBED_UNAVAILABLE", compilation.diagnostics.items[0].code);
@@ -167,7 +167,7 @@ test "a source loaded without a directory reports that embeds need one" {
 
 // spec-case: EMBED-2
 test "a user function named like an embed builtin keeps its own meaning" {
-    var compilation = try language.Compilation.init(t.allocator, "shadow.my", "def embed_bytes(path: str) -> int:\n    return len(path)\n\n\ndef main() -> int:\n    return embed_bytes(\"data.bin\")\n");
+    var compilation = try language.Compilation.init(t.allocator, "shadow.my", "func embed_bytes(path: str) -> int:\n    return len(path)\n\n\nfunc main() -> int:\n    return embed_bytes(\"data.bin\")\n");
     defer compilation.deinit();
     try t.expectEqual(@as(i64, 8), (try native.run(&compilation)).value);
 }
@@ -192,7 +192,7 @@ test "a declaration keys on the embedded files inside it and on nothing else's" 
     try temporary.dir.writeFile(t.io, .{ .sub_path = "data.bin", .data = "one" });
     const root = try rootOf(&temporary);
     defer t.allocator.free(root);
-    const text = "def user() -> int:\n    return len(embed_bytes(\"data.bin\"))\n\n\ndef other() -> int:\n    return 7\n\n\ndef main() -> int:\n    return user() + other()\n";
+    const text = "func user() -> int:\n    return len(embed_bytes(\"data.bin\"))\n\n\nfunc other() -> int:\n    return 7\n\n\nfunc main() -> int:\n    return user() + other()\n";
     var before = try compile(t.allocator, root, text);
     defer before.deinit();
     try before.parse();
@@ -248,11 +248,11 @@ test "a module constant of an embedded file allocates nothing when read" {
         \\const DATA: bytes = embed_bytes("data.bin")
         \\
         \\
-        \\def read() -> int noalloc:
+        \\func read() -> int noalloc:
         \\    return len(DATA)
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return read()
     );
     defer compilation.deinit();
@@ -264,7 +264,7 @@ test "a module constant of an embedded file allocates nothing when read" {
 /// Read one module's embed through a provider that serves `main.my` and one file.
 fn embedProvider(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
     if (!std.mem.eql(u8, path, "main.my")) return error.NotFound;
-    return allocator.dupe(u8, "module main\n\nconst DATA: bytes = embed_bytes(\"data.bin\")\n\ndef main() -> int:\n    return len(DATA)\n");
+    return allocator.dupe(u8, "\nconst DATA: bytes = embed_bytes(\"data.bin\")\n\nfunc main() -> int:\n    return len(DATA)\n");
 }
 
 fn embedFile(_: ?*anyopaque, allocator: std.mem.Allocator, module_path: []const u8, path: []const u8, _: usize) std.mem.Allocator.Error!embed.Read {
@@ -292,8 +292,8 @@ test "the project loader reads the files a module embeds through its provider" {
 const Served = struct { payload: []const u8 };
 
 fn servedSource(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
-    if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8, "module main\nimport data\n\ndef main() -> int:\n    return len(data.TABLE)\n");
-    if (std.mem.eql(u8, path, "data.my")) return allocator.dupe(u8, "module data\n\npublic const TABLE: bytes = embed_bytes(\"table.bin\")\n");
+    if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8, "import data\n\nfunc main() -> int:\n    return len(data.TABLE)\n");
+    if (std.mem.eql(u8, path, "data.my")) return allocator.dupe(u8, "\npublic const TABLE: bytes = embed_bytes(\"table.bin\")\n");
     return error.NotFound;
 }
 
@@ -315,7 +315,7 @@ fn interfaceOf(allocator: std.mem.Allocator, payload: []const u8) ![]u8 {
 
 // spec: EMBED-5
 test "formatting keeps embed calls, an interface names the file, and a receipt lists it" {
-    const source_text = "const TABLE: bytes = embed_bytes(\"table.bin\")\n\n\ndef main() -> int:\n    return len(embed_str(\"note.txt\"))\n";
+    const source_text = "const TABLE: bytes = embed_bytes(\"table.bin\")\n\n\nfunc main() -> int:\n    return len(embed_str(\"note.txt\"))\n";
     var compilation = try language.Compilation.init(t.allocator, "format.my", source_text);
     defer compilation.deinit();
     const formatted = try compilation.format(t.allocator);
@@ -415,7 +415,7 @@ test "a bounded disk embed refuses an overlong file before reading its contents"
 }
 
 fn repeatedEmbedSource(_: ?*anyopaque, allocator: std.mem.Allocator, _: []const u8, limit: usize) language.project.ReadError![]u8 {
-    const text = "module main\n\nconst A: bytes = embed_bytes(\"data.bin\")\nconst B: bytes = embed_bytes(\"data.bin\")\n";
+    const text = "\nconst A: bytes = embed_bytes(\"data.bin\")\nconst B: bytes = embed_bytes(\"data.bin\")\n";
     if (text.len > limit) return error.TooLarge;
     return allocator.dupe(u8, text);
 }

@@ -1,11 +1,10 @@
-module managed_values_case_3
 
 
-public def program() -> i64:
-    text: str = b"a,b,"
-    parts = text.split(b",")
-    sep: str = b","
-    joined = sep.join(parts)
+public func program() -> i64:
+    mut text: str = b"a,b,"
+    mut parts = text.split(b",")
+    mut sep: str = b","
+    mut joined = sep.join(parts)
     if joined == text:
         return len(joined)
     return 0

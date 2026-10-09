@@ -77,7 +77,8 @@ pub const Context = struct {
                     .parameters = values[0 .. values.len - 1],
                     .result = values[values.len - 1],
                     .effects = callback.syntax.effect_bound.allowed,
-                    .mutates = try ast.mutPositions(self.arena.allocator(), callback.syntax.mut_parameters),
+                    .labels = try @import("callables.zig").syntaxLabels(self.arena.allocator(), self.src, callback.syntax),
+                    .mutates = try ast.mutPositions(self.arena.allocator(), callback.syntax.parameter_modes.mut),
                     .return_origin = .unknown,
                 };
                 break :result .{ .callback = signature };
@@ -112,6 +113,23 @@ pub const Context = struct {
             },
         };
     }
+    fn callbackResult(self: Context, callback: ast.CallbackType, depth: usize, aliases: []const generic_requirements.SubjectAlias) Error!Value {
+        const success = try self.sourceType(callback.return_type, depth + 1, aliases);
+        const failure = callback.failure_type orelse return success;
+        const error_type = try self.sourceType(failure, depth + 1, aliases);
+        const declaration = self.catalog.templates.store.?.index.names.get("Result") orelse return error.InternalError;
+        return self.nominal(declaration, &.{ success, error_type });
+    }
+    fn sourceSuffix(self: Context, span: source.Span, depth: usize, aliases: []const @import("generic_requirements.zig").SubjectAlias) Error!?Value {
+        const store = self.catalog.templates.store orelse return null;
+        for (store.index.syntax.suffixes) |suffix| {
+            if (suffix.span.start != span.start or suffix.span.end != span.end) continue;
+            const element = try self.sourceType(suffix.base, depth + 1, aliases);
+            const value = try self.nominal(store.index.names.get(if (suffix.kind == .growable) "list" else "Option").?, &.{element});
+            return value;
+        }
+        return null;
+    }
     fn sourceType(self: Context, span: source.Span, depth: usize, aliases: []const generic_requirements.SubjectAlias) Error!Value {
         try self.charge(span);
         if (depth == 256) return self.sink.fail(body_limit, span, "structural field type exceeds 256 levels");
@@ -120,6 +138,7 @@ pub const Context = struct {
             .subject => |index| return .{ .parameter = index },
             .foreign, .local => {},
         }
+        if (try self.sourceSuffix(span, depth, aliases)) |value| return value;
         if (self.catalog.templates.store) |store| if (store.index.syntax.callbacks.get(span.start)) |callback| {
             // Concrete signatures retain the same identity as their type aliases.
             if (self.catalog.arrays.resolved.get(span.start)) |ty| return .{ .concrete = ty };
@@ -128,19 +147,20 @@ pub const Context = struct {
             const signature = try self.arena.allocator().create(symbolic.Callback);
             signature.* = .{
                 .parameters = parameters,
-                .result = try self.sourceType(callback.return_type, depth + 1, aliases),
+                .result = try self.callbackResult(callback, depth, aliases),
                 .effects = callback.effect_bound.allowed,
-                .mutates = try ast.mutPositions(self.arena.allocator(), callback.mut_parameters),
+                .labels = try @import("callables.zig").syntaxLabels(self.arena.allocator(), self.src, callback),
+                .mutates = try ast.mutPositions(self.arena.allocator(), callback.parameter_modes.mut),
                 .return_origin = .unknown,
             };
             return .{ .callback = signature };
         };
-        if (self.catalog.templates.applications.get(span.start)) |template| {
+        if (self.catalog.templates.applications.get(span.start)) |template| if (template.syntax.span.end == span.end) {
             var arguments: [16]Value = undefined;
             const required = self.catalog.templates.store.?.index.declarations.items[template.declaration].parameters;
             for (template.syntax.arguments, required, 0..) |argument, parameter, i| arguments[i] = if (parameter.constant_length) try self.lengthArgument(argument) else try self.sourceType(argument, depth + 1, aliases);
             return self.nominal(template.declaration, arguments[0..template.arguments.len]);
-        }
+        };
         if (self.catalog.arrays.templates.get(span.start)) |template| {
             const array = try self.arena.allocator().create(symbolic.Array);
             const size: Value = if (template.length_parameter) |at| try self.lengthArgument(at) else .{ .length = template.length };
@@ -533,6 +553,10 @@ fn writeCanonical(writer: *std.Io.Writer, catalog: type_catalog.Catalog, value: 
         },
         .callback => |callback| {
             writer.print("c({d}", .{callback.effects}) catch return error.OutOfMemory;
+            for (callback.labels, 0..) |label, position| {
+                if (label.len == 0) continue;
+                writer.print("n{d}:{d}:{s}", .{ position, label.len, label }) catch return error.OutOfMemory;
+            }
             if (callback.mutates.len != 0) {
                 writer.writeByte('m') catch return error.OutOfMemory;
                 for (callback.mutates) |position| writer.print("{d},", .{position}) catch return error.OutOfMemory;

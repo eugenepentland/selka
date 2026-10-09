@@ -72,6 +72,7 @@ Both anchors need new sections in `docs/io.md` (shared file, not edited here).
 Suggested runnable examples for those sections:
 
 ```mylang
+# doc: skip Historical pre-redesign syntax retained as audit evidence.
 def main(out: Stream, err: Stream) -> int:
     out.print("result:", 42)
     err.print("note", sep=": ")

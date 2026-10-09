@@ -1,4 +1,3 @@
-module surface_collections_case_3
 
 
 record Box[T]:
@@ -9,8 +8,8 @@ record Empty:
     pass
 
 
-public def program() -> i64:
-    box = Box[i64](value=42)
+public func program() -> i64:
+    mut box = Box[i64](value=42)
     _ = Empty()
     if box.value == 0:
         pass

@@ -27,20 +27,19 @@ declares no `main`:
 
 ```mylang
 # doc: skip library fragment: the bash example below is what calls this export
-module stats
 
 public enum Status:
-    ready,
+    ready
     failed
 
 public record Sample:
     sequence: u64
     status: Status
 
-public def scale_up(sequence: u64, scale: u64) -> u64 effects():
+public func scale_up(sequence: u64, scale: u64) -> u64 effects():
     return sequence * scale
 
-public def sequence_of(sample: Sample) -> u64 effects():
+public func sequence_of(sample: Sample) -> u64 effects():
     return sample.sequence
 ```
 

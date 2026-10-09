@@ -1,13 +1,12 @@
-module rc_inert_returns
 import filesystem
 
 record Node:
-    left: Option[Node]
-    right: Option[Node]
+    left: Node?
+    right: Node?
 
 
 record Tagged:
-    node: Option[Node]
+    node: Node?
     tag: int
 
 
@@ -18,103 +17,104 @@ record Wide:
     fourth: Node
 
 
-union Choice:
-    empty,
-    full: Node
+enum Choice:
+    empty
+    full(value: Node)
 
 
-def make(depth: int) -> Node:
+func make(depth: int) -> Node:
     if depth <= 0:
-        return Node(None, None)
-    return Node(Some(make(depth - 1)), Some(make(depth - 1)))
+        return Node(left=None, right=None)
+    return Node(left=Some(make(depth - 1)), right=Some(make(depth - 1)))
 
 
-def empty(value: Node) -> bool:
+func empty(value: Node) -> bool:
     return value.left is None and value.right is None
 
 
-def boolean(flag: bool) -> Node:
+func boolean(flag: bool) -> Node:
     if not flag:
-        return Node(None, None)
+        return Node(left=None, right=None)
     return make(1)
 
 
-def wide(flag: bool) -> Wide:
+func wide(flag: bool) -> Wide:
     if flag:
-        return Wide(Node(None, None), Node(None, None), Node(None, None), Node(None, None))
-    return Wide(make(1), make(2), make(1), make(2))
+        return Wide(first=Node(left=None, right=None), second=Node(left=None, right=None), third=Node(left=None, right=None), fourth=Node(left=None, right=None))
+    return Wide(first=make(1), second=make(2), third=make(1), fourth=make(2))
 
 
-def choice(flag: bool) -> Choice:
+func choice(flag: bool) -> Choice:
     if flag:
         return Choice.empty
-    return Choice.full(make(1))
+    return Choice.full(value=make(1))
 
 
-public def test_zero_tagged_union_and_nonempty_case_preserve_their_layout() -> bool:
+public func test_zero_tagged_union_and_nonempty_case_preserve_their_layout() -> bool:
     match choice(True):
         case Choice.empty:
             match choice(False):
-                case Choice.full(value):
+                case Choice.full(value=value):
                     return not empty(value)
                 case Choice.empty:
                     return False
-        case Choice.full(_):
+        case Choice.full(value=_):
             return False
 
 
-public def test_null_return_preserves_both_scalar_comparison_paths() -> bool:
+public func test_null_return_preserves_both_scalar_comparison_paths() -> bool:
     return empty(make(0)) and empty(make(-1)) and not empty(make(3))
 
 
-public def test_boolean_null_branch_and_nonempty_fallback_stay_distinct() -> bool:
+public func test_boolean_null_branch_and_nonempty_fallback_stay_distinct() -> bool:
     return empty(boolean(False)) and not empty(boolean(True))
 
 
-public def test_wide_zero_return_preserves_every_inline_field() -> bool:
-    zero = wide(True)
-    full = wide(False)
+public func test_wide_zero_return_preserves_every_inline_field() -> bool:
+    mut zero = wide(True)
+    mut full = wide(False)
     return empty(zero.first) and empty(zero.second) and empty(zero.third) and empty(zero.fourth) and not empty(full.second)
 
 
-def shared(items: list[int], flag: bool) -> Node:
+func shared(items: int[], flag: bool) -> Node:
     if flag:
-        return Node(None, None)
+        return Node(left=None, right=None)
     return make(len(items))
 
 
-public def test_incoming_managed_owner_retains_ordinary_cleanup() -> bool:
-    items = [1, 2]
-    first = shared(items, True)
-    second = shared(items, False)
+public func test_incoming_managed_owner_retains_ordinary_cleanup() -> bool:
+    mut items = [1, 2]
+    mut first = shared(items, True)
+    mut second = shared(items, False)
     return empty(first) and not empty(second) and items == [1, 2]
 
 
-def nonzero(flag: bool) -> Tagged:
+func nonzero(flag: bool) -> Tagged:
     if flag:
-        return Tagged(None, 7)
-    return Tagged(Some(make(1)), 9)
+        return Tagged(node=None, tag=7)
+    return Tagged(node=Some(make(1)), tag=9)
 
 
-public def test_nonzero_plain_fields_are_not_replaced_by_zero() -> bool:
+public func test_nonzero_plain_fields_are_not_replaced_by_zero() -> bool:
     return nonzero(True).tag == 7 and nonzero(False).tag == 9
 
 
-def consume(file: TextFile, flag: bool) -> Node:
+func consume(file: TextFile, flag: bool) -> Node:
     _ = file.write("saved")
     if flag:
-        return Node(None, None)
+        return Node(left=None, right=None)
     return make(1)
 
 
-def resource_check() -> Result[bool, str]:
-    fs = filesystem.memory()
-    value = consume(fs.open("content", "w")?, True)
-    text = fs.read_text("content")?
+func resource_check() -> Result[bool, str]:
+    mut fs = filesystem.memory()
+    const file = try fs.open("content", "w")
+    const value = consume(file, True)
+    mut text = try fs.read_text("content")
     return Ok(empty(value) and text == "saved")
 
 
-public def test_unique_incoming_resource_is_closed_on_null_return() -> bool:
+public func test_unique_incoming_resource_is_closed_on_null_return() -> bool:
     match resource_check():
         case Ok(result):
             return result

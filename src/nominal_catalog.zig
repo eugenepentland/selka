@@ -86,10 +86,14 @@ const Builder = struct {
         const allocator = self.context.allocator;
         var output: std.Io.Writer.Allocating = .init(allocator);
         defer output.deinit();
-        output.writer.writeAll("def(") catch return error.OutOfMemory;
+        output.writer.writeAll("func(") catch return error.OutOfMemory;
         const parameter_count = node.key.arguments.len - 1;
         for (node.key.arguments[0..parameter_count], 0..) |argument, index| {
             if (index != 0) output.writer.writeAll(", ") catch return error.OutOfMemory;
+            if (index < node.key.base.callback.labels.len) {
+                const label = node.key.base.callback.labels[index];
+                if (label.len != 0) output.writer.print("named {s}: ", .{label}) catch return error.OutOfMemory;
+            }
             const parameter_name = self.identities.items.items[@backingInt(argument)].name orelse return;
             output.writer.writeAll(parameter_name) catch return error.OutOfMemory;
         }
@@ -191,6 +195,7 @@ const Builder = struct {
                 .parameters = parameters[0 .. node.key.arguments.len - 1],
                 .return_type = try self.runtimeType(node.key.arguments[node.key.arguments.len - 1]),
                 .effects = node.key.base.callback.effects,
+                .labels = node.key.base.callback.labels,
                 .mutates = node.key.base.callback.mutates,
                 .return_origin = node.key.base.callback.return_origin,
             };
@@ -320,6 +325,7 @@ const Builder = struct {
                     .parameters = parameters,
                     .return_type = try self.runtimeType(node.key.arguments[parameters.len]),
                     .effects = node.key.base.callback.effects,
+                    .labels = node.key.base.callback.labels,
                     .mutates = node.key.base.callback.mutates,
                     .return_origin = node.key.base.callback.return_origin,
                 };

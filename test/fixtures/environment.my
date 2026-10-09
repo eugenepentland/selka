@@ -1,9 +1,9 @@
 # The injected provider defines which names it permits; this literal names K.
-def lookup(env: Environment) -> Option[str] effects(environment):
+func lookup(env: Environment) -> str? effects(environment):
     return env.get("K")
 
 
-def main(env: Environment) -> int:
+func main(env: Environment) -> int:
     match lookup(env):
         case Some(value):
             return len(value)

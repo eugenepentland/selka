@@ -1,17 +1,17 @@
 # scan_replace: str.replace over LIB.md's 4 MB text.
 
 
-def shared_text() -> str:
-    block = "".join([f"item{i},{(i * 7919) % 100003},{'xxxxxx'[:i % 7]}\n" for i in range(2000)])
-    return "".join([block for _ in range(110)])
+func shared_text() -> str:
+    mut block = "".join([for i in range(2000) yield f"item{i},{(i * 7919) % 100003},{'xxxxxx'[:i % 7]}\n"])
+    return "".join([for _ in range(110) yield block])
 
 
-def main(out: Stream) -> int:
-    text = shared_text()
-    total = 0
-    a = 0
-    b = 0
-    c = 0
+func main(out: Stream) -> int:
+    mut text = shared_text()
+    mut total = 0
+    mut a = 0
+    mut b = 0
+    mut c = 0
     for _ in range(4):
         a = len(text.replace("item", "it"))
         b = len(text.replace(",", ";;"))

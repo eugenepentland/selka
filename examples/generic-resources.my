@@ -26,20 +26,20 @@ record Owned:
     code: int
 
 
-def forward[T](file: File) -> File effects(filesystem):
+func forward[T](file: File) -> File effects(filesystem):
     return file
 
 
-def drop[T](file: File) -> int effects(filesystem):
+func drop[T](file: File) -> int effects(filesystem):
     return 1
 
 
-def fields[T](value: Owned) -> int effects(filesystem):
+func fields[T](value: Owned) -> int effects(filesystem):
     _ = value
     return 7
 
 
-def handle[T](r: Open) -> int effects(filesystem):
+func handle[T](r: Open) -> int effects(filesystem):
     match r:
         case Open.ok(file):
             return fields[bool](Owned(file=forward[bool](file), code=7))
@@ -47,9 +47,9 @@ def handle[T](r: Open) -> int effects(filesystem):
             return code
 
 
-def main(fs: Filesystem) -> int:
-    empty: [0] u8 = []
-    first = handle[bool](acquire_resource[Open](fs, empty))
+func main(fs: Filesystem) -> int:
+    mut empty: FixedArray[u8, 0] = FixedArray[u8, 0]([])
+    mut first = handle[bool](acquire_resource[Open](fs, empty))
     match acquire_resource[Open](fs, empty):
         case Open.ok(file):
             return first + drop[bool](file)

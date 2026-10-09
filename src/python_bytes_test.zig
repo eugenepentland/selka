@@ -59,43 +59,43 @@ fn value(source: []const u8) !i64 {
 
 // spec-case: PY-BYTES-1
 test "PY-BYTES-1 out-of-range indexes ranges and separators trap with located codes" {
-    try trapped("def main() -> int:\n    raw = b\"ab\"\n    return raw[2]\n", "R_LIST_BOUNDS");
-    try trapped("def main() -> int:\n    raw = b\"ab\"\n    return raw[-3]\n", "R_LIST_BOUNDS");
-    try trapped("def main() -> int:\n    return len(b\"ab\".split(b\"\"))\n", "R_EMPTY_SEPARATOR");
-    try trapped("def main() -> int:\n    values: list[int] = [256]\n    return len(bytes(values))\n", "R_BYTE_RANGE");
-    try trapped("def main() -> int:\n    values: list[int] = [0 - 1]\n    return len(bytes(values))\n", "R_BYTE_RANGE");
+    try trapped("func main() -> int:\n    mut raw = b\"ab\"\n    return raw[2]\n", "R_LIST_BOUNDS");
+    try trapped("func main() -> int:\n    mut raw = b\"ab\"\n    return raw[-3]\n", "R_LIST_BOUNDS");
+    try trapped("func main() -> int:\n    return len(b\"ab\".split(b\"\"))\n", "R_EMPTY_SEPARATOR");
+    try trapped("func main() -> int:\n    mut values: int[] = [256]\n    return len(bytes(values))\n", "R_BYTE_RANGE");
+    try trapped("func main() -> int:\n    mut values: int[] = [0 - 1]\n    return len(bytes(values))\n", "R_BYTE_RANGE");
 }
 
 // spec-case: PY-BYTES-6
 test "PY-BYTES-6 the mutable octet buffer traps the same byte-range conversion errors" {
-    try trapped("def main() -> int:\n    values: list[int] = [256]\n    return len(byte_buffer(values))\n", "R_BYTE_RANGE");
-    try trapped("def main() -> int:\n    values: list[int] = [0 - 1]\n    return len(byte_buffer(values))\n", "R_BYTE_RANGE");
-    try t.expectEqual(@as(i64, 42), try value("def main() -> int:\n    values: list[int] = [65, 66]\n    if byte_buffer(values) != b\"AB\":\n        return 1\n    return 42\n"));
-    try rejected("def main() -> int:\n    return len(byte_buffer(\"ab\"))\n", "E_BYTES_CONVERSION");
-    try rejected("def main() -> int:\n    raw = b\"ab\"\n    return len(byte_buffer(raw))\n", "E_BYTES_CONVERSION");
+    try trapped("func main() -> int:\n    mut values: int[] = [256]\n    return len(byte_buffer(values))\n", "R_BYTE_RANGE");
+    try trapped("func main() -> int:\n    mut values: int[] = [0 - 1]\n    return len(byte_buffer(values))\n", "R_BYTE_RANGE");
+    try t.expectEqual(@as(i64, 42), try value("func main() -> int:\n    mut values: int[] = [65, 66]\n    if byte_buffer(values) != b\"AB\":\n        return 1\n    return 42\n"));
+    try rejected("func main() -> int:\n    return len(byte_buffer(\"ab\"))\n", "E_BYTES_CONVERSION");
+    try rejected("func main() -> int:\n    mut raw = b\"ab\"\n    return len(byte_buffer(raw))\n", "E_BYTES_CONVERSION");
 }
 
 // spec-case: PY-BYTES-1
 test "PY-BYTES-1 byte strings are immutable and never convert through str" {
-    try rejected("def main() -> int:\n    raw = b\"ab\"\n    raw[0] = 1\n    return 0\n", "E_COLLECTION_METHOD");
-    try rejected("def main() -> int:\n    raw = b\"ab\"\n    raw.append(1)\n    return 0\n", "E_COLLECTION_METHOD");
-    try rejected("def main() -> int:\n    return len(str(b\"ab\"))\n", "E_TEXT_CONVERSION");
-    try rejected("def main() -> int:\n    raw = b\"ab\"\n    return len(raw - raw)\n", "E_TEXT_OPERATOR");
+    try rejected("func main() -> int:\n    mut raw = b\"ab\"\n    raw[0] = 1\n    return 0\n", "E_COLLECTION_METHOD");
+    try rejected("func main() -> int:\n    mut raw = b\"ab\"\n    raw.append(1)\n    return 0\n", "E_COLLECTION_METHOD");
+    try rejected("func main() -> int:\n    return len(str(b\"ab\"))\n", "E_TEXT_CONVERSION");
+    try rejected("func main() -> int:\n    mut raw = b\"ab\"\n    return len(raw - raw)\n", "E_TEXT_OPERATOR");
     // An immutable byte string is a hashable key (HASH-KEYS-1); the mutable
     // octet buffer is not.
-    try rejected("def main() -> int:\n    values: dict[byte_buffer, int] = {}\n    return len(values)\n", "E_DICT_KEY");
-    try rejected("def main() -> int:\n    return len(bytes(\"ab\"))\n", "E_BYTES_CONVERSION");
-    try rejected("def main() -> int:\n    return len(b\"ab\".encode())\n", "E_COLLECTION_METHOD");
+    try rejected("func main() -> int:\n    mut values: dict[byte_buffer, int] = {}\n    return len(values)\n", "E_DICT_KEY");
+    try rejected("func main() -> int:\n    return len(bytes(\"ab\"))\n", "E_BYTES_CONVERSION");
+    try rejected("func main() -> int:\n    return len(b\"ab\".encode())\n", "E_COLLECTION_METHOD");
     try rejected(
-        "def build() -> int noalloc:\n    raw = b\"ab\"\n    return len(raw)\ndef main() -> int:\n    return build()\n",
+        "func build() -> int noalloc:\n    mut raw = b\"ab\"\n    return len(raw)\nfunc main() -> int:\n    return build()\n",
         effect_bound,
     );
     try rejected(
-        "def grow(a: bytes, b: bytes) -> int noalloc:\n    return len(a + b)\ndef main() -> int:\n    return grow(b\"a\", b\"b\")\n",
+        "func grow(a: bytes, b: bytes) -> int noalloc:\n    return len(a + b)\nfunc main() -> int:\n    return grow(b\"a\", b\"b\")\n",
         effect_bound,
     );
     try rejected(
-        "def cut(a: bytes) -> int noalloc:\n    return len(a[0:1])\ndef main() -> int:\n    return cut(b\"ab\")\n",
+        "func cut(a: bytes) -> int noalloc:\n    return len(a[0:1])\nfunc main() -> int:\n    return cut(b\"ab\")\n",
         effect_bound,
     );
 }
@@ -103,12 +103,12 @@ test "PY-BYTES-1 byte strings are immutable and never convert through str" {
 // spec: PY-BYTES-5
 test "PY-BYTES-5 every byte-string operation builds and runs natively" {
     const source =
-        \\def parsed(digits: str) -> Result[bytes, str]:
+        \\func parsed(digits: str) -> Result[bytes, str]:
         \\    return bytes.fromhex(digits)
         \\
-        \\def main() -> int:
-        \\    raw = b"a,b" + b",c"
-        \\    parts = raw.split(b",")
+        \\func main() -> int:
+        \\    mut raw = b"a,b" + b",c"
+        \\    mut parts = raw.split(b",")
         \\    if b",".join(parts) != raw or raw[0:1] != b"a":
         \\        return 1
         \\    if not raw.startswith(b"a") or raw.endswith(b"z") or raw.find(b"b") != 2:
@@ -136,7 +136,7 @@ test "PY-BYTES-5 every byte-string operation builds and runs natively" {
 /// with the `str` literal it must equal, and re-encode to pin the exact scalar
 /// sequence rather than only the length.
 const valid_utf8_decode =
-    \\def text_of(raw: bytes) -> str:
+    \\func text_of(raw: bytes) -> str:
     \\    match raw.decode():
     \\        case Ok(text):
     \\            return text
@@ -144,7 +144,7 @@ const valid_utf8_decode =
     \\            return message
     \\
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    if text_of(b"abc") != "abc":
     \\        return 1
     \\    if text_of(b"abc").encode() != b"abc":
@@ -170,7 +170,7 @@ const valid_utf8_decode =
 /// reach `Err` with the runtime's existing invalid-UTF-8 message, which is what
 /// an `MYL_BYTES_INVALID` status publishes (an allocation failure would trap).
 const invalid_utf8_encoding =
-    \\def status_of(raw: bytes) -> str:
+    \\func status_of(raw: bytes) -> str:
     \\    match raw.decode():
     \\        case Ok(_):
     \\            return "accepted"
@@ -178,7 +178,7 @@ const invalid_utf8_encoding =
     \\            return message
     \\
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    if status_of(b"\xc0\x80") != "invalid UTF-8 in byte string":
     \\        return 1
     \\    if status_of(b"\xc1\xbf") != "invalid UTF-8 in byte string":
@@ -209,7 +209,7 @@ const invalid_utf8_encoding =
 /// Guest program: truncated sequences, stray continuation bytes and a bad
 /// continuation byte are all still rejected by the single validating pass.
 const truncated_utf8_decode =
-    \\def status_of(raw: bytes) -> str:
+    \\func status_of(raw: bytes) -> str:
     \\    match raw.decode():
     \\        case Ok(_):
     \\            return "accepted"
@@ -217,7 +217,7 @@ const truncated_utf8_decode =
     \\            return message
     \\
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    if status_of(b"\x80") != "invalid UTF-8 in byte string":
     \\        return 1
     \\    if status_of(b"\xbf") != "invalid UTF-8 in byte string":
@@ -256,80 +256,159 @@ test "UTF8-DECODE-1 truncated and stray continuation bytes stay invalid" {
 
 // spec-case: PY-BYTES-7
 test "PY-BYTES-7 views and copies exist only on the immutable byte string" {
-    try rejected("def main() -> int:\n    empty: list[int] = []\n    data = byte_buffer(empty)\n    return len(data.view(0, 1))\n", "E_COLLECTION_METHOD");
-    try rejected("def main() -> int:\n    empty: list[int] = []\n    data = byte_buffer(empty)\n    return len(data.copy())\n", "E_COLLECTION_METHOD");
-    try rejected("def main() -> int:\n    text = \"abc\"\n    return len(text.view(0, 1))\n", "E_COLLECTION_METHOD");
-    try rejected("def main() -> int:\n    text = \"abc\"\n    return len(text.copy())\n", "E_COLLECTION_METHOD");
-    try rejected("def main() -> int:\n    text = \"abc\"\n    return len(text.scalar_count())\n", "E_COLLECTION_METHOD");
-    try rejected("def main() -> int:\n    raw = b\"abc\"\n    return len(raw.view(\"a\", 1))\n", "E_TYPE");
-    try rejected("def main() -> int:\n    raw = b\"abc\"\n    return len(raw.view(0, 1, 2))\n", "E_ARITY");
+    try rejected("func main() -> int:\n    mut empty: int[] = []\n    mut data = byte_buffer(empty)\n    return len(data.view(0, 1))\n", "E_COLLECTION_METHOD");
+    try rejected("func main() -> int:\n    mut empty: int[] = []\n    mut data = byte_buffer(empty)\n    return len(data.copy())\n", "E_COLLECTION_METHOD");
+    try rejected("func main() -> int:\n    mut text = \"abc\"\n    return len(text.view(0, 1))\n", "E_COLLECTION_METHOD");
+    try rejected("func main() -> int:\n    mut text = \"abc\"\n    return len(text.copy())\n", "E_COLLECTION_METHOD");
+    try rejected("func main() -> int:\n    mut text = \"abc\"\n    return len(text.scalar_count())\n", "E_COLLECTION_METHOD");
+    try rejected("func main() -> int:\n    mut raw = b\"abc\"\n    return len(raw.view(\"a\", 1))\n", "E_TYPE");
+    try rejected("func main() -> int:\n    mut raw = b\"abc\"\n    return len(raw.view(0, 1, 2))\n", "E_ARITY");
 }
 
 // spec-case: PY-BYTES-9
 test "PY-BYTES-9 numeric parsing is accepted under noalloc and a view is not" {
     try t.expectEqual(@as(i64, 42), try value(
-        "def parse(text: str) -> int noalloc:\n    match int(text):\n        case Some(found):\n            return found\n" ++
-            "        case None:\n            return 0\ndef main() -> int:\n    return parse(\"42\")\n",
+        "func parse(text: str) -> int noalloc:\n" ++
+            "    match parse_int(text):\n" ++
+            "        case Some(found):\n" ++
+            "            return found\n" ++
+            "        case None:\n" ++
+            "            return 0\n" ++
+            "func main() -> int:\n" ++
+            "    return parse(\"42\")\n",
     ));
     try t.expectEqual(@as(i64, 42), try value(
-        "def parse(raw: bytes) -> int noalloc:\n    match raw.parse_int():\n        case Some(found):\n            return found\n" ++
-            "        case None:\n            return 0\ndef main() -> int:\n    return parse(b\"42\")\n",
+        "func parse(raw: bytes) -> int noalloc:\n" ++
+            "    match raw.parse_int():\n" ++
+            "        case Some(found):\n" ++
+            "            return found\n" ++
+            "        case None:\n" ++
+            "            return 0\n" ++
+            "func main() -> int:\n" ++
+            "    return parse(b\"42\")\n",
     ));
     try t.expectEqual(@as(i64, 42), try value(
-        "def measure(raw: bytes) -> int noalloc:\n    match raw.scalar_count():\n" ++
-            "        case Ok(width):\n            return width + 40\n        case Err(_):\n            return 0\n" ++
-            "def main() -> int:\n    return measure(b\"42\")\n",
+        "func measure(raw: bytes) -> int noalloc:\n" ++
+            "    match raw.scalar_count():\n" ++
+            "        case Ok(width):\n" ++
+            "            return width + 40\n" ++
+            "        case Err(_):\n" ++
+            "            return 0\n" ++
+            "func main() -> int:\n" ++
+            "    return measure(b\"42\")\n",
     ));
     try t.expectEqual(@as(i64, 42), try value(
-        "def same(raw: bytes, expected: bytes) -> int noalloc:\n    if raw == expected:\n        return 42\n    return 0\n" ++
-            "def main() -> int:\n    return same(b\"42\", b\"42\")\n",
+        "func same(raw: bytes, expected: bytes) -> int noalloc:\n    if raw == expected:\n        return 42\n    return 0\n" ++
+            "func main() -> int:\n    return same(b\"42\", b\"42\")\n",
     ));
     try t.expectEqual(@as(i64, 42), try value(
-        "def parse(text: str) -> int noalloc:\n    match float(text):\n        case Some(found):\n" ++
-            "            if found > 2.0:\n                return 42\n            return 0\n        case None:\n            return 0\n" ++
-            "def main() -> int:\n    return parse(\"2.5\")\n",
+        "func parse(text: str) -> int noalloc:\n" ++
+            "    match parse_float(text):\n" ++
+            "        case Some(found):\n" ++
+            "            if found > 2.0:\n" ++
+            "                return 42\n" ++
+            "            return 0\n" ++
+            "        case None:\n" ++
+            "            return 0\n" ++
+            "func main() -> int:\n" ++
+            "    return parse(\"2.5\")\n",
     ));
     try t.expectEqual(@as(i64, 42), try value(
-        "def parse(raw: bytes) -> int noalloc:\n    match raw.parse_float():\n        case Some(found):\n" ++
-            "            if found > 2.0:\n                return 42\n            return 0\n        case None:\n            return 0\n" ++
-            "def main() -> int:\n    return parse(b\"2.5\")\n",
+        "func parse(raw: bytes) -> int noalloc:\n" ++
+            "    match raw.parse_float():\n" ++
+            "        case Some(found):\n" ++
+            "            if found > 2.0:\n" ++
+            "                return 42\n" ++
+            "            return 0\n" ++
+            "        case None:\n" ++
+            "            return 0\n" ++
+            "func main() -> int:\n" ++
+            "    return parse(b\"2.5\")\n",
     ));
-    try rejected("def peek(raw: bytes) -> int noalloc:\n    return len(raw.view(0, 1))\ndef main() -> int:\n    return peek(b\"abc\")\n", effect_bound);
+    try rejected("func peek(raw: bytes) -> int noalloc:\n    return len(raw.view(0, 1))\nfunc main() -> int:\n    return peek(b\"abc\")\n", effect_bound);
 }
 
 // spec: PY-BYTES-RANGE-1
 test "PY-BYTES-RANGE-1 range parsing and scalar counting clamp without a view allocation" {
     try t.expectEqual(@as(i64, 42), try value(
-        "def ranged(raw: bytes) -> int noalloc:\n" ++
-            "    match raw.parse_int_range(2, 4):\n        case Some(number):\n            if number != 42:\n                return 1\n        case None:\n            return 2\n" ++
-            "    match raw.parse_float_range(5, 8):\n        case Some(number):\n            if number != 2.5:\n                return 3\n        case None:\n            return 4\n" ++
+        "func ranged(raw: bytes) -> int noalloc:\n" ++
+            "    match raw.parse_int_range(2, 4):\n" ++
+            "        case Some(number):\n" ++
+            "            if number != 42:\n" ++
+            "                return 1\n" ++
+            "        case None:\n" ++
+            "            return 2\n" ++
+            "    match raw.parse_float_range(5, 8):\n" ++
+            "        case Some(number):\n" ++
+            "            if number != 2.5:\n" ++
+            "                return 3\n" ++
+            "        case None:\n" ++
+            "            return 4\n" ++
             "    return 0\n" ++
-            "def main() -> int:\n    raw = b\"xx42=2.5abc\"\n    if ranged(raw) != 0:\n        return 1\n" ++
-            "    match raw.scalar_count_range(0 - 3, 99):\n        case Ok(width):\n            return width + 39\n        case Err(_):\n            return 5\n",
+            "func main() -> int:\n" ++
+            "    mut raw = b\"xx42=2.5abc\"\n" ++
+            "    if ranged(raw) != 0:\n" ++
+            "        return 1\n" ++
+            "    match raw.scalar_count_range(0 - 3, 99):\n" ++
+            "        case Ok(width):\n" ++
+            "            return width + 39\n" ++
+            "        case Err(_):\n" ++
+            "            return 5\n",
     ));
     try t.expectEqual(@as(i64, 42), try value(
-        "def main() -> int:\n" ++
-            "    raw = b\"x-9223372036854775808y\"\n" ++
-            "    match raw.parse_int_range(1, 21):\n        case Some(number):\n            if number != -9223372036854775808:\n                return 1\n        case None:\n            return 2\n" ++
-            "    match raw.parse_int_range(21, 1):\n        case Some(_):\n            return 3\n        case None:\n            pass\n" ++
-            "    match b\"a\\xce\\xbbb\".scalar_count_range(1, 3):\n        case Ok(width):\n            return width + 41\n        case Err(_):\n            return 4\n",
+        "func main() -> int:\n" ++
+            "    mut raw = b\"x-9223372036854775808y\"\n" ++
+            "    match raw.parse_int_range(1, 21):\n" ++
+            "        case Some(number):\n" ++
+            "            if number != -9223372036854775808:\n" ++
+            "                return 1\n" ++
+            "        case None:\n" ++
+            "            return 2\n" ++
+            "    match raw.parse_int_range(21, 1):\n" ++
+            "        case Some(_):\n" ++
+            "            return 3\n" ++
+            "        case None:\n" ++
+            "            pass\n" ++
+            "    match b\"a\\xce\\xbbb\".scalar_count_range(1, 3):\n" ++
+            "        case Ok(width):\n" ++
+            "            return width + 41\n" ++
+            "        case Err(_):\n" ++
+            "            return 4\n",
     ));
     try t.expectEqual(@as(i64, 42), try value(
-        "def main() -> int:\n" ++
-            "    values: list[int] = []\n    raw = bytes(values)\n" ++
-            "    match raw.parse_int_range(0 - 10, 10):\n        case Some(_):\n            return 1\n        case None:\n            pass\n" ++
-            "    match raw.scalar_count_range(0 - 10, 10):\n        case Ok(width):\n            return width + 42\n        case Err(_):\n            return 2\n",
+        "func main() -> int:\n" ++
+            "    mut values: int[] = []\n" ++
+            "    mut raw = bytes(values)\n" ++
+            "    match raw.parse_int_range(0 - 10, 10):\n" ++
+            "        case Some(_):\n" ++
+            "            return 1\n" ++
+            "        case None:\n" ++
+            "            pass\n" ++
+            "    match raw.scalar_count_range(0 - 10, 10):\n" ++
+            "        case Ok(width):\n" ++
+            "            return width + 42\n" ++
+            "        case Err(_):\n" ++
+            "            return 2\n",
     ));
     try t.expectEqual(@as(i64, 42), try value(
-        "def main() -> int:\n" ++
+        "func main() -> int:\n" ++
             "    match b\"a\\xffb\".scalar_count_range(1, 2):\n" ++
-            "        case Ok(_):\n            return 1\n" ++
-            "        case Err(message):\n            if message == \"invalid UTF-8 in byte string\":\n                return 42\n            return 2\n",
+            "        case Ok(_):\n" ++
+            "            return 1\n" ++
+            "        case Err(message):\n" ++
+            "            if message == \"invalid UTF-8 in byte string\":\n" ++
+            "                return 42\n" ++
+            "            return 2\n",
     ));
     try rejected(
-        "def measure(raw: bytes) -> int noalloc:\n" ++
-            "    match raw.scalar_count_range(0, len(raw)):\n        case Ok(width):\n            return width\n        case Err(_):\n            return 0\n" ++
-            "def main() -> int:\n    return measure(b\"abc\")\n",
+        "func measure(raw: bytes) -> int noalloc:\n" ++
+            "    match raw.scalar_count_range(0, len(raw)):\n" ++
+            "        case Ok(width):\n" ++
+            "            return width\n" ++
+            "        case Err(_):\n" ++
+            "            return 0\n" ++
+            "func main() -> int:\n" ++
+            "    return measure(b\"abc\")\n",
         effect_bound,
     );
 }
@@ -337,34 +416,80 @@ test "PY-BYTES-RANGE-1 range parsing and scalar counting clamp without a view al
 // spec: PY-BYTES-FUSED-RANGE-1
 test "PY-BYTES-FUSED-RANGE-1 immediate slices and views parse under noalloc" {
     try t.expectEqual(@as(i64, 42), try value(
-        "def fused(raw: bytes) -> int noalloc:\n" ++
-            "    match raw[2:4].parse_int():\n        case Some(number):\n            if number != 42:\n                return 1\n        case None:\n            return 2\n" ++
-            "    match raw.view(5, 8).parse_float():\n        case Some(number):\n            if number != 2.5:\n                return 3\n        case None:\n            return 4\n" ++
-            "    match raw[0 - 8:0 - 6].parse_int():\n        case Some(number):\n            if number != 42:\n                return 5\n        case None:\n            return 6\n" ++
-            "    match raw[8:2].parse_int():\n        case Some(_):\n            return 7\n        case None:\n            pass\n" ++
+        "func fused(raw: bytes) -> int noalloc:\n" ++
+            "    match raw[2:4].parse_int():\n" ++
+            "        case Some(number):\n" ++
+            "            if number != 42:\n" ++
+            "                return 1\n" ++
+            "        case None:\n" ++
+            "            return 2\n" ++
+            "    match raw.view(5, 8).parse_float():\n" ++
+            "        case Some(number):\n" ++
+            "            if number != 2.5:\n" ++
+            "                return 3\n" ++
+            "        case None:\n" ++
+            "            return 4\n" ++
+            "    match raw[0 - 8:0 - 6].parse_int():\n" ++
+            "        case Some(number):\n" ++
+            "            if number != 42:\n" ++
+            "                return 5\n" ++
+            "        case None:\n" ++
+            "            return 6\n" ++
+            "    match raw[8:2].parse_int():\n" ++
+            "        case Some(_):\n" ++
+            "            return 7\n" ++
+            "        case None:\n" ++
+            "            pass\n" ++
             "    return 42\n" ++
-            "def main() -> int:\n    if fused(b\"xx42=2.5yy\") != 42:\n        return 8\n" ++
-            "    match b\"42\"[:].parse_int():\n        case Some(number):\n            if number != 42:\n                return 9\n        case None:\n            return 10\n" ++
-            "    match b\"42\"[0 - 99:99].parse_int():\n        case Some(number):\n            return number\n        case None:\n            return 11\n",
+            "func main() -> int:\n" ++
+            "    if fused(b\"xx42=2.5yy\") != 42:\n" ++
+            "        return 8\n" ++
+            "    match b\"42\"[:].parse_int():\n" ++
+            "        case Some(number):\n" ++
+            "            if number != 42:\n" ++
+            "                return 9\n" ++
+            "        case None:\n" ++
+            "            return 10\n" ++
+            "    match b\"42\"[0 - 99:99].parse_int():\n" ++
+            "        case Some(number):\n" ++
+            "            return number\n" ++
+            "        case None:\n" ++
+            "            return 11\n",
     ));
     try rejected(
-        "def retained(raw: bytes) -> int noalloc:\n" ++
-            "    part = raw[0:2]\n" ++
-            "    match part.parse_int():\n        case Some(number):\n            return number\n        case None:\n            return 0\n" ++
-            "def main() -> int:\n    return retained(b\"42\")\n",
+        "func retained(raw: bytes) -> int noalloc:\n" ++
+            "    mut part = raw[0:2]\n" ++
+            "    match part.parse_int():\n" ++
+            "        case Some(number):\n" ++
+            "            return number\n" ++
+            "        case None:\n" ++
+            "            return 0\n" ++
+            "func main() -> int:\n" ++
+            "    return retained(b\"42\")\n",
         effect_bound,
     );
     try rejected(
-        "def retained(raw: bytes) -> int noalloc:\n" ++
-            "    part = raw.view(0, 2)\n" ++
-            "    match part.parse_int():\n        case Some(number):\n            return number\n        case None:\n            return 0\n" ++
-            "def main() -> int:\n    return retained(b\"42\")\n",
+        "func retained(raw: bytes) -> int noalloc:\n" ++
+            "    mut part = raw.view(0, 2)\n" ++
+            "    match part.parse_int():\n" ++
+            "        case Some(number):\n" ++
+            "            return number\n" ++
+            "        case None:\n" ++
+            "            return 0\n" ++
+            "func main() -> int:\n" ++
+            "    return retained(b\"42\")\n",
         effect_bound,
     );
     try rejected(
-        "def mutable(data: byte_buffer) -> int noalloc:\n" ++
-            "    match data[0:2].parse_int():\n        case Some(number):\n            return number\n        case None:\n            return 0\n" ++
-            "def main() -> int:\n    values: list[int] = [52, 50]\n    return mutable(byte_buffer(values))\n",
+        "func mutable(data: byte_buffer) -> int noalloc:\n" ++
+            "    match data[0:2].parse_int():\n" ++
+            "        case Some(number):\n" ++
+            "            return number\n" ++
+            "        case None:\n" ++
+            "            return 0\n" ++
+            "func main() -> int:\n" ++
+            "    mut values: int[] = [52, 50]\n" ++
+            "    return mutable(byte_buffer(values))\n",
         effect_bound,
     );
 }
@@ -372,24 +497,43 @@ test "PY-BYTES-FUSED-RANGE-1 immediate slices and views parse under noalloc" {
 // spec-case: PY-BYTES-FUSED-RANGE-1
 test "PY-BYTES-FUSED-RANGE-1 receiver and bounds keep source order and run once" {
     try t.expectEqual(@as(i64, 42), try value(
-        "def source(log: mut list[int], raw: bytes) -> bytes effects(mutation):\n" ++
-            "    log[0] = log[0] + 1\n    return raw\n" ++
-            "def bound(log: mut list[int]) -> int effects(mutation):\n" ++
-            "    value = log[0]\n    log[0] = value + 1\n    return value\n" ++
-            "def main() -> int:\n    log: list[int] = [0]\n" ++
+        "func source(mut log: int[], raw: bytes) -> bytes effects(mutation):\n" ++
+            "    log[0] = log[0] + 1\n" ++
+            "    return raw\n" ++
+            "func bound(mut log: int[]) -> int effects(mutation):\n" ++
+            "    mut value = log[0]\n" ++
+            "    log[0] = value + 1\n" ++
+            "    return value\n" ++
+            "func main() -> int:\n" ++
+            "    mut log: int[] = [0]\n" ++
             "    match source(mut log, b\"x42\")[bound(mut log):bound(mut log)].parse_int():\n" ++
-            "        case Some(number):\n            if number != 4 or log[0] != 3:\n                return 1\n" ++
-            "        case None:\n            return 2\n    return 42\n",
+            "        case Some(number):\n" ++
+            "            if number != 4 or log[0] != 3:\n" ++
+            "                return 1\n" ++
+            "        case None:\n" ++
+            "            return 2\n" ++
+            "    return 42\n",
     ));
 }
 
 // spec-case: PY-BYTES-FUSED-RANGE-1
 test "PY-BYTES-FUSED-RANGE-1 generic noalloc bodies accept immediate ranges" {
     try t.expectEqual(@as(i64, 42), try value(
-        "def generic[T](raw: bytes, marker: T) -> int noalloc:\n" ++
-            "    match raw[2:].parse_int():\n        case Some(number):\n            if number != 42:\n                return 1\n        case None:\n            return 2\n" ++
-            "    match raw.view(2, 4).parse_float():\n        case Some(number):\n            if number != 42.0:\n                return 3\n        case None:\n            return 4\n" ++
+        "func generic[T](raw: bytes, marker: T) -> int noalloc:\n" ++
+            "    match raw[2:].parse_int():\n" ++
+            "        case Some(number):\n" ++
+            "            if number != 42:\n" ++
+            "                return 1\n" ++
+            "        case None:\n" ++
+            "            return 2\n" ++
+            "    match raw.view(2, 4).parse_float():\n" ++
+            "        case Some(number):\n" ++
+            "            if number != 42.0:\n" ++
+            "                return 3\n" ++
+            "        case None:\n" ++
+            "            return 4\n" ++
             "    return 42\n" ++
-            "def main() -> int:\n    return generic[int](b\"xx42\", 0)\n",
+            "func main() -> int:\n" ++
+            "    return generic[int](b\"xx42\", 0)\n",
     ));
 }

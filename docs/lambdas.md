@@ -11,9 +11,9 @@ directly in a callback argument:
 record Person:
     age: int
 
-def main() -> int:
-    people = [Person(age=30), Person(age=12)]
-    ranked = sorted(people, key=lambda person: person.age)
+func main() -> int:
+    mut people = [Person(age=30), Person(age=12)]
+    mut ranked = sorted(people, key=lambda person: person.age)
     return ranked[0].age
 ```
 
@@ -37,4 +37,4 @@ not type by itself is `E_SORT_KEY`, which quotes the underlying error.
 
 `sorted(values)` keeps its existing ordering for lists of integer, `float`, `str`, or `bytes`.
 `sorted(values, key=callback)` accepts a callback from the element type to an ordered key
-(`def(T) -> K effects(managed_allocation)`: it may build a `str`, and nothing else), evaluates it once per element in input order before a stable merge, and leaves the input list unchanged.
+(`func(T) -> K effects(managed_allocation)`: it may build a `str`, and nothing else), evaluates it once per element in input order before a stable merge, and leaves the input list unchanged.

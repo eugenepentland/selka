@@ -1,4 +1,3 @@
-module live_view_snapshots
 
 record HeldFields:
     live: DictValues[int, int]
@@ -7,56 +6,56 @@ record HeldFields:
 record Envelope:
     live: DictValues[int, int]
 
-union Held:
-    values: DictValues[int, int],
+enum Held:
+    values(value: DictValues[int, int])
     empty
 
-public def test_last_view_read_does_not_move_its_mapping() -> bool:
-    mapping = {1: 7}
-    live = mapping.values()
-    result = HeldFields(live, live.mapping)
+public func test_last_view_read_does_not_move_its_mapping() -> bool:
+    mut mapping = {1: 7}
+    mut live = mapping.values()
+    mut result = HeldFields(live, live.mapping)
     result.snapshot[1] = 11
     if list(result.live) != [7]:
         return False
     mapping[1] = 13
     return result.snapshot[1] == 11 and mapping[1] == 13
 
-public def test_nested_record_projection_keeps_view_live_and_mapping_independent() -> bool:
-    mapping = {1: 7}
-    owner = Envelope(mapping.values())
-    result = HeldFields(owner.live, owner.live.mapping)
+public func test_nested_record_projection_keeps_view_live_and_mapping_independent() -> bool:
+    mut mapping = {1: 7}
+    mut owner = Envelope(mapping.values())
+    mut result = HeldFields(owner.live, owner.live.mapping)
     result.snapshot[1] = 11
     if list(result.live) != [7]:
         return False
     mapping[1] = 13
     return result.snapshot[1] == 11 and mapping[1] == 13
 
-public def test_fixed_array_projection_preserves_external_mapping_owner() -> bool:
-    mapping = {1: 7}
-    owners: [1]Envelope = [Envelope(mapping.values())]
-    result = HeldFields(owners[0].live, owners[0].live.mapping)
+public func test_fixed_array_projection_preserves_external_mapping_owner() -> bool:
+    mut mapping = {1: 7}
+    mut owners: FixedArray[Envelope, 1] = [Envelope(mapping.values())]
+    mut result = HeldFields(owners[0].live, owners[0].live.mapping)
     result.snapshot[1] = 11
     if list(result.live) != [7]:
         return False
     mapping[1] = 13
     return result.snapshot[1] == 11 and mapping[1] == 13
 
-public def test_list_projection_preserves_external_mapping_owner() -> bool:
-    mapping = {1: 7}
-    owners = [Envelope(mapping.values())]
-    result = HeldFields(owners[0].live, owners[0].live.mapping)
+public func test_list_projection_preserves_external_mapping_owner() -> bool:
+    mut mapping = {1: 7}
+    mut owners = [Envelope(mapping.values())]
+    mut result = HeldFields(owners[0].live, owners[0].live.mapping)
     result.snapshot[1] = 11
     if list(result.live) != [7]:
         return False
     mapping[1] = 13
     return result.snapshot[1] == 11 and mapping[1] == 13
 
-public def test_variant_payload_projection_preserves_external_mapping_owner() -> bool:
-    mapping = {1: 7}
-    owner = Held.values(mapping.values())
+public func test_variant_payload_projection_preserves_external_mapping_owner() -> bool:
+    mut mapping = {1: 7}
+    mut owner = Held.values(value=mapping.values())
     match owner:
-        case Held.values(live):
-            result = HeldFields(live, live.mapping)
+        case Held.values(value=live):
+            mut result = HeldFields(live, live.mapping)
             result.snapshot[1] = 11
             if list(result.live) != [7]:
                 return False
@@ -65,45 +64,45 @@ public def test_variant_payload_projection_preserves_external_mapping_owner() ->
         case Held.empty:
             return False
 
-public def test_fresh_view_mapping_projection_still_creates_a_snapshot() -> bool:
-    mapping = {1: 7}
-    snapshot = mapping.values().mapping
+public func test_fresh_view_mapping_projection_still_creates_a_snapshot() -> bool:
+    mut mapping = {1: 7}
+    mut snapshot = mapping.values().mapping
     snapshot[1] = 11
     return mapping[1] == 7 and snapshot[1] == 11
 
-def replace_mapping(live: mut DictValues[int, int]):
-    fields = live.mapping
+func replace_mapping(mut live: DictValues[int, int]):
+    mut fields = live.mapping
     fields[1] = 11
     live.mapping = fields
 
-public def test_field_extract_mutate_and_return_cannot_mutate_external_mapping() -> bool:
-    mapping = {1: 7}
-    live = mapping.values()
+public func test_field_extract_mutate_and_return_cannot_mutate_external_mapping() -> bool:
+    mut mapping = {1: 7}
+    mut live = mapping.values()
     replace_mapping(mut live)
     return mapping[1] == 7 and list(live) == [11]
 
-def replace_payload(items: mut list[Held], index: int):
+func replace_payload(mut items: Held[], index: int):
     match items[index]:
-        case Held.values(old):
-            fields = old.mapping
+        case Held.values(value=old):
+            mut fields = old.mapping
             fields[1] = 11
-            items[index] = Held.values(fields.values())
+            items[index] = Held.values(value=fields.values())
         case Held.empty:
             pass
 
-public def test_indexed_payload_return_cannot_elide_mapping_snapshot() -> bool:
-    mapping = {1: 7}
-    items = [Held.values(mapping.values())]
+public func test_indexed_payload_return_cannot_elide_mapping_snapshot() -> bool:
+    mut mapping = {1: 7}
+    mut items = [Held.values(value=mapping.values())]
     replace_payload(mut items, 0)
     match items[0]:
-        case Held.values(live):
+        case Held.values(value=live):
             return mapping[1] == 7 and list(live) == [11]
         case Held.empty:
             return False
 
-public def test_copying_the_view_itself_keeps_external_identity() -> bool:
-    mapping = {1: 7}
-    live = mapping.values()
-    owners: [2]Envelope = [Envelope(live), Envelope(live)]
+public func test_copying_the_view_itself_keeps_external_identity() -> bool:
+    mut mapping = {1: 7}
+    mut live = mapping.values()
+    mut owners: FixedArray[Envelope, 2] = [Envelope(live), Envelope(live)]
     mapping[1] = 13
     return list(owners[0].live) == [13] and list(owners[1].live) == [13]

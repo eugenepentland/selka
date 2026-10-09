@@ -6,19 +6,19 @@ const native = @import("native_execute.zig");
 const typed = @import("typed.zig");
 const declarations =
     \\public domain Id: u64:
-    \\    def make(n: u64) -> Id effects():
+    \\    func make(n: u64) -> Id effects():
     \\        return wrap[Id](n)
     \\
     \\
     \\domain Other: u64:
-    \\    def make(n: u64) -> Other effects():
+    \\    func make(n: u64) -> Other effects():
     \\        return wrap[Other](n)
     \\
     \\
     \\
 ;
 const comparison = declarations ++
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    if Id.make(18446744073709551615u64) == Id.make(18446744073709551615u64):
     \\        return 1
     \\    return 0
@@ -55,35 +55,32 @@ test "domain equality emits native comparisons without a feature rejection" {
 const Modules = struct {
     fn read(context: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
         if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8, if (context == null)
-            \\module main
             \\import left as a
             \\import bridge as b
             \\
             \\
-            \\def main() -> i64:
+            \\func main() -> i64:
             \\    if a.Id.make(9u64) == b.make(9u64):
             \\        return 1
             \\    return 0
         else
-            \\module main
             \\import left as a
             \\import right as b
             \\
             \\
-            \\def main() -> i64:
+            \\func main() -> i64:
             \\    _ = a.Id.make(9u64) == b.Id.make(9u64)
             \\    return 0
         );
         if (std.mem.eql(u8, path, "bridge.my")) return allocator.dupe(u8,
-            \\module bridge
             \\import left as alias
             \\
             \\
-            \\public def make(n: u64) -> alias.Id effects():
+            \\public func make(n: u64) -> alias.Id effects():
             \\    return alias.Id.make(n)
         );
-        if (std.mem.eql(u8, path, "left.my")) return allocator.dupe(u8, "module left\n" ++ declarations);
-        if (std.mem.eql(u8, path, "right.my")) return allocator.dupe(u8, "module right\n" ++ declarations);
+        if (std.mem.eql(u8, path, "left.my")) return allocator.dupe(u8, "" ++ declarations);
+        if (std.mem.eql(u8, path, "right.my")) return allocator.dupe(u8, "" ++ declarations);
         return error.NotFound;
     }
 };
@@ -111,13 +108,13 @@ test "domain equality compares every scalar backing by value" {
     for ([_][]const u8{ "i8", "i16", "i32", "i64", "u8", "u16", "u32", "u64" }) |width| {
         const source = try std.fmt.allocPrint(t.allocator,
             \\domain D: {s}:
-            \\    def make(n: {s}) -> D:
+            \\    func make(n: {s}) -> D:
             \\        return wrap[D](n)
             \\
             \\
-            \\def main() -> i64:
-            \\    a = D.make(7{s})
-            \\    b = D.make(8{s})
+            \\func main() -> i64:
+            \\    const a = D.make(7{s})
+            \\    const b = D.make(8{s})
             \\    if a == a and a != b and not (a == b) and not (a != a):
             \\        return 1
             \\    return 0
@@ -128,24 +125,24 @@ test "domain equality compares every scalar backing by value" {
     try expectValue(t.allocator, comparison, 1);
     try expectValue(t.allocator,
         \\domain D: i64:
-        \\    def make(n: i64) -> D:
+        \\    func make(n: i64) -> D:
         \\        return wrap[D](n)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    if D.make(-9223372036854775808) == D.make(-9223372036854775808) and D.make(-1) != D.make(1):
         \\        return 1
         \\    return 0
     , 1);
     try expectValue(t.allocator,
         \\domain D: bool:
-        \\    def make(n: bool) -> D:
+        \\    func make(n: bool) -> D:
         \\        return wrap[D](n)
         \\
         \\
-        \\def main() -> i64:
-        \\    a = D.make(True)
-        \\    b = D.make(False)
+        \\func main() -> i64:
+        \\    mut a = D.make(True)
+        \\    mut b = D.make(False)
         \\    if a == a and b == b and a != b and not (a == b) and not (a != a):
         \\        return 1
         \\    return 0
@@ -155,41 +152,41 @@ test "domain equality compares every scalar backing by value" {
 test "domain equality preserves opacity and rejects mixed IDs arithmetic ordering and integer requirements" {
     const cases = [_]struct { source: []const u8, code: []const u8 = "E_TYPE" }{
         .{ .source =
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    _ = Id.make(1u64) == Other.make(1u64)
         \\    return 0
         },
         .{ .source =
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    _ = Id.make(1u64) != Other.make(1u64)
         \\    return 0
         },
         .{ .source =
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    _ = Id.make(1u64) == 1u64
         \\    return 0
         },
         .{ .source =
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    _ = Id.make(1u64) + Id.make(1u64)
         \\    return 0
         },
         .{ .source =
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    _ = Id.make(1u64) < Id.make(1u64)
         \\    return 0
         },
         .{ .source =
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    _ = unwrap(Id.make(1u64))
         \\    return 0
         , .code = "E_PRIVATE_DOMAIN" },
         .{ .source =
-        \\def same[T: integer](a: T, b: T) -> bool:
+        \\func same[T: integer](a: T, b: T) -> bool:
         \\    return a == b
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    _ = same[Id](Id.make(1u64), Id.make(1u64))
         \\    return 0
         , .code = "E_GENERIC_ARGUMENT" },
@@ -206,8 +203,8 @@ test "domain equality preserves opacity and rejects mixed IDs arithmetic orderin
 
 test "domain equality loops complete and traps name the failing frame" {
     var compilation = try language.Compilation.init(t.allocator, "loop.my", declarations ++
-        \\def main() -> i64:
-        \\    n = 0u64
+        \\func main() -> i64:
+        \\    mut n = 0u64
         \\    while Id.make(n) != Id.make(10000u64):
         \\        n = n + 1u64
         \\    return i64(n)
@@ -217,15 +214,15 @@ test "domain equality loops complete and traps name the failing frame" {
     const budgeted = try native.runWithOptions(&compilation, .{ .max_steps = 50 });
     try t.expectEqualStrings("R_STEP_LIMIT", budgeted.trap.code);
     var trapped = try language.Compilation.init(t.allocator, "order.my", declarations ++
-        \\def left() -> Id:
+        \\func left() -> Id:
         \\    return Id.make(1u64 // 0u64)
         \\
         \\
-        \\def right() -> Id:
+        \\func right() -> Id:
         \\    return Id.make(18446744073709551615u64 + 1u64)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    _ = left() == right()
         \\    return 0
     );
@@ -239,16 +236,16 @@ test "domain equality loops complete and traps name the failing frame" {
 test "value equality rejects an aggregate that reaches a callback field" {
     try reject(
         \\record Holder:
-        \\    action: def(int) -> int effects()
+        \\    action: func(int) -> int effects()
         \\
         \\
-        \\def identity(value: int) -> int effects():
+        \\func identity(value: int) -> int effects():
         \\    return value
         \\
         \\
-        \\def main() -> int:
-        \\    first = Holder(action=identity)
-        \\    second = Holder(action=identity)
+        \\func main() -> int:
+        \\    mut first = Holder(action=identity)
+        \\    mut second = Holder(action=identity)
         \\    if first == second:
         \\        return 1
         \\    return 0

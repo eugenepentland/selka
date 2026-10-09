@@ -1,10 +1,9 @@
-module managed_values_case_11
 
 
-public def program() -> i64:
-    value: str = b"hé🙂"
-    suffix: str = b"!"
-    all = value + suffix
+public func program() -> i64:
+    mut value: str = b"hé🙂"
+    mut suffix: str = b"!"
+    mut all = value + suffix
     if all[3] == suffix:
         return len(all)
     return 0

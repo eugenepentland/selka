@@ -1,4 +1,3 @@
-module stores
 
 # Stores into fields, elements, dictionary values, tuples and payloads, and
 # the operations that build a new collection from an old one's elements, give
@@ -6,8 +5,8 @@ module stores
 
 
 record Bag:
-    items: list[int]
-    tags: dict[str, list[int]]
+    items: int[]
+    tags: dict[str, int[]]
 
 
 record Holder:
@@ -15,41 +14,41 @@ record Holder:
     count: int
 
 
-def keys_of(values: list[list[int]]) -> int:
+func keys_of(values: int[][]) -> int:
     return len(values)
 
 
-def size(values: list[int]) -> int:
+func size(values: int[]) -> int:
     return len(values)
 
 
 # spec-case: VALUE-SEMANTICS-2
-public def test_a_record_field_holds_its_own_list() -> bool:
-    items = [1]
-    bag = Bag(items=items, tags={})
+public func test_a_record_field_holds_its_own_list() -> bool:
+    mut items = [1]
+    mut bag = Bag(items=items, tags={})
     items.append(2)
     bag.items.append(3)
-    copy = bag
+    mut copy = bag
     copy.items.append(4)
     return items == [1, 2] and bag.items == [1, 3] and copy.items == [1, 3, 4]
 
 
 # spec-case: VALUE-SEMANTICS-2
-public def test_a_nested_record_copy_is_independent() -> bool:
-    holder = Holder(bag=Bag(items=[1], tags={"a": [1]}), count=1)
-    other = holder
+public func test_a_nested_record_copy_is_independent() -> bool:
+    mut holder = Holder(bag=Bag(items=[1], tags={"a": [1]}), count=1)
+    mut other = holder
     other.bag.items.append(2)
     other.bag.tags["a"].append(2)
     return holder.bag.items == [1] and holder.bag.tags["a"] == [1] and other.bag.items == [1, 2] and other.bag.tags["a"] == [1, 2]
 
 
 # spec-case: VALUE-SEMANTICS-2
-public def test_element_and_dictionary_value_stores_copy() -> bool:
-    row = [1]
-    rows: list[list[int]] = []
+public func test_element_and_dictionary_value_stores_copy() -> bool:
+    mut row = [1]
+    mut rows: int[][] = []
     rows.append(row)
     rows.insert(0, row)
-    table: dict[str, list[int]] = {}
+    mut table: dict[str, int[]] = {}
     table["r"] = row
     row.append(9)
     rows[0].append(2)
@@ -58,12 +57,12 @@ public def test_element_and_dictionary_value_stores_copy() -> bool:
 
 
 # spec-case: VALUE-SEMANTICS-2
-public def test_tuple_and_payload_stores_copy() -> bool:
-    items = [1]
-    pair = (items, 5)
-    maybe: Option[list[int]] = Some(items)
+public func test_tuple_and_payload_stores_copy() -> bool:
+    mut items = [1]
+    mut pair = (items, 5)
+    mut maybe: int[]? = Some(items)
     items.append(2)
-    first, count = pair
+    const first, count = pair
     match maybe:
         case Some(inside):
             return len(first) == 1 and count == 5 and len(inside) == 1 and len(items) == 2
@@ -72,46 +71,46 @@ public def test_tuple_and_payload_stores_copy() -> bool:
 
 
 # spec-case: VALUE-SEMANTICS-2
-public def test_copy_slice_and_list_copy_their_elements() -> bool:
-    grid = [[1], [2]]
-    shallow = grid.copy()
+public func test_copy_slice_and_list_copy_their_elements() -> bool:
+    mut grid = [[1], [2]]
+    mut shallow = grid.copy()
     shallow[0].append(7)
-    sliced = grid[0:1]
+    mut sliced = grid[0:1]
     sliced[0].append(8)
-    listed = list(grid)
+    mut listed = list(grid)
     listed[1].append(9)
-    table = {"k": [1]}
-    values = list(table.values())
+    mut table = {"k": [1]}
+    mut values = list(table.values())
     values[0].append(2)
     return grid == [[1], [2]] and shallow[0] == [1, 7] and sliced[0] == [1, 8] and listed[1] == [2, 9] and table["k"] == [1] and values[0] == [1, 2]
 
 
 # spec-case: VALUE-SEMANTICS-2
-public def test_extend_and_sorted_copy_the_elements_they_take() -> bool:
-    grid = [[3], [1, 1], [2, 2, 2]]
-    more: list[list[int]] = []
+public func test_extend_and_sorted_copy_the_elements_they_take() -> bool:
+    mut grid = [[3], [1, 1], [2, 2, 2]]
+    mut more: int[][] = []
     more.extend(grid)
     more[0].append(0)
-    ordered = sorted(grid, key=size)
+    mut ordered = sorted(grid, key=size)
     ordered[0].append(5)
     return grid == [[3], [1, 1], [2, 2, 2]] and more[0] == [3, 0] and ordered[0] == [3, 5] and keys_of(ordered) == 3
 
 
 # spec-case: VALUE-SEMANTICS-2
-public def test_update_copies_the_dictionary_values_it_takes() -> bool:
-    source = {"k": [1]}
-    target: dict[str, list[int]] = {}
+public func test_update_copies_the_dictionary_values_it_takes() -> bool:
+    mut source = {"k": [1]}
+    mut target: dict[str, int[]] = {}
     target.update(source)
     target["k"].append(2)
     return source["k"] == [1] and target["k"] == [1, 2]
 
 
 # spec-case: VALUE-SEMANTICS-2
-public def test_setdefault_and_get_hand_back_copies() -> bool:
-    table: dict[str, list[int]] = {}
-    fallback = [0]
-    stored = table.setdefault("a", [1])
+public func test_setdefault_and_get_hand_back_copies() -> bool:
+    mut table: dict[str, int[]] = {}
+    mut fallback = [0]
+    mut stored = table.setdefault("a", [1])
     stored.append(2)
-    got = table.get("b", fallback)
+    mut got = table.get("b", fallback)
     got.append(3)
     return table["a"] == [1] and stored == [1, 2] and fallback == [0] and got == [0, 3]

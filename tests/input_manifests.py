@@ -50,7 +50,7 @@ def main():
         source = config / 'values.my'
         source.write_text(generated)
         entry = root / 'main.my'
-        entry.write_text('module main\nimport config.values as v\n\n\ndef main() -> i64:\n    if ' +
+        entry.write_text('import config.values as v\n\n\nfunc main() -> i64:\n    if ' +
                          ' and '.join(conditions) + ':\n        return 7\n    return 0\n')
         # The generated module is ordinary source: building and running the project natively
         # is what proves every integer-width extreme and both booleans survive generation.
@@ -83,7 +83,7 @@ def main():
         assert generated_input['path'] == 'config/values.my'
         assert schema(2, f'--inputs={manifest}').stdout == ''
         original_entry = entry.read_text()
-        entry.write_text('module main\n\n\ndef main() -> i64:\n    return 0\n')
+        entry.write_text('\n\nfunc main() -> i64:\n    return 0\n')
         assert 'not imported' in schema(2).stderr
         entry.write_text(original_entry)
         document['module'] = 'main'
@@ -114,8 +114,8 @@ def main():
             bindings.append(file)
 
         def multi_entry(count):
-            entry.write_text('module main\n' + ''.join(f'import data.m{i}\n' for i in range(count)) +
-                             '\n\ndef main() -> i64:\n    return ' +
+            entry.write_text('' + ''.join(f'import data.m{i}\n' for i in range(count)) +
+                             '\n\nfunc main() -> i64:\n    return ' +
                              ' + '.join(f'm{i}.value()' for i in range(count)) + '\n')
 
         def multi(files, status=0, *extra):
@@ -143,7 +143,7 @@ def main():
             file.write_bytes(data + b' ' * (1024 * 1024 - len(data)))
         assert len(json.loads(multi(bindings[:8]).stdout)['functions']) == 8
         assert 'byte budget exceeded' in multi(bindings[:9], status=2).stderr
-        main_bytes = b'module main\n\n\ndef main() -> i64:\n    return 0\n'
+        main_bytes = b'\n\nfunc main() -> i64:\n    return 0\n'
         entry.write_bytes(main_bytes + b' ' * (4 * 1024 * 1024 - len(main_bytes)))
         assert multi([]).returncode == 0
         with entry.open('ab') as stream:

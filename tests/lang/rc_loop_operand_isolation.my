@@ -1,17 +1,17 @@
 # Private fast-loop words reuse already accounted, unescaped storage.
-def scan(count: int, repeats: int) -> int:
-    data = b"mylang micro benchmark kernel payload 0123456789 abcdefghijklmno"
-    hits = 0
+func scan(count: int, repeats: int) -> int:
+    mut data = b"mylang micro benchmark kernel payload 0123456789 abcdefghijklmno"
+    mut hits = 0
     for repeat in range(repeats):
         for index in range(count):
             if data[index] == 109:
                 hits += 1
     return hits
 
-def real_iterator() -> int:
-    data = b"mylang micro benchmark kernel payload 0123456789 abcdefghijklmno" + bytes([109])
-    saved = data
-    hits = 0
+func real_iterator() -> int:
+    mut data = b"mylang micro benchmark kernel payload 0123456789 abcdefghijklmno" + bytes([109])
+    mut saved = data
+    mut hits = 0
     for index in range(len(data)):
         if data[index] == 109:
             hits += 1
@@ -21,13 +21,13 @@ def real_iterator() -> int:
     assert saved == data
     return hits
 
-public def test_isolated_words_cover_zero_both_branches_and_outer_reentry() -> bool:
+public func test_isolated_words_cover_zero_both_branches_and_outer_reentry() -> bool:
     return scan(0, 4) == 0 and scan(1, 3) == 3 and scan(64, 3) == 12
 
-public def test_isolated_words_keep_real_iterator_tokens_and_snapshots() -> bool:
+public func test_isolated_words_keep_real_iterator_tokens_and_snapshots() -> bool:
     return real_iterator() == 10
 
-def main(out: Stream) -> int:
+func main(out: Stream) -> int:
     assert test_isolated_words_cover_zero_both_branches_and_outer_reentry()
     assert test_isolated_words_keep_real_iterator_tokens_and_snapshots()
     out.print(scan(64, 3))

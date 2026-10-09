@@ -4,22 +4,22 @@
 
 record Node:
     value: int
-    left: Option[Node]
+    left: Node?
 
 
-def chain(length: int) -> Option[Node]:
-    head: Option[Node] = None
+func chain(length: int) -> Node?:
+    mut head: Node? = None
     for index in range(length):
         head = Some(Node(value=index, left=head))
     return head
 
 
-def main() -> int:
-    first = chain(1000000)
-    second = chain(1000000)
+func main() -> int:
+    mut first = chain(1000000)
+    mut second = chain(1000000)
     if first != second:
         return 1
-    keys: set[Option[Node]] = set()
+    mut keys: set[Node?] = set()
     keys.add(first)
     keys.add(second)
     if len(keys) != 1:

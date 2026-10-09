@@ -1,4 +1,3 @@
-module bindings
 
 # Loop variables and match bindings hold copies (VALUE-SEMANTICS-2); writing
 # through one is rejected (VALUE-SEMANTICS-4), so a change goes through the
@@ -10,48 +9,48 @@ record Point:
     y: int
 
 
-def lengths(values: dict[str, list[int]]) -> int:
-    total = 0
+func lengths(values: dict[str, int[]]) -> int:
+    mut total = 0
     for key, value in values.items():
         total += len(value) + len(key)
     return total
 
 
 # spec-case: VALUE-SEMANTICS-4
-public def test_a_loop_variable_copy_can_be_changed_as_a_local() -> bool:
-    grid = [[1], [2, 2]]
-    seen: list[list[int]] = []
+public func test_a_loop_variable_copy_can_be_changed_as_a_local() -> bool:
+    mut grid = [[1], [2, 2]]
+    mut seen: int[][] = []
     for row in grid:
-        local = row
+        mut local = row
         local.append(0)
         seen.append(local)
     return grid == [[1], [2, 2]] and seen == [[1, 0], [2, 2, 0]]
 
 
 # spec-case: VALUE-SEMANTICS-4
-public def test_changes_through_the_place_reach_the_collection() -> bool:
-    points = [Point(x=1, y=1), Point(x=2, y=2)]
+public func test_changes_through_the_place_reach_the_collection() -> bool:
+    mut points = [Point(x=1, y=1), Point(x=2, y=2)]
     for i in range(len(points)):
         points[i].x = points[i].x * 10
-    table = {"a": [1]}
+    mut table = {"a": [1]}
     for key in table.keys():
         table[key].append(2)
     return points[0].x == 10 and points[1].x == 20 and table["a"] == [1, 2]
 
 
 # spec-case: VALUE-SEMANTICS-2
-public def test_dictionary_views_and_enumerate_read_the_values() -> bool:
-    table = {"ab": [1, 2], "c": [3]}
-    count = 0
+public func test_dictionary_views_and_enumerate_read_the_values() -> bool:
+    mut table = {"ab": [1, 2], "c": [3]}
+    mut count = 0
     for index, values in enumerate(list(table.values())):
         count += index + len(values)
     return count == 4 and lengths(table) == 6
 
 
 # spec-case: VALUE-SEMANTICS-2
-public def test_a_match_binding_is_a_copy_of_the_payload() -> bool:
-    maybe: Option[list[int]] = Some([1])
-    kept: list[list[int]] = []
+public func test_a_match_binding_is_a_copy_of_the_payload() -> bool:
+    mut maybe: int[]? = Some([1])
+    mut kept: int[][] = []
     match maybe:
         case Some(inside):
             kept.append(inside)

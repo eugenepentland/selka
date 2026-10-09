@@ -1,4 +1,4 @@
-def main() -> int:
-    xs = [1, 2, 3]
-    n: int = len(xs)
+func main() -> int:
+    mut xs = [1, 2, 3]
+    mut n: int = len(xs)
     return n

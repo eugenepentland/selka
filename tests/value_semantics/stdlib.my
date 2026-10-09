@@ -1,4 +1,3 @@
-module stdlib
 
 import byte_builder
 import network
@@ -6,21 +5,21 @@ import pool
 
 
 # spec-case: VALUE-SEMANTICS-10
-public def test_builder_is_a_value_and_mut_updates_only_the_target() -> bool:
-    original = byte_builder.create()
+public func test_builder_is_a_value_and_mut_updates_only_the_target() -> bool:
+    mut original = byte_builder.create()
     _ = byte_builder.append_byte(mut original, 65)
-    changed = original
+    mut changed = original
     _ = byte_builder.append_byte(mut changed, 66)
     return byte_builder.finish(original) == b"A" and byte_builder.finish(changed) == b"AB"
 
 
 # A handle retains logical identity within its pool while a copied pool is an
 # independent value. The caller must pass the pool with `mut` to update it.
-public def test_pool_handles_address_the_mutated_pool() -> bool:
-    initial: list[int] = [5]
-    store = pool.create(initial)
-    handle = pool.insert(mut store, 7)
-    copied = store
+public func test_pool_handles_address_the_mutated_pool() -> bool:
+    mut initial: int[] = [5]
+    mut store = pool.create(initial)
+    mut handle = pool.insert(mut store, 7)
+    mut copied = store
     _ = pool.set(mut copied, handle, 9)
     match pool.get(store, handle):
         case Some(value):
@@ -36,5 +35,5 @@ public def test_pool_handles_address_the_mutated_pool() -> bool:
 
 
 # The network module's read payload and failure carrier are value declarations.
-public def test_network_denied_is_still_deterministic() -> bool:
+public func test_network_denied_is_still_deterministic() -> bool:
     return network.denied_here() == 6 and network.describe(6) != ""

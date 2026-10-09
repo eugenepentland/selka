@@ -22,51 +22,51 @@ fn reject(bytes: []const u8, code: []const u8) !void {
 // spec: STRUCTURAL-LIMIT-1
 test "structural declarations reject uncalled invalid access and incomplete construction" {
     try reject(
-        \\def f[T: copy + field(value: i64)](v: T) -> bool:
+        \\func f[T: copy + field(value: i64)](v: T) -> bool:
         \\    return v.value
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_GENERIC_TYPE");
     // A type parameter has no construction spelling: `T(...)` reads as a call.
     try reject(
-        \\def f[T: copy + field(value: i64)]() -> T:
+        \\func f[T: copy + field(value: i64)]() -> T:
         \\    return T(value=1)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_UNKNOWN_FUNCTION");
     try reject(
-        \\def f[T](v: T) -> i64:
+        \\func f[T](v: T) -> i64:
         \\    return T.score(v)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_GENERIC_REQUIREMENT");
 }
 
 test "structural fields reject incomplete forwarding unknown fields and hidden obligations" {
     try reject(
-        \\def get[T: copy + field(value: i64)](v: T) -> i64:
+        \\func get[T: copy + field(value: i64)](v: T) -> i64:
         \\    return v.value
         \\
         \\
-        \\def forward[U](v: U) -> i64:
+        \\func forward[U](v: U) -> i64:
         \\    return get[U](v)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_GENERIC_BODY_UNSUPPORTED");
     try reject(
-        \\def get[T: copy + field(value: i64)](v: T) -> i64:
+        \\func get[T: copy + field(value: i64)](v: T) -> i64:
         \\    return v.hidden
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_UNKNOWN_FIELD");
     try reject(
@@ -75,11 +75,11 @@ test "structural fields reject incomplete forwarding unknown fields and hidden o
         \\    err: i64
         \\
         \\
-        \\def get[T: copy + field(value: R)](v: T) -> i64:
+        \\func get[T: copy + field(value: R)](v: T) -> i64:
         \\    return 0
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_GENERIC_REQUIREMENT");
     try reject(
@@ -87,15 +87,15 @@ test "structural fields reject incomplete forwarding unknown fields and hidden o
         \\    item: T
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_GENERIC_REQUIREMENT");
     try reject(
-        \\def f[T: copy + field(value: i64) + field(value: i64)](v: T) -> i64:
+        \\func f[T: copy + field(value: i64) + field(value: i64)](v: T) -> i64:
         \\    return 0
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_GENERIC_REQUIREMENT");
     try reject(
@@ -109,17 +109,17 @@ test "structural fields reject incomplete forwarding unknown fields and hidden o
 }
 const domain =
     \\domain D: i64:
-    \\    def make(n: i64) -> D:
+    \\    func make(n: i64) -> D:
     \\        return wrap[D](n)
     \\
-    \\    def score(v: D) -> i64 effects():
+    \\    func score(v: D) -> i64 effects():
     \\        return unwrap(v)
     \\
     \\
     \\
 ;
 const operation =
-    \\def apply[T: copy + op(score(v: T) -> i64 effects())](v: T) -> i64:
+    \\func apply[T: copy + op(score(v: T) -> i64 effects())](v: T) -> i64:
     \\    return T.score(v)
     \\
     \\
@@ -127,98 +127,98 @@ const operation =
 ;
 test "structural operation forwarding retains type identity and public contracts" {
     try run(domain ++ operation ++
-        \\def forward[U: copy + op(score(v: U) -> i64 effects())](v: U) -> i64:
+        \\func forward[U: copy + op(score(v: U) -> i64 effects())](v: U) -> i64:
         \\    return apply[U](v)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return forward[D](D.make(11))
     , 11);
     try reject(operation ++
-        \\def forward[U](v: U) -> i64:
+        \\func forward[U](v: U) -> i64:
         \\    return apply[U](v)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_GENERIC_ARGUMENT");
     try reject(
-        \\def f[T: copy + op(score(v: T) -> bool effects())](v: T) -> i64:
+        \\func f[T: copy + op(score(v: T) -> bool effects())](v: T) -> i64:
         \\    return T.score(v)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_GENERIC_TYPE");
     try reject(
-        \\def f[T: copy + op(score(v: T) -> i64 effects())](v: T) -> i64:
+        \\func f[T: copy + op(score(v: T) -> i64 effects())](v: T) -> i64:
         \\    return T.score(True)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_GENERIC_TYPE");
 }
 test "structural concrete operations reject private absent wrong typed and excessive effect methods" {
     try reject(
         \\domain D: i64:
-        \\    def make() -> D:
+        \\    func make() -> D:
         \\        return wrap[D](1)
         \\
-        \\    private def score(v: D) -> i64 effects():
+        \\    private func score(v: D) -> i64 effects():
         \\        return unwrap(v)
         \\
         \\
         \\
     ++ operation ++
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return apply[D](D.make())
     , "E_GENERIC_ARGUMENT");
     try reject(
         \\domain D: i64:
-        \\    def make() -> D:
+        \\    func make() -> D:
         \\        return wrap[D](1)
         \\
         \\
         \\
     ++ operation ++
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return apply[D](D.make())
     , "E_GENERIC_ARGUMENT");
     try reject(
         \\domain D: i64:
-        \\    def make() -> D:
+        \\    func make() -> D:
         \\        return wrap[D](1)
         \\
-        \\    def score(v: D) -> bool effects():
+        \\    func score(v: D) -> bool effects():
         \\        return True
         \\
         \\
         \\
     ++ operation ++
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return apply[D](D.make())
     , "E_GENERIC_ARGUMENT");
     try reject(
         \\domain D: i64:
-        \\    def make() -> D:
+        \\    func make() -> D:
         \\        return wrap[D](1)
         \\
-        \\    def score(v: D) -> i64 effects(host):
+        \\    func score(v: D) -> i64 effects(host):
         \\        return unwrap(v)
         \\
         \\
         \\
     ++ operation ++
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return apply[D](D.make())
     , "E_GENERIC_ARGUMENT");
     try reject(
-        \\def f[T: copy + op(score(v: T) -> i64 effects(host))](v: T) -> i64 effects():
+        \\func f[T: copy + op(score(v: T) -> i64 effects(host))](v: T) -> i64 effects():
         \\    return T.score(v)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_EFFECT_BOUND");
 }
@@ -227,11 +227,11 @@ const example = domain ++ operation ++
     \\    value: i64
     \\
     \\
-    \\def get[T: copy + field(value: i64)](v: T) -> i64:
+    \\func get[T: copy + field(value: i64)](v: T) -> i64:
     \\    return v.value
     \\
     \\
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    return get[A](A(value=5)) + apply[D](D.make(7))
 ;
 fn lifecycle(allocator: std.mem.Allocator) !void {
@@ -253,26 +253,24 @@ test "structural formatter lifecycle round trips and releases storage under allo
 }
 const module_files = [_]language.embedded_project.File{
     .{ .path = "main.my", .bytes =
-    \\module main
     \\import api
     \\
     \\
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    return api.apply[api.D](api.D.make(13))
     },
     .{ .path = "api.my", .bytes =
-    \\module api
     \\
     \\
     \\public domain D: i64:
-    \\    def make(n: i64) -> D effects():
+    \\    func make(n: i64) -> D effects():
     \\        return wrap[D](n)
     \\
-    \\    def score(v: D) -> i64 effects():
+    \\    func score(v: D) -> i64 effects():
     \\        return unwrap(v)
     \\
     \\
-    \\public def apply[T: copy + op(score(v: T) -> i64 effects())](v: T) -> i64 effects():
+    \\public func apply[T: copy + op(score(v: T) -> i64 effects())](v: T) -> i64 effects():
     \\    return T.score(v)
     },
 };
@@ -294,19 +292,19 @@ test "structural composite fields substitute arrays and nominal applications" {
         \\
         \\
         \\record A:
-        \\    items: [2]i64
+        \\    items: FixedArray[i64, 2]
         \\    box: Box[i64]
         \\
         \\
-        \\def get[T: copy + field(items: [2]U) + field(box: Box[U]), U](v: T) -> U:
+        \\func get[T: copy + field(items: FixedArray[U, 2]) + field(box: Box[U]), U](v: T) -> U:
         \\    return v.box.value
         \\
         \\
-        \\def main() -> i64:
-        \\    return get[A, i64](A(items=[1, 2], box=Box[i64](value=7)))
+        \\func main() -> i64:
+        \\    return get[A, i64](A(items=FixedArray[int, 2]([1, 2]), box=Box[i64](value=7)))
     , 7);
     try reject(
-        \\def f[T: copy + field(items: [2]U), U](v: T) -> U:
+        \\func f[T: copy + field(items: FixedArray[U, 2]), U](v: T) -> U:
         \\    return v.items[True]
     , "E_GENERIC_OPERATION");
 }
@@ -317,27 +315,27 @@ const composite =
     \\
     \\
     \\record A:
-    \\    items: [2]i64
+    \\    items: FixedArray[i64, 2]
     \\    box: Box[i64]
     \\
     \\
     \\record B:
-    \\    items: [2]bool
+    \\    items: FixedArray[bool, 2]
     \\    box: Box[bool]
     \\
     \\
-    \\def get[T: copy + field(items: [2]U) + field(box: Box[U]), U](v: T) -> U:
+    \\func get[T: copy + field(items: FixedArray[U, 2]) + field(box: Box[U]), U](v: T) -> U:
     \\    return v.box.value
     \\
     \\
-    \\def forward[V: copy + field(items: [2]W) + field(box: Box[W]), W](v: V) -> W:
+    \\func forward[V: copy + field(items: FixedArray[W, 2]) + field(box: Box[W]), W](v: V) -> W:
     \\    return get[V, W](v)
     \\
     \\
-    \\def main() -> i64:
-    \\    flag = forward[B, bool](B(items=[True, False], box=Box[bool](value=True)))
+    \\func main() -> i64:
+    \\    mut flag = forward[B, bool](B(items=FixedArray[bool, 2]([True, False]), box=Box[bool](value=True)))
     \\    if flag:
-    \\        return forward[A, i64](A(items=[1, 2], box=Box[i64](value=7)))
+    \\        return forward[A, i64](A(items=FixedArray[int, 2]([1, 2]), box=Box[i64](value=7)))
     \\    return 0
 ;
 fn compositeLifecycle(allocator: std.mem.Allocator) !void {
@@ -359,33 +357,33 @@ test "named constraint operation ceilings accept subsets and reject excess" {
         \\constraint Priced[P] = copy + op(price(policy: P) -> int effects())
         \\
         \\domain D: int:
-        \\    def make(n: int) -> D:
+        \\    func make(n: int) -> D:
         \\        return wrap[D](n)
         \\
-        \\    def price(policy: D) -> int effects():
+        \\    func price(policy: D) -> int effects():
         \\        return unwrap(policy)
         \\
-        \\def total[P: Priced](policy: P) -> int effects():
+        \\func total[P: Priced](policy: P) -> int effects():
         \\    return P.price(policy)
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return total[D](D.make(4))
     , 4);
     try reject(
         \\constraint Priced[P] = copy + op(price(policy: P, out: Stream) -> int effects())
         \\
         \\domain D: int:
-        \\    def make(n: int) -> D:
+        \\    func make(n: int) -> D:
         \\        return wrap[D](n)
         \\
-        \\    def price(policy: D, out: Stream) -> int effects(output):
+        \\    func price(policy: D, out: Stream) -> int effects(output):
         \\        out.print("x")
         \\        return unwrap(policy)
         \\
-        \\def total[P: Priced](policy: P, out: Stream) -> int effects():
+        \\func total[P: Priced](policy: P, out: Stream) -> int effects():
         \\    return P.price(policy, out)
         \\
-        \\def main(out: Stream) -> int:
+        \\func main(out: Stream) -> int:
         \\    return total[D](D.make(4), out)
     , "E_GENERIC_ARGUMENT");
 }
@@ -395,23 +393,23 @@ test "named constraints reject weaker to stronger forwarding universally" {
     try reject(
         \\constraint HasValue[T] = copy + field(value: int)
         \\
-        \\def read[T: HasValue](v: T) -> int:
+        \\func read[T: HasValue](v: T) -> int:
         \\    return v.value
         \\
-        \\def forward[U: copy](v: U) -> int:
+        \\func forward[U: copy](v: U) -> int:
         \\    return read[U](v)
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     , "E_GENERIC_BODY_UNSUPPORTED");
     try reject(
-        \\def read[T: copy + field(value: int)](v: T) -> int:
+        \\func read[T: copy + field(value: int)](v: T) -> int:
         \\    return v.value
         \\
-        \\def forward[U: copy](v: U) -> int:
+        \\func forward[U: copy](v: U) -> int:
         \\    return read[U](v)
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     , "E_GENERIC_BODY_UNSUPPORTED");
 }
@@ -421,11 +419,11 @@ test "named constraint expansion enforces the requirement limit" {
     try reject(
         \\constraint Wide[T] = copy + field(f0: int) + field(f1: int) + field(f2: int) + field(f3: int) + field(f4: int) + field(f5: int) + field(f6: int) + field(f7: int) + field(f8: int) + field(f9: int) + field(f10: int) + field(f11: int) + field(f12: int) + field(f13: int) + field(f14: int)
         \\
-        \\def f[T: Wide + codec](v: T) -> int:
+        \\func f[T: Wide + codec](v: T) -> int:
         \\    _ = v
         \\    return 0
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     , "E_GENERIC_LIMIT");
 }
@@ -439,20 +437,20 @@ test "named constraints coalesce identical members and reject conflicts" {
         \\record Box:
         \\    value: int
         \\
-        \\def f[T: A + B](v: T) -> int:
+        \\func f[T: A + B](v: T) -> int:
         \\    return v.value
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return f[Box](Box(value=3))
     , 3);
     try reject(
         \\constraint A[T] = copy + field(value: int)
         \\constraint B[T] = copy + field(value: bool)
         \\
-        \\def f[T: A + B](v: T) -> int:
+        \\func f[T: A + B](v: T) -> int:
         \\    return v.value
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     , "E_GENERIC_REQUIREMENT");
 }
@@ -462,19 +460,19 @@ test "named constraints reject unused invalid definitions" {
     try reject(
         \\constraint Bad[P] = field(x: int)
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     , "E_GENERIC_REQUIREMENT");
     try reject(
         \\constraint Bad[P] = copy + field(x: Bogus)
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     , "E_UNKNOWN_TYPE");
     try reject(
         \\constraint Bad[P] = copy + op(go(v: P) -> Bogus effects())
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     , "E_UNKNOWN_TYPE");
 }
@@ -485,12 +483,12 @@ test "named constraints reject unused invalid definitions" {
 test "named constraints reject unused result-bearing fields" {
     try reject(
         \\constraint Bad[T] = copy + field(value: Result[int, int])
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     , "E_GENERIC_REQUIREMENT");
     try reject(
         \\constraint Bad[T] = copy + field(value: Donations)
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     , "E_UNKNOWN_TYPE");
 }
@@ -499,21 +497,21 @@ test "named constraints reject unused result-bearing fields" {
 // spec-case: NAMED-CONSTRAINT-CALLBACK-1
 test "named constraints reject conflicting callback parameters results and effects" {
     try reject(
-        \\constraint A[P] = copy + op(run(p: P, fn: def(P) -> int effects()) -> int effects())
-        \\constraint B[Q] = copy + op(run(p: Q, fn: def(int) -> int effects()) -> int effects())
-        \\def use[T: A + B](p: T) -> int:
+        \\constraint A[P] = copy + op(run(p: P, fn: func(P) -> int effects()) -> int effects())
+        \\constraint B[Q] = copy + op(run(p: Q, fn: func(int) -> int effects()) -> int effects())
+        \\func use[T: A + B](p: T) -> int:
         \\    return 0
     , "E_GENERIC_REQUIREMENT");
     try reject(
-        \\constraint A[P] = copy + op(run(p: P) -> def(P) -> P effects() effects())
-        \\constraint B[Q] = copy + op(run(p: Q) -> def(Q) -> int effects() effects())
-        \\def use[T: A + B](p: T) -> int:
+        \\constraint A[P] = copy + op(run(p: P) -> func(P) -> P effects() effects())
+        \\constraint B[Q] = copy + op(run(p: Q) -> func(Q) -> int effects() effects())
+        \\func use[T: A + B](p: T) -> int:
         \\    return 0
     , "E_GENERIC_REQUIREMENT");
     try reject(
-        \\constraint A[P] = copy + op(run(p: P, fn: def(P) -> int effects()) -> int effects())
-        \\constraint B[Q] = copy + op(run(p: Q, fn: def(Q) -> int effects(output)) -> int effects())
-        \\def use[T: A + B](p: T) -> int:
+        \\constraint A[P] = copy + op(run(p: P, fn: func(P) -> int effects()) -> int effects())
+        \\constraint B[Q] = copy + op(run(p: Q, fn: func(Q) -> int effects(output)) -> int effects())
+        \\func use[T: A + B](p: T) -> int:
         \\    return 0
     , "E_GENERIC_REQUIREMENT");
 }

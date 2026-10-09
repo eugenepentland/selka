@@ -1,10 +1,9 @@
-module right
 
-public def quote(count: int) -> int effects():
-    subtotal = count * 2
+public func quote(count: int) -> int effects():
+    mut subtotal = count * 2
     return subtotal + 3
 
 
-def alternate(count: int) -> int:
-    subtotal = count * 2
+func alternate(count: int) -> int:
+    mut subtotal = count * 2
     return subtotal + 4

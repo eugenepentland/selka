@@ -1,12 +1,11 @@
-module inputs
 
-public def books() -> int effects():
+public func books() -> int effects():
     return 2
 
 
-public def cables() -> int effects():
+public func cables() -> int effects():
     return 3
 
 
-public def adapters() -> int effects():
+public func adapters() -> int effects():
     return 1

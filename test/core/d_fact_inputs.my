@@ -1,65 +1,64 @@
-module d_fact_inputs
 
 # spec-case: NEW-CORE-DICT-1
 # Unknown call results must weaken the empty entry fact of a loop-carried dict.
-def produced(key: i64) -> dict[i64, i64]:
-    result: dict[i64, i64] = {}
+func produced(key: i64) -> dict[i64, i64]:
+    mut result: dict[i64, i64] = {}
     result[0] = key
     result[1] = key + 1
     return result
 
-public def test_unknown_call_then_copy_joins_the_loop_back_edge() -> bool:
-    mapping: dict[i64, i64] = {}
+public func test_unknown_call_then_copy_joins_the_loop_back_edge() -> bool:
+    mut mapping: dict[i64, i64] = {}
     for key in range(4):
         mapping = produced(key).copy()
     return len(mapping) == 2 and mapping[0] == 3
 
-public def test_unknown_call_then_insert_joins_the_loop_back_edge() -> bool:
-    mapping: dict[i64, i64] = {}
+public func test_unknown_call_then_insert_joins_the_loop_back_edge() -> bool:
+    mut mapping: dict[i64, i64] = {}
     for key in range(4):
         mapping = produced(key)
         mapping[2] = key
     return len(mapping) == 3 and mapping[2] == 3
 
-public def test_unknown_call_then_remove_joins_the_loop_back_edge() -> bool:
-    mapping: dict[i64, i64] = {}
+public func test_unknown_call_then_remove_joins_the_loop_back_edge() -> bool:
+    mut mapping: dict[i64, i64] = {}
     for key in range(4):
         mapping = produced(key)
         _ = mapping.pop(0)
     return len(mapping) == 1 and mapping[1] == 4
 
-public def test_unknown_call_then_replace_joins_the_loop_back_edge() -> bool:
-    mapping: dict[i64, i64] = {}
+public func test_unknown_call_then_replace_joins_the_loop_back_edge() -> bool:
+    mut mapping: dict[i64, i64] = {}
     for key in range(4):
         mapping = produced(key)
         mapping[0] += 1
     return len(mapping) == 2 and mapping[0] == 4
 
-def replace_from_parameter(source: dict[i64, i64]) -> dict[i64, i64]:
-    result: dict[i64, i64] = {}
+func replace_from_parameter(source: dict[i64, i64]) -> dict[i64, i64]:
+    mut result: dict[i64, i64] = {}
     for step in range(3):
         result = source.copy()
         result[0] += step
     return result
 
-public def test_unknown_parameter_copy_and_replace_keep_their_lengths() -> bool:
-    mapping = replace_from_parameter({0: 7, 1: 8})
+public func test_unknown_parameter_copy_and_replace_keep_their_lengths() -> bool:
+    mut mapping = replace_from_parameter({0: 7, 1: 8})
     return len(mapping) == 2 and mapping[0] == 9 and mapping[1] == 8
 
-def bump_text(counts: mut dict[str, i64], key: str) -> None:
+func bump_text(mut counts: dict[str, i64], key: str) -> Unit:
     counts[key] = counts.get(key, 0) + 1
 
 # Original S2-X dictionary_hashing failure, copied without editing tests/lang.
-public def test_text_keys_count_the_same_through_one_key_object_or_many() -> bool:
-    sequence = "ACGTTGCAACGGTACCATGGACTTAGCATCGA"
-    reused: dict[str, i64] = {}
-    fresh: dict[str, i64] = {}
+public func test_text_keys_count_the_same_through_one_key_object_or_many() -> bool:
+    mut sequence = "ACGTTGCAACGGTACCATGGACTTAGCATCGA"
+    mut reused: dict[str, i64] = {}
+    mut fresh: dict[str, i64] = {}
     for i in range(len(sequence) - 2):
-        piece = sequence[i:i + 3]
+        mut piece = sequence[i:i + 3]
         bump_text(mut reused, piece)
         bump_text(mut fresh, sequence[i:i + 3])
         fresh[sequence[i:i + 3]] += 0
-    total = 0
+    mut total = 0
     for key in reused:
         total += reused[key]
     return reused == fresh and total == 30 and reused["ACG"] == 2 and list(reused.keys()) == list(fresh.keys())

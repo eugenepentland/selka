@@ -21,14 +21,14 @@ fn execute(text: []const u8, expected: i64) !void {
 test "break and continue target nearest loops and preserve generic flow and formatting" {
     for ([_]bool{ false, true }) |generic| {
         const source = try std.mem.concat(t.allocator, u8, &.{
-            if (generic) "def work[T]() -> i64:\n" else "def work() -> i64:\n",
-            \\    sum = 0
-            \\    i = 0
+            if (generic) "func work[T]() -> i64:\n" else "func work() -> i64:\n",
+            \\    mut sum = 0
+            \\    mut i = 0
             \\    while i < 5:
             \\        i += 1
             \\        if i == 2:
             \\            continue
-            \\        j = 0
+            \\        mut j = 0
             \\        while j < 10:
             \\            j += 1
             \\            if j == 3:
@@ -42,10 +42,10 @@ test "break and continue target nearest loops and preserve generic flow and form
             \\
             ,
             if (generic)
-                \\def main() -> i64:
+                \\func main() -> i64:
                 \\    return work[bool]()
             else
-                \\def main() -> i64:
+                \\func main() -> i64:
                 \\    return work()
             ,
         });

@@ -46,6 +46,7 @@ pub const Store = struct {
                 arguments[contract.parameters.len] = try self.typeArgument(records, contract.return_type, span, depth + 1);
                 break :array try self.graph.materializeKey(.{ .base = .{ .callback = .{
                     .effects = contract.effects,
+                    .labels = contract.labels,
                     .mutates = contract.mutates,
                     .return_origin = contract.return_origin,
                 } }, .arguments = arguments[0 .. contract.parameters.len + 1] }, span);

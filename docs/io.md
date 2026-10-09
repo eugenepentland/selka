@@ -13,8 +13,8 @@ withhold authority instead.
 ```mylang
 # doc: expect hello 42 True None
 # doc: expect ['a', 'b'] {'k': 1} b'\x00\xff'
-def main(out: Stream) -> int:
-    out.print("hello", 42, True, None)
+func main(out: Stream) -> int:
+    out.print("hello", 42, True, ())
     out.print(["a", "b"], {"k": 1}, b"\x00\xff")
     return 0
 ```
@@ -24,7 +24,7 @@ Arguments are separated by single spaces and followed by one newline. `sep=` and
 
 ```mylang
 # doc: expect 1-2-3!
-def main(out: Stream) -> int:
+func main(out: Stream) -> int:
     out.print(1, 2, 3, sep="-", end="!\n")
     return 0
 ```
@@ -43,19 +43,19 @@ record Point:
     y: int
 
 enum Colour:
-    red,
+    red
     green
 
 
-def pick(n: int) -> Result[int, str]:
+func pick(n: int) -> Result[int, str]:
     if n < 0:
         return Err("nope")
     return Ok(n)
 
-def main(out: Stream) -> int:
+func main(out: Stream) -> int:
     out.print(Point(x=1, y=2), Colour.green)
-    found: Option[int] = Some(4)
-    missing: Option[int] = None
+    mut found: int? = Some(4)
+    mut missing: int? = None
     out.print(pick(3), pick(-1), found, missing)
     return 0
 ```
@@ -69,7 +69,7 @@ with `filesystem` and `network`:
 
 ```mylang
 # doc: expect-error E_EFFECT_BOUND
-def main(out: Stream) -> int noio:
+func main(out: Stream) -> int noio:
     out.print("not allowed here")
     return 0
 ```
@@ -82,7 +82,7 @@ one from main"; `debug(...)` remains the only way to write without a capability.
 
 ```mylang
 # doc: expect-error E_OUTPUT_CAPABILITY
-def main() -> int:
+func main() -> int:
     print("no stream")
     return 0
 ```
@@ -119,10 +119,10 @@ carried by the receiver value. Streams are granted unconditionally, so
 
 ```mylang
 # doc: check
-def main(out: Stream, err: Stream) -> int:
+func main(out: Stream, err: Stream) -> int:
     out.print("result:", 42)
     err.print("note", sep=": ")
-    written: int = out.write("raw")
+    mut written: int = out.write("raw")
     return written
 ```
 
@@ -138,8 +138,8 @@ record Sink:
     label: str
 
 
-def main(out: Stream) -> int:
-    sink = Sink(stream=out, label="ok")
+func main(out: Stream) -> int:
+    mut sink = Sink(stream=out, label="ok")
     sink.stream.print(sink.label, 2)
     return 0
 ```
@@ -154,7 +154,7 @@ executable drops it in lowering, arguments included.
 
 ```mylang
 # doc: check
-def trace() -> int noio:
+func trace() -> int noio:
     debug("pure function")
     return 0
 ```
@@ -239,7 +239,7 @@ host-boundary diagnostic on stderr.
 
 ```mylang
 # doc: expect count 0
-def main(args: list[str], out: Stream) -> int:
+func main(args: str[], out: Stream) -> int:
     out.print("count", len(args))
     return 0
 ```
@@ -310,9 +310,9 @@ with the same stderr line and exit 2.
 
 ```mylang
 # doc: check
-def main(env: Environment) -> int effects(environment):
-    home = env.get("HOME")
-    narrowed = env.only("HOME")
+func main(env: Environment) -> int effects(environment):
+    mut home = env.get("HOME")
+    mut narrowed = env.only("HOME")
     _ = home
     _ = narrowed
     return len(env.names())
@@ -335,7 +335,7 @@ claims the free spelling.
 # doc: allow-read notes
 # doc: expect Ok('hello from a granted directory\n')
 # doc: expect True False
-def main(fs: Filesystem, out: Stream) -> int:
+func main(fs: Filesystem, out: Stream) -> int:
     out.print(fs.read_text("greeting.txt"))
     out.print(fs.exists("greeting.txt"), fs.exists("absent.txt"))
     return 0
@@ -355,14 +355,14 @@ returns a compatible `Result`:
 # doc: allow-read notes
 # doc: expect b'hello from a granted directory\n'
 # doc: expect 3
-def count(fs: Filesystem) -> Result[int, str]:
-    total = 0
-    with fs.open("lines.txt", "r")? as f:
+func count(fs: Filesystem) -> Result[int, str]:
+    mut total = 0
+    with try fs.open("lines.txt", "r") as f:
         for line in f.readlines():
             total = total + 1
     return Ok(total)
 
-def main(fs: Filesystem, out: Stream) -> int:
+func main(fs: Filesystem, out: Stream) -> int:
     with fs.open("greeting.txt", "rb") as f:
         out.print(f.read())
     match count(fs):
@@ -420,7 +420,7 @@ narrower than read authority:
 # doc: allow-read notes
 # doc: expect Err('read \'../escape\': denied: outside the granted directories, or the mode needs a write grant')
 # doc: expect Err('write \'new.txt\': denied: outside the granted directories, or the mode needs a write grant')
-def main(fs: Filesystem, out: Stream) -> int:
+func main(fs: Filesystem, out: Stream) -> int:
     out.print(fs.read_text("../escape"))
     out.print(fs.write_text("new.txt", "x"))
     return 0
@@ -430,7 +430,7 @@ File operations contribute the `filesystem` effect, so `noio` rejects them:
 
 ```mylang
 # doc: expect-error E_EFFECT_BOUND
-def main(fs: Filesystem) -> int noio:
+func main(fs: Filesystem) -> int noio:
     _ = fs.exists("notes.txt")
     return 0
 ```
@@ -441,7 +441,7 @@ def main(fs: Filesystem) -> int noio:
 
 ```mylang
 # doc: expect-error E_WITH_RESOURCE
-def main() -> int:
+func main() -> int:
     with 7 as value:
         return 0
 ```

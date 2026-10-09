@@ -8,9 +8,9 @@ const options = @import("core_test_options");
 const report = std.debug.print;
 
 const source =
-    \\def main() -> int:
-    \\    d: dict[int, int] = {1: 7}
-    \\    key = 2
+    \\func main() -> int:
+    \\    mut d: dict[int, int] = {1: 7}
+    \\    mut key = 2
     \\    d[key] = d.get(key, 0) + 9
     \\    return d[key]
 ;
@@ -18,10 +18,10 @@ const source =
 const exposed_view =
     \\record Holder:
     \\    mapping: dict[int, int]
-    \\def main() -> int:
-    \\    d = {1: 7}
-    \\    holder = Holder(d)
-    \\    view = d.values()
+    \\func main() -> int:
+    \\    mut d = {1: 7}
+    \\    mut holder = Holder(mapping=d)
+    \\    mut view = d.values()
     \\    d[1] = 9
     \\    return list(view)[0] + holder.mapping[1]
 ;
@@ -131,19 +131,19 @@ test "fixed arrays refuse stored live dictionary views precisely" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     var refusal: build.Refusal = .{};
-    const stored_view = "def main() -> int:\n    d = {1: 7}\n    views: [1]DictValues[int, int] = [d.values()]\n    d[1] = 9\n    return list(views[0])[0]\n";
+    const stored_view = "func main() -> int:\n    mut d = {1: 7}\n    mut views: FixedArray[DictValues[int, int], 1] = [d.values()]\n    d[1] = 9\n    return list(views[0])[0]\n";
     try std.testing.expectError(error.SourceError, support.buildSource(arena.allocator(), stored_view, &refusal));
 }
 
 const small_tables =
-    \\def main(out: Stream) -> int:
-    \\    counts: dict[str, int] = {}
+    \\func main(out: Stream) -> int:
+    \\    mut counts: dict[str, int] = {}
     \\    for word in "the cat and the hat and the bat".split(" "):
     \\        if word in counts:
     \\            counts[word] = counts[word] + 1
     \\        else:
     \\            counts[word] = 1
-    \\    numbers: dict[int, int] = {}
+    \\    mut numbers: dict[int, int] = {}
     \\    for j in range(6):
     \\        numbers[j * 7] = j
     \\    _ = numbers.pop(14)

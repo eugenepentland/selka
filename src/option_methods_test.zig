@@ -24,16 +24,16 @@ fn expectRejected(text: []const u8, code: []const u8, message: []const u8) !void
 // spec: OPTION-METHODS-1
 test "option methods check the default against the payload type" {
     try expectRejected(
-        \\def main() -> int:
-        \\    return int("4").unwrap_or("x")
+        \\func main() -> int:
+        \\    return parse_int("4").unwrap_or("x")
     , "E_TYPE", "`unwrap_or` default must be `int` (the Option's payload), found str");
     try accepted(
-        \\def main() -> int:
-        \\    return int("4").unwrap_or(7)
+        \\func main() -> int:
+        \\    return parse_int("4").unwrap_or(7)
     );
     try accepted(
-        \\def main() -> int:
-        \\    value: Option[int] = None
+        \\func main() -> int:
+        \\    mut value: int? = None
         \\    return value.unwrap_or(7)
     );
 }
@@ -41,35 +41,35 @@ test "option methods check the default against the payload type" {
 // spec: OPTION-METHODS-2
 test "option method rejections name the accepted spellings" {
     try expectRejected(
-        \\def main() -> int:
-        \\    return int("4").missing()
+        \\func main() -> int:
+        \\    return parse_int("4").missing()
     , "E_COLLECTION_METHOD", "an Option receiver supports `unwrap_or(default)`, `is_none()` and `is_some()`");
     try expectRejected(
-        \\def main() -> int:
-        \\    return int("4").is_none(1)
+        \\func main() -> int:
+        \\    return parse_int("4").is_none(1)
     , "E_ARITY", "`is_none` takes no arguments");
     try expectRejected(
-        \\def main() -> int:
-        \\    return int("4").unwrap_or()
+        \\func main() -> int:
+        \\    return parse_int("4").unwrap_or()
     , "E_ARITY", "`unwrap_or` takes exactly one argument: `unwrap_or(default)`");
 }
 
 // spec-case: OPTION-METHODS-2
 test "option methods are accepted in generic bodies under a noalloc ceiling" {
     try accepted(
-        \\def head[T: copy + storable](values: list[T]) -> Option[T]:
+        \\func head[T: copy + storable](values: T[]) -> T?:
         \\    if len(values) == 0:
         \\        return None
         \\    return Some(values[0])
         \\
         \\
-        \\def bounded[T: copy + storable](value: Option[T], fallback: T) -> T noalloc:
+        \\func bounded[T: copy + storable](value: T?, fallback: T) -> T noalloc:
         \\    if value.is_none():
         \\        return fallback
         \\    return value.unwrap_or(fallback)
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return bounded(head([1, 2]), 7)
     );
 }
@@ -77,20 +77,20 @@ test "option methods are accepted in generic bodies under a noalloc ceiling" {
 // spec-case: OPTION-METHODS-2
 test "an Option method checks in place wherever its value is used" {
     try accepted(
-        \\def report(value: Option[int], out: Stream) -> None effects(output):
+        \\func report(value: int?, out: Stream) -> Unit effects(output):
         \\    out.print(value.unwrap_or(7))
         \\    out.print(value.is_none())
         \\    out.print(value.is_some())
         \\
         \\
-        \\def measured(value: Option[int]) -> bool:
+        \\func measured(value: int?) -> bool:
         \\    _ = value.is_none()
         \\    _ = value.is_some()
         \\    _ = value.unwrap_or(4)
         \\    return value.is_some() and value.unwrap_or(5) == 5
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    if measured(Some(1)):
         \\        return 0
         \\    return 1
@@ -100,15 +100,15 @@ test "an Option method checks in place wherever its value is used" {
 // spec-case: OPTION-METHODS-1
 test "an integer-literal default adopts the payload type" {
     try accepted(
-        \\def head[T: copy + storable](values: list[T]) -> Option[T]:
+        \\func head[T: copy + storable](values: T[]) -> T?:
         \\    if len(values) == 0:
         \\        return None
         \\    return Some(values[0])
         \\
         \\
-        \\def main() -> int:
-        \\    narrow: list[u8] = [u8(5)]
-        \\    adopted: u8 = head(narrow).unwrap_or(7)
+        \\func main() -> int:
+        \\    mut narrow: u8[] = [u8(5)]
+        \\    mut adopted: u8 = head(narrow).unwrap_or(7)
         \\    return int(adopted)
     );
 }

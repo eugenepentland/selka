@@ -3,12 +3,12 @@ const std = @import("std");
 const support = @import("test_support.zig");
 
 const known =
-    \\def inc(x: int) -> int:
+    \\func inc(x: int) -> int:
     \\    return x + 1
     \\
     \\
-    \\def main(out: Stream) -> int:
-    \\    f = inc
+    \\func main(out: Stream) -> int:
+    \\    mut f = inc
     \\    out.print(f(41))
     \\    return 0
     \\
@@ -24,23 +24,23 @@ test "a known function value lowers to a direct call before release inlining" {
 }
 
 const choice =
-    \\def first(x: int) -> int:
+    \\func first(x: int) -> int:
     \\    return x * 3 + 7
     \\
     \\
-    \\def second(x: int) -> int:
+    \\func second(x: int) -> int:
     \\    return x * 5 + 11
     \\
     \\
-    \\def total(n: int, seed: int) -> int:
-    \\    f = first if seed % 2 == 0 else second
-    \\    acc = 0
+    \\func total(n: int, seed: int) -> int:
+    \\    mut f = if (seed % 2 == 0) then (first) else (second)
+    \\    mut acc = 0
     \\    for i in range(n):
     \\        acc += f(i)
     \\    return acc
     \\
     \\
-    \\def main(out: Stream) -> int:
+    \\func main(out: Stream) -> int:
     \\    out.print(total(4, 7))
     \\    return 0
     \\
@@ -65,7 +65,7 @@ test "an escaped callback caller keeps unproved arithmetic as real source callee
     defer arena.deinit();
     const a = arena.allocator();
     const entry = try std.mem.replaceOwned(u8, a, choice, "total(4, 7)", "apply(total, 4, 7)");
-    const source = try std.mem.concat(a, u8, &.{ entry, "\ndef apply(f: def(int, int) -> int, n: int, seed: int) -> int:\n    return f(n, seed)\n" });
+    const source = try std.mem.concat(a, u8, &.{ entry, "\nfunc apply(f: func(int, int) -> int, n: int, seed: int) -> int:\n    return f(n, seed)\n" });
     const text = try support.optimizedText(a, source);
     try std.testing.expect(std.mem.indexOf(u8, text, "call i64 first") != null);
     try std.testing.expect(std.mem.indexOf(u8, text, "call i64 second") != null);

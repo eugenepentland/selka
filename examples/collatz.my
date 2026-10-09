@@ -1,6 +1,6 @@
-def collatz_steps(start: int) -> int:
-    n = start
-    steps = 0
+func collatz_steps(start: int) -> int:
+    mut n = start
+    mut steps = 0
     while n > 1:
         if remtrunc(n, 2) == 0:
             n = divtrunc(n, 2)
@@ -10,5 +10,5 @@ def collatz_steps(start: int) -> int:
     return steps
 
 
-def main() -> int:
+func main() -> int:
     return collatz_steps(27)

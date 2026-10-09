@@ -246,8 +246,8 @@ fn closure(init: std.process.Init, path: []const u8, reading: Reading) ![]const 
     return paths;
 }
 
-/// The import closures of the headed roots of `roots` (those opening with a `module`
-/// header), each project's from one load of an entry importing all of them, each
+/// The import closures of the headerless source roots of `roots`, obtained
+/// for each project from one entry importing all of them, with each
 /// module read once (NEW-CORE-TEST-UNION-1); null for every other root, and for
 /// every root of a project whose shared load fails, which load alone.
 fn sharedClosures(init: std.process.Init, roots: []const []const u8, snapshot: *Snapshot) ![]const ?[]const []const u8 {
@@ -636,15 +636,16 @@ fn declaresTests(bytes: []const u8) bool {
         var line = std.mem.trim(u8, raw, " \t\r");
         if (std.mem.eql(u8, line, "@test")) return true;
         if (std.mem.startsWith(u8, line, "public ")) line = std.mem.trimStart(u8, line[7..], " \t");
-        if (std.mem.startsWith(u8, line, "def test_")) return true;
+        if (std.mem.startsWith(u8, line, "func test_") or std.mem.startsWith(u8, line, "def test_")) return true;
     }
     return false;
 }
 
 // spec-case: NEW-CORE-S4-TEST-2
 test "directory inventory recognizes test declarations and generated subtrees" {
-    try std.testing.expect(declaresTests("public def test_x() -> bool:\n    return True\n"));
-    try std.testing.expect(declaresTests("@test\ndef property(x: int) -> bool:\n    return True\n"));
+    try std.testing.expect(declaresTests("public func test_x() -> bool:\n    return True\n"));
+    try std.testing.expect(declaresTests("public func test_x() -> bool:\n    return True\n"));
+    try std.testing.expect(declaresTests("@test\nfunc property(x: int) -> bool:\n    return True\n"));
     try std.testing.expect(!declaresTests("# def test_x()\n"));
     try std.testing.expect(generated(".mylang-cache-new"));
     try std.testing.expect(!generated("types"));
@@ -755,14 +756,14 @@ test "loadedClosure snapshots provider imports embeds config policy cases and re
     defer temporary.cleanup();
     const root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a);
     try temporary.dir.createDirPath(std.testing.io, "tests");
-    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "tests/app.my", .data = "module tests.app\nimport dep\npublic def test_x() -> bool:\n    return True\n" });
-    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "dep.my", .data = "module dep\npublic def value() -> str:\n    return \"old\"\n" });
-    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "ext.my", .data = "module ext\npublic def value() -> str:\n    return \"external\"\n" });
+    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "tests/app.my", .data = "import dep\npublic func test_x() -> bool:\n    return True\n" });
+    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "dep.my", .data = "public func value() -> str:\n    return \"old\"\n" });
+    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "ext.my", .data = "public func value() -> str:\n    return \"external\"\n" });
     try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "data.txt", .data = "original asset" });
     try temporary.dir.writeFile(std.testing.io, .{ .sub_path = language.project_config.config_name, .data = "{\"version\":1,\"interface_files\":true,\"import_policy\":\"policy.json\"}" });
     try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "policy.json", .data = "{}" });
-    const configured_cases = "{\"test_x\":{\"providers\":{\"dep.my\":\"module dep\\nimport ext\\n" ++
-        "public def value() -> str:\\n    return embed_str(\\\"data.txt\\\")\\n\"}}}";
+    const configured_cases = "{\"test_x\":{\"providers\":{\"dep.my\":\"import ext\\n" ++
+        "public func value() -> str:\\n    return embed_str(\\\"data.txt\\\")\\n\"}}}";
     try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "tests/app.cases.json", .data = configured_cases });
     const path = try std.fs.path.join(a, &.{ root, "tests/app.my" });
     var diagnostics: std.ArrayList(u8) = .empty;
@@ -794,9 +795,9 @@ test "directory roots start largest file first and each child's jobs divide the 
     const a = arena.allocator();
     var temporary = std.testing.tmpDir(.{});
     defer temporary.cleanup();
-    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "small.my", .data = "def test_a() -> bool:\n    return True\n" });
-    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "large.my", .data = "def test_b() -> bool:\n    return True\n\ndef test_c() -> bool:\n    return True\n" });
-    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "same.my", .data = "def test_d() -> bool:\n    return True\n\ndef test_e() -> bool:\n    return True\n" });
+    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "small.my", .data = "func test_a() -> bool:\n    return True\n" });
+    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "large.my", .data = "func test_b() -> bool:\n    return True\n\nfunc test_c() -> bool:\n    return True\n" });
+    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "same.my", .data = "func test_d() -> bool:\n    return True\n\nfunc test_e() -> bool:\n    return True\n" });
     const root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a);
     const paths = [_][]const u8{ try std.fs.path.join(a, &.{ root, "small.my" }), try std.fs.path.join(a, &.{ root, "large.my" }), try std.fs.path.join(a, &.{ root, "same.my" }), try std.fs.path.join(a, &.{ root, "missing.my" }) };
     try std.testing.expectEqualSlices(usize, &.{ 1, 2, 0, 3 }, try largestFirst(a, std.testing.io, &paths));
@@ -814,7 +815,7 @@ fn lists(paths: []const []const u8, name: []const u8) bool {
 }
 
 // spec-case: NEW-CORE-TEST-UNION-1
-test "sharedClosures loads headed roots together (headedEntry, loadTogether) and leaves the rest and a failed load to load alone" {
+test "sharedClosures loads headerless roots together and leaves a failed load to load alone" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const a = arena.allocator();
@@ -823,10 +824,10 @@ test "sharedClosures loads headed roots together (headedEntry, loadTogether) and
     const root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a);
     const io = std.testing.io;
     try temporary.dir.writeFile(io, .{ .sub_path = "mylang.json", .data = "{\"version\": 1}\n" });
-    try temporary.dir.writeFile(io, .{ .sub_path = "dep.my", .data = "module dep\n\npublic def value() -> int:\n    return 3\n" });
-    try temporary.dir.writeFile(io, .{ .sub_path = "a_test.my", .data = "module a_test\nimport dep\n\npublic def test_a() -> bool:\n    return dep.value() == 3\n" });
-    try temporary.dir.writeFile(io, .{ .sub_path = "b_test.my", .data = "module b_test\n\npublic def test_b() -> bool:\n    return True\n" });
-    try temporary.dir.writeFile(io, .{ .sub_path = "c_test.my", .data = "public def test_c() -> bool:\n    return True\n" });
+    try temporary.dir.writeFile(io, .{ .sub_path = "dep.my", .data = "\npublic func value() -> int:\n    return 3\n" });
+    try temporary.dir.writeFile(io, .{ .sub_path = "a_test.my", .data = "import dep\n\npublic func test_a() -> bool:\n    return dep.value() == 3\n" });
+    try temporary.dir.writeFile(io, .{ .sub_path = "b_test.my", .data = "\npublic func test_b() -> bool:\n    return True\n" });
+    try temporary.dir.writeFile(io, .{ .sub_path = "c_test.my", .data = "public func test_c() -> bool:\n    return True\n" });
     var environment = try std.testing.environ.createMap(a);
     const init: std.process.Init = .{ .minimal = .{ .environ = .empty, .args = .{ .vector = &.{} } }, .arena = &arena, .gpa = std.testing.allocator, .io = io, .environ_map = &environment, .preopens = .empty };
     const roots = [_][]const u8{ try std.fs.path.join(a, &.{ root, "a_test.my" }), try std.fs.path.join(a, &.{ root, "b_test.my" }), try std.fs.path.join(a, &.{ root, "c_test.my" }) };
@@ -834,9 +835,9 @@ test "sharedClosures loads headed roots together (headedEntry, loadTogether) and
     const found = try sharedClosures(init, &roots, &snapshot);
     try std.testing.expect(lists(found[0].?, "a_test.my") and lists(found[0].?, "dep.my"));
     try std.testing.expect(lists(found[1].?, "b_test.my") and !lists(found[1].?, "dep.my"));
-    try std.testing.expectEqual(@as(?[]const []const u8, null), found[2]);
+    try std.testing.expect(lists(found[2].?, "c_test.my") and !lists(found[2].?, "dep.my"));
     // A root that imports a missing module fails the shared load: every root loads alone.
-    try temporary.dir.writeFile(io, .{ .sub_path = "b_test.my", .data = "module b_test\nimport missing\n\npublic def test_b() -> bool:\n    return True\n" });
+    try temporary.dir.writeFile(io, .{ .sub_path = "b_test.my", .data = "import missing\n\npublic func test_b() -> bool:\n    return True\n" });
     var fresh: Snapshot = .{ .allocator = a, .io = io };
     const alone = try sharedClosures(init, &roots, &fresh);
     try std.testing.expectEqual(@as(?[]const []const u8, null), alone[0]);

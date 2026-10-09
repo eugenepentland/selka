@@ -28,18 +28,16 @@ const ProjectFiles = struct {
 // spec: KEYWORD-ONLY-1
 test "keyword-only parameters reject a positional operand with the whole call rewritten" {
     const io_module =
-        \\module io
         \\
         \\
-        \\public def issue(host: int, *, code: int, file: int, position: int) -> int effects():
+        \\public func issue(host: int, named code: int, named file: int, named position: int) -> int effects():
         \\    return host + code + file + position
     ;
     const entry =
-        \\module main
         \\import io
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return io.issue(1, 13, 0, 4)
     ;
     var files: ProjectFiles = .{ .entries = &.{
@@ -59,11 +57,11 @@ test "keyword-only parameters reject a positional operand with the whole call re
 // spec-case: KEYWORD-ONLY-1
 test "a keyword argument already written by name keeps its name in the rewritten call" {
     const text =
-        \\def issue(host: int, *, code: int, file: int, position: int) -> int:
+        \\func issue(host: int, named code: int, named file: int, named position: int) -> int:
         \\    return host + code + file + position
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return issue(1, 3, code=2, position=4)
     ;
     var c = try language.Compilation.init(t.allocator, "keyword-only.my", text);
@@ -76,11 +74,11 @@ test "a keyword argument already written by name keeps its name in the rewritten
 // spec-case: KEYWORD-ONLY-1
 test "a positional operand before the keyword-only boundary still binds positionally" {
     const text =
-        \\def issue(host: int, port: int, *, code: int) -> int:
+        \\func issue(host: int, port: int, named code: int) -> int:
         \\    return host + port + code
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return issue(1, 2, code=3)
     ;
     var c = try language.Compilation.init(t.allocator, "keyword-only.my", text);
@@ -91,7 +89,7 @@ test "a positional operand before the keyword-only boundary still binds position
 
 // spec: PYTHON-CALL-2
 test "Python calls reject unknown duplicate missing and misplaced arguments and invalid defaults" {
-    const header = "def add(a: int, b: int = 2) -> int:\n    return a + b\n\ndef main() -> int:\n    return ";
+    const header = "func add(a: int, b: int = 2) -> int:\n    return a + b\n\nfunc main() -> int:\n    return ";
     for ([_][]const u8{ "add(unknown=1)", "add(a=1, a=2)", "add(1, a=2)", "add()", "add(1, 2, 3)", "add(a=1, 2)" }) |call| {
         const text = try std.mem.concat(t.allocator, u8, &.{ header, call, "\n" });
         defer t.allocator.free(text);
@@ -104,10 +102,10 @@ test "Python calls reject unknown duplicate missing and misplaced arguments and 
 // spec-case: PYTHON-CALL-2
 test "Python defaults reject mutable expressions and mismatched scalar types" {
     for ([_][]const u8{
-        "def bad(a: int = True):\n    pass\n\ndef main() -> int:\n    return 0\n",
-        "def bad(a: int = 1, b: int):\n    pass\n\ndef main() -> int:\n    return 0\n",
-        "def bad(a: list[int] = []):\n    pass\n\ndef main() -> int:\n    return 0\n",
-        "def bad(a: int = 1 + 2):\n    pass\n\ndef main() -> int:\n    return 0\n",
+        "func bad(a: int = True):\n    pass\n\nfunc main() -> int:\n    return 0\n",
+        "def bad(a: int = 1, b: int):\n    pass\n\nfunc main() -> int:\n    return 0\n",
+        "def bad(a: list[int] = []):\n    pass\n\nfunc main() -> int:\n    return 0\n",
+        "def bad(a: int = 1 + 2):\n    pass\n\nfunc main() -> int:\n    return 0\n",
     }) |text| {
         var c = try language.Compilation.init(t.allocator, "default.my", text);
         defer c.deinit();
@@ -120,7 +118,7 @@ test "Python default changes invalidate checked caller reuse" {
     var cache = language.semantic_cache.Cache.init(t.allocator, 8 * 1024 * 1024);
     defer cache.deinit();
     for ([_]struct { default: []const u8, expected: i64 }{ .{ .default = "2", .expected = 42 }, .{ .default = "3", .expected = 43 } }) |case| {
-        const text = try std.mem.concat(t.allocator, u8, &.{ "def add(a: int, b: int = ", case.default, ") -> int:\n    return a + b\n\ndef main() -> int:\n    return add(a=40)\n" });
+        const text = try std.mem.concat(t.allocator, u8, &.{ "func add(named a: int, named b: int = ", case.default, ") -> int:\n    return a + b\n\nfunc main() -> int:\n    return add(a=40)\n" });
         defer t.allocator.free(text);
         var c = try language.Compilation.init(t.allocator, "cached.my", text);
         defer c.deinit();

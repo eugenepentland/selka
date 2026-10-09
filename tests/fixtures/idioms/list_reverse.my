@@ -1,4 +1,4 @@
-def main() -> int:
-    xs = [1, 2, 3]
+func main() -> int:
+    mut xs = [1, 2, 3]
     xs.reverse()
     return xs[0]

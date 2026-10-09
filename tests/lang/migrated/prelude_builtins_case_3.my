@@ -1,6 +1,5 @@
-module prelude_builtins_case_3
 
 
-public def program() -> int:
-    sorted = 4
+public func program() -> int:
+    mut sorted = 4
     return sorted + 1

@@ -6,11 +6,10 @@ const interfaces = @import("interfaces.zig");
 const Cache = @import("compiler.zig").syntax_cache.Cache;
 const Files = struct {
     main: []const u8 =
-        \\module main
         \\import data
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return data.value()
     ,
     data: []const u8 = initial,
@@ -25,27 +24,25 @@ const Files = struct {
     }
 };
 const initial =
-    \\module data
     \\
     \\
     \\record Pair:
     \\    n: i64
     \\
     \\
-    \\public def value() -> i64 effects():
-    \\    x = Pair(n=7)
+    \\public func value() -> i64 effects():
+    \\    mut x = Pair(n=7)
     \\    return x.n
 ;
 const changed =
-    \\module data
     \\
     \\
     \\record Pair:
     \\    n: i64
     \\
     \\
-    \\public def value() -> i64 effects():
-    \\    x = Pair(n=9)
+    \\public func value() -> i64 effects():
+    \\    mut x = Pair(n=9)
     \\    return x.n
 ;
 fn execute(allocator: std.mem.Allocator, files: *Files, cache: *Cache, clear: bool) !i64 {
@@ -107,10 +104,9 @@ test "cached syntax never suppresses fresh interface or semantic errors" {
     var files: Files = .{};
     _ = try execute(t.allocator, &files, &cache, false);
     files.data =
-        \\module data
         \\
         \\
-        \\public def value() -> bool effects():
+        \\public func value() -> bool effects():
         \\    return True
     ;
     try t.expectError(error.SourceError, execute(t.allocator, &files, &cache, false));
@@ -118,10 +114,9 @@ test "cached syntax never suppresses fresh interface or semantic errors" {
     try t.expectError(error.SourceError, execute(t.allocator, &files, &cache, false));
     try t.expectEqual(hits + 2, cache.statistics.hits);
     files.data =
-        \\module data
         \\
         \\
-        \\def value() -> i64:
+        \\func value() -> i64:
         \\    return 7
     ;
     try t.expectError(error.SourceError, execute(t.allocator, &files, &cache, false));
@@ -149,11 +144,10 @@ test "cached quoted byte arrays survive source relocation and cache eviction" {
     var cache = Cache.init(t.allocator, .{});
     defer cache.deinit();
     var files: Files = .{ .data =
-        \\module data
         \\
         \\
-        \\public def value() -> i64 effects(managed_allocation):
-        \\    s = b"a\x00b"
+        \\public func value() -> i64 effects(managed_allocation):
+        \\    mut s = b"a\x00b"
         \\    return i64(s[2])
     };
     try t.expectEqual(@as(i64, 98), try execute(t.allocator, &files, &cache, false));
@@ -167,14 +161,13 @@ test "in-memory syntax cache preserves expression lambdas across a hit" {
     var cache = Cache.init(t.allocator, .{});
     defer cache.deinit();
     var files: Files = .{ .main =
-        \\module main
         \\
         \\
-        \\def apply(f: def(int) -> int effects(), value: int) -> int:
+        \\func apply(f: func(int) -> int effects(), value: int) -> int:
         \\    return f(value)
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return apply(lambda value: value * 2, 21)
     };
     try t.expectEqual(@as(i64, 42), try execute(t.allocator, &files, &cache, false));

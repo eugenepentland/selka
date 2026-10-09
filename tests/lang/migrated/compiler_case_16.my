@@ -1,8 +1,7 @@
-module compiler_case_16
 
 
-public def program() -> i64:
-    flag: bool = True
+public func program() -> i64:
+    mut flag: bool = True
     flag = not flag
     _ = flag == False
     return 4

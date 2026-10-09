@@ -1,4 +1,3 @@
-module mut_collection_call_window
 
 # A borrow whose value is on the operand stack when its root is written sees
 # nothing of that write: the value is read after the write, so the borrow is a
@@ -6,78 +5,78 @@ module mut_collection_call_window
 
 record Box:
     tag: int
-    names: list[int]
+    names: int[]
 
 
 record State:
-    boxes: list[Box]
+    boxes: Box[]
 
 
-def weigh(names: list[int], b: int) -> int:
+func weigh(names: int[], b: int) -> int:
     return len(names) * 100 + b
 
 
-def hold(names: list[int], boxes: mut list[Box]) -> int:
+func hold(names: int[], mut boxes: Box[]) -> int:
     boxes[0].names.append(7)
     return len(names)
 
 
-def hold_after(boxes: mut list[Box], names: list[int]) -> int:
+func hold_after(mut boxes: Box[], names: int[]) -> int:
     boxes[0].names.append(7)
     return len(names)
 
 
-def append_first(boxes: mut list[Box]) -> int:
+func append_first(mut boxes: Box[]) -> int:
     boxes[0].names.append(7)
     return 1
 
 
-def push(xs: mut list[int]) -> int:
+func push(mut xs: int[]) -> int:
     xs.append(9)
     return 1
 
 
-def probe(state: mut State) -> int:
-    box = state.boxes[0]
+func probe(mut state: State) -> int:
+    mut box = state.boxes[0]
     return hold(box.names, mut state.boxes)
 
 
-public def test_a_borrowed_field_passed_before_a_mut_collection_argument_keeps_its_value() -> bool:
-    state = State([Box(1, [1])])
-    seen = probe(mut state)
+public func test_a_borrowed_field_passed_before_a_mut_collection_argument_keeps_its_value() -> bool:
+    mut state = State(boxes=[Box(tag=1, names=[1])])
+    mut seen = probe(mut state)
     return seen == 1 and len(state.boxes[0].names) == 2
 
 
-public def test_a_borrowed_field_passed_after_a_mut_collection_argument_keeps_its_value() -> bool:
-    state = State([Box(1, [1])])
-    box = state.boxes[0]
-    seen = hold_after(mut state.boxes, box.names)
+public func test_a_borrowed_field_passed_after_a_mut_collection_argument_keeps_its_value() -> bool:
+    mut state = State(boxes=[Box(tag=1, names=[1])])
+    mut box = state.boxes[0]
+    mut seen = hold_after(mut state.boxes, box.names)
     return seen == 1 and len(state.boxes[0].names) == 2
 
 
-public def test_a_borrowed_field_keeps_its_value_across_a_later_nested_mut_call() -> bool:
-    state = State([Box(1, [1])])
-    box = state.boxes[0]
-    seen = weigh(box.names, append_first(mut state.boxes))
+public func test_a_borrowed_field_keeps_its_value_across_a_later_nested_mut_call() -> bool:
+    mut state = State(boxes=[Box(tag=1, names=[1])])
+    mut box = state.boxes[0]
+    mut seen = weigh(box.names, append_first(mut state.boxes))
     return seen == 101 and len(state.boxes[0].names) == 2
 
 
-public def test_a_borrowed_field_keeps_its_value_across_a_later_pop_through_the_root() -> bool:
-    state = State([Box(1, [1, 2])])
-    box = state.boxes[0]
-    seen = weigh(box.names, state.boxes[0].names.pop())
+public func test_a_borrowed_field_keeps_its_value_across_a_later_pop_through_the_root() -> bool:
+    mut state = State(boxes=[Box(tag=1, names=[1, 2])])
+    mut box = state.boxes[0]
+    mut seen = weigh(box.names, state.boxes[0].names.pop())
     return seen == 202 and len(state.boxes[0].names) == 1
 
 
-public def test_a_borrowed_local_keeps_its_value_across_a_later_mut_call_of_its_source() -> bool:
-    xs = [1, 2, 3]
-    ys = xs
-    seen = weigh(ys, push(mut xs))
+public func test_a_borrowed_local_keeps_its_value_across_a_later_mut_call_of_its_source() -> bool:
+    mut xs = [1, 2, 3]
+    mut ys = xs
+    mut seen = weigh(ys, push(mut xs))
     return seen == 301 and len(xs) == 4
 
 
-public def test_a_borrow_the_write_consumes_stays_a_borrow_of_the_same_value() -> bool:
-    state = State([Box(1, [1])])
-    box = state.boxes[0]
-    state.boxes.append(Box(2, box.names))
+public func test_a_borrow_the_write_consumes_stays_a_borrow_of_the_same_value() -> bool:
+    mut state = State(boxes=[Box(tag=1, names=[1])])
+    mut box = state.boxes[0]
+    state.boxes.append(Box(tag=2, names=box.names))
     return len(state.boxes) == 2 and len(state.boxes[1].names) == 1 and len(box.names) == 1

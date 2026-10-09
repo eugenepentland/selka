@@ -1,60 +1,59 @@
-module python_arrays
 
 
 enum Status:
-    ok,
-    missing,
+    ok
+    missing
     failed
 
 
-def total(values: [3]i64) -> i64:
+func total(values: FixedArray[i64, 3]) -> i64:
     return values[0] + values[1] + values[2]
 
 
 record Row:
-    cells: [2]i64
+    cells: FixedArray[i64, 2]
 
 
-def pair() -> [2]i64:
-    return [1, 2]
+func pair() -> FixedArray[i64, 2]:
+    return FixedArray[int, 2]([1, 2])
 
 
-def codes() -> [Status]i64:
+func codes() -> [Status]i64:
     return {Status.failed: 500, Status.ok: 200, Status.missing: 404}
 
 
 # spec: PY-ARRAY-1
-public def test_a_list_literal_builds_a_fixed_array_wherever_the_context_declares_one() -> bool:
-    fixed: [3]i64 = [4, 7, 9]
-    row = Row(cells=[10, 11])
-    return total(fixed) + total([1, 2, 3]) + row.cells[1] + pair()[0] + 4 == 42
+public func test_a_list_literal_builds_a_fixed_array_wherever_the_context_declares_one() -> bool:
+    mut fixed: FixedArray[i64, 3] = FixedArray[int, 3]([4, 7, 9])
+    mut row = Row(cells=FixedArray[int, 2]([10, 11]))
+    return total(fixed) + total(FixedArray[int, 3]([1, 2, 3])) + row.cells[1] + pair()[0] + 4 == 42
 
 
 # spec-case: PY-ARRAY-1
-public def test_a_list_literal_without_an_array_context_still_builds_a_managed_list() -> bool:
-    values = [40, 2]
+public func test_a_list_literal_without_an_array_context_still_builds_a_managed_list() -> bool:
+    mut values = [40, 2]
     values.append(0)
     return values[0] + values[1] + len(values) - 3 == 42
 
 
 # spec: PY-TABLE-1
-public def test_a_dict_literal_builds_an_enum_indexed_table_from_qualified_case_keys() -> bool:
-    table = codes()
+public func test_a_dict_literal_builds_an_enum_indexed_table_from_qualified_case_keys() -> bool:
+    mut table = codes()
     return table[Status.ok] - table[Status.missing] + 246 == 42
 
 
 # spec: PY-DIV-1
-public def test_divtrunc_and_remtrunc_round_toward_zero_beside_flooring() -> bool:
-    a = -7
-    b = 2
+public func test_divtrunc_and_remtrunc_round_toward_zero_beside_flooring() -> bool:
+    mut a = -7
+    mut b = 2
     return (a // b) * 1000 + divtrunc(a, b) * 100 + (a % b) * 10 + remtrunc(a, b) == -4291
 
 
 # spec-case: PY-DIV-1
-public def test_truncating_helpers_keep_the_full_unsigned_width() -> bool:
-    wide: u64 = 18446744073709551615
+public func test_truncating_helpers_keep_the_full_unsigned_width() -> bool:
+    mut wide: u64 = 18446744073709551615
     return i64(divtrunc(wide, 3u64) - remtrunc(wide, 3u64)) - 6148914691236517163 == 42
 
 
-def main() -> int:
+func main() -> int:
     return 0

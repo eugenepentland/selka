@@ -1,61 +1,60 @@
-module float_integer_casts
 
 const SMALL: i8 = i8(-128.5)
 const ZERO: u8 = u8(-0.5)
 const WIDE: u64 = u64(18446744073709549568.0)
 
 
-def generic_cast[T](value: float) -> u32 noalloc:
+func generic_cast[T](value: float) -> u32 noalloc:
     return u32(value)
 
 
 # spec: FLOAT-INTEGER-CAST-1
-public def test_signed_widths_truncate_toward_zero() -> bool:
-    value = -42.75
+public func test_signed_widths_truncate_toward_zero() -> bool:
+    mut value = -42.75
     return i8(value) == -42i8 and i16(value) == -42i16 and i32(value) == -42i32 and i64(value) == -42 and int(value) == i64(value)
 
 
 # spec-case: FLOAT-INTEGER-CAST-1
-public def test_unsigned_widths_truncate_toward_zero() -> bool:
-    value = 42.75
+public func test_unsigned_widths_truncate_toward_zero() -> bool:
+    mut value = 42.75
     return u8(value) == 42u8 and u16(value) == 42u16 and u32(value) == 42u32 and u64(value) == 42u64
 
 
 # spec-case: FLOAT-INTEGER-CAST-1
-public def test_truncation_precedes_signed_minimum_checks() -> bool:
-    a = -128.5
-    b = -32768.5
-    c = -2147483648.5
+public func test_truncation_precedes_signed_minimum_checks() -> bool:
+    mut a = -128.5
+    mut b = -32768.5
+    mut c = -2147483648.5
     return i8(a) == -128i8 and i16(b) == -32768i16 and i32(c) == -2147483648i32
 
 
 # spec-case: FLOAT-INTEGER-CAST-1
-public def test_negative_unsigned_fraction_and_signed_zero_are_zero() -> bool:
-    value = -0.75
-    zero = -0.0
+public func test_negative_unsigned_fraction_and_signed_zero_are_zero() -> bool:
+    mut value = -0.75
+    mut zero = -0.0
     return u8(value) == 0u8 and u16(value) == 0u16 and u32(value) == 0u32 and u64(value) == 0u64 and i8(zero) == 0i8 and u64(zero) == 0u64
 
 
 # spec-case: FLOAT-INTEGER-CAST-1
-public def test_values_below_the_upper_boundary_fit() -> bool:
-    a = 127.99
-    b = 255.99
+public func test_values_below_the_upper_boundary_fit() -> bool:
+    mut a = 127.99
+    mut b = 255.99
     return i8(a) == 127i8 and u8(b) == 255u8 and i16(32767.99) == 32767i16 and u16(65535.99) == 65535u16 and i32(2147483647.75) == 2147483647i32 and u32(4294967295.75) == 4294967295u32
 
 
 # spec-case: FLOAT-INTEGER-CAST-1
-public def test_wide_boundaries_use_exact_binary64_limits() -> bool:
-    signed_min = -9223372036854775808.0
-    signed_max_float = 9223372036854774784.0
-    unsigned_max_float = 18446744073709549568.0
+public func test_wide_boundaries_use_exact_binary64_limits() -> bool:
+    mut signed_min = -9223372036854775808.0
+    mut signed_max_float = 9223372036854774784.0
+    mut unsigned_max_float = 18446744073709549568.0
     return i64(signed_min) == -9223372036854775808 and i64(signed_max_float) == 9223372036854774784 and u64(unsigned_max_float) == 18446744073709549568u64
 
 
 # spec-case: FLOAT-INTEGER-CAST-1
-public def test_casts_in_generic_bodies_do_not_allocate() -> bool:
+public func test_casts_in_generic_bodies_do_not_allocate() -> bool:
     return generic_cast[int](42.75) == 42u32
 
 
 # spec-case: CONST-FLOAT-3
-public def test_constant_casts_match_the_runtime_rule() -> bool:
+public func test_constant_casts_match_the_runtime_rule() -> bool:
     return SMALL == -128i8 and ZERO == 0u8 and WIDE == 18446744073709549568u64

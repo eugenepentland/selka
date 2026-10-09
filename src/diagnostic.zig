@@ -1,4 +1,10 @@
 //! Stable diagnostics are data; only the CLI chooses an output destination.
+/// Shared code for an assignment that lacks an explicit binding declaration.
+pub const binding_declaration = "E_BINDING_DECLARATION";
+/// Shared code for a pattern inconsistent with its declared enum payload.
+pub const pattern_payload = "E_PATTERN_PAYLOAD";
+/// Shared code for incorrect nominal or callable type argument counts.
+pub const generic_arity = "E_GENERIC_ARITY";
 /// Shared code for attempts to discard a must-handle result value.
 pub const result_discard = "E_RESULT_DISCARD";
 pub const tuple_arity = "E_TUPLE_ARITY";
@@ -58,15 +64,6 @@ pub const Fix = struct {
         return if (index == 0) self.edit else self.more[index - 1];
     }
 };
-/// The fix that deletes a parameter's `mut` marker: the `mut` in front of the
-/// declared type starting at `type_start`, and the blank after it. Null when
-/// the bytes there are not a `mut` marker.
-pub fn removeMut(bytes: []const u8, type_start: usize) ?Fix {
-    var start = type_start;
-    while (start > 0 and (bytes[start - 1] == ' ' or bytes[start - 1] == '\t')) start -= 1;
-    if (start == type_start or start < "mut".len or !std.mem.eql(u8, bytes[start - "mut".len .. start], "mut")) return null;
-    return .{ .edit = .{ .span = .{ .start = start - "mut".len, .end = type_start }, .text = "" } };
-}
 /// Structured source diagnostic with optional related evidence and a bounded guest trace.
 pub const Diagnostic = struct {
     code: []const u8,

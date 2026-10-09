@@ -1,4 +1,3 @@
-module value_equality
 
 import pool
 
@@ -7,38 +6,38 @@ record Point:
     y: int
 
 
-union Shape:
-    empty,
-    radius: int,
-    point: Point
+enum Shape:
+    empty
+    radius(value: int)
+    point(value: Point)
 
 
 record Bag:
-    items: list[int]
+    items: int[]
     name: str
 
 
 record Node:
     value: int
-    next: Option[Node]
+    next: Node?
 
 
-def make_ok() -> Result[int, str]:
+func make_ok() -> Result[int, str]:
     return Ok(3)
 
 
-def make_err() -> Result[int, str]:
+func make_err() -> Result[int, str]:
     return Err("x")
 
 
 # spec: VALUE-EQUALITY-1
-public def test_record_array_and_nested_equality_is_structural() -> bool:
+public func test_record_array_and_nested_equality_is_structural() -> bool:
     if Point(x=1, y=2) != Point(x=1, y=2):
         return False
     if Point(x=1, y=2) == Point(x=1, y=3):
         return False
-    left: [3]int = [1, 2, 3]
-    right: [3]int = [1, 2, 3]
+    mut left: FixedArray[int, 3] = FixedArray[int, 3]([1, 2, 3])
+    mut right: FixedArray[int, 3] = FixedArray[int, 3]([1, 2, 3])
     if left != right:
         return False
     if Bag(items=[1, 2], name="a") != Bag(items=[1, 2], name="a"):
@@ -49,10 +48,10 @@ public def test_record_array_and_nested_equality_is_structural() -> bool:
 
 
 # spec-case: VALUE-EQUALITY-1
-public def test_union_result_and_option_equality_is_structural() -> bool:
-    if Shape.radius(4) != Shape.radius(4):
+public func test_union_result_and_option_equality_is_structural() -> bool:
+    if Shape.radius(value=4) != Shape.radius(value=4):
         return False
-    if Shape.radius(4) == Shape.point(Point(x=4, y=0)):
+    if Shape.radius(value=4) == Shape.point(value=Point(x=4, y=0)):
         return False
     if Shape.empty != Shape.empty:
         return False
@@ -60,10 +59,10 @@ public def test_union_result_and_option_equality_is_structural() -> bool:
         return False
     if make_ok() == make_err():
         return False
-    value: Result[int, str] = make_ok()
+    mut value: Result[int, str] = make_ok()
     if value != Ok(3):
         return False
-    some: Option[int] = Some(4)
+    mut some: int? = Some(4)
     if some != Some(4):
         return False
     if some == None:
@@ -74,26 +73,26 @@ public def test_union_result_and_option_equality_is_structural() -> bool:
 
 
 # spec-case: VALUE-EQUALITY-1
-public def test_recursive_record_equality_is_structural() -> bool:
-    first = Node(value=1, next=None)
-    second = Node(value=1, next=None)
+public func test_recursive_record_equality_is_structural() -> bool:
+    mut first = Node(value=1, next=None)
+    mut second = Node(value=1, next=None)
     if first != second:
         return False
     if first != first:
         return False
     second.next = Some(first)
-    expected: Option[Node] = Some(first)
+    mut expected: Node? = Some(first)
     if second.next != expected:
         return False
     return True
 
 
 # spec-case: VALUE-EQUALITY-1
-public def test_pool_handles_keep_identity_separate_from_record_equality() -> bool:
-    seed: list[Node] = []
-    store = pool.create(seed)
-    first = pool.insert(mut store, Node(value=1, next=None))
-    second = pool.insert(mut store, Node(value=1, next=None))
+public func test_pool_handles_keep_identity_separate_from_record_equality() -> bool:
+    mut seed: Node[] = []
+    mut store = pool.create(seed)
+    mut first = pool.insert(mut store, Node(value=1, next=None))
+    mut second = pool.insert(mut store, Node(value=1, next=None))
     if first == second:
         return False
     match pool.get(store, first):
@@ -108,9 +107,9 @@ public def test_pool_handles_keep_identity_separate_from_record_equality() -> bo
 
 
 # spec-case: EQUALITY-CONTEXT-1
-public def test_equality_through_a_field_supplies_the_option_type() -> bool:
-    first = Node(value=1, next=None)
-    second = Node(value=2, next=Some(first))
+public func test_equality_through_a_field_supplies_the_option_type() -> bool:
+    mut first = Node(value=1, next=None)
+    mut second = Node(value=2, next=Some(first))
     if second.next == None:
         return False
     if first.next != None:
@@ -121,11 +120,11 @@ public def test_equality_through_a_field_supplies_the_option_type() -> bool:
 
 
 # spec: EQUALITY-CONTEXT-2
-public def test_equality_infers_empty_lists_through_field_and_index_paths() -> bool:
-    rows = [Bag(items=[], name="empty"), Bag(items=[7], name="full")]
-    indexed: dict[str, list[Bag]] = {"rows": rows}
-    fixed: [2]Bag = [rows[0], rows[1]]
-    nested: list[list[int]] = [[], [7]]
+public func test_equality_infers_empty_lists_through_field_and_index_paths() -> bool:
+    mut rows = [Bag(items=[], name="empty"), Bag(items=[7], name="full")]
+    mut indexed: dict[str, Bag[]] = {"rows": rows}
+    mut fixed: FixedArray[Bag, 2] = FixedArray[Bag, 2]([rows[0], rows[1]])
+    mut nested: int[][] = [[], [7]]
     if indexed["rows"][0].items != [] or [] == indexed["rows"][1].items:
         return False
     if fixed[0].items != [] or fixed[1].items == []:
@@ -133,18 +132,18 @@ public def test_equality_infers_empty_lists_through_field_and_index_paths() -> b
     return nested[0] == [] and [] != nested[1]
 
 
-def next_position(seen: mut list[int]) -> int:
+func next_position(mut seen: int[]) -> int:
     seen[0] += 1
     return 0
 
 
 # spec-case: EQUALITY-CONTEXT-2
-public def test_equality_context_does_not_evaluate_indexes_twice() -> bool:
-    seen = [0]
-    rows: list[list[int]] = [[]]
-    empty = rows[next_position(mut seen)] == []
+public func test_equality_context_does_not_evaluate_indexes_twice() -> bool:
+    mut seen = [0]
+    mut rows: int[][] = [[]]
+    mut empty = rows[next_position(mut seen)] == []
     return empty and seen[0] == 1
 
 
-def main() -> int:
+func main() -> int:
     return 0

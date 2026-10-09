@@ -7,40 +7,40 @@
 
 
 record Node:
-    left: Option[Node]
-    right: Option[Node]
+    left: Node?
+    right: Node?
 
 
-def make(depth: int) -> Node:
+func make(depth: int) -> Node:
     if depth == 0:
         return Node(left=None, right=None)
     return Node(left=Some(make(depth - 1)), right=Some(make(depth - 1)))
 
 
-def check(node: Node) -> int:
-    left = node.left
-    right = node.right
+func check(node: Node) -> int:
+    mut left = node.left
+    mut right = node.right
     if left is None or right is None:
         return 1
     return 1 + check(left) + check(right)
 
 
-def main(out: Stream) -> int:
-    max_depth = 16
-    min_depth = 4
+func main(out: Stream) -> int:
+    mut max_depth = 16
+    mut min_depth = 4
 
-    stretch = max_depth + 1
-    stretch_check = 0
+    mut stretch = max_depth + 1
+    mut stretch_check = 0
     with arena():
         stretch_check = check(make(stretch))
     out.print(f"stretch tree of depth {stretch}\t check: {stretch_check}")
 
-    long_lived = make(max_depth)
+    mut long_lived = make(max_depth)
 
-    depth = min_depth
+    mut depth = min_depth
     while depth <= max_depth:
-        iterations = shift_left(1, max_depth - depth + min_depth)
-        total = 0
+        mut iterations = shift_left(1, max_depth - depth + min_depth)
+        mut total = 0
         for _ in range(iterations):
             with arena():
                 total = total + check(make(depth))

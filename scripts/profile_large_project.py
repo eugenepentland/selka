@@ -323,19 +323,19 @@ def generate_ordinary_modules(root, modules, functions, token=1):
     root = Path(root)
     root.mkdir(parents=True, exist_ok=True)
     _write(root / "conf.my", [
-        "module conf",
+        "",
         "",
         f"public const STEP: int = {token}",
         "",
     ])
     for module in range(modules):
         name = f"m{module:03d}"
-        body = [f"module {name}", "import conf"]
+        body = ['', "import conf"]
         if module > 0:
             body.append(f"import m{module - 1:03d}")
         body += [
             "",
-            "public def base(x: int) -> int effects():",
+            "public func base(x: int) -> int effects():",
             "    return x + conf.STEP",
             "",
         ]
@@ -343,13 +343,13 @@ def generate_ordinary_modules(root, modules, functions, token=1):
         for index in range(functions):
             current = f"f{index}"
             body += [
-                f"def {current}(x: int) -> int effects():",
+                f"func {current}(x: int) -> int effects():",
                 f"    return {previous}(x) + 1",
                 "",
             ]
             previous = current
         body += [
-            "public def value(seed: int) -> int effects():",
+            "public func value(seed: int) -> int effects():",
         ]
         if module > 0:
             body.append(f"    return {previous}(seed) + m{module - 1:03d}.value(seed)")
@@ -357,22 +357,22 @@ def generate_ordinary_modules(root, modules, functions, token=1):
             body.append(f"    return {previous}(seed)")
         body += [
             "",
-            "public def ping(seed: int = 0) -> int effects():",
+            "public func ping(seed: int = 0) -> int effects():",
             f"    return {previous}(seed)",
             "",
         ]
         _write(root / f"{name}.my", body)
-    main = ["module main"]
+    main = [""]
     for module in range(modules):
         main.append(f"import m{module:03d}")
     main += [
         "import conf",
         "",
-        "def main() -> int effects():",
+        "func main() -> int effects():",
         "    return " + " + ".join(f"m{module:03d}.value(0)" for module in range(modules)) + " + m000.ping() + conf.STEP",
         "",
         "",
-        "public def test_ordinary() -> bool effects():",
+        "public func test_ordinary() -> bool effects():",
         "    return m000.value(1) >= 0",
         "",
     ]
@@ -393,7 +393,7 @@ def generate(root, modules, functions):
 
 def _provider_lines(name, functions, token=1, union_variant="branch", effect="effects()", extra_variant=None):
     lines = [
-        f"module {name}",
+        '',
         "import conf",
         "",
         "public record Row:",
@@ -401,42 +401,42 @@ def _provider_lines(name, functions, token=1, union_variant="branch", effect="ef
         "    weight: int",
         "",
         "public enum Kind:",
-        "    light,",
+        "    light",
         "    heavy",
         "",
-        "public union Node:",
-        "    leaf: int,",
+        "public enum Node:",
+        "    leaf(value: int)",
     ]
     if union_variant == "branch":
         if extra_variant is not None:
-            lines.append("    branch: Row,")
+            lines.append("    branch(value: Row)")
             lines.append(f"    {extra_variant}")
         else:
-            lines.append("    branch: Row")
+            lines.append("    branch(value: Row)")
     else:
-        lines.append("    branch: Row,")
+        lines.append("    branch(value: Row)")
         lines.append("    empty")
     lines += [
         "",
-        f"public def classify(row: Row) -> Kind {effect}:",
+        f"public func classify(row: Row) -> Kind {effect}:",
         "    if row.weight > 10:",
         "        return Kind.heavy",
         "    return Kind.light",
         "",
-        f"def classify_chain(row: Row) -> Kind {effect}:",
+        f"func classify_chain(row: Row) -> Kind {effect}:",
         "    return classify(row)",
         "",
-        "public def summarize(rows: list[Row]) -> int effects():",
-        "    total = 0",
+        "public func summarize(rows: Row[]) -> int effects():",
+        "    mut total = 0",
         "    for row in rows:",
         "        total = total + row.weight * conf.SCALE",
         "    return total",
         "",
-        "def size(node: Node) -> int effects():",
+        "func size(node: Node) -> int effects():",
         "    match node:",
-        "        case Node.leaf(value):",
+        "        case Node.leaf(value=value):",
         "            return value",
-        "        case Node.branch(row):",
+        "        case Node.branch(value=row):",
         "            return row.weight",
     ]
     if union_variant != "branch":
@@ -455,26 +455,26 @@ def _provider_lines(name, functions, token=1, union_variant="branch", effect="ef
         current = f"h{index}"
         if index == 0:
             lines += [
-                f"def {current}(x: int) -> int effects():",
-                f"    return {previous}(Node.leaf(x)) + {token}",
+                f"func {current}(x: int) -> int effects():",
+                f"    return {previous}(Node.leaf(value=x)) + {token}",
                 "",
             ]
         else:
             lines += [
-                f"def {current}(x: int) -> int effects():",
+                f"func {current}(x: int) -> int effects():",
                 f"    return {previous}(x) + {index % 5 + 1}",
                 "",
             ]
         previous = current
     lines += [
         "public domain Policy: int:",
-        "    def make(seed: int) -> Policy effects():",
+        "    func make(seed: int) -> Policy effects():",
         "        return wrap[Policy](seed)",
         "",
-        "    def price(policy: Policy, subtotal: int) -> int effects():",
+        "    func price(policy: Policy, subtotal: int) -> int effects():",
         "        return subtotal - unwrap(policy)",
         "",
-        "    def tag(policy: Policy) -> int effects():",
+        "    func tag(policy: Policy) -> int effects():",
         "        return unwrap(policy)",
         "",
     ]
@@ -486,13 +486,13 @@ def generate_managed(root, providers, functions, token=1):
     root = Path(root)
     root.mkdir(parents=True, exist_ok=True)
     _write(root / "conf.my", [
-        "module conf",
+        "",
         "",
         f"public const SCALE: int = {token}",
         "",
     ])
     _write(root / "contracts.my", [
-        "module contracts",
+        "",
         "",
         "public constraint Prices[P] = copy + op(price(policy: P, subtotal: int) -> int effects()) + op(tag(policy: P) -> int effects())",
         "",
@@ -501,36 +501,36 @@ def generate_managed(root, providers, functions, token=1):
     for index, name in enumerate(names):
         _write(root / f"{name}.my", _provider_lines(name, functions, token=token))
     _write(root / "pricing.my", [
-        "module pricing",
+        "",
         "import contracts",
         "",
-        "public def apply[P: contracts.Prices](policy: P, subtotal: int) -> int effects():",
+        "public func apply[P: contracts.Prices](policy: P, subtotal: int) -> int effects():",
         "    return P.price(policy, subtotal) + P.tag(policy)",
         "",
-        "public def bundle[P: contracts.Prices](policy: P, subtotal: int) -> int effects():",
+        "public func bundle[P: contracts.Prices](policy: P, subtotal: int) -> int effects():",
         "    return apply[P](policy, subtotal) + 1",
         "",
     ])
-    main = ["module main", "import pricing"]
+    main = ["", "import pricing"]
     for name in names:
         main.append(f"import {name}")
     main += [
         "",
-        "def total(subtotal: int) -> int effects():",
-        "    value = 0",
+        "func total(subtotal: int) -> int effects():",
+        "    mut value = 0",
     ]
     for index, name in enumerate(names):
         main.append(f"    value = value + pricing.bundle({name}.Policy.make({index % 97}), subtotal)")
     main += [
         "    return value",
         "",
-        "def main() -> int effects(managed_allocation):",
-        f"    rows = [{names[0]}.Row(index=0, weight=3), {names[0]}.Row(index=1, weight=11)]",
+        "func main() -> int effects(managed_allocation):",
+        f"    const rows = [{names[0]}.Row(index=0, weight=3), {names[0]}.Row(index=1, weight=11)]",
         f"    _ = {names[0]}.summarize(rows)",
         "    return total(2000)",
         "",
         "",
-        "public def test_managed() -> bool effects():",
+        "public func test_managed() -> bool effects():",
         "    return total(2000) > 0",
         "",
     ]
@@ -559,12 +559,12 @@ def apply_ordinary_edit(paths, kind, token):
         return path
     if kind == "constant_edit":
         path = paths["constant"]
-        path.write_text("module conf\n\n\npublic const STEP: int = %d\n" % token)
+        path.write_text("\n\npublic const STEP: int = %d\n" % token)
         return path
     if kind == "signature_edit":
         path = paths["signature"]
         text = path.read_text()
-        text = text.replace("def ping(seed: int = 0)", f"def ping(seed: int = {token})")
+        text = text.replace("func ping(seed: int = 0)", f"func ping(seed: int = {token})")
         path.write_text(text)
         return path
     raise ValueError(f"unsupported ordinary edit: {kind}")
@@ -574,12 +574,12 @@ def apply_managed_edit(paths, kind, token, providers):
     if kind == "implementation_edit":
         path = paths["managed_provider"]
         text = path.read_text()
-        text = text.replace("    return size(Node.leaf(x)) + 1", f"    return size(Node.leaf(x)) + {token}")
+        text = text.replace("    return size(Node.leaf(value=x)) + 1", f"    return size(Node.leaf(value=x)) + {token}")
         path.write_text(text)
         return path
     if kind == "constant_edit":
         path = paths["constant"]
-        path.write_text("module conf\n\n\npublic const SCALE: int = %d\n" % token)
+        path.write_text("\n\npublic const SCALE: int = %d\n" % token)
         return path
     if kind == "union_edit":
         path = paths["managed_provider"]
@@ -600,15 +600,15 @@ def apply_managed_edit(paths, kind, token, providers):
         pricing = paths["pricing"]
         text = pricing.read_text()
         effect = "effects(clock)" if token % 2 else "effects()"
-        text = text.replace("def bundle[P: contracts.Prices](policy: P, subtotal: int) -> int effects():",
-                            f"def bundle[P: contracts.Prices](policy: P, subtotal: int) -> int {effect}:")
+        text = text.replace("func bundle[P: contracts.Prices](policy: P, subtotal: int) -> int effects():",
+                            f"func bundle[P: contracts.Prices](policy: P, subtotal: int) -> int {effect}:")
         text += f"# s1 effect edit token {token}\n"
         pricing.write_text(text)
         main = paths["main"]
         main_text = main.read_text()
         caller_effect = "effects(clock)" if token % 2 else "effects()"
-        main_text = main_text.replace("def total(subtotal: int) -> int effects():",
-                                      f"def total(subtotal: int) -> int {caller_effect}:")
+        main_text = main_text.replace("func total(subtotal: int) -> int effects():",
+                                      f"func total(subtotal: int) -> int {caller_effect}:")
         main_text += f"# s1 effect edit token {token}\n"
         main.write_text(main_text)
         return pricing
@@ -617,7 +617,7 @@ def apply_managed_edit(paths, kind, token, providers):
 
 def _functions_of(path):
     text = path.read_text()
-    match = re.search(r"def h(\d+)\(", text)
+    match = re.search(r"func h(\d+)\(", text)
     if not match:
         return 0
     return int(match.group(1)) + 1
@@ -690,9 +690,9 @@ def parse_list_modules(text):
     imports = []
     current = None
     for line in text.splitlines():
-        if line.startswith("module graph"):
+        if line.startswith(""):
             continue
-        match = re.match(r"module (\S+) path=(\S+) sha256=(\S+)", line)
+        match = re.match(r"", line)
         if match:
             current = match.group(1)
             modules.append({"module": current, "path": match.group(2), "sha256": match.group(3)})
@@ -1297,10 +1297,10 @@ def probe_bounded_failures(compiler, scratch):
     shutil.rmtree(module_root, ignore_errors=True)
     module_root.mkdir(parents=True)
     for index in range(2):
-        body = [f"module m{index:03d}"]
+        body = ['']
         if index + 1 < 2:
             body.append(f"import m{index + 1:03d}")
-        body += ["", f"def value() -> int effects():", f"    return {index}"]
+        body += ["", f"func value() -> int effects():", f"    return {index}"]
         _write(module_root / f"m{index:03d}.my", body)
     _write(module_root / "mylang.json", ['{"version": 1, "budgets": {"max_modules": 1}}'])
     result = run_measured([compiler, "check-project", module_root / "m000.my", "--no-cache"], timeout=120)
@@ -1318,8 +1318,8 @@ def probe_bounded_failures(compiler, scratch):
     shutil.rmtree(bytes_root, ignore_errors=True)
     bytes_root.mkdir(parents=True)
     padding = "\n".join(f"# pad {index:07d}" for index in range(5 * MIB // 16))
-    _write(bytes_root / "main.my", ["module main", "", padding, "",
-                                    "def main() -> int effects():", "    return 0"])
+    _write(bytes_root / "main.my", ["", "", padding, "",
+                                    "func main() -> int effects():", "    return 0"])
     result = run_measured([compiler, "check-project", bytes_root / "main.my", "--no-cache"], timeout=120)
     records.append({
         "probe": "single source file over 4 MiB",
@@ -1336,10 +1336,10 @@ def probe_bounded_failures(compiler, scratch):
     total_root.mkdir(parents=True)
     for index in range(6):
         padding = "\n".join(f"# pad {index:07d}" for _ in range(250000))
-        _write(total_root / f"m{index}.my", [f"module m{index}", "", padding, "",
-                                             "public def value() -> int effects():", "    return 0"])
-    entry_lines = ["module main"] + [f"import m{index}" for index in range(6)]
-    entry_lines += ["", "def main() -> int effects():",
+        _write(total_root / f"m{index}.my", ['', "", padding, "",
+                                             "public func value() -> int effects():", "    return 0"])
+    entry_lines = [""] + [f"import m{index}" for index in range(6)]
+    entry_lines += ["", "func main() -> int effects():",
                     "    return " + " + ".join(f"m{index}.value()" for index in range(6))]
     _write(total_root / "main.my", entry_lines)
     result = run_measured([compiler, "check-project", total_root / "main.my", "--no-cache"], timeout=180)
@@ -1538,7 +1538,7 @@ def apply_maintained_edit(target, index):
     text = target.read_text()
     if not text.endswith("\n"):
         text += "\n"
-    text += f"\ndef s1_maintained_edit_{index}() -> int effects():\n    return {1000 + index}\n"
+    text += f"\nfunc s1_maintained_edit_{index}() -> int effects():\n    return {1000 + index}\n"
     target.write_text(text)
     return target
 

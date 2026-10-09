@@ -1,4 +1,3 @@
-module rc_interval_anchors
 # RC-INTERVAL-ANCHOR-2: values read out of a `mut` list parameter or a named
 # list local are read in place while nothing writes the list; a value that is
 # still live when the list is written keeps its own copy.
@@ -17,18 +16,18 @@ record Pin:
     net_id: int
 
 
-def span(text: bytes) -> Span:
+func span(text: bytes) -> Span:
     return Span(source=text, start=0, end=len(text))
 
 
-def pin(part: int, net: bytes) -> Pin:
+func pin(part: int, net: bytes) -> Pin:
     return Pin(part=part, net=span(net), display=span(net + b"!"), net_id=-1)
 
 
-def equal(a: Span, b: Span) -> bool:
+func equal(a: Span, b: Span) -> bool:
     if a.end - a.start != b.end - b.start:
         return False
-    i = 0
+    mut i = 0
     while i < a.end - a.start:
         if a.source[a.start + i] != b.source[b.start + i]:
             return False
@@ -38,11 +37,11 @@ def equal(a: Span, b: Span) -> bool:
 
 # Inner scans compare two elements through an inlined helper, and the list is
 # written only between the scans.
-def normalize(pins: mut list[Pin]):
-    i = 0
+func normalize(mut pins: Pin[]):
+    mut i = 0
     while i < len(pins):
-        raw_id = -1
-        j = 0
+        mut raw_id = -1
+        mut j = 0
         while j < i:
             if raw_id < 0 and equal(pins[j].net, pins[i].net):
                 raw_id = pins[j].net_id
@@ -54,14 +53,14 @@ def normalize(pins: mut list[Pin]):
         i += 1
 
 
-def unique_parts(count: int) -> list[Pin]:
-    out: list[Pin] = []
-    k = 0
+func unique_parts(count: int) -> Pin[]:
+    mut out: Pin[] = []
+    mut k = 0
     while k < count:
-        found = False
-        j = 0
+        mut found = False
+        mut j = 0
         while j < len(out):
-            previous = out[j]
+            mut previous = out[j]
             if previous.part == k % 4 and equal(previous.net, span(b"n")):
                 found = True
             j += 1
@@ -71,47 +70,47 @@ def unique_parts(count: int) -> list[Pin]:
     return out
 
 
-public def test_a_mut_list_is_read_in_place_between_its_writes() -> bool:
-    pins = [pin(0, b"VCC"), pin(1, b"GND"), pin(2, b"VCC"), pin(3, b"SDA"), pin(4, b"GND")]
-    before = pins
+public func test_a_mut_list_is_read_in_place_between_its_writes() -> bool:
+    mut pins = [pin(0, b"VCC"), pin(1, b"GND"), pin(2, b"VCC"), pin(3, b"SDA"), pin(4, b"GND")]
+    mut before = pins
     normalize(mut pins)
-    ids = [pins[0].net_id, pins[1].net_id, pins[2].net_id, pins[3].net_id, pins[4].net_id]
+    mut ids = [pins[0].net_id, pins[1].net_id, pins[2].net_id, pins[3].net_id, pins[4].net_id]
     return ids == [0, 1, 0, 3, 1] and pins[4].display.source == b"GND?" and before[4].net_id == -1 and before[4].display.source == b"GND!"
 
 
-public def test_a_local_list_is_read_in_place_between_appends() -> bool:
-    out = unique_parts(11)
+public func test_a_local_list_is_read_in_place_between_appends() -> bool:
+    mut out = unique_parts(11)
     return len(out) == 4 and out[3].part == 3 and out[0].net.source == b"n"
 
 
 # Near misses: the value is live when the list is written.
-def stale(pins: mut list[Pin]) -> int:
-    first = pins[0]
+func stale(mut pins: Pin[]) -> int:
+    mut first = pins[0]
     pins[0].net = span(b"changed")
     pins[0].part = 90
     return first.part * 100 + first.net.end
 
 
-def change(pins: mut list[Pin]) -> int:
+func change(mut pins: Pin[]) -> int:
     pins.clear()
     pins.append(pin(70, b"late"))
     return 0
 
 
-def across_call(pins: mut list[Pin]) -> int:
-    first = pins[0]
+func across_call(mut pins: Pin[]) -> int:
+    mut first = pins[0]
     _ = change(mut pins)
     return first.part * 100 + first.net.end + pins[0].part
 
 
-def argument_order(pins: mut list[Pin]) -> int:
+func argument_order(mut pins: Pin[]) -> int:
     return len(pins[0].net.source) * 100 + change(mut pins) + pins[0].part
 
 
-def grown(count: int) -> int:
-    out = [pin(5, b"first")]
-    first = out[0]
-    k = 0
+func grown(count: int) -> int:
+    mut out = [pin(5, b"first")]
+    mut first = out[0]
+    mut k = 0
     while k < count:
         out.append(pin(k, b"xx"))
         out[0] = pin(60 + k, b"other")
@@ -119,9 +118,9 @@ def grown(count: int) -> int:
     return first.part * 100 + first.net.end + out[0].part
 
 
-def returned(count: int) -> Pin:
-    out: list[Pin] = []
-    k = 0
+func returned(count: int) -> Pin:
+    mut out: Pin[] = []
+    mut k = 0
     while k < count:
         out.append(pin(k, b"value"))
         k += 1
@@ -129,40 +128,40 @@ def returned(count: int) -> Pin:
 
 
 record Holder:
-    items: list[Pin]
+    items: Pin[]
 
 
-def handed() -> int:
-    out = [pin(1, b"abc"), pin(2, b"de")]
-    first = out[0]
-    holder = Holder(items=out)
+func handed() -> int:
+    mut out = [pin(1, b"abc"), pin(2, b"de")]
+    mut first = out[0]
+    mut holder = Holder(items=out)
     holder.items.clear()
     holder.items.append(pin(9, b"zzzzzz"))
     return first.part * 100 + first.net.end + holder.items[0].part
 
 
-def last_capture(count: int) -> bool:
-    values: list[Pin] = []
+func last_capture(count: int) -> bool:
+    mut values: Pin[] = []
     for i in range(count):
         values.append(pin(count - i, b"v"))
     values[0].part = 0
     return values[len(values) - 1].part == 1 and values[0].part == 0
 
 
-public def test_a_list_handed_to_a_new_owner_keeps_earlier_reads() -> bool:
+public func test_a_list_handed_to_a_new_owner_keeps_earlier_reads() -> bool:
     return handed() == 112 and last_capture(40)
 
 
-public def test_values_live_across_a_write_keep_their_copy() -> bool:
-    pins = [pin(3, b"abc"), pin(4, b"de")]
-    first = stale(mut pins)
-    again = [pin(8, b"wxyz")]
-    second = across_call(mut again)
-    third = [pin(9, b"ab")]
-    order = argument_order(mut third)
+public func test_values_live_across_a_write_keep_their_copy() -> bool:
+    mut pins = [pin(3, b"abc"), pin(4, b"de")]
+    mut first = stale(mut pins)
+    mut again = [pin(8, b"wxyz")]
+    mut second = across_call(mut again)
+    mut third = [pin(9, b"ab")]
+    mut order = argument_order(mut third)
     return first == 303 and pins[0].part == 90 and second == 874 and order == 270
 
 
-public def test_local_lists_written_or_returned_keep_owners() -> bool:
-    kept = returned(3)
+public func test_local_lists_written_or_returned_keep_owners() -> bool:
+    mut kept = returned(3)
     return grown(3) == 567 and kept.part == 2 and kept.net.source == b"value"

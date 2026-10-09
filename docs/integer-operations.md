@@ -18,10 +18,10 @@ Validation: `zig test src/integer_operations_test.zig` runs width-boundary, cons
 
 ```mylang
 # doc: expect 42
-def main() -> int:
-    counter = 9223372036854775807
-    channel: u8 = 200
-    offset: i32 = -1000i32
+func main() -> int:
+    mut counter = 9223372036854775807
+    mut channel: u8 = 200
+    mut offset: i32 = -1000i32
     if int(channel) != 200 or int(offset) != -1000:
         return 1
     if counter - 9223372036854775765 != 42:
@@ -62,13 +62,13 @@ a literal takes that operand's type. `mylang fmt` keeps the spelling you wrote.
 # doc: expect 42
 const MASK: u32 = 0xFF00_0000
 
-def main() -> int:
-    low = 0x2A
+func main() -> int:
+    mut low = 0x2A
     if i64(MASK) != 4278190080:
         return 1
     if 0o52 != low or 0b10_1010 != low or 1_000 != 1000:
         return 2
-    block: [0x10]u8 = [0u8, 1u8, 2u8, 3u8, 4u8, 5u8, 6u8, 7u8, 8u8, 9u8, 10u8, 11u8, 12u8, 13u8, 14u8, 15u8]
+    mut block: FixedArray[u8, 0x10] = FixedArray[u8, 16]([0u8, 1u8, 2u8, 3u8, 4u8, 5u8, 6u8, 7u8, 8u8, 9u8, 10u8, 11u8, 12u8, 13u8, 14u8, 15u8])
     if len(block) != 16 or block[15] != 15u8:
         return 3
     return int(0x2Au8)
@@ -80,8 +80,8 @@ These are the named spellings of the operations that have no operator. `bit_and`
 
 ```mylang
 # doc: expect 42
-def main() -> int:
-    flags: u8 = 12u8
+func main() -> int:
+    mut flags: u8 = 12u8
     if bit_and(flags, 10u8) != 8u8:
         return 1
     if bit_or(flags, 10u8) != 14u8:
@@ -101,8 +101,8 @@ def main() -> int:
 
 ```mylang
 # doc: expect 42
-def main() -> int:
-    level: u8 = 250u8
+func main() -> int:
+    mut level: u8 = 250u8
     if wrapping_add(level, 10u8) != 4u8:
         return 1
     if saturating_add(level, 10u8) != 255u8:
@@ -124,8 +124,8 @@ def main() -> int:
 
 ```mylang
 # doc: expect 42
-def main() -> int:
-    total = -85
+func main() -> int:
+    mut total = -85
     if total // 2 != -43 or total % 2 != 1:
         return 1
     if remtrunc(total, 2) != -1:

@@ -34,14 +34,14 @@ fn rejectAll(sources: []const []const u8, code: []const u8) !void {
 // spec: GC-SOURCE-1
 test "managed copies are stored back after helper mutation without allocator authority" {
     const source =
-        \\def change(values: mut list[i64]):
+        \\func change(mut values: i64[]):
         \\    values.append(40)
         \\    values[0u64] = 42
         \\
         \\
-        \\def main() -> i64:
-        \\    values: list[i64] = []
-        \\    alias = values
+        \\func main() -> i64:
+        \\    mut values: i64[] = []
+        \\    mut alias = values
         \\    change(mut alias)
         \\    values = alias
         \\    if len(values) != 1:
@@ -56,23 +56,23 @@ test "managed copies are stored back after helper mutation without allocator aut
 test "managed intermediate call arguments and record snapshots survive collection" {
     const source =
         \\record Holder:
-        \\    values: list[i64]
+        \\    values: i64[]
         \\
         \\
-        \\def make() -> list[i64]:
-        \\    values: list[i64] = []
+        \\func make() -> i64[]:
+        \\    mut values: i64[] = []
         \\    values.append(42)
         \\    return values
         \\
         \\
-        \\def consume(first: Holder, second: mut list[i64]) -> i64:
+        \\func consume(first: Holder, mut second: i64[]) -> i64:
         \\    second.append(9)
-        \\    values = first.values
+        \\    mut values = first.values
         \\    return values[0u64]
         \\
         \\
-        \\def main() -> i64:
-        \\    scratch: list[i64] = []
+        \\func main() -> i64:
+        \\    mut scratch: i64[] = []
         \\    return consume(Holder(values=make()), mut scratch)
     ;
     try t.expectEqual(@as(i64, 42), (try execute(source)).value);
@@ -85,8 +85,8 @@ test "managed bounds reads and writes produce located list bounds traps" {
         "values[0u64] = 42\n    return 0",
     }) |operation| {
         const source = try std.fmt.allocPrint(t.allocator,
-            \\def main() -> i64:
-            \\    values: list[i64] = []
+            \\func main() -> i64:
+            \\    mut values: i64[] = []
             \\    {s}
         , .{operation});
         defer t.allocator.free(source);
@@ -101,30 +101,30 @@ test "managed bounds reads and writes produce located list bounds traps" {
 test "noalloc rejects transitive managed allocation while permitting fixed-slot mutation" {
     for ([_][]const u8{ "noalloc", "noalloc" }) |bound| {
         const create_source = try std.fmt.allocPrint(t.allocator,
-            \\def make() -> list[i64]:
+            \\func make() -> i64[]:
             \\    return []
             \\
             \\
-            \\def constrained() -> list[i64] {s}:
+            \\func constrained() -> i64[] {s}:
             \\    return make()
             \\
             \\
-            \\def main() -> i64:
+            \\func main() -> i64:
             \\    return 0
             \\
         , .{bound});
         defer t.allocator.free(create_source);
         try reject(create_source, "E_EFFECT_BOUND");
         const append_source = try std.fmt.allocPrint(t.allocator,
-            \\def grow(values: mut list[i64]) -> None:
+            \\func grow(mut values: i64[]) -> Unit:
             \\    values.append(42)
             \\
             \\
-            \\def constrained(values: mut list[i64]) -> None {s}:
+            \\func constrained(mut values: i64[]) -> Unit {s}:
             \\    grow(mut values)
             \\
             \\
-            \\def main() -> i64:
+            \\func main() -> i64:
             \\    return 0
             \\
         , .{bound});
@@ -132,17 +132,17 @@ test "noalloc rejects transitive managed allocation while permitting fixed-slot 
         try reject(append_source, "E_EFFECT_BOUND");
     }
     const source =
-        \\def fixed(values: mut list[i64]) -> None effects(mutation):
+        \\func fixed(mut values: i64[]) -> Unit effects(mutation):
         \\    values[0u64] = 42
         \\
         \\
-        \\def inspect(values: mut list[i64]) -> i64 effects(mutation):
+        \\func inspect(mut values: i64[]) -> i64 effects(mutation):
         \\    fixed(mut values)
         \\    return values[0u64]
         \\
         \\
-        \\def main() -> i64:
-        \\    values: list[i64] = []
+        \\func main() -> i64:
+        \\    mut values: i64[] = []
         \\    values.append(0)
         \\    return inspect(mut values)
     ;
@@ -155,8 +155,8 @@ test "managed elements reject owned resources and unchecked results" {
         \\resource File: filesystem
         \\
         \\
-        \\def main() -> i64:
-        \\    values: list[File] = []
+        \\func main() -> i64:
+        \\    mut values: File[] = []
         \\    return len(values)
         ,
         \\resource File: filesystem
@@ -166,8 +166,8 @@ test "managed elements reject owned resources and unchecked results" {
         \\    file: File
         \\
         \\
-        \\def main() -> i64:
-        \\    values: list[Wrapper] = []
+        \\func main() -> i64:
+        \\    mut values: Wrapper[] = []
         \\    return len(values)
         ,
         \\result Answer:
@@ -175,8 +175,8 @@ test "managed elements reject owned resources and unchecked results" {
         \\    err: i64
         \\
         \\
-        \\def main() -> i64:
-        \\    values: list[Answer] = []
+        \\func main() -> i64:
+        \\    mut values: Answer[] = []
         \\    return len(values)
         ,
     }, "E_GENERIC_REQUIREMENT");
@@ -186,25 +186,25 @@ test "managed elements reject owned resources and unchecked results" {
 test "an independent collection snapshot roots its elements across later mutations" {
     const source =
         \\record Holder:
-        \\    items: list[i64]
+        \\    items: i64[]
         \\
         \\
-        \\def total(holder: Holder) -> i64:
-        \\    sum = 0
+        \\func total(holder: Holder) -> i64:
+        \\    mut sum = 0
         \\    for item in holder.items:
         \\        sum = sum + item
         \\    return sum
         \\
         \\
-        \\def main() -> i64:
-        \\    values: list[i64] = []
-        \\    alias = values
+        \\func main() -> i64:
+        \\    mut values: i64[] = []
+        \\    mut alias = values
         \\    alias.append(11)
-        \\    holder = Holder(items=alias)
+        \\    mut holder = Holder(items=alias)
         \\    alias.append(31)
-        \\    i = 0
+        \\    mut i = 0
         \\    while i < 40:
-        \\        garbage: list[i64] = []
+        \\        mut garbage: i64[] = []
         \\        garbage.append(i)
         \\        i = i + 1
         \\    return total(holder)
@@ -216,8 +216,8 @@ test "an independent collection snapshot roots its elements across later mutatio
 // spec: GC-BOUNDARY-1
 test "a managed list read past its initialized bounds is a located trap" {
     const source =
-        \\def main() -> i64:
-        \\    values: list[i64] = []
+        \\func main() -> i64:
+        \\    mut values: i64[] = []
         \\    values.append(7)
         \\    return values[3u64]
     ;
@@ -234,14 +234,14 @@ test "scalar element reads load every width and keep a record read's copy" {
         \\    right: i64
         \\
         \\
-        \\def main() -> i64:
-        \\    narrow = [1i16, 2i16, 300i16]
-        \\    flags = [True, False]
-        \\    raw = b"abc"
-        \\    total = i64(narrow[0]) + i64(narrow[-1]) + i64(narrow[1])
+        \\func main() -> i64:
+        \\    mut narrow = [1i16, 2i16, 300i16]
+        \\    mut flags = [True, False]
+        \\    mut raw = b"abc"
+        \\    mut total = i64(narrow[0]) + i64(narrow[-1]) + i64(narrow[1])
         \\    if flags[-1]:
         \\        total = total + 100
-        \\    rows = [Pair(left=5, right=6)]
+        \\    mut rows = [Pair(left=5, right=6)]
         \\    return total + rows[0].left + i64(raw[2])
     ;
     const result = try execute(source);
@@ -250,8 +250,8 @@ test "scalar element reads load every width and keep a record read's copy" {
 
 test "a scalar element read past the end keeps the original index in its detail" {
     const source =
-        \\def main() -> i64:
-        \\    values = [4, 5, 6]
+        \\func main() -> i64:
+        \\    mut values = [4, 5, 6]
         \\    return values[-4]
     ;
     const result = try execute(source);
@@ -272,12 +272,12 @@ test "negative element indexes count from the end for lists byte strings and tex
         \\    right: i64
         \\
         \\
-        \\def main() -> i64:
-        \\    values = [4, 5, 6]
-        \\    names = ["red", "green"]
-        \\    rows = [Pair(left=7, right=8)]
-        \\    raw = b"abc"
-        \\    text = "héllo"
+        \\func main() -> i64:
+        \\    mut values = [4, 5, 6]
+        \\    mut names = ["red", "green"]
+        \\    mut rows = [Pair(left=7, right=8)]
+        \\    mut raw = b"abc"
+        \\    mut text = "héllo"
         \\    return values[-1] + values[-len(values)] + len(names[-1]) + rows[-1].left + i64(raw[-1]) + i64(raw[-len(raw)]) + len(text[-1]) + len(text[-len(text)])
     ;
     const result = try execute(source);
@@ -288,8 +288,8 @@ test "negative element indexes count from the end for lists byte strings and tex
 // spec: GC-CAPABILITY-1
 test "a managed element declaration refuses a capability, directly or inside a record" {
     try rejectAll(&.{
-        \\def main(fs: Filesystem) -> int:
-        \\    values: list[Filesystem] = []
+        \\func main(fs: Filesystem) -> int:
+        \\    mut values: Filesystem[] = []
         \\    values.append(fs)
         \\    return len(values)
         ,
@@ -297,8 +297,8 @@ test "a managed element declaration refuses a capability, directly or inside a r
         \\    fs: Filesystem
         \\
         \\
-        \\def main(fs: Filesystem) -> int:
-        \\    values: list[Holder] = []
+        \\func main(fs: Filesystem) -> int:
+        \\    mut values: Holder[] = []
         \\    values.append(Holder(fs=fs))
         \\    return len(values)
         ,
@@ -310,8 +310,8 @@ test "a managed element declaration refuses a capability, directly or inside a r
         \\    holder: Holder
         \\
         \\
-        \\def main(fs: Filesystem) -> int:
-        \\    values: list[Outer] = []
+        \\func main(fs: Filesystem) -> int:
+        \\    mut values: Outer[] = []
         \\    values.append(Outer(holder=Holder(fs=fs)))
         \\    return len(values)
     }, "E_LIST_CAPABILITY");
@@ -319,12 +319,12 @@ test "a managed element declaration refuses a capability, directly or inside a r
 
 test "QBE-TEXT-BLOCK-1 run-time text shares one allocation with its payload" {
     const source =
-        \\def main() -> i64:
-        \\    keep: list[str] = []
+        \\func main() -> i64:
+        \\    mut keep: str[] = []
         \\    for index in range(64):
-        \\        text = "-".join(["a", "b", "c"])
+        \\        mut text = "-".join(["a", "b", "c"])
         \\        keep.append(text.replace("-", "\u00e9") + text[0:2])
-        \\    total = 0
+        \\    mut total = 0
         \\    for item in keep:
         \\        total = total + len(item)
         \\    if keep[0] != "a\u00e9b\u00e9ca-":
@@ -351,8 +351,8 @@ test "UTF8-TEXT-1 text stores UTF-8 octets and still indexes Unicode scalars" {
     // mixed-width keys are what makes a dictionary's hashing and equality part
     // of the same check.
     const source =
-        \\def main() -> i64:
-        \\    text = "a\u00e9\u6f22b"
+        \\func main() -> i64:
+        \\    mut text = "a\u00e9\u6f22b"
         \\    if len(text) != 4:
         \\        return 1
         \\    if text[0] != "a":
@@ -367,7 +367,7 @@ test "UTF8-TEXT-1 text stores UTF-8 octets and still indexes Unicode scalars" {
         \\        return 6
         \\    if text[3:99] != "b":
         \\        return 7
-        \\    ordered = sorted(["\u6f22", "\u00e9", "a"])
+        \\    mut ordered = sorted(["\u6f22", "\u00e9", "a"])
         \\    if ordered[0] != "a":
         \\        return 8
         \\    if ordered[1] != "\u00e9":
@@ -414,7 +414,7 @@ test "UTF8-TEXT-1 text stores UTF-8 octets and still indexes Unicode scalars" {
         \\        return 26
         \\    if "a\u00e9".zfill(4) != "00a\u00e9":
         \\        return 27
-        \\    counts: dict[str, int] = {}
+        \\    mut counts: dict[str, int] = {}
         \\    counts["\u00e9"] = 1
         \\    counts["\u6f22"] = 2
         \\    counts["\u00e9"] = counts["\u00e9"] + 1
@@ -426,7 +426,7 @@ test "UTF8-TEXT-1 text stores UTF-8 octets and still indexes Unicode scalars" {
         \\        return 30
         \\    if "\u00e9" not in counts:
         \\        return 31
-        \\    total = 0
+        \\    mut total = 0
         \\    for letter in text:
         \\        total = total + len(letter)
         \\    if total != 4:
@@ -447,9 +447,9 @@ test "UTF8-TEXT-1 text stores UTF-8 octets and still indexes Unicode scalars" {
         \\        return 40
         \\    if len(text[1:4:2]) != 2 or text[1:4:2][0] != "\u00e9":
         \\        return 41
-        \\    kept = "z"
+        \\    mut kept = "z"
         \\    with arena() as scratch:
-        \\        inside = "-".join([text, "\u00e9"])
+        \\        mut inside = "-".join([text, "\u00e9"])
         \\        kept = scratch.escape(inside)
         \\    if kept != "a\u00e9\u6f22b-\u00e9" or len(kept) != 6:
         \\        return 42
@@ -461,15 +461,15 @@ test "UTF8-TEXT-1 text stores UTF-8 octets and still indexes Unicode scalars" {
 }
 
 test "GC-OBJECT-1 a two-word header fits thousands of live lists under one budget" {
-    // Each live four-element `list[i64]` costs one 72-byte list header object
+    // Each live four-element `i64[]` costs one 72-byte list header object
     // plus a 32-byte backing; the two-word header is what lets four thousand of
     // them stay inside one mebibyte. The retired 96-byte header charged roughly
     // twice that and trapped here, so the budget is the observable half of the
     // representation change.
     var compilation = try language.Compilation.init(t.allocator, "header.my",
-        \\def main() -> i64:
-        \\    values: list[list[i64]] = []
-        \\    n = 0
+        \\func main() -> i64:
+        \\    mut values: i64[][] = []
+        \\    mut n = 0
         \\    while n < 4000:
         \\        values.append([n, n + 1, n + 2, n + 3])
         \\        n += 1
@@ -488,15 +488,15 @@ test "GC-SEGMENT-1 a churn loop reuses reclaimed slots without stale fields" {
     // copies, and a slot whose payload was not zeroed would publish the previous
     // owner's storage pointer.
     var compilation = try language.Compilation.init(t.allocator, "segments.my",
-        \\def main() -> i64:
-        \\    keep: list[list[i64]] = []
-        \\    n = 0
+        \\func main() -> i64:
+        \\    mut keep: i64[][] = []
+        \\    mut n = 0
         \\    while n < 20000:
-        \\        scratch = [n, n + 1, n + 2, n + 3]
+        \\        mut scratch = [n, n + 1, n + 2, n + 3]
         \\        if n % 1000 == 0:
         \\            keep.append(scratch)
         \\        n += 1
-        \\    total = 0
+        \\    mut total = 0
         \\    for item in keep:
         \\        total = total + item[3]
         \\    return total

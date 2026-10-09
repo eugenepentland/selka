@@ -8,60 +8,39 @@ bring in.
 
 ## Running a file that imports
 
-`mylang run` detects a project entry itself. When the file the command names
-opens with a `module` header — or a module-only `import`/`export` directive — it
-loads the reachable graph exactly as a project command does, so a single file
-that imports a standard module needs no separate command:
+`mylang run` loads the reachable graph when a file imports modules. Module
+identity comes from the file path: `helper.my` is imported as `helper`, and no
+source file declares a `module` header. Standard modules are embedded in the
+compiler and use the same import syntax:
 
 ```mylang
 # doc: expect 42
-module main
 import math
 
-def main() -> int:
+func main() -> int:
     return math.clamp(99, 0, 42)
 ```
 
 `mylang run main.my --print-result` prints `42`; `mylang run-project main.my`
-remains the explicit alias for the same entry. A file with no module header is
-still checked and run as one standalone unit; see
-[headerless scripts](#headerless-scripts) for the one import it may carry.
+remains the explicit project command. A file without imports can still be
+checked and run as one standalone unit.
 
 ### Headerless scripts
 
-A file with no `module` header is one standalone unit, and it may import the
-compiler-embedded standard modules directly. The first line is the import; there
-is no module name to declare because nothing imports the file back:
+All source files are headerless, including imported modules. A project import
+resolves to a matching file under the project root. A missing file produces a
+located module-read diagnostic:
 
 ```mylang
-# doc: expect 42
-import math
-
-def main() -> int:
-    return math.clamp(99, 0, 42)
-```
-
-Save it as `probe4.my` and `mylang run probe4.my --print-result` prints `42`.
-The imports resolve from the embedded standard library exactly as they do for a
-project entry — the same ten modules, the same exports — and the rest of the file
-is an ordinary program body. Anything other than standard-module imports still
-needs the header, because a project module has to declare the name its importers
-request:
-
-```mylang
-# doc: expect-error E_MODULE_HEADER
+# doc: expect-error E_MODULE_READ
 import helper
 
-def main() -> int:
+func main() -> int:
     return 0
 ```
 
-That rejection is reported at the file's first token and names the accepted
-form: begin the file with `module NAME` when it imports a module of its own.
-A file that begins with a declaration, with an `export` directive or with a
-dotted import path is rejected the same way, and a headerless file that another
-module imports is rejected too — only the entry the command names may be
-headerless.
+Exported declarations use `public`; imported private declarations remain
+inaccessible. Generated `.api` metadata retains its module identity header.
 
 This is the canonical everyday command shape:
 
@@ -85,7 +64,7 @@ like `run`; a persistent `build main.my -o app` still requires `--project` for a
 module project. `mylang test main.my` builds each guest test as a separate native
 child with no ambient capabilities and returns an aggregate runner status.
 
-A `main(args: list[str], ...)` entry point receives only guest arguments: values
+A `main(args: str[], ...)` entry point receives only guest arguments: values
 after `--` for `mylang run` and `build --run`, and every OS argument after
 `argv[0]`, unchanged, for an installed executable. Runtime controls stay before
 the delimiter for a command and in `MYLANG_OPTIONS` for an installed program. Values are validated
@@ -114,15 +93,14 @@ as an upper bound.
 ```mylang
 # doc: project measure
 # doc: file units.my
-module units
 
 public record Distance:
     value: int
 
-public def make(value: int) -> Distance effects():
+public func make(value: int) -> Distance effects():
     return Distance(value=value)
 
-public def metres(distance: Distance) -> int effects():
+public func metres(distance: Distance) -> int effects():
     return distance.value
 ```
 
@@ -130,10 +108,9 @@ public def metres(distance: Distance) -> int effects():
 # doc: project measure
 # doc: file main.my
 # doc: expect 42
-module main
 import units
 
-def main() -> int:
+func main() -> int:
     return units.metres(units.make(42))
 ```
 
@@ -155,12 +132,11 @@ rejects with `E_IMPORT_ALIAS`.
 ```mylang
 # doc: project catalog
 # doc: file prices.my
-module prices
 
 public record Price:
     cents: int
 
-public def total(first: Price, second: Price) -> Price effects():
+public func total(first: Price, second: Price) -> Price effects():
     return Price(cents=first.cents + second.cents)
 ```
 
@@ -168,17 +144,16 @@ public def total(first: Price, second: Price) -> Price effects():
 # doc: project catalog
 # doc: file main.my
 # doc: expect 42
-module main
 import prices
 
-def main() -> int:
-    sum: prices.Price = prices.total(prices.Price(cents=40), prices.Price(cents=2))
+func main() -> int:
+    mut sum: prices.Price = prices.total(prices.Price(cents=40), prices.Price(cents=2))
     return sum.cents
 ```
 
 ## Export placement
 
-A declaration is published by writing `public` in front of it: `public def
+A declaration is published by writing `public` in front of it: `public func
 name(...)`, `public record Name`, `public enum Name`, `public type Name`, and so
 on. The modifier names no other declaration, so a file keeps its public surface
 where each declaration is written and a rename can never leave a stale directive
@@ -188,19 +163,18 @@ The bare `export NAME` directive was removed: it now rejects with
 `E_EXPORT_REMOVED`, which points at the declaration spelling to use instead. The
 only remaining export directive is the dotted re-export `export module.Name`,
 which publishes an imported declaration (see below); it may appear anywhere among
-the top-level declarations after the module header and its imports, and a
+the top-level declarations after its imports, and a
 duplicate or unknown re-export still reports at the directive that caused it.
 
 ```mylang
 # doc: project report
 # doc: file totals.my
-module totals
 
-public def base() -> int effects():
+public func base() -> int effects():
     return 40
 
 
-public def bonus() -> int effects():
+public func bonus() -> int effects():
     return 2
 ```
 
@@ -208,10 +182,9 @@ public def bonus() -> int effects():
 # doc: project report
 # doc: file main.my
 # doc: expect 42
-module main
 import totals
 
-def main() -> int:
+func main() -> int:
     return totals.base() + totals.bonus()
 ```
 
@@ -233,22 +206,20 @@ name.
 ```mylang
 # doc: project published
 # doc: file units.my
-module units
 
 public record Distance:
     value: int
 
-public def make(value: int) -> Distance effects():
+public func make(value: int) -> Distance effects():
     return Distance(value=value)
 
-public def metres(distance: Distance) -> int effects():
+public func metres(distance: Distance) -> int effects():
     return distance.value
 ```
 
 ```mylang
 # doc: project published
 # doc: file facade.my
-module facade
 import units
 export units.Distance
 export units.make
@@ -259,11 +230,10 @@ export units.metres
 # doc: project published
 # doc: file main.my
 # doc: expect 42
-module main
 import facade
 
-def main() -> int:
-    distance: facade.Distance = facade.make(42)
+func main() -> int:
+    mut distance: facade.Distance = facade.make(42)
     return facade.metres(distance)
 ```
 
@@ -280,7 +250,7 @@ def main() -> int:
   `E_DUPLICATE_IMPORT`.
 - Standard-library names are reserved and load from embedded source rather than
   from the project root; see [the standard library](standard-library.md).
-- A single-file program needs no `module` header at all, and it may import the
-  embedded standard modules directly. Only an import of a project module needs
-  the header: it is the project commands, not the language, that turn a file
-  into a graph.
+- Every source file derives its module identity from its path; module headers
+  are rejected with a deletion fix. Standard and project imports use the same
+  headerless source form. Configured projects resolve names beneath the project
+  root, and unconfigured entries resolve them beneath the entry directory.

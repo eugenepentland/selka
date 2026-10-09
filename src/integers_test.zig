@@ -8,14 +8,14 @@ const Type = @import("typed.zig").Type;
 
 /// `main` returning `expression` returns `expected`.
 fn evaluate(programs: *native.Cases, expression: []const u8, expected: i64) !void {
-    const text = try std.fmt.allocPrint(testing.allocator, "def main() -> i64:\n    return {s}\n", .{expression});
+    const text = try std.fmt.allocPrint(testing.allocator, "func main() -> i64:\n    return {s}\n", .{expression});
     defer testing.allocator.free(text);
     try programs.returns("integer.my", text, expected);
 }
 
 /// Evaluating `expression` on `main`'s second line traps with `code`.
 fn trapped(programs: *native.Cases, expression: []const u8, code: []const u8) !void {
-    const text = try std.fmt.allocPrint(testing.allocator, "def main() -> i64:\n    _ = {s}\n    return 0\n", .{expression});
+    const text = try std.fmt.allocPrint(testing.allocator, "func main() -> i64:\n    _ = {s}\n    return 0\n", .{expression});
     defer testing.allocator.free(text);
     try programs.traps("integer.my", text, code, 2);
 }
@@ -59,18 +59,18 @@ test "integer widths remain distinct in functions records compound assignment an
         \\    n: u64
         \\
         \\
-        \\conversion def widen(x: Small) -> Wide:
+        \\conversion func widen(x: Small) -> Wide:
         \\    return Wide(n=u64(x.n))
         \\
         \\
-        \\def bump(n: u8) -> u8:
-        \\    result = n
+        \\func bump(n: u8) -> u8:
+        \\    mut result = n
         \\    result += 1u8
         \\    result -= 2u8
         \\    return result
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return i64(widen(Small(n=bump(9u8))).n)
     ;
     var compilation = try language.Compilation.init(testing.allocator, "widths.my", source);
@@ -87,12 +87,12 @@ fn allocationScenario(allocator: std.mem.Allocator) !void {
         \\    n: u8
         \\
         \\
-        \\def f(n: u8) -> u8:
+        \\func f(n: u8) -> u8:
         \\    return n + 1u8
         \\
         \\
-        \\def main() -> i64:
-        \\    n = Small(n=f(254u8))
+        \\func main() -> i64:
+        \\    mut n = Small(n=f(254u8))
         \\    return i64(u64(n.n) * 2u64)
     );
     defer compilation.deinit();
@@ -108,23 +108,23 @@ test "integer widths casts and record values release storage under allocation fa
 
 test "integer widths and casts remain distinct in duplicate discovery" {
     var compilation = try language.Compilation.init(testing.allocator, "duplicates.my",
-        \\def a(n: u8) -> u8:
+        \\func a(n: u8) -> u8:
         \\    return n + 1u8
         \\
         \\
-        \\def b(n: i8) -> i8:
+        \\func b(n: i8) -> i8:
         \\    return n + 1i8
         \\
         \\
-        \\def c(n: u8) -> u16:
+        \\func c(n: u8) -> u16:
         \\    return u16(n)
         \\
         \\
-        \\def d(n: u8) -> u32:
+        \\func d(n: u8) -> u32:
         \\    return u32(n)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     );
     defer compilation.deinit();
@@ -165,13 +165,13 @@ test "all integer widths accept their limits and reject one-past literals" {
     for (widths) |ty| {
         const expression = try std.fmt.allocPrint(testing.allocator, "{d}{s} == {d}{s}", .{ ty.max(), @tagName(ty), ty.max(), @tagName(ty) });
         defer testing.allocator.free(expression);
-        const text = try std.fmt.allocPrint(testing.allocator, "def main() -> i64:\n    if {s}:\n        return 1\n    return 0\n", .{expression});
+        const text = try std.fmt.allocPrint(testing.allocator, "func main() -> i64:\n    if {s}:\n        return 1\n    return 0\n", .{expression});
         defer testing.allocator.free(text);
         try programs.returns("limits.my", text, 1);
         const minimum = try std.fmt.allocPrint(testing.allocator, "i64({d}{s})", .{ ty.min(), @tagName(ty) });
         defer testing.allocator.free(minimum);
         try evaluate(&programs, minimum, @intCast(ty.min()));
-        const bad = try std.fmt.allocPrint(testing.allocator, "def main() -> i64:\n    _ = {d}{s}\n    return 0\n", .{ ty.max() + 1, @tagName(ty) });
+        const bad = try std.fmt.allocPrint(testing.allocator, "func main() -> i64:\n    _ = {d}{s}\n    return 0\n", .{ ty.max() + 1, @tagName(ty) });
         defer testing.allocator.free(bad);
         var invalid = try language.Compilation.init(testing.allocator, "range.my", bad);
         defer invalid.deinit();
@@ -183,7 +183,7 @@ test "all integer widths accept their limits and reject one-past literals" {
 
 test "no implicit width or boolean conversions and unknown suffixes are rejected" {
     const cases = [_]struct { body: []const u8, code: []const u8 }{
-        .{ .body = "source = 1\n    n: i8 = source\n    return 0", .code = "E_TYPE" },
+        .{ .body = "const source = 1\n    const n: i8 = source\n    return 0", .code = "E_TYPE" },
         .{ .body = "_ = 1u8 + 1u16\n    return 0", .code = "E_TYPE" },
         .{ .body = "_ = u8(True)\n    return 0", .code = "E_TYPE" },
         .{ .body = "_ = bool(1)\n    return 0", .code = "E_EXPRESSION" },
@@ -193,7 +193,7 @@ test "no implicit width or boolean conversions and unknown suffixes are rejected
     };
     for (cases) |case| {
         const source = try std.fmt.allocPrint(testing.allocator,
-            \\def main() -> i64:
+            \\func main() -> i64:
             \\    {s}
         , .{case.body});
         defer testing.allocator.free(source);

@@ -107,17 +107,16 @@ def main():
 
     fixture = output / 'fixture'
     fixture.mkdir()
-    (fixture / 'main.my').write_text('''module main
-import calc
-public def test_value() -> bool:
+    (fixture / 'main.my').write_text('''import calc
+public func test_value() -> bool:
     return calc.value() == 3
 
-def main(out: Stream) -> int:
+func main(out: Stream) -> int:
     out.print(calc.value())
     return 0
 ''')
     dependency = fixture / 'calc.my'
-    dependency.write_text('module calc\npublic def value() -> int:\n    return 3\n')
+    dependency.write_text('public func value() -> int:\n    return 3\n')
     test = ['test', fixture / 'main.my', f'--cache-dir={output / "fixture-test-cache"}', '--report', '--json']
     execute = ['run', fixture / 'main.my', f'--cache-dir={output / "fixture-run-cache"}',
                f'--qbe={compiler.parent / "qbe"}', '--timings=json']
@@ -128,7 +127,7 @@ def main(out: Stream) -> int:
         if row['stdout'].strip() != '3':
             failures.append(f"{row['label']}: wrong guest output")
     no_work(second, 'run', ['lowered_functions', 'emitted_fragments'])
-    dependency.write_text('module calc\npublic def value() -> int:\n    return 4\n')
+    dependency.write_text('public func value() -> int:\n    return 4\n')
     run('fixture-test-changed', test, expected=1)
     changed = run('fixture-run-changed', execute)
     if changed['stdout'].strip() != '4':

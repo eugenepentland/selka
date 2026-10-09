@@ -1,18 +1,18 @@
 record Samples:
-    values: [3]int
+    values: FixedArray[int, 3]
 
 
-def sum(values: [3]int) -> int:
-    index = 0
-    total = 0
+func sum(values: FixedArray[int, 3]) -> int:
+    mut index = 0
+    mut total = 0
     while index < len(values):
         total += values[index]
         index += 1
     return total
 
 
-def main() -> int:
-    original = Samples(values=[4, 7, 9])
-    changed = original
+func main() -> int:
+    mut original = Samples(values=FixedArray[int, 3]([4, 7, 9]))
+    mut changed = original
     changed.values = replace(original.values, 1, 11)
     return sum(original.values) + sum(changed.values)

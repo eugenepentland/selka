@@ -512,7 +512,7 @@ fn parseFunctionLine(arena: std.mem.Allocator, module: []const u8, line: []const
     const head = rest[0..effects_at];
     const split = std.mem.indexOfScalar(u8, head, ' ') orelse return null;
     const signature = head[split + 1 ..];
-    if (!std.mem.startsWith(u8, signature, "def(")) return null;
+    if (!std.mem.startsWith(u8, signature, "func(")) return null;
     var clauses = rest[effects_at..];
     if (std.mem.indexOf(u8, clauses, " # ")) |doc| clauses = clauses[0..doc];
     return .{
@@ -642,13 +642,13 @@ fn inferredEffects(
 /// full mask.
 fn entrySource(arena: std.mem.Allocator) Error![]u8 {
     var out: std.ArrayList(u8) = .empty;
-    try out.appendSlice(arena, "module " ++ entry_module ++ "\n");
+
     for (standard_modules) |path| {
         try out.appendSlice(arena, "import ");
         try out.appendSlice(arena, path[0 .. path.len - 3]);
         try out.append(arena, '\n');
     }
-    try out.appendSlice(arena, "\ndef main() -> int:\n    return 0\n");
+    try out.appendSlice(arena, "\nfunc main() -> int:\n    return 0\n");
     return out.toOwnedSlice(arena);
 }
 

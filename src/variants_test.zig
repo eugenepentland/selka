@@ -18,17 +18,17 @@ fn reject(source: []const u8, code: []const u8) !void {
 }
 const choice =
     \\enum Choice:
-    \\    first,
-    \\    second,
+    \\    first
+    \\    second
     \\    third
     \\
     \\
     \\
 ;
 const event =
-    \\union Event:
-    \\    count: i64,
-    \\    flag: bool,
+    \\enum Event:
+    \\    count(value: i64)
+    \\    flag(value: bool)
     \\    empty
     \\
     \\
@@ -39,12 +39,12 @@ const event =
 test "exhaustive matching detects added variants even on statically known values" {
     const source =
         \\enum Choice:
-        \\    first,
-        \\    second,
+        \\    first
+        \\    second
         \\    added
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    match Choice.first:
         \\        case Choice.first:
         \\            return 1
@@ -59,13 +59,13 @@ test "exhaustive matching detects added variants even on statically known values
     try testing.expect(std.mem.indexOf(u8, diagnostic.message, "added") != null);
     try testing.expectEqualStrings("added", compilation.src.text(diagnostic.related.?.span));
     try reject(event ++
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    match Event.empty:
         \\        case Event.empty:
         \\            return 0
     , "E_INCOMPLETE_MATCH");
     try reject(choice ++
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    match Choice.first:
         \\        case Choice.first:
         \\            return 1
@@ -75,7 +75,7 @@ test "exhaustive matching detects added variants even on statically known values
 
 test "match return analysis and control flow joins handle empty arms loops and nesting" {
     try reject(choice ++
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    match Choice.first:
         \\        case Choice.first:
         \\            return 1
@@ -89,15 +89,15 @@ test "match return analysis and control flow joins handle empty arms loops and n
         \\    only
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    match One.only:
         \\        case One.only:
         \\            return 1
         \\    return 2
     , "E_UNREACHABLE");
     try result(choice ++
-        \\def main() -> i64:
-        \\    n = 0
+        \\func main() -> i64:
+        \\    mut n = 0
         \\    while n < 4:
         \\        match Choice.first:
         \\            case Choice.second:
@@ -113,20 +113,20 @@ test "match return analysis and control flow joins handle empty arms loops and n
         \\    only
         \\
         \\
-        \\union U:
-        \\    item: One
+        \\enum U:
+        \\    item(value: One)
         \\
         \\
-        \\def main() -> i64:
-        \\    match U.item(One.only):
-        \\        case U.item(x):
+        \\func main() -> i64:
+        \\    match U.item(value=One.only):
+        \\        case U.item(value=x):
         \\            match x:
         \\                case One.only:
         \\                    return 9
     , 9);
     try result(choice ++
-        \\def main() -> i64:
-        \\    n = 7
+        \\func main() -> i64:
+        \\    mut n = 7
         \\    match Choice.second:
         \\        case Choice.first:
         \\            n = 8
@@ -143,22 +143,22 @@ const nested =
     \\    n: i64
     \\
     \\
-    \\union Item:
-    \\    boxes: [2]Box,
+    \\enum Item:
+    \\    boxes(value: FixedArray[Box, 2])
     \\    empty
     \\
     \\
-    \\def value(x: Item) -> i64:
+    \\func value(x: Item) -> i64:
     \\    match x:
     \\        case Item.empty:
     \\            return 0
-    \\        case Item.boxes(values):
+    \\        case Item.boxes(value=values):
     \\            return values[0].n + values[1].n
     \\
     \\
-    \\def main() -> i64:
-    \\    a = Item.boxes([Box(n=3), Box(n=7)])
-    \\    b = a
+    \\func main() -> i64:
+    \\    mut a = Item.boxes(value=FixedArray[Box, 2]([Box(n=3), Box(n=7)]))
+    \\    mut b = a
     \\    return value(a) + value(b)
 ;
 fn allocationScenario(allocator: std.mem.Allocator) !void {
@@ -177,44 +177,44 @@ test "variant payloads dispatch fixups dumps and discovery clean up at every all
 
 test "duplicate identity retains resolved variants arms and payload bindings" {
     const source =
-        \\union U:
-        \\    a: i64,
-        \\    b: i64
+        \\enum U:
+        \\    a(value: i64)
+        \\    b(value: i64)
         \\
         \\
-        \\def one(x: U) -> i64:
+        \\func one(x: U) -> i64:
         \\    match x:
-        \\        case U.a(n):
+        \\        case U.a(value=n):
         \\            return n
-        \\        case U.b(n):
+        \\        case U.b(value=n):
         \\            return n + 1
         \\
         \\
-        \\def two(y: U) -> i64:
+        \\func two(y: U) -> i64:
         \\    match y:
-        \\        case U.a(v):
+        \\        case U.a(value=v):
         \\            return v
-        \\        case U.b(w):
+        \\        case U.b(value=w):
         \\            return w + 1
         \\
         \\
-        \\def changed(x: U) -> i64:
+        \\func changed(x: U) -> i64:
         \\    match x:
-        \\        case U.a(n):
+        \\        case U.a(value=n):
         \\            return n + 1
-        \\        case U.b(n):
+        \\        case U.b(value=n):
         \\            return n
         \\
         \\
-        \\def a() -> U:
-        \\    return U.a(1)
+        \\func a() -> U:
+        \\    return U.a(value=1)
         \\
         \\
-        \\def b() -> U:
-        \\    return U.b(1)
+        \\func b() -> U:
+        \\    return U.b(value=1)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     ;
     var compilation = try language.Compilation.init(testing.allocator, "duplicates.my", source);

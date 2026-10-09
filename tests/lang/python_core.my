@@ -1,58 +1,57 @@
-module python_core
 
 
-def float_add(x: float, y: float) -> float:
+func float_add(x: float, y: float) -> float:
     return x + y
 
 
-def operand(log: mut list[int], value: int) -> float:
+func operand(mut log: int[], value: int) -> float:
     log.append(value)
     return float(value)
 
 
-def receiver(log: mut list[int], values: list[int]) -> list[int]:
+func receiver(mut log: int[], values: int[]) -> int[]:
     log.append(2)
     return values
 
 
-def log_index(log: mut list[int]) -> int:
+func log_index(mut log: int[]) -> int:
     log.append(3)
     return 0
 
 
-def emit_value(log: mut list[int]) -> int:
+func emit_value(mut log: int[]) -> int:
     log.append(1)
     return 42
 
 
 enum Kind:
-    atom,
+    atom
     group
 
 
-def length(text: str = "é", scale: float = 2.5) -> int:
+func length(text: str = "é", scale: float = 2.5) -> int:
     return len(text) + int(scale)
 
 
-def adjust[T](unused: T, value: float) -> float:
+func adjust[T](unused: T, value: float) -> float:
     _ = unused
     return value + 1.5
 
 
-def present[T](value: T) -> Option[T]:
+func present[T](value: T) -> T?:
     return Some(value)
 
 
-def absent[T](value: T) -> Option[T]:
+func absent[T](value: T) -> T?:
     _ = value
     return None
 
 
-def double(value: int) -> int:
+func double(value: int) -> int:
     return value * 2
 
 
-def apply(f: def(int) -> int, x: int) -> int:
+func apply(f: func(int) -> int, x: int) -> int:
     return f(x)
 
 
@@ -61,7 +60,7 @@ record Score:
     points: int
 
 
-def score(item: Score) -> int:
+func score(item: Score) -> int:
     return item.points
 
 
@@ -73,19 +72,19 @@ record Pair:
     n: int
 
 
-def bump(counter: Counter) -> Counter:
-    changed = counter
+func bump(counter: Counter) -> Counter:
+    mut changed = counter
     changed.n = changed.n + 1
     return changed
 
 
 # spec: PYTHON-CORE-4
-public def test_floating_literals_operators_and_comparisons_use_numeric_binary64_semantics() -> bool:
-    value = float_add(1.5, 2.5) * 10.0 + 2.0
+public func test_floating_literals_operators_and_comparisons_use_numeric_binary64_semantics() -> bool:
+    mut value = float_add(1.5, 2.5) * 10.0 + 2.0
     if value != 42.0:
         return False
-    zero = -0.0
-    nan = divtrunc(0.0, 0.0)
+    mut zero = -0.0
+    mut nan = divtrunc(0.0, 0.0)
     if zero != 0.0:
         return False
     if nan == nan:
@@ -96,10 +95,10 @@ public def test_floating_literals_operators_and_comparisons_use_numeric_binary64
 
 
 # spec-case: PYTHON-CORE-4
-public def test_floating_comparisons_and_remainder_preserve_operand_evaluation_once_in_source_order() -> bool:
-    log: list[int] = []
+public func test_floating_comparisons_and_remainder_preserve_operand_evaluation_once_in_source_order() -> bool:
+    mut log: int[] = []
     if operand(mut log, 5) > operand(mut log, 2):
-        value = operand(mut log, 7) % operand(mut log, 3)
+        mut value = operand(mut log, 7) % operand(mut log, 3)
         if value != 1.0:
             return False
     if len(log) != 4:
@@ -108,12 +107,12 @@ public def test_floating_comparisons_and_remainder_preserve_operand_evaluation_o
 
 
 # spec-case: PY-COLLECTIONS-1
-public def test_python_indexed_assignment_evaluates_rhs_before_receiver_and_index_exactly_once() -> bool:
-    log: list[int] = []
-    values = [0]
-    next_value = emit_value(mut log)
-    target = receiver(mut log, values)
-    position = log_index(mut log)
+public func test_python_indexed_assignment_evaluates_rhs_before_receiver_and_index_exactly_once() -> bool:
+    mut log: int[] = []
+    mut values = [0]
+    mut next_value = emit_value(mut log)
+    mut target = receiver(mut log, values)
+    mut position = log_index(mut log)
     target[position] = next_value
     values = target
     if len(log) != 3 or values[0] != 42:
@@ -122,18 +121,18 @@ public def test_python_indexed_assignment_evaluates_rhs_before_receiver_and_inde
 
 
 # spec-case: PYTHON-3
-public def test_python_payloadless_enum_values_use_ordinary_dotted_members() -> bool:
-    kind = Kind.atom
+public func test_python_payloadless_enum_values_use_ordinary_dotted_members() -> bool:
+    mut kind = Kind.atom
     return kind == Kind.atom
 
 
 # spec-case: PYTHON-CALL-1
-public def test_python_string_and_float_defaults_remain_typed_and_independent_across_repeated_calls() -> bool:
+public func test_python_string_and_float_defaults_remain_typed_and_independent_across_repeated_calls() -> bool:
     return length() + length() + length(scale=33.5) == 40
 
 
 # spec-case: PYTHON-CORE-4
-public def test_python_division_remainder_numeric_conversions_and_generic_numbers() -> bool:
+public func test_python_division_remainder_numeric_conversions_and_generic_numbers() -> bool:
     if 5 / 2 != 2.5:
         return False
     if -5 // 2 != -3 or -5 % 2 != 1:
@@ -148,8 +147,8 @@ public def test_python_division_remainder_numeric_conversions_and_generic_number
 
 
 # spec-case: PYTHON-CORE-1
-public def test_python_contextual_option_constructors_work_in_generic_functions() -> bool:
-    empty: Option[int] = absent(0)
+public func test_python_contextual_option_constructors_work_in_generic_functions() -> bool:
+    mut empty: int? = absent(0)
     _ = empty
     match present(42):
         case Some(value):
@@ -159,28 +158,28 @@ public def test_python_contextual_option_constructors_work_in_generic_functions(
 
 
 # spec: CALLBACK-EFFECTS-1
-public def test_omitted_callback_ceilings_are_unbounded_and_unannotated_functions_fill_slots() -> bool:
+public func test_omitted_callback_ceilings_are_unbounded_and_unannotated_functions_fill_slots() -> bool:
     return apply(double, 21) == 42
 
 
 # spec-case: CALLBACK-EFFECTS-1
-public def test_unannotated_functions_fill_the_sorted_key_callback_slot() -> bool:
-    items = [Score(name="a", points=3), Score(name="b", points=1)]
-    ordered = sorted(items, key=score)
+public func test_unannotated_functions_fill_the_sorted_key_callback_slot() -> bool:
+    mut items = [Score(name="a", points=3), Score(name="b", points=1)]
+    mut ordered = sorted(items, key=score)
     return ordered[0].points * 42 == 42
 
 
 # A record copy is independent of its source.
-public def test_record_copies_are_independent() -> bool:
-    a = Counter(n=1)
-    b = a
+public func test_record_copies_are_independent() -> bool:
+    mut a = Counter(n=1)
+    mut b = a
     b.n = 7
     a = bump(a)
-    pair = Pair(n=1)
-    copy = pair
+    mut pair = Pair(n=1)
+    mut copy = pair
     copy.n = 9
     return a.n * 10 + pair.n == 21 and b.n == 7
 
 
-def main() -> int:
+func main() -> int:
     return 0

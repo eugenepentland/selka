@@ -1,4 +1,3 @@
-module records_case_3
 
 
 record Count:
@@ -6,8 +5,8 @@ record Count:
     keep: i64
 
 
-public def program() -> i64:
-    state = Count(n=0, keep=7)
+public func program() -> i64:
+    mut state = Count(n=0, keep=7)
     while state.n < 10000:
         state.n = state.n + 1
     return state.n + state.keep

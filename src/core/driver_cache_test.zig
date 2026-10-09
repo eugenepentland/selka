@@ -7,8 +7,8 @@ const io = std.testing.io;
 const cwd = std.Io.Dir.cwd();
 const diagnostic = std.debug.print;
 
-const leaf = "module leaf\n\npublic def compute(count: int) -> int:\n    sum = 0\n    for i in range(count):\n        sum += i\n    return sum\n";
-const other = "module other\n\npublic def compute(value: int) -> int:\n    return value + 1\n";
+const leaf = "\npublic func compute(count: int) -> int:\n    mut sum = 0\n    for i in range(count):\n        sum += i\n    return sum\n";
+const other = "\npublic func compute(value: int) -> int:\n    return value + 1\n";
 
 /// One project in a temporary directory, built by the core binary.
 const Project = struct {
@@ -22,7 +22,7 @@ const Project = struct {
         // A private store makes reuse counts exact; the shared one serves helper
         // units other programs already compiled.
         if (private_store) try environment.put("MYLANG_CORE_RUNTIME_CACHE", try std.fs.path.join(a, &.{ root, "store" }));
-        const app = try std.fmt.allocPrint(a, "module app\nimport leaf\nimport other\n\ndef main(out: Stream) -> int:\n    out.print(\"{s}\", leaf.compute(6), other.compute(3))\n    return 0\n", .{&directory.sub_path});
+        const app = try std.fmt.allocPrint(a, "import leaf\nimport other\n\nfunc main(out: Stream) -> int:\n    out.print(\"{s}\", leaf.compute(6), other.compute(3))\n    return 0\n", .{&directory.sub_path});
         try directory.dir.writeFile(io, .{ .sub_path = "app.my", .data = app });
         try directory.dir.writeFile(io, .{ .sub_path = "leaf.my", .data = leaf });
         try directory.dir.writeFile(io, .{ .sub_path = "other.my", .data = other });
@@ -165,7 +165,7 @@ test "an unchanged build replays, a lost record reuses every object and the prog
     const warm = try report(try project.build(&.{}));
     try std.testing.expectEqual(Report{ .units = cold.units, .reused = cold.units, .compiled = 0, .verified = 0, .program = warm.program, .processes = 0, .replayed = false }, warm);
     try std.testing.expectEqualStrings("reused", warm.program);
-    try directory.dir.writeFile(std.testing.io, .{ .sub_path = "leaf.my", .data = "module leaf\n\npublic def compute(count: int) -> int:\n    sum = 0\n    for i in range(count):\n        sum += i * 2\n    return sum\n" });
+    try directory.dir.writeFile(std.testing.io, .{ .sub_path = "leaf.my", .data = "\npublic func compute(count: int) -> int:\n    mut sum = 0\n    for i in range(count):\n        sum += i * 2\n    return sum\n" });
     const edited = try report(try project.build(&.{}));
     try std.testing.expectEqual(@as(u32, 1), edited.compiled);
     try std.testing.expectEqual(cold.units - 1, edited.reused);
@@ -183,7 +183,7 @@ test "a cold build compiles the runtime without debug info, cache-line aligned, 
     var directory = std.testing.tmpDir(.{});
     defer directory.cleanup();
     var project = try Project.prepare(a, &directory, true);
-    try directory.dir.writeFile(io, .{ .sub_path = "app.my", .data = "module app\n\ndef main(out: Stream) -> int:\n    out.print(2.5)\n    return 0\n" });
+    try directory.dir.writeFile(io, .{ .sub_path = "app.my", .data = "\nfunc main(out: Stream) -> int:\n    out.print(2.5)\n    return 0\n" });
     const cold = try report(try project.build(&.{}));
     // The units, the runtime object and the link: no number-tool process.
     try std.testing.expectEqual(cold.compiled + 2, cold.processes);
@@ -254,7 +254,7 @@ test "an unchanged release build starts no process, and a replay follows a rever
     const warm = try report(try project.build(&.{"--release"}));
     try std.testing.expectEqual(@as(u32, 0), warm.processes);
     try std.testing.expectEqualStrings("reused", warm.program);
-    try directory.dir.writeFile(std.testing.io, .{ .sub_path = "other.my", .data = "module other\n\npublic def compute(value: int) -> int:\n    return value + 2\n" });
+    try directory.dir.writeFile(std.testing.io, .{ .sub_path = "other.my", .data = "\npublic func compute(value: int) -> int:\n    return value + 2\n" });
     try std.testing.expect(!(try report(try project.build(&.{"--release"}))).replayed);
     try std.testing.expectEqualStrings(try std.fmt.allocPrint(arena.allocator(), "{s} 15 5\n", .{&directory.sub_path}), try project.output());
     try directory.dir.writeFile(std.testing.io, .{ .sub_path = "other.my", .data = other });
@@ -306,7 +306,7 @@ test "a --link build reuses its C object and program while the source and header
     var directory = std.testing.tmpDir(.{});
     defer directory.cleanup();
     var project = try Project.prepare(arena.allocator(), &directory, false);
-    try directory.dir.writeFile(io, .{ .sub_path = "app.my", .data = "module app\nextern def linked_value(host: Host) -> i32 effects(host)\ndef main(host: Host) -> int:\n    return int(linked_value(host))\n" });
+    try directory.dir.writeFile(io, .{ .sub_path = "app.my", .data = "extern func linked_value(host: Host) -> i32 effects(host)\nfunc main(host: Host) -> int:\n    return int(linked_value(host))\n" });
     try directory.dir.writeFile(io, .{ .sub_path = "value.c", .data = "#include \"value.h\"\nint linked_value(void) { return VALUE; }\n" });
     try directory.dir.writeFile(io, .{ .sub_path = "value.h", .data = "#define VALUE 7\n" });
     _ = try linkedBuild(&project);
@@ -336,7 +336,7 @@ test "a replay follows the embedded files a build read" {
     var directory = std.testing.tmpDir(.{});
     defer directory.cleanup();
     var project = try Project.prepare(arena.allocator(), &directory, false);
-    try directory.dir.writeFile(io, .{ .sub_path = "app.my", .data = "module app\n\ndef main(out: Stream) -> int:\n    out.print(embed_str(\"data.txt\"))\n    return 0\n" });
+    try directory.dir.writeFile(io, .{ .sub_path = "app.my", .data = "\nfunc main(out: Stream) -> int:\n    out.print(embed_str(\"data.txt\"))\n    return 0\n" });
     try directory.dir.writeFile(io, .{ .sub_path = "data.txt", .data = "hello" });
     _ = try project.build(&.{});
     try std.testing.expectEqualStrings("hello\n", try project.output());

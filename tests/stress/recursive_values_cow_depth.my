@@ -5,22 +5,22 @@
 
 
 record Node:
-    items: list[int]
-    next: Option[Node]
+    items: int[]
+    next: Node?
 
 
-def main(out: Stream) -> int:
-    node = Node(items=[0], next=None)
-    i = 0
+func main(out: Stream) -> int:
+    mut node = Node(items=[0], next=None)
+    mut i = 0
     while i < 1100:
         node = Node(items=[i], next=Some(node))
         i += 1
-    copied = node
+    mut copied = node
     node.items.append(-1)
     if len(copied.items) != 1 or len(node.items) != 2:
         return 1
-    cursor: Option[Node] = Some(copied)
-    seen = 0
+    mut cursor: Node? = Some(copied)
+    mut seen = 0
     while cursor is not None:
         if len(cursor.items) != 1:
             return 2

@@ -1,37 +1,36 @@
-module option_propagation
 
-# `?` on an `Option[T]` propagates `None` out of any function returning an
-# `Option[U]`: `None` carries no payload, so `T` and `U` need not agree. The
+# Prefix `try` propagates `None` from an optional-returning function:
+# `None` has no payload, so the optional element types need not agree. The
 # class cases run under `--gc-stress`, where every allocation collects, so the
 # unwrapped reference must stay alive across the allocation that follows it.
 
 
 record Node:
     value: int
-    left: Option[Node]
+    left: Node?
 
 
-def left_value(node: Node) -> Option[int]:
-    child = node.left?
+func left_value(node: Node) -> int?:
+    mut child = try node.left
     return Some(child.value)
 
 
-def grandchild(node: Node) -> Option[Node]:
-    child = node.left?
+func grandchild(node: Node) -> Node?:
+    mut child = try node.left
     return child.left
 
 
-def label(value: Option[int]) -> Option[str]:
-    number = value?
+func label(value: int?) -> str?:
+    mut number = try value
     return Some(f"n={number}")
 
 
-def first_value[T](items: Option[list[T]]) -> Option[int]:
-    present = items?
+func first_value[T](items: T[]?) -> int?:
+    mut present = try items
     return Some(len(present))
 
 
-def or_minus_one(value: Option[int]) -> int:
+func or_minus_one(value: int?) -> int:
     match value:
         case Some(number):
             return number
@@ -40,18 +39,18 @@ def or_minus_one(value: Option[int]) -> int:
 
 
 # spec: OPTION-TRY-3
-public def test_option_propagation_unwraps_a_class_payload_in_a_function_returning_option_int() -> bool:
-    leaf = Node(value=4, left=None)
-    root = Node(value=1, left=Some(leaf))
+public func test_option_propagation_unwraps_a_class_payload_in_a_function_returning_option_int() -> bool:
+    mut leaf = Node(value=4, left=None)
+    mut root = Node(value=1, left=Some(leaf))
     return or_minus_one(left_value(root)) == 4 and or_minus_one(left_value(leaf)) == 0 - 1
 
 
 # spec-case: OPTION-TRY-3
-public def test_option_propagation_into_a_different_class_option_forwards_none() -> bool:
-    leaf = Node(value=4, left=None)
-    middle = Node(value=2, left=Some(leaf))
-    root = Node(value=1, left=Some(middle))
-    found = 0
+public func test_option_propagation_into_a_different_class_option_forwards_none() -> bool:
+    mut leaf = Node(value=4, left=None)
+    mut middle = Node(value=2, left=Some(leaf))
+    mut root = Node(value=1, left=Some(middle))
+    mut found = 0
     match grandchild(root):
         case Some(node):
             found = node.value
@@ -61,8 +60,8 @@ public def test_option_propagation_into_a_different_class_option_forwards_none()
 
 
 # spec-case: OPTION-TRY-3
-public def test_option_propagation_converts_between_scalar_and_managed_elements() -> bool:
-    text = ""
+public func test_option_propagation_converts_between_scalar_and_managed_elements() -> bool:
+    mut text = ""
     match label(Some(7)):
         case Some(value):
             text = value
@@ -72,5 +71,5 @@ public def test_option_propagation_converts_between_scalar_and_managed_elements(
 
 
 # spec-case: OPTION-TRY-3
-public def test_generic_option_propagation_accepts_a_different_enclosing_element() -> bool:
+public func test_generic_option_propagation_accepts_a_different_enclosing_element() -> bool:
     return or_minus_one(first_value[int](Some([1, 2, 3]))) == 3 and or_minus_one(first_value[int](None)) == 0 - 1

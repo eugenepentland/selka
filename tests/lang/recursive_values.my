@@ -1,23 +1,22 @@
-module recursive_values
 
 
 # An expression tree: each recursive case is stored behind one box.
-public union Expr:
-    num(value: int),
-    add(left: Expr, right: Expr),
+public enum Expr:
+    num(value: int)
+    add(left: Expr, right: Expr)
     neg(inner: Expr)
 
 
 # A binary tree through `Option`: `Some` holds the box, `None` holds nothing.
 record Node:
     value: int
-    left: Option[Node]
-    right: Option[Node]
+    left: Node?
+    right: Node?
 
 
 # Mutual recursion: a forest of trees whose children are forests.
-union Forest:
-    empty,
+enum Forest:
+    empty
     grove(first: Tree, rest: Forest)
 
 
@@ -27,41 +26,41 @@ record Tree:
 
 
 # Recursion through a tuple payload.
-union Chain:
-    stop,
-    link: tuple[int, Chain]
+enum Chain:
+    stop
+    link(value: tuple[int, Chain])
 
 
 # Recursion through a fixed array of options.
 record Pair:
     tag: int
-    items: [2]Option[Pair]
+    items: FixedArray[Pair?, 2]
 
 
 # Recursion through a list needs no box at all.
 record Branch:
     label: str
-    kids: list[Branch]
+    kids: Branch[]
 
 
 # A generic recursive union.
-union Shape[T]:
-    leaf: T,
+enum Shape[T]:
+    leaf(value: T)
     both(left: Shape[T], right: Shape[T])
 
 
-def evaluate(e: Expr) -> int:
+func evaluate(e: Expr) -> int:
     match e:
-        case Expr.num(v):
+        case Expr.num(value=v):
             return v
-        case Expr.add(l, r):
+        case Expr.add(left=l, right=r):
             return evaluate(l) + evaluate(r)
-        case Expr.neg(inner):
+        case Expr.neg(inner=inner):
             return -evaluate(inner)
 
 
-def total(node: Node) -> int:
-    sum = node.value
+func total(node: Node) -> int:
+    mut sum = node.value
     match node.left:
         case Some(child):
             sum += total(child)
@@ -75,25 +74,25 @@ def total(node: Node) -> int:
     return sum
 
 
-def forest_size(forest: Forest) -> int:
+func forest_size(forest: Forest) -> int:
     match forest:
         case Forest.empty:
             return 0
-        case Forest.grove(first, rest):
+        case Forest.grove(first=first, rest=rest):
             return first.size + forest_size(first.children) + forest_size(rest)
 
 
-def chain_sum(chain: Chain) -> int:
+func chain_sum(chain: Chain) -> int:
     match chain:
         case Chain.stop:
             return 0
-        case Chain.link(pair):
-            value, rest = pair
+        case Chain.link(value=pair):
+            const value, rest = pair
             return value + chain_sum(rest)
 
 
-def pair_tags(pair: Pair) -> int:
-    sum = pair.tag
+func pair_tags(pair: Pair) -> int:
+    mut sum = pair.tag
     for item in pair.items:
         match item:
             case Some(inner):
@@ -103,56 +102,56 @@ def pair_tags(pair: Pair) -> int:
     return sum
 
 
-def branch_count(branch: Branch) -> int:
-    count = 1
+func branch_count(branch: Branch) -> int:
+    mut count = 1
     for kid in branch.kids:
         count += branch_count(kid)
     return count
 
 
-def leaves[T](shape: Shape[T]) -> int:
+func leaves[T](shape: Shape[T]) -> int:
     match shape:
-        case Shape.leaf(_):
+        case Shape.leaf(value=_):
             return 1
-        case Shape.both(l, r):
+        case Shape.both(left=l, right=r):
             return leaves(l) + leaves(r)
 
 
-def chain_of(length: int) -> Option[Node]:
-    head: Option[Node] = None
+func chain_of(length: int) -> Node?:
+    mut head: Node? = None
     for index in range(length):
         head = Some(Node(value=index, left=head, right=None))
     return head
 
 
-def depth_of(chain: Option[Node]) -> int:
-    count = 0
-    cursor = chain
+func depth_of(chain: Node?) -> int:
+    mut count = 0
+    mut cursor = chain
     while cursor is not None:
         count += 1
         cursor = cursor.left
     return count
 
 
-def second_value(chain: Option[Node]) -> Option[int]:
-    first = chain?
-    second = first.left?
+func second_value(chain: Node?) -> int?:
+    mut first = try chain
+    mut second = try first.left
     return Some(second.value)
 
 
-def leaf(value: int) -> Node:
+func leaf(value: int) -> Node:
     return Node(value=value, left=None, right=None)
 
 
 # spec: RECURSIVE-VALUES-1
-public def test_recursive_declarations_build_and_match() -> bool:
-    e = Expr.add(Expr.num(40), Expr.neg(Expr.num(-2)))
-    tree = Node(value=1, left=Some(leaf(2)), right=Some(Node(value=3, left=Some(leaf(4)), right=None)))
-    forest = Forest.grove(Tree(1, Forest.grove(Tree(2, Forest.empty), Forest.empty)), Forest.grove(Tree(4, Forest.empty), Forest.empty))
-    chain = Chain.link((1, Chain.link((2, Chain.link((3, Chain.stop))))))
-    pair = Pair(tag=1, items=[Some(Pair(tag=2, items=[None, None])), Some(Pair(tag=3, items=[None, None]))])
-    branch = Branch(label="root", kids=[Branch(label="a", kids=[]), Branch(label="b", kids=[Branch(label="c", kids=[])])])
-    shape: Shape[str] = Shape.both(Shape.leaf("x"), Shape.both(Shape.leaf("y"), Shape.leaf("z")))
+public func test_recursive_declarations_build_and_match() -> bool:
+    mut e = Expr.add(left=Expr.num(value=40), right=Expr.neg(inner=Expr.num(value=-2)))
+    mut tree = Node(value=1, left=Some(leaf(2)), right=Some(Node(value=3, left=Some(leaf(4)), right=None)))
+    mut forest = Forest.grove(first=Tree(size=1, children=Forest.grove(first=Tree(size=2, children=Forest.empty), rest=Forest.empty)), rest=Forest.grove(first=Tree(size=4, children=Forest.empty), rest=Forest.empty))
+    mut chain = Chain.link(value=(1, Chain.link(value=(2, Chain.link(value=(3, Chain.stop))))))
+    mut pair = Pair(tag=1, items=FixedArray[Pair?, 2]([Some(Pair(tag=2, items=FixedArray[Pair?, 2]([None, None]))), Some(Pair(tag=3, items=FixedArray[Pair?, 2]([None, None])))]))
+    mut branch = Branch(label="root", kids=[Branch(label="a", kids=[]), Branch(label="b", kids=[Branch(label="c", kids=[])])])
+    mut shape: Shape[str] = Shape.both(left=Shape.leaf(value="x"), right=Shape.both(left=Shape.leaf(value="y"), right=Shape.leaf(value="z")))
     assert evaluate(e) == 42
     assert total(tree) == 10
     assert forest_size(forest) == 7
@@ -162,14 +161,14 @@ public def test_recursive_declarations_build_and_match() -> bool:
     return leaves(shape) == 3
 
 
-public def test_writes_copy_the_path_and_leave_other_holders_alone() -> bool:
-    original = Node(value=1, left=Some(Node(value=2, left=Some(leaf(3)), right=None)), right=None)
-    holder = original
-    kept: list[Node] = [original]
-    child = holder.left
+public func test_writes_copy_the_path_and_leave_other_holders_alone() -> bool:
+    mut original = Node(value=1, left=Some(Node(value=2, left=Some(leaf(3)), right=None)), right=None)
+    mut holder = original
+    mut kept: Node[] = [original]
+    mut child = holder.left
     if child is not None:
         child.value = 20
-        grandchild = child.left
+        mut grandchild = child.left
         if grandchild is not None:
             grandchild.value = 30
         child.left = grandchild
@@ -181,22 +180,22 @@ public def test_writes_copy_the_path_and_leave_other_holders_alone() -> bool:
     return holder != original
 
 
-public def test_replace_and_updates_keep_the_value_semantics() -> bool:
-    base = Node(value=1, left=Some(leaf(2)), right=None)
-    nine: Option[Node] = Some(leaf(9))
-    moved = replace(base, value=5, right=nine)
-    swapped = replace(moved, left=moved.right, right=moved.left)
+public func test_replace_and_updates_keep_the_value_semantics() -> bool:
+    mut base = Node(value=1, left=Some(leaf(2)), right=None)
+    mut nine: Node? = Some(leaf(9))
+    mut moved = replace(base, value=5, right=nine)
+    mut swapped = replace(moved, left=moved.right, right=moved.left)
     assert total(base) == 3
     assert total(moved) == 16
     assert total(swapped) == 16
     return swapped.left == nine and base.right is None
 
 
-public def test_mut_collections_carry_recursive_values_in_and_out() -> bool:
-    shared = Node(value=1, left=Some(leaf(2)), right=None)
-    nodes: list[Node] = [shared]
+public func test_mut_collections_carry_recursive_values_in_and_out() -> bool:
+    mut shared = Node(value=1, left=Some(leaf(2)), right=None)
+    mut nodes: Node[] = [shared]
     grow(mut nodes)
-    cells: [2]Node = [shared, shared]
+    mut cells: FixedArray[Node, 2] = FixedArray[Node, 2]([shared, shared])
     graft(mut cells)
     assert total(nodes[0]) == 113
     assert total(cells[1]) == 15
@@ -204,12 +203,12 @@ public def test_mut_collections_carry_recursive_values_in_and_out() -> bool:
     return total(shared) == 3
 
 
-def grow(nodes: mut list[Node]) -> None:
-    first = nodes[0]
+func grow(mut nodes: Node[]) -> Unit:
+    mut first = nodes[0]
     first.value += 10
     match first.left:
         case Some(inner):
-            changed = inner
+            mut changed = inner
             changed.value += 100
             first.left = Some(changed)
         case None:
@@ -217,43 +216,43 @@ def grow(nodes: mut list[Node]) -> None:
     nodes[0] = first
 
 
-def graft(cells: mut [2]Node) -> None:
+func graft(mut cells: FixedArray[Node, 2]) -> Unit:
     cells[1].value = 7
     cells[1].left = Some(leaf(8))
 
 
-public def test_equality_hashing_and_printing_see_the_value() -> bool:
-    a = Expr.add(Expr.num(1), Expr.neg(Expr.num(2)))
-    b = Expr.add(Expr.num(1), Expr.neg(Expr.num(2)))
-    c = Expr.add(Expr.num(1), Expr.neg(Expr.num(3)))
-    counts: dict[Expr, int] = {a: 1}
+public func test_equality_hashing_and_printing_see_the_value() -> bool:
+    mut a = Expr.add(left=Expr.num(value=1), right=Expr.neg(inner=Expr.num(value=2)))
+    mut b = Expr.add(left=Expr.num(value=1), right=Expr.neg(inner=Expr.num(value=2)))
+    mut c = Expr.add(left=Expr.num(value=1), right=Expr.neg(inner=Expr.num(value=3)))
+    mut counts: dict[Expr, int] = {a: 1}
     counts[b] = counts[b] + 1
     counts[c] = 5
-    seen: set[Node] = set()
+    mut seen: set[Node] = set()
     seen.add(Node(value=1, left=Some(leaf(2)), right=None))
     seen.add(Node(value=1, left=Some(leaf(2)), right=None))
     seen.add(leaf(1))
-    text = f"{Node(value=1, left=Some(leaf(2)), right=None)}"
+    mut text = f"{Node(value=1, left=Some(leaf(2)), right=None)}"
     assert a == b and a != c
     assert counts[a] == 2 and len(counts) == 2
     assert len(seen) == 2
     return text == "Node(value=1, left=Some(Node(value=2, left=None, right=None)), right=None)"
 
 
-public def test_propagation_reads_through_boxed_options() -> bool:
-    chain = chain_of(3)
-    one: Option[int] = Some(1)
+public func test_propagation_reads_through_boxed_options() -> bool:
+    mut chain = chain_of(3)
+    mut one: int? = Some(1)
     assert second_value(chain) == one
     assert second_value(chain_of(1)) is None
     return second_value(None) is None
 
 
 # spec: RECURSIVE-VALUES-3
-public def test_deep_values_compare_hash_and_escape_without_recursion() -> bool:
-    first = chain_of(3000)
-    second = chain_of(3000)
-    third = chain_of(2999)
-    keys: set[Option[Node]] = set()
+public func test_deep_values_compare_hash_and_escape_without_recursion() -> bool:
+    mut first = chain_of(3000)
+    mut second = chain_of(3000)
+    mut third = chain_of(2999)
+    mut keys: set[Node?] = set()
     keys.add(first)
     keys.add(second)
     keys.add(third)
@@ -264,34 +263,34 @@ public def test_deep_values_compare_hash_and_escape_without_recursion() -> bool:
 
 
 # spec-case: RECURSIVE-VALUES-3
-public def test_printing_a_deep_value_stops_at_the_depth_cap() -> bool:
-    boxed = f"{chain_of(40)}"
+public func test_printing_a_deep_value_stops_at_the_depth_cap() -> bool:
+    mut boxed = f"{chain_of(40)}"
     assert boxed.startswith("Some(Node(value=39, left=Some(Node(value=38, ")
     assert "left=Some(...), right=None))" in boxed and len(boxed) < 1000
     # Branch recurses through a list, so it has no hidden box. Its existing
     # renderer and the new box path must obey the same depth-24 ellipsis rule.
-    plain = Branch(label="leaf", kids=[])
+    mut plain = Branch(label="leaf", kids=[])
     for _ in range(40):
         plain = Branch(label="branch", kids=[plain])
-    ordinary = f"{plain}"
+    mut ordinary = f"{plain}"
     return ordinary.startswith("Branch(label='branch', kids=[Branch(") and "..." in ordinary and len(ordinary) < 1000
 
 
 # spec-case: RECURSIVE-VALUES-3
-public def test_generated_recursive_tree_is_reflexive(tree: Expr) -> bool:
+public func test_generated_recursive_tree_is_reflexive(tree: Expr) -> bool:
     return tree == tree
 
 
 # spec: EQUALITY-SCRATCH-1
-public def test_scratch_growth_keeps_nan_and_signed_zero_inside_shared_boxes() -> bool:
-    nan = 0.0 / 0.0
-    leaf_nan: Shape[float] = Shape.leaf(nan)
-    tree: Shape[float] = Shape.both(leaf_nan, leaf_nan)
+public func test_scratch_growth_keeps_nan_and_signed_zero_inside_shared_boxes() -> bool:
+    mut nan = 0.0 / 0.0
+    mut leaf_nan: Shape[float] = Shape.leaf(value=nan)
+    mut tree: Shape[float] = Shape.both(left=leaf_nan, right=leaf_nan)
     for _ in range(10):
-        tree = Shape.both(tree, tree)
-    negative: Shape[float] = Shape.leaf(-0.0)
-    positive: Shape[float] = Shape.leaf(0.0)
+        tree = Shape.both(left=tree, right=tree)
+    mut negative: Shape[float] = Shape.leaf(value=-0.0)
+    mut positive: Shape[float] = Shape.leaf(value=0.0)
     for _ in range(40):
-        negative = Shape.both(negative, negative)
-        positive = Shape.both(positive, positive)
+        negative = Shape.both(left=negative, right=negative)
+        positive = Shape.both(left=positive, right=positive)
     return tree != tree and negative == positive

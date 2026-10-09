@@ -1,4 +1,3 @@
-module copy_on_write_values
 
 # Value semantics of a copied collection or record: a copy shares nothing
 # observable, so the first write through either name leaves the other alone,
@@ -10,30 +9,30 @@ module copy_on_write_values
 # only one left (RC-DEFAULT-1) and gives each program the same answer.
 
 
-def copy_then_append() -> int:
-    xs: list[int] = [1, 2]
-    ys = xs
+func copy_then_append() -> int:
+    mut xs: int[] = [1, 2]
+    mut ys = xs
     ys.append(3)
     return len(xs) * 10 + len(ys)
 
 
-public def test_a_copy_shares_the_list_and_the_first_write_through_either_name_copies_it() -> bool:
+public func test_a_copy_shares_the_list_and_the_first_write_through_either_name_copies_it() -> bool:
     return copy_then_append() == 23
 
 
 record Lists:
-    first: list[int]
-    second: list[int]
+    first: int[]
+    second: int[]
 
 
-def flat_record() -> int:
-    original = Lists(first=[1], second=[2])
-    copied = original
+func flat_record() -> int:
+    mut original = Lists(first=[1], second=[2])
+    mut copied = original
     copied.first.append(3)
     return len(original.first) * 100 + len(copied.first) * 10 + len(copied.second)
 
 
-public def test_a_flat_record_copy_writes_one_leaf_without_touching_the_original() -> bool:
+public func test_a_flat_record_copy_writes_one_leaf_without_touching_the_original() -> bool:
     return flat_record() == 121
 
 
@@ -42,42 +41,42 @@ record Pair:
     second: int
 
 
-union Item:
-    pair: Pair,
+enum Item:
+    pair(value: Pair)
     empty
 
 
-def read_item(items: list[Item], index: int) -> int:
+func read_item(items: Item[], index: int) -> int:
     match items[index]:
-        case Item.pair(payload):
+        case Item.pair(value=payload):
             return payload.first + payload.second
         case Item.empty:
             return 0
 
 
-public def test_a_variant_element_read_from_the_end_yields_its_selected_payload() -> bool:
-    return read_item([Item.pair(Pair(1, 2))], -1) == 3 and read_item([Item.pair(Pair(1, 2)), Item.empty], -1) == 0
+public func test_a_variant_element_read_from_the_end_yields_its_selected_payload() -> bool:
+    return read_item([Item.pair(value=Pair(first=1, second=2))], -1) == 3 and read_item([Item.pair(value=Pair(first=1, second=2)), Item.empty], -1) == 0
 
 
 record Branch:
-    items: list[int]
-    next: Option[Branch]
+    items: int[]
+    next: Branch?
 
 
-def exposed_child() -> int:
-    root = Branch(items=[0], next=Some(Branch(items=[1], next=None)))
-    exposed = root.next
-    copied = root
+func exposed_child() -> int:
+    mut root = Branch(items=[0], next=Some(Branch(items=[1], next=None)))
+    mut exposed = root.next
+    mut copied = root
     if exposed is None:
         return 0
     exposed.items.append(2)
-    old = copied.next
+    mut old = copied.next
     if old is None:
         return 0
     return len(old.items) * 10 + len(exposed.items)
 
 
-public def test_a_child_exposed_before_a_later_copy_of_its_parent_stays_independent() -> bool:
+public func test_a_child_exposed_before_a_later_copy_of_its_parent_stays_independent() -> bool:
     return exposed_child() == 12
 
 
@@ -86,240 +85,240 @@ record Outer:
 
 
 record Inner:
-    items: list[int]
-    tail: [0]Outer
+    items: int[]
+    tail: FixedArray[Outer, 0]
 
 
-def direct_cycle() -> int:
-    first = Outer(child=Inner(items=[1], tail=[]))
-    changed = first
+func direct_cycle() -> int:
+    mut first = Outer(child=Inner(items=[1], tail=FixedArray[Outer, 0]([])))
+    mut changed = first
     changed.child.items.append(2)
     return len(first.child.items) * 10 + len(changed.child.items)
 
 
-def element_cycle() -> int:
-    first = Outer(child=Inner(items=[1], tail=[]))
-    values: list[Outer] = [first]
+func element_cycle() -> int:
+    mut first = Outer(child=Inner(items=[1], tail=FixedArray[Outer, 0]([])))
+    mut values: Outer[] = [first]
     values[0].child.items.append(2)
     return len(first.child.items) * 10 + len(values[0].child.items)
 
 
-def set_first(xs: mut list[int]) -> None:
+func set_first(mut xs: int[]) -> Unit:
     xs[0] = 7
 
 
-def argument_cycle() -> int:
-    sibling = [[11], [22], [33]]
-    original = Outer(child=Inner(items=[1], tail=[]))
-    changed = original
+func argument_cycle() -> int:
+    mut sibling = [[11], [22], [33]]
+    mut original = Outer(child=Inner(items=[1], tail=FixedArray[Outer, 0]([])))
+    mut changed = original
     set_first(mut changed.child.items)
     if sibling[0][0] == 11 and sibling[2][0] == 33 and original.child.items == [1] and changed.child.items == [7]:
         return 1
     return 0
 
 
-public def test_a_record_that_can_reach_itself_through_a_zero_length_array_detaches_before_a_nested_write() -> bool:
+public func test_a_record_that_can_reach_itself_through_a_zero_length_array_detaches_before_a_nested_write() -> bool:
     return direct_cycle() == 12 and element_cycle() == 12 and argument_cycle() == 1
 
 
 record Node:
     number: int
-    next: Option[Node]
+    next: Node?
 
 
-def total(node: Node) -> int:
-    child = node.next
+func total(node: Node) -> int:
+    mut child = node.next
     if child is None:
         return node.number
     return node.number + total(child)
 
 
-public def test_a_pure_recursive_box_read_adds_up_the_chain() -> bool:
-    return total(Node(1, Some(Node(2, None)))) == 3
+public func test_a_pure_recursive_box_read_adds_up_the_chain() -> bool:
+    return total(Node(number=1, next=Some(Node(number=2, next=None)))) == 3
 
 
-def fill(n: int) -> list[int]:
-    out: list[int] = []
+func fill(n: int) -> int[]:
+    mut out: int[] = []
     out.append(n)
     out.append(n + 1)
     return out
 
 
-public def test_appends_to_a_fresh_list_each_land_in_place() -> bool:
-    values = fill(2)
+public func test_appends_to_a_fresh_list_each_land_in_place() -> bool:
+    mut values = fill(2)
     return len(values) == 2 and values[0] == 2 and values[1] == 3
 
 
-def hoisted() -> int:
-    xs: list[int] = [0]
-    ys = xs
+func hoisted() -> int:
+    mut xs: int[] = [0]
+    mut ys = xs
     for i in range(10):
         ys.append(i)
     return len(xs) * 100 + len(ys)
 
 
-def matrix() -> int:
-    grid = [[0, 0], [0, 5]]
-    saved = grid
+func matrix() -> int:
+    mut grid = [[0, 0], [0, 5]]
+    mut saved = grid
     for i in range(2):
         for j in range(2):
             grid[i][j] = i * 2 + j + 1
     return saved[1][1] * 100 + grid[1][1]
 
 
-public def test_a_loop_appending_through_a_copy_leaves_the_original_alone() -> bool:
+public func test_a_loop_appending_through_a_copy_leaves_the_original_alone() -> bool:
     return hoisted() == 111
 
 
-public def test_a_nested_write_in_a_loop_leaves_the_saved_rows_alone() -> bool:
+public func test_a_nested_write_in_a_loop_leaves_the_saved_rows_alone() -> bool:
     return matrix() == 504
 
 
-def nested_writes() -> int:
-    grid = [[1, 2], [3, 4]]
-    snapshot = grid
+func nested_writes() -> int:
+    mut grid = [[1, 2], [3, 4]]
+    mut snapshot = grid
     grid[1][0] = 7
     grid[0].append(5)
     return snapshot[1][0] * 1000 + len(snapshot[0]) * 100 + grid[1][0] * 10 + len(grid[0])
 
 
-def dictionary_value_writes() -> int:
-    d: dict[str, list[int]] = {"a": [1]}
-    before = d
+func dictionary_value_writes() -> int:
+    mut d: dict[str, int[]] = {"a": [1]}
+    mut before = d
     d["a"].append(2)
     d["a"][0] = 9
     return len(before["a"]) * 1000 + before["a"][0] * 100 + len(d["a"]) * 10 + d["a"][0]
 
 
-public def test_a_write_through_a_nested_element_or_a_dictionary_value_copies_every_level() -> bool:
+public func test_a_write_through_a_nested_element_or_a_dictionary_value_copies_every_level() -> bool:
     return nested_writes() == 3273 and dictionary_value_writes() == 1129
 
 
-def alternating_owners() -> int:
-    original: list[dict[str, dict[str, list[int]]]] = [{"a": {"b": [1]}}]
-    changed = original
+func alternating_owners() -> int:
+    mut original: dict[str, dict[str, int[]]][] = [{"a": {"b": [1]}}]
+    mut changed = original
     changed[0]["a"]["b"].append(2)
     return len(original[0]["a"]["b"]) * 10 + len(changed[0]["a"]["b"])
 
 
-def fixed_array_paths() -> int:
-    original: dict[str, [1][1]list[int]] = {"k": [[[1]]]}
-    changed = original
+func fixed_array_paths() -> int:
+    mut original: dict[str, FixedArray[FixedArray[int[], 1], 1]] = {"k": FixedArray[FixedArray[int[], 1], 1]([FixedArray[int[], 1]([[1]])])}
+    mut changed = original
     changed["k"][0][0].append(2)
     return len(original["k"][0][0]) * 10 + len(changed["k"][0][0])
 
 
-def rewrite_entry(values: mut dict[str, [1]list[int]]) -> int:
-    copied = values["k"]
+func rewrite_entry(mut values: dict[str, FixedArray[int[], 1]]) -> int:
+    mut copied = values["k"]
     values["k"] = copied
     return 0
 
 
-def completed_callback() -> int:
-    original: dict[str, [1]list[int]] = {"k": [[1]]}
-    changed = original
-    at = rewrite_entry(mut changed)
+func completed_callback() -> int:
+    mut original: dict[str, FixedArray[int[], 1]] = {"k": FixedArray[int[], 1]([[1]])}
+    mut changed = original
+    mut at = rewrite_entry(mut changed)
     changed["k"][at].append(2)
     return len(original["k"][0]) * 10 + len(changed["k"][0])
 
 
-public def test_alternating_collection_owners_keep_both_snapshots() -> bool:
+public func test_alternating_collection_owners_keep_both_snapshots() -> bool:
     return alternating_owners() == 12 and fixed_array_paths() == 12
 
 
-public def test_a_completed_callback_updates_the_current_equal_array_entry() -> bool:
+public func test_a_completed_callback_updates_the_current_equal_array_entry() -> bool:
     return completed_callback() == 12
 
 
 record Bag:
-    items: list[int]
+    items: int[]
 
 
 record Holder:
-    items: list[int]
+    items: int[]
 
 
-def record_fields() -> int:
-    a = Bag(items=[1])
-    b = a
+func record_fields() -> int:
+    mut a = Bag(items=[1])
+    mut b = a
     b.items.append(2)
-    box = Holder(items=[1])
-    kept = box.items
+    mut box = Holder(items=[1])
+    mut kept = box.items
     box.items.append(2)
     return len(a.items) * 1000 + len(b.items) * 100 + len(kept) * 10 + len(box.items)
 
 
-public def test_a_write_through_a_record_field_writes_the_copy_back_into_the_field() -> bool:
+public func test_a_write_through_a_record_field_writes_the_copy_back_into_the_field() -> bool:
     return record_fields() == 1212
 
 
-def keep(xs: list[int]) -> list[list[int]]:
-    store: list[list[int]] = []
+func keep(xs: int[]) -> int[][]:
+    mut store: int[][] = []
     store.append(xs)
     return store
 
 
-def grow(xs: mut list[int]) -> list[list[int]]:
-    store = keep(xs)
+func grow(mut xs: int[]) -> int[][]:
+    mut store = keep(xs)
     xs.append(9)
     return store
 
 
-def pinned() -> int:
-    xs: list[int] = [1]
-    store = grow(mut xs)
+func pinned() -> int:
+    mut xs: int[] = [1]
+    mut store = grow(mut xs)
     return len(store[0]) * 10 + len(xs)
 
 
-public def test_a_mut_argument_the_callee_copied_is_a_real_copy() -> bool:
+public func test_a_mut_argument_the_callee_copied_is_a_real_copy() -> bool:
     return pinned() == 12
 
 
 record Payload:
     number: int
-    items: list[int]
+    items: int[]
 
 
-union Entry:
-    payload: Payload,
+enum Entry:
+    payload(value: Payload)
     empty
 
 
-def observe(items: mut list[Entry], index: int) -> int:
-    seen = -1
+func observe(mut items: Entry[], index: int) -> int:
+    mut seen = -1
     match items[index]:
-        case Entry.payload(old):
-            fields = old.items
+        case Entry.payload(value=old):
+            mut fields = old.items
             fields.append(2)
             seen = len(old.items)
-            items[index] = Entry.payload(Payload(0, fields))
+            items[index] = Entry.payload(value=Payload(number=0, items=fields))
         case Entry.empty:
             pass
     return seen
 
 
-public def test_an_element_field_appended_through_a_copy_leaves_what_the_match_saw() -> bool:
-    items = [Entry.payload(Payload(5, [1])), Entry.empty]
-    seen = observe(mut items, 0)
-    again = observe(mut items, 1)
+public func test_an_element_field_appended_through_a_copy_leaves_what_the_match_saw() -> bool:
+    mut items = [Entry.payload(value=Payload(number=5, items=[1])), Entry.empty]
+    mut seen = observe(mut items, 0)
+    mut again = observe(mut items, 1)
     match items[0]:
-        case Entry.payload(now):
+        case Entry.payload(value=now):
             return seen == 1 and again == -1 and now.number == 0 and now.items == [1, 2]
         case Entry.empty:
             return False
 
 
-def save(rows: list[list[int]], saved: mut list[list[list[int]]]) -> int:
+func save(rows: int[][], mut saved: int[][][]) -> int:
     saved.append(rows)
     return 2
 
 
-def receiver_across_callback() -> int:
-    rows = [[1]]
-    saved: list[list[list[int]]] = []
+func receiver_across_callback() -> int:
+    mut rows = [[1]]
+    mut saved: int[][][] = []
     rows[0].append(save(rows, mut saved))
     return len(rows[0]) * 10 + len(saved[0][0])
 
 
-public def test_a_receiver_stays_pinned_across_later_argument_callbacks() -> bool:
+public func test_a_receiver_stays_pinned_across_later_argument_callbacks() -> bool:
     return receiver_across_callback() == 21

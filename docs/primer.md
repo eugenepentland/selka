@@ -34,9 +34,9 @@ difference; `fmt FILE` prints the complete corrected source.
 
 ## File layout
 
-- A single-file program needs no header. A file that imports another file of
-  the project starts with `module NAME`, and **NAME must equal the file name**
-  without `.my` (`calc.my` → `module calc`). `def main` is unrelated to it.
+- Files need no module header. Their paths determine module names: `calc.my`
+  is `calc`, and `shared/calc.my` is `shared.calc` beneath the project root.
+  `func main` marks an executable entry.
 - `import util` loads `util.my` beside the entry; call `util.f(x)`. Only the
   declarations `util` marks `public` are visible. `check`, `run`, `build` and
   `test` follow the imports from a module entry by themselves.
@@ -44,8 +44,8 @@ difference; `fmt FILE` prints the complete corrected source.
   effects and public signatures as well as imports, and a file that does declare
   `main` keeps every check on it. `run` and `build` still need a `main`.
   `check-module name.my` does the same but always checks as a library and
-  requires the `module` header.
-- Tests are `public def test_name() -> bool` (return `True` to pass), in the same
+  accepts the same headerless module source.
+- Tests are `public func test_name() -> bool` (return `True` to pass), in the same
   file as the code or in `name_test.my` that does `import name` (then only
   `name`'s `public` declarations are visible). A test may take `out: Stream`
   and the capabilities `fs: Filesystem`, `clock: Clock`, `entropy: Entropy`,
@@ -53,8 +53,8 @@ difference; `fmt FILE` prints the complete corrected source.
   stand-in (an empty in-memory filesystem, a simulated clock, ...), never real
   authority, so I/O code is testable without host files. `mylang docs tests`
   has the table.
-  A `*_test.my` entry may omit its `module` header even when importing the
-  sibling module; both `test` and `fmt` accept that form.
+  A `*_test.my` entry imports its sibling directly; both `test` and `fmt`
+  accept the same headerless form as other modules.
   Run `mylang test name_test.my` to select sibling tests directly. If
   `mylang test name.my` selects none, it points out an existing sibling test
   file; testing the containing directory also discovers it.
@@ -63,7 +63,7 @@ difference; `fmt FILE` prints the complete corrected source.
 
 ```mylang
 # doc: check
-def main(args: list[str], fs: Filesystem, out: Stream, err: Stream) -> int:
+func main(args: str[], fs: Filesystem, out: Stream, err: Stream) -> int:
     if len(args) != 1: # args are the arguments only (no program name)
         err.print("usage: prog FILE")
         return 2 # main's return value is the exit status
@@ -92,21 +92,21 @@ record Item:              # independent value; fields by keyword
 
 record Node:              # recursive tree value
     value: int
-    next: Option[Node]
+    next: Node?
 
 enum Color:
-    red,
+    red
     green
 
-union Shape:              # tagged union; variants carry a payload or named fields
-    circle: float,
+enum Shape:              # tagged union; variants carry a payload or named fields
+    circle(value: float)
     rect(w: float, h: float)
 
-def area(s: Shape) -> float:
+func area(s: Shape) -> float:
     match s:
-        case Shape.circle(r):
+        case Shape.circle(value=r):
             return 3.0 * r * r
-        case Shape.rect(w, h):
+        case Shape.rect(w=w, h=h):
             return w * h
 ```
 
@@ -115,7 +115,7 @@ Construct with keywords: `Item(name="a", count=1)`, `Shape.rect(w=2.0, h=3.0)`,
 graphs with identity use pool handles. Writing a field of a `record`
 copy (`for it in items: it.count = 0`) is a compile error: update the owning
 collection or rebuild the record. Builtin types: `int`, `float`, `bool`, `str`, `bytes`,
-`list[T]`, `dict[K, V]` (keys `int` or `str` only), `tuple[A, B]`, `Option[T]`
+`T[]`, `dict[K, V]` (keys `int` or `str` only), `tuple[A, B]`, `T?`
 (`Some(x)` / `None`) and `Result[T, E]` (`Ok(x)` / `Err(e)`).
 
 A public declaration can expose only public types. `E_PRIVATE_INTERFACE` on
@@ -131,8 +131,8 @@ public record Count:
 public record ItemCount:
     count: Count
 
-def main(out: Stream) -> int:
-    item = ItemCount(count=Count(value=2))
+func main(out: Stream) -> int:
+    mut item = ItemCount(count=Count(value=2))
     out.print(item.count.value)
     return 0
 ```
@@ -141,21 +141,21 @@ def main(out: Stream) -> int:
 
 ```mylang
 # doc: expect 3
-def parse_pair(s: str) -> Result[tuple[int, int], str]:
-    parts = s.split(",")
+func parse_pair(s: str) -> tuple[int, int] fails str:
+    mut parts = s.split(",")
     if len(parts) != 2:
-        return Err(f"bad pair: {s}")
-    a = int(parts[0].strip())          # int(str) -> Option[int]; float(str) likewise
-    b = int(parts[1].strip())
+        fail f"bad pair: {s}"
+    mut a = parse_int(parts[0].strip())          # int(str) -> int?; float(str) likewise
+    mut b = parse_int(parts[1].strip())
     if a is None or b is None:         # `is None` narrows: a and b are int below
-        return Err("not a number")
-    return Ok((a, b))
+        fail "not a number"
+    return (a, b)
 
-def total(s: str) -> Result[int, str]:
-    a, b = parse_pair(s)?              # `?` returns the Err early; tuples unpack
-    return Ok(a + b)
+func total(s: str) -> int fails str:
+    const left, right = try parse_pair(s) # failure returns from this function
+    return left + right
 
-def main(out: Stream) -> int:
+func main(out: Stream) -> int:
     match total("1, 2"):
         case Ok(n):
             out.print(n)
@@ -164,19 +164,21 @@ def main(out: Stream) -> int:
     return 0
 ```
 
-There are no exceptions and no `try`. To compare with a literal `Ok(...)`, bind
-it to a typed name first: `expected: Result[int, str] = Ok(3)`, then
-`total("1,2") == expected`.
+There are no exception handlers. Declare expected errors with `fails`, return
+success with `return`, fail with `fail`, and propagate with boundary `try`.
+To retain a result for explicit comparison, use a typed declaration such as
+`const expected: Result[int, str] = Ok(3)`.
 
-A call used as a statement must return unit (`-> None`, or no return
+
+A call used as a statement must return unit (`-> Unit`, or no return
 annotation). `E_EXPLICIT_DISCARD_REQUIRED` means a non-unit result was ignored:
 use the value, handle it, or write `_ = expression` to discard it explicitly.
-For a `Result`, normally use `match` or `?` to handle failure.
+For a checked result, use `match` or boundary `try` to handle failure.
 
 ```mylang
 # doc: expect 1
-def main(out: Stream) -> int:
-    values = [10, 20]
+func main(out: Stream) -> int:
+    mut values = [10, 20]
     _ = values.pop()                  # pop returns the removed element
     out.print(len(values))
     return 0
@@ -186,22 +188,22 @@ def main(out: Stream) -> int:
 
 ```mylang
 # doc: expect 2 1 [[], [7]] 1
-def main(out: Stream) -> int:
-    counts: dict[str, int] = {}          # an empty literal needs a declared type
+func main(out: Stream) -> int:
+    mut counts: dict[str, int] = {}          # an empty literal needs a declared type
     for word in "a b a".split():
         counts[word] = counts.get(word, 0) + 1
-    rows: list[list[int]] = []
+    mut rows: int[][] = []
     rows.append([])                      # `[]` passed to a method takes its type from it
-    rows.append([n * 7 for n in range(1, 2)])
+    rows.append([for n in range(1, 2) yield n * 7])
     out.print(counts["a"], counts["b"], rows, len(rows[1]))
     return 0
 ```
 
 ```mylang
 # doc: expect {3, 1, 2} {'a': 1, 'bb': 2} 14 True
-def main(out: Stream) -> int:
-    seen = {3, 1, 2, 3}                  # a set[int]; keeps first-insertion order
-    lengths = {w: len(w) for w in ["a", "bb"]}
+func main(out: Stream) -> int:
+    mut seen = {3, 1, 2, 3}                  # a set[int]; keeps first-insertion order
+    mut lengths = {w: len(w) for w in ["a", "bb"]}
     out.print(seen, lengths, sum(x * x for x in [1, 2, 3]), any(x > 2 for x in seen))
     return 0
 ```
@@ -229,11 +231,11 @@ def main(out: Stream) -> int:
 
 ```mylang
 # doc: expect 1
-def bump(counts: mut dict[str, int], key: str):
+func bump(mut counts: dict[str, int], key: str):
     counts[key] = counts.get(key, 0) + 1
 
-def main(out: Stream) -> int:
-    counts: dict[str, int] = {}
+func main(out: Stream) -> int:
+    mut counts: dict[str, int] = {}
     bump(mut counts, "x")                # the call site repeats `mut`
     out.print(counts["x"])
     return 0
@@ -250,9 +252,9 @@ while `f(mut s.a, mut s.b)` and `f(mut xs[0], mut xs[1])` are fine.
 
 ```mylang
 # doc: expect 3.5 -4 2 -3 2.67 b
-def main(out: Stream) -> int:
-    fixed = f"{2.675:.2f}"
-    word = "abc"
+func main(out: Stream) -> int:
+    mut fixed = f"{2.675:.2f}"
+    mut word = "abc"
     out.print(7 / 2, -7 // 2, -7 % 3, divtrunc(-7, 2), fixed, word[1])
     return 0
 ```
@@ -277,7 +279,7 @@ def main(out: Stream) -> int:
 - `round(x, n)` rounds the exact binary value, like C and Python
   (`round(2.675, 2)` → `2.67`), except that an exact tie rounds away from zero
   (`round(0.125, 2)` → `0.13`, Python `0.12`; `f"{0.125:.2f}"` is `0.12` in both).
-- Build a large string by collecting pieces in a `list[str]` and
+- Build a large string by collecting pieces in a `str[]` and
   `"".join(pieces)`. For byte-level scanning read with `fs.read_file`: `data[i]`
   is an `int`, `data[a:b]` a `bytes` slice, `.decode()` a `Result[str, ...]`.
 
@@ -287,16 +289,17 @@ def main(out: Stream) -> int:
 | --- | --- |
 | `x ** n` | `math.pow(x, n)` (`import math`, integer exponent) |
 | `gen = (x for x in xs)` kept in a variable | a list comprehension `[x for x in xs]`; generators are call arguments |
-| `try` / `except` | `Result` and `?` |
+| `try:` / `except` | `fails`, prefix `try`, or an explicit result `match` |
 | methods on classes, closures | top-level functions that take the object or state |
-| `heapq`, `re`, `collections` | write the small helper (a binary heap over `list[int]`) |
+| `heapq`, `re`, `collections` | write the small helper (a binary heap over `int[]`) |
 | `if x:` on a list, str or int | an explicit `bool` expression |
 
 ## Scoping
 
-Locals are function-scoped like Python, but reading a name on a path where it
-might not be assigned yet is a compile error (`E_UNBOUND`): assign a default
-before the loop or `if` that sets it (`best = 0` before the loop).
+Use `const` for an immutable local and `mut` for a writable local. Declarations
+belong to their enclosing block, and shadowing an active local or parameter is
+rejected. Ordinary assignment updates a declared writable binding. Declare a
+changing accumulator before a loop or branch if it must remain available afterward.
 
 ## Where to read more
 

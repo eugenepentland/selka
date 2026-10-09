@@ -1,17 +1,16 @@
-module structural_constraints_case_10
 
 
 domain D: i64:
-    def make(n: i64) -> D:
+    func make(n: i64) -> D:
         return wrap[D](n)
 
-    def score(v: D) -> i64 effects():
+    func score(v: D) -> i64 effects():
         return unwrap(v)
 
 
-def apply[T: copy + op(score(v: T) -> i64 effects())](v: T) -> i64:
+func apply[T: copy + op(score(v: T) -> i64 effects())](v: T) -> i64:
     return T.score(v)
 
 
-public def program() -> i64:
+public func program() -> i64:
     return apply[D](D.make(7))

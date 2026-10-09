@@ -22,14 +22,14 @@ comprehension takes.
 ```mylang
 # doc: expect {2, 3, 5, 7} {'b', 'a'} {0, 1, 9, 16} set() {'a', 'b'}
 # doc: expect 4 2
-def main(out: Stream) -> int:
-    primes = {2, 3, 5, 7, 3}
-    seen: set[str] = set()
+func main(out: Stream) -> int:
+    mut primes = {2, 3, 5, 7, 3}
+    mut seen: set[str] = set()
     seen.add("b")
     seen.add("a")
     seen.add("b")
-    squares = {n * n for n in range(5) if n != 2}
-    empty: set[int] = set()
+    mut squares = {n * n for n in range(5) if n != 2}
+    mut empty: set[int] = set()
     out.print(primes, seen, squares, empty, set("abba"))
     out.print(len(primes), len(seen))
     return 0
@@ -56,24 +56,24 @@ order. Changing the set's size while a loop walks it traps with
 
 ```mylang
 # doc: expect 42
-def tag(names: mut set[str], name: str) -> None:
+func tag(mut names: set[str], name: str) -> Unit:
     names.add(name)
 
-def main() -> int:
-    names = {"ada", "bob"}
-    alias = names
+func main() -> int:
+    mut names = {"ada", "bob"}
+    mut alias = names
     tag(mut alias, "cy")
     if "cy" in names:
         return 1
     alias.discard("zed")
     alias.remove("bob")
-    newest = alias.pop()
+    mut newest = alias.pop()
     if newest != "cy" or "cy" in alias:
         return 1
-    backup = alias.copy()
+    mut backup = alias.copy()
     alias.update({"dee", "eve"})
     alias.clear()
-    total = 0
+    mut total = 0
     for name in backup:
         total += len(name)
     return total * 14
@@ -95,9 +95,9 @@ the same element type. On integers `|`, `&` and `^` are rejected with
 ```mylang
 # doc: expect {1, 2, 3, 4, 6, 5} {2, 4} {1, 3} {1, 3, 6, 5}
 # doc: expect True False True True
-def main(out: Stream) -> int:
-    left = {1, 2, 3, 4}
-    right = {6, 4, 2, 5}
+func main(out: Stream) -> int:
+    mut left = {1, 2, 3, 4}
+    mut right = {6, 4, 2, 5}
     out.print(left | right, left & right, left - right, left ^ right)
     out.print({2, 3} < left, left <= right, left.isdisjoint({9}), {3, 1, 2} == {1, 2, 3})
     return 0
@@ -120,21 +120,21 @@ record Cell:
     row: int
     col: int
 
-union Shape:
-    dot,
-    circle: int,
-    label: str
+enum Shape:
+    dot
+    circle(value: int)
+    label(value: str)
 
-def main() -> int:
-    walls: set[Cell] = {Cell(row=0, col=1), Cell(row=2, col=3)}
-    names: dict[tuple[int, str], int] = {(1, "a"): 40}
-    shapes = {Shape.circle(2), Shape.label("x"), Shape.dot}
-    start = Cell(row=0, col=1)
-    marked: set[Cell] = {start}
+func main() -> int:
+    mut walls: set[Cell] = {Cell(row=0, col=1), Cell(row=2, col=3)}
+    mut names: dict[tuple[int, str], int] = {(1, "a"): 40}
+    mut shapes = {Shape.circle(value=2), Shape.label(value="x"), Shape.dot}
+    mut start = Cell(row=0, col=1)
+    mut marked: set[Cell] = {start}
     start.col = 9
     if Cell(row=0, col=1) not in walls or Cell(row=0, col=1) not in marked:
         return 1
-    if Shape.label("x") not in shapes or Shape.circle(3) in shapes:
+    if Shape.label(value="x") not in shapes or Shape.circle(value=3) in shapes:
         return 2
     return names[(1, "a")] + len(marked) + len(walls) - 1
 ```

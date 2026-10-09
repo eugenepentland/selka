@@ -1,4 +1,4 @@
-def main() -> int:
+func main() -> int:
     if any([False, True]) and all([True, True]):
         return 42
     return 0

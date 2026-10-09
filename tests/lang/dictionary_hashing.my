@@ -1,4 +1,3 @@
-module dictionary_hashing
 
 # The dictionary's hash functions, its record of the last probe and the hashes
 # its table stores are all invisible: every program here answers exactly what it
@@ -11,37 +10,37 @@ module dictionary_hashing
 # growth across many resizes.
 
 
-def repeat(letter: str, count: i64) -> str:
-    parts: list[str] = []
+func repeat(letter: str, count: i64) -> str:
+    mut parts: str[] = []
     for _ in range(count):
         parts.append(letter)
     return "".join(parts)
 
 
-def bump_by_get(counts: mut dict[i64, i64], key: i64) -> None:
+func bump_by_get(mut counts: dict[i64, i64], key: i64) -> Unit:
     counts[key] = counts.get(key, 0) + 1
 
 
-def bump_by_membership(counts: mut dict[i64, i64], key: i64) -> None:
+func bump_by_membership(mut counts: dict[i64, i64], key: i64) -> Unit:
     if key in counts:
         counts[key] = counts[key] + 1
     else:
         counts[key] = 1
 
 
-def bump_by_setdefault(counts: mut dict[i64, i64], key: i64) -> None:
+func bump_by_setdefault(mut counts: dict[i64, i64], key: i64) -> Unit:
     counts[key] = counts.setdefault(key, 0) + 1
 
 
-def bump_text(counts: mut dict[str, i64], key: str) -> None:
+func bump_text(mut counts: dict[str, i64], key: str) -> Unit:
     counts[key] = counts.get(key, 0) + 1
 
 
 # spec: PY-DICT-3
-public def test_negative_and_extreme_integer_keys_each_keep_their_own_entry() -> bool:
-    low = -9223372036854775807 - 1
-    keys = [0, 1, -1, 2, -2, 255, 256, -256, 65535, 65536, 4294967295, 4294967296, -4294967296, 9223372036854775807, low, low + 1]
-    counts: dict[i64, i64] = {}
+public func test_negative_and_extreme_integer_keys_each_keep_their_own_entry() -> bool:
+    mut low = -9223372036854775807 - 1
+    mut keys = [0, 1, -1, 2, -2, 255, 256, -256, 65535, 65536, 4294967295, 4294967296, -4294967296, 9223372036854775807, low, low + 1]
+    mut counts: dict[i64, i64] = {}
     for i in range(len(keys)):
         counts[keys[i]] = i
     if len(counts) != 16:
@@ -52,8 +51,8 @@ public def test_negative_and_extreme_integer_keys_each_keep_their_own_entry() ->
     if 3 in counts or -3 in counts or low + 2 in counts:
         return False
     # Every power of two and its negation: single-bit keys hash apart too.
-    bits: dict[i64, i64] = {}
-    bit = 1
+    mut bits: dict[i64, i64] = {}
+    mut bit = 1
     for i in range(62):
         bits[bit] = i
         bits[0 - bit] = 100 + i
@@ -63,28 +62,28 @@ public def test_negative_and_extreme_integer_keys_each_keep_their_own_entry() ->
     if bits[-2305843009213693952] != 161 or 3 in bits or 0 in bits:
         return False
     # Narrow widths hash their own bytes: the whole i8 space, and u64 extremes.
-    narrow: dict[i8, i64] = {}
+    mut narrow: dict[i8, i64] = {}
     for i in range(256):
         narrow[i8(i - 128)] = i
     if len(narrow) != 256 or narrow[-128i8] != 0 or narrow[i8(-1)] != 127 or narrow[127i8] != 255:
         return False
-    wide: dict[u64, i64] = {18446744073709551615u64: 1, 0u64: 2, 9223372036854775808u64: 3}
-    short: dict[i16, i64] = {-32768i16: 1, 32767i16: 2, i16(-1): 3}
+    mut wide: dict[u64, i64] = {18446744073709551615u64: 1, 0u64: 2, 9223372036854775808u64: 3}
+    mut short: dict[i16, i64] = {-32768i16: 1, 32767i16: 2, i16(-1): 3}
     return len(wide) == 3 and wide[18446744073709551615u64] == 1 and wide[9223372036854775808u64] == 3 and 1u64 not in wide and short[i16(-1)] == 3 and short[-32768i16] == 1
 
 
 # spec-case: PY-DICT-3
-public def test_empty_short_long_and_multi_octet_text_keys_each_keep_their_own_entry() -> bool:
+public func test_empty_short_long_and_multi_octet_text_keys_each_keep_their_own_entry() -> bool:
     # Lengths 0 through 69 cover the empty text, every length the short path
     # reads as two overlapping halves, and several whole words plus a tail.
-    counts: dict[str, i64] = {}
-    text = ""
+    mut counts: dict[str, i64] = {}
+    mut text = ""
     for i in range(70):
         counts[text] = i
         text = text + chr(97 + i % 26)
     if len(counts) != 70:
         return False
-    probe = ""
+    mut probe = ""
     for i in range(70):
         if counts[probe] != i:
             return False
@@ -92,42 +91,42 @@ public def test_empty_short_long_and_multi_octet_text_keys_each_keep_their_own_e
     if probe in counts or "b" in counts:
         return False
     # Multi-octet scalars: equal texts are equal octets, whatever their width.
-    wide: dict[str, i64] = {"é": 1, "e": 2, "éé": 3, "🙂": 4, "🙂🙂🙂": 5, "x🙂": 6, "🙂x": 7}
+    mut wide: dict[str, i64] = {"é": 1, "e": 2, "éé": 3, "🙂": 4, "🙂🙂🙂": 5, "x🙂": 6, "🙂x": 7}
     if len(wide) != 7 or wide[chr(233)] != 1 or wide["e"] != 2 or wide[chr(128578) + "x"] != 7:
         return False
     return "🙂🙂" not in wide and wide["🙂🙂🙂"] == 5 and wide["x" + chr(128578)] == 6
 
 
 # spec-case: PY-DICT-3
-public def test_text_keys_differing_only_in_their_last_octet_or_past_their_eighth() -> bool:
-    counts: dict[str, i64] = {}
+public func test_text_keys_differing_only_in_their_last_octet_or_past_their_eighth() -> bool:
+    mut counts: dict[str, i64] = {}
     for length in [1, 4, 7, 8, 9, 15, 16, 17, 24, 33]:
-        stem = repeat("q", length - 1)
+        const stem = repeat("q", length - 1)
         for letter in range(26):
             counts[stem + chr(97 + letter)] = length * 100 + letter
     if len(counts) != 260:
         return False
     for length in [1, 4, 7, 8, 9, 15, 16, 17, 24, 33]:
-        stem = repeat("q", length - 1)
+        const stem = repeat("q", length - 1)
         for letter in range(26):
             if counts[stem + chr(97 + letter)] != length * 100 + letter:
                 return False
         if (stem + "{") in counts or (stem + "aa") in counts:
             return False
     # One shared eight-octet prefix: only the octets past it tell keys apart.
-    shared: dict[str, i64] = {}
+    mut shared: dict[str, i64] = {}
     for i in range(600):
         shared["abcdefgh" + str(i)] = i
-    total = 0
+    mut total = 0
     for i in range(600):
         total += shared["abcdefgh" + str(i)]
     return len(shared) == 600 and total == 179700 and "abcdefgh" not in shared and "abcdefgh600" not in shared
 
 
 # spec-case: PY-DICT-5
-public def test_integer_keys_that_share_most_of_their_bits_still_find_their_own_entries() -> bool:
-    high: dict[i64, i64] = {}
-    same_low: dict[i64, i64] = {}
+public func test_integer_keys_that_share_most_of_their_bits_still_find_their_own_entries() -> bool:
+    mut high: dict[i64, i64] = {}
+    mut same_low: dict[i64, i64] = {}
     for i in range(2000):
         high[i * 4294967296] = i
         same_low[i * 1024 + 7] = i
@@ -142,17 +141,17 @@ public def test_integer_keys_that_share_most_of_their_bits_still_find_their_own_
 
 
 # spec: PY-DICT-5
-public def test_popping_out_of_collision_runs_then_reinserting_keeps_every_key_reachable() -> bool:
-    counts: dict[i64, i64] = {}
+public func test_popping_out_of_collision_runs_then_reinserting_keeps_every_key_reachable() -> bool:
+    mut counts: dict[i64, i64] = {}
     for i in range(1200):
         counts[i * 4294967296] = i
-    removed = 0
+    mut removed = 0
     for i in range(400):
         removed += counts.pop(i * 3 * 4294967296)
     if len(counts) != 800 or removed != 239400:
         return False
     for i in range(1200):
-        key = i * 4294967296
+        mut key = i * 4294967296
         if i % 3 == 0:
             if key in counts:
                 return False
@@ -161,7 +160,7 @@ public def test_popping_out_of_collision_runs_then_reinserting_keeps_every_key_r
     # A reinserted key appends after every survivor, in reinsertion order.
     for i in range(400):
         counts[i * 3 * 4294967296] = 0 - i
-    keys = list(counts.keys())
+    mut keys = list(counts.keys())
     if len(keys) != 1200 or keys[0] != 4294967296 or keys[800] != 0 or keys[1199] != 1197 * 4294967296:
         return False
     if counts[1197 * 4294967296] != -399 or counts[1198 * 4294967296] != 1198:
@@ -177,8 +176,8 @@ public def test_popping_out_of_collision_runs_then_reinserting_keeps_every_key_r
 
 
 # spec-case: PY-DICT-5
-public def test_text_keys_popped_and_reinserted_read_back_in_insertion_order() -> bool:
-    counts: dict[str, i64] = {}
+public func test_text_keys_popped_and_reinserted_read_back_in_insertion_order() -> bool:
+    mut counts: dict[str, i64] = {}
     for i in range(300):
         counts["key" + str(i)] = i
     for i in range(100):
@@ -187,13 +186,13 @@ public def test_text_keys_popped_and_reinserted_read_back_in_insertion_order() -
         return False
     for i in range(100):
         counts["key" + str(i * 3 + 1)] = -1
-    keys = list(counts.keys())
+    mut keys = list(counts.keys())
     return len(keys) == 300 and keys[0] == "key0" and keys[199] == "key299" and keys[200] == "key1" and counts["key298"] == -1
 
 
 # spec-case: PY-DICT-5
-public def test_growth_across_many_resizes_keeps_every_key_and_insertion_order() -> bool:
-    numbers: dict[i64, i64] = {}
+public func test_growth_across_many_resizes_keeps_every_key_and_insertion_order() -> bool:
+    mut numbers: dict[i64, i64] = {}
     for i in range(6000):
         numbers[i * 7919 - 3000] = i
     if len(numbers) != 6000:
@@ -201,23 +200,23 @@ public def test_growth_across_many_resizes_keeps_every_key_and_insertion_order()
     for i in range(6000):
         if numbers[i * 7919 - 3000] != i:
             return False
-    order = list(numbers.keys())
+    mut order = list(numbers.keys())
     if order[0] != -3000 or order[5999] != 5999 * 7919 - 3000 or -2999 in numbers:
         return False
-    names: dict[str, i64] = {}
+    mut names: dict[str, i64] = {}
     for i in range(1500):
         names["n" + str(i)] = i
-    spelled = list(names.keys())
+    mut spelled = list(names.keys())
     return len(names) == 1500 and spelled[0] == "n0" and spelled[1499] == "n1499" and names["n777"] == 777
 
 
 # spec: PY-DICT-4
-public def test_every_get_then_set_spelling_counts_the_same_for_integer_keys() -> bool:
-    by_get: dict[i64, i64] = {}
-    by_membership: dict[i64, i64] = {}
-    by_setdefault: dict[i64, i64] = {}
+public func test_every_get_then_set_spelling_counts_the_same_for_integer_keys() -> bool:
+    mut by_get: dict[i64, i64] = {}
+    mut by_membership: dict[i64, i64] = {}
+    mut by_setdefault: dict[i64, i64] = {}
     for i in range(3000):
-        key = (i * 37) % 101 - 50
+        mut key = (i * 37) % 101 - 50
         bump_by_get(mut by_get, key)
         bump_by_membership(mut by_membership, key)
         bump_by_setdefault(mut by_setdefault, key)
@@ -225,7 +224,7 @@ public def test_every_get_then_set_spelling_counts_the_same_for_integer_keys() -
         return False
     if list(by_get.keys()) != list(by_membership.keys()) or list(by_get.keys()) != list(by_setdefault.keys()):
         return False
-    total = 0
+    mut total = 0
     for counted in by_get:
         total += by_get[counted]
     if total != 3000 or by_get[-50] != 30 or by_get[50] != 30:
@@ -237,92 +236,92 @@ public def test_every_get_then_set_spelling_counts_the_same_for_integer_keys() -
 
 
 # spec-case: PY-DICT-4
-public def test_a_missed_read_never_shadows_a_key_inserted_before_the_write() -> bool:
-    counts: dict[i64, i64] = {}
+public func test_a_missed_read_never_shadows_a_key_inserted_before_the_write() -> bool:
+    mut counts: dict[i64, i64] = {}
     # Another key inserted between the miss and the write may take the very
     # slot the miss ended on.
     for other in range(1, 40):
         counts.clear()
-        seen = counts.get(0, 0)
+        mut seen = counts.get(0, 0)
         counts[other] = 2
         counts[0] = seen + 1
         if len(counts) != 2 or counts[other] != 2 or counts[0] != 1:
             return False
     # The same key inserted by setdefault, by update or into an explicit copy.
     counts.clear()
-    missing = 7 in counts
+    mut missing = 7 in counts
     _ = counts.setdefault(7, 3)
     counts[7] = 9
     if missing or len(counts) != 1 or counts[7] != 9:
         return False
-    before = counts.get(5, 0)
+    mut before = counts.get(5, 0)
     counts.update({5: 10, 6: 11})
     counts[5] = before + 1
     if len(counts) != 3 or counts[5] != 1 or list(counts.keys())[1] != 5:
         return False
-    alias = counts.copy()
-    absent = counts.get(8, -1)
+    mut alias = counts.copy()
+    mut absent = counts.get(8, -1)
     alias[8] = 4
     counts[8] = absent + 100
     if len(counts) != 4 or counts[8] != 99 or alias[8] != 4:
         return False
     # Growth, a pop and a clear between the miss and the write.
-    grown: dict[i64, i64] = {}
-    first = grown.get(-1, 0)
+    mut grown: dict[i64, i64] = {}
+    mut first = grown.get(-1, 0)
     for i in range(100):
         grown[i] = i
     grown[-1] = first + 1
     if len(grown) != 101 or grown[-1] != 1 or list(grown.keys())[100] != -1:
         return False
-    late = grown.get(1000, 0)
+    mut late = grown.get(1000, 0)
     _ = grown.pop(50)
     grown[1000] = late + 1
     if len(grown) != 101 or grown[1000] != 1 or grown[99] != 99 or 50 in grown:
         return False
-    cleared = grown.get(2000, 0)
+    mut cleared = grown.get(2000, 0)
     grown.clear()
     grown[2000] = cleared + 1
     if len(grown) != 1 or grown[2000] != 1:
         return False
     # A text miss, then an equal text inserted, then the write: one entry.
-    texts: dict[str, i64] = {}
-    key = "k" + str(7)
-    miss = texts.get(key, 0)
+    mut texts: dict[str, i64] = {}
+    mut key = "k" + str(7)
+    mut miss = texts.get(key, 0)
     texts["k7"] = 5
     texts[key] = miss + 1
     return len(texts) == 1 and texts["k7"] == 1
 
 
 # spec-case: PY-DICT-4
-public def test_text_keys_count_the_same_through_one_key_object_or_many() -> bool:
-    sequence = "ACGTTGCAACGGTACCATGGACTTAGCATCGA"
-    reused: dict[str, i64] = {}
-    fresh: dict[str, i64] = {}
+public func test_text_keys_count_the_same_through_one_key_object_or_many() -> bool:
+    mut sequence = "ACGTTGCAACGGTACCATGGACTTAGCATCGA"
+    mut reused: dict[str, i64] = {}
+    mut fresh: dict[str, i64] = {}
     for i in range(len(sequence) - 2):
-        piece = sequence[i:i + 3]
+        mut piece = sequence[i:i + 3]
         bump_text(mut reused, piece)
         bump_text(mut fresh, sequence[i:i + 3])
         fresh[sequence[i:i + 3]] += 0
-    total = 0
+    mut total = 0
     for key in reused:
         total += reused[key]
     return reused == fresh and total == 30 and reused["ACG"] == 2 and list(reused.keys()) == list(fresh.keys())
 
 
 # spec-case: PY-DICT-3
-public def test_printing_and_iteration_follow_insertion_order_not_hash_order() -> bool:
-    numbers: dict[i64, i64] = {}
+public func test_printing_and_iteration_follow_insertion_order_not_hash_order() -> bool:
+    mut numbers: dict[i64, i64] = {}
     for key in [42, -7, 1000000000000, 0, 3, -9223372036854775807]:
         numbers[key] = 1
     numbers[3] = 2
     if f"{numbers}" != "{42: 1, -7: 1, 1000000000000: 1, 0: 1, 3: 2, -9223372036854775807: 1}":
         return False
-    names: dict[str, i64] = {"zeta": 1, "alpha": 2, "": 3, "mid": 4}
+    mut names: dict[str, i64] = {"zeta": 1, "alpha": 2, "": 3, "mid": 4}
     names["alpha"] = 5
     if f"{names}" != "{'zeta': 1, 'alpha': 5, '': 3, 'mid': 4}":
         return False
     return list(names.values()) == [1, 5, 3, 4] and list(numbers.keys())[5] == -9223372036854775807
 
 
-def main() -> int:
+func main() -> int:
     return 0

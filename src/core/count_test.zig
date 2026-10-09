@@ -171,11 +171,11 @@ test "without --counters the emitted text names no counter and links the ordinar
     defer arena.deinit();
     const a = arena.allocator();
     const program =
-        \\def twice(xs: list[int]) -> list[int]:
-        \\    ys = xs
+        \\func twice(xs: int[]) -> int[]:
+        \\    mut ys = xs
         \\    ys.append(1)
         \\    return ys
-        \\def main(out: Stream) -> int:
+        \\func main(out: Stream) -> int:
         \\    out.print(len(twice([1, 2])))
         \\    return 0
     ;
@@ -290,7 +290,7 @@ test "a counting build counts each bounds, overflow, division and shift check it
     try std.testing.expectEqualStrings(plain.stdout, release.stdout);
     try std.testing.expect(field(release.counts, &.{ "kinds", "shift_check", "count" }) >= 4);
     // A build without the flag counts nothing: its text names no check site.
-    const text = try support.llvmText(a, "def f(a: int, b: int) -> int:\n    return a // b\ndef main() -> int:\n    return f(7, 2)\n");
+    const text = try support.llvmText(a, "func f(a: int, b: int) -> int:\n    return a // b\nfunc main() -> int:\n    return f(7, 2)\n");
     try std.testing.expect(!contains(text, "myl.cs."));
 }
 

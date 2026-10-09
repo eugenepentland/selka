@@ -1,85 +1,85 @@
 record State:
-    values: list[int]
+    values: int[]
     count: int
     ready: bool
 
 
-def add(state: mut State, amount: int):
+func add(mut state: State, amount: int):
     state.count = state.count + amount
 
 
-def observe_then_change(state: mut State) -> int:
-    before = state.count
+func observe_then_change(mut state: State) -> int:
+    mut before = state.count
     state.values.append(before)
     state.count = before + 10
     return before + 2
 
 
-def from_callback(state: mut State):
-    next_count = observe_then_change(mut state)
+func from_callback(mut state: State):
+    mut next_count = observe_then_change(mut state)
     state.count = next_count
 
 
-def toggled(state: mut State):
+func toggled(mut state: State):
     state.ready = False
     state.ready = True
     state.ready = False
 
 
-def loop(state: mut State, times: int):
-    i = 0
+func loop(mut state: State, times: int):
+    mut i = 0
     while i < times:
         state.count = state.count + 1
         i += 1
 
 
-public def test_saved_record_and_child_snapshots_survive_scalar_publication() -> bool:
-    state = State([7], 3, True)
-    saved = state
-    children = state.values
+public func test_saved_record_and_child_snapshots_survive_scalar_publication() -> bool:
+    mut state = State(values=[7], count=3, ready=True)
+    mut saved = state
+    mut children = state.values
     add(mut state, 4)
     add(mut state, 2)
     state.values.append(9)
     return state.count == 9 and saved.count == 3 and saved.values == [7] and children == [7]
 
 
-public def test_rhs_observation_and_mutation_complete_before_final_store() -> bool:
-    state = State([1], 5, True)
+public func test_rhs_observation_and_mutation_complete_before_final_store() -> bool:
+    mut state = State(values=[1], count=5, ready=True)
     from_callback(mut state)
     return state.count == 7 and state.values == [1, 5]
 
 
-public def test_loop_reuse_and_boolean_width_preserve_siblings() -> bool:
-    state = State([2, 4], 0, True)
+public func test_loop_reuse_and_boolean_width_preserve_siblings() -> bool:
+    mut state = State(values=[2, 4], count=0, ready=True)
     loop(mut state, 50)
     toggled(mut state)
     return state.count == 50 and not state.ready and state.values == [2, 4]
 
 
-def count_for_append(state: mut State) -> int:
+func count_for_append(mut state: State) -> int:
     state.count = state.count + 1
     return state.count
 
 
-def with_snapshot(state: mut State, snapshot: State) -> bool:
+func with_snapshot(mut state: State, snapshot: State) -> bool:
     state.count = state.count + 1
     return snapshot.count + 1 == state.count
 
 
-public def test_same_call_snapshot_and_pinned_parent_keep_distinct_scalar_bits() -> bool:
-    state = State([5], 2, True)
-    first = with_snapshot(mut state, state)
-    states = [state]
-    saved = states
-    mutation_result_88 = count_for_append(mut state)
+public func test_same_call_snapshot_and_pinned_parent_keep_distinct_scalar_bits() -> bool:
+    mut state = State(values=[5], count=2, ready=True)
+    mut first = with_snapshot(mut state, state)
+    mut states = [state]
+    mut saved = states
+    mut mutation_result_88 = count_for_append(mut state)
     state.values.append(mutation_result_88)
-    changed = states[0]
+    mut changed = states[0]
     add(mut changed, 4)
     states[0] = changed
     return first and state.count == 4 and state.values == [5, 4] and states[0].count == 7 and saved[0].count == 3
 
 
-def main(out: Stream) -> int:
+func main(out: Stream) -> int:
     out.print(test_saved_record_and_child_snapshots_survive_scalar_publication())
     out.print(test_rhs_observation_and_mutation_complete_before_final_store())
     out.print(test_loop_reuse_and_boolean_width_preserve_siblings())

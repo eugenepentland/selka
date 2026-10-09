@@ -351,6 +351,11 @@ static void value_render(core_render_buffer *output, const core_value_shape *sha
     case 5: {
         uint64_t tag = value_tag(shape, at);
         if (tag >= shape->count || !shape->names) abort();
+        /* Named case fields already have their constructor in the payload descriptor. */
+        if (shape->offsets && shape->offsets[tag] == 2) {
+            value_render(output, shape->children[tag], value_payload(shape, at), depth + 1);
+            break;
+        }
         value_render_text(output, shape->names[tag]);
         if (shape->offsets ? shape->offsets[tag] != 0 : shape->children[tag]->kind != 0) {
             value_render_text(output, "(");

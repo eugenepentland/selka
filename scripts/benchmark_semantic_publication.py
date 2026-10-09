@@ -32,14 +32,14 @@ import tempfile
 import time
 from pathlib import Path
 
-SOURCE_HEAD = "module main\n\n"
+SOURCE_HEAD = "\n"
 
 
 def generate_source(bodies: int) -> str:
     lines = [SOURCE_HEAD.rstrip("\n"), ""]
     for index in range(bodies - 1):
-        lines += [f"def helper{index}() -> int effects():", f"    return {index}", ""]
-    lines += ["def main() -> int:", f"    return helper{bodies - 2}()", ""]
+        lines += [f"func helper{index}() -> int effects():", f"    return {index}", ""]
+    lines += ["func main() -> int:", f"    return helper{bodies - 2}()", ""]
     return "\n".join(lines)
 
 

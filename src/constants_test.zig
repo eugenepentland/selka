@@ -20,13 +20,13 @@ fn scenario(allocator: std.mem.Allocator) !void {
         \\const WIDTH: u8 = u8(BASE)
         \\
         \\
-        \\def work[T]() -> i64:
+        \\func work[T]() -> i64:
         \\    if SAFE:
         \\        return MIN
         \\    return ANSWER + i64(WIDTH)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return work[bool]()
     ;
     var compilation = try language.Compilation.init(allocator, "constants.my", text);
@@ -45,14 +45,12 @@ test "scalar constants support forward dependencies checked widths short circuit
 }
 fn provider(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
     const text = if (std.mem.eql(u8, path, "main.my"))
-        \\module main
         \\import constants
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return constants.VALUE
     else if (std.mem.eql(u8, path, "constants.my"))
-        \\module constants
         \\
         \\
         \\public const VALUE: i64 = FACTOR * 6
@@ -77,9 +75,9 @@ const managed_literals =
     \\const DATA: Octets = b"\x00\xff\n"
     \\const EMPTY_TEXT: str = ""
     \\const EMPTY_DATA: bytes = b""
-    \\def read[T]() -> int:
+    \\func read[T]() -> int:
     \\    return len(TEXT) + len(DATA) + len(EMPTY_TEXT) + len(EMPTY_DATA)
-    \\def main() -> int:
+    \\func main() -> int:
     \\    if TEXT != "hé🙂\n\0" or DATA != b"\x00\xff\n":
     \\        return 1
     \\    return read[bool]() + read[int]() + DATA[1]
@@ -120,8 +118,8 @@ fn rejectConstant(text: []const u8, code: []const u8) !void {
 // spec-case: CONSTANT-2
 test "managed constants reject nonliteral initializers even when unused" {
     for ([_][]const u8{
-        "const S: str = make()\ndef make() -> str:\n    return \"x\"\n",
-        "const B: bytes = make()\ndef make() -> bytes:\n    return b\"x\"\n",
+        "const S: str = make()\nfunc make() -> str:\n    return \"x\"\n",
+        "const B: bytes = make()\nfunc make() -> bytes:\n    return b\"x\"\n",
         "const S: str = \"x\" + \"y\"\n",
         "const B: bytes = b\"x\" + b\"y\"\n",
         "const S: str = str(42)\n",
@@ -132,7 +130,7 @@ test "managed constants reject nonliteral initializers even when unused" {
         "const S: str = \"xy\"[0]\n",
         "const B: bytes = b\"xy\"[0:1]\n",
     }) |declaration| {
-        const text = try std.mem.concat(t.allocator, u8, &.{ declaration, "def main() -> int:\n    return 0\n" });
+        const text = try std.mem.concat(t.allocator, u8, &.{ declaration, "func main() -> int:\n    return 0\n" });
         defer t.allocator.free(text);
         try rejectConstant(text, "E_CONSTANT_EXPRESSION");
     }
@@ -140,28 +138,28 @@ test "managed constants reject nonliteral initializers even when unused" {
 
 // spec-case: CONSTANT-2
 test "managed constants require matching literal types and keep byte or generic reads allocating" {
-    try rejectConstant("const S: str = b\"x\"\ndef main() -> int:\n    return 0\n", "E_TYPE");
-    try rejectConstant("const B: bytes = \"x\"\ndef main() -> int:\n    return 0\n", "E_TYPE");
+    try rejectConstant("const S: str = b\"x\"\nfunc main() -> int:\n    return 0\n", "E_TYPE");
+    try rejectConstant("const B: bytes = \"x\"\nfunc main() -> int:\n    return 0\n", "E_TYPE");
     // A non-generic str constant read is a compile-time scalar, so an explicit
     // noalloc ceiling accepts it; a bytes constant, and any generic body that
     // returns one, still contributes managed_allocation.
-    try acceptConstant("const S: str = \"x\"\ndef main() -> int noalloc:\n    return len(S)\n");
-    try rejectConstant("const B: bytes = b\"x\"\ndef main() -> int effects():\n    return len(B)\n", "E_EFFECT_BOUND");
-    try rejectConstant("const S: str = \"x\"\ndef unused[T]() -> str noalloc:\n    return S\ndef main() -> int:\n    return 0\n", "E_EFFECT_BOUND");
-    try rejectConstant("const B: bytes = b\"x\"\ndef unused[T]() -> bytes effects():\n    return B\ndef main() -> int:\n    return 0\n", "E_EFFECT_BOUND");
+    try acceptConstant("const S: str = \"x\"\nfunc main() -> int noalloc:\n    return len(S)\n");
+    try rejectConstant("const B: bytes = b\"x\"\nfunc main() -> int effects():\n    return len(B)\n", "E_EFFECT_BOUND");
+    try rejectConstant("const S: str = \"x\"\nfunc unused[T]() -> str noalloc:\n    return S\nfunc main() -> int:\n    return 0\n", "E_EFFECT_BOUND");
+    try rejectConstant("const B: bytes = b\"x\"\nfunc unused[T]() -> bytes effects():\n    return B\nfunc main() -> int:\n    return 0\n", "E_EFFECT_BOUND");
 }
 
 // spec-case: CONST-FLOAT-1
 test "float constants reject overflowing literals and mismatched declared types" {
-    try rejectConstant("const BAD: float = 1e309\ndef main() -> int:\n    return 0\n", "E_FLOAT_RANGE");
-    try rejectConstant("const BAD: int = 3.14\ndef main() -> int:\n    return 0\n", "E_TYPE");
-    try rejectConstant("const BAD: float = True\ndef main() -> int:\n    return 0\n", "E_TYPE");
+    try rejectConstant("const BAD: float = 1e309\nfunc main() -> int:\n    return 0\n", "E_FLOAT_RANGE");
+    try rejectConstant("const BAD: int = 3.14\nfunc main() -> int:\n    return 0\n", "E_TYPE");
+    try rejectConstant("const BAD: float = True\nfunc main() -> int:\n    return 0\n", "E_TYPE");
 }
 
 // spec-case: CONST-FLOAT-2
 test "float constants reject integer-only operators and float source calls" {
-    try rejectConstant("const BAD: float = 1.0 & 2.0\ndef main() -> int:\n    return 0\n", "E_FLOAT_OPERATION");
-    try rejectConstant("const BAD: float = source()\ndef source() -> float:\n    return 1.0\ndef main() -> int:\n    return 0\n", "E_CONSTANT_TYPE");
+    try rejectConstant("const BAD: float = 1.0 & 2.0\nfunc main() -> int:\n    return 0\n", "E_FLOAT_OPERATION");
+    try rejectConstant("const BAD: float = source()\nfunc source() -> float:\n    return 1.0\nfunc main() -> int:\n    return 0\n", "E_CONSTANT_TYPE");
 }
 
 // spec-case: CONST-FLOAT-3
@@ -174,7 +172,7 @@ test "constant float integer conversions reject nonfinite and width boundaries" 
         "u64(18446744073709551616.0)",
     }) |conversion| {
         const ty = conversion[0..std.mem.indexOfScalar(u8, conversion, '(').?];
-        const text = try std.fmt.allocPrint(t.allocator, "const BAD: {s} = {s}\ndef main() -> int:\n    return 0\n", .{ ty, conversion });
+        const text = try std.fmt.allocPrint(t.allocator, "const BAD: {s} = {s}\nfunc main() -> int:\n    return 0\n", .{ ty, conversion });
         defer t.allocator.free(text);
         try rejectConstant(text, "E_CONSTANT_ARITHMETIC");
     }

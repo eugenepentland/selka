@@ -1,4 +1,3 @@
-module callback_slots
 
 import sort
 
@@ -14,49 +13,49 @@ record Score:
     points: int
 
 
-def negate(value: int) -> int:
+func negate(value: int) -> int:
     return 0 - value
 
 
-def points_of(item: Score) -> int:
+func points_of(item: Score) -> int:
     return item.points
 
 
-def apply_twice[T: copy + storable](f: def(T) -> T effects(), value: T) -> T:
+func apply_twice[T: copy + storable](f: func(T) -> T effects(), value: T) -> T:
     return f(f(value))
 
 
-def pick[T: copy + storable](items: list[T], key: def(T) -> int effects()) -> int:
-    best = 0
+func pick[T: copy + storable](items: T[], key: func(T) -> int effects()) -> int:
+    mut best = 0
     for item in items:
         if key(item) > best:
             best = key(item)
     return best
 
 
-def count_to(limit: int) -> int:
-    items: list[int] = []
+func count_to(limit: int) -> int:
+    mut items: int[] = []
     for index in range(limit):
         items.append(index)
     return len(items)
 
 
-def run(f: def(int) -> int, value: int) -> int:
+func run(f: func(int) -> int, value: int) -> int:
     return f(value)
 
 
 # spec: CALLBACK-SLOT-1
-public def test_an_unannotated_function_fills_a_generic_sort_by_key_slot() -> bool:
-    ordered = sort.sort_by_key([3, 1, 2], negate)
+public func test_an_unannotated_function_fills_a_generic_sort_by_key_slot() -> bool:
+    mut ordered = sort.sort_by_key([3, 1, 2], negate)
     return ordered[0] == 3 and ordered[2] == 1
 
 
 # spec-case: CALLBACK-SLOT-1
-public def test_an_unannotated_function_fills_a_user_generic_callback_slot() -> bool:
-    scores = [Score(name="a", points=3), Score(name="b", points=8)]
+public func test_an_unannotated_function_fills_a_user_generic_callback_slot() -> bool:
+    mut scores = [Score(name="a", points=3), Score(name="b", points=8)]
     return apply_twice(negate, 5) == 5 and pick(scores, points_of) == 8
 
 
 # spec-case: CALLBACK-SLOT-1
-public def test_an_allocating_unannotated_function_still_fills_an_unbounded_slot() -> bool:
+public func test_an_allocating_unannotated_function_still_fills_an_unbounded_slot() -> bool:
     return run(count_to, 4) == 4

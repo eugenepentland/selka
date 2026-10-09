@@ -30,6 +30,12 @@ fn typeArgumentToken(tag: lex.Tag) bool {
     return switch (tag) {
         .ident,
         .integer,
+        .question,
+        .kw_def,
+        .lparen,
+        .rparen,
+        .arrow,
+        .colon,
         .lbracket,
         .rbracket,
         .kw_i8,
@@ -64,7 +70,6 @@ const RequirementCollections = struct {
 /// at a known point. The enum is what a call site names; `declaration_hints`
 /// carries the table row it resolves to.
 pub const HintForm = enum {
-    union_cases,
     module_constant,
     method,
     from_import,
@@ -85,32 +90,23 @@ pub const DeclarationHint = struct { form: HintForm, idiom: []const u8, message:
 /// the parser's messaging are one table; `src/declaration_hints_test.zig` and
 /// `tests/parser_hints.py` fail when one side names a form the other lacks.
 pub const declaration_hints = [_]DeclarationHint{
-    .{ .form = .union_cases, .idiom = "union-cases", .message = "union cases are separated by commas", .accepted = "insert a comma after the previous case" },
     .{ .form = .module_constant, .idiom = "module-constant", .message = "a bare assignment declares no module-level binding", .accepted = "declare it as a constant: const MAX: int = 42" },
-    .{ .form = .method, .idiom = "method", .message = "a record or class body declares fields, not methods", .accepted = "declare a top-level function taking the record: def norm1(p: Point) -> int" },
+    .{ .form = .method, .idiom = "method", .message = "a record or class body declares fields, not methods", .accepted = "declare a top-level function taking the record: func norm1(p: Point) -> int" },
     .{ .form = .from_import, .idiom = "from-import", .message = "a from-import is not a declaration", .accepted = "import the module and declare a record: import dataclasses" },
     .{ .form = .chained_assignment, .idiom = "chained-assign", .message = "a chained assignment declares no binding", .accepted = "assign one name per statement: `x = 21` first, then `y = 21`" },
     .{ .form = .exceptions, .idiom = "exceptions", .message = "a try statement is not part of the language", .accepted = "return `Result` and match it: `case Ok(value)` and `case Err(reason)`" },
     .{ .form = .match_literal, .idiom = "match-literal", .message = "a case names a union, enum or result case, not a literal", .accepted = "compare literals with `if`/`elif`: `if x == 1:` then `elif x == 3:`" },
     .{ .form = .del_statement, .idiom = "del", .message = "a del statement is not part of the language", .accepted = "remove with `_ = xs.pop(index)` for a list or `_ = d.pop(key)` for a dictionary" },
     .{ .form = .string_prefix, .idiom = "string-prefix", .message = "a string prefix is not part of a literal", .accepted = "drop the prefix and write the escape in an ordinary quoted string" },
-    .{ .form = .main_guard, .idiom = "main-guard", .message = "a module has no `__name__` guard", .accepted = "delete the guard: `mylang run` calls `def main()` directly" },
-    .{ .form = .option_unwrap, .idiom = "option-unwrap", .message = "`unwrap` is a keyword here, not a method", .accepted = "extract with `match`: `case Ok(value)` or `case Some(value)`; `?` propagates a `Result`" },
+    .{ .form = .main_guard, .idiom = "main-guard", .message = "a module has no `__name__` guard", .accepted = "delete the guard: `mylang run` calls `func main()` directly" },
+    .{ .form = .option_unwrap, .idiom = "option-unwrap", .message = "`unwrap` is a keyword here, not a method", .accepted = "extract with `match`: `case Ok(value)` or `case Some(value)`; prefix `try` propagates a result" },
     .{ .form = .walrus, .idiom = "walrus", .message = "the walrus operator is not part of the language", .accepted = "assign the name on its own line first, then test it" },
 };
-/// The primary message for a case list whose next case lacks its separating
-/// comma. `union` reads from the hint table so the two can never drift.
-fn caseCommaMessage(head: []const u8) []const u8 {
-    if (std.mem.eql(u8, head, "enum")) return "enum cases are separated by commas";
-    if (std.mem.eql(u8, head, "result")) return "result cases are separated by commas";
-    return declaration_hints[@backingInt(HintForm.union_cases)].message;
-}
 /// Accepted spellings for Python forms whose rejection is not `E_SYNTAX`, so
 /// they have no row in the shared classifier table. Each one names a construct
 /// the language accepts today for the same intent; nothing here guesses.
 const loop_else_accepted = "use a flag: assign it before the loop, set it before `break`, and test it after";
 const nested_def_accepted = "declare the function at the top level and call it from the body";
-const match_expression_accepted = "assign the value in each branch of an if/elif statement";
 const power_accepted = "multiply in a loop: `total = 1` then `for i in range(exponent): total = total * base`";
 /// The accepted `range` arities, shared by the parser and the prelude's `list(range(...))`.
 const range_arity = "range requires end; start, end; or start, end, step";
@@ -119,7 +115,6 @@ const for_else_message = "a loop has no `else` clause";
 const set_augment_message = "a set has no augmented assignment operator";
 const set_augment_accepted = "rebind with the operator, `s = s | t`, or call `s.update(t)`";
 const nested_def_message = "a function body declares statements, not another function";
-const match_expression_message = "`match` is a statement, not an expression";
 const power_message = "`**` is not an operator";
 const shift_message = "`<<` and `>>` are not operators";
 /// PY-GENERATOR-2: a generator expression has no length, as in Python.
@@ -137,10 +132,11 @@ pub const Parser = struct {
     tokens: []const lex.Token,
     sink: *diagnostic.Sink,
     cursor: struct {
+        dialect: enum { migration, target } = .target,
         pos: usize = 0,
         depth: usize = 0,
         delimiters: usize = 0,
-        /// Bit 0/1 records a top-level `def len`/`def replace`, indexed once at
+        /// Bit 0/1 records a top-level `func len`/`func replace`, indexed once at
         /// parse start so each prelude call does not rescan the token stream.
         shadowing: u2 = 0,
     } = .{},
@@ -149,6 +145,7 @@ pub const Parser = struct {
         nodes: std.ArrayList(ast.Node) = .empty,
         statements: std.ArrayList(ast.Statement) = .empty,
         types: struct {
+            suffixes: std.ArrayList(ast.TypeSuffix) = .empty,
             arrays: std.ArrayList(ast.ArrayType) = .empty,
             callbacks: std.ArrayList(ast.CallbackType) = .empty,
             applications: std.ArrayList(ast.TypeApplication) = .empty,
@@ -182,7 +179,7 @@ pub const Parser = struct {
             if (self.tokens[self.cursor.pos + 1].tag == .rparen) _ = self.take(.comma);
         }
         const token = self.current();
-        if (tag == .semicolon and token.tag != .semicolon and lex.implicitTerminator(self.src.bytes, self.tokens, self.cursor.pos)) {
+        if (tag == .semicolon and token.tag != .semicolon and (self.previousTag() == .dedent or lex.implicitTerminator(self.src.bytes, self.tokens, self.cursor.pos))) {
             const end = self.tokens[self.cursor.pos - 1].span.end;
             return .{ .tag = .semicolon, .span = .{ .start = end, .end = end } };
         }
@@ -210,13 +207,12 @@ pub const Parser = struct {
     /// One expression-position Python form with the accepted spelling it has
     /// instead of the grammar production that is missing.
     const ExpressionForm = struct { message: []const u8, accepted: []const u8 };
-    /// The Python form standing where an expression belongs: a nested `def`, a
+    /// The Python form standing where an expression belongs: a nested `func`, a
     /// `match` expression, or the second `*`/`<` of `**`/`<<`. Every other token
     /// keeps the ordinary "expected an expression" failure.
     fn pythonExpressionFailure(self: *Parser, token: lex.Token) diagnostic.Error {
         const form: ?ExpressionForm = switch (token.tag) {
             .kw_def => .{ .message = nested_def_message, .accepted = nested_def_accepted },
-            .kw_match => .{ .message = match_expression_message, .accepted = match_expression_accepted },
             .star => if (self.previousTag() == .star) .{ .message = power_message, .accepted = power_accepted } else null,
             .lt => if (self.previousTag() == .lt) .{ .message = shift_message, .accepted = shift_accepted } else null,
             .equal => switch (self.previousTag()) {
@@ -282,6 +278,10 @@ pub const Parser = struct {
     }
     /// Whether the cursor sits on an identifier in `previous`'s column: the next
     /// case of a union, enum or result written without the separating comma.
+    fn nextVariantCase(self: *Parser, previous: Span) bool {
+        if (self.take(.comma)) return self.current().tag != .dedent;
+        return self.caseAtSameColumn(previous);
+    }
     fn caseAtSameColumn(self: *Parser, previous: Span) bool {
         const token = self.current();
         if (token.tag != .ident) return false;
@@ -345,7 +345,7 @@ pub const Parser = struct {
     }
     /// Whether the cursor starts a `mut` parameter or callback-parameter marker:
     /// `mut` followed by the type it marks. A `mut` with nothing after it is the
-    /// declared name or the type itself, so `def f(mut: int)` and `def f(a: mut)`
+    /// declared name or the type itself, so `func f(mut: int)` and `func f(a: mut)`
     /// are unchanged.
     fn atMutParameter(self: *Parser) bool {
         if (!self.identIsMut()) return false;
@@ -375,7 +375,7 @@ pub const Parser = struct {
         const value = try self.expression(0);
         return self.append(.{ .span = .join(marker.span, self.syntax.nodes.items[@backingInt(value)].span), .data = .{ .mut_argument = value } });
     }
-    /// Record top-level `def len`/`def replace` once so shadowing checks are
+    /// Record top-level `func len`/`func replace` once so shadowing checks are
     /// constant-time instead of a fresh full token scan for every prelude call.
     fn indexShadowingDeclarations(self: *Parser) void {
         var position: usize = 0;
@@ -470,7 +470,25 @@ pub const Parser = struct {
         }
         return joined;
     }
+    fn word(self: *Parser, text: []const u8) bool {
+        if (self.current().tag != .ident or !std.mem.eql(u8, self.src.text(self.current().span), text)) return false;
+        self.cursor.pos += 1;
+        return true;
+    }
     fn typeName(self: *Parser) diagnostic.Error!Span {
+        var base = try self.typeAtom();
+        while (true) {
+            const kind: @FieldType(ast.TypeSuffix, "kind") = if (self.take(.question)) .optional else if (self.current().tag == .lbracket and self.tokens[self.cursor.pos + 1].tag == .rbracket) array: {
+                self.cursor.pos += 2;
+                break :array .growable;
+            } else break;
+            const span: Span = .join(base, self.tokens[self.cursor.pos - 1].span);
+            try self.syntax.types.suffixes.append(self.storage, .{ .span = span, .base = base, .kind = kind });
+            base = span;
+        }
+        return base;
+    }
+    fn typeAtom(self: *Parser) diagnostic.Error!Span {
         try self.enter();
         defer self.cursor.depth -= 1;
         const token = self.current();
@@ -536,18 +554,25 @@ pub const Parser = struct {
         var parameters: std.ArrayList(Span) = .empty;
         var names: std.ArrayList(?Span) = .empty;
         var mut_parameters: std.ArrayList(bool) = .empty;
+        var named_parameters: std.ArrayList(bool) = .empty;
         if (self.current().tag != .rparen) while (true) {
             if (parameters.items.len == 16) return self.sink.fail(eGenericLimit, first, "callbacks support at most 16 value parameters");
             // A callback type is positional, so it has no keyword-only group.
             if (self.current().tag == .star) return self.sink.fail(syntax_code, self.current().span, "`*` is not permitted in a callback type; declare the keyword-only parameters on a function");
+            const named = self.word("named");
+            try named_parameters.append(allocator, named);
+            const prefix_mut = self.identIsMut() and self.tokens[self.cursor.pos + 1].tag == .ident and self.tokens[self.cursor.pos + 2].tag == .colon;
+            if (prefix_mut) self.cursor.pos += 1;
             var name: ?Span = null;
             if (self.current().tag == .ident and self.tokens[self.cursor.pos + 1].tag == .colon) {
                 name = (try self.expect(.ident)).span;
                 _ = try self.expect(.colon);
             }
+            if (named and name == null) return self.sink.fail("E_PARAMETER_NAME", self.current().span, "a named callable parameter requires a name and type, such as `named limit: int`");
             const mutable = self.atMutParameter();
+            if (mutable and prefix_mut) return self.sink.fail("E_PARAMETER_MODIFIER", self.current().span, "write `mut` once before the parameter name");
             if (mutable) self.cursor.pos += 1;
-            try mut_parameters.append(allocator, mutable);
+            try mut_parameters.append(allocator, mutable or prefix_mut);
             try parameters.append(allocator, try self.typeName());
             try names.append(allocator, name);
             if (!self.take(.comma) or self.current().tag == .rparen) break;
@@ -557,6 +582,7 @@ pub const Parser = struct {
         const result = try self.typeName();
         // An omitted callback ceiling is unbounded: the slot accepts any function
         // value, and an explicit ceiling remains an upper bound on the callee.
+        const failure_type = if (self.word("fails")) try self.typeName() else null;
         const bound = try self.effectBound() orelse effects.Bound{ .span = first, .allowed = effects.all };
         try self.rejectMutatesClause();
         const span: Span = .join(first, self.tokens[self.cursor.pos - 1].span);
@@ -565,14 +591,16 @@ pub const Parser = struct {
             .parameters = try parameters.toOwnedSlice(allocator),
             .parameter_names = try names.toOwnedSlice(allocator),
             .return_type = result,
+            .failure_type = failure_type,
             .effect_bound = bound,
-            .mut_parameters = try mut_parameters.toOwnedSlice(allocator),
+            .parameter_modes = .{ .mut = try mut_parameters.toOwnedSlice(allocator), .named = try named_parameters.toOwnedSlice(allocator) },
         });
         return span;
     }
     fn nominalTypeName(self: *Parser) diagnostic.Error!Span {
         const token = try self.expect(.ident);
         const name = try self.qualifiedTail(token.span);
+        if (self.current().tag == .lbracket and self.tokens[self.cursor.pos + 1].tag == .rbracket) return name;
         if (!self.take(.lbracket)) return name;
         var arguments: std.ArrayList(Span) = .empty;
         while (true) {
@@ -586,22 +614,21 @@ pub const Parser = struct {
         try self.syntax.types.applications.append(self.storage, .{ .span = span, .name = name, .arguments = try arguments.toOwnedSlice(self.storage) });
         return span;
     }
-    /// Parse module headers and bodies without loading imports or checking names.
-    /// Headerless test entries accept project imports like the test runner;
-    /// other headerless files may import only embedded standard modules.
+    /// Parse path-named modules and their leading import directives.
+    /// Redundant legacy headers are accepted only by migration parsers.
     pub fn parseModule(self: *Parser) diagnostic.Error!ast.Program {
         self.module_syntax = true;
-        const first_token = self.current();
-        const has_header = first_token.tag == .ident and std.mem.eql(u8, self.src.text(first_token.span), "module");
-        const headerless_test = !has_header and std.mem.endsWith(u8, self.src.path, "_test.my");
-        if (headerless_test or try self.standardImportScript()) {
-            try self.importDirectives();
-            return self.parse();
+        const first = self.current();
+        if (first.tag == .ident and std.mem.eql(u8, self.src.text(first.span), "module")) {
+            self.cursor.pos += 1;
+            try self.moduleName();
+            const end = try self.expect(.semicolon);
+            if (self.cursor.dialect == .target) {
+                const span: Span = .join(first.span, end.span);
+                try self.sink.appendFix(.{ .code = "E_MODULE_HEADER", .span = span, .message = "module names come from file paths; remove the redundant module header" }, .{ .span = span, .text = "" });
+                return error.SourceError;
+            }
         }
-        const first = try self.expect(.ident);
-        if (!std.mem.eql(u8, self.src.text(first.span), "module")) return self.sink.fail("E_MODULE_HEADER", first.span, "file must begin with a module declaration");
-        try self.moduleName();
-        _ = try self.expect(.semicolon);
         try self.importDirectives();
         return self.parse();
     }
@@ -622,12 +649,6 @@ pub const Parser = struct {
             try self.syntax.import_aliases.put(allocator, self.src.text(path), {});
             _ = try self.expect(.semicolon);
         }
-    }
-    /// Whether the file opens with a headerless run of standard-module imports:
-    /// the script shape that needs no `module` declaration. The one policy lives
-    /// in `project.zig` so the parser and the project loader cannot disagree.
-    fn standardImportScript(self: *Parser) diagnostic.Error!bool {
-        return @import("project.zig").standardImportOpening(self.storage, self.src, self.tokens, self.cursor.pos);
     }
     fn parseCodec(self: *Parser) diagnostic.Error!ast.Codec {
         const wire = try self.typeName();
@@ -698,7 +719,7 @@ pub const Parser = struct {
         };
     }
     /// Reject an attribute placed above a declaration that cannot carry it:
-    /// `@requires`/`@ensures` need a `def` with a body, `@invariant` a
+    /// `@requires`/`@ensures` need a `func` with a body, `@invariant` a
     /// `record` or `domain`, and the other attributes a function. A domain
     /// member (`member` set) takes only contract clauses.
     fn checkAttributeTarget(self: *Parser, pending: []const ast.Attribute, member: bool) diagnostic.Error!void {
@@ -708,7 +729,10 @@ pub const Parser = struct {
             .invariant => if (head != .record and head != .domain)
                 return self.sink.fail(contract_target_code, attribute.span, "`@invariant` attaches to a `record` or `domain` declaration; a class, union, enum, alias, constraint or function carries none"),
             .requires, .ensures => if (head != .function)
-                return self.sink.fail(contract_target_code, attribute.span, if (head == .host_function) "an `extern` or `host` declaration has no body to check a contract in" else "`@requires` and `@ensures` attach to a `def` declaration"),
+                return self.sink.fail(contract_target_code, attribute.span, if (head == .host_function)
+                    "an `extern` or `host` declaration has no body to check a contract in"
+                else
+                    "`@requires` and `@ensures` attach to a `func` declaration"),
             .deprecated, .@"test", .allow => if (member or (head != .function and head != .host_function))
                 return self.sink.fail("E_ATTRIBUTE_TARGET", attribute.span, if (member) "only contract clauses attach to a domain member" else "attributes attach to a function declaration"),
         };
@@ -878,8 +902,7 @@ pub const Parser = struct {
             }
             const fallible = self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "result");
             if (self.current().tag == .kw_enum or self.current().tag == .kw_union or fallible) {
-                const is_union = self.current().tag != .kw_enum;
-                const case_head: []const u8 = if (fallible) "result" else if (self.current().tag == .kw_enum) "enum" else "union";
+                var is_union = self.current().tag != .kw_enum;
                 self.cursor.pos += 1;
                 const name = try self.expect(.ident);
                 const type_parameters = try self.typeParameters();
@@ -890,18 +913,14 @@ pub const Parser = struct {
                     const tag = try self.expect(.ident);
                     var fields: []const ast.Parameter = &.{};
                     var payload: ?Span = null;
-                    if (is_union and self.take(.lparen)) {
+                    if (self.take(.lparen)) {
                         fields = try self.caseFields();
+                        is_union = true;
                     } else if (is_union and self.take(.colon)) {
                         payload = try self.typeName();
                     }
                     try cases.append(self.storage, .{ .name = tag.span, .payload = payload, .fields = fields });
-                    if (!self.take(.comma)) {
-                        // A next case on its own line is the shape an agent writes
-                        // first, so name the rule instead of "expected a dedent".
-                        if (self.caseAtSameColumn(tag.span)) return self.hint(.union_cases, self.current().span, caseCommaMessage(case_head), tag.span);
-                        break;
-                    }
+                    if (!self.nextVariantCase(tag.span)) break;
                 };
                 _ = try self.expect(.dedent);
                 try self.markPublic(&public_names, declare_public, name.span);
@@ -950,13 +969,14 @@ pub const Parser = struct {
             try functions.append(self.storage, declared_function);
             try self.attach(&attribute_table, declared_function.name, pending);
         }
-        return .{
+        const program: ast.Program = .{
             .types = .{
                 .resources = try resources.toOwnedSlice(self.storage),
                 .variants = try variants.toOwnedSlice(self.storage),
                 .domains = try domains.toOwnedSlice(self.storage),
                 .expressions = .{
                     .callbacks = try self.syntax.types.callbacks.toOwnedSlice(self.storage),
+                    .suffixes = try self.syntax.types.suffixes.toOwnedSlice(self.storage),
                     .arrays = try self.syntax.types.arrays.toOwnedSlice(self.storage),
                     .applications = try self.syntax.types.applications.toOwnedSlice(self.storage),
                     .aliases = try self.syntax.types.aliases.toOwnedSlice(self.storage),
@@ -974,16 +994,18 @@ pub const Parser = struct {
             .attributes = try attribute_table.toOwnedSlice(self.storage),
             .docstrings = try self.syntax.docstrings.toOwnedSlice(self.storage),
         };
+        if (self.cursor.dialect == .target and try @import("frontend_migration.zig").publish(self.src, program, self.tokens, self.sink)) return error.SourceError;
+        return program;
     }
-    /// The code a retired `host def` declaration is refused with (NEW-CORE-S5-HOST-1).
+    /// The code a retired `host func` declaration is refused with (NEW-CORE-S5-HOST-1).
     pub const host_retired_code = "E_HOST_RETIRED";
-    /// Why `host def` is refused and what replaces it.
-    const host_retired = "`host def` is retired (S5-D5): host functions and their registered adapters were removed with the old back end; declare the function `extern def` and link its C implementation with `--link FILE.c`";
+    /// Why `host func` is refused and what replaces it.
+    const host_retired = "`host func` is retired (S5-D5): host functions and their registered adapters were removed with the old back end; declare the function `extern func` and link its C implementation with `--link FILE.c`";
     fn function(self: *Parser, owner: ?Span) diagnostic.Error!ast.Function {
         const c_abi = self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "extern");
         const host: ?Span = if (c_abi or (self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "host"))) self.current().span else null;
         // NEW-CORE-S5-HOST-1: host functions were retired with their registered
-        // adapters (S5-D5); C interop is `extern def` with `--link FILE.c`.
+        // adapters (S5-D5); C interop is `extern func` with `--link FILE.c`.
         if (host != null and !c_abi) return self.sink.fail(host_retired_code, host.?, host_retired);
         if (host != null) self.cursor.pos += 1;
         const restricted = self.take(.kw_private);
@@ -1002,12 +1024,13 @@ pub const Parser = struct {
             if (type_parameters.len != 0) return self.sink.fail("E_HOST_DECLARATION", span, "generic host declarations are not supported");
             if (self.current().tag != .ident or !std.mem.eql(u8, self.src.text(self.current().span), "effects")) return self.sink.fail("E_HOST_EFFECTS", span, "host declarations require an explicit effects(host, ...) contract");
         }
+        const failure_type = if (self.word("fails")) try self.typeName() else null;
         const effect_bound = try self.effectBound();
         if (host) |span| if (effect_bound.?.allowed & effects.bit(.host) == 0) return self.sink.fail("E_HOST_EFFECTS", span, "host declarations must include the host effect");
         try self.rejectMutatesClauseOf(parameters.parameters.items);
         if (c_abi and !annotated_return) return self.sink.fail("E_EXTERN_SIGNATURE", name.span, "extern functions require an explicit return type (unit for C void)");
-        // A foreign call is the one ambient authority left, so every `extern def`
-        // and `host def` takes the `Host` capability as a visible first parameter.
+        // A foreign call is the one ambient authority left, so every `extern func`
+        // and `host func` takes the `Host` capability as a visible first parameter.
         if (host != null) {
             if (parameters.parameters.items.len == 0 or !std.mem.eql(u8, self.src.text(parameters.parameters.items[0].ty), "Host")) return self.sink.fail(
                 "E_HOST_CAPABILITY",
@@ -1032,6 +1055,7 @@ pub const Parser = struct {
                 .type_parameters = type_parameters,
                 .parameters = try parameters.parameters.toOwnedSlice(self.storage),
                 .return_type = return_type,
+                .failure_type = failure_type,
                 .mut_positions = mut_positions,
                 .keyword_only_from = parameters.keyword_only_from,
             },
@@ -1058,9 +1082,14 @@ pub const Parser = struct {
                 list.keyword_only_from = list.parameters.items.len;
                 continue;
             }
+            const named = self.word("named");
+            if (named and list.keyword_only_from == null) list.keyword_only_from = list.parameters.items.len;
+            const prefix_mut = self.identIsMut() and self.tokens[self.cursor.pos + 1].tag == .ident;
+            if (prefix_mut) self.cursor.pos += 1;
             const parameter = try self.declaredName();
             _ = try self.expect(.colon);
             const mutable = self.atMutParameter();
+            if (mutable and prefix_mut) return self.sink.fail("E_PARAMETER_MODIFIER", self.current().span, "write `mut` once before the parameter name");
             if (mutable) self.cursor.pos += 1;
             const ty = try self.typeName();
             const default_value = if (self.take(.equal)) try self.defaultArgument() else null;
@@ -1070,7 +1099,7 @@ pub const Parser = struct {
                 if (default_seen and default_value == null) return self.sink.fail(eDefaultArgument, parameter, "required parameters must precede parameters with defaults");
                 default_seen = default_seen or default_value != null;
             }
-            try list.parameters.append(self.storage, .{ .name = parameter, .ty = ty, .default_value = default_value, .mut = mutable });
+            try list.parameters.append(self.storage, .{ .name = parameter, .ty = ty, .default_value = default_value, .mut = mutable or prefix_mut, .named = named });
             if (!self.take(.comma) or self.current().tag == .rparen) break;
         };
         return list;
@@ -1420,7 +1449,7 @@ pub const Parser = struct {
             _ = try self.expect(.lparen);
             _ = try self.expect(.rparen);
             break :resource null;
-        } else try self.conditionExpression();
+        } else try self.boundaryExpression();
         const name: ?Span = if (self.take(.kw_as)) (try self.expect(.ident)).span else null;
         const body = try self.block(null);
         return self.addStatement(.{
@@ -1428,13 +1457,52 @@ pub const Parser = struct {
             .data = .{ .with_scope = .{ .resource = resource, .name = name, .body = body } },
         });
     }
+    fn boundaryExpression(self: *Parser) diagnostic.Error!ast.NodeId {
+        const first = self.current().span;
+        if (!self.word("try")) return self.expression(0);
+        const value = try self.expression(0);
+        return self.append(.{ .span = .join(first, self.syntax.nodes.items[@backingInt(value)].span), .data = .{ .propagate = value } });
+    }
     fn conditionExpression(self: *Parser) diagnostic.Error!ast.NodeId {
         return self.expression(0);
+    }
+    fn redesignedStatement(self: *Parser, first: lex.Token) diagnostic.Error!?ast.StatementId {
+        if (self.current().tag == .kw_const or (self.identIsMut() and self.tokens[self.cursor.pos + 1].tag == .ident)) {
+            self.cursor.pos += 1;
+            const name = try self.declaredName();
+            if (self.current().tag == .comma) {
+                const declaration = try self.destructuringDeclaration(first, name);
+                return declaration;
+            }
+            const annotation = if (self.take(.colon)) try self.typeName() else null;
+            _ = try self.expect(.equal);
+            const value = try self.boundaryExpression();
+            const end = try self.statementEnd(first);
+            const result = try self.addStatement(.{ .span = .join(first.span, end.span), .data = .{ .binding = .{ .name = name, .annotation = annotation, .mutable = first.tag != .kw_const, .value = value } } });
+            return result;
+        }
+        if (self.word("fail") or self.word("yield")) {
+            const failure = std.mem.eql(u8, self.src.text(first.span), "fail");
+            const value = try self.boundaryExpression();
+            const end = try self.statementEnd(first);
+            const result = try self.addStatement(.{ .span = .join(first.span, end.span), .data = if (failure) .{ .fail = value } else .{ .yield_value = value } });
+            return result;
+        }
+        if (self.word("try")) {
+            if (self.current().tag == .indent) return self.hintHere(.exceptions);
+            self.cursor.pos -= 1;
+            const value = try self.boundaryExpression();
+            const end = try self.statementEnd(first);
+            const result = try self.addStatement(.{ .span = .join(first.span, end.span), .data = .{ .discard = value } });
+            return result;
+        }
+        return null;
     }
     fn statement(self: *Parser) diagnostic.Error!ast.StatementId {
         try self.enter();
         defer self.cursor.depth -= 1;
         const first = self.current();
+        if (try self.redesignedStatement(first)) |result| return result;
         if (self.take(.kw_with)) return self.withStatement(first.span);
         if (self.take(.kw_match)) {
             const value = try self.conditionExpression();
@@ -1444,7 +1512,7 @@ pub const Parser = struct {
                 _ = try self.expect(.kw_case);
                 const pattern = try self.matchPattern();
                 const body = try self.block(null);
-                try arms.append(self.storage, .{ .ty = pattern.ty, .name = pattern.name, .bindings = pattern.bindings, .body = body });
+                try arms.append(self.storage, .{ .ty = pattern.ty, .name = pattern.name, .bindings = pattern.bindings, .binding_names = pattern.binding_names, .payload_patterns = pattern.payload_patterns, .body = body });
                 if (self.current().tag != .kw_case) break;
             };
             const close = try self.expect(.dedent);
@@ -1452,6 +1520,7 @@ pub const Parser = struct {
         }
         if (self.take(.kw_if) or self.take(.kw_elif)) {
             const condition = try self.conditionExpression();
+            if (self.word("then")) return self.conditionalDiscard(first, condition);
             const then_body = try self.block(null);
             const else_body = if (self.current().tag == .kw_elif)
                 try self.statement()
@@ -1504,7 +1573,7 @@ pub const Parser = struct {
             .kw_return => ret: {
                 self.cursor.pos += 1;
                 const empty = self.current().tag == .semicolon or lex.implicitTerminator(self.src.bytes, self.tokens, self.cursor.pos);
-                break :ret .{ .ret = if (empty) try self.append(.{ .span = first.span, .data = .unit }) else try self.bareTuple(try self.expression(0)) };
+                break :ret .{ .ret = if (empty) try self.append(.{ .span = first.span, .data = .unit }) else try self.bareTuple(try self.boundaryExpression()) };
             },
             .ident => assignment: {
                 if (self.tokens[self.cursor.pos + 1].tag == .comma) {
@@ -1515,12 +1584,12 @@ pub const Parser = struct {
                     self.cursor.pos += 2;
                     const annotation = try self.typeName();
                     _ = try self.expect(.equal);
-                    break :assignment .{ .binding = .{ .name = first.span, .mutable = true, .annotation = annotation, .value = try self.expression(0) } };
+                    break :assignment .{ .binding = .{ .name = first.span, .mutable = true, .annotation = annotation, .value = try self.boundaryExpression() } };
                 }
                 // `_ = value` is the only spelling that drops a value.
                 if (std.mem.eql(u8, self.src.text(first.span), "_") and self.tokens[self.cursor.pos + 1].tag == .equal) {
                     self.cursor.pos += 2;
-                    break :assignment .{ .discard = try self.expression(0) };
+                    break :assignment .{ .discard = try self.boundaryExpression() };
                 }
                 const operator = self.tokens[self.cursor.pos + 1];
                 const op: ast.AssignmentOp = assignmentOperation(operator.tag) orelse {
@@ -1528,7 +1597,7 @@ pub const Parser = struct {
                     break :assignment .{ .discard = try self.assignmentExpression() };
                 };
                 self.cursor.pos += 2;
-                break :assignment .{ .assignment = .{ .name = first.span, .value = try self.expression(0), .op = op, .op_span = operator.span } };
+                break :assignment .{ .assignment = .{ .name = first.span, .value = try self.boundaryExpression(), .op = op, .op_span = operator.span } };
             },
             else => expression: {
                 implicit_discard = true;
@@ -1615,6 +1684,25 @@ pub const Parser = struct {
         if (self.current().tag == .kw_else) return self.alternative(expression_code, for_else_message, loop_else_accepted);
         const span: Span = .join(first.span, self.syntax.statements.items[@backingInt(body)].span);
         return self.loopStatement(header, body, span);
+    }
+    /// Explicit local declarations destructure one tuple into named bindings.
+    fn destructuringDeclaration(self: *Parser, first: lex.Token, name: Span) diagnostic.Error!ast.StatementId {
+        const head = try self.append(.{ .span = name, .data = .{ .name = name } });
+        const targets = try self.destructuringTargets(head);
+        for (self.syntax.nodes.items[@backingInt(targets)].data.tuple) |target| {
+            const node = self.syntax.nodes.items[@backingInt(target)];
+            if (node.data != .name) return self.sink.fail("E_BINDING_TARGET", node.span, "a destructuring declaration binds names; use a separate assignment for fields or elements");
+        }
+        _ = try self.expect(.equal);
+        const value = try self.bareTuple(try self.boundaryExpression());
+        const end = try self.statementEnd(first);
+        const span: Span = .join(first.span, end.span);
+        const assignment = try self.append(.{ .span = span, .data = .{ .field_assignment = .{
+            .target = targets,
+            .value = value,
+            .declaration = first.tag != .kw_const,
+        } } });
+        return self.addStatement(.{ .span = span, .data = .{ .discard = assignment } });
     }
     /// `x, y = value`: a destructuring assignment. Both sides are `.tuple` nodes
     /// in source order and the whole statement keeps the shape a field
@@ -1719,12 +1807,27 @@ pub const Parser = struct {
         if (self.current().tag == .dedent or self.current().tag == .eof) return false;
         return lex.implicitTerminator(self.src.bytes, self.tokens, self.cursor.pos);
     }
+    fn expressionHead(self: *Parser, token: lex.Token) diagnostic.Error!?ast.NodeId {
+        if (token.tag != .ident) return null;
+        if (std.mem.eql(u8, self.src.text(token.span), "try")) return self.sink.fail(
+            "E_TRY_POSITION",
+            token.span,
+            "`try` is permitted only at a statement value boundary; extract the fallible operation into a declaration",
+        );
+        if (std.mem.eql(u8, self.src.text(token.span), "lambda")) {
+            const value = try self.lambdaExpression(token);
+            return value;
+        }
+        return null;
+    }
     fn expression(self: *Parser, min_precedence: u8) diagnostic.Error!ast.NodeId {
         try self.enter();
         defer self.cursor.depth -= 1;
         const token = self.current();
-        if (token.tag == .ident and std.mem.eql(u8, self.src.text(token.span), "lambda")) return self.lambdaExpression(token);
+        if (try self.expressionHead(token)) |value| return value;
         var left: ast.NodeId = switch (token.tag) {
+            .kw_if => try self.forwardConditional(token),
+            .kw_match => try self.matchExpression(token),
             .kw_restrict_resource => try self.parseRestrict(token),
             .kw_read_resource, .kw_write_resource => try self.parseResourceIo(token),
             .kw_environment_get => try self.parseEnvironmentGated(token),
@@ -1761,17 +1864,7 @@ pub const Parser = struct {
             .kw_f64_floor, .kw_f64_ceil, .kw_f64_trunc, .kw_f64_abs, .kw_f64_neg, .kw_f64_from_u64, .kw_f64_to_u64 => try self.parseFloatUnary(token),
             .kw_wrap => try self.parseWrap(token),
             .kw_i8, .kw_i16, .kw_i32, .kw_i64, .kw_u8, .kw_u16, .kw_u32, .kw_u64 => try self.parseWidthConversion(token),
-            .lbracket => list: {
-                _ = self.take(.lbracket);
-                var values: std.ArrayList(ast.NodeId) = .empty;
-                if (self.current().tag != .rbracket) while (true) {
-                    try values.append(self.storage, try self.expression(0));
-                    if (values.items.len == 1 and self.current().tag == .kw_for) break :list try self.parseComprehension(token, values.items[0]);
-                    if (!self.take(.comma) or self.current().tag == .rbracket) break;
-                };
-                const close = try self.expect(.rbracket);
-                break :list try self.append(.{ .span = .join(token.span, close.span), .data = .{ .list_literal = try values.toOwnedSlice(self.storage) } });
-            },
+            .lbracket => try self.listLiteral(token),
             .kw_len, .kw_replace => if (self.declaresFunction(token.span) or (token.tag == .kw_replace and self.recordUpdateAhead())) try self.parseLeaf(token) else try self.parseBuiltin(token),
             .kw_unwrap => try self.parseBuiltin(token),
             .kw_todo => try self.parseHole(token),
@@ -1802,7 +1895,7 @@ pub const Parser = struct {
                 _ = try removed_names.rejectMarker(self.sink, self.src.bytes, token.span);
                 return self.pythonExpressionFailure(token);
             },
-            // A `def` or `match` in expression position, and the second `*` or
+            // A `func` or `match` in expression position, and the second `*` or
             // `<` of a `**` or `<<`, name their accepted spelling; every other
             // token keeps the plain rejection.
             else => return self.pythonExpressionFailure(token),
@@ -1862,6 +1955,62 @@ pub const Parser = struct {
     /// arm at the lowest precedence, so `a if p else b if q else c` nests in its
     /// else arm. A `kw_if` on a new logical line starts an `if` statement, not a
     /// conditional, so the caller checks the line boundary first.
+    fn listLiteral(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
+        _ = self.take(.lbracket);
+        if (self.current().tag == .kw_for) return self.sourceComprehension(token);
+        var values: std.ArrayList(ast.NodeId) = .empty;
+        if (self.current().tag != .rbracket) while (true) {
+            try values.append(self.storage, try self.expression(0));
+            if (values.items.len == 1 and self.current().tag == .kw_for) return self.parseComprehension(token, values.items[0]);
+            if (!self.take(.comma) or self.current().tag == .rbracket) break;
+        };
+        const close = try self.expect(.rbracket);
+        return self.append(.{ .span = .join(token.span, close.span), .data = .{ .list_literal = try values.toOwnedSlice(self.storage) } });
+    }
+    fn forwardConditional(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
+        self.cursor.pos += 1;
+        const condition = try self.expression(0);
+        if (!self.word("then")) return self.sink.fail("E_CONDITIONAL", self.current().span, "conditional values require `if condition then value else value`");
+        return self.conditionalValues(token.span, condition);
+    }
+    fn conditionalValues(self: *Parser, first: Span, condition: ast.NodeId) diagnostic.Error!ast.NodeId {
+        const then_value = try self.expression(0);
+        _ = try self.expect(.kw_else);
+        const else_value = try self.expression(0);
+        return self.append(.{ .span = .join(first, self.syntax.nodes.items[@backingInt(else_value)].span), .data = .{ .conditional = .{ .condition = condition, .then_value = then_value, .else_value = else_value } } });
+    }
+    /// A conditional value used as a statement follows ordinary discard rules.
+    fn conditionalDiscard(self: *Parser, first: lex.Token, condition: ast.NodeId) diagnostic.Error!ast.StatementId {
+        const value = try self.conditionalValues(first.span, condition);
+        const end = try self.statementEnd(first);
+        return self.addStatement(.{ .span = .join(first.span, end.span), .implicit_discard = true, .data = .{ .discard = value } });
+    }
+    fn sourceComprehension(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
+        _ = try self.expect(.kw_for);
+        const name = try self.expect(.ident);
+        _ = try self.expect(.kw_in);
+        const input = try self.expression(1);
+        const filter = if (self.take(.kw_if)) try self.expression(1) else null;
+        if (!self.word("yield")) return self.sink.fail("E_COMPREHENSION", self.current().span, "source-first comprehensions require `yield` before the produced value");
+        const output = try self.expression(0);
+        const close = try self.expect(.rbracket);
+        const src: ast.Comprehension.Source = if (try self.rangeBounds(input)) |bounds| .{ .range = bounds } else .{ .iterable = input };
+        return self.append(.{ .span = .join(token.span, close.span), .data = .{ .comprehension = .{ .output = output, .name = name.span, .source = src, .filter = filter } } });
+    }
+    fn matchExpression(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
+        self.cursor.pos += 1;
+        const value = try self.expression(0);
+        _ = try self.expect(.indent);
+        var arms: std.ArrayList(ast.MatchArm) = .empty;
+        while (self.current().tag != .dedent) {
+            _ = try self.expect(.kw_case);
+            const pattern = try self.matchPattern();
+            const body = try self.block(null);
+            try arms.append(self.storage, .{ .ty = pattern.ty, .name = pattern.name, .bindings = pattern.bindings, .binding_names = pattern.binding_names, .payload_patterns = pattern.payload_patterns, .body = body });
+        }
+        const close = try self.expect(.dedent);
+        return self.append(.{ .span = .join(token.span, close.span), .data = .{ .match_expression = .{ .value = value, .arms = try arms.toOwnedSlice(self.storage) } } });
+    }
     fn conditionalExpression(self: *Parser, then_value: ast.NodeId) diagnostic.Error!ast.NodeId {
         self.cursor.pos += 1;
         const condition = try self.expression(1);
@@ -2417,7 +2566,7 @@ pub const Parser = struct {
             .arguments = try arguments.toOwnedSlice(self.storage),
         } } });
     }
-    const Pattern = struct { ty: Span, name: Span, bindings: []const ?Span = &.{} };
+    const Pattern = struct { payload_patterns: []const ast.PatternField = &.{}, binding_names: []const ?Span = &.{}, ty: Span, name: Span, bindings: []const ?Span = &.{} };
     fn matchPattern(self: *Parser) diagnostic.Error!Pattern {
         const head = self.current();
         // A case names a union, enum or result case — or `_`, or `None`. A
@@ -2436,15 +2585,35 @@ pub const Parser = struct {
         }
         if (self.take(.lparen)) {
             var bindings: std.ArrayList(?Span) = .empty;
+            var binding_names: std.ArrayList(?Span) = .empty;
+            var payload_patterns: std.ArrayList(ast.PatternField) = .empty;
             if (self.current().tag != .rparen) while (true) {
-                const binding = (try self.expect(.ident)).span;
-                try bindings.append(self.storage, if (std.mem.eql(u8, self.src.text(binding), "_")) null else binding);
+                const labelled = self.current().tag == .ident and self.tokens[self.cursor.pos + 1].tag == .equal;
+                const label = if (labelled) (try self.expect(.ident)).span else null;
+                if (labelled) _ = try self.expect(.equal);
+                const field = try self.payloadPattern();
+                try payload_patterns.append(self.storage, .{ .name = label, .pattern = field });
+                try binding_names.append(self.storage, label);
+                try bindings.append(self.storage, if (field.data == .binding) field.data.binding else null);
                 if (!self.take(.comma) or self.current().tag == .rparen) break;
             };
             _ = try self.expect(.rparen);
             pattern.bindings = try bindings.toOwnedSlice(self.storage);
+            pattern.binding_names = try binding_names.toOwnedSlice(self.storage);
+            pattern.payload_patterns = try payload_patterns.toOwnedSlice(self.storage);
         }
         return pattern;
+    }
+    fn payloadPattern(self: *Parser) diagnostic.Error!ast.Pattern {
+        try self.enter();
+        defer self.cursor.depth -= 1;
+        const head = self.current();
+        if (head.tag == .ident and self.tokens[self.cursor.pos + 1].tag != .dot and self.tokens[self.cursor.pos + 1].tag != .lparen and self.tokens[self.cursor.pos + 1].tag != .lbracket) {
+            self.cursor.pos += 1;
+            return .{ .span = head.span, .data = .{ .binding = if (std.mem.eql(u8, self.src.text(head.span), "_")) null else head.span } };
+        }
+        const nested = try self.matchPattern();
+        return .{ .span = .join(head.span, self.tokens[self.cursor.pos - 1].span), .data = .{ .variant = .{ .ty = nested.ty, .name = nested.name, .fields = nested.payload_patterns } } };
     }
     fn sameExpressionLine(self: *Parser) bool {
         return self.cursor.delimiters != 0 or self.cursor.pos == 0 or std.mem.indexOfScalar(u8, self.src.bytes[self.tokens[self.cursor.pos - 1].span.end..self.current().span.start], '\n') == null;
@@ -2465,8 +2634,8 @@ pub const Parser = struct {
             if (self.tokens[position].tag == .rbracket) brackets -|= 1;
             switch (self.tokens[position].tag) {
                 .dot => if (applied and brackets == 0) return false,
-                .comma, .colon => if (brackets == 0) return false,
-                .lparen => return applied and brackets == 0,
+                .comma, .colon, .rparen => if (brackets == 0) return false,
+                .lparen => if (brackets == 0) return applied,
                 else => if (!typeArgumentToken(self.tokens[position].tag)) return false,
             }
         }

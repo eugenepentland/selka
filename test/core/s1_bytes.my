@@ -3,7 +3,7 @@
 # cafe7fea7): lengths, decoding, equality, search and dictionary keys.
 
 
-def decoded(raw: bytes) -> str:
+func decoded(raw: bytes) -> str:
     match raw.decode():
         case Ok(value):
             return value
@@ -11,16 +11,16 @@ def decoded(raw: bytes) -> str:
             return "!" + message
 
 
-def main(out: Stream) -> int:
-    t = "héllo wörld".encode()
-    a = "hello world".encode()
-    parts = [t[0:3], t[1:3], t[1:2], t[2:2], a[1:4], a.view(6, 11), t.view(7, 10), t[-4:], t[0:99], a[-100:3]]
-    keys: dict[bytes, int] = {}
+func main(out: Stream) -> int:
+    mut t = "héllo wörld".encode()
+    mut a = "hello world".encode()
+    mut parts = [t[0:3], t[1:3], t[1:2], t[2:2], a[1:4], a.view(6, 11), t.view(7, 10), t[-4:], t[0:99], a[-100:3]]
+    mut keys: dict[bytes, int] = {}
     for p in parts:
-        text = decoded(p)
+        mut text = decoded(p)
         out.print(len(p), text, len(text), p == a[1:4], p.find(b"l"))
         keys[p] = keys.get(p, 0) + len(p)
     out.print(len(keys), keys[a[1:4]], keys.get(t[0:3], -1))
-    s = decoded(a[0:5]) + decoded(t[0:3])
+    mut s = decoded(a[0:5]) + decoded(t[0:3])
     out.print(s, len(s), s[5], s.find("é"), s[1:6])
     return 0

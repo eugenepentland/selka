@@ -1,11 +1,11 @@
-def lookup(key: int) -> Option[int]:
+func lookup(key: int) -> int?:
     return Some(key + 1)
 
-def get(key: int) -> Option[int]:
-    found = lookup(key)?
+func get(key: int) -> int?:
+    mut found = try lookup(key)
     return Some(found + 1)
 
-def main() -> int:
+func main() -> int:
     match get(0):
         case Some(value):
             return value + 40

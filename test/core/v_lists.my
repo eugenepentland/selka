@@ -1,4 +1,3 @@
-module v_lists
 
 record Cell:
     code: int
@@ -7,90 +6,90 @@ record Cell:
 
 
 record Grid:
-    cells: list[Cell]
+    cells: Cell[]
 
 
-union Value:
-    integer: int,
-    boolean: bool,
-    cell: Cell
+enum Value:
+    integer(value: int)
+    boolean(value: bool)
+    cell(value: Cell)
 
 
-def push_one(xs0: list[int], v: int) -> int:
-    xs = xs0
+func push_one(xs0: int[], v: int) -> int:
+    mut xs = xs0
     xs.append(v)
     return len(xs) + xs0[0]
 
 
-def write_cells(cells0: list[Cell], v: int) -> int:
-    cells = cells0
+func write_cells(cells0: Cell[], v: int) -> int:
+    mut cells = cells0
     cells[0].code = v
     cells[1].flag = not cells[1].flag
     cells[2] = Cell(code=v + 1, weight=v + 2, flag=True)
-    return cells[0].code * 100 + cells0[0].code + (1000 if cells[1].flag else 0) + cells[2].weight
+    return cells[0].code * 100 + cells0[0].code + (if (cells[1].flag) then (1000) else (0)) + cells[2].weight
 
 
-def as_integer(value: Value) -> int:
+func as_integer(value: Value) -> int:
     match value:
-        case Value.integer(n):
+        case Value.integer(value=n):
             return n
-        case Value.boolean(_):
+        case Value.boolean(value=_):
             return 0
-        case Value.cell(c):
+        case Value.cell(value=c):
             return c.code
 
 
-def stack_run(n: int) -> int:
-    stack: list[Value] = [Value.integer(n), Value.boolean(False)]
-    total = 0
+func stack_run(n: int) -> int:
+    mut stack: Value[] = [Value.integer(value=n), Value.boolean(value=False)]
+    mut total = 0
     for i in range(6):
-        popped = stack.pop()
+        mut popped = stack.pop()
         match popped:
-            case Value.boolean(b):
-                total += 3 if b else 1
-            case Value.integer(k):
+            case Value.boolean(value=b):
+                total += if (b) then (3) else (1)
+            case Value.integer(value=k):
                 total += k
-            case Value.cell(c):
+            case Value.cell(value=c):
                 total += c.weight
-        stack.append(Value.integer(i))
-        stack.append(Value.boolean(i % 2 == 0))
+        stack.append(Value.integer(value=i))
+        stack.append(Value.boolean(value=i % 2 == 0))
         if i % 3 == 0:
-            stack.append(Value.cell(Cell(code=i, weight=i * 7, flag=True)))
-        stack[0] = Value.integer(as_integer(stack[0]) + 1)
+            stack.append(Value.cell(value=Cell(code=i, weight=i * 7, flag=True)))
+        stack[0] = Value.integer(value=as_integer(stack[0]) + 1)
     return total + as_integer(stack[0]) * 1000 + len(stack)
 
 
-def peek(vs: list[Value], i: int) -> int:
+func peek(vs: Value[], i: int) -> int:
     match vs[i]:
-        case Value.integer(n):
+        case Value.integer(value=n):
             return n
-        case Value.boolean(b):
-            return 1 if b else 0
-        case Value.cell(c):
+        case Value.boolean(value=b):
+            return if (b) then (1) else (0)
+        case Value.cell(value=c):
             return c.code * 10 + c.weight
 
 
-def field_reads(cells: list[Cell], i: int) -> int:
-    return cells[i].code + cells[i].weight + (1 if cells[i].flag else 0)
+func field_reads(cells: Cell[], i: int) -> int:
+    return cells[i].code + cells[i].weight + (if (cells[i].flag) then (1) else (0))
 
 
-def drain(xs: list[int]) -> int:
-    copy = xs
-    total = 0
+func drain(xs: int[]) -> int:
+    mut copy = xs
+    mut total = 0
     while len(copy) > 0:
         total = total * 3 + copy.pop()
     return total
 
 
-def main(out: Stream) -> int:
+func main(out: Stream) -> int:
     out.print(push_one([4, 5, 6], 7))
-    cells = [Cell(code=1, weight=2, flag=True), Cell(code=2, weight=3, flag=False), Cell(code=5, weight=6, flag=False)]
+    mut cells = [Cell(code=1, weight=2, flag=True), Cell(code=2, weight=3, flag=False), Cell(code=5, weight=6, flag=False)]
     out.print(write_cells(cells, 55), cells[0].code, cells[2].code)
     out.print(stack_run(5))
-    vs = [Value.integer(5), Value.boolean(True), Value.cell(Cell(code=7, weight=8, flag=True))]
+    mut vs = [Value.integer(value=5), Value.boolean(value=True), Value.cell(value=Cell(code=7, weight=8, flag=True))]
     out.print(peek(vs, 0), peek(vs, 1), peek(vs, 2))
     out.print(field_reads(cells, 0), field_reads(cells, 2))
     out.print(drain([1, 2, 3, 4]))
-    g = Grid(cells=cells)
+    mut g = Grid(cells=cells)
     out.print(len(g.cells), g.cells[1].weight)
     return 0

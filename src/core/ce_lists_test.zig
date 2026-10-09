@@ -107,32 +107,32 @@ const field_stores =
     \\record Named:
     \\    name: str
     \\    pos: Vec
-    \\    tags: list[str]
+    \\    tags: str[]
     \\
     \\
-    \\def bump(bodies: mut list[Body], i: int, d: float):
+    \\func bump(mut bodies: Body[], i: int, d: float):
     \\    bodies[i].vx = bodies[i].vx + d
     \\
     \\
-    \\def rename(xs: mut list[Named], i: int, s: str):
+    \\func rename(mut xs: Named[], i: int, s: str):
     \\    xs[i].name = s
     \\    xs[i].pos.x = 3
     \\
     \\
-    \\def keep(xs: mut list[Named], i: int) -> int:
-    \\    before = xs[i]
+    \\func keep(mut xs: Named[], i: int) -> int:
+    \\    mut before = xs[i]
     \\    xs[i].pos.y = 9
     \\    return before.pos.y
     \\
     \\
-    \\def grow(xs: mut list[Named], i: int):
+    \\func grow(mut xs: Named[], i: int):
     \\    xs[i].tags.append("t")
     \\
     \\
-    \\def main(out: Stream) -> int:
-    \\    bodies = [Body(x=1.0, y=0.0, z=0.0, vx=0.0, vy=0.0, vz=0.0, mass=1.0)]
+    \\func main(out: Stream) -> int:
+    \\    mut bodies = [Body(x=1.0, y=0.0, z=0.0, vx=0.0, vy=0.0, vz=0.0, mass=1.0)]
     \\    bump(mut bodies, 0, 2.0)
-    \\    xs = [Named(name="a", pos=Vec(x=1, y=2), tags=[])]
+    \\    mut xs = [Named(name="a", pos=Vec(x=1, y=2), tags=[])]
     \\    rename(mut xs, 0, "b")
     \\    grow(mut xs, 0)
     \\    out.print(bodies[0].vx, xs[0].name, xs[0].pos.x, keep(mut xs, 0), len(xs[0].tags))
@@ -192,33 +192,33 @@ test "a store into a field of a list element is one in-place field store after t
         const trapped = try leakChecked(a, root, "ce_elements", flags, &.{ "x", "y", "z", "w" });
         try std.testing.expectEqual(@as(u8, 1), trapped.status);
         try std.testing.expectEqualStrings(expected_common, trapped.stdout);
-        try std.testing.expect(contains(trapped.stderr, "ce_elements.my:216:9: error[R_LIST_BOUNDS]: native execution failed (index 2, length 2)\n"));
+        try std.testing.expect(contains(trapped.stderr, "ce_elements.my:215:9: error[R_LIST_BOUNDS]: native execution failed (index 2, length 2)\n"));
     }
 }
 
 const whole_store =
     \\record Inner:
     \\    name: str
-    \\    tags: list[str]
+    \\    tags: str[]
     \\    n: int
     \\
     \\
     \\record Frame:
     \\    closure: int
     \\    inner: Inner
-    \\    code: list[int]
+    \\    code: int[]
     \\    ip: int
     \\    base: int
     \\
     \\
-    \\def put(frames: mut list[Frame], frame: Frame):
+    \\func put(mut frames: Frame[], frame: Frame):
     \\    frames[len(frames) - 1] = frame
     \\
     \\
-    \\def main(out: Stream) -> int:
-    \\    f = Frame(closure=1, inner=Inner(name="n", tags=[], n=0), code=[1], ip=0, base=0)
-    \\    frames = [f]
-    \\    g = f
+    \\func main(out: Stream) -> int:
+    \\    mut f = Frame(closure=1, inner=Inner(name="n", tags=[], n=0), code=[1], ip=0, base=0)
+    \\    mut frames = [f]
+    \\    mut g = f
     \\    g.ip = 4
     \\    put(mut frames, g)
     \\    out.print(frames[0].ip)
@@ -247,7 +247,7 @@ test "a read of a record field merges with an earlier identical read in another 
     defer arena.deinit();
     const a = arena.allocator();
     const source = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, try std.fmt.allocPrint(a, "{s}/ce_cow.my", .{options.fixtures}), a, .limited(1 << 20));
-    const text = try support.ownedText(a, source["module ce_cow\n".len..]);
+    const text = try support.ownedText(a, source["".len..]);
     // `it.rt.stack[i] = v` after a `mut` call through a write-back temporary, and the
     // collector's `rt.marker.marks[i] = False`: the index's negative branch splits each
     // into a read that reaches the list and one that writes it back. Every copy is a
@@ -270,30 +270,30 @@ test "a read of a record field merges with an earlier identical read in another 
 const big_part =
     \\record Big:
     \\    a: str
-    \\    b: list[int]
+    \\    b: int[]
     \\    c: int
     \\    d: int
     \\    e: int
     \\
     \\
     \\record Holder:
-    \\    items: list[Big]
+    \\    items: Big[]
     \\    n: int
     \\
     \\
-    \\def touch(h: mut Holder) -> int:
+    \\func touch(mut h: Holder) -> int:
     \\    h.n = h.n + 1
     \\    return h.n
     \\
     \\
-    \\def keep(h: mut Holder, i: int) -> int:
-    \\    x = h.items[i]
-    \\    k = touch(mut h)
+    \\func keep(mut h: Holder, i: int) -> int:
+    \\    mut x = h.items[i]
+    \\    mut k = touch(mut h)
     \\    return k + len(x.b) + len(x.a)
     \\
     \\
-    \\def main(out: Stream) -> int:
-    \\    h = Holder(items=[Big(a="s", b=[1], c=0, d=0, e=0)], n=0)
+    \\func main(out: Stream) -> int:
+    \\    mut h = Holder(items=[Big(a="s", b=[1], c=0, d=0, e=0)], n=0)
     \\    out.print(keep(mut h, 0))
     \\    return 0
     \\
@@ -305,7 +305,7 @@ test "an element's part read before a mut call and used after it holds its own c
     defer arena.deinit();
     const a = arena.allocator();
     const source = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, try std.fmt.allocPrint(a, "{s}/ce_cow.my", .{options.fixtures}), a, .limited(1 << 20));
-    const text = try support.ownedText(a, source["module ce_cow\n".len..]);
+    const text = try support.ownedText(a, source["".len..]);
     // `match rt.objects[ref]: case klass(k): allocate(mut rt, …); … k.methods`: the payload
     // read is retained, not `rt.objects`, so `allocate` finds the list unique.
     const call_value = functionIr(text, "call_value");
@@ -332,8 +332,8 @@ test "an element's part read before a mut call and used after it holds its own c
 }
 
 const slice_loops =
-    \\def total(xs: list[int], a: int, b: int) -> int:
-    \\    n = 0
+    \\func total(xs: int[], a: int, b: int) -> int:
+    \\    mut n = 0
     \\    for x in xs[a:b]:
     \\        if x < 0:
     \\            break
@@ -341,16 +341,16 @@ const slice_loops =
     \\    return n
     \\
     \\
-    \\def written(xs: mut list[int]) -> int:
-    \\    n = 0
+    \\func written(mut xs: int[]) -> int:
+    \\    mut n = 0
     \\    for x in xs[1:]:
     \\        xs[0] = x
     \\        n = n + x
     \\    return n
     \\
     \\
-    \\def main(out: Stream) -> int:
-    \\    xs = [1, 2, 3]
+    \\func main(out: Stream) -> int:
+    \\    mut xs = [1, 2, 3]
     \\    out.print(total(xs, 1, 9), written(mut xs))
     \\    return 0
     \\
@@ -388,10 +388,10 @@ test "a slice used only as a loop source is iterated in place, and a slice still
 }
 
 const appends_loop =
-    \\def main(out: Stream) -> int:
-    \\    empty: list[int] = []
-    \\    buffer = byte_buffer(empty)
-    \\    piece = b"mylang!\n"
+    \\func main(out: Stream) -> int:
+    \\    mut empty: int[] = []
+    \\    mut buffer = byte_buffer(empty)
+    \\    mut piece = b"mylang!\n"
     \\    for i in range(1000):
     \\        _ = buffer.append_range(piece, 0, 8)
     \\    out.print(len(buffer))
@@ -400,8 +400,8 @@ const appends_loop =
 ;
 
 const appends_several =
-    \\def fill(buffer: mut byte_buffer, piece: bytes, text: str) -> int:
-    \\    n = 0
+    \\func fill(mut buffer: byte_buffer, piece: bytes, text: str) -> int:
+    \\    mut n = 0
     \\    if buffer.append_range(piece, 1, 3):
     \\        n += 1
     \\    if buffer.append_utf8(text):
@@ -411,9 +411,9 @@ const appends_several =
     \\    return n
     \\
     \\
-    \\def main(out: Stream) -> int:
-    \\    empty: list[int] = []
-    \\    buffer = byte_buffer(empty)
+    \\func main(out: Stream) -> int:
+    \\    mut empty: int[] = []
+    \\    mut buffer = byte_buffer(empty)
     \\    out.print(fill(mut buffer, b"abcd", "xy"), len(buffer))
     \\    return 0
     \\
@@ -466,5 +466,6 @@ fn expectGrowthTrap(a: std.mem.Allocator, root: []const u8, expected: []const u8
     try std.testing.expect(ran.term == .exited and ran.term.exited == 1);
     try std.testing.expectEqualStrings(expected, ran.stdout);
     try std.testing.expect(contains(ran.stderr, "error[R_MEMORY_BUDGET]: memory budget exhausted"));
-    try std.testing.expect(contains(ran.stderr, "in ce_appends::main at ce_appends.my:61:17\n"));
+    const frame = try std.fmt.allocPrint(a, "in main at {s}/ce_appends.my:60:17\n", .{options.fixtures});
+    try std.testing.expect(contains(ran.stderr, frame));
 }

@@ -12,14 +12,14 @@ test "a scalar-only mut record parameter writes the caller" {
         \\record Counter:
         \\    n: int
         \\
-        \\def increment(c: mut Counter) -> None:
+        \\func increment(mut c: Counter) -> Unit:
         \\    c.n = c.n + 1
         \\
-        \\def reset(c: mut Counter) -> None:
+        \\func reset(mut c: Counter) -> Unit:
         \\    c = Counter(n=10)
         \\
-        \\def main() -> int:
-        \\    c = Counter(n=1)
+        \\func main() -> int:
+        \\    mut c = Counter(n=1)
         \\    increment(mut c)
         \\    reset(mut c)
         \\    return c.n
@@ -32,18 +32,18 @@ const tools = [_][]const u8{
     "--zig=" ++ @import("test_options").zig_path,
 };
 const host_program =
-    \\host def measure(host: Host, x: i64) -> i64 effects(host)
+    \\host func measure(host: Host, x: i64) -> i64 effects(host)
     \\
     \\
-    \\def main(host: Host) -> i64:
+    \\func main(host: Host) -> i64:
     \\    return measure(host, 6)
 ;
 
 // spec-case: CONSTANT-2
 test "CLI managed constants check and reject expressions" {
-    try invoke("check", "const S: str = \"hé🙂\"\nconst B: bytes = b\"\\x00\\xff\"\ndef main() -> int:\n    return len(S) + len(B)\n", 0, "", "");
-    try invoke("check", "const S: str = \"a\" + \"b\"\ndef main() -> int:\n    return 0\n", 1, "", "E_CONSTANT_EXPRESSION");
-    try invoke("check", "const B: bytes = OTHER\nconst OTHER: bytes = b\"x\"\ndef main() -> int:\n    return 0\n", 1, "", "E_CONSTANT_EXPRESSION");
+    try invoke("check", "const S: str = \"hé🙂\"\nconst B: bytes = b\"\\x00\\xff\"\nfunc main() -> int:\n    return len(S) + len(B)\n", 0, "", "");
+    try invoke("check", "const S: str = \"a\" + \"b\"\nfunc main() -> int:\n    return 0\n", 1, "", "E_CONSTANT_EXPRESSION");
+    try invoke("check", "const B: bytes = OTHER\nconst OTHER: bytes = b\"x\"\nfunc main() -> int:\n    return 0\n", 1, "", "E_CONSTANT_EXPRESSION");
 }
 
 fn expectConstantProcess(argv: []const []const u8, expected: []const u8) !void {
@@ -90,15 +90,14 @@ fn managedConstantModes(temporary: *testing.TmpDir, data: []const u8, expected: 
 // clean project prints none, and the runner has nothing to repeat.
 test "CLI run reports each frontend warning once" {
     const outcome = try runProjectFixture("run",
-        \\module main
         \\
         \\
-        \\def touch(values: mut list[int]) -> None:
+        \\func touch(mut values: int[]) -> Unit:
         \\    values[0] = 1
         \\
         \\
-        \\def main() -> int:
-        \\    values = [1]
+        \\func main() -> int:
+        \\    mut values = [1]
         \\    touch(mut values)
         \\    return 0
     , &.{});
@@ -113,35 +112,34 @@ test "CLI managed constants import run build installed and invalidate warm cache
     var temporary = testing.tmpDir(.{});
     defer temporary.cleanup();
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data =
-        \\module main
         \\import constants
-        \\def read[T]() -> str:
+        \\func read[T]() -> str:
         \\    return constants.TEXT
-        \\def main(out: Stream) -> int:
+        \\func main(out: Stream) -> int:
         \\    out.print(read[int]())
         \\    out.print(len(constants.DATA))
         \\    out.print(constants.DATA[1])
         \\    return 0
     });
-    const original = "module constants\npublic const TEXT: str = \"hé🙂\"\npublic const DATA: bytes = b\"\\x00\\xff\"\n";
+    const original = "public const TEXT: str = \"hé🙂\"\npublic const DATA: bytes = b\"\\x00\\xff\"\n";
     try managedConstantModes(&temporary, original, "hé🙂\n2\n255\n");
     try managedConstantModes(&temporary, original, "hé🙂\n2\n255\n");
     // Same byte lengths, new contents: unchanged callers must observe the new IL.
-    try managedConstantModes(&temporary, "module constants\npublic const TEXT: str = \"hà🙃\"\npublic const DATA: bytes = b\"\\x00\\xfe\"\n", "hà🙃\n2\n254\n");
+    try managedConstantModes(&temporary, "public const TEXT: str = \"hà🙃\"\npublic const DATA: bytes = b\"\\x00\\xfe\"\n", "hà🙃\n2\n254\n");
 }
 
 // spec-case: NEW-CORE-S5-HOST-1
-test "CLI refuses a retired host declaration at check time and names extern def" {
+test "CLI refuses a retired host declaration at check time and names extern func" {
     try invoke("check", host_program, 1, "", "error[E_HOST_RETIRED]");
-    try invoke("run", host_program, 1, "", "declare the function `extern def`");
+    try invoke("run", host_program, 1, "", "declare the function `extern func`");
 }
 // spec: HOST-CAPABILITY-1
 test "CLI threads a Host capability through an extern call and runs it natively" {
     const source =
-        \\extern def abs(host: Host, x: i32) -> i32 effects(host)
+        \\extern func abs(host: Host, x: i32) -> i32 effects(host)
         \\
         \\
-        \\def main(host: Host) -> i64:
+        \\func main(host: Host) -> i64:
         \\    return i64(abs(host, -7))
     ;
     try invoke("check", source, 0, "", "");
@@ -153,15 +151,15 @@ test "CLI passes every NaN to foreign code as the canonical quiet NaN" {
     // argument that crossed uncanonicalized would answer -1.0. A NaN the
     // foreign function returns enters the guest and still prints `nan`.
     const source =
-        \\extern def copysign(host: Host, x: float, y: float) -> float effects(host)
+        \\extern func copysign(host: Host, x: float, y: float) -> float effects(host)
         \\
         \\
-        \\def nan_of(zero: float) -> float:
+        \\func nan_of(zero: float) -> float:
         \\    return zero / zero
         \\
         \\
-        \\def main(host: Host, out: Stream) -> int:
-        \\    nan = nan_of(0.0)
+        \\func main(host: Host, out: Stream) -> int:
+        \\    mut nan = nan_of(0.0)
         \\    out.print(copysign(host, 1.0, nan), copysign(host, 1.0, -nan), copysign(host, 1.0, -2.0))
         \\    out.print(copysign(host, -nan, 1.0), copysign(host, nan, -1.0))
         \\    return 0
@@ -171,10 +169,10 @@ test "CLI passes every NaN to foreign code as the canonical quiet NaN" {
 // spec-case: HOST-CAPABILITY-1
 test "CLI withholds Host under restrict and grants it with --allow-host" {
     const source =
-        \\extern def abs(host: Host, x: i32) -> i32 effects(host)
+        \\extern func abs(host: Host, x: i32) -> i32 effects(host)
         \\
         \\
-        \\def main(host: Host) -> i64:
+        \\func main(host: Host) -> i64:
         \\    return i64(abs(host, -7))
     ;
     try invokeOptions("run", source, &.{"--restrict"}, 2, "", "--allow-host");
@@ -183,8 +181,8 @@ test "CLI withholds Host under restrict and grants it with --allow-host" {
 // spec-case: NEW-CORE-S5-ARENA-2
 test "CLI checks and runs a managed value assigned across a retired arena block" {
     const source =
-        \\def main() -> int:
-        \\    keeper: list[int] = []
+        \\func main() -> int:
+        \\    mut keeper: int[] = []
         \\    with arena() as scratch:
         \\        keeper = [1, 2]
         \\    return len(keeper)
@@ -371,16 +369,16 @@ test "C2 ordinary body reuse crosses processes and relocates warnings" {
     const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache_base});
     defer testing.allocator.free(cache_argument);
     const seed =
-        \\def helper(n: i64) -> i64:
+        \\func helper(n: i64) -> i64:
         \\    return n + 1
         \\
         \\
-        \\def keep(n: i64) -> i64:
-        \\    unused = 3
+        \\func keep(n: i64) -> i64:
+        \\    mut unused = 3
         \\    return n + 1
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return keep(helper(40))
     ;
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = seed });
@@ -393,19 +391,19 @@ test "C2 ordinary body reuse crosses processes and relocates warnings" {
     try testing.expectEqual(@as(usize, 0), seeded.reused);
 
     const edited =
-        \\def helper(n: i64) -> i64:
+        \\func helper(n: i64) -> i64:
         \\    return n + 2
         \\
         \\
         \\type Marker = i64
         \\
         \\
-        \\def keep(n: i64) -> i64:
-        \\    unused = 3
+        \\func keep(n: i64) -> i64:
+        \\    mut unused = 3
         \\    return n + 1
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return keep(helper(40))
     ;
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = edited });
@@ -460,7 +458,7 @@ test "C2 damaged truncated oversized and foreign-version entries fall back fresh
     const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache_base});
     defer testing.allocator.free(cache_argument);
     const source =
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 42
     ;
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = source });
@@ -520,9 +518,9 @@ test "C2 concurrent publishers never expose a partial entry" {
     const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache_base});
     defer testing.allocator.free(cache_argument);
     const source =
-        \\def helper(n: i64) -> i64:
+        \\func helper(n: i64) -> i64:
         \\    return n + 1
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return helper(41)
     ;
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = source });
@@ -552,15 +550,14 @@ fn writeLadder(directory: std.Io.Dir, modules: usize, functions: usize, constant
         var text: std.Io.Writer.Allocating = .init(testing.allocator);
         defer text.deinit();
         const out = &text.writer;
-        try out.print("module m{d}\n", .{module});
         if (module > 0) try out.print("import m{d}\n", .{module - 1});
         try out.print("\n\npublic record Acc{d}:\n    total: int\n    count: int\n", .{module});
         var function: usize = 0;
         while (function < functions) : (function += 1) {
             const offset = if (module == 1 and function == 0) constant else module;
-            try out.print("\n\npublic def f{d}_{d}(n: int) -> int:\n    xs: list[int] = []\n    for k in range(n):\n        xs.append(k * {d} + {d})\n", .{ module, function, function + 1, offset });
-            if (module == 0 and function == 0) try out.writeAll("    spare = 1\n");
-            try out.print("    acc = Acc{d}(total=0, count=0)\n    for x in xs:\n        acc = Acc{d}(total=acc.total + x, count=acc.count + 1)\n", .{ module, module });
+            try out.print("\n\npublic func f{d}_{d}(n: int) -> int:\n    mut xs: int[] = []\n    for k in range(n):\n        xs.append(k * {d} + {d})\n", .{ module, function, function + 1, offset });
+            if (module == 0 and function == 0) try out.writeAll("    const spare = 1\n");
+            try out.print("    mut acc = Acc{d}(total=0, count=0)\n    for x in xs:\n        acc = Acc{d}(total=acc.total + x, count=acc.count + 1)\n", .{ module, module });
             if (module > 0) try out.print("    return acc.total + m{d}.f{d}_{d}(n - 1)\n", .{ module - 1, module - 1, function }) else try out.writeAll("    return acc.total\n");
         }
         const name = try std.fmt.allocPrint(testing.allocator, "m{d}.my", .{module});
@@ -569,7 +566,7 @@ fn writeLadder(directory: std.Io.Dir, modules: usize, functions: usize, constant
     }
     var main_text: std.Io.Writer.Allocating = .init(testing.allocator);
     defer main_text.deinit();
-    try main_text.writer.print("module main\nimport m{d}\n\n\ndef main() -> int:\n    total = 0\n", .{modules - 1});
+    try main_text.writer.print("import m{d}\n\n\nfunc main() -> int:\n    mut total = 0\n", .{modules - 1});
     var function: usize = 0;
     while (function < functions) : (function += 1) try main_text.writer.print("    total += m{d}.f{d}_{d}(5)\n", .{ modules - 1, modules - 1, function });
     try main_text.writer.writeAll("    return total - total\n");
@@ -652,15 +649,15 @@ test "a cached check sees a field renamed in a record reached only through a lis
     defer testing.allocator.free(entry);
     const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}/cache", .{directory});
     defer testing.allocator.free(cache_argument);
-    const shapes = "module shapes\npublic record Inner:\n    x: int\npublic record Outer:\n    items: list[Inner]\npublic def make() -> Outer:\n    items: list[Inner] = []\n    items.append(Inner(x=1))\n    return Outer(items=items)\n";
+    const shapes = "public record Inner:\n    x: int\npublic record Outer:\n    items: Inner[]\npublic func make() -> Outer:\n    mut items: Inner[] = []\n    items.append(Inner(x=1))\n    return Outer(items=items)\n";
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "shapes.my", .data = shapes });
-    try temporary.dir.writeFile(testing.io, .{ .sub_path = "user.my", .data = "module user\nimport shapes\npublic def first(o: shapes.Outer) -> int:\n    v = o.items[0]\n    return v.x\n" });
-    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "module main\nimport shapes\nimport user\ndef main() -> int:\n    return user.first(shapes.make())\n" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "user.my", .data = "import shapes\npublic func first(o: shapes.Outer) -> int:\n    mut v = o.items[0]\n    return v.x\n" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "import shapes\nimport user\nfunc main() -> int:\n    return user.first(shapes.make())\n" });
     const seed = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check", entry, cache_argument } });
     defer testing.allocator.free(seed.stdout);
     defer testing.allocator.free(seed.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, seed.term);
-    const renamed = "module shapes\npublic record Inner:\n    y: int\npublic record Outer:\n    items: list[Inner]\npublic def make() -> Outer:\n    items: list[Inner] = []\n    items.append(Inner(y=1))\n    return Outer(items=items)\n";
+    const renamed = "public record Inner:\n    y: int\npublic record Outer:\n    items: Inner[]\npublic func make() -> Outer:\n    mut items: Inner[] = []\n    items.append(Inner(y=1))\n    return Outer(items=items)\n";
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "shapes.my", .data = renamed });
     const cached = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check", entry, cache_argument } });
     defer testing.allocator.free(cached.stdout);
@@ -669,7 +666,7 @@ test "a cached check sees a field renamed in a record reached only through a lis
     defer testing.allocator.free(cold.stdout);
     defer testing.allocator.free(cold.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, cold.term);
-    try testing.expect(std.mem.indexOf(u8, cold.stderr, "user.my:5:14: error[E_UNKNOWN_FIELD]") != null);
+    try testing.expect(std.mem.indexOf(u8, cold.stderr, "user.my:4:14: error[E_UNKNOWN_FIELD]") != null);
     try testing.expectEqual(cold.term, cached.term);
     try testing.expectEqualStrings(cold.stderr, cached.stderr);
 }
@@ -697,9 +694,9 @@ test "a module checks against emitted interfaces after its imports' sources are 
     defer testing.allocator.free(from);
     const artifact = try std.fs.path.join(testing.allocator, &.{ directory, "interfaces", "lib.myi" });
     defer testing.allocator.free(artifact);
-    try temporary.dir.writeFile(testing.io, .{ .sub_path = "shapes.my", .data = "module shapes\npublic record Inner:\n    x: int\n" });
-    try temporary.dir.writeFile(testing.io, .{ .sub_path = "lib.my", .data = "module lib\nimport shapes\npublic def firsts(items: list[shapes.Inner]) -> int:\n    total = 0\n    for item in items:\n        total += item.x\n    return total\n" });
-    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "module main\nimport shapes\nimport lib\ndef main() -> int:\n    return lib.firsts([shapes.Inner(x=2)])\n" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "shapes.my", .data = "public record Inner:\n    x: int\n" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "lib.my", .data = "import shapes\npublic func firsts(items: shapes.Inner[]) -> int:\n    mut total = 0\n    for item in items:\n        total += item.x\n    return total\n" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "import shapes\nimport lib\nfunc main() -> int:\n    return lib.firsts([shapes.Inner(x=2)])\n" });
     const emitted = try runInterfaces(&.{ "interfaces", "emit", entry, out });
     defer freeRun(emitted);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, emitted.term);
@@ -707,7 +704,7 @@ test "a module checks against emitted interfaces after its imports' sources are 
     const shown = try runInterfaces(&.{ "interfaces", "show", artifact });
     defer freeRun(shown);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, shown.term);
-    try testing.expect(std.mem.indexOf(u8, shown.stdout, "public def firsts(items: list[shapes.Inner]) -> int:\n    pass") != null);
+    try testing.expect(std.mem.indexOf(u8, shown.stdout, "public func firsts(items: shapes.Inner[]) -> int:\n    pass") != null);
     const verified = try runInterfaces(&.{ "interfaces", "oracle", entry });
     defer freeRun(verified);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, verified.term);
@@ -720,7 +717,7 @@ test "a module checks against emitted interfaces after its imports' sources are 
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, alone.term);
     try testing.expect(std.mem.indexOf(u8, alone.stdout, "\"stood_in\":1,\"declared_only\":true") != null);
     // A call the interface's signature rejects is reported against the module's own source.
-    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "module main\nimport shapes\nimport lib\ndef main() -> int:\n    return lib.firsts(3)\n" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "import shapes\nimport lib\nfunc main() -> int:\n    return lib.firsts(3)\n" });
     const rejected = try runInterfaces(&.{ "interfaces", "check", entry, "--module=main", from });
     defer freeRun(rejected);
     try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, rejected.term);
@@ -763,15 +760,14 @@ fn projectBuild(allocator: std.mem.Allocator, directory: []const u8, output: []c
 }
 
 const schedule_generic =
-    \\module util
-    \\public def largest[T: integer](values: list[T]) -> T:
-    \\    best = values[0]
+    \\public func largest[T: integer](values: T[]) -> T:
+    \\    mut best = values[0]
     \\    for value in values:
     \\        if value > best:
     \\            best = value
     \\    return best
-    \\public def grow(values: list[int]) -> list[int]:
-    \\    out: list[int] = []
+    \\public func grow(values: int[]) -> int[]:
+    \\    mut out: int[] = []
     \\    for value in values:
     \\        out.append(value + largest(values))
     \\    return out
@@ -779,11 +775,10 @@ const schedule_generic =
 ;
 
 const schedule_main =
-    \\module main
     \\import util
-    \\def main(out: Stream) -> int:
-    \\    values = util.grow([3, 9, 4])
-    \\    ranked = sorted(values, key=lambda v: v % 5)
+    \\func main(out: Stream) -> int:
+    \\    mut values = util.grow([3, 9, 4])
+    \\    mut ranked = sorted(values, key=lambda v: v % 5)
     \\    out.print(ranked)
     \\    return util.largest(values) + values[1]
     \\
@@ -841,7 +836,7 @@ test "C3 symbolic template reuse crosses processes and preserves selective inval
     const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache_base});
     defer testing.allocator.free(cache_argument);
     const base_template =
-        \\def size[T: integer](value: T) -> i64 effects():
+        \\func size[T: integer](value: T) -> i64 effects():
         \\    _ = value
         \\    return 7
         \\
@@ -849,7 +844,7 @@ test "C3 symbolic template reuse crosses processes and preserves selective inval
         \\
     ;
     const edited_template =
-        \\def size[T: integer](value: T) -> i64 effects():
+        \\func size[T: integer](value: T) -> i64 effects():
         \\    _ = value
         \\    return 8
         \\
@@ -857,21 +852,21 @@ test "C3 symbolic template reuse crosses processes and preserves selective inval
         \\
     ;
     const base_helper =
-        \\def helper(n: i64) -> i64:
+        \\func helper(n: i64) -> i64:
         \\    return n + 1
         \\
         \\
         \\
     ;
     const edited_helper =
-        \\def helper(n: i64) -> i64:
+        \\func helper(n: i64) -> i64:
         \\    return n + 2
         \\
         \\
         \\
     ;
     const main_fn =
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return size[u8](1u8) + helper(0)
     ;
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = base_template ++ base_helper ++ main_fn });
@@ -917,7 +912,7 @@ test "C3 symbolic template reuse crosses processes and preserves selective inval
 // spec-case: CAPABILITY-3
 test "run build --run and installed executables share the restricted capability diagnostic" {
     const program =
-        \\def main(clock: Clock) -> int:
+        \\func main(clock: Clock) -> int:
         \\    _ = clock
         \\    return 0
     ;
@@ -994,7 +989,7 @@ fn runExecutable(argv: []const []const u8, options: []const u8) !std.process.Run
 }
 
 const argv_echo =
-    \\def main(args: list[str], out: Stream) -> int:
+    \\func main(args: str[], out: Stream) -> int:
     \\    out.print("count", len(args))
     \\    for value in args:
     \\        out.print("[" + value + "]")
@@ -1052,7 +1047,7 @@ test "run replaces an inherited MYLANG_OPTIONS with its own command line" {
 // spec: RESULT-MAIN-1
 test "CLI maps Result main ok and err to status codes and one diagnostic" {
     const ok =
-        \\def main(args: list[str]) -> Result[int, str]:
+        \\func main(args: str[]) -> Result[int, str]:
         \\    if len(args) == 0:
         \\        return Err("missing name")
         \\    return Ok(7)
@@ -1074,7 +1069,7 @@ test "CLI maps Result main ok and err to status codes and one diagnostic" {
     try testing.expect(std.mem.endsWith(u8, rejected.stderr, "input.my:3:16  main  Err(...) created\n"));
 
     const wrapped =
-        \\def main() -> Result[int, str]:
+        \\func main() -> Result[int, str]:
         \\    return Ok(300)
     ;
     const status = try runFixture("run", wrapped, &.{});
@@ -1088,33 +1083,34 @@ test "CLI maps Result main ok and err to status codes and one diagnostic" {
 /// A program whose `Err` is created two calls deep, converted into the entry's
 /// error union on the way out and reported by `main`.
 const error_trace_program =
-    \\union AppError:
-    \\    Config: str,
-    \\    Usage: int
+    \\enum AppError:
+    \\    Config(value: str)
+    \\    Usage(value: int)
     \\
-    \\def parse_port(text: str) -> Result[int, str]:
+    \\func parse_port(text: str) -> Result[int, str]:
     \\    if len(text) == 0:
     \\        return Err("empty port")
     \\    return Ok(len(text))
     \\
-    \\def read_config(text: str) -> Result[int, str]:
-    \\    port = parse_port(text)?
+    \\func read_config(text: str) -> Result[int, str]:
+    \\    mut port = try parse_port(text)
     \\    return Ok(port + 1)
     \\
-    \\def load(text: str) -> Result[int, AppError]:
-    \\    return Ok(read_config(text)?)
+    \\func load(text: str) -> Result[int, AppError]:
+    \\    const port = try read_config(text)
+    \\    return Ok(port)
     \\
-    \\def main() -> Result[int, AppError]:
-    \\    port = load("")?
+    \\func main() -> Result[int, AppError]:
+    \\    mut port = try load("")
     \\    return Ok(port)
 ;
 /// The report `error_trace_program` writes, `{path}` standing for its entry.
 const error_trace_report =
-    \\error: AppError.Config('empty port')
+    \\error: AppError.Config(value='empty port')
     \\  {path}:7:16   parse_port   Err(...) created
-    \\  {path}:11:12  read_config  ? propagated
-    \\  {path}:15:15  load         ? converted to AppError.Config
-    \\  {path}:18:12  main         ? propagated
+    \\  {path}:11:16  read_config  try propagated
+    \\  {path}:15:18  load         try converted to AppError.Config
+    \\  {path}:19:16  main         try propagated
     \\
 ;
 
@@ -1165,30 +1161,30 @@ fn expectErrorReport(binary: []const u8, wanted: []const u8) !void {
 /// caller makes with its values in registers. `main` then fails with a
 /// three-site trace.
 const kept_registers_program =
-    \\def step(x: int, i: int) -> Result[int, int]:
+    \\func step(x: int, i: int) -> Result[int, int]:
     \\    if i % 5 == 2:
     \\        return Err(i)
     \\    return Ok((x * 7 + i) % 1000003)
     \\
     \\
-    \\def relay(x: int, i: int) -> Result[int, int]:
-    \\    value = step(x, i)?
+    \\func relay(x: int, i: int) -> Result[int, int]:
+    \\    mut value = try step(x, i)
     \\    return Ok(value + 1)
     \\
     \\
-    \\def churn(n: int) -> int:
-    \\    a = 1
-    \\    b = 2
-    \\    c = 3
-    \\    d = 4
-    \\    e = 5
-    \\    f = 6
-    \\    g = 7
-    \\    h = 8
-    \\    k = 9
-    \\    failed = 0
+    \\func churn(n: int) -> int:
+    \\    mut a = 1
+    \\    mut b = 2
+    \\    mut c = 3
+    \\    mut d = 4
+    \\    mut e = 5
+    \\    mut f = 6
+    \\    mut g = 7
+    \\    mut h = 8
+    \\    mut k = 9
+    \\    mut failed = 0
     \\    for i in range(n):
-    \\        r: Result[int, int] = Err(i) if i % 3 == 0 else Ok(i)
+    \\        mut r: Result[int, int] = if (i % 3 == 0) then (Err(i)) else (Ok(i))
     \\        match r:
     \\            case Ok(v):
     \\                a = (a + v * 3) % 1000003
@@ -1209,9 +1205,9 @@ const kept_registers_program =
     \\    return a + b + c + d + e + f + g + h + k + failed
     \\
     \\
-    \\def main(out: Stream) -> Result[int, int]:
+    \\func main(out: Stream) -> Result[int, int]:
     \\    out.print(churn(3000))
-    \\    value = relay(1, 7)?
+    \\    mut value = try relay(1, 7)
     \\    return Ok(value)
     \\
 ;
@@ -1219,8 +1215,8 @@ const kept_registers_program =
 const kept_registers_report =
     \\error: 7
     \\  {path}:3:16   step   Err(...) created
-    \\  {path}:8:13   relay  ? propagated
-    \\  {path}:47:13  main   ? propagated
+    \\  {path}:8:17   relay  try propagated
+    \\  {path}:47:17  main   try propagated
     \\
 ;
 /// Run a build of `kept_registers_program`: its `int` error is the exit
@@ -1269,17 +1265,18 @@ test "CLI test reports a Result test's Err with its error return trace in text a
     var temporary = testing.tmpDir(.{});
     defer temporary.cleanup();
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "config_test.my", .data =
-        \\def parse_port(text: str) -> Result[int, str]:
+        \\func parse_port(text: str) -> Result[int, str]:
         \\    if len(text) == 0:
         \\        return Err("empty")
         \\    return Ok(len(text))
         \\
-        \\public def test_port() -> Result[bool, str]:
-        \\    port = parse_port("")?
+        \\public func test_port() -> Result[bool, str]:
+        \\    mut port = try parse_port("")
         \\    return Ok(port == 2)
         \\
-        \\public def test_fine() -> Result[bool, str]:
-        \\    return Ok(parse_port("ab")? == 2)
+        \\public func test_fine() -> Result[bool, str]:
+        \\    const port = try parse_port("ab")
+        \\    return Ok(port == 2)
     });
     const entry = try temporary.dir.realPathFileAlloc(testing.io, "config_test.my", a);
     defer a.free(entry);
@@ -1293,7 +1290,7 @@ test "CLI test reports a Result test's Err with its error return trace in text a
     try testing.expect(std.mem.indexOf(u8, text.stdout,
         \\failed config_test::test_port: expected {"case":"ok","value":true}, got {"case":"err","value":"empty"}
         \\  config_test.my:3:16  config_test::parse_port  Err(...) created
-        \\  config_test.my:7:12  config_test::test_port   ? propagated
+        \\  config_test.my:7:16  config_test::test_port   try propagated
         \\
     ) != null);
     const json = try std.process.run(a, testing.io, .{ .argv = &.{ compiler_path, "test", entry, "--json", "--cache-dir", cache, tools[0] } });
@@ -1301,13 +1298,13 @@ test "CLI test reports a Result test's Err with its error return trace in text a
     defer a.free(json.stderr);
     const parsed = try std.json.parseFromSlice(std.json.Value, a, json.stdout, .{});
     defer parsed.deinit();
-    try testing.expect(std.mem.endsWith(u8, testReason(parsed.value, "config_test::test_port"), "\n  config_test.my:7:12  config_test::test_port   ? propagated"));
+    try testing.expect(std.mem.endsWith(u8, testReason(parsed.value, "config_test::test_port"), "\n  config_test.my:7:16  config_test::test_port   try propagated"));
 }
 
 // spec: EPRINT-1
 test "CLI separates eprint stderr from print stdout byte-exactly" {
     const program =
-        \\def main(out: Stream, err: Stream) -> int:
+        \\func main(out: Stream, err: Stream) -> int:
         \\    out.print("out", 1)
         \\    err.print("err", 7, sep="-", end="!\n")
         \\    err.print()
@@ -1326,7 +1323,7 @@ test "CLI forwards guest arguments after -- for run and build --run" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
     const program =
-        \\def main(args: list[str], out: Stream) -> int:
+        \\func main(args: str[], out: Stream) -> int:
         \\    out.print("count", len(args))
         \\    for value in args:
         \\        out.print("[" + value + "]")
@@ -1405,19 +1402,17 @@ test "build --run detects module projects and installed binaries receive the sam
     defer temp.cleanup();
     try temp.dir.createDir(testing.io, "app", .default_dir);
     try temp.dir.writeFile(testing.io, .{ .sub_path = "app/main.my", .data =
-        \\module main
         \\import helper
         \\
-        \\def main(args: list[str], out: Stream) -> int:
+        \\func main(args: str[], out: Stream) -> int:
         \\    out.print(helper.render(args))
         \\    return 0
     });
     try temp.dir.writeFile(testing.io, .{ .sub_path = "app/helper.my", .data =
-        \\module helper
         \\
         \\
-        \\public def render(args: list[str]) -> str:
-        \\    out = ""
+        \\public func render(args: str[]) -> str:
+        \\    mut out = ""
         \\    for value in args:
         \\        out = out + "[" + value + "]"
         \\    return out
@@ -1522,32 +1517,29 @@ fn spawnWithEnv(argv: []const []const u8, env_map: *const std.process.Environ.Ma
 /// The entry of the empty-`PATH` project: it imports a module, prints through
 /// its stream and carries a test, so `build`, `run` and `test` all have work.
 const empty_path_main =
-    \\module main
     \\import text.words
     \\
-    \\def main(out: Stream) -> int:
-    \\    n = words.count_words("the quick brown fox")
+    \\func main(out: Stream) -> int:
+    \\    mut n = words.count_words("the quick brown fox")
     \\    out.print(f"words: {n}")
     \\    return 0
     \\
     \\
-    \\public def test_main_words() -> bool:
+    \\public func test_main_words() -> bool:
     \\    return words.count_words("one two") == 2
     \\
 ;
 /// The imported module of the empty-`PATH` project, with a test of its own.
 const empty_path_words =
-    \\module text.words
-    \\
-    \\public def count_words(line: str) -> int:
-    \\    total = 0
+    \\public func count_words(line: str) -> int:
+    \\    mut total = 0
     \\    for part in line.split(" "):
     \\        if len(part) > 0:
     \\            total = total + 1
     \\    return total
     \\
     \\
-    \\public def test_count_words() -> bool:
+    \\public func test_count_words() -> bool:
     \\    return count_words("a bb  ccc") == 3 and count_words("") == 0
     \\
 ;
@@ -1616,9 +1608,9 @@ test "CLI user commands need no interpreter: check, build, run, test, fmt, docs,
 }
 
 /// The shared library every packages fixture locks.
-const package_library = "module numbers\n\n\npublic def answer() -> int:\n    return 42\n";
+const package_library = "\n\npublic func answer() -> int:\n    return 42\n";
 /// An application entry that imports the locked library and returns its answer.
-const package_application = "module main\nimport numbers\n\ndef main() -> int:\n    return numbers.answer()\n";
+const package_application = "import numbers\n\nfunc main() -> int:\n    return numbers.answer()\n";
 
 /// A temporary tree holding `library/numbers.my`, `packages.json` naming it, and
 /// the absolute compiler, plus the environment every `mylang packages` call runs
@@ -1759,13 +1751,13 @@ test "mylang packages refuses drift, shared paths, doubled namespaces, standard 
     const receipt = try fixture.read("receipt.json");
     defer testing.allocator.free(receipt);
     const build_args = [_][]const u8{ "build", "app1/main.my", "--lock", "lock.json", "--receipt", "receipt.json" };
-    try fixture.write("library/numbers.my", "module numbers\n\n\npublic def answer() -> int:\n    return 43\n");
+    try fixture.write("library/numbers.my", "\n\npublic func answer() -> int:\n    return 43\n");
     try fixture.expect(&build_args, 2, "", "packages: locked dependency changed: numbers");
     try fixture.write("library/numbers.my", package_library);
     try fixture.write("app1/numbers.my", package_library);
     try fixture.expect(&build_args, 2, "", "duplicate or invalid module path: numbers.my");
     try fixture.temporary.dir.deleteFile(testing.io, "app1/numbers.my");
-    try fixture.write("app1/std_extra.my", "module std_extra\n");
+    try fixture.write("app1/std_extra.my", "");
     try fixture.expect(&build_args, 2, "", "cannot replace a standard module: std_extra.my");
     try fixture.temporary.dir.deleteFile(testing.io, "app1/std_extra.my");
     try doubledLock(&fixture, frozen);
@@ -1810,7 +1802,7 @@ test "mylang packages lock pins each resolved root and module hash and refuses b
     try fixture.write("empty/notes.txt", "no sources here");
     try fixture.write("packages.json", "{\"packages\":[{\"name\":\"numbers\",\"root\":\"empty\"}]}");
     try fixture.expect(&lock_args, 2, "", "empty dependency: numbers");
-    try fixture.write("library/stray.my", "module stray\n");
+    try fixture.write("library/stray.my", "");
     try fixture.write("packages.json", "{\"packages\":[{\"name\":\"numbers\",\"root\":\"library\"}]}");
     try fixture.expect(&lock_args, 2, "", "dependency source must declare its package namespace: stray.my");
     try fixture.expect(&.{ "lock", "packages.json" }, 2, "", "usage: mylang packages");
@@ -1901,14 +1893,14 @@ test "CLI run and check success" {
 // spec-case: NATIVE-TEST-10
 test "a native run reports a failed assert with its message" {
     try invoke("run",
-        \\def main() -> int:
+        \\func main() -> int:
         \\    assert False, "x should be two"
         \\    return 0
     , 1, "", "error[R_ASSERT]: native execution failed: x should be two");
     // A message carrying JSON syntax must not corrupt the machine record: the
     // `trap_detail` object still parses and appears in the JSON diagnostics.
     try invokeOptions("run",
-        \\def main() -> int:
+        \\func main() -> int:
         \\    assert False, "say \"hi\""
         \\    return 0
     , &.{"--diagnostics=json"}, 1, "", "\"trap_detail\"");
@@ -1916,7 +1908,7 @@ test "a native run reports a failed assert with its message" {
 // spec: NATIVE-TIMING-1
 test "CLI execution timings preserve results and runtime diagnostics" {
     const source =
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 42
     ;
     const outcome = try runFixture("run", source, &.{"--timings"});
@@ -1929,7 +1921,7 @@ test "CLI execution timings preserve results and runtime diagnostics" {
     try testing.expect(std.mem.startsWith(u8, outcome.stderr, prefix));
     _ = try std.fmt.parseInt(u64, std.mem.trim(u8, outcome.stderr[prefix.len..], "\n"), 10);
     const trap =
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return divtrunc(1, 0)
     ;
     try invokeOptions("run", trap, &.{"--timings"}, 1, "", "error[R_DIVISION_BY_ZERO]");
@@ -1940,15 +1932,15 @@ test "CLI execution timings preserve results and runtime diagnostics" {
 // spec: CLI-1
 test "CLI distinguishes source errors runtime traps and Usage errors" {
     try invoke("check",
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 1 +
     , 1, "", "error[E_EXPRESSION]");
     try invoke("check",
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 9223372036854775807 + 1
     , 0, "", "");
     try invoke("run",
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 9223372036854775807 + 1
     , 1, "", "error[R_OVERFLOW]");
     try invoke("unknown", "", 2, "", "usage:");
@@ -1983,36 +1975,36 @@ test "CLI missing arguments and missing files are host or usage failures" {
 }
 test "CLI binding warnings do not alter status or result output" {
     const text =
-        \\def main() -> i64:
-        \\    unused = 3
+        \\func main() -> i64:
+        \\    mut unused = 3
         \\    return 7
     ;
     try invoke("run", text, 0, "7\n", "warning[W_UNUSED_BINDING]");
     try invoke("check", text, 0, "", "warning[W_UNUSED_BINDING]");
     try invoke("run",
-        \\def main() -> i64:
-        \\    unused = 9223372036854775807 + 1
+        \\func main() -> i64:
+        \\    mut unused = 9223372036854775807 + 1
         \\    return 7
     , 1, "", "error[R_OVERFLOW]");
     try invoke("run",
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return -9223372036854775808
     , 0, "-9223372036854775808\n", "");
     try invoke("check",
-        \\def main() -> i64:
-        \\    x = True
+        \\func main() -> i64:
+        \\    mut x = True
         \\    x = 1
         \\    return 7
     , 1, "", "error[E_TYPE]");
 }
 test "CLI step budgets stop a loop and reject invalid options" {
     const text =
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 1
     ;
     try invokeOptions("run", text, &.{"--max-steps=2"}, 0, "1\n", "");
     try invokeOptions("run",
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    while True:
         \\        pass
         \\    return 1
@@ -2026,7 +2018,7 @@ test "CLI step budgets stop a loop and reject invalid options" {
 // spec: BUDGET-HINT-1
 test "CLI budget traps name the flag that raises the budget" {
     const text =
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    while True:
         \\        pass
         \\    return 1
@@ -2034,24 +2026,24 @@ test "CLI budget traps name the flag that raises the budget" {
     try invokeOptions("run", text, &.{"--max-steps=1"}, 1, "", "raise it with --max-steps=N");
     try invokeOptions("run", text, &.{ "--max-steps=1", "--diagnostics=json" }, 1, "", "\"message\":\"instruction budget exhausted; raise it with --max-steps=N\"");
     try invokeOptions("run",
-        \\def inner() -> i64:
+        \\func inner() -> i64:
         \\    return 1
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return inner()
     , &.{ "--max-frames=1", "--max-steps=1000000" }, 1, "", "raise it with --max-frames=N");
     try invokeOptions("run",
-        \\def inner() -> i64:
+        \\func inner() -> i64:
         \\    return 1
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return inner()
     , &.{ "--max-frames=1", "--max-steps=1000000", "--diagnostics=json" }, 1, "", "\"message\":\"call-depth budget exhausted; raise it with --max-frames=N (each frame reserves 32 KiB of stack, so --max-memory must cover N x 32 KiB)\"");
     const memory =
-        \\def main() -> i64:
-        \\    values: list[int] = []
+        \\func main() -> i64:
+        \\    mut values: int[] = []
         \\    for r in range(100000000):
         \\        values.append(r)
         \\    return len(values)
@@ -2063,7 +2055,7 @@ test "an executable built without a frame ceiling refuses a runtime frame budget
     var temporary = testing.tmpDir(.{});
     defer temporary.cleanup();
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "depth.my", .data =
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     });
     const entry = try temporary.dir.realPathFileAlloc(testing.io, "depth.my", testing.allocator);
@@ -2091,7 +2083,7 @@ test "an executable built without a frame ceiling refuses a runtime frame budget
     // The executable still runs without any ceiling argument, and `run` compiles
     // the accounting in and enforces the same ceiling.
     try expectConstantProcess(&.{output}, "");
-    try invokeOptions("run", "def inner() -> i64:\n    return 0\n\n\ndef main() -> i64:\n    return inner()\n", &.{"--max-frames=1"}, 1, "", "error[R_FRAME_LIMIT]");
+    try invokeOptions("run", "func inner() -> i64:\n    return 0\n\n\nfunc main() -> i64:\n    return inner()\n", &.{"--max-frames=1"}, 1, "", "error[R_FRAME_LIMIT]");
 }
 /// Build `name` as a debug and as a `--release` executable and run both; then run
 /// it through `mylang run` with and without a frame ceiling. Each pair must
@@ -2177,18 +2169,18 @@ test "a frame-map trap names every logical frame an inlined callee, a callback, 
         \\# a trap inside a small callee LLVM inlines into a loop
         \\
         \\
-        \\def a(i: int, j: int) -> float:
+        \\func a(i: int, j: int) -> float:
         \\    return 1.0 / float((i + j) * (i + j + 1) // 2 + i + 1)
         \\
         \\
-        \\def total(n: int, start: int) -> float:
-        \\    s = 0.0
+        \\func total(n: int, start: int) -> float:
+        \\    mut s = 0.0
         \\    for i in range(n):
         \\        s = s + a(start + i, 9223372036854775000)
         \\    return s
         \\
         \\
-        \\def main(out: Stream) -> int:
+        \\func main(out: Stream) -> int:
         \\    out.print(int(total(10, 1)))
         \\    return 0
     ,
@@ -2203,19 +2195,19 @@ test "a frame-map trap names every logical frame an inlined callee, a callback, 
         \\# an assertion inside a key function called back by sorted
         \\
         \\
-        \\def key_of(x: int) -> int:
+        \\func key_of(x: int) -> int:
         \\    assert x != 3, "no threes"
         \\    return 0 - x
         \\
         \\
-        \\def main(out: Stream) -> int:
-        \\    ordered = sorted([5, 4, 3, 2, 1], key=key_of)
+        \\func main(out: Stream) -> int:
+        \\    mut ordered = sorted([5, 4, 3, 2, 1], key=key_of)
         \\    out.print(ordered[0])
         \\    return 0
     ,
         \\{path}:5:12: error[R_ASSERT]: native execution failed: no threes
         \\  in key_of at {path}:5:12
-        \\  in main at {path}:10:15
+        \\  in main at {path}:10:19
         \\
     ++ "\x1eMYLANG-TRAP {\"version\":1,\"operation\":\"no threes\"}\n");
     // The runtime helper traps inside itself; the frame is its call site.
@@ -2223,12 +2215,12 @@ test "a frame-map trap names every logical frame an inlined callee, a callback, 
         \\# a conversion the runtime helper refuses, two frames deep
         \\
         \\
-        \\def convert(x: float) -> int:
+        \\func convert(x: float) -> int:
         \\    return int(x * 1e300 * 1e300)
         \\
         \\
-        \\def main(out: Stream) -> int:
-        \\    total = 0
+        \\func main(out: Stream) -> int:
+        \\    mut total = 0
         \\    for i in range(3):
         \\        total = total + convert(float(i) + 0.5)
         \\    out.print(total)
@@ -2265,13 +2257,13 @@ test "a frame-map trap names every logical frame an inlined callee, a callback, 
         \\# unbounded recursion reaches the execution-stack floor
         \\
         \\
-        \\def descend(depth: int) -> int:
+        \\func descend(depth: int) -> int:
         \\    if depth == 0:
         \\        return 0
         \\    return 1 + descend(depth - 1)
         \\
         \\
-        \\def main(out: Stream) -> int:
+        \\func main(out: Stream) -> int:
         \\    out.print(descend(1000000000))
         \\    return 0
     , recursion_trace);
@@ -2284,18 +2276,18 @@ test "a trap through a halting failure path reports the same code, trace, record
         \\# an overflow three frames deep
         \\
         \\
-        \\def grow(x: int, step: int) -> int:
+        \\func grow(x: int, step: int) -> int:
         \\    return x + step
         \\
         \\
-        \\def climb(x: int) -> int:
-        \\    total = x
+        \\func climb(x: int) -> int:
+        \\    mut total = x
         \\    for i in range(10):
         \\        total = grow(total, 1000000000000000000)
         \\    return total
         \\
         \\
-        \\def main(out: Stream) -> int:
+        \\func main(out: Stream) -> int:
         \\    out.print(climb(1))
         \\    return 0
     ,
@@ -2310,13 +2302,13 @@ test "a trap through a halting failure path reports the same code, trace, record
         \\# an out-of-range list write after a successful loop
         \\
         \\
-        \\def poke(xs: mut list[int], at: int) -> None:
+        \\func poke(mut xs: int[], at: int) -> Unit:
         \\    xs[at] = 7
         \\
         \\
-        \\def main(out: Stream) -> int:
-        \\    xs: list[int] = [1, 2, 3]
-        \\    total = 0
+        \\func main(out: Stream) -> int:
+        \\    mut xs: int[] = [1, 2, 3]
+        \\    mut total = 0
         \\    for x in xs:
         \\        total = total + x
         \\    poke(mut xs, total)
@@ -2335,21 +2327,21 @@ const checked_arithmetic_program =
     \\# checked + - * at every width, operands from the command line
     \\
     \\
-    \\def number(text: str) -> int:
-    \\    match int(text):
+    \\func number(text: str) -> int:
+    \\    match parse_int(text):
     \\        case Some(value):
     \\            return value
     \\        case None:
     \\            return 0
     \\
     \\
-    \\def wide(x: int) -> u64:
+    \\func wide(x: int) -> u64:
     \\    if x >= 0:
     \\        return u64(x)
     \\    return u64(x + 9223372036854775807 + 1) + 9223372036854775808u64
     \\
     \\
-    \\def signed64(op: str, x: int, y: int) -> int:
+    \\func signed64(op: str, x: int, y: int) -> int:
     \\    if op == "add":
     \\        return x + y
     \\    if op == "sub":
@@ -2357,7 +2349,7 @@ const checked_arithmetic_program =
     \\    return x * y
     \\
     \\
-    \\def unsigned64(op: str, x: u64, y: u64) -> u64:
+    \\func unsigned64(op: str, x: u64, y: u64) -> u64:
     \\    if op == "add":
     \\        return x + y
     \\    if op == "sub":
@@ -2365,7 +2357,7 @@ const checked_arithmetic_program =
     \\    return x * y
     \\
     \\
-    \\def signed32(op: str, x: i32, y: i32) -> i32:
+    \\func signed32(op: str, x: i32, y: i32) -> i32:
     \\    if op == "add":
     \\        return x + y
     \\    if op == "sub":
@@ -2373,7 +2365,7 @@ const checked_arithmetic_program =
     \\    return x * y
     \\
     \\
-    \\def unsigned32(op: str, x: u32, y: u32) -> u32:
+    \\func unsigned32(op: str, x: u32, y: u32) -> u32:
     \\    if op == "add":
     \\        return x + y
     \\    if op == "sub":
@@ -2381,7 +2373,7 @@ const checked_arithmetic_program =
     \\    return x * y
     \\
     \\
-    \\def signed16(op: str, x: i16, y: i16) -> i16:
+    \\func signed16(op: str, x: i16, y: i16) -> i16:
     \\    if op == "add":
     \\        return x + y
     \\    if op == "sub":
@@ -2389,7 +2381,7 @@ const checked_arithmetic_program =
     \\    return x * y
     \\
     \\
-    \\def unsigned16(op: str, x: u16, y: u16) -> u16:
+    \\func unsigned16(op: str, x: u16, y: u16) -> u16:
     \\    if op == "add":
     \\        return x + y
     \\    if op == "sub":
@@ -2397,7 +2389,7 @@ const checked_arithmetic_program =
     \\    return x * y
     \\
     \\
-    \\def signed8(op: str, x: i8, y: i8) -> i8:
+    \\func signed8(op: str, x: i8, y: i8) -> i8:
     \\    if op == "add":
     \\        return x + y
     \\    if op == "sub":
@@ -2405,7 +2397,7 @@ const checked_arithmetic_program =
     \\    return x * y
     \\
     \\
-    \\def unsigned8(op: str, x: u8, y: u8) -> u8:
+    \\func unsigned8(op: str, x: u8, y: u8) -> u8:
     \\    if op == "add":
     \\        return x + y
     \\    if op == "sub":
@@ -2413,11 +2405,11 @@ const checked_arithmetic_program =
     \\    return x * y
     \\
     \\
-    \\def report(out: Stream, args: list[str]) -> int:
-    \\    width = args[0]
-    \\    op = args[1]
-    \\    x = number(args[2])
-    \\    y = number(args[3])
+    \\func report(out: Stream, args: str[]) -> int:
+    \\    mut width = args[0]
+    \\    mut op = args[1]
+    \\    mut x = number(args[2])
+    \\    mut y = number(args[3])
     \\    if width == "i64":
     \\        out.print(signed64(op, x, y))
     \\    if width == "u64":
@@ -2437,7 +2429,7 @@ const checked_arithmetic_program =
     \\    return 0
     \\
     \\
-    \\def main(args: list[str], out: Stream) -> int:
+    \\func main(args: str[], out: Stream) -> int:
     \\    return report(out, args)
 ;
 /// One boundary of `checked_arithmetic_program`: `x op ok` is `sum`, the
@@ -2551,15 +2543,15 @@ test "checked arithmetic at every width reports the same result and trap from a 
 }
 /// Literal +/-1 operands retain their exact overflow details and cleanup.
 const literal_overflow_program =
-    \\def number(text: str) -> int:
-    \\    match int(text):
+    \\func number(text: str) -> int:
+    \\    match parse_int(text):
     \\        case Some(value):
     \\            return value
     \\        case None:
     \\            return 0
     \\
     \\
-    \\def calculate(form: str, value: int) -> int:
+    \\func calculate(form: str, value: int) -> int:
     \\    if form == "add_one":
     \\        return value + 1
     \\    if form == "sub_one":
@@ -2569,7 +2561,7 @@ const literal_overflow_program =
     \\    return value - -1
     \\
     \\
-    \\def main(args: list[str], out: Stream) -> int:
+    \\func main(args: str[], out: Stream) -> int:
     \\    out.print(calculate(args[0], number(args[1])))
     \\    return 0
 ;
@@ -2624,79 +2616,79 @@ const sticky_reduction_program =
     \\# checked reductions in loops, operands from the command line
     \\
     \\
-    \\def number(text: str) -> int:
-    \\    match int(text):
+    \\func number(text: str) -> int:
+    \\    match parse_int(text):
     \\        case Some(value):
     \\            return value
     \\        case None:
     \\            return 0
     \\
     \\
-    \\def build(n: int, value: int, last: int) -> list[int]:
-    \\    values: list[int] = []
+    \\func build(n: int, value: int, last: int) -> int[]:
+    \\    mut values: int[] = []
     \\    for i in range(n):
     \\        values.append(value)
     \\    values.append(last)
     \\    return values
     \\
     \\
-    \\def total_of(values: list[int], start: int) -> int:
-    \\    total = start
+    \\func total_of(values: int[], start: int) -> int:
+    \\    mut total = start
     \\    for v in values:
     \\        total += v
     \\    return total
     \\
     \\
-    \\def indexed(values: list[int], start: int) -> int:
-    \\    total = start
+    \\func indexed(values: int[], start: int) -> int:
+    \\    mut total = start
     \\    for i in range(len(values)):
     \\        total = total + values[i]
     \\    return total
     \\
     \\
-    \\def scaled(values: list[int], start: int) -> int:
-    \\    total = start
+    \\func scaled(values: int[], start: int) -> int:
+    \\    mut total = start
     \\    for v in values:
     \\        total += v * 3
     \\    return total
     \\
     \\
-    \\def difference(values: list[int], start: int) -> int:
-    \\    total = start
+    \\func difference(values: int[], start: int) -> int:
+    \\    mut total = start
     \\    for v in values:
     \\        total -= v
     \\    return total
     \\
     \\
-    \\def count_of(values: list[int], start: int) -> int:
-    \\    count = start
+    \\func count_of(values: int[], start: int) -> int:
+    \\    mut count = start
     \\    for v in values:
     \\        if v == 109:
     \\            count += 1
     \\    return count
     \\
     \\
-    \\def octets(n: int, start: int) -> int:
-    \\    empty: list[int] = []
-    \\    buffer = byte_buffer(empty)
+    \\func octets(n: int, start: int) -> int:
+    \\    mut empty: int[] = []
+    \\    mut buffer = byte_buffer(empty)
     \\    for i in range(n):
     \\        _ = buffer.append_byte(109)
     \\        _ = buffer.append_byte(7)
-    \\    data = bytes(buffer)
-    \\    count = start
+    \\    mut data = bytes(buffer)
+    \\    mut count = start
     \\    for i in range(len(data)):
     \\        if data[i] == 109:
     \\            count += 1
     \\    return count
     \\
     \\
-    \\def main(args: list[str], out: Stream) -> int:
-    \\    kind = args[0]
-    \\    n = number(args[1])
-    \\    value = number(args[2])
-    \\    last = number(args[3])
-    \\    start = number(args[4])
-    \\    values = build(n, value, last)
+    \\func main(args: str[], out: Stream) -> int:
+    \\    mut kind = args[0]
+    \\    mut n = number(args[1])
+    \\    mut value = number(args[2])
+    \\    mut last = number(args[3])
+    \\    mut start = number(args[4])
+    \\    mut values = build(n, value, last)
     \\    if kind == "sum":
     \\        out.print(total_of(values, start))
     \\    if kind == "indexed":
@@ -2824,74 +2816,74 @@ const element_loops_program =
     \\    v: float
     \\
     \\
-    \\def number(text: str) -> int:
-    \\    match int(text):
+    \\func number(text: str) -> int:
+    \\    match parse_int(text):
     \\        case Some(value):
     \\            return value
     \\        case None:
     \\            return 0
     \\
     \\
-    \\def dot(a: list[float], b: list[float]) -> float:
-    \\    s = 0.0
+    \\func dot(a: float[], b: float[]) -> float:
+    \\    mut s = 0.0
     \\    for i in range(len(a)):
     \\        s = s + a[i] * b[i]
     \\    return s
     \\
     \\
-    \\def product(n: int) -> float:
-    \\    a = [[float(i + j) for j in range(n)] for i in range(n)]
-    \\    b = [[float(i * j % 7) for j in range(n)] for i in range(n)]
-    \\    c = [[0.0 for j in range(n)] for i in range(n)]
+    \\func product(n: int) -> float:
+    \\    mut a = [for i in range(n) yield [for j in range(n) yield float(i + j)]]
+    \\    mut b = [for i in range(n) yield [for j in range(n) yield float(i * j % 7)]]
+    \\    mut c = [for i in range(n) yield [for j in range(n) yield 0.0]]
     \\    for i in range(n):
     \\        for k in range(n):
-    \\            aik = a[i][k]
+    \\            mut aik = a[i][k]
     \\            for j in range(n):
     \\                c[i][j] = c[i][j] + aik * b[k][j]
-    \\    total = 0.0
+    \\    mut total = 0.0
     \\    for i in range(n):
     \\        for j in range(n):
     \\            total = total + c[i][j]
     \\    return total
     \\
     \\
-    \\def advance(bodies: mut list[Body], steps: int) -> None:
+    \\func advance(mut bodies: Body[], steps: int) -> Unit:
     \\    for s in range(steps):
     \\        for i in range(len(bodies)):
     \\            bodies[i].x = bodies[i].x + bodies[i].v
     \\            bodies[i].v = bodies[i].v * 0.5
     \\
     \\
-    \\def scan(n: int) -> int:
-    \\    empty: list[int] = []
-    \\    buffer = byte_buffer(empty)
+    \\func scan(n: int) -> int:
+    \\    mut empty: int[] = []
+    \\    mut buffer = byte_buffer(empty)
     \\    for i in range(n):
     \\        _ = buffer.append_byte(i % 256)
-    \\    data = bytes(buffer)
-    \\    count = 0
+    \\    mut data = bytes(buffer)
+    \\    mut count = 0
     \\    for i in range(len(data)):
     \\        if data[i] == 109:
     \\            count += 1
     \\    return count
     \\
     \\
-    \\def prefix(values: list[int], at: int) -> int:
-    \\    total = 0
+    \\func prefix(values: int[], at: int) -> int:
+    \\    mut total = 0
     \\    for i in range(at):
     \\        total += values[i]
     \\    return total
     \\
     \\
-    \\def main(args: list[str], out: Stream) -> int:
-    \\    n = number(args[0])
-    \\    at = number(args[1])
+    \\func main(args: str[], out: Stream) -> int:
+    \\    mut n = number(args[0])
+    \\    mut at = number(args[1])
     \\    out.print(int(product(n)))
-    \\    bodies = [Body(x=float(i), v=1.0) for i in range(n)]
+    \\    mut bodies = [for i in range(n) yield Body(x=float(i), v=1.0)]
     \\    advance(mut bodies, 10)
     \\    out.print(int(bodies[n - 1].x * 1000.0))
     \\    out.print(scan(n * 100))
-    \\    values = [i * 3 for i in range(n)]
-    \\    out.print(int(dot([float(v) for v in values], [1.5 for v in values])))
+    \\    mut values = [for i in range(n) yield i * 3]
+    \\    out.print(int(dot([for v in values yield float(v)], [for v in values yield 1.5])))
     \\    out.print(prefix(values, at))
     \\    return 0
 ;
@@ -2913,36 +2905,36 @@ test "element loops over lists, nested lists, records and bytes compute and trap
 /// Loops LLVM vectorizes once their checks are proven (`QBE-LOOP-VERSION-1`):
 /// a byte count and a row update, sized and shifted from the command line.
 const vector_loops_program =
-    \\def number(text: str) -> int:
-    \\    match int(text):
+    \\func number(text: str) -> int:
+    \\    match parse_int(text):
     \\        case Some(value):
     \\            return value
     \\        case None:
     \\            return 0
     \\
     \\
-    \\def scan(data: bytes) -> int:
-    \\    count = 0
+    \\func scan(data: bytes) -> int:
+    \\    mut count = 0
     \\    for i in range(len(data)):
     \\        if data[i] == 109:
     \\            count += 1
     \\    return count
     \\
     \\
-    \\def axpy(c: mut list[float], b: list[float], a: float, shift: int) -> None:
+    \\func axpy(mut c: float[], b: float[], a: float, shift: int) -> Unit:
     \\    for j in range(len(c)):
     \\        c[j] = c[j] + a * b[j + shift]
     \\
     \\
-    \\def main(args: list[str], out: Stream) -> int:
-    \\    n = number(args[0])
-    \\    text = ""
+    \\func main(args: str[], out: Stream) -> int:
+    \\    mut n = number(args[0])
+    \\    mut text = ""
     \\    for i in range(n):
     \\        text = text + "mylang "
-    \\    b = [float(i) for i in range(n)]
-    \\    c = [1.0 for i in range(n)]
+    \\    mut b = [for i in range(n) yield float(i)]
+    \\    mut c = [for i in range(n) yield 1.0]
     \\    axpy(mut c, b, 0.5, number(args[1]))
-    \\    total = 0.0
+    \\    mut total = 0.0
     \\    for x in c:
     \\        total = total + x
     \\    out.print(scan(text.encode()))
@@ -2979,7 +2971,7 @@ test "an executable built without a requested ceiling refuses a runtime step bud
     var temporary = testing.tmpDir(.{});
     defer temporary.cleanup();
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "budget.my", .data =
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     });
     const entry = try temporary.dir.realPathFileAlloc(testing.io, "budget.my", testing.allocator);
@@ -3005,46 +2997,46 @@ test "an executable built without a requested ceiling refuses a runtime step bud
     try testing.expect(std.mem.indexOf(u8, refused.stderr, "error[R_NO_STEP_ACCOUNTING]") != null);
     try testing.expect(std.mem.indexOf(u8, refused.stderr, "mylang run --max-steps=N") != null);
     // Asking `run` for the same ceiling compiles the accounting and enforces it.
-    try invokeOptions("run", "def main() -> i64:\n    while True:\n        pass\n    return 0\n", &.{"--max-steps=1"}, 1, "", "error[R_STEP_LIMIT]");
+    try invokeOptions("run", "func main() -> i64:\n    while True:\n        pass\n    return 0\n", &.{"--max-steps=1"}, 1, "", "error[R_STEP_LIMIT]");
 }
 // spec: CLI-3
 test "CLI executes the exact plan acceptance programs and recursive functions" {
     try invoke("run", @embedFile("fixtures/sum.my"), 0, "4950\n", "");
     try invoke("run", @embedFile("fixtures/gcd.my"), 0, "6\n", "");
     try invoke("run",
-        \\def fact(n: i64) -> i64:
+        \\func fact(n: i64) -> i64:
         \\    if n <= 1:
         \\        return 1
         \\    return n * fact(n - 1)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return fact(10)
     , 0, "3628800\n", "");
     try invoke("run",
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 1 + add(add(2, 3), add(4, 5))
         \\
         \\
-        \\def add(a: i64, b: i64) -> i64:
+        \\func add(a: i64, b: i64) -> i64:
         \\    return a + b
     , 0, "15\n", "");
     try invoke("run",
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return bad()
         \\
         \\
-        \\def bad() -> i64:
+        \\func bad() -> i64:
         \\    return divtrunc(1, 0)
     , 1, "", "in main at");
 }
 test "CLI frame budgets count main and reject invalid overrides" {
     const text =
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return f()
         \\
         \\
-        \\def f() -> i64:
+        \\func f() -> i64:
         \\    return 7
     ;
     try invokeOptions("run", text, &.{"--max-frames=2"}, 0, "7\n", "");
@@ -3060,7 +3052,7 @@ test "all commands reject invalid programs before execution and locate runtime t
     for ([_][]const u8{ "check", "run" }) |command| {
         try invoke(command, @embedFile("fixtures/rejected.my"), 1, "", ":2:12: error[E_UNKNOWN_NAME]");
         try invoke(command,
-            \\def main() -> bool:
+            \\func main() -> bool:
             \\    return True
         , 1, "", "error[E_TYPE]");
     }
@@ -3078,15 +3070,15 @@ test "oversized source is a host resource failure with no result output" {
 }
 test "duplicate discovery is separate advisory analysis with explicit options" {
     const source =
-        \\def a(n: i64) -> i64:
+        \\func a(n: i64) -> i64:
         \\    return n * 2 + 1
         \\
         \\
-        \\def b(x: i64) -> i64:
+        \\func b(x: i64) -> i64:
         \\    return x * 2 + 1
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 7
     ;
     const outcome = try runFixture("discover-duplicates", source, &.{ "--min-nodes=1", "--population=reference", "--timings" });
@@ -3099,7 +3091,7 @@ test "duplicate discovery is separate advisory analysis with explicit options" {
     try invoke("check", source, 0, "", "");
     try invoke("run", source, 0, "7\n", "");
     try invoke("discover-duplicates",
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return unknown
     , 1, "", "error[E_UNKNOWN_NAME]");
     for ([_][]const u8{ "--min-nodes=0", "--min-nodes=", "--min-nodes=-1", "--population=unknown", "--max-steps=10" }) |option| {
@@ -3122,11 +3114,11 @@ test "CLI checks runs and dumps records and declared complete conversions" {
         \\    y: i64
         \\
         \\
-        \\conversion def convert(src: Source) -> View:
+        \\conversion func convert(src: Source) -> View:
         \\    return View(y=src.x)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     ;
     for ([_][]const u8{ "check", "run", "discover-duplicates" }) |command| {
@@ -3145,11 +3137,11 @@ test "CLI checks resource ownership completion and implicit cleanup effects with
         \\    file: File
         \\
         \\
-        \\def cleanup(input: Wrapper) -> i64 noio:
+        \\func cleanup(input: Wrapper) -> i64 noio:
         \\    return 0
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     ;
     for ([_][]const u8{ "check", "run", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_EFFECT_BOUND]");
@@ -3172,33 +3164,33 @@ test "CLI checks resource data operations effects and required mutation without 
         \\    err: i64
         \\
         \\
-        \\def write_once(fs: Filesystem) -> i64 effects(filesystem):
-        \\    request: [1]u8 = [42u8]
+        \\func write_once(fs: Filesystem) -> i64 effects(filesystem):
+        \\    mut request: FixedArray[u8, 1] = FixedArray[u8, 1]([42u8])
         \\    match acquire_resource[Open](fs, request):
         \\        case Open.ok(file):
-        \\            payload: [1]u8 = [7u8]
+        \\            mut payload: FixedArray[u8, 1] = FixedArray[u8, 1]([7u8])
         \\            _ = write_resource[Written](file, payload)
         \\            return 0
         \\        case Open.err(code):
         \\            return code
         \\
         \\
-        \\def main(fs: Filesystem) -> i64:
+        \\func main(fs: Filesystem) -> i64:
         \\    return write_once(fs)
     ;
     for ([_][]const u8{ "check", "run", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_IMMUTABLE]");
 }
 test "CLI approximate discovery is advisory explains drift and reports budget exhaustion" {
     const source =
-        \\def a(x: i64) -> i64:
+        \\func a(x: i64) -> i64:
         \\    return x * 2 + 1
         \\
         \\
-        \\def b(x: i64) -> i64:
+        \\func b(x: i64) -> i64:
         \\    return x * 2 + 3
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     ;
     const outcome = try runFixture("discover-duplicates", source, &.{ "--approximate", "--min-nodes=1" });
@@ -3216,11 +3208,11 @@ test "CLI approximate discovery is advisory explains drift and reports budget ex
 }
 test "CLI static quality report uses advisory thresholds and rejects invalid options" {
     const source =
-        \\def helper(x: i64) -> i64:
+        \\func helper(x: i64) -> i64:
         \\    return x
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return helper(7)
     ;
     const outcome = try runFixture("report-quality", source, &.{"--max-line-bytes=1"});
@@ -3231,7 +3223,7 @@ test "CLI static quality report uses advisory thresholds and rejects invalid opt
     for ([_][]const []const u8{ &.{"--max-nesting=-1"}, &.{"--max-decisions="}, &.{ "--max-parameters=1", "--max-parameters=2" }, &.{"--max-steps=1"} }) |options| try invokeOptions("report-quality", source, options, 2, "", "usage:");
     try invokeOptions("run", source, &.{"--max-nesting=1"}, 2, "", "usage:");
     try invoke("report-quality",
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return False
     , 1, "", "error[E_TYPE]");
 }
@@ -3239,28 +3231,28 @@ test "CLI formatter supports stdout check mode and syntax-only formatting" {
     // `fmt` writes canonical bytes to stdout; `--check` is nonzero when the
     // input differs from that canonical form.
     const canonical =
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 7
         \\
     ;
     try invoke("fmt", canonical, 0, canonical, "");
     try invokeOptions("fmt", canonical, &.{"--check"}, 0, "", "");
     const spaced =
-        \\def  main( ) ->  i64 :
+        \\func  main( ) ->  i64 :
         \\        return   7
     ;
     try invoke("fmt", spaced, 0, canonical, "");
     try invokeOptions("fmt", spaced, &.{"--check"}, 1, "", "formatting differs");
     try invoke("fmt",
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return False
     , 0,
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return False
         \\
     , "");
     try invoke("fmt",
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return +
     , 1, "", "error[E_EXPRESSION]");
     try invokeOptions("fmt", canonical, &.{ "--check", "--check" }, 2, "", "usage:");
@@ -3268,14 +3260,14 @@ test "CLI formatter supports stdout check mode and syntax-only formatting" {
 }
 // spec: CHECK-LIBRARY-1
 test "CLI check-module checks bodies and never invents main" {
-    try invoke("check-module", "module input\n\npublic def value() -> int:\n    return 7\n", 0, "", "");
-    try invoke("check-module", "module input\n\npublic record Pair:\n    value: int\n", 0, "", "");
-    try invoke("check-module", "module input\n\npublic def identity[T](value: T) -> T:\n    return value\n", 0, "", "");
-    try invoke("check-module", "module input\n\npublic def value() -> int:\n    return False\n", 1, "", "E_TYPE");
-    try invoke("check-module", "module input\n\npublic def value() -> int:\n    return main()\n", 1, "", "E_UNKNOWN_SYMBOL");
-    try invoke("check-module", "module input\n\nrecord Hidden:\n    value: int\n\npublic def value() -> Hidden:\n    return Hidden(7)\n", 1, "", "E_PRIVATE_INTERFACE");
-    try invoke("check-module", "module input\n\npublic def value(out: Stream) -> None noio:\n    out.print(7)\n", 1, "", "E_EFFECT");
-    const library = "module input\n\npublic def grown(xs: list[int]) -> list[int]:\n    copy = xs\n    copy.append(1)\n    return copy\n";
+    try invoke("check-module", "\npublic func value() -> int:\n    return 7\n", 0, "", "");
+    try invoke("check-module", "\npublic record Pair:\n    value: int\n", 0, "", "");
+    try invoke("check-module", "\npublic func identity[T](value: T) -> T:\n    return value\n", 0, "", "");
+    try invoke("check-module", "\npublic func value() -> int:\n    return False\n", 1, "", "E_TYPE");
+    try invoke("check-module", "\npublic func value() -> int:\n    return main()\n", 1, "", "E_UNKNOWN_SYMBOL");
+    try invoke("check-module", "\nrecord Hidden:\n    value: int\n\npublic func value() -> Hidden:\n    return Hidden(value=7)\n", 1, "", "E_PRIVATE_INTERFACE");
+    try invoke("check-module", "\npublic func value(out: Stream) -> Unit noio:\n    out.print(7)\n", 1, "", "E_EFFECT");
+    const library = "\npublic func grown(xs: int[]) -> int[]:\n    mut copy = xs\n    copy.append(1)\n    return copy\n";
     try invoke("check-module", library, 0, "", "");
 }
 
@@ -3292,8 +3284,8 @@ fn expectLibraryCommand(path: []const u8, cache: []const u8, command: []const u8
 test "CLI check-module follows imports and cannot cache an executable verdict" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "module helper\n\npublic def value() -> int:\n    return 7\n" });
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "library.my", .data = "module library\nimport helper\n\npublic def value() -> int:\n    return helper.value()\n" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "\npublic func value() -> int:\n    return 7\n" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "library.my", .data = "import helper\n\npublic func value() -> int:\n    return helper.value()\n" });
     const path = try temp.dir.realPathFileAlloc(testing.io, "library.my", testing.allocator);
     defer testing.allocator.free(path);
     const cache = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}/cache", .{std.fs.path.dirname(path).?});
@@ -3301,7 +3293,7 @@ test "CLI check-module follows imports and cannot cache an executable verdict" {
     try expectLibraryCommand(path, cache, "check-module", 0, "");
     try expectLibraryCommand(path, cache, "check-project", 1, "E_MAIN");
     try expectLibraryCommand(path, cache, "run", 1, "E_MAIN");
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "module helper\n\npublic def value() -> int:\n    return False\n" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "\npublic func value() -> int:\n    return False\n" });
     try expectLibraryCommand(path, cache, "check-module", 1, "E_TYPE");
 }
 
@@ -3309,7 +3301,7 @@ test "CLI check-module follows imports and cannot cache an executable verdict" {
 test "CLI check-module enforces configured warning and interface gates" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "library.my", .data = "module library\n\npublic def value() -> int:\n    unused: int = 1\n    return 7\n" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "library.my", .data = "\npublic func value() -> int:\n    mut unused: int = 1\n    return 7\n" });
     const path = try temp.dir.realPathFileAlloc(testing.io, "library.my", testing.allocator);
     defer testing.allocator.free(path);
     try temp.dir.writeFile(testing.io, .{ .sub_path = "mylang.json", .data = "{\"version\":2,\"lint\":{\"warnings\":\"deny\"}}" });
@@ -3332,60 +3324,60 @@ fn expectFailsAsItself(command: []const u8, text: []const u8, options: []const [
 
 // spec: CHECK-LIBRARY-2
 test "CLI check type-checks a file without main as a library" {
-    try invoke("check", "public def add(a: int, b: int) -> int:\n    return a + b\n", 0, "", "");
+    try invoke("check", "public func add(a: int, b: int) -> int:\n    return a + b\n", 0, "", "");
     try invoke("check", "public record Pair:\n    value: int\n", 0, "", "");
-    try invoke("check", "public def identity[T](value: T) -> T:\n    return value\n", 0, "", "");
-    try invoke("check", "def helper() -> int:\n    return 1\n", 0, "", "");
+    try invoke("check", "public func identity[T](value: T) -> T:\n    return value\n", 0, "", "");
+    try invoke("check", "func helper() -> int:\n    return 1\n", 0, "", "");
     try invoke("check", "", 0, "", "");
-    try invoke("check", "module input\n\npublic def value() -> int:\n    return 7\n", 0, "", "");
-    try invoke("check", "import strings\n\npublic def shout(text: str) -> str:\n    return strings.upper(text)\n", 0, "", "");
-    const library = "module input\n\npublic def grown(xs: list[int]) -> list[int]:\n    copy = xs\n    copy.append(1)\n    return copy\n";
+    try invoke("check", "\npublic func value() -> int:\n    return 7\n", 0, "", "");
+    try invoke("check", "import strings\n\npublic func shout(text: str) -> str:\n    return strings.upper(text)\n", 0, "", "");
+    const library = "\npublic func grown(xs: int[]) -> int[]:\n    mut copy = xs\n    copy.append(1)\n    return copy\n";
     try invoke("check", library, 0, "", "");
     try invokeOptions("check", library, &.{"--diagnostics=json"}, 0, "", "");
     // A body error is the library's own diagnostic, never the missing entry point.
-    try expectFailsAsItself("check", "public def value() -> int:\n    return False\n", &.{}, "error[E_TYPE]");
-    try expectFailsAsItself("check", "module input\n\npublic def value() -> int:\n    return False\n", &.{}, "error[E_TYPE]");
-    try expectFailsAsItself("check", "public def value() -> int:\n    return missing\n", &.{}, "error[E_UNKNOWN_NAME]");
-    try expectFailsAsItself("check", "public def value(out: Stream) -> None noio:\n    out.print(7)\n", &.{}, "error[E_EFFECT_BOUND]");
-    try expectFailsAsItself("check", "module input\n\nrecord Hidden:\n    value: int\n\npublic def value() -> Hidden:\n    return Hidden(7)\n", &.{}, "error[E_PRIVATE_INTERFACE]");
-    try expectFailsAsItself("check", "public def value() -> int:\n    return False\n", &.{"--diagnostics=json"}, "\"code\":\"E_TYPE\"");
-    try expectFailsAsItself("check", "public def value() -> int:\n    return +\n", &.{}, "error[E_EXPRESSION]");
+    try expectFailsAsItself("check", "public func value() -> int:\n    return False\n", &.{}, "error[E_TYPE]");
+    try expectFailsAsItself("check", "\npublic func value() -> int:\n    return False\n", &.{}, "error[E_TYPE]");
+    try expectFailsAsItself("check", "public func value() -> int:\n    return missing\n", &.{}, "error[E_UNKNOWN_NAME]");
+    try expectFailsAsItself("check", "public func value(out: Stream) -> Unit noio:\n    out.print(7)\n", &.{}, "error[E_EFFECT_BOUND]");
+    try expectFailsAsItself("check", "\nrecord Hidden:\n    value: int\n\npublic func value() -> Hidden:\n    return Hidden(value=7)\n", &.{}, "error[E_PRIVATE_INTERFACE]");
+    try expectFailsAsItself("check", "public func value() -> int:\n    return False\n", &.{"--diagnostics=json"}, "\"code\":\"E_TYPE\"");
+    try expectFailsAsItself("check", "public func value() -> int:\n    return +\n", &.{}, "error[E_EXPRESSION]");
 }
 
 // spec-case: CHECK-LIBRARY-2
 test "CLI commands that need an entry point still report E_MAIN for a library" {
-    const library = "public def add(a: int, b: int) -> int:\n    return a + b\n";
+    const library = "public func add(a: int, b: int) -> int:\n    return a + b\n";
     try invoke("run", library, 1, "", "error[E_MAIN]");
     try invokeOptions("build", library, &.{"--run"}, 1, "", "error[E_MAIN]");
-    try invoke("run", "module input\n\npublic def value() -> int:\n    return 7\n", 1, "", "error[E_MAIN]");
-    try invoke("check-project", "module input\n\npublic def value() -> int:\n    return 7\n", 1, "", "error[E_MAIN]");
+    try invoke("run", "\npublic func value() -> int:\n    return 7\n", 1, "", "error[E_MAIN]");
+    try invoke("check-project", "\npublic func value() -> int:\n    return 7\n", 1, "", "error[E_MAIN]");
     // The message points at the command that accepts a library.
     try invoke("run", library, 1, "", "`mylang check FILE` type-checks a library");
 }
 
 // spec-case: CHECK-LIBRARY-2
 test "CLI check keeps every entry check when main is declared" {
-    try invoke("check", "def main() -> int:\n    return 0\n", 0, "", "");
-    try invoke("check", "module input\n\ndef main() -> int:\n    return 0\n", 0, "", "");
-    try invoke("check", "def main(args: list[str], out: Stream) -> int:\n    out.print(len(args))\n    return 0\n", 0, "", "");
+    try invoke("check", "func main() -> int:\n    return 0\n", 0, "", "");
+    try invoke("check", "\nfunc main() -> int:\n    return 0\n", 0, "", "");
+    try invoke("check", "func main(args: str[], out: Stream) -> int:\n    out.print(len(args))\n    return 0\n", 0, "", "");
     // A wrong signature is an entry error, not a library that happens to define `main`.
-    try invoke("check", "def main(count: int) -> int:\n    return count\n", 1, "", "error[E_MAIN]");
-    try invoke("check", "def main(log: Stream) -> int:\n    return 0\n", 1, "", "error[E_MAIN]");
-    try invoke("check", "def main[T](value: T) -> int:\n    return 0\n", 1, "", "error[E_MAIN]");
-    try invoke("check", "def main() -> bool:\n    return True\n", 1, "", "error[E_TYPE]");
-    try invoke("check", "module input\n\ndef main(count: int) -> int:\n    return count\n", 1, "", "error[E_MAIN]");
-    try invoke("check", "module input\n\ndef main() -> bool:\n    return True\n", 1, "", "error[E_TYPE]");
+    try invoke("check", "func main(count: int) -> int:\n    return count\n", 1, "", "error[E_MAIN]");
+    try invoke("check", "func main(log: Stream) -> int:\n    return 0\n", 1, "", "error[E_MAIN]");
+    try invoke("check", "func main[T](value: T) -> int:\n    return 0\n", 1, "", "error[E_MAIN]");
+    try invoke("check", "func main() -> bool:\n    return True\n", 1, "", "error[E_TYPE]");
+    try invoke("check", "\nfunc main(count: int) -> int:\n    return count\n", 1, "", "error[E_MAIN]");
+    try invoke("check", "\nfunc main() -> bool:\n    return True\n", 1, "", "error[E_TYPE]");
     // Bodies are still checked as an executable's are, and the entry is not skipped.
-    try invoke("check", "def main() -> int:\n    return missing\n", 1, "", "error[E_UNKNOWN_NAME]");
-    try invoke("check", "def helper() -> int:\n    return False\n\ndef main() -> int:\n    return 0\n", 1, "", "error[E_TYPE]");
+    try invoke("check", "func main() -> int:\n    return missing\n", 1, "", "error[E_UNKNOWN_NAME]");
+    try invoke("check", "func helper() -> int:\n    return False\n\nfunc main() -> int:\n    return 0\n", 1, "", "error[E_TYPE]");
 }
 
 // spec-case: CHECK-LIBRARY-2
 test "CLI check of a module entry follows imports and records no executable verdict" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "module helper\n\npublic def value() -> int:\n    return 7\n" });
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "library.my", .data = "module library\nimport helper\n\npublic def value() -> int:\n    return helper.value()\n" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "\npublic func value() -> int:\n    return 7\n" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "library.my", .data = "import helper\n\npublic func value() -> int:\n    return helper.value()\n" });
     const path = try temp.dir.realPathFileAlloc(testing.io, "library.my", testing.allocator);
     defer testing.allocator.free(path);
     const cache = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}/cache", .{std.fs.path.dirname(path).?});
@@ -3395,7 +3387,7 @@ test "CLI check of a module entry follows imports and records no executable verd
     try expectLibraryCommand(path, cache, "check-project", 1, "E_MAIN");
     try expectLibraryCommand(path, cache, "run", 1, "E_MAIN");
     try expectLibraryCommand(path, "--no-cache", "check", 0, "");
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "module helper\n\npublic def value() -> int:\n    return False\n" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "\npublic func value() -> int:\n    return False\n" });
     try expectLibraryCommand(path, cache, "check", 1, "E_TYPE");
     try expectLibraryCommand(path, "--no-cache", "check-module", 1, "E_TYPE");
 }
@@ -3404,8 +3396,8 @@ test "CLI check of a module entry follows imports and records no executable verd
 test "CLI check of a library enforces configured warning and interface gates" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "headerless.my", .data = "public def value() -> int:\n    unused: int = 1\n    return 7\n" });
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "library.my", .data = "module library\n\npublic def value() -> int:\n    unused: int = 1\n    return 7\n" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "headerless.my", .data = "public func value() -> int:\n    mut unused: int = 1\n    return 7\n" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "library.my", .data = "\npublic func value() -> int:\n    mut unused: int = 1\n    return 7\n" });
     const headerless = try temp.dir.realPathFileAlloc(testing.io, "headerless.my", testing.allocator);
     defer testing.allocator.free(headerless);
     const path = try temp.dir.realPathFileAlloc(testing.io, "library.my", testing.allocator);
@@ -3420,17 +3412,17 @@ test "CLI check of a library enforces configured warning and interface gates" {
 
 // spec: FMT-CHECK-LOCATION-1
 test "CLI formatter check locates spacing and missing final newline" {
-    try invokeOptions("fmt", "def  main() -> int:\n    return 7\n", &.{"--check"}, 1, "", "input.my:1:5: formatting differs");
-    try invokeOptions("fmt", "def main() -> int:\n    return 7", &.{"--check"}, 1, "", "input.my:2:13: formatting differs");
-    try invokeOptions("fmt-module", "module input\n\ndef  f() -> int:\n    return 7\n", &.{"--check"}, 1, "", "input.my:3:5: formatting differs");
+    try invokeOptions("fmt", "func  main() -> int:\n    return 7\n", &.{"--check"}, 1, "", "input.my:1:6: formatting differs");
+    try invokeOptions("fmt", "func main() -> int:\n    return 7", &.{"--check"}, 1, "", "input.my:2:13: formatting differs");
+    try invokeOptions("fmt-module", "\nfunc  f() -> int:\n    return 7\n", &.{"--check"}, 1, "", "input.my:1:1: formatting differs");
 }
 
 // spec: FMT-TEST-MODULE-1
 test "CLI formatter and test agree on headerless sibling test imports" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "module helper\n\npublic def value() -> int:\n    return 7\n" });
-    const source = "import helper\n\npublic def test_value() -> bool:\n    return helper.value() == 7\n";
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "\npublic func value() -> int:\n    return 7\n" });
+    const source = "import helper\n\npublic func test_value() -> bool:\n    return helper.value() == 7\n";
     try temp.dir.writeFile(testing.io, .{ .sub_path = "helper_test.my", .data = source });
     const path = try temp.dir.realPathFileAlloc(testing.io, "helper_test.my", testing.allocator);
     defer testing.allocator.free(path);
@@ -3448,15 +3440,15 @@ test "CLI formatter and test agree on headerless sibling test imports" {
     defer testing.allocator.free(tested.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, tested.term);
     try testing.expect(std.mem.indexOf(u8, tested.stdout, "1 passed") != null);
-    try invoke("fmt", source, 1, "", "E_MODULE_HEADER");
+    try invoke("fmt", source, 0, source, "");
 }
 
 // spec: TEST-SIBLING-HINT-1
 test "CLI empty test selection names an unloaded sibling and preserves JSON" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "module helper\n\npublic def value() -> int:\n    return 7\n" });
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper_test.my", .data = "import helper\n\npublic def test_value() -> bool:\n    return helper.value() == 7\n" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "\npublic func value() -> int:\n    return 7\n" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper_test.my", .data = "import helper\n\npublic func test_value() -> bool:\n    return helper.value() == 7\n" });
     const path = try temp.dir.realPathFileAlloc(testing.io, "helper.my", testing.allocator);
     defer testing.allocator.free(path);
     const empty = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "test", path, "--json" } });
@@ -3475,8 +3467,8 @@ test "CLI empty test selection names an unloaded sibling and preserves JSON" {
     defer testing.allocator.free(absent.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 3 }, absent.term);
     try testing.expectEqualStrings("", absent.stderr);
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper_test.my", .data = "module helper_test\n\npublic def value() -> int:\n    return 7\n\n\npublic def test_value() -> bool:\n    return True\n" });
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "module helper\nimport helper_test\n\ndef main() -> int:\n    return helper_test.value()\n" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper_test.my", .data = "\npublic func value() -> int:\n    return 7\n\n\npublic func test_value() -> bool:\n    return True\n" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "import helper_test\n\nfunc main() -> int:\n    return helper_test.value()\n" });
     const loaded = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "test", path, "--filter", "does_not_exist" } });
     defer testing.allocator.free(loaded.stdout);
     defer testing.allocator.free(loaded.stderr);
@@ -3489,14 +3481,13 @@ test "CLI module discovery loads real files and diagnoses cross-file cycles" {
     defer temp.cleanup();
     try temp.dir.createDirPath(testing.io, "shared");
     try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data =
-        \\module input
         \\import shared.data as data
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     });
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "shared/data.my", .data = "module shared.data\n" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "shared/data.my", .data = "" });
     const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
     defer testing.allocator.free(path);
     const result = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "list-modules", path } });
@@ -3508,45 +3499,41 @@ test "CLI module discovery loads real files and diagnoses cross-file cycles" {
     const root = std.mem.indexOf(u8, result.stdout, "module input path=input.my sha256=").?;
     try testing.expect(child < root);
     try testing.expect(std.mem.indexOf(u8, result.stdout, "bodies/exports/types not checked") != null);
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "shared/data.my", .data = "module shared.data\nimport input\n" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "shared/data.my", .data = "import input\n" });
     const cycle = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "list-modules", path } });
     defer testing.allocator.free(cycle.stdout);
     defer testing.allocator.free(cycle.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, cycle.term);
     try testing.expectEqualStrings("", cycle.stdout);
-    for ([_][]const u8{ "E_IMPORT_CYCLE", "shared/data.my:2:", "input.my:1:", "input -> shared.data -> input" }) |part| try testing.expect(std.mem.indexOf(u8, cycle.stderr, part) != null);
+    for ([_][]const u8{ "E_IMPORT_CYCLE", "shared/data.my:1:", "input.my:1:", "input -> shared.data -> input" }) |part| try testing.expect(std.mem.indexOf(u8, cycle.stderr, part) != null);
 }
 test "CLI module discovery keeps header validity separate from compilation" {
     const result = try runFixture("list-modules",
-        \\module input
-        \\def broken(
+        \\func broken(
     , &.{});
     defer testing.allocator.free(result.stdout);
     defer testing.allocator.free(result.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
     try testing.expect(std.mem.indexOf(u8, result.stdout, "header discovery only") != null);
     try invoke("list-modules",
-        \\module input
         \\import missing
     , 1, "", "E_MODULE_READ");
     try invokeOptions("list-modules", "module input", &.{"--max-steps=10"}, 2, "", "usage:");
     const compilation = try runFixture("check",
-        \\module input
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return unknown()
     , &.{});
     defer testing.allocator.free(compilation.stdout);
     defer testing.allocator.free(compilation.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, compilation.term);
-    try testing.expect(std.mem.indexOf(u8, compilation.stderr, "E_UNKNOWN_SYMBOL") != null);
+    try testing.expect(std.mem.indexOf(u8, compilation.stderr, "E_UNKNOWN_FUNCTION") != null);
 }
 test "CLI module interfaces parse bodies and check exported signature visibility" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
     try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data =
-        \\module input
         \\import units
         \\
         \\
@@ -3554,15 +3541,14 @@ test "CLI module interfaces parse bodies and check exported signature visibility
         \\    distance: units.Distance
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return unknown()
     });
     try temp.dir.writeFile(testing.io, .{ .sub_path = "units.my", .data =
-        \\module units
         \\
         \\
         \\public domain Distance: i64:
-        \\    def make(x: i64) -> Distance effects():
+        \\    func make(x: i64) -> Distance effects():
         \\        return wrap[Distance](x)
     });
     const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
@@ -3574,11 +3560,10 @@ test "CLI module interfaces parse bodies and check exported signature visibility
     try testing.expectEqualStrings("", result.stderr);
     for ([_][]const u8{ "bodies not type checked", "export type Sample", "export type Distance", "export function Distance.make" }) |part| try testing.expect(std.mem.indexOf(u8, result.stdout, part) != null);
     try temp.dir.writeFile(testing.io, .{ .sub_path = "units.my", .data =
-        \\module units
         \\
         \\
         \\domain Distance: i64:
-        \\    def make(x: i64) -> Distance:
+        \\    func make(x: i64) -> Distance:
         \\        return wrap[Distance](x)
     });
     const hidden = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "list-interfaces", path } });
@@ -3586,20 +3571,18 @@ test "CLI module interfaces parse bodies and check exported signature visibility
     defer testing.allocator.free(hidden.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, hidden.term);
     try testing.expectEqualStrings("", hidden.stdout);
-    for ([_][]const u8{ "E_PRIVATE_SYMBOL", "input.my:6:", "units.my:4:" }) |part| try testing.expect(std.mem.indexOf(u8, hidden.stderr, part) != null);
+    for ([_][]const u8{ "E_PRIVATE_SYMBOL", "input.my:5:", "units.my:3:" }) |part| try testing.expect(std.mem.indexOf(u8, hidden.stderr, part) != null);
     try invoke("list-interfaces",
-        \\module input
-        \\def broken(
+        \\func broken(
     , 1, "", "E_SYNTAX");
     try invoke("list-interfaces",
-        \\module input
         \\
         \\
         \\record Secret:
         \\    pass
         \\
         \\
-        \\public def f() -> Secret:
+        \\public func f() -> Secret:
         \\    return Secret()
     , 1, "", "E_PRIVATE_INTERFACE");
     try invokeOptions("list-interfaces", "module input", &.{"--check"}, 2, "", "usage:");
@@ -3609,10 +3592,9 @@ test "CLI list-interfaces renders capability parameters with their Python spelli
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
     try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data =
-        \\module input
         \\
         \\
-        \\public def main(fs: Filesystem, clock: Clock) -> int:
+        \\public func main(fs: Filesystem, clock: Clock) -> int:
         \\    return 0
     });
     const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
@@ -3631,11 +3613,10 @@ test "CLI run loads a project entry that imports a standard module and leaves si
     var temporary = testing.tmpDir(.{});
     defer temporary.cleanup();
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data =
-        \\module main
         \\import math
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return math.clamp(99, 0, 42)
     });
     const path = try temporary.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
@@ -3661,18 +3642,16 @@ test "CLI check on a CHECK-PROJECT-ENTRY-1 module project loads the reachable gr
     var temporary = testing.tmpDir(.{});
     defer temporary.cleanup();
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data =
-        \\module main
         \\import helper
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return helper.value()
     });
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data =
-        \\module helper
         \\
         \\
-        \\public def value() -> int effects():
+        \\public func value() -> int effects():
         \\    return 42
     });
     const path = try temporary.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
@@ -3696,16 +3675,14 @@ test "CLI build loads a module project entry without --project" {
     defer temporary.cleanup();
     try temporary.dir.createDir(testing.io, "app", .default_dir);
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "app/main.my", .data =
-        \\module main
         \\import helper
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return helper.value()
     });
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "app/helper.my", .data =
-        \\module helper
         \\
-        \\public def value() -> int effects():
+        \\public func value() -> int effects():
         \\    return 42
     });
     const entry = try temporary.dir.realPathFileAlloc(testing.io, "app/main.my", testing.allocator);
@@ -3736,12 +3713,11 @@ test "CLI test discovers a test_ function without an explicit export" {
     var temporary = testing.tmpDir(.{});
     defer temporary.cleanup();
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data =
-        \\module main
         \\
-        \\def test_add() -> bool:
+        \\func test_add() -> bool:
         \\    return 1 + 1 == 2
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     });
     const path = try temporary.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
@@ -3782,7 +3758,7 @@ test "a guest build inside a build.zig project leaves no Zig cache in that proje
     defer temporary.cleanup();
     // A `build.zig` makes this directory the project `zig cc` would cache under.
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "build.zig", .data = "" });
-    try temporary.dir.writeFile(testing.io, .{ .sub_path = "hello.my", .data = "def main(out: Stream) -> int:\n    out.print(\"hello\")\n    return 0\n" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "hello.my", .data = "func main(out: Stream) -> int:\n    out.print(\"hello\")\n    return 0\n" });
     const compiler = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, compiler_path, testing.allocator);
     defer testing.allocator.free(compiler);
     var environment = try std.process.Environ.createMap(testing.environ, testing.allocator);
@@ -3813,7 +3789,7 @@ test "mylang test inside a build.zig project compiles its runner without a Zig c
     var temporary = testing.tmpDir(.{});
     defer temporary.cleanup();
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "build.zig", .data = "" });
-    try temporary.dir.writeFile(testing.io, .{ .sub_path = "checks.my", .data = "public def test_adds() -> bool:\n    return 1 + 1 == 2\n" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "checks.my", .data = "public func test_adds() -> bool:\n    return 1 + 1 == 2\n" });
     const compiler = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, compiler_path, testing.allocator);
     defer testing.allocator.free(compiler);
     var environment = try std.process.Environ.createMap(testing.environ, testing.allocator);
@@ -3836,18 +3812,17 @@ test "CLI test ignores unexported test_ helpers that cannot default" {
     var temporary = testing.tmpDir(.{});
     defer temporary.cleanup();
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data =
-        \\module main
         \\
-        \\def test_helper(value: int) -> bool:
+        \\func test_helper(value: int) -> bool:
         \\    return value > 0
         \\
-        \\def test_count() -> int:
+        \\func test_count() -> int:
         \\    return 1
         \\
-        \\def test_ok() -> bool:
+        \\func test_ok() -> bool:
         \\    return True
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     });
     const path = try temporary.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
@@ -3870,9 +3845,9 @@ test "CLI test ignores unexported test_ helpers that cannot default" {
 test "CLI directory test applies each entry's own cases file and lets a test file reach its module's privates" {
     var temporary = testing.tmpDir(.{});
     defer temporary.cleanup();
-    try temporary.dir.writeFile(testing.io, .{ .sub_path = "scanner.my", .data = "module scanner\n\n\ndef helper() -> int:\n    return 7\n\n\npublic def scan() -> int:\n    return helper()\n" });
-    try temporary.dir.writeFile(testing.io, .{ .sub_path = "scanner_test.my", .data = "module scanner_test\nimport scanner\n\n\npublic def test_helper() -> bool:\n    return scanner.helper() == scanner.scan()\n" });
-    try temporary.dir.writeFile(testing.io, .{ .sub_path = "scaled_test.my", .data = "module scaled_test\n\n\npublic def test_scaled(n: int) -> int:\n    return n * 2\n" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "scanner.my", .data = "\n\nfunc helper() -> int:\n    return 7\n\n\npublic func scan() -> int:\n    return helper()\n" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "scanner_test.my", .data = "import scanner\n\n\npublic func test_helper() -> bool:\n    return scanner.helper() == scanner.scan()\n" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "scaled_test.my", .data = "\n\npublic func test_scaled(n: int) -> int:\n    return n * 2\n" });
     const root = try temporary.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
     defer testing.allocator.free(root);
     const cache = try std.fs.path.join(testing.allocator, &.{ root, ".mylang-test-cache" });
@@ -3903,18 +3878,17 @@ test "CLI test reports an exported ill-shaped test as a failed case" {
     var temporary = testing.tmpDir(.{});
     defer temporary.cleanup();
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data =
-        \\module main
         \\
         \\
-        \\public def test_bad() -> int effects():
+        \\public func test_bad() -> int effects():
         \\    return 1
         \\
         \\
-        \\public def test_ok() -> bool effects():
+        \\public func test_ok() -> bool effects():
         \\    return True
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     });
     const path = try temporary.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
@@ -3948,19 +3922,18 @@ fn printedWord(stdout: []const u8) ![]const u8 {
 }
 
 const capability_tests =
-    \\module main
     \\import network
     \\import random
     \\import time
     \\
-    \\public def test_clock(clock: Clock) -> bool:
+    \\public func test_clock(clock: Clock) -> bool:
     \\    match time.now(clock):
     \\        case Ok(instant):
     \\            return instant.unix_nanoseconds == 946684800000000000
     \\        case Err(_):
     \\            return False
     \\
-    \\public def test_files(fs: Filesystem, env: Environment, net: Network) -> bool:
+    \\public func test_files(fs: Filesystem, env: Environment, net: Network) -> bool:
     \\    _ = fs.write_text("a.txt", "x")
     \\    match network.connect(net.host("127.0.0.1:1")):
     \\        case network.Connected.ok(_):
@@ -3968,20 +3941,20 @@ const capability_tests =
     \\        case network.Connected.err(code):
     \\            return code == network.denied_here() and fs.exists("a.txt") and len(env.names()) == 0
     \\
-    \\public def test_entropy(entropy: Entropy, out: Stream) -> bool:
+    \\public func test_entropy(entropy: Entropy, out: Stream) -> bool:
     \\    match random.from_entropy(entropy):
     \\        case Ok(sampled):
-    \\            generator = sampled
+    \\            mut generator = sampled
     \\            out.print("word", random.next_word(mut generator))
     \\        case Err(_):
     \\            out.print("no entropy")
     \\    return False
     \\
-    \\public def test_host(host: Host) -> bool:
+    \\public func test_host(host: Host) -> bool:
     \\    _ = host
     \\    return True
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return 0
 ;
 
@@ -4028,37 +4001,35 @@ test "CLI test hands declared capabilities deterministic stand-ins and reuses th
 // spec-case: CHECK-PROJECT-ENTRY-1
 test "CLI check keeps plain single-file programs on the one-unit path" {
     try invoke("check",
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 7
     , 0, "", "");
     try invoke("check",
-        \\def main() -> int:
-        \\    x = True
+        \\func main() -> int:
+        \\    mut x = True
         \\    x = 1
         \\    return 7
     , 1, "", "E_TYPE");
 }
 // spec: CLI-6
 test "CLI answers removed C-backend commands with what replaces them" {
-    try invokeOptions("emit-c", "def main() -> int:\n    return 0\n", &.{}, 2, "", "--emit-llvm PATH");
-    try invokeOptions("emit-project-c", "module main\n\n\ndef main() -> int:\n    return 0\n", &.{}, 2, "", "--emit-llvm PATH");
+    try invokeOptions("emit-c", "func main() -> int:\n    return 0\n", &.{}, 2, "", "--emit-llvm PATH");
+    try invokeOptions("emit-project-c", "\n\nfunc main() -> int:\n    return 0\n", &.{}, 2, "", "--emit-llvm PATH");
 }
 test "CLI checks and runs module programs with private boundaries and cross-file traps" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
     try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data =
-        \\module input
         \\import helper
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return helper.value()
     });
     try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data =
-        \\module helper
         \\
         \\
-        \\public def value() -> i64 effects():
+        \\public func value() -> i64 effects():
         \\    return 42
     });
     const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
@@ -4080,43 +4051,39 @@ test "CLI checks and runs module programs with private boundaries and cross-file
         try testing.expectEqualStrings("", result.stderr);
     }
     try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data =
-        \\module helper
         \\
         \\
-        \\public def value() -> i64 effects():
+        \\public func value() -> i64 effects():
         \\    return divtrunc(1, 0)
     });
     const trap = try std.process.run(testing.allocator, testing.io, .{ .argv = &(.{ compiler_path, "run-project", path, "--print-result" } ++ tools) });
     defer testing.allocator.free(trap.stdout);
     defer testing.allocator.free(trap.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, trap.term);
-    for ([_][]const u8{ "R_DIVISION_BY_ZERO", "helper.my:5:", "input.my:6:" }) |part| try testing.expect(std.mem.indexOf(u8, trap.stderr, part) != null);
+    for ([_][]const u8{ "R_DIVISION_BY_ZERO", "helper.my:4:", "input.my:5:" }) |part| try testing.expect(std.mem.indexOf(u8, trap.stderr, part) != null);
     try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data =
-        \\module helper
         \\
         \\
-        \\def value() -> i64:
+        \\func value() -> i64:
         \\    return 42
     });
     const hidden = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check-project", path } });
     defer testing.allocator.free(hidden.stdout);
     defer testing.allocator.free(hidden.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, hidden.term);
-    for ([_][]const u8{ "E_PRIVATE_SYMBOL", "helper.my:4:", "input.my:6:" }) |part| try testing.expect(std.mem.indexOf(u8, hidden.stderr, part) != null);
+    for ([_][]const u8{ "E_PRIVATE_SYMBOL", "helper.my:3:", "input.my:5:" }) |part| try testing.expect(std.mem.indexOf(u8, hidden.stderr, part) != null);
     try invokeOptions("run-project",
-        \\module input
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    while True:
         \\        pass
         \\    return 7
     , &.{"--max-steps=100"}, 1, "", "R_STEP_LIMIT");
     try invokeOptions("check-project",
-        \\module input
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 7
     , &.{"--max-steps=1"}, 2, "", "usage:");
 }
@@ -4124,18 +4091,16 @@ test "CLI checkProjectPolicy distinguishes language failures policy failures and
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
     try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data =
-        \\module input
         \\import core
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return core.value()
     });
     try temp.dir.writeFile(testing.io, .{ .sub_path = "core.my", .data =
-        \\module core
         \\
         \\
-        \\public def value() -> i64 effects():
+        \\public func value() -> i64 effects():
         \\    return 7
     });
     try temp.dir.writeFile(testing.io, .{ .sub_path = "rules file.json", .data = "{\"version\":1,\"default_action\":\"deny\",\"rules\":[]}" });
@@ -4171,10 +4136,9 @@ test "CLI checkProjectPolicy distinguishes language failures policy failures and
     try testing.expectEqualStrings("", config_error.stdout);
     try testing.expect(std.mem.indexOf(u8, config_error.stderr, "UnsupportedPolicyVersion") != null);
     try temp.dir.writeFile(testing.io, .{ .sub_path = "core.my", .data =
-        \\module core
         \\
         \\
-        \\public def value() -> i64:
+        \\public func value() -> i64:
         \\    return True
     });
     const invalid = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check-policy", path, option } });
@@ -4184,51 +4148,47 @@ test "CLI checkProjectPolicy distinguishes language failures policy failures and
     try testing.expectEqualStrings("", invalid.stdout);
     try testing.expect(std.mem.indexOf(u8, invalid.stderr, "E_TYPE") != null);
     try invoke("check-policy",
-        \\module input
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , 2, "", "usage:");
     try invokeOptions("check-project",
-        \\module input
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , &.{"--policy=some.json"}, 2, "", "usage:");
     try invokeOptions("check-policy",
-        \\module input
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , &.{ "--policy=a", "--policy=b" }, 2, "", "usage:");
 }
 // spec: LINT-1
 test "CLI lint reports L_ findings and blocks only under --gate" {
     const source =
-        \\module input
         \\
         \\
-        \\public def compute(value: int) -> int:
+        \\public func compute(value: int) -> int:
         \\    "Compute the input plus one."
         \\    return helper(value)
         \\
         \\
-        \\def helper(value: int) -> int:
+        \\func helper(value: int) -> int:
         \\    return value + 1
         \\
         \\
-        \\def unused_helper(value: int) -> int:
+        \\func unused_helper(value: int) -> int:
         \\    return value - 1
         \\
         \\
-        \\public def test_compute() -> bool effects():
+        \\public func test_compute() -> bool effects():
         \\    return compute(1) == 2
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     ;
     try invoke("lint", source, 0, "lint: 1 finding(s): 0 blocking, 1 report, 0 waived, 0 accepted\n", "warning[L_DEAD_PRIVATE]");
@@ -4239,29 +4199,28 @@ test "CLI lint reports L_ findings and blocks only under --gate" {
 // spec-case: LINT-1
 test "CLI lint test hygiene rules flag fake tests and leave expression tests alone" {
     const source =
-        \\module input
         \\
         \\
-        \\def square(value: int) -> int:
+        \\func square(value: int) -> int:
         \\    return value * value
         \\
         \\
-        \\def test_expression() -> bool effects():
+        \\func test_expression() -> bool effects():
         \\    return square(3) == 9
         \\
         \\
-        \\def test_fake() -> bool effects():
+        \\func test_fake() -> bool effects():
         \\    return True
         \\
         \\
-        \\def test_conditional() -> bool effects():
+        \\func test_conditional() -> bool effects():
         \\    if 1 == 1:
         \\        assert 1 == 1
         \\        return True
         \\    return False
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     ;
     try invokeOptions("lint", source, &.{"--gate"}, 3, "lint: 2 finding(s): 2 blocking, 0 report, 0 waived, 0 accepted\n", "L_TEST_NO_ASSERTION");
@@ -4273,16 +4232,15 @@ test "CLI lint advisory budget rules report only and never block under gate" {
     defer temp.cleanup();
     try temp.dir.writeFile(testing.io, .{ .sub_path = "mylang.json", .data = "{\"version\":2,\"lint\":{\"rules\":{\"function-length\":{\"max\":1}}}}" });
     try temp.dir.writeFile(testing.io, .{ .sub_path = "app.my", .data =
-        \\module app
         \\
         \\
-        \\def value(input: int) -> int:
+        \\func value(input: int) -> int:
         \\    if input > 0:
         \\        return input
         \\    return 0
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return value(1)
     });
     const path = try temp.dir.realPathFileAlloc(testing.io, "app.my", testing.allocator);
@@ -4299,11 +4257,10 @@ test "CLI warnings deny makes a checker warning rejecting in check and check-pro
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
     try temp.dir.writeFile(testing.io, .{ .sub_path = "app.my", .data =
-        \\module app
         \\
         \\
-        \\def main() -> int:
-        \\    unused: int = 1
+        \\func main() -> int:
+        \\    mut unused: int = 1
         \\    return 0
     });
     const path = try temp.dir.realPathFileAlloc(testing.io, "app.my", testing.allocator);
@@ -4326,27 +4283,24 @@ test "CLI check-project reports an import no reference resolves through" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
     try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data =
-        \\module helper
         \\
         \\
-        \\public def value() -> int:
+        \\public func value() -> int:
         \\    return 42
     });
     try temp.dir.writeFile(testing.io, .{ .sub_path = "unused_mod.my", .data =
-        \\module unused_mod
         \\
         \\
-        \\public def thing() -> int:
+        \\public func thing() -> int:
         \\    return 1
     });
     try temp.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data =
-        \\module main
         \\import helper
         \\import unused_mod
         \\
         \\
-        \\def main() -> int:
-        \\    note = "unused_mod.thing()"
+        \\func main() -> int:
+        \\    mut note = "unused_mod.thing()"
         \\    return helper.value() - 42
     });
     const path = try temp.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
@@ -4371,22 +4325,21 @@ test "CLI check-project reports an import no reference resolves through" {
 // spec-case: TESTS-FOR-1
 test "CLI tests-for lists direct and transitive tests and rejects an unknown name" {
     const source =
-        \\module input
         \\
         \\
-        \\def parse(value: int) -> int:
+        \\func parse(value: int) -> int:
         \\    return helper(value)
         \\
         \\
-        \\def helper(value: int) -> int:
+        \\func helper(value: int) -> int:
         \\    return value
         \\
         \\
-        \\def test_parse() -> bool effects():
+        \\func test_parse() -> bool effects():
         \\    return parse(1) == 1
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     ;
     try invokeOptions("tests-for", source, &.{"input::helper"}, 0,
@@ -4406,22 +4359,21 @@ test "CLI tests-for lists direct and transitive tests and rejects an unknown nam
 // spec-case: TESTS-FOR-SYNTAX-1
 test "CLI tests-for answers a project that does not type-check from its syntax and accepts module.name" {
     const source =
-        \\module input
         \\
         \\
-        \\def parse(value: int) -> int:
+        \\func parse(value: int) -> int:
         \\    return helper(value)
         \\
         \\
-        \\def helper(value: int) -> int:
+        \\func helper(value: int) -> int:
         \\    return value
         \\
         \\
-        \\def test_parse() -> bool effects():
+        \\func test_parse() -> bool effects():
         \\    return parse(1) == 1
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     ;
     const red = try std.mem.replaceOwned(u8, testing.allocator, source, "    return value\n", "    return value + \"red\"\n");
@@ -4440,19 +4392,18 @@ test "CLI tests-for answers a project that does not type-check from its syntax a
         \\  reached-by (1): input::test_parse
         \\
     , "");
-    try invokeOptions("tests-for", "module input\n\n\ndef parse(value: int) -> int:\n    return +\n", &.{"input::parse"}, 1, "", "the project does not parse");
+    try invokeOptions("tests-for", "func parse(value: int) -> int:\n    return +\n", &.{"input::parse"}, 1, "", "the project does not parse");
 }
 // spec-case: NAVIGATION-SELECT-1
 test "CLI index-project prints the summary by default, the full document on --full and a selection per filter" {
     const source =
-        \\module input
         \\
         \\
-        \\def helper(value: int) -> int:
+        \\func helper(value: int) -> int:
         \\    return value
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return helper(0)
     ;
     const summary = try runFixture("index-project", source, &.{});
@@ -4483,36 +4434,34 @@ test "CLI index-project prints the summary by default, the full document on --fu
 // spec-case: LINT-1
 test "CLI lint undocumented-export reports under agent and blocks under strict" {
     const source =
-        \\module input
         \\
         \\
-        \\public def compute(value: int) -> int:
+        \\public func compute(value: int) -> int:
         \\    return value + 1
         \\
         \\
-        \\def test_compute() -> bool effects():
+        \\func test_compute() -> bool effects():
         \\    return compute(1) == 2
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     ;
     try invoke("lint", source, 0, "lint: 1 finding(s): 0 blocking, 1 report, 0 waived, 0 accepted\n", "L_UNDOCUMENTED_EXPORT");
     try invokeOptions("lint", source, &.{ "--gate", "--profile=strict" }, 3, "lint: 1 finding(s): 1 blocking, 0 report, 0 waived, 0 accepted\n", "L_UNDOCUMENTED_EXPORT");
     const documented =
-        \\module input
         \\
         \\
-        \\public def compute(value: int) -> int:
+        \\public func compute(value: int) -> int:
         \\    "Compute the input plus one."
         \\    return value + 1
         \\
         \\
-        \\def test_compute() -> bool effects():
+        \\func test_compute() -> bool effects():
         \\    return compute(1) == 2
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     ;
     try invokeOptions("lint", documented, &.{ "--gate", "--profile=strict" }, 0, "lint: 0 finding(s): 0 blocking, 0 report, 0 waived, 0 accepted\n", "");
@@ -4524,14 +4473,13 @@ test "CLI api-diff records a baseline and classifies body and interface changes"
     const root = try temp.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
     defer testing.allocator.free(root);
     try temp.dir.writeFile(testing.io, .{ .sub_path = "app.my", .data =
-        \\module app
         \\
         \\
-        \\public def compute(value: int) -> int:
+        \\public func compute(value: int) -> int:
         \\    return value + 1
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     });
     const path = try temp.dir.realPathFileAlloc(testing.io, "app.my", testing.allocator);
@@ -4547,14 +4495,13 @@ test "CLI api-diff records a baseline and classifies body and interface changes"
     defer testing.allocator.free(write.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, write.term);
     try temp.dir.writeFile(testing.io, .{ .sub_path = "app.my", .data =
-        \\module app
         \\
         \\
-        \\public def compute(value: int) -> int:
+        \\public func compute(value: int) -> int:
         \\    return value + 2
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     });
     const body = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "api-diff", path, against_option } });
@@ -4563,14 +4510,13 @@ test "CLI api-diff records a baseline and classifies body and interface changes"
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, body.term);
     try testing.expect(std.mem.indexOf(u8, body.stdout, "compatible=1") != null);
     try temp.dir.writeFile(testing.io, .{ .sub_path = "app.my", .data =
-        \\module app
         \\
         \\
-        \\public def compute(value: int, extra: int) -> int:
+        \\public func compute(value: int, extra: int) -> int:
         \\    return value + extra
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     });
     const signature = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "api-diff", path, against_option, "--json" } });
@@ -4586,19 +4532,17 @@ test "CLI api-diff records a baseline and classifies body and interface changes"
 
 /// The module the interface-file CLI fixtures publish, and its entry.
 const api_app_source =
-    \\module app
     \\
     \\
-    \\public def compute(value: int) -> int:
+    \\public func compute(value: int) -> int:
     \\    return value + 1
     \\
 ;
 const api_main_source =
-    \\module main
     \\import app
     \\
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return app.compute(41) - 42
     \\
 ;
@@ -4608,7 +4552,7 @@ const api_app_interface =
     \\# generated by mylang api; do not edit
     \\module app
     \\
-    \\public def compute(value: int) -> int ceiling(managed_allocation)
+    \\public func compute(value: int) -> int ceiling(managed_allocation)
     \\
 ;
 
@@ -4692,13 +4636,13 @@ test "CLI api --check and --write: exit codes, diff, json, body-edit stability a
     try expectApi(.{ .root = root, .entry = "main.my", .cache = "--no-cache" }, "api", &.{"--check"}, 0, "api: 2 interface files current\n", "");
 
     // A body edit leaves the file byte-identical; a signature edit does not.
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "app.my", .data = "module app\n\n\npublic def compute(value: int) -> int:\n    # changed body\n    return 1 + value\n" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "app.my", .data = "\n\npublic func compute(value: int) -> int:\n    # changed body\n    return 1 + value\n" });
     try expectApi(warm, "api", &.{"--write"}, 0, "api: 2 interface files current\n", "");
     const body_bytes = try temp.dir.readFileAlloc(testing.io, "app.api", testing.allocator, .limited(1 << 20));
     defer testing.allocator.free(body_bytes);
     try testing.expectEqualStrings(warm_bytes, body_bytes);
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "app.my", .data = "module app\n\n\npublic def compute(value: int, extra: int = 1) -> int:\n    return value + extra\n" });
-    try expectApi(warm, "api", &.{"--check"}, 1, "@@ -2,3 +2,3 @@\n module app\n \n-public def compute(value: int) -> int ceiling(managed_allocation)\n+public def compute(value: int, extra: int = 1) -> int ceiling(managed_allocation)\n", "");
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "app.my", .data = "\n\npublic func compute(value: int, extra: int = 1) -> int:\n    return value + extra\n" });
+    try expectApi(warm, "api", &.{"--check"}, 1, "@@ -2,3 +2,3 @@\n module app\n \n-public func compute(value: int) -> int ceiling(managed_allocation)\n+public func compute(value: int, extra: int = 1) -> int ceiling(managed_allocation)\n", "");
     try expectApi(warm, "api", &.{ "--check", "--json" }, 1, "{\"version\":\"interface-files-v1\",\"mode\":\"check\",\"status\":\"stale\",\"files\":2,\"modules\":[{\"module\":\"app\",\"path\":\"app.api\",\"state\":\"stale\",\"added\":[],\"removed\":[],\"changed\":[\"compute\"]}]}\n", "");
     try expectApi(warm, "api", &.{ "--write", "--json" }, 0, "\"mode\":\"write\",\"status\":\"updated\"", "");
     try expectApi(warm, "api", &.{ "--check", "--json" }, 0, "{\"version\":\"interface-files-v1\",\"mode\":\"check\",\"status\":\"current\",\"files\":2,\"modules\":[]}\n", "");
@@ -4724,13 +4668,13 @@ test "CLI check rejects a stale interface file when mylang.json sets interface_f
     try expectApi(fixture, "check", &.{}, 0, "", "");
     // The replayed success is keyed on the interface files' bytes.
     try expectApi(fixture, "check", &.{}, 0, "", "");
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "app.api", .data = "# generated by mylang api; do not edit\nmodule app\n" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "app.api", .data = "# generated by mylang api; do not edit\n" });
     try expectApi(fixture, "check", &.{}, 1, "", "app.api:1:1: error[E_INTERFACE_FILE_STALE]: the interface file of module `app` is stale;");
     try expectApi(fixture, "run", &.{}, 1, "", "E_INTERFACE_FILE_STALE");
     try expectApi(fixture, "api", &.{"--write"}, 0, "", "");
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "app.my", .data = "module app\n\n\npublic def compute(value: int) -> int:\n    return value + 2\n" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "app.my", .data = "\n\npublic func compute(value: int) -> int:\n    return value + 2\n" });
     try expectApi(fixture, "check", &.{}, 0, "", "");
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "app.my", .data = "module app\n\n\n@deprecated(\"use compute2\")\npublic def compute(value: int) -> int:\n    return value + 1\n" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "app.my", .data = "\n\n@deprecated(\"use compute2\")\npublic func compute(value: int) -> int:\n    return value + 1\n" });
     try expectApi(fixture, "check", &.{}, 1, "", "app.api:1:1: error[E_INTERFACE_FILE_STALE]");
     try temp.dir.deleteFile(testing.io, "app.api");
     try expectApi(fixture, "check-project", &.{}, 1, "", "is missing");
@@ -4768,66 +4712,62 @@ test "CLI the interface-files example keeps its checked-in interface files curre
 /// `entry_value` export keeps `main` independent of `validate`'s signature so
 /// the baseline fixture can change it without breaking the project.
 const context_entry =
-    \\module main
     \\import model
     \\
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return model.entry_value()
 ;
 
 const context_model =
-    \\module model
     \\
     \\
-    \\public def validate(value: int) -> int:
-    \\    total = value
+    \\public func validate(value: int) -> int:
+    \\    mut total = value
     \\    return check(total)
     \\
     \\
-    \\public def entry_value() -> int:
+    \\public func entry_value() -> int:
     \\    return 1
     \\
     \\
-    \\def check(value: int) -> int:
+    \\func check(value: int) -> int:
     \\    return value + 1
 ;
 
 /// `context_model` with a body-only edit: the same signature computes a
 /// different result, which an interface baseline classifies as compatible.
 const context_model_body_edit =
-    \\module model
     \\
     \\
-    \\public def validate(value: int) -> int:
-    \\    total = value + 1
+    \\public func validate(value: int) -> int:
+    \\    mut total = value + 1
     \\    return check(total)
     \\
     \\
-    \\public def entry_value() -> int:
+    \\public func entry_value() -> int:
     \\    return 1
     \\
     \\
-    \\def check(value: int) -> int:
+    \\func check(value: int) -> int:
     \\    return value + 1
 ;
 
 /// `context_model` with a breaking interface edit: `validate` gains a parameter
 /// every caller would have to supply.
 const context_model_signature_edit =
-    \\module model
     \\
     \\
-    \\public def validate(value: int, extra: int) -> int:
-    \\    total = value + extra
+    \\public func validate(value: int, extra: int) -> int:
+    \\    mut total = value + extra
     \\    return check(total)
     \\
     \\
-    \\public def entry_value() -> int:
+    \\public func entry_value() -> int:
     \\    return 1
     \\
     \\
-    \\def check(value: int) -> int:
+    \\func check(value: int) -> int:
     \\    return value + 1
 ;
 
@@ -4837,7 +4777,7 @@ const context_model_signature_edit =
 fn wideContextModel(allocator: std.mem.Allocator, extra: usize) ![]u8 {
     var source: std.ArrayList(u8) = .empty;
     defer source.deinit(allocator);
-    try source.appendSlice(allocator, "module model\n\n\npublic def validate(value: int) -> int:\n    total = value\n");
+    try source.appendSlice(allocator, "\n\npublic func validate(value: int) -> int:\n    mut total = value\n");
     var line: usize = 0;
     while (line < extra) : (line += 1) {
         try source.appendSlice(allocator, "    total = total + 1\n");
@@ -5051,34 +4991,31 @@ test "CLI context refuses an unqualified name that two modules both declare" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
     try temp.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data =
-        \\module main
         \\import alpha
         \\import beta
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return alpha.first() + beta.second()
     });
     try temp.dir.writeFile(testing.io, .{ .sub_path = "alpha.my", .data =
-        \\module alpha
         \\
         \\
-        \\public def validate(value: int) -> int:
+        \\public func validate(value: int) -> int:
         \\    return value + 1
         \\
         \\
-        \\public def first() -> int:
+        \\public func first() -> int:
         \\    return 1
     });
     try temp.dir.writeFile(testing.io, .{ .sub_path = "beta.my", .data =
-        \\module beta
         \\
         \\
-        \\public def validate(value: int) -> int:
+        \\public func validate(value: int) -> int:
         \\    return value + 2
         \\
         \\
-        \\public def second() -> int:
+        \\public func second() -> int:
         \\    return 2
     });
     const path = try temp.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
@@ -5179,14 +5116,13 @@ test "CLI context answers an incomplete project without checked facts" {
     // `validate` declares an `int` result and returns `True`, so the project's
     // bodies do not check; the command still owes a parseable answer.
     const broken_model =
-        \\module model
         \\
         \\
-        \\public def validate(value: int) -> int:
+        \\public func validate(value: int) -> int:
         \\    return True
         \\
         \\
-        \\public def entry_value() -> int:
+        \\public func entry_value() -> int:
         \\    return 1
     ;
     const path = try writeContextProject(&temp, broken_model);
@@ -5264,36 +5200,34 @@ test "CLI lint change-without-test blocks a changed helper only under gate and a
     const root = try temp.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
     defer testing.allocator.free(root);
     try temp.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data =
-        \\module main
         \\
         \\
-        \\def helper(value: int) -> int:
+        \\func helper(value: int) -> int:
         \\    return value + 1
         \\
         \\
-        \\def test_helper() -> bool effects():
+        \\func test_helper() -> bool effects():
         \\    return helper(1) == 2
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     });
     try gitIn(testing.allocator, root, &.{ "init", "-q" });
     try gitIn(testing.allocator, root, &.{ "add", "main.my" });
     try gitIn(testing.allocator, root, &.{ "-c", "user.email=test@example.com", "-c", "user.name=test", "commit", "-q", "-m", "init" });
     try temp.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data =
-        \\module main
         \\
         \\
-        \\def helper(value: int) -> int:
+        \\func helper(value: int) -> int:
         \\    return value + 2
         \\
         \\
-        \\def test_helper() -> bool effects():
+        \\func test_helper() -> bool effects():
         \\    return helper(1) == 2
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     });
     const path = try std.fs.path.join(testing.allocator, &.{ root, "main.my" });
@@ -5315,41 +5249,39 @@ test "CLI test affected selects tests that reach a changed declaration" {
     const root = try temp.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
     defer testing.allocator.free(root);
     const before =
-        \\module app
         \\
         \\
-        \\def helper(value: int) -> int:
+        \\func helper(value: int) -> int:
         \\    return value + 1
         \\
         \\
-        \\def test_helper() -> bool effects():
+        \\func test_helper() -> bool effects():
         \\    return helper(1) == 2
         \\
         \\
-        \\def test_unrelated() -> bool effects():
+        \\func test_unrelated() -> bool effects():
         \\    return 3 == 3
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     ;
     const after =
-        \\module app
         \\
         \\
-        \\def helper(value: int) -> int:
+        \\func helper(value: int) -> int:
         \\    return value + 2
         \\
         \\
-        \\def test_helper() -> bool effects():
+        \\func test_helper() -> bool effects():
         \\    return helper(1) == 3
         \\
         \\
-        \\def test_unrelated() -> bool effects():
+        \\func test_unrelated() -> bool effects():
         \\    return 3 == 3
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     ;
     try temp.dir.writeFile(testing.io, .{ .sub_path = "app.my", .data = before });
@@ -5396,14 +5328,13 @@ test "CLI lint accept records a baseline that gate then accepts" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
     try temp.dir.writeFile(testing.io, .{ .sub_path = "app.my", .data =
-        \\module app
         \\
         \\
-        \\def helper() -> int:
+        \\func helper() -> int:
         \\    return 1
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     });
     const path = try temp.dir.realPathFileAlloc(testing.io, "app.my", testing.allocator);
@@ -5426,22 +5357,20 @@ test "CLI discovers cross module duplicates with options and rejects invalid dep
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
     try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data =
-        \\module input
         \\import helper
         \\
         \\
-        \\def twice(value: i64) -> i64:
+        \\func twice(value: i64) -> i64:
         \\    return value * 2 + 3
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     });
     try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data =
-        \\module helper
         \\
         \\
-        \\def copy(x: i64) -> i64:
+        \\func copy(x: i64) -> i64:
         \\    return x * 2 + 3
     });
     const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
@@ -5450,14 +5379,13 @@ test "CLI discovers cross module duplicates with options and rejects invalid dep
     defer testing.allocator.free(result.stdout);
     defer testing.allocator.free(result.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
-    for ([_][]const u8{ "scope: reachable module graph", "population=reference", "input::twice", "helper::copy", "input.my:5:", "helper.my:4:", "approximate near-v3", "truncated=true" }) |part| try testing.expect(std.mem.indexOf(u8, result.stdout, part) != null);
+    for ([_][]const u8{ "scope: reachable module graph", "population=reference", "input::twice", "helper::copy", "input.my:4:", "helper.my:3:", "approximate near-v3", "truncated=true" }) |part| try testing.expect(std.mem.indexOf(u8, result.stdout, part) != null);
     try testing.expect(std.mem.indexOf(u8, result.stderr, "project_frontend_ns=") != null);
     try testing.expect(std.mem.indexOf(u8, result.stderr, "modules=2") != null);
     try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data =
-        \\module helper
         \\
         \\
-        \\def copy(x: i64) -> i64:
+        \\func copy(x: i64) -> i64:
         \\    return True
     });
     const invalid = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "discover-project-duplicates", path } });
@@ -5467,17 +5395,15 @@ test "CLI discovers cross module duplicates with options and rejects invalid dep
     try testing.expectEqualStrings("", invalid.stdout);
     try testing.expect(std.mem.indexOf(u8, invalid.stderr, "E_TYPE") != null);
     try invokeOptions("discover-project-duplicates",
-        \\module input
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , &.{"--max-work=1"}, 2, "", "usage:");
     try invokeOptions("discover-project-duplicates",
-        \\module input
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , &.{"--max-steps=1"}, 2, "", "usage:");
 }
@@ -5485,22 +5411,20 @@ test "CLI module quality reports preserve export roots and advisory thresholds" 
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
     try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data =
-        \\module input
         \\import api
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     });
     try temp.dir.writeFile(testing.io, .{ .sub_path = "api.my", .data =
-        \\module api
         \\
         \\
-        \\public def entry() -> i64 effects():
+        \\public func entry() -> i64 effects():
         \\    return hidden()
         \\
         \\
-        \\def hidden() -> i64:
+        \\func hidden() -> i64:
         \\    return 1
     });
     const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
@@ -5511,14 +5435,13 @@ test "CLI module quality reports preserve export roots and advisory thresholds" 
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
     // `import api` exists only to pull `api.my` into the reachable graph, so the
     // unused-import warning names it and nothing else is written to stderr.
-    try testing.expectEqualStrings("input.my:2:8: warning[W_UNUSED_IMPORT]: import `api` is never referenced in this module; remove it or use it\n  import api\n         ^\n", result.stderr);
-    for ([_][]const u8{ "quality-modules-v1", "api.my:4:", "api::entry; private=false; reachable-from-main=false", "module-exported=true reachable-from-exports=true", "module-exported=false reachable-from-exports=true", "function-lines 2 exceeds configured 1", "calls api::hidden at api.my:5:", "Runtime coverage and assertions: not measured" }) |part| try testing.expect(std.mem.indexOf(u8, result.stdout, part) != null);
+    try testing.expectEqualStrings("input.my:1:8: warning[W_UNUSED_IMPORT]: import `api` is never referenced in this module; remove it or use it\n  import api\n         ^\n", result.stderr);
+    for ([_][]const u8{ "quality-modules-v1", "api.my:3:", "api::entry; private=false; reachable-from-main=false", "module-exported=true reachable-from-exports=true", "module-exported=false reachable-from-exports=true", "function-lines 2 exceeds configured 1", "calls api::hidden at api.my:4:", "Runtime coverage and assertions: not measured" }) |part| try testing.expect(std.mem.indexOf(u8, result.stdout, part) != null);
     try testing.expect(std.mem.indexOf(u8, result.stdout, "no call path from main or exported interfaces") == null);
     try temp.dir.writeFile(testing.io, .{ .sub_path = "api.my", .data =
-        \\module api
         \\
         \\
-        \\def invalid() -> i64:
+        \\func invalid() -> i64:
         \\    return True
     });
     const invalid = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "report-project-quality", path } });
@@ -5528,10 +5451,9 @@ test "CLI module quality reports preserve export roots and advisory thresholds" 
     try testing.expectEqualStrings("", invalid.stdout);
     try testing.expect(std.mem.indexOf(u8, invalid.stderr, "E_TYPE") != null);
     try invokeOptions("report-project-quality",
-        \\module input
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , &.{"--approximate"}, 2, "", "usage:");
 }
@@ -5540,31 +5462,26 @@ test "CLI module formatting is syntax only and canonical for every reachable mod
     // The header directive group is followed by one blank line and top-level
     // declarations by two, so the fixtures below are already canonical.
     const draft =
-        \\module input
         \\import absent as a
         \\
-        \\def f(x: a.T) -> a.T:
+        \\func f(x: a.T) -> a.T:
         \\    return x
         \\
     ;
     try invoke("fmt-module", draft, 0, draft, "");
     try invokeOptions("fmt-module", draft, &.{"--check"}, 0, "", "");
     try invoke("fmt-module",
-        \\module input
-        \\def broken(
+        \\func broken(
     , 1, "", "E_SYNTAX");
     const root_module =
-        \\module input
         \\import child
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return unknown()
         \\
     ;
     const child_module =
-        \\module child
-        \\
-        \\def f() -> Missing:
+        \\func f() -> Missing:
         \\    return unknown()
         \\
     ;
@@ -5590,15 +5507,14 @@ test "CLI module formatting is syntax only and canonical for every reachable mod
         try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, output.term);
         try testing.expectEqualStrings(if (std.mem.eql(u8, name, "input.my")) root_module else child_module, output.stdout);
     }
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "child.my", .data = "module child\n\ndef  f() -> Missing:\n    return unknown()\n" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "child.my", .data = "\nfunc  f() -> Missing:\n    return unknown()\n" });
     const differing = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "fmt-project", path, "--check" } });
     defer testing.allocator.free(differing.stdout);
     defer testing.allocator.free(differing.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, differing.term);
-    try testing.expect(std.mem.indexOf(u8, differing.stderr, "child.my:3:5: formatting differs") != null);
+    try testing.expect(std.mem.indexOf(u8, differing.stderr, "child.my:1:1: formatting differs") != null);
     try temp.dir.writeFile(testing.io, .{ .sub_path = "child.my", .data =
-        \\module child
-        \\def broken(
+        \\func broken(
     });
     const invalid = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "fmt-project", path, "--check" } });
     defer testing.allocator.free(invalid.stdout);
@@ -5621,15 +5537,14 @@ test "CLI schema inputs load fresh generated modules and reject malformed manife
     const option = try std.fmt.allocPrint(testing.allocator, "--inputs={s}", .{path});
     defer testing.allocator.free(option);
     const source =
-        \\module input
         \\import config
         \\
         \\
-        \\public def read() -> i64 effects():
+        \\public func read() -> i64 effects():
         \\    return config.value()
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     ;
     const result = try runFixture("schema-project", source, &.{option});
@@ -5645,10 +5560,9 @@ fn sessionScript(script: []const u8, flags: []const []const u8, expected_status:
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
     try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data =
-        \\module input
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     });
     try temp.dir.writeFile(testing.io, .{ .sub_path = "commands", .data = script });
@@ -5685,19 +5599,19 @@ test "CLI sessionCheck returns host failure without terminating the session" {
 }
 test "CLI executes generic fixed arrays and reports uncalled template shape errors" {
     try invoke("run",
-        \\def twice[T: integer](x: T) -> [2]T:
-        \\    return [x, x + x]
+        \\func twice[T: integer](x: T) -> FixedArray[T, 2]:
+        \\    return FixedArray[T, 2]([x, x + x])
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return twice[i64](6)[1]
     , 0, "12\n", "");
     try invokeOptions("check",
-        \\def bad[T](a: [2]T) -> [3]T:
+        \\func bad[T](a: FixedArray[T, 2]) -> FixedArray[T, 3]:
         \\    return a
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_GENERIC_TYPE\"");
 }
@@ -5707,7 +5621,7 @@ test "CLI formats nominal templates and runs programs with unused declarations" 
         \\    value: T
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     ;
     try invoke("fmt", source, 0,
@@ -5715,7 +5629,7 @@ test "CLI formats nominal templates and runs programs with unused declarations" 
         \\    value: T
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
         \\
     , "");
@@ -5731,7 +5645,7 @@ test "CLI reports unused nominal template requirement errors" {
         \\    key: Key[U]
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_GENERIC_REQUIREMENT\"");
     try invokeOptions("check",
@@ -5739,7 +5653,7 @@ test "CLI reports unused nominal template requirement errors" {
         \\    value: Missing
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_UNKNOWN_TYPE\"");
 }
@@ -5749,7 +5663,7 @@ test "CLI rejects recursive nominal layouts but preserves finite nested and phan
         \\    next: Node[T]
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_RECURSIVE_RECORD\"");
     try invokeOptions("check",
@@ -5763,10 +5677,10 @@ test "CLI rejects recursive nominal layouts but preserves finite nested and phan
         \\
         \\record Finite[U]:
         \\    nested: Box[Box[U]]
-        \\    phantom: Empty[Finite[[1]U]]
+        \\    phantom: Empty[Finite[FixedArray[U, 1]]]
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , &.{"--diagnostics=json"}, 0, "", "");
 }
@@ -5776,26 +5690,26 @@ test "CLI executes concrete nominal instances and reports argument identity erro
         \\    value: T
         \\
         \\
-        \\union Slot[T]:
-        \\    none,
-        \\    some: T
+        \\enum Slot[T]:
+        \\    none
+        \\    some(value: T)
     ;
     const program = definitions ++ "\n\n\n" ++
-        \\def main() -> i64:
-        \\    slot: Slot[Box[i64]] = Slot.some(Box[i64](value=12))
+        \\func main() -> i64:
+        \\    mut slot: Slot[Box[i64]] = Slot.some(value=Box[i64](value=12))
         \\    match slot:
         \\        case Slot.none:
         \\            return 0
-        \\        case Slot.some(box):
+        \\        case Slot.some(value=box):
         \\            return box.value
     ;
     try invoke("run", program, 0, "12\n", "");
     try invokeOptions("check", definitions ++ "\n\n\n" ++
-        \\def takes(box: Box[i64]) -> i64:
+        \\func takes(box: Box[i64]) -> i64:
         \\    return box.value
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return takes(Box[bool](value=True))
     , &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_TYPE\"");
 }
@@ -5805,29 +5719,28 @@ test "CLI specializes nominal generic bodies and reports uncalled shape errors" 
         \\    value: T
     ;
     try invoke("run", definitions ++ "\n\n\n" ++
-        \\def pack[T](x: T) -> Box[T]:
+        \\func pack[T](x: T) -> Box[T]:
         \\    return Box[T](value=x)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return pack[i64](31).value
     , 0, "31\n", "");
     try invokeOptions("check", definitions ++ "\n\n\n" ++
-        \\def bad[T](x: T) -> Box[T]:
+        \\func bad[T](x: T) -> Box[T]:
         \\    return Box[T](value=1)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_GENERIC_TYPE\"");
 }
 // spec: DEPENDENCIES-1
 test "CLI project-dependencies buildIndex emits checked graph identity and rejects invalid bodies" {
     const outcome = try runFixture("project-dependencies",
-        \\module input
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 7
     , &.{});
     defer testing.allocator.free(outcome.stdout);
@@ -5840,18 +5753,16 @@ test "CLI project-dependencies buildIndex emits checked graph identity and rejec
     try testing.expectEqualStrings("input.my", parsed.value.object.get("inputs").?.array.items[0].object.get("path").?.string);
     try testing.expectEqual(@as(usize, 64), parsed.value.object.get("implementation").?.object.get("compiler_sha256").?.string.len);
     try invoke("project-dependencies",
-        \\module input
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return True
     , 1, "", "E_TYPE");
     try invoke("project-dependencies",
-        \\module input
         \\export absent
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , 1, "", "error[E_EXPORT_REMOVED]");
 }
@@ -5920,10 +5831,9 @@ test "CLI features identify installed compiler without source input" {
     // The identity is the compiler's embedded build-time digest, not a fresh hash of its
     // own executable, so a receipt from the same compiler reports exactly the same value.
     const receipt = try runFixture("project-dependencies",
-        \\module input
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 7
     , &.{});
     defer testing.allocator.free(receipt.stdout);
@@ -5958,7 +5868,6 @@ test "every implemented feature carries a kind, a summary and a documentation po
     try testing.expect(retired.get("note").?.string.len > 0);
 }
 const listing_module =
-    \\module input
     \\import math
     \\import shared.units as units
     \\
@@ -5975,12 +5884,12 @@ const listing_module =
     \\    id: Count
     \\
     \\
-    \\extern def measure(host: Host, x: i64) -> i64 effects(host)
+    \\extern func measure(host: Host, x: i64) -> i64 effects(host)
     \\
     \\
     \\
     \\
-    \\public def main() -> i64:
+    \\public func main() -> i64:
     \\    return LIMIT
 ;
 const Listing = struct {
@@ -6019,7 +5928,7 @@ test "CLI declaration listing accounts for every byte with disjoint ordered rang
     try testing.expectEqual(@as(usize, 5), listing.declarations.len);
     var ranges: std.ArrayList(Listing.Extent) = .empty;
     defer ranges.deinit(testing.allocator);
-    try ranges.append(testing.allocator, listing.header.?);
+    try testing.expect(listing.header == null);
     for (listing.imports) |imported| try ranges.append(testing.allocator, imported.bytes);
     for (listing.exports) |exported| try ranges.append(testing.allocator, exported.bytes);
     var previous: usize = 0;
@@ -6046,27 +5955,25 @@ test "CLI declaration listing accounts for every byte with disjoint ordered rang
 }
 test "CLI declaration listing separates parse failures from checking and usage failures" {
     try invoke("list-declarations",
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 1 +
     , 1, "", "error[E_EXPRESSION]");
     try invokeOptions("list-declarations",
-        \\module m
         \\export absent
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_EXPORT_REMOVED\"");
     try invokeOptions("list-declarations",
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , &.{"--check"}, 2, "", "usage:");
     const unchecked =
-        \\module m
         \\
         \\
-        \\def main() -> i64:
-        \\    flag: bool = 1
+        \\func main() -> i64:
+        \\    mut flag: bool = 1
         \\    return flag
     ;
     const outcome = try runFixture("list-declarations", unchecked, &.{});
@@ -6077,33 +5984,33 @@ test "CLI declaration listing separates parse failures from checking and usage f
 }
 test "CLI executes control flow and preserves discarded traps" {
     try invoke("run",
-        \\def main() -> i64:
-        \\    sum = 0
-        \\    i = 0
+        \\func main() -> i64:
+        \\    mut sum = 0
+        \\    mut i = 0
         \\    while i < 100:
         \\        sum += i
         \\        i += 1
         \\    return sum
     , 0, "4950\n", "");
     try invoke("run",
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    if False and divtrunc(1, 0) == 0:
         \\        return 1
         \\    else:
         \\        return 7
     , 0, "7\n", "");
     try invoke("run",
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    _ = divtrunc(1, 0)
         \\    return 7
     , 1, "", "error[R_DIVISION_BY_ZERO]");
     try invoke("run",
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    while True:
         \\        return 7
     , 0, "7\n", "");
     try invoke("check",
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    while True:
         \\        break
     , 1, "", "error[E_MISSING_RETURN]");
@@ -6120,7 +6027,7 @@ test "all commands preserve stdout and deterministic advisory stderr" {
         const wanted: u8 = if (std.mem.eql(u8, command, "run")) 7 else 0;
         try testing.expectEqual(std.process.Child.Term{ .exited = wanted }, outcome.term);
         try testing.expectEqualStrings(expected, outcome.stdout);
-        try testing.expect(std.mem.indexOf(u8, outcome.stderr, ":2:5: warning[W_UNUSED_BINDING]") != null);
+        try testing.expect(std.mem.indexOf(u8, outcome.stderr, ":2:9: warning[W_UNUSED_BINDING]") != null);
         try testing.expectEqual(@as(usize, 1), std.mem.count(u8, outcome.stderr, "warning["));
         try testing.expect(std.mem.indexOf(u8, outcome.stderr, "`_ =`") != null);
     }
@@ -6128,27 +6035,27 @@ test "all commands preserve stdout and deterministic advisory stderr" {
 test "CLI preserves integer width bounds and explicit casts" {
     try invoke("run", @embedFile("fixtures/integers.my"), 0, "6148914691236516950\n", "");
     try invoke("check",
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    _ = u8(256)
         \\    return 0
     , 0, "", "");
     try invoke("run",
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    _ = u8(256)
         \\    return 0
     , 1, "", "error[R_OVERFLOW]");
     try invoke("run",
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    _ = 255u8 + 1u8
         \\    return 0
     , 1, "", "error[R_OVERFLOW]");
     try invoke("check",
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    _ = 256u8
         \\    return 0
     , 1, "", "error[E_INTEGER_RANGE]");
     try invoke("check",
-        \\def main() -> u8:
+        \\func main() -> u8:
         \\    return 0u8
     , 1, "", "error[E_TYPE]");
 }
@@ -6156,23 +6063,23 @@ test "CLI checks array schemas dumps indexing and reports bounds traps" {
     try invoke("run", @embedFile("fixtures/arrays.my"), 0, "44\n", "");
     try invoke("check", @embedFile("fixtures/arrays.my"), 0, "", "");
     const invalid =
-        \\def main() -> i64:
-        \\    values: [3]i64 = [1]
+        \\func main() -> i64:
+        \\    mut values: FixedArray[i64, 3] = FixedArray[int, 3]([1])
         \\    return values[0]
     ;
     for ([_][]const u8{ "check", "run", "discover-duplicates" }) |command| {
         try invoke(command, invalid, 1, "", "error[E_ARRAY_LENGTH]");
     }
     const bounds =
-        \\def main() -> i64:
-        \\    values: [1]i64 = [7]
+        \\func main() -> i64:
+        \\    mut values: FixedArray[i64, 1] = FixedArray[int, 1]([7])
         \\    return values[1]
     ;
     try invoke("check", bounds, 0, "", "");
     try invoke("run", bounds, 1, "", ":3:12: error[R_LIST_BOUNDS]");
     try invoke("run",
-        \\def main() -> i64:
-        \\    payload: [1]u8 = [7u8]
+        \\func main() -> i64:
+        \\    mut payload: FixedArray[u8, 1] = FixedArray[u8, 1]([7u8])
         \\    _ = replace(payload, 18446744073709551615u64, 8u8)
         \\    return 0
     , 1, "", "error[R_LIST_BOUNDS]");
@@ -6182,11 +6089,11 @@ test "CLI checks domain privacy unit mismatches and qualified factory execution"
     try invoke("check", @embedFile("fixtures/domains.my"), 0, "", "");
     const private =
         \\domain D: i64:
-        \\    private def raw(n: i64) -> D:
+        \\    private func raw(n: i64) -> D:
         \\        return wrap[D](n)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    _ = D.raw(1)
         \\    return 0
     ;
@@ -6195,31 +6102,31 @@ test "CLI checks domain privacy unit mismatches and qualified factory execution"
     }
     try invoke("check",
         \\domain D: i64:
-        \\    def make(n: i64) -> D:
+        \\    func make(n: i64) -> D:
         \\        return wrap[D](n)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    _ = wrap[D](1)
         \\    return 0
     , 1, "", "error[E_PRIVATE_DOMAIN]");
     try invoke("check",
         \\domain Seconds: i64:
-        \\    def from(n: i64) -> Seconds:
+        \\    func from(n: i64) -> Seconds:
         \\        return wrap[Seconds](n)
         \\
         \\
         \\domain Millimeters: i64:
-        \\    def of(n: i64) -> Millimeters:
+        \\    func of(n: i64) -> Millimeters:
         \\        return wrap[Millimeters](n)
         \\
         \\
-        \\def distance(n: Millimeters) -> i64:
+        \\func distance(n: Millimeters) -> i64:
         \\    _ = n
         \\    return 0
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return distance(Seconds.from(1))
     , 1, "", "expected Millimeters, found Seconds");
 }
@@ -6228,12 +6135,12 @@ test "CLI executes variants dumps dispatch and rejects newly incomplete matches"
     try invoke("check", @embedFile("fixtures/variants.my"), 0, "", "");
     const added =
         \\enum Color:
-        \\    red,
-        \\    green,
+        \\    red
+        \\    green
         \\    added
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    match Color.red:
         \\        case Color.red:
         \\            return 1
@@ -6242,23 +6149,23 @@ test "CLI executes variants dumps dispatch and rejects newly incomplete matches"
     ;
     for ([_][]const u8{ "check", "run", "discover-duplicates" }) |command| try invoke(command, added, 1, "", "match does not handle variant `added`");
     try invoke("check",
-        \\union U:
-        \\    value: i64,
+        \\enum U:
+        \\    value(value: i64)
         \\    empty
         \\
         \\
-        \\def main() -> i64:
-        \\    _ = U.value(True)
+        \\func main() -> i64:
+        \\    _ = U.value(value=True)
         \\    return 0
     , 1, "", "error[E_TYPE]");
     try invoke("run",
-        \\union U:
-        \\    value: i64
+        \\enum U:
+        \\    value(value: i64)
         \\
         \\
-        \\def main() -> i64:
-        \\    match U.value(divtrunc(1, 0)):
-        \\        case U.value(_):
+        \\func main() -> i64:
+        \\    match U.value(value=divtrunc(1, 0)):
+        \\        case U.value(value=_):
         \\            return 0
     , 1, "", "error[R_DIVISION_BY_ZERO]");
 }
@@ -6267,12 +6174,12 @@ test "CLI executes complete enum tables and rejects missing mappings in every co
     try invoke("check", @embedFile("fixtures/tables.my"), 0, "", "");
     const added =
         \\enum Key:
-        \\    old,
+        \\    old
         \\    added
         \\
         \\
-        \\def main() -> i64:
-        \\    table: [Key]i64 = {Key.old: 7}
+        \\func main() -> i64:
+        \\    mut table: [Key]i64 = {Key.old: 7}
         \\    return table[Key.old]
     ;
     for ([_][]const u8{ "check", "run", "discover-duplicates" }) |command| try invoke(command, added, 1, "", "missing initializer for key `added`");
@@ -6281,8 +6188,8 @@ test "CLI executes complete enum tables and rejects missing mappings in every co
         \\    a
         \\
         \\
-        \\def main() -> i64:
-        \\    table: [Key]i64 = {Key.a: 7}
+        \\func main() -> i64:
+        \\    mut table: [Key]i64 = {Key.a: 7}
         \\    return table[0]
     , 1, "", "expected Key, found int");
     // A positional list cannot stand in for an enum-keyed table; only named entries reach one.
@@ -6291,8 +6198,8 @@ test "CLI executes complete enum tables and rejects missing mappings in every co
         \\    a
         \\
         \\
-        \\def main() -> i64:
-        \\    table: [Key]i64 = [7]
+        \\func main() -> i64:
+        \\    mut table: [Key]i64 = [7]
         \\    return table[Key.a]
     , 1, "", "error[E_LIST_TYPE]");
 }
@@ -6306,8 +6213,8 @@ test "CLI handles recoverable results and rejects silent error loss" {
         \\    err: i64
         \\
         \\
-        \\def main() -> i64:
-        \\    r: R = Err(7)
+        \\func main() -> i64:
+        \\    mut r: R = Err(7)
         \\    return 0
     ;
     for ([_][]const u8{ "check", "run", "discover-duplicates" }) |command| try invoke(command, ignored, 1, "", "error[E_RESULT_UNHANDLED]");
@@ -6317,11 +6224,11 @@ test "CLI handles recoverable results and rejects silent error loss" {
         \\    err: i64
         \\
         \\
-        \\def make() -> R:
+        \\func make() -> R:
         \\    return Ok(1)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    make()
         \\    return 0
     , 1, "", "error[E_EXPLICIT_DISCARD_REQUIRED]");
@@ -6332,11 +6239,10 @@ test "CLI checks external capabilities but cannot silently grant ambient provide
     try checkProjectClean(source);
     try invokeProjectOptions("run", source, &.{"--restrict"}, 2, "", "--restrict is active");
     const invalid =
-        \\module main
         \\import time
         \\
         \\
-        \\def main(c: Clock) -> int effects():
+        \\func main(c: Clock) -> int effects():
         \\    _ = time.now(c)
         \\    return 0
     ;
@@ -6347,7 +6253,7 @@ test "CLI checks bounded environment access without granting ambient process acc
     try invoke("check", source, 0, "", "");
     try invokeOptions("run", source, &.{"--restrict"}, 2, "", "--restrict is active");
     const invalid =
-        \\def main(env: Environment) -> i64 effects():
+        \\func main(env: Environment) -> i64 effects():
         \\    _ = env.get("K")
         \\    return 0
     ;
@@ -6359,13 +6265,13 @@ test "CLI exposes fs.read_only permission attenuation and rejects the removed sp
     try invoke("check", source, 0, "", "");
     try invokeOptions("run", source, &.{"--restrict"}, 2, "", "--restrict is active");
     const invalid =
-        \\def main(fs: Filesystem) -> i64:
+        \\func main(fs: Filesystem) -> i64:
         \\    _ = restrict_resource[read, read](fs)
         \\    return 0
     ;
     for ([_][]const u8{ "check", "run", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_REMOVED_SPELLING]");
     const extra =
-        \\def main(fs: Filesystem) -> i64:
+        \\func main(fs: Filesystem) -> i64:
         \\    _ = fs.read_only(1)
         \\    return 0
     ;
@@ -6380,9 +6286,9 @@ test "CLI narrows a Network to one literal endpoint and rejects a dynamic host" 
         \\    ok: Socket,
         \\    err: int
         \\
-        \\def main(net: Network) -> int:
-        \\    scoped = net.host("127.0.0.1:8000")
-        \\    request: [1]u8 = [0u8]
+        \\func main(net: Network) -> int:
+        \\    mut scoped = net.host("127.0.0.1:8000")
+        \\    mut request: FixedArray[u8, 1] = FixedArray[u8, 1]([0u8])
         \\    match acquire_resource[Open](scoped, request):
         \\        case Open.ok(socket):
         \\            _ = socket
@@ -6398,10 +6304,10 @@ test "CLI narrows a Network to one literal endpoint and rejects a dynamic host" 
         \\    ok: Socket,
         \\    err: int
         \\
-        \\def main(net: Network) -> int:
-        \\    endpoint = "127.0.0.1:8000"
-        \\    scoped = net.host(endpoint)
-        \\    request: [1]u8 = [0u8]
+        \\func main(net: Network) -> int:
+        \\    mut endpoint = "127.0.0.1:8000"
+        \\    mut scoped = net.host(endpoint)
+        \\    mut request: FixedArray[u8, 1] = [0u8]
         \\    match acquire_resource[Open](scoped, request):
         \\        case Open.ok(socket):
         \\            _ = socket
@@ -6415,12 +6321,11 @@ test "CLI narrows a Network to one literal endpoint and rejects a dynamic host" 
 /// A project guest whose `main` takes a `Network`, narrows it to one literal
 /// endpoint and reports the acquisition code. Used by the grant tests.
 const network_connect_guest =
-    \\module main
     \\import network
     \\
     \\
-    \\def main(net: Network) -> int effects(network):
-    \\    scoped = net.host("127.0.0.1:9")
+    \\func main(net: Network) -> int effects(network):
+    \\    mut scoped = net.host("127.0.0.1:9")
     \\    match network.connect(scoped):
     \\        case network.Connected.ok(connection):
     \\            _ = connection
@@ -6471,15 +6376,14 @@ test "CLI grants a narrowed endpoint and the network module exchanges bytes over
     const name = try std.fmt.allocPrint(testing.allocator, "{f}", .{server.socket.address});
     defer testing.allocator.free(name);
     const source = try std.fmt.allocPrint(testing.allocator,
-        \\module main
         \\import network
         \\
         \\
-        \\def main(net: Network) -> int effects(network):
-        \\    scoped = net.host("{s}")
+        \\func main(net: Network) -> int effects(network):
+        \\    mut scoped = net.host("{s}")
         \\    match network.connect(scoped):
         \\        case network.Connected.ok(first):
-        \\            payload: [4]u8 = b"ping"
+        \\            mut payload: FixedArray[u8, 4] = b"ping"
         \\            match network.write(first, payload):
         \\                case network.Written.ok(sent):
         \\                    _ = sent
@@ -6543,7 +6447,7 @@ test "CLI checks and lowers the qualified whole-path helper methods" {
     const source = @embedFile("fixtures/file-methods.my");
     try invoke("check", source, 0, "", "");
     const invalid =
-        \\def main(fs: Filesystem) -> int:
+        \\func main(fs: Filesystem) -> int:
         \\    _ = fs.read_text()
         \\    return 0
     ;
@@ -6551,11 +6455,10 @@ test "CLI checks and lowers the qualified whole-path helper methods" {
 }
 
 const clock_program =
-    \\module main
     \\import time
     \\
     \\
-    \\def main(clock: Clock) -> int:
+    \\func main(clock: Clock) -> int:
     \\    match time.now(clock):
     \\        case Ok(instant):
     \\            return instant.unix_nanoseconds - instant.unix_nanoseconds
@@ -6569,27 +6472,26 @@ test "CLI accepts Python capability spellings and lets a declared type keep the 
         \\record Clock:
         \\    ticks: int
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return Clock(ticks=7).ticks
     ;
     try invoke("run", declared, 0, "7\n", "");
     const entropy =
-        \\module main
         \\import random
         \\
         \\
-        \\def main(rng: Entropy) -> int:
+        \\func main(rng: Entropy) -> int:
         \\    _ = random.from_entropy(rng)
         \\    return 0
     ;
     try checkProjectClean(entropy);
     try invoke("check",
-        \\def main(env: Environment) -> i64:
+        \\func main(env: Environment) -> i64:
         \\    _ = env
         \\    return 0
     , 0, "", "");
     try invoke("check",
-        \\def main(fs: Filesystem) -> i64:
+        \\func main(fs: Filesystem) -> i64:
         \\    _ = fs
         \\    return 0
     , 0, "", "");
@@ -6612,7 +6514,7 @@ test "CLI grant flags reject repeats empty values and commands that do not execu
 // spec: CAPABILITY-3
 test "CLI refuses an ungranted entry capability only while --restrict is active" {
     const environment =
-        \\def main(env: Environment) -> i64 effects(environment):
+        \\func main(env: Environment) -> i64 effects(environment):
         \\    _ = env.get("PATH")
         \\    return 0
     ;
@@ -6627,18 +6529,17 @@ test "CLI refuses an ungranted entry capability only while --restrict is active"
     try invokeOptions("run", environment, &.{ "--restrict", "--allow-env=PATH" }, 0, "0\n", "");
     // A grant the entry point never requests is simply never read.
     try invokeOptions("run",
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 4
     , &.{ "--restrict", "--allow-clock", "--allow-random=7" }, 0, "4\n", "");
 }
 // spec: CAPABILITY-5
 test "CLI clock entropy and environment providers honour their grants" {
     const seeded =
-        \\module main
         \\import random
         \\
         \\
-        \\def main(rng: Entropy) -> int:
+        \\func main(rng: Entropy) -> int:
         \\    match random.from_entropy(rng):
         \\        case Ok(generator):
         \\            return int(generator.state[0] % 1000u64)
@@ -6656,7 +6557,7 @@ test "CLI clock entropy and environment providers honour their grants" {
     // value is unknown here, so assert the contract against its printed result.
     try testing.expectEqual(std.process.Child.Term{ .exited = resultStatus(first.stdout) }, first.term);
     const missing =
-        \\def main(env: Environment) -> i64 effects(environment):
+        \\func main(env: Environment) -> i64 effects(environment):
         \\    match env.get("PATH"):
         \\        case Some(value):
         \\            return len(value) - len(value)
@@ -6682,7 +6583,7 @@ test "CLI directory grants scope the file surface and separate reading from writ
     const write_grant = try std.fmt.allocPrint(testing.allocator, "--allow-write={s}", .{directory});
     defer testing.allocator.free(write_grant);
     const program =
-        \\def main(fs: Filesystem, out: Stream) -> int:
+        \\func main(fs: Filesystem, out: Stream) -> int:
         \\    out.print(read_text(fs, "notes.txt"))
         \\    out.print(write_text(fs, "copy.txt", "beta\n"))
         \\    out.print(read_text(fs, "../escape"))
@@ -6701,7 +6602,7 @@ test "CLI directory grants scope the file surface and separate reading from writ
 // spec-case: IO-1
 test "CLI streams program output and reports the entry result only on request" {
     const program =
-        \\def main(out: Stream) -> int:
+        \\func main(out: Stream) -> int:
         \\    out.print("streamed")
         \\    return 7
     ;
@@ -6725,11 +6626,10 @@ test "CLI resolves the Python capability spellings inside projects that import m
     var temporary = testing.tmpDir(.{});
     defer temporary.cleanup();
     const entry =
-        \\module main
         \\import time
         \\import random
         \\
-        \\def main(clock: Clock, rng: Entropy, fs: Filesystem, out: Stream) -> int:
+        \\func main(clock: Clock, rng: Entropy, fs: Filesystem, out: Stream) -> int:
         \\    match time.now(clock):
         \\        case Ok(instant):
         \\            out.print("clock", instant.unix_nanoseconds - instant.unix_nanoseconds)
@@ -6773,7 +6673,7 @@ test "CLI grants every capability by default and resolves paths against the work
     defer testing.allocator.free(anchor);
     const directory = std.fs.path.dirname(anchor).?;
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data =
-        \\def main(fs: Filesystem, out: Stream) -> int:
+        \\func main(fs: Filesystem, out: Stream) -> int:
         \\    out.print(read_text(fs, "notes.txt"))
         \\    out.print(write_text(fs, "made.txt", "beta\n"))
         \\    out.print(read_text(fs, "../escape"))
@@ -6798,7 +6698,7 @@ test "CLI grants every capability by default and resolves paths against the work
     defer testing.allocator.free(written);
     try testing.expectEqualStrings("beta\n", written);
     // An absolute path names itself, and `--allow-*` without `--restrict` narrows nothing.
-    const absolute = try std.fmt.allocPrint(testing.allocator, "def main(fs: Filesystem, out: Stream) -> int:\n    out.print(read_text(fs, \"{s}\"))\n    return 0\n", .{anchor});
+    const absolute = try std.fmt.allocPrint(testing.allocator, "func main(fs: Filesystem, out: Stream) -> int:\n    out.print(read_text(fs, \"{s}\"))\n    return 0\n", .{anchor});
     defer testing.allocator.free(absolute);
     try invokeOptions("run", absolute, &.{"--allow-read=."}, 0, "Ok('alpha\\n')\n0\n", "");
 }
@@ -6890,18 +6790,16 @@ test "CLI project checks reuse syntax and verdicts and invalidate only changed m
     defer temp.cleanup();
     try temp.dir.createDir(testing.io, "app", .default_dir);
     try temp.dir.writeFile(testing.io, .{ .sub_path = "app/main.my", .data =
-        \\module main
         \\
         \\import helper
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return helper.answer()
     });
     try temp.dir.writeFile(testing.io, .{ .sub_path = "app/helper.my", .data =
-        \\module helper
         \\
         \\
-        \\public def answer() -> i64 effects():
+        \\public func answer() -> i64 effects():
         \\    return 7
     });
     const entry = try temp.dir.realPathFileAlloc(testing.io, "app/main.my", testing.allocator);
@@ -6926,10 +6824,9 @@ test "CLI project checks reuse syntax and verdicts and invalidate only changed m
 
     // Editing the dependency invalidates the verdict and only that module's syntax.
     try temp.dir.writeFile(testing.io, .{ .sub_path = "app/helper.my", .data =
-        \\module helper
         \\
         \\
-        \\public def answer() -> i64 effects():
+        \\public func answer() -> i64 effects():
         \\    return 8
     });
     const edited = try projectCacheCheck(entry, cache_argument, 0);
@@ -6941,10 +6838,9 @@ test "CLI project checks reuse syntax and verdicts and invalidate only changed m
     // A rejected edit can never inherit the earlier successful verdict. The
     // failure is reported and the cache is not consulted again for this content.
     try temp.dir.writeFile(testing.io, .{ .sub_path = "app/helper.my", .data =
-        \\module helper
         \\
         \\
-        \\public def answer() -> i64:
+        \\public func answer() -> i64:
         \\    return True
     });
     const broken = try projectCacheCheck(entry, cache_argument, 1);
@@ -6952,10 +6848,9 @@ test "CLI project checks reuse syntax and verdicts and invalidate only changed m
 
     // Repair the source so the final no-cache run is a successful check.
     try temp.dir.writeFile(testing.io, .{ .sub_path = "app/helper.my", .data =
-        \\module helper
         \\
         \\
-        \\public def answer() -> i64 effects():
+        \\public func answer() -> i64 effects():
         \\    return 8
     });
 
@@ -6974,7 +6869,7 @@ test "CLI project checks reuse syntax and verdicts and invalidate only changed m
 // spec: CAPABILITY-DIAG-1
 test "multiple missing capabilities report exactly one identical diagnostic" {
     const program =
-        \\def main(fs: Filesystem, env: Environment) -> int:
+        \\func main(fs: Filesystem, env: Environment) -> int:
         \\    _ = fs
         \\    _ = env
         \\    return 0
@@ -7033,7 +6928,7 @@ test "multiple missing capabilities report exactly one identical diagnostic" {
 // spec: ARGV-LIMIT-1
 test "run build --run and installed executables accept more than 256 guest arguments" {
     const program =
-        \\def main(args: list[str]) -> int:
+        \\func main(args: str[]) -> int:
         \\    return len(args)
     ;
     var temp = testing.tmpDir(.{});
@@ -7095,65 +6990,59 @@ test "run build --run and installed executables accept more than 256 guest argum
     try testing.expectEqualStrings("", installed.stderr);
 }
 const named_constraint_contracts =
-    \\module contracts
     \\
     \\
     \\public constraint Prices[P] = copy + op(price(policy: P, subtotal: int) -> int effects())
 ;
 const named_constraint_checkout =
-    \\module checkout
     \\import contracts
     \\
     \\
-    \\public def total[P: contracts.Prices](policy: P, subtotal: int) -> int effects():
+    \\public func total[P: contracts.Prices](policy: P, subtotal: int) -> int effects():
     \\    return P.price(policy, subtotal) + 500
 ;
 const named_constraint_fakes =
-    \\module fakes
     \\
     \\
     \\public domain FixedPrices: int:
-    \\    def make(amount: int) -> FixedPrices effects():
+    \\    func make(amount: int) -> FixedPrices effects():
     \\        return wrap[FixedPrices](amount)
     \\
-    \\    def price(policy: FixedPrices, subtotal: int) -> int effects():
+    \\    func price(policy: FixedPrices, subtotal: int) -> int effects():
     \\        _ = subtotal
     \\        return unwrap(policy)
 ;
 const named_constraint_fake_tests =
-    \\module fake_tests
     \\import checkout
     \\import fakes
     \\
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    assert test_checkout()
     \\    return 0
     \\
     \\
-    \\public def test_checkout() -> bool effects():
+    \\public func test_checkout() -> bool effects():
     \\    return checkout.total(fakes.FixedPrices.make(1750), 2000) == 2250
 ;
 const named_constraint_production_invalid =
-    \\module production
     \\import contracts
     \\
     \\
     \\public domain DiscountPrices: int:
-    \\    def make(discount: int) -> DiscountPrices effects():
+    \\    func make(discount: int) -> DiscountPrices effects():
     \\        return wrap[DiscountPrices](discount)
     \\
-    \\    def price(policy: DiscountPrices, subtotal: int) -> int effects():
+    \\    func price(policy: DiscountPrices, subtotal: int) -> int effects():
     \\        return missing_name(policy, subtotal)
 ;
 const named_constraint_main =
-    \\module main
     \\import checkout
     \\import production
     \\
     \\
-    \\def main() -> int:
-    \\    real = production.DiscountPrices.make(250)
+    \\func main() -> int:
+    \\    mut real = production.DiscountPrices.make(250)
     \\    assert checkout.total(real, 2000) == 2250
     \\    return 0
 ;
@@ -7228,7 +7117,7 @@ fn runNamedConstraintProbes(allocator: std.mem.Allocator) !void {
 test "mylang build answers the core's developer switches as mylang-core did" {
     var temporary = testing.tmpDir(.{});
     defer temporary.cleanup();
-    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "def main(out: Stream) -> int:\n    out.print(6 * 7)\n    return 0\n" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "func main(out: Stream) -> int:\n    out.print(6 * 7)\n    return 0\n" });
     const root = try temporary.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
     defer testing.allocator.free(root);
     const compiler = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, compiler_path, testing.allocator);
@@ -7270,8 +7159,8 @@ fn writeProjectFile(dir: *std.testing.TmpDir, path: []const u8, data: []const u8
 
 const policy_allow = "{\"version\":1,\"default_action\":\"allow\",\"rules\":[]}";
 const policy_deny = "{\"version\":1,\"default_action\":\"deny\",\"rules\":[]}";
-const policy_project_main = "module main\nimport helper\ndef main() -> int:\n    return helper.value()\n";
-const policy_project_helper = "module helper\npublic def value() -> int effects():\n    return 7\n";
+const policy_project_main = "import helper\nfunc main() -> int:\n    return helper.value()\n";
+const policy_project_helper = "public func value() -> int effects():\n    return 7\n";
 
 // spec-case: REQUIRED-PROJECT-IMPORT-POLICY-1
 test "loadConfiguredPolicy enforces mylang.json across ordinary project commands cold warm and after policy-only edits" {
@@ -7404,7 +7293,7 @@ test "loadConfiguredPolicy policy discovery anchors to the entry file instead of
     try writeProjectFile(&temp, "entry/helper.my", policy_project_helper);
     try writeProjectFile(&temp, "entry/mylang.json", "{\"version\":1,\"import_policy\":\"policy.json\"}");
     try writeProjectFile(&temp, "entry/policy.json", policy_deny);
-    try writeProjectFile(&temp, "elsewhere/main.my", "module main\ndef main() -> int:\n    return 0\n");
+    try writeProjectFile(&temp, "elsewhere/main.my", "func main() -> int:\n    return 0\n");
     try writeProjectFile(&temp, "elsewhere/mylang.json", "{\"version\":1,\"import_policy\":\"policy.json\"}");
     try writeProjectFile(&temp, "elsewhere/policy.json", policy_allow);
     const entry = try temp.dir.realPathFileAlloc(testing.io, "entry/main.my", testing.allocator);
@@ -7431,8 +7320,8 @@ test "loadConfiguredPolicy policy discovery anchors to the entry file instead of
 test "configured policy never disables independent import-cycle rejection" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
-    try writeProjectFile(&temp, "main.my", "module main\nimport helper\ndef main() -> int:\n    return helper.value()\n");
-    try writeProjectFile(&temp, "helper.my", "module helper\nimport main\npublic def value() -> int effects():\n    return 0\n");
+    try writeProjectFile(&temp, "main.my", "import helper\nfunc main() -> int:\n    return helper.value()\n");
+    try writeProjectFile(&temp, "helper.my", "import main\npublic func value() -> int effects():\n    return 0\n");
     try writeProjectFile(&temp, "mylang.json", "{\"version\":1,\"import_policy\":\"policy.json\"}");
     const entry = try temp.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
     defer testing.allocator.free(entry);
@@ -7502,18 +7391,17 @@ test "loadConfiguredPolicy policy applies to native test preparation ProjectConf
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
     try writeProjectFile(&temp, "tests.my",
-        \\module tests
         \\import helper
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
         \\
         \\
-        \\public def test_policy() -> bool effects():
+        \\public func test_policy() -> bool effects():
         \\    return helper.value() == 7
     );
-    try writeProjectFile(&temp, "helper.my", "module helper\npublic def value() -> int effects():\n    return 7\n");
+    try writeProjectFile(&temp, "helper.my", "public func value() -> int effects():\n    return 7\n");
     try writeProjectFile(&temp, "mylang.json", "{\"version\":1,\"import_policy\":\"policy.json\"}");
     try writeProjectFile(&temp, "policy.json", policy_allow);
     const entry = try temp.dir.realPathFileAlloc(testing.io, "tests.my", testing.allocator);
@@ -7550,7 +7438,7 @@ test "loadConfiguredPolicy policy applies to native test preparation ProjectConf
 test "validateUnitConfiguredPolicy checks required configuration for single-unit commands" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
-    try writeProjectFile(&temp, "main.my", "def main() -> int:\n    return 0\n");
+    try writeProjectFile(&temp, "main.my", "func main() -> int:\n    return 0\n");
     try writeProjectFile(&temp, "mylang.json", "{\"version\":1,\"import_policy\":\"policy.json\"}");
     try writeProjectFile(&temp, "policy.json", policy_deny);
     const entry = try temp.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
@@ -7582,18 +7470,17 @@ test "loadConfiguredPolicy policy discovery above the native test entry enforces
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
     try writeProjectFile(&temp, "nested/tests.my",
-        \\module tests
         \\import helper
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
         \\
         \\
-        \\public def test_policy() -> bool effects():
+        \\public func test_policy() -> bool effects():
         \\    return helper.value() == 7
     );
-    try writeProjectFile(&temp, "nested/helper.my", "module helper\npublic def value() -> int effects():\n    return 7\n");
+    try writeProjectFile(&temp, "helper.my", "public func value() -> int effects():\n    return 7\n");
     try writeProjectFile(&temp, "mylang.json", "{\"version\":1,\"import_policy\":\"policy.json\"}");
     try writeProjectFile(&temp, "policy.json", policy_deny);
     const entry = try temp.dir.realPathFileAlloc(testing.io, "nested/tests.my", testing.allocator);
@@ -7667,30 +7554,30 @@ test "CLI migrated corpus projects carry the checked mutation contract" {
 test "CLI nested record alias rejects under effects and runs with a mutation footprint" {
     const rejected =
         \\record Box:
-        \\    values: list[int]
+        \\    values: int[]
         \\
         \\
-        \\def overwrite(box: mut Box) -> None effects():
+        \\func overwrite(mut box: Box) -> Unit effects():
         \\    box.values[0] = 7
         \\
         \\
-        \\def main() -> int:
-        \\    box = Box(values=[1])
+        \\func main() -> int:
+        \\    mut box = Box(values=[1])
         \\    overwrite(mut box)
         \\    return box.values[0]
     ;
     try invoke("check", rejected, 1, "", "E_MUTATION_PERMISSION");
     const permitted =
         \\record Box:
-        \\    values: list[int]
+        \\    values: int[]
         \\
         \\
-        \\def overwrite(box: mut Box) -> None:
+        \\func overwrite(mut box: Box) -> Unit:
         \\    box.values[0] = 7
         \\
         \\
-        \\def main() -> int:
-        \\    box = Box(values=[1])
+        \\func main() -> int:
+        \\    mut box = Box(values=[1])
         \\    overwrite(mut box)
         \\    return box.values[0]
     ;
@@ -7707,53 +7594,49 @@ test "CLI the mut spelling checks and runs while the removed flag is rejected" {
 // --- P1: selected test providers validated against declared contracts ---
 
 const p1_production_unfinished =
-    \\module production
     \\
     \\
     \\public domain Stub: int:
-    \\    def make(discount: int) -> Stub effects():
+    \\    func make(discount: int) -> Stub effects():
     \\        return wrap[Stub](discount)
     \\
-    \\    def price(policy: Stub, ledger: mut list[int], rates: list[int], subtotal: int) -> int effects(mutation):
+    \\    func price(policy: Stub, mut ledger: int[], rates: int[], subtotal: int) -> int effects(mutation):
     \\        return todo[int]()
 ;
 /// Production with the whole derived ceiling written out, so a replacement can
 /// narrow the clause while keeping the signature.
 const p1_production_allocating =
-    \\module production
     \\
     \\
     \\public domain Stub: int:
-    \\    def make(discount: int) -> Stub effects():
+    \\    func make(discount: int) -> Stub effects():
     \\        return wrap[Stub](discount)
     \\
-    \\    def price(policy: Stub, ledger: mut list[int], rates: list[int], subtotal: int) -> int effects(mutation, managed_allocation):
+    \\    func price(policy: Stub, mut ledger: int[], rates: int[], subtotal: int) -> int effects(mutation, managed_allocation):
     \\        return todo[int]()
 ;
 const p1_production_bad_interface =
-    \\module mismatched
     \\
     \\
     \\public domain Stub: int:
-    \\    def make(discount: int) -> Stub effects():
+    \\    func make(discount: int) -> Stub effects():
     \\        return wrap[Stub](discount)
     \\
-    \\    def price(policy: Stub, ledger: list[int], rates: list[int], subtotal: int) -> int effects():
+    \\    func price(policy: Stub, ledger: int[], rates: int[], subtotal: int) -> int effects():
     \\        return subtotal
 ;
 const p1_main =
-    \\module main
     \\import production
     \\
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return 0
     \\
     \\
-    \\public def test_checkout() -> bool:
-    \\    policy = production.Stub.make(250)
-    \\    ledger: list[int] = [0]
-    \\    rates: list[int] = [0]
+    \\public func test_checkout() -> bool:
+    \\    mut policy = production.Stub.make(250)
+    \\    mut ledger: int[] = [0]
+    \\    mut rates: int[] = [0]
     \\    return production.Stub.price(policy, mut ledger, rates, 2000) == 1750
 ;
 /// A replacement `production.Stub.price` whose managed parameters, effect
@@ -7761,14 +7644,14 @@ const p1_main =
 fn p1Fake(parameters: []const u8, perm: []const u8, body: []const u8) ![]const u8 {
     return std.fmt.allocPrint(
         testing.allocator,
-        "module production\n\n\npublic domain Stub: int:\n" ++
-            "    def make(discount: int) -> Stub effects():\n        return wrap[Stub](discount)\n\n" ++
-            "    def price(policy: Stub, {s}, subtotal: int) -> int {s}:\n        {s}\n        return subtotal - unwrap(policy)\n",
+        "public domain Stub: int:\n" ++
+            "    func make(discount: int) -> Stub effects():\n        return wrap[Stub](discount)\n\n" ++
+            "    func price(policy: Stub, {s}, subtotal: int) -> int {s}:\n        {s}\n        return subtotal - unwrap(policy)\n",
         .{ parameters, perm, body },
     );
 }
 /// The production footprint: `ledger` written, `rates` read-only.
-const p1_footprint = "ledger: mut list[int], rates: list[int]";
+const p1_footprint = "mut ledger: int[], rates: int[]";
 const p1_write = "ledger[0] = subtotal";
 fn p1WriteCases(dir: *std.testing.TmpDir, name: []const u8, key: []const u8, source: []const u8) !void {
     const a = testing.allocator;
@@ -7877,8 +7760,8 @@ test "P1 rejects stronger or malformed replacements and a bad production interfa
     // (`price(policy, mut ledger, rates, ...)`), so a replacement may neither
     // drop a `mut` nor add one.
     for ([_][2][]const u8{
-        .{ "ledger: list[int], rates: list[int]", "_ = subtotal" },
-        .{ "ledger: mut list[int], rates: mut list[int]", "ledger[0] = subtotal\n        rates[0] = subtotal" },
+        .{ "ledger: int[], rates: int[]", "_ = subtotal" },
+        .{ "mut ledger: int[], mut rates: int[]", "ledger[0] = subtotal\n        rates[0] = subtotal" },
     }) |footprint| {
         const changed = try p1Fake(footprint[0], "effects(mutation)", footprint[1]);
         defer testing.allocator.free(changed);
@@ -7898,14 +7781,14 @@ test "P1 rejects stronger or malformed replacements and a bad production interfa
     try testing.expect(unknown.term != .exited or unknown.term.exited != 0);
     try testing.expect(std.mem.indexOf(u8, unknown.stderr, "InvalidTestProviders") != null);
 
-    // A production interface error rejects before any provider is selected.
+    // A changed production footprint rejects a provider built for the earlier interface.
     try writeProjectFile(&temp, "production.my", p1_production_bad_interface);
     try p1WriteCases(&temp, "cases.json", "production.my", narrow);
     const interface_error = try p1Invoke(entry, cases_path, cache);
     defer testing.allocator.free(interface_error.stdout);
     defer testing.allocator.free(interface_error.stderr);
     try testing.expect(interface_error.term != .exited or interface_error.term.exited != 0);
-    try testing.expect(std.mem.indexOf(u8, interface_error.stderr, "E_MODULE_NAME") != null);
+    try testing.expect(std.mem.indexOf(u8, interface_error.stderr, "IncompatibleProvider") != null);
 }
 
 test "P1 rejects every incompatible replacement dimension" {
@@ -7927,7 +7810,7 @@ test "P1 rejects every incompatible replacement dimension" {
         .{ .label = "parameter type", .from = "subtotal: int) -> int", .to = "subtotal: bool) -> int" },
         .{ .label = "parameter default", .from = "subtotal: int) -> int", .to = "subtotal: int = 0) -> int" },
         .{ .label = "nominal identity", .from = "Stub", .to = "Other" },
-        .{ .label = "generic requirement", .from = "def price(policy:", .to = "def price[T: copy](policy:" },
+        .{ .label = "generic requirement", .from = "func price(policy:", .to = "func price[T: copy](policy:" },
         .{ .label = "effects too wide", .from = "effects(mutation)", .to = "effects(mutation, managed_allocation)" },
     };
     for (variants) |variant| {
@@ -7952,14 +7835,13 @@ test "P1 ignores an unselected production body type error while its declarations
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
     const production_body_error =
-        \\module production
         \\
         \\
         \\public domain Stub: int:
-        \\    def make(discount: int) -> Stub effects():
+        \\    func make(discount: int) -> Stub effects():
         \\        return wrap[Stub](discount)
         \\
-        \\    def price(policy: Stub, ledger: mut list[int], rates: list[int], subtotal: int) -> int effects(mutation):
+        \\    func price(policy: Stub, mut ledger: int[], rates: int[], subtotal: int) -> int effects(mutation):
         \\        return True
     ;
     try writeProjectFile(&temp, "main.my", p1_main);
@@ -8017,31 +7899,30 @@ fn r3WriteCases(dir: *std.testing.TmpDir, name: []const u8, qualified: []const u
 }
 
 const r3_alias_main =
-    \\module main
     \\
     \\
     \\public type Truth = bool
     \\public type Count = int
-    \\public type Counts = [2]Count
+    \\public type Counts = FixedArray[Count, 2]
     \\public record Pair[T]:
     \\    left: T
     \\    right: T
     \\public type Chosen = Pair[Count]
     \\
     \\
-    \\public def size(values: Counts) -> Count effects():
+    \\public func size(values: Counts) -> Count effects():
     \\    return values[0] + values[1]
     \\
     \\
-    \\public def pick(value: Chosen) -> Count effects():
+    \\public func pick(value: Chosen) -> Count effects():
     \\    return value.left
     \\
     \\
-    \\public def test_alias() -> Truth effects():
+    \\public func test_alias() -> Truth effects():
     \\    return True
     \\
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return 0
 ;
 
@@ -8073,11 +7954,11 @@ test "R3 canonical descriptors expand transparent aliases for discovery and nest
     try testing.expect(std.mem.indexOf(u8, contracts.stdout, "\"version\":\"interface-contracts-v2\"") != null);
     for ([_][]const u8{
         "{\"name\":\"Count\",\"kind\":\"alias\",\"signature\":\"\",\"generics\":\"\",\"permissions\":\"\",\"shape\":\"target:i64\"}",
-        "{\"name\":\"Counts\",\"kind\":\"alias\",\"signature\":\"\",\"generics\":\"\",\"permissions\":\"\",\"shape\":\"target:[2]i64\"}",
+        "{\"name\":\"Counts\",\"kind\":\"alias\",\"signature\":\"\",\"generics\":\"\",\"permissions\":\"\",\"shape\":\"target:FixedArray[i64,2]\"}",
         "{\"name\":\"Chosen\",\"kind\":\"alias\",\"signature\":\"\",\"generics\":\"\",\"permissions\":\"\",\"shape\":\"target:main::Pair[i64]\"}",
-        "{\"name\":\"size\",\"kind\":\"function\",\"signature\":\"def(values:[2]i64)->i64\"",
-        "{\"name\":\"pick\",\"kind\":\"function\",\"signature\":\"def(value:main::Pair[i64])->i64\"",
-        "{\"name\":\"test_alias\",\"kind\":\"function\",\"signature\":\"def()->bool\"",
+        "{\"name\":\"size\",\"kind\":\"function\",\"signature\":\"func(values:FixedArray[i64,2])->i64\"",
+        "{\"name\":\"pick\",\"kind\":\"function\",\"signature\":\"func(value:main::Pair[i64])->i64\"",
+        "{\"name\":\"test_alias\",\"kind\":\"function\",\"signature\":\"func()->bool\"",
     }) |needle| {
         testing.expect(std.mem.indexOf(u8, contracts.stdout, needle) != null) catch |err| {
             std.debug.print("missing canonical contract fragment: {s}\n", .{needle});
@@ -8087,63 +7968,58 @@ test "R3 canonical descriptors expand transparent aliases for discovery and nest
 }
 
 const r3_scalar_main =
-    \\module main
     \\import reading
     \\
     \\
-    \\public def test_reading() -> bool effects():
+    \\public func test_reading() -> bool effects():
     \\    return reading.sample() == 42
     \\
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return 0
 ;
 const r3_scalar_production =
-    \\module reading
     \\
     \\
-    \\public def sample() -> int effects():
+    \\public func sample() -> int effects():
     \\    return todo[int]()
 ;
 const r3_nominal_main =
-    \\module main
     \\import reading
     \\
     \\
-    \\public def test_reading() -> bool effects():
+    \\public func test_reading() -> bool effects():
     \\    return True
     \\
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return 0
 ;
 const r3_nominal_production =
-    \\module reading
     \\
     \\
     \\public domain D: i64:
-    \\    def make(x: i64) -> D effects():
+    \\    func make(x: i64) -> D effects():
     \\        return wrap[D](x)
     \\
     \\
-    \\public def sample() -> D effects():
+    \\public func sample() -> D effects():
     \\    return todo[D]()
 ;
 const r3_nominal_fake =
-    \\module reading
     \\
     \\
     \\public domain D: i64:
-    \\    def make(x: i64) -> D effects():
+    \\    func make(x: i64) -> D effects():
     \\        return wrap[D](x)
     \\
     \\
     \\public domain E: i64:
-    \\    def make(x: i64) -> E effects():
+    \\    func make(x: i64) -> E effects():
     \\        return wrap[E](x)
     \\
     \\
-    \\public def sample() -> E effects():
+    \\public func sample() -> E effects():
     \\    return E.make(1)
 ;
 
@@ -8161,10 +8037,9 @@ test "R3 canonical descriptors compare provider scalar and nominal contracts" {
     defer testing.allocator.free(cache);
 
     const equivalent =
-        \\module reading
         \\
         \\
-        \\public def sample() -> i64 effects():
+        \\public func sample() -> i64 effects():
         \\    return 42
     ;
     try r3WriteCases(&temp, "cases.json", "main::test_reading", "reading.my", equivalent);
@@ -8175,16 +8050,14 @@ test "R3 canonical descriptors compare provider scalar and nominal contracts" {
     try testing.expect(std.mem.indexOf(u8, accepted.stdout, "\"passed\":1") != null);
 
     const scalar_variants = [_][]const u8{
-        \\module reading
         \\
         \\
-        \\public def sample() -> u8 effects():
+        \\public func sample() -> u8 effects():
         \\    return 42
         ,
-        \\module reading
         \\
         \\
-        \\public def sample() -> str effects():
+        \\public func sample() -> str effects():
         \\    return "x"
         ,
     };
@@ -8272,67 +8145,61 @@ test "C3s concrete specialization reuse survives fresh processes with selective 
     defer testing.allocator.free(cache_argument);
 
     const library_render40 =
-        \\module lib
         \\
         \\
-        \\public def render[T: integer](value: T) -> i64 effects():
+        \\public func render[T: integer](value: T) -> i64 effects():
         \\    _ = value
         \\    return 40
         \\
         \\
-        \\public def label[T: integer](value: T) -> i64 effects():
+        \\public func label[T: integer](value: T) -> i64 effects():
         \\    _ = value
         \\    return 7
     ;
     const library_render41 =
-        \\module lib
         \\
         \\
-        \\public def render[T: integer](value: T) -> i64 effects():
+        \\public func render[T: integer](value: T) -> i64 effects():
         \\    _ = value
         \\    return 41
         \\
         \\
-        \\public def label[T: integer](value: T) -> i64 effects():
+        \\public func label[T: integer](value: T) -> i64 effects():
         \\    _ = value
         \\    return 7
     ;
     const library_label8 =
-        \\module lib
         \\
         \\
-        \\public def render[T: integer](value: T) -> i64 effects():
+        \\public func render[T: integer](value: T) -> i64 effects():
         \\    _ = value
         \\    return 41
         \\
         \\
-        \\public def label[T: integer](value: T) -> i64 effects():
+        \\public func label[T: integer](value: T) -> i64 effects():
         \\    _ = value
         \\    return 8
     ;
     const entry_u8 =
-        \\module main
         \\import lib
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return lib.render[u8](1u8) + lib.label[i64](2)
     ;
     const entry_split =
-        \\module main
         \\import lib
         \\
         \\
-        \\def main() -> i64:
-        \\    a = lib.render[u8](1u8)
+        \\func main() -> i64:
+        \\    mut a = lib.render[u8](1u8)
         \\    return a + lib.label[i64](2)
     ;
     const entry_i64 =
-        \\module main
         \\import lib
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return lib.render[i64](1) + lib.label[i64](2)
     ;
 
@@ -8410,36 +8277,33 @@ test "C3s provider body changes stay visible through reused specializations" {
     const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache_base});
     defer testing.allocator.free(cache_argument);
     const base_library =
-        \\module lib
         \\
         \\
-        \\def helper(n: i64) -> i64 effects():
+        \\func helper(n: i64) -> i64 effects():
         \\    return n + 1
         \\
         \\
-        \\public def render[T: integer](value: T) -> i64 effects():
+        \\public func render[T: integer](value: T) -> i64 effects():
         \\    _ = value
         \\    return helper(40)
     ;
     const edited_library =
-        \\module lib
         \\
         \\
-        \\def helper(n: i64) -> i64 effects():
+        \\func helper(n: i64) -> i64 effects():
         \\    return n + 2
         \\
         \\
-        \\public def render[T: integer](value: T) -> i64 effects():
+        \\public func render[T: integer](value: T) -> i64 effects():
         \\    _ = value
         \\    return helper(40)
     ;
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "lib.my", .data = base_library });
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data =
-        \\module main
         \\import lib
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return lib.render[u8](1u8)
     });
     const warm_argv = [_][]const u8{ compiler_path, "run-project", entry, "--print-result", cache_argument };
@@ -8477,22 +8341,22 @@ test "C3s damaged truncated and foreign specialization entries fall back fresh" 
     const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache_base});
     defer testing.allocator.free(cache_argument);
     const source =
-        \\def size[T: integer](value: T) -> i64 effects():
+        \\func size[T: integer](value: T) -> i64 effects():
         \\    _ = value
         \\    return 7
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return size[u8](1u8)
     ;
     const edited =
-        \\def size[T: integer](value: T) -> i64 effects():
+        \\func size[T: integer](value: T) -> i64 effects():
         \\    _ = value
         \\    return 7
         \\
         \\
-        \\def main() -> i64:
-        \\    value = size[u8](1u8)
+        \\func main() -> i64:
+        \\    mut value = size[u8](1u8)
         \\    return value
     ;
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = source });
@@ -8542,12 +8406,12 @@ test "C3s no-cache performs specialization checks without reads or writes" {
     const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache_base});
     defer testing.allocator.free(cache_argument);
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data =
-        \\def size[T: integer](value: T) -> i64 effects():
+        \\func size[T: integer](value: T) -> i64 effects():
         \\    _ = value
         \\    return 7
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return size[u8](1u8)
     });
     const first = try c3sCheckReport(entry, cache_argument, true);
@@ -8577,27 +8441,27 @@ test "C3s reused specialization warnings relocate and defaults stay equivalent" 
     const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache_base});
     defer testing.allocator.free(cache_argument);
     const base =
-        \\def size[T: integer](value: T, extra: i64 = 5) -> i64 effects():
-        \\    unused_local = 3
+        \\func size[T: integer](value: T, extra: i64 = 5) -> i64 effects():
+        \\    mut unused_local = 3
         \\    _ = value
         \\    return extra
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return size[u8](1u8)
     ;
     const edited =
         \\type Marker = i64
         \\
         \\
-        \\def size[T: integer](value: T, extra: i64 = 5) -> i64 effects():
-        \\    unused_local = 3
+        \\func size[T: integer](value: T, extra: i64 = 5) -> i64 effects():
+        \\    mut unused_local = 3
         \\    _ = value
         \\    return extra
         \\
         \\
-        \\def main() -> i64:
-        \\    a = size[u8](1u8)
+        \\func main() -> i64:
+        \\    mut a = size[u8](1u8)
         \\    return a
     ;
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = base });
@@ -8668,8 +8532,8 @@ test "module by module, a trapping and a printing test report what the whole-pro
     var temporary = testing.tmpDir(.{});
     defer temporary.cleanup();
     const directory = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
-    try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = "module util\npublic def ratio(n: int, d: int) -> int:\n    return n // d\npublic def test_ratio() -> bool:\n    return ratio(6, 0) == 1\n" });
-    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "module main\nimport util\ndef main() -> int:\n    return 0\npublic def test_said(out: Stream) -> bool effects(output):\n    out.print(\"said\")\n    return util.ratio(4, 2) == 3\n" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "util.my", .data = "public func ratio(n: int, d: int) -> int:\n    return n // d\npublic func test_ratio() -> bool:\n    return ratio(6, 0) == 1\n" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "import util\nfunc main() -> int:\n    return 0\npublic func test_said(out: Stream) -> bool effects(output):\n    out.print(\"said\")\n    return util.ratio(4, 2) == 3\n" });
     const entry = try std.fs.path.join(a, &.{ directory, "main.my" });
     var module_args: std.ArrayList([]const u8) = .empty;
     try module_args.appendSlice(a, &.{ "test", entry, "--cache-dir", try std.fs.path.join(a, &.{ directory, "cm" }) });
@@ -8707,26 +8571,25 @@ fn guestTestRun(allocator: std.mem.Allocator, entry: []const u8, extra: []const 
 }
 
 const guest_output_program =
-    \\module main
     \\
     \\
-    \\public def test_chatty(out: Stream) -> bool effects(output, managed_allocation):
+    \\public func test_chatty(out: Stream) -> bool effects(output, managed_allocation):
     \\    out.print("debug-marker")
     \\    return True
     \\
     \\
-    \\public def test_failing(out: Stream) -> bool effects(output, managed_allocation):
+    \\public func test_failing(out: Stream) -> bool effects(output, managed_allocation):
     \\    out.print("debug-marker")
     \\    return False
     \\
     \\
-    \\public def test_assert(out: Stream) -> bool effects(output, managed_allocation):
+    \\public func test_assert(out: Stream) -> bool effects(output, managed_allocation):
     \\    out.print("debug-marker")
     \\    assert 1 == 2, "one equals two"
     \\    return True
     \\
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return 0
 ;
 
@@ -8758,14 +8621,13 @@ test "guest print output stays off the test protocol and shows on failure" {
 }
 
 const guest_typed_program =
-    \\module main
     \\
     \\
-    \\public def test_value() -> int effects():
+    \\public func test_value() -> int effects():
     \\    return 3
     \\
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return 0
 ;
 
@@ -8787,17 +8649,16 @@ test "a typed expectation failure names both actual and expected values" {
 }
 
 const library_entry_program =
-    \\module inventory
     \\
     \\
-    \\public def test_count() -> bool effects():
+    \\public func test_count() -> bool effects():
     \\    return 3 == 3
 ;
 
 const bare_test_entry_program =
     \\
     \\
-    \\public def test_bare() -> bool effects():
+    \\public func test_bare() -> bool effects():
     \\    return True
 ;
 
@@ -8822,31 +8683,28 @@ test "library modules and bare *_test.my files are valid guest test entries" {
 }
 
 const directory_project_main =
-    \\module main
     \\import helper
     \\
     \\
-    \\public def test_main() -> bool effects():
+    \\public func test_main() -> bool effects():
     \\    return helper.value() == 7
     \\
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return 0
 ;
 
 const directory_project_helper =
-    \\module helper
     \\
     \\
-    \\public def value() -> int effects():
+    \\public func value() -> int effects():
     \\    return 7
 ;
 
 const directory_project_test =
-    \\module library_test
     \\
     \\
-    \\public def test_alone() -> bool effects():
+    \\public func test_alone() -> bool effects():
     \\    return True
 ;
 
@@ -8872,35 +8730,32 @@ test "a directory run discovers project roots instead of every module" {
 }
 
 const directory_orphan_inner =
-    \\module inner
     \\
     \\
-    \\public def base() -> int effects():
+    \\public func base() -> int effects():
     \\    return 40
     \\
     \\
-    \\public def test_inner() -> bool effects():
+    \\public func test_inner() -> bool effects():
     \\    return base() == 40
 ;
 
 const directory_orphan_outer =
-    \\module outer
     \\import inner
     \\
     \\
-    \\public def test_outer() -> bool effects():
+    \\public func test_outer() -> bool effects():
     \\    return inner.base() + 2 == 42
 ;
 
 const directory_helper_with_test =
-    \\module helper
     \\
     \\
-    \\public def value() -> int effects():
+    \\public func value() -> int effects():
     \\    return 7
     \\
     \\
-    \\public def test_helper() -> bool effects():
+    \\public func test_helper() -> bool effects():
     \\    return value() == 7
 ;
 
@@ -8954,18 +8809,17 @@ test "CLI list-interfaces prints a tests column from the shared reachability ind
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
     try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data =
-        \\module input
         \\
         \\
-        \\public def parse(value: int) -> int:
+        \\public func parse(value: int) -> int:
         \\    return value
         \\
         \\
-        \\def test_parse() -> bool effects():
+        \\func test_parse() -> bool effects():
         \\    return parse(1) == 1
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     });
     const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
@@ -9004,7 +8858,7 @@ test "every building and running command refuses --unchecked as removed" {
     var temporary = testing.tmpDir(.{});
     defer temporary.cleanup();
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "refused.my", .data =
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     });
     const entry = try temporary.dir.realPathFileAlloc(testing.io, "refused.my", testing.allocator);
@@ -9026,7 +8880,6 @@ test "every building and running command refuses --unchecked as removed" {
 /// whose `Range` carries `@invariant(INV)`, with a passing test for each.
 fn contractFixture(precondition: []const u8, invariant: []const u8) ![]u8 {
     return std.fmt.allocPrint(testing.allocator,
-        \\module main
         \\
         \\@invariant({s})
         \\public record Range:
@@ -9034,19 +8887,19 @@ fn contractFixture(precondition: []const u8, invariant: []const u8) ![]u8 {
         \\    high: int
         \\
         \\@requires({s})
-        \\public def half(amount: int) -> int:
+        \\public func half(amount: int) -> int:
         \\    return amount // 2
         \\
-        \\def make(low: int) -> Range:
-        \\    return Range(low, 5)
+        \\func make(low: int) -> Range:
+        \\    return Range(low=low, high=5)
         \\
-        \\public def test_half() -> bool:
+        \\public func test_half() -> bool:
         \\    return half(4) == 2
         \\
-        \\public def test_make() -> bool:
+        \\public func test_make() -> bool:
         \\    return make(3).low == 3
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return half(4) + make(3).low
         \\
     , .{ invariant, precondition });
@@ -9147,23 +9000,23 @@ test "CLI a release build and a JSON diagnostic report the contract that failed"
     defer temporary.cleanup();
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data =
         \\@requires(amount > 0, "amount must be positive")
-        \\def half(amount: int) -> int:
+        \\func half(amount: int) -> int:
         \\    return amount // 2
         \\
         \\@ensures(result > 100)
-        \\def grow(x: int) -> int:
+        \\func grow(x: int) -> int:
         \\    return x + 1
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return grow(half(8))
         \\
     });
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "caller.my", .data =
         \\@requires(amount > 0, "amount must be positive")
-        \\def half(amount: int) -> int:
+        \\func half(amount: int) -> int:
         \\    return amount // 2
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return half(0)
         \\
     });
@@ -9231,21 +9084,20 @@ fn propertyOf(parsed: std.json.Value, name: []const u8) !std.json.Value {
 }
 
 const failing_property =
-    \\module main
     \\
-    \\public def test_sum_stays_below_100(xs: list[int]) -> bool:
-    \\    total = 0
+    \\public func test_sum_stays_below_100(xs: int[]) -> bool:
+    \\    mut total = 0
     \\    for x in xs:
     \\        total = total + x
     \\    return total < 100
     \\
-    \\public def test_reversing_twice_is_the_identity(xs: list[int]) -> bool:
-    \\    ys = xs.copy()
+    \\public func test_reversing_twice_is_the_identity(xs: int[]) -> bool:
+    \\    mut ys = xs.copy()
     \\    ys.reverse()
     \\    ys.reverse()
     \\    return ys == xs
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return 0
 ;
 
@@ -9288,27 +9140,26 @@ test "CLI property test shrinks a failing sum to the single-element list [100] a
 }
 
 const refused_properties =
-    \\module main
     \\
     \\public domain Meters: u32:
-    \\    def from(value: u32) -> Meters:
+    \\    func from(value: u32) -> Meters:
     \\        return wrap[Meters](value)
     \\
-    \\public def test_domain(m: Meters) -> bool:
+    \\public func test_domain(m: Meters) -> bool:
     \\    _ = m
     \\    return True
     \\
-    \\public def test_function(f: def(int) -> int) -> bool:
+    \\public func test_function(f: func(int) -> int) -> bool:
     \\    return f(1) >= 0
     \\
-    \\public def test_host(host: Host, n: int) -> bool:
+    \\public func test_host(host: Host, n: int) -> bool:
     \\    _ = host
     \\    return n >= 0
     \\
-    \\public def test_count(n: int) -> int:
+    \\public func test_count(n: int) -> int:
     \\    return n
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return 0
 ;
 
@@ -9320,7 +9171,7 @@ test "CLI property test names the parameter and type it cannot generate" {
     defer freeRun(result);
     try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, result.term);
     try testing.expect(std.mem.indexOf(u8, result.stdout, "failed main::test_domain: property test parameter `m: main::Meters` cannot be generated: a domain is built only through its own constructors") != null);
-    try testing.expect(std.mem.indexOf(u8, result.stdout, "failed main::test_function: property test parameter `f: def(i64) -> i64") != null);
+    try testing.expect(std.mem.indexOf(u8, result.stdout, "failed main::test_function: property test parameter `f: func(i64) -> i64") != null);
     try testing.expect(std.mem.indexOf(u8, result.stdout, "a function value cannot be generated") != null);
     try testing.expect(std.mem.indexOf(u8, result.stdout, "failed main::test_host: property test parameter `host: Host` cannot be generated: a Host capability is never handed to a test") != null);
     try testing.expect(std.mem.indexOf(u8, result.stdout, "failed main::test_count: a property test returns bool or Result[bool, E], not i64") != null);
@@ -9328,7 +9179,6 @@ test "CLI property test names the parameter and type it cannot generate" {
 }
 
 const filtered_properties =
-    \\module main
     \\
     \\@invariant(self.low <= self.high, "a span never runs backwards")
     \\public record Span:
@@ -9336,10 +9186,10 @@ const filtered_properties =
     \\    high: int
     \\
     \\@requires(n >= 0, "only non-negative numbers")
-    \\public def test_halving(n: int) -> bool:
+    \\public func test_halving(n: int) -> bool:
     \\    return n // 2 <= n
     \\
-    \\public def test_span(span: Span, other: Option[Span]) -> bool:
+    \\public func test_span(span: Span, other: Span?) -> bool:
     \\    match other:
     \\        case Some(second):
     \\            return span.low <= span.high and second.low <= second.high
@@ -9347,10 +9197,10 @@ const filtered_properties =
     \\            return span.low <= span.high
     \\
     \\@requires(n == 12345, "a single value")
-    \\public def test_picky(n: int) -> bool:
+    \\public func test_picky(n: int) -> bool:
     \\    return n == 12345
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return 0
 ;
 
@@ -9383,15 +9233,14 @@ test "CLI property test discards inputs that break a precondition or a record in
 }
 
 const hanging_property =
-    \\module main
     \\
-    \\public def test_finishes(n: int) -> bool:
-    \\    spins = 0
+    \\public func test_finishes(n: int) -> bool:
+    \\    mut spins = 0
     \\    while n > 1000000:
     \\        spins = spins + 1
     \\    return spins == 0
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return 0
 ;
 
@@ -9431,25 +9280,24 @@ test "CLI property test runs in one process, reuses a pass until its seed or run
 }
 
 const boundary_values =
-    \\module main
     \\
-    \\public def test_echo_set(s: set[str]) -> set[str]:
-    \\    t = s.copy()
+    \\public func test_echo_set(s: set[str]) -> set[str]:
+    \\    mut t = s.copy()
     \\    t.add("zz")
     \\    return t
     \\
-    \\public def test_echo_dict(d: dict[tuple[int, str], float]) -> dict[tuple[int, str], float]:
-    \\    e = d.copy()
+    \\public func test_echo_dict(d: dict[tuple[int, str], float]) -> dict[tuple[int, str], float]:
+    \\    mut e = d.copy()
     \\    e[(9, "k")] = 0.5
     \\    return e
     \\
-    \\public def test_echo_bytes(b: bytes) -> bytes:
+    \\public func test_echo_bytes(b: bytes) -> bytes:
     \\    return b + b"!"
     \\
-    \\public def test_echo_float(f: float) -> float:
+    \\public func test_echo_float(f: float) -> float:
     \\    return f * 2.0
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return 0
 ;
 const boundary_cases =
@@ -9474,22 +9322,21 @@ test "CLI test carries sets, dictionaries with tuple keys, bytes and floats acro
 }
 
 const erring_property =
-    \\module main
     \\
-    \\def parse(text: str) -> Result[int, str]:
+    \\func parse(text: str) -> Result[int, str]:
     \\    if len(text) > 3:
     \\        return Err("too long")
     \\    return Ok(len(text))
     \\
-    \\def checked(text: str) -> Result[int, str]:
-    \\    size = parse(text)?
+    \\func checked(text: str) -> Result[int, str]:
+    \\    mut size = try parse(text)
     \\    return Ok(size)
     \\
-    \\public def test_short_text_parses(text: str) -> Result[bool, str]:
-    \\    size = checked(text)?
+    \\public func test_short_text_parses(text: str) -> Result[bool, str]:
+    \\    mut size = try checked(text)
     \\    return Ok(size <= 3)
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return 0
 ;
 
@@ -9503,11 +9350,11 @@ test "CLI property test that fails with an Err reports the minimal input's error
     try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, text.term);
     try testing.expect(std.mem.indexOf(u8, text.stdout, "\n    text = \"aaaa\"\n  original input (run ") != null);
     try testing.expect(std.mem.indexOf(u8, text.stdout, "  reason: returned Err(\"too long\")\n    error return trace:\n") != null);
-    try testing.expect(std.mem.indexOf(u8, text.stdout, "main.my:5:16") != null);
+    try testing.expect(std.mem.indexOf(u8, text.stdout, "main.my:4:16") != null);
     try testing.expect(std.mem.indexOf(u8, text.stdout, "main::parse") != null);
     try testing.expect(std.mem.indexOf(u8, text.stdout, "Err(...) created") != null);
     try testing.expect(std.mem.indexOf(u8, text.stdout, "main::test_short_text_parses") != null);
-    try testing.expect(std.mem.indexOf(u8, text.stdout, "? propagated") != null);
+    try testing.expect(std.mem.indexOf(u8, text.stdout, "try propagated") != null);
     const json = try project.run(&.{"--json"});
     defer freeRun(json);
     const parsed = try std.json.parseFromSlice(std.json.Value, testing.allocator, json.stdout, .{});
@@ -9522,22 +9369,22 @@ test "CLI property test that fails with an Err reports the minimal input's error
 
 const iterated_write_back =
     \\record Runtime:
-    \\    objects: list[int]
+    \\    objects: int[]
     \\record Interp:
     \\    rt: Runtime
-    \\def push(rt: mut Runtime, value: int) -> None:
+    \\func push(mut rt: Runtime, value: int) -> Unit:
     \\    rt.objects.append(value)
-    \\def main() -> int:
-    \\    it = Interp(rt=Runtime(objects=[1, 2]))
-    \\    saved = it.rt
-    \\    seen = 0
+    \\func main() -> int:
+    \\    mut it = Interp(rt=Runtime(objects=[1, 2]))
+    \\    mut saved = it.rt
+    \\    mut seen = 0
     \\    for x in it.rt.objects:
     \\        seen = seen + x
     \\        if x < 3:
-    \\            wb = it.rt
+    \\            mut wb = it.rt
     \\            push(mut wb, x + 2)
     \\            it.rt = wb
-    \\    return 0 if seen == 10 and len(it.rt.objects) == 4 and saved.objects == [1, 2] else 1
+    \\    return if (seen == 10 and len(it.rt.objects) == 4 and saved.objects == [1, 2]) then (0) else (1)
 ;
 
 // spec-case: RC-ITERATION-HOLD-TRANSFER-1
@@ -9578,7 +9425,7 @@ fn expectEveryEntryCommandRefused(dir: std.Io.Dir) !void {
 /// The refusal a file this process cannot read gets, or nothing when it can read
 /// it anyway (running as root), where there is nothing to refuse.
 fn expectUnreadableRefused(dir: std.Io.Dir, command: []const u8) !void {
-    try dir.writeFile(testing.io, .{ .sub_path = "locked.my", .data = "def main() -> int:\n    return 0\n" });
+    try dir.writeFile(testing.io, .{ .sub_path = "locked.my", .data = "func main() -> int:\n    return 0\n" });
     try dir.setFilePermissions(testing.io, "locked.my", std.Io.File.Permissions.fromMode(0), .{});
     const readable = dir.openFile(testing.io, "locked.my", .{});
     if (readable) |file| {
@@ -9644,13 +9491,12 @@ fn runToolIn(dir: std.Io.Dir, environ: ?*const std.process.Environ.Map, args: []
 }
 
 const cache_program =
-    \\module prog
     \\
-    \\def main(out: Stream) -> int:
+    \\func main(out: Stream) -> int:
     \\    out.print("hi")
     \\    return 0
     \\
-    \\public def test_ok() -> bool:
+    \\public func test_ok() -> bool:
     \\    return True
 ;
 
@@ -9695,7 +9541,7 @@ test "MYLANG_FRONTEND_CACHE moves the checked-body store and invalidation baseli
 }
 
 const trivial_run =
-    \\def main(out: Stream) -> int:
+    \\func main(out: Stream) -> int:
     \\    out.print("ok")
     \\    return 0
 ;
@@ -9857,7 +9703,7 @@ test "check reports an embed's diagnostic at its literal and exits nonzero" {
     defer arena.deinit();
     const a = arena.allocator();
     const root = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
-    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "def main() -> int:\n    return len(embed_bytes(\"absent.bin\"))\n" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "func main() -> int:\n    return len(embed_bytes(\"absent.bin\"))\n" });
     const entry = try std.fs.path.join(a, &.{ root, "main.my" });
     const result = try std.process.run(a, testing.io, .{ .argv = &.{ compiler_path, "check", entry } });
     try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, result.term);
@@ -9877,7 +9723,7 @@ test "mylang test runs a module that embeds and reruns it when only the fixture 
     const root = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
     try temporary.dir.createDirPath(testing.io, "fixtures");
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "fixtures/nul.bin", .data = "a\x00b" });
-    try temporary.dir.writeFile(testing.io, .{ .sub_path = "emb.my", .data = "module emb\n\nconst NUL: bytes = embed_bytes(\"fixtures/nul.bin\")\n\n\npublic def test_nul() -> bool:\n    return len(NUL) == 3 and NUL[1] == 0\n" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "emb.my", .data = "\nconst NUL: bytes = embed_bytes(\"fixtures/nul.bin\")\n\n\npublic func test_nul() -> bool:\n    return len(NUL) == 3 and NUL[1] == 0\n" });
     const entry = try std.fs.path.join(a, &.{ root, "emb.my" });
     const cache = try std.fs.path.join(a, &.{ root, "cache" });
     const argv = [_][]const u8{ compiler_path, "test", entry, "--cache-dir", cache, tools[0] };
@@ -9934,14 +9780,13 @@ test "CLI guest frame preflight permits a restored compiler limit and preserves 
 }
 
 const embed_tooling_source =
-    \\module main
     \\
     \\const DATA: bytes = embed_bytes("data.bin")
     \\
-    \\public def measure[T](value: T) -> int:
+    \\public func measure[T](value: T) -> int:
     \\    return len(DATA)
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return measure(1)
 ;
 
@@ -10004,7 +9849,7 @@ test "CLI directory tests forward the installed host receipt when modes are alre
     var arena = std.heap.ArenaAllocator.init(testing.allocator);
     defer arena.deinit();
     const a = arena.allocator();
-    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "public def test_ok() -> bool:\n    return True\n" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "public func test_ok() -> bool:\n    return True\n" });
     const root = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
     const cache = try std.fs.path.join(a, &.{ root, "cache" });
     var environment = try std.process.Environ.createMap(testing.environ, a);
@@ -10019,8 +9864,8 @@ test "CLI directory tests forward the installed host receipt when modes are alre
     try testing.expect(std.mem.indexOf(u8, result.stdout, "1 passed") != null);
 }
 
-const snapshot_embed_main = "module main\nimport data\n\nconst A: bytes = embed_bytes(\"data.bin\")\nconst B: bytes = embed_bytes(\"data.bin\")\n\ndef main() -> int:\n    return 0\n\npublic def test_payload() -> bool:\n    return A == b\"abcd\" and B == A and data.C == A\n";
-const snapshot_embed_data = "module data\n\npublic const C: bytes = embed_bytes(\"data.bin\")\n";
+const snapshot_embed_main = "import data\n\nconst A: bytes = embed_bytes(\"data.bin\")\nconst B: bytes = embed_bytes(\"data.bin\")\n\nfunc main() -> int:\n    return 0\n\npublic func test_payload() -> bool:\n    return A == b\"abcd\" and B == A and data.C == A\n";
+const snapshot_embed_data = "\npublic const C: bytes = embed_bytes(\"data.bin\")\n";
 
 /// Run a real snapshot test and preserve the located budget diagnostic on refusal.
 fn expectSnapshotBudget(allocator: std.mem.Allocator, entry: []const u8, cache: []const u8, expected_status: u8) !void {
@@ -10070,11 +9915,11 @@ test "CLI provider replacements recapture embedded fixture edits with a warm tes
     var arena = std.heap.ArenaAllocator.init(testing.allocator);
     defer arena.deinit();
     const a = arena.allocator();
-    try writeProjectFile(&temporary, "main.my", "module main\nimport dependency\n\npublic def test_fixture() -> bool:\n    return dependency.value() == 7\n");
-    try writeProjectFile(&temporary, "dependency.my", "module dependency\n\npublic def value() -> int effects():\n    return 7\n");
-    try writeProjectFile(&temporary, "fixture.my", "module fixture\n\npublic const DATA: bytes = embed_bytes(\"fixture.bin\")\n");
+    try writeProjectFile(&temporary, "main.my", "import dependency\n\npublic func test_fixture() -> bool:\n    return dependency.value() == 7\n");
+    try writeProjectFile(&temporary, "dependency.my", "\npublic func value() -> int effects():\n    return 7\n");
+    try writeProjectFile(&temporary, "fixture.my", "\npublic const DATA: bytes = embed_bytes(\"fixture.bin\")\n");
     try writeProjectFile(&temporary, "fixture.bin", "1234567");
-    try r3WriteCases(&temporary, "cases.json", "main::test_fixture", "dependency.my", "module dependency\nimport fixture\n\npublic def value() -> int effects():\n    return len(fixture.DATA)\n");
+    try r3WriteCases(&temporary, "cases.json", "main::test_fixture", "dependency.my", "import fixture\n\npublic func value() -> int effects():\n    return len(fixture.DATA)\n");
     const entry = try temporary.dir.realPathFileAlloc(testing.io, "main.my", a);
     const cases = try temporary.dir.realPathFileAlloc(testing.io, "cases.json", a);
     const cache = try std.fs.path.join(a, &.{ std.fs.path.dirname(entry).?, "cache" });
@@ -10096,14 +9941,14 @@ test "CLI provider replacements recapture embedded fixture edits with a warm tes
 
 // spec-case: DIAGNOSTIC-JSON-1
 test "CLI native build forwards diagnostic presentation to its source frontend" {
-    try invokeOptions("build", "def main() -> int:\n    return False\n", &.{ "--run", "--diagnostics=json" }, 1, "", "\"code\":\"E_TYPE\"");
+    try invokeOptions("build", "func main() -> int:\n    return False\n", &.{ "--run", "--diagnostics=json" }, 1, "", "\"code\":\"E_TYPE\"");
 }
 
 test {}
 
 const s5_loop =
-    \\def main() -> int:
-    \\    i = 0
+    \\func main() -> int:
+    \\    mut i = 0
     \\    while True:
     \\        i = i + 1
     \\    return i
@@ -10111,22 +9956,22 @@ const s5_loop =
 
 // spec: NEW-CORE-S5-RUN-1
 test "run on the new core keeps the exit, argument, budget and grant contract" {
-    try invokeOptions("run", "def main() -> int:\n    return 300\n", &.{}, 0, "300\n", "");
-    try invoke("run", "def main() -> int:\n    xs = [1]\n    return xs[3]\n", 1, "", "error[R_LIST_BOUNDS]");
-    try invokeOptions("run", "def main(args: list[str], out: Stream) -> int:\n    out.print(len(args), args[1])\n    return 0\n", &.{ "--", "--release", "b" }, 0, "2 b\n0\n", "");
+    try invokeOptions("run", "func main() -> int:\n    return 300\n", &.{}, 0, "300\n", "");
+    try invoke("run", "func main() -> int:\n    mut xs = [1]\n    return xs[3]\n", 1, "", "error[R_LIST_BOUNDS]");
+    try invokeOptions("run", "func main(args: str[], out: Stream) -> int:\n    out.print(len(args), args[1])\n    return 0\n", &.{ "--", "--release", "b" }, 0, "2 b\n0\n", "");
     try invokeOptions("run", s5_loop, &.{"--max-steps=1000"}, 1, "", "R_STEP_LIMIT");
     try invokeOptions("run", s5_loop, &.{ "--timeout", "1" }, 1, "", "R_TIMEOUT");
-    const deep = "def down(n: int) -> int:\n    if n == 0:\n        return 0\n    return down(n - 1) + 1\n\ndef main() -> int:\n    return down(100000)\n";
+    const deep = "func down(n: int) -> int:\n    if n == 0:\n        return 0\n    return down(n - 1) + 1\n\nfunc main() -> int:\n    return down(100000)\n";
     try invokeOptions("run", deep, &.{"--max-frames=100"}, 1, "", "R_FRAME_LIMIT");
-    const grow = "def main() -> int:\n    xs: list[int] = []\n    i = 0\n    while i < 100000000:\n        xs.append(i)\n        i = i + 1\n    return len(xs)\n";
+    const grow = "func main() -> int:\n    mut xs: int[] = []\n    mut i = 0\n    while i < 100000000:\n        xs.append(i)\n        i = i + 1\n    return len(xs)\n";
     try invokeOptions("run", grow, &.{"--max-memory=16M"}, 1, "", "R_MEMORY_BUDGET");
-    try invokeOptions("run", "def main(clock: Clock) -> int:\n    _ = clock\n    return 0\n", &.{"--restrict"}, 2, "", "pass --allow-clock");
-    try invokeOptions("run", "def main() -> int:\n    return 0\n", &.{"--allow-read="}, 2, "", "usage: mylang run");
+    try invokeOptions("run", "func main(clock: Clock) -> int:\n    _ = clock\n    return 0\n", &.{"--restrict"}, 2, "", "pass --allow-clock");
+    try invokeOptions("run", "func main() -> int:\n    return 0\n", &.{"--allow-read="}, 2, "", "usage: mylang run");
 }
 
 // spec: NEW-CORE-S5-RETIRED-1
 test "the old back end's commands and flags are refused by name with what replaces them" {
-    const program = "def main() -> int:\n    return 0\n";
+    const program = "func main() -> int:\n    return 0\n";
     try invoke("invoke", program, 2, "", "retired with host functions");
     try invoke("emit-qbe", program, 2, "", "QBE IL emission was retired");
     try invoke("dump-bytecode", program, 2, "", "mylang dump-ir");
@@ -10138,7 +9983,7 @@ test "the old back end's commands and flags are refused by name with what replac
 
 // spec: NEW-CORE-S5-ARENA-1
 test "an arena block checks and runs as an ordinary block and warns that arenas are retired" {
-    const program = "def main() -> int:\n    total = 0\n    with arena():\n        xs = [1, 2, 3]\n        total = len(xs)\n    return total\n";
+    const program = "func main() -> int:\n    mut total = 0\n    with arena():\n        mut xs = [1, 2, 3]\n        total = len(xs)\n    return total\n";
     try invoke("check", program, 0, "", "warning[W_ARENA_RETIRED]");
     try invoke("run", program, 0, "3\n", "remove the `with arena():` line");
 }
@@ -10147,8 +9992,8 @@ test "an arena block checks and runs as an ordinary block and warns that arenas 
 test "check of a project entry checks the merged program and writes no per-module records" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "module main\nimport helper\n\ndef main() -> int:\n    return helper.two()\n" });
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "module helper\n\npublic def two() -> int:\n    return \"two\"\n" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "import helper\n\nfunc main() -> int:\n    return helper.two()\n" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "\npublic func two() -> int:\n    return \"two\"\n" });
     const root = try temp.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
     defer testing.allocator.free(root);
     const entry = try std.fs.path.join(testing.allocator, &.{ root, "main.my" });
@@ -10159,8 +10004,8 @@ test "check of a project entry checks the merged program and writes no per-modul
     defer testing.allocator.free(rejected.stdout);
     defer testing.allocator.free(rejected.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, rejected.term);
-    try testing.expect(std.mem.indexOf(u8, rejected.stderr, "helper.my:4:") != null);
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "module helper\n\npublic def two() -> int:\n    return 2\n" });
+    try testing.expect(std.mem.indexOf(u8, rejected.stderr, "helper.my:3:") != null);
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "\npublic func two() -> int:\n    return 2\n" });
     const accepted = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check", entry, cache } });
     defer testing.allocator.free(accepted.stdout);
     defer testing.allocator.free(accepted.stderr);
@@ -10171,14 +10016,14 @@ test "check of a project entry checks the merged program and writes no per-modul
 
 // spec: NEW-CORE-S5-CONTRACT-1
 test "a broken precondition traps with the old core's description of the clause" {
-    const program = "@requires(amount > 10)\ndef half(amount: int) -> int:\n    return amount // 2\n\ndef main() -> int:\n    return half(4)\n";
+    const program = "@requires(amount > 10)\nfunc half(amount: int) -> int:\n    return amount // 2\n\nfunc main() -> int:\n    return half(4)\n";
     try invoke("run", program, 1, "", "error[R_REQUIRES]: precondition violated: half requires `amount > 10`");
-    try invoke("run", "def main() -> int:\n    assert 1 > 2, \"never\"\n    return 0\n", 1, "", "error[R_ASSERT]: native execution failed: never");
+    try invoke("run", "func main() -> int:\n    assert 1 > 2, \"never\"\n    return 0\n", 1, "", "error[R_ASSERT]: native execution failed: never");
 }
 
 // spec: NEW-CORE-S5-TEST-1
 test "a test whose result is not bool fails its case and the run" {
-    const outcome = try runFixture("test", "public def test_bad() -> int:\n    return 1\n\npublic def test_ok() -> bool:\n    return True\n", &.{});
+    const outcome = try runFixture("test", "public func test_bad() -> int:\n    return 1\n\npublic func test_ok() -> bool:\n    return True\n", &.{});
     defer testing.allocator.free(outcome.stdout);
     defer testing.allocator.free(outcome.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, outcome.term);
@@ -10191,15 +10036,14 @@ test "CLI list-interfaces --cost output appends exact release costs without chan
     var temporary = testing.tmpDir(.{});
     defer temporary.cleanup();
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data =
-        \\module input
-        \\public def changed(xs: list[int]) -> list[int]:
-        \\    ys = xs
+        \\public func changed(xs: int[]) -> int[]:
+        \\    mut ys = xs
         \\    ys[0] = 4
         \\    return ys
-        \\public def unused() -> int:
+        \\public func unused() -> int:
         \\    return 9
-        \\def main(out: Stream) -> int:
-        \\    xs = [1]
+        \\func main(out: Stream) -> int:
+        \\    mut xs = [1]
         \\    out.print(changed(xs))
         \\    return 0
     });
@@ -10211,8 +10055,8 @@ test "CLI list-interfaces --cost output appends exact release costs without chan
     try testing.expect(std.mem.indexOf(u8, plain.stdout, "export function unused") != null);
     const cost = try contractCommand(&.{ compiler_path, "cost", path });
     defer freeResult(cost);
-    try testing.expect(std.mem.indexOf(u8, cost.stdout, "input::changed: checks") != null);
-    try testing.expect(std.mem.indexOf(u8, cost.stdout, "input::unused:") == null);
+    try testing.expect(std.mem.indexOf(u8, cost.stdout, "changed: checks") != null);
+    try testing.expect(std.mem.indexOf(u8, cost.stdout, "unused:") == null);
     try testing.expect(std.mem.indexOf(u8, cost.stdout, "TOTAL:") != null);
     const listed = try contractCommand(&.{ compiler_path, "list-interfaces", path, "--cost" });
     defer freeResult(listed);
@@ -10228,8 +10072,7 @@ test "CLI list-interfaces --cost output appends exact release costs without chan
     try invokeOptions("list-interfaces", "module input", &.{ "--cost", "--contracts" }, 2, "", "usage:");
     try invokeOptions("list-interfaces", "module input", &.{ "--contracts", "--cost" }, 2, "", "usage:");
     try invokeOptions("list-interfaces",
-        \\module input
-        \\public def main() -> int:
+        \\public func main() -> int:
         \\    return unknown()
     , &.{"--cost"}, 1, "", "unknown");
 }

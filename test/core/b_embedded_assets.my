@@ -1,4 +1,3 @@
-module b_embedded_assets
 
 const RAW: bytes = embed_bytes("b_blob_data/binary.bin")
 const NUL: bytes = embed_bytes("b_blob_data/nul.bin")
@@ -6,14 +5,14 @@ const EMPTY: bytes = embed_bytes("b_blob_data/empty.bin")
 const TEXT: str = embed_str("b_blob_data/multi.txt")
 
 # spec-case: NEW-CORE-S3-NUMBER-1
-public def test_embedded_bytes_preserve_nul_invalid_utf8_and_empty() -> bool:
+public func test_embedded_bytes_preserve_nul_invalid_utf8_and_empty() -> bool:
     return RAW == b"\xff\xfe\x80\x00\x7f" and NUL == b"ab\x00cd" and EMPTY == b""
 
 # spec-case: NEW-CORE-S3-NUMBER-1
-public def test_embedded_text_is_scalar_indexed() -> bool:
+public func test_embedded_text_is_scalar_indexed() -> bool:
     return TEXT == "héllo 🙂 日本" and len(TEXT) == 10 and len(TEXT.encode()) == 18
 
-def main(out: Stream) -> int:
+func main(out: Stream) -> int:
     if not test_embedded_bytes_preserve_nul_invalid_utf8_and_empty() or not test_embedded_text_is_scalar_indexed():
         return 1
     out.print(RAW.hex(), NUL.hex(), len(EMPTY), len(TEXT), len(TEXT.encode()))

@@ -1,59 +1,58 @@
-module row_tree_build_walk
 
-extern def runtime_bench_now(host: Host) -> i64 effects(host)
+extern func runtime_bench_now(host: Host) -> i64 effects(host)
 
 # Row `tree_build_walk` (S4 CONTRACT.md): build a balanced binary tree of SIZE nodes as a recursive
 # union, walk it with a depth-weighted sum, and release it with the batch. Arguments `size iterations
 # seed`, output `checksum elapsed`.
 
 
-union Tree:
-    leaf,
+enum Tree:
+    leaf
     node(left: Tree, value: int, right: Tree)
 
 
-def build(lo: int, hi: int, base: int) -> Tree:
+func build(lo: int, hi: int, base: int) -> Tree:
     if lo >= hi:
         return Tree.leaf
-    mid = (lo + hi) // 2
-    return Tree.node(build(lo, mid, base), (base + 13 * mid) % 1009, build(mid + 1, hi, base))
+    mut mid = (lo + hi) // 2
+    return Tree.node(left=build(lo, mid, base), value=(base + 13 * mid) % 1009, right=build(mid + 1, hi, base))
 
 
-def walk(tree: Tree, depth: int) -> int:
+func walk(tree: Tree, depth: int) -> int:
     match tree:
         case Tree.leaf:
             return 0
-        case Tree.node(left, value, right):
+        case Tree.node(left=left, value=value, right=right):
             return (depth + 1) * value + walk(left, depth + 1) + walk(right, depth + 1)
 
 
-def batch_result(size: int, batch: int, seed: int) -> int:
+func batch_result(size: int, batch: int, seed: int) -> int:
     return walk(build(0, size, seed + batch), 0) % 1000000007
 
 
-def parse_number(text: str) -> int:
-    match int(text):
+func parse_number(text: str) -> int:
+    match parse_int(text):
         case Some(n):
             return n
         case None:
             return 0
 
 
-def main(args: list[str], host: Host, out: Stream) -> int:
+func main(args: str[], host: Host, out: Stream) -> int:
     if len(args) != 3:
         return 2
-    size = parse_number(args[0])
-    iterations = parse_number(args[1])
-    seed = parse_number(args[2])
+    mut size = parse_number(args[0])
+    mut iterations = parse_number(args[1])
+    mut seed = parse_number(args[2])
     if size < 2 or iterations < 1 or seed < 1 or seed > 1000000:
         return 2
-    checksum = 0
-    start = runtime_bench_now(host)
+    mut checksum = 0
+    mut start = runtime_bench_now(host)
     for batch in range(iterations):
-        part = batch_result(size, batch, seed)
+        mut part = batch_result(size, batch, seed)
         if part < 0:
             return 2
         checksum = (checksum + part) % 1000000007
-    elapsed = runtime_bench_now(host) - start
+    mut elapsed = runtime_bench_now(host) - start
     out.print(checksum, elapsed)
     return 0

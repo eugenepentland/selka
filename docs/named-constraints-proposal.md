@@ -30,7 +30,7 @@ This is existing, executable syntax:
 
 ```mylang
 # doc: check
-def checkout[P: copy + op(price(policy: P, subtotal: int) -> int effects())](policy: P, subtotal: int) -> int effects():
+func checkout[P: copy + op(price(policy: P, subtotal: int) -> int effects())](policy: P, subtotal: int) -> int effects():
     return P.price(policy, subtotal) + 500
 ```
 
@@ -42,10 +42,10 @@ Every helper that forwards `P` must currently repeat the relevant requirements.
 # doc: skip proposed named-constraint syntax
 constraint Prices[P] = copy + op(price(policy: P, subtotal: int) -> int effects())
 
-def checkout[P: Prices](policy: P, subtotal: int) -> int effects():
+func checkout[P: Prices](policy: P, subtotal: int) -> int effects():
     return P.price(policy, subtotal) + 500
 
-def place_order[P: Prices](policy: P, subtotal: int) -> int effects():
+func place_order[P: Prices](policy: P, subtotal: int) -> int effects():
     return checkout(policy, subtotal)
 ```
 
@@ -65,7 +65,7 @@ Fields use the same naming mechanism:
 # doc: skip proposed named-constraint syntax
 constraint HasValue[T] = copy + field(value: int)
 
-def value_of[T: HasValue](item: T) -> int:
+func value_of[T: HasValue](item: T) -> int:
     return item.value
 ```
 
@@ -113,26 +113,26 @@ The fake models that fixture; it does not implement a general discount policy.
 constraint Prices[P] = copy + op(price(policy: P, subtotal: int) -> int effects())
 
 domain DiscountPrices: int:
-    def make(discount: int) -> DiscountPrices:
+    func make(discount: int) -> DiscountPrices:
         return wrap[DiscountPrices](discount)
 
-    def price(policy: DiscountPrices, subtotal: int) -> int effects():
+    func price(policy: DiscountPrices, subtotal: int) -> int effects():
         return subtotal - unwrap(policy)
 
 domain FixedPrices: int:
-    def make(amount: int) -> FixedPrices:
+    func make(amount: int) -> FixedPrices:
         return wrap[FixedPrices](amount)
 
-    def price(policy: FixedPrices, subtotal: int) -> int effects():
+    func price(policy: FixedPrices, subtotal: int) -> int effects():
         _ = subtotal
         return unwrap(policy)
 
-def checkout[P: Prices](policy: P, subtotal: int) -> int effects():
+func checkout[P: Prices](policy: P, subtotal: int) -> int effects():
     return P.price(policy, subtotal) + 500
 
-def main() -> int:
-    real = DiscountPrices.make(250)
-    fake = FixedPrices.make(1750)
+func main() -> int:
+    mut real = DiscountPrices.make(250)
+    mut fake = FixedPrices.make(1750)
     assert checkout(real, 2000) == 2250
     assert checkout(fake, 2000) == 2250
     return 0
@@ -219,17 +219,15 @@ Do not turn constraints into nominal type-catalog entries to obtain name lookup.
 
 ```mylang
 # doc: skip proposed named-constraint syntax; contracts.my
-module contracts
 
 public constraint Prices[P] = copy + op(price(policy: P, subtotal: int) -> int effects())
 ```
 
 ```mylang
 # doc: skip proposed named-constraint syntax; checkout.my
-module checkout
 import contracts
 
-public def total[P: contracts.Prices](policy: P, subtotal: int) -> int effects():
+public func total[P: contracts.Prices](policy: P, subtotal: int) -> int effects():
     return P.price(policy, subtotal) + 500
 ```
 

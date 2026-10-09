@@ -28,11 +28,11 @@ pub fn usesModuleSyntax(bytes: []const u8) bool {
 
 // spec: ARGV-1
 test "module syntax detection ignores comments and rejects assignment lookalikes" {
-    try std.testing.expect(usesModuleSyntax("module app\n"));
+    try std.testing.expect(usesModuleSyntax("module main\n"));
     try std.testing.expect(usesModuleSyntax("\n# note\nimport helper\n"));
     try std.testing.expect(usesModuleSyntax("export value\n"));
     try std.testing.expect(!usesModuleSyntax("module = 1\n"));
     try std.testing.expect(!usesModuleSyntax("import = 2\n"));
-    try std.testing.expect(!usesModuleSyntax("def main() -> int:\n    return 0\n"));
+    try std.testing.expect(!usesModuleSyntax("func main() -> int:\n    return 0\n"));
     try std.testing.expect(!usesModuleSyntax(""));
 }

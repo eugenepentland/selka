@@ -13,17 +13,17 @@ const Call = @import("call_arguments.zig").Call;
 const Field = struct { name: source.Span, default_value: ?usize = null };
 
 /// Lower calls targeting ordinary records to the existing named-field syntax.
-pub fn lower(allocator: std.mem.Allocator, src: source.Source, catalog: Catalog, call: Call, sink: *diagnostic.Sink) diagnostic.Error!?ast.Node {
+pub fn lower(allocator: std.mem.Allocator, src: source.Source, catalog: Catalog, nodes: []const ast.Node, call: Call, sink: *diagnostic.Sink) diagnostic.Error!?ast.Node {
     if (call.owner != null or call.type_arguments.len != 0) return null;
     if (catalog.templates.applications.get(call.name.start)) |application| {
         const declaration = catalog.templates.store.?.index.declarations.items[application.declaration];
         if (declaration.kind == .record) {
-            const node = try construct(allocator, src, call, try templateFields(allocator, declaration.fields), sink);
+            const node = try construct(allocator, src, nodes, call, try templateFields(allocator, declaration.fields), sink);
             return node;
         }
     }
     const ty = try recordType(src, catalog, call.name, sink) orelse return null;
-    const node = try construct(allocator, src, call, try checkedFields(allocator, catalog.records[ty.recordIndex()].fields), sink);
+    const node = try construct(allocator, src, nodes, call, try checkedFields(allocator, catalog.records[ty.recordIndex()].fields), sink);
     return node;
 }
 /// Normalize a generic record template's fields for construction.
@@ -42,8 +42,13 @@ fn checkedFields(allocator: std.mem.Allocator, declarations: []const typed.Field
 /// positional and named arguments come first, in source order; every field the
 /// call omits and whose declaration carries a default contributes one trailing
 /// initializer referencing that declared literal node.
-fn construct(allocator: std.mem.Allocator, src: source.Source, call: Call, declarations: []const Field, sink: *diagnostic.Sink) diagnostic.Error!ast.Node {
+fn construct(allocator: std.mem.Allocator, src: source.Source, nodes: []const ast.Node, call: Call, declarations: []const Field, sink: *diagnostic.Sink) diagnostic.Error!ast.Node {
     if (call.arguments.len > declarations.len) return sink.fail("E_ARITY", call.name, "too many arguments for this record");
+    const labels = try allocator.alloc([]const u8, declarations.len);
+    for (declarations, labels) |field, *label| label.* = src.text(field.name);
+    const sites = try allocator.alloc(source.Span, call.arguments.len);
+    for (call.arguments, sites) |argument, *site| site.* = nodes[@backingInt(argument)].span;
+    try @import("frontend_named_fields.zig").require(sink, call.name, "E_NAMED_FIELDS", .{ .labels = labels, .sites = sites, .names = call.argument_names });
     const supplied = try allocator.alloc(bool, declarations.len);
     defer allocator.free(supplied);
     @memset(supplied, false);

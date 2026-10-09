@@ -3,10 +3,10 @@
 Declare a module constant with an explicit scalar type:
 
 ```my
-const SCALE: i64 = 6;
-public const ANSWER: i64 = SCALE * FACTOR;
-const FACTOR: i64 = 7;
-const MASK: u8 = u8(255);
+const SCALE: i64 = 6
+public const ANSWER: i64 = SCALE * FACTOR
+const FACTOR: i64 = 7
+const MASK: u8 = u8(255)
 ```
 
 Integer widths, `bool` and `float` are supported (see [float constants](#float-constants)). An unsuffixed integer literal in any base takes
@@ -19,20 +19,19 @@ Bounded calls to scalar source functions are supported as described in
 and external effects are excluded throughout a scalar initializer. Every constant is checked even when unused. Overflow, invalid
 casts, and evaluated division by zero are compilation errors.
 
-Short-circuit operators retain their normal runtime semantics: `false &&
+Short-circuit operators retain their normal runtime semantics: `False and
 (1 / 0 == 0)` is a valid false constant. Its unevaluated operand is still checked
 for legal syntax, dependencies, and type correctness.
 
 Constants use the existing module export/privacy rules:
 
 ```my
-module settings;
-public const ANSWER: i64 = 42;
+public const ANSWER: i64 = 42
 ```
 
-Importers read `settings::ANSWER`. Generic functions may read concrete constants;
+Importers read `settings.ANSWER`. Generic functions may read concrete constants;
 there are no generic constants yet. Constants cannot be assigned or mutably
-reassigned, and they cannot replace the required `def main` entry point.
+reassigned, and they cannot replace the required `func main` entry point.
 
 Checking folds scalar initializers before anything is built, and each read of a
 scalar constant is its literal value (`mylang dump-ir` shows `42:i64` where
@@ -66,7 +65,7 @@ const PI: float = 3.14
 const TWO_PI: float = PI * 2.0
 const SCALE: int = int(TWO_PI * 100.0)
 
-def main() -> int:
+func main() -> int:
     if TWO_PI != 6.28 or SCALE != 628:
         return 1
     return int(PI * 10.0) + 11
@@ -83,7 +82,7 @@ const LABEL: str = "hé🙂"
 const HEADER: bytes = b"\x00\x27"
 const EMPTY: bytes = b""
 
-def main() -> int effects(managed_allocation):
+func main() -> int effects(managed_allocation):
     return len(LABEL) + HEADER[1] + len(EMPTY)
 ```
 
@@ -111,8 +110,8 @@ local: a constant literal allocates, an embedded constant does not.
 const TABLE: bytes = b"a=1\nb=2\nc=3"
 const LABEL: str = "hello"
 
-def main() -> int effects(managed_allocation):
-    rows = TABLE.split(b"\n")
+func main() -> int effects(managed_allocation):
+    mut rows = TABLE.split(b"\n")
     if len(rows) != 3 or not LABEL.startswith("he"):
         return 1
     return len(LABEL.upper()) + rows[1][2] - 13

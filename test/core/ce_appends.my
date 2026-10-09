@@ -1,52 +1,51 @@
-module ce_appends
 
 # Inline byte-buffer appends (NEW-CORE-CE-LISTS-6): every answer here is the base
 # compiler's. `grow N` appends until the buffer holds N octets.
 
 
-def checksum(buffer: byte_buffer) -> int:
-    total = 0
+func checksum(buffer: byte_buffer) -> int:
+    mut total = 0
     for i in range(len(buffer)):
         total = (total * 31 + buffer[i]) % 1000003
     return total
 
 
-def parse(text: str) -> int:
-    match int(text):
+func parse(text: str) -> int:
+    match parse_int(text):
         case Some(value):
             return value
         case None:
             return 0
 
 
-def main(args: list[str], out: Stream) -> int:
-    empty: list[int] = []
-    buffer = byte_buffer(empty)
-    piece = b"abcdefgh"
-    accepted = 0
+func main(args: str[], out: Stream) -> int:
+    mut empty: int[] = []
+    mut buffer = byte_buffer(empty)
+    mut piece = b"abcdefgh"
+    mut accepted = 0
     # Valid, empty, reversed, negative and past-the-end ranges, through several growths.
     for i in range(3000):
         if buffer.append_range(piece, i % 11 - 2, (i * 7) % 12 - 1):
             accepted += 1
     out.print(len(buffer), accepted, checksum(buffer))
     # Exactly at the capacity boundary: reserve room for 16 octets, fill it, then one more.
-    exact = byte_buffer(empty)
+    mut exact = byte_buffer(empty)
     _ = exact.reserve(16)
     _ = exact.append_range(piece, 0, 8)
     _ = exact.append_range(piece, 0, 8)
-    full = len(exact)
+    mut full = len(exact)
     _ = exact.append_range(piece, 7, 8)
     out.print(full, len(exact), checksum(exact))
     # A snapshot shares the buffer's storage: the next append moves the buffer, the
     # snapshot keeps its octets, and appending the snapshot to the buffer reads it whole.
-    snapshot = bytes(buffer)
-    alias = buffer
+    mut snapshot = bytes(buffer)
+    mut alias = buffer
     _ = buffer.append_range(snapshot, 0, 5)
     _ = buffer.append_range(snapshot, len(snapshot) - 3, len(snapshot))
     _ = buffer.append_utf8("héllo")
     out.print(len(snapshot), len(buffer), len(alias), checksum(buffer))
     # Appending from another buffer.
-    other = byte_buffer(empty)
+    mut other = byte_buffer(empty)
     _ = other.append_range(piece, 2, 6)
     _ = buffer.append_range(bytes(other), 0, 4)
     out.print(len(buffer), checksum(buffer), checksum(other))
@@ -55,8 +54,8 @@ def main(args: list[str], out: Stream) -> int:
     _ = other.append_range(other, 1, 3)
     out.print(len(other), checksum(other))
     if len(args) > 1 and args[0] == "grow":
-        target = parse(args[1])
-        grown = byte_buffer(empty)
+        mut target = parse(args[1])
+        mut grown = byte_buffer(empty)
         while len(grown) < target:
             _ = grown.append_range(piece, 0, 8)
         out.print(len(grown))

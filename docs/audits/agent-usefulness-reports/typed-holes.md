@@ -103,6 +103,7 @@ short, unchanged `E_TYPED_HOLE` diagnostic with the obligation pointer.
 Program (`hole.my`):
 
 ```mylang
+# doc: skip Historical pre-redesign syntax retained as audit evidence.
 # doc: expect-error E_TYPED_HOLE
 def first(x: int) -> int:
     return todo[int]()

@@ -24,7 +24,7 @@ pub const declarations =
     \\
     \\record Chunk[T]:
     \\    eof: bool
-    \\    bytes: [4]u8
+    \\    bytes: FixedArray[u8, 4]
     \\    length: u64
     \\
     \\
@@ -43,8 +43,8 @@ pub const declarations =
     \\    err: i64
     \\
     \\
-    \\def singleton[T](x: T) -> [1]T:
-    \\    return [x]
+    \\func singleton[T](x: T) -> FixedArray[T, 1]:
+    \\    return FixedArray[T, 1]([x])
     \\
     \\
     \\

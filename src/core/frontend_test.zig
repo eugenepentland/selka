@@ -21,30 +21,27 @@ test "an entry path splits into the loader root and module name, and offsets map
 }
 
 const main_source =
-    \\module main
     \\import lib
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return lib.change(4) + lib.keep(5)
     \\
 ;
 const lib_source =
-    \\module lib
     \\
-    \\public def change(x: int) -> int:
+    \\public func change(x: int) -> int:
     \\    return x + 1
     \\
-    \\public def keep(x: int) -> int:
+    \\public func keep(x: int) -> int:
     \\    return x * 2
     \\
 ;
 const edited_source =
-    \\module lib
     \\
-    \\public def change(x: int) -> int:
+    \\public func change(x: int) -> int:
     \\    return x + 9
     \\
-    \\public def keep(x: int) -> int:
+    \\public func keep(x: int) -> int:
     \\    return x * 2
     \\
 ;
@@ -148,12 +145,11 @@ test "frontend reuse still diagnoses a changed imported signature exactly as fre
     defer seed.deinit(std.testing.allocator);
     try std.testing.expectError(error.ExpectedSourceError, rejectedProject(std.testing.allocator, root, null));
     try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "lib.my", .data =
-        \\module lib
         \\
-        \\public def change(x: str) -> int:
+        \\public func change(x: str) -> int:
         \\    return len(x)
         \\
-        \\public def keep(x: int) -> int:
+        \\public func keep(x: int) -> int:
         \\    return x * 2
         \\
     });
@@ -172,8 +168,8 @@ test "frontend nested project entry and source providers enforce fresh loader bu
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     session.configureProject(.{}, "pkg.entry");
-    session.entry_suffix = "\n\ndef main() -> int:\n    return helper(3)\n";
-    session.setProviders(&.{.{ .path = "pkg/entry.my", .text = "module pkg.entry\n\npublic def helper(x: int) -> int:\n    return x + 1\n" }});
+    session.entry_suffix = "\n\nfunc main() -> int:\n    return helper(3)\n";
+    session.setProviders(&.{.{ .path = "pkg/entry.my", .text = "\npublic func helper(x: int) -> int:\n    return x + 1\n" }});
     var diagnostics: std.ArrayList(u8) = .empty;
     const checked = try session.check(arena.allocator(), "pkg.entry", &diagnostics);
     try std.testing.expectEqualStrings("pkg/entry.my", session.entry_file);

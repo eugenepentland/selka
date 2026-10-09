@@ -3,74 +3,75 @@
 # the collector and RC.
 
 
-def frequencies(seq: str, k: int) -> dict[str, int]:
-    counts: dict[str, int] = {}
+func frequencies(seq: str, k: int) -> dict[str, int]:
+    mut counts: dict[str, int] = {}
     for i in range(len(seq) - k + 1):
-        key = seq[i:i + k]
+        mut key = seq[i:i + k]
         counts[key] = counts.get(key, 0) + 1
     return counts
 
 
-public def test_counted_slices_store_owned_copies_of_new_keys() -> bool:
-    text = "GATTACA" + "GATTACA"
-    counts = frequencies(text, 2)
+public func test_counted_slices_store_owned_copies_of_new_keys() -> bool:
+    mut text = "GATTACA" + "GATTACA"
+    mut counts = frequencies(text, 2)
     text = "changed"
     return counts["GA"] == 2 and counts["AT"] == 2 and counts["AG"] == 1 and len(counts) == 7 and text == "changed"
 
 
-public def test_empty_and_whole_slices_count_the_same() -> bool:
-    single = frequencies("ACGT", 4)
-    none = frequencies("ACGT", 5)
-    empty = frequencies("", 1)
+public func test_empty_and_whole_slices_count_the_same() -> bool:
+    mut single = frequencies("ACGT", 4)
+    mut none = frequencies("ACGT", 5)
+    mut empty = frequencies("", 1)
     return single["ACGT"] == 1 and len(single) == 1 and len(none) == 0 and len(empty) == 0
 
 
-def presence(seq: str, probe: str) -> int:
-    found = 0
-    counts: dict[str, int] = {}
+func presence(seq: str, probe: str) -> int:
+    mut found = 0
+    mut counts: dict[str, int] = {}
     counts[probe] = 0
     for i in range(len(seq)):
-        key = seq[i:i + 1]
+        mut key = seq[i:i + 1]
         if key in counts:
             found = found + 1
         counts[key] = counts.get(key, 0) + 1
     return found * 100 + counts[probe]
 
 
-public def test_contains_and_get_read_the_borrowed_span() -> bool:
+public func test_contains_and_get_read_the_borrowed_span() -> bool:
     return presence("AACAA", "A") == 404 and presence("CCC", "C") == 303
 
 
-def rewritten(seq: str, k: int) -> dict[str, int]:
-    counts: dict[str, int] = {}
+func rewritten(input_seq: str, k: int) -> dict[str, int]:
+    mut seq = input_seq
+    mut counts: dict[str, int] = {}
     for i in range(len(seq) - k + 1):
-        key = seq[i:i + k]
+        mut key = seq[i:i + k]
         counts[key] = counts.get(key, 0) + 1
         seq = seq[1:] + "T"
     return counts
 
 
-public def test_a_rewritten_parameter_keeps_owned_slices() -> bool:
-    counts = rewritten("ACGA", 2)
+public func test_a_rewritten_parameter_keeps_owned_slices() -> bool:
+    mut counts = rewritten("ACGA", 2)
     return counts["AC"] == 1 and counts["GA"] == 1 and counts["TT"] == 1 and len(counts) == 3
 
 
-def kept(seq: str, k: int) -> list[str]:
-    keys: list[str] = []
+func kept(seq: str, k: int) -> str[]:
+    mut keys: str[] = []
     for i in range(len(seq) - k + 1):
-        key = seq[i:i + k]
+        mut key = seq[i:i + k]
         keys.append(key)
     return keys
 
 
-public def test_slices_that_escape_are_built_as_texts() -> bool:
-    source = "xy" + "z"
-    keys = kept(source, 2)
+public func test_slices_that_escape_are_built_as_texts() -> bool:
+    mut source = "xy" + "z"
+    mut keys = kept(source, 2)
     source = ""
     return keys == ["xy", "yz"] and source == ""
 
 
-def main() -> int:
+func main() -> int:
     assert test_counted_slices_store_owned_copies_of_new_keys()
     assert test_empty_and_whole_slices_count_the_same()
     assert test_contains_and_get_read_the_borrowed_span()

@@ -72,20 +72,20 @@ fn reject(text: []const u8, code: []const u8) !void {
 // spec: IO-7
 test "IO-7 with open binds a handle whose reads follow the declared mode" {
     try expectPrinted(
-        \\def main(fs: Filesystem, out: Stream) -> int:
+        \\func main(fs: Filesystem, out: Stream) -> int:
         \\    with open(fs, "notes.txt", "rb") as f:
         \\        out.print(f.read())
         \\    return 0
     , "b'alpha\\nbeta\\n'\n");
     try expectPrinted(
-        \\def main(fs: Filesystem, out: Stream) -> int:
+        \\func main(fs: Filesystem, out: Stream) -> int:
         \\    with open(fs, "notes.txt", "r") as f:
         \\        out.print(f.read(5))
         \\        out.print(f.readline())
         \\    return 0
     , "alpha\n\n\n");
     try expectPrinted(
-        \\def main(fs: Filesystem, out: Stream) -> int:
+        \\func main(fs: Filesystem, out: Stream) -> int:
         \\    with open(fs, "notes.txt", "r") as f:
         \\        for line in f.readlines():
         \\            out.print(len(line))
@@ -99,7 +99,7 @@ test "IO-8 writing modes create truncate and append through a write grant" {
     try sandbox.init(true);
     defer sandbox.deinit();
     const program =
-        \\def main(fs: Filesystem, out: Stream) -> int:
+        \\func main(fs: Filesystem, out: Stream) -> int:
         \\    with open(fs, "out.txt", "w") as f:
         \\        out.print(f.write("first\n"))
         \\        f.flush()
@@ -123,7 +123,7 @@ test "IO-9 whole-path helpers report provider failures as readable Result errors
     defer sandbox.deinit();
     try sandbox.temporary.dir.writeFile(t.io, .{ .sub_path = "notes.txt", .data = "alpha\n" });
     const program =
-        \\def main(fs: Filesystem, out: Stream) -> int:
+        \\func main(fs: Filesystem, out: Stream) -> int:
         \\    out.print(read_text(fs, "notes.txt"))
         \\    out.print(read_file(fs, "notes.txt"))
         \\    out.print(exists(fs, "notes.txt"), exists(fs, "absent.txt"))
@@ -190,7 +190,7 @@ test "the default grant reads a FIFO named by its absolute path the way fopen do
     const fifo = try std.fs.path.joinZ(t.allocator, &.{ sandbox.path, "pipe" });
     defer t.allocator.free(fifo);
     try makeFifo(fifo);
-    const program = try std.fmt.allocPrint(t.allocator, "def main(fs: Filesystem, out: Stream) -> int:\n    out.print(read_file(fs, \"{s}\"))\n    return 0\n", .{fifo});
+    const program = try std.fmt.allocPrint(t.allocator, "func main(fs: Filesystem, out: Stream) -> int:\n    out.print(read_file(fs, \"{s}\"))\n    return 0\n", .{fifo});
     defer t.allocator.free(program);
     var compilation = try language.Compilation.init(t.allocator, module, program);
     defer compilation.deinit();
@@ -211,7 +211,7 @@ test "a restricted grant refuses a FIFO inside the granted directory without blo
     defer t.allocator.free(fifo);
     try makeFifo(fifo);
     const outcome = try sandbox.run(module,
-        \\def main(fs: Filesystem, out: Stream) -> int:
+        \\func main(fs: Filesystem, out: Stream) -> int:
         \\    out.print(read_file(fs, "pipe"))
         \\    return 0
     );
@@ -224,7 +224,7 @@ test "IO-10 a read-only grant denies every writing mode" {
     try sandbox.init(false);
     defer sandbox.deinit();
     const program =
-        \\def main(fs: Filesystem, out: Stream) -> int:
+        \\func main(fs: Filesystem, out: Stream) -> int:
         \\    out.print(write_text(fs, "out.txt", "x"))
         \\    out.print(mkdir(fs, "sub"))
         \\    out.print(remove(fs, "out.txt"))
@@ -244,12 +244,12 @@ test "IO-11 a with scope closes its file on every exit including traps and propa
     // The provider holds 256 handles at once, so three hundred scopes that each
     // return, break or propagate can only finish if every one released its own.
     const program =
-        \\def early(fs: Filesystem) -> int:
+        \\func early(fs: Filesystem) -> int:
         \\    with open(fs, "notes.txt", "r") as f:
         \\        return len(f.read())
         \\
-        \\def looped(fs: Filesystem) -> int:
-        \\    total = 0
+        \\func looped(fs: Filesystem) -> int:
+        \\    mut total = 0
         \\    for index in range(300):
         \\        with open(fs, "notes.txt", "r") as f:
         \\            total = total + len(f.read())
@@ -257,14 +257,14 @@ test "IO-11 a with scope closes its file on every exit including traps and propa
         \\                break
         \\    return total
         \\
-        \\def propagated(fs: Filesystem) -> Result[int, str]:
-        \\    with open(fs, "notes.txt", "r")? as f:
+        \\func propagated(fs: Filesystem) -> Result[int, str]:
+        \\    with try open(fs, "notes.txt", "r") as f:
         \\        _ = f.read()
-        \\        _ = read_text(fs, "absent.txt")?
+        \\        _ = try read_text(fs, "absent.txt")
         \\        return Ok(0)
         \\
-        \\def main(fs: Filesystem) -> int:
-        \\    total = early(fs) + looped(fs)
+        \\func main(fs: Filesystem) -> int:
+        \\    mut total = early(fs) + looped(fs)
         \\    match propagated(fs):
         \\        case Ok(value):
         \\            return value
@@ -276,14 +276,14 @@ test "IO-11 a with scope closes its file on every exit including traps and propa
     try t.expectEqual(@as(i64, 6 + 299 * 6), outcome.value);
     // Explicit close releases the handle before the scope ends.
     try expectPrinted(
-        \\def main(fs: Filesystem, out: Stream) -> int:
+        \\func main(fs: Filesystem, out: Stream) -> int:
         \\    with open(fs, "notes.txt", "r") as f:
         \\        out.print(len(f.read()))
         \\        f.close()
         \\    return 0
     , "11\n");
     try expectTrap(
-        \\def main(fs: Filesystem) -> int:
+        \\func main(fs: Filesystem) -> int:
         \\    with open(fs, "written.txt", "w") as f:
         \\        f.close()
         \\        _ = f.write("late")
@@ -294,28 +294,28 @@ test "IO-11 a with scope closes its file on every exit including traps and propa
 // spec: IO-12
 test "IO-12 the file surface is rejected under noio by generic bodies and by the native backend" {
     try reject(
-        \\def main(fs: Filesystem) -> int noio:
+        \\func main(fs: Filesystem) -> int noio:
         \\    _ = exists(fs, "notes.txt")
         \\    return 0
     , "E_EFFECT_BOUND");
     try reject(
-        \\def main(fs: Filesystem) -> int:
+        \\func main(fs: Filesystem) -> int:
         \\    with read_text(fs, "notes.txt") as text:
         \\        return 0
     , "E_WITH_RESOURCE");
     try reject(
-        \\def main() -> int:
+        \\func main() -> int:
         \\    with 7 as value:
         \\        return 0
     , "E_WITH_RESOURCE");
     try reject(
-        \\def main(fs: Filesystem) -> int:
-        \\    mode = "rb"
+        \\func main(fs: Filesystem) -> int:
+        \\    mut mode = "rb"
         \\    with open(fs, "notes.txt", mode) as f:
         \\        return 0
     , "E_FILE_ARGUMENT");
     try reject(
-        \\def main(fs: Filesystem) -> int:
+        \\func main(fs: Filesystem) -> int:
         \\    with open(fs, "notes.txt", "rb") as f:
         \\        _ = f.seek(0)
         \\    return 0
@@ -324,7 +324,7 @@ test "IO-12 the file surface is rejected under noio by generic bodies and by the
 
 test "a program with no granted filesystem refuses to start rather than reading anything" {
     var compilation = try language.Compilation.init(t.allocator, module,
-        \\def main(fs: Filesystem) -> int:
+        \\func main(fs: Filesystem) -> int:
         \\    _ = exists(fs, "notes.txt")
         \\    return 0
     );
@@ -342,7 +342,7 @@ test "FILE-METHOD-1 the whole-path helpers accept the qualified method spelling"
     defer sandbox.deinit();
     try sandbox.temporary.dir.writeFile(t.io, .{ .sub_path = "notes.txt", .data = "alpha\n" });
     const program =
-        \\def main(fs: Filesystem, out: Stream) -> int:
+        \\func main(fs: Filesystem, out: Stream) -> int:
         \\    out.print(fs.read_text("notes.txt"))
         \\    out.print(fs.read_file("notes.txt"))
         \\    out.print(fs.exists("notes.txt"), fs.exists("absent.txt"))
@@ -376,15 +376,15 @@ test "FILE-METHOD-1 the whole-path helpers accept the qualified method spelling"
 // spec-case: FILE-METHOD-1
 test "FILE-METHOD-1 the method spelling shares the free form's result types modes and arity" {
     var compilation = try language.Compilation.init(t.allocator, module,
-        \\def main(fs: Filesystem) -> int:
-        \\    text: Result[str, str] = fs.read_text("notes.txt")
-        \\    raw: Result[bytes, str] = fs.read_file("notes.txt")
-        \\    listing: Result[list[str], str] = fs.listdir(".")
-        \\    present: bool = fs.exists("notes.txt")
-        \\    wrote_text: Result[None, str] = fs.write_text("copy.txt", "x")
-        \\    wrote_raw: Result[None, str] = fs.write_file("copy.bin", b"x")
-        \\    made: Result[None, str] = fs.mkdir("sub")
-        \\    dropped: Result[None, str] = fs.remove("sub")
+        \\func main(fs: Filesystem) -> int:
+        \\    mut text: Result[str, str] = fs.read_text("notes.txt")
+        \\    mut raw: Result[bytes, str] = fs.read_file("notes.txt")
+        \\    mut listing: Result[str[], str] = fs.listdir(".")
+        \\    mut present: bool = fs.exists("notes.txt")
+        \\    mut wrote_text: Result[Unit, str] = fs.write_text("copy.txt", "x")
+        \\    mut wrote_raw: Result[Unit, str] = fs.write_file("copy.bin", b"x")
+        \\    mut made: Result[Unit, str] = fs.mkdir("sub")
+        \\    mut dropped: Result[Unit, str] = fs.remove("sub")
         \\    _ = text
         \\    _ = raw
         \\    _ = listing
@@ -398,41 +398,41 @@ test "FILE-METHOD-1 the method spelling shares the free form's result types mode
     defer compilation.deinit();
     try compilation.check();
     try reject(
-        \\def main(fs: Filesystem) -> int:
+        \\func main(fs: Filesystem) -> int:
         \\    _ = fs.read_text()
         \\    return 0
     , "E_ARITY");
     try reject(
-        \\def main(fs: Filesystem) -> int:
+        \\func main(fs: Filesystem) -> int:
         \\    _ = fs.read_text("a", "b")
         \\    return 0
     , "E_ARITY");
     try reject(
-        \\def main(fs: Filesystem) -> int:
+        \\func main(fs: Filesystem) -> int:
         \\    _ = fs.write_text("a")
         \\    return 0
     , "E_ARITY");
     try reject(
-        \\def main(fs: Filesystem) -> int:
+        \\func main(fs: Filesystem) -> int:
         \\    _ = fs.exists()
         \\    return 0
     , "E_ARITY");
     try reject(
-        \\def main(fs: Filesystem) -> int:
+        \\func main(fs: Filesystem) -> int:
         \\    with fs.open("a") as f:
         \\        _ = f
         \\        return 0
     , "E_ARITY");
     try reject(
-        \\def main(fs: Filesystem) -> int:
-        \\    mode = "r"
+        \\func main(fs: Filesystem) -> int:
+        \\    mut mode = "r"
         \\    with fs.open("a", mode) as f:
         \\        _ = f
         \\        return 0
     , "E_FILE_ARGUMENT");
     try reject(
-        \\def main(fs: Filesystem) -> int:
-        \\    value: int = fs.read_text("notes.txt")
+        \\func main(fs: Filesystem) -> int:
+        \\    mut value: int = fs.read_text("notes.txt")
         \\    return value
     , "E_TYPE");
 }
@@ -440,11 +440,11 @@ test "FILE-METHOD-1 the method spelling shares the free form's result types mode
 // spec-case: FILE-METHOD-1
 test "FILE-METHOD-1 generic bodies reject the method spelling like the free form" {
     try reject(
-        \\def look[T](fs: Filesystem, value: T) -> int:
+        \\func look[T](fs: Filesystem, value: T) -> int:
         \\    _ = fs.read_text("x")
         \\    return 0
         \\
-        \\def main(fs: Filesystem) -> int:
+        \\func main(fs: Filesystem) -> int:
         \\    return look(fs, 7)
     , "E_GENERIC_BODY_UNSUPPORTED");
 }
@@ -452,18 +452,18 @@ test "FILE-METHOD-1 generic bodies reject the method spelling like the free form
 // spec-case: FILE-METHOD-1
 test "FILE-METHOD-1 a same-named function or local keeps the free form while the method stays the receiver's" {
     try expectPrinted(
-        \\def read_text(path: str) -> str:
+        \\func read_text(path: str) -> str:
         \\    _ = path
         \\    return "shadowed"
         \\
-        \\def main(fs: Filesystem, out: Stream) -> int:
+        \\func main(fs: Filesystem, out: Stream) -> int:
         \\    out.print(read_text("notes.txt"))
         \\    out.print(fs.read_text("notes.txt"))
         \\    return 0
     , "shadowed\nOk('alpha\\nbeta\\n')\n");
     try expectPrinted(
-        \\def main(fs: Filesystem, out: Stream) -> int:
-        \\    exists = 7
+        \\func main(fs: Filesystem, out: Stream) -> int:
+        \\    mut exists = 7
         \\    out.print(exists)
         \\    out.print(fs.exists("notes.txt"))
         \\    return 0
@@ -473,20 +473,20 @@ test "FILE-METHOD-1 a same-named function or local keeps the free form while the
 // spec-case: FILE-METHOD-1
 test "FILE-METHOD-1 with fs.open binds a direct handle and propagates through the method mark" {
     try expectPrinted(
-        \\def main(fs: Filesystem, out: Stream) -> int:
+        \\func main(fs: Filesystem, out: Stream) -> int:
         \\    with fs.open("notes.txt", "rb") as f:
         \\        out.print(f.read())
         \\    return 0
     , "b'alpha\\nbeta\\n'\n");
     try expectPrinted(
-        \\def count(fs: Filesystem) -> Result[int, str]:
-        \\    total = 0
-        \\    with fs.open("notes.txt", "r")? as f:
+        \\func count(fs: Filesystem) -> Result[int, str]:
+        \\    mut total = 0
+        \\    with try fs.open("notes.txt", "r") as f:
         \\        for line in f.readlines():
         \\            total = total + 1
         \\    return Ok(total)
         \\
-        \\def main(fs: Filesystem, out: Stream) -> int:
+        \\func main(fs: Filesystem, out: Stream) -> int:
         \\    match count(fs):
         \\        case Ok(value):
         \\            out.print(value)
@@ -495,7 +495,7 @@ test "FILE-METHOD-1 with fs.open binds a direct handle and propagates through th
         \\    return 0
     , "2\n");
     try expectTrap(
-        \\def main(fs: Filesystem) -> int:
+        \\func main(fs: Filesystem) -> int:
         \\    with fs.open("absent.txt", "r") as f:
         \\        return len(f.read())
     , "R_FILE");
@@ -529,50 +529,50 @@ const fs_holder =
 test "CAPABILITY-FIELD-METHOD-1 a capability field keeps the effect, grant and trap rules of a local" {
     // `noio` withholds the filesystem effect from the field spelling as from a local.
     try reject(holder ++
-        \\def probe(ctx: Ctx) -> bool noio:
+        \\func probe(ctx: Ctx) -> bool noio:
         \\    return ctx.fs.exists("notes.txt")
         \\
-        \\def main(fs: Filesystem, clock: Clock) -> int:
+        \\func main(fs: Filesystem, clock: Clock) -> int:
         \\    return 0
     , "E_EFFECT_BOUND");
     // An unknown method names what the receiver does have; a Clock has none.
     try rejectNaming(holder ++
-        \\def main(fs: Filesystem, clock: Clock) -> int:
-        \\    ctx = Ctx(fs=fs, clock=clock)
+        \\func main(fs: Filesystem, clock: Clock) -> int:
+        \\    mut ctx = Ctx(fs=fs, clock=clock)
         \\    _ = ctx.fs.rename("a", "b")
         \\    return 0
     , "E_COLLECTION_METHOD", "a Filesystem has the methods open, read_file");
     try rejectNaming(holder ++
-        \\def main(fs: Filesystem, clock: Clock) -> int:
-        \\    ctx = Ctx(fs=fs, clock=clock)
+        \\func main(fs: Filesystem, clock: Clock) -> int:
+        \\    mut ctx = Ctx(fs=fs, clock=clock)
         \\    _ = ctx.clock.now()
         \\    return 0
     , "E_COLLECTION_METHOD", "a Clock has no methods");
     // Arity and argument rules are the local spelling's.
     try reject(holder ++
-        \\def main(fs: Filesystem, clock: Clock) -> int:
-        \\    ctx = Ctx(fs=fs, clock=clock)
+        \\func main(fs: Filesystem, clock: Clock) -> int:
+        \\    mut ctx = Ctx(fs=fs, clock=clock)
         \\    _ = ctx.fs.read_text()
         \\    return 0
     , "E_ARITY");
     try reject(holder ++
-        \\def main(fs: Filesystem, clock: Clock) -> int:
-        \\    ctx = Ctx(fs=fs, clock=clock)
-        \\    mode = "rb"
+        \\func main(fs: Filesystem, clock: Clock) -> int:
+        \\    mut ctx = Ctx(fs=fs, clock=clock)
+        \\    mut mode = "rb"
         \\    with ctx.fs.open("notes.txt", mode) as f:
         \\        return 0
     , "E_FILE_ARGUMENT");
     try reject(holder ++
-        \\def main(fs: Filesystem, clock: Clock) -> int:
-        \\    ctx = Ctx(fs=fs, clock=clock)
-        \\    name = "data"
+        \\func main(fs: Filesystem, clock: Clock) -> int:
+        \\    mut ctx = Ctx(fs=fs, clock=clock)
+        \\    mut name = "data"
         \\    _ = ctx.fs.dir(name)
         \\    return 0
     , "E_FILESYSTEM_DIR");
     // A read-only grant still denies writes and a direct open still traps.
     try expectPrinted(fs_holder ++
-        \\def main(fs: Filesystem, out: Stream) -> int:
-        \\    ctx = Ctx(fs=fs)
+        \\func main(fs: Filesystem, out: Stream) -> int:
+        \\    mut ctx = Ctx(fs=fs)
         \\    match ctx.fs.write_text("out.txt", "x"):
         \\        case Ok(_):
         \\            out.print("wrote")
@@ -586,8 +586,8 @@ test "CAPABILITY-FIELD-METHOD-1 a capability field keeps the effect, grant and t
         \\    return 0
     , "write 'out.txt': denied: outside the granted directories, or the mode needs a write grant\n11\n");
     try expectTrap(fs_holder ++
-        \\def main(fs: Filesystem) -> int:
-        \\    ctx = Ctx(fs=fs)
+        \\func main(fs: Filesystem) -> int:
+        \\    mut ctx = Ctx(fs=fs)
         \\    with ctx.fs.open("absent.txt", "r") as f:
         \\        return len(f.read())
     , "R_FILE");

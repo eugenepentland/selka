@@ -1,24 +1,23 @@
-module rc_dictionary_views
 
 # spec-case: D2-VIEW-STORAGE-1
-public def test_explicit_snapshot_preserves_prior_values() -> bool:
-    mapping = {1: 7}
-    saved = list(mapping.values())
+public func test_explicit_snapshot_preserves_prior_values() -> bool:
+    mut mapping = {1: 7}
+    mut saved = list(mapping.values())
     mapping[1] = 9
     mapping[2] = 11
     return saved == [7] and list(mapping.values()) == [9, 11]
 
 record Saved:
-    values: list[list[int]]
-    items: list[DictItem[int, list[int]]]
+    values: int[][]
+    items: DictItem[int, int[]][]
 
-def collect(mapping: dict[int, list[int]]) -> Saved:
-    return Saved(list(mapping.values()), list(mapping.items()))
+func collect(mapping: dict[int, int[]]) -> Saved:
+    return Saved(values=list(mapping.values()), items=list(mapping.items()))
 
 # spec-case: D2-VIEW-STORAGE-1
-public def test_returned_nested_snapshots_keep_managed_values() -> bool:
-    mapping = {1: [7, 8]}
-    saved = collect(mapping)
+public func test_returned_nested_snapshots_keep_managed_values() -> bool:
+    mut mapping = {1: [7, 8]}
+    mut saved = collect(mapping)
     mapping[1].append(9)
     saved.values[0].append(11)
     return saved.values == [[7, 8, 11]] and saved.items[0].value == [7, 8] and mapping[1] == [7, 8, 9]

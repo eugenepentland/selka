@@ -15,7 +15,7 @@ result Finish:
     err: Failure
 
 
-def retry(file: File) -> Finish effects(filesystem):
+func retry(file: File) -> Finish effects(filesystem):
     match complete_resource[Finish](file):
         case Finish.ok(done):
             return Ok(done)
@@ -23,8 +23,8 @@ def retry(file: File) -> Finish effects(filesystem):
             return Err(failure)
 
 
-def main(fs: Filesystem) -> int noalloc:
-    request: [1]u8 = [42u8]
+func main(fs: Filesystem) -> int noalloc:
+    mut request: FixedArray[u8, 1] = FixedArray[u8, 1]([42u8])
     match acquire_resource[Open](fs, request):
         case Open.ok(file):
             match retry(file):

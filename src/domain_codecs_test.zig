@@ -20,15 +20,15 @@ const source =
     \\        decode: from_wire,
     \\        encode: to_wire
     \\
-    \\    private def raw(x: i64) -> Positive:
+    \\    private func raw(x: i64) -> Positive:
     \\        return wrap[Positive](x)
     \\
-    \\    def from_wire(x: Wire) -> Decoded effects():
+    \\    func from_wire(x: Wire) -> Decoded effects():
     \\        if x.n <= 0:
     \\            return Err(-1)
     \\        return Ok(Positive.raw(x.n))
     \\
-    \\    def to_wire(x: Positive) -> Wire effects():
+    \\    func to_wire(x: Positive) -> Wire effects():
     \\        return Wire(n=unwrap(x))
     \\
     \\
@@ -36,7 +36,7 @@ const source =
 ;
 fn scenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, "codec.my", source ++
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     );
     defer c.deinit();
@@ -73,25 +73,25 @@ const prefix =
     \\
 ;
 const suffix =
-    \\    def dec(x: i64) -> R:
+    \\    func dec(x: i64) -> R:
     \\        return Ok(wrap[D](x))
     \\
-    \\    def enc(x: D) -> i64:
+    \\    func enc(x: D) -> i64:
     \\        return unwrap(x)
     \\
     \\
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    return 0
 ;
 const private_decode =
-    \\    private def dec(x: i64) -> R:
+    \\    private func dec(x: i64) -> R:
     \\        return Ok(wrap[D](x))
     \\
-    \\    def enc(x: D) -> i64:
+    \\    func enc(x: D) -> i64:
     \\        return unwrap(x)
     \\
     \\
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    return 0
 ;
 // spec: WIRE-4
@@ -150,18 +150,17 @@ test "domain codec declarations reject duplicate missing unknown and private ent
 const Provider = struct {
     fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
         if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8,
-            \\module main
             \\import data as d
             \\
             \\
-            \\def main() -> i64:
+            \\func main() -> i64:
             \\    match d.Positive.from_wire(d.Wire(n=7)):
             \\        case d.Decoded.ok(x):
             \\            return d.Positive.to_wire(x).n
             \\        case d.Decoded.err(e):
             \\            return e
         );
-        if (std.mem.eql(u8, path, "data.my")) return allocator.dupe(u8, "module data\n" ++ source);
+        if (std.mem.eql(u8, path, "data.my")) return allocator.dupe(u8, "" ++ source);
         return error.NotFound;
     }
 };
@@ -221,7 +220,7 @@ test "domain codec formatting preserves comments entries and checked contracts" 
 }
 
 const source_call =
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    match Positive.from_wire(Wire(n=7)):
     \\        case Decoded.ok(x):
     \\            return Positive.to_wire(x).n
@@ -252,31 +251,31 @@ test "domain codec methods reject missing methods invalid arity and backing bypa
         \\    pass
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return D.to_wire(0)
     , "E_UNKNOWN_FUNCTION");
     try reject(
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return i64.from_wire(0)
     , "E_SYNTAX");
     try reject(source ++
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return Positive.to_wire(7)
     , "E_TYPE");
     try reject(source ++
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return Positive.from_wire()
     , "E_ARITY");
     try reject(source ++
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return Positive.from_wire(7)
     , "E_TYPE");
     try reject(
-        \\def helper[T](x: T) -> T:
+        \\func helper[T](x: T) -> T:
         \\    return T.to_wire(x)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_GENERIC_REQUIREMENT");
 }
@@ -287,14 +286,14 @@ test "source codec operations follow selected method names rather than naming co
         \\        decode: dec,
         \\        encode: enc
         \\
-        \\    def dec(x: i64) -> R:
+        \\    func dec(x: i64) -> R:
         \\        return Ok(wrap[D](x * 2))
         \\
-        \\    def enc(x: D) -> i64:
+        \\    func enc(x: D) -> i64:
         \\        return unwrap(x) + 1
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    match D.dec(7):
         \\        case R.ok(x):
         \\            return D.enc(x)

@@ -34,10 +34,10 @@ SUMMARY_NAMES = ("statx", "newfstatat", "getdents64")
 
 
 def generate_source(size: int) -> str:
-    lines = ["module main", ""]
+    lines = ["", ""]
     for i in range(size - 1):
-        lines += [f"def f{i}(x: int) -> int effects():", f"    return x + {i}", ""]
-    lines += ["def main() -> int effects():", "    total = 0"]
+        lines += [f"func f{i}(x: int) -> int effects():", f"    return x + {i}", ""]
+    lines += ["func main() -> int effects():", "    total = 0"]
     for i in range(size - 1):
         lines.append(f"    total = total + f{i}({i})")
     lines += ["    return total", ""]

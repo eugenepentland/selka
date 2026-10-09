@@ -12,7 +12,6 @@ Header order is `module`, then imports. Explicit exports may precede, follow, or
 
 ```mylang
 # doc: skip fragment: the imported `shared.units` module is not shown
-module main
 import shared.units
 
 

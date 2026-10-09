@@ -1,6 +1,6 @@
-def main() -> int:
-    factor: int = 7
-    total = 0
-    amount = 3
+func main() -> int:
+    mut factor: int = 7
+    mut total = 0
+    mut amount = 3
     total = factor * amount
     return total

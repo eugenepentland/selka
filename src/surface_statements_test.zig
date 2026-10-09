@@ -24,7 +24,7 @@ fn evaluate(bytes: []const u8, expected: i64) !void {
 }
 
 // spec: SURFACE-STMT-1
-test "a newline or a dedent ends a statement and a semicolon separates two on one line" {
+test "newlines and dedents end statements without semicolon separators" {
     try evaluate(
         \\type Number = i64
         \\
@@ -32,13 +32,14 @@ test "a newline or a dedent ends a statement and a semicolon separates two on on
         \\const ANSWER: Number = 42
         \\
         \\
-        \\def main() -> i64:
-        \\    value = ANSWER # retained comment
+        \\func main() -> i64:
+        \\    mut value = ANSWER # retained comment
         \\    return value
     , 42);
     try evaluate(
-        \\def main() -> i64:
-        \\    x = 41; y = 1
+        \\func main() -> i64:
+        \\    mut x = 41
+        \\    mut y = 1
         \\    return x + y
     , 42);
     var invalid = try language.Compilation.init(t.allocator, "missing-separator.my",
@@ -53,7 +54,6 @@ test "a newline or a dedent ends a statement and a semicolon separates two on on
 // spec: SURFACE-STMT-5
 test "module declaration discovery and formatting accept newline terminated directives" {
     const bytes =
-        \\module example
         \\import dependency as dep
         \\
         \\
@@ -62,7 +62,7 @@ test "module declaration discovery and formatting accept newline terminated dire
         \\
         \\
         \\
-        \\public def main() -> i64:
+        \\public func main() -> i64:
         \\    return 42
     ;
     var compilation = try language.Compilation.init(t.allocator, "example.my", bytes);
@@ -82,20 +82,20 @@ test "module declaration discovery and formatting accept newline terminated dire
 // spec: SURFACE-STMT-9
 test "newline suffixes end an expression outside parentheses and continue inside parentheses" {
     try evaluate(
-        \\def add(a: i64, b: i64) -> i64:
+        \\func add(a: i64, b: i64) -> i64:
         \\    return a + b
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return add(20, 22)
     , 42);
     var compilation = try language.Compilation.init(t.allocator, "newline-suffix.my",
-        \\def add(a: i64) -> i64:
+        \\func add(a: i64) -> i64:
         \\    return a
         \\
         \\
-        \\def main() -> i64:
-        \\    callback = add
+        \\func main() -> i64:
+        \\    mut callback = add
         \\    42
         \\    return 0
     );
@@ -104,7 +104,7 @@ test "newline suffixes end an expression outside parentheses and continue inside
     const syntax = compilation.syntax.?;
     const body = syntax.statements.items[@backingInt(syntax.functions[1].body)].data.block;
     try t.expectEqual(@as(usize, 3), body.len);
-    const assignment = syntax.statements.items[@backingInt(body[0])].data.assignment;
+    const assignment = syntax.statements.items[@backingInt(body[0])].data.binding;
     try t.expect(syntax.nodes.items[@backingInt(assignment.value)].data == .name);
     const expression = syntax.statements.items[@backingInt(body[1])].data.discard;
     try t.expect(syntax.nodes.items[@backingInt(expression)].data == .integer);

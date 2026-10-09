@@ -1,15 +1,14 @@
-module surface_collections_case_1
 
 
-def add[T](values: mut list[T], value: T):
+func add[T](mut values: T[], value: T):
     values.append(value)
 
 
-def first[T](values: list[T]) -> T:
+func first[T](values: T[]) -> T:
     return values[0]
 
 
-public def program() -> i64:
-    values: list[i64] = []
+public func program() -> i64:
+    mut values: i64[] = []
     add(mut values, 42)
     return first(values)

@@ -110,10 +110,18 @@ fn listAttributes(work: std.mem.Allocator, src: source.Source, syntax: ast.Progr
     return listed;
 }
 
+fn hasExportDirective(bytes: []const u8) bool {
+    var lines = std.mem.splitScalar(u8, bytes, '\n');
+    while (lines.next()) |line| {
+        if (std.mem.startsWith(u8, line, "export ")) return true;
+    }
+    return false;
+}
+
 /// Parse one file and allocate its declarations-v1 listing with the caller's allocator.
 pub fn render(allocator: std.mem.Allocator, arena: *std.heap.ArenaAllocator, src: source.Source, tokens: []const lex.Token, sink: *diagnostic.Sink) Error![]u8 {
     var scan: Scan = .{ .src = src, .tokens = tokens };
-    const module_file = scan.word(0, "module");
+    const module_file = @import("module_syntax.zig").usesModuleSyntax(src.bytes) or hasExportDirective(src.bytes);
     var syntax_parser: parser.Parser = .{ .src = src, .storage = arena.allocator(), .tokens = tokens, .sink = sink };
     const syntax = if (module_file) try syntax_parser.parseModule() else try syntax_parser.parse();
     var scratch = std.heap.ArenaAllocator.init(allocator);
@@ -123,8 +131,7 @@ pub fn render(allocator: std.mem.Allocator, arena: *std.heap.ArenaAllocator, src
     var exports: std.ArrayList(Exported) = .empty;
     var listed: std.ArrayList(Listed) = .empty;
     var tally: Tally = .{ .syntax = syntax };
-    const declaration = if (module_file) try scan.moduleHeader() else null;
-    const module_name = if (declaration) |header| src.text(header.name) else null;
+    const module_name: ?[]const u8 = if (module_file) std.fs.path.stem(src.path) else null;
     if (module_file) try scan.imports(work, &imports, src);
     // A leading string statement is the module's docstring, not a declaration.
     if (scan.tokens[scan.pos].tag == .bytes) scan.pos += 1;
@@ -154,7 +161,7 @@ pub fn render(allocator: std.mem.Allocator, arena: *std.heap.ArenaAllocator, src
     return std.json.Stringify.valueAlloc(allocator, .{
         .version = "declarations-v1",
         .module = module_name,
-        .header = if (declaration) |header| header.bytes else null,
+        .header = @as(?source.Span, null),
         .imports = imports.items,
         .exports = exports.items,
         .declarations = listed.items,
@@ -199,8 +206,6 @@ fn lineStart(bytes: []const u8, at: usize) usize {
     return newline + 1;
 }
 
-/// Module name span and the bytes of the module declaration statement.
-const Declared = struct { name: source.Span, bytes: Bytes };
 /// Leading keywords and declared name of one top-level construct.
 const Head = struct { kind: Kind, name: source.Span, braced: bool };
 const Simple = struct { kind: Kind, braced: bool };
@@ -234,14 +239,6 @@ const Scan = struct {
         var last = first;
         while (self.take(.dot)) last = try self.expect(.ident);
         return .join(first, last);
-    }
-    /// Consume `module NAME;` and return its declared name and statement bytes.
-    fn moduleHeader(self: *Scan) error{InternalError}!Declared {
-        const start = self.tokens[self.pos].span.start;
-        _ = try self.expect(.ident);
-        const name = try self.dotted();
-        const end = try self.expect(.semicolon);
-        return .{ .name = name, .bytes = .{ .start = start, .end = end.end } };
     }
     /// Collect every import statement with its alias and statement bytes.
     fn imports(self: *Scan, work: std.mem.Allocator, into: *std.ArrayList(Import), src: source.Source) Error!void {
@@ -372,7 +369,7 @@ fn declared(syntax: ast.Program, kind: Kind, index: usize) ?source.Span {
 fn variantName(variants: []const ast.Variants, kind: Kind, index: usize) ?source.Span {
     var seen: usize = 0;
     for (variants) |variant| {
-        const actual: Kind = if (variant.fallible) .result else if (variant.is_union) .@"union" else .@"enum";
+        const actual: Kind = if (variant.fallible) .result else .@"enum";
         if (actual != kind) continue;
         if (seen == index) return variant.name;
         seen += 1;

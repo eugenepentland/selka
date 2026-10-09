@@ -50,13 +50,13 @@ $ cat shared-numbers/numbers.my
 module numbers
 
 
-public def answer() -> int:
+public func answer() -> int:
     return 42
 $ cat app/main.my
 module main
 import numbers
 
-def main() -> int:
+func main() -> int:
     return numbers.answer()
 $ mylang packages lock packages.json --output packages.lock.json
 $ mylang packages build app/main.my --lock packages.lock.json \

@@ -1,9 +1,8 @@
-module standard_strings
 
 import strings
 
 
-def is_ord(text: str, expected: int) -> bool:
+func is_ord(text: str, expected: int) -> bool:
     match strings.ord(text):
         case Ok(value):
             return value == expected
@@ -11,7 +10,7 @@ def is_ord(text: str, expected: int) -> bool:
             return False
 
 
-def is_chr_err(result: Result[str, strings.Error]) -> bool:
+func is_chr_err(result: Result[str, strings.Error]) -> bool:
     match result:
         case Ok(_):
             return False
@@ -19,7 +18,7 @@ def is_chr_err(result: Result[str, strings.Error]) -> bool:
             return True
 
 
-def round_trips(code: int) -> bool:
+func round_trips(code: int) -> bool:
     match strings.chr(code):
         case Ok(text):
             if len(text) != 1:
@@ -30,7 +29,7 @@ def round_trips(code: int) -> bool:
 
 
 # spec: STDLIB-TEXT-SCALAR-1
-public def test_ord_reads_unicode_scalar_values() -> bool:
+public func test_ord_reads_unicode_scalar_values() -> bool:
     if not is_ord("A", 65):
         return False
     if not is_ord("é", 233):
@@ -47,8 +46,8 @@ public def test_ord_reads_unicode_scalar_values() -> bool:
 
 
 # spec-case: STDLIB-TEXT-SCALAR-1
-public def test_chr_builds_one_character_and_round_trips() -> bool:
-    codes: list[int] = [0, 65, 233, 8364, 128512, 1114111]
+public func test_chr_builds_one_character_and_round_trips() -> bool:
+    mut codes: int[] = [0, 65, 233, 8364, 128512, 1114111]
     for code in codes:
         if not round_trips(code):
             return False
@@ -56,7 +55,7 @@ public def test_chr_builds_one_character_and_round_trips() -> bool:
 
 
 # spec-case: STDLIB-TEXT-SCALAR-1
-public def test_chr_rejects_surrogates_and_out_of_range_code_points() -> bool:
+public func test_chr_rejects_surrogates_and_out_of_range_code_points() -> bool:
     if not is_chr_err(strings.chr(55296)):
         return False
     if not is_chr_err(strings.chr(1114112)):
@@ -64,7 +63,7 @@ public def test_chr_rejects_surrogates_and_out_of_range_code_points() -> bool:
     return is_chr_err(strings.chr(0 - 1))
 
 
-def repeated(text: str, times: int) -> str:
+func repeated(text: str, times: int) -> str:
     match strings.repeat(text, times):
         case Ok(value):
             return value
@@ -72,7 +71,7 @@ def repeated(text: str, times: int) -> str:
             return "error"
 
 
-def rejects_negative() -> bool:
+func rejects_negative() -> bool:
     match strings.repeat("a", 0 - 1):
         case Ok(_):
             return False
@@ -81,32 +80,32 @@ def rejects_negative() -> bool:
 
 
 # The copies one at a time, the reference the doubling must match.
-def appended(text: str, times: int) -> str:
-    out = ""
+func appended(text: str, times: int) -> str:
+    mut out = ""
     for _ in range(times):
         out = out + text
     return out
 
 
 # spec: STANDARD-STRINGS-2
-public def test_repeat_builds_long_texts_in_linear_time() -> bool:
+public func test_repeat_builds_long_texts_in_linear_time() -> bool:
     # 300,000 copies: appending one copy at a time copied the growing answer
     # every time, about 135 GB for this count.
-    long = repeated("abc", 300000)
-    ok = len(long) == 900000 and long[:6] == "abcabc" and long[-4:] == "cabc"
+    mut long = repeated("abc", 300000)
+    mut ok = len(long) == 900000 and long[:6] == "abcabc" and long[-4:] == "cabc"
     ok = ok and long.count("abc") == 300000
-    wide = repeated("é€", 100001)
+    mut wide = repeated("é€", 100001)
     return ok and len(wide) == 200002 and wide[-3:] == "€é€" and wide.count("é€") == 100001
 
 
 # spec-case: STANDARD-STRINGS-2
-public def test_repeat_answers_every_count_exactly() -> bool:
-    ok = repeated("", 1000000000) == "" and repeated("xy", 0) == "" and rejects_negative()
+public func test_repeat_answers_every_count_exactly() -> bool:
+    mut ok = repeated("", 1000000000) == "" and repeated("xy", 0) == "" and rejects_negative()
     for times in range(0, 40):
         ok = ok and repeated("ab", times) == appended("ab", times)
         ok = ok and repeated("ü", times) == appended("ü", times)
     return ok and repeated("0", 4) + "7" == "00007"
 
 
-def main() -> int:
+func main() -> int:
     return 0

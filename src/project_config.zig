@@ -192,19 +192,27 @@ pub fn discover(allocator: std.mem.Allocator, io: std.Io, entry_path: []const u8
 /// (`tests.parser_test`). Every slice is owned by the caller's allocator.
 pub const TestEntry = struct { root: []const u8, relative: []const u8, name: []const u8 };
 
-/// Resolve a standalone `*_test.my` entry against its enclosing project: the
+/// Resolve any configured `.my` entry, or an unconfigured `*_test.my` entry,
+/// against its enclosing project: the
 /// nearest ancestor holding `mylang.json`, else the nearest ancestor holding a
 /// non-test `.my` source, else the entry's own directory. Returns null when the
-/// entry is not a `*_test.my` or sits under a path that cannot spell a dotted
+/// entry is unconfigured and not a `*_test.my`, or cannot spell a dotted
 /// module name. The caller owns the slices of a non-null result. The projection
 /// the test runner materializes has a stub `main` appended, so this decision
 /// rests only on the `*_test.my` convention, never on the file's own contents.
 pub fn testEntryLocation(allocator: std.mem.Allocator, io: std.Io, entry_path: []const u8) Error!?TestEntry {
     const absolute = try absoluteEntry(allocator, io, entry_path);
     defer allocator.free(absolute);
-    if (!std.mem.endsWith(u8, std.fs.path.basename(absolute), "_test.my")) return null;
+    if (!std.mem.endsWith(u8, absolute, ".my")) return null;
     const entry_directory = std.fs.path.dirname(absolute) orelse return null;
-    const root = (try nearestProjectRoot(allocator, io, entry_directory)) orelse try allocator.dupe(u8, entry_directory);
+    const configured = try discover(allocator, io, absolute);
+    defer if (configured) |path| allocator.free(path);
+    const root = if (configured) |path|
+        try allocator.dupe(u8, std.fs.path.dirname(path) orelse entry_directory)
+    else if (std.mem.endsWith(u8, std.fs.path.basename(absolute), "_test.my"))
+        (try nearestProjectRoot(allocator, io, entry_directory)) orelse try allocator.dupe(u8, entry_directory)
+    else
+        return null;
     if (!std.mem.startsWith(u8, absolute, root) or absolute.len <= root.len + 1 or absolute[root.len] != std.fs.path.sep) {
         allocator.free(root);
         return null;
@@ -279,14 +287,15 @@ fn validModuleName(stem: []const u8) bool {
     return true;
 }
 
-/// Whether a source declares a top-level `def main`, the entry point a project
+/// Whether a source declares a top-level `func main`, the entry point a project
 /// check requires. Library modules and `*_test.my` files generally do not.
 pub fn declaresMain(source: []const u8) bool {
     var lines = std.mem.splitScalar(u8, source, '\n');
     while (lines.next()) |raw| {
-        const line = std.mem.trimStart(u8, raw, " \t");
-        if (!std.mem.startsWith(u8, line, "def")) continue;
-        const after_def = line["def".len..];
+        var line = std.mem.trimStart(u8, raw, " \t");
+        if (std.mem.startsWith(u8, line, "public ")) line = std.mem.trimStart(u8, line[7..], " \t");
+        const length: usize = if (std.mem.startsWith(u8, line, "func")) 4 else if (std.mem.startsWith(u8, line, "def")) 3 else continue;
+        const after_def = line[length..];
         if (after_def.len == 0 or (after_def[0] != ' ' and after_def[0] != '\t')) continue;
         const name = std.mem.trimStart(u8, after_def, " \t");
         if (!std.mem.startsWith(u8, name, "main")) continue;

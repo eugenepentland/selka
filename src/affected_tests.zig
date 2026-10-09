@@ -172,8 +172,8 @@ fn declared(header: []const u8) ?[]const u8 {
     for ([_][]const u8{ "public ", "host ", "extern " }) |prefix| {
         if (std.mem.startsWith(u8, line, prefix)) line = std.mem.trimStart(u8, line[prefix.len..], " \t");
     }
-    const rest = if (std.mem.startsWith(u8, line, "def "))
-        line["def ".len..]
+    const rest = if (std.mem.startsWith(u8, line, "func "))
+        line["func ".len..]
     else if (std.mem.startsWith(u8, line, "const "))
         line["const ".len..]
     else
@@ -188,26 +188,26 @@ test "a changed line maps to the top-level declaration that owns it" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
-    const text = "module app\nimport util\n\n\ndef helper(value: int) -> int:\n    return value + 1\n\n\n@test\ndef checks() -> bool:\n    return True\n\n\npublic const LIMIT: int = 3\n\n\nrecord Point:\n    x: int\n";
+    const text = "import util\n\n\nfunc helper(value: int) -> int:\n    return value + 1\n\n\n@test\nfunc checks() -> bool:\n    return True\n\n\npublic const LIMIT: int = 3\n\n\nrecord Point:\n    x: int\n";
     var names: std.ArrayList([]const u8) = .empty;
     // A body line changes its function, an attribute its declaration, a
     // constant itself.
-    try std.testing.expect(!try scanModule(allocator, .{ .text = text, .module = "app", .ranges = &.{.{ .start = 6, .len = 1 }} }, &names));
+    try std.testing.expect(!try scanModule(allocator, .{ .text = text, .module = "app", .ranges = &.{.{ .start = 5, .len = 1 }} }, &names));
     try std.testing.expect(!try scanModule(allocator, .{ .text = text, .module = "app", .ranges = &.{.{ .start = 9, .len = 1 }} }, &names));
-    try std.testing.expect(!try scanModule(allocator, .{ .text = text, .module = "app", .ranges = &.{.{ .start = 14, .len = 1 }} }, &names));
+    try std.testing.expect(!try scanModule(allocator, .{ .text = text, .module = "app", .ranges = &.{.{ .start = 13, .len = 1 }} }, &names));
     try std.testing.expectEqual(@as(usize, 3), names.items.len);
     try std.testing.expectEqualStrings("app::helper", names.items[0]);
     try std.testing.expectEqualStrings("app::checks", names.items[1]);
     try std.testing.expectEqualStrings("app::LIMIT", names.items[2]);
     // An import or a record changes the whole module.
     try std.testing.expect(try scanModule(allocator, .{ .text = text, .module = "app", .ranges = &.{.{ .start = 2, .len = 1 }} }, &names));
-    try std.testing.expect(try scanModule(allocator, .{ .text = text, .module = "app", .ranges = &.{.{ .start = 18, .len = 1 }} }, &names));
+    try std.testing.expect(try scanModule(allocator, .{ .text = text, .module = "app", .ranges = &.{.{ .start = 17, .len = 1 }} }, &names));
     const changed: Changes = .{ .names = names.items, .modules = &.{"util"} };
     try std.testing.expect(changed.reaches("app::helper"));
     try std.testing.expect(changed.reaches("app::helper[int]"));
     try std.testing.expect(!changed.reaches("app::helper_two"));
     try std.testing.expect(changed.reaches("util::anything"));
     try std.testing.expect(!changed.reaches("other::helper"));
-    try std.testing.expectEqualStrings("a.b", try moduleName(allocator, "def main() -> int:\n    return 0\n", "a/b.my"));
-    try std.testing.expectEqualStrings("app", try moduleName(allocator, text, "renamed.my"));
+    try std.testing.expectEqualStrings("a.b", try moduleName(allocator, "func main() -> int:\n    return 0\n", "a/b.my"));
+    try std.testing.expectEqualStrings("renamed", try moduleName(allocator, text, "renamed.my"));
 }

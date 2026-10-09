@@ -1,4 +1,3 @@
-module records_case_2
 
 
 record Outer:
@@ -10,12 +9,12 @@ record Inner:
     value: i64
 
 
-def id(x: Outer) -> Outer:
+func id(x: Outer) -> Outer:
     return x
 
 
-public def program() -> i64:
-    x = id(Outer(flag=True, inner=Inner(value=7)))
+public func program() -> i64:
+    mut x = id(Outer(flag=True, inner=Inner(value=7)))
     if x.flag:
         return x.inner.value
     return 0

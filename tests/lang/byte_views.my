@@ -1,20 +1,19 @@
-module byte_views
 
 
-def span_of(data: bytes, start: int, end: int) -> bytes:
+func span_of(data: bytes, start: int, end: int) -> bytes:
     return data.view(start, end)
 
 
-def heap_span(text: bytes) -> bytes:
-    owned = text + b"-tail"
+func heap_span(text: bytes) -> bytes:
+    mut owned = text + b"-tail"
     return owned.view(0, len(text))
 
 
-def churn(count: int) -> int:
-    total = 0
-    index = 0
+func churn(count: int) -> int:
+    mut total = 0
+    mut index = 0
     while index < count:
-        scratch: list[int] = []
+        mut scratch: int[] = []
         scratch.append(index)
         total += len(scratch)
         index += 1
@@ -24,9 +23,9 @@ def churn(count: int) -> int:
 # A view answers every read of the range it names: length, indexing, iteration,
 # comparison, search and decode, all against the source's own octets.
 # spec: PY-BYTES-7
-public def test_a_view_reads_its_range_with_every_byte_string_operation() -> bool:
-    source = b"content-length: 42\r\n"
-    value = source.view(16, 18)
+public func test_a_view_reads_its_range_with_every_byte_string_operation() -> bool:
+    mut source = b"content-length: 42\r\n"
+    mut value = source.view(16, 18)
     if value != b"42" or len(value) != 2:
         return False
     if value[0] != 52 or value[1] != 50:
@@ -35,7 +34,7 @@ public def test_a_view_reads_its_range_with_every_byte_string_operation() -> boo
         return False
     if not value.startswith(b"4") or not value.endswith(b"2"):
         return False
-    total = 0
+    mut total = 0
     for octet in value:
         total += octet
     if total != 102:
@@ -46,7 +45,7 @@ public def test_a_view_reads_its_range_with_every_byte_string_operation() -> boo
                 return False
         case Err(_):
             return False
-    name = source.view(0, 14)
+    mut name = source.view(0, 14)
     if name != b"content-length" or b"length" not in name:
         return False
     return source.view(14, 16) == b": "
@@ -55,8 +54,8 @@ public def test_a_view_reads_its_range_with_every_byte_string_operation() -> boo
 # A view's endpoints clamp exactly like the slice that would have copied them, so
 # a negative start counts from the end and a reversed range is empty.
 # spec-case: PY-BYTES-7
-public def test_view_endpoints_clamp_like_a_slice() -> bool:
-    source = b"0123456789"
+public func test_view_endpoints_clamp_like_a_slice() -> bool:
+    mut source = b"0123456789"
     if source.view(2, 5) != b"234":
         return False
     if source.view(0 - 3, 10) != b"789":
@@ -80,15 +79,15 @@ public def test_view_endpoints_clamp_like_a_slice() -> bool:
 # already returned, and collection between construction and reading changes
 # nothing. A copy taken before an append to the source is a different value.
 # spec-case: PY-BYTES-7
-public def test_views_retain_their_source_across_collection() -> bool:
-    retained = heap_span(b"alpha-bravo")
+public func test_views_retain_their_source_across_collection() -> bool:
+    mut retained = heap_span(b"alpha-bravo")
     if retained != b"alpha-bravo" or len(retained) != 11:
         return False
     if churn(5000) != 5000:
         return False
     if retained != b"alpha-bravo" or retained[0] != 97 or retained[10] != 111:
         return False
-    inner = retained.view(6, 11)
+    mut inner = retained.view(6, 11)
     if inner != b"bravo":
         return False
     if churn(5000) != 5000:
@@ -103,20 +102,20 @@ public def test_views_retain_their_source_across_collection() -> bool:
 # Slicing a view copies the range it names, and a view of a view keeps reading the
 # same source, so nesting neither widens nor loses octets.
 # spec-case: PY-BYTES-7
-public def test_views_nest_and_slices_copy_their_range() -> bool:
-    source = b"the quick brown fox"
-    words = source.view(4, 19)
+public func test_views_nest_and_slices_copy_their_range() -> bool:
+    mut source = b"the quick brown fox"
+    mut words = source.view(4, 19)
     if words != b"quick brown fox":
         return False
-    inner = words.view(6, 11)
+    mut inner = words.view(6, 11)
     if inner != b"brown":
         return False
-    copied = inner[1:4]
+    mut copied = inner[1:4]
     if copied != b"row" or len(copied) != 3:
         return False
     if inner.view(0, len(inner)) != b"brown" or inner.copy() != b"brown":
         return False
-    owned = inner.copy()
+    mut owned = inner.copy()
     if owned != b"brown" or owned == b"brow":
         return False
     if source.view(4, 9) != b"quick" or words.view(0, 5) != b"quick":
@@ -127,15 +126,15 @@ public def test_views_nest_and_slices_copy_their_range() -> bool:
 # `scalar_count()` validates the range's UTF-8 in the pass that counts it, so a
 # width measurement needs no decoded text and a malformed range reports a reason.
 # spec: PY-BYTES-8
-public def test_scalar_count_counts_scalars_and_rejects_malformed_utf8() -> bool:
-    ascii = b"hello"
+public func test_scalar_count_counts_scalars_and_rejects_malformed_utf8() -> bool:
+    mut ascii = b"hello"
     match ascii.scalar_count():
         case Ok(width):
             if width != 5:
                 return False
         case Err(_):
             return False
-    mixed = b"a\xce\xbbb\xf0\x9f\x98\x80c"
+    mut mixed = b"a\xce\xbbb\xf0\x9f\x98\x80c"
     match mixed.scalar_count():
         case Ok(width):
             if width != 5:
@@ -190,7 +189,7 @@ public def test_scalar_count_counts_scalars_and_rejects_malformed_utf8() -> bool
 # A byte string parses numbers through the one pinned grammar, reading its own
 # octets, so a numeric leaf needs no decoded temporary and no allocation.
 # spec: PY-BYTES-9
-public def test_byte_strings_parse_numbers_without_decoding() -> bool:
+public func test_byte_strings_parse_numbers_without_decoding() -> bool:
     match b"42".parse_int():
         case Some(value):
             if value != 42:
@@ -259,7 +258,7 @@ public def test_byte_strings_parse_numbers_without_decoding() -> bool:
             return False
         case None:
             pass
-    token = b"size=2.5mm".view(5, 8)
+    mut token = b"size=2.5mm".view(5, 8)
     match token.parse_float():
         case Some(value):
             return value == 2.5

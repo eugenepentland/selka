@@ -1,8 +1,7 @@
-module sort
 
 
 # Three-way comparison of two texts in Unicode code point order.
-public def compare_strs(a: str, b: str) -> int effects():
+public func compare_strs(a: str, b: str) -> int effects():
     if a == b:
         return 0
     if min(a, b) == a:
@@ -11,17 +10,17 @@ public def compare_strs(a: str, b: str) -> int effects():
 
 
 # A new ascending list of integers; the input list is not modified.
-public def sort_ints(values: list[int]) -> list[int]:
+public func sort_ints(values: int[]) -> int[]:
     return sorted(values)
 
 
 # A new ascending list of floats; NaNs follow ordered values and the input is unchanged.
-public def sort_floats(values: list[float]) -> list[float]:
+public func sort_floats(values: float[]) -> float[]:
     return sorted(values)
 
 
 # A new list of texts in Unicode code point order; the input is not modified.
-public def sort_strs(values: list[str]) -> list[str]:
+public func sort_strs(values: str[]) -> str[]:
     return sorted(values)
 
 
@@ -29,13 +28,13 @@ public def sort_strs(values: list[str]) -> list[str]:
 # the input is unchanged. It is `sorted(values, key=key)`: each key is
 # computed exactly once, in input order, and the native keyed sort gathers the
 # elements into the new list in key order.
-public def sort_by_key[T: copy + storable](values: list[T], key: def(T) -> int effects()) -> list[T]:
+public func sort_by_key[T: copy + storable](values: T[], key: func(T) -> int effects()) -> T[]:
     return sorted(values, key=key)
 
 
 # Whether a list of integers is already in ascending order.
-public def is_sorted_ints(values: list[int]) -> bool effects():
-    index = 1
+public func is_sorted_ints(values: int[]) -> bool effects():
+    mut index = 1
     while index < len(values):
         if values[index] < values[index - 1]:
             return False
@@ -44,11 +43,11 @@ public def is_sorted_ints(values: list[int]) -> bool effects():
 
 
 # Position of a target in an ascending list of integers, if it is present.
-public def binary_search(values: list[int], target: int) -> Option[int] effects():
-    low = 0
-    high = len(values) - 1
+public func binary_search(values: int[], target: int) -> int? effects():
+    mut low = 0
+    mut high = len(values) - 1
     while low <= high:
-        middle = low + (high - low) // 2
+        mut middle = low + (high - low) // 2
         if values[middle] == target:
             return Some(middle)
         if values[middle] < target:
@@ -59,10 +58,10 @@ public def binary_search(values: list[int], target: int) -> Option[int] effects(
 
 
 # Smallest value of a list of integers, if the list has one.
-public def min_int(values: list[int]) -> Option[int] effects():
+public func min_int(values: int[]) -> int? effects():
     if len(values) == 0:
         return None
-    best = values[0]
+    mut best = values[0]
     for value in values:
         if value < best:
             best = value
@@ -70,10 +69,10 @@ public def min_int(values: list[int]) -> Option[int] effects():
 
 
 # Largest value of a list of integers, if the list has one.
-public def max_int(values: list[int]) -> Option[int] effects():
+public func max_int(values: int[]) -> int? effects():
     if len(values) == 0:
         return None
-    best = values[0]
+    mut best = values[0]
     for value in values:
         if value > best:
             best = value
@@ -81,10 +80,10 @@ public def max_int(values: list[int]) -> Option[int] effects():
 
 
 # Smallest text of a list in code point order, if the list has one.
-public def min_str(values: list[str]) -> Option[str] effects():
+public func min_str(values: str[]) -> str? effects():
     if len(values) == 0:
         return None
-    best = values[0]
+    mut best = values[0]
     for value in values:
         if compare_strs(value, best) < 0:
             best = value
@@ -92,9 +91,9 @@ public def min_str(values: list[str]) -> Option[str] effects():
 
 
 # Integers with later duplicates removed, keeping first-occurrence order.
-public def unique_ints(values: list[int]) -> list[int]:
-    seen: dict[int, bool] = {}
-    out: list[int] = []
+public func unique_ints(values: int[]) -> int[]:
+    mut seen: dict[int, bool] = {}
+    mut out: int[] = []
     for value in values:
         if value not in seen:
             seen[value] = True
@@ -103,9 +102,9 @@ public def unique_ints(values: list[int]) -> list[int]:
 
 
 # Texts with later duplicates removed, keeping first-occurrence order.
-public def unique_strs(values: list[str]) -> list[str]:
-    seen: dict[str, bool] = {}
-    out: list[str] = []
+public func unique_strs(values: str[]) -> str[]:
+    mut seen: dict[str, bool] = {}
+    mut out: str[] = []
     for value in values:
         if value not in seen:
             seen[value] = True

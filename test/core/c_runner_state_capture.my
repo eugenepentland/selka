@@ -1,10 +1,9 @@
-module c_runner_state_capture
 import time
 import random
 
 # Deliberately fail so the old/new reports preserve two independent trials'
 # state. Clock, filesystem and entropy mutations must not reach the next trial.
-public def test_failed_trials_start_from_identical_state(value: int, out: Stream, clock: Clock, entropy: Entropy, fs: Filesystem, env: Environment) -> bool:
+public func test_failed_trials_start_from_identical_state(value: int, out: Stream, clock: Clock, entropy: Entropy, fs: Filesystem, env: Environment) -> bool:
     match time.now(clock):
         case Ok(start):
             out.print("clock", start.unix_nanoseconds)
@@ -13,7 +12,7 @@ public def test_failed_trials_start_from_identical_state(value: int, out: Stream
     out.print("file", fs.exists("trial.txt"), "environment", len(env.names()))
     match random.from_entropy(entropy):
         case Ok(sampled):
-            generator = sampled
+            mut generator = sampled
             out.print("entropy", random.next_word(mut generator), random.next_word(mut generator))
         case Err(message):
             out.print(message)

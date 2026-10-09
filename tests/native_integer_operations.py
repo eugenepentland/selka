@@ -30,6 +30,6 @@ def cases():
             ):
                 checks.append(f'    if {op}({number(a)}, {number(b)}) != {number(expected)}:\n'
                               f'        return {len(checks) + 1}\n')
-    yield 'def main() -> i64:\n' + ''.join(checks) + '    return 0\n', (0, b'0\n')
+    yield 'func main() -> i64:\n' + ''.join(checks) + '    return 0\n', (0, b'0\n')
     for expression in ('shift_left(1, 64)', 'shift_right(1, -1)', 'shift_left(1u8, 8u8)'):
-        yield f'def main() -> i64:\n    _ = {expression}\n    return 0\n', None
+        yield f'func main() -> i64:\n    _ = {expression}\n    return 0\n', None

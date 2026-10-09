@@ -13,7 +13,7 @@ $ mylang lint src/app/main.my
 lint: 2 finding(s): 0 blocking, 2 report, 0 waived, 0 accepted
 $ mylang lint src/app/main.my --gate
 app.my:12:1: error[L_DEAD_PRIVATE]: dead-private: private app::helper has no call site
-  def helper(value: int) -> int:
+  func helper(value: int) -> int:
   ^
 lint: 1 finding(s): 1 blocking, 0 report, 0 waived, 0 accepted
 $ echo $?
@@ -135,7 +135,7 @@ family the documentation gate already parses:
 ```text
 # doc: not-mylang
 # lint: allow function-length reason="exhaustive opcode table, split hurts review"
-def dispatch(op: Op, frame: Frame) -> Result[Frame, VmError]:
+func dispatch(op: Op, frame: Frame) -> Result[Frame, VmError]:
     ...
 ```
 

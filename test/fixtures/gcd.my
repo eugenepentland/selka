@@ -1,14 +1,14 @@
-def gcd(a: int, b: int) -> int:
-    x = a
-    y = b
+func gcd(a: int, b: int) -> int:
+    mut x = a
+    mut y = b
 
     while y != 0:
-        remainder = remtrunc(x, y)
+        mut remainder = remtrunc(x, y)
         x = y
         y = remainder
 
     return x
 
 
-def main() -> int:
+func main() -> int:
     return gcd(48, 18)

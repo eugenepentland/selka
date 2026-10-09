@@ -9,19 +9,19 @@ tracks remain pending.
 
 ```mylang
 enum Status:
-    ok,
-    missing,
+    ok
+    missing
     failed
 
 
-def response_codes() -> [Status]u16:
-    codes: [Status]u16 = {Status.failed: 500u16, Status.ok: 200u16, Status.missing: 404u16}
+func response_codes() -> [Status]u16:
+    mut codes: [Status]u16 = {Status.failed: 500u16, Status.ok: 200u16, Status.missing: 404u16}
     return codes
 
 
-def main() -> i64:
-    original = response_codes()
-    revised = replace(original, Status.failed, 503u16)
+func main() -> i64:
+    mut original = response_codes()
+    mut revised = replace(original, Status.failed, 503u16)
     return i64(revised[Status.failed])
 ```
 

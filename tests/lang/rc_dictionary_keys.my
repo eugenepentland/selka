@@ -1,13 +1,13 @@
 # RC-DICTIONARY-KEY-1
-def test_repeated_negative_index_keys_and_real_iterator() -> bool:
-    keys: list[str] = []
+func test_repeated_negative_index_keys_and_real_iterator() -> bool:
+    mut keys: str[] = []
     for i in range(40):
         keys.append("key" + str(i))
-    counts: dict[str, int] = {}
+    mut counts: dict[str, int] = {}
     for i in range(400):
-        key = keys[(i % 40) - 40]
+        mut key = keys[(i % 40) - 40]
         counts[key] = counts.get(key, 0) + 1
-    total = 0
+    mut total = 0
     for name in keys:
         total += counts[name]
     assert total == 400
@@ -15,11 +15,11 @@ def test_repeated_negative_index_keys_and_real_iterator() -> bool:
     return True
 
 # Split yields view-backed immutable strings; list owns header and backing.
-def test_view_backed_keys_survive_dictionary_growth() -> bool:
-    keys = ("alpha" + ",beta,gamma").split(",")
-    counts: dict[str, int] = {}
+func test_view_backed_keys_survive_dictionary_growth() -> bool:
+    mut keys = ("alpha" + ",beta,gamma").split(",")
+    mut counts: dict[str, int] = {}
     for i in range(60):
-        key = keys[i % 3]
+        mut key = keys[i % 3]
         counts[key] = counts.get(key, 0) + 1
     keys.clear()
     assert counts["alpha"] == 20
@@ -28,13 +28,13 @@ def test_view_backed_keys_survive_dictionary_growth() -> bool:
     return True
 
 # Dictionary first uniqueness remains even when key is a raw anchored pointer.
-def test_preexisting_list_and_dictionary_snapshots() -> bool:
-    keys = ["left" + "-key", "right-key"]
-    saved_keys = keys
-    counts = {"left-key": 7}
-    saved_counts = counts
+func test_preexisting_list_and_dictionary_snapshots() -> bool:
+    mut keys = ["left" + "-key", "right-key"]
+    mut saved_keys = keys
+    mut counts = {"left-key": 7}
+    mut saved_counts = counts
     for i in range(2):
-        key = keys[i]
+        mut key = keys[i]
         counts[key] = counts.get(key, 0) + 1
     keys[0] = "changed"
     assert saved_keys[0] == "left-key"
@@ -43,80 +43,80 @@ def test_preexisting_list_and_dictionary_snapshots() -> bool:
     assert counts["right-key"] == 1
     return True
 
-def inherited_work() -> bool:
-    keys = ("inner" + ",second").split(",")
-    counts: dict[str, int] = {}
+func inherited_work() -> bool:
+    mut keys = ("inner" + ",second").split(",")
+    mut counts: dict[str, int] = {}
     for i in range(80):
-        key = keys[i % 2]
+        mut key = keys[i % 2]
         counts[key] = counts.get(key, 0) + 1
     return counts["inner"] == 40 and counts["second"] == 40
 
-def change_key(keys: mut list[str]) -> int:
+func change_key(mut keys: str[]) -> int:
     keys[0] = "after"
     return 13
 
-def test_rhs_callback_keeps_original_named_key() -> bool:
-    keys = ["be" + "fore"]
-    counts: dict[str, int] = {}
-    key = keys[0]
+func test_rhs_callback_keeps_original_named_key() -> bool:
+    mut keys = ["be" + "fore"]
+    mut counts: dict[str, int] = {}
+    mut key = keys[0]
     counts[key] = change_key(mut keys)
     assert counts["before"] == 13
     assert keys[0] == "after"
     return True
 
-def test_later_key_use_keeps_ordinary_publication() -> bool:
-    keys = ["be" + "fore"]
-    counts: dict[str, int] = {}
-    key = keys[0]
+func test_later_key_use_keeps_ordinary_publication() -> bool:
+    mut keys = ["be" + "fore"]
+    mut counts: dict[str, int] = {}
+    mut key = keys[0]
     counts[key] = 7
     keys.clear()
     assert key == "before"
     return True
 
-def test_string_iterator_role_is_not_elided() -> bool:
-    keys = ["be" + "fore"]
-    counts: dict[str, int] = {}
-    key = keys[0]
+func test_string_iterator_role_is_not_elided() -> bool:
+    mut keys = ["be" + "fore"]
+    mut counts: dict[str, int] = {}
+    mut key = keys[0]
     counts[key] = 7
-    length = 0
+    mut length = 0
     for letter in key:
         length += len(letter)
     assert length == 6
     return True
 
-def parameter_work(keys: list[str]) -> int:
-    counts: dict[str, int] = {}
-    key = keys[0]
+func parameter_work(keys: str[]) -> int:
+    mut counts: dict[str, int] = {}
+    mut key = keys[0]
     counts[key] = 11
     return counts["parameter"]
 
-def test_parameter_keeps_ordinary_capture() -> bool:
+func test_parameter_keeps_ordinary_capture() -> bool:
     return parameter_work(["para" + "meter"]) == 11
 
-def test_user_loop_binding_is_not_an_ordinary_home_proof() -> bool:
-    groups = [["one"], ["two"]]
-    total = 0
+func test_user_loop_binding_is_not_an_ordinary_home_proof() -> bool:
+    mut groups = [["one"], ["two"]]
+    mut total = 0
     for keys in groups:
-        counts: dict[str, int] = {}
-        key = keys[0]
+        mut counts: dict[str, int] = {}
+        mut key = keys[0]
         counts[key] = 7
         total += counts[key]
     return total == 14
 
-def test_rebound_source_and_empty_loop_keep_fallback() -> bool:
-    keys = ["before"]
+func test_rebound_source_and_empty_loop_keep_fallback() -> bool:
+    mut keys = ["before"]
     keys = ["after"]
-    counts: dict[str, int] = {}
+    mut counts: dict[str, int] = {}
     for i in range(0):
-        key = keys[i]
+        mut key = keys[i]
         counts[key] = 7
     return len(counts) == 0
 
 # A previous real owner in the same key slot prevents a zero-token induction.
-def test_preowned_key_reassigned_on_loop_backedges() -> bool:
-    keys = ["first", "second"]
-    counts: dict[str, int] = {}
-    key = "seed" + str(9)
+func test_preowned_key_reassigned_on_loop_backedges() -> bool:
+    mut keys = ["first", "second"]
+    mut counts: dict[str, int] = {}
+    mut key = "seed" + str(9)
     for i in range(8):
         key = keys[i % 2]
         counts[key] = counts.get(key, 0) + 1

@@ -1,51 +1,50 @@
-module main
 import random
 import time
 
 
-def streams() -> int:
-    generator = random.seeded(42)
-    first = random.next_word(mut generator)
-    snapshot = generator
-    second = random.next_word(mut snapshot)
+func streams() -> int:
+    mut generator = random.seeded(42)
+    mut first = random.next_word(mut generator)
+    mut snapshot = generator
+    mut second = random.next_word(mut snapshot)
     if first == second:
         return 1
-    replay = random.seeded(42)
+    mut replay = random.seeded(42)
     if random.next_word(mut replay) != first or random.next_word(mut replay) != second:
         return 2
     if random.next_word(mut generator) != second:
         return 3
-    third = random.next_word(mut snapshot)
+    mut third = random.next_word(mut snapshot)
     if random.next_word(mut generator) != third or random.next_word(mut replay) != third:
         return 7
     if first != 13679457532755275413u64:
         return 4
-    seeded = random.seeded(0)
+    mut seeded = random.seeded(0)
     if random.next_word(mut seeded) != 16294208416658607535u64:
         return 5
-    top = random.from_word(18446744073709551615u64)
-    wrapped = random.seeded(0 - 1)
+    mut top = random.from_word(18446744073709551615u64)
+    mut wrapped = random.seeded(0 - 1)
     if random.next_word(mut top) != random.next_word(mut wrapped):
         return 6
     return 0
 
 
-def fractions() -> int:
-    generator = random.seeded(7)
-    draw = 0
+func fractions() -> int:
+    mut generator = random.seeded(7)
+    mut draw = 0
     while draw < 500:
-        value = random.random(mut generator)
+        mut value = random.random(mut generator)
         if value < 0.0 or value >= 1.0:
             return 10
         draw += 1
     return 0
 
 
-def ranges() -> int:
-    generator = random.seeded(1)
-    draw = 0
-    low = 0
-    high = 0
+func ranges() -> int:
+    mut generator = random.seeded(1)
+    mut draw = 0
+    mut low = 0
+    mut high = 0
     while draw < 500:
         match random.randint(mut generator, 0 - 3, 3):
             case Ok(value):
@@ -85,11 +84,11 @@ def ranges() -> int:
     return 0
 
 
-def permutations() -> int:
-    generator = random.seeded(5)
-    items = [1, 2, 3, 4, 5]
+func permutations() -> int:
+    mut generator = random.seeded(5)
+    mut items = [1, 2, 3, 4, 5]
     random.shuffle(mut generator, mut items)
-    total = 0
+    mut total = 0
     for value in items:
         total += value
     if total != 15 or len(items) != 5:
@@ -100,7 +99,7 @@ def permutations() -> int:
                 return 31
         case None:
             return 32
-    empty: list[int] = []
+    mut empty: int[] = []
     match random.choice(mut generator, empty):
         case Some(_):
             return 33
@@ -110,7 +109,7 @@ def permutations() -> int:
     return 0
 
 
-def durations() -> int:
+func durations() -> int:
     match time.seconds(2):
         case Ok(duration):
             if duration.nanoseconds != 2000000000 or time.to_milliseconds(duration) != 2000:
@@ -145,7 +144,7 @@ def durations() -> int:
     return 0
 
 
-def arithmetic() -> int:
+func arithmetic() -> int:
     match time.sum(time.nanoseconds(9223372036854775807), time.nanoseconds(1)):
         case Ok(_):
             return 50
@@ -170,8 +169,8 @@ def arithmetic() -> int:
     return 0
 
 
-def instants() -> int:
-    start = time.from_unix_nanoseconds(1000)
+func instants() -> int:
+    mut start = time.from_unix_nanoseconds(1000)
     match time.after(start, time.nanoseconds(500)):
         case Ok(later):
             if later.unix_nanoseconds != 1500:
@@ -204,8 +203,8 @@ def instants() -> int:
     return 0
 
 
-def main() -> int:
-    checks = [streams(), fractions(), ranges(), permutations(), durations(), arithmetic(), instants()]
+func main() -> int:
+    mut checks = [streams(), fractions(), ranges(), permutations(), durations(), arithmetic(), instants()]
     for value in checks:
         if value != 0:
             return value

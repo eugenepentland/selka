@@ -6,15 +6,15 @@ argument, and checks implication when a type parameter is forwarded to a helper.
 No representative record or guessed method is substituted during universal checking.
 
 ```my
-def value[T: copy + field(value: i64)](item: T) -> i64:
+func value[T: copy + field(value: i64)](item: T) -> i64:
     return item.value
 
 
-def selected[T: copy + field(value: U), U](item: T) -> U:
+func selected[T: copy + field(value: U), U](item: T) -> U:
     return item.value
 
 
-def score[T: copy + op(score(item: T) -> i64 effects())](item: T) -> i64 effects():
+func score[T: copy + op(score(item: T) -> i64 effects())](item: T) -> i64 effects():
     return T.score(item)
 ```
 

@@ -1,4 +1,3 @@
-module records
 
 
 record Point:
@@ -13,33 +12,34 @@ record Segment:
 
 
 enum Status:
-    ok,
-    missing,
+    ok
+    missing
     failed
 
 
-union Shape:
-    empty,
-    radius: int,
-    point: Point
+enum Shape:
+    empty
+    radius(value: int)
+    point(value: Point)
 
 
-def move(point: Point, dx: int) -> Point:
+func move(input: Point, dx: int) -> Point:
+    mut point = input
     point.x = point.x + dx
     return point
 
 
-def score(shape: Shape) -> int:
+func score(shape: Shape) -> int:
     match shape:
         case Shape.empty:
             return 0
-        case Shape.radius(r):
+        case Shape.radius(value=r):
             return r * r
-        case Shape.point(p):
+        case Shape.point(value=p):
             return p.x + p.y
 
 
-def status_code(status: Status) -> int:
+func status_code(status: Status) -> int:
     match status:
         case Status.ok:
             return 200
@@ -49,24 +49,24 @@ def status_code(status: Status) -> int:
             return 500
 
 
-def codes() -> [Status]int:
+func codes() -> [Status]int:
     return {Status.missing: 404, Status.ok: 200, Status.failed: 500}
 
 
-public def test_value_records() -> bool effects():
-    origin = Point(y=2, x=3)
-    segment = Segment(start=origin, end=move(origin, 4), visible=True)
+public func test_value_records() -> bool effects():
+    mut origin = Point(y=2, x=3)
+    mut segment = Segment(start=origin, end=move(origin, 4), visible=True)
     if origin.x != 3 or origin.y != 2 or segment.end.x != 7:
         return False
-    copied = segment
+    mut copied = segment
     copied.start.x = 99
     return segment.start.x == 3 and copied.start.x == 99 and segment.visible
 
 
-public def test_enums() -> bool effects():
+public func test_enums() -> bool effects():
     if status_code(Status.ok) != 200 or status_code(Status.missing) != 404:
         return False
-    status = Status.ok
+    mut status = Status.ok
     match status:
         case Status.ok:
             return status_code(Status.failed) == 500
@@ -76,16 +76,16 @@ public def test_enums() -> bool effects():
             return False
 
 
-public def test_unions() -> bool effects(managed_allocation):
-    shapes: list[Shape] = [Shape.point(Point(x=2, y=3)), Shape.radius(4), Shape.empty]
+public func test_unions() -> bool effects(managed_allocation):
+    mut shapes: Shape[] = [Shape.point(value=Point(x=2, y=3)), Shape.radius(value=4), Shape.empty]
     return score(shapes[0]) == 5 and score(shapes[1]) == 16 and score(shapes[2]) == 0
 
 
-public def test_arrays_and_tables() -> bool effects():
-    fixed: [3]int = [7, 8, 9]
-    revised = replace(fixed, 1, 11)
-    table = codes()
-    updated = replace(table, Status.failed, 503)
+public func test_arrays_and_tables() -> bool effects():
+    mut fixed: FixedArray[int, 3] = FixedArray[int, 3]([7, 8, 9])
+    mut revised = replace(fixed, 1, 11)
+    mut table = codes()
+    mut updated = replace(table, Status.failed, 503)
     if fixed[1] != 8 or revised[1] != 11:
         return False
     if table[Status.missing] != 404 or updated[Status.failed] != 503:
@@ -93,5 +93,5 @@ public def test_arrays_and_tables() -> bool effects():
     return updated[Status.ok] == 200 and fixed[2] == 9
 
 
-def main() -> int:
+func main() -> int:
     return 0

@@ -16,6 +16,12 @@ fn reject(source: []const u8, code: []const u8, fragment: []const u8) !void {
     try t.expectEqualStrings(code, c.diagnostics.items[0].code);
     try t.expect(std.mem.indexOf(u8, c.diagnostics.items[0].message, fragment) != null);
 }
+/// Run a supported array update and check its caller-visible result.
+fn expectValue(source: []const u8, wanted: i64) !void {
+    var compilation = try language.Compilation.init(t.allocator, fixture_path, source);
+    defer compilation.deinit();
+    try t.expectEqual(wanted, (try native.run(&compilation)).value);
+}
 /// Run `source` natively and require a trap with `code` at `line`.
 fn trap(source: []const u8, code: []const u8, line: u64) !void {
     var c = try language.Compilation.init(t.allocator, fixture_path, source);
@@ -28,22 +34,22 @@ fn trap(source: []const u8, code: []const u8, line: u64) !void {
 // spec-case: PY-ARRAY-WRITE-1
 test "an element write out of range traps like a fixed-array read" {
     try trap(
-        \\def main() -> int:
-        \\    values: [4]int = [0, 0, 0, 0]
-        \\    index = 4
+        \\func main() -> int:
+        \\    mut values: FixedArray[int, 4] = FixedArray[int, 4]([0, 0, 0, 0])
+        \\    mut index = 4
         \\    values[index] = 5
         \\    return values[3]
     , "R_LIST_BOUNDS", 4);
     try trap(
-        \\def main() -> int:
-        \\    values: [4]int = [0, 0, 0, 0]
+        \\func main() -> int:
+        \\    mut values: FixedArray[int, 4] = FixedArray[int, 4]([0, 0, 0, 0])
         \\    values[-5] = 5
         \\    return values[3]
     , "R_LIST_BOUNDS", 3);
     try trap(
-        \\def main() -> int:
-        \\    grid: [2][2]int = [[0, 0], [0, 0]]
-        \\    column = 2
+        \\func main() -> int:
+        \\    mut grid: FixedArray[FixedArray[int, 2], 2] = FixedArray[FixedArray[int, 2], 2]([FixedArray[int, 2]([0, 0]), FixedArray[int, 2]([0, 0])])
+        \\    mut column = 2
         \\    grid[1][column] += 1
         \\    return grid[1][1]
     , "R_LIST_BOUNDS", 4);
@@ -52,32 +58,32 @@ test "an element write out of range traps like a fixed-array read" {
 // spec: PY-ARRAY-NEGATIVE-1
 test "a fixed-array index below minus its length traps where it is written" {
     try trap(
-        \\def main() -> int:
-        \\    values: [4]int = [1, 2, 3, 4]
-        \\    index = -5
+        \\func main() -> int:
+        \\    mut values: FixedArray[int, 4] = FixedArray[int, 4]([1, 2, 3, 4])
+        \\    mut index = -5
         \\    return values[index]
     , "R_LIST_BOUNDS", 4);
     try trap(
-        \\def main() -> int:
-        \\    values: [4]int = [1, 2, 3, 4]
-        \\    index = -9
+        \\func main() -> int:
+        \\    mut values: FixedArray[int, 4] = FixedArray[int, 4]([1, 2, 3, 4])
+        \\    mut index = -9
         \\    values = replace(values, index, 0)
         \\    return values[0]
     , "R_LIST_BOUNDS", 4);
     try trap(
-        \\def main() -> int:
-        \\    grid: [2][2]int = [[0, 0], [0, 0]]
-        \\    row = -3
+        \\func main() -> int:
+        \\    mut grid: FixedArray[FixedArray[int, 2], 2] = FixedArray[FixedArray[int, 2], 2]([FixedArray[int, 2]([0, 0]), FixedArray[int, 2]([0, 0])])
+        \\    mut row = -3
         \\    grid[row][-1] += 1
         \\    return grid[1][1]
     , "R_LIST_BOUNDS", 4);
     try trap(
-        \\def main() -> int:
-        \\    values: [4]int = [1, 2, 3, 4]
-        \\    total = 0
+        \\func main() -> int:
+        \\    mut values: FixedArray[int, 4] = FixedArray[int, 4]([1, 2, 3, 4])
+        \\    mut total = 0
         \\    for i, value in enumerate(values):
-        \\        i = i - 9
-        \\        total += values[i] + value
+        \\        const shifted = i - 9
+        \\        total += values[shifted] + value
         \\    return total
     , "R_LIST_BOUNDS", 6);
 }
@@ -85,8 +91,8 @@ test "a fixed-array index below minus its length traps where it is written" {
 // spec-case: PY-ARRAY-WRITE-1
 test "an element write needs a mutable binding and a writable place" {
     try reject(
-        \\def main() -> int:
-        \\    text = "abc"
+        \\func main() -> int:
+        \\    mut text = "abc"
         \\    text[0] = "x"
         \\    return 0
     , "E_COLLECTION_METHOD", "");
@@ -95,96 +101,98 @@ test "an element write needs a mutable binding and a writable place" {
 // spec-case: PY-ARRAY-MUT-1
 test "an element write through an array parameter that is not mut is rejected as for a list" {
     try reject(
-        \\def set_first(values: [4]int) -> None:
+        \\func set_first(values: FixedArray[int, 4]) -> Unit:
         \\    values[0] = 1
         \\
         \\
-        \\def main() -> int:
-        \\    values: [4]int = [0, 0, 0, 0]
+        \\func main() -> int:
+        \\    mut values: FixedArray[int, 4] = FixedArray[int, 4]([0, 0, 0, 0])
         \\    set_first(values)
         \\    return values[0]
-    , "E_MUTATION_MARKER", "declare `values: mut [4]int`");
+    , "E_IMMUTABLE", "mutable binding");
     try reject(
-        \\def set_first(values: mut [4]int) -> None:
+        \\func set_first(mut values: FixedArray[int, 4]) -> Unit:
         \\    values[0] = 1
         \\
         \\
-        \\def forward(values: [4]int) -> None:
+        \\func forward(values: FixedArray[int, 4]) -> Unit:
         \\    set_first(mut values)
         \\
         \\
-        \\def main() -> int:
-        \\    values: [4]int = [0, 0, 0, 0]
+        \\func main() -> int:
+        \\    mut values: FixedArray[int, 4] = FixedArray[int, 4]([0, 0, 0, 0])
         \\    forward(values)
         \\    return values[0]
-    , "E_MUTATION_MARKER", "declare `values: mut [4]int`");
-    try reject(
-        \\def peek(values: mut [4]int) -> int:
+    , "E_IMMUTABLE", "read-only");
+    try expectValue(
+        \\func peek(mut values: FixedArray[int, 4]) -> int:
         \\    return values[0]
         \\
         \\
-        \\def main() -> int:
-        \\    values: [4]int = [0, 0, 0, 0]
+        \\func main() -> int:
+        \\    mut values: FixedArray[int, 4] = FixedArray[int, 4]([0, 0, 0, 0])
         \\    return peek(mut values)
-    , "E_MUTATION_MARKER", "never written");
+    , 0);
     try reject(
-        \\def set_first(values: mut [4]int) -> None:
+        \\func set_first(mut values: FixedArray[int, 4]) -> Unit:
         \\    values[0] = 1
         \\
         \\
-        \\def main() -> int:
-        \\    values: [4]int = [0, 0, 0, 0]
+        \\func main() -> int:
+        \\    mut values: FixedArray[int, 4] = FixedArray[int, 4]([0, 0, 0, 0])
         \\    set_first(values)
         \\    return values[0]
     , "E_MUTATION_MARKER", "write `(mut values)`");
 }
 
 // spec-case: PY-ARRAY-MUT-1
-test "a mut array parameter names the caller's variable and nothing else" {
-    try reject(
-        \\def reset(values: mut [4]int) -> None:
-        \\    values = [0, 0, 0, 0]
+test "mut arrays support whole rebinding interior targets and function values" {
+    try expectValue(
+        \\func reset(mut values: FixedArray[int, 4]) -> Unit:
+        \\    values = FixedArray[int, 4]([0, 0, 0, 0])
         \\
         \\
-        \\def main() -> int:
-        \\    values: [4]int = [1, 0, 0, 0]
+        \\func main() -> int:
+        \\    mut values: FixedArray[int, 4] = FixedArray[int, 4]([1, 0, 0, 0])
         \\    reset(mut values)
         \\    return values[0]
-    , "E_ASSIGNMENT_TARGET", "names the caller's array");
-    try reject(
+    , 0);
+    try expectValue(
         \\record Box:
-        \\    cells: [4]int
+        \\    cells: FixedArray[int, 4]
         \\
         \\
-        \\def set_first(values: mut [4]int) -> None:
+        \\func set_first(mut values: FixedArray[int, 4]) -> Unit:
         \\    values[0] = 1
         \\
         \\
-        \\def main() -> int:
-        \\    box = Box(cells=[0, 0, 0, 0])
+        \\func main() -> int:
+        \\    mut box = Box(cells=FixedArray[int, 4]([0, 0, 0, 0]))
         \\    set_first(mut box.cells)
         \\    return box.cells[0]
-    , "E_MUTATION_MARKER", "copy the field or element into a local");
-    try reject(
-        \\def set_first(values: mut [4]int) -> None:
+    , 1);
+    try expectValue(
+        \\func set_first(mut values: FixedArray[int, 4]) -> Unit:
         \\    values[0] = 1
         \\
         \\
-        \\def main() -> int:
-        \\    writer = set_first
-        \\    return 0
-    , "E_CALLBACK_TYPE", "cannot be used as a value");
+        \\func main() -> int:
+        \\    const writer = set_first
+        \\    mut values = FixedArray[int, 4]([0, 0, 0, 0])
+        \\    writer(mut values)
+        \\    return values[0]
+    , 1);
 }
 
 test "a read-only argument of an array already passed mut is a snapshot" {
     var c = try language.Compilation.init(t.allocator, fixture_path,
-        \\def reverse_into(target: mut [4]int, source: [4]int) -> None:
+        \\func reverse_into(mut target: FixedArray[int, 4], source: FixedArray[int, 4]) -> Unit:
         \\    for index in range(4):
         \\        target[index] = source[3 - index]
         \\
         \\
-        \\def main() -> int:
-        \\    values: [4]int = [1, 2, 3, 4]
+        \\func main() -> int:
+        \\    mut values: FixedArray[int, 4] = FixedArray[int, 4]([1, 2, 3, 4])
         \\    reverse_into(mut values, values)
         \\    return values[0] * 1000 + values[1] * 100 + values[2] * 10 + values[3]
     );

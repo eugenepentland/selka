@@ -1,35 +1,33 @@
-module rc_journal_types
 
 record Mixed:
-    values: list[int]
-    view: list[list[int]]
+    values: int[]
+    view: int[][]
 
 
-def rebuilt(mapping: dict[int, list[int]], count: int) -> Mixed:
-    result = Mixed([0], list(mapping.values()))
+func rebuilt(mapping: dict[int, int[]], count: int) -> Mixed:
+    mut result = Mixed(values=[0], view=list(mapping.values()))
     for index in range(count):
         if index % 2 == 0:
-            result = Mixed([index, index + 1], list(mapping.values()))
+            result = Mixed(values=[index, index + 1], view=list(mapping.values()))
         else:
-            saved = result
-            result = Mixed(list(saved.view)[0], list(mapping.values()))
+            mut saved = result
+            result = Mixed(values=list(saved.view)[0], view=list(mapping.values()))
     return result
 
 
-public def test_reused_constructor_values_keep_their_current_cleanup_roles() -> bool:
-    mapping = {1: [7, 8]}
-    result = rebuilt(mapping, 6)
+public func test_reused_constructor_values_keep_their_current_cleanup_roles() -> bool:
+    mut mapping = {1: [7, 8]}
+    mut result = rebuilt(mapping, 6)
     mapping[1] = [9]
     return result.values == [7, 8] and list(result.view) == [[7, 8]]
 
 
-def escaped() -> Mixed:
-    with arena() as scratch:
-        mapping = {1: [3, 4]}
-        value = rebuilt(mapping, 5)
-        return scratch.escape(value)
+func escaped() -> Mixed:
+    mut mapping = {1: [3, 4]}
+    mut value = rebuilt(mapping, 5)
+    return value
 
 
-public def test_reused_owners_and_held_values_escape_with_valid_storage() -> bool:
-    result = escaped()
+public func test_reused_owners_and_held_values_escape_with_valid_storage() -> bool:
+    mut result = escaped()
     return result.values == [4, 5] and list(result.view) == [[3, 4]]

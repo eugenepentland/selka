@@ -33,7 +33,6 @@ const Files = struct {
 /// through its module path, and two discovered tests — one by name, one by
 /// `@test` — reach the helpers.
 const data_source =
-    \\module data
     \\
     \\
     \\public record Box:
@@ -41,56 +40,54 @@ const data_source =
     \\
     \\
     \\public domain Meters: int:
-    \\    def make(value: int) -> Meters effects():
+    \\    func make(value: int) -> Meters effects():
     \\        return wrap[Meters](value)
     \\
     \\
-    \\public def read(box: Box) -> int effects():
+    \\public func read(box: Box) -> int effects():
     \\    return box.value
 ;
 const main_source =
-    \\module main
     \\import data as d
     \\
     \\
-    \\def helper(x: int) -> int:
-    \\    meters = d.Meters.make(x)
+    \\func helper(x: int) -> int:
+    \\    mut meters = d.Meters.make(x)
     \\    return d.read(d.Box(value=x)) + 1
     \\
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return helper(1)
     \\
     \\
-    \\def test_helper() -> bool:
+    \\func test_helper() -> bool:
     \\    return helper(1) == 2
     \\
     \\
     \\@test
-    \\def main_answers() -> bool:
+    \\func main_answers() -> bool:
     \\    return main() == 2
 ;
 /// `main_source` with a type error in `main`, so no body checks.
 const red_main_source =
-    \\module main
     \\import data as d
     \\
     \\
-    \\def helper(x: int) -> int:
-    \\    meters = d.Meters.make(x)
+    \\func helper(x: int) -> int:
+    \\    mut meters = d.Meters.make(x)
     \\    return d.read(d.Box(value=x)) + 1
     \\
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return helper(1) + "red"
     \\
     \\
-    \\def test_helper() -> bool:
+    \\func test_helper() -> bool:
     \\    return helper(1) == 2
     \\
     \\
     \\@test
-    \\def main_answers() -> bool:
+    \\func main_answers() -> bool:
     \\    return main() == 2
 ;
 const green = [_]File{ .{ .path = "main.my", .bytes = main_source }, .{ .path = "data.my", .bytes = data_source } };
@@ -139,8 +136,8 @@ fn count(value: std.json.Value, key: []const u8) usize {
 fn generated(allocator: std.mem.Allocator, functions: usize) ![]u8 {
     var text: std.Io.Writer.Allocating = .init(allocator);
     defer text.deinit();
-    try text.writer.writeAll("module main\n\n\ndef main() -> int:\n    return 0\n");
-    for (0..functions) |i| try text.writer.print("\n\ndef f{d}(n: int) -> int:\n    x = n\n    return x\n", .{i});
+    try text.writer.writeAll("\n\nfunc main() -> int:\n    return 0\n");
+    for (0..functions) |i| try text.writer.print("\n\nfunc f{d}(n: int) -> int:\n    const x = n\n    return x\n", .{i});
     return text.toOwnedSlice();
 }
 
@@ -149,8 +146,8 @@ fn generated(allocator: std.mem.Allocator, functions: usize) ![]u8 {
 fn lexicalSource(allocator: std.mem.Allocator, candidates: usize) ![]u8 {
     var text: std.Io.Writer.Allocating = .init(allocator);
     defer text.deinit();
-    try text.writer.writeAll("module main\n\n\n");
-    for (0..candidates) |i| try text.writer.print("def f{d}\n", .{i});
+    try text.writer.writeAll("\n\n");
+    for (0..candidates) |i| try text.writer.print("func f{d}\n", .{i});
     return text.toOwnedSlice();
 }
 

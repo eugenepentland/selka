@@ -1,4 +1,3 @@
-module python_variants
 
 
 record ShapePoint:
@@ -6,24 +5,24 @@ record ShapePoint:
     y: i64
 
 
-union Shape:
-    point: ShapePoint,
-    radius: i64,
+enum Shape:
+    point(value: ShapePoint)
+    radius(value: i64)
     empty
 
 
-def score(shape: Shape) -> i64:
+func score(shape: Shape) -> i64:
     match shape:
         case Shape.empty:
             return 0
-        case Shape.radius(r):
+        case Shape.radius(value=r):
             return r * r
-        case Shape.point(p):
+        case Shape.point(value=p):
             return p.x + p.y
 
 
-union Link:
-    some: i64,
+enum Link:
+    some(value: i64)
     none
 
 
@@ -31,9 +30,9 @@ record VariantNode:
     next: Link
 
 
-def step(node: VariantNode) -> i64:
+func step(node: VariantNode) -> i64:
     match node.next:
-        case Link.some(id):
+        case Link.some(value=id):
             return id
         case Link.none:
             return 0
@@ -43,42 +42,42 @@ record VariantBox[T]:
     value: T
 
 
-union VariantSlot[T]:
-    none,
-    some: T
+enum VariantSlot[T]:
+    none
+    some(value: T)
 
 
-def hold[T](value: T) -> VariantSlot[T]:
-    return VariantSlot.some(value)
+func hold[T](value: T) -> VariantSlot[T]:
+    return VariantSlot.some(value=value)
 
 
-def choose_slot[T](slot: VariantSlot[T], fallback: T) -> T:
+func choose_slot[T](slot: VariantSlot[T], fallback: T) -> T:
     match slot:
         case VariantSlot.none:
             return fallback
-        case VariantSlot.some(value):
+        case VariantSlot.some(value=value):
             return value
 
 
 # spec: PY-VARIANT-1
-public def test_python_payload_variant_construction_names_the_union_case_like_a_call() -> bool:
-    total = score(Shape.point(ShapePoint(x=2, y=3)))
-    total = total + score(Shape.radius(6))
+public func test_python_payload_variant_construction_names_the_union_case_like_a_call() -> bool:
+    mut total = score(Shape.point(value=ShapePoint(x=2, y=3)))
+    total = total + score(Shape.radius(value=6))
     return total + score(Shape.empty) == 41
 
 
 # spec-case: PY-VARIANT-1
-public def test_python_payload_variants_nest_flow_through_locals_and_reach_record_fields() -> bool:
-    held = Link.some(42)
-    filled = VariantNode(next=held)
-    empty = VariantNode(next=Link.none)
+public func test_python_payload_variants_nest_flow_through_locals_and_reach_record_fields() -> bool:
+    mut held = Link.some(value=42)
+    mut filled = VariantNode(next=held)
+    mut empty = VariantNode(next=Link.none)
     return step(filled) + step(empty) == 42
 
 
 # spec: PY-VARIANT-3
-public def test_a_generic_variant_infers_its_type_arguments_from_the_expected_type() -> bool:
-    held: VariantSlot[VariantBox[i64]] = VariantSlot.some(VariantBox[i64](value=42))
-    empty: VariantSlot[i64] = VariantSlot.none
+public func test_a_generic_variant_infers_its_type_arguments_from_the_expected_type() -> bool:
+    mut held: VariantSlot[VariantBox[i64]] = VariantSlot.some(value=VariantBox[i64](value=42))
+    mut empty: VariantSlot[i64] = VariantSlot.none
     return choose_slot(held, VariantBox[i64](value=0)).value + choose_slot(hold[i64](0), 0) + choose_slot(empty, 0) == 42
 
 
@@ -87,77 +86,77 @@ record VariantSpan:
     end: i64
 
 
-union VariantSyntax:
-    form(items: list[VariantSyntax], span: VariantSpan),
-    atom(text: str, span: VariantSpan, literal: Option[str] = None),
+enum VariantSyntax:
+    form(items: VariantSyntax[], span: VariantSpan)
+    atom(text: str, span: VariantSpan, literal: str? = None)
     blank
 
 
-def variant_syntax_size(node: VariantSyntax) -> i64:
+func variant_syntax_size(node: VariantSyntax) -> i64:
     match node:
         case VariantSyntax.blank:
             return 0
-        case VariantSyntax.atom(text, span, literal):
-            width = span.end - span.start + len(text)
+        case VariantSyntax.atom(text=text, span=span, literal=literal):
+            mut width = span.end - span.start + len(text)
             match literal:
                 case None:
                     return width
                 case Some(_found):
                     return width + 1
-        case VariantSyntax.form(items, span):
-            total = span.end - span.start
+        case VariantSyntax.form(items=items, span=span):
+            mut total = span.end - span.start
             for item in items:
                 total = total + variant_syntax_size(item)
             return total
 
 
-def variant_atom_text(node: VariantSyntax) -> str:
+func variant_atom_text(node: VariantSyntax) -> str:
     match node:
         case VariantSyntax.blank:
             return ""
-        case VariantSyntax.form(_, _):
+        case VariantSyntax.form(items=_, span=_):
             return ""
-        case VariantSyntax.atom(text, _, _):
+        case VariantSyntax.atom(text=text, span=_, literal=_):
             return text
 
 
-union VariantPair[T]:
-    pair(left: T, right: T, label: str = "p"),
+enum VariantPair[T]:
+    pair(left: T, right: T, label: str = "p")
     empty
 
 
-def variant_pair_sum(pair: VariantPair[i64]) -> i64:
+func variant_pair_sum(pair: VariantPair[i64]) -> i64:
     match pair:
         case VariantPair.empty:
             return 0
-        case VariantPair.pair(left, right, label):
+        case VariantPair.pair(left=left, right=right, label=label):
             return left + right + len(label)
 
 
-def variant_pair_make[T](left: T, right: T) -> VariantPair[T]:
-    return VariantPair.pair(left, right)
+func variant_pair_make[T](left: T, right: T) -> VariantPair[T]:
+    return VariantPair.pair(left=left, right=right)
 
 
 # spec-case: PY-VARIANT-4
-public def test_a_parenthesized_case_constructs_positionally_by_name_and_with_defaults() -> bool:
-    span = VariantSpan(start=1, end=4)
-    positional = VariantSyntax.atom("abc", span)
-    named = VariantSyntax.atom(text="abc", span=span, literal=Some("x"))
-    grouped = VariantSyntax.form(items=[positional, named], span=span)
+public func test_a_parenthesized_case_constructs_positionally_by_name_and_with_defaults() -> bool:
+    mut span = VariantSpan(start=1, end=4)
+    mut positional = VariantSyntax.atom(text="abc", span=span)
+    mut named = VariantSyntax.atom(text="abc", span=span, literal=Some("x"))
+    mut grouped = VariantSyntax.form(items=[positional, named], span=span)
     return variant_syntax_size(positional) == 6 and variant_syntax_size(named) == 7 and variant_syntax_size(grouped) == 16
 
 
 # spec-case: PY-VARIANT-4
-public def test_a_named_field_pattern_binds_one_name_per_field_and_discards_with_underscore() -> bool:
-    span = VariantSpan(start=0, end=2)
-    return variant_atom_text(VariantSyntax.atom("hi", span)) == "hi" and variant_atom_text(VariantSyntax.blank) == ""
+public func test_a_named_field_pattern_binds_one_name_per_field_and_discards_with_underscore() -> bool:
+    mut span = VariantSpan(start=0, end=2)
+    return variant_atom_text(VariantSyntax.atom(text="hi", span=span)) == "hi" and variant_atom_text(VariantSyntax.blank) == ""
 
 
 # spec-case: PY-VARIANT-4
-public def test_a_generic_parenthesized_case_specializes_with_the_union_arguments() -> bool:
-    pair = variant_pair_make[i64](20, 21)
+public func test_a_generic_parenthesized_case_specializes_with_the_union_arguments() -> bool:
+    mut pair = variant_pair_make[i64](20, 21)
     return variant_pair_sum(pair) == 42 and variant_pair_sum(VariantPair.empty) == 0
 
 
-def main() -> int:
+func main() -> int:
     return 0

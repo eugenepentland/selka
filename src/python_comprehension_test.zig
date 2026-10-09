@@ -14,19 +14,19 @@ fn reject(source: []const u8, code: []const u8) !void {
 // spec: PY-COMPREHENSION-2
 test "comprehensions reject shadowing, non-Boolean filters and uniterable sources" {
     try reject(
-        \\def main() -> int:
-        \\    value = 1
-        \\    _ = [value for value in [1, 2]]
+        \\func main() -> int:
+        \\    mut value = 1
+        \\    _ = [for value in [1, 2] yield value]
         \\    return 0
     , "E_SHADOWING");
     try reject(
-        \\def main() -> int:
-        \\    _ = [x for x in [1, 2] if x]
+        \\func main() -> int:
+        \\    _ = [for x in [1, 2] if x yield x]
         \\    return 0
     , "E_TYPE");
     try reject(
-        \\def main() -> int:
-        \\    _ = [x for x in 3]
+        \\func main() -> int:
+        \\    _ = [for x in 3 yield x]
         \\    return 0
     , "E_COLLECTION_METHOD");
 }
@@ -48,10 +48,10 @@ test "known-size unfiltered comprehensions reserve their bound while filters ret
     var collection: std.ArrayList(Tag) = .empty;
     defer collection.deinit(t.allocator);
     try listCapacities(
-        \\def copy[T: copy + storable](values: list[T]) -> list[T]:
-        \\    return [value for value in values]
+        \\func copy[T: copy + storable](values: T[]) -> T[]:
+        \\    return [for value in values yield value]
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return len(copy([1, 2, 3]))
     , &collection);
     try t.expect(std.mem.indexOfScalar(Tag, collection.items, .local) != null);
@@ -59,16 +59,16 @@ test "known-size unfiltered comprehensions reserve their bound while filters ret
     var range: std.ArrayList(Tag) = .empty;
     defer range.deinit(t.allocator);
     try listCapacities(
-        \\def span[T: integer](start: T, end: T) -> list[T]:
-        \\    return [value for value in range(start, end)]
+        \\func span[T: integer](start: T, end: T) -> T[]:
+        \\    return [for value in range(start, end) yield value]
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return len(span(-2i16, 3i16))
     , &range);
     try t.expect(std.mem.indexOfScalar(Tag, range.items, .block_value) != null);
 
     var filtered: std.ArrayList(Tag) = .empty;
     defer filtered.deinit(t.allocator);
-    try listCapacities("def main() -> int:\n    return len([value for value in range(5) if value > 2])\n", &filtered);
+    try listCapacities("func main() -> int:\n    return len([for value in range(5) if value > 2 yield value])\n", &filtered);
     try t.expect(std.mem.indexOfScalar(Tag, filtered.items, .integer) != null);
 }

@@ -2,27 +2,27 @@
 # (RC-BUFFER-HOIST-1). Each result is the same under the collector and RC.
 
 
-def repeated(count: int, piece: bytes) -> byte_buffer:
-    empty: list[int] = []
-    buffer = byte_buffer(empty)
+func repeated(count: int, piece: bytes) -> byte_buffer:
+    mut empty: int[] = []
+    mut buffer = byte_buffer(empty)
     for index in range(count):
         _ = buffer.append_range(piece, 0, 2)
         _ = buffer.append_byte(48 + index % 10)
     return buffer
 
 
-public def test_zero_and_many_iterations_append_the_same_octets() -> bool:
-    piece = b"ab"
+public func test_zero_and_many_iterations_append_the_same_octets() -> bool:
+    mut piece = b"ab"
     return repeated(0, piece) == b"" and repeated(3, piece) == b"ab0ab1ab2" and len(repeated(1000, piece)) == 3000
 
 
-public def test_a_snapshot_taken_before_the_loop_keeps_its_octets() -> bool:
-    empty: list[int] = []
-    buffer = byte_buffer(empty)
+public func test_a_snapshot_taken_before_the_loop_keeps_its_octets() -> bool:
+    mut empty: int[] = []
+    mut buffer = byte_buffer(empty)
     _ = buffer.append_byte(65)
-    before = bytes(buffer)
-    shared = buffer
-    piece = b"xyz"
+    mut before = bytes(buffer)
+    mut shared = buffer
+    mut piece = b"xyz"
     for index in range(5):
         if index == 4:
             break
@@ -32,10 +32,10 @@ public def test_a_snapshot_taken_before_the_loop_keeps_its_octets() -> bool:
     return buffer == b"Axyzz" and before == b"A" and shared == b"A"
 
 
-public def test_text_and_number_appends_share_one_entry_check() -> bool:
-    empty: list[int] = []
-    buffer = byte_buffer(empty)
-    word = "λx"
+public func test_text_and_number_appends_share_one_entry_check() -> bool:
+    mut empty: int[] = []
+    mut buffer = byte_buffer(empty)
+    mut word = "λx"
     for index in range(3):
         _ = buffer.append_utf8(word)
         _ = buffer.append_int(index - 1)
@@ -43,27 +43,27 @@ public def test_text_and_number_appends_share_one_entry_check() -> bool:
     return buffer == b"\xce\xbbx-1\xce\xbbx0\xce\xbbx1"
 
 
-def grow(buffer: mut byte_buffer) -> int:
+func grow(mut buffer: byte_buffer) -> int:
     _ = buffer.append_byte(33)
     return 46
 
 
-public def test_a_callback_or_snapshot_inside_the_loop_keeps_every_check() -> bool:
-    empty: list[int] = []
-    buffer = byte_buffer(empty)
-    kept = bytes(buffer)
+public func test_a_callback_or_snapshot_inside_the_loop_keeps_every_check() -> bool:
+    mut empty: int[] = []
+    mut buffer = byte_buffer(empty)
+    mut kept = bytes(buffer)
     for index in range(3):
         kept = bytes(buffer)
-        value = grow(mut buffer)
+        mut value = grow(mut buffer)
         _ = buffer.append_byte(value)
     return buffer == b"!.!.!." and kept == b"!.!."
 
 
-public def test_refused_appends_inside_the_loop_write_nothing() -> bool:
-    empty: list[int] = []
-    buffer = byte_buffer(empty)
-    piece = b"abc"
-    refused = 0
+public func test_refused_appends_inside_the_loop_write_nothing() -> bool:
+    mut empty: int[] = []
+    mut buffer = byte_buffer(empty)
+    mut piece = b"abc"
+    mut refused = 0
     for index in range(6):
         if not buffer.append_range(piece, index, 3):
             refused = refused + 1
@@ -72,7 +72,7 @@ public def test_refused_appends_inside_the_loop_write_nothing() -> bool:
     return buffer == b"abc\xfbbc\xfcc\xfd\xfe\xff" and refused == 3
 
 
-def main() -> int:
+func main() -> int:
     assert test_zero_and_many_iterations_append_the_same_octets()
     assert test_a_snapshot_taken_before_the_loop_keeps_its_octets()
     assert test_text_and_number_appends_share_one_entry_check()

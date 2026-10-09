@@ -1,4 +1,3 @@
-module python_surface
 
 
 import python_surface_case_1 as c1
@@ -7,16 +6,16 @@ import python_surface_case_3 as c3
 
 
 # spec: PY-SUBSCRIPT-1
-public def test_a_subscript_index_may_begin_with_a_parenthes() -> bool:
+public func test_a_subscript_index_may_begin_with_a_parenthes() -> bool:
     return c1.program() == 42
 
 # spec-case: PY-RESERVED-1
-public def test_an_intrinsic_name_is_an_ordinary_field_keywo() -> bool:
+public func test_an_intrinsic_name_is_an_ordinary_field_keywo() -> bool:
     return c2.program() == 42
 
 # spec: PY-PRELUDE-1
-public def test_bytes_and_float_resolve_wherever_their_names() -> bool:
+public func test_bytes_and_float_resolve_wherever_their_names() -> bool:
     return c3.program() == 42
 
-def main() -> int:
+func main() -> int:
     return 0

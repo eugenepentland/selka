@@ -128,30 +128,11 @@ fn checkTable() !void {
 }
 
 // spec: PARSER-HINT-1
-test "a union or enum case without its comma names the rule and the fix" {
+test "enum and nominal result cases accept one case per line" {
     var fixture = Fixture.init(t.allocator);
     defer fixture.deinit();
-    const union_case = try fixture.failure(
-        \\union Event:
-        \\    heartbeat
-        \\    count: int
-        \\
-    );
-    try expectHint(&fixture, union_case, "union cases are separated by commas", "insert a comma after the previous case", 3, 5);
-    const enum_case = try fixture.failure(
-        \\enum Level:
-        \\    debug
-        \\    warning
-        \\
-    );
-    try expectHint(&fixture, enum_case, "enum cases are separated by commas", "insert a comma after the previous case", 3, 5);
-    const result_case = try fixture.failure(
-        \\result Parse:
-        \\    ok: int
-        \\    err: str
-        \\
-    );
-    try expectHint(&fixture, result_case, "result cases are separated by commas", "insert a comma after the previous case", 3, 5);
+    try fixture.parses("enum Event:\n    heartbeat\n    count(value: int)\n");
+    try fixture.parses("result Parse:\n    ok: int\n    err: str\n");
 }
 
 // spec: PARSER-HINT-2
@@ -165,24 +146,24 @@ test "a bare module-level assignment names the const declaration it needs" {
 }
 
 // spec: PARSER-HINT-3
-test "a def inside a record or class body names the function that takes the record" {
+test "a func inside a record or class body names the function that takes the record" {
     var fixture = Fixture.init(t.allocator);
     defer fixture.deinit();
     const after_field = try fixture.failure(
         \\record Point:
         \\    x: int
-        \\    def norm1(self) -> int:
+        \\    func norm1(self) -> int:
         \\        return self.x
         \\
     );
-    try expectHint(&fixture, after_field, "a record or class body declares fields, not methods", "declare a top-level function taking the record: def norm1(p: Point) -> int", 3, 5);
+    try expectHint(&fixture, after_field, "a record or class body declares fields, not methods", "declare a top-level function taking the record: func norm1(p: Point) -> int", 3, 5);
     const first_member = try fixture.failure(
         \\class Point:
-        \\    def __init__(self, x: int, y: int):
+        \\    func __init__(self, x: int, y: int):
         \\        self.x = x
         \\
     );
-    try expectHint(&fixture, first_member, "a record or class body declares fields, not methods", "declare a top-level function taking the record: def norm1(p: Point) -> int", 2, 5);
+    try expectHint(&fixture, first_member, "a record or class body declares fields, not methods", "declare a top-level function taking the record: func norm1(p: Point) -> int", 2, 5);
 }
 
 // spec: PARSER-HINT-4
@@ -204,13 +185,13 @@ test "a from-import names the accepted module import and record declaration" {
 test "a Python statement shape names its accepted spelling where the terminator belongs" {
     var fixture = Fixture.init(t.allocator);
     defer fixture.deinit();
-    const chained = try fixture.failure("def main() -> int:\n    x = y = 21\n    return x + y\n");
+    const chained = try fixture.failure("func main() -> int:\n    x = y = 21\n    return x + y\n");
     try expectHint(&fixture, chained, "a chained assignment declares no binding", "assign one name per statement: `x = 21` first, then `y = 21`", 2, 11);
-    const deletion = try fixture.failure("def main() -> int:\n    xs = [1]\n    del xs[0]\n    return 0\n");
+    const deletion = try fixture.failure("func main() -> int:\n    xs = [1]\n    del xs[0]\n    return 0\n");
     try expectHint(&fixture, deletion, "a del statement is not part of the language", "remove with `_ = xs.pop(index)` for a list or `_ = d.pop(key)` for a dictionary", 3, 9);
-    const attempt = try fixture.failure("def main() -> int:\n    try:\n        x = 1\n    return 0\n");
+    const attempt = try fixture.failure("func main() -> int:\n    try:\n        x = 1\n    return 0\n");
     try expectHint(&fixture, attempt, "a try statement is not part of the language", "return `Result` and match it: `case Ok(value)` and `case Err(reason)`", 2, 8);
-    const prefix = try fixture.failure("def main() -> int:\n    r = r\"a\\nb\"\n    return 0\n");
+    const prefix = try fixture.failure("func main() -> int:\n    r = r\"a\\nb\"\n    return 0\n");
     try expectHint(&fixture, prefix, "a string prefix is not part of a literal", "drop the prefix and write the escape in an ordinary quoted string", 2, 10);
 }
 
@@ -219,10 +200,10 @@ test "the collection forms the parser once hinted now parse into the program the
     var fixture = Fixture.init(t.allocator);
     defer fixture.deinit();
     const forms = [_][]const u8{
-        "def main() -> int:\n    seen = {1, 2, 2}\n    return 0\n",
-        "def main() -> int:\n    d = {x: x * x for x in range(4)}\n    return d[3]\n",
-        "def main() -> int:\n    grid = [[1]]\n    flat = [x for row in grid for x in row]\n    return 0\n",
-        "def main() -> int:\n    xs = [1, 2, 3]\n    if any(x > 2 for x in xs):\n        return 1\n    return 0\n",
+        "func main() -> int:\n    mut seen = {1, 2, 2}\n    return 0\n",
+        "func main() -> int:\n    mut d = {x: x * x for x in range(4)}\n    return d[3]\n",
+        "func main() -> int:\n    mut grid = [[1]]\n    mut flat: int[] = []\n    for row in grid:\n        for x in row:\n            flat.append(x)\n    return 0\n",
+        "func main() -> int:\n    mut xs = [1, 2, 3]\n    if any(x > 2 for x in xs):\n        return 1\n    return 0\n",
     };
     for (forms) |bytes| try fixture.parses(bytes);
     try t.expectEqual(@as(usize, 0), fixture.sink.items.items.len);
@@ -232,31 +213,29 @@ test "the collection forms the parser once hinted now parse into the program the
 test "a case literal, an unwrap member, a walrus and a main guard name their accepted forms" {
     var fixture = Fixture.init(t.allocator);
     defer fixture.deinit();
-    const literal = try fixture.failure("def main() -> int:\n    x = 3\n    match x:\n        case 1:\n            return 0\n        case _:\n            return 1\n");
+    const literal = try fixture.failure("func main() -> int:\n    x = 3\n    match x:\n        case 1:\n            return 0\n        case _:\n            return 1\n");
     try expectHint(&fixture, literal, "a case names a union, enum or result case, not a literal", "compare literals with `if`/`elif`: `if x == 1:` then `elif x == 3:`", 4, 14);
-    const unwrap = try fixture.failure("def main() -> int:\n    v = parse(\"42\").unwrap()\n    return v\n");
-    try expectHint(&fixture, unwrap, "`unwrap` is a keyword here, not a method", "extract with `match`: `case Ok(value)` or `case Some(value)`; `?` propagates a `Result`", 2, 21);
-    const walrus = try fixture.failure("def main() -> int:\n    xs = [1, 2, 3]\n    if (n := len(xs)) > 2:\n        return n\n    return 0\n");
+    const unwrap = try fixture.failure("func main() -> int:\n    v = parse(\"42\").unwrap()\n    return v\n");
+    try expectHint(&fixture, unwrap, "`unwrap` is a keyword here, not a method", "extract with `match`: `case Ok(value)` or `case Some(value)`; prefix `try` propagates a result", 2, 21);
+    const walrus = try fixture.failure("func main() -> int:\n    xs = [1, 2, 3]\n    if (n := len(xs)) > 2:\n        return n\n    return 0\n");
     try expectHint(&fixture, walrus, "the walrus operator is not part of the language", "assign the name on its own line first, then test it", 3, 11);
-    const guard = try fixture.failure("def main() -> int:\n    return 42\n\nif __name__ == \"__main__\":\n    main()\n");
-    try expectHint(&fixture, guard, "a module has no `__name__` guard", "delete the guard: `mylang run` calls `def main()` directly", 4, 1);
+    const guard = try fixture.failure("func main() -> int:\n    return 42\n\nif __name__ == \"__main__\":\n    main()\n");
+    try expectHint(&fixture, guard, "a module has no `__name__` guard", "delete the guard: `mylang run` calls `func main()` directly", 4, 1);
 }
 
 // spec: PARSER-HINT-10
 test "a Python form outside the declaration table still names its accepted spelling" {
     var fixture = Fixture.init(t.allocator);
     defer fixture.deinit();
-    const loop_else = try fixture.failure("def main() -> int:\n    for x in [1, 2, 3]:\n        if x == 5:\n            break\n    else:\n        return 42\n    return 0\n");
+    const loop_else = try fixture.failure("func main() -> int:\n    for x in [1, 2, 3]:\n        if x == 5:\n            break\n    else:\n        return 42\n    return 0\n");
     try expectAlternative(&fixture, loop_else, "E_EXPRESSION", "a loop has no `else` clause", "use a flag: assign it before the loop, set it before `break`, and test it after");
-    const while_else = try fixture.failure("def main() -> int:\n    while False:\n        break\n    else:\n        return 1\n    return 0\n");
+    const while_else = try fixture.failure("func main() -> int:\n    while False:\n        break\n    else:\n        return 1\n    return 0\n");
     try expectAlternative(&fixture, while_else, "E_EXPRESSION", "a loop has no `else` clause", "use a flag: assign it before the loop, set it before `break`, and test it after");
-    const nested = try fixture.failure("def main() -> int:\n    def helper(x: int) -> int:\n        return x * 2\n    return helper(21)\n");
+    const nested = try fixture.failure("func main() -> int:\n    func helper(x: int) -> int:\n        return x * 2\n    return helper(21)\n");
     try expectAlternative(&fixture, nested, "E_EXPRESSION", "a function body declares statements, not another function", "declare the function at the top level and call it from the body");
-    const expression = try fixture.failure("def main() -> int:\n    v = match 1:\n        case 0: 1\n    return v\n");
-    try expectAlternative(&fixture, expression, "E_EXPRESSION", "`match` is a statement, not an expression", "assign the value in each branch of an if/elif statement");
-    const power = try fixture.failure("def main() -> int:\n    return 2 ** 5 + 10\n");
+    const power = try fixture.failure("func main() -> int:\n    return 2 ** 5 + 10\n");
     try expectAlternative(&fixture, power, "E_EXPRESSION", "`**` is not an operator", "multiply in a loop: `total = 1` then `for i in range(exponent): total = total * base`");
-    const shift = try fixture.failure("def main() -> int:\n    a = 1 << 4\n    return a\n");
+    const shift = try fixture.failure("func main() -> int:\n    a = 1 << 4\n    return a\n");
     try expectAlternative(&fixture, shift, "E_EXPRESSION", "`<<` and `>>` are not operators", "use `shift_left(value, count)` or `shift_right(value, count)`");
 }
 

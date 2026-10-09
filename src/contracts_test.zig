@@ -64,33 +64,33 @@ test "contracts: contract clauses attach to functions, records and domains and n
         \\@invariant(unwrap(self) < 10u8)
         \\domain Digit: u8:
         \\    @requires(value < 10u8)
-        \\    def from(value: u8) -> Digit:
+        \\    func from(value: u8) -> Digit:
         \\        return wrap[Digit](value)
         \\
         \\    @ensures(result < 10u8)
-        \\    private def raw(value: Digit) -> u8:
+        \\    private func raw(value: Digit) -> u8:
         \\        return unwrap(value)
         \\
         \\@requires(x > 0)
         \\@requires(x < 100, "small")
         \\@ensures(result > x)
-        \\def next[T](x: int, tag: T) -> int:
+        \\func next[T](x: int, tag: T) -> int:
         \\    return x + 1
         \\
-        \\def main() -> int:
-        \\    same = Digit.from(3u8) == Digit.from(3u8)
-        \\    return next(Range(1, 2).high, 0) if same else 0
+        \\func main() -> int:
+        \\    mut same = Digit.from(3u8) == Digit.from(3u8)
+        \\    return if (same) then (next(Range(low=1, high=2).high, 0)) else (0)
     );
-    try rejects("@invariant(True)\nclass C:\n    x: int\n\ndef main() -> int:\n    return 0\n", "E_CONTRACT_TARGET");
-    try rejects("@invariant(True)\nunion U:\n    A,\n    B\n\ndef main() -> int:\n    return 0\n", "E_CONTRACT_TARGET");
-    try rejects("@invariant(True)\ndef f() -> int:\n    return 0\n\ndef main() -> int:\n    return 0\n", "E_CONTRACT_TARGET");
-    try rejects("@requires(True)\nrecord R:\n    x: int\n\ndef main() -> int:\n    return 0\n", "E_CONTRACT_TARGET");
-    try rejects("@requires(True)\nextern def f(host: Host) -> int effects(host);\n\ndef main() -> int:\n    return 0\n", "E_CONTRACT_TARGET");
-    try rejects("@requires(True)\nconst X: int = 3;\n\ndef main() -> int:\n    return 0\n", "E_CONTRACT_TARGET");
-    try rejects("@invariant(True)\ntype Count = int;\n\ndef main() -> int:\n    return 0\n", "E_CONTRACT_TARGET");
-    try rejects("@invariant(True)\nrecord Box[T]:\n    value: T\n\ndef main() -> int:\n    return 0\n", "E_CONTRACT_TARGET");
-    try rejects("domain D: u8:\n    @deprecated(\"old\")\n    def f() -> int:\n        return 0\n\ndef main() -> int:\n    return 0\n", "E_ATTRIBUTE_TARGET");
-    try rejects("@requires(1)\ndef f(x: int) -> int:\n    return x\n\ndef main() -> int:\n    return f(1)\n", "E_TYPE");
+    try rejects("@invariant(True)\nclass C:\n    x: int\n\nfunc main() -> int:\n    return 0\n", "E_CONTRACT_TARGET");
+    try rejects("@invariant(True)\nunion U:\n    A,\n    B\n\nfunc main() -> int:\n    return 0\n", "E_CONTRACT_TARGET");
+    try rejects("@invariant(True)\ndef f() -> int:\n    return 0\n\nfunc main() -> int:\n    return 0\n", "E_CONTRACT_TARGET");
+    try rejects("@requires(True)\nrecord R:\n    x: int\n\nfunc main() -> int:\n    return 0\n", "E_CONTRACT_TARGET");
+    try rejects("@requires(True)\nextern def f(host: Host) -> int effects(host);\n\nfunc main() -> int:\n    return 0\n", "E_CONTRACT_TARGET");
+    try rejects("@requires(True)\nconst X: int = 3;\n\nfunc main() -> int:\n    return 0\n", "E_CONTRACT_TARGET");
+    try rejects("@invariant(True)\ntype Count = int;\n\nfunc main() -> int:\n    return 0\n", "E_CONTRACT_TARGET");
+    try rejects("@invariant(True)\nrecord Box[T]:\n    value: T\n\nfunc main() -> int:\n    return 0\n", "E_CONTRACT_TARGET");
+    try rejects("domain D: u8:\n    @deprecated(\"old\")\n    def f() -> int:\n        return 0\n\nfunc main() -> int:\n    return 0\n", "E_ATTRIBUTE_TARGET");
+    try rejects("@requires(1)\nfunc f(x: int) -> int:\n    return x\n\nfunc main() -> int:\n    return f(1)\n", "E_TYPE");
 }
 
 // spec: CONTRACT-REQUIRES-1
@@ -98,11 +98,11 @@ test "contracts: a broken precondition traps R_REQUIRES at its clause and names 
     const text =
         \\@requires(amount > 0, "amount must be positive")
         \\@requires(amount < 100)
-        \\def half(amount: int) -> int:
+        \\func half(amount: int) -> int:
         \\    return amount // 2
         \\
-        \\def main() -> int:
-        \\    first = half(8)
+        \\func main() -> int:
+        \\    mut first = half(8)
         \\    return first + half(first - 4)
     ;
     var c = try language.Compilation.init(t.allocator, unit, text);
@@ -114,20 +114,20 @@ test "contracts: a broken precondition traps R_REQUIRES at its clause and names 
     try t.expectEqualStrings("main", run.trap.frames[1].function);
     // The clauses are checked in source order, and a precondition only sees
     // the parameters: a body local is not in scope.
-    try returns("@requires(x > 0)\n@requires(x < 10)\ndef f(x: int) -> int:\n    return x\n\ndef main() -> int:\n    return f(9)\n", 9);
-    try rejects("@requires(y > 0)\ndef f(x: int) -> int:\n    y = x\n    return y\n\ndef main() -> int:\n    return f(1)\n", "E_UNKNOWN_NAME");
+    try returns("@requires(x > 0)\n@requires(x < 10)\nfunc f(x: int) -> int:\n    return x\n\nfunc main() -> int:\n    return f(9)\n", 9);
+    try rejects("@requires(y > 0)\nfunc f(x: int) -> int:\n    mut y = x\n    return y\n\nfunc main() -> int:\n    return f(1)\n", "E_UNKNOWN_NAME");
 }
 
 // spec: CONTRACT-ENSURES-1
 test "contracts: a broken postcondition traps R_ENSURES at every normal return and skips an Err" {
     var early = try language.Compilation.init(t.allocator, unit,
         \\@ensures(result < 10, "stays small")
-        \\def clamp(x: int) -> int:
+        \\func clamp(x: int) -> int:
         \\    if x > 50:
         \\        return x
         \\    return 1
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return clamp(3) + clamp(60)
     );
     defer early.deinit();
@@ -135,12 +135,12 @@ test "contracts: a broken postcondition traps R_ENSURES at every normal return a
     // A procedure's implicit end is a normal return too.
     var procedure = try language.Compilation.init(t.allocator, unit,
         \\@ensures(len(items) == 1)
-        \\def fill(items: mut list[int]):
+        \\func fill(mut items: int[]):
         \\    items.append(1)
         \\    items.append(2)
         \\
-        \\def main() -> int:
-        \\    items: list[int] = []
+        \\func main() -> int:
+        \\    mut items: int[] = []
         \\    fill(mut items)
         \\    return 0
     );
@@ -150,16 +150,16 @@ test "contracts: a broken postcondition traps R_ENSURES at every normal return a
     // payload is `result`.
     try returns(
         \\@ensures(result > 100)
-        \\def check(x: int) -> Result[int, str]:
+        \\func check(x: int) -> Result[int, str]:
         \\    if x < 0:
         \\        return Err("negative")
         \\    return Ok(x)
         \\
-        \\def relay(x: int) -> Result[int, str]:
-        \\    value = check(x)?
+        \\func relay(x: int) -> Result[int, str]:
+        \\    mut value = try check(x)
         \\    return Ok(value)
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    match relay(-1):
         \\        case Ok(value):
         \\            return value
@@ -168,10 +168,10 @@ test "contracts: a broken postcondition traps R_ENSURES at every normal return a
     , 7);
     var ok = try language.Compilation.init(t.allocator, unit,
         \\@ensures(result > 100)
-        \\def check(x: int) -> Result[int, str]:
+        \\func check(x: int) -> Result[int, str]:
         \\    return Ok(x)
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    match check(5):
         \\        case Ok(value):
         \\            return value
@@ -180,21 +180,21 @@ test "contracts: a broken postcondition traps R_ENSURES at every normal return a
     );
     defer ok.deinit();
     _ = try traps(&ok, .{ .code = "R_ENSURES", .line = 1, .column = 10, .text = "check ensures `result > 100`" });
-    try rejects("@ensures(result > 0)\ndef f(result: int) -> int:\n    return 1\n\ndef main() -> int:\n    return f(1)\n", sema_contracts.result_code);
-    try rejects("@ensures(result > 0)\ndef f(x: int):\n    pass\n\ndef main() -> int:\n    f(1)\n    return 0\n", sema_contracts.result_code);
+    try rejects("@ensures(result > 0)\nfunc f(result: int) -> int:\n    return 1\n\nfunc main() -> int:\n    return f(1)\n", sema_contracts.result_code);
+    try rejects("@ensures(result > 0)\nfunc f(x: int):\n    pass\n\nfunc main() -> int:\n    f(1)\n    return 0\n", sema_contracts.result_code);
 }
 
 // spec: CONTRACT-OLD-1
 test "contracts: old captures an entry value once and rejects a shared one" {
     var grown = try language.Compilation.init(t.allocator, unit,
         \\@ensures(len(items) == old(len(items)) + 1, "adds exactly one")
-        \\def add(items: mut list[int], value: int):
+        \\func add(mut items: int[], value: int):
         \\    items.append(value)
         \\    if value > 5:
         \\        items.append(value)
         \\
-        \\def main() -> int:
-        \\    items: list[int] = []
+        \\func main() -> int:
+        \\    mut items: int[] = []
         \\    add(mut items, 1)
         \\    add(mut items, 9)
         \\    return len(items)
@@ -202,66 +202,66 @@ test "contracts: old captures an entry value once and rejects a shared one" {
     defer grown.deinit();
     _ = try traps(&grown, .{ .code = "R_ENSURES", .line = 1, .column = 10, .text = "add ensures `len(items) == old(len(items)) + 1`: adds exactly one" });
     // In the default model, old(...) captures an independent value.
-    try returns("@ensures(len(items) == len(old(items.copy())) + 1)\ndef add(items: mut list[int]):\n    items.append(0)\n\ndef main() -> int:\n    items = [1]\n    add(mut items)\n    return len(items)\n", 2);
-    try returns("@ensures(len(old(items)) == 1)\ndef add(items: mut list[int]):\n    items.append(0)\n\ndef main() -> int:\n    items = [1]\n    add(mut items)\n    return len(items)\n", 2);
-    try rejects("@requires(old(x) > 0)\ndef f(x: int) -> int:\n    return x\n\ndef main() -> int:\n    return f(1)\n", sema_contracts.old_code);
-    try rejects("def f(x: int) -> int:\n    return old(x)\n\ndef main() -> int:\n    return f(1)\n", sema_contracts.old_code);
-    try rejects("@ensures(old(old(x)) > 0)\ndef f(x: int) -> int:\n    return x\n\ndef main() -> int:\n    return f(1)\n", sema_contracts.old_code);
+    try returns("@ensures(len(items) == len(old(items.copy())) + 1)\nfunc add(mut items: int[]):\n    items.append(0)\n\nfunc main() -> int:\n    mut items = [1]\n    add(mut items)\n    return len(items)\n", 2);
+    try returns("@ensures(len(old(items)) == 1)\nfunc add(mut items: int[]):\n    items.append(0)\n\nfunc main() -> int:\n    mut items = [1]\n    add(mut items)\n    return len(items)\n", 2);
+    try rejects("@requires(old(x) > 0)\ndef f(x: int) -> int:\n    return x\n\nfunc main() -> int:\n    return f(1)\n", sema_contracts.old_code);
+    try rejects("func f(x: int) -> int:\n    return old(x)\n\nfunc main() -> int:\n    return f(1)\n", sema_contracts.old_code);
+    try rejects("@ensures(old(old(x)) > 0)\nfunc f(x: int) -> int:\n    return x\n\nfunc main() -> int:\n    return f(1)\n", sema_contracts.old_code);
 }
 
 // spec: CONTRACT-PURE-1
 test "contracts: a contract condition may allocate but have no other effect" {
     try rejects(
-        \\def shout(out: Stream) -> bool:
+        \\func shout(out: Stream) -> bool:
         \\    out.print("checked")
         \\    return True
         \\
         \\@requires(shout(out))
-        \\def f(out: Stream, x: int) -> int:
+        \\func f(out: Stream, x: int) -> int:
         \\    return x
         \\
-        \\def main(out: Stream) -> int:
+        \\func main(out: Stream) -> int:
         \\    return f(out, 1)
     , sema_contracts.effect_code);
-    try rejects("@requires(items.pop() > 0)\ndef f(items: mut list[int]) -> int:\n    return 1\n\ndef main() -> int:\n    items = [1]\n    return f(mut items)\n", sema_contracts.effect_code);
+    try rejects("@requires(items.pop() > 0)\nfunc f(mut items: int[]) -> int:\n    return 1\n\nfunc main() -> int:\n    mut items = [1]\n    return f(mut items)\n", sema_contracts.effect_code);
     try rejects(
-        \\def grow(items: mut list[int]) -> bool:
+        \\func grow(mut items: int[]) -> bool:
         \\    items.append(1)
         \\    return True
         \\
         \\@requires(grow(mut items))
-        \\def f(items: mut list[int]) -> int:
+        \\func f(mut items: int[]) -> int:
         \\    return 1
         \\
-        \\def main() -> int:
-        \\    items = [1]
+        \\func main() -> int:
+        \\    mut items = [1]
         \\    return f(mut items)
     , sema_contracts.effect_code);
     try rejects(
-        \\def half(x: int) -> Result[int, str]:
+        \\func half(x: int) -> Result[int, str]:
         \\    return Ok(x // 2)
         \\
-        \\@ensures(half(result)? > 0)
-        \\def f(x: int) -> Result[int, str]:
+        \\@ensures((try half(result)) > 0)
+        \\func f(x: int) -> Result[int, str]:
         \\    return Ok(x)
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
-    , sema_contracts.effect_code);
+    , "E_TRY_POSITION");
     // An invariant sees only `self`, yet a field of it is still storage the
     // condition must not change.
     try rejects(
         \\@invariant(self.items.pop() >= 0)
         \\record Bag:
-        \\    items: list[int]
+        \\    items: int[]
         \\
-        \\def main() -> int:
-        \\    return len(Bag([1]).items)
+        \\func main() -> int:
+        \\    return len(Bag(items=[1]).items)
     , sema_contracts.effect_code);
     // A condition only observes: it cannot take a result-bearing value away
     // from the body that still owns it.
     try rejects(
-        \\def value_or(outcome: Result[int, str]) -> int:
+        \\func value_or(outcome: Result[int, str]) -> int:
         \\    match outcome:
         \\        case Ok(value):
         \\            return value
@@ -269,25 +269,25 @@ test "contracts: a contract condition may allocate but have no other effect" {
         \\            return 0
         \\
         \\@requires(value_or(outcome) > 0)
-        \\def f(outcome: Result[int, str]) -> int:
+        \\func f(outcome: Result[int, str]) -> int:
         \\    return value_or(outcome)
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return f(Ok(1))
     , sema_contracts.effect_code);
     // Allocation, a helper that only allocates, a comprehension's own list
     // and `debug` are all effect-free for a contract.
     try accepts(
-        \\def positive(values: list[int]) -> bool:
+        \\func positive(values: int[]) -> bool:
         \\    debug(values)
-        \\    return len([v for v in values if v > 0]) == len(values)
+        \\    return len([for v in values if v > 0 yield v]) == len(values)
         \\
         \\@requires(positive([x, x + 1]))
         \\@ensures(str(result) != "")
-        \\def f(x: int) -> int:
+        \\func f(x: int) -> int:
         \\    return x
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return f(1)
     );
 }
@@ -319,49 +319,49 @@ test "contracts: an invariant traps R_INVARIANT where a value is built or change
         \\    span: Range
         \\    label: int
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\
     ;
     try expectInvariantTraps(head, &.{
-        .{ .body = "    r = Range(5, 1)\n    return r.low\n", .line = 11, .column = 9 },
-        .{ .body = "    r = Range(low=50)\n    return r.low\n", .line = 11, .column = 9 },
-        .{ .body = "    r = Range(1, 2)\n    r.low = 9\n    return r.low\n", .line = 12, .column = 5 },
-        .{ .body = "    r = Range(1, 2)\n    r.high -= 5\n    return r.low\n", .line = 12, .column = 5 },
-        .{ .body = "    r = replace(Range(1, 2), high=0)\n    return r.low\n", .line = 11, .column = 9 },
-        .{ .body = "    w = Window(span=Range(1, 2), label=0)\n    w.span.low = 7\n    return w.label\n", .line = 12, .column = 5 },
-        .{ .body = "    r = Range(1, 2)\n    r.low, r.high = 5, 4\n    return r.low\n", .line = 12, .column = 5 },
+        .{ .body = "    mut r = Range(low=5, high=1)\n    return r.low\n", .line = 11, .column = 13 },
+        .{ .body = "    mut r = Range(low=50)\n    return r.low\n", .line = 11, .column = 13 },
+        .{ .body = "    mut r = Range(low=1, high=2)\n    r.low = 9\n    return r.low\n", .line = 12, .column = 5 },
+        .{ .body = "    mut r = Range(low=1, high=2)\n    r.high -= 5\n    return r.low\n", .line = 12, .column = 5 },
+        .{ .body = "    mut r = replace(Range(low=1, high=2), high=0)\n    return r.low\n", .line = 11, .column = 13 },
+        .{ .body = "    mut w = Window(span=Range(low=1, high=2), label=0)\n    w.span.low = 7\n    return w.label\n", .line = 12, .column = 5 },
+        .{ .body = "    mut r = Range(low=1, high=2)\n    r.low, r.high = 5, 4\n    return r.low\n", .line = 12, .column = 5 },
     });
     var domain = try language.Compilation.init(t.allocator, unit,
         \\@invariant(unwrap(self) <= 1000u32)
         \\domain Millimeters: u32:
-        \\    def from(value: u32) -> Millimeters:
+        \\    func from(value: u32) -> Millimeters:
         \\        return wrap[Millimeters](value)
         \\
-        \\def main() -> int:
-        \\    distance = Millimeters.from(2000u32)
-        \\    return 1 if distance == distance else 0
+        \\func main() -> int:
+        \\    mut distance = Millimeters.from(2000u32)
+        \\    return if (distance == distance) then (1) else (0)
     );
     defer domain.deinit();
     _ = try traps(&domain, .{ .code = "R_INVARIANT", .line = 4, .column = 16, .text = "Millimeters invariant `unwrap(self) <= 1000u32`" });
     // A plain copy is not a change, and a value the invariant allows runs on.
-    try returns(head ++ "    r = Range(1, 2)\n    copy = r\n    return copy.high\n", 2);
+    try returns(head ++ "    mut r = Range(low=1, high=2)\n    const copy = r\n    return copy.high\n", 2);
 }
 
 // spec: CONTRACT-TRAP-1
 test "contracts: a run reports the contract's own trap code" {
-    const text = "@requires(x > 0)\ndef f(x: int) -> int:\n    return x\n\ndef main() -> int:\n    return f(0)\n";
+    const text = "@requires(x > 0)\nfunc f(x: int) -> int:\n    return x\n\nfunc main() -> int:\n    return f(0)\n";
     var accounted = try language.Compilation.init(t.allocator, unit, text);
     defer accounted.deinit();
     _ = try traps(&accounted, .{ .code = "R_REQUIRES", .line = 1, .column = 11, .text = "f requires `x > 0`" });
     // A plain `assert` keeps `R_ASSERT`.
-    var plain = try language.Compilation.init(t.allocator, unit, "def main() -> int:\n    assert 1 > 2, \"R_REQUIRES looks alike\"\n    return 0\n");
+    var plain = try language.Compilation.init(t.allocator, unit, "func main() -> int:\n    assert 1 > 2, \"R_REQUIRES looks alike\"\n    return 0\n");
     defer plain.deinit();
     const asserted = try native.run(&plain);
     try t.expectEqualStrings("R_ASSERT", asserted.trap.code);
 }
 
 fn assertPrefixStaysLiteral(prefix: []const u8) !void {
-    const text = try std.fmt.allocPrint(t.allocator, "def main() -> int:\n    assert False, \"{s}: ordinary assertion\"\n    return 0\n", .{prefix});
+    const text = try std.fmt.allocPrint(t.allocator, "func main() -> int:\n    assert False, \"{s}: ordinary assertion\"\n    return 0\n", .{prefix});
     defer t.allocator.free(text);
     var c = try language.Compilation.init(t.allocator, unit, text);
     defer c.deinit();
@@ -403,19 +403,19 @@ test "contracts: a test checks its parameters' invariants on entry and passes ev
         \\    high: int
         \\
         \\record Holder:
-        \\    spans: list[Span]
-        \\    best: Option[Span]
+        \\    spans: Span[]
+        \\    best: Span?
         \\
-        \\def test_holder(holder: Holder, keyed: dict[str, Span], pair: tuple[Span, int]) -> bool:
-        \\    first, _ = pair
+        \\func test_holder(holder: Holder, keyed: dict[str, Span], pair: tuple[Span, int]) -> bool:
+        \\    const first, _ = pair
         \\    return len(holder.spans) + len(keyed) == 3 and first.low == 1
         \\
-        \\def plain(holder: Holder) -> int:
+        \\func plain(holder: Holder) -> int:
         \\    return len(holder.spans)
         \\
-        \\def main() -> int:
-        \\    holder = Holder(spans=[Span(1, 2), Span(3, 3)], best=Some(Span(0, 9)))
-        \\    passed = test_holder(holder, {"a": Span(-1, 1)}, (Span(1, 4), 0))
-        \\    return plain(holder) + (40 if passed else 0)
+        \\func main() -> int:
+        \\    mut holder = Holder(spans=[Span(low=1, high=2), Span(low=3, high=3)], best=Some(Span(low=0, high=9)))
+        \\    mut passed = test_holder(holder, {"a": Span(low=-1, high=1)}, (Span(low=1, high=4), 0))
+        \\    return plain(holder) + (if (passed) then (40) else (0))
     , 42);
 }

@@ -669,6 +669,6 @@ test "S2 builder dictionary dispatch lowers an empty dictionary" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const a = arena.allocator();
-    try std.testing.expect(std.mem.indexOf(u8, try support.irText(a, "def main() -> int:\n    d: dict[int, int] = {}\n    return len(d)\n"), "dict_new") != null);
+    try std.testing.expect(std.mem.indexOf(u8, try support.irText(a, "func main() -> int:\n    mut d: dict[int, int] = {}\n    return len(d)\n"), "dict_new") != null);
     try std.testing.expect(true);
 }

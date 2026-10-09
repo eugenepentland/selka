@@ -4,65 +4,65 @@
 # while the call's write reaches the caller. Answers match the collector;
 # RC counting builds balance.
 record Frame:
-    rows: list[list[int]]
+    rows: int[][]
     ip: int
 
 
-def push(values: mut list[int]):
+func push(mut values: int[]):
     values.append(7)
 
 
-def replace_first(rows: mut list[list[int]]):
+func replace_first(mut rows: int[][]):
     rows[0] = [42]
 
 
-def nested(frame: mut Frame) -> int:
+func nested(mut frame: Frame) -> int:
     frame.rows[0].append(5)
     frame.ip = frame.ip + 1
     return 0
 
 
-def field_argument(frame: mut Frame) -> int:
+func field_argument(mut frame: Frame) -> int:
     replace_first(mut frame.rows)
     return 0
 
 
-def element_argument(frame: mut Frame) -> int:
+func element_argument(mut frame: Frame) -> int:
     push(mut frame.rows[0])
     return 0
 
 
-def read_nested(frame: mut Frame) -> int:
+func read_nested(mut frame: Frame) -> int:
     return len(frame.rows[nested(mut frame)])
 
 
-def read_field_argument(frame: mut Frame) -> int:
+func read_field_argument(mut frame: Frame) -> int:
     return frame.rows[field_argument(mut frame)][1]
 
 
-def read_element_argument(frame: mut Frame) -> int:
+func read_element_argument(mut frame: Frame) -> int:
     return len(frame.rows[element_argument(mut frame)])
 
 
-public def test_a_nested_write_callee_keeps_the_captured_receiver() -> bool:
-    frame = Frame([[1, 2], [3]], 0)
-    seen = read_nested(mut frame)
+public func test_a_nested_write_callee_keeps_the_captured_receiver() -> bool:
+    mut frame = Frame(rows=[[1, 2], [3]], ip=0)
+    mut seen = read_nested(mut frame)
     return seen == 2 and frame.rows == [[1, 2, 5], [3]] and frame.ip == 1
 
 
-public def test_a_mut_field_argument_callee_keeps_the_captured_receiver() -> bool:
-    frame = Frame([[1, 2], [3]], 0)
-    seen = read_field_argument(mut frame)
+public func test_a_mut_field_argument_callee_keeps_the_captured_receiver() -> bool:
+    mut frame = Frame(rows=[[1, 2], [3]], ip=0)
+    mut seen = read_field_argument(mut frame)
     return seen == 2 and frame.rows == [[42], [3]]
 
 
-public def test_a_mut_element_argument_callee_keeps_the_captured_receiver() -> bool:
-    frame = Frame([[1, 2], [3]], 0)
-    seen = read_element_argument(mut frame)
+public func test_a_mut_element_argument_callee_keeps_the_captured_receiver() -> bool:
+    mut frame = Frame(rows=[[1, 2], [3]], ip=0)
+    mut seen = read_element_argument(mut frame)
     return seen == 2 and frame.rows == [[1, 2, 7], [3]]
 
 
-def main(out: Stream) -> int:
+func main(out: Stream) -> int:
     out.print(test_a_nested_write_callee_keeps_the_captured_receiver())
     out.print(test_a_mut_field_argument_callee_keeps_the_captured_receiver())
     out.print(test_a_mut_element_argument_callee_keeps_the_captured_receiver())

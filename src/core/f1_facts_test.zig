@@ -63,24 +63,24 @@ const tagged_elements =
     \\    n: int
     \\
     \\
-    \\union Num:
-    \\    i: int,
-    \\    f: float
+    \\enum Num:
+    \\    i(value: int)
+    \\    f(value: float)
     \\
     \\
-    \\def touch(xs: mut list[float], rows: mut list[list[int]], ps: mut list[P], us: mut list[Num], k: int) -> int:
+    \\func touch(mut xs: float[], mut rows: int[][], mut ps: P[], mut us: Num[], k: int) -> int:
     \\    xs[k] = xs[k] + 1.0
     \\    rows[k][k] = rows[k][k] + 1
     \\    ps[k].x = ps[k].x * 2.0
-    \\    us[k] = Num.f(float(k))
+    \\    us[k] = Num.f(value=float(k))
     \\    return len(rows[k]) + ps[k].n
     \\
     \\
-    \\def main(out: Stream) -> int:
-    \\    xs = [1.5, 2.5]
-    \\    rows = [[1, 2], [3, 4]]
-    \\    ps = [P(x=1.0, n=2), P(x=3.0, n=4)]
-    \\    us = [Num.i(1), Num.f(2.0)]
+    \\func main(out: Stream) -> int:
+    \\    mut xs = [1.5, 2.5]
+    \\    mut rows = [[1, 2], [3, 4]]
+    \\    mut ps = [P(x=1.0, n=2), P(x=3.0, n=4)]
+    \\    mut us = [Num.i(value=1), Num.f(value=2.0)]
     \\    out.print(touch(mut xs, mut rows, mut ps, mut us, 1), xs[1], rows[1][1], ps[1].x)
     \\    return 0
     \\
@@ -138,22 +138,22 @@ test "typed element tags keep every answer: records copied whole, unions, mixed 
 }
 
 const store_backs =
-    \\def fill(n: int) -> int:
-    \\    c = [[0.5 for j in range(n)] for i in range(n)]
+    \\func fill(n: int) -> int:
+    \\    mut c = [for i in range(n) yield [for j in range(n) yield 0.5]]
     \\    for i in range(n):
     \\        for j in range(n):
     \\            c[i][j] = c[i][j] + float(j)
     \\    return int(c[n - 1][n - 1])
     \\
     \\
-    \\def scale(c: mut list[list[float]], n: int):
+    \\func scale(mut c: float[][], n: int):
     \\    for i in range(n):
     \\        for j in range(n):
     \\            c[i][j] = c[i][j] * 2.0
     \\
     \\
-    \\def main(out: Stream) -> int:
-    \\    rows = [[1.0, 2.0], [3.0, 4.0]]
+    \\func main(out: Stream) -> int:
+    \\    mut rows = [[1.0, 2.0], [3.0, 4.0]]
     \\    scale(mut rows, 2)
     \\    out.print(fill(4), rows[1][1])
     \\    return 0
@@ -213,8 +213,8 @@ fn functionIr(text: []const u8, name: []const u8) []const u8 {
 }
 
 const counted_growth =
-    \\def scan(data: bytes) -> int:
-    \\    count = 0
+    \\func scan(data: bytes) -> int:
+    \\    mut count = 0
     \\    for pass_index in range(16):
     \\        count += pass_index
     \\        for i in range(len(data)):
@@ -223,22 +223,22 @@ const counted_growth =
     \\    return count
     \\
     \\
-    \\def tally(flags: list[bool]) -> int:
-    \\    count = 0
+    \\func tally(flags: bool[]) -> int:
+    \\    mut count = 0
     \\    for flag in flags:
     \\        if flag:
     \\            count += 1
     \\    return count
     \\
     \\
-    \\def total(xs: list[int]) -> int:
-    \\    t = 0
+    \\func total(xs: int[]) -> int:
+    \\    mut t = 0
     \\    for x in xs:
     \\        t += x
     \\    return t
     \\
     \\
-    \\def main(out: Stream) -> int:
+    \\func main(out: Stream) -> int:
     \\    out.print(scan(b"mmx"), tally([True, False]), total([1, 2]))
     \\    return 0
     \\
@@ -261,13 +261,13 @@ test "a counter that grows by a bounded step per iteration, conditionally or thr
 }
 
 const loop_conditions =
-    \\def sieve() -> int:
-    \\    n = 20000000
-    \\    flags = [True for _ in range(n + 1)]
-    \\    i = 2
+    \\func sieve() -> int:
+    \\    mut n = 20000000
+    \\    mut flags = [for _ in range(n + 1) yield True]
+    \\    mut i = 2
     \\    while i * i <= n:
     \\        if flags[i]:
-    \\            j = i * i
+    \\            mut j = i * i
     \\            while j <= n:
     \\                flags[j] = False
     \\                j = j + i
@@ -275,16 +275,16 @@ const loop_conditions =
     \\    return len(flags)
     \\
     \\
-    \\def drift(n: int) -> int:
-    \\    j = 0
-    \\    limit = n
+    \\func drift(n: int) -> int:
+    \\    mut j = 0
+    \\    mut limit = n
     \\    while j <= limit:
     \\        j = j + 3
     \\        limit = limit + 1
     \\    return j
     \\
     \\
-    \\def main(out: Stream) -> int:
+    \\func main(out: Stream) -> int:
     \\    out.print(sieve(), drift(10))
     \\    return 0
     \\
@@ -306,17 +306,17 @@ test "a loop variable is bounded by its loop condition, and `i * i <= n` bounds 
 }
 
 const callee_ranges =
-    \\def step(a: int, b: int) -> int:
+    \\func step(a: int, b: int) -> int:
     \\    return (a + b) % 1000003
     \\
     \\
-    \\def signed_step(a: int, b: int) -> int:
+    \\func signed_step(a: int, b: int) -> int:
     \\    return (a + b) % 1000003
     \\
     \\
-    \\def main(out: Stream) -> int:
-    \\    total = 0
-    \\    other = 0
+    \\func main(out: Stream) -> int:
+    \\    mut total = 0
+    \\    mut other = 0
     \\    for i in range(30000000):
     \\        total = step(total, i)
     \\        other = signed_step(other, i - 5)
@@ -371,11 +371,11 @@ test "overflow facts keep every answer and trap where they must: counters near t
         // A counter that starts near the top of `int` traps once it leaves it.
         const near = try leakChecked(a, root, "f1_overflow", flags, &.{ "near", "x" });
         try std.testing.expectEqual(@as(u8, 1), near.status);
-        try std.testing.expect(contains(near.stderr, "f1_overflow.my:53:19: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 1, width 64)"));
+        try std.testing.expect(contains(near.stderr, "f1_overflow.my:52:19: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 1, width 64)"));
         // A step the facts cannot bound traps too.
         const huge = try leakChecked(a, root, "f1_overflow", flags, &.{"huge"});
         try std.testing.expectEqual(@as(u8, 1), huge.status);
-        try std.testing.expect(contains(huge.stderr, "f1_overflow.my:61:15: error[R_OVERFLOW]: native execution failed (add: left 4611686018427387904, right 4611686018427387904, width 64)"));
+        try std.testing.expect(contains(huge.stderr, "f1_overflow.my:60:15: error[R_OVERFLOW]: native execution failed (add: left 4611686018427387904, right 4611686018427387904, width 64)"));
     }
 }
 
@@ -391,7 +391,7 @@ test "a verify build catches each overflow rule made one off on the inside: coun
     const counter = try leakChecked(a, root, "f1_overflow", sabotaged, &.{"counter"});
     try std.testing.expectEqual(@as(u8, 1), counter.status);
     try std.testing.expect(contains(counter.stderr, "error[R_CORE_FACT]: native execution failed (range [0, 0]: value 1"));
-    try std.testing.expect(contains(counter.stderr, "in f1_overflow::counter_probe"));
+    try std.testing.expect(contains(counter.stderr, "in counter_probe"));
     const square = try leakChecked(a, root, "f1_overflow", sabotaged, &.{"square"});
     try std.testing.expectEqual(@as(u8, 1), square.status);
     try std.testing.expect(contains(square.stderr, "error[R_CORE_FACT]: native execution failed (range [2, 100]: value 101"));

@@ -175,11 +175,6 @@ pub const Facts = struct {
         };
     }
 
-    /// Whether a store into `slot` moves a value to a home of its own.
-    pub fn namedStore(self: *const Facts, slot: typed.LocalId) bool {
-        return !self.synthetic[@backingInt(slot)];
-    }
-
     /// Whether `id` is a path (fields, indexes, updates) rooted at local
     /// `target`, following a synthetic temporary to the one value it holds.
     pub fn rootedAt(self: *const Facts, id: typed.NodeId, target: ?typed.LocalId) bool {
@@ -272,18 +267,4 @@ fn sameRoot(program: typed.Program, previous: typed.NodeId, value: typed.NodeId)
     const a = pathRoot(program, previous) orelse return null;
     const b = pathRoot(program, value) orelse return null;
     return if (a == b) previous else null;
-}
-
-/// The named local or parameter local `slot` names: the slot itself, or the
-/// local a synthetic temporary was read from; null when untraceable.
-pub fn namedRoot(facts: *const Facts, slot: typed.LocalId) ?typed.LocalId {
-    var current = slot;
-    var hops: usize = 0;
-    while (hops < 64) : (hops += 1) {
-        const index = @backingInt(current);
-        if (!facts.synthetic[index]) return current;
-        const value = facts.stores[index] orelse return null;
-        current = pathRoot(facts.program, value) orelse return null;
-    }
-    return null;
 }

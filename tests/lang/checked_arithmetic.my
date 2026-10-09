@@ -1,4 +1,3 @@
-module checked_arithmetic
 
 # Checked `+ - *` reach every width's extreme without trapping; the operation
 # one step past it traps (pinned in `test/integration.zig`, "checked arithmetic
@@ -7,31 +6,31 @@ module checked_arithmetic
 # `saturating_*` are not checked operations and keep their own results.
 
 
-def add64(x: int, y: int) -> int:
+func add64(x: int, y: int) -> int:
     return x + y
 
 
-def sub64(x: int, y: int) -> int:
+func sub64(x: int, y: int) -> int:
     return x - y
 
 
-def mul64(x: int, y: int) -> int:
+func mul64(x: int, y: int) -> int:
     return x * y
 
 
-def addu64(x: u64, y: u64) -> u64:
+func addu64(x: u64, y: u64) -> u64:
     return x + y
 
 
-def subu64(x: u64, y: u64) -> u64:
+func subu64(x: u64, y: u64) -> u64:
     return x - y
 
 
-def mulu64(x: u64, y: u64) -> u64:
+func mulu64(x: u64, y: u64) -> u64:
     return x * y
 
 
-def signed64_extremes() -> bool:
+func signed64_extremes() -> bool:
     if add64(9223372036854775806, 1) != 9223372036854775807:
         return False
     if add64(-9223372036854775807, -1) != -9223372036854775808:
@@ -55,7 +54,7 @@ def signed64_extremes() -> bool:
     return mul64(4294967296, 2147483647) == 9223372032559808512
 
 
-def unsigned64_extremes() -> bool:
+func unsigned64_extremes() -> bool:
     if addu64(18446744073709551614u64, 1u64) != 18446744073709551615u64:
         return False
     if addu64(9223372036854775808u64, 9223372036854775807u64) != 18446744073709551615u64:
@@ -69,7 +68,7 @@ def unsigned64_extremes() -> bool:
     return mulu64(4294967295u64, 4294967297u64) == 18446744073709551615u64
 
 
-def narrow_extremes() -> bool:
+func narrow_extremes() -> bool:
     if 2147483646i32 + 1i32 != 2147483647i32 or -2147483647i32 - 1i32 != -2147483648i32:
         return False
     if 46341i32 * 46340i32 != 2147441940i32:
@@ -85,7 +84,7 @@ def narrow_extremes() -> bool:
     return 254u8 + 1u8 == 255u8 and 5u8 - 5u8 == 0u8 and 16u8 * 15u8 == 240u8
 
 
-def explicit_overflow_behaviour() -> bool:
+func explicit_overflow_behaviour() -> bool:
     if wrapping_add(9223372036854775807, 1) != -9223372036854775808:
         return False
     if wrapping_sub(-9223372036854775808, 1) != 9223372036854775807:
@@ -103,7 +102,7 @@ def explicit_overflow_behaviour() -> bool:
     return saturating_mul(4294967296u64, 4294967296u64) == 18446744073709551615u64
 
 
-def main() -> int:
+func main() -> int:
     if not signed64_extremes():
         return 1
     if not unsigned64_extremes():
@@ -115,41 +114,41 @@ def main() -> int:
     return 0
 
 
-public def test_signed_64_bit_add_sub_mul_reach_both_extremes() -> bool:
+public func test_signed_64_bit_add_sub_mul_reach_both_extremes() -> bool:
     return signed64_extremes()
 
 
-public def test_unsigned_64_bit_add_sub_mul_reach_both_extremes() -> bool:
+public func test_unsigned_64_bit_add_sub_mul_reach_both_extremes() -> bool:
     return unsigned64_extremes()
 
 
-public def test_narrow_widths_reach_their_extremes() -> bool:
+public func test_narrow_widths_reach_their_extremes() -> bool:
     return narrow_extremes()
 
 
-public def test_wrapping_and_saturating_keep_their_own_results() -> bool:
+public func test_wrapping_and_saturating_keep_their_own_results() -> bool:
     return explicit_overflow_behaviour()
 
 
-public def test_the_program_passes_every_group() -> bool:
+public func test_the_program_passes_every_group() -> bool:
     return main() == 0
 
 
-def increment_literal(x: int) -> int:
+func increment_literal(x: int) -> int:
     return x + 1
 
 
-def decrement_literal(x: int) -> int:
+func decrement_literal(x: int) -> int:
     return x - 1
 
 
-def add_negative_literal(x: int) -> int:
+func add_negative_literal(x: int) -> int:
     return x + -1
 
 
-def subtract_negative_literal(x: int) -> int:
+func subtract_negative_literal(x: int) -> int:
     return x - -1
 
 
-public def test_literal_neighbors_keep_exact_signed_64_bit_results() -> bool:
+public func test_literal_neighbors_keep_exact_signed_64_bit_results() -> bool:
     return increment_literal(9223372036854775806) == 9223372036854775807 and decrement_literal(-9223372036854775807) == -9223372036854775808 and add_negative_literal(-9223372036854775807) == -9223372036854775808 and subtract_negative_literal(9223372036854775806) == 9223372036854775807 and increment_literal(-9223372036854775808) == -9223372036854775807 and decrement_literal(9223372036854775807) == 9223372036854775806 and increment_literal(4294967295) == 4294967296 and decrement_literal(4294967297) == 4294967296

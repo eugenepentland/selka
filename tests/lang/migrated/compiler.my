@@ -1,4 +1,3 @@
-module compiler
 
 
 import compiler_case_1 as c1
@@ -19,53 +18,53 @@ import compiler_case_15 as c15
 import compiler_case_16 as c16
 
 
-public def test_branches_and_loops_execute_both_outcomes_wit_1() -> bool:
+public func test_branches_and_loops_execute_both_outcomes_wit_1() -> bool:
     return c1.program() == 4950
 
-public def test_branches_and_loops_execute_both_outcomes_wit_2() -> bool:
+public func test_branches_and_loops_execute_both_outcomes_wit_2() -> bool:
     return c2.program() == 6
 
-public def test_branches_and_loops_execute_both_outcomes_wit_3() -> bool:
+public func test_branches_and_loops_execute_both_outcomes_wit_3() -> bool:
     return c3.program() == 9
 
-public def test_branches_and_loops_execute_both_outcomes_wit_4() -> bool:
+public func test_branches_and_loops_execute_both_outcomes_wit_4() -> bool:
     return c4.program() == 4
 
-public def test_branches_and_loops_execute_both_outcomes_wit_5() -> bool:
+public func test_branches_and_loops_execute_both_outcomes_wit_5() -> bool:
     return c5.program() == 5
 
-public def test_branches_and_loops_execute_both_outcomes_wit_6() -> bool:
+public func test_branches_and_loops_execute_both_outcomes_wit_6() -> bool:
     return c6.program() == 3
 
-public def test_branches_and_loops_execute_both_outcomes_wit_7() -> bool:
+public func test_branches_and_loops_execute_both_outcomes_wit_7() -> bool:
     return c7.program() == 5000
 
-public def test_forward_mutual_recursive_and_nested_calls_pr_1() -> bool:
+public func test_forward_mutual_recursive_and_nested_calls_pr_1() -> bool:
     return c8.program() == 15
 
-public def test_forward_mutual_recursive_and_nested_calls_pr_2() -> bool:
+public func test_forward_mutual_recursive_and_nested_calls_pr_2() -> bool:
     return c9.program() == 3628800
 
-public def test_forward_mutual_recursive_and_nested_calls_pr_3() -> bool:
+public func test_forward_mutual_recursive_and_nested_calls_pr_3() -> bool:
     return c10.program() == 7
 
-public def test_forward_mutual_recursive_and_nested_calls_pr_4() -> bool:
+public func test_forward_mutual_recursive_and_nested_calls_pr_4() -> bool:
     return c11.program() == 5
 
-public def test_forward_mutual_recursive_and_nested_calls_pr_5() -> bool:
+public func test_forward_mutual_recursive_and_nested_calls_pr_5() -> bool:
     return c12.program() == 8
 
-public def test_locals_mutation_annotations_and_lexical_scop_1() -> bool:
+public func test_locals_mutation_annotations_and_lexical_scop_1() -> bool:
     return c13.program() == 21
 
-public def test_locals_mutation_annotations_and_lexical_scop_2() -> bool:
+public func test_locals_mutation_annotations_and_lexical_scop_2() -> bool:
     return c14.program() == 5
 
-public def test_locals_mutation_annotations_and_lexical_scop_3() -> bool:
+public func test_locals_mutation_annotations_and_lexical_scop_3() -> bool:
     return c15.program() == 8
 
-public def test_locals_mutation_annotations_and_lexical_scop_4() -> bool:
+public func test_locals_mutation_annotations_and_lexical_scop_4() -> bool:
     return c16.program() == 4
 
-def main() -> int:
+func main() -> int:
     return 0

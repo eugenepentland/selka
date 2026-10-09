@@ -5,8 +5,8 @@ const build = @import("build.zig");
 const pipeline = @import("pipeline.zig");
 const driver = @import("driver.zig");
 
-const app = "module app\nimport leaf\ndef main() -> int:\n    xs = [1]\n    return leaf.origin(mut xs, 2)\n";
-const leaf = "module leaf\npublic def origin(xs: mut list[int], x: int) -> int:\n    xs.append(2)\n    return xs[x]\n";
+const app = "import leaf\nfunc main() -> int:\n    mut xs = [1]\n    return leaf.origin(mut xs, 2)\n";
+const leaf = "public func origin(mut xs: int[], x: int) -> int:\n    xs.append(2)\n    return xs[x]\n";
 
 fn snapshot(a: std.mem.Allocator, release: bool, whole: bool) !pipeline.Emission {
     var dir = std.testing.tmpDir(.{});
@@ -82,6 +82,6 @@ test "pipeline emitted split and whole native traps preserve exact consuming cal
     try std.testing.expectEqualStrings("", split.stdout);
     try std.testing.expectEqualStrings(split.stdout, whole.stdout);
     try std.testing.expectEqualStrings(split.stderr, whole.stderr);
-    try std.testing.expect(std.mem.indexOf(u8, split.stderr, "in leaf::origin at leaf.my:4:12") != null);
-    try std.testing.expect(std.mem.indexOf(u8, split.stderr, "in app::main at app.my:5:12") != null);
+    try std.testing.expect(std.mem.indexOf(u8, split.stderr, "in leaf::origin at leaf.my:3:12") != null);
+    try std.testing.expect(std.mem.indexOf(u8, split.stderr, "in app::main at app.my:4:12") != null);
 }

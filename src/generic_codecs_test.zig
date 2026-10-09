@@ -18,22 +18,22 @@ const domain =
     \\        decode: from_wire,
     \\        encode: to_wire
     \\
-    \\    private def raw(x: i64) -> Positive:
+    \\    private func raw(x: i64) -> Positive:
     \\        return wrap[Positive](x)
     \\
-    \\    def from_wire(x: Wire) -> Decoded effects():
+    \\    func from_wire(x: Wire) -> Decoded effects():
     \\        if x.n <= 0:
     \\            return Err(-1)
     \\        return Ok(Positive.raw(x.n))
     \\
-    \\    def to_wire(x: Positive) -> Wire effects():
+    \\    func to_wire(x: Positive) -> Wire effects():
     \\        return Wire(n=unwrap(x))
     \\
     \\
     \\
 ;
 const helpers =
-    \\def round[T](ignored: T, n: i64) -> i64:
+    \\func round[T](ignored: T, n: i64) -> i64:
     \\    _ = ignored
     \\    match Positive.from_wire(Wire(n=n)):
     \\        case Decoded.ok(x):
@@ -46,7 +46,7 @@ const helpers =
 ;
 fn scenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, "generic-codecs.my", domain ++ helpers ++
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return round[bool](False, 7) + round[i64](2, 0)
     );
     defer compilation.deinit();
@@ -65,7 +65,7 @@ test "generic codecs execute concrete domain factories and accessors under alloc
 fn reject(body: []const u8, expected: []const u8) !void {
     const text = try std.mem.concat(t.allocator, u8, &.{
         domain, body, "\n\n\n",
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     });
     defer t.allocator.free(text);
@@ -77,11 +77,10 @@ fn reject(body: []const u8, expected: []const u8) !void {
 const Modules = struct {
     fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
         if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8,
-            \\module main
             \\import model as m
             \\
             \\
-            \\def f[T](x: T) -> i64:
+            \\func f[T](x: T) -> i64:
             \\    _ = x
             \\    match m.Positive.from_wire(m.Wire(n=23)):
             \\        case m.Decoded.ok(p):
@@ -90,10 +89,10 @@ const Modules = struct {
             \\            return e
             \\
             \\
-            \\def main() -> i64:
+            \\func main() -> i64:
             \\    return f[bool](False)
         );
-        if (std.mem.eql(u8, path, "model.my")) return allocator.dupe(u8, "module model\n" ++ domain);
+        if (std.mem.eql(u8, path, "model.my")) return allocator.dupe(u8, "" ++ domain);
         return error.NotFound;
     }
 };
@@ -113,27 +112,27 @@ test "generic codecs follow imported contracts and declaring domain privacy thro
 }
 test "generic codecs preserve domain privacy arity input types and result obligations before calls" {
     try reject(
-        \\def f[T](n: i64) -> Positive:
+        \\func f[T](n: i64) -> Positive:
         \\    return wrap[Positive](n)
     , "E_PRIVATE_DOMAIN");
     try reject(
-        \\def f[T](x: Positive) -> i64:
+        \\func f[T](x: Positive) -> i64:
         \\    return unwrap(x)
     , "E_PRIVATE_DOMAIN");
     try reject(
-        \\def f[T](n: i64) -> Positive:
+        \\func f[T](n: i64) -> Positive:
         \\    return Positive.raw(n)
     , "E_PRIVATE_FUNCTION");
     try reject(
-        \\def f[T]() -> Decoded:
+        \\func f[T]() -> Decoded:
         \\    return Positive.from_wire()
     , "E_ARITY");
     try reject(
-        \\def f[T](n: T) -> Wire:
+        \\func f[T](n: T) -> Wire:
         \\    return Positive.to_wire(n)
     , "E_GENERIC_TYPE");
     try reject(
-        \\def f[T](n: T) -> T:
+        \\func f[T](n: T) -> T:
         \\    return T.to_wire(n)
     , "E_GENERIC_REQUIREMENT");
 }

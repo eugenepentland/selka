@@ -8,18 +8,18 @@ pending work.
 ## Syntax and type identity
 
 ```mylang
-def sum(values: [3]i64) -> i64:
-    index = 0
-    total = 0
+func sum(values: FixedArray[i64, 3]) -> i64:
+    mut index = 0
+    mut total = 0
     while index < len(values):
         total += values[index]
         index += 1
     return total
 
 
-def main() -> i64:
-    original: [3]i64 = [4, 7, 9]
-    changed = replace(original, 1, 11)
+func main() -> i64:
+    mut original: FixedArray[i64, 3] = FixedArray[int, 3]([4, 7, 9])
+    mut changed = replace(original, 1, 11)
     return sum(original) + sum(changed)
 ```
 

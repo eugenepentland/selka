@@ -15,6 +15,7 @@ pub const Base = union(enum) {
     callback: struct {
         effects: @import("effect_set.zig").Mask,
         mutates: []const u16 = &.{},
+        labels: []const []const u8 = &.{},
         return_origin: typed.ReturnOrigin = .unknown,
     },
     builtin: typed.Type,
@@ -35,6 +36,12 @@ const KeyContext = struct {
                 std.hash.autoHash(hasher, callback.effects);
                 std.hash.autoHash(hasher, callback.mutates.len);
                 for (callback.mutates) |position| std.hash.autoHash(hasher, position);
+                for (callback.labels, 0..) |label, position| {
+                    if (label.len == 0) continue;
+                    std.hash.autoHash(hasher, position);
+                    std.hash.autoHash(hasher, label.len);
+                    hasher.update(label);
+                }
                 switch (callback.return_origin) {
                     .fresh => std.hash.autoHash(hasher, @as(u8, 0)),
                     .params => |positions| {
@@ -73,6 +80,7 @@ const KeyContext = struct {
             .callback => |left| switch (b) {
                 .callback => |right| left.effects == right.effects and
                     std.mem.eql(u16, left.mutates, right.mutates) and
+                    @import("callback_labels.zig").equalLabels(left.labels, right.labels) and
                     typed.ReturnOrigin.eql(left.return_origin, right.return_origin),
                 else => false,
             },
@@ -201,7 +209,8 @@ pub const Graph = struct {
                 for (callback.arguments, 0..) |argument, i| arguments_out[i] = try self.resolve(argument, arguments, callback.syntax.span);
                 break :result self.intern(.{ .base = .{ .callback = .{
                     .effects = callback.syntax.effect_bound.allowed,
-                    .mutates = try ast.mutPositions(self.allocator, callback.syntax.mut_parameters),
+                    .labels = try @import("callback_labels.zig").syntaxLabels(self.allocator, self.templates.context.src, callback.syntax),
+                    .mutates = try ast.mutPositions(self.allocator, callback.syntax.parameter_modes.mut),
                     .return_origin = .unknown,
                 } }, .arguments = arguments_out[0..callback.arguments.len] }, callback.syntax.span);
             },

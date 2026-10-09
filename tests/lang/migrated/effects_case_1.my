@@ -1,12 +1,11 @@
-module effects_case_1
 
 
-def touch(values: mut list[int]) -> None effects(mutation):
+func touch(mut values: int[]) -> Unit effects(mutation):
     values[0] = 42
 
 
-public def program() -> int:
-    values = [1]
+public func program() -> int:
+    mut values = [1]
     touch(mut values)
     if values[0] != 42:
         return 1

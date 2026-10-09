@@ -4,7 +4,6 @@ const t = std.testing;
 const language = @import("compiler.zig");
 const File = @import("embedded_project.zig").File;
 const library =
-    \\module lib
     \\
     \\
     \\public record Box[T]:
@@ -16,23 +15,22 @@ const library =
     \\    err: i64
     \\
     \\
-    \\public def echo[T: equality](x: [2]T) -> [2]T effects():
+    \\public func echo[T: equality](x: FixedArray[T, 2]) -> FixedArray[T, 2] effects():
     \\    return x
     \\
     \\
-    \\def hidden[T](x: T) -> T:
+    \\func hidden[T](x: T) -> T:
     \\    return x
 ;
 const entry =
-    \\module main
     \\import lib as api
     \\
     \\
-    \\public def run(x: i64) -> i64 effects():
+    \\public func run(x: i64) -> i64 effects():
     \\    return x
     \\
     \\
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    return 0
 ;
 const Files = struct {
@@ -77,7 +75,7 @@ fn scenario(allocator: std.mem.Allocator) !void {
     try t.expectEqualStrings("lib::echo", echo.get("name").?.string);
     try t.expect(!contract.get("callable").?.bool);
     try t.expect(contract.get("requires_explicit_instantiation").?.bool);
-    try t.expectEqualStrings("[2]T", signature.get("result").?.string);
+    try t.expectEqualStrings("FixedArray[T, 2]", signature.get("result").?.string);
     try t.expectEqualStrings("equality", contract.get("type_parameters").?.array.items[0].object.get("requirements").?.array.items[0].string);
     try t.expectEqual(@as(usize, 0), signature.get("declared_effects").?.array.items.len);
     try t.expectEqualStrings("lib.my", echo.get("source").?.object.get("path").?.string);
@@ -112,28 +110,26 @@ test "public generic identities survive whitespace while source receipts change"
 }
 test "public generic schema refuses invalid uncalled bodies" {
     try t.expectError(error.SourceError, inspect(t.allocator,
-        \\module lib
         \\
         \\
-        \\public def bad[T](x: T) -> bool:
+        \\public func bad[T](x: T) -> bool:
         \\    return x == x
     ));
 }
 
 test "public generic schemas retain structural field operation and codec constraints" {
     const bytes = try inspect(t.allocator,
-        \\module lib
         \\
         \\
-        \\public def field[T: copy + field(value: i64)](x: T) -> i64 effects():
+        \\public func field[T: copy + field(value: i64)](x: T) -> i64 effects():
         \\    return x.value
         \\
         \\
-        \\public def action[T: copy + op(score(value: T) -> i64 effects())](x: T) -> i64 effects():
+        \\public func action[T: copy + op(score(value: T) -> i64 effects())](x: T) -> i64 effects():
         \\    return T.score(x)
         \\
         \\
-        \\public def coded[T: copy + codec](x: T) -> T effects():
+        \\public func coded[T: copy + codec](x: T) -> T effects():
         \\    return x
     );
     defer t.allocator.free(bytes);
@@ -150,7 +146,6 @@ test "public generic schemas retain structural field operation and codec constra
     const field = templates[2].object.get("contract").?.object.get("type_parameters").?.array.items[0].object;
     try t.expectEqualStrings("value", field.get("field_requirements").?.array.items[0].object.get("name").?.string);
     try t.expectError(error.SourceError, inspect(t.allocator,
-        \\module lib
         \\
         \\
         \\record Secret:
@@ -159,13 +154,12 @@ test "public generic schemas retain structural field operation and codec constra
         \\
         \\
         \\
-        \\public def f[T: copy + field(value: Secret)](x: T) -> i64:
+        \\public func f[T: copy + field(value: Secret)](x: T) -> i64:
         \\    return 0
     ));
 }
 
 const named_contracts =
-    \\module contracts
     \\
     \\
     \\public constraint Prices[Provider] = copy + op(price(policy: Provider, subtotal: i64) -> i64 effects())
@@ -177,33 +171,31 @@ const named_contracts =
     \\constraint Hidden[H] = copy + op(secret(item: H) -> i64 effects())
 ;
 const named_library =
-    \\module lib
     \\import contracts
     \\
     \\
-    \\public def total[P: contracts.Prices](policy: P, subtotal: i64) -> i64 effects():
+    \\public func total[P: contracts.Prices](policy: P, subtotal: i64) -> i64 effects():
     \\    return P.price(policy, subtotal)
     \\
     \\
-    \\public def value_of[T: contracts.HasValue](item: T) -> i64 effects():
+    \\public func value_of[T: contracts.HasValue](item: T) -> i64 effects():
     \\    return item.value
 ;
 const named_entry =
-    \\module main
     \\import lib as api
     \\
     \\
-    \\public def run(x: i64) -> i64 effects():
+    \\public func run(x: i64) -> i64 effects():
     \\    return x
     \\
     \\
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    return 0
 ;
 const NamedFiles = struct {
     contracts: []const u8,
     library: []const u8 = named_library,
-    types: []const u8 = "module types\n",
+    types: []const u8 = "",
     fn read(context: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) language.project.ReadError![]u8 {
         const self: *NamedFiles = @ptrCast(@alignCast(context.?));
         return language.embedded_project.read(allocator, &.{
@@ -308,14 +300,13 @@ fn templateParameter(parsed: std.json.Value, name: []const u8) !std.json.ObjectM
 // spec: GENERIC-API-DEFAULT-COPY-1
 test "public generic schema retains default copy for functions and nominal templates" {
     const bytes = try inspect(t.allocator,
-        \\module lib
         \\public record Box[T]:
         \\    value: T
-        \\public def identity[T](value: T) -> T effects():
+        \\public func identity[T](value: T) -> T effects():
         \\    return value
-        \\public def stored[T: storable]() -> int effects():
+        \\public func stored[T: storable]() -> int effects():
         \\    return 0
-        \\public def coded[T: codec]() -> int effects():
+        \\public func coded[T: codec]() -> int effects():
         \\    return 0
     );
     defer t.allocator.free(bytes);
@@ -340,26 +331,23 @@ fn expectSubjectTypes(expanded: std.json.ObjectMap) !void {
     const inputs = operation.get("parameters").?.array.items;
     try t.expectEqualStrings("P", inputs[0].object.get("type").?.string);
     try t.expectEqualStrings("types.T", inputs[1].object.get("type").?.string);
-    try t.expectEqualStrings("list[def(P, types.T) -> [2]P effects()]", inputs[2].object.get("type").?.string);
-    try t.expectEqualStrings("def(P) -> types.T effects()", operation.get("result").?.string);
+    try t.expectEqualStrings("func(P, types.T) -> FixedArray[P, 2] effects()[]", inputs[2].object.get("type").?.string);
+    try t.expectEqualStrings("func(P) -> types.T effects()", operation.get("result").?.string);
 }
 
 fn subjectSchemaScenario(allocator: std.mem.Allocator) !void {
     var files: NamedFiles = .{
         .types =
-        \\module types
         \\public record T:
         \\    value: int
         ,
         .contracts =
-        \\module contracts
         \\import types
-        \\public constraint Mixed[T] = copy + op(use(subject: T, concrete: types.T, nested: list[def(T, types.T) -> [2]T effects()]) -> def(T) -> types.T effects() effects())
+        \\public constraint Mixed[T] = copy + op(use(subject: T, concrete: types.T, nested: func(T, types.T) -> FixedArray[T, 2] effects()[]) -> func(T) -> types.T effects() effects())
         ,
         .library =
-        \\module lib
         \\import contracts
-        \\public def use[P: contracts.Mixed](p: P) -> int effects():
+        \\public func use[P: contracts.Mixed](p: P) -> int effects():
         \\    return 0
         ,
     };

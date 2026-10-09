@@ -365,10 +365,10 @@ test "a main that returns an Err reports it with the old core's error return tra
         try std.testing.expectEqual(@as(u8, 1), failed.status);
         const lines = [_][]const u8{
             "error: negative\n",
-            "v_trace.my:10:16  v_trace::parse    Err(...) created\n",
-            "v_trace.my:16:5   v_trace::forward  returned\n",
-            "v_trace.my:20:9   v_trace::pass_on  ? propagated\n",
-            "v_trace.my:57:9   v_trace::main     ? propagated\n",
+            "v_trace.my:9:16   parse    Err(...) created\n",
+            "v_trace.my:15:5   forward  returned\n",
+            "v_trace.my:19:13  pass_on  try propagated\n",
+            "v_trace.my:56:13  main     try propagated\n",
         };
         for (lines) |line| try std.testing.expect(std.mem.indexOf(u8, failed.stderr, line) != null);
     }
@@ -412,7 +412,7 @@ test "a failed assert traps R_ASSERT with its message at the condition, flushing
     try std.testing.expect(try matches(arena.allocator(), "v_assert", "6\n4\n", 1));
     for ([_]Mode{ .debug, .release, .verify }) |mode| {
         const failed = try stderrOf(arena.allocator(), "v_assert", mode);
-        try std.testing.expect(std.mem.indexOf(u8, failed, "v_assert.my:14:16: error[R_ASSERT]: native execution failed: limit exceeded\n  in v_assert::checked_sum at ") != null);
+        try std.testing.expect(std.mem.indexOf(u8, failed, "v_assert.my:13:16: error[R_ASSERT]: native execution failed: limit exceeded\n  in checked_sum at ") != null);
         try std.testing.expect(std.mem.indexOf(u8, failed, "MYLANG-TRAP {\"version\":1,\"operation\":\"limit exceeded\"}") != null);
     }
 }
@@ -425,10 +425,12 @@ test "an assert whose message is a computed str prints it on its own stderr line
     try std.testing.expect(try matches(arena.allocator(), "v_assert_message_err", "1\n2\n", 1));
     for ([_]Mode{ .debug, .release }) |mode| {
         const computed = try stderrOf(arena.allocator(), "v_assert_message", mode);
-        try std.testing.expect(std.mem.startsWith(u8, computed, "bad \"n\"=7\nv_assert_message.my:9:12: error[R_ASSERT]: native execution failed\n  in v_assert_message::check at "));
+        const computed_prefix = try std.fmt.allocPrint(arena.allocator(), "bad \"n\"=7\n{s}/v_assert_message.my:8:12: error[R_ASSERT]: native execution failed\n  in check at ", .{options.fixtures});
+        try std.testing.expect(std.mem.startsWith(u8, computed, computed_prefix));
         try std.testing.expect(std.mem.indexOf(u8, computed, "MYLANG-TRAP {\"version\":1,\"operation\":\"\"}") != null);
         const literal_false = try stderrOf(arena.allocator(), "v_assert_message_err", mode);
-        try std.testing.expect(std.mem.startsWith(u8, literal_false, "too big: 5\nv_assert_message_err.my:24:20: error[R_ASSERT]: native execution failed\n"));
+        const literal_prefix = try std.fmt.allocPrint(arena.allocator(), "too big: 5\n{s}/v_assert_message_err.my:23:20: error[R_ASSERT]: native execution failed\n", .{options.fixtures});
+        try std.testing.expect(std.mem.startsWith(u8, literal_false, literal_prefix));
     }
 }
 
@@ -619,7 +621,7 @@ const v_units_output =
 ;
 
 // spec: NEW-CORE-UNIT-1
-test "a list of None holds its length: append, write, read, pop, iteration, copies and equality match the old core" {
+test "a list of Unit holds its length: append, write, read, pop, iteration, copies and equality match the old core" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     try std.testing.expect(try matches(arena.allocator(), "v_units", v_units_output, 0));

@@ -31,7 +31,7 @@ fn tests(arena: std.mem.Allocator, source: []const u8) ![2]usize {
 /// `b[i][0] = 7` for every row of a fresh `b` in a loop, with `setup` before the loop and
 /// `after` printed after it.
 fn program(comptime setup: []const u8, comptime after: []const u8) []const u8 {
-    return "def main(out: Stream) -> int:\n    b = [[1, 2], [3, 4]]\n" ++ setup ++
+    return "func main(out: Stream) -> int:\n    mut b = [[1, 2], [3, 4]]\n" ++ setup ++
         \\    for i in range(2):
         \\        b[i][0] = 7
         \\
@@ -45,11 +45,11 @@ test "a row read out of a fresh list and kept across a loop's nested store keeps
     const a = arena.allocator();
     // Nothing keeps a row (a row read whose last use comes before the loop does not
     // either): the outer list and every row are updated in place, untested.
-    try std.testing.expectEqual([2]usize{ 0, 0 }, try tests(a, program("    kb = b[1]\n    out.print(kb[0])\n", "")));
+    try std.testing.expectEqual([2]usize{ 0, 0 }, try tests(a, program("    const kb = b[1]\n    out.print(kb[0])\n", "")));
     try std.testing.expectEqual([2]usize{ 0, 0 }, try tests(a, program("", "")));
     // `kb = b[1]` is promoted to its own count when the loop consumes `b`: row 1 has two
     // owners, so the row update tests its count (the outer list is still unique).
-    const kept = try tests(a, program("    kb = b[1]\n", ", kb[0]"));
+    const kept = try tests(a, program("    const kb = b[1]\n", ", kb[0]"));
     try std.testing.expect(kept[0] >= 1 and kept[1] >= 1);
 }
 
@@ -59,7 +59,7 @@ test "an outer list whose push may have copied it does not prove its rows unique
     defer arena.deinit();
     const a = arena.allocator();
     // `snap = b` before the push: the push copies `b`, and the copy shares row 0 with `snap`.
-    const shared = try tests(a, program("    snap = b\n    b.append([5, 6])\n", ", snap[0][0]"));
+    const shared = try tests(a, program("    const snap = b\n    b.append([5, 6])\n", ", snap[0][0]"));
     try std.testing.expect(shared[0] >= 1 and shared[1] >= 1);
     // The same push into a list nothing else holds is in place: still no test.
     try std.testing.expectEqual([2]usize{ 0, 0 }, try tests(a, program("    b.append([5, 6])\n", "")));

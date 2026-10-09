@@ -12,9 +12,8 @@ test "standard json parses renders navigates and rejects noncompliant documents"
 test "standard json scanner keeps its position a scalar" {
     const language = @import("compiler.zig");
     var entry: fixture.Entry = .{ .text =
-        \\module main
         \\import json
-        \\def main() -> int:
+        \\func main() -> int:
         \\    match json.loads("[1,\"x\"]"):
         \\        case Ok(value):
         \\            return len(json.dumps(value))
@@ -42,9 +41,9 @@ fn expectScalarPosition(records: []const @import("typed.zig").Record) !void {
 
 // spec-case: STANDARD-JSON-1
 test "standard json keeps parsed values rooted under collection stress" {
-    try fixture.run(t.allocator, "module main\nimport json\n" ++
-        "def main() -> int:\n" ++
-        "    source = \"{\\\"rows\\\":[{\\\"n\\\":40},{\\\"n\\\":2}]}\"\n" ++
+    try fixture.run(t.allocator, "import json\n" ++
+        "func main() -> int:\n" ++
+        "    mut source = \"{\\\"rows\\\":[{\\\"n\\\":40},{\\\"n\\\":2}]}\"\n" ++
         "    match json.loads(source):\n" ++
         "        case Ok(document):\n" ++
         "            if json.dumps(document) != source:\n" ++
@@ -52,15 +51,15 @@ test "standard json keeps parsed values rooted under collection stress" {
         "            return total(document)\n" ++
         "        case Err(_):\n" ++
         "            return 2\n" ++
-        "def total(document: json.Json) -> int:\n" ++
+        "func total(document: json.Json) -> int:\n" ++
         "    match json.get(document, \"rows\"):\n" ++
         "        case Some(rows):\n" ++
         "            return summed(rows)\n" ++
         "        case None:\n" ++
         "            return 3\n" ++
-        "def summed(rows: json.Json) -> int:\n" ++
-        "    sum = 0\n" ++
-        "    index = 0\n" ++
+        "func summed(rows: json.Json) -> int:\n" ++
+        "    mut sum = 0\n" ++
+        "    mut index = 0\n" ++
         "    while index < 2:\n" ++
         "        match json.at(rows, index):\n" ++
         "            case Some(row):\n" ++
@@ -69,7 +68,7 @@ test "standard json keeps parsed values rooted under collection stress" {
         "                return 4\n" ++
         "        index += 1\n" ++
         "    return sum\n" ++
-        "def field(row: json.Json) -> int:\n" ++
+        "func field(row: json.Json) -> int:\n" ++
         "    match json.get(row, \"n\"):\n" ++
         "        case Some(value):\n" ++
         "            match json.as_int(value):\n" ++
@@ -84,20 +83,19 @@ test "standard json keeps parsed values rooted under collection stress" {
 // spec: STDLIB-ERROR-UNION-1
 test "standard json error unions carry a matchable category and a message helper" {
     try fixture.run(t.allocator,
-        \\module main
         \\import json
         \\
         \\
-        \\union AppError:
-        \\    Json: json.Error
+        \\enum AppError:
+        \\    Json(value: json.Error)
         \\
         \\
-        \\def size(source: str) -> Result[int, AppError]:
-        \\    document = json.loads(source)?
+        \\func size(source: str) -> Result[int, AppError]:
+        \\    mut document = try json.loads(source)
         \\    return Ok(len(json.dumps(document)))
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    match size("{}"):
         \\        case Ok(count):
         \\            if count != 2:
@@ -109,7 +107,7 @@ test "standard json error unions carry a matchable category and a message helper
         \\            return 3
         \\        case Err(error):
         \\            match error:
-        \\                case AppError.Json(detail):
+        \\                case AppError.Json(value=detail):
         \\                    if len(json.message(detail)) == 0:
         \\                        return 4
         \\                    return 42

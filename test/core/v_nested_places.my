@@ -1,26 +1,25 @@
-module v_nested_places
 
 record Rows:
-    rows: list[list[int]]
+    rows: int[][]
 
 # spec-case: NEW-CORE-PLACE-S4-1
-public def test_nested_unique_and_shared_paths() -> bool:
-    a = [[1, 2], [3, 4]]
+public func test_nested_unique_and_shared_paths() -> bool:
+    mut a = [[1, 2], [3, 4]]
     a[0][1] = 8
-    saved = a
+    mut saved = a
     a[1][0] = 9
-    row = [0, 0]
-    repeated = [row, row]
+    mut row = [0, 0]
+    mut repeated = [row, row]
     repeated[0][1] = 7
-    deep = [[[0, 1]]]
-    old_deep = deep
+    mut deep = [[[0, 1]]]
+    mut old_deep = deep
     deep[0][0][0] = 6
-    record = Rows(a)
+    mut record = Rows(rows=a)
     record.rows[0][0] = 5
-    mapping = {"x": [[0, 1]]}
-    old_mapping = mapping
+    mut mapping = {"x": [[0, 1]]}
+    mut old_mapping = mapping
     mapping["x"][0][1] = 4
     return a == [[1, 8], [9, 4]] and saved == [[1, 8], [3, 4]] and repeated == [[0, 7], [0, 0]] and row == [0, 0] and deep == [[[6, 1]]] and old_deep == [[[0, 1]]] and record.rows[0][0] == 5 and a[0][0] == 1 and mapping["x"][0][1] == 4 and old_mapping["x"][0][1] == 1
 
-def main() -> int:
+func main() -> int:
     return 0

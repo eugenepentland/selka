@@ -25,7 +25,7 @@ def main():
         work = root / "work"
         work.mkdir()
         source = work / "main.my"
-        source.write_text("public def test_ok() -> bool:\n    return True\n\ndef main() -> int:\n    return 0\n")
+        source.write_text('public func test_ok() -> bool:\n    return True\n\nfunc main() -> int:\n    return 0\n')
         cache = root / "selected-cache"
         # spec-case: CLI-CACHE-ISOLATION-1
         run(compiler, ["test", str(source), "--no-cache", "--cache-dir", str(cache)], work)
@@ -37,7 +37,7 @@ def main():
         assert not (work / ".mylang-cache").exists(), "build --no-cache leaked a cwd cache"
         docs = root / "documentation"
         docs.mkdir()
-        (docs / "README.md").write_text("```mylang\ndef main() -> int:\n    return 0\n```\n")
+        (docs / "README.md").write_text("```mylang\nfunc main() -> int:\n    return 0\n```\n")
         scratch = root / "scratch"
         scratch.mkdir()
         environ = dict(os.environ, TMPDIR=str(scratch))
@@ -45,13 +45,13 @@ def main():
         assert not (docs / ".mylang-cache").exists(), "doctest wrote its document root"
         assert not (work / ".mylang-cache").exists(), "doctest children leaked a cwd cache"
         assert not list(scratch.glob("doctest-*")), "doctest left its scratch workspace"
-        source.write_text("def recurse(n: int) -> bool:\n    if n == 0:\n        return True\n    return recurse(n - 1)\n\npublic def test_depth() -> bool:\n    return recurse(20)\n")
+        source.write_text('func recurse(n: int) -> bool:\n    if n == 0:\n        return True\n    return recurse(n - 1)\n\npublic func test_depth() -> bool:\n    return recurse(20)\n')
         failure = run(compiler, ["test", str(source), "--no-cache", "--cache-dir", str(cache), "--max-frames", "2"], work, status=1)
         assert "R_FRAME_LIMIT" in failure.stdout + failure.stderr
         assert "--max-frames=N" in failure.stdout + failure.stderr
         assert "--max-memory" in failure.stdout + failure.stderr
         # spec-case: MEMORY-HOST-GUEST-1
-        source.write_text("def main() -> int:\n    return 0\n")
+        source.write_text('func main() -> int:\n    return 0\n')
         # 300,000 frames reserve over 9 GiB virtually, exceeding the host's 8 GiB
         # ceiling without committing pages. The guest's explicit 12G budget fits.
         run(compiler, ["run", str(source), "--max-frames=300000", "--max-memory=12G", "--cache-dir=" + str(cache)], work)

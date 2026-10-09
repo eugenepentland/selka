@@ -50,6 +50,7 @@ surface change, is what put the loop variables in registers.
 Probe `experiments/ssa-audit/scalar_loop.my`:
 
 ```mylang
+# doc: skip Historical pre-redesign syntax retained as audit evidence.
 def sum_evens(items: list[int]) -> int:
     total = 0
     i = 0

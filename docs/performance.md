@@ -40,17 +40,17 @@ record Point:
     y: int
 
 
-def shifted(point: Point) -> Point:
+func shifted(point: Point) -> Point:
     return Point(x=point.x + 1, y=point.y + 1)
 
 
-def total(point: Point) -> int:
+func total(point: Point) -> int:
     return point.x + point.y
 
 
-def main() -> int:
-    start = Point(x=1, y=2)
-    moved = shifted(start)
+func main() -> int:
+    mut start = Point(x=1, y=2)
+    mut moved = shifted(start)
     if start.x != 1 or start.y != 2:
         return 1
     if moved.x != 2 or moved.y != 3:
@@ -95,15 +95,15 @@ pass shows can never fail is not emitted.
 
 ```mylang
 # doc: expect 45
-def total(values: list[int]) -> int:
-    sum = 0
+func total(values: int[]) -> int:
+    mut sum = 0
     for value in values:
         sum += value
     return sum
 
 
-def main() -> int:
-    values: list[int] = []
+func main() -> int:
+    mut values: int[] = []
     for i in range(10):
         values.append(i)
     return total(values)
@@ -134,21 +134,21 @@ original loop reports a failing index at the same iteration with the same messag
 
 ```mylang
 # doc: expect 42
-def scale(row: mut list[float], factor: float) -> None:
+func scale(mut row: float[], factor: float) -> Unit:
     for j in range(len(row)):
         row[j] = row[j] * factor
 
 
-def count(data: list[int], wanted: int) -> int:
-    found = 0
+func count(data: int[], wanted: int) -> int:
+    mut found = 0
     for value in data:
         if value == wanted:
             found += 1
     return found
 
 
-def main() -> int:
-    row = [1.0, 2.0, 3.0]
+func main() -> int:
+    mut row = [1.0, 2.0, 3.0]
     scale(mut row, 2.0)
     if row[2] != 6.0:
         return 1
@@ -198,9 +198,9 @@ copy of the array (`array_set` in `mylang dump-ir`).
 
 ```mylang
 # doc: expect 14
-def main() -> int:
-    data: [8]int = [1, 1, 1, 1, 1, 1, 1, 1]
-    index = 0
+func main() -> int:
+    mut data: FixedArray[int, 8] = FixedArray[int, 8]([1, 1, 1, 1, 1, 1, 1, 1])
+    mut index = 0
     while index < 8:
         data = replace(data, index, index * 2)
         index += 1
@@ -213,16 +213,16 @@ not known up front. A `bytes` value is the immutable byte-shaped alternative.
 
 ## Call C when you need a library
 
-`extern def` declares a C function with scalar parameters, and `--link FILE.c`
+`extern func` declares a C function with scalar parameters, and `--link FILE.c`
 compiles a C source and links it into the program. A C library function such as
 `hypot` needs no flag:
 
 ```console
 $ cat > hyp.my <<'EOF'
-extern def hypot(host: Host, a: float, b: float) -> float effects(host)
+extern func hypot(host: Host, a: float, b: float) -> float effects(host)
 
 
-def main(host: Host) -> int:
+func main(host: Host) -> int:
     return int(hypot(host, 3.0, 4.0)) * 10 + int(hypot(host, 5.0, 12.0))
 EOF
 $ mylang run hyp.my --print-result
@@ -297,16 +297,16 @@ record Point:
     y: int
 
 
-def first(values: list[int]) -> int noalloc:
+func first(values: int[]) -> int noalloc:
     return values[0]
 
 
-def dot(a: Point, b: Point) -> int noalloc:
+func dot(a: Point, b: Point) -> int noalloc:
     return a.x * b.x + a.y * b.y
 
 
-def main() -> int:
-    values: list[int] = [7, 39]
+func main() -> int:
+    mut values: int[] = [7, 39]
     return first(values) + dot(Point(x=3, y=4), Point(x=5, y=6))
 ```
 
@@ -318,6 +318,6 @@ Build a list inside `first` and the checker answers `E_EFFECT_BOUND` (effect
 - [Native builds](tooling/native-build.md): the driver, its caches and `--report`.
 - [Runtime budgets](tooling/runtime-budgets.md): step, frame and byte ceilings.
 - [Value semantics](value-semantics.md): when a write copies.
-- [C interop](c-ffi.md): the exact `extern def` surface.
+- [C interop](c-ffi.md): the exact `extern func` surface.
 - [Standard library](standard-library.md) and [floating point](floating-point.md):
   what the shipped modules provide.

@@ -59,25 +59,24 @@ fn contains(haystack: []const u8, needle: []const u8) bool {
 }
 
 const affected_before =
-    \\module app
     \\
     \\
     \\const LIMIT: int = 3
     \\
     \\
-    \\def helper(value: int) -> int:
+    \\func helper(value: int) -> int:
     \\    return value + 1
     \\
     \\
-    \\def test_helper() -> bool effects():
+    \\func test_helper() -> bool effects():
     \\    return helper(1) == 2
     \\
     \\
-    \\def test_unrelated() -> bool effects():
+    \\func test_unrelated() -> bool effects():
     \\    return LIMIT == 3
     \\
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return 0
     \\
 ;
@@ -95,7 +94,7 @@ test "test --affected runs only the tests that reach a declaration changed since
     try context.git(&.{ "commit", "-q", "-m", "init" });
     const affected = [_][]const u8{ "test", "app.my", "--affected", "--against=HEAD", "--cache-dir", "cache" };
     // An untracked module changes on every line, but this program does not load it.
-    try context.write("other.my", "module other\n\n\nconst OTHER: int = 1\n\n\ndef test_other() -> bool:\n    return OTHER == 1\n");
+    try context.write("other.my", "\n\nconst OTHER: int = 1\n\n\nfunc test_other() -> bool:\n    return OTHER == 1\n");
     // An unchanged program selects nothing and exits 3, as a filter matching nothing does.
     const unchanged = try context.compiler(&affected);
     try std.testing.expectEqual(@as(u8, 3), unchanged.status);
@@ -126,7 +125,7 @@ test "test --affected runs only the tests that reach a declaration changed since
     try std.testing.expect(contains(unresolvable.stderr, "git cannot resolve"));
 }
 
-const answer = "def main() -> int:\n    return 42\n";
+const answer = "func main() -> int:\n    return 42\n";
 
 // spec: NEW-CORE-S5-NO-CACHE-1
 test "no-cache builds runs and tests through a private cache it removes and publishes nothing" {
@@ -136,7 +135,7 @@ test "no-cache builds runs and tests through a private cache it removes and publ
     defer temporary.cleanup();
     const context: Context = .{ .arena = arena.allocator(), .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", arena.allocator()) };
     try context.write("main.my", answer);
-    try context.write("check.my", "def test_answer() -> bool:\n    return 6 * 7 == 42\n");
+    try context.write("check.my", "func test_answer() -> bool:\n    return 6 * 7 == 42\n");
     try std.Io.Dir.cwd().createDirPath(std.testing.io, try context.path("cache"));
     const cached = try context.compiler(&.{ "run", "main.my", "--print-result", "--cache-dir", "cache", "--report" });
     try std.testing.expectEqual(@as(u8, 42), cached.status);
@@ -190,7 +189,7 @@ test "timings print the program's run time without changing its status, output o
     defer temporary.cleanup();
     const context: Context = .{ .arena = arena.allocator(), .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", arena.allocator()) };
     try context.write("main.my", answer);
-    try context.write("trap.my", "def main() -> int:\n    return divtrunc(1, 0)\n");
+    try context.write("trap.my", "func main() -> int:\n    return divtrunc(1, 0)\n");
     const timed = try context.compiler(&.{ "run", "main.my", "--print-result", "--cache-dir", "cache", "--timings" });
     try std.testing.expectEqual(@as(u8, 42), timed.status);
     try std.testing.expectEqualStrings("42\n", timed.stdout);
@@ -252,7 +251,7 @@ test "test names a bad flag value or unknown option before printing its own usag
     try std.testing.expect(!contains(missing.stderr, "mylang-core"));
 }
 
-const debug_line = "def main(out: Stream) -> int:\n    debug(\"debugging\", 41)\n    out.print(42)\n    return 0\n";
+const debug_line = "func main(out: Stream) -> int:\n    debug(\"debugging\", 41)\n    out.print(42)\n    return 0\n";
 
 // spec: NEW-CORE-S5-DEBUG-RELEASE-1
 test "a build --release executable drops debug lines, a debug build and a run keep them" {

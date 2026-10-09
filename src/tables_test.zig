@@ -19,8 +19,8 @@ fn reject(source: []const u8, code: []const u8) !void {
 }
 const color =
     \\enum Color:
-    \\    red,
-    \\    green,
+    \\    red
+    \\    green
     \\    blue
     \\
     \\
@@ -28,8 +28,8 @@ const color =
 ;
 const other =
     \\enum Other:
-    \\    red,
-    \\    green,
+    \\    red
+    \\    green
     \\    blue
     \\
     \\
@@ -39,19 +39,19 @@ const other =
 // spec: CORE-9
 test "enum table construction follows names across enum and initializer reordering" {
     const body =
-        \\def lookup(table: [Color]i64, key: Color) -> i64:
+        \\func lookup(table: [Color]i64, key: Color) -> i64:
         \\    return table[key]
         \\
         \\
-        \\def main() -> i64:
-        \\    t: [Color]i64 = {Color.blue: 30, Color.red: 10, Color.green: 20}
+        \\func main() -> i64:
+        \\    mut t: [Color]i64 = {Color.blue: 30, Color.red: 10, Color.green: 20}
         \\    return lookup(t, Color.red) + t[Color.green] * 10 + t[Color.blue] * 100
     ;
     try result(color ++ body, 3210);
     try result(
         \\enum Color:
-        \\    blue,
-        \\    red,
+        \\    blue
+        \\    red
         \\    green
         \\
         \\
@@ -62,23 +62,23 @@ test "enum table construction follows names across enum and initializer reorderi
         \\    only
         \\
         \\
-        \\def main() -> i64:
-        \\    t: [One]bool = {One.only: True}
+        \\func main() -> i64:
+        \\    mut t: [One]bool = {One.only: True}
         \\    if t[One.only]:
         \\        return i64(len(t))
         \\    return 0
     , 1);
     try result(color ++
-        \\def main() -> i64:
-        \\    old: [Color]i64 = {Color.red: 1, Color.green: 2, Color.blue: 3}
-        \\    changed = replace(old, Color.red, 9)
+        \\func main() -> i64:
+        \\    mut old: [Color]i64 = {Color.red: 1, Color.green: 2, Color.blue: 3}
+        \\    mut changed = replace(old, Color.red, 9)
         \\    return old[Color.red] + changed[Color.red] + changed[Color.green] + i64(len(changed))
     , 15);
 }
 
 const allocation_source =
     \\enum Key:
-    \\    a,
+    \\    a
     \\    b
     \\
     \\
@@ -86,13 +86,13 @@ const allocation_source =
     \\    n: i64
     \\
     \\
-    \\def make() -> [Key]Box:
+    \\func make() -> [Key]Box:
     \\    return {Key.b: Box(n=7), Key.a: Box(n=3)}
     \\
     \\
-    \\def main() -> i64:
-    \\    old = make()
-    \\    next = replace(old, Key.a, Box(n=9))
+    \\func main() -> i64:
+    \\    mut old = make()
+    \\    mut next = replace(old, Key.a, Box(n=9))
     \\    return old[Key.a].n + next[Key.a].n + next[Key.b].n
 ;
 fn allocationScenario(allocator: std.mem.Allocator) !void {
@@ -111,31 +111,31 @@ test "table schemas named construction replacement and discovery clean up on all
 
 test "table duplicate identity retains key type named mapping and initializer order" {
     var compilation = try language.Compilation.init(testing.allocator, "duplicates.my", color ++ other ++
-        \\def a(n: i64) -> [Color]i64:
+        \\func a(n: i64) -> [Color]i64:
         \\    return {Color.red: n, Color.green: 2, Color.blue: 3}
         \\
         \\
-        \\def b(x: i64) -> [Color]i64:
+        \\func b(x: i64) -> [Color]i64:
         \\    return {Color.red: x, Color.green: 2, Color.blue: 3}
         \\
         \\
-        \\def c(n: i64) -> [Other]i64:
+        \\func c(n: i64) -> [Other]i64:
         \\    return {Other.red: n, Other.green: 2, Other.blue: 3}
         \\
         \\
-        \\def d(n: i64) -> [Color]i64:
+        \\func d(n: i64) -> [Color]i64:
         \\    return {Color.green: n, Color.red: 2, Color.blue: 3}
         \\
         \\
-        \\def e(n: i64) -> [Color]i64:
+        \\func e(n: i64) -> [Color]i64:
         \\    return {Color.green: 2, Color.red: n, Color.blue: 3}
         \\
         \\
-        \\def f(n: i64) -> [3]i64:
-        \\    return [n, 2, 3]
+        \\func f(n: i64) -> FixedArray[i64, 3]:
+        \\    return FixedArray[int, 3]([n, 2, 3])
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     );
     defer compilation.deinit();

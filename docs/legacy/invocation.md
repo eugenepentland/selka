@@ -225,11 +225,11 @@ A generic function has no concrete checked signature, so the initial route is an
 exported concrete wrapper:
 
 ```mylang
-def identity[T](value: T) -> T effects():
+func identity[T](value: T) -> T effects():
     return value
 
 
-public def normalize(value: i64) -> i64 effects():
+public func normalize(value: i64) -> i64 effects():
     return identity(value)
 ```
 

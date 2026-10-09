@@ -9,10 +9,9 @@ const Cache = language.frontend_cache.Cache;
 
 const Files = struct {
     bytes: []const u8 =
-        \\module main
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     ,
     fn read(context: ?*anyopaque, allocator: std.mem.Allocator, _: []const u8, _: usize) language.project.ReadError![]u8 {
@@ -56,10 +55,9 @@ test "syntax entries round trip under exact bytes and invalidate on any change" 
 
     // A changed body changes the key, so the old entry is never returned.
     files.bytes =
-        \\module main
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 7
     ;
     var changed = language.project.Project.init(t.allocator);
@@ -102,10 +100,9 @@ test "verdict entries require identical module bytes and reject damaged files" {
 
     // Editing the only module invalidates the verdict.
     files.bytes =
-        \\module main
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 3
     ;
     var changed = language.project.Project.init(t.allocator);
@@ -203,10 +200,9 @@ test "damaged entries are rejected and fall back to fresh work without failing" 
 
     // An unknown key is a plain miss, not damage.
     files.bytes =
-        \\module main
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 5
     ;
     var changed = language.project.Project.init(t.allocator);
@@ -261,7 +257,7 @@ test "single-file check stores and reuses parsed syntax through the same cache" 
     defer t.allocator.free(root);
     var cache = openCache(root);
     const bytes =
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 41
     ;
     // `check`, `run` and `emit-qbe` all reach the parser through Compilation, so
@@ -291,14 +287,13 @@ test "cached syntax retains expression lambdas across a warm lookup" {
     defer caller.deinit();
     var cache = openCache(root);
     var files: Files = .{ .bytes =
-        \\module main
         \\
         \\
-        \\def apply(callback: def(int) -> int effects(), value: int) -> int:
+        \\func apply(callback: func(int) -> int effects(), value: int) -> int:
         \\    return callback(value)
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return apply(lambda value: value * 2, 21)
     };
     var project = language.project.Project.init(t.allocator);

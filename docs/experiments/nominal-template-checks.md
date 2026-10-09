@@ -19,7 +19,7 @@ record Bad[U]:
     key: Key[U]
 
 
-def main() -> i64:
+func main() -> i64:
     return 0
 ```
 

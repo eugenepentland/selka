@@ -7,81 +7,81 @@ const native = @import("native_execute.zig");
 const source = @import("source.zig");
 
 const two_holes =
-    \\def first() -> i64:
+    \\func first() -> i64:
     \\    return todo[i64]()
     \\
     \\
-    \\def second[T](x: T) -> T:
+    \\func second[T](x: T) -> T:
     \\    _ = x
     \\    return todo[T]()
     \\
     \\
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    return 0
 ;
 
 const snapshot_source =
-    \\def ordinary(x: int) -> int:
-    \\    y = x + 1
+    \\func ordinary(x: int) -> int:
+    \\    mut y = x + 1
     \\    return todo[int]()
     \\
     \\
-    \\def maybe(flag: bool) -> int:
+    \\func maybe(flag: bool) -> int:
     \\    if flag:
-    \\        pending = 1
+    \\        mut pending = 1
     \\    return todo[int]()
     \\
     \\
-    \\def bounded(values: mut list[int]) -> int effects(mutation):
+    \\func bounded(mut values: int[]) -> int effects(mutation):
     \\    return todo[int]()
     \\
     \\
-    \\def template[T: copy + storable](value: T) -> T:
+    \\func template[T: copy + storable](value: T) -> T:
     \\    return todo[T]()
     \\
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return 0
 ;
 
 const independent_source =
-    \\def broken() -> int:
+    \\func broken() -> int:
     \\    return absent_name()
     \\
     \\
-    \\def holed(x: int) -> int:
+    \\func holed(x: int) -> int:
     \\    return todo[int]()
     \\
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return 0
 ;
 
 const single_hole =
-    \\def first() -> int:
+    \\func first() -> int:
     \\    return todo[int]()
     \\
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return 7
 ;
 
 const moved_hole =
-    \\def first() -> int:
+    \\func first() -> int:
     \\
     \\    return todo[int]()
     \\
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return 7
 ;
 
 const filled_hole =
-    \\def first() -> int:
+    \\func first() -> int:
     \\    return 7
     \\
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return 7
 ;
 
@@ -113,7 +113,7 @@ test "formatting retains typed holes and filling them restores executable checki
     defer t.allocator.free(formatted);
     try t.expect(std.mem.indexOf(u8, formatted, "todo[i64]()") != null);
     var repaired = try language.Compilation.init(t.allocator, "fixed.my",
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 7
     );
     defer repaired.deinit();
@@ -157,7 +157,7 @@ fn hasRequirement(obligation: *const diagnostic.Obligation, subject: []const u8,
 
 /// The JSON text of one diagnostic that is not a typed hole.
 fn unrelatedJson(allocator: std.mem.Allocator) ![]u8 {
-    var compilation = try checked(allocator, "broken.my", "def main() -> int:\n    return absent_name()\n");
+    var compilation = try checked(allocator, "broken.my", "func main() -> int:\n    return absent_name()\n");
     defer compilation.deinit();
     return language.diagnostic_output.render(allocator, compilation.diagnostics.items[0], compilation.src, .json);
 }
@@ -192,7 +192,7 @@ test "ordinary and uncalled generic holes retain their own bounded context snaps
     const maybe = try obligationFor(&compilation, "maybe");
     try t.expectEqualStrings("bool", bindingType(maybe, "flag").?);
     try t.expect(bindingType(maybe, "pending") == null);
-    try t.expectEqual(@as(usize, 1), maybe.contract.unusable_bindings);
+    try t.expectEqual(@as(usize, 0), maybe.contract.unusable_bindings);
     const bounded = try obligationFor(&compilation, "bounded");
     try t.expectEqualStrings("mut(values)", bounded.contract.mutation.?.text);
     try t.expect(std.mem.indexOf(u8, bounded.contract.effects.?.text, "mutation") != null);

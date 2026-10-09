@@ -82,7 +82,7 @@ mistake. Ceremony that does not buy a correctness guarantee is a defect.
 
 Concretely, the goal has five parts:
 
-- **Python-like syntax, statically typed.** `def`, indentation, `record`, ordinary
+- **Python-like syntax, statically typed.** `func`, indentation, `record`, ordinary
   assignment, `list[T]`, strings, dictionaries, `for ... in`, comprehensions and
   familiar builtins, with types checked before execution. Mylang should not surprise a
   Python reader; every difference from Python must be deliberate, documented and rare.
@@ -368,9 +368,9 @@ Do not add a REPL or guest printing facility. Printing `main`'s result is enough
 
 ```mylang
 # doc: expect 4950
-def sum_to(n: i64) -> i64:
-    total: i64 = 0
-    i: i64 = 0
+func sum_to(n: i64) -> i64:
+    mut total: i64 = 0
+    mut i: i64 = 0
 
     while i < n:
         total += i
@@ -379,7 +379,7 @@ def sum_to(n: i64) -> i64:
     return total
 
 
-def main(out: Stream) -> i64:
+func main(out: Stream) -> i64:
     out.print(sum_to(100))
     return 0
 ```
@@ -390,19 +390,19 @@ A second example exercises calls, local mutation, and remainder:
 
 ```mylang
 # doc: expect 6
-def gcd(a: i64, b: i64) -> i64:
-    x = a
-    y = b
+func gcd(a: i64, b: i64) -> i64:
+    mut x = a
+    mut y = b
 
     while y != 0:
-        remainder = x % y
+        mut remainder = x % y
         x = y
         y = remainder
 
     return x
 
 
-def main(out: Stream) -> i64:
+func main(out: Stream) -> i64:
     out.print(gcd(48, 18))
     return 0
 ```

@@ -1,85 +1,84 @@
-module d_view_identity
 
 record Holder:
     mapping: dict[int, int]
 
-union Captured:
-    Mapping: dict[int, int]
+enum Captured:
+    Mapping(value: dict[int, int])
 
-def retain_mapping(d: dict[int, int]) -> Holder:
-    return Holder(d)
+func retain_mapping(d: dict[int, int]) -> Holder:
+    return Holder(mapping=d)
 
-def fresh_mapping() -> dict[int, int]:
+func fresh_mapping() -> dict[int, int]:
     return {1: 7}
 
-public def test_record_alias_before_view() -> bool:
-    d = {1: 7}
-    holder = Holder(d)
-    view = list(d.values())
+public func test_record_alias_before_view() -> bool:
+    mut d = {1: 7}
+    mut holder = Holder(mapping=d)
+    mut view = list(d.values())
     d[1] = 9
     return list(view) == [7] and holder.mapping[1] == 7 and d[1] == 9
 
-public def test_record_alias_after_view() -> bool:
-    d = {1: 7}
-    view = list(d.values())
-    holder = Holder(d)
+public func test_record_alias_after_view() -> bool:
+    mut d = {1: 7}
+    mut view = list(d.values())
+    mut holder = Holder(mapping=d)
     d[1] = 9
     return list(view) == [7] and holder.mapping[1] == 7
 
-public def test_tuple_and_aggregate_copy_before_view() -> bool:
-    d = {1: 7}
-    holder = (d, 11)
-    saved = holder
-    view = list(d.values())
+public func test_tuple_and_aggregate_copy_before_view() -> bool:
+    mut d = {1: 7}
+    mut holder = (d, 11)
+    mut saved = holder
+    mut view = list(d.values())
     d[1] = 9
     selected, marker = saved
     return list(view) == [7] and selected[1] == 7 and marker == 11
 
-public def test_union_payload_before_view() -> bool:
-    d = {1: 7}
-    holder = Captured.Mapping(d)
-    view = list(d.values())
+public func test_union_payload_before_view() -> bool:
+    mut d = {1: 7}
+    mut holder = Captured.Mapping(value=d)
+    mut view = list(d.values())
     d[1] = 9
     match holder:
-        case Captured.Mapping(saved):
+        case Captured.Mapping(value=saved):
             return list(view) == [7] and saved[1] == 7
 
-public def test_list_alias_before_view() -> bool:
-    d = {1: 7}
-    holders = [d]
-    view = list(d.values())
+public func test_list_alias_before_view() -> bool:
+    mut d = {1: 7}
+    mut holders = [d]
+    mut view = list(d.values())
     d[1] = 9
     return list(view) == [7] and holders[0][1] == 7
 
-public def test_nested_dictionary_alias_before_view() -> bool:
-    d = {1: 7}
-    holders = {2: d}
-    view = list(d.values())
+public func test_nested_dictionary_alias_before_view() -> bool:
+    mut d = {1: 7}
+    mut holders = {2: d}
+    mut view = list(d.values())
     d[1] = 9
     return list(view) == [7] and holders[2][1] == 7
 
-public def test_returned_alias_before_view() -> bool:
-    d = {1: 7}
-    holder = retain_mapping(d)
-    view = list(d.values())
+public func test_returned_alias_before_view() -> bool:
+    mut d = {1: 7}
+    mut holder = retain_mapping(d)
+    mut view = list(d.values())
     d[1] = 9
     return list(view) == [7] and holder.mapping[1] == 7
 
-public def test_fixed_array_alias_before_view() -> bool:
-    d = {1: 7}
-    holders: [1]dict[int, int] = [d]
-    view = list(d.values())
+public func test_fixed_array_alias_before_view() -> bool:
+    mut d = {1: 7}
+    mut holders: FixedArray[dict[int, int], 1] = FixedArray[dict[int, int], 1]([d])
+    mut view = list(d.values())
     d[1] = 9
     return list(view) == [7] and holders[0][1] == 7
 
-public def test_returned_dictionary_snapshot_is_independent() -> bool:
-    d = fresh_mapping()
-    view = list(d.values())
+public func test_returned_dictionary_snapshot_is_independent() -> bool:
+    mut d = fresh_mapping()
+    mut view = list(d.values())
     d[1] = 9
     return list(view) == [7]
 
-public def test_fixed_array_stored_snapshot() -> bool:
-    d = {1: 7}
-    views: [1]list[int] = [list(d.values())]
+public func test_fixed_array_stored_snapshot() -> bool:
+    mut d = {1: 7}
+    mut views: FixedArray[int[], 1] = FixedArray[int[], 1]([list(d.values())])
     d[1] = 9
     return list(views[0]) == [7]

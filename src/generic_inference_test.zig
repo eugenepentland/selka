@@ -4,23 +4,23 @@ const t = std.testing;
 const language = @import("compiler.zig");
 const native = @import("native_execute.zig");
 const text =
-    \\def id[T](value: T) -> T:
+    \\func id[T](value: T) -> T:
     \\    return value
     \\
     \\
-    \\def sum[T: integer](x: T) -> T:
+    \\func sum[T: integer](x: T) -> T:
     \\    if x == T(0):
     \\        return x
     \\    return x + sum(x - T(1))
     \\
     \\
-    \\def forward[U: integer](x: U) -> U:
+    \\func forward[U: integer](x: U) -> U:
     \\    return id(sum(x))
     \\
     \\
-    \\def main() -> i64:
-    \\    small = forward(4u8)
-    \\    wide = forward(5)
+    \\func main() -> i64:
+    \\    mut small = forward(4u8)
+    \\    mut wide = forward(5)
     \\    if id(True):
     \\        return i64(small) + wide + sum[i64](2)
     \\    return 0
@@ -46,19 +46,17 @@ fn run(text_input: []const u8, expected: i64) !void {
 const Modules = struct {
     fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
         if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8,
-            \\module main
             \\import helper as h
             \\
             \\
-            \\def main() -> i64:
-            \\    values: [2]i64 = [7, 9]
+            \\func main() -> i64:
+            \\    mut values: FixedArray[i64, 2] = FixedArray[i64, 2]([7, 9])
             \\    return h.first(values)
         );
         if (std.mem.eql(u8, path, "helper.my")) return allocator.dupe(u8,
-            \\module helper
             \\
             \\
-            \\public def first[T, const N: u64](x: [N]T) -> T effects():
+            \\public func first[T, const N: u64](x: [N]T) -> T effects():
             \\    return x[0]
         );
         return error.NotFound;

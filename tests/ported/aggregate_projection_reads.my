@@ -1,4 +1,3 @@
-module aggregate_projection_reads
 
 # Fields read through a list element: a snapshot of an element keeps its value
 # across a later element write, growth and many allocations; bytes fields and
@@ -24,24 +23,24 @@ record Item:
     label: bytes
 
 
-def projected(items: list[Item], index: int) -> int:
+func projected(items: Item[], index: int) -> int:
     return items[index].inner.value
 
 
-def label(items: list[Item], index: int) -> bytes:
+func label(items: Item[], index: int) -> bytes:
     return items[index].label
 
 
-def snapshot(items: list[Item], index: int) -> Item:
+func snapshot(items: Item[], index: int) -> Item:
     return items[index]
 
 
-def projection_answer() -> int:
-    items = [Item(inner=Inner(value=7, other=8), label=b"old")]
-    saved = snapshot(items, 0)
-    name = label(items, -1)
+func projection_answer() -> int:
+    mut items = [Item(inner=Inner(value=7, other=8), label=b"old")]
+    mut saved = snapshot(items, 0)
+    mut name = label(items, -1)
     items[0] = Item(inner=Inner(value=9, other=10), label=b"new")
-    i = 0
+    mut i = 0
     while i < 40:
         items.append(Item(inner=Inner(value=i, other=0), label=b"grown" + b"!"))
         i += 1
@@ -52,7 +51,7 @@ def projection_answer() -> int:
     return 42
 
 
-public def test_a_snapshot_and_a_bytes_field_survive_element_writes_and_growth() -> bool:
+public func test_a_snapshot_and_a_bytes_field_survive_element_writes_and_growth() -> bool:
     return projection_answer() == 42
 
 
@@ -61,17 +60,17 @@ record Pair:
     right: int
 
 
-def read(items: list[Pair], index: int) -> int:
+func read(items: Pair[], index: int) -> int:
     return items[index].left
 
 
-public def test_a_field_of_the_only_element_reads_from_either_end() -> bool:
-    items = [Pair(left=3, right=4)]
+public func test_a_field_of_the_only_element_reads_from_either_end() -> bool:
+    mut items = [Pair(left=3, right=4)]
     return read(items, 0) == 3 and read(items, -1) == 3
 
 
-def stack_join() -> int:
-    x: i64 = 0
+func stack_join() -> int:
+    mut x: i64 = 0
     while x < 4:
         x = x + 1
     if x == 4:
@@ -79,28 +78,29 @@ def stack_join() -> int:
     return 0
 
 
-def twice(x: i64) -> i64:
+func twice(x: i64) -> i64:
     return x * 2
 
 
-def branch_total() -> int:
-    total = 0
-    index = 0
+func branch_total() -> int:
+    mut total = 0
+    mut index = 0
     while index < 4:
         total = total + index
         index = index + 1
     return total
 
 
-public def test_a_loop_and_a_call_join_to_the_right_value() -> bool:
+public func test_a_loop_and_a_call_join_to_the_right_value() -> bool:
     return stack_join() == 8
 
 
-public def test_a_loop_accumulates_through_every_branch_label() -> bool:
+public func test_a_loop_accumulates_through_every_branch_label() -> bool:
     return branch_total() == 6
 
 
-def descend(depth: i64, value: Pair) -> i64:
+func descend(depth: i64, input: Pair) -> i64:
+    mut value = input
     value = Pair(left=value.left + 1, right=value.right)
     value = Pair(left=value.left + 1, right=value.right)
     value = Pair(left=value.left + 1, right=value.right)
@@ -166,5 +166,5 @@ def descend(depth: i64, value: Pair) -> i64:
     return descend(depth - 1, value)
 
 
-public def test_a_recursion_with_a_large_frame_adds_sixty_per_level() -> bool:
+public func test_a_recursion_with_a_large_frame_adds_sixty_per_level() -> bool:
     return descend(20, Pair(left=0, right=1)) == 1260 and descend(0, Pair(left=5, right=1)) == 65

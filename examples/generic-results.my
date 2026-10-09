@@ -3,11 +3,12 @@ result Number:
     err: int
 
 
-def increment[T: integer](input: Number, amount: T) -> Number:
-    return Ok(input? + int(amount))
+func increment[T: integer](input: Number, amount: T) -> Number:
+    const value = try input
+    return Ok(value + int(amount))
 
 
-def number[T](context: T, input: Number) -> int:
+func number[T](context: T, input: Number) -> int:
     _ = context
     match input:
         case Number.ok(value):
@@ -16,14 +17,14 @@ def number[T](context: T, input: Number) -> int:
             return 0 - code
 
 
-def count[T](context: T, early: bool, input: Number) -> int:
+func count[T](context: T, early: bool, input: Number) -> int:
     _ = context
     if early:
         _ = input
         return 1
     _ = input
-    index = 0
-    pending: Number = Ok(0)
+    mut index = 0
+    mut pending: Number = Ok(0)
     while index < 3:
         _ = pending
         pending = Ok(index)
@@ -32,5 +33,5 @@ def count[T](context: T, early: bool, input: Number) -> int:
     return index
 
 
-def main() -> int:
+func main() -> int:
     return number[bool](True, increment[u8](Ok(7), 1u8)) + number[bool](True, increment[u8](Err(3), 1u8)) + count[u8](0u8, True, Err(9)) + count[u8](0u8, False, Ok(9))
