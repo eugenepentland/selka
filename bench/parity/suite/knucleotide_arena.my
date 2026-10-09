@@ -3,8 +3,6 @@
 # reports — runs inside its own `with arena():` block and is released in bulk
 # at block exit instead of being traced. The generated sequence stays on the
 # collecting heap. Only scalars and printed text leave a block.
-
-
 record Entry:
     key: str
     count: int
@@ -45,11 +43,9 @@ func count_of(seq: str, key: str) -> int:
 func main(out: Stream) -> int:
     mut seq = generate(1000000)
     for k in [1, 2]:
-        with arena():
-            _ = report_frequencies(out, seq, k)
+        _ = report_frequencies(out, seq, k)
     for key in ["GGT", "GGTA", "GGTATT", "GGTATTTTAATT", "GGTATTTTAATTTATAGT"]:
         mut found = 0
-        with arena():
-            found = count_of(seq, key)
+        found = count_of(seq, key)
         out.print(f"{found}\t{key}")
     return 0

@@ -1,0 +1,1 @@
+internal error[E_CORE_INVALID_IR]: invalid Core IR in main b7: predecessor b8 does not branch here

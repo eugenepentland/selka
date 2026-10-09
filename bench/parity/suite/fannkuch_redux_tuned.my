@@ -13,8 +13,6 @@
 # function's GC root chain, 22 four-word root records per write in
 # fannkuch_redux.my. A fixed array lives in the frame, carries no GC roots and
 # its replace() compiles to a plain store.
-
-
 func fannkuch() -> tuple[int, int]:
     mut n = 10
     mut perm: FixedArray[int, 10] = FixedArray[int, 10]([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])

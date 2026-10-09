@@ -1,4 +1,3 @@
-
 # The collector is generational: a survivor stays marked and old, and a minor
 # collection follows no reference into the old generation. These cases build a
 # long-lived structure, let collections promote it, and then give it a young
@@ -8,8 +7,6 @@
 # more collections. A young object an old one references must survive them.
 # Under `--gc-stress` every allocation collects, and every third collection
 # is full.
-
-
 record Node:
     next: Node?
     value: int

@@ -51,8 +51,8 @@ identity, bootstrap-language version, target, runtime ABI, effects/capabilities
 contract and invoking flags. The contract fingerprint is mixed into every syntax,
 verdict, checked-body and specialization key, so changing any
 dimension invalidates an entry even when the source bytes are identical. The
-on-disk format is `mylang-frontend-cache-v3`; the runtime ABI dimension is
-`runtime-abi-v0-unfrozen` until Wave 4 freezes `runtime-abi-v1`. See
+on-disk format is `mylang-frontend-cache-v7`; the runtime ABI dimension is
+`runtime-abi-v3` and changes when the native ABI changes. See
 [the incremental contract](../experiments/incremental-contract.md#cache-key-contract).
 
 | layer | stored | key also includes | skipped on a hit | still runs fresh |
@@ -61,7 +61,7 @@ on-disk format is `mylang-frontend-cache-v3`; the runtime ABI dimension is
 | project verdict | the rendered warning text of one successful `check-project` | every loaded module's name, exact path and exact bytes, plus the diagnostic format | declaration/interface resolution and the entire semantic check | loading every module from disk and recomputing the key |
 
 Single-file commands (`check`, `run`) key syntax with body start `0`;
-project commands key it with the module header's body start, so the two shapes
+project commands key it with the body start after imports, so the two shapes
 never alias. A syntax hit returns independently owned AST storage: the two
 growable `Program` lists are persisted as exact-length owned slices, so a restored
 list owns exactly its items and never advertises capacity it did not allocate.
@@ -165,8 +165,8 @@ a type interned while checking are always checked.
 Two independent guards keep a stand-in from outliving a type it depends on.
 The dependency context is transitive: a declaration's fingerprint covers every
 declaration it reaches, in an order-independent way (so recursive and mutually
-recursive types are covered), a composite type spelling such as `list[Inner]`,
-`dict[str, Inner]`, `Option[Inner]`, a tuple, an array or a callback type
+recursive types are covered), a composite type spelling such as `Inner[]`,
+`dict[str, Inner]`, `Inner?`, `FixedArray[Inner, N]` or a callable type
 references each component type, a type declaration's fingerprint covers its
 source text, and a facade's re-exported name binds the declaration it names.
 Independently, a summary records the transitive shape digest of every catalog
@@ -204,7 +204,7 @@ checked program without summaries (above), and native-test preparation use the
 same checked-body query path. The durable store lives under
 `<cache-dir>/semantic/` when `--cache-dir` (or `MYLANG_FRONTEND_CACHE`) is given
 and `.mylang-cache/semantic/` otherwise; it is one contract-namespaced directory of
-versioned `semantic-cache-v3` files. Each file contains one stable declaration
+versioned `semantic-cache-v4` files. Each file contains one stable declaration
 key, the dependency context, the checked contract digest, the owned relocatable
 `typed.Function`/node/statement tree, referenced stable identities, source
 region/body bytes, the body-local binding-warning notes (code, severity, span and
@@ -299,8 +299,7 @@ its body start, and reused only when all three match exactly; no hash comparison
 can produce a false hit. A hit skips the interface phase's second lexer pass and
 the body parser, and deep-copies the syntax into the fresh project, so returned
 syntax never borrows retained storage and clearing or eviction cannot invalidate
-it. Everything else still runs: source is reloaded and re-lexed for module
-headers, and symbols, exports, resolution, visibility, ownership, effects and
+it. Everything else still runs: source is reloaded and re-lexed for import discovery, and symbols, exports, resolution, visibility, ownership, effects and
 every body are checked again. Retention is 256 entries and 16 MiB of entry arena
 capacity with oldest-insertion eviction; larger entries are bypassed rather than
 stored. In the session below the two-module project is checked, then `main.my` is

@@ -2,7 +2,6 @@
 # and f-strings (SUITE.md section 11).
 import strings
 
-
 # 'x' * count: str has no repetition operator; strings.repeat is the library
 # spelling, and it answers a Result because a negative count is an error.
 func pad(count: int) -> str:

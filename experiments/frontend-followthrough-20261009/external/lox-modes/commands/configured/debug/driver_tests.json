@@ -1,0 +1,331 @@
+{
+  "actual_tests": 13,
+  "command": [
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/artifacts/mylang",
+    "test",
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/lox/benchmarks/lox/ports/mylang/driver_tests.my",
+    "--json",
+    "--force",
+    "--jobs",
+    "1",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/lox-modes/cache",
+    "--max-steps=100000000",
+    "--cases",
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/lox/benchmarks/lox/ports/mylang/driver_cases.json"
+  ],
+  "complete_report_exact": false,
+  "cwd": "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/lox",
+  "elapsed_seconds": 3.2321881640236825,
+  "expected_statuses_equal": true,
+  "functional_membership_pass": true,
+  "membership_equal_after_explicit_module_mapping": true,
+  "nonpassing": 0,
+  "process_status_equal": true,
+  "reference_command": [
+    "/home/epentland/.cache/mylang/frontend-20261008/mylang-s5-pin/bin/mylang",
+    "test",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox/benchmarks/lox/ports/mylang/driver_tests.my",
+    "--json",
+    "--force",
+    "--jobs",
+    "1",
+    "--cache-dir",
+    "/home/epentland/.cache/mylang/frontend-current-lox-oracle-20261008",
+    "--max-steps=100000000",
+    "--cases",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox/benchmarks/lox/ports/mylang/driver_cases.json"
+  ],
+  "reference_receipt_sha256": "4d6e792a3644ff57c2f5a5d9e5f084b78defc4a2842ba50629530a8352c26098",
+  "reference_returncode": 0,
+  "reference_tests": 13,
+  "report_changes": [
+    {
+      "candidate": [
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/lox/benchmarks/lox/ports/mylang/driver_tests.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/lox/benchmarks/lox/ports/mylang/driver.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/lox/benchmarks/lox/ports/mylang/heap.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/lox/benchmarks/lox/ports/mylang/object.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/lox/benchmarks/lox/ports/mylang/chunk.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/lox/benchmarks/lox/ports/mylang/value.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/lox/benchmarks/lox/ports/mylang/table.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/lox/benchmarks/lox/ports/mylang/interpreter.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/lox/benchmarks/lox/ports/mylang/ast.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/lox/benchmarks/lox/ports/mylang/scanner.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/lox/benchmarks/lox/ports/mylang/natives.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/lox/benchmarks/lox/ports/mylang/lox_strings.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/lox/benchmarks/lox/ports/mylang/output.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/lox/benchmarks/lox/ports/mylang/parser.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/lox/benchmarks/lox/ports/mylang/resolver.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/lox/benchmarks/lox/ports/mylang/vm.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/lox/benchmarks/lox/ports/mylang/compiler.my"
+      ],
+      "field": "sources",
+      "reference": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox/benchmarks/lox/ports/mylang/driver_tests.my",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox/benchmarks/lox/ports/mylang/driver.my",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox/benchmarks/lox/ports/mylang/heap.my",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox/benchmarks/lox/ports/mylang/object.my",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox/benchmarks/lox/ports/mylang/chunk.my",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox/benchmarks/lox/ports/mylang/value.my",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox/benchmarks/lox/ports/mylang/table.my",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox/benchmarks/lox/ports/mylang/interpreter.my",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox/benchmarks/lox/ports/mylang/ast.my",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox/benchmarks/lox/ports/mylang/scanner.my",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox/benchmarks/lox/ports/mylang/natives.my",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox/benchmarks/lox/ports/mylang/lox_strings.my",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox/benchmarks/lox/ports/mylang/output.my",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox/benchmarks/lox/ports/mylang/parser.my",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox/benchmarks/lox/ports/mylang/resolver.my",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox/benchmarks/lox/ports/mylang/vm.my",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox/benchmarks/lox/ports/mylang/compiler.my"
+      ]
+    },
+    {
+      "candidate": [
+        {
+          "at": "",
+          "contract": "a0f6abe40136cb5a18955cb0e23cad288482a624356a02f85a533d8f15103589",
+          "name": "driver_tests::test_run_arithmetic",
+          "provider": "90749761473527ee7063fb368e05e4e7db32e42c745b26c82376c66c493d82bb",
+          "reason": "",
+          "source": "1855c5c0fe133388780902e2c93f6954b89fe7468c6a8fe1169e01e1b64560b2",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "contract": "a0f6abe40136cb5a18955cb0e23cad288482a624356a02f85a533d8f15103589",
+          "name": "driver_tests::test_run_class_init_method",
+          "provider": "90749761473527ee7063fb368e05e4e7db32e42c745b26c82376c66c493d82bb",
+          "reason": "",
+          "source": "1855c5c0fe133388780902e2c93f6954b89fe7468c6a8fe1169e01e1b64560b2",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "contract": "a0f6abe40136cb5a18955cb0e23cad288482a624356a02f85a533d8f15103589",
+          "name": "driver_tests::test_run_closure_counter",
+          "provider": "90749761473527ee7063fb368e05e4e7db32e42c745b26c82376c66c493d82bb",
+          "reason": "",
+          "source": "1855c5c0fe133388780902e2c93f6954b89fe7468c6a8fe1169e01e1b64560b2",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "contract": "a0f6abe40136cb5a18955cb0e23cad288482a624356a02f85a533d8f15103589",
+          "name": "driver_tests::test_run_compile_error_status",
+          "provider": "90749761473527ee7063fb368e05e4e7db32e42c745b26c82376c66c493d82bb",
+          "reason": "",
+          "source": "1855c5c0fe133388780902e2c93f6954b89fe7468c6a8fe1169e01e1b64560b2",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "contract": "a0f6abe40136cb5a18955cb0e23cad288482a624356a02f85a533d8f15103589",
+          "name": "driver_tests::test_run_gc_stress_same_output",
+          "provider": "90749761473527ee7063fb368e05e4e7db32e42c745b26c82376c66c493d82bb",
+          "reason": "",
+          "source": "1855c5c0fe133388780902e2c93f6954b89fe7468c6a8fe1169e01e1b64560b2",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "contract": "a0f6abe40136cb5a18955cb0e23cad288482a624356a02f85a533d8f15103589",
+          "name": "driver_tests::test_run_inheritance_super",
+          "provider": "90749761473527ee7063fb368e05e4e7db32e42c745b26c82376c66c493d82bb",
+          "reason": "",
+          "source": "1855c5c0fe133388780902e2c93f6954b89fe7468c6a8fe1169e01e1b64560b2",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "contract": "a0f6abe40136cb5a18955cb0e23cad288482a624356a02f85a533d8f15103589",
+          "name": "driver_tests::test_run_print_value_kinds",
+          "provider": "90749761473527ee7063fb368e05e4e7db32e42c745b26c82376c66c493d82bb",
+          "reason": "",
+          "source": "1855c5c0fe133388780902e2c93f6954b89fe7468c6a8fe1169e01e1b64560b2",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "contract": "a0f6abe40136cb5a18955cb0e23cad288482a624356a02f85a533d8f15103589",
+          "name": "driver_tests::test_run_runtime_error_trace",
+          "provider": "90749761473527ee7063fb368e05e4e7db32e42c745b26c82376c66c493d82bb",
+          "reason": "",
+          "source": "1855c5c0fe133388780902e2c93f6954b89fe7468c6a8fe1169e01e1b64560b2",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "contract": "a0f6abe40136cb5a18955cb0e23cad288482a624356a02f85a533d8f15103589",
+          "name": "driver_tests::test_run_set_rhs_keeps_original_receiver",
+          "provider": "90749761473527ee7063fb368e05e4e7db32e42c745b26c82376c66c493d82bb",
+          "reason": "",
+          "source": "1855c5c0fe133388780902e2c93f6954b89fe7468c6a8fe1169e01e1b64560b2",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "contract": "a0f6abe40136cb5a18955cb0e23cad288482a624356a02f85a533d8f15103589",
+          "name": "driver_tests::test_run_set_rhs_keeps_receiver_mutations",
+          "provider": "90749761473527ee7063fb368e05e4e7db32e42c745b26c82376c66c493d82bb",
+          "reason": "",
+          "source": "1855c5c0fe133388780902e2c93f6954b89fe7468c6a8fe1169e01e1b64560b2",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "contract": "a0f6abe40136cb5a18955cb0e23cad288482a624356a02f85a533d8f15103589",
+          "name": "driver_tests::test_run_shared_upvalue",
+          "provider": "90749761473527ee7063fb368e05e4e7db32e42c745b26c82376c66c493d82bb",
+          "reason": "",
+          "source": "1855c5c0fe133388780902e2c93f6954b89fe7468c6a8fe1169e01e1b64560b2",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "contract": "a0f6abe40136cb5a18955cb0e23cad288482a624356a02f85a533d8f15103589",
+          "name": "driver_tests::test_run_stack_overflow",
+          "provider": "90749761473527ee7063fb368e05e4e7db32e42c745b26c82376c66c493d82bb",
+          "reason": "",
+          "source": "1855c5c0fe133388780902e2c93f6954b89fe7468c6a8fe1169e01e1b64560b2",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "contract": "a0f6abe40136cb5a18955cb0e23cad288482a624356a02f85a533d8f15103589",
+          "name": "driver_tests::test_run_string_concat",
+          "provider": "90749761473527ee7063fb368e05e4e7db32e42c745b26c82376c66c493d82bb",
+          "reason": "",
+          "source": "1855c5c0fe133388780902e2c93f6954b89fe7468c6a8fe1169e01e1b64560b2",
+          "status": "passed"
+        }
+      ],
+      "field": "tests",
+      "reference": [
+        {
+          "at": "",
+          "contract": "99a4413f0307e3e6a720c612bc6e216990fe377144e93a496cb90771c4cc3fca",
+          "name": "driver_tests::test_run_arithmetic",
+          "provider": "a419211f268bf17912073de2d4ce990988492835d7e45e41f1dac56ee45dcc22",
+          "reason": "",
+          "source": "8e4ab1f4ad4cb6713b411c8e278fdcd2057ecd0e350a535c3df64d20433bdd32",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "contract": "99a4413f0307e3e6a720c612bc6e216990fe377144e93a496cb90771c4cc3fca",
+          "name": "driver_tests::test_run_class_init_method",
+          "provider": "a419211f268bf17912073de2d4ce990988492835d7e45e41f1dac56ee45dcc22",
+          "reason": "",
+          "source": "8e4ab1f4ad4cb6713b411c8e278fdcd2057ecd0e350a535c3df64d20433bdd32",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "contract": "99a4413f0307e3e6a720c612bc6e216990fe377144e93a496cb90771c4cc3fca",
+          "name": "driver_tests::test_run_closure_counter",
+          "provider": "a419211f268bf17912073de2d4ce990988492835d7e45e41f1dac56ee45dcc22",
+          "reason": "",
+          "source": "8e4ab1f4ad4cb6713b411c8e278fdcd2057ecd0e350a535c3df64d20433bdd32",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "contract": "99a4413f0307e3e6a720c612bc6e216990fe377144e93a496cb90771c4cc3fca",
+          "name": "driver_tests::test_run_compile_error_status",
+          "provider": "a419211f268bf17912073de2d4ce990988492835d7e45e41f1dac56ee45dcc22",
+          "reason": "",
+          "source": "8e4ab1f4ad4cb6713b411c8e278fdcd2057ecd0e350a535c3df64d20433bdd32",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "contract": "99a4413f0307e3e6a720c612bc6e216990fe377144e93a496cb90771c4cc3fca",
+          "name": "driver_tests::test_run_gc_stress_same_output",
+          "provider": "a419211f268bf17912073de2d4ce990988492835d7e45e41f1dac56ee45dcc22",
+          "reason": "",
+          "source": "8e4ab1f4ad4cb6713b411c8e278fdcd2057ecd0e350a535c3df64d20433bdd32",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "contract": "99a4413f0307e3e6a720c612bc6e216990fe377144e93a496cb90771c4cc3fca",
+          "name": "driver_tests::test_run_inheritance_super",
+          "provider": "a419211f268bf17912073de2d4ce990988492835d7e45e41f1dac56ee45dcc22",
+          "reason": "",
+          "source": "8e4ab1f4ad4cb6713b411c8e278fdcd2057ecd0e350a535c3df64d20433bdd32",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "contract": "99a4413f0307e3e6a720c612bc6e216990fe377144e93a496cb90771c4cc3fca",
+          "name": "driver_tests::test_run_print_value_kinds",
+          "provider": "a419211f268bf17912073de2d4ce990988492835d7e45e41f1dac56ee45dcc22",
+          "reason": "",
+          "source": "8e4ab1f4ad4cb6713b411c8e278fdcd2057ecd0e350a535c3df64d20433bdd32",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "contract": "99a4413f0307e3e6a720c612bc6e216990fe377144e93a496cb90771c4cc3fca",
+          "name": "driver_tests::test_run_runtime_error_trace",
+          "provider": "a419211f268bf17912073de2d4ce990988492835d7e45e41f1dac56ee45dcc22",
+          "reason": "",
+          "source": "8e4ab1f4ad4cb6713b411c8e278fdcd2057ecd0e350a535c3df64d20433bdd32",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "contract": "99a4413f0307e3e6a720c612bc6e216990fe377144e93a496cb90771c4cc3fca",
+          "name": "driver_tests::test_run_set_rhs_keeps_original_receiver",
+          "provider": "a419211f268bf17912073de2d4ce990988492835d7e45e41f1dac56ee45dcc22",
+          "reason": "",
+          "source": "8e4ab1f4ad4cb6713b411c8e278fdcd2057ecd0e350a535c3df64d20433bdd32",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "contract": "99a4413f0307e3e6a720c612bc6e216990fe377144e93a496cb90771c4cc3fca",
+          "name": "driver_tests::test_run_set_rhs_keeps_receiver_mutations",
+          "provider": "a419211f268bf17912073de2d4ce990988492835d7e45e41f1dac56ee45dcc22",
+          "reason": "",
+          "source": "8e4ab1f4ad4cb6713b411c8e278fdcd2057ecd0e350a535c3df64d20433bdd32",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "contract": "99a4413f0307e3e6a720c612bc6e216990fe377144e93a496cb90771c4cc3fca",
+          "name": "driver_tests::test_run_shared_upvalue",
+          "provider": "a419211f268bf17912073de2d4ce990988492835d7e45e41f1dac56ee45dcc22",
+          "reason": "",
+          "source": "8e4ab1f4ad4cb6713b411c8e278fdcd2057ecd0e350a535c3df64d20433bdd32",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "contract": "99a4413f0307e3e6a720c612bc6e216990fe377144e93a496cb90771c4cc3fca",
+          "name": "driver_tests::test_run_stack_overflow",
+          "provider": "a419211f268bf17912073de2d4ce990988492835d7e45e41f1dac56ee45dcc22",
+          "reason": "",
+          "source": "8e4ab1f4ad4cb6713b411c8e278fdcd2057ecd0e350a535c3df64d20433bdd32",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "contract": "99a4413f0307e3e6a720c612bc6e216990fe377144e93a496cb90771c4cc3fca",
+          "name": "driver_tests::test_run_string_concat",
+          "provider": "a419211f268bf17912073de2d4ce990988492835d7e45e41f1dac56ee45dcc22",
+          "reason": "",
+          "source": "8e4ab1f4ad4cb6713b411c8e278fdcd2057ecd0e350a535c3df64d20433bdd32",
+          "status": "passed"
+        }
+      ]
+    }
+  ],
+  "returncode": 0,
+  "stderr_exact": true,
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stdout_sha256": "0f6367b976b2b1e52817e7f89227fe8bd1e28221e57557557675e25b3e49e344",
+  "timeout": false
+}

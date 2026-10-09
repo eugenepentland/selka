@@ -47,10 +47,10 @@ func main() -> int:
 ```
 
 A parameter itself stays read-only: `xs.append(9)` in `appended` is
-`E_MUTATION_MARKER`, and the message says to declare `xs: mut list[int]` or
+`E_MUTATION_MARKER`, and the message says to declare `mut xs: int[]` or
 to assign it to a local and change the copy.
 
-**`mut` records are `inout`.** A `mut` parameter of a plain `record` or tuple
+**`mut` records are `inout`.** A `mut` parameter of a plain `record`
 is the caller's variable: a field assignment, a nested field or collection
 write and a rebinding of the whole parameter all reach the caller.
 

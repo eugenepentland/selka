@@ -1,0 +1,17 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 1 after 35s (all 3 build slot(s) busy)
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 4 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 2 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 128 finding(s) — report-only (--verbose for detail)
+guardian: repeated-string-literal: 2 finding(s) — report-only (--verbose for detail)
+guardian: try-in-return: 2 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 checks — 0 blocking, 4 report-only
+[main 675dac5] feedback: mylang — frontend recovery and noalloc closeout
+ 1 file changed, 6 insertions(+)
+real 0.70
+user 2.12
+sys 0.21
+real 37.96
+user 2.16
+sys 0.31

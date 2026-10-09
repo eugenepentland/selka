@@ -7,12 +7,14 @@ func checksum(count: int) -> int:
         result += value
     return result
 
+
 func number(text: str) -> int:
     match parse_int(text):
         case Some(value):
             return value
         case None:
             return 0
+
 
 func main(args: str[], out: Stream) -> int:
     if len(args) != 2:

@@ -1,4 +1,3 @@
-
 """Contract clauses that hold: every test runs its clauses and returns True
 only when the program carried on past them. Violations and diagnostics are
 Zig tests in `src/contracts_test.zig`."""

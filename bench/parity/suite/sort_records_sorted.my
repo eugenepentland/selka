@@ -5,8 +5,6 @@
 # The prelude keyed sorted is a bottom-up merge that appends into one reused
 # scratch list, where sort.sort_by_key is a recursive merge that copies both
 # halves with slices and builds a fresh output list at every level.
-
-
 record Rec:
     key: int
     id: int

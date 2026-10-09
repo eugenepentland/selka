@@ -1,0 +1,6 @@
+union Region:
+    board,
+    polygon: list[[2]float]
+
+func main() -> int:
+    return 0

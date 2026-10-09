@@ -1,6 +1,4 @@
 # float_loop: a binary64 multiply-add-sqrt dependency chain.
-
-
 func main(out: Stream) -> int:
     mut x = 0.0
     for i in range(20000000):

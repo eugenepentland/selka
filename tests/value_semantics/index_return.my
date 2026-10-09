@@ -1,5 +1,3 @@
-
-
 record Payload:
     number: int
     items: int[]
@@ -262,9 +260,11 @@ func earlier_match(mut items: Item[], index: int) -> int:
             pass
     return -1
 
+
 public func test_earlier_match_binding_stays_independent() -> bool:
     mut items = [Item.payload(value=Payload(number=0, items=[1]))]
     return earlier_match(mut items, 0) == 1 and contents(items, 0) == [1, 2]
+
 
 func earlier_local(mut items: Item[], index: int) -> int:
     mut before = items[index]
@@ -284,9 +284,11 @@ func earlier_local(mut items: Item[], index: int) -> int:
             pass
     return -1
 
+
 public func test_earlier_element_local_stays_independent() -> bool:
     mut items = [Item.payload(value=Payload(number=0, items=[1]))]
     return earlier_local(mut items, 0) == 1 and contents(items, 0) == [1, 2]
+
 
 func earlier_parent(mut items: Item[], index: int) -> int:
     mut before = items
@@ -301,9 +303,11 @@ func earlier_parent(mut items: Item[], index: int) -> int:
             pass
     return -1
 
+
 public func test_earlier_parent_snapshot_stays_independent() -> bool:
     mut items = [Item.payload(value=Payload(number=0, items=[1]))]
     return earlier_parent(mut items, 0) == 1 and contents(items, 0) == [1, 2]
+
 
 func readonly_alias(mut items: Item[], before: Item[], index: int) -> int:
     match items[index]:
@@ -317,9 +321,11 @@ func readonly_alias(mut items: Item[], before: Item[], index: int) -> int:
             pass
     return -1
 
+
 public func test_readonly_parameter_alias_is_a_snapshot() -> bool:
     mut items = [Item.payload(value=Payload(number=0, items=[1]))]
     return readonly_alias(mut items, items, 0) == 1 and contents(items, 0) == [1, 2]
+
 
 func iterator_alias(mut items: Item[], index: int) -> int:
     for before in items:
@@ -339,14 +345,17 @@ func iterator_alias(mut items: Item[], index: int) -> int:
                 pass
     return -1
 
+
 public func test_iteration_binding_stays_independent() -> bool:
     mut items = [Item.payload(value=Payload(number=0, items=[1]))]
     return iterator_alias(mut items, 0) == 1 and contents(items, 0) == [1, 2]
+
 
 public func test_earlier_match_with_caller_snapshot_stays_independent() -> bool:
     mut items = [Item.payload(value=Payload(number=0, items=[1]))]
     mut saved = items
     return earlier_match(mut items, -1) == 1 and contents(items, 0) == [1, 2] and contents(saved, 0) == [1]
+
 
 func earlier_match_after(mut items: Item[], index: int) -> int:
     match items[index]:
@@ -364,9 +373,11 @@ func earlier_match_after(mut items: Item[], index: int) -> int:
             pass
     return -1
 
+
 public func test_earlier_match_observed_after_store() -> bool:
     mut items = [Item.payload(value=Payload(number=0, items=[1]))]
     return earlier_match_after(mut items, 0) == 1 and contents(items, 0) == [1, 2]
+
 
 func earlier_child(mut items: Item[], index: int) -> int:
     match items[index]:
@@ -384,6 +395,7 @@ func earlier_child(mut items: Item[], index: int) -> int:
         case Item.empty:
             pass
     return -1
+
 
 public func test_earlier_borrowed_child_survives_dead_match_binding() -> bool:
     mut items = [Item.payload(value=Payload(number=0, items=[1]))]

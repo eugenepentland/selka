@@ -1,5 +1,3 @@
-
-
 func empty[T]() -> FixedArray[T, 0]:
     return FixedArray[T, 0]([])
 

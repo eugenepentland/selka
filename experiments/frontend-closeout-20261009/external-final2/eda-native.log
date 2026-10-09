@@ -1,0 +1,30 @@
+{
+  "cases": 34,
+  "failed": [],
+  "mismatches": [],
+  "elapsed_seconds": 7.668593161040917,
+  "binary_unchanged": true
+}
+	Command being timed: "python3 /home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/tools/frontend_external_oracle.py eda --source /home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda --binary /home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/external-final2/artifacts/eda-release --output /home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/external-final2/eda-native --jobs 3 --against /home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/eda-native-final/answers.json"
+	User time (seconds): 3.74
+	System time (seconds): 0.62
+	Percent of CPU this job got: 51%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:08.48
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 53940
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 1
+	Minor (reclaiming a frame) page faults: 114735
+	Voluntary context switches: 209
+	Involuntary context switches: 1441
+	Swaps: 0
+	File system inputs: 10072
+	File system outputs: 60280
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

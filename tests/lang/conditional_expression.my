@@ -1,11 +1,8 @@
-
 # `value_if_true if condition else value_if_false` is one expression: the
 # condition is bool, both arms share one type (the expected type when the
 # context supplies one), only the chosen arm is evaluated, and nesting is
 # allowed. These cases pin the value, the laziness and the positions the
 # expression is usable in.
-
-
 public record Point:
     x: int
     y: int

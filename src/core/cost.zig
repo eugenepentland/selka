@@ -34,7 +34,10 @@ pub fn allocation(module: *const ir.Module, function: *const ir.Function, inst: 
 fn calleeAllocation(callee: *const ir.Function) Allocation {
     return switch (callee.signature.linkage) {
         .internal => .never,
-        .extern_c => .unresolved,
+        // Scalar runtime helpers use the extern ABI. Only declarations synthesized
+        // by the compiler (no source name span) may use the audited allowlist;
+        // source extern declarations remain opaque even with a helper's name.
+        .extern_c => if (callee.span == 0 and runtimeAllocationFree(callee.name)) .never else .unresolved,
         .runtime_c => if (runtimeAllocationFree(callee.name)) .never else .may,
     };
 }
@@ -55,7 +58,8 @@ pub fn runtimeAllocationFree(symbol: []const u8) bool {
         "myl_core_bytes_utf8_count_range", "myl_core_buffer_capacity",    "myl_core_buffer_range_valid",
         "myl_core_buffer_reserve_valid",   "myl_core_buffer_reverse",     "myl_core_from_hex_valid",
         "myl_core_span_eq",                "myl_core_span_chars",         "myl_core_span_starts",
-        "myl_core_span_ends",              "myl_core_span_contains",
+        "myl_core_span_ends",              "myl_core_span_contains",      "myl_core_octets_compare",
+        "myl_core_dict_ordinal",
     };
     for (names) |name| if (std.mem.eql(u8, name, symbol)) return true;
     return false;

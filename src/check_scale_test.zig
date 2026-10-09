@@ -42,7 +42,7 @@ const Outcome = struct {
 
 /// How a check runs: as `check` (summaries stand in for bodies) or as a command
 /// that lowers the program (every body checked, summaries stand in for facts).
-const Mode = enum { check, lowering };
+const Mode = enum { check, lowering, allocation_contracts };
 
 /// Check the project `files` (entry module `main`) with the given previous
 /// summaries, exactly as `check` or a lowering command does through a cache.
@@ -57,7 +57,11 @@ fn checkProject(files: []const File, previous: ?[]const u8, mode: Mode) !Outcome
     defer cache.deinit();
     var arena_state = std.heap.ArenaAllocator.init(t.allocator);
     defer arena_state.deinit();
-    var request: summary.Request = .{ .facts_only = mode == .lowering };
+    var request: summary.Request = .{ .body_policy = switch (mode) {
+        .check => .summaries,
+        .lowering => .concrete,
+        .allocation_contracts => .allocation_contracts,
+    } };
     var decoded: summary.Index = .{};
     if (previous) |payload| {
         decoded = summary.decode(arena_state.allocator(), payload).?;
@@ -690,4 +694,26 @@ test "reserved words removed spellings and layout lex exactly as before the keyw
         .kw_def, .ident, .lparen, .rparen, .arrow, .ident, .indent, .ident, .equal, .bytes, .kw_return, .ident, .dedent, .ident, .equal, .integer, .eof,
     };
     try t.expectEqualSlices(lexer.Tag, &layout_expected, layout);
+}
+
+// spec-case: FRONTEND-CORE-NOALLOC-1
+test "allocation contract summaries retain concrete bounded closures across reordered declarations" {
+    const original = projectFiles(lib_source);
+    const unchanged = try checkAfterEditAs(&original, &original, .allocation_contracts);
+    defer unchanged.warm.deinit();
+    defer unchanged.cold.deinit();
+    try t.expectEqual(@as(usize, 3), unchanged.warm.checked);
+    try t.expectEqual(@as(usize, 4), unchanged.warm.stood_in);
+    try t.expectEqualStrings(unchanged.cold.facts, unchanged.warm.facts);
+    const gather_at = comptime std.mem.indexOf(u8, lib_source, "public func gather").?;
+    const plain_at = comptime std.mem.indexOf(u8, lib_source, "public func plain").?;
+    const reordered_source = lib_source[0..gather_at] ++ lib_source[plain_at..] ++ "\n\n" ++ lib_source[gather_at..plain_at];
+    const reordered = projectFiles(reordered_source);
+    const moved = try checkAfterEditAs(&original, &reordered, .allocation_contracts);
+    defer moved.warm.deinit();
+    defer moved.cold.deinit();
+    try t.expectEqual(@as(usize, 3), moved.warm.checked);
+    try t.expectEqual(@as(usize, 4), moved.warm.stood_in);
+    try t.expectEqualStrings(moved.cold.facts, moved.warm.facts);
+    try t.expectEqualStrings(moved.cold.diagnostics, moved.warm.diagnostics);
 }

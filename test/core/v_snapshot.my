@@ -1,5 +1,3 @@
-
-
 record Frame:
     code: int[]
     ip: int

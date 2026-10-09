@@ -1,0 +1,56 @@
+{
+  "actual_tests": 0,
+  "command": [
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/artifacts/mylang",
+    "test",
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/lox/benchmarks/lox/ports/mylang/scanner.my",
+    "--json",
+    "--force",
+    "--jobs",
+    "1",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/lox-modes/cache",
+    "--release",
+    "--max-steps=100000000"
+  ],
+  "complete_report_exact": false,
+  "cwd": "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/lox",
+  "elapsed_seconds": 0.03781551215797663,
+  "expected_statuses_equal": true,
+  "functional_membership_pass": true,
+  "membership_equal_after_explicit_module_mapping": true,
+  "nonpassing": 0,
+  "process_status_equal": true,
+  "reference_command": [
+    "/home/epentland/.cache/mylang/frontend-20261008/mylang-s5-pin/bin/mylang",
+    "test",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox/benchmarks/lox/ports/mylang/scanner.my",
+    "--json",
+    "--force",
+    "--jobs",
+    "1",
+    "--cache-dir",
+    "/home/epentland/.cache/mylang/frontend-current-lox-oracle-20261008",
+    "--release",
+    "--max-steps=100000000"
+  ],
+  "reference_receipt_sha256": "dd6bd94509904c883151e3f39941427b0200d9c56357d0e0352d1c4b03a348be",
+  "reference_returncode": 3,
+  "reference_tests": 0,
+  "report_changes": [
+    {
+      "candidate": [
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/lox/benchmarks/lox/ports/mylang/scanner.my"
+      ],
+      "field": "sources",
+      "reference": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox/benchmarks/lox/ports/mylang/scanner.my"
+      ]
+    }
+  ],
+  "returncode": 3,
+  "stderr_exact": false,
+  "stderr_sha256": "a0f2cbfc735d457d7aa6320230c14ebee4904d648b4bbea188e85d0b24c543b6",
+  "stdout_sha256": "5773e104c7e13060bc915dfa29278ac76029fbbcbe290496ad34e5495967040a",
+  "timeout": false
+}

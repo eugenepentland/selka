@@ -1,0 +1,284 @@
+
+# clox's on-demand scanner over the source bytes (SPEC §3).
+
+
+public enum TokenKind:
+    LEFT_PAREN
+    RIGHT_PAREN
+    LEFT_BRACE
+    RIGHT_BRACE
+    COMMA
+    DOT
+    MINUS
+    PLUS
+    SEMICOLON
+    SLASH
+    STAR
+    BANG
+    BANG_EQUAL
+    EQUAL
+    EQUAL_EQUAL
+    GREATER
+    GREATER_EQUAL
+    LESS
+    LESS_EQUAL
+    IDENTIFIER
+    STRING
+    NUMBER
+    AND
+    CLASS
+    ELSE
+    FALSE
+    FOR
+    FUN
+    IF
+    NIL
+    OR
+    PRINT
+    RETURN
+    SUPER
+    THIS
+    TRUE
+    VAR
+    WHILE
+    ERROR
+    EOF
+
+
+# A lexeme as a byte range of the source. An ERROR token has no lexeme and
+# carries its message instead; every other token's message is empty.
+public record Token:
+    kind: TokenKind
+    start: int
+    length: int
+    line: int
+    message: bytes
+
+
+public record Scanner:
+    source: bytes
+    start: int
+    current: int
+    line: int
+
+
+public func new_scanner(source: bytes) -> Scanner:
+    return Scanner(source=source, start=0, current=0, line=1)
+
+
+# The token's spelling, read in place from the source.
+public func lexeme(source: bytes, token: Token) -> bytes:
+    return source.view(token.start, token.start + token.length)
+
+
+# Whether the token spells exactly `text`, compared without copying.
+public func token_is(source: bytes, token: Token, text: bytes) -> bool:
+    if token.length != len(text):
+        return False
+    mut i = 0
+    while i < token.length:
+        if source[token.start + i] != text[i]:
+            return False
+        i += 1
+    return True
+
+
+func is_alpha(c: int) -> bool:
+    return (c >= ord("a") and c <= ord("z")) or (c >= ord("A") and c <= ord("Z")) or c == ord("_")
+
+
+func is_digit(c: int) -> bool:
+    return c >= ord("0") and c <= ord("9")
+
+
+func at_end(s: Scanner) -> bool:
+    return s.current >= len(s.source)
+
+
+func advance(mut s: Scanner) -> int:
+    mut c = s.source[s.current]
+    s.current = s.current + 1
+    return c
+
+
+func peek(s: Scanner) -> int:
+    if at_end(s):
+        return 0
+    return s.source[s.current]
+
+
+func peek_next(s: Scanner) -> int:
+    if s.current + 1 >= len(s.source):
+        return 0
+    return s.source[s.current + 1]
+
+
+func match_byte(mut s: Scanner, expected: int) -> bool:
+    if at_end(s) or s.source[s.current] != expected:
+        return False
+    s.current = s.current + 1
+    return True
+
+
+func make_token(s: Scanner, kind: TokenKind) -> Token:
+    return Token(kind=kind, start=s.start, length=s.current - s.start, line=s.line, message=b"")
+
+
+func error_token(s: Scanner, message: bytes) -> Token:
+    return Token(kind=TokenKind.ERROR, start=s.start, length=0, line=s.line, message=message)
+
+
+func skip_whitespace(mut s: Scanner):
+    while True:
+        mut c = peek(s)
+        if at_end(s):
+            return
+        if c == ord(" ") or c == ord("\r") or c == ord("\t"):
+            s.current = s.current + 1
+        elif c == ord("\n"):
+            s.line = s.line + 1
+            s.current = s.current + 1
+        elif c == ord("/") and peek_next(s) == ord("/"):
+            while peek(s) != ord("\n") and not at_end(s):
+                s.current = s.current + 1
+        else:
+            return
+
+
+# The keyword `kind` when the rest of the lexeme after `offset` spells `rest`.
+func check_keyword(s: Scanner, offset: int, rest: bytes, kind: TokenKind) -> TokenKind:
+    if s.current - s.start != offset + len(rest):
+        return TokenKind.IDENTIFIER
+    mut i = 0
+    while i < len(rest):
+        if s.source[s.start + offset + i] != rest[i]:
+            return TokenKind.IDENTIFIER
+        i += 1
+    return kind
+
+
+# clox's keyword trie: switch on the first byte, and the second for f and t.
+func identifier_kind(s: Scanner) -> TokenKind:
+    mut c = s.source[s.start]
+    if c == ord("a"):
+        return check_keyword(s, 1, b"nd", TokenKind.AND)
+    if c == ord("c"):
+        return check_keyword(s, 1, b"lass", TokenKind.CLASS)
+    if c == ord("e"):
+        return check_keyword(s, 1, b"lse", TokenKind.ELSE)
+    if c == ord("f"):
+        if s.current - s.start > 1:
+            const second = s.source[s.start + 1]
+            if second == ord("a"):
+                return check_keyword(s, 2, b"lse", TokenKind.FALSE)
+            if second == ord("o"):
+                return check_keyword(s, 2, b"r", TokenKind.FOR)
+            if second == ord("u"):
+                return check_keyword(s, 2, b"n", TokenKind.FUN)
+        return TokenKind.IDENTIFIER
+    if c == ord("i"):
+        return check_keyword(s, 1, b"f", TokenKind.IF)
+    if c == ord("n"):
+        return check_keyword(s, 1, b"il", TokenKind.NIL)
+    if c == ord("o"):
+        return check_keyword(s, 1, b"r", TokenKind.OR)
+    if c == ord("p"):
+        return check_keyword(s, 1, b"rint", TokenKind.PRINT)
+    if c == ord("r"):
+        return check_keyword(s, 1, b"eturn", TokenKind.RETURN)
+    if c == ord("s"):
+        return check_keyword(s, 1, b"uper", TokenKind.SUPER)
+    if c == ord("t"):
+        if s.current - s.start > 1:
+            const second = s.source[s.start + 1]
+            if second == ord("h"):
+                return check_keyword(s, 2, b"is", TokenKind.THIS)
+            if second == ord("r"):
+                return check_keyword(s, 2, b"ue", TokenKind.TRUE)
+        return TokenKind.IDENTIFIER
+    if c == ord("v"):
+        return check_keyword(s, 1, b"ar", TokenKind.VAR)
+    if c == ord("w"):
+        return check_keyword(s, 1, b"hile", TokenKind.WHILE)
+    return TokenKind.IDENTIFIER
+
+
+func identifier(mut s: Scanner) -> Token:
+    while is_alpha(peek(s)) or is_digit(peek(s)):
+        s.current = s.current + 1
+    return make_token(s, identifier_kind(s))
+
+
+func number(mut s: Scanner) -> Token:
+    while is_digit(peek(s)):
+        s.current = s.current + 1
+    if peek(s) == ord(".") and is_digit(peek_next(s)):
+        s.current = s.current + 1
+        while is_digit(peek(s)):
+            s.current = s.current + 1
+    return make_token(s, TokenKind.NUMBER)
+
+
+func string(mut s: Scanner) -> Token:
+    while peek(s) != ord('"') and not at_end(s):
+        if peek(s) == ord("\n"):
+            s.line = s.line + 1
+        s.current = s.current + 1
+    if at_end(s):
+        return error_token(s, b"Unterminated string.")
+    s.current = s.current + 1
+    return make_token(s, TokenKind.STRING)
+
+
+# The next token; EOF repeats once the source is exhausted.
+public func scan_token(mut s: Scanner) -> Token:
+    skip_whitespace(mut s)
+    s.start = s.current
+    if at_end(s):
+        return make_token(s, TokenKind.EOF)
+    mut c = advance(mut s)
+    if is_alpha(c):
+        return identifier(mut s)
+    if is_digit(c):
+        return number(mut s)
+    if c == ord("("):
+        return make_token(s, TokenKind.LEFT_PAREN)
+    if c == ord(")"):
+        return make_token(s, TokenKind.RIGHT_PAREN)
+    if c == ord("{"):
+        return make_token(s, TokenKind.LEFT_BRACE)
+    if c == ord("}"):
+        return make_token(s, TokenKind.RIGHT_BRACE)
+    if c == ord(";"):
+        return make_token(s, TokenKind.SEMICOLON)
+    if c == ord(","):
+        return make_token(s, TokenKind.COMMA)
+    if c == ord("."):
+        return make_token(s, TokenKind.DOT)
+    if c == ord("-"):
+        return make_token(s, TokenKind.MINUS)
+    if c == ord("+"):
+        return make_token(s, TokenKind.PLUS)
+    if c == ord("/"):
+        return make_token(s, TokenKind.SLASH)
+    if c == ord("*"):
+        return make_token(s, TokenKind.STAR)
+    if c == ord("!"):
+        if match_byte(mut s, ord("=")):
+            return make_token(s, TokenKind.BANG_EQUAL)
+        return make_token(s, TokenKind.BANG)
+    if c == ord("="):
+        if match_byte(mut s, ord("=")):
+            return make_token(s, TokenKind.EQUAL_EQUAL)
+        return make_token(s, TokenKind.EQUAL)
+    if c == ord("<"):
+        if match_byte(mut s, ord("=")):
+            return make_token(s, TokenKind.LESS_EQUAL)
+        return make_token(s, TokenKind.LESS)
+    if c == ord(">"):
+        if match_byte(mut s, ord("=")):
+            return make_token(s, TokenKind.GREATER_EQUAL)
+        return make_token(s, TokenKind.GREATER)
+    if c == ord('"'):
+        return string(mut s)
+    return error_token(s, b"Unexpected character.")

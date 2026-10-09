@@ -1,4 +1,3 @@
-
 func drain(n: int) -> int:
     mut xs: int[] = []
     for i in range(n):

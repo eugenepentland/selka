@@ -1,9 +1,6 @@
-
 # A project with a `mylang.json` (MODULE-PROJECT-1): source budgets, an
 # import policy that keeps `core` below `app`, and a lint section. Its build
 # takes the per-module path and makes the whole-program build's executable.
-
-
 public record Box:
     width: int
     height: int

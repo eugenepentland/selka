@@ -1,5 +1,3 @@
-
-
 func counts(value: Unit, n: int) -> int:
     mut values = [value, value]
     for i in range(n):

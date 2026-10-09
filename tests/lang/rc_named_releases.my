@@ -1,8 +1,6 @@
 # Named locals the program only reads and rebinds whole are released after
 # their last use (RC-NAMED-RELEASE-1). Each answer is the same under the
 # collector and RC; RC counting builds balance.
-
-
 func counted(seed: int, size: int) -> dict[str, int]:
     mut counts: dict[str, int] = {}
     for index in range(size):

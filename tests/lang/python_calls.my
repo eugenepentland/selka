@@ -1,5 +1,3 @@
-
-
 func mark(mut log: int[], value: int) -> int:
     log.append(value)
     return value

@@ -1,4 +1,3 @@
-
 record Big:
     a: int
     b: int

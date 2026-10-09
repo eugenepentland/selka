@@ -1,0 +1,21 @@
+{
+  "corpus": "lox",
+  "baseline": "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/lox-modes-successor",
+  "baseline_compiler_sha256": "5e072ee17b825cfbd40ed5533c3bce9f166ce4ae576395020cd5e435cc45ed11",
+  "final_compiler_sha256": "aca89445a3f2d4f2dddbf68b6441c3473374cd37b2e6cde68929e0690def737f",
+  "migrated_source_inventories_equal": true,
+  "commands": 84,
+  "all_membership_equal": true,
+  "all_contract_hashes_equal": true,
+  "all_provider_hashes_equal": true,
+  "all_verdicts_equal": true,
+  "raw_report_equal_commands": 81,
+  "stdout_byte_equal_commands": 81,
+  "source_fingerprint_changed_commands": [
+    "configured/debug/driver_tests",
+    "configured/release/driver_tests",
+    "configured/verify/driver_tests"
+  ],
+  "other_changed_case_fields": [],
+  "configured_source_fingerprint_preimage_equivalence_proved": false
+}

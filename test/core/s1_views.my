@@ -1,8 +1,5 @@
-
 # Slices used as dictionary keys borrow their source (NEW-CORE-S1-VIEW-1..4). Every
 # answer here is the base compiler's (`main` cafe7fea7, debug) and CPython's.
-
-
 func summary(d: dict[str, int]) -> str:
     mut keys = sorted(list(d.keys()))
     mut parts: str[] = []

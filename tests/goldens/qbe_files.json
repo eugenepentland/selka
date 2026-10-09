@@ -144,7 +144,7 @@
   },
   "90eba2b17c66db1959b67e404b805d4e": {
    "case": [
-    "func main(fs: Filesystem, out: Stream) -> int:\n    mut kept: str[] = []\n    with arena() as scratch:\n        with open(fs, \"lines.txt\", \"r\") as f:\n            mut lines = f.readlines()\n            kept = scratch.escape(lines)\n    out.print(len(kept), kept[0])\n    return 0\n",
+    "func main(fs: Filesystem, out: Stream) -> int:\n    mut kept: str[] = []\n    with open(fs, \"lines.txt\", \"r\") as f:\n        mut lines = f.readlines()\n        kept = lines\n    out.print(len(kept), kept[0])\n    return 0\n",
     [],
     []
    ],
@@ -286,7 +286,7 @@
   },
   "dff251829bbf706212f5d276d4ee893f": {
    "case": [
-    "func main(fs: Filesystem, out: Stream) -> int:\n    mut kept: str[] = []\n    with arena() as scratch:\n        with open(fs, \"lines.txt\", \"r\") as f:\n            mut lines = f.readlines()\n            kept = scratch.escape(lines)\n    out.print(len(kept), kept[0])\n    return 0\n",
+    "func main(fs: Filesystem, out: Stream) -> int:\n    mut kept: str[] = []\n    with open(fs, \"lines.txt\", \"r\") as f:\n        mut lines = f.readlines()\n        kept = lines\n    out.print(len(kept), kept[0])\n    return 0\n",
     [],
     [
      "--gc-stress"

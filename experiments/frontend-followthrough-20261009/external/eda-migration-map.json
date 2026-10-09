@@ -1,0 +1,610 @@
+{
+  "pin": "7e938b65a880339f0aa0d58f5805cd2cd2bbfe1b",
+  "files": [
+    {
+      "path": "mylang/src/infra_fs.my",
+      "before_sha256": "36fae33c7de90979aea17d0677851f90756ed6b857e6a97d6173edf00a5beca1",
+      "after_sha256": "4efd6ef0741b5111bb2832822b49d736250b9f10a0c27e382aae461abc631db7"
+    },
+    {
+      "path": "mylang/src/escape_test.my",
+      "before_sha256": "c01ffebaba64d0cb9dda64ab6a3051ecb4d31192368689a658b8d52ddb87cd64",
+      "after_sha256": "254f5224fb2db8f0f578c1e68ccd3e99843771627017066fcddcd9359e2aaa88"
+    },
+    {
+      "path": "mylang/src/kicad_sch_shape.my",
+      "before_sha256": "625d2cd0b917a4d8741c7b75ffc4fa402797f514f18f0f39b864405f97e0547d",
+      "after_sha256": "a639829065e514a043395bb00d8e6fa3016a9883906aaed54b70eadede96c666"
+    },
+    {
+      "path": "mylang/src/lib_limits_test.my",
+      "before_sha256": "3371c54c40c9ffaef8bae3c10f4755108e38b68344c4790150df3f858c119596",
+      "after_sha256": "98bd0799ec8b7859d00d5d092a50378010773480b02ba04909b4ad53f7c48fd9"
+    },
+    {
+      "path": "mylang/src/export_kicad_netlist_test.my",
+      "before_sha256": "332c8cd41d863e057a76eab0c8812657fac85b5e673c5ad052f120d8a227e781",
+      "after_sha256": "225efd094c01f60dd06c5cebc54b324a1e0de7ed33812cad139f8dad891f8b68"
+    },
+    {
+      "path": "mylang/src/sexpr_ast.my",
+      "before_sha256": "f0ac78d1d8d02760f42e291f8febe45749594f599854b8464e93e3a70d97e48c",
+      "after_sha256": "f2611b4e977ab4991ec015273305cc979b769e07f2b0928b51342dfdfb5f6557"
+    },
+    {
+      "path": "mylang/src/sexpr_tokenizer.my",
+      "before_sha256": "f260410a2d3a1730dad3c002869b07221be9244d8387e7a2541708a82edea1a4",
+      "after_sha256": "245e0e254ec22c6c52dd3e0ce652a42272d7120c57b41e6d495f3166552e4465"
+    },
+    {
+      "path": "mylang/src/flat_netlist.my",
+      "before_sha256": "b1b04f8c6ca5f7d33c49e48c90d8fd232ef995514a2751be168c68f3506256ad",
+      "after_sha256": "3283ef581e2845a722b1f4d6b0d1c4b129fdc2e4730e0688b2a84d92b5a90d01"
+    },
+    {
+      "path": "mylang/src/support_float_fmt_test.my",
+      "before_sha256": "310b5c5358184002bd2dd791a404132a306e86f1a3a405bb6a865ffbd0893d5b",
+      "after_sha256": "bca0de07c5aae0088dafe4496b49452e70eb861ebee6c11f09d942a4f43e302c"
+    },
+    {
+      "path": "mylang/src/kicad_sym_reader.my",
+      "before_sha256": "5ff293c6b8460fc4eb28dcb5d71a05c8ef200b86059753d4064e5d983dae64c4",
+      "after_sha256": "803f4bf79a35b4d741bcc8dda1856582948c92ee1a3e181de978741edb1b0ab2"
+    },
+    {
+      "path": "mylang/src/kicad_sch_verify_test.my",
+      "before_sha256": "cb6e4d233d38669cdafb5fcf36daa866ad23abbefa4d43fcf616a91a460f544b",
+      "after_sha256": "75c7994f15e696e9fa9f05d02b63498450e7033248342f09c036d2a939d29b24"
+    },
+    {
+      "path": "mylang/src/support_expect_test.my",
+      "before_sha256": "4cec4c9445a23424763f15b198156239b8f25921bb3531ef436bf4dc45083429",
+      "after_sha256": "1c47b80d631af5c68ac8a822847626584148f9c93d1c31c92acf6f6a6dcb215f"
+    },
+    {
+      "path": "mylang/src/eval_env_test.my",
+      "before_sha256": "1fff291254a4ea61414d674694320ddbeb4fd70ab6ab608e6f4519bcc2b60f2e",
+      "after_sha256": "1b4d2e473b51ab85b9336343887920433f592a8f875e676df845a0502c1c211b"
+    },
+    {
+      "path": "mylang/src/support_sha256_test.my",
+      "before_sha256": "698a0e49ccc0d9b5a38e5eafef318393ed7977eebfd5641dd866e53de52bbcbf",
+      "after_sha256": "ca15eee0d49753c729c934de298aca2f5e0762ed4dfcdc5cd28b9e2ed2215675"
+    },
+    {
+      "path": "mylang/src/eval_rails_test.my",
+      "before_sha256": "39b74ee3291603410c5224d683b6c8a59e1fdfd4a663598a6e3a2b8b31c77ab5",
+      "after_sha256": "fd53c036dc3892bdf1aa548f09575d695d24638166ae992c0e4bb213af5b0661"
+    },
+    {
+      "path": "mylang/src/kicad_sch_emit.my",
+      "before_sha256": "056d22644d6278617ad072de75073e1ce0293908e6506bc61691933fb35f81a3",
+      "after_sha256": "23472754cb340801d2aef490f8a2c3a0c3282e003b456408ec7503ba00184ae1"
+    },
+    {
+      "path": "mylang/src/net_name_test.my",
+      "before_sha256": "f3e54784c5c01d73c0d3e71a516d414bde64831d930313b280ad8e7df103ac2a",
+      "after_sha256": "afb3e28cd8e1013b2a5411c7246bfee211c3776052cea5c668f5c7b9372b56b2"
+    },
+    {
+      "path": "mylang/src/support_strs.my",
+      "before_sha256": "1e7613254c49db8bc83d872eb69b8acb398a2c50cb528df171abfadb726f5053",
+      "after_sha256": "f3854ad6320c241cac9750b3d4c2c0da5c16a48cb2ce5ea51777ac523e1e37b4"
+    },
+    {
+      "path": "mylang/src/kicad_sch_vendor.my",
+      "before_sha256": "cf8b6f35e399cf8f94f00fa3e2ae7bb03cfd4b577151777255d601ba5faa6452",
+      "after_sha256": "f3ab34b84c2859d166dea4d48f122230aeba9d64f2f68b70d5cdc63a062aba01"
+    },
+    {
+      "path": "mylang/src/numeric.my",
+      "before_sha256": "7bc89a1143178d09819f9c336396d00dc375bfa91df4efe2a3ff0958fe305bd9",
+      "after_sha256": "39756fb6bd307ff58f9f66d836e8e7beeff9194ba6e8a1099b0be63bb2db7047"
+    },
+    {
+      "path": "mylang/src/render_svg_draw_test.my",
+      "before_sha256": "1943205f9232be5dc32b11dd72fca3a7780870c73325079a080662203f2c001a",
+      "after_sha256": "2289307720d07f0cde11fde632335b89643c30df73443973bdc3884aaf903241"
+    },
+    {
+      "path": "mylang/src/export_kicad_netlist.my",
+      "before_sha256": "a46e70ad7b8a97d0e2dd6abb4ce9149d49648f413842dca98bc7d415a85e0dcd",
+      "after_sha256": "aa7119e093fbb382319886232440c6deb6ee33e8f402a876be1534767b3f4ad7"
+    },
+    {
+      "path": "mylang/src/support_crc32_test.my",
+      "before_sha256": "201d961d6dbec7fbf6993309688c285b8f2621bedfb35f534a429839c18e15f4",
+      "after_sha256": "d280f8244e0d373c07ca8823f4f47a00631a3204224678c34b91f2342382ffed"
+    },
+    {
+      "path": "mylang/src/export_kicad_test.my",
+      "before_sha256": "3a4e00fe7436b080068a42362100358d26d211a8378baadabf7a7b27f3d3ac83",
+      "after_sha256": "52fa961a5cb50706823d56729c0904e8679c0a66f44c07b973f42742b2fd437e"
+    },
+    {
+      "path": "mylang/src/kicad_sch_compose.my",
+      "before_sha256": "26cf234664818cdb7a3e17e21eb79584bb25402fa3128cb3d0070343aa905548",
+      "after_sha256": "4544a2e09a1e4749d67acb614361a2016bda19aebfefcd89a443d1d8e7cc62c3"
+    },
+    {
+      "path": "mylang/src/render_svg_context.my",
+      "before_sha256": "99a2582cc4f051d4380f55a62a5a4eb6823b895d6eee228e480eeb2cab674a1c",
+      "after_sha256": "9c7959af0a32e490620cbbc7295aa6615a61b81447cfb51c3af4edf18e27e074"
+    },
+    {
+      "path": "mylang/src/placement_pin_roles_test.my",
+      "before_sha256": "5375b2d178dbdcd64d4d159ed9ec9f6428d8a886037eb9dff7c44f1f411213e7",
+      "after_sha256": "ebb97f845474365b1cb4ecf37b644865cda90746ad9c5db311a865bad0050a26"
+    },
+    {
+      "path": "mylang/src/support_strs_test.my",
+      "before_sha256": "8b0050772825e7e3fc6dc656dc74d3a5e778e18f3280d457d5ce0327c2dc15ad",
+      "after_sha256": "4cf63bf6b36d2c71dbf05cb6326f3b099d5e0b06244a10c80ef31419a8ce64d8"
+    },
+    {
+      "path": "mylang/src/support_sort.my",
+      "before_sha256": "4f0db7fe5aa8238790c52735ca885f1931d84ac7d2ccd9d817fb06ac0f3c3733",
+      "after_sha256": "af8c5735c4080888a4af592038d2479d6d6d383ffce342a8683fa80356fd13d2"
+    },
+    {
+      "path": "mylang/src/uuid_test.my",
+      "before_sha256": "09a186520c3f6c0904e625c7e246d00a4159c033eeafad6d52e8ecf103a9c768",
+      "after_sha256": "43ae57ce95d8be48c385eb6f1f5cb565016e40fedfcb79fd46df66081f5d5fc2"
+    },
+    {
+      "path": "mylang/src/main.my",
+      "before_sha256": "0c091863d6c0b54134bec116d2e03931f6ed6a6fa5e78c7b7189588be19aa6b3",
+      "after_sha256": "b660c980e7d0cdccd28c8d9f33da66e4708ee5d0e438d2be057cba4ad65a2329"
+    },
+    {
+      "path": "mylang/src/eval_net_analysis.my",
+      "before_sha256": "12b4cffc3e5c4a86bbe4243e9912d96f557fb079258d95313311002716919812",
+      "after_sha256": "c772c88f4d4ea85115527b17deeb10c05ef12dc7779f4f90451b03db2b81ba6f"
+    },
+    {
+      "path": "mylang/src/support_sort_test.my",
+      "before_sha256": "595fdb9c08f628283ca7b287f299df810a69939bdd23477f25d7f933d5e47c61",
+      "after_sha256": "ac0f841560c88cec1a67d66b80b5669ce22ce16be1e7f496cf124cc1686b4fe4"
+    },
+    {
+      "path": "mylang/src/kicad_sch_textbox_test.my",
+      "before_sha256": "3be317688dd10dc2c8ef786177dff8aa04359af52731a7c888cd3725318a70b9",
+      "after_sha256": "d87634270cd3b421076779132b09a4b800fe27dfc174798332245fefa413dc21"
+    },
+    {
+      "path": "mylang/src/kicad_sch_testdata.my",
+      "before_sha256": "be24d112465b6c63df22d6f1755a877fa239222ff768b230f41f8d5a84f50ce7",
+      "after_sha256": "593d98a923eb78796eab45020591cc7443e18d70df8efeefff99352960236cca"
+    },
+    {
+      "path": "mylang/src/support_expect.my",
+      "before_sha256": "6eab33733d0cef266d10abde846bb270c370a424502b17650096a78d19a9c5df",
+      "after_sha256": "a511cc0a19c9ecfa0c86ac626662731f97d79ac7c7b3850192fd225dba085393"
+    },
+    {
+      "path": "mylang/src/placement_geometry.my",
+      "before_sha256": "594fb6230b5fb9dd5612e7f0209e53053de041c0946caecfd479902c038577f7",
+      "after_sha256": "80e48a4ebc250cc20ec62dd1bcd17c172657c0a12323b62b904a713b5a49ed18"
+    },
+    {
+      "path": "mylang/src/escape.my",
+      "before_sha256": "bf7812ff6f78980594b3a6186434bf35d2a3bc8afa50ccbf211877a0b4d846d5",
+      "after_sha256": "4ae9d18af6727e0de7cc8b6bea4b3d59e7d54c7795776a5be313fc08f1a2d00f"
+    },
+    {
+      "path": "mylang/src/kicad_sch_compose_test.my",
+      "before_sha256": "9d98d252e80298a26ab4c50a9be929f8618d9eec6bdfadfdea89162037e5eebc",
+      "after_sha256": "658b3ed13dd9493bc9f9170c45548ff151c7d086d22df02263c0213fb527c2a9"
+    },
+    {
+      "path": "mylang/src/lib_limits.my",
+      "before_sha256": "e196ad7884d3e3185a42aac06b3948f569e57b373b0db00b3660d144b11779a5",
+      "after_sha256": "80138862a5a1a416196945c7bd4ee97cc1fd894db9a5c61bcd24cb89f8a893a8"
+    },
+    {
+      "path": "mylang/src/diagram_membership_test.my",
+      "before_sha256": "48ac0b09265b65f074ad78a05871b7e40140d21034ad17a37af8c58a9139d553",
+      "after_sha256": "76ac01e0379cc053d46fcbf4435817bf92b83d0574c055fd42e99dca4963bd71"
+    },
+    {
+      "path": "mylang/src/export_kicad.my",
+      "before_sha256": "e0016311e9615a2eccf36c380b7b50f882ff47a1fb15b459312d72336ee73339",
+      "after_sha256": "674bc2bd59e6d49bf0f6e450a55488700234d1455f3abb09929ee00e7469cf76"
+    },
+    {
+      "path": "mylang/src/kicad_sch_wire.my",
+      "before_sha256": "6a2aa11ee30382e544e7b39f88c81df448e0733e75d1976b52a878e7163b02be",
+      "after_sha256": "c5e659fb58662e4aebbe9fb3ea42519b4f803020ca0e3c3375c484f957fa5fa9"
+    },
+    {
+      "path": "mylang/src/kicad_sch_sheet_test.my",
+      "before_sha256": "0735fee173059f0ad60b3b76a49bc6890081be352dbc6c03dbf5b33d66f8243a",
+      "after_sha256": "f80305c7bccfcb099da83d5b592c30c2e4f903186df994f2bfcdd4c52f0b0de3"
+    },
+    {
+      "path": "mylang/src/kicad_sch_emit_test.my",
+      "before_sha256": "98fe2f36ff08da9eb13b28e54d8d01dfe91cebb6b82f8c575b2eedb06ab692c4",
+      "after_sha256": "0a6943c9999a31c5fa587fff47323430998ead4e9c0fc37ec8061b59e321cc82"
+    },
+    {
+      "path": "mylang/src/placement_geometry_test.my",
+      "before_sha256": "ab8886e994bf89a98b8d96fe1c51ca856445a93dd8a31a5e36e09dd518706ff7",
+      "after_sha256": "e5bb81b0a8cccc0601b1dd5c63fae600ba80bac5dafee9cd195b8d475d6009df"
+    },
+    {
+      "path": "mylang/src/kicad_sch_stagger.my",
+      "before_sha256": "1e019b21f26728b621319df37c8272284199452c3b1f3e8ee1f5abc76ee4b1b9",
+      "after_sha256": "7ad5c4e8a2da6a16794756e169186ba6b4df1d3632e41ce63f49e58349fbf118"
+    },
+    {
+      "path": "mylang/src/zipfile_test.my",
+      "before_sha256": "9e9b6d25c9942e98033195b1d1f3769572a8b682cfcea7af8acc039d7f5a1821",
+      "after_sha256": "ad35cc5c0e0a6e03452eed83f72fe2473d0bb492c44871dbb98b9f2f352474a4"
+    },
+    {
+      "path": "mylang/src/support_sha256.my",
+      "before_sha256": "46cf3b0a09993af1f66b12cbd4ff7e408dcb334a5728558d2a6caf7200b872b0",
+      "after_sha256": "c82774b1bcf8fe88ee7b922f45637b75ca7d02368dc456a02e18db16f9bdcc66"
+    },
+    {
+      "path": "mylang/src/kicad_sch_verify.my",
+      "before_sha256": "54e73cd2f0c628fd7320fc1e706eb31cda67406f3a3c6a4debba3fc3aa801680",
+      "after_sha256": "8f7cf74424c570aba6c0a6bc8173e257b1ab92f8fdae31419d9996a468d4d4c2"
+    },
+    {
+      "path": "mylang/src/kicad_sym_reader_test.my",
+      "before_sha256": "300e0bfafadac1ad563036fc323801426412bd469f628a39e9b348f3d30e4966",
+      "after_sha256": "48a5a16ab6a8ecfe5f0c4f89e2e1c273102e1827e261f802f6ae01d48dd94bff"
+    },
+    {
+      "path": "mylang/src/kicad_sch_gang_test.my",
+      "before_sha256": "bde0c0181df31b406f251fcaab786fa90b4a7e3297e344da2b143e95b2554e61",
+      "after_sha256": "c6d814632d6026b2d04180fda0d6aa53e66daa438303e5689032a024868475bb"
+    },
+    {
+      "path": "mylang/src/kicad_sch_project_test.my",
+      "before_sha256": "c5a5e5791fafa8798624adbf25e99c975775878a22d637d1541881fea09b216f",
+      "after_sha256": "4655ffdf323d76a375ebe4419a4b2ca4bb7344044893be6fc0fcf49fb0a1b667"
+    },
+    {
+      "path": "mylang/src/kicad_sch_bank.my",
+      "before_sha256": "87f4700bdcc0ad51fd62f073500d721026fe749c64b5d0f01234153029a536f0",
+      "after_sha256": "c3c62c170040c0104a269149ae721f301ba79d476fc97b6c1bb6967d9daa2cd9"
+    },
+    {
+      "path": "mylang/src/kicad_sym_testdata.my",
+      "before_sha256": "c8e0bcea96c3dc5a2d9d5b62b799187e01b871bd20daab949ab54d1d0a6aa6e1",
+      "after_sha256": "2781e1545c6f48eb110742f7027f0b863b7c4479e77ede885f3f8ee62ebd3445"
+    },
+    {
+      "path": "mylang/src/eval_env.my",
+      "before_sha256": "0b32202d3aeb495a5f4d763063be3c8f41f997f3e63afffd37c5b18cf063055a",
+      "after_sha256": "3d28f7116d1187cf666a1f2e1300833eefb6290d40659f1e13b27a953440a0e9"
+    },
+    {
+      "path": "mylang/src/stdlib.my",
+      "before_sha256": "cfb3ec20f0ebfda0270c556af011b21c3fc65e3300c7af1f43e284683cdf7191",
+      "after_sha256": "6d562c5e6d02fe4d5c0fe570def2a0f4e3a1c8aefc9dd8a18a1b9a51037028b2"
+    },
+    {
+      "path": "mylang/src/net_name.my",
+      "before_sha256": "0ede10d4fb88594678d1cd837dfb82ef84902f21646b1cccbcd28e5edcc147db",
+      "after_sha256": "20841e0efb26282d1f479d27ae4170732bd372e448a0b9d3e2fabb076c346674"
+    },
+    {
+      "path": "mylang/src/eval_net_analysis_test.my",
+      "before_sha256": "f53bec8c833c2051c2d41e0e64b0353970e5abc134ff801a04c31e49f1520347",
+      "after_sha256": "7385deff94dc4710ee7828fb6485427db608d5c06dde93e9d24afcb444d39c8a"
+    },
+    {
+      "path": "mylang/src/footprint_paste_test.my",
+      "before_sha256": "0bfe2b9fa6a4e6c9239502af67655eefc885c335fdcc7bda6fc4f458025268d5",
+      "after_sha256": "ceb3a423d5b663e221a2394aaf3aecd3675010a1b1d50964e5722aa6f8ac485e"
+    },
+    {
+      "path": "mylang/src/board_layers.my",
+      "before_sha256": "e92a754e6a4698f5b38e1786148ca8a24eb86f26313768abe64b07869365758d",
+      "after_sha256": "31fb18a9f3dca1f1bef12114dd72ba9bd4aec0e607a35e72a1f764f4088af940"
+    },
+    {
+      "path": "mylang/src/stdlib_test.my",
+      "before_sha256": "31185870283543c69392a8defec8ab7a3e05b398da08d6afa129cb4b1e3258c3",
+      "after_sha256": "131f5e588424cd95119874f570bb6af3f477c8b3239a429de6da972fdcf36b8a"
+    },
+    {
+      "path": "mylang/src/poly_scanline_test.my",
+      "before_sha256": "4e937f326d0f62c5983528f7c2aecf772e0d691ab0cc521606e4772dcb78ebb9",
+      "after_sha256": "7fb8c71d91ed85db9525d2ff37523f9622392050377ff160b647287123f4fd77"
+    },
+    {
+      "path": "mylang/src/decouple_key.my",
+      "before_sha256": "a6f46836e2a48260c1c1ccdd2c69ba745bff7a950416bb609e8c0b92c7951809",
+      "after_sha256": "43b5e4c0078c5f75a36f4510a4b9e1ddef77c5664e10d5f5da4c16a8e132cd40"
+    },
+    {
+      "path": "mylang/src/kicad_pcb_format_test.my",
+      "before_sha256": "b47db471342f41805fefaf0988357c91edfb897ba86c51f570b022ed63c5ac3f",
+      "after_sha256": "9db788f24ff7cb0b69862414cc37f5c0742ccd5a113ccb404bb99810b4dc3007"
+    },
+    {
+      "path": "mylang/src/eval_electrical_test.my",
+      "before_sha256": "9274cde632509a5abe4e253a8fabe5d1c8c92cd8d1c744cb73f2bf844fab3e60",
+      "after_sha256": "1b2d5ae463354298d88b2dc5f5bd451b767159777b27228486aa706cbf292ada"
+    },
+    {
+      "path": "mylang/src/infra_log.my",
+      "before_sha256": "58e055fdb182550f2dac5c10ed75f6c2f6cb510b3a865ffda2398c9daeff4aa9",
+      "after_sha256": "4fc7f6bc8173105a889709b12ad00ccf05aeb3fde4365527f9e1d12561b2b95d"
+    },
+    {
+      "path": "mylang/src/support_parse.my",
+      "before_sha256": "246c47930c4e61256d7d885b5dd4b95d5c878c2d417c653697580f8d96f4efe0",
+      "after_sha256": "28b97c35b0ae81a765edd346bce28d0180e3b1c659e85a089e88e77f247a3010"
+    },
+    {
+      "path": "mylang/src/export_kicad_model.my",
+      "before_sha256": "af9798ef74abc64090da079c3f9d03b0119491082da7674fb8bafc5e07fa082e",
+      "after_sha256": "a29f60d1084e7588a4d92ef8f5a1328909c28f5113f8525918a77fda8ad14564"
+    },
+    {
+      "path": "mylang/src/kicad_sch_wire_test.my",
+      "before_sha256": "5ec4a90e96c01ac54ee34f342738e56b8eac79a5c5526bf7845a9511d7d0d5e8",
+      "after_sha256": "99450300121d8c3e47d4c9c490b2afa266df5ee5f5c5a4fb14bb80aa20fb03f2"
+    },
+    {
+      "path": "mylang/src/kicad_sch_vendor_test.my",
+      "before_sha256": "c7ed5685452b1ab5998caf32669c6b814536aa6e2142158073984b38addcab8f",
+      "after_sha256": "8daf54b32553758eb0a98419277d37cc41b89fd0e6b0d943bf0cc1b569cb630d"
+    },
+    {
+      "path": "mylang/src/infra_fs_test.my",
+      "before_sha256": "ecc2b4572652116cfb120a77cf98ae4a31cafbb81d027bb4a3ae62de53065c08",
+      "after_sha256": "312da209715210715c64cbea2cdb3fd5b226cf12dd36259f7d11138e7ad0ef4d"
+    },
+    {
+      "path": "mylang/src/export_kicad_footprint.my",
+      "before_sha256": "83569e7770e75b7c516c202a8df8b61bc1d1a829d38bfcd3f867ca66715f5575",
+      "after_sha256": "b88d182c98b6048e73b60c7a4badb89901c7b9801f389b4dd8e1597ddbd647cb"
+    },
+    {
+      "path": "mylang/src/kicad_sch_project.my",
+      "before_sha256": "a6a4249dd25bb5ec251c83f85ab54271b184b402a945a812bf9b43ed6cc56270",
+      "after_sha256": "011de79b51c71c5172eb1902a6519d4165cbc893d3343d4b8ff9187050f9c9c1"
+    },
+    {
+      "path": "mylang/src/sexpr_parser_test.my",
+      "before_sha256": "d966cbb4027c24bf6224f3bad23e422632ddb5dbbd5923c299348a6a43b28804",
+      "after_sha256": "fbc2919cd117599887e1a6b36397b58f5acf9cc07f6a7e230047655684dc34c2"
+    },
+    {
+      "path": "mylang/src/kicad_sch_stagger_test.my",
+      "before_sha256": "9562ff62b27b65dd812fe828117de90ecda3160752140c5057c130e02b699c44",
+      "after_sha256": "a40bd6354775a19bd8705857e7d3b1b3676bb04c68706c7076e4b9971b8610a5"
+    },
+    {
+      "path": "mylang/src/support_parse_test.my",
+      "before_sha256": "e4babacfec13a28902c37a1d4e5b22be34a8f955e9614762d0080a872e25d6cf",
+      "after_sha256": "a07c8036c8c5060de7b5d39788f2c59c5519037d0b6e6f8f459a467789613090"
+    },
+    {
+      "path": "mylang/src/kicad_sch_shape_test.my",
+      "before_sha256": "aa8cd0ac65c60cb06f9651017f39bb2cabed4c6aedc1c08b655d0e5c8750acd5",
+      "after_sha256": "1fa473b860abae374eef75eb9a6666a012106cfabc8deeefe1d2cbd1952a740b"
+    },
+    {
+      "path": "mylang/src/render_svg_context_test.my",
+      "before_sha256": "e1abde7e3a2f0da9a39186b892472d2bdbdfe9252adf86c07345f27ad444c150",
+      "after_sha256": "30afd8105b1a9b625119287d76bf5282c3ef1bf1f4d9e24b8262e8cbb18f960c"
+    },
+    {
+      "path": "mylang/src/export_kicad_footprint_test.my",
+      "before_sha256": "82644a4d36653944d879462db285fbec8bf03ef06a4fc00d1b316636302ae8be",
+      "after_sha256": "0ceff26133aee96fd0e27d288192d1ffc524d033dcf7f9a2cb941af645d6982f"
+    },
+    {
+      "path": "mylang/src/stdlib_embed.my",
+      "before_sha256": "e0624768128afa656b00b1f076f2afc8e7e384f78fba0f2d7d7f5d74b694960c",
+      "after_sha256": "46044fa44ee9541d618d3f37e2f71a1657e239fff07feeffbfa0de9972fb6fed"
+    },
+    {
+      "path": "mylang/src/sexpr_paren_span.my",
+      "before_sha256": "5175ae21d624ce60af9634a9cf02f94918c54c8cd8d06e0ce276e568e903c06d",
+      "after_sha256": "8d891d236b82bbee07bb690f705c2f121e10ec38b85a4070de0d415d71beae3e"
+    },
+    {
+      "path": "mylang/src/kicad_sch_glyph_test.my",
+      "before_sha256": "217eb3b630e4cf75d87a7592e63e8e183ae0b2cca1b2beccf10807b5ffbded46",
+      "after_sha256": "f718ed711f0566c2cd14bd761dce017f20c0c3ff855444cbadb7cdb1ef3245bc"
+    },
+    {
+      "path": "mylang/src/board_layers_test.my",
+      "before_sha256": "ef8cda09eebd120898560b4a67957cf60ad757f41b8f7488ba5aa329cffdc584",
+      "after_sha256": "d9b199daebb0d6dcc63a99ae0aad06e7f3ff631adc1671806e49f0222fcf105a"
+    },
+    {
+      "path": "mylang/src/zipfile.my",
+      "before_sha256": "0a6ab3f6e7786c28349963c40bd516be495f9264974405c3efdcca9301029aaa",
+      "after_sha256": "0b2e9044e2220098f81528552a1fcb79ce469c32f1b0a0ff62c1950d14a02ebf"
+    },
+    {
+      "path": "mylang/src/export_kicad_sch.my",
+      "before_sha256": "65afe1b6697b14792cbc278221c718bd816f7cfa12c5f2145972440492b27a86",
+      "after_sha256": "704ba6b5a20920ddaa465ed9f7bde0e58dea4699fdfeb7e3d19e3a87b562b024"
+    },
+    {
+      "path": "mylang/src/support_float_fmt.my",
+      "before_sha256": "1312c6207b9b750429a971ff907bd6a1d8487ae4bf10be8ae33e65bc26138e3c",
+      "after_sha256": "86c28f189eab737c9e3c45077f724e79e8f2a7465f6d310383e0e02c4faa4752"
+    },
+    {
+      "path": "mylang/src/kicad_sch_textbox.my",
+      "before_sha256": "bc01063657f87fe3e96d8284060595757269dca6959c59b869824f6fa18a567b",
+      "after_sha256": "86428089d6c5b5e0162c7f45347ef5edaa6386d0a3ca0d502d0c2816f9d20d3e"
+    },
+    {
+      "path": "mylang/src/render_block_types.my",
+      "before_sha256": "8147a50b5208e418ade8df75ca28523802a6ead059bac9eea9b48fb5725525be",
+      "after_sha256": "684b9eb4846da814537e4958dd72b929dcd87f8d3212e2578bd9077b00aaf89e"
+    },
+    {
+      "path": "mylang/src/kicad_sch_stub.my",
+      "before_sha256": "fc85d33c8961b218d3e656f8b27440c05531a5e6a6ae754bf9c211af8642c3ff",
+      "after_sha256": "eae4421a4d1d09221b91bfe454888d6b0272d4be55ed3bf07d0c77ca3d254a38"
+    },
+    {
+      "path": "mylang/src/eval_electrical.my",
+      "before_sha256": "f1b62a64ba1598c9934bb4492ca317ccf700cade68a2813710baef591f7f2577",
+      "after_sha256": "46f753ff8f3264592c64d68504c3bef7002fe3c5ed2e2108ef958345c5b1c4cc"
+    },
+    {
+      "path": "mylang/src/eval_rails.my",
+      "before_sha256": "1a80e2cb96a8a120696424ff2b53dda919116b30ad4a35df0789322bc0f00631",
+      "after_sha256": "baaa69f66496b9dec1af90270f8d7e3a806be5e35a772b38c15a83a49482bd9c"
+    },
+    {
+      "path": "mylang/src/export_kicad_sch_test.my",
+      "before_sha256": "4c33b32cd295126c51be291e6309d658739ca85f952ae1364eb2f400acd9846e",
+      "after_sha256": "87fa36cd0ad0d0b12e39cd84329f808f4c259a159d9ce6716d94509b9d8ece50"
+    },
+    {
+      "path": "mylang/src/json_writer_test.my",
+      "before_sha256": "c7ba3b5c786ae6cd3111c9c5476d116d6c3c51b9812e2ad4c78af802d9a04d14",
+      "after_sha256": "195764ae8832ae1cf50dd397f98aaa8cbe5be0ce54412d835f29a7d7ea3674b7"
+    },
+    {
+      "path": "mylang/src/kicad_sch_plan_test.my",
+      "before_sha256": "9cbb1c8b7ce4172ef7f99e74e0ea2190d95a7f4c21cbb214c34a1f4f52be902b",
+      "after_sha256": "11f6fb40376817be98284e921887f9b50cbd94c4c50a69fdb27cbb9fbf9147a8"
+    },
+    {
+      "path": "mylang/src/sexpr_ast_test.my",
+      "before_sha256": "914c1dd51c78083f5c79745b63d2e8bfa0d8d65c50067f5cfd3fc0bbc74a8dde",
+      "after_sha256": "48ef8049a94739311ab1cb8fa64c715a14216f0c5d44bb13317034f47ca84173"
+    },
+    {
+      "path": "mylang/src/footprint_paste.my",
+      "before_sha256": "949667179378d17e76e56dceff63231fcfa26ae246dd77661fb1cc371e0b837b",
+      "after_sha256": "57d3aaf4acb5992f9db884d5b5e583c61b677da4e5bad114a7edfc64482e5b29"
+    },
+    {
+      "path": "mylang/src/kicad_sch_gang.my",
+      "before_sha256": "6a9bc5d3f7217fc74ea486463565f4fb13f6785bbbde41fe4a736c40ae108e00",
+      "after_sha256": "b1cf4dd2649120b4db92b24d5cf07333845ec4a7b3cad9402afe939f1df7966e"
+    },
+    {
+      "path": "mylang/src/kicad_sym_library_test.my",
+      "before_sha256": "cb6d9b8c05efdb56cb1a0859112394f64a2ead0437024f5f81ab02a0035464ac",
+      "after_sha256": "26563ea1c61d97221eba1e3312e82d19e55b4f07f05cc18d22034f5302747a4c"
+    },
+    {
+      "path": "mylang/src/kicad_sch_plan.my",
+      "before_sha256": "be805ad201c263f11b171eebcfccdc6aaa9d839197bd9fba770e4d0d57189ce6",
+      "after_sha256": "80556be4a89d48551b2b7007adc239f01daa9e212e2132d2ecdb349070b216d1"
+    },
+    {
+      "path": "mylang/src/numeric_test.my",
+      "before_sha256": "3629dfe6086374a6947ab6fbd841d6fe8dc3abf778ecd85d78d6bacbf6df0557",
+      "after_sha256": "61f6073f24a13821af2a5d233a59b72282486e7dd143b2a1b54b99e15be9dad0"
+    },
+    {
+      "path": "mylang/src/uuid.my",
+      "before_sha256": "23a7f08da43708164e82f6d9515fd895a9c129b7b4a348c3d7167d5099612716",
+      "after_sha256": "f328d74c335a7dbc8bac83ad8c788063f39d24c0fec4c22606c045a0f22fad43"
+    },
+    {
+      "path": "mylang/src/support_crc32.my",
+      "before_sha256": "f042703bc48cba1d82b00fb83b8e9883eaff90b41c597cac9ab1dbd978c7eb00",
+      "after_sha256": "e1f786b0ad086f23068bf60e80786143255799ab78e73152f534a2032fee315d"
+    },
+    {
+      "path": "mylang/src/kicad_sch_stub_test.my",
+      "before_sha256": "7b333a415e659d7a1569f6d66920d1a0aab8e9698696a429ea0b3dfcbbcd06f8",
+      "after_sha256": "806ad2ff116d9de62ba3c8d8d2576b6268274c5fb5e84edbc15a045482aad104"
+    },
+    {
+      "path": "mylang/src/diagram_membership.my",
+      "before_sha256": "53aaf1af14787a491c9de133ba01abfb31d6b11678a63bb8f17c438eff7238d0",
+      "after_sha256": "41799e3c697aebcfa7ff8134935c0149eb0e3bcf0638bec40dd793d079cb0a0b"
+    },
+    {
+      "path": "mylang/src/flat_netlist_test.my",
+      "before_sha256": "7e275d8ad1f2a10f842c2dd451daaa0df8491526fa992c3fb69f79d952be2eaf",
+      "after_sha256": "3e71a9e5235b3c02540eebc488960883f8618a63333fefb939b405f8c31b0f98"
+    },
+    {
+      "path": "mylang/src/pad_neck_profile.my",
+      "before_sha256": "65c55ff3672a435476da2e50f6549dbc8cb5e8a59045c723f159c91cc06d916d",
+      "after_sha256": "f9c32bc6ebeb3d34fe20e7fc325df7602893a5692adf4aa42c96212e641b5135"
+    },
+    {
+      "path": "mylang/src/poly_scanline.my",
+      "before_sha256": "8978d1e3226d4694515c5e7d094102196ec5f696e3b917a66c6383c50f8f042b",
+      "after_sha256": "d5680334f8e6089ddf1f113e3b88b4029ad20b9159e926541945abf6108ae086"
+    },
+    {
+      "path": "mylang/src/json_writer.my",
+      "before_sha256": "27c309bb603c267d3aabddf4fa59604e88add00675c4f7591de2d83dbffb99e4",
+      "after_sha256": "d87b390af4ef616420f3db1c4bbdead27c08e78d9631a4d8efbcb4a0ac8804cb"
+    },
+    {
+      "path": "mylang/src/design_model_test.my",
+      "before_sha256": "31bcfebe217ab9e541add0010bd13d3fc6d92a296f87f3192cb3586d1e6583e6",
+      "after_sha256": "7d3a5d60bbf546b24f8a0b4abaefabd01dcd28446c25a28b0216a67e44255be1"
+    },
+    {
+      "path": "mylang/src/design_model.my",
+      "before_sha256": "87304ad1df75fbe6eb08e42ab25be214d8940631b8be22981a24f31dbf0101c3",
+      "after_sha256": "cde8e26630af370b8be4bc6ebfef3adfff334ab4ea837c6a5040feb5fe5c9cf7"
+    },
+    {
+      "path": "mylang/src/kicad_sch_bank_test.my",
+      "before_sha256": "b8cc82e2eecc2b6219e5d189d2e3d18ba0f26ab061d47dc6e1ddd26986860f85",
+      "after_sha256": "11d4eab59cd284afb5c3adda15217661e94fedfd8ccc1665b891af77c1fd3222"
+    },
+    {
+      "path": "mylang/src/kicad_sch_sheet.my",
+      "before_sha256": "bb37db7fe60c104103a19b31f7ac954fba86263df4c942702c00bc06b7cf4d15",
+      "after_sha256": "308e5d641583c75692936ffc0ecbb0d3debbb095ebc94572b2f7aa1cce2221ea"
+    },
+    {
+      "path": "mylang/src/sexpr_paren_span_test.my",
+      "before_sha256": "4f5be9cc0a77e2fbe42ce454e10845df4e6637f1bfc454aabe05b25ee22caac0",
+      "after_sha256": "6a1f4b697421dd5285aa82c565bb7637d4bb656efc5b2e1c798e86bb8b7240b0"
+    },
+    {
+      "path": "mylang/src/kicad_sym_library.my",
+      "before_sha256": "7020468395c6edef35b104ef9ada7bdd9453fd62f4ae367ac16591ecb4264274",
+      "after_sha256": "48f18ccae1fd24cd79c1b0bf0b07f86eb27c0fa2ced6898ed20926090af28dec"
+    },
+    {
+      "path": "mylang/src/placement_pin_roles.my",
+      "before_sha256": "0130a62136212a261bdd5cced05eef34df5bd38d3a79466871a6c6384304509c",
+      "after_sha256": "7e94672c419a618996cdc3260578a44f4e6376aa36645143df9a97daf42d0b9a"
+    },
+    {
+      "path": "mylang/src/main_test.my",
+      "before_sha256": "27f3329ae9f20044c98c15ce15e43439587b0dc5652fc724b5811a237358b401",
+      "after_sha256": "007754cf05750e0babe80b4bb80462bb7d8d4e2f564729448b5e78ca66594a8a"
+    },
+    {
+      "path": "mylang/src/decouple_key_test.my",
+      "before_sha256": "71d6b95f0d60f120dba55513ba735041a71b1fe86e77337e047096fdac0bf5e8",
+      "after_sha256": "67634d18a3110516a64e77c7e5280f6acd5d88b3a054243e9ab1e83293b02da1"
+    },
+    {
+      "path": "mylang/src/sexpr_tokenizer_test.my",
+      "before_sha256": "499b068df7709eb139a473b6a69abec3b2729bf2fcad8b059f8ab2ded6f10634",
+      "after_sha256": "8dc35f4b3f857e5094b1f6d026acf46a31ce68d05bd9f49b9f577270661ff0dc"
+    },
+    {
+      "path": "mylang/src/kicad_pcb_format.my",
+      "before_sha256": "98eb3b168fb8b9ed67f2ca1604c0380b755b053dd838fc6c40c7f6052259e01e",
+      "after_sha256": "a6ef1e648960143ba0b88862d9cd6d704000c8e12b3c662e40c61e5431381a0a"
+    },
+    {
+      "path": "mylang/src/sexpr_parser.my",
+      "before_sha256": "f8cec91f24e8ce8cba57312d04c205f9dcf93b7bddd69bb1d363a4aae871ab5e",
+      "after_sha256": "ed4e8aa3d804748a5a7a62b34aa889082281fbf53d0a8e4f8cd1db9db1d2e8a6"
+    }
+  ]
+}

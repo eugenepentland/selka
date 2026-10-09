@@ -1,0 +1,72 @@
+{
+  "actual_tests": 0,
+  "command": [
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/artifacts/mylang-qualified",
+    "test",
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/eval_electrical.my",
+    "--json",
+    "--force",
+    "--jobs",
+    "1",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/external-final2/eda-modes/cache",
+    "--release",
+    "--max-frames=30000",
+    "--max-steps=4000000000",
+    "--max-memory=2G"
+  ],
+  "complete_report_exact": false,
+  "cwd": "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda",
+  "elapsed_seconds": 0.25576435099355876,
+  "expected_statuses_equal": true,
+  "functional_membership_pass": true,
+  "membership_equal_after_explicit_module_mapping": true,
+  "nonpassing": 0,
+  "process_status_equal": true,
+  "reference_command": [
+    "/home/epentland/.cache/mylang/frontend-20261008/mylang-s5-pin/bin/mylang",
+    "test",
+    "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/eval_electrical.my",
+    "--json",
+    "--force",
+    "--jobs",
+    "1",
+    "--cache-dir",
+    "/home/epentland/.cache/mylang/frontend-current-eda-oracle-20261008",
+    "--release",
+    "--max-frames=30000",
+    "--max-steps=4000000000",
+    "--max-memory=2G"
+  ],
+  "reference_receipt_sha256": "7560602e12599782c34262c1944ab77ac3dacd785369d9d4e04252582081e12a",
+  "reference_returncode": 3,
+  "reference_tests": 0,
+  "report_changes": [
+    {
+      "candidate": [
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/eval_electrical.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/sexpr_ast.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/eval_env.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/pad_neck_profile.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/numeric.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/support_crc32.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/support_strs.my"
+      ],
+      "field": "sources",
+      "reference": [
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/eval_electrical.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/sexpr_ast.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/eval_env.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/pad_neck_profile.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/numeric.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/support_crc32.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/support_strs.my"
+      ]
+    }
+  ],
+  "returncode": 3,
+  "stderr_exact": false,
+  "stderr_sha256": "c23747124bcf9625291bae5ca3b5c3a97b35e96d7dd578720d8c787aab4a881d",
+  "stdout_sha256": "dd3a3d1df357d490b4d2c8e6c5052030fad1df79e7b83f9e59f76207252b73f4",
+  "timeout": false
+}

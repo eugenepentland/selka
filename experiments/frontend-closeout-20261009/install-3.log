@@ -1,0 +1,36 @@
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source a624fa6f37bc)
+guardian: diff-scoped vs d21b2dfa9b36f1de285985a6b38e39847d6beca2: 65/565 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 15 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 13 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 2/88 failed (line-length, module-doc-header) — diff-scoped vs d21b2dfa9b36f1de285985a6b38e39847d6beca2, 65 file(s) in scope
+guardian: failures grouped by check (2):
+  line-length (1 finding)
+    - src/core/allocation_contract.zig:78: line is 265 chars (hard limit 240)
+      fix: split the expression when doing so improves readability
+  module-doc-header (1 finding)
+    - src/core/frontend_test.zig: 243-line module has no `//!` header (over 200 lines needs a 2+-line or 60+-char module doc)
+      fix: add a `//!` block (2+ lines or 60+ chars) at line 1 for the module.
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them
+install
++- run ../guardian-zig/zig-out/bin/guardian-check failure
+error: process exited with code 1
+failed command: ../guardian-zig/zig-out/bin/guardian-check all . --quiet
+
+Build Summary: 6/9 steps succeeded (1 failed)
+install transitive failure
++- install mylang transitive failure
+|  +- compile exe mylang debug native cached 11ms MaxRSS:41M
+|  |  +- run exe build-identity (build_identity) cached
+|  |  |  +- compile exe build-identity debug native cached 8ms MaxRSS:39M
+|  |  +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 8ms MaxRSS:40M
+|  +- run ../guardian-zig/zig-out/bin/guardian-check failure
+|     +- guardian-selfcheck success
+|        +- run ../guardian-zig/zig-out/bin/guardian-check success 5ms
++- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+
+real 2.70
+user 5.36
+sys 1.80
+real 7.75
+user 5.37
+sys 1.82

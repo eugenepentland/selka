@@ -1,4 +1,3 @@
-
 # Absolute answers for a few constant divisors: floor division by 7 and 8, a
 # truncating remainder by -7, a division of the largest u64 by itself, and the
 # truncating remainder of the minimum integer by -1. The generated differential
@@ -7,8 +6,6 @@
 # QBE constant-divisor test did (`qbe_constant_divisor_test.zig`). The traps that
 # test also pinned (a zero divisor, and the minimum integer divided by -1, each
 # after partial output) cannot be expected from a guest test.
-
-
 func seven(x: int) -> int:
     return x // 7
 

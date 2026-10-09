@@ -1,0 +1,2 @@
+{"version":"diagnostic-v1","kind":"diagnostic","diagnostic":{"code":"E_BINDING_SCOPE_MIGRATION","severity":"error","message":"this implicit local is used outside its block; declare the state in the enclosing block or rewrite the branches as a value expression","location":{"path":"vm.my","start":{"line":482,"column":13},"end":{"line":482,"column":19},"bytes":{"start":19546,"end":19552}},"notes":[],"stack":{"frames":[],"omitted":0}}}
+fix: nothing to fix

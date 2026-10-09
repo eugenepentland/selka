@@ -1,0 +1,8 @@
+func parse_int(s: str) -> Option[int]:
+    return int(s)
+
+func main() -> int:
+    const v = parse_int("12")
+    if v is not None:
+        return v
+    return 0

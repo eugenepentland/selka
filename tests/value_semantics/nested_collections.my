@@ -1,4 +1,3 @@
-
 record DictionaryField:
     entries: dict[str, int[]]
 

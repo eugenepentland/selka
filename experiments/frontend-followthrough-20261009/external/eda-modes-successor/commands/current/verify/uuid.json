@@ -1,0 +1,62 @@
+{
+  "actual_tests": 0,
+  "command": [
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/artifacts/mylang-successor",
+    "test",
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/uuid.my",
+    "--json",
+    "--force",
+    "--jobs",
+    "1",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/eda-modes-successor/cache",
+    "--release",
+    "--verify-facts",
+    "--max-frames=30000",
+    "--max-steps=4000000000",
+    "--max-memory=2G"
+  ],
+  "complete_report_exact": false,
+  "cwd": "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda",
+  "elapsed_seconds": 0.023921574000269175,
+  "expected_statuses_equal": true,
+  "functional_membership_pass": true,
+  "membership_equal_after_explicit_module_mapping": true,
+  "nonpassing": 0,
+  "process_status_equal": true,
+  "reference_command": [
+    "/home/epentland/.cache/mylang/frontend-20261008/mylang-s5-pin/bin/mylang",
+    "test",
+    "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/uuid.my",
+    "--json",
+    "--force",
+    "--jobs",
+    "1",
+    "--cache-dir",
+    "/home/epentland/.cache/mylang/frontend-current-eda-oracle-20261008",
+    "--release",
+    "--verify-facts",
+    "--max-frames=30000",
+    "--max-steps=4000000000",
+    "--max-memory=2G"
+  ],
+  "reference_receipt_sha256": "c187592e95dfc4b8cb577fe4dbcd8757c2fcb91f57569f0ebd1da611eb6a1530",
+  "reference_returncode": 3,
+  "reference_tests": 0,
+  "report_changes": [
+    {
+      "candidate": [
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/uuid.my"
+      ],
+      "field": "sources",
+      "reference": [
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/uuid.my"
+      ]
+    }
+  ],
+  "returncode": 3,
+  "stderr_exact": false,
+  "stderr_sha256": "740452446a70eb70003636dc115219f03f104af8a928d3c1fd367b256b919c90",
+  "stdout_sha256": "2ec8fbd3a85b5f705f2f8570202fa455a3cdd0860d6da1011059e492e01079b0",
+  "timeout": false
+}

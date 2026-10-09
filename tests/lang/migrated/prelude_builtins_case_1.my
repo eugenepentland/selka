@@ -1,5 +1,3 @@
-
-
 func sum(xs: int[]) -> int:
     _ = xs
     return 7

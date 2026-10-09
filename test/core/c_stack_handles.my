@@ -2,6 +2,7 @@ import network
 
 extern func final_status(host: Host) -> int effects(host)
 
+
 func nested(net: Network, depth: int) -> bool:
     match network.connect(net):
         case network.Connected.err(_):
@@ -13,6 +14,7 @@ func nested(net: Network, depth: int) -> bool:
                     return good and closed
                 case network.Closed.err(_):
                     return False
+
 
 func main(net: Network, host: Host) -> int:
     if not nested(net.host("127.0.0.1:1234"), 300):

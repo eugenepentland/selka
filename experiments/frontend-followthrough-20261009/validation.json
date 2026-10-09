@@ -1,0 +1,46 @@
+{
+  "implementation_commit": "d8fe5b797",
+  "compiler_sha256": "5e072ee17b825cfbd40ed5533c3bce9f166ce4ae576395020cd5e435cc45ed11",
+  "checks": [
+    {
+      "name": "full repository gate",
+      "receipt": "full-gate-2.log",
+      "exit_code": 0,
+      "steps_passed": 94,
+      "steps_total": 94,
+      "gate_body_seconds": 63.23,
+      "dispatch_seconds": 72.87,
+      "executed_zig_tests": 559,
+      "shard_skips": 3913,
+      "note": "Valid cached steps reused; earlier full run executed 2235 Zig tests successfully, but failed three Python driver tests. Failed attempt retained."
+    },
+    {
+      "name": "final formatting gate",
+      "receipt": "fmt-check-3.log",
+      "exit_code": 0,
+      "steps_passed": 15,
+      "steps_total": 15,
+      "dispatch_seconds": 5.62,
+      "selected_my_sources": 752,
+      "explicit_exclusions": 257
+    },
+    {
+      "name": "whole-tree Guardian",
+      "receipt": "guardian-full-2.log",
+      "exit_code": 0,
+      "checks_passed": 88,
+      "dispatch_seconds": 1.92,
+      "note": "Report-only findings retained in receipt."
+    },
+    {
+      "name": "final external qualification",
+      "receipt": "external/successor-qualification.json",
+      "mode_commands_passed": 450,
+      "lox_native_cases": 974,
+      "eda_native_goldens": 34,
+      "note": "Native answers qualified on b184 candidate; successful identical Lox IR and EDA native executable bind successor. Six EDA property commands explicitly preserve frozen seed."
+    }
+  ],
+  "quiet_performance_claim": false,
+  "failed_attempts_preserved": true
+}

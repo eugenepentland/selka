@@ -1,11 +1,8 @@
-
 # FLOAT-NAN-OBSERVED-1 lets a NaN keep the payload and sign its operation gave
 # it. `negated` is the reliable non-canonical NaN: negation flips the sign bit
 # whatever the operand's payload, so it is `0xfff8...` (or another negative
 # NaN) and never the canonical `0x7ff8000000000000`. Each test drives it
 # through one family of observation points and requires the canonical answer.
-
-
 record Sample:
     value: float
     label: int

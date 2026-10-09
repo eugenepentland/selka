@@ -1,0 +1,85 @@
+test-units
++- run test 31 pass, 2 fail (33 total)
+guardian/test: test wall 2.45s; slowest over 50ms:
+guardian/test:   0.41s  float_operations_test.test.every fixed-width float conversion traps for NaN infinities and range violations
+guardian/test:   0.31s  python_bytes_test.test.PY-BYTES-RANGE-1 range parsing and scalar counting clamp without a view allocation
+guardian/test:   0.28s  for_range_test.test.half-open ranges evaluate bounds once and support generic nested exits
+guardian/test:   0.26s  python_bytes_test.test.PY-BYTES-1 out-of-range indexes ranges and separators trap with located codes
+guardian/test:   0.21s  stdlib_math_test.test.standard integer extrema and clamp cover every width and full signed range
+guardian/test:   0.20s  integers_test.test.inlined shifts wrap within the width and reject out of range counts
+guardian/test:   0.17s  array_places_test.test.an element write out of range traps like a fixed-array read
+guardian/test:   0.16s  python_bytes_test.test.PY-BYTES-6 the mutable octet buffer traps the same byte-range conversion errors
+guardian/test:   0.07s  python_syntax_test.test.source shaped typed ranges retain endpoint spans and walker call order
+guardian/test:   0.07s  python_bytes_test.test.UTF8-DECODE-1 overlong surrogate and out-of-range encodings stay invalid
+guardian/test: FAIL — 2 failed of 33
+guardian/test: RESULT {"passed":31,"failed":2,"skipped":0}
+error: 'python_bytes_test.test.PY-BYTES-RANGE-1 range parsing and scalar counting clamp without a view allocation' failed:
+       guardian/test: 33 test(s) selected by filter: "range", "shared dir" — 26 match by name, 7 unnamed test block(s) run regardless
+       native_execute: `mylang run` refused a program the front end accepted:
+       {"version":"diagnostic-v1","kind":"diagnostic","diagnostic":{"code":"E_CORE_ALLOCATION_BOUND","severity":"error","message":"allocation contract of ranged is exceeded by ranged: static Core site may allocate (unresolved call)","location":{"path":"/home/epentland/ai/canopy/mylang-frontend-redesign/.mylang-cache/unit-tests/core/src/413b3b37bd4bb2b2ddb40caeed45acdd/utf8-decode.my","start":{"line":2,"column":11},"end":{"line":2,"column":11},"bytes":{"start":50,"end":50}},"notes":[],"stack":{"frames":[],"omitted":0}}}
+       
+       /home/epentland/ai/canopy/mylang-frontend-redesign/src/native_execute.zig:308:5: 0x1e5fa59 in refused (root_test.zig)
+           return error.NewCoreBuildFailed;
+           ^
+       /home/epentland/ai/canopy/mylang-frontend-redesign/src/native_execute.zig:413:55: 0x151ceff in execute (root_test.zig)
+           const program = afterBuild(outcome.stderr) orelse return refused(argv.items, outcome.stderr);
+                                                             ^
+       /home/epentland/ai/canopy/mylang-frontend-redesign/src/native_execute.zig:90:5: 0x151b7e1 in runWithOptions__anon_62982 (root_test.zig)
+           return execute(session, try write(session, sources), options);
+           ^
+       /home/epentland/ai/canopy/mylang-frontend-redesign/src/python_bytes_test.zig:53:9: 0x1f30012 in value (root_test.zig)
+               return err;
+               ^
+       /home/epentland/ai/canopy/mylang-frontend-redesign/src/python_bytes_test.zig:333:37: 0x1f32372 in test.PY-BYTES-RANGE-1 range parsing and scalar counting clamp without a view allocation (root_test.zig)
+           try t.expectEqual(@as(i64, 42), try value(
+                                           ^
+error: 'python_bytes_test.test.PY-BYTES-FUSED-RANGE-1 generic noalloc bodies accept immediate ranges' failed:
+       native_execute: `mylang run` refused a program the front end accepted:
+       {"version":"diagnostic-v1","kind":"diagnostic","diagnostic":{"code":"E_CORE_ALLOCATION_BOUND","severity":"error","message":"allocation contract of generic[i64] is exceeded by generic[i64]: static Core site may allocate (unresolved call)","location":{"path":"/home/epentland/ai/canopy/mylang-frontend-redesign/.mylang-cache/unit-tests/core/src/d4276ccb7902fcd2cbfcb8c683126398/utf8-decode.my","start":{"line":2,"column":11},"end":{"line":2,"column":11},"bytes":{"start":65,"end":65}},"notes":[],"stack":{"frames":[],"omitted":0}}}
+       
+       W_UNUSED_BINDING: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed [marker]
+       /home/epentland/ai/canopy/mylang-frontend-redesign/src/native_execute.zig:308:5: 0x1e5fa59 in refused (root_test.zig)
+           return error.NewCoreBuildFailed;
+           ^
+       /home/epentland/ai/canopy/mylang-frontend-redesign/src/native_execute.zig:413:55: 0x151ceff in execute (root_test.zig)
+           const program = afterBuild(outcome.stderr) orelse return refused(argv.items, outcome.stderr);
+                                                             ^
+       /home/epentland/ai/canopy/mylang-frontend-redesign/src/native_execute.zig:90:5: 0x151b7e1 in runWithOptions__anon_62982 (root_test.zig)
+           return execute(session, try write(session, sources), options);
+           ^
+       /home/epentland/ai/canopy/mylang-frontend-redesign/src/python_bytes_test.zig:53:9: 0x1f30012 in value (root_test.zig)
+               return err;
+               ^
+       /home/epentland/ai/canopy/mylang-frontend-redesign/src/python_bytes_test.zig:521:37: 0x1f3066f in test.PY-BYTES-FUSED-RANGE-1 generic noalloc bodies accept immediate ranges (root_test.zig)
+           try t.expectEqual(@as(i64, 42), try value(
+                                           ^
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/1c3d36fc7178d97462afb854d4412332/test --guardian-filter=range "--guardian-filter=shared dir" --cache-dir=./.zig-cache --seed=0x910137bf --listen=-
+
+Build Summary: 6/8 steps succeeded (1 failed); 31/33 tests passed (2 failed)
+test-units transitive failure
++- run test 31 pass, 2 fail (33 total)
+
+Command exited with non-zero status 1
+	Command being timed: "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build test-units -Dtest-filter=range -Dtest-filter=shared dir"
+	User time (seconds): 8.58
+	System time (seconds): 2.04
+	Percent of CPU this job got: 242%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:04.38
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 296024
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 176
+	Minor (reclaiming a frame) page faults: 482506
+	Voluntary context switches: 43947
+	Involuntary context switches: 1136
+	Swaps: 0
+	File system inputs: 4632
+	File system outputs: 250496
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 1

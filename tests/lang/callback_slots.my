@@ -1,4 +1,3 @@
-
 import sort
 
 # An unannotated function passed as a value takes the ceiling of the callback
@@ -6,8 +5,6 @@ import sort
 # type arguments are inferred, or a sort key — and its inferred body must fit
 # that ceiling. A body that allocates, prints or reaches any other effect the
 # slot forbids is rejected at the function value (see `src/python_core_test.zig`).
-
-
 record Score:
     name: str
     points: int

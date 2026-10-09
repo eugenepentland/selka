@@ -1,4 +1,3 @@
-
 # Recording an error return trace (ERROR-TRACE-1) writes only to the trace: every
 # `Err` construction, `?`, conversion and returned result still carries exactly
 # the value it carried before, including past the ring's 32 entries. A test

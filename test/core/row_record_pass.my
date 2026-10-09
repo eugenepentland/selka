@@ -1,11 +1,9 @@
-
 extern func runtime_bench_now(host: Host) -> i64 effects(host)
+
 
 # Row `record_pass` (S4 CONTRACT.md): a twelve-field record threaded through SIZE calls of a function
 # that returns a new record, so the record crosses every call by value. Arguments `size iterations
 # seed`, output `checksum elapsed`.
-
-
 record State:
     f0: int
     f1: int
@@ -28,42 +26,15 @@ func mix(a: int, b: int) -> int:
 func advance(s: State, x: int) -> State:
     mut t = mix(s.f0 + s.f5, x)
     mut f3 = if (x % 3 == 0) then (mix(s.f4, x)) else (s.f4)
-    return State(
-        f0=s.f1,
-        f1=s.f2,
-        f2=s.f3,
-        f3=f3,
-        f4=s.f5,
-        f5=s.f6,
-        f6=s.f7,
-        f7=s.f8,
-        f8=s.f9,
-        f9=s.f10,
-        f10=s.f11,
-        f11=t,
-    )
+    return State(f0=s.f1, f1=s.f2, f2=s.f3, f3=f3, f4=s.f5, f5=s.f6, f6=s.f7, f7=s.f8, f8=s.f9, f9=s.f10, f10=s.f11, f11=t)
 
 
 func batch_result(size: int, batch: int, seed: int) -> int:
     mut base = seed + batch
-    mut s = State(
-        f0=base % 1009,
-        f1=(base + 7) % 1009,
-        f2=(base + 14) % 1009,
-        f3=(base + 21) % 1009,
-        f4=(base + 28) % 1009,
-        f5=(base + 35) % 1009,
-        f6=(base + 42) % 1009,
-        f7=(base + 49) % 1009,
-        f8=(base + 56) % 1009,
-        f9=(base + 63) % 1009,
-        f10=(base + 70) % 1009,
-        f11=(base + 77) % 1009,
-    )
+    mut s = State(f0=base % 1009, f1=(base + 7) % 1009, f2=(base + 14) % 1009, f3=(base + 21) % 1009, f4=(base + 28) % 1009, f5=(base + 35) % 1009, f6=(base + 42) % 1009, f7=(base + 49) % 1009, f8=(base + 56) % 1009, f9=(base + 63) % 1009, f10=(base + 70) % 1009, f11=(base + 77) % 1009)
     for j in range(size):
         s = advance(s, (base + 13 * j) % 1009)
-    return (s.f0 + 2 * s.f1 + 3 * s.f2 + 4 * s.f3 + 5 * s.f4 + 6 * s.f5 + 7 * s.f6 + 8 * s.f7 + 9 * s.f8
-            + 10 * s.f9 + 11 * s.f10 + 12 * s.f11)
+    return (s.f0 + 2 * s.f1 + 3 * s.f2 + 4 * s.f3 + 5 * s.f4 + 6 * s.f5 + 7 * s.f6 + 8 * s.f7 + 9 * s.f8 + 10 * s.f9 + 11 * s.f10 + 12 * s.f11)
 
 
 func parse_number(text: str) -> int:

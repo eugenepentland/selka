@@ -451,6 +451,12 @@ pub const SpecializationEntry = struct {
     }
 };
 
+/// Validate owned source-range headers before decoded statements reach a consumer.
+pub fn validRangeHeaders(statements: []const typed.Statement) bool {
+    for (statements) |statement| if (statement.data == .range_loop and statement.data.range_loop.parts.len != 1) return false;
+    return true;
+}
+
 /// Whether one specialization payload is internally consistent. Called by the
 /// store before a decoded entry can reach the checker; a false result is a
 /// miss, never a trusted unchecked identity.
@@ -476,6 +482,7 @@ pub fn validSpecialization(payload: StoredSpecialization, max_declarations: usiz
     if (payload.body.range.nodes.end - payload.body.range.nodes.start != payload.body.nodes.len) return false;
     if (payload.body.range.statements.start > payload.body.range.statements.end) return false;
     if (payload.body.range.statements.end - payload.body.range.statements.start != payload.body.statements.len) return false;
+    if (!validRangeHeaders(payload.body.statements)) return false;
     if (!validSpecializationRefs(payload.refs, payload.counts, max_declarations, max_entry_bytes)) return false;
     return true;
 }

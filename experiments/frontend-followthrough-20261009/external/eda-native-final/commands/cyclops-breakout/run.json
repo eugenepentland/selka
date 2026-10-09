@@ -1,0 +1,39 @@
+{
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/artifacts/eda-release-final",
+    "--model",
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/golden/cases/cyclops-breakout/model.sexp",
+    "--project-dir",
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/golden/projects/designs",
+    "--out-dir",
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/eda-native-final/outputs/cyclops-breakout"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda",
+  "exit_code": 0,
+  "elapsed_seconds": 0.024348489940166473,
+  "timeout_seconds": 600,
+  "affinity": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "stdout_sha256": "5dec42611bb32d58fc33942363de66e1efab158374db2d377cb6b9b1dd423b0f",
+  "stderr_sha256": "41f26403805501728955f6eefc2a4211846ad7a3ef2418f22bd683c4c79f330a"
+}

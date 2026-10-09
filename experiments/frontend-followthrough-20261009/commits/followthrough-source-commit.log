@@ -1,0 +1,14 @@
+guardian: run-all: cached — 0 blocking (inputs unchanged since last green run)
+[codex/frontend-followthrough-20261009 d8fe5b797] Complete readable frontend migration and corpus formatting gate
+ 659 files changed, 4155 insertions(+), 2533 deletions(-)
+ create mode 100644 docs/audits/frontend-followthrough-2026-10-09.md
+ create mode 100644 scripts/check_my_format.py
+ create mode 100644 scripts/migrate_embedded.py
+ create mode 100644 scripts/my_format_exclusions.json
+ create mode 100644 scripts/spelling_census.py
+ create mode 100644 src/frontend_migration_types.zig
+ create mode 100644 tests/test_migrate_embedded.py
+ create mode 100644 tests/test_my_format.py
+real 0.79
+user 0.27
+sys 0.41

@@ -1,5 +1,3 @@
-
-
 record Doc:
     title: str
     rows: int[][]

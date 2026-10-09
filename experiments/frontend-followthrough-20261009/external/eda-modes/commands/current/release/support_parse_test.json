@@ -1,0 +1,139 @@
+{
+  "actual_tests": 5,
+  "command": [
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/artifacts/mylang",
+    "test",
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/support_parse_test.my",
+    "--json",
+    "--force",
+    "--jobs",
+    "1",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/eda-modes/cache",
+    "--release",
+    "--max-frames=30000",
+    "--max-steps=4000000000",
+    "--max-memory=2G"
+  ],
+  "complete_report_exact": false,
+  "cwd": "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda",
+  "elapsed_seconds": 0.16229355987161398,
+  "expected_statuses_equal": false,
+  "functional_membership_pass": false,
+  "membership_equal_after_explicit_module_mapping": true,
+  "nonpassing": 5,
+  "process_status_equal": false,
+  "reference_command": [
+    "/home/epentland/.cache/mylang/frontend-20261008/mylang-s5-pin/bin/mylang",
+    "test",
+    "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/support_parse_test.my",
+    "--json",
+    "--force",
+    "--jobs",
+    "1",
+    "--cache-dir",
+    "/home/epentland/.cache/mylang/frontend-current-eda-oracle-20261008",
+    "--release",
+    "--max-frames=30000",
+    "--max-steps=4000000000",
+    "--max-memory=2G"
+  ],
+  "reference_receipt_sha256": "6c542227f445779446ed2f6d74922bdd6c6cb961cfd69a73e9eba8aeb61a3afd",
+  "reference_returncode": 0,
+  "reference_tests": 5,
+  "report_changes": [
+    {
+      "candidate": 5,
+      "field": "failed",
+      "reference": 0
+    },
+    {
+      "candidate": 0,
+      "field": "passed",
+      "reference": 5
+    },
+    {
+      "candidate": [
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/support_parse_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/support_parse.my"
+      ],
+      "field": "sources",
+      "reference": [
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/support_parse_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/support_parse.my"
+      ]
+    },
+    {
+      "candidate": [
+        {
+          "at": "",
+          "name": "src.support_parse_test::test_parse_float_accepts_what_zig_accepts",
+          "reason": "R_FRAME_LIMIT\n  in src.support_parse::parse_float at src/support_parse.my:47:8\n  in src.support_parse::parse_float at src/support_parse.my:49:12\n  in src.support_parse::parse_float at src/support_parse.my:49:12\n  in src.support_parse::parse_float at src/support_parse.my:49:12\n  in src.support_parse::parse_float at src/support_parse.my:49:12\n  in src.support_parse::parse_float at src/support_parse.my:49:12\n  in src.support_parse::parse_float at src/support_parse.my:49:12\n  in src.support_parse::parse_float at src/support_parse.my:49:12\n  in src.support_parse::parse_float at src/support_parse.my:49:12\n  in src.support_parse::parse_float at src/support_parse.my:49:12\n  in src.support_parse::parse_float at src/support_parse.my:49:12\n  in src.support_parse::parse_float at src/support_parse.my:49:12\n  in src.support_parse::parse_float at src/support_parse.my:49:12\n  in src.support_parse::parse_float at src/support_parse.my:49:12\n  in src.support_parse::parse_float at src/support_parse.my:49:12\n  in src.support_parse::parse_float at src/support_parse.my:49:12\n  29984 frames omitted\n\ncall-depth budget exhausted; raise it with --max-frames=N (each frame reserves 32 KiB of stack, so --max-memory must cover N x 32 KiB)\n",
+          "status": "failed"
+        },
+        {
+          "at": "",
+          "name": "src.support_parse_test::test_parse_float_rejects_what_zig_rejects",
+          "reason": "R_FRAME_LIMIT\n  in src.support_parse::parse_float at src/support_parse.my:47:8\n  in src.support_parse::parse_float at src/support_parse.my:49:12\n  in src.support_parse::parse_float at src/support_parse.my:49:12\n  in src.support_parse::parse_float at src/support_parse.my:49:12\n  in src.support_parse::parse_float at src/support_parse.my:49:12\n  in src.support_parse::parse_float at src/support_parse.my:49:12\n  in src.support_parse::parse_float at src/support_parse.my:49:12\n  in src.support_parse::parse_float at src/support_parse.my:49:12\n  in src.support_parse::parse_float at src/support_parse.my:49:12\n  in src.support_parse::parse_float at src/support_parse.my:49:12\n  in src.support_parse::parse_float at src/support_parse.my:49:12\n  in src.support_parse::parse_float at src/support_parse.my:49:12\n  in src.support_parse::parse_float at src/support_parse.my:49:12\n  in src.support_parse::parse_float at src/support_parse.my:49:12\n  in src.support_parse::parse_float at src/support_parse.my:49:12\n  in src.support_parse::parse_float at src/support_parse.my:49:12\n  29984 frames omitted\n\ncall-depth budget exhausted; raise it with --max-frames=N (each frame reserves 32 KiB of stack, so --max-memory must cover N x 32 KiB)\n",
+          "status": "failed"
+        },
+        {
+          "at": "",
+          "name": "src.support_parse_test::test_parse_int_accepts_what_zig_accepts",
+          "reason": "R_FRAME_LIMIT\n  in src.support_parse::parse_int at src/support_parse.my:30:8\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  29984 frames omitted\n\ncall-depth budget exhausted; raise it with --max-frames=N (each frame reserves 32 KiB of stack, so --max-memory must cover N x 32 KiB)\n",
+          "status": "failed"
+        },
+        {
+          "at": "",
+          "name": "src.support_parse_test::test_parse_int_rejects_what_zig_rejects",
+          "reason": "R_FRAME_LIMIT\n  in src.support_parse::parse_int at src/support_parse.my:30:8\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  29984 frames omitted\n\ncall-depth budget exhausted; raise it with --max-frames=N (each frame reserves 32 KiB of stack, so --max-memory must cover N x 32 KiB)\n",
+          "status": "failed"
+        },
+        {
+          "at": "",
+          "name": "src.support_parse_test::test_parse_u32_range",
+          "reason": "R_FRAME_LIMIT\n  in src.support_parse::parse_int at src/support_parse.my:30:8\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  29984 frames omitted\n\ncall-depth budget exhausted; raise it with --max-frames=N (each frame reserves 32 KiB of stack, so --max-memory must cover N x 32 KiB)\n",
+          "status": "failed"
+        }
+      ],
+      "field": "tests",
+      "reference": [
+        {
+          "at": "",
+          "name": "support_parse_test::test_parse_float_accepts_what_zig_accepts",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "support_parse_test::test_parse_float_rejects_what_zig_rejects",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "support_parse_test::test_parse_int_accepts_what_zig_accepts",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "support_parse_test::test_parse_int_rejects_what_zig_rejects",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "support_parse_test::test_parse_u32_range",
+          "reason": "",
+          "status": "passed"
+        }
+      ]
+    }
+  ],
+  "returncode": 1,
+  "stderr_exact": true,
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stdout_sha256": "9b9010e6e3f629e79e006a45a830087fa22de153746e99a573a8c06a2c646a23",
+  "timeout": false
+}

@@ -1,17 +1,17 @@
-
-
 constraint Render[P] = copy + op(render(p: P, extra: P[]) -> int effects())
+
 
 domain D: int:
     func make(n: int) -> D:
         return wrap[D](n)
-
     func render(p: D, extra: D[]) -> int effects():
         _ = p
         return len(extra)
 
+
 func count[P: Render](p: P, extra: P[]) -> int effects():
     return P.render(p, extra)
+
 
 public func program() -> int:
     mut d = D.make(1)

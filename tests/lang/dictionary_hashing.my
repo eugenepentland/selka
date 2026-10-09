@@ -1,4 +1,3 @@
-
 # The dictionary's hash functions, its record of the last probe and the hashes
 # its table stores are all invisible: every program here answers exactly what it
 # answered when keys were hashed octet by octet and every lookup walked the
@@ -8,8 +7,6 @@
 # past their eighth, empty and multi-octet texts, removal out of the middle of a
 # collision run, a missed read followed by an insertion before the write, and
 # growth across many resizes.
-
-
 func repeat(letter: str, count: i64) -> str:
     mut parts: str[] = []
     for _ in range(count):

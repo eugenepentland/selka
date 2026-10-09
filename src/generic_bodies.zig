@@ -63,16 +63,7 @@ const unknown_method = "unknown collection method";
 fn keywordSort(self: anytype, input_call: Call) bool {
     return input_call.owner != null and input_call.arguments.len != 0 and std.mem.eql(u8, self.src.text(input_call.name), "sort");
 }
-/// Reject a literal `dir()` path that could leave a scoped root, mirroring `scopedPath`.
-fn scopedDirectoryPath(bytes: []const u8) bool {
-    if (bytes.len == 0) return true;
-    if (std.mem.indexOfAny(u8, bytes, "\\\x00") != null) return false;
-    var parts = std.mem.splitScalar(u8, bytes, '/');
-    while (parts.next()) |part| {
-        if (part.len == 0 or std.mem.eql(u8, part, ".") or std.mem.eql(u8, part, "..")) return false;
-    }
-    return true;
-}
+const scopedDirectoryPath = @import("scoped_directory.zig").valid;
 const FunctionMap = std.StringHashMapUnmanaged(usize);
 
 const Pending = struct { available: bool, transfer_span: ?source.Span };
@@ -1445,12 +1436,12 @@ const Checker = struct {
     fn numericParse(self: *Checker, invocation: Call, input: Symbolic, floating: bool, span: source.Span) Error!?Symbolic {
         const parses = std.mem.startsWith(u8, self.src.text(invocation.name), "parse_");
         if (self.shapes().collectionKind(input) == .string) {
-            if (!parses) return self.sink.failFix(
-                "E_NUMERIC_PARSE",
-                invocation.name,
-                "parse text explicitly with parse_int or parse_float; int and float convert numbers",
-                .{ .span = invocation.name, .text = if (floating) "parse_float" else "parse_int" },
-            );
+            if (!parses) {
+                const target = if (floating) "parse_float" else "parse_int";
+                const claimed = self.active.contains(target) or self.functions.contains(target) or self.catalog.names.contains(target) or self.catalog.templates.names.contains(target) or
+                    if (self.module_names) |names| try names.topLevelSpelling(invocation.name, target) else false;
+                return numeric_surface.rejectTextConversion(self.sink, invocation.name, target, claimed);
+            }
             const parsed = try self.optionType(if (floating) self.floatType() else .{ .concrete = .i64 });
             return parsed;
         }

@@ -1,5 +1,6 @@
 resource File: filesystem
 
+
 result Open:
     ok: File,
     err: int
@@ -36,7 +37,7 @@ func work(fs: Filesystem) -> Status effects(filesystem):
     return Ok(int(chunk.length) + int(written))
 
 
-func main(fs: Filesystem) -> int noalloc:
+func main(fs: Filesystem) -> int effects(filesystem):
     match work(fs):
         case Status.ok(value):
             return value

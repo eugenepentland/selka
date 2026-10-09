@@ -1,9 +1,6 @@
-
 # Loop iteration bindings are read-only. A mutable local copy lets a body
 # rewrite its current value without changing which iteration comes next.
 # Every loop form is pinned here; traced elements run under `--gc-stress`.
-
-
 record Pair:
     left: i64
     right: i64

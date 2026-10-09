@@ -1,0 +1,87 @@
+test-units
++- run test 66 pass, 2 fail (68 total)
+retention: budget=5916 retained=3670 spec_bytes=3670 evictions=44 oldest_fresh_checks=+1
+symbolic retention: budget=4410 retained=4292 symbolic_bytes=4292 templates=8 evictions=8 warm_fresh=+4 warm_reused=+8
+guardian/test: test wall 16.81s; slowest over 50ms:
+guardian/test:   8.57s  semantic_cache_test.test.semantic cache reuses unchanged checked bodies after edits and preserves diagnostics and ownership under allocation failures
+guardian/test:   1.57s  semantic_cache_test.test.shared retention budget bounds distinct specializations and eviction forces fresh checks
+guardian/test:   1.18s  semantic_cache_test.test.generic publication rolls back cleanly on allocation failure
+guardian/test:   0.46s  semantic_cache_test.test.durable-hit promotion is bounded by the shared budget without changing acceptance
+guardian/test:   0.29s  semantic_cache_test.test.declared callback slots and matching function values reuse when the contract is stable
+guardian/test:   0.29s  semantic_cache_test.test.declaration and type identity changes invalidate dependents while unrelated declarations preserve reuse
+guardian/test:   0.29s  semantic_cache_test.test.durable entries isolate every contract dimension and the mutation version
+guardian/test:   0.26s  semantic_cache_test.test.const-length specialization keys and resolved nominal generics reuse
+guardian/test:   0.23s  semantic_cache_test.test.shared budget covers ordinary hash growth boundaries
+guardian/test:   0.21s  semantic_cache_test.test.shared budget holds after an oversized-single-entry session without changing acceptance
+guardian/test: FAIL — 2 failed of 68
+guardian/test: RESULT {"passed":66,"failed":2,"skipped":0}
+error: 'semantic_cache_test.test.declared callback slots and matching function values reuse when the contract is stable' failed:
+       guardian/test: 68 test(s) selected by filter: "semantic_cache_test", "semantic_project_test" — 61 match by name, 7 unnamed test block(s) run regardless
+       guardian/test: SLOW  8.57s  semantic_cache_test.test.semantic cache reuses unchanged checked bodies after edits and preserves diagnostics and ownership under allocation failures
+       /home/epentland/ai/canopy/mylang-frontend-redesign/src/parser.zig:988:36: 0x1e1a922 in parse (root_test.zig)
+               if (self.cursor.recovered) return error.SourceError;
+                                          ^
+       /home/epentland/ai/canopy/mylang-frontend-redesign/src/compiler.zig:135:23: 0x1f5632b in parseCached (root_test.zig)
+               self.syntax = try p.parse();
+                             ^
+       /home/epentland/ai/canopy/mylang-frontend-redesign/src/compiler.zig:119:9: 0x1f558c6 in parse (root_test.zig)
+               return self.parseCached(null);
+               ^
+       /home/epentland/ai/canopy/mylang-frontend-redesign/src/compiler.zig:185:9: 0x1f54bae in checkWithCache (root_test.zig)
+               try self.parse();
+               ^
+       /home/epentland/ai/canopy/mylang-frontend-redesign/src/semantic_cache_test.zig:61:9: 0x1f4e2d8 in compare (root_test.zig)
+               try cached.checkWithCache(cache);
+               ^
+       /home/epentland/ai/canopy/mylang-frontend-redesign/src/semantic_cache_test.zig:603:5: 0x1fea4f0 in test.declared callback slots and matching function values reuse when the contract is stable (root_test.zig)
+           try compare(t.allocator, &cache, program, 42);
+           ^
+error: 'semantic_cache_test.test.a function value with no matching declared callback misses with its exact reason' failed:
+       /home/epentland/ai/canopy/mylang-frontend-redesign/src/parser.zig:988:36: 0x1e1a922 in parse (root_test.zig)
+               if (self.cursor.recovered) return error.SourceError;
+                                          ^
+       /home/epentland/ai/canopy/mylang-frontend-redesign/src/compiler.zig:135:23: 0x1f5632b in parseCached (root_test.zig)
+               self.syntax = try p.parse();
+                             ^
+       /home/epentland/ai/canopy/mylang-frontend-redesign/src/compiler.zig:119:9: 0x1f558c6 in parse (root_test.zig)
+               return self.parseCached(null);
+               ^
+       /home/epentland/ai/canopy/mylang-frontend-redesign/src/compiler.zig:185:9: 0x1f54bae in checkWithCache (root_test.zig)
+               try self.parse();
+               ^
+       /home/epentland/ai/canopy/mylang-frontend-redesign/src/semantic_cache_test.zig:61:9: 0x1f4e2d8 in compare (root_test.zig)
+               try cached.checkWithCache(cache);
+               ^
+       /home/epentland/ai/canopy/mylang-frontend-redesign/src/semantic_cache_test.zig:646:5: 0x1fe9fc0 in test.a function value with no matching declared callback misses with its exact reason (root_test.zig)
+           try compare(t.allocator, &cache, program, 42);
+           ^
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/6aa393d5586497d72f522a8f017ee0bf/test --guardian-filter=semantic_cache_test --guardian-filter=semantic_project_test --cache-dir=./.zig-cache --seed=0x7e5595a4 --listen=-
+
+Build Summary: 6/8 steps succeeded (1 failed); 66/68 tests passed (2 failed)
+test-units transitive failure
++- run test 66 pass, 2 fail (68 total)
+
+Command exited with non-zero status 1
+	Command being timed: "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build test-units -Dtest-filter=semantic_cache_test -Dtest-filter=semantic_project_test"
+	User time (seconds): 26.00
+	System time (seconds): 4.33
+	Percent of CPU this job got: 138%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:21.88
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 490500
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 817517
+	Voluntary context switches: 53818
+	Involuntary context switches: 1507
+	Swaps: 0
+	File system inputs: 4272
+	File system outputs: 999336
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 1

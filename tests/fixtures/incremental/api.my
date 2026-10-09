@@ -1,3 +1,2 @@
 import model
-
 export model.Point

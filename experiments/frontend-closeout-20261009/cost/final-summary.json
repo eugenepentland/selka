@@ -1,0 +1,700 @@
+{
+  "compiler_sha256": "aca89445a3f2d4f2dddbf68b6441c3473374cd37b2e6cde68929e0690def737f",
+  "census": {
+    "lox": {
+      "entry": "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/lox/benchmarks/lox/ports/mylang/main.my",
+      "selection": "One selected executable entry; all checked body instances in its loaded graph.",
+      "functions": 382,
+      "counts": {
+        "list.in_or_not_in": [
+          0,
+          0,
+          0
+        ],
+        "list.eq": [
+          0,
+          0,
+          0
+        ],
+        "list.ne": [
+          0,
+          0,
+          0
+        ],
+        "record.eq": [
+          0,
+          0,
+          0
+        ],
+        "record.ne": [
+          0,
+          0,
+          0
+        ],
+        "dict.eq": [
+          0,
+          0,
+          0
+        ],
+        "dict.ne": [
+          0,
+          0,
+          0
+        ],
+        "set.eq": [
+          0,
+          0,
+          0
+        ],
+        "set.ne": [
+          0,
+          0,
+          0
+        ],
+        "list.add": [
+          0,
+          0,
+          0
+        ],
+        "sequence.mul": [
+          0,
+          0,
+          0
+        ],
+        "list.slice_without_step": [
+          0,
+          0,
+          0
+        ],
+        "list.slice_step": [
+          0,
+          0,
+          0
+        ],
+        "str.slice_or_tail": [
+          0,
+          0,
+          0
+        ],
+        "str.slice_step": [
+          0,
+          0,
+          0
+        ],
+        "bytes.slice": [
+          1,
+          0,
+          0
+        ],
+        "bytes.view": [
+          3,
+          1,
+          0
+        ],
+        "str.add_in_loop": [
+          0,
+          0,
+          0
+        ],
+        "list.contains_method": [
+          0,
+          0,
+          0
+        ],
+        "literal.fixed_array": [
+          0,
+          0,
+          0
+        ],
+        "literal.packed_list": [
+          0,
+          0,
+          0
+        ]
+      },
+      "uncounted_visible_nodes": {
+        "equality.unknown_nominal": 48,
+        "opaque.external_read": 1,
+        "opaque.file_access": 1,
+        "opaque.stand_in": 2,
+        "opaque.stream_write": 4,
+        "opaque.unit": 336
+      },
+      "uncounted_constructs": {
+        "list_plain_slice": "uncounted: anonymous copy-loop lowering has no original slice identity",
+        "sequence_repetition": "uncounted: anonymous gather-loop lowering has no original multiply identity",
+        "list_nonpacked_literal": "uncounted: acquire/append lowering also represents comprehensions and other constructors",
+        "uninstantiated_generic_templates": "uncounted: dump contains checked specializations, not the bodies of unused generic templates",
+        "record_equality_without_visible_constructor": "uncounted: dump omits aggregate schema tags; nominal equality may be enum/domain/variant/record",
+        "source_loop_depth": "uncounted: reported depth is typed loop nesting, which includes generated loops",
+        "hidden_operands": "uncounted: opaque nodes and print separator/terminator omit subtrees",
+        "fused_slice_or_view": "uncounted: immediately consumed byte slices/views may lower to range operations without slice/view identity"
+      }
+    },
+    "eda": {
+      "entry": "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/main.my",
+      "selection": "One selected executable entry; all checked body instances in its loaded graph.",
+      "functions": 1213,
+      "counts": {
+        "list.in_or_not_in": [
+          0,
+          2,
+          2
+        ],
+        "list.eq": [
+          0,
+          0,
+          0
+        ],
+        "list.ne": [
+          2,
+          1,
+          0
+        ],
+        "record.eq": [
+          0,
+          2,
+          0
+        ],
+        "record.ne": [
+          0,
+          0,
+          0
+        ],
+        "dict.eq": [
+          0,
+          0,
+          0
+        ],
+        "dict.ne": [
+          0,
+          0,
+          0
+        ],
+        "set.eq": [
+          0,
+          0,
+          0
+        ],
+        "set.ne": [
+          0,
+          0,
+          0
+        ],
+        "list.add": [
+          0,
+          0,
+          0
+        ],
+        "sequence.mul": [
+          0,
+          0,
+          0
+        ],
+        "list.slice_without_step": [
+          0,
+          0,
+          0
+        ],
+        "list.slice_step": [
+          0,
+          0,
+          0
+        ],
+        "str.slice_or_tail": [
+          19,
+          5,
+          0
+        ],
+        "str.slice_step": [
+          0,
+          0,
+          0
+        ],
+        "bytes.slice": [
+          43,
+          13,
+          0
+        ],
+        "bytes.view": [
+          6,
+          1,
+          1
+        ],
+        "str.add_in_loop": [
+          0,
+          62,
+          4
+        ],
+        "list.contains_method": [
+          0,
+          0,
+          0
+        ],
+        "literal.fixed_array": [
+          7,
+          2,
+          0
+        ],
+        "literal.packed_list": [
+          1,
+          0,
+          0
+        ]
+      },
+      "uncounted_visible_nodes": {
+        "equality.unknown_nominal": 83,
+        "opaque.file_access": 18,
+        "opaque.function_value": 10,
+        "opaque.invoke": 9,
+        "opaque.stream_write": 5,
+        "opaque.unit": 512
+      },
+      "uncounted_constructs": {
+        "list_plain_slice": "uncounted: anonymous copy-loop lowering has no original slice identity",
+        "sequence_repetition": "uncounted: anonymous gather-loop lowering has no original multiply identity",
+        "list_nonpacked_literal": "uncounted: acquire/append lowering also represents comprehensions and other constructors",
+        "uninstantiated_generic_templates": "uncounted: dump contains checked specializations, not the bodies of unused generic templates",
+        "record_equality_without_visible_constructor": "uncounted: dump omits aggregate schema tags; nominal equality may be enum/domain/variant/record",
+        "source_loop_depth": "uncounted: reported depth is typed loop nesting, which includes generated loops",
+        "hidden_operands": "uncounted: opaque nodes and print separator/terminator omit subtrees",
+        "fused_slice_or_view": "uncounted: immediately consumed byte slices/views may lower to range operations without slice/view identity"
+      }
+    },
+    "stdlib": {
+      "entry": "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/cost/operations/stdlib.my",
+      "selection": "One selected executable entry; all checked body instances in its loaded graph.",
+      "functions": 110,
+      "counts": {
+        "list.in_or_not_in": [
+          0,
+          0,
+          0
+        ],
+        "list.eq": [
+          0,
+          0,
+          0
+        ],
+        "list.ne": [
+          0,
+          0,
+          0
+        ],
+        "record.eq": [
+          0,
+          0,
+          0
+        ],
+        "record.ne": [
+          0,
+          0,
+          0
+        ],
+        "dict.eq": [
+          0,
+          0,
+          0
+        ],
+        "dict.ne": [
+          0,
+          0,
+          0
+        ],
+        "set.eq": [
+          0,
+          0,
+          0
+        ],
+        "set.ne": [
+          0,
+          0,
+          0
+        ],
+        "list.add": [
+          0,
+          0,
+          0
+        ],
+        "sequence.mul": [
+          0,
+          0,
+          0
+        ],
+        "list.slice_without_step": [
+          0,
+          0,
+          0
+        ],
+        "list.slice_step": [
+          0,
+          0,
+          0
+        ],
+        "str.slice_or_tail": [
+          3,
+          1,
+          0
+        ],
+        "str.slice_step": [
+          0,
+          0,
+          0
+        ],
+        "bytes.slice": [
+          1,
+          0,
+          0
+        ],
+        "bytes.view": [
+          0,
+          0,
+          0
+        ],
+        "str.add_in_loop": [
+          0,
+          2,
+          0
+        ],
+        "list.contains_method": [
+          0,
+          0,
+          0
+        ],
+        "literal.fixed_array": [
+          0,
+          0,
+          0
+        ],
+        "literal.packed_list": [
+          0,
+          0,
+          0
+        ]
+      },
+      "uncounted_visible_nodes": {
+        "opaque.unit": 20
+      },
+      "uncounted_constructs": {
+        "list_plain_slice": "uncounted: anonymous copy-loop lowering has no original slice identity",
+        "sequence_repetition": "uncounted: anonymous gather-loop lowering has no original multiply identity",
+        "list_nonpacked_literal": "uncounted: acquire/append lowering also represents comprehensions and other constructors",
+        "uninstantiated_generic_templates": "uncounted: dump contains checked specializations, not the bodies of unused generic templates",
+        "record_equality_without_visible_constructor": "uncounted: dump omits aggregate schema tags; nominal equality may be enum/domain/variant/record",
+        "source_loop_depth": "uncounted: reported depth is typed loop nesting, which includes generated loops",
+        "hidden_operands": "uncounted: opaque nodes and print separator/terminator omit subtrees",
+        "fused_slice_or_view": "uncounted: immediately consumed byte slices/views may lower to range operations without slice/view identity"
+      }
+    },
+    "language": {
+      "entry": "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/cost/operations/main.my",
+      "selection": "One selected executable entry; all checked body instances in its loaded graph.",
+      "functions": 3,
+      "counts": {
+        "list.in_or_not_in": [
+          1,
+          0,
+          0
+        ],
+        "list.eq": [
+          1,
+          0,
+          0
+        ],
+        "list.ne": [
+          0,
+          0,
+          0
+        ],
+        "record.eq": [
+          0,
+          0,
+          0
+        ],
+        "record.ne": [
+          0,
+          0,
+          0
+        ],
+        "dict.eq": [
+          0,
+          0,
+          0
+        ],
+        "dict.ne": [
+          0,
+          0,
+          0
+        ],
+        "set.eq": [
+          0,
+          0,
+          0
+        ],
+        "set.ne": [
+          0,
+          0,
+          0
+        ],
+        "list.add": [
+          0,
+          0,
+          0
+        ],
+        "sequence.mul": [
+          0,
+          0,
+          0
+        ],
+        "list.slice_without_step": [
+          0,
+          0,
+          0
+        ],
+        "list.slice_step": [
+          0,
+          0,
+          0
+        ],
+        "str.slice_or_tail": [
+          0,
+          0,
+          0
+        ],
+        "str.slice_step": [
+          0,
+          0,
+          0
+        ],
+        "bytes.slice": [
+          1,
+          0,
+          0
+        ],
+        "bytes.view": [
+          1,
+          0,
+          0
+        ],
+        "str.add_in_loop": [
+          0,
+          1,
+          0
+        ],
+        "list.contains_method": [
+          0,
+          0,
+          0
+        ],
+        "literal.fixed_array": [
+          0,
+          0,
+          0
+        ],
+        "literal.packed_list": [
+          0,
+          0,
+          0
+        ]
+      },
+      "uncounted_visible_nodes": {},
+      "uncounted_constructs": {
+        "list_plain_slice": "uncounted: anonymous copy-loop lowering has no original slice identity",
+        "sequence_repetition": "uncounted: anonymous gather-loop lowering has no original multiply identity",
+        "list_nonpacked_literal": "uncounted: acquire/append lowering also represents comprehensions and other constructors",
+        "uninstantiated_generic_templates": "uncounted: dump contains checked specializations, not the bodies of unused generic templates",
+        "record_equality_without_visible_constructor": "uncounted: dump omits aggregate schema tags; nominal equality may be enum/domain/variant/record",
+        "source_loop_depth": "uncounted: reported depth is typed loop nesting, which includes generated loops",
+        "hidden_operands": "uncounted: opaque nodes and print separator/terminator omit subtrees",
+        "fused_slice_or_view": "uncounted: immediately consumed byte slices/views may lower to range operations without slice/view identity"
+      }
+    }
+  },
+  "operations": {
+    "units": 128,
+    "unit": "input-record",
+    "oracle_stdout": "2144\n",
+    "instructions": {
+      "samples": [
+        206326,
+        206326,
+        206325
+      ],
+      "median": 206326,
+      "min": 206325,
+      "max": 206326,
+      "spread": 4.846698913370104e-06
+    },
+    "instructions_per_input_record": 1611.921875,
+    "static_cost_totals": {
+      "checks": {
+        "kept": 11,
+        "proved": 7
+      },
+      "updates": {
+        "in_place": 1,
+        "tested": 1,
+        "copied": 0
+      },
+      "allocation": {
+        "sites": 6,
+        "unresolved_calls": 2
+      },
+      "rc": {
+        "retains": 0,
+        "releases": 4,
+        "elided_pairs": 0,
+        "stack_lists": 0
+      },
+      "inlined_calls": 0,
+      "loops": {
+        "unswitched": 0,
+        "versioned": 0,
+        "vector_plans": 0,
+        "unknown": 3
+      },
+      "llvm_vectorized_loops": null
+    },
+    "runtime_totals": {
+      "calls": 7,
+      "allocs": 27,
+      "alloc_bytes": 2752,
+      "frees": 27,
+      "free_bytes": 2752,
+      "list_grows": 0,
+      "list_grow_bytes": 0,
+      "reallocs": 0,
+      "realloc_added_bytes": 0,
+      "realloc_moves": 0,
+      "realloc_moved_bytes": 0,
+      "list_copies": 0,
+      "list_copy_bytes": 0,
+      "dict_copies": 0,
+      "dict_copy_bytes": 0,
+      "buffer_copies": 0,
+      "buffer_copy_bytes": 0,
+      "text_copies": 4,
+      "text_copy_bytes": 0,
+      "runtime_retains": 0,
+      "runtime_releases": 3,
+      "dict_grows": 0,
+      "dict_grow_bytes": 0,
+      "buffer_grows": 0,
+      "buffer_grow_bytes": 0,
+      "text_grows": 8,
+      "text_grow_bytes": 124,
+      "text_appends": 128,
+      "text_append_bytes": 128,
+      "buffer_pushes": 0,
+      "buffer_appends": 0,
+      "buffer_append_bytes": 0,
+      "shared_retains": 0,
+      "shared_releases": 0,
+      "share_marks": 0,
+      "share_bytes": 0,
+      "peak_live_bytes": 640,
+      "live_bytes_at_exit": 0
+    },
+    "runtime_kinds": {
+      "retain": {
+        "count": 0,
+        "bytes": 0,
+        "extra": 0
+      },
+      "release": {
+        "count": 16,
+        "bytes": 0,
+        "extra": 0
+      },
+      "release_unique": {
+        "count": 4,
+        "bytes": 0,
+        "extra": 0
+      },
+      "unique_test": {
+        "count": 128,
+        "bytes": 0,
+        "extra": 124
+      },
+      "list_copy": {
+        "count": 0,
+        "bytes": 0,
+        "extra": 0
+      },
+      "dict_copy": {
+        "count": 0,
+        "bytes": 0,
+        "extra": 0
+      },
+      "buffer_copy": {
+        "count": 0,
+        "bytes": 0,
+        "extra": 0
+      },
+      "text_copy": {
+        "count": 4,
+        "bytes": 0,
+        "extra": 0
+      },
+      "record_copy": {
+        "count": 0,
+        "bytes": 0,
+        "extra": 0
+      },
+      "list_push": {
+        "count": 128,
+        "bytes": 1024,
+        "extra": 0
+      },
+      "element_load": {
+        "count": 0,
+        "bytes": 0,
+        "extra": 0
+      },
+      "element_store": {
+        "count": 0,
+        "bytes": 0,
+        "extra": 0
+      },
+      "bounds_check": {
+        "count": 202,
+        "bytes": 0,
+        "extra": 0
+      },
+      "overflow_check": {
+        "count": 148,
+        "bytes": 0,
+        "extra": 0
+      },
+      "division_check": {
+        "count": 0,
+        "bytes": 0,
+        "extra": 0
+      },
+      "shift_check": {
+        "count": 0,
+        "bytes": 0,
+        "extra": 0
+      },
+      "other_check": {
+        "count": 4,
+        "bytes": 0,
+        "extra": 0
+      }
+    },
+    "counter_semantics": "core-count-p1-c26c95de7",
+    "collector": {
+      "kind": "perf",
+      "tool": {
+        "path": "/usr/bin/perf",
+        "sha256": "1371ae5cb9fa59632d1d0e34b877d7251df4029810ba67dc56e946545e87b531",
+        "version": "perf version 7.0.14"
+      },
+      "event": "cpu_core/instructions/u",
+      "cpu": 0,
+      "scope": "user instructions; process and inherited children; whole workload"
+    },
+    "scope": "complete scenario",
+    "comparison": "Single qualified source-bound capture, no before/after performance comparison."
+  }
+}

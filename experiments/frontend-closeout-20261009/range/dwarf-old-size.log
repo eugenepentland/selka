@@ -1,0 +1,16 @@
+readelf: Warning: Bogus end-of-siblings marker detected at offset 6bad6 in .debug_info section
+readelf: Warning: Bogus end-of-siblings marker detected at offset 6bad7 in .debug_info section
+readelf: Warning: Bogus end-of-siblings marker detected at offset 6bad8 in .debug_info section
+readelf: Warning: Further warnings about bogus end-of-sibling markers suppressed
+qualified typed.Statement record at prior source line634:
+    <cb4b16>   Unknown AT value: 2cce: 15 byte block: 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+ <2><cb4b26>: Abbrev Number: 7 (DW_TAG_structure_type)
+    <cb4b27>   Unknown AT value: 2ccd: <0xcae3b8>
+    <cb4b2b>   DW_AT_decl_line   : 0x27a
+    <cb4b2f>   DW_AT_decl_column : 1
+    <cb4b30>   DW_AT_accessibility: 1	(public)
+    <cb4b31>   DW_AT_name        : (indirect string, offset: 0x5539a): Statement
+    <cb4b35>   DW_AT_byte_size   : 80
+    <cb4b36>   DW_AT_alignment   : 8
+ <3><cb4b37>: Abbrev Number: 51 (DW_TAG_member)
+    <cb4b38>   DW_AT_name        : (indirect string, offset: 0x444d6): span

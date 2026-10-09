@@ -1,5 +1,3 @@
-
-
 func touch[T](mut values: T[], item: T) -> Unit effects(mutation):
     values[0] = item
 

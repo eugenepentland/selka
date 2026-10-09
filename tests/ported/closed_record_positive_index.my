@@ -1,7 +1,5 @@
-
 # Ported from the retired QBE field-inout tests: a closed carrier written at a
 # positive index keeps its snapshots and detached aliases.
-
 record Runtime:
     data: int[]
     top: int

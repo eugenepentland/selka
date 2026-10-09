@@ -399,7 +399,7 @@ const v_arena_output =
 ;
 
 // spec-case: NEW-CORE-ARENA-1
-test "with arena() blocks, escape, break and continue out of them print what the old core prints" {
+test "migrated arena values break and continue preserve the frozen output" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     try std.testing.expect(try matches(arena.allocator(), "v_arena", v_arena_output, 0));

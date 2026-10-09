@@ -1,6 +1,5 @@
 import strings
 
-
 func expect_int(text: str, wanted: int) -> bool:
     match strings.to_int(text):
         case Some(value):

@@ -1,0 +1,19 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 1 after 5s (all 3 build slot(s) busy)
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 15 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 21 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 8129 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 2 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/frontend-followthrough-20261009 fb868aace] frontend: complete recovery, reuse and explicit allocation contracts
+ 55 files changed, 1528 insertions(+), 281 deletions(-)
+ create mode 100644 docs/tooling/cost-workflow.md
+ create mode 100644 src/core/allocation_contract.zig
+ create mode 100644 src/scoped_directory.zig
+real 1.57
+user 5.35
+sys 1.46
+real 13.80
+user 5.36
+sys 1.49

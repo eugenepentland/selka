@@ -1,14 +1,14 @@
 import filesystem
 
 @ensures(len(result) == 2)
-func checked(fail: bool) -> Result[str[], str]:
+func checked(fail : bool) -> Result[str[], str]:
     if fail:
         return Err("skip the postcondition")
     return Ok([str(17), str(23)])
 
 
-func forwarded(fail: bool) -> Result[str[], str]:
-    mut values = try checked(fail)
+func forwarded(fail : bool) -> Result[str[], str]:
+    mut values = try checked(fail )
     return Ok(values)
 
 

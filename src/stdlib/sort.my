@@ -1,5 +1,3 @@
-
-
 # Three-way comparison of two texts in Unicode code point order.
 public func compare_strs(a: str, b: str) -> int effects():
     if a == b:

@@ -2,8 +2,6 @@
 # directly with --value-semantics on each backend: constructing a million
 # scalar-only recursive boxes and taking a non-borrowed copy must not walk the
 # immutable chain, and a later outer-field write must leave the copy alone.
-
-
 record Node:
     value: int
     next: Node?

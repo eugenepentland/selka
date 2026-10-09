@@ -2,7 +2,6 @@ import model
 import make
 import api
 
-
 public func indexed_x(s: model.Scene) -> int:
     return s.index["a"].x
 

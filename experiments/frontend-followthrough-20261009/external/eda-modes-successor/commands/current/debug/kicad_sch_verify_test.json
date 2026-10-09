@@ -1,0 +1,181 @@
+{
+  "actual_tests": 8,
+  "command": [
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/artifacts/mylang-successor",
+    "test",
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_sch_verify_test.my",
+    "--json",
+    "--force",
+    "--jobs",
+    "1",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/eda-modes-successor/cache",
+    "--max-frames=30000",
+    "--max-steps=4000000000",
+    "--max-memory=2G"
+  ],
+  "complete_report_exact": false,
+  "cwd": "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda",
+  "elapsed_seconds": 0.9570999899879098,
+  "expected_statuses_equal": true,
+  "functional_membership_pass": true,
+  "membership_equal_after_explicit_module_mapping": true,
+  "nonpassing": 0,
+  "process_status_equal": true,
+  "reference_command": [
+    "/home/epentland/.cache/mylang/frontend-20261008/mylang-s5-pin/bin/mylang",
+    "test",
+    "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sch_verify_test.my",
+    "--json",
+    "--force",
+    "--jobs",
+    "1",
+    "--cache-dir",
+    "/home/epentland/.cache/mylang/frontend-current-eda-oracle-20261008",
+    "--max-frames=30000",
+    "--max-steps=4000000000",
+    "--max-memory=2G"
+  ],
+  "reference_receipt_sha256": "063c5a35a443f24b1b928ea51a31599773e9c81b04af44c1a321b5ac240dd773",
+  "reference_returncode": 0,
+  "reference_tests": 8,
+  "report_changes": [
+    {
+      "candidate": [
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_sch_verify_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_sch_verify.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_sch_textbox.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/sexpr_ast.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/numeric.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/support_sort.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/support_parse.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/support_strs.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/sexpr_parser.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/sexpr_tokenizer.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/support_expect.my"
+      ],
+      "field": "sources",
+      "reference": [
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sch_verify_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sch_verify.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sch_textbox.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/sexpr_ast.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/numeric.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/support_sort.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/support_parse.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/support_strs.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/sexpr_parser.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/sexpr_tokenizer.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/support_expect.my"
+      ]
+    },
+    {
+      "candidate": [
+        {
+          "at": "",
+          "name": "src.kicad_sch_verify_test::test_kicad_sch_verify_catches_a_label_caught_mid_wire",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_verify_test::test_kicad_sch_verify_catches_a_wire_through_a_pin_a_diagonal_and_a_missing_segment",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_verify_test::test_kicad_sch_verify_catches_label_no_connect_and_lib_id_damage",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_verify_test::test_kicad_sch_verify_catches_off_grid_coordinates_and_duplicate_pads",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_verify_test::test_kicad_sch_verify_matches_child_sheet_files_and_rail_symbol_values",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_verify_test::test_kicad_sch_verify_matches_junction_dots_to_the_points_wire_ends_actually_meet_at",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_verify_test::test_kicad_sch_verify_passes_a_good_document_and_catches_a_dropped_symbol",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_verify_test::test_kicad_sch_verify_passes_off_grid_body_art_but_not_an_off_grid_pin",
+          "reason": "",
+          "status": "passed"
+        }
+      ],
+      "field": "tests",
+      "reference": [
+        {
+          "at": "",
+          "name": "kicad_sch_verify_test::test_kicad_sch_verify_catches_a_label_caught_mid_wire",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_verify_test::test_kicad_sch_verify_catches_a_wire_through_a_pin_a_diagonal_and_a_missing_segment",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_verify_test::test_kicad_sch_verify_catches_label_no_connect_and_lib_id_damage",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_verify_test::test_kicad_sch_verify_catches_off_grid_coordinates_and_duplicate_pads",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_verify_test::test_kicad_sch_verify_matches_child_sheet_files_and_rail_symbol_values",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_verify_test::test_kicad_sch_verify_matches_junction_dots_to_the_points_wire_ends_actually_meet_at",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_verify_test::test_kicad_sch_verify_passes_a_good_document_and_catches_a_dropped_symbol",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_verify_test::test_kicad_sch_verify_passes_off_grid_body_art_but_not_an_off_grid_pin",
+          "reason": "",
+          "status": "passed"
+        }
+      ]
+    }
+  ],
+  "returncode": 0,
+  "stderr_exact": true,
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stdout_sha256": "c4d6c8044403b6c7cfab45f28eb5141ec7a8dc2deb94144d63bcbc7479d7e8a1",
+  "timeout": false
+}

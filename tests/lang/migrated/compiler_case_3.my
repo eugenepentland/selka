@@ -1,5 +1,3 @@
-
-
 public func program() -> i64:
     mut x = 3
     while False:

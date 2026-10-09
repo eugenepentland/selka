@@ -1,0 +1,37 @@
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source a624fa6f37bc)
+guardian: diff-scoped vs d21b2dfa9b36f1de285985a6b38e39847d6beca2: 86/566 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 15 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 13 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 3108 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs d21b2dfa9b36f1de285985a6b38e39847d6beca2, 86 file(s) in scope
+Build Summary: 15/15 steps succeeded
+fmt-check success
++- zig fmt --check success
++- check live .my corpus formatting cached
+|  +- install success
+|  |  +- install mylang cached
+|  |  |  +- compile exe mylang debug native cached 8ms MaxRSS:42M
+|  |  |  |  +- run exe build-identity (build_identity) cached
+|  |  |  |  |  +- compile exe build-identity debug native cached 4ms MaxRSS:41M
+|  |  |  |  +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 5ms MaxRSS:41M
+|  |  |  +- run ../guardian-zig/zig-out/bin/guardian-check success 1s
+|  |  |     +- guardian-selfcheck success
+|  |  |        +- run ../guardian-zig/zig-out/bin/guardian-check success 5ms
+|  |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|  +- hash declared test inputs success 67ms
+|  +- record the test environment success 4ms
+|  +- compile exe mylang debug native (+2 more reused dependencies)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- verify .my formatting gate cached
+   +- install (+2 more reused dependencies)
+   +- hash declared test inputs (reused)
+   +- record the test environment (reused)
+   +- compile exe mylang debug native (+2 more reused dependencies)
+   +- compile exe mylang debug native (+2 more reused dependencies)
+
+real 1.85
+user 5.00
+sys 1.76
+real 3.73
+user 5.01
+sys 1.79

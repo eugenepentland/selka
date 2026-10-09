@@ -1,0 +1,36 @@
+{
+  "compiler_sha256": "b18488cc1cf9573288c43b642df3b828f6903784bb5d3f4b2a094ca2db707472",
+  "source_manifest_sha256": "fe825e9c9343eac00078600aa839baed1a1612b9e43e80b1919d9aeb3b8aebb2",
+  "native": {
+    "lox": {
+      "cases": 974,
+      "failed": [],
+      "mismatches": [],
+      "elapsed_seconds": 6.407553541008383,
+      "binary_unchanged": true
+    },
+    "eda": {
+      "cases": 34,
+      "failed": [],
+      "mismatches": [],
+      "elapsed_seconds": 2.198152357013896,
+      "binary_unchanged": true
+    }
+  },
+  "lox": {
+    "mode_commands": 84,
+    "guest_tests_per_mode": 65,
+    "configured_tests_per_mode": 13,
+    "audit": "lox-modes-final-difference-audit.json"
+  },
+  "eda": {
+    "mode_commands": 366,
+    "guest_tests_per_mode": 310,
+    "frozen_property_seed": 8679566789041942096,
+    "seed_replay_commands": 6,
+    "audit": "eda-final-combined-audit.json"
+  },
+  "production_sources_unchanged_after_seed_replay": true,
+  "configured_fingerprint_equivalence_claimed": false,
+  "configured_contract_source_migration_review": "configured-contract-audit.json"
+}

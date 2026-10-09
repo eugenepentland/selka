@@ -1,9 +1,7 @@
-
 # `byte_buffer(values)` is a fresh value (VALUE-BUFFER-FRESH-1): storing it into
 # a local places no copy, so nothing may depend on that copy having been made.
 # Each test builds a buffer from a list and then tries to see the list, another
 # buffer, a snapshot or a stored record change when the buffer is written.
-
 record Packet:
     tag: str
     body: byte_buffer

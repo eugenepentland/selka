@@ -1,6 +1,6 @@
-
 record Packet:
     body: byte_buffer
+
 
 # spec-case: NEW-CORE-S3-NUMBER-1
 public func test_byte_buffer_snapshots_copies_and_places() -> bool:
@@ -17,6 +17,7 @@ public func test_byte_buffer_snapshots_copies_and_places() -> bool:
         return False
     return packet.body == b"\x01\x02\x03\x04\x05" and buffer == b"\x01\x02\x03\x04"
 
+
 # spec-case: NEW-CORE-S3-NUMBER-1
 public func test_buffer_append_range_utf8_and_float_preserve_inputs() -> bool:
     mut buffer = byte_buffer([])
@@ -25,6 +26,7 @@ public func test_buffer_append_range_utf8_and_float_preserve_inputs() -> bool:
     if buffer.append_byte(256) or buffer.append_range(b"abc", 2, 1):
         return False
     return bytes(buffer) == b"\xce\xbb-0.0"
+
 
 func main() -> int:
     return 0

@@ -1,5 +1,3 @@
-
-
 public func program() -> i64:
     mut values = {1: 10, 2: 20}
     if 2 in values:

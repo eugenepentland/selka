@@ -1,5 +1,3 @@
-
-
 func total(values: int[]) -> int:
     mut sum = 0
     for value in values:

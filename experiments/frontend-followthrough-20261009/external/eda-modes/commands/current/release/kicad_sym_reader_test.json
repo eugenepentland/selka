@@ -1,0 +1,169 @@
+{
+  "actual_tests": 6,
+  "command": [
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/artifacts/mylang",
+    "test",
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_sym_reader_test.my",
+    "--json",
+    "--force",
+    "--jobs",
+    "1",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/eda-modes/cache",
+    "--release",
+    "--max-frames=30000",
+    "--max-steps=4000000000",
+    "--max-memory=2G"
+  ],
+  "complete_report_exact": false,
+  "cwd": "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda",
+  "elapsed_seconds": 1.387497769901529,
+  "expected_statuses_equal": false,
+  "functional_membership_pass": false,
+  "membership_equal_after_explicit_module_mapping": true,
+  "nonpassing": 4,
+  "process_status_equal": false,
+  "reference_command": [
+    "/home/epentland/.cache/mylang/frontend-20261008/mylang-s5-pin/bin/mylang",
+    "test",
+    "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sym_reader_test.my",
+    "--json",
+    "--force",
+    "--jobs",
+    "1",
+    "--cache-dir",
+    "/home/epentland/.cache/mylang/frontend-current-eda-oracle-20261008",
+    "--release",
+    "--max-frames=30000",
+    "--max-steps=4000000000",
+    "--max-memory=2G"
+  ],
+  "reference_receipt_sha256": "1a54d3f58dbb7d499f69e0b8ee3a9b63e56adb337de90819db919c87964990be",
+  "reference_returncode": 0,
+  "reference_tests": 6,
+  "report_changes": [
+    {
+      "candidate": 4,
+      "field": "failed",
+      "reference": 0
+    },
+    {
+      "candidate": 2,
+      "field": "passed",
+      "reference": 6
+    },
+    {
+      "candidate": [
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_sym_reader_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_sym_reader.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/sexpr_ast.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/sexpr_parser.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/sexpr_tokenizer.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/numeric.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/support_sort.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/support_strs.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/support_parse.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_sym_testdata.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/support_expect.my"
+      ],
+      "field": "sources",
+      "reference": [
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sym_reader_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sym_reader.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/sexpr_ast.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/sexpr_parser.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/sexpr_tokenizer.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/numeric.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/support_sort.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/support_strs.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/support_parse.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sym_testdata.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/support_expect.my"
+      ]
+    },
+    {
+      "candidate": [
+        {
+          "at": "",
+          "name": "src.kicad_sym_reader_test::test_fuzz_parselibrary_tolerates_arbitrary_bytes",
+          "reason": "R_FRAME_LIMIT\n  in src.support_parse::parse_int at src/support_parse.my:30:8\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  29984 frames omitted\n\ncall-depth budget exhausted; raise it with --max-frames=N (each frame reserves 32 KiB of stack, so --max-memory must cover N x 32 KiB)\n",
+          "status": "failed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sym_reader_test::test_kicad_sym_reader_models_each_body_primitive_and_skips_malformed_ones",
+          "reason": "R_FRAME_LIMIT\n  in src.support_parse::parse_int at src/support_parse.my:30:8\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  29984 frames omitted\n\ncall-depth budget exhausted; raise it with --max-frames=N (each frame reserves 32 KiB of stack, so --max-memory must cover N x 32 KiB)\n",
+          "status": "failed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sym_reader_test::test_kicad_sym_reader_parses_a_flat_vendor_symbol_s_pins_and_body_graphics",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sym_reader_test::test_kicad_sym_reader_rejects_a_non_library_root_and_tolerates_an_empty_library",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sym_reader_test::test_kicad_sym_reader_splits_sub_symbols_into_units_and_keeps_sub_hundredth_coordinates",
+          "reason": "R_FRAME_LIMIT\n  in src.support_parse::parse_int at src/support_parse.my:30:8\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  29984 frames omitted\n\ncall-depth budget exhausted; raise it with --max-frames=N (each frame reserves 32 KiB of stack, so --max-memory must cover N x 32 KiB)\n",
+          "status": "failed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sym_reader_test::test_kicad_sym_unitid_reads_the_trailing_unit_and_style_numbers",
+          "reason": "R_FRAME_LIMIT\n  in src.support_parse::parse_int at src/support_parse.my:30:8\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  in src.support_parse::parse_int at src/support_parse.my:32:12\n  29984 frames omitted\n\ncall-depth budget exhausted; raise it with --max-frames=N (each frame reserves 32 KiB of stack, so --max-memory must cover N x 32 KiB)\n",
+          "status": "failed"
+        }
+      ],
+      "field": "tests",
+      "reference": [
+        {
+          "at": "",
+          "name": "kicad_sym_reader_test::test_fuzz_parselibrary_tolerates_arbitrary_bytes",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sym_reader_test::test_kicad_sym_reader_models_each_body_primitive_and_skips_malformed_ones",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sym_reader_test::test_kicad_sym_reader_parses_a_flat_vendor_symbol_s_pins_and_body_graphics",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sym_reader_test::test_kicad_sym_reader_rejects_a_non_library_root_and_tolerates_an_empty_library",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sym_reader_test::test_kicad_sym_reader_splits_sub_symbols_into_units_and_keeps_sub_hundredth_coordinates",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sym_reader_test::test_kicad_sym_unitid_reads_the_trailing_unit_and_style_numbers",
+          "reason": "",
+          "status": "passed"
+        }
+      ]
+    }
+  ],
+  "returncode": 1,
+  "stderr_exact": true,
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stdout_sha256": "0b1f2d05b6f86aa47ec28a9e0d9f33caec82717fa890dde9671f1818ed4fc665",
+  "timeout": false
+}

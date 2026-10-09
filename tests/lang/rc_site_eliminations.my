@@ -571,35 +571,7 @@ public func test_records_copied_out_of_readonly_lists_into_named_locals() -> boo
 # for the whole file; the result is the number of failures.
 func main() -> int:
     mut failures = 0
-    for passed in [
-        test_loaned_field_reads_keep_values_through_their_temporaries(),
-        test_loaned_reads_through_negative_indices_and_readonly_parameters(),
-        test_index_callback_replacing_the_list_keeps_the_loaned_original(),
-        test_managed_elements_and_nested_record_fields_relocate_whole_values(),
-        test_owned_temporaries_are_taken_not_relocated(),
-        test_field_receivers_write_through_mut_records_and_keep_snapshots(),
-        test_field_receivers_of_local_records_and_negative_indices(),
-        test_completed_callback_replaces_the_field_list_before_update(),
-        test_managed_element_field_stores_keep_their_scope(),
-        test_payload_bindings_read_in_place_keep_their_owner(),
-        test_payload_bindings_outliving_a_scrutinee_write_keep_their_copy(),
-        test_returned_bindings_and_locals_move_their_owner(),
-        test_returned_parameters_keep_the_callers_value(),
-        test_nested_field_copies_into_constructors_stay_independent(),
-        test_nested_field_copies_from_mut_parameters_and_call_results(),
-        test_readonly_table_reads_borrow_payloads_in_place(),
-        test_nested_readonly_matches_in_loops(),
-        test_mut_roots_keep_owned_bindings(),
-        test_mut_root_list_reads_across_unrelated_calls(),
-        test_mut_root_list_reads_keep_the_list_a_call_replaces(),
-        test_mut_root_fields_passed_to_calls_read_the_current_value(),
-        test_mut_root_fields_keep_the_value_a_later_mut_call_replaces(),
-        test_mut_root_fields_passed_to_calls_whose_results_are_matched(),
-        test_records_copied_out_of_readonly_lists_into_named_locals(),
-        test_borrowed_match_accessors_read_in_place_and_copy_when_kept(),
-        test_borrowed_fields_across_calls_that_only_advance_the_root(),
-        test_borrowed_fields_across_calls_that_replace_them(),
-    ]:
+    for passed in [test_loaned_field_reads_keep_values_through_their_temporaries(), test_loaned_reads_through_negative_indices_and_readonly_parameters(), test_index_callback_replacing_the_list_keeps_the_loaned_original(), test_managed_elements_and_nested_record_fields_relocate_whole_values(), test_owned_temporaries_are_taken_not_relocated(), test_field_receivers_write_through_mut_records_and_keep_snapshots(), test_field_receivers_of_local_records_and_negative_indices(), test_completed_callback_replaces_the_field_list_before_update(), test_managed_element_field_stores_keep_their_scope(), test_payload_bindings_read_in_place_keep_their_owner(), test_payload_bindings_outliving_a_scrutinee_write_keep_their_copy(), test_returned_bindings_and_locals_move_their_owner(), test_returned_parameters_keep_the_callers_value(), test_nested_field_copies_into_constructors_stay_independent(), test_nested_field_copies_from_mut_parameters_and_call_results(), test_readonly_table_reads_borrow_payloads_in_place(), test_nested_readonly_matches_in_loops(), test_mut_roots_keep_owned_bindings(), test_mut_root_list_reads_across_unrelated_calls(), test_mut_root_list_reads_keep_the_list_a_call_replaces(), test_mut_root_fields_passed_to_calls_read_the_current_value(), test_mut_root_fields_keep_the_value_a_later_mut_call_replaces(), test_mut_root_fields_passed_to_calls_whose_results_are_matched(), test_records_copied_out_of_readonly_lists_into_named_locals(), test_borrowed_match_accessors_read_in_place_and_copy_when_kept(), test_borrowed_fields_across_calls_that_only_advance_the_root(), test_borrowed_fields_across_calls_that_replace_them()]:
         if not passed:
             failures += 1
     return failures

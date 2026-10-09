@@ -1,0 +1,29 @@
+{
+  "compiler_sha256": "5e072ee17b825cfbd40ed5533c3bce9f166ce4ae576395020cd5e435cc45ed11",
+  "production_unchanged": true,
+  "corpora_unchanged": true,
+  "compiler_unchanged": true,
+  "changed_production_paths": [
+    "src/arena_fix.zig",
+    "src/retired_features_test.zig"
+  ],
+  "arena_source_files_scanned": 173,
+  "arena_occurrences": 0,
+  "native_proofs": {
+    "lox": "successor-ir-comparison.json complete successful IR identical",
+    "eda": "successor-eda-executable-comparison.json native executable byte identical"
+  },
+  "mode_commands": {
+    "lox": {
+      "commands": 84,
+      "passed": 84,
+      "report_audit": "lox-modes-successor-difference-audit.json"
+    },
+    "eda": {
+      "commands": 366,
+      "passed": 366,
+      "report_audit": "eda-modes-successor-difference-audit.json"
+    }
+  },
+  "frozen_property_seed": 8679566789041942096
+}

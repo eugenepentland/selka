@@ -1,5 +1,3 @@
-
-
 public func replace_list(mut items: int[]):
     items = [7]
     items.append(8)

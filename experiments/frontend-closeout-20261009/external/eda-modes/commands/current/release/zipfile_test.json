@@ -1,0 +1,121 @@
+{
+  "actual_tests": 4,
+  "command": [
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/artifacts/mylang-final",
+    "test",
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/zipfile_test.my",
+    "--json",
+    "--force",
+    "--jobs",
+    "1",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/external/eda-modes/cache",
+    "--release",
+    "--max-frames=30000",
+    "--max-steps=4000000000",
+    "--max-memory=2G"
+  ],
+  "complete_report_exact": false,
+  "cwd": "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda",
+  "elapsed_seconds": 0.18843218591064215,
+  "expected_statuses_equal": true,
+  "functional_membership_pass": true,
+  "membership_equal_after_explicit_module_mapping": true,
+  "nonpassing": 0,
+  "process_status_equal": true,
+  "reference_command": [
+    "/home/epentland/.cache/mylang/frontend-20261008/mylang-s5-pin/bin/mylang",
+    "test",
+    "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/zipfile_test.my",
+    "--json",
+    "--force",
+    "--jobs",
+    "1",
+    "--cache-dir",
+    "/home/epentland/.cache/mylang/frontend-current-eda-oracle-20261008",
+    "--release",
+    "--max-frames=30000",
+    "--max-steps=4000000000",
+    "--max-memory=2G"
+  ],
+  "reference_receipt_sha256": "619daed405392bad4d933fb739901a40c41f750a1435c5317f0d83b926558ba5",
+  "reference_returncode": 0,
+  "reference_tests": 4,
+  "report_changes": [
+    {
+      "candidate": [
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/zipfile_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/zipfile.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/support_crc32.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/support_expect.my"
+      ],
+      "field": "sources",
+      "reference": [
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/zipfile_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/zipfile.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/support_crc32.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/support_expect.my"
+      ]
+    },
+    {
+      "candidate": [
+        {
+          "at": "",
+          "name": "src.zipfile_test::test_encoded_size_predicts_the_complete_archive_before_allocation",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.zipfile_test::test_fuzz_write_emits_a_well_formed_archive_for_arbitrary_entry_bytes",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.zipfile_test::test_write_produces_an_archive_std_zip_can_extract",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.zipfile_test::test_write_rejects_zip32_field_overflow_before_producing_bytes",
+          "reason": "",
+          "status": "passed"
+        }
+      ],
+      "field": "tests",
+      "reference": [
+        {
+          "at": "",
+          "name": "zipfile_test::test_encoded_size_predicts_the_complete_archive_before_allocation",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "zipfile_test::test_fuzz_write_emits_a_well_formed_archive_for_arbitrary_entry_bytes",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "zipfile_test::test_write_produces_an_archive_std_zip_can_extract",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "zipfile_test::test_write_rejects_zip32_field_overflow_before_producing_bytes",
+          "reason": "",
+          "status": "passed"
+        }
+      ]
+    }
+  ],
+  "returncode": 0,
+  "stderr_exact": true,
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stdout_sha256": "45b7ce9409ca971a28c8ff80ba0024f486cf73b2a1c459d8edb14ef98033d4b1",
+  "timeout": false
+}

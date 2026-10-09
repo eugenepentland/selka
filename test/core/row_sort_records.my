@@ -1,5 +1,5 @@
-
 extern func runtime_bench_now(host: Host) -> i64 effects(host)
+
 
 record Row:
     key: int

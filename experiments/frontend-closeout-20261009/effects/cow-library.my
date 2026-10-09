@@ -1,0 +1,2 @@
+func fixed(mut values: int[]) -> Unit noalloc:
+    values[0] = 42

@@ -1,5 +1,3 @@
-
-
 func change(mut items: int[]) -> Unit:
     items[1] = 9
 

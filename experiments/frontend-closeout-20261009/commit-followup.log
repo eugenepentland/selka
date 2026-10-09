@@ -1,0 +1,16 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 1 after 10s (all 3 build slot(s) busy)
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 15 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 21 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 8132 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 2 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/frontend-followthrough-20261009 48e741592] frontend: honor noalloc on UTF-8 error paths and resource examples
+ 10 files changed, 58 insertions(+), 11 deletions(-)
+real 2.99
+user 7.76
+sys 2.10
+real 19.19
+user 7.77
+sys 2.14

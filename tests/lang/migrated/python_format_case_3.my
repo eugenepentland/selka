@@ -1,7 +1,6 @@
-
-
 func label(count: int, items: int[]) -> str:
     return f"total {count} of {len(items)} items"
+
 
 public func program() -> int:
     mut score = 0

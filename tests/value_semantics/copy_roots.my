@@ -1,5 +1,3 @@
-
-
 func snapshot(xs: int[]) -> int[]:
     return xs
 

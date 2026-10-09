@@ -1,4 +1,3 @@
-
 func histogram(text: str) -> dict[str, int]:
     mut counts: dict[str, int] = {}
     for word in text.split(" "):

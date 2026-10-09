@@ -1,4 +1,3 @@
-
 public func test_integer_cow_index_and_tombstone() -> bool:
     mut values: dict[str, int] = {str(j): j for j in range(20)}
     mut snapshot = values
@@ -8,6 +7,7 @@ public func test_integer_cow_index_and_tombstone() -> bool:
     values["4"] = 92
     return len(values) == 20 and snapshot["3"] == 3 and snapshot["4"] == 4 and values["3"] == 90 and values["5"] == 91 and values["4"] == 92
 
+
 public func test_bool_store_and_snapshot() -> bool:
     mut values: dict[bool, bool] = {False: False, True: True}
     mut snapshot = values
@@ -15,6 +15,7 @@ public func test_bool_store_and_snapshot() -> bool:
     _ = values.pop(True)
     values[False] = False
     return not snapshot[False] and snapshot[True] and not values[False] and len(values) == 1
+
 
 public func test_unit_store_and_snapshot() -> bool:
     mut values: dict[int, Unit] = {1: (), 2: ()}
@@ -26,6 +27,7 @@ public func test_unit_store_and_snapshot() -> bool:
     _ = values[1]
     return len(snapshot) == 2 and len(values) == 1 and 2 in snapshot and 1 in values
 
+
 public func test_narrow_store_and_snapshot() -> bool:
     mut values: dict[i8, u8] = {i8(-7): u8(3), i8(8): u8(4)}
     mut snapshot = values
@@ -33,6 +35,7 @@ public func test_narrow_store_and_snapshot() -> bool:
     _ = values.pop(i8(8))
     values[i8(-7)] = u8(0)
     return snapshot[i8(-7)] == u8(3) and values[i8(-7)] == u8(0) and snapshot[i8(8)] == u8(4) and len(values) == 1
+
 
 public func test_float_store_nan_and_snapshot() -> bool:
     mut nan = 0.0

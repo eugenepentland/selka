@@ -1,0 +1,533 @@
+fn main() -> i64
+b0:
+  %0 = call bool test_writes_then_iteration_preserve_snapshot()
+  branch %0, b2, b1
+b1: ; preds b0
+  ret 1:i64
+b2: ; preds b0
+  %4 = call bool test_earlier_iteration_then_writes_preserve_identity()
+  branch %4, b4, b3
+b3: ; preds b2
+  ret 2:i64
+b4: ; preds b2
+  %8 = call bool test_helper_return_is_published_before_capture()
+  branch %8, b6, b5
+b5: ; preds b4
+  ret 3:i64
+b6: ; preds b4
+  %12 = call bool test_user_loop_copy_remains_independent()
+  branch %12, b8, b7
+b7: ; preds b6
+  ret 4:i64
+b8: ; preds b6
+  %16 = call bool test_call_then_source_rebind_preserves_values()
+  branch %16, b10, b9
+b9: ; preds b8
+  ret 5:i64
+b10: ; preds b8
+  %20 = call bool test_named_source_iteration_sees_element_changes()
+  branch %20, b12, b11
+b11: ; preds b10
+  ret 7:i64
+b12: ; preds b10
+  ret 0:i64
+fn test_writes_then_iteration_preserve_snapshot() -> bool
+b0:
+  %1 = list_new list[bool] 3:i64
+  %3 = list_push list[bool] %1, 1:bool
+  %5 = list_push list[bool] %3, 1:bool
+  %7 = list_push list[bool] %5, 1:bool
+  jump b1
+b1: ; preds b0 b3
+  %11 = phi i64 0:i64, %33
+  %16 = phi list[bool] %7, %29
+  %13 = cmp.lt bool %11, 20:i64
+  branch %13, b2, b4
+b2: ; preds b1
+  %19 = cmp.lt bool 0:i64, 0:i64
+  branch %19, b5, b6
+b3: ; preds b6
+  %33 = add.exact i64 %11, 1:i64
+  jump b1
+b4: ; preds b1
+  %38 = list_len u64 %16
+  %39 = convert.exact i64 %38
+  jump b7
+b5: ; preds b2
+  %21 = list_len u64 %16
+  %22 = convert.exact i64 %21
+  %23 = add.exact i64 %22, 0:i64
+  jump b6
+b6: ; preds b2 b5
+  %25 = phi i64 0:i64, %23
+  %29 = list_set.exact list[bool] %16, %25, 0:bool
+  jump b3
+b7: ; preds b4 b9
+  %41 = phi i64 0:i64, %55
+  %48 = phi i64 0:i64, %59
+  %43 = cmp.lt bool %41, %39
+  branch %43, b8, b10
+b8: ; preds b7
+  %46 = list_get.exact bool %16, %41
+  branch %46, b11, b12
+b9: ; preds b12
+  %55 = add.exact i64 %41, 1:i64
+  jump b7
+b10: ; preds b7
+  %61 = cmp.eq bool %48, 2:i64
+  branch %61, b13, b14
+b11: ; preds b8
+  %50 = add.exact i64 %48, 1:i64
+  jump b12
+b12: ; preds b8 b11
+  %59 = phi i64 %48, %50
+  jump b9
+b13: ; preds b10
+  %69 = cmp.lt bool 0:i64, 0:i64
+  branch %69, b15, b16
+b14: ; preds b10 b16
+  %79 = phi bool %61, %77
+  branch %79, b17, b18
+b15: ; preds b13
+  %71 = list_len u64 %7
+  %72 = convert.exact i64 %71
+  %73 = add.exact i64 %72, 0:i64
+  jump b16
+b16: ; preds b13 b15
+  %75 = phi i64 0:i64, %73
+  %77 = list_get.exact bool %7, %75
+  jump b14
+b17: ; preds b14
+  %87 = cmp.lt bool 0:i64, 0:i64
+  branch %87, b19, b20
+b18: ; preds b14 b20
+  %98 = phi bool %79, %96
+  ret %98
+b19: ; preds b17
+  %89 = list_len u64 %16
+  %90 = convert.exact i64 %89
+  %91 = add.exact i64 %90, 0:i64
+  jump b20
+b20: ; preds b17 b19
+  %93 = phi i64 0:i64, %91
+  %95 = list_get.exact bool %16, %93
+  %96 = not bool %95
+  jump b18
+fn test_earlier_iteration_then_writes_preserve_identity() -> bool
+b0:
+  %1 = list_new list[bool] 3:i64
+  %3 = list_push list[bool] %1, 1:bool
+  %5 = list_push list[bool] %3, 1:bool
+  %7 = list_push list[bool] %5, 0:bool
+  %10 = list_len u64 %7
+  %11 = convert.exact i64 %10
+  jump b1
+b1: ; preds b0 b3
+  %13 = phi i64 0:i64, %27
+  %20 = phi i64 0:i64, %31
+  %15 = cmp.lt bool %13, %11
+  branch %15, b2, b4
+b2: ; preds b1
+  %18 = list_get.exact bool %7, %13
+  branch %18, b5, b6
+b3: ; preds b6
+  %27 = add.exact i64 %13, 1:i64
+  jump b1
+b4: ; preds b1
+  jump b7
+b5: ; preds b2
+  %22 = add.exact i64 %20, 1:i64
+  jump b6
+b6: ; preds b2 b5
+  %31 = phi i64 %20, %22
+  jump b3
+b7: ; preds b4 b9
+  %35 = phi i64 0:i64, %57
+  %40 = phi list[bool] %7, %53
+  %37 = cmp.lt bool %35, 12:i64
+  branch %37, b8, b10
+b8: ; preds b7
+  %43 = cmp.lt bool 1:i64, 0:i64
+  branch %43, b11, b12
+b9: ; preds b12
+  %57 = add.exact i64 %35, 1:i64
+  jump b7
+b10: ; preds b7
+  %64 = list_len u64 %40
+  %65 = convert.exact i64 %64
+  jump b13
+b11: ; preds b8
+  %45 = list_len u64 %40
+  %46 = convert.exact i64 %45
+  %47 = add.exact i64 %46, 1:i64
+  jump b12
+b12: ; preds b8 b11
+  %49 = phi i64 1:i64, %47
+  %53 = list_set.exact list[bool] %40, %49, 0:bool
+  jump b9
+b13: ; preds b10 b15
+  %67 = phi i64 0:i64, %81
+  %74 = phi i64 0:i64, %85
+  %69 = cmp.lt bool %67, %65
+  branch %69, b14, b16
+b14: ; preds b13
+  %72 = list_get.exact bool %40, %67
+  branch %72, b17, b18
+b15: ; preds b18
+  %81 = add.exact i64 %67, 1:i64
+  jump b13
+b16: ; preds b13
+  %91 = cmp.eq bool %20, 2:i64
+  branch %91, b19, b20
+b17: ; preds b14
+  %76 = add.exact i64 %74, 1:i64
+  jump b18
+b18: ; preds b14 b17
+  %85 = phi i64 %74, %76
+  jump b15
+b19: ; preds b16
+  %94 = cmp.eq bool %74, 1:i64
+  jump b20
+b20: ; preds b16 b19
+  %96 = phi bool %91, %94
+  ret %96
+fn test_helper_return_is_published_before_capture() -> bool
+b0:
+  %0 = call list[bool] returned_flags()
+  jump b1
+b1: ; preds b0 b3
+  %4 = phi i64 0:i64, %26
+  %9 = phi list[bool] %0, %22
+  %6 = cmp.lt bool %4, 8:i64
+  branch %6, b2, b4
+b2: ; preds b1
+  %12 = cmp.lt bool 0:i64, 0:i64
+  branch %12, b5, b6
+b3: ; preds b6
+  %26 = add.exact i64 %4, 1:i64
+  jump b1
+b4: ; preds b1
+  %31 = list_len u64 %9
+  %32 = convert.exact i64 %31
+  jump b7
+b5: ; preds b2
+  %14 = list_len u64 %9
+  %15 = convert.exact i64 %14
+  %16 = add.exact i64 %15, 0:i64
+  jump b6
+b6: ; preds b2 b5
+  %18 = phi i64 0:i64, %16
+  %22 = list_set.exact list[bool] %9, %18, 0:bool
+  jump b3
+b7: ; preds b4 b9
+  %34 = phi i64 0:i64, %48
+  %41 = phi i64 0:i64, %52
+  %36 = cmp.lt bool %34, %32
+  branch %36, b8, b10
+b8: ; preds b7
+  %39 = list_get.exact bool %9, %34
+  branch %39, b11, b12
+b9: ; preds b12
+  %48 = add.exact i64 %34, 1:i64
+  jump b7
+b10: ; preds b7
+  %54 = cmp.eq bool %41, 1:i64
+  ret %54
+b11: ; preds b8
+  %43 = add.exact i64 %41, 1:i64
+  jump b12
+b12: ; preds b8 b11
+  %52 = phi i64 %41, %43
+  jump b9
+fn test_user_loop_copy_remains_independent() -> bool
+b0:
+  %1 = list_new list[list[bool]] 2:i64
+  %3 = list_new list[bool] 2:i64
+  %5 = list_push list[bool] %3, 1:bool
+  %7 = list_push list[bool] %5, 1:bool
+  %8 = list_push list[list[bool]] %1, %7
+  %10 = list_new list[bool] 2:i64
+  %12 = list_push list[bool] %10, 1:bool
+  %14 = list_push list[bool] %12, 1:bool
+  %15 = list_push list[list[bool]] %8, %14
+  %18 = list_len u64 %15
+  %19 = convert.exact i64 %18
+  jump b1
+b1: ; preds b0 b3
+  %21 = phi i64 0:i64, %71
+  %64 = phi i64 0:i64, %52
+  %23 = cmp.lt bool %21, %19
+  branch %23, b2, b4
+b2: ; preds b1
+  %26 = list_get.exact list[bool] %15, %21
+  %30 = cmp.lt bool 0:i64, 0:i64
+  branch %30, b5, b6
+b3: ; preds b10
+  %71 = add.exact i64 %21, 1:i64
+  jump b1
+b4: ; preds b1
+  %80 = cmp.eq bool %64, 2:i64
+  branch %80, b13, b14
+b5: ; preds b2
+  %32 = list_len u64 %26
+  %33 = convert.exact i64 %32
+  %34 = add.exact i64 %33, 0:i64
+  jump b6
+b6: ; preds b2 b5
+  %36 = phi i64 0:i64, %34
+  %40 = list_set.exact list[bool] %26, %36, 0:bool
+  %42 = list_len u64 %40
+  %43 = convert.exact i64 %42
+  jump b7
+b7: ; preds b6 b9
+  %45 = phi i64 0:i64, %59
+  %52 = phi i64 %64, %65
+  %47 = cmp.lt bool %45, %43
+  branch %47, b8, b10
+b8: ; preds b7
+  %50 = list_get.exact bool %40, %45
+  branch %50, b11, b12
+b9: ; preds b12
+  %59 = add.exact i64 %45, 1:i64
+  jump b7
+b10: ; preds b7
+  jump b3
+b11: ; preds b8
+  %54 = add.exact i64 %52, 1:i64
+  jump b12
+b12: ; preds b8 b11
+  %65 = phi i64 %52, %54
+  jump b9
+b13: ; preds b4
+  %88 = cmp.lt bool 0:i64, 0:i64
+  branch %88, b15, b16
+b14: ; preds b4 b18
+  %109 = phi bool %80, %107
+  branch %109, b19, b20
+b15: ; preds b13
+  %90 = list_len u64 %15
+  %91 = convert.exact i64 %90
+  %92 = add.exact i64 %91, 0:i64
+  jump b16
+b16: ; preds b13 b15
+  %94 = phi i64 0:i64, %92
+  %96 = list_get.exact list[bool] %15, %94
+  %99 = cmp.lt bool 0:i64, 0:i64
+  branch %99, b17, b18
+b17: ; preds b16
+  %101 = list_len u64 %96
+  %102 = convert.exact i64 %101
+  %103 = add.exact i64 %102, 0:i64
+  jump b18
+b18: ; preds b16 b17
+  %105 = phi i64 0:i64, %103
+  %107 = list_get.exact bool %96, %105
+  jump b14
+b19: ; preds b14
+  %116 = cmp.lt bool 1:i64, 0:i64
+  branch %116, b21, b22
+b20: ; preds b14 b24
+  %137 = phi bool %109, %135
+  ret %137
+b21: ; preds b19
+  %118 = list_len u64 %15
+  %119 = convert.exact i64 %118
+  %120 = add.exact i64 %119, 1:i64
+  jump b22
+b22: ; preds b19 b21
+  %122 = phi i64 1:i64, %120
+  %124 = list_get.exact list[bool] %15, %122
+  %127 = cmp.lt bool 0:i64, 0:i64
+  branch %127, b23, b24
+b23: ; preds b22
+  %129 = list_len u64 %124
+  %130 = convert.exact i64 %129
+  %131 = add.exact i64 %130, 0:i64
+  jump b24
+b24: ; preds b22 b23
+  %133 = phi i64 0:i64, %131
+  %135 = list_get.exact bool %124, %133
+  jump b20
+fn test_call_then_source_rebind_preserves_values() -> bool
+b0:
+  %1 = list_new list[bool] 2:i64
+  %3 = list_push list[bool] %1, 1:bool
+  %5 = list_push list[bool] %3, 0:bool
+  %6 = call record{i64, list[bool]} replace_index(%5)
+  %7 = record_get i64 %6, field0
+  %8 = record_get list[bool] %6, field1
+  %11 = cmp.lt bool %7, 0:i64
+  branch %11, b1, b2
+b1: ; preds b0
+  %13 = list_len u64 %8
+  %14 = convert.exact i64 %13
+  %15 = add.exact i64 %14, %7
+  jump b2
+b2: ; preds b0 b1
+  %17 = phi i64 %7, %15
+  %21 = list_set.exact list[bool] %8, %17, 0:bool
+  %24 = list_len u64 %21
+  %25 = convert.exact i64 %24
+  jump b3
+b3: ; preds b2 b5
+  %27 = phi i64 0:i64, %41
+  %34 = phi i64 0:i64, %45
+  %29 = cmp.lt bool %27, %25
+  branch %29, b4, b6
+b4: ; preds b3
+  %32 = list_get.exact bool %21, %27
+  branch %32, b7, b8
+b5: ; preds b8
+  %41 = add.exact i64 %27, 1:i64
+  jump b3
+b6: ; preds b3
+  %47 = list_new list[bool] 3:i64
+  %49 = list_push list[bool] %47, 1:bool
+  %51 = list_push list[bool] %49, 1:bool
+  %53 = list_push list[bool] %51, 1:bool
+  %57 = cmp.lt bool 1:i64, 0:i64
+  branch %57, b9, b10
+b7: ; preds b4
+  %36 = add.exact i64 %34, 1:i64
+  jump b8
+b8: ; preds b4 b7
+  %45 = phi i64 %34, %36
+  jump b5
+b9: ; preds b6
+  %59 = list_len u64 %53
+  %60 = convert.exact i64 %59
+  %61 = add.exact i64 %60, 1:i64
+  jump b10
+b10: ; preds b6 b9
+  %63 = phi i64 1:i64, %61
+  %67 = list_set.exact list[bool] %53, %63, 0:bool
+  %70 = list_len u64 %67
+  %71 = convert.exact i64 %70
+  jump b11
+b11: ; preds b10 b13
+  %73 = phi i64 0:i64, %87
+  %80 = phi i64 0:i64, %91
+  %75 = cmp.lt bool %73, %71
+  branch %75, b12, b14
+b12: ; preds b11
+  %78 = list_get.exact bool %67, %73
+  branch %78, b15, b16
+b13: ; preds b16
+  %87 = add.exact i64 %73, 1:i64
+  jump b11
+b14: ; preds b11
+  %96 = cmp.eq bool %34, 1:i64
+  branch %96, b17, b18
+b15: ; preds b12
+  %82 = add.exact i64 %80, 1:i64
+  jump b16
+b16: ; preds b12 b15
+  %91 = phi i64 %80, %82
+  jump b13
+b17: ; preds b14
+  %99 = cmp.eq bool %80, 2:i64
+  jump b18
+b18: ; preds b14 b17
+  %101 = phi bool %96, %99
+  ret %101
+fn test_named_source_iteration_sees_element_changes() -> bool
+b0:
+  %1 = list_new list[bool] 2:i64
+  %3 = list_push list[bool] %1, 1:bool
+  %5 = list_push list[bool] %3, 1:bool
+  %8 = list_len u64 %5
+  %9 = convert.exact i64 %8
+  jump b1
+b1: ; preds b0 b14
+  %11 = phi i64 0:i64, %73
+  %12 = phi i64 %9, %68
+  %15 = phi list[bool] %5, %52
+  %33 = phi i64 0:i64, %78
+  %13 = cmp.lt bool %11, %12
+  branch %13, b2, b4
+b2: ; preds b1
+  %16 = list_len u64 %15
+  %17 = convert.exact i64 %16
+  %18 = cmp.lt bool %17, %12
+  branch %18, b5, b6
+b3: ; preds b12
+  %54 = list_len u64 %52
+  %55 = convert.exact i64 %54
+  %58 = cmp.lt bool %55, %28
+  branch %58, b13, b14
+b4: ; preds b1
+  %80 = cmp.eq bool %33, 1:i64
+  branch %80, b17, b18
+b5: ; preds b2
+  %20 = list_len u64 %15
+  %21 = convert i64 %20
+  %22 = cmp.eq bool %21, %12
+  branch %22, b7, b8
+b6: ; preds b2 b7
+  %27 = list_len u64 %15
+  %28 = convert.exact i64 %27
+  %30 = list_get.exact bool %15, %11
+  branch %30, b9, b10
+b7: ; preds b5
+  jump b6
+b8: ; preds b5
+  unreachable
+b9: ; preds b6
+  %35 = add.exact i64 %33, 1:i64
+  jump b10
+b10: ; preds b6 b9
+  %78 = phi i64 %33, %35
+  %42 = cmp.lt bool 1:i64, 0:i64
+  branch %42, b11, b12
+b11: ; preds b10
+  %44 = list_len u64 %15
+  %45 = convert.exact i64 %44
+  %46 = add.exact i64 %45, 1:i64
+  jump b12
+b12: ; preds b10 b11
+  %48 = phi i64 1:i64, %46
+  %52 = list_set.exact list[bool] %15, %48, 0:bool
+  jump b3
+b13: ; preds b3
+  %60 = list_len u64 %52
+  %61 = convert i64 %60
+  %62 = cmp.eq bool %61, %28
+  branch %62, b15, b16
+b14: ; preds b3 b15
+  %67 = list_len u64 %52
+  %68 = convert.exact i64 %67
+  %73 = add.exact i64 %11, 1:i64
+  jump b1
+b15: ; preds b13
+  jump b14
+b16: ; preds b13
+  unreachable
+b17: ; preds b4
+  %84 = cmp.lt bool 1:i64, 0:i64
+  branch %84, b19, b20
+b18: ; preds b4 b20
+  %95 = phi bool %80, %93
+  ret %95
+b19: ; preds b17
+  %86 = list_len u64 %15
+  %87 = convert.exact i64 %86
+  %88 = add.exact i64 %87, 1:i64
+  jump b20
+b20: ; preds b17 b19
+  %90 = phi i64 1:i64, %88
+  %92 = list_get.exact bool %15, %90
+  %93 = not bool %92
+  jump b18
+fn returned_flags() -> list[bool]
+b0:
+  %1 = list_new list[bool] 2:i64
+  %3 = list_push list[bool] %1, 1:bool
+  %5 = list_push list[bool] %3, 1:bool
+  ret %5
+fn replace_index(list[bool]) -> record{i64, list[bool]}
+b0:
+  %2 = list_new list[bool] 0:u64
+  %4 = list_push list[bool] %2, 1:bool
+  %6 = list_push list[bool] %4, 1:bool
+  %8 = record_make record{i64, list[bool]} 0:i64, %6
+  ret %8

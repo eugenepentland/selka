@@ -1,10 +1,7 @@
-
 # A safepoint publishes no root for a value a published owner already reaches
 # (`QBE-BORROW-ROOT-1`). Under `--gc-stress` every allocation collects, so a
 # borrowed value whose owner stopped reaching it — and whose own root was
 # wrongly dropped — would be read after the sweep freed it.
-
-
 public record Node:
     items: int[]
     next: Node?

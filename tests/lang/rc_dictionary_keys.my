@@ -14,6 +14,7 @@ func test_repeated_negative_index_keys_and_real_iterator() -> bool:
     assert len(counts) == 40
     return True
 
+
 # Split yields view-backed immutable strings; list owns header and backing.
 func test_view_backed_keys_survive_dictionary_growth() -> bool:
     mut keys = ("alpha" + ",beta,gamma").split(",")
@@ -26,6 +27,7 @@ func test_view_backed_keys_survive_dictionary_growth() -> bool:
     assert counts["beta"] == 20
     assert counts["gamma"] == 20
     return True
+
 
 # Dictionary first uniqueness remains even when key is a raw anchored pointer.
 func test_preexisting_list_and_dictionary_snapshots() -> bool:
@@ -43,6 +45,7 @@ func test_preexisting_list_and_dictionary_snapshots() -> bool:
     assert counts["right-key"] == 1
     return True
 
+
 func inherited_work() -> bool:
     mut keys = ("inner" + ",second").split(",")
     mut counts: dict[str, int] = {}
@@ -51,9 +54,11 @@ func inherited_work() -> bool:
         counts[key] = counts.get(key, 0) + 1
     return counts["inner"] == 40 and counts["second"] == 40
 
+
 func change_key(mut keys: str[]) -> int:
     keys[0] = "after"
     return 13
+
 
 func test_rhs_callback_keeps_original_named_key() -> bool:
     mut keys = ["be" + "fore"]
@@ -64,6 +69,7 @@ func test_rhs_callback_keeps_original_named_key() -> bool:
     assert keys[0] == "after"
     return True
 
+
 func test_later_key_use_keeps_ordinary_publication() -> bool:
     mut keys = ["be" + "fore"]
     mut counts: dict[str, int] = {}
@@ -72,6 +78,7 @@ func test_later_key_use_keeps_ordinary_publication() -> bool:
     keys.clear()
     assert key == "before"
     return True
+
 
 func test_string_iterator_role_is_not_elided() -> bool:
     mut keys = ["be" + "fore"]
@@ -84,14 +91,17 @@ func test_string_iterator_role_is_not_elided() -> bool:
     assert length == 6
     return True
 
+
 func parameter_work(keys: str[]) -> int:
     mut counts: dict[str, int] = {}
     mut key = keys[0]
     counts[key] = 11
     return counts["parameter"]
 
+
 func test_parameter_keeps_ordinary_capture() -> bool:
     return parameter_work(["para" + "meter"]) == 11
+
 
 func test_user_loop_binding_is_not_an_ordinary_home_proof() -> bool:
     mut groups = [["one"], ["two"]]
@@ -103,6 +113,7 @@ func test_user_loop_binding_is_not_an_ordinary_home_proof() -> bool:
         total += counts[key]
     return total == 14
 
+
 func test_rebound_source_and_empty_loop_keep_fallback() -> bool:
     mut keys = ["before"]
     keys = ["after"]
@@ -111,6 +122,7 @@ func test_rebound_source_and_empty_loop_keep_fallback() -> bool:
         mut key = keys[i]
         counts[key] = 7
     return len(counts) == 0
+
 
 # A previous real owner in the same key slot prevents a zero-token induction.
 func test_preowned_key_reassigned_on_loop_backedges() -> bool:

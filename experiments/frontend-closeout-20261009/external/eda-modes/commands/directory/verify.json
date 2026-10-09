@@ -1,0 +1,4055 @@
+{
+  "actual_tests": 310,
+  "command": [
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/artifacts/mylang-final",
+    "test",
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src",
+    "--json",
+    "--force",
+    "--jobs",
+    "3",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/external/eda-modes/cache",
+    "--release",
+    "--verify-facts",
+    "--max-frames=30000",
+    "--max-steps=4000000000",
+    "--max-memory=2G",
+    "--seed",
+    "8679566789041942096"
+  ],
+  "complete_report_exact": false,
+  "cwd": "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda",
+  "elapsed_seconds": 19.148669803980738,
+  "expected_statuses_equal": true,
+  "functional_membership_pass": true,
+  "membership_equal_after_explicit_module_mapping": true,
+  "nonpassing": 0,
+  "process_status_equal": true,
+  "reference_command": [
+    "/home/epentland/.cache/mylang/frontend-20261008/mylang-s5-pin/bin/mylang",
+    "test",
+    "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src",
+    "--json",
+    "--force",
+    "--jobs",
+    "3",
+    "--cache-dir",
+    "/home/epentland/.cache/mylang/frontend-current-eda-oracle-20261008",
+    "--release",
+    "--verify-facts",
+    "--max-frames=30000",
+    "--max-steps=4000000000",
+    "--max-memory=2G"
+  ],
+  "reference_receipt_sha256": "a32601b7cb180414370b094c061812adaa03be712dbef6d042eef54f694db5e0",
+  "reference_returncode": 0,
+  "reference_tests": 310,
+  "report_changes": [
+    {
+      "candidate": [
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/board_layers.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/board_layers_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/decouple_key.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/decouple_key_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/design_model.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/design_model_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/diagram_membership.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/diagram_membership_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/escape.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/escape_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/eval_electrical.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/eval_electrical_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/eval_env.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/eval_env_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/eval_net_analysis.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/eval_net_analysis_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/eval_rails.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/eval_rails_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/export_kicad.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/export_kicad_footprint.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/export_kicad_footprint_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/export_kicad_model.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/export_kicad_netlist.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/export_kicad_netlist_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/export_kicad_sch.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/export_kicad_sch_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/export_kicad_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/flat_netlist.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/flat_netlist_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/footprint_paste.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/footprint_paste_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/infra_fs.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/infra_fs_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/infra_log.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/json_writer.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/json_writer_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_pcb_format.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_pcb_format_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_sch_bank.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_sch_bank_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_sch_compose.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_sch_compose_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_sch_emit.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_sch_emit_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_sch_gang.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_sch_gang_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_sch_glyph_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_sch_plan.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_sch_plan_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_sch_project.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_sch_project_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_sch_shape.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_sch_shape_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_sch_sheet.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_sch_sheet_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_sch_stagger.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_sch_stagger_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_sch_stub.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_sch_stub_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_sch_testdata.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_sch_textbox.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_sch_textbox_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_sch_vendor.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_sch_vendor_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_sch_verify.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_sch_verify_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_sch_wire.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_sch_wire_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_sym_library.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_sym_library_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_sym_reader.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_sym_reader_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_sym_testdata.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/lib_limits.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/lib_limits_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/main.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/main_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/net_name.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/net_name_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/numeric.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/numeric_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/pad_neck_profile.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/placement_geometry.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/placement_geometry_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/placement_pin_roles.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/placement_pin_roles_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/poly_scanline.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/poly_scanline_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/render_block_types.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/render_svg_context.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/render_svg_context_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/render_svg_draw_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/sexpr_ast.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/sexpr_ast_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/sexpr_paren_span.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/sexpr_paren_span_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/sexpr_parser.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/sexpr_parser_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/sexpr_tokenizer.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/sexpr_tokenizer_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/stdlib.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/stdlib_embed.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/stdlib_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/support_crc32.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/support_crc32_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/support_expect.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/support_expect_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/support_float_fmt.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/support_float_fmt_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/support_parse.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/support_parse_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/support_sha256.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/support_sha256_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/support_sort.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/support_sort_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/support_strs.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/support_strs_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/uuid.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/uuid_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/zipfile.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/zipfile_test.my"
+      ],
+      "field": "sources",
+      "reference": [
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/board_layers.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/board_layers_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/decouple_key.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/decouple_key_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/design_model.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/design_model_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/diagram_membership.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/diagram_membership_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/escape.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/escape_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/eval_electrical.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/eval_electrical_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/eval_env.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/eval_env_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/eval_net_analysis.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/eval_net_analysis_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/eval_rails.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/eval_rails_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/export_kicad.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/export_kicad_footprint.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/export_kicad_footprint_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/export_kicad_model.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/export_kicad_netlist.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/export_kicad_netlist_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/export_kicad_sch.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/export_kicad_sch_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/export_kicad_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/flat_netlist.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/flat_netlist_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/footprint_paste.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/footprint_paste_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/infra_fs.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/infra_fs_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/infra_log.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/json_writer.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/json_writer_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_pcb_format.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_pcb_format_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sch_bank.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sch_bank_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sch_compose.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sch_compose_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sch_emit.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sch_emit_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sch_gang.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sch_gang_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sch_glyph_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sch_plan.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sch_plan_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sch_project.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sch_project_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sch_shape.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sch_shape_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sch_sheet.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sch_sheet_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sch_stagger.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sch_stagger_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sch_stub.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sch_stub_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sch_testdata.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sch_textbox.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sch_textbox_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sch_vendor.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sch_vendor_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sch_verify.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sch_verify_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sch_wire.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sch_wire_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sym_library.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sym_library_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sym_reader.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sym_reader_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sym_testdata.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/lib_limits.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/lib_limits_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/main.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/main_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/net_name.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/net_name_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/numeric.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/numeric_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/pad_neck_profile.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/placement_geometry.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/placement_geometry_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/placement_pin_roles.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/placement_pin_roles_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/poly_scanline.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/poly_scanline_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/render_block_types.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/render_svg_context.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/render_svg_context_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/render_svg_draw_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/sexpr_ast.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/sexpr_ast_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/sexpr_paren_span.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/sexpr_paren_span_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/sexpr_parser.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/sexpr_parser_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/sexpr_tokenizer.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/sexpr_tokenizer_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/stdlib.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/stdlib_embed.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/stdlib_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/support_crc32.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/support_crc32_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/support_expect.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/support_expect_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/support_float_fmt.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/support_float_fmt_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/support_parse.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/support_parse_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/support_sha256.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/support_sha256_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/support_sort.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/support_sort_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/support_strs.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/support_strs_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/uuid.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/uuid_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/zipfile.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/zipfile_test.my"
+      ]
+    },
+    {
+      "candidate": [
+        {
+          "at": "",
+          "name": "src.board_layers_test::test_a_front_side_layer_name_flips_to_its_back_twin_and_a_sideless_one_does_not",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.board_layers_test::test_a_layer_set_with_no_bits_is_unrestricted",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.board_layers_test::test_a_six_layer_declared_stackup_numbers_signals_around_its_planes",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.board_layers_test::test_an_undeclared_board_builds_the_implicit_four_layer_table",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.board_layers_test::test_imported_copper_spellings_are_recognized_without_minting_rows",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.board_layers_test::test_layer_names_round_trip_through_the_shared_table",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.board_layers_test::test_layer_rows_carry_position_colours_and_poured_outer_faces_stay_routable",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.board_layers_test::test_the_layer_table_carries_each_row_s_gerber_identity",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.board_layers_test::test_the_layer_table_carries_the_technical_fabrication_rows",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.board_layers_test::test_the_named_layer_constants_are_the_spellings_the_table_itself_carries",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.decouple_key_test::test_capfarads_parses_si_prefixes_including_the_micro_sign_and_the_bulk_threshold",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.decouple_key_test::test_pinfromorigin_reads_value_pad_replica_and_rejects_every_other_key_shape",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.design_model_test::test_design_model_a_malformed_model_names_the_offending_line",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.design_model_test::test_design_model_a_model_round_trips_every_modelled_field_into_the_block",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.diagram_membership_test::test_attachedsubblocks_reports_a_section_s_own_modules_in_declaration_order",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.diagram_membership_test::test_computesubblockattachments_keeps_a_power_producer_out_of_a_consuming_section",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.escape_test::test_decodexmlalloc_copies_an_entity_it_does_not_know_through_verbatim",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.escape_test::test_decodexmlalloc_round_trips_every_byte_writexml_can_escape",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.escape_test::test_the_two_apostrophe_spellings_differ_in_nothing_but_the_apostrophe",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.escape_test::test_writexml_escapes_markup_and_both_quote_styles",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.escape_test::test_writexml_neutralizes_a_script_attribute_breakout",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.eval_electrical_test::test_parse_captures_voltage_levels",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.eval_electrical_test::test_parse_ignores_unknown_sub_forms",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.eval_electrical_test::test_parse_reads_pin_function_name",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.eval_electrical_test::test_parse_recognises_all_electrical_types",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.eval_electrical_test::test_parse_rejects_an_unknown_electrical_type",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.eval_electrical_test::test_parse_returns_null_without_pin_name",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.eval_electrical_test::test_parsesubforms_fills_caller_supplied_decl_from_sub_form_list",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.eval_electrical_test::test_port_level_electrical_decl_carries_boundary_logic_levels",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.eval_env_test::test_env_get_and_put",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.eval_env_test::test_env_parent_chain",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.eval_env_test::test_ground_via_distance_protection_is_enabled_by_default",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.eval_net_analysis_test::test_isgroundbase_accepts_the_base_names_in_any_case_and_only_those",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.eval_net_analysis_test::test_isratingzerovolts_adds_only_the_chassis_node_to_the_ground_tokens",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.eval_net_analysis_test::test_supply_capacitor_without_a_ground_leg_is_not_decoupling",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.eval_net_analysis_test::test_the_ground_net_vocabulary_tables_keep_the_spellings_their_consumers_had",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.eval_net_analysis_test::test_top_level_input_power_ports_require_decoupling",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.eval_rails_test::test_build_collapses_ferrite_bridged_nets_into_single_rail",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.eval_rails_test::test_build_derives_one_rail_per_power_output_port",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.eval_rails_test::test_build_excludes_gnd",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.eval_rails_test::test_build_falls_back_to_section_power_port_voltage",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.eval_rails_test::test_build_falls_back_to_top_level_design_port_nominal",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.eval_rails_test::test_build_preserves_top_level_rated_maximum",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.eval_rails_test::test_build_recognizes_a_bare_vout_tied_to_a_rail_named_net",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.eval_rails_test::test_build_records_source_ref_des_and_source_port",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.eval_rails_test::test_build_returns_empty_slice_when_no_rails_declared",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.eval_rails_test::test_build_uses_sub_block_port_nominal_for_voltage",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.eval_rails_test::test_the_supply_rail_vocabulary_tables_keep_the_spellings_their_consumers_had",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_footprint_test::test_exportfootprintmod_emits_a_copper_pour_only_footprint_keepout",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_footprint_test::test_exportfootprintmod_emits_a_custom_pad_s_polygon_as_kicad_primitives_gr_poly",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_footprint_test::test_exportfootprintmod_emits_a_footprint_keepout_that_also_blocks_vias",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_footprint_test::test_exportfootprintmod_emits_fab_geometry_on_f_fab_and_keeps_silkscreen_on_f_silks",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_footprint_test::test_exportfootprintmod_emits_silkscreen_poly_rect_pin_1_markers_must_not_be_dropped",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_footprint_test::test_exportfootprintmod_emits_the_pad_rotation_geometry_zig_reads_mapped_into_kicad_s_frame",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_footprint_test::test_exportfootprintmod_escapes_a_hostile_3d_model_filename",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_footprint_test::test_exportfootprintmod_inflates_the_f_crtyd_courtyard_by_the_placement_margin",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_footprint_test::test_exportfootprintmod_leaves_a_rotated_custom_pad_s_at_unrotated",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_footprint_test::test_exportfootprintmod_names_the_body_and_smd_pad_layers_with_kicad_s_own_spellings",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_footprint_test::test_exportfootprintmod_puts_a_concave_custom_pad_anchor_on_copper",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_footprint_test::test_exportfootprintmod_strokes_f_silks_at_the_fabricated_width_and_f_fab_at_the_documentation_width",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_footprint_test::test_rotated_paste_window_keeps_its_local_size_and_transforms_its_center",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_footprint_test::test_usesourcekicadmod_replaces_a_model_block_whose_path_holds_a_parenthesis",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_netlist_test::test_extractpadnames_reads_bare_int_quoted_and_atom_pad_numbers",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_netlist_test::test_the_exported_netlist_reproduces_every_net_s_membership_exactly",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_netlist_test::test_writenetlist_escapes_the_raw_design_name_and_copies_tokenizer_slices_verbatim",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_sch_test::test_kicad_sch_a_bound_bypass_cap_and_a_three_pin_cluster_net_become_drawn_wire",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_sch_test::test_kicad_sch_a_decoupling_bank_replaces_its_members_labels_with_one_rail_label",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_sch_test::test_kicad_sch_a_displayed_part_number_clears_the_value_above_it_and_every_neighbour",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_sch_test::test_kicad_sch_a_ganged_cap_is_turned_upright_and_drops_its_per_pin_drawing",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_sch_test::test_kicad_sch_a_hierarchical_export_is_deterministic_across_runs",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_sch_test::test_kicad_sch_a_hierarchical_export_links_a_sheet_per_section_module_and_leftover",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_sch_test::test_kicad_sch_a_hub_s_repeated_rail_pins_are_ganged_under_one_adornment",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_sch_test::test_kicad_sch_a_multi_part_instance_emits_kicad_units_that_share_one_reference",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_sch_test::test_kicad_sch_a_net_on_a_missing_ref_des_draws_no_label_and_does_not_fail_the_export",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_sch_test::test_kicad_sch_a_passive_is_emitted_as_a_real_device_glyph_rather_than_a_box",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_sch_test::test_kicad_sch_a_resolved_part_number_is_shown_on_a_hub_and_hidden_on_a_passive",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_sch_test::test_kicad_sch_a_two_pin_net_spanning_two_sections_is_still_label_connected",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_sch_test::test_kicad_sch_a_vendor_body_reaches_the_emitted_sheet_and_can_be_switched_off",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_sch_test::test_kicad_sch_an_empty_design_still_exports_a_self_checking_sheet",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_sch_test::test_kicad_sch_bypass_stubs_of_a_rail_all_label_as_the_rail_and_its_own_dotted_net_survives",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_sch_test::test_kicad_sch_caps_on_different_bypass_stubs_of_one_rail_join_one_bank",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_sch_test::test_kicad_sch_child_sheets_nest_their_instance_path_under_the_root_s_uuid",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_sch_test::test_kicad_sch_export_emits_the_pinned_header_and_each_instance_s_own_uuid",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_sch_test::test_kicad_sch_export_is_deterministic_across_runs",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_sch_test::test_kicad_sch_export_maps_dnp_to_kicad_s_dnp_and_in_bom_flags",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_sch_test::test_kicad_sch_export_replaces_ground_labels_with_rail_symbols_and_drives_each_rail",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_sch_test::test_kicad_sch_export_writes_hierarchical_net_names_into_labels_unchanged",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_sch_test::test_kicad_sch_firstundrawn_finds_an_uncovered_pin_and_passes_full_coverage",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_sch_test::test_kicad_sch_fixture_export_matches_the_committed_golden_file",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_sch_test::test_kicad_sch_qualify_re_attaches_the_sub_block_path_to_a_module_local_ref",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_sch_test::test_kicad_sch_the_export_kicad_bundle_carries_the_schematic_on_request",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_sch_test::test_kicad_sch_the_flat_threshold_and_the_flat_option_both_collapse_the_hierarchy",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_sch_test::test_kicad_sch_the_vendor_fixture_export_matches_its_committed_golden_file",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_test::test_collectinstances_prefixes_a_decoupling_binding_s_target_ic_like_the_ref_des",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_test::test_footprint_mod_export",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_test::test_netlist_generation",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_test::test_sanitizekicadname_neutralizes_traversal_and_passes_safe_names_through",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.export_kicad_test::test_the_export_layer_re_exports_the_flatten_currency_types_unchanged",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.flat_netlist_test::test_flatten_currency_types_default_their_optional_fields",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.flat_netlist_test::test_uuidfromid_pins_the_identity_kicad_sync_keys_on",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.footprint_paste_test::test_ic_package_paste_parsing_empty_and_malformed",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.infra_fs_test::test_cache_probe_leaves_the_closure_alone_without_weakening_the_tamper_guard",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.infra_fs_test::test_cache_probe_rejects_an_end_call_away_from_its_owner_thread",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.infra_fs_test::test_nested_read_traces_invalidate_both_scopes_without_stealing_reads",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.infra_fs_test::test_read_trace_binds_child_dir_bytes_and_detects_aba_consumption",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.infra_fs_test::test_read_trace_digest_sorts_canonical_paths",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.infra_fs_test::test_read_trace_rejects_an_end_call_away_from_its_owner_thread",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.infra_fs_test::test_read_trace_rejects_directory_and_negative_dependency_aba",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.infra_fs_test::test_read_trace_rejects_symlink_removal_and_retargeting",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.infra_fs_test::test_read_trace_reports_retained_evidence_memory",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.json_writer_test::test_escape_control_characters",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.json_writer_test::test_escape_quotes_and_backslashes",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.json_writer_test::test_one_script_context_escaper_answers_for_every_page_json_writer",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.json_writer_test::test_script_strings_escape_closing_tags_and_javascript_line_separators",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.json_writer_test::test_the_sidecar_escaper_leaves_alone_and_still_escapes_quote_backslash_and_controls",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.json_writer_test::test_writefield_surrounds_value_with_quotes",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_pcb_format_test::test_padnumbertext_reads_quoted_bare_atom_and_bare_int_pad_numbers",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_pcb_format_test::test_sexprescape_escapes_quotes_and_backslashes_passes_clean_text_through",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_pcb_format_test::test_sexprunescape_inverts_sexprescape_and_is_a_no_op_on_clean_text",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_bank_test::test_kicad_sch_anglefor_stands_a_cap_up_and_reachof_refuses_an_odd_body",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_bank_test::test_kicad_sch_bank_grouping_keys_on_the_rail_and_ground_pair",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_bank_test::test_kicad_sch_bank_members_sort_by_value_then_reference",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_bank_test::test_kicad_sch_cellfor_budgets_the_whole_bank_and_keeps_its_origin_inside",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_bank_test::test_kicad_sch_issupplynet_accepts_real_rails_and_refuses_signals",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_bank_test::test_kicad_sch_railpts_breaks_the_rail_at_each_member_column",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_bank_test::test_kicad_sch_the_bank_caption_names_its_ic_and_rail",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_bank_test::test_kicad_sch_the_bank_frame_places_rails_clear_of_every_member_pin",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_compose_test::test_kicad_sch_a_band_heading_never_repeats_the_sheet_title",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_compose_test::test_kicad_sch_israilnet_accepts_the_canonical_grounds_and_nothing_else",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_emit_test::test_kicad_sch_a_rail_symbol_s_text_hangs_with_its_body_and_a_flag_s_the_other_way",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_emit_test::test_kicad_sch_label_angle_and_justification_mirror_the_pin_side",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_emit_test::test_kicad_sch_labelspan_budgets_what_kicad_actually_draws",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_emit_test::test_kicad_sch_mm4_prints_ten_thousandths_of_a_millimetre_exactly",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_emit_test::test_kicad_sch_mm_prints_exact_hundredths_and_str_escapes",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_emit_test::test_kicad_sch_pin_text_shrinks_on_a_fine_pitch_edge_and_stays_full_size_elsewhere",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_emit_test::test_kicad_sch_the_instance_path_gains_a_sheet_segment_on_a_child_file",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_gang_test::test_kicad_sch_a_gang_refuses_a_run_that_would_cross_a_foreign_tip",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_gang_test::test_kicad_sch_gang_planning_cuts_a_net_at_a_column_change_instead_of_losing_it",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_gang_test::test_kicad_sch_gang_planning_gangs_each_contiguous_stretch_of_one_net",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_gang_test::test_kicad_sch_gang_planning_keys_on_the_edge_and_the_net",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_gang_test::test_kicad_sch_runpts_walks_the_gang_s_tips_in_order",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_glyph_test::test_kicad_sch_a_diode_glyph_orients_itself_by_pin_function_not_pad_order",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_glyph_test::test_kicad_sch_a_glyph_unit_keeps_the_stock_pin_endpoints_and_carries_real_body_art",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_glyph_test::test_kicad_sch_classify_picks_a_glyph_per_passive_class_and_boxes_everything_else",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_plan_test::test_kicad_sch_cluster_binds_a_declared_decap_to_its_ic_and_groups_the_rest_by_net_affinity",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_plan_test::test_kicad_sch_cluster_keeps_hubless_members_in_one_bucket_in_declaration_order",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_plan_test::test_kicad_sch_ispassiveref_reads_the_leaf_of_a_hierarchical_ref",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_plan_test::test_kicad_sch_slugify_normalises_a_title_and_uniquename_disambiguates_collisions",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_project_test::test_kicad_sch_the_project_file_escapes_a_hostile_design_name",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_project_test::test_kicad_sch_the_sidecar_set_names_the_four_project_files",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_project_test::test_kicad_sch_the_symbol_library_drops_the_lib_id_prefix",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_shape_test::test_kicad_sch_a_pin_named_after_its_own_pad_does_not_draw_the_name_as_well",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_shape_test::test_kicad_sch_a_wide_pad_id_lengthens_its_pin_so_the_number_clears_the_body",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_shape_test::test_kicad_sch_sanitizelibname_replaces_separator_characters",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_shape_test::test_kicad_sch_synth_draws_the_glyph_for_two_pads_and_falls_back_to_a_box_beyond_that",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_shape_test::test_kicad_sch_synth_drops_empty_units_so_unit_numbers_stay_contiguous",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_shape_test::test_kicad_sch_synth_orders_an_edge_by_net_and_mutes_the_names_it_gangs",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_shape_test::test_kicad_sch_synth_places_supply_pins_up_ground_pins_down_signals_left_and_right",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_shape_test::test_kicad_sch_synth_splits_pads_into_units_and_keeps_every_pad_drawn_once",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_shape_test::test_kicad_sch_synth_unions_pinout_footprint_and_net_referenced_pads_without_repeats",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_sheet_test::test_kicad_sch_isqrt_and_page_clamping_stay_integral",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_sheet_test::test_kicad_sch_packcells_reports_block_extents_and_preserves_member_order",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_sheet_test::test_kicad_sch_packsheet_grid_snaps_every_spot_and_wraps_rather_than_running_out",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_stagger_test::test_kicad_sch_a_crowded_edge_spreads_into_two_stub_columns_and_a_roomy_one_does_not",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_stagger_test::test_kicad_sch_a_same_net_run_shares_one_column_and_holds_its_neighbours_apart",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_stagger_test::test_kicad_sch_a_spread_unit_keeps_every_pin_endpoint_side_and_body_it_was_given",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_stagger_test::test_kicad_sch_spreading_needs_the_net_map_and_leaves_a_shape_without_one_alone",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_stagger_test::test_kicad_sch_spreading_repeats_exactly_and_skips_unconnected_pads",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_stub_test::test_kicad_sch_collapse_renames_a_real_bypass_stub_and_refuses_everything_else",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_stub_test::test_kicad_sch_split_reads_the_last_two_dots_and_rejects_a_name_without_both",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_textbox_test::test_kicad_sch_a_zero_size_pin_name_is_not_measured_while_its_number_still_is",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_textbox_test::test_kicad_sch_text_boxes_follow_justification_and_orientation",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_textbox_test::test_kicad_sch_the_scan_finds_an_overlapping_label_pair_and_clears_a_tidy_sheet",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_vendor_test::test_kicad_sch_a_vendor_symbol_supplies_the_body_pin_sides_and_pin_names",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_vendor_test::test_kicad_sch_an_unsafe_vendor_symbol_is_rejected_in_favour_of_the_box",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_vendor_test::test_kicad_sch_pads_missing_from_a_vendor_symbol_land_in_a_catch_all_unit",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_vendor_test::test_kicad_sch_sideof_inverts_the_library_pin_angle_onto_an_edge",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_vendor_test::test_kicad_sch_snapnearest_keeps_spacing_across_a_half_grid_pin_row",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_vendor_test::test_kicad_sch_vendor_pin_endpoints_are_snapped_onto_the_1_27_mm_grid",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_verify_test::test_kicad_sch_verify_catches_a_label_caught_mid_wire",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_verify_test::test_kicad_sch_verify_catches_a_wire_through_a_pin_a_diagonal_and_a_missing_segment",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_verify_test::test_kicad_sch_verify_catches_label_no_connect_and_lib_id_damage",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_verify_test::test_kicad_sch_verify_catches_off_grid_coordinates_and_duplicate_pads",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_verify_test::test_kicad_sch_verify_matches_child_sheet_files_and_rail_symbol_values",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_verify_test::test_kicad_sch_verify_matches_junction_dots_to_the_points_wire_ends_actually_meet_at",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_verify_test::test_kicad_sch_verify_passes_a_good_document_and_catches_a_dropped_symbol",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_verify_test::test_kicad_sch_verify_passes_off_grid_body_art_but_not_an_off_grid_pin",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_wire_test::test_kicad_sch_junctions_names_the_three_way_meeting_points_only",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_wire_test::test_kicad_sch_route_crosses_foreign_wire_but_avoids_tees_overlaps_and_bodies",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_wire_test::test_kicad_sch_route_gives_up_beyond_the_maximum_span",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_wire_test::test_kicad_sch_route_prefers_the_straight_run_then_one_bend",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_wire_test::test_kicad_sch_route_refuses_a_path_that_would_run_over_a_pin",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_wire_test::test_kicad_sch_the_junction_point_key_round_trips_both_signs",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sym_library_test::test_kicad_sym_the_vendor_index_matches_names_case_insensitively_across_and",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sym_library_test::test_kicad_sym_the_vendor_index_tolerates_a_missing_directory_and_a_junk_library",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sym_reader_test::test_fuzz_parselibrary_tolerates_arbitrary_bytes",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sym_reader_test::test_kicad_sym_reader_models_each_body_primitive_and_skips_malformed_ones",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sym_reader_test::test_kicad_sym_reader_parses_a_flat_vendor_symbol_s_pins_and_body_graphics",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sym_reader_test::test_kicad_sym_reader_rejects_a_non_library_root_and_tolerates_an_empty_library",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sym_reader_test::test_kicad_sym_reader_splits_sub_symbols_into_units_and_keeps_sub_hundredth_coordinates",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sym_reader_test::test_kicad_sym_unitid_reads_the_trailing_unit_and_style_numbers",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.lib_limits_test::test_lib_read_caps_clear_their_worst_case_part",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.lib_limits_test::test_the_synthetic_over_cap_pinout_straddles_the_retired_cap",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.main_test::test_eda_sch_the_command_line_needs_a_model_a_project_and_an_output_directory",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.net_name_test::test_leaf_removes_a_hierarchy_prefix",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.net_name_test::test_parent_removes_a_hierarchy_leaf",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.net_name_test::test_stripupper_drops_separators_and_raises_case",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.numeric_test::test_checkedint_is_exact_at_each_type_s_maximum",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.numeric_test::test_checkedint_rejects_nan_and_infinities",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.numeric_test::test_checkedint_rejects_out_of_range_and_rounds_in_range",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.numeric_test::test_tocount_collapses_non_finite_and_negative_to_zero_rounds_valid_counts",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.placement_geometry_test::test_circular_courtyard_survives_footprint_loading_with_an_offset_and_placement_margin",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.placement_geometry_test::test_load_falls_back_to_a_synthesized_box_for_a_missing_footprint",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.placement_geometry_test::test_load_parses_a_0402_footprint_s_pads_and_courtyard",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.placement_geometry_test::test_parsecopperpourkeepout_reads_a_through_via_prohibition",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.placement_geometry_test::test_parsecopperpourkeepout_reads_its_face_and_polygon",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.placement_geometry_test::test_parsepad_reads_a_per_pad_mask_margin_and_the_no_paste_keyword",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.placement_geometry_test::test_parsepad_reads_an_rf_minimum_size_independently_of_nominal_size",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.placement_geometry_test::test_parsepad_reads_oval_slots_pad_rotation_and_roundrect_ratio",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.placement_geometry_test::test_parsesilkscreen_collects_lines_and_circles",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.placement_pin_roles_test::test_classify_prefers_electrical_type_falls_back_to_ground_name",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.placement_pin_roles_test::test_connectionrequirement_tiers_floating_pads_by_confidence",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.placement_pin_roles_test::test_isgroundfn_separates_real_grounds_from_config_straps",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.placement_pin_roles_test::test_isstrapfn_recognises_config_straps_but_not_supplies_grounds_or_gpio",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.placement_pin_roles_test::test_issupplyfn_separates_real_supplies_from_grounds_and_signals",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.placement_pin_roles_test::test_istranslatorchannel_rejects_names_shorter_than_2_or_longer_than_16_chars",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.placement_pin_roles_test::test_optional_nc_names_stay_distinct_from_forbidden_or_reserved_pads",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.placement_pin_roles_test::test_padrequirements_maps_only_the_pads_worth_flagging",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.placement_pin_roles_test::test_strappads_collects_strap_pads_by_name_and_by_electrical_type",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.placement_pin_roles_test::test_strappads_ignores_connector_positional_pins",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.poly_scanline_test::test_widestinterval_picks_the_larger_lobe_and_its_midpoint",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.render_svg_context_test::test_bias_tee_island_anchors_to_the_rf_pin_that_continues_to_an_output_port",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.render_svg_context_test::test_decouples_binding_docks_each_cap_on_its_served_hub_pad",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.render_svg_context_test::test_isstdrefdes_rejects_a_ref_shorter_than_two_characters",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.render_svg_draw_test::test_drawnetwire_escapes_a_quote_angle_bracket_in_the_net_name",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.render_svg_draw_test::test_drawwire_emits_a_straight_line_for_a_horizontal_y1_y2_wire",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.render_svg_draw_test::test_functional_signal_classification_sees_through_a_sub_block_path",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.render_svg_draw_test::test_rail_output_pin_labels",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.sexpr_ast_test::test_node_constructors",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.sexpr_paren_span_test::test_matchingclose_skips_strings_and_respects_the_comment_dialect",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.sexpr_parser_test::test_fuzz_parser_never_crashes_on_arbitrary_bytes",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.sexpr_parser_test::test_fuzz_parser_property",
+          "property": {
+            "counts": {
+              "attempts": 0,
+              "discarded": 0,
+              "passed": 100,
+              "processes": 1,
+              "runs": 100,
+              "shrinks": 0
+            },
+            "failure": null,
+            "seed": 8679566789041942096
+          },
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.sexpr_parser_test::test_parse_isform_helper",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.sexpr_parser_test::test_parse_multiple_top_level_forms",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.sexpr_parser_test::test_parse_nested_lists",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.sexpr_parser_test::test_parse_numbers_and_units",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.sexpr_parser_test::test_parse_rejects_excessively_deep_nesting",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.sexpr_parser_test::test_parse_si_scaled_values",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.sexpr_parser_test::test_parse_simple_list",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.sexpr_parser_test::test_parse_with_comments",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.sexpr_parser_test::test_parsediag_column_aligns_a_caret_under_the_offending_token",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.sexpr_parser_test::test_parsediag_locates_a_mid_file_syntax_error",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.sexpr_parser_test::test_parsediag_points_an_unterminated_list_at_its_open_paren",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.sexpr_parser_test::test_suffixed_literals_retain_their_spelling",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.sexpr_tokenizer_test::test_records_unexpected_character_error_span",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.sexpr_tokenizer_test::test_records_unterminated_string_error_span",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.sexpr_tokenizer_test::test_tokenize_comments",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.sexpr_tokenizer_test::test_tokenize_comparison_operators",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.sexpr_tokenizer_test::test_tokenize_dollar_sign_pad_identifiers",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.sexpr_tokenizer_test::test_tokenize_numbers",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.sexpr_tokenizer_test::test_tokenize_operators",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.sexpr_tokenizer_test::test_tokenize_parens_and_atoms",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.sexpr_tokenizer_test::test_tokenize_percent_literals",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.sexpr_tokenizer_test::test_tokenize_si_suffix_before_rparen",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.sexpr_tokenizer_test::test_tokenize_si_suffix_boundary_cases",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.sexpr_tokenizer_test::test_tokenize_si_suffixed_numbers",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.sexpr_tokenizer_test::test_tokenize_standalone_plus_stays_as_operator_atom",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.sexpr_tokenizer_test::test_tokenize_unquoted_filename_with_comma",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.sexpr_tokenizer_test::test_tokenize_unquoted_filename_with_plus",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.sexpr_tokenizer_test::test_tracks_line_and_column",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.stdlib_test::test_a_bundled_path_reads_back_by_path",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.stdlib_test::test_a_project_file_overrides_the_bundle_and_a_missing_one_falls_through_to_it",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.stdlib_test::test_a_stdlib_root_overrides_the_embedded_table",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.stdlib_test::test_bundled_stems_list_one_sub_directory_at_a_time",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.stdlib_test::test_every_bundled_component_s_footprint_and_pinout_is_bundled_too",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.stdlib_test::test_the_bundle_carries_the_whole_passives_prelude",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.support_crc32_test::test_empty_and_check_value",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.support_crc32_test::test_running_value_continues",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.support_crc32_test::test_text_and_binary",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.support_expect_test::test_support_expect_failing_checks_return_false",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.support_expect_test::test_support_expect_passing_checks_return_true_and_stay_silent",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.support_float_fmt_test::test_plain_d_is_shortest_digits_without_an_exponent",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.support_float_fmt_test::test_prec_pads_carries_and_keeps_the_sign_of_zero",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.support_float_fmt_test::test_prec_rounds_the_shortest_digits_half_up",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.support_parse_test::test_parse_float_accepts_what_zig_accepts",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.support_parse_test::test_parse_float_rejects_what_zig_rejects",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.support_parse_test::test_parse_int_accepts_what_zig_accepts",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.support_parse_test::test_parse_int_rejects_what_zig_rejects",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.support_parse_test::test_parse_u32_range",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.support_sha256_test::test_canopy_id_digest",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.support_sha256_test::test_digest_is_thirty_two_bytes",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.support_sha256_test::test_fips_vectors",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.support_sha256_test::test_high_bytes_and_two_blocks",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.support_sha256_test::test_padding_boundaries",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.support_sort_test::test_sort_by_ctx_reads_the_context_and_is_stable",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.support_sort_test::test_sort_by_descending_keeps_input_order_of_equal_keys",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.support_sort_test::test_sort_by_handles_empty_and_single_lists",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.support_sort_test::test_sort_by_is_stable_and_matches_the_keyed_sort",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.support_strs_test::test_ascii_classes_and_case_are_byte_wise",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.support_strs_test::test_integer_padding_matches_zig_format",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.support_strs_test::test_order_is_bytewise_then_length",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.support_strs_test::test_path_helpers_match_zig",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.support_strs_test::test_search_from_an_offset",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.support_strs_test::test_text_and_byte_len_count_bytes_not_scalars",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.support_strs_test::test_trim_and_tokenize_take_a_byte_set",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.uuid_test::test_format_stamps_version_and_variant_and_renders_the_canonical_shape",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.zipfile_test::test_encoded_size_predicts_the_complete_archive_before_allocation",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.zipfile_test::test_fuzz_write_emits_a_well_formed_archive_for_arbitrary_entry_bytes",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.zipfile_test::test_write_produces_an_archive_std_zip_can_extract",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.zipfile_test::test_write_rejects_zip32_field_overflow_before_producing_bytes",
+          "reason": "",
+          "status": "passed"
+        }
+      ],
+      "field": "tests",
+      "reference": [
+        {
+          "at": "",
+          "name": "board_layers_test::test_a_front_side_layer_name_flips_to_its_back_twin_and_a_sideless_one_does_not",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "board_layers_test::test_a_layer_set_with_no_bits_is_unrestricted",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "board_layers_test::test_a_six_layer_declared_stackup_numbers_signals_around_its_planes",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "board_layers_test::test_an_undeclared_board_builds_the_implicit_four_layer_table",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "board_layers_test::test_imported_copper_spellings_are_recognized_without_minting_rows",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "board_layers_test::test_layer_names_round_trip_through_the_shared_table",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "board_layers_test::test_layer_rows_carry_position_colours_and_poured_outer_faces_stay_routable",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "board_layers_test::test_the_layer_table_carries_each_row_s_gerber_identity",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "board_layers_test::test_the_layer_table_carries_the_technical_fabrication_rows",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "board_layers_test::test_the_named_layer_constants_are_the_spellings_the_table_itself_carries",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "decouple_key_test::test_capfarads_parses_si_prefixes_including_the_micro_sign_and_the_bulk_threshold",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "decouple_key_test::test_pinfromorigin_reads_value_pad_replica_and_rejects_every_other_key_shape",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "design_model_test::test_design_model_a_malformed_model_names_the_offending_line",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "design_model_test::test_design_model_a_model_round_trips_every_modelled_field_into_the_block",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "diagram_membership_test::test_attachedsubblocks_reports_a_section_s_own_modules_in_declaration_order",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "diagram_membership_test::test_computesubblockattachments_keeps_a_power_producer_out_of_a_consuming_section",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "escape_test::test_decodexmlalloc_copies_an_entity_it_does_not_know_through_verbatim",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "escape_test::test_decodexmlalloc_round_trips_every_byte_writexml_can_escape",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "escape_test::test_the_two_apostrophe_spellings_differ_in_nothing_but_the_apostrophe",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "escape_test::test_writexml_escapes_markup_and_both_quote_styles",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "escape_test::test_writexml_neutralizes_a_script_attribute_breakout",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "eval_electrical_test::test_parse_captures_voltage_levels",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "eval_electrical_test::test_parse_ignores_unknown_sub_forms",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "eval_electrical_test::test_parse_reads_pin_function_name",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "eval_electrical_test::test_parse_recognises_all_electrical_types",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "eval_electrical_test::test_parse_rejects_an_unknown_electrical_type",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "eval_electrical_test::test_parse_returns_null_without_pin_name",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "eval_electrical_test::test_parsesubforms_fills_caller_supplied_decl_from_sub_form_list",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "eval_electrical_test::test_port_level_electrical_decl_carries_boundary_logic_levels",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "eval_env_test::test_env_get_and_put",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "eval_env_test::test_env_parent_chain",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "eval_env_test::test_ground_via_distance_protection_is_enabled_by_default",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "eval_net_analysis_test::test_isgroundbase_accepts_the_base_names_in_any_case_and_only_those",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "eval_net_analysis_test::test_isratingzerovolts_adds_only_the_chassis_node_to_the_ground_tokens",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "eval_net_analysis_test::test_supply_capacitor_without_a_ground_leg_is_not_decoupling",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "eval_net_analysis_test::test_the_ground_net_vocabulary_tables_keep_the_spellings_their_consumers_had",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "eval_net_analysis_test::test_top_level_input_power_ports_require_decoupling",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "eval_rails_test::test_build_collapses_ferrite_bridged_nets_into_single_rail",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "eval_rails_test::test_build_derives_one_rail_per_power_output_port",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "eval_rails_test::test_build_excludes_gnd",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "eval_rails_test::test_build_falls_back_to_section_power_port_voltage",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "eval_rails_test::test_build_falls_back_to_top_level_design_port_nominal",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "eval_rails_test::test_build_preserves_top_level_rated_maximum",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "eval_rails_test::test_build_recognizes_a_bare_vout_tied_to_a_rail_named_net",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "eval_rails_test::test_build_records_source_ref_des_and_source_port",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "eval_rails_test::test_build_returns_empty_slice_when_no_rails_declared",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "eval_rails_test::test_build_uses_sub_block_port_nominal_for_voltage",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "eval_rails_test::test_the_supply_rail_vocabulary_tables_keep_the_spellings_their_consumers_had",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_footprint_test::test_exportfootprintmod_emits_a_copper_pour_only_footprint_keepout",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_footprint_test::test_exportfootprintmod_emits_a_custom_pad_s_polygon_as_kicad_primitives_gr_poly",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_footprint_test::test_exportfootprintmod_emits_a_footprint_keepout_that_also_blocks_vias",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_footprint_test::test_exportfootprintmod_emits_fab_geometry_on_f_fab_and_keeps_silkscreen_on_f_silks",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_footprint_test::test_exportfootprintmod_emits_silkscreen_poly_rect_pin_1_markers_must_not_be_dropped",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_footprint_test::test_exportfootprintmod_emits_the_pad_rotation_geometry_zig_reads_mapped_into_kicad_s_frame",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_footprint_test::test_exportfootprintmod_escapes_a_hostile_3d_model_filename",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_footprint_test::test_exportfootprintmod_inflates_the_f_crtyd_courtyard_by_the_placement_margin",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_footprint_test::test_exportfootprintmod_leaves_a_rotated_custom_pad_s_at_unrotated",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_footprint_test::test_exportfootprintmod_names_the_body_and_smd_pad_layers_with_kicad_s_own_spellings",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_footprint_test::test_exportfootprintmod_puts_a_concave_custom_pad_anchor_on_copper",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_footprint_test::test_exportfootprintmod_strokes_f_silks_at_the_fabricated_width_and_f_fab_at_the_documentation_width",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_footprint_test::test_rotated_paste_window_keeps_its_local_size_and_transforms_its_center",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_footprint_test::test_usesourcekicadmod_replaces_a_model_block_whose_path_holds_a_parenthesis",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_netlist_test::test_extractpadnames_reads_bare_int_quoted_and_atom_pad_numbers",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_netlist_test::test_the_exported_netlist_reproduces_every_net_s_membership_exactly",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_netlist_test::test_writenetlist_escapes_the_raw_design_name_and_copies_tokenizer_slices_verbatim",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_sch_test::test_kicad_sch_a_bound_bypass_cap_and_a_three_pin_cluster_net_become_drawn_wire",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_sch_test::test_kicad_sch_a_decoupling_bank_replaces_its_members_labels_with_one_rail_label",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_sch_test::test_kicad_sch_a_displayed_part_number_clears_the_value_above_it_and_every_neighbour",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_sch_test::test_kicad_sch_a_ganged_cap_is_turned_upright_and_drops_its_per_pin_drawing",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_sch_test::test_kicad_sch_a_hierarchical_export_is_deterministic_across_runs",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_sch_test::test_kicad_sch_a_hierarchical_export_links_a_sheet_per_section_module_and_leftover",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_sch_test::test_kicad_sch_a_hub_s_repeated_rail_pins_are_ganged_under_one_adornment",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_sch_test::test_kicad_sch_a_multi_part_instance_emits_kicad_units_that_share_one_reference",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_sch_test::test_kicad_sch_a_net_on_a_missing_ref_des_draws_no_label_and_does_not_fail_the_export",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_sch_test::test_kicad_sch_a_passive_is_emitted_as_a_real_device_glyph_rather_than_a_box",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_sch_test::test_kicad_sch_a_resolved_part_number_is_shown_on_a_hub_and_hidden_on_a_passive",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_sch_test::test_kicad_sch_a_two_pin_net_spanning_two_sections_is_still_label_connected",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_sch_test::test_kicad_sch_a_vendor_body_reaches_the_emitted_sheet_and_can_be_switched_off",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_sch_test::test_kicad_sch_an_empty_design_still_exports_a_self_checking_sheet",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_sch_test::test_kicad_sch_bypass_stubs_of_a_rail_all_label_as_the_rail_and_its_own_dotted_net_survives",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_sch_test::test_kicad_sch_caps_on_different_bypass_stubs_of_one_rail_join_one_bank",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_sch_test::test_kicad_sch_child_sheets_nest_their_instance_path_under_the_root_s_uuid",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_sch_test::test_kicad_sch_export_emits_the_pinned_header_and_each_instance_s_own_uuid",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_sch_test::test_kicad_sch_export_is_deterministic_across_runs",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_sch_test::test_kicad_sch_export_maps_dnp_to_kicad_s_dnp_and_in_bom_flags",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_sch_test::test_kicad_sch_export_replaces_ground_labels_with_rail_symbols_and_drives_each_rail",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_sch_test::test_kicad_sch_export_writes_hierarchical_net_names_into_labels_unchanged",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_sch_test::test_kicad_sch_firstundrawn_finds_an_uncovered_pin_and_passes_full_coverage",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_sch_test::test_kicad_sch_fixture_export_matches_the_committed_golden_file",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_sch_test::test_kicad_sch_qualify_re_attaches_the_sub_block_path_to_a_module_local_ref",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_sch_test::test_kicad_sch_the_export_kicad_bundle_carries_the_schematic_on_request",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_sch_test::test_kicad_sch_the_flat_threshold_and_the_flat_option_both_collapse_the_hierarchy",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_sch_test::test_kicad_sch_the_vendor_fixture_export_matches_its_committed_golden_file",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_test::test_collectinstances_prefixes_a_decoupling_binding_s_target_ic_like_the_ref_des",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_test::test_footprint_mod_export",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_test::test_netlist_generation",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_test::test_sanitizekicadname_neutralizes_traversal_and_passes_safe_names_through",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "export_kicad_test::test_the_export_layer_re_exports_the_flatten_currency_types_unchanged",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "flat_netlist_test::test_flatten_currency_types_default_their_optional_fields",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "flat_netlist_test::test_uuidfromid_pins_the_identity_kicad_sync_keys_on",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "footprint_paste_test::test_ic_package_paste_parsing_empty_and_malformed",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "infra_fs_test::test_cache_probe_leaves_the_closure_alone_without_weakening_the_tamper_guard",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "infra_fs_test::test_cache_probe_rejects_an_end_call_away_from_its_owner_thread",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "infra_fs_test::test_nested_read_traces_invalidate_both_scopes_without_stealing_reads",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "infra_fs_test::test_read_trace_binds_child_dir_bytes_and_detects_aba_consumption",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "infra_fs_test::test_read_trace_digest_sorts_canonical_paths",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "infra_fs_test::test_read_trace_rejects_an_end_call_away_from_its_owner_thread",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "infra_fs_test::test_read_trace_rejects_directory_and_negative_dependency_aba",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "infra_fs_test::test_read_trace_rejects_symlink_removal_and_retargeting",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "infra_fs_test::test_read_trace_reports_retained_evidence_memory",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "json_writer_test::test_escape_control_characters",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "json_writer_test::test_escape_quotes_and_backslashes",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "json_writer_test::test_one_script_context_escaper_answers_for_every_page_json_writer",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "json_writer_test::test_script_strings_escape_closing_tags_and_javascript_line_separators",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "json_writer_test::test_the_sidecar_escaper_leaves_alone_and_still_escapes_quote_backslash_and_controls",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "json_writer_test::test_writefield_surrounds_value_with_quotes",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_pcb_format_test::test_padnumbertext_reads_quoted_bare_atom_and_bare_int_pad_numbers",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_pcb_format_test::test_sexprescape_escapes_quotes_and_backslashes_passes_clean_text_through",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_pcb_format_test::test_sexprunescape_inverts_sexprescape_and_is_a_no_op_on_clean_text",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_bank_test::test_kicad_sch_anglefor_stands_a_cap_up_and_reachof_refuses_an_odd_body",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_bank_test::test_kicad_sch_bank_grouping_keys_on_the_rail_and_ground_pair",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_bank_test::test_kicad_sch_bank_members_sort_by_value_then_reference",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_bank_test::test_kicad_sch_cellfor_budgets_the_whole_bank_and_keeps_its_origin_inside",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_bank_test::test_kicad_sch_issupplynet_accepts_real_rails_and_refuses_signals",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_bank_test::test_kicad_sch_railpts_breaks_the_rail_at_each_member_column",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_bank_test::test_kicad_sch_the_bank_caption_names_its_ic_and_rail",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_bank_test::test_kicad_sch_the_bank_frame_places_rails_clear_of_every_member_pin",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_compose_test::test_kicad_sch_a_band_heading_never_repeats_the_sheet_title",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_compose_test::test_kicad_sch_israilnet_accepts_the_canonical_grounds_and_nothing_else",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_emit_test::test_kicad_sch_a_rail_symbol_s_text_hangs_with_its_body_and_a_flag_s_the_other_way",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_emit_test::test_kicad_sch_label_angle_and_justification_mirror_the_pin_side",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_emit_test::test_kicad_sch_labelspan_budgets_what_kicad_actually_draws",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_emit_test::test_kicad_sch_mm4_prints_ten_thousandths_of_a_millimetre_exactly",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_emit_test::test_kicad_sch_mm_prints_exact_hundredths_and_str_escapes",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_emit_test::test_kicad_sch_pin_text_shrinks_on_a_fine_pitch_edge_and_stays_full_size_elsewhere",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_emit_test::test_kicad_sch_the_instance_path_gains_a_sheet_segment_on_a_child_file",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_gang_test::test_kicad_sch_a_gang_refuses_a_run_that_would_cross_a_foreign_tip",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_gang_test::test_kicad_sch_gang_planning_cuts_a_net_at_a_column_change_instead_of_losing_it",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_gang_test::test_kicad_sch_gang_planning_gangs_each_contiguous_stretch_of_one_net",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_gang_test::test_kicad_sch_gang_planning_keys_on_the_edge_and_the_net",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_gang_test::test_kicad_sch_runpts_walks_the_gang_s_tips_in_order",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_glyph_test::test_kicad_sch_a_diode_glyph_orients_itself_by_pin_function_not_pad_order",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_glyph_test::test_kicad_sch_a_glyph_unit_keeps_the_stock_pin_endpoints_and_carries_real_body_art",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_glyph_test::test_kicad_sch_classify_picks_a_glyph_per_passive_class_and_boxes_everything_else",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_plan_test::test_kicad_sch_cluster_binds_a_declared_decap_to_its_ic_and_groups_the_rest_by_net_affinity",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_plan_test::test_kicad_sch_cluster_keeps_hubless_members_in_one_bucket_in_declaration_order",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_plan_test::test_kicad_sch_ispassiveref_reads_the_leaf_of_a_hierarchical_ref",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_plan_test::test_kicad_sch_slugify_normalises_a_title_and_uniquename_disambiguates_collisions",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_project_test::test_kicad_sch_the_project_file_escapes_a_hostile_design_name",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_project_test::test_kicad_sch_the_sidecar_set_names_the_four_project_files",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_project_test::test_kicad_sch_the_symbol_library_drops_the_lib_id_prefix",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_shape_test::test_kicad_sch_a_pin_named_after_its_own_pad_does_not_draw_the_name_as_well",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_shape_test::test_kicad_sch_a_wide_pad_id_lengthens_its_pin_so_the_number_clears_the_body",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_shape_test::test_kicad_sch_sanitizelibname_replaces_separator_characters",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_shape_test::test_kicad_sch_synth_draws_the_glyph_for_two_pads_and_falls_back_to_a_box_beyond_that",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_shape_test::test_kicad_sch_synth_drops_empty_units_so_unit_numbers_stay_contiguous",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_shape_test::test_kicad_sch_synth_orders_an_edge_by_net_and_mutes_the_names_it_gangs",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_shape_test::test_kicad_sch_synth_places_supply_pins_up_ground_pins_down_signals_left_and_right",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_shape_test::test_kicad_sch_synth_splits_pads_into_units_and_keeps_every_pad_drawn_once",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_shape_test::test_kicad_sch_synth_unions_pinout_footprint_and_net_referenced_pads_without_repeats",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_sheet_test::test_kicad_sch_isqrt_and_page_clamping_stay_integral",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_sheet_test::test_kicad_sch_packcells_reports_block_extents_and_preserves_member_order",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_sheet_test::test_kicad_sch_packsheet_grid_snaps_every_spot_and_wraps_rather_than_running_out",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_stagger_test::test_kicad_sch_a_crowded_edge_spreads_into_two_stub_columns_and_a_roomy_one_does_not",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_stagger_test::test_kicad_sch_a_same_net_run_shares_one_column_and_holds_its_neighbours_apart",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_stagger_test::test_kicad_sch_a_spread_unit_keeps_every_pin_endpoint_side_and_body_it_was_given",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_stagger_test::test_kicad_sch_spreading_needs_the_net_map_and_leaves_a_shape_without_one_alone",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_stagger_test::test_kicad_sch_spreading_repeats_exactly_and_skips_unconnected_pads",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_stub_test::test_kicad_sch_collapse_renames_a_real_bypass_stub_and_refuses_everything_else",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_stub_test::test_kicad_sch_split_reads_the_last_two_dots_and_rejects_a_name_without_both",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_textbox_test::test_kicad_sch_a_zero_size_pin_name_is_not_measured_while_its_number_still_is",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_textbox_test::test_kicad_sch_text_boxes_follow_justification_and_orientation",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_textbox_test::test_kicad_sch_the_scan_finds_an_overlapping_label_pair_and_clears_a_tidy_sheet",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_vendor_test::test_kicad_sch_a_vendor_symbol_supplies_the_body_pin_sides_and_pin_names",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_vendor_test::test_kicad_sch_an_unsafe_vendor_symbol_is_rejected_in_favour_of_the_box",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_vendor_test::test_kicad_sch_pads_missing_from_a_vendor_symbol_land_in_a_catch_all_unit",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_vendor_test::test_kicad_sch_sideof_inverts_the_library_pin_angle_onto_an_edge",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_vendor_test::test_kicad_sch_snapnearest_keeps_spacing_across_a_half_grid_pin_row",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_vendor_test::test_kicad_sch_vendor_pin_endpoints_are_snapped_onto_the_1_27_mm_grid",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_verify_test::test_kicad_sch_verify_catches_a_label_caught_mid_wire",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_verify_test::test_kicad_sch_verify_catches_a_wire_through_a_pin_a_diagonal_and_a_missing_segment",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_verify_test::test_kicad_sch_verify_catches_label_no_connect_and_lib_id_damage",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_verify_test::test_kicad_sch_verify_catches_off_grid_coordinates_and_duplicate_pads",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_verify_test::test_kicad_sch_verify_matches_child_sheet_files_and_rail_symbol_values",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_verify_test::test_kicad_sch_verify_matches_junction_dots_to_the_points_wire_ends_actually_meet_at",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_verify_test::test_kicad_sch_verify_passes_a_good_document_and_catches_a_dropped_symbol",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_verify_test::test_kicad_sch_verify_passes_off_grid_body_art_but_not_an_off_grid_pin",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_wire_test::test_kicad_sch_junctions_names_the_three_way_meeting_points_only",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_wire_test::test_kicad_sch_route_crosses_foreign_wire_but_avoids_tees_overlaps_and_bodies",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_wire_test::test_kicad_sch_route_gives_up_beyond_the_maximum_span",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_wire_test::test_kicad_sch_route_prefers_the_straight_run_then_one_bend",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_wire_test::test_kicad_sch_route_refuses_a_path_that_would_run_over_a_pin",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_wire_test::test_kicad_sch_the_junction_point_key_round_trips_both_signs",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sym_library_test::test_kicad_sym_the_vendor_index_matches_names_case_insensitively_across_and",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sym_library_test::test_kicad_sym_the_vendor_index_tolerates_a_missing_directory_and_a_junk_library",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sym_reader_test::test_fuzz_parselibrary_tolerates_arbitrary_bytes",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sym_reader_test::test_kicad_sym_reader_models_each_body_primitive_and_skips_malformed_ones",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sym_reader_test::test_kicad_sym_reader_parses_a_flat_vendor_symbol_s_pins_and_body_graphics",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sym_reader_test::test_kicad_sym_reader_rejects_a_non_library_root_and_tolerates_an_empty_library",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sym_reader_test::test_kicad_sym_reader_splits_sub_symbols_into_units_and_keeps_sub_hundredth_coordinates",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sym_reader_test::test_kicad_sym_unitid_reads_the_trailing_unit_and_style_numbers",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "lib_limits_test::test_lib_read_caps_clear_their_worst_case_part",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "lib_limits_test::test_the_synthetic_over_cap_pinout_straddles_the_retired_cap",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "main_test::test_eda_sch_the_command_line_needs_a_model_a_project_and_an_output_directory",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "net_name_test::test_leaf_removes_a_hierarchy_prefix",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "net_name_test::test_parent_removes_a_hierarchy_leaf",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "net_name_test::test_stripupper_drops_separators_and_raises_case",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "numeric_test::test_checkedint_is_exact_at_each_type_s_maximum",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "numeric_test::test_checkedint_rejects_nan_and_infinities",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "numeric_test::test_checkedint_rejects_out_of_range_and_rounds_in_range",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "numeric_test::test_tocount_collapses_non_finite_and_negative_to_zero_rounds_valid_counts",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "placement_geometry_test::test_circular_courtyard_survives_footprint_loading_with_an_offset_and_placement_margin",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "placement_geometry_test::test_load_falls_back_to_a_synthesized_box_for_a_missing_footprint",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "placement_geometry_test::test_load_parses_a_0402_footprint_s_pads_and_courtyard",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "placement_geometry_test::test_parsecopperpourkeepout_reads_a_through_via_prohibition",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "placement_geometry_test::test_parsecopperpourkeepout_reads_its_face_and_polygon",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "placement_geometry_test::test_parsepad_reads_a_per_pad_mask_margin_and_the_no_paste_keyword",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "placement_geometry_test::test_parsepad_reads_an_rf_minimum_size_independently_of_nominal_size",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "placement_geometry_test::test_parsepad_reads_oval_slots_pad_rotation_and_roundrect_ratio",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "placement_geometry_test::test_parsesilkscreen_collects_lines_and_circles",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "placement_pin_roles_test::test_classify_prefers_electrical_type_falls_back_to_ground_name",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "placement_pin_roles_test::test_connectionrequirement_tiers_floating_pads_by_confidence",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "placement_pin_roles_test::test_isgroundfn_separates_real_grounds_from_config_straps",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "placement_pin_roles_test::test_isstrapfn_recognises_config_straps_but_not_supplies_grounds_or_gpio",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "placement_pin_roles_test::test_issupplyfn_separates_real_supplies_from_grounds_and_signals",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "placement_pin_roles_test::test_istranslatorchannel_rejects_names_shorter_than_2_or_longer_than_16_chars",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "placement_pin_roles_test::test_optional_nc_names_stay_distinct_from_forbidden_or_reserved_pads",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "placement_pin_roles_test::test_padrequirements_maps_only_the_pads_worth_flagging",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "placement_pin_roles_test::test_strappads_collects_strap_pads_by_name_and_by_electrical_type",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "placement_pin_roles_test::test_strappads_ignores_connector_positional_pins",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "poly_scanline_test::test_widestinterval_picks_the_larger_lobe_and_its_midpoint",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "render_svg_context_test::test_bias_tee_island_anchors_to_the_rf_pin_that_continues_to_an_output_port",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "render_svg_context_test::test_decouples_binding_docks_each_cap_on_its_served_hub_pad",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "render_svg_context_test::test_isstdrefdes_rejects_a_ref_shorter_than_two_characters",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "render_svg_draw_test::test_drawnetwire_escapes_a_quote_angle_bracket_in_the_net_name",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "render_svg_draw_test::test_drawwire_emits_a_straight_line_for_a_horizontal_y1_y2_wire",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "render_svg_draw_test::test_functional_signal_classification_sees_through_a_sub_block_path",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "render_svg_draw_test::test_rail_output_pin_labels",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "sexpr_ast_test::test_node_constructors",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "sexpr_paren_span_test::test_matchingclose_skips_strings_and_respects_the_comment_dialect",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "sexpr_parser_test::test_fuzz_parser_never_crashes_on_arbitrary_bytes",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "sexpr_parser_test::test_fuzz_parser_property",
+          "property": {
+            "counts": {
+              "attempts": 0,
+              "discarded": 0,
+              "passed": 100,
+              "processes": 1,
+              "runs": 100,
+              "shrinks": 0
+            },
+            "failure": null,
+            "seed": 8679566789041942096
+          },
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "sexpr_parser_test::test_parse_isform_helper",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "sexpr_parser_test::test_parse_multiple_top_level_forms",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "sexpr_parser_test::test_parse_nested_lists",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "sexpr_parser_test::test_parse_numbers_and_units",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "sexpr_parser_test::test_parse_rejects_excessively_deep_nesting",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "sexpr_parser_test::test_parse_si_scaled_values",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "sexpr_parser_test::test_parse_simple_list",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "sexpr_parser_test::test_parse_with_comments",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "sexpr_parser_test::test_parsediag_column_aligns_a_caret_under_the_offending_token",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "sexpr_parser_test::test_parsediag_locates_a_mid_file_syntax_error",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "sexpr_parser_test::test_parsediag_points_an_unterminated_list_at_its_open_paren",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "sexpr_parser_test::test_suffixed_literals_retain_their_spelling",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "sexpr_tokenizer_test::test_records_unexpected_character_error_span",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "sexpr_tokenizer_test::test_records_unterminated_string_error_span",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "sexpr_tokenizer_test::test_tokenize_comments",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "sexpr_tokenizer_test::test_tokenize_comparison_operators",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "sexpr_tokenizer_test::test_tokenize_dollar_sign_pad_identifiers",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "sexpr_tokenizer_test::test_tokenize_numbers",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "sexpr_tokenizer_test::test_tokenize_operators",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "sexpr_tokenizer_test::test_tokenize_parens_and_atoms",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "sexpr_tokenizer_test::test_tokenize_percent_literals",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "sexpr_tokenizer_test::test_tokenize_si_suffix_before_rparen",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "sexpr_tokenizer_test::test_tokenize_si_suffix_boundary_cases",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "sexpr_tokenizer_test::test_tokenize_si_suffixed_numbers",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "sexpr_tokenizer_test::test_tokenize_standalone_plus_stays_as_operator_atom",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "sexpr_tokenizer_test::test_tokenize_unquoted_filename_with_comma",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "sexpr_tokenizer_test::test_tokenize_unquoted_filename_with_plus",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "sexpr_tokenizer_test::test_tracks_line_and_column",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "stdlib_test::test_a_bundled_path_reads_back_by_path",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "stdlib_test::test_a_project_file_overrides_the_bundle_and_a_missing_one_falls_through_to_it",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "stdlib_test::test_a_stdlib_root_overrides_the_embedded_table",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "stdlib_test::test_bundled_stems_list_one_sub_directory_at_a_time",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "stdlib_test::test_every_bundled_component_s_footprint_and_pinout_is_bundled_too",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "stdlib_test::test_the_bundle_carries_the_whole_passives_prelude",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "support_crc32_test::test_empty_and_check_value",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "support_crc32_test::test_running_value_continues",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "support_crc32_test::test_text_and_binary",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "support_expect_test::test_support_expect_failing_checks_return_false",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "support_expect_test::test_support_expect_passing_checks_return_true_and_stay_silent",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "support_float_fmt_test::test_plain_d_is_shortest_digits_without_an_exponent",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "support_float_fmt_test::test_prec_pads_carries_and_keeps_the_sign_of_zero",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "support_float_fmt_test::test_prec_rounds_the_shortest_digits_half_up",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "support_parse_test::test_parse_float_accepts_what_zig_accepts",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "support_parse_test::test_parse_float_rejects_what_zig_rejects",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "support_parse_test::test_parse_int_accepts_what_zig_accepts",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "support_parse_test::test_parse_int_rejects_what_zig_rejects",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "support_parse_test::test_parse_u32_range",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "support_sha256_test::test_canopy_id_digest",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "support_sha256_test::test_digest_is_thirty_two_bytes",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "support_sha256_test::test_fips_vectors",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "support_sha256_test::test_high_bytes_and_two_blocks",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "support_sha256_test::test_padding_boundaries",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "support_sort_test::test_sort_by_ctx_reads_the_context_and_is_stable",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "support_sort_test::test_sort_by_descending_keeps_input_order_of_equal_keys",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "support_sort_test::test_sort_by_handles_empty_and_single_lists",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "support_sort_test::test_sort_by_is_stable_and_matches_the_keyed_sort",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "support_strs_test::test_ascii_classes_and_case_are_byte_wise",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "support_strs_test::test_integer_padding_matches_zig_format",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "support_strs_test::test_order_is_bytewise_then_length",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "support_strs_test::test_path_helpers_match_zig",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "support_strs_test::test_search_from_an_offset",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "support_strs_test::test_text_and_byte_len_count_bytes_not_scalars",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "support_strs_test::test_trim_and_tokenize_take_a_byte_set",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "uuid_test::test_format_stamps_version_and_variant_and_renders_the_canonical_shape",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "zipfile_test::test_encoded_size_predicts_the_complete_archive_before_allocation",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "zipfile_test::test_fuzz_write_emits_a_well_formed_archive_for_arbitrary_entry_bytes",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "zipfile_test::test_write_produces_an_archive_std_zip_can_extract",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "zipfile_test::test_write_rejects_zip32_field_overflow_before_producing_bytes",
+          "reason": "",
+          "status": "passed"
+        }
+      ]
+    }
+  ],
+  "returncode": 0,
+  "stderr_exact": false,
+  "stderr_sha256": "9b6486ff8a150b8744b2b4df6a75b6adccfe0e3d8b5b10a43b9807304a581898",
+  "stdout_sha256": "97eae42fd109e8eced1f07a7e7a151a0fa31c8f9fa8be62c476acfa9039afc3e",
+  "timeout": false
+}

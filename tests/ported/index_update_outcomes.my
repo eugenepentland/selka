@@ -1,4 +1,3 @@
-
 # `values[index] = values[index] + delta` and its neighbours: the value each
 # update leaves, for positive and negative indices, with and without a second
 # name sharing the list, around floor remainders and quotients, and with a
@@ -8,8 +7,6 @@
 # R_LIST_BOUNDS of an out-of-range index, R_OVERFLOW, R_DIVISION_BY_ZERO with
 # their lines and operand details, and a step budget) cannot be expected from a
 # guest test, so only the non-trapping runs and their edge values are kept.
-
-
 func update(index: int, delta: int, shared: bool) -> int:
     mut values = [7, 11]
     mut snapshot = if (shared) then (values) else ([0, 0])

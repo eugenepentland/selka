@@ -1,0 +1,73 @@
+[
+  {
+    "source": "tests/lang/loop_rebinding.my",
+    "raw.stdout": true,
+    "facts.stdout": true,
+    "module.ll": true,
+    "run.stdout": true,
+    "run.stderr": true
+  },
+  {
+    "source": "tests/lang/bounded_loop_ranges.my",
+    "raw.stdout": true,
+    "facts.stdout": true,
+    "module.ll": true,
+    "run.stdout": true,
+    "run.stderr": true
+  },
+  {
+    "source": "tests/lang/array_negative_index.my",
+    "raw.stdout": true,
+    "facts.stdout": true,
+    "module.ll": true,
+    "run.stdout": true,
+    "run.stderr": true
+  },
+  {
+    "source": "tests/lang/rc_scalar_loops.my",
+    "raw.stdout": true,
+    "facts.stdout": true,
+    "module.ll": true,
+    "run.stdout": true,
+    "run.stderr": true
+  },
+  {
+    "source": "experiments/frontend-closeout-20261009/range/fixtures/python_expressions_driver.my",
+    "raw.stdout": true,
+    "facts.stdout": true,
+    "module.ll": true,
+    "run.stdout": true,
+    "run.stderr": true
+  },
+  {
+    "source": "experiments/frontend-closeout-20261009/range/fixtures/range_semantics_v2.my",
+    "raw.stdout": true,
+    "facts.stdout": true,
+    "module.ll": false,
+    "run.stdout": false,
+    "run.stderr": false
+  }
+]
+	Command being timed: "python3 /home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/range/llvm_compare.py native-final2 /home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/artifacts/mylang-qualified"
+	User time (seconds): 5.81
+	System time (seconds): 4.12
+	Percent of CPU this job got: 81%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:12.21
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 183180
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 20
+	Minor (reclaiming a frame) page faults: 1553610
+	Voluntary context switches: 1894
+	Involuntary context switches: 1680
+	Swaps: 0
+	File system inputs: 88
+	File system outputs: 16896
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

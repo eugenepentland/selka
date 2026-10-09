@@ -193,6 +193,15 @@ pub const Compilation = struct {
         return sema.declaresMain(self.src, self.syntax.?);
     }
 
+    /// Return library trees for backend validation without retaining an executable.
+    pub fn checkLibraryProgram(self: *Compilation) diagnostic.Error!typed.Program {
+        for (self.diagnostics.items) |item| if (item.severity == .err) return error.SourceError;
+        try self.parse();
+        var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
+        defer self.diagnostics = sink.items;
+        return sema.checkLibraryProgram(sink.allocator, self.src, self.syntax.?, &sink, null);
+    }
+
     /// Type-check a unit that has no `main` as a library: every declaration and body,
     /// effects and public type boundaries, with no executable entry. The checked tree is
     /// discarded, so `program` stays null and no caller can lower or run the result.

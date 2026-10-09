@@ -1,0 +1,2340 @@
+{
+  "version": "juice-v1",
+  "identity_scheme": "mylang-juice-native-v1",
+  "tool_id": "669cc43cc590815b482e2cb562a0f1d4bc1d501c706968ad18f14ead58d1cd39",
+  "name": "final",
+  "status": "complete",
+  "manifest": {
+    "version": 1,
+    "name": "frontend-closeout-operations-20261009",
+    "adapter": "mylang",
+    "sources": [
+      "main.my",
+      "juice.toml"
+    ],
+    "build": {
+      "compiler": "mylang",
+      "entry": "main.my",
+      "counter_semantics": "core-count-p1-c26c95de7",
+      "tools": [],
+      "timeout_seconds": 300,
+      "flags": [],
+      "prefix": [],
+      "dependencies": []
+    },
+    "workloads": [
+      {
+        "name": "operations-quick",
+        "family": "list-text-bytes",
+        "args": [
+          "32",
+          "4"
+        ],
+        "unit": "input-record",
+        "units": 128,
+        "expected_stdout": "2144\n",
+        "tier": "quick",
+        "weight": 1,
+        "timeout_seconds": 30,
+        "check": [],
+        "outputs": [],
+        "expected_stderr": "",
+        "exit_code": 0
+      }
+    ],
+    "inputs": [],
+    "environment": {}
+  },
+  "source_root": "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/cost/operations",
+  "sources": {
+    "main.my": "46356643f7ce475a7d32ca82b647c164461e017f54f6a89627ba51b0744c290a",
+    "juice.toml": "55c4401f1027af529d8c6c23746cf6de741dd77f2a0e83e776871e087bd7a858"
+  },
+  "contract": {
+    "name": "frontend-closeout-operations-20261009",
+    "inputs": {},
+    "environment": {},
+    "workloads": [
+      {
+        "name": "operations-quick",
+        "family": "list-text-bytes",
+        "args": [
+          "32",
+          "4"
+        ],
+        "unit": "input-record",
+        "units": 128,
+        "expected_stdout": "2144\n",
+        "tier": "quick",
+        "weight": 1,
+        "timeout_seconds": 30,
+        "check": [],
+        "outputs": [],
+        "expected_stderr": "",
+        "exit_code": 0
+      }
+    ]
+  },
+  "collector": {
+    "kind": "perf",
+    "tool": {
+      "path": "/usr/bin/perf",
+      "sha256": "1371ae5cb9fa59632d1d0e34b877d7251df4029810ba67dc56e946545e87b531",
+      "version": "perf version 7.0.14"
+    },
+    "event": "cpu_core/instructions/u",
+    "cpu": 0,
+    "scope": "user instructions; process and inherited children; whole workload"
+  },
+  "workloads": {
+    "operations-quick": {
+      "units": 128,
+      "unit": "input-record",
+      "family": "list-text-bytes",
+      "tier": "quick",
+      "region": null,
+      "scope": "complete scenario",
+      "weight": 1,
+      "correctness": {
+        "stdout": "30815ece5843239d93582bf98322a1442b7d6f838556dccb752846444446a2da",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "files": {}
+      },
+      "semantic": {
+        "version": "mylang-counters-v1",
+        "totals": {
+          "calls": 7,
+          "allocs": 27,
+          "alloc_bytes": 2752,
+          "frees": 27,
+          "free_bytes": 2752,
+          "list_grows": 0,
+          "list_grow_bytes": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0,
+          "realloc_moves": 0,
+          "realloc_moved_bytes": 0,
+          "list_copies": 0,
+          "list_copy_bytes": 0,
+          "dict_copies": 0,
+          "dict_copy_bytes": 0,
+          "buffer_copies": 0,
+          "buffer_copy_bytes": 0,
+          "text_copies": 4,
+          "text_copy_bytes": 0,
+          "runtime_retains": 0,
+          "runtime_releases": 3,
+          "dict_grows": 0,
+          "dict_grow_bytes": 0,
+          "buffer_grows": 0,
+          "buffer_grow_bytes": 0,
+          "text_grows": 8,
+          "text_grow_bytes": 124,
+          "text_appends": 128,
+          "text_append_bytes": 128,
+          "buffer_pushes": 0,
+          "buffer_appends": 0,
+          "buffer_append_bytes": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0,
+          "share_bytes": 0,
+          "peak_live_bytes": 640,
+          "live_bytes_at_exit": 0
+        },
+        "kinds": {
+          "retain": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "release": {
+            "count": 16,
+            "bytes": 0,
+            "extra": 0
+          },
+          "release_unique": {
+            "count": 4,
+            "bytes": 0,
+            "extra": 0
+          },
+          "unique_test": {
+            "count": 128,
+            "bytes": 0,
+            "extra": 124
+          },
+          "list_copy": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "dict_copy": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "buffer_copy": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "text_copy": {
+            "count": 4,
+            "bytes": 0,
+            "extra": 0
+          },
+          "record_copy": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "list_push": {
+            "count": 128,
+            "bytes": 1024,
+            "extra": 0
+          },
+          "element_load": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "element_store": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "bounds_check": {
+            "count": 202,
+            "bytes": 0,
+            "extra": 0
+          },
+          "overflow_check": {
+            "count": 148,
+            "bytes": 0,
+            "extra": 0
+          },
+          "division_check": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "shift_check": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "other_check": {
+            "count": 4,
+            "bytes": 0,
+            "extra": 0
+          }
+        },
+        "functions": [
+          {
+            "name": "<outside>",
+            "calls": 0,
+            "allocs": 3,
+            "alloc_bytes": 192,
+            "frees": 3,
+            "free_bytes": 192,
+            "list_grows": 0,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 0,
+            "text_copy_bytes": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 3,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 0,
+            "text_grow_bytes": 0,
+            "text_appends": 0,
+            "text_append_bytes": 0,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0
+          },
+          {
+            "name": "main",
+            "calls": 1,
+            "allocs": 0,
+            "alloc_bytes": 0,
+            "frees": 0,
+            "free_bytes": 0,
+            "list_grows": 0,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 0,
+            "text_copy_bytes": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 0,
+            "text_grow_bytes": 0,
+            "text_appends": 0,
+            "text_append_bytes": 0,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0
+          },
+          {
+            "name": "number",
+            "calls": 2,
+            "allocs": 0,
+            "alloc_bytes": 0,
+            "frees": 0,
+            "free_bytes": 0,
+            "list_grows": 0,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 0,
+            "text_copy_bytes": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 0,
+            "text_grow_bytes": 0,
+            "text_appends": 0,
+            "text_append_bytes": 0,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0
+          },
+          {
+            "name": "checksum",
+            "calls": 4,
+            "allocs": 24,
+            "alloc_bytes": 2560,
+            "frees": 24,
+            "free_bytes": 2560,
+            "list_grows": 0,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 4,
+            "text_copy_bytes": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 8,
+            "text_grow_bytes": 124,
+            "text_appends": 128,
+            "text_append_bytes": 128,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0
+          }
+        ],
+        "sites": [
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "main.my",
+            "line": 32,
+            "column": 26,
+            "kind": "bounds_check",
+            "detail": "list_get",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "main.my",
+            "line": 33,
+            "column": 27,
+            "kind": "bounds_check",
+            "detail": "list_get",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "main.my",
+            "line": 38,
+            "column": 16,
+            "kind": "overflow_check",
+            "detail": "add",
+            "count": 4,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "checksum",
+            "origin": "checksum",
+            "path": "main.my",
+            "line": 5,
+            "column": 9,
+            "kind": "list_push",
+            "detail": "list_push",
+            "count": 128,
+            "bytes": 1024,
+            "extra": 0
+          },
+          {
+            "function": "checksum",
+            "origin": "checksum",
+            "path": "main.my",
+            "line": 6,
+            "column": 14,
+            "kind": "unique_test",
+            "detail": "is_unique",
+            "count": 128,
+            "bytes": 0,
+            "extra": 124
+          },
+          {
+            "function": "checksum",
+            "origin": "checksum",
+            "path": "main.my",
+            "line": 1,
+            "column": 6,
+            "kind": "release",
+            "detail": "release",
+            "count": 4,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "checksum",
+            "origin": "checksum",
+            "path": "main.my",
+            "line": 7,
+            "column": 18,
+            "kind": "other_check",
+            "detail": "convert",
+            "count": 4,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "checksum",
+            "origin": "checksum",
+            "path": "main.my",
+            "line": 8,
+            "column": 5,
+            "kind": "bounds_check",
+            "detail": "list_get",
+            "count": 128,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "checksum",
+            "origin": "checksum",
+            "path": "main.my",
+            "line": 9,
+            "column": 16,
+            "kind": "overflow_check",
+            "detail": "add",
+            "count": 128,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "checksum",
+            "origin": "checksum",
+            "path": "main.my",
+            "line": 12,
+            "column": 16,
+            "kind": "overflow_check",
+            "detail": "add",
+            "count": 4,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "checksum",
+            "origin": "checksum",
+            "path": "main.my",
+            "line": 13,
+            "column": 8,
+            "kind": "bounds_check",
+            "detail": "list_get",
+            "count": 72,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "checksum",
+            "origin": "checksum",
+            "path": "main.my",
+            "line": 1,
+            "column": 6,
+            "kind": "release_unique",
+            "detail": "release",
+            "count": 4,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "checksum",
+            "origin": "checksum",
+            "path": "main.my",
+            "line": 14,
+            "column": 16,
+            "kind": "overflow_check",
+            "detail": "add",
+            "count": 4,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "checksum",
+            "origin": "checksum",
+            "path": "main.my",
+            "line": 16,
+            "column": 19,
+            "kind": "release",
+            "detail": "release",
+            "count": 4,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "checksum",
+            "origin": "checksum",
+            "path": "main.my",
+            "line": 18,
+            "column": 19,
+            "kind": "overflow_check",
+            "detail": "add",
+            "count": 4,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "checksum",
+            "origin": "checksum",
+            "path": "main.my",
+            "line": 17,
+            "column": 20,
+            "kind": "release",
+            "detail": "release",
+            "count": 4,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "checksum",
+            "origin": "checksum",
+            "path": "main.my",
+            "line": 18,
+            "column": 32,
+            "kind": "overflow_check",
+            "detail": "add",
+            "count": 4,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "checksum",
+            "origin": "checksum",
+            "path": "main.my",
+            "line": 6,
+            "column": 14,
+            "kind": "text_copy",
+            "detail": "str_from_view",
+            "count": 4,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "checksum",
+            "origin": "checksum",
+            "path": "main.my",
+            "line": 6,
+            "column": 14,
+            "kind": "release",
+            "detail": "release",
+            "count": 4,
+            "bytes": 0,
+            "extra": 0
+          }
+        ]
+      },
+      "counter_semantics": "core-count-p1-c26c95de7",
+      "metrics": {
+        "instructions": {
+          "samples": [
+            206326,
+            206326,
+            206325
+          ],
+          "median": 206326,
+          "min": 206325,
+          "max": 206326,
+          "spread": 0.000004846698913370104
+        }
+      },
+      "samples": [
+        {
+          "exit_code": 0,
+          "wall_seconds": 0.026263233,
+          "stdout_sha256": "30815ece5843239d93582bf98322a1442b7d6f838556dccb752846444446a2da",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "functions": [],
+          "lines": [],
+          "metrics": {
+            "instructions": 206326
+          }
+        },
+        {
+          "exit_code": 0,
+          "wall_seconds": 0.010905437,
+          "stdout_sha256": "30815ece5843239d93582bf98322a1442b7d6f838556dccb752846444446a2da",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "functions": [],
+          "lines": [],
+          "metrics": {
+            "instructions": 206326
+          }
+        },
+        {
+          "exit_code": 0,
+          "wall_seconds": 0.015997526,
+          "stdout_sha256": "30815ece5843239d93582bf98322a1442b7d6f838556dccb752846444446a2da",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "functions": [],
+          "lines": [],
+          "metrics": {
+            "instructions": 206325
+          }
+        }
+      ],
+      "functions": [],
+      "lines": []
+    }
+  },
+  "build_config": {
+    "compiler": {
+      "path": "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/artifacts/mylang-final",
+      "identity_kind": "mylang-embedded-build-v1",
+      "source_sha256": "669cc43cc590815b482e2cb562a0f1d4bc1d501c706968ad18f14ead58d1cd39",
+      "architecture": "x86_64",
+      "os": "linux",
+      "abi": "gnu",
+      "version": "usage: mylang build <file.my> (-o <output> | --run [-- ARGS...]) [--release] [--link FILE.c]... (native build; `mylang build` prints the options)\n       mylang run <file.my> [options] [-- ARGS...] | run-project <entry.my> [options] [-- ARGS...] (build and run; `mylang run` prints the options)\n       mylang test <entry.my|directory> [--filter GLOB] [--json] [--release] [--affected --against REF] (run the public test_* functions)\n       mylang dump-ir <file.my> [--facts] | dump-typed <file.my> [FUNCTION] | coverage <file.my>... (developer views of the new core)\n       mylang juice <doctor|analyze|record|compare|validate|calibrate> (performance work proxy)\n       mylang cost <entry.my> [FUNCTION] [--json] [--debug | --no-facts | --verify-facts] [--llvm-remarks FILE.opt.yaml] (per-function Core costs)\n       mylang list-interfaces <entry.my> [--contracts | --cost] (public declarations; --cost checks bodies and appends release costs)\n       mylang fix [--check] <entry.my|directory> (apply every structured diagnostic repair)\n       mylang doc-coverage [<repo-root>] (every implemented feature and standard export needs a documented example)\n       mylang doctest [<repo-root>] [--filter GLOB] [--report PATH] [--jobs N] [--verbose] (run every fenced documentation example)\n       mylang reference --query TERM [--format=text|json] (compiler-derived facts from this executable)\n       mylang docs [TOPIC] (list the user guides built into this executable, or print one)\n       mylang packages lock CONFIG.json --output LOCK.json | build ENTRY.my --lock LOCK.json [--command C] [--receipt FILE] (offline locked local packages)\n       mylang dump-tokens <file.my> (stage-0 `tokens-v1` JSON on stdout; lexical failures exit 1)\n       mylang interfaces emit|check|oracle <entry.my> | show <module.myi> (per-module interface artifacts; `mylang interfaces` prints the options)\n       mylang <schema-project|input-module|check|discover-duplicates|discover-project-duplicates|report-project-quality|report-quality|fmt|fmt-module|fmt-project|list-modules|list-interfaces|list-declarations|check-project|check-module|check-policy> <file.my>\n  schema-project: --schema-report (include checked source and compiler identities)\n  check: type-check a program; a file that declares no main is checked as a library, like check-module; imports, public declarations or project configuration select module-graph checking\n  check-module: type-check a library module and its imports without an executable main\n  input-module: reads a typed JSON manifest and writes generated module source\n  schema-project: --inputs=manifest.json (repeat for up to 16 modules)\n  discover-duplicates/discover-project-duplicates: --min-nodes=N --population=production|tests|generated|reference|intentional --timings --approximate --max-work=N\n  report-quality/report-project-quality: --max-function-lines=N --max-parameters=N --max-nesting=N --max-decisions=N --max-line-bytes=N (0 disables a signal)\n  check-policy: --policy=path.json (required; policy failures exit 3)\n  lint: --gate --accept --json --profile=agent|strict|safety --against=REF (blocking findings exit 3)\n  tests-for: <entry.my> <qualified-name> lists the tests that reach a declaration\n  api-diff: <entry.my> --write=FILE | --against=FILE [--json] (classified interface changes)\n  api: <entry.my> --write | --check [--json] (the generated .api interface file beside every module; stale files exit 1)\n  context: <entry.my> --symbol=NAME | --at=PATH:LINE:COLUMN [--context-bytes=N] [--format=json] [--against=FILE] (one bounded agent-context-v1 answer about one declaration)\n  fmt-project: --check (required; checks the reachable import graph)\n  fmt/fmt-module: --check (otherwise writes formatted source to stdout)\n  list-declarations: parse-only declarations-v1 JSON with byte ranges\n  index-project: navigation-summary-v1 per-module declaration counts by default; --module=NAME --symbol=NAME --kind=function|type|constraint|field|case|parameter|local select navigation-v1 records (navigation-selection-v1); --full prints the complete navigation-v1 document\n  "
+    },
+    "tools": {
+      "zig": {
+        "path": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+        "version": "info: Usage: zig [command] [options]\n\nCommands:\n\n  build            Build project from build.zig\n  fetch            Copy a package into global cache and print its hash\n  init             Initialize a Zig package in the current directory\n\n  build-exe        Create executable from source or object files\n  build-lib        Create library from source or object files\n  build-obj        Create object from source or object files\n  test             Perform unit testing\n  test-obj         Create object for unit testing\n  run              Create executable and run immediately\n\n  ast-check        Look for simple compile errors in any set of files\n  fmt              Reformat Zig source into canonical form\n  reduce           Minimize a bug report\n  translate-c      Convert C code to Zig code\n\n  ar               Combine object files into static archive\n  cc               Use Zig as a drop-in C compiler\n  c++              Use Zig as a drop-in C++ compiler\n  dlltool          Use Zig as a drop-in dlltool.exe\n  lib              Use Zig as a drop-in lib.exe\n  objcopy          Manipulate executables and relocatables\n  objdump          Print information about executables and relocatables\n  ranlib           Use Zig as a drop-in ranlib\n  rc               Use Zig as a drop-in rc.exe\n\n  env              Print lib path, std path, cache directory, and version\n  help             Print this help and exit\n  std              View standard library documentation in a browser\n  libc             Display native libc paths file or validate one\n  targets          List available compilation targets\n  version          Print version number and exit\n  zen              Print Zen of Zig and exit\n\nGeneral Options:\n\n  -h, --help       Print command-specific usage\n\nerror: unknown command: --version"
+      }
+    },
+    "dependencies": {},
+    "spec": {
+      "compiler": "mylang",
+      "entry": "main.my",
+      "counter_semantics": "core-count-p1-c26c95de7",
+      "tools": [],
+      "timeout_seconds": 300,
+      "flags": [],
+      "prefix": [],
+      "dependencies": []
+    },
+    "environment_sha256": "785e32c616b3ca1d542a3b2e89c2001aa9fb68cc330c19d36752e582a3790076"
+  },
+  "build": {
+    "key": "62c9034730a3e4abf83b276e02a8ac6c46f3e3f62db7f6b52eb6e9ea092e92f5",
+    "cached": false,
+    "build_seconds": 0.188280542,
+    "artifacts": {
+      "plain": "d3173e5f73a2ca2787588f97642709936814b71f7335f67abc3af71d2a733991",
+      "counted": "8c92639afcdda1113e9898a3470e2b6c021443aa58917949e396ef6888aeeee4"
+    },
+    "code": {
+      "sections": {
+        ".interp": 28,
+        ".note.ABI-tag": 32,
+        ".dynsym": 2616,
+        ".gnu.version": 218,
+        ".gnu.version_r": 160,
+        ".gnu.hash": 28,
+        ".hash": 880,
+        ".dynstr": 1197,
+        ".rela.dyn": 120,
+        ".rela.plt": 2520,
+        ".rodata": 15848,
+        ".eh_frame_hdr": 2628,
+        ".eh_frame": 13396,
+        ".text": 200934,
+        ".plt": 1696,
+        ".tdata": 4,
+        ".tbss": 720,
+        ".data.rel.ro": 456,
+        ".dynamic": 352,
+        ".got": 48,
+        ".got.plt": 864,
+        ".relro_padding": 872,
+        ".data": 16,
+        ".bss": 150720,
+        ".debug_info": 1858,
+        ".debug_abbrev": 762,
+        ".debug_aranges": 48,
+        ".debug_line": 2008,
+        ".debug_str": 1078,
+        ".comment": 40,
+        ".debug_ranges": 144,
+        ".debug_pubnames": 65,
+        ".debug_pubtypes": 18,
+        ".debug_loc": 726
+      },
+      "functions": {
+        "__fstat": {
+          "bytes": 20
+        },
+        "__libc_csu_fini": {
+          "bytes": 6
+        },
+        "__libc_csu_init": {
+          "bytes": 101
+        },
+        "_start": {
+          "bytes": 43
+        },
+        "block_alloc": {
+          "bytes": 580,
+          "atomic_sites": 4
+        },
+        "block_free": {
+          "bytes": 224,
+          "atomic_sites": 2
+        },
+        "core_append_line": {
+          "bytes": 427
+        },
+        "core_budget_hint": {
+          "bytes": 101
+        },
+        "core_buffer_grow": {
+          "bytes": 361,
+          "atomic_sites": 2
+        },
+        "core_dict_children": {
+          "bytes": 344
+        },
+        "core_fatal_begin": {
+          "bytes": 232,
+          "atomic_sites": 1
+        },
+        "core_floor_fault": {
+          "bytes": 759
+        },
+        "core_floor_install": {
+          "bytes": 266,
+          "vector_sites": 7
+        },
+        "core_group_wait": {
+          "bytes": 457,
+          "vector_sites": 8,
+          "atomic_sites": 3
+        },
+        "core_host_error": {
+          "bytes": 161
+        },
+        "core_host_fail": {
+          "bytes": 38
+        },
+        "core_host_nodes": {
+          "bytes": 495,
+          "divide_sites": 2
+        },
+        "core_host_packed_type": {
+          "bytes": 229
+        },
+        "core_host_read": {
+          "bytes": 592
+        },
+        "core_host_write": {
+          "bytes": 656
+        },
+        "core_io_cap": {
+          "bytes": 232
+        },
+        "core_io_cleanup": {
+          "bytes": 670,
+          "vector_sites": 4
+        },
+        "core_io_complete": {
+          "bytes": 200,
+          "vector_sites": 2
+        },
+        "core_io_environment_read": {
+          "bytes": 1905
+        },
+        "core_io_failure": {
+          "bytes": 485
+        },
+        "core_io_initialize": {
+          "bytes": 2633,
+          "vector_sites": 17
+        },
+        "core_io_memory_acquire": {
+          "bytes": 611,
+          "vector_sites": 4
+        },
+        "core_io_memory_change": {
+          "bytes": 1280
+        },
+        "core_io_memory_complete": {
+          "bytes": 136,
+          "vector_sites": 4
+        },
+        "core_io_memory_create": {
+          "bytes": 227
+        },
+        "core_io_memory_leaf_order": {
+          "bytes": 520
+        },
+        "core_io_memory_listing": {
+          "bytes": 1194
+        },
+        "core_io_memory_network_acquire": {
+          "bytes": 13
+        },
+        "core_io_memory_network_complete": {
+          "bytes": 11
+        },
+        "core_io_memory_network_release": {
+          "bytes": 6
+        },
+        "core_io_memory_open_file": {
+          "bytes": 452
+        },
+        "core_io_memory_read": {
+          "bytes": 225,
+          "vector_sites": 2
+        },
+        "core_io_memory_release": {
+          "bytes": 129,
+          "vector_sites": 4
+        },
+        "core_io_memory_valid_path": {
+          "bytes": 234
+        },
+        "core_io_memory_write": {
+          "bytes": 317
+        },
+        "core_io_name_order": {
+          "bytes": 62
+        },
+        "core_io_option_error": {
+          "bytes": 216
+        },
+        "core_io_provider": {
+          "bytes": 590,
+          "vector_sites": 16
+        },
+        "core_io_read": {
+          "bytes": 594
+        },
+        "core_io_read_all": {
+          "bytes": 338
+        },
+        "core_io_resource_acquire": {
+          "bytes": 1583,
+          "vector_sites": 10,
+          "atomic_sites": 4
+        },
+        "core_io_scope": {
+          "bytes": 601
+        },
+        "core_io_scoped_acquire": {
+          "bytes": 3631,
+          "vector_sites": 3
+        },
+        "core_io_scoped_acquire_network": {
+          "bytes": 627,
+          "vector_sites": 5
+        },
+        "core_io_scoped_close": {
+          "bytes": 308,
+          "vector_sites": 7
+        },
+        "core_io_scoped_complete": {
+          "bytes": 99,
+          "vector_sites": 3
+        },
+        "core_io_scoped_endpoint": {
+          "bytes": 442
+        },
+        "core_io_scoped_grant": {
+          "bytes": 101
+        },
+        "core_io_scoped_init": {
+          "bytes": 116
+        },
+        "core_io_scoped_network_provider": {
+          "bytes": 78
+        },
+        "core_io_scoped_provider": {
+          "bytes": 78
+        },
+        "core_io_scoped_read_handle": {
+          "bytes": 319,
+          "vector_sites": 2
+        },
+        "core_io_scoped_release": {
+          "bytes": 92,
+          "vector_sites": 3
+        },
+        "core_io_scoped_usable": {
+          "bytes": 95
+        },
+        "core_io_scoped_working_directory": {
+          "bytes": 94
+        },
+        "core_io_scoped_write_handle": {
+          "bytes": 273
+        },
+        "core_io_sequence": {
+          "bytes": 551
+        },
+        "core_io_write": {
+          "bytes": 496
+        },
+        "core_io_write_all": {
+          "bytes": 148
+        },
+        "core_operation_record": {
+          "bytes": 350
+        },
+        "core_release_child": {
+          "bytes": 54
+        },
+        "core_repr_render": {
+          "bytes": 1207,
+          "vector_sites": 33
+        },
+        "core_run_timed_out": {
+          "bytes": 46
+        },
+        "core_search_octets": {
+          "bytes": 1233
+        },
+        "core_share_child": {
+          "bytes": 141
+        },
+        "core_start_budget": {
+          "bytes": 235
+        },
+        "core_start_refuse": {
+          "bytes": 204
+        },
+        "core_task_execute": {
+          "bytes": 375,
+          "vector_sites": 8,
+          "atomic_sites": 3
+        },
+        "core_task_find": {
+          "bytes": 261,
+          "atomic_sites": 4
+        },
+        "core_task_report": {
+          "bytes": 625
+        },
+        "core_task_worker_main": {
+          "bytes": 502,
+          "atomic_sites": 2
+        },
+        "core_tasks_quiesce": {
+          "bytes": 165
+        },
+        "core_test_capture": {
+          "bytes": 187
+        },
+        "core_test_copy": {
+          "bytes": 271
+        },
+        "core_test_file": {
+          "bytes": 248
+        },
+        "core_test_launch": {
+          "bytes": 11
+        },
+        "core_test_on_stack": {
+          "bytes": 389,
+          "divide_sites": 2,
+          "vector_sites": 6
+        },
+        "core_test_read_octets": {
+          "bytes": 886,
+          "vector_sites": 8
+        },
+        "core_test_record": {
+          "bytes": 225
+        },
+        "core_test_stderr": {
+          "bytes": 236
+        },
+        "core_text_append_bytes": {
+          "bytes": 724,
+          "atomic_sites": 2
+        },
+        "core_text_find_bytes": {
+          "bytes": 311
+        },
+        "core_text_join_short": {
+          "bytes": 1396
+        },
+        "core_text_known": {
+          "bytes": 298
+        },
+        "core_text_locate": {
+          "bytes": 316
+        },
+        "core_text_move": {
+          "bytes": 572,
+          "vector_sites": 37
+        },
+        "core_text_slice_step": {
+          "bytes": 1543,
+          "vector_sites": 48
+        },
+        "core_thread_key_initialize": {
+          "bytes": 34
+        },
+        "core_thread_register_slow": {
+          "bytes": 186
+        },
+        "core_thread_retire": {
+          "bytes": 94
+        },
+        "count_free_shared": {
+          "bytes": 33
+        },
+        "count_release_shared": {
+          "bytes": 50,
+          "atomic_sites": 1
+        },
+        "count_saturate_plain": {
+          "bytes": 49
+        },
+        "dict_rebuild": {
+          "bytes": 833
+        },
+        "dict_release_part": {
+          "bytes": 270
+        },
+        "dict_same": {
+          "bytes": 145
+        },
+        "dw_name": {
+          "bytes": 368,
+          "vector_sites": 8
+        },
+        "dw_read_entry": {
+          "bytes": 2776,
+          "vector_sites": 57
+        },
+        "dwarf_frames": {
+          "bytes": 7457,
+          "vector_sites": 307,
+          "divide_sites": 2
+        },
+        "flush_all": {
+          "bytes": 29
+        },
+        "fstat": {
+          "bytes": 20
+        },
+        "fstatat": {
+          "bytes": 26
+        },
+        "heap_exhausted": {
+          "bytes": 16
+        },
+        "live_count": {
+          "bytes": 383
+        },
+        "main": {
+          "bytes": 1503
+        },
+        "my.number": {
+          "bytes": 510
+        },
+        "myl_core_args": {
+          "bytes": 842
+        },
+        "myl_core_assert_fail": {
+          "bytes": 870,
+          "atomic_sites": 1
+        },
+        "myl_core_box_new": {
+          "bytes": 60
+        },
+        "myl_core_buffer_append_checked": {
+          "bytes": 305
+        },
+        "myl_core_buffer_append_i64": {
+          "bytes": 319
+        },
+        "myl_core_buffer_append_spelled": {
+          "bytes": 95
+        },
+        "myl_core_buffer_capacity": {
+          "bytes": 10
+        },
+        "myl_core_buffer_copy": {
+          "bytes": 89
+        },
+        "myl_core_buffer_from_bytes": {
+          "bytes": 89
+        },
+        "myl_core_buffer_from_list": {
+          "bytes": 103
+        },
+        "myl_core_buffer_new": {
+          "bytes": 47
+        },
+        "myl_core_buffer_pop": {
+          "bytes": 13
+        },
+        "myl_core_buffer_push": {
+          "bytes": 63
+        },
+        "myl_core_buffer_push_checked": {
+          "bytes": 219
+        },
+        "myl_core_buffer_range_valid": {
+          "bytes": 33
+        },
+        "myl_core_buffer_reserve_valid": {
+          "bytes": 35
+        },
+        "myl_core_buffer_reserved": {
+          "bytes": 112
+        },
+        "myl_core_buffer_reverse": {
+          "bytes": 201
+        },
+        "myl_core_buffer_set": {
+          "bytes": 13
+        },
+        "myl_core_buffer_snapshot": {
+          "bytes": 110
+        },
+        "myl_core_bytes_concat": {
+          "bytes": 308
+        },
+        "myl_core_bytes_contains_value": {
+          "bytes": 37
+        },
+        "myl_core_bytes_decode_text": {
+          "bytes": 234
+        },
+        "myl_core_bytes_find": {
+          "bytes": 331
+        },
+        "myl_core_bytes_find_any": {
+          "bytes": 577,
+          "vector_sites": 3
+        },
+        "myl_core_bytes_from_list": {
+          "bytes": 161
+        },
+        "myl_core_bytes_hex": {
+          "bytes": 189
+        },
+        "myl_core_bytes_index_offset": {
+          "bytes": 20
+        },
+        "myl_core_bytes_search": {
+          "bytes": 293,
+          "vector_sites": 4
+        },
+        "myl_core_bytes_slice": {
+          "bytes": 209
+        },
+        "myl_core_bytes_slice_step": {
+          "bytes": 13
+        },
+        "myl_core_bytes_to_list": {
+          "bytes": 154
+        },
+        "myl_core_bytes_trim": {
+          "bytes": 715,
+          "vector_sites": 3
+        },
+        "myl_core_bytes_utf8_count": {
+          "bytes": 18
+        },
+        "myl_core_bytes_utf8_count_range": {
+          "bytes": 104
+        },
+        "myl_core_bytes_utf8_error": {
+          "bytes": 104,
+          "vector_sites": 4
+        },
+        "myl_core_bytes_valid_list": {
+          "bytes": 95
+        },
+        "myl_core_cap_dir": {
+          "bytes": 352
+        },
+        "myl_core_cap_grant": {
+          "bytes": 1785,
+          "vector_sites": 76
+        },
+        "myl_core_cap_host": {
+          "bytes": 293
+        },
+        "myl_core_cap_restrict": {
+          "bytes": 134
+        },
+        "myl_core_clock_advance": {
+          "bytes": 215
+        },
+        "myl_core_dict_clear": {
+          "bytes": 227,
+          "vector_sites": 2
+        },
+        "myl_core_dict_copy": {
+          "bytes": 569
+        },
+        "myl_core_dict_entries": {
+          "bytes": 14
+        },
+        "myl_core_dict_find": {
+          "bytes": 586,
+          "vector_sites": 10
+        },
+        "myl_core_dict_find_span": {
+          "bytes": 917,
+          "vector_sites": 10
+        },
+        "myl_core_dict_hash": {
+          "bytes": 116
+        },
+        "myl_core_dict_insert": {
+          "bytes": 1013,
+          "atomic_sites": 2,
+          "vector_sites": 4
+        },
+        "myl_core_dict_live": {
+          "bytes": 43
+        },
+        "myl_core_dict_new": {
+          "bytes": 141
+        },
+        "myl_core_dict_ordinal": {
+          "bytes": 115
+        },
+        "myl_core_dict_remove": {
+          "bytes": 360,
+          "vector_sites": 4
+        },
+        "myl_core_dict_set": {
+          "bytes": 87
+        },
+        "myl_core_environment_fixed": {
+          "bytes": 1240,
+          "vector_sites": 7
+        },
+        "myl_core_environment_names": {
+          "bytes": 2071
+        },
+        "myl_core_environment_only": {
+          "bytes": 180
+        },
+        "myl_core_environment_raw": {
+          "bytes": 335
+        },
+        "myl_core_environment_text": {
+          "bytes": 723
+        },
+        "myl_core_err_trace": {
+          "bytes": 57
+        },
+        "myl_core_err_trace_append_preserve_most": {
+          "bytes": 43
+        },
+        "myl_core_err_trace_origin_preserve_most": {
+          "bytes": 28
+        },
+        "myl_core_exit": {
+          "bytes": 1453
+        },
+        "myl_core_external_read": {
+          "bytes": 523,
+          "vector_sites": 2
+        },
+        "myl_core_file_access": {
+          "bytes": 2124,
+          "vector_sites": 2
+        },
+        "myl_core_file_method": {
+          "bytes": 985,
+          "vector_sites": 6
+        },
+        "myl_core_file_scope_close": {
+          "bytes": 155
+        },
+        "myl_core_free_block": {
+          "bytes": 786,
+          "vector_sites": 9
+        },
+        "myl_core_from_hex": {
+          "bytes": 1105,
+          "vector_sites": 98
+        },
+        "myl_core_from_hex_valid": {
+          "bytes": 115
+        },
+        "myl_core_group_close": {
+          "bytes": 93
+        },
+        "myl_core_group_open": {
+          "bytes": 128,
+          "vector_sites": 3
+        },
+        "myl_core_host_check": {
+          "bytes": 127
+        },
+        "myl_core_host_grant": {
+          "bytes": 130
+        },
+        "myl_core_host_invoke": {
+          "bytes": 7783,
+          "vector_sites": 94
+        },
+        "myl_core_io_at": {
+          "bytes": 15
+        },
+        "myl_core_io_bytes_from_u8_list": {
+          "bytes": 177
+        },
+        "myl_core_ir_span_materialize": {
+          "bytes": 234
+        },
+        "myl_core_ir_str_append": {
+          "bytes": 27
+        },
+        "myl_core_ir_str_append_char": {
+          "bytes": 126
+        },
+        "myl_core_ir_str_char": {
+          "bytes": 301,
+          "vector_sites": 3
+        },
+        "myl_core_ir_str_code": {
+          "bytes": 163
+        },
+        "myl_core_ir_str_from_span": {
+          "bytes": 7
+        },
+        "myl_core_ir_str_from_view": {
+          "bytes": 234
+        },
+        "myl_core_ir_str_slice": {
+          "bytes": 47
+        },
+        "myl_core_ir_str_slice_span": {
+          "bytes": 655,
+          "vector_sites": 50
+        },
+        "myl_core_ir_str_width": {
+          "bytes": 58
+        },
+        "myl_core_list_copy": {
+          "bytes": 425,
+          "divide_sites": 2
+        },
+        "myl_core_list_grow": {
+          "bytes": 697,
+          "atomic_sites": 4,
+          "divide_sites": 2
+        },
+        "myl_core_list_new_slow": {
+          "bytes": 101,
+          "divide_sites": 2
+        },
+        "myl_core_list_sort": {
+          "bytes": 14209,
+          "vector_sites": 216
+        },
+        "myl_core_main_error_bool": {
+          "bytes": 132
+        },
+        "myl_core_main_error_i64": {
+          "bytes": 365
+        },
+        "myl_core_main_error_str": {
+          "bytes": 105
+        },
+        "myl_core_main_error_u64": {
+          "bytes": 287
+        },
+        "myl_core_map_chunks": {
+          "bytes": 55
+        },
+        "myl_core_none_text": {
+          "bytes": 85
+        },
+        "myl_core_number_text_invalid": {
+          "bytes": 9
+        },
+        "myl_core_number_text_new": {
+          "bytes": 61
+        },
+        "myl_core_octets_compare": {
+          "bytes": 78
+        },
+        "myl_core_octets_repeat_signed": {
+          "bytes": 246,
+          "divide_sites": 1
+        },
+        "myl_core_octets_repeat_unsigned": {
+          "bytes": 246,
+          "divide_sites": 1
+        },
+        "myl_core_output_begin": {
+          "bytes": 37
+        },
+        "myl_core_output_end": {
+          "bytes": 132
+        },
+        "myl_core_parse_int_range": {
+          "bytes": 422
+        },
+        "myl_core_print_bool": {
+          "bytes": 65
+        },
+        "myl_core_print_end": {
+          "bytes": 92
+        },
+        "myl_core_print_i64": {
+          "bytes": 287
+        },
+        "myl_core_print_sep": {
+          "bytes": 49
+        },
+        "myl_core_print_str": {
+          "bytes": 45
+        },
+        "myl_core_print_u64": {
+          "bytes": 272
+        },
+        "myl_core_release": {
+          "bytes": 49
+        },
+        "myl_core_release_slow": {
+          "bytes": 29
+        },
+        "myl_core_resource_acquire": {
+          "bytes": 216
+        },
+        "myl_core_resource_complete": {
+          "bytes": 108
+        },
+        "myl_core_resource_read": {
+          "bytes": 303
+        },
+        "myl_core_resource_write": {
+          "bytes": 217
+        },
+        "myl_core_retain_slow": {
+          "bytes": 42,
+          "atomic_sites": 1
+        },
+        "myl_core_run_controls": {
+          "bytes": 332,
+          "vector_sites": 7
+        },
+        "myl_core_s2_sort_in_place": {
+          "bytes": 25055,
+          "vector_sites": 192
+        },
+        "myl_core_s2_sort_keyed": {
+          "bytes": 3662,
+          "vector_sites": 89
+        },
+        "myl_core_s2_unsupported": {
+          "bytes": 81
+        },
+        "myl_core_s3_token_roundtrip": {
+          "bytes": 9
+        },
+        "myl_core_same_block": {
+          "bytes": 12
+        },
+        "myl_core_saturating_integer": {
+          "bytes": 177
+        },
+        "myl_core_share": {
+          "bytes": 571,
+          "vector_sites": 2
+        },
+        "myl_core_span_chars": {
+          "bytes": 609,
+          "vector_sites": 66
+        },
+        "myl_core_span_contains": {
+          "bytes": 261
+        },
+        "myl_core_span_ends": {
+          "bytes": 36
+        },
+        "myl_core_span_eq": {
+          "bytes": 33
+        },
+        "myl_core_span_hash": {
+          "bytes": 294
+        },
+        "myl_core_span_starts": {
+          "bytes": 30
+        },
+        "myl_core_span_utf8_count": {
+          "bytes": 532
+        },
+        "myl_core_split_ws_end": {
+          "bytes": 96
+        },
+        "myl_core_split_ws_start": {
+          "bytes": 97
+        },
+        "myl_core_stand_in": {
+          "bytes": 297,
+          "vector_sites": 2
+        },
+        "myl_core_start": {
+          "bytes": 1585,
+          "divide_sites": 2,
+          "vector_sites": 22
+        },
+        "myl_core_str_chars": {
+          "bytes": 498,
+          "vector_sites": 48
+        },
+        "myl_core_str_concat": {
+          "bytes": 299
+        },
+        "myl_core_str_contains": {
+          "bytes": 334
+        },
+        "myl_core_str_ends": {
+          "bytes": 46
+        },
+        "myl_core_str_eq": {
+          "bytes": 97
+        },
+        "myl_core_str_find": {
+          "bytes": 2803,
+          "vector_sites": 284
+        },
+        "myl_core_str_from_bool": {
+          "bytes": 133
+        },
+        "myl_core_str_from_i64": {
+          "bytes": 306
+        },
+        "myl_core_str_from_u64": {
+          "bytes": 284
+        },
+        "myl_core_str_hash": {
+          "bytes": 323
+        },
+        "myl_core_str_index_offset": {
+          "bytes": 543,
+          "vector_sites": 50
+        },
+        "myl_core_str_join": {
+          "bytes": 873
+        },
+        "myl_core_str_offset": {
+          "bytes": 30
+        },
+        "myl_core_str_parse_int": {
+          "bytes": 409
+        },
+        "myl_core_str_slice_step": {
+          "bytes": 13
+        },
+        "myl_core_str_split": {
+          "bytes": 444
+        },
+        "myl_core_str_split_whitespace": {
+          "bytes": 573
+        },
+        "myl_core_str_starts": {
+          "bytes": 37
+        },
+        "myl_core_stream_write": {
+          "bytes": 63
+        },
+        "myl_core_stream_write_buffer": {
+          "bytes": 63
+        },
+        "myl_core_stream_write_bytes": {
+          "bytes": 63
+        },
+        "myl_core_task_call": {
+          "bytes": 8
+        },
+        "myl_core_task_item": {
+          "bytes": 15
+        },
+        "myl_core_task_result": {
+          "bytes": 180
+        },
+        "myl_core_task_submit": {
+          "bytes": 2120,
+          "vector_sites": 11,
+          "atomic_sites": 4
+        },
+        "myl_core_test_ceilings": {
+          "bytes": 148
+        },
+        "myl_core_test_enter": {
+          "bytes": 57
+        },
+        "myl_core_test_leave": {
+          "bytes": 13
+        },
+        "myl_core_test_limits": {
+          "bytes": 88,
+          "vector_sites": 2
+        },
+        "myl_core_test_open": {
+          "bytes": 215
+        },
+        "myl_core_test_read": {
+          "bytes": 65
+        },
+        "myl_core_test_read_bool": {
+          "bytes": 107
+        },
+        "myl_core_test_read_bytes": {
+          "bytes": 15
+        },
+        "myl_core_test_read_float": {
+          "bytes": 113,
+          "vector_sites": 3
+        },
+        "myl_core_test_read_text": {
+          "bytes": 9
+        },
+        "myl_core_test_register": {
+          "bytes": 119
+        },
+        "myl_core_test_run": {
+          "bytes": 1898,
+          "vector_sites": 2
+        },
+        "myl_core_test_tick": {
+          "bytes": 45
+        },
+        "myl_core_test_trace": {
+          "bytes": 101
+        },
+        "myl_core_test_write": {
+          "bytes": 65
+        },
+        "myl_core_test_write_bool": {
+          "bytes": 112
+        },
+        "myl_core_test_write_float": {
+          "bytes": 111,
+          "vector_sites": 1
+        },
+        "myl_core_test_write_text": {
+          "bytes": 894,
+          "vector_sites": 49
+        },
+        "myl_core_text_bound": {
+          "bytes": 23
+        },
+        "myl_core_text_case": {
+          "bytes": 380
+        },
+        "myl_core_text_chr": {
+          "bytes": 470,
+          "vector_sites": 11
+        },
+        "myl_core_text_encode": {
+          "bytes": 45
+        },
+        "myl_core_text_every": {
+          "bytes": 148
+        },
+        "myl_core_text_format": {
+          "bytes": 1385,
+          "vector_sites": 57
+        },
+        "myl_core_text_ord": {
+          "bytes": 196
+        },
+        "myl_core_text_replace": {
+          "bytes": 772,
+          "divide_sites": 1
+        },
+        "myl_core_text_repr": {
+          "bytes": 427,
+          "vector_sites": 6
+        },
+        "myl_core_text_scalar_valid": {
+          "bytes": 35
+        },
+        "myl_core_text_search": {
+          "bytes": 2282,
+          "vector_sites": 184
+        },
+        "myl_core_text_splitlines": {
+          "bytes": 298
+        },
+        "myl_core_text_trim": {
+          "bytes": 2110,
+          "vector_sites": 9
+        },
+        "myl_core_text_zfill": {
+          "bytes": 889,
+          "vector_sites": 48
+        },
+        "myl_core_threads": {
+          "bytes": 274,
+          "vector_sites": 6
+        },
+        "myl_core_trap": {
+          "bytes": 1718,
+          "atomic_sites": 1,
+          "vector_sites": 29
+        },
+        "myl_core_values_equal": {
+          "bytes": 2509,
+          "vector_sites": 5
+        },
+        "myl_core_values_hash": {
+          "bytes": 1116,
+          "vector_sites": 16
+        },
+        "myl_core_values_render": {
+          "bytes": 307,
+          "vector_sites": 2
+        },
+        "os_exit": {
+          "bytes": 56
+        },
+        "out_of_memory": {
+          "bytes": 471,
+          "atomic_sites": 1
+        },
+        "output_refused": {
+          "bytes": 279,
+          "atomic_sites": 1
+        },
+        "reference_at": {
+          "bytes": 114
+        },
+        "s2_keyed_less": {
+          "bytes": 907,
+          "vector_sites": 12
+        },
+        "s2_keyed_place": {
+          "bytes": 1393,
+          "vector_sites": 20
+        },
+        "s2_keyed_sort_entries": {
+          "bytes": 1406,
+          "vector_sites": 12
+        },
+        "s2_sort_u64": {
+          "bytes": 2603
+        },
+        "stream_commit": {
+          "bytes": 754,
+          "atomic_sites": 1
+        },
+        "stream_flush": {
+          "bytes": 455
+        },
+        "stream_flush_unlocked": {
+          "bytes": 388,
+          "atomic_sites": 1
+        },
+        "stream_write": {
+          "bytes": 542
+        },
+        "trace_write": {
+          "bytes": 751
+        },
+        "trap_frames": {
+          "bytes": 114
+        },
+        "trap_omitted": {
+          "bytes": 135
+        },
+        "value_memo": {
+          "bytes": 555
+        },
+        "value_render": {
+          "bytes": 3389,
+          "vector_sites": 8
+        },
+        "value_render_bytes": {
+          "bytes": 147
+        },
+        "write@plt-0x10": {
+          "bytes": 0
+        },
+        "write@plt": {
+          "bytes": 0
+        },
+        "memcpy@plt": {
+          "bytes": 0
+        },
+        "realloc@plt": {
+          "bytes": 0
+        },
+        "pthread_mutex_lock@plt": {
+          "bytes": 0
+        },
+        "syscall@plt": {
+          "bytes": 0
+        },
+        "pthread_mutex_unlock@plt": {
+          "bytes": 0
+        },
+        "pthread_mutex_trylock@plt": {
+          "bytes": 0
+        },
+        "malloc_usable_size@plt": {
+          "bytes": 0
+        },
+        "aligned_alloc@plt": {
+          "bytes": 0
+        },
+        "free@plt": {
+          "bytes": 0
+        },
+        "_exit@plt": {
+          "bytes": 0
+        },
+        "malloc@plt": {
+          "bytes": 0
+        },
+        "strlen@plt": {
+          "bytes": 0
+        },
+        "snprintf@plt": {
+          "bytes": 0
+        },
+        "backtrace@plt": {
+          "bytes": 0
+        },
+        "getenv@plt": {
+          "bytes": 0
+        },
+        "memcmp@plt": {
+          "bytes": 0
+        },
+        "memset@plt": {
+          "bytes": 0
+        },
+        "fprintf@plt": {
+          "bytes": 0
+        },
+        "bcmp@plt": {
+          "bytes": 0
+        },
+        "calloc@plt": {
+          "bytes": 0
+        },
+        "abort@plt": {
+          "bytes": 0
+        },
+        "memmove@plt": {
+          "bytes": 0
+        },
+        "memchr@plt": {
+          "bytes": 0
+        },
+        "memmem@plt": {
+          "bytes": 0
+        },
+        "_Exit@plt": {
+          "bytes": 0
+        },
+        "strrchr@plt": {
+          "bytes": 0
+        },
+        "strtoul@plt": {
+          "bytes": 0
+        },
+        "inet_pton@plt": {
+          "bytes": 0
+        },
+        "socket@plt": {
+          "bytes": 0
+        },
+        "connect@plt": {
+          "bytes": 0
+        },
+        "close@plt": {
+          "bytes": 0
+        },
+        "read@plt": {
+          "bytes": 0
+        },
+        "__errno_location@plt": {
+          "bytes": 0
+        },
+        "lseek@plt": {
+          "bytes": 0
+        },
+        "pwrite@plt": {
+          "bytes": 0
+        },
+        "open@plt": {
+          "bytes": 0
+        },
+        "openat@plt": {
+          "bytes": 0
+        },
+        "mkdirat@plt": {
+          "bytes": 0
+        },
+        "fdopendir@plt": {
+          "bytes": 0
+        },
+        "readdir@plt": {
+          "bytes": 0
+        },
+        "dirfd@plt": {
+          "bytes": 0
+        },
+        "unlinkat@plt": {
+          "bytes": 0
+        },
+        "ftruncate@plt": {
+          "bytes": 0
+        },
+        "closedir@plt": {
+          "bytes": 0
+        },
+        "mylang_native_providers_v7@plt": {
+          "bytes": 0
+        },
+        "strdup@plt": {
+          "bytes": 0
+        },
+        "strcmp@plt": {
+          "bytes": 0
+        },
+        "strncmp@plt": {
+          "bytes": 0
+        },
+        "strtoull@plt": {
+          "bytes": 0
+        },
+        "clock_gettime@plt": {
+          "bytes": 0
+        },
+        "sprintf@plt": {
+          "bytes": 0
+        },
+        "strchr@plt": {
+          "bytes": 0
+        },
+        "qsort@plt": {
+          "bytes": 0
+        },
+        "myl_core_str_from_f64@plt": {
+          "bytes": 0
+        },
+        "setitimer@plt": {
+          "bytes": 0
+        },
+        "getrlimit@plt": {
+          "bytes": 0
+        },
+        "setrlimit@plt": {
+          "bytes": 0
+        },
+        "sigemptyset@plt": {
+          "bytes": 0
+        },
+        "sigaction@plt": {
+          "bytes": 0
+        },
+        "alarm@plt": {
+          "bytes": 0
+        },
+        "sysconf@plt": {
+          "bytes": 0
+        },
+        "fflush@plt": {
+          "bytes": 0
+        },
+        "mmap@plt": {
+          "bytes": 0
+        },
+        "sigaltstack@plt": {
+          "bytes": 0
+        },
+        "fread@plt": {
+          "bytes": 0
+        },
+        "fwrite@plt": {
+          "bytes": 0
+        },
+        "dup@plt": {
+          "bytes": 0
+        },
+        "dup2@plt": {
+          "bytes": 0
+        },
+        "fopen@plt": {
+          "bytes": 0
+        },
+        "ftell@plt": {
+          "bytes": 0
+        },
+        "fclose@plt": {
+          "bytes": 0
+        },
+        "getpid@plt": {
+          "bytes": 0
+        },
+        "fork@plt": {
+          "bytes": 0
+        },
+        "waitpid@plt": {
+          "bytes": 0
+        },
+        "fgetc@plt": {
+          "bytes": 0
+        },
+        "fseek@plt": {
+          "bytes": 0
+        },
+        "prctl@plt": {
+          "bytes": 0
+        },
+        "getppid@plt": {
+          "bytes": 0
+        },
+        "tmpfile@plt": {
+          "bytes": 0
+        },
+        "signal@plt": {
+          "bytes": 0
+        },
+        "raise@plt": {
+          "bytes": 0
+        },
+        "mprotect@plt": {
+          "bytes": 0
+        },
+        "getcontext@plt": {
+          "bytes": 0
+        },
+        "makecontext@plt": {
+          "bytes": 0
+        },
+        "swapcontext@plt": {
+          "bytes": 0
+        },
+        "sched_getaffinity@plt": {
+          "bytes": 0
+        },
+        "__sched_cpucount@plt": {
+          "bytes": 0
+        },
+        "pthread_attr_init@plt": {
+          "bytes": 0
+        },
+        "pthread_attr_setstacksize@plt": {
+          "bytes": 0
+        },
+        "pthread_attr_setguardsize@plt": {
+          "bytes": 0
+        },
+        "sigaddset@plt": {
+          "bytes": 0
+        },
+        "pthread_sigmask@plt": {
+          "bytes": 0
+        },
+        "pthread_create@plt": {
+          "bytes": 0
+        },
+        "pthread_attr_destroy@plt": {
+          "bytes": 0
+        },
+        "pthread_once@plt": {
+          "bytes": 0
+        },
+        "pthread_setspecific@plt": {
+          "bytes": 0
+        },
+        "pthread_key_create@plt": {
+          "bytes": 0
+        },
+        "strstr@plt": {
+          "bytes": 0
+        },
+        "fcntl@plt": {
+          "bytes": 0
+        },
+        "pthread_self@plt": {
+          "bytes": 0
+        },
+        "pthread_getattr_np@plt": {
+          "bytes": 0
+        },
+        "pthread_attr_getstack@plt": {
+          "bytes": 0
+        },
+        "__fxstatat@plt": {
+          "bytes": 0
+        },
+        "__fxstat@plt": {
+          "bytes": 0
+        }
+      },
+      "available": true
+    },
+    "static_cost": {
+      "version": "cost-v1",
+      "functions": [
+        {
+          "name": "main",
+          "counts": {
+            "checks": {
+              "kept": 3,
+              "proved": 2
+            },
+            "updates": {
+              "in_place": 0,
+              "tested": 0,
+              "copied": 0
+            },
+            "allocation": {
+              "sites": 0,
+              "unresolved_calls": 0
+            },
+            "rc": {
+              "retains": 0,
+              "releases": 0,
+              "elided_pairs": 0,
+              "stack_lists": 0
+            },
+            "inlined_calls": 0,
+            "loops": {
+              "unswitched": 0,
+              "versioned": 0,
+              "vector_plans": 0,
+              "unknown": 1
+            },
+            "llvm_vectorized_loops": null
+          }
+        },
+        {
+          "name": "number",
+          "counts": {
+            "checks": {
+              "kept": 0,
+              "proved": 0
+            },
+            "updates": {
+              "in_place": 0,
+              "tested": 0,
+              "copied": 0
+            },
+            "allocation": {
+              "sites": 0,
+              "unresolved_calls": 0
+            },
+            "rc": {
+              "retains": 0,
+              "releases": 0,
+              "elided_pairs": 0,
+              "stack_lists": 0
+            },
+            "inlined_calls": 0,
+            "loops": {
+              "unswitched": 0,
+              "versioned": 0,
+              "vector_plans": 0,
+              "unknown": 0
+            },
+            "llvm_vectorized_loops": null
+          }
+        },
+        {
+          "name": "checksum",
+          "counts": {
+            "checks": {
+              "kept": 8,
+              "proved": 5
+            },
+            "updates": {
+              "in_place": 1,
+              "tested": 1,
+              "copied": 0
+            },
+            "allocation": {
+              "sites": 6,
+              "unresolved_calls": 2
+            },
+            "rc": {
+              "retains": 0,
+              "releases": 4,
+              "elided_pairs": 0,
+              "stack_lists": 0
+            },
+            "inlined_calls": 0,
+            "loops": {
+              "unswitched": 0,
+              "versioned": 0,
+              "vector_plans": 0,
+              "unknown": 2
+            },
+            "llvm_vectorized_loops": null
+          }
+        }
+      ],
+      "totals": {
+        "checks": {
+          "kept": 11,
+          "proved": 7
+        },
+        "updates": {
+          "in_place": 1,
+          "tested": 1,
+          "copied": 0
+        },
+        "allocation": {
+          "sites": 6,
+          "unresolved_calls": 2
+        },
+        "rc": {
+          "retains": 0,
+          "releases": 4,
+          "elided_pairs": 0,
+          "stack_lists": 0
+        },
+        "inlined_calls": 0,
+        "loops": {
+          "unswitched": 0,
+          "versioned": 0,
+          "vector_plans": 0,
+          "unknown": 3
+        },
+        "llvm_vectorized_loops": null
+      }
+    }
+  },
+  "context": {
+    "system": "Linux",
+    "kernel": "7.0.0-31-generic",
+    "machine": "x86_64",
+    "cpu": {
+      "vendor_id": "GenuineIntel",
+      "cpu family": "6",
+      "model": "154",
+      "model name": "12th Gen Intel(R) Core(TM) i7-12700H",
+      "stepping": "3",
+      "microcode": "0x43b",
+      "flags": "fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities"
+    },
+    "libraries": {
+      "/usr/lib/x86_64-linux-gnu/libc.so.6": "85e64f97e348786a8fb4d9f3d52fec289e2fb86bba20f0731dfe61990525e0f7",
+      "/usr/lib/x86_64-linux-gnu/libpthread.so.0": "1327fc40710691dbd94e88b6cf4efce27fefe8fbb93f7d1164a75b4dccaea696",
+      "/lib64/ld-linux-x86-64.so.2": "bda779ea9e9ad234f60315477d7cfd0bdde861cd8ddd9df8cdaf62f18c4cec14"
+    },
+    "execution_path": "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/cost/juice-cache/frontend-closeout-operations-20261009/workspace/run",
+    "collector": {
+      "kind": "perf",
+      "tool": {
+        "path": "/usr/bin/perf",
+        "sha256": "1371ae5cb9fa59632d1d0e34b877d7251df4029810ba67dc56e946545e87b531",
+        "version": "perf version 7.0.14"
+      },
+      "event": "cpu_core/instructions/u",
+      "cpu": 0,
+      "scope": "user instructions; process and inherited children; whole workload"
+    }
+  },
+  "evidence": {
+    "operations-quick-3-counted.stdout": "30815ece5843239d93582bf98322a1442b7d6f838556dccb752846444446a2da",
+    "operations-quick-0-sample.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "operations-quick-2-sample.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "operations-quick-counters.json": "701ea0bf8542fa5de911a350ab611c7bac7d7eaafab000dab889cc2ea8ee31ea",
+    "operations-quick-2-sample.perf": "665042e811546eb014e9b6ff6e9c13ad642c8c307da06ef08a24f44576f1efb5",
+    "operations-quick-1-sample.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "operations-quick-2-sample.stdout": "30815ece5843239d93582bf98322a1442b7d6f838556dccb752846444446a2da",
+    "operations-quick-1-sample.perf": "8485c67fb3478436c9bcdc895eaf394ae42c6bc1a43e5f4adcb61fac1a5e9194",
+    "operations-quick-0-sample.perf": "1c07b7b4a05abbfd8fc2e80f532377f5e7ef41dfdcff40b0e5914309cd6d01df",
+    "operations-quick-1-sample.stdout": "30815ece5843239d93582bf98322a1442b7d6f838556dccb752846444446a2da",
+    "operations-quick-0-sample.stdout": "30815ece5843239d93582bf98322a1442b7d6f838556dccb752846444446a2da",
+    "operations-quick-3-counted.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

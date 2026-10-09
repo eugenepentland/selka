@@ -163,6 +163,18 @@ pub const Walker = struct {
                     try self.stmt(b.then_body);
                     try self.expr(b.condition);
                 },
+                .range_loop => |range| {
+                    if (range.plan().loop.step) |step| try self.stmt(step);
+                    try self.stmt(range.plan().loop.body);
+                    try self.expr(range.plan().loop.condition);
+                    var i = range.plan().setup.len;
+                    while (i != 0) {
+                        i -= 1;
+                        try self.stmt(range.plan().setup[i]);
+                    }
+                    try self.expr(range.plan().end.value);
+                    try self.expr(range.plan().start.value);
+                },
                 .loop => |l| {
                     if (l.step) |step| try self.stmt(step);
                     try self.stmt(l.body);

@@ -1,10 +1,7 @@
-
 # CE2-B fixture (docs/audits/values-keys-trap-search-plan-2026-10-07.md §4.5 "CE2"): results built
 # in the caller's `sret` destination, arguments read where they lie, `sret` shared with a by-value
 # argument, pushes and element-field containers updated in place. Every function prints what value
 # semantics says; the shapes are the adversarial ones each transformation must refuse or survive.
-
-
 record Span:
     line: int
     col: int
@@ -53,7 +50,6 @@ record Pair:
 
 
 # ---- step 1: declared results built in %ret ----
-
 func make_token(src: bytes, t: Cursor, tag: int) -> Token:
     return Token(tag=tag, text=str(len(src) * 10 + t.pos), span=Span(line=t.line, col=t.col, offset=t.pos))
 
@@ -221,7 +217,6 @@ func pairs() -> str:
 
 
 # ---- step 2: list elements lent to calls where they lie ----
-
 record Holder:
     items: Big[]
     n: int
@@ -295,7 +290,6 @@ func lent() -> str:
 
 
 # ---- step 3: `sret` shared with a by-value argument that dies at the call ----
-
 record State:
     f0: int
     f1: int
@@ -370,7 +364,6 @@ func sharing() -> str:
 
 
 # ---- step 5: a field taken for a `mut` call next to calls that borrow its record ----
-
 record Slot:
     key: int
     value: int
@@ -440,7 +433,6 @@ func globals() -> str:
 
 
 # ---- step 6: container updates of an element's field in place ----
-
 record Bucket:
     name: str
     items: int[]

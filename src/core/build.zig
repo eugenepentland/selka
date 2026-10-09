@@ -676,6 +676,22 @@ const FnBuilder = struct {
 
     // ---- statements ---------------------------------------------------------------
 
+    /// Lower one binding store and preserve its alias and assignment facts.
+    fn storeStatement(self: *FnBuilder, store: typed.Store, span: u32, assign: bool) Error!void {
+        if (store.element) {
+            const kind = self.mb.module.kind(self.ssa.types.items[self.local(store.slot)]);
+            if (kind != .array and kind != .record) return self.mb.refuse("element store", span);
+        }
+        try self.guardViewRebind(self.local(store.slot), span);
+        var place: ?Place = null;
+        const value = try self.expressionPlace(store.value, &place);
+        const block = self.current orelse return;
+        try self.write(self.local(store.slot), block, value);
+        try self.assigned(self.local(store.slot));
+        if (assign) try build_capture.invalidate(@TypeOf(self), self, .{ .root = self.local(store.slot), .steps = &.{} }, span);
+        try self.noteAlias(store.slot, place);
+    }
+
     /// Lower a checked statement and preserve lexical cleanup on every exit.
     pub fn statement(self: *FnBuilder, id: typed.StatementId) Error!void {
         if (self.current == null) return;
@@ -685,19 +701,14 @@ const FnBuilder = struct {
             .block => |items| {
                 for (items) |item| try self.statement(item);
             },
-            .initialize, .assign => |store| {
-                if (store.element) {
-                    const kind = self.mb.module.kind(self.ssa.types.items[self.local(store.slot)]);
-                    if (kind != .array and kind != .record) return self.mb.refuse("element store", span);
-                }
-                try self.guardViewRebind(self.local(store.slot), span);
-                var place: ?Place = null;
-                const value = try self.expressionPlace(store.value, &place);
-                const block = self.current orelse return;
-                try self.write(self.local(store.slot), block, value);
-                try self.assigned(self.local(store.slot));
-                if (s.data == .assign) try build_capture.invalidate(@TypeOf(self), self, .{ .root = self.local(store.slot), .steps = &.{} }, span);
-                try self.noteAlias(store.slot, place);
+            .initialize, .assign => |store| try self.storeStatement(store, span, s.data == .assign),
+            .range_loop => |range| {
+                const binding: u32 = @intCast(range.plan().binding.start);
+                try self.storeStatement(range.plan().start, binding, false);
+                if (self.current == null) return;
+                try self.storeStatement(range.plan().end, binding, false);
+                for (range.plan().setup) |setup| try self.statement(setup);
+                try self.loopStatement(range.plan().loop.id, range.plan().loop.condition, range.plan().loop.body, range.plan().loop.step);
             },
             .discard => |value| _ = try self.expression(value),
             .ret => |value| {

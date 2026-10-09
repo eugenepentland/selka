@@ -1,7 +1,5 @@
 # sort_builtin: two million xorshift values sorted in place by list.sort(),
 # the built-in stable sort; prints three order statistics and a checksum.
-
-
 func xorshift(input: u64) -> u64:
     mut x = input
     x = bit_xor(x, shift_left(x, 13u64))

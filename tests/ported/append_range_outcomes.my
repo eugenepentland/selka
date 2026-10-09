@@ -1,12 +1,9 @@
-
 # Appending `(seed + i * 13) % 1009` to an empty list in a loop: the length and
 # the first and last elements after zero, negative, short, boundary, growing and
 # long runs and for extreme seeds. These are the executed programs of the
 # retired QBE `RC-APPEND-RANGE-1` outcome tests (`qbe_rc_append_version_test.zig`).
 # The traps those tests also pinned (R_OVERFLOW at the integer limit and
 # R_MEMORY_BUDGET under a 1 MiB ceiling) cannot be expected from a guest test.
-
-
 func grown(n: int, seed: int) -> int:
     mut values: int[] = []
     for i in range(n):

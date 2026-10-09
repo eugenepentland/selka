@@ -1,7 +1,6 @@
 import base64
 import hex
 
-
 func roundtrip(data: bytes) -> bool:
     match base64.b64decode(base64.b64encode(data)):
         case Ok(value):

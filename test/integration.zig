@@ -4,7 +4,7 @@ const testing = std.testing;
 const compiler_path = @import("test_options").compiler_path;
 // Mirror src/semantic_store.zig's directory format: this CLI test cannot
 // import files outside its Zig module root.
-const semantic_cache_version = "semantic-cache-v3";
+const semantic_cache_version = "semantic-cache-v4";
 
 // spec: VALUE-SEMANTICS-11
 test "a scalar-only mut record parameter writes the caller" {
@@ -179,16 +179,15 @@ test "CLI withholds Host under restrict and grants it with --allow-host" {
     try invokeOptions("run", source, &.{ "--restrict", "--allow-host" }, 0, "7\n", "");
 }
 // spec-case: NEW-CORE-S5-ARENA-2
-test "CLI checks and runs a managed value assigned across a retired arena block" {
+test "CLI checks and runs the migrated managed value assignment" {
     const source =
         \\func main() -> int:
         \\    mut keeper: int[] = []
-        \\    with arena() as scratch:
-        \\        keeper = [1, 2]
+        \\    keeper = [1, 2]
         \\    return len(keeper)
     ;
-    try invoke("check", source, 0, "", "warning[W_ARENA_RETIRED]");
-    try invoke("run", source, 0, "2\n", "warning[W_ARENA_RETIRED]");
+    try invoke("check", source, 0, "", "");
+    try invoke("run", source, 0, "2\n", "");
 }
 fn invoke(command: []const u8, text: []const u8, expected_status: u8, expected_stdout: []const u8, stderr_part: []const u8) !void {
     return invokeOptions(command, text, &.{}, expected_status, expected_stdout, stderr_part);
@@ -9982,10 +9981,10 @@ test "the old back end's commands and flags are refused by name with what replac
 }
 
 // spec: NEW-CORE-S5-ARENA-1
-test "an arena block checks and runs as an ordinary block and warns that arenas are retired" {
+test "an arena block is rejected with its targeted removal diagnostic" {
     const program = "func main() -> int:\n    mut total = 0\n    with arena():\n        mut xs = [1, 2, 3]\n        total = len(xs)\n    return total\n";
-    try invoke("check", program, 0, "", "warning[W_ARENA_RETIRED]");
-    try invoke("run", program, 0, "3\n", "remove the `with arena():` line");
+    try invoke("check", program, 1, "", "error[E_ARENA_REMOVED]");
+    try invoke("run", program, 1, "", "remove the `with arena():` line");
 }
 
 // spec: NEW-CORE-S5-CHECK-1

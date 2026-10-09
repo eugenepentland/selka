@@ -1,7 +1,5 @@
 # Trees of two-edge nodes that die in one drain (RC-DRAIN-PAIR-1). Each answer
 # is the same under the collector and RC; RC counting builds balance.
-
-
 record Node:
     left: Node?
     right: Node?

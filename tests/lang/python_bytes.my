@@ -1,5 +1,3 @@
-
-
 func bytes_widen(value: bytes) -> bytes:
     return value + value
 
@@ -9,7 +7,7 @@ record BytesPacket:
     body: bytes
 
 
-func bytes_pair[T:copy+storable](value: T) -> T[]:
+func bytes_pair[T: copy + storable](value: T) -> T[]:
     mut values: T[] = [value]
     values.append(value)
     return values

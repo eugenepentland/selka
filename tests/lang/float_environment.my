@@ -1,4 +1,3 @@
-
 # QBE-FLOAT-ENV-1 removes the per-operation floating-point environment check.
 # These assertions pin results that depend on every binary64 bit, so a lowering
 # that changed rounding, fused an operation, or reordered a comparison fails.

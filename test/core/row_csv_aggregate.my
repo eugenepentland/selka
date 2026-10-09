@@ -1,7 +1,6 @@
-
 # Split from benchmarks/runtime/expanded/text/main.my; identical timed work.
-
 extern func runtime_bench_now(host: Host) -> i64 effects(host)
+
 
 record Inputs:
     raw: bytes
@@ -10,6 +9,7 @@ record Inputs:
     numbers: int[]
     fragments: str[]
 
+
 func number(text: str) -> int:
     match parse_int(text):
         case Some(value):
@@ -17,8 +17,10 @@ func number(text: str) -> int:
         case None:
             return 0
 
+
 func row_name(j: int) -> str:
     return (if (j % 2 == 0) then ("café,\"item\"") else ("naïve,item")) + str(j)
+
 
 func score(text: str) -> int:
     mut raw = text.encode()
@@ -26,6 +28,7 @@ func score(text: str) -> int:
     for value in raw:
         result += value
     return result
+
 
 func csv_rows(text: str) -> str[][]:
     mut rows: str[][] = []
@@ -68,6 +71,7 @@ func csv_rows(text: str) -> str[][]:
             field += ch
     return rows
 
+
 func csv_job(text: str) -> int:
     mut groups: dict[str, int] = {"east": 0, "west": 0, "north": 0}
     mut accepted = 0
@@ -84,6 +88,7 @@ func csv_job(text: str) -> int:
                 rejected += 1
     return groups["east"] + groups["west"] * 2 + groups["north"] * 3 + accepted * 17 + rejected * 101 + names
 
+
 func inputs(kind: str, size: int, seed: int) -> Inputs:
     mut raw = b""
     mut texts: str[] = []
@@ -99,6 +104,7 @@ func inputs(kind: str, size: int, seed: int) -> Inputs:
     texts = ["".join(csv_chunks)]
     return Inputs(raw=raw, texts=texts, other=other, numbers=numbers, fragments=fragments)
 
+
 func kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:
     mut checksum = 0
     for step in range(iterations):
@@ -106,6 +112,7 @@ func kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:
         mut value = csv_job(data.texts[0])
         checksum = (checksum + value) % 1000000007
     return checksum
+
 
 func main(args: str[], host: Host, out: Stream) -> int:
     if len(args) != 3:

@@ -1,0 +1,600 @@
+[
+  {
+    "source": "tests/lang/loop_rebinding.my",
+    "source_sha256": "6c705d34b1b5c5fc2a0246dfde56598a643f578ece2c5320ab98e4365fd8f5c0",
+    "compiler": "old5e",
+    "compiler_sha256": "5e072ee17b825cfbd40ed5533c3bce9f166ce4ae576395020cd5e435cc45ed11",
+    "mode": "raw",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/artifacts/mylang-successor",
+      "dump-ir",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/tests/lang/loop_rebinding.my"
+    ],
+    "exit": 0,
+    "wall_seconds": 0.2185532369185239
+  },
+  {
+    "source": "tests/lang/loop_rebinding.my",
+    "source_sha256": "6c705d34b1b5c5fc2a0246dfde56598a643f578ece2c5320ab98e4365fd8f5c0",
+    "compiler": "old5e",
+    "compiler_sha256": "5e072ee17b825cfbd40ed5533c3bce9f166ce4ae576395020cd5e435cc45ed11",
+    "mode": "facts",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/artifacts/mylang-successor",
+      "dump-ir",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/tests/lang/loop_rebinding.my",
+      "--facts"
+    ],
+    "exit": 0,
+    "wall_seconds": 0.2234704999718815
+  },
+  {
+    "source": "tests/lang/loop_rebinding.my",
+    "source_sha256": "6c705d34b1b5c5fc2a0246dfde56598a643f578ece2c5320ab98e4365fd8f5c0",
+    "compiler": "old5e",
+    "compiler_sha256": "5e072ee17b825cfbd40ed5533c3bce9f166ce4ae576395020cd5e435cc45ed11",
+    "mode": "build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/artifacts/mylang-successor",
+      "build",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/tests/lang/loop_rebinding.my",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/range/native-final2/old5e/loop_rebinding/program",
+      "--release",
+      "--no-cache",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/range/native-final2/old5e/loop_rebinding/module.ll"
+    ],
+    "exit": 0,
+    "wall_seconds": 0.3265590709634125,
+    "native_exit": 0
+  },
+  {
+    "source": "tests/lang/loop_rebinding.my",
+    "source_sha256": "6c705d34b1b5c5fc2a0246dfde56598a643f578ece2c5320ab98e4365fd8f5c0",
+    "compiler": "candidate",
+    "compiler_sha256": "21319448ba51241f917c040004d1a3c7123e5516d5f0a766d7cff557294793f2",
+    "mode": "raw",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/artifacts/mylang-qualified",
+      "dump-ir",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/tests/lang/loop_rebinding.my"
+    ],
+    "exit": 0,
+    "wall_seconds": 0.22097579599358141
+  },
+  {
+    "source": "tests/lang/loop_rebinding.my",
+    "source_sha256": "6c705d34b1b5c5fc2a0246dfde56598a643f578ece2c5320ab98e4365fd8f5c0",
+    "compiler": "candidate",
+    "compiler_sha256": "21319448ba51241f917c040004d1a3c7123e5516d5f0a766d7cff557294793f2",
+    "mode": "facts",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/artifacts/mylang-qualified",
+      "dump-ir",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/tests/lang/loop_rebinding.my",
+      "--facts"
+    ],
+    "exit": 0,
+    "wall_seconds": 0.21833686088211834
+  },
+  {
+    "source": "tests/lang/loop_rebinding.my",
+    "source_sha256": "6c705d34b1b5c5fc2a0246dfde56598a643f578ece2c5320ab98e4365fd8f5c0",
+    "compiler": "candidate",
+    "compiler_sha256": "21319448ba51241f917c040004d1a3c7123e5516d5f0a766d7cff557294793f2",
+    "mode": "build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/artifacts/mylang-qualified",
+      "build",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/tests/lang/loop_rebinding.my",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/range/native-final2/candidate/loop_rebinding/program",
+      "--release",
+      "--no-cache",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/range/native-final2/candidate/loop_rebinding/module.ll"
+    ],
+    "exit": 0,
+    "wall_seconds": 0.3274435088969767,
+    "native_exit": 0
+  },
+  {
+    "source": "tests/lang/bounded_loop_ranges.my",
+    "source_sha256": "2e7bdcfa05e6435ae1756d33702f0dfb46e37d388dc3e68a9220d7d370c9f6ab",
+    "compiler": "old5e",
+    "compiler_sha256": "5e072ee17b825cfbd40ed5533c3bce9f166ce4ae576395020cd5e435cc45ed11",
+    "mode": "raw",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/artifacts/mylang-successor",
+      "dump-ir",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/tests/lang/bounded_loop_ranges.my"
+    ],
+    "exit": 0,
+    "wall_seconds": 0.21763640502467752
+  },
+  {
+    "source": "tests/lang/bounded_loop_ranges.my",
+    "source_sha256": "2e7bdcfa05e6435ae1756d33702f0dfb46e37d388dc3e68a9220d7d370c9f6ab",
+    "compiler": "old5e",
+    "compiler_sha256": "5e072ee17b825cfbd40ed5533c3bce9f166ce4ae576395020cd5e435cc45ed11",
+    "mode": "facts",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/artifacts/mylang-successor",
+      "dump-ir",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/tests/lang/bounded_loop_ranges.my",
+      "--facts"
+    ],
+    "exit": 0,
+    "wall_seconds": 0.20571219315752387
+  },
+  {
+    "source": "tests/lang/bounded_loop_ranges.my",
+    "source_sha256": "2e7bdcfa05e6435ae1756d33702f0dfb46e37d388dc3e68a9220d7d370c9f6ab",
+    "compiler": "old5e",
+    "compiler_sha256": "5e072ee17b825cfbd40ed5533c3bce9f166ce4ae576395020cd5e435cc45ed11",
+    "mode": "build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/artifacts/mylang-successor",
+      "build",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/tests/lang/bounded_loop_ranges.my",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/range/native-final2/old5e/bounded_loop_ranges/program",
+      "--release",
+      "--no-cache",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/range/native-final2/old5e/bounded_loop_ranges/module.ll"
+    ],
+    "exit": 0,
+    "wall_seconds": 0.3066169531084597,
+    "native_exit": 0
+  },
+  {
+    "source": "tests/lang/bounded_loop_ranges.my",
+    "source_sha256": "2e7bdcfa05e6435ae1756d33702f0dfb46e37d388dc3e68a9220d7d370c9f6ab",
+    "compiler": "candidate",
+    "compiler_sha256": "21319448ba51241f917c040004d1a3c7123e5516d5f0a766d7cff557294793f2",
+    "mode": "raw",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/artifacts/mylang-qualified",
+      "dump-ir",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/tests/lang/bounded_loop_ranges.my"
+    ],
+    "exit": 0,
+    "wall_seconds": 0.21360280504450202
+  },
+  {
+    "source": "tests/lang/bounded_loop_ranges.my",
+    "source_sha256": "2e7bdcfa05e6435ae1756d33702f0dfb46e37d388dc3e68a9220d7d370c9f6ab",
+    "compiler": "candidate",
+    "compiler_sha256": "21319448ba51241f917c040004d1a3c7123e5516d5f0a766d7cff557294793f2",
+    "mode": "facts",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/artifacts/mylang-qualified",
+      "dump-ir",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/tests/lang/bounded_loop_ranges.my",
+      "--facts"
+    ],
+    "exit": 0,
+    "wall_seconds": 0.23198783886618912
+  },
+  {
+    "source": "tests/lang/bounded_loop_ranges.my",
+    "source_sha256": "2e7bdcfa05e6435ae1756d33702f0dfb46e37d388dc3e68a9220d7d370c9f6ab",
+    "compiler": "candidate",
+    "compiler_sha256": "21319448ba51241f917c040004d1a3c7123e5516d5f0a766d7cff557294793f2",
+    "mode": "build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/artifacts/mylang-qualified",
+      "build",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/tests/lang/bounded_loop_ranges.my",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/range/native-final2/candidate/bounded_loop_ranges/program",
+      "--release",
+      "--no-cache",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/range/native-final2/candidate/bounded_loop_ranges/module.ll"
+    ],
+    "exit": 0,
+    "wall_seconds": 0.3478886301163584,
+    "native_exit": 0
+  },
+  {
+    "source": "tests/lang/array_negative_index.my",
+    "source_sha256": "3a1b33bf27193f189e65879e57a392368fc3908934da7887ccd1541820681eab",
+    "compiler": "old5e",
+    "compiler_sha256": "5e072ee17b825cfbd40ed5533c3bce9f166ce4ae576395020cd5e435cc45ed11",
+    "mode": "raw",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/artifacts/mylang-successor",
+      "dump-ir",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/tests/lang/array_negative_index.my"
+    ],
+    "exit": 0,
+    "wall_seconds": 0.32088150293566287
+  },
+  {
+    "source": "tests/lang/array_negative_index.my",
+    "source_sha256": "3a1b33bf27193f189e65879e57a392368fc3908934da7887ccd1541820681eab",
+    "compiler": "old5e",
+    "compiler_sha256": "5e072ee17b825cfbd40ed5533c3bce9f166ce4ae576395020cd5e435cc45ed11",
+    "mode": "facts",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/artifacts/mylang-successor",
+      "dump-ir",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/tests/lang/array_negative_index.my",
+      "--facts"
+    ],
+    "exit": 0,
+    "wall_seconds": 0.23052115109749138
+  },
+  {
+    "source": "tests/lang/array_negative_index.my",
+    "source_sha256": "3a1b33bf27193f189e65879e57a392368fc3908934da7887ccd1541820681eab",
+    "compiler": "old5e",
+    "compiler_sha256": "5e072ee17b825cfbd40ed5533c3bce9f166ce4ae576395020cd5e435cc45ed11",
+    "mode": "build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/artifacts/mylang-successor",
+      "build",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/tests/lang/array_negative_index.my",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/range/native-final2/old5e/array_negative_index/program",
+      "--release",
+      "--no-cache",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/range/native-final2/old5e/array_negative_index/module.ll"
+    ],
+    "exit": 0,
+    "wall_seconds": 0.32202833890914917,
+    "native_exit": 0
+  },
+  {
+    "source": "tests/lang/array_negative_index.my",
+    "source_sha256": "3a1b33bf27193f189e65879e57a392368fc3908934da7887ccd1541820681eab",
+    "compiler": "candidate",
+    "compiler_sha256": "21319448ba51241f917c040004d1a3c7123e5516d5f0a766d7cff557294793f2",
+    "mode": "raw",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/artifacts/mylang-qualified",
+      "dump-ir",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/tests/lang/array_negative_index.my"
+    ],
+    "exit": 0,
+    "wall_seconds": 0.2922453540377319
+  },
+  {
+    "source": "tests/lang/array_negative_index.my",
+    "source_sha256": "3a1b33bf27193f189e65879e57a392368fc3908934da7887ccd1541820681eab",
+    "compiler": "candidate",
+    "compiler_sha256": "21319448ba51241f917c040004d1a3c7123e5516d5f0a766d7cff557294793f2",
+    "mode": "facts",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/artifacts/mylang-qualified",
+      "dump-ir",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/tests/lang/array_negative_index.my",
+      "--facts"
+    ],
+    "exit": 0,
+    "wall_seconds": 0.2447512769140303
+  },
+  {
+    "source": "tests/lang/array_negative_index.my",
+    "source_sha256": "3a1b33bf27193f189e65879e57a392368fc3908934da7887ccd1541820681eab",
+    "compiler": "candidate",
+    "compiler_sha256": "21319448ba51241f917c040004d1a3c7123e5516d5f0a766d7cff557294793f2",
+    "mode": "build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/artifacts/mylang-qualified",
+      "build",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/tests/lang/array_negative_index.my",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/range/native-final2/candidate/array_negative_index/program",
+      "--release",
+      "--no-cache",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/range/native-final2/candidate/array_negative_index/module.ll"
+    ],
+    "exit": 0,
+    "wall_seconds": 0.3185469349846244,
+    "native_exit": 0
+  },
+  {
+    "source": "tests/lang/rc_scalar_loops.my",
+    "source_sha256": "c68c4b8f9bdfde25fa03de66119edea1cdaa9830947602d973cb85452b245a82",
+    "compiler": "old5e",
+    "compiler_sha256": "5e072ee17b825cfbd40ed5533c3bce9f166ce4ae576395020cd5e435cc45ed11",
+    "mode": "raw",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/artifacts/mylang-successor",
+      "dump-ir",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/tests/lang/rc_scalar_loops.my"
+    ],
+    "exit": 0,
+    "wall_seconds": 0.2193252749275416
+  },
+  {
+    "source": "tests/lang/rc_scalar_loops.my",
+    "source_sha256": "c68c4b8f9bdfde25fa03de66119edea1cdaa9830947602d973cb85452b245a82",
+    "compiler": "old5e",
+    "compiler_sha256": "5e072ee17b825cfbd40ed5533c3bce9f166ce4ae576395020cd5e435cc45ed11",
+    "mode": "facts",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/artifacts/mylang-successor",
+      "dump-ir",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/tests/lang/rc_scalar_loops.my",
+      "--facts"
+    ],
+    "exit": 0,
+    "wall_seconds": 0.22851687599904835
+  },
+  {
+    "source": "tests/lang/rc_scalar_loops.my",
+    "source_sha256": "c68c4b8f9bdfde25fa03de66119edea1cdaa9830947602d973cb85452b245a82",
+    "compiler": "old5e",
+    "compiler_sha256": "5e072ee17b825cfbd40ed5533c3bce9f166ce4ae576395020cd5e435cc45ed11",
+    "mode": "build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/artifacts/mylang-successor",
+      "build",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/tests/lang/rc_scalar_loops.my",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/range/native-final2/old5e/rc_scalar_loops/program",
+      "--release",
+      "--no-cache",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/range/native-final2/old5e/rc_scalar_loops/module.ll"
+    ],
+    "exit": 0,
+    "wall_seconds": 0.30348099605180323,
+    "native_exit": 0
+  },
+  {
+    "source": "tests/lang/rc_scalar_loops.my",
+    "source_sha256": "c68c4b8f9bdfde25fa03de66119edea1cdaa9830947602d973cb85452b245a82",
+    "compiler": "candidate",
+    "compiler_sha256": "21319448ba51241f917c040004d1a3c7123e5516d5f0a766d7cff557294793f2",
+    "mode": "raw",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/artifacts/mylang-qualified",
+      "dump-ir",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/tests/lang/rc_scalar_loops.my"
+    ],
+    "exit": 0,
+    "wall_seconds": 0.20654477505013347
+  },
+  {
+    "source": "tests/lang/rc_scalar_loops.my",
+    "source_sha256": "c68c4b8f9bdfde25fa03de66119edea1cdaa9830947602d973cb85452b245a82",
+    "compiler": "candidate",
+    "compiler_sha256": "21319448ba51241f917c040004d1a3c7123e5516d5f0a766d7cff557294793f2",
+    "mode": "facts",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/artifacts/mylang-qualified",
+      "dump-ir",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/tests/lang/rc_scalar_loops.my",
+      "--facts"
+    ],
+    "exit": 0,
+    "wall_seconds": 0.23605811805464327
+  },
+  {
+    "source": "tests/lang/rc_scalar_loops.my",
+    "source_sha256": "c68c4b8f9bdfde25fa03de66119edea1cdaa9830947602d973cb85452b245a82",
+    "compiler": "candidate",
+    "compiler_sha256": "21319448ba51241f917c040004d1a3c7123e5516d5f0a766d7cff557294793f2",
+    "mode": "build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/artifacts/mylang-qualified",
+      "build",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/tests/lang/rc_scalar_loops.my",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/range/native-final2/candidate/rc_scalar_loops/program",
+      "--release",
+      "--no-cache",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/range/native-final2/candidate/rc_scalar_loops/module.ll"
+    ],
+    "exit": 0,
+    "wall_seconds": 0.45084740105085075,
+    "native_exit": 0
+  },
+  {
+    "source": "experiments/frontend-closeout-20261009/range/fixtures/python_expressions_driver.my",
+    "source_sha256": "0028839282385e7c2d4a412760a0994db25ab53849124cd9adc2aa5d385072c6",
+    "compiler": "old5e",
+    "compiler_sha256": "5e072ee17b825cfbd40ed5533c3bce9f166ce4ae576395020cd5e435cc45ed11",
+    "mode": "raw",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/artifacts/mylang-successor",
+      "dump-ir",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/range/fixtures/python_expressions_driver.my"
+    ],
+    "exit": 0,
+    "wall_seconds": 0.2705033109523356
+  },
+  {
+    "source": "experiments/frontend-closeout-20261009/range/fixtures/python_expressions_driver.my",
+    "source_sha256": "0028839282385e7c2d4a412760a0994db25ab53849124cd9adc2aa5d385072c6",
+    "compiler": "old5e",
+    "compiler_sha256": "5e072ee17b825cfbd40ed5533c3bce9f166ce4ae576395020cd5e435cc45ed11",
+    "mode": "facts",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/artifacts/mylang-successor",
+      "dump-ir",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/range/fixtures/python_expressions_driver.my",
+      "--facts"
+    ],
+    "exit": 0,
+    "wall_seconds": 0.3279364330228418
+  },
+  {
+    "source": "experiments/frontend-closeout-20261009/range/fixtures/python_expressions_driver.my",
+    "source_sha256": "0028839282385e7c2d4a412760a0994db25ab53849124cd9adc2aa5d385072c6",
+    "compiler": "old5e",
+    "compiler_sha256": "5e072ee17b825cfbd40ed5533c3bce9f166ce4ae576395020cd5e435cc45ed11",
+    "mode": "build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/artifacts/mylang-successor",
+      "build",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/range/fixtures/python_expressions_driver.my",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/range/native-final2/old5e/python_expressions_driver/program",
+      "--release",
+      "--no-cache",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/range/native-final2/old5e/python_expressions_driver/module.ll"
+    ],
+    "exit": 0,
+    "wall_seconds": 0.5502746589481831,
+    "native_exit": 0
+  },
+  {
+    "source": "experiments/frontend-closeout-20261009/range/fixtures/python_expressions_driver.my",
+    "source_sha256": "0028839282385e7c2d4a412760a0994db25ab53849124cd9adc2aa5d385072c6",
+    "compiler": "candidate",
+    "compiler_sha256": "21319448ba51241f917c040004d1a3c7123e5516d5f0a766d7cff557294793f2",
+    "mode": "raw",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/artifacts/mylang-qualified",
+      "dump-ir",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/range/fixtures/python_expressions_driver.my"
+    ],
+    "exit": 0,
+    "wall_seconds": 0.24899717909283936
+  },
+  {
+    "source": "experiments/frontend-closeout-20261009/range/fixtures/python_expressions_driver.my",
+    "source_sha256": "0028839282385e7c2d4a412760a0994db25ab53849124cd9adc2aa5d385072c6",
+    "compiler": "candidate",
+    "compiler_sha256": "21319448ba51241f917c040004d1a3c7123e5516d5f0a766d7cff557294793f2",
+    "mode": "facts",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/artifacts/mylang-qualified",
+      "dump-ir",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/range/fixtures/python_expressions_driver.my",
+      "--facts"
+    ],
+    "exit": 0,
+    "wall_seconds": 0.35808799997903407
+  },
+  {
+    "source": "experiments/frontend-closeout-20261009/range/fixtures/python_expressions_driver.my",
+    "source_sha256": "0028839282385e7c2d4a412760a0994db25ab53849124cd9adc2aa5d385072c6",
+    "compiler": "candidate",
+    "compiler_sha256": "21319448ba51241f917c040004d1a3c7123e5516d5f0a766d7cff557294793f2",
+    "mode": "build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/artifacts/mylang-qualified",
+      "build",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/range/fixtures/python_expressions_driver.my",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/range/native-final2/candidate/python_expressions_driver/program",
+      "--release",
+      "--no-cache",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/range/native-final2/candidate/python_expressions_driver/module.ll"
+    ],
+    "exit": 0,
+    "wall_seconds": 1.0278810388408601,
+    "native_exit": 0
+  },
+  {
+    "source": "experiments/frontend-closeout-20261009/range/fixtures/range_semantics_v2.my",
+    "source_sha256": "8df2592865e78d032b378f92703ad72385e417ef47b0a21b9174c2ffc22692f6",
+    "compiler": "old5e",
+    "compiler_sha256": "5e072ee17b825cfbd40ed5533c3bce9f166ce4ae576395020cd5e435cc45ed11",
+    "mode": "raw",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/artifacts/mylang-successor",
+      "dump-ir",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/range/fixtures/range_semantics_v2.my"
+    ],
+    "exit": 0,
+    "wall_seconds": 0.3884227939415723
+  },
+  {
+    "source": "experiments/frontend-closeout-20261009/range/fixtures/range_semantics_v2.my",
+    "source_sha256": "8df2592865e78d032b378f92703ad72385e417ef47b0a21b9174c2ffc22692f6",
+    "compiler": "old5e",
+    "compiler_sha256": "5e072ee17b825cfbd40ed5533c3bce9f166ce4ae576395020cd5e435cc45ed11",
+    "mode": "facts",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/artifacts/mylang-successor",
+      "dump-ir",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/range/fixtures/range_semantics_v2.my",
+      "--facts"
+    ],
+    "exit": 0,
+    "wall_seconds": 0.4950841781683266
+  },
+  {
+    "source": "experiments/frontend-closeout-20261009/range/fixtures/range_semantics_v2.my",
+    "source_sha256": "8df2592865e78d032b378f92703ad72385e417ef47b0a21b9174c2ffc22692f6",
+    "compiler": "old5e",
+    "compiler_sha256": "5e072ee17b825cfbd40ed5533c3bce9f166ce4ae576395020cd5e435cc45ed11",
+    "mode": "build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/artifacts/mylang-successor",
+      "build",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/range/fixtures/range_semantics_v2.my",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/range/native-final2/old5e/range_semantics_v2/program",
+      "--release",
+      "--no-cache",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/range/native-final2/old5e/range_semantics_v2/module.ll"
+    ],
+    "exit": 2,
+    "wall_seconds": 0.6394385320600122
+  },
+  {
+    "source": "experiments/frontend-closeout-20261009/range/fixtures/range_semantics_v2.my",
+    "source_sha256": "8df2592865e78d032b378f92703ad72385e417ef47b0a21b9174c2ffc22692f6",
+    "compiler": "candidate",
+    "compiler_sha256": "21319448ba51241f917c040004d1a3c7123e5516d5f0a766d7cff557294793f2",
+    "mode": "raw",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/artifacts/mylang-qualified",
+      "dump-ir",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/range/fixtures/range_semantics_v2.my"
+    ],
+    "exit": 0,
+    "wall_seconds": 0.5889508528634906
+  },
+  {
+    "source": "experiments/frontend-closeout-20261009/range/fixtures/range_semantics_v2.my",
+    "source_sha256": "8df2592865e78d032b378f92703ad72385e417ef47b0a21b9174c2ffc22692f6",
+    "compiler": "candidate",
+    "compiler_sha256": "21319448ba51241f917c040004d1a3c7123e5516d5f0a766d7cff557294793f2",
+    "mode": "facts",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/artifacts/mylang-qualified",
+      "dump-ir",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/range/fixtures/range_semantics_v2.my",
+      "--facts"
+    ],
+    "exit": 0,
+    "wall_seconds": 0.3572647818364203
+  },
+  {
+    "source": "experiments/frontend-closeout-20261009/range/fixtures/range_semantics_v2.my",
+    "source_sha256": "8df2592865e78d032b378f92703ad72385e417ef47b0a21b9174c2ffc22692f6",
+    "compiler": "candidate",
+    "compiler_sha256": "21319448ba51241f917c040004d1a3c7123e5516d5f0a766d7cff557294793f2",
+    "mode": "build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/artifacts/mylang-qualified",
+      "build",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/range/fixtures/range_semantics_v2.my",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/range/native-final2/candidate/range_semantics_v2/program",
+      "--release",
+      "--no-cache",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/range/native-final2/candidate/range_semantics_v2/module.ll"
+    ],
+    "exit": 2,
+    "wall_seconds": 0.446173625998199
+  }
+]

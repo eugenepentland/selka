@@ -1,0 +1,37 @@
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source a624fa6f37bc)
+guardian: diff-scoped vs d21b2dfa9b36f1de285985a6b38e39847d6beca2: 20/563 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 15 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 5 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 3/88 failed (line-length, repeated-string-literal, error-path-test) — diff-scoped vs d21b2dfa9b36f1de285985a6b38e39847d6beca2, 20 file(s) in scope
+guardian: failures grouped by check (3):
+  line-length (2 findings)
+    - src/numeric_surface.zig:12: line is 300 chars (hard limit 240)
+      fix: split the expression when doing so improves readability
+    - src/retired_features_test.zig:317: line is 264 chars (hard limit 240)
+  repeated-string-literal (1 finding)
+    - src/retired_features_test.zig: string literal retired.my appears 3 times (lines 13, 40, 290) — extract a const
+      fix: extract the literal/const into a shared file-scope const and import it.
+  error-path-test (1 finding)
+    - src/retired_features_test.zig:301: new returned error — no test names error `MissingArenaDiagnostic`
+      fix: add (or extend) a test that names the error identifier — `try testing.expectError(error.X, …)` is enough — in this same change.
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them
+install
++- run ../guardian-zig/zig-out/bin/guardian-check failure
+error: process exited with code 1
+failed command: ../guardian-zig/zig-out/bin/guardian-check all . --quiet
+
+Build Summary: 6/9 steps succeeded (1 failed)
+install transitive failure
++- install mylang transitive failure
+|  +- compile exe mylang debug native success 3s MaxRSS:498M
+|  |  +- run exe build-identity (build_identity) success 37ms
+|  |  |  +- compile exe build-identity debug native cached 8ms MaxRSS:36M
+|  |  +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 8ms MaxRSS:37M
+|  +- run ../guardian-zig/zig-out/bin/guardian-check failure
+|     +- guardian-selfcheck success
+|        +- run ../guardian-zig/zig-out/bin/guardian-check success 5ms
++- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+
+real 3.72
+user 12.30
+sys 2.17

@@ -1,6 +1,7 @@
 //! The `mylang` command line. Commands that build, run or test code go to the
 //! new core (`mylang_core`, `src/core/cli.zig`); this file owns the front-end
 //! commands: checking, formatting, linting, navigation and project reports.
+const mylang_core = @import("mylang_core");
 const inputs_prefix = "--inputs=";
 const policy_prefix = "--policy=";
 const cache_directory_prefix = "--cache-dir=";
@@ -235,7 +236,7 @@ fn dispatch(process: std.process.Init) !u8 {
     const args = try process.minimal.args.toSlice(process.arena.allocator());
     // Building, running and testing go to the new core, which also refuses the
     // retired commands and flags by name.
-    if (try @import("mylang_core").dispatch(process, args)) |status| return status;
+    if (try mylang_core.dispatch(process, args)) |status| return status;
     if (args.len == 2 and std.mem.eql(u8, args[1], "--features")) {
         try featureReport(process);
         return 0;
@@ -625,8 +626,13 @@ fn recordUnitTypedNodes(init: Context, compilation: *const language.Compilation)
 /// `main` of any signature is always checked as an entry point.
 fn checkUnit(parsed: Parsed, compilation: *language.Compilation, semantic: *language.semantic_cache.Cache) language.diagnostic.Error!void {
     const as_library = parsed.command == .check and !compilation.declaresMain();
-    if (as_library) return compilation.checkLibrary();
-    return compilation.checkWithCache(semantic);
+    const program = if (as_library) try compilation.checkLibraryProgram() else result: {
+        try compilation.checkWithCache(semantic);
+        break :result compilation.program.?;
+    };
+    var sink: language.diagnostic.Sink = .{ .allocator = compilation.arena.allocator(), .items = compilation.diagnostics };
+    defer compilation.diagnostics = sink.items;
+    try mylang_core.checkAllocationContracts(sink.allocator, program, compilation.src, &sink);
 }
 
 fn report(init: Context, compilation: *const language.Compilation) !void {
@@ -1912,7 +1918,7 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
         const semantic_before = if (functions) |f| f.statistics else null;
         // `check` needs no checked trees: unchanged bodies are stood in by the
         // summaries the entry's last successful check left.
-        var summaries: language.semantic_summary.Request = .{};
+        var summaries: language.semantic_summary.Request = .{ .body_policy = .allocation_contracts };
         try openSummaries(init, parsed, &project, functions, &summaries);
         defer closeSummaries(functions);
         // `context` answers about a project that does not check: it publishes the
@@ -1924,6 +1930,13 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
                 recordCheckWork(init, functions, semantic_before, compilation.program);
                 if (try checkFailure(init, parsed, &compilation, files.inputs)) |status| return status;
                 unchecked_reason = "bodies did not check; declarations and diagnostics only";
+            },
+            else => return err,
+        };
+        if (unchecked_reason == null) mylang_core.checkAllocationContracts(compilation.diagnostics.allocator, compilation.program.?, compilation.src, &compilation.diagnostics) catch |err| switch (err) {
+            error.SourceError => {
+                if (try checkFailure(init, parsed, &compilation, files.inputs)) |status| return status;
+                unchecked_reason = "allocation contract did not check";
             },
             else => return err,
         };
@@ -1973,7 +1986,14 @@ fn earlyProjectCheck(init: Context, parsed: Parsed, compilation: *language.proje
 
 /// Check a library without recording an executable verdict or lowering its bodies.
 fn checkLibraryProject(init: Context, parsed: Parsed, compilation: *language.project_compile.Compilation, files: *ModuleFiles, configured: *const ConfiguredPolicy) !u8 {
-    compilation.checkLibrary() catch |err| switch (err) {
+    const library_program = compilation.checkLibraryProgram() catch |err| switch (err) {
+        error.SourceError => {
+            try reportProject(init, compilation);
+            return 1;
+        },
+        else => return err,
+    };
+    mylang_core.checkAllocationContracts(compilation.diagnostics.allocator, library_program, compilation.src, &compilation.diagnostics) catch |err| switch (err) {
         error.SourceError => {
             try reportProject(init, compilation);
             return 1;
@@ -2212,7 +2232,7 @@ fn listInterfaces(init: Context, project: *language.project.Project, parsed: Par
 fn interfaceListing(init: Context, text: []const u8, parsed: Parsed) !u8 {
     var extra: []const u8 = "";
     if (parsed.cost) {
-        const rendered = try @import("mylang_core").interfaceCost(init.process.?.*, parsed.path);
+        const rendered = try mylang_core.interfaceCost(init.process.?.*, parsed.path);
         if (rendered.status != 0) return rendered.status;
         extra = rendered.text;
     }

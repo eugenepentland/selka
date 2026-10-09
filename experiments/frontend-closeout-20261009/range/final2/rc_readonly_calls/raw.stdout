@@ -1,0 +1,268 @@
+fn main() -> i64
+b0:
+  %0 = call bool test_composed_reader_preserves_snapshot_and_later_mutation()
+  branch %0, b2, b1
+b1: ; preds b0
+  unreachable
+b2: ; preds b0
+  %3 = call bool test_composed_reader_handles_empty_and_repeated_inputs()
+  branch %3, b4, b3
+b3: ; preds b2
+  unreachable
+b4: ; preds b2
+  %6 = call bool test_composed_helper_preserves_self_recursion()
+  branch %6, b6, b5
+b5: ; preds b4
+  unreachable
+b6: ; preds b4
+  %9 = call bool test_managed_result_helper_keeps_owned_fallback()
+  branch %9, b8, b7
+b7: ; preds b6
+  unreachable
+b8: ; preds b6
+  %12 = call bool test_mutating_helper_keeps_snapshot_and_ordinary_cleanup()
+  branch %12, b10, b9
+b9: ; preds b8
+  unreachable
+b10: ; preds b8
+  ret 0:i64
+fn test_composed_reader_preserves_snapshot_and_later_mutation() -> bool
+b0:
+  %1 = list_new list[record{bytes, i64}] 2:i64
+  %3 = call bytes myl_core_text_encode(str5)
+  %5 = record_make record{bytes, i64} %3, 3:i64
+  %6 = list_push list[record{bytes, i64}] %1, %5
+  %8 = call bytes myl_core_text_encode(str6)
+  %10 = record_make record{bytes, i64} %8, 7:i64
+  %11 = list_push list[record{bytes, i64}] %6, %10
+  %12 = call i64 total(%11)
+  %14 = call bytes myl_core_text_encode(str7)
+  %16 = record_make record{bytes, i64} %14, 9:i64
+  %17 = list_push list[record{bytes, i64}] %11, %16
+  %19 = cmp.eq bool %12, 20:i64
+  branch %19, b1, b2
+b1: ; preds b0
+  %21 = call i64 total(%17)
+  %23 = cmp.eq bool %21, 38:i64
+  jump b2
+b2: ; preds b0 b1
+  %25 = phi bool %19, %23
+  branch %25, b3, b4
+b3: ; preds b2
+  %28 = call i64 total(%11)
+  %30 = cmp.eq bool %28, 20:i64
+  jump b4
+b4: ; preds b2 b3
+  %32 = phi bool %25, %30
+  ret %32
+fn test_composed_reader_handles_empty_and_repeated_inputs() -> bool
+b0:
+  %1 = list_new list[record{bytes, i64}] 0:i64
+  %3 = list_new list[record{bytes, i64}] 1:i64
+  %5 = call bytes myl_core_text_encode(str8)
+  %7 = record_make record{bytes, i64} %5, 3:i64
+  %8 = list_push list[record{bytes, i64}] %3, %7
+  jump b1
+b1: ; preds b0 b3
+  %13 = phi i64 0:i64, %23
+  %17 = phi i64 0:i64, %20
+  %15 = cmp.lt bool %13, 8:i64
+  branch %15, b2, b4
+b2: ; preds b1
+  %19 = call i64 total(%8)
+  %20 = add.exact i64 %17, %19
+  jump b3
+b3: ; preds b2
+  %23 = add.exact i64 %13, 1:i64
+  jump b1
+b4: ; preds b1
+  %26 = cmp.eq bool %17, 48:i64
+  branch %26, b5, b6
+b5: ; preds b4
+  %29 = call i64 total(%1)
+  %31 = cmp.eq bool %29, 0:i64
+  jump b6
+b6: ; preds b4 b5
+  %33 = phi bool %26, %31
+  branch %33, b7, b8
+b7: ; preds b6
+  %38 = cmp.lt bool 0:i64, 0:i64
+  branch %38, b9, b10
+b8: ; preds b6 b10
+  %52 = phi bool %33, %50
+  ret %52
+b9: ; preds b7
+  %40 = list_len u64 %8
+  %41 = convert.exact i64 %40
+  %42 = add.exact i64 %41, 0:i64
+  jump b10
+b10: ; preds b7 b9
+  %44 = phi i64 0:i64, %42
+  %47 = list_get_field.exact bytes %8, %44, path 0
+  %49 = call bytes myl_core_text_encode(str9)
+  %50 = call bool myl_core_str_eq(%47, %49)
+  jump b8
+fn test_composed_helper_preserves_self_recursion() -> bool
+b0:
+  %1 = list_new list[record{bytes, i64}] 1:i64
+  %3 = call bytes myl_core_text_encode(str10)
+  %5 = record_make record{bytes, i64} %3, 3:i64
+  %6 = list_push list[record{bytes, i64}] %1, %5
+  %8 = call i64 recursive(%6, 64:i64)
+  %10 = cmp.eq bool %8, 3:i64
+  branch %10, b1, b2
+b1: ; preds b0
+  %14 = cmp.lt bool 0:i64, 0:i64
+  branch %14, b3, b4
+b2: ; preds b0 b4
+  %28 = phi bool %10, %26
+  ret %28
+b3: ; preds b1
+  %16 = list_len u64 %6
+  %17 = convert.exact i64 %16
+  %18 = add.exact i64 %17, 0:i64
+  jump b4
+b4: ; preds b1 b3
+  %20 = phi i64 0:i64, %18
+  %23 = list_get_field.exact bytes %6, %20, path 0
+  %25 = call bytes myl_core_text_encode(str11)
+  %26 = call bool myl_core_str_eq(%23, %25)
+  jump b2
+fn test_managed_result_helper_keeps_owned_fallback() -> bool
+b0:
+  %1 = list_new list[record{bytes, i64}] 1:i64
+  %3 = call bytes myl_core_text_encode(str12)
+  %5 = record_make record{bytes, i64} %3, 3:i64
+  %6 = list_push list[record{bytes, i64}] %1, %5
+  %7 = call record{bytes, i64} returned(%6)
+  %8 = call i64 through_owned_result(%6)
+  %10 = list_new list[record{bytes, i64}] 0:u64
+  %12 = cmp.eq bool %8, 3:i64
+  branch %12, b1, b2
+b1: ; preds b0
+  %14 = record_get bytes %7, field0
+  %16 = call bytes myl_core_text_encode(str13)
+  %17 = call bool myl_core_str_eq(%14, %16)
+  jump b2
+b2: ; preds b0 b1
+  %19 = phi bool %12, %17
+  branch %19, b3, b4
+b3: ; preds b2
+  %22 = record_get i64 %7, field1
+  %24 = cmp.eq bool %22, 3:i64
+  jump b4
+b4: ; preds b2 b3
+  %26 = phi bool %19, %24
+  ret %26
+fn test_mutating_helper_keeps_snapshot_and_ordinary_cleanup() -> bool
+b0:
+  %1 = list_new list[record{bytes, i64}] 1:i64
+  %3 = call bytes myl_core_text_encode(str14)
+  %5 = record_make record{bytes, i64} %3, 3:i64
+  %6 = list_push list[record{bytes, i64}] %1, %5
+  %7 = call record{i64, list[record{bytes, i64}]} changed(%6)
+  %8 = record_get i64 %7, field0
+  %9 = record_get list[record{bytes, i64}] %7, field1
+  %11 = cmp.eq bool %8, 28:i64
+  branch %11, b1, b2
+b1: ; preds b0
+  %13 = call i64 total(%9)
+  %15 = cmp.eq bool %13, 28:i64
+  jump b2
+b2: ; preds b0 b1
+  %17 = phi bool %11, %15
+  branch %17, b3, b4
+b3: ; preds b2
+  %20 = call i64 total(%6)
+  %22 = cmp.eq bool %20, 6:i64
+  jump b4
+b4: ; preds b2 b3
+  %24 = phi bool %17, %22
+  ret %24
+fn myl_core_text_encode(str) -> bytes extern
+fn total(list[record{bytes, i64}]) -> i64
+b0:
+  jump b1
+b1: ; preds b0 b3
+  %4 = phi i64 0:i64, %29
+  %21 = phi i64 0:i64, %27
+  %6 = list_len u64 param0
+  %7 = convert.exact i64 %6
+  %8 = cmp.lt bool %4, %7
+  branch %8, b2, b4
+b2: ; preds b1
+  %11 = cmp.lt bool %4, 0:i64
+  branch %11, b5, b6
+b3: ; preds b6
+  jump b1
+b4: ; preds b1
+  ret %21
+b5: ; preds b2
+  %13 = list_len u64 param0
+  %14 = convert.exact i64 %13
+  %15 = add.exact i64 %14, %4
+  jump b6
+b6: ; preds b2 b5
+  %17 = phi i64 %4, %15
+  %19 = list_get.exact record{bytes, i64} param0, %17
+  %24 = call i64 middle(param0, %4)
+  %25 = record_get i64 %19, field1
+  %26 = add.exact i64 %24, %25
+  %27 = add.exact i64 %21, %26
+  %29 = add.exact i64 %4, 1:i64
+  jump b3
+fn myl_core_str_eq(bytes, bytes) -> bool runtime
+fn recursive(list[record{bytes, i64}], i64) -> i64
+b0:
+  %3 = cmp.eq bool param1, 0:i64
+  branch %3, b1, b2
+b1: ; preds b0
+  %6 = call i64 middle(param0, 0:i64)
+  ret %6
+b2: ; preds b0
+  %9 = sub.exact i64 param1, 1:i64
+  %10 = call i64 recursive(param0, %9)
+  ret %10
+fn returned(list[record{bytes, i64}]) -> record{bytes, i64}
+b0:
+  %3 = cmp.lt bool 0:i64, 0:i64
+  branch %3, b1, b2
+b1: ; preds b0
+  %5 = list_len u64 param0
+  %6 = convert.exact i64 %5
+  %7 = add.exact i64 %6, 0:i64
+  jump b2
+b2: ; preds b0 b1
+  %9 = phi i64 0:i64, %7
+  %11 = list_get.exact record{bytes, i64} param0, %9
+  ret %11
+fn through_owned_result(list[record{bytes, i64}]) -> i64
+b0:
+  %1 = call record{bytes, i64} returned(param0)
+  %2 = record_get i64 %1, field1
+  ret %2
+fn changed(list[record{bytes, i64}]) -> record{i64, list[record{bytes, i64}]}
+b0:
+  %2 = call bytes myl_core_text_encode(str15)
+  %4 = record_make record{bytes, i64} %2, 11:i64
+  %5 = list_push list[record{bytes, i64}] param0, %4
+  %6 = call i64 total(%5)
+  %7 = record_make record{i64, list[record{bytes, i64}]} %6, %5
+  ret %7
+fn middle(list[record{bytes, i64}], i64) -> i64
+b0:
+  %2 = call i64 leaf(param0, param1)
+  ret %2
+fn leaf(list[record{bytes, i64}], i64) -> i64
+b0:
+  %3 = cmp.lt bool param1, 0:i64
+  branch %3, b1, b2
+b1: ; preds b0
+  %5 = list_len u64 param0
+  %6 = convert.exact i64 %5
+  %7 = add.exact i64 %6, param1
+  jump b2
+b2: ; preds b0 b1
+  %9 = phi i64 param1, %7
+  %12 = list_get_field.exact i64 param0, %9, path 1
+  ret %12

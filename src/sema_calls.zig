@@ -42,17 +42,7 @@ const eCollectionMethod = sema_shared.eCollectionMethod;
 const read_only_method = "read_only";
 const dir_method = "dir";
 const host_method = "host";
-/// Reject a literal `dir()` path that could leave a scoped root, mirroring the
-/// `scopedPath` rule. An empty path names the root itself.
-fn scopedDirectoryPath(bytes: []const u8) bool {
-    if (bytes.len == 0) return true;
-    if (std.mem.indexOfAny(u8, bytes, "\\\x00") != null) return false;
-    var parts = std.mem.splitScalar(u8, bytes, '/');
-    while (parts.next()) |part| {
-        if (part.len == 0 or std.mem.eql(u8, part, ".") or std.mem.eql(u8, part, "..")) return false;
-    }
-    return true;
-}
+const scopedDirectoryPath = @import("scoped_directory.zig").valid;
 /// Remove the matching quotes around one string-literal spelling.
 fn literalText(bytes: []const u8, span: source.Span) []const u8 {
     const text = bytes[span.start..span.end];

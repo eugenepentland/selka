@@ -1083,7 +1083,7 @@ fn hasTopLevelControl(program: typed.Program, top: []const typed.StatementId) bo
     for (top) |id| {
         switch (program.statements[@backingInt(id)].data) {
             .branch, .match => return true,
-            .loop => loops += 1,
+            .loop, .range_loop => loops += 1,
             else => {},
         }
     }
@@ -1126,6 +1126,11 @@ fn scanTestBody(scratch: std.mem.Allocator, program: typed.Program, root: typed.
                 if (branch.else_body) |otherwise| try pending.append(scratch, otherwise);
             },
             .match => |matching| for (matching.arms) |arm| try pending.append(scratch, arm.body),
+            .range_loop => |range| {
+                try pending.appendSlice(scratch, range.plan().setup);
+                try pending.append(scratch, range.plan().loop.body);
+                if (range.plan().loop.step) |step| try pending.append(scratch, step);
+            },
             .loop => |loop| {
                 try pending.append(scratch, loop.body);
                 if (loop.step) |step| try pending.append(scratch, step);
@@ -1653,6 +1658,7 @@ fn worstConditionLogicalCount(scratch: std.mem.Allocator, program: typed.Program
             const condition = switch (program.statements[@backingInt(id)].data) {
                 .branch => |branch| branch.condition,
                 .loop => |loop| loop.condition,
+                .range_loop => |range| range.plan().loop.condition,
                 else => continue,
             };
             worst = @max(worst, logicalOperatorCount(src.text(program.nodes[@backingInt(condition)].span)));
@@ -2064,6 +2070,11 @@ fn scanSentinelFunction(context: *RuleContext, program: typed.Program, sources: 
             .expression => continue,
         };
         switch (program.statements[@backingInt(statement)].data) {
+            .range_loop => |range| for ([_]typed.Store{ range.plan().start, range.plan().end }) |store| {
+                const slot = @backingInt(store.slot);
+                if (slot >= function.scope.locals.len or function.scope.locals[slot].usage.temporary) continue;
+                try stores.append(memory, store);
+            },
             .initialize, .assign => |store| {
                 const slot = @backingInt(store.slot);
                 if (slot >= function.scope.locals.len) continue;

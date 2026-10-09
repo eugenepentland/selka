@@ -26,7 +26,7 @@ const owned = @import("semantic_entry.zig");
 const cache_key = @import("cache_key.zig");
 
 /// On-disk format version. Bump for any layout, tag or validation change.
-pub const format_version = "semantic-cache-v3";
+pub const format_version = "semantic-cache-v4";
 /// Default root for ordinary one-shot commands; `--cache-dir=DIR` maps to
 /// `DIR/semantic` through the same shared cache-root option.
 pub const default_directory = ".mylang-cache/semantic";
@@ -350,7 +350,7 @@ pub const Store = struct {
         if (body.range.nodes.end - body.range.nodes.start != body.nodes.len) return false;
         if (body.range.statements.start > body.range.statements.end) return false;
         if (body.range.statements.end - body.range.statements.start != body.statements.len) return false;
-        return self.validRefs(body) and self.validNotes(body);
+        return owned.validRangeHeaders(body.statements) and self.validRefs(body) and self.validNotes(body);
     }
 
     fn validRefs(self: *Store, body: StoredBody) bool {
@@ -668,7 +668,7 @@ pub const Store = struct {
             if (note.message.len == 0 or note.message.len > self.limits.max_entry_bytes) return false;
             if (note.span.start > note.span.end or note.span.end > entry.source.old_len) return false;
         }
-        return true;
+        return owned.validRangeHeaders(entry.statements);
     }
 
     /// Bound the contract namespace by bytes and entry count. Trimming is a
@@ -734,4 +734,63 @@ const DiskEntry = struct { name: []const u8, size: usize, mtime: i128 };
 
 fn oldestFirst(_: void, a: DiskEntry, b: DiskEntry) bool {
     return a.mtime < b.mtime;
+}
+
+fn rangeHeaderImage(allocator: std.mem.Allocator, store: *Store, count: usize) !void {
+    const header: typed.RangeParts = .{
+        .binding = .{ .start = 0, .end = 1 },
+        .start = .{ .slot = @fromBackingInt(0), .value = @fromBackingInt(0) },
+        .end = .{ .slot = @fromBackingInt(1), .value = @fromBackingInt(0) },
+        .setup = &.{},
+        .loop = .{ .condition = @fromBackingInt(1), .body = @fromBackingInt(1) },
+    };
+    const headers = [_]typed.RangeParts{ header, header };
+    const statements = [_]typed.Statement{
+        .{ .span = .{ .start = 0, .end = 1 }, .terminates = false, .data = .{ .range_loop = .{
+            .parts = headers[0..count],
+        } } },
+        .{ .span = .{ .start = 0, .end = 1 }, .terminates = true, .data = .{ .ret = @fromBackingInt(0) } },
+    };
+    const nodes = [_]typed.Node{
+        .{ .span = .{ .start = 0, .end = 1 }, .ty = .i64, .data = .{ .integer = 0 } },
+        .{ .span = .{ .start = 0, .end = 1 }, .ty = .bool, .data = .{ .boolean = false } },
+    };
+    const body: StoredBody = .{
+        .meta = .{
+            .identity = .{ .key = "range-header", .context = @splat(0), .body = .{ .start = 0, .end = 1 }, .region = .{ .start = 0, .end = 1 } },
+            .old_function_count = 1,
+            .old_record_count = 0,
+            .function_refs = &.{},
+            .record_refs = &.{},
+        },
+        .function = .{ .id = @fromBackingInt(0), .name = "main", .declaration = .{ .start = 0, .end = 1 }, .scope = .{ .body = @fromBackingInt(0) } },
+        .nodes = &nodes,
+        .statements = &statements,
+        .range = .{ .nodes = .{ .start = 0, .end = 2 }, .statements = .{ .start = 0, .end = 2 } },
+        .source_bytes = .{ .old_len = 1, .body = "x", .region = "x" },
+    };
+    var payload = codec.Writer.init(allocator);
+    defer payload.deinit();
+    try payload.write(StoredBody, body);
+    try std.testing.expect(try store.publishPayload("range-header", @splat(0), payload.bytes.items));
+}
+
+// spec-case: TYPED-RANGE-1
+test "durable range header corruption is a miss for empty and multiple owned headers" {
+    const t = std.testing;
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    var store = Store.init(t.allocator, t.io, root, cache_key.Contract.default, "range-header-test");
+    defer store.deinit();
+    try rangeHeaderImage(t.allocator, &store, 0);
+    try t.expect((try store.lookup(t.allocator, "range-header", @splat(0))) == null);
+    try rangeHeaderImage(t.allocator, &store, 2);
+    try t.expect((try store.lookup(t.allocator, "range-header", @splat(0))) == null);
+    try t.expectEqual(@as(usize, 2), store.statistics.damaged);
+    try rangeHeaderImage(t.allocator, &store, 1);
+    var entry = (try store.lookup(t.allocator, "range-header", @splat(0))).?;
+    defer entry.deinit();
+    try t.expectEqual(@as(usize, 1), entry.statements[0].data.range_loop.parts.len);
 }

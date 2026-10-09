@@ -1,6 +1,4 @@
 # records: construct a 3-field value record per iteration and pass it by value.
-
-
 record Vec:
     x: int
     y: int

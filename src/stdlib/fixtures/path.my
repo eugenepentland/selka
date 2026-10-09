@@ -1,6 +1,5 @@
 import path
 
-
 func joins() -> int:
     if path.join("/usr", "lib") != "/usr/lib" or path.join("/usr/", "lib") != "/usr/lib":
         return 1

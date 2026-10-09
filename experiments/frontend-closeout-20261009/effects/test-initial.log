@@ -1,0 +1,17 @@
+test-core
++- run test
+   +- compile test debug native 1 errors
+src/core/cost_test.zig:347:11: error: local constant shadows declaration of 'ir'
+    const ir = @import("ir.zig");
+          ^~
+src/core/cost_test.zig:3:1: note: declared here
+const ir = @import("ir.zig");
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+error: 1 compilation errors
+failed command: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig test -ODebug --dep mylang --dep core_tool_platform --dep build_identity --dep memory_budget --dep core_test_options --dep core_number_text_object -Mroot=src/core/root_test.zig -ODebug --dep memory_budget -Mmylang=src/compiler.zig -Mcore_tool_platform=src/config_core_tool_platform.zig -ODebug -Mbuild_identity=.zig-cache/o/3afabd9140d84b6d8e2374b64eaad342/build_identity/identity.zig -ferror-tracing -ODebug -Mmemory_budget=src/memory_budget.zig -Mcore_test_options=.zig-cache/o/793160f12d1a04aec89ceb6f21df9d81/options.zig -Mcore_number_text_object=.zig-cache/o/613a15d57de9e110f222ab5a539d578c/core_number_text.o --test-filter "Core allocation contracts" --test-runner ../guardian-zig/src/test_runner.zig --cache-dir .zig-cache --global-cache-dir /home/epentland/ai/canopy/.zig-global-cache --name test --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+
+Build Summary: 5/8 steps succeeded (1 failed)
+test-core transitive failure
++- run test transitive failure
+   +- compile test debug native 1 errors
+

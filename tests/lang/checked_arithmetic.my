@@ -1,11 +1,8 @@
-
 # Checked `+ - *` reach every width's extreme without trapping; the operation
 # one step past it traps (pinned in `test/integration.zig`, "checked arithmetic
 # at every width ..."). The 64-bit checks are the ones the LLVM adapter lowers
 # to overflow intrinsics (LLVM-OVERFLOW-INTRINSIC-1); `wrapping_*` and
 # `saturating_*` are not checked operations and keep their own results.
-
-
 func add64(x: int, y: int) -> int:
     return x + y
 

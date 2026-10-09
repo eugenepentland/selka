@@ -1,10 +1,16 @@
-
-
 constraint A[P] = copy + field(value: int)
+
+
 constraint B[Q] = copy + field(value: int)
+
+
 record Box:
     value: int
+
+
 func f[T: A + B](v: T) -> int:
     return v.value
+
+
 public func program() -> int:
     return f[Box](Box(value=3))

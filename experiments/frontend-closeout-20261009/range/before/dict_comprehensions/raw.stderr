@@ -1,0 +1,3 @@
+dict_comprehensions.my:1:1: error[E_MAIN]: the program requires an entry point: func main() -> int; `mylang check FILE` type-checks a library that has no main
+  # Dict comprehensions and the comprehensions that lower through their own
+  ^

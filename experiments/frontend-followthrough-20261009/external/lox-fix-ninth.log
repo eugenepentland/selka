@@ -1,0 +1,3 @@
+{"version":"diagnostic-v1","kind":"diagnostic","diagnostic":{"code":"E_BINDING_SCOPE_MIGRATION","severity":"error","message":"this implicit local is used outside its block; declare the state in the enclosing block or rewrite the branches as a value expression","location":{"path":"resolver.my","start":{"line":267,"column":13},"end":{"line":267,"column":17},"bytes":{"start":9448,"end":9452}},"notes":[],"stack":{"frames":[],"omitted":0}}}
+fixed experiments/frontend-followthrough-20261009/external/sources/lox/benchmarks/lox/ports/mylang/parser.my: 1 edit (E_NAMED_FIELDS)
+fix: 1 edit in 1 file over 1 round

@@ -2,7 +2,6 @@ import model
 import make
 import measure
 
-
 func main() -> int:
     mut s = make.scene()
     mut nodes: model.Node[] = []

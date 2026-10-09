@@ -1,6 +1,4 @@
 # fib: naive double recursion; measures call/frame protocol at depth.
-
-
 func fib(n: int) -> int:
     if n < 2:
         return n

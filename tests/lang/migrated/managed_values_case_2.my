@@ -1,5 +1,3 @@
-
-
 public func program() -> i64:
     mut scores = {1: 40, 2: 2}
     return scores[1] + scores[2]

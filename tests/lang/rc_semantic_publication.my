@@ -1,5 +1,3 @@
-
-
 public func test_repeated_optional_unwrap_replaces_a_private_loan_with_an_owner() -> bool:
     mut words: str?[] = [Some("left" + "0"), None, Some("right" + "2"), None]
     mut joined = ""

@@ -1,6 +1,5 @@
 import strings
 
-
 # A path split into everything before its final suffix and that suffix.
 public record Split:
     root: str

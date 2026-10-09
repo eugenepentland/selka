@@ -1,0 +1,3 @@
+experiments/frontend-closeout-20261009/effects/foreign-spoof.my:1:13: error[E_EXTERN_SYMBOL]: extern names must be C identifiers outside the reserved myl_/mylang_ runtime namespaces
+  extern func myl_core_parse_int_range(host: Host) -> int effects(host)
+              ^

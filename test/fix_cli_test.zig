@@ -373,7 +373,7 @@ test "CLI fix removes retired arena blocks, dedents their bodies and unwraps esc
     const preview = try project.run("fix", "main.my", &.{"--check"});
     defer preview.deinit();
     try testing.expectEqual(@as(u8, 1), preview.status);
-    try testing.expect(contains(preview.stdout, "E_FRONTEND_SYNTAX"));
+    try testing.expect(contains(preview.stdout, "E_ARENA_REMOVED"));
     const fixed = try project.run("fix", "main.my", &.{});
     defer fixed.deinit();
     try testing.expectEqual(@as(u8, 0), fixed.status);

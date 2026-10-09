@@ -1,0 +1,1912 @@
+[
+  {
+    "path": "sources/eda/mylang/src/infra_fs.my",
+    "original": "import support_sha256 as sha",
+    "replacement": "import src.support_sha256 as sha"
+  },
+  {
+    "path": "sources/eda/mylang/src/escape_test.my",
+    "original": "import escape",
+    "replacement": "import src.escape as escape"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_shape.my",
+    "original": "import kicad_sym_reader as kicad_sym",
+    "replacement": "import src.kicad_sym_reader as kicad_sym"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_shape.my",
+    "original": "import sexpr_ast as ast",
+    "replacement": "import src.sexpr_ast as ast"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_shape.my",
+    "original": "import sexpr_parser as parser",
+    "replacement": "import src.sexpr_parser as parser"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_shape.my",
+    "original": "import infra_fs",
+    "replacement": "import src.infra_fs as infra_fs"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_shape.my",
+    "original": "import placement_pin_roles as pin_roles",
+    "replacement": "import src.placement_pin_roles as pin_roles"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_shape.my",
+    "original": "import lib_limits",
+    "replacement": "import src.lib_limits as lib_limits"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_shape.my",
+    "original": "import net_name",
+    "replacement": "import src.net_name as net_name"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_shape.my",
+    "original": "import support_strs as strs",
+    "replacement": "import src.support_strs as strs"
+  },
+  {
+    "path": "sources/eda/mylang/src/lib_limits_test.my",
+    "original": "import lib_limits as m",
+    "replacement": "import src.lib_limits as m"
+  },
+  {
+    "path": "sources/eda/mylang/src/lib_limits_test.my",
+    "original": "import support_expect as ex",
+    "replacement": "import src.support_expect as ex"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_netlist_test.my",
+    "original": "import export_kicad_netlist as m",
+    "replacement": "import src.export_kicad_netlist as m"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_netlist_test.my",
+    "original": "import flat_netlist as flat",
+    "replacement": "import src.flat_netlist as flat"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_netlist_test.my",
+    "original": "import eval_env as env",
+    "replacement": "import src.eval_env as env"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_netlist_test.my",
+    "original": "import sexpr_ast as ast",
+    "replacement": "import src.sexpr_ast as ast"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_netlist_test.my",
+    "original": "import sexpr_parser as parser",
+    "replacement": "import src.sexpr_parser as parser"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_netlist_test.my",
+    "original": "import kicad_pcb_format as kicad_format",
+    "replacement": "import src.kicad_pcb_format as kicad_format"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_netlist_test.my",
+    "original": "import support_sort as srt",
+    "replacement": "import src.support_sort as srt"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_netlist_test.my",
+    "original": "import support_strs as strs",
+    "replacement": "import src.support_strs as strs"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_netlist_test.my",
+    "original": "import support_expect as ex",
+    "replacement": "import src.support_expect as ex"
+  },
+  {
+    "path": "sources/eda/mylang/src/sexpr_tokenizer.my",
+    "original": "import sexpr_ast as ast",
+    "replacement": "import src.sexpr_ast as ast"
+  },
+  {
+    "path": "sources/eda/mylang/src/flat_netlist.my",
+    "original": "import eval_env as env_mod",
+    "replacement": "import src.eval_env as env_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/flat_netlist.my",
+    "original": "import eval_net_analysis as na",
+    "replacement": "import src.eval_net_analysis as na"
+  },
+  {
+    "path": "sources/eda/mylang/src/flat_netlist.my",
+    "original": "import support_strs as strs",
+    "replacement": "import src.support_strs as strs"
+  },
+  {
+    "path": "sources/eda/mylang/src/flat_netlist.my",
+    "original": "import support_sha256 as sha256",
+    "replacement": "import src.support_sha256 as sha256"
+  },
+  {
+    "path": "sources/eda/mylang/src/flat_netlist.my",
+    "original": "import uuid",
+    "replacement": "import src.uuid as uuid"
+  },
+  {
+    "path": "sources/eda/mylang/src/support_float_fmt_test.my",
+    "original": "import support_float_fmt as ff",
+    "replacement": "import src.support_float_fmt as ff"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sym_reader.my",
+    "original": "import sexpr_ast as ast",
+    "replacement": "import src.sexpr_ast as ast"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sym_reader.my",
+    "original": "import sexpr_parser as parser",
+    "replacement": "import src.sexpr_parser as parser"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sym_reader.my",
+    "original": "import numeric",
+    "replacement": "import src.numeric as numeric"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sym_reader.my",
+    "original": "import support_sort as srt",
+    "replacement": "import src.support_sort as srt"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sym_reader.my",
+    "original": "import support_strs as strs",
+    "replacement": "import src.support_strs as strs"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sym_reader.my",
+    "original": "import support_parse as parse_mod",
+    "replacement": "import src.support_parse as parse_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_verify_test.my",
+    "original": "import kicad_sch_verify as m",
+    "replacement": "import src.kicad_sch_verify as m"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_verify_test.my",
+    "original": "import support_expect as ex",
+    "replacement": "import src.support_expect as ex"
+  },
+  {
+    "path": "sources/eda/mylang/src/support_expect_test.my",
+    "original": "import support_expect as ex",
+    "replacement": "import src.support_expect as ex"
+  },
+  {
+    "path": "sources/eda/mylang/src/eval_env_test.my",
+    "original": "import eval_env as m",
+    "replacement": "import src.eval_env as m"
+  },
+  {
+    "path": "sources/eda/mylang/src/eval_env_test.my",
+    "original": "import support_expect as ex",
+    "replacement": "import src.support_expect as ex"
+  },
+  {
+    "path": "sources/eda/mylang/src/support_sha256_test.my",
+    "original": "import support_expect as ex",
+    "replacement": "import src.support_expect as ex"
+  },
+  {
+    "path": "sources/eda/mylang/src/support_sha256_test.my",
+    "original": "import support_sha256 as sha",
+    "replacement": "import src.support_sha256 as sha"
+  },
+  {
+    "path": "sources/eda/mylang/src/eval_rails_test.my",
+    "original": "import eval_rails as m",
+    "replacement": "import src.eval_rails as m"
+  },
+  {
+    "path": "sources/eda/mylang/src/eval_rails_test.my",
+    "original": "import eval_env as env",
+    "replacement": "import src.eval_env as env"
+  },
+  {
+    "path": "sources/eda/mylang/src/eval_rails_test.my",
+    "original": "import support_expect as ex",
+    "replacement": "import src.support_expect as ex"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_emit.my",
+    "original": "import eval_env as env_mod",
+    "replacement": "import src.eval_env as env_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_emit.my",
+    "original": "import flat_netlist as flat_netlist",
+    "replacement": "import src.flat_netlist as flat_netlist"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_emit.my",
+    "original": "import kicad_sch_shape as shape_mod",
+    "replacement": "import src.kicad_sch_shape as shape_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_emit.my",
+    "original": "import kicad_sch_sheet as sheet_mod",
+    "replacement": "import src.kicad_sch_sheet as sheet_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_emit.my",
+    "original": "import kicad_sch_wire as wire_mod",
+    "replacement": "import src.kicad_sch_wire as wire_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_emit.my",
+    "original": "import kicad_sch_plan as plan_mod",
+    "replacement": "import src.kicad_sch_plan as plan_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_emit.my",
+    "original": "import kicad_sym_reader as kicad_sym",
+    "replacement": "import src.kicad_sym_reader as kicad_sym"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_emit.my",
+    "original": "import render_svg_context as draw",
+    "replacement": "import src.render_svg_context as draw"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_emit.my",
+    "original": "import net_name",
+    "replacement": "import src.net_name as net_name"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_emit.my",
+    "original": "import support_strs as strs",
+    "replacement": "import src.support_strs as strs"
+  },
+  {
+    "path": "sources/eda/mylang/src/net_name_test.my",
+    "original": "import net_name",
+    "replacement": "import src.net_name as net_name"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_vendor.my",
+    "original": "import kicad_sym_library as library",
+    "replacement": "import src.kicad_sym_library as library"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_vendor.my",
+    "original": "import kicad_sch_shape as shape",
+    "replacement": "import src.kicad_sch_shape as shape"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_vendor.my",
+    "original": "import kicad_sym_reader as kicad_sym",
+    "replacement": "import src.kicad_sym_reader as kicad_sym"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_vendor.my",
+    "original": "import kicad_sch_sheet as sheet",
+    "replacement": "import src.kicad_sch_sheet as sheet"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_vendor.my",
+    "original": "import infra_log as log",
+    "replacement": "import src.infra_log as log"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_vendor.my",
+    "original": "import support_strs as strs",
+    "replacement": "import src.support_strs as strs"
+  },
+  {
+    "path": "sources/eda/mylang/src/render_svg_draw_test.my",
+    "original": "import render_svg_context as m",
+    "replacement": "import src.render_svg_context as m"
+  },
+  {
+    "path": "sources/eda/mylang/src/render_svg_draw_test.my",
+    "original": "import support_expect as ex",
+    "replacement": "import src.support_expect as ex"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_netlist.my",
+    "original": "import flat_netlist",
+    "replacement": "import src.flat_netlist as flat_netlist"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_netlist.my",
+    "original": "import sexpr_parser as parser_mod",
+    "replacement": "import src.sexpr_parser as parser_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_netlist.my",
+    "original": "import sexpr_ast as ast_mod",
+    "replacement": "import src.sexpr_ast as ast_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_netlist.my",
+    "original": "import kicad_pcb_format as kicad_format",
+    "replacement": "import src.kicad_pcb_format as kicad_format"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_netlist.my",
+    "original": "import support_strs as strs",
+    "replacement": "import src.support_strs as strs"
+  },
+  {
+    "path": "sources/eda/mylang/src/support_crc32_test.my",
+    "original": "import support_crc32 as crc",
+    "replacement": "import src.support_crc32 as crc"
+  },
+  {
+    "path": "sources/eda/mylang/src/support_crc32_test.my",
+    "original": "import support_expect as ex",
+    "replacement": "import src.support_expect as ex"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_test.my",
+    "original": "import export_kicad as m",
+    "replacement": "import src.export_kicad as m"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_test.my",
+    "original": "import flat_netlist as flat",
+    "replacement": "import src.flat_netlist as flat"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_test.my",
+    "original": "import eval_env as env",
+    "replacement": "import src.eval_env as env"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_compose.my",
+    "original": "import kicad_sch_emit as emit",
+    "replacement": "import src.kicad_sch_emit as emit"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_compose.my",
+    "original": "import kicad_sch_shape as shape_mod",
+    "replacement": "import src.kicad_sch_shape as shape_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_compose.my",
+    "original": "import kicad_sch_verify as verify",
+    "replacement": "import src.kicad_sch_verify as verify"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_compose.my",
+    "original": "import kicad_sch_bank as bank",
+    "replacement": "import src.kicad_sch_bank as bank"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_compose.my",
+    "original": "import kicad_sch_gang as gang_mod",
+    "replacement": "import src.kicad_sch_gang as gang_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_compose.my",
+    "original": "import kicad_sch_plan as plan_mod",
+    "replacement": "import src.kicad_sch_plan as plan_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_compose.my",
+    "original": "import kicad_sch_sheet as sheet_mod",
+    "replacement": "import src.kicad_sch_sheet as sheet_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_compose.my",
+    "original": "import kicad_sch_wire as wire",
+    "replacement": "import src.kicad_sch_wire as wire"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_compose.my",
+    "original": "import net_name",
+    "replacement": "import src.net_name as net_name"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_compose.my",
+    "original": "import support_strs as strs",
+    "replacement": "import src.support_strs as strs"
+  },
+  {
+    "path": "sources/eda/mylang/src/render_svg_context.my",
+    "original": "import eval_env as env_mod",
+    "replacement": "import src.eval_env as env_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/render_svg_context.my",
+    "original": "import eval_net_analysis as na",
+    "replacement": "import src.eval_net_analysis as na"
+  },
+  {
+    "path": "sources/eda/mylang/src/render_svg_context.my",
+    "original": "import eval_rails as rails_mod",
+    "replacement": "import src.eval_rails as rails_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/render_svg_context.my",
+    "original": "import render_block_types",
+    "replacement": "import src.render_block_types as render_block_types"
+  },
+  {
+    "path": "sources/eda/mylang/src/render_svg_context.my",
+    "original": "import net_name",
+    "replacement": "import src.net_name as net_name"
+  },
+  {
+    "path": "sources/eda/mylang/src/render_svg_context.my",
+    "original": "import support_strs as strs",
+    "replacement": "import src.support_strs as strs"
+  },
+  {
+    "path": "sources/eda/mylang/src/render_svg_context.my",
+    "original": "import support_parse as parse_mod",
+    "replacement": "import src.support_parse as parse_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/render_svg_context.my",
+    "original": "import support_float_fmt as ff",
+    "replacement": "import src.support_float_fmt as ff"
+  },
+  {
+    "path": "sources/eda/mylang/src/render_svg_context.my",
+    "original": "import escape",
+    "replacement": "import src.escape as escape"
+  },
+  {
+    "path": "sources/eda/mylang/src/render_svg_context.my",
+    "original": "import infra_log as log",
+    "replacement": "import src.infra_log as log"
+  },
+  {
+    "path": "sources/eda/mylang/src/placement_pin_roles_test.my",
+    "original": "import placement_pin_roles as m",
+    "replacement": "import src.placement_pin_roles as m"
+  },
+  {
+    "path": "sources/eda/mylang/src/placement_pin_roles_test.my",
+    "original": "import eval_env as env",
+    "replacement": "import src.eval_env as env"
+  },
+  {
+    "path": "sources/eda/mylang/src/placement_pin_roles_test.my",
+    "original": "import support_expect as ex",
+    "replacement": "import src.support_expect as ex"
+  },
+  {
+    "path": "sources/eda/mylang/src/support_strs_test.my",
+    "original": "import support_expect as ex",
+    "replacement": "import src.support_expect as ex"
+  },
+  {
+    "path": "sources/eda/mylang/src/support_strs_test.my",
+    "original": "import support_strs as ss",
+    "replacement": "import src.support_strs as ss"
+  },
+  {
+    "path": "sources/eda/mylang/src/uuid_test.my",
+    "original": "import uuid",
+    "replacement": "import src.uuid as uuid"
+  },
+  {
+    "path": "sources/eda/mylang/src/main.my",
+    "original": "import design_model",
+    "replacement": "import src.design_model as design_model"
+  },
+  {
+    "path": "sources/eda/mylang/src/main.my",
+    "original": "import export_kicad",
+    "replacement": "import src.export_kicad as export_kicad"
+  },
+  {
+    "path": "sources/eda/mylang/src/main.my",
+    "original": "import export_kicad_sch",
+    "replacement": "import src.export_kicad_sch as export_kicad_sch"
+  },
+  {
+    "path": "sources/eda/mylang/src/main.my",
+    "original": "import infra_fs",
+    "replacement": "import src.infra_fs as infra_fs"
+  },
+  {
+    "path": "sources/eda/mylang/src/main.my",
+    "original": "import support_strs as strs",
+    "replacement": "import src.support_strs as strs"
+  },
+  {
+    "path": "sources/eda/mylang/src/eval_net_analysis.my",
+    "original": "import eval_env as env_mod",
+    "replacement": "import src.eval_env as env_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/eval_net_analysis.my",
+    "original": "import net_name",
+    "replacement": "import src.net_name as net_name"
+  },
+  {
+    "path": "sources/eda/mylang/src/eval_net_analysis.my",
+    "original": "import support_strs as strs",
+    "replacement": "import src.support_strs as strs"
+  },
+  {
+    "path": "sources/eda/mylang/src/support_sort_test.my",
+    "original": "import support_sort as ss",
+    "replacement": "import src.support_sort as ss"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_textbox_test.my",
+    "original": "import kicad_sch_textbox as m",
+    "replacement": "import src.kicad_sch_textbox as m"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_textbox_test.my",
+    "original": "import sexpr_parser as parser",
+    "replacement": "import src.sexpr_parser as parser"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_textbox_test.my",
+    "original": "import support_expect as ex",
+    "replacement": "import src.support_expect as ex"
+  },
+  {
+    "path": "sources/eda/mylang/src/placement_geometry.my",
+    "original": "import footprint_paste as paste_mod",
+    "replacement": "import src.footprint_paste as paste_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/placement_geometry.my",
+    "original": "import sexpr_parser as parser",
+    "replacement": "import src.sexpr_parser as parser"
+  },
+  {
+    "path": "sources/eda/mylang/src/placement_geometry.my",
+    "original": "import sexpr_ast as ast",
+    "replacement": "import src.sexpr_ast as ast"
+  },
+  {
+    "path": "sources/eda/mylang/src/placement_geometry.my",
+    "original": "import numeric",
+    "replacement": "import src.numeric as numeric"
+  },
+  {
+    "path": "sources/eda/mylang/src/placement_geometry.my",
+    "original": "import board_layers",
+    "replacement": "import src.board_layers as board_layers"
+  },
+  {
+    "path": "sources/eda/mylang/src/placement_geometry.my",
+    "original": "import lib_limits",
+    "replacement": "import src.lib_limits as lib_limits"
+  },
+  {
+    "path": "sources/eda/mylang/src/placement_geometry.my",
+    "original": "import stdlib",
+    "replacement": "import src.stdlib as stdlib"
+  },
+  {
+    "path": "sources/eda/mylang/src/placement_geometry.my",
+    "original": "import support_strs as strs",
+    "replacement": "import src.support_strs as strs"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_compose_test.my",
+    "original": "import kicad_sch_compose as m",
+    "replacement": "import src.kicad_sch_compose as m"
+  },
+  {
+    "path": "sources/eda/mylang/src/diagram_membership_test.my",
+    "original": "import diagram_membership as m",
+    "replacement": "import src.diagram_membership as m"
+  },
+  {
+    "path": "sources/eda/mylang/src/diagram_membership_test.my",
+    "original": "import eval_env as env",
+    "replacement": "import src.eval_env as env"
+  },
+  {
+    "path": "sources/eda/mylang/src/diagram_membership_test.my",
+    "original": "import support_expect as ex",
+    "replacement": "import src.support_expect as ex"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad.my",
+    "original": "import eval_env as env_mod",
+    "replacement": "import src.eval_env as env_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad.my",
+    "original": "import flat_netlist as flat_netlist",
+    "replacement": "import src.flat_netlist as flat_netlist"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad.my",
+    "original": "import export_kicad_model as model_mod",
+    "replacement": "import src.export_kicad_model as model_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad.my",
+    "original": "import zipfile as zipfile",
+    "replacement": "import src.zipfile as zipfile"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad.my",
+    "original": "import export_kicad_sch as sch_mod",
+    "replacement": "import src.export_kicad_sch as sch_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad.my",
+    "original": "import export_kicad_footprint as footprint_mod",
+    "replacement": "import src.export_kicad_footprint as footprint_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad.my",
+    "original": "import export_kicad_netlist as netlist_mod",
+    "replacement": "import src.export_kicad_netlist as netlist_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad.my",
+    "original": "import infra_fs",
+    "replacement": "import src.infra_fs as infra_fs"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad.my",
+    "original": "import infra_log as log",
+    "replacement": "import src.infra_log as log"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad.my",
+    "original": "import lib_limits",
+    "replacement": "import src.lib_limits as lib_limits"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad.my",
+    "original": "import stdlib",
+    "replacement": "import src.stdlib as stdlib"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad.my",
+    "original": "import support_strs as strs",
+    "replacement": "import src.support_strs as strs"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_wire.my",
+    "original": "import kicad_sch_shape as shape_mod",
+    "replacement": "import src.kicad_sch_shape as shape_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_wire.my",
+    "original": "import support_sort as srt",
+    "replacement": "import src.support_sort as srt"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_sheet_test.my",
+    "original": "import kicad_sch_sheet as m",
+    "replacement": "import src.kicad_sch_sheet as m"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_sheet_test.my",
+    "original": "import support_expect as ex",
+    "replacement": "import src.support_expect as ex"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_emit_test.my",
+    "original": "import kicad_sch_emit as m",
+    "replacement": "import src.kicad_sch_emit as m"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_emit_test.my",
+    "original": "import kicad_sch_shape as shape",
+    "replacement": "import src.kicad_sch_shape as shape"
+  },
+  {
+    "path": "sources/eda/mylang/src/placement_geometry_test.my",
+    "original": "import placement_geometry as m",
+    "replacement": "import src.placement_geometry as m"
+  },
+  {
+    "path": "sources/eda/mylang/src/placement_geometry_test.my",
+    "original": "import sexpr_parser as parser",
+    "replacement": "import src.sexpr_parser as parser"
+  },
+  {
+    "path": "sources/eda/mylang/src/placement_geometry_test.my",
+    "original": "import sexpr_ast as ast",
+    "replacement": "import src.sexpr_ast as ast"
+  },
+  {
+    "path": "sources/eda/mylang/src/placement_geometry_test.my",
+    "original": "import infra_fs",
+    "replacement": "import src.infra_fs as infra_fs"
+  },
+  {
+    "path": "sources/eda/mylang/src/placement_geometry_test.my",
+    "original": "import support_expect as ex",
+    "replacement": "import src.support_expect as ex"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_stagger.my",
+    "original": "import kicad_sch_shape as shape",
+    "replacement": "import src.kicad_sch_shape as shape"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_stagger.my",
+    "original": "import kicad_sch_emit as emit",
+    "replacement": "import src.kicad_sch_emit as emit"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_stagger.my",
+    "original": "import support_sort as sorts",
+    "replacement": "import src.support_sort as sorts"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_stagger.my",
+    "original": "import support_strs as strs",
+    "replacement": "import src.support_strs as strs"
+  },
+  {
+    "path": "sources/eda/mylang/src/zipfile_test.my",
+    "original": "import zipfile as m",
+    "replacement": "import src.zipfile as m"
+  },
+  {
+    "path": "sources/eda/mylang/src/zipfile_test.my",
+    "original": "import support_expect as ex",
+    "replacement": "import src.support_expect as ex"
+  },
+  {
+    "path": "sources/eda/mylang/src/zipfile_test.my",
+    "original": "import support_crc32 as crc_mod",
+    "replacement": "import src.support_crc32 as crc_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_verify.my",
+    "original": "import kicad_sch_textbox as textbox",
+    "replacement": "import src.kicad_sch_textbox as textbox"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_verify.my",
+    "original": "import sexpr_ast as ast",
+    "replacement": "import src.sexpr_ast as ast"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_verify.my",
+    "original": "import sexpr_parser as parser",
+    "replacement": "import src.sexpr_parser as parser"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_verify.my",
+    "original": "import numeric",
+    "replacement": "import src.numeric as numeric"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_verify.my",
+    "original": "import support_parse as parse_mod",
+    "replacement": "import src.support_parse as parse_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_verify.my",
+    "original": "import support_strs as strs",
+    "replacement": "import src.support_strs as strs"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sym_reader_test.my",
+    "original": "import kicad_sym_reader as m",
+    "replacement": "import src.kicad_sym_reader as m"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sym_reader_test.my",
+    "original": "import kicad_sym_testdata as data",
+    "replacement": "import src.kicad_sym_testdata as data"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sym_reader_test.my",
+    "original": "import support_expect as ex",
+    "replacement": "import src.support_expect as ex"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_gang_test.my",
+    "original": "import kicad_sch_gang as m",
+    "replacement": "import src.kicad_sch_gang as m"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_gang_test.my",
+    "original": "import kicad_sch_shape as shape",
+    "replacement": "import src.kicad_sch_shape as shape"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_gang_test.my",
+    "original": "import kicad_sch_wire as wire",
+    "replacement": "import src.kicad_sch_wire as wire"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_gang_test.my",
+    "original": "import support_expect as ex",
+    "replacement": "import src.support_expect as ex"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_project_test.my",
+    "original": "import kicad_sch_project as m",
+    "replacement": "import src.kicad_sch_project as m"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_project_test.my",
+    "original": "import kicad_sch_shape as shape",
+    "replacement": "import src.kicad_sch_shape as shape"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_project_test.my",
+    "original": "import kicad_sch_emit as emit",
+    "replacement": "import src.kicad_sch_emit as emit"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_project_test.my",
+    "original": "import support_strs as strs",
+    "replacement": "import src.support_strs as strs"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_bank.my",
+    "original": "import kicad_sch_shape as shape_mod",
+    "replacement": "import src.kicad_sch_shape as shape_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_bank.my",
+    "original": "import kicad_sch_sheet as sheet_mod",
+    "replacement": "import src.kicad_sch_sheet as sheet_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_bank.my",
+    "original": "import kicad_sch_wire as wire",
+    "replacement": "import src.kicad_sch_wire as wire"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_bank.my",
+    "original": "import kicad_sch_emit as emit",
+    "replacement": "import src.kicad_sch_emit as emit"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_bank.my",
+    "original": "import decouple_key as decouple_key",
+    "replacement": "import src.decouple_key as decouple_key"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_bank.my",
+    "original": "import eval_rails as rails",
+    "replacement": "import src.eval_rails as rails"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_bank.my",
+    "original": "import placement_pin_roles as pin_roles",
+    "replacement": "import src.placement_pin_roles as pin_roles"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_bank.my",
+    "original": "import net_name as net_name",
+    "replacement": "import src.net_name as net_name"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_bank.my",
+    "original": "import support_strs as strs",
+    "replacement": "import src.support_strs as strs"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_bank.my",
+    "original": "import support_sort as sorts",
+    "replacement": "import src.support_sort as sorts"
+  },
+  {
+    "path": "sources/eda/mylang/src/eval_env.my",
+    "original": "import sexpr_ast as ast",
+    "replacement": "import src.sexpr_ast as ast"
+  },
+  {
+    "path": "sources/eda/mylang/src/eval_env.my",
+    "original": "import pad_neck_profile",
+    "replacement": "import src.pad_neck_profile as pad_neck_profile"
+  },
+  {
+    "path": "sources/eda/mylang/src/eval_env.my",
+    "original": "import numeric",
+    "replacement": "import src.numeric as numeric"
+  },
+  {
+    "path": "sources/eda/mylang/src/eval_env.my",
+    "original": "import support_crc32 as crc32",
+    "replacement": "import src.support_crc32 as crc32"
+  },
+  {
+    "path": "sources/eda/mylang/src/eval_env.my",
+    "original": "import support_strs as strs",
+    "replacement": "import src.support_strs as strs"
+  },
+  {
+    "path": "sources/eda/mylang/src/stdlib.my",
+    "original": "import stdlib_embed as embed",
+    "replacement": "import src.stdlib_embed as embed"
+  },
+  {
+    "path": "sources/eda/mylang/src/stdlib.my",
+    "original": "import infra_fs as fsx",
+    "replacement": "import src.infra_fs as fsx"
+  },
+  {
+    "path": "sources/eda/mylang/src/eval_net_analysis_test.my",
+    "original": "import eval_net_analysis as m",
+    "replacement": "import src.eval_net_analysis as m"
+  },
+  {
+    "path": "sources/eda/mylang/src/eval_net_analysis_test.my",
+    "original": "import eval_env as env",
+    "replacement": "import src.eval_env as env"
+  },
+  {
+    "path": "sources/eda/mylang/src/eval_net_analysis_test.my",
+    "original": "import support_expect as ex",
+    "replacement": "import src.support_expect as ex"
+  },
+  {
+    "path": "sources/eda/mylang/src/footprint_paste_test.my",
+    "original": "import footprint_paste as m",
+    "replacement": "import src.footprint_paste as m"
+  },
+  {
+    "path": "sources/eda/mylang/src/footprint_paste_test.my",
+    "original": "import sexpr_parser as parser",
+    "replacement": "import src.sexpr_parser as parser"
+  },
+  {
+    "path": "sources/eda/mylang/src/footprint_paste_test.my",
+    "original": "import support_expect as ex",
+    "replacement": "import src.support_expect as ex"
+  },
+  {
+    "path": "sources/eda/mylang/src/board_layers.my",
+    "original": "import support_strs as strs",
+    "replacement": "import src.support_strs as strs"
+  },
+  {
+    "path": "sources/eda/mylang/src/stdlib_test.my",
+    "original": "import stdlib as m",
+    "replacement": "import src.stdlib as m"
+  },
+  {
+    "path": "sources/eda/mylang/src/stdlib_test.my",
+    "original": "import infra_fs as fsx",
+    "replacement": "import src.infra_fs as fsx"
+  },
+  {
+    "path": "sources/eda/mylang/src/stdlib_test.my",
+    "original": "import support_strs as strs",
+    "replacement": "import src.support_strs as strs"
+  },
+  {
+    "path": "sources/eda/mylang/src/stdlib_test.my",
+    "original": "import support_expect as ex",
+    "replacement": "import src.support_expect as ex"
+  },
+  {
+    "path": "sources/eda/mylang/src/poly_scanline_test.my",
+    "original": "import poly_scanline as m",
+    "replacement": "import src.poly_scanline as m"
+  },
+  {
+    "path": "sources/eda/mylang/src/poly_scanline_test.my",
+    "original": "import support_expect as ex",
+    "replacement": "import src.support_expect as ex"
+  },
+  {
+    "path": "sources/eda/mylang/src/decouple_key.my",
+    "original": "import support_strs as strs",
+    "replacement": "import src.support_strs as strs"
+  },
+  {
+    "path": "sources/eda/mylang/src/decouple_key.my",
+    "original": "import support_parse as parse_mod",
+    "replacement": "import src.support_parse as parse_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_pcb_format_test.my",
+    "original": "import kicad_pcb_format as m",
+    "replacement": "import src.kicad_pcb_format as m"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_pcb_format_test.my",
+    "original": "import sexpr_parser as parser",
+    "replacement": "import src.sexpr_parser as parser"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_pcb_format_test.my",
+    "original": "import sexpr_ast as ast",
+    "replacement": "import src.sexpr_ast as ast"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_pcb_format_test.my",
+    "original": "import sexpr_tokenizer as tok",
+    "replacement": "import src.sexpr_tokenizer as tok"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_pcb_format_test.my",
+    "original": "import support_expect as ex",
+    "replacement": "import src.support_expect as ex"
+  },
+  {
+    "path": "sources/eda/mylang/src/eval_electrical_test.my",
+    "original": "import eval_electrical as m",
+    "replacement": "import src.eval_electrical as m"
+  },
+  {
+    "path": "sources/eda/mylang/src/eval_electrical_test.my",
+    "original": "import eval_env as env",
+    "replacement": "import src.eval_env as env"
+  },
+  {
+    "path": "sources/eda/mylang/src/eval_electrical_test.my",
+    "original": "import sexpr_parser as parser",
+    "replacement": "import src.sexpr_parser as parser"
+  },
+  {
+    "path": "sources/eda/mylang/src/eval_electrical_test.my",
+    "original": "import sexpr_ast as ast",
+    "replacement": "import src.sexpr_ast as ast"
+  },
+  {
+    "path": "sources/eda/mylang/src/eval_electrical_test.my",
+    "original": "import support_expect as ex",
+    "replacement": "import src.support_expect as ex"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_model.my",
+    "original": "import eval_env as env_mod",
+    "replacement": "import src.eval_env as env_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_model.my",
+    "original": "import flat_netlist as flat_netlist",
+    "replacement": "import src.flat_netlist as flat_netlist"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_model.my",
+    "original": "import export_kicad_netlist as netlist_mod",
+    "replacement": "import src.export_kicad_netlist as netlist_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_model.my",
+    "original": "import export_kicad_footprint as footprint_mod",
+    "replacement": "import src.export_kicad_footprint as footprint_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_model.my",
+    "original": "import infra_fs as infra_fs",
+    "replacement": "import src.infra_fs as infra_fs"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_model.my",
+    "original": "import infra_log as log",
+    "replacement": "import src.infra_log as log"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_model.my",
+    "original": "import stdlib as stdlib",
+    "replacement": "import src.stdlib as stdlib"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_model.my",
+    "original": "import lib_limits as lib_limits",
+    "replacement": "import src.lib_limits as lib_limits"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_model.my",
+    "original": "import support_parse as parse_mod",
+    "replacement": "import src.support_parse as parse_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_model.my",
+    "original": "import support_strs as strs",
+    "replacement": "import src.support_strs as strs"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_wire_test.my",
+    "original": "import kicad_sch_wire as m",
+    "replacement": "import src.kicad_sch_wire as m"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_wire_test.my",
+    "original": "import kicad_sch_shape as shape",
+    "replacement": "import src.kicad_sch_shape as shape"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_wire_test.my",
+    "original": "import support_expect as ex",
+    "replacement": "import src.support_expect as ex"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_vendor_test.my",
+    "original": "import kicad_sch_vendor as m",
+    "replacement": "import src.kicad_sch_vendor as m"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_vendor_test.my",
+    "original": "import kicad_sch_shape as shape",
+    "replacement": "import src.kicad_sch_shape as shape"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_vendor_test.my",
+    "original": "import kicad_sym_reader as reader",
+    "replacement": "import src.kicad_sym_reader as reader"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_vendor_test.my",
+    "original": "import kicad_sym_library as library",
+    "replacement": "import src.kicad_sym_library as library"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_vendor_test.my",
+    "original": "import kicad_sym_testdata as data",
+    "replacement": "import src.kicad_sym_testdata as data"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_vendor_test.my",
+    "original": "import support_expect as ex",
+    "replacement": "import src.support_expect as ex"
+  },
+  {
+    "path": "sources/eda/mylang/src/infra_fs_test.my",
+    "original": "import infra_fs as m",
+    "replacement": "import src.infra_fs as m"
+  },
+  {
+    "path": "sources/eda/mylang/src/infra_fs_test.my",
+    "original": "import support_expect as ex",
+    "replacement": "import src.support_expect as ex"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_footprint.my",
+    "original": "import sexpr_ast as ast",
+    "replacement": "import src.sexpr_ast as ast"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_footprint.my",
+    "original": "import sexpr_parser as parser_mod",
+    "replacement": "import src.sexpr_parser as parser_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_footprint.my",
+    "original": "import sexpr_paren_span as paren_span",
+    "replacement": "import src.sexpr_paren_span as paren_span"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_footprint.my",
+    "original": "import placement_geometry as geometry",
+    "replacement": "import src.placement_geometry as geometry"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_footprint.my",
+    "original": "import numeric",
+    "replacement": "import src.numeric as numeric"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_footprint.my",
+    "original": "import poly_scanline",
+    "replacement": "import src.poly_scanline as poly_scanline"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_footprint.my",
+    "original": "import board_layers",
+    "replacement": "import src.board_layers as board_layers"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_footprint.my",
+    "original": "import kicad_pcb_format as kicad_format",
+    "replacement": "import src.kicad_pcb_format as kicad_format"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_footprint.my",
+    "original": "import infra_fs as fsx",
+    "replacement": "import src.infra_fs as fsx"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_footprint.my",
+    "original": "import infra_log as log",
+    "replacement": "import src.infra_log as log"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_footprint.my",
+    "original": "import footprint_paste as paste_mod",
+    "replacement": "import src.footprint_paste as paste_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_footprint.my",
+    "original": "import support_float_fmt as ff",
+    "replacement": "import src.support_float_fmt as ff"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_footprint.my",
+    "original": "import support_strs as strs",
+    "replacement": "import src.support_strs as strs"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_project.my",
+    "original": "import kicad_sch_emit as emit",
+    "replacement": "import src.kicad_sch_emit as emit"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_project.my",
+    "original": "import kicad_sch_shape as shape_mod",
+    "replacement": "import src.kicad_sch_shape as shape_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_project.my",
+    "original": "import json_writer as json_writer",
+    "replacement": "import src.json_writer as json_writer"
+  },
+  {
+    "path": "sources/eda/mylang/src/sexpr_parser_test.my",
+    "original": "import sexpr_ast as ast",
+    "replacement": "import src.sexpr_ast as ast"
+  },
+  {
+    "path": "sources/eda/mylang/src/sexpr_parser_test.my",
+    "original": "import sexpr_parser as parser",
+    "replacement": "import src.sexpr_parser as parser"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_stagger_test.my",
+    "original": "import kicad_sch_stagger as m",
+    "replacement": "import src.kicad_sch_stagger as m"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_stagger_test.my",
+    "original": "import kicad_sch_shape as shape",
+    "replacement": "import src.kicad_sch_shape as shape"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_stagger_test.my",
+    "original": "import kicad_sch_emit as emit",
+    "replacement": "import src.kicad_sch_emit as emit"
+  },
+  {
+    "path": "sources/eda/mylang/src/support_parse_test.my",
+    "original": "import support_parse as sp",
+    "replacement": "import src.support_parse as sp"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_shape_test.my",
+    "original": "import kicad_sch_shape as m",
+    "replacement": "import src.kicad_sch_shape as m"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_shape_test.my",
+    "original": "import infra_fs",
+    "replacement": "import src.infra_fs as infra_fs"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_shape_test.my",
+    "original": "import support_expect as ex",
+    "replacement": "import src.support_expect as ex"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_shape_test.my",
+    "original": "import support_strs as strs",
+    "replacement": "import src.support_strs as strs"
+  },
+  {
+    "path": "sources/eda/mylang/src/render_svg_context_test.my",
+    "original": "import eval_env as env_mod",
+    "replacement": "import src.eval_env as env_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/render_svg_context_test.my",
+    "original": "import render_svg_context as m",
+    "replacement": "import src.render_svg_context as m"
+  },
+  {
+    "path": "sources/eda/mylang/src/render_svg_context_test.my",
+    "original": "import support_expect as ex",
+    "replacement": "import src.support_expect as ex"
+  },
+  {
+    "path": "sources/eda/mylang/src/render_svg_context_test.my",
+    "original": "import support_strs as strs",
+    "replacement": "import src.support_strs as strs"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_footprint_test.my",
+    "original": "import export_kicad_footprint as m",
+    "replacement": "import src.export_kicad_footprint as m"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_footprint_test.my",
+    "original": "import placement_geometry as geometry",
+    "replacement": "import src.placement_geometry as geometry"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_footprint_test.my",
+    "original": "import infra_fs as fsx",
+    "replacement": "import src.infra_fs as fsx"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_footprint_test.my",
+    "original": "import sexpr_parser as parser_mod",
+    "replacement": "import src.sexpr_parser as parser_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_footprint_test.my",
+    "original": "import support_parse",
+    "replacement": "import src.support_parse as support_parse"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_footprint_test.my",
+    "original": "import support_strs as strs",
+    "replacement": "import src.support_strs as strs"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_footprint_test.my",
+    "original": "import support_expect as ex",
+    "replacement": "import src.support_expect as ex"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_glyph_test.my",
+    "original": "import kicad_sch_shape as m",
+    "replacement": "import src.kicad_sch_shape as m"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_glyph_test.my",
+    "original": "import support_expect as ex",
+    "replacement": "import src.support_expect as ex"
+  },
+  {
+    "path": "sources/eda/mylang/src/board_layers_test.my",
+    "original": "import board_layers as m",
+    "replacement": "import src.board_layers as m"
+  },
+  {
+    "path": "sources/eda/mylang/src/board_layers_test.my",
+    "original": "import support_expect as ex",
+    "replacement": "import src.support_expect as ex"
+  },
+  {
+    "path": "sources/eda/mylang/src/zipfile.my",
+    "original": "import support_crc32 as crc_mod",
+    "replacement": "import src.support_crc32 as crc_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_sch.my",
+    "original": "import eval_env as env_mod",
+    "replacement": "import src.eval_env as env_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_sch.my",
+    "original": "import flat_netlist as flat_netlist",
+    "replacement": "import src.flat_netlist as flat_netlist"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_sch.my",
+    "original": "import infra_log as log",
+    "replacement": "import src.infra_log as log"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_sch.my",
+    "original": "import diagram_membership as membership",
+    "replacement": "import src.diagram_membership as membership"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_sch.my",
+    "original": "import decouple_key",
+    "replacement": "import src.decouple_key as decouple_key"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_sch.my",
+    "original": "import export_kicad_netlist as netlist",
+    "replacement": "import src.export_kicad_netlist as netlist"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_sch.my",
+    "original": "import kicad_sch_compose as compose",
+    "replacement": "import src.kicad_sch_compose as compose"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_sch.my",
+    "original": "import kicad_sch_emit as emit",
+    "replacement": "import src.kicad_sch_emit as emit"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_sch.my",
+    "original": "import kicad_sch_plan as plan",
+    "replacement": "import src.kicad_sch_plan as plan"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_sch.my",
+    "original": "import kicad_sch_project as project",
+    "replacement": "import src.kicad_sch_project as project"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_sch.my",
+    "original": "import kicad_sch_shape as shape_mod",
+    "replacement": "import src.kicad_sch_shape as shape_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_sch.my",
+    "original": "import kicad_sch_stagger as stagger",
+    "replacement": "import src.kicad_sch_stagger as stagger"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_sch.my",
+    "original": "import kicad_sch_stub as stub",
+    "replacement": "import src.kicad_sch_stub as stub"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_sch.my",
+    "original": "import kicad_sch_textbox as textbox",
+    "replacement": "import src.kicad_sch_textbox as textbox"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_sch.my",
+    "original": "import kicad_sch_vendor as vendor",
+    "replacement": "import src.kicad_sch_vendor as vendor"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_sch.my",
+    "original": "import kicad_sch_verify as verify",
+    "replacement": "import src.kicad_sch_verify as verify"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_sch.my",
+    "original": "import kicad_sym_library as sym_library",
+    "replacement": "import src.kicad_sym_library as sym_library"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_sch.my",
+    "original": "import lib_limits",
+    "replacement": "import src.lib_limits as lib_limits"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_sch.my",
+    "original": "import stdlib",
+    "replacement": "import src.stdlib as stdlib"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_sch.my",
+    "original": "import net_name",
+    "replacement": "import src.net_name as net_name"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_sch.my",
+    "original": "import support_strs as strs",
+    "replacement": "import src.support_strs as strs"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_textbox.my",
+    "original": "import sexpr_ast as ast",
+    "replacement": "import src.sexpr_ast as ast"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_textbox.my",
+    "original": "import numeric",
+    "replacement": "import src.numeric as numeric"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_textbox.my",
+    "original": "import support_sort as srt",
+    "replacement": "import src.support_sort as srt"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_textbox.my",
+    "original": "import support_parse as parse_mod",
+    "replacement": "import src.support_parse as parse_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_textbox.my",
+    "original": "import support_strs as strs",
+    "replacement": "import src.support_strs as strs"
+  },
+  {
+    "path": "sources/eda/mylang/src/render_block_types.my",
+    "original": "import eval_env as env_mod",
+    "replacement": "import src.eval_env as env_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/render_block_types.my",
+    "original": "import support_strs as strs",
+    "replacement": "import src.support_strs as strs"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_stub.my",
+    "original": "import flat_netlist as flat",
+    "replacement": "import src.flat_netlist as flat"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_stub.my",
+    "original": "import net_name",
+    "replacement": "import src.net_name as net_name"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_stub.my",
+    "original": "import support_strs as strs",
+    "replacement": "import src.support_strs as strs"
+  },
+  {
+    "path": "sources/eda/mylang/src/eval_electrical.my",
+    "original": "import sexpr_ast as ast",
+    "replacement": "import src.sexpr_ast as ast"
+  },
+  {
+    "path": "sources/eda/mylang/src/eval_electrical.my",
+    "original": "import eval_env as env_mod",
+    "replacement": "import src.eval_env as env_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/eval_rails.my",
+    "original": "import eval_env as env_mod",
+    "replacement": "import src.eval_env as env_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/eval_rails.my",
+    "original": "import eval_net_analysis as na",
+    "replacement": "import src.eval_net_analysis as na"
+  },
+  {
+    "path": "sources/eda/mylang/src/eval_rails.my",
+    "original": "import support_strs as strs",
+    "replacement": "import src.support_strs as strs"
+  },
+  {
+    "path": "sources/eda/mylang/src/eval_rails.my",
+    "original": "import support_sort as srt",
+    "replacement": "import src.support_sort as srt"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_sch_test.my",
+    "original": "import export_kicad_sch as m",
+    "replacement": "import src.export_kicad_sch as m"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_sch_test.my",
+    "original": "import export_kicad as export_mod",
+    "replacement": "import src.export_kicad as export_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_sch_test.my",
+    "original": "import eval_env as env",
+    "replacement": "import src.eval_env as env"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_sch_test.my",
+    "original": "import flat_netlist as flat",
+    "replacement": "import src.flat_netlist as flat"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_sch_test.my",
+    "original": "import kicad_sym_testdata as vendor_data",
+    "replacement": "import src.kicad_sym_testdata as vendor_data"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_sch_test.my",
+    "original": "import kicad_sch_testdata as data",
+    "replacement": "import src.kicad_sch_testdata as data"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_sch_test.my",
+    "original": "import kicad_sch_textbox as textbox",
+    "replacement": "import src.kicad_sch_textbox as textbox"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_sch_test.my",
+    "original": "import sexpr_parser as parser",
+    "replacement": "import src.sexpr_parser as parser"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_sch_test.my",
+    "original": "import infra_fs as fsx",
+    "replacement": "import src.infra_fs as fsx"
+  },
+  {
+    "path": "sources/eda/mylang/src/export_kicad_sch_test.my",
+    "original": "import support_expect as ex",
+    "replacement": "import src.support_expect as ex"
+  },
+  {
+    "path": "sources/eda/mylang/src/json_writer_test.my",
+    "original": "import json_writer as m",
+    "replacement": "import src.json_writer as m"
+  },
+  {
+    "path": "sources/eda/mylang/src/json_writer_test.my",
+    "original": "import support_expect as ex",
+    "replacement": "import src.support_expect as ex"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_plan_test.my",
+    "original": "import kicad_sch_plan as m",
+    "replacement": "import src.kicad_sch_plan as m"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_plan_test.my",
+    "original": "import support_expect as ex",
+    "replacement": "import src.support_expect as ex"
+  },
+  {
+    "path": "sources/eda/mylang/src/sexpr_ast_test.my",
+    "original": "import sexpr_ast as ast",
+    "replacement": "import src.sexpr_ast as ast"
+  },
+  {
+    "path": "sources/eda/mylang/src/footprint_paste.my",
+    "original": "import sexpr_ast as ast",
+    "replacement": "import src.sexpr_ast as ast"
+  },
+  {
+    "path": "sources/eda/mylang/src/footprint_paste.my",
+    "original": "import support_float_fmt as ff",
+    "replacement": "import src.support_float_fmt as ff"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_gang.my",
+    "original": "import kicad_sch_shape as shape_mod",
+    "replacement": "import src.kicad_sch_shape as shape_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_gang.my",
+    "original": "import kicad_sch_wire as wire",
+    "replacement": "import src.kicad_sch_wire as wire"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_gang.my",
+    "original": "import support_sort as srt",
+    "replacement": "import src.support_sort as srt"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_gang.my",
+    "original": "import support_strs as strs",
+    "replacement": "import src.support_strs as strs"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sym_library_test.my",
+    "original": "import kicad_sym_library as m",
+    "replacement": "import src.kicad_sym_library as m"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sym_library_test.my",
+    "original": "import kicad_sym_testdata as data",
+    "replacement": "import src.kicad_sym_testdata as data"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sym_library_test.my",
+    "original": "import infra_fs as fsx",
+    "replacement": "import src.infra_fs as fsx"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sym_library_test.my",
+    "original": "import support_expect as ex",
+    "replacement": "import src.support_expect as ex"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_plan.my",
+    "original": "import net_name",
+    "replacement": "import src.net_name as net_name"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_plan.my",
+    "original": "import support_strs as strs",
+    "replacement": "import src.support_strs as strs"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_plan.my",
+    "original": "import support_sort as srt",
+    "replacement": "import src.support_sort as srt"
+  },
+  {
+    "path": "sources/eda/mylang/src/numeric_test.my",
+    "original": "import numeric",
+    "replacement": "import src.numeric as numeric"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_stub_test.my",
+    "original": "import kicad_sch_stub as m",
+    "replacement": "import src.kicad_sch_stub as m"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_stub_test.my",
+    "original": "import flat_netlist as flat",
+    "replacement": "import src.flat_netlist as flat"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_stub_test.my",
+    "original": "import support_expect as ex",
+    "replacement": "import src.support_expect as ex"
+  },
+  {
+    "path": "sources/eda/mylang/src/diagram_membership.my",
+    "original": "import eval_env as env_mod",
+    "replacement": "import src.eval_env as env_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/diagram_membership.my",
+    "original": "import render_block_types as rb",
+    "replacement": "import src.render_block_types as rb"
+  },
+  {
+    "path": "sources/eda/mylang/src/diagram_membership.my",
+    "original": "import support_strs as strs",
+    "replacement": "import src.support_strs as strs"
+  },
+  {
+    "path": "sources/eda/mylang/src/flat_netlist_test.my",
+    "original": "import flat_netlist as m",
+    "replacement": "import src.flat_netlist as m"
+  },
+  {
+    "path": "sources/eda/mylang/src/flat_netlist_test.my",
+    "original": "import support_expect as ex",
+    "replacement": "import src.support_expect as ex"
+  },
+  {
+    "path": "sources/eda/mylang/src/json_writer.my",
+    "original": "import support_strs as strs",
+    "replacement": "import src.support_strs as strs"
+  },
+  {
+    "path": "sources/eda/mylang/src/design_model_test.my",
+    "original": "import design_model as m",
+    "replacement": "import src.design_model as m"
+  },
+  {
+    "path": "sources/eda/mylang/src/design_model_test.my",
+    "original": "import eval_env as env_mod",
+    "replacement": "import src.eval_env as env_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/design_model_test.my",
+    "original": "import support_expect as ex",
+    "replacement": "import src.support_expect as ex"
+  },
+  {
+    "path": "sources/eda/mylang/src/design_model.my",
+    "original": "import eval_env as env_mod",
+    "replacement": "import src.eval_env as env_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/design_model.my",
+    "original": "import sexpr_ast as ast",
+    "replacement": "import src.sexpr_ast as ast"
+  },
+  {
+    "path": "sources/eda/mylang/src/design_model.my",
+    "original": "import sexpr_parser as parser",
+    "replacement": "import src.sexpr_parser as parser"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_bank_test.my",
+    "original": "import kicad_sch_bank as m",
+    "replacement": "import src.kicad_sch_bank as m"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_bank_test.my",
+    "original": "import kicad_sch_emit as emit",
+    "replacement": "import src.kicad_sch_emit as emit"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_bank_test.my",
+    "original": "import kicad_sch_shape as shape",
+    "replacement": "import src.kicad_sch_shape as shape"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sch_sheet.my",
+    "original": "import kicad_sch_shape as shape_mod",
+    "replacement": "import src.kicad_sch_shape as shape_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/sexpr_paren_span_test.my",
+    "original": "import sexpr_paren_span as ps",
+    "replacement": "import src.sexpr_paren_span as ps"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sym_library.my",
+    "original": "import kicad_sym_reader as reader",
+    "replacement": "import src.kicad_sym_reader as reader"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sym_library.my",
+    "original": "import infra_fs as fsx",
+    "replacement": "import src.infra_fs as fsx"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sym_library.my",
+    "original": "import infra_log as log",
+    "replacement": "import src.infra_log as log"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_sym_library.my",
+    "original": "import support_strs as strs",
+    "replacement": "import src.support_strs as strs"
+  },
+  {
+    "path": "sources/eda/mylang/src/placement_pin_roles.my",
+    "original": "import sexpr_ast as ast",
+    "replacement": "import src.sexpr_ast as ast"
+  },
+  {
+    "path": "sources/eda/mylang/src/placement_pin_roles.my",
+    "original": "import sexpr_parser as parser",
+    "replacement": "import src.sexpr_parser as parser"
+  },
+  {
+    "path": "sources/eda/mylang/src/placement_pin_roles.my",
+    "original": "import infra_fs",
+    "replacement": "import src.infra_fs as infra_fs"
+  },
+  {
+    "path": "sources/eda/mylang/src/placement_pin_roles.my",
+    "original": "import eval_electrical as electrical",
+    "replacement": "import src.eval_electrical as electrical"
+  },
+  {
+    "path": "sources/eda/mylang/src/placement_pin_roles.my",
+    "original": "import eval_env as env",
+    "replacement": "import src.eval_env as env"
+  },
+  {
+    "path": "sources/eda/mylang/src/placement_pin_roles.my",
+    "original": "import eval_rails as rails_mod",
+    "replacement": "import src.eval_rails as rails_mod"
+  },
+  {
+    "path": "sources/eda/mylang/src/placement_pin_roles.my",
+    "original": "import eval_net_analysis as na",
+    "replacement": "import src.eval_net_analysis as na"
+  },
+  {
+    "path": "sources/eda/mylang/src/placement_pin_roles.my",
+    "original": "import numeric",
+    "replacement": "import src.numeric as numeric"
+  },
+  {
+    "path": "sources/eda/mylang/src/placement_pin_roles.my",
+    "original": "import lib_limits",
+    "replacement": "import src.lib_limits as lib_limits"
+  },
+  {
+    "path": "sources/eda/mylang/src/placement_pin_roles.my",
+    "original": "import support_strs as strs",
+    "replacement": "import src.support_strs as strs"
+  },
+  {
+    "path": "sources/eda/mylang/src/main_test.my",
+    "original": "import main as entry",
+    "replacement": "import src.main as entry"
+  },
+  {
+    "path": "sources/eda/mylang/src/decouple_key_test.my",
+    "original": "import decouple_key as m",
+    "replacement": "import src.decouple_key as m"
+  },
+  {
+    "path": "sources/eda/mylang/src/decouple_key_test.my",
+    "original": "import support_expect as ex",
+    "replacement": "import src.support_expect as ex"
+  },
+  {
+    "path": "sources/eda/mylang/src/sexpr_tokenizer_test.my",
+    "original": "import sexpr_tokenizer as tk",
+    "replacement": "import src.sexpr_tokenizer as tk"
+  },
+  {
+    "path": "sources/eda/mylang/src/kicad_pcb_format.my",
+    "original": "import sexpr_ast as ast",
+    "replacement": "import src.sexpr_ast as ast"
+  },
+  {
+    "path": "sources/eda/mylang/src/sexpr_parser.my",
+    "original": "import sexpr_ast as ast",
+    "replacement": "import src.sexpr_ast as ast"
+  },
+  {
+    "path": "sources/eda/mylang/src/sexpr_parser.my",
+    "original": "import sexpr_tokenizer as tokenizer_mod",
+    "replacement": "import src.sexpr_tokenizer as tokenizer_mod"
+  }
+]

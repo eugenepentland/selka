@@ -11,8 +11,6 @@
 # Everything else — one fresh dict per k, the get-then-store update, the two
 # stable sorts — is exactly the idiomatic port, so the difference between the
 # two files is what the str slices (allocation, hashing, collection) cost.
-
-
 record Entry:
     code: int
     count: int

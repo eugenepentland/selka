@@ -1,0 +1,32 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 2 after 41s (all 3 build slot(s) busy)
+{
+  "cases": 974,
+  "failed": [],
+  "mismatches": [],
+  "elapsed_seconds": 4.008435382973403,
+  "binary_unchanged": true
+}
+	Command being timed: "python3 experiments/frontend-followthrough-20261009/external/tools/frontend_external_oracle.py lox --source experiments/frontend-followthrough-20261009/external/sources/lox --binary experiments/frontend-closeout-20261009/external/artifacts/lox-release --output experiments/frontend-closeout-20261009/external/lox-native --jobs 3 --against experiments/frontend-followthrough-20261009/external/lox-native-final/answers.json"
+	User time (seconds): 3.09
+	System time (seconds): 5.37
+	Percent of CPU this job got: 208%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:04.06
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 30088
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 1
+	Minor (reclaiming a frame) page faults: 5391359
+	Voluntary context switches: 8892
+	Involuntary context switches: 204
+	Swaps: 0
+	File system inputs: 9608
+	File system outputs: 24336
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

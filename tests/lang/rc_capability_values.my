@@ -1,6 +1,4 @@
-
 import test_capabilities
-
 
 public func test_repeated_capability_lists_preserve_their_owned_results() -> bool:
     for index in range(8):

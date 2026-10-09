@@ -163,16 +163,21 @@ pub const Facts = struct {
         while (try walker.next()) |item| switch (item) {
             .expression => {},
             .statement => |id| switch (self.program.statements[@backingInt(id)].data) {
-                .initialize, .assign => |store| {
-                    const index = @backingInt(store.slot);
-                    counts[index] +|= 1;
-                    // Several stores of one path (a refreshed receiver) still
-                    // name one root; different roots name none.
-                    self.stores[index] = if (counts[index] == 1) store.value else if (self.stores[index]) |previous| sameRoot(self.program, previous, store.value) else null;
+                .initialize, .assign => |store| self.recordStore(counts, store),
+                .range_loop => |range| {
+                    self.recordStore(counts, range.plan().start);
+                    self.recordStore(counts, range.plan().end);
                 },
                 else => {},
             },
         };
+    }
+
+    fn recordStore(self: *Facts, counts: []u8, store: typed.Store) void {
+        const index = @backingInt(store.slot);
+        counts[index] +|= 1;
+        // Several stores of one path still name one root; different roots name none.
+        self.stores[index] = if (counts[index] == 1) store.value else if (self.stores[index]) |previous| sameRoot(self.program, previous, store.value) else null;
     }
 
     /// Whether `id` is a path (fields, indexes, updates) rooted at local

@@ -1,5 +1,3 @@
-
-
 func build(n: int) -> int effects():
     return n * 2
 

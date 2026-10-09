@@ -1,4 +1,3 @@
-
 import sort
 
 # `sorted(xs, key=...)` shares its key type with every other callback value of
@@ -7,8 +6,6 @@ import sort
 # and then failed lowering with an internal error; every spelling below lives in
 # one program on purpose, because the second failure needed a second callback
 # value of the key's type anywhere in the program.
-
-
 record Entry:
     rank: int
     id: int

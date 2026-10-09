@@ -1,12 +1,9 @@
-
 # A safepoint publishes only the locals live across it. These cases hold a
 # value across a collection in every way the frame can still read it — a named
 # local, an operand, a loop's receiver, an error path, an arena scan, a callback
 # and a fused decode — and let a dead one go. Under `--gc-stress` every
 # allocation collects, so a value missing from a root would be read after the
 # sweep freed it.
-
-
 public record Ball:
     x: float
     y: float

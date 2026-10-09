@@ -1,11 +1,9 @@
-
 extern func runtime_bench_now(host: Host) -> i64 effects(host)
+
 
 # Row `union_find` (CONTRACT.md): union by linking roots, path halving that mutates `parent`.
 # Arguments `size iterations seed`; output `checksum elapsed`. `parent` is one fresh list per batch
 # and `find` takes it as `mut`, so every call site writes `find(mut parent, x)`.
-
-
 func find(mut parent: int[], x: int) -> int:
     while parent[x] != x:
         parent[x] = parent[parent[x]]

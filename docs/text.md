@@ -220,9 +220,9 @@ func main() -> int:
 `text.split()` with no argument is Python's whitespace split: it breaks the
 receiver on runs of the same six ASCII whitespace scalars `isspace()` accepts —
 space, tab, line feed, carriage return, vertical tab and form feed — keeps only
-the nonempty pieces and answers `list[str]`. Leading, trailing and doubled
+the nonempty pieces and answers `str[]`. Leading, trailing and doubled
 whitespace therefore produce no empty string, and `"".split()` is empty.
-`bytes.split()` agrees on the octets and answers `list[bytes]`.
+`bytes.split()` agrees on the octets and answers `bytes[]`.
 `text.split(separator)` keeps its exact-separator meaning: adjacent separators
 still produce empty pieces, an empty needle still traps `R_EMPTY_SEPARATOR`, and
 the separator form still requires its one argument. A call with any other
@@ -397,7 +397,7 @@ func main() -> int:
 
 ## Parsing numbers from text
 
-`parse_int(text)` answers `Option[int]` and `parse_float(text)` answers `Option[float]`. The
+`parse_int(text)` answers `int?` and `parse_float(text)` answers `float?`. The
 language has no exceptions, so text that is not a number produces `None` and the
 caller decides what that means; `match` with `case Some(value)` and `case None`
 is the way to read the answer.

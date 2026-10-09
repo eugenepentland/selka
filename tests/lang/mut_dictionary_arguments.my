@@ -1,4 +1,3 @@
-
 func clone_during(mut target: dict[int, int], source: dict[int, dict[int, int]]) -> dict[int, dict[int, int]]:
     target[1] = target[1]
     return source.copy()

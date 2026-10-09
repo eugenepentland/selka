@@ -10,8 +10,6 @@
 # of a scaled vector is origin + dir * t — so the checksum is bit-identical.
 # The difference from raytrace.my is what the small record-returning helper
 # calls cost; what remains against Zig is per-operation code generation.
-
-
 record Vec3:
     x: float
     y: float
@@ -78,14 +76,7 @@ func mix(c: int, v: int) -> int:
 
 
 func main(out: Stream) -> int:
-    mut spheres = [
-        Sphere(center=Vec3(x=0.0, y=-1000.0, z=0.0), radius=999.0, color=Vec3(x=0.5, y=0.5, z=0.5)),
-        Sphere(center=Vec3(x=0.0, y=0.0, z=-3.0), radius=1.0, color=Vec3(x=1.0, y=0.2, z=0.2)),
-        Sphere(center=Vec3(x=-2.0, y=0.0, z=-4.0), radius=1.0, color=Vec3(x=0.2, y=1.0, z=0.2)),
-        Sphere(center=Vec3(x=2.0, y=0.0, z=-4.0), radius=1.0, color=Vec3(x=0.2, y=0.2, z=1.0)),
-        Sphere(center=Vec3(x=0.0, y=2.0, z=-6.0), radius=1.5, color=Vec3(x=1.0, y=1.0, z=0.2)),
-        Sphere(center=Vec3(x=-1.5, y=-0.5, z=-2.0), radius=0.5, color=Vec3(x=0.2, y=1.0, z=1.0)),
-    ]
+    mut spheres = [Sphere(center=Vec3(x=0.0, y=-1000.0, z=0.0), radius=999.0, color=Vec3(x=0.5, y=0.5, z=0.5)), Sphere(center=Vec3(x=0.0, y=0.0, z=-3.0), radius=1.0, color=Vec3(x=1.0, y=0.2, z=0.2)), Sphere(center=Vec3(x=-2.0, y=0.0, z=-4.0), radius=1.0, color=Vec3(x=0.2, y=1.0, z=0.2)), Sphere(center=Vec3(x=2.0, y=0.0, z=-4.0), radius=1.0, color=Vec3(x=0.2, y=0.2, z=1.0)), Sphere(center=Vec3(x=0.0, y=2.0, z=-6.0), radius=1.5, color=Vec3(x=1.0, y=1.0, z=0.2)), Sphere(center=Vec3(x=-1.5, y=-0.5, z=-2.0), radius=0.5, color=Vec3(x=0.2, y=1.0, z=1.0))]
     mut light_inv = 1.0 / sqrt(1.0 * 1.0 + 1.0 * 1.0 + 1.0 * 1.0)
     mut light = Vec3(x=1.0 * light_inv, y=1.0 * light_inv, z=1.0 * light_inv)
     mut width = 1920

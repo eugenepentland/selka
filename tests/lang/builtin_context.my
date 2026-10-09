@@ -1,5 +1,3 @@
-
-
 func pick_list[T](value: T) -> T[]:
     mut values: T[] = []
     values.append(value)

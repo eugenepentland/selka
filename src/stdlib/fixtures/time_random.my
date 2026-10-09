@@ -1,7 +1,6 @@
 import random
 import time
 
-
 func streams() -> int:
     mut generator = random.seeded(42)
     mut first = random.next_word(mut generator)

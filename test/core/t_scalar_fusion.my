@@ -1,4 +1,3 @@
-
 func select(text: str, take: bool) -> str:
     mut out = ""
     for ch in text:
@@ -15,9 +14,11 @@ func select(text: str, take: bool) -> str:
             out += ch
     return out
 
+
 func compares(text: str, index: int) -> bool:
     mut ch = text[index]
     return ch == "\0" or ch == "é" or ch == "\U0010ffff"
+
 
 func branch(text: str, take: bool) -> str:
     mut ch = text[0]
@@ -32,12 +33,14 @@ func branch(text: str, take: bool) -> str:
         out += ch
     return out
 
+
 func append_same(source: str) -> str:
     mut text = source
     mut ch = text[0]
     if ch == "é":
         text += ch
     return text
+
 
 func append_distinct_alias(values: str[]) -> str:
     mut source = values[0]
@@ -46,6 +49,7 @@ func append_distinct_alias(values: str[]) -> str:
     if ch == "é" or ch == "\0":
         out += ch
     return out
+
 
 func append_capacity_alias(values: str[]) -> str:
     mut source = values[0]
@@ -58,6 +62,7 @@ func append_capacity_alias(values: str[]) -> str:
                 out += ch
     return out
 
+
 func replaced(source: str) -> str:
     mut text = source
     mut ch = text[-1]
@@ -68,8 +73,10 @@ func replaced(source: str) -> str:
         out += ch
     return out
 
+
 func identity(text: str) -> str:
     return text
+
 
 func returned(text: str) -> str:
     mut ch = text[0]
@@ -77,10 +84,12 @@ func returned(text: str) -> str:
         return ch
     return "!"
 
+
 func stored(text: str) -> str:
     mut ch = text[0]
     mut values = [ch]
     return values[0]
+
 
 func called(text: str) -> str:
     mut ch = text[0]
@@ -88,33 +97,40 @@ func called(text: str) -> str:
     mut result = identity(ch)
     return if (matched) then (result) else ("!")
 
+
 func joined(text: str, take: bool) -> str:
     mut ch = text[0]
     mut selected = if (take) then (ch) else ("!")
     return selected
 
+
 func wider_comparison(text: str) -> bool:
     mut ch = text[0]
     return ch != "éx" and ch != ""
+
 
 # spec-case: NEW-CORE-STR-1
 public func test_comparisons_and_appends_preserve_all_unicode_scalars() -> bool:
     mut text = "aé€\0🙂\U0010ffff"
     return select(text, True) == text and select(text, False) == ".é.\0🙂\U0010ffff"
 
+
 # spec-case: NEW-CORE-STR-1
 public func test_comparison_only_reads_cover_nul_and_scalar_extremes() -> bool:
     return compares("\0é\U0010ffff", 0) and compares("\0é\U0010ffff", -2) and compares("\0é\U0010ffff", 2) and not compares("x", 0)
 
+
 # spec-case: NEW-CORE-STR-1
 public func test_distinct_branches_and_repeated_appends_keep_the_selected_character() -> bool:
     return branch("éz", True) == "é" and branch("éz", False) == "!" and branch("\0z", False) == "\0\0" and branch("xz", True) == ""
+
 
 # spec-case: NEW-CORE-TEXT-BYTES-1
 public func test_same_source_destination_keeps_the_ordinary_path_and_snapshot() -> bool:
     mut source = "".join(["é", "z"])
     mut saved = source
     return append_same(source) == "ézé" and saved == "éz" and source == "éz"
+
 
 # spec-case: NEW-CORE-TEXT-BYTES-1
 public func test_distinct_ssa_aliases_share_input_but_copy_the_append_destination() -> bool:
@@ -126,50 +142,62 @@ public func test_distinct_ssa_aliases_share_input_but_copy_the_append_destinatio
     mut expanded = append_capacity_alias(aliases)
     return result == "ézé" and source == "éz" and values == ["éz", "éz"] and expanded == wide + wide + wide + wide and aliases == [wide, wide] and wide == "123456789012345é€🙂\0"
 
+
 # spec-case: NEW-CORE-TEXT-BYTES-1
 public func test_rebinding_the_receiver_does_not_change_the_selected_bytes() -> bool:
     return replaced("aé") == "é"
+
 
 # spec-case: NEW-CORE-STR-1
 public func test_escaping_and_multiscalar_consumers_remain_strings() -> bool:
     return returned("éz") == "é" and stored("éz") == "é" and called("éz") == "é" and joined("éz", True) == "é" and joined("éz", False) == "!" and wider_comparison("éz")
 
+
 # spec-case: NEW-CORE-TEXT-BYTES-1
 public func test_empty_iteration_does_not_read_past_the_text() -> bool:
     return select("", True) == ""
+
 
 # spec-case: NEW-CORE-TEXT-BYTES-1
 public func test_empty_comparison_only_read_traps() -> bool:
     return compares("", 0)
 
+
 # spec-case: NEW-CORE-TEXT-BYTES-1
 public func test_large_positive_index_traps() -> bool:
     return compares("aé", 9223372036854775807)
+
 
 # spec-case: NEW-CORE-TEXT-BYTES-1
 public func test_large_negative_index_traps() -> bool:
     return compares("aé", -9223372036854775807)
 
+
 # spec-case: NEW-CORE-TEXT-S3-1
 public func test_surrogate_construction_traps_before_scalar_uses() -> bool:
     return compares(chr(55296), 0)
+
 
 # spec-case: NEW-CORE-TEXT-BYTES-1
 public func test_nonplace_unicode_index_reports_source_index_and_scalar_length() -> bool:
     mut ch = identity("aé")[99]
     return ch == "x"
 
+
 # spec-case: NEW-CORE-TEXT-BYTES-1
 public func test_minimum_signed_index_reports_its_original_value() -> bool:
     return compares("aé", -9223372036854775808)
+
 
 # spec-case: NEW-CORE-TEXT-S3-1
 public func test_empty_separator_is_a_structured_native_trap() -> bool:
     return len("x".split("")) == 1
 
+
 # spec-case: NEW-CORE-TEXT-S3-1
 public func test_out_of_range_byte_is_a_structured_native_trap() -> bool:
     return len(bytes([256])) == 1
+
 
 # spec-case: NEW-CORE-LIST-S3-2
 public func test_missing_list_value_is_a_structured_native_trap() -> bool:

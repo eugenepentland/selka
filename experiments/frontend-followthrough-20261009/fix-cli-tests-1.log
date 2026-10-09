@@ -1,0 +1,25 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 1 after 5s (all 3 build slot(s) busy)
+test-cli
++- run test w
+guardian/test: 9 test(s) selected by filter: "CLI fix" — 7 match by name, 2 unnamed test block(s) run regardless
+guardian/test: test wall 1.24s; slowest over 50ms:
+guardian/test:   1.00s  fix_cli_test.test.CLI fix migrates the pinned pre-marker Lox corpus with no hand edits
+guardian/test:   0.05s  fix_cli_test.test.D2 CLI fix materializes stored dictionary projections with contextual list snapshots
+guardian/test: PASS — 9 passed
+guardian/test: RESULT {"passed":9,"failed":0,"skipped":0}
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/0d9f77ce5332e2275a6296b58c0af038/test "--guardian-filter=CLI fix" --cache-dir=./.zig-cache --seed=0xd06ced9e --listen=-
+
+Build Summary: 8/8 steps succeeded; 9/9 tests passed
+test-cli success
++- run test 9 pass (9 total) 1s MaxRSS:20M
+   +- compile test debug native success 321ms MaxRSS:157M
+      +- options success
+         +- compile exe mylang debug native cached 4ms MaxRSS:41M
+            +- run exe build-identity (build_identity) cached
+            |  +- compile exe build-identity debug native cached 6ms MaxRSS:38M
+            +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 6ms MaxRSS:38M
+
+real 12.08
+user 2.14
+sys 0.52

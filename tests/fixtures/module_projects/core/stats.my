@@ -1,6 +1,5 @@
 import core.shapes
 
-
 public func total_area(boxes: core.shapes.Box[]) -> int:
     mut total = 0
     for box in boxes:

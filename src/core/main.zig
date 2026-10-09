@@ -3,6 +3,7 @@
 //! `typed.Program`: the Core IR, its facts, LLVM emission and the native build.
 const std = @import("std");
 const frontend = @import("frontend.zig");
+const project_entry = @import("project_entry.zig");
 const typed_dump = @import("typed_dump.zig");
 const build = @import("build.zig");
 const print = @import("print.zig");
@@ -43,7 +44,7 @@ const test_usage =
 
 /// What stops a command before it has a status: memory, an unwritable stream, or a
 /// test the runner cannot encode.
-pub const Error = test_runner.Error || std.Io.File.Writer.Error || frontend.Error || build.Error || error{ReadFailed};
+pub const Error = test_runner.Error || std.Io.File.Writer.Error || frontend.Error || project_entry.Error || build.Error || error{ReadFailed};
 
 /// Dispatch one command; the process exit status is its result.
 pub fn main(init: std.process.Init) !u8 {
@@ -67,19 +68,24 @@ pub fn developer(init: std.process.Init, args: []const []const u8) Error!u8 {
     return 2;
 }
 
+fn developerFailure(init: std.process.Init, report: []const u8, err: (project_entry.Error || frontend.Error || error{ReadFailed})) Error!u8 {
+    if (err == error.OutOfMemory) return error.OutOfMemory;
+    if (err == error.InternalError) return error.InternalError;
+    try std.Io.File.stderr().writeStreamingAll(init.io, report);
+    return switch (err) {
+        error.ConfigurationFailed => 2,
+        error.PolicyDenied => 3,
+        else => 1,
+    };
+}
+
 fn dumpTyped(init: std.process.Init, path: []const u8, filter: ?[]const u8) !u8 {
     const allocator = init.arena.allocator();
-    const entry = frontend.entryOf(path);
+    var report: std.ArrayList(u8) = .empty;
+    const entry = project_entry.resolve(allocator, init.io, path, &report) catch |err| return developerFailure(init, report.items, err);
     var session = frontend.Session.init(init.gpa, init.io, entry.root);
     defer session.deinit();
-    var report: std.ArrayList(u8) = .empty;
-    const checked = session.checkFile(allocator, path, &report) catch |err| switch (err) {
-        error.SourceError, error.ReadFailed => {
-            try std.Io.File.stderr().writeStreamingAll(init.io, report.items);
-            return 1;
-        },
-        else => return err,
-    };
+    const checked = entry.check(allocator, &session, &report) catch |err| return developerFailure(init, report.items, err);
     const text = try typed_dump.render(allocator, checked.program, filter);
     try std.Io.File.stdout().writeStreamingAll(init.io, text);
     return 0;
@@ -87,17 +93,11 @@ fn dumpTyped(init: std.process.Init, path: []const u8, filter: ?[]const u8) !u8 
 
 fn dumpIr(init: std.process.Init, path: []const u8, with_facts: bool) !u8 {
     const allocator = init.arena.allocator();
-    const entry = frontend.entryOf(path);
+    var report: std.ArrayList(u8) = .empty;
+    const entry = project_entry.resolve(allocator, init.io, path, &report) catch |err| return developerFailure(init, report.items, err);
     var session = frontend.Session.init(init.gpa, init.io, entry.root);
     defer session.deinit();
-    var report: std.ArrayList(u8) = .empty;
-    const checked = session.checkFile(allocator, path, &report) catch |err| switch (err) {
-        error.SourceError, error.ReadFailed => {
-            try std.Io.File.stderr().writeStreamingAll(init.io, report.items);
-            return 1;
-        },
-        else => return err,
-    };
+    const checked = entry.check(allocator, &session, &report) catch |err| return developerFailure(init, report.items, err);
     var refusal: build.Refusal = .{};
     var module = build.buildModuleSource(allocator, checked.program, checked.src, &refusal) catch |err| switch (err) {
         error.Unsupported => {
@@ -388,11 +388,15 @@ fn coverageCommand(init: std.process.Init, arguments: []const []const u8) !u8 {
         var scratch = std.heap.ArenaAllocator.init(init.gpa);
         defer scratch.deinit();
         const allocator = scratch.allocator();
-        const entry = frontend.entryOf(path);
+        var report: std.ArrayList(u8) = .empty;
+        const entry = project_entry.resolve(allocator, init.io, path, &report) catch |err| {
+            if (err == error.OutOfMemory) return err;
+            try out.print(init.arena.allocator(), "frontend {s}\t{s}\n", .{ path, std.mem.sliceTo(report.items, '\n') });
+            continue;
+        };
         var session = frontend.Session.init(init.gpa, init.io, entry.root);
         defer session.deinit();
-        var report: std.ArrayList(u8) = .empty;
-        const checked = session.checkFile(allocator, path, &report) catch |err| switch (err) {
+        const checked = entry.check(allocator, &session, &report) catch |err| switch (err) {
             error.OutOfMemory => return err,
             else => {
                 const first = std.mem.sliceTo(report.items, '\n');

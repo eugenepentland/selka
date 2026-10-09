@@ -448,9 +448,8 @@ test "UTF8-TEXT-1 text stores UTF-8 octets and still indexes Unicode scalars" {
         \\    if len(text[1:4:2]) != 2 or text[1:4:2][0] != "\u00e9":
         \\        return 41
         \\    mut kept = "z"
-        \\    with arena() as scratch:
-        \\        mut inside = "-".join([text, "\u00e9"])
-        \\        kept = scratch.escape(inside)
+        \\    mut inside = "-".join([text, "\u00e9"])
+        \\    kept = inside
         \\    if kept != "a\u00e9\u6f22b-\u00e9" or len(kept) != 6:
         \\        return 42
         \\    return 1234

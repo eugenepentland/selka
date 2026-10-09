@@ -108,7 +108,7 @@ pub const Whole = struct {
             .index = undefined,
             .compilation = undefined,
             .cache = semantic_cache.Cache.init(gpa, 0),
-            .request = .{ .facts_only = true },
+            .request = .{ .body_policy = .concrete },
             .entry = entry,
         };
         const arena = self.project.arena.allocator();

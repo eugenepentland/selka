@@ -339,7 +339,7 @@ pub const Cache = struct {
         if (profile) |p| p.addSince("dependency_key_preparation", prepare_start, false);
         if (self.context.persistent) |persistent| {
             const needs_trees = if (self.context.summaries) |request|
-                request.facts_only and self.context.retain_summary_trees
+                request.body_policy == .concrete and self.context.retain_summary_trees
             else
                 true;
             if (self.entries.len == 0 and needs_trees) {
@@ -606,7 +606,7 @@ pub const Session = struct {
         // Validation-only summary requests have no complete trees to retain.
         // Hosts may opt lowering requests into tree reuse independently of the
         // unchanged pass facts their summaries stand in for.
-        if (cache.context.summaries) |request| if (!request.facts_only or !cache.context.retain_summary_trees) return;
+        if (cache.context.summaries) |request| if (request.body_policy != .concrete or !cache.context.retain_summary_trees) return;
         const generic_bytes = cache.reuse.symbolic.retainedBytes() + cache.reuse.specializations.retainedBytes();
         const ordinary_budget = cache.reuse.max_bytes -| generic_bytes;
         const ordinary_count = self.prepared.ordinary_ast.len;

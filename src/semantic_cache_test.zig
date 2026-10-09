@@ -1271,7 +1271,7 @@ test "nested concrete specializations conservatively miss and self-recursion rem
     try t.expectEqual(recursive_before.reused + 1, recursive_after.reused);
 }
 
-test "const-length specialization keys keep identity and nominal generics miss conservatively" {
+test "const-length specialization keys and resolved nominal generics reuse" {
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
     defer cache.deinit();
     const size_fn =
@@ -1317,10 +1317,21 @@ test "const-length specialization keys keep identity and nominal generics miss c
     const nominal_before: spec_stats = cache.reuse.specializations.statistics;
     try compare(t.allocator, &cache, nominal, 3);
     const nominal_after: spec_stats = cache.reuse.specializations.statistics;
-    // The body instantiates a nominal application while checking, so its
-    // record reference has no pre-collected stable identity and stays fresh.
-    try t.expectEqual(nominal_before.reused, nominal_after.reused);
-    try t.expect(nominal_after.misses[@backingInt(spec_reason.interned_record)] > nominal_before.misses[@backingInt(spec_reason.interned_record)]);
+    // Resolving the fresh specialization signature creates Box[i64] before
+    // lookup. Its validated provider identity remaps the retained body.
+    try t.expectEqual(nominal_before.reused + 1, nominal_after.reused);
+    try t.expectEqual(nominal_before.checked, nominal_after.checked);
+    try t.expectEqual(nominal_before.misses[@backingInt(spec_reason.interned_record)], nominal_after.misses[@backingInt(spec_reason.interned_record)]);
+    try compare(t.allocator, &cache, "record Unrelated:\n    value: bool\n\n" ++ nominal, 3);
+    const reordered = cache.reuse.specializations.statistics;
+    try t.expectEqual(nominal_after.reused + 1, reordered.reused);
+    try t.expectEqual(nominal_after.checked, reordered.checked);
+    const changed = try std.mem.replaceOwned(u8, t.allocator, nominal, "value: T", "value: T\n    extra: int = 0");
+    defer t.allocator.free(changed);
+    try compare(t.allocator, &cache, changed, 3);
+    const invalidated = cache.reuse.specializations.statistics;
+    try t.expectEqual(reordered.reused, invalidated.reused);
+    try t.expectEqual(reordered.checked + 1, invalidated.checked);
 }
 
 const owned_entry = @import("semantic_entry.zig");
@@ -1911,4 +1922,39 @@ test "callback provider identities retain named labels and mutation positions" {
     const renamed = try semantic_key.providerIdentity(t.allocator, &.{callback_type}, &changed);
     defer t.allocator.free(renamed);
     try t.expect(!std.mem.eql(u8, original, renamed));
+    const argument = try semantic_key.argumentDescriptor(t.allocator, callback_type, null, &records);
+    defer t.allocator.free(argument);
+    const renamed_argument = try semantic_key.argumentDescriptor(t.allocator, callback_type, null, &changed);
+    defer t.allocator.free(renamed_argument);
+    try t.expect(!std.mem.eql(u8, argument, renamed_argument));
+    changed[0].contract.callback.?.labels = &.{"amount"};
+    changed[0].contract.callback.?.mutates = &.{0};
+    const mutable_argument = try semantic_key.argumentDescriptor(t.allocator, callback_type, null, &changed);
+    defer t.allocator.free(mutable_argument);
+    try t.expect(!std.mem.eql(u8, argument, mutable_argument));
+}
+
+// spec-case: SEMANTIC-CACHE-12
+test "resolved argument descriptors distinguish schema changes and survive catalog reordering" {
+    const typed = @import("typed.zig");
+    const first: typed.Type = @fromBackingInt(typed.Type.record_base);
+    const second: typed.Type = @fromBackingInt(typed.Type.record_base + 1);
+    const original = [_]typed.Record{.{ .id = first, .name = "pkg::Value", .declaration = .{ .start = 0, .end = 0 }, .fields = &.{.{ .name = "item", .declaration = .{ .start = 0, .end = 0 }, .ty = .i64 }} }};
+    const reordered = [_]typed.Record{
+        .{ .id = first, .name = "other::Value", .declaration = .{ .start = 0, .end = 0 }, .fields = &.{} },
+        .{ .id = second, .name = "pkg::Value", .declaration = .{ .start = 50, .end = 60 }, .fields = original[0].fields },
+    };
+    const descriptor = try semantic_key.argumentDescriptor(t.allocator, first, null, &original);
+    defer t.allocator.free(descriptor);
+    const moved = try semantic_key.argumentDescriptor(t.allocator, second, null, &reordered);
+    defer t.allocator.free(moved);
+    try t.expectEqualStrings(descriptor, moved);
+    var changed = original;
+    changed[0].fields = &.{.{ .name = "item", .declaration = .{ .start = 0, .end = 0 }, .ty = .bool }};
+    const incompatible = try semantic_key.argumentDescriptor(t.allocator, first, null, &changed);
+    defer t.allocator.free(incompatible);
+    try t.expect(!std.mem.eql(u8, descriptor, incompatible));
+    const unrelated = try semantic_key.argumentDescriptor(t.allocator, first, null, &reordered);
+    defer t.allocator.free(unrelated);
+    try t.expect(!std.mem.eql(u8, descriptor, unrelated));
 }

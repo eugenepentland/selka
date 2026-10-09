@@ -1,7 +1,4 @@
-
-
 import mut_rebind_helpers as helpers
-
 
 # spec-case: MUT-REBIND-CALLER-1
 public func test_imported_mut_collection_rebinding_preserves_source_snapshots() -> bool:

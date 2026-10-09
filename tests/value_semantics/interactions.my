@@ -1,7 +1,4 @@
-
 # How value semantics meets records, arenas and contract captures.
-
-
 record Box:
     items: int[]
 

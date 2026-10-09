@@ -373,6 +373,9 @@ const Builder = struct {
             .statement => |statement_id| {
                 const statement = program.statements[@backingInt(statement_id)];
                 switch (statement.data) {
+                    .range_loop => |range| for ([_]typed.Store{ range.plan().start, range.plan().end }) |store| {
+                        try self.edge(owner, self.id(function.scope.locals[@backingInt(store.slot)].declaration), "write", range.plan().binding);
+                    },
                     .assign, .initialize => |store| try self.edge(owner, self.id(function.scope.locals[@backingInt(store.slot)].declaration), "write", statement.span),
                     else => {},
                 }

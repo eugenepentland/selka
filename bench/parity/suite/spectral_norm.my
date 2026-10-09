@@ -1,8 +1,6 @@
 # spectral_norm: ten power-iteration rounds on the infinite matrix
 # A(i, j) = 1 / ((i + j)(i + j + 1)/2 + i + 1), n = 2000. `a` stays a separate
 # function. See SUITE.md section 3.
-
-
 func a(i: int, j: int) -> float:
     return 1.0 / float((i + j) * (i + j + 1) // 2 + i + 1)
 

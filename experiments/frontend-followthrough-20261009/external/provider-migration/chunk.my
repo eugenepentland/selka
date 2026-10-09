@@ -1,0 +1,67 @@
+
+# Bytecode chunks: opcodes, code bytes with one line per byte, and the
+# constant pool (SPEC §8.1).
+import value
+
+
+public const OP_CONSTANT: int = 0
+public const OP_NIL: int = 1
+public const OP_TRUE: int = 2
+public const OP_FALSE: int = 3
+public const OP_POP: int = 4
+public const OP_GET_LOCAL: int = 5
+public const OP_SET_LOCAL: int = 6
+public const OP_GET_GLOBAL: int = 7
+public const OP_DEFINE_GLOBAL: int = 8
+public const OP_SET_GLOBAL: int = 9
+public const OP_GET_UPVALUE: int = 10
+public const OP_SET_UPVALUE: int = 11
+public const OP_GET_PROPERTY: int = 12
+public const OP_SET_PROPERTY: int = 13
+public const OP_GET_SUPER: int = 14
+public const OP_EQUAL: int = 15
+public const OP_GREATER: int = 16
+public const OP_LESS: int = 17
+public const OP_ADD: int = 18
+public const OP_SUBTRACT: int = 19
+public const OP_MULTIPLY: int = 20
+public const OP_DIVIDE: int = 21
+public const OP_NOT: int = 22
+public const OP_NEGATE: int = 23
+public const OP_PRINT: int = 24
+public const OP_JUMP: int = 25
+public const OP_JUMP_IF_FALSE: int = 26
+public const OP_LOOP: int = 27
+public const OP_CALL: int = 28
+public const OP_INVOKE: int = 29
+public const OP_SUPER_INVOKE: int = 30
+public const OP_CLOSURE: int = 31
+public const OP_CLOSE_UPVALUE: int = 32
+public const OP_RETURN: int = 33
+public const OP_CLASS: int = 34
+public const OP_INHERIT: int = 35
+public const OP_METHOD: int = 36
+
+
+# A function's bytecode. `code` holds bytes (0..255); `lines[i]` is the
+# source line of `code[i]`.
+public record Chunk:
+    code: int[]
+    lines: int[]
+    constants: value.Value[]
+
+
+public func new_chunk() -> Chunk:
+    return Chunk(code=[], lines=[], constants=[])
+
+
+public func write_byte(mut target: Chunk, byte: int, line: int):
+    target.code.append(byte)
+    target.lines.append(line)
+
+
+# Appends a constant and answers its index; the compiler enforces the
+# 256-constant limit.
+public func add_constant(mut target: Chunk, constant: value.Value) -> int:
+    target.constants.append(constant)
+    return len(target.constants) - 1

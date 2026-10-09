@@ -3,17 +3,41 @@
 # so each argument carries its SysV sign or zero extension. Built with `--link
 # v_extern_narrow.c`; the values come from runtime inputs and from constants.
 extern func widen_i8(host: Host, x: i8) -> i64 effects(host)
+
+
 extern func widen_i16(host: Host, x: i16) -> i64 effects(host)
+
+
 extern func widen_u8(host: Host, x: u8) -> i64 effects(host)
+
+
 extern func widen_u16(host: Host, x: u16) -> i64 effects(host)
+
+
 extern func widen_i32(host: Host, x: i32) -> i64 effects(host)
+
+
 extern func widen_u32(host: Host, x: u32) -> i64 effects(host)
+
+
 extern func widen_bool(host: Host, x: bool) -> i64 effects(host)
+
+
 extern func neg_i8(host: Host, x: i64) -> i8 effects(host)
+
+
 extern func make_u8(host: Host, x: i64) -> u8 effects(host)
+
+
 extern func neg_i16(host: Host, x: i64) -> i16 effects(host)
+
+
 extern func make_u16(host: Host, x: i64) -> u16 effects(host)
+
+
 extern func is_odd(host: Host, x: i64) -> bool effects(host)
+
+
 extern func many(host: Host, a: i64, b: i64, c: i64, d: i64, e: i64, f: i64, g: i64, h: i8, i: u16, x: float, y: float, z: float) -> i64 effects(host)
 
 

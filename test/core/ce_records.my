@@ -1,8 +1,6 @@
 # CE-A (records in the emitter): records over four words share homes, are read where
 # they lie, updated in place and passed in-out. Every case prints what value semantics
 # says it must; the copies the emitter removed must not be observable.
-
-
 record Span:
     line: int
     col: int

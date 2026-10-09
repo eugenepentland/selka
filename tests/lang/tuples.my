@@ -1,5 +1,3 @@
-
-
 record Label:
     pair: tuple[int, str]
 

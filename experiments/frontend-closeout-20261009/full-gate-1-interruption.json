@@ -1,0 +1,9 @@
+{
+  "pid": 2346917,
+  "command": "./.zig-cache/o/ad2c0ba814c96313b55006c5cb8fbd4e/test --guardian-shard=2/6 --cache-dir=./.zig-cache --seed=0x3fa3954 --listen=- ",
+  "wchan": "inet_csk_accept",
+  "utc": "2026-10-09T13:30:48Z",
+  "action": "SIGTERM own stuck test process only",
+  "reason": "Full gate already failed; test shard waits indefinitely in socket accept after candidate compiler rejected client. Descendant compiler is defunct. Other sessions untouched. Rejected broad effects interpretation corrected; retry full gate required.",
+  "observed_elapsed_seconds": 450
+}

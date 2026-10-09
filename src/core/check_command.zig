@@ -3,6 +3,7 @@
 const std = @import("std");
 const language = @import("mylang");
 const frontend = @import("frontend.zig");
+const project_entry = @import("project_entry.zig");
 
 /// A check's host failures; source diagnostics are returned as process status.
 pub const Error = error{ OutOfMemory, WriteFailed };
@@ -20,20 +21,29 @@ const Options = struct {
 pub fn run(init: std.process.Init, args: []const []const u8) Error!u8 {
     const options = parse(args) orelse return 2;
     const allocator = init.arena.allocator();
-    const entry = frontend.entryOf(options.path);
+    var report: std.ArrayList(u8) = .empty;
+    const entry = project_entry.resolve(allocator, init.io, options.path, &report) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        try write(init.io, report.items);
+        return project_entry.status(err);
+    };
     var session = frontend.Session.init(init.gpa, init.io, entry.root);
     defer session.deinit();
     if (!options.no_cache) try session.enableCache(init.gpa, options.cache);
     if (!options.typed) session.validationOnly();
     var profile = language.timings.Profile.init(init.io, options.timings, .compiler);
     session.setProfile(&profile);
-    var report: std.ArrayList(u8) = .empty;
-    const checked = session.checkFile(allocator, options.path, &report) catch |err| switch (err) {
+    const checked = entry.check(allocator, &session, &report) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         else => {
             try write(init.io, report.items);
-            profile.report(1) catch return error.WriteFailed;
-            return 1;
+            const status: u8 = switch (err) {
+                error.PolicyDenied => 3,
+                error.ConfigurationFailed => 2,
+                else => 1,
+            };
+            profile.report(status) catch return error.WriteFailed;
+            return status;
         },
     };
     profile.counts = .{

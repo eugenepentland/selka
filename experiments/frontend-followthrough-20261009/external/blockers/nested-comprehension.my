@@ -1,0 +1,7 @@
+record Item:
+    values: int[]
+
+func main() -> int:
+    const xs = [[1], [2]]
+    const ys = [Item(values=[v for v in x]) for x in xs]
+    return len(ys)

@@ -1,39 +1,91 @@
-
 import float_constants_support as support
 
 # `float` module constants: the initializer folds at check time with the same binary64
 # operations the running program uses, so a constant and the same expression computed
 # at run time are the same number.
-
 type Real = float
 
+
 const PI: float = 3.14
+
+
 const TWO_PI: float = PI * 2.0
+
+
 const HALF: float = 1 / 2
+
+
 const WHOLE: float = 2
+
+
 const NEGATIVE: float = -2.5
+
+
 const NEGATIVE_WHOLE: float = -5
+
+
 const TINY: float = 1e-9
+
+
 const GROUPED: float = 1_000.5
+
+
 const LEADING_DOT: float = .25
+
+
 const RATIO: float = TWO_PI / PI
+
+
 const MEAN: float = (PI + TWO_PI) / 2
+
+
 const FLOORED: float = 7.5 // 2.0
+
+
 const REMAINDER: float = -7.5 % 2.0
+
+
 const ROOT: float = sqrt(2.0)
+
+
 const CEILED: float = ceil(2.1)
+
+
 const SUM: float = 0.1 + 0.2
+
+
 const THIRD: float = 1 / 3
+
+
 const ROUNDED: float = float(9007199254740993)
+
+
 const UNSIGNED_WIDE: float = float(18446744073709551615u64)
+
+
 const INTEGER_FIRST: float = PI * 2
+
+
 const NEGATIVE_ZERO: float = -0.0
+
+
 const ALIASED: Real = 2.718
+
+
 const BELOW: bool = PI < 3.15
+
+
 const EQUAL: bool = TWO_PI == PI * 2.0
+
+
 const UNORDERED: bool = (0.0 / 0.0) != (0.0 / 0.0)
+
+
 const HUNDRED_PI: int = int(PI * 100.0)
+
+
 const BACK: float = float(HUNDRED_PI)
+
 
 record Circle:
     radius: float
@@ -133,7 +185,11 @@ public func test_a_float_constant_read_does_not_allocate() -> bool noalloc:
 
 
 const FLOAT_CHAIN: bool = 0.0 < PI < TWO_PI
+
+
 const MIXED_CHAIN: bool = 0 < PI <= TWO_PI
+
+
 const SKIPPED_FLOAT_CHAIN: bool = PI < 0.0 < 1 // 0
 
 

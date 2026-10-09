@@ -1,6 +1,4 @@
 # Canonical scalar-list captures remain distinct from real iterator holds.
-
-
 func test_writes_then_iteration_preserve_snapshot() -> bool:
     mut flags = [True, True, True]
     mut saved = flags

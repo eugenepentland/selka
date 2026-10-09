@@ -1,0 +1,45 @@
+
+# SPEC §11.2 tests 43-47. `out` is the authority the captured Output stands
+# in for; nothing is written to it.
+import ast
+import heap
+import output
+import parser
+
+
+# The printed form of the script's first statement, an expression statement.
+func printed(source: bytes, out: Stream) -> bytes:
+    mut rt = heap.new_runtime(False, None)
+    mut o = output.capture(out)
+    match parser.parse(mut rt, mut o, source):
+        case Some(program):
+            match program.stmts[program.statements[0]]:
+                case ast.Stmt.expression(value=expr):
+                    return ast.print_expr(program, source, expr)
+                case _:
+                    return b"not an expression statement"
+        case None:
+            return bytes(o.stderr)
+
+
+public func test_parse_precedence(out: Stream) -> bool:
+    return printed(b"1 + 2 * 3 - 4 / 5;", out) == b"(- (+ 1 (* 2 3)) (/ 4 5))"
+
+
+public func test_parse_unary_grouping(out: Stream) -> bool:
+    return printed(b"-(1 + 2) == !true;", out) == b"(== (- (group (+ 1 2))) (! true))"
+
+
+public func test_parse_logical(out: Stream) -> bool:
+    return printed(b"a or b and c;", out) == b"(or a (and b c))"
+
+
+public func test_parse_call_get_set(out: Stream) -> bool:
+    return printed(b"a.b(c).d = e;", out) == b"(.= (call (. a b) c) d e)"
+
+
+public func test_parse_error_recovery(out: Stream) -> bool:
+    mut rt = heap.new_runtime(False, None)
+    mut o = output.capture(out)
+    mut failed = (parser.parse(mut rt, mut o, b"var = 1; print 2;") is None)
+    return failed and bytes(o.stderr) == b"[line 1] Error at '=': Expect variable name.\n"

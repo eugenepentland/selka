@@ -1,0 +1,25 @@
+test-units
++- run test w
+guardian/test: 72 test(s) selected by filter: "frontend" — 65 match by name, 7 unnamed test block(s) run regardless
+guardian/test: test wall 0.37s; slowest over 50ms:
+guardian/test:   0.08s  python_bytes_test.test.frontend parenthesized byte conditional arms respect contextual bytes and optional bytes
+guardian/test:   0.08s  python_bytes_test.test.frontend parenthesized byte literals retain bytes identity through inferred conditionals
+guardian/test:   0.05s  sema_mut_arguments_test.test.frontend dynamic overlapping mut indices trap before caller writeback
+guardian/test: PASS — 72 passed
+guardian/test: RESULT {"passed":72,"failed":0,"skipped":0}
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/3b311509fd3865f8e446e06847305e96/test --guardian-filter=frontend --cache-dir=./.zig-cache --seed=0x7c4e73c3 --listen=-
+
+Build Summary: 8/8 steps succeeded; 72/72 tests passed
+test-units success
++- run test 72 pass (72 total) 402ms MaxRSS:56M
+   +- compile test debug native success 1s MaxRSS:294M
+      +- run exe build-identity (build_identity) cached
+      |  +- compile exe build-identity debug native cached 7ms MaxRSS:36M
+      +- options cached
+         +- compile exe mylang debug native cached 7ms MaxRSS:41M
+            +- run exe build-identity (build_identity) (+1 more reused dependencies)
+            +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 7ms MaxRSS:38M
+
+real 1.94
+user 4.20
+sys 0.66

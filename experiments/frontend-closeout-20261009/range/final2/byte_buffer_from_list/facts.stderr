@@ -1,0 +1,3 @@
+byte_buffer_from_list.my:1:1: error[E_MAIN]: the program requires an entry point: func main() -> int; `mylang check FILE` type-checks a library that has no main
+  # `byte_buffer(values)` is a fresh value (VALUE-BUFFER-FRESH-1): storing it into
+  ^

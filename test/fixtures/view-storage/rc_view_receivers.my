@@ -1,5 +1,3 @@
-
-
 public func test_unshared_mapping_write_preserves_live_identity() -> bool:
     mut mapping = {1: 7}
     mut view = mapping.values()

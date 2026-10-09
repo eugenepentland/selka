@@ -1,6 +1,4 @@
 # dict_count: dict[str, int] read-modify-write over 1000 distinct short keys.
-
-
 func main(out: Stream) -> int:
     mut keys: str[] = []
     for i in range(1000):

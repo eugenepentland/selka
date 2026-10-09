@@ -1,8 +1,6 @@
 # Range keys sliced from a never-written read-only parameter borrow its text
 # for the whole call (RC-ANCHORED-RANGE-KEY-1). Each answer is the same under
 # the collector and RC.
-
-
 func frequencies(seq: str, k: int) -> dict[str, int]:
     mut counts: dict[str, int] = {}
     for i in range(len(seq) - k + 1):

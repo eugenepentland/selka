@@ -1,0 +1,519 @@
+
+# jlox's recursive-descent parser over the drained token list (SPEC §9.2).
+# Names and string literals are interned as their nodes are built; each
+# string that interning creates joins the Runtime's permanent roots.
+import ast
+import heap
+import lox_strings
+import output
+import scanner
+import value
+
+
+# A syntax error that has already been reported; unwinds to `declaration`,
+# which synchronizes, the way jlox's ParseError exception does.
+record ParseError:
+    pass
+
+
+record Parser:
+    rt: heap.Runtime
+    out: output.Output
+    source: bytes
+    tokens: scanner.Token[]
+    current: int
+    had_error: bool
+    program: ast.Program
+
+
+func report(mut p: Parser, line: int, location: bytes, message: bytes):
+    mut empty: int[] = []
+    mut text = byte_buffer(empty)
+    _ = text.append_utf8("[line ")
+    _ = text.append_int(line)
+    _ = text.append_utf8("] Error")
+    _ = text.append_range(location, 0, len(location))
+    _ = text.append_utf8(": ")
+    _ = text.append_range(message, 0, len(message))
+    mut __wb_38 = p.out
+    output.error_line(mut __wb_38, bytes(text))
+    p.out = __wb_38
+    p.had_error = True
+
+
+func error(mut p: Parser, token: scanner.Token, message: bytes) -> ParseError:
+    if token.kind == scanner.TokenKind.EOF:
+        report(mut p, token.line, b" at end", message)
+    else:
+        report(mut p, token.line, b" at '" + scanner.lexeme(p.source, token) + b"'", message)
+    return ParseError()
+
+
+# The interned string for a token's lexeme (or a string literal's
+# contents), rooted permanently if this call created it.
+func intern(mut p: Parser, chars: bytes) -> value.ObjRef:
+    mut before = p.rt.allocations
+    mut __wb_54 = p.rt
+    mut ref = lox_strings.copy_string(mut __wb_54, chars)
+    p.rt = __wb_54
+    if p.rt.allocations != before:
+        p.rt.permanent_roots.append(ref)
+    return ref
+
+
+func intern_name(mut p: Parser, token: scanner.Token) -> value.ObjRef:
+    return intern(mut p, scanner.lexeme(p.source, token))
+
+
+func peek(p: Parser) -> scanner.Token:
+    return p.tokens[p.current]
+
+
+func previous(p: Parser) -> scanner.Token:
+    return p.tokens[p.current - 1]
+
+
+func is_at_end(p: Parser) -> bool:
+    return peek(p).kind == scanner.TokenKind.EOF
+
+
+func check(p: Parser, kind: scanner.TokenKind) -> bool:
+    if is_at_end(p):
+        return False
+    return peek(p).kind == kind
+
+
+func advance(mut p: Parser) -> scanner.Token:
+    if not is_at_end(p):
+        p.current = p.current + 1
+    return previous(p)
+
+
+func match_token(mut p: Parser, kind: scanner.TokenKind) -> bool:
+    if check(p, kind):
+        _ = advance(mut p)
+        return True
+    return False
+
+
+func consume(mut p: Parser, kind: scanner.TokenKind, message: bytes) -> Result[scanner.Token, ParseError]:
+    if check(p, kind):
+        return Ok(advance(mut p))
+    return Err(error(mut p, peek(p), message))
+
+
+func synchronize(mut p: Parser):
+    _ = advance(mut p)
+    while not is_at_end(p):
+        if previous(p).kind == scanner.TokenKind.SEMICOLON:
+            return
+        match peek(p).kind:
+            case scanner.TokenKind.CLASS:
+                return
+            case scanner.TokenKind.FUN:
+                return
+            case scanner.TokenKind.VAR:
+                return
+            case scanner.TokenKind.FOR:
+                return
+            case scanner.TokenKind.IF:
+                return
+            case scanner.TokenKind.WHILE:
+                return
+            case scanner.TokenKind.PRINT:
+                return
+            case scanner.TokenKind.RETURN:
+                return
+            case _:
+                pass
+        _ = advance(mut p)
+
+
+func add_expr(mut p: Parser, expr: ast.Expr) -> int:
+    p.program.exprs.append(expr)
+    return len(p.program.exprs) - 1
+
+
+func add_stmt(mut p: Parser, node: ast.Stmt) -> int:
+    p.program.stmts.append(node)
+    return len(p.program.stmts) - 1
+
+
+func literal(mut p: Parser, constant: value.Value, token: scanner.Token) -> int:
+    return add_expr(mut p, ast.Expr.literal(value=ast.LiteralExpr(constant=constant, token=token)))
+
+
+func variable(mut p: Parser, name: scanner.Token) -> int:
+    return add_expr(mut p, ast.Expr.variable(value=ast.VariableExpr(name=name, name_ref=intern_name(mut p, name), hops=ast.GLOBAL, slot=0)))
+
+
+func primary(mut p: Parser) -> Result[int, ParseError]:
+    if match_token(mut p, scanner.TokenKind.FALSE):
+        return Ok(literal(mut p, value.Value.boolean(value=False), previous(p)))
+    if match_token(mut p, scanner.TokenKind.TRUE):
+        return Ok(literal(mut p, value.Value.boolean(value=True), previous(p)))
+    if match_token(mut p, scanner.TokenKind.NIL):
+        return Ok(literal(mut p, value.Value.nil, previous(p)))
+    if match_token(mut p, scanner.TokenKind.NUMBER):
+        const token = previous(p)
+        mut number = 0.0
+        match p.source.parse_float_range(token.start, token.start + token.length):
+            case Some(v):
+                number = v
+            case None:
+                number = 0.0
+        return Ok(literal(mut p, value.Value.number(value=number), token))
+    if match_token(mut p, scanner.TokenKind.STRING):
+        const token = previous(p)
+        mut ref = intern(mut p, p.source.view(token.start + 1, token.start + token.length - 1))
+        return Ok(literal(mut p, value.Value.obj(value=ref), token))
+    if match_token(mut p, scanner.TokenKind.SUPER):
+        mut keyword = previous(p)
+        _ = try consume(mut p, scanner.TokenKind.DOT, b"Expect '.' after 'super'.")
+        mut method = try consume(mut p, scanner.TokenKind.IDENTIFIER, b"Expect superclass method name.")
+        return Ok(add_expr(mut p, ast.Expr.super_access(value=ast.SuperExpr(keyword=keyword, method=method, method_ref=intern_name(mut p, method), hops=ast.GLOBAL, slot=0))))
+    if match_token(mut p, scanner.TokenKind.THIS):
+        return Ok(add_expr(mut p, ast.Expr.this(value=ast.ThisExpr(keyword=previous(p), hops=ast.GLOBAL, slot=0))))
+    if match_token(mut p, scanner.TokenKind.IDENTIFIER):
+        return Ok(variable(mut p, previous(p)))
+    if match_token(mut p, scanner.TokenKind.LEFT_PAREN):
+        mut inner = try expression(mut p)
+        _ = try consume(mut p, scanner.TokenKind.RIGHT_PAREN, b"Expect ')' after expression.")
+        return Ok(add_expr(mut p, ast.Expr.grouping(value=ast.GroupingExpr(inner=inner))))
+    return Err(error(mut p, peek(p), b"Expect expression."))
+
+
+func finish_call(mut p: Parser, callee: int) -> Result[int, ParseError]:
+    mut arguments: int[] = []
+    if not check(p, scanner.TokenKind.RIGHT_PAREN):
+        const argument = try expression(mut p)
+        arguments.append(argument)
+        while match_token(mut p, scanner.TokenKind.COMMA):
+            if len(arguments) >= 255:
+                _ = error(mut p, peek(p), b"Can't have more than 255 arguments.")
+            const next_argument = try expression(mut p)
+            arguments.append(next_argument)
+    mut paren = try consume(mut p, scanner.TokenKind.RIGHT_PAREN, b"Expect ')' after arguments.")
+    return Ok(add_expr(mut p, ast.Expr.call(value=ast.CallExpr(callee=callee, paren=paren, arguments=arguments))))
+
+
+func call(mut p: Parser) -> Result[int, ParseError]:
+    mut expr = try primary(mut p)
+    while True:
+        if match_token(mut p, scanner.TokenKind.LEFT_PAREN):
+            expr = try finish_call(mut p, expr)
+        elif match_token(mut p, scanner.TokenKind.DOT):
+            mut name = try consume(mut p, scanner.TokenKind.IDENTIFIER, b"Expect property name after '.'.")
+            expr = add_expr(mut p, ast.Expr.get(value=ast.GetExpr(target=expr, name=name, name_ref=intern_name(mut p, name))))
+        else:
+            return Ok(expr)
+
+
+func unary(mut p: Parser) -> Result[int, ParseError]:
+    if match_token(mut p, scanner.TokenKind.BANG) or match_token(mut p, scanner.TokenKind.MINUS):
+        mut operator = previous(p)
+        mut right = try unary(mut p)
+        return Ok(add_expr(mut p, ast.Expr.unary(value=ast.UnaryExpr(operator=operator, right=right))))
+    return call(mut p)
+
+
+func binary(mut p: Parser, left: int, operator: scanner.Token, right: int) -> int:
+    return add_expr(mut p, ast.Expr.binary(value=ast.BinaryExpr(left=left, operator=operator, right=right)))
+
+
+func factor(mut p: Parser) -> Result[int, ParseError]:
+    mut expr = try unary(mut p)
+    while match_token(mut p, scanner.TokenKind.SLASH) or match_token(mut p, scanner.TokenKind.STAR):
+        mut operator = previous(p)
+        mut right = try unary(mut p)
+        expr = binary(mut p, expr, operator, right)
+    return Ok(expr)
+
+
+func term(mut p: Parser) -> Result[int, ParseError]:
+    mut expr = try factor(mut p)
+    while match_token(mut p, scanner.TokenKind.MINUS) or match_token(mut p, scanner.TokenKind.PLUS):
+        mut operator = previous(p)
+        mut right = try factor(mut p)
+        expr = binary(mut p, expr, operator, right)
+    return Ok(expr)
+
+
+func comparison(mut p: Parser) -> Result[int, ParseError]:
+    mut expr = try term(mut p)
+    while match_token(mut p, scanner.TokenKind.GREATER) or match_token(mut p, scanner.TokenKind.GREATER_EQUAL) or match_token(mut p, scanner.TokenKind.LESS) or match_token(mut p, scanner.TokenKind.LESS_EQUAL):
+        mut operator = previous(p)
+        mut right = try term(mut p)
+        expr = binary(mut p, expr, operator, right)
+    return Ok(expr)
+
+
+func equality(mut p: Parser) -> Result[int, ParseError]:
+    mut expr = try comparison(mut p)
+    while match_token(mut p, scanner.TokenKind.BANG_EQUAL) or match_token(mut p, scanner.TokenKind.EQUAL_EQUAL):
+        mut operator = previous(p)
+        mut right = try comparison(mut p)
+        expr = binary(mut p, expr, operator, right)
+    return Ok(expr)
+
+
+func logical(mut p: Parser, left: int, operator: scanner.Token, right: int) -> int:
+    return add_expr(mut p, ast.Expr.logical(value=ast.LogicalExpr(left=left, operator=operator, right=right)))
+
+
+func and_(mut p: Parser) -> Result[int, ParseError]:
+    mut expr = try equality(mut p)
+    while match_token(mut p, scanner.TokenKind.AND):
+        mut operator = previous(p)
+        mut right = try equality(mut p)
+        expr = logical(mut p, expr, operator, right)
+    return Ok(expr)
+
+
+func or_(mut p: Parser) -> Result[int, ParseError]:
+    mut expr = try and_(mut p)
+    while match_token(mut p, scanner.TokenKind.OR):
+        mut operator = previous(p)
+        mut right = try and_(mut p)
+        expr = logical(mut p, expr, operator, right)
+    return Ok(expr)
+
+
+func assignment(mut p: Parser) -> Result[int, ParseError]:
+    mut expr = try or_(mut p)
+    if match_token(mut p, scanner.TokenKind.EQUAL):
+        mut equals = previous(p)
+        mut assigned = try assignment(mut p)
+        match p.program.exprs[expr]:
+            case ast.Expr.variable(value=target):
+                const name = target.name
+                return Ok(add_expr(mut p, ast.Expr.assign(value=ast.AssignExpr(name=name, name_ref=intern_name(mut p, name), assigned=assigned, hops=ast.GLOBAL, slot=0))))
+            case ast.Expr.get(value=target):
+                const name = target.name
+                return Ok(add_expr(mut p, ast.Expr.set(value=ast.SetExpr(target=target.target, name=name, name_ref=intern_name(mut p, name), assigned=assigned))))
+            case _:
+                _ = error(mut p, equals, b"Invalid assignment target.")
+    return Ok(expr)
+
+
+func expression(mut p: Parser) -> Result[int, ParseError]:
+    return assignment(mut p)
+
+
+func block(mut p: Parser) -> Result[int[], ParseError]:
+    mut statements: int[] = []
+    while not check(p, scanner.TokenKind.RIGHT_BRACE) and not is_at_end(p):
+        match declaration(mut p):
+            case Some(parsed):
+                statements.append(parsed)
+            case None:
+                pass
+    _ = try consume(mut p, scanner.TokenKind.RIGHT_BRACE, b"Expect '}' after block.")
+    return Ok(statements)
+
+
+func expression_statement(mut p: Parser) -> Result[int, ParseError]:
+    mut expr = try expression(mut p)
+    _ = try consume(mut p, scanner.TokenKind.SEMICOLON, b"Expect ';' after expression.")
+    return Ok(add_stmt(mut p, ast.Stmt.expression(value=expr)))
+
+
+func print_statement(mut p: Parser) -> Result[int, ParseError]:
+    mut expr = try expression(mut p)
+    _ = try consume(mut p, scanner.TokenKind.SEMICOLON, b"Expect ';' after value.")
+    return Ok(add_stmt(mut p, ast.Stmt.print(value=expr)))
+
+
+func return_statement(mut p: Parser) -> Result[int, ParseError]:
+    mut keyword = previous(p)
+    mut result: int? = None
+    if not check(p, scanner.TokenKind.SEMICOLON):
+        const extracted_331 = try expression(mut p)
+        result = Some(extracted_331)
+    _ = try consume(mut p, scanner.TokenKind.SEMICOLON, b"Expect ';' after return value.")
+    return Ok(add_stmt(mut p, ast.Stmt.return_stmt(value=ast.ReturnStmt(keyword=keyword, result=result))))
+
+
+func if_statement(mut p: Parser) -> Result[int, ParseError]:
+    _ = try consume(mut p, scanner.TokenKind.LEFT_PAREN, b"Expect '(' after 'if'.")
+    mut condition = try expression(mut p)
+    _ = try consume(mut p, scanner.TokenKind.RIGHT_PAREN, b"Expect ')' after if condition.")
+    mut then_branch = try statement(mut p)
+    mut else_branch: int? = None
+    if match_token(mut p, scanner.TokenKind.ELSE):
+        const extracted_343 = try statement(mut p)
+        else_branch = Some(extracted_343)
+    return Ok(add_stmt(mut p, ast.Stmt.if_stmt(value=ast.IfStmt(condition=condition, then_branch=then_branch, else_branch=else_branch))))
+
+
+func while_statement(mut p: Parser) -> Result[int, ParseError]:
+    _ = try consume(mut p, scanner.TokenKind.LEFT_PAREN, b"Expect '(' after 'while'.")
+    mut condition = try expression(mut p)
+    _ = try consume(mut p, scanner.TokenKind.RIGHT_PAREN, b"Expect ')' after condition.")
+    mut body = try statement(mut p)
+    return Ok(add_stmt(mut p, ast.Stmt.while_stmt(value=ast.WhileStmt(condition=condition, body=body))))
+
+
+# jlox's desugaring: the increment joins the body in an inner block, a
+# missing condition becomes `true`, and an initializer gets an outer block.
+func for_statement(mut p: Parser) -> Result[int, ParseError]:
+    _ = try consume(mut p, scanner.TokenKind.LEFT_PAREN, b"Expect '(' after 'for'.")
+    mut initializer: int? = None
+    if match_token(mut p, scanner.TokenKind.SEMICOLON):
+        initializer = None
+    elif match_token(mut p, scanner.TokenKind.VAR):
+        const extracted_363 = try var_declaration(mut p)
+        initializer = Some(extracted_363)
+    else:
+        const extracted_365 = try expression_statement(mut p)
+        initializer = Some(extracted_365)
+    mut condition: int? = None
+    if not check(p, scanner.TokenKind.SEMICOLON):
+        const extracted_368 = try expression(mut p)
+        condition = Some(extracted_368)
+    _ = try consume(mut p, scanner.TokenKind.SEMICOLON, b"Expect ';' after loop condition.")
+    mut increment: int? = None
+    if not check(p, scanner.TokenKind.RIGHT_PAREN):
+        const extracted_372 = try expression(mut p)
+        increment = Some(extracted_372)
+    _ = try consume(mut p, scanner.TokenKind.RIGHT_PAREN, b"Expect ')' after for clauses.")
+    mut body = try statement(mut p)
+    match increment:
+        case Some(step):
+            mut increment_stmt = add_stmt(mut p, ast.Stmt.expression(value=step))
+            body = add_stmt(mut p, ast.Stmt.block(value=ast.BlockStmt(statements=[body, increment_stmt], slot_count=0)))
+        case None:
+            pass
+    mut test = 0
+    match condition:
+        case Some(given):
+            test = given
+        case None:
+            test = literal(mut p, value.Value.boolean(value=True), previous(p))
+    body = add_stmt(mut p, ast.Stmt.while_stmt(value=ast.WhileStmt(condition=test, body=body)))
+    match initializer:
+        case Some(first):
+            body = add_stmt(mut p, ast.Stmt.block(value=ast.BlockStmt(statements=[first, body], slot_count=0)))
+        case None:
+            pass
+    return Ok(body)
+
+
+func statement(mut p: Parser) -> Result[int, ParseError]:
+    if match_token(mut p, scanner.TokenKind.FOR):
+        return for_statement(mut p)
+    if match_token(mut p, scanner.TokenKind.IF):
+        return if_statement(mut p)
+    if match_token(mut p, scanner.TokenKind.PRINT):
+        return print_statement(mut p)
+    if match_token(mut p, scanner.TokenKind.RETURN):
+        return return_statement(mut p)
+    if match_token(mut p, scanner.TokenKind.WHILE):
+        return while_statement(mut p)
+    if match_token(mut p, scanner.TokenKind.LEFT_BRACE):
+        mut statements = try block(mut p)
+        return Ok(add_stmt(mut p, ast.Stmt.block(value=ast.BlockStmt(statements=statements, slot_count=0))))
+    return expression_statement(mut p)
+
+
+func var_declaration(mut p: Parser) -> Result[int, ParseError]:
+    mut name = try consume(mut p, scanner.TokenKind.IDENTIFIER, b"Expect variable name.")
+    mut initializer: int? = None
+    if match_token(mut p, scanner.TokenKind.EQUAL):
+        const extracted_417 = try expression(mut p)
+        initializer = Some(extracted_417)
+    _ = try consume(mut p, scanner.TokenKind.SEMICOLON, b"Expect ';' after variable declaration.")
+    return Ok(add_stmt(mut p, ast.Stmt.var_decl(value=ast.VarStmt(name=name, name_ref=intern_name(mut p, name), initializer=initializer, slot=ast.GLOBAL))))
+
+
+# A function or method, stored in the program's function table; answers its
+# index. `kind` names it in the error messages.
+func function(mut p: Parser, kind: bytes) -> Result[int, ParseError]:
+    mut name = try consume(mut p, scanner.TokenKind.IDENTIFIER, b"Expect " + kind + b" name.")
+    _ = try consume(mut p, scanner.TokenKind.LEFT_PAREN, b"Expect '(' after " + kind + b" name.")
+    mut params: scanner.Token[] = []
+    if not check(p, scanner.TokenKind.RIGHT_PAREN):
+        const extracted_429 = try consume(mut p, scanner.TokenKind.IDENTIFIER, b"Expect parameter name.")
+        params.append(extracted_429)
+        while match_token(mut p, scanner.TokenKind.COMMA):
+            if len(params) >= 255:
+                _ = error(mut p, peek(p), b"Can't have more than 255 parameters.")
+            const extracted_433 = try consume(mut p, scanner.TokenKind.IDENTIFIER, b"Expect parameter name.")
+            params.append(extracted_433)
+    _ = try consume(mut p, scanner.TokenKind.RIGHT_PAREN, b"Expect ')' after parameters.")
+    _ = try consume(mut p, scanner.TokenKind.LEFT_BRACE, b"Expect '{' before " + kind + b" body.")
+    mut body = try block(mut p)
+    mut name_ref = intern_name(mut p, name)
+    mut interned: ast.Param[] = []
+    for param in params:
+        interned.append(ast.Param(name=param, name_ref=intern_name(mut p, param)))
+    p.program.functions.append(ast.FunctionDecl(name=name, name_ref=name_ref, params=interned, body=body, slot=ast.GLOBAL, slot_count=0))
+    return Ok(len(p.program.functions) - 1)
+
+
+func class_declaration(mut p: Parser) -> Result[int, ParseError]:
+    mut name = try consume(mut p, scanner.TokenKind.IDENTIFIER, b"Expect class name.")
+    mut superclass: int? = None
+    if match_token(mut p, scanner.TokenKind.LESS):
+        _ = try consume(mut p, scanner.TokenKind.IDENTIFIER, b"Expect superclass name.")
+        superclass = Some(variable(mut p, previous(p)))
+    _ = try consume(mut p, scanner.TokenKind.LEFT_BRACE, b"Expect '{' before class body.")
+    mut methods: int[] = []
+    while not check(p, scanner.TokenKind.RIGHT_BRACE) and not is_at_end(p):
+        const extracted_454 = try function(mut p, b"method")
+        methods.append(extracted_454)
+    _ = try consume(mut p, scanner.TokenKind.RIGHT_BRACE, b"Expect '}' after class body.")
+    return Ok(add_stmt(mut p, ast.Stmt.class_decl(value=ast.ClassStmt(name=name, name_ref=intern_name(mut p, name), slot=ast.GLOBAL, superclass=superclass, methods=methods))))
+
+
+func declaration_or_error(mut p: Parser) -> Result[int, ParseError]:
+    if match_token(mut p, scanner.TokenKind.CLASS):
+        return class_declaration(mut p)
+    if match_token(mut p, scanner.TokenKind.FUN):
+        mut index = try function(mut p, b"function")
+        return Ok(add_stmt(mut p, ast.Stmt.function(value=index)))
+    if match_token(mut p, scanner.TokenKind.VAR):
+        return var_declaration(mut p)
+    return statement(mut p)
+
+
+# One declaration's statement index, or None after a syntax error has been
+# reported and the parser has synchronized past it.
+func declaration(mut p: Parser) -> int?:
+    match declaration_or_error(mut p):
+        case Ok(parsed):
+            return Some(parsed)
+        case Err(_):
+            synchronize(mut p)
+            return None
+
+
+# Drains the scanner: ERROR tokens are reported and dropped (SPEC §9.2).
+func scan_tokens(mut p: Parser):
+    mut lexer = scanner.new_scanner(p.source)
+    while True:
+        mut token = scanner.scan_token(mut lexer)
+        if token.kind == scanner.TokenKind.ERROR:
+            report(mut p, token.line, b"", token.message)
+        else:
+            p.tokens.append(token)
+            if token.kind == scanner.TokenKind.EOF:
+                return
+
+
+# Parses a script. Answers the program, or None when a scan or parse error
+# was reported.
+public func parse(mut rt: heap.Runtime, mut out: output.Output, source: bytes) -> ast.Program?:
+    mut p = Parser(rt=rt, out=out, source=source, tokens=[], current=0, had_error=False, program=ast.new_program())
+    scan_tokens(mut p)
+    while not is_at_end(p):
+        match declaration(mut p):
+            case Some(parsed):
+                p.program.statements.append(parsed)
+            case None:
+                pass
+    rt = p.rt
+    out = p.out
+    if p.had_error:
+        return None
+    return Some(p.program)

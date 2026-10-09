@@ -1366,12 +1366,8 @@ fn warningLess(_: void, a: diagnostic.Diagnostic, b: diagnostic.Diagnostic) bool
 // source diagnostic once, ordered independently of specialization discovery.
 fn normalizeDiagnostics(sink: *diagnostic.Sink) void {
     std.mem.sort(diagnostic.Diagnostic, sink.items.items, {}, warningLess);
-    // NEW-CORE-S5-ARENA-1: a rejected program reports its errors as before; the
-    // retired-arena advice is for a program that otherwise checks.
-    const rejected = reportedError(sink.items.items);
     var count: usize = 0;
     for (sink.items.items) |item| {
-        if (rejected and std.mem.eql(u8, item.code, @import("arena_fix.zig").retired_code)) continue;
         if (count != 0) {
             const previous = sink.items.items[count - 1];
             if (previous.span.start == item.span.start and previous.span.end == item.span.end and
@@ -1514,14 +1510,15 @@ fn reuseBody(
     return function;
 }
 /// Open the stand-in plan for a request whose cache carries a summary request.
-fn openPlan(cache: ?*semantic_cache.Cache, session: *?semantic_cache.Session, allocator: std.mem.Allocator, main: usize) Error!?sema_summaries.Plan {
+fn openPlan(cache: ?*semantic_cache.Cache, session: *?semantic_cache.Session, allocator: std.mem.Allocator, main: usize, syntax: ast.Program) Error!?sema_summaries.Plan {
     const c = cache orelse return null;
     const request = c.context.summaries orelse return null;
     const queries = if (session.*) |*opened| opened else return null;
     const timing = activeTiming(cache);
     const start = timingStart(timing);
     defer timingAdd(timing, "stand_in_planning", start);
-    const plan = try sema_summaries.Plan.init(allocator, request, queries, main);
+    var plan = try sema_summaries.Plan.init(allocator, request, queries, main);
+    try plan.requireAllocationBodies(allocator, syntax);
     return plan;
 }
 /// Mark a failed stand-in attempt for a full retry and pass the error on. A
@@ -1707,7 +1704,12 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
 /// Check every library declaration and body without creating an executable entry.
 /// Checked trees are discarded; library success cannot seed executable caches.
 pub fn checkLibrary(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, names: ?*Names) Error!void {
-    _ = try checkCore(allocator, src, program, sink, .{ .names = names, .entry_required = false });
+    _ = try checkLibraryProgram(allocator, src, program, sink, names);
+}
+
+/// Library tree for backend contract verification; never an executable entry.
+pub fn checkLibraryProgram(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, names: ?*Names) Error!typed.Program {
+    return checkCore(allocator, src, program, sink, .{ .names = names, .entry_required = false });
 }
 
 /// Whether the entry unit declares a free function named `main`, the lookup
@@ -1735,6 +1737,17 @@ const CheckOptions = struct {
 
 fn checkCore(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, options: CheckOptions) Error!typed.Program {
     defer normalizeDiagnostics(sink);
+    const checked = checkProgram(allocator, src, program, sink, options) catch |err| {
+        // Removal repairs remain available even when an unrelated body fails.
+        if (err == error.SourceError) try @import("arena_fix.zig").reject(allocator, src, program, sink);
+        return err;
+    };
+    try @import("arena_fix.zig").reject(allocator, src, program, sink);
+    if (reportedError(sink.items.items)) return error.SourceError;
+    return checked;
+}
+
+fn checkProgram(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, options: CheckOptions) Error!typed.Program {
     const cache = options.cache;
     const module_names = options.names;
     const timing = activeTiming(cache);
@@ -1822,7 +1835,7 @@ fn checkCore(allocator: std.mem.Allocator, src: source.Source, program: ast.Prog
     // A library has no executable entry. This placeholder remains internal:
     // library checking neither adapts, returns nor caches the checked program.
     const main = if (options.entry_required) try checkEntry(&checker, module_names, failed) else @as(typed.FunctionId, @fromBackingInt(0));
-    var plan = try openPlan(cache, &session, allocator, @backingInt(main));
+    var plan = try openPlan(cache, &session, allocator, @backingInt(main), program);
     const functions = try checkBodies(.{
         .checker = &checker,
         .session = &session,
@@ -1859,7 +1872,6 @@ fn checkCore(allocator: std.mem.Allocator, src: source.Source, program: ast.Prog
     const warnings_start = timingStart(timing);
     try warnBindings(allocator, functions, stubs, sink);
     try warnImports(module_names, sink);
-    try @import("arena_fix.zig").warn(allocator, src, program, sink);
     const pass_items: []const diagnostic.Diagnostic = if (plan != null) try allocator.dupe(diagnostic.Diagnostic, sink.items.items[pass_start..]) else &.{};
     std.mem.sort(diagnostic.Diagnostic, sink.items.items, {}, warningLess);
     timingAdd(timing, "warning_derivation", warnings_start);

@@ -1,5 +1,3 @@
-
-
 record Holder[T]:
     value: T
 

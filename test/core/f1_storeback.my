@@ -1,9 +1,6 @@
-
 # Store-backs of an element's block pointer (NEW-CORE-F1-STOREBACK-1): `c[i][j] = v`
 # stores c's row pointer back only when copy on write, growth or replacement moved it.
 # Every answer here is the base compiler's (main cafe7fea7).
-
-
 record Bag:
     name: str
     items: int[]

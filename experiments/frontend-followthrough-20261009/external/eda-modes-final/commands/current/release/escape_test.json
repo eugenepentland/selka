@@ -1,0 +1,129 @@
+{
+  "actual_tests": 5,
+  "command": [
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/artifacts/mylang-final",
+    "test",
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/escape_test.my",
+    "--json",
+    "--force",
+    "--jobs",
+    "1",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/eda-modes-final/cache",
+    "--release",
+    "--max-frames=30000",
+    "--max-steps=4000000000",
+    "--max-memory=2G"
+  ],
+  "complete_report_exact": false,
+  "cwd": "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda",
+  "elapsed_seconds": 0.11751044797711074,
+  "expected_statuses_equal": true,
+  "functional_membership_pass": true,
+  "membership_equal_after_explicit_module_mapping": true,
+  "nonpassing": 0,
+  "process_status_equal": true,
+  "reference_command": [
+    "/home/epentland/.cache/mylang/frontend-20261008/mylang-s5-pin/bin/mylang",
+    "test",
+    "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/escape_test.my",
+    "--json",
+    "--force",
+    "--jobs",
+    "1",
+    "--cache-dir",
+    "/home/epentland/.cache/mylang/frontend-current-eda-oracle-20261008",
+    "--release",
+    "--max-frames=30000",
+    "--max-steps=4000000000",
+    "--max-memory=2G"
+  ],
+  "reference_receipt_sha256": "1b048783051eeb187f0774ca6ca8c3b22dee5b0bff6f35182e1d937f7977a1f2",
+  "reference_returncode": 0,
+  "reference_tests": 5,
+  "report_changes": [
+    {
+      "candidate": [
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/escape_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/escape.my"
+      ],
+      "field": "sources",
+      "reference": [
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/escape_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/escape.my"
+      ]
+    },
+    {
+      "candidate": [
+        {
+          "at": "",
+          "name": "src.escape_test::test_decodexmlalloc_copies_an_entity_it_does_not_know_through_verbatim",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.escape_test::test_decodexmlalloc_round_trips_every_byte_writexml_can_escape",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.escape_test::test_the_two_apostrophe_spellings_differ_in_nothing_but_the_apostrophe",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.escape_test::test_writexml_escapes_markup_and_both_quote_styles",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.escape_test::test_writexml_neutralizes_a_script_attribute_breakout",
+          "reason": "",
+          "status": "passed"
+        }
+      ],
+      "field": "tests",
+      "reference": [
+        {
+          "at": "",
+          "name": "escape_test::test_decodexmlalloc_copies_an_entity_it_does_not_know_through_verbatim",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "escape_test::test_decodexmlalloc_round_trips_every_byte_writexml_can_escape",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "escape_test::test_the_two_apostrophe_spellings_differ_in_nothing_but_the_apostrophe",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "escape_test::test_writexml_escapes_markup_and_both_quote_styles",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "escape_test::test_writexml_neutralizes_a_script_attribute_breakout",
+          "reason": "",
+          "status": "passed"
+        }
+      ]
+    }
+  ],
+  "returncode": 0,
+  "stderr_exact": true,
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stdout_sha256": "eeba250cb4e758a781a4a59fe288c4ae541b73602f30c5d15faf52d9931cbdaa",
+  "timeout": false
+}

@@ -403,6 +403,19 @@ const CanonicalWriter = struct {
                 try work.append(allocator, .{ .expression = branch.condition });
             },
             .loop_exit => |exit| writer.print("continue {}\n", .{exit.continuing}) catch return error.OutOfMemory,
+            .range_loop => |range| {
+                writer.print("range slots {d} {d} setup {d}\n", .{ @backingInt(range.plan().start.slot), @backingInt(range.plan().end.slot), range.plan().setup.len }) catch return error.OutOfMemory;
+                if (range.plan().loop.step) |step| try work.append(allocator, .{ .statement = step });
+                try work.append(allocator, .{ .statement = range.plan().loop.body });
+                try work.append(allocator, .{ .expression = range.plan().loop.condition });
+                var i = range.plan().setup.len;
+                while (i > 0) {
+                    i -= 1;
+                    try work.append(allocator, .{ .statement = range.plan().setup[i] });
+                }
+                try work.append(allocator, .{ .expression = range.plan().end.value });
+                try work.append(allocator, .{ .expression = range.plan().start.value });
+            },
             .loop => |loop| {
                 if (loop.step) |step| try work.append(allocator, .{ .statement = step });
                 try work.append(allocator, .{ .statement = loop.body });

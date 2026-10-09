@@ -1,0 +1,3 @@
+discard_names.my:1:1: error[E_MAIN]: the program requires an entry point: func main() -> int; `mylang check FILE` type-checks a library that has no main
+  # `_` is the discard name: a loop, comprehension or `with` scope may bind it
+  ^

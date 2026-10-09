@@ -1,5 +1,3 @@
-
-
 func next(mut xs: i64[]) -> i64:
     xs.append(1)
     return 42
