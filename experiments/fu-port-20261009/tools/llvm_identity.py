@@ -8,8 +8,11 @@ EDA with four ReleaseFast compilers:
   P  the port       (.mylang-cache/compilers/port-*)   on the same new-syntax sources
 and compare normalized text: every build runs in its source root with a relative path; the
 root's absolute path, `source_filename`, debug-info metadata (`!DI*` nodes and `!dbg`
-attachments) and the line and column of each trap site record (`@myl.site.N`) are normalized
-away. Everything else, including non-debug metadata, is compared exactly.
+attachments), the line and column of each trap site record (`@myl.site.N`), and the spelling
+of function names (quoted symbols renamed in order of first appearance; the name strings
+`@myl.fn.N` and source path strings `@myl.path.N` that trap reports print: a headered module
+reported its file's basename, a headerless one its path from the project root) are normalized away; `compare` also reports which programs
+are identical without the name normalization. Everything else, including non-debug metadata, is compared exactly.
   (a) P == X: the port's code for the new source is fu-x's code for the old source.
   (b) M == A as well means the redesign changed nothing in that program's code, and P differs
       from M exactly as X differs from A.
@@ -63,22 +66,41 @@ def emit(tag, job):
 SITE = re.compile(r"^(@myl\.site\.\d+ = private constant %myl\.site \{ i32 -?\d+, )i32 -?\d+, i32 -?\d+, ")
 
 
-def normalize(text, root):
+QUOTED = re.compile(r'@"[^"]*"')
+FN_NAME = re.compile(r'^(@myl\.(?:fn|path)\.\d+ = private constant )\[\d+ x i8\] c"[^"]*"')
+
+
+def rename(text):
+    """Quoted symbols (`@"my.module::name"`, `@"my.lambda@OFFSET"`) renamed in order of first
+    appearance: the redesign's headerless entry modules drop the `module::` prefix, and a lambda's
+    name carries its byte offset, which moves with any edit above it."""
+    names = {}
+    return QUOTED.sub(lambda m: names.setdefault(m.group(0), f'@"S{len(names)}"'), text)
+
+
+def normalize(text, root, symbols=True):
+    if symbols:
+        text = rename(text)
     lines = []
     for line in text.replace(str(root), "<ROOT>").split("\n"):
-        if line.startswith("source_filename") or re.match(r"^!\d+ = (distinct )?!DI", line) or line.startswith("!llvm.dbg.cu"):
+        # Debug metadata: `!DI*` nodes, and every node in the emitter's debug numbering range
+        # (from !1000000: the module flags that name the debug-info versions).
+        if (line.startswith(("source_filename", "!llvm.dbg.cu", "!llvm.module.flags")) or re.match(r"^!\d+ = (distinct )?!DI", line)
+                or re.match(r"^!1\d{6,} = ", line)):
             continue
         line = re.sub(r",? !dbg !\d+", "", line)
         line = SITE.sub(r"\1i32 L, i32 C, ", line)
+        if symbols:
+            line = FN_NAME.sub(r'\1[N x i8] c"FUNCTION"', line)
         lines.append(line)
     return "\n".join(lines)
 
 
-def load(tag, job):
+def load(tag, job, symbols=True):
     path = WORK / tag / f"{job[0]}.ll"
     if not path.exists():
         return None
-    return normalize(path.read_text(), (OLD if tag in "AX" else NEW)[job[1]])
+    return normalize(path.read_text(), (OLD if tag in "AX" else NEW)[job[1]], symbols)
 
 
 def main():
@@ -96,11 +118,13 @@ def main():
         if any(t is None for t in texts.values()):
             report["programs"][job[0]] = {"missing": [t for t, v in texts.items() if v is None]}
             continue
+        exact = {tag: load(tag, job, False) for tag in "PX"}
         report["programs"][job[0]] = {"P==X": texts["P"] == texts["X"], "M==A": texts["M"] == texts["A"],
-                                      "X==A": texts["X"] == texts["A"], "P==M": texts["P"] == texts["M"]}
+                                      "X==A": texts["X"] == texts["A"], "P==M": texts["P"] == texts["M"],
+                                      "P==X with names": exact["P"] == exact["X"]}
     Path(sys.argv[2]).write_text(json.dumps(report, indent=1) + "\n")
     rows = report["programs"]
-    for key in ("P==X", "M==A", "X==A", "P==M"):
+    for key in ("P==X", "M==A", "X==A", "P==M", "P==X with names"):
         differ = sorted(k for k, v in rows.items() if not v.get(key, False))
         print(f"{key}: {len(rows) - len(differ)} of {len(rows)} identical; not: {differ}")
 
