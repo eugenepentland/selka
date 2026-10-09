@@ -1,0 +1,126 @@
+STEP stage2b start 22:25:43
+STEP qualify-run2=0 22:27:43
+qualify=0 22:27:43
+  "qualified": true,
+  debug    matching 1518, mismatching 0, unsupported 0 (of 1518 tests; 1518 supported)
+  release  matching 1518, mismatching 0, unsupported 0 (of 1518 tests; 1518 supported)
+ok   gate exit 0
+ok   gate 88/88
+ok   fmt exit 0
+ok   qualify exit 0 (qualify-run2)
+ok   conformance debug 1518/0/0
+ok   conformance release 1518/0/0
+ok   fuzz200 exit 0
+ok   fuzz200 nine kinds PASS
+ok   fuzz200 no FAIL or STOP
+ok   build final
+ok   build base
+ok   lox conformance exit 0
+ok   lox vm normal 246/246
+ok   lox vm gc-stress 246/246
+ok   lox tree normal 241/241
+ok   lox tree gc-stress 241/241
+ok   lox port tests exit 0
+ok   lox port tests 65 passed
+ok   eda tests exit 0
+ok   eda tests 310 passed
+ok   run final exit 0
+ok   run final lox: 48, 0 not identical
+ok   run final eda: 34, 0 not identical
+ok   run final parity: 4, 0 not identical
+ok   run final rows: 46, 0 not identical
+ok   identity exit 0
+ok   identity lox: 48 cells, 48 identical
+ok   identity eda: 34 cells, 34 identical
+ok   identity parity: 4 cells, 4 identical
+ok   identity rows: 46 cells, 46 identical
+ok   part1b done
+ok   timing-prep lox builds
+ok   timing-prep rows build
+STEP part1 green 22:27:43
+STEP tables=0 22:27:47
+22:27:47 lox runtime start (LOX_SKIP=) load 6.43 3.29 2.57
+waiting for quiet CPUs before round 1 closures/vm: 83% busy
+round 1/3 done, load (1.89453125, 2.65478515625, 2.52392578125)
+round 2/3 done, load (1.623046875, 1.9580078125, 2.24755859375)
+waiting for quiet CPUs before round 3 strings/tree: 85% busy
+round 3/3 done, load (6.302734375, 5.5986328125, 3.7529296875)
+| script/engine | mylang:release | mylang-base:release | zig:release | zig:release-safe | rust:release | go:release |
+|---|---|---|---|---|---|---|
+| binary_trees/vm | 1562 ms (2.79x) | 2889 ms (5.16x) | 560 ms (1.00x) | 1366 ms (2.44x) | 715 ms (1.28x) | 885 ms (1.58x) |
+| binary_trees/tree | 257 ms (2.00x) | 265 ms (2.06x) | 128 ms (1.00x) | 276 ms (2.15x) | 172 ms (1.34x) | 200 ms (1.56x) |
+| closures/vm | 2269 ms (2.44x) | 4426 ms (4.75x) | 931 ms (1.00x) | 1340 ms (1.44x) | 1148 ms (1.23x) | 1077 ms (1.16x) |
+| closures/tree | 347 ms (1.89x) | 369 ms (2.01x) | 184 ms (1.00x) | 307 ms (1.67x) | 270 ms (1.47x) | 242 ms (1.32x) |
+| equality/vm | 2333 ms (2.31x) | 7382 ms (7.32x) | 1009 ms (1.00x) | 1103 ms (1.09x) | 1249 ms (1.24x) | 1356 ms (1.34x) |
+| equality/tree | 360 ms (1.90x) | 366 ms (1.93x) | 214 ms (1.13x) | 241 ms (1.27x) | 231 ms (1.22x) | 190 ms (1.00x) |
+| fib/vm | 1987 ms (2.94x) | 4521 ms (6.69x) | 676 ms (1.00x) | 879 ms (1.30x) | 921 ms (1.36x) | 801 ms (1.19x) |
+| fib/tree | 153 ms (1.51x) | 169 ms (1.66x) | 102 ms (1.00x) | 174 ms (1.72x) | 154 ms (1.52x) | 124 ms (1.22x) |
+| instantiation/vm | 1240 ms (2.75x) | 2185 ms (4.85x) | 451 ms (1.00x) | 649 ms (1.44x) | 712 ms (1.58x) | 878 ms (1.95x) |
+| instantiation/tree | 170 ms (1.31x) | 182 ms (1.40x) | 130 ms (1.00x) | 252 ms (1.94x) | 155 ms (1.19x) | 209 ms (1.60x) |
+| invocation/vm | 3556 ms (4.34x) | 5991 ms (7.31x) | 819 ms (1.00x) | 1376 ms (1.68x) | 1567 ms (1.91x) | 1370 ms (1.67x) |
+| invocation/tree | 606 ms (1.38x) | 597 ms (1.36x) | 440 ms (1.00x) | 821 ms (1.87x) | 520 ms (1.18x) | 668 ms (1.52x) |
+| method_call/vm | 2888 ms (3.11x) | 5988 ms (6.45x) | 929 ms (1.00x) | 1291 ms (1.39x) | 1331 ms (1.43x) | 1201 ms (1.29x) |
+| method_call/tree | 496 ms (1.73x) | 558 ms (1.95x) | 287 ms (1.00x) | 471 ms (1.64x) | 339 ms (1.18x) | 446 ms (1.55x) |
+| properties/vm | 2812 ms (3.54x) | 4831 ms (6.08x) | 794 ms (1.00x) | 1244 ms (1.57x) | 1354 ms (1.71x) | 1210 ms (1.52x) |
+| properties/tree | 497 ms (1.52x) | 540 ms (1.66x) | 326 ms (1.00x) | 560 ms (1.72x) | 384 ms (1.18x) | 474 ms (1.45x) |
+| string_equality/vm | 2112 ms (4.38x) | 6717 ms (13.92x) | 483 ms (1.00x) | 614 ms (1.27x) | 824 ms (1.71x) | 1091 ms (2.26x) |
+| string_equality/tree | 522 ms (3.31x) | 520 ms (3.30x) | 158 ms (1.00x) | 205 ms (1.30x) | 387 ms (2.46x) | 187 ms (1.19x) |
+| strings/vm | 1201 ms (2.00x) | 2658 ms (4.43x) | 600 ms (1.00x) | 1167 ms (1.94x) | 620 ms (1.03x) | 736 ms (1.23x) |
+| strings/tree | 153 ms (1.76x) | 156 ms (1.80x) | 87 ms (1.00x) | 151 ms (1.73x) | 120 ms (1.38x) | 114 ms (1.31x) |
+| trees/vm | 3256 ms (3.30x) | 5377 ms (5.46x) | 985 ms (1.00x) | 1453 ms (1.47x) | 1461 ms (1.48x) | 1327 ms (1.35x) |
+| trees/tree | 247 ms (1.72x) | 255 ms (1.78x) | 144 ms (1.00x) | 229 ms (1.59x) | 173 ms (1.21x) | 196 ms (1.37x) |
+| zoo/vm | 3291 ms (3.34x) | 5868 ms (5.96x) | 985 ms (1.00x) | 1551 ms (1.57x) | 1675 ms (1.70x) | 1510 ms (1.53x) |
+| zoo/tree | 562 ms (1.47x) | 618 ms (1.62x) | 382 ms (1.00x) | 669 ms (1.75x) | 499 ms (1.31x) | 568 ms (1.49x) |
+| zoo_batch/vm | 2679 ms (3.22x) | 5355 ms (6.44x) | 832 ms (1.00x) | 1276 ms (1.53x) | 1313 ms (1.58x) | 1154 ms (1.39x) |
+| zoo_batch/tree | 500 ms (1.56x) | 545 ms (1.70x) | 321 ms (1.00x) | 550 ms (1.71x) | 410 ms (1.28x) | 499 ms (1.55x) |
+
+0 failed runs; results in /home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/.mylang-cache/lox/results/20261008T222747Z-runtime
+runtime=0
+22:41:48 lox runtime end load 6.30 5.60 3.75
+results/20261008T222747Z-runtime
+STEP lox done 22:41:48
+22:41:48 eda runtime start load 6.30 5.60 3.75
+warm-up done, 34 cases x 6 binaries verified; loadavg (6.17578125, 5.59521484375, 3.77197265625)
+round 1/10 done, 34 cases x 6 binaries verified; loadavg (5.53369140625, 5.47607421875, 3.75244140625)
+round 2/10 done, 34 cases x 6 binaries verified; loadavg (5.33056640625, 5.4345703125, 3.748046875)
+round 3/10 done, 34 cases x 6 binaries verified; loadavg (4.9833984375, 5.36083984375, 3.73291015625)
+round 4/10 done, 34 cases x 6 binaries verified; loadavg (4.37060546875, 5.216796875, 3.703125)
+round 5/10 done, 34 cases x 6 binaries verified; loadavg (4.1005859375, 5.146484375, 3.6884765625)
+round 6/10 done, 34 cases x 6 binaries verified; loadavg (3.85205078125, 5.07763671875, 3.673828125)
+round 7/10 done, 34 cases x 6 binaries verified; loadavg (3.48681640625, 4.95947265625, 3.64990234375)
+round 8/10 done, 34 cases x 6 binaries verified; loadavg (3.28759765625, 4.8935546875, 3.63525390625)
+round 9/10 done, 34 cases x 6 binaries verified; loadavg (3.10400390625, 4.82861328125, 3.62109375)
+round 10/10 done, 34 cases x 6 binaries verified; loadavg (2.77978515625, 4.7021484375, 3.5927734375)
+exact-RSS round done (/usr/bin/time -f %M)
+
+binary        total(med)  total(min)  peak RSS  geomean ratio vs ...
+zig-fast          0.782s      0.768s     80 MiB  zig-safe 0.914  rust 0.910  go 0.375  mylang-base 0.759  mylang-final 0.795
+zig-safe          0.856s      0.844s     80 MiB  zig-fast 1.094  rust 0.996  go 0.410  mylang-base 0.830  mylang-final 0.870
+rust              0.845s      0.831s     44 MiB  zig-fast 1.099  zig-safe 1.004  go 0.412  mylang-base 0.834  mylang-final 0.874
+go                2.043s      1.977s     70 MiB  zig-fast 2.667  zig-safe 2.438  rust 2.428  mylang-base 2.023  mylang-final 2.122
+mylang-base       1.019s      0.999s     52 MiB  zig-fast 1.318  zig-safe 1.205  rust 1.200  go 0.494  mylang-final 1.049
+mylang-final      0.977s      0.955s     52 MiB  zig-fast 1.257  zig-safe 1.149  rust 1.144  go 0.471  mylang-base 0.954
+wrote /home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/ce2-x-20261008/results/eda-runtime.json
+eda=0
+22:43:11 eda runtime end load 2.64 4.64 3.58
+STEP eda done 22:43:11
+22:43:11 parity final start load 2.64 4.64 3.58
+parity final=1
+22:51:01 parity final end load 2.49 3.48 3.46
+22:51:01 parity base start load 2.49 3.48 3.46
+parity base=1
+22:54:38 parity base end load 2.10 3.00 3.30
+STEP parity done 22:54:38
+22:54:38 rows 1 start load 2.10 3.00 3.30
+rows 1=0
+22:57:12 rows 1 end load 1.68 2.52 3.07
+STEP rows 1 done 22:57:12
+22:57:12 rows 2 start load 1.68 2.52 3.07
+rows 2=0
+22:59:43 rows 2 end load 1.98 2.30 2.90
+STEP rows 2 done 22:59:43
+22:59:43 rows 3 start load 1.98 2.30 2.90
+rows 3=0
+23:02:13 rows 3 end load 1.37 1.98 2.69
+STEP rows 3 done 23:02:13
+STEP part3 done 23:02:13

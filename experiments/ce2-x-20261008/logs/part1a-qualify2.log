@@ -1,0 +1,4 @@
+qualify=0 22:27:43
+  "qualified": true,
+  debug    matching 1518, mismatching 0, unsupported 0 (of 1518 tests; 1518 supported)
+  release  matching 1518, mismatching 0, unsupported 0 (of 1518 tests; 1518 supported)

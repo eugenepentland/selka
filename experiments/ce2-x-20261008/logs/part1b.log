@@ -1,0 +1,23 @@
+final cac3d272c62e814c base ed975fde7234dec3 start 22:11:11
+build final=0 22:24:58
+build base=0 reused (the CE-X compiler is unchanged since run 1)
+lox conformance=0
+conformance engine=vm gc=normal: 246/246 passed
+conformance engine=vm gc=gc-stress: 246/246 passed
+conformance engine=tree gc=normal: 241/241 passed
+conformance engine=tree gc=gc-stress: 241/241 passed
+lox port tests=0
+65 passed, 0 cached, 0 failed, 0 skipped
+eda tests=0
+310 passed, 0 cached, 0 failed, 0 skipped
+run final=0 22:25:21
+lox: 48 cells, 0 not identical or uncounted: []
+eda: 34 cells, 0 not identical or uncounted: []
+parity: 4 cells, 0 not identical or uncounted: []
+rows: 46 cells, 0 not identical or uncounted: []
+identity=0 22:25:29
+parity: 4 cells, 4 identical, differing: []
+rows: 46 cells, 46 identical, differing: []
+eda: 34 cells, 34 identical, differing: []
+lox: 48 cells, 48 identical, differing: []
+part1b done 22:25:29

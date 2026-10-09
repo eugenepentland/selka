@@ -1,0 +1,19 @@
+--- harness/measure.py.morning	2026-10-08 16:52:25.970382058 +0000
++++ harness/measure.py	2026-10-08 16:52:25.985455312 +0000
+@@ -215,7 +215,15 @@
+         port_dir, config = lb.load_port(port)
+         for profile in wanted_profiles(profiles, port, config):
+             cache = (lb.lox_bench_dir() / "cache" / f"{port}-{profile}").resolve()
+-            binary = lb.build_port(port, profile, cache)
++            if os.environ.get("LOX_PREBUILT"):
++                # CE-X: binaries were built beforehand, outside the CPU-10 lock; never build here.
++                spec = config["profiles"][profile]
++                binary = Path(lb.substitute(spec["binary"], cache, port_dir))
++                binary = binary if binary.is_absolute() else port_dir / binary
++                if not binary.exists():
++                    raise SystemExit(f"LOX_PREBUILT: {binary} does not exist")
++            else:
++                binary = lb.build_port(port, profile, cache)
+             # `exec` (optional) is the command prefix to time instead of `binary`, for a port
+             # whose `binary` is a launcher script (mylang's lox.sh adds a leading `--`).
+             exec_prefix = config["profiles"][profile].get("exec")
