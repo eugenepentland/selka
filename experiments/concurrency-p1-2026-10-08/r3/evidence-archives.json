@@ -19,5 +19,13 @@
     "archive": "r3/p1-1-logs.tar.xz",
     "sha256": "f9c1edfe9b23c1682c5859ffe8a4733721cd688d016f067ac9153779601e93c3",
     "bytes": 86232
+  },
+  "raw/r3-C1.tar.xz": {
+    "sha256": "f1a3778eb0449a842febbee0a5b5a14d1962fcbcdc0caa5aa9e74f4af234873d",
+    "bytes": 1060356
+  },
+  "r3/helper-logs.tar.xz": {
+    "sha256": "ebfc0476f0ad2996f77ac15a378bbf544c39d33dda9e01e972462be9fc4b194b",
+    "bytes": 65540
   }
 }

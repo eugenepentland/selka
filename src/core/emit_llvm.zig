@@ -3191,7 +3191,7 @@ const FunctionEmitter = struct {
     }
 
     /// Plain counts update inline after one threshold test. Shared counts and plain
-    /// saturation use one cold preserve-most call; immortal constants stay read-only.
+    /// saturation use one cold preserve-most call; the cold arm skips immortals inline.
     fn countBlock(self: *FunctionEmitter, out: *Out, mode: Counting, block: []const u8, block_type: ir.Type) !void {
         if (self.may_be_empty) {
             // An `undef` value is all null pointers (`undefValue`): nothing to count.
@@ -3209,6 +3209,8 @@ const FunctionEmitter = struct {
         }
         const count = try self.fresh("%rc");
         const plain = try self.fresh("%rp");
+        const saturated = try self.fresh("%rs");
+        const shared = try self.fresh("rc.shared");
         const update = try self.fresh(if (mode == .retain) "rc.inc" else "rc.dec");
         const slow = try self.fresh("rc.slow");
         const done = try self.fresh(self.label);
@@ -3225,7 +3227,7 @@ const FunctionEmitter = struct {
             try out.print(self.a(), "{s}:\n  store i32 {s}, ptr {s}, align 8, " ++ tbaa_count ++ "\n  br label %{s}\n", .{ keep, next, block, done });
             try out.print(self.a(), "{s}:\n  call void @myl_core_free(ptr {s})\n  br label %{s}\n", .{ free, block, done });
         }
-        try out.print(self.a(), "{s}:\n", .{slow});
+        try out.print(self.a(), "{s}:\n  {s} = icmp eq i32 {s}, -1\n  br i1 {s}, label %{s}, label %{s}\n{s}:\n", .{ slow, saturated, count, saturated, done, shared, shared });
         try out.print(self.a(), "  call preserve_mostcc void @myl_core_{s}_slow(ptr {s})\n  br label %{s}\n{s}:\n", .{ @tagName(mode), block, done, done });
         self.label = done;
     }

@@ -2,10 +2,10 @@
 
 ## Current progress — 2026-10-09
 
-- **Done:** Fast-forwarded to `0ee93b396`. R9/R10 is committed at `9477f7673`; moved main `cafe7fea7` was merged with real merge `42041fa45`. The corresponding comparison merge is `94dc1c3a2`. No push, main merge, or Claude worktree/branch modification occurred.
-- **Measured:** R9 initially selects B: five-cell geomean **0.997061×**, C **0.997773×**. Both pass median cell limits; B/C `json::read_value` sizes are 8,061/8,472 bytes, versus baseline 7,068/7,052/7,020 at K=4/5/6. [All five-cell alignment ratios](r3/results/five-cell.md). The complete initial tax results are below. All correctness gates required at P1-1 passed.
-- **Decided:** Keep B pending the bounded tax investigation. The four row misses and EDA/Lox geomean misses trigger investigation under §9.1, not a stop. Disassembly identifies a needless ordinary-call register-save cost inside B's immortal release helper. `r3/helper-preservation.patch` is an isolated experiment, not yet adopted. The per-thread runtime is also still staged outside the implementation tree.
-- **Next:** Complete that investigation and P1-1 checkpoint, then P1-2 through P1-6 and read-only P2-0. **P1 is not complete.**
+- **Done:** Fast-forwarded to `0ee93b396`; R9/R10 committed at `9477f7673`; main `cafe7fea7` merged by real merge `42041fa45`. Comparison baseline: `94dc1c3a2`. Checkpoint `9f68e16d2` restores real native contention and records every initial tax failure. No push or main/Claude modification occurred.
+- **Measured:** The runtime-helper investigation removes the large string-join regression. With the common refined runtime, **C wins R9's five-cell comparison**: 1.013078× versus B's 1.023796×. C's 92-cell row geomean is **0.996360×**, and EDA passes at **1.004482×** with no cell above 1.03. Its full Debug gate passes **88/88 steps, 2,101 executed tests**; fmt passes; pre-commit qualification passes **510 Core tests and 1518/0/0 conformance in both modes**. Lox conformance/65 port tests, EDA 310 tests/34 goldens, and all 132 counted/plain cells pass again.
+- **Decided:** Adopt C and the internal preserve-most release/free adapters. The initial B/C run remains below; the new comparison gives both variants the same runtime refinement and again follows R9's five-cell rule. Six row cells remain above 1.03 and stay recorded for the final P1-6 check. EDA's initial proximity to the 1.03 hard stop was resolved by this investigation.
+- **Next:** Qualify the committed C implementation, run the frozen fuzz matrices, and complete C's Lox/parity tax before the P1-1 checkpoint. Then continue P1-2 through P1-6 and read-only P2-0. **P1 is not complete.**
 
 ### Revision-3 correctness checkpoint
 
@@ -29,6 +29,22 @@ Each cell uses the median of paired K=4,5,6 ratios, with CE-X's rounds and input
 | parity | 45 | 0.999173 | 0 | 1.65–20.54 | [all cells / alignments](r3/results/p1-1-tax-parity.md) |
 
 The row misses are `string_search/64` **1.044908**, `string_join/64` **1.295063**, `csv_aggregate/4096` **1.070642**, and `csv_aggregate/64` **1.082134**. Every table links to raw `.json.gz` samples in the same directory; these retain base and package wall times, all rounds, startup samples, load and binary hashes. The initial five-cell comparison and this full sweep are both retained; later measurements do not erase either.
+
+### Revision-3 helper refinement — C selected
+
+The emitted slow path remains the approved C alternative: a cold immortal check followed by one preserve-most call. Internally, `count_release_shared` also preserves registers, and a second preserve-most adapter isolates the ordinary C free call to the last shared owner. CAS loops, count memory order, and the plain path are unchanged. A new guest test joins immortal and allocated strings and verifies both output and leak-free destruction.
+
+| comparison | B with refined helpers | C with refined helpers |
+|---|---:|---:|
+| R9 five-cell geomean | 1.023796 | **1.013078** |
+| 92 row/size cells, geomean | 0.998804 | **0.996360** |
+| row cells above 1.03 | 4 | 6 |
+| `string_join/64` | 1.011527 | 0.996833 |
+| EDA geomean | 1.015979 | **1.004482** |
+| EDA cells above 1.03 | 1 | 0 |
+| `json::read_value` bytes, K=4/5/6 | 8061/8061/8061 | 8472/8472/8472 |
+
+[Every row, base/package time and alignment](r3/results/helper-tax-rows.md); [every EDA case](r3/results/helper-tax-eda.md); [compiler identities and sizes](r3/results/helper-variants.json); [build, native-test, full-gate and external logs](r3/helper-logs.tar.xz). C's remaining row misses are `list_append/64` 1.038567, `string_search/64` 1.040646, `csv_aggregate/4096` 1.037795, `csv_aggregate/64` 1.039146, `record_pass/4096` 1.051673 and `union_find/4096` 1.042637. These are checkpoint misses, not passes. [Pre-commit qualification](r3/C1-qualify/summary.json), [external status/times](r3/results/C1-external.json), [counted/plain summaries](results/r3-C1/), and [counter JSON](raw/r3-C1.tar.xz) retain this candidate's correctness evidence. The ReleaseFast compiler was built from the isolated C1 source archive before adoption; its implementation files match the adopted emitter/runtime (apart from a comment), and its binary hash is retained.
 
 ## Historical P1-1 report (before revisions 2 and 3)
 

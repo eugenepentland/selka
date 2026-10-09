@@ -89,3 +89,11 @@
 - **Reversibility:** Easy; archives extract to original package-relative paths. Counter JSON is byte-identical to the original output; only its gzip container is removed.
 
 The historical fuzz archives were also transcoded from gzip to xz with identical uncompressed tar bytes, and historical `.log` files were gzip-compressed with verified contents. Report links were updated and `r3/historical-recompression.json` records the tar hashes. This reduces the package to 7.78 MB and leaves room for the remaining steps without dropping evidence.
+
+## 2026-10-09 · P1-1 investigation — adopt refined C
+
+- **Question:** Which approved path should remain after the helper refinement, and are the misses a hard stop?
+- **Options:** Keep the original B despite the newly measured refinement; use refined B; use refined C under the same R9 selection rule.
+- **Evidence:** Both refined variants ran the same 92 cells, three paired layouts and seven rounds. Their R9 five-cell geomeans are B1 1.023796 and C1 1.013078, selecting C1. Full-row geomeans are 0.998804/0.996360; `string_join/64` is 1.011527/0.996833, resolving original B's 1.295063 miss. EDA improves to B1 1.015979 and C1 1.004482 (C1 has no cell above 1.03). C1 retains six row misses listed in REPORT.md. JSON `read_value` remains 8061 bytes for B1 and 8472 for C1 at each K. The internal helper experiment passes three focused shared-count tests with live assertions. The adopted C tree passes the full Debug gate (88 steps, 2101 executed tests), fmt, pre-commit qualification (510 Core tests; both conformance modes 1518/0/0), both Lox conformance modes/65 tests, EDA 310 tests/all goldens and all 132 counted/plain cells.
+- **Choice:** Adopt refined C, requalify the committed implementation and run both frozen fuzz matrices, then finish its Lox/parity tax. Continue into P1-2 if no corpus exceeds the §9.1 hard stop after investigation. Do not erase initial or refined-B failures. The ordinary/refined code and R9's variant selection are both measured; none of C1–C7 or R1–R11 changes. The short-guest build settle=0 setting is also used for this repeated counted/plain build; slot/memory/CPU admission still applies.
+- **Reversibility:** Easy; all three compiler hashes, the C emitter patch, the helper patch, complete samples and prior commits are retained. No frozen IR or ownership pass is edited.

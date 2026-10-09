@@ -130,6 +130,26 @@ test "shared count emission uses unordered reads, plain thresholds and cold help
     try std.testing.expect(std.mem.indexOf(u8, text, "call preserve_mostcc void @myl_core_release_slow(ptr") != null);
 }
 
+// spec-case: SHARED-COUNTS-1
+test "shared count cold dispatch preserves immortal and allocated strings through one join" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var refusal: @import("build.zig").Refusal = .{};
+    var module = try support.buildSource(arena.allocator(),
+        \\def choose(flag: bool, text: str) -> str:
+        \\    return "constant" if flag else text
+        \\def main(out: Stream) -> int:
+        \\    for i in range(4):
+        \\        text = str(40 + i)
+        \\        out.print(choose(i % 2 == 0, text), text)
+        \\    return 0
+    , &refusal);
+    const run = try support.runOwned(arena.allocator(), &module, .{ .release = true });
+    try std.testing.expectEqual(@as(u8, 0), run.status);
+    try std.testing.expectEqualStrings("", run.stderr);
+    try std.testing.expectEqualStrings("constant 40\n41 41\nconstant 42\n43 43\n", run.stdout);
+}
+
 // The compiler supplies the type checking: rename just myl_block.count, plus
 // its sanctioned access sites. A new unsanctioned access fails C compilation,
 // even through a typedef or a renamed pointer; unrelated .count fields survive.
