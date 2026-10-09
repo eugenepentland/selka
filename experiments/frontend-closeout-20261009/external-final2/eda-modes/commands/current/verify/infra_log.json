@@ -1,0 +1,62 @@
+{
+  "actual_tests": 0,
+  "command": [
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/artifacts/mylang-qualified",
+    "test",
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/infra_log.my",
+    "--json",
+    "--force",
+    "--jobs",
+    "1",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/external-final2/eda-modes/cache",
+    "--release",
+    "--verify-facts",
+    "--max-frames=30000",
+    "--max-steps=4000000000",
+    "--max-memory=2G"
+  ],
+  "complete_report_exact": false,
+  "cwd": "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda",
+  "elapsed_seconds": 0.029524712124839425,
+  "expected_statuses_equal": true,
+  "functional_membership_pass": true,
+  "membership_equal_after_explicit_module_mapping": true,
+  "nonpassing": 0,
+  "process_status_equal": true,
+  "reference_command": [
+    "/home/epentland/.cache/mylang/frontend-20261008/mylang-s5-pin/bin/mylang",
+    "test",
+    "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/infra_log.my",
+    "--json",
+    "--force",
+    "--jobs",
+    "1",
+    "--cache-dir",
+    "/home/epentland/.cache/mylang/frontend-current-eda-oracle-20261008",
+    "--release",
+    "--verify-facts",
+    "--max-frames=30000",
+    "--max-steps=4000000000",
+    "--max-memory=2G"
+  ],
+  "reference_receipt_sha256": "4e8b5e6307f35167960f2fefb0caad6fb20f5c38c95ff548f39b7707ee9f3e21",
+  "reference_returncode": 3,
+  "reference_tests": 0,
+  "report_changes": [
+    {
+      "candidate": [
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/infra_log.my"
+      ],
+      "field": "sources",
+      "reference": [
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/infra_log.my"
+      ]
+    }
+  ],
+  "returncode": 3,
+  "stderr_exact": true,
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stdout_sha256": "63481b4542dd416e35dc0a77eeeaf8ad3d6e57ec3a3deadc75f3f1429dbb4fae",
+  "timeout": false
+}

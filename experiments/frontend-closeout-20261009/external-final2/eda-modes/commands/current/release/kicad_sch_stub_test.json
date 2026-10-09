@@ -1,0 +1,117 @@
+{
+  "actual_tests": 2,
+  "command": [
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/artifacts/mylang-qualified",
+    "test",
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_sch_stub_test.my",
+    "--json",
+    "--force",
+    "--jobs",
+    "1",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/external-final2/eda-modes/cache",
+    "--release",
+    "--max-frames=30000",
+    "--max-steps=4000000000",
+    "--max-memory=2G"
+  ],
+  "complete_report_exact": false,
+  "cwd": "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda",
+  "elapsed_seconds": 1.5785627998411655,
+  "expected_statuses_equal": true,
+  "functional_membership_pass": true,
+  "membership_equal_after_explicit_module_mapping": true,
+  "nonpassing": 0,
+  "process_status_equal": true,
+  "reference_command": [
+    "/home/epentland/.cache/mylang/frontend-20261008/mylang-s5-pin/bin/mylang",
+    "test",
+    "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sch_stub_test.my",
+    "--json",
+    "--force",
+    "--jobs",
+    "1",
+    "--cache-dir",
+    "/home/epentland/.cache/mylang/frontend-current-eda-oracle-20261008",
+    "--release",
+    "--max-frames=30000",
+    "--max-steps=4000000000",
+    "--max-memory=2G"
+  ],
+  "reference_receipt_sha256": "818da7b32d2144a94064270f3ab11a021ac0470c232f72cf65aa795e3259cf55",
+  "reference_returncode": 0,
+  "reference_tests": 2,
+  "report_changes": [
+    {
+      "candidate": [
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_sch_stub_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/kicad_sch_stub.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/flat_netlist.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/eval_env.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/sexpr_ast.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/pad_neck_profile.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/numeric.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/support_crc32.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/support_strs.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/eval_net_analysis.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/net_name.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/support_sha256.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/uuid.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/support_expect.my"
+      ],
+      "field": "sources",
+      "reference": [
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sch_stub_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/kicad_sch_stub.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/flat_netlist.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/eval_env.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/sexpr_ast.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/pad_neck_profile.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/numeric.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/support_crc32.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/support_strs.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/eval_net_analysis.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/net_name.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/support_sha256.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/uuid.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/support_expect.my"
+      ]
+    },
+    {
+      "candidate": [
+        {
+          "at": "",
+          "name": "src.kicad_sch_stub_test::test_kicad_sch_collapse_renames_a_real_bypass_stub_and_refuses_everything_else",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "src.kicad_sch_stub_test::test_kicad_sch_split_reads_the_last_two_dots_and_rejects_a_name_without_both",
+          "reason": "",
+          "status": "passed"
+        }
+      ],
+      "field": "tests",
+      "reference": [
+        {
+          "at": "",
+          "name": "kicad_sch_stub_test::test_kicad_sch_collapse_renames_a_real_bypass_stub_and_refuses_everything_else",
+          "reason": "",
+          "status": "passed"
+        },
+        {
+          "at": "",
+          "name": "kicad_sch_stub_test::test_kicad_sch_split_reads_the_last_two_dots_and_rejects_a_name_without_both",
+          "reason": "",
+          "status": "passed"
+        }
+      ]
+    }
+  ],
+  "returncode": 0,
+  "stderr_exact": true,
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stdout_sha256": "c52a15bdecf94ef5ee8e05fade122939c3910e2935db3f76559e4f4e878efea6",
+  "timeout": false
+}

@@ -1,0 +1,32 @@
+{
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/external-final2/artifacts/lox-release",
+    "--engine=tree",
+    "--gc-stress",
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/lox/benchmarks/lox/corpus/test/function/missing_comma_in_parameters.lox"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/lox",
+  "exit_code": 65,
+  "elapsed_seconds": 0.0010790880769491196,
+  "timeout_seconds": 60,
+  "affinity": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_sha256": "da63eaaf0ba47e40a6a97aa707407e34324b5c086a990b29cae69718832fea29"
+}

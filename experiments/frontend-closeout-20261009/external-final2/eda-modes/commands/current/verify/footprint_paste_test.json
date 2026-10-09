@@ -1,0 +1,93 @@
+{
+  "actual_tests": 1,
+  "command": [
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/artifacts/mylang-qualified",
+    "test",
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/footprint_paste_test.my",
+    "--json",
+    "--force",
+    "--jobs",
+    "1",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/external-final2/eda-modes/cache",
+    "--release",
+    "--verify-facts",
+    "--max-frames=30000",
+    "--max-steps=4000000000",
+    "--max-memory=2G"
+  ],
+  "complete_report_exact": false,
+  "cwd": "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda",
+  "elapsed_seconds": 0.3732612528838217,
+  "expected_statuses_equal": true,
+  "functional_membership_pass": true,
+  "membership_equal_after_explicit_module_mapping": true,
+  "nonpassing": 0,
+  "process_status_equal": true,
+  "reference_command": [
+    "/home/epentland/.cache/mylang/frontend-20261008/mylang-s5-pin/bin/mylang",
+    "test",
+    "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/footprint_paste_test.my",
+    "--json",
+    "--force",
+    "--jobs",
+    "1",
+    "--cache-dir",
+    "/home/epentland/.cache/mylang/frontend-current-eda-oracle-20261008",
+    "--release",
+    "--verify-facts",
+    "--max-frames=30000",
+    "--max-steps=4000000000",
+    "--max-memory=2G"
+  ],
+  "reference_receipt_sha256": "0c53f5fa3e4a6a1460dbf0f994c0bdaf7bbc86cc4bc972d5e6cace51a9cf7476",
+  "reference_returncode": 0,
+  "reference_tests": 1,
+  "report_changes": [
+    {
+      "candidate": [
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/footprint_paste_test.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/footprint_paste.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/sexpr_ast.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/support_float_fmt.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/sexpr_parser.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/sexpr_tokenizer.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/support_expect.my"
+      ],
+      "field": "sources",
+      "reference": [
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/footprint_paste_test.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/footprint_paste.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/sexpr_ast.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/support_float_fmt.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/sexpr_parser.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/sexpr_tokenizer.my",
+        "/home/epentland/ai/canopy/eda-bench-wt/codex-frontend-fp2-eda/mylang/src/support_expect.my"
+      ]
+    },
+    {
+      "candidate": [
+        {
+          "at": "",
+          "name": "src.footprint_paste_test::test_ic_package_paste_parsing_empty_and_malformed",
+          "reason": "",
+          "status": "passed"
+        }
+      ],
+      "field": "tests",
+      "reference": [
+        {
+          "at": "",
+          "name": "footprint_paste_test::test_ic_package_paste_parsing_empty_and_malformed",
+          "reason": "",
+          "status": "passed"
+        }
+      ]
+    }
+  ],
+  "returncode": 0,
+  "stderr_exact": true,
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stdout_sha256": "43ef5e01b5cf06c87c4293966a6ffcc3f755844f310e70c2283c0f6304dbd359",
+  "timeout": false
+}

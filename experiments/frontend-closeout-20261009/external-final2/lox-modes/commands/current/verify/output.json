@@ -1,0 +1,68 @@
+{
+  "actual_tests": 0,
+  "command": [
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/artifacts/mylang-qualified",
+    "test",
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/lox/benchmarks/lox/ports/mylang/output.my",
+    "--json",
+    "--force",
+    "--jobs",
+    "1",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/external-final2/lox-modes/cache",
+    "--release",
+    "--verify-facts",
+    "--max-steps=100000000"
+  ],
+  "complete_report_exact": false,
+  "cwd": "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/lox",
+  "elapsed_seconds": 0.10044019715860486,
+  "expected_statuses_equal": true,
+  "functional_membership_pass": true,
+  "membership_equal_after_explicit_module_mapping": true,
+  "nonpassing": 0,
+  "process_status_equal": true,
+  "reference_command": [
+    "/home/epentland/.cache/mylang/frontend-20261008/mylang-s5-pin/bin/mylang",
+    "test",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox/benchmarks/lox/ports/mylang/output.my",
+    "--json",
+    "--force",
+    "--jobs",
+    "1",
+    "--cache-dir",
+    "/home/epentland/.cache/mylang/frontend-current-lox-oracle-20261008",
+    "--release",
+    "--verify-facts",
+    "--max-steps=100000000"
+  ],
+  "reference_receipt_sha256": "24d1f3dfd545c0b15cd5d44b0909b5f781f9d7551f2f3904144e4efbefe9f748",
+  "reference_returncode": 3,
+  "reference_tests": 0,
+  "report_changes": [
+    {
+      "candidate": [
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/lox/benchmarks/lox/ports/mylang/output.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/lox/benchmarks/lox/ports/mylang/heap.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/lox/benchmarks/lox/ports/mylang/object.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/lox/benchmarks/lox/ports/mylang/chunk.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/lox/benchmarks/lox/ports/mylang/value.my",
+        "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/lox/benchmarks/lox/ports/mylang/table.my"
+      ],
+      "field": "sources",
+      "reference": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox/benchmarks/lox/ports/mylang/output.my",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox/benchmarks/lox/ports/mylang/heap.my",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox/benchmarks/lox/ports/mylang/object.my",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox/benchmarks/lox/ports/mylang/chunk.my",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox/benchmarks/lox/ports/mylang/value.my",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fp2-lox/benchmarks/lox/ports/mylang/table.my"
+      ]
+    }
+  ],
+  "returncode": 3,
+  "stderr_exact": true,
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stdout_sha256": "ee06d2058e8de32da4daeab08ca4f0199b9844cc5e588dee3596251bd98a0f02",
+  "timeout": false
+}

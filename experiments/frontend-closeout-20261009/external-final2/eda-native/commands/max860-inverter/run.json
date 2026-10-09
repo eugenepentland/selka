@@ -1,0 +1,35 @@
+{
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/external-final2/artifacts/eda-release",
+    "--model",
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/golden/cases/max860-inverter/model.sexp",
+    "--project-dir",
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/golden/projects/designs",
+    "--out-dir",
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/external-final2/eda-native/outputs/max860-inverter"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda",
+  "exit_code": 0,
+  "elapsed_seconds": 0.08776762406341732,
+  "timeout_seconds": 600,
+  "affinity": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "stdout_sha256": "00d383b72740197b9c64f9c8bb59296619f56039f0f7c9a90b89f4bd85b6dc00",
+  "stderr_sha256": "c77428716cff08fa61b5e861d4a9a9ec64cd67d70283863afe6bacb0d0cd656c"
+}
