@@ -108,3 +108,13 @@ Options: guard only newline restarts, or also the dedent that ends the damaged s
 Evidence: the requested malformed-elif regression produces two diagnostics instead of one. Recovery can stop on either boundary.
 Choice: guard both with one continuation predicate. elif/else/case are tokens; except/finally are ordinary identifiers in this language, so recognize only their unsupported clause-header form ending in an indent token. This avoids swallowing independent assignments to valid locals named except or finally. Tests cover all five clause forms, subsequent independent errors and those identifier assignments. No partial tree is published.
 Reversibility: error synchronization only; no exception syntax or new reserved word is introduced.
+
+## D14 — F7 converts console source to executable fences
+
+Question: teach doctest shell execution/extraction, or make the source explicit in existing checked fences?
+Options: introduce a shell transcript runner, or convert examples and reject future embedded source.
+Evidence: the new doctest regression fails to identify a cat grow.my transcript and a shell heredoc. The scan also finds package and private-test-module examples with removed module headers.
+Choice: convert all seven .my cat payloads in five active guides to mylang fences, with project/file directives for multi-file examples. Keep command/output transcripts separate. Extend the mis-tag lint specifically to cat commands with a .my operand followed by content; command-only and interface-output transcripts remain valid. The deliberately huge memory-budget program is type-checked rather than run without its documented byte ceiling. Convert the recursive record fragment to a checked fence; update stale binding/list/enum/Unit/try prose and noalloc warning semantics. Retain the old generic-section anchor while updating the active feature pointer.
+Reversibility: documentation and documentation-gate coverage only; no guest syntax change.
+
+F7 validation follow-up: a grouped private test module cannot use an unrelated neutral main as evidence, because check-project checks only reachable modules; importing that test module would remove its private-access privilege. Add optional `# doc: entry <file>.my`, constrained to one file declared in the project, and check scanner_test.my as the entry. Its missing main receives the runner's existing neutral stub. The new planning regression first fails with action invalid; the actual documentation run validates the private call. No shell execution or new guest syntax is introduced.

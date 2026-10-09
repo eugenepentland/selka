@@ -521,5 +521,84 @@
     "failures": [],
     "log_sha256": "a0f5dbdd5ab559258ed45ef23601352d837e255c960f9996e6655299c0a56d85",
     "log_bytes": 395680
+  },
+  {
+    "phase": "F7-red",
+    "command": "zig build test-units -Dtest-filter=F7 doctest --summary all",
+    "source_commit": "cf2d77e7556e26601c91ed3ace3ffaf2e54cd20f",
+    "status": 1,
+    "summary": "Build Summary: 6/8 steps succeeded (1 failed); 7/8 tests passed (1 failed)",
+    "test_verdicts": {
+      "passed": 7,
+      "failed": 1,
+      "skipped": 0
+    },
+    "failures": [
+      "doctest_command.test.F7 doctest detects unchecked console programs without mistaking command output for source"
+    ],
+    "log_sha256": "d23d0342345cec142b69b4a1bd96e36c10e3a8f69de46c74904baa4a3a2ddb79",
+    "log_bytes": 2511
+  },
+  {
+    "phase": "F7-entry-red",
+    "command": "zig build test-units -Dtest-filter=F7 doctest checks --summary all",
+    "source_commit": "cf2d77e7556e26601c91ed3ace3ffaf2e54cd20f",
+    "status": 1,
+    "summary": "Build Summary: 6/8 steps succeeded (1 failed); 7/8 tests passed (1 failed)",
+    "test_verdicts": {
+      "passed": 7,
+      "failed": 1,
+      "skipped": 0
+    },
+    "failures": [
+      "doctest_command.test.F7 doctest checks a private test module as its own project entry"
+    ],
+    "log_sha256": "dad0846de2f5beb16d0fa8db7d72f81dbafe99ca4091c985e744a0d2cd355e47",
+    "log_bytes": 2759
+  },
+  {
+    "phase": "F7-focused",
+    "command": "zig build test-units -Dtest-filter=doctest --summary all",
+    "source_commit": "cf2d77e7556e26601c91ed3ace3ffaf2e54cd20f",
+    "status": 0,
+    "summary": "Build Summary: 8/8 steps succeeded; 23/23 tests passed",
+    "test_verdicts": {
+      "passed": 23,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "eca9fbffa7d9314c7700e77b49949932a2eb736816a062a5a9a2ab3dd3095034",
+    "log_bytes": 1673
+  },
+  {
+    "phase": "F7-full",
+    "command": "zig build test --summary all",
+    "source_commit": "cf2d77e7556e26601c91ed3ace3ffaf2e54cd20f",
+    "status": 0,
+    "summary": "Build Summary: 95/95 steps succeeded; 2307/23679 tests passed (21372 skipped)",
+    "test_verdicts": {
+      "passed": 2307,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "288e60ace914f72045ca0a40ed554fa710cd173bf095e5c773e7f96e55fd860d",
+    "log_bytes": 396708
+  },
+  {
+    "phase": "F7-final",
+    "command": "zig build test --summary all",
+    "source_commit": "cf2d77e7556e26601c91ed3ace3ffaf2e54cd20f",
+    "status": 0,
+    "summary": "Build Summary: 95/95 steps succeeded; 600/4800 tests passed (4200 skipped)",
+    "test_verdicts": {
+      "passed": 600,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "9146b9a7fae2e40e3041a5a5a64d66ac87d0384884ff5fb6c7ba5c0729c5ba78",
+    "log_bytes": 325493
   }
 ]

@@ -31,15 +31,17 @@ func main() -> int:
     return double[int](pick[int](21, 0, True))
 ```
 
-## Generic records and unions
+<a id="generic-records-and-unions"></a>
 
-`record Name[T]:` and `union Name[T]:` take the same parameter lists. An instance
+## Generic records and enums
+
+`record Name[T]:` and `enum Name[T]:` take the same parameter lists. An instance
 is identified by the declaration plus its ordered arguments, so `Box[int]` and
 `Box[bool]` are unrelated types that never share a schema, and two declarations
 with identical fields stay distinct. Construct a generic record with its
 arguments spelled out, `Box[int](value=7)`, because a square-bracket application
-in call position names a record when the base is a type. A generic union case
-names only its template — `Slot.some(value)`, never `Slot[int].some(value)`,
+in call position names a record when the base is a type. A generic enum case
+names only its template — `Slot.some(value=x)`, never `Slot[int].some(value=x)`,
 which cannot be told apart from an index followed by a call — so its arguments
 come from the expected type of a binding annotation, parameter, field or result,
 and `E_GENERIC_INFERENCE` is reported when no context supplies them.
@@ -169,9 +171,10 @@ func main() -> int:
 - A declaration takes at most 16 combined type and constant-length arguments, and
   a program is bounded at 4,096 function specializations.
 - `main` cannot be generic.
-- Generic function bodies reject `print`, the file builtins and `with arena()`
-  with `E_GENERIC_BODY_UNSUPPORTED`. Write an ordinary function and call it from
-  the generic one.
+- Generic function bodies reject direct file operations and `with` resource
+  scopes with `E_GENERIC_BODY_UNSUPPORTED`. Put those operations in an ordinary
+  helper and call it from the generic function. `with arena()` is retired in
+  every function; see [retired arenas](managed-memory.md#retired-arenas).
 - Structural contracts apply to function type parameters only.
 - The public schema lists generic templates separately from concrete functions
   and types, and schema export of a generic type constructor is unsupported.

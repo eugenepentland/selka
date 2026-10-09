@@ -688,20 +688,30 @@ type and constant of module `<name>`, so a helper need not become `public` just
 to be tested. Any other importer, including another module's test file, still
 gets `E_PRIVATE_SYMBOL`.
 
-```console
-$ cat scanner.my
-module scanner
+In `scanner.my`:
 
-
+```mylang
+# doc: project scanner-private
+# doc: file scanner.my
+# doc: check
 func is_digit(c: str) -> bool:
     return c in "0123456789"
-$ cat scanner_test.my
-module scanner_test
+```
+
+In `scanner_test.my`:
+
+```mylang
+# doc: project scanner-private
+# doc: file scanner_test.my
+# doc: entry scanner_test.my
 import scanner
 
 
 public func test_is_digit() -> bool:
     return scanner.is_digit("7") and not scanner.is_digit("x")
+```
+
+```console
 $ mylang test .
 passed scanner_test::test_is_digit
 1 passed, 0 cached, 0 failed, 0 skipped

@@ -436,15 +436,18 @@ depends on it.
 - [DOCTEST-1] `mylang doctest [<repo-root>] [--filter GLOB] [--report PATH] [--verbose]` walks
 `README.md`, `SPEC.md` and every `*.md` under `docs/` recursively, except `docs/legacy/`,
 extracts fenced `mylang`/`my` blocks, and applies the leading `# doc:` directives (`expect`,
-`expect-error`, `check`, `project`, `file`, `skip`, `not-mylang`, `allow-read`, `allow-write`).
+`expect-error`, `check`, `project`, `file`, `entry`, `skip`, `not-mylang`, `allow-read`, `allow-write`).
 Blocks sharing a `# doc: project <name>` are materialised as one multi-file project under a
-private temporary directory; every unit is then checked, run, check-project-ed or run-project-ed
+private temporary directory; an optional `entry` selects one declared project file instead
+of `main.my`. Every unit is then checked, run, check-project-ed or run-project-ed
 by the running compiler with `--diagnostics=json` and the same `--print-result` and
 `--restrict` capability-grant options the documentation gate used before. `expect` compares
 trimmed standard output, `expect-error` compares `diagnostic-v1` codes, and the command reports
 per-document tallies, mis-tagged prose fences and failures. `--report PATH` writes a
 `doc-examples-v1` JSON report, and the command exits 0 only when nothing failed, nothing was
-mis-tagged and at least one executable block was found.
+mis-tagged and at least one executable block was found. Console/shell fences containing
+source after a `cat` command naming a `.my` file are mis-tagged: put that program in
+checked `mylang` fences, using project/file directives for multiple files.
 - [DOCTEST-2] Units are independent, so `mylang doctest` executes them on a bounded pool of
 workers that pull from one shared cursor, each unit keeping its own private directory, child
 process and status. The width is `--jobs N`, then `MYLANG_JOBS`, then the machine's cores capped

@@ -545,7 +545,7 @@
     "generic-nominals": {
       "kind": "language",
       "summary": "Record and enum declarations take type parameters and specialize by argument identity.",
-      "doc": "docs/generics.md#generic-records-and-unions"
+      "doc": "docs/generics.md#generic-records-and-enums"
     },
     "structural-contracts": {
       "kind": "language",
