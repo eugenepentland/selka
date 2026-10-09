@@ -22,12 +22,17 @@ comptime {
     _ = @import("driver.zig");
     _ = @import("driver_test.zig");
     _ = @import("pipeline_emission_test.zig");
+    _ = @import("backend_owned_test.zig");
     _ = @import("driver_native_cache_test.zig");
     _ = @import("unit_cache.zig");
     _ = @import("build_replay.zig");
     _ = @import("driver_cache_test.zig");
     _ = @import("facts_test.zig");
     _ = @import("passes.zig");
+    _ = @import("stage_store_test.zig");
+    _ = @import("lowering_cache_test.zig");
+    _ = @import("optimization_cache_test.zig");
+    _ = @import("deferred_facts_test.zig");
     _ = @import("vector_test.zig");
     _ = @import("e2e_test.zig");
     _ = @import("values_test.zig");

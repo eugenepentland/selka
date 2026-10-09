@@ -792,6 +792,188 @@ test "durable semantic entries survive a new cache process and roll back cleanly
     }
 }
 
+const durable_body_source =
+    \\record Item:
+    \\    n: i64
+    \\
+    \\func helper(n: i64) -> i64:
+    \\    return Item(n=n).n + 1
+    \\
+    \\
+++ suffix;
+
+/// Keep less than one ordinary entry in memory, while keeping durable files.
+const DurableWork = struct { checked: usize, reused: usize, stored: usize, damaged: usize, misses: language.semantic_cache.MissCounts };
+fn transientDurableRun(root: []const u8, bytes: []const u8, expected: i64) !DurableWork {
+    const contract = cache_key.Contract.default;
+    const fingerprint = try contract.fingerprint(t.allocator);
+    defer t.allocator.free(fingerprint);
+    var store = semantic_store.Store.init(t.allocator, t.io, root, contract, language.semantic_cache.mutation_contract_version);
+    defer store.deinit();
+    var cache = Cache.initWithContract(t.allocator, 1, fingerprint);
+    defer cache.deinit();
+    cache.context.persistent = &store;
+    try compare(t.allocator, &cache, bytes, expected);
+    try t.expectEqual(@as(usize, 0), cache.entries.len);
+    try t.expectEqual(@as(usize, 0), cache.statistics.retained_bytes);
+    return .{
+        .checked = cache.statistics.checked,
+        .reused = cache.statistics.reused,
+        .stored = store.statistics.stored,
+        .damaged = store.statistics.damaged,
+        .misses = cache.statistics.misses,
+    };
+}
+
+// spec-case: SEMANTIC-CACHE-9
+test "durable bodies restore falls back for defaults outside the declaration region" {
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    const bytes =
+        \\record Item:
+        \\    n: i64 = 42
+        \\
+        \\func get() -> i64:
+        \\    return Item().n
+        \\
+        \\func main() -> i64:
+        \\    return get()
+    ;
+    _ = try transientDurableRun(root, bytes, 42);
+    const warm = try transientDurableRun(root, bytes, 42);
+    try t.expectEqual(@as(usize, 1), warm.checked);
+    try t.expectEqual(@as(usize, 1), warm.reused);
+    try t.expectEqual(@as(usize, 1), warm.misses[@backingInt(language.semantic_cache.MissReason.relocation_failed)]);
+}
+
+// spec-case: SEMANTIC-CACHE-9
+// spec-case: SEMANTIC-CACHE-15
+test "durable bodies restore beyond the retention budget with edits and remapped identities" {
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    const cold = try transientDurableRun(root, durable_body_source, 42);
+    try t.expectEqual(@as(usize, 3), cold.checked);
+    try t.expectEqual(@as(usize, 3), cold.stored);
+    const warm = try transientDurableRun(root, durable_body_source, 42);
+    try t.expectEqual(@as(usize, 0), warm.checked);
+    try t.expectEqual(@as(usize, 3), warm.reused);
+    try t.expectEqual(@as(usize, 0), warm.stored);
+    // Same-length edits must compare body bytes even on an on-demand hit.
+    const edited = try t.allocator.dupe(u8, durable_body_source);
+    defer t.allocator.free(edited);
+    edited[std.mem.indexOf(u8, edited, ".n + 1").? + 5] = '2';
+    const changed = try transientDurableRun(root, edited, 43);
+    try t.expectEqual(@as(usize, 1), changed.checked);
+    try t.expectEqual(@as(usize, 2), changed.reused);
+    try t.expectEqual(@as(usize, 1), changed.stored);
+    // Shift source, function and nominal type ordinals before restoring every
+    // old body; the fresh comparison checks values, facts and warning spans.
+    const shifted = try std.mem.concat(t.allocator, u8, &.{
+        "record Unrelated:\n    n: bool\n\nfunc uncalled() -> i64:\n    return 0\n\n",
+        edited,
+    });
+    defer t.allocator.free(shifted);
+    const moved = try transientDurableRun(root, shifted, 43);
+    try t.expectEqual(@as(usize, 1), moved.checked);
+    try t.expectEqual(@as(usize, 3), moved.reused);
+    const repeated = try transientDurableRun(root, shifted, 43);
+    try t.expectEqual(@as(usize, 0), repeated.checked);
+    try t.expectEqual(@as(usize, 4), repeated.reused);
+    try t.expectEqual(@as(usize, 0), repeated.stored);
+}
+
+// spec-case: SEMANTIC-CACHE-9
+// spec-case: SEMANTIC-CACHE-15
+test "durable bodies restore persistUnretained closes its batch on allocation failure" {
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    const contract = cache_key.Contract.default;
+    const fingerprint = try contract.fingerprint(t.allocator);
+    defer t.allocator.free(fingerprint);
+    var seed = Cache.initWithContract(t.allocator, 4 << 20, fingerprint);
+    defer seed.deinit();
+    var unit = try language.Compilation.init(t.allocator, "edited.my", prefix ++ suffix);
+    defer unit.deinit();
+    try unit.checkWithCache(&seed);
+    var failures = t.FailingAllocator.init(t.allocator, .{});
+    var store = semantic_store.Store.init(failures.allocator(), t.io, root, contract, language.semantic_cache.mutation_contract_version);
+    defer store.deinit();
+    var cache = Cache.initWithContract(t.allocator, 1, fingerprint);
+    defer cache.deinit();
+    cache.context.persistent = &store;
+    var session = try cache.begin(unit.arena.allocator(), unit.src, unit.syntax.?, unit.program.?.records);
+    try t.expectEqual(seed.entries.len, session.ranges.len);
+    for (seed.entries, session.ranges) |entry, *range| range.* = entry.range;
+    // beginBatch's namespace-existence probe allocates once; fail the first
+    // publication allocation after the batch is active, exercising cleanup.
+    failures.fail_index = failures.alloc_index + 1;
+    try t.expectError(error.OutOfMemory, session.remember(unit.program.?));
+    try t.expect(store.batch == null);
+    try t.expectEqual(@as(usize, 0), cache.entries.len);
+    failures.fail_index = std.math.maxInt(usize);
+    try session.remember(unit.program.?);
+    try t.expect(store.batch == null);
+    try t.expectEqual(@as(usize, 3), store.statistics.stored);
+    try t.expectEqual(@as(usize, 0), cache.statistics.retained_bytes);
+}
+
+// spec-case: SEMANTIC-CACHE-15
+test "a damaged on-demand body rechecks and republishes without retaining trees" {
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    _ = try transientDurableRun(root, durable_body_source, 42);
+    try t.expect(try truncateFirstEntry(t.allocator, root, cache_key.Contract.default));
+    const repaired = try transientDurableRun(root, durable_body_source, 42);
+    try t.expectEqual(@as(usize, 1), repaired.checked);
+    try t.expectEqual(@as(usize, 2), repaired.reused);
+    try t.expectEqual(@as(usize, 1), repaired.stored);
+    try t.expect(repaired.damaged > 0);
+    const warm = try transientDurableRun(root, durable_body_source, 42);
+    try t.expectEqual(@as(usize, 0), warm.checked);
+    try t.expectEqual(@as(usize, 3), warm.reused);
+    try t.expectEqual(@as(usize, 0), warm.stored);
+}
+
+// spec-case: SEMANTIC-CACHE-9
+test "durable restore combines a retained prefix with temporary body hits" {
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    const contract = cache_key.Contract.default;
+    const fingerprint = try contract.fingerprint(t.allocator);
+    defer t.allocator.free(fingerprint);
+    var store = semantic_store.Store.init(t.allocator, t.io, root, contract, language.semantic_cache.mutation_contract_version);
+    defer store.deinit();
+    var seed = Cache.initWithContract(t.allocator, 4 * 1024 * 1024, fingerprint);
+    defer seed.deinit();
+    seed.context.persistent = &store;
+    try compare(t.allocator, &seed, durable_body_source, 42);
+    // Allow the first entry and some arena growth variation, while excluding
+    // the complete snapshot. Both memory and durable paths must supply trees.
+    const budget = prefixRetainedCost(seed.entries[0..1]) + 1024;
+    try t.expect(budget < seed.statistics.retained_bytes);
+    var warm_store = semantic_store.Store.init(t.allocator, t.io, root, contract, language.semantic_cache.mutation_contract_version);
+    defer warm_store.deinit();
+    var warm = Cache.initWithContract(t.allocator, budget, fingerprint);
+    defer warm.deinit();
+    warm.context.persistent = &warm_store;
+    try compare(t.allocator, &warm, durable_body_source, 42);
+    try t.expect(warm.entries.len > 0 and warm.entries.len < 3);
+    try t.expect(warm.statistics.retained_bytes <= budget);
+    try t.expectEqual(@as(usize, 0), warm.statistics.checked);
+    try t.expectEqual(@as(usize, 3), warm.statistics.reused);
+    try t.expectEqual(@as(usize, 0), warm_store.statistics.stored);
+}
+
 const DurableRun = struct { checked: usize, reused: usize, evicted: usize = 0 };
 
 fn durableRun(allocator: std.mem.Allocator, root: []const u8, source: []const u8, contract: cache_key.Contract, mutation_contract: []const u8, limits: semantic_store.Limits) !DurableRun {

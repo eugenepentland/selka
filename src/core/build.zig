@@ -26,6 +26,7 @@ const build_bytes = @import("build_bytes.zig");
 const build_fn = @import("build_fn.zig");
 const build_values = @import("build_values.zig");
 const build_capture = @import("build_capture.zig");
+const lowering_cache = @import("lowering_cache.zig");
 
 /// Refusal reasons several constructs share.
 const refuse_payload = "match payload";
@@ -68,31 +69,69 @@ pub fn buildExecutable(allocator: std.mem.Allocator, input: Input, refusal: *Ref
     return buildRootsInput(allocator, &.{input.program.main}, input, refusal);
 }
 
+/// Reuse validated function lowering artifacts, preserving the uncached oracle.
+pub fn buildExecutableCached(allocator: std.mem.Allocator, input: Input, refusal: *Refusal, cache: *lowering_cache.Cache) Error!ir.Module {
+    return buildRootsCached(allocator, &.{input.program.main}, input, refusal, cache);
+}
+
 /// Build selected roots with optional loaded source; digest-only inputs refuse blobs precisely.
 pub fn buildRootsSource(allocator: std.mem.Allocator, program: typed.Program, roots: []const typed.FunctionId, source: ?Source, refusal: *Refusal) Error!ir.Module {
     return buildRootsInput(allocator, roots, .{ .program = program, .source = source }, refusal);
 }
 
 fn buildRootsInput(allocator: std.mem.Allocator, roots: []const typed.FunctionId, input: Input, refusal: *Refusal) Error!ir.Module {
+    return buildRootsCached(allocator, roots, input, refusal, null);
+}
+
+fn buildRootsCached(allocator: std.mem.Allocator, roots: []const typed.FunctionId, input: Input, refusal: *Refusal, cache: ?*lowering_cache.Cache) Error!ir.Module {
     const program = input.program;
-    var mb: ModuleBuilder = .{ .allocator = allocator, .input = input, .refusal = refusal };
-    defer mb.ids.deinit(allocator);
+    var mb: ModuleBuilder = .{ .allocator = allocator, .input = input, .refusal = refusal, .discovery = .{ .enabled = cache != null } };
+    defer mb.discovery.ids.deinit(allocator);
+    defer mb.types.deinit(allocator);
+    defer mb.discovery.pending.deinit(allocator);
+    defer mb.discovery.types.deinit(allocator);
     for (roots, 0..) |root, position| {
         const index = try mb.functionIndex(root);
         if (position == 0) mb.module.entry = index;
     }
+    var reuse: ?lowering_cache.Session = if (cache) |store| lowering_cache.Session.prepare(store, mb.lowering()) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        error.InvalidSnapshot => null,
+    } else null;
+    if (reuse) |*session| {
+        var scratch = std.heap.ArenaAllocator.init(session.cache.store.backing);
+        defer scratch.deinit();
+        try session.advance(scratch.allocator(), .{ .functions = 0, .compounds = 0, .strings = 0, .pending = 0, .types = 0 }, mb.lowering());
+    }
     var next: usize = 0;
-    while (next < mb.pending.items.len) : (next += 1) {
-        const id = mb.pending.items[next];
-        const index = mb.ids.get(@backingInt(id)).?;
+    while (next < mb.discovery.pending.items.len) : (next += 1) {
+        const id = mb.discovery.pending.items[next];
+        const index = mb.discovery.ids.get(@backingInt(id)).?;
         const function = program.functions[@backingInt(id)];
         if (mb.module.functions.items[index].signature.linkage == .internal) {
             // Building may declare callees and grow the table, so store afterwards.
-            const built = try buildFunction(&mb, function, mb.module.functions.items[index]);
+            const built = if (reuse) |*session| blk: {
+                var scratch = std.heap.ArenaAllocator.init(session.cache.store.backing);
+                defer scratch.deinit();
+                const a = scratch.allocator();
+                const before = lowering_cache.Before.init(mb.lowering());
+                const key: ?[32]u8 = session.key(mb.lowering(), function) catch |err| switch (err) {
+                    error.OutOfMemory => return error.OutOfMemory,
+                    error.InvalidSnapshot => null,
+                };
+                if (key) |digest| if (try session.restore(a, digest, mb.lowering(), function, mb.module.functions.items[index])) |cached| {
+                    try session.advance(a, before, mb.lowering());
+                    break :blk cached;
+                };
+                const fresh = try buildFunction(&mb, function, mb.module.functions.items[index]);
+                session.cache.lowered += 1;
+                if (key) |digest| try session.remember(a, mb.lowering(), .{ .key = digest, .before = before, .checked = function }, fresh);
+                try session.advance(a, before, mb.lowering());
+                break :blk fresh;
+            } else try buildFunction(&mb, function, mb.module.functions.items[index]);
             mb.module.functions.items[index] = built;
         }
     }
-    mb.pending.deinit(allocator);
     // Element reads that are only taken apart become field reads, before ownership sees their uses of the list.
     for (mb.module.functions.items) |*function| {
         if (function.signature.linkage == .internal) {
@@ -169,12 +208,14 @@ const ModuleBuilder = struct {
     input: Input,
     refusal: *Refusal,
     module: ir.Module = .{},
-    /// Checked function id → IR function index.
-    ids: std.AutoHashMapUnmanaged(usize, u32) = .empty,
-    pending: std.ArrayList(typed.FunctionId) = .empty,
+    discovery: lowering_cache.Discovery = .{},
     /// Checked record and union type → IR type. An entry is made before the type's fields
     /// are mapped, so a recursive type (through a boxed field) finds itself.
     types: std.AutoHashMapUnmanaged(typed.Type, ir.Type) = .empty,
+
+    fn lowering(self: *ModuleBuilder) lowering_cache.Context {
+        return .{ .arena = self.allocator, .input = .{ .program = self.input.program, .source = self.input.source, .drop_debug = self.input.drop_debug }, .module = &self.module, .discovery = &self.discovery, .types = &self.types };
+    }
 
     /// Record an unsupported feature at its source position.
     pub fn refuse(self: *ModuleBuilder, reason: []const u8, span: u32) Error {
@@ -184,7 +225,7 @@ const ModuleBuilder = struct {
 
     /// The IR index of a checked function, declaring it on first use.
     fn functionIndex(self: *ModuleBuilder, id: typed.FunctionId) Error!u32 {
-        if (self.ids.get(@backingInt(id))) |index| return index;
+        if (self.discovery.ids.get(@backingInt(id))) |index| return index;
         const function = self.input.program.functions[@backingInt(id)];
         if (self.viewType(function.signature.return_type)) return self.refuse("escaping live dictionary view", @intCast(function.declaration.start));
         const all = try self.allocator.alloc(ir.Type, function.signature.parameter_count);
@@ -204,8 +245,8 @@ const ModuleBuilder = struct {
         const ret = try self.returnType(function, declared, all, span);
         const index: u32 = @intCast(self.module.functions.items.len);
         try self.module.functions.append(self.allocator, .{ .name = function.name, .signature = .{ .params = params, .ret = ret, .linkage = linkage, .owned = ownedParameters(all, function.signature.declared_mutates) }, .span = span });
-        try self.ids.put(self.allocator, @backingInt(id), index);
-        try self.pending.append(self.allocator, id);
+        try self.discovery.ids.put(self.allocator, @backingInt(id), index);
+        try self.discovery.pending.append(self.allocator, id);
         return index;
     }
 
@@ -307,6 +348,7 @@ const ModuleBuilder = struct {
         const reserved: ir.Type = @fromBackingInt(@intCast(ir.Type.first_compound + self.module.compounds.items.len));
         try self.module.compounds.append(self.allocator, .{ .record = &.{} });
         try self.types.put(self.allocator, ty, reserved);
+        if (self.discovery.enabled) try self.discovery.types.append(self.allocator, .{ .checked = ty, .physical = reserved });
         return reserved;
     }
 

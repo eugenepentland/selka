@@ -571,3 +571,225 @@ test "S4 nested consuming helpers retain all frames under fact verification" {
     try std.testing.expect(std.mem.indexOf(u8, ran.stderr, "in leaf::middle at leaf.my:7:12") != null);
     try std.testing.expect(std.mem.indexOf(u8, ran.stderr, "in app::main at app.my:4:12") != null);
 }
+
+const stages = @import("stage_store.zig");
+const emission_cache = @import("emission_cache.zig");
+const emission_key = @import("emission_key.zig");
+const deferred_facts = @import("deferred_facts.zig");
+const fact_tables = @import("facts.zig");
+
+fn encodedFacts(a: std.mem.Allocator, known: []const ?fact_tables.Facts) !deferred_facts.Table {
+    const table = try deferred_facts.Table.init(a, known.len);
+    for (known, table.entries) |slot, *entry| if (slot) |value| {
+        entry.* = try deferred_facts.encode(a, value);
+    };
+    return table;
+}
+
+fn sameUnits(expected: []const units.Unit, actual: []const units.Unit) !void {
+    try std.testing.expectEqual(expected.len, actual.len);
+    for (expected, actual) |left, right| {
+        try std.testing.expectEqualStrings(left.name, right.name);
+        try std.testing.expectEqualStrings(left.source_path, right.source_path);
+        try std.testing.expectEqualStrings(left.llvm, right.llvm);
+        try std.testing.expectEqual(left.kind, right.kind);
+        try std.testing.expectEqual(left.number, right.number);
+        try std.testing.expectEqual(left.math, right.math);
+        try std.testing.expectEqual(left.counting, right.counting);
+    }
+}
+
+// spec: NEW-CORE-STAGE-CACHE-5
+test "S4 cached emission matches fresh output and renders only the changed unit" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
+    var store = try stages.Store.init(std.testing.allocator, std.testing.io, root);
+    defer store.deinit();
+    const module = try unitLifetimeModule(a);
+    const context: u8 = 0;
+    const options: emitter.Options = .{ .locator = .{ .context = &context, .locate = fixedLocation }, .source_path = "lifetime.my", .main = .{} };
+    const fresh = try units.emitWithScratch(a, std.testing.allocator, &module, options);
+    var cold: emission_cache.Counts = .{};
+    const first = try units.emitCached(a, std.testing.allocator, &module, options, .{ .store = &store, .lanes = 4, .counts = &cold });
+    try sameUnits(fresh, first);
+    try std.testing.expectEqual(@as(u32, 33), cold.rendered);
+    try std.testing.expectEqual(@as(u32, 4), cold.workers);
+    var warm: emission_cache.Counts = .{};
+    const repeated = try units.emitCached(a, std.testing.allocator, &module, options, .{ .store = &store, .lanes = 1, .counts = &warm });
+    try sameUnits(fresh, repeated);
+    try std.testing.expectEqual(@as(u32, 33), warm.reused);
+    try std.testing.expectEqual(@as(u32, 0), warm.rendered);
+    module.functions.items[7].insts.items[0].data = 81;
+    var edited: emission_cache.Counts = .{};
+    const changed_units = try units.emitCached(a, std.testing.allocator, &module, options, .{ .store = &store, .lanes = 4, .counts = &edited });
+    try sameUnits(try units.emitWithScratch(a, std.testing.allocator, &module, options), changed_units);
+    try std.testing.expectEqual(@as(u32, 32), edited.reused);
+    try std.testing.expectEqual(@as(u32, 1), edited.rendered);
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-5
+test "S4 generated helper seeds and completed units survive scratch and cache hits" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
+    var store = try stages.Store.init(std.testing.allocator, std.testing.io, root);
+    defer store.deinit();
+    var refusal: build.Refusal = .{};
+    var module = try support.buildSource(a, "func main(out: Stream) -> int:\n    const values = [1.25, 2.5]\n    out.print(f\"{values}\")\n    return 0\n", &refusal);
+    var wave = try support.Hand.init(a, &module, "wave", .{ .params = &.{.f64}, .ret = .f64 });
+    const sine = try wave.emit(.{ .op = .float_unary, .ty = .f64, .a = try wave.param(0), .data = @backingInt(ir.FloatUnary.sin) });
+    _ = try wave.emit(.{ .op = .ret, .ty = .void, .a = sine });
+    _ = try wave.finish();
+    const context: u8 = 0;
+    const options: emitter.Options = .{ .locator = .{ .context = &context, .locate = fixedLocation }, .source_path = "lifetime.my", .main = .{ .parameters = &.{"out"} }, .counters = true };
+    const fresh = try units.emitWithScratch(a, std.testing.allocator, &module, options);
+    var cold: emission_cache.Counts = .{};
+    const first = try units.emitCached(a, std.testing.allocator, &module, options, .{ .store = &store, .lanes = 2, .counts = &cold });
+    try sameUnits(fresh, first);
+    try std.testing.expect(cold.seeds_rendered > 0);
+    var warm: emission_cache.Counts = .{};
+    const repeated = try units.emitCached(a, std.testing.allocator, &module, options, .{ .store = &store, .lanes = 3, .counts = &warm });
+    try sameUnits(fresh, repeated);
+    try std.testing.expectEqual(cold.seeds_rendered, warm.seeds_reused);
+    try std.testing.expectEqual(@as(u32, 0), warm.seeds_rendered);
+    try std.testing.expectEqual(@as(u32, 0), warm.rendered);
+    try std.testing.expect(numericHelper(repeated));
+    var math = false;
+    var counting = false;
+    for (repeated) |emitted| {
+        math = math or emitted.math;
+        counting = counting or emitted.counting;
+    }
+    try std.testing.expect(math);
+    try std.testing.expect(counting);
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-5
+test "S4 deferred fact bytes share eager cache keys and render equal LLVM" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
+    var store = try stages.Store.init(std.testing.allocator, std.testing.io, root);
+    defer store.deinit();
+    var refusal: build.Refusal = .{};
+    var module = try support.buildSource(a, "func sum(xs: int[]) -> int:\n    mut total = 0\n    for x in xs:\n        total += x\n    return total\n\nfunc main() -> int:\n    return sum([1, 2, 3])\n", &refusal);
+    const result = try passes.runWithScratch(a, std.testing.allocator, &module, .trusted);
+    const context: u8 = 0;
+    var options: emitter.Options = .{
+        .locator = .{ .context = &context, .locate = fixedLocation },
+        .source_path = "lifetime.my",
+        .main = .{},
+        .analysis = .{ .facts = result.known, .vectors = result.plans, .provenance = &result.provenance },
+    };
+    const fresh = try units.emitWithScratch(a, std.testing.allocator, &module, options);
+    const eager = try units.emitCached(a, std.testing.allocator, &module, options, .{ .store = &store });
+    try sameUnits(fresh, eager);
+    const table = try encodedFacts(a, result.known);
+    options.analysis.facts = &.{};
+    var warm: emission_cache.Counts = .{};
+    const reused = try units.emitCached(a, std.testing.allocator, &module, options, .{ .store = &store, .deferred = &table, .counts = &warm });
+    try sameUnits(fresh, reused);
+    try std.testing.expectEqual(@as(u32, 0), warm.rendered);
+    try std.testing.expectEqual(@as(u32, @intCast(fresh.len)), warm.reused);
+    var empty = try stages.Store.init(std.testing.allocator, std.testing.io, try std.fs.path.join(a, &.{ root, "empty" }));
+    defer empty.deinit();
+    const rendered = try units.emitCached(a, std.testing.allocator, &module, options, .{ .store = &empty, .deferred = &table, .lanes = 2 });
+    try sameUnits(fresh, rendered);
+    // An orphaned literal is never rendered, but unknown metadata makes the
+    // canonical input policy select uncached emission. Facts must still load.
+    try module.functions.items[module.entry].insts.append(a, .{ .op = .str_const, .ty = .str, .data = std.math.maxInt(u64) });
+    options.analysis.facts = result.known;
+    const fallback_oracle = try units.emitWithScratch(a, std.testing.allocator, &module, options);
+    options.analysis.facts = &.{};
+    const fallback = try units.emitCached(a, std.testing.allocator, &module, options, .{ .store = &store, .deferred = &table });
+    try sameUnits(fallback_oracle, fallback);
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-5
+test "S4 emission admission bounds concurrent estimated scratch and admits an oversized unit alone" {
+    try std.testing.expectEqual(@as(usize, 0), emission_cache.batch(&.{}, 4, 100));
+    try std.testing.expectEqual(@as(usize, 2), emission_cache.batch(&.{ 40, 50, 60 }, 4, 100));
+    try std.testing.expectEqual(@as(usize, 1), emission_cache.batch(&.{ 400, 40, 50 }, 4, 100));
+    try std.testing.expectEqual(@as(usize, 1), emission_cache.batch(&.{ 40, 50, 60 }, 1, 100));
+    try std.testing.expectEqual(@as(usize, 1), emission_cache.batch(&.{ 40, 50 }, 0, 0));
+    try std.testing.expectEqual(@as(usize, 4096), emission_cache.weight(0));
+    try std.testing.expectEqual(std.math.maxInt(usize), emission_cache.weight(std.math.maxInt(usize)));
+}
+
+const KeyFixture = struct { module: ir.Module, root: u32, callee: u32 };
+
+fn keyFixture(a: std.mem.Allocator, shifted: bool) !KeyFixture {
+    var module: ir.Module = .{};
+    if (shifted) {
+        try module.compounds.append(a, .{ .box = .str });
+        try module.strings.append(a, "unrelated");
+        var padding = try support.Hand.init(a, &module, "unused", .{ .params = &.{}, .ret = .i64 });
+        _ = try padding.emit(.{ .op = .ret, .ty = .void, .a = try padding.int(.i64, 0) });
+        _ = try padding.finish();
+    }
+    const list = try module.intern(a, .{ .list = .i64 });
+    const string = module.strings.items.len;
+    try module.strings.append(a, "stable");
+    var target = try support.Hand.init(a, &module, "leaf::identity", .{ .params = &.{.i64}, .ret = .i64 });
+    _ = try target.emit(.{ .op = .ret, .ty = .void, .a = try target.param(0) });
+    const callee = try target.finish();
+    var caller = try support.Hand.init(a, &module, "app::main", .{ .params = &.{}, .ret = .i64 });
+    _ = try caller.loose(.{ .op = .undef, .ty = list });
+    _ = try caller.loose(.{ .op = .str_const, .ty = .str, .data = string });
+    const number = try caller.int(.i64, 19);
+    const call = try caller.emit(.{ .op = .call, .ty = .i64, .a = @fromBackingInt(callee), .data = try caller.extra(&.{number}), .span = if (shifted) 111 else 11 });
+    _ = try caller.emit(.{ .op = .ret, .ty = .void, .a = call });
+    const root = try caller.finish();
+    module.entry = root;
+    return .{ .module = module, .root = root, .callee = callee };
+}
+
+fn fixtureKey(a: std.mem.Allocator, fixture: KeyFixture, given: emitter.Options) !emission_key.Digest {
+    var options = given;
+    const catalog = try constants.Catalog.init(a, &fixture.module);
+    const summaries = try @import("effects.zig").analyze(a, &fixture.module);
+    if (options.analysis.effects == null) options.analysis.effects = &summaries;
+    var prepared = try emission_key.Prepared.init(a, &fixture.module, options, &catalog);
+    const exported = try a.alloc(bool, fixture.module.functions.items.len);
+    @memset(exported, true);
+    const symbols = try a.alloc(?[]const u8, exported.len);
+    @memset(symbols, null);
+    return prepared.key(a, .{ .functions = &.{fixture.root}, .exported = exported, .symbols = symbols, .source_path = options.source_path, .constants = &catalog });
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-5
+test "S4 emission inputs canonicalize global identities and invalidate effect and inline ancestry changes" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const original = try keyFixture(a, false);
+    const shifted = try keyFixture(a, true);
+    const context: u8 = 0;
+    var options: emitter.Options = .{ .locator = .{ .context = &context, .locate = fixedLocation }, .source_path = "lifetime.my", .main = .{} };
+    const first = try fixtureKey(a, original, options);
+    try std.testing.expectEqual(first, try fixtureKey(a, shifted, options));
+    const changed_effects = try @import("effects.zig").analyze(a, &original.module);
+    changed_effects.may[original.callee][0] = !changed_effects.may[original.callee][0];
+    options.analysis.effects = &changed_effects;
+    try std.testing.expect(!std.mem.eql(u8, &first, &try fixtureKey(a, original, options)));
+    options.analysis.effects = null;
+    var ancestry: @import("inline_origins.zig").Table = .{};
+    try ancestry.frames.append(a, .{ .function = original.callee, .call_span = 11, .parent = null });
+    try ancestry.setBlock(a, original.root, 0, 0);
+    options.analysis.provenance = &ancestry;
+    const inlined = try fixtureKey(a, original, options);
+    try std.testing.expect(!std.mem.eql(u8, &first, &inlined));
+    try ancestry.frames.append(a, .{ .function = original.root, .call_span = 21, .parent = null });
+    ancestry.frames.items[0].parent = 1;
+    try std.testing.expect(!std.mem.eql(u8, &inlined, &try fixtureKey(a, original, options)));
+}

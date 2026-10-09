@@ -108,7 +108,7 @@ fn encode(writer: *Writer, comptime Mapping: type, mapping: Mapping, comptime T:
     switch (info) {
         .int, .comptime_int => try writer.integer(value),
         .float => {
-            const bits: std.meta.Int(.unsigned, @bitSizeOf(T)) = @bitCast(value);
+            const bits: @Int(.unsigned, @bitSizeOf(T)) = @bitCast(value);
             try writer.integer(bits);
         },
         .bool => try writer.raw(&.{@intFromBool(value)}),
@@ -123,6 +123,7 @@ fn encode(writer: *Writer, comptime Mapping: type, mapping: Mapping, comptime T:
         .pointer => |pointer| {
             if (pointer.size != .slice) @compileError("persisted data may only own slices, not " ++ @typeName(T));
             try writer.integer(@as(u64, value.len));
+            if (comptime pointer.child == u8 and !Mapping.handles(u8)) return writer.raw(value);
             for (value) |item| try encode(writer, Mapping, mapping, pointer.child, item);
         },
         .array => |array| for (value) |item| try encode(writer, Mapping, mapping, array.child, item),
@@ -147,7 +148,7 @@ fn decode(reader: *Reader, comptime Mapping: type, mapping: Mapping, comptime T:
             return reader.integer(T);
         },
         .float => {
-            const bits = try reader.integer(std.meta.Int(.unsigned, @bitSizeOf(T)));
+            const bits = try reader.integer(@Int(.unsigned, @bitSizeOf(T)));
             return @bitCast(bits);
         },
         .bool => {
@@ -175,6 +176,11 @@ fn decode(reader: *Reader, comptime Mapping: type, mapping: Mapping, comptime T:
             if (pointer.size != .slice) @compileError("persisted data may only own slices, not " ++ @typeName(T));
             const count = try reader.integer(u64);
             if (count > reader.bytes.len) return error.InvalidEncoding;
+            if (comptime pointer.child == u8 and !Mapping.handles(u8)) {
+                const bytes = try reader.take(std.math.cast(usize, count) orelse return error.InvalidEncoding);
+                const owned = try reader.allocator.dupe(u8, bytes);
+                return owned;
+            }
             const items = try reader.allocate(pointer.child, std.math.cast(usize, count) orelse return error.InvalidEncoding);
             errdefer reader.allocator.free(items);
             for (items) |*item| item.* = try decode(reader, Mapping, mapping, pointer.child);
@@ -248,6 +254,31 @@ test "codec rejects truncated and malformed bytes" {
     try bad_union.integer(@as(u8, 9));
     var bad_union_reader = Reader.init(std.testing.allocator, bad_union.bytes.items);
     try std.testing.expectError(error.InvalidEncoding, bad_union_reader.read(union(enum) { a, b }));
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-1
+test "codec bulk byte slices preserve scalar encoding and own mutable restored bytes" {
+    var bytes: [256]u8 = undefined;
+    var legacy = Writer.init(std.testing.allocator);
+    defer legacy.deinit();
+    try legacy.integer(@as(u64, bytes.len));
+    for (&bytes, 0..) |*byte, index| {
+        byte.* = @intCast(index);
+        try legacy.integer(byte.*);
+    }
+    var writer = Writer.init(std.testing.allocator);
+    defer writer.deinit();
+    try writer.write([]const u8, &bytes);
+    try std.testing.expectEqualSlices(u8, legacy.bytes.items, writer.bytes.items);
+    var reader = Reader.init(std.testing.allocator, writer.bytes.items);
+    const restored = try reader.read([]u8);
+    defer std.testing.allocator.free(restored);
+    try std.testing.expect(reader.done());
+    try std.testing.expectEqualSlices(u8, &bytes, restored);
+    restored[0] = 42;
+    try std.testing.expectEqual(@as(u8, 0), writer.bytes.items[8]);
+    var truncated = Reader.init(std.testing.allocator, writer.bytes.items[0 .. writer.bytes.items.len - 1]);
+    try std.testing.expectError(error.Truncated, truncated.read([]const u8));
 }
 
 // spec-case: CACHE-CHECKSUM-1

@@ -337,11 +337,11 @@ pub const Cache = struct {
         const recall = if (self.context.summaries) |request| if (request.previous) |previous| summary.recall(previous) else null else null;
         const prepared = try key.prepare(allocator, src, syntax, .{ .build = self.context.contract, .mutation = self.context.mutation_contract }, self.resolution, recall);
         if (profile) |p| p.addSince("dependency_key_preparation", prepare_start, false);
+        const needs_trees = if (self.context.summaries) |request|
+            request.facts_only and self.context.retain_summary_trees
+        else
+            true;
         if (self.context.persistent) |persistent| {
-            const needs_trees = if (self.context.summaries) |request|
-                request.facts_only and self.context.retain_summary_trees
-            else
-                true;
             if (self.entries.len == 0 and needs_trees) {
                 const io_start = if (profile) |p| p.now() else std.Io.Timestamp.zero;
                 try self.loadPersistent(persistent, prepared);
@@ -351,7 +351,8 @@ pub const Cache = struct {
         // Per-function eligibility: an unrelated generic, alias, constant or
         // callback no longer disables ordinary-body reuse. A zero-retention cache
         // still reports a bypass because reuse was never consulted.
-        const enabled = self.reuse.max_bytes != 0 and self.entries.len != 0;
+        const enabled = self.reuse.max_bytes != 0 and
+            (self.entries.len != 0 or (needs_trees and self.context.persistent != null));
         if (self.reuse.max_bytes == 0) self.statistics.bypassed += 1;
         const count = prepared.ordinary_ast.len;
         const ranges = try allocator.alloc(copy.Range, count);
@@ -412,14 +413,24 @@ pub const Session = struct {
     /// Copy one unchanged checked local tree, remapping declaration and catalog
     /// identities. Any missing or ambiguous remap is a miss.
     pub fn lookup(self: *Session, allocator: std.mem.Allocator, index: usize, nodes: *std.ArrayList(typed.Node), statements: *std.ArrayList(typed.Statement)) error{ OutOfMemory, InternalError }!?typed.Function {
-        // A disabled cache or a first request with no retained snapshot is a
-        // whole-cache bypass already counted by `begin`; do not manufacture a
-        // per-body reason when reuse was never a candidate.
+        // Do not manufacture per-body misses when retention is disabled or
+        // neither retained entries nor an eligible durable store is available.
         if (!self.reuse.enabled) return null;
         if (index >= self.prepared.ordinary_ast.len) return self.reason(.not_ordinary);
         const ast_index = self.prepared.ordinary_ast[index];
-        const entry_index = self.cache.index.get(self.prepared.keys[ast_index]) orelse return self.reason(.no_entry);
-        const entry = &self.cache.entries[entry_index];
+        if (self.cache.index.get(self.prepared.keys[ast_index])) |entry_index| {
+            return self.copyEntry(allocator, index, &self.cache.entries[entry_index], nodes, statements);
+        }
+        const persistent = self.cache.context.persistent orelse return self.reason(.no_entry);
+        var entry = (try persistent.lookup(self.cache.allocator, self.prepared.keys[ast_index], self.prepared.contexts[ast_index])) orelse return self.reason(.no_entry);
+        defer entry.deinit();
+        // Restore only this body's independently owned tree. It need not fit
+        // the retention budget, and no decoded storage survives the copy.
+        return self.copyEntry(allocator, index, &entry, nodes, statements);
+    }
+
+    fn copyEntry(self: *Session, allocator: std.mem.Allocator, index: usize, entry: *const owned.Entry, nodes: *std.ArrayList(typed.Node), statements: *std.ArrayList(typed.Statement)) error{ OutOfMemory, InternalError }!?typed.Function {
+        const ast_index = self.prepared.ordinary_ast[index];
         // Cheap rejections first. The dependency digest is a 32-byte compare that
         // also carries the mutation and effect contract, and both stored lengths
         // are integer compares; only a request that survives all three touches
@@ -598,8 +609,8 @@ pub const Session = struct {
     /// specialization tables, so this request keeps the longest leading prefix
     /// of stable ordinary bodies whose owned storage plus the exact
     /// hash-index backing allocation fits the share of the budget the generic
-    /// tables leave. A body that does not fit is a fresh miss on its next
-    /// request rather than a reason to disable reuse for every body.
+    /// tables leave. Bodies outside that prefix can still be restored one at
+    /// a time from the durable store without growing retained storage.
     pub fn remember(self: *Session, program: typed.Program) error{ OutOfMemory, InternalError }!void {
         const cache = self.cache;
         if (cache.reuse.max_bytes == 0) return;
@@ -631,6 +642,9 @@ pub const Session = struct {
             if (self.reuse.stood_in[i]) continue;
             const ast_index = self.prepared.ordinary_ast[i];
             const stable_key = self.prepared.keys[ast_index];
+            // An on-demand durable hit was already copied and released. Leave
+            // its existing file alone rather than rebuilding a retained entry.
+            if (self.reuse.functions[i] and !cache.index.contains(stable_key)) continue;
             if (self.reuse.functions[i]) if (cache.index.get(stable_key)) |old_index| if (!used[old_index]) {
                 const cost = owned.entryCost(cache.entries[old_index]);
                 if (!fitsOrdinaryBudget(running, cost, pending.items.len + 1, ordinary_budget)) {
@@ -682,6 +696,7 @@ pub const Session = struct {
             const previous = owned.retained(cache.entries) + owned.hashIndexBytes(cache.index.capacity());
             if (previous <= ordinary_budget) {
                 cache.statistics.bypassed += 1;
+                try self.persistUnretained(program, stopped_at);
                 return;
             }
             cache.statistics.retention.evicted += cache.entries.len;
@@ -707,6 +722,33 @@ pub const Session = struct {
         published = true;
         cache.recountRetention();
         try persistFresh(cache, fresh.items);
+        try self.persistUnretained(program, stopped_at);
+    }
+
+    /// Persist checked bodies beyond the in-memory prefix, with one temporary
+    /// owned entry at a time. Successful durable hits need no publication.
+    fn persistUnretained(self: *Session, program: typed.Program, start: usize) error{ OutOfMemory, InternalError }!void {
+        const persistent = self.cache.context.persistent orelse return;
+        var started = false;
+        errdefer if (started) {
+            persistent.endBatch() catch |err| switch (err) {
+                // Preserve the original publication/check error during cleanup.
+                error.OutOfMemory => {},
+            };
+        };
+        for (start..self.prepared.ordinary_ast.len) |i| {
+            if (self.reuse.stood_in[i] or self.reuse.functions[i]) continue;
+            const range = self.ranges[i];
+            if (range.nodes.end > program.nodes.len or range.statements.end > program.statements.len) return error.InternalError;
+            var entry = (try self.buildFreshEntry(program, i, range)) orelse continue;
+            defer entry.deinit();
+            if (!started) {
+                try persistent.beginBatch();
+                started = true;
+            }
+            _ = try persistent.put(&entry);
+        }
+        if (started) try persistent.endBatch();
     }
 };
 

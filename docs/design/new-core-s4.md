@@ -187,6 +187,79 @@ once over the Lox port and the EDA slice.
   the end of the build, so successful builds no longer retain `program-<nonce>`
   directories and Zig's cache no longer keeps a second copy of every object.
 
+### Intermediate reuse (2026-10-09)
+
+Edited builds also use the compiler-bound `stages-v1` store before the native
+object store. Each artifact is one atomic file containing its input key, payload
+checksum, and bounded plain-data encoding. Missing, damaged or unavailable entries
+fall back to fresh computation. `--verify-cache` bypasses frontend and intermediate
+reuse before checking native objects against freshly emitted LLVM.
+
+- Checked ordinary bodies beyond the 16 MiB retained-memory budget are loaded
+  from durable storage on demand, copied into the current checked program, and
+  released. Cold checks publish the nonretained suffix one body at a time. The
+  per-project durable limit grows with source bytes, capped at 4 GiB; this does
+  not enlarge the memory retention budget or the 64 MiB individual-entry limit.
+- After lowering, the backend owns the names, literal bytes and source metadata
+  it still needs, so the frontend session can release its syntax and checked
+  trees before optimization. Inlining safety proofs use caller-local scratch;
+  only cloned IR and its source ancestry survive the caller's inline pass.
+- Raw lowering artifacts capture each function and its ordered declaration,
+  type, string, and pending-function discoveries. Replay relocates current source
+  positions and string slots, then runs the existing module transforms. Checked
+  trees are hashed by content, including expanded generic/default bodies and
+  embedded inputs. A rolling discovery guard avoids rescanning the growing IR.
+- Optimizer artifacts preserve the original caller mutation order. Separate
+  keys cover leaf/CFG inlining, unswitching, exploratory return/argument
+  summaries, parameter-aware inlining, and final facts/ownership/vector results.
+  Keys include the callee bodies or summaries actually consulted, incoming
+  parameter intervals, source ancestry, and pass mode. An unchanged transform
+  can restore a validated no-op receipt without copying another IR body.
+  Ordinary optimized Debug builds retain final analysis as verified encoded
+  bytes. LLVM keys use the analysis digest; only units that need rendering
+  decode their functions' dense tables into private worker scratch. Statistics,
+  fact verification, and whole-program LLVM requests retain the eager path.
+- Function/type catalog changes conservatively invalidate lowering and optimizer
+  artifacts across the module. Ordinary body and literal edits can reuse
+  independent functions. This first implementation does not promise a narrow
+  rebuild after every declaration or type-graph edit.
+- Completed development LLVM units and generated-helper seeds use canonical
+  input keys covering facts, effects, descriptor aliasing, exported symbols,
+  located spans, inline ancestry, and emission options. Release emission remains
+  one whole-program unit. Verified artifacts include runtime dependency flags,
+  so hits do not rescan LLVM text for number helpers, math or counters. Bulk byte
+  copies preserve the codec's original wire format. Native object keys and
+  runtime optimization stay the same.
+- Emission and native compiles use private worker scratch and both job-count and
+  estimated-byte admission limits. The transient admission budget is at most
+  1 GiB and at most one quarter of currently available memory; an oversized
+  individual unit runs alone. This is a concurrency estimate, not a hard ceiling
+  on the complete compiler process or an individual clang process.
+
+The existing single-line `--report` JSON includes a `stages` object with actual
+frontend, lowering, optimizer and emission reuse counters. Its `nanoseconds`
+fields include lookup, hashing, decoding and publication in their stage times.
+`native` includes object handling and linking; `linker` separately records time
+inside the linker process and is zero when the program store serves the output.
+Whole-build replay reports `stages: null`, since none of those stages ran.
+`frontend_misses` uses `semantic_cache.MissReason` order and includes publication
+bypasses. Expanded defaults with positions outside a retained declaration can
+still require fresh checking; a rejected relocation never installs a partial body.
+
+The scaling harness is `experiments/incremental-stages-20261009/benchmark.py`.
+It takes `SCALING_COMPILER`, `SCALING_SEED`, `SCALING_DEPENDENCIES`, and
+`SCALING_GOLDENS` paths through the environment. Run it through the build-slot
+wrapper on the reserved benchmark CPUs with `--copies 12 32 --repeats 3
+--few-edits --dependency-edits --threshold 1000 --output <fresh-directory>`.
+The 12-copy project has 191,416 physical lines; the 32-copy project has 510,436.
+Every replica is called and every generated project module is imported. This
+is a synthetic scale test of the EDA port, not a separate 500k-line application.
+It checks usage text, export goldens and leaks after each measured build. The
+reported RSS is GNU time's largest process peak, not simultaneous process-tree
+memory. Fixture generation, cache preparation and output validation are excluded
+from build latency. Broad declaration changes are measured separately from
+ordinary edits; a changed shared helper intentionally reaches all replicas.
+
 ## 7. Tests S4 adds
 
 - **Unit text stability:**

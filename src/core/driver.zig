@@ -24,6 +24,7 @@ const unit_cache = @import("unit_cache.zig");
 const count_runtime = @import("count_runtime.zig");
 const sanitize_llvm = @import("sanitize_llvm.zig");
 const Digest = unit_cache.Digest;
+const stage_metrics = @import("stage_metrics.zig");
 
 /// The runtime C source, compiled into every program.
 pub const runtime_source = @embedFile("runtime/core_rt.c") ++ "\n" ++
@@ -66,6 +67,8 @@ pub const Counts = struct {
     verified: u32 = 0,
     /// Every `zig` process this build started.
     processes: u32 = 0,
+    /// Wall time inside the native linker process, zero on program cache hits.
+    link_ns: u64 = 0,
 };
 
 /// The result of a successful `link`.
@@ -114,9 +117,10 @@ const Native = struct {
     log: *std.ArrayList(u8),
     guard: Guard,
     counts: *Counts,
+    backing: ?std.mem.Allocator = null,
 
     fn resources(self: Native) unit_cache.Resources {
-        return .{ .arena = self.arena, .io = self.io, .environment = self.environment };
+        return .{ .arena = self.arena, .io = self.io, .environment = self.environment, .backing = self.backing, .memory_budget_bytes = stage_metrics.workerBudget(self.io) };
     }
 };
 
@@ -130,6 +134,11 @@ const Object = struct { path: []const u8, digest: Digest };
 
 /// Compile and link `request.units` into `request.output`; failures append the tool's stderr to `log`.
 pub fn link(allocator: std.mem.Allocator, io: std.Io, environ: *const std.process.Environ.Map, request: Request, log: *std.ArrayList(u8)) Error!Outcome {
+    return linkWithScratch(allocator, null, io, environ, request, log);
+}
+
+/// Link with private worker arenas on a reclaiming thread-safe allocator.
+pub fn linkWithScratch(allocator: std.mem.Allocator, backing: ?std.mem.Allocator, io: std.Io, environ: *const std.process.Environ.Map, request: Request, log: *std.ArrayList(u8)) Error!Outcome {
     try validateLayout(allocator, environ, log);
     try validateSanitize(allocator, environ, log);
     const cwd = std.Io.Dir.cwd();
@@ -150,7 +159,7 @@ pub fn link(allocator: std.mem.Allocator, io: std.Io, environ: *const std.proces
     // unproved tool gets one, and it never writes the shared builds.
     if (!guest.cacheable) environment.put("ZIG_GLOBAL_CACHE_DIR", try std.fs.path.join(allocator, &.{ staging, "global" })) catch return error.OutOfMemory;
     var outcome: Outcome = .{ .tool = guest };
-    const native: Native = .{ .arena = allocator, .io = io, .environment = &environment, .zig = guest.path, .log = log, .guard = .{ .resources = resources, .identity = guest }, .counts = &outcome.counts };
+    const native: Native = .{ .arena = allocator, .io = io, .environment = &environment, .zig = guest.path, .log = log, .guard = .{ .resources = resources, .identity = guest }, .counts = &outcome.counts, .backing = backing };
     // Content-keyed objects are shared, so a fresh work directory (a new worktree,
     // a test's temporary directory) reuses them; an unproved tool keeps every
     // object private to this build.
@@ -188,7 +197,9 @@ pub fn link(allocator: std.mem.Allocator, io: std.Io, environ: *const std.proces
     try argv.appendSlice(allocator, &.{ "-Wno-override-module", "-o", linked });
     for (objects.items) |object| try argv.append(allocator, object.path);
     if (needs.math) try argv.append(allocator, "-lm");
+    const link_start = stage_metrics.now(io);
     try run(native, argv.items);
+    outcome.counts.link_ns = stage_metrics.elapsed(io, link_start);
     try native.guard.check(log);
     if (!places.cacheable) {
         try publishOutput(native, linked, request.output);

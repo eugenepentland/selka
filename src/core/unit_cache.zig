@@ -171,6 +171,10 @@ pub const Resources = struct {
     arena: std.mem.Allocator,
     io: std.Io,
     environment: *const std.process.Environ.Map,
+    /// Reclaiming thread-safe backing; absent callers execute serially.
+    backing: ?std.mem.Allocator = null,
+    /// Admission budget for estimated child memory, independent of job count.
+    memory_budget_bytes: usize = 1 << 30,
 };
 
 /// How many compiles run at once: `MYLANG_JOBS`, else the CPUs this process may
@@ -192,15 +196,59 @@ pub fn compileAll(resources: Resources, jobs: []Job, lanes: usize) Error!void {
     const order = try resources.arena.alloc(usize, jobs.len);
     for (order, 0..) |*slot, index| slot.* = index;
     std.mem.sort(usize, order, jobs, heavier);
-    var queue: Queue = .{ .resources = resources, .jobs = jobs, .order = order };
+    if (resources.backing == null) {
+        for (order) |index| try runJob(resources, &jobs[index]);
+        return;
+    }
     const threads = try resources.arena.alloc(std.Thread, @max(1, @min(lanes, jobs.len)) - 1);
+    var start: usize = 0;
+    while (start < order.len) {
+        const count = admitted(jobs, order[start..], lanes, resources.memory_budget_bytes);
+        try compileBatch(resources, jobs, order[start..][0..count], threads);
+        start += count;
+    }
+}
+
+/// Reserve a baseline per clang plus an estimate proportional to its LLVM input.
+/// One unusually large unit still makes progress, alone.
+pub fn admitted(jobs: []const Job, order: []const usize, lanes: usize, budget: usize) usize {
+    if (order.len == 0) return 0;
+    var total: usize = 0;
+    var count: usize = 0;
+    for (order[0..@min(@max(1, lanes), order.len)]) |index| {
+        const estimate = (64 << 20) +| (jobs[index].weight *| 64);
+        const next = total +| estimate;
+        if (count != 0 and next > budget) break;
+        total = next;
+        count += 1;
+    }
+    return @max(1, count);
+}
+
+fn compileBatch(resources: Resources, jobs: []Job, order: []const usize, threads: []std.Thread) Error!void {
+    var queue: Queue = .{ .resources = resources, .jobs = jobs, .order = order };
     var started: usize = 0;
-    for (threads) |*thread| {
+    for (threads[0..@min(threads.len, order.len - 1)]) |*thread| {
         thread.* = std.Thread.spawn(.{}, Queue.drain, .{&queue}) catch break;
         started += 1;
     }
     queue.drain();
     for (threads[0..started]) |thread| thread.join();
+    // Workers own only backing-allocated logs. Copy them in deterministic order
+    // after joining, so no worker ever touches the coordinator's arena.
+    const copied = capture: {
+        defer for (order) |index| {
+            jobs[index].log.deinit(resources.backing.?);
+            jobs[index].log = .empty;
+        };
+        const logs = try resources.arena.alloc(std.ArrayList(u8), order.len);
+        for (order, logs) |index, *log| {
+            const bytes = try resources.arena.dupe(u8, jobs[index].log.items);
+            log.* = .{ .items = bytes, .capacity = bytes.len };
+        }
+        break :capture logs;
+    };
+    for (order, copied) |index, log| jobs[index].log = log;
     if (queue.exhausted.load(.acquire)) return error.OutOfMemory;
 }
 
@@ -222,13 +270,26 @@ const Queue = struct {
             if (at >= self.order.len) return;
             const job = &self.jobs[self.order[at]];
             // Only allocation failure ends the queue; a tool failure is the job's verdict.
-            runJob(self.resources, job) catch {
+            runIsolated(self.resources, job) catch {
                 self.exhausted.store(true, .release);
                 return;
             };
         }
     }
 };
+
+fn runIsolated(resources: Resources, job: *Job) error{OutOfMemory}!void {
+    const backing = resources.backing.?;
+    var scratch = std.heap.ArenaAllocator.init(backing);
+    defer scratch.deinit();
+    var local: Job = .{ .argv = job.argv, .weight = job.weight };
+    var private = resources;
+    private.arena = scratch.allocator();
+    try runJob(private, &local);
+    const bytes = try backing.dupe(u8, local.log.items);
+    job.log = .{ .items = bytes, .capacity = bytes.len };
+    job.ok = local.ok;
+}
 
 fn runJob(resources: Resources, job: *Job) error{OutOfMemory}!void {
     const result = @import("process_spawn.zig").run(resources.arena, resources.io, .{ .argv = job.argv, .environment = .{ .map = resources.environment } }) catch |err| {
@@ -406,4 +467,26 @@ test "compile width follows MYLANG_JOBS, else the CPUs, and never exceeds the wo
     try std.testing.expectEqual(@as(usize, 1), width(&environment, 0));
     try environment.put("MYLANG_JOBS", "0");
     try std.testing.expect(width(&environment, 1000) >= 1);
+}
+
+// spec: NEW-CORE-STAGE-CACHE-6
+test "native stage admission bounds simultaneous memory and isolated workers preserve diagnostics" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var environment = try std.testing.environ.createMap(a);
+    var jobs = [_]Job{
+        .{ .argv = &.{ "/bin/sh", "-c", "echo first >&2" }, .weight = 1024 },
+        .{ .argv = &.{ "/bin/sh", "-c", "echo second >&2; exit 7" }, .weight = 1024 },
+        .{ .argv = &.{"/nonexistent/stage-worker"}, .weight = 1024 },
+    };
+    try std.testing.expectEqual(@as(usize, 1), admitted(&jobs, &.{ 0, 1, 2 }, 3, 1));
+    try std.testing.expectEqual(@as(usize, 2), admitted(&jobs, &.{ 0, 1, 2 }, 3, 150 << 20));
+    try std.testing.expectEqual(@as(usize, 1), admitted(&jobs, &.{ 0, 1, 2 }, 1, 1 << 30));
+    try compileAll(.{ .arena = a, .backing = std.testing.allocator, .io = std.testing.io, .environment = &environment }, &jobs, 3);
+    try std.testing.expect(jobs[0].ok);
+    try std.testing.expect(!jobs[1].ok and !jobs[2].ok);
+    try std.testing.expectEqualStrings("first\n", jobs[0].log.items);
+    try std.testing.expectEqualStrings("second\n", jobs[1].log.items);
+    try std.testing.expect(std.mem.indexOf(u8, jobs[2].log.items, "cannot run") != null);
 }

@@ -11,6 +11,8 @@ const version = @import("version.zig");
 const own = @import("own.zig");
 const effects = @import("effects.zig");
 const origins = @import("inline_origins.zig");
+const deferred_facts = @import("deferred_facts.zig");
+const cache_mod = @import("optimization_cache.zig");
 
 /// Passes only allocate.
 pub const Error = std.mem.Allocator.Error;
@@ -40,14 +42,7 @@ pub const Result = struct {
 pub const FunctionStats = struct { counts: Counts = .{}, own: own.Stats = .{} };
 
 /// How often each release pass changed something (`--stats`).
-pub const Counts = struct {
-    inlined: u32 = 0,
-    /// Loop copies added by unswitching and by trip-count guards.
-    unswitched: u32 = 0,
-    versioned: u32 = 0,
-    proven: u32 = 0,
-    vectorized: u32 = 0,
-};
+pub const Counts = @import("pass_statistics.zig").Counts;
 
 /// The debug pipeline's only pass: ownership and counting, no facts.
 pub fn ownership(arena: std.mem.Allocator, module: *ir.Module) Error!own.Stats {
@@ -66,13 +61,47 @@ pub fn debug(arena: std.mem.Allocator, module: *ir.Module) Error!Result {
 
 /// Debug ownership keeps IR/statistics on `arena` and reclaims work through `backing`.
 pub fn debugWithScratch(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir.Module) Error!Result {
+    return debugInternal(arena, backing, module, null);
+}
+
+/// Debug ownership with persistent function-stage reuse.
+pub fn debugCached(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir.Module, cache: *cache_mod.Context) Error!Result {
+    return debugInternal(arena, backing, module, cache);
+}
+
+fn debugInternal(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir.Module, cache: ?*cache_mod.Context) Error!Result {
+    if (cache) |context| try context.prepare(arena);
+    var work = std.heap.ArenaAllocator.init(backing);
+    defer work.deinit();
     var result: Result = .{ .known = &.{}, .plans = &.{}, .per_function = try arena.alloc(FunctionStats, module.functions.items.len) };
     @memset(result.per_function, .{});
     const summaries = try effects.analyze(arena, module);
     for (module.functions.items, result.per_function, 0..) |*function, *local, index| {
         if (function.signature.linkage != .internal) continue;
+        const key = if (cache) |context| try context.key(work.allocator(), .{ .stage = .debug, .function = @intCast(index), .mode = 0, .provenance = &result.provenance, .inputs = .{ .effects = &summaries } }) else null;
+        const hit = if (cache) |context| if (key) |digest| try context.load(work.allocator(), .debug, digest, cache_mod.Final) else null else null;
+        if (hit) |cached| {
+            if (cache_mod.validFinal(cached, false)) if (try cache.?.restore(arena, @intCast(index), cached.function, cached.provenance, &result.provenance)) |restored| {
+                function.* = restored;
+                local.own = cached.state.own;
+                result.own.add(local.own);
+                _ = work.reset(.retain_capacity);
+                continue;
+            };
+            cache.?.rejected(.debug);
+        }
         local.own = try own.functionWithScratch(arena, backing, module, function, .{ .function_index = @intCast(index), .effects = &summaries });
         result.own.add(local.own);
+        if (cache) |context| {
+            context.changed(index);
+            if (key) |digest| try context.saveFinal(work.allocator(), digest, @intCast(index), &result.provenance, .{
+                .known = null,
+                .plans = &.{},
+                .counts = .{},
+                .own = local.own,
+            });
+        }
+        _ = work.reset(.retain_capacity);
     }
     return result;
 }
@@ -84,8 +113,24 @@ pub fn run(arena: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Resul
 
 /// Keep final IR/facts on `arena`; use `backing` for independently reclaimable pass storage.
 pub fn runWithScratch(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Result {
+    return runInternal(arena, backing, module, mode, null);
+}
+
+/// Apply stages in the same order as `runWithScratch`, restoring only validated functions.
+pub fn runCached(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir.Module, mode: Mode, cache: *cache_mod.Context) Error!Result {
+    return runInternal(arena, backing, module, mode, cache);
+}
+
+/// Development emission retains compact verified facts and decodes only LLVM misses.
+pub fn runCachedDeferred(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir.Module, mode: Mode, cache: *cache_mod.Context, table: *deferred_facts.Table) Error!Result {
+    cache.deferred = table;
+    return runInternal(arena, backing, module, mode, cache);
+}
+
+fn runInternal(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir.Module, mode: Mode, cache: ?*cache_mod.Context) Error!Result {
     try @import("fuse_text.zig").whitespace(arena, module);
     _ = try @import("fuse_slice_key.zig").run(arena, module);
+    if (cache) |context| try context.prepare(arena);
     var result: Result = .{
         .known = try arena.alloc(?facts.Facts, module.functions.items.len),
         .plans = try arena.alloc([]const vector.Plan, module.functions.items.len),
@@ -96,7 +141,11 @@ pub fn runWithScratch(arena: std.mem.Allocator, backing: std.mem.Allocator, modu
     @memset(result.per_function, .{});
     const inlined = try arena.alloc(u32, module.functions.items.len);
     @memset(inlined, 0);
-    result.counts.inlined = try inline_leaves.inlineLeavesCounted(arena, module, &result.provenance, inlined);
+    result.counts.inlined = if (cache) |context|
+        try inlineCached(arena, backing, module, .{ .cache = context, .provenance = &result.provenance, .counts = inlined, .stage = .inline_leaf, .mode = mode }) +
+            try inlineCached(arena, backing, module, .{ .cache = context, .provenance = &result.provenance, .counts = inlined, .stage = .inline_cfg, .mode = mode })
+    else
+        try inline_leaves.inlineLeavesCountedWithScratch(arena, backing, module, &result.provenance, inlined);
     if (mode == .off) {
         const summaries = try effects.analyze(arena, module);
         for (module.functions.items, result.per_function, inlined, 0..) |*function, *local, expanded, index| {
@@ -129,32 +178,70 @@ pub fn runWithScratch(arena: std.mem.Allocator, backing: std.mem.Allocator, modu
     defer scratch.deinit();
     const returns = try arena.alloc(?facts.Interval, module.functions.items.len);
     @memset(returns, null);
-    for (module.functions.items, 0..) |*function, index| {
-        if (function.signature.linkage != .internal) continue;
-        const changed = try version.unswitch(arena, function, result.provenance.context(@intCast(index)));
-        result.per_function[index].counts.unswitched = changed;
-        result.counts.unswitched += changed;
-    }
+    try unswitchFunctions(arena, module, &result, cache, mode, &temporary);
     // Unanalysed callers still invalidate their callees' parameter intervals.
     for (module.functions.items) |*function| {
         if (function.signature.linkage != .internal) try parameter_summary.add(arena, module, function, null);
     }
     for (try calleesFirst(arena, module)) |index| {
         const function = &module.functions.items[index];
-        const known = try facts.analyzeWithScratch(temporary.allocator(), scratch.allocator(), function, .{ .fold = !verify, .sabotage = sabotage, .mark = false, .returns = returns });
-        try parameter_summary.add(arena, module, function, known);
-        returns[index] = facts.returnRange(&known, function, sabotage);
+        if (cache == null) {
+            const known = try facts.analyzeWithScratch(temporary.allocator(), scratch.allocator(), function, .{ .fold = !verify, .sabotage = sabotage, .mark = false, .returns = returns });
+            try parameter_summary.add(arena, module, function, known);
+            returns[index] = facts.returnRange(&known, function, sabotage);
+            _ = temporary.reset(.retain_capacity);
+            _ = scratch.reset(.retain_capacity);
+            continue;
+        }
+        const key = if (cache) |context| try context.key(temporary.allocator(), .{ .stage = .first_facts, .function = index, .mode = @backingInt(mode), .provenance = &result.provenance, .inputs = .{ .returns = returns } }) else null;
+        const summary = try firstSummary(temporary.allocator(), scratch.allocator(), .{
+            .module = module,
+            .function = index,
+            .options = .{ .fold = !verify, .sabotage = sabotage, .mark = false, .returns = returns },
+            .cache = cache.?,
+            .key = key,
+        });
+        try parameter_summary.addSummary(arena, summary);
+        returns[index] = summary.returned;
         _ = temporary.reset(.retain_capacity);
         _ = scratch.reset(.retain_capacity);
     }
     const parameters = parameter_summary.finish();
     // Closed caller bounds can prove an affine callback safe only after the
     // all-call parameter pass. Deliberately corrupted facts cannot prove safety.
-    if (sabotage == .none) result.counts.inlined += try inline_leaves.withParametersCounted(arena, module, parameters, &result.provenance, inlined);
+    if (sabotage == .none) result.counts.inlined += if (cache) |context|
+        try inlineCached(arena, backing, module, .{ .cache = context, .provenance = &result.provenance, .counts = inlined, .parameters = parameters, .stage = .parameter_inline, .mode = mode })
+    else
+        try inline_leaves.withParametersCountedWithScratch(arena, backing, module, parameters, &result.provenance, inlined);
     // The effect summaries of the inlined module; the passes below keep every function's meaning.
     const summaries = try effects.analyze(arena, module);
     for (module.functions.items, result.known, result.plans, parameters, 0..) |*function, *slot, *plan, params, index| {
         if (function.signature.linkage != .internal) continue;
+        result.per_function[index].counts.inlined = inlined[index];
+        const key = if (cache) |context| try context.key(temporary.allocator(), .{
+            .stage = .final,
+            .function = @intCast(index),
+            .mode = @backingInt(mode),
+            .provenance = &result.provenance,
+            .inputs = .{
+                .parameters = params,
+                .returns = returns,
+                .effects = &summaries,
+                .events = .{ inlined[index], result.per_function[index].counts.unswitched },
+            },
+        }) else null;
+        if (try cachedFinal(arena, temporary.allocator(), cache, .{ .function = @intCast(index), .key = key, .provenance = &result.provenance })) |cached| {
+            function.* = cached.function;
+            slot.* = cached.state.known;
+            plan.* = cached.state.plans;
+            result.per_function[index] = .{ .counts = cached.state.counts, .own = cached.state.own };
+            result.counts.proven += cached.state.counts.proven;
+            result.counts.versioned += cached.state.counts.versioned;
+            result.counts.vectorized += cached.state.counts.vectorized;
+            result.own.add(cached.state.own);
+            _ = temporary.reset(.retain_capacity);
+            continue;
+        }
         const options: facts.Options = .{ .fold = !verify, .sabotage = sabotage, .params = params, .returns = returns };
         var known = try facts.analyzeWithScratch(temporary.allocator(), scratch.allocator(), function, options);
         _ = scratch.reset(.retain_capacity);
@@ -182,15 +269,157 @@ pub fn runWithScratch(arena: std.mem.Allocator, backing: std.mem.Allocator, modu
         result.per_function[index].own = try own.functionWithScratch(arena, backing, module, function, .{ .verify = verify, .facts = &known, .provenance = &result.provenance, .function_index = @intCast(index), .effects = &summaries });
         result.own.add(result.per_function[index].own);
         try extend(temporary.allocator(), &known, function);
-        known = try known.clone(arena);
-        slot.* = known;
-        _ = temporary.reset(.retain_capacity);
         // Vector code comes only from trusted facts, never in a verify build.
         if (!verify) plan.* = try vector.plan(arena, function, known);
+        const artifact = try retainFinalFacts(arena, temporary.allocator(), cache, index, &known);
+        slot.* = if (artifact == null) known else null;
         result.per_function[index].counts.vectorized = @intCast(plan.len);
         result.counts.vectorized += @intCast(plan.len);
+        if (cache) |context| {
+            context.changed(index);
+            if (key) |digest| try context.saveFinal(temporary.allocator(), digest, @intCast(index), &result.provenance, .{
+                .known = known,
+                .plans = plan.*,
+                .counts = result.per_function[index].counts,
+                .own = result.per_function[index].own,
+                .artifact = artifact,
+            });
+        }
+        _ = temporary.reset(.retain_capacity);
     }
     return result;
+}
+
+fn retainFinalFacts(arena: std.mem.Allocator, work: std.mem.Allocator, cache: ?*cache_mod.Context, index: usize, known: *facts.Facts) Error!?deferred_facts.Artifact {
+    if (cache) |context| if (context.deferred) |table| {
+        const encoded = try deferred_facts.encode(work, known.*);
+        const artifact = try retainedArtifact(arena, encoded);
+        table.entries[index] = artifact;
+        return artifact;
+    };
+    known.* = try known.clone(arena);
+    return null;
+}
+
+fn retainedArtifact(arena: std.mem.Allocator, artifact: deferred_facts.Artifact) Error!deferred_facts.Artifact {
+    return .{ .bytes = try arena.dupe(u8, artifact.bytes), .digest = artifact.digest, .loop_ids = try arena.dupe(usize, artifact.loop_ids) };
+}
+
+const FinalRequest = struct { function: u32, key: ?[32]u8, provenance: *origins.Table };
+const CachedFinal = struct { function: ir.Function, state: cache_mod.FinalState };
+
+fn cachedFinal(arena: std.mem.Allocator, work: std.mem.Allocator, cache: ?*cache_mod.Context, request: FinalRequest) Error!?CachedFinal {
+    const context = cache orelse return null;
+    const key = request.key orelse return null;
+    var value = try context.load(work, .final, key, cache_mod.Final) orelse return null;
+    const description = value.analysis orelse {
+        context.rejected(.final);
+        return null;
+    };
+    const artifact = try context.loadFacts(work, description) orelse {
+        context.rejected(.final);
+        return null;
+    };
+    if (context.deferred == null) value.state.known = try deferred_facts.decode(work, artifact);
+    if (cache_mod.validFinal(value, true)) if (try context.restore(arena, request.function, value.function, value.provenance, request.provenance)) |restored| {
+        var state = value.state;
+        if (context.deferred) |table| {
+            table.entries[request.function] = try retainedArtifact(arena, artifact);
+        } else state.known = if (state.known) |known| try known.clone(arena) else null;
+        state.plans = try cache_mod.retainPlans(arena, state.plans);
+        return .{ .function = restored, .state = state };
+    };
+    context.rejected(.final);
+    return null;
+}
+
+const FirstRequest = struct {
+    module: *ir.Module,
+    function: u32,
+    options: facts.Options,
+    cache: *cache_mod.Context,
+    key: ?[32]u8,
+};
+
+fn firstSummary(work: std.mem.Allocator, scratch: std.mem.Allocator, request: FirstRequest) Error!cache_mod.Summary {
+    if (request.key) |digest| if (try request.cache.load(work, .first_facts, digest, cache_mod.Summary)) |summary| {
+        if (summary.valid(request.module)) return summary;
+        request.cache.rejected(.first_facts);
+    };
+    const function = &request.module.functions.items[request.function];
+    const known = try facts.analyzeWithScratch(work, scratch, function, request.options);
+    const summary = try cache_mod.summarize(work, request.module, function, &known, request.options.sabotage);
+    if (request.key) |digest| try request.cache.save(digest, cache_mod.Summary, summary);
+    return summary;
+}
+
+fn unswitchFunctions(arena: std.mem.Allocator, module: *ir.Module, result: *Result, cache: ?*cache_mod.Context, mode: Mode, temporary: *std.heap.ArenaAllocator) Error!void {
+    for (module.functions.items, 0..) |*function, index| {
+        if (function.signature.linkage != .internal) continue;
+        const key = if (cache) |context| try context.key(temporary.allocator(), .{ .stage = .unswitch, .function = @intCast(index), .mode = @backingInt(mode), .provenance = &result.provenance }) else null;
+        var changed: ?u32 = null;
+        if (cache) |context| if (key) |digest| {
+            if (try context.load(temporary.allocator(), .unswitch, digest, cache_mod.Transform)) |cached| {
+                if (try context.restoreTransform(arena, temporary.allocator(), @intCast(index), cached, &result.provenance)) |restored| {
+                    function.* = restored;
+                    changed = cached.changed;
+                } else context.rejected(.unswitch);
+            }
+        };
+        if (changed == null) {
+            changed = try version.unswitch(arena, function, result.provenance.context(@intCast(index)));
+            if (cache) |context| {
+                context.changed(index);
+                if (key) |digest| try context.saveTransform(temporary.allocator(), digest, @intCast(index), &result.provenance, changed.?);
+            }
+        }
+        _ = temporary.reset(.retain_capacity);
+        result.per_function[index].counts.unswitched = changed.?;
+        result.counts.unswitched += changed.?;
+    }
+}
+
+const InlineRound = struct {
+    cache: *cache_mod.Context,
+    provenance: *origins.Table,
+    counts: []u32,
+    parameters: []const []const ?facts.Interval = &.{},
+    stage: cache_mod.Stage,
+    mode: Mode,
+};
+
+fn inlineCached(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir.Module, round: InlineRound) Error!u32 {
+    const cache = round.cache;
+    const provenance = round.provenance;
+    const parameters = round.parameters;
+    const stage = round.stage;
+    var work = std.heap.ArenaAllocator.init(backing);
+    defer work.deinit();
+    var total: u32 = 0;
+    for (module.functions.items, 0..) |*function, index| {
+        if (function.signature.linkage != .internal) continue;
+        const params = if (index < parameters.len) parameters[index] else &.{};
+        const key = try cache.key(work.allocator(), .{ .stage = stage, .function = @intCast(index), .mode = @backingInt(round.mode), .provenance = provenance, .inputs = .{ .parameters = params } });
+        var changed: ?u32 = null;
+        if (key) |digest| if (try cache.load(work.allocator(), stage, digest, cache_mod.Transform)) |cached| {
+            if (try cache.restoreTransform(arena, work.allocator(), @intCast(index), cached, provenance)) |restored| {
+                function.* = restored;
+                changed = cached.changed;
+            } else cache.rejected(stage);
+        };
+        if (changed == null) {
+            changed = if (stage == .inline_cfg)
+                try inline_leaves.cfgCaller(arena, module, @intCast(index), provenance)
+            else
+                try inline_leaves.leafCallerWithScratch(arena, work.allocator(), module, @intCast(index), params, provenance);
+            cache.changed(index);
+            if (key) |digest| try cache.saveTransform(work.allocator(), digest, @intCast(index), provenance, changed.?);
+        }
+        round.counts[index] += changed.?;
+        total += changed.?;
+        _ = work.reset(.retain_capacity);
+    }
+    return total;
 }
 
 /// The internal functions in an order that puts each callee before its callers
@@ -277,6 +506,18 @@ const ParameterSummary = struct {
                 if (callee >= self.usable.len or !self.usable[callee]) continue;
                 try mergeCall(arena, .{ .caller = caller, .known = known, .call = call }, &self.merged[callee], module.functions.items[callee].signature.params.len);
             }
+        }
+    }
+
+    fn addSummary(self: *ParameterSummary, arena: std.mem.Allocator, summary: cache_mod.Summary) Error!void {
+        for (summary.calls) |call| {
+            if (call.callee >= self.usable.len or !self.usable[call.callee]) continue;
+            if (self.merged[call.callee]) |ranges| {
+                for (ranges, call.ranges) |*slot, next| {
+                    const now = slot.* orelse continue;
+                    slot.* = if (next) |range| facts.Interval.hull(now, range) else null;
+                }
+            } else self.merged[call.callee] = try arena.dupe(?facts.Interval, call.ranges);
         }
     }
 
