@@ -214,7 +214,7 @@ test "--counters is a build and run flag given once, and part of the build's rep
     const built = try cli_args.parse(a, .build, &.{ "p.my", "-o", "p", "--counters" }, "zig", &failure);
     try std.testing.expect(built.build.show.codegen.counters);
     const ran = try cli_args.parse(a, .run, &.{ "p.my", "--counters", "--release" }, "zig", &failure);
-    try std.testing.expect(ran.build.show.codegen.counters and ran.build.release);
+    try std.testing.expect(ran.build.show.codegen.counters and ran.build.mode == .release);
     try std.testing.expectError(error.Usage, cli_args.parse(a, .build, &.{ "p.my", "-o", "p", "--counters", "--counters" }, "zig", &failure));
     const plain = try cli_args.parse(a, .build, &.{ "p.my", "-o", "p" }, "zig", &failure);
     try std.testing.expect(!plain.build.show.codegen.counters);

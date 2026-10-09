@@ -257,11 +257,11 @@ test "the S0 compute kernels give the old core's checksums at 4096 and 64 elemen
 }
 
 /// The integer_math checksum line and trap code of a verify (or sabotaged) release build.
-fn verified(arena: std.mem.Allocator, root: []const u8, flag: []const u8) !Outcome {
+fn verified(arena: std.mem.Allocator, root: []const u8, mode: []const u8, flag: []const u8) !Outcome {
     const output = try std.fmt.allocPrint(arena, "{s}/int_math{s}", .{ root, flag });
     const source = try std.fmt.allocPrint(arena, "{s}/int_math.my", .{options.fixtures});
     const cache = try std.fmt.allocPrint(arena, cache_format, .{root});
-    const result = try std.process.run(arena, std.testing.io, .{ .argv = &.{ options.core_path, "build", source, "-o", output, optimize_flag, flag, "--link", options.clock_path, cache_flag, cache } });
+    const result = try std.process.run(arena, std.testing.io, .{ .argv = &.{ options.core_path, "build", source, "-o", output, mode, flag, "--link", options.clock_path, cache_flag, cache } });
     try std.testing.expect(result.term == .exited and result.term.exited == 0);
     return run(arena, output, &.{ "4096", "300", "7" });
 }
@@ -273,12 +273,14 @@ test "a verify build checks every fact at run time, and catches a deliberately w
     var dir = std.testing.tmpDir(.{});
     defer dir.cleanup();
     const root = try scratch(arena.allocator(), dir);
-    const honest = try verified(arena.allocator(), root, "--verify-facts");
-    try std.testing.expectEqualStrings("561601106", firstField(honest.stdout));
-    try std.testing.expectEqual(@as(u8, 0), honest.status);
-    const sabotaged = try verified(arena.allocator(), root, "--sabotage-facts");
-    try std.testing.expectEqual(@as(u8, 1), sabotaged.status);
-    try std.testing.expect(std.mem.indexOf(u8, sabotaged.stderr, "error[R_CORE_FACT]: native execution failed (range [0, 1007]: value 1008") != null);
+    for ([_][]const u8{ optimize_flag, "--optimize-debug" }) |mode| {
+        const honest = try verified(arena.allocator(), root, mode, "--verify-facts");
+        try std.testing.expectEqualStrings("561601106", firstField(honest.stdout));
+        try std.testing.expectEqual(@as(u8, 0), honest.status);
+        const sabotaged = try verified(arena.allocator(), root, mode, "--sabotage-facts");
+        try std.testing.expectEqual(@as(u8, 1), sabotaged.status);
+        try std.testing.expect(std.mem.indexOf(u8, sabotaged.stderr, "error[R_CORE_FACT]: native execution failed (range [0, 1007]: value 1008") != null);
+    }
 }
 
 /// A release build of `test/core/NAME.my` with `flag` (a verify or sabotage mode), run at 4096 elements.

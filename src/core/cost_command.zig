@@ -90,11 +90,16 @@ pub fn output(init: std.process.Init, request: Request) Error!Output {
         try diagnostics.print(a, "{s}:{d}:{d}: error[E_CORE_UNSUPPORTED]: the new core does not support {s} yet\n", .{ at.path, at.line, at.column, refusal.reason });
         return failure(init, diagnostics.items, err);
     };
-    const options: pipeline.Options = .{ .zig = cli_run.zigPath(init), .release = !request.debug, .facts = if (request.mode == .verify) .verify else if (request.mode == .off) .off else .on, .show = .{ .stats = true } };
+    const options: pipeline.Options = .{
+        .zig = cli_run.zigPath(init),
+        .mode = if (request.debug) .debug else .release,
+        .facts = if (request.mode == .verify) .verify else if (request.mode == .off) .off else .on,
+        .show = .{ .stats = true },
+    };
     const emission = pipeline.emitted(a, &module, try pipeline.unitFor(a, checked, entry.path, session.single != null), options, &diagnostics) catch |err| return failure(init, diagnostics.items, err);
     var report = emission.cost_report.?;
     if (request.llvm_remarks == null) {
-        const captured = try driver.optimizationRemarks(a, init.io, init.environ_map, .{ .zig = options.zig, .work = options.cache, .output = "", .release = options.release, .links = &.{}, .units = emission.units });
+        const captured = try driver.optimizationRemarks(a, init.io, init.environ_map, .{ .zig = options.zig, .work = options.cache, .output = "", .mode = options.mode, .links = &.{}, .units = emission.units });
         if (captured.yaml) |yaml| remarks.apply(&report, yaml);
         var timing: std.ArrayList(u8) = .empty;
         try cost.llvmStats(a, &timing, report.totals, captured);

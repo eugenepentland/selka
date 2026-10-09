@@ -142,7 +142,7 @@ fn write(init: std.process.Init, text: []const u8) Error!void {
 }
 
 const build_usage =
-    \\usage: mylang build <file.my> (-o <output> | --run [run options] [-- ARGS...]) [--release] [--link FILE.c]... [--emit-llvm PATH]
+    \\usage: mylang build <file.my> (-o <output> | --run [run options] [-- ARGS...]) [--release | --optimize-debug] [--link FILE.c]... [--emit-llvm PATH]
     \\       [--cache-dir DIR] [--no-cache] [--zig PATH] [--report] [--cache-report] [--verify-cache] [--stats] [--diagnostics=text|json]
     \\
 ;
