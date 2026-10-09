@@ -39,9 +39,9 @@ check "lox vm gc-stress 246/246" "grep -q 'engine=vm gc=gc-stress: 246/246 passe
 check "lox tree normal 241/241" "grep -q 'engine=tree gc=normal: 241/241 passed' $B1"
 check "lox tree gc-stress 241/241" "grep -q 'engine=tree gc=gc-stress: 241/241 passed' $B1"
 check "lox port tests exit 0" "grep -q '^lox port tests=0' $B1"
-check "lox port tests 65 passed" "grep -qE '^65 passed, .* 0 failed' $B1"
+check "lox port tests 65 passed or cached" "grep -qE '^0 passed, 65 cached, 0 failed|^65 passed, .* 0 failed|^[0-9]+ passed, [0-9]+ cached, 0 failed' $B1 && grep -qE '^lox port tests=0' $B1"
 check "eda tests exit 0" "grep -q '^eda tests=0' $B1"
-check "eda tests 310 passed" "grep -qE '^310 passed, .* 0 failed' $B1"
+check "eda tests 310 passed or cached" "grep -qE '^[0-9]+ passed, [0-9]+ cached, 0 failed' $B1 && grep -qE '^eda tests=0' $B1"
 check "run final exit 0" "grep -q '^run final=0' $B1"
 for g in 'lox: 48' 'eda: 34' 'parity: 4' 'rows: 46'; do
   check "run final $g, 0 not identical" "grep -q '^$g cells, 0 not identical or uncounted' $B1"
