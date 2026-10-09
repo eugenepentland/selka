@@ -47,6 +47,13 @@ fn functionCounter(counts: std.json.Value, function: []const u8, name: []const u
     return -1;
 }
 
+/// Whether a child exited with status 0 (its output reported when not).
+fn succeeded(ran: std.process.RunResult) bool {
+    const ok = ran.term == .exited and ran.term.exited == 0;
+    if (!ok) report("child: {s}{s}\n", .{ ran.stdout, ran.stderr });
+    return ok;
+}
+
 /// Debug, release, and release with the facts verified.
 const modes = [_][]const []const u8{ &.{}, &.{"--release"}, &.{ "--release", "--verify-facts" } };
 
@@ -265,6 +272,24 @@ test "a store ahead of an if-elif ladder runs only in the arms that observe it" 
         // Sunk one level (main's rule) it ran 216 times.
         try std.testing.expect(lineSum(counts, "unique_test", "u1_sink::run", 52) <= 16);
     }
+}
+
+// spec-case: NEW-CORE-U1-SINK-1
+test "a store sunk several blocks down keeps its operands: the guest tests that sink most still pass" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
+    const source = try std.fmt.allocPrint(a, "{s}/rc_counted_receivers.my", .{options.lang_tests});
+    const cache = try std.fmt.allocPrint(a, "{s}/cache", .{root});
+    var environment = try std.testing.environ.createMap(a);
+    try environment.put("MYL_CORE_LEAKCHECK", "1");
+    // Each sinking copies the store's operands to a new place in `extra`; a copy taken from
+    // under an append that moved it read freed memory (a compiler panic, at --verify-facts).
+    const ran = try std.process.run(a, std.testing.io, .{ .argv = &.{ options.core_path, "test", source, "--release", "--verify-facts", "--cache-dir", cache }, .environ_map = &environment });
+    try std.testing.expect(succeeded(ran));
 }
 
 // spec-case: NEW-CORE-U1-SINK-1

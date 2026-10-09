@@ -879,9 +879,11 @@ const Context = struct {
         // path to it, for the same list and index: the copy repeats nothing.
         if (copy.check == .exact) copy.check = .proven;
         if (chain.len > 1) copy.a = try self.reread(store.a, f.inst(chain[1]), records[1], s, &at);
+        // Copied first: appending may move `f.extra`, which the store's operands point into.
+        const operands = try self.scratch.dupe(ir.Ref, f.operands(store.data));
         const extra_start: u32 = @intCast(f.extra.items.len);
-        try f.extra.appendSlice(self.arena, f.operands(store.data));
-        copy.data = (ir.ExtraSlice{ .start = extra_start, .len = @intCast(f.operands(store.data).len) }).pack();
+        try f.extra.appendSlice(self.arena, operands);
+        copy.data = (ir.ExtraSlice{ .start = extra_start, .len = @intCast(operands.len) }).pack();
         var previous = try self.emitAtStart(s, copy, &at);
         stored.* = previous;
         for (chain[1..], 1..) |member, k| {
