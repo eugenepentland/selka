@@ -1,0 +1,14 @@
+commit 5b7756893194b68fa4253f574d7bf00e6e0743ec start 04:08:16 load 2.62 6.30 4.68
+gate=0 04:11:18
+   +- compile exe mylang debug native (+2 more reused dependencies)
+
+gate wall 181.68 s
+Build Summary: 88/88 steps succeeded; 2117/21760 tests passed (19643 skipped)
+fmt=0
+qualify=0 04:14:02
+  "qualified": true,
+  debug    matching 1518, mismatching 0, unsupported 0 (of 1518 tests; 1518 supported)
+  release  matching 1518, mismatching 0, unsupported 0 (of 1518 tests; 1518 supported)
+fuzz200=0 04:27:56
+s0: PASS; 98.61950351600535s s1: PASS; 121.86341660702601s rebinding: PASS; 110.69992170901969s iteration: PASS; 173.2585140641313s rc: PASS; 70.00775662786327s dict: PASS; 254.22051485301927s text: PASS; 54.78963430295698s functions: PASS; 95.75387300201692s number: PASS; 122.65188916190527s 
+part1a done 04:27:56

@@ -1,0 +1,23 @@
+source_commit=5b7756893194b68fa4253f574d7bf00e6e0743ec
+$ /home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/scripts/build-slot.sh build -- nice -n 10 /usr/bin/python3 /home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/experiments/new-core-s5-20261007/tools/fuzz_frozen.py --kind rc --references /home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/experiments/new-core-s5-20261007/references/fuzz-v1.json.gz --cases 200 --seed 3303 --old /home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/experiments/new-core-s5-20261007/tools/frozen-old-core --new /home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/cex/mylang-debug --evidence /home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/experiments/fs-x-20261009/fuzz200-2/rc --cache-root /home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/s5/fuzz/20261009T041404Z-155b7b4a4e91/rc
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: all 3 build slot(s) busy; waiting (60s so far)
+build-slot: all 3 build slot(s) busy; waiting (120s so far)
+build-slot: all 3 build slot(s) busy; waiting (180s so far)
+build-slot: all 3 build slot(s) busy; waiting (240s so far)
+build-slot: all 3 build slot(s) busy; waiting (300s so far)
+build-slot: all 3 build slot(s) busy; waiting (360s so far)
+build-slot: all 3 build slot(s) busy; waiting (421s so far)
+build-slot: build slot 3 after 466s (all 3 build slot(s) busy)
+qualification progress: rc: seen=25 elapsed=7.98s
+qualification progress: rc: seen=50 elapsed=16.54s
+qualification progress: rc: seen=75 elapsed=25.23s
+qualification progress: rc: seen=100 elapsed=34.05s
+qualification progress: rc: seen=125 elapsed=42.54s
+qualification progress: rc: seen=150 elapsed=51.51s
+qualification progress: rc: seen=175 elapsed=60.50s
+qualification progress: rc: seen=200 elapsed=69.65s
+cases=200 refused=0 rejected=0 compared=1800 mismatch=0
+qualification {"kind": "rc", "qualified": true, "accepted": 200, "native_comparisons": 1800, "elapsed_seconds": 70.00775662786327}
+
+exit=0

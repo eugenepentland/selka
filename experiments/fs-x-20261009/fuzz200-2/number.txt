@@ -1,0 +1,27 @@
+source_commit=5b7756893194b68fa4253f574d7bf00e6e0743ec
+$ /home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/scripts/build-slot.sh build -- nice -n 10 /usr/bin/python3 /home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/experiments/new-core-s5-20261007/tools/fuzz_frozen.py --kind number --references /home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/experiments/new-core-s5-20261007/references/fuzz-v1.json.gz --cases 200 --seed 3308 --old /home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/experiments/new-core-s5-20261007/tools/frozen-old-core --new /home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/cex/mylang-debug --evidence /home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/experiments/fs-x-20261009/fuzz200-2/number --cache-root /home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/s5/fuzz/20261009T041404Z-155b7b4a4e91/number --harness /home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/experiments/new-core-s2-20261005/wave-b/s2-t2/fuzz_number.py
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: all 3 build slot(s) busy; waiting (60s so far)
+build-slot: all 3 build slot(s) busy; waiting (120s so far)
+build-slot: all 3 build slot(s) busy; waiting (180s so far)
+build-slot: all 3 build slot(s) busy; waiting (240s so far)
+build-slot: all 3 build slot(s) busy; waiting (300s so far)
+build-slot: all 3 build slot(s) busy; waiting (360s so far)
+build-slot: all 3 build slot(s) busy; waiting (421s so far)
+build-slot: all 3 build slot(s) busy; waiting (481s so far)
+build-slot: all 3 build slot(s) busy; waiting (541s so far)
+build-slot: all 3 build slot(s) busy; waiting (601s so far)
+build-slot: all 3 build slot(s) busy; waiting (661s so far)
+build-slot: build slot 3 after 706s (all 3 build slot(s) busy)
+qualification progress: number: seen=25 elapsed=16.07s
+qualification progress: number: seen=50 elapsed=32.04s
+qualification progress: number: seen=75 elapsed=48.02s
+qualification progress: number: seen=100 elapsed=64.41s
+qualification progress: number: seen=125 elapsed=81.34s
+qualification progress: number: seen=150 elapsed=95.08s
+qualification progress: number: seen=175 elapsed=108.57s
+qualification progress: number: seen=200 elapsed=122.05s
+records,unions,propagate,mut,alias cases=200 old_rejected=0 refused=0 compared=3000 mismatch=0 fact=0 traps=0 caught=0
+qualification {"kind": "number", "qualified": true, "accepted": 200, "native_comparisons": 3000, "elapsed_seconds": 122.65188916190527}
+
+exit=0

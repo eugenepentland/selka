@@ -1,0 +1,59 @@
+STEP start 5b7756893 04:04:11 load 8.06 3.15 2.87
+STEP releasefast=0 04:08:16
+STEP part1a finished 04:27:56
+STEP part1b and prep finished 04:44:52
+ok   gate exit 0
+ok   gate 88/88
+ok   fmt exit 0
+ok   qualify exit 0
+ok   conformance debug 1518/0/0
+ok   conformance release 1518/0/0
+ok   fuzz200 exit 0
+ok   fuzz200 nine kinds PASS
+ok   fuzz200 no FAIL or STOP
+ok   build final
+ok   build base
+ok   lox conformance exit 0
+ok   lox vm normal 246/246
+ok   lox vm gc-stress 246/246
+ok   lox tree normal 241/241
+ok   lox tree gc-stress 241/241
+ok   lox port tests exit 0
+ok   lox port tests 65 passed
+ok   eda tests exit 0
+ok   eda tests 310 passed
+ok   run final exit 0
+ok   run final lox: 48, 0 not identical
+ok   run final eda: 34, 0 not identical
+ok   run final parity: 4, 0 not identical
+ok   run final rows: 46, 0 not identical
+ok   identity exit 0
+ok   identity lox: 48 cells, 48 identical
+ok   identity eda: 34 cells, 34 identical
+ok   identity parity: 4 cells, 4 identical
+ok   identity rows: 46 cells, 46 identical
+ok   part1b done
+ok   timing-prep lox builds
+ok   timing-prep rows build
+STEP part1 green 04:44:52
+STEP llvm-diff=0 04:45:16
+94 programs, 2 not identical: ['row:binary_search', 'row:string_split']
+PARITY_FILTER=
+LOX_CHANGED=0
+EDA_CHANGED=0
+04:45:16 rows 1 start load 2.41 3.69 3.91
+rows 1=0
+04:48:01 rows 1 end load 2.90 3.40 3.76
+STEP rows 1 done 04:48:01
+04:48:01 rows 2 start load 2.90 3.40 3.76
+rows 2=0
+04:50:40 rows 2 end load 1.96 2.86 3.50
+STEP rows 2 done 04:50:40
+04:50:40 rows 3 start load 1.96 2.86 3.50
+rows 3=0
+04:53:04 rows 3 end load 1.36 2.30 3.19
+STEP rows 3 done 04:53:04
+STEP eda skipped: LLVM identical to run 1
+STEP parity skipped: LLVM identical to run 1
+STEP lox skipped: LLVM identical to run 1
+STEP part3 done 04:53:04

@@ -1,0 +1,462 @@
+{
+ "row-record_reads": {
+  "label": "row-record_reads",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "94363151bfa881dea25c65660d99a49462574709f215a0f65e73bc459a0b7e9e",
+  "stdout": "744472322 18918852\n",
+  "stderr": "",
+  "counts": true
+ },
+ "row-tagged_stack": {
+  "label": "row-tagged_stack",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "3566688d0ab22c6c01cd9fbd5bdf989cfa3f8de6e152c01b63c699e3343c9f7e",
+  "stdout": "80535481 46985414\n",
+  "stderr": "",
+  "counts": true
+ },
+ "row-mutate_unique": {
+  "label": "row-mutate_unique",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "720f9256e86ab774f2107190ec0a1606dd479b3d805a75a17a3411c6fa44030c",
+  "stdout": "287462445 31057979\n",
+  "stderr": "",
+  "counts": true
+ },
+ "row-mutate_shared": {
+  "label": "row-mutate_shared",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "ba0fa0b63575034e8bd40ea1847f8e106a5993460fb035f5f82876cc28900a74",
+  "stdout": "2620424 535079\n",
+  "stderr": "",
+  "counts": true
+ },
+ "row-record_construct": {
+  "label": "row-record_construct",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "193069e18a64b2c512d231eac32d32af569a84adb2a121f071e18ea422e25452",
+  "stdout": "870968511 48146564\n",
+  "stderr": "",
+  "counts": true
+ },
+ "row-record_update": {
+  "label": "row-record_update",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "8ff0fb1e37bd45be41be7955e17a6b086a5af7903f2446e3afa2f9b2a7a79f95",
+  "stdout": "870968511 40454685\n",
+  "stderr": "",
+  "counts": true
+ },
+ "row-option_handle": {
+  "label": "row-option_handle",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "a65de4b0ab8d35f1b18fba3551a89836c4e069b0db2b1623ee549ceb89377988",
+  "stdout": "927015754 15163493\n",
+  "stderr": "",
+  "counts": true
+ },
+ "row-result_propagate": {
+  "label": "row-result_propagate",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "589310fb8e1bea48579b5da659fe67e994f3732178592e011583ba11d5e79859",
+  "stdout": "166728930 19569658\n",
+  "stderr": "",
+  "counts": true
+ },
+ "row-list_scan": {
+  "label": "row-list_scan",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "fb7dd0cdfd031dcfe8d43b2813f6e8f194124f62422b7ecb13d84f046f0cd2a5",
+  "stdout": "257772632 33436696\n",
+  "stderr": "",
+  "counts": true
+ },
+ "row-list_append": {
+  "label": "row-list_append",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "d8014702670010854372aa1470ab1306158978dc69f344c13fb111ea6607ede8",
+  "stdout": "665442961 43499261\n",
+  "stderr": "",
+  "counts": true
+ },
+ "row-list_filter": {
+  "label": "row-list_filter",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "995e17ae0f10e402058b626c7374580531fb7096c4f51314f78488e61ad90afe",
+  "stdout": "852403740 31661965\n",
+  "stderr": "",
+  "counts": true
+ },
+ "row-alloc_short": {
+  "label": "row-alloc_short",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "e0a8c78476a064f7154d6565fb8bef734abb20807d3f146f9c8276730c49dbe0",
+  "stdout": "869311713 6836413\n",
+  "stderr": "",
+  "counts": true
+ },
+ "row-alloc_retained": {
+  "label": "row-alloc_retained",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "25728c23aaa677cb7af2734164015d8769dad79a29775b6372addcde47881ba8",
+  "stdout": "869311713 54601118\n",
+  "stderr": "",
+  "counts": true
+ },
+ "row-mutate_nested": {
+  "label": "row-mutate_nested",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "e05eb4c1ce14b8746595cb09ef5d985cbcbf3e745aafd9eb2c637abe28b7c087",
+  "stdout": "8794306 9948082\n",
+  "stderr": "",
+  "counts": true
+ },
+ "row-bytes_scan": {
+  "label": "row-bytes_scan",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "d4a24e083c42080b9ca90d7acb231261ac651beec02d015e475de87f523a19b1",
+  "stdout": "88959986 415217\n",
+  "stderr": "",
+  "counts": true
+ },
+ "row-string_equal": {
+  "label": "row-string_equal",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "069c9308d29b982972144ce3dc393633ff5b34f29ff9d39918e658a4d43fa338",
+  "stdout": "100000 4685845\n",
+  "stderr": "",
+  "counts": true
+ },
+ "row-string_search": {
+  "label": "row-string_search",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "5d8e7d657a0ee99352e914832e0de8ea21184fd69248d10b6799f1b4c51843dd",
+  "stdout": "82050000 6731109\n",
+  "stderr": "",
+  "counts": true
+ },
+ "row-string_split": {
+  "label": "row-string_split",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "e7ede9b133a5609468cad17d5dcb5d3c55dc3385df087dd09f7024adeaef24f7",
+  "stdout": "703954400 28204715\n",
+  "stderr": "",
+  "counts": true
+ },
+ "row-string_join": {
+  "label": "row-string_join",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "6289c4f82dc45707075aa3d9b8ebbf72853866a7ff8a79076d3b1f1d9fc9a6d9",
+  "stdout": "228756486 9785340\n",
+  "stderr": "",
+  "counts": true
+ },
+ "row-dict_lookup": {
+  "label": "row-dict_lookup",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "e30537bb5bc877567a35cb174056640311c599dfe4fcc1b28bc27eef7fb60b85",
+  "stdout": "260753752 106848585\n",
+  "stderr": "",
+  "counts": true
+ },
+ "row-dict_lookup_str": {
+  "label": "row-dict_lookup_str",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "208c219dc6956b7eaeeb7f9f18ca1ab95a92f02738054cdbf65b9c143fd77410",
+  "stdout": "260753752 107379026\n",
+  "stderr": "",
+  "counts": true
+ },
+ "row-dict_update": {
+  "label": "row-dict_update",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "6c7327d7d76f7d794e89abf2e316f06c6772a4236c9bbd2cbe5f97997a8def43",
+  "stdout": "327973489 444698620\n",
+  "stderr": "",
+  "counts": true
+ },
+ "row-dict_update_str": {
+  "label": "row-dict_update_str",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "8c4df47f3aa22d85a10d997ab94b7539c0450a70d3c0cc0bf0311c791d2d5435",
+  "stdout": "327973489 436776016\n",
+  "stderr": "",
+  "counts": true
+ },
+ "row-set_dedup": {
+  "label": "row-set_dedup",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "a6b014b878afdf261d7e0d8f01b68823a349331a7e99a894055c6a71e55c5638",
+  "stdout": "95103986 137489783\n",
+  "stderr": "",
+  "counts": true
+ },
+ "row-int_parse": {
+  "label": "row-int_parse",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "603bf33701e30583744c0b4f466540de29e62bd28b6657f407696feb7e6cb699",
+  "stdout": "202584371 63674622\n",
+  "stderr": "",
+  "counts": true
+ },
+ "row-int_format": {
+  "label": "row-int_format",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "e34a4d26f49590de2f4f97f95c2370016709435e53adef7bc6d307ffce55d041",
+  "stdout": "296726930 84410331\n",
+  "stderr": "",
+  "counts": true
+ },
+ "row-call_indirect": {
+  "label": "row-call_indirect",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "ac9a6db98d5f5baec82d865d299851bd8346867a132e0e1c995f189ef1ced7f8",
+  "stdout": "89389306 2457060\n",
+  "stderr": "",
+  "counts": true
+ },
+ "row-sort_int": {
+  "label": "row-sort_int",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "466df7056f87fc2da15f458c7ad813b7d3686f2b0cfe41f88f49df69ac3c7313",
+  "stdout": "793872127 23914581\n",
+  "stderr": "",
+  "counts": true
+ },
+ "row-sort_records": {
+  "label": "row-sort_records",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "59f9e93846bb24f02b58a193c15ab1e68e27e6b737bb15e04bbe5b3de67bd6e8",
+  "stdout": "870748407 23547018\n",
+  "stderr": "",
+  "counts": true
+ },
+ "row-int_math": {
+  "label": "row-int_math",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "02720f7eb8e962679f0f232bce1678c6e5975d946c89631e0f38239535ad1043",
+  "stdout": "488688792 3944879\n",
+  "stderr": "",
+  "counts": true
+ },
+ "row-float_math": {
+  "label": "row-float_math",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "e6c9edc09e852024f5054e0199ba2d8dc01c9cb1665516d080773f5dbf426ec1",
+  "stdout": "232907868 11582210\n",
+  "stderr": "",
+  "counts": true
+ },
+ "row-call_direct": {
+  "label": "row-call_direct",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "53f6d6db2091281139df55b9cb916eaa203c8a7869456061568fd95f869b2b28",
+  "stdout": "260187185 2244496\n",
+  "stderr": "",
+  "counts": true
+ },
+ "row-branch_predictable": {
+  "label": "row-branch_predictable",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "336019b148985a1f33591395e676d1aa56a56ee5853ef0ecb8c4598387c3d4a9",
+  "stdout": "211971818 1557717\n",
+  "stderr": "",
+  "counts": true
+ },
+ "row-branch_mixed": {
+  "label": "row-branch_mixed",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "5ee5365cc75301d8f47fdbbb8692b1a370352dd18006e954236cc01347563f89",
+  "stdout": "668567049 4843084\n",
+  "stderr": "",
+  "counts": true
+ },
+ "row-binary_search": {
+  "label": "row-binary_search",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "2e78f80c51a4dfbc46ec13d89d779a61a81ac472b5bd2fb91cf44b7879419c6c",
+  "stdout": "93672238 25659901\n",
+  "stderr": "",
+  "counts": true
+ },
+ "row-word_count": {
+  "label": "row-word_count",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "391e3bf893e20f51472147ec45c13ddc16446ce906b2e38f829e566b8ba5e426",
+  "stdout": "19267570 24396601\n",
+  "stderr": "",
+  "counts": true
+ },
+ "row-csv_aggregate": {
+  "label": "row-csv_aggregate",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "699a6a3debf19f10042c986bb7399132845956c8842fc9127f2c65da6450e475",
+  "stdout": "801808057 55027566\n",
+  "stderr": "",
+  "counts": true
+ },
+ "row-json_transform": {
+  "label": "row-json_transform",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "9e0ae59a35dcc786e6b0d82e066c9d8b4e76a104bc984a50d40ea001f3b1a22d",
+  "stdout": "225765931 83514909\n",
+  "stderr": "",
+  "counts": true
+ },
+ "row-packet_decode": {
+  "label": "row-packet_decode",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "dd96dd2d12423dc61bf683b9340f45b3f52b8d4eaf64b58158d72b12d24c096f",
+  "stdout": "635993509 11694507\n",
+  "stderr": "",
+  "counts": true
+ },
+ "row-lox_eval": {
+  "label": "row-lox_eval",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "7f1a17c1594107aa60e2ebdd35411c1633834b227d813cb7cd30f840e5ecd1a8",
+  "stdout": "19955744 14606871\n",
+  "stderr": "",
+  "counts": true
+ },
+ "row-tree_build_walk": {
+  "label": "row-tree_build_walk",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "3d5d161a34566b9d4313bcc431115a79dc0315fa6a651f7249b0592da75a2662",
+  "stdout": "181448421 32701907\n",
+  "stderr": "",
+  "counts": true
+ },
+ "row-record_pass": {
+  "label": "row-record_pass",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "a931c5fb7753919152edffc5e5252a9aafb12d912219985f20ddaa3b557e42a2",
+  "stdout": "36686933 25101880\n",
+  "stderr": "",
+  "counts": true
+ },
+ "row-grid_dp": {
+  "label": "row-grid_dp",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "3e71e5199a2e70dc531c732791bb6aab1a16f2491f8c185b55a1e3f09030c042",
+  "stdout": "115143130 22681840\n",
+  "stderr": "",
+  "counts": true
+ },
+ "row-union_find": {
+  "label": "row-union_find",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "c6a48ec17daf3188af08202eb79f3fe0afa5bb5c815eeff6d98f17b86dc69fb8",
+  "stdout": "777875623 41668451\n",
+  "stderr": "",
+  "counts": true
+ },
+ "row-float_format": {
+  "label": "row-float_format",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "126a6e4d126a31ddfe157536d432e674364351684e1818186484b2921d7f95e7",
+  "stdout": "659497267 22886567\n",
+  "stderr": "",
+  "counts": true
+ },
+ "row-buffer_write": {
+  "label": "row-buffer_write",
+  "status": 0,
+  "plain_status": 0,
+  "same_output": true,
+  "stdout_sha256": "25d114d1c39b2ccdea8436272e81bdcabe5ce132a216bc657ce501228ad9e2b7",
+  "stdout": "89591540 20389190\n",
+  "stderr": "",
+  "counts": true
+ }
+}
