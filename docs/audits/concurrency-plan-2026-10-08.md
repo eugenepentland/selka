@@ -1,6 +1,6 @@
 # Structured concurrency, phase 1: packages P1 and P2, 2026-10-08
 
-Status: **P1 stopped at P1-1's early tax gate (2026-10-08).** Revision 1 was read and `codex/concurrency-p1` fast-forwarded to `a633dbd5d`; CE2 `main` was merged with a real merge commit. P1-1 is implemented at `07b0b3dc3`. The 46-row corpus geomean passes (0.998711×), but four row/size medians exceed 1.03×; the required plain-load diagnostic also fails. See [the P1 report](../../experiments/concurrency-p1-2026-10-08/REPORT.md). P1-2 and later steps remain unimplemented; no P2 work has started.
+Status: **P1 is ready to resume at P1-1 (revision 2, 2026-10-08).** P1-1 (`07b0b3dc3`) stopped correctly at its early tax gate. The 46-row geomean was 0.9987×, but `json_transform` was about 4% slower in every batch, and three other cells crossed 1.03× in one run only. See [the P1 report](../../experiments/concurrency-p1-2026-10-08/REPORT.md). Revision 2 (§4.8 R9–R11) shrinks the slow path, adds a layout control to the tax protocol and accepts the compare-exchange helpers. Revision 1's R1–R8 stand. P2 is fully specified here, but it starts only after the front-end plan's F4 exit and the user's go (§6).
 - **Decisions:** C1–C7, accepted by the user on 2026-10-08 (§2).
 - **What it delivers:** CPU fork/join parallelism. `parallel.map` and task groups run on a work-stealing pool of OS threads. Only values that cross into a task get atomic counts.
 - **Size (estimates):** P1 about 25–40 h; P2 about 30–45 h. Each package ends with a stop for the user.
@@ -8,7 +8,7 @@ Status: **P1 stopped at P1-1's early tax gate (2026-10-08).** Revision 1 was rea
 
 ## Launch instruction (for Codex)
 
-> **Resuming P1 (revision 1).** Fast-forward `codex/concurrency-p1` to `claude/concurrency-plan`, which already contains your P1-0 commits. Read §4.7 first, then continue with P1-1. Everything else below is unchanged.
+> **Resuming P1 (revision 2).** Fast-forward `codex/concurrency-p1` to `claude/concurrency-plan`, which already contains your P1-0 and P1-1 commits. Read §4.8 R9–R11, then redo P1-1's slow path and its tax gate as §5 P1-1 now says. Everything else is unchanged.
 >
 > **Now, package P1 only.** Implement package P1 of `docs/audits/concurrency-plan-2026-10-08.md` (branch `claude/concurrency-plan`) on `codex/concurrency-p1`, created from `claude/concurrency-plan`.
 > - If `main` has moved, merge `main` into it first with a real merge commit.
@@ -376,6 +376,36 @@ The rules cover every fatal path P1-0 listed: traps, assertion failures, output 
 
 **R8. The source guard** matches reference-count accesses on `myl_block`, through P1-0's typed AST inventory or an equivalent check. It does not ban the token `count`, which other structures use for lengths and arities. It allows the helper implementations, block initialisation and the share walk.
 
+### 4.8 Revision 2: decisions on P1-1's tax stop (2026-10-08)
+
+P1-1's stop was correct, and its gate result stands as recorded. What it showed:
+- **The encoding costs nothing on average:** geomean 0.9987× and 0.9980× over two runs.
+- **One regression is consistent:** `json_transform` came out at 1.039–1.045× (size 4096) and 1.025–1.033× (size 64) in every batch of both runs. The plain-load build reproduces it (1.031×), so the cause is the encoding's emitted code, not the `unordered` loads. `json::read_value` grew from 7,068 to 8,160 bytes, with 30 new slow-call sites.
+- **The other cells over 1.03× are layout:** `bytes_scan/64` and `string_search/64` did not recur in the second run. `binary_search/4096` was 0.948× with `unordered` loads and 1.052× with plain loads, although both lower to the same machine loads.
+
+**R9. The slow path is one `preserve_mostcc` call.**
+- Inline code stays one load, one unsigned compare and the plain update.
+- Everything else (immortal and shared) is a single `call preserve_mostcc void @myl_core_{retain,release}_slow(ptr)` in a block weighted unlikely (`!prof` branch weights).
+- The C helpers are `__attribute__((cold, noinline, preserve_most))` and declared `preserve_mostcc ... nounwind cold`, exactly as the ERROR-TRACE-6 twins are (`myl_core_err_trace_*_preserve_most`).
+- **Why:** a C-convention call forces values that are live across it into callee-saved registers. Claude's synthetic probe (`experiments/concurrency-p1-2026-10-08/evidence/claude-r2/`: 12 retain sites, 5 live values) gives:
+  - 511 bytes before P1;
+  - 1,317 bytes as P1-1 built it;
+  - **814 bytes with one `preserve_mostcc` call (variant B)**;
+  - 934 bytes with `preserve_mostcc` and the immortal test kept inline (variant C).
+- **Variant B** costs immortal retains and releases a call, and string constants are immortal. So P1-1 measures B and C on the five cells that crossed 1.03× (`json_transform` ×2, `bytes_scan/64`, `string_search/64`, `binary_search/4096`) and on `json::read_value`'s size. It keeps the variant with the better geomean over those cells, and records both in the report.
+- `release_slow` may free; a `preserve_most` helper may call ordinary C functions inside it.
+
+**R10. The tax protocol controls for code layout.**
+- **Problem:** two builds that differ only in code layout can differ by about 5% on one cell. A single-build comparison against a 3% per-cell limit therefore partly measures layout luck.
+- **Mechanism:** an internal, measurement-only switch, `MYLANG_CORE_LAYOUT=K` (K = 4, 5 or 6). It passes `-mllvm -align-all-functions=K` to every clang compile of an emitted unit and of the runtime archive, and it is part of the object and runtime cache keys. The pinned `zig cc` accepts the flag and moves function addresses (Claude, 2026-10-08). The zig driver rejects `--shuffle-sections` and `--symbol-ordering-file`.
+- **Protocol:** the three batches of §7.1's protocol use K = 4, 5 and 6, with base and candidate built at the same K within a batch, so timing costs the same as before.
+- **Cell ratio:** the median of the three batch ratios, as before.
+- **Thresholds unchanged:** per-corpus geomean ≤ 1.010, and no cell above 1.03×.
+- **Report** each batch's ratio, so a cell that is slow at every alignment stands out from one that is slow at one alignment.
+- The switch is internal like `MYLANG_CORE_SANITIZE` (§4.5): no CLI flag, no feature slug, one spec bullet `[LAYOUT-SWITCH-1]`.
+
+**R11. The compare-exchange helpers are accepted.** Shared retain and release use compare-exchange loops. A sentinel check followed by a blind fetch-add could race another thread's saturation and wrap past the immortal value. Keep the loops, and keep the near-saturation and contention tests.
+
 ## 5. Package P1: the runtime (about 25–40 h)
 
 **P1-0. Inventory (1–2 h).**
@@ -383,15 +413,23 @@ The rules cover every fatal path P1-0 listed: traps, assertion failures, output 
 - Every count access in the runtime.
 - Confirmation that a hand-built IR program can call the §4.4 ABI with `func_ref`, boxes and helper calls. If something is missing, write it down for P2-0 and carry on.
 
-**P1-1. Count encoding (§4.1), then an early tax check.**
-- **Code:**
+**P1-1. Count encoding (§4.1), then an early tax check.** Built at `07b0b3dc3`; revision 2 redoes its slow path and its gate.
+- **Code (done):**
   - the `unordered` count loads (R1);
   - `countBlock`;
   - the two slow helpers;
-  - `count_retain`, `count_release` and `count_is_unique`, with every runtime count site moved onto them (P1-0's 19 lines, plus the count-bearing operations it lists);
+  - `count_retain`, `count_release` and `count_is_unique`, with every runtime count site moved onto them;
   - the source test (R8).
-- **Then measure** the single-threaded tax (§7.1), with the `unordered` loads in and the TLS declaration still plain. If the tax gate fails, also time a build with plain loads and report both, so the cost of the loads is separated from the cost of the encoding.
-- **Stop rule:** if the wall-time geomean of any corpus is above 1.010, or any row's median is above 1.03×, stop and report. That would contradict C3's premise.
+- **Revision 2 code:**
+  - the `preserve_mostcc` slow path (R9, variants B and C);
+  - the `MYLANG_CORE_LAYOUT` switch (R10).
+- **Then:**
+  1. Choose R9's variant on the five cells and on `json::read_value`'s size.
+  2. Measure the single-threaded tax under R10's protocol on **every** corpus of §7.1: the 46 rows, EDA, both Lox engines and parity. Use the merged resume base `54eda9012` (or its successor if `main` is merged again) built with the same switch.
+- **Stop rule:**
+  - a per-corpus geomean above 1.010, or any cell's median ratio above 1.03×, stops the package with a report;
+  - the report names, for each such cell, its three per-alignment ratios.
+- **If the gate passes,** run P1-1's correctness gates again (§7.3, without the TSan suite), then continue with P1-2.
 
 **P1-2. Per-thread runtime state (§4.3).**
 - The TLS free lists, measuring initial-exec against local-exec on the tax rows.
@@ -421,10 +459,11 @@ The rules cover every fatal path P1-0 listed: traps, assertion failures, output 
   - `count_load_line` and its comment (R1), which is shared by `countBlock`, `isUnique` and `freeUnique`'s verification read; their comparisons do not change;
   - `countBlock`;
   - the fixed runtime text: the `@myl_core_free_lists` declaration, the inline allocation and free text (around lines 3432–3510), and the `@myl_core_task_call` bridge (R4);
+  - the slow-helper declarations and call sites (R9);
   - the counting-build global declarations made thread-local (`@myl_count_current`, `@myl_count_copy_site`, `@myl_count_push_site`);
   - the `sanitize_thread` attribute;
 - not `core_host.c`: R3 keeps the fatal path out of it;
-- the runtime asset build and link flags for the TSan switch;
+- the runtime asset build and link flags for the TSan switch, and the clang flags of the layout switch (R10) in the build driver (`src/core/build.zig` or wherever the unit and runtime compiles are assembled; name the file in the report);
 - new tests under `src/core/`;
 - `SPEC.md` (§7.2 tags), `docs/tooling/native-build.md` (one paragraph on the TSan switch, as internal), and this plan's Status line;
 - `experiments/concurrency-p1-<date>/`.
@@ -529,7 +568,7 @@ Nothing in the front end, `own.zig` or `ir.zig`.
 
 ### 7.2 Spec tags
 
-- **P1:** `[SHARED-COUNTS-1]` (encoding and emitted paths), `[SHARED-COUNTS-2]` (share walk and invariant), `[RUNTIME-THREADS-1]` (per-thread state, staging, traps, stacks, signals), `[TASK-SCHEDULER-1]` (lazy pool, deques, waiting runs work, thread count), `[TSAN-BUILD-1]` (internal switch).
+- **P1:** `[SHARED-COUNTS-1]` (encoding and emitted paths), `[SHARED-COUNTS-2]` (share walk and invariant), `[RUNTIME-THREADS-1]` (per-thread state, staging, traps, stacks, signals), `[TASK-SCHEDULER-1]` (lazy pool, deques, waiting runs work, thread count), `[TSAN-BUILD-1]` (internal switch), `[LAYOUT-SWITCH-1]` (internal layout switch, R10).
 - **P2:** `[PARALLEL-MAP-1]`, `[TASK-GROUP-1]`, `[TASK-CHECK-1]` and following (one per diagnostic family), `[TASK-TRAP-1]`, `[TASK-OUTPUT-1]`, `[THREAD-COUNT-1]`.
 - One `// spec:` test per bullet; further tests carry `// spec-case:`.
 
