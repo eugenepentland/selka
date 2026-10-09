@@ -206,7 +206,9 @@ reuse before checking native objects against freshly emitted LLVM.
   only cloned IR and its source ancestry survive the caller's inline pass.
 - Raw lowering artifacts capture each function and its ordered declaration,
   type, string, and pending-function discoveries. Replay relocates current source
-  positions and string slots, then runs the existing module transforms. Checked
+  positions and string slots, then runs the existing module transforms. Saved
+  source-backed IR and inline ancestry restore line/column positions against the
+  current file; an earlier same-line length edit cannot install old byte offsets. Checked
   trees are hashed by content, including expanded generic/default bodies and
   embedded inputs. A rolling discovery guard avoids rescanning the growing IR.
 - Optimizer artifacts preserve the original caller mutation order. Separate
@@ -259,6 +261,77 @@ reported RSS is GNU time's largest process peak, not simultaneous process-tree
 memory. Fixture generation, cache preparation and output validation are excluded
 from build latency. Broad declaration changes are measured separately from
 ordinary edits; a changed shared helper intentionally reaches all replicas.
+
+### Scaling validation of intermediate reuse (2026-10-09)
+
+Implementation `c48cfc24b` and source-position correction `7ab53ba6a` implement
+all five stages: temporary-memory reclamation, durable checked/lowered/optimizer/
+LLVM reuse, dependency invalidation, bounded emission/native work, and the large
+EDA scaling matrix. Runtime optimization remains O2.
+The corrected version passed the complete test gate: 91/91 build steps and
+2,253 executed tests, plus all 88 whole-tree Guardian checks.
+
+The final measurements and reproducible harnesses are in
+`experiments/incremental-stages-20261009/`. `comparison.json` summarizes the
+measurements; `matrix.json` and `reserved-edits.json` retain every sample, compiler
+hash, source hash, cache counter, phase time, load reading and RSS measurement.
+All 47 final large build invocations/setup builds passed all-replica usage,
+blinky-breakout export goldens, and runtime leak checks.
+
+| Synthetic EDA size | Entry edit median | Helper edit median | Three-file edit median | Steady-edit peak RSS, median |
+|---|---:|---:|---:|---:|
+| 191,416 lines | 8.51 s | 6.65 s | 7.08 s | 1.20 GiB |
+| Approximately 510k lines | 22.57 s | 33.29 s | 23.18 s | 3.18 GiB |
+
+These are three-sample medians on reserved CPUs 2,3,10,11: two physical P cores
+with four threads, `MYLANG_JOBS=4`, with the compiler itself built ReleaseFast.
+The guest is optimized Debug. This repeat uses fresh same-length edits and keeps
+the reachable declaration added during the main matrix (510,440 lines versus
+510,436 initially). Unrelated work on the shared host can still affect package
+throughput and memory/I/O; these are measured results, not isolated hardware
+limits. The earlier matrix used four physical P cores (0,4,6,8) and experienced
+substantial contention. Its full samples remain in `matrix.json`, including
+510k declaration-edit and shared-helper medians of 40.98 and 46.90 seconds. Do
+not interpret the different runs as a controlled comparison of core counts.
+
+For 191k lines, the prior memory-fixed compiler used 3.274 GiB on steady edits;
+this version used 1.204 GiB, a **63.2% reduction**. The initial passes with empty
+frontend/intermediate caches peaked at 2.05 GiB (191k) and 4.70 GiB (510k), both
+within the default compiler host-memory limit. Those final setup builds reused
+760/2,020 validated native objects and are explicitly labelled
+`cold_stages_warm_native`, not fully cold builds. The separate shared fixture
+has 510,470 lines and reused 2,021 native objects for setup. The older fully cold
+native reference is qualified in `cold-native-reference.json`; no Release guest
+builds were run. RSS is GNU time's largest process peak, not simultaneous
+compiler-plus-worker memory.
+
+The **15-second target is not yet met at 510k lines**. A representative repeated
+entry edit spent 11.28 seconds in the frontend, 1.09 in lowering, 3.95 in optimizer
+work/cache processing, 3.80 in emission/cache processing, and 1.85 in native
+handling (including a 0.11-second linker process). It reused 2,019 of 2,020 native
+units. Further progress needs less whole-program frontend and cache processing;
+native recompilation and linking are already a small share of ordinary edits.
+Declaration changes conservatively invalidate the ordered catalog. A changed
+common helper invalidates its own and 32 callers' inlining artifacts even when
+only the shared native unit needs recompilation.
+
+The source-position regression tests compare exact fresh/cached LLVM, lowered
+spans and reachable nested inline ancestry after an earlier literal grows on the
+same line. Object auditing against the previous compiler found 760 of 775 objects
+byte-identical; all 15 edited pairs have identical instructions, literal values,
+DWARF line/info sections and runtime trap descriptors. Only literal-pool ordering/
+alignment and corresponding reference addresses differ. See
+`object-equivalence.json` for each pair.
+
+The `--native-seed <completed-matrix-root>` option copies only completed object/
+checksum pairs published before the source matrix's cold-build metrics cutoff;
+edited variants are excluded. It asserts that frontend, lowering, optimizer and
+emission caches start cold and that native objects are reused. Without the
+option, the harness still measures full cold builds. The `repeat_edits.py`
+companion takes `--input <completed-matrix-root> --output <fresh-result-root>
+--copies 12 32 --repeats 3`, uses the identical recorded compiler and caches,
+saves the original edited files, and requires exactly one or three native
+compiles for every fresh edit. It leaves the fixture in its final edited state.
 
 ## 7. Tests S4 adds
 

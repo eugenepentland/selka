@@ -26,7 +26,10 @@ def sha(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def run(command, cwd, env, timeout=600):
+RUN_TIMEOUT_SECONDS = 1800
+
+
+def run(command, cwd, env, timeout=RUN_TIMEOUT_SECONDS):
     process = subprocess.Popen([str(x) for x in command], cwd=cwd, env=env,
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                start_new_session=True)
@@ -37,6 +40,48 @@ def run(command, cwd, env, timeout=600):
         stdout, stderr = process.communicate()
         raise RuntimeError(f'timeout: {command}, {stderr[-2000:]!r}')
     return process.returncode, stdout, stderr
+
+
+def copy_native_seed(source, destination, cutoff_file, baseline_units):
+    """Copy completed object/sum pairs and runtime objects; the compiler verifies sums on reuse."""
+    assert source.is_dir(), f'missing native seed: {source}'
+    cutoff = cutoff_file.stat().st_mtime_ns
+    files = {}
+    objects = runtime = skipped = later = 0
+    for path in sorted(source.rglob('*.o')):
+        relative = path.relative_to(source)
+        is_runtime = len(relative.parts) == 1 and re.fullmatch(r'core_\w+-[0-9a-f]{64}\.o', path.name)
+        checksum = Path(str(path) + '.sum')
+        if not is_runtime:
+            if not re.fullmatch(r'[0-9a-f]{64}\.o', path.name) or not checksum.is_file():
+                skipped += 1
+                continue
+            if path.stat().st_mtime_ns > cutoff or checksum.stat().st_mtime_ns > cutoff:
+                later += 1
+                continue
+            lines = checksum.read_text().splitlines()
+            if (len(lines) != 3 or lines[0] != 'core-unit-sum-v1' or not lines[1].isdigit()
+                    or int(lines[1]) != path.stat().st_size or not re.fullmatch(r'[0-9a-f]{64}', lines[2])):
+                skipped += 1
+                continue
+        for original in ([path] if is_runtime else [path, checksum]):
+            target = destination / original.relative_to(source)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(original, target)
+            files[str(original.relative_to(source))] = sha(target)
+        if is_runtime:
+            runtime += 1
+        else:
+            objects += 1
+    assert objects > 0 and runtime > 0, 'seed contains no completed units or runtime objects'
+    assert objects == baseline_units, ('seed must contain exactly the validated baseline units', objects, baseline_units)
+    return {'source': str(source), 'unit_object_count': objects, 'runtime_object_count': runtime,
+            'copied_file_count': len(files), 'skipped_incomplete_object_count': skipped,
+            'skipped_post_baseline_object_count': later, 'source_baseline_units': baseline_units,
+            'cutoff_file': str(cutoff_file), 'cutoff_mtime_ns': cutoff,
+            'cutoff_utc': datetime.fromtimestamp(cutoff / 1e9, timezone.utc).isoformat(),
+            'copied_files_sha256': files,
+            'verification': 'Only completed size-matching object/sum pairs published before the validated baseline metrics cutoff copied; native cache validates BLAKE3 checksums on reads. Runtime objects copied by content-keyed name.'}
 
 
 def generate(root, copies, seed_files, shared=False):
@@ -97,10 +142,15 @@ def main():
     parser.add_argument('--repeats', type=int, default=3)
     parser.add_argument('--threshold', type=float, default=15)
     parser.add_argument('--host-memory', help='Override compiler host memory ceiling for this experiment only')
+    parser.add_argument('--native-seed', type=Path,
+                        help='Prior matrix root; reuse only native objects, with empty frontend and stage caches')
     parser.add_argument('--few-edits', action='store_true', help='Also change three files before each rebuild')
     parser.add_argument('--dependency-edits', action='store_true',
                         help='At 32 copies also measure shared-helper and new-reachable-function edits')
     args = parser.parse_args()
+    native_seed = args.native_seed.resolve() if args.native_seed else None
+    native_seed_report = json.loads((native_seed / 'results.json').read_text()) if native_seed else None
+    first_phase = 'cold_stages_warm_native' if native_seed else 'cold'
     root = args.output.resolve()
     root.mkdir(parents=True, exist_ok=False)
     (root / 'tmp').mkdir()
@@ -115,14 +165,20 @@ def main():
               'compiler_host_mode': 'ReleaseFast', 'guest_modes': {m: MODES[m] for m in MEASURED_MODES},
               'affinity': sorted(os.sched_getaffinity(0)), 'jobs': 4,
               'repeats_per_edit': args.repeats, 'threshold_s': args.threshold,
+              'run_timeout_seconds': RUN_TIMEOUT_SECONDS,
               'host_memory_limit': args.host_memory or 'default 8 GiB plus 256 MiB headroom',
               'method': 'Synthetic independently namespaced copies of the 60 reachable EDA MyLang port modules. '
                         'All copies called from root entry. Full CLI build wall time, prewarmed runtime/toolchain, '
-                        'fresh frontend and native guest caches for each cold build. Incremental edits retain caches '
+                        + ('fresh frontend/stage caches with previously populated native objects for cold_stages_warm_native; this is not a full cold-native build. '
+                           if native_seed else 'fresh frontend and native guest caches for each cold build. ')
+                        + 'Incremental edits retain caches '
                         'and use unique new source/IR content each time. No release guest builds. '
-                        'At 32 copies optional extra phases change a common predicate consumed by every replica, and add a reachable predicate function in one replica. Shared-fixture baseline preparation is separate and excluded. Source generation, admission wait, and golden execution validation excluded.',
+                        'At 32 copies optional extra phases change a common predicate consumed by every replica, and add a reachable predicate function in one replica. Shared-fixture baseline preparation is separate and excluded. Native seed copying, source generation, admission wait, and golden execution validation excluded.',
               'seed_sha256': {p: sha(SEED / p) for p in seed_files},
               'sizes': {}, 'records': [], 'fixture_baselines': [], 'summary': {}}
+    if native_seed:
+        report['native_seed'] = {'root': str(native_seed), 'report_sha256': sha(native_seed / 'results.json'),
+                                 'fixtures': []}
 
     def save():
         (root / 'results.json').write_text(json.dumps(report, indent=2) + '\n')
@@ -154,9 +210,19 @@ def main():
                   'seconds': seconds, 'cache': cache, 'stages': stages,
                   'physical_lines': source_lines, 'project_modules': len(source_files), 'loadavg_before': load,
                   'command': [str(x) for x in command], **json.loads(metrics.read_text())}
+        if phase in ('cold_stages_warm_native', 'shared_baseline_cold_stages_warm_native'):
+            assert cache['reused'] > 0 and cache['compiled'] < cache['units'], 'native seed did not provide reuse'
+            assert stages is not None, 'cold-stage measurement requires stage counters'
+            assert stages['frontend']['reused'] == stages['frontend']['syntax_hits'] == 0
+            assert stages['lowering']['reused'] == 0 and stages['lowering']['lowered'] > 0
+            assert not any(stages['optimizer']['hits'])
+            assert stages['emission']['reused'] == stages['emission']['seeds_reused'] == 0
+            assert stages['emission']['rendered'] == stages['emission']['units']
         if measured:
             if phase == 'cold':
                 assert cache['compiled'] == cache['units'] and cache['reused'] == 0
+            elif phase == 'cold_stages_warm_native':
+                pass  # Cold stage counters and native reuse were checked above; zero native compiles is valid.
             elif phase == 'unchanged':
                 assert cache['program'] == 'replayed'
             else:
@@ -217,9 +283,19 @@ def main():
                 helper2.write_text(helper2_original)
             directory = root / str(copies) / mode
             (directory / 'native').mkdir(parents=True)
+            if native_seed:
+                assert not (directory / 'cache').exists()
+                prior = next(record for record in native_seed_report['records']
+                             if (record['copies'], record['mode'], record['phase']) == (copies, mode, 'cold'))
+                assert prior.get('execution_check', '').startswith('passed:')
+                previous_directory = native_seed / str(copies) / mode
+                seed = copy_native_seed(previous_directory / 'native', directory / 'native',
+                                        previous_directory / 'cold-0.metrics.json', prior['cache']['units'])
+                report['native_seed']['fixtures'].append({'copies': copies, 'mode': mode, 'phase': first_phase, **seed})
+                save()
             for f in runtime:
                 shutil.copy2(f, directory / 'native' / f.name)
-            cold = build(source, directory, mode, 'cold', 0, copies)
+            cold = build(source, directory, mode, first_phase, 0, copies)
             validate(directory, copies, cold, 'usage: eda-sch ')
             replay = build(source, directory, mode, 'unchanged', 0, copies)
             validate(directory, copies, replay, 'usage: eda-sch ')
@@ -249,7 +325,7 @@ def main():
                     assert record['cache']['compiled'] == 3
                     validate(directory, copies, record, token)
         report['summary'][str(copies)] = {}
-        phases = ['cold', 'unchanged', 'entry_edit', 'helper_edit']
+        phases = [first_phase, 'unchanged', 'entry_edit', 'helper_edit']
         if args.dependency_edits and copies == 32:
             # This starts from the prior normal-fixture incremental state. Each
             # sample creates a new actually called function; global IR IDs may
@@ -270,9 +346,20 @@ def main():
             report['sizes'][f'{copies}-shared'] = generate(shared_source, copies, seed_files, shared=True)
             shared_directory = root / str(copies) / f'{mode}-shared'
             (shared_directory / 'native').mkdir(parents=True)
+            shared_phase = 'shared_baseline_cold_stages_warm_native' if native_seed else 'shared_baseline'
+            if native_seed:
+                assert not (shared_directory / 'cache').exists()
+                prior = next(record for record in native_seed_report['fixture_baselines']
+                             if (record['copies'], record['mode'], record['phase']) == (copies, mode, 'shared_baseline'))
+                assert prior.get('execution_check', '').startswith('passed:')
+                previous_directory = native_seed / str(copies) / f'{mode}-shared'
+                seed = copy_native_seed(previous_directory / 'native', shared_directory / 'native',
+                                        previous_directory / 'shared_baseline-0.metrics.json', prior['cache']['units'])
+                report['native_seed']['fixtures'].append({'copies': copies, 'mode': f'{mode}-shared', 'phase': shared_phase, **seed})
+                save()
             for f in runtime:
                 shutil.copy2(f, shared_directory / 'native' / f.name)
-            baseline = build(shared_source, shared_directory, mode, 'shared_baseline', 0, copies, measured=False)
+            baseline = build(shared_source, shared_directory, mode, shared_phase, 0, copies, measured=False)
             report['fixture_baselines'].append(baseline)
             validate(shared_directory, copies, baseline, 'usage: eda-sch ')
             shared_helper = shared_source / 'bench_shared.my'
