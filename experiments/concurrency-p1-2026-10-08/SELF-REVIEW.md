@@ -59,3 +59,6 @@ Layout K=4/5/6 is passed to every emitted unit and runtime compile and salts the
 Local-exec TLS was selected from the complete paired row sweep; C and both LLVM emitters agree. No front-end `src/*.zig`, `src/core/ir.zig`, `src/core/own.zig` or `core_host.c` changed. No accepted semantics, threshold or required gate was relaxed. Main remains the merged `cafe7fea7`; no push or modification of main/Claude occurred.
 
 Remaining phase-1 limits are intentional: workers, old rings, small-allocation chunks and their registry records live for the process; shared marks are permanent; provider operations serialize; fatal workers skip external cleanup; task handles have no user surface until P2. P2 must enforce confinement, Host/resource exclusions, all-exit close lowering and CLI stack/job accounting. [P2-0](P2-0.md) proves the lowering vocabulary and identifies those files; it does not authorize P2.
+
+
+The first final full gate additionally exposed two pre-existing native-only harnesses in `own_test.zig` that needed the C task adapter. Both now provide it; their focused million-deep release/allocator tests pass. This corrects the earlier incomplete fixture inventory without changing the runtime or the forbidden ownership pass.

@@ -309,3 +309,22 @@ Guardian’s whole-tree commit check caught that SHARED-COUNTS-1 still described
 - **Evidence:** The whole-tree commit gate's change-classification check required a same-change spec/test update for the TLS declarations; the 15 focused tests and paired measurements were already green/recorded.
 - **Choice:** Add local-exec to the existing RUNTIME-THREADS-1 contract, matching the implementation and measured selection. Preserve the rejected commit log. No test exemption or artificial coverage.
 - **Reversal:** Documentation follows any later measured model change.
+
+
+## 2026-10-09 — P1-6: repair the remaining native-only task bridges
+
+- **Question:** Why did the first final Debug gate fail two older allocator/ownership fixtures?
+- **Options:** Weaken the runtime bridge dependency, or supply the explicit C adapter required by native-only harnesses.
+- **Evidence:** P1-final-01 passed 2,119 executed tests but failed both C harness links in `src/core/own_test.zig` with undefined `myl_core_task_call`. Those harnesses include the runtime without any emitted LLVM unit. All emitted-code and scheduler tests passed. The two focused repaired tests pass, including the million-deep iterative release and allocator live-count assertions.
+- **Choice:** Add the same C-only adapter used by the new native fixtures to both older harnesses. `own_test.zig` is a test outside the expected list; the forbidden `own.zig` is untouched. Preserve the failed full-gate log and rerun the full gate/qualification/frozen matrices on a fresh committed head. Production sources are byte-identical to f4eb26606, so retain that ReleaseFast compiler and its external results with explicit source equivalence.
+- **Infrastructure:** The scratch external-build orchestrator also used an invalid `--corpus` argument; preserve its status-2 log, then resume the three corpus builds with the documented positional argument. All 132 counted/plain comparisons, Lox conformance/65 port tests and EDA 310 tests already passed. No timing or gate was waived.
+- **Reversal:** Test linkage and orchestration corrections only; no runtime/ABI behavior changes.
+
+
+## 2026-10-09 — P1-6: assert native fixture link and execution status
+
+- **Question:** How should the older native fixture tests verify their required runtime linkage?
+- **Options:** Continue inferring success from stderr/stdout, or assert both compiler and executable exit status explicitly.
+- **Evidence:** Guardian rejected the first bridge-only test-file change under change-classification because it changed fixture constants outside a tagged test body. Review found that both old harness tests checked output without explicit successful exit status.
+- **Choice:** Assert successful linking, successful execution and empty execution stderr in both harness paths, including the existing NEW-CORE-RC-6 tagged test. Preserve the rejected gate log and rerun the two substantive tests and fmt. No dummy assertion or spec exemption.
+- **Reversal:** Test strengthening only.

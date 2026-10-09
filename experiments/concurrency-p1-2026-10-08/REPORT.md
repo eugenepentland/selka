@@ -3,9 +3,9 @@
 ## Current progress — 2026-10-09
 
 - **Done:** P1-1's B2 checkpoint is complete at `5042d85a5` (implementation `9c2559a45`). P1-2 per-thread runtime state is committed at `9d2524f5e` and passes the full Debug gate and fmt. P1-3’s shared child iterator is committed at `020ee5422`. P1-4’s scheduler is committed at `8a3782b05`. P1-5’s real emitted-code/sanitizer integration now passes its focused tests and fmt. Main remains `cafe7fea7`, merged by real merge `42041fa45`; comparison base remains `94dc1c3a2`. No push or main/Claude modification occurred.
-- **Measured:** Early B2 tax is recorded below; all corpus geomeans are below 1.03, with target misses retained. P1-2's initial-exec/local-exec comparison is next.
-- **Decided:** Use private TLS state with narrow shared locks/atomics, persistent retired-thread allocator records, whole-output-unit staging and bounded fatal reporting. Keep the B2 emitter and the logged last-owner acquire CAS. Select measured local-exec TLS; both archives are pinned to the P1-2 implementation.
-- **Next:** Complete the required P1-5 sanitizer repetitions, then whole-package review, final correctness/TSan/tax and P2-0. **P1 is not complete.**
+- **Measured:** The complete TLS row sweep selects local-exec (1.012443× versus initial-exec 1.015031×); neither passes all tax targets. Final binding measurements remain pending.
+- **Decided:** Preserve B2, local-exec TLS, the shared child iterator and the integrated scheduler/TSan path. The first final full gate found two missing C-only fixture bridges; both are repaired and pass focused tests. Production sources remain identical to `f4eb26606`.
+- **Next:** Rerun the final full gate/qualification/frozen fuzz matrices, finish 100×3 sanitizer repetitions, then binding tax and bounded investigation. External Lox/EDA and 132 counted/plain comparisons passed. P2-0 and package review are written. **P1 is not complete.**
 
 ### Revision-3 correctness checkpoint
 
