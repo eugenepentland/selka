@@ -6,7 +6,8 @@ pub const Mode = enum {
     optimized_debug,
     release,
 
-    /// The optimization level for generated program code and foreign C sources.
+    /// The requested zig cc level for generated program code and foreign C sources.
+    /// The pinned Zig currently maps both -O2 and -O3 to Clang -O2.
     /// The shared C runtime has its own fixed -O2 policy.
     pub fn level(self: Mode) []const u8 {
         return switch (self) {

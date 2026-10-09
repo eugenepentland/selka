@@ -50,8 +50,8 @@ development build:
   trap traces. An edit recompiles units whose emitted text changes; inlining and
   propagated facts can also change callers' units. Optimization adds build work,
   so measure cold builds and edits as well as runtime before choosing it for your
-  edit loop. It is a prototype, not a guarantee of Release speed on every program
-  or of debugger variable availability and statement-by-statement stepping.
+  edit loop. It is a prototype, not a guarantee of Release speed on every program.
+  See the [tested debugger limitations](#interactive-debugger-qualification).
 
 ```console
 $ mylang build app/main.my -o app --cache-report
@@ -61,11 +61,35 @@ mylang-core: cache: 1 units, 0 reused, 1 compiled, 0 verified; program linked; 2
 ```
 
 All modes keep every check the program can reach (see
-[checks in every build](#checks-in-every-build)), report traps identically and give
-the same output. `mylang test --release` runs a suite on release builds;
+[checks in every build](#checks-in-every-build)) and report traps identically.
+Release standalone builds omit `debug(...)` output; ordinary output is unchanged.
+`mylang test --release` runs a suite on release builds;
 `--verify-facts` (release or optimized debug) also checks at run time every fact the passes relied on
 and traps `R_CORE_FACT` if one does not hold, and `--no-facts` turns the fact pass
 off to measure what it buys.
+
+### Effective optimization levels
+
+The flags MyLang requests and the optimization the pinned toolchain actually runs
+are distinct. With Zig `0.17.0-dev.1683+5ceec001b` (Clang 22.1.8), `zig cc -###`
+reports Clang `-O0` for requested `-O0`, and Clang `-O2` for requested `-O1`, `-O2`
+or `-O3`. This holds for both generated LLVM and linked C sources on the native
+x86-64 target used here. The runtime's requested level remains `-O2`.
+
+Compiling the identical Release-generated LLVM for each of the six parity
+benchmarks with requested `-O2` and `-O3`, then linking the same runtime objects,
+produced byte-identical executable `.text` sections in every case. All outputs
+matched the expected files. Thus the current `-O3` spelling provides no additional
+optimization; Release still enables whole-program LLVM optimization and omits
+`debug(...)` from standalone builds. Recheck the mapping after a toolchain upgrade.
+
+[Driver commands, effective flags and code hashes](../../bench/parity/optimization_driver_20261009.json)
+are checked in. Reproduce with the pinned Zig, GNU `objcopy` and a new directory:
+
+```bash
+python3 scripts/qualify_optimization_driver.py --compiler zig-out/bin/mylang \
+  --output /tmp/optimization-driver-qualification
+```
 
 ## `mylang build`
 
@@ -159,6 +183,41 @@ fires; a call does no bookkeeping for it. The runtime also writes one
 machine-readable `MYLANG-TRAP` record after the text, which `mylang run` hides and
 `--diagnostics=json` turns into the `trap_detail` of a `diagnostic-v1` record
 ([runtime diagnostics](../io.md#runtime-diagnostics)).
+
+## Interactive debugger qualification
+
+The emitted debug information currently describes functions, call sites and trap
+locations. It contains no source-variable declarations or variable locations.
+Preserving trap reports therefore does not imply full source-level debugging.
+
+GDB 17.1 probes on 2026-10-09 compared ordinary Debug, optimized Debug and Release
+using a two-module loop and a separate tiny helper. Both programs returned the
+expected output in every mode. The table describes those fixtures, not a promise
+that every function or source line supports the same operations:
+
+| Probe | Debug | Optimized Debug | Release |
+|---|---|---|---|
+| Named loop-function breakpoint | Hits entry; caller frame correct | Hits entry; caller frame correct | Relocates to a trap location; not hit on normal execution |
+| Caller line breakpoint, then step into loop function | Hits; steps into function | Hits; steps into function | No compiled code for that line |
+| Arithmetic source-line breakpoint | Accepted, but only on trap path; normal execution does not stop | Relocates to another line; normal execution does not stop | No compiled code for that line |
+| Statement `step` / `next` inside loop function | Skips source body | Skips source body | No active frame after missed entry breakpoint |
+| Tiny helper's named breakpoint | Hits | Helper eliminated; no named function | Helper eliminated; no named function |
+| Inspect source arguments and locals | No symbols | No symbols | No frame or source symbols |
+
+Optimized Debug retains useful function and call-site breakpoints, but can remove
+helpers that ordinary Debug keeps. Neither mode currently supports normal
+statement stepping or local-variable inspection. Supporting those requires
+statement locations on normal execution paths and variable/type/location metadata
+through optimization. Exact trap traces and `debug(...)` retention are checked
+separately by the compiler's regression tests.
+
+[Sources and full GDB transcripts](../../bench/parity/debugger_20261009.json) are
+checked in. Reproduce with GDB built with Python support and a new directory:
+
+```bash
+python3 scripts/qualify_debugger.py --compiler zig-out/bin/mylang \
+  --gdb gdb --output /tmp/debugger-qualification
+```
 
 ## The caches
 
