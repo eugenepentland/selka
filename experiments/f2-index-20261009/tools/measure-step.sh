@@ -9,17 +9,19 @@ set -u
 root=$(cd "$(dirname "$0")/../../.." && pwd)
 cd "$root" || exit 2
 tag=$1; compiler=$2
-base=$HOME/.cache/mylang/main-35df839b/bin/mylang
+base=${F2_BASE:-$HOME/.cache/mylang/main-35df839b/bin/mylang}
+bt=${F2_BASETAG:-base}   # the base arm's tag (lane binaries, parity directory)
 tools=experiments/f2-index-20261009/tools
 export TMPDIR=$root/.tmp/tmp
 mkdir -p .tmp/f2 "$TMPDIR"
 out=.tmp/f2/$tag
-[ -d .tmp/f2/parity/base ] || scripts/build-slot.sh build python3 $tools/parity.py build --mylang "$base" --out .tmp/f2/parity/base > $out-parity-base-build.log 2>&1
+[ -d .tmp/f2/parity/$bt ] || scripts/build-slot.sh build python3 $tools/parity.py build --mylang "$base" --out .tmp/f2/parity/$bt > $out-parity-base-build.log 2>&1
 scripts/build-slot.sh build python3 $tools/parity.py build --mylang "$compiler" --out .tmp/f2/parity/$tag > $out-parity-build.log 2>&1; tail -1 $out-parity-build.log
-python3 $tools/parity.py measure --arm base=.tmp/f2/parity/base --arm $tag=.tmp/f2/parity/$tag --ref zig-safe --out $out-parity.json --rounds 5 > $out-parity.log 2>&1
+python3 $tools/parity.py measure --arm base=.tmp/f2/parity/$bt --arm $tag=.tmp/f2/parity/$tag --ref zig-safe --out $out-parity.json --rounds 5 > $out-parity.log 2>&1
 python3 $tools/lane.py build --compiler "$compiler" --tag $tag > $out-lane-build.log 2>&1; cat $out-lane-build.log | grep '^build'
 python3 $tools/lane.py check --tag $tag --out $out-check.json > $out-check.log 2>&1; tail -2 $out-check.log
-python3 $tools/lane.py measure --tags base,$tag --out $out-lane.json --rounds 5 > $out-lane.log 2>&1
+[ -d .tmp/f2/lane/bin/$bt ] || python3 $tools/lane.py build --compiler "$base" --tag $bt > $out-lane-base-build.log 2>&1
+python3 $tools/lane.py measure --tags $bt,$tag --out $out-lane.json --rounds 5 > $out-lane.log 2>&1
 rm -rf .tmp/f2/rows-$tag; mkdir -p .tmp/f2/rows-$tag
 scripts/build-slot.sh build python3 experiments/new-core-s4-20261006/integration/measure_all46.py --build-only --mylang "$base" --core "$compiler" --bin $root/.tmp/f2/rows-$tag > $out-rows-build.log 2>&1
 echo "rows built: $(grep -c 'status=0' $out-rows-build.log) ok, $(grep 'status=' $out-rows-build.log | grep -vc 'status=0') failed"
