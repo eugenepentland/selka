@@ -149,3 +149,11 @@ Measurement: use the same five-sample private EDA fixture and equivalent edits a
 Reversibility: local lookup algorithm and work counter only; no type identity, cache format, runtime semantics or numeric gate threshold changes.
 
 F10 after measurement: medians are 312.181 ms (bounded edit) and 308.275 ms (unrelated edit), versus 332.750 / 326.910 ms before. All five samples in both arms still perform 1,205 ordinary bodies and reuse 8, and perform 11 specialization bodies and reuse 8. These shared-machine elapsed observations are not a quiet-hardware speedup claim (the before arm overlapped a focused debug build). The deterministic publication reproducer is the algorithmic evidence: 467 catalog visits fall to 19; warm lookup/publication also visits 19 and reuses all 16 bodies.
+
+## D18 — final qualification retains summaries and verifies frozen inputs
+
+Question: how can the required external replay stay below 10 MB without weakening the closeout comparison?
+Options: copy another raw capture tree, or run against the unchanged frozen trees and retain only identities, counts and hashes.
+Evidence: the historical source inventories match all 302 Lox and 3,744 EDA files. The original mode receipts contain 84 Lox and 366 EDA commands; the native baseline contains 974 Lox answers and 34 EDA answers.
+Choice: replay all 450 saved commands with the established EDA module-name mapping and property seed. Compare exact case/status membership, process status, every native answer and EDA output byte hash against the historical references. Preserve raw streams only for failures. Guard the compiler, runner, production tree, build inputs and frozen sources before/after. Keep compact per-command hashes to make the summary auditable; reference the unchanged historical runners and answer files at 0bbfeb740. Run the unmodified S5 qualification in fresh evidence with its original thresholds, shard count and both conformance modes.
+Reversibility: evidence and runner storage only; no oracle, source, gate threshold or test selection is changed.
