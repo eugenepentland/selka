@@ -90,8 +90,8 @@ fn siteSum(counts: std.json.Value, kind: []const u8, function: []const u8, name:
     return sum;
 }
 
-const hoist_expected = "90230 33 2\n865079466 962860009 86651320\n458455359 976384266 554113001 8718774604\n814298128 890434128 128128\n605789002 676242 22549 41868000\n343010 32 598486 343010\n";
-const hoist_expected_more = "373724 33 2\n102650968 453315009 88748160\n948059408 36681838 395256001 9223654218\n814298128 175119 128128\n58046002 676242 63229 950607000\n54592 32 317729 54592\n";
+const hoist_expected = "90230 33 2\n865079466 962860009 86651320\n458455359 976384266 554113001 8718774604\n814298128 890434128 128128\n605789002 676242 22549 41868000\n343010 32 598486 343010\n952490 3 21\n";
+const hoist_expected_more = "373724 33 2\n102650968 453315009 88748160\n948059408 36681838 395256001 9223654218\n814298128 175119 128128\n58046002 676242 63229 950607000\n54592 32 317729 54592\n71883 3 61\n";
 
 // spec: NEW-CORE-U1-HOIST-1
 test "a loop's updates of a value nothing in the loop shares test its count once, on the loop's entry edge" {
@@ -112,6 +112,8 @@ test "a loop's updates of a value nothing in the loop shares test its count once
         // A list a call returned: one test, which finds it unique, for 20 appends.
         try std.testing.expectEqual(@as(i64, 1), siteSum(counts, "unique_test", "u1_hoist::from_call", "count"));
         try std.testing.expectEqual(@as(i64, 1), siteSum(counts, "unique_test", "u1_hoist::from_call", "extra"));
+        // Two loops over a shared `mut` list: one test, before the first.
+        try std.testing.expectEqual(@as(i64, 1), siteSum(counts, "unique_test", "u1_hoist::two_loops", "count"));
         // An alias held until the loop's third iteration: the entering list is still needed,
         // so each of the 20 appends keeps its test.
         try std.testing.expectEqual(@as(i64, 20), siteSum(counts, "unique_test", "u1_hoist::dropped_alias", "count"));

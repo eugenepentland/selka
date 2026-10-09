@@ -183,6 +183,16 @@ def nested_mut(xs: mut list[int], n: int) -> int:
     return total(xs)
 
 
+# Two loops update the `mut` list the caller shares: the first loop's entry test copies it,
+# and the second loop finds it unique without a test of its own.
+def two_loops(xs: mut list[int], n: int) -> int:
+    for i in range(n):
+        xs.append(i)
+    for i in range(n):
+        xs[i] = xs[i] * 2
+    return total(xs)
+
+
 def make(n: int) -> list[int]:
     out = [n]
     if n > 1000:
@@ -211,4 +221,7 @@ def main(args: list[str], out: Stream) -> int:
     shared = [1, 1]
     other = shared
     out.print(nested_mut(mut shared, n // 4), total(other), from_call(n), total(shared))
+    again = [3]
+    kept = again
+    out.print(two_loops(mut again, n), total(kept), len(again))
     return 0

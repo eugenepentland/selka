@@ -905,10 +905,32 @@ fn isCut(cuts: []const Cut, phi: ir.Ref, operand: usize) bool {
 /// made in the loop, a call that may keep it, a store of it into another value, or an
 /// entering value still needed in the loop.
 fn hoistTests(arena: std.mem.Allocator, module: *const ir.Module, f: *ir.Function, marks: *Marks) Error!void {
+    // One loop's tests at a time, in program order, each weighed on the code the ones before
+    // left: a later loop that the value reaches already unique needs no test of its own.
+    var rounds: usize = 0;
+    while (rounds < max_hoisted) : (rounds += 1) {
+        var cuts: std.ArrayList(Cut) = .empty;
+        if (!try firstHoistable(arena, module, f, marks, &cuts)) return;
+        const e: Editor = .{ .arena = arena, .f = f, .origin = marks.origin };
+        var done: std.ArrayList(Cut) = .empty;
+        for (cuts.items) |cut| {
+            if (isCut(done.items, cut.phi, cut.operand)) continue;
+            try done.append(arena, cut);
+            const ensured = try ensureUnique(e, module, cut);
+            try marks.ensured.put(arena, @backingInt(ensured), {});
+        }
+    }
+}
+
+/// How many loops' tests `hoistTests` moves in one function.
+const max_hoisted = 32;
+
+/// The cuts that make the first update (in block order) that tests its count statically
+/// unique, in `cuts`; false when no update's can be.
+fn firstHoistable(arena: std.mem.Allocator, module: *const ir.Module, f: *ir.Function, marks: *Marks, cuts: *std.ArrayList(Cut)) Error!bool {
     var a = try Analysis.of(arena, module, f, marks);
     try a.analyze();
     var shape: ?facts.Shape = null;
-    var cuts: std.ArrayList(Cut) = .empty;
     for (f.blocks.items, 0..) |block, b| {
         if (!a.present(b)) continue;
         for (block.insts.items, 0..) |ref, pos| {
@@ -919,18 +941,11 @@ fn hoistTests(arena: std.mem.Allocator, module: *const ir.Module, f: *ir.Functio
             if (!a.counted(list) or a.liveAfter(list, @intCast(b), @intCast(pos))) continue;
             if (try staticallyUnique(&a, list, ref)) continue;
             if (shape == null) shape = try facts.shape(arena, f);
-            try hoistable(&a, .{ .shape = shape.?, .site = ref, .block = @intCast(b) }, list, &cuts);
+            try hoistable(&a, .{ .shape = shape.?, .site = ref, .block = @intCast(b) }, list, cuts);
+            if (cuts.items.len != 0) return true;
         }
     }
-    if (cuts.items.len == 0) return;
-    const e: Editor = .{ .arena = arena, .f = f, .origin = marks.origin };
-    var done: std.ArrayList(Cut) = .empty;
-    for (cuts.items) |cut| {
-        if (isCut(done.items, cut.phi, cut.operand)) continue;
-        try done.append(arena, cut);
-        const ensured = try ensureUnique(e, module, cut);
-        try marks.ensured.put(arena, @backingInt(ensured), {});
-    }
+    return false;
 }
 
 /// The update `hoistable` weighs: its instruction and block, and the function's dominators.
