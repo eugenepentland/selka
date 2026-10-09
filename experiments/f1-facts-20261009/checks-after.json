@@ -1,0 +1,65 @@
+{
+ "bytes_scan": {
+  "counting_matches": true,
+  "kinds": {
+   "bounds_check": 0,
+   "division_check": 0,
+   "other_check": 0,
+   "overflow_check": 0,
+   "shift_check": 0
+  },
+  "sites": {},
+  "stdout_sha256": "6bad0207281a4d36c465d56f11f4cb248fa0b9c7dedba4591d717f815e861c7a"
+ },
+ "calls": {
+  "counting_matches": true,
+  "kinds": {
+   "bounds_check": 0,
+   "division_check": 0,
+   "other_check": 0,
+   "overflow_check": 0,
+   "shift_check": 0
+  },
+  "sites": {},
+  "stdout_sha256": "93acd367386ad3b42a26b3815a580aae055ca2f18ea40258ccaa29f7e6921380"
+ },
+ "matmul": {
+  "counting_matches": true,
+  "kinds": {
+   "bounds_check": 750750500,
+   "division_check": 0,
+   "other_check": 2,
+   "overflow_check": 1000000,
+   "shift_check": 0
+  },
+  "sites": {
+   "bounds_check@matmul.my:27": 500000,
+   "bounds_check@matmul.my:29": 750000000,
+   "bounds_check@matmul.my:32": 500,
+   "bounds_check@matmul.my:36": 250000,
+   "other_check@matmul.my:37": 1,
+   "other_check@matmul.my:38": 1,
+   "overflow_check@matmul.my:6": 1000000
+  },
+  "stdout_sha256": "808e7e925cc6db0490c4ba77159937c810a33790b95990cb679a12cf17113bab"
+ },
+ "sieve": {
+  "counting_matches": true,
+  "kinds": {
+   "bounds_check": 66592510,
+   "division_check": 0,
+   "other_check": 0,
+   "overflow_check": 4472,
+   "shift_check": 0
+  },
+  "sites": {
+   "bounds_check@sieve.my:12": 4471,
+   "bounds_check@sieve.my:15": 46588036,
+   "bounds_check@sieve.my:19": 20000001,
+   "bounds_check@sieve.my:8": 1,
+   "bounds_check@sieve.my:9": 1,
+   "overflow_check@sieve.my:11": 4472
+  },
+  "stdout_sha256": "cf9c0ad3d037bc30d279b430355c9cfab624c7b170305ceee94acb2d79a1be5e"
+ }
+}

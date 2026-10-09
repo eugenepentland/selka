@@ -2301,6 +2301,7 @@ const FunctionEmitter = struct {
                 try out.print(self.a(), zero_test_line, .{ zero, tyname, right });
                 try self.trapIf(out, zero, try self.site(.division_by_zero, inst, operation), try self.widened(out, inst.a), try self.widened(out, inst.b));
             }
+            if (info.bits == 64 and self.fitsU32(inst.a) and self.fitsU32(inst.b)) return self.narrowDivision(out, name, is_rem, .{ left, right });
             try out.print(self.a(), binary_line, .{ name, if (is_rem) "urem" else "udiv", tyname, left, right });
             return;
         }
@@ -3430,6 +3431,28 @@ const FunctionEmitter = struct {
         const known = self.state.options.analysis.facts[self.index] orelse return false;
         const range = known.ranges[ref.index()] orelse return false;
         return range.lo >= 0;
+    }
+
+    /// An unsigned 64-bit division or remainder whose operands the trusted facts put in
+    /// `u32` (NEW-CORE-F1-OVERFLOW-4): each operand masked to its low 32 bits (the same
+    /// value) before the 64-bit operation, so LLVM knows their high bits are zero and a
+    /// constant divisor's multiply-by-reciprocal needs no 65-bit correction steps.
+    fn narrowDivision(self: *FunctionEmitter, out: *Out, name: []const u8, is_rem: bool, operands: [2][]const u8) !void {
+        const left = try self.fresh("%nl");
+        const right = try self.fresh("%nr");
+        try out.print(self.a(), "  {s} = and i64 {s}, 4294967295\n  {s} = and i64 {s}, 4294967295\n", .{ left, operands[0], right, operands[1] });
+        try out.print(self.a(), binary_line, .{ name, if (is_rem) "urem" else "udiv", "i64", left, right });
+    }
+
+    /// Whether trusted facts put an integer value inside `u32` (never in verify builds).
+    fn fitsU32(self: *FunctionEmitter, raw: ir.Ref) bool {
+        if (self.state.options.verify or self.index >= self.state.options.analysis.facts.len) return false;
+        const known = self.state.options.analysis.facts[self.index] orelse return false;
+        const ref = self.function.resolve(raw);
+        const inst = self.function.inst(ref);
+        if (inst.op == .iconst) return inst.data <= std.math.maxInt(u32);
+        const range = known.ranges[ref.index()] orelse return false;
+        return range.lo >= 0 and range.hi <= std.math.maxInt(u32);
     }
 
     /// Whether trusted facts put an integer value inside `i32` (never in verify builds).

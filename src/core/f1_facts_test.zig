@@ -195,3 +195,207 @@ test "store-backs keep every answer: shared rows, rows replaced in the loop, ali
         try std.testing.expectEqual(@as(u8, 0), more.status);
     }
 }
+
+/// The text of one function in a module's textual IR, from its header to the next function.
+fn functionIr(text: []const u8, name: []const u8) []const u8 {
+    var start: usize = 0;
+    while (std.mem.indexOfPos(u8, text, start, "fn ")) |header| {
+        const line_end = std.mem.indexOfScalarPos(u8, text, header, '\n') orelse text.len;
+        const line = text[header..line_end];
+        const paren = std.mem.indexOfScalar(u8, line, '(') orelse line.len;
+        if (std.mem.endsWith(u8, line[0..paren], name)) {
+            const next = std.mem.indexOfPos(u8, text, line_end, "\nfn ") orelse text.len;
+            return text[header..next];
+        }
+        start = line_end;
+    }
+    return "";
+}
+
+const counted_growth =
+    \\def scan(data: bytes) -> int:
+    \\    count = 0
+    \\    for pass_index in range(16):
+    \\        count += pass_index
+    \\        for i in range(len(data)):
+    \\            if data[i] == 109:
+    \\                count += 1
+    \\    return count
+    \\
+    \\
+    \\def tally(flags: list[bool]) -> int:
+    \\    count = 0
+    \\    for flag in flags:
+    \\        if flag:
+    \\            count += 1
+    \\    return count
+    \\
+    \\
+    \\def total(xs: list[int]) -> int:
+    \\    t = 0
+    \\    for x in xs:
+    \\        t += x
+    \\    return t
+    \\
+    \\
+    \\def main(out: Stream) -> int:
+    \\    out.print(scan(b"mmx"), tally([True, False]), total([1, 2]))
+    \\    return 0
+    \\
+;
+
+// spec: NEW-CORE-F1-OVERFLOW-1
+test "a counter that grows by a bounded step per iteration, conditionally or through an inner counted loop, never overflows" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const text = try support.optimizedText(arena.allocator(), counted_growth);
+    // `count += pass_index` and the inner `count += 1` (under a condition) are proven: at most
+    // 16 passes of at most `max_list_length` bytes each.
+    const scan = functionIr(text, "scan");
+    try std.testing.expect(!contains(scan, "add.exact"));
+    try std.testing.expect(contains(scan, "add.proven i64"));
+    // A conditional `count += 1` over a list's elements.
+    try std.testing.expect(!contains(functionIr(text, "tally"), "add.exact"));
+    // A step the facts cannot bound keeps its check.
+    try std.testing.expect(contains(functionIr(text, "total"), "add.exact"));
+}
+
+const loop_conditions =
+    \\def sieve() -> int:
+    \\    n = 20000000
+    \\    flags = [True for _ in range(n + 1)]
+    \\    i = 2
+    \\    while i * i <= n:
+    \\        if flags[i]:
+    \\            j = i * i
+    \\            while j <= n:
+    \\                flags[j] = False
+    \\                j = j + i
+    \\        i = i + 1
+    \\    return len(flags)
+    \\
+    \\
+    \\def drift(n: int) -> int:
+    \\    j = 0
+    \\    limit = n
+    \\    while j <= limit:
+    \\        j = j + 3
+    \\        limit = limit + 1
+    \\    return j
+    \\
+    \\
+    \\def main(out: Stream) -> int:
+    \\    out.print(sieve(), drift(10))
+    \\    return 0
+    \\
+;
+
+// spec: NEW-CORE-F1-OVERFLOW-2
+test "a loop variable is bounded by its loop condition, and `i * i <= n` bounds `i` by the square root of `n`" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const text = try support.optimizedText(arena.allocator(), loop_conditions);
+    const sieve = functionIr(text, "sieve");
+    // `j = i * i`, `j = j + i` and `i = i + 1` are proven: `i <= 4472` in the body, `j <= 20000000`.
+    // The condition's own `i * i` keeps its check, as do the index normalizations nothing reaches.
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, sieve, "mul.proven i64"));
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, sieve, "mul.exact i64"));
+    try std.testing.expectEqual(@as(usize, 4), std.mem.count(u8, sieve, "add.proven i64"));
+    // A bound that moves in the body bounds nothing: `j + 3` keeps its check.
+    try std.testing.expect(contains(functionIr(text, "drift"), "add.exact"));
+}
+
+const callee_ranges =
+    \\def step(a: int, b: int) -> int:
+    \\    return (a + b) % 1000003
+    \\
+    \\
+    \\def signed_step(a: int, b: int) -> int:
+    \\    return (a + b) % 1000003
+    \\
+    \\
+    \\def main(out: Stream) -> int:
+    \\    total = 0
+    \\    other = 0
+    \\    for i in range(30000000):
+    \\        total = step(total, i)
+    \\        other = signed_step(other, i - 5)
+    \\    out.print(total, other)
+    \\    return 0
+    \\
+;
+
+// spec: NEW-CORE-F1-OVERFLOW-3
+test "a call returns its callee's return interval, so floor modulo of non-negative arguments needs no fix-up" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const text = try support.optimizedText(arena.allocator(), callee_ranges);
+    // `total` is a result of `step`, in [0, 1000002], and `i` is non-negative: the sum cannot
+    // overflow and is non-negative, so the remainder is unsigned and needs no floor fix-up.
+    const step = functionIr(text, "step");
+    try std.testing.expect(contains(step, "add.proven i64 param0, param1"));
+    try std.testing.expect(contains(step, "floor_rem.proven i64"));
+    // One argument may be negative (`i - 5`): the floor remainder keeps its fix-up.
+    try std.testing.expect(contains(functionIr(text, "signed_step"), "floor_rem.exact i64"));
+}
+
+// spec: NEW-CORE-F1-OVERFLOW-4
+test "a proven 64-bit division or remainder whose operands fit in 32 bits masks them to their low 32 bits" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const llvm = try support.releaseLlvmText(arena.allocator(), callee_ranges);
+    const step = try definition(llvm, "@\"my.step\"");
+    try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, step, " = and i64 "));
+    try std.testing.expect(contains(step, ", 4294967295\n"));
+    try std.testing.expect(contains(step, " = urem i64 %nl."));
+    try std.testing.expect(!contains(step, "srem"));
+    // A verify build never narrows: the facts are what it checks.
+    const verify = try support.verifyLlvmText(arena.allocator(), callee_ranges);
+    try std.testing.expect(!contains(try definition(verify, "@\"my.step\""), "4294967295"));
+}
+
+// spec-case: NEW-CORE-F1-OVERFLOW-1
+test "overflow facts keep every answer and trap where they must: counters near the top, unbounded steps, moving bounds, negative modulo arguments" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
+    for (modes) |flags| {
+        const plain = try leakChecked(a, root, "f1_overflow", flags, &.{});
+        try std.testing.expectEqualStrings("101\n3\n41\n1229 25\n4\n6\n14114\n49950029970031\n", plain.stdout);
+        try std.testing.expectEqualStrings("", plain.stderr);
+        const moving = try leakChecked(a, root, "f1_overflow", flags, &.{ "moving", "x", "x", "x" });
+        try std.testing.expectEqualStrings("16117\n", moving.stdout);
+        // A counter that starts near the top of `int` traps once it leaves it.
+        const near = try leakChecked(a, root, "f1_overflow", flags, &.{ "near", "x" });
+        try std.testing.expectEqual(@as(u8, 1), near.status);
+        try std.testing.expect(contains(near.stderr, "f1_overflow.my:53:19: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 1, width 64)"));
+        // A step the facts cannot bound traps too.
+        const huge = try leakChecked(a, root, "f1_overflow", flags, &.{"huge"});
+        try std.testing.expectEqual(@as(u8, 1), huge.status);
+        try std.testing.expect(contains(huge.stderr, "f1_overflow.my:61:15: error[R_OVERFLOW]: native execution failed (add: left 4611686018427387904, right 4611686018427387904, width 64)"));
+    }
+}
+
+// spec: NEW-CORE-F1-OVERFLOW-5
+test "a verify build catches each overflow rule made one off on the inside: counter growth, square roots, return intervals" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
+    const sabotaged: []const []const u8 = &.{ "--release", "--sabotage-facts=overflow" };
+    const counter = try leakChecked(a, root, "f1_overflow", sabotaged, &.{"counter"});
+    try std.testing.expectEqual(@as(u8, 1), counter.status);
+    try std.testing.expect(contains(counter.stderr, "error[R_CORE_FACT]: native execution failed (range [0, 0]: value 1"));
+    try std.testing.expect(contains(counter.stderr, "in f1_overflow::counter_probe"));
+    const square = try leakChecked(a, root, "f1_overflow", sabotaged, &.{"square"});
+    try std.testing.expectEqual(@as(u8, 1), square.status);
+    try std.testing.expect(contains(square.stderr, "error[R_CORE_FACT]: native execution failed (range [2, 100]: value 101"));
+    const returns = try leakChecked(a, root, "f1_overflow", sabotaged, &.{"modulos"});
+    try std.testing.expectEqual(@as(u8, 1), returns.status);
+    try std.testing.expect(contains(returns.stderr, "error[R_CORE_FACT]: native execution failed (range [0, 5]: value 6"));
+}
