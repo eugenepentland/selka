@@ -1,0 +1,4 @@
+# oracle: cpython
+def main() -> int:
+    table = {k: v for k, v in zip(["a", "b", "c"], [1, 2, 3])}
+    return table["c"] * 10 + len(table)

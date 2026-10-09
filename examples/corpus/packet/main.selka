@@ -1,0 +1,16 @@
+import inputs
+import decoder
+import model
+
+func main() -> int:
+    mut packet = inputs.bytes()
+    mut size = inputs.size()
+    match decoder.decode(packet, size):
+        case model.Decoded.err(error):
+            return model.error_code(error)
+        case model.Decoded.ok(message):
+            match message:
+                case model.Message.heartbeat(value=sequence):
+                    return int(sequence)
+                case model.Message.reading(value=reading):
+                    return int(reading.sequence) * 4294967296 + int(reading.value)

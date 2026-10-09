@@ -1,0 +1,32 @@
+record Tag:
+    name: str
+    weight: int
+
+
+enum Label:
+    word(value: str)
+    count(value: int)
+    none
+
+
+func same(a: str, b: str) -> bool:
+    return a == b
+
+
+func first_match(words: str[], wanted: str) -> int:
+    for i in range(len(words)):
+        if words[i] == wanted:
+            return i
+    return -1
+
+
+func main(out: Stream) -> int:
+    out.print(same("abc", "abc"), same("abc", "abd"), same("", ""), same("a", ""), "x" != "y", "x" != "x")
+    out.print(same("héllo", "héllo"), same("héllo", "hello"), same("ab", "abc"))
+    mut xs = ["one", "two", "three"]
+    mut ys = ["one", "two", "three"]
+    out.print(xs == ys, xs == ["one", "two"], xs != ["one", "two", "four"])
+    out.print(Tag(name="n", weight=1) == Tag(name="n", weight=1), Tag(name="n", weight=1) == Tag(name="m", weight=1))
+    out.print(Label.word(value="q") == Label.word(value="q"), Label.word(value="q") == Label.word(value="r"), Label.word(value="q") == Label.none, Label.count(value=1) == Label.count(value=1))
+    out.print(first_match(xs, "three"), first_match(xs, "four"))
+    return 0

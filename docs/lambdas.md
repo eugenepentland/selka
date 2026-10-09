@@ -1,0 +1,40 @@
+# Lambdas
+
+## Expression-bodied noncapturing lambdas
+
+A `lambda` is a short spelling for an existing function value. Its parameters and
+result are typed from the callback expected at that position, so a lambda belongs
+directly in a callback argument:
+
+```selka
+# doc: expect 12
+record Person:
+    age: int
+
+func main() -> int:
+    mut people = [Person(age=30), Person(age=12)]
+    mut ranked = sorted(people, key=lambda person: person.age)
+    return ranked[0].age
+```
+
+Only `lambda name, ...: expression` is supported. Parameters have no annotations or
+defaults, and there is no statement body. A lambda may read its parameters and module
+constants. It cannot capture a function local; move the operation to a top-level
+function or pass the state as another explicit parameter instead.
+
+The expected callback type supplies the exact effect ceiling as well as the parameter
+and result types. A lambda used where no callback type is expected is rejected rather
+than inferred without a bound.
+
+A lambda is one function with one callback type, so it cannot be written inside a
+generic function body, where each specialization would need its own:
+`E_GENERIC_BODY_UNSUPPORTED` says so at the lambda. Declare a top-level function and
+pass it by name instead; a named key works in a generic body's `sorted` and `.sort`.
+
+A sort key's result type is the lambda body's own type, so `key=lambda p: p.name.lower()`
+sorts by a `str` and `key=lambda p: float(p.score) / 2.0` by a `float`. A body that does
+not type by itself is `E_SORT_KEY`, which quotes the underlying error.
+
+`sorted(values)` keeps its existing ordering for lists of integer, `float`, `str`, or `bytes`.
+`sorted(values, key=callback)` accepts a callback from the element type to an ordered key
+(`func(T) -> K effects(managed_allocation)`: it may build a `str`, and nothing else), evaluates it once per element in input order before a stable merge, and leaves the input list unchanged.

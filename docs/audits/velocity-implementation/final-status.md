@@ -1,0 +1,158 @@
+# Development velocity: implementation status
+
+Status: **core packages plus the R1–R4/HASH/WARM and C3/C4 correction passes integrated, with the final cache-retention accounting fix and the final S1 rerun recorded on top; release checklist partially met.**
+Baseline: `9ce142e98cb22e684622ed1d5678071d6944206e` (post named-constraint fixes).
+Integration HEAD: `936b3e69` (final S1 evidence/docs commit, on top of the three concurrent build/audit commits `7472a0da`/`1c40467f`/`9a177b53`; the measured compiler is `c18c0d18`, the merge of the warm-check telemetry/profiling package and C4 selective native-test preparation/lowering, and the two trees are byte-identical in production compiler sources — see the identity note in the final S1 report).
+Plan: [development-velocity-implementation-plan-2026-09-15.md](../development-velocity-implementation-plan-2026-09-15.md).
+Ledger and frozen contracts: [README.md](README.md), [contracts.md](contracts.md).
+
+## Integrated packages
+
+| Package | Result | Integration |
+| --- | --- | --- |
+| W0 | baseline, frozen contracts, execution ledger | `66e96ce` |
+| W0Q | 42 audit probes re-run; gate record; incremental-status reconciliation | `1c79941` |
+| F1 | canonical formatter; `fmt`/`--check`/`fmt-project --check`; comment/literal/execution preservation | `0594e61` |
+| D1 | bounded structured native trap detail in text and JSON; stderr record transport | `5591945`, `20a8938` |
+| C0 | `work-report-v1` actual work/reuse counters separate from fingerprints | `3d505be` |
+| E1 | directional callable effect assignability; canonical callback diagnostics | `55aee27` |
+| E2 | explicit exported effect ceilings; declared bounded API fingerprints; corpus migration | `2c0e270` |
+| M1 | `effects(mutation)`, `mutates(...)`, write/return-origin metadata, `effects-v3`, shared classifier | `44a0bfe` |
+| M2 | deep origins, call-permission enforcement, conservative overlap rejection, return aliases | `8d5b84b` |
+| C1 | per-function body eligibility, stable identity remapping, negative lookups | `b8a512a` |
+| A1 | required entry-anchored `mylang.json` import policy in ordinary commands and caches | `5988575` |
+| S1 | repaired workload harness; 10k/100k/maintained cold/warm/edit samples | `21d104e` |
+| M3 | corpus repair/activation, navigation exposure, runnable mutation docs | `75bb69a` |
+| C1R | module-qualified stable keys, resolved-declaration dependencies, callback/function-value eligibility, contract-bound reuse context; check-session bypass lifetime fix | `86ffbb7c` |
+| C2 | durable `semantic-cache-v1` checked bodies: atomic publication, validated remap-or-miss decoding, contract isolation, eviction, `--no-cache` correctness | `88691e7b` |
+| P1 | declaration-first provider selection: replacements validated against every public contract, receipt contract/provider/source identities | `354c0e8` |
+| C3a | symbolic-template reuse (`symbolic-template-v1`): durable direct abstract results, selective invalidation, whole-graph effects rerun | `8b212f7e` |
+| C3b | canonical specialization-key engine (template/positional/provider/constraint/contract/build dimensions) | `b0b156e8` |
+| C3S | validated concrete-specialization replay (`specialization-v1`) with typed remap and effect-rerun discipline | `f444ddc5` |
+| C4 | receipt-first test selection with a durable reduced preparation graph (`native-test-graph-v2` after G1's key envelope and structural validation); warm unchanged reruns execute zero tests with no lowering/emission/linking | `aea9b525` |
+| G1 | reduced graph bound to its requested input key (v2 envelope + structural validation); a copied entry is a miss | `0c420fbc` |
+| N1 | directory fan-out forwards `--no-cache`; seeded/empty caches execute every case and write zero durable files | `0c420fbc` |
+| Retention | bounded-prefix ordinary retention, reference-sized ordinary remap, clear releases all three entry kinds, shared `reuse.max_bytes` budget with per-kind reporting | `9699895b`/`610656cf` |
+| B1 | exact cache-retention accounting: stdlib minimum capacity/header/alignment plus arena chunk bookkeeping; boundary tests | `3f76446c` |
+| R3 | canonical declaration type descriptors; manifest `interface-contracts-v2` | `bc462aa6` |
+| R1/R2 | receipt acceptance bound to selected dependency closure; one checked project/prepared library per selected provider graph | `1ed663b9` |
+| R4 | batched semantic-store inventory: statx 128/256/512/1024 → 260/516/1028/2052 | `d54cc302` |
+| HASH | declared `mutates` positions + exported return-origin bound in the public API fingerprint | `4e2d1600` |
+| WARM | per-file content dependency removes the cold-build requirement for runtime edits | `70eecedf` |
+| Follow-up | F1 keeps the space before `mutates(...)`; board-trial/schematic standalone runners accept the driver's trailing `--cache-dir` | `26e8121` |
+
+Still open from the plan: the **productivity trial**. **B1** is closed by
+`3f76446c`; the **S1** remeasurement is recorded in
+[`s1-corrected-report-2026-09-16.md`](s1-corrected-report-2026-09-16.md) and the
+final integrated rerun in
+[`s1-final-report-2026-09-16.md`](s1-final-report-2026-09-16.md) (the 100k
+check-feedback and affected-test latency objectives remain unmet); **D2**'s
+documentation reconciliation is complete and its gates are green. C4 lowers only
+the selected closure: a changed snapshot runs `native-test-graph` for checked
+facts with no lowering or emission, and an uncached selection lowers/emits/links
+only the reachable function closure named in `--select-file`; a fully cached
+selection skips all lowering/emission/linking. See the final report for measured
+counters.
+
+## Final gate evidence
+
+Gates on the corrected C3/C3S/C4 tree (`610656cf`, worktrees rebuilt from the C3/C4 tree):
+
+| Gate | Result |
+| --- | --- |
+| `zig build test --summary all -j8` (Debug) | **39/39 steps succeeded; 1199/1199 tests passed; exit 0** |
+| `zig build test -Doptimize=ReleaseFast --summary all -j1` | **39/39 steps succeeded; 1198/1199 passed, 1 skipped (Debug-only allocation sweep); exit 0** |
+| Retention batch (ReleaseFast at the retention commit `92218ee2`) | **39/39 steps; 1198/1199 passed, 1 skipped; exit 0** |
+| WARM end-to-end probe | in-place bundled-runtime edit refreshed `content_hash`, installed archive names and materialized runtime bytes without cleaning |
+| Guardian whole-tree commit gate | 88/88 checks passed |
+| `zig build fmt-check`, `test-doc-coverage`, `test-docs`, `test-qbe`, `test-native-tests` | covered by the `test` graph and independently green |
+
+Follow-up gates on the B1/D2/S1 tree (`3f76446c` plus docs/S1 commits through
+`50a4c64a`):
+
+| Gate | Result |
+| --- | --- |
+| `zig build test --summary all -j8` (Debug, final `50a4c64a`) | **39/39 steps succeeded; exit 0** |
+| `zig build test -Doptimize=ReleaseFast --summary all -j1` (final `a0cbf87f`) | **39/39 steps succeeded; 1204/1205 passed, 1 expected Debug-only allocation-sweep skip; exit 0** |
+| `zig build fmt-check --summary all` | **2/2 steps succeeded** |
+| `zig build test-doc-coverage --summary all` | **121 documented features (81 language, 40 tooling), 0 failures; 20/20 steps** |
+| `zig build test-docs --summary all` | **242 files scanned, 441 blocks, 120 run, 24 checked, 10 skipped, 0 failed; 21/21 steps** (run on the D2 tree immediately before the final one-word SPEC prose correction) |
+| Guardian whole-tree commit gate | 88/88 checks passed on each commit |
+
+Final acceptance gates on `936b3e69` (Debug and ReleaseFast, after the S1
+evidence/docs commit and the concurrent build/audit commits):
+
+| Gate | Result |
+| --- | --- |
+| `zig build test --summary all -j8` (Debug) | **41/41 steps succeeded; 1211/1211 tests passed; exit 0** |
+| `zig build test -Doptimize=ReleaseFast --summary all -j1` | **41/41 steps succeeded; 1210/1211 tests passed, 1 expected Debug-only allocation-sweep skip; exit 0** |
+| `zig build test-doc-coverage` / `test-docs` | **121 features, 0 failures; 251 doc files/451 blocks, 0 failed** |
+
+The ReleaseFast test-root compile peaked at 2.55 GiB on this tree, above the old
+2.15 GiB `rss.compile` bound, so `build.zig` now declares 3 GiB with a measured
+comment. ReleaseFast still runs at `-j1` on this host for memory stability. This
+is a bounded host-build ceiling, not a project size limit.
+
+Pinned toolchain: Zig `0.17.0-dev.1683+5ceec001b`; QBE built from `vendor/qbe`
+(1.3). Baseline compiler identity `fff3e012…`.
+
+## Release checklist
+
+| Item | Status | Evidence / gap |
+| --- | --- | --- |
+| Audit mutation reject under empty effects; declared writes succeed; deep aliases, callbacks and generic bodies cannot bypass | **Met for the required matrix** | Audit `empty_effects_mutate_argument` and `record_nested_alias` reject with `E_MUTATION_PERMISSION`/`E_MUTATION_OVERLAP`; permitted `effects(mutation) mutates(...)` counterparts run natively. Partial transitive generic-call substitution remains; the declared mutation footprint and the exported return-origin bound now participate in the public API fingerprint (HASH), while inference stays body-local. |
+| Exported ceilings explicit; effect/mutation subset substitution works | **Met** | `E_EFFECT_CEILING` at declarations with body-derived bounds; E1/E2 relation plus M1/M2 footprint subset. |
+| Formatter changes noncanonical source, preserves semantics, idempotent | **Met** | F1 fixtures and native execution-preservation tests. |
+| Bounds traps show index/length in native text and JSON with stacks | **Met** | D1 text/JSON trap detail; Debug and ReleaseFast; `run` and native tests. |
+| Unrelated ordinary bodies reuse with generics present and across processes | **Met for ordinary bodies** | C1R measures a session edit as `performed=1/reused=2`; C2 measures a genuinely new process as `performed=1/reused=2` and an unchanged rerun as `performed=0/reused=3`. Generic specializations still wait for C3. |
+| Symbolic templates and concrete specializations have measured selective reuse | **Met for template and specialization bodies** | C3/C3S persist `symbolic-template-v1` and `specialization-v1` and measure real reuse: a fresh process after an entry-body edit reports `checked_bodies performed=1/reused=2`; template/argument edits invalidate only dependents. Ordinary bodies that *reference* a specialization still conservatively miss (`.generic_specialization`), and nested refs whose instance is not yet materialized miss. |
+| Warm/cold/no-cache status, diagnostic, interface and native results agree | **Met for the implemented reuse scope** | C2/C3/C3S test cold/warm/`--no-cache` for ordinary bodies, symbolic templates and concrete specializations, including damage, contract isolation, concurrency and eviction; WARM proves in-place runtime edits refresh identity/archives without cleaning. C4 shows a warm unchanged native-test run executes zero tests with no lowering/emission/linking and that `--report` reconciles `executed_tests.performed/reused` with `native-tests-v1`. |
+| A fake can replace an unfinished production body against a checked contract | **Met** | P1 checks declarations/interfaces first, fully checks only the selected provider graph, validates every replaced public contract with the directional relation, and binds contract/provider/source identities into receipts. |
+| Configured architecture policy cannot be skipped by ordinary commands or caches | **Met** | A1 config discovery/enforcement cold and warm, statuses 2/3, cwd-independent, receipts include policy identity. |
+| Selective tests retain correctness and skip unnecessary compilation work | **Met** | R1/R2 bind receipts to the selected closure and share one prepared graph/library per provider identity; C4 skips all lowering/emission/linking for a warm unchanged selection (zero executions, `executed_tests 0/1`). A changed snapshot runs `native-test-graph` for checked facts without lowering/emission, then `mylang test` builds only the `--select-file` closure: the final 100k ordinary first build lowers 524 of 33,475 checked bodies and a used-helper edit lowers only that closure; an unused-helper edit executes zero tests and lowers nothing. Whole-project lowering is not on the `mylang test` path. |
+| Representative scale limits, latency and memory measured honestly | **Met as measurement; objectives not met** | Final S1 rerun (ReleaseFast, pinned `8e58100c…`, low-load 100k, [`s1-final-report-2026-09-16.md`](s1-final-report-2026-09-16.md)): ordinary cold p95 1262.2 ms, unchanged 103.3 ms, implementation/constant/signature edits 1014.2–1020.5 ms, sessions 1041.2/1044.1 ms; managed edits 1091.3–1102.3 ms. 100k forced tests are now measured, not blocked: ordinary p95 2846.0 ms (first selective build 15.6 s), managed p95 3173.7 ms (first selective build 11.3 s); 10k forced p95 356.3/446.9 ms. Check feedback <500 ms and affected tests <1 s remain unmet. Budget/eviction evidence and the 500k gap remain in [`s1-corrected-report-2026-09-16.md`](s1-corrected-report-2026-09-16.md); productivity trial unrun. |
+| Current documentation and feature claims match the final executable | **Met** | D2 reconciled C3/C4 and the `native-test-graph-v2` boundary, the exact cache-retention accounting, `src/features.json`, README/tooling pages and VM/watch historical redirects, and confirmed `scripts/profile_large_project.py` emits only current syntax. Final gates: `test-doc-coverage` 121 features/0 failures, `test-docs` 441 blocks/0 failed, `fmt-check` 2/2, full Debug `39/39` steps. |
+| Relevant gates and Guardian feedback complete | **Met for the integrated scope** | Final `936b3e69` gates: full Debug `41/41` steps / `1211/1211` tests; ReleaseFast `41/41` steps / `1210/1211` with the expected Debug-only allocation-sweep skip; doc coverage and doc examples 0 failures; Guardian whole-tree checks pass on each commit. Consolidated feedback committed to `~/ai/canopy/guardian-zig/FEEDBACK.md`. |
+
+## Known limitations carried forward
+
+- **Conservative overlap:** same/overlapping managed type pairs
+  (`list[int]`/`list[int]`, `dict[str,int]`/`dict[str,int]`) reject unless proven
+  disjoint; two writable aliases or an explicit snapshot are the repairs.
+- **Return-origin declaration syntax:** the public API fingerprint now hashes the
+  declared mutation footprint and the exported return-origin bound (HASH), but the
+  language has no syntax for a narrower declared return-origin, so exported
+  declarations hash the conservative `unknown` bound; inferred private precision
+  remains a body-local fact.
+- **Transitive generic mutation substitution:** abstract generic checking enforces
+  attributed direct writes; concrete specialization bodies partially replay
+  (`specialization_bodies 64/64` at 16–128 MiB in the corrected profile), and the
+  remaining misses are `specialization-missing-instance-identity`.
+- **Scale:** the default loader still bounds projects at 256 modules/16 MiB and
+  navigation rejects both 100k workloads. The final S1 rerun shows ordinary-100k
+  `implementation_edit` p95 1016.5 ms vs the <500 ms target and 100k forced tests
+  p95 2846.0 ms vs the <1 s affected-test target (both now measured). The 16 MiB
+  shared retention budget is a demonstrated work multiplier and moderate session
+  benefit, not the established dominant wall-time cost: the final report and the
+  20-sample profile in
+  [`s1-profile-warm-2026-09-16.md`](s1-profile-warm-2026-09-16.md) measure
+  dependency-key preparation as the largest warm-check phase (final ordinary
+  100k implementation edit p50 518.6 ms), with retention/publication second
+  (final 75.9 ms at 16 MiB; the profile's 384–443 ms at 64/128 MiB). Managed
+  concrete specialization bodies partially replay (`specialization_bodies 64/64`;
+  the remaining 64 misses are `specialization-missing-instance-identity`), and
+  the old `instantiated_specializations 128/0` counter is checked-program shape,
+  not body-replay evidence. C4 makes 100k affected-test feedback feasible
+  (whole-project lowering is no longer required), but it does not meet the <1 s
+  target; an eviction-cost workload with churn beyond the chosen budget has not
+  yet been built.
+- **Productivity trial:** D2's documentation gates are now green, but the comparative
+  unfamiliar-code productivity trial remains unrun. The application-comparison
+  pilot task packs are still draft-unreviewed, scored launch is disabled, and no
+  reviewed cohort/model/tool baseline has been frozen. Running it is a separate
+  coordinator/task-pack authorization step; performance measurements above are
+  not productivity evidence.
+
+Historical audit documents and probe JSON were not rewritten; where an audit
+example now correctly rejects, its fence is marked `notest` so the historical
+bytes remain visible without being executed as current behavior.

@@ -1,0 +1,14 @@
+
+
+# An Environment stand-in holding exactly `values`: `env.get` answers from them,
+# `env.names()` lists them sorted and `env.only(...)` narrows them. It never reads
+# the process environment and grants no real authority, so building one needs no
+# capability and is not an effect. A name must be nonempty, at most 128 bytes and
+# free of `=`; a value at most 16384 bytes; neither may contain NUL.
+public func fixed(values: dict[str, str]) -> Environment:
+    mut pairs = ""
+    for name in values:
+        mut value = values[name]
+        assert "\x00" not in name and "\x00" not in value, "environment names and values cannot contain NUL"
+        pairs = pairs + name + "\x00" + value + "\x00"
+    return __stand_in[Environment](pairs)

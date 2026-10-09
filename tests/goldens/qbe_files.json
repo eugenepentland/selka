@@ -1,0 +1,341 @@
+{
+ "entries": {
+  "03c5557d69bfb80c92cffc0beda210b5": {
+   "case": [
+    "func main(fs: Filesystem, out: Stream) -> int:\n    match listdir(fs, \".\"):\n        case Ok(names):\n            mut found = 0\n            for name in names:\n                if name == \"greeting.txt\" or name == \"lines.txt\":\n                    found += 1\n            out.print(len(names), found)\n        case Err(message):\n            out.print(message)\n    out.print(listdir(fs, \"absent\"))\n    return 0\n",
+    [],
+    [
+     "--gc-stress"
+    ]
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "MiAyCkVycignbGlzdGRpciBcJ2Fic2VudFwnOiBmYWlsZWQ6IHRoZSBwYXRoIGRvZXMgbm90IGV4aXN0IG9yIGNvdWxkIG5vdCBiZSB1c2VkJykKMAo="
+  },
+  "0447686f140f57d19b6ebd0af755ad73": {
+   "case": [
+    "func count(fs: Filesystem) -> Result[int, str]:\n    mut total = 0\n    with try open(fs, \"lines.txt\", \"r\") as f:\n        for line in f.readlines():\n            total = total + 1\n    return Ok(total)\n\nfunc main(fs: Filesystem, out: Stream) -> int:\n    out.print(read_text(fs, \"greeting.txt\"))\n    out.print(exists(fs, \"greeting.txt\"), exists(fs, \"absent.txt\"))\n    with open(fs, \"greeting.txt\", \"rb\") as f:\n        out.print(f.read())\n    match count(fs):\n        case Ok(value):\n            out.print(value)\n        case Err(message):\n            out.print(message)\n    out.print(read_file(fs, \"absent.txt\"))\n    return 0\n",
+    [],
+    [
+     "--gc-stress"
+    ]
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "T2soJ2hlbGxvIGZyb20gYSBncmFudGVkIGRpcmVjdG9yeVxuJykKVHJ1ZSBGYWxzZQpiJ2hlbGxvIGZyb20gYSBncmFudGVkIGRpcmVjdG9yeVxuJwozCkVycigncmVhZCBcJ2Fic2VudC50eHRcJzogZmFpbGVkOiB0aGUgcGF0aCBkb2VzIG5vdCBleGlzdCBvciBjb3VsZCBub3QgYmUgdXNlZCcpCjAK"
+  },
+  "056759b64efd53a7f4c0a29288290f3b": {
+   "case": [
+    "func first(fs: Filesystem, path: str) -> Result[int, str]:\n    with try open(fs, path, \"r\") as f:\n        return Ok(len(f.readline()))\n\nfunc main(fs: Filesystem, out: Stream) -> int:\n    mut total = 0\n    for round in range(4):\n        with open(fs, \"lines.txt\", \"r\") as f:\n            if round == 1:\n                continue\n            if round == 3:\n                break\n            total = total + len(f.readline())\n    match first(fs, \"greeting.txt\"):\n        case Ok(value):\n            total = total + value\n        case Err(message):\n            total = total - len(message)\n    match first(fs, \"absent.txt\"):\n        case Ok(value):\n            out.print(value)\n        case Err(message):\n            out.print(message)\n    out.print(total)\n    return 0\n",
+    [],
+    [
+     "--gc-stress"
+    ]
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "b3BlbiAnYWJzZW50LnR4dCc6IGZhaWxlZDogdGhlIHBhdGggZG9lcyBub3QgZXhpc3Qgb3IgY291bGQgbm90IGJlIHVzZWQKMzkKMAo="
+  },
+  "2468eb90df17ec8bac5b25deeeee6feb": {
+   "case": [
+    "func main(fs: Filesystem, out: Stream) -> int:\n    out.print(exists(fs, \"greeting.txt\"))\n    return 0\n",
+    [
+     "--restrict"
+    ],
+    []
+   ],
+   "returncode": 2,
+   "stderr": "bXlsYW5nOiAtLXJlc3RyaWN0IGlzIGFjdGl2ZSBhbmQgdGhpcyBjb21tYW5kIGxpbmUgZGlkIG5vdCBncmFudCBhIGNhcGFiaWxpdHkgdGhlIGVudHJ5IHBvaW50IHJlcXVlc3RzOyBwYXNzIC0tYWxsb3ctcmVhZD1ESVIsIG9yIGRyb3AgLS1yZXN0cmljdCB0byBncmFudCBldmVyeSBjYXBhYmlsaXR5Cg==",
+   "stdout": ""
+  },
+  "345eca99acaaa8b6a0c48b309953f20a": {
+   "case": [
+    "func main(fs: Filesystem, clock: Clock, entropy: Entropy, names: Environment, out: Stream) -> int:\n    _ = clock\n    _ = entropy\n    _ = names\n    out.print(exists(fs, \"greeting.txt\"))\n    return 0\n",
+    [],
+    []
+   ],
+   "returncode": 0,
+   "stderr": "PGNvcnB1cz4vY2FzZS5teToxOjI2OiB3YXJuaW5nW1dfVU5VU0VEX0JJTkRJTkddOiBiaW5kaW5nIGlzIG5ldmVyIHJlYWQ7IHVzZSBpdCBvciByZW1vdmUgaXQsIHByZXNlcnZpbmcgaW5pdGlhbGl6ZXIgZWZmZWN0cyB3aXRoIGBfID1gIHdoZW4gbmVlZGVkCiAgZGVmIG1haW4oZnM6IEZpbGVzeXN0ZW0sIGNsb2NrOiBDbG9jaywgZW50cm9weTogRW50cm9weSwgbmFtZXM6IEVudmlyb25tZW50KSAtPiBpbnQ6CiAgICAgICAgICAgICAgICAgICAgICAgICAgIF4KPGNvcnB1cz4vY2FzZS5teToxOjQwOiB3YXJuaW5nW1dfVU5VU0VEX0JJTkRJTkddOiBiaW5kaW5nIGlzIG5ldmVyIHJlYWQ7IHVzZSBpdCBvciByZW1vdmUgaXQsIHByZXNlcnZpbmcgaW5pdGlhbGl6ZXIgZWZmZWN0cyB3aXRoIGBfID1gIHdoZW4gbmVlZGVkCiAgZGVmIG1haW4oZnM6IEZpbGVzeXN0ZW0sIGNsb2NrOiBDbG9jaywgZW50cm9weTogRW50cm9weSwgbmFtZXM6IEVudmlyb25tZW50KSAtPiBpbnQ6CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgXgo8Y29ycHVzPi9jYXNlLm15OjE6NTg6IHdhcm5pbmdbV19VTlVTRURfQklORElOR106IGJpbmRpbmcgaXMgbmV2ZXIgcmVhZDsgdXNlIGl0IG9yIHJlbW92ZSBpdCwgcHJlc2VydmluZyBpbml0aWFsaXplciBlZmZlY3RzIHdpdGggYF8gPWAgd2hlbiBuZWVkZWQKICBkZWYgbWFpbihmczogRmlsZXN5c3RlbSwgY2xvY2s6IENsb2NrLCBlbnRyb3B5OiBFbnRyb3B5LCBuYW1lczogRW52aXJvbm1lbnQpIC0+IGludDoKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBeCg==",
+   "stdout": "VHJ1ZQowCg=="
+  },
+  "44905125317ae9ddb41a57663057945b": {
+   "case": [
+    "func main(fs: Filesystem, out: Stream) -> int:\n    out.print(read_text(fs, \"greeting.txt\"))\n    out.print(read_text(fs, \"../escape\"))\n    out.print(write_text(fs, \"new.txt\", \"x\"))\n    out.print(mkdir(fs, \"fresh\"))\n    out.print(remove(fs, \"greeting.txt\"))\n    return 0\n",
+    [
+     "--restrict",
+     "--allow-read=."
+    ],
+    [
+     "--gc-stress"
+    ]
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "T2soJ2hlbGxvIGZyb20gYSBncmFudGVkIGRpcmVjdG9yeVxuJykKRXJyKCdyZWFkIFwnLi4vZXNjYXBlXCc6IGRlbmllZDogb3V0c2lkZSB0aGUgZ3JhbnRlZCBkaXJlY3Rvcmllcywgb3IgdGhlIG1vZGUgbmVlZHMgYSB3cml0ZSBncmFudCcpCkVycignd3JpdGUgXCduZXcudHh0XCc6IGRlbmllZDogb3V0c2lkZSB0aGUgZ3JhbnRlZCBkaXJlY3Rvcmllcywgb3IgdGhlIG1vZGUgbmVlZHMgYSB3cml0ZSBncmFudCcpCkVycignbWtkaXIgXCdmcmVzaFwnOiBkZW5pZWQ6IG91dHNpZGUgdGhlIGdyYW50ZWQgZGlyZWN0b3JpZXMsIG9yIHRoZSBtb2RlIG5lZWRzIGEgd3JpdGUgZ3JhbnQnKQpFcnIoJ3JlbW92ZSBcJ2dyZWV0aW5nLnR4dFwnOiBkZW5pZWQ6IG91dHNpZGUgdGhlIGdyYW50ZWQgZGlyZWN0b3JpZXMsIG9yIHRoZSBtb2RlIG5lZWRzIGEgd3JpdGUgZ3JhbnQnKQowCg=="
+  },
+  "6c8455ab3d47a29db9b40e0487e4d8bc": {
+   "case": [
+    "func main(fs: Filesystem, out: Stream) -> int:\n    out.print(exists(fs, \"greeting.txt\"))\n    return 0\n",
+    [
+     "--restrict"
+    ],
+    [
+     "--gc-stress"
+    ]
+   ],
+   "returncode": 2,
+   "stderr": "bXlsYW5nOiAtLXJlc3RyaWN0IGlzIGFjdGl2ZSBhbmQgdGhpcyBjb21tYW5kIGxpbmUgZGlkIG5vdCBncmFudCBhIGNhcGFiaWxpdHkgdGhlIGVudHJ5IHBvaW50IHJlcXVlc3RzOyBwYXNzIC0tYWxsb3ctcmVhZD1ESVIsIG9yIGRyb3AgLS1yZXN0cmljdCB0byBncmFudCBldmVyeSBjYXBhYmlsaXR5Cg==",
+   "stdout": ""
+  },
+  "6c9e52e1ed53e80172c5dd0fef60ff08": {
+   "case": [
+    "func main(fs: Filesystem, out: Stream) -> int:\n    out.print(write_file(fs, \"broken.bin\", b\"\\xff\\xfe\"))\n    out.print(read_text(fs, \"broken.bin\"))\n    out.print(read_file(fs, \"broken.bin\"))\n    out.print(remove(fs, \"broken.bin\"))\n    return 0\n",
+    [],
+    []
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "T2soTm9uZSkKRXJyKCdyZWFkIFwnYnJva2VuLmJpblwnOiB0aGUgYnl0ZXMgcmVhZCBhcmUgbm90IHZhbGlkIFVURi04IHRleHQnKQpPayhiJ1x4ZmZceGZlJykKT2soTm9uZSkKMAo="
+  },
+  "82fed4d19765b9a0fb235e46951abd09": {
+   "case": [
+    "func count(fs: Filesystem) -> Result[int, str]:\n    mut total = 0\n    with try open(fs, \"lines.txt\", \"r\") as f:\n        for line in f.readlines():\n            total = total + 1\n    return Ok(total)\n\nfunc main(fs: Filesystem, out: Stream) -> int:\n    out.print(read_text(fs, \"greeting.txt\"))\n    out.print(exists(fs, \"greeting.txt\"), exists(fs, \"absent.txt\"))\n    with open(fs, \"greeting.txt\", \"rb\") as f:\n        out.print(f.read())\n    match count(fs):\n        case Ok(value):\n            out.print(value)\n        case Err(message):\n            out.print(message)\n    out.print(read_file(fs, \"absent.txt\"))\n    return 0\n",
+    [],
+    []
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "T2soJ2hlbGxvIGZyb20gYSBncmFudGVkIGRpcmVjdG9yeVxuJykKVHJ1ZSBGYWxzZQpiJ2hlbGxvIGZyb20gYSBncmFudGVkIGRpcmVjdG9yeVxuJwozCkVycigncmVhZCBcJ2Fic2VudC50eHRcJzogZmFpbGVkOiB0aGUgcGF0aCBkb2VzIG5vdCBleGlzdCBvciBjb3VsZCBub3QgYmUgdXNlZCcpCjAK"
+  },
+  "875269c69559b839fa62825d79febf7f": {
+   "case": [
+    "func main() -> int:\n    return 7\n",
+    [
+     "--allow-clock",
+     "--allow-clock"
+    ],
+    []
+   ],
+   "returncode": 2,
+   "stderr": "dXNhZ2U6IG15bGFuZyB0ZXN0IDxlbnRyeS5teT4gWy0tZmlsdGVyIEdMT0JdIFstLWNhc2VzIEZJTEVdIFstLWpzb25dIFstLWZvcmNlXQogICAgICAgbXlsYW5nIGJ1aWxkIDxmaWxlLm15PiAoLW8gPG91dHB1dD4gfCAtLXJ1bikgWy0taGVscF0KICAgICAgIG15bGFuZyBkb2MtY292ZXJhZ2UgWzxyZXBvLXJvb3Q+XSAoZXZlcnkgaW1wbGVtZW50ZWQgZmVhdHVyZSBhbmQgc3RhbmRhcmQgZXhwb3J0IG5lZWRzIGEgZG9jdW1lbnRlZCBleGFtcGxlKQogICAgICAgbXlsYW5nIDxpbnZva2UtcHJvamVjdHxjaGVjay12YWx1ZS1wcm9qZWN0fHNjaGVtYS1wcm9qZWN0fGlucHV0LW1vZHVsZXxjaGVja3xydW58ZHVtcC1ieXRlY29kZXxkaXNjb3Zlci1kdXBsaWNhdGVzfGRpc2NvdmVyLXByb2plY3QtZHVwbGljYXRlc3xyZXBvcnQtcHJvamVjdC1xdWFsaXR5fHJlcG9ydC1xdWFsaXR5fGZtdHxmbXQtbW9kdWxlfGZtdC1wcm9qZWN0fGVtaXQtcWJlfGVtaXQtcHJvamVjdC1xYmV8ZXZhbC1wcm9qZWN0fGxpc3QtbW9kdWxlc3xsaXN0LWludGVyZmFjZXN8bGlzdC1kZWNsYXJhdGlvbnN8Y2hlY2stcHJvamVjdHxydW4tcHJvamVjdHxjaGVjay1wb2xpY3k+IDxmaWxlLm15PgogIHNjaGVtYS1wcm9qZWN0OiAtLXNjaGVtYS1yZXBvcnQgKGluY2x1ZGUgY2hlY2tlZCBzb3VyY2UgYW5kIGNvbXBpbGVyIGlkZW50aXRpZXMpCiAgY2hlY2stdmFsdWUtcHJvamVjdDogLS12YWx1ZT1wYXRoLmpzb24gKHJlcXVpcmVkOyB2YWxpZGF0ZXMgYW5kIHdyaXRlcyBjYW5vbmljYWwgdHlwZWQtanNvbi12MSk7IC0tbWF4LWNvZGVjLXN0ZXBzPU4gLS1tYXgtY29kZWMtZnJhbWVzPU4gLS1tYXgtY29kZWMtY2FsbHM9TiAtLW1heC1jb2RlYy1ieXRlcz1OIC0tbWF4LWNvZGVjLXZhbHVlcz1OCiAgaW52b2tlLXByb2plY3Q6IC0tcmVxdWVzdD1wYXRoLmpzb24gKHR5cGVkLWNhbGwtdjEsIHNjaGVtYS1waW5uZWQgcHVibGljIGZ1bmN0aW9uIGNhbGw7IHNhbWUgY29kZWMgYnVkZ2V0cykKICBpbnB1dC1tb2R1bGU6IHJlYWRzIGEgdHlwZWQgSlNPTiBtYW5pZmVzdCBhbmQgd3JpdGVzIGdlbmVyYXRlZCBtb2R1bGUgc291cmNlCiAgcnVuL3J1bi1wcm9qZWN0OiAtLW1heC1zdGVwcz1OIC0tbWF4LWZyYW1lcz1OIC0tZGlzcGF0Y2g9b3B0aW1pemVkfGdlbmVyaWMgLS1nYy1zdHJlc3MgLS1wcmludC1yZXN1bHQKICBydW4vcnVuLXByb2plY3QgYXV0aG9yaXR5OiBldmVyeSBjYXBhYmlsaXR5IGlzIGdyYW50ZWQgYnkgZGVmYXVsdDsgLS1yZXN0cmljdCBkZW5pZXMgdGhlbSBhbmQgZW5hYmxlcyAtLWFsbG93LXJlYWQ9RElSIC0tYWxsb3ctd3JpdGU9RElSIChyZXBlYXRhYmxlKSAtLWFsbG93LWNsb2NrIC0tYWxsb3ctcmFuZG9tWz1TRUVEXSAtLWFsbG93LWVudls9TkFNRSwuLi5dIC0tYWxsb3ctYWxsLiBVbmRlciAtLXJlc3RyaWN0IGFuIGVudHJ5IHBvaW50IHJlcXVlc3RpbmcgYW4gdW5ncmFudGVkIGNhcGFiaWxpdHkgZXhpdHMgMiBiZWZvcmUgZXhlY3V0aW9uOyAtLWFsbG93LXJhbmRvbT1TRUVEIHBpbnMgdGhlIHNlZWQgaW4gZWl0aGVyIG1vZGUKICBydW46IC0tdGltaW5ncyAoVk0gZXhlY3V0aW9uIG5hbm9zZWNvbmRzIG9uIHN0ZGVycjsgZXhjbHVkZXMgc291cmNlIGNvbXBpbGF0aW9uKQogIGV2YWwtcHJvamVjdDogLS1tYXgtc3RlcHM9TiAtLW1heC1mcmFtZXM9TiAtLW1heC1ldmFsLWJ5dGVzPU4gLS1ldmFsdWF0aW9uLXJlcG9ydHwtLWV2YWx1YXRpb24tcmVxdWVzdCAtLWlucHV0cz1tYW5pZmVzdC5qc29uIChyZXBlYXQgZm9yIHVwIHRvIDE2IG1vZHVsZXM7IGVmZmVjdC1mcmVlLCBwYXJhbWV0ZXItZnJlZSBlbnRyeSkKICBzY2hlbWEtcHJvamVjdC9jaGVjay12YWx1ZS1wcm9qZWN0L2ludm9rZS1wcm9qZWN0OiAtLWlucHV0cz1tYW5pZmVzdC5qc29uIChyZXBlYXQgZm9yIHVwIHRvIDE2IG1vZHVsZXMpCiAgZGlzY292ZXItZHVwbGljYXRlcy9kaXNjb3Zlci1wcm9qZWN0LWR1cGxpY2F0ZXM6IC0tbWluLW5vZGVzPU4gLS1wb3B1bGF0aW9uPXByb2R1Y3Rpb258dGVzdHN8Z2VuZXJhdGVkfHJlZmVyZW5jZXxpbnRlbnRpb25hbCAtLXRpbWluZ3MgLS1hcHByb3hpbWF0ZSAtLW1heC13b3JrPU4KICByZXBvcnQtcXVhbGl0eS9yZXBvcnQtcHJvamVjdC1xdWFsaXR5OiAtLW1heC1mdW5jdGlvbi1saW5lcz1OIC0tbWF4LXBhcmFtZXRlcnM9TiAtLW1heC1uZXN0aW5nPU4gLS1tYXgtZGVjaXNpb25zPU4gLS1tYXgtbGluZS1ieXRlcz1OICgwIGRpc2FibGVzIGEgc2lnbmFsKQogIGNoZWNrLXBvbGljeTogLS1wb2xpY3k9cGF0aC5qc29uIChyZXF1aXJlZDsgcG9saWN5IGZhaWx1cmVzIGV4aXQgMykKICBmbXQtcHJvamVjdDogLS1jaGVjayAocmVxdWlyZWQ7IGNoZWNrcyB0aGUgcmVhY2hhYmxlIGltcG9ydCBncmFwaCkKICBmbXQvZm10LW1vZHVsZTogLS1jaGVjayAob3RoZXJ3aXNlIHdyaXRlcyBmb3JtYXR0ZWQgc291cmNlIHRvIHN0ZG91dCkKICBsaXN0LWRlY2xhcmF0aW9uczogcGFyc2Utb25seSBkZWNsYXJhdGlvbnMtdjEgSlNPTiB3aXRoIGJ5dGUgcmFuZ2VzCiAgaW5kZXgtcHJvamVjdDogSlNPTiBzeW1ib2xzLCByZWZlcmVuY2VzIGFuZCBwaW5uZWQgc291cmNlIHNuYXBzaG90CiAgcHJvamVjdC1kZXBlbmRlbmNpZXM6IGNoZWNrZWQgbW9kdWxlIGdyYXBoIGFuZCBoYXNoZXM7IC0taW5wdXRzIHN1cHBvcnRlZAogIG9uZS1zaG90IGNvbW1hbmRzOiAtLXRpbWluZ3M9anNvbiAocGhhc2UtdGltaW5ncy12MSBKU09OIExpbmVzIG9uIHN0ZGVycikKICBhbGwgY29tbWFuZHM6IC0tZGlhZ25vc3RpY3M9dGV4dHxqc29uIChzdGRlcnIgSlNPTiBMaW5lczsgc3Rkb3V0IHVuY2hhbmdlZCkKICBjaGVjay1zZXNzaW9uOiBwZXJzaXN0ZW50IGNoZWNrL2NsZWFyL3F1aXQgbGluZXMgb24gc3RkaW47IEpTT04gc3RhdHVzIG9uIHN0ZG91dDsgLS1pbnB1dHMgc3VwcG9ydGVkCg==",
+   "stdout": ""
+  },
+  "8af0d3b5da68d266c13761d5d9c83d40": {
+   "case": [
+    "func main(fs: Filesystem, out: Stream) -> int:\n    with open(fs, \"absent.txt\", \"r\") as f:\n        out.print(f.read())\n    return 0\n",
+    [],
+    []
+   ],
+   "returncode": 1,
+   "stderr": "PGNvcnB1cz4vY2FzZS5teToyOjEwOiBlcnJvcltSX0ZJTEVdOiBmYWlsZWQ6IHRoZSBwYXRoIGRvZXMgbm90IGV4aXN0IG9yIGNvdWxkIG5vdCBiZSB1c2VkCiAgICAgIHdpdGggb3BlbihmcywgImFic2VudC50eHQiLCAiciIpIGFzIGY6CiAgICAgICAgICAgXgogIGluIG1haW4gYXQgPGNvcnB1cz4vY2FzZS5teToyOjEwCg==",
+   "stdout": ""
+  },
+  "8ea25ee27413af44fde6734c22ab171d": {
+   "case": [
+    "func main(fs: Filesystem, out: Stream) -> int:\n    out.print(write_file(fs, \"broken.bin\", b\"\\xff\\xfe\"))\n    out.print(read_text(fs, \"broken.bin\"))\n    out.print(read_file(fs, \"broken.bin\"))\n    out.print(remove(fs, \"broken.bin\"))\n    return 0\n",
+    [],
+    [
+     "--gc-stress"
+    ]
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "T2soTm9uZSkKRXJyKCdyZWFkIFwnYnJva2VuLmJpblwnOiB0aGUgYnl0ZXMgcmVhZCBhcmUgbm90IHZhbGlkIFVURi04IHRleHQnKQpPayhiJ1x4ZmZceGZlJykKT2soTm9uZSkKMAo="
+  },
+  "90eba2b17c66db1959b67e404b805d4e": {
+   "case": [
+    "func main(fs: Filesystem, out: Stream) -> int:\n    mut kept: str[] = []\n    with open(fs, \"lines.txt\", \"r\") as f:\n        mut lines = f.readlines()\n        kept = lines\n    out.print(len(kept), kept[0])\n    return 0\n",
+    [],
+    []
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "MyBvbmUKCjAK"
+  },
+  "9ea76b2a9c728163af3be477a9ececa0": {
+   "case": [
+    "func main(fs: Filesystem, clock: Clock, entropy: Entropy, names: Environment, out: Stream) -> int:\n    _ = clock\n    _ = entropy\n    _ = names\n    out.print(exists(fs, \"greeting.txt\"))\n    return 0\n",
+    [],
+    [
+     "--gc-stress"
+    ]
+   ],
+   "returncode": 0,
+   "stderr": "PGNvcnB1cz4vY2FzZS5teToxOjI2OiB3YXJuaW5nW1dfVU5VU0VEX0JJTkRJTkddOiBiaW5kaW5nIGlzIG5ldmVyIHJlYWQ7IHVzZSBpdCBvciByZW1vdmUgaXQsIHByZXNlcnZpbmcgaW5pdGlhbGl6ZXIgZWZmZWN0cyB3aXRoIGBfID1gIHdoZW4gbmVlZGVkCiAgZGVmIG1haW4oZnM6IEZpbGVzeXN0ZW0sIGNsb2NrOiBDbG9jaywgZW50cm9weTogRW50cm9weSwgbmFtZXM6IEVudmlyb25tZW50KSAtPiBpbnQ6CiAgICAgICAgICAgICAgICAgICAgICAgICAgIF4KPGNvcnB1cz4vY2FzZS5teToxOjQwOiB3YXJuaW5nW1dfVU5VU0VEX0JJTkRJTkddOiBiaW5kaW5nIGlzIG5ldmVyIHJlYWQ7IHVzZSBpdCBvciByZW1vdmUgaXQsIHByZXNlcnZpbmcgaW5pdGlhbGl6ZXIgZWZmZWN0cyB3aXRoIGBfID1gIHdoZW4gbmVlZGVkCiAgZGVmIG1haW4oZnM6IEZpbGVzeXN0ZW0sIGNsb2NrOiBDbG9jaywgZW50cm9weTogRW50cm9weSwgbmFtZXM6IEVudmlyb25tZW50KSAtPiBpbnQ6CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgXgo8Y29ycHVzPi9jYXNlLm15OjE6NTg6IHdhcm5pbmdbV19VTlVTRURfQklORElOR106IGJpbmRpbmcgaXMgbmV2ZXIgcmVhZDsgdXNlIGl0IG9yIHJlbW92ZSBpdCwgcHJlc2VydmluZyBpbml0aWFsaXplciBlZmZlY3RzIHdpdGggYF8gPWAgd2hlbiBuZWVkZWQKICBkZWYgbWFpbihmczogRmlsZXN5c3RlbSwgY2xvY2s6IENsb2NrLCBlbnRyb3B5OiBFbnRyb3B5LCBuYW1lczogRW52aXJvbm1lbnQpIC0+IGludDoKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBeCg==",
+   "stdout": "VHJ1ZQowCg=="
+  },
+  "9f0502b9f6c5d578689b09d856fba5c5": {
+   "case": [
+    "func main() -> int:\n    return 7\n",
+    [
+     "--allow-clock",
+     "--allow-clock"
+    ],
+    [
+     "--gc-stress"
+    ]
+   ],
+   "returncode": 2,
+   "stderr": "dXNhZ2U6IG15bGFuZyB0ZXN0IDxlbnRyeS5teT4gWy0tZmlsdGVyIEdMT0JdIFstLWNhc2VzIEZJTEVdIFstLWpzb25dIFstLWZvcmNlXQogICAgICAgbXlsYW5nIGJ1aWxkIDxmaWxlLm15PiAoLW8gPG91dHB1dD4gfCAtLXJ1bikgWy0taGVscF0KICAgICAgIG15bGFuZyBkb2MtY292ZXJhZ2UgWzxyZXBvLXJvb3Q+XSAoZXZlcnkgaW1wbGVtZW50ZWQgZmVhdHVyZSBhbmQgc3RhbmRhcmQgZXhwb3J0IG5lZWRzIGEgZG9jdW1lbnRlZCBleGFtcGxlKQogICAgICAgbXlsYW5nIDxpbnZva2UtcHJvamVjdHxjaGVjay12YWx1ZS1wcm9qZWN0fHNjaGVtYS1wcm9qZWN0fGlucHV0LW1vZHVsZXxjaGVja3xydW58ZHVtcC1ieXRlY29kZXxkaXNjb3Zlci1kdXBsaWNhdGVzfGRpc2NvdmVyLXByb2plY3QtZHVwbGljYXRlc3xyZXBvcnQtcHJvamVjdC1xdWFsaXR5fHJlcG9ydC1xdWFsaXR5fGZtdHxmbXQtbW9kdWxlfGZtdC1wcm9qZWN0fGVtaXQtcWJlfGVtaXQtcHJvamVjdC1xYmV8ZXZhbC1wcm9qZWN0fGxpc3QtbW9kdWxlc3xsaXN0LWludGVyZmFjZXN8bGlzdC1kZWNsYXJhdGlvbnN8Y2hlY2stcHJvamVjdHxydW4tcHJvamVjdHxjaGVjay1wb2xpY3k+IDxmaWxlLm15PgogIHNjaGVtYS1wcm9qZWN0OiAtLXNjaGVtYS1yZXBvcnQgKGluY2x1ZGUgY2hlY2tlZCBzb3VyY2UgYW5kIGNvbXBpbGVyIGlkZW50aXRpZXMpCiAgY2hlY2stdmFsdWUtcHJvamVjdDogLS12YWx1ZT1wYXRoLmpzb24gKHJlcXVpcmVkOyB2YWxpZGF0ZXMgYW5kIHdyaXRlcyBjYW5vbmljYWwgdHlwZWQtanNvbi12MSk7IC0tbWF4LWNvZGVjLXN0ZXBzPU4gLS1tYXgtY29kZWMtZnJhbWVzPU4gLS1tYXgtY29kZWMtY2FsbHM9TiAtLW1heC1jb2RlYy1ieXRlcz1OIC0tbWF4LWNvZGVjLXZhbHVlcz1OCiAgaW52b2tlLXByb2plY3Q6IC0tcmVxdWVzdD1wYXRoLmpzb24gKHR5cGVkLWNhbGwtdjEsIHNjaGVtYS1waW5uZWQgcHVibGljIGZ1bmN0aW9uIGNhbGw7IHNhbWUgY29kZWMgYnVkZ2V0cykKICBpbnB1dC1tb2R1bGU6IHJlYWRzIGEgdHlwZWQgSlNPTiBtYW5pZmVzdCBhbmQgd3JpdGVzIGdlbmVyYXRlZCBtb2R1bGUgc291cmNlCiAgcnVuL3J1bi1wcm9qZWN0OiAtLW1heC1zdGVwcz1OIC0tbWF4LWZyYW1lcz1OIC0tZGlzcGF0Y2g9b3B0aW1pemVkfGdlbmVyaWMgLS1nYy1zdHJlc3MgLS1wcmludC1yZXN1bHQKICBydW4vcnVuLXByb2plY3QgYXV0aG9yaXR5OiBldmVyeSBjYXBhYmlsaXR5IGlzIGdyYW50ZWQgYnkgZGVmYXVsdDsgLS1yZXN0cmljdCBkZW5pZXMgdGhlbSBhbmQgZW5hYmxlcyAtLWFsbG93LXJlYWQ9RElSIC0tYWxsb3ctd3JpdGU9RElSIChyZXBlYXRhYmxlKSAtLWFsbG93LWNsb2NrIC0tYWxsb3ctcmFuZG9tWz1TRUVEXSAtLWFsbG93LWVudls9TkFNRSwuLi5dIC0tYWxsb3ctYWxsLiBVbmRlciAtLXJlc3RyaWN0IGFuIGVudHJ5IHBvaW50IHJlcXVlc3RpbmcgYW4gdW5ncmFudGVkIGNhcGFiaWxpdHkgZXhpdHMgMiBiZWZvcmUgZXhlY3V0aW9uOyAtLWFsbG93LXJhbmRvbT1TRUVEIHBpbnMgdGhlIHNlZWQgaW4gZWl0aGVyIG1vZGUKICBydW46IC0tdGltaW5ncyAoVk0gZXhlY3V0aW9uIG5hbm9zZWNvbmRzIG9uIHN0ZGVycjsgZXhjbHVkZXMgc291cmNlIGNvbXBpbGF0aW9uKQogIGV2YWwtcHJvamVjdDogLS1tYXgtc3RlcHM9TiAtLW1heC1mcmFtZXM9TiAtLW1heC1ldmFsLWJ5dGVzPU4gLS1ldmFsdWF0aW9uLXJlcG9ydHwtLWV2YWx1YXRpb24tcmVxdWVzdCAtLWlucHV0cz1tYW5pZmVzdC5qc29uIChyZXBlYXQgZm9yIHVwIHRvIDE2IG1vZHVsZXM7IGVmZmVjdC1mcmVlLCBwYXJhbWV0ZXItZnJlZSBlbnRyeSkKICBzY2hlbWEtcHJvamVjdC9jaGVjay12YWx1ZS1wcm9qZWN0L2ludm9rZS1wcm9qZWN0OiAtLWlucHV0cz1tYW5pZmVzdC5qc29uIChyZXBlYXQgZm9yIHVwIHRvIDE2IG1vZHVsZXMpCiAgZGlzY292ZXItZHVwbGljYXRlcy9kaXNjb3Zlci1wcm9qZWN0LWR1cGxpY2F0ZXM6IC0tbWluLW5vZGVzPU4gLS1wb3B1bGF0aW9uPXByb2R1Y3Rpb258dGVzdHN8Z2VuZXJhdGVkfHJlZmVyZW5jZXxpbnRlbnRpb25hbCAtLXRpbWluZ3MgLS1hcHByb3hpbWF0ZSAtLW1heC13b3JrPU4KICByZXBvcnQtcXVhbGl0eS9yZXBvcnQtcHJvamVjdC1xdWFsaXR5OiAtLW1heC1mdW5jdGlvbi1saW5lcz1OIC0tbWF4LXBhcmFtZXRlcnM9TiAtLW1heC1uZXN0aW5nPU4gLS1tYXgtZGVjaXNpb25zPU4gLS1tYXgtbGluZS1ieXRlcz1OICgwIGRpc2FibGVzIGEgc2lnbmFsKQogIGNoZWNrLXBvbGljeTogLS1wb2xpY3k9cGF0aC5qc29uIChyZXF1aXJlZDsgcG9saWN5IGZhaWx1cmVzIGV4aXQgMykKICBmbXQtcHJvamVjdDogLS1jaGVjayAocmVxdWlyZWQ7IGNoZWNrcyB0aGUgcmVhY2hhYmxlIGltcG9ydCBncmFwaCkKICBmbXQvZm10LW1vZHVsZTogLS1jaGVjayAob3RoZXJ3aXNlIHdyaXRlcyBmb3JtYXR0ZWQgc291cmNlIHRvIHN0ZG91dCkKICBsaXN0LWRlY2xhcmF0aW9uczogcGFyc2Utb25seSBkZWNsYXJhdGlvbnMtdjEgSlNPTiB3aXRoIGJ5dGUgcmFuZ2VzCiAgaW5kZXgtcHJvamVjdDogSlNPTiBzeW1ib2xzLCByZWZlcmVuY2VzIGFuZCBwaW5uZWQgc291cmNlIHNuYXBzaG90CiAgcHJvamVjdC1kZXBlbmRlbmNpZXM6IGNoZWNrZWQgbW9kdWxlIGdyYXBoIGFuZCBoYXNoZXM7IC0taW5wdXRzIHN1cHBvcnRlZAogIG9uZS1zaG90IGNvbW1hbmRzOiAtLXRpbWluZ3M9anNvbiAocGhhc2UtdGltaW5ncy12MSBKU09OIExpbmVzIG9uIHN0ZGVycikKICBhbGwgY29tbWFuZHM6IC0tZGlhZ25vc3RpY3M9dGV4dHxqc29uIChzdGRlcnIgSlNPTiBMaW5lczsgc3Rkb3V0IHVuY2hhbmdlZCkKICBjaGVjay1zZXNzaW9uOiBwZXJzaXN0ZW50IGNoZWNrL2NsZWFyL3F1aXQgbGluZXMgb24gc3RkaW47IEpTT04gc3RhdHVzIG9uIHN0ZG91dDsgLS1pbnB1dHMgc3VwcG9ydGVkCg==",
+   "stdout": ""
+  },
+  "9f115ba86084917f666491553203ad9f": {
+   "case": [
+    "func main(fs: Filesystem, out: Stream) -> int:\n    with open(fs, \"absent.txt\", \"r\") as f:\n        out.print(f.read())\n    return 0\n",
+    [],
+    [
+     "--gc-stress"
+    ]
+   ],
+   "returncode": 1,
+   "stderr": "PGNvcnB1cz4vY2FzZS5teToyOjEwOiBlcnJvcltSX0ZJTEVdOiBmYWlsZWQ6IHRoZSBwYXRoIGRvZXMgbm90IGV4aXN0IG9yIGNvdWxkIG5vdCBiZSB1c2VkCiAgICAgIHdpdGggb3BlbihmcywgImFic2VudC50eHQiLCAiciIpIGFzIGY6CiAgICAgICAgICAgXgogIGluIG1haW4gYXQgPGNvcnB1cz4vY2FzZS5teToyOjEwCg==",
+   "stdout": ""
+  },
+  "a5cfa2778dcef304585ac6899f7eedef": {
+   "case": [
+    "func main(fs: Filesystem, out: Stream) -> int:\n    match listdir(fs, \".\"):\n        case Ok(names):\n            mut found = 0\n            for name in names:\n                if name == \"greeting.txt\" or name == \"lines.txt\":\n                    found += 1\n            out.print(len(names), found)\n        case Err(message):\n            out.print(message)\n    out.print(listdir(fs, \"absent\"))\n    return 0\n",
+    [],
+    []
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "MiAyCkVycignbGlzdGRpciBcJ2Fic2VudFwnOiBmYWlsZWQ6IHRoZSBwYXRoIGRvZXMgbm90IGV4aXN0IG9yIGNvdWxkIG5vdCBiZSB1c2VkJykKMAo="
+  },
+  "acb1bdec0c88bf09dd5259212a12fc1a": {
+   "case": [
+    "func main(fs: Filesystem, out: Stream) -> int:\n    out.print(write_text(fs, \"kept.txt\", \"value\"))\n    out.print(read_text(fs, \"kept.txt\"))\n    out.print(remove(fs, \"kept.txt\"))\n    return 0\n",
+    [
+     "--restrict",
+     "--allow-write=."
+    ],
+    []
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "T2soTm9uZSkKT2soJ3ZhbHVlJykKT2soTm9uZSkKMAo="
+  },
+  "b1bb41663bf1bf07beacda5756031bc0": {
+   "case": [
+    "func first(fs: Filesystem, path: str) -> Result[int, str]:\n    with try open(fs, path, \"r\") as f:\n        return Ok(len(f.readline()))\n\nfunc main(fs: Filesystem, out: Stream) -> int:\n    mut total = 0\n    for round in range(4):\n        with open(fs, \"lines.txt\", \"r\") as f:\n            if round == 1:\n                continue\n            if round == 3:\n                break\n            total = total + len(f.readline())\n    match first(fs, \"greeting.txt\"):\n        case Ok(value):\n            total = total + value\n        case Err(message):\n            total = total - len(message)\n    match first(fs, \"absent.txt\"):\n        case Ok(value):\n            out.print(value)\n        case Err(message):\n            out.print(message)\n    out.print(total)\n    return 0\n",
+    [],
+    []
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "b3BlbiAnYWJzZW50LnR4dCc6IGZhaWxlZDogdGhlIHBhdGggZG9lcyBub3QgZXhpc3Qgb3IgY291bGQgbm90IGJlIHVzZWQKMzkKMAo="
+  },
+  "b28bf920e42da53ee1c6086ccbe7c730": {
+   "case": [
+    "func main(fs: Filesystem, out: Stream) -> int:\n    out.print(write_text(fs, \"out.txt\", \"first\\nsecond\\n\"))\n    with open(fs, \"out.txt\", \"a\") as f:\n        out.print(f.write(\"third\\n\"))\n    out.print(read_text(fs, \"out.txt\"))\n    with open(fs, \"out.txt\", \"r\") as f:\n        out.print(f.readline(), f.read(3), f.read())\n        f.flush()\n        f.close()\n    out.print(write_file(fs, \"raw.bin\", b\"\\x00\\x01\\xff\"))\n    out.print(read_file(fs, \"raw.bin\"))\n    out.print(mkdir(fs, \"nested\"), write_text(fs, \"nested/inner.txt\", \"x\"))\n    out.print(read_text(fs, \"nested/inner.txt\"), exists(fs, \"nested\"))\n    out.print(remove(fs, \"nested/inner.txt\"), remove(fs, \"nested\"), exists(fs, \"nested\"))\n    out.print(remove(fs, \"missing.txt\"))\n    out.print(write_text(fs, \"out.txt\", \"again\\n\"), read_text(fs, \"out.txt\"))\n    return 0\n",
+    [],
+    [
+     "--gc-stress"
+    ]
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "T2soTm9uZSkKNgpPaygnZmlyc3RcbnNlY29uZFxudGhpcmRcbicpCmZpcnN0CiBzZWMgb25kCnRoaXJkCgpPayhOb25lKQpPayhiJ1x4MDBceDAxXHhmZicpCk9rKE5vbmUpIE9rKE5vbmUpCk9rKCd4JykgVHJ1ZQpPayhOb25lKSBPayhOb25lKSBGYWxzZQpFcnIoJ3JlbW92ZSBcJ21pc3NpbmcudHh0XCc6IGZhaWxlZDogdGhlIHBhdGggZG9lcyBub3QgZXhpc3Qgb3IgY291bGQgbm90IGJlIHVzZWQnKQpPayhOb25lKSBPaygnYWdhaW5cbicpCjAK"
+  },
+  "c9979616ffb2e5e15b0ae35505787fac": {
+   "case": [
+    "func main(fs: Filesystem, out: Stream) -> int:\n    out.print(exists(fs, \"greeting.txt\"))\n    return 0\n",
+    [
+     "--restrict",
+     "--allow-read=absent-directory"
+    ],
+    []
+   ],
+   "returncode": 2,
+   "stderr": "bXlsYW5nOiBob3N0IGZhaWx1cmU6IEZpbGVOb3RGb3VuZAo=",
+   "stdout": ""
+  },
+  "cc6337dd3dc589a25cc07a325b053e0d": {
+   "case": [
+    "func main(fs: Filesystem, out: Stream) -> int:\n    out.print(read_text(fs, \"greeting.txt\"))\n    out.print(read_text(fs, \"../escape\"))\n    out.print(write_text(fs, \"new.txt\", \"x\"))\n    out.print(mkdir(fs, \"fresh\"))\n    out.print(remove(fs, \"greeting.txt\"))\n    return 0\n",
+    [
+     "--restrict",
+     "--allow-read=."
+    ],
+    []
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "T2soJ2hlbGxvIGZyb20gYSBncmFudGVkIGRpcmVjdG9yeVxuJykKRXJyKCdyZWFkIFwnLi4vZXNjYXBlXCc6IGRlbmllZDogb3V0c2lkZSB0aGUgZ3JhbnRlZCBkaXJlY3Rvcmllcywgb3IgdGhlIG1vZGUgbmVlZHMgYSB3cml0ZSBncmFudCcpCkVycignd3JpdGUgXCduZXcudHh0XCc6IGRlbmllZDogb3V0c2lkZSB0aGUgZ3JhbnRlZCBkaXJlY3Rvcmllcywgb3IgdGhlIG1vZGUgbmVlZHMgYSB3cml0ZSBncmFudCcpCkVycignbWtkaXIgXCdmcmVzaFwnOiBkZW5pZWQ6IG91dHNpZGUgdGhlIGdyYW50ZWQgZGlyZWN0b3JpZXMsIG9yIHRoZSBtb2RlIG5lZWRzIGEgd3JpdGUgZ3JhbnQnKQpFcnIoJ3JlbW92ZSBcJ2dyZWV0aW5nLnR4dFwnOiBkZW5pZWQ6IG91dHNpZGUgdGhlIGdyYW50ZWQgZGlyZWN0b3JpZXMsIG9yIHRoZSBtb2RlIG5lZWRzIGEgd3JpdGUgZ3JhbnQnKQowCg=="
+  },
+  "d035f76a581478406810981819cd47c8": {
+   "case": [
+    "func main(fs: Filesystem, out: Stream) -> int:\n    with open(fs, \"greeting.txt\", \"r\") as f:\n        f.close()\n        out.print(f.read())\n    return 0\n",
+    [],
+    [
+     "--gc-stress"
+    ]
+   ],
+   "returncode": 1,
+   "stderr": "PGNvcnB1cz4vY2FzZS5teTo0OjE1OiBlcnJvcltSX0ZJTEVdOiB0aGUgZmlsZSBpcyBhbHJlYWR5IGNsb3NlZAogICAgICAgICAgcHJpbnQoZi5yZWFkKCkpCiAgICAgICAgICAgICAgICBeCiAgaW4gbWFpbiBhdCA8Y29ycHVzPi9jYXNlLm15OjQ6MTUK",
+   "stdout": ""
+  },
+  "d2c5f0dc7001785484437c4ed402d9b9": {
+   "case": [
+    "func main(fs: Filesystem, out: Stream) -> int:\n    with open(fs, \"greeting.txt\", \"r\") as f:\n        f.close()\n        out.print(f.read())\n    return 0\n",
+    [],
+    []
+   ],
+   "returncode": 1,
+   "stderr": "PGNvcnB1cz4vY2FzZS5teTo0OjE1OiBlcnJvcltSX0ZJTEVdOiB0aGUgZmlsZSBpcyBhbHJlYWR5IGNsb3NlZAogICAgICAgICAgcHJpbnQoZi5yZWFkKCkpCiAgICAgICAgICAgICAgICBeCiAgaW4gbWFpbiBhdCA8Y29ycHVzPi9jYXNlLm15OjQ6MTUK",
+   "stdout": ""
+  },
+  "dff251829bbf706212f5d276d4ee893f": {
+   "case": [
+    "func main(fs: Filesystem, out: Stream) -> int:\n    mut kept: str[] = []\n    with open(fs, \"lines.txt\", \"r\") as f:\n        mut lines = f.readlines()\n        kept = lines\n    out.print(len(kept), kept[0])\n    return 0\n",
+    [],
+    [
+     "--gc-stress"
+    ]
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "MyBvbmUKCjAK"
+  },
+  "e0c8dfab36e9c8c5d6410b47ee693d53": {
+   "case": [
+    "func main(fs: Filesystem, out: Stream) -> int:\n    out.print(write_text(fs, \"kept.txt\", \"value\"))\n    out.print(read_text(fs, \"kept.txt\"))\n    out.print(remove(fs, \"kept.txt\"))\n    return 0\n",
+    [
+     "--restrict",
+     "--allow-write=."
+    ],
+    [
+     "--gc-stress"
+    ]
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "T2soTm9uZSkKT2soJ3ZhbHVlJykKT2soTm9uZSkKMAo="
+  },
+  "ebd61f251e72c6e53a853ea102c5999c": {
+   "case": [
+    "func main(fs: Filesystem, out: Stream) -> int:\n    out.print(exists(fs, \"greeting.txt\"))\n    return 0\n",
+    [
+     "--restrict",
+     "--allow-read=absent-directory"
+    ],
+    [
+     "--gc-stress"
+    ]
+   ],
+   "returncode": 2,
+   "stderr": "bXlsYW5nOiBob3N0IGZhaWx1cmU6IEZpbGVOb3RGb3VuZAo=",
+   "stdout": ""
+  },
+  "fe75df848f9c20c0d4cc117dd2bc0a07": {
+   "case": [
+    "func main(fs: Filesystem, out: Stream) -> int:\n    out.print(write_text(fs, \"out.txt\", \"first\\nsecond\\n\"))\n    with open(fs, \"out.txt\", \"a\") as f:\n        out.print(f.write(\"third\\n\"))\n    out.print(read_text(fs, \"out.txt\"))\n    with open(fs, \"out.txt\", \"r\") as f:\n        out.print(f.readline(), f.read(3), f.read())\n        f.flush()\n        f.close()\n    out.print(write_file(fs, \"raw.bin\", b\"\\x00\\x01\\xff\"))\n    out.print(read_file(fs, \"raw.bin\"))\n    out.print(mkdir(fs, \"nested\"), write_text(fs, \"nested/inner.txt\", \"x\"))\n    out.print(read_text(fs, \"nested/inner.txt\"), exists(fs, \"nested\"))\n    out.print(remove(fs, \"nested/inner.txt\"), remove(fs, \"nested\"), exists(fs, \"nested\"))\n    out.print(remove(fs, \"missing.txt\"))\n    out.print(write_text(fs, \"out.txt\", \"again\\n\"), read_text(fs, \"out.txt\"))\n    return 0\n",
+    [],
+    []
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "T2soTm9uZSkKNgpPaygnZmlyc3RcbnNlY29uZFxudGhpcmRcbicpCmZpcnN0CiBzZWMgb25kCnRoaXJkCgpPayhOb25lKQpPayhiJ1x4MDBceDAxXHhmZicpCk9rKE5vbmUpIE9rKE5vbmUpCk9rKCd4JykgVHJ1ZQpPayhOb25lKSBPayhOb25lKSBGYWxzZQpFcnIoJ3JlbW92ZSBcJ21pc3NpbmcudHh0XCc6IGZhaWxlZDogdGhlIHBhdGggZG9lcyBub3QgZXhpc3Qgb3IgY291bGQgbm90IGJlIHVzZWQnKQpPayhOb25lKSBPaygnYWdhaW5cbicpCjAK"
+  }
+ },
+ "version": "golden-outcomes-v1"
+}

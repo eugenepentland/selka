@@ -1,0 +1,21 @@
+# sieve: Eratosthenes over a list[bool] of n + 1 flags; prints the prime count.
+# A list[bool] stores one byte per flag.
+func main(out: Stream) -> int:
+    mut n = 20000000
+    mut flags = [for _ in range(n + 1) yield True]
+    flags[0] = False
+    flags[1] = False
+    mut i = 2
+    while i * i <= n:
+        if flags[i]:
+            mut j = i * i
+            while j <= n:
+                flags[j] = False
+                j = j + i
+        i = i + 1
+    mut count = 0
+    for flag in flags:
+        if flag:
+            count += 1
+    out.print(count)
+    return 0

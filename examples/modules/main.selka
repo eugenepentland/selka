@@ -1,0 +1,10 @@
+import shared.units
+
+public record Measurement:
+    distance: units.Distance
+
+
+# The imported factory enforces Distance construction in its defining module.
+func main() -> int:
+    mut measurement = Measurement(distance=units.Distance.make(12))
+    return units.Distance.number(measurement.distance)

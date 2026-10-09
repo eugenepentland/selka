@@ -1,0 +1,9 @@
+public domain Distance: int:
+    private func raw(value: int) -> Distance:
+        return wrap[Distance](value)
+    func make(value: int) -> Distance effects():
+        if value < 0:
+            return Distance.raw(0)
+        return Distance.raw(value)
+    func number(value: Distance) -> int effects():
+        return unwrap(value)

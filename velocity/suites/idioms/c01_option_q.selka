@@ -1,0 +1,17 @@
+# oracle: selka-only
+def first_even(xs: list[int]) -> Option[int]:
+    for x in xs:
+        if x % 2 == 0:
+            return Some(x)
+    return None
+
+def doubled(xs: list[int]) -> Option[int]:
+    v = first_even(xs)?
+    return Some(v * 2)
+
+def main() -> int:
+    match doubled([1, 21, 3]):
+        case Some(v):
+            return v
+        case None:
+            return 0

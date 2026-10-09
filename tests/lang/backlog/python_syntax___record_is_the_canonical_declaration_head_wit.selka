@@ -1,0 +1,13 @@
+record Point:
+    x: int
+    y: int
+
+
+func main() -> int:
+    mut record = Point(x=20, y=22)
+    return record.x + record.y
+
+
+# spec: PY-RECORD-1
+public func test_record_is_the_canonical_declaration_head_wit_1() -> bool:
+    return main() == 42

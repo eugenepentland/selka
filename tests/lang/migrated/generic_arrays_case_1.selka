@@ -1,0 +1,29 @@
+public func pair[T](a: T, b: T) -> FixedArray[T, 2] effects():
+    return FixedArray[T, 2]([a, b])
+
+
+public func contains[T: equality](a: FixedArray[T, 2], n: T) -> bool effects():
+    mut i = 0
+    while i < len(a):
+        if a[i] == n:
+            return True
+        i = i + 1
+    return False
+
+
+func matrix[T](x: T) -> FixedArray[FixedArray[T, 2], 2]:
+    return pair[FixedArray[T, 2]](pair[T](x, x), pair[T](x, x))
+
+
+func concrete(a: FixedArray[i64, 2]) -> i64:
+    return a[0] + a[1]
+
+
+func caller[T](x: T) -> i64:
+    _ = matrix[T](x)
+    return concrete(pair[i64](3, 4))
+
+
+public func program() -> i64:
+    mut a = matrix[i64](9)
+    return a[1][0] + caller[bool](True)

@@ -1,0 +1,10 @@
+func build() -> int[]:
+    mut values: int[] = []
+    values.append(1)
+    values.append(2)
+    return values
+
+
+public func program() -> int:
+    mut values = build()
+    return values[0] + values[1] - 3

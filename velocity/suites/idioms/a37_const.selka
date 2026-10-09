@@ -1,0 +1,5 @@
+# oracle: cpython
+MAX = 42
+
+def main() -> int:
+    return MAX

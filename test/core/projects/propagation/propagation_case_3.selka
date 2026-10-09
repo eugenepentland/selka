@@ -1,0 +1,21 @@
+result R:
+    ok: i64,
+    err: i64
+
+
+result Outer:
+    ok: R,
+    err: i64
+
+
+func f(r: Outer) -> R:
+    _ = try r
+    return Ok(5)
+
+
+public func program() -> i64:
+    match f(Ok(Ok(1))):
+        case R.ok(n):
+            return n
+        case R.err(e):
+            return e

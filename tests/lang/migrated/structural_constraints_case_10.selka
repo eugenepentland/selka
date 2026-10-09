@@ -1,0 +1,13 @@
+domain D: i64:
+    func make(n: i64) -> D:
+        return wrap[D](n)
+    func score(v: D) -> i64 effects():
+        return unwrap(v)
+
+
+func apply[T: copy + op(score(v: T) -> i64 effects())](v: T) -> i64:
+    return T.score(v)
+
+
+public func program() -> i64:
+    return apply[D](D.make(7))

@@ -1,0 +1,1240 @@
+{
+  "language_version": "0.1.0",
+  "primary_backend": "llvm",
+  "implemented": {
+    "run-time-counters": {
+      "kind": "tooling",
+      "summary": "`--counters` on `selka build`, `build --run` and `run` makes a counting build: the program writes `selka-counters-v1` JSON at exit (to `SELKA_COUNTERS`, else `selka-counters.json`) with count updates, uniqueness tests, copies by kind with bytes, list pushes, allocations, frees, growth and peak live bytes, per emitted function and per source site. Without the flag the executable is unchanged.",
+      "doc": "docs/tooling/counters.md#run-time-counters"
+    },
+    "cost-command": {
+      "kind": "tooling",
+      "summary": "`selka cost ENTRY.selka [FUNCTION] [--json]` reports per-function checks, ownership updates, dynamic allocation sites, RC operations, Core inlining and vector plans using the build stats counters. LLVM vectorization stays unknown without optimization remarks.",
+      "doc": "docs/tooling/cost.md#per-function-cost"
+    },
+    "tuples": {
+      "kind": "language",
+      "summary": "`tuple[T1, ..., Tn]` (two to eight elements) is an immutable, fixed-arity anonymous record: it is built with `(a, b)` and the bare forms after `return`, taken apart only by destructuring (`const x, y = value` or `mut x, y = value`; assignment destructuring updates existing writable bindings, `for a, b in pairs`, `_` for a value not needed), compares structurally, prints as `(1, 'a')`, and is rejected when indexed, named by field, called as a method or measured with `len`.",
+      "doc": "docs/tuples.md#tuples"
+    },
+    "typed-hole-obligations": {
+      "kind": "tooling",
+      "summary": "`selka check --diagnostics=json` attaches a versioned `typed-hole-obligation` record to each `E_TYPED_HOLE` diagnostic: snapshot identity and hole range, declared and contextual expected types, usable bindings, generic requirements, effect ceiling and mutation footprint, with whole-program facts a hole cannot promise named in an `unavailable` list.",
+      "doc": "docs/typed-holes.md#structured-obligations"
+    },
+    "lint-command": {
+      "kind": "tooling",
+      "summary": "`selka lint` reports `L_*` findings over a checked project, with profiles, waiver comments, related notes naming the tests that reach a declaration, section-9 advisory report rules, and a report/block split that only `--gate` enforces.",
+      "doc": "docs/tooling/lint.md#selka-lint"
+    },
+    "tests-for-index": {
+      "kind": "tooling",
+      "summary": "One tests-reachability index backs `selka tests-for`, the related notes on `selka lint` findings, and the `tests(N)` column of `selka list-interfaces`; on a project that does not type-check, `tests-for` answers from a syntax call graph labeled `basis: syntax`.",
+      "doc": "docs/tooling/navigation.md#which-tests-reach-a-declaration"
+    },
+    "interface-fact-status": {
+      "kind": "tooling",
+      "summary": "`selka list-interfaces` and `selka index-project` label every effect, mutation and return-origin fact with its analysis status (`checked`, `template`, `declaration-only`, `declared`, `lexical-only`), publish `unavailable`/`null` instead of the checker's conservative mask when no checked instantiation exists, and keep a declared `ceiling(...)` visible either way.",
+      "doc": "docs/tooling/navigation.md#fact-status-in-interface-and-navigation-output"
+    },
+    "diagnostic-fixes": {
+      "kind": "tooling",
+      "summary": "A diagnostic whose repair is certain carries a `diagnostic-v1` `fix`: exact edits as file, UTF-8 byte range and replacement text, for call-site and parameter `mut` markers, module names, renamed spellings, `_ = ` discards and unused imports.",
+      "doc": "docs/tooling/fix.md#structured-fixes-in-diagnostics"
+    },
+    "fix-command": {
+      "kind": "tooling",
+      "summary": "`selka fix ENTRY.selka|DIR [--check]` applies every structured fix across a project to a fixed point, prints what changed per file and passes on the diagnostics that need a person; `--check` writes nothing and exits 1 when a fix would apply.",
+      "doc": "docs/tooling/fix.md#selka-fix"
+    },
+    "unused-import-warning": {
+      "kind": "tooling",
+      "summary": "A direct `import` no reference in its module resolves through is reported as the deny-able `W_UNUSED_IMPORT` warning beside `W_UNUSED_BINDING`.",
+      "doc": "docs/tooling/import-policy.md#unused-import-warnings"
+    },
+    "affected-test-selection": {
+      "kind": "tooling",
+      "summary": "`selka test --affected --against REF` runs only the tests that reach a declaration changed since `REF`, printing the selected and skipped counts and exiting 3 on an empty derivation.",
+      "doc": "docs/tooling/guest-tests.md#affected-selection"
+    },
+    "api-diff": {
+      "kind": "tooling",
+      "summary": "`selka api-diff` records declaration identity/fingerprint baselines and classifies later changes as additive, compatible or breaking.",
+      "doc": "docs/tooling/api-diff.md#selka-api-diff"
+    },
+    "interface-files": {
+      "kind": "tooling",
+      "summary": "`selka api --write|--check [--json]` keeps a generated, body-free `.api` interface file beside every project module, and `\"interface_files\": true` in `selka.json` makes a stale one `E_INTERFACE_FILE_STALE`.",
+      "doc": "docs/tooling/interface-files.md#selka-api"
+    },
+    "direct-c-scalar-imports": {
+      "kind": "tooling",
+      "summary": "`extern func` declarations call fixed-arity C scalar functions directly from every native build, passing narrow integers sign- or zero-extended as SysV C callers do and any NaN `float` argument as the canonical quiet NaN.",
+      "doc": "docs/c-ffi.md#direct-c-imports"
+    },
+    "explicit-native-link-inputs": {
+      "kind": "tooling",
+      "summary": "`selka build`, `run` and `test` accept repeatable `--link FILE.c` C sources, compiled with the build's toolchain and reused only while the source and every header its depfile listed keep their bytes.",
+      "doc": "docs/c-ffi.md#linking-your-code"
+    },
+    "python-free-native-build-driver": {
+      "kind": "tooling",
+      "summary": "`selka build` drives the Zig toolchain's clang (`zig cc`) itself, compiling each LLVM unit and linking it with the core runtime, with no Python or installer in the loop.",
+      "doc": "docs/tooling/native-build.md#selka-build"
+    },
+    "python-free-native-guest-tests": {
+      "kind": "tooling",
+      "summary": "`selka test` discovers exported `test_` functions and runs them as fresh native processes.",
+      "doc": "docs/tooling/guest-tests.md#selka-test"
+    },
+    "affected-native-test-result-reuse": {
+      "kind": "tooling",
+      "summary": "A native test run reuses receipts for cases whose sources and compiler identity did not change.",
+      "doc": "docs/tooling/guest-tests.md#reusing-unaffected-results"
+    },
+    "parallel-guest-test-directories": {
+      "kind": "tooling",
+      "summary": "`selka test` runs a whole directory of `.selka` programs as parallel child commands sharing one cache, with one merged summary.",
+      "doc": "docs/tooling/guest-tests.md#directory-runs"
+    },
+    "isolated-source-provider-test-fixtures": {
+      "kind": "tooling",
+      "summary": "A test case may replace dependency sources inside a private bounded snapshot that never edits the originals.",
+      "doc": "docs/tooling/guest-tests.md#isolated-source-provider-fixtures"
+    },
+    "property-tests": {
+      "kind": "tooling",
+      "summary": "A `test_` function with data parameters and no cases-file arguments is a property test: `selka test` generates seeded, size-growing, edge-biased inputs from the parameter types, discards inputs that break the test's preconditions or a generated record's invariants, runs many inputs per native process, shrinks a failure to a minimal counterexample printed as selka literals with a reproduction command, and reuses a pass until the seed, `--property-runs` or the generator changes.",
+      "doc": "docs/tooling/guest-tests.md#property-tests"
+    },
+    "attributes": {
+      "kind": "language",
+      "summary": "@deprecated, @test and @allow attach a fixed attribute vocabulary to declarations; @test drives discovery and @deprecated warns across modules.",
+      "doc": "docs/functions.md#attributes"
+    },
+    "docstrings": {
+      "kind": "language",
+      "summary": "A leading string-literal statement is a module/function docstring, surfaced by list-interfaces and checked by L_UNDOCUMENTED_EXPORT.",
+      "doc": "docs/functions.md#docstrings"
+    },
+    "keyword-arguments-and-immutable-defaults": {
+      "kind": "language",
+      "summary": "Calls accept positional and keyword arguments with trailing immutable scalar defaults.",
+      "doc": "docs/functions.md#keyword-arguments-and-defaults"
+    },
+    "positional-and-named-record-constructors": {
+      "kind": "language",
+      "summary": "Records are constructed with explicit field labels, such as Point(x=1, y=2); scalar field defaults may be omitted.",
+      "doc": "docs/records-and-unions.md#named-constructors"
+    },
+    "recursive-value-types": {
+      "kind": "language",
+      "summary": "Records and enums can contain themselves through finite recursive paths; immutable managed boxes preserve value behavior for construction, reads and updates.",
+      "doc": "docs/records-and-unions.md#recursive-payloads"
+    },
+    "record-field-defaults": {
+      "kind": "language",
+      "summary": "Record fields may declare scalar defaults omitted at construction.",
+      "doc": "docs/records-and-unions.md#field-defaults-and-functional-update"
+    },
+    "functional-record-update": {
+      "kind": "language",
+      "summary": "`replace(record, field=value, …)` returns a copy with only the named fields changed.",
+      "doc": "docs/records-and-unions.md#field-defaults-and-functional-update"
+    },
+    "collection-membership-and-value-equality": {
+      "kind": "language",
+      "summary": "`in`, `not in`, `==` and `!=` compare managed collection contents rather than identities; records, fixed arrays, enums, `Result` and `Option` compare structurally.",
+      "doc": "docs/managed-memory.md#membership-and-value-equality"
+    },
+    "python-indented-syntax": {
+      "kind": "language",
+      "summary": "`func`, `record`, enum, explicit const/mut declarations, four-space indentation and # comments are canonical source syntax; legacy forms are rejected with structured migration fixes.",
+      "doc": "docs/python-syntax.md#the-language"
+    },
+    "python-payload-variant-construction": {
+      "kind": "language",
+      "summary": "`enum Shape` declares named payload cases; `Shape.radius(value=4)` constructs one and `case Shape.radius(value=r)` binds its payload.",
+      "doc": "docs/records-and-unions.md#payload-variant-construction"
+    },
+    "python-named-variant-case-fields": {
+      "kind": "language",
+      "summary": "`enum Node` declares cases with named payload fields such as `form(items: Node[], span: Span)`, constructed and matched with explicit field labels.",
+      "doc": "docs/records-and-unions.md#named-variant-case-fields"
+    },
+    "python-contextual-array-and-table-literals": {
+      "kind": "language",
+      "summary": "`[a, b]` constructs a growable array; `FixedArray[T, N]([a, b])` explicitly constructs a fixed array and checks its length. Enum tables retain their indexed table syntax.",
+      "doc": "docs/records-and-unions.md#fixed-arrays-and-enum-tables"
+    },
+    "fixed-array-element-writes": {
+      "kind": "language",
+      "summary": "`a[i] = v`, `a[i] += v`, `a[i].f = v`, `grid[r][c] = v` and `r.cells[i] = v` write one element of a fixed array or table in place while assignment still copies the array.",
+      "doc": "docs/records-and-unions.md#writing-array-elements"
+    },
+    "mut-fixed-array-parameters": {
+      "kind": "language",
+      "summary": "`mut values: FixedArray[T, N]` names caller storage; rebinding and element writes reach the caller, including fields and elements passed as mut targets. A readonly array parameter is an independent snapshot.",
+      "doc": "docs/records-and-unions.md#passing-an-array-to-be-written"
+    },
+    "fixed-array-iteration": {
+      "kind": "language",
+      "summary": "`for x in a`, `enumerate(a)` and comprehensions walk a fixed array over the value it had when the loop began, copying it only when the body writes it.",
+      "doc": "docs/records-and-unions.md#iterating-a-fixed-array"
+    },
+    "fixed-array-negative-indices": {
+      "kind": "language",
+      "summary": "`a[-1]` is a fixed array's last element for reads, every element write and `replace`, exactly as for a list; an index outside `-N <= i < N` traps `R_LIST_BOUNDS`.",
+      "doc": "docs/records-and-unions.md#negative-indices"
+    },
+    "destructuring-element-targets": {
+      "kind": "language",
+      "summary": "A destructuring target may be an element or a field, so `a[i], a[j] = a[j], a[i]` swaps two elements of an array or list.",
+      "doc": "docs/tuples.md#element-and-field-targets"
+    },
+    "python-call-type-arguments": {
+      "kind": "language",
+      "summary": "`identity[int](2)` supplies a generic call's type arguments explicitly in Python syntax.",
+      "doc": "docs/functions.md#explicit-call-type-arguments"
+    },
+    "truncating-division-helpers": {
+      "kind": "language",
+      "summary": "`divtrunc` and `remtrunc` round toward zero where `//` and `%` round down.",
+      "doc": "docs/integer-operations.md#truncating-division"
+    },
+    "contracts": {
+      "kind": "language",
+      "summary": "`@requires(cond[, \"message\"])` and `@ensures(cond[, \"message\"])` on a `func` are checked at entry and at every normal return in every build mode and backend, with `result`, entry-time `old(expr)` and `Ok`-only postconditions for `Result`; a violation traps `R_REQUIRES` (naming the caller) or `R_ENSURES`, and conditions must be effect-free apart from allocation.",
+      "doc": "docs/contracts.md#preconditions-and-postconditions"
+    },
+    "type-invariants": {
+      "kind": "language",
+      "summary": "`@invariant(cond[, \"message\"])` on a `record` or `domain` is checked against `self` at every construction, `replace`, field write and `wrap`, trapping `R_INVARIANT` where the bad value was produced.",
+      "doc": "docs/contracts.md#invariants"
+    },
+    "assert-statements": {
+      "kind": "language",
+      "summary": "`assert condition` and `assert condition, \"message\"` trap `R_ASSERT` under every effect bound.",
+      "doc": "docs/statements.md#assert-statements"
+    },
+    "assert-messages-with-values": {
+      "kind": "language",
+      "summary": "assert accepts an f-string message and renders it only on failure, before the trap.",
+      "doc": "docs/statements.md#assert-statements"
+    },
+    "python-string-methods": {
+      "kind": "language",
+      "summary": "`str` answers Python's strip, case, search, classification and padding methods with fresh strings.",
+      "doc": "docs/text.md#string-methods"
+    },
+    "whitespace-split": {
+      "kind": "language",
+      "summary": "`text.split()` with no argument breaks on runs of the six ASCII whitespace scalars and drops empty pieces, `text.split(separator)` keeps its exact-separator meaning, and `bytes.split()` agrees on the octets.",
+      "doc": "docs/text.md#splitting-on-whitespace"
+    },
+    "prelude-scalar-builtins": {
+      "kind": "language",
+      "summary": "`ord(text)` and `chr(code)` convert between a `str` and its one Unicode scalar value, folding a one-scalar literal at check time and trapping `R_TEXT_SCALAR` on anything else.",
+      "doc": "docs/text.md#unicode-scalar-values"
+    },
+    "format-strings": {
+      "kind": "language",
+      "summary": "`f\"...\"` interpolates any value `print` can render, with `{{` and `}}` for literal braces.",
+      "doc": "docs/text.md#format-strings"
+    },
+    "python-comparison-chains": {
+      "kind": "language",
+      "summary": "`a < b <= c` chains as in Python: the six comparisons share one precedence level, each operand is evaluated once left to right, and the rest of a chain is skipped once a link is false.",
+      "doc": "docs/python-syntax.md#operators-python-has"
+    },
+    "text-ordering-and-repetition": {
+      "kind": "language",
+      "summary": "`<`, `<=`, `>` and `>=` order `str` by code point and `bytes` by octet; `sequence * count` and `count * sequence` repeat a `str`, `bytes` or list, and `*=` repeats a binding.",
+      "doc": "docs/text.md#ordering-and-repetition"
+    },
+    "format-specifications": {
+      "kind": "language",
+      "summary": "`f\"{value:spec}\"` renders a `str`, integer or `float` under CPython's format-specification mini-language byte for byte, rounding floats from their exact binary value with ties to even; a specification the value cannot take is `E_FORMAT_STRING` with CPython's reason.",
+      "doc": "docs/text.md#format-specifications"
+    },
+    "stepped-range": {
+      "kind": "language",
+      "summary": "`range(start, stop, step)` counts up or down in `for` loops, comprehensions and `list(range(...))` without overflowing on its last step; a literal zero step is `E_RANGE_STEP` and a runtime zero traps before iterating.",
+      "doc": "docs/range-iteration.md#stepped-ranges"
+    },
+    "round-to-digits": {
+      "kind": "language",
+      "summary": "`round(value, ndigits)` answers the float nearest the exact binary value rounded to `ndigits` decimals, halves away from zero like `round(value)`; a negative count rounds left of the point.",
+      "doc": "docs/python-syntax.md#prelude-builtins"
+    },
+    "list-comprehensions": {
+      "kind": "language",
+      "summary": "`[for name in source if condition yield expression]` eagerly builds a managed list with one source and one readonly binder; combine filters with Boolean and, and use explicit loops for nested iteration.",
+      "doc": "docs/managed-memory.md#list-comprehensions"
+    },
+    "dict-and-set-comprehensions": {
+      "kind": "language",
+      "summary": "`{k: v for ...}` and `{x for ...}` build a dictionary or a set, and these forms accept two names, several `for` clauses and several `if` filters, each clause accepting what a `for` loop accepts.",
+      "doc": "docs/python-syntax.md#dict-and-set-comprehensions"
+    },
+    "generator-arguments": {
+      "kind": "language",
+      "summary": "A generator expression passed to `sum`, `any`, `all`, `min` or `max` folds without building a list (`any`/`all` stop early), and one passed to `sorted`, `list`, `set`, `dict` or `str.join` is collected; anywhere else is `E_GENERATOR`.",
+      "doc": "docs/python-syntax.md#generator-expressions"
+    },
+    "bitwise-operators": {
+      "kind": "language",
+      "summary": "`|`, `^` and `&` are bitwise or, xor and and on integers with Python's precedence, and union, symmetric difference and intersection on sets.",
+      "doc": "docs/python-syntax.md#operators-python-has"
+    },
+    "wildcard-match-arms": {
+      "kind": "language",
+      "summary": "A final case _ covers the remaining variants or disjoint nested pattern combinations; enum payload patterns use declared labels. Match expressions produce one value with yield in each arm.",
+      "doc": "docs/match-expressions.md#wildcard-arms"
+    },
+    "prelude-float-operations": {
+      "kind": "language",
+      "summary": "Prelude helpers convert, compare and classify binary64 values without importing a module.",
+      "doc": "docs/floating-point.md#prelude-float-helpers"
+    },
+    "python-prelude-builtins": {
+      "kind": "language",
+      "summary": "Bare Python `sum`, `min`, `max`, `sorted`, `abs`, `round`, `any`, `all`, `reversed`, `list` and `zip` work without an import.",
+      "doc": "docs/python-syntax.md#prelude-builtins"
+    },
+    "keyed-sorting": {
+      "kind": "language",
+      "summary": "`values.sort(key=..., reverse=...)` sorts in place and `sorted(values, key=..., reverse=...)` sorts a copy, stably, with `int`, `float`, `str`, `bool` or tuple keys computed once per element.",
+      "doc": "docs/python-syntax.md#keyed-sorting"
+    },
+    "string-to-number-parsing": {
+      "kind": "language",
+      "summary": "`parse_int(text)` and `parse_float(text)` answer optional values rather than raising on text that is not a number.",
+      "doc": "docs/text.md#parsing-numbers-from-text"
+    },
+    "python-assignments-and-value-records": {
+      "kind": "language",
+      "summary": "`const` and `mut` explicitly declare locals with lexical block scope and no active-name shadowing; assignment only updates writable bindings. Ordinary records and managed collections have independent snapshot semantics.",
+      "doc": "docs/statements.md#assignments-and-value-records"
+    },
+    "discard-name": {
+      "kind": "language",
+      "summary": "`_` is a discard name that never shadows: nested `for` loops, comprehensions and `with` scopes may each bind it, and `for _, _ in ...` binds nothing.",
+      "doc": "docs/statements.md#the-discard-name"
+    },
+    "option-equality-inference": {
+      "kind": "language",
+      "summary": "`Some(...)`, `None`, `Ok(...)` and `Err(...)` beside `==` or `!=` take the type of the other operand, in either order, including a call or method call: `lookup(k) == Some(1)`.",
+      "doc": "docs/results-and-options.md#comparing-with-a-constructor"
+    },
+    "canonical-prelude-types": {
+      "kind": "language",
+      "summary": "`list`, `dict`, `str`, `bytes`, `float`, `Option` and `Result` have one identity in every module without source-text scanning.",
+      "doc": "docs/results-and-options.md#canonical-prelude-types"
+    },
+    "inferred-list-literals-and-slices": {
+      "kind": "language",
+      "summary": "A list literal infers its element type and `values[a:b]` copies a clamped range into a fresh list.",
+      "doc": "docs/managed-memory.md#inferred-literals-and-slices"
+    },
+    "collection-iteration": {
+      "kind": "language",
+      "summary": "`for` visits lists, strings, byte strings and dictionary keys, with `enumerate` for indexes.",
+      "doc": "docs/managed-memory.md#iterating-collections"
+    },
+    "managed-unicode-strings": {
+      "kind": "language",
+      "summary": "`str` is an immutable garbage-collected sequence of Unicode scalar values.",
+      "doc": "docs/text.md#managed-unicode-strings"
+    },
+    "managed-bytes": {
+      "kind": "language",
+      "summary": "`bytes` is an immutable garbage-collected byte string with Python indexing, slicing and search.",
+      "doc": "docs/bytes.md#managed-byte-strings"
+    },
+    "value-semantics": {
+      "kind": "language",
+      "summary": "Value semantics is the only model: `list`, `dict`, `set` and `byte_buffer` values, and aggregates holding one, are independent across assignments, stores, returns and bindings, with copy-on-write storage under one-count reference counting. Read-only arguments are lent, `mut` records are `inout`, and writes through loop or match bindings and into returned values are errors. `class` declarations and builtin `Cell` are rejected.",
+      "doc": "docs/value-semantics.md#value-semantics"
+    },
+    "aggregate-copy-elision": {
+      "kind": "language",
+      "summary": "A read-only aggregate parameter, a short-lived local and a match binding that owns nothing are read where they live, so field reads, tag tests and payload projections are loads rather than aggregate copies while record values keep snapshot semantics; a field write to a record whose old value is never read again updates it in place.",
+      "doc": "docs/performance.md#records-are-values-not-copies"
+    },
+    "byte-views": {
+      "kind": "language",
+      "summary": "`bytes.view(start, end)` reads a clamped range of the same storage and retains its owner, `bytes.copy()` materializes an owned copy, and every read operation works on a view.",
+      "doc": "docs/bytes.md#views-and-owned-copies"
+    },
+    "nonallocating-byte-parsing": {
+      "kind": "language",
+      "summary": "`bytes.scalar_count()` counts Unicode scalars while validating UTF-8, and `bytes.parse_int()`/`bytes.parse_float()` read the octets through the pinned number grammar, with no decoded temporary and no allocation.",
+      "doc": "docs/bytes.md#counting-characters-and-parsing-numbers"
+    },
+    "mutable-byte-buffer": {
+      "kind": "language",
+      "summary": "`byte_buffer` is the mutable octet buffer beside immutable `bytes`: six in-place append methods over spare capacity, including direct integer and canonical float formatting, and `bytes(buffer)` publishes it as an immutable snapshot without copying its octets.",
+      "doc": "docs/bytes.md#writing-octets-in-place"
+    },
+    "managed-insertion-ordered-dictionaries": {
+      "kind": "language",
+      "summary": "`dict` keeps insertion order over hashable keys and copyable values and answers `items`, `pop`, `update`, `setdefault`, `get`, `keys`, `values`, `copy` and `clear`.",
+      "doc": "docs/managed-memory.md#insertion-ordered-dictionaries"
+    },
+    "managed-sets": {
+      "kind": "language",
+      "summary": "`set[T]` keeps insertion order over hashable elements: `{a, b}` literals, `set()` with a type from context, `set(iterable)`, `{x for x in xs if p}` comprehensions, `add`, `remove`, `discard`, `pop`, `clear`, `copy`, `update`, `in`, `len`, `for`, `sorted` and `list`, and Python rendering (`{1, 2}`, `set()`). Assignments give independent values by default; `mut` parameters write through to callers.",
+      "doc": "docs/sets.md#set-literals-and-construction"
+    },
+    "set-operators": {
+      "kind": "language",
+      "summary": "`|`, `&`, `-` and `^` build a new set holding the left operand's order then the right's new elements, `<=`, `<`, `>=` and `>` test subsets and supersets, `==` ignores insertion order, and `union`, `intersection`, `difference`, `symmetric_difference`, `issubset`, `issuperset` and `isdisjoint` spell the same operations.",
+      "doc": "docs/sets.md#set-operators"
+    },
+    "hashable-keys": {
+      "kind": "language",
+      "summary": "Dictionary keys and set elements may be any integer, `bool`, `str`, `bytes`, or a tuple, record, enum, domain, optional or fixed array built only from those, hashed and compared structurally with no seed; `float`, collections, `byte_buffer`, `class`, function and capability keys are rejected with `E_DICT_KEY` or `E_SET_ELEMENT` naming the offending part.",
+      "doc": "docs/sets.md#hashable-keys"
+    },
+    "dictionary-methods": {
+      "kind": "language",
+      "summary": "`dict.pop(key[, fallback])` removes and returns a value, `update` merges another dictionary in insertion order, and `setdefault` returns or stores a fallback.",
+      "doc": "docs/managed-memory.md#insertion-ordered-dictionaries"
+    },
+    "ordinary-binary64-float": {
+      "kind": "language",
+      "summary": "`float` is IEEE binary64 with ordinary literals, operators, comparisons and integer conversions.",
+      "doc": "docs/floating-point.md#binary64-floating-point"
+    },
+    "float-integer-casts": {
+      "kind": "language",
+      "summary": "Fixed-width integer casts and int(float) truncate toward zero and trap R_FLOAT_CONVERSION for nonfinite or out-of-range results.",
+      "doc": "docs/floating-point.md#integer-conversions"
+    },
+    "float-nan-when-observed": {
+      "kind": "language",
+      "summary": "A NaN's payload and sign are never observable: arithmetic propagates NaNs as IEEE does, and text, foreign-call arguments, equality and sorting see the canonical quiet NaN.",
+      "doc": "docs/floating-point.md#nan-payloads"
+    },
+    "contextual-option-constructors": {
+      "kind": "language",
+      "summary": "`Some(value)` and a bare `None` take their `T?` optional type from context; an ordinary T value is promoted when an optional destination requires it.",
+      "doc": "docs/results-and-options.md#option-constructors"
+    },
+    "unit-and-result-entry": {
+      "kind": "language",
+      "summary": "`main` may return int or Unit, optionally with `fails E`; explicit Result return types remain supported. Integer success supplies the exit status, integer failure supplies its status, and other failures exit one.",
+      "doc": "docs/functions.md#entry-point-signatures"
+    },
+    "optional-semicolons": {
+      "kind": "language",
+      "summary": "Statements end at newlines; explicit semicolons are rejected with a structured newline repair when it is safe. Lexer-inserted statement boundaries remain internal.",
+      "doc": "docs/statements.md#statement-endings"
+    },
+    "dotted-module-qualification": {
+      "kind": "language",
+      "summary": "An imported module's exports are named `module.name`, including its types.",
+      "doc": "docs/modules.md#dotted-qualification"
+    },
+    "builtin-list-and-result-types": {
+      "kind": "language",
+      "summary": "`T[]`, `T?`, `FixedArray[T, N]`, `Unit` and `Result[T, E]` are prelude types that need no declaration or import.",
+      "doc": "docs/results-and-options.md#builtin-list-and-result-types"
+    },
+    "contextual-empty-list-and-result-constructors": {
+      "kind": "language",
+      "summary": "An empty `[]`, `{}`, `Ok(...)` or `Err(...)` takes its type from the annotation, field or result it fills.",
+      "doc": "docs/results-and-options.md#contextual-empty-constructors"
+    },
+    "list-methods-and-indexing": {
+      "kind": "language",
+      "summary": "Lists answer `append`, `extend`, `insert`, `pop`, `remove`, `index`, `reverse`, `sort`, `copy`, `clear`, `len`, indexing with negative positions and indexed in-place `+=`.",
+      "doc": "docs/managed-memory.md#list-methods-and-indexing"
+    },
+    "postfix-error-propagation": {
+      "kind": "language",
+      "summary": "Prefix `try` unwraps success and propagates failure at a statement boundary, including return, binding, discard and resource acquisition heads; embedded expression propagation is rejected.",
+      "doc": "docs/results-and-options.md#postfix-error-propagation"
+    },
+    "fixed-width-integers": {
+      "kind": "language",
+      "summary": "`int` is checked signed 64-bit; `i8`-`i64` and `u8`-`u64` are available for binary formats.",
+      "doc": "docs/integer-operations.md#fixed-width-integers"
+    },
+    "numeric-literal-spellings": {
+      "kind": "language",
+      "summary": "Integer literals take Python's `0x`, `0o` and `0b` spellings and underscores between digits, float literals take `.5`, `5.` and underscores, a width suffix combines with every base (`0xFFu8`), an unsuffixed literal that fits takes the declared type even in a `const` initializer, decimal leading zeros are rejected (`0755` is an error), and array lengths accept any unsuffixed spelling (`[0x10]u8`).",
+      "doc": "docs/integer-operations.md#integer-literal-spellings"
+    },
+    "named-integer-bitwise-shifts": {
+      "kind": "language",
+      "summary": "`bit_and`, `bit_or`, `bit_xor`, `shift_left` and `shift_right` are named operations over one integer type.",
+      "doc": "docs/integer-operations.md#bitwise-and-shift-helpers"
+    },
+    "wrapping-saturating-integers": {
+      "kind": "language",
+      "summary": "`wrapping_*` reduces modulo the declared width and `saturating_*` clamps to its bounds.",
+      "doc": "docs/integer-operations.md#wrapping-and-saturating-arithmetic"
+    },
+    "booleans": {
+      "kind": "language",
+      "summary": "`True`, `False`, `and`, `or` and `not` are the only condition type; integers do not stand in.",
+      "doc": "docs/statements.md#booleans-and-conditions"
+    },
+    "unit-procedures": {
+      "kind": "language",
+      "summary": "A procedure omits its return annotation or writes `-> Unit`, returns `()` or uses bare return, and may end naturally.",
+      "doc": "docs/functions.md#unit-procedures"
+    },
+    "byte-literals": {
+      "kind": "language",
+      "summary": "`b\"...\"` and `b'...'` write byte strings with escapes and a decoded-size limit.",
+      "doc": "docs/bytes.md#byte-literals"
+    },
+    "compile-time-embed": {
+      "kind": "language",
+      "summary": "`embed_bytes(\"path\")` and `embed_str(\"path\")` read a project file at compile time as static `bytes` or UTF-8 `str`, with no capability and no effect, usable as a module constant; the path is relative to the embedding file and confined to the project, and editing only the file rebuilds exactly what embeds it.",
+      "doc": "docs/bytes.md#embedding-a-file-at-compile-time"
+    },
+    "nominal-records": {
+      "kind": "language",
+      "summary": "`record` declares a nominal value record of annotated fields; `class` is rejected.",
+      "doc": "docs/records-and-unions.md#records"
+    },
+    "tagged-unions": {
+      "kind": "language",
+      "summary": "`enum` declares a closed variant type with named payload cases and exhaustive matching; rare nominal result declarations remain supported.",
+      "doc": "docs/records-and-unions.md#tagged-unions"
+    },
+    "checked-results": {
+      "kind": "language",
+      "summary": "`func f(...) -> T fails E` separates successful T returns from fail E; explicit Result[T, E] still carries Ok/Err. Failures must be handled or propagated with prefix try before a value is discarded.",
+      "doc": "docs/results-and-options.md#checked-results"
+    },
+    "generic-functions": {
+      "kind": "language",
+      "summary": "`func name[T](...)` declares a template specialized per concrete argument type.",
+      "doc": "docs/generics.md#generic-functions"
+    },
+    "generic-call-argument-inference": {
+      "kind": "language",
+      "summary": "A generic call omits its type arguments when the argument types determine every parameter.",
+      "doc": "docs/generic-inference.md#generic-call-inference"
+    },
+    "expected-type-inference": {
+      "kind": "language",
+      "summary": "A generic call infers type and const arguments from its expected result as well as its arguments.",
+      "doc": "docs/generic-inference.md#expected-result-types"
+    },
+    "flow-sensitive-option-guards": {
+      "kind": "language",
+      "summary": "Local T? payloads are available on paths guarded by is None or is not None.",
+      "doc": "docs/results-and-options.md#flow-sensitive-option-guards"
+    },
+    "option-methods": {
+      "kind": "language",
+      "summary": "`T?` supports unwrap_or(default), is_none() and is_some(); defaults use the payload type, the methods are pure and allocation-free, and generic bodies preserve optional contracts.",
+      "doc": "docs/results-and-options.md#option-methods"
+    },
+    "const-length-generics": {
+      "kind": "language",
+      "summary": "A `const N: u64` parameter carries a bounded array length through generic signatures.",
+      "doc": "docs/const-length-generics.md#constant-length-parameters"
+    },
+    "generic-nominals": {
+      "kind": "language",
+      "summary": "Record and enum declarations take type parameters and specialize by argument identity.",
+      "doc": "docs/generics.md#generic-records-and-unions"
+    },
+    "structural-contracts": {
+      "kind": "language",
+      "summary": "A generic parameter may require named fields or operations instead of a nominal bound.",
+      "doc": "docs/generics.md#structural-contracts"
+    },
+    "capability-effects": {
+      "kind": "language",
+      "summary": "A function's declared effect ceiling bounds everything it transitively calls.",
+      "doc": "docs/effects.md#capability-effects"
+    },
+    "disk-modules": {
+      "kind": "language",
+      "summary": "Module identities derive from paths beneath the project root; source files use import and public declarations without module headers. Redundant legacy headers carry a deletion fix.",
+      "doc": "docs/modules.md#disk-modules"
+    },
+    "headerless-standard-imports": {
+      "kind": "language",
+      "summary": "A file with no `module` header may import the embedded standard modules directly (`import strings`) and stays a standalone unit; importing a project module still requires the header and reports `E_MODULE_HEADER`.",
+      "doc": "docs/modules.md#headerless-scripts"
+    },
+    "typed-json": {
+      "kind": "language",
+      "summary": "Exported signatures over JSON-compatible types are checked, rendered by `schema-project`, and carried as `typed-json-v1` test arguments and expectations.",
+      "doc": "docs/typed-json.md#typed-json-boundaries"
+    },
+    "public-declarations": {
+      "kind": "language",
+      "summary": "A leading `public` modifier publishes a top-level declaration, replacing the separate `export NAME` directive for local declarations.",
+      "doc": "docs/modules.md#export-placement"
+    },
+    "flexible-top-level-export-placement": {
+      "kind": "language",
+      "summary": "A dotted `export module.Name` re-export may appear anywhere at the top level among the declarations.",
+      "doc": "docs/modules.md#export-placement"
+    },
+    "re-exports": {
+      "kind": "language",
+      "summary": "An export directive may re-export an imported declaration so a package publishes one facade module.",
+      "doc": "docs/modules.md#re-exports"
+    },
+    "source-navigation": {
+      "kind": "tooling",
+      "summary": "`index-project --full` reports definitions, references and a pinned source snapshot as one `navigation-v1` JSON document with no size cap, streamed to stdout.",
+      "doc": "docs/tooling/navigation.md#source-navigation"
+    },
+    "navigation-summary-and-filters": {
+      "kind": "tooling",
+      "summary": "`index-project` prints a bounded `navigation-summary-v1` overview by default (per-module declaration counts by kind plus drill-down queries), and `--module`, `--symbol` and `--kind` print the selected `navigation-v1` records with their references as `navigation-selection-v1`.",
+      "doc": "docs/tooling/navigation.md#summary-and-filters-for-large-projects"
+    },
+    "navigation-call-site-spelling": {
+      "kind": "tooling",
+      "summary": "`context --symbol`, `tests-for` and `index-project --symbol` accept the call-site spelling `module.name` as well as `module::name`, trying every module/member split and reporting several matches as ambiguous.",
+      "doc": "docs/tooling/navigation.md#call-site-spelling"
+    },
+    "syntax-cache": {
+      "kind": "tooling",
+      "summary": "Parsed syntax trees are reused across commands when the source bytes are unchanged.",
+      "doc": "docs/tooling/caches.md#syntax-cache"
+    },
+    "exact-verdict-cache": {
+      "kind": "tooling",
+      "summary": "A whole-program checking verdict is reused when the compiler and the source snapshot both match.",
+      "doc": "docs/tooling/caches.md#exact-verdict-cache"
+    },
+    "independent-function-diagnostics": {
+      "kind": "language",
+      "summary": "One `check` reports the first fault in each independently checked function instead of stopping at the first.",
+      "doc": "docs/diagnostic-recovery.md#checking-independent-function-faults"
+    },
+    "scalar-module-constants": {
+      "kind": "language",
+      "summary": "`const NAME: T = expression` folds an immutable scalar at check time.",
+      "doc": "docs/module-constants.md#immutable-scalar-constants"
+    },
+    "float-module-constants": {
+      "kind": "language",
+      "summary": "A module `const` may be a `float`; its initializer folds at check time with the same binary64 operations the running program uses, including arithmetic, comparisons, `float(...)`, `int(...)` and conversion to a fixed-width integer.",
+      "doc": "docs/module-constants.md#float-constants"
+    },
+    "constant-methods": {
+      "kind": "language",
+      "summary": "A `str` or `bytes` module constant takes the same methods as a local bound to it: `TABLE.split(b\"\\n\")`, `NAME.upper()`, including embedded and imported constants.",
+      "doc": "docs/module-constants.md#string-and-byte-literal-constants"
+    },
+    "literal-module-constants": {
+      "kind": "language",
+      "summary": "String and byte constants require matching literals and allocate on read.",
+      "doc": "docs/module-constants.md#string-and-byte-literal-constants"
+    },
+    "bounded-source-constant-functions": {
+      "kind": "language",
+      "summary": "A constant initializer may call bounded nongeneric scalar source functions.",
+      "doc": "docs/source-evaluation.md#bounded-source-evaluation-in-constants"
+    },
+    "structured-loop-exits": {
+      "kind": "language",
+      "summary": "`break` and `continue` leave or restart the nearest enclosing loop with checked cleanup.",
+      "doc": "docs/structured-loop-exits.md#structured-loop-exits"
+    },
+    "integer-range-iteration": {
+      "kind": "language",
+      "summary": "`for index in range(start, end)` visits a half-open ascending integer range.",
+      "doc": "docs/range-iteration.md#integer-range-iteration"
+    },
+    "transparent-type-aliases": {
+      "kind": "language",
+      "summary": "`type Name = Target` is another spelling for an existing type, not a new identity.",
+      "doc": "docs/type-aliases.md#transparent-type-aliases"
+    },
+    "composite-structural-signatures": {
+      "kind": "language",
+      "summary": "One structural contract may require several fields and operations together.",
+      "doc": "docs/generics.md#composite-structural-signatures"
+    },
+    "local-locked-packages": {
+      "kind": "tooling",
+      "summary": "`selka packages lock` pins every local package's sources by SHA-256, and `selka packages build` compiles a verified private snapshot of the application and its locked packages.",
+      "doc": "docs/tooling/packages.md#local-locked-packages"
+    },
+    "nested-runtime-byte-budgets": {
+      "kind": "tooling",
+      "summary": "Runtime byte budgets nest, so an inner region can never exceed the region containing it.",
+      "doc": "docs/tooling/runtime-budgets.md#nested-byte-budgets"
+    },
+    "guest-memory-ceilings": {
+      "kind": "tooling",
+      "summary": "`selka run` and every `selka test` child run under a byte ceiling (4 GiB and 512 MiB by default; `--max-memory`, `SELKA_MEMORY_LIMIT`, `limits` in `selka.json`) that the runtime traps on with `R_MEMORY_BUDGET` and the kernel backs with `RLIMIT_AS`.",
+      "doc": "docs/tooling/runtime-budgets.md#guest-memory-ceilings"
+    },
+    "release-builds": {
+      "kind": "tooling",
+      "summary": "`selka build`, `run` and `test` build debug by default, one LLVM unit per source module so an edit recompiles only the units whose text changed; `--release` (or `--mode ReleaseFast`) builds the whole program as one optimized LLVM unit, keeping every check its facts do not prove.",
+      "doc": "docs/tooling/native-build.md#debug-and-release-builds"
+    },
+    "docs-command": {
+      "kind": "tooling",
+      "summary": "`selka docs` lists the user guides embedded in the compiler, primer first, and `selka docs TOPIC` prints one as Markdown from any directory.",
+      "doc": "docs/README.md#the-guides-built-into-the-compiler"
+    },
+    "structured-native-trap-detail": {
+      "kind": "tooling",
+      "summary": "Native traps carry bounded structured index/length and operand detail rendered identically in text and JSON, transported from the child as one versioned stderr record.",
+      "doc": "docs/io.md#runtime-diagnostics"
+    },
+    "symbolic-template-reuse": {
+      "kind": "tooling",
+      "summary": "Checked symbolic generic templates persist direct abstract results under symbolic-template-v1 and replay across processes when the body, dependency context, name-resolution mode and checker version still match; whole-graph effects always rerun.",
+      "doc": "docs/tooling/caches.md#persistent-checked-body-store"
+    },
+    "canonical-specialization-keys": {
+      "kind": "tooling",
+      "summary": "Concrete specialization keys are canonical over template identity, ordered positional descriptors, provider contracts, constraints, declared contracts and build context; validated concrete specialization bodies replay under specialization-v1 with typed remap and conservatively miss on unresolved references.",
+      "doc": "docs/tooling/work-report.md#compiler-work-and-reuse-report"
+    },
+    "shared-semantic-retention-budget": {
+      "kind": "tooling",
+      "summary": "Ordinary checked bodies, symbolic templates and concrete specializations share one reuse.max_bytes in-memory budget accounting for exact owned entry rows, arena backing including chunk bookkeeping, stable keys and the exact stdlib hash-index backing; eviction converges to the bound, oversized entries bypass, a zero budget disables reuse, and retained bytes plus a per-kind breakdown are reported.",
+      "doc": "docs/tooling/caches.md#persistent-checked-body-store"
+    },
+    "check-summaries": {
+      "kind": "tooling",
+      "summary": "A project check stands stored per-function summaries (dependency context, region digest and referenced names, propagated effect and mutation facts, region-relative diagnostics, callees) in for every unchanged body, so a one-body edit checks only that body; a changed cross-function fact, a cycle through a stood-in body or a pass error repeats the check in full, and build/run use the summaries for pass facts only.",
+      "doc": "docs/tooling/caches.md#check-summaries"
+    },
+    "module-interfaces": {
+      "kind": "tooling",
+      "summary": "`selka interfaces emit` writes one `module-interface-v8` artifact per module from the whole-program check (declaration text with only the bodies a dependent reads, the facts that stand in for the rest, interface fingerprints and reached shapes) with an interface hash that a body-only edit keeps and an implementation hash; `interfaces check` checks one module against interfaces alone and `interfaces oracle` proves every module's such check equals the whole-program check.",
+      "doc": "docs/tooling/module-interfaces.md#module-interfaces"
+    },
+    "persistent-checked-bodies": {
+      "kind": "tooling",
+      "summary": "Ordinary checked bodies persist across compiler processes as versioned, validated semantic-cache-v2 entries with atomic publication, remap-or-miss decoding, contract isolation and --no-cache correctness.",
+      "doc": "docs/tooling/caches.md#persistent-checked-body-store"
+    },
+    "native-test-preparation-reuse": {
+      "kind": "tooling",
+      "summary": "A warm unchanged test run checks the project through the shared query cache and replays result receipts keyed by each test's Core IR before passes, so looking up a cached test emits and links no code.",
+      "doc": "docs/tooling/guest-tests.md#reusing-unaffected-results"
+    },
+    "selected-test-providers": {
+      "kind": "tooling",
+      "summary": "Native test preparation validates exported declaration contracts first and fully checks only the selected replacement provider graph; replacements must satisfy every public contract they replace, and receipts bind contract, provider and source identities.",
+      "doc": "docs/tooling/guest-tests.md#isolated-source-provider-fixtures"
+    },
+    "required-project-import-policy": {
+      "kind": "tooling",
+      "summary": "A discovered entry-anchored selka.json makes its import_policy required for ordinary check, build, run, project and native-test commands before any cached success, with config and policy identity in receipts.",
+      "doc": "docs/tooling/import-policy.md#enforcement"
+    },
+    "checked-mutation-contracts": {
+      "kind": "language",
+      "summary": "`mut name: T` declares caller storage and `mut argument` marks its call site; updates include scalar or whole-value rebinding and nested fields or elements. Readonly arguments are independent snapshots; mut capabilities and named callback labels are preserved by callable contracts.",
+      "doc": "docs/effects.md#mutation-contracts"
+    },
+    "mut-parameters": {
+      "kind": "language",
+      "summary": "`mut name: T` accepts writable scalar and ordinary aggregate storage; other parameters are readonly snapshots. Call sites mark exactly declared mut positions, and callable assignment preserves those positions exactly. A mut parameter may be unused.",
+      "doc": "docs/effects.md#declaration-site-mutation-errors"
+    },
+    "exclusive-mut-arguments": {
+      "kind": "language",
+      "summary": "Mut arguments must name disjoint caller places. Known overlap rejects statically with E_MUTATION_OVERLAP; dynamic indices and keys are compared after evaluation and trap before the call when they overlap.",
+      "doc": "docs/value-semantics.md#the-rules"
+    },
+    "per-function-body-reuse": {
+      "kind": "tooling",
+      "summary": "Ordinary checked bodies reuse per function with stable declaration identities and dependency digests, so an unrelated generic, alias, constant or callback no longer disables reuse.",
+      "doc": "docs/tooling/work-report.md#compiler-work-and-reuse-report"
+    },
+    "actual-work-report": {
+      "kind": "tooling",
+      "summary": "Versioned work-report-v1 separates unchanged fingerprints from actual result reuse and reports per-stage performed, reused and skipped work with bypass reasons and session deltas.",
+      "doc": "docs/tooling/work-report.md#compiler-work-and-reuse-report"
+    },
+    "native-instruction-and-frame-budgets": {
+      "kind": "tooling",
+      "summary": "`selka run`, `run-project` and `build --run` take opt-in `--max-steps` and `--max-frames` ceilings (one step per executed block, one frame per call of a program function), compiled into `main`, and each trap names the flag that raises it; a test defaults to 1,000,000 steps and 1,024 frames.",
+      "doc": "docs/tooling/runtime-budgets.md#instruction-and-frame-budgets"
+    },
+    "typed-holes": {
+      "kind": "language",
+      "summary": "`todo[T]()` declares an unfinished implementation with a checked type and blocks publication.",
+      "doc": "docs/typed-holes.md#typed-holes"
+    },
+    "deterministic-test-provider-fixtures": {
+      "kind": "tooling",
+      "summary": "A guest test runs with no ambient authority, and a case may replace a dependency's source to make a reading deterministic.",
+      "doc": "docs/tooling/guest-tests.md#deterministic-provider-fixtures"
+    },
+    "test-capability-parameters": {
+      "kind": "tooling",
+      "summary": "A `test_` function may declare `Clock`, `Entropy`, `Filesystem`, `Environment` and `Network` parameters; `selka test` hands each a deterministic stand-in (a clock at a fixed instant, entropy seeded from the test name or `--seed N`, an empty in-memory filesystem, an empty environment, a denied network), never real authority, and binds the seed and instant into receipt identity.",
+      "doc": "docs/tooling/guest-tests.md#capability-parameters"
+    },
+    "typed-noncapturing-function-values": {
+      "kind": "language",
+      "summary": "A function value has a declared signature and captures nothing.",
+      "doc": "docs/functions.md#function-values"
+    },
+    "expression-bodied-lambdas": {
+      "kind": "language",
+      "summary": "A contextually typed `lambda` spells an expression-bodied noncapturing callback.",
+      "doc": "docs/lambdas.md#expression-bodied-noncapturing-lambdas"
+    },
+    "bounded-guest-callbacks": {
+      "kind": "language",
+      "summary": "A callback parameter declares its signature and an effect ceiling; an implementation callable may use a subset of the destination's effects.",
+      "doc": "docs/functions.md#bounded-callbacks"
+    },
+    "changed-source-function-body-cache": {
+      "kind": "tooling",
+      "summary": "Unchanged function bodies reuse their checked results when other functions in the module change.",
+      "doc": "docs/tooling/caches.md#function-body-cache"
+    },
+    "managed-lists": {
+      "kind": "language",
+      "summary": "`T[]` is a growable managed array; assignment, arguments and stores preserve independent values over copy-on-write storage.",
+      "doc": "docs/managed-memory.md#managed-lists"
+    },
+    "standard-math": {
+      "kind": "language",
+      "summary": "`math` provides classification, rounding, roots, powers and integer helpers over `float` and `int`.",
+      "doc": "docs/standard-library.md#math"
+    },
+    "standard-strings": {
+      "kind": "language",
+      "summary": "`strings` provides classification, search, trimming, padding and number formatting over `str`.",
+      "doc": "docs/standard-library.md#strings"
+    },
+    "standard-sort": {
+      "kind": "language",
+      "summary": "`sort` provides stable ordering, binary search, extrema and deduplication over managed lists.",
+      "doc": "docs/standard-library.md#sort"
+    },
+    "standard-path": {
+      "kind": "language",
+      "summary": "`path` joins, splits and normalizes POSIX-style path text without touching the filesystem.",
+      "doc": "docs/standard-library.md#path"
+    },
+    "standard-hex": {
+      "kind": "language",
+      "summary": "`hex` encodes and decodes hexadecimal text for byte strings in either letter case.",
+      "doc": "docs/standard-library.md#hex"
+    },
+    "standard-base64": {
+      "kind": "language",
+      "summary": "`base64` encodes and decodes standard and URL-safe base64 text.",
+      "doc": "docs/standard-library.md#base64"
+    },
+    "standard-json": {
+      "kind": "language",
+      "summary": "`json` parses and renders ordinary JSON documents as a bounded managed tree.",
+      "doc": "docs/standard-library.md#json"
+    },
+    "standard-pool": {
+      "kind": "language",
+      "summary": "`pool` provides generation-checked handles into a reusable slot table.",
+      "doc": "docs/standard-library.md#pool"
+    },
+    "standard-random": {
+      "kind": "language",
+      "summary": "`random` provides a deterministic SplitMix64 stream seeded explicitly or from an entropy capability.",
+      "doc": "docs/standard-library.md#random"
+    },
+    "standard-time": {
+      "kind": "language",
+      "summary": "`time` provides durations, instants and Unix wall-clock readings behind a clock capability.",
+      "doc": "docs/standard-library.md#time"
+    },
+    "deterministic-stand-in-capabilities": {
+      "kind": "language",
+      "summary": "`time.simulated_clock`, `random.seeded_entropy`, `filesystem.memory`, `environment.fixed` and `network.denied` build a Clock, Entropy, Filesystem, Environment or Network that never reaches a host resource; building one needs no capability, narrowing one keeps it a stand-in, and using one where no parameter supplies the effect is not an effect of the function.",
+      "doc": "docs/effects.md#deterministic-stand-ins"
+    },
+    "standard-filesystem": {
+      "kind": "language",
+      "summary": "`filesystem.memory()` builds an empty in-memory `Filesystem` that serves the whole-path helpers, `open`, `fs.dir` and `read_only` without touching the disk.",
+      "doc": "docs/standard-library.md#filesystem"
+    },
+    "standard-environment": {
+      "kind": "language",
+      "summary": "`environment.fixed(values)` builds an `Environment` holding exactly the given pairs, with `get`, `names` and `only`, that never reads the process environment.",
+      "doc": "docs/standard-library.md#environment"
+    },
+    "doc-examples": {
+      "kind": "tooling",
+      "summary": "Every fenced documentation example is run, type-checked or explicitly skipped by the default gate.",
+      "doc": "docs/tooling/documentation-gate.md#executable-examples"
+    },
+    "python-print-and-output-effect": {
+      "kind": "language",
+      "summary": "`stream.print`/`out.print` renders values Python-style through a `Stream` and contributes an `output` effect.",
+      "doc": "docs/io.md#print"
+    },
+    "python-file-surface": {
+      "kind": "language",
+      "summary": "`with open(...)`, handle methods and whole-path helpers read and write inside granted directories.",
+      "doc": "docs/io.md#files"
+    },
+    "command-line-capability-grants": {
+      "kind": "tooling",
+      "summary": "`selka run` grants every capability by default; `--restrict` denies them and `--allow-*` narrows what it grants back.",
+      "doc": "docs/io.md#capabilities"
+    },
+    "documented-feature-coverage": {
+      "kind": "tooling",
+      "summary": "`selka doc-coverage` fails the build when an implemented feature or a standard export has no documented example.",
+      "doc": "docs/tooling/documentation-gate.md#feature-and-export-coverage"
+    },
+    "named-constraints": {
+      "kind": "language",
+      "summary": "`constraint Name[Subject] = ...` names a reusable structural requirement shared by function type parameters.",
+      "doc": "docs/generics.md#named-constraints"
+    },
+    "stable-incremental-identities": {
+      "kind": "tooling",
+      "summary": "Compiler identities for modules, declarations, bodies, types, specializations and emitted fragments are content-derived and stable across unrelated edits.",
+      "doc": "docs/experiments/incremental-contract.md#stable-identities"
+    },
+    "invalidation-report": {
+      "kind": "tooling",
+      "summary": "`selka check-project --explain-invalidation` reports per-stage hit/miss and the first changed dependency against a stored baseline; `--report` adds per-stage counts.",
+      "doc": "docs/experiments/incremental-contract.md#invalidation-observability"
+    },
+    "incremental-cache-contract": {
+      "kind": "tooling",
+      "summary": "Incremental cache keys include compiler identity, bootstrap version, target, runtime ABI, effects/capabilities contract and flags.",
+      "doc": "docs/experiments/incremental-contract.md#cache-key-contract"
+    },
+    "clean-warm-invalidation-matrix": {
+      "kind": "tooling",
+      "summary": "A clean-versus-warm invalidation matrix proves status, diagnostics, interface manifest and reuse counts agree.",
+      "doc": "docs/experiments/incremental-contract.md#correctness-clean-versus-warm"
+    },
+    "list-interfaces-signature": {
+      "kind": "tooling",
+      "summary": "`selka list-interfaces` prints each exported callable's whole signature, with Python capability spellings, the inferred effects set, mutates parameters by name, and any declared ceiling.",
+      "doc": "docs/tooling/navigation.md#reading-an-interface"
+    },
+    "capability-method-narrowing": {
+      "kind": "language",
+      "summary": "`fs.read_only()` returns a read-only `Filesystem` capability; it intersects permissions, performs no I/O, and contributes no effect.",
+      "doc": "docs/effects.md#capability-method-narrowing"
+    },
+    "filesystem-dir": {
+      "kind": "language",
+      "summary": "`fs.dir(path)` derives a `Filesystem` rooted at a literal path under the receiver's root; it is lazy, effect-free, and confines every acquisition to that subtree.",
+      "doc": "docs/effects.md#filesystem-dir"
+    },
+    "environment-python-surface": {
+      "kind": "language",
+      "summary": "`env.get(\"NAME\")` returns str?, `env.only(...)` narrows an Environment to literal names, and `env.names()` lists visible names as str[].",
+      "doc": "docs/io.md#environment"
+    },
+    "filesystem-methods": {
+      "kind": "language",
+      "summary": "Every whole-path file helper also accepts a qualified method spelling on a `Filesystem` value (`fs.read_text(path)`), sharing the free form's arities, result types, literal-mode rule and trapping `with fs.open(...)` head; the method stays the receiver's even when a same-named function or local exists.",
+      "doc": "docs/io.md#files"
+    },
+    "network-host": {
+      "kind": "language",
+      "summary": "`net.host(name)` narrows a `Network` to one literal endpoint; it is lazy, effect-free, and every acquisition through it requests exactly that endpoint.",
+      "doc": "docs/effects.md#network-host"
+    },
+    "network-python-surface": {
+      "kind": "language",
+      "summary": "The `network` standard module wraps `connect`, `read`, `write` and `close` over the raw network resource primitives.",
+      "doc": "docs/standard-library.md#network"
+    },
+    "network-endpoint-grant": {
+      "kind": "tooling",
+      "summary": "`selka run`, `run-project` and `build --run` accept repeatable `--allow-endpoint=IP:PORT` grants that provision a literal-only TCP provider for a `Network` entry point under `--restrict`; without the grant the entry point is refused.",
+      "doc": "docs/effects.md#network-host"
+    },
+    "host-capability-foreign-calls": {
+      "kind": "tooling",
+      "summary": "Every `extern func` takes `host: Host` as its first parameter and declares `effects(host)`; the checker verifies it at each call and the C ABI drops it before the foreign call, with `--allow-host` under `--restrict`.",
+      "doc": "docs/c-ffi.md#the-host-parameter"
+    },
+    "buffered-stream-write": {
+      "kind": "language",
+      "summary": "`stream.write(buffer)` writes a mutable byte buffer's current octets straight out of its own storage, with no snapshot copy and the same `output` effect and byte count as a byte string.",
+      "doc": "docs/io.md#stream"
+    },
+    "stream-capability": {
+      "kind": "language",
+      "summary": "`out.print(...)`/`err.print(...)` and `stream.write(text)` write through a `Stream` capability and contribute the `output` effect.",
+      "doc": "docs/io.md#stream"
+    },
+    "debug-line": {
+      "kind": "language",
+      "summary": "`debug(values...)` writes to standard error without a capability and contributes no effect.",
+      "doc": "docs/io.md#debug"
+    },
+    "error-conversion": {
+      "kind": "language",
+      "summary": "Prefix `try` converts a propagated error into the enclosing failure type when its enum has a case whose payload is that error type.",
+      "doc": "docs/results-and-options.md#postfix-error-propagation"
+    },
+    "error-return-traces": {
+      "kind": "language",
+      "summary": "An error reaching main or a test is reported with its return trace: its construction or runtime call, every prefix try propagation and conversion, and each return that passed it on, retained in a bounded ring only on error paths.",
+      "doc": "docs/results-and-options.md#error-return-traces"
+    },
+    "standard-error-unions": {
+      "kind": "language",
+      "summary": "Fallible standard modules export error enums with named string payload fields and a message(error) helper, rather than returning unstructured string errors.",
+      "doc": "docs/standard-library.md#error-unions"
+    },
+    "reference-command": {
+      "kind": "tooling",
+      "summary": "`selka reference --query TERM [--format=text|json]` answers from data embedded in the running executable: implemented features with their documentation anchors, supported boundaries, unsupported and removed names, embedded standard-library declarations with their checked signature, effects and declared ceiling labeled by analysis status, and the checker's own builtin and collection-method vocabulary.",
+      "doc": "docs/reference.md#the-compiler-derived-reference"
+    },
+    "agent-context": {
+      "kind": "tooling",
+      "summary": "`selka context <entry.selka> --symbol 'module::name'` or `--at 'path:line:column'` answers one `agent-context-v1` object about one declaration from the facts `selka index-project`, `selka list-interfaces`, `selka tests-for` and `selka api-diff` already publish: declaration, contract with fact status, types, dependencies, tests and optional changes in a fixed priority order inside a `--context-bytes` budget, with per-section `omissions`, a `continuation` query, and a labeled partial answer on an incomplete project.",
+      "doc": "docs/tooling/agent-context.md#selka-context"
+    },
+    "keyword-only-parameters": {
+      "kind": "language",
+      "summary": "`named name: T` marks each parameter individually; calls supply its explicit label in any order, and callable types retain named labels as part of their contract.",
+      "doc": "docs/functions.md#keyword-only-parameters"
+    },
+    "conditional-expression": {
+      "kind": "language",
+      "summary": "`if condition then value_if_true else value_if_false` is an expression with a Boolean condition and contextual arm types; only the selected arm is evaluated.",
+      "doc": "docs/python-syntax.md#conditional-expressions"
+    },
+    "derived-effect-ceilings": {
+      "kind": "language",
+      "summary": "A function's effect ceiling is derived from its parameter list - a capability parameter permits its effect, a `mut` parameter `mutation`, a callback parameter its declared ceiling, and allocation is always permitted - so a body that exceeds it is rejected in that body with the parameter to add; `noalloc`, `noio` and `effects(...)` only narrow it, a clause that restates it warns `W_DERIVED_EFFECTS`, a clause naming an effect no parameter supplies is `E_DERIVED_EFFECTS`, and a capability parameter the body never reads is `E_UNUSED_CAPABILITY`.",
+      "doc": "docs/effects.md#the-signature-is-the-ceiling"
+    },
+    "test-file-private-access": {
+      "kind": "tooling",
+      "summary": "A module named `<name>_test` that no other module imports may call the private functions, types and constants of module `<name>`, so a helper need not become `public` to be tested; every other importer still gets `E_PRIVATE_SYMBOL`.",
+      "doc": "docs/tooling/guest-tests.md#private-declarations"
+    },
+    "per-entry-cases-files": {
+      "kind": "tooling",
+      "summary": "`selka test ENTRY` without `--cases` applies the `<stem>.cases.json` beside the entry, so a directory run applies each entry's own cases file to that entry and a single-file run sees the same cases.",
+      "doc": "docs/tooling/guest-tests.md#per-entry-cases-files"
+    },
+    "bytes-sorting": {
+      "kind": "language",
+      "summary": "Stable sorted and list.sort accept bytes elements and scalar/tuple bytes keys.",
+      "doc": "docs/python-text-surface.md#python-text-surface"
+    },
+    "text-trim-charsets": {
+      "kind": "language",
+      "summary": "Text and bytes trim explicit character sets with Python defaults.",
+      "doc": "docs/python-text-surface.md#trimming-character-sets"
+    },
+    "text-search-ranges": {
+      "kind": "language",
+      "summary": "Text and bytes accept Python search/count/prefix/suffix ranges and checked index lookup.",
+      "doc": "docs/python-text-surface.md#ranged-search"
+    },
+    "scalar-repr": {
+      "kind": "language",
+      "summary": "Exact CPython scalar repr with Unicode16 printability and shortest float formatting.",
+      "doc": "docs/python-text-surface.md#scalar-repr"
+    },
+    "memory-bounded-test-fanout": {
+      "kind": "tooling",
+      "summary": "A test run sizes its worker pool from free memory as well as cores (each per-test ceiling plus 256 MiB of headroom must fit in MemAvailable), with --jobs and SELKA_JOBS to override it.",
+      "doc": "docs/tooling/runtime-budgets.md#test-fan-out"
+    }
+  },
+  "unsupported": [
+    "stored-reference-fields",
+    "guest-shared-memory-threads",
+    "unrestricted-comptime",
+    "capturing-closures",
+    "python-dynamic-object-model"
+  ],
+  "native_exclusions": [],
+  "limits": {
+    "generic_calls": "explicit arguments or complete inference from call inputs; ambiguous and unmaterialized phantom arguments require explicit specialization",
+    "unit": "Unit/() procedures; None is only an optional absence; main accepts int or Unit, optionally fails E, and explicit Result return types",
+    "container_elements": "managed list/dict elements: copyable values without must-handle obligations, owned resources, or capability grants",
+    "noalloc": "managed-backing-operations-only",
+    "type_aliases": "non-parameterized",
+    "constants": "bounded-scalar-expressions-and-nongeneric-source-functions-plus-str-bytes-literals",
+    "iteration": "range(end/start,end), list/str/dict/fixed-array foreach and enumerate; fixed bounds and structural mutation checks",
+    "native_runtime": "the new core: Core IR to LLVM text, compiled with the pinned Zig toolchain's clang and linked with the core C runtime; amd64 Linux (SysV) only; foreign calls through scalar `extern func` with `--link FILE.c`",
+    "workers": "no host worker facility and no guest spawn syntax; parallelism is one guest process per task",
+    "floating_point": "float literals, ordinary operators, signed int conversions; IEEE binary64; standard sqrt is the correctly rounded binary64 operation, decimal parsing is accurate rather than correctly rounded; no transcendentals",
+    "callbacks": "exact parameter types, named labels, mutation positions and effect ceilings; failure types and suffixes are preserved; no capturing closures or reference results",
+    "semantic_reuse": "ordinary checked bodies and concrete specializations replay across processes; symbolic templates keep abstract checking; unresolved nested or interned-identity references stay conservative; in-memory retention is bounded by one shared reuse.max_bytes budget and a zero budget disables reuse",
+    "text_data": "managed Unicode scalar strings and managed bytes; foreign calls take scalars only",
+    "time_random": "Unix wall clock and explicit entropy capabilities; deterministic noncryptographic SplitMix64",
+    "managed_lists": "independent values with copy-on-write payloads; automatic growth; no owned/resource elements, borrowed interiors or host escape",
+    "python": "static fixed-width types, explicit const/mut bindings with lexical block scope and no active shadowing, value snapshots; indentation is the block syntax",
+    "dictionaries": "managed insertion order; homogeneous hashable keys (integers, bool, str, bytes, and tuples, records, enums, domains, optional values and fixed arrays of those) and copyable values",
+    "value_semantics": "independent collection and aggregate snapshots with copy-on-write transfers; copies do not add managed_allocation. class and Cell are rejected. Prefix mut parameters and mut arguments preserve caller storage, including whole-value rebinding, fields and elements, through callable contracts.",
+    "sets": "managed insertion order over hashable elements; `set()` needs an expected type; no frozenset, no augmented operators (`|=`); generic bodies key only by integer-bounded parameters, `str` or concrete hashable types; a module that declares its own function named `set` keeps it, and there the type spelling `set[T]` is unavailable while literals still work",
+    "generators": "generator expressions only as the argument of sum, any, all, min, max, sorted, list, set, dict or str.join; no suspended generator functions or stored generator values; yield belongs to source-first array comprehensions and match-expression arms",
+    "native_tests": "one native process per test; exported test_ functions returning bool or Result[bool, E]; positive deterministic receipts keyed by the test program's Core IR, settings, toolchain and outcome-relevant environment; a run with --link or --verify-facts never reuses a receipt; directory runs share one worker budget (--jobs, SELKA_JOBS or CPUs)",
+    "standard_library": "fourteen embedded modules using the canonical frontend: math, strings, sort, path, hex, base64, json, pool, random, time, byte_builder, filesystem, network, environment",
+    "memory": "one-count reference counting with copy-on-write; no tracing collector; value semantics prevents cycles, and identity graphs use pool handles; `with arena()` is removed; its diagnostic carries a migration fix"
+  },
+  "removed": {
+    "explicit-storage-tier": {
+      "date": "2026-09-13",
+      "note": "buffer/pool/list declarations, the allocator capability, references and slices, lexical borrows, legacy arena scopes and every standard module built on them. Managed collections and `with arena()` regions replace them."
+    },
+    "c-backend": {
+      "date": "2026-09-13",
+      "note": "emit-c/emit-project-c, src/native.zig and the C-only runtime. QBE is the only native backend."
+    },
+    "record-literals-without-new": {
+      "date": "2026-09-13",
+      "note": "merged into positional-and-named-record-constructors; the `new T { ... }` spelling it was named against left with the legacy brace syntax."
+    },
+    "legacy-migration": {
+      "date": "2026-09-13",
+      "note": "selka migrate/migrate-project, src/migrate*.zig and their drivers. Their input was the brace dialect, which no longer exists."
+    },
+    "legacy-syntax": {
+      "date": "2026-09-13",
+      "note": "the brace dialect: fn/let/let mut/struct/new, `T { … }` record literals, `::` qualification, `::<T>` turbofish, `cast<T>(x)`, `//` comments, `{ }` scope blocks, match expressions, `true`/`false`/`unit`, `else if` and `a..b` ranges. Indentation, `def`/`class`, `T(f=v)`, `alias.name`, `f[T](x)`, `T(x)`, `#` comments, `match`/`case`, `True`/`False`/`None`, `elif` and `range(a, b)` are the surface."
+    },
+    "named-executable-laws": {
+      "date": "2026-09-24",
+      "note": "the sampled-law runner was a Python script (scripts/laws.py), never part of the compiler; it moved to experiments/guest-laws/ as an experiment. `selka test --cases` still runs one law case natively."
+    },
+    "value-producing-matches": {
+      "date": "2026-09-13",
+      "note": "`match e { P => v }` had only a brace spelling and no Python one; a `match` statement whose arms return covers the same programs."
+    },
+    "bounded-scalar-source-evaluation": {
+      "date": "2026-09-14",
+      "note": "the eval-project command, its step/frame/eval-byte budgets and its eval-report-v1 / evaluation-request documents. It executed a parameter-free entry in the compiler's own process; `selka run` builds the program natively and runs it instead."
+    },
+    "bounded-vm-trace": {
+      "date": "2026-09-14",
+      "note": "vm_trace.Trace and the vm.Options.memory.trace hook. The ring of recent instructions it sampled was an interpreter artifact; a native guest reports a source-mapped call stack at its trap instead."
+    },
+    "in-memory-host-replay": {
+      "date": "2026-09-14",
+      "note": "host_replay.Transcript and its recorded call comparison. It wrapped an interpreter provider registration, and a natively built guest calls its registered provider directly."
+    },
+    "isolated-process-workers": {
+      "date": "2026-09-14",
+      "note": "scripts/workers.py and its typed-call-v1 job pool. Each job dispatched one guest call through invoke-project; nothing replaces it, and the language still has no spawn syntax."
+    },
+    "memory-accounting-categories": {
+      "date": "2026-09-14",
+      "note": "selka-io --memory-report, --max-runtime-bytes, --max-vm-bytes and --max-host-bytes, and the runtime-memory-v1 split of VM bytes into guest backing and bookkeeping. There is no VM allocator to split; guest-memory-ceilings bounds a guest process instead."
+    },
+    "mandatory-mutation-footprint-warning": {
+      "date": "2026-09-21",
+      "note": "`W_MUTATES_MISSING` and the reference-typed `class` exemption, with the `mutates(...)` clause and the opt-in `&` / `--mutation-markers` marker beside them. A parameter a function writes through is declared `mut name: T` and every argument bound to one is written `mut argument`; see the implemented `mut-parameters` entry."
+    },
+    "unchecked-release-builds": {
+      "date": "2026-09-24",
+      "note": "`selka build --unchecked` (and `run`/`run-project`/`build --run --unchecked`, and the emitters' internal `--drop-safety-checks`) omitted the overflow, narrowing-cast and index-bounds guards and, with no ceiling, the frame record, so a would-be trap was undefined behaviour and optimization could change a program's result. Every build now keeps them (RELEASE-CHECKED-1), and `--unchecked` is refused as removed."
+    },
+    "guest-test-gc-stress": {
+      "date": "2026-10-08",
+      "note": "Retired with the old back end in new-core stage S5 (2026-10): `selka test --gc-stress` ran tests under the tracing collector's stress mode. The collector is gone; one-count reference counting is the only memory model, and the flag is refused."
+    },
+    "nonmoving-tracing-gc": {
+      "date": "2026-10-08",
+      "note": "Retired with the old back end in new-core stage S5 (2026-10): the single-threaded nonmoving tracing collector, `--gc-runtime` and `SELKA_RUNTIME=gc-v1`. Managed objects are reference counted once and released when their last owner goes away."
+    },
+    "managed-list-cycles": {
+      "date": "2026-10-08",
+      "note": "Retired with the old back end in new-core stage S5 (2026-10): reclaiming cyclic managed graphs needed the tracing collector and legacy sharing. Value semantics cannot build a cycle; identity graphs use pool handles."
+    },
+    "managed-arenas": {
+      "date": "2026-10-08",
+      "note": "Retired with the old back end in new-core stage S5 (2026-10): `with arena() as name:` regions and their escape checks (`E_ARENA_ESCAPE`). The spelling is rejected with `E_ARENA_REMOVED`; `selka fix` removes the block and unwraps escapes."
+    },
+    "managed-class-records": {
+      "date": "2026-10-08",
+      "note": "Retired with the old back end in new-core stage S5 (2026-10): legacy-sharing mode and its GC-managed `class` reference records, `--legacy-sharing` and the `value_semantics: false` opt-out. `class` and builtin `Cell` are rejected; use records for values and pool handles for identity."
+    },
+    "rc-ownership-sites": {
+      "date": "2026-10-08",
+      "note": "Retired with the old back end in new-core stage S5 (2026-10): `--rc-runtime=sites` and `SELKA_RC_SITES`, the counting two-count RC runtime that charged ownership events to call sites. `selka build --stats` reports the new core's ownership plan."
+    },
+    "ownership-explain": {
+      "date": "2026-10-08",
+      "note": "Retired with the old back end in new-core stage S5 (2026-10): `selka check --explain-ownership=OUT.jsonl`, which wrote the old bytecode ownership analysis. The flag is refused; `selka build --stats` reports the new core's ownership plan."
+    },
+    "native-invocation": {
+      "date": "2026-10-08",
+      "note": "Retired with the old back end in new-core stage S5 (2026-10): `selka invoke` and its `native-invocation-v1` envelope, retired with host functions (S5-D5). Call the function from a `main` or a test."
+    },
+    "module-compile": {
+      "date": "2026-10-08",
+      "note": "Retired with the old back end in new-core stage S5 (2026-10): `selka compile-module` and `link-modules`, the old back end's per-module QBE builds. `selka build` emits and caches one LLVM unit per module instead."
+    },
+    "module-build": {
+      "date": "2026-10-08",
+      "note": "Retired with the old back end in new-core stage S5 (2026-10): the module-by-module scheduler of `compile-module` children behind `build` and `run`. A debug build emits one LLVM unit per module and recompiles only units whose text changed."
+    },
+    "module-check": {
+      "date": "2026-10-08",
+      "note": "Retired with the old back end in new-core stage S5 (2026-10): module-by-module `selka check` from `compile-module` records. A project check checks the merged program with the semantic cache."
+    },
+    "module-test": {
+      "date": "2026-10-08",
+      "note": "Retired with the old back end in new-core stage S5 (2026-10): per-module test libraries built from `compile-module` records. `selka test` builds each test program with the new core and keys receipts on its Core IR."
+    },
+    "guest-performance-benchmarks": {
+      "date": "2026-10-08",
+      "note": "Retired with the old back end in new-core stage S5 (2026-10): `selka test --bench*` with its baselines and policies, and `bench-promote` (S5-D6). Time a program with `selka run --timings` or an external benchmark harness."
+    },
+    "host-application-guest-bounds": {
+      "date": "2026-10-08",
+      "note": "Retired with the old back end in new-core stage S5 (2026-10): the host applications `schematic-svg`, `board-trial` and `selka-io` and the ceilings they chose for their guests (S5-D5)."
+    },
+    "signature-pure-outcome-replay": {
+      "date": "2026-10-08",
+      "note": "Retired with the old back end in new-core stage S5 (2026-10): `selka test --pure-skip`, which replayed a recorded outcome for a signature-pure test without running it (S5-D6)."
+    },
+    "test-diagnostics-json": {
+      "date": "2026-10-08",
+      "note": "Retired with the old back end in new-core stage S5 (2026-10): `selka test --diagnostics=json` (S5-D6). `selka check --diagnostics=json` reports an entry that does not compile, `fix` fields included."
+    },
+    "copied-block-byte-io": {
+      "date": "2026-10-08",
+      "note": "Retired with the old back end in new-core stage S5 (2026-10): copied 256-byte blocks, an ABI of the retired `selka-io` byte runner host (S5-D5)."
+    },
+    "configurable-byte-io-budgets": {
+      "date": "2026-10-08",
+      "note": "Retired with the old back end in new-core stage S5 (2026-10): the `selka-io` byte runner's input, output and execution budgets (S5-D5)."
+    },
+    "scoped-directory-and-endpoint-providers": {
+      "date": "2026-10-08",
+      "note": "Retired with the old back end in new-core stage S5 (2026-10): the `selka-io` byte runner's `--allow-dir` and `--allow-endpoint` providers (S5-D5). `selka run --restrict --allow-read/--allow-write/--allow-endpoint` grants the same authority."
+    },
+    "scoped-filesystem-metadata-and-listings": {
+      "date": "2026-10-08",
+      "note": "Retired with the old back end in new-core stage S5 (2026-10): metadata and listings of the `selka-io` byte runner's scoped directory providers (S5-D5)."
+    },
+    "native-default-releasefast": {
+      "date": "2026-10-08",
+      "note": "Retired with the old back end in new-core stage S5 (2026-10): builds defaulted to QBE at ReleaseFast. A build is now a debug build, one LLVM unit per module, unless `--release` asks for the optimized whole-program build (`release-builds`)."
+    },
+    "direct-c-scalar-imports-qbe": {
+      "date": "2026-10-08",
+      "note": "merged into direct-c-scalar-imports when the QBE back end was retired (new-core stage S5, 2026-10); `extern def` calls work the same in every build."
+    }
+  }
+}

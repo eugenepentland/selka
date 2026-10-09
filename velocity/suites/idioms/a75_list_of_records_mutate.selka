@@ -1,0 +1,10 @@
+# oracle: selka-only
+record Item:
+    n: int
+
+def main() -> int:
+    items = [Item(1), Item(2)]
+    for it in items:
+        it.n = 21
+    items[0].n += 0
+    return items[0].n + items[1].n

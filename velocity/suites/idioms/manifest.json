@@ -1,0 +1,998 @@
+{
+ "version": "idiom-suite-v1",
+ "measured_on": "2026-09-20",
+ "binary": "sha256:b3265ab0679338dc2683766f11f105f133b648e1d6aa33fa1e4696b7e0cf46ec zig-out/bin/selka compiler:d6bc5756105a656c5002a40d139263fe3992f71fd451654c368e617171566658",
+ "oracle_rule": "cpython: run with runpy, call main(), compare exit & 0xFF and stdout; rejected-by-design: valid Python the language rejects on purpose, counts only toward C3; selka-only: uses Option/Result/record/union, no CPython oracle, needs an expect directive",
+ "probes": [
+  {
+   "name": "a01_ternary.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a02_chained_cmp.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a03_tuple_swap.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a04_tuple_return.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a05_is_none.selka",
+   "oracle": "selka-only",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a06_eq_none.selka",
+   "oracle": "selka-only",
+   "baseline": {
+    "selka_accepts": true,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a07_option_unwrap.selka",
+   "oracle": "selka-only",
+   "baseline": {
+    "selka_accepts": true,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a08_aug_subscript.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": true,
+    "agree": true,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a09_aug_str_list.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": true,
+    "agree": true,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a10_chained_assign.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a11_truthiness.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a12_docstring.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": true,
+    "agree": true,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a13_nested_def.selka",
+   "oracle": "rejected-by-design",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a14_lambda_capture.selka",
+   "oracle": "selka-only",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a15_lambda_nocapture.selka",
+   "oracle": "selka-only",
+   "baseline": {
+    "selka_accepts": true,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a16_fstring_spec.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a17_percent_format.selka",
+   "oracle": "rejected-by-design",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a18_str_format.selka",
+   "oracle": "rejected-by-design",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a19_str_repeat.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a20_dict_items.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": true,
+    "agree": true,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a21_set.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a22_set_literal.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a23_optional_annot.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a24_optional_typing.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a25_nested_list.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": true,
+    "agree": true,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a26_sort_key.selka",
+   "oracle": "selka-only",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a27_sorted_key.selka",
+   "oracle": "selka-only",
+   "baseline": {
+    "selka_accepts": true,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a28_sorted_reverse.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a29_max_two_args.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": true,
+    "agree": true,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a30_range_step.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a31_slice_neg.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": true,
+    "agree": true,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a32_join_map.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a33_round2.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a34_power.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a35_div.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a36_module_global.selka",
+   "oracle": "rejected-by-design",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a37_const.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a38_class_methods.selka",
+   "oracle": "rejected-by-design",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a39_dataclass.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a40_try_except.selka",
+   "oracle": "rejected-by-design",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a41_import_os.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a42_open_python.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a43_len_dict.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": true,
+    "agree": true,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a44_enumerate_start.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a45_record_default.selka",
+   "oracle": "selka-only",
+   "baseline": {
+    "selka_accepts": true,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a46_record_eq.selka",
+   "oracle": "selka-only",
+   "baseline": {
+    "selka_accepts": true,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a47_print_record.selka",
+   "oracle": "selka-only",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a48_for_else.selka",
+   "oracle": "rejected-by-design",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a49_match_literal.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a50_match_str.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a51_del.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a52_pop_insert.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": true,
+    "agree": true,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a53_multiline_str.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a54_bitops.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a55_chr_ord_hex.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a56_divmod_pow.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a57_assert_fstring.selka",
+   "oracle": "selka-only",
+   "baseline": {
+    "selka_accepts": true,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a58_main_guard.selka",
+   "oracle": "rejected-by-design",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a59_reassign_annot.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": true,
+    "agree": true,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a60_overflow.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": true,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a61_result_unwrap.selka",
+   "oracle": "selka-only",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a62_option_or.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a63_dict_get_option.selka",
+   "oracle": "selka-only",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a64_split_noargs.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": true,
+    "agree": true,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a65_str_cmp.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a66_nested_comp.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a67_dict_comp.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a68_genexp.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a69_print_end.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a70_int_from_float.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a71_type_alias.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a72_type_alias_kw.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": true,
+    "agree": true,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a73_while_else_walrus.selka",
+   "oracle": "rejected-by-design",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a74_str_in_list.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": true,
+    "agree": true,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a75_list_of_records_mutate.selka",
+   "oracle": "selka-only",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a76_record_in_dict.selka",
+   "oracle": "selka-only",
+   "baseline": {
+    "selka_accepts": true,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a77_dict_record_key.selka",
+   "oracle": "selka-only",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a78_multiple_return_record.selka",
+   "oracle": "selka-only",
+   "baseline": {
+    "selka_accepts": true,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a79_str_methods.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "a80_none_return_call.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "c01_option_q.selka",
+   "oracle": "selka-only",
+   "baseline": {
+    "selka_accepts": true,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "c02_result_err_convert.selka",
+   "oracle": "selka-only",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "c03_main_result_str.selka",
+   "oracle": "selka-only",
+   "baseline": {
+    "selka_accepts": true,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "c04_option_default.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": true,
+    "agree": true,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "c05_option_field.selka",
+   "oracle": "selka-only",
+   "baseline": {
+    "selka_accepts": true,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "c06_result_record_err.selka",
+   "oracle": "selka-only",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "c07_if_let_style.selka",
+   "oracle": "selka-only",
+   "baseline": {
+    "selka_accepts": true,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "c08_match_expr.selka",
+   "oracle": "selka-only",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "d01_loop_record_copy.selka",
+   "oracle": "selka-only",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "d02_alias_record_copy.selka",
+   "oracle": "selka-only",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "d03_record_param_mutate.selka",
+   "oracle": "selka-only",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "d04_dict_items_keys.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "d05_round_half.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "d06_record_field_in_dict_loop.selka",
+   "oracle": "selka-only",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "d07_str_index_assign.selka",
+   "oracle": "selka-only",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "d08_int_float_mix.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "d09_shadow_builtin.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "d10_unused_result.selka",
+   "oracle": "selka-only",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "e01_step_budget.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": true,
+    "agree": true,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "e02_bitops_each.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "e03_shift.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "e04_generic.selka",
+   "oracle": "selka-only",
+   "baseline": {
+    "selka_accepts": true,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "e05_str_concat_perf.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": true,
+    "agree": true,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "e06_list_of_lists_build.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": true,
+    "agree": true,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "e07_recursion_depth.selka",
+   "oracle": "selka-only",
+   "baseline": {
+    "selka_accepts": true,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "e08_format_float.selka",
+   "oracle": "selka-only",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": null,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "e09_walk_dict_sorted.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "e10_while_assign_after_loop.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "e11_if_no_else_bind.selka",
+   "oracle": "cpython",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": false,
+    "silent_wrong": false
+   }
+  },
+  {
+   "name": "e12_none_default_param.selka",
+   "oracle": "selka-only",
+   "baseline": {
+    "selka_accepts": false,
+    "agree": null,
+    "silent_wrong": false
+   }
+  }
+ ]
+}

@@ -1,0 +1,76 @@
+# rc_fuzz.py seed 62 case 26: an alias read across a loop that appends to the original,
+# where only one of several paths into the loop carries a shared block (NEW-CORE-RC-9).
+func make_ints(n: int) -> int[]:
+    mut out: int[] = []
+    for i in range(n):
+        out.append(i)
+    return out
+
+
+func grow_int(xs: int[], n: int) -> int[]:
+    mut ys = xs
+    if n > 1:
+        return xs
+    ys.append(n)
+    return ys
+
+
+func grow_str(xs: str[], n: int) -> str[]:
+    mut ys = xs
+    if n > 1:
+        return xs
+    ys.append("a")
+    return ys
+
+
+func grow_row(xs: int[][], n: int) -> int[][]:
+    mut ys = xs
+    if n > 1:
+        return xs
+    ys.append(make_ints(2))
+    return ys
+
+
+func body(seed: int, out: Stream) -> int:
+    mut acc = 0
+    mut il1: int[] = []
+    il1.append(6)
+    mut sl2: str[] = []
+    sl2.append("xyz")
+    mut rl3: int[][] = []
+    rl3.append(make_ints(seed))
+    acc = acc + len(il1)
+    for i2 in range(3):
+        for i1 in range(2):
+            sl2.append("xyz")
+            il1.append(i2)
+            mut ig4 = grow_int(il1, 1)
+            if len(rl3) > 0:
+                mut inner5 = rl3[0]
+                inner5.append(5)
+                acc = acc + len(inner5) + len(rl3[0])
+            acc = acc + len(rl3)
+        mut ra6 = rl3
+        mut ia7 = il1
+        mut sa8 = sl2
+        for i1 in range(2):
+            acc = acc + len(sa8)
+            mut rg9 = grow_row(ra6, seed)
+            acc = acc + len(ia7)
+            sl2.append("bc")
+        if len(ia7) > 3:
+            acc = acc + len(sa8)
+            mut sg10 = grow_str(sa8, seed)
+            acc = acc + len(ia7)
+            return acc + len(ia7)
+    acc = acc + len(il1)
+    if len(sl2) > 0:
+        out.print(sl2[len(sl2) - 1])
+    acc = acc + len(sl2)
+    acc = acc + len(rl3)
+    return acc
+
+
+func main(args: str[], out: Stream) -> int:
+    out.print(body(len(args), out))
+    return 0

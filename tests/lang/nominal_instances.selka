@@ -1,0 +1,73 @@
+record Box[T]:
+    value: T
+
+
+enum Slot[T]:
+    none
+    some(value: T)
+
+
+result Answer[T]:
+    ok: T,
+    err: i64
+
+
+func nominal_id[T](x: T) -> T:
+    return x
+
+
+func nominal_pair[T](x: T) -> FixedArray[T, 2]:
+    return FixedArray[T, 2]([x, x])
+
+
+record EmptyPhantom[T]:
+    pass
+
+
+record GrowPhantom[T]:
+    marker: EmptyPhantom[GrowPhantom[FixedArray[T, 1]]]
+
+
+func plus(input: Answer[i64]) -> Answer[i64]:
+    const value = try input
+    return Answer.ok(value + 1)
+
+
+func basic_program() -> i64:
+    mut a = Box[i64](value=7)
+    mut b = a
+    b.value = 9
+    mut slot: Slot[Box[i64]] = Slot.some(value=b)
+    match slot:
+        case Slot.none:
+            return 0
+        case Slot.some(value=value):
+            return a.value + value.value
+
+
+public func test_nominal_instances_compose_with_existing_generic_functions_and_fixed_arrays() -> bool:
+    mut boxes = nominal_pair[Box[i64]](nominal_id[Box[i64]](Box[i64](value=6)))
+    if boxes[0].value + boxes[1].value != 12:
+        return False
+    mut a: FixedArray[Box[i64], 2] = FixedArray[Box[int], 2]([Box[i64](value=3), Box[i64](value=8)])
+    return a[1].value == 8
+
+
+public func test_nominal_instances_keep_growing_phantom_arguments_outside_runtime_storage() -> bool:
+    _ = GrowPhantom[i64](marker=EmptyPhantom[GrowPhantom[FixedArray[i64, 1]]]())
+    return True
+
+
+# spec: NOMINAL-INSTANCE-1
+public func test_nominal_instances_construct_assign_nest_and_exhaustively_match_on_the_vm() -> bool:
+    if basic_program() != 16:
+        return False
+    match plus(Answer.ok(4)):
+        case Answer.ok(n):
+            return n == 5
+        case Answer.err(_):
+            return False
+
+
+func main() -> int:
+    return 0

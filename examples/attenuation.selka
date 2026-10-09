@@ -1,0 +1,36 @@
+resource File: filesystem
+
+
+result Open:
+    ok: File,
+    err: int
+
+
+record Chunk:
+    bytes: FixedArray[u8, 16]
+    length: u64
+    eof: bool
+
+
+result Read:
+    ok: Chunk,
+    err: int
+
+
+func delegate(fs: Filesystem) -> Filesystem effects():
+    return fs.read_only()
+
+
+func main(fs: Filesystem) -> int:
+    mut reader = delegate(fs)
+    mut request: FixedArray[u8, 1] = FixedArray[u8, 1]([42u8])
+    match acquire_resource[Open](reader, request):
+        case Open.ok(input):
+            mut file = input
+            match read_resource[Read](file):
+                case Read.ok(chunk):
+                    return int(chunk.length)
+                case Read.err(code):
+                    return -code
+        case Open.err(code):
+            return -code

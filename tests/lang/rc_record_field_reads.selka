@@ -1,0 +1,123 @@
+record Cursor:
+    code: int[]
+    index: int
+
+
+func read(index: int) -> int:
+    mut cursor = Cursor(code=[7, 11, 13], index=index)
+    mut value = cursor.code[cursor.index]
+    return value + cursor.index
+
+
+func read_from(items: int[], index: int) -> int:
+    mut cursor = Cursor(code=items, index=index)
+    mut value = cursor.code[cursor.index]
+    return value + cursor.index
+
+
+func adjacent(index: int) -> int:
+    mut cursor = Cursor(code=[7, 11, 13], index=index)
+    mut first = cursor.code[cursor.index]
+    mut second = cursor.code[-1]
+    mut ordinary = [first, second]
+    ordinary.append(cursor.index)
+    return ordinary[0] + ordinary[1] + ordinary[2]
+
+
+func rebind(times: int) -> int:
+    mut cursor = Cursor(code=[7, 11, 13], index=0)
+    mut total = 0
+    mut count = 0
+    while count < times:
+        mut value = cursor.code[cursor.index]
+        total += value
+        cursor = Cursor(code=[17, 19], index=count % 2)
+        count += 1
+    return total + cursor.index
+
+
+func change(mut cursor: Cursor) -> int:
+    cursor.code = [29]
+    return 0
+
+
+func captured_callback() -> int:
+    mut cursor = Cursor(code=[7], index=0)
+    mut value = cursor.code[change(mut cursor)]
+    return value + cursor.code[0]
+
+
+func floating(number: float) -> int:
+    mut cursor = Cursor(code=[7, 11, 13], index=0)
+    mut value = cursor.code[int(sqrt(number))]
+    return value + cursor.index
+
+
+func arithmetic(seed: int) -> int:
+    mut cursor = Cursor(code=[7, 11, 13], index=0)
+    mut value = cursor.code[cursor.index]
+    return value + seed + cursor.index
+
+
+func heap_frame(values: FixedArray[int, 4096], index: int) -> int:
+    mut padding = replace(values, 0, 3)
+    mut cursor = Cursor(code=[7, 11, 13], index=index)
+    mut value = cursor.code[cursor.index]
+    return value + padding[0] + cursor.index
+
+
+public func test_checked_positive_and_negative_indices() -> bool:
+    return read(0) == 7 and read(1) == 12 and read(-1) == 12 and read(-3) == 4
+
+
+public func test_successful_interval_then_ordinary_publication() -> bool:
+    return adjacent(0) == 20 and adjacent(1) == 25 and adjacent(-1) == 25
+
+
+public func test_dynamic_reentry_replaces_retained_home() -> bool:
+    return rebind(0) == 0 and rebind(1) == 7 and rebind(4) == 61
+
+
+public func test_captured_callback_keeps_selected_snapshot() -> bool:
+    return captured_callback() == 36
+
+
+public func test_generated_float_call_keeps_ordinary_fallback() -> bool:
+    return floating(0.0) == 7 and floating(1.0) == 11 and floating(4.0) == 13
+
+
+public func test_older_heap_home_inside_inner_region() -> bool:
+    mut cursor = Cursor(code=[17, 19], index=1)
+    mut result = 0
+    result = cursor.code[cursor.index]
+    return result + cursor.index == 20
+
+
+public func test_named_snapshot_survives_replacement_after_read() -> bool:
+    mut cursor = Cursor(code=[7, 11], index=1)
+    mut snapshot = cursor
+    mut value = cursor.code[cursor.index]
+    cursor = Cursor(code=[13], index=0)
+    return value + snapshot.code[1] + cursor.code[0] == 35
+
+
+record Flags:
+    code: bool[]
+    index: int
+
+
+record Octets:
+    code: u8[]
+    index: int
+
+
+public func test_boolean_and_narrow_elements_preserve_width() -> bool:
+    mut flags = Flags(code=[False, True], index=1)
+    mut flag = flags.code[flags.index]
+    mut octets = Octets(code=[u8(255), u8(128)], index=0)
+    mut octet = octets.code[octets.index]
+    return flag and octet == u8(255) and flags.index == 1 and octets.index == 0
+
+
+func main() -> int:
+    return 0

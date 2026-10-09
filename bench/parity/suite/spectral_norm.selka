@@ -1,0 +1,49 @@
+# spectral_norm: ten power-iteration rounds on the infinite matrix
+# A(i, j) = 1 / ((i + j)(i + j + 1)/2 + i + 1), n = 2000. `a` stays a separate
+# function. See SUITE.md section 3.
+func a(i: int, j: int) -> float:
+    return 1.0 / float((i + j) * (i + j + 1) // 2 + i + 1)
+
+
+func mul_av(v: float[], mut out: float[]) -> Unit:
+    mut n = len(v)
+    for i in range(n):
+        mut s = 0.0
+        for j in range(n):
+            s = s + a(i, j) * v[j]
+        out[i] = s
+
+
+func mul_atv(v: float[], mut out: float[]) -> Unit:
+    mut n = len(v)
+    for i in range(n):
+        mut s = 0.0
+        for j in range(n):
+            s = s + a(j, i) * v[j]
+        out[i] = s
+
+
+# The checker cannot prove the read-only `v` disjoint from the writable `tmp`
+# (both are parameters), so `mul_av(v, mut tmp)` is E_MUTATION_OVERLAP; its
+# suggested "fresh snapshot" is the fix that keeps this function's shape. The
+# two copies per call are 40 copies of 2000 floats in the whole run.
+func mul_atav(v: float[], mut out: float[], mut tmp: float[]) -> Unit:
+    mul_av(v.copy(), mut tmp)
+    mul_atv(tmp.copy(), mut out)
+
+
+func main(out: Stream) -> int:
+    mut n = 2000
+    mut u = [for _ in range(n) yield 1.0]
+    mut v = [for _ in range(n) yield 0.0]
+    mut tmp = [for _ in range(n) yield 0.0]
+    for _ in range(10):
+        mul_atav(u, mut v, mut tmp)
+        mul_atav(v, mut u, mut tmp)
+    mut vbv = 0.0
+    mut vv = 0.0
+    for i in range(n):
+        vbv = vbv + u[i] * v[i]
+        vv = vv + v[i] * v[i]
+    out.print(int(sqrt(vbv / vv) * 1e9))
+    return 0

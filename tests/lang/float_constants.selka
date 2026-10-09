@@ -1,0 +1,199 @@
+import float_constants_support as support
+
+# `float` module constants: the initializer folds at check time with the same binary64
+# operations the running program uses, so a constant and the same expression computed
+# at run time are the same number.
+type Real = float
+
+
+const PI: float = 3.14
+
+
+const TWO_PI: float = PI * 2.0
+
+
+const HALF: float = 1 / 2
+
+
+const WHOLE: float = 2
+
+
+const NEGATIVE: float = -2.5
+
+
+const NEGATIVE_WHOLE: float = -5
+
+
+const TINY: float = 1e-9
+
+
+const GROUPED: float = 1_000.5
+
+
+const LEADING_DOT: float = .25
+
+
+const RATIO: float = TWO_PI / PI
+
+
+const MEAN: float = (PI + TWO_PI) / 2
+
+
+const FLOORED: float = 7.5 // 2.0
+
+
+const REMAINDER: float = -7.5 % 2.0
+
+
+const ROOT: float = sqrt(2.0)
+
+
+const CEILED: float = ceil(2.1)
+
+
+const SUM: float = 0.1 + 0.2
+
+
+const THIRD: float = 1 / 3
+
+
+const ROUNDED: float = float(9007199254740993)
+
+
+const UNSIGNED_WIDE: float = float(18446744073709551615u64)
+
+
+const INTEGER_FIRST: float = PI * 2
+
+
+const NEGATIVE_ZERO: float = -0.0
+
+
+const ALIASED: Real = 2.718
+
+
+const BELOW: bool = PI < 3.15
+
+
+const EQUAL: bool = TWO_PI == PI * 2.0
+
+
+const UNORDERED: bool = (0.0 / 0.0) != (0.0 / 0.0)
+
+
+const HUNDRED_PI: int = int(PI * 100.0)
+
+
+const BACK: float = float(HUNDRED_PI)
+
+
+record Circle:
+    radius: float
+
+
+func area(radius: float) -> float:
+    return PI * radius * radius
+
+
+func unit_circle() -> Circle:
+    return Circle(radius=PI)
+
+
+func scaled[T](value: T) -> float:
+    return TWO_PI * 2.0
+
+
+func runtime_sum(left: float, right: float) -> float:
+    return left + right
+
+
+func runtime_ratio(numerator: int, denominator: int) -> float:
+    return float(numerator) / float(denominator)
+
+
+func runtime_from(value: int) -> float:
+    return float(value)
+
+
+func runtime_negative(value: float) -> float:
+    return -value
+
+
+# spec: CONST-FLOAT-1
+public func test_a_float_constant_reads_as_its_literal() -> bool:
+    return PI == 3.14 and NEGATIVE == -2.5 and TINY == 0.000000001 and GROUPED == 1000.5 and LEADING_DOT == 0.25 and WHOLE == 2.0
+
+
+# spec-case: CONST-FLOAT-1
+public func test_an_integer_literal_takes_the_float_type_of_its_constant() -> bool:
+    return WHOLE == 2.0 and NEGATIVE_WHOLE == -5.0 and HALF == 0.5
+
+
+# spec-case: CONST-FLOAT-1
+public func test_a_float_constant_may_depend_on_another_in_either_order() -> bool:
+    return TWO_PI == 6.28 and RATIO == 2.0 and MEAN == runtime_sum(PI, TWO_PI) / 2.0 and INTEGER_FIRST == 6.28
+
+
+# spec: CONST-FLOAT-2
+public func test_folded_arithmetic_is_the_run_time_result() -> bool:
+    return SUM == runtime_sum(0.1, 0.2) and SUM != 0.3 and THIRD == runtime_ratio(1, 3) and TWO_PI == runtime_sum(PI, PI)
+
+
+# spec-case: CONST-FLOAT-2
+public func test_an_integer_converts_to_the_nearest_binary64_when_folded() -> bool:
+    return ROUNDED == runtime_from(9007199254740993) and ROUNDED == 9007199254740992.0 and UNSIGNED_WIDE == runtime_from(1) * 18446744073709551616.0
+
+
+# spec-case: CONST-FLOAT-2
+public func test_floor_division_and_remainder_floor_the_quotient() -> bool:
+    return FLOORED == 3.0 and REMAINDER == 0.5
+
+
+# spec-case: CONST-FLOAT-2
+public func test_the_float_intrinsics_fold() -> bool:
+    return ROOT == sqrt(runtime_from(2)) and CEILED == 3.0
+
+
+# spec-case: CONST-FLOAT-2
+public func test_negative_zero_keeps_its_sign() -> bool:
+    return NEGATIVE_ZERO == 0.0 and 1.0 / NEGATIVE_ZERO < 0.0 and 1.0 / runtime_negative(0.0) < 0.0
+
+
+# spec-case: CONST-FLOAT-2
+public func test_a_comparison_of_constants_is_a_bool_constant() -> bool:
+    return BELOW and EQUAL and UNORDERED
+
+
+# spec: CONST-FLOAT-3
+public func test_a_float_constant_converts_to_an_integer_constant() -> bool:
+    return HUNDRED_PI == 314 and BACK == 314.0 and int(-PI * 100.0) == -314
+
+
+# spec-case: CONST-FLOAT-1
+public func test_a_float_constant_works_as_an_operand_field_and_alias() -> bool:
+    return area(2.0) == 12.56 and unit_circle().radius == PI and ALIASED == 2.718 and scaled[int](0) == 12.56
+
+
+# spec-case: CONST-FLOAT-1
+public func test_an_imported_float_constant_keeps_its_folded_value() -> bool:
+    return support.TAU == 6.28 and support.AREA == 12.56
+
+
+# spec-case: CONST-FLOAT-1
+public func test_a_float_constant_read_does_not_allocate() -> bool noalloc:
+    return PI == 3.14 and TWO_PI == 6.28
+
+
+const FLOAT_CHAIN: bool = 0.0 < PI < TWO_PI
+
+
+const MIXED_CHAIN: bool = 0 < PI <= TWO_PI
+
+
+const SKIPPED_FLOAT_CHAIN: bool = PI < 0.0 < 1 // 0
+
+
+# spec-case: CONST-FLOAT-1
+# spec-case: PY-CHAIN-1
+public func test_constant_float_chains_fold_and_short_circuit() -> bool:
+    return FLOAT_CHAIN and MIXED_CHAIN and not SKIPPED_FLOAT_CHAIN

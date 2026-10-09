@@ -1,0 +1,8 @@
+.{
+    .name = .selka,
+    .version = "0.1.0",
+    .fingerprint = 0x89d9bbd5f9ce03e5,
+    .minimum_zig_version = "0.17.0-dev.1683+5ceec001b",
+    .dependencies = .{ .guardian = .{ .path = "../guardian-zig" } },
+    .paths = .{ "build.zig", "build.zig.zon", ".zigversion", ".qbeversion", "src", "vendor", "tests", "test", "guardian.toml", "SPEC.md", "examples", "docs", "README.md" },
+}

@@ -1,0 +1,6 @@
+public domain FixedPrices: int:
+    func make(amount: int) -> FixedPrices effects():
+        return wrap[FixedPrices](amount)
+    func price(policy: FixedPrices, subtotal: int) -> int effects():
+        _ = subtotal
+        return unwrap(policy)

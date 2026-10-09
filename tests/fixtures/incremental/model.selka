@@ -1,0 +1,30 @@
+public enum Color:
+    red
+    green
+    blue
+
+
+public record Point:
+    x: int
+    y: int
+
+
+public record Node:
+    value: int
+    children: Node[]
+    tag: str?
+
+
+public enum Shape:
+    dot(value: Point)
+    circle(center: Point, radius: int)
+    empty
+
+
+public record Scene:
+    shapes: Shape[]
+    index: dict[str, Point]
+    root: Node?
+    tint: Color
+    pairs: tuple[int, Point][]
+    count: int

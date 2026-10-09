@@ -1,0 +1,234 @@
+# Fixed arrays take Python's negative indices exactly as lists do
+# (PY-ARRAY-NEGATIVE-1): a read, every element-write form, and `replace`.
+# Also pinned here: augmented assignment to a field of an element
+# (PY-ARRAY-WRITE-2), loops over an array the body never writes
+# (PY-ARRAY-ITER-2), element and field targets in a destructuring assignment
+# (PY-DESTRUCTURE-PLACE-1) and element writes through a record or class field
+# (QBE-ARRAYWRITE-2). The traced element types run under `--gc-stress`.
+enum Status:
+    ok
+    missing
+    failed
+
+
+record Point:
+    x: i64
+    y: i64
+
+
+record Grid:
+    cells: FixedArray[i64, 4]
+    label: str
+
+
+record Board:
+    cells: FixedArray[i64, 3]
+
+
+func label(index: i64) -> str:
+    return "w" + str(index)
+
+
+func churn(rounds: i64) -> i64:
+    mut total = 0
+    for round in range(rounds):
+        mut words = [label(round), label(round + 1)]
+        total += len(words[0]) + len(words[1])
+    return total
+
+
+func last[T: copy + storable, const N: u64](values: [N]T) -> T:
+    return values[-1]
+
+
+func pair(left: i64, right: i64) -> tuple[i64, i64]:
+    return left, right
+
+
+# spec-case: PY-ARRAY-NEGATIVE-1
+public func test_a_negative_index_reads_from_the_end() -> bool:
+    mut values: FixedArray[i64, 4] = FixedArray[int, 4]([10, 20, 30, 40])
+    mut back = -3
+    return values[-1] == 40 and values[-4] == 10 and values[back] == 20 and values[back + 1] == 30
+
+
+# spec-case: PY-ARRAY-NEGATIVE-1
+public func test_a_negative_index_writes_from_the_end() -> bool:
+    mut values: FixedArray[i64, 4] = FixedArray[int, 4]([0, 0, 0, 0])
+    mut before = values
+    values[-1] = 4
+    mut back = -4
+    values[back] = 1
+    values[-2] += 3
+    values[back + 1] -= 2
+    return values[0] == 1 and values[1] == -2 and values[2] == 3 and values[3] == 4 and before[3] == 0
+
+
+# spec-case: PY-ARRAY-NEGATIVE-1
+public func test_replace_counts_a_negative_index_from_the_end() -> bool:
+    mut values: FixedArray[i64, 3] = FixedArray[int, 3]([1, 2, 3])
+    mut back = -3
+    mut changed = replace(replace(values, -1, 9), back, 7)
+    return changed[0] == 7 and changed[2] == 9 and values[0] == 1 and values[2] == 3
+
+
+# spec-case: PY-ARRAY-NEGATIVE-1
+public func test_nested_negative_indices_reach_one_cell() -> bool:
+    mut grid: FixedArray[FixedArray[i64, 3], 2] = FixedArray[FixedArray[int, 3], 2]([FixedArray[int, 3]([1, 2, 3]), FixedArray[int, 3]([4, 5, 6])])
+    mut row = -2
+    grid[-1][-1] = 60
+    grid[row][-3] *= 10
+    return grid[1][2] == 60 and grid[0][0] == 10 and grid[0][2] == 3 and grid[-1][-2] == 5
+
+
+# spec-case: PY-ARRAY-NEGATIVE-1
+public func test_a_field_of_a_negative_element_is_written() -> bool:
+    mut points: FixedArray[Point, 3] = FixedArray[Point, 3]([Point(x=1, y=1), Point(x=2, y=2), Point(x=3, y=3)])
+    mut back = -2
+    points[-1].x = 30
+    points[back].y += 20
+    return points[2].x == 30 and points[1].y == 22 and points[0].x == 1 and points[-3].y == 1
+
+
+# spec: PY-ARRAY-WRITE-2
+public func test_augmented_assignment_to_a_field_of_an_element_keeps_its_operator() -> bool:
+    mut points: FixedArray[Point, 2] = FixedArray[Point, 2]([Point(x=1, y=2), Point(x=3, y=4)])
+    points[1].x += 10
+    points[0].y *= 5
+    points[1].y -= 1
+    return points[1].x == 13 and points[0].y == 10 and points[1].y == 3 and points[0].x == 1
+
+
+public func test_a_record_field_array_takes_a_negative_index() -> bool:
+    mut grid = Grid(cells=FixedArray[int, 4]([1, 2, 3, 4]), label="g")
+    mut copy = grid
+    grid.cells[-1] = 40
+    grid.cells[-4] += 10
+    return grid.cells[3] == 40 and grid.cells[0] == 11 and copy.cells[3] == 4 and copy.cells[0] == 1
+
+
+public func test_a_record_field_array_is_independent_of_an_earlier_copy() -> bool:
+    mut board = Board(cells=FixedArray[int, 3]([0, 0, 0]))
+    mut alias = board
+    board.cells[-1] = 7
+    board.cells[0] += board.cells[-1] * 2
+    board.cells[-2] = 5
+    return alias.cells[2] == 0 and alias.cells[0] == 0 and board.cells[2] == 7 and board.cells[0] == 14 and board.cells[1] == 5
+
+
+# spec-case: PY-ARRAY-NEGATIVE-1
+public func test_an_array_inside_a_list_slot_takes_a_negative_index() -> bool:
+    mut rows: FixedArray[i64, 3][] = [FixedArray[int, 3]([1, 2, 3]), FixedArray[int, 3]([4, 5, 6])]
+    rows[-1][-1] = 60
+    rows[0][-3] += 100
+    return rows[1][2] == 60 and rows[0][0] == 101 and rows[-2][-2] == 2
+
+
+# spec-case: PY-ARRAY-NEGATIVE-1
+public func test_an_enum_table_is_still_indexed_by_its_key() -> bool:
+    mut table: [Status] i64 = {Status.ok: 1, Status.missing: 2, Status.failed: 3}
+    table[Status.failed] += 10
+    return table[Status.failed] == 13 and table[Status.ok] == 1
+
+
+# spec-case: PY-ARRAY-NEGATIVE-1
+public func test_an_enumerate_position_the_body_assigns_counts_from_the_end() -> bool:
+    mut values: FixedArray[i64, 4] = FixedArray[int, 4]([1, 2, 3, 4])
+    mut total = 0
+    for iteration_position, value in enumerate(values):
+        mut position = iteration_position
+        # A mutable iteration copy can count from the end (PY-FOR-REBIND-1).
+        position = position - 4
+        total += values[position] * value
+    return total == 1 + 4 + 9 + 16
+
+
+# spec-case: PY-ARRAY-NEGATIVE-1
+public func test_range_and_modular_indices_read_every_element() -> bool:
+    mut values: FixedArray[i64, 5] = FixedArray[int, 5]([1, 2, 3, 4, 5])
+    mut total = 0
+    for index in range(5):
+        total += values[index] * values[(index + 1) % 5] + values[-index - 1]
+    return total == 2 + 6 + 12 + 20 + 5 + 15
+
+
+# spec-case: PY-ARRAY-NEGATIVE-1
+public func test_a_generic_body_counts_from_the_end_of_its_length() -> bool:
+    mut words: FixedArray[str, 3] = FixedArray[str, 3](["a", "b", "c"])
+    mut numbers: FixedArray[i64, 2] = FixedArray[int, 2]([5, 6])
+    return last(words) == "c" and last(numbers) == 6
+
+
+# spec-case: PY-ARRAY-NEGATIVE-1
+public func test_traced_elements_written_from_the_end_survive_collection() -> bool:
+    mut words: FixedArray[str, 4] = FixedArray[str, 4](["", "", "", ""])
+    for index in range(4):
+        words[-index - 1] = label(index)
+        _ = churn(4)
+    return words[0] == "w3" and words[3] == "w0" and words[-2] == "w1"
+
+
+# spec: PY-ARRAY-ITER-2
+public func test_a_loop_over_an_array_the_body_never_writes_sees_every_element() -> bool:
+    mut words: FixedArray[str, 3] = FixedArray[str, 3](["a", "b", "c"])
+    mut joined = ""
+    for word in words:
+        joined = joined + word + label(len(joined))
+        _ = churn(2)
+    return joined == "aw0bw3cw6"
+
+
+# spec-case: PY-ARRAY-ITER-2
+public func test_a_loop_sees_array_writes_from_the_end() -> bool:
+    mut values: FixedArray[i64, 3] = FixedArray[int, 3]([1, 2, 3])
+    mut seen = 0
+    for value in values:
+        values[-1] = 100
+        seen = seen * 10 + value
+    return seen == 220 and values[2] == 100
+
+
+# spec: PY-DESTRUCTURE-PLACE-1
+public func test_a_destructuring_assignment_swaps_array_elements() -> bool:
+    mut values: FixedArray[i64, 4] = FixedArray[int, 4]([1, 2, 3, 4])
+    values[0], values[-1] = values[-1], values[0]
+    mut left = 1
+    mut right = -2
+    values[left], values[right] = values[right], values[left]
+    return values[0] == 4 and values[1] == 3 and values[2] == 2 and values[3] == 1
+
+
+# spec-case: PY-DESTRUCTURE-PLACE-1
+public func test_a_destructuring_assignment_writes_list_dictionary_and_field_targets() -> bool:
+    mut items = [1, 2, 3]
+    items[0], items[-1] = items[-1], items[0]
+    mut counts = {"a": 1, "b": 2}
+    counts["a"], counts["b"] = counts["b"], counts["a"]
+    mut point = Point(x=1, y=2)
+    point.x, point.y = point.y, point.x
+    mut points: FixedArray[Point, 2] = FixedArray[Point, 2]([Point(x=0, y=0), Point(x=0, y=0)])
+    points[0].x, points[-1].y = pair(5, 6)
+    mut first = 0
+    first, items[1] = 7, 70
+    return items[0] == 3 and items[2] == 1 and items[1] == 70 and counts["a"] == 2 and counts["b"] == 1 and point.x == 2 and point.y == 1 and points[0].x == 5 and points[1].y == 6 and first == 7
+
+
+# spec-case: PY-DESTRUCTURE-PLACE-1
+public func test_a_destructuring_assignment_evaluates_the_whole_value_first() -> bool:
+    mut values: FixedArray[i64, 3] = FixedArray[int, 3]([1, 2, 3])
+    mut index = 0
+    index, values[index] = 2, 9
+    return index == 2 and values[2] == 9 and values[0] == 1
+
+
+# spec-case: PY-DESTRUCTURE-PLACE-1
+public func test_traced_list_slots_swap_while_collections_run() -> bool:
+    mut words = [label(1), label(2), label(3)]
+    for round in range(3):
+        words[0], words[-1] = words[-1], words[0]
+        _ = churn(3)
+    return words[0] == "w3" and words[2] == "w1" and words[1] == "w2"
+
+
+func main() -> int:
+    return 0

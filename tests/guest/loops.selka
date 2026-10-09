@@ -1,0 +1,51 @@
+public func test_range_loops() -> bool effects():
+    mut total = 0
+    for index in range(5):
+        total += index
+    if total != 10:
+        return False
+    mut ranged = 0
+    for index in range(2, 6):
+        ranged += index
+    if ranged != 14:
+        return False
+    mut countdown = 0
+    for index in range(3):
+        if index == 0:
+            continue
+        countdown += 1
+    return countdown == 2
+
+
+public func test_enumerate_and_control() -> bool effects(managed_allocation):
+    mut values = [10, 20, 30, 40]
+    mut positions = 0
+    mut total = 0
+    for index, value in enumerate(values):
+        if value == 30:
+            break
+        positions += 1
+        total += index
+    return positions == 2 and total == 1
+
+
+public func test_comprehension_filter() -> bool effects(managed_allocation):
+    mut source = [1, 2, 3, 4, 5, 6]
+    mut kept = [for value in source if value % 2 == 0 yield value * 2]
+    if len(kept) != 3 or kept[0] != 4 or kept[2] != 12:
+        return False
+    mut all_values = [for value in source yield value + 1]
+    return len(all_values) == 6 and all_values[5] == 7
+
+
+public func test_while_and_locals() -> bool effects():
+    mut index = 0
+    mut total = 0
+    while index < 5:
+        total += index * index
+        index += 1
+    return total == 30 and index == 5
+
+
+func main() -> int:
+    return 0

@@ -1,0 +1,300 @@
+# A loop whose body dispatches on a loop-invariant integer: the same answer for
+# every literal the dispatch names and for the arm that names none, for
+# comparison joins that short-circuit, for a dispatch value the body itself
+# changes, and for seeds and runs at the integer limits. These are the executed
+# programs of the retired QBE loop unswitching tests
+# (`qbe_loop_unswitch_test.zig`, `QBE-LOOP-UNSWITCH-1`), which also read the
+# emitted IL, and ran each program under two protocols. The traps those tests
+# also pinned (R_LIST_BOUNDS, R_OVERFLOW and R_DIVISION_BY_ZERO at the failing
+# iteration, with the output printed before it) cannot be expected from a guest
+# test, so each trapping input is replaced by the nearest input that does not
+# trap, and the value the loop reaches exactly at the limit.
+func dispatch(kind: int, count: int, seed: int, mut raw: int[]) -> int:
+    mut total = seed
+    for i in range(count):
+        if kind == 0:
+            total += raw[i]
+        elif kind == 1:
+            raw.append(i)
+            total += i
+        elif kind == 2:
+            total += 1 // (i - 2)
+        else:
+            total -= raw[i]
+    return total
+
+
+func changed(kind: int, count: int) -> int:
+    mut selector = kind
+    mut total = 0
+    for i in range(count):
+        if selector == 0:
+            total += i
+        else:
+            total -= i
+        selector += 1
+    return total
+
+
+func folded(kind: int, count: int, seed: int) -> int:
+    mut raw = [1, 2, 3]
+    return dispatch(kind, count, seed, mut raw)
+
+
+func appended_length(kind: int, count: int) -> int:
+    mut raw = [1, 2, 3]
+    mut total = dispatch(kind, count, 0, mut raw)
+    return len(raw) * 1000 + total
+
+
+public func test_a_three_element_fold_reaches_its_sum_and_the_other_arms_reach_theirs() -> bool:
+    assert folded(0, 3, 0) == 6
+    assert folded(1, 3, 0) == 3
+    assert folded(3, 3, 0) == -6
+    assert folded(99, 3, 0) == -6
+    assert folded(-1, 3, 0) == -6
+    assert folded(2, 2, 0) == -2
+    return True
+
+
+public func test_a_zero_trip_loop_returns_its_seed_for_every_literal_and_the_default() -> bool:
+    assert folded(-1, 0, 13) == 13
+    assert folded(0, 0, 13) == 13
+    assert folded(1, 0, 13) == 13
+    assert folded(2, 0, 13) == 13
+    assert folded(3, 0, 13) == 13
+    assert folded(99, 0, 13) == 13
+    return True
+
+
+public func test_an_arm_that_appends_leaves_the_list_longer_by_the_trip_count() -> bool:
+    assert appended_length(1, 3) == 6003
+    assert appended_length(0, 3) == 3006
+    assert appended_length(2, 2) == 3000 - 2
+    return True
+
+
+public func test_each_arm_reaches_the_integer_limit_exactly_without_passing_it() -> bool:
+    assert folded(1, 2, 9223372036854775806) == 9223372036854775807
+    assert folded(0, 3, 9223372036854775801) == 9223372036854775807
+    assert folded(3, 3, -9223372036854775807 - 1 + 6) == -9223372036854775807 - 1
+    return True
+
+
+public func test_a_dispatch_value_the_body_changes_is_read_afresh_each_trip() -> bool:
+    assert changed(0, 4) == -6
+    assert changed(-2, 5) == -6
+    assert changed(1, 4) == -6
+    assert changed(0, 0) == 0
+    return True
+
+
+func join_0(kind: int, count: int) -> int:
+    mut total = 0
+    for i in range(count):
+        if kind == 2:
+            total += 1
+        if kind == 2 or kind == 3:
+            total += 3
+        else:
+            total += 7
+    return total
+
+
+func join_1(kind: int, count: int) -> int:
+    mut total = 0
+    for i in range(count):
+        if kind == 2:
+            total += 1
+        if kind == 2 and kind != 3:
+            total += 3
+        else:
+            total += 7
+    return total
+
+
+func join_2(kind: int, count: int, seed: int) -> int:
+    mut total = 0
+    for i in range(count):
+        if kind == 2:
+            total += 1
+        if (kind == 2 or kind == 3) and i < seed:
+            total += 3
+        else:
+            total += 7
+    return total
+
+
+func join_3(kind: int, count: int, seed: int) -> int:
+    mut total = 0
+    for i in range(count):
+        if kind == 2:
+            total += 1
+        if i < seed and (kind == 2 or kind == 3):
+            total += 3
+        else:
+            total += 7
+    return total
+
+
+func join_4(kind: int, count: int, seed: int) -> int:
+    mut total = 0
+    for i in range(count):
+        if kind == 2:
+            total += 1
+        if (if (i < seed) then (kind == 2) else (kind == 3)):
+            total += 3
+        else:
+            total += 7
+    return total
+
+
+func join_5(kind: int, count: int, seed: int) -> int:
+    mut total = 0
+    for i in range(count):
+        if kind == 2:
+            total += 1
+        if kind == 2 or 1 // (seed - i) > 0:
+            total += 3
+        else:
+            total += 7
+    return total
+
+
+func join_6(kind: int, count: int, seed: int) -> int:
+    mut total = 0
+    for i in range(count):
+        if kind == 2:
+            total += 1
+        if i < seed or kind == 2:
+            total += 3
+        else:
+            total += 7
+    return total
+
+
+func join_7(kind: int, count: int, seed: int) -> int:
+    mut total = 0
+    for i in range(count):
+        if kind == 2:
+            total += 1
+        if (if (i < 1) then (seed) else (kind)) == 2:
+            total += 3
+        else:
+            total += 7
+    return total
+
+
+public func test_comparison_joins_keep_short_circuit_and_conditional_values() -> bool:
+    assert join_0(2, 3) == 12
+    assert join_0(3, 3) == 9
+    assert join_0(99, 3) == 21
+    assert join_0(2, 0) == 0
+    assert join_1(2, 3) == 12
+    assert join_1(3, 3) == 21
+    assert join_1(99, 3) == 21
+    assert join_1(2, 0) == 0
+    assert join_2(2, 3, 1) == 20
+    assert join_2(3, 3, 1) == 17
+    assert join_2(99, 3, 1) == 21
+    assert join_2(2, 0, 0) == 0
+    assert join_2(2, 3, 0) == 24
+    assert join_3(2, 3, 1) == 20
+    assert join_3(3, 3, 1) == 17
+    assert join_3(99, 3, 1) == 21
+    assert join_3(2, 0, 0) == 0
+    assert join_3(2, 3, 0) == 24
+    assert join_4(2, 3, 1) == 20
+    assert join_4(3, 3, 1) == 13
+    assert join_4(99, 3, 1) == 21
+    assert join_4(2, 0, 0) == 0
+    assert join_4(2, 3, 0) == 24
+    assert join_5(2, 3, 1) == 12
+    assert join_5(2, 0, 0) == 0
+    assert join_5(2, 3, 0) == 12
+    assert join_6(2, 3, 1) == 12
+    assert join_6(3, 3, 1) == 17
+    assert join_6(99, 3, 1) == 17
+    assert join_6(2, 0, 0) == 0
+    assert join_6(2, 3, 0) == 12
+    assert join_7(2, 3, 1) == 16
+    assert join_7(3, 3, 1) == 21
+    assert join_7(99, 3, 1) == 21
+    assert join_7(2, 0, 0) == 0
+    assert join_7(2, 3, 0) == 16
+    return True
+
+
+func wide(kind: int, count: int) -> int:
+    mut total = 0
+    for i in range(count):
+        if kind == 0:
+            total += i + 0
+        elif kind == 1:
+            total += i + 1
+        elif kind == 2:
+            total += i + 2
+        elif kind == 3:
+            total += i + 3
+        elif kind == 4:
+            total += i + 4
+        elif kind == 5:
+            total += i + 5
+        elif kind == 6:
+            total += i + 6
+        elif kind == 7:
+            total += i + 7
+        elif kind == 8:
+            total += i + 8
+        elif kind == 9:
+            total += i + 9
+        elif kind == 10:
+            total += i + 10
+        elif kind == 11:
+            total += i + 11
+        elif kind == 12:
+            total += i + 12
+        elif kind == 13:
+            total += i + 13
+        elif kind == 14:
+            total += i + 14
+        elif kind == 15:
+            total += i + 15
+        elif kind == 16:
+            total += i + 16
+        else:
+            total -= i
+    return total
+
+
+public func test_a_dispatch_with_seventeen_literals_keeps_every_arm() -> bool:
+    assert wide(1, 32) == 528
+    assert wide(16, 3) == 51
+    assert wide(0, 4) == 6
+    assert wide(17, 4) == -6
+    assert wide(-1, 4) == -6
+    return True
+
+
+func gc_dispatch(kind: int, count: int, seed: int, mut raw: int[]) -> int:
+    mut total = seed
+    for i in range(count):
+        raw.append(i)
+        if kind == 0:
+            total += raw[i]
+        else:
+            total -= raw[i]
+    return total
+
+
+func gc_folded(kind: int, count: int, seed: int) -> int:
+    mut raw = [1, 2, 3]
+    mut total = gc_dispatch(kind, count, seed, mut raw)
+    return total * 100 + len(raw)
+
+
+public func test_a_dispatch_that_appends_before_each_read_keeps_both_arms() -> bool:
+    assert gc_folded(0, 3, 0) == 606
+    assert gc_folded(99, 3, 0) == -594
+    assert gc_folded(0, 0, 13) == 1303
+    return True

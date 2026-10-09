@@ -1,0 +1,58 @@
+import sort
+
+# An unannotated function passed as a value takes the ceiling of the callback
+# slot it fills — a direct call's parameter, a generic call's parameter once its
+# type arguments are inferred, or a sort key — and its inferred body must fit
+# that ceiling. A body that allocates, prints or reaches any other effect the
+# slot forbids is rejected at the function value (see `src/python_core_test.zig`).
+record Score:
+    name: str
+    points: int
+
+
+func negate(value: int) -> int:
+    return 0 - value
+
+
+func points_of(item: Score) -> int:
+    return item.points
+
+
+func apply_twice[T: copy + storable](f: func(T) -> T effects(), value: T) -> T:
+    return f(f(value))
+
+
+func pick[T: copy + storable](items: T[], key: func(T) -> int effects()) -> int:
+    mut best = 0
+    for item in items:
+        if key(item) > best:
+            best = key(item)
+    return best
+
+
+func count_to(limit: int) -> int:
+    mut items: int[] = []
+    for index in range(limit):
+        items.append(index)
+    return len(items)
+
+
+func run(f: func(int) -> int, value: int) -> int:
+    return f(value)
+
+
+# spec: CALLBACK-SLOT-1
+public func test_an_unannotated_function_fills_a_generic_sort_by_key_slot() -> bool:
+    mut ordered = sort.sort_by_key([3, 1, 2], negate)
+    return ordered[0] == 3 and ordered[2] == 1
+
+
+# spec-case: CALLBACK-SLOT-1
+public func test_an_unannotated_function_fills_a_user_generic_callback_slot() -> bool:
+    mut scores = [Score(name="a", points=3), Score(name="b", points=8)]
+    return apply_twice(negate, 5) == 5 and pick(scores, points_of) == 8
+
+
+# spec-case: CALLBACK-SLOT-1
+public func test_an_allocating_unannotated_function_still_fills_an_unbounded_slot() -> bool:
+    return run(count_to, 4) == 4

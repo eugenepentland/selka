@@ -1,0 +1,31 @@
+record Box[T]:
+    value: T
+
+
+enum Slot[T]:
+    none
+    some(value: T)
+
+
+func pack[T](x: T) -> Box[T]:
+    return Box[T](value=x)
+
+
+func extract[T](box: Box[T]) -> T:
+    return box.value
+
+
+func slot[T](x: T) -> Slot[T]:
+    return Slot.some(value=x)
+
+
+func choose[T](x: Slot[T], fallback: T) -> T:
+    match x:
+        case Slot.none:
+            return fallback
+        case Slot.some(value=value):
+            return value
+
+
+func main() -> int:
+    return extract[int](pack[int](choose[int](slot[int](7), 0)))

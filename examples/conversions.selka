@@ -1,0 +1,22 @@
+record Source:
+    x: int
+    y: int
+    note: bool
+
+
+record View:
+    distance: int
+
+
+func combine(x: int, y: int) -> int:
+    return x + y
+
+
+conversion func to_view(source: Source) -> View:
+    _ = source.note
+    return View(distance=combine(source.x, source.y))
+
+
+func main() -> int:
+    mut source = Source(x=4, y=7, note=True)
+    return to_view(source).distance

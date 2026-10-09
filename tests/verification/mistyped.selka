@@ -1,0 +1,4 @@
+func main() -> i64:
+    mut value = 7
+    value = True
+    return value

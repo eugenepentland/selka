@@ -1,0 +1,65 @@
+record Item:
+    text: bytes
+    number: int
+
+
+record Big:
+    text: bytes
+    padding: FixedArray[int, 600]
+    number: int
+
+
+func pick(items: Item[], index: int) -> Item:
+    return items[index]
+
+
+func choose(index: int, first: Item[], second: Item[]) -> Item:
+    if index == 0:
+        return first[0]
+    return first[index]
+
+
+func scalar(items: Item[], other: Item[], times: int) -> int:
+    mut saved = pick(items, 0)
+    mut i = 0
+    mut total = 0
+    while i < times:
+        mut current = choose(i % 2, other, items)
+        total += current.number + saved.number + int(saved.text[0])
+        i += 1
+    return total
+
+
+func big_pick(items: Big[], index: int) -> Big:
+    return items[index]
+
+
+func big_scalar(items: Big[], times: int) -> int:
+    mut saved = big_pick(items, 0)
+    mut total = 0
+    mut i = 0
+    while i < times:
+        mut current = big_pick(items, i % 2)
+        total += saved.number + current.number + saved.padding[599] + int(saved.text[0])
+        i += 1
+    return total
+
+
+public func test_saved_small_results_survive_calls_and_loop_reuse() -> bool:
+    mut items = [Item(text=b"a", number=3), Item(text=b"b", number=7)]
+    mut other = [Item(text=b"c", number=11), Item(text=b"d", number=13)]
+    mut saved = items
+    return scalar(items, other, 4) == 448 and saved[0].number == 3
+
+
+public func test_large_indirect_results_keep_saved_bits_after_calls() -> bool:
+    mut padding: FixedArray[int, 600] = FixedArray[int, 600]([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    padding[599] = 5
+    mut items = [Big(text=b"a", padding=padding, number=3), Big(text=b"b", padding=padding, number=7)]
+    return big_scalar(items, 4) == 440
+
+
+func main(out: Stream) -> int:
+    out.print(test_saved_small_results_survive_calls_and_loop_reuse())
+    out.print(test_large_indirect_results_keep_saved_bits_after_calls())
+    return 0

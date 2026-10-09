@@ -1,0 +1,6 @@
+# oracle: cpython
+def main() -> int:
+    names = ["a", "b"]
+    if "b" in names and "x" not in names and "b" in "abc":
+        return 42
+    return 0

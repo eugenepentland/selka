@@ -1,0 +1,25 @@
+# Runtime stress for RECURSIVE-VALUES-3. A guest test's step budget rejects this
+# much construction, so build and run the native binary directly on each backend.
+record Node:
+    value: int
+    left: Node?
+
+
+func chain(length: int) -> Node?:
+    mut head: Node? = None
+    for index in range(length):
+        head = Some(Node(value=index, left=head))
+    return head
+
+
+func main() -> int:
+    mut first = chain(1000000)
+    mut second = chain(1000000)
+    if first != second:
+        return 1
+    mut keys: set[Node?] = set()
+    keys.add(first)
+    keys.add(second)
+    if len(keys) != 1:
+        return 2
+    return 0

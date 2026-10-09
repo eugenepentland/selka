@@ -1,0 +1,97 @@
+# RC-DICTIONARY-LOOP-1
+func fresh(times: int) -> dict[str, int]:
+    mut keys = ["al" + "pha", "beta"]
+    mut counts: dict[str, int] = {}
+    for i in range(times):
+        mut key = keys[i % 2]
+        counts[key] = counts.get(key, 0) + 1
+    assert len(keys) == 2
+    return counts
+
+
+func test_fresh_root_and_zero_iterations() -> bool:
+    mut counts = fresh(80)
+    assert counts["alpha"] == 40
+    assert counts["beta"] == 40
+    assert len(fresh(0)) == 0
+    return True
+
+
+func shared_empty(times: int) -> int:
+    mut keys = ["key"]
+    mut counts: dict[str, int] = {}
+    mut saved = counts
+    for i in range(times):
+        mut key = keys[0]
+        counts[key] = counts.get(key, 0) + 1
+    assert len(saved) == 0
+    return counts.get("key", 0)
+
+
+func test_shared_empty_root_refuses_even_zero_iterations() -> bool:
+    return shared_empty(0) == 0 and shared_empty(4) == 4
+
+
+func during(times: int) -> int:
+    mut keys = ["key"]
+    mut counts: dict[str, int] = {}
+    mut saved: dict[str, int] = {}
+    for i in range(times):
+        saved = counts
+        mut key = keys[0]
+        counts[key] = counts.get(key, 0) + 1
+    return saved.get("key", 0)
+
+
+func test_publication_during_loop_refuses() -> bool:
+    return during(3) == 2
+
+
+func change(mut counts: dict[str, int]) -> int:
+    counts["key"] = 10
+    return 7
+
+
+func calls(times: int) -> int:
+    mut keys = ["key"]
+    mut counts: dict[str, int] = {}
+    for i in range(times):
+        mut key = keys[0]
+        mut mutation_result_59 = change(mut counts)
+        counts[key] = mutation_result_59
+    return counts["key"]
+
+
+func test_callback_and_reference_keep_fallback() -> bool:
+    return calls(2) == 7
+
+
+func rebound(times: int) -> int:
+    mut keys = ["key"]
+    mut counts: dict[str, int] = {}
+    for i in range(times):
+        counts = {"key": 20}
+        mut key = keys[0]
+        counts[key] = counts.get(key, 0) + 1
+    return counts["key"]
+
+
+func test_rebound_root_keeps_fallback() -> bool:
+    return rebound(2) == 21
+
+
+func enclosing() -> bool:
+    mut keys = ["key"]
+    mut counts: dict[str, int] = {}
+    mut saved: dict[str, int] = {}
+    for outer in range(3):
+        for i in range(2):
+            mut key = keys[0]
+            counts[key] = counts.get(key, 0) + 1
+        saved = counts
+    counts["key"] = 9
+    return saved["key"] == 6
+
+
+func test_enclosing_loop_publication_cannot_feed_fresh_entry() -> bool:
+    return enclosing()

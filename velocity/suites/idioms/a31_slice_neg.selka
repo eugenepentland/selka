@@ -1,0 +1,5 @@
+# oracle: cpython
+def main() -> int:
+    xs = [1, 2, 3, 4]
+    r = xs[::-1]
+    return r[0] * 10 + xs[-1] + xs[1:][0] * 0

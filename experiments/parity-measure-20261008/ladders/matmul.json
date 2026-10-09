@@ -1,0 +1,326 @@
+{
+ "rung0[-fno-strict-aliasing]": {
+  "instructions": 1384148008,
+  "cycles": 643289832,
+  "output_ok": true,
+  "samples": [
+   {
+    "instructions": 1384148004,
+    "cycles": 643570326
+   },
+   {
+    "instructions": 1384148006,
+    "cycles": 643836645
+   },
+   {
+    "instructions": 1384148009,
+    "cycles": 643289832
+   },
+   {
+    "instructions": 1384148010,
+    "cycles": 642515880
+   },
+   {
+    "instructions": 1384148008,
+    "cycles": 642330065
+   }
+  ]
+ },
+ "rung1[-fno-strict-aliasing]": {
+  "instructions": 821647920,
+  "cycles": 280777523,
+  "output_ok": true,
+  "samples": [
+   {
+    "instructions": 821647921,
+    "cycles": 276990343
+   },
+   {
+    "instructions": 821647920,
+    "cycles": 282029907
+   },
+   {
+    "instructions": 821647923,
+    "cycles": 281343856
+   },
+   {
+    "instructions": 821647918,
+    "cycles": 280777523
+   },
+   {
+    "instructions": 821647920,
+    "cycles": 279588831
+   }
+  ]
+ },
+ "rung2[-fno-strict-aliasing]": {
+  "instructions": 139647888,
+  "cycles": 73241362,
+  "output_ok": true,
+  "samples": [
+   {
+    "instructions": 139647893,
+    "cycles": 74585846
+   },
+   {
+    "instructions": 139647890,
+    "cycles": 73241362
+   },
+   {
+    "instructions": 139647888,
+    "cycles": 73078612
+   },
+   {
+    "instructions": 139647886,
+    "cycles": 72022120
+   },
+   {
+    "instructions": 139647887,
+    "cycles": 74286541
+   }
+  ]
+ },
+ "rung3[-fno-strict-aliasing]": {
+  "instructions": 129397877,
+  "cycles": 72235861,
+  "output_ok": true,
+  "samples": [
+   {
+    "instructions": 129397879,
+    "cycles": 72876792
+   },
+   {
+    "instructions": 129397877,
+    "cycles": 71707247
+   },
+   {
+    "instructions": 129397876,
+    "cycles": 73190670
+   },
+   {
+    "instructions": 129397873,
+    "cycles": 72191945
+   },
+   {
+    "instructions": 129397877,
+    "cycles": 72235861
+   }
+  ]
+ },
+ "rung4[-fno-strict-aliasing]": {
+  "instructions": 129397877,
+  "cycles": 73748222,
+  "output_ok": true,
+  "samples": [
+   {
+    "instructions": 129397877,
+    "cycles": 73748222
+   },
+   {
+    "instructions": 129397877,
+    "cycles": 74117834
+   },
+   {
+    "instructions": 129397879,
+    "cycles": 74702506
+   },
+   {
+    "instructions": 129397875,
+    "cycles": 70777370
+   },
+   {
+    "instructions": 129397874,
+    "cycles": 72355394
+   }
+  ]
+ },
+ "rung5": {
+  "instructions": 1009148890,
+  "cycles": 207077288,
+  "output_ok": true,
+  "samples": [
+   {
+    "instructions": 1009148888,
+    "cycles": 206063608
+   },
+   {
+    "instructions": 1009148888,
+    "cycles": 207971882
+   },
+   {
+    "instructions": 1009148902,
+    "cycles": 207077288
+   },
+   {
+    "instructions": 1009148890,
+    "cycles": 206955133
+   },
+   {
+    "instructions": 1009148895,
+    "cycles": 208011774
+   }
+  ]
+ },
+ "rung6": {
+  "instructions": 128398850,
+  "cycles": 72680397,
+  "output_ok": true,
+  "samples": [
+   {
+    "instructions": 128398850,
+    "cycles": 73803805
+   },
+   {
+    "instructions": 128398851,
+    "cycles": 72073515
+   },
+   {
+    "instructions": 128398854,
+    "cycles": 72680397
+   },
+   {
+    "instructions": 128398850,
+    "cycles": 70765151
+   },
+   {
+    "instructions": 128398849,
+    "cycles": 72796963
+   }
+  ]
+ },
+ "mylang": {
+  "instructions": 1312936170,
+  "cycles": 645202177,
+  "output_ok": true,
+  "samples": [
+   {
+    "instructions": 1312936170,
+    "cycles": 645372418
+   },
+   {
+    "instructions": 1312936170,
+    "cycles": 645024552
+   },
+   {
+    "instructions": 1312936209,
+    "cycles": 645202177
+   },
+   {
+    "instructions": 1312936168,
+    "cycles": 646459327
+   },
+   {
+    "instructions": 1312936178,
+    "cycles": 644792518
+   }
+  ]
+ },
+ "zig-safe": {
+  "instructions": 1010563683,
+  "cycles": 230411727,
+  "output_ok": true,
+  "samples": [
+   {
+    "instructions": 1010563683,
+    "cycles": 230363425
+   },
+   {
+    "instructions": 1010563677,
+    "cycles": 230411727
+   },
+   {
+    "instructions": 1010563686,
+    "cycles": 230477581
+   },
+   {
+    "instructions": 1010563680,
+    "cycles": 229895082
+   },
+   {
+    "instructions": 1010563684,
+    "cycles": 230582693
+   }
+  ]
+ },
+ "zig-fast": {
+  "instructions": 496660106,
+  "cycles": 160275020,
+  "output_ok": true,
+  "samples": [
+   {
+    "instructions": 496660107,
+    "cycles": 157091755
+   },
+   {
+    "instructions": 496660105,
+    "cycles": 165961203
+   },
+   {
+    "instructions": 496660107,
+    "cycles": 160966804
+   },
+   {
+    "instructions": 496660106,
+    "cycles": 157463095
+   },
+   {
+    "instructions": 496660104,
+    "cycles": 160275020
+   }
+  ]
+ },
+ "rust-checked": {
+  "instructions": 2386668452,
+  "cycles": 435779050,
+  "output_ok": true,
+  "samples": [
+   {
+    "instructions": 2386669067,
+    "cycles": 435779050
+   },
+   {
+    "instructions": 2386668154,
+    "cycles": 436998736
+   },
+   {
+    "instructions": 2386668682,
+    "cycles": 435422424
+   },
+   {
+    "instructions": 2386667912,
+    "cycles": 436591040
+   },
+   {
+    "instructions": 2386668452,
+    "cycles": 435095904
+   }
+  ]
+ },
+ "rust": {
+  "instructions": 1760663545,
+  "cycles": 319546372,
+  "output_ok": true,
+  "samples": [
+   {
+    "instructions": 1760663545,
+    "cycles": 319581922
+   },
+   {
+    "instructions": 1760663329,
+    "cycles": 317301746
+   },
+   {
+    "instructions": 1760664108,
+    "cycles": 318979957
+   },
+   {
+    "instructions": 1760663532,
+    "cycles": 325180789
+   },
+   {
+    "instructions": 1760663771,
+    "cycles": 319546372
+   }
+  ]
+ }
+}

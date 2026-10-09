@@ -1,0 +1,12 @@
+constraint A[P] = copy + op(identity(x: P[]) -> int effects())
+
+
+constraint B[Q] = copy + op(identity(x: Q[]) -> int effects())
+
+
+func use[T: A + B](x: T) -> int:
+    return 0
+
+
+public func program() -> int:
+    return 0

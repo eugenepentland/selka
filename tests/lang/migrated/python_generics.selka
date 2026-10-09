@@ -1,0 +1,15 @@
+import python_generics_case_1 as c1
+import python_generics_case_2 as c2
+
+# spec-case: PY-GENERIC-1
+public func test_explicit_and_inferred_type_arguments_reach_t() -> bool:
+    return c1.program() == 42
+
+
+# spec: PY-GENERIC-1
+public func test_square_type_arguments_select_a_generic_funct() -> bool:
+    return c2.program() == 42
+
+
+func main() -> int:
+    return 0

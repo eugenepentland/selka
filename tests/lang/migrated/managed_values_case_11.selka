@@ -1,0 +1,7 @@
+public func program() -> i64:
+    mut value: str = b"hé🙂"
+    mut suffix: str = b"!"
+    mut all = value + suffix
+    if all[3] == suffix:
+        return len(all)
+    return 0

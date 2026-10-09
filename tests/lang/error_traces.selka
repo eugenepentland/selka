@@ -1,0 +1,92 @@
+# Recording an error return trace (ERROR-TRACE-1) writes only to the trace: every
+# `Err` construction, `?`, conversion and returned result still carries exactly
+# the value it carried before, including past the ring's 32 entries. A test
+# returning `Result[bool, E]` expects `Ok(True)` without a cases file.
+enum AppError:
+    Config(value: str)
+    Usage(value: int)
+
+
+func parse_port(text: str) -> Result[int, str]:
+    if len(text) == 0:
+        return Err("empty port")
+    return Ok(len(text))
+
+
+func read_config(text: str) -> Result[int, str]:
+    mut port = try parse_port(text)
+    return Ok(port + 1)
+
+
+func load(text: str) -> Result[int, AppError]:
+    match read_config(text):
+        case Ok(value):
+            return Ok(value)
+        case Err(error):
+            return Err(AppError.Config(value=error))
+
+
+func descend(depth: int) -> Result[int, int]:
+    if depth == 0:
+        return Err(9)
+    const value = try descend(depth - 1)
+    return Ok(value + 1)
+
+
+func climb(depth: int) -> Result[int, int]:
+    if depth == 0:
+        return Ok(0)
+    const value = try climb(depth - 1)
+    return Ok(value + 1)
+
+
+func pass_on(result: Result[int, int]) -> Result[int, int]:
+    return result
+
+
+func choose(value: int) -> Result[int, int]:
+    return if (value > 10) then (Ok(value)) else (pass_on(Err(value)))
+
+
+func code_of(result: Result[int, int]) -> int:
+    match result:
+        case Ok(value):
+            return value
+        case Err(code):
+            return -code
+
+
+# spec-case: ERROR-TRACE-1
+public func test_converted_error_keeps_its_payload() -> bool:
+    match load(""):
+        case Ok(port):
+            return False
+        case Err(error):
+            match error:
+                case AppError.Config(value=text):
+                    return text == "empty port"
+                case AppError.Usage(value=code):
+                    return False
+
+
+# spec-case: ERROR-TRACE-1
+public func test_returned_results_keep_their_case_and_value() -> bool:
+    return code_of(choose(4)) == -4 and code_of(choose(12)) == 12 and code_of(pass_on(Ok(3))) == 3
+
+
+# spec-case: ERROR-TRACE-4
+public func test_propagation_deeper_than_the_ring_keeps_the_error() -> bool:
+    return code_of(descend(40)) == -9 and code_of(climb(40)) == 40
+
+
+# spec-case: ERROR-TRACE-3
+public func test_a_result_test_passes_on_ok_true() -> Result[bool, str]:
+    mut port = try read_config("ab")
+    return Ok(port == 3)
+
+
+# spec-case: ERROR-TRACE-3
+public func test_a_result_test_takes_a_stand_in_capability(fs: Filesystem) -> Result[bool, str]:
+    _ = try fs.write_text("port.txt", "8080")
+    const text = try fs.read_text("port.txt")
+    return Ok(text == "8080")

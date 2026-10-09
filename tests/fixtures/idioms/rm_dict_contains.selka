@@ -1,0 +1,5 @@
+func main() -> int:
+    mut d = {"a": 1}
+    if d.contains("a"):
+        return 42
+    return 0

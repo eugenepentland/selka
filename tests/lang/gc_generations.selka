@@ -1,0 +1,131 @@
+# The collector is generational: a survivor stays marked and old, and a minor
+# collection follows no reference into the old generation. These cases build a
+# long-lived structure, let collections promote it, and then give it a young
+# object in every way a program can — a field store into an old class body
+# (the store barrier), an append to an old list and a store into an old list
+# slot (rescanned without a barrier) — before churning enough garbage to run
+# more collections. A young object an old one references must survive them.
+# Under `--gc-stress` every allocation collects, and every third collection
+# is full.
+record Node:
+    next: Node?
+    value: int
+
+
+func chain(n: int) -> Node:
+    mut head = Node(next=None, value=0)
+    for i in range(n):
+        head = Node(next=Some(head), value=i + 1)
+    return head
+
+
+func length(node: Node) -> int:
+    mut count = 1
+    mut cursor = node
+    while True:
+        match cursor.next:
+            case Some(next):
+                cursor = next
+                count += 1
+            case None:
+                return count
+
+
+# Allocate about 8 KB of short-lived text per round, so a few hundred rounds
+# run minor collections within a test's instruction budget. Returns the rounds.
+func churn(rounds: int) -> int:
+    mut done = 0
+    for _ in range(rounds):
+        mut text = "abcdefgh"
+        for doubling in range(9):
+            text = text + text
+        done += len(text) // 4096
+    return done
+
+
+func last_value(node: Node) -> int:
+    match node.next:
+        case Some(next):
+            return next.value
+        case None:
+            return -1
+
+
+public func test_a_long_lived_chain_survives_many_minor_collections() -> bool:
+    mut old = chain(200)
+    mut rounds = churn(2500)
+    return length(old) == 201 and old.value == 200 and rounds == 2500
+
+
+public func test_an_old_class_body_keeps_a_young_object_stored_into_it() -> bool:
+    mut old = chain(50)
+    _ = churn(1200)
+    old.next = Some(Node(next=None, value=77))
+    _ = churn(1200)
+    return last_value(old) == 77 and length(old) == 2
+
+
+public func test_a_young_chain_hung_on_an_old_body_survives_intact() -> bool:
+    mut old = chain(10)
+    _ = churn(1200)
+    old.next = Some(chain(30))
+    _ = churn(1200)
+    return length(old) == 32 and last_value(old) == 30
+
+
+public func test_an_old_list_keeps_young_objects_appended_and_stored() -> bool:
+    mut nodes: Node[] = []
+    for i in range(20):
+        nodes.append(Node(next=None, value=i))
+    _ = churn(1200)
+    nodes.append(Node(next=None, value=500))
+    nodes[3] = Node(next=None, value=300)
+    _ = churn(1200)
+    return len(nodes) == 21 and nodes[20].value == 500 and nodes[3].value == 300 and nodes[4].value == 4
+
+
+func filled(count: int) -> Node[]:
+    mut nodes: Node[] = []
+    for i in range(count):
+        nodes.append(Node(next=None, value=i))
+    return nodes
+
+
+func replace_every(mut nodes: Node[], step: int, base: int) effects(mutation, managed_allocation):
+    mut i = 0
+    while i < len(nodes):
+        nodes[i] = Node(next=None, value=base + i)
+        i += step
+
+
+func value_sum(nodes: Node[]) -> int:
+    mut sum = 0
+    for node in nodes:
+        sum += node.value
+    return sum
+
+
+# Element storage of 2000 references (16 KB) is a large-class object that keeps
+# its mark in its header; it is rescanned by every minor collection like any
+# other old storage. (Oversized one-slot storage is covered by the runtime's C
+# tests, which can afford a list that large.)
+public func test_an_old_large_list_keeps_young_objects_stored_into_it() -> bool:
+    mut large = filled(2000)
+    _ = churn(1200)
+    replace_every(mut large, 7, 1000000)
+    large.append(Node(next=None, value=5))
+    _ = churn(1200)
+    # 286 slots were replaced, each by its index plus the base.
+    return value_sum(large) == 2000 * 1999 // 2 + 286 * 1000000 + 5 and len(large) == 2001
+
+
+public func test_inline_constructed_bodies_start_zeroed_and_hold_their_fields() -> bool:
+    mut total = 0
+    for i in range(30000):
+        mut node = Node(next=None, value=i)
+        match node.next:
+            case Some(next):
+                total += next.value + 1000000
+            case None:
+                total += node.value
+    return total == 30000 * 29999 // 2

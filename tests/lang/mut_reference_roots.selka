@@ -1,0 +1,49 @@
+record Packet:
+    items: int[]
+
+
+func bump(mut packet: Packet) -> int:
+    packet.items.append(9)
+    return len(packet.items)
+
+
+func bump_array(mut slots: FixedArray[int[], 1]) -> int:
+    slots[0].append(9)
+    return len(slots[0])
+
+
+public func test_record_reference_after_allocation() -> bool:
+    mut kept = Packet(items=[1, 2, 3])
+    mut scratch = [4, 5]
+    mut result = bump(mut kept)
+    return result == 4 and len(scratch) == 2
+
+
+public func test_array_reference_after_allocation() -> bool:
+    mut kept: FixedArray[int[], 1] = FixedArray[int[], 1]([[1, 2, 3]])
+    mut scratch = [4, 5]
+    mut result = bump_array(mut kept)
+    return result == 4 and len(scratch) == 2
+
+
+func selected(take: bool) -> bool:
+    mut kept = Packet(items=[1, 2, 3])
+    mut scratch = [4, 5]
+    mut result = 0
+    if take:
+        result = bump(mut kept)
+    return result == 4 and len(scratch) == 2
+
+
+public func test_reference_through_forward_branch() -> bool:
+    return selected(True)
+
+
+func through_parameter(mut packet: Packet) -> int:
+    mut scratch = [4, 5]
+    return bump(mut packet) + len(scratch)
+
+
+public func test_forwarded_reference_after_allocation() -> bool:
+    mut kept = Packet(items=[1, 2, 3])
+    return through_parameter(mut kept) == 6

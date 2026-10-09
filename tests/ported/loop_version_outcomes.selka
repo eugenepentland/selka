@@ -1,0 +1,216 @@
+# Loops whose index, counter and accumulator the compiler can prove: every
+# program here keeps the answer the unproven loop gives. These are the
+# value-returning programs of the retired QBE loop-versioning tests
+# (`qbe_loop_facts_test.zig`); the traps those tests also pinned at the failing
+# iteration (R_LIST_BOUNDS, R_OVERFLOW, R_DIVISION_BY_ZERO with their line and
+# detail) cannot be expected from a guest test, so each program below keeps the
+# nearest input that does not trap and the exact edge value it reaches. The
+# loops run at least 16 iterations, so a guarded fast copy is entered.
+func total(xs: int[]) -> int:
+    mut t = 0
+    for i in range(len(xs)):
+        t += xs[i]
+    return t
+
+
+public func test_a_loop_shorter_than_the_minimum_span_and_a_longer_one_sum_the_same() -> bool:
+    return total([1, 2, 3]) == 6 and total([for i in range(20) yield i]) == 190 and total([]) == 0
+
+
+func mark(mut flags: bool[], i: int, n: int) -> Unit:
+    mut j = i * i
+    while j <= n:
+        flags[j] = False
+        j = j + i
+
+
+func sieve_survivors() -> int:
+    mut flags = [for _ in range(30) yield True]
+    mark(mut flags, 2, 29)
+    mut count = 0
+    for flag in flags:
+        if flag:
+            count += 1
+    return count
+
+
+public func test_a_while_loop_with_a_step_held_in_a_local_clears_every_multiple() -> bool:
+    return sieve_survivors() == 17
+
+
+func coefficient(i: int, j: int) -> float:
+    return 1.0 / float((i + j) * (i + j + 1) // 2 + i + 1)
+
+
+func row(v: float[], i: int) -> float:
+    mut s = 0.0
+    for j in range(len(v)):
+        s = s + coefficient(i, j) * v[j]
+    return s
+
+
+public func test_a_product_of_counters_keeps_its_exact_float_sum() -> bool:
+    mut v = [for k in range(20) yield 1.0 + float(k)]
+    return int(row(v, 1) * 1000.0) == 4035
+
+
+func kernel(a: float[][], b: float[][], mut c: float[][], n: int) -> Unit:
+    for i in range(n):
+        for k in range(n):
+            mut aik = a[i][k]
+            for j in range(n):
+                c[i][j] = c[i][j] + aik * b[k][j]
+
+
+public func test_invariant_rows_of_a_matrix_product_keep_every_element() -> bool:
+    mut n = 20
+    mut left = [for i in range(n) yield [for j in range(n) yield 1.0]]
+    mut right = [for i in range(n) yield [for j in range(n) yield 2.0]]
+    mut c = [for i in range(n) yield [for j in range(n) yield 0.0]]
+    kernel(left, right, mut c, n)
+    return int(c[1][2]) == 40 and int(c[19][19]) == 40 and int(c[0][0]) == 40
+
+
+func flags_of(n: int) -> bool[]:
+    return [for _ in range(n) yield True]
+
+
+func squares(n: int) -> int[]:
+    mut values = [for _ in range(n) yield 0]
+    values.clear()
+    for i in range(n):
+        values.append(i * i)
+    return values
+
+
+func grown(n: int) -> int[]:
+    mut values: int[] = []
+    for i in range(n):
+        values.append(i)
+    return values
+
+
+func echoed(n: int) -> int[]:
+    mut values = [for _ in range(n) yield 0]
+    for i in range(n):
+        values.append(len(values))
+    return values
+
+
+func fills() -> int:
+    mut marks = flags_of(40)
+    mut t = 0
+    for square in squares(40):
+        t += square
+    for value in grown(40):
+        t += value
+    for value in echoed(20):
+        t += value
+    return t + len(marks)
+
+
+public func test_presized_and_growing_appends_build_the_same_lists() -> bool:
+    # 40 flags, squares 0..39 (20540), 0..39 (780), and 20..39 (590).
+    return fills() == 40 + 20540 + 780 + 590
+
+
+func reciprocal(n: int) -> int[]:
+    return [for i in range(n) yield 100 // (i - 17)]
+
+
+public func test_a_comprehension_dividing_by_a_counter_floors_toward_minus_infinity() -> bool:
+    mut values = reciprocal(17)
+    return len(values) == 17 and values[0] == -6 and values[16] == -100 and total(values) == -351
+
+
+func shifted(xs: int[]) -> int:
+    mut t = 0
+    for i in range(len(xs) - 1):
+        t += xs[i + 1]
+    return t
+
+
+public func test_an_index_one_past_the_counter_reads_the_next_element_up_to_the_last() -> bool:
+    return shifted([for i in range(20) yield i]) == 190
+
+
+func near_overflow_total(first: int, second: int, third: int) -> int:
+    mut xs = [for _ in range(20) yield 0]
+    xs[17] = first
+    xs[18] = second
+    xs[19] = third
+    return total(xs)
+
+
+public func test_a_sum_that_stops_just_below_the_integer_limit_does_not_overflow() -> bool:
+    return near_overflow_total(9223372036854775000, 500, 0) == 9223372036854775500 and near_overflow_total(9223372036854775000, 500, 307) == 9223372036854775807
+
+
+func ratio(xs: int[]) -> int:
+    mut t = 0
+    for i in range(len(xs)):
+        t += xs[i] // (i - 20)
+    return t
+
+
+public func test_a_quotient_by_a_negative_counter_floors_each_term() -> bool:
+    return ratio([for i in range(20) yield i]) == -60
+
+
+func count_positive(xs: int[], start: int) -> int:
+    mut c = start
+    for x in xs:
+        if x > 0:
+            c += 1
+    return c
+
+
+public func test_an_accumulator_reaches_the_integer_limit_exactly() -> bool:
+    mut ones = [for _ in range(20) yield 1]
+    return count_positive(ones, 9223372036854775787) == 9223372036854775807 and count_positive(ones, 0) == 20
+
+
+func short_row_kernel(mut c: float[][], n: int) -> Unit:
+    for j in range(n):
+        c[1][j] = c[1][j] + 1.0
+
+
+public func test_a_row_shorter_than_the_other_is_updated_up_to_its_own_length() -> bool:
+    mut c = [[for _ in range(20) yield 0.0], [for _ in range(19) yield 0.0]]
+    short_row_kernel(mut c, 19)
+    return len(c[1]) == 19 and c[1][0] == 1.0 and c[1][18] == 1.0 and c[0][0] == 0.0 and len(c[0]) == 20
+
+
+func mark_all(mut flags: bool[], j0: int, step: int, n: int) -> int:
+    mut j = j0
+    mut marked = 0
+    while j <= n:
+        flags[j] = False
+        marked += 1
+        j = j + step
+    return marked
+
+
+func reverse_into(mut values: FixedArray[int, 32], k: int) -> int:
+    for i in range(20):
+        values[k - i] = i
+    return values[0] + values[31]
+
+
+func negative_index_answer() -> int:
+    mut flags = [for _ in range(40) yield True]
+    mut count = mark_all(mut flags, -9, 1, 20) + mark_all(mut flags, 25, 1, 39)
+    mut values: FixedArray[int, 32] = FixedArray[int, 32]([9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9])
+    mut t = reverse_into(mut values, 10) + reverse_into(mut values, 31)
+    mut left = 0
+    for flag in flags:
+        if flag:
+            left += 1
+    return count * 10000 + left * 100 + t
+
+
+public func test_negative_indices_and_a_negative_start_take_pythons_meaning() -> bool:
+    # mark: 30 then 15 flags cleared, 0..20 and 25..39 in all (-9..-1 is
+    # 31..39), so 4 are left; reverse(10) counts from the end below 0 and
+    # returns 10 + 11, reverse(31) stays in bounds and returns 10 + 0.
+    return negative_index_answer() == 45 * 10000 + 4 * 100 + 31

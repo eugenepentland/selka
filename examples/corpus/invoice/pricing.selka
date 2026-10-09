@@ -1,0 +1,71 @@
+import money
+import quantity
+import catalog
+import delivery
+import packaging
+import handling
+
+record Line:
+    product: catalog.Product
+    count: quantity.Count
+
+
+record Totals:
+    gross: money.Cents
+    discount: money.Cents
+    tax: money.Cents
+    delivery: money.Cents
+    packaging: money.Cents
+    handling: money.Cents
+    total: money.Cents
+    items: u16
+
+
+public record Receipt:
+    gross: int
+    discount: int
+    tax: int
+    delivery: int
+    packaging: int
+    handling: int
+    total: int
+    items: u16
+
+
+public result Invoice:
+    ok: Receipt,
+    err: quantity.InvalidQuantity
+
+
+conversion func receipt(totals: Totals) -> Receipt:
+    return Receipt(gross=money.Cents.number(totals.gross), discount=money.Cents.number(totals.discount), tax=money.Cents.number(totals.tax), delivery=money.Cents.number(totals.delivery), packaging=money.Cents.number(totals.packaging), handling=money.Cents.number(totals.handling), total=money.Cents.number(totals.total), items=totals.items)
+
+
+public func calculate(books: int, cables: int, adapters: int) -> Invoice effects():
+    const book_count = try quantity.Count.parse(books)
+    const book_line = Line(product=catalog.Product.book, count=book_count)
+    const cable_count = try quantity.Count.parse(cables)
+    const cable_line = Line(product=catalog.Product.cable, count=cable_count)
+    const adapter_count = try quantity.Count.parse(adapters)
+    const adapter_line = Line(product=catalog.Product.adapter, count=adapter_count)
+    const lines = FixedArray[Line, 3]([book_line, cable_line, adapter_line])
+    mut gross = money.Cents.make(0u64)
+    mut items = 0u16
+    mut index = 0
+    while index < len(lines):
+        mut line = lines[index]
+        mut count = quantity.Count.number(line.count)
+        mut cents = money.Cents.number(catalog.price(line.product)) * int(count)
+        gross = money.Cents.add(gross, money.Cents.make(u64(cents)))
+        items += count
+        index += 1
+    mut discount = 0
+    if items >= 10u16:
+        discount = divtrunc(money.Cents.number(gross), 10)
+    mut taxable = money.Cents.number(gross) - discount
+    mut tax = divtrunc(taxable * 750 + 5000, 10000)
+    mut shipping = delivery.fee(int(items))
+    mut packing = packaging.fee(int(items))
+    mut service = handling.fee(int(items))
+    mut totals = Totals(gross=gross, discount=money.Cents.make(u64(discount)), tax=money.Cents.make(u64(tax)), delivery=money.Cents.make(u64(shipping)), packaging=money.Cents.make(u64(packing)), handling=money.Cents.make(u64(service)), total=money.Cents.make(u64(taxable + tax + shipping + packing + service)), items=items)
+    return Ok(receipt(totals))

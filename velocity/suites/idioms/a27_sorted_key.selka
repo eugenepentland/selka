@@ -1,0 +1,12 @@
+# oracle: selka-only
+record P:
+    name: str
+    score: int
+
+def score(p: P) -> int:
+    return p.score
+
+def main() -> int:
+    ps = [P("a", 3), P("b", 1), P("c", 2)]
+    out = sorted(ps, key=score)
+    return out[0].score * 42

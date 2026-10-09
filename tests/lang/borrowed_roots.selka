@@ -1,0 +1,86 @@
+# A safepoint publishes no root for a value a published owner already reaches
+# (`QBE-BORROW-ROOT-1`). Under `--gc-stress` every allocation collects, so a
+# borrowed value whose owner stopped reaching it — and whose own root was
+# wrongly dropped — would be read after the sweep freed it.
+public record Node:
+    items: int[]
+    next: Node?
+
+
+func fresh(n: int) -> int[]:
+    return [n, n + 1, n + 2]
+
+
+public func test_a_loop_variable_survives_allocations_while_its_list_does() -> bool:
+    mut rows = [fresh(0), fresh(10), fresh(20)]
+    mut total = 0
+    for row in rows:
+        for i in range(5):
+            mut scratch = fresh(i)
+            total += row[1] + scratch[0]
+    return total == 1 * 5 + 11 * 5 + 21 * 5 + 3 * 10
+
+
+public func test_an_element_removed_from_its_list_keeps_its_own_root() -> bool:
+    mut rows = [fresh(0), fresh(10)]
+    mut row = rows[1]
+    rows.clear()
+    mut scratch = fresh(5)
+    for i in range(20):
+        scratch = fresh(i + 50)
+    return row[2] == 12 and scratch[0] == 69 and len(rows) == 0
+
+
+func drop_all(mut rows: int[][]) -> int:
+    rows.clear()
+    return 0
+
+
+public func test_an_element_a_callee_removes_keeps_its_own_root() -> bool:
+    mut rows = [fresh(0), fresh(10)]
+    mut row = rows[0]
+    mut status = drop_all(mut rows)
+    mut scratch = fresh(7)
+    for i in range(20):
+        scratch = fresh(i + 50)
+    return row[1] == 1 and status == 0 and scratch[2] == 71
+
+
+public func test_an_element_overwritten_in_its_list_keeps_its_own_root() -> bool:
+    mut rows = [fresh(0), fresh(10)]
+    mut row = rows[0]
+    rows[0] = fresh(100)
+    mut scratch = fresh(1)
+    return row[0] == 0 and rows[0][0] == 100 and scratch[0] == 1
+
+
+public func test_a_field_read_survives_while_the_instance_holds_it() -> bool:
+    mut node = Node(items=fresh(3), next=None)
+    mut items = node.items
+    mut total = 0
+    for i in range(10):
+        mut scratch = fresh(i)
+        total += items[0] + scratch[0]
+    node.items = fresh(50)
+    mut extra = fresh(2)
+    return total == 30 + 45 and items[1] == 4 and node.items[0] == 50 and extra[0] == 2
+
+
+public func test_a_dictionary_value_survives_until_it_is_replaced() -> bool:
+    mut table = {"a": fresh(1), "b": fresh(2)}
+    mut held = table["a"]
+    mut scratch = fresh(9)
+    table["a"] = fresh(40)
+    mut after = fresh(8)
+    return held[0] == 1 and table["a"][0] == 40 and scratch[0] == 9 and after[0] == 8
+
+
+public func test_a_chain_of_borrows_survives_through_dead_owners() -> bool:
+    mut grid = [[fresh(1), fresh(2)], [fresh(3)]]
+    mut row = grid[0]
+    mut cell = row[1]
+    mut total = 0
+    for i in range(6):
+        mut scratch = fresh(i)
+        total += cell[0] + scratch[0]
+    return total == 12 + 15 and len(grid) == 2

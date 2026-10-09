@@ -1,0 +1,14 @@
+record Box[T]:
+    value: T
+
+
+func unbox[T](x: Box[T]) -> T:
+    return x.value
+
+
+func forward[U](x: Box[U]) -> U:
+    return unbox(x)
+
+
+public func program() -> i64:
+    return forward(Box[i64](value=9))

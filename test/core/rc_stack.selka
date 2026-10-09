@@ -1,0 +1,29 @@
+func short_sums(n: int, seed: int) -> int:
+    mut total = 0
+    for j in range(n):
+        mut short = [for k in range(4) yield seed + j + k]
+        for value in short:
+            total += value
+        short = []
+        mut tail = [j, j + 1]
+        total += len(tail) + tail[1] + len(short)
+    return total
+
+
+func bounded(seed: int) -> int:
+    mut m = seed % 5
+    mut xs = [for k in range(m) yield k * 2]
+    mut total = len(xs)
+    for x in xs:
+        total += x
+    return total
+
+
+func escapes(n: int) -> int[]:
+    mut out = [for k in range(n) yield k]
+    return out
+
+
+func main(args: str[], out: Stream) -> int:
+    out.print(short_sums(10, len(args)), bounded(len(args)), len(escapes(3)))
+    return 0

@@ -1,0 +1,28 @@
+enum DivisionError:
+    zero
+
+
+result Quotient:
+    ok: int,
+    err: DivisionError
+
+
+func divide(numerator: int, denominator: int) -> Quotient:
+    if denominator == 0:
+        return Err(DivisionError.zero)
+    return Ok(divtrunc(numerator, denominator))
+
+
+func value_or_zero(outcome: Quotient) -> int:
+    match outcome:
+        case Quotient.ok(value):
+            return value
+        case Quotient.err(_):
+            return 0
+
+
+func main() -> int:
+    mut first = divide(21, 3)
+    mut total = value_or_zero(first) + value_or_zero(divide(21, 0))
+    _ = divide(1, 0)
+    return total

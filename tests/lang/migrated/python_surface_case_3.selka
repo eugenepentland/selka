@@ -1,0 +1,15 @@
+enum Json:
+    number(value: float)
+    raw(value: bytes)
+
+
+func size(value: Json) -> int:
+    match value:
+        case Json.number(value=number):
+            return int(number)
+        case Json.raw(value=raw):
+            return len(raw)
+
+
+public func program() -> int:
+    return size(Json.number(value=40.0)) + size(Json.raw(value=b"ab"))

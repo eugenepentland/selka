@@ -1,0 +1,217 @@
+
+# Element-field stores and whole-element stores (NEW-CORE-CE-LISTS-1, -2): every
+# answer here is the base compiler's.
+
+
+record Body:
+    x: float
+    y: float
+    z: float
+    vx: float
+    vy: float
+    vz: float
+    mass: float
+
+
+record Small:
+    a: int
+    b: int
+
+
+record Vec:
+    x: int
+    y: int
+
+
+record Named:
+    name: str
+    tags: str[]
+    pos: Vec
+    count: int
+    note: str?
+    extra: int[]
+
+
+enum Shape:
+    dot(value: int)
+    pair(value: Small)
+    label(value: str)
+    nothing
+
+
+record Frame:
+    closure: int
+    names: str[]
+    code: int[]
+    inner: Named
+    ip: int
+    base: int
+
+
+func bump(mut bodies: Body[], dt: float):
+    mut n = len(bodies)
+    for i in range(n):
+        for j in range(i + 1, n):
+            mut dx = bodies[i].x - bodies[j].x
+            bodies[i].vx = bodies[i].vx - dx * bodies[j].mass * dt
+            bodies[j].vx = bodies[j].vx + dx * bodies[i].mass * dt
+    for i in range(n):
+        bodies[i].x = bodies[i].x + dt * bodies[i].vx
+
+
+func small_sets(mut xs: Small[], k: int):
+    for i in range(len(xs)):
+        xs[i].a = xs[i].a + k
+        xs[i].b = xs[(i + 1) % len(xs)].a
+
+
+func named_sets(mut xs: Named[], round: int):
+    for i in range(len(xs)):
+        xs[i].name = xs[i].name + "!"
+        xs[i].pos.x = xs[i].pos.x + round
+        xs[i].count = len(xs[i].tags) + round
+        if round % 2 == 0:
+            xs[i].note = Some(xs[i].name)
+        else:
+            xs[i].note = None
+        xs[i].extra = [round, i]
+        xs[i].tags = xs[(i + 1) % len(xs)].tags
+
+
+func name_of(x: Named) -> str:
+    match x.note:
+        case Some(text):
+            return x.name + "/" + text
+        case None:
+            return x.name + "/-"
+
+
+func describe(xs: Named[]) -> str:
+    mut out = ""
+    for x in xs:
+        out = out + name_of(x) + ":" + str(len(x.tags)) + ":" + str(x.pos.x) + ":" + str(x.count) + ":" + str(len(x.extra)) + " "
+    return out
+
+
+func shapes(mut xs: Shape[]) -> int:
+    mut total = 0
+    for i in range(len(xs)):
+        match xs[i]:
+            case Shape.dot(value=v):
+                xs[i] = Shape.label(value=str(v))
+            case Shape.pair(value=p):
+                xs[i] = Shape.dot(value=p.a + p.b)
+            case Shape.label(value=text):
+                xs[i] = Shape.pair(value=Small(a=len(text), b=i))
+            case Shape.nothing:
+                xs[i] = Shape.nothing
+        total = total + i
+    return total
+
+
+func shape_text(xs: Shape[]) -> str:
+    mut out = ""
+    for s in xs:
+        match s:
+            case Shape.dot(value=v):
+                out = out + "d" + str(v) + " "
+            case Shape.pair(value=p):
+                out = out + "p" + str(p.a) + "," + str(p.b) + " "
+            case Shape.label(value=text):
+                out = out + "l" + text + " "
+            case Shape.nothing:
+                out = out + "n "
+    return out
+
+
+func run_frames(mut frames: Frame[], steps: int) -> int:
+    mut frame = frames[len(frames) - 1]
+    mut total = 0
+    for s in range(steps):
+        frame.ip = frame.ip + 1
+        frames[len(frames) - 1] = frame
+        total = total + frames[len(frames) - 1].ip + len(frame.names)
+        if s % 3 == 0:
+            frame.names.append("n" + str(s))
+    return total
+
+
+enum Big:
+    wide(value: Named)
+    small(value: int)
+    text(value: str)
+    pair(value: Small)
+
+
+# Whole-element stores of a union over four words: each replaces another case.
+func rotate_big(mut xs: Big[], round: int) -> int:
+    mut total = 0
+    for i in range(len(xs)):
+        match xs[i]:
+            case Big.wide(value=named):
+                xs[i] = Big.text(value=named.name + str(round))
+                total = total + len(named.tags)
+            case Big.small(value=v):
+                xs[i] = Big.wide(value=Named(name="w" + str(v), tags=["x", "y"], pos=Vec(x=v, y=round), count=v, note=Some("n"), extra=[v]))
+                total = total + v
+            case Big.text(value=t):
+                xs[i] = Big.pair(value=Small(a=len(t), b=round))
+                total = total + len(t)
+            case Big.pair(value=p):
+                xs[i] = Big.small(value=p.a + p.b)
+                total = total + p.b
+    return total
+
+
+func main(args: str[], out: Stream) -> int:
+    mut bodies = [Body(x=1.0, y=0.0, z=0.0, vx=0.0, vy=0.0, vz=0.0, mass=2.0), Body(x=2.0, y=0.0, z=0.0, vx=0.0, vy=0.0, vz=0.0, mass=3.0), Body(x=4.0, y=0.0, z=0.0, vx=0.0, vy=0.0, vz=0.0, mass=5.0)]
+    mut shared = bodies
+    for k in range(1000):
+        bump(mut bodies, 0.001)
+    out.print(int(bodies[0].x * 1000000.0), int(bodies[2].vx * 1000000.0), shared[0].x, shared[2].vx)
+    mut smalls = [Small(a=1, b=2), Small(a=3, b=4), Small(a=5, b=6)]
+    mut before = smalls
+    small_sets(mut smalls, 10)
+    small_sets(mut smalls, 7)
+    out.print(smalls[0].a, smalls[0].b, smalls[2].a, smalls[2].b, before[0].a, before[2].b)
+    mut names = [Named(name="a", tags=["t"], pos=Vec(x=1, y=2), count=0, note=None, extra=[]), Named(name="b", tags=["u", "v"], pos=Vec(x=3, y=4), count=0, note=Some("q"), extra=[9])]
+    mut kept = names
+    mut kept_tags = names[1].tags
+    for round in range(5):
+        named_sets(mut names, round)
+    out.print(describe(names), len(names))
+    out.print(describe(kept), len(kept_tags))
+    mut shape_list = [Shape.dot(value=4), Shape.pair(value=Small(a=2, b=3)), Shape.label(value="hey"), Shape.nothing]
+    mut shape_copy = shape_list
+    mut t = 0
+    for round in range(4):
+        t = t + shapes(mut shape_list)
+    out.print(shape_text(shape_list), shape_text(shape_copy), t)
+    mut inner = Named(name="in", tags=[], pos=Vec(x=0, y=0), count=0, note=None, extra=[])
+    mut frames = [Frame(closure=1, names=["x"], code=[1, 2], inner=inner, ip=0, base=0), Frame(closure=2, names=[], code=[3], inner=inner, ip=5, base=1)]
+    mut frames_before = frames
+    out.print(run_frames(mut frames, 100), frames[1].ip, len(frames[1].names), frames_before[1].ip, len(frames_before[1].names))
+    mut bigs = [Big.small(value=3), Big.text(value="abc"), Big.wide(value=Named(name="q", tags=["t"], pos=Vec(x=1, y=1), count=0, note=None, extra=[])), Big.pair(value=Small(a=1, b=2))]
+    mut bigs_before = bigs
+    mut rotated = 0
+    for round in range(9):
+        rotated = rotated + rotate_big(mut bigs, round)
+    out.print(rotated, rotate_big(mut bigs_before, 100), len(bigs))
+    # An element read into a local before a store into its field keeps the old value.
+    mut snap = smalls[1]
+    smalls[1].a = 1000
+    mut big = bodies[1]
+    bodies[1].vx = 77.0
+    mut nm = names[0]
+    names[0].name = "changed"
+    names[0].tags.append("more")
+    out.print(snap.a, smalls[1].a, big.vx, bodies[1].vx, nm.name, names[0].name, len(nm.tags), len(names[0].tags))
+    for unused in names:
+        _ = unused
+    # A store at an index the program reads from its arguments: traps when out of range.
+    mut at = len(args) - 2
+    if len(args) > 1:
+        smalls[at].a = 99
+        names[at].name = "z"
+        out.print(smalls[at].a, names[at].name)
+    return 0

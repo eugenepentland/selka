@@ -1,0 +1,17 @@
+func keep[T](value: T) -> T:
+    mut result = value
+    return result
+
+
+func noop() -> Unit:
+    return ()
+
+
+func main() -> int:
+    noop()
+    return keep(42)
+
+
+# spec: PYTHON-2
+public func test_python_generics_default_to_copy_and_none_mea() -> bool:
+    return main() == 42

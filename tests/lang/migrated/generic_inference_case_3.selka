@@ -1,0 +1,14 @@
+record Chunk[T, const N: u64]:
+    items: [N]T
+
+
+func first[T, const N: u64](x: Chunk[T, N]) -> T:
+    return x.items[0]
+
+
+func forward[U, const M: u64](x: Chunk[U, M]) -> U:
+    return first(x)
+
+
+public func program() -> i64:
+    return forward(Chunk[i64, 2](items=FixedArray[int, 2]([8, 9])))

@@ -1,0 +1,577 @@
+# Ownership operations `--rc-runtime=sites` showed the compiler could drop,
+# each with the near misses that must keep them. Every test checks values
+# only; the operation counts are asserted by the sites build test.
+enum Value:
+    nil
+    number(value: float)
+    text(value: str)
+
+
+record Runtime:
+    stack: Value[]
+    top: int
+
+
+record Chunk:
+    code: int[]
+    names: str[]
+
+
+record Frame:
+    chunk: Chunk
+    at: int
+
+
+record CallFrame:
+    ip: int
+    base: int
+
+
+record Machine:
+    stack: Value[]
+    frames: CallFrame[]
+    names: str[]
+    top: int
+    count: int
+
+
+func push(mut m: Machine, item: Value):
+    m.stack[m.top] = item
+    m.top = m.top + 1
+
+
+func step(mut m: Machine, ip: int):
+    m.frames[m.count - 1].ip = ip
+
+
+func grow_stack(mut m: Machine) -> int:
+    m.stack = [Value.nil, Value.nil, Value.nil]
+    return 1
+
+
+func replaced_receiver(mut m: Machine, item: Value):
+    mut mutation_result_53 = grow_stack(mut m)
+    m.stack[mutation_result_53] = item
+
+
+func rename(mut m: Machine, name: str):
+    m.names[0] = name
+
+
+func local_machine(item: Value) -> Value[]:
+    mut m = Machine(stack=[Value.nil, Value.nil], frames=[], names=[], top=0, count=0)
+    m.stack[m.top] = item
+    m.stack[-1] = item
+    return m.stack
+
+
+record Name:
+    chars: bytes
+    hash: u32
+
+
+record Code:
+    ops: int[]
+
+
+record Callable:
+    arity: int
+    code: Code
+
+
+enum Obj:
+    free
+    name(value: Name)
+    callable(value: Callable)
+
+
+func arity_of(objects: Obj[], at: int) -> int:
+    match objects[at]:
+        case Obj.callable(value=payload):
+            return payload.arity + len(payload.code.ops)
+        case _:
+            return -1
+
+
+func name_of(objects: Obj[], at: int) -> Name:
+    match objects[at]:
+        case Obj.name(value=payload):
+            return payload
+        case _:
+            return Name(chars=b"", hash=0u32)
+
+
+func freed_arity(mut objects: Obj[], at: int) -> int:
+    match objects[at]:
+        case Obj.callable(value=payload):
+            objects[at] = Obj.free
+            return payload.arity + len(payload.code.ops)
+        case _:
+            return -1
+
+
+func joined(left: bytes, right: bytes) -> Name:
+    mut made = Name(chars=left + right, hash=3u32)
+    return made
+
+
+func same(value: Name) -> Name:
+    return value
+
+
+record CodeUnit:
+    arity: int
+    chunk: Chunk
+
+
+record Loaded:
+    code: int[]
+    names: str[]
+    at: int
+
+
+func load(unit: CodeUnit, at: int) -> Loaded:
+    return Loaded(code=unit.chunk.code, names=unit.chunk.names, at=at)
+
+
+func load_mut(mut unit: CodeUnit) -> Loaded:
+    mut loaded = Loaded(code=unit.chunk.code, names=unit.chunk.names, at=unit.arity)
+    unit.chunk.code.append(99)
+    return loaded
+
+
+func made_unit() -> CodeUnit:
+    return CodeUnit(arity=3, chunk=Chunk(code=[4, 5], names=["made"]))
+
+
+func load_made() -> Loaded:
+    return Loaded(code=made_unit().chunk.code, names=made_unit().chunk.names, at=0)
+
+
+record Table:
+    objects: Obj[]
+    count: int
+
+
+func table_arity(table: Table, at: int) -> int:
+    match table.objects[at]:
+        case Obj.callable(value=payload):
+            return payload.arity + len(payload.code.ops)
+        case _:
+            return -1
+
+
+func table_name(table: Table, at: int) -> Name:
+    match table.objects[at]:
+        case Obj.name(value=payload):
+            return payload
+        case _:
+            return Name(chars=b"", hash=0u32)
+
+
+func table_ops(table: Table, at: int) -> int[]:
+    match table.objects[at]:
+        case Obj.callable(value=payload):
+            return payload.code.ops
+        case _:
+            return []
+
+
+func nested_anchor(table: Table) -> int:
+    mut total = 0
+    for i in range(len(table.objects)):
+        match table.objects[i]:
+            case Obj.callable(value=outer):
+                match table.objects[outer.arity]:
+                    case Obj.name(value=inner):
+                        total += len(inner.chars)
+                    case _:
+                        total += 100
+            case _:
+                total += 1
+    return total
+
+
+func replaced_table(mut table: Table, at: int) -> int:
+    table.count = table.count + 1
+    match table.objects[at]:
+        case Obj.callable(value=payload):
+            table.objects[at] = Obj.free
+            return payload.arity + len(payload.code.ops)
+        case _:
+            return -1
+
+
+record Cursor:
+    code: int[]
+    ip: int
+
+
+func advance(mut cursor: Cursor) -> int:
+    cursor.ip = cursor.ip + 1
+    return cursor.code[cursor.ip - 1]
+
+
+func fetch(mut rt: Runtime, mut cursor: Cursor) -> Value:
+    rt.top = rt.top + 1
+    return rt.stack[advance(mut cursor)]
+
+
+func reset_stack(mut rt: Runtime) -> int:
+    rt.stack = [Value.text(value="fresh")]
+    return 0
+
+
+func fetch_reset(mut rt: Runtime) -> Value:
+    return rt.stack[reset_stack(mut rt)]
+
+
+record Globals:
+    entries: Value[]
+
+
+record Vm:
+    globals: Globals
+    names: str[]
+    top: int
+
+
+func entry_at(globals: Globals, at: int) -> Value:
+    return globals.entries[at]
+
+
+func name_length(vm: Vm, at: int) -> int:
+    return len(vm.names[at])
+
+
+func global_value(mut vm: Vm, at: int) -> Value:
+    vm.top = vm.top + 1
+    return entry_at(vm.globals, name_length(vm, at))
+
+
+func find_entry(globals: Globals, at: int) -> Value?:
+    if at < len(globals.entries):
+        return Some(globals.entries[at])
+    return None
+
+
+func matched_global(mut vm: Vm, at: int) -> Value:
+    vm.top = vm.top + 1
+    match find_entry(vm.globals, name_length(vm, at)):
+        case Some(found):
+            return found
+        case None:
+            return Value.nil
+
+
+func wipe(mut vm: Vm) -> int:
+    vm.globals = Globals(entries=[Value.text(value="wiped")])
+    return 0
+
+
+func wiped_value(mut vm: Vm) -> Value:
+    return entry_at(vm.globals, wipe(mut vm))
+
+
+func table_name_hash(table: Table, at: int) -> u32:
+    return table_name(table, at).hash
+
+
+func table_name_chars(table: Table, at: int) -> bytes:
+    return table_name(table, at).chars
+
+
+record Bytecode:
+    constants: Value[]
+    code: int[]
+    ip: int
+
+
+func read_op(mut frame: Bytecode) -> int:
+    mut byte = frame.code[frame.ip]
+    frame.ip = frame.ip + 1
+    return byte
+
+
+func read_value(mut frame: Bytecode) -> Value:
+    return frame.constants[read_op(mut frame)]
+
+
+func reload_constants(mut frame: Bytecode) -> int:
+    frame.constants = [Value.text(value="reloaded")]
+    frame.ip = 0
+    return 0
+
+
+func read_reloaded(mut frame: Bytecode) -> Value:
+    return frame.constants[reload_constants(mut frame)]
+
+
+record Wire:
+    net: Name
+    part: int
+    open: bool
+
+
+func matching_wires(wires: Wire[], wanted: int) -> int:
+    mut total = 0
+    mut j = 0
+    while j < len(wires):
+        mut other = wires[j]
+        if j == 2:
+            other = wires[0]
+        if not other.open and other.part == wanted:
+            total += len(other.net.chars)
+        j += 1
+    return total
+
+
+func first_wire(wires: Wire[]) -> Wire:
+    mut other = wires[0]
+    return other
+
+
+func pop(mut rt: Runtime) -> Value:
+    rt.top = rt.top - 1
+    return rt.stack[rt.top]
+
+
+func peek(rt: Runtime, distance: int) -> Value:
+    return rt.stack[rt.top - 1 - distance]
+
+
+func number(item: Value) -> float:
+    match item:
+        case Value.number(value=x):
+            return x
+        case _:
+            return -1.0
+
+
+func swap_stack(mut rt: Runtime) -> int:
+    rt.stack = [Value.number(value=99.0)]
+    return 0
+
+
+func replaced_during_index(mut rt: Runtime) -> Value:
+    return rt.stack[swap_stack(mut rt)]
+
+
+func next_name(mut frame: Frame) -> str:
+    frame.at = frame.at + 1
+    return frame.chunk.names[frame.at - 1]
+
+
+func owned_rows(count: int) -> Value[]:
+    mut rows: Value[] = []
+    for i in range(count):
+        rows.append(Value.number(value=float(i)))
+    return rows
+
+
+func last_owned(count: int) -> Value:
+    return owned_rows(count)[-1]
+
+
+public func test_loaned_field_reads_keep_values_through_their_temporaries() -> bool:
+    mut rt = Runtime(stack=[Value.number(value=1.5), Value.nil, Value.number(value=2.5)], top=3)
+    mut snapshot = rt
+    mut first = number(pop(mut rt))
+    mut second = pop(mut rt)
+    mut third = number(pop(mut rt))
+    return first == 2.5 and second == Value.nil and third == 1.5 and rt.top == 0 and snapshot.stack == rt.stack
+
+
+public func test_loaned_reads_through_negative_indices_and_readonly_parameters() -> bool:
+    mut rt = Runtime(stack=[Value.number(value=4.0), Value.text(value="x")], top=0)
+    return pop(mut rt) == Value.text(value="x") and number(peek(rt, 0)) == 4.0 and rt.top == -1
+
+
+public func test_index_callback_replacing_the_list_keeps_the_loaned_original() -> bool:
+    mut rt = Runtime(stack=[Value.number(value=7.0), Value.number(value=8.0)], top=2)
+    mut item = replaced_during_index(mut rt)
+    return number(item) == 7.0 and rt.stack == [Value.number(value=99.0)]
+
+
+public func test_managed_elements_and_nested_record_fields_relocate_whole_values() -> bool:
+    mut frame = Frame(chunk=Chunk(code=[1, 2], names=["alpha", "beta"]), at=0)
+    mut saved = frame
+    mut names = next_name(mut frame) + next_name(mut frame)
+    return names == "alphabeta" and frame.at == 2 and saved.at == 0 and saved.chunk.names == ["alpha", "beta"]
+
+
+public func test_owned_temporaries_are_taken_not_relocated() -> bool:
+    return number(last_owned(5)) == 4.0 and number(last_owned(1)) == 0.0
+
+
+public func test_field_receivers_write_through_mut_records_and_keep_snapshots() -> bool:
+    mut m = Machine(stack=[Value.nil, Value.nil, Value.nil], frames=[CallFrame(ip=0, base=0), CallFrame(ip=5, base=1)], names=["a"], top=0, count=2)
+    mut before = m
+    push(mut m, Value.number(value=1.0))
+    push(mut m, Value.text(value="two"))
+    step(mut m, 9)
+    step(mut m, 11)
+    return m.stack == [Value.number(value=1.0), Value.text(value="two"), Value.nil] and m.top == 2 and m.frames[1].ip == 11 and m.frames[0].ip == 0 and before.stack == [Value.nil, Value.nil, Value.nil] and before.frames[1].ip == 5
+
+
+public func test_field_receivers_of_local_records_and_negative_indices() -> bool:
+    return local_machine(Value.number(value=3.0)) == [Value.number(value=3.0), Value.number(value=3.0)]
+
+
+public func test_completed_callback_replaces_the_field_list_before_update() -> bool:
+    mut m = Machine(stack=[Value.nil, Value.nil], frames=[], names=[], top=0, count=0)
+    replaced_receiver(mut m, Value.number(value=4.0))
+    return m.stack == [Value.nil, Value.number(value=4.0), Value.nil]
+
+
+public func test_managed_element_field_stores_keep_their_scope() -> bool:
+    mut m = Machine(stack=[], frames=[], names=["a", "b"], top=0, count=0)
+    mut saved = m
+    rename(mut m, "c")
+    return m.names == ["c", "b"] and saved.names == ["a", "b"]
+
+
+public func test_payload_bindings_read_in_place_keep_their_owner() -> bool:
+    mut objects = [Obj.free, Obj.callable(value=Callable(arity=2, code=Code(ops=[1, 2, 3])))]
+    mut saved = objects
+    mut total = 0
+    for i in range(4):
+        total += arity_of(objects, 1) + arity_of(objects, 0)
+    return total == 16 and saved == objects
+
+
+public func test_payload_bindings_outliving_a_scrutinee_write_keep_their_copy() -> bool:
+    mut objects = [Obj.callable(value=Callable(arity=4, code=Code(ops=[9])))]
+    mut first = freed_arity(mut objects, 0)
+    mut second = freed_arity(mut objects, 0)
+    return first == 5 and second == -1 and objects == [Obj.free]
+
+
+public func test_returned_bindings_and_locals_move_their_owner() -> bool:
+    mut objects = [Obj.name(value=Name(chars=b"ab" + b"c", hash=7u32)), Obj.free]
+    mut found = name_of(objects, 0)
+    objects[0] = Obj.free
+    mut made = joined(b"x", b"yz")
+    return found.chars == b"abc" and found.hash == 7u32 and made.chars == b"xyz" and name_of(objects, 1).chars == b""
+
+
+public func test_returned_parameters_keep_the_callers_value() -> bool:
+    mut original = Name(chars=b"k" + b"eep", hash=1u32)
+    mut copy = same(original)
+    mut again = same(copy)
+    return copy.chars == b"keep" and again.chars == b"keep" and original.chars == b"keep"
+
+
+public func test_nested_field_copies_into_constructors_stay_independent() -> bool:
+    mut unit = CodeUnit(arity=1, chunk=Chunk(code=[1, 2], names=["a", "b"]))
+    mut loaded = load(unit, 7)
+    loaded.code.append(3)
+    loaded.names[0] = "z"
+    return loaded.code == [1, 2, 3] and loaded.names == ["z", "b"] and unit.chunk.code == [1, 2] and unit.chunk.names == ["a", "b"] and loaded.at == 7
+
+
+public func test_nested_field_copies_from_mut_parameters_and_call_results() -> bool:
+    mut unit = CodeUnit(arity=2, chunk=Chunk(code=[8], names=["m"]))
+    mut loaded = load_mut(mut unit)
+    mut made = load_made()
+    return loaded.code == [8] and unit.chunk.code == [8, 99] and loaded.at == 2 and made.code == [4, 5] and made.names == ["made"]
+
+
+public func test_readonly_table_reads_borrow_payloads_in_place() -> bool:
+    mut table = Table(objects=[Obj.callable(value=Callable(arity=1, code=Code(ops=[4, 5]))), Obj.name(value=Name(chars=b"n" + b"ame", hash=9u32))], count=2)
+    mut saved = table
+    mut arity = table_arity(table, 0) + table_arity(table, 1)
+    mut name = table_name(table, 1)
+    mut ops = table_ops(table, 0)
+    ops.append(6)
+    table.objects[1] = Obj.free
+    return arity == 2 and name.chars == b"name" and ops == [4, 5, 6] and saved.objects[1] == Obj.name(value=Name(chars=b"name", hash=9u32)) and table_ops(saved, 0) == [4, 5]
+
+
+public func test_nested_readonly_matches_in_loops() -> bool:
+    mut table = Table(objects=[Obj.callable(value=Callable(arity=1, code=Code(ops=[]))), Obj.name(value=Name(chars=b"abc", hash=1u32)), Obj.free], count=3)
+    return nested_anchor(table) == 5
+
+
+public func test_mut_roots_keep_owned_bindings() -> bool:
+    mut table = Table(objects=[Obj.callable(value=Callable(arity=3, code=Code(ops=[1])))], count=0)
+    mut first = replaced_table(mut table, 0)
+    return first == 4 and table.count == 1 and table.objects == [Obj.free]
+
+
+public func test_mut_root_list_reads_across_unrelated_calls() -> bool:
+    mut rt = Runtime(stack=[Value.number(value=1.0), Value.text(value="b"), Value.nil], top=0)
+    mut cursor = Cursor(code=[2, 0, 1], ip=0)
+    mut first = fetch(mut rt, mut cursor)
+    mut second = fetch(mut rt, mut cursor)
+    mut third = fetch(mut rt, mut cursor)
+    return first == Value.nil and number(second) == 1.0 and third == Value.text(value="b") and rt.top == 3 and cursor.ip == 3
+
+
+public func test_mut_root_list_reads_keep_the_list_a_call_replaces() -> bool:
+    mut rt = Runtime(stack=[Value.number(value=8.0), Value.nil], top=0)
+    mut item = fetch_reset(mut rt)
+    return number(item) == 8.0 and rt.stack == [Value.text(value="fresh")]
+
+
+public func test_mut_root_fields_passed_to_calls_read_the_current_value() -> bool:
+    mut vm = Vm(globals=Globals(entries=[Value.nil, Value.number(value=1.0), Value.text(value="two")]), names=["a", "bb"], top=0)
+    mut first = global_value(mut vm, 0)
+    mut second = global_value(mut vm, 1)
+    return number(first) == 1.0 and second == Value.text(value="two") and vm.top == 2
+
+
+public func test_mut_root_fields_passed_to_calls_whose_results_are_matched() -> bool:
+    mut vm = Vm(globals=Globals(entries=[Value.nil, Value.text(value="one")]), names=["a", "bbb"], top=0)
+    mut first = matched_global(mut vm, 0)
+    mut second = matched_global(mut vm, 1)
+    return first == Value.text(value="one") and second == Value.nil and vm.top == 2
+
+
+# The collector lends the argument's field in place, so it reads the list the
+# later `mut` call installed; RC keeps its loan on the list read first. Both
+# must survive the replacement; the counted build checks nothing leaks.
+public func test_mut_root_fields_keep_the_value_a_later_mut_call_replaces() -> bool:
+    mut vm = Vm(globals=Globals(entries=[Value.number(value=6.0)]), names=[], top=0)
+    mut item = wiped_value(mut vm)
+    return (number(item) == 6.0 or item == Value.text(value="wiped")) and vm.globals.entries == [Value.text(value="wiped")]
+
+
+public func test_borrowed_match_accessors_read_in_place_and_copy_when_kept() -> bool:
+    mut table = Table(objects=[Obj.name(value=Name(chars=b"ke" + b"y", hash=11u32)), Obj.free], count=2)
+    mut hash = table_name_hash(table, 0) + table_name_hash(table, 1)
+    mut chars = table_name_chars(table, 0)
+    mut kept = table_name(table, 0)
+    table.objects[0] = Obj.free
+    return hash == 11u32 and chars == b"key" and kept.chars == b"key" and table_name_hash(table, 0) == 0u32
+
+
+public func test_borrowed_fields_across_calls_that_only_advance_the_root() -> bool:
+    mut frame = Bytecode(constants=[Value.number(value=1.0), Value.text(value="b"), Value.nil], code=[2, 0, 1], ip=0)
+    mut first = read_value(mut frame)
+    mut second = read_value(mut frame)
+    mut third = read_value(mut frame)
+    return first == Value.nil and number(second) == 1.0 and third == Value.text(value="b") and frame.ip == 3
+
+
+public func test_borrowed_fields_across_calls_that_replace_them() -> bool:
+    mut frame = Bytecode(constants=[Value.number(value=5.0)], code=[0], ip=0)
+    mut item = read_reloaded(mut frame)
+    return (number(item) == 5.0 or item == Value.text(value="reloaded")) and frame.constants == [Value.text(value="reloaded")]
+
+
+public func test_records_copied_out_of_readonly_lists_into_named_locals() -> bool:
+    mut wires = [Wire(net=Name(chars=b"ab" + b"c", hash=1u32), part=1, open=False), Wire(net=Name(chars=b"d", hash=2u32), part=2, open=False), Wire(net=Name(chars=b"e", hash=3u32), part=1, open=True)]
+    mut kept = first_wire(wires)
+    wires[0] = Wire(net=Name(chars=b"", hash=0u32), part=9, open=True)
+    return matching_wires(wires, 1) == 0 and matching_wires([kept, kept], 1) == 6 and kept.net.chars == b"abc"
+
+
+# Run every test once, so `selka run --rc-runtime=stats` shows balanced counts
+# for the whole file; the result is the number of failures.
+func main() -> int:
+    mut failures = 0
+    for passed in [test_loaned_field_reads_keep_values_through_their_temporaries(), test_loaned_reads_through_negative_indices_and_readonly_parameters(), test_index_callback_replacing_the_list_keeps_the_loaned_original(), test_managed_elements_and_nested_record_fields_relocate_whole_values(), test_owned_temporaries_are_taken_not_relocated(), test_field_receivers_write_through_mut_records_and_keep_snapshots(), test_field_receivers_of_local_records_and_negative_indices(), test_completed_callback_replaces_the_field_list_before_update(), test_managed_element_field_stores_keep_their_scope(), test_payload_bindings_read_in_place_keep_their_owner(), test_payload_bindings_outliving_a_scrutinee_write_keep_their_copy(), test_returned_bindings_and_locals_move_their_owner(), test_returned_parameters_keep_the_callers_value(), test_nested_field_copies_into_constructors_stay_independent(), test_nested_field_copies_from_mut_parameters_and_call_results(), test_readonly_table_reads_borrow_payloads_in_place(), test_nested_readonly_matches_in_loops(), test_mut_roots_keep_owned_bindings(), test_mut_root_list_reads_across_unrelated_calls(), test_mut_root_list_reads_keep_the_list_a_call_replaces(), test_mut_root_fields_passed_to_calls_read_the_current_value(), test_mut_root_fields_keep_the_value_a_later_mut_call_replaces(), test_mut_root_fields_passed_to_calls_whose_results_are_matched(), test_records_copied_out_of_readonly_lists_into_named_locals(), test_borrowed_match_accessors_read_in_place_and_copy_when_kept(), test_borrowed_fields_across_calls_that_only_advance_the_root(), test_borrowed_fields_across_calls_that_replace_them()]:
+        if not passed:
+            failures += 1
+    return failures

@@ -1,0 +1,28 @@
+# QBE-FLOAT-ENV-1 removes the per-operation floating-point environment check.
+# These assertions pin results that depend on every binary64 bit, so a lowering
+# that changed rounding, fused an operation, or reordered a comparison fails.
+public func test_float_arithmetic_keeps_exact_bits() -> bool:
+    mut total = 0.1 + 0.2
+    if total != 0.30000000000000004:
+        return False
+    if (total - 0.3) * 18014398509481984.0 != 1.0:
+        return False
+    mut root = sqrt(2.0)
+    if root * root != 2.0000000000000004:
+        return False
+    if int((root - 1.0) * 4503599627370496.0) != 1865452045155277:
+        return False
+    if 0.1 * 0.1 != 0.010000000000000002:
+        return False
+    if 1.0 / (0.0 - 0.0) <= 0.0:
+        return False
+    if 1.0 / (0.0 * (0.0 - 1.0)) >= 0.0:
+        return False
+    mut nan = sqrt(0.0 - 1.0)
+    if nan == nan:
+        return False
+    return True
+
+
+func main() -> int:
+    return 0

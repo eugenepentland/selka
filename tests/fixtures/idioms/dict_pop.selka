@@ -1,0 +1,7 @@
+func main() -> int:
+    mut d = {"a": 1, "b": 2}
+    mut removed = d.pop("a")
+    mut missing = d.pop("z", 7)
+    if len(d) != 1:
+        return 1
+    return removed + missing

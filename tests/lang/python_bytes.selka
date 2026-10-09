@@ -1,0 +1,335 @@
+func bytes_widen(value: bytes) -> bytes:
+    return value + value
+
+
+record BytesPacket:
+    tag: str
+    body: bytes
+
+
+func bytes_pair[T: copy + storable](value: T) -> T[]:
+    mut values: T[] = [value]
+    values.append(value)
+    return values
+
+
+func bytes_decoded(raw: bytes) -> Result[str, str]:
+    return raw.decode()
+
+
+func bytes_parsed(digits: str) -> Result[bytes, str]:
+    return bytes.fromhex(digits)
+
+
+# spec: PY-BYTES-1
+public func test_byte_literals_index_slice_concatenate_compare_and_iterate() -> bool:
+    mut raw = b"hi\x00\xff"
+    if len(raw) != 4:
+        return False
+    if raw[0] != 104 or raw[-1] != 255 or raw[2] != 0:
+        return False
+    if raw[1:3] != b"i\x00":
+        return False
+    if raw[-99:99] != raw or raw[3:1] != b"":
+        return False
+    if b"hi" + b"\x00\xff" != raw:
+        return False
+    if raw == b"hi" or not (raw != b"hi"):
+        return False
+    mut total = 0
+    for value in raw:
+        total += value
+    for index, value in enumerate(raw):
+        total += index
+    return total - 428 == 42
+
+
+# spec-case: PY-BYTES-1
+public func test_membership_accepts_a_byte_scalar_or_a_contiguous_subsequence() -> bool:
+    mut raw = b"alpha"
+    if 108 not in raw:
+        return False
+    if 200 in raw:
+        return False
+    if b"lph" not in raw:
+        return False
+    if b"lhp" in raw:
+        return False
+    if b"" not in raw:
+        return False
+    if 97 not in raw or b"pha" not in raw:
+        return False
+    return True
+
+
+# spec-case: PY-BYTES-1
+public func test_byte_strings_alias_through_helpers_and_survive_collection_stress() -> bool:
+    mut seed = b"\x01"
+    mut grown = seed
+    for step in range(6):
+        grown = bytes_widen(grown)
+    mut holder: bytes[] = []
+    for step in range(20):
+        holder.append(bytes_widen(seed))
+    if len(seed) != 1:
+        return False
+    if len(holder[19]) != 2:
+        return False
+    return len(grown) - 22 == 42
+
+
+# spec: PY-BYTES-3
+public func test_split_join_prefix_suffix_search_and_container_storage() -> bool:
+    mut line = b"a,bb,,c"
+    mut parts = line.split(b",")
+    if len(parts) != 4 or parts[2] != b"":
+        return False
+    if b",".join(parts) != line:
+        return False
+    if not line.startswith(b"a,") or not line.endswith(b",c"):
+        return False
+    if line.startswith(b"b") or line.endswith(b"b"):
+        return False
+    if line.find(b"bb") != 2 or line.find(b"zz") != -1:
+        return False
+    mut packets: BytesPacket[] = [BytesPacket(tag="first", body=parts[1])]
+    mut index: dict[str, bytes] = {}
+    for packet in packets:
+        index[packet.tag] = packet.body
+    if index["first"] != b"bb":
+        return False
+    mut optional: bytes? = Some(line)
+    match optional:
+        case Some(value):
+            if value != line:
+                return False
+        case None:
+            return False
+    return 35 + len(index["first"]) + len(parts) + len(packets) == 42
+
+
+# spec-case: PY-BYTES-3
+public func test_generic_bodies_preserve_managed_byte_string_identities() -> bool:
+    mut both = bytes_pair(b"ab")
+    if both[0] != both[1] or both[1] != b"ab":
+        return False
+    return len(both[0]) + 40 == 42
+
+
+func bytes_search(raw: bytes, start: int) -> int:
+    return raw.find_any(b",;", start)
+
+
+# spec-case: PY-BYTES-3
+public func test_find_any_reports_the_first_octet_of_a_set_at_or_after_start() -> bool:
+    mut raw = b"a,b;c"
+    if raw.find_any(b",;", 0) != 1:
+        return False
+    if raw.find_any(b",;", 2) != 3:
+        return False
+    if raw.find_any(b"c", 0) != 4:
+        return False
+    if raw.find_any(b"z", 0) != -1:
+        return False
+    if raw.find_any(b"", 0) != -1:
+        return False
+    mut start = 2
+    if raw.find_any(b",;", start) != 3:
+        return False
+    return raw.find_any(b"a", 1) == -1
+
+
+# spec: PY-BYTES-21
+public func test_find_any_searches_a_two_octet_set_with_one_pass_per_octet() -> bool:
+    mut raw = b"x;y,z"
+    if raw.find_any(b",;", 0) != 1:
+        return False
+    if raw.find_any(b";,", 0) != 1:
+        return False
+    if raw.find_any(b",;", 2) != 3:
+        return False
+    if b"x,y;z".find_any(b",;", 0) != 1:
+        return False
+    if b"abcdef".find_any(b",;", 0) != -1:
+        return False
+    if b"abc;ef".find_any(b",;", 5) != -1:
+        return False
+    if b"abxc".find_any(b"xx", 0) != 2:
+        return False
+    return b"\xff\x00".find_any(b"\x00\xff", 0) == 0
+
+
+# `times` copies of `piece` by doubling.
+func doubled(piece: bytes, times: int) -> bytes:
+    mut out = b""
+    mut chunk = piece
+    mut remaining = times
+    while remaining > 0:
+        if remaining % 2 == 1:
+            out = out + chunk
+        remaining = remaining // 2
+        if remaining > 0:
+            chunk = chunk + chunk
+    return out
+
+
+# The number of `\n`-ended records a loop of two-octet searches walks.
+func records(raw: bytes) -> int:
+    mut count = 0
+    mut at = raw.find_any(b"\n,", 0)
+    while at >= 0:
+        count += 1
+        at = raw.find_any(b"\n,", at + 1)
+    return count
+
+
+# spec: PY-BYTES-22
+public func test_find_any_walks_an_input_missing_one_octet_in_linear_time() -> bool:
+    # 20,000 records of 200 octets and no comma: each search stops at the next
+    # newline, so the loop scans the 4 MB input about twice, where rescanning to
+    # the end for the absent comma on every call would scan it 10,000 times.
+    mut line = doubled(b"0123456789", 20)
+    mut raw = doubled(line[:199] + b"\n", 20000) + b"tail"
+    mut ok = records(raw) == 20000
+    mut commas = doubled(line[:199] + b",", 20000)
+    return ok and records(commas) == 20000 and raw.find_any(b",\n", len(raw) - 4) == -1 and raw.find_any(b",\n", len(raw) - 5) == len(raw) - 5
+
+
+# spec-case: PY-BYTES-22
+public func test_find_any_finds_either_octet_across_its_search_windows() -> bool:
+    mut plain = doubled(b"x", 1000)
+    mut ok = (plain[:63] + b"," + plain[:63] + b"\n").find_any(b"\n,", 0) == 63
+    ok = ok and (plain[:64] + b"\n" + plain[:10] + b",").find_any(b",\n", 0) == 64
+    ok = ok and (plain[:191] + b",").find_any(b"\n,", 0) == 191
+    ok = ok and (plain[:192] + b"\n").find_any(b"\n,", 0) == 192
+    ok = ok and (plain[:500] + b"\n," + plain[:500]).find_any(b",\n", 100) == 500
+    ok = ok and (plain[:500] + b",\n").find_any(b"\n,", 501) == 501
+    ok = ok and (b"," + plain).find_any(b"\n,", 1) == -1
+    return ok and (plain + b"\n").find_any(b"\n,", 0) == 1000
+
+
+# spec-case: PY-BYTES-3
+public func test_find_any_clamps_start_and_reads_values_as_a_byte_set() -> bool:
+    mut raw = b"a,b;c"
+    if raw.find_any(b"a", -5) != 0:
+        return False
+    if raw.find_any(b"a", len(raw)) != -1:
+        return False
+    if raw.find_any(b"a", len(raw) + 1) != -1:
+        return False
+    if raw.find_any(b",", 1) != 1:
+        return False
+    if raw.find_any(b"xx,xx", 0) != 1:
+        return False
+    if b"".find_any(b"a", 0) != -1:
+        return False
+    if b"needle-in-haystack".find_any(b"-", 0) != 6:
+        return False
+    if bytes_search(b"a,b;c", 2) != 3:
+        return False
+    mut values: int[] = []
+    for value in range(256):
+        values.append(value)
+    mut every = bytes(values)
+    if len(every) != 256:
+        return False
+    if every.find_any(b"\x00", 0) != 0:
+        return False
+    if every.find_any(b"\xff", 255) != 255:
+        return False
+    if every.find_any(b"\x7f", 300) != -1:
+        return False
+    return raw.find_any(b"\x00\xff", 0) == -1
+
+
+# spec-case: PY-BYTES-3
+public func test_find_keeps_its_first_index_answer_for_short_and_long_needles() -> bool:
+    mut raw = b"banana"
+    if raw.find(b"a") != 1:
+        return False
+    if raw.find(b"n") != 2:
+        return False
+    if raw.find(b"na") != 2:
+        return False
+    if raw.find(b"banana") != 0:
+        return False
+    if raw.find(b"bananas") != -1:
+        return False
+    if raw.find(b"") != 0:
+        return False
+    if b"".find(b"a") != -1:
+        return False
+    return raw.find(b"an") == 1
+
+
+# spec: PY-BYTES-2
+public func test_integer_list_text_and_hexadecimal_conversions_round_trip() -> bool:
+    mut values: int[] = [0, 65, 255]
+    mut raw = bytes(values)
+    if raw != b"\x00A\xff":
+        return False
+    mut back = raw.to_list()
+    if len(back) != 3 or back[2] != 255:
+        return False
+    if raw.hex() != "0041ff":
+        return False
+    mut encoded = "hé".encode()
+    if len(encoded) != 3:
+        return False
+    match bytes_decoded(encoded):
+        case Ok(value):
+            if value != "hé":
+                return False
+        case Err(_):
+            return False
+    match bytes_decoded(b"\xff\xfe"):
+        case Ok(_):
+            return False
+        case Err(message):
+            if len(message) == 0:
+                return False
+    match bytes_parsed("0041ff"):
+        case Ok(value):
+            if value != raw:
+                return False
+        case Err(_):
+            return False
+    match bytes_parsed("00g1"):
+        case Ok(_):
+            return False
+        case Err(_):
+            return True
+
+
+public func test_a_decoded_slice_keeps_clamping_and_invalid_utf8() -> bool:
+    mut raw = b"a\xc3\xa9z"
+    match raw[1:3].decode():
+        case Ok(text):
+            if text != "é":
+                return False
+        case Err(_):
+            return False
+    match raw[-99:99].decode():
+        case Ok(text):
+            if len(text) != 3:
+                return False
+        case Err(_):
+            return False
+    match raw[3:1].decode():
+        case Ok(text):
+            if len(text) != 0:
+                return False
+        case Err(_):
+            return False
+    mut broken = b"a\xffz"
+    match broken[1:2].decode():
+        case Ok(_):
+            return False
+        case Err(message):
+            if len(message) == 0:
+                return False
+    return True
+
+
+func main() -> int:
+    return 0

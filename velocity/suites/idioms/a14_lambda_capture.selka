@@ -1,0 +1,7 @@
+# oracle: selka-only
+def apply(f: def(int) -> int, v: int) -> int:
+    return f(v)
+
+def main() -> int:
+    k = 2
+    return apply(lambda x: x * k, 21)

@@ -1,0 +1,26 @@
+constraint Run[P] = copy + op(apply(worker: P, callback: func(P) -> int effects()) -> int effects())
+
+
+domain Worker: int:
+    func make() -> Worker:
+        return wrap[Worker](42)
+    func apply(worker: Worker, callback: func(Worker) -> int effects()) -> int effects():
+        return callback(worker)
+    func read(worker: Worker) -> int effects():
+        return unwrap(worker)
+
+
+func get[P: copy + op(apply(worker: P, callback: func(P) -> int effects()) -> int effects())](worker: P, callback: func(P) -> int effects()) -> int effects():
+    return P.apply(worker, callback)
+
+
+func forward[Q: Run](worker: Q, callback: func(Q) -> int effects()) -> int effects():
+    return get(worker, callback)
+
+
+func read_worker(worker: Worker) -> int effects():
+    return Worker.read(worker)
+
+
+public func program() -> int:
+    return forward(Worker.make(), read_worker)

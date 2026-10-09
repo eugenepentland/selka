@@ -1,0 +1,17 @@
+# oracle: selka-only
+record ParseError:
+    line: int
+    message: str
+
+def parse(s: str) -> Result[int, ParseError]:
+    if s == "":
+        return Err(ParseError(line=1, message="empty"))
+    return Ok(42)
+
+def main() -> int:
+    match parse(""):
+        case Ok(v):
+            return v
+        case Err(e):
+            print(e.message)
+            return e.line

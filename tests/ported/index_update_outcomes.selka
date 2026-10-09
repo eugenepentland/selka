@@ -1,0 +1,232 @@
+# `values[index] = values[index] + delta` and its neighbours: the value each
+# update leaves, for positive and negative indices, with and without a second
+# name sharing the list, around floor remainders and quotients, and with a
+# snapshot, rebinding, resize or mutating call between the read and the write.
+# These are the executed programs of the retired QBE `RC-INDEX-UPDATE-1` tests
+# (`qbe_rc_index_update_test.zig`). The traps those tests also pinned (the
+# R_LIST_BOUNDS of an out-of-range index, R_OVERFLOW, R_DIVISION_BY_ZERO with
+# their lines and operand details, and a step budget) cannot be expected from a
+# guest test, so only the non-trapping runs and their edge values are kept.
+func update(index: int, delta: int, shared: bool) -> int:
+    mut values = [7, 11]
+    mut snapshot = if (shared) then (values) else ([0, 0])
+    values[index] = values[index] + delta
+    return values[index] + snapshot[index] * 100
+
+
+func modulo(index: int, divisor: int, shared: bool) -> int:
+    mut values = [7, 11]
+    mut snapshot = if (shared) then (values) else ([0, 0])
+    values[index] = (values[index] + 1) % divisor
+    return values[index] + snapshot[index] * 100
+
+
+func quotient(index: int, divisor: int) -> int:
+    mut values = [-9223372036854775807 - 1, 11]
+    values[index] = values[index] // divisor
+    return values[index]
+
+
+func checksum_update(index: int, delta: int, shared: bool) -> int:
+    mut values = [7, 11]
+    mut snapshot = if (shared) then (values) else ([0, 0])
+    values[index] = (values[index] + delta) % 1000003
+    mut checksum = 29
+    checksum = (checksum + values[index]) % 1000000007
+    return checksum + values[0] + values[1] + snapshot[index] * 100
+
+
+func combine(values: int[], value: int) -> int:
+    return values[0] + value
+
+
+func managed_prefix(index: int, delta: int) -> int:
+    mut values = [7, 11]
+    values[index] = values[index] + delta
+    return combine(values, values[index])
+
+
+func shared_read(index: int, delta: int) -> int:
+    mut values = [7, 11]
+    mut snapshot = values
+    values[index] = values[index] + delta
+    return snapshot[index] + values[index] + values[0] + values[1]
+
+
+func provenance(index: int, delta: int) -> int:
+    mut values = [7, 11]
+    mut next_value = values[index] + delta
+    values[index] = next_value
+    return values[index]
+
+
+func descriptor(index: int) -> int:
+    mut values = [7, 11]
+    mut flags = [True, False]
+    values[index] = values[index] + 3
+    return values[index] + (if (flags[0]) then (1) else (0))
+
+
+func alias(index: int, delta: int) -> int:
+    mut values = [7, 11]
+    mut next_value = values[index] + delta
+    mut snapshot = values
+    values[index] = next_value
+    return snapshot[index] * 100 + values[index]
+
+
+func rebound(index: int, delta: int) -> int:
+    mut values = [7, 11]
+    mut next_value = values[index] + delta
+    values = [19, 23]
+    values[index] = next_value
+    return values[index]
+
+
+func resized(index: int, delta: int) -> int:
+    mut values = [7, 11]
+    mut next_value = values[index] + delta
+    values.clear()
+    values.append(17)
+    values[index] = next_value
+    return values[index]
+
+
+func change(mut values: int[]) -> int:
+    values.clear()
+    values.append(17)
+    return 0
+
+
+func callback(index: int) -> int:
+    mut values = [7, 11]
+    mut cleared = change(mut values)
+    values[index] = values[index] + cleared
+    return values[index]
+
+
+func distinct(index: int) -> int:
+    mut left = [7, 11]
+    mut right = [19, 23]
+    right[index] = left[index] + 3
+    return right[index]
+
+
+func changed_index(input: int) -> int:
+    mut index = input
+    mut values = [7, 11]
+    mut next_value = values[index] + 3
+    index = (index + 1) % 2
+    values[index] = next_value
+    return values[index]
+
+
+func narrow(index: int) -> i32:
+    mut values: i32[] = [7, 11]
+    values[index] = values[index] + 3
+    return values[index]
+
+
+func managed(index: int) -> int:
+    mut values = [[7], [11]]
+    values[index] = values[index]
+    return values[index][0]
+
+
+func repeat(times: int, index: int) -> int:
+    mut values = [7, 11]
+    mut total = 0
+    for at in range(times):
+        values[index] = values[index] + at + 1
+        total += values[index]
+    return total + values[0] + values[1]
+
+
+public func test_positive_and_negative_indices_update_the_selected_element_with_and_without_a_snapshot() -> bool:
+    assert update(-2, 3, False) == 10
+    assert update(-2, 3, True) == 710
+    assert update(-1, 3, False) == 14
+    assert update(-1, 3, True) == 1114
+    assert update(0, 3, False) == 10
+    assert update(0, 3, True) == 710
+    assert update(1, 3, False) == 14
+    assert update(1, 3, True) == 1114
+    return True
+
+
+public func test_the_stored_value_is_forwarded_exactly_across_the_integer_range() -> bool:
+    assert provenance(1, -9223372036854775807 - 1) == 11 + (-9223372036854775807 - 1)
+    assert provenance(1, -10) == 1
+    assert provenance(1, 9223372036854775807 - 11) == 9223372036854775807
+    assert provenance(0, 3) == 10
+    return True
+
+
+public func test_floor_remainders_keep_the_divisors_sign() -> bool:
+    assert modulo(-1, -5, False) == -3
+    assert modulo(-1, -5, True) == 1097
+    assert modulo(-1, -3, False) == 0
+    assert modulo(-1, -3, True) == 1100
+    assert modulo(-1, 3, False) == 0
+    assert modulo(-1, 3, True) == 1100
+    assert modulo(-1, 5, False) == 2
+    assert modulo(-1, 5, True) == 1102
+    return True
+
+
+public func test_floor_quotients_and_the_minimum_integer_are_stored_exactly() -> bool:
+    assert quotient(-1, -3) == -4
+    assert quotient(-1, 3) == 3
+    assert quotient(0, 1) == -9223372036854775807 - 1
+    return True
+
+
+public func test_a_checksum_following_the_update_sees_the_stored_value() -> bool:
+    assert checksum_update(-2, -10, False) == 2000040
+    assert checksum_update(-2, -10, True) == 2000740
+    assert checksum_update(-2, 3, False) == 60
+    assert checksum_update(-2, 3, True) == 760
+    assert checksum_update(-1, -10, False) == 38
+    assert checksum_update(-1, -10, True) == 1138
+    assert checksum_update(-1, 3, False) == 64
+    assert checksum_update(-1, 3, True) == 1164
+    assert checksum_update(0, -10, False) == 2000040
+    assert checksum_update(0, -10, True) == 2000740
+    assert checksum_update(0, 3, False) == 60
+    assert checksum_update(0, 3, True) == 760
+    assert checksum_update(1, -10, False) == 38
+    assert checksum_update(1, -10, True) == 1138
+    assert checksum_update(1, 3, False) == 64
+    assert checksum_update(1, 3, True) == 1164
+    return True
+
+
+public func test_a_managed_prefix_and_a_snapshot_read_after_the_update_see_both_versions() -> bool:
+    assert managed_prefix(-1, 3) == 21
+    assert shared_read(-1, 3) == 46
+    return True
+
+
+public func test_zero_trips_and_repeated_updates_keep_their_totals() -> bool:
+    assert repeat(0, -9223372036854775807 - 1) == 18
+    assert repeat(3, -1) == 67
+    return True
+
+
+public func test_aliases_rebinds_resizes_and_calls_before_the_write_keep_their_meaning() -> bool:
+    assert alias(0, 3) == 710
+    assert rebound(0, 3) == 10
+    assert resized(0, 3) == 10
+    assert callback(0) == 17
+    assert distinct(0) == 10
+    assert changed_index(0) == 10
+    return True
+
+
+public func test_other_element_types_and_a_flag_list_keep_the_update() -> bool:
+    assert descriptor(-1) == 15
+    assert int(narrow(-1)) == 14
+    assert int(narrow(0)) == 10
+    assert managed(-1) == 11
+    assert managed(0) == 7
+    return True

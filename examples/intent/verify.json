@@ -1,0 +1,28 @@
+{
+  "version": 2,
+  "policy": "intent-example-v1",
+  "steps": [
+    {
+      "id": "returns-seven",
+      "kind": "test",
+      "complete": true,
+      "inputs": [
+        "*.selka"
+      ],
+      "commands": [
+        [
+          "../../zig-out/bin/selka",
+          "run-project",
+          "--print-result",
+          "main.selka"
+        ]
+      ],
+      "expect_stdout": "7\n",
+      "env": [
+        "HOME",
+        "SELKA_QBE",
+        "SELKA_ZIG"
+      ]
+    }
+  ]
+}

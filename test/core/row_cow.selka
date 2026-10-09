@@ -1,0 +1,562 @@
+# NEW-CORE-ROW-COW: one program of every shape in experiments/fix-row-cow-20261009/shapes
+# (tools/fixture.py), run by src/core/row_cow_test.zig at debug, release and
+# --verify-facts under the leak check against row_cow.expected.
+# r_b.selka
+func scale_rb(mut c: float[][], n: int):
+    for i in range(n):
+        for j in range(n):
+            c[i][j] = c[i][j] * 2.0
+
+
+func shape_rb(out: Stream) -> int:
+    mut rows3 = [[1.0, 2.0], [3.0, 4.0]]
+    mut keep3 = rows3[1]
+    scale_rb(mut rows3, 2)
+    out.print(rows3[1][1], keep3[1])
+    return 0
+
+
+# r_c.selka
+func shape_rc(out: Stream) -> int:
+    mut rows3 = [[1.0, 2.0], [3.0, 4.0]]
+    mut keep3 = rows3[1]
+    for i in range(2):
+        for j in range(2):
+            rows3[i][j] = rows3[i][j] * 2.0
+    out.print(rows3[1][1], keep3[1])
+    return 0
+
+
+# r_d.selka
+func scale_rd(mut c: float[][], n: int):
+    for i in range(n):
+        for j in range(n):
+            c[i][j] = c[i][j] * 2.0
+
+
+func shape_rd(out: Stream) -> int:
+    mut rows3 = [[1.0, 2.0], [3.0, 4.0]]
+    mut keep3 = rows3[1]
+    scale_rd(mut rows3, 2)
+    scale_rd(mut rows3, 2)
+    out.print(rows3[1][1], keep3[1])
+    return 0
+
+
+# r_f.selka
+func shape_rf(out: Stream) -> int:
+    mut a = [[1, 2], [3, 4]]
+    mut ka = a[1]
+    a[1][0] = a[1][0] * 2
+    out.print("readwrite-const", a[1][0], ka[0])
+    mut b = [[1, 2], [3, 4]]
+    mut kb = b[1]
+    for i in range(2):
+        b[i][0] = 7
+    out.print("loop-write", b[1][0], kb[0])
+    mut c = [[1, 2], [3, 4]]
+    mut kc = c[1]
+    for i in range(2):
+        c[i][0] = c[i][0] * 2
+    out.print("loop-readwrite", c[1][0], kc[0])
+    mut d = [[1, 2], [3, 4]]
+    mut kd = d[1]
+    mut i = 1
+    d[i][0] = d[i][0] + 10
+    out.print("var-readwrite", d[1][0], kd[0])
+    return 0
+
+
+# s01_int_loop.selka
+func shape_s01(out: Stream) -> int:
+    mut b = [[1, 2], [3, 4]]
+    mut kb = b[1]
+    mut ka = b[0]
+    for i in range(2):
+        b[i][0] = 7
+    out.print(b[1][0], kb[0], b[0][0], ka[0])
+    return 0
+
+
+# s02_alias_inside_loop.selka
+func shape_s02(out: Stream) -> int:
+    mut b = [[1, 2], [3, 4], [5, 6]]
+    mut k = [0]
+    for i in range(3):
+        if i == 0:
+            k = b[1]
+        b[i][0] = 9
+    out.print(k[0], b[0][0], b[1][0], b[2][0])
+    mut c = [[1, 2], [3, 4]]
+    mut acc = 0
+    for i in range(2):
+        mut r = c[i]
+        c[i][0] = 0
+        acc = acc + r[0] - c[i][0]
+    out.print(acc, c[0][0] + 1)
+    return 0
+
+
+# s03_callee_alias.selka
+func row_s03(xs: int[][], i: int) -> int[]:
+    return xs[i]
+
+
+func grab_s03(mut xs: int[][], i: int) -> int[]:
+    xs[0][1] = xs[0][1] + 0
+    return xs[i]
+
+
+func shape_s03(out: Stream) -> int:
+    mut b = [[1, 2], [3, 4]]
+    mut k = row_s03(b, 1)
+    for i in range(2):
+        b[i][0] = 7
+    out.print(k[0], b[1][0])
+    mut c = [[1, 2], [3, 4]]
+    mut kc = grab_s03(mut c, 1)
+    for i in range(2):
+        c[i][0] = 7
+    out.print(kc[0], c[1][0])
+    return 0
+
+
+# s04_record_items.selka
+record Bag_s04:
+    n: int
+    items: int[]
+
+
+func shape_s04(out: Stream) -> int:
+    mut xs = [Bag_s04(n=1, items=[1, 2]), Bag_s04(n=2, items=[3, 4])]
+    mut kept = xs[1]
+    mut ki = xs[1].items
+    for i in range(2):
+        xs[i].items[0] = 7
+    out.print(kept.items[0], xs[1].items[0], ki[0])
+    mut ys = [Bag_s04(n=1, items=[1, 2]), Bag_s04(n=2, items=[3, 4])]
+    mut ky = ys[1].items
+    for i in range(2):
+        ys[i].items.append(5)
+    out.print(len(ky), len(ys[1].items) - 1)
+    mut zs = [Bag_s04(n=1, items=[1]), Bag_s04(n=2, items=[3])]
+    mut kz = zs[0]
+    for i in range(2):
+        zs[i].n = 5
+    out.print(kz.n, zs[0].n)
+    return 0
+
+
+# s05_append_aug.selka
+func shape_s05(out: Stream) -> int:
+    mut b = [[1, 2], [3, 4]]
+    mut k = b[1]
+    for i in range(2):
+        b[i].append(9)
+    out.print(len(k), len(b[1]))
+    mut c = [[1, 2], [3, 4]]
+    mut kc = c[1]
+    for i in range(2):
+        c[i][0] += 10
+    out.print(kc[0], c[1][0])
+    return 0
+
+
+# s06_dict.selka
+func shape_s06(out: Stream) -> int:
+    mut d = {"a": [1, 2], "b": [3, 4]}
+    mut k = d["b"]
+    for key in ["a", "b"]:
+        d[key][0] = 7
+    out.print(k[0], d["b"][0])
+    mut e: dict[int, int[]] = {}
+    e[0] = [1, 2]
+    e[1] = [3, 4]
+    mut ke = e[1]
+    for i in range(2):
+        e[i][0] = 7
+    out.print(ke[0], e[1][0])
+    return 0
+
+
+# s07_record_rows.selka
+record Grid_s07:
+    w: int
+    rows: int[][]
+
+
+func shape_s07(out: Stream) -> int:
+    mut g = Grid_s07(w=2, rows=[[1, 2], [3, 4]])
+    mut k = g.rows[1]
+    for i in range(2):
+        g.rows[i][0] = 7
+    out.print(k[0], g.rows[1][0])
+    mut h = Grid_s07(w=2, rows=[[1, 2], [3, 4]])
+    mut kh = h.rows[1]
+    mut rows = h.rows
+    for i in range(2):
+        rows[i][0] = 7
+    out.print(kh[0], rows[1][0])
+    return 0
+
+
+# s08_comprehension.selka
+func shape_s08(out: Stream) -> int:
+    mut b = [for i in range(3) yield [for j in range(2) yield i * 2 + j + 1]]
+    mut k = b[1]
+    mut z = b[2]
+    for i in range(3):
+        b[i][0] = 7
+    out.print(k[0], b[1][0], z[0] - 5)
+    return 0
+
+
+# s09_append_filled.selka
+func shape_s09(out: Stream) -> int:
+    mut b: int[][] = []
+    for i in range(3):
+        mut row: int[] = []
+        for j in range(2):
+            row.append(i * 2 + j + 1)
+        b.append(row)
+    mut k = b[1]
+    mut first = b[0]
+    for i in range(3):
+        for j in range(2):
+            b[i][j] = 7
+    out.print(k[0], b[1][0], first[0])
+    return 0
+
+
+# s10_mut_param.selka
+func bump_s10(mut c: int[][], n: int):
+    for i in range(n):
+        c[i][0] = c[i][0] * 2
+
+
+func bump_big_s10(mut c: int[][], n: int, out: Stream) effects(output, mutation):
+    for i in range(n):
+        mut j = 0
+        while j < len(c[i]):
+            c[i][j] = c[i][j] * 2
+            j += 1
+        if i > 100:
+            out.print("never")
+
+
+func shape_s10(out: Stream) -> int:
+    mut b = [[1, 2], [3, 4]]
+    mut k = b[1]
+    bump_s10(mut b, 2)
+    bump_s10(mut b, 2)
+    mut k2 = b[1]
+    bump_s10(mut b, 2)
+    out.print(k[0], b[1][0] - 10, k2[0] - 9)
+    mut c = [[1, 2], [3, 4]]
+    mut kc = c[1]
+    bump_big_s10(mut c, 2, out)
+    bump_big_s10(mut c, 2, out)
+    out.print(kc[0], c[1][0] + 2)
+    return 0
+
+
+# s11_control.selka
+func early_s11(mut b: int[][], stop: int) -> int:
+    for i in range(len(b)):
+        if i == stop:
+            return i
+        b[i][0] = 7
+    return -1
+
+
+func shape_s11(out: Stream) -> int:
+    mut b = [[1, 2], [3, 4], [5, 6]]
+    mut k = b[1]
+    mut i = 0
+    while i < 3:
+        b[i][0] = 7
+        i += 1
+    out.print(k[0], b[1][0])
+    mut c = [[1, 2], [3, 4], [5, 6]]
+    mut kc = c[1]
+    for i2 in range(3):
+        for j in range(2):
+            if j == 1:
+                continue
+            c[i2][j] = 7
+    out.print(kc[0], c[1][0])
+    mut d = [[1, 2], [3, 4], [5, 6]]
+    mut kd = d[1]
+    for i3 in range(3):
+        d[i3][0] = 7
+        if i3 == 1:
+            break
+    out.print(kd[0], d[1][0])
+    mut e = [[1, 2], [3, 4], [5, 6]]
+    mut ke = e[1]
+    mut stopped = early_s11(mut e, 2)
+    out.print(ke[0], e[2][0] - 5 + stopped - 2)
+    mut g = [[1, 2], [3, 4], [5, 6]]
+    mut kg = g[1]
+    mut n = 0
+    for i4 in range(3):
+        if i4 == 0:
+            continue
+        g[i4][0] = 7
+        n += 1
+    out.print(kg[0], g[1][0])
+    return 0
+
+
+# s12_other_iteration.selka
+func shape_s12(out: Stream) -> int:
+    mut b = [[1, 2], [3, 4], [5, 6]]
+    mut k = [0]
+    for i in range(3):
+        if i == 1:
+            k = b[2]
+        b[i][0] = 9
+    out.print(k[0], b[2][0])
+    mut c = [[1, 2], [3, 4], [5, 6]]
+    mut kc = [0]
+    mut i = 0
+    while i < 3:
+        c[i][0] = 9
+        if i == 0:
+            kc = c[2]
+        i += 1
+    out.print(kc[0], c[2][0])
+    return 0
+
+
+# s13_text_bool.selka
+func shape_s13(out: Stream) -> int:
+    mut t = [["a", "b"], ["c", "d"]]
+    mut k = t[1]
+    for i in range(2):
+        t[i][0] = "z"
+    out.print(k[0], t[1][0])
+    mut f = [[False, False], [False, True]]
+    mut kf = f[1]
+    for i in range(2):
+        f[i][0] = True
+    out.print(kf[0], f[1][0])
+    mut g = [[0.5, 1.0], [1.5, 2.0]]
+    mut kg = g[1]
+    for i in range(2):
+        g[i][0] = 9.0
+    out.print(kg[0], g[1][0])
+    return 0
+
+
+# s14_copies.selka
+func shape_s14(out: Stream) -> int:
+    mut b = [[1, 2], [3, 4]]
+    mut s = b[0:2]
+    for i in range(2):
+        b[i][0] = 7
+    out.print(s[1][0], b[1][0])
+    mut c = [[1, 2], [3, 4]]
+    mut m = [for r in c yield r]
+    for i in range(2):
+        c[i][0] = 7
+    out.print(m[1][0], c[1][0])
+    mut d = [[1, 2], [3, 4]]
+    mut o: int[][] = []
+    o.append(d[1])
+    for i in range(2):
+        d[i][0] = 7
+    out.print(o[0][0], d[1][0])
+    mut e = [[1, 2], [3, 4]]
+    mut cat = e[:]
+    for i in range(2):
+        e[i][0] = 7
+    out.print(cat[1][0], e[1][0])
+    return 0
+
+
+# s15_whole_alias.selka
+func shape_s15(out: Stream) -> int:
+    mut b = [[1, 2], [3, 4]]
+    mut c = b
+    for i in range(2):
+        b[i][0] = 7
+    out.print(c[1][0], b[1][0])
+    mut r = [1, 2]
+    mut d = [r, [3, 4]]
+    for i in range(2):
+        d[i][0] = 7
+    out.print(r[0], d[0][0])
+    return 0
+
+
+# s16_alias_write.selka
+func shape_s16(out: Stream) -> int:
+    mut b = [[1, 2], [3, 4]]
+    mut k = b[1]
+    for i in range(2):
+        k[0] = 9
+    out.print(b[1][0], k[0])
+    return 0
+
+
+# s17_three_level.selka
+func shape_s17(out: Stream) -> int:
+    mut x = [[[1, 2], [3, 4]], [[5, 6], [7, 8]]]
+    mut k = x[1][0]
+    for i in range(2):
+        for j in range(2):
+            x[i][j][0] = 7
+    out.print(k[0], x[1][0][0])
+    mut y = [[[1, 2], [3, 4]], [[5, 6], [7, 8]]]
+    mut ky = y[1]
+    for i in range(2):
+        for j in range(2):
+            y[i][j][0] = 7
+    out.print(ky[0][0], y[1][0][0])
+    return 0
+
+
+# s18_alias_after_constant.selka
+func shape_s18(out: Stream) -> int:
+    mut b = [[1, 2], [3, 4]]
+    b[1][1] = 4
+    mut k = b[1]
+    for i in range(2):
+        b[i][0] = 7
+    out.print(k[0], b[1][0], k[1])
+    return 0
+
+
+# s19_shared_during_build.selka
+func same_s19(xs: int[][]) -> int[][]:
+    return xs
+
+
+func shape_s19(out: Stream) -> int:
+    mut b = [[1, 2]]
+    mut snap = b
+    b.append([3, 4])
+    for i in range(2):
+        b[i][0] = 7
+    out.print(snap[0][0], b[0][0])
+    mut c = [[1, 2]]
+    mut t = same_s19(c)
+    c.append([3, 4])
+    for i in range(2):
+        c[i][0] = 7
+    out.print(t[0][0], c[0][0])
+    mut d = [[1, 2], [5, 6]]
+    mut u = d
+    d[1] = [3, 4]
+    for i in range(2):
+        d[i][0] = 7
+    out.print(u[0][0], d[0][0])
+    return 0
+
+
+# s20_calls_in_loop.selka
+func row_s20(xs: int[][], i: int) -> int[] effects():
+    return xs[i]
+
+
+func pick_s20(f: func(int[][], int) -> int[] effects(), xs: int[][], i: int) -> int[]:
+    return f(xs, i)
+
+
+func shape_s20(out: Stream) -> int:
+    mut b = [[1, 2], [3, 4], [5, 6]]
+    mut k = [0]
+    for i in range(3):
+        b[i][0] = 9
+        if i == 0:
+            k = row_s20(b, 2)
+    out.print(k[0], b[2][0])
+    mut c = [[1, 2], [3, 4], [5, 6]]
+    mut kc = [0]
+    for i in range(3):
+        c[i][0] = 9
+        if i == 0:
+            kc = pick_s20(row_s20, c, 2)
+    out.print(kc[0], c[2][0])
+    mut d = [[1, 2], [3, 4]]
+    mut kd = pick_s20(row_s20, d, 1)
+    for i in range(2):
+        d[i][0] = 7
+    out.print(kd[0], d[1][0])
+    return 0
+
+
+# s21_slice_loop.selka
+func shape_s21(out: Stream) -> int:
+    mut b = [[1, 2], [3, 4]]
+    mut acc = 0
+    for r in b[0:2]:
+        b[1][0] = 9
+        acc += r[0]
+    out.print(acc, b[1][0])
+    mut c = [[1, 2], [3, 4]]
+    mut acc2 = 0
+    for r in c:
+        c[1][0] = 9
+        acc2 += r[0]
+    out.print(acc2, c[1][0])
+    mut d = [[1, 2], [3, 4]]
+    mut acc3 = 0
+    for i in range(2):
+        const r = d[i]
+        d[1][0] = 9
+        acc3 += r[0]
+    out.print(acc3, d[1][0])
+    return 0
+
+
+# s22_row_aliases_row.selka
+func shape_s22(out: Stream) -> int:
+    mut b = [[1, 2], [3, 4]]
+    b[0] = b[1]
+    b[0][0] = b[0][0] + 0
+    for i in range(1, 2):
+        b[i][0] = 7
+    out.print(b[1][0], b[0][0])
+    mut c = [[1, 2]]
+    c.append(c[0])
+    for i in range(1, 2):
+        c[i][0] = 7
+    out.print(c[1][0], c[0][0])
+    mut r = [1, 2]
+    mut d = [r, r]
+    for i in range(1, 2):
+        d[i][0] = 7
+    out.print(d[1][0], d[0][0])
+    return 0
+
+
+func main(out: Stream) -> int:
+    _ = shape_rb(out)
+    _ = shape_rc(out)
+    _ = shape_rd(out)
+    _ = shape_rf(out)
+    _ = shape_s01(out)
+    _ = shape_s02(out)
+    _ = shape_s03(out)
+    _ = shape_s04(out)
+    _ = shape_s05(out)
+    _ = shape_s06(out)
+    _ = shape_s07(out)
+    _ = shape_s08(out)
+    _ = shape_s09(out)
+    _ = shape_s10(out)
+    _ = shape_s11(out)
+    _ = shape_s12(out)
+    _ = shape_s13(out)
+    _ = shape_s14(out)
+    _ = shape_s15(out)
+    _ = shape_s16(out)
+    _ = shape_s17(out)
+    _ = shape_s18(out)
+    _ = shape_s19(out)
+    _ = shape_s20(out)
+    _ = shape_s21(out)
+    _ = shape_s22(out)
+    return 0

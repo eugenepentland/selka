@@ -1,0 +1,10 @@
+public func program() -> i64:
+    mut scores: dict[str, i64] = {b"x": 1}
+    mut alias = scores
+    alias[b"x"] = 40
+    scores = alias
+    mut names = list(scores.keys())
+    mut key: str = b"x"
+    if names[0] == key:
+        return scores.get(b"x", 0) + scores.get(b"missing", 2)
+    return 0

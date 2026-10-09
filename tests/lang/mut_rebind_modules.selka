@@ -1,0 +1,26 @@
+import mut_rebind_helpers as helpers
+
+# spec-case: MUT-REBIND-CALLER-1
+public func test_imported_mut_collection_rebinding_preserves_source_snapshots() -> bool:
+    mut items = [1]
+    mut mapping = {1: 1}
+    mut flags = {1}
+    mut saved_items = items
+    mut saved_mapping = mapping
+    mut saved_flags = flags
+    helpers.replace_list(mut items)
+    helpers.replace_dict(mut mapping)
+    helpers.replace_set(mut flags)
+    return items == [7, 8] and mapping == {7: 7, 8: 8} and flags == {7, 8} and saved_items == [1] and saved_mapping == {1: 1} and saved_flags == {1}
+
+
+# spec-case: MUT-REBIND-CALLER-1
+public func test_imported_function_values_and_direct_calls_share_their_mut_abi() -> bool:
+    mut action = helpers.append_only
+    mut items = [1]
+    mut saved = items
+    action(mut items)
+    helpers.append_only(mut items)
+    mut reset = helpers.replace_list
+    reset(mut items)
+    return items == [7, 8] and saved == [1]

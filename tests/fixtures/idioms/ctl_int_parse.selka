@@ -1,0 +1,6 @@
+func main() -> int:
+    match parse_int("42"):
+        case Some(v):
+            return v
+        case None:
+            return 0

@@ -1,0 +1,54 @@
+# sort_quick: two million xorshift values sorted in place by the SUITE.md
+# recursive Hoare quicksort (recurse on the smaller side, loop on the larger);
+# prints three order statistics and a checksum.
+func xorshift(input: u64) -> u64:
+    mut x = input
+    x = bit_xor(x, shift_left(x, 13u64))
+    x = bit_xor(x, shift_right(x, 7u64))
+    return bit_xor(x, shift_left(x, 17u64))
+
+
+func mix(c: int, v: int) -> int:
+    return (c * 31 + v) % 1000000007
+
+
+func quicksort(mut xs: int[], input_lo: int, input_hi: int) -> Unit:
+    mut lo = input_lo
+    mut hi = input_hi
+    while lo < hi:
+        mut pivot = xs[lo + (hi - lo) // 2]
+        mut i = lo
+        mut j = hi
+        while i <= j:
+            while xs[i] < pivot:
+                i = i + 1
+            while xs[j] > pivot:
+                j = j - 1
+            if i <= j:
+                mut temp = xs[i]
+                xs[i] = xs[j]
+                xs[j] = temp
+                i = i + 1
+                j = j - 1
+        if j - lo < hi - i:
+            quicksort(mut xs, lo, j)
+            lo = i
+        else:
+            quicksort(mut xs, i, hi)
+            hi = j
+
+
+func main(out: Stream) -> int:
+    mut n = 2000000
+    mut state = 88172645463325252u64
+    mut values: int[] = []
+    for _ in range(n):
+        state = xorshift(state)
+        values.append(int(shift_right(state, 33u64)))
+    quicksort(mut values, 0, n - 1)
+    out.print(values[0], values[n // 2], values[n - 1])
+    mut c = 0
+    for v in values:
+        c = mix(c, v)
+    out.print(c)
+    return 0

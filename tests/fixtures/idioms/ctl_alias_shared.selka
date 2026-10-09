@@ -1,0 +1,5 @@
+func main() -> int:
+    mut xs = [1]
+    mut ys = xs
+    ys.append(2)
+    return len(xs)

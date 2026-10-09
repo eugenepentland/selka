@@ -1,0 +1,6 @@
+public func program() -> i64:
+    mut values: i64[] = []
+    values.append(42)
+    if 42 in values:
+        return 42
+    return 0

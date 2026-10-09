@@ -1,0 +1,97 @@
+# A list built by appending `(seed + offset + i * 13) % 1009` in a loop: the
+# first and last elements for negative, positive, extreme and empty runs, a
+# modulus wider than 2^62, and scaled seeds at both endpoints of the proven
+# magnitude. These are the executed programs of the retired QBE bounded
+# remainder bias tests (`qbe_loop_remainder_bias_test.zig`). The traps those
+# tests also pinned (R_OVERFLOW when the seed sits at the integer limit, and
+# R_MEMORY_BUDGET under a 1 MiB ceiling) cannot be expected from a guest test.
+func calculate(n: int, seed: int, offset: int) -> int:
+    mut values: int[] = []
+    for i in range(n):
+        values.append((seed + offset + i * 13) % 1009)
+    if n <= 0:
+        return len(values)
+    return len(values) + values[0] + values[-1]
+
+
+public func test_negative_positive_and_extreme_seeds_keep_their_first_and_last_elements() -> bool:
+    assert calculate(32, -1048576, 0) == 994
+    assert calculate(32, 17, 0) == 469
+    assert calculate(32, -9223372036854775807 - 1, 0) == 1060
+    assert calculate(0, 9223372036854775807, 0) == 0
+    return True
+
+
+public func test_runs_of_thirty_two_three_and_zero_elements_for_each_seed() -> bool:
+    assert calculate(32, -1048576, 0) == 994 and calculate(3, -1048576, 0) == 1597 and calculate(0, -1048576, 0) == 0
+    assert calculate(32, -1, 0) == 1442 and calculate(3, -1, 0) == 1036 and calculate(0, -1, 0) == 0
+    assert calculate(32, 0, 0) == 435 and calculate(3, 0, 0) == 29 and calculate(0, 0, 0) == 0
+    assert calculate(32, 17, 0) == 469 and calculate(3, 17, 0) == 63 and calculate(0, 17, 0) == 0
+    assert calculate(32, 576460752303423488, 0) == 459 and calculate(3, 576460752303423488, 0) == 53
+    assert calculate(32, -576460752303423488, 0) == 1420 and calculate(3, -576460752303423488, 0) == 1014
+    assert calculate(0, 576460752303423488, 0) == 0 and calculate(0, -576460752303423488, 0) == 0
+    return True
+
+
+public func test_an_offset_that_cancels_the_seed_and_a_zero_count_with_an_extreme_offset() -> bool:
+    assert calculate(32, 17, 0) == calculate(32, 0, 17)
+    assert calculate(32, 17, -17) == calculate(32, 0, 0)
+    assert calculate(0, 9223372036854775807, 1) == 0
+    return True
+
+
+func calculate_wide(n: int, seed: int, offset: int) -> int:
+    mut values: int[] = []
+    for i in range(n):
+        values.append((seed + offset + i * 13) % 4700000000000000000)
+    if n <= 0:
+        return len(values)
+    return values[0]
+
+
+public func test_a_modulus_beyond_the_signed_half_range_keeps_the_full_unsigned_bits() -> bool:
+    assert calculate_wide(32, -1, 0) == 4699999999999999999
+    assert calculate_wide(32, 17, 0) == 17
+    assert calculate_wide(32, -576460752303423488, 0) == 4123539247696576512
+    assert calculate_wide(32, 576460752303423488, 0) == 576460752303423488
+    return True
+
+
+func calculate_scaled(n: int, seed: int) -> int:
+    mut values: int[] = []
+    for i in range(n):
+        values.append((seed * 15 + i * 0) % 1009)
+    if n <= 0:
+        return len(values)
+    return len(values) + values[0] + values[-1]
+
+
+public func test_scaled_seeds_at_both_magnitude_endpoints_keep_their_remainders() -> bool:
+    assert calculate_scaled(32, -576460752303423488) == 1690
+    assert calculate_scaled(32, 576460752303423488) == 392
+    return True
+
+
+record Box:
+    value: int
+
+
+func touch(mut box: Box, n: int) -> Unit:
+    if n > 0:
+        touch(mut box, n - 1)
+    else:
+        box.value += 1
+
+
+func referenced(mut box: Box, n: int) -> int:
+    mut seed = box.value
+    touch(mut box, 0)
+    mut total = 0
+    for i in range(n):
+        total += (seed + i * 13) % 1009
+    return total + box.value
+
+
+public func test_a_seed_read_before_a_mutating_call_stays_the_value_it_had() -> bool:
+    mut box = Box(value=17)
+    return referenced(mut box, 32) == 7010 and box.value == 18

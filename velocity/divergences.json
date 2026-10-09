@@ -1,0 +1,72 @@
+{
+ "version": "divergence-policy-v1",
+ "note": "The declared, reviewed list of places where this language intentionally answers differently from CPython. velocity/score.py reads this file: strict C2 counts every completed probe that disagrees with CPython, and C2_policy counts only the disagreements no entry here claims. `--gate` fails on C2_policy, so a declared divergence does not block a package and an undeclared one always does. An entry claims a probe by name or fnmatch glob in `probes`; every claimed probe must still diverge (score.py reports a claimed probe that now agrees as a stale entry). `cases` are expression/value pairs the divergence is reproducible from: velocity/divergence_evidence.py evaluates each expression under both runtimes and fails when the declared value does not reproduce. Deleting an entry, not editing one, is how a divergence stops being declared: the divergence then becomes a C2 gate failure until the language changes or a new reviewed entry replaces it.",
+ "gate_rule": "score.py --gate exits 1 when a completed probe disagrees with CPython and no entry in this file claims its name; a claimed disagreement is reported but does not gate.",
+ "reviewed_on": "2026-09-26",
+ "entries": [
+  {
+   "id": "round-half-away-from-zero",
+   "status": "declared",
+   "title": "round() breaks ties away from zero and answers an integral float",
+   "probes": ["d05_round_half.selka"],
+   "idiom": "python-round-ties-to-even",
+   "selka": "round(value) takes a float and answers the nearest integral float with halves away from zero, matching math.round and format_float; int(round(2.5)) is 3. round(value, ndigits) rounds the exact binary value to ndigits decimals the same way (PRELUDE-ROUND-2): round(0.125, 2) is 0.13, and round(2.675, 2) is 2.67 in both languages because 2.675 is stored below the half.",
+   "cpython": "round(value) answers an int for a one-argument call and breaks ties to even; round(2.5) is 2, so int(round(2.5)) is 2.",
+   "documented_at": [
+    "SPEC.md#PRELUDE-ROUND-1",
+    "SPEC.md#PRELUDE-ROUND-2",
+    "docs/python-syntax.md#builtins (round(value) answers the nearest integral float, with halves away from zero)",
+    "docs/floating-point.md#rounding-roots-and-powers (math.round rounds halves away from zero)"
+   ],
+   "rationale": "The language's rule is deliberate and internally consistent: math.round, format_float and the SPEC bullet PRELUDE-ROUND-1 all round halves away from zero, which is C's round() and IEEE roundToIntegralTiesAway. The divergence is therefore declared, not repaired: it is a Python-fidelity hazard for an agent that writes round(x) expecting CPython's ties-to-even int, and the honest instrument reports it as such. Changing the rule is a language decision (velocity/backlog.json C-1) that this measurement package does not make.",
+   "decision": "keep the documented rule; report the divergence strictly and exempt it from the package gate by this declaration",
+   "tracked_by": "velocity/backlog.json C-1",
+   "evidence": "velocity/suites/idioms/divergence-evidence.json",
+   "review": {
+    "state": "accepted-for-gating",
+    "reviewed_on": "2026-09-21",
+    "reviewer": "measurement package (WS-MEASURE); the language decision itself remains open in backlog C-1"
+   },
+   "cases": [
+    {"expression": "int(round(2.5))", "selka": 3, "cpython": 2},
+    {"expression": "int(round(0.5))", "selka": 1, "cpython": 0},
+    {"expression": "int(round(-0.5))", "selka": -1, "cpython": 0},
+    {"expression": "int(round(-2.5))", "selka": -3, "cpython": -2},
+    {"expression": "int(round(1.4))", "selka": 1, "cpython": 1},
+    {"expression": "int(round(2.6))", "selka": 3, "cpython": 3},
+    {"expression": "round(2.5) + 0.5", "selka": 3.5, "cpython": 2.5},
+    {"expression": "round(0.125, 2)", "selka": 0.13, "cpython": 0.12},
+    {"expression": "round(1250.0, -2)", "selka": 1300.0, "cpython": 1200.0},
+    {"expression": "round(2.675, 2)", "selka": 2.67, "cpython": 2.67}
+   ]
+  },
+  {
+   "id": "collection-value-semantics",
+   "status": "declared",
+   "title": "List and dictionary assignment creates independent values",
+   "probes": [
+    "d11_list_value_copy.selka",
+    "d12_nested_list_value_copy.selka",
+    "d13_dict_value_copy.selka"
+   ],
+   "idiom": "python-mutable-collection-aliasing",
+   "selka": "Assignment copies a collection value, including mutable descendants. Changing the copy leaves the original unchanged. Each probe returns 12.",
+   "cpython": "Assignment aliases the collection object. Mutations through the second name affect the original, including nested lists. Each probe returns 22.",
+   "documented_at": [
+    "docs/adr/D9-value-semantics-then-rc.md",
+    "docs/managed-memory.md",
+    "docs/records-and-unions.md"
+   ],
+   "rationale": "D9 adopts independent values and copy-on-write before reference counting. Keep these valid Python probes under the CPython oracle so the intentional semantic difference stays visible in strict C2; exempt only these named cases from C2_policy.",
+   "decision": "Keep value semantics and record the distinct Python result.",
+   "tracked_by": "docs/audits/d9-closeout-plan-2026-09-26.md WP-3f",
+   "evidence": "velocity/suites/idioms/divergence-evidence-d9.json",
+   "review": {
+    "state": "accepted-for-gating",
+    "reviewed_on": "2026-09-26",
+    "reviewer": "D9 default-flip implementation of the accepted value-semantics decision"
+   },
+   "cases": []
+  }
+ ]
+}

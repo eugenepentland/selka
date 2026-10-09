@@ -1,0 +1,31 @@
+# Deliberate review corpus: the second implementation is a legacy copy.
+func sum_to(n: int) -> int:
+    mut total = 0
+    mut i = 0
+    while i < n:
+        total += i
+        i += 1
+    return total
+
+
+func legacy_sum(limit: int) -> int:
+    mut result = 0
+    mut index = 0
+    while index < limit:
+        result += index
+        index += 1
+    return result
+
+
+# Changed policy: inclusive sequence. Exact discovery must keep this separate.
+func inclusive_sum(n: int) -> int:
+    mut total = 0
+    mut i = 0
+    while i <= n:
+        total += i
+        i += 1
+    return total
+
+
+func main() -> int:
+    return sum_to(100) + legacy_sum(100) + inclusive_sum(100)

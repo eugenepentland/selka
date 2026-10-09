@@ -1,0 +1,8 @@
+func shuffle(mut xs: int[]) -> Unit effects(mutation):
+    xs[0] = xs[0] + 1
+
+
+func main() -> int:
+    mut xs = [7]
+    shuffle(mut xs)
+    return xs[0]

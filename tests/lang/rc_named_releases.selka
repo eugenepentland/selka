@@ -1,0 +1,62 @@
+# Named locals the program only reads and rebinds whole are released after
+# their last use (RC-NAMED-RELEASE-1). Each answer is the same under the
+# collector and RC; RC counting builds balance.
+func counted(seed: int, size: int) -> dict[str, int]:
+    mut counts: dict[str, int] = {}
+    for index in range(size):
+        mut key = "k" + str((seed * index) % 7)
+        counts[key] = counts.get(key, 0) + 1
+    return counts
+
+
+public func test_a_rebound_dictionary_is_released_before_the_next_value() -> bool:
+    mut total = 0
+    mut counts = counted(1, 3)
+    for seed in [2, 3, 5]:
+        counts = counted(seed, 20)
+        total = total + len(counts)
+    return total == 21 and counts["k0"] == 3
+
+
+public func test_values_read_out_of_a_dead_local_stay_alive() -> bool:
+    mut rows = [[1, 2], [3, 4]]
+    mut first = rows[0]
+    mut word = "alpha" + "beta"
+    mut piece = word[1:4]
+    mut total = 0
+    for index in range(3):
+        total = total + first[index % 2] + len(piece)
+    return total == 1 + 2 + 1 + 9 and piece == "lph"
+
+
+public func test_a_local_read_again_on_a_later_iteration_is_kept() -> bool:
+    mut names = ["a", "b"]
+    mut seen: str[] = []
+    mut marker = 0
+    for index in range(4):
+        if index % 2 == 0:
+            seen.append(names[index // 2])
+        marker = index
+    return seen == ["a", "b"] and marker == 3
+
+
+func fill(mut values: int[]) -> int:
+    values.append(len(values))
+    return len(values)
+
+
+public func test_written_and_snapshot_locals_keep_their_owners() -> bool:
+    mut values = [1]
+    mut before = values
+    mut count = fill(mut values)
+    mut after = values
+    values = [9]
+    return count == 2 and before == [1] and after == [1, 1] and values == [9]
+
+
+func main() -> int:
+    assert test_a_rebound_dictionary_is_released_before_the_next_value()
+    assert test_values_read_out_of_a_dead_local_stay_alive()
+    assert test_a_local_read_again_on_a_later_iteration_is_kept()
+    assert test_written_and_snapshot_locals_keep_their_owners()
+    return 0

@@ -1,0 +1,105 @@
+import strings
+
+# A path split into everything before its final suffix and that suffix.
+public record Split:
+    root: str
+    extension: str
+
+
+# The single path separator these operations understand.
+public func separator() -> str:
+    return "/"
+
+
+# Whether a path starts at the root rather than at the working directory.
+public func is_absolute(value: str) -> bool:
+    return strings.starts_with(value, separator())
+
+
+# Two path pieces joined; an absolute right side replaces the left one.
+public func join(left: str, right: str) -> str:
+    if len(right) == 0:
+        return left
+    if len(left) == 0 or is_absolute(right):
+        return right
+    if strings.ends_with(left, separator()):
+        return left + right
+    return left + separator() + right
+
+
+# Every piece joined from left to right under the same rules as join.
+public func join_all(parts: str[]) -> str:
+    mut out = ""
+    for part in parts:
+        out = join(out, part)
+    return out
+
+
+# The final component of a path; a trailing separator yields the empty text.
+public func basename(value: str) -> str:
+    mut index = len(value)
+    while index > 0 and value[index - 1] != separator():
+        index -= 1
+    return value[index:len(value)]
+
+
+# Everything before the final component, without its trailing separator.
+public func dirname(value: str) -> str:
+    mut index = len(value)
+    while index > 0 and value[index - 1] != separator():
+        index -= 1
+    while index > 1 and value[index - 1] == separator():
+        index -= 1
+    return value[0:index]
+
+
+# A path split at the final dot of its last component.
+public func splitext(value: str) -> Split:
+    mut name = basename(value)
+    mut cut = len(name)
+    while cut > 0 and name[cut - 1] != ".":
+        cut -= 1
+    if cut <= 1:
+        return Split(root=value, extension="")
+    mut boundary = len(value) - (len(name) - cut) - 1
+    return Split(root=value[0:boundary], extension=value[boundary:len(value)])
+
+
+# The final component without its suffix.
+public func stem(value: str) -> str:
+    return basename(splitext(value).root)
+
+
+# The final suffix of a path, including its leading dot, or the empty text.
+public func extension(value: str) -> str:
+    return splitext(value).extension
+
+
+# Nonempty components of a path, with separators and single dots removed.
+public func components(value: str) -> str[]:
+    mut out: str[] = []
+    for piece in value.split(separator()):
+        if len(piece) > 0 and piece != ".":
+            out.append(piece)
+    return out
+
+
+# A path with duplicate separators, single dots and resolvable parents removed.
+public func normalize(value: str) -> str:
+    if len(value) == 0:
+        return "."
+    mut absolute = is_absolute(value)
+    mut parts: str[] = []
+    for piece in components(value):
+        if piece != "..":
+            parts.append(piece)
+        elif len(parts) > 0 and parts[len(parts) - 1] != "..":
+            parts = parts[0:len(parts) - 1]
+        elif not absolute:
+            parts.append(piece)
+    mut body = separator().join(parts)
+    if absolute:
+        return separator() + body
+    if len(body) == 0:
+        return "."
+    return body

@@ -1,0 +1,10 @@
+func inc(x: i64) -> i64 effects():
+    return x + 1
+
+
+func apply[T](f: func(T) -> T effects(), x: T) -> T:
+    return f(x)
+
+
+public func program() -> i64:
+    return apply(inc, 4)

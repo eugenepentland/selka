@@ -1,0 +1,167 @@
+record Widget:
+    width: int
+
+
+record Counter:
+    value: int
+
+
+func append_one[T: copy + storable](mut candidate: T[]?, item: T) -> int:
+    if candidate is None:
+        return 0
+    candidate.append(item)
+    return len(candidate)
+
+
+func observe(mut counter: int[]) -> int?:
+    counter[0] = counter[0] + 1
+    return Some(counter[0])
+
+
+func inferred_identity[T: copy + storable](value: T) -> T:
+    return value
+
+
+func width(candidate: Widget?) -> int:
+    if candidate is None:
+        return 0
+    return candidate.width
+
+
+func positive(candidate: int?) -> bool:
+    return candidate is not None and candidate > 0
+
+
+func absent_or_positive(candidate: int?) -> bool:
+    return candidate is None or candidate > 0
+
+
+func fallback[T: copy + storable](candidate: T?, other: T) -> T:
+    if candidate is None:
+        return other
+    return candidate
+
+
+func generic_positive[T: integer](candidate: T?) -> bool:
+    return candidate is not None and candidate > T(0)
+
+
+# spec: OPTION-FLOW-1
+public func test_option_narrowing_early_return_and_fields() -> bool:
+    return width(Some(Widget(width=42))) == 42 and width(None) == 0
+
+
+# spec: OPTION-FLOW-2
+public func test_option_narrowing_short_circuit_conditions() -> bool:
+    return positive(Some(42)) and not positive(None) and absent_or_positive(None) and not absent_or_positive(Some(-1))
+
+
+# spec-case: OPTION-FLOW-1
+public func test_option_narrowing_generic_payload_and_guard() -> bool:
+    mut present: int? = Some(42)
+    mut missing: int? = None
+    return fallback(present, 0) == 42 and fallback(missing, 7) == 7 and generic_positive(present)
+
+
+# spec: OPTION-FLOW-3
+public func test_option_narrowing_reassignment_and_loop_guard() -> bool:
+    mut candidate: int? = Some(42)
+    mut total = 0
+    while candidate is not None:
+        total += candidate
+        candidate = None
+    return total == 42 and candidate is None
+
+
+# spec-case: OPTION-FLOW-3
+public func test_option_narrowing_survives_unrelated_loop_writes() -> bool:
+    mut candidate: int? = Some(40)
+    if candidate is None:
+        return False
+    mut total = 0
+    for index in range(2):
+        total += index
+    return candidate + total == 41
+
+
+# spec-case: OPTION-FLOW-1
+public func test_option_narrowing_else_negation_and_original_context() -> bool:
+    mut candidate: int? = Some(42)
+    if candidate is None:
+        return False
+    else:
+        mut copied: int? = candidate
+        if copied is None:
+            return False
+        return copied == candidate
+
+
+# spec-case: OPTION-FLOW-2
+public func test_option_narrowing_two_guard_conjunction() -> bool:
+    mut first: int? = Some(40)
+    mut second: int? = Some(2)
+    if first is not None and second is not None:
+        return first + second == 42
+    return False
+
+
+# spec-case: OPTION-FLOW-1
+public func test_option_narrowing_negated_guard() -> bool:
+    mut candidate: int? = Some(42)
+    if not (candidate is None):
+        return candidate == 42
+    return False
+
+
+# spec-case: OPTION-FLOW-1
+public func test_option_narrowing_record_write_preserves_wrapper() -> bool:
+    mut candidate: Widget? = Some(Widget(width=40))
+    if candidate is None:
+        return False
+    candidate.width = candidate.width + 2
+    mut copied: Widget? = candidate
+    return candidate.width == 42 and width(copied) == 42
+
+
+# spec-case: OPTION-FLOW-1
+public func test_option_narrowing_record_write_preserves_independent_value() -> bool:
+    mut counter = Counter(value=40)
+    mut candidate: Counter? = Some(counter)
+    if candidate is None:
+        return False
+    candidate.value = candidate.value + 2
+    return candidate.value == 42 and counter.value == 40
+
+
+# spec-case: OPTION-FLOW-1
+public func test_option_narrowing_collection_methods_and_index_writes() -> bool:
+    mut items: int[] = [40]
+    mut candidate: int[]? = Some(items.copy())
+    mut count = append_one(mut candidate, 2)
+    if candidate is None:
+        return False
+    candidate[0] = candidate[0] + candidate[1]
+    return count == 2 and candidate[0] == 42 and items[0] == 40
+
+
+# spec-case: OPTION-FLOW-2
+public func test_option_narrowing_false_disjunction_and_repeated_guard() -> bool:
+    mut first: int? = Some(40)
+    mut second: int? = Some(2)
+    if first is None or second is None:
+        return False
+    if first is None:
+        return False
+    return first + second == 42
+
+
+# spec: OPTION-FLOW-4
+# spec-case: GENERIC-EXPECTED-1
+public func test_option_narrowing_tests_and_contextual_calls_evaluate_once() -> bool:
+    mut counter: int[] = [0]
+    if observe(mut counter) is None:
+        return False
+    mut value: int? = inferred_identity(observe(mut counter))
+    if value is None or observe(mut counter) is None:
+        return False
+    return value == 2 and counter[0] == 3

@@ -1,0 +1,201 @@
+# A `mut` record argument writes the caller's whole tree when the call runs
+# (OWNERSHIP-MUT-RECORD-WRITE-1), not where the reference is pushed
+# (OWNERSHIP-MUT-RECORD-WRITE-2). A borrow read only for a scalar in the
+# call's later arguments may stay a borrow; one whose collection reaches the
+# callee, or is read after the call, is a real copy. Every answer is the value
+# semantics one under the collector and every RC build.
+record Box:
+    tag: int
+    names: int[]
+
+
+record State:
+    boxes: Box[]
+    seen: int
+
+
+enum Slot:
+    empty
+    full(value: Box)
+
+
+record Store:
+    slots: Slot[]
+    total: int
+
+
+# Replaces the first box and churns the heap, so a borrow of the old box
+# that outlived the write would read released or reused storage.
+func replace_first(mut state: State, tag: int):
+    state.boxes[0] = Box(tag=tag * 10, names=[tag, tag, tag])
+    mut junk: int[][] = []
+    for i in range(32):
+        junk.append([i, i + 1])
+    state.seen = state.seen + tag + len(junk)
+
+
+func grow_first(mut state: State, tag: int):
+    state.boxes[0].names.append(tag)
+    state.seen = state.seen + tag
+
+
+func keep(mut state: State, names: int[]) -> int:
+    state.boxes[0].names.append(7)
+    state.boxes[0] = Box(tag=0, names=[])
+    return len(names) * 100 + names[0]
+
+
+func hold(mut state: State, box: Box) -> int:
+    state.boxes[0].names.append(7)
+    return len(box.names) * 100 + box.tag
+
+
+func first(names: int[], mut state: State) -> int:
+    state.boxes[0].names.append(7)
+    return len(names)
+
+
+func mixed(mut state: State, tag: int, names: int[]) -> int:
+    state.boxes[0].names.append(tag)
+    return len(names)
+
+
+func refill(mut store: Store, tag: int):
+    store.slots[0] = Slot.full(value=Box(tag=tag + 1, names=[tag]))
+    store.total = store.total + tag
+
+
+func keep_slot(mut store: Store, names: int[]) -> int:
+    store.slots[0] = Slot.empty
+    store.total = store.total + 1
+    return len(names)
+
+
+func count_boxes(mut state: State) -> int:
+    state.seen = state.seen + 1
+    return len(state.boxes)
+
+
+func pair(mut state: State, mut other: State, tag: int) -> int:
+    state.boxes[0].names.append(tag)
+    other.boxes[0] = Box(tag=tag, names=[])
+    return len(state.boxes[0].names) * 10 + len(other.boxes[0].names)
+
+
+func outer(mut state: State, counted: int, tag: int) -> int:
+    state.boxes[0].names.append(tag)
+    return counted * 100 + len(state.boxes[0].names)
+
+
+public func test_a_scalar_read_after_the_reference_sees_the_value_before_the_call() -> bool:
+    mut state = State(boxes=[Box(tag=4, names=[1, 2])], seen=0)
+    mut box = state.boxes[0]
+    replace_first(mut state, box.tag)
+    return state.boxes[0].tag == 40 and state.boxes[0].names == [4, 4, 4] and state.seen == 36
+
+
+public func test_a_match_binding_read_for_a_scalar_survives_the_callee_replacing_its_element() -> bool:
+    mut store = Store(slots=[Slot.full(value=Box(tag=5, names=[9]))], total=0)
+    match store.slots[0]:
+        case Slot.full(value=box):
+            refill(mut store, box.tag)
+        case Slot.empty:
+            return False
+    match store.slots[0]:
+        case Slot.full(value=now):
+            return now.tag == 6 and now.names == [5] and store.total == 5
+        case Slot.empty:
+            return False
+
+
+public func test_a_borrow_read_after_the_call_keeps_the_value_before_it() -> bool:
+    mut state = State(boxes=[Box(tag=3, names=[1])], seen=0)
+    mut box = state.boxes[0]
+    replace_first(mut state, box.tag)
+    return box.tag == 3 and box.names == [1] and state.boxes[0].names == [3, 3, 3]
+
+
+public func test_a_collection_argument_read_from_the_borrow_is_a_snapshot() -> bool:
+    mut state = State(boxes=[Box(tag=2, names=[5, 6])], seen=0)
+    mut box = state.boxes[0]
+    mut seen = keep(mut state, box.names)
+    return seen == 205 and state.boxes[0].tag == 0 and len(state.boxes[0].names) == 0
+
+
+public func test_the_whole_borrow_as_an_argument_is_a_snapshot() -> bool:
+    mut state = State(boxes=[Box(tag=8, names=[1, 2, 3])], seen=0)
+    mut box = state.boxes[0]
+    mut seen = hold(mut state, box)
+    return seen == 308 and state.boxes[0].names == [1, 2, 3, 7]
+
+
+public func test_an_operand_pushed_before_the_reference_is_a_snapshot() -> bool:
+    mut state = State(boxes=[Box(tag=1, names=[4])], seen=0)
+    mut box = state.boxes[0]
+    mut seen = first(box.names, mut state)
+    return seen == 1 and state.boxes[0].names == [4, 7]
+
+
+public func test_a_scalar_and_a_collection_from_one_borrow_in_one_call() -> bool:
+    mut state = State(boxes=[Box(tag=6, names=[1, 1])], seen=0)
+    mut box = state.boxes[0]
+    mut seen = mixed(mut state, box.tag, box.names)
+    return seen == 2 and state.boxes[0].names == [1, 1, 6]
+
+
+public func test_a_match_binding_collection_argument_is_a_snapshot() -> bool:
+    mut store = Store(slots=[Slot.full(value=Box(tag=1, names=[3, 4, 5]))], total=0)
+    mut seen = 0
+    match store.slots[0]:
+        case Slot.full(value=box):
+            seen = keep_slot(mut store, box.names)
+        case Slot.empty:
+            seen = -1
+    match store.slots[0]:
+        case Slot.full(value=_):
+            return False
+        case Slot.empty:
+            return seen == 3 and store.total == 1
+
+
+public func test_a_nested_writing_call_between_the_reference_and_the_scalar_read() -> bool:
+    mut state = State(boxes=[Box(tag=2, names=[1])], seen=0)
+    mut box = state.boxes[0]
+    mut seen = outer(mut state, count_boxes(mut state), box.tag)
+    return seen == 102 and state.boxes[0].names == [1, 2] and state.seen == 1
+
+
+# `pair(mut state, mut state, box.tag)` is E_MUTATION_OVERLAP (MUT-EXCLUSIVE-1);
+# a second state copied out keeps the scalar read from the borrow.
+public func test_two_mut_states_with_a_scalar_from_a_borrow() -> bool:
+    mut state = State(boxes=[Box(tag=9, names=[1])], seen=0)
+    mut box = state.boxes[0]
+    mut other = state
+    mut seen = pair(mut state, mut other, box.tag)
+    return seen == 20 and state.boxes[0].names == [1, 9] and other.boxes[0].tag == 9 and len(other.boxes[0].names) == 0
+
+
+public func test_a_loop_of_scalar_reads_through_a_growing_state() -> bool:
+    mut state = State(boxes=[Box(tag=1, names=[0])], seen=0)
+    mut total = 0
+    for i in range(20):
+        mut box = state.boxes[0]
+        grow_first(mut state, box.tag + i)
+        total = total + state.seen
+    return len(state.boxes[0].names) == 21 and state.seen == 210 and total == 1540
+
+
+# Run the same assertions without test-harness accounting or result wrapping.
+func main(out: Stream) -> int:
+    out.print(test_a_scalar_read_after_the_reference_sees_the_value_before_the_call())
+    out.print(test_a_match_binding_read_for_a_scalar_survives_the_callee_replacing_its_element())
+    out.print(test_a_borrow_read_after_the_call_keeps_the_value_before_it())
+    out.print(test_a_collection_argument_read_from_the_borrow_is_a_snapshot())
+    out.print(test_the_whole_borrow_as_an_argument_is_a_snapshot())
+    out.print(test_an_operand_pushed_before_the_reference_is_a_snapshot())
+    out.print(test_a_scalar_and_a_collection_from_one_borrow_in_one_call())
+    out.print(test_a_match_binding_collection_argument_is_a_snapshot())
+    out.print(test_a_nested_writing_call_between_the_reference_and_the_scalar_read())
+    out.print(test_two_mut_states_with_a_scalar_from_a_borrow())
+    out.print(test_a_loop_of_scalar_reads_through_a_growing_state())
+    return 0

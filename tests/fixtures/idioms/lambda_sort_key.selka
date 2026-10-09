@@ -1,0 +1,7 @@
+record Person:
+    age: int
+
+func main() -> int:
+    mut people = [Person(age=30), Person(age=12)]
+    mut ranked = sorted(people, key=lambda person: person.age)
+    return ranked[0].age

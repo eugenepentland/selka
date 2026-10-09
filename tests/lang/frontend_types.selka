@@ -1,0 +1,244 @@
+import frontend_type_helpers
+
+enum ParseError:
+    invalid
+    empty
+
+
+enum Message:
+    pair(left: int, right: int)
+    empty
+
+
+func parse(value: int) -> int fails ParseError:
+    if value < 0:
+        fail ParseError.invalid
+    if value == 0:
+        fail ParseError.empty
+    return value + 1
+
+
+func forward(value: int) -> int fails ParseError:
+    return try parse(value)
+
+
+func optional(value: int) -> int?:
+    if value == 0:
+        return None
+    return value
+
+
+func nested_optional(value: int) -> int??:
+    return optional(value)
+
+
+func nothing() -> Unit:
+    return
+
+
+# spec: FRONTEND-TYPES-1
+public func test_frontend_array_optional() -> bool:
+    mut values: int[] = [3, 4]
+    values.append(5)
+    const present = optional(3)
+    if present is None:
+        return False
+    return len(values) == 3 and present == 3
+
+
+# spec-case: FRONTEND-TYPES-1
+public func test_frontend_nested_optional() -> bool:
+    const outer = nested_optional(0)
+    match outer:
+        case Some(inner):
+            return inner is None
+        case None:
+            return False
+
+
+# spec: FRONTEND-FAILURES-1
+public func test_frontend_failure_success() -> bool:
+    match forward(4):
+        case Ok(value):
+            return value == 5
+        case Err(error):
+            return False
+
+
+# spec-case: FRONTEND-FAILURES-1
+public func test_frontend_nested_failure() -> bool:
+    match forward(-1):
+        case Ok(value):
+            return False
+        case Err(ParseError.invalid):
+            return True
+        case Err(ParseError.empty):
+            return False
+
+
+# spec: FRONTEND-MATCH-1
+public func test_frontend_named_enum_pattern() -> bool:
+    const message = Message.pair(right=8, left=3)
+    match message:
+        case Message.pair(right=right, left=left):
+            return left == 3 and right == 8
+        case Message.empty:
+            return False
+
+
+# spec-case: FRONTEND-MATCH-1
+public func test_frontend_match_value() -> bool:
+    const number = match Message.pair(left=3, right=8):
+        case Message.pair(left=left, right=right):
+            yield left + right
+        case Message.empty:
+            yield 0
+    return number == 11
+
+
+# spec-case: FRONTEND-TYPES-1
+public func test_frontend_fixed_array() -> bool:
+    const values: FixedArray[int, 2] = FixedArray[int, 2]([3, 4])
+    return values[0] == 3 and values[1] == 4
+
+
+enum Bit:
+    low
+    high
+
+
+enum Product:
+    pair(left: Bit, right: Bit)
+
+
+# spec-case: FRONTEND-MATCH-1
+public func test_frontend_nested_product() -> bool:
+    const product = Product.pair(left=Bit.high, right=Bit.low)
+    const value = match product:
+        case Product.pair(left=Bit.low, right=Bit.low):
+            yield 0
+        case Product.pair(left=Bit.low, right=Bit.high):
+            yield 1
+        case Product.pair(left=Bit.high, right=Bit.low):
+            yield 2
+        case Product.pair(left=Bit.high, right=Bit.high):
+            yield 3
+    return value == 2
+
+
+func unit_optional() -> Unit?:
+    return ()
+
+
+# spec-case: FRONTEND-TYPES-1
+public func test_frontend_optional_unit() -> bool:
+    match unit_optional():
+        case Some(_):
+            return True
+        case None:
+            return False
+
+
+# spec-case: FRONTEND-TYPES-1
+public func test_frontend_dynamic_fixed_array() -> bool:
+    const source: int[] = [3, 4]
+    match FixedArray[int, 2](source):
+        case Ok(values):
+            return values[0] == 3 and values[1] == 4
+        case Err(error):
+            return False
+
+
+# spec-case: FRONTEND-TYPES-1
+public func test_frontend_dynamic_fixed_array_mismatch() -> bool:
+    const source: int[] = [3]
+    match FixedArray[int, 2](source):
+        case Ok(values):
+            return False
+        case Err(FixedArrayLengthError.wrong_length):
+            return True
+
+
+# spec-case: FRONTEND-TYPES-1
+public func test_frontend_imported_nominal_suffix() -> bool:
+    const values = frontend_type_helpers.rows([frontend_type_helpers.Row(value=3)])
+    const copied = frontend_type_helpers.generic_rows(values)
+    return copied[0].value == 3
+
+
+enum Number:
+    present(value: int)
+    absent
+
+
+enum NumberProduct:
+    pair(left: Number, right: Bit)
+
+
+# spec-case: FRONTEND-MATCH-1
+public func test_frontend_product_row_binders() -> bool:
+    const input = NumberProduct.pair(left=Number.present(value=7), right=Bit.high)
+    const result = match input:
+        case NumberProduct.pair(left=Number.present(value=first), right=Bit.low):
+            yield first
+        case NumberProduct.pair(left=Number.present(value=second), right=Bit.high):
+            yield second + 1
+        case NumberProduct.pair(left=Number.absent, right=Bit.low):
+            yield 0
+        case NumberProduct.pair(left=Number.absent, right=Bit.high):
+            yield 1
+    return result == 8
+
+
+enum NestedBit:
+    wrapped(value: Bit)
+    absent
+
+
+enum NestedProduct:
+    pair(left: NestedBit, right: Bit)
+
+
+# spec-case: FRONTEND-MATCH-1
+public func test_frontend_deep_product() -> bool:
+    const input = NestedProduct.pair(left=NestedBit.wrapped(value=Bit.high), right=Bit.low)
+    const result = match input:
+        case NestedProduct.pair(left=NestedBit.wrapped(value=Bit.low), right=Bit.low):
+            yield 0
+        case NestedProduct.pair(left=NestedBit.wrapped(value=Bit.low), right=Bit.high):
+            yield 1
+        case NestedProduct.pair(left=NestedBit.wrapped(value=Bit.high), right=Bit.low):
+            yield 2
+        case NestedProduct.pair(left=NestedBit.wrapped(value=Bit.high), right=Bit.high):
+            yield 3
+        case NestedProduct.pair(left=NestedBit.absent, right=Bit.low):
+            yield 4
+        case NestedProduct.pair(left=NestedBit.absent, right=Bit.high):
+            yield 5
+    return result == 2
+
+
+enum Singleton:
+    only
+
+
+enum DisjointProduct:
+    pair(left: Singleton, right: Bit)
+
+
+# spec-case: FRONTEND-MATCH-1
+public func test_frontend_disjoint_wildcard_product() -> bool:
+    match DisjointProduct.pair(left=Singleton.only, right=Bit.high):
+        case DisjointProduct.pair(left=Singleton.only, right=Bit.low):
+            return False
+        case DisjointProduct.pair(left=_, right=Bit.high):
+            return True
+
+
+func grouped_optional(found: bool) -> int?:
+    return if (found) then (Some(7)) else (((None)))
+
+
+# spec-case: FRONTEND-TYPES-1
+public func test_frontend_grouped_none() -> bool:
+    return grouped_optional(False) is None

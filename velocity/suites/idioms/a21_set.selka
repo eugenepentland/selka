@@ -1,0 +1,7 @@
+# oracle: cpython
+def main() -> int:
+    seen: set[int] = set()
+    seen.add(1)
+    seen.add(1)
+    seen.add(2)
+    return len(seen) * 21

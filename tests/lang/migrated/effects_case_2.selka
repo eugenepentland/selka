@@ -1,0 +1,18 @@
+record Box:
+    values: int[]
+
+
+func write_text(mut pieces: str[], box: Box) -> Unit:
+    pieces.append("x")
+    _ = box
+
+
+func use(mut pieces: str[], box: Box) -> Unit:
+    write_text(mut pieces, box)
+
+
+public func program() -> int:
+    mut pieces: str[] = []
+    mut box = Box(values=[1])
+    use(mut pieces, box)
+    return 0

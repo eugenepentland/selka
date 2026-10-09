@@ -1,0 +1,8 @@
+public func program() -> i64:
+    mut text: str = b"a,b,"
+    mut parts = text.split(b",")
+    mut sep: str = b","
+    mut joined = sep.join(parts)
+    if joined == text:
+        return len(joined)
+    return 0

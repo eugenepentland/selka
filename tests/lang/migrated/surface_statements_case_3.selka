@@ -1,0 +1,20 @@
+type Done = Unit
+
+
+func nothing() -> Done:
+    return
+
+
+func explicit():
+    return ()
+
+
+func identity[T](value: T) -> T:
+    return value
+
+
+public func program() -> i64:
+    nothing()
+    explicit()
+    identity[Unit](())
+    return 42

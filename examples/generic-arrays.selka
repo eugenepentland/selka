@@ -1,0 +1,32 @@
+domain ComponentId: u64:
+    func make(raw: u64) -> ComponentId:
+        return wrap[ComponentId](raw)
+
+
+domain NetId: u64:
+    func make(raw: u64) -> NetId:
+        return wrap[NetId](raw)
+
+
+func pair[T](first: T, second: T) -> FixedArray[T, 2]:
+    return FixedArray[T, 2]([first, second])
+
+
+func contains[T: equality](items: FixedArray[T, 2], needle: T) -> bool:
+    mut index = 0
+    while index < int(len(items)):
+        if items[index] == needle:
+            return True
+        index += 1
+    return False
+
+
+func main() -> int:
+    mut components = pair[ComponentId](ComponentId.make(1u64), ComponentId.make(2u64))
+    mut nets = pair[NetId](NetId.make(8u64), NetId.make(9u64))
+    mut score = 0
+    if contains[ComponentId](components, ComponentId.make(2u64)):
+        score += 1
+    if contains[NetId](nets, NetId.make(9u64)):
+        score += 2
+    return score

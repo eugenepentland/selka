@@ -1,0 +1,88 @@
+record State:
+    values: int[]
+    code: int[]
+    links: int[]
+    count: int
+
+
+func counted(times: int) -> int:
+    mut state = State(values=[7], code=[8], links=[9], count=0)
+    mut i = 0
+    while i < times:
+        state.count = state.count + 1
+        i += 1
+    return state.count + state.values[0] + state.code[0] + state.links[0]
+
+
+func replace(mut state: State):
+    state = State(values=[11], code=[12], links=[13], count=40)
+
+
+func move_result(mut state: State) -> State:
+    mut saved = state
+    state.count = state.count + 2
+    return saved
+
+
+func forward(mut state: State) -> State:
+    return move_result(mut state)
+
+
+func append_child(mut state: State):
+    state.values.append(15)
+
+
+func rhs(mut state: State) -> int:
+    replace(mut state)
+    return state.count + 3
+
+
+public func test_named_loop_keeps_three_child_owners() -> bool:
+    return counted(100) == 124
+
+
+public func test_named_rebinding_and_forwarded_mut_return_keep_ownership() -> bool:
+    mut state = State(values=[7], code=[8], links=[9], count=0)
+    mut saved = forward(mut state)
+    state.count = state.count + 1
+    replace(mut state)
+    state.count = state.count + 2
+    state = State(values=[20], code=[21], links=[22], count=5)
+    state.count = state.count + 4
+    return saved.count == 0 and saved.values == [7] and state.count == 9 and state.code == [21]
+
+
+public func test_record_and_list_snapshots_survive_named_scalar_write() -> bool:
+    mut state = State(values=[7], code=[8], links=[9], count=2)
+    mut saved = state
+    mut children = state.values
+    state.count = state.count + 5
+    append_child(mut state)
+    state.count = state.count + 1
+    return saved.count == 2 and saved.values == [7] and children == [7] and state.count == 8 and state.values == [7, 15]
+
+
+public func test_complete_rhs_rebinding_precedes_named_scalar_commit() -> bool:
+    mut state = State(values=[7], code=[8], links=[9], count=2)
+    mut saved = state
+    mut next_count = rhs(mut state)
+    state.count = next_count
+    return state.count == 43 and state.values == [11] and state.links == [13] and saved.count == 2 and saved.code == [8]
+
+
+public func test_published_record_snapshot_keeps_original_scalar_bits() -> bool:
+    mut state = State(values=[7], code=[8], links=[9], count=0)
+    mut published = [state]
+    mut next_count = rhs(mut state)
+    state.count = next_count
+    state.count = state.count + 1
+    return published[0].count == 0 and published[0].values == [7] and state.count == 44 and state.values == [11]
+
+
+func main(out: Stream) -> int:
+    out.print(test_named_loop_keeps_three_child_owners())
+    out.print(test_named_rebinding_and_forwarded_mut_return_keep_ownership())
+    out.print(test_record_and_list_snapshots_survive_named_scalar_write())
+    out.print(test_complete_rhs_rebinding_precedes_named_scalar_commit())
+    out.print(test_published_record_snapshot_keeps_original_scalar_bits())
+    return 0

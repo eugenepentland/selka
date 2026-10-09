@@ -1,0 +1,79 @@
+func lookup(values: int[], index: int) -> int?:
+    if index < 0 or index >= len(values):
+        return None
+    return Some(values[index])
+
+
+func describe(value: int?) -> int:
+    match value:
+        case Some(number):
+            return number
+        case None:
+            return -1
+
+
+func divide(numerator: int, denominator: int) -> Result[int, str]:
+    if denominator == 0:
+        return Err("division by zero")
+    return Ok(numerator // denominator)
+
+
+func average(total: int, parts: int) -> Result[int, str]:
+    mut share = try divide(total, parts)
+    return Ok(share + 1)
+
+
+func report(total: int, parts: int) -> int:
+    match average(total, parts):
+        case Ok(value):
+            return value
+        case Err(message):
+            return len(message)
+
+
+public func test_options() -> bool effects(managed_allocation):
+    mut values = [10, 20, 30]
+    if describe(lookup(values, 1)) != 20 or describe(lookup(values, 9)) != -1:
+        return False
+    mut blank: int? = None
+    return describe(blank) == -1
+
+
+public func test_results() -> bool effects(managed_allocation):
+    match divide(21, 3):
+        case Ok(value):
+            if value != 7:
+                return False
+        case Err(_):
+            return False
+    match divide(1, 0):
+        case Ok(_):
+            return False
+        case Err(message):
+            return message == "division by zero"
+
+
+public func test_propagation() -> bool effects(managed_allocation):
+    return report(40, 2) == 21 and report(40, 0) == 16
+
+
+public func test_parsing_and_conversion() -> bool effects(managed_allocation):
+    if describe(parse_int("22")) != 22 or describe(parse_int(" 42 ")) != 42:
+        return False
+    if describe(parse_int("0x10")) != -1 or describe(parse_int("")) != -1:
+        return False
+    match parse_float("2.5"):
+        case Some(value):
+            if value != 2.5:
+                return False
+        case None:
+            return False
+    match parse_float("nope"):
+        case Some(_):
+            return False
+        case None:
+            return True
+
+
+func main() -> int:
+    return 0

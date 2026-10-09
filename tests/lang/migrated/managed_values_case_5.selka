@@ -1,0 +1,9 @@
+public func program() -> i64:
+    mut a: i64[] = []
+    mut b: i64[] = []
+    a.append(42)
+    b.append(42)
+    if a == b:
+        if 42 in a:
+            return 42
+    return 0

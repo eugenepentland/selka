@@ -1,0 +1,13 @@
+# oracle: selka-only
+record User:
+    name: str
+    email: Option[str]
+
+def main() -> int:
+    u = User(name="a", email=None)
+    v = User(name="b", email=Some("x@y"))
+    match v.email:
+        case Some(e):
+            return len(e) * 8 + 2
+        case None:
+            return 0

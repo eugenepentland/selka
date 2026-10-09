@@ -1,0 +1,7 @@
+public func program() -> i64:
+    mut values: i64[] = []
+    mut alias = values
+    alias.append(10)
+    values = alias
+    values[0] = 41
+    return values[0] + len(values)

@@ -1,0 +1,22 @@
+public domain Id: u64:
+    func make(n: u64) -> Id effects():
+        return wrap[Id](n)
+
+
+domain Other: u64:
+    func make(n: u64) -> Other effects():
+        return wrap[Other](n)
+
+
+func same[T: equality](a: T, b: T) -> bool:
+    return a == b
+
+
+func different[T: equality](a: T, b: T) -> bool:
+    return a != b
+
+
+public func program() -> i64:
+    if same[Id](Id.make(1u64), Id.make(1u64)) and different[Other](Other.make(1u64), Other.make(2u64)):
+        return 1
+    return 0

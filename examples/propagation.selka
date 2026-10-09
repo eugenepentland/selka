@@ -1,0 +1,37 @@
+enum ArithmeticError:
+    zero
+
+
+result Quotient:
+    ok: int,
+    err: ArithmeticError
+
+
+result Total:
+    err: ArithmeticError,
+    ok: int
+
+
+func divide(n: int, d: int) -> Quotient:
+    if d == 0:
+        return Err(ArithmeticError.zero)
+    return Ok(divtrunc(n, d))
+
+
+func calculate(denominator: int) -> Total:
+    mut value = 10
+    const divided = try divide(21, denominator)
+    value = value + divided
+    return Ok(value)
+
+
+func handle(outcome: Total) -> int:
+    match outcome:
+        case Total.ok(value):
+            return value
+        case Total.err(_):
+            return 3
+
+
+func main() -> int:
+    return handle(calculate(3)) + handle(calculate(0))

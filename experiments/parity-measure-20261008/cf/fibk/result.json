@@ -1,0 +1,43 @@
+{
+ "program": "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/bench/parity/micro/fib.my",
+ "name": "fibk",
+ "cases": {
+  "run": {
+   "args": [],
+   "variants": {
+    "real": {
+     "median": {
+      "instructions": 749075272,
+      "cycles": 252409623,
+      "branch-misses": 21457,
+      "L1-dcache-load-misses": 2229
+     },
+     "status": 0,
+     "output_matches_real": true
+    },
+    "base": {
+     "median": {
+      "instructions": 749073929,
+      "cycles": 252404788,
+      "branch-misses": 21498,
+      "L1-dcache-load-misses": 2227
+     },
+     "status": 0,
+     "output_matches_real": true,
+     "llvm_lines_changed": 0
+    },
+    "overflow": {
+     "median": {
+      "instructions": 531653569,
+      "cycles": 251399239,
+      "branch-misses": 21286,
+      "L1-dcache-load-misses": 2192
+     },
+     "status": 0,
+     "output_matches_real": true,
+     "llvm_lines_changed": 1
+    }
+   }
+  }
+ }
+}

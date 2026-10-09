@@ -1,0 +1,107 @@
+record FieldCounter:
+    n: int
+    total: float
+    label: str
+    items: int[]
+
+
+record FieldPoint:
+    x: int
+    y: int
+
+
+record FieldHolder:
+    inner: FieldCounter
+    point: FieldPoint
+
+
+func bump(counter: FieldCounter) -> FieldCounter:
+    mut updated = counter
+    updated.n += 1
+    updated.n *= 3
+    updated.n -= 1
+    updated.n //= 2
+    updated.n %= 5
+    updated.total += 0.5
+    updated.total /= 2.0
+    updated.label += "!"
+    return updated
+
+
+func reset(mut counter: FieldCounter) -> int:
+    counter.n = 99
+    counter.items.append(100)
+    return 1
+
+
+func new_counter() -> FieldCounter:
+    return FieldCounter(n=1, total=1.0, label="a", items=[1])
+
+
+# An augmented assignment to a class field reads the field, applies the
+# operator's ordinary rules and stores the result, like a binding does.
+# spec: AUGMENTED-FIELD-1
+public func test_augmented_assignment_updates_a_record_value() -> bool:
+    mut c = new_counter()
+    c = bump(c)
+    return c.n == 2 and c.total == 0.75 and c.label == "a!"
+
+
+# Record fields, nested field paths and fields of list elements take the same
+# operators, each evaluating its owner once.
+# spec-case: AUGMENTED-FIELD-1
+public func test_augmented_assignment_reaches_records_nested_paths_and_list_slots() -> bool:
+    mut p = FieldPoint(x=1, y=2)
+    p.x += 10
+    p.y -= 5
+    mut h = FieldHolder(inner=new_counter(), point=FieldPoint(x=0, y=0))
+    h.inner.n += 4
+    h.point.y += 7
+    mut points = [FieldPoint(x=1, y=1)]
+    points[0].x += 5
+    return p.x == 11 and p.y == -3 and h.inner.n == 5 and h.point.y == 7 and points[0].x == 6
+
+
+# `+=` updates the field while an explicit copy keeps its earlier contents.
+# spec-case: AUGMENTED-FIELD-1
+public func test_augmented_addition_to_a_list_field_extends_in_place() -> bool:
+    mut c = new_counter()
+    mut before = c.items.copy()
+    c.items += [9, 8]
+    return len(c.items) == 3 and c.items[2] == 8 and before == [1]
+
+
+# An overlapping mut call finishes before the current field is read.
+# spec-case: AUGMENTED-FIELD-1
+public func test_augmented_field_reads_the_current_field_after_the_mut_call() -> bool:
+    mut c = new_counter()
+    mut before = c
+    mut added = reset(mut c)
+    c.n += added
+    return c.n == 100 and c.items == [1, 100] and before.n == 1 and before.items == [1]
+
+
+func main() -> int:
+    return 0
+
+
+# spec-case: AUGMENTED-FIELD-1
+public func test_augmented_list_field_writeback_preserves_record_snapshot() -> bool:
+    mut c = new_counter()
+    mut before = c
+    c.items += [9, 8]
+    return c.items == [1, 9, 8] and before.items == [1]
+
+
+func replace_items(mut counter: FieldCounter) -> int[]:
+    counter.items = [50]
+    counter.n = 7
+    return [2]
+
+
+# spec-case: AUGMENTED-FIELD-1
+public func test_augmented_list_field_updates_the_replacement_after_the_mut_call() -> bool:
+    mut c = new_counter()
+    mut added = replace_items(mut c)
+    c.items += added
+    return c.items == [50, 2] and c.n == 7

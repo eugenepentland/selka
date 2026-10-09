@@ -1,0 +1,33 @@
+# text_ops: building, splitting, parsing and rewriting text with str methods
+# and f-strings (SUITE.md section 11).
+import strings
+
+# 'x' * count: str has no repetition operator; strings.repeat is the library
+# spelling, and it answers a Result because a negative count is an error.
+func pad(count: int) -> str:
+    match strings.repeat("x", count):
+        case Ok(text):
+            return text
+        case Err(_):
+            return ""
+
+
+func main(out: Stream) -> int:
+    mut text = "\n".join([for i in range(200000) yield f"item{i},{(i * 7919) % 100003},{pad(i % 7)}"])
+    mut total = 0
+    mut widths = 0
+    mut sevens = 0
+    for line in text.split("\n"):
+        mut fields = line.split(",")
+        match parse_int(fields[1]):
+            case Some(value):
+                total += value
+            case None:
+                return 1
+        widths += len(fields[2])
+        if fields[0].endswith("7"):
+            sevens += 1
+    mut rewritten = text.replace("item", "it")
+    out.print(f"{total} {widths} {sevens}")
+    out.print(f"{len(text)} {len(rewritten)} {text.count(',1')}")
+    return 0

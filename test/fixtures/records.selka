@@ -1,0 +1,23 @@
+record Point:
+    x: int
+    y: int
+
+
+record Segment:
+    start: Point
+    end: Point
+    visible: bool
+
+
+func move(point: Point, dx: int) -> Point:
+    mut moved = point
+    moved.x = point.x + dx
+    return moved
+
+
+func main() -> int:
+    mut origin = Point(y=2, x=3)
+    mut segment = Segment(start=origin, end=move(origin, 4), visible=True)
+    if segment.visible:
+        return segment.start.x + segment.end.x + segment.end.y
+    return 0

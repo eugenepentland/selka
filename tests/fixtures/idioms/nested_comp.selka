@@ -1,0 +1,8 @@
+func main() -> int:
+    mut grid = [[1, 2], [3, 4], [5]]
+    mut flat: int[] = []
+    for row in grid:
+        for x in row:
+            if x % 2 == 1:
+                flat.append(x)
+    return sum(flat) * 10 + len(flat)

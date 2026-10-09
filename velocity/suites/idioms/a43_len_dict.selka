@@ -1,0 +1,4 @@
+# oracle: cpython
+def main() -> int:
+    d = {"a": 1, "b": 2}
+    return len(d) * 21

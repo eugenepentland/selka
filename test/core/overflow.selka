@@ -1,0 +1,8 @@
+func grow(x: int) -> int:
+    return x * 1000000000000
+
+
+func main(args: str[], out: Stream) -> int:
+    out.print(1)
+    out.print(grow(len(args) + 9300000))
+    return 0

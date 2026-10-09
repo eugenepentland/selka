@@ -1,0 +1,37 @@
+# binary_trees: the same workload and output as binary_trees.selka, with a
+# recursive union whose branch payloads are immutable managed boxes.
+enum Tree:
+    leaf
+    branch(left: Tree, right: Tree)
+
+
+func make(depth: int) -> Tree:
+    if depth == 0:
+        return Tree.leaf
+    return Tree.branch(left=make(depth - 1), right=make(depth - 1))
+
+
+func check(tree: Tree) -> int:
+    match tree:
+        case Tree.leaf:
+            return 1
+        case Tree.branch(left=left, right=right):
+            return 1 + check(left) + check(right)
+
+
+func main(out: Stream) -> int:
+    mut max_depth = 16
+    mut min_depth = 4
+    mut stretch = max_depth + 1
+    out.print(f"stretch tree of depth {stretch}\t check: {check(make(stretch))}")
+    mut long_lived = make(max_depth)
+    mut depth = min_depth
+    while depth <= max_depth:
+        mut iterations = shift_left(1, max_depth - depth + min_depth)
+        mut total = 0
+        for _ in range(iterations):
+            total = total + check(make(depth))
+        out.print(f"{iterations}\t trees of depth {depth}\t check: {total}")
+        depth = depth + 2
+    out.print(f"long lived tree of depth {max_depth}\t check: {check(long_lived)}")
+    return 0

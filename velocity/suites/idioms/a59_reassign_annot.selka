@@ -1,0 +1,5 @@
+# oracle: cpython
+def main() -> int:
+    x: int = 0
+    x = 42
+    return x

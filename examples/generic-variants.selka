@@ -1,0 +1,47 @@
+record Payload:
+    n: int
+
+
+enum Color:
+    red
+    blue
+
+
+enum Choice:
+    none
+    value(value: Payload)
+
+
+enum Scalar:
+    empty
+    number(value: int)
+
+
+func make[T: integer](value: T) -> Choice:
+    return Choice.value(value=Payload(n=int(value)))
+
+
+func score[T](context: T, value: Choice) -> int:
+    _ = context
+    match value:
+        case Choice.none:
+            return 0
+        case Choice.value(value=payload):
+            return payload.n
+
+
+func scalar[T](context: T, value: Scalar) -> int:
+    _ = context
+    match value:
+        case Scalar.empty:
+            return 0
+        case Scalar.number(value=payload):
+            return payload
+
+
+func table[T: integer](value: T) -> [Color]int:
+    return {Color.red: int(value), Color.blue: 9}
+
+
+func main() -> int:
+    return score[bool](True, make[u8](7u8)) + scalar[int](0, Scalar.number(value=table[u16](1u16)[Color.blue]))

@@ -1,0 +1,18 @@
+enum State:
+    idle
+    active
+
+
+func toggle(state: State) -> State:
+    if state == State.idle:
+        return State.active
+    return State.idle
+
+
+func main() -> int:
+    mut state = toggle(State.idle)
+    match state:
+        case State.active:
+            return 7
+        case State.idle:
+            return 0

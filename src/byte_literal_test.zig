@@ -1,0 +1,64 @@
+//! Text-sized byte literals share array semantics through checking and native execution.
+const std = @import("std");
+const t = std.testing;
+const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
+const program =
+    \\func first[T](x: T) -> T:
+    \\    return x
+    \\
+    \\
+    \\func main() -> i64:
+    \\    mut a = first[FixedArray[u8, 4]](b"A\x00\xffB")
+    \\    return i64(a[0]) + i64(a[2]) + i64(len(b"µ"))
+;
+fn scenario(allocator: std.mem.Allocator) !void {
+    var c = try language.Compilation.init(allocator, "bytes.selka", program);
+    defer c.deinit();
+    try t.expectEqual(@as(i64, 322), (try native.run(&c)).value);
+    const formatted = try c.format(allocator);
+    defer allocator.free(formatted);
+    var again = try language.Compilation.init(allocator, "formatted.selka", formatted);
+    defer again.deinit();
+    try t.expectEqual(@as(i64, 322), (try native.run(&again)).value);
+}
+// spec: BYTE-LITERAL-1
+test "byte literals preserve arbitrary bytes UTF8 lengths generic arrays and formatting" {
+    try scenario(t.allocator);
+}
+test "byte literals reject invalid escapes and retain ordinary array type checks" {
+    const Case = struct { text: []const u8, code: []const u8 };
+    for ([_]Case{
+        .{ .text = "def main() -> i64:\n    return len(\"\\q\")\n", .code = "E_BYTE_ESCAPE" },
+        .{ .text = "def main() -> i64:\n    return len(\"\\x+f\")\n", .code = "E_BYTE_ESCAPE" },
+        .{ .text = "def main() -> i64:\n    return len(\"\\x0\")\n", .code = "E_BYTE_ESCAPE" },
+        .{ .text = "def main() -> i64:\n    return len(\"x\n\")\n", .code = "E_BYTE_LITERAL" },
+        .{ .text =
+        \\func f() -> FixedArray[u8, 1]:
+        \\    return b"ab"
+        \\
+        \\
+        \\func main() -> i64:
+        \\    return 0
+        , .code = "E_TYPE" },
+    }) |case| {
+        var c = try language.Compilation.init(t.allocator, "bad-byte.selka", case.text);
+        defer c.deinit();
+        try t.expectError(error.SourceError, c.check());
+        try t.expectEqualStrings(case.code, c.diagnostics.items[0].code);
+    }
+}
+
+test "byte literal decoded size limit reports E_BYTE_LITERAL_LIMIT before lowering" {
+    const text = try t.allocator.alloc(u8, 65536 + 1 + 40);
+    defer t.allocator.free(text);
+    const prefix = "def main() -> i64:\n    return len(\"";
+    @memcpy(text[0..prefix.len], prefix);
+    @memset(text[prefix.len..][0..65537], 'a');
+    const suffix = "\")\n";
+    @memcpy(text[prefix.len + 65537 ..][0..suffix.len], suffix);
+    var c = try language.Compilation.init(t.allocator, "large.selka", text[0 .. prefix.len + 65537 + suffix.len]);
+    defer c.deinit();
+    try t.expectError(error.SourceError, c.check());
+    try t.expectEqualStrings("E_BYTE_LITERAL_LIMIT", c.diagnostics.items[0].code);
+}

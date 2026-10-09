@@ -1,0 +1,201 @@
+{
+ "version": "divergence-evidence-v1",
+ "measured_on": "2026-09-24",
+ "policy": {
+  "path": "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a33a43c4cd674d3c1/velocity/divergences.json",
+  "version": "divergence-policy-v1",
+  "sha256": "09233d4801151606220a647bb077f7f8e0f00a72aa70af6a69cbbf3eb001d4d6"
+ },
+ "binary": {
+  "path": "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a33a43c4cd674d3c1/zig-out/bin/mylang",
+  "sha256": "b5468fd8de1528def197fde1c4318a7f76ec17dde01a6adee6032199416bf3d9"
+ },
+ "python": {
+  "executable": "/usr/bin/python3",
+  "version": "3.14.4"
+ },
+ "cases": [
+  {
+   "entry": "round-half-away-from-zero",
+   "expression": "int(round(2.5))",
+   "declared": {
+    "mylang": 3,
+    "cpython": 2
+   },
+   "observed": {
+    "mylang": "3",
+    "cpython": "2"
+   },
+   "reproduces": {
+    "mylang": true,
+    "cpython": true
+   }
+  },
+  {
+   "entry": "round-half-away-from-zero",
+   "expression": "int(round(0.5))",
+   "declared": {
+    "mylang": 1,
+    "cpython": 0
+   },
+   "observed": {
+    "mylang": "1",
+    "cpython": "0"
+   },
+   "reproduces": {
+    "mylang": true,
+    "cpython": true
+   }
+  },
+  {
+   "entry": "round-half-away-from-zero",
+   "expression": "int(round(-0.5))",
+   "declared": {
+    "mylang": -1,
+    "cpython": 0
+   },
+   "observed": {
+    "mylang": "-1",
+    "cpython": "0"
+   },
+   "reproduces": {
+    "mylang": true,
+    "cpython": true
+   }
+  },
+  {
+   "entry": "round-half-away-from-zero",
+   "expression": "int(round(-2.5))",
+   "declared": {
+    "mylang": -3,
+    "cpython": -2
+   },
+   "observed": {
+    "mylang": "-3",
+    "cpython": "-2"
+   },
+   "reproduces": {
+    "mylang": true,
+    "cpython": true
+   }
+  },
+  {
+   "entry": "round-half-away-from-zero",
+   "expression": "int(round(1.4))",
+   "declared": {
+    "mylang": 1,
+    "cpython": 1
+   },
+   "observed": {
+    "mylang": "1",
+    "cpython": "1"
+   },
+   "reproduces": {
+    "mylang": true,
+    "cpython": true
+   }
+  },
+  {
+   "entry": "round-half-away-from-zero",
+   "expression": "int(round(2.6))",
+   "declared": {
+    "mylang": 3,
+    "cpython": 3
+   },
+   "observed": {
+    "mylang": "3",
+    "cpython": "3"
+   },
+   "reproduces": {
+    "mylang": true,
+    "cpython": true
+   }
+  },
+  {
+   "entry": "round-half-away-from-zero",
+   "expression": "round(2.5) + 0.5",
+   "declared": {
+    "mylang": 3.5,
+    "cpython": 2.5
+   },
+   "observed": {
+    "mylang": "3.5",
+    "cpython": "2.5"
+   },
+   "reproduces": {
+    "mylang": true,
+    "cpython": true
+   }
+  },
+  {
+   "entry": "round-half-away-from-zero",
+   "expression": "round(0.125, 2)",
+   "declared": {
+    "mylang": 0.13,
+    "cpython": 0.12
+   },
+   "observed": {
+    "mylang": "0.13",
+    "cpython": "0.12"
+   },
+   "reproduces": {
+    "mylang": true,
+    "cpython": true
+   }
+  },
+  {
+   "entry": "round-half-away-from-zero",
+   "expression": "round(1250.0, -2)",
+   "declared": {
+    "mylang": 1300.0,
+    "cpython": 1200.0
+   },
+   "observed": {
+    "mylang": "1300.0",
+    "cpython": "1200.0"
+   },
+   "reproduces": {
+    "mylang": true,
+    "cpython": true
+   }
+  },
+  {
+   "entry": "round-half-away-from-zero",
+   "expression": "round(2.675, 2)",
+   "declared": {
+    "mylang": 2.67,
+    "cpython": 2.67
+   },
+   "observed": {
+    "mylang": "2.67",
+    "cpython": "2.67"
+   },
+   "reproduces": {
+    "mylang": true,
+    "cpython": true
+   }
+  }
+ ],
+ "probes": [
+  {
+   "entry": "round-half-away-from-zero",
+   "probe": "d05_round_half.my",
+   "mylang": {
+    "status": 61,
+    "value": "317",
+    "stderr_first_line": ""
+   },
+   "cpython": {
+    "status": 208,
+    "stdout": "",
+    "ok": true,
+    "error": null
+   },
+   "agrees": false
+  }
+ ],
+ "commands": {
+  "record": "python3 velocity/divergence_evidence.py --binary /home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a33a43c4cd674d3c1/zig-out/bin/mylang",
+  "strict_c2": "python3 velocity/score.py --probe 'd05*' --json"
+ }
+}

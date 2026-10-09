@@ -1,0 +1,80 @@
+record Link:
+    next: Link?
+
+
+enum Wrapped:
+    empty
+    leaf(value: int[])
+    next(value: Wrapped)
+
+
+func inline_variant(items: int[]) -> int:
+    mut wrapped = Wrapped.leaf(value=items)
+    match wrapped:
+        case Wrapped.leaf(value=values):
+            return 1
+        case _:
+            return 0
+
+
+func recursive_variant(items: int[]) -> int:
+    mut wrapped = Wrapped.next(value=Wrapped.leaf(value=items))
+    match wrapped:
+        case Wrapped.next(value=inner):
+            match inner:
+                case Wrapped.leaf(value=values):
+                    return len(values)
+                case _:
+                    return 0
+        case _:
+            return 0
+
+
+func length(node: Link) -> int:
+    mut tail = node.next
+    if tail is None:
+        return 1
+    return 1 + length(tail)
+
+
+func list_sum(values: int[]) -> int:
+    mut total = 0
+    for index in range(len(values)):
+        total += values[index]
+    return total
+
+
+public func test_recursive_reader_preserves_caller_snapshot() -> bool:
+    mut node = Link(next=None)
+    for index in range(128):
+        node = Link(next=Some(node))
+    mut before = node
+    mut total = 0
+    for index in range(8):
+        total += length(node)
+    node = Link(next=None)
+    return total == 1032 and length(before) == 129 and length(node) == 1
+
+
+public func test_loop_reader_leaves_collection_available_for_later_mutation() -> bool:
+    mut values = [1, 2, 3]
+    mut before = values
+    mut first = list_sum(values)
+    values.append(4)
+    return first == 6 and list_sum(values) == 10 and list_sum(before) == 6
+
+
+func main() -> int:
+    assert test_recursive_reader_preserves_caller_snapshot()
+    assert test_loop_reader_leaves_collection_available_for_later_mutation()
+    assert test_inline_and_recursive_variant_wrappers_preserve_input()
+    return 0
+
+
+public func test_inline_and_recursive_variant_wrappers_preserve_input() -> bool:
+    mut items = [1, 2, 3]
+    mut before = items
+    mut inline_result = inline_variant(items)
+    mut recursive_result = recursive_variant(items)
+    items.clear()
+    return inline_result == 1 and recursive_result == 3 and len(before) == 3 and len(items) == 0

@@ -1,0 +1,9 @@
+# oracle: cpython
+def main() -> int:
+    s = "ab"
+    s += "cd"
+    xs = [1, 2]
+    xs += [3, 4]
+    f = 1.5
+    f += 2.5
+    return len(s) + len(xs) + int(f) * 9

@@ -1,0 +1,9 @@
+public domain Meters: u32:
+    private func raw(value: u32) -> Meters:
+        return wrap[Meters](value)
+    func from(value: u32) -> Meters:
+        if value > 1000u32:
+            return Meters.raw(1000u32)
+        return Meters.raw(value + 1u32)
+    func number(value: Meters) -> u32:
+        return unwrap(value)

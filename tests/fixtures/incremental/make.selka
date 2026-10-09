@@ -1,0 +1,22 @@
+import model
+
+public func point(x: int, y: int) -> model.Point:
+    return model.Point(x=x, y=y)
+
+
+public func leaf(value: int) -> model.Node:
+    return model.Node(value=value, children=[], tag=None)
+
+
+public func scene() -> model.Scene:
+    mut shapes: model.Shape[] = [model.Shape.dot(value=point(1, 2)), model.Shape.circle(center=point(3, 4), radius=5)]
+    mut index: dict[str, model.Point] = {}
+    index["a"] = point(6, 7)
+    mut root = leaf(8)
+    root.children.append(leaf(9))
+    mut pairs: tuple[int, model.Point][] = [(1, point(10, 11))]
+    return model.Scene(shapes=shapes, index=index, root=Some(root), tint=model.Color.green, pairs=pairs, count=2)
+
+
+public func grow(mut nodes: model.Node[], value: int) -> Unit:
+    nodes.append(leaf(value))

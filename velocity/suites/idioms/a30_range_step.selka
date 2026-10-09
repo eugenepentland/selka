@@ -1,0 +1,6 @@
+# oracle: cpython
+def main() -> int:
+    t = 0
+    for i in range(0, 10, 2):
+        t += i
+    return t + 22

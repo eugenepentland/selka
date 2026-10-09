@@ -1,0 +1,6 @@
+func empty[T]() -> FixedArray[T, 0]:
+    return FixedArray[T, 0]([])
+
+
+public func program() -> i64:
+    return i64(len(empty[bool]()))

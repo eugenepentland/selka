@@ -1,0 +1,72 @@
+record Point:
+    x: int
+    y: int
+
+
+record Segment:
+    from_point: Point
+    to_point: Point
+    live: bool
+    label: int
+
+
+record Mixed:
+    tag: u8
+    small: i32
+    flag: bool
+    big: int
+    half: i16
+
+
+enum Color:
+    red
+    green
+    blue
+
+
+record Pixel:
+    color: Color
+    luma: int
+
+
+func shift(input: Segment, dx: int) -> int:
+    mut seg = input
+    seg.to_point.x = seg.to_point.x + dx
+    seg.label += 1
+    return seg.to_point.x - seg.from_point.x
+
+
+func bump(input: Point) -> Point:
+    mut p = input
+    p.x = p.x + 1
+    p.y = p.y * 2
+    return p
+
+
+func mixed_sum(m: Mixed) -> int:
+    return m.big + int(m.small) + int(m.half) + int(m.tag) + (if (m.flag) then (1000) else (0))
+
+
+func same(a: Color, b: Color) -> bool:
+    return a == b
+
+
+func main(out: Stream) -> int:
+    mut seg = Segment(from_point=Point(x=1, y=2), to_point=Point(x=5, y=6), live=True, label=0)
+    out.print(shift(seg, 3), seg.to_point.x, seg.label)
+    seg.live = not seg.live
+    seg.from_point.y = seg.from_point.y + 40
+    out.print(seg.live, seg.from_point.y, seg.to_point.y)
+    mut p = Point(x=1, y=3)
+    for i in range(4):
+        p = bump(p)
+    out.print(p.x, p.y)
+    mut m = Mixed(tag=200u8, small=-5i32, flag=True, big=1000, half=7i16)
+    out.print(mixed_sum(m))
+    m.small = 40i32
+    m.half = -9i16
+    out.print(mixed_sum(m))
+    mut px = Pixel(color=Color.green, luma=3)
+    mut qx = Pixel(color=Color.blue, luma=4)
+    out.print(same(px.color, qx.color), same(px.color, Color.green), px.color != qx.color)
+    return 0

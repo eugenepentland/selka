@@ -1,0 +1,11 @@
+# oracle: rejected-by-design
+counter = 0
+
+def bump() -> int:
+    global counter
+    counter += 1
+    return counter
+
+def main() -> int:
+    bump()
+    return bump() * 21

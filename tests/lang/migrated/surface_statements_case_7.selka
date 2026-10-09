@@ -1,0 +1,3 @@
+public func program() -> i64:
+    mut value = 40 + 2
+    return value

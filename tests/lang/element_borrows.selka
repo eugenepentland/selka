@@ -1,0 +1,55 @@
+record Entry:
+    key: int
+    hash: u32
+    weight: float
+
+
+record Row:
+    a: int
+    b: int
+    c: int
+    d: int
+
+
+func is_empty(entry: Entry) -> bool:
+    return entry.key == -1
+
+
+# A readonly probe loop: the element local lends its address across the call.
+func find(entries: Entry[], key: int) -> int:
+    mut index = 0
+    while index < len(entries):
+        mut entry = entries[index]
+        if is_empty(entry):
+            return -1
+        if entry.key == key:
+            return index
+        index += 1
+    return -2
+
+
+public func test_readonly_probe_reads_borrowed_elements() -> bool:
+    mut entries = [Entry(key=3, hash=1u32, weight=0.5), Entry(key=7, hash=2u32, weight=1.5), Entry(key=-1, hash=0u32, weight=0.0)]
+    return find(entries, 7) == 1 and find(entries, 9) == -1 and find(entries, 3) == 0
+
+
+func total(rows: Row[]) -> int:
+    mut result = 0
+    for row in rows:
+        result += row.c * 10 + row.a
+    return result
+
+
+func bump(mut rows: Row[]) -> Unit:
+    for i in range(len(rows)):
+        rows[i].c = rows[i].c + rows[i].a
+        rows[i].d = rows[i].d * 2
+
+
+public func test_iterated_and_updated_elements_keep_value_semantics() -> bool:
+    mut rows = [Row(a=1, b=2, c=3, d=4), Row(a=5, b=6, c=7, d=8)]
+    mut before = rows
+    bump(mut rows)
+    mut snapshot = rows[1]
+    rows[1].c = 0
+    return total(rows) == 46 and total(before) == 106 and snapshot.c == 12 and rows[0].d == 8

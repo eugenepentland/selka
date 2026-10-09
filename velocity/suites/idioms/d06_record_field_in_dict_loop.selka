@@ -1,0 +1,10 @@
+# oracle: selka-only
+record Acc:
+    total: int
+
+def main() -> int:
+    accounts: dict[str, Acc] = {"a": Acc(0)}
+    a = accounts["a"]
+    a.total = 42
+    print(accounts["a"].total)
+    return accounts["a"].total

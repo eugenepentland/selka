@@ -1,0 +1,36 @@
+public func test_guarded_list_writes_keep_the_named_input_snapshot() -> bool:
+    mut values = [1, 2, 3, 4]
+    mut before = values
+    for index in range(len(values)):
+        values[index] = before[index] * 2
+    return values == [2, 4, 6, 8] and before == [1, 2, 3, 4]
+
+
+func shifted(mut values: int[], offset: int, count: int) -> unit:
+    for index in range(count):
+        values[index + offset] = index + 10
+
+
+public func test_negative_index_fallback_and_zero_iterations_preserve_results() -> bool:
+    mut values = [1, 2, 3, 4]
+    mut before = values
+    shifted(mut values, -4, 4)
+    shifted(mut values, 100, 0)
+    return values == [10, 11, 12, 13] and before == [1, 2, 3, 4]
+
+
+public func test_nested_guarded_rows_are_detached_before_storage_is_cached() -> bool:
+    mut row = [1.0, 2.0, 3.0]
+    mut values = [row, row]
+    mut before = values
+    for outer in range(2):
+        for inner in range(3):
+            values[outer][inner] = values[outer][inner] + float(outer + inner)
+    return values == [[1.0, 3.0, 5.0], [2.0, 4.0, 6.0]] and before == [[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]] and row == [1.0, 2.0, 3.0]
+
+
+func main() -> int:
+    assert test_guarded_list_writes_keep_the_named_input_snapshot()
+    assert test_negative_index_fallback_and_zero_iterations_preserve_results()
+    assert test_nested_guarded_rows_are_detached_before_storage_is_cached()
+    return 0

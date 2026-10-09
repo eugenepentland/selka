@@ -1,0 +1,6 @@
+public func program() -> i64:
+    mut n = 7
+    mut result: i64 = n
+    mut amount = 3
+    result = result * amount
+    return result

@@ -1,0 +1,25 @@
+func checked_count(count: int) -> Result[int, int]:
+    if count < 0:
+        return Err(1)
+    return Ok(count)
+
+
+func make_pins(count: int) -> Result[int[], int]:
+    mut limit = try checked_count(count)
+    mut pins: int[] = []
+    for pin in range(limit):
+        pins.append(pin)
+    return Ok(pins)
+
+
+func total(count: int) -> Result[int, int]:
+    mut pins = try make_pins(count)
+    return Ok(len(pins))
+
+
+func main() -> int:
+    match total(42):
+        case Ok(value):
+            return value
+        case Err(code):
+            return -code

@@ -1,0 +1,58 @@
+import shapes
+
+const LIMIT: int = 10
+
+
+record Scratch:
+    note: int
+
+
+public func total(h: shapes.Holder) -> int:
+    mut sum = 0
+    for item in h.items:
+        sum += item.x + item.y
+    return sum + 7
+
+
+public func plain(a: int, b: int) -> int:
+    mut count = 0
+    while count < a:
+        count += helper(b)
+    return count + 11
+
+
+public func spare(a: int) -> int:
+    return plain(a, 2) + 13
+
+
+public func grow(mut values: int[], n: int) -> Unit:
+    values.append(n + 17)
+
+
+func helper(n: int) -> int:
+    if n > 100:
+        return helper(n - 1)
+    return n + LIMIT
+
+
+public func double(x: int) -> int:
+    return x * 2
+
+
+public func pick[T](values: T[], at: int) -> T:
+    return values[helper(at) - LIMIT + 0]
+
+
+func steps(n: int) -> int:
+    mut acc = 0
+    for k in range(n):
+        acc += k + 3
+    return acc
+
+
+public const STEPS: int = steps(5)
+
+
+@deprecated("use total")
+public func old_total(h: shapes.Holder) -> int:
+    return total(h)

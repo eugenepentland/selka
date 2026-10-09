@@ -1,0 +1,138 @@
+# A capability held in a record field takes method syntax exactly as a bare local
+# does (SPEC.md CAPABILITY-FIELD-METHOD-1): `ctx.fs.read_text(path)` builds the
+# same checked call as `fs = ctx.fs` followed by `fs.read_text(path)`.
+import environment
+import filesystem
+import network
+import random
+import time
+
+record Ports:
+    fs: Filesystem
+    env: Environment
+    net: Network
+    clock: Clock
+    entropy: Entropy
+
+
+record App:
+    label: str
+    ports: Ports
+
+
+func app() -> App:
+    mut ports = Ports(fs=filesystem.memory(), env=environment.fixed({"LANG": "C", "HOME": "/home/test"}), net=network.denied(), clock=time.simulated_clock(time.from_unix_nanoseconds(42)), entropy=random.seeded_entropy(7))
+    return App(label="test", ports=ports)
+
+
+func text(result: Result[str, str]) -> str:
+    match result:
+        case Ok(value):
+            return value
+        case Err(message):
+            return "error: " + message
+
+
+func done(result: Result[Unit, str]) -> bool:
+    match result:
+        case Ok(_):
+            return True
+        case Err(_):
+            return False
+
+
+func data(result: Result[bytes, str]) -> bytes:
+    match result:
+        case Ok(value):
+            return value
+        case Err(_):
+            return b""
+
+
+func names(result: Result[str[], str]) -> str[]:
+    match result:
+        case Ok(value):
+            return value
+        case Err(_):
+            return ["error"]
+
+
+# Read a file through a one-level field path.
+func read_note(ports: Ports, path: str) -> str:
+    return text(ports.fs.read_text(path))
+
+
+# Append a line through a two-level field path and an open handle.
+func append_line(state: App, line: str) -> bool:
+    with state.ports.fs.open("log.txt", "a") as f:
+        _ = f.write(line + "\n")
+    return state.ports.fs.exists("log.txt")
+
+
+# spec: CAPABILITY-FIELD-METHOD-1
+public func test_filesystem_methods_work_on_a_field_path() -> bool:
+    mut state = app()
+    mut written = done(state.ports.fs.write_text("notes.txt", "hello"))
+    mut made = done(state.ports.fs.mkdir("data"))
+    mut nested = done(state.ports.fs.write_file("data/raw.bin", b"\x00\x01"))
+    mut raw = data(state.ports.fs.read_file("data/raw.bin"))
+    mut listing = names(state.ports.fs.listdir(""))
+    mut removed = done(state.ports.fs.remove("notes.txt"))
+    return written and read_note(state.ports, "data/raw.bin") != "" and made and nested and raw == b"\x00\x01" and listing == ["data", "notes.txt"] and removed and not state.ports.fs.exists("notes.txt")
+
+
+# spec-case: CAPABILITY-FIELD-METHOD-1
+public func test_open_scopes_and_narrowing_work_on_a_field_path() -> bool:
+    mut state = app()
+    mut first = append_line(state, "a")
+    mut second = append_line(state, "b")
+    mut lines: str[] = []
+    with state.ports.fs.open("log.txt", "r") as g:
+        lines = g.readlines()
+    _ = state.ports.fs.mkdir("data")
+    mut scoped = state.ports.fs.dir("data")
+    mut inside = done(scoped.write_text("x.txt", "1"))
+    mut frozen = state.ports.fs.read_only()
+    mut refused = done(frozen.write_text("y.txt", "2"))
+    mut chained = done(state.ports.fs.dir("data").write_text("z.txt", "3"))
+    return first and second and lines == ["a\n", "b\n"] and inside and not refused and chained and text(state.ports.fs.read_text("data/z.txt")) == "3" and not state.ports.fs.exists("y.txt")
+
+
+# spec-case: CAPABILITY-FIELD-METHOD-1
+public func test_a_field_and_a_local_alias_of_it_reach_the_same_filesystem() -> bool:
+    mut state = app()
+    _ = done(state.ports.fs.write_text("shared.txt", "one"))
+    mut alias = state.ports.fs
+    return read_note(state.ports, "shared.txt") == "one" and text(alias.read_text("shared.txt")) == "one"
+
+
+# spec-case: CAPABILITY-FIELD-METHOD-1
+public func test_environment_methods_work_on_a_field_path() -> bool:
+    mut state = app()
+    mut narrowed = state.ports.env.only("HOME")
+    mut home = state.ports.env.get("HOME")
+    return home is not None and state.ports.env.get("PATH") is None and state.ports.env.names() == ["HOME", "LANG"] and narrowed.names() == ["HOME"]
+
+
+# spec-case: CAPABILITY-FIELD-METHOD-1
+public func test_network_host_works_on_a_field_path() -> bool:
+    mut state = app()
+    match network.connect(state.ports.net.host("127.0.0.1:8000")):
+        case network.Connected.ok(_):
+            return False
+        case network.Connected.err(code):
+            return code == network.denied_here()
+
+
+# spec-case: CAPABILITY-FIELD-METHOD-1
+public func test_clock_and_entropy_fields_still_pass_to_their_module_functions() -> bool:
+    mut state = app()
+    match time.now(state.ports.clock):
+        case Ok(instant):
+            match random.from_entropy(state.ports.entropy):
+                case Ok(_):
+                    return instant.unix_nanoseconds == 42
+                case Err(_):
+                    return False
+        case Err(_):
+            return False

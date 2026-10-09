@@ -1,0 +1,6 @@
+#!/bin/sh
+# Zig wrapper for the DSH sandbox: see .worktrees/agent-usefulness/zigw.
+here=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+ZIG_GLOBAL_CACHE_DIR="${ZIG_GLOBAL_CACHE_DIR:-$here/../../.zig-global-cache}"
+export ZIG_GLOBAL_CACHE_DIR
+exec zig "$@"

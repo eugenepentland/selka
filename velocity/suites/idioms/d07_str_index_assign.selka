@@ -1,0 +1,5 @@
+# oracle: selka-only
+def main() -> int:
+    s = "abc"
+    s[0] = "z"
+    return 0

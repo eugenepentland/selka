@@ -1,0 +1,16 @@
+result R:
+    ok: i64,
+    err: i64
+
+
+func f(r: R) -> R:
+    const value = try r
+    return Ok(2 * value + 1)
+
+
+public func program() -> i64:
+    match f(Ok(3)):
+        case R.ok(n):
+            return n
+        case R.err(_):
+            return 0

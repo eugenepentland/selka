@@ -1,0 +1,164 @@
+record Point:
+    x: int
+    y: int
+
+
+enum Shape:
+    circle(value: int)
+    square(value: Point)
+    unit
+
+
+enum Level:
+    low
+    mid
+    high
+
+
+enum Expr:
+    num(value: int)
+    add(left: Expr, right: Expr)
+    neg(inner: Expr)
+
+
+record Node:
+    value: int
+    left: Node?
+    right: Node?
+
+
+func area(s: Shape) -> int:
+    match s:
+        case Shape.circle(value=r):
+            return r * r
+        case Shape.square(value=p):
+            return p.x * p.y
+        case Shape.unit:
+            return 1
+
+
+func half(x: int) -> int?:
+    if x % 2 == 0:
+        return Some(x // 2)
+    return None
+
+
+func quarter(x: int) -> int?:
+    mut h = try half(x)
+    mut k = try half(h)
+    return Some(h + k)
+
+
+func checked(x: int) -> Result[int, str]:
+    if x < 0:
+        return Err("negative")
+    return Ok(x * 2)
+
+
+func chain(x: int) -> Result[int, str]:
+    mut v = try checked(x)
+    mut w = try checked(v - 5)
+    return Ok(w + 1)
+
+
+func unit_result(x: int) -> Result[Unit, str]:
+    if x < 0:
+        return Err("neg")
+    return Ok(())
+
+
+func two_steps(x: int) -> Result[int, str]:
+    try unit_result(x)
+    try unit_result(x - 5)
+    return Ok(x)
+
+
+func level_of(n: int) -> Level:
+    if n < 3:
+        return Level.low
+    if n < 6:
+        return Level.mid
+    return Level.high
+
+
+func weight(l: Level) -> int:
+    match l:
+        case Level.low:
+            return 1
+        case Level.mid:
+            return 20
+        case Level.high:
+            return 300
+
+
+func evaluate(e: Expr) -> int:
+    match e:
+        case Expr.num(value=v):
+            return v
+        case Expr.add(left=l, right=r):
+            return evaluate(l) + evaluate(r)
+        case Expr.neg(inner=inner):
+            return -evaluate(inner)
+
+
+func total(node: Node) -> int:
+    mut sum = node.value
+    match node.left:
+        case Some(child):
+            sum += total(child)
+        case None:
+            pass
+    match node.right:
+        case Some(child):
+            sum += total(child)
+        case None:
+            pass
+    return sum
+
+
+func leaf(v: int) -> Node:
+    return Node(value=v, left=None, right=None)
+
+
+func show(r: Result[int, str], out: Stream) -> int:
+    match r:
+        case Ok(v):
+            out.print("ok", v)
+            return v
+        case Err(e):
+            out.print("err", e)
+            return -1
+
+
+func main(out: Stream) -> int:
+    out.print(area(Shape.circle(value=3)), area(Shape.square(value=Point(x=4, y=5))), area(Shape.unit))
+    mut total_opt = 0
+    for i in range(8):
+        match half(i):
+            case Some(v):
+                total_opt += v
+            case None:
+                total_opt += 100
+        match quarter(i * 2):
+            case Some(v):
+                total_opt += v * 1000
+            case None:
+                total_opt += 1
+    out.print(total_opt)
+    mut a = show(chain(10), out)
+    mut b = show(chain(1), out)
+    mut c = show(chain(-3), out)
+    mut d = if (False) then (show(two_steps(9), out)) else (0)
+    out.print(a + b + c + d)
+    for v in [10, 3, -1]:
+        match two_steps(v):
+            case Ok(n):
+                out.print("ok", n)
+            case Err(e):
+                out.print("err", e)
+    out.print(weight(level_of(1)) + weight(level_of(4)) + weight(level_of(9)))
+    mut e = Expr.add(left=Expr.num(value=4), right=Expr.neg(inner=Expr.add(left=Expr.num(value=1), right=Expr.num(value=2))))
+    out.print(evaluate(e))
+    mut t = Node(value=1, left=Some(leaf(2)), right=Some(Node(value=3, left=Some(leaf(4)), right=None)))
+    out.print(total(t))
+    return 0

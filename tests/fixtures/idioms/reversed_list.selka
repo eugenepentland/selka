@@ -1,0 +1,3 @@
+func main() -> int:
+    mut ys = list(reversed([1, 2]))
+    return len(ys)

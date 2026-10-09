@@ -1,0 +1,1269 @@
+//! Deep origin, alias and call-permission analysis for M2.
+//!
+//! The pass computes a sound, monotone upper bound on which caller inputs a
+//! checked value may alias (including managed descendants reached through
+//! records, arrays, variants and fresh wrappers) and which inputs a function's
+//! body may write. Call footprints are substituted into actual argument origins
+//! and propagated through direct calls, indirect callbacks, recursion and
+//! specializations to a fixed point. Budget exhaustion widens every summary
+//! conservatively instead of accepting a write.
+const std = @import("std");
+const ast = @import("ast.zig");
+const typed = @import("typed.zig");
+const mutation = @import("mutation.zig");
+const effect_set = @import("effect_set.zig");
+const diagnostic = @import("diagnostic.zig");
+const source = @import("source.zig");
+const callables = @import("callables.zig");
+const Walker = @import("typed_walk.zig").Walker;
+const value_semantics = @import("value_semantics.zig");
+const value_checks = @import("value_semantics_check.zig");
+
+/// Diagnostic code for a managed write that exceeds its declared contract.
+pub const permission_code = "E_MUTATION_PERMISSION";
+/// Diagnostic code for writable and read-only arguments that may overlap.
+pub const overlap_code = "E_MUTATION_OVERLAP";
+/// Diagnostic code for a bounded analysis that had to widen conservatively.
+pub const limit_code = "E_MUTATION_LIMIT";
+/// Error code for a `mut` marker that is missing, unneeded or unauthorizable.
+pub const mutation_marker_code = "E_MUTATION_MARKER";
+
+/// A set of parameter positions, one bit per position. A position at or past
+/// `mask_positions` cannot be named exactly: an origin or footprint that reaches one
+/// is `unknown` (every possible alias) instead, never a dropped bit.
+pub const Mask = u64;
+
+/// How many parameter positions a `Mask` names exactly.
+pub const mask_positions = @bitSizeOf(Mask);
+
+/// The mask bit of parameter `position`, or 0 for a position a `Mask` cannot name.
+pub fn bitOf(position: usize) Mask {
+    return if (position < mask_positions) @as(Mask, 1) << @intCast(position) else 0;
+}
+
+/// Abstract upper bound on the caller inputs a value may alias.
+///
+/// `positions` names the enclosing function's parameter positions whose managed
+/// storage may be reachable; `unknown` means the bound could not be proven. A
+/// value with no positions and no unknown bit is definitely fresh local storage
+/// and therefore disjoint from every caller input.
+pub const Origin = struct {
+    positions: Mask = 0,
+    unknown: bool = false,
+
+    /// Build the origin of a direct reference to one parameter position; a position
+    /// past `mask_positions` is an unknown origin.
+    pub fn fromPosition(position: u16) Origin {
+        if (position >= mask_positions) return .{ .unknown = true };
+        return .{ .positions = bitOf(position) };
+    }
+
+    /// Build the origin of definitely fresh local storage.
+    pub fn fresh() Origin {
+        return .{};
+    }
+
+    /// Join two origins, preserving every possible alias and unknown marker.
+    pub fn merge(a: Origin, b: Origin) Origin {
+        return .{ .positions = a.positions | b.positions, .unknown = a.unknown or b.unknown };
+    }
+
+    /// Whether this value is proven disjoint from every caller input.
+    pub fn isFresh(self: Origin) bool {
+        return self.positions == 0 and !self.unknown;
+    }
+
+    /// Whether one parameter position is in the alias set (for a position past
+    /// `mask_positions`, whether the origin is unknown).
+    pub fn has(self: Origin, position: u16) bool {
+        if (position >= mask_positions) return self.unknown;
+        return self.positions & bitOf(position) != 0;
+    }
+};
+
+/// Inferred transitive facts for one checked function.
+pub const Summary = struct {
+    return_origin: Origin = .{},
+    /// Positions of this function's parameters it may write (transitively).
+    mutates: Mask = 0,
+    /// A write target's origin could not be attributed to a parameter position.
+    mutates_unknown: bool = false,
+    /// Any managed receiver write, fresh local or not.
+    writes: bool = false,
+    /// A managed write that is not proven to target definitely fresh storage.
+    external: bool = false,
+    witnesses: struct {
+        /// First located external write, used for diagnostics.
+        external: ?source.Span = null,
+        /// First write reaching a parameter not declared `mut`.
+        undeclared: ?source.Span = null,
+    } = .{},
+};
+
+/// One function's cross-function facts as the effect and mutation passes infer
+/// them: the propagated effect mask (before the mutation bit is added) and the
+/// mutation summary. A check that did not materialize a body stands these in
+/// for it; a pass that computes them can hand them back for the next check.
+pub const Fact = struct { graph_mask: effect_set.Mask = 0, summary: Summary = .{} };
+
+/// The stand-in facts for function `index`, or null when its body was checked.
+pub fn standIn(stubs: []const ?Fact, index: usize) ?Fact {
+    return if (index < stubs.len) stubs[index] else null;
+}
+
+fn mergeSummaries(a: Summary, b: Summary) Summary {
+    return .{
+        .return_origin = Origin.merge(a.return_origin, b.return_origin),
+        .mutates = a.mutates | b.mutates,
+        .mutates_unknown = a.mutates_unknown or b.mutates_unknown,
+        .writes = a.writes or b.writes,
+        .external = a.external or b.external,
+        .witnesses = .{
+            .external = a.witnesses.external orelse b.witnesses.external,
+            .undeclared = a.witnesses.undeclared orelse b.witnesses.undeclared,
+        },
+    };
+}
+
+/// Whether two summaries carry the same transitive facts. Witness spans only
+/// locate a function's own diagnostics, so they do not take part.
+pub fn sameSummary(a: Summary, b: Summary) bool {
+    return a.mutates == b.mutates and a.mutates_unknown == b.mutates_unknown and
+        a.writes == b.writes and a.external == b.external and
+        a.return_origin.positions == b.return_origin.positions and a.return_origin.unknown == b.return_origin.unknown;
+}
+
+/// Whether a value of `ty` may reach managed storage another value could share.
+pub fn mayContainManaged(program: typed.Program, ty: typed.Type) bool {
+    var path: [64]typed.Type = undefined;
+    return mayContainManagedDepth(program, ty, &path, 0);
+}
+
+/// `path` holds the types on the current walk: a recursive value type reaches
+/// itself again through a boxed field (RECURSIVE-VALUES-2), and the visit
+/// already on the path answers for everything below the repeat.
+fn mayContainManagedDepth(program: typed.Program, ty: typed.Type, path: *[64]typed.Type, depth: usize) bool {
+    if (!ty.isAggregate()) return false;
+    const index = ty.recordIndex();
+    if (index >= program.records.len) return true;
+    if (depth == path.len) return true;
+    for (path[0..depth]) |seen| if (seen == ty) return false;
+    path[depth] = ty;
+    const record = program.records[index];
+    if (record.managed) {
+        // Strings and bytes are immutable managed buffers; they carry no
+        // writable storage and therefore no mutation origin.
+        const kind = record.collection.kind;
+        if (kind == .string or kind == .bytes) return false;
+        return true;
+    }
+    if (record.shape.array) |array| if (mayContainManagedDepth(program, array.element, path, depth + 1)) return true;
+    if (record.shape.variants) |variants| for (variants.cases) |case| {
+        if (case.payload) |payload| if (mayContainManagedDepth(program, payload, path, depth + 1)) return true;
+    };
+    for (record.fields) |field| if (mayContainManagedDepth(program, field.ty, path, depth + 1)) return true;
+    return false;
+}
+
+fn managedElement(program: typed.Program, owner: typed.Type) bool {
+    if (!owner.isAggregate()) return false;
+    const index = owner.recordIndex();
+    if (index >= program.records.len) return true;
+    const element = program.records[index].shape.buffer orelse return true;
+    return mayContainManaged(program, element);
+}
+
+/// Normalize a sorted-free list of parameter positions to a bitset.
+pub fn positionsBitset(positions: []const u16) Mask {
+    var mask: Mask = 0;
+    for (positions) |position| mask |= bitOf(position);
+    return mask;
+}
+
+fn bitCount(mask: Mask) usize {
+    var count: usize = 0;
+    var position: u7 = 0;
+    while (position < mask_positions) : (position += 1) {
+        if (mask & (bitOf(position)) != 0) count += 1;
+    }
+    return count;
+}
+
+fn bitsetPositions(allocator: std.mem.Allocator, mask: Mask) std.mem.Allocator.Error![]const u16 {
+    const out = try allocator.alloc(u16, bitCount(mask));
+    var written: usize = 0;
+    var position: u7 = 0;
+    while (position < mask_positions) : (position += 1) {
+        if (mask & (bitOf(position)) == 0) continue;
+        out[written] = position;
+        written += 1;
+    }
+    return out;
+}
+
+fn originFromBound(bound: typed.ReturnOrigin) Origin {
+    return switch (bound) {
+        .fresh => .{},
+        .unknown => .{ .unknown = true },
+        .params => |positions| blk: {
+            var origin = Origin{};
+            for (positions) |position| {
+                if (position >= mask_positions) origin.unknown = true;
+                origin.positions |= bitOf(position);
+            }
+            break :blk origin;
+        },
+    };
+}
+
+fn boundFromOrigin(allocator: std.mem.Allocator, origin: Origin) std.mem.Allocator.Error!typed.ReturnOrigin {
+    if (origin.unknown) return .unknown;
+    if (origin.positions == 0) return .fresh;
+    return .{ .params = try bitsetPositions(allocator, origin.positions) };
+}
+
+const Footprint = struct { positions: Mask = 0, unknown: bool = false };
+
+fn effectiveFootprint(program: typed.Program, summaries: []const Summary, index: usize) Footprint {
+    const function = program.functions[index];
+    if (function.policy.effect_bound != null) {
+        const declared = function.signature.declared_mutates;
+        const untracked = for (declared) |position| {
+            if (position >= mask_positions) break true;
+        } else false;
+        return .{ .positions = positionsBitset(declared), .unknown = untracked };
+    }
+    const summary = summaries[index];
+    return .{ .positions = summary.mutates, .unknown = summary.mutates_unknown };
+}
+
+/// Apply the block's own initialize/assign statements to the origin table. The
+/// ordinary walker will visit them again; merging is idempotent and conservative.
+fn applyBlockStatements(context: *const Context, function: typed.Function, origins: []Origin, body: typed.StatementId, depth: usize) void {
+    if (depth == 256) return;
+    const statement = context.program.statements[@backingInt(body)];
+    switch (statement.data) {
+        .initialize, .assign => _ = bindStatement(context, function, origins, statement, depth + 1),
+        .match => |matched| {
+            _ = bindStatement(context, function, origins, statement, depth + 1);
+            for (matched.arms) |arm| applyBlockStatements(context, function, origins, arm.body, depth + 1);
+        },
+        .block => |children| for (children) |child| applyBlockStatements(context, function, origins, child, depth + 1),
+        .branch => |branch| {
+            applyBlockStatements(context, function, origins, branch.then_body, depth + 1);
+            if (branch.else_body) |otherwise| applyBlockStatements(context, function, origins, otherwise, depth + 1);
+        },
+        .range_loop => |range| {
+            _ = bindStatement(context, function, origins, statement, depth + 1);
+            for (range.plan().setup) |setup| applyBlockStatements(context, function, origins, setup, depth + 1);
+            applyBlockStatements(context, function, origins, range.plan().loop.body, depth + 1);
+            if (range.plan().loop.step) |step| applyBlockStatements(context, function, origins, step, depth + 1);
+        },
+        .loop => |loop| {
+            applyBlockStatements(context, function, origins, loop.body, depth + 1);
+            if (loop.step) |step| applyBlockStatements(context, function, origins, step, depth + 1);
+        },
+        .with_scope => |scope| applyBlockStatements(context, function, origins, scope.body, depth + 1),
+        else => {},
+    }
+}
+
+/// Merge one binding statement's value origin into the local origin table and
+/// report whether any local's origin grew. A store binds its slot to the value;
+/// a `match` binds each arm's payload slot to the matched value, because a
+/// payload of a class type is the very object the matched container holds, so
+/// a write through it is a write to the container's owner.
+fn bindStatement(context: *const Context, function: typed.Function, origins: []Origin, statement: typed.Statement, depth: usize) bool {
+    switch (statement.data) {
+        .initialize, .assign => |store| {
+            // VALUE-SEMANTICS-4: a named local receives its own copy.
+            if (copiedHome(context.program, function, store.slot)) return false;
+            const value = context.nodeOrigin(function, origins, store.value, depth);
+            return widen(origins, @backingInt(store.slot), value);
+        },
+        .range_loop => |range| {
+            var grew = false;
+            for ([_]typed.Store{ range.plan().start, range.plan().end }) |store| {
+                if (copiedHome(context.program, function, store.slot)) continue;
+                const value = context.nodeOrigin(function, origins, store.value, depth);
+                grew = widen(origins, @backingInt(store.slot), value) or grew;
+            }
+            return grew;
+        },
+        .match => |matched| {
+            var grew = false;
+            for (matched.arms) |arm| {
+                const slot = arm.slot orelse continue;
+                const index = @backingInt(slot);
+                if (index >= function.scope.locals.len) continue;
+                if (copiedHome(context.program, function, slot)) continue;
+                const payload = function.scope.locals[index].ty;
+                if (widen(origins, index, context.childIfManaged(payload, function, origins, matched.value, depth))) grew = true;
+            }
+            return grew;
+        },
+        else => return false,
+    }
+}
+
+/// Under value semantics, whether a store into `slot` gives it a copy that
+/// shares nothing writable with its source, so the local starts fresh: a named
+/// local (not a parameter) whose type reaches no `class` or Cell.
+fn copiedHome(program: typed.Program, function: typed.Function, slot: typed.LocalId) bool {
+    const index = @backingInt(slot);
+    if (index < function.signature.parameter_count or index >= function.scope.locals.len) return false;
+    if (!value_semantics.namedHome(function, index)) return false;
+    return value_semantics.copiesAll(program.records, function.scope.locals[index].ty);
+}
+
+/// Merge `value` into one slot's origin, reporting whether it grew.
+fn widen(origins: []Origin, slot: usize, value: Origin) bool {
+    if (slot >= origins.len) return false;
+    const merged = Origin.merge(origins[slot], value);
+    const grew = merged.positions != origins[slot].positions or merged.unknown != origins[slot].unknown;
+    origins[slot] = merged;
+    return grew;
+}
+
+const Context = struct {
+    allocator: std.mem.Allocator,
+    program: typed.Program,
+    summaries: []const Summary,
+
+    fn tracks(self: *const Context, ty: typed.Type) bool {
+        return mayContainManaged(self.program, ty);
+    }
+
+    /// Resolve the origin of one checked expression under the current local origins.
+    fn nodeOrigin(self: *const Context, function: typed.Function, origins: []const Origin, node_id: typed.NodeId, depth: usize) Origin {
+        if (depth == 256) return .{ .unknown = true };
+        const node = self.program.nodes[@backingInt(node_id)];
+        return switch (node.data) {
+            .local => |slot| self.localOrigin(function, origins, slot),
+            .field => |field| self.childIfManaged(node.ty, function, origins, field.base, depth),
+            .index => |index| self.childIfManaged(node.ty, function, origins, index.base, depth),
+            .cast => |value| self.childIfManaged(node.ty, function, origins, value, depth),
+            .wrap, .arena_escape => |value| self.childIfManaged(node.ty, function, origins, value, depth),
+            .restrict_resource => |restrict| self.childIfManaged(node.ty, function, origins, restrict.value, depth),
+            .unwrap => |value| self.childIfManaged(node.ty, function, origins, value, depth),
+            .propagate => |propagate| self.nodeOrigin(function, origins, propagate.value, depth + 1),
+            .block_value => |block| if (self.tracks(node.ty)) self.blockValueOrigin(function, origins, block, depth + 1) else Origin{},
+            .variant => |variant| self.variantOrigin(node.ty, function, origins, variant.value, depth),
+            .array => |values| self.mergeValues(function, origins, values, depth),
+            .record => |fields| self.mergeFields(function, origins, fields, depth),
+            .update => |update| self.updateOrigin(node.ty, function, origins, update, depth),
+            .replace => |replace| self.replaceOrigin(node.ty, function, origins, replace, depth),
+            .buffer_operation => |operation| self.bufferOrigin(node.ty, function, origins, operation),
+            .call => |call| self.callResultOrigin(function, origins, call.function, call.arguments, depth + 1),
+            .invoke => |invoke| self.invokeOrigin(function, origins, invoke, depth),
+            .acquire_buffer,
+            .acquire_resource,
+            .complete_resource,
+            .dir_resource,
+            .host_resource,
+            .environment_get,
+            .environment_only,
+            .environment_names,
+            .external_read,
+            .stand_in,
+            .resource_io,
+            .print,
+            .stream_write,
+            .file_access,
+            .file_method,
+            .length,
+            .binary,
+            .unary,
+            .integer,
+            .boolean,
+            .unit,
+            .blob,
+            .function_value,
+            => Origin{},
+        };
+    }
+
+    fn childIfManaged(self: *const Context, ty: typed.Type, function: typed.Function, origins: []const Origin, base: typed.NodeId, depth: usize) Origin {
+        // The test is writability, not managedness: a `byte_buffer` is managed
+        // like `bytes` but keeps writable storage, so a write through it belongs
+        // to whoever owns the buffer. A read-only `str`, `bytes` or scalar-only
+        // record carries no origin because nothing can be written through it.
+        if (!typed.carriesWritableStorage(self.program.records, ty)) return Origin{};
+        return self.nodeOrigin(function, origins, base, depth + 1);
+    }
+
+    fn variantOrigin(self: *const Context, ty: typed.Type, function: typed.Function, origins: []const Origin, value: ?typed.NodeId, depth: usize) Origin {
+        const payload = value orelse return Origin{};
+        return self.childIfManaged(ty, function, origins, payload, depth);
+    }
+
+    fn updateOrigin(self: *const Context, ty: typed.Type, function: typed.Function, origins: []const Origin, update: @FieldType(@FieldType(typed.Node, "data"), "update"), depth: usize) Origin {
+        var origin = self.childIfManaged(ty, function, origins, update.base, depth);
+        for (update.fields) |field| {
+            if (!self.tracks(self.program.nodes[@backingInt(field.value)].ty)) continue;
+            origin = Origin.merge(origin, self.nodeOrigin(function, origins, field.value, depth + 1));
+        }
+        return origin;
+    }
+
+    fn replaceOrigin(self: *const Context, ty: typed.Type, function: typed.Function, origins: []const Origin, replace: @FieldType(@FieldType(typed.Node, "data"), "replace"), depth: usize) Origin {
+        const origin = self.childIfManaged(ty, function, origins, replace.base, depth);
+        return Origin.merge(origin, self.nodeOrigin(function, origins, replace.value, depth + 1));
+    }
+
+    fn bufferOrigin(self: *const Context, ty: typed.Type, function: typed.Function, origins: []const Origin, operation: @FieldType(@FieldType(typed.Node, "data"), "buffer_operation")) Origin {
+        if (!self.tracks(ty)) return Origin{};
+        const owner = self.localOrigin(function, origins, operation.owner);
+        if (operation.kind == .copy and !self.ownerElementManaged(function, operation.owner)) return Origin{};
+        return owner;
+    }
+
+    fn invokeOrigin(self: *const Context, function: typed.Function, origins: []const Origin, invoke: @FieldType(@FieldType(typed.Node, "data"), "invoke"), depth: usize) Origin {
+        const signature = callables.signature(self.program.nodes[@backingInt(invoke.callee)].ty, self.program.records) orelse return .{ .unknown = true };
+        return self.substituteOrigin(function, origins, originFromBound(signature.return_origin), invoke.arguments, depth + 1);
+    }
+
+    fn localOrigin(_: *const Context, function: typed.Function, origins: []const Origin, slot: typed.LocalId) Origin {
+        const index = @backingInt(slot);
+        if (index < function.signature.parameter_count) return Origin.fromPosition(@intCast(index));
+        if (index < origins.len) return origins[index];
+        return .{ .unknown = true };
+    }
+
+    fn ownerElementManaged(self: *const Context, function: typed.Function, slot: typed.LocalId) bool {
+        const index = @backingInt(slot);
+        if (index >= function.scope.locals.len) return true;
+        return managedElement(self.program, function.scope.locals[index].ty);
+    }
+
+    /// Resolve the origin of an expression block. The block's own initialization
+    /// statements are applied to the local-origin table first, so a lowered literal
+    /// or method receiver keeps the origin of the value it was built from.
+    fn blockValueOrigin(self: *const Context, function: typed.Function, origins: []const Origin, block: @FieldType(@FieldType(typed.Node, "data"), "block_value"), depth: usize) Origin {
+        if (depth == 256) return .{ .unknown = true };
+        const mutable = @constCast(origins);
+        applyBlockStatements(self, function, mutable, block.body, depth + 1);
+        return self.nodeOrigin(function, mutable, block.value, depth + 1);
+    }
+
+    fn mergeValues(self: *const Context, function: typed.Function, origins: []const Origin, values: []const typed.NodeId, depth: usize) Origin {
+        var origin = Origin{};
+        for (values) |value| {
+            if (!self.tracks(self.program.nodes[@backingInt(value)].ty)) continue;
+            origin = Origin.merge(origin, self.nodeOrigin(function, origins, value, depth + 1));
+        }
+        return origin;
+    }
+
+    fn mergeFields(self: *const Context, function: typed.Function, origins: []const Origin, fields: []const typed.FieldInit, depth: usize) Origin {
+        var origin = Origin{};
+        for (fields) |field| {
+            if (!self.tracks(self.program.nodes[@backingInt(field.value)].ty)) continue;
+            origin = Origin.merge(origin, self.nodeOrigin(function, origins, field.value, depth + 1));
+        }
+        return origin;
+    }
+
+    fn substituteOrigin(self: *const Context, function: typed.Function, origins: []const Origin, bound: Origin, arguments: []const typed.NodeId, depth: usize) Origin {
+        if (bound.unknown) return .{ .unknown = true };
+        var origin = Origin{};
+        var position: u7 = 0;
+        while (position < mask_positions) : (position += 1) {
+            if (!bound.has(position)) continue;
+            if (position >= arguments.len) {
+                origin.unknown = true;
+                continue;
+            }
+            origin = Origin.merge(origin, self.nodeOrigin(function, origins, arguments[position], depth + 1));
+        }
+        return origin;
+    }
+
+    /// The caller inputs a callee's write through one argument can reach. A
+    /// fixed array crosses a `mut` position as the caller's own variable, so a
+    /// write to its elements reaches only that variable: a parameter's
+    /// position when the argument passes a parameter on, fresh storage for a
+    /// local. Managed elements it holds are shared like any value's, so their
+    /// origins still count.
+    fn writtenArgumentOrigin(self: *const Context, function: typed.Function, origins: []const Origin, argument: typed.NodeId) Origin {
+        var current = argument;
+        var depth: usize = 0;
+        while (depth < 256) : (depth += 1) {
+            const node = self.program.nodes[@backingInt(current)];
+            switch (node.data) {
+                .local => |slot| {
+                    const index = @backingInt(slot);
+                    if (index < function.signature.parameter_count) return Origin.fromPosition(@intCast(index));
+                    if (index < function.scope.locals.len and function.scope.locals[index].usage.temporary)
+                        return self.localOrigin(function, origins, slot);
+                    return .{};
+                },
+                .block_value => |block| {
+                    applyBlockStatements(self, function, @constCast(origins), block.body, depth + 1);
+                    current = block.value;
+                },
+                .field => |field| current = field.base,
+                .index => |index| current = index.base,
+                else => return .{},
+            }
+        }
+        return .{ .unknown = true };
+    }
+
+    fn callResultOrigin(self: *const Context, function: typed.Function, origins: []const Origin, callee: typed.FunctionId, arguments: []const typed.NodeId, depth: usize) Origin {
+        const index = @backingInt(callee);
+        if (index >= self.summaries.len) return .{ .unknown = true };
+        return self.substituteOrigin(function, origins, self.summaries[index].return_origin, arguments, depth + 1);
+    }
+};
+
+/// Accumulates one call's writes into the caller's inferred summary.
+const WriteSite = struct {
+    context: *const Context,
+    function: typed.Function,
+    origins: []const Origin,
+    arguments: []const typed.NodeId,
+    summary: *Summary,
+
+    fn absorbWrite(self: WriteSite, origin_value: Origin, span: source.Span) void {
+        self.summary.writes = true;
+        if (origin_value.unknown) {
+            self.summary.mutates_unknown = true;
+            self.summary.external = true;
+            self.witness(unknownWritePositions(self.function), span);
+            return;
+        }
+        if (origin_value.positions == 0) return;
+        self.summary.mutates |= origin_value.positions;
+        self.summary.external = true;
+        self.witness(origin_value.positions, span);
+    }
+
+    /// Remember where one external write reaching `positions` happened: the
+    /// first such write overall, and the first one that reaches a parameter the
+    /// signature does not declare `mut`, so a missing-marker diagnostic points
+    /// at a write that needs the marker rather than at an allowed one.
+    fn witness(self: WriteSite, positions: Mask, span: source.Span) void {
+        if (self.summary.witnesses.external == null) self.summary.witnesses.external = span;
+        const declared = positionsBitset(self.function.signature.declared_mutates);
+        if (positions & ~declared != 0 and self.summary.witnesses.undeclared == null) self.summary.witnesses.undeclared = span;
+    }
+
+    fn absorb(self: WriteSite, mask: Mask, unknown: bool, span: source.Span) void {
+        if (unknown) {
+            self.summary.writes = true;
+            // An unknown footprint can only reach caller state through an actual
+            // argument. If every argument is definitely fresh, the writes stay local.
+            var reaches_caller = false;
+            for (self.arguments) |argument| {
+                if (!self.context.nodeOrigin(self.function, self.origins, argument, 0).isFresh()) {
+                    reaches_caller = true;
+                    break;
+                }
+            }
+            if (reaches_caller) {
+                self.summary.mutates_unknown = true;
+                self.summary.external = true;
+                self.witness(unknownWritePositions(self.function), span);
+            }
+            return;
+        }
+        var position: u7 = 0;
+        while (position < mask_positions) : (position += 1) {
+            if (mask & (bitOf(position)) == 0) continue;
+            if (position >= self.arguments.len) {
+                self.summary.writes = true;
+                self.summary.mutates_unknown = true;
+                self.summary.external = true;
+                self.witness(unknownWritePositions(self.function), span);
+                continue;
+            }
+            const origin_value = self.context.writtenArgumentOrigin(self.function, self.origins, self.arguments[position]);
+            self.absorbWrite(origin_value, span);
+        }
+    }
+};
+
+/// Record assignments that write a parameter's caller storage: fixed-array
+/// elements and whole `mut` record or collection variables.
+fn absorbElementWrite(context: *const Context, function: typed.Function, origins: []const Origin, store: typed.Store, span: source.Span, summary: *Summary) void {
+    const slot = @backingInt(store.slot);
+    if (slot >= function.signature.parameter_count) return;
+    const ty = function.scope.locals[slot].ty;
+    const array_write = store.element and typed.referenceArray(context.program.records, ty);
+    // VALUE-SEMANTICS-3: any assignment to a `mut` record parameter (a field
+    // write rebuilds it) lands in the caller's record.
+    const declared_mut = declaredMut(function, slot);
+    const caller_write = array_write or declared_mut;
+    if (!caller_write) return;
+    const site = WriteSite{ .context = context, .function = function, .origins = origins, .arguments = &.{}, .summary = summary };
+    site.absorbWrite(Origin.fromPosition(@intCast(slot)), span);
+}
+
+fn declaredMut(function: typed.Function, slot: usize) bool {
+    for (function.signature.declared_mutates) |position| if (position == slot) return true;
+    return false;
+}
+
+fn absorbDirectWrite(context: *const Context, function: typed.Function, origins: []const Origin, node: typed.Node, summary: *Summary) void {
+    const witness = mutation.typedNode(context.program, function, node) orelse return;
+    if (witness.operation != .receiver_write) return;
+    const origin_value = if (witness.owner) |owner|
+        context.localOrigin(function, origins, owner)
+    else if (witness.input) |position|
+        Origin.fromPosition(position)
+    else
+        Origin{ .unknown = true };
+    const site = WriteSite{ .context = context, .function = function, .origins = origins, .arguments = &.{}, .summary = summary };
+    site.absorbWrite(origin_value, witness.span);
+}
+
+fn absorbExpressionCall(context: *const Context, function: typed.Function, origins: []const Origin, node: typed.Node, summary: *Summary) void {
+    switch (node.data) {
+        .call => |call| {
+            const site = WriteSite{ .context = context, .function = function, .origins = origins, .arguments = call.arguments, .summary = summary };
+            const footprint = effectiveFootprint(context.program, context.summaries, @backingInt(call.function));
+            site.absorb(footprint.positions, footprint.unknown, node.span);
+        },
+        .invoke => |invoke| {
+            const signature = callables.signature(context.program.nodes[@backingInt(invoke.callee)].ty, context.program.records);
+            const site = WriteSite{ .context = context, .function = function, .origins = origins, .arguments = invoke.arguments, .summary = summary };
+            if (signature) |contract| {
+                site.absorb(positionsBitset(contract.mutates), false, node.span);
+            } else {
+                site.absorb(0, true, node.span);
+            }
+        },
+        else => {},
+    }
+}
+
+/// Bind one statement's effect on the local origin table. A `return` merges its
+/// value's origin into the summary; that reads only bindings already resolved,
+/// because the first pass visits statements in source order.
+fn applyStatement(context: *const Context, function: typed.Function, origins: []Origin, statement_id: typed.StatementId, summary: *Summary) bool {
+    const statement = context.program.statements[@backingInt(statement_id)];
+    switch (statement.data) {
+        .initialize, .assign => |store| {
+            const grew = bindStatement(context, function, origins, statement, 0);
+            absorbElementWrite(context, function, origins, store, statement.span, summary);
+            return grew;
+        },
+        .ret => |value| {
+            // VALUE-SEMANTICS-4: a returned value is the caller's own copy.
+            const returned = context.program.nodes[@backingInt(value)].ty;
+            if (value_semantics.copiesAll(context.program.records, returned)) return false;
+            summary.return_origin = Origin.merge(summary.return_origin, context.nodeOrigin(function, origins, value, 0));
+        },
+        else => return bindStatement(context, function, origins, statement, 0),
+    }
+    return false;
+}
+
+fn applyExpression(context: *const Context, function: typed.Function, origins: []const Origin, expression_id: typed.NodeId, summary: *Summary) void {
+    const node = context.program.nodes[@backingInt(expression_id)];
+    absorbDirectWrite(context, function, origins, node, summary);
+    absorbExpressionCall(context, function, origins, node, summary);
+}
+
+fn analyzeFunction(context: *const Context, index: usize) std.mem.Allocator.Error!Summary {
+    const function = context.program.functions[index];
+    const locals = function.scope.locals.len;
+    const origins = try context.allocator.alloc(Origin, if (locals == 0) 1 else locals);
+    defer context.allocator.free(origins);
+    @memset(origins, .{});
+    var summary = Summary{};
+    // Bindings are resolved first, in source order. A hidden temporary such as
+    // the receiver of `builder.buffer.append_byte(v)` is initialized by an
+    // earlier statement than the expression that reads it, so a single walk that
+    // also recorded writes could meet the read before the store and attribute the
+    // write to fresh storage. Return origins are merged in the same first pass
+    // because they only read the bindings that are already known.
+    // A loop can read a binding before a later statement widens it, so the
+    // walk repeats until no local's origin grows. Each origin only gains bits
+    // from a finite set, so the repetition is bounded by the locals' count.
+    var grew = true;
+    while (grew) {
+        grew = false;
+        var bindings = try Walker.init(context.allocator, context.program, function.scope.body);
+        defer bindings.deinit();
+        while (try bindings.next()) |item| switch (item) {
+            .statement => |statement_id| if (applyStatement(context, function, origins, statement_id, &summary)) {
+                grew = true;
+            },
+            else => {},
+        };
+    }
+    var walker = try Walker.init(context.allocator, context.program, function.scope.body);
+    defer walker.deinit();
+    while (try walker.next()) |item| switch (item) {
+        .expression => |expression_id| applyExpression(context, function, origins, expression_id, &summary),
+        else => {},
+    };
+    return summary;
+}
+
+const FixedPoint = struct { summaries: []Summary, widened: bool };
+
+/// Compute transitive mutation and return-origin summaries to a fixed point.
+/// Budget exhaustion widens conservatively; it never reports a write as absent.
+fn buildSummaries(allocator: std.mem.Allocator, program: typed.Program, stubs: []const ?Fact) std.mem.Allocator.Error!FixedPoint {
+    const summaries = try allocator.alloc(Summary, program.functions.len);
+    @memset(summaries, .{});
+    // A stood-in body keeps the summary it had when it was last checked; only
+    // checked bodies iterate, reading those fixed summaries at their calls.
+    for (summaries, 0..) |*summary, index| {
+        if (standIn(stubs, index)) |fact| summary.* = fact.summary;
+    }
+    var keep = true;
+    defer if (keep) allocator.free(summaries);
+    var scratch = std.heap.ArenaAllocator.init(allocator);
+    defer scratch.deinit();
+    const context = Context{ .allocator = scratch.allocator(), .program = program, .summaries = summaries };
+    const budget = program.functions.len * 4 + 32;
+    var iteration: usize = 0;
+    while (true) {
+        var changed = false;
+        for (program.functions, 0..) |_, index| {
+            if (standIn(stubs, index) != null) continue;
+            _ = scratch.reset(.retain_capacity);
+            const computed = try analyzeFunction(&context, index);
+            const merged = mergeSummaries(summaries[index], computed);
+            if (!sameSummary(merged, summaries[index])) {
+                summaries[index] = merged;
+                changed = true;
+            }
+        }
+        if (!changed) break;
+        iteration += 1;
+        if (iteration >= budget) break;
+    }
+    const widened = iteration >= budget and iteration != 0;
+    if (widened) for (summaries) |*summary| {
+        summary.mutates_unknown = true;
+        summary.return_origin.unknown = true;
+        summary.writes = true;
+        summary.external = true;
+    };
+    keep = false;
+    return .{ .summaries = summaries, .widened = widened };
+}
+
+fn publish(allocator: std.mem.Allocator, program: typed.Program, summaries: []const Summary) std.mem.Allocator.Error!void {
+    for (program.functions, summaries, 0..) |function, summary, index| {
+        const mutable = @constCast(&program.functions[index]);
+        mutable.signature.inferred.writes = summary.writes;
+        mutable.signature.inferred.external = summary.external;
+        // An unattributed write may reach every parameter, including any past what a
+        // `Mask` names, so the published list is all of them.
+        mutable.signature.mutates = if (summary.mutates_unknown)
+            try allPositions(allocator, function.signature.parameter_count)
+        else
+            try bitsetPositions(allocator, summary.mutates);
+        mutable.signature.return_origin = try boundFromOrigin(allocator, summary.return_origin);
+    }
+}
+
+/// Every parameter position of a function with `count` parameters, in order.
+fn allPositions(allocator: std.mem.Allocator, count: usize) std.mem.Allocator.Error![]const u16 {
+    const out = try allocator.alloc(u16, count);
+    for (out, 0..) |*position, index| position.* = @intCast(index);
+    return out;
+}
+
+fn permissionMessage(allocator: std.mem.Allocator, function: typed.Function, summary: Summary, permitted: Mask, has_permission: bool) std.mem.Allocator.Error![]const u8 {
+    var text: std.Io.Writer.Allocating = .init(allocator);
+    defer text.deinit();
+    text.writer.print("managed write in `{s}` exceeds its contract", .{function.name}) catch return error.OutOfMemory;
+    if (summary.mutates_unknown) {
+        text.writer.writeAll("; the write target's origin could not be proven fresh or tied to a published input") catch return error.OutOfMemory;
+    } else if (!has_permission) {
+        text.writer.writeAll("; the declared effect ceiling does not include `mutation`") catch return error.OutOfMemory;
+    } else {
+        text.writer.writeAll("; the declared mutates footprint does not cover ") catch return error.OutOfMemory;
+        var listed = false;
+        var position: u7 = 0;
+        while (position < mask_positions) : (position += 1) {
+            const bit = bitOf(position);
+            if (summary.mutates & bit == 0 or permitted & bit != 0) continue;
+            text.writer.print("{s}p{d}", .{ if (listed) ", " else "", position }) catch return error.OutOfMemory;
+            listed = true;
+        }
+        text.writer.writeAll("; declare both effects(mutation) and mutates(...), or assign the value to a local and change that copy") catch return error.OutOfMemory;
+    }
+    return allocator.dupe(u8, text.written()) catch return error.OutOfMemory;
+}
+
+/// Write one parameter's source name, falling back to `p<N>` when the checked
+/// local carries no name. Positions are zero-based, matching `mutates(...)`.
+fn writeParameterName(writer: *std.Io.Writer, function: typed.Function, position: u7) std.Io.Writer.Error!void {
+    const index: usize = position;
+    if (index < function.scope.locals.len) {
+        const name = function.scope.locals[index].name;
+        if (name.len != 0) return writer.writeAll(name);
+    }
+    try writer.print("p{d}", .{position});
+}
+
+/// Build the rejection for a written parameter that no `mut` marks, naming the
+/// exact declaration the reader should paste. `positions` is the inferred write
+/// set widened by every position an untraceable target could reach, so the paste
+/// covers the whole contract the body needs.
+fn unmarkedWriteMessage(allocator: std.mem.Allocator, src: source.Source, declared: ast.Function, function: typed.Function, positions: Mask) std.mem.Allocator.Error![]const u8 {
+    var text: std.Io.Writer.Allocating = .init(allocator);
+    defer text.deinit();
+    text.writer.writeAll("this function writes ") catch return error.OutOfMemory;
+    var listed = false;
+    var position: u7 = 0;
+    while (position < mask_positions) : (position += 1) {
+        if (positions & (bitOf(position)) == 0) continue;
+        if (listed) text.writer.writeAll(", ") catch return error.OutOfMemory;
+        text.writer.writeAll("`") catch return error.OutOfMemory;
+        writeParameterName(&text.writer, function, position) catch return error.OutOfMemory;
+        text.writer.print("` (parameter {d})", .{@as(u32, position) + 1}) catch return error.OutOfMemory;
+        listed = true;
+    }
+    // VALUE-SEMANTICS-4: a parameter is read-only unless declared `mut`.
+    text.writer.writeAll(", which is read-only here; declare ") catch return error.OutOfMemory;
+    writeMutatedParameters(&text.writer, src, declared, function, positions) catch return error.OutOfMemory;
+    text.writer.writeAll(" so the change reaches the caller, or assign it to a local (`copy = ") catch return error.OutOfMemory;
+    writeParameterName(&text.writer, function, @intCast(@ctz(positions))) catch return error.OutOfMemory;
+    text.writer.writeAll("`) and change the copy") catch return error.OutOfMemory;
+    return allocator.dupe(u8, text.written()) catch return error.OutOfMemory;
+}
+
+/// Write one `mut name: T` declaration per set bit of `positions`, comma
+/// separated. Each is a paste-ready parameter annotation.
+fn writeMutatedParameters(writer: *std.Io.Writer, src: source.Source, declared: ast.Function, function: typed.Function, positions: Mask) std.mem.Allocator.Error!void {
+    var listed = false;
+    var position: u7 = 0;
+    while (position < mask_positions) : (position += 1) {
+        if (positions & (bitOf(position)) == 0) continue;
+        if (listed) writer.writeAll(", ") catch return error.OutOfMemory;
+        writer.writeAll("`") catch return error.OutOfMemory;
+        try writeMutatedParameter(writer, src, declared, function, position);
+        writer.writeAll("`") catch return error.OutOfMemory;
+        listed = true;
+    }
+}
+
+/// One parameter's declaration as `mut name: T`. The type is the source text the
+/// reader actually wrote, so the paste is exactly the edit they need to make and
+/// appears verbatim in the message.
+fn writeMutatedParameter(writer: *std.Io.Writer, src: source.Source, declared: ast.Function, function: typed.Function, position: u7) std.mem.Allocator.Error!void {
+    writer.writeAll("mut ") catch return error.OutOfMemory;
+    writeParameterName(writer, function, position) catch return error.OutOfMemory;
+    writer.writeAll(": ") catch return error.OutOfMemory;
+    const index: usize = position;
+    if (index >= declared.signature.parameters.len) {
+        writer.writeAll("T") catch return error.OutOfMemory;
+        return;
+    }
+    writer.writeAll(src.text(declared.signature.parameters[index].ty)) catch return error.OutOfMemory;
+}
+
+/// Every parameter position an unattributed write could reach. An untraceable
+/// target can only be caller state through an argument, and every argument of
+/// this function is one of its own parameters.
+fn unknownWritePositions(function: typed.Function) Mask {
+    var positions: Mask = 0;
+    var bit: u7 = 0;
+    while (bit < mask_positions) : (bit += 1) {
+        if (bit < function.signature.parameter_count) positions |= bitOf(bit);
+    }
+    return positions;
+}
+
+/// What the mutation pass needs besides the checked program: the exporting
+/// verdicts and the source its declaration-side messages quote.
+pub const Request = struct {
+    /// Whether each function is exported, in program order.
+    exported: []const bool,
+    /// Merged source of the checked program, for paste-ready diagnostics.
+    src: source.Source,
+    /// Parsed declarations, which carry each parameter's own type span.
+    syntax: ast.Program,
+    /// Diagnostic destination.
+    sink: *diagnostic.Sink,
+    /// Stand-in facts for bodies this check did not materialize, by function
+    /// index; such a function is neither analyzed nor diagnosed.
+    stubs: []const ?Fact = &.{},
+    /// When set, receives every function's final mutation summary.
+    summaries: ?[]Summary = null,
+};
+
+/// The syntax function one checked function was built from. A specialized
+/// generic instance shares its template's declaration, so the template's spans
+/// are the ones the reader sees.
+fn declaringFunction(syntax: ast.Program, function: typed.Function) ast.Function {
+    for (syntax.functions) |declared| {
+        if (declared.name.start == function.declaration.start and declared.name.end == function.declaration.end) return declared;
+    }
+    return syntax.functions[0];
+}
+
+/// The declaration-side half of item 1: a written parameter must be declared
+/// `mut`. Unused declared caller-update capabilities remain valid. Every message carries the exact
+/// replacement text. A position already rejected by `checkMutTypes` is not
+/// reported again here.
+fn checkMutDeclarations(allocator: std.mem.Allocator, program: typed.Program, request: Request, index: usize, summary: Summary) std.mem.Allocator.Error!bool {
+    const src = request.src;
+    const sink = request.sink;
+
+    const function = program.functions[index];
+    // The declaring syntax is found by a scan of every declaration, so it is
+    // looked up only for a function that actually reports a diagnostic.
+    const positions: Mask = if (summary.mutates_unknown) unknownWritePositions(function) else summary.mutates;
+    const declared = positionsBitset(function.signature.declared_mutates);
+    var violated = false;
+    if (summary.external and positions & ~declared != 0) {
+        const message = try unmarkedWriteMessage(allocator, src, declaringFunction(request.syntax, function), function, positions & ~declared);
+        // Only an attributed write names the parameters for certain; a widened
+        // unknown write lists every position, scalars included, as advice.
+        const fix = if (summary.mutates_unknown) null else try markParameters(allocator, request.syntax, function, positions & ~declared);
+        try sink.items.append(allocator, .{
+            .code = mutation_marker_code,
+            .span = summary.witnesses.undeclared orelse summary.witnesses.external orelse function.declaration,
+            .message = message,
+            .provenance = .{ .fix = fix },
+        });
+        violated = true;
+    }
+    return violated;
+}
+
+/// The syntax declaration of one checked function, or null when none has its
+/// exact name span (a lambda body), so a fix never edits another signature.
+fn exactDeclaration(syntax: ast.Program, function: typed.Function) ?ast.Function {
+    for (syntax.functions) |declared| {
+        if (declared.name.start == function.declaration.start and declared.name.end == function.declaration.end) return declared;
+    }
+    return null;
+}
+
+/// The fix for an unmarked written parameter: `mut ` in front of each written
+/// parameter's declared name, in parameter order.
+fn markParameters(allocator: std.mem.Allocator, syntax: ast.Program, function: typed.Function, positions: Mask) std.mem.Allocator.Error!?diagnostic.Fix {
+    const declared = exactDeclaration(syntax, function) orelse return null;
+    var edits: std.ArrayList(diagnostic.Edit) = .empty;
+    var position: u7 = 0;
+    while (position < mask_positions) : (position += 1) {
+        if (positions & (bitOf(position)) == 0) continue;
+        if (position >= declared.signature.parameters.len) return null;
+        const at = declared.signature.parameters[position].name.start;
+        try edits.append(allocator, .{ .span = .{ .start = at, .end = at }, .text = "mut " });
+    }
+    if (edits.items.len == 0) return null;
+    return .{ .edit = edits.items[0], .more = edits.items[1..] };
+}
+
+fn checkDeclaredBound(allocator: std.mem.Allocator, program: typed.Program, index: usize, summary: Summary, sink: *diagnostic.Sink) std.mem.Allocator.Error!bool {
+    const function = program.functions[index];
+    if (!summary.external) return false;
+    const permitted = positionsBitset(function.signature.declared_mutates);
+    if (function.policy.effect_bound) |bound| {
+        const has_permission = bound.allowed & effect_set.bit(.mutation) != 0;
+        if (!has_permission) {
+            const message = try permissionMessage(allocator, function, summary, permitted, has_permission);
+            try sink.items.append(allocator, .{
+                .code = permission_code,
+                .span = summary.witnesses.external orelse function.declaration,
+                .message = message,
+                .related = .{ .span = bound.span, .message = "declared effect ceiling and mutates footprint are here" },
+            });
+            return true;
+        }
+        // A declared `mut` position already reports its own missing marker, so a
+        // write that lands outside the declared set is reported there rather than
+        // twice. Only an untraceable target, which no single position can cover,
+        // stays a permission failure.
+        if (summary.mutates_unknown and !mutCoversUnknown(permitted, function)) {
+            const message = try permissionMessage(allocator, function, summary, permitted, has_permission);
+            try sink.items.append(allocator, .{
+                .code = permission_code,
+                .span = summary.witnesses.external orelse function.declaration,
+                .message = message,
+                .related = .{ .span = bound.span, .message = "declared effect ceiling and mutates footprint are here" },
+            });
+            return true;
+        }
+    }
+    return false;
+}
+
+/// Whether the declared `mut` positions already permit every position an
+/// unattributed write could reach, which is what makes such a write the marker
+/// error's business rather than a permission failure's.
+fn mutCoversUnknown(permitted: Mask, function: typed.Function) bool {
+    return unknownWritePositions(function) & ~permitted == 0;
+}
+
+/// One unordered pair of types the disjointness proof has queued.
+const TypePair = struct { low: typed.Type, high: typed.Type };
+
+/// What one queued pair settles on its own.
+const PairVerdict = enum { alias, disjoint, expand };
+
+/// Settle a pair without looking at components: the same type or the same
+/// nominal record may alias, a side that holds no managed storage cannot, and a
+/// record the catalog cannot describe may. Anything else aliases only through
+/// a component.
+fn pairVerdict(program: typed.Program, a: typed.Type, b: typed.Type) PairVerdict {
+    if (a == b) return .alias;
+    if (!mayContainManaged(program, a) or !mayContainManaged(program, b)) return .disjoint;
+    if (!a.isAggregate() or !b.isAggregate()) return .disjoint;
+    const ai = a.recordIndex();
+    const bi = b.recordIndex();
+    if (ai >= program.records.len or bi >= program.records.len) return .alias;
+    if (ai == bi) return .alias;
+    return .expand;
+}
+
+/// The proof's whole state for one query: every pair ever queued, so each is
+/// expanded at most once, and the pairs still to expand.
+const AliasSearch = struct {
+    allocator: std.mem.Allocator,
+    program: typed.Program,
+    seen: std.AutoHashMapUnmanaged(TypePair, void) = .empty,
+    pending: std.ArrayList(TypePair) = .empty,
+
+    fn deinit(self: *AliasSearch) void {
+        self.seen.deinit(self.allocator);
+        self.pending.deinit(self.allocator);
+    }
+
+    /// Queue an unordered pair unless this query already queued it.
+    fn queue(self: *AliasSearch, a: typed.Type, b: typed.Type) std.mem.Allocator.Error!void {
+        const pair: TypePair = if (@backingInt(a) <= @backingInt(b)) .{ .low = a, .high = b } else .{ .low = b, .high = a };
+        if ((try self.seen.getOrPut(self.allocator, pair)).found_existing) return;
+        try self.pending.append(self.allocator, pair);
+    }
+
+    /// Queue `target` against every managed component of `container`.
+    fn queueComponents(self: *AliasSearch, target: typed.Type, container: typed.Type) std.mem.Allocator.Error!void {
+        const record = self.program.records[container.recordIndex()];
+        if (record.shape.buffer) |element| try self.queue(target, element);
+        if (record.shape.array) |array| try self.queue(target, array.element);
+        if (record.shape.domain) |domain| try self.queue(target, domain);
+        if (record.shape.variants) |variants| for (variants.cases) |case| {
+            if (case.payload) |payload| try self.queue(target, payload);
+        };
+        for (record.fields) |field| try self.queue(target, field.ty);
+    }
+};
+
+/// Sound proof that two argument types cannot share mutable managed storage.
+/// Two values may alias exactly when some pair reachable from `(a, b)`, by
+/// replacing either side with one of its managed components, is the same type,
+/// the same nominal record or a record the catalog cannot describe. The search
+/// is a reachability walk over unordered type pairs that expands each pair once
+/// for the whole query, so it is polynomial in the number of reachable types;
+/// meeting a pair again adds nothing (coinductive), which is what the old
+/// per-path walk concluded too, only after re-walking every path to it.
+pub fn typesMayAlias(allocator: std.mem.Allocator, program: typed.Program, a: typed.Type, b: typed.Type) std.mem.Allocator.Error!bool {
+    var search = AliasSearch{ .allocator = allocator, .program = program };
+    defer search.deinit();
+    try search.queue(a, b);
+    while (search.pending.pop()) |pair| {
+        switch (pairVerdict(program, pair.low, pair.high)) {
+            .alias => return true,
+            .disjoint => continue,
+            .expand => {},
+        }
+        try search.queueComponents(pair.low, pair.high);
+        try search.queueComponents(pair.high, pair.low);
+    }
+    return false;
+}
+
+/// One checked call site's argument list and the parameter types it binds.
+const CallSite = struct {
+    function: typed.Function,
+    origins: []const Origin,
+    arguments: []const typed.NodeId,
+    parameter_types: []const typed.Type = &.{},
+    parameter_locals: []const typed.Local = &.{},
+    sink: *diagnostic.Sink,
+    roots: ?Roots = null,
+
+    /// Whether two arguments read through locals that may name one object.
+    fn sameRoot(self: CallSite, program: typed.Program, a: usize, b: usize) bool {
+        const roots = self.roots orelse return false;
+        const left = mutation.nodeRoot(program, self.arguments[a]) orelse return false;
+        const right = mutation.nodeRoot(program, self.arguments[b]) orelse return false;
+        return roots.same(@backingInt(left), @backingInt(right));
+    }
+
+    fn typeAt(self: CallSite, index: usize) typed.Type {
+        if (index < self.parameter_types.len) return self.parameter_types[index];
+        return self.parameter_locals[index].ty;
+    }
+};
+
+/// Which locals of one function may name the same storage. A local assigned
+/// from a path rooted at another local, or bound to a `match` payload of one,
+/// joins that local's class. Origins already separate caller-owned inputs, so
+/// only two fresh arguments consult this: fresh storage is not the caller's, but
+/// one fresh list passed twice is still one list.
+const Roots = struct {
+    parent: []usize,
+
+    fn init(allocator: std.mem.Allocator, count: usize) std.mem.Allocator.Error!Roots {
+        const parent = try allocator.alloc(usize, count);
+        for (parent, 0..) |*slot, index| slot.* = index;
+        return .{ .parent = parent };
+    }
+
+    fn find(self: Roots, slot: usize) usize {
+        var at = slot;
+        while (self.parent[at] != at) at = self.parent[at];
+        return at;
+    }
+
+    fn join(self: Roots, a: usize, b: usize) void {
+        if (a >= self.parent.len or b >= self.parent.len) return;
+        const left = self.find(a);
+        const right = self.find(b);
+        if (left != right) self.parent[left] = right;
+    }
+
+    fn same(self: Roots, a: usize, b: usize) bool {
+        if (a >= self.parent.len or b >= self.parent.len) return false;
+        return self.find(a) == self.find(b);
+    }
+};
+
+const OverlapChecker = struct {
+    allocator: std.mem.Allocator,
+    program: typed.Program,
+    summaries: []const Summary,
+    roots: ?Roots = null,
+
+    /// Report the first writable/read-only argument pair not proven disjoint.
+    fn checkArguments(self: *const OverlapChecker, site: CallSite, written_mask: Mask) std.mem.Allocator.Error!bool {
+        const context = Context{ .allocator = self.allocator, .program = self.program, .summaries = self.summaries };
+        var written: u7 = 0;
+        while (written < mask_positions) : (written += 1) {
+            const written_bit = bitOf(written);
+            if (written_mask & written_bit == 0 or written >= site.arguments.len) continue;
+            if (written >= site.arguments.len or !mayContainManaged(self.program, site.typeAt(written))) continue;
+            const fresh = context.nodeOrigin(site.function, site.origins, site.arguments[written], 0).isFresh();
+            if (try self.checkReadOnly(&context, site, written, written_mask, fresh)) return true;
+        }
+        return false;
+    }
+
+    fn checkReadOnly(self: *const OverlapChecker, context: *const Context, site: CallSite, written: u7, written_mask: Mask, written_fresh: bool) std.mem.Allocator.Error!bool {
+        var read_only: u7 = 0;
+        while (read_only < mask_positions) : (read_only += 1) {
+            const read_bit = bitOf(read_only);
+            if (read_only == written or read_only >= site.arguments.len) continue;
+            if (written_mask & read_bit != 0) continue;
+            const written_type = site.typeAt(written);
+            const read_type = site.typeAt(read_only);
+            if (!mayContainManaged(self.program, read_type)) continue;
+            const read_fresh = context.nodeOrigin(site.function, site.origins, site.arguments[read_only], 0).isFresh();
+            // Fresh storage is never the caller's, so a fresh argument can only
+            // meet another fresh one, and only through a shared local.
+            const both_fresh = written_fresh and read_fresh;
+            if (both_fresh and !site.sameRoot(self.program, written, read_only)) continue;
+            if (!both_fresh and (written_fresh or read_fresh)) continue;
+            if (!try typesMayAlias(self.allocator, self.program, written_type, read_type)) continue;
+            try site.sink.items.append(self.allocator, .{
+                .code = overlap_code,
+                .span = self.program.nodes[@backingInt(site.arguments[read_only])].span,
+                .message = "writable argument may alias an argument promised read-only; pass a fresh snapshot, make both inputs writable, or split the call",
+                .related = .{
+                    .span = self.program.nodes[@backingInt(site.arguments[written])].span,
+                    .message = "writable argument originates here; the two input graphs are not proven disjoint",
+                },
+            });
+            return true;
+        }
+        return false;
+    }
+};
+
+/// Enforce M2's mutation permissions over a checked program. Returns whether
+/// any diagnostic was emitted; callers turn that into `error.SourceError`.
+pub fn check(allocator: std.mem.Allocator, program: typed.Program, request: Request) std.mem.Allocator.Error!bool {
+    const sink = request.sink;
+    _ = request.exported;
+    var violated = false;
+    const built = try buildSummaries(allocator, program, request.stubs);
+    try publish(allocator, program, built.summaries);
+    if (request.summaries) |out| {
+        for (out, 0..) |*summary, index| summary.* = if (index < built.summaries.len) built.summaries[index] else .{};
+    }
+    if (built.widened and program.functions.len != 0) {
+        try sink.items.append(allocator, .{
+            .code = limit_code,
+            .span = program.functions[0].declaration,
+            .message = "mutation origin analysis exhausted its fixed-point budget; mutation and return-origin summaries widened conservatively",
+        });
+        violated = true;
+    }
+    // A stood-in body passed all three checks when it was last checked, and its
+    // own facts and every callee fact it reads are unchanged, so it is skipped.
+    for (program.functions, 0..) |_, index| {
+        if (standIn(request.stubs, index) != null) continue;
+        if (try checkDeclaredBound(allocator, program, index, built.summaries[index], sink)) violated = true;
+    }
+    // Item 1's declaration side: every write is declared `mut`, every `mut` is
+    // written, and every `mut` names a type with storage to write.
+    for (program.functions, 0..) |_, index| {
+        if (standIn(request.stubs, index) != null) continue;
+        if (try checkMutDeclarations(allocator, program, request, index, built.summaries[index])) violated = true;
+    }
+
+    // VALUE-SEMANTICS-5: a read-only argument is a value of its own (lent,
+    // or a real copy where a `mut` argument of the same call could reach
+    // it), so no writable/read-only overlap is possible. Instead a write
+    // through a value binding or into a returned value is rejected.
+    for (program.functions, 0..) |_, index| {
+        if (standIn(request.stubs, index) != null) continue;
+        if (try value_checks.checkWrites(allocator, program, index, sink)) violated = true;
+    }
+    return violated;
+}
+
+test "origin lattice merges positions and identifies fresh storage" {
+    const t = std.testing;
+    const param_one = Origin.fromPosition(1);
+    const param_three = Origin.fromPosition(3);
+    const merged = Origin.merge(param_one, param_three);
+    try t.expect(merged.has(1));
+    try t.expect(merged.has(3));
+    try t.expect(!merged.isFresh());
+    try t.expect(Origin.fresh().isFresh());
+    try t.expect(!(Origin{ .unknown = true }).isFresh());
+}
+
+test "bitset helpers normalize and order parameter positions" {
+    const t = std.testing;
+    const positions = [_]u16{ 3, 0, 7 };
+    try t.expectEqual(@as(u16, 0b1000_1001), positionsBitset(&positions));
+    const slice = try bitsetPositions(t.allocator, 0b1000_1001);
+    defer t.allocator.free(slice);
+    try t.expectEqualSlices(u16, &.{ 0, 3, 7 }, slice);
+}
+
+test "managed reachability sees records and recursive collections" {
+    const t = std.testing;
+    const record = typed.Record{ .id = @fromBackingInt(0), .name = "Box", .declaration = .{ .start = 0, .end = 0 }, .managed = false, .fields = &.{.{ .name = "items", .declaration = .{ .start = 0, .end = 0 }, .ty = .i64 }} };
+    const list = typed.Record{ .id = @fromBackingInt(1), .name = "list", .declaration = .{ .start = 0, .end = 0 }, .managed = true, .fields = &.{}, .shape = .{ .buffer = .i64 } };
+    const records = [_]typed.Record{ record, list };
+    const empty_nodes: []const typed.Node = &.{};
+    const empty_statements: []const typed.Statement = &.{};
+    const empty_functions: []const typed.Function = &.{};
+    const program = typed.Program{
+        .nodes = empty_nodes,
+        .statements = empty_statements,
+        .functions = empty_functions,
+        .main = @fromBackingInt(0),
+        .records = &records,
+    };
+    try t.expect(!mayContainManaged(program, .i64));
+    try t.expect(mayContainManaged(program, @fromBackingInt(typed.Type.record_base + 1)));
+    try t.expect(!mayContainManaged(program, @fromBackingInt(typed.Type.record_base)));
+}

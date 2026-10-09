@@ -1,0 +1,370 @@
+{
+  "version": "velocity-goal-v1",
+  "owner": "user",
+  "rule": "Agents read this file and report against it. An agent may propose a change to a weight, target or tolerance only in a commit that touches nothing else; it never edits this file as part of a language change.",
+  "objective": "Fewest agent turns and least repair from a task description to a verified program, at every project size.",
+  "measured_on": "2026-09-17",
+  "baseline_binary": "commit 237871a6, zig-out/bin/selka",
+  "budget": {
+    "iterations_per_day": 24,
+    "solver_runs_per_night": 35,
+    "max_candidate_wall_clock_s": 7200
+  },
+  "projects": {
+    "schematic": {
+      "path": "src/schematic/guest",
+      "lines": 2186,
+      "modules": 14,
+      "build_flag": "--project"
+    },
+    "corpus": {
+      "path": "examples/corpus",
+      "lines": 320,
+      "modules": 13
+    },
+    "synthetic50k": {
+      "generator": "velocity/gen_project.py",
+      "seed": 20260917,
+      "modules": 121,
+      "functions_per_module": 40,
+      "lines": 53164
+    },
+    "synthetic500k": {
+      "generator": "velocity/gen_project.py",
+      "seed": 20260917,
+      "modules": 1210,
+      "functions_per_module": 40,
+      "enabled_when": "B1 on synthetic50k < 5 s"
+    }
+  },
+  "solver": {
+    "command_templates": {
+      "dsh": [
+        "dsh",
+        "--profile",
+        "headless",
+        "{prompt}"
+      ],
+      "claude": [
+        "claude",
+        "-p",
+        "{prompt}",
+        "--output-format",
+        "json",
+        "--max-turns",
+        "{turn_cap}"
+      ]
+    },
+    "default": "dsh",
+    "turn_cap": 30,
+    "tools_visible_to_solver": [
+      "zig-out/bin/selka",
+      "docs/",
+      "README.md"
+    ],
+    "never_visible_to_solver": [
+      "src/",
+      "velocity/",
+      "experiments/",
+      "scripts/"
+    ]
+  },
+  "lanes": {
+    "A": {
+      "name": "task velocity",
+      "weight": 0.35,
+      "cadence": "nightly",
+      "metrics": {
+        "A1": {
+          "name": "solve rate within turn cap",
+          "unit": "fraction",
+          "direction": "up",
+          "normalize": "linear",
+          "baseline": null,
+          "target": 0.95,
+          "tolerance": 0.0
+        },
+        "A2": {
+          "name": "median turns to verified solution",
+          "unit": "turns",
+          "direction": "down",
+          "normalize": "log",
+          "baseline": null,
+          "target": 3,
+          "tolerance": 0.05
+        },
+        "A3": {
+          "name": "repair rounds per task before first green verify",
+          "unit": "count",
+          "direction": "down",
+          "normalize": "log",
+          "baseline": null,
+          "target": 0.5,
+          "tolerance": 0.05
+        },
+        "A4": {
+          "name": "seconds waited on compiler, build and test calls per task",
+          "unit": "s",
+          "direction": "down",
+          "normalize": "log",
+          "baseline": null,
+          "target": 5,
+          "tolerance": 0.05
+        },
+        "A5": {
+          "name": "tokens per solved task",
+          "unit": "tokens",
+          "direction": "down",
+          "normalize": "log",
+          "baseline": null,
+          "target": null,
+          "tolerance": 0.05,
+          "note": "target set after the first nightly run"
+        }
+      }
+    },
+    "B": {
+      "name": "loop latency",
+      "weight": 0.25,
+      "cadence": "every iteration",
+      "samples": 3,
+      "statistic": "median",
+      "metrics": {
+        "B1": {
+          "name": "one-line body edit to running program",
+          "unit": "s",
+          "direction": "down",
+          "normalize": "log",
+          "baseline": {
+            "schematic": 3.4,
+            "synthetic50k": 74.0
+          },
+          "target": 1.0,
+          "tolerance": 0.05,
+          "how": "edit one body line; time `selka run <entry>` warm"
+        },
+        "B2": {
+          "name": "one-line body edit to check verdict",
+          "unit": "s",
+          "direction": "down",
+          "normalize": "log",
+          "baseline": {
+            "schematic": 0.17,
+            "synthetic50k": 3.9
+          },
+          "target": 0.3,
+          "tolerance": 0.05,
+          "how": "edit one body line; time `selka check-project <entry>` warm"
+        },
+        "B3": {
+          "name": "warm unchanged build with nothing to compile",
+          "unit": "s",
+          "direction": "down",
+          "normalize": "log",
+          "baseline": {
+            "schematic": 3.3,
+            "synthetic50k": 70.0
+          },
+          "target": 0.2,
+          "tolerance": 0.05,
+          "how": "time `selka build <entry> --project -o out` twice, report the second"
+        },
+        "B4": {
+          "name": "cold build seconds per thousand lines",
+          "unit": "s/kloc",
+          "direction": "down",
+          "normalize": "log",
+          "baseline": {
+            "schematic": 4.7,
+            "synthetic50k": 14.0
+          },
+          "target": 0.5,
+          "tolerance": 0.05,
+          "how": "fresh --cache-dir; time build; divide by lines/1000"
+        },
+        "B5": {
+          "name": "checked bodies reused after a one-line body edit",
+          "unit": "fraction",
+          "direction": "up",
+          "normalize": "linear",
+          "baseline": {
+            "schematic": 0.99,
+            "synthetic50k": 0.0002
+          },
+          "target": 0.99,
+          "tolerance": 0.0,
+          "how": "`--report` work-report-v1 checked_bodies.reused / (reused + performed)"
+        },
+        "B6": {
+          "name": "tests reused after an unrelated body edit",
+          "unit": "fraction",
+          "direction": "up",
+          "normalize": "linear",
+          "baseline": null,
+          "target": 0.95,
+          "tolerance": 0.0,
+          "how": "`selka test <dir>` summary: cached / total"
+        },
+        "B7": {
+          "name": "interface edit to first diagnostic in true dependents",
+          "unit": "s",
+          "direction": "down",
+          "normalize": "log",
+          "baseline": null,
+          "target": 0.5,
+          "tolerance": 0.05,
+          "how": "add a parameter to an exported function; time check-project"
+        }
+      }
+    },
+    "C": {
+      "name": "python fidelity",
+      "weight": 0.2,
+      "cadence": "every iteration",
+      "suite": "velocity/suites/idioms",
+      "oracle": "cpython: run the probe with runpy, call main(), compare exit status & 0xFF and stdout",
+      "metrics": {
+        "C1": {
+          "name": "first-try fidelity",
+          "unit": "fraction",
+          "direction": "up",
+          "normalize": "linear",
+          "baseline": 0.343,
+          "baseline_detail": "23 agree of 67 probes tagged oracle: cpython (76 run under CPython, 9 of those are rejected by design and count only toward C3)",
+          "target": 0.9,
+          "tolerance": 0.0
+        },
+        "C2": {
+          "name": "silent wrong answers",
+          "unit": "count",
+          "direction": "down",
+          "gate": true,
+          "baseline": 1,
+          "baseline_detail": "d05_round_half.selka: round(2.5) is 3 here and 2 in Python",
+          "target": 0,
+          "tolerance": 0.0
+        },
+        "C3": {
+          "name": "rejections naming the alternative or carrying a fix",
+          "unit": "fraction",
+          "direction": "up",
+          "normalize": "linear",
+          "baseline": 0.02,
+          "target": 0.95,
+          "tolerance": 0.0,
+          "how": "diagnostic-v1 has a `fix` field or a note with role `alternative`"
+        },
+        "C4": {
+          "name": "boilerplate lines per public declaration",
+          "unit": "ratio",
+          "direction": "down",
+          "normalize": "log",
+          "baseline": 1.1,
+          "baseline_detail": "stdlib: 140 export + module header + redundant effects lines over 189 functions",
+          "target": 0.1,
+          "tolerance": 0.0,
+          "how": "count ^module, ^export and effects(managed_allocation) lines over src/stdlib and examples/corpus; divide by exported declarations"
+        }
+      }
+    },
+    "D": {
+      "name": "comprehension and navigation",
+      "weight": 0.2,
+      "cadence": "every iteration",
+      "metrics": {
+        "D1": {
+          "name": "change-impact queries answerable while one body fails",
+          "unit": "fraction",
+          "direction": "up",
+          "normalize": "linear",
+          "baseline": 0.0,
+          "baseline_detail": "0 of 6 red, 2 of 6 green; callers/impact only via scripts/navigate.py",
+          "target": 1.0,
+          "tolerance": 0.0,
+          "queries": [
+            "callers",
+            "callees",
+            "impact",
+            "tests-for",
+            "recompile-set",
+            "boundary-mentions"
+          ]
+        },
+        "D2": {
+          "name": "list-interfaces rows with signature, effects, mutates and summary",
+          "unit": "fraction",
+          "direction": "up",
+          "normalize": "linear",
+          "baseline": 0.25,
+          "target": 1.0,
+          "tolerance": 0.0
+        },
+        "D3": {
+          "name": ".selka files passing the formatter check",
+          "unit": "fraction",
+          "direction": "up",
+          "normalize": "linear",
+          "baseline": 0.0,
+          "baseline_detail": "every src/stdlib module and the schematic guest fail fmt-module --check; no gate formats .selka",
+          "target": 1.0,
+          "tolerance": 0.0
+        },
+        "D4": {
+          "name": "diagnostic codes with an explain entry",
+          "unit": "fraction",
+          "direction": "up",
+          "normalize": "linear",
+          "baseline": 0.0,
+          "baseline_detail": "0 of 203",
+          "target": 1.0,
+          "tolerance": 0.0
+        },
+        "D5": {
+          "name": "misleading diagnostics in the suite",
+          "unit": "count",
+          "direction": "down",
+          "normalize": "log",
+          "baseline": 4,
+          "baseline_detail": "unwrap_or on Option -> E_UNKNOWN_TYPE; two-segment module call -> E_COLLECTION_METHOD; \"\"\"docstring\"\"\" -> E_BYTE_LITERAL; a & b -> removed with no replacement",
+          "target": 0,
+          "tolerance": 0.0
+        }
+      }
+    },
+    "E": {
+      "name": "gates",
+      "weight": 0.0,
+      "cadence": "every iteration",
+      "gates": [
+        "zig build test --summary all",
+        "zig build test-qbe --summary all",
+        "zig build test-qbe-build --summary all",
+        "zig build fmt-check",
+        "zig-out/bin/selka doc-coverage .",
+        "zig-out/bin/selka doctest .",
+        "idiom suite: every probe that agreed with CPython before the change still agrees",
+        "C2 == 0 once it reaches 0"
+      ]
+    }
+  },
+  "acceptance": {
+    "rule": "pareto-with-ratchet",
+    "steps": [
+      "every lane E gate passes",
+      "no B, C or D metric is worse than baseline.json by more than its tolerance",
+      "at least one metric improved beyond its noise floor, or the commit names the backlog prerequisite it completes"
+    ],
+    "noise_floor": {
+      "latency_relative": 0.05,
+      "fraction_absolute": 0.005,
+      "count_absolute": 1
+    },
+    "on_accept": "write baseline.json, append history",
+    "on_reject": "append history with numbers and reason, discard the worktree"
+  },
+  "normalization": {
+    "log": "score = clamp(ln(baseline / value) / ln(baseline / target), 0, 1) for direction down; inverted for up",
+    "linear": "score = clamp((value - baseline) / (target - baseline), 0, 1)",
+    "composite": "weighted mean of lane scores; trend only, never an acceptance criterion"
+  }
+}

@@ -1,0 +1,490 @@
+func change(mut items: int[]) -> Unit:
+    items[1] = 9
+
+
+func select(mut counter: int[]) -> int:
+    counter[0] += 1
+    return 0
+
+
+func select_last(mut counter: int[]) -> int:
+    counter[0] += 1
+    return -1
+
+
+func change_array(mut items: FixedArray[int, 2]) -> Unit:
+    items[1] = 9
+
+
+func keep_changed(mut items: int[], value: int) -> int:
+    items[1] = 9
+    return value
+
+
+func keep_growing(mut items: int[], value: int) -> int:
+    if value < 3:
+        items.append(value + 1)
+    return value
+
+
+func changed_filter(mut items: int[], value: int) -> bool:
+    items[1] = 9
+    return value > 0
+
+
+func keep_changed_array(mut items: FixedArray[int, 2], value: int) -> int:
+    items[1] = 9
+    return value
+
+
+func keep_true(mut flags: bool[], value: bool) -> bool:
+    flags[1] = True
+    return value
+
+
+func keep_false(mut flags: bool[], value: bool) -> bool:
+    flags[1] = False
+    return value
+
+
+func keep_changed_child(mut items: FixedArray[int[], 2], row: int[]) -> int:
+    items[1][0] = 9
+    return row[0]
+
+
+record Holder:
+    items: int[]
+
+
+record FixedHolder:
+    items: FixedArray[int, 2]
+
+
+record TextHolder:
+    text: str
+
+
+record BytesHolder:
+    data: bytes
+
+
+# spec: D1-LIVE-PLACE
+public func test_element_writes_remain_live_with_a_named_copy() -> bool:
+    mut items = [1, 2]
+    mut saved = items
+    mut total = 0
+    for value in items:
+        total += value
+        items[1] = 9
+    return total == 10 and items == [1, 9] and saved == [1, 2]
+
+
+# spec-case: D1-LIVE-PLACE
+public func test_append_growth_is_visible_through_continue() -> bool:
+    mut items = [1]
+    mut saved = items
+    mut total = 0
+    for value in items:
+        total += value
+        if value < 4:
+            items.append(value + 1)
+            continue
+    return total == 10 and items == [1, 2, 3, 4] and saved == [1]
+
+
+# spec-case: D1-LIVE-PLACE
+public func test_mut_callee_element_writes_remain_live() -> bool:
+    mut items = [1, 2]
+    mut saved = items
+    mut total = 0
+    for value in items:
+        total += value
+        change(mut items)
+    return total == 10 and saved == [1, 2]
+
+
+# spec-case: D1-LIVE-PLACE
+public func test_field_writeback_refreshes_the_place() -> bool:
+    mut holder = Holder(items=[1, 2])
+    mut saved = holder
+    mut total = 0
+    for value in holder.items:
+        total += value
+        mut working = holder
+        change(mut working.items)
+        holder.items = working.items
+    return total == 10 and holder.items == [1, 9] and saved.items == [1, 2]
+
+
+# spec-case: D1-LIVE-PLACE
+public func test_root_rebinding_takes_an_entry_snapshot() -> bool:
+    mut items = [1, 2]
+    mut total = 0
+    for value in items:
+        items[1] = 9
+        items = [7, 8]
+        total += value
+    return total == 3 and items == [7, 8]
+
+
+# spec-case: D1-LIVE-PLACE
+public func test_record_root_rebinding_takes_an_entry_snapshot() -> bool:
+    mut holder = Holder(items=[1, 2])
+    mut total = 0
+    for value in holder.items:
+        holder.items[1] = 9
+        holder = Holder(items=[7, 8])
+        total += value
+    return total == 3 and holder.items == [7, 8]
+
+
+# spec-case: D1-LIVE-PLACE
+public func test_indexed_place_keeps_its_entry_index() -> bool:
+    mut rows = [[1, 2], [7, 8]]
+    mut at = 0
+    mut total = 0
+    for value in rows[at]:
+        total += value
+        rows[0][1] = 9
+        at = 1
+    return total == 10 and rows[1] == [7, 8]
+
+
+# spec-case: D1-LIVE-PLACE
+public func test_index_expression_is_evaluated_once() -> bool:
+    mut rows = [[1, 2]]
+    mut counter = [0]
+    mut total = 0
+    for value in rows[select(mut counter)]:
+        total += value
+        rows[0][1] = 9
+    return total == 10 and counter == [1]
+
+
+# spec-case: D1-LIVE-PLACE
+public func test_compound_index_expression_keeps_its_setup() -> bool:
+    mut rows = [[7, 8], [1, 2]]
+    mut counter = [0]
+    mut total = 0
+    for value in rows[select(mut counter) + 1]:
+        total += value
+        rows[1][1] = 9
+    return total == 10 and counter == [1]
+
+
+# spec-case: D1-LIVE-PLACE
+public func test_negative_index_is_normalized_once_at_entry() -> bool:
+    mut rows = [[7, 8], [1, 2]]
+    mut counter = [0]
+    mut total = 0
+    for value in rows[select_last(mut counter)]:
+        total += value
+        rows[-1][1] = 9
+    return total == 10 and counter == [1] and rows[0] == [7, 8]
+
+
+# spec-case: D1-LIVE-PLACE
+public func test_enumerate_refreshes_elements_and_growth() -> bool:
+    mut items = [1]
+    mut total = 0
+    for at, value in enumerate(items):
+        total += at + value
+        if at < 2:
+            items.append(value + 1)
+    return total == 9 and items == [1, 2, 3]
+
+
+# spec-case: D1-LIVE-PLACE
+public func test_zip_refreshes_each_place_and_shorter_length() -> bool:
+    mut left = [1]
+    mut right = [10]
+    mut saved = right
+    mut total = 0
+    for a, b in zip(left, right):
+        total += a + b
+        if a < 3:
+            left.append(a + 1)
+            right.append(b + 10)
+    return total == 66 and saved == [10]
+
+
+# spec-case: D1-LIVE-PLACE
+public func test_zip_sees_shared_element_writes() -> bool:
+    mut left = [1, 2]
+    mut right = [10, 20]
+    mut saved = right
+    mut total = 0
+    for a, b in zip(left, right):
+        total += a + b
+        right[1] = 90
+    return total == 103 and saved == [10, 20]
+
+
+# spec-case: D1-LIVE-PLACE
+public func test_byte_buffer_append_growth_is_visible() -> bool:
+    mut items = byte_buffer([1])
+    mut saved = items
+    mut total = 0
+    for value in items:
+        total += value
+        if value < 3:
+            _ = items.append_byte(value + 1)
+    return total == 6 and len(items) == 3 and len(saved) == 1
+
+
+# spec-case: D1-LIVE-PLACE
+public func test_immutable_source_root_rebinding_keeps_entry_text() -> bool:
+    mut text = "ab"
+    mut total = 0
+    for letter in text:
+        text = "longer"
+        total += len(letter)
+    return total == 2 and text == "longer"
+
+
+# spec-case: D1-LIVE-PLACE
+public func test_dictionary_values_refresh_through_a_shared_payload() -> bool:
+    mut mapping = {1: 10, 2: 20}
+    mut saved = mapping
+    mut total = 0
+    for value in mapping.values():
+        total += value
+        mapping[2] = 90
+    return total == 100 and saved == {1: 10, 2: 20}
+
+
+# spec-case: D1-LIVE-PLACE
+public func test_reductions_over_places_preserve_value_reads() -> bool:
+    mut holder = Holder(items=[1, 2, 3])
+    mut flags = [False, True]
+    return sum(holder.items) == 6 and any(flags) and not all(flags)
+
+
+# spec-case: D1-LIVE-PLACE
+public func test_fixed_array_mut_callee_writes_remain_live() -> bool:
+    mut items: FixedArray[int, 2] = FixedArray[int, 2]([1, 2])
+    mut saved = items
+    mut total = 0
+    for value in items:
+        total += value
+        change_array(mut items)
+    return total == 10 and saved == FixedArray[int, 2]([1, 2])
+
+
+# spec-case: D1-LIVE-PLACE
+public func test_fixed_array_field_writes_remain_live() -> bool:
+    mut holder = FixedHolder(items=FixedArray[int, 2]([1, 2]))
+    mut saved = holder
+    mut total = 0
+    for value in holder.items:
+        total += value
+        holder.items[1] = 9
+    return total == 10 and saved.items == FixedArray[int, 2]([1, 2])
+
+
+# spec-case: D1-LIVE-PLACE
+public func test_fixed_array_root_assignment_selects_an_entry_snapshot() -> bool:
+    mut items: FixedArray[int, 2] = FixedArray[int, 2]([1, 2])
+    mut total = 0
+    for value in items:
+        items[1] = 9
+        items = FixedArray[int, 2]([7, 8])
+        total += value
+    return total == 3 and items == FixedArray[int, 2]([7, 8])
+
+
+# spec-case: D1-LIVE-PLACE
+public func test_fixed_array_indexed_place_reads_the_same_entry_index() -> bool:
+    mut rows: FixedArray[int, 2][] = [FixedArray[int, 2]([1, 2]), FixedArray[int, 2]([7, 8])]
+    mut at = 0
+    mut total = 0
+    for value in rows[at]:
+        total += value
+        rows[0][1] = 9
+        at = 1
+    return total == 10 and rows[1] == FixedArray[int, 2]([7, 8])
+
+
+# spec-case: D1-LIVE-PLACE
+public func test_managed_array_root_snapshot_preserves_child_values() -> bool:
+    mut items: FixedArray[int[], 2] = FixedArray[int[], 2]([[1], [2]])
+    mut total = 0
+    for row in items:
+        items[1][0] = 9
+        items = FixedArray[int[], 2]([[7], [8]])
+        total += row[0]
+    return total == 3 and items[0] == [7] and items[1] == [8]
+
+
+# spec-case: D1-LIVE-PLACE
+public func test_unfiltered_comprehension_refreshes_a_shared_source() -> bool:
+    mut items = [1, 2]
+    mut saved = items
+    mut visited = [for value in items yield keep_changed(mut items, value)]
+    return visited == [1, 9] and saved == [1, 2]
+
+
+# spec-case: D1-LIVE-PLACE
+public func test_unfiltered_comprehension_visits_growth() -> bool:
+    mut items = [1]
+    mut saved = items
+    mut visited = [for value in items yield keep_growing(mut items, value)]
+    return visited == [1, 2, 3] and saved == [1]
+
+
+# spec-case: D1-LIVE-PLACE
+public func test_unfiltered_set_comprehension_refreshes_its_source() -> bool:
+    mut items = [1, 2]
+    mut saved = items
+    mut visited = {keep_changed(mut items, value) for value in items}
+    return visited == {1, 9} and saved == [1, 2]
+
+
+# spec-case: D1-LIVE-PLACE
+public func test_filtered_comprehension_sees_produced_value_writes() -> bool:
+    mut items = [1, 2]
+    mut saved = items
+    mut visited = [for value in items if True yield keep_changed(mut items, value)]
+    return visited == [1, 9] and saved == [1, 2]
+
+
+# spec-case: D1-LIVE-PLACE
+public func test_filtered_comprehension_sees_filter_writes() -> bool:
+    mut items = [1, 2]
+    mut saved = items
+    mut visited = [for value in items if changed_filter(mut items, value) yield value]
+    return visited == [1, 9] and saved == [1, 2]
+
+
+# spec-case: D1-LIVE-PLACE
+public func test_multiple_clauses_refresh_the_outer_shared_source() -> bool:
+    mut items = [1, 2]
+    mut saved = items
+    mut visited: int[] = []
+    for value in items:
+        for _ in range(1):
+            visited.append(keep_changed(mut items, value))
+    return visited == [1, 9] and saved == [1, 2]
+
+
+# spec-case: D1-LIVE-PLACE
+public func test_sum_generator_refreshes_after_produced_value_writes() -> bool:
+    mut items = [1, 2]
+    mut saved = items
+    mut total = sum(keep_changed(mut items, value) for value in items if True)
+    return total == 10 and saved == [1, 2]
+
+
+# spec-case: D1-LIVE-PLACE
+public func test_any_generator_refreshes_after_produced_value_writes() -> bool:
+    mut flags = [False, False]
+    mut saved = flags
+    mut result = any(keep_true(mut flags, value) for value in flags if True)
+    return result and saved == [False, False]
+
+
+# spec-case: D1-LIVE-PLACE
+public func test_all_generator_refreshes_after_produced_value_writes() -> bool:
+    mut flags = [True, True]
+    mut saved = flags
+    mut result = all(keep_false(mut flags, value) for value in flags if True)
+    return not result and saved == [True, True]
+
+
+# spec-case: D1-LIVE-PLACE
+public func test_fixed_array_comprehension_refreshes_after_mut_writes() -> bool:
+    mut items: FixedArray[int, 2] = FixedArray[int, 2]([1, 2])
+    mut saved = items
+    mut visited = [for value in items yield keep_changed_array(mut items, value)]
+    return visited == [1, 9] and saved == FixedArray[int, 2]([1, 2])
+
+
+# spec-case: D1-LIVE-PLACE
+public func test_non_ascii_text_field_replacement_uses_current_scalars() -> bool:
+    mut holder = TextHolder(text="a🙂")
+    mut saved = holder
+    mut visited: str[] = []
+    for letter in holder.text:
+        visited.append(letter)
+        holder.text = "aé"
+    return visited == ["a", "é"] and saved.text == "a🙂"
+
+
+# spec-case: D1-LIVE-PLACE
+public func test_immutable_bytes_field_replacement_reads_current_octets() -> bool:
+    mut holder = BytesHolder(data=b"ab")
+    mut saved = holder
+    mut visited: int[] = []
+    for octet in holder.data:
+        visited.append(octet)
+        holder.data = b"az"
+    return visited == [97, 122] and saved.data == b"ab"
+
+
+# spec-case: D1-LIVE-PLACE
+public func test_immutable_child_root_rebinding_keeps_an_entry_snapshot() -> bool:
+    mut rows = ["ab"]
+    mut visited: str[] = []
+    for letter in rows[0]:
+        visited.append(letter)
+        rows = []
+    return visited == ["a", "b"] and len(rows) == 0
+
+
+# spec-case: D1-LIVE-PLACE
+public func test_immutable_augmented_root_rebinding_keeps_entry_text() -> bool:
+    mut text = "ab"
+    mut visited: str[] = []
+    for letter in text:
+        visited.append(letter)
+        text += "c"
+    return visited == ["a", "b"] and text == "abcc"
+
+
+# spec-case: D1-LIVE-PLACE
+public func test_managed_array_comprehension_preserves_copy_and_live_children() -> bool:
+    mut items: FixedArray[int[], 2] = FixedArray[int[], 2]([[1], [2]])
+    mut saved = items
+    mut visited = [for row in items yield keep_changed_child(mut items, row)]
+    return visited == [1, 9] and saved[0] == [1] and saved[1] == [2]
+
+
+func main() -> int:
+    assert test_element_writes_remain_live_with_a_named_copy()
+    assert test_append_growth_is_visible_through_continue()
+    assert test_mut_callee_element_writes_remain_live()
+    assert test_field_writeback_refreshes_the_place()
+    assert test_root_rebinding_takes_an_entry_snapshot()
+    assert test_record_root_rebinding_takes_an_entry_snapshot()
+    assert test_indexed_place_keeps_its_entry_index()
+    assert test_index_expression_is_evaluated_once()
+    assert test_compound_index_expression_keeps_its_setup()
+    assert test_negative_index_is_normalized_once_at_entry()
+    assert test_enumerate_refreshes_elements_and_growth()
+    assert test_zip_refreshes_each_place_and_shorter_length()
+    assert test_zip_sees_shared_element_writes()
+    assert test_byte_buffer_append_growth_is_visible()
+    assert test_immutable_source_root_rebinding_keeps_entry_text()
+    assert test_dictionary_values_refresh_through_a_shared_payload()
+    assert test_reductions_over_places_preserve_value_reads()
+    assert test_fixed_array_mut_callee_writes_remain_live()
+    assert test_fixed_array_field_writes_remain_live()
+    assert test_fixed_array_root_assignment_selects_an_entry_snapshot()
+    assert test_fixed_array_indexed_place_reads_the_same_entry_index()
+    assert test_managed_array_root_snapshot_preserves_child_values()
+    assert test_unfiltered_comprehension_refreshes_a_shared_source()
+    assert test_unfiltered_comprehension_visits_growth()
+    assert test_unfiltered_set_comprehension_refreshes_its_source()
+    assert test_filtered_comprehension_sees_produced_value_writes()
+    assert test_filtered_comprehension_sees_filter_writes()
+    assert test_multiple_clauses_refresh_the_outer_shared_source()
+    assert test_sum_generator_refreshes_after_produced_value_writes()
+    assert test_any_generator_refreshes_after_produced_value_writes()
+    assert test_all_generator_refreshes_after_produced_value_writes()
+    assert test_fixed_array_comprehension_refreshes_after_mut_writes()
+    assert test_non_ascii_text_field_replacement_uses_current_scalars()
+    assert test_immutable_bytes_field_replacement_reads_current_octets()
+    assert test_immutable_child_root_rebinding_keeps_an_entry_snapshot()
+    assert test_immutable_augmented_root_rebinding_keeps_entry_text()
+    assert test_managed_array_comprehension_preserves_copy_and_live_children()
+    return 0

@@ -1,0 +1,24 @@
+{
+  "version": 2,
+  "policy": "incremental-example-v1",
+  "steps": [
+    {
+      "id": "invoice",
+      "kind": "test",
+      "complete": true,
+      "inputs": ["invoice/*.selka"],
+      "tools": ["selka"],
+      "commands": [["selka", "run-project", "--print-result", "invoice/main.selka"]],
+      "expect_stdout": "42\n"
+    },
+    {
+      "id": "independent",
+      "kind": "test",
+      "complete": true,
+      "inputs": ["independent/*.selka"],
+      "tools": ["selka"],
+      "commands": [["selka", "run-project", "--print-result", "independent/main.selka"]],
+      "expect_stdout": "7\n"
+    }
+  ]
+}

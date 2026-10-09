@@ -1,0 +1,19 @@
+func set(mut values: int[], index: int, replacement: int):
+    values[index] = replacement
+
+
+func countdown(n: int) effects():
+    if n == 0:
+        return
+    countdown(n - 1)
+
+
+func apply(callback: func(int) -> Unit effects(), value: int):
+    callback(value)
+
+
+func main() -> int:
+    mut values: int[] = [0]
+    set(mut values, 0, 42)
+    apply(countdown, 3)
+    return values[0]

@@ -1,0 +1,30 @@
+import model
+
+func checksum(bytes: FixedArray[u8, 9]) -> u8:
+    mut sum = 0u16
+    mut index = 0u64
+    while index < 8u64:
+        sum += u16(bytes[index])
+        index += 1u64
+    return u8(sum % 256u16)
+
+
+public func decode(bytes: FixedArray[u8, 9], size: u64) -> model.Decoded effects():
+    if size != 9u64:
+        return Err(model.Error.frame_length)
+    if bytes[0] != 1u8:
+        return Err(model.Error.version)
+    mut kind = bytes[1]
+    if kind != 1u8 and kind != 2u8:
+        return Err(model.Error.kind)
+    mut length = bytes[2]
+    if kind == 1u8 and length != 0u8 or kind == 2u8 and length != 4u8:
+        return Err(model.Error.payload_length)
+    if checksum(bytes) != bytes[8]:
+        return Err(model.Error.checksum)
+    mut sequence = bytes[3]
+    if kind == 1u8:
+        return Ok(model.Message.heartbeat(value=sequence))
+    mut high = u32(bytes[4]) * 16777216u32 + u32(bytes[5]) * 65536u32 + u32(bytes[6]) * 256u32
+    mut reading = model.Reading(sequence=sequence, value=high + u32(bytes[7]))
+    return Ok(model.Message.reading(value=reading))

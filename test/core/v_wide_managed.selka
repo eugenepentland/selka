@@ -1,0 +1,63 @@
+record Big:
+    a: int
+    b: int
+    c: int
+    d: int
+    names: int[]
+    more: int[]
+
+
+enum Slot:
+    empty
+    one(value: int)
+    big(value: Big)
+
+
+func mk(i: int) -> Big:
+    return Big(a=i, b=i + 1, c=i + 2, d=i + 3, names=[i, i + 1], more=[])
+
+
+func grow(b0: Big, v: int) -> Big:
+    mut b = b0
+    b.names.append(v)
+    b.more.append(v * 2)
+    b.a = b.a + 1
+    return b
+
+
+func weight(s: Slot) -> int:
+    match s:
+        case Slot.empty:
+            return 0
+        case Slot.one(value=n):
+            return n
+        case Slot.big(value=b):
+            return b.a + b.d + len(b.names) * 100 + len(b.more) * 1000
+
+
+func spin(b0: Big, n: int) -> int:
+    mut b = b0
+    mut other = mk(100)
+    for i in range(n):
+        mut t = b
+        b = grow(other, i)
+        other = t
+    return b.a * 1000 + other.a + len(b.names) + len(other.names)
+
+
+func main(out: Stream) -> int:
+    mut slots: Slot[] = [Slot.empty, Slot.one(value=5), Slot.big(value=mk(7))]
+    mut shared = grow(mk(1), 9)
+    slots.append(Slot.big(value=shared))
+    slots.append(Slot.big(value=shared))
+    mut total = 0
+    for i in range(len(slots)):
+        total += weight(slots[i])
+    out.print(total, len(shared.names), len(shared.more))
+    out.print(spin(mk(1), 5), spin(mk(3), 0))
+    mut bigs = [mk(1), mk(2)]
+    bigs[0] = grow(bigs[0], 4)
+    bigs[1].names.append(8)
+    bigs[1].a = 50
+    out.print(len(bigs[0].names), len(bigs[1].names), bigs[1].a, bigs[0].a)
+    return 0

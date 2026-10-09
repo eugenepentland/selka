@@ -1,0 +1,17 @@
+public func replace_list(mut items: int[]):
+    items = [7]
+    items.append(8)
+
+
+public func replace_dict(mut items: dict[int, int]):
+    items = {7: 7}
+    items[8] = 8
+
+
+public func replace_set(mut items: set[int]):
+    items = {7}
+    items.add(8)
+
+
+public func append_only(mut items: int[]):
+    items.append(9)

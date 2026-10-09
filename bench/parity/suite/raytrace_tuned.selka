@@ -1,0 +1,98 @@
+# raytrace_tuned: the same image as raytrace.selka with the vector algebra written
+# out on float locals. What changed, and why:
+# - intersect takes the ray as six floats and does sub/dot inline, so no Vec3 is
+#   built, passed or returned inside the 6-12 intersections per pixel.
+# - shade inlines add/scale/sub/normalize/dot the same way and returns one Vec3
+#   per pixel; main normalizes the primary ray inline.
+# - The scene is unchanged (record Vec3, record Sphere, list[Sphere]).
+# Every expression keeps the operation order of the Vec3 helpers exactly —
+# dot is ((x*x' + y*y') + z*z'), normalize multiplies by 1.0 / sqrt(dot), add
+# of a scaled vector is origin + dir * t — so the checksum is bit-identical.
+# The difference from raytrace.selka is what the small record-returning helper
+# calls cost; what remains against Zig is per-operation code generation.
+record Vec3:
+    x: float
+    y: float
+    z: float
+
+
+record Sphere:
+    center: Vec3
+    radius: float
+    color: Vec3
+
+
+func intersect(ox: float, oy: float, oz: float, dx: float, dy: float, dz: float, s: Sphere) -> float:
+    mut ocx = ox - s.center.x
+    mut ocy = oy - s.center.y
+    mut ocz = oz - s.center.z
+    mut b = ocx * dx + ocy * dy + ocz * dz
+    mut c = ocx * ocx + ocy * ocy + ocz * ocz - s.radius * s.radius
+    mut disc = b * b - c
+    if disc < 0.0:
+        return -1.0
+    mut root = sqrt(disc)
+    mut t = (0.0 - b) - root
+    if t > 0.001:
+        return t
+    t = (0.0 - b) + root
+    if t > 0.001:
+        return t
+    return -1.0
+
+
+func shade(ox: float, oy: float, oz: float, dx: float, dy: float, dz: float, spheres: Sphere[], light: Vec3) -> Vec3:
+    mut best = -1.0
+    mut hit_index = -1
+    for k, s in enumerate(spheres):
+        mut t = intersect(ox, oy, oz, dx, dy, dz, s)
+        if t > 0.0 and (hit_index < 0 or t < best):
+            best = t
+            hit_index = k
+    if hit_index < 0:
+        return Vec3(x=0.6, y=0.7, z=0.9)
+    mut hit = spheres[hit_index]
+    mut px = ox + dx * best
+    mut py = oy + dy * best
+    mut pz = oz + dz * best
+    mut nx = px - hit.center.x
+    mut ny = py - hit.center.y
+    mut nz = pz - hit.center.z
+    mut inv = 1.0 / sqrt(nx * nx + ny * ny + nz * nz)
+    mut diffuse = nx * inv * light.x + ny * inv * light.y + nz * inv * light.z
+    if diffuse < 0.0:
+        diffuse = 0.0
+    if diffuse > 0.0:
+        for q in spheres:
+            if intersect(px, py, pz, light.x, light.y, light.z, q) > 0.0:
+                diffuse = 0.0
+                break
+    mut f = 0.1 + 0.9 * diffuse
+    return Vec3(x=hit.color.x * f, y=hit.color.y * f, z=hit.color.z * f)
+
+
+func mix(c: int, v: int) -> int:
+    return (c * 31 + v) % 1000000007
+
+
+func main(out: Stream) -> int:
+    mut spheres = [Sphere(center=Vec3(x=0.0, y=-1000.0, z=0.0), radius=999.0, color=Vec3(x=0.5, y=0.5, z=0.5)), Sphere(center=Vec3(x=0.0, y=0.0, z=-3.0), radius=1.0, color=Vec3(x=1.0, y=0.2, z=0.2)), Sphere(center=Vec3(x=-2.0, y=0.0, z=-4.0), radius=1.0, color=Vec3(x=0.2, y=1.0, z=0.2)), Sphere(center=Vec3(x=2.0, y=0.0, z=-4.0), radius=1.0, color=Vec3(x=0.2, y=0.2, z=1.0)), Sphere(center=Vec3(x=0.0, y=2.0, z=-6.0), radius=1.5, color=Vec3(x=1.0, y=1.0, z=0.2)), Sphere(center=Vec3(x=-1.5, y=-0.5, z=-2.0), radius=0.5, color=Vec3(x=0.2, y=1.0, z=1.0))]
+    mut light_inv = 1.0 / sqrt(1.0 * 1.0 + 1.0 * 1.0 + 1.0 * 1.0)
+    mut light = Vec3(x=1.0 * light_inv, y=1.0 * light_inv, z=1.0 * light_inv)
+    mut width = 1920
+    mut height = 1080
+    mut aspect = float(width) / float(height)
+    mut w = -1.5
+    mut checksum = 0
+    for y in range(height):
+        for x in range(width):
+            mut u = (2.0 * (float(x) + 0.5) / float(width) - 1.0) * aspect
+            mut v = 1.0 - 2.0 * (float(y) + 0.5) / float(height)
+            mut inv = 1.0 / sqrt(u * u + v * v + w * w)
+            mut c = shade(0.0, 0.0, 0.0, u * inv, v * inv, w * inv, spheres, light)
+            mut r = int(min(c.x, 1.0) * 255.0)
+            mut g = int(min(c.y, 1.0) * 255.0)
+            mut b = int(min(c.z, 1.0) * 255.0)
+            checksum = mix(checksum, r * 65536 + g * 256 + b)
+    out.print(checksum)
+    return 0

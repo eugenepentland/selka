@@ -1,0 +1,5 @@
+def read(clock: clock_cap) -> int:
+    return 0
+
+def main() -> int:
+    return 42

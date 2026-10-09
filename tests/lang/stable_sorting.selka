@@ -1,0 +1,340 @@
+# The native list sort and the keyed standard sort, checked over every input
+# shape, lengths on both sides of the run and merge thresholds, every sortable
+# element type, and keys on every packing path. Short lists are compared with
+# an insertion-sort reference; long ones with a linear oracle, because a stable
+# order is the one permutation whose keys never decrease and whose equal keys
+# keep their input order. Each test stays inside the runner's default step
+# budget.
+import sort
+
+record Keyed:
+    key: int
+    position: int
+
+
+func next_state(x: u64) -> u64:
+    mut state = bit_xor(x, shift_left(x, 13u64))
+    state = bit_xor(state, shift_right(state, 7u64))
+    return bit_xor(state, shift_left(state, 17u64))
+
+
+# `count` integers in one input shape: 0 random, 1 ascending, 2 descending,
+# 3 all equal, 4 sawtooth, 5 organ pipe, 6 alternating runs, 7 few distinct.
+func shaped(count: int, shape: int, seed: u64) -> int[]:
+    mut values: int[] = []
+    mut state = seed
+    for i in range(count):
+        state = next_state(state)
+        mut noise = int(shift_right(state, 40u64))
+        mut value = noise % 5
+        if shape == 0:
+            value = noise - 8388608
+        elif shape == 1:
+            value = i
+        elif shape == 2:
+            value = count - i
+        elif shape == 3:
+            value = 7
+        elif shape == 4:
+            value = i % 37
+        elif shape == 5:
+            value = if (i < count // 2) then (i) else (count - i)
+        elif shape == 6:
+            value = if ((i // 50) % 2 == 0) then (i) else (count - i)
+        values.append(value)
+    return values
+
+
+# A stable reference order: insertion into a new list.
+func reference_sorted(values: int[]) -> int[]:
+    mut out: int[] = []
+    for value in values:
+        out.append(value)
+        mut at = len(out) - 1
+        while at > 0 and out[at - 1] > value:
+            out[at] = out[at - 1]
+            at -= 1
+        out[at] = value
+    return out
+
+
+# Three order-independent sums that a lost, duplicated or altered element
+# changes; the values the tests sort are small enough that none overflows.
+func fingerprint(values: int[]) -> int[]:
+    mut total = 0
+    mut mixed = 0
+    mut squares = 0
+    for value in values:
+        total += value
+        mixed = bit_xor(mixed, value * 2654435761)
+        squares = (squares + value * value) % 1000000007
+    return [total, mixed, squares]
+
+
+# Whether `after` is `before` sorted: the same fingerprint, never decreasing.
+func sorted_copy(before: int[], after: int[]) -> bool:
+    for at in range(1, len(after)):
+        if after[at] < after[at - 1]:
+            return False
+    return len(after) == len(before) and fingerprint(after) == fingerprint(before)
+
+
+# Whether `ordered` is the stable key order of `items`, which is also left
+# unchanged: every position once, keys never decreasing, equal keys in input
+# order.
+func stable_by_key(items: Keyed[], ordered: Keyed[]) -> bool:
+    if len(ordered) != len(items):
+        return False
+    mut seen = [for _ in range(len(items)) yield False]
+    for at in range(len(ordered)):
+        mut item = ordered[at]
+        if items[at].position != at or item.position < 0 or item.position >= len(items) or seen[item.position]:
+            return False
+        seen[item.position] = True
+        if items[item.position].key != item.key:
+            return False
+        if at > 0 and ordered[at - 1].key > item.key:
+            return False
+        if at > 0 and ordered[at - 1].key == item.key and ordered[at - 1].position > item.position:
+            return False
+    return True
+
+
+func by_key(item: Keyed) -> int effects():
+    return item.key
+
+
+# Whether `left` precedes or equals `right` in Unicode scalar order, read one
+# scalar at a time rather than through the runtime's text comparison.
+func scalar_order(left: str, right: str) -> bool:
+    mut at = 0
+    while at < len(left) and at < len(right):
+        if ord(left[at]) != ord(right[at]):
+            return ord(left[at]) < ord(right[at])
+        at += 1
+    return len(left) <= len(right)
+
+
+func positive_zero(value: float) -> bool:
+    return value == 0.0 and 1.0 / value > 0.0
+
+
+func negative_zero(value: float) -> bool:
+    return value == 0.0 and 1.0 / value < 0.0
+
+
+# Sort every shape at `lengths` and check each against the linear oracle.
+func long_shapes_sort(first_shape: int, last_shape: int, lengths: int[]) -> bool:
+    mut shape = first_shape
+    while shape <= last_shape:
+        for count in lengths:
+            mut values = shaped(count, shape, u64(count * 8 + shape + 1))
+            mut before = values[:]
+            values.sort()
+            if not sorted_copy(before, values):
+                return False
+        shape += 1
+    return True
+
+
+# spec: LIST-SORT-RUNS-1
+public func test_sort_matches_a_stable_reference_for_short_lists_of_every_shape() -> bool:
+    mut lengths = [0, 1, 2, 3, 4, 5, 7, 8, 15, 16, 17, 31, 32, 33]
+    mut shape = 0
+    while shape < 8:
+        for count in lengths:
+            mut values = shaped(count, shape, u64(count * 8 + shape + 1))
+            mut expected = reference_sorted(values)
+            values.sort()
+            if values != expected:
+                return False
+        shape += 1
+    return True
+
+
+# spec-case: LIST-SORT-RUNS-1
+public func test_sort_orders_long_random_ascending_descending_and_flat_lists() -> bool:
+    return long_shapes_sort(0, 3, [63, 65, 257, 700])
+
+
+# spec-case: LIST-SORT-RUNS-1
+public func test_sort_orders_long_sawtooth_pipe_run_and_few_valued_lists() -> bool:
+    return long_shapes_sort(4, 7, [64, 65, 257, 700])
+
+
+# spec-case: LIST-SORT-RUNS-1
+public func test_sort_orders_a_large_list_and_preserves_explicit_snapshot() -> bool:
+    mut values = shaped(5000, 0, 88172645463325252u64)
+    mut before = values[:]
+    mut snapshot = values.copy()
+    values.sort()
+    return len(values) == 5000 and sorted_copy(before, values) and snapshot == before
+
+
+# spec-case: LIST-SORT-RUNS-1
+public func test_sort_puts_nans_last_and_keeps_signed_zeros_in_input_order() -> bool:
+    mut nan = 0.0 / 0.0
+    mut minus_zero = 0.0 * (0.0 - 1.0)
+    mut infinity = 1.0 / 0.0
+    mut values = [nan, 2.0, minus_zero, 0.0, 0.0 - 1.0, infinity, 0.0 - infinity, 0.0, minus_zero, nan, 2.0]
+    values.sort()
+    mut ordered = values[0] == 0.0 - infinity and values[1] == 0.0 - 1.0 and values[6] == 2.0 and values[7] == 2.0 and values[8] == infinity
+    mut zeros = negative_zero(values[2]) and positive_zero(values[3]) and positive_zero(values[4]) and negative_zero(values[5])
+    return ordered and zeros and values[9] != values[9] and values[10] != values[10]
+
+
+# spec-case: LIST-SORT-RUNS-1
+public func test_sort_keeps_zero_signs_and_nans_in_order_across_merges() -> bool:
+    mut values: float[] = []
+    mut signs: bool[] = []
+    mut nans = 0
+    mut state = 7u64
+    for i in range(3000):
+        state = next_state(state)
+        mut pick = int(shift_right(state, 58u64))
+        if pick < 8:
+            values.append(0.0)
+            signs.append(False)
+        elif pick < 16:
+            values.append(0.0 * (0.0 - 1.0))
+            signs.append(True)
+        elif pick < 20:
+            values.append(0.0 / 0.0)
+            nans += 1
+        else:
+            values.append((float(int(shift_right(state, 44u64)) - 524288) + 0.5) / 7.0)
+    values.sort()
+    mut seen: bool[] = []
+    for at in range(len(values)):
+        mut value = values[at]
+        if value == 0.0:
+            seen.append(1.0 / value < 0.0)
+        if at >= len(values) - nans and value == value:
+            return False
+        if at > 0 and at < len(values) - nans and value < values[at - 1]:
+            return False
+    return seen == signs
+
+
+# spec-case: LIST-SORT-RUNS-1
+public func test_sort_orders_multibyte_text_by_scalar_value() -> bool:
+    mut codes = [65, 122, 233, 255, 8364, 128512, 1114111, 127, 97, 256]
+    mut words: str[] = []
+    mut state = 11u64
+    for i in range(700):
+        state = next_state(state)
+        mut first = codes[int(shift_right(state, 60u64)) % 10]
+        mut second = codes[int(shift_right(state, 52u64)) % 10]
+        mut length = int(shift_right(state, 40u64)) % 3
+        mut word = chr(first)
+        if length == 1:
+            word = word + chr(second)
+        elif length == 2:
+            word = word + chr(second) + chr(first)
+        words.append(word)
+    mut before = len(words)
+    words.sort()
+    for at in range(1, len(words)):
+        if not scalar_order(words[at - 1], words[at]):
+            return False
+    mut small = ["é", "e", "😀", "€", "", "ea", "e"]
+    small.sort()
+    return len(words) == before and small == ["", "e", "e", "ea", "é", "€", "😀"]
+
+
+# spec-case: LIST-SORT-RUNS-1
+public func test_sort_orders_every_integer_width() -> bool:
+    mut source = shaped(150, 0, 99u64)
+    mut wide = [for value in source yield value % 200 - 100]
+    mut tiny = [for value in wide yield i8(value)]
+    mut short = [for value in wide yield i16(value * 300)]
+    mut middle = [for value in wide yield i32(value * 20000000)]
+    mut octets = [for value in wide yield u8(value + 100)]
+    mut halves = [for value in wide yield u16(value + 100) * 300u16]
+    mut words = [for value in wide yield u32(value + 100) * 20000000u32]
+    tiny.sort()
+    short.sort()
+    middle.sort()
+    octets.sort()
+    halves.sort()
+    words.sort()
+    mut expected = reference_sorted(wide)
+    for at in range(len(expected)):
+        const value = expected[at]
+        if int(tiny[at]) != value or int(short[at]) != value * 300 or int(middle[at]) != value * 20000000:
+            return False
+        if int(octets[at]) != value + 100 or int(halves[at]) != (value + 100) * 300 or int(words[at]) != (value + 100) * 20000000:
+            return False
+    return True
+
+
+# spec-case: LIST-SORT-RUNS-1
+public func test_sort_orders_unsigned_words_above_the_signed_range() -> bool:
+    mut values: u64[] = []
+    mut state = 5u64
+    for i in range(2000):
+        state = next_state(state)
+        values.append(bit_or(shift_left(shift_right(state, 56u64), 56u64), u64(i)))
+    values.sort()
+    mut positions = 0
+    for at in range(len(values)):
+        positions += int(bit_and(values[at], 65535u64))
+        if at > 0 and values[at] <= values[at - 1]:
+            return False
+    return positions == 1999 * 2000 // 2 and values[len(values) - 1] > 9223372036854775807u64
+
+
+# spec-case: PY-COLLECTIONS-15
+public func test_text_sorts_in_place_and_preserves_explicit_snapshot() -> bool:
+    mut words = ["pear", "é", "Apple", "apple", "😀", "pear"]
+    mut snapshot = words.copy()
+    words.sort()
+    return words == ["Apple", "apple", "pear", "pear", "é", "😀"] and sorted(words) == words and snapshot[0] == "pear"
+
+
+# spec: STANDARD-SORT-KEY-1
+public func test_sort_by_key_is_stable_and_leaves_its_input_for_every_length() -> bool:
+    for count in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 33, 100, 1025]:
+        mut items: Keyed[] = []
+        mut state = u64(count + 11)
+        for i in range(count):
+            state = next_state(state)
+            items.append(Keyed(key=int(shift_right(state, 60u64)) - 8, position=i))
+        if not stable_by_key(items, sort.sort_by_key(items, by_key)):
+            return False
+    return True
+
+
+# spec-case: STANDARD-SORT-KEY-1
+public func test_sort_by_key_orders_keys_too_far_apart_to_pack() -> bool:
+    mut edges = [9223372036854775807, 0 - 9223372036854775807 - 1, 0, 0 - 1, 1, 4294967296, 0 - 4294967296, 4294967295, 0 - 4294967295, 9223372036854775807, 0, 2147483648, 0 - 2147483648, 0 - 9223372036854775807 - 1]
+    mut items = [for at in range(len(edges)) yield Keyed(key=edges[at], position=at)]
+    mut state = 3u64
+    for i in range(1200):
+        state = next_state(state)
+        mut key = int(shift_right(state, 1u64)) - 4611686018427387904
+        if i % 5 == 4:
+            key = items[i // 2].key
+        items.append(Keyed(key=key, position=len(items)))
+    mut ordered = sort.sort_by_key(items, by_key)
+    return stable_by_key(items, ordered) and ordered[0].position == 1 and ordered[1].position == 13
+
+
+# spec-case: STANDARD-SORT-KEY-1
+public func test_sort_by_key_packs_keys_just_inside_the_word() -> bool:
+    # 1000 positions take 10 bits, so a key span of 2^53 - 1 is the widest one
+    # word holds; the span just past it takes the two-pass path.
+    mut widest = 9007199254740991
+    for span in [widest, widest + 1]:
+        mut items: Keyed[] = []
+        for i in range(1000):
+            mut offset = if (i % 3 == 0) then (span) else (if ((i == 1)) then ((0)) else (((i * 7919) % 1000)))
+            items.append(Keyed(key=offset - 5, position=i))
+        if not stable_by_key(items, sort.sort_by_key(items, by_key)):
+            return False
+    return True
+
+
+# The directory runner selects programs by their entry point.
+func main() -> int:
+    return 0

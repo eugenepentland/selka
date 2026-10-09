@@ -1,0 +1,71 @@
+public func test_nested_write_releases_only_finished_read_temporaries() -> bool:
+    mut rows = [[1, 2], [3, 4]]
+    mut snapshot = rows
+    for index in range(40):
+        rows[0][1] = rows[0][1] + rows[1][0]
+    return rows == [[1, 122], [3, 4]] and snapshot == [[1, 2], [3, 4]]
+
+
+public func test_derived_value_survives_finished_parent_temporary() -> bool:
+    mut rows = [[[1]], [[2]]]
+    mut selected = rows[0][0]
+    rows.clear()
+    selected.append(7)
+    return selected == [1, 7]
+
+
+func save(rows: int[][], mut saved: int[][][]) -> int:
+    saved.append(rows)
+    return 9
+
+
+public func test_pending_receiver_holds_survive_temporary_releases() -> bool:
+    mut rows = [[1]]
+    mut saved: int[][][] = []
+    rows[0].append(save(rows, mut saved))
+    return rows == [[1, 9]] and saved == [[[1]]]
+
+
+public func test_zero_iteration_and_branch_paths_keep_snapshot_owners() -> bool:
+    mut rows = [[1]]
+    mut snapshot = rows
+    for index in range(0):
+        rows[0][0] = rows[0][0] + 1
+    if len(rows) == 1:
+        rows[0][0] = rows[0][0] + 2
+    else:
+        rows[0][0] = rows[0][0] + 4
+    return rows == [[3]] and snapshot == [[1]]
+
+
+func main() -> int:
+    assert test_nested_write_releases_only_finished_read_temporaries()
+    assert test_derived_value_survives_finished_parent_temporary()
+    assert test_pending_receiver_holds_survive_temporary_releases()
+    assert test_zero_iteration_and_branch_paths_keep_snapshot_owners()
+    assert test_sorted_empty_receiver_survives_its_mutation_scope()
+    assert test_sorted_text_receiver_survives_its_mutation_scope()
+    assert test_sorted_method_result_keeps_its_physical_anchor()
+    return 0
+
+
+public func test_sorted_empty_receiver_survives_its_mutation_scope() -> bool:
+    mut source: i32[] = []
+    mut ordered = sorted(source)
+    ordered.append(7i32)
+    return ordered == [7i32] and source == []
+
+
+public func test_sorted_text_receiver_survives_its_mutation_scope() -> bool:
+    mut source = ["pear", "Apple", "apple", "pear"]
+    mut ordered = sorted(source)
+    source.clear()
+    ordered.append("plum")
+    return ordered == ["Apple", "apple", "pear", "pear", "plum"] and source == []
+
+
+public func test_sorted_method_result_keeps_its_physical_anchor() -> bool:
+    mut source = "pear,Apple,apple,pear"
+    mut ordered = sorted(source.split(",").copy())
+    ordered.reverse()
+    return ordered == ["pear", "pear", "apple", "Apple"] and source == "pear,Apple,apple,pear"

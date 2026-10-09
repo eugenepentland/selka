@@ -1,0 +1,538 @@
+//! Concrete schemas remain nominal while unrelated generic arguments stay symbolic.
+const std = @import("std");
+const t = std.testing;
+const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
+const schema =
+    \\record Sample:
+    \\    values: FixedArray[i64, 2]
+    \\    tag: u8
+    \\
+    \\
+    \\
+;
+const program = schema ++
+    \\func make[T: integer](x: T) -> Sample:
+    \\    return Sample(values=FixedArray[int, 2]([i64(x), i64(x) + 1]), tag=7u8)
+    \\
+    \\
+    \\func total[T](x: T, s: Sample) -> i64:
+    \\    _ = x
+    \\    return s.values[0] + s.values[1] + i64(len(s.values))
+    \\
+    \\
+    \\func choose[T](x: T, a: Sample, b: Sample) -> Sample:
+    \\    _ = x
+    \\    if a.tag == b.tag:
+    \\        return a
+    \\    return b
+    \\
+    \\
+    \\func main() -> i64:
+    \\    mut p = make[u8](7u8)
+    \\    return total[bool](True, choose[i64](0, p, p))
+;
+fn scenario(allocator: std.mem.Allocator) !void {
+    var c = try language.Compilation.init(allocator, "concrete.selka", program);
+    defer c.deinit();
+    try t.expectEqual(@as(i64, 17), (try native.run(&c)).value);
+}
+// spec: GENERIC-CONCRETE-1
+test "generic concrete records and arrays retain checked shapes under allocation failures" {
+    try scenario(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), scenario, .{});
+}
+fn reject(bytes: []const u8, expected: []const u8) !void {
+    var c = try language.Compilation.init(t.allocator, "invalid.selka", bytes);
+    defer c.deinit();
+    try t.expectError(error.SourceError, c.check());
+    try t.expectEqualStrings(expected, c.diagnostics.items[0].code);
+}
+const updates =
+    \\record Pair:
+    \\    values: FixedArray[i64, 2]
+    \\    flag: bool
+    \\
+    \\
+    \\func change[T: integer](p: Pair, index: T, value: i64) -> Pair:
+    \\    mut q = p
+    \\    q.values = replace(p.values, index, value)
+    \\    return q
+    \\
+    \\
+    \\func main() -> i64:
+    \\    mut original = Pair(values=FixedArray[int, 2]([7, 8]), flag=True)
+    \\    mut changed = change[u8](original, 0u8, 20)
+    \\    if changed.flag:
+    \\        return original.values[0] + changed.values[0] + changed.values[1]
+    \\    return 0
+;
+fn updateScenario(allocator: std.mem.Allocator) !void {
+    var c = try language.Compilation.init(allocator, "updates.selka", updates);
+    defer c.deinit();
+    try t.expectEqual(@as(i64, 35), (try native.run(&c)).value);
+    var table = try language.Compilation.init(allocator, "table-update.selka",
+        \\enum Key:
+        \\    first
+        \\    second
+        \\
+        \\
+        \\func put[T: integer](p: [Key]i64, key: Key, value: T) -> [Key]i64:
+        \\    return replace(p, key, i64(value))
+        \\
+        \\
+        \\func main() -> i64:
+        \\    mut old: [Key]i64 = {Key.first: 1, Key.second: 2}
+        \\    mut changed = put[u8](old, Key.first, 8u8)
+        \\    return old[Key.first] + changed[Key.first]
+    );
+    defer table.deinit();
+    try t.expectEqual(@as(i64, 9), (try native.run(&table)).value);
+}
+// spec: GENERIC-UPDATE-1
+test "generic record updates and array replacement preserve snapshots under allocation failures" {
+    try updateScenario(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), updateScenario, .{});
+}
+const variants =
+    \\record Payload:
+    \\    n: i64
+    \\
+    \\
+    \\enum Color:
+    \\    red
+    \\    blue
+    \\
+    \\
+    \\enum Choice:
+    \\    none
+    \\    value(value: Payload)
+    \\
+    \\
+    \\func make[T: integer](x: T) -> Choice:
+    \\    return Choice.value(value=Payload(n=i64(x)))
+    \\
+    \\
+    \\func score[T](context: T, x: Choice) -> i64:
+    \\    _ = context
+    \\    match x:
+    \\        case Choice.none:
+    \\            return 0
+    \\        case Choice.value(value=p):
+    \\            return p.n
+    \\
+    \\
+    \\func color[T](context: T) -> Color:
+    \\    _ = context
+    \\    return Color.blue
+    \\
+    \\
+    \\func mapping[T: integer](x: T) -> [Color]i64:
+    \\    return {Color.red: i64(x), Color.blue: 0}
+    \\
+    \\
+    \\func main() -> i64:
+    \\    match color[bool](True):
+    \\        case Color.red:
+    \\            return 0
+    \\        case Color.blue:
+    \\            return score[i64](0, make[u8](7u8)) + mapping[u8](2u8)[Color.red]
+;
+fn variantScenario(allocator: std.mem.Allocator) !void {
+    var c = try language.Compilation.init(allocator, "variants.selka", variants);
+    defer c.deinit();
+    try t.expectEqual(@as(i64, 9), (try native.run(&c)).value);
+}
+// spec: GENERIC-VARIANT-1
+test "generic concrete variants construct and match with scoped payloads under allocation failures" {
+    try variantScenario(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), variantScenario, .{});
+}
+
+test "generic concrete shapes reject mismatched nominal values and malformed constructors before instantiation" {
+    try reject(
+        \\record A:
+        \\    n: i64
+        \\
+        \\
+        \\record B:
+        \\    n: i64
+        \\
+        \\
+        \\func f[T](x: A) -> B:
+        \\    return x
+        \\
+        \\
+        \\func main() -> i64:
+        \\    return 0
+    , "E_GENERIC_TYPE");
+    try reject(
+        \\record A:
+        \\    n: i64
+        \\
+        \\
+        \\func f[T](x: T) -> A:
+        \\    _ = x
+        \\    return A()
+        \\
+        \\
+        \\func main() -> i64:
+        \\    return 0
+    , "E_MISSING_FIELD");
+    try reject(
+        \\record A:
+        \\    n: i64
+        \\    m: i64
+        \\
+        \\
+        \\func f[T](x: T) -> A:
+        \\    _ = x
+        \\    return A(n=1, n=2)
+        \\
+        \\
+        \\func main() -> i64:
+        \\    return 0
+    , "E_DUPLICATE_FIELD");
+    try reject(
+        \\record A:
+        \\    n: i64
+        \\
+        \\
+        \\func f[T](x: A) -> i64:
+        \\    return x.other
+        \\
+        \\
+        \\func main() -> i64:
+        \\    return 0
+    , "E_UNKNOWN_FIELD");
+    try reject(
+        \\func f[T](x: T) -> FixedArray[i64, 2]:
+        \\    _ = x
+        \\    return FixedArray[i64, 2]([1])
+        \\
+        \\
+        \\func main() -> i64:
+        \\    return 0
+    , "E_ARRAY_LENGTH");
+    try reject(
+        \\func f[T](x: FixedArray[i64, 2]) -> i64:
+        \\    return x[True]
+        \\
+        \\
+        \\func main() -> i64:
+        \\    return 0
+    , "E_GENERIC_OPERATION");
+    try reject(
+        \\func f[T](x: T) -> i64:
+        \\    return x.n
+        \\
+        \\
+        \\func main() -> i64:
+        \\    return 0
+    , "E_GENERIC_BODY_UNSUPPORTED");
+}
+
+test "generic concrete variants reject incomplete duplicate and malformed uncalled matches" {
+    try reject(
+        \\enum E:
+        \\    a
+        \\    b
+        \\
+        \\
+        \\func f[T](x: E) -> i64:
+        \\    match x:
+        \\        case E.a:
+        \\            return 1
+        \\
+        \\
+        \\func main() -> i64:
+        \\    return 0
+    , "E_INCOMPLETE_MATCH");
+    try reject(
+        \\enum E:
+        \\    a
+        \\
+        \\
+        \\func f[T](x: E) -> i64:
+        \\    match x:
+        \\        case E.a:
+        \\            return 1
+        \\        case E.a:
+        \\            return 2
+        \\
+        \\
+        \\func main() -> i64:
+        \\    return 0
+    , "E_DUPLICATE_ARM");
+    try reject(
+        \\enum E:
+        \\    a(value: i64)
+        \\
+        \\
+        \\func f[T](x: E) -> i64:
+        \\    match x:
+        \\        case E.a:
+        \\            return 1
+        \\
+        \\
+        \\func main() -> i64:
+        \\    return 0
+    , "E_PATTERN_PAYLOAD");
+    try reject(
+        \\enum E:
+        \\    a
+        \\
+        \\
+        \\func f[T](x: E) -> i64:
+        \\    match x:
+        \\        case E.a(p):
+        \\            return p
+        \\
+        \\
+        \\func main() -> i64:
+        \\    return 0
+    , "E_PATTERN_PAYLOAD");
+    try reject(
+        \\enum E:
+        \\    a(value: i64)
+        \\
+        \\
+        \\func f[T](x: T) -> E:
+        \\    _ = x
+        \\    return E.a(value=True)
+        \\
+        \\
+        \\func main() -> i64:
+        \\    return 0
+    , "E_GENERIC_TYPE");
+    try reject(
+        \\enum E:
+        \\    a(value: i64)
+        \\
+        \\
+        \\func f[T](x: T) -> E:
+        \\    _ = x
+        \\    return E.a
+        \\
+        \\
+        \\func main() -> i64:
+        \\    return 0
+    , "E_VARIANT_PAYLOAD");
+    try reject(
+        \\enum E:
+        \\    a
+        \\
+        \\
+        \\enum F:
+        \\    a
+        \\
+        \\
+        \\func f[T](x: E) -> i64:
+        \\    match x:
+        \\        case F.a:
+        \\            return 1
+        \\
+        \\
+        \\func main() -> i64:
+        \\    return 0
+    , "E_GENERIC_TYPE");
+}
+
+test "generic match payload scopes and fallthrough preserve independent arm checking" {
+    var c = try language.Compilation.init(t.allocator, "arms.selka",
+        \\enum U:
+        \\    left(value: i64)
+        \\    right(value: i64)
+        \\
+        \\
+        \\func f[T](x: T, u: U) -> i64:
+        \\    _ = x
+        \\    mut out = 0
+        \\    match u:
+        \\        case U.left(value=p):
+        \\            out = p
+        \\        case U.right(value=p):
+        \\            out = p + 1
+        \\    return out
+        \\
+        \\
+        \\func main() -> i64:
+        \\    return f[bool](True, U.left(value=7)) + f[bool](False, U.right(value=8))
+    );
+    defer c.deinit();
+    try t.expectEqual(@as(i64, 16), (try native.run(&c)).value);
+    try reject(
+        \\enum U:
+        \\    a(value: i64)
+        \\
+        \\
+        \\func f[T](u: U) -> i64:
+        \\    match u:
+        \\        case U.a(value=p):
+        \\            _ = p
+        \\    return p
+        \\
+        \\
+        \\func main() -> i64:
+        \\    return 0
+    , "E_UNKNOWN_NAME");
+    try reject(
+        \\enum U:
+        \\    a
+        \\    b
+        \\
+        \\
+        \\func f[T](u: U) -> i64:
+        \\    match u:
+        \\        case U.a:
+        \\            pass
+        \\        case U.b:
+        \\            return True
+        \\    return 0
+        \\
+        \\
+        \\func main() -> i64:
+        \\    return 0
+    , "E_GENERIC_TYPE");
+    try reject(
+        \\enum U:
+        \\    a
+        \\    b
+        \\
+        \\
+        \\func f[T](u: U) -> i64:
+        \\    match u:
+        \\        case U.a:
+        \\            pass
+        \\        case U.b:
+        \\            return 1
+        \\
+        \\
+        \\func main() -> i64:
+        \\    return 0
+    , "E_MISSING_RETURN");
+}
+
+test "generic concrete enum tables require complete unique nominal keys" {
+    var c = try language.Compilation.init(t.allocator, "table.selka",
+        \\enum K:
+        \\    a
+        \\    b
+        \\
+        \\
+        \\func table[T: integer](x: T) -> [K]i64:
+        \\    return {K.a: i64(x), K.b: 2}
+        \\
+        \\
+        \\func main() -> i64:
+        \\    return table[u8](7u8)[K.a]
+    );
+    defer c.deinit();
+    try t.expectEqual(@as(i64, 7), (try native.run(&c)).value);
+    try reject(
+        \\enum K:
+        \\    a
+        \\    b
+        \\
+        \\
+        \\func f[T](x: T) -> [K]i64:
+        \\    _ = x
+        \\    return {K.a: 1}
+        \\
+        \\
+        \\func main() -> i64:
+        \\    return 0
+    , "E_INCOMPLETE_TABLE");
+    try reject(
+        \\enum K:
+        \\    a
+        \\
+        \\
+        \\func f[T](x: T) -> [K]i64:
+        \\    _ = x
+        \\    return {K.a: 1, K.a: 2}
+        \\
+        \\
+        \\func main() -> i64:
+        \\    return 0
+    , "E_DUPLICATE_KEY");
+}
+
+const semantic_key = @import("semantic_key.zig");
+
+// spec-case: SEMANTIC-CACHE-12
+test "canonical specialization keys distinguish every keyed dimension and argument order" {
+    const allocator = t.allocator;
+    const base = try semantic_key.specializationFingerprint(allocator, .{
+        .template_identity = "pkg::render",
+        .arguments = &.{ "T:i64", "L:3" },
+        .provider = "provider-a",
+        .constraints = "constraints-a",
+        .contracts = "contracts-a",
+        .build = "build-a",
+    });
+    defer allocator.free(base);
+    const same = try semantic_key.specializationFingerprint(allocator, .{
+        .template_identity = "pkg::render",
+        .arguments = &.{ "T:i64", "L:3" },
+        .provider = "provider-a",
+        .constraints = "constraints-a",
+        .contracts = "contracts-a",
+        .build = "build-a",
+    });
+    defer allocator.free(same);
+    try t.expectEqualStrings(base, same);
+
+    const changed_inputs = [_]semantic_key.SpecializationInputs{
+        .{ .template_identity = "pkg::other", .arguments = &.{ "T:i64", "L:3" }, .provider = "provider-a", .constraints = "constraints-a", .contracts = "contracts-a", .build = "build-a" },
+        .{ .template_identity = "pkg::render", .arguments = &.{ "T:u8", "L:3" }, .provider = "provider-a", .constraints = "constraints-a", .contracts = "contracts-a", .build = "build-a" },
+        .{ .template_identity = "pkg::render", .arguments = &.{ "T:i64", "L:4" }, .provider = "provider-a", .constraints = "constraints-a", .contracts = "contracts-a", .build = "build-a" },
+        .{ .template_identity = "pkg::render", .arguments = &.{ "L:3", "T:i64" }, .provider = "provider-a", .constraints = "constraints-a", .contracts = "contracts-a", .build = "build-a" },
+        .{ .template_identity = "pkg::render", .arguments = &.{ "T:i64", "L:3" }, .provider = "provider-b", .constraints = "constraints-a", .contracts = "contracts-a", .build = "build-a" },
+        .{ .template_identity = "pkg::render", .arguments = &.{ "T:i64", "L:3" }, .provider = "provider-a", .constraints = "constraints-b", .contracts = "contracts-a", .build = "build-a" },
+        .{ .template_identity = "pkg::render", .arguments = &.{ "T:i64", "L:3" }, .provider = "provider-a", .constraints = "constraints-a", .contracts = "contracts-b", .build = "build-a" },
+        .{ .template_identity = "pkg::render", .arguments = &.{ "T:i64", "L:3" }, .provider = "provider-a", .constraints = "constraints-a", .contracts = "contracts-a", .build = "build-b" },
+    };
+    for (changed_inputs) |variant| {
+        const changed = try semantic_key.specializationFingerprint(allocator, variant);
+        defer allocator.free(changed);
+        try t.expect(!std.mem.eql(u8, base, changed));
+    }
+
+    const length_descriptor = try semantic_key.argumentDescriptor(allocator, .u64, 3, &.{});
+    defer allocator.free(length_descriptor);
+    try t.expectEqualStrings("L:3", length_descriptor);
+    const type_descriptor = try semantic_key.argumentDescriptor(allocator, .i64, null, &.{});
+    defer allocator.free(type_descriptor);
+    try t.expectEqualStrings("T:i64", type_descriptor);
+
+    const bound = @import("effect_set.zig").Bound{ .span = .{ .start = 0, .end = 1 }, .allowed = 0 };
+    const digest_a = semantic_key.declaredContractDigest(bound, &.{});
+    const digest_b = semantic_key.declaredContractDigest(bound, &.{1});
+    try t.expect(!std.mem.eql(u8, &digest_a, &digest_b));
+}
+
+// spec: MUT-PARAM-7
+test "a mut argument marker inside a generic body forwards to a declared mut parameter" {
+    var c = try language.Compilation.init(t.allocator, "mut_generic.selka",
+        \\func push(mut values: i64[], value: i64) -> Unit:
+        \\    values.append(value)
+        \\
+        \\
+        \\func twice[T](mut values: i64[], tag: T) -> Unit:
+        \\    _ = tag
+        \\    push(mut values, 1)
+        \\    push(mut values, 2)
+        \\
+        \\
+        \\func main() -> i64:
+        \\    mut values: i64[] = []
+        \\    twice[bool](mut values, True)
+        \\    return values[0] + values[1]
+    );
+    defer c.deinit();
+    try t.expectEqual(@as(i64, 3), (try native.run(&c)).value);
+}

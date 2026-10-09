@@ -1,0 +1,8 @@
+# oracle: selka-only
+record Config:
+    name: str
+    retries: int = 3
+
+def main() -> int:
+    c = Config(name="x")
+    return c.retries * 14

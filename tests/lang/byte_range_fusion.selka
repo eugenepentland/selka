@@ -1,0 +1,48 @@
+func canonical(raw: bytes) -> bool noalloc:
+    match raw[2:4].parse_int():
+        case Some(value):
+            if value != 42:
+                return False
+        case None:
+            return False
+    match raw.view(5, 8).parse_float():
+        case Some(value):
+            if value != 2.5:
+                return False
+        case None:
+            return False
+    match raw[8:2].parse_int():
+        case Some(_):
+            return False
+        case None:
+            return True
+
+
+# spec-case: PY-BYTES-FUSED-RANGE-1
+public func test_immediate_byte_ranges_use_the_numeric_range_parser() -> bool:
+    return canonical(b"xx42=2.5yy")
+
+
+# spec-case: PY-BYTES-FUSED-RANGE-1
+public func test_omitted_negative_and_clamped_bounds_keep_slice_semantics() -> bool:
+    match b"42"[:].parse_int():
+        case Some(value):
+            if value != 42:
+                return False
+        case None:
+            return False
+    match b"xx42yy"[0 - 4:0 - 2].parse_int():
+        case Some(value):
+            if value != 42:
+                return False
+        case None:
+            return False
+    match b"42"[0 - 99:99].parse_int():
+        case Some(value):
+            return value == 42
+        case None:
+            return False
+
+
+func main() -> int:
+    return 0

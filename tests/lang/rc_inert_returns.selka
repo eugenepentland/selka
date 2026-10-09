@@ -1,0 +1,122 @@
+import filesystem
+
+record Node:
+    left: Node?
+    right: Node?
+
+
+record Tagged:
+    node: Node?
+    tag: int
+
+
+record Wide:
+    first: Node
+    second: Node
+    third: Node
+    fourth: Node
+
+
+enum Choice:
+    empty
+    full(value: Node)
+
+
+func make(depth: int) -> Node:
+    if depth <= 0:
+        return Node(left=None, right=None)
+    return Node(left=Some(make(depth - 1)), right=Some(make(depth - 1)))
+
+
+func empty(value: Node) -> bool:
+    return value.left is None and value.right is None
+
+
+func boolean(flag: bool) -> Node:
+    if not flag:
+        return Node(left=None, right=None)
+    return make(1)
+
+
+func wide(flag: bool) -> Wide:
+    if flag:
+        return Wide(first=Node(left=None, right=None), second=Node(left=None, right=None), third=Node(left=None, right=None), fourth=Node(left=None, right=None))
+    return Wide(first=make(1), second=make(2), third=make(1), fourth=make(2))
+
+
+func choice(flag: bool) -> Choice:
+    if flag:
+        return Choice.empty
+    return Choice.full(value=make(1))
+
+
+public func test_zero_tagged_union_and_nonempty_case_preserve_their_layout() -> bool:
+    match choice(True):
+        case Choice.empty:
+            match choice(False):
+                case Choice.full(value=value):
+                    return not empty(value)
+                case Choice.empty:
+                    return False
+        case Choice.full(value=_):
+            return False
+
+
+public func test_null_return_preserves_both_scalar_comparison_paths() -> bool:
+    return empty(make(0)) and empty(make(-1)) and not empty(make(3))
+
+
+public func test_boolean_null_branch_and_nonempty_fallback_stay_distinct() -> bool:
+    return empty(boolean(False)) and not empty(boolean(True))
+
+
+public func test_wide_zero_return_preserves_every_inline_field() -> bool:
+    mut zero = wide(True)
+    mut full = wide(False)
+    return empty(zero.first) and empty(zero.second) and empty(zero.third) and empty(zero.fourth) and not empty(full.second)
+
+
+func shared(items: int[], flag: bool) -> Node:
+    if flag:
+        return Node(left=None, right=None)
+    return make(len(items))
+
+
+public func test_incoming_managed_owner_retains_ordinary_cleanup() -> bool:
+    mut items = [1, 2]
+    mut first = shared(items, True)
+    mut second = shared(items, False)
+    return empty(first) and not empty(second) and items == [1, 2]
+
+
+func nonzero(flag: bool) -> Tagged:
+    if flag:
+        return Tagged(node=None, tag=7)
+    return Tagged(node=Some(make(1)), tag=9)
+
+
+public func test_nonzero_plain_fields_are_not_replaced_by_zero() -> bool:
+    return nonzero(True).tag == 7 and nonzero(False).tag == 9
+
+
+func consume(file: TextFile, flag: bool) -> Node:
+    _ = file.write("saved")
+    if flag:
+        return Node(left=None, right=None)
+    return make(1)
+
+
+func resource_check() -> Result[bool, str]:
+    mut fs = filesystem.memory()
+    const file = try fs.open("content", "w")
+    const value = consume(file, True)
+    mut text = try fs.read_text("content")
+    return Ok(empty(value) and text == "saved")
+
+
+public func test_unique_incoming_resource_is_closed_on_null_return() -> bool:
+    match resource_check():
+        case Ok(result):
+            return result
+        case Err(_):
+            return False

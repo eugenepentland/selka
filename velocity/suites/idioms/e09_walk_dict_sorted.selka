@@ -1,0 +1,6 @@
+# oracle: cpython
+def main() -> int:
+    counts = {"b": 2, "a": 1}
+    for k in sorted(counts.keys()):
+        print(k, counts[k])
+    return 0

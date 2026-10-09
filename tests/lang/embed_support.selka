@@ -1,0 +1,9 @@
+# A module that publishes files it embeds, for embed.selka to read through an import.
+public const SUPPORT: bytes = embed_bytes("embed_fixtures/support.txt")
+
+
+public const GREETING: str = embed_str("embed_fixtures/multi.txt")
+
+
+public func support_length() -> int noalloc:
+    return len(SUPPORT)

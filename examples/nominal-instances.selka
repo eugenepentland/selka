@@ -1,0 +1,19 @@
+record Box[T]:
+    value: T
+
+
+enum Slot[T]:
+    none
+    some(value: T)
+
+
+func main() -> int:
+    mut original = Box[int](value=7)
+    mut changed = original
+    changed.value = 9
+    mut slot: Slot[Box[int]] = Slot.some(value=changed)
+    match slot:
+        case Slot.none:
+            return 0
+        case Slot.some(value=box):
+            return original.value + box.value

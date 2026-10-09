@@ -1,0 +1,82 @@
+record Row:
+    key: int
+    ordinal: int
+    text: str
+
+
+func by_key(row: Row) -> int:
+    return row.key
+
+
+func inc(x: int) -> int:
+    return x + 1
+
+
+func apply(f: func(int) -> int, x: int) -> int:
+    return f(x)
+
+
+func replace_word(mut words: FixedArray[str, 2], word: str):
+    words[-1] = word
+
+
+func rewrite_last(mut words: str[], word: str):
+    words[-1] = word
+
+
+func rewrite_first(mut words: str[], word: str):
+    words[0] = word
+
+
+func choose() -> func(int) -> int:
+    return inc
+
+
+# spec: NEW-CORE-S2-IR-1
+public func test_callbacks_pass_return_and_live_fixed_array_writes() -> bool:
+    mut f = choose()
+    mut values: FixedArray[int, 3] = FixedArray[int, 3]([1, 2, 3])
+    mut saved = values
+    mut total = 0
+    for value in values:
+        total += value
+        values[1] = 20
+    return apply(f, 41) == 42 and total == 24 and saved[1] == 2
+
+
+# spec-case: NEW-CORE-S2-IR-1
+public func test_managed_array_mut_write_keeps_snapshot() -> bool:
+    mut words: FixedArray[str, 2] = FixedArray[str, 2](["alpha" + str(1), "beta" + str(2)])
+    mut saved = words
+    replace_word(mut words, "gamma" + str(3))
+    return saved[-1] == "beta2" and words[-1] == "gamma3"
+
+
+# spec-case: NEW-CORE-S2-IR-1
+public func test_mut_callback_copies_managed_list_back_without_changing_snapshot() -> bool:
+    mut words = [str(1), str(2)]
+    mut saved = words
+    mut f = if (len(words[0]) > 0) then (rewrite_last) else (rewrite_first)
+    f(mut words, "delta" + str(4))
+    return saved == ["1", "2"] and words == ["1", "delta4"]
+
+
+# spec: NEW-CORE-SORT-1
+public func test_keyed_records_remain_stable_and_snapshot_keeps_order() -> bool:
+    mut rows = [Row(key=2, ordinal=0, text="a" + str(1)), Row(key=1, ordinal=1, text="b" + str(2)), Row(key=2, ordinal=2, text="c" + str(3))]
+    mut saved = rows
+    rows.sort(key=by_key, reverse=True)
+    return rows[0].ordinal == 0 and rows[1].ordinal == 2 and rows[2].ordinal == 1 and saved[1].text == "b2"
+
+
+# spec-case: NEW-CORE-SORT-1
+public func test_sort_narrow_numeric_and_tuple_keys() -> bool:
+    mut rows = [Row(key=2, ordinal=0, text="a" + str(1)), Row(key=1, ordinal=1, text="b" + str(2)), Row(key=2, ordinal=2, text="c" + str(3))]
+    mut copied = sorted(rows, key=lambda row: (row.key, row.text))
+    mut values = [u8(200), u8(1), u8(255), u8(2)]
+    values.sort()
+    return copied[0].ordinal == 1 and copied[1].ordinal == 0 and copied[2].ordinal == 2 and values[0] == 1u8 and values[3] == 255u8
+
+
+func main() -> int:
+    return 0

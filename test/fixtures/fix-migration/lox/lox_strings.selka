@@ -1,0 +1,69 @@
+module lox_strings
+# String hashing and interning (SPEC §6.2 and §6.3). The spec calls this
+# module `strings`; that name belongs to selka's standard library, which a
+# project module cannot shadow.
+import heap
+import object
+import table
+import value
+
+
+# 32-bit FNV-1a over the bytes.
+public def fnv1a(chars: bytes) -> u32:
+    hash = 2166136261u32
+    for byte in chars:
+        hash = wrapping_mul(bit_xor(hash, u32(byte)), 16777619u32)
+    return hash
+
+
+# The interned string with exactly these bytes, or NO_OBJ. Probes like
+# `find_entry`, comparing length, hash and then bytes of each live key.
+public def find_string(rt: heap.Runtime, chars: bytes, hash: u32) -> value.ObjRef:
+    entries = rt.strings.entries
+    if rt.strings.count == 0:
+        return value.NO_OBJ
+    mask = len(entries) - 1
+    index = int(bit_and(hash, u32(mask)))
+    while True:
+        entry = entries[index]
+        if entry.key == value.NO_OBJ:
+            match entry.value:
+                case value.Value.nil:
+                    return value.NO_OBJ
+                case _:
+                    pass
+        elif entry.hash == hash:
+            candidate = heap.string_obj(rt, entry.key).chars
+            if len(candidate) == len(chars) and candidate == chars:
+                return entry.key
+        index = bit_and(index + 1, mask)
+
+
+def intern(rt: mut heap.Runtime, chars: bytes, hash: u32) -> value.ObjRef:
+    ref = heap.allocate(rt, object.Obj.string(object.StringObj(chars=chars, hash=hash)))
+    __wb_44 = rt.strings
+    _ = table.set(__wb_44, ref, hash, value.Value.nil)
+    rt.strings = __wb_44
+    return ref
+
+
+# The interned string for these bytes, allocating a String that owns a copy
+# only when none exists yet.
+public def copy_string(rt: mut heap.Runtime, chars: bytes) -> value.ObjRef:
+    hash = fnv1a(chars)
+    existing = find_string(rt, chars, hash)
+    if existing != value.NO_OBJ:
+        return existing
+    return intern(rt, chars.copy(), hash)
+
+
+# The interned string for `a ++ b`. The joined buffer becomes the new
+# String's bytes, or is dropped when that string already exists. Both
+# operands must still be rooted by the caller.
+public def concat(rt: mut heap.Runtime, a: value.ObjRef, b: value.ObjRef) -> value.ObjRef:
+    chars = heap.string_obj(rt, a).chars + heap.string_obj(rt, b).chars
+    hash = fnv1a(chars)
+    existing = find_string(rt, chars, hash)
+    if existing != value.NO_OBJ:
+        return existing
+    return intern(rt, chars, hash)

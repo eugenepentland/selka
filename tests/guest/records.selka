@@ -1,0 +1,95 @@
+record Point:
+    x: int
+    y: int
+
+
+record Segment:
+    start: Point
+    end: Point
+    visible: bool
+
+
+enum Status:
+    ok
+    missing
+    failed
+
+
+enum Shape:
+    empty
+    radius(value: int)
+    point(value: Point)
+
+
+func move(input: Point, dx: int) -> Point:
+    mut point = input
+    point.x = point.x + dx
+    return point
+
+
+func score(shape: Shape) -> int:
+    match shape:
+        case Shape.empty:
+            return 0
+        case Shape.radius(value=r):
+            return r * r
+        case Shape.point(value=p):
+            return p.x + p.y
+
+
+func status_code(status: Status) -> int:
+    match status:
+        case Status.ok:
+            return 200
+        case Status.missing:
+            return 404
+        case Status.failed:
+            return 500
+
+
+func codes() -> [Status]int:
+    return {Status.missing: 404, Status.ok: 200, Status.failed: 500}
+
+
+public func test_value_records() -> bool effects():
+    mut origin = Point(y=2, x=3)
+    mut segment = Segment(start=origin, end=move(origin, 4), visible=True)
+    if origin.x != 3 or origin.y != 2 or segment.end.x != 7:
+        return False
+    mut copied = segment
+    copied.start.x = 99
+    return segment.start.x == 3 and copied.start.x == 99 and segment.visible
+
+
+public func test_enums() -> bool effects():
+    if status_code(Status.ok) != 200 or status_code(Status.missing) != 404:
+        return False
+    mut status = Status.ok
+    match status:
+        case Status.ok:
+            return status_code(Status.failed) == 500
+        case Status.missing:
+            return False
+        case Status.failed:
+            return False
+
+
+public func test_unions() -> bool effects(managed_allocation):
+    mut shapes: Shape[] = [Shape.point(value=Point(x=2, y=3)), Shape.radius(value=4), Shape.empty]
+    return score(shapes[0]) == 5 and score(shapes[1]) == 16 and score(shapes[2]) == 0
+
+
+public func test_arrays_and_tables() -> bool effects():
+    mut fixed: FixedArray[int, 3] = FixedArray[int, 3]([7, 8, 9])
+    mut revised = replace(fixed, 1, 11)
+    mut table = codes()
+    mut updated = replace(table, Status.failed, 503)
+    if fixed[1] != 8 or revised[1] != 11:
+        return False
+    if table[Status.missing] != 404 or updated[Status.failed] != 503:
+        return False
+    return updated[Status.ok] == 200 and fixed[2] == 9
+
+
+func main() -> int:
+    return 0

@@ -1,0 +1,4 @@
+const IMPORT: bytes = b"import"
+
+func main() -> int:
+    return len(IMPORT)

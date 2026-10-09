@@ -1,0 +1,74 @@
+record RenderBox:
+    n: int
+
+
+record RenderPair:
+    left: RenderBox
+    right: RenderBox
+
+
+record RenderHolder:
+    box: RenderBox
+    k: int
+
+
+enum RenderItem:
+    empty
+    box(value: RenderBox)
+
+
+# A class reached through any slot renders its own fields: every renderer is
+# handed the slot, and a class slot holds the body pointer, so the payload of a
+# union, an option, a record or class field, a tuple or an array element, and a
+# list or dictionary element all read the class body rather than the pointer.
+# spec: IO-13
+public func test_a_class_renders_its_fields_wherever_it_is_nested() -> bool:
+    mut box = RenderBox(n=1)
+    if f"{RenderItem.box(value=box)}" != "RenderItem.box(value=RenderBox(n=1))":
+        return False
+    if f"{RenderPair(left=RenderBox(n=2), right=RenderBox(n=3))}" != "RenderPair(left=RenderBox(n=2), right=RenderBox(n=3))":
+        return False
+    if f"{RenderHolder(box=RenderBox(n=4), k=5)}" != "RenderHolder(box=RenderBox(n=4), k=5)":
+        return False
+    mut found: RenderBox? = Some(RenderBox(n=6))
+    if f"{found}" != "Some(RenderBox(n=6))":
+        return False
+    mut items = [RenderItem.box(value=RenderBox(n=7)), RenderItem.empty]
+    if f"{items}" != "[RenderItem.box(value=RenderBox(n=7)), RenderItem.empty]":
+        return False
+    mut pair: tuple[int, RenderBox] = (8, RenderBox(n=9))
+    if f"{pair}" != "(8, RenderBox(n=9))":
+        return False
+    mut fixed: FixedArray[RenderBox, 2] = FixedArray[RenderBox, 2]([RenderBox(n=10), RenderBox(n=11)])
+    if f"{fixed}" != "[RenderBox(n=10), RenderBox(n=11)]":
+        return False
+    mut table = {"a": RenderItem.box(value=RenderBox(n=12))}
+    return f"{table}" == "{'a': RenderItem.box(value=RenderBox(n=12))}" and f"{[box]}" == "[RenderBox(n=1)]"
+
+
+func zeros(count: int) -> str:
+    mut text = ""
+    for _ in range(count):
+        text = text + "0"
+    return text
+
+
+# A float prints positionally however long that spelling is: the largest and
+# smallest finite doubles render whole, digit for digit as `str` spells them,
+# instead of reporting the line unprintable.
+# spec: IO-14
+public func test_a_float_with_a_long_positional_spelling_renders_whole() -> bool:
+    mut big = 1.2345e300
+    mut largest = -1.7976931348623157e308
+    mut tiny = 5e-324
+    if f"{[big]}" != "[12345" + zeros(296) + ".0]":
+        return False
+    if f"{[largest]}" != "[-17976931348623157" + zeros(292) + ".0]":
+        return False
+    if f"{[tiny]}" != "[0." + zeros(323) + "5]":
+        return False
+    return f"{[big, largest, tiny]}" == "[" + str(big) + ", " + str(largest) + ", " + str(tiny) + "]"
+
+
+func main() -> int:
+    return 0

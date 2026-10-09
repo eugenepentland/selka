@@ -1,0 +1,9 @@
+constraint Id[P] = copy + op(identity(x: P) -> P effects())
+
+
+func forward[T: Id + op(identity(x: T) -> T effects())](x: T) -> T effects():
+    return T.identity(x)
+
+
+public func program() -> int:
+    return 0

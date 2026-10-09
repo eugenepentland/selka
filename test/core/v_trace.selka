@@ -1,0 +1,57 @@
+
+enum Failure:
+    text(value: str)
+    code(value: int)
+
+
+func parse(x: int) -> Result[int, str]:
+    if x < 0:
+        return Err("negative")
+    return Ok(x)
+
+
+func forward(x: int) -> Result[int, str]:
+    mut r = parse(x)
+    return r
+
+
+func pass_on(x: int) -> Result[int, str]:
+    mut v = try forward(x)
+    return Ok(v + 1)
+
+
+func lift(x: int) -> Result[int, Failure]:
+    mut v = try pass_on(x)
+    return Ok(v * 2)
+
+
+func describe(f: Failure) -> str:
+    match f:
+        case Failure.text(value=t):
+            return t
+        case Failure.code(value=_):
+            return "code"
+
+
+func run(x: int) -> Result[int, str]:
+    match lift(x):
+        case Ok(v):
+            return Ok(v)
+        case Err(f):
+            return Err(describe(f))
+
+
+func main(args: str[], out: Stream) -> Result[int, str]:
+    mut a = try pass_on(len(args) + 2)
+    match run(3):
+        case Ok(v):
+            out.print("run", a, v)
+        case Err(e):
+            out.print("run failed", e)
+    match run(0 - 3):
+        case Ok(v):
+            out.print("run", v)
+        case Err(e):
+            out.print("run failed", e)
+    mut b = try pass_on(0 - len(args))
+    return Ok(a + b)

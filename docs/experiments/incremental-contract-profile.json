@@ -1,0 +1,60 @@
+{
+  "version": "incremental-contract-profile-v1",
+  "workload": "selfhost/prototype/bench.selka",
+  "scope": "single-module compiler-shaped lexer/builder workload; private-body edit only; local sequential checking, cold includes process startup",
+  "machine": {
+    "hostname": "linuxserver",
+    "platform": "Linux 7.0.0-31-generic x86_64",
+    "logical_cpus": 20,
+    "note": "Debug compiler build; benchmark measured while the machine was otherwise idle."
+  },
+  "edit": {
+    "before": "line_count = 4000",
+    "after": "line_count = 4001"
+  },
+  "repeats": 7,
+  "warm_edit_p95_budget_ms": 500,
+  "cold_check": {
+    "samples": [
+      23.232059000292793,
+      16.714902994863223,
+      14.958774001570418,
+      15.299816994229332,
+      21.02187000127742,
+      21.75578100286657,
+      20.40120399760781
+    ],
+    "median_ms": 20.40120399760781,
+    "p95_ms": 23.232059000292793
+  },
+  "warm_verdict": {
+    "samples": [
+      2.5669699971331283,
+      2.3678169964114204,
+      2.4682400035089813,
+      2.338616002816707,
+      2.406911997240968,
+      2.3098080055206083,
+      2.458417999150697
+    ],
+    "median_ms": 2.406911997240968,
+    "p95_ms": 2.5669699971331283
+  },
+  "edited_check": {
+    "samples": [
+      8.601130997703876,
+      7.500621999497525,
+      7.62064599985024,
+      7.704757997998968,
+      7.821237995813135,
+      7.532016003096942,
+      7.571608999569435
+    ],
+    "median_ms": 7.62064599985024,
+    "p95_ms": 8.601130997703876
+  },
+  "expected_reuse": {
+    "edited_check": "the edited module is reparsed and rechecked; unchanged declarations reuse their checked bodies and the unchanged project interface keeps callers out of the recheck"
+  },
+  "compiler_sha256": "5ac44a9425e237a2204b0516cce4c7f7f6f48e7e4528b5028a15de714c567bed"
+}

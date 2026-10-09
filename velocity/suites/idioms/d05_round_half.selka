@@ -1,0 +1,13 @@
+# oracle: cpython
+# The one silent divergence probe: this language documents `round` as halves away
+# from zero (SPEC.md PRELUDE-ROUND-1, docs/python-syntax.md), CPython rounds ties
+# to even. The probe cannot print -- printing needs a `Stream` parameter the
+# CPython oracle cannot supply, and a bare `print` is rejected with
+# E_OUTPUT_CAPABILITY before the program runs -- so it returns the three tie cases
+# as decimal digits, plus 10 so neither answer is negative:
+#   selka  int(round(2.5))=3, int(round(0.5))=1, int(round(-2.5))=-3 -> 317
+#   CPython int(round(2.5))=2, int(round(0.5))=0, int(round(-2.5))=-2 -> 208
+# Declared in velocity/divergences.json as round-half-away-from-zero, so C2 counts
+# it strictly and the policy-adjusted gate does not trip on it.
+def main() -> int:
+    return int(round(2.5)) * 100 + int(round(0.5)) * 10 + int(round(-2.5)) + 10

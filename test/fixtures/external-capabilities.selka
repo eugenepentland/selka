@@ -1,0 +1,22 @@
+import random
+import time
+
+func sample(clock: Clock, rng: Entropy) -> Result[int, str] effects(clock, random, managed_allocation):
+    match time.now(clock):
+        case Ok(instant):
+            match random.from_entropy(rng):
+                case Ok(generator):
+                    _ = generator
+                    return Ok(instant.unix_nanoseconds)
+                case Err(message):
+                    return Err(message)
+        case Err(message):
+            return Err(message)
+
+
+func main(clock: Clock, rng: Entropy) -> int:
+    match sample(clock, rng):
+        case Ok(now):
+            return now
+        case Err(message):
+            return len(message)

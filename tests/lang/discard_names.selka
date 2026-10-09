@@ -1,0 +1,143 @@
+# `_` is the discard name: a loop, comprehension or `with` scope may bind it
+# again inside another one without shadowing anything, and `for _, _ in ...`
+# names nothing at all. Every other loop name still may not reuse an active
+# local's name.
+func nested_ranges() -> int:
+    mut total = 0
+    for _ in range(2):
+        for _ in range(3):
+            total += 1
+    return total
+
+
+func nested_lists() -> int:
+    mut total = 0
+    for _ in [10, 20]:
+        for _ in [1, 2, 3]:
+            total += 1
+    return total
+
+
+func nested_pairs() -> int:
+    mut total = 0
+    mut counts = {"a": 1, "b": 2}
+    for _, count in counts.items():
+        for _, other in counts.items():
+            total += count * other
+    return total
+
+
+func only_discards() -> int:
+    mut total = 0
+    mut counts = {"a": 1, "b": 2}
+    for _, _ in counts.items():
+        for _, _ in enumerate([1, 2, 3]):
+            total += 1
+    return total
+
+
+func nested_walks() -> int:
+    mut total = 0
+    for _ in range(2):
+        for x in reversed([1, 2]):
+            for _ in reversed([1, 2, 3]):
+                total += x
+    for a, b in zip([1, 2], [3, 4]):
+        for _, _ in zip([1], [2]):
+            total += a + b
+    return total
+
+
+func nested_comprehensions() -> int:
+    mut xs = [1, 2, 3]
+    mut grid = [for _ in xs yield [for _ in xs yield 2]]
+    mut counts = [for x in xs yield len([for _ in range(x) yield 1])]
+    return len(grid) * 10 + len(grid[0]) + counts[2]
+
+
+func payload_discard_in_loops() -> int:
+    mut total = 0
+    for _ in range(2):
+        for _ in range(2):
+            match parsed(1):
+                case Some(_):
+                    total += 1
+                case None:
+                    total += 100
+    return total
+
+
+func parsed(value: int) -> int?:
+    if value > 0:
+        return Some(value)
+    return None
+
+
+func after_the_loops(items: int[]) -> int:
+    mut total = 0
+    for _ in items:
+        total += 1
+    for _ in items:
+        total += 10
+    return total
+
+
+func generic_loops[T](value: T, count: int) -> int:
+    mut total = 0
+    for _ in range(count):
+        for _ in range(count):
+            total += 1
+    mut squares = [for _ in range(count) yield [for _ in range(count) yield 0]]
+    return total + len(squares)
+
+
+func with_scopes() -> int:
+    mut total = 0
+    total += 1
+    total += 1
+    return total
+
+
+# spec: DISCARD-NAME-1
+public func test_nested_range_loops_may_both_bind_the_discard_name() -> bool:
+    return nested_ranges() == 6
+
+
+# spec-case: DISCARD-NAME-1
+public func test_nested_list_loops_may_both_bind_the_discard_name() -> bool:
+    return nested_lists() == 6
+
+
+# spec-case: DISCARD-NAME-1
+public func test_nested_two_name_loops_may_discard_the_first_name_twice() -> bool:
+    return nested_pairs() == 9
+
+
+# spec-case: DISCARD-NAME-1
+public func test_a_loop_may_discard_both_of_its_names() -> bool:
+    return only_discards() == 6
+
+
+# spec-case: DISCARD-NAME-1
+public func test_nested_reversed_and_zip_loops_may_discard_names() -> bool:
+    return nested_walks() == 18 + 10
+
+
+# spec-case: DISCARD-NAME-1
+public func test_nested_comprehensions_may_discard_their_element_names() -> bool:
+    return nested_comprehensions() == 3 * 10 + 3 + 3
+
+
+# spec-case: DISCARD-NAME-1
+public func test_a_discarded_payload_inside_discarding_loops_binds_nothing() -> bool:
+    return payload_discard_in_loops() == 4
+
+
+# spec-case: DISCARD-NAME-1
+public func test_sequential_loops_reuse_the_discard_name() -> bool:
+    return after_the_loops([1, 2, 3]) == 33
+
+
+# spec-case: DISCARD-NAME-1
+public func test_generic_bodies_may_nest_discard_names_too() -> bool:
+    return generic_loops[int](5, 3) == 9 + 3

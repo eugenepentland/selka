@@ -1,0 +1,74 @@
+# A snapshot of a whole `mut` collection parameter is the callee's own value,
+# and a later write through the parameter still reaches the caller
+# (RC-MUT-PAYLOAD-SNAPSHOT-1). The key of the write below reads the snapshot
+# after the receiver is captured. Answers match the collector; RC counting
+# builds balance.
+func keyed(mut table: dict[str, int]) -> int:
+    mut snapshot = table
+    table["k" + str(len(snapshot))] = 7
+    return 0
+
+
+func keyed_in_loop(mut table: dict[str, int[]]) -> int:
+    mut round = 0
+    while round < 2:
+        round = round + 1
+        mut snapshot = table
+        table["k" + str(len(snapshot))] = [len(snapshot)]
+    return round
+
+
+func kept(mut table: dict[str, int]) -> int:
+    mut snapshot = table
+    table["k" + str(len(snapshot))] = 7
+    return len(snapshot)
+
+
+public func test_a_dead_snapshot_does_not_detach_the_mut_parameter() -> bool:
+    mut table = {"a": 1, "b": 2}
+    _ = keyed(mut table)
+    return table == {"a": 1, "b": 2, "k2": 7}
+
+
+public func test_snapshots_in_a_loop_do_not_detach_the_mut_parameter() -> bool:
+    mut table = {"a": [1], "b": [2, 2]}
+    mut rounds = keyed_in_loop(mut table)
+    return rounds == 2 and table == {"a": [1], "b": [2, 2], "k2": [2], "k3": [3]}
+
+
+public func test_a_live_snapshot_keeps_its_own_value() -> bool:
+    mut table = {"a": 1}
+    mut seen = kept(mut table)
+    return seen == 1 and table == {"a": 1, "k1": 7}
+
+
+record Part:
+    items: int[]
+    k: int
+
+
+func extend_parts(mut parts: Part[]) -> int:
+    parts.append(Part(items=[], k=1))
+    return len(parts)
+
+
+func snapshot_rounds(mut parts: Part[]) -> int:
+    mut round = 0
+    while round < 3:
+        round = round + 1
+        mut snapshot = parts
+    return extend_parts(mut parts)
+
+
+public func test_dead_snapshots_in_a_loop_then_a_mut_call() -> bool:
+    mut parts = [Part(items=[1, 2], k=3), Part(items=[4], k=5)]
+    mut count = snapshot_rounds(mut parts)
+    return count == 3 and len(parts) == 3 and parts[2].k == 1
+
+
+func main(out: Stream) -> int:
+    out.print(test_a_dead_snapshot_does_not_detach_the_mut_parameter())
+    out.print(test_snapshots_in_a_loop_do_not_detach_the_mut_parameter())
+    out.print(test_a_live_snapshot_keeps_its_own_value())
+    out.print(test_dead_snapshots_in_a_loop_then_a_mut_call())
+    return 0

@@ -1,0 +1,6 @@
+# oracle: cpython
+def main() -> int:
+    x = 7 / 2
+    print(x)
+    print(-7 // 2, -7 % 2)
+    return 42

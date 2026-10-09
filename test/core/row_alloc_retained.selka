@@ -1,0 +1,44 @@
+extern func runtime_bench_now(host: Host) -> i64 effects(host)
+
+
+# Row `alloc_retained` of benchmarks/runtime/expanded/collections/main.my as a program of its own, like
+# compute_s0.selka: arguments `size iterations seed` (the original takes the row name first), the same
+# setup, kernel (the row's branch of `batch_result`), checksum and output `checksum elapsed`.
+# The dictionaries, keys and Lox program the original builds for other rows are left out.
+func batch_result(size: int, batch: int, seed: int) -> int:
+    mut total = 0
+    mut retained: int[][] = []
+    for j in range(size):
+        retained.append([for k in range(4) yield seed + batch + j + k])
+    for inner in retained:
+        for value in inner:
+            total += value
+    return total
+
+
+func parse_number(text: str) -> int:
+    match parse_int(text):
+        case Some(n):
+            return n
+        case None:
+            return 0
+
+
+func main(args: str[], host: Host, out: Stream) -> int:
+    if len(args) != 3:
+        return 2
+    mut size = parse_number(args[0])
+    mut iterations = parse_number(args[1])
+    mut seed = parse_number(args[2])
+    if size < 2 or iterations < 1 or seed < 1 or seed > 1000000:
+        return 2
+    mut checksum = 0
+    mut start = runtime_bench_now(host)
+    for batch in range(iterations):
+        mut part = batch_result(size, batch, seed)
+        if part < 0:
+            return 2
+        checksum = (checksum + part) % 1000000007
+    mut elapsed = runtime_bench_now(host) - start
+    out.print(checksum, elapsed)
+    return 0

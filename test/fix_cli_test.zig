@@ -1,0 +1,485 @@
+//! `selka fix`, `check` on library and test entries, and `test --diagnostics=json`,
+//! driven through the compiler binary exactly as a user or an agent runs them.
+const std = @import("std");
+const testing = std.testing;
+const compiler_path = @import("test_options").compiler_path;
+
+/// One source file of a temporary project.
+const File = struct { path: []const u8, data: []const u8 };
+
+/// A temporary project directory and the absolute paths a command needs.
+const Project = struct {
+    temp: testing.TmpDir,
+    root: [:0]const u8,
+    cache: []const u8,
+
+    fn init(files: []const File) !Project {
+        var temp = testing.tmpDir(.{});
+        errdefer temp.cleanup();
+        for (files) |file| {
+            if (std.fs.path.dirname(file.path)) |directory| try temp.dir.createDirPath(testing.io, directory);
+            try temp.dir.writeFile(testing.io, .{ .sub_path = file.path, .data = file.data });
+        }
+        const root = try temp.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+        errdefer testing.allocator.free(root);
+        const cache = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}/.cache", .{root});
+        return .{ .temp = temp, .root = root, .cache = cache };
+    }
+
+    fn deinit(self: *Project) void {
+        testing.allocator.free(self.cache);
+        testing.allocator.free(self.root);
+        self.temp.cleanup();
+    }
+
+    /// The absolute path of one file or directory inside the project.
+    fn path(self: *const Project, relative: []const u8) ![]const u8 {
+        return std.fs.path.join(testing.allocator, &.{ self.root, relative });
+    }
+
+    /// One file's current bytes.
+    fn read(self: *const Project, relative: []const u8) ![]const u8 {
+        return self.temp.dir.readFileAlloc(testing.io, relative, testing.allocator, .limited(1 << 20));
+    }
+
+    /// Run `selka COMMAND TARGET ARGS...` from the project directory with this
+    /// project's cache, so the paths `fix` prints are project-relative.
+    fn run(self: *const Project, command: []const u8, target: []const u8, args: []const []const u8) !Outcome {
+        const compiler = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, compiler_path, testing.allocator);
+        defer testing.allocator.free(compiler);
+        const absolute = try self.path(target);
+        defer testing.allocator.free(absolute);
+        var argv: std.ArrayList([]const u8) = .empty;
+        defer argv.deinit(testing.allocator);
+        try argv.appendSlice(testing.allocator, &.{ compiler, command, absolute });
+        try argv.appendSlice(testing.allocator, args);
+        if (!std.mem.eql(u8, command, "test")) try argv.append(testing.allocator, self.cache);
+        const result = try std.process.run(testing.allocator, testing.io, .{ .argv = argv.items, .cwd = .{ .dir = self.temp.dir } });
+        return .{ .status = switch (result.term) {
+            .exited => |code| code,
+            else => 255,
+        }, .stdout = result.stdout, .stderr = result.stderr };
+    }
+};
+
+/// A finished command: exit status and both streams, owned by the testing allocator.
+const Outcome = struct {
+    status: u8,
+    stdout: []const u8,
+    stderr: []const u8,
+
+    fn deinit(self: Outcome) void {
+        testing.allocator.free(self.stdout);
+        testing.allocator.free(self.stderr);
+    }
+};
+
+fn contains(haystack: []const u8, needle: []const u8) bool {
+    return std.mem.indexOf(u8, haystack, needle) != null;
+}
+
+const fixable_main =
+    \\import util.helpers
+    \\import util.unused
+    \\
+    \\
+    \\func main() -> int:
+    \\    mut xs: int[] = []
+    \\    helpers.grow(xs)
+    \\    helpers.grow(xs)
+    \\    return len(xs)
+    \\
+;
+const fixable_helpers =
+    \\module helpers
+    \\
+    \\public func grow(mut xs: int[]) -> Unit:
+    \\    xs.append(1)
+    \\
+;
+const unused_module =
+    \\
+    \\
+    \\public func nothing() -> int:
+    \\    return 0
+    \\
+;
+
+// spec: FIX-MIGRATION-1
+test "CLI fix applies every structured fix across modules to a fixed point" {
+    var project = try Project.init(&.{
+        .{ .path = "main.selka", .data = fixable_main },
+        .{ .path = "util/helpers.selka", .data = fixable_helpers },
+        .{ .path = "util/unused.selka", .data = unused_module },
+    });
+    defer project.deinit();
+    // `--check` reports what would change and writes nothing.
+    const preview = try project.run("fix", "main.selka", &.{"--check"});
+    defer preview.deinit();
+    try testing.expectEqual(@as(u8, 1), preview.status);
+    try testing.expect(contains(preview.stdout, "would fix util/helpers.selka: 1 edit (E_MODULE_HEADER)"));
+    const untouched = try project.read("util/helpers.selka");
+    defer testing.allocator.free(untouched);
+    try testing.expectEqualStrings(fixable_helpers, untouched);
+    // A real run removes the legacy module header, marks both calls and drops the unused import.
+    const fixed = try project.run("fix", "main.selka", &.{});
+    defer fixed.deinit();
+    try testing.expectEqual(@as(u8, 0), fixed.status);
+    try testing.expectEqualStrings("", fixed.stderr);
+    try testing.expect(contains(fixed.stdout, "fixed main.selka: 3 edits (E_MUTATION_MARKER, W_UNUSED_IMPORT)"));
+    try testing.expect(contains(fixed.stdout, "fixed util/helpers.selka: 1 edit (E_MODULE_HEADER)"));
+    try testing.expect(contains(fixed.stdout, "fix: 4 edits in 2 files over 3 rounds"));
+    const main = try project.read("main.selka");
+    defer testing.allocator.free(main);
+    try testing.expectEqualStrings(
+        \\import util.helpers
+        \\
+        \\
+        \\func main() -> int:
+        \\    mut xs: int[] = []
+        \\    helpers.grow(mut xs)
+        \\    helpers.grow(mut xs)
+        \\    return len(xs)
+        \\
+    , main);
+    // Nothing is left, and the project checks.
+    const again = try project.run("fix", "main.selka", &.{"--check"});
+    defer again.deinit();
+    try testing.expectEqual(@as(u8, 0), again.status);
+    try testing.expectEqualStrings("fix: nothing to fix\n", again.stdout);
+    const checked = try project.run("check", "main.selka", &.{});
+    defer checked.deinit();
+    try testing.expectEqual(@as(u8, 0), checked.status);
+}
+
+// spec-case: FRONTEND-MIGRATION-1
+test "CLI fix migrates frontend syntax to a clean check and then reaches a fixed point" {
+    const original = @embedFile("fixtures/fix-migration/frontend.selka");
+    var project = try Project.init(&.{.{ .path = "main.selka", .data = original }});
+    defer project.deinit();
+    const preview = try project.run("fix", "main.selka", &.{"--check"});
+    defer preview.deinit();
+    try testing.expectEqual(@as(u8, 1), preview.status);
+    const before = try project.read("main.selka");
+    defer testing.allocator.free(before);
+    try testing.expectEqualStrings(original, before);
+    const fixed = try project.run("fix", "main.selka", &.{});
+    defer fixed.deinit();
+    try testing.expectEqual(@as(u8, 0), fixed.status);
+    const after = try project.read("main.selka");
+    defer testing.allocator.free(after);
+    try testing.expect(contains(after, "func shift(mut points: Point[], named delta: int) -> Unit:"));
+    try testing.expect(contains(after, "mut answer = (if (True) then (points[0].x) else (0))"));
+    const checked = try project.run("check", "main.selka", &.{});
+    defer checked.deinit();
+    try testing.expectEqual(@as(u8, 0), checked.status);
+    const again = try project.run("fix", "main.selka", &.{"--check"});
+    defer again.deinit();
+    try testing.expectEqual(@as(u8, 0), again.status);
+}
+
+// spec-case: FIX-MIGRATION-1
+test "CLI fix splits receiver overlap into a preceding call without repeating effects" {
+    const original = @embedFile("fixtures/fix-migration/receiver-overlap.selka");
+    var project = try Project.init(&.{.{ .path = "main.selka", .data = original }});
+    defer project.deinit();
+    const preview = try project.run("fix", "main.selka", &.{"--check"});
+    defer preview.deinit();
+    try testing.expectEqual(@as(u8, 1), preview.status);
+    try testing.expect(contains(preview.stdout, "E_FRONTEND_SYNTAX"));
+    const before = try project.read("main.selka");
+    defer testing.allocator.free(before);
+    try testing.expectEqualStrings(original, before);
+    const fixed = try project.run("fix", "main.selka", &.{});
+    defer fixed.deinit();
+    try testing.expectEqual(@as(u8, 0), fixed.status);
+    const after = try project.read("main.selka");
+    defer testing.allocator.free(after);
+    try testing.expectEqual(@as(usize, 1), std.mem.count(u8, after, "selected(mut items)"));
+    try testing.expect(contains(after, " = selected(mut items)\n    items[mutation_result_"));
+    const checked = try project.run("check", "main.selka", &.{});
+    defer checked.deinit();
+    try testing.expectEqual(@as(u8, 0), checked.status);
+    const again = try project.run("fix", "main.selka", &.{"--check"});
+    defer again.deinit();
+    try testing.expectEqual(@as(u8, 0), again.status);
+}
+
+// spec-case: FIX-MIGRATION-1
+test "CLI fix reports what it cannot fix once and exits 1" {
+    const library =
+        \\
+        \\
+        \\public func grow(mut xs: int[]) -> Unit:
+        \\    xs.append(missing)
+        \\
+    ;
+    const first_test =
+        \\import lib
+        \\
+        \\
+        \\public func test_one() -> bool:
+        \\    mut xs: int[] = []
+        \\    lib.grow(xs)
+        \\    return len(xs) == 1
+        \\
+    ;
+    var project = try Project.init(&.{
+        .{ .path = "lib.selka", .data = library },
+        .{ .path = "first_test.selka", .data = first_test },
+        .{ .path = "second_test.selka", .data = "import lib\n\n\npublic func test_two() -> bool:\n    mut xs: int[] = []\n    lib.grow(mut xs)\n    return True\n" },
+    });
+    defer project.deinit();
+    const outcome = try project.run("fix", ".", &.{});
+    defer outcome.deinit();
+    try testing.expectEqual(@as(u8, 1), outcome.status);
+    // The unknown name in the shared module is reported once, not per test file.
+    try testing.expectEqual(@as(usize, 1), std.mem.count(u8, outcome.stderr, "error[E_UNKNOWN_NAME]"));
+    try testing.expect(contains(outcome.stdout, "fixed first_test.selka: 1 edit (E_MUTATION_MARKER)"));
+    const fixed = try project.read("first_test.selka");
+    defer testing.allocator.free(fixed);
+    try testing.expect(contains(fixed, "lib.grow(mut xs)"));
+    const json = try project.run("fix", ".", &.{"--diagnostics=json"});
+    defer json.deinit();
+    try testing.expect(contains(json.stderr, "\"version\":\"diagnostic-v1\""));
+    const usage = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "fix" } });
+    defer testing.allocator.free(usage.stdout);
+    defer testing.allocator.free(usage.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, usage.term);
+    try testing.expect(contains(usage.stderr, "usage: selka fix"));
+}
+
+// spec-case: CHECK-LIBRARY-2
+test "CLI check checks a library module or a test file without main" {
+    var project = try Project.init(&.{
+        .{ .path = "lib.selka", .data = "\n\npublic func one() -> int:\n    return 1\n" },
+        .{ .path = "broken.selka", .data = "\n\npublic func one() -> int:\n    return missing\n" },
+        .{ .path = "plain_test.selka", .data = "func test_one() -> bool:\n    return True\n" },
+    });
+    defer project.deinit();
+    const library = try project.run("check", "lib.selka", &.{});
+    defer library.deinit();
+    try testing.expectEqual(@as(u8, 0), library.status);
+    try testing.expectEqualStrings("", library.stderr);
+    // A library's own error keeps its line, and the stub never shows up.
+    const broken = try project.run("check", "broken.selka", &.{});
+    defer broken.deinit();
+    try testing.expectEqual(@as(u8, 1), broken.status);
+    try testing.expect(contains(broken.stderr, "broken.selka:4:12: error[E_UNKNOWN_NAME]"));
+    try testing.expect(!contains(broken.stderr, "E_MAIN"));
+    const headerless_test = try project.run("check", "plain_test.selka", &.{});
+    defer headerless_test.deinit();
+    try testing.expectEqual(@as(u8, 0), headerless_test.status);
+}
+
+/// The pinned migration corpus: nine modules and tests of the value-semantics
+/// Lox port (the copy the RC performance harness pins, 2026-09-29) with every
+/// call-site `mut` marker stripped, as a program written before the markers
+/// were required would read.
+const lox_corpus = [_]File{
+    .{ .path = "value.selka", .data = @embedFile("fixtures/fix-migration/lox/value.selka") },
+    .{ .path = "table.selka", .data = @embedFile("fixtures/fix-migration/lox/table.selka") },
+    .{ .path = "chunk.selka", .data = @embedFile("fixtures/fix-migration/lox/chunk.selka") },
+    .{ .path = "object.selka", .data = @embedFile("fixtures/fix-migration/lox/object.selka") },
+    .{ .path = "heap.selka", .data = @embedFile("fixtures/fix-migration/lox/heap.selka") },
+    .{ .path = "lox_strings.selka", .data = @embedFile("fixtures/fix-migration/lox/lox_strings.selka") },
+    .{ .path = "table_test.selka", .data = @embedFile("fixtures/fix-migration/lox/table_test.selka") },
+    .{ .path = "heap_test.selka", .data = @embedFile("fixtures/fix-migration/lox/heap_test.selka") },
+    .{ .path = "lox_strings_test.selka", .data = @embedFile("fixtures/fix-migration/lox/lox_strings_test.selka") },
+};
+
+/// How many of the corpus files `check` rejects.
+fn rejectedFiles(project: *const Project) !usize {
+    var rejected: usize = 0;
+    for (lox_corpus) |file| {
+        const outcome = try project.run("check", file.path, &.{});
+        defer outcome.deinit();
+        rejected += @intFromBool(outcome.status != 0);
+    }
+    return rejected;
+}
+
+// spec: FIX-MIGRATION-2
+test "CLI fix migrates the pinned pre-marker Lox corpus with no hand edits" {
+    var project = try Project.init(&lox_corpus);
+    defer project.deinit();
+    // Before: every file uses retired source syntax; writable calls also lack markers.
+    try testing.expectEqual(@as(usize, 9), try rejectedFiles(&project));
+    const migrated = try project.run("fix", ".", &.{});
+    defer migrated.deinit();
+    try testing.expectEqual(@as(u8, 0), migrated.status);
+    try testing.expectEqualStrings("", migrated.stderr);
+    try testing.expect(contains(migrated.stdout, "fix: 412 edits in 9 files over 30 rounds"));
+    try testing.expect(contains(migrated.stdout, "fixed heap.selka: 147 edits (E_MODULE_HEADER, E_BINDING_DECLARATION, E_MUTATION_MARKER, E_NAMED_PATTERN, E_NAMED_FIELDS)"));
+    // After: every entry checks, and a second pass finds nothing to do.
+    try testing.expectEqual(@as(usize, 0), try rejectedFiles(&project));
+    const settled = try project.run("fix", ".", &.{"--check"});
+    defer settled.deinit();
+    try testing.expectEqual(@as(u8, 0), settled.status);
+    try testing.expectEqualStrings("fix: nothing to fix\n", settled.stdout);
+    const heap = try project.read("heap.selka");
+    defer testing.allocator.free(heap);
+    try testing.expect(contains(heap, "    mark_table(mut marker, rt.globals)\n"));
+}
+
+const abi_append_producer = "\npublic func change(mut items: int[]):\n    items.append(9)\n\npublic func append_only(mut items: int[]):\n    items.append(3)\n";
+const abi_rebind_producer = "\npublic func change(mut items: int[]):\n    items = [7]\n    items.append(8)\n\npublic func append_only(mut items: int[]):\n    items.append(3)\n";
+const abi_consumer =
+    \\
+    \\import lib
+    \\func main() -> int:
+    \\    mut first = [1]
+    \\    mut first_saved = first
+    \\    lib.change(mut first)
+    \\    mut action = lib.change
+    \\    mut second = [1]
+    \\    mut second_saved = second
+    \\    action(mut second)
+    \\    mut third = [1]
+    \\    mut third_saved = third
+    \\    mut append = lib.append_only
+    \\    append(mut third)
+    \\    lib.append_only(mut third)
+    \\    return if (first == second and first != [1] and first_saved == [1] and second_saved == [1] and third == [1, 3, 3] and third_saved == [1]) then (1) else (0)
+;
+
+fn abiRun(project: *const Project) !void {
+    const result = try project.run("run", "main.selka", &.{"--print-result"});
+    defer result.deinit();
+    try testing.expectEqual(@as(u8, 1), result.status);
+    try testing.expectEqualStrings("1\n", result.stdout);
+}
+
+// spec-case: MUT-REBIND-CALLER-1
+test "CLI warm imported direct and callback ABIs follow producer rebinding changes" {
+    var project = try Project.init(&.{ .{ .path = "main.selka", .data = abi_consumer }, .{ .path = "lib.selka", .data = abi_append_producer } });
+    defer project.deinit();
+    try abiRun(&project);
+    try abiRun(&project);
+    try project.temp.dir.writeFile(testing.io, .{ .sub_path = "lib.selka", .data = abi_rebind_producer });
+    try abiRun(&project);
+    try abiRun(&project);
+    const consumer = try project.read("main.selka");
+    defer testing.allocator.free(consumer);
+    try testing.expectEqualStrings(abi_consumer, consumer);
+}
+
+// spec: NEW-CORE-S5-ARENA-3
+// spec-case: FIX-MIGRATION-1
+test "CLI fix removes retired arena blocks, dedents their bodies and unwraps escapes" {
+    const original = @embedFile("fixtures/fix-migration/arenas.selka");
+    var project = try Project.init(&.{.{ .path = "main.selka", .data = original }});
+    defer project.deinit();
+    const preview = try project.run("fix", "main.selka", &.{"--check"});
+    defer preview.deinit();
+    try testing.expectEqual(@as(u8, 1), preview.status);
+    try testing.expect(contains(preview.stdout, "E_ARENA_REMOVED"));
+    const fixed = try project.run("fix", "main.selka", &.{});
+    defer fixed.deinit();
+    try testing.expectEqual(@as(u8, 0), fixed.status);
+    try testing.expectEqualStrings("", fixed.stderr);
+    const after = try project.read("main.selka");
+    defer testing.allocator.free(after);
+    try testing.expectEqualStrings(arenas_migrated, after);
+    const checked = try project.run("check", "main.selka", &.{});
+    defer checked.deinit();
+    try testing.expectEqual(@as(u8, 0), checked.status);
+    try testing.expectEqualStrings("", checked.stderr);
+    const again = try project.run("fix", "main.selka", &.{"--check"});
+    defer again.deinit();
+    try testing.expectEqual(@as(u8, 0), again.status);
+}
+
+/// `fixtures/fix-migration/arenas.selka` after `selka fix`.
+const arenas_migrated =
+    \\# Pre-S5 arena code: `selka fix` deletes every `with arena():` line, dedents
+    \\# the block's body and rewrites each `name.escape(value)` to `value`.
+    \\record Reading:
+    \\    sensor: int
+    \\    samples: int[]
+    \\
+    \\
+    \\func collect(sensors: int) -> Reading[]:
+    \\    mut readings: Reading[] = []
+    \\    for sensor in range(sensors):
+    \\        # one region per sensor
+    \\        mut samples: int[] = []
+    \\        for index in range(3):
+    \\            samples.append(sensor * 3 + index)
+    \\
+    \\        # kept: a copy survives the region
+    \\        readings.append(Reading(sensor=sensor, samples=samples))
+    \\    return readings
+    \\
+    \\
+    \\func loudest(readings: Reading[]) -> int:
+    \\    mut best = 0
+    \\# a comment at the left margin stays where it is
+    \\    for reading in readings:
+    \\        mut total = 0
+    \\        for sample in reading.samples:
+    \\            total = total + sample
+    \\        if total > best:
+    \\            best = total
+    \\    return best
+    \\
+    \\
+    \\func nested() -> int:
+    \\    mut kept = "z"
+    \\    mut joined = "-".join(["a", str(2)])
+    \\    kept = (joined + "!")
+    \\    mut size = len(joined)
+    \\    # after the inner block
+    \\    return len(kept) + size
+    \\
+    \\
+    \\func main() -> int:
+    \\    mut readings = collect(4)
+    \\    return len(readings) + loudest(readings) + nested()
+    \\
+;
+
+// spec-case: FIX-MIGRATION-1
+// spec-case: D2-VIEW-STORAGE-1
+test "D2 CLI fix materializes stored dictionary projections with contextual list snapshots" {
+    const original = @embedFile("fixtures/fix-migration/dictionary-views.selka");
+    var project = try Project.init(&.{.{ .path = "main.selka", .data = original }});
+    defer project.deinit();
+    const preview = try project.run("fix", "main.selka", &.{"--check"});
+    defer preview.deinit();
+    try testing.expectEqual(@as(u8, 1), preview.status);
+    try testing.expect(contains(preview.stdout, "E_MODULE_HEADER"));
+    const fixed = try project.run("fix", "main.selka", &.{});
+    defer fixed.deinit();
+    try testing.expectEqual(@as(u8, 0), fixed.status);
+    const after = try project.read("main.selka");
+    defer testing.allocator.free(after);
+    try testing.expect(contains(after, "keys = list(mapping.keys())"));
+    try testing.expect(contains(after, "values = list(mapping.values())"));
+    try testing.expect(contains(after, "items = list(mapping.items())"));
+    try testing.expect(contains(after, "nested = [list(mapping.values())]"));
+    try testing.expect(contains(after, "interior = list(rows[0].values())"));
+    const checked = try project.run("check", "main.selka", &.{});
+    defer checked.deinit();
+    try testing.expectEqual(@as(u8, 0), checked.status);
+    const again = try project.run("fix", "main.selka", &.{"--check"});
+    defer again.deinit();
+    try testing.expectEqual(@as(u8, 0), again.status);
+}
+
+fn storedViewCorpus(path: []const u8, text: []const u8) !void {
+    var project = try Project.init(&.{.{ .path = path, .data = text }});
+    defer project.deinit();
+    const checked = try project.run("check", path, &.{"--diagnostics=json"});
+    defer checked.deinit();
+    try testing.expectEqual(@as(u8, 1), checked.status);
+    try testing.expect(contains(checked.stderr, "E_VIEW_STORED"));
+}
+
+// spec-case: D2-VIEW-STORAGE-1
+test "D2 rejects the former held receiver snapshot history and aggregate view corpora" {
+    try storedViewCorpus("rc_dictionary_views.selka", @embedFile("fixtures/view-storage/rc_dictionary_views.selka"));
+    try storedViewCorpus("rc_view_receivers.selka", @embedFile("fixtures/view-storage/rc_view_receivers.selka"));
+    try storedViewCorpus("live_view_snapshots.selka", @embedFile("fixtures/view-storage/live_view_snapshots.selka"));
+    try storedViewCorpus("rc_semantic_history.selka", @embedFile("fixtures/view-storage/rc_semantic_history.selka"));
+}

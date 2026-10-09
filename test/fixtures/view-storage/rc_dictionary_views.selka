@@ -1,0 +1,93 @@
+func mapping_of(view: DictValues[int, int]) -> dict[int, int]:
+    return view.mapping
+
+
+# spec-case: DICT-VIEWS-1
+public func test_mapping_projection_creates_named_snapshots() -> bool:
+    mut mapping = {1: 7}
+    mut view = mapping.values()
+    mut snapshot = view.mapping
+    mut returned = mapping_of(view)
+    mapping[1] = 9
+    return snapshot[1] == 7 and returned[1] == 7 and list(view) == [7] and mapping[1] == 9
+
+
+# spec-case: DICT-VIEWS-1
+public func test_replacing_mapping_field_rebinds_live_identity() -> bool:
+    mut first = {1: 7}
+    mut second = {2: 8}
+    mut view = first.values()
+    view.mapping = second
+    first.clear()
+    second[2] = 9
+    return list(view) == [9]
+
+
+# spec-case: DICT-VIEWS-1
+public func test_stored_and_returned_views_observe_growth_and_clear() -> bool:
+    mut mapping = {1: 7}
+    mut views = [mapping.values(), mapping.values()]
+    for index in range(2, 100):
+        mapping[index] = index
+    if len(views[0]) != 99 or len(views[1]) != 99:
+        return False
+    mapping.clear()
+    mapping[100] = 42
+    return list(views[0]) == [42] and list(views[1]) == [42]
+
+
+record HeldPair:
+    values: DictValues[int, int[]]
+    items: DictItems[int, int[]]
+    saved: DictValues[int, int[]][]
+
+
+func escape_held_pair() -> HeldPair:
+    mut mapping = {1: [7, 8]}
+    mut view = mapping.values()
+    mut result = HeldPair(values=view, items=mapping.items(), saved=[view, view])
+    return result
+
+
+# spec-case: DICT-VIEWS-1
+public func test_arena_escape_traverses_nested_held_edges_and_managed_values() -> bool:
+    mut escaped = escape_held_pair()
+    return list(escaped.values) == [[7, 8]] and list(escaped.items)[0].value == [7, 8] and list(escaped.saved[1]) == [[7, 8]]
+
+
+record HeldBranch:
+    view: DictValues[int, int]
+    tail: HeldBranch?
+
+
+# spec-case: DICT-VIEWS-1
+public func test_recursive_boxes_keep_live_held_edges_through_copy_and_drop() -> bool:
+    mut mapping = {1: 7}
+    mut branch = HeldBranch(view=mapping.values(), tail=None)
+    for depth in range(256):
+        branch = HeldBranch(view=mapping.values(), tail=Some(branch))
+    mapping[1] = 9
+    mut cursor: HeldBranch? = Some(branch)
+    mut result = 0
+    while cursor is not None:
+        mut node = cursor
+        result += list(node.view)[0]
+        cursor = node.tail
+    return result == 257 * 9
+
+
+record HeldOuter:
+    view: DictValues[int, int]
+
+
+func held_through_arena(mapping: dict[int, int]) -> HeldOuter:
+    mut result = HeldOuter(view=mapping.values())
+    return result
+
+
+# spec-case: DICT-VIEWS-1
+public func test_escaping_an_older_held_mapping_preserves_its_live_identity() -> bool:
+    mut mapping = {1: 7}
+    mut escaped = held_through_arena(mapping)
+    mapping[1] = 9
+    return list(escaped.view) == [9]

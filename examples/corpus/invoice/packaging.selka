@@ -1,0 +1,8 @@
+# Independent packaging tariff; changes are reviewed separately from delivery.
+public func fee(items: int) -> int effects():
+    mut cents = 100
+    if items > 10:
+        cents += 100
+    if items == 0:
+        return 0
+    return cents

@@ -1,0 +1,132 @@
+# Split from benchmarks/runtime/expanded/text/main.my; identical timed work.
+extern func runtime_bench_now(host: Host) -> i64 effects(host)
+
+
+record Inputs:
+    raw: bytes
+    texts: str[]
+    other: str[]
+    numbers: int[]
+    fragments: str[]
+
+
+func number(text: str) -> int:
+    match parse_int(text):
+        case Some(value):
+            return value
+        case None:
+            return 0
+
+
+func row_name(j: int) -> str:
+    return (if (j % 2 == 0) then ("café,\"item\"") else ("naïve,item")) + str(j)
+
+
+func score(text: str) -> int:
+    mut raw = text.encode()
+    mut result = len(raw)
+    for value in raw:
+        result += value
+    return result
+
+
+func csv_rows(text: str) -> str[][]:
+    mut rows: str[][] = []
+    mut fields: str[] = []
+    mut field = ""
+    mut quoted = False
+    mut pending_quote = False
+    for ch in text:
+        if quoted:
+            if ch == "\"":
+                if pending_quote:
+                    field += "\""
+                    pending_quote = False
+                else:
+                    pending_quote = True
+            elif pending_quote:
+                quoted = False
+                pending_quote = False
+                if ch == ",":
+                    fields.append(field)
+                    field = ""
+                elif ch == "\n":
+                    fields.append(field)
+                    rows.append(fields)
+                    fields = []
+                    field = ""
+            else:
+                field += ch
+        elif ch == "\"":
+            quoted = True
+        elif ch == ",":
+            fields.append(field)
+            field = ""
+        elif ch == "\n":
+            fields.append(field)
+            rows.append(fields)
+            fields = []
+            field = ""
+        else:
+            field += ch
+    return rows
+
+
+func csv_job(text: str) -> int:
+    mut groups: dict[str, int] = {"east": 0, "west": 0, "north": 0}
+    mut accepted = 0
+    mut rejected = 0
+    mut names = 0
+    for row in csv_rows(text):
+        match parse_int(row[3]):
+            case Some(amount):
+                if row[4] == "1":
+                    groups[row[2]] += amount
+                    accepted += 1
+                    names += score(row[1])
+            case None:
+                rejected += 1
+    return groups["east"] + groups["west"] * 2 + groups["north"] * 3 + accepted * 17 + rejected * 101 + names
+
+
+func inputs(kind: str, size: int, seed: int) -> Inputs:
+    mut raw = b""
+    mut texts: str[] = []
+    mut other: str[] = []
+    mut numbers: int[] = []
+    mut fragments: str[] = []
+    mut regions = ["east", "west", "north"]
+    mut csv_chunks: str[] = []
+    for j in range(size):
+        mut amount = if (j % 11 == 0) then ("oops") else (str((seed + j * 19) % 100003))
+        mut quoted = "\"" + row_name(j).replace("\"", "\"\"") + "\""
+        csv_chunks.append(str(seed + j) + "," + quoted + "," + regions[(seed + j) % 3] + "," + amount + "," + (if ((seed + j) % 3 != 0) then ("1") else ("0")) + "\n")
+    texts = ["".join(csv_chunks)]
+    return Inputs(raw=raw, texts=texts, other=other, numbers=numbers, fragments=fragments)
+
+
+func kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:
+    mut checksum = 0
+    for step in range(iterations):
+        mut cursor = seed + step
+        mut value = csv_job(data.texts[0])
+        checksum = (checksum + value) % 1000000007
+    return checksum
+
+
+func main(args: str[], host: Host, out: Stream) -> int:
+    if len(args) != 3:
+        return 2
+    mut kind = "csv_aggregate"
+    mut size = number(args[0])
+    mut iterations = number(args[1])
+    mut seed = number(args[2])
+    if size < 2 or iterations < 1 or seed < 1 or seed > 1000000:
+        return 2
+    mut data = inputs(kind, size, seed)
+    mut checksum = 0
+    mut start = runtime_bench_now(host)
+    checksum = kernel(kind, data, iterations, seed)
+    mut elapsed = runtime_bench_now(host) - start
+    out.print(checksum, elapsed)
+    return 0

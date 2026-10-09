@@ -1,0 +1,63 @@
+# spec-case: VALUE-SEMANTICS-1
+public func test_growth_and_indexing() -> bool effects(managed_allocation):
+    mut scores: int[] = [10, 20, 30]
+    scores.append(40)
+    scores[1] = scores[1] + 5
+    if len(scores) != 4 or scores[-1] != 40 or scores[1] != 25:
+        return False
+    mut copied = scores
+    copied.append(50)
+    return len(scores) == 4 and scores[-1] == 40 and len(copied) == 5 and copied[-1] == 50 and scores[0] == 10
+
+
+public func test_slices() -> bool effects(managed_allocation):
+    mut readings = [3, 12, 7, 20]
+    mut empty: int[] = []
+    mut window = readings[1:3]
+    window[0] = 0
+    if readings[1] != 12 or window[0] != 0:
+        return False
+    if len(readings[2:99]) != 2 or len(readings[3:1]) != 0 or len(readings[-2:]) != 2:
+        return False
+    return len(empty) == 0 and readings[0:2][1] == 12
+
+
+public func test_membership_and_iteration() -> bool effects(managed_allocation):
+    mut values = [4, 8, 15, 16, 23, 42]
+    if 15 not in values or 99 in values:
+        return False
+    mut total = 0
+    for value in values:
+        total += value
+    if total != 108:
+        return False
+    mut count = 0
+    for value in values:
+        if value == 15:
+            break
+        count += 1
+    return count == 2
+
+
+public func test_comprehension_and_loops() -> bool effects(managed_allocation):
+    mut source = [1, 2, 3, 4, 5]
+    mut kept = [for value in source if value > 2 yield value * 2]
+    if len(kept) != 3 or kept[0] != 6 or kept[2] != 10:
+        return False
+    mut total = 0
+    for index, value in enumerate(source):
+        if index == 1:
+            continue
+        if value == 5:
+            break
+        total += value
+    if total != 8:
+        return False
+    mut ranged = 0
+    for index in range(2, 6):
+        ranged += index
+    return ranged == 14
+
+
+func main() -> int:
+    return 0

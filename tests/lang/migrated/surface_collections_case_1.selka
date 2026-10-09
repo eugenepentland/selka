@@ -1,0 +1,12 @@
+func add[T](mut values: T[], value: T):
+    values.append(value)
+
+
+func first[T](values: T[]) -> T:
+    return values[0]
+
+
+public func program() -> i64:
+    mut values: i64[] = []
+    add(mut values, 42)
+    return first(values)

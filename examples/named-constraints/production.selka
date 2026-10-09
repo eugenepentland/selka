@@ -1,0 +1,7 @@
+import contracts
+
+public domain DiscountPrices: int:
+    func make(discount: int) -> DiscountPrices effects():
+        return wrap[DiscountPrices](discount)
+    func price(policy: DiscountPrices, subtotal: int) -> int effects():
+        return subtotal - unwrap(policy)

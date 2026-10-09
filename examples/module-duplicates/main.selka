@@ -1,0 +1,5 @@
+import left
+import right
+
+func main() -> int:
+    return left.price(10) + right.quote(10)

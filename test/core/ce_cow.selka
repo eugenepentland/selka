@@ -1,0 +1,163 @@
+# Copy on write narrowed to what is shared (NEW-CORE-CE-LISTS-3, -4): the Lox
+# interpreter's and VM's shapes. Every answer here is the base compiler's.
+record Klass:
+    name: str
+    methods: int[]
+
+
+enum Obj:
+    klass(value: Klass)
+    instance(value: int)
+    free
+
+
+record Marker:
+    marks: bool[]
+    gray: int[]
+
+
+record Runtime:
+    objects: Obj[]
+    stack: int[]
+    marker: Marker
+    free_slots: int[]
+    top: int
+
+
+record Interpreter:
+    rt: Runtime
+    calls: int
+
+
+func allocate(mut rt: Runtime, obj: Obj) -> int:
+    if len(rt.free_slots) > 0:
+        mut slot = rt.free_slots.pop()
+        rt.objects[slot] = obj
+        return slot
+    rt.objects.append(obj)
+    rt.marker.marks.append(False)
+    return len(rt.objects) - 1
+
+
+# The tree interpreter: a write-back temporary around a `mut` call, then a store
+# through the record's list at an index that may count from the end.
+func instantiate(mut it: Interpreter, klass_ref: int) -> int:
+    mut callee_slot = it.rt.top - 1
+    mut wb = it.rt
+    mut instance = allocate(mut wb, Obj.instance(value=klass_ref))
+    it.rt = wb
+    it.rt.stack[callee_slot] = instance
+    it.calls = it.calls + 1
+    return instance
+
+
+# The VM: an element's payload read before a `mut` call and used after it.
+func call_value(mut rt: Runtime, ref: int) -> int:
+    match rt.objects[ref]:
+        case Obj.klass(value=klass):
+            mut instance = allocate(mut rt, Obj.instance(value=ref))
+            rt.stack[rt.top - 1] = instance
+            return instance + len(klass.methods) + len(klass.name)
+        case Obj.instance(value=v):
+            return v
+        case Obj.free:
+            return -1
+
+
+func sweep(mut rt: Runtime) -> int:
+    mut freed = 0
+    mut i = 0
+    while i < len(rt.objects):
+        if rt.marker.marks[i]:
+            rt.marker.marks[i] = False
+        else:
+            match rt.objects[i]:
+                case Obj.instance(value=v):
+                    rt.objects[i] = Obj.free
+                    rt.free_slots.append(i)
+                    freed += 1
+                case _:
+                    pass
+        i += 1
+    return freed
+
+
+func mark_some(mut rt: Runtime, every: int):
+    for i in range(len(rt.objects)):
+        if i % every == 0:
+            rt.marker.marks[i] = True
+
+
+# A copy of the list taken before the store keeps the old list.
+func snapshot_then_store(mut it: Interpreter, at: int, v: int) -> int:
+    mut before = it.rt.stack
+    it.rt.stack[at] = v
+    return before[at] * 1000 + it.rt.stack[at]
+
+
+record Pads:
+    ref: str
+    net: dict[str, str]
+
+
+record Comp:
+    pins: Pads
+    used: str[]
+    seen: set[str]
+
+
+record Builder:
+    comps: dict[str, Comp]
+    keys: str[]
+    ref_inst: dict[str, int]
+
+
+func note(self: Builder, mut comp: Comp, pin: str, net: str):
+    if comp.pins.ref != "r":
+        return
+    if pin not in comp.pins.net:
+        comp.pins.net[pin] = net + str(len(self.keys))
+
+
+# The EDA builder: the record is passed to a call between the read of its dictionary
+# and the write-back, so that read must not take the dictionary.
+func build(mut self: Builder, pins: str[]):
+    for p in pins:
+        if p not in self.ref_inst:
+            continue
+        mut i = self.ref_inst[p]
+        mut key = self.keys[i]
+        mut comp = self.comps[key]
+        note(self, mut comp, p, "n")
+        if p not in comp.seen:
+            comp.seen.add(p)
+            comp.used.append(p)
+        self.comps[key] = comp
+
+
+func main(out: Stream) -> int:
+    mut rt = Runtime(objects=[Obj.klass(value=Klass(name="Foo", methods=[1, 2, 3]))], stack=[0, 0, 0, 0], marker=Marker(marks=[False], gray=[]), free_slots=[], top=4)
+    mut it = Interpreter(rt=rt, calls=0)
+    mut kept = it.rt.stack
+    mut total = 0
+    for round in range(40):
+        for k in range(500):
+            total = total + instantiate(mut it, 0)
+            mut wb = it.rt
+            total = total + call_value(mut wb, 0)
+            it.rt = wb
+        mut wb2 = it.rt
+        mark_some(mut wb2, 3)
+        total = total + sweep(mut wb2) * 7
+        it.rt = wb2
+    out.print(total, it.calls, len(it.rt.objects), len(it.rt.free_slots), it.rt.stack[3], len(kept), kept[3])
+    out.print(snapshot_then_store(mut it, 2, 5), snapshot_then_store(mut it, -1, 9), it.rt.stack[2], it.rt.stack[3])
+    mut b = Builder(comps={}, keys=["k0", "k1"], ref_inst={"a": 0, "b": 1, "c": 0})
+    b.comps["k0"] = Comp(pins=Pads(ref="r", net={}), used=[], seen=set())
+    b.comps["k1"] = Comp(pins=Pads(ref="q", net={}), used=[], seen=set())
+    mut ps: str[] = []
+    for i in range(3000):
+        ps.append(["a", "b", "c", "d"][i % 4] + "")
+    build(mut b, ps)
+    out.print(len(b.comps["k0"].used), len(b.comps["k0"].pins.net), len(b.comps["k1"].used), len(b.comps["k1"].pins.net))
+    return 0

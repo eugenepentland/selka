@@ -1,0 +1,6 @@
+# oracle: cpython
+def main() -> int:
+    xs = [3, 1, 2]
+    ordered = sorted(x * 10 for x in xs)
+    text = "".join(str(x) for x in xs)
+    return ordered[0] + len(text) + len(set(x % 2 for x in xs))

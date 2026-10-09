@@ -1,0 +1,42 @@
+import random
+import time
+
+func show(out: Stream, result: Result[str, str]):
+    match result:
+        case Ok(value):
+            out.print(value)
+        case Err(message):
+            out.print(message)
+
+
+func main(fs: Filesystem, env: Environment, entropy: Entropy, clock: Clock, out: Stream) -> int:
+    # Fixture directory, environment allowlist and entropy seed are explicit.
+    show(out, fs.read_text("input.txt"))
+    show(out, fs.read_text("../outside.txt"))
+    match fs.write_text("output.txt", "saved"):
+        case Ok(_):
+            out.print("written")
+        case Err(message):
+            out.print(message)
+    for name in env.only("KEEP", "MISSING", "KEEP").names():
+        out.print(name)
+    match env.get("KEEP"):
+        case Some(value):
+            out.print(value)
+        case None:
+            out.print("missing")
+    match random.from_entropy(entropy):
+        case Ok(sampled):
+            mut generator = sampled
+            out.print(random.next_word(mut generator))
+        case Err(message):
+            out.print(message)
+    match time.advance(clock, time.nanoseconds(0)):
+        case Ok(_):
+            out.print("advanced")
+        case Err(message):
+            out.print(message)
+    mut separator = ":"
+    mut terminator = "!\n"
+    out.print("left", 7, "right", sep=separator, end=terminator)
+    return 0

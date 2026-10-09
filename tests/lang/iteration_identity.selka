@@ -1,0 +1,124 @@
+public func test_nonstructural_dictionary_writes_remain_visible() -> bool:
+    mut values = {1: 10, 2: 20}
+    mut total = 0
+    for key in values:
+        values[key] = values[key] + 1
+        total += values[key]
+    return total == 32 and values == {1: 11, 2: 21}
+
+
+public func test_list_iteration_observes_later_element_writes() -> bool:
+    mut values = [1, 2]
+    mut total = 0
+    for value in values:
+        total += value
+        values[1] = 9
+    return total == 10 and values == [1, 9]
+
+
+public func test_rebinding_source_preserves_original_iteration_storage() -> bool:
+    mut values = [1, 2]
+    mut total = 0
+    for value in values:
+        values = [7]
+        total += value
+    mut mapping = {1: 10, 2: 20}
+    for key in mapping:
+        mapping = {7: 70}
+        total += key
+    return total == 6 and values == [7] and mapping == {7: 70}
+
+
+public func test_named_snapshot_remains_independent_of_iteration_writes() -> bool:
+    mut values = [1, 2]
+    mut snapshot = values
+    mut total = 0
+    for value in values:
+        values[1] = 9
+        total += value
+    return total == 10 and values == [1, 9] and snapshot == [1, 2]
+
+
+public func test_fresh_managed_sources_survive_without_an_owner_local() -> bool:
+    mut total = 0
+    for value in [2, 3]:
+        total += value
+    for key in {4: 5, 6: 7}:
+        total += key
+    for value in {8, 9}:
+        total += value
+    for byte in b"AZ":
+        total += byte
+    for letter in "xy":
+        total += len(letter)
+    return total == 189
+
+
+public func test_fixed_array_iteration_reads_the_place_and_preserves_a_copy() -> bool:
+    mut values: FixedArray[int, 2] = FixedArray[int, 2]([1, 2])
+    mut snapshot = values
+    mut total = 0
+    for value in values:
+        total += value
+        values[1] = 9
+    return total == 10 and values[1] == 9 and snapshot == FixedArray[int, 2]([1, 2])
+
+
+record Runtime:
+    objects: int[]
+
+
+record Interp:
+    rt: Runtime
+
+
+func bump(mut rt: Runtime, at: int) -> Unit:
+    if at < len(rt.objects):
+        rt.objects[at] = rt.objects[at] + 10
+
+
+# spec: RC-ITERATION-HOLD-TRANSFER-1
+public func test_write_back_through_a_field_preserves_live_iteration() -> bool:
+    mut it = Interp(rt=Runtime(objects=[1, 2, 3]))
+    mut seen: int[] = []
+    mut at = 0
+    for x in it.rt.objects:
+        seen.append(x)
+        mut wb = it.rt
+        bump(mut wb, at + 1)
+        it.rt = wb
+        at += 1
+    return seen == [1, 12, 13] and it.rt.objects == [1, 12, 13]
+
+
+record Source:
+    items: int[]
+    n: int
+
+
+func source() -> Source:
+    return Source(items=[1, 2, 3], n=1)
+
+
+# spec: ITERATION-FIELD-SNAPSHOT-1
+public func test_last_field_transfer_preserves_live_iteration() -> bool:
+    mut state = source()
+    mut total = 0
+    for value in state.items:
+        mut moved = state.items
+        moved.append(value)
+        total += len(moved)
+        state = source()
+    return total == 12
+
+
+func main() -> int:
+    assert test_nonstructural_dictionary_writes_remain_visible()
+    assert test_write_back_through_a_field_preserves_live_iteration()
+    assert test_last_field_transfer_preserves_live_iteration()
+    assert test_list_iteration_observes_later_element_writes()
+    assert test_rebinding_source_preserves_original_iteration_storage()
+    assert test_named_snapshot_remains_independent_of_iteration_writes()
+    assert test_fresh_managed_sources_survive_without_an_owner_local()
+    assert test_fixed_array_iteration_reads_the_place_and_preserves_a_copy()
+    return 0

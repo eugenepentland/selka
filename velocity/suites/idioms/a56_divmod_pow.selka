@@ -1,0 +1,4 @@
+# oracle: cpython
+def main() -> int:
+    q, r = divmod(85, 2)
+    return q + pow(2, 0) - 1

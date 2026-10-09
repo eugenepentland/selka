@@ -1,0 +1,77 @@
+# Slices that are only read borrow their source (NEW-CORE-S1-VIEW-4): equality, length,
+# prefixes, suffixes and containment over ASCII and non-ASCII text, clamped, empty and
+# reversed bounds, and slices of slices. CPython's answers.
+func reads(s: str, t: str) -> str:
+    mut out: str[] = []
+    mut n = len(s)
+    for i in range(-2, n + 2):
+        for j in range(i - 1, n + 3):
+            mut row = 0
+            if s[i:j] == t:
+                row += 1
+            if s[i:j] != "é":
+                row += 2
+            if t == s[i:j]:
+                row += 4
+            if s[i:j].startswith("a"):
+                row += 8
+            if s[i:j].endswith("é"):
+                row += 16
+            if "bé" in s[i:j]:
+                row += 32
+            if s[i:j] == s[j:i + 3]:
+                row += 64
+            out.append(str(len(s[i:j])) + ":" + str(row))
+    return ",".join(out)
+
+
+# A view read after its source is rebound in the same iteration.
+func rebound(s: str) -> int:
+    mut total = 0
+    mut t = s
+    for i in range(len(s)):
+        mut head = t[0:i]
+        t = t + "x"
+        if head.startswith("ab"):
+            total += len(head)
+        if head == s[0:i]:
+            total += 100
+    return total
+
+
+# The source is handed to a list while the view is live, and the list's copy is then
+# extended: the view still reads the original octets.
+func stored(s: str) -> str:
+    mut xs: str[] = []
+    mut t = s + "!"
+    mut head = t[0:3]
+    xs.append(t)
+    xs[0] += "?"
+    mut out = ""
+    if head == "abc":
+        out = "same"
+    if head.startswith("ab"):
+        out += "+"
+    return out + xs[0] + str(len(head))
+
+
+# A slice that is also printed stays a copy; one that is only compared is a view.
+func mixed(s: str, out: Stream) -> int:
+    mut hits = 0
+    for i in range(len(s) - 1):
+        mut pair = s[i:i + 2]
+        if pair == "ab":
+            hits += 1
+        if s[i:i + 2] == "ba":
+            out.print(pair)
+    return hits
+
+
+func main(out: Stream) -> int:
+    out.print(reads("abébé", "bé"))
+    out.print(reads("abcab", "ab"))
+    out.print(reads("", ""))
+    out.print(rebound("abcabd"), rebound("éaé"))
+    out.print(mixed("abbaab", out))
+    out.print(stored("abcdef"), stored("xé"))
+    return 0

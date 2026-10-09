@@ -1,0 +1,91 @@
+# Store-backs of an element's block pointer (NEW-CORE-F1-STOREBACK-1): `c[i][j] = v`
+# stores c's row pointer back only when copy on write, growth or replacement moved it.
+# Every answer here is the base compiler's (main cafe7fea7).
+record Bag:
+    name: str
+    items: int[]
+
+
+func grid(n: int, base: float) -> float[][]:
+    return [for i in range(n) yield [for j in range(n) yield base + float(i * n + j)]]
+
+
+func total(rows: float[][]) -> int:
+    mut t = 0.0
+    for row in rows:
+        for v in row:
+            t = t + v
+    return int(t * 10.0)
+
+
+# Row 1 is shared with `keep`: its first write copies it, and that copy's pointer must
+# reach `c`, while `keep` keeps the old row.
+func shared_row(n: int) -> int:
+    mut c = grid(n, 1.0)
+    mut keep = c[1]
+    for i in range(n):
+        for j in range(n):
+            c[i][j] = c[i][j] * 2.0 + float(j)
+    return total(c) * 1000 + int(keep[0] * 10.0 + keep[n - 1])
+
+
+# A row replaced inside the loop: the whole-row store and the element stores interleave.
+func replaced_row(n: int) -> int:
+    mut c = grid(n, 0.5)
+    for i in range(n):
+        for j in range(n):
+            c[i][j] = c[i][j] + 1.0
+            if j == 2:
+                c[i] = [for k in range(n) yield float(k)]
+    return total(c)
+
+
+# Aliasing rows: after `c[0] = c[1]` both slots hold one row, so a write through c[0]
+# copies it and only c[0] changes.
+func aliased_rows(n: int) -> int:
+    mut c = grid(n, 3.0)
+    c[0] = c[1]
+    for j in range(n):
+        c[0][j] = c[0][j] - 1.0
+    c[2] = c[0]
+    c[2][0] = 99.0
+    return total(c) * 100 + int(c[1][0]) + int(c[0][0]) + int(c[2][0])
+
+
+# A break and an early return between the element writes and the row's next use.
+func early(n: int, stop: int) -> int:
+    mut c = grid(n, 0.0)
+    for i in range(n):
+        for j in range(n):
+            if i * n + j == stop:
+                break
+            c[i][j] = -c[i][j]
+        if i == n - 1 and stop < 0:
+            return total(c)
+    return total(c) + 7
+
+
+# A list field updated in place (`xs[i].items.append(v)`) and text grown in place
+# (`names[i] += s`): the pointer moves when the block grows or was shared.
+func fields(n: int) -> int:
+    mut bags = [for i in range(n) yield Bag(name="b" + str(i), items=[i])]
+    mut seen = bags[1].items
+    mut names = [for i in range(n) yield "n" + str(i)]
+    mut held = names[2]
+    for r in range(40):
+        for i in range(n):
+            bags[i].items.append(r * i)
+            names[i] += str(r % 10)
+    mut t = 0
+    for b in bags:
+        t = t + len(b.items) + b.items[len(b.items) - 1]
+    for s in names:
+        t = t + len(s)
+    return t * 10 + len(seen) + len(held)
+
+
+func main(args: str[], out: Stream) -> int:
+    mut n = 5 + len(args)
+    out.print(shared_row(n), replaced_row(n), aliased_rows(n))
+    out.print(early(n, 7), early(n, 1000), early(n, -1), fields(n))
+    return 0

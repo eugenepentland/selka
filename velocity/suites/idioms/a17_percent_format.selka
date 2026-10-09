@@ -1,0 +1,5 @@
+# oracle: rejected-by-design
+def main() -> int:
+    s = "%d items" % 3
+    print(s)
+    return 42

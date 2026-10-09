@@ -1,0 +1,35 @@
+record Box:
+    tag: int
+    names: int[]
+
+
+record State:
+    boxes: Box[]
+    seen: int
+
+
+func count_boxes(mut state: State) -> int:
+    state.seen = state.seen + 1
+    return len(state.boxes)
+
+
+func outer(mut state: State, counted: int, tag: int) -> int:
+    state.boxes[0].names.append(tag)
+    return counted * 100 + len(state.boxes[0].names)
+
+
+func first(names: int[], mut state: State) -> int:
+    state.boxes[0].names.append(7)
+    return len(names)
+
+
+func main(out: Stream) -> int:
+    mut state = State(boxes=[Box(tag=2, names=[1])], seen=0)
+    mut box = state.boxes[0]
+    mut seen = outer(mut state, count_boxes(mut state), box.tag)
+    out.print(seen, state.boxes[0].names == [1, 2], state.seen)
+    mut other = State(boxes=[Box(tag=4, names=[1, 2])], seen=0)
+    mut held = other.boxes[0]
+    mut got = first(held.names, mut other)
+    out.print(got, len(other.boxes[0].names), len(held.names))
+    return 0

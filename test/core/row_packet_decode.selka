@@ -1,0 +1,85 @@
+# Split from benchmarks/runtime/expanded/compute/main.my; identical timed work.
+extern func runtime_bench_now(host: Host) -> i64 effects(host)
+
+
+record Packet:
+    identifier: int
+    payload_sum: int
+    length: int
+
+
+func parse_number(text: str) -> int:
+    match parse_int(text):
+        case Some(value):
+            return value
+        case None:
+            return 0
+
+
+func make_frame(j: int, seed: int) -> bytes:
+    mut identifier = (seed + j * 17) % 65536
+    mut raw = [165, 1, identifier // 256, identifier % 256, 4]
+    for k in range(4):
+        raw.append((seed + j * 13 + k * 7) % 256)
+    mut check = 0
+    for byte in raw:
+        check += byte
+    raw.append(check % 256)
+    if j % 4 == 1:
+        raw[0] = 164
+    elif j % 4 == 2:
+        raw[9] = (raw[9] + 1) % 256
+    elif j % 4 == 3:
+        raw[4] = 5
+    return bytes(raw)
+
+
+func decode(raw: bytes) -> Result[Packet, int]:
+    if len(raw) < 6:
+        return Err(3)
+    if raw[0] != 165:
+        return Err(1)
+    if raw[1] != 1:
+        return Err(2)
+    mut length = raw[4]
+    if len(raw) != length + 6:
+        return Err(3)
+    mut check = 0
+    for i in range(len(raw) - 1):
+        check += raw[i]
+    if check % 256 != raw[len(raw) - 1]:
+        return Err(4)
+    mut total = 0
+    for i in range(5, len(raw) - 1):
+        total += raw[i]
+    return Ok(Packet(identifier=raw[2] * 256 + raw[3], payload_sum=total, length=length))
+
+
+func main(args: str[], host: Host, out: Stream) -> int:
+    if len(args) != 3:
+        return 2
+    mut size = parse_number(args[0])
+    mut iterations = parse_number(args[1])
+    mut seed = parse_number(args[2])
+    if size < 2 or iterations < 1 or seed < 1 or seed > 1000000:
+        return 2
+    mut values = [for j in range(size) yield (seed + j * 37) % 1009]
+    mut frames = [for j in range(size) yield make_frame(j, seed)]
+    mut checksum = 0
+    mut start = runtime_bench_now(host)
+    for batch in range(iterations):
+        mut phase = batch % 17
+        mut pass_total = 0
+        for j in range(size):
+            mut x = values[j]
+            mut value = 0
+            match decode(frames[j]):
+                case Ok(packet):
+                    value = packet.identifier + packet.payload_sum * 3 + packet.length
+                case Err(error):
+                    value = error * 101
+            pass_total += value
+        checksum = (checksum + pass_total) % 1000000007
+    mut elapsed = runtime_bench_now(host) - start
+    out.print(checksum, elapsed)
+    return 0

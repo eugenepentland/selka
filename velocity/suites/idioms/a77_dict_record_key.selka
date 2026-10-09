@@ -1,0 +1,9 @@
+# oracle: selka-only
+record K:
+    a: int
+    b: int
+
+def main() -> int:
+    d: dict[K, int] = {}
+    d[K(1, 2)] = 42
+    return d[K(1, 2)]

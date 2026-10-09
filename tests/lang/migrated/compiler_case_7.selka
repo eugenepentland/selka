@@ -1,0 +1,7 @@
+public func program() -> i64:
+    mut i = 0
+    while i < 5000:
+        mut local = i
+        _ = local * 2
+        i += 1
+    return i

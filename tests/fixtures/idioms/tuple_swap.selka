@@ -1,0 +1,5 @@
+func main() -> int:
+    mut a = 1
+    mut b = 2
+    a, b = b, a
+    return a * 10 + b

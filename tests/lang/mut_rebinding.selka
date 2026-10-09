@@ -1,0 +1,68 @@
+func replace_list(mut items: int[], other: int[]) -> int[]:
+    items = other
+    items.append(7)
+    items[0] = 9
+    return items
+
+
+# spec-case: MUT-REBIND-CALLER-1
+public func test_rebound_mut_list_does_not_mutate_its_readonly_source() -> bool:
+    mut items = [1]
+    mut source = [2]
+    mut changed = replace_list(mut items, source)
+    return changed == [9, 7] and source == [2] and items == [9, 7]
+
+
+func replace_rows(mut items: int[][], other: int[][]) -> int[][]:
+    items = other
+    for index in range(6):
+        items[index % 2][0] = index
+    return items
+
+
+# spec-case: MUT-REBIND-CALLER-1
+public func test_rebound_nested_list_keeps_parent_and_child_snapshots() -> bool:
+    mut items = [[1]]
+    mut row = [2]
+    mut source = [row, row]
+    mut changed = replace_rows(mut items, source)
+    return changed == [[4], [5]] and source == [[2], [2]] and row == [2] and items == [[4], [5]]
+
+
+func replace_mapping(mut items: dict[int, int[]], other: dict[int, int[]]) -> dict[int, int[]]:
+    items = other
+    items[1].append(7)
+    items[2] = [9]
+    return items
+
+
+# spec-case: MUT-REBIND-CALLER-1
+public func test_rebound_dictionary_keeps_nested_source_values_independent() -> bool:
+    mut items = {0: [1]}
+    mut source = {1: [2]}
+    mut changed = replace_mapping(mut items, source)
+    return changed == {1: [2, 7], 2: [9]} and source == {1: [2]} and items == {1: [2, 7], 2: [9]}
+
+
+func conditional(mut items: int[], other: int[], use_other: bool) -> int[]:
+    if use_other:
+        items = other
+    items[0] = 7
+    return items
+
+
+# spec-case: MUT-REBIND-CALLER-1
+public func test_original_mut_payload_still_updates_when_the_rebind_branch_is_skipped() -> bool:
+    mut original = [1]
+    mut source = [2]
+    mut changed = conditional(mut original, source, False)
+    mut second = conditional(mut original, source, True)
+    return changed == [7] and original == [7] and second == [7] and source == [2]
+
+
+func main() -> int:
+    assert test_rebound_mut_list_does_not_mutate_its_readonly_source()
+    assert test_rebound_nested_list_keeps_parent_and_child_snapshots()
+    assert test_rebound_dictionary_keeps_nested_source_values_independent()
+    assert test_original_mut_payload_still_updates_when_the_rebind_branch_is_skipped()
+    return 0

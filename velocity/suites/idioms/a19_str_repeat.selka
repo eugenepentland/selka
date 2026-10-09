@@ -1,0 +1,4 @@
+# oracle: cpython
+def main() -> int:
+    s = "ab" * 3
+    return len(s) * 7

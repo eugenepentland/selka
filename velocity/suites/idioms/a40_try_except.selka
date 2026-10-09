@@ -1,0 +1,7 @@
+# oracle: rejected-by-design
+def main() -> int:
+    try:
+        x = int("zz")
+    except ValueError:
+        return 42
+    return 0

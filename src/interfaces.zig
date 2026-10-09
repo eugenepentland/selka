@@ -1,0 +1,1672 @@
+//! Module declaration identities and export boundaries, before body type checking.
+const std = @import("std");
+const eGenericArity = "E_GENERIC_ARITY";
+/// Error code for an export directive that names no visible declaration.
+const eUnknownExport = "E_UNKNOWN_EXPORT";
+/// Error code for a name absent from the resolved module.
+const eUnknownSymbol = "E_UNKNOWN_SYMBOL";
+/// Error code for a qualifier that names no direct import alias.
+const eUnknownImport = "E_UNKNOWN_IMPORT";
+/// Error code for a declaration of the wrong kind for the reference.
+const eSymbolKind = "E_SYMBOL_KIND";
+/// Format one module-qualified declaration name as `module::symbol`.
+const qualified_name_format = "{s}::{s}";
+const graph = @import("project.zig");
+const ast = @import("ast.zig");
+const source = @import("source.zig");
+const diagnostic = @import("diagnostic.zig");
+const lexer = @import("lexer.zig");
+const number_literal = @import("number_literal.zig");
+const parser = @import("parser.zig");
+const typed = @import("typed.zig");
+const generic_requirements = @import("generic_requirements.zig");
+const structural_declarations = @import("structural_declarations.zig");
+const effect_set = @import("effect_set.zig");
+const fact_status = @import("fact_status.zig");
+const prelude = @import("prelude.zig");
+const tests_index = @import("tests_index.zig");
+const SyntaxCache = @import("syntax_cache.zig").Cache;
+const FrontendCache = @import("frontend_cache.zig").Cache;
+/// One exported declaration's canonical declared contract for provider validation.
+/// Exact fields (`signature`, `generics`, `shape`) compare for equality; the
+/// permission field (`permissions`) uses the frozen directional subset relation
+/// so a replacement may be narrower but never stronger.
+pub const ContractDeclaration = struct {
+    name: []const u8,
+    kind: []const u8,
+    signature: []const u8 = "",
+    generics: []const u8 = "",
+    /// `effects=<names>;mutates=<positions>;origin=<tag>`; empty for non-callables.
+    permissions: []const u8 = "",
+    shape: []const u8 = "",
+    /// Present only for a declaration carrying `@test`, so test discovery can
+    /// admit a name that does not use the `test_` prefix.
+    @"test": ?bool = null,
+    /// The declaration's contract clauses (`@requires`, `@ensures`,
+    /// `@invariant`) in source order, whitespace folded; absent when it has none.
+    contracts: ?[]const u8 = null,
+};
+/// One module's exported declared-contract table.
+pub const ContractModule = struct { name: []const u8, declarations: []const ContractDeclaration };
+/// Versioned declaration-level contract manifest; bodies are not checked.
+///
+/// `analysis` is the status of the run that produced it: `declaration-only` when
+/// no checked program was attached, so every `permissions` value is the declared
+/// bound a replacement may narrow and never an inferred summary; null (omitted
+/// from the JSON) when a checked program supplied the inferred effects. The
+/// field is omitted rather than `null` in the checked case, which keeps every
+/// checked manifest byte-identical to the one this compiler published before.
+pub const ContractManifest = struct {
+    version: []const u8 = "interface-contracts-v2",
+    analysis: ?[]const u8 = null,
+    modules: []const ContractModule,
+};
+/// Allocation, rejected declarations and an incomplete project all prevent a manifest.
+pub const ContractError = diagnostic.Error || error{IncompleteProject};
+/// Distinguish type declarations from callable declarations during name resolution.
+pub const Kind = enum { type, function, constraint };
+/// Identify a declaration by its module and local symbol index.
+pub const Identity = struct { module: usize, symbol: usize };
+/// One exported declaration a listing line renders, and the module it is listed under.
+const Exported = struct { module: usize, symbol: Symbol };
+/// A checked program's functions by name: `exact` by the whole qualified name,
+/// `family` by the name before any `[...]` specialization suffix, each keeping
+/// the first function in program order, which is the one a scan would find.
+const FunctionTable = struct {
+    exact: std.StringHashMapUnmanaged(typed.FunctionId) = .empty,
+    family: std.StringHashMapUnmanaged(typed.FunctionId) = .empty,
+};
+/// Store declaration visibility and optional domain-owner restrictions. A
+/// re-export facade carries `re_export` pointing at the defining declaration in
+/// its own module; every consumer resolves through that identity.
+pub const Symbol = struct { name: []const u8, kind: Kind, span: source.Span, exported: bool = false, owner: ?[]const u8 = null, restricted: bool = false, re_export: ?Identity = null };
+/// Store parsed module declarations and their local name index. `import_used`
+/// carries one flag per direct import in this module's own order; the resolver
+/// sets it when a reference actually resolves through that import, which is the
+/// exact evidence `W_UNUSED_IMPORT` reads.
+pub const Unit = struct { syntax: ast.Program, symbols: std.ArrayList(Symbol) = .empty, names: std.StringHashMapUnmanaged(usize) = .empty, import_used: []bool = &.{} };
+/// One named bound resolution plus the caller-local span that exposed it.
+const BoundResolution = struct { identity: Identity, span: source.Span };
+/// A resolved constraint identity and the declaring syntax that describes it.
+const ConstraintResolution = struct { identity: Identity, declaration: *const ast.Constraint };
+/// Interface-time named-bound lookup that records each resolved constraint identity.
+const ConstraintLookup = struct {
+    index: *Index,
+    module: usize,
+    bounds: std.ArrayList(BoundResolution),
+    fn find(ctx: *anyopaque, reference: ast.BoundReference, sink: *diagnostic.Sink) diagnostic.Error!generic_requirements.Definition {
+        const self: *ConstraintLookup = @ptrCast(@alignCast(ctx));
+        const resolution = try self.index.constraintDeclaration(self.module, reference, sink);
+        const bound_span = if (reference.alias) |alias| source.Span.join(alias, reference.name) else reference.name;
+        try self.bounds.append(self.index.project.arena.allocator(), .{ .identity = resolution.identity, .span = bound_span });
+        return .{
+            .module = resolution.identity.module,
+            .name = resolution.declaration.name,
+            .subject = resolution.declaration.subject.name,
+            .scope = resolution.declaration.span,
+            .body = &resolution.declaration.subject,
+            // Requirement spans belong to the defining module's source coordinates.
+            .copyable = generic_requirements.explicitCopyable(
+                self.index.project.modules.items[resolution.identity.module].src,
+                resolution.declaration.subject.requirements,
+            ),
+        };
+    }
+};
+/// MODULE-INTERFACE-CUTOFF-1: one name a check looked up in a module's
+/// declaration namespace, found or not.
+pub const Lookup = struct { module: usize, name: []const u8 };
+
+/// Storage belongs to project.arena. Do not retain this index after project.deinit.
+pub const Index = struct {
+    project: *graph.Project,
+    units: []Unit,
+    /// MODULE-INTERFACE-CUTOFF-1: when set, every name `resolve` (and a
+    /// kind or constant probe) looks up in a module, found or missing, and
+    /// the declaration a re-export resolves to, in project-arena storage.
+    lookups: ?*std.ArrayList(Lookup) = null,
+    /// Checked bodies, when the caller has them, so `renderContracts` can publish
+    /// each unannotated callable's frozen inferred ceiling instead of demanding
+    /// the author retype it. Null during pure interface pre-validation.
+    program: ?typed.Program = null,
+    fn add(self: *Index, module: usize, span: source.Span, kind: Kind, owner: ?source.Span, restricted: bool) diagnostic.Error!void {
+        const allocator = self.project.arena.allocator();
+        const src = self.project.modules.items[module].src;
+        const name = src.text(span);
+        const owner_name = if (owner) |at| src.text(at) else null;
+        const key = if (owner_name) |prefix| try std.fmt.allocPrint(allocator, "{s}.{s}", .{ prefix, name }) else name;
+        const unit = &self.units[module];
+        if (unit.names.get(key)) |previous| return self.project.fail("E_DUPLICATE_SYMBOL", "module declaration name is already bound", .{ .module = module, .span = span }, .{ .module = module, .span = unit.symbols.items[previous].span });
+        if (owner == null) for (self.project.modules.items[module].imports) |imported| {
+            if (std.mem.eql(u8, name, imported.alias)) return self.project.fail("E_IMPORT_ALIAS", "declaration conflicts with an import alias", .{ .module = module, .span = span }, .{ .module = module, .span = imported.span });
+        };
+        try unit.names.put(allocator, key, unit.symbols.items.len);
+        try unit.symbols.append(allocator, .{ .name = key, .kind = kind, .span = span, .owner = owner_name, .restricted = restricted });
+    }
+    /// Resolve a direct import alias or this module's own declaration namespace.
+    /// Members use Domain.method; private domain members require the same owner.
+    pub const Request = struct { from: usize, alias: ?[]const u8, name: []const u8, kind: Kind, owner: ?[]const u8, span: source.Span };
+    /// Resolve a requested declaration and enforce module and domain visibility.
+    pub fn resolve(self: *Index, request: Request) diagnostic.Error!Identity {
+        const from = request.from;
+        const alias = request.alias;
+        const name = request.name;
+        const kind = request.kind;
+        const owner = request.owner;
+        const span = request.span;
+        var target = from;
+        const site: graph.Site = .{ .module = from, .span = span };
+        if (alias) |requested| {
+            var found = false;
+            for (self.project.modules.items[from].imports, 0..) |imported, import_index| {
+                if (!imported.matches(requested)) continue;
+                target = imported.target;
+                found = true;
+                if (import_index < self.units[from].import_used.len) self.units[from].import_used[import_index] = true;
+                break;
+            }
+            if (!found) return self.project.fail(eUnknownImport, "name does not identify a direct import alias", site, null);
+        }
+        try self.noteLookup(target, name);
+        const symbol_id = self.units[target].names.get(name) orelse {
+            const message = if (kind == .function)
+                try self.functionMissMessage(from, target, name)
+            else
+                "declaration is not present in the resolved module";
+            return self.project.fail(eUnknownSymbol, message, site, null);
+        };
+        const symbol = self.units[target].symbols.items[symbol_id];
+        const declaration: graph.Site = .{ .module = target, .span = symbol.span };
+        const visible = target == from or symbol.exported or self.testsModule(from, target);
+        if (!visible) return self.project.fail("E_PRIVATE_SYMBOL", "declaration is private to its module", site, declaration);
+        if (symbol.restricted and !sameOwner(target == from, owner, symbol.owner.?)) return self.project.fail("E_PRIVATE_FUNCTION", "private domain function requires the same declaring domain", site, declaration);
+        if (symbol.kind != kind) return self.project.fail(eSymbolKind, "declaration has the wrong kind for this reference", site, declaration);
+        // A facade re-export resolves to the declaration that defines it, so the
+        // caller sees the defining module's identity and the facade is only a name.
+        if (symbol.re_export) |identity| {
+            try self.noteLookup(identity.module, self.units[identity.module].symbols.items[identity.symbol].name);
+            return identity;
+        }
+        return .{ .module = target, .symbol = symbol_id };
+    }
+    /// MODULE-INTERFACE-CUTOFF-1: record one name looked up in module
+    /// `module`'s namespace when a caller asked for the record.
+    pub fn noteLookup(self: *Index, module: usize, name: []const u8) std.mem.Allocator.Error!void {
+        const list = self.lookups orelse return;
+        try list.append(self.project.arena.allocator(), .{ .module = module, .name = name });
+    }
+    /// Whether module `from` is the test file of module `target`: it is named
+    /// `<target>_test` and no module imports it, so it is a test entry and
+    /// cannot hand the private declarations it reaches to anything else.
+    pub fn testsModule(self: *const Index, from: usize, target: usize) bool {
+        const modules = self.project.modules.items;
+        const tester = modules[from].name;
+        const tested = modules[target].name;
+        if (tester.len != tested.len + "_test".len) return false;
+        if (!std.mem.startsWith(u8, tester, tested) or !std.mem.endsWith(u8, tester, "_test")) return false;
+        for (modules) |module| for (module.imports) |imported| {
+            if (imported.target == from) return false;
+        };
+        return true;
+    }
+    /// Whether a module's direct import at `import_index` was resolved at least
+    /// once, which is the exact evidence `W_UNUSED_IMPORT` reports against.
+    pub fn importUsed(self: *const Index, module: usize, import_index: usize) bool {
+        if (module >= self.units.len) return false;
+        const used = self.units[module].import_used;
+        return import_index < used.len and used[import_index];
+    }
+    /// Recover import usage for declarations whose checked bodies the semantic
+    /// cache replayed. `resolve` observes a fresh reference exactly; a replayed
+    /// body is never re-resolved, so this pass reads each module's own token
+    /// stream past its header and marks an import the way the resolver does: a
+    /// dotted qualified name whose qualifier matches the import's alias or full
+    /// dotted path. A local binding cannot shadow an import alias
+    /// (`E_SHADOWING`), and comments and string literals are single tokens, so a
+    /// match is a resolved qualified reference rather than a bare identifier.
+    pub fn recoverImportUsage(self: *Index, backing: std.mem.Allocator) void {
+        if (self.project.problem != null) return;
+        var arena = std.heap.ArenaAllocator.init(backing);
+        defer arena.deinit();
+        const scratch = arena.allocator();
+        for (self.project.order.items) |module_id| {
+            const module = self.project.modules.items[module_id];
+            if (module.imports.len == 0) continue;
+            if (module.header.usage_scanned) {
+                for (module.imports, 0..) |imported, import_index| {
+                    if (imported.seen and import_index < self.units[module_id].import_used.len) self.units[module_id].import_used[import_index] = true;
+                }
+                continue;
+            }
+            var sink: diagnostic.Sink = .{ .allocator = scratch };
+            const tokens = lexer.lex(scratch, module.src.bytes, &sink) catch continue;
+            var index: usize = 0;
+            while (index < tokens.len) : (index += 1) {
+                if (tokens[index].tag != .ident) continue;
+                if (tokens[index].span.start < module.header.body_start) continue;
+                var last = index;
+                var cursor = index + 1;
+                while (cursor + 1 < tokens.len and tokens[cursor].tag == .dot and tokens[cursor + 1].tag == .ident) {
+                    last = cursor + 1;
+                    cursor += 2;
+                }
+                if (last == index) continue;
+                const qualifier = module.src.bytes[tokens[index].span.start..tokens[last - 2].span.end];
+                for (module.imports, 0..) |imported, import_index| {
+                    if (!imported.matches(qualifier)) continue;
+                    if (import_index < self.units[module_id].import_used.len) self.units[module_id].import_used[import_index] = true;
+                    break;
+                }
+                index = last;
+            }
+        }
+    }
+    /// Resolve the target of a `export alias.Name` re-export directive. The
+    /// directive does not say whether it names a type, function or constraint,
+    /// so each kind is probed in turn; a kind mismatch is retried and only a
+    /// missing or private target is reported, as `E_UNKNOWN_EXPORT`/the privacy
+    /// code at the directive.
+    fn resolveExported(self: *Index, module: usize, alias: []const u8, name: []const u8, span: source.Span) diagnostic.Error!Identity {
+        const kinds = [_]Kind{ .type, .function, .constraint };
+        for (kinds) |kind| {
+            if (self.resolve(.{ .from = module, .alias = alias, .name = name, .kind = kind, .owner = null, .span = span })) |resolved| {
+                return resolved;
+            } else |err| {
+                if (err != error.SourceError) return err;
+                const problem = self.project.problem orelse return error.InternalError;
+                if (std.mem.eql(u8, problem.code, eSymbolKind)) {
+                    self.project.problem = null;
+                    continue;
+                }
+                if (std.mem.eql(u8, problem.code, eUnknownSymbol) or std.mem.eql(u8, problem.code, eUnknownImport)) {
+                    return self.project.fail(eUnknownExport, "re-export names no exported imported declaration", .{ .module = module, .span = span }, null);
+                }
+                return err;
+            }
+        }
+        return self.project.fail(eUnknownExport, "re-export names no exported imported declaration", .{ .module = module, .span = span }, null);
+    }
+    /// Publish a re-exported declaration in the facade module under its local
+    /// name. The new symbol's span stays in the facade source (the directive),
+    /// so diagnostics locate the facade while `re_export` carries the defining
+    /// identity every consumer resolves through.
+    fn addFacade(self: *Index, module: usize, name: []const u8, span: source.Span, target: Identity) diagnostic.Error!void {
+        const allocator = self.project.arena.allocator();
+        const unit = &self.units[module];
+        if (unit.names.get(name)) |previous| return self.project.fail("E_DUPLICATE_SYMBOL", "module declaration name is already bound", .{ .module = module, .span = span }, .{ .module = module, .span = unit.symbols.items[previous].span });
+        const target_symbol = self.units[target.module].symbols.items[target.symbol];
+        try unit.names.put(allocator, name, unit.symbols.items.len);
+        try unit.symbols.append(allocator, .{ .name = name, .kind = target_symbol.kind, .span = span, .exported = true, .re_export = target });
+    }
+    /// Message for an unresolved function, naming close visible declarations.
+    fn functionMissMessage(self: *Index, from: usize, target: usize, name: []const u8) std.mem.Allocator.Error![]const u8 {
+        const allocator = self.project.arena.allocator();
+        var candidates: std.ArrayList([]const u8) = .empty;
+        defer candidates.deinit(allocator);
+        for (self.units[target].symbols.items) |symbol| {
+            if (symbol.kind != .function) continue;
+            if (std.mem.indexOfScalar(u8, symbol.name, '.') != null) continue;
+            if (target != from and !symbol.exported) continue;
+            if (std.mem.eql(u8, symbol.name, name)) continue;
+            if (typed.editDistanceAtMost(symbol.name, name, 2) > 2) continue;
+            try candidates.append(allocator, symbol.name);
+        }
+        if (candidates.items.len == 0) return "declaration is not present in the resolved module";
+        std.mem.sort([]const u8, candidates.items, {}, tokenLess);
+        const shown = candidates.items[0..@min(candidates.items.len, 3)];
+        var joined: std.ArrayList(u8) = .empty;
+        defer joined.deinit(allocator);
+        for (shown, 0..) |candidate, index| {
+            if (index != 0) try joined.appendSlice(allocator, "`, `");
+            try joined.appendSlice(allocator, candidate);
+        }
+        return std.fmt.allocPrint(allocator, "declaration is not present in the resolved module; did you mean {s}`{s}`?", .{ if (shown.len == 1) "" else "one of: ", joined.items });
+    }
+    fn resolveConstraint(self: *Index, module: usize, reference: ast.BoundReference, sink: *diagnostic.Sink) diagnostic.Error!Identity {
+        const src = self.project.modules.items[module].src;
+        const alias = if (reference.alias) |span| src.text(span) else null;
+        return self.resolve(.{
+            .from = module,
+            .alias = alias,
+            .name = src.text(reference.name),
+            .kind = .constraint,
+            .owner = null,
+            .span = reference.name,
+        }) catch |err| {
+            if (err != error.SourceError) return err;
+            const problem = self.project.problem orelse return error.InternalError;
+            if (std.mem.eql(u8, problem.code, eUnknownSymbol)) return sink.fail(
+                diagnostic.generic_requirement,
+                reference.name,
+                "unknown requirement; expected copy, equality, integer, codec, storable, or a declared constraint",
+            );
+            return sink.fail(problem.code, problem.site.span, problem.message);
+        };
+    }
+    fn constraintDeclaration(self: *Index, module: usize, reference: ast.BoundReference, sink: *diagnostic.Sink) diagnostic.Error!ConstraintResolution {
+        const identity = try self.resolveConstraint(module, reference, sink);
+        const symbol = self.units[identity.module].symbols.items[identity.symbol];
+        for (self.units[identity.module].syntax.types.constraints) |*constraint| {
+            if (constraint.name.start == symbol.span.start and constraint.name.end == symbol.span.end) return .{ .identity = identity, .declaration = constraint };
+        }
+        return error.InternalError;
+    }
+    fn signatureType(self: *Index, module: usize, span: source.Span) diagnostic.Error!void {
+        const syntax = self.units[module].syntax;
+        for (syntax.types.expressions.suffixes) |suffix| {
+            if (suffix.span.start == span.start and suffix.span.end == span.end) return self.signatureType(module, suffix.base);
+        }
+        for (syntax.types.expressions.callbacks) |callback| {
+            if (callback.span.start != span.start or callback.span.end != span.end) continue;
+            for (callback.parameters) |parameter| try self.signatureType(module, parameter);
+            try self.signatureType(module, callback.return_type);
+            if (callback.failure_type) |failure| try self.signatureType(module, failure);
+            return;
+        }
+        for (syntax.types.expressions.arrays) |array| {
+            if (array.span.start != span.start or array.span.end != span.end) continue;
+            if (array.index == .enum_type) try self.signatureType(module, array.index.enum_type);
+            return self.signatureType(module, array.element);
+        }
+        // A tuple is structural: its element spans are checked in place and the
+        // whole spelling names no declaration of its own.
+        for (syntax.types.expressions.tuples) |tuple| {
+            if (tuple.span.start != span.start or tuple.span.end != span.end) continue;
+            for (tuple.elements) |element| try self.signatureType(module, element);
+            return;
+        }
+        const src = self.project.modules.items[module].src;
+        if (span.start == span.end or std.mem.eql(u8, src.text(span), "Unit") or std.mem.eql(u8, src.text(span), "()")) return;
+        if (typed.Type.fromName(src.text(span)) != null) return;
+        if (!self.units[module].names.contains(src.text(span)) and prelude.scalar(src.text(span))) return;
+        for (syntax.types.expressions.applications) |application| {
+            if (application.span.start == span.start and application.span.end == span.end) return self.applicationType(module, application, &.{});
+        }
+        const id = try self.typeIdentity(module, span);
+        try self.requirePublicType(module, span, id);
+        if (self.declaredTypeParameters(id).len != 0) return self.project.fail(
+            eGenericArity,
+            "nominal type template requires explicit type arguments",
+            .{ .module = module, .span = span },
+            .{ .module = id.module, .span = self.units[id.module].symbols.items[id.symbol].span },
+        );
+    }
+    fn typeIdentity(self: *Index, module: usize, span: source.Span) diagnostic.Error!Identity {
+        const allocator = self.project.arena.allocator();
+        const src = self.project.modules.items[module].src;
+
+        // Re-lex this short name to normalize whitespace/comments around module
+        // separators; a plain dotted spelling is decided without the lexer.
+        const text = src.text(span);
+        const qualified = switch (lexer.quickQualifiedName(text)) {
+            .name => |quick| quick,
+            .none => return error.InternalError,
+            .slow => slow: {
+                var sink: diagnostic.Sink = .{ .allocator = allocator };
+                const tokens = try lexer.lex(allocator, text, &sink);
+                break :slow lexer.qualifiedName(text, tokens) orelse return error.InternalError;
+            },
+        };
+        return self.resolve(.{ .from = module, .alias = qualified.alias, .name = qualified.name, .kind = .type, .owner = null, .span = span });
+    }
+    /// `typeIdentity` for a caller that recovers from an unresolved name.
+    ///
+    /// A signature names types the module index cannot resolve on purpose — a
+    /// type parameter, a builtin — and the effect and resource scans simply
+    /// skip those. `resolve` reports its refusal by recording a project
+    /// problem, which is a diagnostic the project owns, not this scan's; left
+    /// behind it makes the whole project read as failed to anything that asks
+    /// later. The lookup therefore restores whatever problem the project
+    /// already had.
+    fn optionalTypeIdentity(self: *Index, module: usize, span: source.Span) ?Identity {
+        const existing = self.project.problem;
+        return self.typeIdentity(module, span) catch {
+            self.project.problem = existing;
+            return null;
+        };
+    }
+    fn requirePublicType(self: *Index, module: usize, span: source.Span, id: Identity) diagnostic.Error!void {
+        const symbol = self.units[id.module].symbols.items[id.symbol];
+        if (!symbol.exported) return self.project.fail("E_PRIVATE_INTERFACE", "exported interface exposes an unexported type", .{ .module = module, .span = span }, .{ .module = id.module, .span = symbol.span });
+    }
+    /// Whether a merged-source function-name span names an exported function.
+    ///
+    /// E2 uses this after body checking to require an explicit effect ceiling on
+    /// every exported declaration, including exported generic templates and
+    /// public domain operations exposed through an exported type. Non-exported
+    /// helpers (and a non-exported `main`) stay inferred.
+    pub fn functionExported(self: *Index, src: source.Source, span: source.Span) bool {
+        const original = src.originalSpan(span) catch return false;
+        if (original.input >= self.units.len) return false;
+        for (self.units[original.input].symbols.items) |symbol| {
+            if (symbol.kind != .function) continue;
+            if (symbol.span.start == original.span.start and symbol.span.end == original.span.end) return symbol.exported;
+        }
+        return false;
+    }
+    fn applicationType(self: *Index, module: usize, application: ast.TypeApplication, parameters: []const ast.TypeParameter) diagnostic.Error!void {
+        const src = self.project.modules.items[module].src;
+        for (parameters) |parameter| if (std.mem.eql(u8, src.text(parameter.name), src.text(application.name))) return self.project.fail(
+            "E_TYPE_APPLICATION",
+            "type parameters cannot be used as type constructors",
+            .{ .module = module, .span = application.name },
+            null,
+        );
+        const name = src.text(application.name);
+        if (!self.units[module].names.contains(name)) {
+            if (std.mem.eql(u8, name, "FixedArray")) {
+                if (application.arguments.len != 2) return self.project.fail(eGenericArity, "FixedArray requires an element type and length", .{ .module = module, .span = application.span }, null);
+                return self.genericSignatureType(module, application.arguments[0], parameters);
+            }
+            const arity = prelude.arity(name);
+            if (arity) |count| {
+                if (application.arguments.len != count) return self.project.fail(eGenericArity, "builtin type argument count does not match", .{ .module = module, .span = application.span }, null);
+                for (application.arguments) |argument| try self.genericSignatureType(module, argument, parameters);
+                return;
+            }
+        }
+        const id = try self.typeIdentity(module, application.name);
+        try self.requirePublicType(module, application.name, id);
+        const declaration = self.units[id.module].symbols.items[id.symbol].span;
+        const arity = self.declaredTypeParameters(id).len;
+        if (arity != application.arguments.len) return self.project.fail(
+            eGenericArity,
+            "type application argument count does not match its declaration",
+            .{ .module = module, .span = application.span },
+            .{ .module = id.module, .span = declaration },
+        );
+        for (application.arguments) |argument| try self.genericSignatureType(module, argument, parameters);
+    }
+    fn declaredTypeParameters(self: *Index, id: Identity) []const ast.TypeParameter {
+        const declaration = self.units[id.module].symbols.items[id.symbol].span;
+        inline for (.{ "records", "variants" }) |category| {
+            for (@field(self.units[id.module].syntax.types, category)) |item| {
+                if (item.name.start == declaration.start) return item.type_parameters;
+            }
+        }
+        return &.{};
+    }
+    fn checkParameterShadowing(self: *Index, module: usize, parameter: ast.TypeParameter) diagnostic.Error!void {
+        const src = self.project.modules.items[module].src;
+        const name = src.text(parameter.name);
+        const site: graph.Site = .{ .module = module, .span = parameter.name };
+        if (typed.Type.fromName(name) != null) return self.project.fail("E_GENERIC_PARAMETER", "type parameter cannot shadow a builtin type", site, null);
+        if (self.units[module].names.get(name)) |symbol| return self.project.fail("E_SHADOWING", "type parameter shadows a module declaration", site, .{ .module = module, .span = self.units[module].symbols.items[symbol].span });
+        for (self.project.modules.items[module].imports) |imported| {
+            if (std.mem.eql(u8, name, imported.alias)) return self.project.fail("E_SHADOWING", "type parameter shadows an import alias", site, .{ .module = module, .span = imported.span });
+        }
+    }
+    fn checkNominalParameters(self: *Index, module: usize, parameters: []const ast.TypeParameter) diagnostic.Error!void {
+        for (parameters) |parameter| if (parameter.named_requirements.len != 0) {
+            const reference = parameter.named_requirements[0];
+            return self.project.fail(
+                diagnostic.generic_requirement,
+                "named constraints may only bound function type parameters",
+                .{ .module = module, .span = boundSpan(reference) },
+                null,
+            );
+        };
+        _ = try self.checkGenericRequirements(module, parameters);
+        for (parameters) |parameter| try self.checkParameterShadowing(module, parameter);
+    }
+    fn checkGenericRequirements(self: *Index, module: usize, parameters: []const ast.TypeParameter) diagnostic.Error![]const BoundResolution {
+        const allocator = self.project.arena.allocator();
+        var sink: diagnostic.Sink = .{ .allocator = allocator };
+        var lookup_state: ConstraintLookup = .{ .index = self, .module = module, .bounds = .empty };
+        const lookup: generic_requirements.Lookup = .{ .ctx = &lookup_state, .find = ConstraintLookup.find };
+        generic_requirements.validateBounds(allocator, self.project.modules.items[module].src, parameters, &sink, lookup) catch |err| {
+            if (err != error.SourceError) return err;
+            return self.emitSinkProblem(module, &sink);
+        };
+        return lookup_state.bounds.toOwnedSlice(allocator);
+    }
+    fn emitSinkProblem(self: *Index, module: usize, sink: *diagnostic.Sink) diagnostic.Error {
+        if (sink.items.items.len == 0) return error.InternalError;
+        const problem = sink.items.items[0];
+        return self.project.fail(problem.code, problem.message, .{ .module = module, .span = problem.span }, null);
+    }
+    fn genericSignatureType(self: *Index, module: usize, span: source.Span, parameters: []const ast.TypeParameter) diagnostic.Error!void {
+        const src = self.project.modules.items[module].src;
+        for (self.units[module].syntax.types.expressions.suffixes) |suffix| {
+            if (suffix.span.start == span.start and suffix.span.end == span.end) return self.genericSignatureType(module, suffix.base, parameters);
+        }
+        for (parameters) |parameter| if (std.mem.eql(u8, src.text(parameter.name), src.text(span))) return;
+        for (self.units[module].syntax.types.expressions.applications) |application| {
+            if (application.span.start == span.start and application.span.end == span.end) return self.applicationType(module, application, parameters);
+        }
+        for (self.units[module].syntax.types.expressions.callbacks) |callback| {
+            if (callback.span.start != span.start or callback.span.end != span.end) continue;
+            for (callback.parameters) |parameter| try self.genericSignatureType(module, parameter, parameters);
+            try self.genericSignatureType(module, callback.return_type, parameters);
+            if (callback.failure_type) |failure| try self.genericSignatureType(module, failure, parameters);
+            return;
+        }
+        for (self.units[module].syntax.types.expressions.arrays) |array| {
+            if (array.span.start != span.start or array.span.end != span.end) continue;
+            if (array.index == .enum_type) try self.genericSignatureType(module, array.index.enum_type, parameters);
+            return self.genericSignatureType(module, array.element, parameters);
+        }
+        for (self.units[module].syntax.types.expressions.tuples) |tuple| {
+            if (tuple.span.start != span.start or tuple.span.end != span.end) continue;
+            for (tuple.elements) |element| try self.genericSignatureType(module, element, parameters);
+            return;
+        }
+        try self.signatureType(module, span);
+    }
+    fn checkConstraint(self: *Index, module: usize, constraint: ast.Constraint) diagnostic.Error!void {
+        const project = self.project;
+        const src = project.modules.items[module].src;
+        if (constraint.subject.name.start == constraint.subject.name.end) return project.fail(
+            diagnostic.generic_requirement,
+            "constraint requires exactly one subject binder",
+            .{ .module = module, .span = constraint.name },
+            null,
+        );
+        if (constraint.subject.named_requirements.len != 0) {
+            const reference = constraint.subject.named_requirements[0];
+            return project.fail(
+                diagnostic.generic_requirement,
+                "a constraint right-hand side may not reference another named constraint",
+                .{ .module = module, .span = boundSpan(reference) },
+                null,
+            );
+        }
+        try self.checkParameterShadowing(module, constraint.subject);
+        var sink: diagnostic.Sink = .{ .allocator = project.arena.allocator() };
+        structural_declarations.validate(src, constraint.subject, parameterCopy(src, constraint.subject), &sink) catch |err| {
+            if (err != error.SourceError) return err;
+            return self.emitSinkProblem(module, &sink);
+        };
+        const symbol_id = self.units[module].names.get(src.text(constraint.name)) orelse return error.InternalError;
+        if (!self.units[module].symbols.items[symbol_id].exported) return;
+        const parameters: [1]ast.TypeParameter = .{constraint.subject};
+        for (constraint.subject.field_requirements) |field| try self.genericSignatureType(module, field.ty, &parameters);
+        for (constraint.subject.operation_requirements) |operation| {
+            for (operation.parameters) |input| try self.genericSignatureType(module, input.ty, &parameters);
+            try self.genericSignatureType(module, operation.return_type, &parameters);
+        }
+    }
+    fn checkSignatures(self: *Index, module: usize) diagnostic.Error!void {
+        const project = self.project;
+        const allocator = project.arena.allocator();
+        const unit = self.units[module];
+        for (unit.syntax.types.records) |record| {
+            try self.checkNominalParameters(module, record.type_parameters);
+            if (!unit.symbols.items[unit.names.get(project.modules.items[module].src.text(record.name)).?].exported) continue;
+            for (record.fields) |field| try self.genericSignatureType(module, field.ty, record.type_parameters);
+        }
+        for (unit.syntax.types.variants) |variant| {
+            try self.checkNominalParameters(module, variant.type_parameters);
+            if (!unit.symbols.items[unit.names.get(project.modules.items[module].src.text(variant.name)).?].exported) continue;
+            for (variant.cases) |case| {
+                if (case.payload) |payload| try self.genericSignatureType(module, payload, variant.type_parameters);
+                for (case.fields) |field| try self.genericSignatureType(module, field.ty, variant.type_parameters);
+            }
+        }
+        for (unit.syntax.types.expressions.aliases) |alias| {
+            if (unit.symbols.items[unit.names.get(project.modules.items[module].src.text(alias.name)).?].exported) try self.signatureType(module, alias.target);
+        }
+        for (unit.syntax.types.domains) |domain| {
+            if (unit.symbols.items[unit.names.get(project.modules.items[module].src.text(domain.name)).?].exported) try self.signatureType(module, domain.backing);
+        }
+        for (unit.syntax.types.constraints) |constraint| {
+            try self.checkConstraint(module, constraint);
+        }
+        for (unit.syntax.functions) |function| {
+            const bounds = try self.checkGenericRequirements(module, function.signature.type_parameters);
+            const src = project.modules.items[module].src;
+            const name = if (function.policy.owner) |owner| try std.fmt.allocPrint(allocator, "{s}.{s}", .{ src.text(owner), src.text(function.name) }) else src.text(function.name);
+            if (!unit.symbols.items[unit.names.get(name).?].exported) continue;
+            for (bounds) |bound| {
+                // The identity's symbol index belongs to the defining module's table.
+                const symbol = self.units[bound.identity.module].symbols.items[bound.identity.symbol];
+                if (!symbol.exported) return project.fail(
+                    "E_PRIVATE_INTERFACE",
+                    "exported generic function exposes an unexported constraint",
+                    .{ .module = module, .span = bound.span },
+                    .{ .module = bound.identity.module, .span = symbol.span },
+                );
+            }
+            for (function.signature.type_parameters) |parameter| {
+                for (parameter.field_requirements) |field| try self.genericSignatureType(module, field.ty, function.signature.type_parameters);
+                for (parameter.operation_requirements) |operation| {
+                    for (operation.parameters) |input| try self.genericSignatureType(module, input.ty, function.signature.type_parameters);
+                    try self.genericSignatureType(module, operation.return_type, function.signature.type_parameters);
+                }
+            }
+            for (function.signature.parameters) |parameter| try self.genericSignatureType(module, parameter.ty, function.signature.type_parameters);
+            try self.genericSignatureType(module, function.signature.return_type, function.signature.type_parameters);
+            if (function.signature.failure_type) |failure| try self.genericSignatureType(module, failure, function.signature.type_parameters);
+        }
+    }
+    /// Render exported declarations after interface checking; output belongs to
+    /// allocator. Callable lines carry their whole signature, the inferred
+    /// `effects(...)` set when a checked instantiation produced one (the literal
+    /// `unavailable` plus an `analysis(STATUS)` clause otherwise), `mutates(...)`
+    /// parameter names, and the declared ceiling when the source wrote one.
+    pub fn render(self: *Index, allocator: std.mem.Allocator) ContractError![]u8 {
+        if (self.project.problem != null) return error.IncompleteProject;
+        var output: std.Io.Writer.Allocating = .init(allocator);
+        errdefer output.deinit();
+        // The `tests` column reads the same reachability index `tests-for`
+        // answers from; it is absent when no checked program is attached.
+        var tests: ?tests_index.Index = try self.buildTestsIndex(allocator);
+        defer {
+            if (tests) |*index| index.deinit();
+        }
+        const functions = try self.functionTable();
+        output.writer.writeAll("module interfaces v1; declarations/signature visibility checked; bodies not type checked\n") catch return error.OutOfMemory;
+        for (self.project.order.items) |module| {
+            output.writer.print("module {s}\n", .{self.project.modules.items[module].name}) catch return error.OutOfMemory;
+            for (self.units[module].symbols.items) |symbol| {
+                if (!symbol.exported) continue;
+                if (symbol.kind == .function) {
+                    try self.renderFunctionLine(&output.writer, .{ .module = module, .symbol = symbol }, if (tests) |*index| index else null, &functions);
+                    continue;
+                }
+                output.writer.print("  export {s} {s}", .{ @tagName(symbol.kind), symbol.name }) catch return error.OutOfMemory;
+                const origin = self.declarationSource(module, symbol);
+                try self.appendContractClauses(&output.writer, origin.module, origin.symbol);
+                try self.appendDocstringLine(&output.writer, module, symbol);
+                output.writer.writeAll("\n") catch return error.OutOfMemory;
+            }
+        }
+        return output.toOwnedSlice();
+    }
+    /// Effects one declaration's parameter list permits by construction. It is
+    /// read from the signature alone — resolved capability parameter types, the
+    /// `mut` markers, every callback parameter's declared ceiling, and the
+    /// effects an external resource type carries in the parameters or the
+    /// result — plus `managed_allocation`, which is always ambient. A checked
+    /// body may not exceed it, and an explicit `noalloc`/`noio`/`effects(...)`
+    /// clause only narrows it, so this is the ceiling the interface publishes for
+    /// a declaration whose body was never checked.
+    fn derivedCeiling(self: *Index, module: usize, signature: ast.FunctionSignature) ContractError!effect_set.Mask {
+        var mask = effect_set.bit(.managed_allocation);
+        mask |= try self.resourceTypeEffect(module, signature.return_type);
+        for (signature.parameters) |parameter| {
+            if (parameter.mut) mask |= effect_set.bit(.mutation);
+            mask |= try self.typeAuthority(module, parameter.ty, signature.type_parameters, 0);
+        }
+        return mask;
+    }
+
+    /// Authority one parameter type carries, read from the declaration alone: a
+    /// capability type permits its effect, a callback type the bounded ceiling it
+    /// declares, an external `resource` the family it belongs to, and a local
+    /// record whatever its own fields carry, so a record holding an
+    /// `Environment` publishes `environment` exactly as the capability does.
+    fn typeAuthority(self: *Index, module: usize, span: source.Span, parameters: []const ast.TypeParameter, depth: usize) ContractError!effect_set.Mask {
+        if (depth == 32) return 0;
+        var mask: effect_set.Mask = 0;
+        const text = try self.contractTypeText(module, span, parameters);
+        if (capabilityEffect(text)) |effect| mask |= effect_set.bit(effect);
+        mask |= try self.resourceTypeEffect(module, span);
+        for (self.units[module].syntax.types.expressions.callbacks) |callback| {
+            if (callback.span.start != span.start or callback.span.end != span.end) continue;
+            // An omitted callback ceiling is the unbounded `all` mask, which
+            // declares nothing and therefore contributes nothing.
+            if (callback.effect_bound.allowed != effect_set.all) mask |= callback.effect_bound.allowed;
+        }
+        const identity = self.optionalTypeIdentity(module, span) orelse return mask;
+        const symbol = self.units[identity.module].symbols.items[identity.symbol];
+        for (self.units[identity.module].syntax.types.records) |record| {
+            if (record.type_parameters.len != 0) continue;
+            if (record.name.start != symbol.span.start or record.name.end != symbol.span.end) continue;
+            for (record.fields) |field| {
+                mask |= try self.typeAuthority(identity.module, field.ty, &.{}, depth + 1);
+            }
+        }
+        return mask;
+    }
+
+    /// The effect an external `resource NAME: kind` type carries when it appears
+    /// in a signature, or zero for every other type. Only a directly named
+    /// resource is read here; a resource nested inside a record is caught by the
+    /// checked program, which walks the whole record catalog.
+    fn resourceTypeEffect(self: *Index, module: usize, span: source.Span) ContractError!effect_set.Mask {
+        const identity = self.optionalTypeIdentity(module, span) orelse return 0;
+        const symbol = self.units[identity.module].symbols.items[identity.symbol];
+        const source_text = self.project.modules.items[identity.module].src;
+        for (self.units[identity.module].syntax.types.resources) |resource| {
+            if (resource.name.start != symbol.span.start or resource.name.end != symbol.span.end) continue;
+            const kind = source_text.text(resource.backing);
+            if (std.mem.eql(u8, kind, "filesystem")) return effect_set.bit(.filesystem);
+            if (std.mem.eql(u8, kind, "network")) return effect_set.bit(.network);
+        }
+        return 0;
+    }
+
+    /// Ceiling the interface publishes for one declaration: the derived set, and
+    /// the source's own clause when it narrows that set. A `host def`/`extern
+    /// def` has no body to derive from, so its clause is its ceiling as written.
+    pub fn effectiveCeiling(self: *Index, module: usize, function: ast.Function) ContractError!effect_set.Mask {
+        const declared = if (function.policy.effect_bound) |bound| bound.allowed else null;
+        if (function.policy.host != null or function.policy.c_abi) return declared orelse effect_set.all;
+        const derived = try self.derivedCeiling(module, function.signature);
+        return if (declared) |mask| mask & derived else derived;
+    }
+    /// Render one exported function as `export function NAME def(...) effects(...)
+    /// [analysis(STATUS)] [mutates(names)] [ceiling(...)] [tests(N)]
+    /// [# first docstring line]`.
+    ///
+    /// `effects(...)` is the checked inferred set when a checked instantiation
+    /// exists and the literal `unavailable` otherwise, and `analysis(STATUS)`
+    /// appears exactly in that second case, so the conservative internal mask is
+    /// never published as an inferred fact. The status is `template` for a
+    /// generic declaration no checked instantiation used and `declaration-only`
+    /// when this listing has no checked bodies at all. A declared ceiling is the
+    /// source's own and stays visible either way, including an explicitly empty
+    /// `ceiling()`. `tests` carries the shared reachability index, or null when
+    /// no checked program is attached, in which case the column says
+    /// `tests(unavailable)` rather than silently disappearing.
+    fn renderFunctionLine(self: *Index, writer: *std.Io.Writer, exported: Exported, tests: ?*const tests_index.Index, functions: *const FunctionTable) ContractError!void {
+        const allocator = self.project.arena.allocator();
+        const origin = self.declarationSource(exported.module, exported.symbol);
+        const function = self.findFunction(self.units[origin.module], origin.symbol.span) orelse return error.InternalError;
+        const signature = try self.contractSignatureText(origin.module, function.signature);
+        const inferred = try self.publishedEffects(origin.module, origin.symbol, functions);
+        writer.print("  export function {s} {s} effects(", .{ origin.display, signature }) catch return error.OutOfMemory;
+        if (inferred) |mask| {
+            var names: std.ArrayList(u8) = .empty;
+            try appendEffectNames(&names, allocator, mask);
+            writer.writeAll(names.items) catch return error.OutOfMemory;
+        } else {
+            writer.writeAll("unavailable") catch return error.OutOfMemory;
+        }
+        writer.writeAll(")") catch return error.OutOfMemory;
+        if (inferred == null) writer.print(" analysis({s})", .{fact_status.name(unavailableAnalysis(self.program, function))}) catch return error.OutOfMemory;
+        // The ceiling is the signature's own contract: the derived set, narrowed
+        // by the source's clause when it wrote one. It is published for every
+        // declaration, checked body or not, because it follows from the
+        // parameters alone.
+        writer.writeAll(" ceiling(") catch return error.OutOfMemory;
+        var ceiling: std.ArrayList(u8) = .empty;
+        try appendEffectNames(&ceiling, allocator, try self.effectiveCeiling(origin.module, function));
+        writer.writeAll(ceiling.items) catch return error.OutOfMemory;
+        writer.writeAll(")") catch return error.OutOfMemory;
+        if (tests) |index| {
+            if (try self.programFunction(origin.module, origin.symbol.name, functions)) |id| {
+                const answer = index.answer(id);
+                writer.print(" tests({d})", .{answer.reached.len}) catch return error.OutOfMemory;
+            }
+        } else {
+            writer.writeAll(" tests(unavailable)") catch return error.OutOfMemory;
+        }
+        try self.appendContractClauses(writer, origin.module, origin.symbol);
+        try self.appendDocstringLine(writer, origin.module, origin.symbol);
+        writer.writeAll("\n") catch return error.OutOfMemory;
+    }
+    /// The checked function identity of one module-qualified declaration, or
+    /// null when the attached program carries no such name.
+    fn programFunction(self: *Index, module: usize, name: []const u8, functions: *const FunctionTable) ContractError!?typed.FunctionId {
+        const qualified = try std.fmt.allocPrint(self.project.arena.allocator(), qualified_name_format, .{ self.project.modules.items[module].name, name });
+        return functions.exact.get(qualified);
+    }
+    /// Index the attached program's functions by name once per listing, so
+    /// each exported callable finds its checked entry with one lookup rather
+    /// than a scan of every function (quadratic on a large project). Empty when
+    /// no checked program is attached.
+    fn functionTable(self: *Index) ContractError!FunctionTable {
+        var table: FunctionTable = .{};
+        const program = self.program orelse return table;
+        const allocator = self.project.arena.allocator();
+        for (program.functions, 0..) |function, index| {
+            const id: typed.FunctionId = @fromBackingInt(@intCast(index));
+            const exact = try table.exact.getOrPut(allocator, function.name);
+            if (!exact.found_existing) exact.value_ptr.* = id;
+            const base = function.name[0 .. std.mem.indexOfScalar(u8, function.name, '[') orelse function.name.len];
+            const family = try table.family.getOrPut(allocator, base);
+            if (!family.found_existing) family.value_ptr.* = id;
+        }
+        return table;
+    }
+    /// Build the shared tests index for the attached checked program, or null
+    /// when no bodies were checked.
+    fn buildTestsIndex(self: *Index, allocator: std.mem.Allocator) ContractError!?tests_index.Index {
+        const program = self.program orelse return null;
+        const scratch = self.project.arena.allocator();
+        const modules = try self.moduleSyntax(scratch);
+        const call_graph = try tests_index.callGraph(scratch, program);
+        const discovered = try tests_index.discoveredTests(scratch, program, modules);
+        const built = try tests_index.build(allocator, program, call_graph, discovered);
+        return built;
+    }
+    /// The parsed syntax and source of every module, the inputs the shared
+    /// tests index needs to discover `@test` declarations.
+    pub fn moduleSyntax(self: *Index, allocator: std.mem.Allocator) std.mem.Allocator.Error![]tests_index.ModuleSyntax {
+        const modules = try allocator.alloc(tests_index.ModuleSyntax, self.project.order.items.len);
+        for (self.project.order.items, 0..) |module, slot| {
+            modules[slot] = .{
+                .name = self.project.modules.items[module].name,
+                .src = self.project.modules.items[module].src,
+                .syntax = self.units[module].syntax,
+            };
+        }
+        return modules;
+    }
+    /// The contract clauses above one declaration, each spelled as written with
+    /// its whitespace folded and joined by one space, or null when it has none.
+    fn contractClauses(self: *Index, module: usize, declaration: source.Span) ContractError!?[]const u8 {
+        const allocator = self.project.arena.allocator();
+        const src = self.project.modules.items[module].src;
+        var out: std.ArrayList(u8) = .empty;
+        for (ast.attributesOf(self.units[module].syntax, declaration)) |attribute| {
+            if (!attribute.kind.contract()) continue;
+            if (out.items.len != 0) try out.append(allocator, ' ');
+            try appendFolded(&out, allocator, src.text(attribute.span));
+        }
+        if (out.items.len == 0) return null;
+        const clauses = try out.toOwnedSlice(allocator);
+        return clauses;
+    }
+    /// Append ` <clauses>` for a declaration that carries contract clauses.
+    fn appendContractClauses(self: *Index, writer: *std.Io.Writer, module: usize, symbol: Symbol) ContractError!void {
+        const clauses = try self.contractClauses(module, symbol.span) orelse return;
+        writer.print(" {s}", .{clauses}) catch return error.OutOfMemory;
+    }
+    /// Append ` # <first docstring line>` for one declaration, or nothing when it
+    /// has no docstring. The line is what a reader sees in the listing.
+    fn appendDocstringLine(self: *Index, writer: *std.Io.Writer, module: usize, symbol: Symbol) ContractError!void {
+        const doc = ast.docstringOf(self.units[module].syntax, symbol.span) orelse return;
+        const line = firstDocLine(doc.text);
+        if (line.len == 0) return;
+        writer.print(" # {s}", .{line}) catch return error.OutOfMemory;
+    }
+    /// The unit, symbol and published name an interface entry reads its
+    /// declaration from. For a re-export facade the declaration lives in the
+    /// defining module while the published name stays the facade's local name.
+    const DeclarationSource = struct { module: usize, symbol: Symbol, display: []const u8 };
+    fn declarationSource(self: *Index, module: usize, symbol: Symbol) DeclarationSource {
+        if (symbol.re_export) |target| return .{
+            .module = target.module,
+            .symbol = self.units[target.module].symbols.items[target.symbol],
+            .display = symbol.name,
+        };
+        return .{ .module = module, .symbol = symbol, .display = symbol.name };
+    }
+    /// Render exported declarations, plus the unexported `test_` declarations
+    /// that already have the defaulting test shape, as a canonical
+    /// declared-contract manifest. Bodies are never checked; declared signatures
+    /// and explicit public ceilings are, so a provider can be validated before
+    /// production bodies run. The manifest's `analysis` field says
+    /// `declaration-only` when no checked program supplied inferred effects, so a
+    /// reader can tell a declared bound (an omitted ceiling promises the full
+    /// mask) from an inferred summary; the per-declaration `permissions` string
+    /// stays the directional replacement bound its frozen consumer compares.
+    pub fn renderContracts(self: *Index, allocator: std.mem.Allocator) ContractError![]u8 {
+        if (self.project.problem != null) return error.IncompleteProject;
+        // Intermediate tables live in the project arena; only the final JSON text
+        // is owned by the caller. This keeps a one-shot listing leak-free.
+        const scratch = self.project.arena.allocator();
+        var modules: std.ArrayList(ContractModule) = .empty;
+        for (self.project.order.items) |module| try modules.append(scratch, try self.contractModule(module));
+        std.mem.sort(ContractModule, modules.items, {}, moduleLess);
+        return std.json.Stringify.valueAlloc(allocator, ContractManifest{
+            .analysis = if (self.program == null) fact_status.name(.declaration_only) else null,
+            .modules = try modules.toOwnedSlice(scratch),
+        }, .{ .emit_null_optional_fields = false });
+    }
+    /// MODULE-TEST-4: module `module`'s entry of `renderContracts`: its
+    /// exported declarations and its discovered tests, sorted by name,
+    /// allocated in the project arena.
+    pub fn contractModule(self: *Index, module: usize) ContractError!ContractModule {
+        const scratch = self.project.arena.allocator();
+        var declarations: std.ArrayList(ContractDeclaration) = .empty;
+        for (self.units[module].symbols.items) |symbol| {
+            // `selka test` discovers `test_` functions by name and `@test`
+            // declarations by attribute, so the discovery contract publishes
+            // them beside explicit exports.
+            const discovered_test = symbol.kind == .function and (std.mem.startsWith(u8, symbol.name, "test_") or self.isTestDeclaration(module, symbol));
+            if (!symbol.exported and !discovered_test) continue;
+            const declaration = try self.contractDeclaration(module, symbol);
+            // An unexported `test_` name is only discovered when it already
+            // has the defaulting test shape; `@test` names its intent, so it
+            // needs no shape default.
+            if (!symbol.exported) {
+                if (!testShape(declaration) and declaration.@"test" != true) continue;
+            }
+            try declarations.append(scratch, declaration);
+        }
+        std.mem.sort(ContractDeclaration, declarations.items, {}, declarationLess);
+        return .{ .name = self.project.modules.items[module].name, .declarations = try declarations.toOwnedSlice(scratch) };
+    }
+    /// Whether one symbol's declaration carries `@test`.
+    fn isTestDeclaration(self: *Index, module: usize, symbol: Symbol) bool {
+        const origin = self.declarationSource(module, symbol);
+        const function = self.findFunction(self.units[origin.module], origin.symbol.span) orelse return false;
+        return ast.hasAttribute(self.units[origin.module].syntax, function.name, .@"test");
+    }
+    /// The declared shape an unexported `test_` function must already have to be
+    /// discovered without `export`: no generic parameters and a zero-argument
+    /// `bool` result, which is the one shape discovery can default.
+    fn testShape(declaration: ContractDeclaration) bool {
+        return declaration.generics.len == 0 and std.mem.eql(u8, declaration.signature, "func()->bool");
+    }
+    fn contractDeclaration(self: *Index, module: usize, symbol: Symbol) ContractError!ContractDeclaration {
+        const origin = self.declarationSource(module, symbol);
+        var declaration = switch (origin.symbol.kind) {
+            .function => try self.contractFunction(origin.module, origin.symbol),
+            .type => try self.contractType(origin.module, origin.symbol),
+            .constraint => try self.contractConstraint(origin.module, origin.symbol),
+        };
+        declaration.name = origin.display;
+        return declaration;
+    }
+    /// The function declaration in `unit` whose name has this span, if any.
+    pub fn findFunction(self: *Index, unit: Unit, span: source.Span) ?ast.Function {
+        _ = self;
+        for (unit.syntax.functions) |function| {
+            if (function.name.start == span.start and function.name.end == span.end) return function;
+        }
+        return null;
+    }
+    fn contractFunction(self: *Index, module: usize, symbol: Symbol) ContractError!ContractDeclaration {
+        const function = self.findFunction(self.units[module], symbol.span) orelse return error.InternalError;
+        // The declared bound is the signature's own: the ceiling the parameter
+        // list implies, narrowed by an explicit `noalloc`/`noio`/`effects(...)`
+        // clause. A `host def`/`extern def` declares its authority directly.
+        // Pure interface pre-validation therefore has a real bound to publish
+        // instead of the unbounded `all` mask an omitted ceiling used to mean.
+        const mask = try self.effectiveCeiling(module, function);
+        var out: ContractDeclaration = .{ .name = symbol.name, .kind = "function" };
+        out.generics = try self.contractGenericsText(module, function.signature.type_parameters);
+        out.signature = try self.contractSignatureText(module, function.signature);
+        out.permissions = try permissionsText(self.project.arena.allocator(), mask, function.signature.mut_positions, "unknown");
+        if (ast.hasAttribute(self.units[module].syntax, function.name, .@"test")) out.@"test" = true;
+        out.contracts = try self.contractClauses(module, function.name);
+        return out;
+    }
+    /// Ceiling the interface publishes for one exported function. An explicit
+    /// `noalloc`/`noio`/`effects(...)` wins as an opt-in narrowing; otherwise the
+    /// typed program's frozen inferred mask is used, matched by the
+    /// module-qualified name so ordinary, domain and generic specialization
+    /// entries all match. Null when the necessary checking did not produce a
+    /// concrete instantiation — no checked program was attached, or this generic
+    /// declaration was never instantiated — because the checker's conservative
+    /// `all` mask is a bound, not an inferred fact, and no caller may publish it
+    /// as one. `renderFunctionLine` reports the null as `effects(unavailable)`
+    /// plus the analysis status; `contractFunction` keeps the declared-bound
+    /// meaning of the contract manifest.
+    fn publishedEffects(self: *Index, module: usize, symbol: Symbol, functions: *const FunctionTable) ContractError!?effect_set.Mask {
+        const program = self.program orelse return null;
+        const prefix = try std.fmt.allocPrint(
+            self.project.arena.allocator(),
+            qualified_name_format,
+            .{ self.project.modules.items[module].name, symbol.name },
+        );
+        const id = functions.family.get(prefix) orelse return null;
+        return program.functions[@backingInt(id)].policy.effects;
+    }
+    fn contractSignatureText(self: *Index, module: usize, signature: ast.FunctionSignature) ContractError![]const u8 {
+        const allocator = self.project.arena.allocator();
+        const src = self.project.modules.items[module].src;
+        var out: std.ArrayList(u8) = .empty;
+        try out.appendSlice(allocator, "func(");
+        for (signature.parameters, 0..) |parameter, index| {
+            if (index != 0) try out.appendSlice(allocator, ",");
+            // Each named parameter carries its published label contract.
+            if (parameter.named or (signature.keyword_only_from != null and index >= signature.keyword_only_from.?)) try out.appendSlice(allocator, "named ");
+            if (parameter.mut) try out.appendSlice(allocator, "mut ");
+            try out.appendSlice(allocator, src.text(parameter.name));
+            try out.appendSlice(allocator, ":");
+            try out.appendSlice(allocator, try self.contractTypeText(module, parameter.ty, signature.type_parameters));
+            if (parameter.default_value) |value| {
+                const span = self.units[module].syntax.nodes.items[@backingInt(value)].span;
+                try out.appendSlice(allocator, "=");
+                try out.appendSlice(allocator, std.mem.trim(u8, src.text(span), " \t\r\n"));
+            }
+        }
+        try out.appendSlice(allocator, ")->");
+        try out.appendSlice(allocator, try self.contractTypeText(module, signature.return_type, signature.type_parameters));
+        if (signature.failure_type) |failure| {
+            try out.appendSlice(allocator, " fails ");
+            try out.appendSlice(allocator, try self.contractTypeText(module, failure, signature.type_parameters));
+        }
+        return out.toOwnedSlice(allocator);
+    }
+    fn contractGenericsText(self: *Index, module: usize, parameters: []const ast.TypeParameter) ContractError![]const u8 {
+        if (parameters.len == 0) return "";
+        const allocator = self.project.arena.allocator();
+        var out: std.ArrayList(u8) = .empty;
+        try out.appendSlice(allocator, "[");
+        for (parameters, 0..) |parameter, index| {
+            if (index != 0) try out.appendSlice(allocator, ",");
+            try out.appendSlice(allocator, try std.fmt.allocPrint(allocator, "${d}:", .{index}));
+            const tokens = try self.requirementTokens(module, parameter, parameters);
+            for (tokens, 0..) |token, token_index| {
+                if (token_index != 0) try out.appendSlice(allocator, "+");
+                try out.appendSlice(allocator, token);
+            }
+        }
+        try out.appendSlice(allocator, "]");
+        return out.toOwnedSlice(allocator);
+    }
+    /// The sorted, duplicate-free requirement tokens one type parameter
+    /// declares: `copy`, `length`, builtin bounds, qualified named constraints,
+    /// `field(name:type)` and `op(...)` requirements. The slice and its text
+    /// live in the project arena.
+    pub fn requirementTokens(self: *Index, module: usize, parameter: ast.TypeParameter, parameters: []const ast.TypeParameter) ContractError![]const []const u8 {
+        const allocator = self.project.arena.allocator();
+        var tokens: std.ArrayList([]const u8) = .empty;
+        if (parameter.default_copy or hasBuiltinRequirement(self.project.modules.items[module].src, parameter, "copy")) {
+            try appendUniqueToken(allocator, &tokens, "copy");
+        }
+        if (parameter.constant_length) try appendUniqueToken(allocator, &tokens, "length");
+        for (parameter.requirements) |span| {
+            const name = self.project.modules.items[module].src.text(span);
+            if (std.mem.eql(u8, name, "copy")) continue;
+            try appendUniqueToken(allocator, &tokens, name);
+        }
+        for (parameter.named_requirements) |reference| {
+            var sink: diagnostic.Sink = .{ .allocator = allocator };
+            const resolution = try self.constraintDeclaration(module, reference, &sink);
+            try appendUniqueToken(allocator, &tokens, try std.fmt.allocPrint(allocator, qualified_name_format, .{
+                self.project.modules.items[resolution.identity.module].name,
+                self.units[resolution.identity.module].symbols.items[resolution.identity.symbol].name,
+            }));
+        }
+        for (parameter.field_requirements) |field| {
+            try appendUniqueToken(allocator, &tokens, try std.fmt.allocPrint(allocator, "field({s}:{s})", .{
+                self.project.modules.items[module].src.text(field.name),
+                try self.contractTypeText(module, field.ty, parameters),
+            }));
+        }
+        for (parameter.operation_requirements) |operation| {
+            try appendUniqueToken(allocator, &tokens, try self.contractOperationText(module, operation, parameters));
+        }
+        std.mem.sort([]const u8, tokens.items, {}, tokenLess);
+        return tokens.toOwnedSlice(allocator);
+    }
+    fn contractOperationText(self: *Index, module: usize, operation: ast.Operation, parameters: []const ast.TypeParameter) ContractError![]const u8 {
+        const allocator = self.project.arena.allocator();
+        var out: std.ArrayList(u8) = .empty;
+        try out.appendSlice(allocator, "op(");
+        try out.appendSlice(allocator, self.project.modules.items[module].src.text(operation.name));
+        try out.appendSlice(allocator, "(");
+        for (operation.parameters, 0..) |parameter, index| {
+            if (index != 0) try out.appendSlice(allocator, ",");
+            try out.appendSlice(allocator, self.project.modules.items[module].src.text(parameter.name));
+            try out.appendSlice(allocator, ":");
+            try out.appendSlice(allocator, try self.contractTypeText(module, parameter.ty, parameters));
+        }
+        try out.appendSlice(allocator, ")->");
+        try out.appendSlice(allocator, try self.contractTypeText(module, operation.return_type, parameters));
+        try out.appendSlice(allocator, " effects(");
+        try appendEffectNames(&out, allocator, operation.effect_bound.allowed);
+        try out.appendSlice(allocator, "))");
+        return out.toOwnedSlice(allocator);
+    }
+    fn contractFieldDefault(self: *Index, shape: *std.ArrayList(u8), module: usize, default: ?ast.NodeId) ContractError!void {
+        const value = default orelse return;
+        const src = self.project.modules.items[module].src;
+        const span = self.units[module].syntax.nodes.items[@backingInt(value)].span;
+        const allocator = self.project.arena.allocator();
+        try shape.appendSlice(allocator, "=");
+        try shape.appendSlice(allocator, std.mem.trim(u8, src.text(span), " \t\r\n"));
+    }
+    fn contractType(self: *Index, module: usize, symbol: Symbol) ContractError!ContractDeclaration {
+        const unit = self.units[module];
+        for (unit.syntax.types.records) |record| {
+            if (record.name.start != symbol.span.start) continue;
+            var out: ContractDeclaration = .{ .name = symbol.name, .kind = "record" };
+            out.generics = try self.contractGenericsText(module, record.type_parameters);
+            out.shape = try self.contractFieldsText(module, record.fields, record.type_parameters);
+            out.contracts = try self.contractClauses(module, record.name);
+            return out;
+        }
+        for (unit.syntax.types.variants) |variant| {
+            if (variant.name.start != symbol.span.start) continue;
+            var out: ContractDeclaration = .{ .name = symbol.name, .kind = if (variant.fallible) "result" else "enum" };
+            out.generics = try self.contractGenericsText(module, variant.type_parameters);
+            var shape: std.ArrayList(u8) = .empty;
+            const allocator = self.project.arena.allocator();
+            try shape.appendSlice(allocator, "cases{");
+            for (variant.cases, 0..) |case, index| {
+                if (index != 0) try shape.appendSlice(allocator, ",");
+                try shape.appendSlice(allocator, self.project.modules.items[module].src.text(case.name));
+                if (case.payload) |payload| {
+                    try shape.appendSlice(allocator, ":");
+                    try shape.appendSlice(allocator, try self.contractTypeText(module, payload, variant.type_parameters));
+                } else if (case.fields.len != 0) {
+                    // A parenthesized case is part of the exported contract: its
+                    // named fields, their types and whether each has a default.
+                    try shape.appendSlice(allocator, "(");
+                    for (case.fields, 0..) |field, field_index| {
+                        if (field_index != 0) try shape.appendSlice(allocator, ",");
+                        try shape.appendSlice(allocator, self.project.modules.items[module].src.text(field.name));
+                        try shape.appendSlice(allocator, ":");
+                        try shape.appendSlice(allocator, try self.contractTypeText(module, field.ty, variant.type_parameters));
+                        try self.contractFieldDefault(&shape, module, field.default_value);
+                    }
+                    try shape.appendSlice(allocator, ")");
+                }
+            }
+            try shape.appendSlice(allocator, "}");
+            out.shape = try shape.toOwnedSlice(allocator);
+            return out;
+        }
+        for (unit.syntax.types.domains) |domain| {
+            if (domain.name.start != symbol.span.start) continue;
+            var out: ContractDeclaration = .{ .name = symbol.name, .kind = if (domain.managed) "resource" else "domain" };
+            out.generics = try self.contractGenericsText(module, domain.type_parameters);
+            out.shape = try std.fmt.allocPrint(self.project.arena.allocator(), "backing:{s}", .{try self.contractTypeText(module, domain.backing, domain.type_parameters)});
+            out.contracts = try self.contractClauses(module, domain.name);
+            return out;
+        }
+        for (unit.syntax.types.resources) |resource| {
+            if (resource.name.start != symbol.span.start) continue;
+            var out: ContractDeclaration = .{ .name = symbol.name, .kind = "resource" };
+            out.generics = try self.contractGenericsText(module, resource.type_parameters);
+            // `resource NAME: family` names an external resource family
+            // (`filesystem`, `network`), not a type, so it is rendered as written
+            // rather than resolved as a declaration.
+            out.shape = try std.fmt.allocPrint(self.project.arena.allocator(), "backing:{s}", .{self.project.modules.items[module].src.text(resource.backing)});
+            return out;
+        }
+        for (unit.syntax.types.expressions.aliases) |alias| {
+            if (alias.name.start != symbol.span.start) continue;
+            var out: ContractDeclaration = .{ .name = symbol.name, .kind = "alias" };
+            out.shape = try std.fmt.allocPrint(self.project.arena.allocator(), "target:{s}", .{try self.contractTypeText(module, alias.target, &.{})});
+            return out;
+        }
+        return error.InternalError;
+    }
+    fn contractFieldsText(self: *Index, module: usize, fields: []const ast.Parameter, parameters: []const ast.TypeParameter) ContractError![]const u8 {
+        const allocator = self.project.arena.allocator();
+        var out: std.ArrayList(u8) = .empty;
+        try out.appendSlice(allocator, "fields{");
+        for (fields, 0..) |field, index| {
+            if (index != 0) try out.appendSlice(allocator, ",");
+            try out.appendSlice(allocator, self.project.modules.items[module].src.text(field.name));
+            try out.appendSlice(allocator, ":");
+            try out.appendSlice(allocator, try self.contractTypeText(module, field.ty, parameters));
+        }
+        try out.appendSlice(allocator, "}");
+        return out.toOwnedSlice(allocator);
+    }
+    fn contractConstraint(self: *Index, module: usize, symbol: Symbol) ContractError!ContractDeclaration {
+        const unit = self.units[module];
+        for (unit.syntax.types.constraints) |constraint| {
+            if (constraint.name.start != symbol.span.start) continue;
+            var out: ContractDeclaration = .{ .name = symbol.name, .kind = "constraint" };
+            const allocator = self.project.arena.allocator();
+            var shape: std.ArrayList(u8) = .empty;
+            try shape.appendSlice(allocator, "subject($0:");
+            var tokens: std.ArrayList([]const u8) = .empty;
+            defer tokens.deinit(allocator);
+            const subject = constraint.subject;
+            if (subject.default_copy or hasBuiltinRequirement(self.project.modules.items[module].src, subject, "copy")) try appendUniqueToken(allocator, &tokens, "copy");
+            for (subject.requirements) |span| {
+                const name = self.project.modules.items[module].src.text(span);
+                if (std.mem.eql(u8, name, "copy")) continue;
+                try appendUniqueToken(allocator, &tokens, name);
+            }
+            for (subject.field_requirements) |field| {
+                try appendUniqueToken(allocator, &tokens, try std.fmt.allocPrint(allocator, "field({s}:{s})", .{
+                    self.project.modules.items[module].src.text(field.name),
+                    try self.contractTypeText(module, field.ty, &.{subject}),
+                }));
+            }
+            for (subject.operation_requirements) |operation| {
+                try appendUniqueToken(allocator, &tokens, try self.contractOperationText(module, operation, &.{subject}));
+            }
+            std.mem.sort([]const u8, tokens.items, {}, tokenLess);
+            for (tokens.items, 0..) |token, index| {
+                if (index != 0) try shape.appendSlice(allocator, "+");
+                try shape.appendSlice(allocator, token);
+            }
+            try shape.appendSlice(allocator, ")");
+            out.shape = try shape.toOwnedSlice(allocator);
+            return out;
+        }
+        return error.InternalError;
+    }
+    /// Render one `tuple[T1, ..., Tn]` spelling as its canonical descriptor.
+    /// Element descriptors are already canonical, so a tuple renders as
+    /// `tuple[i64,str]` and the surface rewriter turns it into source spelling.
+    fn contractTupleText(self: *Index, module: usize, tuple: ast.TupleType, parameters: []const ast.TypeParameter, path: *std.ArrayList(Identity)) ContractError![]const u8 {
+        const allocator = self.project.arena.allocator();
+        var out: std.ArrayList(u8) = .empty;
+        try out.appendSlice(allocator, "tuple[");
+        for (tuple.elements, 0..) |element, index| {
+            if (index != 0) try out.appendSlice(allocator, ",");
+            try out.appendSlice(allocator, try self.contractTypeTextPath(module, element, parameters, path));
+        }
+        try out.appendSlice(allocator, "]");
+        return out.toOwnedSlice(allocator);
+    }
+    /// Render one declaration-level type spelled in `module` as its canonical
+    /// descriptor (`i64`, `list[pkg::Name]`, `$0` for a type parameter); the
+    /// text lives in the project arena.
+    pub fn contractTypeText(self: *Index, module: usize, span: source.Span, parameters: []const ast.TypeParameter) ContractError![]const u8 {
+        var path: std.ArrayList(Identity) = .empty;
+        defer path.deinit(self.project.arena.allocator());
+        return self.contractTypeTextPath(module, span, parameters, &path);
+    }
+    /// Render one declaration-level type as a canonical descriptor. Builtin
+    /// aliases collapse to their checked spelling, transparent aliases expand to
+    /// their target recursively, and nominal identities stay qualified. The
+    /// `path` guard rejects alias cycles without checking any function body.
+    fn contractTypeTextPath(self: *Index, module: usize, span: source.Span, parameters: []const ast.TypeParameter, path: *std.ArrayList(Identity)) ContractError![]const u8 {
+        const allocator = self.project.arena.allocator();
+        const src = self.project.modules.items[module].src;
+        const text = src.text(span);
+        if (span.start == span.end or std.mem.eql(u8, text, "Unit") or std.mem.eql(u8, text, "()") or std.mem.eql(u8, text, "unit")) return allocator.dupe(u8, "Unit");
+        for (self.units[module].syntax.types.expressions.suffixes) |suffix| {
+            if (suffix.span.start != span.start or suffix.span.end != span.end) continue;
+            const base = try self.contractTypeTextPath(module, suffix.base, parameters, path);
+            return std.fmt.allocPrint(allocator, "{s}{s}", .{ base, if (suffix.kind == .growable) "[]" else "?" });
+        }
+        for (parameters, 0..) |parameter, index| {
+            if (std.mem.eql(u8, src.text(parameter.name), text)) return std.fmt.allocPrint(allocator, "${d}", .{index});
+        }
+        for (self.units[module].syntax.types.expressions.callbacks) |callback| {
+            if (callback.span.start != span.start or callback.span.end != span.end) continue;
+            return self.contractCallbackText(module, callback, parameters, path);
+        }
+        for (self.units[module].syntax.types.expressions.arrays) |array| {
+            if (array.span.start != span.start or array.span.end != span.end) continue;
+            if (array.index == .length) {
+                const element = try self.contractTypeTextPath(module, array.element, parameters, path);
+                const length = try canonicalLength(allocator, src.text(array.index.length));
+                return std.fmt.allocPrint(allocator, "FixedArray[{s},{s}]", .{ element, length });
+            }
+            const index = try self.contractTypeTextPath(module, array.index.enum_type, parameters, path);
+            const element = try self.contractTypeTextPath(module, array.element, parameters, path);
+            return std.fmt.allocPrint(allocator, "[{s}]{s}", .{ index, element });
+        }
+        for (self.units[module].syntax.types.expressions.tuples) |tuple| {
+            if (tuple.span.start != span.start or tuple.span.end != span.end) continue;
+            return self.contractTupleText(module, tuple, parameters, path);
+        }
+        if (typed.Type.fromName(text)) |builtin| return allocator.dupe(u8, prelude.reservedTypeName(builtin) orelse typed.typeName(builtin, &.{}));
+        if (!self.units[module].names.contains(text)) {
+            if (prelude.reservedType(text)) |reserved| return allocator.dupe(u8, prelude.reservedTypeName(reserved) orelse typed.typeName(reserved, &.{}));
+            if (prelude.scalar(text)) return allocator.dupe(u8, text);
+        }
+        for (self.units[module].syntax.types.expressions.applications) |application| {
+            if (application.span.start == span.start and application.span.end == span.end) return self.contractApplicationTextPath(module, application, parameters, path);
+        }
+        const id = try self.typeIdentity(module, span);
+        try self.requirePublicType(module, span, id);
+        if (self.aliasDeclaration(id)) |alias| {
+            for (path.items) |seen| {
+                if (sameIdentity(seen, id)) return self.project.fail(
+                    "E_ALIAS_CYCLE",
+                    "type aliases must have acyclic dependencies",
+                    .{ .module = module, .span = span },
+                    null,
+                );
+            }
+            try path.append(allocator, id);
+            defer path.items.len -= 1;
+            return self.contractTypeTextPath(id.module, alias.target, &.{}, path);
+        }
+        if (self.declaredTypeParameters(id).len != 0) return self.project.fail(
+            eGenericArity,
+            "nominal type template requires explicit type arguments",
+            .{ .module = module, .span = span },
+            .{ .module = id.module, .span = self.units[id.module].symbols.items[id.symbol].span },
+        );
+        return std.fmt.allocPrint(allocator, qualified_name_format, .{
+            self.project.modules.items[id.module].name,
+            self.units[id.module].symbols.items[id.symbol].name,
+        });
+    }
+    fn contractCallbackText(self: *Index, module: usize, callback: ast.CallbackType, parameters: []const ast.TypeParameter, path: *std.ArrayList(Identity)) ContractError![]const u8 {
+        const allocator = self.project.arena.allocator();
+        const src = self.project.modules.items[module].src;
+        var out: std.ArrayList(u8) = .empty;
+        try out.appendSlice(allocator, "func(");
+        for (callback.parameters, 0..) |parameter, index| {
+            if (index != 0) try out.appendSlice(allocator, ",");
+            const named = index < callback.parameter_modes.named.len and callback.parameter_modes.named[index];
+            if (named) try out.appendSlice(allocator, "named ");
+            if (index < callback.parameter_modes.mut.len and callback.parameter_modes.mut[index]) try out.appendSlice(allocator, "mut ");
+            if (named and index < callback.parameter_names.len) if (callback.parameter_names[index]) |name| {
+                try out.appendSlice(allocator, src.text(name));
+                try out.appendSlice(allocator, ": ");
+            };
+            try out.appendSlice(allocator, try self.contractTypeTextPath(module, parameter, parameters, path));
+        }
+        try out.appendSlice(allocator, ")->");
+        try out.appendSlice(allocator, try self.contractTypeTextPath(module, callback.return_type, parameters, path));
+        if (callback.failure_type) |failure| {
+            try out.appendSlice(allocator, " fails ");
+            try out.appendSlice(allocator, try self.contractTypeTextPath(module, failure, parameters, path));
+        }
+        try out.appendSlice(allocator, " effects(");
+        try appendEffectNames(&out, allocator, callback.effect_bound.allowed);
+        try out.appendSlice(allocator, ")");
+        return out.toOwnedSlice(allocator);
+    }
+    fn aliasDeclaration(self: *Index, id: Identity) ?ast.TypeAlias {
+        const symbol = self.units[id.module].symbols.items[id.symbol];
+        for (self.units[id.module].syntax.types.expressions.aliases) |alias| {
+            if (alias.name.start == symbol.span.start and alias.name.end == symbol.span.end) return alias;
+        }
+        return null;
+    }
+    fn contractApplicationTextPath(self: *Index, module: usize, application: ast.TypeApplication, parameters: []const ast.TypeParameter, path: *std.ArrayList(Identity)) ContractError![]const u8 {
+        const allocator = self.project.arena.allocator();
+        const src = self.project.modules.items[module].src;
+        for (parameters) |parameter| if (std.mem.eql(u8, src.text(parameter.name), src.text(application.name))) return self.project.fail(
+            "E_TYPE_APPLICATION",
+            "type parameters cannot be used as type constructors",
+            .{ .module = module, .span = application.name },
+            null,
+        );
+        var out: std.ArrayList(u8) = .empty;
+        const name = src.text(application.name);
+        if (!self.units[module].names.contains(name)) {
+            if (std.mem.eql(u8, name, "FixedArray")) {
+                if (application.arguments.len != 2) return self.project.fail(eGenericArity, "FixedArray requires an element type and length", .{ .module = module, .span = application.span }, null);
+                const element = try self.contractTypeTextPath(module, application.arguments[0], parameters, path);
+                const length = try self.contractLengthText(module, application.arguments[1], parameters, path);
+                return std.fmt.allocPrint(allocator, "FixedArray[{s},{s}]", .{ element, length });
+            }
+            if ((std.mem.eql(u8, name, "list") or std.mem.eql(u8, name, "Option")) and application.arguments.len == 1) {
+                const element = try self.contractTypeTextPath(module, application.arguments[0], parameters, path);
+                return std.fmt.allocPrint(allocator, "{s}{s}", .{ element, if (std.mem.eql(u8, name, "list")) "[]" else "?" });
+            }
+            if (prelude.arity(name)) |arity| {
+                if (application.arguments.len != arity) return self.project.fail(eGenericArity, "builtin type argument count does not match", .{ .module = module, .span = application.span }, null);
+                try out.appendSlice(allocator, name);
+                try self.appendTypeArgumentsPath(&out, module, application, parameters, path);
+                return out.toOwnedSlice(allocator);
+            }
+        }
+        const id = try self.typeIdentity(module, application.name);
+        try self.requirePublicType(module, application.name, id);
+        if (self.declaredTypeParameters(id).len != application.arguments.len) return self.project.fail(
+            eGenericArity,
+            "type application argument count does not match its declaration",
+            .{ .module = module, .span = application.span },
+            .{ .module = id.module, .span = self.units[id.module].symbols.items[id.symbol].span },
+        );
+        try out.appendSlice(allocator, self.project.modules.items[id.module].name);
+        try out.appendSlice(allocator, "::");
+        try out.appendSlice(allocator, self.units[id.module].symbols.items[id.symbol].name);
+        try self.appendTypeArgumentsPath(&out, module, application, parameters, path);
+        return out.toOwnedSlice(allocator);
+    }
+    fn contractLengthText(self: *Index, module: usize, span: source.Span, parameters: []const ast.TypeParameter, path: *std.ArrayList(Identity)) ContractError![]const u8 {
+        const allocator = self.project.arena.allocator();
+        const text = self.project.modules.items[module].src.text(span);
+        return switch (number_literal.count(text)) {
+            .ok => |value| std.fmt.allocPrint(allocator, "{d}", .{value}),
+            else => self.contractTypeTextPath(module, span, parameters, path),
+        };
+    }
+    fn appendTypeArgumentsPath(self: *Index, out: *std.ArrayList(u8), module: usize, application: ast.TypeApplication, parameters: []const ast.TypeParameter, path: *std.ArrayList(Identity)) ContractError!void {
+        const allocator = self.project.arena.allocator();
+        try out.appendSlice(allocator, "[");
+        for (application.arguments, 0..) |argument, index| {
+            if (index != 0) try out.appendSlice(allocator, ",");
+            try out.appendSlice(allocator, try self.contractTypeTextPath(module, argument, parameters, path));
+        }
+        try out.appendSlice(allocator, "]");
+    }
+};
+/// The decimal spelling of an array length, so `[0x10]u8` and `[16]u8` share one contract
+/// descriptor; a text that is not a plain count is kept as written.
+fn canonicalLength(allocator: std.mem.Allocator, text: []const u8) std.mem.Allocator.Error![]const u8 {
+    return switch (number_literal.count(text)) {
+        .ok => |value| std.fmt.allocPrint(allocator, "{d}", .{value}),
+        .bad => text,
+    };
+}
+fn sameIdentity(a: Identity, b: Identity) bool {
+    return a.module == b.module and a.symbol == b.symbol;
+}
+fn declarationLess(_: void, a: ContractDeclaration, b: ContractDeclaration) bool {
+    return std.mem.lessThan(u8, a.name, b.name);
+}
+fn moduleLess(_: void, a: ContractModule, b: ContractModule) bool {
+    return std.mem.lessThan(u8, a.name, b.name);
+}
+fn tokenLess(_: void, a: []const u8, b: []const u8) bool {
+    return std.mem.lessThan(u8, a, b);
+}
+/// The effect one canonical capability parameter descriptor permits, or null for
+/// a value type. The descriptors come from `contractTypeText`, which resolves
+/// aliases and prints most capabilities under their Python spellings
+/// (`Filesystem`, `Clock`, ...) and `Stream`/`Host` under their internal ones,
+/// so both spellings are recognized (DERIVED-EFFECTS-4).
+fn capabilityEffect(text: []const u8) ?effect_set.Effect {
+    const table = [_]struct { []const u8, effect_set.Effect }{
+        .{ "filesystem_cap", .filesystem },
+        .{ "network_cap", .network },
+        .{ "clock_cap", .clock },
+        .{ "random_cap", .random },
+        .{ "environment_cap", .environment },
+        .{ "stream_cap", .output },
+        .{ "host_cap", .host },
+        .{ "Filesystem", .filesystem },
+        .{ "Network", .network },
+        .{ "Clock", .clock },
+        .{ "Entropy", .random },
+        .{ "Environment", .environment },
+    };
+    inline for (table) |entry| if (std.mem.eql(u8, text, entry[0])) return entry[1];
+    return null;
+}
+fn appendUniqueToken(allocator: std.mem.Allocator, list: *std.ArrayList([]const u8), token: []const u8) !void {
+    for (list.items) |existing| if (std.mem.eql(u8, existing, token)) return;
+    try list.append(allocator, token);
+}
+fn hasBuiltinRequirement(src: source.Source, parameter: ast.TypeParameter, name: []const u8) bool {
+    for (parameter.requirements) |span| if (std.mem.eql(u8, src.text(span), name)) return true;
+    return false;
+}
+/// Canonical declared permission encoding for one exported callable:
+/// `effects=<comma names>;mutates=<position list>;origin=<tag>`.
+fn permissionsText(allocator: std.mem.Allocator, mask: effect_set.Mask, mutates: []const u16, origin: []const u8) ![]const u8 {
+    var out: std.ArrayList(u8) = .empty;
+    try out.appendSlice(allocator, "effects=");
+    var separator = false;
+    inline for (std.meta.tags(effect_set.Effect)) |effect| {
+        if (mask & effect_set.bit(effect) != 0) {
+            if (separator) try out.appendSlice(allocator, ",");
+            try out.appendSlice(allocator, @tagName(effect));
+            separator = true;
+        }
+    }
+    try out.appendSlice(allocator, ";mutates=");
+    for (mutates, 0..) |position, index| {
+        if (index != 0) try out.appendSlice(allocator, ",");
+        try out.appendSlice(allocator, try std.fmt.allocPrint(allocator, "{d}", .{position}));
+    }
+    try out.appendSlice(allocator, ";origin=");
+    try out.appendSlice(allocator, origin);
+    return out.toOwnedSlice(allocator);
+}
+/// Append each effect `mask` holds, by name in declaration order, joined by commas.
+pub fn appendEffectNames(out: *std.ArrayList(u8), allocator: std.mem.Allocator, mask: effect_set.Mask) std.mem.Allocator.Error!void {
+    var separator = false;
+    inline for (std.meta.tags(effect_set.Effect)) |effect| {
+        if (mask & effect_set.bit(effect) != 0) {
+            if (separator) try out.appendSlice(allocator, ",");
+            try out.appendSlice(allocator, @tagName(effect));
+            separator = true;
+        }
+    }
+}
+/// The status of an inferred summary this listing could not produce: `template`
+/// when a checked program exists but never instantiated this generic
+/// declaration, and `declaration-only` when the listing has no checked bodies at
+/// all. A non-generic declaration missing from a checked program also reports
+/// `declaration-only`, because no inferred summary is available for it either.
+fn unavailableAnalysis(program: ?typed.Program, function: ast.Function) fact_status.Status {
+    if (program == null) return .declaration_only;
+    if (function.signature.type_parameters.len != 0) return .template;
+    return .declaration_only;
+}
+fn boundSpan(reference: ast.BoundReference) source.Span {
+    return if (reference.alias) |alias| source.Span.join(alias, reference.name) else reference.name;
+}
+/// Append `text` with every run of spaces, tabs and line breaks folded to one
+/// space: the normalized spelling of a clause written across several lines.
+pub fn appendFolded(out: *std.ArrayList(u8), allocator: std.mem.Allocator, text: []const u8) std.mem.Allocator.Error!void {
+    var blank = false;
+    for (text) |byte| {
+        const space = byte == ' ' or byte == '\t' or byte == '\r' or byte == '\n';
+        if (space and blank) continue;
+        blank = space;
+        try out.append(allocator, if (space) ' ' else byte);
+    }
+}
+/// The first non-empty line of a docstring with surrounding whitespace trimmed.
+fn firstDocLine(text: []const u8) []const u8 {
+    const trimmed = std.mem.trim(u8, text, " \t\r\n");
+    const end = std.mem.indexOfScalar(u8, trimmed, '\n') orelse return trimmed;
+    return std.mem.trimEnd(u8, trimmed[0..end], " \t\r");
+}
+fn parameterCopy(src: source.Source, parameter: ast.TypeParameter) bool {
+    if (parameter.default_copy) return true;
+    for (parameter.requirements) |span| {
+        const name = src.text(span);
+        if (std.mem.eql(u8, name, "copy") or std.mem.eql(u8, name, "equality") or std.mem.eql(u8, name, "integer")) return true;
+    }
+    return false;
+}
+/// Parse and index every module before checking exported signature visibility.
+pub fn build(project: *graph.Project) (diagnostic.Error || error{IncompleteProject})!Index {
+    return buildWithCache(project, null, null);
+}
+/// Reuse unchanged parse tables from either an in-process syntax cache, a
+/// persistent content-addressed frontend cache, or both, while rebuilding every
+/// symbol, export and exported signature check.
+pub fn buildWithCache(project: *graph.Project, cache: ?*SyntaxCache, frontend: ?*FrontendCache) (diagnostic.Error || error{IncompleteProject})!Index {
+    return buildWithCacheTimed(project, cache, frontend, null);
+}
+/// Same as `buildWithCache`, with optional opt-in phase timing. Syntax replay and
+/// parse are accumulated per module; `declarations_interfaces` is the remaining
+/// inclusive wall interval of this function (index construction plus signature
+/// validation), so the two records do not double-count syntax work.
+pub fn buildWithCacheTimed(
+    project: *graph.Project,
+    cache: ?*SyntaxCache,
+    frontend: ?*FrontendCache,
+    timing: ?*@import("timings.zig").Profile,
+) (diagnostic.Error || error{IncompleteProject})!Index {
+    if (!project.progress.complete or project.problem != null) return error.IncompleteProject;
+    const allocator = project.arena.allocator();
+    const include_timing = if (timing) |profile| profile.enabled else false;
+    const total_start = if (include_timing) timing.?.now() else std.Io.Timestamp.zero;
+    var syntax_ns: i96 = 0;
+    var index: Index = .{ .project = project, .units = try allocator.alloc(Unit, project.modules.items.len) };
+    for (project.order.items) |module_id| {
+        const module = project.modules.items[module_id];
+        const syntax_start = if (include_timing) timing.?.now() else std.Io.Timestamp.zero;
+        var replayed = false;
+        const syntax = try moduleSyntax(project, module_id, cache, frontend, &replayed);
+        if (include_timing) {
+            const elapsed = syntax_start.durationTo(timing.?.now()).nanoseconds;
+            syntax_ns += elapsed;
+            timing.?.add(if (replayed) "syntax_replay" else "syntax_parse", elapsed, false);
+        }
+        index.units[module_id] = .{ .syntax = syntax };
+        if (module.imports.len != 0) {
+            const used = try allocator.alloc(bool, module.imports.len);
+            @memset(used, false);
+            index.units[module_id].import_used = used;
+        }
+        inline for (.{ "records", "domains", "variants", "resources" }) |field| {
+            for (@field(syntax.types, field)) |declaration| try index.add(module_id, declaration.name, .type, null, false);
+        }
+        for (syntax.types.expressions.aliases) |alias| try index.add(module_id, alias.name, .type, null, false);
+        for (syntax.types.constraints) |constraint| try index.add(module_id, constraint.name, .constraint, null, false);
+        for (syntax.functions) |function| try index.add(module_id, function.name, .function, function.policy.owner, function.policy.restricted);
+        for (module.exports) |exported| {
+            if (exported.alias) |alias| {
+                const target = try index.resolveExported(module_id, alias, exported.name, exported.span);
+                try index.addFacade(module_id, exported.name, exported.span, target);
+                continue;
+            }
+            const id = index.units[module_id].names.get(exported.name) orelse return project.fail(eUnknownExport, "export names no local declaration", .{ .module = module_id, .span = exported.span }, null);
+            if (ast.isPublicDeclaration(syntax, index.units[module_id].symbols.items[id].span)) return project.fail("E_DUPLICATE_EXPORT", "declaration is already public", .{ .module = module_id, .span = exported.span }, null);
+            index.units[module_id].symbols.items[id].exported = true;
+        }
+        // A declaration marked `public` publishes itself, exactly as an `export`
+        // directive naming it would; the directive form stays accepted so an
+        // existing source keeps its meaning.
+        for (syntax.types.public_declarations) |span| {
+            const id = index.units[module_id].names.get(module.src.text(span)) orelse return project.fail(eUnknownExport, "public declaration names no local declaration", .{ .module = module_id, .span = span }, null);
+            index.units[module_id].symbols.items[id].exported = true;
+        }
+        for (index.units[module_id].symbols.items) |*symbol| {
+            if (symbol.owner) |owner| symbol.exported = !symbol.restricted and index.units[module_id].symbols.items[index.units[module_id].names.get(owner).?].exported;
+        }
+    }
+    // Every module is indexed before checking interface dependencies.
+    for (project.order.items) |module| {
+        try index.checkSignatures(module);
+    }
+    if (include_timing) {
+        const elapsed = total_start.durationTo(timing.?.now()).nanoseconds;
+        timing.?.add("declarations_interfaces", @max(0, elapsed - syntax_ns), false);
+    }
+    return index;
+}
+
+fn sameOwner(local: bool, owner: ?[]const u8, declared: []const u8) bool {
+    if (!local) return false;
+    return std.mem.eql(u8, owner orelse return false, declared);
+}
+
+fn moduleSyntax(project: *graph.Project, module_id: usize, cache: ?*SyntaxCache, frontend: ?*FrontendCache, replayed: *bool) diagnostic.Error!ast.Program {
+    const module = project.modules.items[module_id];
+    const allocator = project.arena.allocator();
+    replayed.* = false;
+    if (cache) |retained| {
+        if (try retained.lookup(allocator, module.src, module.header.body_start)) |syntax| {
+            replayed.* = true;
+            return syntax;
+        }
+    }
+    // A persistent hit still rebuilds every symbol and signature check below; it
+    // only skips lexing and parsing. A rejected or damaged entry is a miss.
+    if (frontend) |disk| {
+        if (try disk.lookupSyntax(allocator, module.src, module.header.body_start)) |syntax| {
+            replayed.* = true;
+            return syntax;
+        }
+    }
+    var sink: diagnostic.Sink = .{ .allocator = allocator };
+    const syntax = parseModule(project, module_id, &sink) catch |err| {
+        if (err != error.SourceError) return err;
+        const problem = sink.items.items[0];
+        const failure = project.fail(problem.code, problem.message, .{ .module = module_id, .span = problem.span }, null);
+        try preserveParserFixes(project, sink.items.items);
+        return failure;
+    };
+    if (cache) |retained| try retained.remember(module.src, module.header.body_start, syntax);
+    if (frontend) |disk| try disk.rememberSyntax(module.src, module.header.body_start, syntax);
+    return syntax;
+}
+fn preserveParserFixes(project: *graph.Project, problems: []const diagnostic.Diagnostic) std.mem.Allocator.Error!void {
+    var edits: std.ArrayList(diagnostic.Edit) = .empty;
+    const allocator = project.arena.allocator();
+    for (problems) |problem| {
+        const fix = problem.provenance.fix orelse continue;
+        for (0..fix.count()) |index| try edits.append(allocator, fix.at(index));
+    }
+    if (edits.items.len == 0) return;
+    project.problem.?.fix = edits.items[0];
+    project.problem.?.fix_more = edits.items[1..];
+}
+
+fn parseModule(project: *graph.Project, module_id: usize, sink: *diagnostic.Sink) diagnostic.Error!ast.Program {
+    const module = project.modules.items[module_id];
+    // ARENA-BOUNDED-1: the syntax outlives the tokens, which nothing reads after
+    // the parse, so they come from the child allocator and go back at once
+    // instead of staying in the project arena (about 420 MB at a million lines).
+    const scratch = project.arena.child_allocator;
+    const tokens = try lexer.lex(scratch, module.src.bytes, sink);
+    defer scratch.free(tokens);
+    var parse: parser.Parser = .{ .src = module.src, .storage = project.arena.allocator(), .tokens = tokens, .sink = sink, .syntax = .{ .growth = scratch } };
+    defer parse.release();
+    return parse.parseModule();
+}

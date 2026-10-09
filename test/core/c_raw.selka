@@ -1,0 +1,41 @@
+import network
+
+# Raw provider I/O goes through the trusted standard-library wrappers.
+extern func final_status(host: Host) -> int effects(host)
+
+
+func main(net: Network, host: Host) -> int:
+    match network.connect(net.host("127.0.0.1:1234")):
+        case network.Connected.err(_):
+            return 1
+        case network.Connected.ok(resource):
+            match network.read[4](resource):
+                case network.Read.err(_):
+                    return 2
+                case network.Read.ok(chunk):
+                    assert chunk.length == 2u64 and chunk.eof
+                    assert chunk.bytes[0] == 97u8 and chunk.bytes[1] == 98u8
+                    assert chunk.bytes[2] == 0u8 and chunk.bytes[3] == 0u8
+    match network.connect(net.host("127.0.0.1:1234")):
+        case network.Connected.err(_):
+            return 3
+        case network.Connected.ok(resource):
+            mut data: FixedArray[u8, 2] = [99u8, 100u8]
+            match network.write(resource, data):
+                case network.Written.err(_):
+                    return 4
+                case network.Written.ok(written):
+                    assert written == 2u64
+    match network.connect(net.host("127.0.0.1:1234")):
+        case network.Connected.err(_):
+            return 5
+        case network.Connected.ok(resource):
+            match network.close(resource):
+                case network.Closed.ok(_):
+                    return 6
+                case network.Closed.err(failure):
+                    match network.close(failure.resource):
+                        case network.Closed.ok(closed):
+                            return if (closed) then (final_status(host)) else (7)
+                        case network.Closed.err(_):
+                            return 8

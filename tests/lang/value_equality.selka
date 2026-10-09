@@ -1,0 +1,148 @@
+import pool
+
+record Point:
+    x: int
+    y: int
+
+
+enum Shape:
+    empty
+    radius(value: int)
+    point(value: Point)
+
+
+record Bag:
+    items: int[]
+    name: str
+
+
+record Node:
+    value: int
+    next: Node?
+
+
+func make_ok() -> Result[int, str]:
+    return Ok(3)
+
+
+func make_err() -> Result[int, str]:
+    return Err("x")
+
+
+# spec: VALUE-EQUALITY-1
+public func test_record_array_and_nested_equality_is_structural() -> bool:
+    if Point(x=1, y=2) != Point(x=1, y=2):
+        return False
+    if Point(x=1, y=2) == Point(x=1, y=3):
+        return False
+    mut left: FixedArray[int, 3] = FixedArray[int, 3]([1, 2, 3])
+    mut right: FixedArray[int, 3] = FixedArray[int, 3]([1, 2, 3])
+    if left != right:
+        return False
+    if Bag(items=[1, 2], name="a") != Bag(items=[1, 2], name="a"):
+        return False
+    if Bag(items=[1, 2], name="a") == Bag(items=[1, 3], name="a"):
+        return False
+    return True
+
+
+# spec-case: VALUE-EQUALITY-1
+public func test_union_result_and_option_equality_is_structural() -> bool:
+    if Shape.radius(value=4) != Shape.radius(value=4):
+        return False
+    if Shape.radius(value=4) == Shape.point(value=Point(x=4, y=0)):
+        return False
+    if Shape.empty != Shape.empty:
+        return False
+    if make_ok() != make_ok():
+        return False
+    if make_ok() == make_err():
+        return False
+    mut value: Result[int, str] = make_ok()
+    if value != Ok(3):
+        return False
+    mut some: int? = Some(4)
+    if some != Some(4):
+        return False
+    if some == None:
+        return False
+    if some != some:
+        return False
+    return True
+
+
+# spec-case: VALUE-EQUALITY-1
+public func test_recursive_record_equality_is_structural() -> bool:
+    mut first = Node(value=1, next=None)
+    mut second = Node(value=1, next=None)
+    if first != second:
+        return False
+    if first != first:
+        return False
+    second.next = Some(first)
+    mut expected: Node? = Some(first)
+    if second.next != expected:
+        return False
+    return True
+
+
+# spec-case: VALUE-EQUALITY-1
+public func test_pool_handles_keep_identity_separate_from_record_equality() -> bool:
+    mut seed: Node[] = []
+    mut store = pool.create(seed)
+    mut first = pool.insert(mut store, Node(value=1, next=None))
+    mut second = pool.insert(mut store, Node(value=1, next=None))
+    if first == second:
+        return False
+    match pool.get(store, first):
+        case Some(one):
+            match pool.get(store, second):
+                case Some(two):
+                    return one == two
+                case None:
+                    return False
+        case None:
+            return False
+
+
+# spec-case: EQUALITY-CONTEXT-1
+public func test_equality_through_a_field_supplies_the_option_type() -> bool:
+    mut first = Node(value=1, next=None)
+    mut second = Node(value=2, next=Some(first))
+    if second.next == None:
+        return False
+    if first.next != None:
+        return False
+    if second.next != Some(first):
+        return False
+    return True
+
+
+# spec: EQUALITY-CONTEXT-2
+public func test_equality_infers_empty_lists_through_field_and_index_paths() -> bool:
+    mut rows = [Bag(items=[], name="empty"), Bag(items=[7], name="full")]
+    mut indexed: dict[str, Bag[]] = {"rows": rows}
+    mut fixed: FixedArray[Bag, 2] = FixedArray[Bag, 2]([rows[0], rows[1]])
+    mut nested: int[][] = [[], [7]]
+    if indexed["rows"][0].items != [] or [] == indexed["rows"][1].items:
+        return False
+    if fixed[0].items != [] or fixed[1].items == []:
+        return False
+    return nested[0] == [] and [] != nested[1]
+
+
+func next_position(mut seen: int[]) -> int:
+    seen[0] += 1
+    return 0
+
+
+# spec-case: EQUALITY-CONTEXT-2
+public func test_equality_context_does_not_evaluate_indexes_twice() -> bool:
+    mut seen = [0]
+    mut rows: int[][] = [[]]
+    mut empty = rows[next_position(mut seen)] == []
+    return empty and seen[0] == 1
+
+
+func main() -> int:
+    return 0

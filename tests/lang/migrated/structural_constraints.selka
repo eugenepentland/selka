@@ -1,0 +1,63 @@
+import structural_constraints_case_1 as c1
+import structural_constraints_case_2 as c2
+import structural_constraints_case_3 as c3
+import structural_constraints_case_4 as c4
+import structural_constraints_case_5 as c5
+import structural_constraints_case_6 as c6
+import structural_constraints_case_7 as c7
+import structural_constraints_case_8 as c8
+import structural_constraints_case_9 as c9
+import structural_constraints_case_10 as c10
+
+# spec-case: NAMED-CONSTRAINT-SEMANTICS-6
+public func test_named_constraints_coalesce_alpha_renamed_sub_1() -> bool:
+    return c1.program() == 0
+
+
+# spec-case: NAMED-CONSTRAINT-SEMANTICS-6
+public func test_named_constraints_coalesce_alpha_renamed_sub_2() -> bool:
+    return c2.program() == 0
+
+
+# spec-case: NAMED-CONSTRAINT-SEMANTICS-6
+public func test_named_constraints_coalesce_alpha_renamed_sub_3() -> bool:
+    return c3.program() == 0
+
+
+# spec-case: NAMED-CONSTRAINT-CALLBACK-1
+public func test_named_constraints_coalesce_nested_callbacks() -> bool:
+    return c4.program() == 0
+
+
+# spec: NAMED-CONSTRAINT-SEMANTICS-1
+public func test_named_constraints_execute_forward_and_interc() -> bool:
+    return c5.program() == 9
+
+
+# spec: NAMED-CONSTRAINT-CALLBACK-1
+public func test_named_constraints_normalize_callbacks_and_fo() -> bool:
+    return c6.program() == 42
+
+
+# spec-case: NAMED-CONSTRAINT-SEMANTICS-6
+public func test_named_constraints_normalizeone_and_canonical() -> bool:
+    return c7.program() == 3
+
+
+# spec: NAMED-CONSTRAINT-SEMANTICS-2
+public func test_named_constraints_substitute_the_subject_thr() -> bool:
+    return c8.program() == 3
+
+
+# spec: STRUCTURAL-FIELD-1
+public func test_structural_fields_execute_multiple_nominal_r() -> bool:
+    return c9.program() == 5
+
+
+# spec: STRUCTURAL-OP-1
+public func test_structural_public_domain_operations_execute() -> bool:
+    return c10.program() == 7
+
+
+func main() -> int:
+    return 0

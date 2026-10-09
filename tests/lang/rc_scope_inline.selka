@@ -1,0 +1,33 @@
+func nested(mut items: int[], depth: int) -> int:
+    mut before = items
+    if depth > 0:
+        mut seen = nested(mut items, depth - 1)
+        items.append(depth)
+        return seen + len(before)
+    items.append(0)
+    return len(before)
+
+
+public func test_nested_pins_restore_the_outer_snapshot_state() -> bool:
+    mut items = [7]
+    mut before = items
+    mut total = nested(mut items, 3)
+    items.append(99)
+    return total == 4 and before == [7] and items == [7, 0, 1, 2, 3, 99]
+
+
+func snapshots(mut first: int[], mut second: int[]) -> int:
+    mut a = first
+    mut b = second
+    first.append(1)
+    second.append(2)
+    return len(a) + len(b)
+
+
+public func test_reused_multi_pin_journals_preserve_growth_and_snapshots() -> bool:
+    mut first = [0]
+    mut second = [9]
+    mut total = 0
+    for _ in range(40):
+        total = total + snapshots(mut first, mut second)
+    return total == 1640 and len(first) == 41 and len(second) == 41 and first[40] == 1 and second[40] == 2

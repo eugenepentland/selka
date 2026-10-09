@@ -1,0 +1,52 @@
+enum Detail:
+    Malformed(value: str)
+    Code(value: i64)
+
+
+enum Wrapped:
+    Nested(value: Detail)
+
+
+result Inner:
+    ok: i64,
+    err: Detail
+
+
+result Outer:
+    ok: bool,
+    err: Wrapped
+
+
+func inner(kind: i64) -> Inner:
+    if kind == 0:
+        return Ok(5)
+    if kind == 1:
+        return Err(Detail.Malformed(value="bad"))
+    return Err(Detail.Code(value=9))
+
+
+func outer(kind: i64) -> Outer:
+    const value = try inner(kind)
+    return Ok(value > 3)
+
+
+func handle(value: Outer) -> i64:
+    match value:
+        case Outer.ok(flag):
+            if flag:
+                return 1
+            return 0
+        case Outer.err(error):
+            match error:
+                case Wrapped.Nested(value=detail):
+                    match detail:
+                        case Detail.Malformed(value=text):
+                            if text == "bad":
+                                return 7
+                            return 8
+                        case Detail.Code(value=code):
+                            return 20 + code
+
+
+public func program() -> i64:
+    return handle(outer(0)) + handle(outer(1)) + handle(outer(2))

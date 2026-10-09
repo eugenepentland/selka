@@ -1,0 +1,44 @@
+enum AppError:
+    Detail(value: str)
+    Missing(value: i64)
+
+
+result Inner:
+    ok: i64,
+    err: str
+
+
+result Outer:
+    ok: bool,
+    err: AppError
+
+
+func inner(flag: bool) -> Inner:
+    if flag:
+        return Err("bad")
+    return Ok(5)
+
+
+func outer(flag: bool) -> Outer:
+    const value = try inner(flag)
+    return Ok(value > 3)
+
+
+func handle(value: Outer) -> i64:
+    match value:
+        case Outer.ok(flag):
+            if flag:
+                return 1
+            return 0
+        case Outer.err(error):
+            match error:
+                case AppError.Detail(value=text):
+                    if text == "bad":
+                        return 7
+                    return 8
+                case AppError.Missing(value=code):
+                    return 100 + code
+
+
+public func program() -> i64:
+    return handle(outer(False)) + handle(outer(True))

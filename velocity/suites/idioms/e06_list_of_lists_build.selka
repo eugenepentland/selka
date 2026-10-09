@@ -1,0 +1,9 @@
+# oracle: cpython
+def main() -> int:
+    grid: list[list[int]] = []
+    for r in range(100):
+        row: list[int] = []
+        for c in range(100):
+            row.append(r * c)
+        grid.append(row)
+    return grid[99][99] % 100

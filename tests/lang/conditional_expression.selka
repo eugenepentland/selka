@@ -1,0 +1,88 @@
+# `value_if_true if condition else value_if_false` is one expression: the
+# condition is bool, both arms share one type (the expected type when the
+# context supplies one), only the chosen arm is evaluated, and nesting is
+# allowed. These cases pin the value, the laziness and the positions the
+# expression is usable in.
+public record Point:
+    x: int
+    y: int
+
+
+func fails() -> int:
+    mut zero = 0
+    return 1 // zero
+
+
+func scaled(value: int, double: bool) -> int:
+    return value * (if double then 2 else 1)
+
+
+func describe(value: int) -> int:
+    return value + 1
+
+
+func lookup(found: bool) -> int?:
+    return if (found) then (Some(7)) else (None)
+
+
+# spec-case: CONDITIONAL-EXPR-3
+public func test_only_the_chosen_arm_is_evaluated() -> bool:
+    return (if (True) then (42) else (fails())) == 42
+
+
+# spec-case: CONDITIONAL-EXPR-3
+public func test_the_else_arm_runs_when_the_condition_is_false() -> bool:
+    return (if (False) then (1) else (42)) == 42
+
+
+# spec-case: CONDITIONAL-EXPR-4
+public func test_a_conditional_takes_its_arm_type_from_the_expected_type() -> bool:
+    mut small: u8 = if (True) then (1) else (2)
+    return int(small) == 1
+
+
+# spec-case: CONDITIONAL-EXPR-4
+public func test_a_conditional_nests_in_its_else_arm() -> bool:
+    return (if (False) then (1) else if ((False)) then ((2)) else ((3))) == 3
+
+
+# spec-case: CONDITIONAL-EXPR-4
+public func test_a_conditional_value_passes_as_a_call_argument() -> bool:
+    return describe(if (True) then (1) else (2)) == 2
+
+
+# spec-case: CONDITIONAL-EXPR-4
+public func test_a_conditional_value_fills_an_fstring_hole() -> bool:
+    mut count = 1
+    mut label = f"{count} {if (count == 1) then ('item') else ('items')}"
+    return label == "1 item"
+
+
+# spec-case: CONDITIONAL-EXPR-4
+public func test_a_conditional_selects_between_record_values() -> bool:
+    mut point = if (True) then (Point(x=532, y=0)) else (Point(x=352, y=0))
+    return point.x == 532
+
+
+# spec-case: CONDITIONAL-EXPR-2
+public func test_a_conditional_selects_by_an_expected_option_type() -> bool:
+    mut found: int? = if (True) then (Some(7)) else (None)
+    match found:
+        case Some(index):
+            return index == 7
+        case None:
+            return False
+
+
+# spec-case: CONDITIONAL-EXPR-3
+public func test_a_conditional_expression_forwards_its_condition_to_a_helper() -> bool:
+    return scaled(21, True) == 42
+
+
+# spec-case: CONDITIONAL-EXPR-2
+public func test_a_conditional_return_takes_its_arm_type_from_the_return_type() -> bool:
+    match lookup(True):
+        case Some(index):
+            return index == 7
+        case None:
+            return False

@@ -1,0 +1,27 @@
+func append_one(mut candidate: int[]?, item: int) -> int:
+    if candidate is None:
+        return 0
+    candidate.append(item)
+    return len(candidate)
+
+
+func bump_first(mut candidate: int[]?) -> int:
+    if candidate is None:
+        return -1
+    candidate[0] = candidate[0] + 100
+    return candidate[0]
+
+
+func main(out: Stream) -> int:
+    mut items: int[] = [40]
+    mut candidate: int[]? = Some(items.copy())
+    mut count = append_one(mut candidate, 2)
+    mut other: int[]? = Some([5, 6])
+    out.print(count, bump_first(mut other), bump_first(mut candidate), append_one(mut other, 7))
+    if candidate is None:
+        return 1
+    candidate[0] = candidate[0] + candidate[1]
+    out.print(candidate[0], items[0], len(candidate))
+    mut nothing: int[]? = None
+    out.print(append_one(mut nothing, 5), bump_first(mut nothing))
+    return 0

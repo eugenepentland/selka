@@ -1,0 +1,9 @@
+import inputs
+import pricing
+
+func main() -> int:
+    match pricing.calculate(inputs.books(), inputs.cables(), inputs.adapters()):
+        case pricing.Invoice.ok(receipt):
+            return receipt.total
+        case pricing.Invoice.err(_):
+            return -1

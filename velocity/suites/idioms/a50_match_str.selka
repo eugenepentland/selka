@@ -1,0 +1,12 @@
+# oracle: cpython
+def kind(s: str) -> int:
+    match s:
+        case "a":
+            return 1
+        case "b":
+            return 42
+        case _:
+            return 0
+
+def main() -> int:
+    return kind("b")

@@ -1,0 +1,17 @@
+enum Choice:
+    first
+    second
+
+
+func main() -> int:
+    const answer = match Choice.first:
+        case Choice.first:
+            yield 42
+        case Choice.second:
+            yield 0
+    return answer
+
+
+# spec: PY-SCOPE-3
+public func test_match_merges_definite_assignment_across_cont_1() -> bool:
+    return main() == 42

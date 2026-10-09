@@ -1,0 +1,15 @@
+record point:
+    Value: i64
+
+
+func predicate(first: point, value: point) -> bool:
+    return first.Value == value.Value
+
+
+public func program() -> i64:
+    mut flag = True
+    mut item = point(Value=42)
+    if flag:
+        if not False and predicate(item, point(Value=42)):
+            return 42
+    return 0

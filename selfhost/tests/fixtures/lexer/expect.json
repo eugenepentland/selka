@@ -1,0 +1,100 @@
+{
+  "at_token.selka": {
+    "status": "ok"
+  },
+  "bad_escape.selka": {
+    "reason": "stage-0 lexing only finds the closing quote; E_BYTE_ESCAPE is reported while decoding in a later phase",
+    "status": "skip"
+  },
+  "blank_comment_suite.selka": {
+    "status": "ok"
+  },
+  "bytes_literals.selka": {
+    "status": "ok"
+  },
+  "comments_only.selka": {
+    "status": "ok"
+  },
+  "crlf.selka": {
+    "status": "ok"
+  },
+  "decl_heads.selka": {
+    "status": "ok"
+  },
+  "delimiters.selka": {
+    "status": "ok"
+  },
+  "empty.selka": {
+    "status": "ok"
+  },
+  "format_strings.selka": {
+    "status": "ok"
+  },
+  "integers.selka": {
+    "status": "ok"
+  },
+  "is_keyword.selka": {
+    "status": "ok"
+  },
+  "keywords.selka": {
+    "status": "ok"
+  },
+  "literal_limit.selka": {
+    "reason": "the 65536 decoded-byte limit is enforced when decoding after lexing; a <40-line fixture cannot reach it",
+    "status": "skip"
+  },
+  "mixed_indent.selka": {
+    "status": "error"
+  },
+  "module_header.selka": {
+    "status": "ok"
+  },
+  "multiple_dedents.selka": {
+    "status": "ok"
+  },
+  "nested_indent.selka": {
+    "status": "ok"
+  },
+  "nesting_limit.selka": {
+    "reason": "the 256-level nesting limit needs 257 indentation levels, beyond the <40-line fixture budget",
+    "status": "skip"
+  },
+  "operators.selka": {
+    "status": "ok"
+  },
+  "removed_amp.selka": {
+    "status": "ok",
+    "note": "Ampersand is tokenized for readonly types; this expression is rejected by the parser"
+  },
+  "removed_fat_arrow.selka": {
+    "status": "error"
+  },
+  "removed_spelling.selka": {
+    "status": "error"
+  },
+  "strings_escapes.selka": {
+    "status": "ok"
+  },
+  "tabs.selka": {
+    "status": "error"
+  },
+  "unicode_ident.selka": {
+    "status": "error"
+  },
+  "unicode_string.selka": {
+    "status": "ok"
+  },
+  "unknown_backtick.selka": {
+    "status": "error"
+  },
+  "unknown_char.selka": {
+    "status": "error"
+  },
+  "unterminated_string.selka": {
+    "status": "error"
+  },
+  "numeric_spellings.selka": {
+    "status": "ok",
+    "note": "Python numeric token extents, malformed spellings and adjacent field dots"
+  }
+}

@@ -1,0 +1,9 @@
+# oracle: cpython
+"""Module docstring."""
+
+def f(x: int) -> int:
+    """Return x doubled."""
+    return x * 2
+
+def main() -> int:
+    return f(21)

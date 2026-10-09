@@ -1,0 +1,45 @@
+record Frame:
+    code: int[]
+    ip: int
+
+
+func read(mut frame: Frame) -> int:
+    mut value = frame.code[frame.ip]
+    frame.ip += 1
+    return value
+
+
+public func test_positive_and_negative_reads_keep_scalar_updates_and_snapshots() -> bool:
+    mut frame = Frame(code=[7, 11, 13], ip=0)
+    mut before = frame
+    assert read(mut frame) == 7
+    frame.ip = -1
+    assert read(mut frame) == 13
+    frame.code[0] = 17
+    return frame.ip == 0 and before.ip == 0 and before.code == [7, 11, 13]
+
+
+func replace(mut frame: Frame) -> int:
+    frame.code = [17, 19]
+    return 0
+
+
+func selected(mut frame: Frame) -> int:
+    return frame.code[replace(mut frame)]
+
+
+public func test_index_callback_keeps_the_receiver_selected_before_replacement() -> bool:
+    mut frame = Frame(code=[7, 11], ip=0)
+    mut result = selected(mut frame)
+    return result == 7 and frame.code == [17, 19]
+
+
+enum Cell:
+    empty
+    number(value: int)
+
+
+func main() -> int:
+    assert test_positive_and_negative_reads_keep_scalar_updates_and_snapshots()
+    assert test_index_callback_keeps_the_receiver_selected_before_replacement()
+    return 0

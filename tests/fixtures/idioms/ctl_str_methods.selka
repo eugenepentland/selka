@@ -1,0 +1,3 @@
+func main() -> int:
+    mut parts = "a,b".split(",")
+    return len(parts) + len("ab".upper().lower())

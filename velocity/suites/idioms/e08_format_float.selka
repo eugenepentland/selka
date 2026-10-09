@@ -1,0 +1,13 @@
+# oracle: selka-only
+module main
+import strings
+
+def main() -> int:
+    x = 3.14159
+    match strings.format_float(x, 2):
+        case Ok(s):
+            print(s)
+            return 0
+        case Err(e):
+            print(strings.message(e))
+            return 1

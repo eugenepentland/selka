@@ -1,0 +1,76 @@
+record Span:
+    text: bytes
+    start: int
+
+
+record Node:
+    span: Span
+    id: int
+
+
+func empty() -> Node:
+    return Node(span=Span(text=b"", start=0), id=-1)
+
+
+func find(nodes: Node[], key: int) -> Node:
+    mut i = 0
+    while i < len(nodes):
+        mut node = nodes[i]
+        if node.id == key:
+            return node
+        i += 1
+    return empty()
+
+
+func late(first: bytes, second: bytes) -> bytes:
+    mut answer = first
+    mut i = 0
+    while i < 2:
+        if i > 0:
+            return answer
+        answer = second
+        i += 1
+    return first
+
+
+public func test_search_first_late_missing_and_empty() -> bool:
+    mut nodes = [Node(span=Span(text=bytes([65, 66]), start=1), id=4), Node(span=Span(text=bytes([67, 68]), start=2), id=9)]
+    mut first = find(nodes, 4)
+    mut last = find(nodes, 9)
+    mut absent = find(nodes, 12)
+    mut none = find([], 0)
+    nodes.clear()
+    return first.span.text == b"AB" and last.span.text == b"CD" and absent.id == -1 and none.span.text == b""
+
+
+public func test_callers_snapshots_keep_ordinary_ownership() -> bool:
+    mut nodes = [Node(span=Span(text=bytes([65]), start=3), id=1)]
+    mut snapshot = nodes
+    mut result = find(nodes, 1)
+    nodes[0] = Node(span=Span(text=bytes([66]), start=4), id=2)
+    return snapshot[0].span.text == b"A" and result.span.text == b"A" and nodes[0].span.text == b"B"
+
+
+public func test_indirect_entry_stays_owned() -> bool:
+    mut selected = find
+    mut nodes = [Node(span=Span(text=bytes([81]), start=8), id=2)]
+    mut result = selected(nodes, 2)
+    nodes.clear()
+    return result.span.text == b"Q" and result.span.start == 8
+
+
+public func test_loop_backedge_returns_the_second_live_argument() -> bool:
+    mut first = bytes([65])
+    mut second = bytes([66])
+    mut result = late(first, second)
+    first = bytes([67])
+    second = bytes([68])
+    return result == b"B" and first == b"C" and second == b"D"
+
+
+func main(out: Stream) -> int:
+    out.print(test_search_first_late_missing_and_empty())
+    out.print(test_callers_snapshots_keep_ordinary_ownership())
+    out.print(test_indirect_entry_stays_owned())
+    out.print(test_loop_backedge_returns_the_second_live_argument())
+    return 0

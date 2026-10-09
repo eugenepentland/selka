@@ -1,0 +1,86 @@
+import random
+import time
+
+func streams() -> int:
+    mut generator = random.seeded(0)
+    if random.next_word(mut generator) != 16294208416658607535u64:
+        return 1
+    if random.next_word(mut generator) != 7960286522194355700u64:
+        return 2
+    mut replay = random.seeded(0)
+    if random.next_word(mut replay) != 16294208416658607535u64:
+        return 3
+    mut snapshot = replay
+    if random.next_word(mut snapshot) != 7960286522194355700u64:
+        return 4
+    if random.next_word(mut replay) != 7960286522194355700u64:
+        return 5
+    if random.next_word(mut replay) != random.next_word(mut snapshot):
+        return 6
+    return 0
+
+
+func bounds() -> int:
+    mut generator = random.seeded(3)
+    match random.randint(mut generator, 4, 3):
+        case Ok(_):
+            return 10
+        case Err(_):
+            _ = 0
+    match random.randint(mut generator, 0 - 9223372036854775807 - 1, 9223372036854775807):
+        case Ok(_):
+            _ = 0
+        case Err(_):
+            return 11
+    mut draws = 0
+    while draws < 200:
+        match random.randint(mut generator, 0, 9):
+            case Ok(value):
+                if value < 0 or value > 9:
+                    return 12
+            case Err(_):
+                return 13
+        draws += 1
+    return 0
+
+
+func limits() -> int:
+    mut earliest = time.from_unix_nanoseconds(0 - 9223372036854775807 - 1)
+    mut latest = time.from_unix_nanoseconds(9223372036854775807)
+    match time.elapsed(earliest, latest):
+        case Ok(_):
+            return 20
+        case Err(_):
+            _ = 0
+    match time.after(latest, time.nanoseconds(1)):
+        case Ok(_):
+            return 21
+        case Err(_):
+            _ = 0
+    match time.elapsed(latest, earliest):
+        case Ok(_):
+            return 22
+        case Err(_):
+            _ = 0
+    match time.seconds(9223372037):
+        case Ok(_):
+            return 23
+        case Err(_):
+            _ = 0
+    match time.milliseconds(42):
+        case Ok(span):
+            if span.nanoseconds != 42000000:
+                return 24
+        case Err(_):
+            return 25
+    if not time.expired(earliest, latest) or time.expired(latest, earliest):
+        return 26
+    return 0
+
+
+func main() -> int:
+    mut checks = [streams(), bounds(), limits()]
+    for value in checks:
+        if value != 0:
+            return value
+    return 0

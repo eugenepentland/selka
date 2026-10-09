@@ -1,0 +1,320 @@
+# CE-A (records in the emitter): records over four words share homes, are read where
+# they lie, updated in place and passed in-out. Every case prints what value semantics
+# says it must; the copies the emitter removed must not be observable.
+record Span:
+    line: int
+    col: int
+    offset: int
+
+
+record Cursor:
+    pos: int
+    line: int
+    col: int
+    span: Span
+
+
+record Pair:
+    left: Span
+    right: Span
+
+
+record Bag:
+    name: str
+    items: int[]
+    count: int
+    total: int
+    last: int
+
+
+record Runtime:
+    stack: int[]
+    top: int
+    a: int
+    b: int
+    c: int
+
+
+record Interp:
+    name: str
+    rt: Runtime
+    depth: int
+
+
+enum Shape:
+    none
+    dot(value: Span)
+    bag(value: Bag)
+
+
+func advance(src: bytes, mut t: Cursor):
+    if t.pos < len(src):
+        if src[t.pos] == 10:
+            t.line += 1
+            t.col = 1
+        else:
+            t.col += 1
+        t.pos += 1
+
+
+func mark(mut t: Cursor):
+    t.span = Span(line=t.line, col=t.col, offset=t.pos)
+
+
+# A phi in a loop with break and continue: the cursor is carried around the loop,
+# changed on some paths only, and read after it.
+func scan(src: bytes) -> int:
+    mut t = Cursor(pos=0, line=1, col=1, span=Span(line=0, col=0, offset=0))
+    mut seen = 0
+    while t.pos < len(src):
+        if src[t.pos] == 35:
+            mark(mut t)
+            advance(src, mut t)
+            continue
+        if src[t.pos] == 33:
+            break
+        advance(src, mut t)
+        seen += 1
+    return t.pos * 1000000 + t.line * 10000 + t.col * 100 + t.span.offset + seen * 7
+
+
+# A snapshot taken before an in-place update keeps the old value: here the old
+# version is read after the write, so the write must not reuse its home.
+func snapshot() -> int:
+    mut t = Cursor(pos=5, line=2, col=3, span=Span(line=1, col=1, offset=1))
+    mut old = t
+    t.pos += 10
+    mut nested = t.span
+    t.span.offset = 99
+    return old.pos * 1000 + t.pos * 10 + nested.offset + t.span.offset * 100000
+
+
+# Two loop-carried records swapped each iteration (a parallel copy on the back edge).
+func swaps(n: int) -> int:
+    mut a = Cursor(pos=1, line=0, col=0, span=Span(line=0, col=0, offset=0))
+    mut b = Cursor(pos=2, line=0, col=0, span=Span(line=0, col=0, offset=0))
+    for i in range(n):
+        mut t = a
+        a = b
+        b = t
+        b.col += i
+    return a.pos * 100 + b.pos * 10 + a.col + b.col * 1000
+
+
+# A field moved from one memory field of a record to another of the same record.
+func shuffle() -> int:
+    mut p = Pair(left=Span(line=1, col=2, offset=3), right=Span(line=4, col=5, offset=6))
+    mut q = p
+    p.right = p.left
+    p.left = Span(line=7, col=8, offset=9)
+    return p.left.line * 100000 + p.right.line * 10000 + q.right.line * 1000 + q.left.col * 100 + p.right.offset
+
+
+# Records with counted children: a list and a text field, updated in place and through `mut`.
+func push_all(mut b: Bag, n: int):
+    for i in range(n):
+        b.items.append(i)
+        b.count += 1
+        b.total += i
+        b.last = i
+
+
+func counted() -> int:
+    mut b = Bag(name="bag", items=[], count=0, total=0, last=-1)
+    mut keep = b
+    push_all(mut b, 5)
+    mut copy = b
+    b.items.append(100)
+    b.name = b.name + "!"
+    push_all(mut b, 2)
+    return len(keep.items) * 1000000 + len(copy.items) * 10000 + len(b.items) * 100 + b.total + len(b.name) * 10000000
+
+
+# Unions over four words: a payload read where it lies, and a match on an updated copy.
+func shapes(k: int) -> int:
+    mut s = Shape.dot(value=Span(line=k, col=k + 1, offset=k + 2))
+    if k > 2:
+        s = Shape.bag(value=Bag(name="b", items=[k, k], count=2, total=2 * k, last=k))
+    mut total = 0
+    match s:
+        case Shape.dot(value=d):
+            total = d.line + d.col + d.offset
+        case Shape.bag(value=g):
+            mut h = g
+            h.total += 1
+            total = g.total * 1000 + h.total + len(g.items)
+        case Shape.none:
+            total = -1
+    return total
+
+
+# Result payloads propagated with `?` next to a `mut` record.
+func step(mut t: Cursor, limit: int) -> Result[Span, str]:
+    if t.pos >= limit:
+        return Err("end")
+    t.pos += 1
+    t.span = Span(line=t.line, col=t.col, offset=t.pos)
+    return Ok(t.span)
+
+
+func steps(mut t: Cursor, limit: int) -> Result[int, str]:
+    mut first = try step(mut t, limit)
+    mut second = try step(mut t, limit)
+    return Ok(first.offset * 10 + second.offset)
+
+
+func results() -> int:
+    mut t = Cursor(pos=0, line=3, col=4, span=Span(line=0, col=0, offset=0))
+    mut a = 0
+    match steps(mut t, 10):
+        case Ok(v):
+            a = v
+        case Err(e):
+            a = -len(e)
+    mut b = 0
+    match steps(mut t, 3):
+        case Ok(v):
+            b = v
+        case Err(e):
+            b = -len(e)
+    return a * 10000 + b * 100 + t.pos
+
+
+# Recursion through a `mut` record.
+func climb(mut t: Cursor, depth: int) -> int:
+    if depth == 0:
+        return t.pos
+    t.pos += depth
+    mut below = climb(mut t, depth - 1)
+    t.col += 1
+    return below + t.col
+
+
+func recursion() -> int:
+    mut t = Cursor(pos=0, line=0, col=0, span=Span(line=0, col=0, offset=0))
+    mut r = climb(mut t, 6)
+    return r * 1000 + t.pos * 10 + t.col
+
+
+# A `mut` argument next to read-only arguments that read it, or a part of it: they see
+# the value from before the call.
+func overlap(mut t: Cursor, before: Cursor, part: Span) -> int:
+    t.pos = 1000
+    t.span.offset = 77
+    return before.pos + part.offset + t.pos
+
+
+func overlaps() -> int:
+    mut t = Cursor(pos=3, line=0, col=0, span=Span(line=0, col=0, offset=4))
+    mut r = overlap(mut t, t, t.span)
+    return r * 1000 + t.span.offset
+
+
+# Two `mut` records passed in one call, and a `mut` record updated twice by one helper.
+func trade(mut a: Cursor, mut b: Cursor) -> int:
+    mut keep = a
+    a = b
+    b = keep
+    a.col += 1
+    return a.pos * 10 + b.pos
+
+
+func apply(mut t: Cursor) -> int:
+    mark(mut t)
+    t.pos += 1
+    mark(mut t)
+    return t.span.offset
+
+
+func two() -> int:
+    mut a = Cursor(pos=1, line=0, col=0, span=Span(line=0, col=0, offset=0))
+    mut b = Cursor(pos=2, line=0, col=5, span=Span(line=0, col=0, offset=0))
+    mut r = trade(mut a, mut b)
+    mut t = Cursor(pos=9, line=8, col=7, span=Span(line=0, col=0, offset=0))
+    mut s = apply(mut t)
+    return r * 100000 + a.pos * 10000 + a.col * 1000 + b.pos * 100 + s
+
+
+# A record built in the caller's destination and returned through several paths.
+func build(k: int) -> Cursor:
+    mut c = Cursor(pos=k, line=k, col=k, span=Span(line=k, col=k, offset=k))
+    if k % 2 == 0:
+        c.pos += 1
+        return c
+    mut other = c
+    other.line = 50
+    if k > 5:
+        return other
+    c.col = 40
+    return c
+
+
+func built() -> int:
+    mut total = 0
+    for k in range(9):
+        mut c = build(k)
+        total = total * 3 + c.pos + c.line + c.col
+    return total
+
+
+# Write-backs (`wb = it.rt; push(mut wb, v); it.rt = wb`): built in the field itself, except
+# where a snapshot of the old field is still read after the update.
+func push(mut rt: Runtime, v: int):
+    rt.stack[rt.top] = v
+    rt.top = rt.top + 1
+
+
+func pop(mut rt: Runtime) -> int:
+    rt.top = rt.top - 1
+    return rt.stack[rt.top]
+
+
+func interp_step(mut it: Interp, v: int) -> int:
+    mut wb = it.rt
+    push(mut wb, v)
+    it.rt = wb
+    if v % 2 == 0:
+        mut wb2 = it.rt
+        mut x = pop(mut wb2)
+        it.rt = wb2
+        return x
+    mut snap = it.rt
+    mut wb3 = it.rt
+    push(mut wb3, v + 100)
+    it.rt = wb3
+    return snap.top * 1000 + it.rt.top
+
+
+func writebacks() -> int:
+    mut it = Interp(name="i", rt=Runtime(stack=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], top=0, a=0, b=0, c=0), depth=0)
+    mut shared = it
+    mut total = 0
+    for i in range(7):
+        total = total * 7 + interp_step(mut it, i)
+    return total * 1000 + it.rt.top * 100 + it.rt.stack[1] + shared.rt.top + len(shared.rt.stack)
+
+
+# A trap in the middle of an update: the counted overflow traps after the earlier lines printed.
+func overflow(mut t: Cursor, by: int):
+    t.col += 1
+    t.pos += by
+
+
+func main(args: str[], out: Stream) -> int:
+    out.print(scan(b"ab\ncd#ef\ngh!ij"))
+    out.print(snapshot())
+    out.print(swaps(5), swaps(6))
+    out.print(shuffle())
+    out.print(counted())
+    out.print(shapes(1), shapes(4))
+    out.print(results())
+    out.print(recursion())
+    out.print(overlaps())
+    out.print(two())
+    out.print(built())
+    out.print(writebacks())
+    if len(args) > 0:
+        mut t = Cursor(pos=9223372036854775807, line=0, col=0, span=Span(line=0, col=0, offset=0))
+        overflow(mut t, len(args))
+        out.print(t.pos)
+    return 0

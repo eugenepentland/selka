@@ -1,0 +1,6 @@
+func identity[T](value: T) -> T:
+    return value
+
+
+public func program() -> i64:
+    return identity[i64](42)

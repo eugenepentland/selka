@@ -1,0 +1,9 @@
+# oracle: cpython
+def main() -> int:
+    x = 5
+    if x > 3:
+        label = "big"
+    else:
+        label = "small"
+    print(label)
+    return 0

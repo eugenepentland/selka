@@ -1,0 +1,16 @@
+record Cell:
+    code: int
+    flag: bool
+
+
+func write(cells0: Cell[], i: int, v: int) -> int:
+    mut cells = cells0
+    cells[i] = Cell(code=v, flag=True)
+    return cells[i].code
+
+
+func main(out: Stream) -> int:
+    mut cells = [Cell(code=1, flag=False), Cell(code=2, flag=False)]
+    out.print(write(cells, 1, 9))
+    out.print(write(cells, 2, 9))
+    return 0

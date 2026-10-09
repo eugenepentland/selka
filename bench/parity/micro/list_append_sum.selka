@@ -1,0 +1,10 @@
+# list_append_sum: grow a list[int] by append, then fold it with a for loop.
+func main(out: Stream) -> int:
+    mut values: int[] = []
+    for i in range(16000000):
+        values.append(i)
+    mut total = 0
+    for v in values:
+        total += v
+    out.print(total)
+    return 0

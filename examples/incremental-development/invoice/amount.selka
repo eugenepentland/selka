@@ -1,0 +1,2 @@
+public func total() -> int effects():
+    return 42

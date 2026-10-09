@@ -1,0 +1,9 @@
+func main() -> int:
+    mut seen: set[str] = set()
+    for word in ["a", "b", "a", "c"]:
+        seen.add(word)
+    seen.discard("z")
+    seen.remove("b")
+    if seen.issubset({"a", "c", "d"}) and "a" in seen:
+        return len(seen) + len(seen.union(["x", "y"])) * 10
+    return 0

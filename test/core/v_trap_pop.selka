@@ -1,0 +1,14 @@
+func drain(n: int) -> int:
+    mut xs: int[] = []
+    for i in range(n):
+        xs.append(i)
+    mut total = 0
+    for i in range(n + 1):
+        total += xs.pop()
+    return total
+
+
+func main(out: Stream) -> int:
+    out.print(drain(3))
+    out.print(drain(0))
+    return 0

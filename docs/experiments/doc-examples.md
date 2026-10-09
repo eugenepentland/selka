@@ -1,0 +1,138 @@
+# Executable documentation examples
+
+`selka doctest` runs every documentation example through the compiler, so a
+documented program cannot drift away from the language it describes. The default
+`zig build test` gate depends on it through the `test-docs` step.
+
+```sh
+zig build test-docs
+zig-out/bin/selka doctest .
+```
+
+The command runs the compiler binary it is invoked as; `zig build` must have installed
+that binary first. `--filter GLOB` restricts the scan
+to matching repository-relative document paths, `--verbose` prints every command,
+diagnostic and skip reason, and `--report PATH` writes a `doc-examples-v1` JSON report.
+
+Units are independent, so they run on a bounded pool of workers that pull from
+one shared cursor — `--jobs N` or `SELKA_JOBS` sets the width, and the default
+is the machine's cores capped by what its free memory affords (`selka test
+<dir>` now uses the cores alone). Statuses are collected and only reported once
+every unit has finished, so the tallies, the failure lines and the summary read
+exactly as they did when units ran one at a time; only `--verbose` progress
+lines interleave, each written whole.
+
+## What is scanned
+
+`README.md`, `SPEC.md` and every `*.md` under `docs/`, recursively, except
+`docs/legacy/`. That directory holds pages whose subject was removed from the
+language, so its examples are deliberately not executed. A fenced block whose info
+string is `selka` or `my` is an executable example and a complete program by
+default. Backtick and tilde fences both work.
+
+A block that declares no `main` is type-checked rather than executed: the runner
+appends a neutral entry point, because `check` and `check-project` both require one.
+Declarations are checked even when unused, so a declaration-only example is really
+checked. A block that declares `module NAME` is written to `NAME.selka` and
+goes through `check-project` or `run-project`; everything else is written to `main.selka`
+and goes through `check` or `run`. Sources are written under a per-run temporary root
+and never into the repository.
+
+The runner writes whatever the fence contains and lets the compiler judge it, so a
+page's examples are held to exactly the surface the compiler accepts.
+
+## Directives
+
+The leading lines of a block may carry directives written as `# doc:` comments. Directive lines are stripped before the program is
+written out. An unknown directive name fails the run.
+
+| Directive | Meaning |
+| --- | --- |
+| `# doc: expect <text>` | Run the program; stdout, trimmed, must equal `<text>`. Repeated lines join with newlines. |
+| `# doc: expect-error <CODE>` | `check` must fail and its `--diagnostics=json` output must carry that code. |
+| `# doc: check` | Type-check only. Also the default when the block declares no `main`. |
+| `# doc: project <name>` | Group this block with the other blocks of the same document and name into one project. |
+| `# doc: file <name>.selka` | Name this block's file inside its project; `main.selka` is the entry. |
+| `# doc: skip <reason>` | Do not execute. The reason is mandatory and appears in the report. |
+| `# doc: not-selka` | Prose block that only looks like guest source; exempt from the mis-tag lint. |
+| `# doc: allow-read <dir>` | Run under `--restrict` with `--allow-read=docs/fixtures/<dir>`, granting only that fixture directory. |
+| `# doc: allow-write <dir>` | The same, with write authority on that directory. |
+| `# doc: value-semantics` | Accepted and redundant: value semantics is always on, so the unit runs with no switch. |
+| `# doc: legacy-sharing` | Skip the unit: it documents legacy sharing, a mode the compiler retired (S5-D4). |
+| `# doc: gc-runtime` | Skip the unit: it documents the tracing collector, a mode the compiler retired (S5-D4). |
+
+A block with no directive and a `main` is run and must exit 0.
+
+A run unit is given `--print-result` unless its own source calls `print`, so an
+example that prints its output asserts that output and an older example still
+asserts the entry point's `int` result.
+
+Capability grants name a directory under `docs/fixtures/`. They imply
+`--restrict`, so an example that carries one is executed with exactly the
+authority it names and nothing else; an example with no grant directive runs with
+the command's ordinary defaults. A fixture directory holds the files the example
+reads; an example that writes should write only names it also removes, because
+the tree is shared by every run.
+
+Grouped blocks become one project checked or run through `run-project`:
+
+```selka
+# doc: project greeting
+# doc: file helper.selka
+# doc: expect 42
+
+public func answer() -> int effects():
+    return 42
+```
+
+```selka
+# doc: project greeting
+# doc: file main.selka
+import helper
+
+func main() -> int:
+    return helper.answer()
+```
+
+## The mis-tag lint
+
+A block tagged `text`, `rust`, `python`, `go`, or left untagged, whose content has
+`func main`, `fn main` or `module ` at the start of a line, is reported as a mis-tagged
+example and fails the run. Otherwise a stale example could hide behind a fence that
+never executes. Genuinely non-selka blocks opt out with `# doc: not-selka` as the
+first line, or with an info string like `text notest` when the block should not carry
+a visible directive line.
+
+## Exit status and report
+
+The runner prints per-file counts of blocks run, checked, skipped, mis-tagged and
+failed, then a one-line summary. It exits 0 only when nothing failed, nothing is
+mis-tagged, and at least one executable block was found; finding no executable block
+at all is a failure rather than a pass.
+
+## Current inventory
+
+`README.md` and `SPEC.md` contribute no executable blocks: the README fences are all
+shell invocations, and `SPEC.md` has no fenced blocks at all. Across the scanned
+documents the gate currently runs 106 examples, type-checks 19 and skips 6. Those
+figures are a snapshot; the runner's own summary is the authority. The count grew
+when every implemented feature gained a documented example, which
+[`selka doc-coverage`](../tooling/documentation-gate.md) now requires.
+
+| Document | Skipped block | Reason |
+| --- | --- | --- |
+| `docs/audits/language-simplicity-2026-09-12.md` | boilerplate probe | removed feature |
+| `docs/experiments/module-discovery.md` | module header | fragment: header excerpt whose imported modules are not shown |
+| `docs/experiments/module-interfaces.md` | export placement | fragment: the imported `shared.units` module is not shown |
+| `docs/experiments/source-codecs.md` | codec match | fragment: statements without the `Positive` domain and `Wire` declarations |
+
+Every fragment above is a candidate for a later documentation rewrite: completing one
+into a whole program removes its `skip` directive and adds it to the executed set. The
+`removed feature` row is different in kind: it is a block in a dated record whose syntax
+the language no longer has, kept for the history rather than rewritten. Nothing under
+`docs/legacy/` appears here at all, because the scan skips that directory: an example
+whose subject was removed is not executed, and so it is neither a skip nor a failure.
+
+`README.md` and `SPEC.md` are the other standing item. Neither carries an executable
+example today, so neither is covered by this gate; examples added to them are picked up
+automatically.

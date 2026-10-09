@@ -1,0 +1,4 @@
+public func program() -> int:
+    mut values = [10, 20, 30]
+    mut n = 4
+    return values[(n - 1) % 3] * 5 - 8

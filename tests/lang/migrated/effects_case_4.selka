@@ -1,0 +1,10 @@
+func touch[T](mut values: T[], item: T) -> Unit effects(mutation):
+    values[0] = item
+
+
+public func program() -> int:
+    mut values = [1]
+    touch[int](mut values, 5)
+    if values[0] != 5:
+        return 1
+    return 0

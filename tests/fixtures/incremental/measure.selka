@@ -1,0 +1,51 @@
+import model
+import make
+import api
+
+public func indexed_x(s: model.Scene) -> int:
+    return s.index["a"].x
+
+
+public func first_child(s: model.Scene) -> int:
+    match s.root:
+        case Some(node):
+            return node.children[0].value
+        case None:
+            return 0
+
+
+public func radius_sum(s: model.Scene) -> int:
+    mut total = 0
+    for shape in s.shapes:
+        match shape:
+            case model.Shape.circle(center=center, radius=radius):
+                total += radius + center.y
+            case model.Shape.dot(value=p):
+                total += p.x
+            case model.Shape.empty:
+                total += 0
+    return total
+
+
+public func pair_y(s: model.Scene) -> int:
+    const key, point = s.pairs[0]
+    return key + point.y
+
+
+public func chained() -> int:
+    return make.scene().index["a"].y
+
+
+public func through_api(p: api.Point) -> int:
+    return p.x + p.y
+
+
+public func tinted(s: model.Scene) -> bool:
+    return s.tint == model.Color.green
+
+
+public func deepest(n: model.Node) -> int:
+    mut best = n.value
+    for child in n.children:
+        best = best + deepest(child)
+    return best

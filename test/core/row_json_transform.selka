@@ -1,0 +1,110 @@
+import json
+
+# Split from benchmarks/runtime/expanded/text/main.my; identical timed work.
+extern func runtime_bench_now(host: Host) -> i64 effects(host)
+
+
+record Inputs:
+    raw: bytes
+    texts: str[]
+    other: str[]
+    numbers: int[]
+    fragments: str[]
+
+
+func number(text: str) -> int:
+    match int(text):
+        case Some(value):
+            return value
+        case None:
+            return 0
+
+
+func row_name(j: int) -> str:
+    return (if (j % 2 == 0) then ("café,\"item\"") else ("naïve,item")) + str(j)
+
+
+func score(text: str) -> int:
+    mut raw = text.encode()
+    mut result = len(raw)
+    for value in raw:
+        result += value
+    return result
+
+
+func json_integer(value: json.Json) -> int:
+    match json.as_int(value):
+        case Some(n):
+            return n
+        case None:
+            return 0
+
+
+func json_active(value: json.Json) -> bool:
+    match json.as_bool(value):
+        case Some(flag):
+            return flag
+        case None:
+            return False
+
+
+func json_job(text: str, bump: int) -> int:
+    mut output: json.Json[] = []
+    match json.loads(text):
+        case Ok(value):
+            match value:
+                case json.Json.array(value=rows):
+                    for row in rows:
+                        match row:
+                            case json.Json.object(value=fields):
+                                if json_active(fields["active"]):
+                                    mut result: dict[str, json.Json] = {"id": fields["id"], "name": fields["name"], "amount": json.integer(json_integer(fields["amount"]) + bump)}
+                                    output.append(json.object(result))
+                            case _:
+                                return 0
+                case _:
+                    return 0
+        case Err(_):
+            return 0
+    return score(json.dumps(json.array(output)))
+
+
+func inputs(kind: str, size: int, seed: int) -> Inputs:
+    mut raw = b""
+    mut texts: str[] = []
+    mut other: str[] = []
+    mut numbers: int[] = []
+    mut fragments: str[] = []
+    mut rows: json.Json[] = []
+    for j in range(size):
+        mut fields: dict[str, json.Json] = {"id": json.integer(seed + j), "name": json.text(row_name(j)), "amount": json.integer((seed + j * 19) % 100003), "active": json.boolean((seed + j) % 3 != 0)}
+        rows.append(json.object(fields))
+    texts = [json.dumps(json.array(rows))]
+    return Inputs(raw=raw, texts=texts, other=other, numbers=numbers, fragments=fragments)
+
+
+func kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:
+    mut checksum = 0
+    for step in range(iterations):
+        mut cursor = seed + step
+        mut value = json_job(data.texts[0], cursor % 17)
+        checksum = (checksum + value) % 1000000007
+    return checksum
+
+
+func main(args: str[], host: Host, out: Stream) -> int:
+    if len(args) != 3:
+        return 2
+    mut kind = "json_transform"
+    mut size = number(args[0])
+    mut iterations = number(args[1])
+    mut seed = number(args[2])
+    if size < 2 or iterations < 1 or seed < 1 or seed > 1000000:
+        return 2
+    mut data = inputs(kind, size, seed)
+    mut checksum = 0
+    mut start = runtime_bench_now(host)
+    checksum = kernel(kind, data, iterations, seed)
+    mut elapsed = runtime_bench_now(host) - start
+    out.print(checksum, elapsed)
+    return 0

@@ -1,0 +1,19 @@
+# scan_replace: str.replace over LIB.md's 4 MB text.
+func shared_text() -> str:
+    mut block = "".join([for i in range(2000) yield f"item{i},{(i * 7919) % 100003},{'xxxxxx'[:i % 7]}\n"])
+    return "".join([for _ in range(110) yield block])
+
+
+func main(out: Stream) -> int:
+    mut text = shared_text()
+    mut total = 0
+    mut a = 0
+    mut b = 0
+    mut c = 0
+    for _ in range(4):
+        a = len(text.replace("item", "it"))
+        b = len(text.replace(",", ";;"))
+        c = len(text.replace("x\nitem1", "|"))
+        total += a + b + c
+    out.print(f"{a} {b} {c} {total}")
+    return 0

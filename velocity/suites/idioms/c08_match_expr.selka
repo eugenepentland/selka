@@ -1,0 +1,7 @@
+# oracle: selka-only
+def main() -> int:
+    d = {"a": 1}
+    v = match d.get("b", 0):
+        case 0: 42
+        case _: 0
+    return v

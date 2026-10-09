@@ -1,0 +1,9 @@
+
+
+# An empty in-memory Filesystem. Every whole-path helper, `open`, `fs.dir(...)`,
+# `read_only()`, `exists` and `listdir` work on it; it starts with no files,
+# accepts only relative paths, sorts its listings by name, and never touches the
+# real filesystem. It grants no real authority, so building one needs no
+# capability and is not an effect.
+public func memory() -> Filesystem:
+    return __stand_in[Filesystem](0)

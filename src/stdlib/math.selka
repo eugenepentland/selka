@@ -1,0 +1,249 @@
+
+
+# Largest finite binary64 value; anything above it is positive infinity.
+func max_finite() -> float:
+    return 1.7976931348623157e308
+
+
+# Ratio of a circle's circumference to its diameter, rounded to binary64.
+public func pi() -> float effects():
+    return 3.141592653589793
+
+
+# Base of the natural logarithm, rounded to binary64.
+public func e() -> float effects():
+    return 2.718281828459045
+
+
+# The canonical quiet not-a-number.
+public func nan() -> float effects():
+    return 0.0 / 0.0
+
+
+# Positive infinity.
+public func infinity() -> float effects():
+    return 1.0 / 0.0
+
+
+# Whether a value is not-a-number, which is the only value unequal to itself.
+public func is_nan(value: float) -> bool effects():
+    return value != value
+
+
+# Whether a value is one of the two infinities.
+public func is_inf(value: float) -> bool effects():
+    return value > max_finite() or value < 0.0 - max_finite()
+
+
+# Whether a value is neither infinite nor not-a-number.
+public func is_finite(value: float) -> bool effects():
+    return not is_nan(value) and not is_inf(value)
+
+
+# Magnitude of a floating value, mapping both zeros to positive zero.
+public func fabs(value: float) -> float effects():
+    if value == 0.0:
+        return 0.0
+    if value < 0.0:
+        return 0.0 - value
+    return value
+
+
+# Sign of a floating value as -1, 0 or 1; not-a-number reports 0.
+public func sign(value: float) -> int effects():
+    if value > 0.0:
+        return 1
+    if value < 0.0:
+        return 0 - 1
+    return 0
+
+
+# Integral part of a value, rounding toward zero.
+public func trunc(value: float) -> float effects():
+    if is_nan(value) or is_inf(value):
+        return value
+    if value >= 9223372036854775808.0 or value < 0.0 - 9223372036854775808.0:
+        return value
+    return float(int(value))
+
+
+# Largest integral value that is not greater than the argument.
+public func floor(value: float) -> float effects():
+    mut whole = trunc(value)
+    if whole > value:
+        return whole - 1.0
+    return whole
+
+
+# Smallest integral value that is not less than the argument.
+public func ceil(value: float) -> float effects():
+    mut whole = trunc(value)
+    if whole < value:
+        return whole + 1.0
+    return whole
+
+
+# Nearest integral value, with halves rounded away from zero.
+public func round(value: float) -> float effects():
+    if is_nan(value) or is_inf(value):
+        return value
+    mut whole = trunc(value)
+    mut fraction = value - whole
+    if fraction >= 0.5:
+        return whole + 1.0
+    if fraction <= 0.0 - 0.5:
+        return whole - 1.0
+    return whole
+
+
+# Square root, correctly rounded by the binary64 intrinsic. This module
+# declares `sqrt`, which shadows the prelude helper, so it reaches the
+# compiler-internal intrinsic spelling directly.
+public func sqrt(value: float) -> float effects():
+    if is_nan(value) or value == 0.0:
+        return value
+    if value < 0.0:
+        return nan()
+    if is_inf(value):
+        return value
+    return __float_sqrt(value)
+
+
+# Sine of an angle in radians, evaluated by the native binary64 operation.
+public func sin(value: float) -> float effects():
+    if value == 0.0:
+        return value
+    if not is_finite(value):
+        return nan()
+    return __float_sin(value)
+
+
+# Cosine of an angle in radians, evaluated by the native binary64 operation.
+public func cos(value: float) -> float effects():
+    if value == 0.0:
+        return 1.0
+    if not is_finite(value):
+        return nan()
+    return __float_cos(value)
+
+
+# Repeated squaring for a nonnegative exponent that already fits the budget.
+func positive_power(base: float, exponent: int) -> float:
+    mut total = 1.0
+    mut factor = base
+    mut remaining = exponent
+    while remaining > 0:
+        if remaining % 2 == 1:
+            total = total * factor
+        factor = factor * factor
+        remaining = remaining // 2
+    return total
+
+
+# Exponents past this magnitude only decide overflow, underflow and sign.
+func saturated(exponent: int) -> int:
+    if exponent > 4096 or exponent < 0 - 4096:
+        return 4096 + exponent % 2
+    if exponent < 0:
+        return 0 - exponent
+    return exponent
+
+
+# Base raised to an integer exponent; magnitudes above 4096 saturate by parity.
+public func pow(base: float, exponent: int) -> float effects():
+    if exponent == 0:
+        return 1.0
+    mut magnitude = positive_power(base, saturated(exponent))
+    if exponent < 0:
+        return 1.0 / magnitude
+    return magnitude
+
+
+# Smaller of two floating values; a not-a-number operand propagates.
+public func fmin(a: float, b: float) -> float effects():
+    if is_nan(a) or is_nan(b):
+        return nan()
+    if a <= b:
+        return a
+    return b
+
+
+# Larger of two floating values; a not-a-number operand propagates.
+public func fmax(a: float, b: float) -> float effects():
+    if is_nan(a) or is_nan(b):
+        return nan()
+    if a >= b:
+        return a
+    return b
+
+
+# Smaller of two integers of any width, compared without subtraction.
+public func min[T: integer](a: T, b: T) -> T noalloc:
+    if a <= b:
+        return a
+    return b
+
+
+# Larger of two integers of any width, compared without subtraction.
+public func max[T: integer](a: T, b: T) -> T noalloc:
+    if a >= b:
+        return a
+    return b
+
+
+# Value restricted to an inclusive integer range; an inverted range yields low.
+public func clamp[T: integer](value: T, low: T, high: T) -> T noalloc:
+    if high < low:
+        return low
+    if value < low:
+        return low
+    if value > high:
+        return high
+    return value
+
+
+# Magnitude of an integer; the most negative value has no positive counterpart.
+public func abs(value: int) -> Result[int, str]:
+    if value == 0 - 9223372036854775807 - 1:
+        return Err("absolute value of -9223372036854775808 is not representable")
+    if value < 0:
+        return Ok(0 - value)
+    return Ok(value)
+
+
+# Greatest common divisor, reported as a nonnegative integer.
+public func gcd(a: int, b: int) -> Result[int, str]:
+    mut left = a
+    mut right = b
+    while right != 0:
+        mut remainder = left % right
+        left = right
+        right = remainder
+    return abs(left)
+
+
+# Least common multiple of two integers, reported as a nonnegative integer.
+public func lcm(a: int, b: int) -> Result[int, str]:
+    if a == 0 or b == 0:
+        return Ok(0)
+    mut left = try abs(a)
+    mut right = try abs(b)
+    mut divisor = try gcd(left, right)
+    mut quotient = left // divisor
+    if quotient > 9223372036854775807 // right:
+        return Err("least common multiple does not fit a 64-bit integer")
+    return Ok(quotient * right)
+
+
+# Integer square root: the largest whole number whose square is not larger.
+public func isqrt(value: int) -> Result[int, str]:
+    if value < 0:
+        return Err("integer square root of a negative value is undefined")
+    if value < 2:
+        return Ok(value)
+    mut estimate = int(sqrt(float(value)))
+    while estimate > 0 and estimate > value // estimate:
+        estimate = (estimate + value // estimate) // 2
+    while (estimate + 1) <= value // (estimate + 1):
+        estimate += 1
+    return Ok(estimate)

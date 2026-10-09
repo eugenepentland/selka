@@ -1,0 +1,75 @@
+# Plain aggregate stores copy bytes after the ordinary receiver/bounds checks.
+record Point:
+    x: int
+    y: int
+
+
+record Board:
+    points: FixedArray[Point, 2]
+
+
+func edit(mut values: Point[], index: int) -> Unit:
+    values[index].x = values[index].y + 10
+
+
+func replace_during(mut values: Point[]) -> int:
+    values[0] = Point(x=20, y=30)
+    values.append(Point(x=40, y=50))
+    return 7
+
+
+public func test_plain_record_update_preserves_the_earlier_snapshot() -> bool:
+    mut values = [Point(x=1, y=2), Point(x=3, y=4)]
+    mut before = values
+    edit(mut values, -1)
+    return values[1].x == 14 and values[1].y == 4 and before[1].x == 3
+
+
+public func test_same_and_neighbor_element_copies_preserve_independent_bytes() -> bool:
+    mut values = [Point(x=1, y=2), Point(x=3, y=4)]
+    values[0] = values[0]
+    values[1] = values[0]
+    values[0].x = 9
+    return values[0].x == 9 and values[0].y == 2 and values[1].x == 1 and values[1].y == 2
+
+
+public func test_plain_nested_arrays_copy_before_a_field_update() -> bool:
+    mut boards = [Board(points=FixedArray[Point, 2]([Point(x=1, y=2), Point(x=3, y=4)])), Board(points=FixedArray[Point, 2]([Point(x=5, y=6), Point(x=7, y=8)]))]
+    mut before = boards
+    boards[0].points[1].y = 40
+    boards[1] = boards[0]
+    boards[0].points[0].x = 10
+    return before[0].points[1].y == 4 and boards[1].points[1].y == 40 and boards[1].points[0].x == 1
+
+
+public func test_rhs_callback_finishes_before_the_plain_field_receiver_is_read() -> bool:
+    mut values = [Point(x=1, y=2)]
+    mut before = values
+    mut mutation_result_52 = replace_during(mut values)
+    values[0].x = mutation_result_52
+    return values[0].x == 7 and values[0].y == 30 and len(values) == 2 and before[0].x == 1
+
+
+public func test_fixed_array_element_store_keeps_source_and_destination_distinct() -> bool:
+    mut values: FixedArray[int, 2][] = [FixedArray[int, 2]([1, 2]), FixedArray[int, 2]([3, 4])]
+    mut before = values
+    values[1] = values[0]
+    values[0][1] = 20
+    return before[0][1] == 2 and values[0][1] == 20 and values[1][1] == 2
+
+
+public func test_zero_sized_elements_keep_the_established_storage_path() -> bool:
+    mut empty: FixedArray[int, 0] = FixedArray[int, 0]([])
+    mut values: FixedArray[int, 0][] = [empty, empty]
+    values[1] = empty
+    return len(values) == 2 and len(values[1]) == 0
+
+
+func main() -> int:
+    assert test_plain_record_update_preserves_the_earlier_snapshot()
+    assert test_same_and_neighbor_element_copies_preserve_independent_bytes()
+    assert test_plain_nested_arrays_copy_before_a_field_update()
+    assert test_rhs_callback_finishes_before_the_plain_field_receiver_is_read()
+    assert test_fixed_array_element_store_keeps_source_and_destination_distinct()
+    assert test_zero_sized_elements_keep_the_established_storage_path()
+    return 0

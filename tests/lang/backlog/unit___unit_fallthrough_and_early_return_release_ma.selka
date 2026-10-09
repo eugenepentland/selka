@@ -1,0 +1,33 @@
+result A:
+    ok: i64[],
+    err: i64
+
+
+func consume(values: i64[], early: bool):
+    _ = len(values)
+    if early:
+        return
+
+
+func produce() -> A:
+    mut values: i64[] = []
+    values.append(1)
+    values.append(2)
+    return Ok(values)
+
+
+func main() -> i64:
+    mut i = 0
+    while i < 2:
+        match produce():
+            case A.ok(values):
+                consume(values, i == 0)
+            case A.err(code):
+                return code
+        i += 1
+    return 42
+
+
+# spec: UNIT-4
+public func test_unit_fallthrough_and_early_return_release_ma() -> bool:
+    return main() == 42

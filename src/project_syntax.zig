@@ -1,0 +1,140 @@
+//! Combine already-parsed module tables while preserving declaration ownership.
+//! This is not name resolution: consumers must retain the module context below.
+/// Failures returned by build; callers must handle these boundary errors.
+pub const BuildError = error{
+    EmptySourceMap,
+    IncompleteProject,
+    InvalidNodeId,
+    InvalidSourceIndex,
+    InvalidSourceSpan,
+    InvalidStatementId,
+    NestedSourceMap,
+    OutOfMemory,
+    Overflow,
+};
+
+const std = @import("std");
+const ast = @import("ast.zig");
+const source = @import("source.zig");
+const interfaces = @import("interfaces.zig");
+/// Half-open expression and statement ranges originating in one merged module.
+pub const Range = struct { node_start: usize, node_end: usize, statement_start: usize, statement_end: usize };
+/// Merged project syntax, mapped source, and entry identity backed by the project arena.
+pub const Merged = struct {
+    src: source.Source,
+    syntax: ast.Program,
+    modules: []const Range,
+    function_modules: []const usize,
+};
+const Remap = @import("ast_copy.zig").Mapper;
+/// All output storage belongs to index.project.arena; the original AST is unchanged.
+pub fn build(index: *interfaces.Index) BuildError!Merged {
+    const project = index.project;
+    if (!project.progress.complete or project.problem != null) return error.IncompleteProject;
+    const allocator = project.arena.allocator();
+    const inputs = try allocator.alloc(source.Source, project.modules.items.len);
+    for (inputs, project.modules.items) |*input, module| input.* = module.src;
+    const src = try source.Source.initMapped(allocator, inputs);
+    const ranges = try allocator.alloc(Range, inputs.len);
+    var merged: ast.Program = .{ .nodes = .empty, .statements = .empty, .functions = &.{} };
+    var function_modules: std.ArrayList(usize) = .empty;
+    // Size the merged tables once: appending module by module into an arena
+    // would otherwise regrow and recopy the whole program's nodes repeatedly.
+    var node_total: usize = 0;
+    var statement_total: usize = 0;
+    var function_total: usize = 0;
+    for (index.units) |unit| {
+        node_total += unit.syntax.nodes.items.len;
+        statement_total += unit.syntax.statements.items.len;
+        function_total += unit.syntax.functions.len;
+    }
+    try merged.nodes.ensureTotalCapacityPrecise(allocator, node_total);
+    try merged.statements.ensureTotalCapacityPrecise(allocator, statement_total);
+    try function_modules.ensureTotalCapacityPrecise(allocator, function_total);
+    for (index.units, 0..) |unit, module| {
+        const map: Remap = .{
+            .src = src,
+            .module = module,
+            .nodes = merged.nodes.items.len,
+            .statements = merged.statements.items.len,
+            .node_count = unit.syntax.nodes.items.len,
+            .statement_count = unit.syntax.statements.items.len,
+        };
+        for (unit.syntax.nodes.items) |node| try merged.nodes.append(allocator, try map.value(allocator, ast.Node, node));
+        for (unit.syntax.statements.items) |statement| try merged.statements.append(allocator, try map.value(allocator, ast.Statement, statement));
+        ranges[module] = .{ .node_start = map.nodes, .node_end = merged.nodes.items.len, .statement_start = map.statements, .statement_end = merged.statements.items.len };
+        for (unit.syntax.functions) |_| try function_modules.append(allocator, module);
+    }
+    // Append each declaration category once, avoiding quadratic slice copying.
+    inline for (.{ "functions", "records", "domains", "variants", "constraints", "suffixes", "arrays", "tuples", "applications", "callbacks", "aliases", "resources" }) |field| {
+        const is_function = comptime std.mem.eql(u8, field, "functions");
+        // `tuples` is a structural type expression too: a module program that
+        // names one keeps it, exactly as it keeps a fixed-array spelling.
+        const is_expression = comptime std.mem.eql(u8, field, "suffixes") or
+            std.mem.eql(u8, field, "arrays") or std.mem.eql(u8, field, "tuples") or
+            std.mem.eql(u8, field, "applications") or std.mem.eql(u8, field, "aliases") or
+            std.mem.eql(u8, field, "callbacks");
+        const Collection = if (is_function) ast.Program else if (is_expression) ast.TypeExpressions else ast.TypeDeclarations;
+        const Slice = @FieldType(Collection, field);
+        const Item = @typeInfo(Slice).pointer.child;
+        var declarations: std.ArrayList(Item) = .empty;
+        for (index.units, ranges, 0..) |unit, range, module| {
+            const map: Remap = .{
+                .src = src,
+                .module = module,
+                .nodes = range.node_start,
+                .statements = range.statement_start,
+                .node_count = unit.syntax.nodes.items.len,
+                .statement_count = unit.syntax.statements.items.len,
+            };
+            for (@field(if (is_function) unit.syntax else if (is_expression) unit.syntax.types.expressions else unit.syntax.types, field)) |item| try declarations.append(allocator, try map.value(allocator, Item, item));
+        }
+        if (is_function) {
+            merged.functions = try declarations.toOwnedSlice(allocator);
+        } else {
+            @field(if (is_expression) merged.types.expressions else merged.types, field) = try declarations.toOwnedSlice(allocator);
+        }
+    }
+    // Lambdas are syntax-only callable bodies: they are not module exports, but
+    // their spans and body node identities must be relocated with the same map
+    // as the rest of the merged syntax or a module program loses them.
+    var lambdas: std.ArrayList(ast.Lambda) = .empty;
+    for (index.units, ranges, 0..) |unit, range, module| {
+        const map: Remap = .{
+            .src = src,
+            .module = module,
+            .nodes = range.node_start,
+            .statements = range.statement_start,
+            .node_count = unit.syntax.nodes.items.len,
+            .statement_count = unit.syntax.statements.items.len,
+        };
+        for (unit.syntax.lambdas) |lambda| try lambdas.append(allocator, try map.value(allocator, ast.Lambda, lambda));
+    }
+    merged.lambdas = try lambdas.toOwnedSlice(allocator);
+    // Declaration attributes are keyed by each module's own name span, so they
+    // must be relocated with the same map as the functions they describe. A
+    // contract clause's condition is an expression of its module, so node
+    // identities move with that module's node range too.
+    var attributes: std.ArrayList(ast.DeclarationAttributes) = .empty;
+    for (index.units, ranges, 0..) |unit, range, module| {
+        const map: Remap = .{
+            .src = src,
+            .module = module,
+            .nodes = range.node_start,
+            .statements = range.statement_start,
+            .node_count = unit.syntax.nodes.items.len,
+            .statement_count = unit.syntax.statements.items.len,
+        };
+        for (unit.syntax.attributes) |entry| try attributes.append(allocator, try map.value(allocator, ast.DeclarationAttributes, entry));
+    }
+    merged.attributes = try attributes.toOwnedSlice(allocator);
+    // Leading docstrings carry no expression or statement identity; they only
+    // need the same span relocation as the declarations that own them.
+    var docstrings: std.ArrayList(ast.DeclarationDoc) = .empty;
+    for (index.units, 0..) |unit, module| {
+        const map: Remap = .{ .src = src, .module = module };
+        for (unit.syntax.docstrings) |entry| try docstrings.append(allocator, try map.value(allocator, ast.DeclarationDoc, entry));
+    }
+    merged.docstrings = try docstrings.toOwnedSlice(allocator);
+    return .{ .src = src, .syntax = merged, .modules = ranges, .function_modules = try function_modules.toOwnedSlice(allocator) };
+}

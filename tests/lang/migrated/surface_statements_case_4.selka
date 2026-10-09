@@ -1,0 +1,20 @@
+result R:
+    ok: i64,
+    err: i64
+
+
+func first() -> R:
+    return Ok(41)
+
+
+func next() -> R:
+    mut n = try first()
+    return Ok(n + 1)
+
+
+public func program() -> i64:
+    match next():
+        case R.ok(n):
+            return n
+        case R.err(e):
+            return e

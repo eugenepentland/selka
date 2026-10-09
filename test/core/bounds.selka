@@ -1,0 +1,5 @@
+func main(args: str[], out: Stream) -> int:
+    mut values = [for j in range(3) yield j * 2]
+    out.print(values[0])
+    out.print(values[len(args) + 5])
+    return 0

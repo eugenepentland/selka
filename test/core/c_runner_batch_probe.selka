@@ -1,0 +1,13 @@
+# Three plain tests for the batch probe (NEW-CORE-TEST-BATCH-1). The linked
+# c_runner_batch_probe.c counts their processes and can end a process at its
+# second trial, which a test run alone never reaches.
+public func test_one() -> bool:
+    return True
+
+
+public func test_two() -> bool:
+    return True
+
+
+public func test_three() -> bool:
+    return True

@@ -1,0 +1,130 @@
+func total(values: int[]) -> int noalloc:
+    mut result = 0
+    for value in values:
+        result += value
+    return result
+
+
+func paired_total(items: DictItem[str, int][]) -> int noalloc:
+    mut result = 0
+    for key, value in items:
+        result += len(key) + value
+    return result
+
+
+func generic_values[T: copy + storable](mapping: dict[str, T]) -> T[]:
+    mut view = list(mapping.values())
+    return view
+
+
+func generic_live_values[T: copy + storable](mapping: dict[str, T]) -> T[]:
+    return list(mapping.values())
+
+
+func generic_items[T: copy + storable](mapping: dict[str, T]) -> DictItem[str, T][]:
+    return list(mapping.items())
+
+
+func generic_first[T: copy + storable](mapping: dict[str, T], fallback: T) -> T noalloc:
+    for key, value in mapping.items():
+        return value
+    return fallback
+
+
+# spec-case: DICT-VIEWS-1
+public func test_bound_snapshots_stay_independent() -> bool:
+    mut mapping = {"a": 10, "b": 20}
+    mut values = list(mapping.values())
+    mut keys = list(mapping.keys())
+    mut items = list(mapping.items())
+    mut snapshot = list(values)
+    mapping["b"] = 30
+    mapping["c"] = 2
+    if total(values) != 30 or paired_total(items) != 32:
+        return False
+    return len(keys) == 2 and snapshot == [10, 20] and list(keys) == ["a", "b"]
+
+
+# spec-case: DICT-VIEWS-1
+public func test_items_have_key_value_fields_in_every_context() -> bool:
+    mut mapping = {"a": 10, "b": 20}
+    mut entries = list(mapping.items())
+    if entries[0].key != "a" or entries[0].value != 10:
+        return False
+    mut result = 0
+    for key, value in entries:
+        result += len(key) + value
+    for entry in mapping.items():
+        result += entry.value
+    for index, entry in enumerate(mapping.items()):
+        result += index + entry.value
+    return result == 93
+
+
+# spec-case: DICT-VIEWS-1
+public func test_views_support_comprehensions_and_generic_helpers() -> bool:
+    mut mapping = {"a": 10, "b": 20}
+    if [for value in mapping.values() yield value + 1] != [11, 21]:
+        return False
+    if [for item in mapping.items() yield item.key] != ["a", "b"]:
+        return False
+    if generic_values(mapping) != [10, 20]:
+        return False
+    if list(generic_live_values(mapping)) != [10, 20]:
+        return False
+    if generic_items(mapping)[1].value != 20:
+        return False
+    return generic_first(mapping, 0) == 10
+
+
+# spec-case: DICT-VIEWS-1
+public func test_views_keep_mapping_alive_and_empty_views_work() -> bool:
+    mut items = list({"alive": 42}.items())
+    for value in range(2000):
+        mut garbage = [value, value + 1]
+        if len(garbage) != 2:
+            return False
+    mut empty: dict[str, int] = {}
+    if len(empty.items()) != 0 or len(list(empty.values())) != 0:
+        return False
+    return list(items)[0].value == 42
+
+
+# spec-case: DICT-VIEWS-1
+public func test_view_reads_observe_value_replacement_and_loop_control() -> bool:
+    mut mapping = {"a": 10, "b": 20, "c": 30}
+    mut result = 0
+    for key, value in mapping.items():
+        if key == "a":
+            mapping["b"] = 2
+            continue
+        result += value
+        break
+    return result == 2 and mapping["a"] == 10
+
+
+# spec-case: DICT-VIEWS-1
+# spec-case: D2-VIEW-STORAGE-1
+public func test_direct_projection_membership_and_snapshots() -> bool:
+    mut mapping = {1: [7, 8], 2: [9]}
+    if 1 not in mapping.keys() or 3 in mapping.keys():
+        return False
+    if [7, 8]not in mapping.values() or [8] in mapping.values():
+        return False
+    for item in mapping.items():
+        if item not in mapping.items():
+            return False
+    mut other = {2: [8]}
+    for item in other.items():
+        if item in mapping.items():
+            return False
+    mut empty: dict[int, int[]] = {}
+    if [9] in empty.values():
+        return False
+    for item in mapping.items():
+        if item in empty.items():
+            return False
+    mut values = list(mapping.values())
+    mapping[1].append(11)
+    values[1].append(13)
+    return values == [[7, 8], [9, 13]] and mapping[1] == [7, 8, 11] and mapping[2] == [9]

@@ -1,0 +1,45 @@
+resource File: filesystem
+
+
+result Open:
+    ok: File,
+    err: int
+
+
+record Chunk:
+    bytes: FixedArray[u8, 16]
+    length: u64
+    eof: bool
+
+
+result Read:
+    ok: Chunk,
+    err: int
+
+
+result Written:
+    ok: u64,
+    err: int
+
+
+result Status:
+    ok: int,
+    err: int
+
+
+func work(fs: Filesystem) -> Status effects(filesystem):
+    mut request: FixedArray[u8, 1] = FixedArray[u8, 1]([42u8])
+    mut file = try acquire_resource[Open](fs, request)
+    mut chunk = try read_resource[Read](file)
+    # The count reports actual write progress. This example sends one byte.
+    mut payload: FixedArray[u8, 1] = FixedArray[u8, 1]([7u8])
+    mut written = try write_resource[Written](file, payload)
+    return Ok(int(chunk.length) + int(written))
+
+
+func main(fs: Filesystem) -> int effects(filesystem):
+    match work(fs):
+        case Status.ok(value):
+            return value
+        case Status.err(code):
+            return -code

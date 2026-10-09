@@ -1,0 +1,11 @@
+# oracle: selka-only
+def parse(s: str) -> Result[int, str]:
+    match int(s):
+        case Some(v):
+            return Ok(v)
+        case None:
+            return Err("bad")
+
+def main() -> int:
+    v = parse("42").unwrap()
+    return v

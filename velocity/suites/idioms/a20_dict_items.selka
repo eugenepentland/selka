@@ -1,0 +1,7 @@
+# oracle: cpython
+def main() -> int:
+    d = {10: 100, 20: 200}
+    total = 0
+    for k, v in d.items():
+        total += k + v
+    return total

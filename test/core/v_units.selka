@@ -1,0 +1,20 @@
+func counts(value: Unit, n: int) -> int:
+    mut values = [value, value]
+    for i in range(n):
+        values.append(value)
+    values[1] = value
+    mut seen = 0
+    for item in values:
+        seen += 1
+    mut first = values[0]
+    mut last = values.pop()
+    mut copy = values
+    copy.append(value)
+    return len(values) * 100 + len(copy) * 10 + seen + (if (values == copy) then (1) else (0))
+
+
+func main(out: Stream) -> int:
+    out.print(counts((), 3), counts((), 0))
+    mut empty: Unit[] = []
+    out.print(len(empty), empty == [])
+    return 0

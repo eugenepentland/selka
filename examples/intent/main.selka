@@ -1,0 +1,6 @@
+func configured_limit() -> int:
+    return 7
+
+
+func main() -> int:
+    return configured_limit()

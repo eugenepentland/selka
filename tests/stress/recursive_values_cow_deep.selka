@@ -1,0 +1,20 @@
+# Runtime stress for COW-SHARED-1 and VALUE-SEMANTICS-2. Build this source
+# directly with --value-semantics on each backend: constructing a million
+# scalar-only recursive boxes and taking a non-borrowed copy must not walk the
+# immutable chain, and a later outer-field write must leave the copy alone.
+record Node:
+    value: int
+    next: Node?
+
+
+func main(out: Stream) -> int:
+    mut node = Node(value=0, next=None)
+    mut i = 0
+    while i < 1000000:
+        node = Node(value=i + 1, next=Some(node))
+        i += 1
+    mut copied = node
+    node.value = -1
+    out.print(copied.value)
+    out.print(node.value)
+    return 0

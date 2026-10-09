@@ -1,0 +1,6 @@
+import config.values as inputs
+
+func main() -> int:
+    if inputs.enabled():
+        return int(inputs.batch_size())
+    return 0

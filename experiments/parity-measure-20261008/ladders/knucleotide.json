@@ -1,0 +1,245 @@
+{
+ "rung0": {
+  "instructions": 2441645183,
+  "cycles": 817820110,
+  "output_ok": true,
+  "samples": [
+   {
+    "instructions": 2441645181,
+    "cycles": 825789466
+   },
+   {
+    "instructions": 2441645180,
+    "cycles": 818945157
+   },
+   {
+    "instructions": 2441645185,
+    "cycles": 817820110
+   },
+   {
+    "instructions": 2441645183,
+    "cycles": 814572059
+   },
+   {
+    "instructions": 2441645185,
+    "cycles": 817000709
+   }
+  ]
+ },
+ "rung1": {
+  "instructions": 1099945420,
+  "cycles": 360703556,
+  "output_ok": true,
+  "samples": [
+   {
+    "instructions": 1099945407,
+    "cycles": 361158796
+   },
+   {
+    "instructions": 1099945416,
+    "cycles": 360703556
+   },
+   {
+    "instructions": 1099945429,
+    "cycles": 364401022
+   },
+   {
+    "instructions": 1099945420,
+    "cycles": 360325665
+   },
+   {
+    "instructions": 1099945422,
+    "cycles": 359912361
+   }
+  ]
+ },
+ "rung2": {
+  "instructions": 1038929077,
+  "cycles": 298999920,
+  "output_ok": true,
+  "samples": [
+   {
+    "instructions": 1038929074,
+    "cycles": 298562450
+   },
+   {
+    "instructions": 1038929072,
+    "cycles": 299474442
+   },
+   {
+    "instructions": 1038929083,
+    "cycles": 301273133
+   },
+   {
+    "instructions": 1038929081,
+    "cycles": 298999920
+   },
+   {
+    "instructions": 1038929077,
+    "cycles": 298385287
+   }
+  ]
+ },
+ "rung3": {
+  "instructions": 1005646950,
+  "cycles": 303292376,
+  "output_ok": true,
+  "samples": [
+   {
+    "instructions": 1005646949,
+    "cycles": 305625933
+   },
+   {
+    "instructions": 1005646955,
+    "cycles": 302899713
+   },
+   {
+    "instructions": 1005646947,
+    "cycles": 303292376
+   },
+   {
+    "instructions": 1005646950,
+    "cycles": 304058927
+   },
+   {
+    "instructions": 1005646953,
+    "cycles": 302977973
+   }
+  ]
+ },
+ "mylang": {
+  "instructions": 2852740699,
+  "cycles": 904784492,
+  "output_ok": true,
+  "samples": [
+   {
+    "instructions": 2852740707,
+    "cycles": 906013421
+   },
+   {
+    "instructions": 2852740699,
+    "cycles": 896762426
+   },
+   {
+    "instructions": 2852740705,
+    "cycles": 906640666
+   },
+   {
+    "instructions": 2852740697,
+    "cycles": 904784492
+   },
+   {
+    "instructions": 2852740687,
+    "cycles": 900184544
+   }
+  ]
+ },
+ "my-tuned": {
+  "instructions": 586102017,
+  "cycles": 254341553,
+  "output_ok": true,
+  "samples": [
+   {
+    "instructions": 586102017,
+    "cycles": 256022390
+   },
+   {
+    "instructions": 586102008,
+    "cycles": 253465323
+   },
+   {
+    "instructions": 586102017,
+    "cycles": 256886794
+   },
+   {
+    "instructions": 586102008,
+    "cycles": 254307246
+   },
+   {
+    "instructions": 586102018,
+    "cycles": 254341553
+   }
+  ]
+ },
+ "zig-safe": {
+  "instructions": 1377192336,
+  "cycles": 414075030,
+  "output_ok": true,
+  "samples": [
+   {
+    "instructions": 1377192336,
+    "cycles": 414075030
+   },
+   {
+    "instructions": 1377192348,
+    "cycles": 414973212
+   },
+   {
+    "instructions": 1377192334,
+    "cycles": 414245939
+   },
+   {
+    "instructions": 1377192325,
+    "cycles": 414014378
+   },
+   {
+    "instructions": 1377192341,
+    "cycles": 413973220
+   }
+  ]
+ },
+ "zig-fast": {
+  "instructions": 1064685141,
+  "cycles": 369798723,
+  "output_ok": true,
+  "samples": [
+   {
+    "instructions": 1064685141,
+    "cycles": 369798723
+   },
+   {
+    "instructions": 1064685124,
+    "cycles": 367865015
+   },
+   {
+    "instructions": 1064685544,
+    "cycles": 370739422
+   },
+   {
+    "instructions": 1064685138,
+    "cycles": 370048520
+   },
+   {
+    "instructions": 1064685144,
+    "cycles": 367898676
+   }
+  ]
+ },
+ "rust-checked": {
+  "instructions": 2058650552,
+  "cycles": 517798824,
+  "output_ok": true,
+  "samples": [
+   {
+    "instructions": 2061464719,
+    "cycles": 517798824
+   },
+   {
+    "instructions": 2058650552,
+    "cycles": 1154043927
+   },
+   {
+    "instructions": 2059330709,
+    "cycles": 519015771
+   },
+   {
+    "instructions": 2058566984,
+    "cycles": 512209590
+   },
+   {
+    "instructions": 2058624188,
+    "cycles": 511395653
+   }
+  ]
+ }
+}

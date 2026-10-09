@@ -1,0 +1,15 @@
+# oracle: selka-only
+record Item:
+    n: int
+    visited: bool
+
+def main() -> int:
+    items = [Item(1, False), Item(2, False)]
+    for it in items:
+        it.visited = True
+    count = 0
+    for it in items:
+        if it.visited:
+            count += 1
+    print("visited:", count)
+    return count

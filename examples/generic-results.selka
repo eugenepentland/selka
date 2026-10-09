@@ -1,0 +1,37 @@
+result Number:
+    ok: int,
+    err: int
+
+
+func increment[T: integer](input: Number, amount: T) -> Number:
+    const value = try input
+    return Ok(value + int(amount))
+
+
+func number[T](context: T, input: Number) -> int:
+    _ = context
+    match input:
+        case Number.ok(value):
+            return value
+        case Number.err(code):
+            return 0 - code
+
+
+func count[T](context: T, early: bool, input: Number) -> int:
+    _ = context
+    if early:
+        _ = input
+        return 1
+    _ = input
+    mut index = 0
+    mut pending: Number = Ok(0)
+    while index < 3:
+        _ = pending
+        pending = Ok(index)
+        index += 1
+    _ = pending
+    return index
+
+
+func main() -> int:
+    return number[bool](True, increment[u8](Ok(7), 1u8)) + number[bool](True, increment[u8](Err(3), 1u8)) + count[u8](0u8, True, Err(9)) + count[u8](0u8, False, Ok(9))

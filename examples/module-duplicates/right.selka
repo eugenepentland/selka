@@ -1,0 +1,8 @@
+public func quote(count: int) -> int effects():
+    mut subtotal = count * 2
+    return subtotal + 3
+
+
+func alternate(count: int) -> int:
+    mut subtotal = count * 2
+    return subtotal + 4

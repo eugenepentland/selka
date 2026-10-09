@@ -1,0 +1,6 @@
+# oracle: cpython
+def main() -> int:
+    xs = [1, 2, 3]
+    first = xs.pop(0)
+    xs.insert(0, 40)
+    return xs[0] + first + xs.pop()  - 2

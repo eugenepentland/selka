@@ -1,0 +1,126 @@
+
+
+# One SplitMix64 stream. Copying a Random value forks its current state.
+public record Random:
+    state: u64[]
+
+
+# Typed carrier for one host entropy read.
+result EntropyReading:
+    ok: u64,
+    err: int
+
+
+# Two's-complement word for a signed seed, including the most negative one.
+func to_word(value: int) -> u64:
+    if value < 0:
+        return wrapping_sub(0u64, u64(0 - (value + 1)) + 1u64)
+    return u64(value)
+
+
+# A reproducible generator for a raw 64-bit state word.
+public func from_word(word: u64) -> Random:
+    mut cells: u64[] = []
+    cells.append(word)
+    return Random(state=cells)
+
+
+# A reproducible generator for a signed seed; equal seeds give equal streams.
+public func seeded(seed: int) -> Random:
+    return from_word(to_word(seed))
+
+
+# A generator seeded from the host entropy capability.
+public func from_entropy(capability: Entropy) -> Result[Random, str]:
+    match random_u64[EntropyReading](capability):
+        case EntropyReading.ok(word):
+            return Ok(from_word(word))
+        case EntropyReading.err(code):
+            if code == 1:
+                return Err("entropy capability is unavailable")
+            if code == 2:
+                return Err("entropy capability was denied")
+            return Err("entropy capability failed")
+
+
+# An Entropy stand-in whose words are the SplitMix64 stream for `seed`, so
+# `from_entropy` on it is reproducible. It grants no real authority, so building
+# one needs no capability and is not an effect.
+public func seeded_entropy(seed: int) -> Entropy:
+    return __stand_in[Entropy](seed)
+
+
+# The next SplitMix64 word, advancing this generator's state exactly once.
+public func next_word(mut generator: Random) -> u64 effects(mutation):
+    mut state = wrapping_add(generator.state[0], 11400714819323198485u64)
+    generator.state[0] = state
+    mut word = wrapping_mul(bit_xor(state, shift_right(state, 30u64)), 13787848793156543929u64)
+    word = wrapping_mul(bit_xor(word, shift_right(word, 27u64)), 10723151780598845931u64)
+    return bit_xor(word, shift_right(word, 31u64))
+
+
+# A float uniformly drawn from the 2^53 multiples of 2^-53 in [0, 1).
+public func random(mut generator: Random) -> float effects(mutation):
+    mut drawn = shift_right(next_word(mut generator), 11u64)
+    return float(i64(drawn)) / 9007199254740992.0
+
+
+# Distance between two signed bounds, computed without overflowing either width.
+func span(low: int, high: int) -> u64:
+    if low >= 0 or high < 0:
+        return u64(high - low)
+    return u64(high) + u64(0 - (low + 1)) + 1u64
+
+
+# An unbiased word below a modulus, retrying the biased tail of the range.
+func below(mut generator: Random, modulus: u64) -> u64 effects(mutation):
+    if modulus == 0u64:
+        return next_word(mut generator)
+    mut threshold = wrapping_sub(0u64, modulus) % modulus
+    mut word = next_word(mut generator)
+    while word < threshold:
+        word = next_word(mut generator)
+    return word % modulus
+
+
+# A signed bound shifted by an unsigned offset, in steps that each stay in range.
+func offset(low: int, value: u64) -> int:
+    mut third = value // 3u64
+    mut rest = value - third - third
+    return low + i64(third) + i64(third) + i64(rest)
+
+
+# A uniform integer in an inclusive range, covering the full signed width.
+public func randint(mut generator: Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):
+    if low > high:
+        return Err("randint needs low <= high")
+    mut width = span(low, high)
+    if width == 18446744073709551615u64:
+        return Ok(offset(low, next_word(mut generator)))
+    return Ok(offset(low, below(mut generator, width + 1u64)))
+
+
+# A uniformly chosen element, or nothing when the list is empty.
+public func choice[T: copy + storable](mut generator: Random, items: T[]) -> T? effects(mutation, managed_allocation):
+    if len(items) == 0:
+        return None
+    match randint(mut generator, 0, len(items) - 1):
+        case Ok(index):
+            return Some(items[index])
+        case Err(_):
+            return None
+
+
+# A list permuted in place by an unbiased Fisher-Yates pass.
+public func shuffle[T: copy + storable](mut generator: Random, mut items: T[]) effects(mutation, managed_allocation):
+    mut index = len(items) - 1
+    while index > 0:
+        match randint(mut generator, 0, index):
+            case Ok(pick):
+                mut held = items[index]
+                items[index] = items[pick]
+                items[pick] = held
+            case Err(_):
+                index = 0
+        index -= 1
+    return

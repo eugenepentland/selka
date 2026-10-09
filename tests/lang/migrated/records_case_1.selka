@@ -1,0 +1,10 @@
+record Pair:
+    x: i64
+    y: i64
+
+
+public func program() -> i64:
+    mut a: Pair = Pair(y=2, x=3)
+    mut b = a
+    b.x = 8
+    return a.x + b.x + b.y

@@ -1,0 +1,135 @@
+# Property tests: a `test_` function with data parameters and no cases-file
+# `arguments` runs against generated inputs. `selka test` draws each input
+# from the parameter types, seeded from the test's name, and every one of the
+# (by default 100) inputs must return True. A precondition, or an invariant of
+# a generated record, discards the inputs that break it instead of failing.
+import random
+
+@invariant(self.low <= self.high, "a span never runs backwards")
+public record PropertySpan:
+    low: int
+    high: int
+
+
+public record PropertyTagged:
+    name: str
+    weight: u8
+
+
+public enum PropertyShape:
+    circle(value: int)
+    square(value: PropertySpan)
+    empty
+
+
+public enum PropertyColor:
+    red
+    green
+    blue
+
+
+func reversed_twice(xs: int[]) -> int[]:
+    mut ys = xs.copy()
+    ys.reverse()
+    ys.reverse()
+    return ys
+
+
+public func test_reversing_twice_is_the_identity(xs: int[]) -> bool:
+    return reversed_twice(xs) == xs
+
+
+public func test_sorting_orders_and_keeps_every_element(xs: i32[]) -> bool:
+    mut ys = sorted(xs)
+    for i in range(1, len(ys)):
+        if ys[i - 1] > ys[i]:
+            return False
+    return len(ys) == len(xs)
+
+
+public func test_concatenated_text_adds_lengths(a: str, b: str) -> bool:
+    return len(a + b) == len(a) + len(b)
+
+
+public func test_concatenated_bytes_add_lengths(a: bytes, b: bytes) -> bool:
+    return len(a + b) == len(a) + len(b)
+
+
+public func test_adding_to_a_set_makes_it_a_member(s: set[int], x: int) -> bool:
+    mut t = s.copy()
+    t.add(x)
+    return x in t and len(t) >= len(s)
+
+
+public func test_every_dictionary_key_reads_back(d: dict[str, int]) -> bool:
+    mut count = 0
+    for key in d.keys():
+        if key in d:
+            count = count + 1
+    return count == len(d)
+
+
+@requires(n >= 0, "halving is only asked of non-negative numbers")
+public func test_halving_never_grows(n: int) -> bool:
+    return n // 2 <= n
+
+
+public func test_a_span_is_ordered(span: PropertySpan) -> bool:
+    return span.low <= span.high
+
+
+public func test_a_record_keeps_its_fields(tagged: PropertyTagged) -> bool:
+    mut copy = replace(tagged, weight=tagged.weight)
+    return copy.name == tagged.name and copy.weight == tagged.weight
+
+
+public func test_a_shape_has_a_kind(shape: PropertyShape) -> bool:
+    match shape:
+        case PropertyShape.circle(value=_):
+            return True
+        case PropertyShape.square(value=span):
+            return span.low <= span.high
+        case PropertyShape.empty:
+            return True
+
+
+public func test_an_option_defaults(value: int?) -> bool:
+    match value:
+        case Some(_):
+            return True
+        case None:
+            return value == None
+
+
+public func test_negating_twice_keeps_a_float(f: float) -> bool:
+    return f != f or -(-f) == f
+
+
+public func test_a_tuple_swaps_back(pair: tuple[int, str]) -> bool:
+    const number, text = pair
+    mut swapped = (text, number)
+    const back_text, back_number = swapped
+    return back_number == number and back_text == text
+
+
+public func test_a_fixed_array_has_its_length(values: FixedArray[u8, 4], color: PropertyColor) -> bool:
+    return len(values) == 4 and color == color
+
+
+public func test_a_result_verdict(xs: int[]) -> Result[bool, str]:
+    if len(xs) > 1000:
+        return Err("too long")
+    return Ok(True)
+
+
+public func test_a_capability_beside_generated_data(limit: u8, entropy: Entropy) -> bool:
+    match random.from_entropy(entropy):
+        case Ok(sampled):
+            mut generator = sampled
+            match random.randint(mut generator, 0, int(limit)):
+                case Ok(value):
+                    return value >= 0 and value <= int(limit)
+                case Err(_):
+                    return False
+        case Err(_):
+            return False

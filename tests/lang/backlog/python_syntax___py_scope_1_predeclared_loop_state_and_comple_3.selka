@@ -1,0 +1,12 @@
+func main() -> int:
+    mut answer = 0
+    mut i = 0
+    while i < 3:
+        answer = answer + i
+        i += 1
+    return answer
+
+
+# spec-case: PY-SCOPE-1
+public func test_py_scope_1_predeclared_loop_state_and_comple_3() -> bool:
+    return main() == 3

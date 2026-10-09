@@ -1,0 +1,4 @@
+import amount
+
+func main() -> int:
+    return amount.total()

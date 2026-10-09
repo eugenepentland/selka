@@ -1,0 +1,12 @@
+record Pair[T]:
+    first: T
+    second: T
+
+
+func pick[T](values: Pair[T]) -> T:
+    return values.first
+
+
+public func program() -> i64:
+    mut boxed = Pair[i64](first=40, second=2)
+    return pick[i64](boxed) + pick(Pair[i64](first=2, second=0))

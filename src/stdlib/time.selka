@@ -1,0 +1,147 @@
+
+
+# A signed span of wall-clock time, counted in nanoseconds.
+public record Duration:
+    nanoseconds: int
+
+
+# A point on the host's Unix clock, counted in nanoseconds since the epoch.
+public record Instant:
+    unix_nanoseconds: int
+
+
+# Typed carrier for one host clock read.
+result Reading:
+    ok: int,
+    err: int
+
+
+# Largest magnitude a nanosecond count can hold.
+func limit() -> int:
+    return 9223372036854775807
+
+
+# A duration of the given number of nanoseconds.
+public func nanoseconds(count: int) -> Duration effects():
+    return Duration(nanoseconds=count)
+
+
+# A duration of whole microseconds, rejecting counts beyond the signed range.
+public func microseconds(count: int) -> Result[Duration, str]:
+    return scaled(count, 1000)
+
+
+# A duration of whole milliseconds, rejecting counts beyond the signed range.
+public func milliseconds(count: int) -> Result[Duration, str]:
+    return scaled(count, 1000000)
+
+
+# A duration of whole seconds, rejecting counts beyond the signed range.
+public func seconds(count: int) -> Result[Duration, str]:
+    return scaled(count, 1000000000)
+
+
+# A duration for a count of units, checked against the nanosecond range.
+func scaled(count: int, unit: int) -> Result[Duration, str]:
+    mut reach = limit() // unit
+    if count > reach or count < 0 - reach:
+        return Err("duration does not fit a 64-bit nanosecond count")
+    return Ok(Duration(nanoseconds=count * unit))
+
+
+# Two durations added, rejecting a total outside the nanosecond range.
+public func sum(first: Duration, second: Duration) -> Result[Duration, str]:
+    if second.nanoseconds > 0 and first.nanoseconds > limit() - second.nanoseconds:
+        return Err("duration sum does not fit a 64-bit nanosecond count")
+    if second.nanoseconds < 0 and first.nanoseconds < (0 - limit() - 1) - second.nanoseconds:
+        return Err("duration sum does not fit a 64-bit nanosecond count")
+    return Ok(Duration(nanoseconds=first.nanoseconds + second.nanoseconds))
+
+
+# The second duration subtracted from the first, rejecting range overflow.
+public func difference(first: Duration, second: Duration) -> Result[Duration, str]:
+    if second.nanoseconds == 0 - limit() - 1:
+        return Err("duration difference does not fit a 64-bit nanosecond count")
+    return sum(first, Duration(nanoseconds=0 - second.nanoseconds))
+
+
+# Three-way comparison of two durations.
+public func compare(first: Duration, second: Duration) -> int effects():
+    if first.nanoseconds < second.nanoseconds:
+        return 0 - 1
+    if first.nanoseconds > second.nanoseconds:
+        return 1
+    return 0
+
+
+# A duration as a floating count of seconds, rounded to binary64.
+public func to_seconds(value: Duration) -> float effects():
+    return float(value.nanoseconds) / 1000000000.0
+
+
+# A duration truncated toward zero to whole milliseconds.
+public func to_milliseconds(value: Duration) -> int effects():
+    if value.nanoseconds >= 0:
+        return value.nanoseconds // 1000000
+    if value.nanoseconds == 0 - limit() - 1:
+        return 0 - 9223372036854
+    return 0 - (0 - value.nanoseconds) // 1000000
+
+
+# The current wall-clock instant, read through an explicit clock capability.
+public func now(clock: Clock) -> Result[Instant, str]:
+    match clock_now[Reading](clock):
+        case Reading.ok(count):
+            return Ok(Instant(unix_nanoseconds=count))
+        case Reading.err(code):
+            if code == 1:
+                return Err("clock capability is unavailable")
+            if code == 2:
+                return Err("clock capability was denied")
+            return Err("clock capability failed")
+
+
+# A simulated clock that reads `start` until it is advanced. It grants no real
+# authority, so building one needs no capability and is not an effect, and code
+# that reads it through `now` cannot tell it from a host clock.
+public func simulated_clock(start: Instant) -> Clock:
+    return __stand_in[Clock](start.unix_nanoseconds)
+
+
+# Move a simulated clock by `duration`, backward for a negative one, the way a
+# wall clock may step. A host-granted clock cannot be moved.
+public func advance(clock: Clock, duration: Duration) -> Result[Unit, str]:
+    mut status = __clock_advance(clock, duration.nanoseconds)
+    if status == 1:
+        return Err("only a simulated clock can be advanced")
+    if status == 2:
+        return Err("the simulated clock would leave the 64-bit nanosecond range")
+    return Ok(())
+
+
+# An instant rebuilt from a stored Unix nanosecond count.
+public func from_unix_nanoseconds(count: int) -> Instant effects():
+    return Instant(unix_nanoseconds=count)
+
+
+# An instant advanced by a duration, rejecting a result outside the epoch range.
+public func after(start: Instant, duration: Duration) -> Result[Instant, str]:
+    if duration.nanoseconds > 0 and start.unix_nanoseconds > limit() - duration.nanoseconds:
+        return Err("instant does not fit a 64-bit Unix nanosecond count")
+    if duration.nanoseconds < 0 and start.unix_nanoseconds < (0 - limit() - 1) - duration.nanoseconds:
+        return Err("instant does not fit a 64-bit Unix nanosecond count")
+    return Ok(Instant(unix_nanoseconds=start.unix_nanoseconds + duration.nanoseconds))
+
+
+# The nonnegative span between two instants, rejecting a reversed pair.
+public func elapsed(start: Instant, end: Instant) -> Result[Duration, str]:
+    if end.unix_nanoseconds < start.unix_nanoseconds:
+        return Err("elapsed needs an end at or after its start")
+    if start.unix_nanoseconds < 0 and end.unix_nanoseconds > limit() + start.unix_nanoseconds:
+        return Err("elapsed span does not fit a 64-bit nanosecond count")
+    return Ok(Duration(nanoseconds=end.unix_nanoseconds - start.unix_nanoseconds))
+
+
+# Whether a deadline has been reached at the given instant.
+public func expired(deadline: Instant, current: Instant) -> bool effects():
+    return current.unix_nanoseconds >= deadline.unix_nanoseconds

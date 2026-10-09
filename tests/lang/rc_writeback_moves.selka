@@ -1,0 +1,374 @@
+# `wb = owner.f; change(mut wb); owner.f = wb` is a move of `owner.f` under
+# RC when nothing can observe the emptied field before the store-back
+# (RC-CLOSED-FIELD-TRANSFER-2). Every test here also runs under GC and
+# `--gc-stress`; the near misses must keep plain value semantics.
+record Note:
+    words: str[]
+
+
+record Rt:
+    objects: int[]
+    names: dict[str, int]
+    label: str
+    last: Note?
+    count: int
+
+
+record Interp:
+    rt: Rt
+    label: str
+    depth: int
+
+
+record Nested:
+    inner: Interp
+    extra: int[]
+
+
+record Bag:
+    items: int[]
+    size: int
+
+
+func fresh() -> Interp:
+    return Interp(rt=Rt(objects=[], names={}, label="rt", last=None, count=0), label="it", depth=0)
+
+
+func push(mut rt: Rt, value: int):
+    rt.objects.append(value)
+    rt.count += 1
+
+
+func name(mut rt: Rt, key: str, value: int):
+    rt.names[key] = value
+    rt.last = Some(Note(words=[key]))
+
+
+func push_measured(mut rt: Rt, owner: Interp):
+    rt.objects.append(len(owner.rt.objects))
+
+
+func total(rt: Rt) -> int:
+    mut sum = 0
+    for item in rt.objects:
+        sum += item
+    return sum
+
+
+public func test_owned_local_writeback_loop_appends_in_place() -> bool:
+    mut it = fresh()
+    mut i = 0
+    while i < 200:
+        mut wb = it.rt
+        push(mut wb, i)
+        it.rt = wb
+        i += 1
+    return len(it.rt.objects) == 200 and it.rt.count == 200 and total(it.rt) == 19900 and it.label == "it"
+
+
+public func test_snapshots_taken_before_the_moves_keep_their_values() -> bool:
+    mut it = fresh()
+    mut first = it.rt
+    push(mut first, 1)
+    it.rt = first
+    mut saved = it
+    mut saved_rt = it.rt
+    for i in range(50):
+        mut wb = it.rt
+        push(mut wb, i)
+        it.rt = wb
+    return saved.rt.objects == [1] and saved_rt.objects == [1] and len(it.rt.objects) == 51 and saved_rt.count == 1
+
+
+func step(mut it: Interp, note: Note, value: int):
+    mut wb = it.rt
+    push(mut wb, value + len(note.words) + len(it.label))
+    it.rt = wb
+    mut names = it.rt
+    name(mut names, it.label, value)
+    it.rt = names
+
+
+public func test_mut_parameter_writeback_with_read_only_record_argument() -> bool:
+    mut it = fresh()
+    mut note = Note(words=["a", "b"])
+    mut saved = it
+    for i in range(20):
+        step(mut it, note, i)
+    mut last = it.rt.last
+    return len(it.rt.objects) == 20 and it.rt.objects[0] == 4 and it.rt.names["it"] == 19 and len(saved.rt.objects) == 0 and note.words == ["a", "b"] and last is not None and last.words == ["it"]
+
+
+func step_alias(mut it: Interp, other: Interp) -> int:
+    mut wb = it.rt
+    push(mut wb, len(other.rt.objects))
+    it.rt = wb
+    return len(other.rt.objects)
+
+
+public func test_read_only_alias_of_the_owner_sees_the_original() -> bool:
+    mut it = fresh()
+    mut first = step_alias(mut it, it)
+    mut second = step_alias(mut it, it)
+    return first == 0 and second == 1 and it.rt.objects == [0, 1]
+
+
+func read_between(mut it: Interp):
+    mut wb = it.rt
+    push(mut wb, 7)
+    push(mut wb, len(it.rt.objects))
+    it.rt = wb
+
+
+public func test_place_read_between_take_and_writeback_sees_the_original() -> bool:
+    mut it = fresh()
+    read_between(mut it)
+    read_between(mut it)
+    return it.rt.objects == [7, 0, 7, 2]
+
+
+func maybe(mut it: Interp, keep: bool):
+    mut wb = it.rt
+    push(mut wb, 5)
+    if keep:
+        it.rt = wb
+
+
+public func test_writeback_on_some_paths_keeps_the_original_elsewhere() -> bool:
+    mut it = fresh()
+    maybe(mut it, False)
+    maybe(mut it, True)
+    maybe(mut it, False)
+    mut local = fresh()
+    for i in range(6):
+        mut wb = local.rt
+        push(mut wb, i)
+        if i % 2 == 0:
+            local.rt = wb
+    return it.rt.objects == [5] and local.rt.objects == [0, 2, 4]
+
+
+func early(mut it: Interp, stop: bool) -> int:
+    mut wb = it.rt
+    push(mut wb, 9)
+    if stop:
+        return len(wb.objects)
+    it.rt = wb
+    return 0
+
+
+func owned_early(stop: bool) -> int:
+    mut it = fresh()
+    mut wb = it.rt
+    push(mut wb, 4)
+    if stop:
+        return len(wb.objects) + len(it.rt.objects) * 10
+    it.rt = wb
+    return len(it.rt.objects) * 100
+
+
+public func test_early_return_between_take_and_writeback() -> bool:
+    mut it = fresh()
+    mut stopped = early(mut it, True)
+    mut unchanged = len(it.rt.objects)
+    mut finished = early(mut it, False)
+    return stopped == 1 and unchanged == 0 and finished == 0 and it.rt.objects == [9] and owned_early(True) == 1 and owned_early(False) == 100
+
+
+public func test_break_and_continue_between_take_and_writeback() -> bool:
+    mut broken = fresh()
+    mut i = 0
+    while i < 10:
+        mut wb = broken.rt
+        push(mut wb, i)
+        if i == 3:
+            break
+        broken.rt = wb
+        i += 1
+    mut skipped = fresh()
+    for j in range(6):
+        mut wb2 = skipped.rt
+        push(mut wb2, j)
+        if j == 2:
+            continue
+        skipped.rt = wb2
+    return broken.rt.objects == [0, 1, 2] and skipped.rt.objects == [0, 1, 3, 4, 5]
+
+
+func pass_owner(mut it: Interp):
+    mut wb = it.rt
+    push(mut wb, 1)
+    push_measured(mut wb, it)
+    it.rt = wb
+
+
+public func test_owner_passed_to_the_callee_sees_the_original() -> bool:
+    mut it = fresh()
+    pass_owner(mut it)
+    mut local = fresh()
+    mut wb = local.rt
+    push(mut wb, 1)
+    push_measured(mut wb, local)
+    local.rt = wb
+    return it.rt.objects == [1, 0] and local.rt.objects == [1, 0]
+
+
+public func test_nested_field_writebacks() -> bool:
+    mut n = Nested(inner=fresh(), extra=[3])
+    mut saved = n
+    for i in range(5):
+        mut wb = n.inner.rt
+        push(mut wb, i)
+        n.inner.rt = wb
+    for k in range(3):
+        mut inner = n.inner
+        mut rt = inner.rt
+        push(mut rt, 10 + k)
+        inner.rt = rt
+        n.inner = inner
+    mut objects = n.inner.rt.objects
+    objects.append(99)
+    n.inner.rt.objects = objects
+    return n.inner.rt.objects == [0, 1, 2, 3, 4, 10, 11, 12, 99] and saved.inner.rt.objects == [] and n.extra == [3]
+
+
+public func test_list_element_writebacks() -> bool:
+    mut rts = [Rt(objects=[], names={}, label="a", last=None, count=0), Rt(objects=[1], names={}, label="b", last=None, count=0)]
+    mut saved = rts
+    for i in range(4):
+        mut wb = rts[1]
+        push(mut wb, i)
+        rts[1] = wb
+    mut holders = [fresh(), fresh()]
+    for j in range(3):
+        mut h = holders[0]
+        mut rt = h.rt
+        push(mut rt, j)
+        h.rt = rt
+        holders[0] = h
+    return rts[1].objects == [1, 0, 1, 2, 3] and saved[1].objects == [1] and rts[0].objects == [] and holders[0].rt.objects == [0, 1, 2] and holders[1].rt.objects == []
+
+
+func fill(mut it: Interp, n: int, flag: bool):
+    mut wb = it.rt
+    mut i = 0
+    while i < n:
+        if flag:
+            push(mut wb, i)
+        else:
+            name(mut wb, "k", i)
+        i += 1
+    it.rt = wb
+
+
+public func test_loops_and_branches_inside_the_window() -> bool:
+    mut it = fresh()
+    fill(mut it, 0, True)
+    mut empty = len(it.rt.objects)
+    fill(mut it, 4, True)
+    fill(mut it, 3, False)
+    return empty == 0 and it.rt.objects == [0, 1, 2, 3] and it.rt.names["k"] == 2 and it.rt.count == 4
+
+
+public func test_target_rebound_inside_the_window_stores_the_new_value() -> bool:
+    mut it = fresh()
+    mut other = Rt(objects=[7], names={}, label="o", last=None, count=0)
+    mut wb = it.rt
+    push(mut wb, 1)
+    wb = other
+    it.rt = wb
+    return it.rt.objects == [7] and other.objects == [7] and it.rt.label == "o"
+
+
+public func test_owned_list_field_writeback() -> bool:
+    mut bag = Bag(items=[], size=0)
+    mut saved = bag
+    for i in range(100):
+        mut items = bag.items
+        items.append(i)
+        bag.items = items
+        bag.size += 1
+    return len(bag.items) == 100 and bag.size == 100 and bag.items[99] == 99 and saved.items == []
+
+
+func checked_push(mut rt: Rt, value: int) -> Result[int, str]:
+    if value < 0:
+        return Err("negative")
+    rt.objects.append(value)
+    return Ok(len(rt.objects))
+
+
+func propagate(mut it: Interp, value: int) -> Result[int, str]:
+    mut wb = it.rt
+    mut size = try checked_push(mut wb, value)
+    it.rt = wb
+    return Ok(size)
+
+
+public func test_question_mark_exit_between_take_and_writeback() -> bool:
+    mut it = fresh()
+    mut first = 0
+    match propagate(mut it, 3):
+        case Ok(size):
+            first = size
+        case Err(_):
+            first = -1
+    mut failed = False
+    match propagate(mut it, -1):
+        case Ok(_):
+            failed = False
+        case Err(message):
+            failed = message == "negative"
+    return first == 1 and failed and it.rt.objects == [3]
+
+
+public func test_window_reads_target_siblings_and_matches() -> bool:
+    mut it = fresh()
+    mut seeds: int?[] = [Some(5), None, Some(7)]
+    for seed in seeds:
+        mut wb = it.rt
+        match seed:
+            case Some(value):
+                push(mut wb, value + it.depth + total(wb))
+            case None:
+                name(mut wb, it.label, len(wb.objects))
+        it.rt = wb
+    return it.rt.objects == [5, 12] and it.rt.names["it"] == 1 and it.depth == 0
+
+
+public func test_nested_transfer_inside_an_outer_window() -> bool:
+    mut it = fresh()
+    mut saved = it
+    for i in range(4):
+        mut wb = it.rt
+        mut objects = wb.objects
+        objects.append(i)
+        wb.objects = objects
+        wb.count += 1
+        it.rt = wb
+    return it.rt.objects == [0, 1, 2, 3] and it.rt.count == 4 and saved.rt.objects == []
+
+
+func repeated_writeback(mut it: Interp, n: int):
+    mut wb = it.rt
+    mut i = 0
+    while i < n:
+        push(mut wb, i)
+        it.rt = wb
+        i += 1
+
+
+public func test_writeback_inside_a_loop_that_starts_after_the_take() -> bool:
+    mut it = fresh()
+    repeated_writeback(mut it, 3)
+    mut local = fresh()
+    mut first = local.rt
+    push(mut first, 9)
+    local.rt = first
+    mut wb = local.rt
+    mut j = 0
+    while j < 3:
+        push(mut wb, j)
+        local.rt = wb
+        j += 1
+    return it.rt.objects == [0, 1, 2] and it.rt.count == 3 and local.rt.objects == [9, 0, 1, 2]

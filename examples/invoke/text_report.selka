@@ -1,0 +1,56 @@
+# A text/list transformation that returns a typed report, callable through
+# `selka invoke` with no handwritten JSON plumbing:
+#
+#   selka invoke examples/invoke/text_report.selka \
+#     --function 'text_report::summarize' \
+#     --input=examples/invoke/requests/text-report.json
+#
+# `summarize` takes Unicode text plus a `list[str]` and returns a record of
+# counts. `join`, `widths` and `bracket_all` move the same list across the
+# boundary in the other direction, so the example covers text and lists as both
+# an argument and a result.
+public record Summary:
+    scalars: i64
+    pieces: i64
+    longest: i64
+    empty: i64
+
+
+public func summarize(text: str, pieces: str[]) -> Summary effects():
+    mut longest = 0
+    mut empty = 0
+    for piece in pieces:
+        mut width = len(piece)
+        if width > longest:
+            longest = width
+        if width == 0:
+            empty += 1
+    return Summary(scalars=len(text), pieces=len(pieces), longest=longest, empty=empty)
+
+
+public func join(pieces: str[], separator: str) -> str:
+    mut total = ""
+    mut index = 0
+    for piece in pieces:
+        if index != 0:
+            total = total + separator
+        total = total + piece
+        index += 1
+    return total
+
+
+public func widths(pieces: str[]) -> i64[]:
+    return [for piece in pieces yield len(piece)]
+
+
+public func bracket_all(text: str) -> str[]:
+    return ["[" + text + "]", text]
+
+
+func main() -> int:
+    mut report = summarize(text="hello", pieces=["a", "bb", ""])
+    if report.empty != 1:
+        return 1
+    if report.longest != 2:
+        return 2
+    return 0

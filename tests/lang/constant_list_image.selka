@@ -1,0 +1,55 @@
+func image() -> int[]:
+    return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63]
+
+
+func append(mut items: int[]) -> int:
+    mut before = items
+    items.append(64)
+    return len(before)
+
+
+public func test_constant_list_image_detaches_before_write_and_growth() -> bool:
+    mut first = image()
+    mut second = image()
+    mut saved = first
+    first[0] = -7
+    first.append(64)
+    return first[0] == -7 and len(first) == 65 and second[0] == 0 and len(second) == 64 and saved[0] == 0 and len(saved) == 64
+
+
+public func test_constant_list_image_mut_parameter_preserves_snapshot() -> bool:
+    mut items = image()
+    mut before = items
+    mut count = append(mut items)
+    return count == 64 and len(items) == 65 and len(before) == 64 and len(image()) == 64
+
+
+func tick(mut counter: int[]) -> int:
+    counter[0] += 1
+    return counter[0]
+
+
+public func test_nonconstant_list_elements_keep_order_and_run_once() -> bool:
+    mut counter = [0]
+    mut items = [tick(mut counter), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, tick(mut counter)]
+    return counter[0] == 2 and items[0] == 1 and items[64] == 2
+
+
+func text_image() -> str[]:
+    return ["", "é😀", "", "é😀", "", "é😀", "", "é😀", "", "é😀", "", "é😀", "", "é😀", "", "é😀", "", "é😀", "", "é😀", "", "é😀", "", "é😀", "", "é😀", "", "é😀", "", "é😀", "", "é😀", "", "é😀", "", "é😀", "", "é😀", "", "é😀", "", "é😀", "", "é😀", "", "é😀", "", "é😀", "", "é😀", "", "é😀", "", "é😀", "", "é😀", "", "é😀", "", "é😀", "", "é😀", "", "é😀"]
+
+
+func bytes_image() -> bytes[]:
+    return [b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff", b"", b"\x00\xff"]
+
+
+public func test_immortal_list_elements_detach_and_preserve_empty_values() -> bool:
+    mut texts = text_image()
+    mut saved_texts = texts
+    texts[1] = "changed"
+    texts.append("tail")
+    mut octets = bytes_image()
+    mut saved_octets = octets
+    octets[1] = b"changed"
+    octets.append(b"tail")
+    return (texts[1] == "changed" and len(texts) == 65 and saved_texts[0] == "" and saved_texts[1] == "é😀" and saved_octets[1] == b"\x00\xff" and octets[1] == b"changed" and len(octets) == 65 and bytes_image()[0] == b"")

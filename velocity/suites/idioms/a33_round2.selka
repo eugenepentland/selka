@@ -1,0 +1,5 @@
+# oracle: cpython
+def main() -> int:
+    x = round(3.14159, 2)
+    print(x)
+    return 42

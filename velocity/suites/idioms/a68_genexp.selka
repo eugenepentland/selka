@@ -1,0 +1,6 @@
+# oracle: cpython
+def main() -> int:
+    xs = [1, 2, 3]
+    if any(x > 2 for x in xs):
+        return sum(x * x for x in xs) * 3
+    return 0

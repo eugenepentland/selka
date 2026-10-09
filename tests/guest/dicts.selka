@@ -1,0 +1,43 @@
+public func test_insertion_order() -> bool effects(managed_allocation):
+    mut counts: dict[str, int] = {}
+    counts["pear"] = 2
+    counts["apple"] = 3
+    counts["pear"] = counts["pear"] + 1
+    mut order: str[] = []
+    for name in counts:
+        order.append(name)
+    if len(order) != 2 or order[0] != "pear" or order[1] != "apple":
+        return False
+    if counts["pear"] != 3 or counts["apple"] != 3:
+        return False
+    return len(counts) == 2
+
+
+# spec-case: VALUE-SEMANTICS-1
+public func test_copies_and_values() -> bool effects(managed_allocation):
+    mut counts: dict[str, int] = {}
+    counts["pear"] = 2
+    counts["apple"] = 3
+    mut copied = counts
+    copied["fig"] = 5
+    if "fig" in counts or len(counts) != 2 or copied["fig"] != 5:
+        return False
+    mut total = 0
+    for amount in copied.values():
+        total += amount
+    if total != 10:
+        return False
+    return len(copied.keys()) == 3 and len(counts.keys()) == 2
+
+
+public func test_membership_and_get() -> bool effects(managed_allocation):
+    mut counts: dict[str, int] = {"pear": 2, "apple": 3}
+    if "pear" not in counts or "plum" in counts:
+        return False
+    if counts.get("plum", 0) != 0 or counts["apple"] != 3:
+        return False
+    return counts.get("pear", 0) == 2
+
+
+func main() -> int:
+    return 0

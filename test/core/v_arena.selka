@@ -1,0 +1,54 @@
+record Row:
+    id: int
+    cells: int[]
+
+
+func squares(n: int) -> int[]:
+    mut out: int[] = []
+    for i in range(n):
+        out.append(i * i)
+    return out
+
+
+func total(xs: int[]) -> int:
+    mut sum = 0
+    for x in xs:
+        sum += x
+    return sum
+
+
+func staged(rounds: int) -> int:
+    mut kept: int[] = []
+    mut count = 0
+    for round in range(rounds):
+        mut built = squares(round + 3)
+        count += total(built)
+        if round == rounds - 1:
+            kept = built
+    return count * 100 + len(kept)
+
+
+func nested(n: int) -> Row:
+    mut result = Row(id=0, cells=[])
+    mut row = Row(id=n, cells=squares(n))
+    mut inner = squares(n + 1)
+    row.cells.append(total(inner))
+    result = row
+    return result
+
+
+func early(n: int) -> int:
+    for i in range(n):
+        if i == 2:
+            break
+        if i == 0:
+            continue
+    return n
+
+
+func main(out: Stream) -> int:
+    out.print(staged(5))
+    mut row = nested(4)
+    out.print(row.id, len(row.cells), total(row.cells))
+    out.print(early(6))
+    return 0

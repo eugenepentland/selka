@@ -1,0 +1,4 @@
+import message
+
+func main() -> int:
+    return 0

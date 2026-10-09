@@ -1,0 +1,49 @@
+record Flt:
+    x: float
+    n: int
+
+
+record Pair:
+    a: int
+    b: bool
+
+
+record Line:
+    from_point: Pair
+    to_point: Pair
+    live: bool
+
+
+enum Shape:
+    one(value: int)
+    two(value: Pair)
+    none
+
+
+func main(out: Stream) -> int:
+    mut nan = 0.0 / 0.0
+    out.print(Flt(x=nan, n=1) == Flt(x=nan, n=1), Flt(x=0.0, n=1) == Flt(x=-0.0, n=1), nan == nan, 0.0 == -0.0)
+    out.print(Pair(a=1, b=True) == Pair(a=1, b=True), Pair(a=1, b=True) != Pair(a=1, b=False))
+    out.print(Line(from_point=Pair(a=1, b=True), to_point=Pair(a=2, b=False), live=True) == Line(from_point=Pair(a=1, b=True), to_point=Pair(a=2, b=False), live=True))
+    out.print(Line(from_point=Pair(a=1, b=True), to_point=Pair(a=2, b=False), live=True) == Line(from_point=Pair(a=1, b=True), to_point=Pair(a=3, b=False), live=True))
+    out.print(Shape.one(value=3) == Shape.one(value=3), Shape.one(value=3) == Shape.one(value=4), Shape.two(value=Pair(a=1, b=False)) == Shape.two(value=Pair(a=1, b=False)), Shape.none == Shape.none, Shape.one(value=1) == Shape.none)
+    mut o: int? = Some(3)
+    mut n: int? = None
+    out.print(o == Some(3), o == n, n == None, o != n)
+    mut xs = [1, 2, 3]
+    mut ys = [1, 2, 3]
+    out.print(xs == ys, xs == [1, 2], xs != [1, 2, 4], xs == [1, 2, 4])
+    mut bs = [True, False]
+    out.print(bs == [True, False], bs == [True, True])
+    mut small = [u8(1), u8(2)]
+    out.print(small == [u8(1), u8(2)], small != [u8(1), u8(3)])
+    nan = 0.0 / 0.0
+    mut floats = [nan, 1.0]
+    out.print(floats == [nan, 1.0], [0.0] == [-0.0], floats == [nan, 1.0, 2.0])
+    mut rows = [[1, 2], [3]]
+    out.print(rows == [[1, 2], [3]], rows == [[1, 2], [4]], rows == [[1, 2]], rows != [[1, 2], [3, 4]])
+    mut pairs = [Pair(a=1, b=True), Pair(a=2, b=False)]
+    out.print(pairs == [Pair(a=1, b=True), Pair(a=2, b=False)], pairs == [Pair(a=1, b=True), Pair(a=2, b=True)])
+    mut maybes: int?[] = [Some(1), None]
+    out.print(maybes == [Some(1), None], maybes == [Some(1), Some(2)])
+    return 0

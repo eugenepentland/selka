@@ -1,0 +1,64 @@
+record PlainKey:
+    high: u64
+    low: i16
+
+
+public func test_scalar_updates_keep_deletion_history_and_snapshot_values() -> bool:
+    mut mapping: dict[int, int] = {}
+    for i in range(128):
+        mapping[i * 257 - 10000] = i + 3
+    mut snapshot = mapping
+    for i in range(128):
+        const key = i * 257 - 10000
+        if i % 2 == 0:
+            if mapping.pop(key) != i + 3:
+                return False
+        else:
+            mapping[key] = mapping.get(key, 17) + 9
+    for i in range(128, 256):
+        mapping[i * 257 - 10000] = i + 3
+    for i in range(256):
+        const key = i * 257 - 10000
+        if i < 128 and snapshot.get(key, -1) != i + 3:
+            return False
+        mut expected = i + 3
+        if i < 128:
+            expected = if (i % 2 == 0) then (-1) else (i + 12)
+        if mapping.get(key, -1) != expected:
+            return False
+    return len(mapping) == 192 and len(snapshot) == 128
+
+
+public func test_payload_free_sets_keep_order_and_plain_structural_keys() -> bool:
+    mut members: set[u8] = set()
+    for i in range(1000):
+        members.add(u8(i % 17))
+    mut before = members
+    members.remove(u8(3))
+    members.add(u8(255))
+    mut order = list(members)
+    if len(order) != 17 or order[-1] != u8(255) or u8(3) not in before:
+        return False
+    if u8(3) in members or u8(255) in before:
+        return False
+    mut points: set[PlainKey] = set()
+    for i in range(100):
+        points.add(PlainKey(high=u64(i % 9), low=i16(i % 5)))
+    return len(points) == 45 and PlainKey(high=u64(8), low=i16(4)) in points
+
+
+public func test_equal_texts_and_views_keep_owned_keys_across_growth() -> bool:
+    mut mapping: dict[str, int] = {}
+    for i in range(96):
+        mut container = "prefix:" + str(i) + ":suffix"
+        const key = container[7:len(container) - 7]
+        mapping[key] = i
+        if str(i) not in mapping or mapping.get(str(i), -1) != i:
+            return False
+    for i in range(96):
+        const key = str(i)
+        mapping[key] = mapping.get("" + key, -1) + 100
+    for i in range(96):
+        if mapping[str(i)] != i + 100:
+            return False
+    return len(mapping) == 96

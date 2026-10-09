@@ -1,0 +1,26 @@
+result R:
+    ok: i64,
+    err: i64
+
+
+result Outer:
+    ok: R,
+    err: i64
+
+
+func flatten(r: Outer) -> R:
+    const inner = try r
+    const value = try inner
+    return Ok(value)
+
+
+func handle(r: R) -> i64:
+    match r:
+        case R.ok(n):
+            return n
+        case R.err(e):
+            return e
+
+
+public func program() -> i64:
+    return handle(flatten(Ok(Ok(1)))) + handle(flatten(Ok(Err(2)))) + handle(flatten(Err(3)))

@@ -1,0 +1,95 @@
+func write(mut items: int[][], row: int, column: int, value: int) -> unit:
+    items[row][column] = value
+
+
+public func test_nested_scalar_writes_keep_the_original_snapshot() -> bool:
+    mut rows = [[1, 2], [3, 4]]
+    mut before = rows
+    for index in range(20):
+        write(mut rows, -1, -1, index)
+        rows[0][-1] = rows[-1][-1] + 2
+    return rows == [[1, 21], [3, 19]] and before == [[1, 2], [3, 4]]
+
+
+func save(rows: int[][], mut snapshots: int[][][]) -> int:
+    snapshots.append(rows)
+    return 7
+
+
+public func test_callback_publication_keeps_full_pending_receiver_pins() -> bool:
+    mut rows = [[1]]
+    mut snapshots: int[][][] = []
+    rows[0].append(save(rows, mut snapshots))
+    return rows == [[1, 7]] and snapshots == [[[1]]]
+
+
+public func test_managed_publication_still_establishes_independent_values() -> bool:
+    mut rows = [[1], [2]]
+    mut before = rows
+    rows[0] = rows[1]
+    rows[0].append(3)
+    return rows == [[2, 3], [2]] and before == [[1], [2]]
+
+
+public func test_conditional_indices_and_zero_iterations_preserve_owners() -> bool:
+    mut rows = [[1, 2]]
+    mut before = rows
+    for index in range(0):
+        rows[0][index] = 7
+    for index in range(10):
+        rows[0][if (index < 5) then (-1) else (0)] = index
+    return rows == [[9, 4]] and before == [[1, 2]]
+
+
+func main() -> int:
+    assert test_nested_scalar_writes_keep_the_original_snapshot()
+    assert test_callback_publication_keeps_full_pending_receiver_pins()
+    assert test_managed_publication_still_establishes_independent_values()
+    assert test_conditional_indices_and_zero_iterations_preserve_owners()
+    assert test_three_level_shared_projection_keeps_named_row_and_outer_snapshot()
+    assert test_plain_record_writes_keep_snapshot_and_negative_index()
+    assert test_plain_record_call_finishes_before_selection_and_keeps_snapshot()
+    return 0
+
+
+public func test_three_level_shared_projection_keeps_named_row_and_outer_snapshot() -> bool:
+    mut row = [1, 2]
+    mut rows = [row, row]
+    mut cube = [rows, rows]
+    mut before = cube
+    mut saved = cube[0][1]
+    cube[0][1][-1] = 7
+    cube[1][0][if (len(saved) == 2) then (0) else (1)] = 9
+    return cube == [[[1, 2], [1, 7]], [[9, 2], [1, 2]]] and before == [[[1, 2], [1, 2]], [[1, 2], [1, 2]]] and saved == [1, 2] and row == [1, 2]
+
+
+record Point:
+    x: int
+    y: int
+
+
+func write_point(mut points: Point[], index: int, value: int) -> unit:
+    points[index].x = value
+
+
+func save_points(mut points: Point[], mut snapshots: Point[][]) -> int:
+    snapshots.append(points)
+    points[0].y = 9
+    return -1
+
+
+public func test_plain_record_writes_keep_snapshot_and_negative_index() -> bool:
+    mut points = [Point(x=3, y=7)]
+    mut before = points
+    for index in range(4):
+        write_point(mut points, -1, index)
+        points[0].y = points[0].x + 10
+    return points == [Point(x=3, y=13)] and before == [Point(x=3, y=7)]
+
+
+public func test_plain_record_call_finishes_before_selection_and_keeps_snapshot() -> bool:
+    mut points = [Point(x=3, y=7)]
+    mut snapshots: Point[][] = []
+    mut mutation_result_101 = save_points(mut points, mut snapshots)
+    points[mutation_result_101].x = 13
+    return points == [Point(x=13, y=9)] and snapshots == [[Point(x=3, y=7)]]

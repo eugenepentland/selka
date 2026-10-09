@@ -1,0 +1,10 @@
+import core.shapes
+import core.stats
+import hex
+
+public func describe(out: Stream, boxes: core.shapes.Box[]) -> int:
+    mut count = len(boxes)
+    mut area = core.stats.total_area(boxes)
+    out.print(f"area {area} widest {core.stats.widest(boxes)}")
+    out.print(hex.encode(b"box"))
+    return area

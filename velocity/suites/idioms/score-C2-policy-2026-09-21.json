@@ -1,0 +1,6009 @@
+{
+ "version": "lane-c-score-v1",
+ "measured_on": "2026-09-20",
+ "suite": "velocity/suites/idioms",
+ "selection": "*",
+ "binary": {
+  "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/zig-out/bin/mylang",
+  "sha256": "64e2178d0895fa095ddacb03eefde21dada98cf2e8954e72847968575613a3d4",
+  "mtime": "2026-09-20T18:45:44.638847+00:00",
+  "compiler_identity": {
+   "compiler_sha256": "db7991a6970eb8d77e4b1eac231f57592b7eea9ee8daf98bda86d6065fd238a7",
+   "zig_version": "0.17.0-dev.1683+5ceec001b",
+   "architecture": "x86_64",
+   "os": "linux",
+   "abi": "gnu",
+   "optimize": "debug"
+  }
+ },
+ "elapsed_seconds": 1.262,
+ "metrics": {
+  "C1": {
+   "value": 0.2537313432835821,
+   "numerator": 17,
+   "denominator": 67,
+   "agreed": [
+    "a08_aug_subscript.my",
+    "a09_aug_str_list.my",
+    "a12_docstring.my",
+    "a20_dict_items.my",
+    "a25_nested_list.my",
+    "a29_max_two_args.my",
+    "a31_slice_neg.my",
+    "a43_len_dict.my",
+    "a52_pop_insert.my",
+    "a59_reassign_annot.my",
+    "a64_split_noargs.my",
+    "a72_type_alias_kw.my",
+    "a74_str_in_list.my",
+    "c04_option_default.my",
+    "e01_step_budget.my",
+    "e05_str_concat_perf.my",
+    "e06_list_of_lists_build.my"
+   ]
+  },
+  "C2": {
+   "definition": "every probe mylang accepted and ran to completion whose exit status (& 0xFF) or stdout differs from CPython, declared divergences included",
+   "value": 1,
+   "gate": false,
+   "probes": [
+    {
+     "probe": "d05_round_half.my",
+     "stdout": "",
+     "oracle_stdout": "",
+     "status": 61,
+     "oracle_status": 208,
+     "divergence": "round-half-away-from-zero"
+    }
+   ]
+  },
+  "C2_policy": {
+   "definition": "silent wrong answers no entry in the divergence policy claims; this is the number a package gate fails on",
+   "value": 0,
+   "gate": true,
+   "probes": [],
+   "declared": [
+    {
+     "probe": "d05_round_half.my",
+     "stdout": "",
+     "oracle_stdout": "",
+     "status": 61,
+     "oracle_status": 208,
+     "divergence": "round-half-away-from-zero"
+    }
+   ],
+   "stale": [],
+   "policy": {
+    "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/divergences.json",
+    "version": "divergence-policy-v1",
+    "problem": null,
+    "entries": 1
+   }
+  },
+  "C3": {
+   "definition": "diagnostic-v1 carries a non-null fix or a note whose role is alternative",
+   "value": 0.6282051282051282,
+   "numerator": 49,
+   "denominator": 78,
+   "matched": [
+    {
+     "probe": "a01_ternary.my",
+     "code": "E_SYNTAX",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "a03_tuple_swap.my",
+     "code": "E_SYNTAX",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "a04_tuple_return.my",
+     "code": "E_SYNTAX",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "a05_is_none.my",
+     "code": "E_SYNTAX",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "a10_chained_assign.my",
+     "code": "E_SYNTAX",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "a13_nested_def.my",
+     "code": "E_EXPRESSION",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "a18_str_format.my",
+     "code": "E_COLLECTION_METHOD",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "a22_set_literal.my",
+     "code": "E_SYNTAX",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "a24_optional_typing.my",
+     "code": "E_SYNTAX",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "a28_sorted_reverse.my",
+     "code": "E_CALL_ARGUMENT",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "a32_join_map.my",
+     "code": "E_OUTPUT_CAPABILITY",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "a34_power.my",
+     "code": "E_EXPRESSION",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "a35_div.my",
+     "code": "E_OUTPUT_CAPABILITY",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "a36_module_global.my",
+     "code": "E_SYNTAX",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "a37_const.my",
+     "code": "E_SYNTAX",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "a38_class_methods.my",
+     "code": "E_SYNTAX",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "a39_dataclass.my",
+     "code": "E_SYNTAX",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "a40_try_except.my",
+     "code": "E_SYNTAX",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "a42_open_python.my",
+     "code": "E_ARITY",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "a47_print_record.my",
+     "code": "E_OUTPUT_CAPABILITY",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "a48_for_else.my",
+     "code": "E_EXPRESSION",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "a49_match_literal.my",
+     "code": "E_SYNTAX",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "a50_match_str.my",
+     "code": "E_SYNTAX",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "a51_del.my",
+     "code": "E_SYNTAX",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "a53_multiline_str.my",
+     "code": "E_SYNTAX",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "a56_divmod_pow.my",
+     "code": "E_SYNTAX",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "a58_main_guard.my",
+     "code": "E_SYNTAX",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "a61_result_unwrap.my",
+     "code": "E_SYNTAX",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "a62_option_or.my",
+     "code": "E_ARITY",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "a63_dict_get_option.my",
+     "code": "E_ARITY",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "a66_nested_comp.my",
+     "code": "E_SYNTAX",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "a67_dict_comp.my",
+     "code": "E_SYNTAX",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "a68_genexp.my",
+     "code": "E_SYNTAX",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "a69_print_end.my",
+     "code": "E_OUTPUT_CAPABILITY",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "a70_int_from_float.my",
+     "code": "E_SYNTAX",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "a71_type_alias.my",
+     "code": "E_SYNTAX",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "a73_while_else_walrus.my",
+     "code": "E_SYNTAX",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "a80_none_return_call.my",
+     "code": "E_OUTPUT_CAPABILITY",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "c06_result_record_err.my",
+     "code": "E_OUTPUT_CAPABILITY",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "c08_match_expr.my",
+     "code": "E_EXPRESSION",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "d01_loop_record_copy.my",
+     "code": "E_OUTPUT_CAPABILITY",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "d02_alias_record_copy.my",
+     "code": "E_OUTPUT_CAPABILITY",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "d04_dict_items_keys.my",
+     "code": "E_OUTPUT_CAPABILITY",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "d06_record_field_in_dict_loop.my",
+     "code": "E_OUTPUT_CAPABILITY",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "d08_int_float_mix.my",
+     "code": "E_OUTPUT_CAPABILITY",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "e03_shift.my",
+     "code": "E_EXPRESSION",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "e09_walk_dict_sorted.my",
+     "code": "E_OUTPUT_CAPABILITY",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "e11_if_no_else_bind.my",
+     "code": "E_OUTPUT_CAPABILITY",
+     "kind": "note-alternative"
+    },
+    {
+     "probe": "e12_none_default_param.my",
+     "code": "E_OUTPUT_CAPABILITY",
+     "kind": "note-alternative"
+    }
+   ],
+   "unmatched": [
+    {
+     "probe": "a02_chained_cmp.my",
+     "code": "E_TYPE",
+     "message": "expected bool, found int"
+    },
+    {
+     "probe": "a11_truthiness.my",
+     "code": "E_TYPE",
+     "message": "expected bool, found list[int]"
+    },
+    {
+     "probe": "a14_lambda_capture.my",
+     "code": "E_LAMBDA_CAPTURE",
+     "message": "lambda cannot capture local `k`; use a top-level function or pass the value as an explicit state parameter"
+    },
+    {
+     "probe": "a16_fstring_spec.my",
+     "code": "E_FORMAT_STRING",
+     "message": "format specifications are not supported; convert the value before interpolating it"
+    },
+    {
+     "probe": "a17_percent_format.my",
+     "code": "E_TYPE",
+     "message": "expected str, found int"
+    },
+    {
+     "probe": "a19_str_repeat.my",
+     "code": "E_TYPE",
+     "message": "expected str, found int"
+    },
+    {
+     "probe": "a21_set.my",
+     "code": "E_UNKNOWN_TYPE",
+     "message": "type is not declared"
+    },
+    {
+     "probe": "a23_optional_annot.my",
+     "code": "E_TOKEN",
+     "message": "unexpected character in source"
+    },
+    {
+     "probe": "a26_sort_key.my",
+     "code": "E_CALL_ARGUMENT",
+     "message": "keyword arguments require a declared function or record constructor"
+    },
+    {
+     "probe": "a30_range_step.my",
+     "code": "E_ARITY",
+     "message": "range requires end or start, end"
+    },
+    {
+     "probe": "a33_round2.my",
+     "code": "E_ARITY",
+     "message": "`round(value: float) -> float` takes 1 argument, but this call passes 2"
+    },
+    {
+     "probe": "a41_import_os.my",
+     "code": "E_MODULE_HEADER",
+     "message": "file must begin with a module declaration"
+    },
+    {
+     "probe": "a44_enumerate_start.my",
+     "code": "E_ARITY",
+     "message": "enumerate requires one iterable and two iteration names"
+    },
+    {
+     "probe": "a54_bitops.my",
+     "code": "E_REMOVED_SPELLING",
+     "message": "`&` was removed and has no replacement"
+    },
+    {
+     "probe": "a55_chr_ord_hex.my",
+     "code": "E_UNKNOWN_FUNCTION",
+     "message": "no function has this qualified name"
+    },
+    {
+     "probe": "a57_assert_fstring.my",
+     "code": "R_ASSERT",
+     "message": "x was 1\n/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a57_assert_fstring.my:4:12: error[R_ASSERT]: native execution failed\n  in main at /home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a57_assert_fstring.my:4:12"
+    },
+    {
+     "probe": "a60_overflow.my",
+     "code": "R_OVERFLOW",
+     "message": "native execution failed (add: left 9223372036854775807, right 1, width 64)"
+    },
+    {
+     "probe": "a65_str_cmp.my",
+     "code": "E_TEXT_OPERATOR",
+     "message": "managed collections support equality and str/bytes support concatenation"
+    },
+    {
+     "probe": "a75_list_of_records_mutate.my",
+     "code": "E_ASSIGNMENT_TARGET",
+     "message": "augmented assignment to a record field is not supported; write the field out in full"
+    },
+    {
+     "probe": "a77_dict_record_key.my",
+     "code": "E_DICT_KEY",
+     "message": "dictionary keys must be integers or str"
+    },
+    {
+     "probe": "a79_str_methods.my",
+     "code": "E_LIST_METHOD",
+     "message": "unknown method for a str receiver; accepted methods: count, encode, endswith, find, isalpha, isdigit, isspace, join, lower, lstrip, parse_float, parse_int, replace, rstrip, split, splitlines, startswith, strip, upper, zfill"
+    },
+    {
+     "probe": "c02_result_err_convert.my",
+     "code": "E_TYPE",
+     "message": "expected int, found str"
+    },
+    {
+     "probe": "d03_record_param_mutate.my",
+     "code": "E_ASSIGNMENT_TARGET",
+     "message": "augmented assignment to a record field is not supported; write the field out in full"
+    },
+    {
+     "probe": "d07_str_index_assign.my",
+     "code": "E_COLLECTION_METHOD",
+     "message": "operation is not supported by this collection"
+    },
+    {
+     "probe": "d09_shadow_builtin.my",
+     "code": "E_SHADOWING",
+     "message": "binding shadows an active local or top-level function"
+    },
+    {
+     "probe": "d10_unused_result.my",
+     "code": "E_EXPLICIT_DISCARD_REQUIRED",
+     "message": "a standalone non-unit value requires `_ =` or result handling"
+    },
+    {
+     "probe": "e02_bitops_each.my",
+     "code": "E_TOKEN",
+     "message": "unexpected character in source"
+    },
+    {
+     "probe": "e08_format_float.my",
+     "code": "E_MODULE_NAME",
+     "message": "declared module name does not match its requested path"
+    },
+    {
+     "probe": "e10_while_assign_after_loop.my",
+     "code": "E_UNBOUND",
+     "message": "name may be read before it is assigned; some control-flow path reaching here leaves it unbound"
+    }
+   ]
+  },
+  "C3_text_any": {
+   "definition": "secondary text heuristic: the message or a note names a replacement spelling or carries a repair verb",
+   "value": 0.5,
+   "numerator": 39,
+   "denominator": 78,
+   "matched": [
+    {
+     "probe": "a01_ternary.my",
+     "code": "E_SYNTAX",
+     "kind": "text-repair"
+    },
+    {
+     "probe": "a03_tuple_swap.my",
+     "code": "E_SYNTAX",
+     "kind": "text-spelling"
+    },
+    {
+     "probe": "a04_tuple_return.my",
+     "code": "E_SYNTAX",
+     "kind": "text-spelling"
+    },
+    {
+     "probe": "a13_nested_def.my",
+     "code": "E_EXPRESSION",
+     "kind": "text-repair"
+    },
+    {
+     "probe": "a14_lambda_capture.my",
+     "code": "E_LAMBDA_CAPTURE",
+     "kind": "text-spelling"
+    },
+    {
+     "probe": "a16_fstring_spec.my",
+     "code": "E_FORMAT_STRING",
+     "kind": "text-repair"
+    },
+    {
+     "probe": "a18_str_format.my",
+     "code": "E_COLLECTION_METHOD",
+     "kind": "text-spelling"
+    },
+    {
+     "probe": "a22_set_literal.my",
+     "code": "E_SYNTAX",
+     "kind": "text-spelling"
+    },
+    {
+     "probe": "a24_optional_typing.my",
+     "code": "E_SYNTAX",
+     "kind": "text-repair"
+    },
+    {
+     "probe": "a28_sorted_reverse.my",
+     "code": "E_CALL_ARGUMENT",
+     "kind": "text-repair"
+    },
+    {
+     "probe": "a32_join_map.my",
+     "code": "E_OUTPUT_CAPABILITY",
+     "kind": "text-repair"
+    },
+    {
+     "probe": "a35_div.my",
+     "code": "E_OUTPUT_CAPABILITY",
+     "kind": "text-repair"
+    },
+    {
+     "probe": "a36_module_global.my",
+     "code": "E_SYNTAX",
+     "kind": "text-repair"
+    },
+    {
+     "probe": "a37_const.my",
+     "code": "E_SYNTAX",
+     "kind": "text-repair"
+    },
+    {
+     "probe": "a38_class_methods.my",
+     "code": "E_SYNTAX",
+     "kind": "text-repair"
+    },
+    {
+     "probe": "a39_dataclass.my",
+     "code": "E_SYNTAX",
+     "kind": "text-repair"
+    },
+    {
+     "probe": "a47_print_record.my",
+     "code": "E_OUTPUT_CAPABILITY",
+     "kind": "text-repair"
+    },
+    {
+     "probe": "a48_for_else.my",
+     "code": "E_EXPRESSION",
+     "kind": "text-spelling"
+    },
+    {
+     "probe": "a53_multiline_str.my",
+     "code": "E_SYNTAX",
+     "kind": "text-repair"
+    },
+    {
+     "probe": "a56_divmod_pow.my",
+     "code": "E_SYNTAX",
+     "kind": "text-spelling"
+    },
+    {
+     "probe": "a66_nested_comp.my",
+     "code": "E_SYNTAX",
+     "kind": "text-repair"
+    },
+    {
+     "probe": "a68_genexp.my",
+     "code": "E_SYNTAX",
+     "kind": "text-spelling"
+    },
+    {
+     "probe": "a69_print_end.my",
+     "code": "E_OUTPUT_CAPABILITY",
+     "kind": "text-repair"
+    },
+    {
+     "probe": "a70_int_from_float.my",
+     "code": "E_SYNTAX",
+     "kind": "text-repair"
+    },
+    {
+     "probe": "a71_type_alias.my",
+     "code": "E_SYNTAX",
+     "kind": "text-repair"
+    },
+    {
+     "probe": "a75_list_of_records_mutate.my",
+     "code": "E_ASSIGNMENT_TARGET",
+     "kind": "text-repair"
+    },
+    {
+     "probe": "a80_none_return_call.my",
+     "code": "E_OUTPUT_CAPABILITY",
+     "kind": "text-repair"
+    },
+    {
+     "probe": "c06_result_record_err.my",
+     "code": "E_OUTPUT_CAPABILITY",
+     "kind": "text-repair"
+    },
+    {
+     "probe": "d01_loop_record_copy.my",
+     "code": "E_OUTPUT_CAPABILITY",
+     "kind": "text-repair"
+    },
+    {
+     "probe": "d02_alias_record_copy.my",
+     "code": "E_OUTPUT_CAPABILITY",
+     "kind": "text-repair"
+    },
+    {
+     "probe": "d03_record_param_mutate.my",
+     "code": "E_ASSIGNMENT_TARGET",
+     "kind": "text-repair"
+    },
+    {
+     "probe": "d04_dict_items_keys.my",
+     "code": "E_OUTPUT_CAPABILITY",
+     "kind": "text-repair"
+    },
+    {
+     "probe": "d06_record_field_in_dict_loop.my",
+     "code": "E_OUTPUT_CAPABILITY",
+     "kind": "text-repair"
+    },
+    {
+     "probe": "d08_int_float_mix.my",
+     "code": "E_OUTPUT_CAPABILITY",
+     "kind": "text-repair"
+    },
+    {
+     "probe": "d10_unused_result.my",
+     "code": "E_EXPLICIT_DISCARD_REQUIRED",
+     "kind": "text-spelling"
+    },
+    {
+     "probe": "e03_shift.my",
+     "code": "E_EXPRESSION",
+     "kind": "text-spelling"
+    },
+    {
+     "probe": "e09_walk_dict_sorted.my",
+     "code": "E_OUTPUT_CAPABILITY",
+     "kind": "text-repair"
+    },
+    {
+     "probe": "e11_if_no_else_bind.my",
+     "code": "E_OUTPUT_CAPABILITY",
+     "kind": "text-repair"
+    },
+    {
+     "probe": "e12_none_default_param.my",
+     "code": "E_OUTPUT_CAPABILITY",
+     "kind": "text-repair"
+    }
+   ]
+  },
+  "C3_text_spelling": {
+   "definition": "subset of C3_text_any that names an accepted spelling",
+   "value": 0.1282051282051282,
+   "numerator": 10,
+   "denominator": 78
+  },
+  "verdicts": {
+   "agree": 17,
+   "complete": 14,
+   "reject": 76,
+   "trap": 2,
+   "wrong": 1
+  },
+  "histogram": {
+   "OK": 31,
+   "E_SYNTAX": 25,
+   "E_OUTPUT_CAPABILITY": 14,
+   "E_ARITY": 6,
+   "E_EXPRESSION": 5,
+   "E_TYPE": 5,
+   "E_ASSIGNMENT_TARGET": 2,
+   "E_CALL_ARGUMENT": 2,
+   "E_COLLECTION_METHOD": 2,
+   "E_TOKEN": 2,
+   "E_DICT_KEY": 1,
+   "E_EXPLICIT_DISCARD_REQUIRED": 1,
+   "E_FORMAT_STRING": 1,
+   "E_LAMBDA_CAPTURE": 1,
+   "E_LIST_METHOD": 1,
+   "E_MODULE_HEADER": 1,
+   "E_MODULE_NAME": 1,
+   "E_REMOVED_SPELLING": 1,
+   "E_SHADOWING": 1,
+   "E_TEXT_OPERATOR": 1,
+   "E_UNBOUND": 1,
+   "E_UNKNOWN_FUNCTION": 1,
+   "E_UNKNOWN_TYPE": 1,
+   "OK/SILENT-WRONG/DECLARED": 1,
+   "R_ASSERT": 1,
+   "R_OVERFLOW": 1
+  }
+ },
+ "probes": [
+  {
+   "probe": "a01_ternary.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a01_ternary.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_SYNTAX",
+   "codes": [
+    "E_SYNTAX"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_SYNTAX",
+     "severity": "error",
+     "message": "a conditional expression is not part of the language",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "write an if/else statement that assigns the same name",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a01_ternary.my",
+        "start": {
+         "line": 4,
+         "column": 12
+        },
+        "end": {
+         "line": 4,
+         "column": 14
+        },
+        "bytes": {
+         "start": 58,
+         "end": 60
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": true,
+   "c3_text_spelling": false,
+   "alternative": "note-alternative",
+   "alternative_text_kind": "text-repair",
+   "alternative_structured": true,
+   "alternative_text": true,
+   "seconds": 0.028163275972474366,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SYNTAX\",\"severity\":\"error\",\"message\":\"a conditional expression is not part of the language\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.worktrees/integration/v... [470 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a02_chained_cmp.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a02_chained_cmp.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_TYPE",
+   "codes": [
+    "E_TYPE"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_TYPE",
+     "severity": "error",
+     "message": "expected bool, found int",
+     "notes": [],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.018683348025660962,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_TYPE\",\"severity\":\"error\",\"message\":\"expected bool, found int\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a02_chai... [150 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a03_tuple_swap.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a03_tuple_swap.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_SYNTAX",
+   "codes": [
+    "E_SYNTAX"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_SYNTAX",
+     "severity": "error",
+     "message": "a comma-separated target list declares no binding",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "bind one name per statement and use a temporary variable; declare a record to return several values",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a03_tuple_swap.my",
+        "start": {
+         "line": 5,
+         "column": 6
+        },
+        "end": {
+         "line": 5,
+         "column": 7
+        },
+        "bytes": {
+         "start": 63,
+         "end": 64
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": true,
+   "c3_text_spelling": true,
+   "alternative": "note-alternative",
+   "alternative_text_kind": "text-spelling",
+   "alternative_structured": true,
+   "alternative_text": true,
+   "seconds": 0.016468638030346483,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SYNTAX\",\"severity\":\"error\",\"message\":\"a comma-separated target list declares no binding\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.worktrees/integration/velo... [515 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a04_tuple_return.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a04_tuple_return.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_SYNTAX",
+   "codes": [
+    "E_SYNTAX"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_SYNTAX",
+     "severity": "error",
+     "message": "a comma-separated return list is not one value",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "bind one name per statement and use a temporary variable; declare a record to return several values",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a04_tuple_return.my",
+        "start": {
+         "line": 3,
+         "column": 18
+        },
+        "end": {
+         "line": 3,
+         "column": 19
+        },
+        "bytes": {
+         "start": 83,
+         "end": 84
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": true,
+   "c3_text_spelling": true,
+   "alternative": "note-alternative",
+   "alternative_text_kind": "text-spelling",
+   "alternative_structured": true,
+   "alternative_text": true,
+   "seconds": 0.028061528981197625,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SYNTAX\",\"severity\":\"error\",\"message\":\"a comma-separated return list is not one value\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.worktrees/integration/velocit... [520 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a05_is_none.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a05_is_none.my",
+   "oracle": "mylang-only",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_SYNTAX",
+   "codes": [
+    "E_SYNTAX"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_SYNTAX",
+     "severity": "error",
+     "message": "`is` is not an operator",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "compare the value with `== None`, or match it: `case Some(value)` and `case None`",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a05_is_none.my",
+        "start": {
+         "line": 10,
+         "column": 10
+        },
+        "end": {
+         "line": 10,
+         "column": 12
+        },
+        "bytes": {
+         "start": 219,
+         "end": 221
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": "note-alternative",
+   "alternative_text_kind": null,
+   "alternative_structured": true,
+   "alternative_text": false,
+   "seconds": 0.028584284998942167,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SYNTAX\",\"severity\":\"error\",\"message\":\"`is` is not an operator\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a05_is_... [477 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a06_eq_none.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a06_eq_none.my",
+   "oracle": "mylang-only",
+   "verdict": "complete",
+   "accepts": true,
+   "completes": true,
+   "status": 42,
+   "code": null,
+   "codes": [],
+   "diagnostics": [],
+   "c1": false,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.16367248201277107,
+   "stdout_preview": "",
+   "stderr_preview": "",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a07_option_unwrap.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a07_option_unwrap.my",
+   "oracle": "mylang-only",
+   "verdict": "complete",
+   "accepts": true,
+   "completes": true,
+   "status": 42,
+   "code": null,
+   "codes": [],
+   "diagnostics": [],
+   "c1": false,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.14386767201358452,
+   "stdout_preview": "",
+   "stderr_preview": "",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a08_aug_subscript.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a08_aug_subscript.my",
+   "oracle": "cpython",
+   "verdict": "agree",
+   "accepts": true,
+   "completes": true,
+   "status": 43,
+   "code": null,
+   "codes": [],
+   "diagnostics": [],
+   "c1": true,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.16137060103937984,
+   "stdout_preview": "",
+   "stderr_preview": "",
+   "oracle_status": 43,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a09_aug_str_list.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a09_aug_str_list.my",
+   "oracle": "cpython",
+   "verdict": "agree",
+   "accepts": true,
+   "completes": true,
+   "status": 44,
+   "code": null,
+   "codes": [],
+   "diagnostics": [],
+   "c1": true,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.1775736200506799,
+   "stdout_preview": "",
+   "stderr_preview": "",
+   "oracle_status": 44,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a10_chained_assign.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a10_chained_assign.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_SYNTAX",
+   "codes": [
+    "E_SYNTAX"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_SYNTAX",
+     "severity": "error",
+     "message": "a chained assignment declares no binding",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "assign one name per statement: `x = 21` first, then `y = 21`",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a10_chained_assign.my",
+        "start": {
+         "line": 3,
+         "column": 11
+        },
+        "end": {
+         "line": 3,
+         "column": 12
+        },
+        "bytes": {
+         "start": 47,
+         "end": 48
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": "note-alternative",
+   "alternative_text_kind": null,
+   "alternative_structured": true,
+   "alternative_text": false,
+   "seconds": 0.015017452999018133,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SYNTAX\",\"severity\":\"error\",\"message\":\"a chained assignment declares no binding\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suit... [479 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a11_truthiness.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a11_truthiness.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_TYPE",
+   "codes": [
+    "E_TYPE"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_TYPE",
+     "severity": "error",
+     "message": "expected bool, found list[int]",
+     "notes": [],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.031570582010317594,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_TYPE\",\"severity\":\"error\",\"message\":\"expected bool, found list[int]\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a1... [154 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a12_docstring.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a12_docstring.my",
+   "oracle": "cpython",
+   "verdict": "agree",
+   "accepts": true,
+   "completes": true,
+   "status": 42,
+   "code": null,
+   "codes": [],
+   "diagnostics": [],
+   "c1": true,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.15251551300752908,
+   "stdout_preview": "",
+   "stderr_preview": "",
+   "oracle_status": 42,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a13_nested_def.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a13_nested_def.my",
+   "oracle": "rejected-by-design",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_EXPRESSION",
+   "codes": [
+    "E_EXPRESSION"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_EXPRESSION",
+     "severity": "error",
+     "message": "a function body declares statements, not another function",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "declare the function at the top level and call it from the body",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a13_nested_def.my",
+        "start": {
+         "line": 3,
+         "column": 5
+        },
+        "end": {
+         "line": 3,
+         "column": 8
+        },
+        "bytes": {
+         "start": 52,
+         "end": 55
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": true,
+   "c3_text_spelling": false,
+   "alternative": "note-alternative",
+   "alternative_text_kind": "text-repair",
+   "alternative_structured": true,
+   "alternative_text": true,
+   "seconds": 0.014636857027653605,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_EXPRESSION\",\"severity\":\"error\",\"message\":\"a function body declares statements, not another function\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.worktrees/inte... [491 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a14_lambda_capture.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a14_lambda_capture.my",
+   "oracle": "mylang-only",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_LAMBDA_CAPTURE",
+   "codes": [
+    "E_LAMBDA_CAPTURE"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_LAMBDA_CAPTURE",
+     "severity": "error",
+     "message": "lambda cannot capture local `k`; use a top-level function or pass the value as an explicit state parameter",
+     "notes": [],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": true,
+   "c3_text_spelling": true,
+   "alternative": null,
+   "alternative_text_kind": "text-spelling",
+   "alternative_structured": false,
+   "alternative_text": true,
+   "seconds": 0.03328339598374441,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_LAMBDA_CAPTURE\",\"severity\":\"error\",\"message\":\"lambda cannot capture local `k`; use a top-level function or pass the value as an explicit state parameter\",\"location\":{\"pa... [247 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a15_lambda_nocapture.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a15_lambda_nocapture.my",
+   "oracle": "mylang-only",
+   "verdict": "complete",
+   "accepts": true,
+   "completes": true,
+   "status": 42,
+   "code": null,
+   "codes": [],
+   "diagnostics": [],
+   "c1": false,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.18060063297161832,
+   "stdout_preview": "",
+   "stderr_preview": "",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a16_fstring_spec.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a16_fstring_spec.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_FORMAT_STRING",
+   "codes": [
+    "E_FORMAT_STRING"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_FORMAT_STRING",
+     "severity": "error",
+     "message": "format specifications are not supported; convert the value before interpolating it",
+     "notes": [],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": true,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": "text-repair",
+   "alternative_structured": false,
+   "alternative_text": true,
+   "seconds": 0.028053942951373756,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_FORMAT_STRING\",\"severity\":\"error\",\"message\":\"format specifications are not supported; convert the value before interpolating it\",\"location\":{\"path\":\"/home/epentland/ai/c... [218 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a17_percent_format.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a17_percent_format.my",
+   "oracle": "rejected-by-design",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_TYPE",
+   "codes": [
+    "E_TYPE"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_TYPE",
+     "severity": "error",
+     "message": "expected str, found int",
+     "notes": [],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.03119890997186303,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_TYPE\",\"severity\":\"error\",\"message\":\"expected str, found int\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a17_perce... [152 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a18_str_format.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a18_str_format.my",
+   "oracle": "rejected-by-design",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_COLLECTION_METHOD",
+   "codes": [
+    "E_COLLECTION_METHOD"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_COLLECTION_METHOD",
+     "severity": "error",
+     "message": "unknown method for a str receiver; accepted methods: count, encode, endswith, find, isalpha, isdigit, isspace, join, lower, lstrip, parse_float, parse_int, replace, rstrip, split, splitlines, startswith, strip, upper, zfill",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "use an f-string: f\"{value}\" interpolates where str.format does",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a18_str_format.my",
+        "start": {
+         "line": 3,
+         "column": 20
+        },
+        "end": {
+         "line": 3,
+         "column": 26
+        },
+        "bytes": {
+         "start": 67,
+         "end": 73
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": true,
+   "c3_text_spelling": true,
+   "alternative": "note-alternative",
+   "alternative_text_kind": "text-spelling",
+   "alternative_structured": true,
+   "alternative_text": true,
+   "seconds": 0.03330480196746066,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_COLLECTION_METHOD\",\"severity\":\"error\",\"message\":\"unknown method for a str receiver; accepted methods: count, encode, endswith, find, isalpha, isdigit, isspace, join, low... [669 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a19_str_repeat.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a19_str_repeat.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_TYPE",
+   "codes": [
+    "E_TYPE"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_TYPE",
+     "severity": "error",
+     "message": "expected str, found int",
+     "notes": [],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.03361693798797205,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_TYPE\",\"severity\":\"error\",\"message\":\"expected str, found int\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a19_str_r... [148 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a20_dict_items.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a20_dict_items.my",
+   "oracle": "cpython",
+   "verdict": "agree",
+   "accepts": true,
+   "completes": true,
+   "status": 74,
+   "code": null,
+   "codes": [],
+   "diagnostics": [],
+   "c1": true,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.18868121999548748,
+   "stdout_preview": "",
+   "stderr_preview": "",
+   "oracle_status": 74,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a21_set.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a21_set.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_UNKNOWN_TYPE",
+   "codes": [
+    "E_UNKNOWN_TYPE"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_UNKNOWN_TYPE",
+     "severity": "error",
+     "message": "type is not declared",
+     "notes": [],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.03637043101480231,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_UNKNOWN_TYPE\",\"severity\":\"error\",\"message\":\"type is not declared\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a21_... [146 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a22_set_literal.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a22_set_literal.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_SYNTAX",
+   "codes": [
+    "E_SYNTAX"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_SYNTAX",
+     "severity": "error",
+     "message": "a set literal is not a collection this language has",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "use a dict literal keyed by the value: `{1: True, 2: True}`",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a22_set_literal.my",
+        "start": {
+         "line": 3,
+         "column": 14
+        },
+        "end": {
+         "line": 3,
+         "column": 15
+        },
+        "bytes": {
+         "start": 50,
+         "end": 51
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": true,
+   "c3_text_spelling": true,
+   "alternative": "note-alternative",
+   "alternative_text_kind": "text-spelling",
+   "alternative_structured": true,
+   "alternative_text": true,
+   "seconds": 0.023179401003289968,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SYNTAX\",\"severity\":\"error\",\"message\":\"a set literal is not a collection this language has\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.worktrees/integration/ve... [483 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a23_optional_annot.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a23_optional_annot.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_TOKEN",
+   "codes": [
+    "E_TOKEN"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_TOKEN",
+     "severity": "error",
+     "message": "unexpected character in source",
+     "notes": [],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.025718223012518138,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_TOKEN\",\"severity\":\"error\",\"message\":\"unexpected character in source\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a... [160 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a24_optional_typing.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a24_optional_typing.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_SYNTAX",
+   "codes": [
+    "E_SYNTAX"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_SYNTAX",
+     "severity": "error",
+     "message": "a from-import is not a declaration",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "import the module and declare a record: import dataclasses",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a24_optional_typing.my",
+        "start": {
+         "line": 2,
+         "column": 1
+        },
+        "end": {
+         "line": 2,
+         "column": 5
+        },
+        "bytes": {
+         "start": 18,
+         "end": 22
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": true,
+   "c3_text_spelling": false,
+   "alternative": "note-alternative",
+   "alternative_text_kind": "text-repair",
+   "alternative_structured": true,
+   "alternative_text": true,
+   "seconds": 0.026182839006651193,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SYNTAX\",\"severity\":\"error\",\"message\":\"a from-import is not a declaration\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idi... [469 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a25_nested_list.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a25_nested_list.my",
+   "oracle": "cpython",
+   "verdict": "agree",
+   "accepts": true,
+   "completes": true,
+   "status": 42,
+   "code": null,
+   "codes": [],
+   "diagnostics": [],
+   "c1": true,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.2724848659709096,
+   "stdout_preview": "",
+   "stderr_preview": "",
+   "oracle_status": 42,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a26_sort_key.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a26_sort_key.my",
+   "oracle": "mylang-only",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_CALL_ARGUMENT",
+   "codes": [
+    "E_CALL_ARGUMENT",
+    "E_LAMBDA_CONTEXT"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_CALL_ARGUMENT",
+     "severity": "error",
+     "message": "keyword arguments require a declared function or record constructor",
+     "notes": [],
+     "fix": null
+    },
+    {
+     "code": "E_LAMBDA_CONTEXT",
+     "severity": "error",
+     "message": "lambda requires an expected callback type",
+     "notes": [],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.03229004004970193,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_CALL_ARGUMENT\",\"severity\":\"error\",\"message\":\"keyword arguments require a declared function or record constructor\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.w... [616 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a27_sorted_key.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a27_sorted_key.my",
+   "oracle": "mylang-only",
+   "verdict": "complete",
+   "accepts": true,
+   "completes": true,
+   "status": 42,
+   "code": null,
+   "codes": [],
+   "diagnostics": [],
+   "c1": false,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.2754297530045733,
+   "stdout_preview": "",
+   "stderr_preview": "",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a28_sorted_reverse.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a28_sorted_reverse.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_CALL_ARGUMENT",
+   "codes": [
+    "E_CALL_ARGUMENT"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_CALL_ARGUMENT",
+     "severity": "error",
+     "message": "sorted accepts only the named argument key=callback",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "sorted orders ascending only; write `reversed(sorted(values))` for a descending order",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a28_sorted_reverse.my",
+        "start": {
+         "line": 3,
+         "column": 28
+        },
+        "end": {
+         "line": 3,
+         "column": 35
+        },
+        "bytes": {
+         "start": 64,
+         "end": 71
+        }
+       }
+      },
+      {
+       "role": "signature",
+       "message": "sorted(values: list[T], key: callback) -> list[T]",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a28_sorted_reverse.my",
+        "start": {
+         "line": 3,
+         "column": 10
+        },
+        "end": {
+         "line": 3,
+         "column": 16
+        },
+        "bytes": {
+         "start": 46,
+         "end": 52
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": true,
+   "c3_text_spelling": false,
+   "alternative": "note-alternative",
+   "alternative_text_kind": "text-repair",
+   "alternative_structured": true,
+   "alternative_text": true,
+   "seconds": 0.041554349998477846,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_CALL_ARGUMENT\",\"severity\":\"error\",\"message\":\"sorted accepts only the named argument key=callback\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.worktrees/integra... [818 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a29_max_two_args.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a29_max_two_args.my",
+   "oracle": "cpython",
+   "verdict": "agree",
+   "accepts": true,
+   "completes": true,
+   "status": 42,
+   "code": null,
+   "codes": [],
+   "diagnostics": [],
+   "c1": true,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.18356818798929453,
+   "stdout_preview": "",
+   "stderr_preview": "",
+   "oracle_status": 42,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a30_range_step.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a30_range_step.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_ARITY",
+   "codes": [
+    "E_ARITY"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_ARITY",
+     "severity": "error",
+     "message": "range requires end or start, end",
+     "notes": [],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.034389384964015335,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_ARITY\",\"severity\":\"error\",\"message\":\"range requires end or start, end\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms... [158 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a31_slice_neg.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a31_slice_neg.my",
+   "oracle": "cpython",
+   "verdict": "agree",
+   "accepts": true,
+   "completes": true,
+   "status": 44,
+   "code": null,
+   "codes": [],
+   "diagnostics": [],
+   "c1": true,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.23299040098208934,
+   "stdout_preview": "",
+   "stderr_preview": "",
+   "oracle_status": 44,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a32_join_map.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a32_join_map.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_OUTPUT_CAPABILITY",
+   "codes": [
+    "E_OUTPUT_CAPABILITY"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_OUTPUT_CAPABILITY",
+     "severity": "error",
+     "message": "print needs a Stream; add `out: Stream` to this function and pass one from main",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "print needs a Stream; add `out: Stream` to this function and pass one from main",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a32_join_map.my",
+        "start": {
+         "line": 5,
+         "column": 5
+        },
+        "end": {
+         "line": 5,
+         "column": 10
+        },
+        "bytes": {
+         "start": 100,
+         "end": 105
+        }
+       }
+      },
+      {
+       "role": "signature",
+       "message": "stream.print(values..., sep: str, end: str) -> None",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a32_join_map.my",
+        "start": {
+         "line": 5,
+         "column": 5
+        },
+        "end": {
+         "line": 5,
+         "column": 10
+        },
+        "bytes": {
+         "start": 100,
+         "end": 105
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": true,
+   "c3_text_spelling": false,
+   "alternative": "note-alternative",
+   "alternative_text_kind": "text-repair",
+   "alternative_structured": true,
+   "alternative_text": true,
+   "seconds": 0.031043391034472734,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_OUTPUT_CAPABILITY\",\"severity\":\"error\",\"message\":\"print needs a Stream; add `out: Stream` to this function and pass one from main\",\"location\":{\"path\":\"/home/epentland/ai/... [831 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a33_round2.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a33_round2.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_ARITY",
+   "codes": [
+    "E_ARITY"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_ARITY",
+     "severity": "error",
+     "message": "`round(value: float) -> float` takes 1 argument, but this call passes 2",
+     "notes": [],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.038853919017128646,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_ARITY\",\"severity\":\"error\",\"message\":\"`round(value: float) -> float` takes 1 argument, but this call passes 2\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.workt... [192 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a34_power.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a34_power.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_EXPRESSION",
+   "codes": [
+    "E_EXPRESSION"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_EXPRESSION",
+     "severity": "error",
+     "message": "`**` is not an operator",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "multiply in a loop: `total = 1` then `for i in range(exponent): total = total * base`",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a34_power.my",
+        "start": {
+         "line": 3,
+         "column": 15
+        },
+        "end": {
+         "line": 3,
+         "column": 16
+        },
+        "bytes": {
+         "start": 51,
+         "end": 52
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": "note-alternative",
+   "alternative_text_kind": null,
+   "alternative_structured": true,
+   "alternative_text": false,
+   "seconds": 0.03202746098395437,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_EXPRESSION\",\"severity\":\"error\",\"message\":\"`**` is not an operator\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a34... [473 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a35_div.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a35_div.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_OUTPUT_CAPABILITY",
+   "codes": [
+    "E_OUTPUT_CAPABILITY"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_OUTPUT_CAPABILITY",
+     "severity": "error",
+     "message": "print needs a Stream; add `out: Stream` to this function and pass one from main",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "print needs a Stream; add `out: Stream` to this function and pass one from main",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a35_div.my",
+        "start": {
+         "line": 4,
+         "column": 5
+        },
+        "end": {
+         "line": 4,
+         "column": 10
+        },
+        "bytes": {
+         "start": 55,
+         "end": 60
+        }
+       }
+      },
+      {
+       "role": "signature",
+       "message": "stream.print(values..., sep: str, end: str) -> None",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a35_div.my",
+        "start": {
+         "line": 4,
+         "column": 5
+        },
+        "end": {
+         "line": 4,
+         "column": 10
+        },
+        "bytes": {
+         "start": 55,
+         "end": 60
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": true,
+   "c3_text_spelling": false,
+   "alternative": "note-alternative",
+   "alternative_text_kind": "text-repair",
+   "alternative_structured": true,
+   "alternative_text": true,
+   "seconds": 0.03696204302832484,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_OUTPUT_CAPABILITY\",\"severity\":\"error\",\"message\":\"print needs a Stream; add `out: Stream` to this function and pass one from main\",\"location\":{\"path\":\"/home/epentland/ai/... [810 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a36_module_global.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a36_module_global.my",
+   "oracle": "rejected-by-design",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_SYNTAX",
+   "codes": [
+    "E_SYNTAX"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_SYNTAX",
+     "severity": "error",
+     "message": "a bare assignment declares no module-level binding",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "declare it as a constant: const MAX: int = 42",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a36_module_global.my",
+        "start": {
+         "line": 2,
+         "column": 1
+        },
+        "end": {
+         "line": 2,
+         "column": 8
+        },
+        "bytes": {
+         "start": 29,
+         "end": 36
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": true,
+   "c3_text_spelling": false,
+   "alternative": "note-alternative",
+   "alternative_text_kind": "text-repair",
+   "alternative_structured": true,
+   "alternative_text": true,
+   "seconds": 0.02033421996748075,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SYNTAX\",\"severity\":\"error\",\"message\":\"a bare assignment declares no module-level binding\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.worktrees/integration/vel... [468 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a37_const.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a37_const.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_SYNTAX",
+   "codes": [
+    "E_SYNTAX"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_SYNTAX",
+     "severity": "error",
+     "message": "a bare assignment declares no module-level binding",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "declare it as a constant: const MAX: int = 42",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a37_const.my",
+        "start": {
+         "line": 2,
+         "column": 1
+        },
+        "end": {
+         "line": 2,
+         "column": 4
+        },
+        "bytes": {
+         "start": 18,
+         "end": 21
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": true,
+   "c3_text_spelling": false,
+   "alternative": "note-alternative",
+   "alternative_text_kind": "text-repair",
+   "alternative_structured": true,
+   "alternative_text": true,
+   "seconds": 0.033120031002908945,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SYNTAX\",\"severity\":\"error\",\"message\":\"a bare assignment declares no module-level binding\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.worktrees/integration/vel... [452 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a38_class_methods.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a38_class_methods.my",
+   "oracle": "rejected-by-design",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_SYNTAX",
+   "codes": [
+    "E_SYNTAX"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_SYNTAX",
+     "severity": "error",
+     "message": "a record or class body declares fields, not methods",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "declare a top-level function taking the record: def norm1(p: Point) -> int",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a38_class_methods.my",
+        "start": {
+         "line": 3,
+         "column": 5
+        },
+        "end": {
+         "line": 3,
+         "column": 8
+        },
+        "bytes": {
+         "start": 46,
+         "end": 49
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": true,
+   "c3_text_spelling": false,
+   "alternative": "note-alternative",
+   "alternative_text_kind": "text-repair",
+   "alternative_structured": true,
+   "alternative_text": true,
+   "seconds": 0.03421503602294251,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SYNTAX\",\"severity\":\"error\",\"message\":\"a record or class body declares fields, not methods\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.worktrees/integration/ve... [498 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a39_dataclass.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a39_dataclass.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_SYNTAX",
+   "codes": [
+    "E_SYNTAX"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_SYNTAX",
+     "severity": "error",
+     "message": "a from-import is not a declaration",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "import the module and declare a record: import dataclasses",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a39_dataclass.my",
+        "start": {
+         "line": 2,
+         "column": 1
+        },
+        "end": {
+         "line": 2,
+         "column": 5
+        },
+        "bytes": {
+         "start": 18,
+         "end": 22
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": true,
+   "c3_text_spelling": false,
+   "alternative": "note-alternative",
+   "alternative_text_kind": "text-repair",
+   "alternative_structured": true,
+   "alternative_text": true,
+   "seconds": 0.0328515240107663,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SYNTAX\",\"severity\":\"error\",\"message\":\"a from-import is not a declaration\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idi... [457 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a40_try_except.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a40_try_except.my",
+   "oracle": "rejected-by-design",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_SYNTAX",
+   "codes": [
+    "E_SYNTAX"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_SYNTAX",
+     "severity": "error",
+     "message": "a try statement is not part of the language",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "return `Result` and match it: `case Ok(value)` and `case Err(reason)`",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a40_try_except.my",
+        "start": {
+         "line": 3,
+         "column": 8
+        },
+        "end": {
+         "line": 3,
+         "column": 9
+        },
+        "bytes": {
+         "start": 55,
+         "end": 56
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": "note-alternative",
+   "alternative_text_kind": null,
+   "alternative_structured": true,
+   "alternative_text": false,
+   "seconds": 0.02125285897636786,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SYNTAX\",\"severity\":\"error\",\"message\":\"a try statement is not part of the language\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/s... [479 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a41_import_os.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a41_import_os.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_MODULE_HEADER",
+   "codes": [
+    "E_MODULE_HEADER"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_MODULE_HEADER",
+     "severity": "error",
+     "message": "file must begin with a module declaration",
+     "notes": [],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.033322095987387,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_MODULE_HEADER\",\"severity\":\"error\",\"message\":\"file must begin with a module declaration\",\"location\":{\"path\":\"a41_import_os.my\",\"start\":{\"line\":2,\"column\":1},\"end\":{\"line\"... [93 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a42_open_python.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a42_open_python.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_ARITY",
+   "codes": [
+    "E_ARITY"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_ARITY",
+     "severity": "error",
+     "message": "`open(fs: Filesystem, path: str, mode: str) -> Result[File, str]` takes 3 arguments, but this call passes 1",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "a free file helper takes the Filesystem capability first: `open(fs, path, mode)` or `read_text(fs, path)`; `fs.open(path, mode)` is the method spelling",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a42_open_python.my",
+        "start": {
+         "line": 3,
+         "column": 10
+        },
+        "end": {
+         "line": 3,
+         "column": 31
+        },
+        "bytes": {
+         "start": 46,
+         "end": 67
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": "note-alternative",
+   "alternative_text_kind": null,
+   "alternative_structured": true,
+   "alternative_text": false,
+   "seconds": 0.03849152399925515,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_ARITY\",\"severity\":\"error\",\"message\":\"`open(fs: Filesystem, path: str, mode: str) -> Result[File, str]` takes 3 arguments, but this call passes 1\",\"location\":{\"path\":\"/ho... [630 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a43_len_dict.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a43_len_dict.my",
+   "oracle": "cpython",
+   "verdict": "agree",
+   "accepts": true,
+   "completes": true,
+   "status": 42,
+   "code": null,
+   "codes": [],
+   "diagnostics": [],
+   "c1": true,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.17893689800985157,
+   "stdout_preview": "",
+   "stderr_preview": "",
+   "oracle_status": 42,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a44_enumerate_start.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a44_enumerate_start.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_ARITY",
+   "codes": [
+    "E_ARITY"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_ARITY",
+     "severity": "error",
+     "message": "enumerate requires one iterable and two iteration names",
+     "notes": [],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.026047970983199775,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_ARITY\",\"severity\":\"error\",\"message\":\"enumerate requires one iterable and two iteration names\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.worktrees/integration... [186 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a45_record_default.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a45_record_default.my",
+   "oracle": "mylang-only",
+   "verdict": "complete",
+   "accepts": true,
+   "completes": true,
+   "status": 42,
+   "code": null,
+   "codes": [],
+   "diagnostics": [],
+   "c1": false,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.1930770199978724,
+   "stdout_preview": "",
+   "stderr_preview": "",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a46_record_eq.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a46_record_eq.my",
+   "oracle": "mylang-only",
+   "verdict": "complete",
+   "accepts": true,
+   "completes": true,
+   "status": 42,
+   "code": null,
+   "codes": [],
+   "diagnostics": [],
+   "c1": false,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.18766727205365896,
+   "stdout_preview": "",
+   "stderr_preview": "",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a47_print_record.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a47_print_record.my",
+   "oracle": "mylang-only",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_OUTPUT_CAPABILITY",
+   "codes": [
+    "E_OUTPUT_CAPABILITY"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_OUTPUT_CAPABILITY",
+     "severity": "error",
+     "message": "print needs a Stream; add `out: Stream` to this function and pass one from main",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "print needs a Stream; add `out: Stream` to this function and pass one from main",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a47_print_record.my",
+        "start": {
+         "line": 8,
+         "column": 5
+        },
+        "end": {
+         "line": 8,
+         "column": 10
+        },
+        "bytes": {
+         "start": 107,
+         "end": 112
+        }
+       }
+      },
+      {
+       "role": "signature",
+       "message": "stream.print(values..., sep: str, end: str) -> None",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a47_print_record.my",
+        "start": {
+         "line": 8,
+         "column": 5
+        },
+        "end": {
+         "line": 8,
+         "column": 10
+        },
+        "bytes": {
+         "start": 107,
+         "end": 112
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": true,
+   "c3_text_spelling": false,
+   "alternative": "note-alternative",
+   "alternative_text_kind": "text-repair",
+   "alternative_structured": true,
+   "alternative_text": true,
+   "seconds": 0.030559174017980695,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_OUTPUT_CAPABILITY\",\"severity\":\"error\",\"message\":\"print needs a Stream; add `out: Stream` to this function and pass one from main\",\"location\":{\"path\":\"/home/epentland/ai/... [843 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a48_for_else.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a48_for_else.my",
+   "oracle": "rejected-by-design",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_EXPRESSION",
+   "codes": [
+    "E_EXPRESSION"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_EXPRESSION",
+     "severity": "error",
+     "message": "a loop has no `else` clause",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "use a flag: assign it before the loop, set it before `break`, and test it after",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a48_for_else.my",
+        "start": {
+         "line": 6,
+         "column": 5
+        },
+        "end": {
+         "line": 6,
+         "column": 9
+        },
+        "bytes": {
+         "start": 113,
+         "end": 117
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": true,
+   "c3_text_spelling": true,
+   "alternative": "note-alternative",
+   "alternative_text_kind": "text-spelling",
+   "alternative_structured": true,
+   "alternative_text": true,
+   "seconds": 0.022223136969842017,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_EXPRESSION\",\"severity\":\"error\",\"message\":\"a loop has no `else` clause\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms... [477 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a49_match_literal.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a49_match_literal.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_SYNTAX",
+   "codes": [
+    "E_SYNTAX"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_SYNTAX",
+     "severity": "error",
+     "message": "a case names a union, enum or result case, not a literal",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "compare literals with `if`/`elif`: `if x == 1:` then `elif x == 3:`",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a49_match_literal.my",
+        "start": {
+         "line": 5,
+         "column": 14
+        },
+        "end": {
+         "line": 5,
+         "column": 15
+        },
+        "bytes": {
+         "start": 73,
+         "end": 74
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": "note-alternative",
+   "alternative_text_kind": null,
+   "alternative_structured": true,
+   "alternative_text": false,
+   "seconds": 0.033155999961309135,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SYNTAX\",\"severity\":\"error\",\"message\":\"a case names a union, enum or result case, not a literal\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.worktrees/integrati... [500 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a50_match_str.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a50_match_str.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_SYNTAX",
+   "codes": [
+    "E_SYNTAX"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_SYNTAX",
+     "severity": "error",
+     "message": "a case names a union, enum or result case, not a literal",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "compare literals with `if`/`elif`: `if x == 1:` then `elif x == 3:`",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a50_match_str.my",
+        "start": {
+         "line": 4,
+         "column": 14
+        },
+        "end": {
+         "line": 4,
+         "column": 17
+        },
+        "bytes": {
+         "start": 69,
+         "end": 72
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": "note-alternative",
+   "alternative_text_kind": null,
+   "alternative_structured": true,
+   "alternative_text": false,
+   "seconds": 0.03257824102183804,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SYNTAX\",\"severity\":\"error\",\"message\":\"a case names a union, enum or result case, not a literal\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.worktrees/integrati... [492 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a51_del.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a51_del.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_SYNTAX",
+   "codes": [
+    "E_SYNTAX"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_SYNTAX",
+     "severity": "error",
+     "message": "a del statement is not part of the language",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "remove with `_ = xs.pop(index)` for a list or `_ = d.pop(key)` for a dictionary",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a51_del.my",
+        "start": {
+         "line": 4,
+         "column": 9
+        },
+        "end": {
+         "line": 4,
+         "column": 11
+        },
+        "bytes": {
+         "start": 64,
+         "end": 66
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": "note-alternative",
+   "alternative_text_kind": null,
+   "alternative_structured": true,
+   "alternative_text": false,
+   "seconds": 0.03318783704889938,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SYNTAX\",\"severity\":\"error\",\"message\":\"a del statement is not part of the language\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/s... [477 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a52_pop_insert.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a52_pop_insert.my",
+   "oracle": "cpython",
+   "verdict": "agree",
+   "accepts": true,
+   "completes": true,
+   "status": 42,
+   "code": null,
+   "codes": [],
+   "diagnostics": [],
+   "c1": true,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.2012658899766393,
+   "stdout_preview": "",
+   "stderr_preview": "",
+   "oracle_status": 42,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a53_multiline_str.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a53_multiline_str.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_SYNTAX",
+   "codes": [
+    "E_SYNTAX"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_SYNTAX",
+     "severity": "error",
+     "message": "a string prefix is not part of a literal",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "drop the prefix and write the escape in an ordinary quoted string",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a53_multiline_str.my",
+        "start": {
+         "line": 5,
+         "column": 10
+        },
+        "end": {
+         "line": 5,
+         "column": 16
+        },
+        "bytes": {
+         "start": 72,
+         "end": 78
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": true,
+   "c3_text_spelling": false,
+   "alternative": "note-alternative",
+   "alternative_text_kind": "text-repair",
+   "alternative_structured": true,
+   "alternative_text": true,
+   "seconds": 0.023241989023517817,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SYNTAX\",\"severity\":\"error\",\"message\":\"a string prefix is not part of a literal\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suit... [482 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a54_bitops.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a54_bitops.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_REMOVED_SPELLING",
+   "codes": [
+    "E_REMOVED_SPELLING"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_REMOVED_SPELLING",
+     "severity": "error",
+     "message": "`&` was removed and has no replacement",
+     "notes": [],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.03292370797134936,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_REMOVED_SPELLING\",\"severity\":\"error\",\"message\":\"`&` was removed and has no replacement\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.worktrees/integration/veloc... [171 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a55_chr_ord_hex.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a55_chr_ord_hex.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_UNKNOWN_FUNCTION",
+   "codes": [
+    "E_UNKNOWN_FUNCTION"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_UNKNOWN_FUNCTION",
+     "severity": "error",
+     "message": "no function has this qualified name",
+     "notes": [],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.030954743968322873,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_UNKNOWN_FUNCTION\",\"severity\":\"error\",\"message\":\"no function has this qualified name\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity... [172 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a56_divmod_pow.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a56_divmod_pow.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_SYNTAX",
+   "codes": [
+    "E_SYNTAX"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_SYNTAX",
+     "severity": "error",
+     "message": "a comma-separated target list declares no binding",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "bind one name per statement and use a temporary variable; declare a record to return several values",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a56_divmod_pow.my",
+        "start": {
+         "line": 3,
+         "column": 6
+        },
+        "end": {
+         "line": 3,
+         "column": 7
+        },
+        "bytes": {
+         "start": 42,
+         "end": 43
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": true,
+   "c3_text_spelling": true,
+   "alternative": "note-alternative",
+   "alternative_text_kind": "text-spelling",
+   "alternative_structured": true,
+   "alternative_text": true,
+   "seconds": 0.0324170280364342,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SYNTAX\",\"severity\":\"error\",\"message\":\"a comma-separated target list declares no binding\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.worktrees/integration/velo... [515 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a57_assert_fstring.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a57_assert_fstring.my",
+   "oracle": "mylang-only",
+   "verdict": "trap",
+   "accepts": true,
+   "completes": false,
+   "status": 1,
+   "code": "R_ASSERT",
+   "codes": [
+    "R_ASSERT"
+   ],
+   "diagnostics": [
+    {
+     "code": "R_ASSERT",
+     "severity": "error",
+     "message": "x was 1\n/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a57_assert_fstring.my:4:12: error[R_ASSERT]: native execution failed\n  in main at /home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a57_assert_fstring.my:4:12",
+     "notes": [],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.18962038296740502,
+   "stdout_preview": "",
+   "stderr_preview": "x was 1\n/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a57_assert_fstring.my:4:12: error[R_ASSERT]: native execution failed\n  in main at /home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites... [35 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a58_main_guard.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a58_main_guard.my",
+   "oracle": "rejected-by-design",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_SYNTAX",
+   "codes": [
+    "E_SYNTAX"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_SYNTAX",
+     "severity": "error",
+     "message": "a module has no `__name__` guard",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "delete the guard: `mylang run` calls `def main()` directly",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a58_main_guard.my",
+        "start": {
+         "line": 5,
+         "column": 1
+        },
+        "end": {
+         "line": 5,
+         "column": 3
+        },
+        "bytes": {
+         "start": 63,
+         "end": 65
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": "note-alternative",
+   "alternative_text_kind": null,
+   "alternative_structured": true,
+   "alternative_text": false,
+   "seconds": 0.0307400279561989,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SYNTAX\",\"severity\":\"error\",\"message\":\"a module has no `__name__` guard\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idiom... [457 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a59_reassign_annot.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a59_reassign_annot.my",
+   "oracle": "cpython",
+   "verdict": "agree",
+   "accepts": true,
+   "completes": true,
+   "status": 42,
+   "code": null,
+   "codes": [],
+   "diagnostics": [],
+   "c1": true,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.14117826899746433,
+   "stdout_preview": "",
+   "stderr_preview": "",
+   "oracle_status": 42,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a60_overflow.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a60_overflow.my",
+   "oracle": "cpython",
+   "verdict": "trap",
+   "accepts": true,
+   "completes": false,
+   "status": 1,
+   "code": "R_OVERFLOW",
+   "codes": [
+    "R_OVERFLOW"
+   ],
+   "diagnostics": [
+    {
+     "code": "R_OVERFLOW",
+     "severity": "error",
+     "message": "native execution failed (add: left 9223372036854775807, right 1, width 64)",
+     "notes": [],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.15712891501607373,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"R_OVERFLOW\",\"severity\":\"error\",\"message\":\"native execution failed (add: left 9223372036854775807, right 1, width 64)\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/... [403 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a61_result_unwrap.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a61_result_unwrap.my",
+   "oracle": "mylang-only",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_SYNTAX",
+   "codes": [
+    "E_SYNTAX"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_SYNTAX",
+     "severity": "error",
+     "message": "`unwrap` is a keyword here, not a method",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "extract with `match`: `case Ok(value)` or `case Some(value)`; `?` propagates a `Result`",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a61_result_unwrap.my",
+        "start": {
+         "line": 10,
+         "column": 21
+        },
+        "end": {
+         "line": 10,
+         "column": 27
+        },
+        "bytes": {
+         "start": 215,
+         "end": 221
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": "note-alternative",
+   "alternative_text_kind": null,
+   "alternative_structured": true,
+   "alternative_text": false,
+   "seconds": 0.0166559349745512,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SYNTAX\",\"severity\":\"error\",\"message\":\"`unwrap` is a keyword here, not a method\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suit... [512 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a62_option_or.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a62_option_or.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_ARITY",
+   "codes": [
+    "E_ARITY"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_ARITY",
+     "severity": "error",
+     "message": "`dict[str, int].get(key: str, default: int) -> int` takes 2 arguments, but this call passes 1",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "a dictionary `get` always takes its fallback: `d.get(key, default)`",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a62_option_or.my",
+        "start": {
+         "line": 4,
+         "column": 11
+        },
+        "end": {
+         "line": 4,
+         "column": 14
+        },
+        "bytes": {
+         "start": 64,
+         "end": 67
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": "note-alternative",
+   "alternative_text_kind": null,
+   "alternative_structured": true,
+   "alternative_text": false,
+   "seconds": 0.02140921604586765,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_ARITY\",\"severity\":\"error\",\"message\":\"`dict[str, int].get(key: str, default: int) -> int` takes 2 arguments, but this call passes 1\",\"location\":{\"path\":\"/home/epentland/a... [527 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a63_dict_get_option.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a63_dict_get_option.my",
+   "oracle": "mylang-only",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_ARITY",
+   "codes": [
+    "E_ARITY"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_ARITY",
+     "severity": "error",
+     "message": "`dict[str, int].get(key: str, default: int) -> int` takes 2 arguments, but this call passes 1",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "a dictionary `get` always takes its fallback: `d.get(key, default)`",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a63_dict_get_option.my",
+        "start": {
+         "line": 4,
+         "column": 11
+        },
+        "end": {
+         "line": 4,
+         "column": 14
+        },
+        "bytes": {
+         "start": 68,
+         "end": 71
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": "note-alternative",
+   "alternative_text_kind": null,
+   "alternative_structured": true,
+   "alternative_text": false,
+   "seconds": 0.02247651299694553,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_ARITY\",\"severity\":\"error\",\"message\":\"`dict[str, int].get(key: str, default: int) -> int` takes 2 arguments, but this call passes 1\",\"location\":{\"path\":\"/home/epentland/a... [539 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a64_split_noargs.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a64_split_noargs.my",
+   "oracle": "cpython",
+   "verdict": "agree",
+   "accepts": true,
+   "completes": true,
+   "status": 42,
+   "code": null,
+   "codes": [],
+   "diagnostics": [],
+   "c1": true,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.14810168300755322,
+   "stdout_preview": "",
+   "stderr_preview": "",
+   "oracle_status": 42,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a65_str_cmp.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a65_str_cmp.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_TEXT_OPERATOR",
+   "codes": [
+    "E_TEXT_OPERATOR"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_TEXT_OPERATOR",
+     "severity": "error",
+     "message": "managed collections support equality and str/bytes support concatenation",
+     "notes": [],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.03820531297242269,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_TEXT_OPERATOR\",\"severity\":\"error\",\"message\":\"managed collections support equality and str/bytes support concatenation\",\"location\":{\"path\":\"/home/epentland/ai/canopy/myla... [203 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a66_nested_comp.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a66_nested_comp.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_SYNTAX",
+   "codes": [
+    "E_SYNTAX"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_SYNTAX",
+     "severity": "error",
+     "message": "a comprehension takes exactly one generator",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "write the loops out and append: `for row in grid:` then `for x in row: flat.append(x)`",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a66_nested_comp.my",
+        "start": {
+         "line": 4,
+         "column": 31
+        },
+        "end": {
+         "line": 4,
+         "column": 34
+        },
+        "bytes": {
+         "start": 95,
+         "end": 98
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": true,
+   "c3_text_spelling": false,
+   "alternative": "note-alternative",
+   "alternative_text_kind": "text-repair",
+   "alternative_structured": true,
+   "alternative_text": true,
+   "seconds": 0.03172023396473378,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SYNTAX\",\"severity\":\"error\",\"message\":\"a comprehension takes exactly one generator\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/s... [502 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a67_dict_comp.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a67_dict_comp.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_SYNTAX",
+   "codes": [
+    "E_SYNTAX"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_SYNTAX",
+     "severity": "error",
+     "message": "a dict comprehension is not provided",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "build the dictionary with a loop: `for x in range(4): d[x] = x * x`",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a67_dict_comp.my",
+        "start": {
+         "line": 3,
+         "column": 19
+        },
+        "end": {
+         "line": 3,
+         "column": 22
+        },
+        "bytes": {
+         "start": 55,
+         "end": 58
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": "note-alternative",
+   "alternative_text_kind": null,
+   "alternative_structured": true,
+   "alternative_text": false,
+   "seconds": 0.018123652029316872,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SYNTAX\",\"severity\":\"error\",\"message\":\"a dict comprehension is not provided\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/i... [472 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a68_genexp.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a68_genexp.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_SYNTAX",
+   "codes": [
+    "E_SYNTAX"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_SYNTAX",
+     "severity": "error",
+     "message": "a generator expression is not provided",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "materialize a list instead: `any([x > 2 for x in xs])`",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a68_genexp.my",
+        "start": {
+         "line": 4,
+         "column": 18
+        },
+        "end": {
+         "line": 4,
+         "column": 21
+        },
+        "bytes": {
+         "start": 73,
+         "end": 76
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": true,
+   "c3_text_spelling": true,
+   "alternative": "note-alternative",
+   "alternative_text_kind": "text-spelling",
+   "alternative_structured": true,
+   "alternative_text": true,
+   "seconds": 0.019175361027009785,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SYNTAX\",\"severity\":\"error\",\"message\":\"a generator expression is not provided\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites... [455 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a69_print_end.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a69_print_end.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_OUTPUT_CAPABILITY",
+   "codes": [
+    "E_OUTPUT_CAPABILITY"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_OUTPUT_CAPABILITY",
+     "severity": "error",
+     "message": "print needs a Stream; add `out: Stream` to this function and pass one from main",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "print needs a Stream; add `out: Stream` to this function and pass one from main",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a69_print_end.my",
+        "start": {
+         "line": 3,
+         "column": 5
+        },
+        "end": {
+         "line": 3,
+         "column": 10
+        },
+        "bytes": {
+         "start": 41,
+         "end": 46
+        }
+       }
+      },
+      {
+       "role": "signature",
+       "message": "stream.print(values..., sep: str, end: str) -> None",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a69_print_end.my",
+        "start": {
+         "line": 3,
+         "column": 5
+        },
+        "end": {
+         "line": 3,
+         "column": 10
+        },
+        "bytes": {
+         "start": 41,
+         "end": 46
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": true,
+   "c3_text_spelling": false,
+   "alternative": "note-alternative",
+   "alternative_text_kind": "text-repair",
+   "alternative_structured": true,
+   "alternative_text": true,
+   "seconds": 0.03802869498031214,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_OUTPUT_CAPABILITY\",\"severity\":\"error\",\"message\":\"print needs a Stream; add `out: Stream` to this function and pass one from main\",\"location\":{\"path\":\"/home/epentland/ai/... [828 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a70_int_from_float.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a70_int_from_float.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_SYNTAX",
+   "codes": [
+    "E_SYNTAX"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_SYNTAX",
+     "severity": "error",
+     "message": "a conditional expression is not part of the language",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "write an if/else statement that assigns the same name",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a70_int_from_float.my",
+        "start": {
+         "line": 3,
+         "column": 41
+        },
+        "end": {
+         "line": 3,
+         "column": 43
+        },
+        "bytes": {
+         "start": 77,
+         "end": 79
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": true,
+   "c3_text_spelling": false,
+   "alternative": "note-alternative",
+   "alternative_text_kind": "text-repair",
+   "alternative_structured": true,
+   "alternative_text": true,
+   "seconds": 0.01934834202984348,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SYNTAX\",\"severity\":\"error\",\"message\":\"a conditional expression is not part of the language\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.worktrees/integration/v... [484 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a71_type_alias.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a71_type_alias.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_SYNTAX",
+   "codes": [
+    "E_SYNTAX"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_SYNTAX",
+     "severity": "error",
+     "message": "a bare assignment declares no module-level binding",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "declare it as a constant: const MAX: int = 42",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a71_type_alias.my",
+        "start": {
+         "line": 2,
+         "column": 1
+        },
+        "end": {
+         "line": 2,
+         "column": 5
+        },
+        "bytes": {
+         "start": 18,
+         "end": 22
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": true,
+   "c3_text_spelling": false,
+   "alternative": "note-alternative",
+   "alternative_text_kind": "text-repair",
+   "alternative_structured": true,
+   "alternative_text": true,
+   "seconds": 0.02034486405318603,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SYNTAX\",\"severity\":\"error\",\"message\":\"a bare assignment declares no module-level binding\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.worktrees/integration/vel... [462 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a72_type_alias_kw.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a72_type_alias_kw.my",
+   "oracle": "cpython",
+   "verdict": "agree",
+   "accepts": true,
+   "completes": true,
+   "status": 42,
+   "code": null,
+   "codes": [],
+   "diagnostics": [],
+   "c1": true,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.16654337698128074,
+   "stdout_preview": "",
+   "stderr_preview": "",
+   "oracle_status": 42,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a73_while_else_walrus.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a73_while_else_walrus.my",
+   "oracle": "rejected-by-design",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_SYNTAX",
+   "codes": [
+    "E_SYNTAX"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_SYNTAX",
+     "severity": "error",
+     "message": "the walrus operator is not part of the language",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "assign the name on its own line first, then test it",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a73_while_else_walrus.my",
+        "start": {
+         "line": 4,
+         "column": 11
+        },
+        "end": {
+         "line": 4,
+         "column": 12
+        },
+        "bytes": {
+         "start": 77,
+         "end": 78
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": "note-alternative",
+   "alternative_text_kind": null,
+   "alternative_structured": true,
+   "alternative_text": false,
+   "seconds": 0.030754215025808662,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SYNTAX\",\"severity\":\"error\",\"message\":\"the walrus operator is not part of the language\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.worktrees/integration/veloci... [483 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a74_str_in_list.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a74_str_in_list.my",
+   "oracle": "cpython",
+   "verdict": "agree",
+   "accepts": true,
+   "completes": true,
+   "status": 42,
+   "code": null,
+   "codes": [],
+   "diagnostics": [],
+   "c1": true,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.1919896139879711,
+   "stdout_preview": "",
+   "stderr_preview": "",
+   "oracle_status": 42,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a75_list_of_records_mutate.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a75_list_of_records_mutate.my",
+   "oracle": "mylang-only",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_ASSIGNMENT_TARGET",
+   "codes": [
+    "E_ASSIGNMENT_TARGET"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_ASSIGNMENT_TARGET",
+     "severity": "error",
+     "message": "augmented assignment to a record field is not supported; write the field out in full",
+     "notes": [],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": true,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": "text-repair",
+   "alternative_structured": false,
+   "alternative_text": true,
+   "seconds": 0.030269843991845846,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_ASSIGNMENT_TARGET\",\"severity\":\"error\",\"message\":\"augmented assignment to a record field is not supported; write the field out in full\",\"location\":{\"path\":\"/home/epentlan... [236 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a76_record_in_dict.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a76_record_in_dict.my",
+   "oracle": "mylang-only",
+   "verdict": "complete",
+   "accepts": true,
+   "completes": true,
+   "status": 42,
+   "code": null,
+   "codes": [],
+   "diagnostics": [],
+   "c1": false,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.20810965000418946,
+   "stdout_preview": "",
+   "stderr_preview": "",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a77_dict_record_key.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a77_dict_record_key.my",
+   "oracle": "mylang-only",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_DICT_KEY",
+   "codes": [
+    "E_DICT_KEY"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_DICT_KEY",
+     "severity": "error",
+     "message": "dictionary keys must be integers or str",
+     "notes": [],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.02296748396474868,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_DICT_KEY\",\"severity\":\"error\",\"message\":\"dictionary keys must be integers or str\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/sui... [173 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a78_multiple_return_record.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a78_multiple_return_record.my",
+   "oracle": "mylang-only",
+   "verdict": "complete",
+   "accepts": true,
+   "completes": true,
+   "status": 42,
+   "code": null,
+   "codes": [],
+   "diagnostics": [],
+   "c1": false,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.16604461299721152,
+   "stdout_preview": "",
+   "stderr_preview": "",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a79_str_methods.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a79_str_methods.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_LIST_METHOD",
+   "codes": [
+    "E_LIST_METHOD"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_LIST_METHOD",
+     "severity": "error",
+     "message": "unknown method for a str receiver; accepted methods: count, encode, endswith, find, isalpha, isdigit, isspace, join, lower, lstrip, parse_float, parse_int, replace, rstrip, split, splitlines, startswith, strip, upper, zfill",
+     "notes": [],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.035362988943234086,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_LIST_METHOD\",\"severity\":\"error\",\"message\":\"unknown method for a str receiver; accepted methods: count, encode, endswith, find, isalpha, isdigit, isspace, join, lower, ls... [358 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "a80_none_return_call.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a80_none_return_call.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_OUTPUT_CAPABILITY",
+   "codes": [
+    "E_OUTPUT_CAPABILITY"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_OUTPUT_CAPABILITY",
+     "severity": "error",
+     "message": "print needs a Stream; add `out: Stream` to this function and pass one from main",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "print needs a Stream; add `out: Stream` to this function and pass one from main",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a80_none_return_call.my",
+        "start": {
+         "line": 3,
+         "column": 5
+        },
+        "end": {
+         "line": 3,
+         "column": 10
+        },
+        "bytes": {
+         "start": 41,
+         "end": 46
+        }
+       }
+      },
+      {
+       "role": "signature",
+       "message": "stream.print(values..., sep: str, end: str) -> None",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/a80_none_return_call.my",
+        "start": {
+         "line": 3,
+         "column": 5
+        },
+        "end": {
+         "line": 3,
+         "column": 10
+        },
+        "bytes": {
+         "start": 41,
+         "end": 46
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": true,
+   "c3_text_spelling": false,
+   "alternative": "note-alternative",
+   "alternative_text_kind": "text-repair",
+   "alternative_structured": true,
+   "alternative_text": true,
+   "seconds": 0.03537991497432813,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_OUTPUT_CAPABILITY\",\"severity\":\"error\",\"message\":\"print needs a Stream; add `out: Stream` to this function and pass one from main\",\"location\":{\"path\":\"/home/epentland/ai/... [849 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "c01_option_q.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/c01_option_q.my",
+   "oracle": "mylang-only",
+   "verdict": "complete",
+   "accepts": true,
+   "completes": true,
+   "status": 0,
+   "code": null,
+   "codes": [],
+   "diagnostics": [],
+   "c1": false,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.21573009999701753,
+   "stdout_preview": "",
+   "stderr_preview": "",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "c02_result_err_convert.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/c02_result_err_convert.my",
+   "oracle": "mylang-only",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_TYPE",
+   "codes": [
+    "E_TYPE"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_TYPE",
+     "severity": "error",
+     "message": "expected int, found str",
+     "notes": [],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.0391640670131892,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_TYPE\",\"severity\":\"error\",\"message\":\"expected int, found str\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/c02_resul... [159 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "c03_main_result_str.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/c03_main_result_str.my",
+   "oracle": "mylang-only",
+   "verdict": "complete",
+   "accepts": true,
+   "completes": true,
+   "status": 1,
+   "code": null,
+   "codes": [],
+   "diagnostics": [],
+   "c1": false,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.18428992200642824,
+   "stdout_preview": "",
+   "stderr_preview": "",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "c04_option_default.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/c04_option_default.my",
+   "oracle": "cpython",
+   "verdict": "agree",
+   "accepts": true,
+   "completes": true,
+   "status": 42,
+   "code": null,
+   "codes": [],
+   "diagnostics": [],
+   "c1": true,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.18704097397858277,
+   "stdout_preview": "",
+   "stderr_preview": "",
+   "oracle_status": 42,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "c05_option_field.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/c05_option_field.my",
+   "oracle": "mylang-only",
+   "verdict": "complete",
+   "accepts": true,
+   "completes": true,
+   "status": 26,
+   "code": null,
+   "codes": [],
+   "diagnostics": [
+    {
+     "code": "W_UNUSED_BINDING",
+     "severity": "warning",
+     "message": "binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed",
+     "notes": [],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.19992268999340013,
+   "stdout_preview": "",
+   "stderr_preview": "",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "c06_result_record_err.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/c06_result_record_err.my",
+   "oracle": "mylang-only",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_OUTPUT_CAPABILITY",
+   "codes": [
+    "E_OUTPUT_CAPABILITY"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_OUTPUT_CAPABILITY",
+     "severity": "error",
+     "message": "print needs a Stream; add `out: Stream` to this function and pass one from main",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "print needs a Stream; add `out: Stream` to this function and pass one from main",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/c06_result_record_err.my",
+        "start": {
+         "line": 16,
+         "column": 13
+        },
+        "end": {
+         "line": 16,
+         "column": 18
+        },
+        "bytes": {
+         "start": 324,
+         "end": 329
+        }
+       }
+      },
+      {
+       "role": "signature",
+       "message": "stream.print(values..., sep: str, end: str) -> None",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/c06_result_record_err.my",
+        "start": {
+         "line": 16,
+         "column": 13
+        },
+        "end": {
+         "line": 16,
+         "column": 18
+        },
+        "bytes": {
+         "start": 324,
+         "end": 329
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": true,
+   "c3_text_spelling": false,
+   "alternative": "note-alternative",
+   "alternative_text_kind": "text-repair",
+   "alternative_structured": true,
+   "alternative_text": true,
+   "seconds": 0.036902907013427466,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_OUTPUT_CAPABILITY\",\"severity\":\"error\",\"message\":\"print needs a Stream; add `out: Stream` to this function and pass one from main\",\"location\":{\"path\":\"/home/epentland/ai/... [867 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "c07_if_let_style.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/c07_if_let_style.my",
+   "oracle": "mylang-only",
+   "verdict": "complete",
+   "accepts": true,
+   "completes": true,
+   "status": 42,
+   "code": null,
+   "codes": [],
+   "diagnostics": [],
+   "c1": false,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.20694002602249384,
+   "stdout_preview": "",
+   "stderr_preview": "",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "c08_match_expr.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/c08_match_expr.my",
+   "oracle": "mylang-only",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_EXPRESSION",
+   "codes": [
+    "E_EXPRESSION"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_EXPRESSION",
+     "severity": "error",
+     "message": "`match` is a statement, not an expression",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "assign the value in each branch of an if/elif statement",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/c08_match_expr.my",
+        "start": {
+         "line": 4,
+         "column": 9
+        },
+        "end": {
+         "line": 4,
+         "column": 14
+        },
+        "bytes": {
+         "start": 66,
+         "end": 71
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": "note-alternative",
+   "alternative_text_kind": null,
+   "alternative_structured": true,
+   "alternative_text": false,
+   "seconds": 0.03322403400670737,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_EXPRESSION\",\"severity\":\"error\",\"message\":\"`match` is a statement, not an expression\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity... [469 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "d01_loop_record_copy.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/d01_loop_record_copy.my",
+   "oracle": "mylang-only",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_OUTPUT_CAPABILITY",
+   "codes": [
+    "E_OUTPUT_CAPABILITY"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_OUTPUT_CAPABILITY",
+     "severity": "error",
+     "message": "print needs a Stream; add `out: Stream` to this function and pass one from main",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "print needs a Stream; add `out: Stream` to this function and pass one from main",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/d01_loop_record_copy.my",
+        "start": {
+         "line": 14,
+         "column": 5
+        },
+        "end": {
+         "line": 14,
+         "column": 10
+        },
+        "bytes": {
+         "start": 261,
+         "end": 266
+        }
+       }
+      },
+      {
+       "role": "signature",
+       "message": "stream.print(values..., sep: str, end: str) -> None",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/d01_loop_record_copy.my",
+        "start": {
+         "line": 14,
+         "column": 5
+        },
+        "end": {
+         "line": 14,
+         "column": 10
+        },
+        "bytes": {
+         "start": 261,
+         "end": 266
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": true,
+   "c3_text_spelling": false,
+   "alternative": "note-alternative",
+   "alternative_text_kind": "text-repair",
+   "alternative_structured": true,
+   "alternative_text": true,
+   "seconds": 0.029269644990563393,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_OUTPUT_CAPABILITY\",\"severity\":\"error\",\"message\":\"print needs a Stream; add `out: Stream` to this function and pass one from main\",\"location\":{\"path\":\"/home/epentland/ai/... [861 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "d02_alias_record_copy.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/d02_alias_record_copy.my",
+   "oracle": "mylang-only",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_OUTPUT_CAPABILITY",
+   "codes": [
+    "E_OUTPUT_CAPABILITY"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_OUTPUT_CAPABILITY",
+     "severity": "error",
+     "message": "print needs a Stream; add `out: Stream` to this function and pass one from main",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "print needs a Stream; add `out: Stream` to this function and pass one from main",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/d02_alias_record_copy.my",
+        "start": {
+         "line": 9,
+         "column": 5
+        },
+        "end": {
+         "line": 9,
+         "column": 10
+        },
+        "bytes": {
+         "start": 136,
+         "end": 141
+        }
+       }
+      },
+      {
+       "role": "signature",
+       "message": "stream.print(values..., sep: str, end: str) -> None",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/d02_alias_record_copy.my",
+        "start": {
+         "line": 9,
+         "column": 5
+        },
+        "end": {
+         "line": 9,
+         "column": 10
+        },
+        "bytes": {
+         "start": 136,
+         "end": 141
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": true,
+   "c3_text_spelling": false,
+   "alternative": "note-alternative",
+   "alternative_text_kind": "text-repair",
+   "alternative_structured": true,
+   "alternative_text": true,
+   "seconds": 0.02454256796045229,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_OUTPUT_CAPABILITY\",\"severity\":\"error\",\"message\":\"print needs a Stream; add `out: Stream` to this function and pass one from main\",\"location\":{\"path\":\"/home/epentland/ai/... [858 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "d03_record_param_mutate.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/d03_record_param_mutate.my",
+   "oracle": "mylang-only",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_ASSIGNMENT_TARGET",
+   "codes": [
+    "E_ASSIGNMENT_TARGET"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_ASSIGNMENT_TARGET",
+     "severity": "error",
+     "message": "augmented assignment to a record field is not supported; write the field out in full",
+     "notes": [],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": true,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": "text-repair",
+   "alternative_structured": false,
+   "alternative_text": true,
+   "seconds": 0.03149117098655552,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_ASSIGNMENT_TARGET\",\"severity\":\"error\",\"message\":\"augmented assignment to a record field is not supported; write the field out in full\",\"location\":{\"path\":\"/home/epentlan... [230 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "d04_dict_items_keys.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/d04_dict_items_keys.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_OUTPUT_CAPABILITY",
+   "codes": [
+    "E_OUTPUT_CAPABILITY"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_OUTPUT_CAPABILITY",
+     "severity": "error",
+     "message": "print needs a Stream; add `out: Stream` to this function and pass one from main",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "print needs a Stream; add `out: Stream` to this function and pass one from main",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/d04_dict_items_keys.my",
+        "start": {
+         "line": 5,
+         "column": 9
+        },
+        "end": {
+         "line": 5,
+         "column": 14
+        },
+        "bytes": {
+         "start": 97,
+         "end": 102
+        }
+       }
+      },
+      {
+       "role": "signature",
+       "message": "stream.print(values..., sep: str, end: str) -> None",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/d04_dict_items_keys.my",
+        "start": {
+         "line": 5,
+         "column": 9
+        },
+        "end": {
+         "line": 5,
+         "column": 14
+        },
+        "bytes": {
+         "start": 97,
+         "end": 102
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": true,
+   "c3_text_spelling": false,
+   "alternative": "note-alternative",
+   "alternative_text_kind": "text-repair",
+   "alternative_structured": true,
+   "alternative_text": true,
+   "seconds": 0.03751316200941801,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_OUTPUT_CAPABILITY\",\"severity\":\"error\",\"message\":\"print needs a Stream; add `out: Stream` to this function and pass one from main\",\"location\":{\"path\":\"/home/epentland/ai/... [849 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "d05_round_half.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/d05_round_half.my",
+   "oracle": "cpython",
+   "verdict": "wrong",
+   "accepts": true,
+   "completes": true,
+   "status": 61,
+   "code": null,
+   "codes": [],
+   "diagnostics": [],
+   "c1": false,
+   "c2": true,
+   "c3": false,
+   "c2_declared": true,
+   "divergence": "round-half-away-from-zero",
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.06008887098869309,
+   "stdout_preview": "",
+   "stderr_preview": "",
+   "oracle_status": 208,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "d06_record_field_in_dict_loop.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/d06_record_field_in_dict_loop.my",
+   "oracle": "mylang-only",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_OUTPUT_CAPABILITY",
+   "codes": [
+    "E_OUTPUT_CAPABILITY"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_OUTPUT_CAPABILITY",
+     "severity": "error",
+     "message": "print needs a Stream; add `out: Stream` to this function and pass one from main",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "print needs a Stream; add `out: Stream` to this function and pass one from main",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/d06_record_field_in_dict_loop.my",
+        "start": {
+         "line": 9,
+         "column": 5
+        },
+        "end": {
+         "line": 9,
+         "column": 10
+        },
+        "bytes": {
+         "start": 157,
+         "end": 162
+        }
+       }
+      },
+      {
+       "role": "signature",
+       "message": "stream.print(values..., sep: str, end: str) -> None",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/d06_record_field_in_dict_loop.my",
+        "start": {
+         "line": 9,
+         "column": 5
+        },
+        "end": {
+         "line": 9,
+         "column": 10
+        },
+        "bytes": {
+         "start": 157,
+         "end": 162
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": true,
+   "c3_text_spelling": false,
+   "alternative": "note-alternative",
+   "alternative_text_kind": "text-repair",
+   "alternative_structured": true,
+   "alternative_text": true,
+   "seconds": 0.022880106000229716,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_OUTPUT_CAPABILITY\",\"severity\":\"error\",\"message\":\"print needs a Stream; add `out: Stream` to this function and pass one from main\",\"location\":{\"path\":\"/home/epentland/ai/... [882 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "d07_str_index_assign.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/d07_str_index_assign.my",
+   "oracle": "mylang-only",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_COLLECTION_METHOD",
+   "codes": [
+    "E_COLLECTION_METHOD"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_COLLECTION_METHOD",
+     "severity": "error",
+     "message": "operation is not supported by this collection",
+     "notes": [],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.025196623988449574,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_COLLECTION_METHOD\",\"severity\":\"error\",\"message\":\"operation is not supported by this collection\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.worktrees/integrati... [188 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "d08_int_float_mix.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/d08_int_float_mix.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_OUTPUT_CAPABILITY",
+   "codes": [
+    "E_OUTPUT_CAPABILITY"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_OUTPUT_CAPABILITY",
+     "severity": "error",
+     "message": "print needs a Stream; add `out: Stream` to this function and pass one from main",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "print needs a Stream; add `out: Stream` to this function and pass one from main",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/d08_int_float_mix.my",
+        "start": {
+         "line": 7,
+         "column": 5
+        },
+        "end": {
+         "line": 7,
+         "column": 10
+        },
+        "bytes": {
+         "start": 91,
+         "end": 96
+        }
+       }
+      },
+      {
+       "role": "signature",
+       "message": "stream.print(values..., sep: str, end: str) -> None",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/d08_int_float_mix.my",
+        "start": {
+         "line": 7,
+         "column": 5
+        },
+        "end": {
+         "line": 7,
+         "column": 10
+        },
+        "bytes": {
+         "start": 91,
+         "end": 96
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": true,
+   "c3_text_spelling": false,
+   "alternative": "note-alternative",
+   "alternative_text_kind": "text-repair",
+   "alternative_structured": true,
+   "alternative_text": true,
+   "seconds": 0.035215206968132406,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_OUTPUT_CAPABILITY\",\"severity\":\"error\",\"message\":\"print needs a Stream; add `out: Stream` to this function and pass one from main\",\"location\":{\"path\":\"/home/epentland/ai/... [840 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "d09_shadow_builtin.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/d09_shadow_builtin.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_SHADOWING",
+   "codes": [
+    "E_SHADOWING"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_SHADOWING",
+     "severity": "error",
+     "message": "binding shadows an active local or top-level function",
+     "notes": [],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.03592621599091217,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SHADOWING\",\"severity\":\"error\",\"message\":\"binding shadows an active local or top-level function\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.worktrees/integrati... [185 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "d10_unused_result.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/d10_unused_result.my",
+   "oracle": "mylang-only",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_EXPLICIT_DISCARD_REQUIRED",
+   "codes": [
+    "E_EXPLICIT_DISCARD_REQUIRED"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_EXPLICIT_DISCARD_REQUIRED",
+     "severity": "error",
+     "message": "a standalone non-unit value requires `_ =` or result handling",
+     "notes": [],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": true,
+   "c3_text_spelling": true,
+   "alternative": null,
+   "alternative_text_kind": "text-spelling",
+   "alternative_structured": false,
+   "alternative_text": true,
+   "seconds": 0.02118436503224075,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_EXPLICIT_DISCARD_REQUIRED\",\"severity\":\"error\",\"message\":\"a standalone non-unit value requires `_ =` or result handling\",\"location\":{\"path\":\"/home/epentland/ai/canopy/myl... [211 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "e01_step_budget.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/e01_step_budget.my",
+   "oracle": "cpython",
+   "verdict": "agree",
+   "accepts": true,
+   "completes": true,
+   "status": 21,
+   "code": null,
+   "codes": [],
+   "diagnostics": [],
+   "c1": true,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.20555733900982887,
+   "stdout_preview": "",
+   "stderr_preview": "",
+   "oracle_status": 21,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "e02_bitops_each.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/e02_bitops_each.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_TOKEN",
+   "codes": [
+    "E_TOKEN"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_TOKEN",
+     "severity": "error",
+     "message": "unexpected character in source",
+     "notes": [],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.01697912300005555,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_TOKEN\",\"severity\":\"error\",\"message\":\"unexpected character in source\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/e... [157 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "e03_shift.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/e03_shift.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_EXPRESSION",
+   "codes": [
+    "E_EXPRESSION"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_EXPRESSION",
+     "severity": "error",
+     "message": "`<<` and `>>` are not operators",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "use `shift_left(value, count)` or `shift_right(value, count)`",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/e03_shift.my",
+        "start": {
+         "line": 3,
+         "column": 12
+        },
+        "end": {
+         "line": 3,
+         "column": 13
+        },
+        "bytes": {
+         "start": 48,
+         "end": 49
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": true,
+   "c3_text_spelling": true,
+   "alternative": "note-alternative",
+   "alternative_text_kind": "text-spelling",
+   "alternative_structured": true,
+   "alternative_text": true,
+   "seconds": 0.01796378497965634,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_EXPRESSION\",\"severity\":\"error\",\"message\":\"`<<` and `>>` are not operators\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/id... [457 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "e04_generic.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/e04_generic.my",
+   "oracle": "mylang-only",
+   "verdict": "complete",
+   "accepts": true,
+   "completes": true,
+   "status": 42,
+   "code": null,
+   "codes": [],
+   "diagnostics": [
+    {
+     "code": "W_MUTATES_MISSING",
+     "severity": "warning",
+     "message": "this function writes `s` (parameter 1) reachable from the caller; declare `mutates(s)`",
+     "notes": [],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.18318771198391914,
+   "stdout_preview": "",
+   "stderr_preview": "",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "e05_str_concat_perf.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/e05_str_concat_perf.my",
+   "oracle": "cpython",
+   "verdict": "agree",
+   "accepts": true,
+   "completes": true,
+   "status": 0,
+   "code": null,
+   "codes": [],
+   "diagnostics": [],
+   "c1": true,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.2231669719913043,
+   "stdout_preview": "",
+   "stderr_preview": "",
+   "oracle_status": 0,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "e06_list_of_lists_build.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/e06_list_of_lists_build.my",
+   "oracle": "cpython",
+   "verdict": "agree",
+   "accepts": true,
+   "completes": true,
+   "status": 1,
+   "code": null,
+   "codes": [],
+   "diagnostics": [],
+   "c1": true,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.20236266200663522,
+   "stdout_preview": "",
+   "stderr_preview": "",
+   "oracle_status": 1,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "e07_recursion_depth.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/e07_recursion_depth.my",
+   "oracle": "mylang-only",
+   "verdict": "complete",
+   "accepts": true,
+   "completes": true,
+   "status": 0,
+   "code": null,
+   "codes": [],
+   "diagnostics": [],
+   "c1": false,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.1748294910066761,
+   "stdout_preview": "",
+   "stderr_preview": "",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "e08_format_float.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/e08_format_float.my",
+   "oracle": "mylang-only",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_MODULE_NAME",
+   "codes": [
+    "E_MODULE_NAME"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_MODULE_NAME",
+     "severity": "error",
+     "message": "declared module name does not match its requested path",
+     "notes": [],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.020896477974019945,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_MODULE_NAME\",\"severity\":\"error\",\"message\":\"declared module name does not match its requested path\",\"location\":{\"path\":\"e08_format_float.my\",\"start\":{\"line\":2,\"column\":8}... [108 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "e09_walk_dict_sorted.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/e09_walk_dict_sorted.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_OUTPUT_CAPABILITY",
+   "codes": [
+    "E_OUTPUT_CAPABILITY"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_OUTPUT_CAPABILITY",
+     "severity": "error",
+     "message": "print needs a Stream; add `out: Stream` to this function and pass one from main",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "print needs a Stream; add `out: Stream` to this function and pass one from main",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/e09_walk_dict_sorted.my",
+        "start": {
+         "line": 5,
+         "column": 9
+        },
+        "end": {
+         "line": 5,
+         "column": 14
+        },
+        "bytes": {
+         "start": 111,
+         "end": 116
+        }
+       }
+      },
+      {
+       "role": "signature",
+       "message": "stream.print(values..., sep: str, end: str) -> None",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/e09_walk_dict_sorted.my",
+        "start": {
+         "line": 5,
+         "column": 9
+        },
+        "end": {
+         "line": 5,
+         "column": 14
+        },
+        "bytes": {
+         "start": 111,
+         "end": 116
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": true,
+   "c3_text_spelling": false,
+   "alternative": "note-alternative",
+   "alternative_text_kind": "text-repair",
+   "alternative_structured": true,
+   "alternative_text": true,
+   "seconds": 0.027498116018250585,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_OUTPUT_CAPABILITY\",\"severity\":\"error\",\"message\":\"print needs a Stream; add `out: Stream` to this function and pass one from main\",\"location\":{\"path\":\"/home/epentland/ai/... [855 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "e10_while_assign_after_loop.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/e10_while_assign_after_loop.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_UNBOUND",
+   "codes": [
+    "E_UNBOUND"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_UNBOUND",
+     "severity": "error",
+     "message": "name may be read before it is assigned; some control-flow path reaching here leaves it unbound",
+     "notes": [
+      {
+       "role": "related",
+       "message": "binding first assigned here",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/e10_while_assign_after_loop.my",
+        "start": {
+         "line": 5,
+         "column": 9
+        },
+        "end": {
+         "line": 5,
+         "column": 13
+        },
+        "bytes": {
+         "start": 81,
+         "end": 85
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": false,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": false,
+   "c3_text_spelling": false,
+   "alternative": null,
+   "alternative_text_kind": null,
+   "alternative_structured": false,
+   "alternative_text": false,
+   "seconds": 0.03908515197690576,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_UNBOUND\",\"severity\":\"error\",\"message\":\"name may be read before it is assigned; some control-flow path reaching here leaves it unbound\",\"location\":{\"path\":\"/home/epentlan... [516 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "e11_if_no_else_bind.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/e11_if_no_else_bind.my",
+   "oracle": "cpython",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_OUTPUT_CAPABILITY",
+   "codes": [
+    "E_OUTPUT_CAPABILITY"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_OUTPUT_CAPABILITY",
+     "severity": "error",
+     "message": "print needs a Stream; add `out: Stream` to this function and pass one from main",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "print needs a Stream; add `out: Stream` to this function and pass one from main",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/e11_if_no_else_bind.my",
+        "start": {
+         "line": 8,
+         "column": 5
+        },
+        "end": {
+         "line": 8,
+         "column": 10
+        },
+        "bytes": {
+         "start": 121,
+         "end": 126
+        }
+       }
+      },
+      {
+       "role": "signature",
+       "message": "stream.print(values..., sep: str, end: str) -> None",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/e11_if_no_else_bind.my",
+        "start": {
+         "line": 8,
+         "column": 5
+        },
+        "end": {
+         "line": 8,
+         "column": 10
+        },
+        "bytes": {
+         "start": 121,
+         "end": 126
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": true,
+   "c3_text_spelling": false,
+   "alternative": "note-alternative",
+   "alternative_text_kind": "text-repair",
+   "alternative_structured": true,
+   "alternative_text": true,
+   "seconds": 0.026657155016437173,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_OUTPUT_CAPABILITY\",\"severity\":\"error\",\"message\":\"print needs a Stream; add `out: Stream` to this function and pass one from main\",\"location\":{\"path\":\"/home/epentland/ai/... [852 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  },
+  {
+   "probe": "e12_none_default_param.my",
+   "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/e12_none_default_param.my",
+   "oracle": "mylang-only",
+   "verdict": "reject",
+   "accepts": false,
+   "completes": false,
+   "status": null,
+   "code": "E_OUTPUT_CAPABILITY",
+   "codes": [
+    "E_OUTPUT_CAPABILITY"
+   ],
+   "diagnostics": [
+    {
+     "code": "E_OUTPUT_CAPABILITY",
+     "severity": "error",
+     "message": "print needs a Stream; add `out: Stream` to this function and pass one from main",
+     "notes": [
+      {
+       "role": "alternative",
+       "message": "print needs a Stream; add `out: Stream` to this function and pass one from main",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/e12_none_default_param.my",
+        "start": {
+         "line": 10,
+         "column": 5
+        },
+        "end": {
+         "line": 10,
+         "column": 10
+        },
+        "bytes": {
+         "start": 218,
+         "end": 223
+        }
+       }
+      },
+      {
+       "role": "signature",
+       "message": "stream.print(values..., sep: str, end: str) -> None",
+       "location": {
+        "path": "/home/epentland/ai/canopy/mylang/.worktrees/integration/velocity/suites/idioms/e12_none_default_param.my",
+        "start": {
+         "line": 10,
+         "column": 5
+        },
+        "end": {
+         "line": 10,
+         "column": 10
+        },
+        "bytes": {
+         "start": 218,
+         "end": 223
+        }
+       }
+      }
+     ],
+     "fix": null
+    }
+   ],
+   "c1": false,
+   "c2": false,
+   "c3": true,
+   "c2_declared": false,
+   "divergence": null,
+   "c3_text_any": true,
+   "c3_text_spelling": false,
+   "alternative": "note-alternative",
+   "alternative_text_kind": "text-repair",
+   "alternative_structured": true,
+   "alternative_text": true,
+   "seconds": 0.03807074000360444,
+   "stdout_preview": "",
+   "stderr_preview": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_OUTPUT_CAPABILITY\",\"severity\":\"error\",\"message\":\"print needs a Stream; add `out: Stream` to this function and pass one from main\",\"location\":{\"path\":\"/home/epentland/ai/... [867 more bytes]",
+   "oracle_status": null,
+   "oracle_stdout_preview": "",
+   "oracle_error": null
+  }
+ ]
+}

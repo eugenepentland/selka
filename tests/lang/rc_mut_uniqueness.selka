@@ -1,0 +1,37 @@
+func overwrite(mut items: int[], value: int) -> unit:
+    items[0] = value
+
+
+func capture_and_write(mut items: int[]) -> int[]:
+    mut before = items
+    for value in range(20):
+        items[0] = value
+    overwrite(mut items, 21)
+    items[-1] = 22
+    return before
+
+
+public func test_caller_and_callee_snapshots_survive_mutable_scalar_writes() -> bool:
+    mut items = [1, 2]
+    mut caller = items
+    mut callee = capture_and_write(mut items)
+    return items == [21, 22] and caller == [1, 2] and callee == [1, 2]
+
+
+func replace_and_write(mut items: int[], other: int[]) -> int[]:
+    items = other
+    items[0] = 7
+    return items
+
+
+public func test_rebinding_a_mutable_parameter_requires_fresh_uniqueness() -> bool:
+    mut items = [1]
+    mut other = [2]
+    mut result = replace_and_write(mut items, other)
+    return result == [7] and other == [2]
+
+
+func main() -> int:
+    assert test_caller_and_callee_snapshots_survive_mutable_scalar_writes()
+    assert test_rebinding_a_mutable_parameter_requires_fresh_uniqueness()
+    return 0

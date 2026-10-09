@@ -1,0 +1,90 @@
+# Mutable assembly state for an immutable byte string. The buffer is one managed
+# `byte_buffer`: its header keeps spare capacity, so every append writes straight
+# into that capacity, doubling it when it runs out. Appending a fragment therefore
+# allocates no value for that fragment, and `finish` copies the whole result
+# exactly once into the immutable `bytes` it returns. Because only `byte_buffer`
+# carries the in-place append methods, a snapshot can never be written through and
+# a byte view of it stays valid.
+public record Builder:
+    buffer: byte_buffer
+
+
+# An empty byte builder.
+public func create() -> Builder:
+    mut empty: int[] = []
+    return Builder(buffer=byte_buffer(empty))
+
+
+# Append one octet directly into the buffer's capacity. An out-of-range value
+# leaves the builder unchanged.
+public func append_byte(mut builder: Builder, value: int) -> bool:
+    return builder.buffer.append_byte(value)
+
+
+# Append the octets `data[start:end]`, copying them straight into the buffer's
+# own capacity. A negative `start`, an `end` below `start` or an `end` past
+# `len(data)` is rejected with `False` before anything is written, so a rejected
+# range leaves the builder unchanged. An empty range succeeds and changes
+# nothing. `data` may be any byte string or another buffer.
+public func append_range(mut builder: Builder, data: bytes, start: int, end: int) -> bool:
+    return builder.buffer.append_range(data, start, end)
+
+
+# Append every octet of `data` in order. An empty span changes nothing.
+public func append(mut builder: Builder, data: bytes):
+    _ = builder.buffer.append_range(data, 0, len(data))
+
+
+# Append the UTF-8 encoding of `text`, which the encoder writes straight into
+# the buffer's capacity: no intermediate `bytes` value is built for the text.
+public func append_text(mut builder: Builder, text: str):
+    _ = builder.buffer.append_utf8(text)
+
+
+# Append the decimal spelling of `value`, written digit by digit straight into
+# the buffer's capacity: no intermediate `str` or `bytes` value is built. Every
+# `int` value has a spelling, including the minimum signed value, which has no
+# positive counterpart.
+public func append_int(mut builder: Builder, value: int):
+    _ = builder.buffer.append_int(value)
+
+
+# Append the canonical spelling of `value`, which is byte for byte what
+# `str(value)` prints: shortest round-tripping digits with a `.0` when the value
+# has no fractional part, and `nan`, `inf` and `-inf` for the non-finite values.
+# The spelling is formatted into the buffer's own capacity, so no temporary text
+# or byte value is built for it.
+public func append_float(mut builder: Builder, value: float) -> bool:
+    return builder.buffer.append_float(value)
+
+
+# Append `count` ASCII spaces, copying them out of one shared literal span. A
+# negative count leaves the builder unchanged.
+public func append_spaces(mut builder: Builder, count: int) -> bool:
+    if count < 0:
+        return False
+    mut spaces = b"                                                                "
+    mut remaining = count
+    while remaining >= 64:
+        if not builder.buffer.append_range(spaces, 0, 64):
+            return False
+        remaining -= 64
+    if remaining > 0:
+        if not builder.buffer.append_range(spaces, 0, remaining):
+            return False
+    return True
+
+
+# Grow the buffer's capacity so `extra` more octets fit without reallocating,
+# without changing the finished length. A negative count is rejected with
+# `False` and leaves the builder unchanged.
+public func reserve(mut builder: Builder, extra: int) -> bool:
+    return builder.buffer.reserve(extra)
+
+
+# An immutable snapshot of everything appended so far, in append order. The
+# snapshot is a fresh copy that shares no storage with the builder, so later
+# appends — including an append of the snapshot itself — never change an earlier
+# result, and the builder stays usable.
+public func finish(builder: Builder) -> bytes:
+    return bytes(builder.buffer)

@@ -1,0 +1,20 @@
+
+func leaf(xs: int[], i: int) -> int:
+    mut total = 0
+    for k in range(i):
+        total = total + xs[k]
+    return total
+
+
+func mid(xs: int[], i: int) -> int:
+    mut v = leaf(xs, i)
+    if v > 100:
+        return v
+    return v + 1
+
+
+func main(args: str[], out: Stream) -> int:
+    mut xs = [1, 2, 3]
+    out.print(mid(xs, 1))
+    out.print(mid(xs, len(args) + 7))
+    return 0

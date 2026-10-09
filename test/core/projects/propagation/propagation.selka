@@ -1,0 +1,54 @@
+import propagation_case_1 as c1
+import propagation_case_2 as c2
+import propagation_case_3 as c3
+import propagation_case_4 as c4
+import propagation_case_5 as c5
+import propagation_case_6 as c6
+import propagation_case_7 as c7
+import propagation_case_8 as c8
+import propagation_case_9 as c9
+
+public func test_nested_results_can_be_propagated_repeatedly_1() -> bool:
+    return c1.program() == 6
+
+
+public func test_nested_results_can_be_propagated_repeatedly_2() -> bool:
+    return c2.program() == 7
+
+
+public func test_nested_results_can_be_propagated_repeatedly_3() -> bool:
+    return c3.program() == 5
+
+
+# spec: OPTION-TRY-1
+public func test_option_propagation_unwraps_some_and_forwards_1() -> bool:
+    return c4.program() == 42
+
+
+# spec-case: OPTION-TRY-1
+public func test_option_propagation_unwraps_some_and_forwards_2() -> bool:
+    return c5.program() == 7
+
+
+# spec: CORE-11
+public func test_try_unwraps_success_and_remaps_errors_betwee_1() -> bool:
+    return c6.program() == 10
+
+
+# spec-case: CORE-11
+public func test_try_unwraps_success_and_remaps_errors_betwee_2() -> bool:
+    return c7.program() == 7
+
+
+# spec: TRY-CONVERT-1
+public func test_try_wraps_a_mismatched_error_into_the_matchi_1() -> bool:
+    return c8.program() == 8
+
+
+# spec-case: TRY-CONVERT-1
+public func test_try_wraps_a_mismatched_error_into_the_matchi_2() -> bool:
+    return c9.program() == 37
+
+
+func main() -> int:
+    return 0

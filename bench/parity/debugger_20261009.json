@@ -1,0 +1,1674 @@
+{
+  "captured_utc": "2026-10-09T13:14:20.346122+00:00",
+  "compiler_sha256": "85c1ac298272f4c96c8ce5e4ed5cd64cb73c8d5b4ed7caaa0a99ac3e726ece71",
+  "gdb": "GNU gdb (Ubuntu 17.1-2ubuntu1) 17.1",
+  "sources": {
+    "compute.my": "public func calculate(seed: int) -> int:\n    mut first = seed + 7\n    mut second = first * 3\n    mut total = 0\n    for i in range(seed):\n        total += second + i\n    return total\n",
+    "main.my": "import compute\n\nfunc main(args: str[], out: Stream) -> int:\n    mut seed = len(args) + 3\n    mut answer = compute.calculate(seed)\n    out.print(answer)\n    return 0\n",
+    "tiny.my": "public func bump(value: int) -> int:\n    return value + 7\n",
+    "inline.my": "import tiny\n\nfunc main(args: str[], out: Stream) -> int:\n    mut seed = len(args)\n    mut answer = tiny.bump(seed)\n    out.print(answer)\n    return 0\n"
+  },
+  "scenarios": {
+    "function_step": [
+      "break compute::calculate",
+      "run a b",
+      "bt",
+      "info args",
+      "info locals",
+      "print seed",
+      "print first",
+      "step",
+      "bt",
+      "continue"
+    ],
+    "function_next": [
+      "break compute::calculate",
+      "run a b",
+      "next",
+      "bt",
+      "continue"
+    ],
+    "arithmetic_line": [
+      "break compute.my:2",
+      "run a b",
+      "bt",
+      "continue"
+    ],
+    "call_line": [
+      "break main.my:5",
+      "run a b",
+      "bt",
+      "info locals",
+      "step",
+      "bt",
+      "continue"
+    ],
+    "inline_function": [
+      "break tiny::bump",
+      "run a b",
+      "bt",
+      "continue"
+    ]
+  },
+  "modes": {
+    "debug": {
+      "flags": [],
+      "programs": {
+        "main": {
+          "stdout": "190\n",
+          "binary_sha256": "d3dd7b7525017771142947dcd5a63fca30d81ac61bbd287077b0d07c659490c6",
+          "local_variable_metadata": 0,
+          "variable_location_intrinsics": 0
+        },
+        "inline": {
+          "stdout": "9\n",
+          "binary_sha256": "b5548c7fef5eda40eca16b6ca71ffbaed8042253171831d984cc61cc42c23f46",
+          "local_variable_metadata": 0,
+          "variable_location_intrinsics": 0
+        }
+      },
+      "sessions": {
+        "function_step": {
+          "observations": [
+            {
+              "command": "break compute::calculate",
+              "output": "Breakpoint 1 at 0x103b2f4: file compute.my, line 1.\n",
+              "error": null,
+              "position": null,
+              "breakpoints": [
+                {
+                  "hits": 0,
+                  "locations": [
+                    {
+                      "line": 1,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "run a b",
+              "output": "[Thread debugging using libthread_db enabled]\nUsing host libthread_db library \"/usr/lib/x86_64-linux-gnu/libthread_db.so.1\".\n",
+              "error": null,
+              "position": {
+                "function": "compute::calculate",
+                "line": 1,
+                "file": "compute.my"
+              },
+              "breakpoints": [
+                {
+                  "hits": 1,
+                  "locations": [
+                    {
+                      "line": 1,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "bt",
+              "output": "#0  compute::calculate () at compute.my:1\n#1  0x000000000103b2be in main::main () at main.my:5\n#2  0x000000000103b482 in myl.entry () at main.my:1\n",
+              "error": null,
+              "position": {
+                "function": "compute::calculate",
+                "line": 1,
+                "file": "compute.my"
+              },
+              "breakpoints": [
+                {
+                  "hits": 1,
+                  "locations": [
+                    {
+                      "line": 1,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "info args",
+              "output": "No arguments.\n",
+              "error": null,
+              "position": {
+                "function": "compute::calculate",
+                "line": 1,
+                "file": "compute.my"
+              },
+              "breakpoints": [
+                {
+                  "hits": 1,
+                  "locations": [
+                    {
+                      "line": 1,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "info locals",
+              "output": "No locals.\n",
+              "error": null,
+              "position": {
+                "function": "compute::calculate",
+                "line": 1,
+                "file": "compute.my"
+              },
+              "breakpoints": [
+                {
+                  "hits": 1,
+                  "locations": [
+                    {
+                      "line": 1,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "print seed",
+              "output": "",
+              "error": "No symbol \"seed\" in current context.",
+              "position": {
+                "function": "compute::calculate",
+                "line": 1,
+                "file": "compute.my"
+              },
+              "breakpoints": [
+                {
+                  "hits": 1,
+                  "locations": [
+                    {
+                      "line": 1,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "print first",
+              "output": "",
+              "error": "No symbol \"first\" in current context.",
+              "position": {
+                "function": "compute::calculate",
+                "line": 1,
+                "file": "compute.my"
+              },
+              "breakpoints": [
+                {
+                  "hits": 1,
+                  "locations": [
+                    {
+                      "line": 1,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "step",
+              "output": "",
+              "error": null,
+              "position": null,
+              "breakpoints": [
+                {
+                  "hits": 1,
+                  "locations": [
+                    {
+                      "line": 1,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "bt",
+              "output": "",
+              "error": "No stack.",
+              "position": null,
+              "breakpoints": [
+                {
+                  "hits": 1,
+                  "locations": [
+                    {
+                      "line": 1,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "continue",
+              "output": "",
+              "error": "The program is not being run.",
+              "position": null,
+              "breakpoints": [
+                {
+                  "hits": 1,
+                  "locations": [
+                    {
+                      "line": 1,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "stdout": "190\n\nBreakpoint 1, compute::calculate () at compute.my:1\n1\tpublic func calculate(seed: int) -> int:\n[Inferior 1 (process 1728916) exited normally]\n",
+          "stderr": ""
+        },
+        "function_next": {
+          "observations": [
+            {
+              "command": "break compute::calculate",
+              "output": "Breakpoint 1 at 0x103b2f4: file compute.my, line 1.\n",
+              "error": null,
+              "position": null,
+              "breakpoints": [
+                {
+                  "hits": 0,
+                  "locations": [
+                    {
+                      "line": 1,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "run a b",
+              "output": "[Thread debugging using libthread_db enabled]\nUsing host libthread_db library \"/usr/lib/x86_64-linux-gnu/libthread_db.so.1\".\n",
+              "error": null,
+              "position": {
+                "function": "compute::calculate",
+                "line": 1,
+                "file": "compute.my"
+              },
+              "breakpoints": [
+                {
+                  "hits": 1,
+                  "locations": [
+                    {
+                      "line": 1,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "next",
+              "output": "",
+              "error": null,
+              "position": {
+                "function": null,
+                "line": 0,
+                "file": null
+              },
+              "breakpoints": [
+                {
+                  "hits": 1,
+                  "locations": [
+                    {
+                      "line": 1,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "bt",
+              "output": "#0  0x000071fb0b82a601 in ?? () from /usr/lib/x86_64-linux-gnu/libc.so.6\n#1  0x000071fb0b82a718 in __libc_start_main () from /usr/lib/x86_64-linux-gnu/libc.so.6\n#2  0x000000000100aa2a in _start () at /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/libc/glibc/sysdeps/x86_64/start-2.33.S:120\n",
+              "error": null,
+              "position": {
+                "function": null,
+                "line": 0,
+                "file": null
+              },
+              "breakpoints": [
+                {
+                  "hits": 1,
+                  "locations": [
+                    {
+                      "line": 1,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "continue",
+              "output": "",
+              "error": null,
+              "position": null,
+              "breakpoints": [
+                {
+                  "hits": 1,
+                  "locations": [
+                    {
+                      "line": 1,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "stdout": "190\n\nBreakpoint 1, compute::calculate () at compute.my:1\n1\tpublic func calculate(seed: int) -> int:\n0x000071fb0b82a601 in ?? () from /usr/lib/x86_64-linux-gnu/libc.so.6\n[Inferior 1 (process 1728929) exited normally]\n",
+          "stderr": ""
+        },
+        "arithmetic_line": {
+          "observations": [
+            {
+              "command": "break compute.my:2",
+              "output": "Breakpoint 1 at 0x103b313: file compute.my, line 2.\n",
+              "error": null,
+              "position": null,
+              "breakpoints": [
+                {
+                  "hits": 0,
+                  "locations": [
+                    {
+                      "line": 2,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "run a b",
+              "output": "[Thread debugging using libthread_db enabled]\nUsing host libthread_db library \"/usr/lib/x86_64-linux-gnu/libthread_db.so.1\".\n",
+              "error": null,
+              "position": null,
+              "breakpoints": [
+                {
+                  "hits": 0,
+                  "locations": [
+                    {
+                      "line": 2,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "bt",
+              "output": "",
+              "error": "No stack.",
+              "position": null,
+              "breakpoints": [
+                {
+                  "hits": 0,
+                  "locations": [
+                    {
+                      "line": 2,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "continue",
+              "output": "",
+              "error": "The program is not being run.",
+              "position": null,
+              "breakpoints": [
+                {
+                  "hits": 0,
+                  "locations": [
+                    {
+                      "line": 2,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "stdout": "190\n[Inferior 1 (process 1728942) exited normally]\n",
+          "stderr": ""
+        },
+        "call_line": {
+          "observations": [
+            {
+              "command": "break main.my:5",
+              "output": "Breakpoint 1 at 0x103b2b9: file main.my, line 5.\n",
+              "error": null,
+              "position": null,
+              "breakpoints": [
+                {
+                  "hits": 0,
+                  "locations": [
+                    {
+                      "line": 5,
+                      "file": "main.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "run a b",
+              "output": "[Thread debugging using libthread_db enabled]\nUsing host libthread_db library \"/usr/lib/x86_64-linux-gnu/libthread_db.so.1\".\n",
+              "error": null,
+              "position": {
+                "function": "main::main",
+                "line": 5,
+                "file": "main.my"
+              },
+              "breakpoints": [
+                {
+                  "hits": 1,
+                  "locations": [
+                    {
+                      "line": 5,
+                      "file": "main.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "bt",
+              "output": "#0  main::main () at main.my:5\n#1  0x000000000103b482 in myl.entry () at main.my:1\n",
+              "error": null,
+              "position": {
+                "function": "main::main",
+                "line": 5,
+                "file": "main.my"
+              },
+              "breakpoints": [
+                {
+                  "hits": 1,
+                  "locations": [
+                    {
+                      "line": 5,
+                      "file": "main.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "info locals",
+              "output": "No locals.\n",
+              "error": null,
+              "position": {
+                "function": "main::main",
+                "line": 5,
+                "file": "main.my"
+              },
+              "breakpoints": [
+                {
+                  "hits": 1,
+                  "locations": [
+                    {
+                      "line": 5,
+                      "file": "main.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "step",
+              "output": "",
+              "error": null,
+              "position": {
+                "function": "compute::calculate",
+                "line": 1,
+                "file": "compute.my"
+              },
+              "breakpoints": [
+                {
+                  "hits": 1,
+                  "locations": [
+                    {
+                      "line": 5,
+                      "file": "main.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "bt",
+              "output": "#0  compute::calculate () at compute.my:1\n#1  0x000000000103b2be in main::main () at main.my:5\n#2  0x000000000103b482 in myl.entry () at main.my:1\n",
+              "error": null,
+              "position": {
+                "function": "compute::calculate",
+                "line": 1,
+                "file": "compute.my"
+              },
+              "breakpoints": [
+                {
+                  "hits": 1,
+                  "locations": [
+                    {
+                      "line": 5,
+                      "file": "main.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "continue",
+              "output": "",
+              "error": null,
+              "position": null,
+              "breakpoints": [
+                {
+                  "hits": 1,
+                  "locations": [
+                    {
+                      "line": 5,
+                      "file": "main.my"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "stdout": "190\n\nBreakpoint 1, main::main () at main.my:5\n5\t    mut answer = compute.calculate(seed)\ncompute::calculate () at compute.my:1\n1\tpublic func calculate(seed: int) -> int:\n[Inferior 1 (process 1728955) exited normally]\n",
+          "stderr": ""
+        },
+        "inline_function": {
+          "observations": [
+            {
+              "command": "break tiny::bump",
+              "output": "Breakpoint 1 at 0x103b1c4: file tiny.my, line 1.\n",
+              "error": null,
+              "position": null,
+              "breakpoints": [
+                {
+                  "hits": 0,
+                  "locations": [
+                    {
+                      "line": 1,
+                      "file": "tiny.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "run a b",
+              "output": "[Thread debugging using libthread_db enabled]\nUsing host libthread_db library \"/usr/lib/x86_64-linux-gnu/libthread_db.so.1\".\n",
+              "error": null,
+              "position": {
+                "function": "tiny::bump",
+                "line": 1,
+                "file": "tiny.my"
+              },
+              "breakpoints": [
+                {
+                  "hits": 1,
+                  "locations": [
+                    {
+                      "line": 1,
+                      "file": "tiny.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "bt",
+              "output": "#0  tiny::bump () at tiny.my:1\n#1  0x000000000103b18e in inline::main () at inline.my:5\n#2  0x000000000103b242 in myl.entry () at inline.my:1\n",
+              "error": null,
+              "position": {
+                "function": "tiny::bump",
+                "line": 1,
+                "file": "tiny.my"
+              },
+              "breakpoints": [
+                {
+                  "hits": 1,
+                  "locations": [
+                    {
+                      "line": 1,
+                      "file": "tiny.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "continue",
+              "output": "",
+              "error": null,
+              "position": null,
+              "breakpoints": [
+                {
+                  "hits": 1,
+                  "locations": [
+                    {
+                      "line": 1,
+                      "file": "tiny.my"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "stdout": "9\n\nBreakpoint 1, tiny::bump () at tiny.my:1\n1\tpublic func bump(value: int) -> int:\n[Inferior 1 (process 1728968) exited normally]\n",
+          "stderr": ""
+        }
+      }
+    },
+    "optimized_debug": {
+      "flags": [
+        "--optimize-debug"
+      ],
+      "programs": {
+        "main": {
+          "stdout": "190\n",
+          "binary_sha256": "55fd40687f3c1db498ba5cea8eb486a311a5be250b499dc529ca8108c7a6fa47",
+          "local_variable_metadata": 0,
+          "variable_location_intrinsics": 0
+        },
+        "inline": {
+          "stdout": "9\n",
+          "binary_sha256": "48f3eeb73ab9a7419c8459dfaac05f2373c4aef08f8fb98c4a5bf5b60edb4de4",
+          "local_variable_metadata": 0,
+          "variable_location_intrinsics": 0
+        }
+      },
+      "sessions": {
+        "function_step": {
+          "observations": [
+            {
+              "command": "break compute::calculate",
+              "output": "Breakpoint 1 at 0x103b010: file compute.my, line 1.\n",
+              "error": null,
+              "position": null,
+              "breakpoints": [
+                {
+                  "hits": 0,
+                  "locations": [
+                    {
+                      "line": 1,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "run a b",
+              "output": "[Thread debugging using libthread_db enabled]\nUsing host libthread_db library \"/usr/lib/x86_64-linux-gnu/libthread_db.so.1\".\n",
+              "error": null,
+              "position": {
+                "function": "compute::calculate",
+                "line": 1,
+                "file": "compute.my"
+              },
+              "breakpoints": [
+                {
+                  "hits": 1,
+                  "locations": [
+                    {
+                      "line": 1,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "bt",
+              "output": "#0  compute::calculate () at compute.my:1\n#1  0x000000000103afd1 in main::main () at main.my:5\n#2  0x000000000103b0e8 in myl.entry () at main.my:1\n",
+              "error": null,
+              "position": {
+                "function": "compute::calculate",
+                "line": 1,
+                "file": "compute.my"
+              },
+              "breakpoints": [
+                {
+                  "hits": 1,
+                  "locations": [
+                    {
+                      "line": 1,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "info args",
+              "output": "No arguments.\n",
+              "error": null,
+              "position": {
+                "function": "compute::calculate",
+                "line": 1,
+                "file": "compute.my"
+              },
+              "breakpoints": [
+                {
+                  "hits": 1,
+                  "locations": [
+                    {
+                      "line": 1,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "info locals",
+              "output": "No locals.\n",
+              "error": null,
+              "position": {
+                "function": "compute::calculate",
+                "line": 1,
+                "file": "compute.my"
+              },
+              "breakpoints": [
+                {
+                  "hits": 1,
+                  "locations": [
+                    {
+                      "line": 1,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "print seed",
+              "output": "",
+              "error": "No symbol \"seed\" in current context.",
+              "position": {
+                "function": "compute::calculate",
+                "line": 1,
+                "file": "compute.my"
+              },
+              "breakpoints": [
+                {
+                  "hits": 1,
+                  "locations": [
+                    {
+                      "line": 1,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "print first",
+              "output": "",
+              "error": "No symbol \"first\" in current context.",
+              "position": {
+                "function": "compute::calculate",
+                "line": 1,
+                "file": "compute.my"
+              },
+              "breakpoints": [
+                {
+                  "hits": 1,
+                  "locations": [
+                    {
+                      "line": 1,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "step",
+              "output": "",
+              "error": null,
+              "position": {
+                "function": "myl_core_exit",
+                "line": 0,
+                "file": null
+              },
+              "breakpoints": [
+                {
+                  "hits": 1,
+                  "locations": [
+                    {
+                      "line": 1,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "bt",
+              "output": "#0  0x000000000100cc80 in myl_core_exit ()\n#1  0x00007d8dc862a601 in ?? () from /usr/lib/x86_64-linux-gnu/libc.so.6\n#2  0x00007d8dc862a718 in __libc_start_main () from /usr/lib/x86_64-linux-gnu/libc.so.6\n#3  0x000000000100a7aa in _start () at /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/libc/glibc/sysdeps/x86_64/start-2.33.S:120\n",
+              "error": null,
+              "position": {
+                "function": "myl_core_exit",
+                "line": 0,
+                "file": null
+              },
+              "breakpoints": [
+                {
+                  "hits": 1,
+                  "locations": [
+                    {
+                      "line": 1,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "continue",
+              "output": "",
+              "error": null,
+              "position": null,
+              "breakpoints": [
+                {
+                  "hits": 1,
+                  "locations": [
+                    {
+                      "line": 1,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "stdout": "190\n\nBreakpoint 1, compute::calculate () at compute.my:1\n1\tpublic func calculate(seed: int) -> int:\n0x000000000100cc80 in myl_core_exit ()\n[Inferior 1 (process 1729033) exited normally]\n",
+          "stderr": ""
+        },
+        "function_next": {
+          "observations": [
+            {
+              "command": "break compute::calculate",
+              "output": "Breakpoint 1 at 0x103b010: file compute.my, line 1.\n",
+              "error": null,
+              "position": null,
+              "breakpoints": [
+                {
+                  "hits": 0,
+                  "locations": [
+                    {
+                      "line": 1,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "run a b",
+              "output": "[Thread debugging using libthread_db enabled]\nUsing host libthread_db library \"/usr/lib/x86_64-linux-gnu/libthread_db.so.1\".\n",
+              "error": null,
+              "position": {
+                "function": "compute::calculate",
+                "line": 1,
+                "file": "compute.my"
+              },
+              "breakpoints": [
+                {
+                  "hits": 1,
+                  "locations": [
+                    {
+                      "line": 1,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "next",
+              "output": "",
+              "error": null,
+              "position": {
+                "function": "myl_core_exit",
+                "line": 0,
+                "file": null
+              },
+              "breakpoints": [
+                {
+                  "hits": 1,
+                  "locations": [
+                    {
+                      "line": 1,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "bt",
+              "output": "#0  0x000000000100cc80 in myl_core_exit ()\n#1  0x00007bdaa242a601 in ?? () from /usr/lib/x86_64-linux-gnu/libc.so.6\n#2  0x00007bdaa242a718 in __libc_start_main () from /usr/lib/x86_64-linux-gnu/libc.so.6\n#3  0x000000000100a7aa in _start () at /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/libc/glibc/sysdeps/x86_64/start-2.33.S:120\n",
+              "error": null,
+              "position": {
+                "function": "myl_core_exit",
+                "line": 0,
+                "file": null
+              },
+              "breakpoints": [
+                {
+                  "hits": 1,
+                  "locations": [
+                    {
+                      "line": 1,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "continue",
+              "output": "",
+              "error": null,
+              "position": null,
+              "breakpoints": [
+                {
+                  "hits": 1,
+                  "locations": [
+                    {
+                      "line": 1,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "stdout": "190\n\nBreakpoint 1, compute::calculate () at compute.my:1\n1\tpublic func calculate(seed: int) -> int:\n0x000000000100cc80 in myl_core_exit ()\n[Inferior 1 (process 1729046) exited normally]\n",
+          "stderr": ""
+        },
+        "arithmetic_line": {
+          "observations": [
+            {
+              "command": "break compute.my:2",
+              "output": "Breakpoint 1 at 0x103b095: file compute.my, line 6.\n",
+              "error": null,
+              "position": null,
+              "breakpoints": [
+                {
+                  "hits": 0,
+                  "locations": [
+                    {
+                      "line": 6,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "run a b",
+              "output": "[Thread debugging using libthread_db enabled]\nUsing host libthread_db library \"/usr/lib/x86_64-linux-gnu/libthread_db.so.1\".\n",
+              "error": null,
+              "position": null,
+              "breakpoints": [
+                {
+                  "hits": 0,
+                  "locations": [
+                    {
+                      "line": 6,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "bt",
+              "output": "",
+              "error": "No stack.",
+              "position": null,
+              "breakpoints": [
+                {
+                  "hits": 0,
+                  "locations": [
+                    {
+                      "line": 6,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "continue",
+              "output": "",
+              "error": "The program is not being run.",
+              "position": null,
+              "breakpoints": [
+                {
+                  "hits": 0,
+                  "locations": [
+                    {
+                      "line": 6,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "stdout": "190\n[Inferior 1 (process 1729059) exited normally]\n",
+          "stderr": ""
+        },
+        "call_line": {
+          "observations": [
+            {
+              "command": "break main.my:5",
+              "output": "Breakpoint 1 at 0x103afcc: file main.my, line 5.\n",
+              "error": null,
+              "position": null,
+              "breakpoints": [
+                {
+                  "hits": 0,
+                  "locations": [
+                    {
+                      "line": 5,
+                      "file": "main.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "run a b",
+              "output": "[Thread debugging using libthread_db enabled]\nUsing host libthread_db library \"/usr/lib/x86_64-linux-gnu/libthread_db.so.1\".\n",
+              "error": null,
+              "position": {
+                "function": "main::main",
+                "line": 5,
+                "file": "main.my"
+              },
+              "breakpoints": [
+                {
+                  "hits": 1,
+                  "locations": [
+                    {
+                      "line": 5,
+                      "file": "main.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "bt",
+              "output": "#0  main::main () at main.my:5\n#1  0x000000000103b0e8 in myl.entry () at main.my:1\n",
+              "error": null,
+              "position": {
+                "function": "main::main",
+                "line": 5,
+                "file": "main.my"
+              },
+              "breakpoints": [
+                {
+                  "hits": 1,
+                  "locations": [
+                    {
+                      "line": 5,
+                      "file": "main.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "info locals",
+              "output": "No locals.\n",
+              "error": null,
+              "position": {
+                "function": "main::main",
+                "line": 5,
+                "file": "main.my"
+              },
+              "breakpoints": [
+                {
+                  "hits": 1,
+                  "locations": [
+                    {
+                      "line": 5,
+                      "file": "main.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "step",
+              "output": "",
+              "error": null,
+              "position": {
+                "function": "compute::calculate",
+                "line": 1,
+                "file": "compute.my"
+              },
+              "breakpoints": [
+                {
+                  "hits": 1,
+                  "locations": [
+                    {
+                      "line": 5,
+                      "file": "main.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "bt",
+              "output": "#0  compute::calculate () at compute.my:1\n#1  0x000000000103afd1 in main::main () at main.my:5\n#2  0x000000000103b0e8 in myl.entry () at main.my:1\n",
+              "error": null,
+              "position": {
+                "function": "compute::calculate",
+                "line": 1,
+                "file": "compute.my"
+              },
+              "breakpoints": [
+                {
+                  "hits": 1,
+                  "locations": [
+                    {
+                      "line": 5,
+                      "file": "main.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "continue",
+              "output": "",
+              "error": null,
+              "position": null,
+              "breakpoints": [
+                {
+                  "hits": 1,
+                  "locations": [
+                    {
+                      "line": 5,
+                      "file": "main.my"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "stdout": "190\n\nBreakpoint 1, main::main () at main.my:5\n5\t    mut answer = compute.calculate(seed)\ncompute::calculate () at compute.my:1\n1\tpublic func calculate(seed: int) -> int:\n[Inferior 1 (process 1729072) exited normally]\n",
+          "stderr": ""
+        },
+        "inline_function": {
+          "observations": [
+            {
+              "command": "break tiny::bump",
+              "output": "",
+              "error": "Function \"tiny::bump\" not defined.",
+              "position": null,
+              "breakpoints": []
+            },
+            {
+              "command": "run a b",
+              "output": "[Thread debugging using libthread_db enabled]\nUsing host libthread_db library \"/usr/lib/x86_64-linux-gnu/libthread_db.so.1\".\n",
+              "error": null,
+              "position": null,
+              "breakpoints": []
+            },
+            {
+              "command": "bt",
+              "output": "",
+              "error": "No stack.",
+              "position": null,
+              "breakpoints": []
+            },
+            {
+              "command": "continue",
+              "output": "",
+              "error": "The program is not being run.",
+              "position": null,
+              "breakpoints": []
+            }
+          ],
+          "stdout": "9\n[Inferior 1 (process 1729085) exited normally]\n",
+          "stderr": ""
+        }
+      }
+    },
+    "release": {
+      "flags": [
+        "--release"
+      ],
+      "programs": {
+        "main": {
+          "stdout": "190\n",
+          "binary_sha256": "fde8cae03b7acb4070292e38aac04bad2bbab5dc9b205d01588dc52fb5b931bb",
+          "local_variable_metadata": 0,
+          "variable_location_intrinsics": 0
+        },
+        "inline": {
+          "stdout": "9\n",
+          "binary_sha256": "bd46122bd82b45deb8aa68de6be48450a9635efb27a31d9684bb9181ce77fb5d",
+          "local_variable_metadata": 0,
+          "variable_location_intrinsics": 0
+        }
+      },
+      "sessions": {
+        "function_step": {
+          "observations": [
+            {
+              "command": "break compute::calculate",
+              "output": "Breakpoint 1 at 0x103aff9: file compute.my, line 6.\n",
+              "error": null,
+              "position": null,
+              "breakpoints": [
+                {
+                  "hits": 0,
+                  "locations": [
+                    {
+                      "line": 6,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "run a b",
+              "output": "[Thread debugging using libthread_db enabled]\nUsing host libthread_db library \"/usr/lib/x86_64-linux-gnu/libthread_db.so.1\".\n",
+              "error": null,
+              "position": null,
+              "breakpoints": [
+                {
+                  "hits": 0,
+                  "locations": [
+                    {
+                      "line": 6,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "bt",
+              "output": "",
+              "error": "No stack.",
+              "position": null,
+              "breakpoints": [
+                {
+                  "hits": 0,
+                  "locations": [
+                    {
+                      "line": 6,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "info args",
+              "output": "",
+              "error": "No frame selected.",
+              "position": null,
+              "breakpoints": [
+                {
+                  "hits": 0,
+                  "locations": [
+                    {
+                      "line": 6,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "info locals",
+              "output": "",
+              "error": "No frame selected.",
+              "position": null,
+              "breakpoints": [
+                {
+                  "hits": 0,
+                  "locations": [
+                    {
+                      "line": 6,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "print seed",
+              "output": "",
+              "error": "No symbol \"seed\" in current context.",
+              "position": null,
+              "breakpoints": [
+                {
+                  "hits": 0,
+                  "locations": [
+                    {
+                      "line": 6,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "print first",
+              "output": "",
+              "error": "No symbol \"first\" in current context.",
+              "position": null,
+              "breakpoints": [
+                {
+                  "hits": 0,
+                  "locations": [
+                    {
+                      "line": 6,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "step",
+              "output": "",
+              "error": "The program is not being run.",
+              "position": null,
+              "breakpoints": [
+                {
+                  "hits": 0,
+                  "locations": [
+                    {
+                      "line": 6,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "bt",
+              "output": "",
+              "error": "No stack.",
+              "position": null,
+              "breakpoints": [
+                {
+                  "hits": 0,
+                  "locations": [
+                    {
+                      "line": 6,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "continue",
+              "output": "",
+              "error": "The program is not being run.",
+              "position": null,
+              "breakpoints": [
+                {
+                  "hits": 0,
+                  "locations": [
+                    {
+                      "line": 6,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "stdout": "190\n[Inferior 1 (process 1729173) exited normally]\n",
+          "stderr": ""
+        },
+        "function_next": {
+          "observations": [
+            {
+              "command": "break compute::calculate",
+              "output": "Breakpoint 1 at 0x103aff9: file compute.my, line 6.\n",
+              "error": null,
+              "position": null,
+              "breakpoints": [
+                {
+                  "hits": 0,
+                  "locations": [
+                    {
+                      "line": 6,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "run a b",
+              "output": "[Thread debugging using libthread_db enabled]\nUsing host libthread_db library \"/usr/lib/x86_64-linux-gnu/libthread_db.so.1\".\n",
+              "error": null,
+              "position": null,
+              "breakpoints": [
+                {
+                  "hits": 0,
+                  "locations": [
+                    {
+                      "line": 6,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "next",
+              "output": "",
+              "error": "The program is not being run.",
+              "position": null,
+              "breakpoints": [
+                {
+                  "hits": 0,
+                  "locations": [
+                    {
+                      "line": 6,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "bt",
+              "output": "",
+              "error": "No stack.",
+              "position": null,
+              "breakpoints": [
+                {
+                  "hits": 0,
+                  "locations": [
+                    {
+                      "line": 6,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "command": "continue",
+              "output": "",
+              "error": "The program is not being run.",
+              "position": null,
+              "breakpoints": [
+                {
+                  "hits": 0,
+                  "locations": [
+                    {
+                      "line": 6,
+                      "file": "compute.my"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "stdout": "190\n[Inferior 1 (process 1729198) exited normally]\n",
+          "stderr": ""
+        },
+        "arithmetic_line": {
+          "observations": [
+            {
+              "command": "break compute.my:2",
+              "output": "",
+              "error": "No compiled code for line 2 in file \"compute.my\".",
+              "position": null,
+              "breakpoints": []
+            },
+            {
+              "command": "run a b",
+              "output": "[Thread debugging using libthread_db enabled]\nUsing host libthread_db library \"/usr/lib/x86_64-linux-gnu/libthread_db.so.1\".\n",
+              "error": null,
+              "position": null,
+              "breakpoints": []
+            },
+            {
+              "command": "bt",
+              "output": "",
+              "error": "No stack.",
+              "position": null,
+              "breakpoints": []
+            },
+            {
+              "command": "continue",
+              "output": "",
+              "error": "The program is not being run.",
+              "position": null,
+              "breakpoints": []
+            }
+          ],
+          "stdout": "190\n[Inferior 1 (process 1729300) exited normally]\n",
+          "stderr": ""
+        },
+        "call_line": {
+          "observations": [
+            {
+              "command": "break main.my:5",
+              "output": "",
+              "error": "No compiled code for line 5 in file \"main.my\".",
+              "position": null,
+              "breakpoints": []
+            },
+            {
+              "command": "run a b",
+              "output": "[Thread debugging using libthread_db enabled]\nUsing host libthread_db library \"/usr/lib/x86_64-linux-gnu/libthread_db.so.1\".\n",
+              "error": null,
+              "position": null,
+              "breakpoints": []
+            },
+            {
+              "command": "bt",
+              "output": "",
+              "error": "No stack.",
+              "position": null,
+              "breakpoints": []
+            },
+            {
+              "command": "info locals",
+              "output": "",
+              "error": "No frame selected.",
+              "position": null,
+              "breakpoints": []
+            },
+            {
+              "command": "step",
+              "output": "",
+              "error": "The program is not being run.",
+              "position": null,
+              "breakpoints": []
+            },
+            {
+              "command": "bt",
+              "output": "",
+              "error": "No stack.",
+              "position": null,
+              "breakpoints": []
+            },
+            {
+              "command": "continue",
+              "output": "",
+              "error": "The program is not being run.",
+              "position": null,
+              "breakpoints": []
+            }
+          ],
+          "stdout": "190\n[Inferior 1 (process 1729313) exited normally]\n",
+          "stderr": ""
+        },
+        "inline_function": {
+          "observations": [
+            {
+              "command": "break tiny::bump",
+              "output": "",
+              "error": "Function \"tiny::bump\" not defined.",
+              "position": null,
+              "breakpoints": []
+            },
+            {
+              "command": "run a b",
+              "output": "[Thread debugging using libthread_db enabled]\nUsing host libthread_db library \"/usr/lib/x86_64-linux-gnu/libthread_db.so.1\".\n",
+              "error": null,
+              "position": null,
+              "breakpoints": []
+            },
+            {
+              "command": "bt",
+              "output": "",
+              "error": "No stack.",
+              "position": null,
+              "breakpoints": []
+            },
+            {
+              "command": "continue",
+              "output": "",
+              "error": "The program is not being run.",
+              "position": null,
+              "breakpoints": []
+            }
+          ],
+          "stdout": "9\n[Inferior 1 (process 1729348) exited normally]\n",
+          "stderr": ""
+        }
+      }
+    }
+  }
+}

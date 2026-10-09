@@ -1,0 +1,95 @@
+{
+ "entries": {
+  "1039c48ba058b52a72da6a71c9938ece": {
+   "case": [
+    "func main(out: Stream) -> int:\n    mut deep: int[][] = [[1]]\n    mut rows: int[][][] = [[[2]]]\n    out.print(deep, rows)\n    mut values: int[] = [1]\n    mut box = values\n    mut ladder: int[][] = [box]\n    mut step = 0\n    while step < 30:\n        ladder = [ladder[0]]\n        step += 1\n    out.print(ladder)\n    return 0\n",
+    []
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "W1sxXV0gW1tbMl1dXQpbWzFdXQowCg=="
+  },
+  "1914376c71591b3ccf3cd011771441c2": {
+   "case": [
+    "record Point:\n    x: int\n    y: int\n\nenum Colour:\n    red\n    green\n\n\nenum Shape:\n    dot\n    span(value: int)\n\nfunc pick(n: int) -> Result[int, str]:\n    if n < 0:\n        return Err(\"nope\")\n    return Ok(n)\n\nfunc main(out: Stream) -> int:\n    out.print(Point(x=1, y=2), Colour.green, Colour.red)\n    mut found: int? = Some(4)\n    mut missing: int? = None\n    out.print(pick(3), pick(-1), found, missing)\n    mut dot: Shape = Shape.dot\n    mut span: Shape = Shape.span(value=7)\n    out.print(dot, span)\n    return 0\n",
+    []
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "UG9pbnQoeD0xLCB5PTIpIENvbG91ci5ncmVlbiBDb2xvdXIucmVkCk9rKDMpIEVycignbm9wZScpIFNvbWUoNCkgTm9uZQpTaGFwZS5kb3QgU2hhcGUuc3Bhbih2YWx1ZT03KQowCg=="
+  },
+  "1c7078f5cd023cf59f716e032967f696": {
+   "case": [
+    "func main(out: Stream) -> int:\n    out.print(0, -9223372036854775808, 9223372036854775807)\n    out.print(255u8, 65535u16, 4294967295u32, 18446744073709551615u64)\n    out.print(-128i8, -32768i16, -2147483648i32)\n    out.print([1u8, 2u8], {1: 2u16})\n    return 0\n",
+    []
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "MCAtOTIyMzM3MjAzNjg1NDc3NTgwOCA5MjIzMzcyMDM2ODU0Nzc1ODA3CjI1NSA2NTUzNSA0Mjk0OTY3Mjk1IDE4NDQ2NzQ0MDczNzA5NTUxNjE1Ci0xMjggLTMyNzY4IC0yMTQ3NDgzNjQ4ClsxLCAyXSB7MTogMn0KMAo="
+  },
+  "23810d8e705280aa32db92672ef9e5a3": {
+   "case": [
+    "func main(out: Stream) -> int:\n    mut values: int[] = []\n    mut table: dict[str, int] = {}\n    out.print(values, table, \"\")\n    out.print([values], [table])\n    return 0\n",
+    []
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "W10ge30gCltbXV0gW3t9XQowCg=="
+  },
+  "2d2bc4546998fc9ba6cf8f9a3e591866": {
+   "case": [
+    "func main(out: Stream) -> int:\n    out.print(\"hello\", 42, True, ())\n    out.print([\"a\", \"b\"], {\"k\": 1}, b\"\\x00\\xff\")\n    out.print()\n    out.print(1, 2, 3, sep=\"-\", end=\"!\\n\")\n    out.print(\"only\", end=\"\")\n    out.print(\"\", sep=\"|\")\n    return 0\n",
+    []
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "aGVsbG8gNDIgVHJ1ZSBOb25lClsnYScsICdiJ10geydrJzogMX0gYidceDAwXHhmZicKCjEtMi0zIQpvbmx5CjAK"
+  },
+  "682c16cacb72531f79a1cf12489b6f5d": {
+   "case": [
+    "record Inner:\n    label: str\n    values: int[]\n\nrecord Outer:\n    inner: Inner\n    flag: bool\n\nfunc main(out: Stream) -> int:\n    mut value = Outer(inner=Inner(label=\"deep\", values=[1, 2]), flag=False)\n    out.print(value)\n    out.print([value])\n    mut box: Outer? = Some(value)\n    out.print(box)\n    mut table: dict[str, Outer] = {\"one\": value}\n    out.print(table)\n    return 0\n",
+    []
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "T3V0ZXIoaW5uZXI9SW5uZXIobGFiZWw9J2RlZXAnLCB2YWx1ZXM9WzEsIDJdKSwgZmxhZz1GYWxzZSkKW091dGVyKGlubmVyPUlubmVyKGxhYmVsPSdkZWVwJywgdmFsdWVzPVsxLCAyXSksIGZsYWc9RmFsc2UpXQpTb21lKE91dGVyKGlubmVyPUlubmVyKGxhYmVsPSdkZWVwJywgdmFsdWVzPVsxLCAyXSksIGZsYWc9RmFsc2UpKQp7J29uZSc6IE91dGVyKGlubmVyPUlubmVyKGxhYmVsPSdkZWVwJywgdmFsdWVzPVsxLCAyXSksIGZsYWc9RmFsc2UpfQowCg=="
+  },
+  "842afbc93bc9863a5ceac667fda67506": {
+   "case": [
+    "func main(out: Stream) -> int:\n    mut row: FixedArray[int, 3] = FixedArray[int, 3]([1, 2, 3])\n    out.print(row)\n    return 0\n",
+    []
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "WzEsIDIsIDNdCjAK"
+  },
+  "da2dd4bb6e7deeda4de2184e876466db": {
+   "case": [
+    "func main(out: Stream) -> int:\n    out.print(b\"\")\n    out.print(b\"plain\")\n    out.print(b\"\\x00\\x1f\\x20\\x7e\\x7f\\xff\")\n    out.print(b\"quote'and\\\\slash\\ttab\\nnewline\")\n    out.print([b\"ab\"], {\"k\": b\"cd\"})\n    return 0\n",
+    []
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "YicnCmIncGxhaW4nCmInXHgwMFx4MWYgflx4N2ZceGZmJwpiJ3F1b3RlXCdhbmRcXHNsYXNoXHR0YWJcbm5ld2xpbmUnCltiJ2FiJ10geydrJzogYidjZCd9CjAK"
+  },
+  "e52beb26d9dd0d0c9c2b69577568001b": {
+   "case": [
+    "func main(out: Stream) -> int:\n    mut text = \"quote'and\\\\slash\\ttab\\nnewline\\rreturn\"\n    out.print(text)\n    out.print([text])\n    out.print({text: text})\n    out.print(\"h\\u00e9\\U0001f642\")\n    out.print([\"h\\u00e9\\U0001f642\"])\n    return 0\n",
+    []
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "cXVvdGUnYW5kXHNsYXNoCXRhYgpuZXdsaW5lDXJldHVybgpbJ3F1b3RlXCdhbmRcXHNsYXNoXHR0YWJcbm5ld2xpbmVccnJldHVybiddCnsncXVvdGVcJ2FuZFxcc2xhc2hcdHRhYlxubmV3bGluZVxycmV0dXJuJzogJ3F1b3RlXCdhbmRcXHNsYXNoXHR0YWJcbm5ld2xpbmVccnJldHVybid9CmjDqfCfmYIKWydow6nwn5mCJ10KMAo="
+  },
+  "fe0fa6208590f5506015ba97bac16252": {
+   "case": [
+    "func main(out: Stream) -> int:\n    out.print(0.0, 1.0, 2.5, 0.1, 100.0)\n    out.print(1e20, 1e-7, 1.7976931348623157e308)\n    out.print(3.0 / 7.0, 1.0 / 3.0, 2.0 / 3.0)\n    out.print(0.0 / 0.0, 1.0 / 0.0, -1.0 / 0.0)\n    out.print([0.5], {\"k\": 0.25})\n    return 0\n",
+    []
+   ],
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "MC4wIDEuMCAyLjUgMC4xIDEwMC4wCjEwMDAwMDAwMDAwMDAwMDAwMDAwMC4wIDAuMDAwMDAwMSAxNzk3NjkzMTM0ODYyMzE1NzAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAuMAowLjQyODU3MTQyODU3MTQyODU1IDAuMzMzMzMzMzMzMzMzMzMzMyAwLjY2NjY2NjY2NjY2NjY2NjYKbmFuIGluZiAtaW5mClswLjVdIHsnayc6IDAuMjV9CjAK"
+  }
+ },
+ "version": "golden-outcomes-v1"
+}

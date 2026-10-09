@@ -1,0 +1,16 @@
+func identity[T](value: T) -> T:
+    return value
+
+
+func sum[T: integer](value: T) -> T:
+    if value == T(0):
+        return value
+    return value + sum[T](value - T(1))
+
+
+func main() -> int:
+    mut small = sum[u8](4u8)
+    mut large = sum[int](5)
+    if identity[bool](True):
+        return int(small) + large
+    return 0

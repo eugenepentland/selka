@@ -1,0 +1,86 @@
+record Item:
+    text: bytes
+    number: int
+
+
+func leaf(items: Item[], index: int) -> int:
+    return items[index].number
+
+
+func middle(items: Item[], index: int) -> int:
+    return leaf(items, index)
+
+
+func total(items: Item[]) -> int:
+    mut result = 0
+    mut index = 0
+    while index < len(items):
+        mut item = items[index]
+        result += middle(items, index) + item.number
+        index += 1
+    return result
+
+
+func recursive(items: Item[], depth: int) -> int:
+    if depth == 0:
+        return middle(items, 0)
+    return recursive(items, depth - 1)
+
+
+func returned(items: Item[]) -> Item:
+    return items[0]
+
+
+func through_owned_result(items: Item[]) -> int:
+    return returned(items).number
+
+
+func changed(mut items: Item[]) -> int:
+    items.append(Item(text=b"new", number=11))
+    return total(items)
+
+
+public func test_composed_reader_preserves_snapshot_and_later_mutation() -> bool:
+    mut items = [Item(text=b"first", number=3), Item(text=b"second", number=7)]
+    mut snapshot = items
+    mut before = total(items)
+    items.append(Item(text=b"third", number=9))
+    return before == 20 and total(items) == 38 and total(snapshot) == 20
+
+
+public func test_composed_reader_handles_empty_and_repeated_inputs() -> bool:
+    mut empty: Item[] = []
+    mut items = [Item(text=b"first", number=3)]
+    mut result = 0
+    for index in range(8):
+        result += total(items)
+    return result == 48 and total(empty) == 0 and items[0].text == b"first"
+
+
+public func test_composed_helper_preserves_self_recursion() -> bool:
+    mut items = [Item(text=b"first", number=3)]
+    return recursive(items, 64) == 3 and items[0].text == b"first"
+
+
+public func test_managed_result_helper_keeps_owned_fallback() -> bool:
+    mut items = [Item(text=b"first", number=3)]
+    mut saved = returned(items)
+    mut result = through_owned_result(items)
+    items.clear()
+    return result == 3 and saved.text == b"first" and saved.number == 3
+
+
+public func test_mutating_helper_keeps_snapshot_and_ordinary_cleanup() -> bool:
+    mut items = [Item(text=b"first", number=3)]
+    mut snapshot = items
+    mut result = changed(mut items)
+    return result == 28 and total(items) == 28 and total(snapshot) == 6
+
+
+func main() -> int:
+    assert test_composed_reader_preserves_snapshot_and_later_mutation()
+    assert test_composed_reader_handles_empty_and_repeated_inputs()
+    assert test_composed_helper_preserves_self_recursion()
+    assert test_managed_result_helper_keeps_owned_fallback()
+    assert test_mutating_helper_keeps_snapshot_and_ordinary_cleanup()
+    return 0

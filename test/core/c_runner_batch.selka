@@ -1,0 +1,34 @@
+# Batched tests (NEW-CORE-TEST-BATCH-1) share a process, yet each trial starts
+# fresh: output, the memory ceiling and the wall-clock limit are its own, whatever
+# ran before it. Run with --max-steps 0, a small --max-memory and --timeout-ms.
+public func test_a_prints_then_fails(out: Stream) -> bool:
+    out.print("noisy")
+    return False
+
+
+public func test_b_fails_quietly() -> bool:
+    return False
+
+
+public func test_c_exhausts_memory() -> bool:
+    mut values: int[] = []
+    while True:
+        values.append(len(values))
+    return True
+
+
+public func test_d_allocates_after() -> bool:
+    mut values: int[] = []
+    for i in range(100000):
+        values.append(i)
+    return len(values) == 100000
+
+
+public func test_e_hangs() -> bool:
+    while True:
+        pass
+    return True
+
+
+public func test_f_passes_after_a_hang() -> bool:
+    return True

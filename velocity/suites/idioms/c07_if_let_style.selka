@@ -1,0 +1,12 @@
+# oracle: selka-only
+def find(xs: list[int], v: int) -> Option[int]:
+    for i, x in enumerate(xs):
+        if x == v:
+            return Some(i)
+    return None
+
+def main() -> int:
+    r = find([5, 6], 6)
+    if r == Some(1):
+        return 42
+    return 0

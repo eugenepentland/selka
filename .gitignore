@@ -1,0 +1,54 @@
+.zig-cache*/
+.zig-global-cache/
+zig-out/
+__pycache__/
+*.pyc
+
+.selka-cache/
+.mylang-cache/
+
+.pending/
+
+.guardian/cache/
+experiments/application_comparison/baselines/*/zig/.guardian/cache/
+qbe_runtime.o
+
+# Local agent/tooling scratch and caches (not project content).
+.claude/
+.dsh-global-cache/
+.tmp/
+.zig-global/
+env.selka
+qualified_unresolved.selka
+zz-attr-tmp/
+zz-probe.out.qbe-manifest.json
+
+# Cascade experiment: run artifacts, working copies and probe scratch.
+experiments/cascade/work/
+experiments/cascade/runs/
+experiments/cascade/probes/
+experiments/cascade/.cache/
+experiments/cascade/tools/
+
+# M3 project-invocation experiment: scratch copies and the frozen tool binaries.
+# The application snapshots, case pack, evidence and cohort readouts are tracked.
+experiments/project-invocation-m3/work/
+experiments/project-invocation-m3/pack/tools/bin/
+
+# Only the benchmark snapshots cited by the public overview belong in Git.
+/experiments/*
+!/experiments/parity-confirm-20261009/
+!/experiments/parity-measure-20261008/
+/benchmarks/
+/velocity/devspeed-trials-*/
+/tests/application_comparison/
+/tests/development_velocity/
+/.selka-mut-modules/
+/doc-comments,cognitive-complexity/
+
+# Keep audit reports and figures; bulky raw runs stay in the development archive.
+/docs/audits/**
+!/docs/audits/**/
+!/docs/audits/**/*.md
+!/docs/audits/**/*.svg
+!/docs/audits/**/*.png

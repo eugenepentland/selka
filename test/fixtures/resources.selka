@@ -1,0 +1,40 @@
+resource File: filesystem
+
+
+result Open:
+    ok: File,
+    err: int
+
+
+record Failure:
+    code: int
+    resource: File
+
+
+result Finish:
+    ok: bool,
+    err: Failure
+
+
+func retry(file: File) -> Finish effects(filesystem):
+    match complete_resource[Finish](file):
+        case Finish.ok(done):
+            return Ok(done)
+        case Finish.err(failure):
+            return Err(failure)
+
+
+func main(fs: Filesystem) -> int effects(filesystem):
+    mut request: FixedArray[u8, 1] = FixedArray[u8, 1]([42u8])
+    match acquire_resource[Open](fs, request):
+        case Open.ok(file):
+            match retry(file):
+                case Finish.ok(done):
+                    if done:
+                        return 7
+                    else:
+                        return 0
+                case Finish.err(failure):
+                    return failure.code
+        case Open.err(code):
+            return code

@@ -1,0 +1,164 @@
+{
+ "rung0": {
+  "instructions": 752460953,
+  "cycles": 221874793,
+  "output_ok": true,
+  "samples": [
+   {
+    "instructions": 752460954,
+    "cycles": 221874793
+   },
+   {
+    "instructions": 752460952,
+    "cycles": 222193243
+   },
+   {
+    "instructions": 752460944,
+    "cycles": 218658596
+   },
+   {
+    "instructions": 752460953,
+    "cycles": 216960147
+   },
+   {
+    "instructions": 752460956,
+    "cycles": 232803862
+   }
+  ]
+ },
+ "rung1": {
+  "instructions": 340304323,
+  "cycles": 109206166,
+  "output_ok": true,
+  "samples": [
+   {
+    "instructions": 340304330,
+    "cycles": 108558118
+   },
+   {
+    "instructions": 340304323,
+    "cycles": 110196300
+   },
+   {
+    "instructions": 340304326,
+    "cycles": 109206166
+   },
+   {
+    "instructions": 340304322,
+    "cycles": 108711372
+   },
+   {
+    "instructions": 340304322,
+    "cycles": 109350292
+   }
+  ]
+ },
+ "rung2": {
+  "instructions": 274439029,
+  "cycles": 88171997,
+  "output_ok": true,
+  "samples": [
+   {
+    "instructions": 274439035,
+    "cycles": 87974484
+   },
+   {
+    "instructions": 274439034,
+    "cycles": 88007914
+   },
+   {
+    "instructions": 274439022,
+    "cycles": 88883538
+   },
+   {
+    "instructions": 274439029,
+    "cycles": 88328887
+   },
+   {
+    "instructions": 274439027,
+    "cycles": 88171997
+   }
+  ]
+ },
+ "mylang": {
+  "instructions": 846787629,
+  "cycles": 247798782,
+  "output_ok": true,
+  "samples": [
+   {
+    "instructions": 846787621,
+    "cycles": 241683715
+   },
+   {
+    "instructions": 846787633,
+    "cycles": 247798782
+   },
+   {
+    "instructions": 846787622,
+    "cycles": 250275697
+   },
+   {
+    "instructions": 846787652,
+    "cycles": 251634699
+   },
+   {
+    "instructions": 846787629,
+    "cycles": 242589583
+   }
+  ]
+ },
+ "zig-safe": {
+  "instructions": 717599869,
+  "cycles": 220536243,
+  "output_ok": true,
+  "samples": [
+   {
+    "instructions": 717599870,
+    "cycles": 220949019
+   },
+   {
+    "instructions": 717599867,
+    "cycles": 220536243
+   },
+   {
+    "instructions": 717599869,
+    "cycles": 224928738
+   },
+   {
+    "instructions": 717599873,
+    "cycles": 219192650
+   },
+   {
+    "instructions": 717599857,
+    "cycles": 220433344
+   }
+  ]
+ },
+ "zig-fast": {
+  "instructions": 220625256,
+  "cycles": 146630300,
+  "output_ok": true,
+  "samples": [
+   {
+    "instructions": 220625257,
+    "cycles": 146666149
+   },
+   {
+    "instructions": 220625256,
+    "cycles": 146630300
+   },
+   {
+    "instructions": 220625255,
+    "cycles": 133336863
+   },
+   {
+    "instructions": 220625244,
+    "cycles": 132744166
+   },
+   {
+    "instructions": 220625256,
+    "cycles": 146686959
+   }
+  ]
+ }
+}

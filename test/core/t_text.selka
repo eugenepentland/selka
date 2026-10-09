@@ -1,0 +1,80 @@
+public func test_unicode_index_slice_and_loop() -> bool:
+    mut text = "aé🙂z"
+    mut joined = ""
+    for ch in text:
+        joined += ch
+    return len(text) == 4 and text[1] == "é" and text[-2] == "🙂" and text[1:3] == "é🙂" and joined == text
+
+
+public func test_empty_split_join_and_find() -> bool:
+    mut parts = "|a||café|".split("|")
+    return len(parts) == 5 and ":".join(parts) == ":a::café:" and "aé🙂z".find("🙂") == 2 and "".find("") == 0
+
+
+public func test_encode_bytes_xor() -> bool:
+    mut raw = "café".encode()
+    mut total = 0
+    for value in raw:
+        total += value ^ 7
+    return len(raw) == 5 and total == 669 and raw[3] == 195 and raw[-1] == 169
+
+
+public func test_append_keeps_shared_text() -> bool:
+    mut original = "café"
+    mut changed = original
+    for j in range(10):
+        changed += "🙂"
+    return original == "café" and len(changed) == 14
+
+
+public func test_large_unicode_index_and_reverse_slice() -> bool:
+    mut text = ""
+    for j in range(80):
+        text += "aé🙂z"
+    return len(text) == 320 and text[257] == "é" and text[-2] == "🙂" and text[2:10:3] == "🙂éa" and "aé🙂z"[::-1] == "z🙂éa"
+
+
+public func test_long_byte_xor_reduction() -> bool:
+    mut text = ""
+    for j in range(300):
+        text += "0123"
+    mut total = 0
+    for octet in text.encode():
+        total += octet ^ 7
+    return total == 64200
+
+
+public func test_doubling_and_self_character_append_preserve_snapshots() -> bool:
+    mut text = "ab"
+    for j in range(8):
+        text += text
+    mut saved = text
+    text += text[0]
+    mut alias = text
+    text += alias
+    return len(saved) == 512 and len(alias) == 513 and len(text) == 1026 and text[-1] == "a" and saved[-1] == "b"
+
+
+public func test_append_alias_through_phi_preserves_the_other_owner() -> bool:
+    mut text = "" + "ab"
+    mut total = 0
+    for j in range(16):
+        mut other = "x"
+        if j % 2 == 0:
+            other = text
+        mut before = len(other)
+        text += other
+        total += before
+        if len(other) != before:
+            return False
+    return len(text) == total + 2 and text[-1] == "x"
+
+
+public func test_empty_separator_traps() -> bool:
+    _ = "a".split("")
+    return False
+
+
+public func test_zero_slice_step_traps() -> bool:
+    _ = "a"[::0]
+    return False

@@ -1,0 +1,7 @@
+public domain Cents: int:
+    func make(value: u64) -> Cents effects():
+        return wrap[Cents](int(value))
+    func number(value: Cents) -> int effects():
+        return unwrap(value)
+    func add(left: Cents, right: Cents) -> Cents effects():
+        return wrap[Cents](unwrap(left) + unwrap(right))

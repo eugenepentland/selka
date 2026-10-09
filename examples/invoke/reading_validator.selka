@@ -1,0 +1,66 @@
+# A structured-record validator. `main` runs it as an ordinary program, and
+# `validate` is callable through `selka invoke` with no handwritten JSON
+# plumbing:
+#
+#   selka invoke examples/invoke/reading_validator.selka \
+#     --function 'reading_validator::validate' \
+#     --input=examples/invoke/requests/reading-ok.json
+#
+# A refusal names the rule that failed rather than returning a bare status, so a
+# caller can tell a cold sensor from an unsteady one without parsing prose. The
+# reading arrives as JSON, is decoded into fresh guest storage, and the verdict
+# goes back as typed JSON.
+public enum Rule:
+    accepted
+    too_cold
+    too_warm
+    too_humid
+    unsteady
+
+
+public record Reading:
+    site: i64
+    celsius: i64
+    humidity: i64
+    first: i64
+    last: i64
+
+
+public record Report:
+    site: i64
+    mean: i64
+    spread: i64
+
+
+public record Fault:
+    site: i64
+    rule: Rule
+    observed: i64
+
+
+public result Verdict:
+    ok: Report,
+    err: Fault
+
+
+public func validate(reading: Reading) -> Verdict effects():
+    mut mean = (reading.first + reading.last) // 2
+    mut spread = reading.last - reading.first
+    if reading.celsius < -20:
+        return Err(Fault(site=reading.site, rule=Rule.too_cold, observed=reading.celsius))
+    if reading.celsius > 60:
+        return Err(Fault(site=reading.site, rule=Rule.too_warm, observed=reading.celsius))
+    if reading.humidity > 100:
+        return Err(Fault(site=reading.site, rule=Rule.too_humid, observed=reading.humidity))
+    if spread > 30:
+        return Err(Fault(site=reading.site, rule=Rule.unsteady, observed=spread))
+    return Ok(Report(site=reading.site, mean=mean, spread=spread))
+
+
+func main() -> int:
+    mut verdict = validate(Reading(site=7, celsius=20, humidity=50, first=10, last=20))
+    match verdict:
+        case Ok(report):
+            return report.mean - 15
+        case Err(fault):
+            return fault.site

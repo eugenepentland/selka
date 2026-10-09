@@ -1,0 +1,112 @@
+# Canonical scalar-list captures remain distinct from real iterator holds.
+func test_writes_then_iteration_preserve_snapshot() -> bool:
+    mut flags = [True, True, True]
+    mut saved = flags
+    for at in range(20):
+        flags[0] = False
+    mut count = 0
+    for flag in flags:
+        if flag:
+            count += 1
+    return count == 2 and saved[0] and not flags[0]
+
+
+func test_earlier_iteration_then_writes_preserve_identity() -> bool:
+    mut flags = [True, True, False]
+    mut count = 0
+    for flag in flags:
+        if flag:
+            count += 1
+    for at in range(12):
+        flags[1] = False
+    mut after = 0
+    for flag in flags:
+        if flag:
+            after += 1
+    return count == 2 and after == 1
+
+
+func returned_flags() -> bool[]:
+    return [True, True]
+
+
+func test_helper_return_is_published_before_capture() -> bool:
+    mut flags = returned_flags()
+    for at in range(8):
+        flags[0] = False
+    mut count = 0
+    for flag in flags:
+        if flag:
+            count += 1
+    return count == 1
+
+
+func test_user_loop_copy_remains_independent() -> bool:
+    mut groups = [[True, True], [True, True]]
+    mut count = 0
+    for element in groups:
+        mut flags = element
+        flags[0] = False
+        for flag in flags:
+            if flag:
+                count += 1
+    return count == 2 and groups[0][0] and groups[1][0]
+
+
+func replace_index(mut flags: bool[]) -> int:
+    flags.clear()
+    flags.append(True)
+    flags.append(True)
+    return 0
+
+
+func test_call_then_source_rebind_preserves_values() -> bool:
+    mut flags = [True, False]
+    mut mutation_result_67 = replace_index(mut flags)
+    flags[mutation_result_67] = False
+    mut count = 0
+    for flag in flags:
+        if flag:
+            count += 1
+    flags = [True, True, True]
+    flags[1] = False
+    mut second = 0
+    for flag in flags:
+        if flag:
+            second += 1
+    return count == 1 and second == 2
+
+
+func mutate_parameter(mut flags: bool[]) -> int:
+    flags[0] = False
+    mut count = 0
+    for flag in flags:
+        if flag:
+            count += 1
+    return count
+
+
+func test_named_source_iteration_sees_element_changes() -> bool:
+    mut flags = [True, True]
+    mut count = 0
+    for flag in flags:
+        if flag:
+            count += 1
+        flags[1] = False
+    return count == 1 and not flags[1]
+
+
+func main() -> int:
+    if not test_writes_then_iteration_preserve_snapshot():
+        return 1
+    if not test_earlier_iteration_then_writes_preserve_identity():
+        return 2
+    if not test_helper_return_is_published_before_capture():
+        return 3
+    if not test_user_loop_copy_remains_independent():
+        return 4
+    if not test_call_then_source_rebind_preserves_values():
+        return 5
+    if not test_named_source_iteration_sees_element_changes():
+        return 7
+    return 0

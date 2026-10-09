@@ -1,0 +1,52 @@
+record Bag:
+    name: str
+    items: int[]
+
+
+func add(mut xs: int[], v: int):
+    xs.append(v)
+
+
+func add_counted(mut xs: int[], v: int) -> int:
+    xs.append(v)
+    return len(xs)
+
+
+func put(mut bag: Bag, v: int):
+    bag.items.append(v)
+
+
+func fill(mut bag: Bag, n: int):
+    for i in range(n):
+        bag.items.append(i)
+
+
+func grow(n: int) -> int:
+    mut xs: int[] = []
+    mut bag = Bag(name="grown", items=[])
+    mut total = 0
+    for i in range(n):
+        add(mut xs, i)
+        total += add_counted(mut xs, i) % 7
+        put(mut bag, i)
+    return total + len(xs) + len(bag.items)
+
+
+func aliasing() -> int:
+    mut a = [1, 2]
+    mut b = a
+    add(mut a, 3)
+    return len(a) * 10 + len(b)
+
+
+func bags() -> int:
+    mut bag = Bag(name="x", items=[])
+    fill(mut bag, 5)
+    mut other = bag
+    fill(mut bag, 2)
+    return len(bag.items) * 10 + len(other.items)
+
+
+func main(args: str[], out: Stream) -> int:
+    out.print(grow(len(args) * 100000), aliasing(), bags())
+    return 0

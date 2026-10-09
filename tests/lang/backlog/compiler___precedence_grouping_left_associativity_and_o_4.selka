@@ -1,0 +1,7 @@
+# spec-case: CORE-1
+public func test_precedence_grouping_left_associativity_and_o_4() -> bool:
+    return 1 - 3 * 4 == -11
+
+
+func main() -> int:
+    return 0

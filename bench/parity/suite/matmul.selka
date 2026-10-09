@@ -1,0 +1,39 @@
+# matmul: n x n float matrices as list[list[float]] (the Python shape), C = A * B
+# by the i-k-j loop; prints the trace and the sum of C, each scaled by 1000.
+func lcg(seed: int) -> int:
+    return (seed * 3877 + 29573) % 139968
+
+
+func random_matrix(n: int, input_seed: int) -> tuple[float[][], int]:
+    mut seed = input_seed
+    mut rows: float[][] = []
+    for i in range(n):
+        mut row: float[] = []
+        for j in range(n):
+            seed = lcg(seed)
+            row.append(float(seed) / 139968.0)
+        rows.append(row)
+    return rows, seed
+
+
+func main(out: Stream) -> int:
+    mut n = 500
+    mut a, seed = random_matrix(n, 42)
+    const b, next_seed = random_matrix(n, seed)
+    seed = next_seed
+    mut c = [for i in range(n) yield [for j in range(n) yield 0.0]]
+    for i in range(n):
+        for k in range(n):
+            mut aik = a[i][k]
+            for j in range(n):
+                c[i][j] = c[i][j] + aik * b[k][j]
+    mut trace = 0.0
+    for i in range(n):
+        trace = trace + c[i][i]
+    mut total = 0.0
+    for i in range(n):
+        for j in range(n):
+            total = total + c[i][j]
+    out.print(int(trace * 1000.0))
+    out.print(int(total * 1000.0))
+    return 0

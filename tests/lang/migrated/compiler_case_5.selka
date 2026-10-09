@@ -1,0 +1,4 @@
+public func program() -> i64:
+    while True:
+        return 5
+    return 6

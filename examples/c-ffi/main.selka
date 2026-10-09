@@ -1,0 +1,10 @@
+extern func abs(host: Host, value: i32) -> i32 effects(host)
+
+
+extern func floor(host: Host, value: float) -> float effects(host)
+
+
+func main(host: Host) -> int:
+    if floor(host, 3.9) != 3.0:
+        return 1
+    return int(abs(host, -42))

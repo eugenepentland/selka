@@ -1,0 +1,14 @@
+record Rows:
+    items: int[][]
+    other: int[]
+
+
+func replace_first(mut xs: int[][]) -> int:
+    xs[0] = [42]
+    return 0
+
+
+public func test_snapshot_survives_mut_argument_clone() -> bool:
+    mut rows = Rows(items=[[1, 2], [3]], other=[])
+    mut before = len(rows.items[replace_first(mut rows.items)])
+    return before == 2 and rows.items == [[42], [3]]

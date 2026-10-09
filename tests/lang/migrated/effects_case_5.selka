@@ -1,0 +1,7 @@
+func total(values: int[]) -> int effects():
+    return len(values)
+
+
+public func program() -> int:
+    mut values = [1, 2, 3]
+    return total(values) - 3

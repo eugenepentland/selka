@@ -1,0 +1,6 @@
+func main() -> int:
+    mut factor: int = 7
+    mut total = 0
+    mut amount = 3
+    total = factor * amount
+    return total

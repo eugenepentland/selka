@@ -1,0 +1,21 @@
+public record Wire:
+    n: int
+
+
+public result Decoded:
+    ok: Positive,
+    err: int
+
+
+public domain Positive: int:
+    codec Wire:
+        decode: from_wire,
+        encode: to_wire
+    private func raw(x: int) -> Positive:
+        return wrap[Positive](x)
+    func from_wire(x: Wire) -> Decoded effects():
+        if x.n <= 0:
+            return Err(-1)
+        return Ok(Positive.raw(x.n))
+    func to_wire(x: Positive) -> Wire effects():
+        return Wire(n=unwrap(x))

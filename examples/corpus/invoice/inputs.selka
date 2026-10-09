@@ -1,0 +1,10 @@
+public func books() -> int effects():
+    return 2
+
+
+public func cables() -> int effects():
+    return 3
+
+
+public func adapters() -> int effects():
+    return 1

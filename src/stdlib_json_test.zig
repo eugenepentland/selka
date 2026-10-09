@@ -1,0 +1,115 @@
+//! Standard JSON parses strict RFC 8259 text and renders it back without whitespace.
+const std = @import("std");
+const t = std.testing;
+const fixture = @import("stdlib_fixture.zig");
+
+// spec: STANDARD-JSON-1
+test "standard json parses renders navigates and rejects noncompliant documents" {
+    try fixture.run(t.allocator, @embedFile("stdlib/fixtures/json.selka"), 42);
+}
+
+// spec-case: STANDARD-JSON-1
+test "standard json scanner keeps its position a scalar" {
+    const language = @import("compiler.zig");
+    var entry: fixture.Entry = .{ .text =
+        \\import json
+        \\func main() -> int:
+        \\    match json.loads("[1,\"x\"]"):
+        \\        case Ok(value):
+        \\            return len(json.dumps(value))
+        \\        case Err(_):
+        \\            return 0
+    };
+    var program: language.embedded_project.Program = undefined;
+    try program.init(t.allocator, .{ .context = &entry, .read = fixture.Entry.read });
+    defer program.deinit();
+    try expectScalarPosition(program.compilation.program.?.records);
+}
+
+/// The private scanner's position is a scalar; passing it to an inout callee
+/// updates the caller's byte offset without allocating or copying a list cell.
+fn expectScalarPosition(records: []const @import("typed.zig").Record) !void {
+    for (records) |record| {
+        if (!std.mem.endsWith(u8, record.name, "::Scanner")) continue;
+        for (record.fields) |field| {
+            if (!std.mem.eql(u8, field.name, "position")) continue;
+            return t.expectEqual(@import("typed.zig").Type.i64, field.ty);
+        }
+    }
+    return error.TestUnexpectedResult;
+}
+
+// spec-case: STANDARD-JSON-1
+test "standard json keeps parsed values rooted under collection stress" {
+    try fixture.run(t.allocator, "import json\n" ++
+        "func main() -> int:\n" ++
+        "    mut source = \"{\\\"rows\\\":[{\\\"n\\\":40},{\\\"n\\\":2}]}\"\n" ++
+        "    match json.loads(source):\n" ++
+        "        case Ok(document):\n" ++
+        "            if json.dumps(document) != source:\n" ++
+        "                return 1\n" ++
+        "            return total(document)\n" ++
+        "        case Err(_):\n" ++
+        "            return 2\n" ++
+        "func total(document: json.Json) -> int:\n" ++
+        "    match json.get(document, \"rows\"):\n" ++
+        "        case Some(rows):\n" ++
+        "            return summed(rows)\n" ++
+        "        case None:\n" ++
+        "            return 3\n" ++
+        "func summed(rows: json.Json) -> int:\n" ++
+        "    mut sum = 0\n" ++
+        "    mut index = 0\n" ++
+        "    while index < 2:\n" ++
+        "        match json.at(rows, index):\n" ++
+        "            case Some(row):\n" ++
+        "                sum += field(row)\n" ++
+        "            case None:\n" ++
+        "                return 4\n" ++
+        "        index += 1\n" ++
+        "    return sum\n" ++
+        "func field(row: json.Json) -> int:\n" ++
+        "    match json.get(row, \"n\"):\n" ++
+        "        case Some(value):\n" ++
+        "            match json.as_int(value):\n" ++
+        "                case Some(count):\n" ++
+        "                    return count\n" ++
+        "                case None:\n" ++
+        "                    return 0\n" ++
+        "        case None:\n" ++
+        "            return 0\n", 42);
+}
+
+// spec: STDLIB-ERROR-UNION-1
+test "standard json error unions carry a matchable category and a message helper" {
+    try fixture.run(t.allocator,
+        \\import json
+        \\
+        \\
+        \\enum AppError:
+        \\    Json(value: json.Error)
+        \\
+        \\
+        \\func size(source: str) -> Result[int, AppError]:
+        \\    mut document = try json.loads(source)
+        \\    return Ok(len(json.dumps(document)))
+        \\
+        \\
+        \\func main() -> int:
+        \\    match size("{}"):
+        \\        case Ok(count):
+        \\            if count != 2:
+        \\                return 1
+        \\        case Err(_):
+        \\            return 2
+        \\    match size("{bad}"):
+        \\        case Ok(_):
+        \\            return 3
+        \\        case Err(error):
+        \\            match error:
+        \\                case AppError.Json(value=detail):
+        \\                    if len(json.message(detail)) == 0:
+        \\                        return 4
+        \\                    return 42
+    , 42);
+}

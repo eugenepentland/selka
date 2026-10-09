@@ -1,0 +1,4 @@
+import math
+
+func main() -> int:
+    return int(math.sqrt(1764.0))

@@ -1,0 +1,6 @@
+# oracle: rejected-by-design
+def main() -> int:
+    return 42
+
+if __name__ == "__main__":
+    main()

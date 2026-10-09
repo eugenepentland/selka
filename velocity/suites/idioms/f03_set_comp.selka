@@ -1,0 +1,4 @@
+# oracle: cpython
+def main() -> int:
+    remainders = {x % 5 for x in range(23) if x > 3}
+    return len(remainders) * 10 + sum(remainders)

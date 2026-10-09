@@ -1,0 +1,4 @@
+import contracts
+
+public func total[P: contracts.Prices](policy: P, subtotal: int) -> int effects():
+    return P.price(policy, subtotal) + 500

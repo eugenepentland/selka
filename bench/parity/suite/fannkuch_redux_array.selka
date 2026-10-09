@@ -1,0 +1,57 @@
+# fannkuch_redux_array: fannkuch_redux over [10]int fixed arrays, spelled the
+# way the list version is. Same algorithm, same order of operations, same
+# output as fannkuch_redux.selka.
+#
+# What changed from the list version: perm, perm1 and count are value arrays,
+# and n is fixed by their type (10), so the loop bounds are compile-time
+# constants here, unlike the Zig and Rust ports, which pass n through
+# opaqueN / black_box. Element writes are ordinary `perm[i] = x` statements;
+# since wave 3 (`lang/fixed-array-writes`) they compile to the same in-place
+# store `fannkuch_redux_tuned.selka` spells as `perm = replace(perm, i, x)`, and
+# the "perm[i] = perm1[i] for all i" copy is still the list version's loop.
+func fannkuch() -> tuple[int, int]:
+    mut n = 10
+    mut perm: FixedArray[int, 10] = FixedArray[int, 10]([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    mut perm1: FixedArray[int, 10] = FixedArray[int, 10]([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+    mut count: FixedArray[int, 10] = FixedArray[int, 10]([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    mut max_flips = 0
+    mut checksum = 0
+    mut perm_count = 0
+    mut r = n
+    while True:
+        while r != 1:
+            count[r - 1] = r
+            r = r - 1
+        for i in range(n):
+            perm[i] = perm1[i]
+        mut flips = 0
+        mut k = perm[0]
+        while k != 0:
+            mut k2 = shift_right(k + 1, 1)
+            for i in range(k2):
+                mut temp = perm[i]
+                perm[i] = perm[k - i]
+                perm[k - i] = temp
+            flips = flips + 1
+            k = perm[0]
+        max_flips = max(max_flips, flips)
+        checksum = checksum + (if (perm_count % 2 == 0) then (flips) else (-flips))
+        while True:
+            if r == n:
+                return checksum, max_flips
+            mut perm0 = perm1[0]
+            for i in range(r):
+                perm1[i] = perm1[i + 1]
+            perm1[r] = perm0
+            count[r] = count[r] - 1
+            if count[r] > 0:
+                break
+            r = r + 1
+        perm_count = perm_count + 1
+
+
+func main(out: Stream) -> int:
+    mut checksum, max_flips = fannkuch()
+    out.print(checksum)
+    out.print(f"Pfannkuchen(10) = {max_flips}")
+    return 0

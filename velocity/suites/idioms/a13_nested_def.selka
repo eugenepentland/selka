@@ -1,0 +1,5 @@
+# oracle: rejected-by-design
+def main() -> int:
+    def helper(x: int) -> int:
+        return x * 2
+    return helper(21)

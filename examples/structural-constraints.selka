@@ -1,0 +1,30 @@
+record Reading:
+    value: int
+
+
+record TaggedReading:
+    tag: bool
+    value: int
+
+
+func value[T: copy + field(value: int)](item: T) -> int:
+    return item.value
+
+
+func forward[U: copy + field(value: int)](item: U) -> int:
+    return value[U](item)
+
+
+domain Counter: int:
+    func make(n: int) -> Counter:
+        return wrap[Counter](n)
+    func score(item: Counter) -> int effects():
+        return unwrap(item)
+
+
+func score[T: copy + op(score(item: T) -> int effects())](item: T) -> int effects():
+    return T.score(item)
+
+
+func main() -> int:
+    return value[Reading](Reading(value=2)) + forward[TaggedReading](TaggedReading(tag=True, value=3)) + score[Counter](Counter.make(7))

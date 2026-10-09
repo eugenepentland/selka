@@ -1,0 +1,113 @@
+# Stores into fields, elements, dictionary values, tuples and payloads, and
+# the operations that build a new collection from an old one's elements, give
+# the destination its own value (VALUE-SEMANTICS-2).
+record Bag:
+    items: int[]
+    tags: dict[str, int[]]
+
+
+record Holder:
+    bag: Bag
+    count: int
+
+
+func keys_of(values: int[][]) -> int:
+    return len(values)
+
+
+func size(values: int[]) -> int:
+    return len(values)
+
+
+# spec-case: VALUE-SEMANTICS-2
+public func test_a_record_field_holds_its_own_list() -> bool:
+    mut items = [1]
+    mut bag = Bag(items=items, tags={})
+    items.append(2)
+    bag.items.append(3)
+    mut copy = bag
+    copy.items.append(4)
+    return items == [1, 2] and bag.items == [1, 3] and copy.items == [1, 3, 4]
+
+
+# spec-case: VALUE-SEMANTICS-2
+public func test_a_nested_record_copy_is_independent() -> bool:
+    mut holder = Holder(bag=Bag(items=[1], tags={"a": [1]}), count=1)
+    mut other = holder
+    other.bag.items.append(2)
+    other.bag.tags["a"].append(2)
+    return holder.bag.items == [1] and holder.bag.tags["a"] == [1] and other.bag.items == [1, 2] and other.bag.tags["a"] == [1, 2]
+
+
+# spec-case: VALUE-SEMANTICS-2
+public func test_element_and_dictionary_value_stores_copy() -> bool:
+    mut row = [1]
+    mut rows: int[][] = []
+    rows.append(row)
+    rows.insert(0, row)
+    mut table: dict[str, int[]] = {}
+    table["r"] = row
+    row.append(9)
+    rows[0].append(2)
+    table["r"].append(3)
+    return row == [1, 9] and rows == [[1, 2], [1]] and table["r"] == [1, 3]
+
+
+# spec-case: VALUE-SEMANTICS-2
+public func test_tuple_and_payload_stores_copy() -> bool:
+    mut items = [1]
+    mut pair = (items, 5)
+    mut maybe: int[]? = Some(items)
+    items.append(2)
+    const first, count = pair
+    match maybe:
+        case Some(inside):
+            return len(first) == 1 and count == 5 and len(inside) == 1 and len(items) == 2
+        case None:
+            return False
+
+
+# spec-case: VALUE-SEMANTICS-2
+public func test_copy_slice_and_list_copy_their_elements() -> bool:
+    mut grid = [[1], [2]]
+    mut shallow = grid.copy()
+    shallow[0].append(7)
+    mut sliced = grid[0:1]
+    sliced[0].append(8)
+    mut listed = list(grid)
+    listed[1].append(9)
+    mut table = {"k": [1]}
+    mut values = list(table.values())
+    values[0].append(2)
+    return grid == [[1], [2]] and shallow[0] == [1, 7] and sliced[0] == [1, 8] and listed[1] == [2, 9] and table["k"] == [1] and values[0] == [1, 2]
+
+
+# spec-case: VALUE-SEMANTICS-2
+public func test_extend_and_sorted_copy_the_elements_they_take() -> bool:
+    mut grid = [[3], [1, 1], [2, 2, 2]]
+    mut more: int[][] = []
+    more.extend(grid)
+    more[0].append(0)
+    mut ordered = sorted(grid, key=size)
+    ordered[0].append(5)
+    return grid == [[3], [1, 1], [2, 2, 2]] and more[0] == [3, 0] and ordered[0] == [3, 5] and keys_of(ordered) == 3
+
+
+# spec-case: VALUE-SEMANTICS-2
+public func test_update_copies_the_dictionary_values_it_takes() -> bool:
+    mut source = {"k": [1]}
+    mut target: dict[str, int[]] = {}
+    target.update(source)
+    target["k"].append(2)
+    return source["k"] == [1] and target["k"] == [1, 2]
+
+
+# spec-case: VALUE-SEMANTICS-2
+public func test_setdefault_and_get_hand_back_copies() -> bool:
+    mut table: dict[str, int[]] = {}
+    mut fallback = [0]
+    mut stored = table.setdefault("a", [1])
+    stored.append(2)
+    mut got = table.get("b", fallback)
+    got.append(3)
+    return table["a"] == [1] and stored == [1, 2] and fallback == [0] and got == [0, 3]

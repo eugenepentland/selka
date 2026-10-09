@@ -1,0 +1,18 @@
+record Outer:
+    inner: Inner
+    flag: bool
+
+
+record Inner:
+    value: i64
+
+
+func id(x: Outer) -> Outer:
+    return x
+
+
+public func program() -> i64:
+    mut x = id(Outer(flag=True, inner=Inner(value=7)))
+    if x.flag:
+        return x.inner.value
+    return 0

@@ -1,0 +1,11 @@
+func first[T, const N: u64](x: [N]T) -> T:
+    return x[0]
+
+
+func forward[U, const M: u64](x: [M]U) -> U:
+    return first(x)
+
+
+public func program() -> i64:
+    mut values: FixedArray[i64, 2] = FixedArray[int, 2]([7, 9])
+    return forward(values)

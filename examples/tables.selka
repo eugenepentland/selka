@@ -1,0 +1,14 @@
+enum Status:
+    ok
+    missing
+    failed
+
+
+func response_codes() -> [Status] u16:
+    return {Status.failed: 500u16, Status.ok: 200u16, Status.missing: 404u16}
+
+
+func main() -> int:
+    mut original = response_codes()
+    mut revised = replace(original, Status.failed, 503u16)
+    return int(original[Status.failed]) + int(revised[Status.failed]) + int(revised[Status.missing])

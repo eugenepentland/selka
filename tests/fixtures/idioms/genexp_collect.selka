@@ -1,0 +1,5 @@
+func main() -> int:
+    mut xs = [3, 1, 2]
+    mut ordered = sorted(x * 10 for x in xs)
+    mut text = "".join(str(x) for x in xs)
+    return ordered[0] + len(text) + len(set(x % 2 for x in xs))

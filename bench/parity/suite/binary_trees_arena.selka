@@ -1,0 +1,43 @@
+# binary_trees (arena variant): the same program as binary_trees.selka, but the
+# stretch tree and every short-lived tree are built and checked inside their
+# own `with arena():` block, so each one is released in bulk at block exit
+# instead of being traced. Only the scalar check count leaves a block. The
+# long-lived tree stays on the collecting heap. The tree now uses a recursive
+# value record with boxed Option children. See SUITE.md section 1.
+record Node:
+    left: Node?
+    right: Node?
+
+
+func make(depth: int) -> Node:
+    if depth == 0:
+        return Node(left=None, right=None)
+    return Node(left=Some(make(depth - 1)), right=Some(make(depth - 1)))
+
+
+func check(node: Node) -> int:
+    mut left = node.left
+    mut right = node.right
+    if left is None or right is None:
+        return 1
+    return 1 + check(left) + check(right)
+
+
+func main(out: Stream) -> int:
+    mut max_depth = 16
+    mut min_depth = 4
+    mut stretch = max_depth + 1
+    mut stretch_check = 0
+    stretch_check = check(make(stretch))
+    out.print(f"stretch tree of depth {stretch}\t check: {stretch_check}")
+    mut long_lived = make(max_depth)
+    mut depth = min_depth
+    while depth <= max_depth:
+        mut iterations = shift_left(1, max_depth - depth + min_depth)
+        mut total = 0
+        for _ in range(iterations):
+            total = total + check(make(depth))
+        out.print(f"{iterations}\t trees of depth {depth}\t check: {total}")
+        depth = depth + 2
+    out.print(f"long lived tree of depth {max_depth}\t check: {check(long_lived)}")
+    return 0

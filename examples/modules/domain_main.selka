@@ -1,0 +1,4 @@
+import shared.units
+
+func main() -> int:
+    return units.Distance.number(units.Distance.make(12))

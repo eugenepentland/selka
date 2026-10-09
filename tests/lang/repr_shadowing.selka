@@ -1,0 +1,13 @@
+func repr(value: int) -> str:
+    _ = value
+    return "declared"
+
+
+func generic_repr[T: copy](marker: T, value: int) -> str:
+    _ = marker
+    return repr(value)
+
+
+# spec-case: PRELUDE-REPR-1
+public func test_declared_function_shadows_scalar_repr_in_concrete_and_generic_calls() -> bool:
+    return repr(42) == "declared" and generic_repr(1, 42) == "declared"

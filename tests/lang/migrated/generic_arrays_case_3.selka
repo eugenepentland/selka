@@ -1,0 +1,7 @@
+func count[T](a: FixedArray[T, 2]) -> int:
+    mut n: int = len(a)
+    return n
+
+
+public func program() -> int:
+    return count[int](FixedArray[int, 2]([7, 8]))

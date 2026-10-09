@@ -1,0 +1,27 @@
+import prelude_builtins_case_1 as c1
+import prelude_builtins_case_2 as c2
+import prelude_builtins_case_3 as c3
+import prelude_builtins_case_4 as c4
+
+# spec: PRELUDE-SHADOW-1
+public func test_a_declared_function_or_binding_keeps_its_own_1() -> bool:
+    return c1.program() == 7
+
+
+# spec-case: PRELUDE-SHADOW-1
+public func test_a_declared_function_or_binding_keeps_its_own_2() -> bool:
+    return c2.program() == 6
+
+
+# spec-case: PRELUDE-SHADOW-1
+public func test_a_declared_function_or_binding_keeps_its_own_3() -> bool:
+    return c3.program() == 5
+
+
+# spec-case: PRELUDE-SHADOW-1
+public func test_a_declared_function_or_binding_keeps_its_own_4() -> bool:
+    return c4.program() == 9
+
+
+func main() -> int:
+    return 0

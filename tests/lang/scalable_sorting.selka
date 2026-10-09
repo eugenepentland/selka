@@ -1,0 +1,42 @@
+# spec-case: PY-COLLECTIONS-15
+public func test_in_place_sort_scales_and_preserves_explicit_snapshot() -> bool:
+    mut values: int[] = []
+    mut n = 4096
+    while n > 0:
+        values.append(n)
+        n -= 1
+    mut before = values.copy()
+    values.sort()
+    return values[0] == 1 and values[2048] == 2049 and values[4095] == 4096 and before[0] == 4096
+
+
+# spec-case: PRELUDE-SORT-1
+public func test_sorted_uses_fresh_storage_and_scalar_text_order() -> bool:
+    mut source = ["é", "apple", "😀", "Apple"]
+    mut ordered = sorted(source)
+    return source[0] == "é" and ordered[0] == "Apple" and ordered[1] == "apple" and ordered[2] == "é" and ordered[3] == "😀"
+
+
+func least(words: str[]) -> str noalloc:
+    return min(words)
+
+
+# spec-case: PRELUDE-EXTREME-1
+public func test_text_extrema_need_no_temporary_encoding() -> bool:
+    return least(["😀", "é", "z"]) == "z"
+
+
+# spec-case: PY-COLLECTIONS-15
+public func test_text_sort_in_place_matches_sorted_and_preserves_snapshot() -> bool:
+    mut words = ["😀", "é", "z", "a"]
+    mut before = words.copy()
+    mut expected = sorted(words)
+    words.sort()
+    mut groups = [words]
+    groups[0].sort()
+    return words == expected and before == ["😀", "é", "z", "a"] and groups[0] == expected
+
+
+# The directory runner selects programs by their entry point.
+func main() -> int:
+    return 0

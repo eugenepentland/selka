@@ -1,0 +1,15 @@
+{
+  "version": "stage0-pin-v1",
+  "branch": "local-reasoning/integration",
+  "commit": "ef9281e36d111e7c625aeabc6de943c6a437a045",
+  "toolchain": "0.17.0-dev.1683+5ceec001b",
+  "sha256": "a3f4066017d679aec413ba8ffb0a861599a86a806e9baaeed92ec14dad6ac5aa",
+  "artifact": "/home/epentland/.cache/mylang/stage0/a3f4066017d679aec413ba8ffb0a861599a86a806e9baaeed92ec14dad6ac5aa/mylang",
+  "cache_dir": "/home/epentland/.cache/mylang/stage0",
+  "cache_env": "MYLANG_STAGE0_CACHE",
+  "built_in": "/home/epentland/ai/canopy/mylang",
+  "tools": {
+    "qbe": "808cce427c310c4ecdcdae6360fade2f5579548f5af3852b1c94e77b22960c5d"
+  },
+  "rule": "every selfhost harness must resolve the stage-0 compiler through selfhost/tests/stage0.py::require(); the recorded commit is the commit whose Zig sources produced this content-addressed artifact; a rebuild must produce a new artifact and be re-pinned explicitly"
+}

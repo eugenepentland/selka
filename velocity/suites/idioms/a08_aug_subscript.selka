@@ -1,0 +1,8 @@
+# oracle: cpython
+def main() -> int:
+    counts: dict[str, int] = {}
+    counts["a"] = 0
+    counts["a"] += 41
+    xs = [1]
+    xs[0] += 1
+    return counts["a"] + xs[0]

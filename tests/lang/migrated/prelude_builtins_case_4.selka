@@ -1,0 +1,6 @@
+func list() -> int:
+    return 9
+
+
+public func program() -> int:
+    return list()

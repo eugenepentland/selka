@@ -1,0 +1,4 @@
+func main() -> int:
+    mut xs = [1, 2]
+    xs[0] += 5
+    return xs[0]
