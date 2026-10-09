@@ -231,7 +231,7 @@ pub fn finish(init: std.process.Init, module: *ir.Module, unit: Unit, options: O
 
 fn linkEmitted(init: std.process.Init, module: *ir.Module, unit: Unit, options: Options, report: *std.ArrayList(u8)) Error!driver.Outcome {
     const allocator = init.arena.allocator();
-    const emission = try emitted(allocator, module, unit, options, report);
+    const emission = try emittedWithScratch(allocator, init.gpa, module, unit, options, report);
     if (options.show.llvm) |where| std.Io.Dir.cwd().writeFile(init.io, .{ .sub_path = where, .data = emission.whole.? }) catch return error.WriteFailed;
     var outcome = driver.link(allocator, init.io, init.environ_map, .{
         .zig = options.zig,
@@ -258,6 +258,12 @@ pub const Emission = struct { units: []const emit_units.Unit, whole: ?[]const u8
 /// Run the same passes and emission used for linking, without invoking a tool.
 /// Test receipts hash this exact reachable program.
 pub fn emitted(allocator: std.mem.Allocator, module: *ir.Module, unit: Unit, options: Options, report: *std.ArrayList(u8)) Error!Emission {
+    return emittedWithScratch(allocator, allocator, module, unit, options, report);
+}
+
+/// Keep IR and finished artifacts on `allocator`; reclaim pass and emission work
+/// through `scratch`, which production callers supply independently of the build arena.
+pub fn emittedWithScratch(allocator: std.mem.Allocator, scratch: std.mem.Allocator, module: *ir.Module, unit: Unit, options: Options, report: *std.ArrayList(u8)) Error!Emission {
     // A debug build of the compiler checks the IR it built, and again after optimization.
     if (verify_ir.enabled) try verify_ir.check(allocator, module, &.{}, report);
     // Optimized modes compute facts; ordinary debug keeps every check.
@@ -272,7 +278,7 @@ pub fn emitted(allocator: std.mem.Allocator, module: *ir.Module, unit: Unit, opt
         .sabotage_overflow => .sabotage_overflow,
     };
     const optimized = options.mode != .debug;
-    var result = if (optimized) try passes.run(allocator, module, mode) else try passes.debug(allocator, module);
+    var result = if (optimized) try passes.runWithScratch(allocator, scratch, module, mode) else try passes.debugWithScratch(allocator, scratch, module);
     if (verify_ir.enabled) try verify_ir.check(allocator, module, result.plans, report);
     const measured = if (options.show.stats) try cost.measure(allocator, module, &result, null) else null;
     if (measured) |snapshot| try cost.stats(allocator, report, snapshot.totals);
@@ -289,7 +295,7 @@ pub fn emitted(allocator: std.mem.Allocator, module: *ir.Module, unit: Unit, opt
     };
     // S4-1a: a release build is one unit, so LLVM optimizes across every module
     // boundary; development modes keep module units and reuse unchanged text.
-    const split = if (options.mode == .release) emit_units.whole(allocator, module, emission) else emit_units.emit(allocator, module, emission);
+    const split = if (options.mode == .release) emit_units.wholeWithScratch(allocator, scratch, module, emission) else emit_units.emitWithScratch(allocator, scratch, module, emission);
     const units = split catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         else => {
@@ -299,7 +305,7 @@ pub fn emitted(allocator: std.mem.Allocator, module: *ir.Module, unit: Unit, opt
     };
     if (options.show.llvm == null) return .{ .units = units, .cost_report = measured };
     if (options.mode == .release) return .{ .units = units, .whole = units[0].llvm, .cost_report = measured };
-    const whole = emit_llvm.emitModule(allocator, module, emission) catch |err| switch (err) {
+    const whole = emit_llvm.emitModuleWithScratch(allocator, scratch, module, emission) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         else => return error.Unsupported,
     };

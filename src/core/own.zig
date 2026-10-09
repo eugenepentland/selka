@@ -105,6 +105,11 @@ pub const unique_assert: u64 = 1;
 
 /// Run the pass over every internal function of `module`.
 pub fn run(arena: std.mem.Allocator, module: *ir.Module, options: Options) Error!Stats {
+    return runWithScratch(arena, arena, module, options);
+}
+
+/// Run ownership with independently reclaimable analysis backing.
+pub fn runWithScratch(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir.Module, options: Options) Error!Stats {
     var total: Stats = .{};
     const summaries = options.effects orelse &try effects.analyze(arena, module);
     for (module.functions.items, 0..) |*f, index| {
@@ -112,13 +117,23 @@ pub fn run(arena: std.mem.Allocator, module: *ir.Module, options: Options) Error
         var local = options;
         local.function_index = @intCast(index);
         local.effects = summaries;
-        total.add(try function(arena, module, f, local));
+        total.add(try functionWithScratch(arena, backing, module, f, local));
     }
     return total;
 }
 
 /// Run the pass over one function of `module`.
 pub fn function(arena: std.mem.Allocator, module: *const ir.Module, f: *ir.Function, options: Options) Error!Stats {
+    return functionWithScratch(arena, arena, module, f, options);
+}
+
+/// IR edits live on `arena`; analysis storage is freed through `backing`.
+pub fn functionWithScratch(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *const ir.Module, f: *ir.Function, options: Options) Error!Stats {
+    // Analysis graphs and liveness die with this function; the IR edits below
+    // still use the caller's allocator. A build arena cannot reclaim scratch.
+    var work = std.heap.ArenaAllocator.init(backing);
+    defer work.deinit();
+    const scratch = work.allocator();
     var stats: Stats = .{};
     var marks: Marks = .{ .origin = if (options.provenance) |table| table.context(options.function_index) else null };
     if (options.facts) |known| {
@@ -134,21 +149,21 @@ pub fn function(arena: std.mem.Allocator, module: *const ir.Module, f: *ir.Funct
     // Element stores nothing reads go, and the rest store only the fields that changed.
     if (options.effects) |summaries| _ = try stores.run(arena, module, f, summaries);
     // Popped elements are found (or read) before anything moves.
-    try markPops(.{ .arena = arena, .f = f, .origin = marks.origin }, module, &marks);
+    try markPops(.{ .arena = arena, .f = f, .origin = marks.origin }, scratch, module, &marks);
     for (f.insts.items, 0..) |inst, index| {
-        if (flags.transferredRead(inst) and module.managed(inst.ty)) try marks.owned_get.put(arena, @intCast(index), {});
-        if (flags.transferredSlot(f, inst)) try marks.taken.put(arena, @intCast(index), {});
+        if (flags.transferredRead(inst) and module.managed(inst.ty)) try marks.owned_get.put(scratch, @intCast(index), {});
+        if (flags.transferredSlot(f, inst)) try marks.taken.put(scratch, @intCast(index), {});
     }
-    try mergeFieldReads(arena, f);
-    try takeFields(arena, module, f, &marks);
-    var phase_a = try Analysis.of(arena, module, f, &marks);
+    try mergeFieldReads(scratch, f);
+    try takeFields(scratch, module, f, &marks);
+    var phase_a = try Analysis.of(scratch, arena, module, f, &marks);
     try phase_a.analyze();
     try copyOnWrite(&phase_a, options, &stats);
-    var phase_b = try Analysis.of(arena, module, f, &marks);
+    var phase_b = try Analysis.of(scratch, arena, module, f, &marks);
     try phase_b.analyze();
     try count(&phase_b, &stats);
     if (options.facts) |known| markFillPushes(f, known);
-    stats.elided = try elidePairs(arena, f);
+    stats.elided = try elidePairsWithScratch(arena, scratch, f);
     stats.retains -= stats.elided;
     stats.releases -= stats.elided;
     return stats;
@@ -254,7 +269,12 @@ const Live = struct {
 };
 
 const Analysis = struct {
-    arena: std.mem.Allocator,
+    storage: struct {
+        /// Analysis-only work storage.
+        scratch: std.mem.Allocator,
+        /// Persistent IR and provenance allocations.
+        results: std.mem.Allocator,
+    },
     module: *const ir.Module,
     f: *ir.Function,
     marks: *Marks,
@@ -275,10 +295,10 @@ const Analysis = struct {
 
     const Where = struct { block: u32 = no_block, pos: u32 = 0 };
 
-    fn of(arena: std.mem.Allocator, module: *const ir.Module, f: *ir.Function, marks: *Marks) Error!Analysis {
+    fn of(arena: std.mem.Allocator, results: std.mem.Allocator, module: *const ir.Module, f: *ir.Function, marks: *Marks) Error!Analysis {
         const n = f.insts.items.len;
         const self: Analysis = .{
-            .arena = arena,
+            .storage = .{ .scratch = arena, .results = results },
             .module = module,
             .f = f,
             .marks = marks,
@@ -366,7 +386,7 @@ const Analysis = struct {
             if (self.marks.stack.contains(@intCast(i)) or self.marks.emptied.contains(@intCast(i))) self.class[i] = .none;
         }
         for (self.parent, 0..) |p, child| {
-            if (p != .none and self.class[child] == .borrowed) try self.children[p.index()].append(self.arena, @fromBackingInt(@intCast(child)));
+            if (p != .none and self.class[child] == .borrowed) try self.children[p.index()].append(self.storage.scratch, @fromBackingInt(@intCast(child)));
         }
     }
 
@@ -385,7 +405,7 @@ const Analysis = struct {
     /// Phis read by a non-phi instruction, directly or through other live phis.
     fn livePhis(self: *Analysis) Error![]bool {
         const f = self.f;
-        const live = try self.arena.alloc(bool, f.insts.items.len);
+        const live = try self.storage.scratch.alloc(bool, f.insts.items.len);
         @memset(live, false);
         var stack: std.ArrayList(ir.Ref) = .empty;
         for (f.blocks.items, 0..) |block, b| {
@@ -406,7 +426,7 @@ const Analysis = struct {
     fn markPhi(self: *Analysis, used: ir.Ref, live: []bool, stack: *std.ArrayList(ir.Ref)) Error!void {
         if (used == .none or self.f.inst(used).op != .phi or live[used.index()]) return;
         live[used.index()] = true;
-        try stack.append(self.arena, used);
+        try stack.append(self.storage.scratch, used);
     }
 
     fn collectUses(self: *Analysis) Error!void {
@@ -443,7 +463,7 @@ const Analysis = struct {
                 return;
             }
         }
-        try list.append(self.arena, use);
+        try list.append(self.storage.scratch, use);
     }
 
     /// Whether operand `k` of a call is an argument the callee takes over (a `mut` one).
@@ -470,12 +490,12 @@ const Analysis = struct {
     /// Every use that keeps `ref` live: its own and, as borrows, those of the borrowed
     /// parts read from it (transitively) that are not counted themselves.
     fn liveUses(self: *Analysis, ref: ir.Ref, out: *std.ArrayList(Use)) Error!void {
-        try out.appendSlice(self.arena, self.uses[ref.index()].items);
+        try out.appendSlice(self.storage.scratch, self.uses[ref.index()].items);
         for (self.children[ref.index()].items) |child_ref| {
             if (self.counted(child_ref)) continue;
             var nested: std.ArrayList(Use) = .empty;
             try self.liveUses(child_ref, &nested);
-            for (nested.items) |use| try out.append(self.arena, .{ .block = use.block, .pos = use.pos, .succ = use.succ, .borrow = use.consume + use.borrow });
+            for (nested.items) |use| try out.append(self.storage.scratch, .{ .block = use.block, .pos = use.pos, .succ = use.succ, .borrow = use.consume + use.borrow });
         }
     }
 
@@ -518,16 +538,16 @@ const Analysis = struct {
         if (f.inst(ref).op != .phi) return false;
         var seen: std.AutoHashMapUnmanaged(u32, void) = .empty;
         var stack: std.ArrayList(ir.Ref) = .empty;
-        stack.append(self.arena, ref) catch return true;
+        stack.append(self.storage.scratch, ref) catch return true;
         while (stack.pop()) |current| {
             for (f.operands(f.inst(current).data)) |operand| {
                 const source = f.resolve(operand);
                 const op = f.inst(source).op;
                 if (op == .undef) return true;
                 if (op != .phi) continue;
-                const entry = seen.getOrPut(self.arena, @backingInt(source)) catch return true;
+                const entry = seen.getOrPut(self.storage.scratch, @backingInt(source)) catch return true;
                 if (entry.found_existing) continue;
-                stack.append(self.arena, source) catch return true;
+                stack.append(self.storage.scratch, source) catch return true;
             }
         }
         return false;
@@ -606,8 +626,8 @@ const Analysis = struct {
     fn liveFrom(self: *Analysis, ref: ir.Ref, uses: []const Use) Error!Live {
         const nblocks = self.f.blocks.items.len;
         var live: Live = .{
-            .in = try std.DynamicBitSetUnmanaged.initEmpty(self.arena, nblocks),
-            .out = try std.DynamicBitSetUnmanaged.initEmpty(self.arena, nblocks),
+            .in = try std.DynamicBitSetUnmanaged.initEmpty(self.storage.scratch, nblocks),
+            .out = try std.DynamicBitSetUnmanaged.initEmpty(self.storage.scratch, nblocks),
             .uses = uses,
             .def = self.where[ref.index()].block,
         };
@@ -616,7 +636,7 @@ const Analysis = struct {
             if (use.onEdge()) live.out.set(use.block);
             if (use.block != live.def and !live.in.isSet(use.block)) {
                 live.in.set(use.block);
-                try stack.append(self.arena, use.block);
+                try stack.append(self.storage.scratch, use.block);
             }
         }
         while (stack.pop()) |b| {
@@ -625,7 +645,7 @@ const Analysis = struct {
                 live.out.set(pred);
                 if (pred != live.def and !live.in.isSet(pred)) {
                     live.in.set(pred);
-                    try stack.append(self.arena, pred);
+                    try stack.append(self.storage.scratch, pred);
                 }
             }
         }
@@ -665,7 +685,7 @@ fn staticallyUnique(a: *const Analysis, value: ir.Ref, site: ir.Ref) Error!bool 
     if (!a.module.isBlock(a.inst(value).ty)) return false;
     var web: std.ArrayList(ir.Ref) = .empty;
     var index: std.AutoHashMapUnmanaged(u32, u6) = .empty;
-    try web.append(a.arena, value);
+    try web.append(a.storage.scratch, value);
     var next: usize = 0;
     while (next < web.items.len) : (next += 1) {
         const current = web.items[next];
@@ -678,12 +698,12 @@ fn staticallyUnique(a: *const Analysis, value: ir.Ref, site: ir.Ref) Error!bool 
             } else return false,
             .phi => for (a.f.operands(instruction.data)) |operand| {
                 const source = a.f.resolve(operand);
-                if (std.mem.indexOfScalar(ir.Ref, web.items, source) == null) try web.append(a.arena, source);
+                if (std.mem.indexOfScalar(ir.Ref, web.items, source) == null) try web.append(a.storage.scratch, source);
             },
             else => if (instruction.op.consumesOperand0()) {} else return false,
         }
     }
-    for (web.items, 0..) |member, i| try index.put(a.arena, @backingInt(member), @intCast(i));
+    for (web.items, 0..) |member, i| try index.put(a.storage.scratch, @backingInt(member), @intCast(i));
     for (web.items) |member| {
         if (try shared(a, .{ .members = web.items, .index = &index }, member, site)) return false;
     }
@@ -699,7 +719,7 @@ fn staticallyUnique(a: *const Analysis, value: ir.Ref, site: ir.Ref) Error!bool 
 /// child, from the read on (NEW-CORE-ROW-COW-1).
 fn exclusiveChildren(a: *const Analysis, root: ir.Ref) Error!bool {
     var values: std.ArrayList(ir.Ref) = .empty;
-    try values.append(a.arena, a.f.resolve(root));
+    try values.append(a.storage.scratch, a.f.resolve(root));
     var next: usize = 0;
     while (next < values.items.len) : (next += 1) {
         const ref = values.items[next];
@@ -712,10 +732,10 @@ fn exclusiveChildren(a: *const Analysis, root: ir.Ref) Error!bool {
                 const at = location(a.f, ref);
                 if (!a.counted(source) or a.liveAfter(source, at.block, at.pos)) return false;
                 if (!try staticallyUnique(a, source, ref)) return false;
-                try addUnique(a.arena, &values, source);
+                try addUnique(a.storage.scratch, &values, source);
             },
             .phi => for (a.f.operands(inst.data)) |operand| {
-                try addUnique(a.arena, &values, a.f.resolve(operand));
+                try addUnique(a.storage.scratch, &values, a.f.resolve(operand));
             },
             .list_push, .list_set => {
                 const child = a.f.resolve(if (inst.op == .list_push) inst.b else a.f.operands(inst.data)[0]);
@@ -724,7 +744,7 @@ fn exclusiveChildren(a: *const Analysis, root: ir.Ref) Error!bool {
                 if (a.liveAfter(child, at.block, at.pos) or !try staticallyUnique(a, child, ref)) return false;
                 const in_place = a.counted(list) and !a.liveAfter(list, at.block, at.pos);
                 if (!in_place or !try staticallyUnique(a, list, ref)) return false;
-                try addUnique(a.arena, &values, list);
+                try addUnique(a.storage.scratch, &values, list);
             },
             else => return false,
         }
@@ -834,8 +854,8 @@ fn carries(a: *const Analysis, web: Web, value: ir.Ref, start: Start, site: ir.R
                 const next = enter(f, web, block, succ, holders);
                 if (next == 0) continue;
                 const key = (@as(u64, succ) << 32) ^ next ^ (next >> 32);
-                if ((try seen.getOrPut(a.arena, key)).found_existing) continue;
-                try stack.append(a.arena, .{ .block = succ, .holders = next });
+                if ((try seen.getOrPut(a.storage.scratch, key)).found_existing) continue;
+                try stack.append(a.storage.scratch, .{ .block = succ, .holders = next });
             }
         }
         const state = stack.pop() orelse return false;
@@ -886,10 +906,10 @@ fn copyOnWrite(a: *Analysis, options: Options, stats: *Stats) Error!void {
             const form: Form = if (!a.counted(list) or a.liveAfter(list, @intCast(b), @intCast(pos)))
                 .copied
             else if (try staticallyUnique(a, list, ref)) .in_place else .tested;
-            try sites.append(a.arena, .{ .update = ref, .form = form });
+            try sites.append(a.storage.scratch, .{ .update = ref, .form = form });
         }
     }
-    const e: Editor = .{ .arena = a.arena, .f = f, .origin = a.marks.origin };
+    const e: Editor = .{ .arena = a.storage.results, .f = f, .origin = a.marks.origin };
     for (sites.items) |site| {
         const before = f.inst(site.update);
         const detach = (before.op == .list_copy or before.op == .dict_copy) and before.data == flags.place_copy;
@@ -918,7 +938,7 @@ fn copyOnWrite(a: *Analysis, options: Options, stats: *Stats) Error!void {
     if (options.verify) {
         var reads: std.ArrayList(ir.Ref) = .empty;
         for (f.blocks.items) |block| for (block.insts.items) |ref| {
-            if (flags.transferredRead(f.inst(ref))) try reads.append(a.arena, ref);
+            if (flags.transferredRead(f.inst(ref))) try reads.append(a.storage.scratch, ref);
         };
         for (reads.items) |ref| try assertUnique(e, ref);
     }
@@ -988,7 +1008,7 @@ fn assertUnique(e: Editor, update: ir.Ref) Error!void {
 
 /// Mark the `list_get` that reads the element a `list_pop` drops: it owns that element.
 /// A pop with no such read gets one after it, released at once.
-fn markPops(e: Editor, module: *const ir.Module, marks: *Marks) Error!void {
+fn markPops(e: Editor, scratch: std.mem.Allocator, module: *const ir.Module, marks: *Marks) Error!void {
     const f = e.f;
     var b: usize = 0;
     while (b < f.blocks.items.len) : (b += 1) {
@@ -1000,13 +1020,13 @@ fn markPops(e: Editor, module: *const ir.Module, marks: *Marks) Error!void {
             const element = module.compound(pop.ty).list;
             if (!module.managed(element)) continue;
             if (poppedRead(f, f.blocks.items[b].insts.items[0..pos], f.resolve(pop.a))) |read| {
-                try marks.owned_get.put(e.arena, @backingInt(read), {});
+                try marks.owned_get.put(scratch, @backingInt(read), {});
                 continue;
             }
             // The popped slot still holds the element: a pop only shortens the list.
             const len = try e.insertAfter(ref, .{ .op = .list_len, .ty = .u64, .a = ref, .span = pop.span });
             const got = try e.insertAfter(len, .{ .op = .list_get, .ty = element, .a = ref, .b = len, .span = pop.span });
-            try marks.owned_get.put(e.arena, @backingInt(got), {});
+            try marks.owned_get.put(scratch, @backingInt(got), {});
             _ = try e.insertAfter(got, .{ .op = .release, .ty = .void, .a = got, .span = pop.span });
             pos += 3;
         }
@@ -1568,7 +1588,7 @@ fn runsAfter(arena: std.mem.Allocator, f: *const ir.Function, block_of: []const 
 /// value: the record's reference to it goes with the consumed record) and release it after.
 fn extractDroppedFields(a: *Analysis) Error!void {
     const f = a.f;
-    const e: Editor = .{ .arena = a.arena, .f = f, .origin = a.marks.origin };
+    const e: Editor = .{ .arena = a.storage.results, .f = f, .origin = a.marks.origin };
     var b: usize = 0;
     while (b < f.blocks.items.len) : (b += 1) {
         var pos: usize = 0;
@@ -1587,7 +1607,7 @@ fn extractDroppedFields(a: *Analysis) Error!void {
                 .check = set.check,
                 .span = set.span,
             });
-            try a.marks.owned_get.put(a.arena, @backingInt(old), {});
+            try a.marks.owned_get.put(a.storage.scratch, @backingInt(old), {});
             _ = try e.insertAfter(ref, .{ .op = .release, .ty = .void, .a = old, .span = set.span });
             pos += 2;
         }
@@ -1627,19 +1647,19 @@ fn countOwned(a: *Analysis, ref: ir.Ref, actions: *std.ArrayList(Action)) Error!
     const live = a.live[ref.index()].?;
     // A list nothing shares (form 1's rule) has count 1 wherever it dies.
     const release_data = try releaseKind(a, ref);
-    if (a.promoted[ref.index()]) try actions.append(a.arena, .{ .place = placeAfterDef(a, ref), .op = .retain, .value = ref });
+    if (a.promoted[ref.index()]) try actions.append(a.storage.scratch, .{ .place = placeAfterDef(a, ref), .op = .retain, .value = ref });
     // Consuming uses: the last one moves, the others take a retained owner.
     for (a.uses[ref.index()].items) |use| {
         if (use.consume == 0) continue;
         if (use.onEdge()) {
             const extra = use.consume - @intFromBool(!a.liveInto(ref, use.succ));
-            for (0..extra) |_| try actions.append(a.arena, .{ .place = .{ .edge = .{ .from = use.block, .to = use.succ } }, .op = .retain, .value = ref });
+            for (0..extra) |_| try actions.append(a.storage.scratch, .{ .place = .{ .edge = .{ .from = use.block, .to = use.succ } }, .op = .retain, .value = ref });
         } else {
             // A call that both takes the value (`mut`) and borrows it gets a second owner.
             const moves = !a.liveAfter(ref, use.block, use.pos) and use.borrow == 0;
             const extra = use.consume - @intFromBool(moves);
             const at = f.blocks.items[use.block].insts.items[use.pos];
-            for (0..extra) |_| try actions.append(a.arena, .{ .place = .{ .before = at }, .op = .retain, .value = ref });
+            for (0..extra) |_| try actions.append(a.storage.scratch, .{ .place = .{ .before = at }, .op = .retain, .value = ref });
         }
     }
     // Deaths inside blocks: after the last use, when nothing later needs the value.
@@ -1659,10 +1679,10 @@ fn countOwned(a: *Analysis, ref: ir.Ref, actions: *std.ArrayList(Action)) Error!
             if (consumed) continue;
             const at = block.insts.items[pos];
             const place: Place = if (f.inst(at).op.terminates()) .{ .before = at } else .{ .after = at };
-            try actions.append(a.arena, .{ .place = place, .op = .release, .value = ref, .data = release_data });
+            try actions.append(a.storage.scratch, .{ .place = place, .op = .release, .value = ref, .data = release_data });
         } else if (b == live.def) {
             // Defined and never used.
-            try actions.append(a.arena, .{ .place = placeAfterDef(a, ref), .op = .release, .value = ref, .data = release_data });
+            try actions.append(a.storage.scratch, .{ .place = placeAfterDef(a, ref), .op = .release, .value = ref, .data = release_data });
         }
     }
     // Deaths on edges: live at the end of `b`, but neither needed in a successor nor taken by its phi.
@@ -1674,7 +1694,7 @@ fn countOwned(a: *Analysis, ref: ir.Ref, actions: *std.ArrayList(Action)) Error!
             const taken = for (a.uses[ref.index()].items) |use| {
                 if (use.onEdge() and use.block == b and use.succ == succ) break true;
             } else false;
-            if (!taken) try actions.append(a.arena, .{ .place = .{ .edge = .{ .from = @intCast(b), .to = succ } }, .op = .release, .value = ref, .data = release_data });
+            if (!taken) try actions.append(a.storage.scratch, .{ .place = .{ .edge = .{ .from = @intCast(b), .to = succ } }, .op = .release, .value = ref, .data = release_data });
         }
     }
 }
@@ -1696,7 +1716,7 @@ fn countBorrowed(a: *Analysis, ref: ir.Ref, actions: *std.ArrayList(Action)) Err
                 .{ .edge = .{ .from = use.block, .to = use.succ } }
             else
                 .{ .before = a.f.blocks.items[use.block].insts.items[use.pos] };
-            try actions.append(a.arena, .{ .place = place, .op = .retain, .value = ref });
+            try actions.append(a.storage.scratch, .{ .place = place, .op = .retain, .value = ref });
         }
     }
 }
@@ -1713,8 +1733,8 @@ const Lists = std.AutoHashMapUnmanaged(u32, std.ArrayList(ir.Ref));
 /// so a value that a use both retains (to consume) and lets die is never freed first.
 fn apply(a: *Analysis, actions: []const Action, stats: *Stats) Error!void {
     const f = a.f;
-    const arena = a.arena;
-    const e: Editor = .{ .arena = arena, .f = f, .origin = a.marks.origin };
+    const arena = a.storage.scratch;
+    const e: Editor = .{ .arena = a.storage.results, .f = f, .origin = a.marks.origin };
     var before: Lists = .empty;
     var after: Lists = .empty;
     var top: Lists = .empty;
@@ -1729,7 +1749,7 @@ fn apply(a: *Analysis, actions: []const Action, stats: *Stats) Error!void {
                     .top => |b| origin.table.block(origin.function, b),
                     .edge => |edge| origin.table.block(origin.function, edge.from),
                 };
-                try origin.setInstruction(arena, counted, frame);
+                try origin.setInstruction(a.storage.results, counted, frame);
             }
             if (op == .retain) stats.retains += 1 else stats.releases += 1;
             const list = switch (action.place) {
@@ -1767,11 +1787,11 @@ fn apply(a: *Analysis, actions: []const Action, stats: *Stats) Error!void {
             const op = f.inst(ref).op;
             if (!phis_done and op != .phi) {
                 phis_done = true;
-                if (top.get(@intCast(b))) |list| try rebuilt.appendSlice(arena, list.items);
+                if (top.get(@intCast(b))) |list| try rebuilt.appendSlice(a.storage.results, list.items);
             }
-            if (before.get(@backingInt(ref))) |list| try rebuilt.appendSlice(arena, list.items);
-            try rebuilt.append(arena, ref);
-            if (after.get(@backingInt(ref))) |list| try rebuilt.appendSlice(arena, list.items);
+            if (before.get(@backingInt(ref))) |list| try rebuilt.appendSlice(a.storage.results, list.items);
+            try rebuilt.append(a.storage.results, ref);
+            if (after.get(@backingInt(ref))) |list| try rebuilt.appendSlice(a.storage.results, list.items);
         }
         block.insts = rebuilt;
     }
@@ -1788,9 +1808,13 @@ fn listFor(arena: std.mem.Allocator, map: *Lists, key: u32) Error!*std.ArrayList
 /// Drop `retain x … release x` in one block when only pure operations lie between
 /// them (nothing that consumes, frees or calls); returns how many pairs it dropped.
 pub fn elidePairs(arena: std.mem.Allocator, f: *ir.Function) Error!u32 {
+    return elidePairsWithScratch(arena, arena, f);
+}
+
+fn elidePairsWithScratch(arena: std.mem.Allocator, scratch: std.mem.Allocator, f: *ir.Function) Error!u32 {
     var dropped: u32 = 0;
     for (f.blocks.items) |*block| {
-        const keep = try arena.alloc(bool, block.insts.items.len);
+        const keep = try scratch.alloc(bool, block.insts.items.len);
         @memset(keep, true);
         for (block.insts.items, 0..) |ref, i| {
             const retain = f.inst(ref);

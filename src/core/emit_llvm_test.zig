@@ -68,9 +68,44 @@ fn noLocation(_: *const anyopaque, _: u32) emit_llvm.Location {
     return .{ .line = 1, .column = 1 };
 }
 
-fn emitHand(arena: std.mem.Allocator, module: *const ir.Module) emit_llvm.Error![]u8 {
+fn emitHand(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *const ir.Module) emit_llvm.Error![]u8 {
     const context: u8 = 0;
-    return emit_llvm.emitModule(arena, module, .{ .locator = .{ .context = &context, .locate = noLocation }, .source_path = "hand.my", .main = .{} });
+    return emit_llvm.emitModuleWithScratch(arena, backing, module, .{ .locator = .{ .context = &context, .locate = noLocation }, .source_path = "hand.my", .main = .{} });
+}
+
+fn repeatedText(a: std.mem.Allocator, backing: std.mem.Allocator, module: *const ir.Module) ![12][]const u8 {
+    var texts: [12][]const u8 = undefined;
+    for (&texts) |*text| text.* = try emitHand(a, backing, module);
+    return texts;
+}
+
+// spec-case: NEW-CORE-LLVM-1
+test "LLVM emission retains only final text in an arena caller across repeated emissions" {
+    var ir_arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer ir_arena.deinit();
+    const module = try handModule(ir_arena.allocator(), .fadd, .f64, &.{});
+    const expected = try emitHand(std.testing.allocator, std.testing.allocator, &module);
+    defer std.testing.allocator.free(expected);
+    // Exactly the output bytes fit; even one retained temporary or an arena
+    // backed by the caller would exhaust this allocator on the first render.
+    const storage = try std.testing.allocator.alloc(u8, expected.len * 12);
+    defer std.testing.allocator.free(storage);
+    var caller = std.heap.FixedBufferAllocator.init(storage);
+    const texts = try repeatedText(caller.allocator(), std.testing.allocator, &module);
+    // All emitter scratch arenas have already been destroyed, and later
+    // renders reused their pages. Earlier output must still be intact.
+    for (texts) |text| try std.testing.expectEqualStrings(expected, text);
+    try std.testing.expectEqual(storage.len, caller.end_index);
+}
+
+// spec-case: NEW-CORE-LLVM-1
+test "LLVM emission failure releases scratch without allocating caller storage" {
+    var ir_arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer ir_arena.deinit();
+    const module = try handModule(ir_arena.allocator(), .add, .f64, &.{});
+    var caller = std.heap.FixedBufferAllocator.init(&.{});
+    try std.testing.expectError(error.UnsupportedInstruction, emitHand(caller.allocator(), std.testing.allocator, &module));
+    try std.testing.expectEqual(@as(usize, 0), caller.end_index);
 }
 
 /// An unused unmanaged memory phi whose entry operand is undef.
@@ -105,7 +140,7 @@ test "unmanaged undef memory phis leave their undefined edge alone without copyi
     defer arena.deinit();
     const module = try unmanagedUndefPhi(arena.allocator());
     try support.verified(arena.allocator(), &module, &.{});
-    const text = try emitHand(arena.allocator(), &module);
+    const text = try emitHand(arena.allocator(), std.testing.allocator, &module);
     try std.testing.expect(std.mem.indexOf(u8, text, "@myl.zeros") == null);
     try std.testing.expect(std.mem.indexOf(u8, text, "ptr poison") == null);
     const entry = std.mem.indexOf(u8, text, "b0:\n") orelse return error.TestUnexpectedResult;
@@ -120,11 +155,11 @@ test "an instruction or entry signature the emitter cannot lower is an error, no
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const float_add = try handModule(arena.allocator(), .add, .f64, &.{});
-    try std.testing.expectError(error.UnsupportedInstruction, emitHand(arena.allocator(), &float_add));
+    try std.testing.expectError(error.UnsupportedInstruction, emitHand(arena.allocator(), std.testing.allocator, &float_add));
     const integer_main = try handModule(arena.allocator(), .fadd, .f64, &.{.i64});
-    try std.testing.expectError(error.UnsupportedEntry, emitHand(arena.allocator(), &integer_main));
+    try std.testing.expectError(error.UnsupportedEntry, emitHand(arena.allocator(), std.testing.allocator, &integer_main));
     const valid = try handModule(arena.allocator(), .fadd, .f64, &.{});
-    const text = try emitHand(arena.allocator(), &valid);
+    const text = try emitHand(arena.allocator(), std.testing.allocator, &valid);
     try std.testing.expect(std.mem.indexOf(u8, text, "fadd double 0x0000000000000000, 0x0000000000000000") != null);
 }
 

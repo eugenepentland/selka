@@ -45,13 +45,16 @@ pub const Catalog = struct {
         var seen: std.StringHashMapUnmanaged(void) = .empty;
         try self.references(a, body, &pending, &seen);
         var out: Out = .empty;
-        try out.appendSlice(a, body);
-        if (pending.items.len != 0) try out.appendSlice(a, self.prelude);
+        var names: Names = .{};
+        // Normalize while appending the closure. Do not build and retain a
+        // second complete module just to replace its descriptor symbols.
+        try normalize(a, &names, &out, body);
+        if (pending.items.len != 0) try normalize(a, &names, &out, self.prelude);
         var index: usize = 0;
         var number = false;
         while (index < pending.items.len) : (index += 1) {
             const definition = self.globals.get(pending.items[index]) orelse return error.UnsupportedInstruction;
-            try out.appendSlice(a, definition);
+            try normalize(a, &names, &out, definition);
             try out.append(a, '\n');
             // Source rendering of a float reaches the separately linked Zig formatter.
             // Its lowering declaration is not a source call, so carry it with this graph.
@@ -61,7 +64,7 @@ pub const Catalog = struct {
         }
         if (number and std.mem.indexOf(u8, body, "@myl_core_str_from_f64(") == null)
             try out.appendSlice(a, "declare ptr @myl_core_str_from_f64(double) nounwind\n");
-        return normalize(a, out.items);
+        return out.toOwnedSlice(a);
     }
 
     fn references(self: *const Catalog, a: std.mem.Allocator, text: []const u8, pending: *std.ArrayList([]const u8), seen: *std.StringHashMapUnmanaged(void)) Error!void {
@@ -127,7 +130,7 @@ const Names = struct {
     values: std.StringHashMapUnmanaged(u32) = .empty,
     renders: std.StringHashMapUnmanaged(u32) = .empty,
 
-    fn name(self: *Names, a: std.mem.Allocator, original: []const u8) Error![]const u8 {
+    fn write(self: *Names, a: std.mem.Allocator, out: *Out, original: []const u8) Error!void {
         const render = std.mem.startsWith(u8, original, render_prefix);
         const prefix = if (render) render_prefix else value_prefix;
         var suffix = original[prefix.len..];
@@ -143,21 +146,18 @@ const Names = struct {
         const table = if (render) &self.renders else &self.values;
         const entry = try table.getOrPut(a, id);
         if (!entry.found_existing) entry.value_ptr.* = @intCast(table.count() - 1);
-        return std.fmt.allocPrint(a, "{s}{s}{d}{s}", .{ prefix, part, entry.value_ptr.*, suffix[end..] });
+        try out.print(a, "{s}{s}{d}{s}", .{ prefix, part, entry.value_ptr.*, suffix[end..] });
     }
 };
 
-fn normalize(a: std.mem.Allocator, text: []const u8) Error![]u8 {
-    var names: Names = .{};
+fn normalize(a: std.mem.Allocator, names: *Names, out: *Out, text: []const u8) Error!void {
     var refs: Symbols = .{ .text = text };
-    var out: Out = .empty;
     var copied: usize = 0;
     while (refs.next()) |name| {
         if (!descriptor(name)) continue;
         try out.appendSlice(a, text[copied .. refs.start + 1]);
-        try out.appendSlice(a, try names.name(a, name));
+        try names.write(a, out, name);
         copied = refs.end;
     }
     try out.appendSlice(a, text[copied..]);
-    return out.toOwnedSlice(a);
 }

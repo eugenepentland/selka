@@ -51,17 +51,27 @@ pub const Counts = struct {
 
 /// The debug pipeline's only pass: ownership and counting, no facts.
 pub fn ownership(arena: std.mem.Allocator, module: *ir.Module) Error!own.Stats {
-    return own.run(arena, module, .{});
+    return ownershipWithScratch(arena, arena, module);
+}
+
+/// Run ownership with independently reclaimable analysis backing.
+pub fn ownershipWithScratch(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir.Module) Error!own.Stats {
+    return own.runWithScratch(arena, backing, module, .{});
 }
 
 /// Run debug ownership with the same per-function accounting as release.
 pub fn debug(arena: std.mem.Allocator, module: *ir.Module) Error!Result {
+    return debugWithScratch(arena, arena, module);
+}
+
+/// Debug ownership keeps IR/statistics on `arena` and reclaims work through `backing`.
+pub fn debugWithScratch(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir.Module) Error!Result {
     var result: Result = .{ .known = &.{}, .plans = &.{}, .per_function = try arena.alloc(FunctionStats, module.functions.items.len) };
     @memset(result.per_function, .{});
     const summaries = try effects.analyze(arena, module);
     for (module.functions.items, result.per_function, 0..) |*function, *local, index| {
         if (function.signature.linkage != .internal) continue;
-        local.own = try own.function(arena, module, function, .{ .function_index = @intCast(index), .effects = &summaries });
+        local.own = try own.functionWithScratch(arena, backing, module, function, .{ .function_index = @intCast(index), .effects = &summaries });
         result.own.add(local.own);
     }
     return result;
@@ -69,6 +79,11 @@ pub fn debug(arena: std.mem.Allocator, module: *ir.Module) Error!Result {
 
 /// Run the release passes over `module`.
 pub fn run(arena: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Result {
+    return runWithScratch(arena, arena, module, mode);
+}
+
+/// Keep final IR/facts on `arena`; use `backing` for independently reclaimable pass storage.
+pub fn runWithScratch(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Result {
     try @import("fuse_text.zig").whitespace(arena, module);
     _ = try @import("fuse_slice_key.zig").run(arena, module);
     var result: Result = .{
@@ -87,7 +102,7 @@ pub fn run(arena: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Resul
         for (module.functions.items, result.per_function, inlined, 0..) |*function, *local, expanded, index| {
             if (function.signature.linkage != .internal) continue;
             local.counts.inlined = expanded;
-            local.own = try own.function(arena, module, function, .{ .provenance = &result.provenance, .function_index = @intCast(index), .effects = &summaries });
+            local.own = try own.functionWithScratch(arena, backing, module, function, .{ .provenance = &result.provenance, .function_index = @intCast(index), .effects = &summaries });
             result.own.add(local.own);
         }
         return result;
@@ -105,9 +120,14 @@ pub fn run(arena: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Resul
     // intervals; `parameterRanges` turns them into the parameter intervals the real
     // pass starts from. It changes no function. It runs callees first, so each
     // function's return interval (NEW-CORE-F1-OVERFLOW-3) is known at its calls.
-    const first = try arena.alloc(?facts.Facts, module.functions.items.len);
+    var parameter_summary = try ParameterSummary.init(arena, module);
+    // Only compact call/return summaries survive the exploratory pass. These
+    // arenas have independent backing so resetting them really releases memory.
+    var temporary = std.heap.ArenaAllocator.init(backing);
+    defer temporary.deinit();
+    var scratch = std.heap.ArenaAllocator.init(backing);
+    defer scratch.deinit();
     const returns = try arena.alloc(?facts.Interval, module.functions.items.len);
-    @memset(first, null);
     @memset(returns, null);
     for (module.functions.items, 0..) |*function, index| {
         if (function.signature.linkage != .internal) continue;
@@ -115,13 +135,19 @@ pub fn run(arena: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Resul
         result.per_function[index].counts.unswitched = changed;
         result.counts.unswitched += changed;
     }
+    // Unanalysed callers still invalidate their callees' parameter intervals.
+    for (module.functions.items) |*function| {
+        if (function.signature.linkage != .internal) try parameter_summary.add(arena, module, function, null);
+    }
     for (try calleesFirst(arena, module)) |index| {
         const function = &module.functions.items[index];
-        const known = try facts.analyze(arena, function, .{ .fold = !verify, .sabotage = sabotage, .mark = false, .returns = returns });
-        first[index] = known;
+        const known = try facts.analyzeWithScratch(temporary.allocator(), scratch.allocator(), function, .{ .fold = !verify, .sabotage = sabotage, .mark = false, .returns = returns });
+        try parameter_summary.add(arena, module, function, known);
         returns[index] = facts.returnRange(&known, function, sabotage);
+        _ = temporary.reset(.retain_capacity);
+        _ = scratch.reset(.retain_capacity);
     }
-    const parameters = try parameterRanges(arena, module, first);
+    const parameters = parameter_summary.finish();
     // Closed caller bounds can prove an affine callback safe only after the
     // all-call parameter pass. Deliberately corrupted facts cannot prove safety.
     if (sabotage == .none) result.counts.inlined += try inline_leaves.withParametersCounted(arena, module, parameters, &result.provenance, inlined);
@@ -130,17 +156,22 @@ pub fn run(arena: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Resul
     for (module.functions.items, result.known, result.plans, parameters, 0..) |*function, *slot, *plan, params, index| {
         if (function.signature.linkage != .internal) continue;
         const options: facts.Options = .{ .fold = !verify, .sabotage = sabotage, .params = params, .returns = returns };
-        var known = try facts.analyze(arena, function, options);
+        var known = try facts.analyzeWithScratch(temporary.allocator(), scratch.allocator(), function, options);
+        _ = scratch.reset(.retain_capacity);
         if (!verify and @import("byte_index.zig").forward(module, function, &known) != 0) {
             // The existing fact and vector rules now see the original counted index.
-            known = try facts.analyze(arena, function, options);
+            _ = temporary.reset(.retain_capacity);
+            known = try facts.analyzeWithScratch(temporary.allocator(), scratch.allocator(), function, options);
+            _ = scratch.reset(.retain_capacity);
         }
         result.counts.proven += known.proven;
         result.per_function[index].counts.proven += known.proven;
         // A reduction proven only under a trip bound gets a guarded copy; the facts then run again.
         const guarded = try version.versionReductions(arena, function, known, result.provenance.context(@intCast(index)));
         if (guarded != 0) {
-            known = try facts.analyze(arena, function, options);
+            _ = temporary.reset(.retain_capacity);
+            known = try facts.analyzeWithScratch(temporary.allocator(), scratch.allocator(), function, options);
+            _ = scratch.reset(.retain_capacity);
             result.counts.proven += known.proven;
             result.per_function[index].counts.proven += known.proven;
         }
@@ -148,10 +179,12 @@ pub fn run(arena: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Resul
         result.per_function[index].counts.versioned = guarded;
         result.per_function[index].counts.inlined = inlined[index];
         // Ownership after the facts: the instructions and blocks it adds have none.
-        result.per_function[index].own = try own.function(arena, module, function, .{ .verify = verify, .facts = &known, .provenance = &result.provenance, .function_index = @intCast(index), .effects = &summaries });
+        result.per_function[index].own = try own.functionWithScratch(arena, backing, module, function, .{ .verify = verify, .facts = &known, .provenance = &result.provenance, .function_index = @intCast(index), .effects = &summaries });
         result.own.add(result.per_function[index].own);
-        try extend(arena, &known, function);
+        try extend(temporary.allocator(), &known, function);
+        known = try known.clone(arena);
         slot.* = known;
+        _ = temporary.reset(.retain_capacity);
         // Vector code comes only from trusted facts, never in a verify build.
         if (!verify) plan.* = try vector.plan(arena, function, known);
         result.per_function[index].counts.vectorized = @intCast(plan.len);
@@ -204,37 +237,58 @@ fn calleesFirst(arena: std.mem.Allocator, module: *const ir.Module) Error![]cons
 /// recursive call needs no fixed point. An argument with no interval makes its
 /// parameter unknown.
 pub fn parameterRanges(arena: std.mem.Allocator, module: *const ir.Module, first: []const ?facts.Facts) Error![]const []const ?facts.Interval {
-    const count = module.functions.items.len;
-    const out = try arena.alloc([]const ?facts.Interval, count);
-    @memset(out, &.{});
-    const usable = try arena.alloc(bool, count);
-    for (module.functions.items, usable) |function, *flag| flag.* = function.signature.linkage == .internal;
-    const merged = try arena.alloc(?[]?facts.Interval, count);
-    @memset(merged, null);
-    for (module.functions.items) |function| {
-        for (function.insts.items) |inst| {
-            if (inst.op == .func_ref and inst.data < count) usable[@intCast(inst.data)] = false;
+    var summary = try ParameterSummary.init(arena, module);
+    for (module.functions.items, first) |*caller, known| try summary.add(arena, module, caller, known);
+    return summary.finish();
+}
+
+/// Compact streaming form of `parameterRanges`: no caller Facts are retained.
+const ParameterSummary = struct {
+    out: [][]const ?facts.Interval,
+    usable: []bool,
+    merged: []?[]?facts.Interval,
+
+    fn init(arena: std.mem.Allocator, module: *const ir.Module) Error!ParameterSummary {
+        const count = module.functions.items.len;
+        const out = try arena.alloc([]const ?facts.Interval, count);
+        errdefer arena.free(out);
+        @memset(out, &.{});
+        const usable = try arena.alloc(bool, count);
+        errdefer arena.free(usable);
+        for (module.functions.items, usable) |function, *flag| flag.* = function.signature.linkage == .internal;
+        const merged = try arena.alloc(?[]?facts.Interval, count);
+        errdefer arena.free(merged);
+        @memset(merged, null);
+        for (module.functions.items) |function| {
+            for (function.insts.items) |inst| {
+                if (inst.op == .func_ref and inst.data < count) usable[@intCast(inst.data)] = false;
+            }
         }
+        return .{ .out = out, .usable = usable, .merged = merged };
     }
-    for (module.functions.items, first) |*caller, known| {
+
+    fn add(self: *ParameterSummary, arena: std.mem.Allocator, module: *const ir.Module, caller: *const ir.Function, known: ?facts.Facts) Error!void {
         for (caller.blocks.items, 0..) |block, b| {
             if (known) |facts_of| if (b >= facts_of.reachable.len or !facts_of.reachable[b]) continue;
             for (block.insts.items) |ref| {
                 const call = caller.inst(ref);
                 if (call.op != .call) continue;
                 const callee = call.a.index();
-                if (callee >= count or !usable[callee]) continue;
-                try mergeCall(arena, .{ .caller = caller, .known = known, .call = call }, &merged[callee], module.functions.items[callee].signature.params.len);
+                if (callee >= self.usable.len or !self.usable[callee]) continue;
+                try mergeCall(arena, .{ .caller = caller, .known = known, .call = call }, &self.merged[callee], module.functions.items[callee].signature.params.len);
             }
         }
     }
-    for (out, merged, usable) |*slot, ranges, flag| {
-        if (flag) if (ranges) |known| {
-            slot.* = known;
-        };
+
+    fn finish(self: *ParameterSummary) []const []const ?facts.Interval {
+        for (self.out, self.merged, self.usable) |*slot, ranges, flag| {
+            if (flag) if (ranges) |known| {
+                slot.* = known;
+            };
+        }
+        return self.out;
     }
-    return out;
-}
+};
 
 /// One call's contribution to its callee's parameter intervals.
 const CallSite = struct { caller: *const ir.Function, known: ?facts.Facts, call: ir.Inst };
@@ -281,4 +335,81 @@ fn grown(comptime T: type, arena: std.mem.Allocator, old: []T, len: usize, fill:
     @memcpy(out[0..old.len], old);
     @memset(out[old.len..], fill);
     return out;
+}
+
+// spec-case: NEW-CORE-FACTS-10
+test "streamed parameter hulls match collected facts after each caller is reclaimed" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var transient = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer transient.deinit();
+    for ([_]enum { direct, unknown, function_value, recursive }{ .direct, .unknown, .function_value, .recursive }) |scenario| {
+        var module: ir.Module = .{};
+        for ([_][]const u8{ "callee", "left", "right" }) |name| {
+            try module.functions.append(a, .{ .name = name, .signature = .{ .params = &.{.i64}, .ret = .i64 } });
+        }
+        const target = &module.functions.items[0];
+        try target.insts.appendSlice(a, &.{
+            .{ .op = .param, .ty = .i64, .data = 0 },
+            .{ .op = .call, .ty = .i64, .a = @fromBackingInt(0), .data = (ir.ExtraSlice{ .start = 0, .len = 1 }).pack() },
+        });
+        try target.extra.append(a, @fromBackingInt(0));
+        try target.blocks.append(a, .{});
+        if (scenario == .recursive) try target.blocks.items[0].insts.append(a, @fromBackingInt(1));
+        const left = &module.functions.items[1];
+        try left.insts.appendSlice(a, &.{
+            .{ .op = .iconst, .ty = .i64, .data = @bitCast(@as(i64, -4)) },
+            .{ .op = .call, .ty = .i64, .a = @fromBackingInt(0), .data = (ir.ExtraSlice{ .start = 0, .len = 1 }).pack() },
+            .{ .op = .iconst, .ty = .i64, .data = 999 },
+            .{ .op = .call, .ty = .i64, .a = @fromBackingInt(0), .data = (ir.ExtraSlice{ .start = 1, .len = 1 }).pack() },
+        });
+        try left.extra.appendSlice(a, &.{ @fromBackingInt(0), @fromBackingInt(2) });
+        try left.blocks.appendSlice(a, &.{ .{}, .{} });
+        try left.blocks.items[0].insts.append(a, @fromBackingInt(1));
+        try left.blocks.items[1].insts.append(a, @fromBackingInt(3));
+        const right = &module.functions.items[2];
+        try right.insts.appendSlice(a, &.{
+            .{ .op = .iconst, .ty = .i64, .data = 12 },
+            .{ .op = .call, .ty = .i64, .a = @fromBackingInt(0), .data = (ir.ExtraSlice{ .start = 0, .len = 1 }).pack() },
+        });
+        try right.extra.append(a, @fromBackingInt(0));
+        try right.blocks.append(a, .{});
+        try right.blocks.items[0].insts.append(a, @fromBackingInt(1));
+        if (scenario == .function_value) try right.insts.append(a, .{ .op = .func_ref, .ty = .i64, .data = 0 });
+        const first = try a.alloc(?facts.Facts, 3);
+        for (module.functions.items, first, 0..) |function, *slot, index| {
+            const ranges = try a.alloc(?facts.Interval, function.insts.items.len);
+            @memset(ranges, null);
+            if (index == 0) ranges[0] = .{ .lo = 0, .hi = 5 };
+            const reachable = try a.alloc(bool, function.blocks.items.len);
+            @memset(reachable, true);
+            if (index == 1) reachable[1] = false;
+            slot.* = if (scenario == .unknown and index == 2) null else .{
+                .ranges = ranges,
+                .reachable = reachable,
+                .floats = &.{},
+                .aggregates = .{ .lists = &.{}, .dicts = &.{}, .fields = &.{} },
+            };
+        }
+        const collected = try parameterRanges(a, &module, first);
+        var streamed = try ParameterSummary.init(a, &module);
+        for ([_]usize{ 2, 0, 1 }) |index| {
+            const known = if (first[index]) |value| try value.clone(transient.allocator()) else null;
+            try streamed.add(a, &module, &module.functions.items[index], known);
+            _ = transient.reset(.retain_capacity);
+            @memset(try transient.allocator().alloc(u8, 1024 * 1024), 0xa5);
+            _ = transient.reset(.retain_capacity);
+        }
+        const actual = streamed.finish();
+        for (collected, actual) |before, after| {
+            try std.testing.expectEqual(before.len, after.len);
+            for (before, after) |x, y| try std.testing.expect(std.meta.eql(x, y));
+        }
+        switch (scenario) {
+            .direct, .recursive => try std.testing.expect(std.meta.eql(actual[0][0], facts.Interval{ .lo = -4, .hi = 12 })),
+            .unknown => try std.testing.expectEqual(@as(?facts.Interval, null), actual[0][0]),
+            .function_value => try std.testing.expectEqual(@as(usize, 0), actual[0].len),
+        }
+    }
 }

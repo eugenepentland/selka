@@ -5,6 +5,7 @@ const llvm = @import("emit_llvm.zig");
 const values = @import("emit_values.zig");
 const constants = @import("emit_constants.zig");
 const number_runtime = @import("number_runtime.zig");
+const effects = @import("effects.zig");
 
 /// Native input suffix shared by the driver and ordered test-program identity.
 pub const native_extension = ".ll";
@@ -33,16 +34,47 @@ const Group = struct {
 
 /// A release build's single unit: the whole program, so LLVM optimizes across every
 /// module boundary. Like any unit it is keyed by its exact text.
+/// The returned slice, names, paths and LLVM text belong to `a`.
+/// Scratch uses `a`; arena callers retain its backing pages.
 pub fn whole(a: std.mem.Allocator, module: *const ir.Module, options: llvm.Options) llvm.Error![]Unit {
-    const text = try llvm.emitModule(a, module, options);
+    return wholeWithScratch(a, a, module, options);
+}
+
+/// Emit one whole-program unit, releasing temporary storage to `backing`.
+pub fn wholeWithScratch(a: std.mem.Allocator, backing: std.mem.Allocator, module: *const ir.Module, options: llvm.Options) llvm.Error![]Unit {
+    const text = try llvm.emitModuleWithScratch(a, backing, module, options);
+    errdefer a.free(text);
     const units = try a.alloc(Unit, 1);
-    units[0] = unit("program", options.source_path, .program, text);
+    errdefer a.free(units);
+    const name = try a.dupe(u8, "program");
+    errdefer a.free(name);
+    const path = try a.dupe(u8, options.source_path);
+    units[0] = unit(name, path, .program, text);
     return units;
 }
 
 /// Partition the frozen IR, then emit each unit with only its reached constants.
 /// Debug builds use this: an edit recompiles only the units whose text changed.
-pub fn emit(a: std.mem.Allocator, module: *const ir.Module, options: llvm.Options) llvm.Error![]Unit {
+/// The returned slice, names, paths and LLVM text belong to `allocator`.
+/// Scratch uses `allocator`; arena callers retain its backing pages.
+pub fn emit(allocator: std.mem.Allocator, module: *const ir.Module, options: llvm.Options) llvm.Error![]Unit {
+    return emitWithScratch(allocator, allocator, module, options);
+}
+
+/// Emit independent units, releasing partition and unit scratch to `backing`.
+pub fn emitWithScratch(allocator: std.mem.Allocator, backing: std.mem.Allocator, module: *const ir.Module, given: llvm.Options) llvm.Error![]Unit {
+    // The partition, descriptor catalog and canonical symbol table are needed
+    // only while emitting. Their explicit backing can return pages independently
+    // of the caller's build arena, which retains just each finished unit.
+    var scratch = std.heap.ArenaAllocator.init(backing);
+    defer scratch.deinit();
+    const a = scratch.allocator();
+    var options = given;
+    if (options.analysis.effects == null) {
+        const summaries = try a.create(effects.Summaries);
+        summaries.* = try effects.analyze(a, module);
+        options.analysis.effects = summaries;
+    }
     var groups: std.ArrayList(Group) = .empty;
     const owner = try a.alloc(?u32, module.functions.items.len);
     const exported = try a.alloc(bool, owner.len);
@@ -87,52 +119,68 @@ pub fn emit(a: std.mem.Allocator, module: *const ir.Module, options: llvm.Option
         const index = group.functions.items[0];
         if (!values.generated(&module.functions.items[index])) continue;
         symbols[index] = "myl.helper.self";
-        const seed = try llvm.emitUnit(a, module, options, .{
+        const seed = try llvm.emitUnitWithScratch(backing, backing, module, options, .{
             .functions = group.functions.items,
             .exported = exported,
             .symbols = symbols,
             .source_path = group.path,
             .constants = &catalog,
         });
+        defer backing.free(seed);
         symbols[index] = try std.fmt.allocPrint(a, "myl.helper.{s}", .{try digest(a, seed)});
     }
     var units: std.ArrayList(Unit) = .empty;
+    errdefer for (units.items) |emitted| {
+        allocator.free(emitted.name);
+        allocator.free(emitted.source_path);
+        allocator.free(emitted.llvm);
+    };
     var names: std.StringHashMapUnmanaged(usize) = .empty;
     defer names.deinit(a);
     for (groups.items) |group| {
-        const text = try llvm.emitUnit(a, module, options, .{
+        const text = try llvm.emitUnitWithScratch(allocator, backing, module, options, .{
             .functions = group.functions.items,
             .exported = exported,
             .symbols = symbols,
             .source_path = group.path,
             .constants = &catalog,
         });
+        errdefer allocator.free(text);
         const name = if (group.kind == .module) try std.fmt.allocPrint(a, "module-{s}", .{try digest(a, group.path)}) else try std.fmt.allocPrint(a, "{s}-{s}", .{ @tagName(group.kind), try digest(a, text) });
-        try append(a, &units, &names, unit(name, group.path, group.kind, text));
+        try append(allocator, a, &units, &names, unit(name, group.path, group.kind, text));
     }
-    const entry = try llvm.emitUnit(a, module, options, .{
-        .functions = &.{},
-        .exported = exported,
-        .symbols = symbols,
-        .entry = true,
-        .source_path = options.source_path,
-        .constants = &catalog,
-    });
-    try units.append(a, unit("entry", options.source_path, .entry, entry));
-    return units.toOwnedSlice(a);
+    {
+        const entry = try llvm.emitUnitWithScratch(allocator, backing, module, options, .{
+            .functions = &.{},
+            .exported = exported,
+            .symbols = symbols,
+            .entry = true,
+            .source_path = options.source_path,
+            .constants = &catalog,
+        });
+        errdefer allocator.free(entry);
+        try append(allocator, a, &units, &names, unit("entry", options.source_path, .entry, entry));
+    }
+    return allocator.dupe(Unit, units.items);
 }
 
-fn append(a: std.mem.Allocator, units: *std.ArrayList(Unit), names: *std.StringHashMapUnmanaged(usize), next: Unit) llvm.Error!void {
-    const entry = try names.getOrPut(a, next.name);
+fn append(allocator: std.mem.Allocator, scratch: std.mem.Allocator, units: *std.ArrayList(Unit), names: *std.StringHashMapUnmanaged(usize), next: Unit) llvm.Error!void {
+    const entry = try names.getOrPut(scratch, next.name);
     if (entry.found_existing) {
         const previous = units.items[entry.value_ptr.*];
         // Equal closed adapters may arise from separate nominal source types.
         // Their callers already share the canonical symbol; emit its body once.
         if (previous.kind != next.kind or !std.mem.eql(u8, previous.llvm, next.llvm)) return error.UnsupportedInstruction;
+        allocator.free(next.llvm);
         return;
     }
+    var owned = next;
+    owned.name = try allocator.dupe(u8, next.name);
+    errdefer allocator.free(owned.name);
+    owned.source_path = try allocator.dupe(u8, next.source_path);
+    errdefer allocator.free(owned.source_path);
     entry.value_ptr.* = units.items.len;
-    try units.append(a, next);
+    try units.append(scratch, owned);
 }
 
 fn moduleGroup(groups: []const Group, path: []const u8) ?u32 {

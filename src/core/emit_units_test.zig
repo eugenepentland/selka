@@ -7,12 +7,104 @@ const passes = @import("passes.zig");
 const emitter = @import("emit_llvm.zig");
 const units = @import("emit_units.zig");
 const driver = @import("driver.zig");
+const ir = @import("ir.zig");
+const constants = @import("emit_constants.zig");
+const support = @import("test_support.zig");
 const report = std.debug.print;
 
 const app = "import leaf\nimport other\n\nfunc main(out: Stream) -> int:\n    out.print(leaf.compute(7), other.compute(3))\n    return 0\n";
 const leaf = "\npublic func compute(x: int) -> int:\n    mut total = 0\n    for i in range(x):\n        total += i\n    return total\n";
 const other = "\npublic func compute(x: int) -> int:\n    return x + 1\n";
 const Mode = enum { debug, release, verify };
+
+fn releaseUnits(a: std.mem.Allocator, emitted: []units.Unit) void {
+    for (emitted) |unit| {
+        a.free(unit.name);
+        a.free(unit.source_path);
+        a.free(unit.llvm);
+    }
+    a.free(emitted);
+}
+
+fn fixedLocation(_: *const anyopaque, _: u32) emitter.Location {
+    return .{ .path = "lifetime.my", .line = 1, .column = 1 };
+}
+
+fn unitLifetimeModule(a: std.mem.Allocator) !ir.Module {
+    var module: ir.Module = .{};
+    for (0..32) |index| {
+        var hand = try support.Hand.init(a, &module, try std.fmt.allocPrint(a, "function[{d}]", .{index}), .{ .params = &.{}, .ret = .i64 });
+        _ = try hand.emit(.{ .op = .ret, .ty = .void, .a = try hand.int(.i64, @intCast(index)) });
+        _ = try hand.finish();
+    }
+    return module;
+}
+
+fn unitArtifactBytes(emitted: []const units.Unit) usize {
+    var bytes: usize = 0;
+    for (emitted) |unit| bytes += unit.name.len + unit.source_path.len + unit.llvm.len;
+    return std.mem.alignForward(usize, bytes, @alignOf(units.Unit)) + @sizeOf(units.Unit) * emitted.len;
+}
+
+// spec-case: NEW-CORE-S4-UNITS-1
+test "S4 unit emission releases partition and catalog scratch and retains independent output" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const module = try unitLifetimeModule(arena.allocator());
+    const context: u8 = 0;
+    const options: emitter.Options = .{ .locator = .{ .context = &context, .locate = fixedLocation }, .source_path = "lifetime.my", .main = .{} };
+    const first = try units.emitWithScratch(std.testing.allocator, std.testing.allocator, &module, options);
+    defer releaseUnits(std.testing.allocator, first);
+    // An arena caller can hold exactly two sets of finished artifacts. No
+    // partition, descriptor catalog, seed text or growing output list fits.
+    const storage = try std.testing.allocator.alignedAlloc(u8, .of(units.Unit), unitArtifactBytes(first) * 2);
+    defer std.testing.allocator.free(storage);
+    var caller = std.heap.FixedBufferAllocator.init(storage);
+    const repeated = try units.emitWithScratch(caller.allocator(), std.testing.allocator, &module, options);
+    _ = try units.emitWithScratch(caller.allocator(), std.testing.allocator, &module, options);
+    try std.testing.expectEqual(storage.len, caller.end_index);
+    try std.testing.expectEqual(@as(usize, 33), first.len);
+    try std.testing.expectEqual(first.len, repeated.len);
+    for (first, repeated) |left, right| {
+        try std.testing.expectEqualStrings(left.name, right.name);
+        try std.testing.expectEqualStrings("lifetime.my", left.source_path);
+        try std.testing.expectEqualStrings(left.llvm, right.llvm);
+    }
+    const whole = try units.wholeWithScratch(std.testing.allocator, std.testing.allocator, &module, options);
+    defer releaseUnits(std.testing.allocator, whole);
+    try std.testing.expectEqual(@as(usize, 1), whole.len);
+    try std.testing.expectEqualStrings("program", whole[0].name);
+    try std.testing.expectEqualStrings("lifetime.my", whole[0].source_path);
+}
+
+// spec-case: NEW-CORE-S4-UNITS-1
+test "S4 descriptor closure normalizes each appended fragment with exact first-use IDs" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var catalog: constants.Catalog = .{ .prelude = "%myl.value = type { ptr }\n" };
+    const definitions = [_][]const u8{
+        "@myl.render.91 = private constant ptr @myl.render.children.91",
+        "@myl.value.42 = private constant ptr @myl.value.name.42.0",
+        "@myl.render.children.91 = private constant ptr @myl.render.92",
+        "@myl.value.name.42.0 = private constant [15 x i8] c\"@myl.value.999\\00\"",
+        "@myl.render.92 = private constant ptr @myl.value.42",
+    };
+    for (definitions) |definition| {
+        var symbols: constants.Symbols = .{ .text = definition };
+        try catalog.globals.put(a, symbols.next().?, definition);
+    }
+    const body = "@r = private constant ptr @myl.render.91\n@v = private constant ptr @myl.value.42\n";
+    const expected =
+        "@r = private constant ptr @myl.render.0\n@v = private constant ptr @myl.value.0\n" ++
+        "%myl.value = type { ptr }\n" ++
+        "@myl.render.0 = private constant ptr @myl.render.children.0\n" ++
+        "@myl.value.0 = private constant ptr @myl.value.name.0.0\n" ++
+        "@myl.render.children.0 = private constant ptr @myl.render.1\n" ++
+        "@myl.value.name.0.0 = private constant [15 x i8] c\"@myl.value.999\\00\"\n" ++
+        "@myl.render.1 = private constant ptr @myl.value.0\n";
+    try std.testing.expectEqualStrings(expected, try catalog.finish(a, body));
+}
 
 fn locate(context: *const anyopaque, offset: u32) emitter.Location {
     const src: *const language.source.Source = @ptrCast(@alignCast(context));

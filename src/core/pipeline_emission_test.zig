@@ -8,7 +8,7 @@ const driver = @import("driver.zig");
 const app = "import leaf\nfunc main() -> int:\n    mut xs = [1]\n    return leaf.origin(mut xs, 2)\n";
 const leaf = "public func origin(mut xs: int[], x: int) -> int:\n    xs.append(2)\n    return xs[x]\n";
 
-fn snapshot(a: std.mem.Allocator, mode: @import("build_mode.zig").Mode, whole: bool) !pipeline.Emission {
+fn snapshot(a: std.mem.Allocator, scratch: std.mem.Allocator, mode: @import("build_mode.zig").Mode, whole: bool) !pipeline.Emission {
     var dir = std.testing.tmpDir(.{});
     defer dir.cleanup();
     try dir.dir.writeFile(std.testing.io, .{ .sub_path = "app.my", .data = app });
@@ -20,7 +20,7 @@ fn snapshot(a: std.mem.Allocator, mode: @import("build_mode.zig").Mode, whole: b
     const checked = try session.check(a, "app", &report);
     var refusal: build.Refusal = .{};
     var module = try build.buildModuleSource(a, checked.program, checked.src, &refusal);
-    const emitted = try pipeline.emitted(a, &module, .{ .src = checked.src, .source_path = "app.my", .main = .{} }, .{
+    const emitted = try pipeline.emittedWithScratch(a, scratch, &module, .{ .src = checked.src, .source_path = "app.my", .main = .{} }, .{
         .zig = "unused",
         .mode = mode,
         .show = .{ .llvm = if (whole) "unused" else null, .stats = true },
@@ -36,8 +36,8 @@ test "pipeline emitted optional whole output preserves every native unit and clo
     defer arena.deinit();
     const a = arena.allocator();
     inline for (.{ .debug, .optimized_debug, .release }) |mode| {
-        const split = try snapshot(a, mode, false);
-        const both = try snapshot(a, mode, true);
+        const split = try snapshot(a, std.testing.allocator, mode, false);
+        const both = try snapshot(a, std.testing.allocator, mode, true);
         try std.testing.expect(split.whole == null);
         try std.testing.expectEqual(split.units.len, both.units.len);
         if (mode == .optimized_debug) try std.testing.expect(split.units.len > 1);
@@ -75,7 +75,7 @@ test "pipeline emitted split and whole native traps preserve exact consuming cal
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const a = arena.allocator();
-    const emission = try snapshot(a, .release, true);
+    const emission = try snapshot(a, std.testing.allocator, .release, true);
     const split = try native(a, emission, true, .release);
     const whole = try native(a, emission, false, .release);
     try std.testing.expectEqual(@as(u8, 1), split.term.exited);
@@ -85,7 +85,7 @@ test "pipeline emitted split and whole native traps preserve exact consuming cal
     try std.testing.expectEqualStrings(split.stderr, whole.stderr);
     try std.testing.expect(std.mem.indexOf(u8, split.stderr, "in leaf::origin at leaf.my:3:12") != null);
     try std.testing.expect(std.mem.indexOf(u8, split.stderr, "in app::main at app.my:4:12") != null);
-    const development = try native(a, try snapshot(a, .optimized_debug, false), true, .optimized_debug);
+    const development = try native(a, try snapshot(a, std.testing.allocator, .optimized_debug, false), true, .optimized_debug);
     try std.testing.expectEqual(@as(u8, 1), development.term.exited);
     try std.testing.expectEqualStrings(whole.stdout, development.stdout);
     try std.testing.expectEqualStrings(whole.stderr, development.stderr);

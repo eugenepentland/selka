@@ -27,6 +27,7 @@ comptime {
     _ = @import("build_replay.zig");
     _ = @import("driver_cache_test.zig");
     _ = @import("facts_test.zig");
+    _ = @import("passes.zig");
     _ = @import("vector_test.zig");
     _ = @import("e2e_test.zig");
     _ = @import("values_test.zig");
