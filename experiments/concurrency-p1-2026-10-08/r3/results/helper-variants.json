@@ -1,0 +1,22 @@
+{
+  "B1": {
+    "compiler": "/home/epentland/.cache/mylang/conc-r3-B1-7421/bin/mylang",
+    "sha256": "865c798c0a7e7e337cdcc95bf5a80d48442d3f3e9f37b9d211e46684db25b8cc",
+    "json_read_value_bytes": {
+      "4": 8061,
+      "5": 8061,
+      "6": 8061
+    },
+    "five_cell_geomean": 1.0237964124671461
+  },
+  "C1": {
+    "compiler": "/home/epentland/.cache/mylang/conc-r3-C1-7421/bin/mylang",
+    "sha256": "3ca45f1f8b926346648f6077c3d3d45e955fe70fb24ac8a4276265f515cac5ee",
+    "json_read_value_bytes": {
+      "4": 8472,
+      "5": 8472,
+      "6": 8472
+    },
+    "five_cell_geomean": 1.0130775680389679
+  }
+}

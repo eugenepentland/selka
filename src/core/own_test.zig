@@ -330,6 +330,8 @@ test "a verify build asserts each statically unique update and still runs clean"
 /// iterative free of a list-of-lists chain a million blocks deep.
 const runtime_harness =
     \\#include "core_rt.c"
+    \\/* Native-only harness: no emitted LLVM unit supplies the task bridge. */
+    \\myl_block *myl_core_task_call(void *run, myl_block *env) { return ((myl_block *(*)(myl_block *))run)(env); }
     \\const myl_core_site myl_core_sites[1];
     \\const char myl_core_source_path[] = "harness";
     \\int main(void) {
@@ -377,7 +379,10 @@ test "the runtime frees a list-of-lists chain a million deep without recursion, 
     try environment.put("ZIG_LOCAL_CACHE_DIR", try std.fs.path.join(a, &.{ root, "zig-local" }));
     const built = try std.process.run(a, std.testing.io, .{ .argv = &.{ zig, "cc", "-O0", "-std=c11", "-o", output, source }, .environ_map = &environment });
     try std.testing.expectEqualStrings("", built.stderr);
+    try std.testing.expect(built.term == .exited and built.term.exited == 0);
     const ran = try std.process.run(a, std.testing.io, .{ .argv = &.{output} });
+    try std.testing.expect(ran.term == .exited and ran.term.exited == 0);
+    try std.testing.expectEqualStrings("", ran.stderr);
     // Head, a million links, the immortal block and the copy were live; only the immortal block stays.
     try std.testing.expectEqualStrings("1000003 1 1\n", ran.stdout);
 }
@@ -387,6 +392,8 @@ test "the runtime frees a list-of-lists chain a million deep without recursion, 
 /// list grows in place by `realloc`, and the live count stays exact throughout.
 const allocator_harness =
     \\#include "core_rt.c"
+    \\/* Native-only harness: no emitted LLVM unit supplies the task bridge. */
+    \\myl_block *myl_core_task_call(void *run, myl_block *env) { return ((myl_block *(*)(myl_block *))run)(env); }
     \\const myl_core_site myl_core_sites[1];
     \\const char myl_core_source_path[] = "harness";
     \\int main(void) {
@@ -421,7 +428,10 @@ fn runHarness(a: std.mem.Allocator, source_text: []const u8) ![]const u8 {
     try environment.put("ZIG_LOCAL_CACHE_DIR", try std.fs.path.join(a, &.{ root, "zig-local" }));
     const built = try std.process.run(a, std.testing.io, .{ .argv = &.{ zig, "cc", "-O0", "-std=c11", "-o", output, source }, .environ_map = &environment });
     try std.testing.expectEqualStrings("", built.stderr);
+    try std.testing.expect(built.term == .exited and built.term.exited == 0);
     const ran = try std.process.run(a, std.testing.io, .{ .argv = &.{output} });
+    try std.testing.expect(ran.term == .exited and ran.term.exited == 0);
+    try std.testing.expectEqualStrings("", ran.stderr);
     return ran.stdout;
 }
 

@@ -1,0 +1,8 @@
+{
+  "source": "c6606353b067b43636a78a27d77da8dac3fd7a4c",
+  "toolchain": "0.17.0-dev.1683+5ceec001b",
+  "object_compile_exit": 0,
+  "ast_wrapper_exit": 1,
+  "static_declarations": 103,
+  "count_access_lines": 19
+}

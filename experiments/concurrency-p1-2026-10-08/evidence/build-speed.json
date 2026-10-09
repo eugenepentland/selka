@@ -1,0 +1,17 @@
+{
+  "rows": {
+    "base": {
+      "files": 46,
+      "first_to_last_completed_seconds": 230.26461386680603,
+      "admission_wait_sum_seconds": 0,
+      "max_admission_wait_seconds": 0
+    },
+    "p1": {
+      "files": 46,
+      "first_to_last_completed_seconds": 250.51695036888123,
+      "admission_wait_sum_seconds": 91,
+      "max_admission_wait_seconds": 20
+    }
+  },
+  "investigation": "The row sweep comprises 46 separate release guest builds at two workers, each through the shared wrapper (5 s admission settling). Admission waits, not one long compiler invocation, account for much of sweep wall time. The diagnostic sweep keeps that safety limit, reuses the on-disk runtime/global caches, and does not rebuild the base or unordered arms. Qualification exclusive install also waited 159.224 s for another lane, outside its measured 0.86 s build."
+}

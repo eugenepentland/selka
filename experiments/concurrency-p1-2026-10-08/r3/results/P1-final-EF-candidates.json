@@ -1,0 +1,114 @@
+{
+  "source": "98cb3a49fff3ba4ad438cb9087f86aa517a32760",
+  "candidates": {
+    "E": {
+      "source_directory": "/home/epentland/ai/canopy/mylang-concurrency-p1/.tmp/p1-final-E-src",
+      "changes": {
+        "src/core/runtime/core_rt.c": {
+          "before_sha256": "6755a1a0a91b54d6491b4ebd317f03d89d7493bc6ddbab546c38c54da6e5ff2f",
+          "after_sha256": "d24f31bff905f0a6a0b3ffd0edf59f528425ca9e0e3219645dcf26a6786b3067"
+        },
+        "src/core/count_runtime.zig": {
+          "before_sha256": "ab2b4172c017b84e16e0719cfef6ec6737af0479b4a9211b3f07d02082090423",
+          "after_sha256": "b50b0796a3534277751bf541d8a6c68913125751d392620ecc5ee370dfc79e5c"
+        }
+      },
+      "identical_other_source_files": 576,
+      "steps": [
+        {
+          "name": "E-focused",
+          "status": 0,
+          "seconds": 54.125302689149976,
+          "log": "r3/logs/P1-final-E-focused.log"
+        },
+        {
+          "name": "E-compiler",
+          "status": 0,
+          "seconds": 198.67442954913713,
+          "log": "r3/logs/P1-final-E-compiler.log"
+        },
+        {
+          "name": "E-rows-build",
+          "status": 0,
+          "seconds": 16.39748021797277,
+          "log": "r3/logs/P1-final-E-rows-build.log"
+        },
+        {
+          "name": "E-eda-build",
+          "status": 0,
+          "seconds": 30.035866285907105,
+          "log": "r3/logs/P1-final-E-eda-build.log"
+        },
+        {
+          "name": "E-lox-build",
+          "status": 0,
+          "seconds": 6.147368384059519,
+          "log": "r3/logs/P1-final-E-lox-build.log"
+        },
+        {
+          "name": "E-parity-build",
+          "status": 0,
+          "seconds": 7.435454362072051,
+          "log": "r3/logs/P1-final-E-parity-build.log"
+        }
+      ],
+      "compiler": "/home/epentland/.cache/mylang/conc-p1-final-E-98cb3a49f/bin/mylang",
+      "sha256": "5f5e21fe454bed62af6cef2ba6457e2a949520e4088c3007b6301ad5b83571b2"
+    },
+    "F": {
+      "source_directory": "/home/epentland/ai/canopy/mylang-concurrency-p1/.tmp/p1-final-F-src",
+      "changes": {
+        "src/core/runtime/core_rt.c": {
+          "before_sha256": "6755a1a0a91b54d6491b4ebd317f03d89d7493bc6ddbab546c38c54da6e5ff2f",
+          "after_sha256": "7eee1f2e76591324f082dfcf303f0f30af0fca5603cd51ef0dba85a07b30a8c1"
+        },
+        "src/core/count_runtime.zig": {
+          "before_sha256": "ab2b4172c017b84e16e0719cfef6ec6737af0479b4a9211b3f07d02082090423",
+          "after_sha256": "b50b0796a3534277751bf541d8a6c68913125751d392620ecc5ee370dfc79e5c"
+        }
+      },
+      "identical_other_source_files": 576,
+      "steps": [
+        {
+          "name": "F-focused",
+          "status": 0,
+          "seconds": 55.04734238400124,
+          "log": "r3/logs/P1-final-F-focused.log"
+        },
+        {
+          "name": "F-compiler",
+          "status": 0,
+          "seconds": 198.83095716917887,
+          "log": "r3/logs/P1-final-F-compiler.log"
+        },
+        {
+          "name": "F-rows-build",
+          "status": 0,
+          "seconds": 16.621348364045843,
+          "log": "r3/logs/P1-final-F-rows-build.log"
+        },
+        {
+          "name": "F-eda-build",
+          "status": 0,
+          "seconds": 30.360459793824703,
+          "log": "r3/logs/P1-final-F-eda-build.log"
+        },
+        {
+          "name": "F-lox-build",
+          "status": 0,
+          "seconds": 6.116159737110138,
+          "log": "r3/logs/P1-final-F-lox-build.log"
+        },
+        {
+          "name": "F-parity-build",
+          "status": 0,
+          "seconds": 7.493008090881631,
+          "log": "r3/logs/P1-final-F-parity-build.log"
+        }
+      ],
+      "compiler": "/home/epentland/.cache/mylang/conc-p1-final-F-98cb3a49f/bin/mylang",
+      "sha256": "667be905ef253dfb69d55038f5ef4c24decd08b3b02b5f8627e880e22469299d"
+    }
+  },
+  "complete": true
+}

@@ -1,0 +1,21 @@
+{
+  "source": "c26c95de73529132755e2bb39d98c6e5aa2e5d94",
+  "common_binary_and_output_namespace": "P1-proxy-common",
+  "comparisons": [
+    {
+      "binary_source_tag": "P1-proxy-base-35df",
+      "snapshot_tag": "P1-proxy-identical-base",
+      "status": 0,
+      "seconds": 11.356160754105076,
+      "log": "r3/logs/P1-proxy-identical-base-count-run.log"
+    },
+    {
+      "binary_source_tag": "P1-final-03",
+      "snapshot_tag": "P1-proxy-identical-p1",
+      "status": 0,
+      "seconds": 36.946152853081,
+      "log": "r3/logs/P1-proxy-identical-p1-count-run.log"
+    }
+  ],
+  "complete": true
+}

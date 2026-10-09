@@ -1,0 +1,26 @@
+[
+  {
+    "original": "r3/results/helper-tax-lox.json",
+    "current": "r3/results/helper-tax-lox.json.gz",
+    "original_sha256": "808a236ea0c52fee35c67ed8435f19d32e1ee2895efe248dde2fc6bbb26b8c15",
+    "compressed_sha256": "d0d65a6cf56f3c0cb442e27755c170301b0d64a9c72db2c057293e4692c74879"
+  },
+  {
+    "original": "evidence/json-read-value-base.asm",
+    "current": "evidence/json-read-value-base.asm.gz",
+    "original_sha256": "8e32e094fad773c09eb998e1dc375b2cad48e47a09806e9f9025c06345554135",
+    "compressed_sha256": "bcf186950d5e6eeaeeb31aeefe411fadbe971aecc852d316784ad87747c09e02"
+  },
+  {
+    "original": "evidence/json-read-value-p1.asm",
+    "current": "evidence/json-read-value-p1.asm.gz",
+    "original_sha256": "0b53bd9d417f3cee0ca70ba1386fe88d241bd65e3e94e3d87ebb80160f098950",
+    "compressed_sha256": "4c58a3759606dda5eb5b19509c8579e7ff3966f32145d6f067ddf8af3971d67d"
+  },
+  {
+    "original": "evidence/json-read-value-plain.asm",
+    "current": "evidence/json-read-value-plain.asm.gz",
+    "original_sha256": "c0345b580abe6b94e3cd2e294445aa4f939d17f8fe62d0ab3ba3035a43a71216",
+    "compressed_sha256": "265b5748ec0ba7d511c6392c60d0e9f42e5d0026c377566ddacefd01b59c9dd1"
+  }
+]

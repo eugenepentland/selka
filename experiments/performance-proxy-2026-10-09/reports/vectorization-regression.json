@@ -1,0 +1,146 @@
+{
+  "base": "vectorized",
+  "base_id": "15e10fd8d4b1710eb10ce3baa11cc6fc6e73e09fccccdd028aa13c7e49ceeb4a",
+  "candidate": "scalar",
+  "candidate_id": "16b6463f7403e4a8bac72b39b22f9207443908ded91ea7b0e5929704551a427a",
+  "change_id": "6ad048c85982b91987b2909e70523be0647fe9949537444875320e17dbaa36da",
+  "code": {
+    "available": true,
+    "functions": {
+      "main": {
+        "base": {
+          "bytes": 296
+        },
+        "candidate": {
+          "bytes": 200
+        }
+      },
+      "sum": {
+        "base": {
+          "bytes": 116
+        },
+        "candidate": {
+          "bytes": 31
+        }
+      }
+    },
+    "scope": "static bytes and instruction sites, not executions",
+    "sections": {
+      ".debug_abbrev": {
+        "base": 415,
+        "candidate": 390
+      },
+      ".debug_info": {
+        "base": 597,
+        "candidate": 625
+      },
+      ".debug_line": {
+        "base": 377,
+        "candidate": 365
+      },
+      ".debug_loclists": {
+        "base": 114,
+        "candidate": 259
+      },
+      ".debug_rnglists": {
+        "base": 67,
+        "candidate": 50
+      },
+      ".debug_str": {
+        "base": 335,
+        "candidate": 355
+      },
+      ".rodata": {
+        "base": 32,
+        "candidate": 10
+      },
+      ".text": {
+        "base": 692,
+        "candidate": 479
+      }
+    }
+  },
+  "collector": {
+    "cpu": 0,
+    "event": "cpu_core/instructions/u",
+    "kind": "perf",
+    "scope": "user instructions; process and inherited children; whole workload",
+    "tool": {
+      "path": "/usr/bin/perf",
+      "sha256": "1371ae5cb9fa59632d1d0e34b877d7251df4029810ba67dc56e946545e87b531",
+      "version": "perf version 7.0.14"
+    }
+  },
+  "context_id": "cae062ce6547ef90a72bb4fb16398cf41c97a65163111cc548f290e8aafefe90",
+  "library_changes": {},
+  "max_spread": 0.005,
+  "meaning": "100 \u00d7 candidate instructions per completed unit / baseline; not a time ratio",
+  "min_change": 0.001,
+  "mode": "backend",
+  "runtime_prediction": {
+    "status": "uncalibrated"
+  },
+  "source_roots": {
+    "base": "/home/epentland/ai/canopy/mylang-performance-proxy/.mylang-cache/juice-qualification-release/vector",
+    "candidate": "/home/epentland/ai/canopy/mylang-performance-proxy/.mylang-cache/juice-qualification-release/vector"
+  },
+  "static_cost": {
+    "status": "unavailable or incompatible"
+  },
+  "suite_juice": 212.03376672159106,
+  "suite_meaning": "weighted geometric mean of selected scenarios; not whole-job runtime",
+  "version": "juice-comparison-v1",
+  "workloads": {
+    "vector": {
+      "assessment": "more-work",
+      "coverage": "measured scenario only; whole-job representativeness unverified",
+      "direction": "more-work",
+      "envelope_meaning": "observed min/max repeat range, not a statistical confidence interval",
+      "family": "vector",
+      "functions": [],
+      "instruction_ratio": 2.1203376672159107,
+      "juice": 212.03376672159106,
+      "lines": [],
+      "metrics": {
+        "instructions": {
+          "base": {
+            "max": 1315143,
+            "median": 1315141,
+            "min": 1315141,
+            "samples": [
+              1315141,
+              1315141,
+              1315143
+            ],
+            "spread": 1.5207494861767674e-06
+          },
+          "candidate": {
+            "max": 2788543,
+            "median": 2788543,
+            "min": 2788541,
+            "samples": [
+              2788543,
+              2788541,
+              2788543
+            ],
+            "spread": 7.172204265811931e-07
+          }
+        }
+      },
+      "ratio_envelope": [
+        2.120332921971223,
+        2.1203376672159107
+      ],
+      "repeatable": true,
+      "risks": [],
+      "scope": "complete scenario",
+      "semantic": {
+        "status": "unavailable"
+      },
+      "tier": "quick",
+      "unit": "record",
+      "units": 524288,
+      "weight": 1
+    }
+  }
+}

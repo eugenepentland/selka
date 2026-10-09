@@ -1,0 +1,53 @@
+{
+  "source": "c26c95de73529132755e2bb39d98c6e5aa2e5d94",
+  "tag": "P1-final-03",
+  "compiler": "/home/epentland/.cache/mylang/conc-p1-final03-c26c95de7/bin/mylang",
+  "steps": [
+    {
+      "name": "releasefast-install",
+      "status": 0,
+      "seconds": 307.15494130318984,
+      "log": "r3/logs/P1-final-03-releasefast-install.log"
+    },
+    {
+      "name": "count-build",
+      "status": 0,
+      "seconds": 88.01019014697522,
+      "log": "r3/logs/P1-final-03-count-build.log"
+    },
+    {
+      "name": "count-run",
+      "status": 0,
+      "seconds": 32.67369434912689,
+      "log": "r3/logs/P1-final-03-count-run.log"
+    },
+    {
+      "name": "lox-conformance",
+      "status": 0,
+      "seconds": 7.98531742207706,
+      "log": "r3/logs/P1-final-03-lox-conformance.log"
+    },
+    {
+      "name": "lox-port-tests",
+      "status": 0,
+      "seconds": 7.684704345883802,
+      "log": "r3/logs/P1-final-03-lox-port-tests.log"
+    },
+    {
+      "name": "eda-tests",
+      "status": 0,
+      "seconds": 10.494743085931987,
+      "log": "r3/logs/P1-final-03-eda-tests.log"
+    },
+    {
+      "name": "corpus-correctness",
+      "status": 0,
+      "seconds": 71.36488670203835,
+      "log": "r3/logs/P1-final-03-corpus-correctness.log"
+    }
+  ],
+  "complete": true,
+  "compiler_sha256": "923d9cb1388188e4ea88e2183cee256f05f8f493a33b83147bc75074952b49d8",
+  "source_identity": "final-selected-source-equivalence.json",
+  "counted_plain_cells": 132
+}

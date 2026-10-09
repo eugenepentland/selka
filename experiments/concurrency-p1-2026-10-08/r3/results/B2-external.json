@@ -1,0 +1,27 @@
+[
+  {
+    "name": "count-build",
+    "status": 0,
+    "seconds": 247.52101882593706
+  },
+  {
+    "name": "count-run",
+    "status": 0,
+    "seconds": 12.053524700226262
+  },
+  {
+    "name": "lox-conformance",
+    "status": 0,
+    "seconds": 7.6536446451209486
+  },
+  {
+    "name": "lox-port-tests",
+    "status": 0,
+    "seconds": 692.4444644360337
+  },
+  {
+    "name": "eda-tests",
+    "status": 0,
+    "seconds": 4.862020754022524
+  }
+]

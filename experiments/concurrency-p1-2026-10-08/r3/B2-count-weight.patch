@@ -1,0 +1,28 @@
+--- a/src/core/emit_llvm.zig
++++ b/src/core/emit_llvm.zig
+@@ -202,7 +202,7 @@
+ /// A count is never 0 while its block is reachable: `[1, 0)`, i.e. 1 through saturated.
+ const count_range = "!range !8";
+ /// The first `!range` node number free for fact intervals.
+-const first_range_node = 10;
++const first_range_node = 11;
+ /// The TBAA scaffold and the count range, as numbered above.
+ const tbaa_metadata =
+     \\!1 = !{!"myl.tbaa"}
+@@ -215,6 +215,7 @@
+     \\!8 = !{i32 1, i32 0}
+     \\!9 = !{!"branch_weights", i32 1, i32 2000}
+     \\!10 = !{!"branch_weights", i32 2000, i32 1}
++    \\!11 = !{!"branch_weights", i32 32, i32 1}
+     \\
+ ;
+ /// `  %x = load i64, ptr %at` of one data word (a union's tag word or payload word).
+@@ -3214,7 +3215,7 @@
+         const done = try self.fresh(self.label);
+         const next = try self.fresh("%rn");
+         try out.print(self.a(), count_load_line, .{ count, block });
+-        try out.print(self.a(), "  {s} = icmp ult i32 {s}, {d}\n  br i1 {s}, label %{s}, label %{s}, !prof !10\n{s}:\n", .{ plain, count, @as(u32, if (mode == .retain) 0x7ffffffe else 0x80000000), plain, update, slow, update });
++        try out.print(self.a(), "  {s} = icmp ult i32 {s}, {d}\n  br i1 {s}, label %{s}, label %{s}, !prof !11\n{s}:\n", .{ plain, count, @as(u32, if (mode == .retain) 0x7ffffffe else 0x80000000), plain, update, slow, update });
+         if (mode == .retain) {
+             try out.print(self.a(), "  {s} = add nuw i32 {s}, 1\n  store i32 {s}, ptr {s}, align 8, " ++ tbaa_count ++ "\n  br label %{s}\n", .{ next, count, next, block, done });
+         } else {

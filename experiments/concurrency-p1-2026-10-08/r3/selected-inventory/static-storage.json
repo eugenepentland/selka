@@ -1,0 +1,1026 @@
+[
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 41,
+    "name": "core_pool_started",
+    "function": "",
+    "type": "_Atomic(bool)",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 42,
+    "name": "core_fatal_winner",
+    "function": "",
+    "type": "_Atomic(uint32_t)",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 43,
+    "name": "core_fatal_owner",
+    "function": "",
+    "type": "bool",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 43,
+    "name": "core_fatal_raw",
+    "function": "",
+    "type": "bool",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 44,
+    "name": "core_stream_mutex",
+    "function": "",
+    "type": "pthread_mutex_t",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 46,
+    "name": "core_running_task",
+    "function": "",
+    "type": "core_task_context",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 193,
+    "name": "core_trap_marks_all",
+    "function": "",
+    "type": "bool",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 203,
+    "name": "heap_ceiling",
+    "function": "",
+    "type": "uint64_t",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 204,
+    "name": "heap_held",
+    "function": "",
+    "type": "_Atomic(uint64_t)",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 230,
+    "name": "live_blocks",
+    "function": "",
+    "type": "_Atomic(int64_t)",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 262,
+    "name": "myl_core_free_lists",
+    "function": "",
+    "type": "void *[33]",
+    "storage": "global"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 264,
+    "name": "chunk_next",
+    "function": "",
+    "type": "unsigned char *",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 264,
+    "name": "chunk_end",
+    "function": "",
+    "type": "unsigned char *",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 265,
+    "name": "core_text_walked",
+    "function": "",
+    "type": "uint64_t",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 278,
+    "name": "core_thread_records",
+    "function": "",
+    "type": "core_thread_record *",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 279,
+    "name": "core_thread_mutex",
+    "function": "",
+    "type": "pthread_mutex_t",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 280,
+    "name": "core_thread_key_once",
+    "function": "",
+    "type": "pthread_once_t",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 281,
+    "name": "core_thread_key",
+    "function": "",
+    "type": "pthread_key_t",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 282,
+    "name": "core_thread_registered",
+    "function": "",
+    "type": "core_thread_record *",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 456,
+    "name": "streams",
+    "function": "",
+    "type": "myl_stream[2]",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 468,
+    "name": "core_staging",
+    "function": "",
+    "type": "core_stage[2]",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 528,
+    "name": "text",
+    "function": "output_refused",
+    "type": "const char[74]",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 564,
+    "name": "ceiling",
+    "function": "out_of_memory",
+    "type": "const char[82]",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 565,
+    "name": "message",
+    "function": "out_of_memory",
+    "type": "const char[22]",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 567,
+    "name": "record",
+    "function": "out_of_memory",
+    "type": "const char[66]",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 810,
+    "name": "error_trace",
+    "function": "",
+    "type": "struct (unnamed at src/core/runtime/core_rt.c:806:16)",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 839,
+    "name": "layout_blocks",
+    "function": "",
+    "type": "const int32_t[5]",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 847,
+    "name": "refused",
+    "function": "myl_core_args",
+    "type": "const char[43]",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 922,
+    "name": "dwarf",
+    "function": "",
+    "type": "struct (unnamed at src/core/runtime/core_rt.c:918:8)",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 924,
+    "name": "__ehdr_start",
+    "function": "",
+    "type": "const char[]",
+    "storage": "extern"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 1168,
+    "name": "trap_capture",
+    "function": "",
+    "type": "char *",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 1169,
+    "name": "trap_capture_size",
+    "function": "",
+    "type": "size_t",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 1171,
+    "name": "trap_lines_left",
+    "function": "",
+    "type": "int",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 1430,
+    "name": "core_io_site",
+    "function": "",
+    "type": "const myl_core_site *",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 1481,
+    "name": "wanted",
+    "function": "print_result_requested",
+    "type": "const char[15]",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 1696,
+    "name": "codes",
+    "function": "myl_core_assert_fail",
+    "type": "const char *const[4]",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 1698,
+    "name": "described",
+    "function": "myl_core_assert_fail",
+    "type": "const char *const[4]",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_unicode_data.h",
+    "line": 7,
+    "name": "core_nonprintable",
+    "function": "",
+    "type": "const uint32_t[738][2]",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_text.c",
+    "line": 232,
+    "name": "core_ascii",
+    "function": "",
+    "type": "struct (unnamed at src/core/runtime/core_text.c:232:8)[128]",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_text.c",
+    "line": 233,
+    "name": "core_ascii_ready",
+    "function": "",
+    "type": "bool",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_text.c",
+    "line": 490,
+    "name": "core_text_list_layout",
+    "function": "",
+    "type": "const int32_t[5]",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_text.c",
+    "line": 1059,
+    "name": "hex",
+    "function": "core_repr_escape",
+    "type": "const unsigned char[17]",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_sort.c",
+    "line": 384,
+    "name": "widths",
+    "function": "s2_key_shape_decode",
+    "type": "const unsigned char[4]",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_number.c",
+    "line": 55,
+    "name": "core_number_pairs",
+    "function": "",
+    "type": "const char[201]",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_number.c",
+    "line": 62,
+    "name": "core_number_powers",
+    "function": "",
+    "type": "const uint64_t[20]",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_io.c",
+    "line": 5,
+    "name": "core_io_mutex",
+    "function": "",
+    "type": "pthread_mutex_t",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_io.c",
+    "line": 6,
+    "name": "core_io_depth",
+    "function": "",
+    "type": "unsigned int",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_io.c",
+    "line": 135,
+    "name": "core_io_native",
+    "function": "",
+    "type": "CoreIoNativeProviders",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_io.c",
+    "line": 136,
+    "name": "core_io_embedding",
+    "function": "",
+    "type": "int",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_io.c",
+    "line": 992,
+    "name": "core_io_cap_layout",
+    "function": "",
+    "type": "const int32_t[9]",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_io.c",
+    "line": 993,
+    "name": "core_io_resource_layout",
+    "function": "",
+    "type": "const int32_t[5]",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_io.c",
+    "line": 994,
+    "name": "core_io_result_pointer_layout",
+    "function": "",
+    "type": "const int32_t[7]",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_io.c",
+    "line": 995,
+    "name": "core_io_result_scalar_layout",
+    "function": "",
+    "type": "const int32_t[5]",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_io.c",
+    "line": 996,
+    "name": "core_io_list_layout",
+    "function": "",
+    "type": "const int32_t[5]",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_io.c",
+    "line": 999,
+    "name": "core_io_provider_layout",
+    "function": "",
+    "type": "const int32_t[5]",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_io.c",
+    "line": 1001,
+    "name": "core_io_tail",
+    "function": "",
+    "type": "CoreIoResource *",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_io.c",
+    "line": 1002,
+    "name": "core_io_open_count",
+    "function": "",
+    "type": "int64_t",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_io.c",
+    "line": 1002,
+    "name": "core_io_family_open",
+    "function": "",
+    "type": "unsigned int[2]",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_io.c",
+    "line": 1003,
+    "name": "core_io_real",
+    "function": "",
+    "type": "CoreIoScoped",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_io.c",
+    "line": 1004,
+    "name": "core_io_initialized",
+    "function": "",
+    "type": "int",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_io.c",
+    "line": 1004,
+    "name": "core_io_restricted",
+    "function": "",
+    "type": "int",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_io.c",
+    "line": 1004,
+    "name": "core_io_clock",
+    "function": "",
+    "type": "int",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_io.c",
+    "line": 1004,
+    "name": "core_io_entropy",
+    "function": "",
+    "type": "int",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_io.c",
+    "line": 1004,
+    "name": "core_io_environment",
+    "function": "",
+    "type": "int",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_io.c",
+    "line": 1004,
+    "name": "core_io_host",
+    "function": "",
+    "type": "int",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_io.c",
+    "line": 1005,
+    "name": "core_io_options",
+    "function": "",
+    "type": "char *",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_io.c",
+    "line": 1006,
+    "name": "core_io_names",
+    "function": "",
+    "type": "const char *",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_io.c",
+    "line": 1007,
+    "name": "core_io_enumerated_names",
+    "function": "",
+    "type": "const char *",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_io.c",
+    "line": 1008,
+    "name": "core_io_seed",
+    "function": "",
+    "type": "uint64_t",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_io.c",
+    "line": 1030,
+    "name": "core_io_scratch_head",
+    "function": "",
+    "type": "CoreIoScratch *",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_io.c",
+    "line": 1066,
+    "name": "core_io_grants",
+    "function": "",
+    "type": "CoreIoGrant[8]",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_io.c",
+    "line": 1066,
+    "name": "core_io_grant_count",
+    "function": "",
+    "type": "size_t",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_io.c",
+    "line": 1067,
+    "name": "core_io_option_argument",
+    "function": "",
+    "type": "const char *",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_io.c",
+    "line": 1172,
+    "name": "verbs",
+    "function": "core_io_file_error",
+    "type": "const char *[9]",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_io.c",
+    "line": 1182,
+    "name": "letters",
+    "function": "myl_core_file_access",
+    "type": "const unsigned char[9]",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_io.c",
+    "line": 1228,
+    "name": "environ",
+    "function": "myl_core_environment_names",
+    "type": "char **",
+    "storage": "extern"
+  },
+  {
+    "file": "src/core/runtime/core_io.c",
+    "line": 1247,
+    "name": "core_io_raw_layout",
+    "function": "",
+    "type": "const int32_t[5]",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_host.c",
+    "line": 6,
+    "name": "core_host_scratch_head",
+    "function": "",
+    "type": "CoreHostScratch *",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_host.c",
+    "line": 29,
+    "name": "core_host_types",
+    "function": "",
+    "type": "const CoreHostType *",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_host.c",
+    "line": 30,
+    "name": "core_host_declarations",
+    "function": "",
+    "type": "const CoreHostDeclaration *",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_host.c",
+    "line": 360,
+    "name": "core_host_cache",
+    "function": "",
+    "type": "CoreHostCache *",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_host.c",
+    "line": 387,
+    "name": "core_host_calls",
+    "function": "",
+    "type": "uint64_t",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_host.c",
+    "line": 387,
+    "name": "core_host_work",
+    "function": "",
+    "type": "uint64_t",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_host.c",
+    "line": 387,
+    "name": "core_host_budget_initialized",
+    "function": "",
+    "type": "int",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_host.c",
+    "line": 387,
+    "name": "core_host_invoking",
+    "function": "",
+    "type": "int",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_bytes.c",
+    "line": 80,
+    "name": "digits",
+    "function": "myl_core_bytes_hex",
+    "type": "const unsigned char[17]",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_test.c",
+    "line": 13,
+    "name": "core_test_input",
+    "function": "",
+    "type": "FILE *",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_test.c",
+    "line": 13,
+    "name": "core_test_output",
+    "function": "",
+    "type": "FILE *",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_test.c",
+    "line": 13,
+    "name": "core_test_values",
+    "function": "",
+    "type": "FILE *",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_test.c",
+    "line": 14,
+    "name": "core_test_path",
+    "function": "",
+    "type": "char *",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_test.c",
+    "line": 15,
+    "name": "core_test_trials",
+    "function": "",
+    "type": "uint64_t",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_test.c",
+    "line": 16,
+    "name": "core_test_steps",
+    "function": "",
+    "type": "uint64_t",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_test.c",
+    "line": 17,
+    "name": "core_test_bounded",
+    "function": "",
+    "type": "bool",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_test.c",
+    "line": 18,
+    "name": "core_test_batch_parent",
+    "function": "",
+    "type": "bool",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_test.c",
+    "line": 38,
+    "name": "core_test_frame_limit",
+    "function": "",
+    "type": "uint64_t",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_test.c",
+    "line": 38,
+    "name": "core_test_depth",
+    "function": "",
+    "type": "uint64_t",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_test.c",
+    "line": 59,
+    "name": "message",
+    "function": "core_run_timed_out",
+    "type": "const char[73]",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_test.c",
+    "line": 71,
+    "name": "refused",
+    "function": "core_run_arm",
+    "type": "const char[51]",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_test.c",
+    "line": 79,
+    "name": "installed",
+    "function": "myl_core_run_controls",
+    "type": "bool",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_test.c",
+    "line": 175,
+    "name": "core_stack_top",
+    "function": "",
+    "type": "uintptr_t",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_test.c",
+    "line": 176,
+    "name": "core_stack_bytes",
+    "function": "",
+    "type": "size_t",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_test.c",
+    "line": 250,
+    "name": "core_floor_ready",
+    "function": "",
+    "type": "bool",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_test.c",
+    "line": 298,
+    "name": "core_test_body",
+    "function": "",
+    "type": "void (*)(void)",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_test.c",
+    "line": 420,
+    "name": "marker",
+    "function": "core_test_trapped",
+    "type": "const unsigned char[14]",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_test.c",
+    "line": 444,
+    "name": "core_test_table",
+    "function": "",
+    "type": "void (**)(void)",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_test.c",
+    "line": 445,
+    "name": "core_test_rows",
+    "function": "",
+    "type": "uint64_t",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_test.c",
+    "line": 445,
+    "name": "core_test_capacity",
+    "function": "",
+    "type": "uint64_t",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_tasks.c",
+    "line": 40,
+    "name": "core_tasks",
+    "function": "",
+    "type": "struct (unnamed at src/core/runtime/core_tasks.c:35:8)",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_tasks.c",
+    "line": 41,
+    "name": "core_worker",
+    "function": "",
+    "type": "core_task_worker *",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_tasks.c",
+    "line": 42,
+    "name": "core_task_layout",
+    "function": "",
+    "type": "const int32_t[5]",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_tasks.c",
+    "line": 43,
+    "name": "core_group_layout",
+    "function": "",
+    "type": "const int32_t[5]",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_tasks.c",
+    "line": 161,
+    "name": "configured",
+    "function": "myl_core_threads",
+    "type": "uint32_t",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_count.c",
+    "line": 34,
+    "name": "__start_myl_count_fns",
+    "function": "",
+    "type": "myl_count_fn[]",
+    "storage": "extern"
+  },
+  {
+    "file": "src/core/runtime/core_count.c",
+    "line": 35,
+    "name": "__stop_myl_count_fns",
+    "function": "",
+    "type": "myl_count_fn[]",
+    "storage": "extern"
+  },
+  {
+    "file": "src/core/runtime/core_count.c",
+    "line": 36,
+    "name": "__start_myl_count_sites",
+    "function": "",
+    "type": "myl_count_site[]",
+    "storage": "extern"
+  },
+  {
+    "file": "src/core/runtime/core_count.c",
+    "line": 37,
+    "name": "__stop_myl_count_sites",
+    "function": "",
+    "type": "myl_count_site[]",
+    "storage": "extern"
+  },
+  {
+    "file": "src/core/runtime/core_count.c",
+    "line": 40,
+    "name": "myl_count_current",
+    "function": "",
+    "type": "myl_count_fn *",
+    "storage": "global"
+  },
+  {
+    "file": "src/core/runtime/core_count.c",
+    "line": 42,
+    "name": "myl_count_copy_site",
+    "function": "",
+    "type": "myl_count_site *",
+    "storage": "global"
+  },
+  {
+    "file": "src/core/runtime/core_count.c",
+    "line": 44,
+    "name": "myl_count_push_site",
+    "function": "",
+    "type": "myl_count_site *",
+    "storage": "global"
+  },
+  {
+    "file": "src/core/runtime/core_count.c",
+    "line": 46,
+    "name": "myl_count_outside",
+    "function": "",
+    "type": "myl_count_fn",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_count.c",
+    "line": 47,
+    "name": "myl_count_live",
+    "function": "",
+    "type": "_Atomic(uint64_t)",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_count.c",
+    "line": 47,
+    "name": "myl_count_peak",
+    "function": "",
+    "type": "_Atomic(uint64_t)",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_count.c",
+    "line": 48,
+    "name": "myl_count_written",
+    "function": "",
+    "type": "bool",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_count.c",
+    "line": 58,
+    "name": "myl_count_mutex",
+    "function": "",
+    "type": "pthread_mutex_t",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_count.c",
+    "line": 59,
+    "name": "myl_count_threads",
+    "function": "",
+    "type": "myl_count_thread *",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_count.c",
+    "line": 60,
+    "name": "myl_count_local",
+    "function": "",
+    "type": "myl_count_thread *",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_count.c",
+    "line": 107,
+    "name": "myl_count_kinds",
+    "function": "",
+    "type": "const char *const[17]",
+    "storage": "static"
+  },
+  {
+    "file": "src/core/runtime/core_count.c",
+    "line": 115,
+    "name": "myl_count_slot_names",
+    "function": "",
+    "type": "const char *const[42]",
+    "storage": "static"
+  }
+]

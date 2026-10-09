@@ -1,0 +1,199 @@
+{
+  "base": "reference-improved",
+  "base_id": "504b6775ccd137449106943414bd78f016e17d8b7ea3633976db8a7b565897f9",
+  "candidate": "reference-repeat",
+  "candidate_id": "0d3373b18658f8a9a2b6ae5d09973890e05a08c871939e732c72bd2908ae18d3",
+  "change_id": "d2e75ccbf6eef92dbb1015efc8e63ea1096b39cc0d8962dec5600da30b732963",
+  "code": {
+    "available": true,
+    "functions": {},
+    "scope": "static bytes and instruction sites, not executions",
+    "sections": {}
+  },
+  "collector": {
+    "cpu": 0,
+    "engines": {
+      "callgrind-amd64-linux": "f7eb0d5742a3df65f807f0a52b9623b8263f4747a536121d3cfe70736ae29f66",
+      "callgrind-x86-linux": "7dc573796c1e7b64e5ade946b10fa680aa2e88c138d67dd16b7c485e4fbf01f4"
+    },
+    "event": "Ir",
+    "kind": "callgrind",
+    "scope": "user instructions; process and inherited children; whole workload",
+    "tool": {
+      "path": "/home/epentland/.cache/juice-deps/usr/bin/valgrind",
+      "sha256": "4652774bd116cb49951ef74115ad4237cad5021b2bd4d80002f09d986ec438b9",
+      "version": "valgrind-3.26.0"
+    }
+  },
+  "context_id": "ecac734791fe937b5e3049b49db49f71fc6b68db4d73f280f792310e67291a2c",
+  "library_changes": {},
+  "max_spread": 0.005,
+  "meaning": "100 \u00d7 candidate instructions per completed unit / baseline; not a time ratio",
+  "min_change": 0.001,
+  "mode": "combined",
+  "runtime_prediction": {
+    "status": "uncalibrated"
+  },
+  "source_roots": {
+    "base": "/home/epentland/ai/canopy/mylang-performance-proxy/.mylang-cache/juice-qualification-release/native",
+    "candidate": "/home/epentland/ai/canopy/mylang-performance-proxy/.mylang-cache/juice-qualification-release/native"
+  },
+  "static_cost": {
+    "status": "unavailable or incompatible"
+  },
+  "suite_juice": 100.0,
+  "suite_meaning": "weighted geometric mean of selected scenarios; not whole-job runtime",
+  "version": "juice-comparison-v1",
+  "workloads": {
+    "bits-quick": {
+      "assessment": "unchanged",
+      "coverage": "measured scenario only; whole-job representativeness unverified",
+      "direction": "unchanged",
+      "envelope_meaning": "observed min/max repeat range, not a statistical confidence interval",
+      "family": "bit-counting",
+      "functions": [],
+      "instruction_ratio": 1.0,
+      "juice": 100.0,
+      "lines": [],
+      "metrics": {
+        "atomics": {
+          "base": {
+            "max": 17,
+            "median": 17,
+            "min": 17,
+            "samples": [
+              17,
+              17,
+              17
+            ],
+            "spread": 0.0
+          },
+          "candidate": {
+            "max": 17,
+            "median": 17,
+            "min": 17,
+            "samples": [
+              17,
+              17,
+              17
+            ],
+            "spread": 0.0
+          }
+        },
+        "instructions": {
+          "base": {
+            "max": 9090816,
+            "median": 9090816,
+            "min": 9090816,
+            "samples": [
+              9090816,
+              9090816,
+              9090816
+            ],
+            "spread": 0.0
+          },
+          "candidate": {
+            "max": 9090816,
+            "median": 9090816,
+            "min": 9090816,
+            "samples": [
+              9090816,
+              9090816,
+              9090816
+            ],
+            "spread": 0.0
+          }
+        }
+      },
+      "ratio_envelope": [
+        1.0,
+        1.0
+      ],
+      "repeatable": true,
+      "risks": [],
+      "scope": "complete scenario",
+      "semantic": {
+        "status": "unavailable"
+      },
+      "tier": "quick",
+      "unit": "record",
+      "units": 262144,
+      "weight": 1
+    },
+    "bits-validation": {
+      "assessment": "unchanged",
+      "coverage": "measured scenario only; whole-job representativeness unverified",
+      "direction": "unchanged",
+      "envelope_meaning": "observed min/max repeat range, not a statistical confidence interval",
+      "family": "bit-counting",
+      "functions": [],
+      "instruction_ratio": 1.0,
+      "juice": 100.0,
+      "lines": [],
+      "metrics": {
+        "atomics": {
+          "base": {
+            "max": 17,
+            "median": 17,
+            "min": 17,
+            "samples": [
+              17,
+              17,
+              17
+            ],
+            "spread": 0.0
+          },
+          "candidate": {
+            "max": 17,
+            "median": 17,
+            "min": 17,
+            "samples": [
+              17,
+              17,
+              17
+            ],
+            "spread": 0.0
+          }
+        },
+        "instructions": {
+          "base": {
+            "max": 18004115,
+            "median": 18004115,
+            "min": 18004115,
+            "samples": [
+              18004115,
+              18004115,
+              18004115
+            ],
+            "spread": 0.0
+          },
+          "candidate": {
+            "max": 18004115,
+            "median": 18004115,
+            "min": 18004115,
+            "samples": [
+              18004115,
+              18004115,
+              18004115
+            ],
+            "spread": 0.0
+          }
+        }
+      },
+      "ratio_envelope": [
+        1.0,
+        1.0
+      ],
+      "repeatable": true,
+      "risks": [],
+      "scope": "complete scenario",
+      "semantic": {
+        "status": "unavailable"
+      },
+      "tier": "validation",
+      "unit": "record",
+      "units": 524288,
+      "weight": 1
+    }
+  }
+}

@@ -1,0 +1,50 @@
+[
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 115,
+    "function": "count_load",
+    "source": "return __atomic_load_n(&block->count, __ATOMIC_RELAXED);"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 126,
+    "function": "count_saturate_plain",
+    "source": "block->count = MYL_SATURATED;"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 139,
+    "function": "myl_core_retain_slow",
+    "source": "if (__atomic_compare_exchange_n(&block->count, &count, count + 1, true,"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 152,
+    "function": "count_release_shared",
+    "source": "if (__atomic_compare_exchange_n(&block->count, &count, count - 1, true,"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 161,
+    "function": "count_retain",
+    "source": "if (count < MYL_PLAIN_MAX) block->count = count + 1;"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 171,
+    "function": "count_release",
+    "source": "block->count = count - 1;"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 352,
+    "function": "block_alloc",
+    "source": "block->count = 1;"
+  },
+  {
+    "file": "src/core/runtime/core_rt.c",
+    "line": 744,
+    "function": "core_share_child",
+    "source": "child->count = count | MYL_SHARED;"
+  }
+]

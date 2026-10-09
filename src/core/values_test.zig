@@ -270,7 +270,7 @@ test "retain, release and is_unique count inline, saturate, and reach blocks ins
     const module = try countsProgram(arena.allocator());
     const run = try support.runModule(arena.allocator(), &module, false);
     try std.testing.expectEqualStrings(counts_output, run.stdout);
-    try std.testing.expect(contains(run.llvm, " = load i32, ptr %v2, align 8, !tbaa !3, !range !8"));
+    try std.testing.expect(contains(run.llvm, " = load atomic i32, ptr %v2 unordered, align 8, !tbaa !3, !range !8"));
     try std.testing.expect(contains(run.llvm, "icmp eq i32 %rc"));
     try std.testing.expect(contains(run.llvm, "add nuw i32"));
     try std.testing.expect(contains(run.llvm, "call void @myl_core_free(ptr "));

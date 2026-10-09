@@ -67,6 +67,7 @@ const everyday_help =
     \\  mylang build FILE.my -o OUT       native executable, a debug build one unit per module
     \\  mylang build FILE.my -o OUT --release   optimized whole-program LLVM build, for shipping or timing
     \\  mylang test FILE.my|DIR           run the public test_* functions
+    \\  mylang juice --help                      runtime work measurements and comparisons
     \\  mylang cost ENTRY.my [FUNCTION] [--json]   per-function checks, updates and allocation sites
     \\  mylang fmt FILE.my [--check]      canonical formatting
     \\  mylang docs [TOPIC]               the user guides built into this compiler
@@ -89,6 +90,7 @@ const usage = "usage: mylang build <file.my> (-o <output> | --run [-- ARGS...]) 
     "       mylang run <file.my> [options] [-- ARGS...] | run-project <entry.my> [options] [-- ARGS...] (build and run; `mylang run` prints the options)\n" ++
     "       mylang test <entry.my|directory> [--filter GLOB] [--json] [--release] [--affected --against REF] (run the public test_* functions)\n" ++
     "       mylang dump-ir <file.my> [--facts] | dump-typed <file.my> [FUNCTION] | coverage <file.my>... (developer views of the new core)\n" ++
+    "       mylang juice <doctor|analyze|record|compare|validate|calibrate> (performance work proxy)\n" ++
     "       mylang cost <entry.my> [FUNCTION] [--json] [--debug | --no-facts | --verify-facts] [--llvm-remarks FILE.opt.yaml] (per-function Core costs)\n" ++
     "       mylang list-interfaces <entry.my> [--contracts | --cost] (public declarations; --cost checks bodies and appends release costs)\n" ++
     "       mylang fix [--check] <entry.my|directory> (apply every structured diagnostic repair)\n" ++

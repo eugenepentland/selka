@@ -1,0 +1,15 @@
+{
+  "source": "9d2524f5ea9ff92bb17546f8ce413a3a3e013468",
+  "models": {
+    "IE": {
+      "compiler": "/home/epentland/.cache/mylang/conc-p1-tls-IE-9d2524f5e/bin/mylang",
+      "sha256": "d74e3eea21d9fae3f2fe104a19804368e1f96e105d4cc92b2212953093b5c738",
+      "seconds": 218.35682666604407
+    },
+    "LE": {
+      "compiler": "/home/epentland/.cache/mylang/conc-p1-tls-LE-9d2524f5e/bin/mylang",
+      "sha256": "1538b9ed308789d9479c0de7d021d46dbac0805383a0bfa1c50a004c862ad0a8",
+      "seconds": 226.24118769099005
+    }
+  }
+}

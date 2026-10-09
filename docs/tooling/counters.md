@@ -1,5 +1,10 @@
 # Run-time counters
 
+For repeatable before/after comparisons with optimized machine instruction
+counts, short workload scenarios and source explanations, use
+[Juice, the performance proxy](juice.md). It keeps these semantic counters
+separate from measurements of the ordinary optimized executable.
+
 `mylang cost` counts *sites*: what the emitted code may do. A counting build
 counts what a run actually does. `--counters` on `mylang build`, `build --run`
 or `run` emits a counter at every count update, uniqueness test, copy, list

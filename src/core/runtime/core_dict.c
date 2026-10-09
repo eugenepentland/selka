@@ -205,7 +205,7 @@ myl_block *myl_core_dict_set(myl_block *dict, int64_t entry, const void *value) 
 myl_block *myl_core_dict_insert(myl_block *dict, int64_t probe, const void *key, const void *value, bool verify) {
     core_dict_meta *meta = dict_meta(dict);
     uint64_t hash = dict_hash(meta->desc, key);
-    if (verify && (probe >= 0 || dict->count != 1)) abort();
+    if (verify && (probe >= 0 || !count_is_unique(dict))) abort();
     if (!meta->index && dict->len >= DICT_SMALL) {
         /* Crossing the small-table boundary builds the first index after append. */
     } else if (meta->index && meta->index->used * 2 >= meta->index->slots) {
@@ -309,7 +309,7 @@ myl_block *myl_core_dict_copy(const myl_block *dict) {
         if (!dict_live(meta, i)) continue;
         for (int32_t r = 0; r < meta->desc->layout[1]; ++r) {
             myl_block *child = reference_at(meta->desc->layout, dict_entry(copy, i), r);
-            if (child && child->count != MYL_SATURATED) ++child->count;
+            count_retain(child);
         }
     }
     return copy;
@@ -330,21 +330,22 @@ myl_block *myl_core_dict_clear(myl_block *dict) {
     return dict;
 }
 
-/* Join the existing iterative RC worklist; a dictionary of deeply nested
- * managed values uses no recursive teardown and frees its untracked index. */
-static void core_dict_free_pending(myl_block *dict, myl_block **pending) {
+/* Dictionary storage has tombstones and its own entry descriptor, but supplies
+   children to the same visitor used for both sharing and destruction. */
+static void core_dict_children(myl_block *dict, core_child_visitor visit, void *context) {
     core_dict_meta *meta = dict_meta(dict);
-    if (meta->desc->layout) for (uint64_t i = 0; i < meta->elen; ++i) {
+    if (!meta->desc->layout) return;
+    for (uint64_t i = 0; i < meta->elen; ++i) {
         if (!dict_live(meta, i)) continue;
         for (int32_t r = 0; r < meta->desc->layout[1]; ++r) {
             myl_block *child = reference_at(meta->desc->layout, dict_entry(dict, i), r);
-            if (!child || child->count == MYL_SATURATED) continue;
-            if (child->count == 1) {
-                child->cap = (int64_t)(intptr_t)*pending;
-                *pending = child;
-            } else --child->count;
+            if (child) visit(child, context);
         }
     }
+}
+
+static void core_dict_finalize(myl_block *dict) {
+    core_dict_meta *meta = dict_meta(dict);
     free(meta->index);
     free(meta->hashes);
     free(meta->dead);

@@ -10,7 +10,7 @@
  * are written as one JSON document (`mylang-counters-v1`) to the path in
  * `MYLANG_COUNTERS`, else to `mylang-counters.json` in the working directory.
  * Nothing is printed on the program's own streams unless the file cannot be
- * written. Single-threaded, like the counts themselves. */
+ * written. Thread-local slots are combined after task quiescence. */
 
 typedef struct myl_count_fn {
     const char *name;
@@ -37,15 +37,71 @@ extern myl_count_site __start_myl_count_sites[] __attribute__((weak, visibility(
 extern myl_count_site __stop_myl_count_sites[] __attribute__((weak, visibility("hidden")));
 
 /* The emitted function running now; set by each prologue, restored before each return. */
-myl_count_fn *myl_count_current;
+MYL_TLS myl_count_fn *myl_count_current;
 /* The site of the Core copy instruction whose runtime call comes next, or null. */
-myl_count_site *myl_count_copy_site;
+MYL_TLS myl_count_site *myl_count_copy_site;
 /* The list push whose reserve call is running, or null: a growth credits its moved bytes there. */
-myl_count_site *myl_count_push_site;
+MYL_TLS myl_count_site *myl_count_push_site;
 
 static myl_count_fn myl_count_outside = { "<outside>", { 0 } };
-static uint64_t myl_count_live, myl_count_peak;
+static _Atomic uint64_t myl_count_live, myl_count_peak;
 static bool myl_count_written;
+
+/* Linker records are immutable identities; each native thread owns copies of
+   their slots. Records survive thread retirement for the one quiescent dump. */
+typedef struct myl_count_thread {
+    myl_count_fn *functions;
+    myl_count_site *sites;
+    myl_count_fn outside;
+    struct myl_count_thread *next;
+} myl_count_thread;
+static pthread_mutex_t myl_count_mutex = PTHREAD_MUTEX_INITIALIZER;
+static myl_count_thread *myl_count_threads;
+static MYL_TLS myl_count_thread *myl_count_local;
+
+static size_t myl_count_functions_size(void) {
+    return __start_myl_count_fns ? (size_t)(__stop_myl_count_fns - __start_myl_count_fns) : 0;
+}
+static size_t myl_count_sites_size(void) {
+    return __start_myl_count_sites ? (size_t)(__stop_myl_count_sites - __start_myl_count_sites) : 0;
+}
+static myl_count_thread *myl_count_thread_get(void) {
+    if (myl_count_local) return myl_count_local;
+    myl_count_thread *local = calloc(1, sizeof *local);
+    if (!local) out_of_memory();
+    size_t functions = myl_count_functions_size(), sites = myl_count_sites_size();
+    local->functions = calloc(functions ? functions : 1, sizeof *local->functions);
+    local->sites = calloc(sites ? sites : 1, sizeof *local->sites);
+    if (!local->functions || !local->sites) out_of_memory();
+    if (functions) memcpy(local->functions, __start_myl_count_fns, functions * sizeof *local->functions);
+    if (sites) memcpy(local->sites, __start_myl_count_sites, sites * sizeof *local->sites);
+    local->outside.name = "<outside>";
+    pthread_mutex_lock(&myl_count_mutex);
+    local->next = myl_count_threads;
+    myl_count_threads = local;
+    pthread_mutex_unlock(&myl_count_mutex);
+    myl_count_local = local;
+    return local;
+}
+
+myl_count_fn *myl_count_function_local(const myl_count_fn *identity) {
+    return &myl_count_thread_get()->functions[identity - __start_myl_count_fns];
+}
+myl_count_site *myl_count_site_local(const myl_count_site *identity) {
+    return &myl_count_thread_get()->sites[identity - __start_myl_count_sites];
+}
+
+static void myl_count_add_live(size_t bytes) {
+    uint64_t live = atomic_fetch_add_explicit(&myl_count_live, bytes, memory_order_relaxed) + bytes;
+    uint64_t peak = atomic_load_explicit(&myl_count_peak, memory_order_relaxed);
+    while (peak < live && !atomic_compare_exchange_weak_explicit(&myl_count_peak, &peak, live,
+            memory_order_relaxed, memory_order_relaxed)) {}
+}
+static void myl_count_sub_live(size_t bytes) {
+    uint64_t live = atomic_load_explicit(&myl_count_live, memory_order_relaxed);
+    while (!atomic_compare_exchange_weak_explicit(&myl_count_live, &live, live - (bytes < live ? bytes : live),
+            memory_order_relaxed, memory_order_relaxed)) {}
+}
 
 /* Site kinds, in `emit_count.Kind` order. */
 static const char *const myl_count_kinds[] = {
@@ -63,10 +119,11 @@ static const char *const myl_count_slot_names[MYL_COUNT_SLOTS] = {
     "text_copies", "text_copy_bytes", "runtime_retains", NULL, "runtime_releases", NULL,
     "dict_grows", "dict_grow_bytes", "buffer_grows", "buffer_grow_bytes", "text_grows", "text_grow_bytes",
     "text_appends", "text_append_bytes", "buffer_pushes", NULL, "buffer_appends", "buffer_append_bytes",
+    "shared_retains", NULL, "shared_releases", NULL, "share_marks", "share_bytes",
 };
 
 static myl_count_fn *myl_count_function(void) {
-    return myl_count_current ? myl_count_current : &myl_count_outside;
+    return myl_count_current ? myl_count_current : &myl_count_thread_get()->outside;
 }
 
 static void myl_count_event(int slot, size_t bytes) {
@@ -77,7 +134,7 @@ static void myl_count_event(int slot, size_t bytes) {
 
 static void myl_count_copy(int slot, size_t bytes) {
     myl_count_event(slot, bytes);
-    myl_count_site *site = myl_count_copy_site;
+    myl_count_site *site = myl_count_copy_site ? myl_count_site_local(myl_count_copy_site) : NULL;
     myl_count_copy_site = NULL;
     if (!site) return;
     site->c[0] += 1;
@@ -86,27 +143,25 @@ static void myl_count_copy(int slot, size_t bytes) {
 
 static void myl_count_list_grow(size_t bytes) {
     myl_count_event(MYL_COUNT_LIST_GROWS, bytes);
-    if (myl_count_push_site) myl_count_push_site->c[2] += bytes;
+    if (myl_count_push_site) myl_count_site_local(myl_count_push_site)->c[2] += bytes;
 }
 
 static void myl_count_alloc(size_t bytes) {
     myl_count_event(MYL_COUNT_ALLOCS, bytes);
-    myl_count_live += bytes;
-    if (myl_count_live > myl_count_peak) myl_count_peak = myl_count_live;
+    myl_count_add_live(bytes);
 }
 
 static void myl_count_free(size_t bytes) {
     myl_count_event(MYL_COUNT_FREES, bytes);
-    myl_count_live -= bytes < myl_count_live ? bytes : myl_count_live;
+    myl_count_sub_live(bytes);
 }
 
 static void myl_count_realloc(size_t before, size_t after, int moved, size_t used) {
     myl_count_event(MYL_COUNT_REALLOCS, after > before ? after - before : 0);
     if (moved) myl_count_event(MYL_COUNT_REALLOC_MOVES, used);
-    if (moved && myl_count_push_site) myl_count_push_site->c[2] += used;
-    myl_count_live += after;
-    myl_count_live -= before < myl_count_live ? before : myl_count_live;
-    if (myl_count_live > myl_count_peak) myl_count_peak = myl_count_live;
+    if (moved && myl_count_push_site) myl_count_site_local(myl_count_push_site)->c[2] += used;
+    if (after >= before) myl_count_add_live(after - before);
+    else myl_count_sub_live(before - after);
 }
 
 static void myl_count_string(FILE *file, const char *text) {
@@ -143,6 +198,27 @@ static void myl_count_function_row(FILE *file, const myl_count_fn *fn, bool *fir
     fputc('}', file);
 }
 
+/* No thread mutates a slot after the scheduler's quiescence barrier. Copy the
+   immutable metadata, then sum the private slots into report-owned storage. */
+static bool myl_count_aggregate(myl_count_fn **functions, myl_count_site **sites) {
+    size_t nf = myl_count_functions_size(), ns = myl_count_sites_size();
+    *functions = calloc(nf ? nf : 1, sizeof **functions);
+    *sites = calloc(ns ? ns : 1, sizeof **sites);
+    if (!*functions || !*sites) { free(*functions); free(*sites); return false; }
+    if (nf) memcpy(*functions, __start_myl_count_fns, nf * sizeof **functions);
+    if (ns) memcpy(*sites, __start_myl_count_sites, ns * sizeof **sites);
+    pthread_mutex_lock(&myl_count_mutex);
+    for (myl_count_thread *thread = myl_count_threads; thread; thread = thread->next) {
+        for (size_t f = 0; f < nf; ++f)
+            for (int c = 0; c < MYL_COUNT_SLOTS; ++c) (*functions)[f].c[c] += thread->functions[f].c[c];
+        for (size_t site = 0; site < ns; ++site)
+            for (int c = 0; c < 4; ++c) (*sites)[site].c[c] += thread->sites[site].c[c];
+        for (int c = 0; c < MYL_COUNT_SLOTS; ++c) myl_count_outside.c[c] += thread->outside.c[c];
+    }
+    pthread_mutex_unlock(&myl_count_mutex);
+    return true;
+}
+
 /* Write every counter once: at `myl_core_exit`, or from `os_exit` when a trap ends the process. */
 static void myl_count_dump(void) {
     if (myl_count_written) return;
@@ -156,8 +232,11 @@ static void myl_count_dump(void) {
     }
     uint64_t totals[MYL_COUNT_SLOTS] = { 0 };
     uint64_t kinds[MYL_COUNT_KINDS][3] = { { 0 } };
-    const myl_count_fn *fns = __start_myl_count_fns, *fns_end = __stop_myl_count_fns;
-    const myl_count_site *sites = __start_myl_count_sites, *sites_end = __stop_myl_count_sites;
+    myl_count_fn *fns;
+    myl_count_site *sites;
+    if (!myl_count_aggregate(&fns, &sites)) { fclose(file); return; }
+    const myl_count_fn *fns_end = fns + myl_count_functions_size();
+    const myl_count_site *sites_end = sites + myl_count_sites_size();
     for (const myl_count_fn *fn = fns; fn && fn < fns_end; ++fn)
         for (int i = 0; i < MYL_COUNT_SLOTS; ++i) totals[i] += fn->c[i];
     for (int i = 0; i < MYL_COUNT_SLOTS; ++i) totals[i] += myl_count_outside.c[i];
@@ -193,5 +272,7 @@ static void myl_count_dump(void) {
         fprintf(file, ",\"count\":%llu,\"bytes\":%llu,\"extra\":%llu}", (unsigned long long)site->c[0], (unsigned long long)site->c[1], (unsigned long long)site->c[2]);
     }
     fputs("]}\n", file);
+    free(fns);
+    free(sites);
     if (fclose(file) != 0) fprintf(stderr, "mylang-counters: cannot write %s\n", path);
 }

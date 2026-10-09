@@ -1,0 +1,784 @@
+{
+  "base": "mylang-baseline",
+  "base_id": "2686d6d2e195718f4bde2720e164cc048f69c10098fd0a7527293732c13cfae9",
+  "candidate": "mylang-improved",
+  "candidate_id": "4a4568eea86cf20fc934f9df5b0d8d828ead7995829bde1db26e860ee4c63923",
+  "change_id": "1ae2054ba5df3a9ed36e281229b3a44043dd9c8b68b06e589171c2fa9cb2ca27",
+  "code": {
+    "available": true,
+    "functions": {
+      "main": {
+        "base": {
+          "bytes": 1133,
+          "vector_sites": 28
+        },
+        "candidate": {
+          "bytes": 1335
+        }
+      }
+    },
+    "scope": "static bytes and instruction sites, not executions",
+    "sections": {
+      ".relro_padding": {
+        "base": 3320,
+        "candidate": 3112
+      },
+      ".text": {
+        "base": 200502,
+        "candidate": 200710
+      }
+    }
+  },
+  "collector": {
+    "cpu": 0,
+    "event": "cpu_core/instructions/u",
+    "kind": "perf",
+    "scope": "user instructions; process and inherited children; whole workload",
+    "tool": {
+      "path": "/usr/bin/perf",
+      "sha256": "1371ae5cb9fa59632d1d0e34b877d7251df4029810ba67dc56e946545e87b531",
+      "version": "perf version 7.0.14"
+    }
+  },
+  "context_id": "9195565a2577804bc85904e05e7890228646cbead0c8a692c6a240587836fdb4",
+  "library_changes": {},
+  "max_spread": 0.005,
+  "meaning": "100 \u00d7 candidate instructions per completed unit / baseline; not a time ratio",
+  "min_change": 0.001,
+  "mode": "application",
+  "runtime_prediction": {
+    "status": "uncalibrated"
+  },
+  "source_roots": {
+    "base": "/home/epentland/ai/canopy/mylang-performance-proxy/.mylang-cache/juice-qualification-release/mylang",
+    "candidate": "/home/epentland/ai/canopy/mylang-performance-proxy/.mylang-cache/juice-qualification-release/mylang"
+  },
+  "static_cost": {
+    "scope": "static Core sites/LLVM remarks, not executions",
+    "totals": {
+      "allocation": {
+        "base": {
+          "sites": 2,
+          "unresolved_calls": 0
+        },
+        "candidate": {
+          "sites": 0,
+          "unresolved_calls": 0
+        }
+      },
+      "checks": {
+        "base": {
+          "kept": 4,
+          "proved": 7
+        },
+        "candidate": {
+          "kept": 4,
+          "proved": 5
+        }
+      },
+      "loops": {
+        "base": {
+          "unknown": 3,
+          "unswitched": 0,
+          "vector_plans": 0,
+          "versioned": 0
+        },
+        "candidate": {
+          "unknown": 3,
+          "unswitched": 0,
+          "vector_plans": 0,
+          "versioned": 1
+        }
+      },
+      "rc": {
+        "base": {
+          "elided_pairs": 0,
+          "releases": 1,
+          "retains": 0,
+          "stack_lists": 0
+        },
+        "candidate": {
+          "elided_pairs": 0,
+          "releases": 0,
+          "retains": 0,
+          "stack_lists": 0
+        }
+      },
+      "updates": {
+        "base": {
+          "copied": 0,
+          "in_place": 1,
+          "tested": 0
+        },
+        "candidate": {
+          "copied": 0,
+          "in_place": 0,
+          "tested": 0
+        }
+      }
+    }
+  },
+  "suite_juice": 84.02664937606409,
+  "suite_meaning": "weighted geometric mean of selected scenarios; not whole-job runtime",
+  "version": "juice-comparison-v1",
+  "workloads": {
+    "sum-quick": {
+      "assessment": "less-work",
+      "coverage": "measured scenario only; whole-job representativeness unverified",
+      "direction": "less-work",
+      "envelope_meaning": "observed min/max repeat range, not a statistical confidence interval",
+      "family": "list-sum",
+      "functions": [],
+      "instruction_ratio": 0.8432682914709757,
+      "juice": 84.32682914709757,
+      "lines": [],
+      "metrics": {
+        "instructions": {
+          "base": {
+            "max": 4548199,
+            "median": 4548199,
+            "min": 4548198,
+            "samples": [
+              4548199,
+              4548199,
+              4548198
+            ],
+            "spread": 2.1986724855266887e-07
+          },
+          "candidate": {
+            "max": 3835352,
+            "median": 3835352,
+            "min": 3835349,
+            "samples": [
+              3835352,
+              3835352,
+              3835349
+            ],
+            "spread": 7.821967840239957e-07
+          }
+        }
+      },
+      "ratio_envelope": [
+        0.84326763186923,
+        0.8432684768780955
+      ],
+      "repeatable": true,
+      "risks": [],
+      "scope": "complete scenario",
+      "semantic": {
+        "contextual_metrics": [
+          "alloc_bytes",
+          "free_bytes",
+          "peak_live_bytes",
+          "realloc_added_bytes",
+          "realloc_moved_bytes",
+          "realloc_moves"
+        ],
+        "functions": [
+          {
+            "changes": {
+              "alloc_bytes": {
+                "base": 2099712,
+                "candidate": 0
+              },
+              "allocs": {
+                "base": 64,
+                "candidate": 0
+              },
+              "free_bytes": {
+                "base": 2099712,
+                "candidate": 0
+              },
+              "frees": {
+                "base": 64,
+                "candidate": 0
+              }
+            },
+            "function": "main::checksum"
+          }
+        ],
+        "kinds": {
+          "bounds_check": {
+            "base": {
+              "bytes": 0,
+              "count": 262146,
+              "extra": 0
+            },
+            "candidate": {
+              "bytes": 0,
+              "count": 2,
+              "extra": 0
+            }
+          },
+          "list_push": {
+            "base": {
+              "bytes": 2097152,
+              "count": 262144,
+              "extra": 0
+            },
+            "candidate": {
+              "bytes": 0,
+              "count": 0,
+              "extra": 0
+            }
+          },
+          "release_unique": {
+            "base": {
+              "bytes": 0,
+              "count": 64,
+              "extra": 0
+            },
+            "candidate": {
+              "bytes": 0,
+              "count": 0,
+              "extra": 0
+            }
+          }
+        },
+        "requested_allocation_bytes": {
+          "reason": "v1 counters expose allocated class/usable sizes",
+          "status": "unavailable"
+        },
+        "site_scope": "before LLVM optimization; source sites retained in capture records",
+        "sites": [
+          {
+            "base": {
+              "bytes": 2097152,
+              "count": 262144,
+              "extra": 0
+            },
+            "candidate": {
+              "bytes": 0,
+              "count": 0,
+              "extra": 0
+            },
+            "column": 9,
+            "detail": "list_push",
+            "function": "main::checksum",
+            "kind": "list_push",
+            "line": 6,
+            "match": "added or removed location",
+            "origin": "main::checksum",
+            "path": "main.my"
+          },
+          {
+            "base": {
+              "bytes": 0,
+              "count": 262144,
+              "extra": 0
+            },
+            "candidate": {
+              "bytes": 0,
+              "count": 0,
+              "extra": 0
+            },
+            "column": 5,
+            "detail": "list_get",
+            "function": "main::checksum",
+            "kind": "bounds_check",
+            "line": 8,
+            "match": "added or removed location",
+            "origin": "main::checksum",
+            "path": "main.my"
+          },
+          {
+            "base": {
+              "bytes": 0,
+              "count": 64,
+              "extra": 0
+            },
+            "candidate": {
+              "bytes": 0,
+              "count": 0,
+              "extra": 0
+            },
+            "column": 5,
+            "detail": "release",
+            "function": "main::checksum",
+            "kind": "release_unique",
+            "line": 3,
+            "match": "added or removed location",
+            "origin": "main::checksum",
+            "path": "main.my"
+          },
+          {
+            "base": {
+              "bytes": 0,
+              "count": 64,
+              "extra": 0
+            },
+            "candidate": {
+              "bytes": 0,
+              "count": 0,
+              "extra": 0
+            },
+            "column": 16,
+            "detail": "add",
+            "function": "main::main",
+            "kind": "overflow_check",
+            "line": 28,
+            "match": "added or removed location",
+            "origin": "main::main",
+            "path": "main.my"
+          },
+          {
+            "base": {
+              "bytes": 0,
+              "count": 0,
+              "extra": 0
+            },
+            "candidate": {
+              "bytes": 0,
+              "count": 64,
+              "extra": 0
+            },
+            "column": 16,
+            "detail": "add",
+            "function": "main::main",
+            "kind": "overflow_check",
+            "line": 26,
+            "match": "added or removed location",
+            "origin": "main::main",
+            "path": "main.my"
+          },
+          {
+            "base": {
+              "bytes": 0,
+              "count": 0,
+              "extra": 0
+            },
+            "candidate": {
+              "bytes": 0,
+              "count": 1,
+              "extra": 0
+            },
+            "column": 21,
+            "detail": "list_get",
+            "function": "main::main",
+            "kind": "bounds_check",
+            "line": 21,
+            "match": "added or removed location",
+            "origin": "main::main",
+            "path": "main.my"
+          },
+          {
+            "base": {
+              "bytes": 0,
+              "count": 0,
+              "extra": 0
+            },
+            "candidate": {
+              "bytes": 0,
+              "count": 1,
+              "extra": 0
+            },
+            "column": 20,
+            "detail": "list_get",
+            "function": "main::main",
+            "kind": "bounds_check",
+            "line": 20,
+            "match": "added or removed location",
+            "origin": "main::main",
+            "path": "main.my"
+          },
+          {
+            "base": {
+              "bytes": 0,
+              "count": 1,
+              "extra": 0
+            },
+            "candidate": {
+              "bytes": 0,
+              "count": 0,
+              "extra": 0
+            },
+            "column": 21,
+            "detail": "list_get",
+            "function": "main::main",
+            "kind": "bounds_check",
+            "line": 23,
+            "match": "added or removed location",
+            "origin": "main::main",
+            "path": "main.my"
+          },
+          {
+            "base": {
+              "bytes": 0,
+              "count": 1,
+              "extra": 0
+            },
+            "candidate": {
+              "bytes": 0,
+              "count": 0,
+              "extra": 0
+            },
+            "column": 20,
+            "detail": "list_get",
+            "function": "main::main",
+            "kind": "bounds_check",
+            "line": 22,
+            "match": "added or removed location",
+            "origin": "main::main",
+            "path": "main.my"
+          }
+        ],
+        "status": "compatible",
+        "totals": {
+          "alloc_bytes": {
+            "base": 2099904,
+            "candidate": 192
+          },
+          "allocs": {
+            "base": 67,
+            "candidate": 3
+          },
+          "free_bytes": {
+            "base": 2099904,
+            "candidate": 192
+          },
+          "frees": {
+            "base": 67,
+            "candidate": 3
+          },
+          "peak_live_bytes": {
+            "base": 33000,
+            "candidate": 192
+          }
+        }
+      },
+      "tier": "quick",
+      "unit": "record",
+      "units": 262144,
+      "weight": 1
+    },
+    "sum-validation": {
+      "assessment": "less-work",
+      "coverage": "measured scenario only; whole-job representativeness unverified",
+      "direction": "less-work",
+      "envelope_meaning": "observed min/max repeat range, not a statistical confidence interval",
+      "family": "list-sum",
+      "functions": [],
+      "instruction_ratio": 0.8372753816050518,
+      "juice": 83.72753816050518,
+      "lines": [],
+      "metrics": {
+        "instructions": {
+          "base": {
+            "max": 35044943,
+            "median": 35044937,
+            "min": 35044937,
+            "samples": [
+              35044937,
+              35044937,
+              35044943
+            ],
+            "spread": 1.712087540633901e-07
+          },
+          "candidate": {
+            "max": 29342264,
+            "median": 29342263,
+            "min": 29342263,
+            "samples": [
+              29342264,
+              29342263,
+              29342263
+            ],
+            "spread": 3.408053427917267e-08
+          }
+        }
+      },
+      "ratio_envelope": [
+        0.8372752382562014,
+        0.8372754101398442
+      ],
+      "repeatable": true,
+      "risks": [],
+      "scope": "complete scenario",
+      "semantic": {
+        "contextual_metrics": [
+          "alloc_bytes",
+          "free_bytes",
+          "peak_live_bytes",
+          "realloc_added_bytes",
+          "realloc_moved_bytes",
+          "realloc_moves"
+        ],
+        "functions": [
+          {
+            "changes": {
+              "alloc_bytes": {
+                "base": 16797696,
+                "candidate": 0
+              },
+              "allocs": {
+                "base": 512,
+                "candidate": 0
+              },
+              "free_bytes": {
+                "base": 16797696,
+                "candidate": 0
+              },
+              "frees": {
+                "base": 512,
+                "candidate": 0
+              }
+            },
+            "function": "main::checksum"
+          }
+        ],
+        "kinds": {
+          "bounds_check": {
+            "base": {
+              "bytes": 0,
+              "count": 2097154,
+              "extra": 0
+            },
+            "candidate": {
+              "bytes": 0,
+              "count": 2,
+              "extra": 0
+            }
+          },
+          "list_push": {
+            "base": {
+              "bytes": 16777216,
+              "count": 2097152,
+              "extra": 0
+            },
+            "candidate": {
+              "bytes": 0,
+              "count": 0,
+              "extra": 0
+            }
+          },
+          "release_unique": {
+            "base": {
+              "bytes": 0,
+              "count": 512,
+              "extra": 0
+            },
+            "candidate": {
+              "bytes": 0,
+              "count": 0,
+              "extra": 0
+            }
+          }
+        },
+        "requested_allocation_bytes": {
+          "reason": "v1 counters expose allocated class/usable sizes",
+          "status": "unavailable"
+        },
+        "site_scope": "before LLVM optimization; source sites retained in capture records",
+        "sites": [
+          {
+            "base": {
+              "bytes": 16777216,
+              "count": 2097152,
+              "extra": 0
+            },
+            "candidate": {
+              "bytes": 0,
+              "count": 0,
+              "extra": 0
+            },
+            "column": 9,
+            "detail": "list_push",
+            "function": "main::checksum",
+            "kind": "list_push",
+            "line": 6,
+            "match": "added or removed location",
+            "origin": "main::checksum",
+            "path": "main.my"
+          },
+          {
+            "base": {
+              "bytes": 0,
+              "count": 2097152,
+              "extra": 0
+            },
+            "candidate": {
+              "bytes": 0,
+              "count": 0,
+              "extra": 0
+            },
+            "column": 5,
+            "detail": "list_get",
+            "function": "main::checksum",
+            "kind": "bounds_check",
+            "line": 8,
+            "match": "added or removed location",
+            "origin": "main::checksum",
+            "path": "main.my"
+          },
+          {
+            "base": {
+              "bytes": 0,
+              "count": 512,
+              "extra": 0
+            },
+            "candidate": {
+              "bytes": 0,
+              "count": 0,
+              "extra": 0
+            },
+            "column": 5,
+            "detail": "release",
+            "function": "main::checksum",
+            "kind": "release_unique",
+            "line": 3,
+            "match": "added or removed location",
+            "origin": "main::checksum",
+            "path": "main.my"
+          },
+          {
+            "base": {
+              "bytes": 0,
+              "count": 512,
+              "extra": 0
+            },
+            "candidate": {
+              "bytes": 0,
+              "count": 0,
+              "extra": 0
+            },
+            "column": 16,
+            "detail": "add",
+            "function": "main::main",
+            "kind": "overflow_check",
+            "line": 28,
+            "match": "added or removed location",
+            "origin": "main::main",
+            "path": "main.my"
+          },
+          {
+            "base": {
+              "bytes": 0,
+              "count": 0,
+              "extra": 0
+            },
+            "candidate": {
+              "bytes": 0,
+              "count": 512,
+              "extra": 0
+            },
+            "column": 16,
+            "detail": "add",
+            "function": "main::main",
+            "kind": "overflow_check",
+            "line": 26,
+            "match": "added or removed location",
+            "origin": "main::main",
+            "path": "main.my"
+          },
+          {
+            "base": {
+              "bytes": 0,
+              "count": 0,
+              "extra": 0
+            },
+            "candidate": {
+              "bytes": 0,
+              "count": 1,
+              "extra": 0
+            },
+            "column": 21,
+            "detail": "list_get",
+            "function": "main::main",
+            "kind": "bounds_check",
+            "line": 21,
+            "match": "added or removed location",
+            "origin": "main::main",
+            "path": "main.my"
+          },
+          {
+            "base": {
+              "bytes": 0,
+              "count": 0,
+              "extra": 0
+            },
+            "candidate": {
+              "bytes": 0,
+              "count": 1,
+              "extra": 0
+            },
+            "column": 20,
+            "detail": "list_get",
+            "function": "main::main",
+            "kind": "bounds_check",
+            "line": 20,
+            "match": "added or removed location",
+            "origin": "main::main",
+            "path": "main.my"
+          },
+          {
+            "base": {
+              "bytes": 0,
+              "count": 1,
+              "extra": 0
+            },
+            "candidate": {
+              "bytes": 0,
+              "count": 0,
+              "extra": 0
+            },
+            "column": 21,
+            "detail": "list_get",
+            "function": "main::main",
+            "kind": "bounds_check",
+            "line": 23,
+            "match": "added or removed location",
+            "origin": "main::main",
+            "path": "main.my"
+          },
+          {
+            "base": {
+              "bytes": 0,
+              "count": 1,
+              "extra": 0
+            },
+            "candidate": {
+              "bytes": 0,
+              "count": 0,
+              "extra": 0
+            },
+            "column": 20,
+            "detail": "list_get",
+            "function": "main::main",
+            "kind": "bounds_check",
+            "line": 22,
+            "match": "added or removed location",
+            "origin": "main::main",
+            "path": "main.my"
+          }
+        ],
+        "status": "compatible",
+        "totals": {
+          "alloc_bytes": {
+            "base": 16797888,
+            "candidate": 192
+          },
+          "allocs": {
+            "base": 515,
+            "candidate": 3
+          },
+          "free_bytes": {
+            "base": 16797888,
+            "candidate": 192
+          },
+          "frees": {
+            "base": 515,
+            "candidate": 3
+          },
+          "peak_live_bytes": {
+            "base": 33000,
+            "candidate": 192
+          }
+        }
+      },
+      "tier": "validation",
+      "unit": "record",
+      "units": 2097152,
+      "weight": 1
+    }
+  }
+}

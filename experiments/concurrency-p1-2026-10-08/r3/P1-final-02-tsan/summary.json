@@ -1,0 +1,41 @@
+{
+  "source": "98cb3a49fff3ba4ad438cb9087f86aa517a32760",
+  "threads": 8,
+  "repetitions": 100,
+  "cpus": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "tsan_options": "halt_on_error=1",
+  "binaries": {
+    "captures": {
+      "path": "/home/epentland/ai/canopy/mylang-concurrency-p1/.tmp/p1-final-stage/tsan-98cb3a49f/captures",
+      "sha256": "abae801f845221c7f20500b175e766c7a6a56bde4267a56648737ff6f6f124fe"
+    },
+    "ranges": {
+      "path": "/home/epentland/ai/canopy/mylang-concurrency-p1/.tmp/p1-final-stage/tsan-98cb3a49f/ranges",
+      "sha256": "5c232cfc1a1d1a0c0bd0799898db1e45b5643597031ce89c08c7693a28785889"
+    },
+    "native-tasks": {
+      "path": "/home/epentland/ai/canopy/mylang-concurrency-p1/.tmp/p1-final-stage/tsan-98cb3a49f/native-tasks",
+      "sha256": "73daf401b153b8883e46e730bdb2db57697b30671f9262c25950cb0a15736b12"
+    }
+  },
+  "complete": true,
+  "completed_processes": 300,
+  "seconds": 651.6386845249217
+}

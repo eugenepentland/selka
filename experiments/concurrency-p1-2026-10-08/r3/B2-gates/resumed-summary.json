@@ -1,0 +1,66 @@
+{
+  "source": "9c2559a459681e7bd5b6a84fb7505a864ac0d8c4",
+  "steps": [
+    {
+      "name": "qualify-retry",
+      "status": 0,
+      "seconds": 140.25860358099453,
+      "command": [
+        "python3",
+        "experiments/new-core-s5-20261007/tools/qualify_merge.py",
+        "--shards",
+        "64",
+        "--compiler",
+        "zig-out/bin/mylang",
+        "--install",
+        "install",
+        "--evidence",
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/experiments/concurrency-p1-2026-10-08/r3/B2-committed-qualify"
+      ]
+    },
+    {
+      "name": "fuzz50",
+      "status": 0,
+      "seconds": 270.28458858304657,
+      "command": [
+        "python3",
+        "experiments/new-core-s5-20261007/tools/fuzz_matrix.py",
+        "--references",
+        "experiments/new-core-s5-20261007/references/fuzz-v1.json.gz",
+        "--new",
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/zig-out/bin/mylang",
+        "--cases",
+        "50",
+        "--qualified-head",
+        "9c2559a459681e7bd5b6a84fb7505a864ac0d8c4",
+        "--evidence",
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/experiments/concurrency-p1-2026-10-08/r3/B2-fuzz50",
+        "--jobs",
+        "3"
+      ]
+    },
+    {
+      "name": "fuzz200",
+      "status": 0,
+      "seconds": 701.1057128291577,
+      "command": [
+        "python3",
+        "experiments/new-core-s5-20261007/tools/fuzz_matrix.py",
+        "--references",
+        "experiments/new-core-s5-20261007/references/fuzz-v1.json.gz",
+        "--new",
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/zig-out/bin/mylang",
+        "--cases",
+        "200",
+        "--qualified-head",
+        "9c2559a459681e7bd5b6a84fb7505a864ac0d8c4",
+        "--evidence",
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/experiments/concurrency-p1-2026-10-08/r3/B2-fuzz200",
+        "--jobs",
+        "3"
+      ]
+    }
+  ],
+  "pass": true,
+  "compiler_sha256": "e424ef526820db92bf0469b3d8d2b42a72dc01234317a70c597c3b69de08f055"
+}

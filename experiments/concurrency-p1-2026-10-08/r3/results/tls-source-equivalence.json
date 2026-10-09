@@ -1,0 +1,23 @@
+{
+  "source": "9d2524f5ea9ff92bb17546f8ce413a3a3e013468",
+  "models": {
+    "IE": {
+      "verified_src_files": 569,
+      "only_changes": "LLVM and C TLS model replacements",
+      "selected_source_sha256": {
+        "src/core/emit_llvm.zig": "d6e1efdd71ac14e00e6aa6449fb62d326f99cbc84afe90e6de8455e392a0b9e1",
+        "src/core/emit_count.zig": "72fc5dfa3b5bdc9362760fbdd70167cf815cd5d44a7e54f73bb81aaae1f6a1b4",
+        "src/core/runtime/core_rt.c": "d9f5f1bfc32f1acd720dfb987173a44dda2bae4759cb1bd523b6c67946636579"
+      }
+    },
+    "LE": {
+      "verified_src_files": 569,
+      "only_changes": "LLVM and C TLS model replacements",
+      "selected_source_sha256": {
+        "src/core/emit_llvm.zig": "f3c01cc6ba993faac560b31a0576243d7104e0f25fad36435239287a69ab2f8a",
+        "src/core/emit_count.zig": "ddd351ca49a3ea9248594b7a18a432c2fe84dd5323e4ecc45f226155382adf42",
+        "src/core/runtime/core_rt.c": "4764be51b3e001ea3a010c6f5be405c905c25a7cfea70f2cc4d43eedf3c786f0"
+      }
+    }
+  }
+}
