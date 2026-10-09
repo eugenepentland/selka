@@ -1,6 +1,6 @@
 # Concurrency, part 2: P1 fixes, zero-tax mode and the language surface (2026-10-09)
 
-Status: **ready for Codex, pending the user's go on D1–D4 (§3).** This plan follows `docs/audits/concurrency-plan-2026-10-08.md` ("plan 1"), whose package P1 is merged into `main`. One Codex run does three packages in order: **P1F** (fixes from Claude's review of P1), **T** (zero-tax mode) and **P2** (the language surface, in the redesigned syntax). Then it stops.
+Status: **ready for Codex.** The user accepted D1–D4 as recommended on 2026-10-09 (§3). This plan follows `docs/audits/concurrency-plan-2026-10-08.md` ("plan 1"), whose package P1 is merged into `main`. One Codex run does three packages in order: **P1F** (fixes from Claude's review of P1), **T** (zero-tax mode) and **P2** (the language surface, in the redesigned syntax). Then it stops.
 - **Size (estimates):** P1F about 4–12 h; T about 10–16 h; P2 about 30–45 h.
 - **Runtime design:** plan 1's §3–§4 (including revisions R1–R11) stays the runtime design. This plan changes the surface (§6) and how programs without tasks are compiled (§5).
 
@@ -92,7 +92,7 @@ Claude read the report, the decision log, the self-review and P2-0. Two adversar
 
 The probes are in `experiments/concurrency-2-review-2026-10-09/` (see its README for how to build them). P1F turns each one into a fixture before fixing it.
 
-## 3. Decisions for the user
+## 3. Decisions (accepted by the user on 2026-10-09, as recommended)
 
 - **D1. Zero-tax mode (package T). Recommended.** A program whose reachable code never calls the task ABI is compiled exactly as it was before P1: the old emitted count paths, non-TLS free lists, no output staging, a single-threaded runtime variant. Only programs that use `parallel` get the thread-capable code and pay P1's tax.
   - **Why:** the tuning in A–G showed the tax moves around rather than going away. A program that cannot start a task gains nothing from paying it. This is the "a program that never spawns keeps today's code" property promised when the design was chosen.
