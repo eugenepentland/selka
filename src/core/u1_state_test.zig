@@ -74,6 +74,9 @@ test "a large byte buffer grows with realloc, and every append, reserve and shar
     const counts = try countsOf(a, root, "u1_growth", &counting);
     try std.testing.expect(functionCounter(counts, "u1_growth::byte_appends", "reallocs") >= 6);
     try std.testing.expect(functionCounter(counts, "u1_growth::byte_appends", "buffer_grow_bytes") < 1024);
+    // A large list keeps growing with realloc as before.
+    try std.testing.expect(functionCounter(counts, "u1_growth::list_growth", "reallocs") >= 4);
+    try std.testing.expectEqual(@as(i64, 0), functionCounter(counts, "u1_growth::list_growth", "buffer_grows"));
 }
 
 /// The sum of `name` over the sites of `kind` emitted in `function`.

@@ -352,31 +352,24 @@ myl_block *myl_core_list_new_slow(int64_t cap, int64_t element_size) {
 /* A block with room for one more element: `list` itself while it has room,
    else a grown copy. The caller's old value is dead after the push (the IR's
    uniqueness rule), so growing frees the old block. */
-/* A large block (class 0) regrown to `bytes` with `realloc`: in place where the
-   allocator can (a large `malloc` block is remapped, not copied, so its pages are
-   neither copied nor faulted in again), and moved to a fresh aligned block when
-   `realloc` loses the alignment. `used` is the bytes in use, header included; the
-   caller's old pointer is dead afterwards (NEW-CORE-U1-GROW-1). */
-static myl_block *large_regrow(myl_block *block, size_t bytes, size_t used) {
-    if (heap_ceiling) heap_refund(malloc_usable_size(block));
-    myl_block *moved = realloc(block, bytes);
-    if (!moved) out_of_memory();
-    if (((uintptr_t)moved & (MYL_ALIGN - 1)) != 0) {
-        myl_block *aligned = aligned_alloc(MYL_ALIGN, (bytes + MYL_ALIGN - 1) & ~(size_t)(MYL_ALIGN - 1));
-        if (!aligned) out_of_memory();
-        memcpy(aligned, moved, used);
-        free(moved);
-        moved = aligned;
-    }
-    if (heap_ceiling) heap_charge(malloc_usable_size(moved));
-    return moved;
-}
-
 myl_block *myl_core_list_grow(myl_block *list, int64_t element_size) {
     if (list->len < list->cap) return list;
     int64_t cap = list->cap < 4 ? 8 : list->cap * 2;
     if (class_of(list) == 0) {
-        myl_block *moved = large_regrow(list, MYL_HEADER + (size_t)cap * (size_t)element_size, MYL_HEADER + (size_t)list->len * (size_t)element_size);
+        /* A large block grows in place where the allocator can (one block either
+           way), and moves to a fresh aligned block when `realloc` loses the alignment. */
+        size_t bytes = MYL_HEADER + (size_t)cap * (size_t)element_size;
+        if (heap_ceiling) heap_refund(malloc_usable_size(list));
+        myl_block *moved = realloc(list, bytes);
+        if (!moved) out_of_memory();
+        if (((uintptr_t)moved & (MYL_ALIGN - 1)) != 0) {
+            myl_block *aligned = aligned_alloc(MYL_ALIGN, (bytes + MYL_ALIGN - 1) & ~(size_t)(MYL_ALIGN - 1));
+            if (!aligned) out_of_memory();
+            memcpy(aligned, moved, MYL_HEADER + (size_t)moved->len * (size_t)element_size);
+            free(moved);
+            moved = aligned;
+        }
+        if (heap_ceiling) heap_charge(malloc_usable_size(moved));
         moved->cap = cap;
         return moved;
     }
