@@ -1,19 +1,19 @@
-# Front-end follow-through: review fixes and an evidence-free merge branch (2026-10-09)
+# Front-end follow-through: review fixes (2026-10-09, revised after the merge)
 
-Status: **ready for Codex.** The user accepted Claude's review recommendations on 2026-10-09, with `noalloc` as a warning (F1).
+Status: **ready for Codex (revision 1).** The follow-through branch (`0bbfeb740`) was merged into `main` as it stood, at `8a2fccd2f`, with its bulk evidence and before any of these fixes. This revision drops the merge-branch construction: Codex branches from `main` and applies the fixes there. The user accepted Claude's review recommendations on 2026-10-09, with `noalloc` as a warning (F1).
 - **What this is:** Claude reviewed `codex/frontend-followthrough-20261009` at `0bbfeb740` (plan `docs/audits/frontend-followthrough-2026-10-09.md`, closeout `experiments/frontend-closeout-20261009/REPORT.md`). Two independent reviewers built the compiler and probed it.
-- **The verdict:** the source work is sound, but the branch must not be merged as it is. This plan builds a merge branch without the bulk evidence, aligns `noalloc` with the accepted VK8 decision, and fixes what the review found.
+- **The verdict:** the source work is sound. Every finding below now applies to `main`. This plan removes the bulk evidence from the working tree, aligns `noalloc` with the accepted VK8 decision, and fixes what the review found.
 - **Size:** about 10–16 h.
 
 ## Launch instruction (for Codex)
 
-> **One run: the merge branch, then F1–F10, then stop for review.**
-> - Create `codex/frontend-merge-20261009` from `claude/frontend-fixes-plan` (current `main` plus this plan).
+> **One run: the evidence cleanup, then F1–F10, then stop for review.**
+> - Create `codex/frontend-fixes-20261009` from `claude/frontend-fixes-plan` (`main` at `8a2fccd2f` plus this plan).
 > - Do §2 first, then §3 in order.
 > - **Do not stop to ask:** decide, log the decision in `experiments/frontend-fixes-20261009/DECISIONS.md`, and continue.
 > - Stop only at a §6 hard stop, or when the report (§5) is written.
 > - Commit at every step. If `main` moves, merge it with a real merge commit and rerun the current step's gates.
-> - Never merge into `main` and never push. Claude reviews the branch, then the user merges it.
+> - Do not merge into `main` unless the user tells you to. Never push.
 
 ## 1. What the review found
 
@@ -43,19 +43,19 @@ Status: **ready for Codex.** The user accepted Claude's review recommendations o
 | F9 | **The arena fix is withheld for two sequential `with arena() as a:` blocks** reusing the name. | `src/arena_fix.zig` `bindingsCertain` |
 | F10 | **Specialization publish and lookup scan names quadratically** (O(specializations × references × records)). This is plausible but not measured. | `src/sema_specialize.zig` around lines 212-221 and 325-335 |
 
-## 2. The merge branch, without the bulk evidence
+## 2. Evidence out of the working tree
 
-1. **Cherry-pick the source commits** onto `codex/frontend-merge-20261009`, in order: `d8fe5b797`, `fb868aace`, `48e741592`.
-2. **Copy the plan text:** take `docs/audits/frontend-followthrough-2026-10-09.md` from `0bbfeb740` (it was updated inside the evidence commit `cf7c620dc`).
-3. **Bring the reports, not the captures.** Copy into `experiments/frontend-followthrough-20261009/` and `experiments/frontend-closeout-20261009/` only:
+The merge put 24,087 evidence files (258 MB) into `main`'s tree, on top of the 928 MB of `experiments/` already there. History keeps the objects either way; this step only stops every new worktree from checking them out.
+
+1. **Delete the bulk captures** under `experiments/frontend-closeout-20261009/` and `experiments/frontend-followthrough-20261009/` in one commit. **Keep:**
    - every `REPORT.md` and `STATUS.md`;
    - the small summary and identity JSON (`candidate-qualified.json`, `qualification.json`, `preservation-check.json`, and each sub-report's summary);
-   - the final gate log, `full-gate-3.log`.
+   - `full-gate-3.log`.
    
-   **Total ≤ 10 MB.**
-4. **Point the reports at the evidence.** Each copied `REPORT.md` gets a line at the top naming the full evidence as `codex/frontend-followthrough-20261009` at `0bbfeb740`. Rewrite the relative links to files that are not copied, so they cite that branch and commit with the path. No link may dangle.
-5. **Leave the evidence branch unchanged.** It keeps the raw evidence; nothing is deleted from it.
-6. **Prove the source matches.** After step 1, `git diff 0bbfeb740 HEAD -- src build.zig tests test docs examples bench scripts SPEC.md README.md` must show only the plan file and the report differences of steps 2–4. Run the full gate on this tree before starting §3, so that later failures are known to come from the fixes.
+   **Total kept ≤ 10 MB.**
+2. **Point each kept `REPORT.md` at the full evidence:** commit `0bbfeb740`, which stays reachable from `main`'s history and from `codex/frontend-followthrough-20261009`. Rewrite every relative link to a deleted file so it cites that commit and the path. No link may dangle.
+3. **Run the full gate on this tree before starting §3,** so that later failures are known to come from the fixes.
+4. **Do not rewrite history.** The user decides any history filtering (for example before publishing the repository) separately.
 
 ## 3. Fixes, in order
 
@@ -128,7 +128,7 @@ Each fix starts with a failing test from the reproducer, then the fix, then the 
 ## 5. Report
 
 `experiments/frontend-fixes-20261009/REPORT.md` should give:
-1. the merge-branch construction, with the source-identity diff of §2 step 6 and the evidence size;
+1. the evidence cleanup: files and bytes removed and kept, and the link rewrite;
 2. each fix with its test and commit;
 3. F1's behaviour table (`check`, `build`, `run`, `test`, `lint`, `lint --gate`, `cost`);
 4. the gates and the external summary;
@@ -149,9 +149,9 @@ Report plainly which phases of the follow-through plan are complete and which ha
 
 **Hard stops (report and stop only for these):**
 1. A semantic change beyond F1's accepted one, or a change to the redesign's syntax rules.
-2. `src/core/ir.zig` or `src/core/own.zig`.
+2. An edit **by you** to `src/core/ir.zig` or `src/core/own.zig`.
 3. Lowering a numeric threshold, or skipping a gate.
-4. Evidence above 10 MB that cannot be summarised.
+4. Evidence for this run above 10 MB that cannot be summarised.
 5. A correctness failure that about 8 hours of investigation does not fix.
-6. Anything that needs a merge into `main`, a push, or a change to a Claude worktree or branch.
+6. A push, a history rewrite, a merge into `main` the user did not ask for, or a change to a Claude worktree or branch. Upstream changes arriving through a merge of `main` are not edits by you and are always allowed.
 7. Resources you cannot recover within your own files and processes.
