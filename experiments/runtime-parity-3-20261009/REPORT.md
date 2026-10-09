@@ -10,7 +10,15 @@ Final head: pending X.
 
 - Launch: read the complete wave-3 plan, parity-plan §§2/6/8, PM report, F1/S1/F2/U1 reports, FU-X and FU-PORT reports.
 - M0 setup: created an isolated worktree from current main; all existing user changes remain in the original checkout.
-- M0 compiler builds, corpora qualification, gate oracles, timing, counterfactuals: pending.
+- Launch commit: `da7759b05`.
+- M0 Debug compiler build: 9/9 steps, exit 0. Guardian: 88 checks pass.
+- M0 formatting: exit 0; 818 live `.my` files checked, zero formatting failures; six formatter-gate tests pass.
+- Copied corpora: 473 Lox files and 210 EDA files, excluding `.tmp/`, `results/` and Git metadata. Source hashes are in `M0/corpora-source-sha256.json`; only the owned Lox baseline compiler path in `bench.json` was retargeted.
+- M0 ReleaseFast compiler build: 9/9 steps, exit 0; compiler SHA-256 and source hashes recorded in `M0/compiler-base.json`. Debug and ReleaseFast compiler sources equal the launch base.
+- External base gates: Lox conformance 974/974; Lox port tests 65 passed, no cached results; EDA tests 310 passed, no cached results; EDA goldens 34/34 byte-identical. Initial external gates use release guest binaries built with the Debug base compiler; ReleaseFast-built guests are prepared separately for timing.
+- Row build: all 46 old/new pairs compile after two private syntax-migration repairs (`M0/row-migration.patch`); no timed work was optimized. Reference rebuild and registry edge probes are in progress.
+- Retargeted timing/counterfactual tools are prepared. Counting covers all 45 parity programs, plus Lox, EDA and rows. CPU-10 timing excludes all admitted builds.
+- Repository full gate and `qualify_merge.py --shards 64` are waiting for another run's gate-slot holder. Parity preparation, counting builds, reference builds and CPU-8 counterfactuals continue through build slots. No timing result claimed yet.
 - U2, S2, R: pending M0 exit; parallel worktrees will branch from M0's final commit.
 - X: pending lane hand-offs.
 
