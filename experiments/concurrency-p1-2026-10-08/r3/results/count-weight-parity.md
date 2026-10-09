@@ -4,7 +4,7 @@ Source: `73737b94f663f056574b1bb58c4f311509b0114d`. CPU 10 under `cpu10.lock`; K
 |---|---:|---:|---:|---|
 | parity / B2 | 45 | 1.000591 | 0 | PASS |
 
-[Raw samples, wall times, load and hashes](count-weight-parity.json.gz). Times below are milliseconds; ratios use each batch's paired medians.
+[Raw samples, wall times, load and hashes](count-weight-parity.json.xz). Times below are milliseconds; ratios use each batch's paired medians.
 
 | cell | arm | K4 base → arm | K4 ratio | K5 base → arm | K5 ratio | K6 base → arm | K6 ratio | median ratio |
 |---|---|---:|---:|---:|---:|---:|---:|---:|

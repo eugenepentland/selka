@@ -34,18 +34,19 @@
   },
   "r3/fuzz-history.tar.xz": {
     "archive": "r3/fuzz-history.tar.xz",
-    "sha256": "6c79f09c9e9687218326a3c90213e78f3f62e9861aa360fd6d0d6162e1f1c02c",
-    "bytes": 4224712,
-    "verified": "Every decoded member compared byte-for-byte before original archives were moved into the private cache. Recompressed with 64 MiB dictionary; decompressed tar byte-identical.",
-    "previous_compression_sha256": "68f775ab48d84482797cef62a3c8e0a2dcfc43e004f25141f58e6bd1ee4e3698",
-    "tar_sha256": "18d6df90f100f15da64b2c947d9aa93ad674ac297d89a6d7d6f05d48e8ea53ea"
+    "sha256": "d250c551b5d8c2e23124534bbe3f61e709bf4f0ecf370871bad68535a354faad",
+    "bytes": 5239092,
+    "members": 9304,
+    "previous_archive_sha256": "6c79f09c9e9687218326a3c90213e78f3f62e9861aa360fd6d0d6162e1f1c02c",
+    "verified": "Every decoded member compared byte-for-byte; member hashes in fuzz-history-manifest.json.gz.",
+    "compression": "LZMA2 128 MiB dictionary; corresponding paths grouped across every run. Every decoded member byte-verified."
   },
   "raw/r3-counter-history.tar.xz": {
     "archive": "raw/r3-counter-history.tar.xz",
-    "sha256": "822528c1bb6a6a680eb79a0b09313391e4279f8aadd8128e0e4ecfff4db41af9",
-    "bytes": 1054960,
-    "verified": "Every decoded member compared byte-for-byte before original archives were moved into the private cache. Recompressed with 64 MiB dictionary; decompressed tar byte-identical.",
-    "previous_compression_sha256": "a80fcb8222e7e4dfccaf7d1b374bfd0c0c1b309bfab5abb8a7a4d470e38a9f73",
-    "tar_sha256": "f8b0284168d2f0db1cb1c041a007526bf671a24dd038b172e98329ddb2e3bbf2"
+    "sha256": "8beebbedb5677b4270b17e8a8dd70b61eb461b90ea983557bd2dc346b5fff2bb",
+    "bytes": 1075692,
+    "members": 396,
+    "previous_archive_sha256": "822528c1bb6a6a680eb79a0b09313391e4279f8aadd8128e0e4ecfff4db41af9",
+    "verified": "Every decoded member SHA-256 checked; member hashes in raw/r3-counter-history-manifest.json.gz."
   }
 }

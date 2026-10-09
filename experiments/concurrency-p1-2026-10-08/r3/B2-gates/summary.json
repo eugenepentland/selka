@@ -1,0 +1,69 @@
+{
+  "source": "9c2559a459681e7bd5b6a84fb7505a864ac0d8c4",
+  "steps": [
+    {
+      "name": "full-gate",
+      "command": [
+        "scripts/build-slot.sh",
+        "gate",
+        "zig",
+        "build",
+        "test",
+        "--summary",
+        "all"
+      ],
+      "status": 0,
+      "seconds": 126.99822430196218,
+      "log": "experiments/concurrency-p1-2026-10-08/r3/B2-gates/full-gate.log"
+    },
+    {
+      "name": "fmt-check",
+      "command": [
+        "scripts/build-slot.sh",
+        "build",
+        "zig",
+        "build",
+        "fmt-check",
+        "--summary",
+        "all"
+      ],
+      "status": 0,
+      "seconds": 0.2003317920025438,
+      "log": "experiments/concurrency-p1-2026-10-08/r3/B2-gates/fmt-check.log"
+    },
+    {
+      "name": "debug-install",
+      "command": [
+        "scripts/build-slot.sh",
+        "build",
+        "zig",
+        "build",
+        "install",
+        "--summary",
+        "all"
+      ],
+      "status": 0,
+      "seconds": 5.862274253042415,
+      "log": "experiments/concurrency-p1-2026-10-08/r3/B2-gates/debug-install.log"
+    },
+    {
+      "name": "qualify",
+      "command": [
+        "python3",
+        "experiments/new-core-s5-20261007/tools/qualify_merge.py",
+        "--shards",
+        "64",
+        "--compiler",
+        "zig-out/bin/mylang",
+        "--install",
+        "install",
+        "--evidence",
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/experiments/concurrency-p1-2026-10-08/r3/B2-gates/qualify"
+      ],
+      "status": 1,
+      "seconds": 0.10900112916715443,
+      "log": "experiments/concurrency-p1-2026-10-08/r3/B2-gates/qualify.log"
+    }
+  ],
+  "pass": false
+}

@@ -2,10 +2,10 @@
 
 ## Current progress — 2026-10-09
 
-- **Done:** Fast-forwarded to `0ee93b396`; R9/R10 committed at `9477f7673`; main `cafe7fea7` merged by real merge `42041fa45`. Comparison baseline: `94dc1c3a2`. C1’s full correctness/qualification/fuzz checkpoint is retained. B2’s selected emitter is now adopted; its fresh correctness checkpoint is next. No push or main/Claude modification occurred.
+- **Done:** Fast-forwarded to `0ee93b396`; R9/R10 committed at `9477f7673`; main `cafe7fea7` merged by real merge `42041fa45`. Comparison baseline: `94dc1c3a2`. C1’s full correctness/qualification/fuzz checkpoint is retained. B2’s selected emitter is adopted and its fresh full correctness checkpoint passes at `9c2559a45`. No push or main/Claude modification occurred.
 - **Measured:** B2 wins the prescribed R9 comparison and completes all corpus timing: rows **0.9990390412**, EDA **1.0207970965**, Lox tree **1.0140140429**, Lox VM **1.0165376601**, parity **1.0005911305**. Every corpus is below 1.03. The target remains missed in rows, EDA and both Lox engines; every failure is retained below.
 - **Decided:** Keep B’s single preserve-most slow call with a still-unlikely 32:1 count branch and the refined internal helpers. This resolves C1’s Lox VM premise failure under R9’s selection rule. Close the early performance investigation with recorded checkpoint misses; P1-2 changes the runtime again, and P1-6 will supply the binding tax decision.
-- **Next:** Rerun P1-1 correctness on adopted B2, then integrate P1-2 through P1-5, perform final review/gates/tax and finish P2-0. Later steps remain isolated drafts. **P1 is not complete.**
+- **Next:** Integrate P1-2 through P1-5, perform final review/gates/tax and finish P2-0. Later steps remain isolated drafts. **P1 is not complete.**
 
 ### Revision-3 correctness checkpoint
 
@@ -70,7 +70,7 @@ Count branches remain unlikely, but use 32:1 instead of 2000:1; allocator weight
 | **B2 selected** | **1.0140140429** | **1.0165376601** | **3 / 4** |
 | C2 | 1.0201026497 | **1.0328550234** | 4 / 7 |
 
-B2 resolves the premise failure under the mandated selection rule; target misses remain explicit. Its remaining corpus sweep is recorded below; its fresh correctness gates are pending.
+B2 resolves the premise failure under the mandated selection rule; target misses remain explicit. Its remaining corpus sweep is recorded below; its fresh correctness gates pass as recorded below.
 
 ### Selected B2: complete early tax checkpoint
 
@@ -377,7 +377,7 @@ and end-to-end confirmation remain pending after this P1-1 tax stop.
 | P1-5 generated thunks at 1/2/8 threads and 100 TSan repetitions | NOT IMPLEMENTED / NOT RUN; the C count harness is not a substitute |
 
 [Qualification summary](qualify/summary.json) and
-[full conformance log](qualify/full-conformance.log) retain the commands and
+[full conformance log](qualify/full-conformance.log.gz.gz.gz.gz.gz) retain the commands and
 results. The first full gate had two failures: an existing RC test expected
 `load i32`, and the property-test timeout case failed its “not shrunk” text
 assertion. The RC expectation was updated. The timeout test passed unchanged
@@ -411,8 +411,8 @@ diagnostics; perf-launch overhead is not allowed to dilute a short kernel's
 tax. The protocol was fixed before timing.
 
 See [timing protocol](evidence/timing-protocol.json),
-[original raw samples](results/tax-rows.json.gz) and
-[diagnostic raw samples](results/tax-rows-plain.json.gz), including binary
+[original raw samples](results/tax-rows.json.xz) and
+[diagnostic raw samples](results/tax-rows-plain.json.xz), including binary
 hashes and per-sample load. All corpora after the 46 rows are unmeasured because
 this first corpus triggered the stop. The own EDA worktree is
 `/home/epentland/ai/canopy/eda-bench-wt/codex-concurrency-p1` at `d45e0cd472d1`;
@@ -718,3 +718,11 @@ arguments must name new directories on reproduction. P1-0's inventory and
 count-reader scripts describe their historical source snapshot; reproduce
 those original probes at the P1-0 commit, not by assuming their old plain-load
 assertion still describes P1-1.
+
+### Selected B2: fresh correctness complete
+
+At `9c2559a45`, the full Debug gate passes **88/88 steps and 2,101 tests**, with fmt green. [Qualification](r3/B2-committed-qualify/summary.json) passes **510 Core tests and conformance 1518/0/0 in both modes**. Both frozen matrices, **9×50 and 9×200**, report complete, qualified, source unchanged and oracles unchanged; their original case outputs and summaries are in [the verified fuzz archive](r3/fuzz-history.tar.xz), under `r3/B2-fuzz50` and `r3/B2-fuzz200`. [Checkpoint commands and timings](r3/B2-gates/resumed-summary.json) are retained; associated logs use `.log.gz` after lossless compression.
+
+[External gates](r3/results/B2-external.json) pass: Lox **246 VM / 241 tree** in normal and stress modes and **65 port tests**; EDA **310 tests / 34 goldens**. All **132 counted/plain cells** match (48 Lox, 34 EDA, 4 parity, 46 rows), with zero statuses and valid counters. [Counter summaries](results/r3-B2/) and [original decoded JSON](raw/r3-counter-history.tar.xz) retain the evidence. The complete tax run also validates all **45 parity arms**. This closes P1-1's required correctness checkpoint.
+
+The first qualification launch failed before compilation because the generic evidence basename collided with an older private cache directory. Its failed log is retained in `r3/B2-gates/qualify.log.gz`; the successful retry used the unique `B2-committed-qualify` name. The checkpoint helper now uses a tag-specific qualification name and explicitly binds fuzz to the recorded committed HEAD. Long prototype/port-test waits were shared-slot admission, not slow test execution; no other lane was interrupted.

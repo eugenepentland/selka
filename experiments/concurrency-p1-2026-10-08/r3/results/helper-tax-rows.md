@@ -5,7 +5,7 @@ Source: `9f68e16d2c07f904cd6cc2dfb022489383b9a2bc`. CPU 10 under `cpu10.lock`; K
 | rows / B1 | 92 | 0.998804 | 4 | MISS |
 | rows / C1 | 92 | 0.996360 | 6 | MISS |
 
-[Raw samples, wall times, load and hashes](helper-tax-rows.json.gz). Times below are milliseconds; ratios use each batch's paired medians.
+[Raw samples, wall times, load and hashes](helper-tax-rows.json.xz). Times below are milliseconds; ratios use each batch's paired medians.
 
 | cell | arm | K4 base → arm | K4 ratio | K5 base → arm | K5 ratio | K6 base → arm | K6 ratio | median ratio |
 |---|---|---:|---:|---:|---:|---:|---:|---:|

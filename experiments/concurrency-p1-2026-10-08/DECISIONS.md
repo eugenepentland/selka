@@ -172,3 +172,45 @@ The historical fuzz archives were also transcoded from gzip to xz with identical
 - **Reversibility:** Easy through the retained commits/patches/compiler identities. This accepts only an early checkpoint miss, not a final target pass.
 
 Guardian’s whole-tree commit check caught that SHARED-COUNTS-1 still described the C alternative’s inline immortal skip after B2 adoption. The specification now describes the measured B path’s single slow call, including immortals; existing tests already exercise those calls on read-only literals and live shared counts. The change-classification gate is rerun without exemptions.
+
+
+## 2026-10-09 — P1-1: close B2 correctness and preserve evidence
+
+- **Question:** How should a qualification launch collision and the growing evidence bundle be handled?
+- **Options:** Delete the older private qualification state, retry under a unique name, or weaken/skip qualification. For evidence, retain separate compressed runs or consolidate exact bytes.
+- **Evidence:** The generic `qualify` basename collided with `.mylang-cache/s5/integration-qualify/qualify/tmp` before compilation. The unique retry passed 510 Core tests and both 1518/0/0 conformance modes. At `9c2559a45`, full Debug is 88/88 with 2,101 tests; frozen 9×50 and 9×200 matrices are qualified, complete and source/oracle-stable. Lox, EDA, parity and all 132 counted/plain cells pass.
+- **Choice:** Keep the failed launch, use a tag-specific qualification name in `tools/checkpoint.py`, and explicitly pass the committed source identity to fuzz. Consolidate the two new fuzz runs and B2 counters into existing archives, verifying every decoded member before moving unpacked copies into this worktree's private cache. Compress verbose logs losslessly. No tests, samples or failure evidence are discarded. This experiment helper is outside the runtime expected list and changes orchestration only.
+- **Reversal:** Easy; original bytes and manifests are retained.
+
+## 2026-10-09 — P1-2: preserve the main stack guard during lazy pool startup
+
+- **Question:** Should lazy pool startup reinstall the main thread's stack-floor handler?
+- **Options:** Remap the signal stack and remeasure the current frame, or make the startup-only installation idempotent.
+- **Evidence:** Review found that a second `core_floor_install` leaked its earlier 256 KiB alternate stack and reset the approximate main stack top at the deeper first-submit frame. The isolated native fixture verifies that a repeated installation preserves both the alternate-stack pointer and main stack top; all six thread-runtime tests pass.
+- **Choice:** Add a startup-only `core_floor_ready` flag. Worker installation remains per-thread. This is included when P1-2 is adopted and changes no accepted concurrency semantics.
+- **Reversal:** Small local change, but restoring repeated installation would restore the defect.
+
+## 2026-10-09 — P1-5 preparation: salt foreign-object manifests for TSan
+
+- **Question:** How should the internal sanitizer switch separate foreign C objects?
+- **Options:** Rely on the runtime ABI salt, or include sanitizer compile arguments in the independent foreign-source manifest key.
+- **Evidence:** The isolated integration's cache regression expected four units plus runtime, foreign source and link processes (seven); the sanitized build ran only six. `driver.zig:foreignKey` hashes its own settings without the runtime ABI. Its stale foreign object was reused even though the compile path accepted `-fsanitize=thread`. The other nine emitted-code tests passed, including actual LLVM TSan and task/map error locations.
+- **Choice:** Hash sanitizer arguments directly in `foreignKey`; preserve the strict regression. The focused rerun passes, including ordinary-to-sanitized-to-ordinary reuse and rejection of invalid switch values. Adopt with P1-5, not as an untested production change.
+- **Reversal:** Easy; cache entries naturally separate by key.
+
+
+## 2026-10-09 — P1-4/P1-5: keep stress coverage within the existing memory allowance
+
+- **Question:** How should the million-submit sanitizer stress fit the existing 1 GiB test-process allowance?
+- **Options:** Increase the allowance, reduce submissions, or join bounded groups while preserving the complete submission count and nesting tests.
+- **Evidence:** The isolated one-group run passed all assertions with zero TSan reports but Zig reported 1,961,353,216 bytes peak RSS, above 1,073,741,824. The process returned success despite that diagnostic, so it is not accepted as a clean gate. One hundred groups of 10,000 preserve a million simple submits, plus 10,000 dropped-group tasks, binary depth 12, chain depth 2,048, repeated result ownership and post-close results. The rerun passes at 578 MiB reported RSS with zero reports.
+- **Choice:** Batch the fixture's million submissions; leave runtime behavior and the memory allowance unchanged. Preserve both logs. Each group still exercises growth and shared environments, and the ordinary 1/2/8 matrix will use the same fixture.
+- **Reversal:** Easy, but a single million-result group requires more sanitizer metadata than the existing allowance permits.
+
+## 2026-10-09 — P1 evidence: lossless compression choices
+
+- **Question:** How can all historical evidence fit the unchanged 10 MB package limit?
+- **Options:** Discard cases (rejected), increase xz's dictionary, chunk large files, or compress remaining verbose text.
+- **Evidence:** Eight complete fuzz matrices contain about 320 MB of raw files. Corresponding-path ordering with a 128 MiB xz dictionary reduced their archive from 5.79 to 5.24 MB. A byte-verified 64 KiB chunk experiment was worse at 5.60 MB and was not adopted.
+- **Choice:** Keep a standard tar.xz with original paths and byte-verified members. Losslessly gzip remaining qualification logs and xz large timing JSON, preserving the rendered per-cell tables and raw sample bytes. Original copies remain in this worktree's private cache; references use the new extensions.
+- **Reversal:** Standard gzip/xz tools recover exact originals. No cases, failures or measurements are discarded.

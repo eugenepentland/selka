@@ -1,2 +1,0 @@
-zig: warning: argument unused during compilation: '-c' [-Wunused-command-line-argument]
-/home/epentland/ai/canopy/mylang-concurrency-p1/.tmp/concurrency-p1-inventory/inventory.c:1:1: error: FileNotFound

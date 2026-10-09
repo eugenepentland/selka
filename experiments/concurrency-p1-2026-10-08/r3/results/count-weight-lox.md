@@ -12,7 +12,7 @@ Source: `73737b94f663f056574b1bb58c4f311509b0114d`. CPU 10 under `cpu10.lock`; K
 | Lox tree / C2 | 13 | 1.0201026497 | 4 | MISS |
 | Lox vm / C2 | 13 | 1.0328550234 | 7 | MISS |
 
-[Raw samples, wall times, load and hashes](count-weight-lox.json.gz). Times below are milliseconds; ratios use each batch's paired medians.
+[Raw samples, wall times, load and hashes](count-weight-lox.json.xz). Times below are milliseconds; ratios use each batch's paired medians.
 
 | cell | arm | K4 base → arm | K4 ratio | K5 base → arm | K5 ratio | K6 base → arm | K6 ratio | median ratio |
 |---|---|---:|---:|---:|---:|---:|---:|---:|

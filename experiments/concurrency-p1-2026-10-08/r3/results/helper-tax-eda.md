@@ -5,7 +5,7 @@ Source: `9f68e16d2c07f904cd6cc2dfb022489383b9a2bc`. CPU 10 under `cpu10.lock`; K
 | eda / B1 | 34 | 1.015979 | 1 | MISS |
 | eda / C1 | 34 | 1.004482 | 0 | PASS |
 
-[Raw samples, wall times, load and hashes](helper-tax-eda.json.gz). Times below are milliseconds; ratios use each batch's paired medians.
+[Raw samples, wall times, load and hashes](helper-tax-eda.json.xz). Times below are milliseconds; ratios use each batch's paired medians.
 
 | cell | arm | K4 base → arm | K4 ratio | K5 base → arm | K5 ratio | K6 base → arm | K6 ratio | median ratio |
 |---|---|---:|---:|---:|---:|---:|---:|---:|

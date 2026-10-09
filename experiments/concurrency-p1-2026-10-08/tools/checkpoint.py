@@ -45,13 +45,13 @@ def main():
     # Prebuild Debug so qualification's exclusive cached-install limit measures its intended path.
     run('debug-install', ['scripts/build-slot.sh', 'build', 'zig', 'build', 'install', '--summary', 'all'])
     run('qualify', ['python3', 'experiments/new-core-s5-20261007/tools/qualify_merge.py', '--shards', '64',
-                    '--compiler', 'zig-out/bin/mylang', '--install', 'install', '--evidence', str(evidence / 'qualify')])
+                    '--compiler', 'zig-out/bin/mylang', '--install', 'install', '--evidence', str(evidence / (args.tag + '-qualify'))])
     compiler = ROOT / 'zig-out/bin/mylang'
     report['compiler_sha256'] = hashlib.sha256(compiler.read_bytes()).hexdigest()
     for count in (50, 200):
         run(f'fuzz{count}', ['python3', 'experiments/new-core-s5-20261007/tools/fuzz_matrix.py',
                             '--references', 'experiments/new-core-s5-20261007/references/fuzz-v1.json.gz',
-                            '--new', str(compiler), '--cases', str(count), '--evidence', str(evidence / f'fuzz{count}'), '--jobs', '3'])
+                            '--new', str(compiler), '--cases', str(count), '--evidence', str(evidence / f'fuzz{count}'), '--jobs', '3', '--qualified-head', report['source']])
     report['pass'] = True
     (evidence / 'summary.json').write_text(json.dumps(report, indent=2) + '\n')
 
