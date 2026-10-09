@@ -46,16 +46,16 @@ fn markerError(source: []const u8) !struct { code: []const u8, message: []u8 } {
 const allocate_body = "func allocate() -> int:\n    mut items: int[] = []\n    return len(items)\n\n";
 // spec: OWN-11
 test "direct and transitive allocation violate explicit bounds with witness paths" {
-    try reject("func main() -> int noalloc:\n    mut items: int[] = []\n    return len(items)\n", "E_EFFECT_BOUND", "main");
+    try reject("func main() -> int effects():\n    mut items: int[] = []\n    return len(items)\n", "E_EFFECT_BOUND", "main");
     try reject(allocate_body ++ "func helper() -> int:\n    return allocate()\n\n" ++
-        "func main() -> int noalloc:\n    return helper()\n", "E_EFFECT_BOUND", "main -> helper -> allocate");
+        "func main() -> int effects():\n    return helper()\n", "E_EFFECT_BOUND", "main -> helper -> allocate");
     try reject("func unused() -> int effects():\n    mut items: int[] = []\n    return len(items)\n\n" ++
         "func main() -> int:\n    return 0\n", "E_EFFECT_BOUND", "unused");
 }
 
 const recursive_a = "func a(n: int) -> int:\n    if n == 0:\n        mut items: int[] = []\n        return len(items)\n    return b(n - 1)\n\n";
 const recursive_b = "func b(n: int) -> int:\n    return a(n)\n\n";
-const recursive_main = "func main() -> int noalloc:\n    return b(0)\n";
+const recursive_main = "func main() -> int effects():\n    return b(0)\n";
 test "recursive effect summaries reach fixed points independent of declaration order" {
     try reject(recursive_a ++ recursive_b ++ recursive_main, "E_EFFECT_BOUND", "main -> b -> a");
     try reject(recursive_b ++ recursive_a ++ recursive_main, "E_EFFECT_BOUND", "main -> b -> a");
@@ -65,9 +65,9 @@ test "recursive effect summaries reach fixed points independent of declaration o
 }
 
 test "effect scanning includes untaken branches and short circuit operands" {
-    try reject("func main() -> int noalloc:\n    if False:\n        mut items: int[] = []\n        return len(items)\n    return 0\n", "E_EFFECT_BOUND", "main");
+    try reject("func main() -> int effects():\n    if False:\n        mut items: int[] = []\n        return len(items)\n    return 0\n", "E_EFFECT_BOUND", "main");
     try reject("func allocate() -> bool:\n    mut items: int[] = []\n    return len(items) == 0\n\n" ++
-        "func main() -> int noalloc:\n    _ = False and allocate()\n    return 0\n", "E_EFFECT_BOUND", "main -> allocate");
+        "func main() -> int effects():\n    _ = False and allocate()\n    return 0\n", "E_EFFECT_BOUND", "main -> allocate");
 }
 
 test "effect bounds reject unknown and duplicate names and noio permits allocation" {
@@ -115,7 +115,7 @@ fn allocationScenario(allocator: std.mem.Allocator) !void {
 }
 fn rejectionScenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, fixture_path, allocate_body ++
-        "func main() -> int noalloc:\n    return allocate()\n");
+        "func main() -> int effects():\n    return allocate()\n");
     defer c.deinit();
     c.check() catch |err| switch (err) {
         error.SourceError => {
@@ -179,7 +179,7 @@ test "declared ceilings reject hidden effects through generic and callback calls
         \\    return allocate()
         \\
         \\
-        \\func main() -> i64 noalloc:
+        \\func main() -> i64 effects():
         \\    return wrapper[i64](1)
     , "E_EFFECT_BOUND", "exceeds declared bound");
 
@@ -1153,16 +1153,16 @@ test "compile-time str literals contribute no managed allocation while computed 
         \\    return len(g())
     , 1);
     try reject(
-        \\func main() -> int noalloc:
+        \\func main() -> int effects():
         \\    return len("a" + "b")
     , "E_EFFECT_BOUND", "main");
     try reject(
-        \\func main() -> int noalloc:
+        \\func main() -> int effects():
         \\    mut data: bytes = b"ab"
         \\    return len(data)
     , "E_EFFECT_BOUND", "main");
     try reject(
-        \\func main() -> int noalloc:
+        \\func main() -> int effects():
         \\    mut items: int[] = []
         \\    return len(items)
     , "E_EFFECT_BOUND", "main");
@@ -1205,7 +1205,7 @@ test "an element read allocates only from a str receiver so whole-program loweri
         \\    return len(names[1]) + len(names[-1])
     , 10);
     try reject(
-        \\func initial(name: str) -> bool noalloc:
+        \\func initial(name: str) -> bool effects():
         \\    return name[0] == "a"
         \\
         \\

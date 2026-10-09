@@ -1,0 +1,805 @@
+[
+  {
+    "phase": "section2",
+    "command": "scripts/build-slot.sh gate zig build test --summary all",
+    "source_commit": "d9deb9b70c13ba876689d0f8870c581ab43e44ba",
+    "status": 1,
+    "summary": "Build Summary: 92/94 steps succeeded (1 failed); 2288/23499 tests passed (21211 skipped)",
+    "test_verdicts": {
+      "passed": 2288,
+      "failed": 0,
+      "skipped": 0
+    },
+    "log_sha256": "acd4c0a907f53fc98d63f14b3e4b47dc9f62ac43c964ce01bb6f96a09495a66b",
+    "log_bytes": 400425,
+    "note": "five external-fixture TMPDIR failures; see D6"
+  },
+  {
+    "phase": "section2",
+    "command": "scripts/build-slot.sh gate zig build test --summary all",
+    "source_commit": "d9deb9b70c13ba876689d0f8870c581ab43e44ba",
+    "status": 0,
+    "summary": "Build Summary: 94/94 steps succeeded; 2288/23499 tests passed (21211 skipped)",
+    "test_verdicts": {
+      "passed": 2288,
+      "failed": 0,
+      "skipped": 0
+    },
+    "log_sha256": "9c97402922113df242996a9af449dc6b4fba63670421962c4628476178df534c",
+    "log_bytes": 396020,
+    "note": "TMPDIR outside checkout; unchanged test sources"
+  },
+  {
+    "phase": "F1-red-core",
+    "command": "scripts/build-slot.sh build zig build test-core -Dtest-filter=F1 --summary all",
+    "source_commit": "ede3e6a589f4c61a1bc9d3ab7777c0b49b6d0b9e",
+    "status": 1,
+    "summary": "Build Summary: 6/8 steps succeeded (1 failed); 0/1 tests passed (1 failed)",
+    "test_verdicts": {
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0
+    },
+    "failures": [
+      "frontend_test.test.F1 validation sessions omit Core allocation contracts after a bounded body edit"
+    ],
+    "log_sha256": "e4c81fb81df1eac9bf5da6ffd207774aef1bbe2d2bcb506414d9e9f3c074c460",
+    "log_bytes": 2788
+  },
+  {
+    "phase": "F1-red-cli",
+    "command": "scripts/build-slot.sh build zig build test-cli -Dtest-filter=F1 --summary all",
+    "source_commit": "ede3e6a589f4c61a1bc9d3ab7777c0b49b6d0b9e",
+    "status": 1,
+    "summary": "Build Summary: 6/8 steps succeeded (1 failed); 2/5 tests passed (3 failed)",
+    "test_verdicts": {
+      "passed": 2,
+      "failed": 3,
+      "skipped": 0
+    },
+    "failures": [
+      "integration.test.F1 check accepts direct and transitive noalloc allocations without warnings",
+      "integration.test.F1 run reports a noalloc warning and preserves the program result",
+      "integration.test.F1 lint blocks noalloc allocations in every profile"
+    ],
+    "log_sha256": "2670f956b3027e54f4d9d3e201b46c8a6f1d20536835e7d4b136cdb7a4b9d686",
+    "log_bytes": 7709
+  },
+  {
+    "phase": "F1-red-replay",
+    "command": "scripts/build-slot.sh build zig build test-cli -Dtest-filter=\"F1 test receipts\" --summary all",
+    "source_commit": "ede3e6a589f4c61a1bc9d3ab7777c0b49b6d0b9e",
+    "status": 1,
+    "summary": "Build Summary: 6/8 steps succeeded (1 failed); 2/3 tests passed (1 failed)",
+    "test_verdicts": {
+      "passed": 2,
+      "failed": 1,
+      "skipped": 0
+    },
+    "failures": [
+      "integration.test.F1 test receipts retain allocation warnings on replay"
+    ],
+    "log_sha256": "440ef2bdca5d460021508424f4d06149b39baf8b35bb968a94c470886b52bbdf",
+    "log_bytes": 2391
+  },
+  {
+    "phase": "F1-green-cli",
+    "command": "scripts/build-slot.sh build zig build test-cli -Dtest-filter=\"F1 \" --summary all",
+    "source_commit": "ede3e6a589f4c61a1bc9d3ab7777c0b49b6d0b9e",
+    "status": 0,
+    "summary": "Build Summary: 8/8 steps succeeded; 8/8 tests passed",
+    "test_verdicts": {
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "9f760f167b04bfc3d983f830e025835cfa0e6b8973591b70d1c75e611beee736",
+    "log_bytes": 2044
+  },
+  {
+    "phase": "F1-green-core",
+    "command": "scripts/build-slot.sh build zig build test-core -Dtest-filter=F1 --summary all",
+    "source_commit": "ede3e6a589f4c61a1bc9d3ab7777c0b49b6d0b9e",
+    "status": 0,
+    "summary": "Build Summary: 8/8 steps succeeded; 1/1 tests passed",
+    "test_verdicts": {
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "46fc92a5d1da0d52247b027d8ab517e29eeafc81aef008bec7c54f2482f25fc1",
+    "log_bytes": 948
+  },
+  {
+    "phase": "F1-first-full",
+    "command": "scripts/build-slot.sh gate zig build test --summary all",
+    "source_commit": "ede3e6a589f4c61a1bc9d3ab7777c0b49b6d0b9e",
+    "status": 1,
+    "summary": "Build Summary: 35/95 steps succeeded (10 failed); 2267/23514 tests passed (21231 skipped, 16 failed)",
+    "test_verdicts": {
+      "passed": 2267,
+      "failed": 16,
+      "skipped": 0
+    },
+    "failures": [
+      "interface_files_test.test.an interface file renders every public declaration in source order without bodies",
+      "interfaces_test.test.exported functions publish their inferred ceiling while explicit ceilings stay upper bounds",
+      "interface_files_test.test.signature, contract, field, ceiling and deprecation edits change the interface file",
+      "python_bytes_test.test.PY-BYTES-1 byte strings are immutable and never convert through str",
+      "stdlib_time_random_test.test.standard time random calls preserve effect ceilings and reproducible draws",
+      "interfaces_test.test.cross module effect and recoverable result obligations are enforced",
+      "dictionary_views_test.test.direct dictionary view iteration remains noalloc while snapshots allocate",
+      "interface_files_test.test.api --write writes missing files and deletes generated orphans; --check then passes",
+      "constants_test.test.managed constants require matching literal types and keep byte or generic reads allocating",
+      "check_scale_test.test.an import alias retargeted to an identical declaration elsewhere re-checks its users",
+      "python_bytes_test.test.PY-BYTES-RANGE-1 range parsing and scalar counting clamp without a view allocation",
+      "check_scale_test.test.a callee whose inferred effects change makes the check repeat in full",
+      "python_bytes_test.test.PY-BYTES-9 numeric parsing is accepted under noalloc and a view is not",
+      "managed_lists_test.test.noalloc rejects transitive managed allocation while permitting fixed-slot mutation",
+      "python_bytes_test.test.PY-BYTES-FUSED-RANGE-1 immediate slices and views parse under noalloc"
+    ],
+    "log_sha256": "27bfd77ef3042a1879a226ac4f17685386fdda177ae0cd7ad2a8540a4b3f7f7b",
+    "log_bytes": 100722
+  },
+  {
+    "phase": "F1-second-full",
+    "command": "scripts/build-slot.sh gate zig build test --summary all",
+    "source_commit": "ede3e6a589f4c61a1bc9d3ab7777c0b49b6d0b9e",
+    "status": 1,
+    "summary": "Build Summary: 90/95 steps succeeded (4 failed); 2292/23535 tests passed (21241 skipped, 2 failed)",
+    "test_verdicts": {
+      "passed": 2292,
+      "failed": 2,
+      "skipped": 0
+    },
+    "failures": [
+      "managed_lists_test.test.explicit effects reject transitive managed allocation while permitting fixed-slot mutation",
+      "check_scale_test.test.allocation contract summaries retain concrete bounded closures across reordered declarations"
+    ],
+    "log_sha256": "c18725203facb2132f66142c5f000ce9983d935456a9d63636c2fbfc2ad2733d",
+    "log_bytes": 411411
+  },
+  {
+    "phase": "F1-final-cli",
+    "command": "scripts/build-slot.sh build zig build test-cli -Dtest-filter=\"F1 \" --summary all",
+    "source_commit": "ede3e6a589f4c61a1bc9d3ab7777c0b49b6d0b9e",
+    "status": 0,
+    "summary": "Build Summary: 8/8 steps succeeded; 8/8 tests passed",
+    "test_verdicts": {
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "1899ebbe0c699ab28a8ee461d6087c23250458df3d58512bfaf9c576cf72a7a6",
+    "log_bytes": 1924
+  },
+  {
+    "phase": "F1-corrected-fixtures",
+    "command": "scripts/build-slot.sh build zig build test-units -Dtest-filter=\"allocation contract summaries\" -Dtest-filter=\"explicit effects reject transitive\" --summary all",
+    "source_commit": "ede3e6a589f4c61a1bc9d3ab7777c0b49b6d0b9e",
+    "status": 0,
+    "summary": "Build Summary: 8/8 steps succeeded; 9/9 tests passed",
+    "test_verdicts": {
+      "passed": 9,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "adf6952034aa4222afad68a5d545be8690b4af008ead333ddecedc6c2ad29685",
+    "log_bytes": 1955
+  },
+  {
+    "phase": "F1-full",
+    "command": "scripts/build-slot.sh gate zig build test --summary all",
+    "source_commit": "ede3e6a589f4c61a1bc9d3ab7777c0b49b6d0b9e",
+    "status": 0,
+    "summary": "Build Summary: 95/95 steps succeeded; 2294/23535 tests passed (21241 skipped)",
+    "test_verdicts": {
+      "passed": 2294,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "f6ccba96aa8186cba1881ddda8b5d18bfc4339a295125c31d0792192aafd0220",
+    "log_bytes": 397263
+  },
+  {
+    "phase": "F2-red",
+    "command": "scripts/build-slot.sh build zig build test-units -Dtest-filter=\"F2 bounded\" --summary all",
+    "source_commit": "242a47edef10880131c9866d54db6423f411df3d",
+    "status": 1,
+    "summary": "Build Summary: 6/8 steps succeeded (1 failed); 7/8 tests passed (1 failed)",
+    "test_verdicts": {
+      "passed": 7,
+      "failed": 1,
+      "skipped": 0
+    },
+    "failures": [
+      "check_scale_test.test.F2 bounded body edits publish summaries for the next unrelated edit"
+    ],
+    "log_sha256": "3675af474878dbcf48e9ae0971de64d5f729101529894729ff4daf375c516d73",
+    "log_bytes": 2773
+  },
+  {
+    "phase": "F2-green",
+    "command": "scripts/build-slot.sh build zig build test-units -Dtest-filter=\"F2 bounded\" --summary all",
+    "source_commit": "242a47edef10880131c9866d54db6423f411df3d",
+    "status": 0,
+    "summary": "Build Summary: 8/8 steps succeeded; 8/8 tests passed",
+    "test_verdicts": {
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "24ddbab0e42238d0f07d8f240bc38cf81112772e79a1a7e696fec67458eeb332",
+    "log_bytes": 1671
+  },
+  {
+    "phase": "F2-spec-linkage",
+    "command": "scripts/build-slot.sh gate zig build test --summary all",
+    "source_commit": "242a47edef10880131c9866d54db6423f411df3d",
+    "status": 1,
+    "summary": "Build Summary: 43/95 steps succeeded (2 failed); 2286/23538 tests passed (21252 skipped)",
+    "test_verdicts": {
+      "passed": 2286,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "9df0e0673c09c0d97c2164d120e4352bb076b6d09c8b354a5a261a86cf93d408",
+    "log_bytes": 81673
+  },
+  {
+    "phase": "F2-full",
+    "command": "scripts/build-slot.sh gate zig build test --summary all",
+    "source_commit": "242a47edef10880131c9866d54db6423f411df3d",
+    "status": 0,
+    "summary": "Build Summary: 95/95 steps succeeded; 2295/23547 tests passed (21252 skipped)",
+    "test_verdicts": {
+      "passed": 2295,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "2427c3a7832effc9d27d5afc79ecf3799892c2b961af14571ffb9ce87964e270",
+    "log_bytes": 397346
+  },
+  {
+    "phase": "F3-red",
+    "command": "scripts/build-slot.sh build zig build test-cli -Dtest-filter=\"F3 \" --summary all",
+    "source_commit": "bc14327e8d3468c95b507ea734b94e88aac609cf",
+    "status": 1,
+    "summary": "Build Summary: 6/8 steps succeeded (1 failed); 2/4 tests passed (2 failed)",
+    "test_verdicts": {
+      "passed": 2,
+      "failed": 2,
+      "skipped": 0
+    },
+    "failures": [
+      "integration.test.F3 project and module checks report both recovered syntax errors",
+      "integration.test.F3 project migration edits belong to their own diagnostic"
+    ],
+    "log_sha256": "ef98f05eb5f02dc4a3c8a37b7cacc45bf88c7913d744d6fcba23542dcadc5df7",
+    "log_bytes": 3527
+  },
+  {
+    "phase": "F3-green",
+    "command": "scripts/build-slot.sh build zig build test-cli -Dtest-filter=\"F3 \" --summary all",
+    "source_commit": "bc14327e8d3468c95b507ea734b94e88aac609cf",
+    "status": 0,
+    "summary": "Build Summary: 8/8 steps succeeded; 4/4 tests passed",
+    "test_verdicts": {
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "e16df649800d2f063bf30acc170f5419c0ff269801480306b920dacaace2ca38",
+    "log_bytes": 1582
+  },
+  {
+    "phase": "F3-first-full",
+    "command": "scripts/build-slot.sh gate zig build test --summary all",
+    "source_commit": "bc14327e8d3468c95b507ea734b94e88aac609cf",
+    "status": 1,
+    "summary": "Build Summary: 42/95 steps succeeded (3 failed); 2287/23550 tests passed (21262 skipped, 1 failed)",
+    "test_verdicts": {
+      "passed": 2287,
+      "failed": 1,
+      "skipped": 0
+    },
+    "failures": [
+      "fix_cli_test.test.CLI fix migrates the pinned pre-marker Lox corpus with no hand edits"
+    ],
+    "log_sha256": "ec7fc65e0018ad0aaff354335f5b998148286d3ca99ead2943307d8955edafac",
+    "log_bytes": 82050
+  },
+  {
+    "phase": "F3-second-full",
+    "command": "scripts/build-slot.sh gate zig build test --summary all",
+    "source_commit": "bc14327e8d3468c95b507ea734b94e88aac609cf",
+    "status": 1,
+    "summary": "Build Summary: 93/95 steps succeeded (1 failed); 2296/23559 tests passed (21262 skipped, 1 failed)",
+    "test_verdicts": {
+      "passed": 2296,
+      "failed": 1,
+      "skipped": 0
+    },
+    "failures": [
+      "fix_cli_test.test.CLI fix migrates the pinned pre-marker Lox corpus with no hand edits"
+    ],
+    "log_sha256": "a59dbfff56f5f9e9b90bcb7d3cc4947fe39c39b30973a1aad5748d6bb10f3635",
+    "log_bytes": 398194
+  },
+  {
+    "phase": "F3-existing-repairs",
+    "command": "scripts/build-slot.sh build zig build test-units -Dtest-filter=\"project parser\" --summary all",
+    "source_commit": "bc14327e8d3468c95b507ea734b94e88aac609cf",
+    "status": 0,
+    "summary": "Build Summary: 8/8 steps succeeded; 9/9 tests passed",
+    "test_verdicts": {
+      "passed": 9,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "14ed832b9cf5cc98e80cc0e4fdc64feaef14ea16e8ed932b0d7432a616d1d081",
+    "log_bytes": 1670
+  },
+  {
+    "phase": "F3-lox-migration",
+    "command": "scripts/build-slot.sh build zig build test-cli -Dtest-filter=\"pinned pre-marker Lox\" --summary all",
+    "source_commit": "bc14327e8d3468c95b507ea734b94e88aac609cf",
+    "status": 0,
+    "summary": "Build Summary: 8/8 steps succeeded; 3/3 tests passed",
+    "test_verdicts": {
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "ec3bdb164a6f77f03595af5d8d1be399cfb40427d71210b46ba5748d3c307a7e",
+    "log_bytes": 1740
+  },
+  {
+    "phase": "F3-full",
+    "command": "scripts/build-slot.sh gate zig build test --summary all",
+    "source_commit": "bc14327e8d3468c95b507ea734b94e88aac609cf",
+    "status": 0,
+    "summary": "Build Summary: 95/95 steps succeeded; 851/6306 tests passed (5455 skipped)",
+    "test_verdicts": {
+      "passed": 851,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "e6ca22d78ed81233f8cd5b9de19beeb55809cb8d1d2fb074fc9ca7feb538a4e4",
+    "log_bytes": 332478
+  },
+  {
+    "phase": "F4-red",
+    "command": "zig build test-units -Dtest-filter=F4 parser --summary all",
+    "source_commit": "f97c31441e1f72a60fc9e8f48186e36c7483ea60",
+    "status": 1,
+    "summary": "Build Summary: 6/8 steps succeeded (1 failed); 7/8 tests passed (1 failed)",
+    "test_verdicts": {
+      "passed": 7,
+      "failed": 1,
+      "skipped": 0
+    },
+    "failures": [
+      "formatter_test.test.F4 parser recovery counts braces in a four-line dictionary literal"
+    ],
+    "log_sha256": "593b80dabc52e8bb348a59c31ccdee8cb8c7c1cc2c38debaf6eeb7c3950d1321",
+    "log_bytes": 2715
+  },
+  {
+    "phase": "F4-focused",
+    "command": "zig build test-units -Dtest-filter=F4 parser --summary all",
+    "source_commit": "f97c31441e1f72a60fc9e8f48186e36c7483ea60",
+    "status": 0,
+    "summary": "Build Summary: 8/8 steps succeeded; 8/8 tests passed",
+    "test_verdicts": {
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "b9af441c5b33c024984ded8a38219d9da76c8d9b13fbdec341994def26227cfa",
+    "log_bytes": 1671
+  },
+  {
+    "phase": "F4-full",
+    "command": "zig build test --summary all",
+    "source_commit": "f97c31441e1f72a60fc9e8f48186e36c7483ea60",
+    "status": 0,
+    "summary": "Build Summary: 95/95 steps succeeded; 2298/23571 tests passed (21273 skipped)",
+    "test_verdicts": {
+      "passed": 2298,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "66eaff5a4b36186086e9fb816deb0c43e89444c7e989e6f4a30aeea2434b6468",
+    "log_bytes": 395725
+  },
+  {
+    "phase": "F5-red",
+    "command": "zig build test-units -Dtest-filter=F5 binding --summary all",
+    "source_commit": "811f0aa1d0cf5bef140f32484e6d3985fd16c015",
+    "status": 1,
+    "summary": "Build Summary: 6/8 steps succeeded (1 failed); 7/9 tests passed (2 failed)",
+    "test_verdicts": {
+      "passed": 7,
+      "failed": 2,
+      "skipped": 0
+    },
+    "failures": [
+      "frontend_migration_test.test.F5 binding migration refuses branch locals used by augmented assignment",
+      "frontend_migration_test.test.F5 binding migration refuses branch locals used by a method receiver"
+    ],
+    "log_sha256": "f9f579629993d88dc64e91a4b92218fa777d0dd0cb41f96a45341030618abe4a",
+    "log_bytes": 4667
+  },
+  {
+    "phase": "F5-focused",
+    "command": "zig build test-units -Dtest-filter=binding migration --summary all",
+    "source_commit": "811f0aa1d0cf5bef140f32484e6d3985fd16c015",
+    "status": 0,
+    "summary": "Build Summary: 8/8 steps succeeded; 15/15 tests passed",
+    "test_verdicts": {
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "08e634f2483235e929c5c30870cfff98ace66ab77101c37ea130c88eefe34cd1",
+    "log_bytes": 1803
+  },
+  {
+    "phase": "F5-full",
+    "command": "zig build test --summary all",
+    "source_commit": "811f0aa1d0cf5bef140f32484e6d3985fd16c015",
+    "status": 0,
+    "summary": "Build Summary: 95/95 steps succeeded; 2302/23619 tests passed (21317 skipped)",
+    "test_verdicts": {
+      "passed": 2302,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "2aa8781e4dd6dd6df16d104523bc094bc2903f0dba936a099eecb5c883b81c71",
+    "log_bytes": 395198
+  },
+  {
+    "phase": "F6-red",
+    "command": "zig build test-units -Dtest-filter=F6 parser --summary all",
+    "source_commit": "20b74bf4f3424d3751b8a32bde89eaf9c0c6fbcc",
+    "status": 1,
+    "summary": "Build Summary: 6/8 steps succeeded (1 failed); 7/8 tests passed (1 failed)",
+    "test_verdicts": {
+      "passed": 7,
+      "failed": 1,
+      "skipped": 0
+    },
+    "failures": [
+      "formatter_test.test.F6 parser recovery skips continuations after a malformed elif header"
+    ],
+    "log_sha256": "bbcf197fa57c5d120060abccbe4d266a5b72f8c47d23b7d1c0e0dca84de0eef3",
+    "log_bytes": 2723
+  },
+  {
+    "phase": "F6-focused",
+    "command": "zig build test-units -Dtest-filter=parser recovery --summary all",
+    "source_commit": "20b74bf4f3424d3751b8a32bde89eaf9c0c6fbcc",
+    "status": 0,
+    "summary": "Build Summary: 8/8 steps succeeded; 16/16 tests passed",
+    "test_verdicts": {
+      "passed": 16,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "4ce5657a172facc68890310d1385eee38d5bdeb9ebe50f6e8a5208aced32db9a",
+    "log_bytes": 1833
+  },
+  {
+    "phase": "F6-full",
+    "command": "zig build test --summary all",
+    "source_commit": "20b74bf4f3424d3751b8a32bde89eaf9c0c6fbcc",
+    "status": 0,
+    "summary": "Build Summary: 95/95 steps succeeded; 2305/23655 tests passed (21350 skipped)",
+    "test_verdicts": {
+      "passed": 2305,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "a0f5dbdd5ab559258ed45ef23601352d837e255c960f9996e6655299c0a56d85",
+    "log_bytes": 395680
+  },
+  {
+    "phase": "F7-red",
+    "command": "zig build test-units -Dtest-filter=F7 doctest --summary all",
+    "source_commit": "cf2d77e7556e26601c91ed3ace3ffaf2e54cd20f",
+    "status": 1,
+    "summary": "Build Summary: 6/8 steps succeeded (1 failed); 7/8 tests passed (1 failed)",
+    "test_verdicts": {
+      "passed": 7,
+      "failed": 1,
+      "skipped": 0
+    },
+    "failures": [
+      "doctest_command.test.F7 doctest detects unchecked console programs without mistaking command output for source"
+    ],
+    "log_sha256": "d23d0342345cec142b69b4a1bd96e36c10e3a8f69de46c74904baa4a3a2ddb79",
+    "log_bytes": 2511
+  },
+  {
+    "phase": "F7-entry-red",
+    "command": "zig build test-units -Dtest-filter=F7 doctest checks --summary all",
+    "source_commit": "cf2d77e7556e26601c91ed3ace3ffaf2e54cd20f",
+    "status": 1,
+    "summary": "Build Summary: 6/8 steps succeeded (1 failed); 7/8 tests passed (1 failed)",
+    "test_verdicts": {
+      "passed": 7,
+      "failed": 1,
+      "skipped": 0
+    },
+    "failures": [
+      "doctest_command.test.F7 doctest checks a private test module as its own project entry"
+    ],
+    "log_sha256": "dad0846de2f5beb16d0fa8db7d72f81dbafe99ca4091c985e744a0d2cd355e47",
+    "log_bytes": 2759
+  },
+  {
+    "phase": "F7-focused",
+    "command": "zig build test-units -Dtest-filter=doctest --summary all",
+    "source_commit": "cf2d77e7556e26601c91ed3ace3ffaf2e54cd20f",
+    "status": 0,
+    "summary": "Build Summary: 8/8 steps succeeded; 23/23 tests passed",
+    "test_verdicts": {
+      "passed": 23,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "eca9fbffa7d9314c7700e77b49949932a2eb736816a062a5a9a2ab3dd3095034",
+    "log_bytes": 1673
+  },
+  {
+    "phase": "F7-full",
+    "command": "zig build test --summary all",
+    "source_commit": "cf2d77e7556e26601c91ed3ace3ffaf2e54cd20f",
+    "status": 0,
+    "summary": "Build Summary: 95/95 steps succeeded; 2307/23679 tests passed (21372 skipped)",
+    "test_verdicts": {
+      "passed": 2307,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "288e60ace914f72045ca0a40ed554fa710cd173bf095e5c773e7f96e55fd860d",
+    "log_bytes": 396708
+  },
+  {
+    "phase": "F7-final",
+    "command": "zig build test --summary all",
+    "source_commit": "cf2d77e7556e26601c91ed3ace3ffaf2e54cd20f",
+    "status": 0,
+    "summary": "Build Summary: 95/95 steps succeeded; 600/4800 tests passed (4200 skipped)",
+    "test_verdicts": {
+      "passed": 600,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "9146b9a7fae2e40e3041a5a5a64d66ac87d0384884ff5fb6c7ba5c0729c5ba78",
+    "log_bytes": 325493
+  },
+  {
+    "phase": "F8-red",
+    "command": "zig build test-cli -Dtest-filter=F8 formatter --summary all",
+    "source_commit": "104a1f29b8518d9d90d43e050ec2ed05f8ea0cf8",
+    "status": 1,
+    "summary": "Build Summary: 6/8 steps succeeded (1 failed); 3/4 tests passed (1 failed)",
+    "test_verdicts": {
+      "passed": 3,
+      "failed": 1,
+      "skipped": 0
+    },
+    "failures": [
+      "integration.test.F8 formatter accepts the exact standard library sources that check accepts"
+    ],
+    "log_sha256": "226640cecf33023fdd1e49691c4254694776d679098c26cb4f04041183a9bbb9",
+    "log_bytes": 3139
+  },
+  {
+    "phase": "F8-focused",
+    "command": "zig build test-cli -Dtest-filter=F8 formatter --summary all",
+    "source_commit": "104a1f29b8518d9d90d43e050ec2ed05f8ea0cf8",
+    "status": 0,
+    "summary": "Build Summary: 8/8 steps succeeded; 5/5 tests passed",
+    "test_verdicts": {
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "2f24f53fef8997e1928477fa5e3699b2db57989c651a87b2f7c1e5201f6faafe",
+    "log_bytes": 1737
+  },
+  {
+    "phase": "F8-full",
+    "command": "zig build test --summary all",
+    "source_commit": "104a1f29b8518d9d90d43e050ec2ed05f8ea0cf8",
+    "status": 0,
+    "summary": "Build Summary: 95/95 steps succeeded; 2310/23697 tests passed (21387 skipped)",
+    "test_verdicts": {
+      "passed": 2310,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "fc78661dc6fab75f7cf0ba6e295d1a13a71787c0805ef3f9a1f79bcd84d9611c",
+    "log_bytes": 395738
+  },
+  {
+    "phase": "F9-red",
+    "command": "zig build test-cli -Dtest-filter=F9 CLI --summary all",
+    "source_commit": "fbc5ec1e741d217a1779ef61e5506beecddd35da",
+    "status": 1,
+    "summary": "Build Summary: 6/8 steps succeeded (1 failed); 2/3 tests passed (1 failed)",
+    "test_verdicts": {
+      "passed": 2,
+      "failed": 1,
+      "skipped": 0
+    },
+    "failures": [
+      "fix_cli_test.test.F9 CLI fix repairs both sequential arena blocks reusing a name"
+    ],
+    "log_sha256": "2e31166310000ca858ddd4a09d58170a2999b40bd758067e75427f51eeadca53",
+    "log_bytes": 2601
+  },
+  {
+    "phase": "F9-focused",
+    "command": "zig build test-cli -Dtest-filter=F9 CLI --summary all",
+    "source_commit": "fbc5ec1e741d217a1779ef61e5506beecddd35da",
+    "status": 0,
+    "summary": "Build Summary: 8/8 steps succeeded; 4/4 tests passed",
+    "test_verdicts": {
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "940d23119984a488584112087deae26aa70f7b63b98af94606d05b7e93587477",
+    "log_bytes": 1711
+  },
+  {
+    "phase": "F9-full-first",
+    "command": "zig build test --summary all",
+    "source_commit": "fbc5ec1e741d217a1779ef61e5506beecddd35da",
+    "status": 1,
+    "summary": "Build Summary: 43/95 steps succeeded (2 failed); 2303/23700 tests passed (21397 skipped)",
+    "test_verdicts": {
+      "passed": 2303,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "51948230f67680f4bf41b89d9177b1dd6920d230bf5d2427a1a84da6adf83a4d",
+    "log_bytes": 81688
+  },
+  {
+    "phase": "F9-full",
+    "command": "zig build test --summary all",
+    "source_commit": "fbc5ec1e741d217a1779ef61e5506beecddd35da",
+    "status": 0,
+    "summary": "Build Summary: 95/95 steps succeeded; 2312/23709 tests passed (21397 skipped)",
+    "test_verdicts": {
+      "passed": 2312,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "d2d6f0f04ab876636365da5752b5e7a25a7faef37e268ea4670d780155c4bb92",
+    "log_bytes": 397419
+  },
+  {
+    "phase": "F10-red",
+    "command": "zig build test-units -Dtest-filter=F10 specialization --summary all",
+    "source_commit": "78bbf1918f5259d88bd4b6ac397420473a192fd8",
+    "status": 1,
+    "summary": "Build Summary: 6/8 steps succeeded (1 failed); 7/8 tests passed (1 failed)",
+    "test_verdicts": {
+      "passed": 7,
+      "failed": 1,
+      "skipped": 0
+    },
+    "failures": [
+      "semantic_cache_test.test.F10 specialization record name work is linear in each fresh catalog"
+    ],
+    "log_sha256": "6369d522b331853586397d1956edf574489da68d00f594555eacda617360bd00",
+    "log_bytes": 2579
+  },
+  {
+    "phase": "F10-focused",
+    "command": "zig build test-units -Dtest-filter=F10 specialization --summary all",
+    "source_commit": "78bbf1918f5259d88bd4b6ac397420473a192fd8",
+    "status": 0,
+    "summary": "Build Summary: 8/8 steps succeeded; 9/9 tests passed",
+    "test_verdicts": {
+      "passed": 9,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "5fe0d91a833e85a0aebc9c5a7aff9ee0fe72423cfd1f9cc75a819221113c8773",
+    "log_bytes": 1967
+  },
+  {
+    "phase": "final-format",
+    "command": "zig build fmt-check --summary all",
+    "source_commit": "78bbf1918f5259d88bd4b6ac397420473a192fd8",
+    "status": 0,
+    "summary": "Build Summary: 15/15 steps succeeded",
+    "test_verdicts": {
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "732d6892e806be6e1a2af9d5c1567b52f432f03917a608b0b15877d8ca34f426",
+    "log_bytes": 3374
+  },
+  {
+    "phase": "F10-full",
+    "command": "scripts/build-slot.sh gate zig build test --summary all",
+    "source_commit": "78bbf1918f5259d88bd4b6ac397420473a192fd8",
+    "status": 0,
+    "summary": "Build Summary: 95/95 steps succeeded; 2314/23733 tests passed (21419 skipped)",
+    "test_verdicts": {
+      "passed": 2314,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "a1131fa439bdccfd3abc7d37ed12753df9e6dfadbbf05073d300f3496e494711",
+    "log_bytes": 395103
+  },
+  {
+    "phase": "final-full",
+    "command": "scripts/build-slot.sh gate zig build test --summary all",
+    "source_commit": "350a9e05786b8d4f8b69335069b5f3f75964915b",
+    "status": 0,
+    "summary": "Build Summary: 95/95 steps succeeded; 600/4800 tests passed (4200 skipped)",
+    "test_verdicts": {
+      "passed": 600,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "258343eb9e76aeeaa51c0454e1b7962b160e9ec0b81025470c69046c3f133e0a",
+    "log_bytes": 316899
+  },
+  {
+    "phase": "final-format-after-harness",
+    "command": "scripts/build-slot.sh gate zig build fmt-check --summary all",
+    "source_commit": "350a9e05786b8d4f8b69335069b5f3f75964915b",
+    "status": 0,
+    "summary": "Build Summary: 15/15 steps succeeded",
+    "test_verdicts": {
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "9086fecea8391caba3f3ff4ec6968ee522aa9ca6f1e237015d9807998c955f56",
+    "log_bytes": 1972
+  }
+]

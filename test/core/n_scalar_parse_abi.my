@@ -12,6 +12,7 @@ public func test_integer_option_c_abi_keeps_signed_limits_and_none_tags() -> boo
 
 
 # spec-case: NEW-CORE-S3-NUMBER-1
+@allow("test-conditional", reason="This language regression intentionally exercises conditional failure paths.")
 public func test_float_option_c_abi_keeps_signed_zero_nonfinite_and_none_tags() -> bool:
     match floating(b"-0.0", 0, 4):
         case Some(value):

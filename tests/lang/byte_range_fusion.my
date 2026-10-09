@@ -23,6 +23,7 @@ public func test_immediate_byte_ranges_use_the_numeric_range_parser() -> bool:
     return canonical(b"xx42=2.5yy")
 
 
+@allow("test-conditional", reason="This language regression intentionally exercises conditional failure paths.")
 # spec-case: PY-BYTES-FUSED-RANGE-1
 public func test_omitted_negative_and_clamped_bounds_keep_slice_semantics() -> bool:
     match b"42"[:].parse_int():

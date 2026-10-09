@@ -28,17 +28,17 @@ Validation used the pinned Zig 0.17.0-dev.1683+5ceec001b through the build-slot
 wrapper, assigned local/global cache directories and temporary directory. Timed
 logs preserve all attempts:
 
-- `focused.log`: rejected compile, helper named `declaration` shadowed existing
+- `0bbfeb740:experiments/frontend-closeout-20261009/recovery/focused.log`: rejected compile, helper named `declaration` shadowed existing
   locals; renamed to `parseDeclaration`.
-- `focused-02.log`: 8/9 passed; new regression expected `E_SYNTAX` instead of
+- `0bbfeb740:experiments/frontend-closeout-20261009/recovery/focused-02.log`: 8/9 passed; new regression expected `E_SYNTAX` instead of
   the unchanged expression diagnostic `E_EXPRESSION`; expectation corrected.
-- `focused-03.log`: 32/32 formatter/recovery tests passed before the additional
+- `0bbfeb740:experiments/frontend-closeout-20261009/recovery/focused-03.log`: 32/32 formatter/recovery tests passed before the additional
   missing-expression regression.
-- `focused-04.log`: final formatter/recovery tests, 33/33 passed, exit 0;
+- `0bbfeb740:experiments/frontend-closeout-20261009/recovery/focused-04.log`: final formatter/recovery tests, 33/33 passed, exit 0;
   4.89 s wall and 489876 KiB maximum RSS.
-- `compatibility.log`: 150/150 syntax, migration and navigation tests passed,
+- `0bbfeb740:experiments/frontend-closeout-20261009/recovery/compatibility.log`: 150/150 syntax, migration and navigation tests passed,
   exit 0, before the additional missing-expression refinement.
-- `compatibility-02.log`: final syntax, migration and navigation verification,
+- `0bbfeb740:experiments/frontend-closeout-20261009/recovery/compatibility-02.log`: final syntax, migration and navigation verification,
   150/150 passed, exit 0.
 
 These are focused checks, not the integration full gate. The Guardian test
@@ -58,3 +58,9 @@ publish syntax suitable for semantic navigation from malformed input.
 The later range/final-focused.log reruns recovery together with 210/210 semantic,
 navigation and source-shaped range checks. Its mutation regression checks every
 diagnostic span and absence of a published AST after a source error.
+
+## Archived full evidence
+
+Full captures and the original version of this report remain in commit `0bbfeb740`,
+reachable from `main` and `codex/frontend-followthrough-20261009`.
+Retrieve any archived path with `git show 0bbfeb740:PATH` (paths are repository-relative).

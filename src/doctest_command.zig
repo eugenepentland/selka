@@ -22,9 +22,9 @@ const executable_tags = [_][]const u8{ "mylang", "my" };
 const prose_tags = [_][]const u8{ "", "text", "rust", "python", "go" };
 /// Directives the runner understands; an unknown name fails its block.
 const known_directives = [_][]const u8{
-    "expect",       "expect-error", "check",      "project",     "file",
-    "skip",         not_mylang,     "allow-read", "allow-write", value_semantics,
-    legacy_sharing, gc_runtime,
+    "expect",   "expect-error", "check",      "project",     "file",          "entry",
+    "skip",     not_mylang,     "allow-read", "allow-write", value_semantics, legacy_sharing,
+    gc_runtime,
 };
 /// Directive that checks and runs its unit under `--value-semantics`
 /// (`VALUE-SEMANTICS-8`); unmarked units use the default value model.
@@ -428,7 +428,31 @@ fn isExecutable(fence: *const Fence) bool {
 
 fn mistagged(fence: *const Fence) bool {
     if (fence.notest or hasDirective(fence, not_mylang)) return false;
+    if (contains(&.{ "console", "bash", "sh" }, fence.tag)) return consoleProgram(fence.source);
     return contains(&prose_tags, fence.tag) and guestShape(fence.source);
+}
+
+/// A cat transcript/heredoc that includes guest source must be moved to a
+/// checked fence. Commands alone and interface/output transcripts are fine.
+fn consoleProgram(text: []const u8) bool {
+    var lines = std.mem.splitScalar(u8, text, '\n');
+    var source_follows = false;
+    while (lines.next()) |line| {
+        const trimmed = std.mem.trim(u8, line, " \t\r");
+        if (trimmed.len == 0) continue;
+        const prompt = std.mem.startsWith(u8, trimmed, "$ ");
+        const command = if (prompt) trimmed[2..] else trimmed;
+        if (std.mem.startsWith(u8, command, "cat ")) {
+            source_follows = false;
+            var words = std.mem.tokenizeAny(u8, command[4..], " \t<>");
+            while (words.next()) |word| {
+                if (std.mem.endsWith(u8, std.mem.trim(u8, word, "\"'"), ".my")) source_follows = true;
+            }
+        } else if (prompt) {
+            source_follows = false;
+        } else if (source_follows) return true;
+    }
+    return false;
 }
 
 /// One fence opener: its indentation, tick run and trailing info string.
@@ -598,6 +622,15 @@ fn unitHasFile(unit: *const Unit, wanted: []const u8) bool {
     return false;
 }
 
+fn entryName(unit: *const Unit) []const u8 {
+    for (unit.members.items) |member| {
+        for (member.directives) |directive| {
+            if (eql(directive.name, "entry")) return std.mem.trim(u8, directive.rest, " \t\r");
+        }
+    }
+    return "main.my";
+}
+
 /// Fold executable fences into standalone block units and named project units.
 fn group(allocator: std.mem.Allocator, blocks: []const *const Fence) ![]*Unit {
     var units: std.ArrayList(*Unit) = .empty;
@@ -651,7 +684,9 @@ fn plan(allocator: std.mem.Allocator, unit: *const Unit) !Plan {
         return .{ .action = .skip, .detail = try join(allocator, skips.items, "; ") };
     }
     if (has_not_mylang) return .{ .action = .invalid, .detail = "'# doc: not-mylang' cannot tag an executable block" };
-    if (unit.kind == .project and !unitHasFile(unit, "main.my")) return .{ .action = .invalid, .detail = "project has no '# doc: file main.my' entry" };
+    const entries = try unitDirectives(allocator, unit, "entry");
+    if (entries.len > 1 or (entries.len != 0 and unit.kind != .project)) return .{ .action = .invalid, .detail = "'# doc: entry' requires one project entry" };
+    if (unit.kind == .project and !unitHasFile(unit, entryName(unit))) return .{ .action = .invalid, .detail = "project has no declared entry file (main.my by default)" };
     const expect = try unitDirectives(allocator, unit, "expect");
     const raw_codes = try unitDirectives(allocator, unit, "expect-error");
     var codes: std.ArrayList([]const u8) = .empty;
@@ -763,12 +798,12 @@ fn write(allocator: std.mem.Allocator, io: std.Io, unit: *const Unit, directory:
         const path = try std.fs.path.join(allocator, &.{ directory, name });
         const content = try std.fmt.allocPrint(allocator, "{s}\n", .{member.source});
         try std.Io.Dir.cwd().writeFile(io, .{ .sub_path = path, .data = content });
-        if (eql(name, "main.my") or (entry == null and unit.kind == .block)) {
+        if (eql(name, entryName(unit)) or (entry == null and unit.kind == .block)) {
             entry = path;
             entry_source = member.source;
         }
     }
-    const entry_path = entry orelse try std.fs.path.join(allocator, &.{ directory, "main.my" });
+    const entry_path = entry orelse try std.fs.path.join(allocator, &.{ directory, entryName(unit) });
     if (!has_main) {
         const stubbed = try std.fmt.allocPrint(allocator, "{s}\n{s}", .{ entry_source, stub });
         try std.Io.Dir.cwd().writeFile(io, .{ .sub_path = entry_path, .data = stubbed });
@@ -1515,6 +1550,35 @@ test "doctest mis-tagged prose fences look like guest source and not-mylang opts
     try testing.expectEqual(@as(usize, 2), found.len);
     try testing.expect(mistagged(&found[0]));
     try testing.expect(!mistagged(&found[1]));
+}
+
+// spec-case: DOCTEST-1
+test "F7 doctest detects unchecked console programs without mistaking command output for source" {
+    const text = "```console\n$ cat grow.my\nfunc grow(values: mut list[int]) -> int:\n    return len(values)\n$ mylang check grow.my\n```\n" ++
+        "```sh\ncat > main.my <<'EOF'\nfunc main() -> int:\n    return 0\nEOF\n```\n" ++
+        "```console\n$ mylang list-interfaces main.my\nmodule interfaces v1; declarations/signature visibility\n```\n" ++
+        "```console\n$ cat main.my\n$ mylang check main.my\n```\n";
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const found = try fences(arena.allocator(), "docs/console.md", text);
+    try testing.expectEqual(@as(usize, 4), found.len);
+    try testing.expect(mistagged(&found[0]));
+    try testing.expect(mistagged(&found[1]));
+    try testing.expect(!mistagged(&found[2]));
+    try testing.expect(!mistagged(&found[3]));
+}
+
+// spec-case: DOCTEST-1
+test "F7 doctest checks a private test module as its own project entry" {
+    const text = "```mylang\n# doc: project scanner\n# doc: file scanner.my\n# doc: check\nfunc digit() -> int:\n    return 7\n```\n" ++
+        "```mylang\n# doc: project scanner\n# doc: file scanner_test.my\n# doc: entry scanner_test.my\nimport scanner\npublic func test_digit() -> bool:\n    return scanner.digit() == 7\n```\n";
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
+    const found = try fences(allocator, "docs/scanner.md", text);
+    const units = try group(allocator, try executableBlocks(allocator, found));
+    try testing.expectEqual(@as(usize, 1), units.len);
+    try testing.expectEqual(Action.check, (try plan(allocator, units[0])).action);
 }
 
 test "doctest glob filters anchor a wildcard-free pattern but expand a star" {

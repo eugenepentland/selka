@@ -1,2 +1,0 @@
-{"version":"diagnostic-v1","kind":"diagnostic","diagnostic":{"code":"E_BINDING_SCOPE_MIGRATION","severity":"error","message":"this implicit local is used outside its block; declare the state in the enclosing block or rewrite the branches as a value expression","location":{"path":"parser.my","start":{"line":287,"column":17},"end":{"line":287,"column":21},"bytes":{"start":10589,"end":10593}},"notes":[],"stack":{"frames":[],"omitted":0}}}
-fix: nothing to fix

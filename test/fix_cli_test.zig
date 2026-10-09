@@ -310,7 +310,7 @@ test "CLI fix migrates the pinned pre-marker Lox corpus with no hand edits" {
     try testing.expectEqual(@as(u8, 0), migrated.status);
     try testing.expectEqualStrings("", migrated.stderr);
     try testing.expect(contains(migrated.stdout, "fix: 412 edits in 9 files over 30 rounds"));
-    try testing.expect(contains(migrated.stdout, "fixed heap.my: 147 edits (E_MODULE_HEADER, E_BINDING_DECLARATION, E_MUTATION_MARKER, E_NAMED_PATTERN, E_NAMED_FIELDS)"));
+    try testing.expect(contains(migrated.stdout, "fixed heap.my: 147 edits (E_MODULE_HEADER, E_BINDING_DECLARATION, E_FRONTEND_SYNTAX, E_MUTATION_MARKER, E_NAMED_PATTERN, E_NAMED_FIELDS)"));
     // After: every entry checks, and a second pass finds nothing to do.
     try testing.expectEqual(@as(usize, 0), try rejectedFiles(&project));
     const settled = try project.run("fix", ".", &.{"--check"});
@@ -438,6 +438,42 @@ const arenas_migrated =
     \\    return len(readings) + loudest(readings) + nested()
     \\
 ;
+
+// spec-case: NEW-CORE-S5-ARENA-3
+test "F9 CLI fix repairs both sequential arena blocks reusing a name" {
+    const original = "func main() -> int:\n    with arena() as a:\n        _ = len(a.escape([1]))\n    with arena() as a:\n        _ = len(a.escape([2]))\n    return 0\n";
+    var project = try Project.init(&.{.{ .path = "main.my", .data = original }});
+    defer project.deinit();
+    const fixed = try project.run("fix", "main.my", &.{});
+    defer fixed.deinit();
+    try testing.expectEqual(@as(u8, 0), fixed.status);
+    const after = try project.read("main.my");
+    defer testing.allocator.free(after);
+    try testing.expect(!contains(after, "with arena"));
+    try testing.expect(!contains(after, "a.escape"));
+    try testing.expectEqual(@as(usize, 2), std.mem.count(u8, after, "len("));
+    const checked = try project.run("check", "main.my", &.{});
+    defer checked.deinit();
+    try testing.expectEqual(@as(u8, 0), checked.status);
+    try testing.expectEqualStrings("", checked.stderr);
+    const again = try project.run("fix", "main.my", &.{"--check"});
+    defer again.deinit();
+    try testing.expectEqual(@as(u8, 0), again.status);
+}
+
+// spec-case: NEW-CORE-S5-ARENA-3
+test "F9 CLI fix still withholds nested arena name shadowing" {
+    const original = "func main() -> int:\n    with arena() as a:\n        with arena() as a:\n            _ = len(a.escape([1]))\n    return 0\n";
+    var project = try Project.init(&.{.{ .path = "main.my", .data = original }});
+    defer project.deinit();
+    const fixed = try project.run("fix", "main.my", &.{});
+    defer fixed.deinit();
+    try testing.expectEqual(@as(u8, 1), fixed.status);
+    const after = try project.read("main.my");
+    defer testing.allocator.free(after);
+    try testing.expectEqualStrings(original, after);
+    try testing.expect(contains(fixed.stderr, "E_ARENA_REMOVED"));
+}
 
 // spec-case: FIX-MIGRATION-1
 // spec-case: D2-VIEW-STORAGE-1

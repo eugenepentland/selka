@@ -16,6 +16,7 @@ def main():
  p.add_argument('--shards',type=int,default=32)
  p.add_argument('--compiler',default='zig-out/bin/mylang-core')
  p.add_argument('--install',default='core')
+ p.add_argument('--frontend-reference',type=Path)
  a=p.parse_args(); out=a.evidence.resolve()
  if not out.is_relative_to(ROOT/'experiments') or out.exists(): p.error('evidence must be a fresh directory inside experiments')
  out.mkdir(parents=True)
@@ -26,7 +27,7 @@ def main():
  env.update(TMPDIR=str(temporary),ZIG_GLOBAL_CACHE_DIR='/home/epentland/ai/canopy/.zig-global-cache')
  results=[]; summary={'source_commit':commit,'references_sha256':digest,'compiler':a.compiler,'core_shards':a.shards,'results':results,'qualified':False}
  def run(name,command,exclusive=False):
-  timer=out/(name+'.seconds'); timed=['/usr/bin/time','-f','%e','-o',str(timer),*command]
+  timer=out/(name+'.seconds'); timed=['/usr/bin/time','-q','-f','%e','-o',str(timer),*command]
   if exclusive: timed=['python3','experiments/new-core-s3-20261006/wave-a/exclusive_core.py','--',*timed]
   wrapped=['scripts/build-slot.sh','gate','--','bash','-c',RETAIN,'--','scripts/build-slot.sh','build','--',*timed]
   started=time.monotonic(); log=out/(name+'.log'); print(name+': '+str(log),flush=True)
@@ -51,7 +52,9 @@ def main():
   test['tests']={k:sum(x[k] for x in verdicts) for k in ('passed','failed','skipped')}
   if len(verdicts)!=a.shards or test['tests']['failed']: raise RuntimeError('test-core shard verdicts are missing or failed')
   if test['seconds']>300 or not walls or max(walls)>90: raise RuntimeError('test-core time requires resharding')
-  run('full-conformance',['python3','experiments/new-core-s5-20261007/tools/conformance_ref.py','--references',str(REFERENCES),'--set','all','--core',str(core),'--cache-dir',str(temporary.parent/'conformance'),'--jobs','4','--why','--leakcheck','--verify'])
+  conformance=['python3','experiments/new-core-s5-20261007/tools/conformance_ref.py','--references',str(REFERENCES),'--set','all','--core',str(core),'--cache-dir',str(temporary.parent/'conformance'),'--jobs','4','--why','--leakcheck','--verify']
+  if a.frontend_reference: conformance += ['--frontend-reference',str(a.frontend_reference.resolve()),'--frontend-journal',str(out/'frontend-conformance.json')]
+  run('full-conformance',conformance)
   summary['qualified']=True
  except Exception as e:
   summary['error']=str(e); raise

@@ -545,7 +545,7 @@
     "generic-nominals": {
       "kind": "language",
       "summary": "Record and enum declarations take type parameters and specialize by argument identity.",
-      "doc": "docs/generics.md#generic-records-and-unions"
+      "doc": "docs/generics.md#generic-records-and-enums"
     },
     "structural-contracts": {
       "kind": "language",
@@ -1019,7 +1019,7 @@
     },
     "derived-effect-ceilings": {
       "kind": "language",
-      "summary": "A function's effect ceiling is derived from its parameter list - a capability parameter permits its effect, a `mut` parameter `mutation`, a callback parameter its declared ceiling, and allocation is always permitted - so a body that exceeds it is rejected in that body with the parameter to add; `noalloc`, `noio` and `effects(...)` only narrow it, a clause that restates it warns `W_DERIVED_EFFECTS`, a clause naming an effect no parameter supplies is `E_DERIVED_EFFECTS`, and a capability parameter the body never reads is `E_UNUSED_CAPABILITY`.",
+      "summary": "A function's effect ceiling is derived from its parameter list - a capability parameter permits its effect, a `mut` parameter `mutation`, a callback parameter its declared ceiling, and allocation is always permitted - so a body that exceeds it is rejected in that body with the parameter to add; `noio` and `effects(...)` narrow it; noalloc is checked at build/run/test time as W_NOALLOC_ALLOCATES and blocks lint --gate via noalloc-allocates, with no Core allocation work in check, a clause that restates it warns `W_DERIVED_EFFECTS`, a clause naming an effect no parameter supplies is `E_DERIVED_EFFECTS`, and a capability parameter the body never reads is `E_UNUSED_CAPABILITY`.",
       "doc": "docs/effects.md#the-signature-is-the-ceiling"
     },
     "test-file-private-access": {
@@ -1070,7 +1070,7 @@
     "generic_calls": "explicit arguments or complete inference from call inputs; ambiguous and unmaterialized phantom arguments require explicit specialization",
     "unit": "Unit/() procedures; None is only an optional absence; main accepts int or Unit, optionally fails E, and explicit Result return types",
     "container_elements": "managed list/dict elements: copyable values without must-handle obligations, owned resources, or capability grants",
-    "noalloc": "managed-backing-operations-only",
+    "noalloc": "ownership-expanded Core may-allocate warnings at build/run/test; lint noalloc-allocates blocks every profile; check does not compute this contract",
     "type_aliases": "non-parameterized",
     "constants": "bounded-scalar-expressions-and-nongeneric-source-functions-plus-str-bytes-literals",
     "iteration": "range(end/start,end), list/str/dict/fixed-array foreach and enumerate; fixed bounds and structural mutation checks",

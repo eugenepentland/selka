@@ -1,3 +1,0 @@
-src/sexpr_parser.my:155:30: error[E_COLLECTION_METHOD]: unknown method for a bytes receiver; accepted methods: append_byte, append_float, append_int, append_range, append_utf8, copy, count, decode, endswith, find, find_any, hex, index, join, lstrip, parse_float, parse_float_range, parse_int, parse_int_range, reserve, rfind, rindex, rstrip, scalar_count, scalar_count_range, split, startswith, strip, to_list, view
-              match token.text.parse_integer():
-                               ^

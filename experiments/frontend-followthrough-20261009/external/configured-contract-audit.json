@@ -1,8 +1,0 @@
-{
-  "cases": 13,
-  "case_membership_identical": true,
-  "all_contract_fields_and_provider_names_equal_except_audited_provider_text": true,
-  "provider_source_mapping": "configured-provider-migration.json",
-  "no_unexplained_case_config_changes": true,
-  "environment_and_settings_fingerprints": "Each command input-identities records candidate keyed environment; changed source fingerprint not cryptographically normalized."
-}

@@ -1,3 +1,0 @@
-rc_dictionary_loops.my:1:1: error[E_MAIN]: the program requires an entry point: func main() -> int; `mylang check FILE` type-checks a library that has no main
-  # RC-DICTIONARY-LOOP-1
-  ^

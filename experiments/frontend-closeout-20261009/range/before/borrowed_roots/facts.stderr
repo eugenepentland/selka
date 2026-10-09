@@ -1,3 +1,0 @@
-borrowed_roots.my:1:1: error[E_MAIN]: the program requires an entry point: func main() -> int; `mylang check FILE` type-checks a library that has no main
-  # A safepoint publishes no root for a value a published owner already reaches
-  ^

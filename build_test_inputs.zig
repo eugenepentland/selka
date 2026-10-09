@@ -157,3 +157,6 @@ pub const embedded_migration = [_][]const u8{
     "scripts/spelling_census.py",
     "tests/test_migrate_embedded.py",
 };
+
+/// All live sources and selection policy read by the allocation-contract lint gate.
+pub const noalloc_lint = my_format ++ [_][]const u8{"scripts/check_noalloc.py"};

@@ -1,7 +1,0 @@
-union Tag:
-    list: list[int],
-    atom: bytes,
-    unit
-
-func main() -> int:
-    return 0

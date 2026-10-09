@@ -1,3 +1,0 @@
-range_semantics.my:26:9: error[E_IMMUTABLE]: this binding cannot be assigned
-          item = 100
-          ^

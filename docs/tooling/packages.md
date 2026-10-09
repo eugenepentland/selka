@@ -46,25 +46,37 @@ alone.
 ```console
 $ cat packages.json
 {"packages":[{"name":"numbers","root":"shared-numbers"}]}
-$ cat shared-numbers/numbers.my
-module numbers
+```
 
+The package's `shared-numbers/numbers.my` publishes the helper:
 
+```mylang
+# doc: project packages-example
+# doc: file numbers.my
+# doc: expect 42
 public func answer() -> int:
     return 42
-$ cat app/main.my
-module main
+```
+
+The application's `app/main.my` imports it:
+
+```mylang
+# doc: project packages-example
+# doc: file main.my
 import numbers
 
 func main() -> int:
     return numbers.answer()
+```
+
+```console
 $ mylang packages lock packages.json --output packages.lock.json
 $ mylang packages build app/main.my --lock packages.lock.json \
     --command run-project --receipt build.json
 42
 $ echo $?
 42
-$ echo 'module numbers' > app/numbers.my
+$ echo 'public const duplicate = 0' > app/numbers.my
 $ mylang packages build app/main.my --lock packages.lock.json
 packages: duplicate or invalid module path: numbers.my
 $ echo $?

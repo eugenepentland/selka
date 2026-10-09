@@ -1,0 +1,38 @@
+{
+  "checks": [
+    {
+      "command": "f7-doctest",
+      "status": 1,
+      "expected_outcome": false,
+      "sha256": "fe9473f9a83648be20140cec8843d9e7229b7a5dbbcb170174aab7c2d74550db",
+      "bytes": 7985
+    },
+    {
+      "command": "f7-private-2",
+      "status": 0,
+      "expected_outcome": true,
+      "sha256": "fbfe8c3244b49e12979b9b8e55c98930a26d708e7112035a46e12fc1420dafa5",
+      "bytes": 183
+    },
+    {
+      "command": "f7-ownership",
+      "status": 0,
+      "expected_outcome": true,
+      "sha256": "966b2d79c4ab89425ac6ab0895c41da6bae74fe4ad2d1e453ba2db945f0e3ec7",
+      "bytes": 421
+    },
+    {
+      "command": "f7-budget",
+      "status": 1,
+      "expected_outcome": true,
+      "sha256": "e9616b13f294a6bc2b7c73464bc192ced0d5f097d50ca0a3c80f7a9c28bc199d",
+      "bytes": 198
+    }
+  ],
+  "doc_summary": "773 files, 1103 blocks; 221 run, 62 checked, 23 existing skips, 0 mistagged, 0 failed (full gate)",
+  "console_payloads_converted": 7,
+  "additional_checked_record": true,
+  "private_test_module_entry_checked": true,
+  "ownership_statistics_equal": true,
+  "memory_budget_diagnostic": "R_MEMORY_BUDGET; grow:1:0, main:9:12"
+}

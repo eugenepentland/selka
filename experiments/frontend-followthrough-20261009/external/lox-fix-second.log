@@ -1,9 +1,0 @@
-{"version":"diagnostic-v1","kind":"diagnostic","diagnostic":{"code":"E_BINDING_SCOPE_MIGRATION","severity":"error","message":"this implicit local is used outside its block; declare the state in the enclosing block or rewrite the branches as a value expression","location":{"path":"parser.my","start":{"line":158,"column":9},"end":{"line":158,"column":14},"bytes":{"start":4720,"end":4725}},"notes":[],"stack":{"frames":[],"omitted":0}}}
-fixed experiments/frontend-followthrough-20261009/external/sources/lox/benchmarks/lox/ports/mylang/ast.my: 85 edits (E_BINDING_DECLARATION)
-fixed experiments/frontend-followthrough-20261009/external/sources/lox/benchmarks/lox/ports/mylang/compiler.my: 238 edits (E_BINDING_DECLARATION, E_NAMED_FIELDS)
-fixed experiments/frontend-followthrough-20261009/external/sources/lox/benchmarks/lox/ports/mylang/compiler_test.my: 32 edits (E_BINDING_DECLARATION, E_NAMED_FIELDS, E_NAMED_PATTERN)
-fixed experiments/frontend-followthrough-20261009/external/sources/lox/benchmarks/lox/ports/mylang/natives.my: 9 edits (E_BINDING_DECLARATION)
-fixed experiments/frontend-followthrough-20261009/external/sources/lox/benchmarks/lox/ports/mylang/output.my: 13 edits (E_NAMED_PATTERN)
-fixed experiments/frontend-followthrough-20261009/external/sources/lox/benchmarks/lox/ports/mylang/parser.my: 227 edits (E_BINDING_DECLARATION)
-fixed experiments/frontend-followthrough-20261009/external/sources/lox/benchmarks/lox/ports/mylang/scanner_test.my: 44 edits (E_BINDING_DECLARATION)
-fix: 648 edits in 7 files over 16 rounds

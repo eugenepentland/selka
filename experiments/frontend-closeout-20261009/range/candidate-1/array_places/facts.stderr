@@ -1,3 +1,0 @@
-array_places.my:1:1: error[E_MAIN]: the program requires an entry point: func main() -> int; `mylang check FILE` type-checks a library that has no main
-  # Fixed arrays written, iterated and passed `mut` with the list spelling
-  ^

@@ -16,6 +16,38 @@ const diagnostic = @import("diagnostic.zig");
 const Error = diagnostic.Error;
 const instances = @import("generic_instances.zig");
 const impl = @This();
+
+/// Extend one request's name index as checking appends catalog records. A
+/// duplicate remains ambiguous, and every record name is visited exactly once.
+fn indexRecordNames(allocator: std.mem.Allocator, names: *std.StringHashMapUnmanaged(usize), indexed: *usize, records: []const typed.Record) std.mem.Allocator.Error!usize {
+    const before = indexed.*;
+    while (indexed.* < records.len) : (indexed.* += 1) {
+        const entry = try names.getOrPut(allocator, records[indexed.*].name);
+        entry.value_ptr.* = if (entry.found_existing) std.math.maxInt(usize) else indexed.*;
+    }
+    return indexed.* - before;
+}
+
+// spec-case: SPECIALIZATION-NAME-INDEX-1
+test "F10 specialization name index retains appended duplicates as ambiguous" {
+    const testing = std.testing;
+    var records: [3]typed.Record = undefined;
+    for ([_][]const u8{ "First", "Second", "First" }, 0..) |name, index| {
+        records[index] = .{ .id = @fromBackingInt(typed.Type.record_base + index), .name = name, .declaration = .{ .start = 0, .end = 0 }, .fields = &.{} };
+    }
+    var names: std.StringHashMapUnmanaged(usize) = .empty;
+    defer names.deinit(testing.allocator);
+    var indexed: usize = 0;
+    try testing.expectEqual(@as(usize, 2), try indexRecordNames(testing.allocator, &names, &indexed, records[0..2]));
+    try testing.expectEqual(@as(?usize, 0), names.get("First"));
+    try testing.expectEqual(@as(usize, 1), try indexRecordNames(testing.allocator, &names, &indexed, &records));
+    try testing.expectEqual(@as(?usize, std.math.maxInt(usize)), names.get("First"));
+    try testing.expectEqual(@as(?usize, 1), names.get("Second"));
+    try testing.expectEqual(@as(?usize, null), names.get("Missing"));
+    try testing.expectEqual(@as(usize, 0), try indexRecordNames(testing.allocator, &names, &indexed, &records));
+    try testing.expectEqual(@as(?usize, std.math.maxInt(usize)), names.get("First"));
+}
+
 /// Bind generic specialization to the concrete checker without an import cycle.
 pub fn Checks(comptime Checker: type) type {
     return struct {
@@ -208,24 +240,20 @@ fn lookupSpecialization(
     @memset(record_remaps, null);
     var shapes: semantic_key.Shapes = .{ .allocator = allocator, .records = self.catalog.records };
     defer shapes.deinit();
+    reuse.backend.memory.statistics.record_name_visits += try indexRecordNames(self.allocator, &self.record_by_name, &self.indexed_record_count, self.catalog.records);
     for (entry.payload.refs.record_refs) |reference| {
         // Body checking may have already instantiated this resolved nominal
         // application. Its old ordinal says nothing about fresh availability.
-        // Search the current catalog and validate the complete provider shape;
+        // Index the current catalog and validate the complete provider shape;
         // absent or ambiguous identities remain conservative misses.
-        var found: ?usize = null;
-        for (self.catalog.records, 0..) |record, candidate| {
-            if (!std.mem.eql(u8, record.name, reference.key)) continue;
-            if (found != null) {
-                reuse.noteMiss(.ambiguous_record);
-                return null;
-            }
-            found = candidate;
-        }
-        const fresh = found orelse {
+        const fresh = self.record_by_name.get(reference.key) orelse {
             reuse.noteMiss(.missing_record);
             return null;
         };
+        if (fresh == std.math.maxInt(usize)) {
+            reuse.noteMiss(.ambiguous_record);
+            return null;
+        }
         const shape = (try shapes.digest(fresh)) orelse {
             reuse.noteMiss(.missing_record);
             return null;
@@ -274,6 +302,7 @@ fn publishSpecializations(comptime Checker: type, self: *Checker, reuse: *generi
     // `--no-cache` never reads or writes a specialization entry.
     if (!reuse.backend.enabled) return;
     const prepared = self.prepared orelse return;
+    reuse.backend.memory.statistics.record_name_visits += try indexRecordNames(self.allocator, &self.record_by_name, &self.indexed_record_count, program.records);
     for (self.spec_fresh.items) |index| {
         if (index >= self.spec_fingerprints.items.len) continue;
         const fingerprint = self.spec_fingerprints.items[index] orelse continue;
@@ -326,11 +355,7 @@ fn publishSpecializations(comptime Checker: type, self: *Checker, reuse: *generi
                 stable_records = false;
                 break;
             }
-            var matches: usize = 0;
-            for (program.records) |record| {
-                if (std.mem.eql(u8, record.name, program.records[record_index.*].name)) matches += 1;
-            }
-            if (matches != 1) {
+            if (self.record_by_name.get(program.records[record_index.*].name) != record_index.*) {
                 stable_records = false;
                 break;
             }

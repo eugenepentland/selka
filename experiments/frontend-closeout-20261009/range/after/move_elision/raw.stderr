@@ -1,3 +1,0 @@
-move_elision.my:1:1: error[E_MAIN]: the program requires an entry point: func main() -> int; `mylang check FILE` type-checks a library that has no main
-  # Aggregate copies the ownership analysis proves unobserved are not emitted
-  ^

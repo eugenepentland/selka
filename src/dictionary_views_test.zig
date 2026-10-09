@@ -98,7 +98,7 @@ test "direct dictionary view iteration remains noalloc while snapshots allocate"
     defer c.deinit();
     try c.check();
     try t.expect(c.program != null);
-    var snapshot = try language.Compilation.init(t.allocator, "snapshot.my", "func copy(d: dict[int,int]) -> int[] noalloc:\n    return list(d.values())\nfunc main() -> int:\n    return 0\n");
+    var snapshot = try language.Compilation.init(t.allocator, "snapshot.my", "func copy(d: dict[int,int]) -> int[] effects():\n    return list(d.values())\nfunc main() -> int:\n    return 0\n");
     defer snapshot.deinit();
     try t.expectError(error.SourceError, snapshot.check());
     try t.expectEqualStrings("E_EFFECT_BOUND", snapshot.diagnostics.items[0].code);

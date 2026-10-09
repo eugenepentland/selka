@@ -98,8 +98,8 @@ test "managed bounds reads and writes produce located list bounds traps" {
 }
 
 // spec: GC-SOURCE-6
-test "noalloc rejects transitive managed allocation while permitting fixed-slot mutation" {
-    for ([_][]const u8{ "noalloc", "noalloc" }) |bound| {
+test "explicit effects reject transitive managed allocation while permitting fixed-slot mutation" {
+    for ([_][]const u8{ "effects()", "effects(mutation)" }) |bound| {
         const create_source = try std.fmt.allocPrint(t.allocator,
             \\func make() -> i64[]:
             \\    return []
@@ -112,7 +112,7 @@ test "noalloc rejects transitive managed allocation while permitting fixed-slot 
             \\func main() -> i64:
             \\    return 0
             \\
-        , .{bound});
+        , .{"effects()"});
         defer t.allocator.free(create_source);
         try reject(create_source, "E_EFFECT_BOUND");
         const append_source = try std.fmt.allocPrint(t.allocator,
