@@ -27,6 +27,7 @@ Final head: pending X.
 - Current-base hot counters confirm read_constant at 3 retains and 3 releases per execution in invocation and method_call, and parse_list P6 at 444,833,472 copied bytes across all 34 EDA designs (`M0/hot-counts.md`). Remaining plain/counting guest builds are batched serially in one admitted build slot; 118 completed binaries are hash-verified on reuse.
 - Remaining counting builds finished (68 new, 118 hash-verified retained); all 199 counting cells pass. The full 151-cell CPU-8 instruction baseline completed all three rounds with positive instruction/cycle samples and zero guest failures (M0/instructions-base.json.gz). compare_instructions.py will reject incomplete lane receipts and report every cell above 1.03×.
 - Lox CPU-10 baseline completed: all 390 timed outputs match (26 cells × 5 arms × 3 rounds), with no noise-related waits. VM geomean 1.595× Zig RS; tree geomean 0.972×. Parity, EDA, rows, and counterfactual confirmation remain queued.
+- validate_qualification.py checks later raw and additive receipts against the exact M0 totals and PROBLEM lines, all 64 core shards, leak/fact flags, and matching compiler hashes. The validator passes on the saved M0 receipts.
 - U2, S2, R: pending M0 exit; parallel worktrees will branch from M0's final commit.
 - X: pending lane hand-offs.
 
