@@ -398,7 +398,11 @@ test "F2 index: a verify build catches a field interval that lost its top" {
     try std.testing.expect(contains(slots.stderr, "f2_fields.my:84:18: error[R_CORE_FACT]: native execution failed (range [0, 2]: value 3"));
     const small = try leakChecked(a, root, "f2_fields", sabotaged, &.{ "small", "x" });
     try std.testing.expectEqual(@as(u8, 1), small.status);
-    try std.testing.expect(contains(small.stderr, "error[R_CORE_FACT]: native execution failed (range [3, 6]: value 7"));
+    // Field forwarding (NEW-CORE-U1-STATE-1) replaces the read of `s.v` by the value stored
+    // there, so the wrong interval [3, 6] is caught where it reaches an asserted value: the read
+    // itself, or `s.v * 2` with [6, 12]. Either way verify traps in `small`, on line 101.
+    try std.testing.expect(contains(small.stderr, "error[R_CORE_FACT]: native execution failed (range ["));
+    try std.testing.expect(contains(small.stderr, "in f2_fields::small at f2_fields.my:101:"));
 }
 
 const element_writes =
