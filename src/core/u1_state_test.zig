@@ -283,3 +283,58 @@ test "sunk frame stores keep every answer, and a trap still reports the frames a
         try std.testing.expect(std.mem.indexOf(u8, trapped.stderr, "error[R_LIST_BOUNDS]: native execution failed (index 6, length 1)") != null);
     }
 }
+
+const appends_expected = "43171 589707438 191476 1262695\n1149056 908500 830547793 461553 13377258 49083919937\n300\n";
+const appends_trapped = "444939 925308766 191476 -1\n27527112 52985500 197161761 539740 111193620 21517689238\n";
+
+// spec: NEW-CORE-U1-STATE-2
+test "a list or buffer a loop appends to keeps its length and capacity in slots; a loop that reads it does not" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const llvm = try support.releaseLlvmText(a,
+        \\def fill(n: int) -> list[int]:
+        \\    xs = [n, 1]
+        \\    for i in range(n):
+        \\        xs.append(i * 3)
+        \\    return xs
+        \\
+        \\
+        \\def bounded(n: int) -> list[int]:
+        \\    xs: list[int] = []
+        \\    while len(xs) < n:
+        \\        xs.append(len(xs))
+        \\    return xs
+        \\
+        \\
+        \\def main(args: list[str], out: Stream) -> int:
+        \\    out.print(len(fill(10 + len(args))), len(bounded(5)))
+        \\    return 0
+        \\
+    );
+    const fill = llvm[std.mem.indexOf(u8, llvm, "define internal fastcc ptr @\"my.fill\"(").?..];
+    const fill_end = std.mem.indexOf(u8, fill, "\n}\n").?;
+    try std.testing.expect(std.mem.indexOf(u8, fill[0..fill_end], "%state0.len = alloca i64") != null);
+    const bounded = llvm[std.mem.indexOf(u8, llvm, "define internal fastcc ptr @\"my.bounded\"(").?..];
+    const bounded_end = std.mem.indexOf(u8, bounded, "\n}\n").?;
+    try std.testing.expect(std.mem.indexOf(u8, bounded[0..bounded_end], "%state") == null);
+}
+
+// spec-case: NEW-CORE-U1-STATE-2
+test "appends with the length in slots keep every answer: exits, nested loops, managed elements, buffers, calls, traps" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
+    for (modes) |flags| {
+        const plain = try leakChecked(a, root, "u1_appends", flags, &.{});
+        try std.testing.expectEqualStrings(appends_expected, plain.stdout);
+        try std.testing.expectEqualStrings("", plain.stderr);
+        const trapped = try leakChecked(a, root, "u1_appends", flags, &.{"x"});
+        try std.testing.expectEqualStrings(appends_trapped, trapped.stdout);
+        try std.testing.expectEqual(@as(u8, 1), trapped.status);
+        try std.testing.expect(std.mem.indexOf(u8, trapped.stderr, "error[R_LIST_BOUNDS]: native execution failed (index 1234, length 1)") != null);
+    }
+}

@@ -12,8 +12,9 @@ myl_block *myl_core_buffer_copy(myl_block *source) {
     memcpy(block_data(out), block_data(source), (size_t)source->len);
     return out;
 }
-static myl_block *core_buffer_grow(myl_block *buffer, int64_t needed) {
-    if (needed <= buffer->cap) return buffer;
+/* The buffer with room for `needed` octets, grown (the caller's old pointer is dead). Kept
+   out of line, so the room test of `core_buffer_grow` inlines into every append. */
+__attribute__((noinline)) static myl_block *core_buffer_regrow(myl_block *buffer, int64_t needed) {
     int64_t capacity = buffer->cap < 8 ? 8 : buffer->cap;
     while (capacity < needed) {
         if (capacity > INT64_MAX / 2) { capacity = needed; break; }
@@ -44,6 +45,9 @@ static myl_block *core_buffer_grow(myl_block *buffer, int64_t needed) {
     memcpy(block_data(out), block_data(buffer), (size_t)buffer->len);
     block_free(buffer);
     return out;
+}
+static inline myl_block *core_buffer_grow(myl_block *buffer, int64_t needed) {
+    return needed <= buffer->cap ? buffer : core_buffer_regrow(buffer, needed);
 }
 myl_block *myl_core_buffer_push(myl_block *buffer, uint8_t value) {
     if (buffer->len == INT64_MAX) out_of_memory();
