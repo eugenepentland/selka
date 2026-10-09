@@ -49,3 +49,28 @@
   concurrency evidence and benchmark caches, and move this task's gate TMPDIR
   to its own directory on the home filesystem (179 GiB available at recovery).
   Retain the failed log and rerun; never count the disk failure as a pass.
+- Integrate all six Juice commands into the compiler as native Zig modules. Keep
+  Python solely as a developer reference and differential-test oracle; no script,
+  checkout or interpreter is an installed runtime dependency. Resolve a mylang
+  adapter's default compiler to the running executable.
+- Preserve v1 record/report schemas, but name the native canonical JSON identity
+  domain explicitly. Reuse existing raw captures; regenerate comparison identity
+  fields through the native command instead of claiming Python/Zig float/JSON
+  serializations are byte-identical.
+- Keep platform process/collector/inventory code separate from contract and report
+  logic. Implement only Linux x86_64 capture now; document future ARM, Windows and
+  macOS capability adapters and a separate LLVM work-count fallback.
+- Accept the documented TOML manifest forms and equivalent JSON. Fail explicitly
+  on unsupported TOML constructs or advanced normalization regex; a bounded byte
+  normalizer avoids an interpreter/host-regex dependency. Custom oracle commands
+  handle advanced validation without silently changing normalization semantics.
+- Move only this worktree's generated Zig and guest caches to task-specific home
+  filesystem directories, retaining their workspace paths as ignored local
+  symlinks. This avoids another shared-workspace disk exhaustion during the gate.
+- Reuse the compiler's existing embedded source/toolchain/optimization identity
+  for the native Juice implementation key, matching the original source-based
+  Python implementation key. Keep executable SHA-256 for an external guest
+  compiler; the running compiler uses an explicitly labeled embedded-build
+  identity (`source_sha256`). Avoid repeatedly hashing the 156 MiB Debug host on
+  every edit-loop capture. The independent artifact SHA-256 checks still read
+  every byte, including final partial buffers.

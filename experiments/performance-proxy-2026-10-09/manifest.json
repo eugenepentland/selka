@@ -7,7 +7,7 @@
     "members": 371
   },
   "files": {
-    "DECISIONS.md": "3fc9a6c198e3326146d3ec52c4c7105c32e5eba3fde1f9c2498fdda0d1fb7c2c",
+    "DECISIONS.md": "5ffb22d37cf0ec511bc5732a2325e0464cc14f6ef4e8baae0c8ca1ee28bce66a",
     "docs-final.log.xz": "15b0b416a584816080040c3e8e29c60c9ba55dac4496fdb74c1151f7709f2363",
     "final-full.log.xz": "6cbd9c74da55e118b22d7024921cd19d24be1dab01984d9bacfb1bf0b2e6bc50",
     "fmt.log.xz": "0040f94d11d0039505328a90b2ff48968db873e9e7967307631bf40ef5679275",
@@ -62,5 +62,9 @@
     "guardian_feedback_commit": "43de8e9",
     "disk_failure_log": "final-full.log.xz",
     "successful_recovery_log": "recovered-full.log.xz"
+  },
+  "native_followup": {
+    "manifest": "native/manifest.json",
+    "sha256": "912423a6ae34783ddac59ed91b2a9bbdd2e4a540757a888ff22fbd175d57bd5b"
   }
 }

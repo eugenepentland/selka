@@ -149,7 +149,7 @@ finer semantic-query caching is conditional on measurements.
 
 The development tools keep the ordinary read/edit/check workflow:
 
-- [Juice performance comparisons](docs/tooling/juice.md) measure optimized
+- [`mylang juice` performance comparisons](docs/tooling/juice.md) measure optimized
   instructions per completed application unit, with short workload scenarios and
   mylang allocation/copy explanations, without waiting for an idle machine.
 - [Project verification](docs/experiments/project-workflow.md) prints a compact

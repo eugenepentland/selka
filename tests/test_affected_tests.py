@@ -59,7 +59,7 @@ class SyntheticRepo(unittest.TestCase):
 
 class Mapping(SyntheticRepo):
     def test_performance_proxy_selects_its_integrity_tests(self) -> None:
-        for path in ("scripts/juice", "scripts/juice_tool/engine.py", "scripts/juice_validate.py", "tests/test_juice.py", "examples/juice/native/kernel.c"):
+        for path in ("scripts/juice", "scripts/juice_tool/engine.py", "scripts/juice_validate.py", "tests/test_juice.py", "tests/test_juice_native.py", "examples/juice/native/kernel.c"):
             sel = self.select({path: ["changed"]})
             self.assertEqual(sorted(sel.steps), ["test-juice"])
 

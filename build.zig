@@ -718,6 +718,10 @@ pub fn build(b: *std.Build) void {
     const juice_run = driver(b, "python3 tests/test_juice.py", rss.script, "juice");
     juice_run.addArgs(&.{ "python3", "tests/test_juice.py" });
     juice_step.dependOn(&juice_run.step);
+    const juice_native_run = driver(b, "python3 tests/test_juice_native.py", rss.script, "juice");
+    juice_native_run.addArgs(&.{ "python3", "tests/test_juice_native.py" });
+    juice_native_run.addArtifactArg(exe);
+    juice_step.dependOn(&juice_native_run.step);
     test_step.dependOn(juice_step);
     // The compiler's `compiler_identity` comes from a make-phase run of
     // `build_identity.zig`. This driver runs that file on throwaway trees that

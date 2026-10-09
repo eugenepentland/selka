@@ -1,0 +1,42 @@
+{
+  "scope": "native CLI smoke tests; no elapsed-time calibration",
+  "records": {
+    "native-base": {
+      "path": "cache/juice-native-example/records/native-base/record.json",
+      "diagnostic_seconds": 1.7304584300145507
+    },
+    "native-repeat": {
+      "path": "cache/juice-native-example/records/native-repeat/record.json",
+      "diagnostic_seconds": 2.262063981965184
+    },
+    "native-improved": {
+      "path": "cache/juice-native-example/records/native-improved/record.json",
+      "diagnostic_seconds": 3.345145638100803
+    },
+    "callgrind": {
+      "path": "cache/juice-native-example/records/callgrind/record.json",
+      "diagnostic_seconds": 3.4875240959227085
+    },
+    "cachegrind": {
+      "path": "cache/juice-native-example/records/cachegrind/record.json",
+      "diagnostic_seconds": 0.5097764409147203
+    },
+    "mylang-base": {
+      "path": "cache/juice-mylang-example/records/mylang-base/record.json",
+      "diagnostic_seconds": 20.591782436938956
+    },
+    "mylang-improved": {
+      "path": "cache/juice-mylang-example/records/mylang-improved/record.json",
+      "diagnostic_seconds": 2.528067713836208
+    }
+  },
+  "checks": {
+    "perf_repeat": true,
+    "perf_algorithm": true,
+    "callgrind": true,
+    "cachegrind": true,
+    "mylang_counters": true,
+    "mylang_static": true,
+    "self_compiler": true
+  }
+}

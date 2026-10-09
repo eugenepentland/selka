@@ -1,0 +1,38 @@
+{
+  "version": "juice-native-evidence-v1",
+  "compiler_sha256": "c49a5143abfe85bc3e9549738e04226fc2f60d582274f5eb6db3c04d3dd417a7",
+  "capture_members": 67,
+  "existing_comparisons_reused": 11,
+  "files": {
+    "algorithm-improvement.json": "a69edecf5398be70a97c32291d609f7c048f5a73df6693a7819f824e0a93c2c5",
+    "algorithm-improvement.md": "ed9098438e3380287668bea120147eee3ffc39d4c72a5c6cda5060276ee8c5e0",
+    "captures.tar.xz": "b2f586033b84c9e15e18cbaa98be9af1c4f648c29e46a53559cffde9a810a9a9",
+    "collectors.log.xz": "33e4a428390e3d05bba3e7f0c27a9d1b3f0e3cba17c3518c1a20b10a1e528d9c",
+    "docs.log.xz": "0b2f1f3389a67e674b75fe7b78f3c310b7e59431875de5c20461e4d0a098d5c4",
+    "fmt.log.xz": "0040f94d11d0039505328a90b2ff48968db873e9e7967307631bf40ef5679275",
+    "focused.log.xz": "05eefd287cd7be0f3930b5d6911c553ec2cee288967679a36e822d022cbb6b5a",
+    "full.log.xz": "01763410101b9e60cfd21d42613ac150c8daf05f3b63ee2f286912a31d02b762",
+    "identical.json": "db7c12ff64fcb4eedd247bb08cfc695794d522121260799cd8bad3d938b5011c",
+    "identical.md": "917275d3e8bc0be8254a0e3d39d81a681655147ba8a3b2c7995fbc72406885b0",
+    "mylang-improvement.json": "27c521e699e47688ffa2f5adfac7e396f567abc9f6bec35607e273ccbeb8e477",
+    "mylang-improvement.md": "5cce2761cb8527cce175d87dfb3adb915d4cb625a8e329caa2f3f2bf02df8380",
+    "qualification.json": "8d3bd035ad1c3dfe00f4ed85ca14a5bd97baf7c88f3cc1b100df6b549848323f",
+    "qualify.py": "8e4fea1bb50a2c29dc6ef99c6e4b92e05daba9ba2079e790045ce1d2d4111fd5",
+    "report-parity.json": "4211247574a27b323db2274d540a9977ac48c8c69be0546073b276f35c8c0045"
+  },
+  "implementation": {
+    "src/core/juice/calibration.zig": "79647e2574a64c1225945ae5b561b632ba1f9a776d4964c4cf33daf450d04c14",
+    "src/core/juice/collectors.zig": "db24a2cb7729fcc860a2463ece71c4f36bdfbc0de3beeab140aa004f1ccb1122",
+    "src/core/juice/command.zig": "a0e52dd245bf6ab91297833339048f5241557dfdc9b3ece861ecf5c529c5c0c2",
+    "src/core/juice/data.zig": "4a4eba3f1ff296e2af2231e92e4948e1d12788695ce12797f559735a71750c3c",
+    "src/core/juice/engine.zig": "f8ed660cff38ffd41ebe50257fbc5961f832343a9bd1a0ed2a49f9abe6bbccc5",
+    "src/core/juice/inventory.zig": "f60d15269e9007a4f0c16487ed1bcf44c68f545cd6f9ace38df4dadbcba15d61",
+    "src/core/juice/manifest.zig": "b9917f357026c8866a0c88000dd9fb1852c05256a214432950b767df6774ee6c",
+    "src/core/juice/normalize.zig": "90562289a21ed30696f6c2d217d765108c8b67597aac516fbe04e1f9645ae55e",
+    "src/core/juice/platform.zig": "ada8e6967387bc44e346ee9409be9d7d57c6b236e1937d251ee8f6c924c00599",
+    "src/core/juice/profiles.zig": "d86b952b28b65b26ebdf683e84a50a6e048887fea674bcd49bc387f752d4ce5b",
+    "src/core/juice/report.zig": "553298322e8c0a6dfcb1a16c04c627a3b30bce4789b8ae0ea42bc26f463455fe",
+    "src/core/juice/tests.zig": "6682398f92aaf7612b287e317955508b96236ec8edb64c0db6d8cbeed23b8189",
+    "src/core/juice/toml.zig": "b7c12df4b01717ff8eac6607b768bb0a1e4094a4d454b867e4b29db01f71551c"
+  }
+}

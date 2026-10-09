@@ -1,8 +1,8 @@
 # Performance proxy implementation — 2026-10-09
 
 Branch: `codex/performance-proxy`, based on completed P1 `a79413c3f`.
-The approved design is implemented as the standalone developer command
-`python3 scripts/juice`; usage and measurement contracts are in
+The approved design is now integrated into the compiler as `mylang juice`.
+The original `scripts/juice` remains a developer reference; usage and measurement contracts are in
 [the tool guide](../tooling/juice.md).
 
 Status: implemented and qualified. Nothing was pushed or merged into main.
@@ -26,7 +26,7 @@ Status: implemented and qualified. Nothing was pushed or merged into main.
 - A CLI, documented TOML contract, native/mylang examples, regression-gate
   option, test target and affected-test integration.
 
-## Evidence
+## Initial standalone qualification
 
 All **15 real-collector qualification checks passed**. Baseline is 100; numbers
 below are instruction-work indices, rounded to three decimals.
@@ -71,11 +71,11 @@ Retained evidence:
 
 To review an archived comparison, extract `captures.tar.xz` into a scratch
 directory and pass the corresponding `cache/<project>/records/<label>/record.json`
-paths to `scripts/juice compare`. Raw evidence hashes are checked again. Absolute
+paths to `mylang juice compare`. Raw evidence hashes are checked again. Absolute
 execution paths inside records describe the original measurement context; they
 need not exist to inspect the records.
 
-## Repository verification
+## Initial repository verification
 
 - 38 proxy integrity/calibration/runner tests; 13 affected-selection tests.
 - Full `zig build test --summary all` passed: 90/90 build steps. The initial
@@ -85,7 +85,7 @@ need not exist to inspect the records.
 - Native `perf`, Callgrind 3.26 and Cachegrind 3.26 exercised end to end. The
   mylang runs used frozen P1 `c26c95de7` and pre-P1 main `35df839be` compilers.
 
-No compiler/front-end/Core IR/runtime source was changed. Full gate logs and the
+The initial standalone implementation changed no compiler/front-end/Core IR/runtime source. Full gate logs and the
 qualification command output are retained with the evidence package.
 
 One intervening recheck failed when the shared workspace filesystem filled
@@ -108,3 +108,58 @@ Calibration machinery is tested, including disjoint holdouts and abstention,
 but the synthetic fitter tests are not runtime prediction evidence. Real time
 estimates require independent, matched, sufficiently stable timing evidence and
 remain scoped to the validated workload families and measurement context.
+
+## Native compiler integration
+
+All six commands (`doctor`, `analyze`, `record`, `compare`, `validate`, `calibrate`)
+now execute native Zig code inside the installed compiler. Help advertises the
+command. No Python interpreter, checkout, or companion script is used at runtime.
+The mylang adapter defaults to the running compiler and retains the explicit
+`--compiler` override for backend comparisons. Existing source/IR/runtime
+semantics were not changed.
+
+Host process/collector/inventory services are separate from the shared contract,
+profile, comparison and calibration modules. The
+[portability design](../tooling/juice-portability.md) covers future Linux ARM64,
+macOS and Windows adapters, a separate LLVM instrumentation work domain and
+per-target baselines. Those adapters are deliberately future work.
+
+Native acceptance evidence:
+
+- The final full gate passed **91/91 steps**, with **2,150 Zig tests executed**
+  (19,874 shard skips). All 88 Guardian checks and `fmt-check` passed.
+- Six native Zig tests cover invalid counts, compressed profiles, normalization,
+  contracts, process deadlines, immutable failure records and independent SHA-256
+  vectors across streaming-buffer boundaries. Eleven native CLI tests cover
+  installation relocation with an empty `PATH`, reporting/calibration parity,
+  cache invalidation, artifact hashes, output checks and incomplete captures.
+  The original 38 Python reference tests remain in the full gate.
+- **11 existing qualification comparisons** were replayed through native Juice,
+  reusing their archived evidence. Instruction ratios, repeat envelopes,
+  directions, assessments and available semantic totals matched. The original
+  broad performance corpus was not rerun.
+- **Seven native collector checks passed**: perf repeated-build control, an
+  application improvement, Callgrind, Cachegrind, mylang semantic counters,
+  static cost and default self-compiler selection. Native instruction indices
+  were **100.000** for the unchanged control, **14.450** for bit-counting improvement
+  and **84.327** for removing mylang list materialization. No timing model was fitted.
+- Native smoke captures ran while the full gate used this shared machine.
+  Observed capture durations were **0.51–3.49 seconds**, except the first mylang
+  capture/build/static analysis at **20.59 seconds**. Its edited candidate took
+  **2.53 seconds**. These include setup/builds and two samples, exclude the outer
+  build-slot wait, and are diagnostic observations rather than runtime predictions.
+
+The port's verification caught and fixed procfs zero-length reads, final partial
+SHA-256 buffers, and Cachegrind's literal `(below main)` function name. Build keys
+use the compiler's existing embedded source/toolchain/optimization identity to
+avoid repeatedly hashing the large Debug host. External compiler and evidence
+artifacts retain executable/file SHA-256 identities. Native identity serialization
+and supported TOML/normalization forms are explicit in the tool guide; unsupported
+forms fail instead of silently changing a contract.
+
+The [native evidence directory](../../experiments/performance-proxy-2026-10-09/native/)
+contains independent artifact hashes, archived raw profiles/captures, comparison
+reports, the reproducible smoke driver and compressed final gate logs. Build and
+guest caches were moved only for this worktree to the home filesystem after the
+workspace disk again ran low. The source branch remains `codex/performance-proxy`;
+main was not merged or modified, and nothing was pushed.

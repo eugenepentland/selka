@@ -6,11 +6,14 @@ Juice compares **instructions per completed application unit**, with baseline
 generated code, source attribution and repeat variability help explain the
 result. Ordinary use needs neither an idle machine nor a full production run.
 
-This is a standalone developer tool, `python3 scripts/juice`, with a generic
-native adapter and a mylang adapter. It does not change the installed compiler,
-switch branches, push, or modify application sources. Python 3.11+, Linux,
-binutils and a native compiler are needed; the selected collector additionally
-needs Linux `perf` or Valgrind. No Python dependency is added to `mylang` itself.
+Juice is built into the installed compiler: `mylang juice --help`. All six
+commands run native Zig code; no Python interpreter, repository checkout or
+companion script is needed. It supports generic native programs and mylang
+applications. Capture currently requires Linux x86_64, a build toolchain and
+`perf` or Valgrind. Binutils provides optional static diagnostics; `ldd` identifies
+loaded libraries. Comparing, validating and calibrating saved JSON needs only
+the compiler binary. The original `scripts/juice` Python tool remains a developer
+reference for differential tests, not an installed dependency.
 
 ## First comparison
 
@@ -19,11 +22,11 @@ before. The cache directory must stay the same between captures; execution
 paths affect some applications' work. Use the build slot in this repository:
 
 ```bash
-python3 scripts/juice doctor
-scripts/build-slot.sh build python3 scripts/juice record examples/juice/native/juice.toml --name before
+mylang juice doctor
+scripts/build-slot.sh build mylang juice record examples/juice/native/juice.toml --name before
 # Edit kernel.c: change '#define SLOW 1' to '#define SLOW 0'.
-scripts/build-slot.sh build python3 scripts/juice record examples/juice/native/juice.toml --name after
-python3 scripts/juice compare \
+scripts/build-slot.sh build mylang juice record examples/juice/native/juice.toml --name after
+mylang juice compare \
   ~/.cache/mylang/juice/juice-native-example/records/before/record.json \
   ~/.cache/mylang/juice/juice-native-example/records/after/record.json \
   --mode application --output /tmp/juice-comparison.json
@@ -34,8 +37,9 @@ use a new label for each edit. Raw outputs, collector profiles and incomplete
 attempts are retained alongside `record.json`. Baseline capture is reused simply
 by comparing later candidate records against it. No baseline rerun is needed.
 
-For mylang, use `examples/juice/mylang/juice.toml` and pass
-`--compiler /path/to/mylang`. Its adapter builds an ordinary release executable
+For mylang, use `examples/juice/mylang/juice.toml`. A manifest compiler of
+`"mylang"` resolves to the running compiler binary, including after installation
+or relocation. Pass `--compiler /path/to/another/mylang` to test another build. Its adapter builds an ordinary release executable
 for native counts and a separate `--counters` executable for explanations. Both
 must produce the same verified result. `--static` also collects `mylang cost`
 (an extra compile). Compiler host optimization and guest `--release` are separate;
@@ -58,7 +62,11 @@ explicitly, with its startup/work included, and prevents a clean runtime estimat
 
 ## Workload contract
 
-Place `juice.toml` next to the application sources. Commands are argument arrays,
+Place `juice.toml` (or an equivalent JSON object) next to the application sources.
+The native TOML reader supports the schema shown here: bare keys, ordinary
+single/double quoted strings, finite numbers, booleans, arrays (including multiline
+arrays and comments), tables and arrays of tables. It rejects multiline strings,
+dotted/quoted keys and inline tables; use JSON for contracts needing those forms. Commands are argument arrays,
 never implicit shell strings. A minimal native example:
 
 ```toml
@@ -103,6 +111,12 @@ in `inputs`, so changing the oracle invalidates comparison. If stdout includes a
 timestamp, `stdout_regex` must match the **whole** output and have exactly one
 capture group containing the semantic result. The expected value/hash and paired
 comparison then use that group; original output remains in the evidence.
+The native normalizer is a bounded byte regex: one capturing group, noncapturing
+`(?:...)`, alternatives, byte classes/ranges, `.`, `^`, `$`, greedy `* + ? {m,n}`,
+and ASCII `\d \s \w` (plus their negations). Dot includes newlines. Lookaround,
+backreferences, lazy/possessive repeats and Unicode character classes are refused.
+Use an explicit `check` command for more elaborate oracles. No host regex library
+or interpreter is loaded.
 
 `sources` and `inputs` are disjoint, nonempty-matching relative globs. Sources
 are copied into a stable build project, inputs into that project and into a
@@ -139,7 +153,7 @@ counter_semantics = "my-counter-hook-contract-1"
 release mode, outputs or instrumentation. Declare imported application modules
 and project configuration in `sources`. Installed compiler resources or linked
 foreign code outside the snapshot belong in `dependencies`. The adapter also
-records the Zig tool identity.
+records the Zig tool identity (`ZIG`, then `MYLANG_ZIG`, then `zig`).
 
 `counter_semantics` is an explicit contract identifier: update it when the
 meaning or coverage of runtime hooks changes, even if the JSON format remains
@@ -175,7 +189,7 @@ Compare quick and larger records separately, then check whether the quick cases
 predict the direction and magnitude of that **same source/compiler change**:
 
 ```bash
-python3 scripts/juice validate quick-comparison.json validation-comparison.json \
+mylang juice validate quick-comparison.json validation-comparison.json \
   --output scenario-validation.json
 ```
 
@@ -219,9 +233,9 @@ ordinary optimized executable, inventories code and collects Core costs/LLVM
 remarks for mylang. An optional prior analysis produces static differences:
 
 ```bash
-scripts/build-slot.sh build python3 scripts/juice analyze examples/juice/native/juice.toml \
+scripts/build-slot.sh build mylang juice analyze examples/juice/native/juice.toml \
   --output /tmp/static-before.json
-scripts/build-slot.sh build python3 scripts/juice analyze examples/juice/native/juice.toml \
+scripts/build-slot.sh build mylang juice analyze examples/juice/native/juice.toml \
   --against /tmp/static-before.json --output /tmp/static-after.json
 ```
 
@@ -276,8 +290,8 @@ Timing format (IDs copied from the comparison, times measured independently):
 ```
 
 ```bash
-python3 scripts/juice calibrate calibration-data.json --output model.json
-python3 scripts/juice compare before/record.json after/record.json \
+mylang juice calibrate calibration-data.json --output model.json
+mylang juice compare before/record.json after/record.json \
   --model model.json --output comparison.json
 ```
 
@@ -289,8 +303,11 @@ to use instruction measurements without waiting for an idle host.
 
 ## Verification and retained evidence
 
-`python3 tests/test_juice.py` and `zig build test-juice` exercise the integrity
-rules without requiring a PMU or Valgrind. The latter is part of the full gate.
+`zig build test-juice` runs the reference tests and native CLI tests, including
+relocation with an empty `PATH`, comparison/calibration parity, cache integrity,
+immutable captures, failed oracles and incomplete counts. It needs no PMU or
+Valgrind and is part of the full gate. `test-core -Dtest-filter=Juice` covers the
+native parsers, normalization and process deadlines.
 Real collector qualification, including load interference and known regressions:
 
 ```bash
@@ -306,3 +323,23 @@ extra copies, atomics, missed vectorization, selected phases, source attribution
 short/large agreement and same-CPU competing processes. It does not establish
 elapsed-time prediction accuracy. See the implementation's saved
 [qualification report](../audits/performance-proxy-2026-10-09.md).
+
+## Saved evidence and native identities
+
+Native Juice reads existing `juice-v1` records, checks their evidence hashes and
+writes the same report schemas. The native canonical JSON identity scheme is
+named `mylang-juice-native-v1`; it is distinct from Python's JSON serialization.
+Existing captures can be reused, but regenerate comparison reports before
+combining native quick/large validation or matching timing evidence. Never edit
+old identity fields to force compatibility. Calibrations use the identities in
+the supplied reports and reject mismatches. Native build receipts additionally
+include the embedded compiler source/toolchain/optimization identity, so a tool
+upgrade invalidates build reuse without repeatedly hashing the large host binary.
+An external guest compiler is fingerprinted by executable bytes. The running
+mylang compiler uses its existing embedded source/toolchain/optimization identity,
+explicitly labeled `mylang-embedded-build-v1` with `source_sha256`, not an executable
+SHA-256. This preserves the fast loop with Debug compiler installations too.
+
+Windows, macOS and ARM capture are future work. See the
+[cross-platform design](juice-portability.md) for collector capabilities,
+per-target baselines and the planned portable instrumentation fallback.

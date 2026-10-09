@@ -10,10 +10,11 @@ const cli_args = @import("cli_args.zig");
 const cli_run = @import("cli_run.zig");
 const pipeline = @import("pipeline.zig");
 const cost_command = @import("cost_command.zig");
+const juice_command = @import("juice/command.zig");
 
 /// What stops a command before it has a status: memory, an unwritable stream, or a
 /// test the runner cannot encode.
-pub const Error = core_main.Error || cost_command.Error;
+pub const Error = core_main.Error || cost_command.Error || juice_command.Error;
 
 /// A retired command or flag and the one-line reason the CLI gives.
 const Retirement = struct { name: []const u8, message: []const u8 };
@@ -89,6 +90,10 @@ test "test refusals point at what test offers, not at flags test also refuses" {
 pub fn dispatch(init: std.process.Init, args: []const []const u8) Error!?u8 {
     if (args.len < 2) return null;
     const command = args[1];
+    if (std.mem.eql(u8, command, "juice")) {
+        const status = try juice_command.run(init, args[2..]);
+        return status;
+    }
     const rest = args[2..];
     const status = status: {
         for (retired_commands) |retired| if (std.mem.eql(u8, command, retired.name)) break :status try refuse(init, command, retired.message);

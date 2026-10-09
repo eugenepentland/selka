@@ -74,6 +74,7 @@ TOKEN_LIMIT = 40
 HOST_STEPS = (
     ("scripts/juice", "test-juice"),
     ("tests/test_juice.py", "test-juice"),
+    ("tests/test_juice_native.py", "test-juice"),
     ("examples/juice/", "test-juice"),
     ("src/core/", "test-core"),
     ("test/core/", "test-core"),
