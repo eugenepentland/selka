@@ -282,3 +282,30 @@ Guardian’s whole-tree commit check caught that SHARED-COUNTS-1 still described
 - **Evidence:** The whole-tree commit gate rejected only `task_ir_test.zig:31` under `line-length`; behavioral tests were green.
 - **Choice:** Expand the initializer across lines and rerun fmt. No behavioral change or exemption.
 - **Reversal:** Formatting only.
+
+
+## 2026-10-09 — P1-2: select local-exec TLS from the paired row sweep
+
+- **Question:** Does this executable runtime benefit from initial-exec or local-exec TLS?
+- **Options:** Keep provisional initial-exec or use local-exec in both LLVM declarations and the C macro.
+- **Evidence:** Both ReleaseFast source archives match all 569 `src` files of `9d2524f5e`, except the three intended TLS-model replacements. All 92 row/size cells ran in paired K=4/5/6 batches, with matching checksums, CPU 10 locked and no own concurrent builds. Initial-exec/base GM is **1.0150306005** (20 cells >1.03); local-exec/base is **1.0124433780** (18 cells >1.03). Direct paired LE/IE GM is **0.9979028166**. One-minute load spans 0.47–1.98. Neither arm passes the tax target; all raw samples and per-alignment cells are retained.
+- **Choice:** Select local-exec for this statically owned executable runtime, changing both emitters and `MYL_TLS` together. This completes the required TLS comparison; P1-6 measures the final shared-walk/scheduler runtime again and investigates remaining misses. `tools/layout_table.py` now reads xz as well as gzip so the compressed historical evidence remains renderable; no metric changed.
+- **Reversal:** A three-file substitution; the complete initial-exec comparison remains available.
+
+
+## 2026-10-09 — P1-6 preparation: complete package review and preserve inventory identities
+
+- **Question:** Is the integrated runtime ready for final qualification and binding measurement?
+- **Options:** Rely on focused tests alone or recheck all count/global/fatal paths against the original inventory and revisions.
+- **Evidence:** SELF-REVIEW.md covers every original static-state family and the new scheduler/registry/counter state. A fresh typed AST lists 128 static declarations and exactly 8 managed-count access lines, all confined to helpers, initialization and sharing. The native object compile passes; the known pinned AST-wrapper FileNotFound diagnostic is retained. Local-exec integration passes 15 thread/share/emitted-IR/TSan tests and fmt. The read-only P2-0 analysis has executable capture/range proofs and identifies no IR or ownership-pass gap.
+- **Choice:** Proceed to the full final gates and binding tax, keeping exact runtime-file hashes and the three-file source diff hash in the fresh inventory. Preserve P1-0's inventory. Fix repeated `.gz` suffixes introduced during report-link compression. P2-0 remains analysis only; P2 is not started.
+- **Reversal:** Documentation/evidence changes are reversible; any new correctness finding must still be fixed and regated before timing counts.
+
+
+## 2026-10-09 — P1-2 TLS closeout: record the selected model in the runtime spec
+
+- **Question:** Where should the final C/LLVM TLS model choice be recorded with its emitter change?
+- **Options:** Treat it as report-only metadata or make the runtime spec state the actual selected model.
+- **Evidence:** The whole-tree commit gate's change-classification check required a same-change spec/test update for the TLS declarations; the 15 focused tests and paired measurements were already green/recorded.
+- **Choice:** Add local-exec to the existing RUNTIME-THREADS-1 contract, matching the implementation and measured selection. Preserve the rejected commit log. No test exemption or artificial coverage.
+- **Reversal:** Documentation follows any later measured model change.

@@ -6,6 +6,7 @@ The AST is scratch (about 124 MB); only the compact inventories are evidence.
 String literals and Zig compile-time constants are classified in REPORT.md.
 """
 import argparse
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -81,6 +82,8 @@ for name, rows in (("static-storage", objects), ("count-accesses", counts)):
 summary = {"source": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
            "toolchain": subprocess.check_output(["zig", "version"], text=True).strip(),
            "object_compile_exit": compiled.returncode, "ast_wrapper_exit": dumped.returncode,
-           "static_declarations": len(objects), "count_access_lines": len(counts)}
+           "static_declarations": len(objects), "count_access_lines": len(counts),
+           "source_files_sha256": {name: hashlib.sha256((ROOT / "src/core" / name).read_bytes()).hexdigest() for name in files},
+           "source_diff_sha256": hashlib.sha256(subprocess.check_output(["git", "diff", "HEAD", "--", "src"], cwd=ROOT)).hexdigest()}
 (OUT / "inventory.json").write_text(json.dumps(summary, indent=2) + "\n")
 print(json.dumps(summary))

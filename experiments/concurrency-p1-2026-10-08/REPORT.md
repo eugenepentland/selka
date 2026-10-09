@@ -4,8 +4,8 @@
 
 - **Done:** P1-1's B2 checkpoint is complete at `5042d85a5` (implementation `9c2559a45`). P1-2 per-thread runtime state is committed at `9d2524f5e` and passes the full Debug gate and fmt. P1-3’s shared child iterator is committed at `020ee5422`. P1-4’s scheduler is committed at `8a3782b05`. P1-5’s real emitted-code/sanitizer integration now passes its focused tests and fmt. Main remains `cafe7fea7`, merged by real merge `42041fa45`; comparison base remains `94dc1c3a2`. No push or main/Claude modification occurred.
 - **Measured:** Early B2 tax is recorded below; all corpus geomeans are below 1.03, with target misses retained. P1-2's initial-exec/local-exec comparison is next.
-- **Decided:** Use private TLS state with narrow shared locks/atomics, persistent retired-thread allocator records, whole-output-unit staging and bounded fatal reporting. Keep the B2 emitter and the logged last-owner acquire CAS. Initial-exec is provisional pending measurement; both TLS archives are pinned to the P1-2 implementation.
-- **Next:** Finish the TLS-model comparison and the required P1-5 sanitizer repetitions, then whole-package review, final correctness/TSan/tax and P2-0. **P1 is not complete.**
+- **Decided:** Use private TLS state with narrow shared locks/atomics, persistent retired-thread allocator records, whole-output-unit staging and bounded fatal reporting. Keep the B2 emitter and the logged last-owner acquire CAS. Select measured local-exec TLS; both archives are pinned to the P1-2 implementation.
+- **Next:** Complete the required P1-5 sanitizer repetitions, then whole-package review, final correctness/TSan/tax and P2-0. **P1 is not complete.**
 
 ### Revision-3 correctness checkpoint
 
@@ -377,7 +377,7 @@ and end-to-end confirmation remain pending after this P1-1 tax stop.
 | P1-5 generated thunks at 1/2/8 threads and 100 TSan repetitions | NOT IMPLEMENTED / NOT RUN; the C count harness is not a substitute |
 
 [Qualification summary](qualify/summary.json) and
-[full conformance log](qualify/full-conformance.log.gz.gz.gz.gz.gz) retain the commands and
+[full conformance log](qualify/full-conformance.log.gz) retain the commands and
 results. The first full gate had two failures: an existing RC test expected
 `load i32`, and the property-test timeout case failed its “not shrunk” text
 assertion. The RC expectation was updated. The timeout test passed unchanged
@@ -754,3 +754,15 @@ The P1-4 commit check also required the scheduler matrix to receive its allocato
 The internal sanitizer switch instruments every emitted LLVM definition, native runtime and linked C source, with separate cache identities. The hand-built IR proofs exercise lists, records, dictionaries, allocated strings and nested lists; mutate a parent after submission; read results twice; and gather range results in input order. Error tests resolve captured PCs, preserve the required unknown-site fallback and report the exact current map item.
 
 The integrated matrix passes **11/11 tests**, including Debug and counted/verified ownership at **1/2/8 threads**, actual LLVM ThreadSanitizer captures/ranges, native million-submit ThreadSanitizer, and ordinary/sanitized/ordinary cache separation. Fmt passes. [Initial run](r3/logs/P1-5-focused-01.log.gz), [post-review run](r3/logs/P1-5-focused.log.gz), [fmt](r3/logs/P1-5-fmt.log.gz). **The required 100 repetitions at eight threads are still pending**, as are final package gates/tax.
+
+### P1-2: TLS comparison complete — local-exec selected
+
+| model | cells | GM/base | cells >1.03 | target |
+|---|---:|---:|---:|---|
+| initial-exec | 92 | 1.0150306005 | 20 | MISS |
+| **local-exec** | 92 | **1.0124433780** | 18 | MISS |
+
+Direct paired LE/IE GM: **0.9979028166**. Load: **0.47–1.98**. [Every cell, base/package time and K=4/5/6 ratio](r3/results/tls-rows.md), [raw samples](r3/results/tls-rows.json.xz), [compiler identities](r3/results/tls-identities.json), [source equivalence](r3/results/tls-source-equivalence.json). Source is P1-2 commit `9d2524f5e`; later steps were integrated separately while these immutable archives built. Both variants preserve outputs. Local-exec is now selected in C and both emitters. This does not claim the final package tax passes: P1-6 is binding.
+
+
+Local-exec integration passes **15/15 focused tests** and fmt ([tests](r3/logs/LE-focused.log.gz), [fmt](r3/logs/LE-fmt.log.gz)). The [whole-package review](SELF-REVIEW.md) is complete, with a [fresh typed inventory](r3/final-inventory/inventory.json) of **128 static declarations / 8 managed count-access lines**. [P2-0](P2-0.md) records the successful existing-IR lowering proof and future checker/builder work. Final qualification, 100-repetition TSan and binding tax remain outstanding.

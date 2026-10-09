@@ -3698,7 +3698,7 @@ const task_bridge =
 ;
 
 const runtime_fast_paths =
-    \\@myl_core_free_lists = external thread_local(initialexec) global [33 x ptr]
+    \\@myl_core_free_lists = external thread_local(localexec) global [33 x ptr]
     \\declare preserve_mostcc void @myl_core_retain_slow(ptr) nounwind cold
     \\declare preserve_mostcc void @myl_core_release_slow(ptr) nounwind cold
     \\declare ptr @myl_core_list_new_slow(i64, i64) nounwind

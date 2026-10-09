@@ -2,6 +2,7 @@
 """Render every alignment and the binding median ratio from R10 tax JSON."""
 import gzip
 import json
+import lzma
 import math
 from pathlib import Path
 import statistics
@@ -9,7 +10,7 @@ import sys
 
 
 def render(path):
-    opener = gzip.open if path.suffix == '.gz' else open
+    opener = {'.gz': gzip.open, '.xz': lzma.open}.get(path.suffix, open)
     with opener(path, 'rt') as handle:
         data = json.load(handle)
     assert data['valid']

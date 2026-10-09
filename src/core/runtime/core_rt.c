@@ -37,7 +37,7 @@
 #include <linux/futex.h>
 
 /* RUNTIME-THREADS-1: the executable owns TLS; no dynamic library can unload it. */
-#define MYL_TLS _Thread_local __attribute__((tls_model("initial-exec")))
+#define MYL_TLS _Thread_local __attribute__((tls_model("local-exec")))
 static _Atomic bool core_pool_started;
 static _Atomic uint32_t core_fatal_winner;
 static MYL_TLS bool core_fatal_owner, core_fatal_raw;

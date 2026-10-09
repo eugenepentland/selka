@@ -1,0 +1,25 @@
+{
+  "source": "9f911528f36e06afc798548b20d6ac810d837aa5",
+  "toolchain": "0.17.0-dev.1683+5ceec001b",
+  "object_compile_exit": 0,
+  "ast_wrapper_exit": 1,
+  "static_declarations": 128,
+  "count_access_lines": 8,
+  "source_files_sha256": {
+    "runtime/core_rt.c": "6755a1a0a91b54d6491b4ebd317f03d89d7493bc6ddbab546c38c54da6e5ff2f",
+    "runtime/core_count.h": "3a39d1ece245f90d88a9812e29bb59467d95d34566e33da2c384d41622eaaee7",
+    "runtime/core_dict.c": "ab41dffabdc925895587f470a46efde2a014256d0f1d4825ace5b901b2335227",
+    "runtime/core_unicode_data.h": "668ed92a73281c3d22138b64719b4a30f2cd7472e31db9b6162f2e272292aeea",
+    "runtime/core_text.c": "71249900f1b82de97ef911a545c06fe3f1eefe70cfd4ff7ad9ad564aaad2f858",
+    "runtime/core_sort.c": "a20021e45073e7b7ca9e2b1003d5d8dd4211f48dfa7a5e77c169e374fa170ffe",
+    "runtime/core_number.c": "0db77b29dbff7b36fc46a93776bf83fbca5f9533ce5ac848b456e844810ab4d3",
+    "runtime/core_io.c": "34ece53b9aa0fd175a11e216fb688ad32b738f8906e9831355a951112a5160b8",
+    "runtime/core_host.c": "77fa8d5fe29bbaca29b580256bd6cd786c40f92c3dfd11f839a261d6456d80fb",
+    "runtime/core_bytes.c": "6272920d340d91995b4816358857c5456c0ddfd87655a4f63150e293e65f6c44",
+    "runtime/core_values.c": "bdf84a2b84e85d3120a65bb4e9d7acd768fb9ae1ac61fa5f2423a6f4749b9534",
+    "runtime/core_test.c": "18535b83cd85b1f4ccd8bd55153c38a55299e561b8dd09429cba3c257d96e7fd",
+    "runtime/core_tasks.c": "39ecb203ac6af9cf9017301a07a707e8bc8830d58790a3bf4f705f572f643a69",
+    "runtime/core_count.c": "e7497cd9feb3ea3d98898223777dc805f3e56f78cbeaa6cfc6cf4d86a090a891"
+  },
+  "source_diff_sha256": "57c4715a23188393f85dc4ba78fd06f14e9287ab2e2f3af0b79f552c6b2e1c5c"
+}
