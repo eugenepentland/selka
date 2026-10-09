@@ -1,0 +1,44 @@
+{"version":"diagnostic-v1","kind":"diagnostic","diagnostic":{"code":"E_SYNTAX","severity":"error","message":"unexpected token; expected a dedent","location":{"path":"sexpr_ast.my","start":{"line":18,"column":29},"end":{"line":18,"column":33},"bytes":{"start":486,"end":490}},"notes":[],"stack":{"frames":[],"omitted":0}}}
+{"version":"diagnostic-v1","kind":"diagnostic","diagnostic":{"code":"E_BINDING_SCOPE_MIGRATION","severity":"error","message":"this implicit local is used outside its block; declare the state in the enclosing block or rewrite the branches as a value expression","location":{"path":"probes/byte_io/byteio.my","start":{"line":39,"column":9},"end":{"line":39,"column":13},"bytes":{"start":1316,"end":1320}},"notes":[],"stack":{"frames":[],"omitted":0}}}
+{"version":"diagnostic-v1","kind":"diagnostic","diagnostic":{"code":"E_BINDING_SCOPE_MIGRATION","severity":"error","message":"this implicit local is used outside its block; declare the state in the enclosing block or rewrite the branches as a value expression","location":{"path":"probes/dict_order/dict_probe.my","start":{"line":39,"column":9},"end":{"line":39,"column":10},"bytes":{"start":993,"end":994}},"notes":[],"stack":{"frames":[],"omitted":0}}}
+{"version":"diagnostic-v1","kind":"diagnostic","diagnostic":{"code":"E_BINDING_SCOPE_MIGRATION","severity":"error","message":"this implicit local is used outside its block; declare the state in the enclosing block or rewrite the branches as a value expression","location":{"path":"probes/dict_order/dict_scale.my","start":{"line":24,"column":9},"end":{"line":24,"column":11},"bytes":{"start":506,"end":508}},"notes":[],"stack":{"frames":[],"omitted":0}}}
+{"version":"diagnostic-v1","kind":"diagnostic","diagnostic":{"code":"E_MODULE_READ","severity":"error","message":"cannot load zigfmt.my: NotFound","location":{"path":"probes/float_fmt/t1.my","start":{"line":3,"column":8},"end":{"line":3,"column":14},"bytes":{"start":9,"end":15}},"notes":[],"stack":{"frames":[],"omitted":0}}}
+{"version":"diagnostic-v1","kind":"diagnostic","diagnostic":{"code":"E_MODULE_READ","severity":"error","message":"cannot load zigfmt.my: NotFound","location":{"path":"probes/float_fmt/verify.my","start":{"line":3,"column":8},"end":{"line":3,"column":14},"bytes":{"start":9,"end":15}},"notes":[],"stack":{"frames":[],"omitted":0}}}
+{"version":"diagnostic-v1","kind":"diagnostic","diagnostic":{"code":"E_BINDING_SCOPE_MIGRATION","severity":"error","message":"this implicit local is used outside its block; declare the state in the enclosing block or rewrite the branches as a value expression","location":{"path":"probes/gaps/g05_shadowing.my","start":{"line":11,"column":9},"end":{"line":11,"column":10},"bytes":{"start":415,"end":416}},"notes":[],"stack":{"frames":[],"omitted":0}}}
+{"version":"diagnostic-v1","kind":"diagnostic","diagnostic":{"code":"E_LAMBDA_CAPTURE","severity":"error","message":"lambda cannot capture local `cands`; use a top-level function or pass the value as an explicit state parameter","location":{"path":"probes/gaps/g09_sort_context.my","start":{"line":9,"column":43},"end":{"line":9,"column":48},"bytes":{"start":362,"end":367}},"notes":[],"stack":{"frames":[],"omitted":0}}}
+{"version":"diagnostic-v1","kind":"message","message":"mylang: host failure: InternalError\n"}
+fixed experiments/frontend-followthrough-20261009/external/sources/eda/mylang/pilot/dump_main.my: 1 edit (E_MODULE_HEADER)
+fixed experiments/frontend-followthrough-20261009/external/sources/eda/mylang/pilot/parse_bench.my: 1 edit (E_MODULE_HEADER)
+fixed experiments/frontend-followthrough-20261009/external/sources/eda/mylang/pilot/sexpr_ast.my: 59 edits (E_MODULE_HEADER, E_FRONTEND_VARIANT)
+fixed experiments/frontend-followthrough-20261009/external/sources/eda/mylang/pilot/sexpr_parser.my: 1 edit (E_MODULE_HEADER)
+fixed experiments/frontend-followthrough-20261009/external/sources/eda/mylang/pilot/sexpr_tokenizer.my: 1 edit (E_MODULE_HEADER)
+fixed experiments/frontend-followthrough-20261009/external/sources/eda/mylang/pilot/tok_bench.my: 1 edit (E_MODULE_HEADER)
+fixed experiments/frontend-followthrough-20261009/external/sources/eda/mylang/pilot/zigfmt.my: 1 edit (E_MODULE_HEADER)
+fixed experiments/frontend-followthrough-20261009/external/sources/eda/mylang/probes/byte_io/byteio.my: 22 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+fixed experiments/frontend-followthrough-20261009/external/sources/eda/mylang/probes/dict_order/dict_probe.my: 24 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+fixed experiments/frontend-followthrough-20261009/external/sources/eda/mylang/probes/dict_order/dict_scale.my: 16 edits (E_MODULE_HEADER, E_BINDING_SCOPE_MIGRATION)
+fixed experiments/frontend-followthrough-20261009/external/sources/eda/mylang/probes/float_fmt/t1.my: 1 edit (E_MODULE_HEADER)
+fixed experiments/frontend-followthrough-20261009/external/sources/eda/mylang/probes/float_fmt/verify.my: 1 edit (E_MODULE_HEADER)
+fixed experiments/frontend-followthrough-20261009/external/sources/eda/mylang/probes/gaps/g01_no_repr.my: 2 edits (E_MODULE_HEADER, E_FRONTEND_SYNTAX)
+fixed experiments/frontend-followthrough-20261009/external/sources/eda/mylang/probes/gaps/g02_strip_chars.my: 2 edits (E_MODULE_HEADER, E_FRONTEND_SYNTAX)
+fixed experiments/frontend-followthrough-20261009/external/sources/eda/mylang/probes/gaps/g03_format_float_zig.my: 3 edits (E_MODULE_HEADER, E_FRONTEND_SYNTAX)
+fixed experiments/frontend-followthrough-20261009/external/sources/eda/mylang/probes/gaps/g04_write_file_quadratic.my: 17 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+fixed experiments/frontend-followthrough-20261009/external/sources/eda/mylang/probes/gaps/g05_shadowing.my: 3 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+fixed experiments/frontend-followthrough-20261009/external/sources/eda/mylang/probes/gaps/g06_seq_repeat.my: 3 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+fixed experiments/frontend-followthrough-20261009/external/sources/eda/mylang/probes/gaps/g07_sort_bytes.my: 5 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+fixed experiments/frontend-followthrough-20261009/external/sources/eda/mylang/probes/gaps/g07b_sort_bytes_key.my: 4 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+fixed experiments/frontend-followthrough-20261009/external/sources/eda/mylang/probes/gaps/g08_str_compare.my: 4 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+fixed experiments/frontend-followthrough-20261009/external/sources/eda/mylang/probes/gaps/g08b_bytes_compare.my: 4 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+fixed experiments/frontend-followthrough-20261009/external/sources/eda/mylang/probes/gaps/g09_sort_context.my: 5 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+fixed experiments/frontend-followthrough-20261009/external/sources/eda/mylang/probes/gaps/g10_no_bitcast.my: 3 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+fixed experiments/frontend-followthrough-20261009/external/sources/eda/mylang/probes/gaps/g11_str_nonascii_quadratic.my: 13 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+fixed experiments/frontend-followthrough-20261009/external/sources/eda/mylang/probes/gaps/g12_find_no_start.my: 3 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+fixed experiments/frontend-followthrough-20261009/external/sources/eda/mylang/probes/gaps/g14_float_const.my: 2 edits (E_MODULE_HEADER, E_FRONTEND_SYNTAX)
+fixed experiments/frontend-followthrough-20261009/external/sources/eda/mylang/probes/gaps/g15_float_to_u64.my: 3 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+fixed experiments/frontend-followthrough-20261009/external/sources/eda/mylang/probes/gaps/g16_option_eq_inference.my: 7 edits (E_BINDING_DECLARATION)
+fixed experiments/frontend-followthrough-20261009/external/sources/eda/mylang/probes/gaps/g17_nested_for_underscore.my: 2 edits (E_BINDING_DECLARATION)
+fixed experiments/frontend-followthrough-20261009/external/sources/eda/mylang/probes/gaps/g19_run_flag_spelling.my: 4 edits (E_FRONTEND_SYNTAX, E_NUMERIC_PARSE)
+fixed experiments/frontend-followthrough-20261009/external/sources/eda/mylang/probes/gaps/g20_record_arg_cost.my: 26 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+fixed experiments/frontend-followthrough-20261009/external/sources/eda/mylang/probes/gaps/g24_mut_path_arg.my: 5 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+fixed experiments/frontend-followthrough-20261009/external/sources/eda/mylang/probes/gaps/g29_set_constructor.my: 3 edits (E_BINDING_DECLARATION)
+fix: 252 edits in 34 files over 57 rounds

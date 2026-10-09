@@ -1,0 +1,35 @@
+{
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/artifacts/lox-release-final",
+    "--engine=vm",
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/lox/benchmarks/lox/corpus/test/limit/no_reuse_constants.lox"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/lox",
+  "exit_code": 65,
+  "elapsed_seconds": 0.0016621388494968414,
+  "timeout_seconds": 60,
+  "affinity": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_sha256": "cbb1d822c27b11fcbf09a35d8b63b51bfe7b9eda808a9bc9ee5e923067f94279"
+}

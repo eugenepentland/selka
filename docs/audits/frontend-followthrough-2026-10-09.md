@@ -70,3 +70,18 @@ All agents share the new branch with disjoint file ownership. Builds use the
 shared build-slot wrapper and exclude reserved timing CPUs. Heavy gates and
 measurements are serialized. Shared caches, other sessions' files, protected
 benchmark trees and historical evidence are not cleanup targets.
+
+## First batch checkpoint
+
+Implementation `d8fe5b797` closes the first batch with 94/94 repository gate
+steps, 15/15 formatting steps, 88 whole-tree Guardian checks and complete
+Lox/EDA qualification. The full report and rejected attempts are preserved in
+`experiments/frontend-followthrough-20261009/REPORT.md`. External migrations
+are reviewed patches against the frozen pins; application worktrees are unchanged.
+
+Next work starts with parser recovery and source ownership. Before any new
+typed-IR corpus audit, resolve the configured-root module-loading discrepancy:
+`dump-ir` fails on EDA's `src.` imports while normal check/build succeeds. Native
+executable identity, not failed dump output, qualified EDA for this batch.
+Then measure current incremental behavior before changing cache keys. Later
+effect/lowering phases remain separate reviewable batches.

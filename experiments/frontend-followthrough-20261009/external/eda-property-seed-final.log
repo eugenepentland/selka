@@ -1,0 +1,8 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 2 after 30s (all 3 build slot(s) busy)
+current/debug/sexpr_parser_test functional_membership_pass
+current/verify/sexpr_parser_test functional_membership_pass
+current/release/sexpr_parser_test functional_membership_pass
+directory/debug functional_membership_pass
+directory/release functional_membership_pass
+directory/verify functional_membership_pass

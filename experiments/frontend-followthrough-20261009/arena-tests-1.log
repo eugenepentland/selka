@@ -1,0 +1,23 @@
+test-units
++- run test w
+guardian/test: 15 test(s) selected by filter: "arena" — 8 match by name, 7 unnamed test block(s) run regardless
+guardian/test: test wall 0.10s; slowest over 50ms:
+guardian/test:   0.09s  chunked_arena.test.the chunked arena reserves at most one chunk beyond what it holds and returns what large lists leave behind
+guardian/test: PASS — 15 passed
+guardian/test: RESULT {"passed":15,"failed":0,"skipped":0}
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/e723449714f72ecc94912107c1e47a94/test --guardian-filter=arena --cache-dir=./.zig-cache --seed=0x17efa2d7 --listen=-
+
+Build Summary: 8/8 steps succeeded; 15/15 tests passed
+test-units success
++- run test 15 pass (15 total) 134ms MaxRSS:59M
+   +- compile test debug native success 1s MaxRSS:293M
+      +- run exe build-identity (build_identity) success 44ms
+      |  +- compile exe build-identity debug native cached 7ms MaxRSS:37M
+      +- options success
+         +- compile exe mylang debug native success 3s MaxRSS:501M
+            +- run exe build-identity (build_identity) (+1 more reused dependencies)
+            +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 7ms MaxRSS:38M
+
+real 5.57
+user 13.21
+sys 1.48

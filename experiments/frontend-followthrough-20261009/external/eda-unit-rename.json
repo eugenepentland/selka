@@ -1,0 +1,86 @@
+{
+  "reason": "Unit is reserved builtin; frozen EDA nominal record renamed preserving references",
+  "replacement": "SchematicUnit",
+  "files": [
+    {
+      "path": "infra_fs.my",
+      "occurrences": 5
+    },
+    {
+      "path": "kicad_sch_shape.my",
+      "occurrences": 13
+    },
+    {
+      "path": "sexpr_tokenizer.my",
+      "occurrences": 1
+    },
+    {
+      "path": "kicad_sym_reader.my",
+      "occurrences": 7
+    },
+    {
+      "path": "kicad_sch_emit.my",
+      "occurrences": 10
+    },
+    {
+      "path": "kicad_sch_vendor.my",
+      "occurrences": 14
+    },
+    {
+      "path": "kicad_sch_compose.my",
+      "occurrences": 2
+    },
+    {
+      "path": "kicad_sch_emit_test.my",
+      "occurrences": 2
+    },
+    {
+      "path": "kicad_sch_stagger.my",
+      "occurrences": 9
+    },
+    {
+      "path": "zipfile_test.my",
+      "occurrences": 1
+    },
+    {
+      "path": "kicad_sch_verify.my",
+      "occurrences": 12
+    },
+    {
+      "path": "kicad_sch_project_test.my",
+      "occurrences": 1
+    },
+    {
+      "path": "kicad_sch_bank.my",
+      "occurrences": 1
+    },
+    {
+      "path": "export_kicad_model.my",
+      "occurrences": 1
+    },
+    {
+      "path": "export_kicad_footprint.my",
+      "occurrences": 1
+    },
+    {
+      "path": "kicad_sch_stagger_test.my",
+      "occurrences": 2
+    },
+    {
+      "path": "kicad_sch_shape_test.my",
+      "occurrences": 1
+    },
+    {
+      "path": "zipfile.my",
+      "occurrences": 1
+    },
+    {
+      "path": "export_kicad_sch.my",
+      "occurrences": 1
+    },
+    {
+      "path": "kicad_sch_bank_test.my",
+      "occurrences": 2
+    }
+  ]
+}

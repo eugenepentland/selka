@@ -1,0 +1,40 @@
+{
+  "reason": "avoid migration-introduced recursion: numeric parse builtins collide with old wrapper names",
+  "changes": [
+    {
+      "path": "render_svg_context.my",
+      "before_sha256": "fc8cc527bb505a7e9438fd24fa5f3f69ad27717f8a6f44447628cbe89f56a596",
+      "after_sha256": "9c7959af0a32e490620cbbc7295aa6615a61b81447cfb51c3af4edf18e27e074"
+    },
+    {
+      "path": "decouple_key.my",
+      "before_sha256": "fc403ded4ae33a0b3a4aacc938839fd29a1941bbc8a08f644136ef1b019e9167",
+      "after_sha256": "43b5e4c0078c5f75a36f4510a4b9e1ddef77c5664e10d5f5da4c16a8e132cd40"
+    },
+    {
+      "path": "support_parse.my",
+      "before_sha256": "02078e378ca0372ed85137a490f9733d9a96ca67018b58f6c0c6639e11f1d2c2",
+      "after_sha256": "28b97c35b0ae81a765edd346bce28d0180e3b1c659e85a089e88e77f247a3010"
+    },
+    {
+      "path": "export_kicad_model.my",
+      "before_sha256": "78f4a99322fb227095214ced56092a5fd24aa91d74c7d3cd35609cc315bb0d3d",
+      "after_sha256": "a29f60d1084e7588a4d92ef8f5a1328909c28f5113f8525918a77fda8ad14564"
+    },
+    {
+      "path": "support_parse_test.my",
+      "before_sha256": "9094b76e04ab3d307f02e2ec69fa6e1c2c2ff972468d5310a8771addc657a9e8",
+      "after_sha256": "a07c8036c8c5060de7b5d39788f2c59c5519037d0b6e6f8f459a467789613090"
+    },
+    {
+      "path": "export_kicad_footprint_test.my",
+      "before_sha256": "552a0bcfa8acc2643113d3ec8c569ccde362bacd4579e3a7fe59f2e6dcc7ce1e",
+      "after_sha256": "0ceff26133aee96fd0e27d288192d1ffc524d033dcf7f9a2cb941af645d6982f"
+    },
+    {
+      "path": "sexpr_parser.my",
+      "before_sha256": "ed4e8aa3d804748a5a7a62b34aa889082281fbf53d0a8e4f8cd1db9db1d2e8a6",
+      "after_sha256": "0881c8448788fef42f8aa0e0251de531db9a3db97ba4b89d55a8fb9222d7bbc1"
+    }
+  ]
+}

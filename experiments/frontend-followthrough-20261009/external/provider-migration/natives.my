@@ -1,0 +1,32 @@
+
+# Test fixture for driver_tests.my (see driver_cases.json): natives.my with
+# a `clock` that returns 0 instead of reading the Clock capability.
+import heap
+import lox_strings
+import object
+import value
+
+
+public const CLOCK: int = 0
+
+
+public func call_native(rt: heap.Runtime, id: int) -> value.Value:
+    assert id == CLOCK, "unknown native"
+    _ = rt
+    return value.Value.number(value=0.0)
+
+
+public func start(mut rt: heap.Runtime):
+    mut init_name = lox_strings.copy_string(mut rt, b"init")
+    rt.init_string = init_name
+    define_natives(mut rt)
+
+
+func define_natives(mut rt: heap.Runtime):
+    mut name = lox_strings.copy_string(mut rt, b"clock")
+    heap.push(mut rt, value.Value.obj(value=name))
+    mut native = heap.allocate(mut rt, object.Obj.native(value=object.NativeObj(id=CLOCK, arity=0)))
+    heap.push(mut rt, value.Value.obj(value=native))
+    _ = heap.set_global(mut rt, name, value.Value.obj(value=native))
+    _ = heap.pop(mut rt)
+    _ = heap.pop(mut rt)

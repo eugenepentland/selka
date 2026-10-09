@@ -1,0 +1,3 @@
+func main() -> int:
+    const text: bytes = if True then b"not_allowed" else b"allowed"
+    return len(text)

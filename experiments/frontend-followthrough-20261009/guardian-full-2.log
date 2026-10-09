@@ -1,0 +1,8 @@
+guardian: file-size: 15 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 20 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 8063 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 2 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+real 1.92
+user 6.41
+sys 1.61

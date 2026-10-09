@@ -1,0 +1,2 @@
+{"version":"diagnostic-v1","kind":"diagnostic","diagnostic":{"code":"E_SYNTAX","severity":"error","message":"unexpected token; expected a newline","location":{"path":"parser.my","start":{"line":331,"column":52},"end":{"line":331,"column":53},"bytes":{"start":12446,"end":12447}},"notes":[],"stack":{"frames":[],"omitted":0}}}
+fix: nothing to fix
