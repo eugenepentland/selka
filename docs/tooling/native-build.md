@@ -282,3 +282,5 @@ a one-line reason: `--backend`, `--llvm-opt`, `--lto`, `--target`, `--keep-symbo
 commands `emit-qbe`, `emit-project-qbe`, `emit-runtime`, `dump-bytecode` (use
 `dump-ir`), `compile-module`, `link-modules` and `invoke`. `--qbe PATH` is accepted
 and ignored.
+
+The internal concurrency-test switch `MYLANG_CORE_SANITIZE=thread` instruments every emitted LLVM function, the native runtime and linked C sources with ThreadSanitizer, and links its runtime. It has no CLI flag or feature slug. Object/runtime/program/replay cache identities include the switch, so sanitized and ordinary objects cannot mix; other values are rejected. Run the concurrency tests with this switch only in a supported native TSan environment.

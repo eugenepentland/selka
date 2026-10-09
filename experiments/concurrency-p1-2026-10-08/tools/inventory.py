@@ -5,6 +5,7 @@ Usage: python3 experiments/concurrency-p1-2026-10-08/tools/inventory.py
 The AST is scratch (about 124 MB); only the compact inventories are evidence.
 String literals and Zig compile-time constants are classified in REPORT.md.
 """
+import argparse
 import json
 import os
 from pathlib import Path
@@ -12,7 +13,10 @@ import re
 import subprocess
 
 ROOT = Path(__file__).resolve().parents[3]
-OUT = Path(__file__).resolve().parents[1] / "evidence"
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("--output", type=Path, default=Path(__file__).resolve().parents[1] / "evidence")
+OUT = parser.parse_args().output.resolve()
+OUT.mkdir(parents=True, exist_ok=True)
 SCRATCH = ROOT / ".tmp" / "concurrency-p1-inventory"
 SCRATCH.mkdir(parents=True, exist_ok=True)
 env = dict(os.environ, TMPDIR=str(SCRATCH),

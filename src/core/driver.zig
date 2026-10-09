@@ -22,6 +22,7 @@ const tool_identity = @import("tool_identity.zig");
 const emit_units = @import("emit_units.zig");
 const unit_cache = @import("unit_cache.zig");
 const count_runtime = @import("count_runtime.zig");
+const sanitize_llvm = @import("sanitize_llvm.zig");
 const Digest = unit_cache.Digest;
 
 /// The runtime C source, compiled into every program.
@@ -130,6 +131,7 @@ const Object = struct { path: []const u8, digest: Digest };
 /// Compile and link `request.units` into `request.output`; failures append the tool's stderr to `log`.
 pub fn link(allocator: std.mem.Allocator, io: std.Io, environ: *const std.process.Environ.Map, request: Request, log: *std.ArrayList(u8)) Error!Outcome {
     try validateLayout(allocator, environ, log);
+    try validateSanitize(allocator, environ, log);
     const cwd = std.Io.Dir.cwd();
     cwd.createDirPath(io, request.work) catch return error.WriteFailed;
     var environment = environ.clone(allocator) catch return error.OutOfMemory;
@@ -181,6 +183,7 @@ pub fn link(allocator: std.mem.Allocator, io: std.Io, environ: *const std.proces
     try argv.appendSlice(allocator, &.{ guest.path, "cc", unit_cache.level(request.release), "-target", target_policy.native_link_target });
     try argv.appendSlice(allocator, target.cpu_flags);
     if (sanitizer.len != 0) try argv.append(allocator, sanitizer);
+    try argv.appendSlice(allocator, sanitizeArguments(environ));
     try argv.append(allocator, "-pthread");
     try argv.appendSlice(allocator, &.{ "-Wno-override-module", "-o", linked });
     for (objects.items) |object| try argv.append(allocator, object.path);
@@ -215,6 +218,7 @@ fn runtimeFor(allocator: std.mem.Allocator, counting: bool, environment: *const 
     var hash = std.crypto.hash.Blake3.init(.{});
     hash.update(source);
     for (layoutArguments(environment)) |argument| unit_cache.field(&hash, argument);
+    for (sanitizeArguments(environment)) |argument| unit_cache.field(&hash, argument);
     hash.final(&abi);
     return .{ .source = source, .abi = abi };
 }
@@ -237,6 +241,26 @@ fn validateLayout(a: std.mem.Allocator, environment: *const std.process.Environ.
     return error.ToolFailed;
 }
 
+// TSAN-BUILD-1: instrument C and every emitted LLVM definition; the same
+// option salts the runtime ABI and foreign settings, separating every cache.
+const sanitize_variable = "MYLANG_CORE_SANITIZE";
+const thread_sanitizer = "-fsanitize=thread";
+
+fn sanitizeArguments(environment: *const std.process.Environ.Map) []const []const u8 {
+    const value = environment.get(sanitize_variable) orelse return &.{};
+    return if (std.mem.eql(u8, value, "thread")) &.{thread_sanitizer} else &.{};
+}
+
+fn validateSanitize(a: std.mem.Allocator, environment: *const std.process.Environ.Map, log: *std.ArrayList(u8)) Error!void {
+    if (environment.get(sanitize_variable) == null or sanitizeArguments(environment).len != 0) return;
+    try log.appendSlice(a, "error: MYLANG_CORE_SANITIZE must be thread\n");
+    return error.ToolFailed;
+}
+
+fn instrumented(a: std.mem.Allocator, environment: *const std.process.Environ.Map, llvm: []const u8) std.mem.Allocator.Error![]const u8 {
+    return if (sanitizeArguments(environment).len != 0) sanitize_llvm.instrument(a, llvm) else llvm;
+}
+
 /// Optional LLVM optimization records from a separate compile of the exact units.
 /// Failure or a tool that accepts the flags but writes no YAML leaves it unknown.
 /// This never replaces a cached object, changes emitted text, or enters the link.
@@ -246,6 +270,7 @@ pub const OptimizationRemarks = struct { yaml: ?[]const u8 = null, processes: u3
 /// deferred until timings justify it. Every spawn is timed and tool-validated.
 pub fn optimizationRemarks(a: std.mem.Allocator, io: std.Io, environ: *const std.process.Environ.Map, request: Request) std.mem.Allocator.Error!OptimizationRemarks {
     if (environ.get(layout_variable) != null and layoutArguments(environ).len == 0) return .{};
+    if (environ.get(sanitize_variable) != null and sanitizeArguments(environ).len == 0) return .{};
     const staging = privateDirectory(a, io, request.work, "llvm-remarks") catch |err| {
         if (err == error.OutOfMemory) return error.OutOfMemory;
         return .{};
@@ -269,7 +294,7 @@ pub fn optimizationRemarks(a: std.mem.Allocator, io: std.Io, environ: *const std
         const source = try std.fmt.allocPrint(a, "{s}/{d}.ll", .{ staging, index });
         const object = try std.fmt.allocPrint(a, "{s}/{d}.o", .{ staging, index });
         const records = try std.fmt.allocPrint(a, "{s}/{d}.opt.yaml", .{ staging, index });
-        std.Io.Dir.cwd().writeFile(io, .{ .sub_path = source, .data = unit.llvm }) catch return result;
+        std.Io.Dir.cwd().writeFile(io, .{ .sub_path = source, .data = try instrumented(a, environ, unit.llvm) }) catch return result;
         var args: std.ArrayList([]const u8) = .empty;
         try args.appendSlice(a, try compileArguments(native, request.release, object, source));
         try args.appendSlice(a, &.{ "-fsave-optimization-record", try std.fmt.allocPrint(a, "-foptimization-record-file={s}", .{records}) });
@@ -367,7 +392,7 @@ fn unitObjects(native: Native, places: Places, settings: unit_cache.Settings, re
         const object = if (served != null) try std.fmt.allocPrint(a, "{s}.verify.o", .{stem}) else if (places.cacheable) try store.partial(a, native.io, key, ".o") else try std.fmt.allocPrint(a, "{s}.o", .{stem});
         const source = try std.fmt.allocPrint(a, "{s}.ll", .{stem});
         // Only units that compile are written out; a hit never rewrites its text.
-        std.Io.Dir.cwd().writeFile(native.io, .{ .sub_path = source, .data = unit.llvm }) catch return error.WriteFailed;
+        std.Io.Dir.cwd().writeFile(native.io, .{ .sub_path = source, .data = try instrumented(a, native.environment, unit.llvm) }) catch return error.WriteFailed;
         try pending.append(a, .{ .unit = unit, .key = key, .object = object, .slot = objects.items.len - 1, .served = served });
         try jobs.append(a, .{ .argv = try compileArguments(native, request.release, object, source), .weight = unit.llvm.len });
     }
@@ -404,6 +429,7 @@ fn compileArguments(native: Native, release: bool, object: []const u8, source: [
     try argv.appendSlice(native.arena, &.{ native.zig, "cc", "-c", unit_cache.level(release), "-target", target_policy.native_link_target });
     try argv.appendSlice(native.arena, target.cpu_flags);
     try argv.appendSlice(native.arena, layoutArguments(native.environment));
+    try argv.appendSlice(native.arena, sanitizeArguments(native.environment));
     try argv.appendSlice(native.arena, &.{ "-Wno-override-module", "-o", object, source });
     return argv.items;
 }
@@ -444,6 +470,7 @@ fn foreignObjects(native: Native, places: Places, settings: unit_cache.Settings,
         var argv: std.ArrayList([]const u8) = .empty;
         try argv.appendSlice(a, &.{ native.zig, "cc", "-c", unit_cache.level(settings.release), "-target", target_policy.native_link_target });
         try argv.appendSlice(a, target.cpu_flags);
+        try argv.appendSlice(a, sanitizeArguments(native.environment));
         try argv.appendSlice(a, &.{ "-MMD", "-MF", depfile, "-o", object, source });
         try jobs.append(a, .{ .argv = argv.items, .weight = links.len - index });
         try compiles.append(a, .{ .manifest = manifest, .manifest_key = manifest_key, .object = object, .depfile = depfile, .slot = objects.items.len - 1 });
@@ -496,6 +523,7 @@ fn foreignKey(native: Native, settings: unit_cache.Settings, source: []const u8)
     };
     var hash = std.crypto.hash.Blake3.init(.{});
     unit_cache.field(&hash, "core-foreign-v1");
+    for (sanitizeArguments(native.environment)) |argument| unit_cache.field(&hash, argument);
     unit_cache.field(&hash, absolute);
     // The source's spelling and the working directory reach its debug information.
     unit_cache.field(&hash, source);
@@ -649,6 +677,7 @@ fn runtimeObject(native: Native, directory: []const u8, runtime: Runtime) Error!
     try argv.appendSlice(allocator, &.{ "-target", target_policy.native_link_target });
     try argv.appendSlice(allocator, target.cpu_flags);
     try argv.appendSlice(allocator, layoutArguments(native.environment));
+    try argv.appendSlice(allocator, sanitizeArguments(native.environment));
     try argv.appendSlice(allocator, &.{ "-std=c11", "-pthread", "-o", partial, source });
     try run(native, argv.items);
     try native.guard.check(native.log);

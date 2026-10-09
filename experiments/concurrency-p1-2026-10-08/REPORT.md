@@ -2,10 +2,10 @@
 
 ## Current progress — 2026-10-09
 
-- **Done:** P1-1's B2 checkpoint is complete at `5042d85a5` (implementation `9c2559a45`). P1-2 per-thread runtime state is committed at `9d2524f5e` and passes the full Debug gate and fmt. P1-3’s shared child iterator is committed at `020ee5422`. P1-4’s scheduler now passes its focused tests and fmt. Main remains `cafe7fea7`, merged by real merge `42041fa45`; comparison base remains `94dc1c3a2`. No push or main/Claude modification occurred.
+- **Done:** P1-1's B2 checkpoint is complete at `5042d85a5` (implementation `9c2559a45`). P1-2 per-thread runtime state is committed at `9d2524f5e` and passes the full Debug gate and fmt. P1-3’s shared child iterator is committed at `020ee5422`. P1-4’s scheduler is committed at `8a3782b05`. P1-5’s real emitted-code/sanitizer integration now passes its focused tests and fmt. Main remains `cafe7fea7`, merged by real merge `42041fa45`; comparison base remains `94dc1c3a2`. No push or main/Claude modification occurred.
 - **Measured:** Early B2 tax is recorded below; all corpus geomeans are below 1.03, with target misses retained. P1-2's initial-exec/local-exec comparison is next.
 - **Decided:** Use private TLS state with narrow shared locks/atomics, persistent retired-thread allocator records, whole-output-unit staging and bounded fatal reporting. Keep the B2 emitter and the logged last-owner acquire CAS. Initial-exec is provisional pending measurement; both TLS archives are pinned to the P1-2 implementation.
-- **Next:** Finish the TLS-model comparison and integrate P1-5, then whole-package review, final correctness/TSan/tax and P2-0. **P1 is not complete.**
+- **Next:** Finish the TLS-model comparison and the required P1-5 sanitizer repetitions, then whole-package review, final correctness/TSan/tax and P2-0. **P1 is not complete.**
 
 ### Revision-3 correctness checkpoint
 
@@ -748,3 +748,9 @@ The runtime now supports groups, submit/result, helping waits, range chunk count
 [Focused tests](r3/logs/P1-4-focused.log.gz) and [fmt](r3/logs/P1-4-fmt.log.gz) pass. The scheduler matrix runs at **1, 2 and 8 threads**, with **1,010,000 submits**, binary depth **12**, chain depth **2,048**, own-deque waits, lazy/budget modes, post-close result ownership and fork guards. The retained share/thread/count tests also pass. TSan repetitions and actual emitted-code proof remain P1-5 work.
 
 The P1-4 commit check also required the scheduler matrix to receive its allocator from the test body. That was corrected; the complete scheduler matrix passed again. The same review correction was applied to the forthcoming IR matrix helpers.
+
+### P1-5: emitted-code integration checkpoint
+
+The internal sanitizer switch instruments every emitted LLVM definition, native runtime and linked C source, with separate cache identities. The hand-built IR proofs exercise lists, records, dictionaries, allocated strings and nested lists; mutate a parent after submission; read results twice; and gather range results in input order. Error tests resolve captured PCs, preserve the required unknown-site fallback and report the exact current map item.
+
+The integrated matrix passes **11/11 tests**, including Debug and counted/verified ownership at **1/2/8 threads**, actual LLVM ThreadSanitizer captures/ranges, native million-submit ThreadSanitizer, and ordinary/sanitized/ordinary cache separation. Fmt passes. [Initial run](r3/logs/P1-5-focused-01.log.gz), [post-review run](r3/logs/P1-5-focused.log.gz), [fmt](r3/logs/P1-5-fmt.log.gz). **The required 100 repetitions at eight threads are still pending**, as are final package gates/tax.

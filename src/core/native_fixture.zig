@@ -47,4 +47,13 @@ pub const Fixture = struct {
         const counts = if (self.counted) std.Io.Dir.cwd().readFileAlloc(io, self.environment.get("MYLANG_COUNTERS").?, self.arena, .limited(1 << 20)) catch return error.TestUnexpectedResult else "";
         return .{ .status = result.term.exited, .stdout = result.stdout, .stderr = result.stderr, .counts = counts };
     }
+    /// Preserve exactly this binary for the separately recorded repetition gate.
+    pub fn exportBinary(self: *const Fixture, name: []const u8) Error!void {
+        const directory = self.environment.get("MYLANG_P1_FIXTURE_OUTPUT") orelse return;
+        const path = try std.fs.path.join(self.arena, &.{ directory, name });
+        std.Io.Dir.cwd().createDirPath(io, directory) catch return error.TestUnexpectedResult;
+        const bytes = std.Io.Dir.cwd().readFileAlloc(io, self.binary, self.arena, .limited(64 << 20)) catch return error.TestUnexpectedResult;
+        std.Io.Dir.cwd().writeFile(io, .{ .sub_path = path, .data = bytes }) catch return error.TestUnexpectedResult;
+        std.Io.Dir.cwd().setFilePermissions(io, path, .executable_file, .{}) catch return error.TestUnexpectedResult;
+    }
 };

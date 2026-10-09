@@ -263,3 +263,22 @@ Guardian’s whole-tree commit check caught that SHARED-COUNTS-1 still described
 - **Evidence:** The P1-4 whole-tree commit gate rejected `task_scheduler_test.matrix` under `allocator-hygiene`; review found the same pattern in P1-5's matrix/fatal helpers.
 - **Choice:** Pass `std.mem.Allocator` from the actual test blocks to each helper. Preserve the failed gate and rerun the affected matrix. No allocator exemption or test reduction.
 - **Reversal:** Straightforward, but the explicit dependency is the repository's required style.
+
+
+## 2026-10-09 — P1-5: real emitted-code instrumentation and repeated evidence
+
+- **Question:** How can the final sanitizer gate cover guest code as well as C without changing frozen Core IR?
+- **Options:** Instrument only C, or add LLVM sanitize_thread attributes to every definition and link the matching sanitizer runtime.
+- **Evidence:** The integrated 11-test matrix passes actual fastcc mixed captures/results, parent copy-on-write, repeated results, counted/verified ownership at 1/2/8 threads, ordered range results, submission-PC/unknown-site reports, exact failing map item 17, actual LLVM TSan and the million-submit native TSan fixture. The foreign-cache regression previously exposed and fixed an independent missing sanitizer salt.
+- **Choice:** Add the validated internal `MYLANG_CORE_SANITIZE=thread` switch in `driver.zig`, instrument emitted LLVM and C, and salt all relevant cache layers. Keep invalid values fatal before compilation. Restore `native_fixture.exportBinary` with its real P1-5 consumer. Export exact tested binaries through an experiment-only environment variable and use `tools/repeat_tsan.py` to record all 100 repetitions for each of native stress, mixed captures and range tasks at eight threads, including stdout, stderr, status and hashes. No suppressions, retries or sanitizer-only runtime behavior.
+- **Files outside the expected list:** `driver_cache_test.zig` verifies independent object/replay cache separation; `root_test.zig` imports the tests; experiment helpers record outcomes. `tools/inventory.py` gains an output argument so final review preserves P1-0's original inventory. The sanitizer text helper and hand-built IR fixtures are new Core test/support files. No front-end, `ir.zig` or `own.zig` edit is needed.
+- **Reversal:** Internal build/test machinery is reversible. The 100-repetition gate remains pending until its recorded run completes.
+
+
+## 2026-10-09 — P1-5: format the emitter test options explicitly
+
+- **Question:** How should the new test's 257-character emitter call satisfy Guardian's 240-character hard limit?
+- **Options:** Exempt the line or split the options initializer.
+- **Evidence:** The whole-tree commit gate rejected only `task_ir_test.zig:31` under `line-length`; behavioral tests were green.
+- **Choice:** Expand the initializer across lines and rerun fmt. No behavioral change or exemption.
+- **Reversal:** Formatting only.

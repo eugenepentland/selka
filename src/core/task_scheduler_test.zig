@@ -36,3 +36,18 @@ fn matrix(allocator: std.mem.Allocator) Error!usize {
 test "scheduler runs million-submit deep nested and own-deque waits at 1 2 8 threads and prohibits fork" {
     try std.testing.expectEqual(@as(usize, 12), try matrix(std.testing.allocator));
 }
+// spec-case: TSAN-BUILD-1
+test "native scheduler million-submit stress has no ThreadSanitizer reports at eight threads" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
+    var fixture = try native.Fixture.init(a, root, source, .{ .sanitized = true });
+    const run = try fixture.run("stress", "8");
+    try std.testing.expectEqual(@as(u8, 0), run.status);
+    try std.testing.expectEqualStrings("", run.stderr);
+    try std.testing.expect(std.mem.indexOf(u8, run.stdout, "1010000 submits, binary depth 12, chain 2048, threads 8, live 0") != null);
+    try fixture.exportBinary("native-tasks");
+}
