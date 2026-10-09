@@ -12,6 +12,7 @@
 const std = @import("std");
 const ir = @import("ir.zig");
 const facts = @import("facts.zig");
+const index_keys = @import("index_keys.zig");
 const vector = @import("vector.zig");
 const c_abi = @import("c_abi.zig");
 const flags = @import("flags.zig");
@@ -819,7 +820,24 @@ const MemoryState = struct {
     uses: []u32 = &.{},
     /// Per instruction: a list element over four words lent to calls where it lies (CE2-B).
     borrowed: []bool = &.{},
+    /// Per instruction: the index the program wrote, when it is a Python index normalization
+    /// phi (`facts.normalizedRaw`), else `.none` (NEW-CORE-F2-WRAP-1).
+    from_end: []ir.Ref = &.{},
+    /// A normalized index's checked value (`checkedIndex`), by the written index's key and its
+    /// list's length key: the LLVM value and the IR block it was made in, for the later
+    /// accesses that block dominates.
+    checked: std.AutoHashMapUnmanaged(NormalizedKey, CheckedIndex) = .empty,
+    /// Dominators of the IR blocks (`facts.shape`), for `checked`.
+    shape: ?facts.Shape = null,
+    /// Value and length identities (`index_keys`), for `checked`.
+    keys: ?index_keys.Keys = null,
 };
+
+/// A written index normalized against a list's length: equal keys, equal normalized values.
+const NormalizedKey = struct { index: index_keys.IndexKey, length: index_keys.Key };
+
+/// One normalized index a checked access made (NEW-CORE-F2-WRAP-1).
+const CheckedIndex = struct { name: []const u8, block: u32 };
 
 /// Per instruction, what an in-out call (CE-A P7) needs: its in-out arguments, and whether its
 /// result record must also hold the final values.
@@ -1211,6 +1229,15 @@ const FunctionEmitter = struct {
             phis[b] = mine.items;
         }
         mem.phis = phis;
+        mem.checked = .empty;
+        mem.shape = try facts.shape(self.a(), f);
+        mem.keys = try index_keys.compute(self.a(), f, mem.shape.?.rpo);
+        mem.from_end = try self.a().alloc(ir.Ref, count);
+        @memset(mem.from_end, .none);
+        for (f.blocks.items, 0..) |block, b| for (block.insts.items) |ref| {
+            if (f.inst(ref).op != .phi) continue;
+            mem.from_end[ref.index()] = facts.normalizedRaw(f, @fromBackingInt(@intCast(b)), ref) orelse .none;
+        };
         const abi = inOutAbi(m, f.signature);
         // A construction whose only use stores it (a push, a write, a return through `sret`, a box,
         // or a field of a construction that is itself stored so or lives in memory) is never built
@@ -2446,8 +2473,7 @@ const FunctionEmitter = struct {
 
     fn listGet(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
         const list = try self.value(inst.a);
-        const index = try self.value(inst.b);
-        try self.boundsCheck(out, inst, list, index);
+        const index = try self.checkedIndex(out, inst, list, try self.value(inst.b));
         // A read nothing uses is only its bounds check: the element is never loaded (a verify
         // build still loads it, for the fact assertions that name it).
         if (self.memory.uses[self.current.index()] == 0 and inst.data == 0 and self.knownFacts() == null) return;
@@ -2459,6 +2485,73 @@ const FunctionEmitter = struct {
         if (inst.ty == .bool or inst.ty.isCompound()) return self.loadValue(out, inst.ty, slot, name);
         const stored = storageType(inst.ty);
         try out.print(self.a(), "  {s} = load {s}, ptr {s}, align {d}{s}, {s}\n", .{ name, stored, slot, elementSize(inst.ty), try self.loadRange(name, inst.ty), self.dataTag(stored) });
+    }
+
+    /// `boundsCheck`, answering the index the element's address takes. An index the builder
+    /// normalized from the end (`facts.normalizedRaw`) is first tested as the program wrote it:
+    /// a written index below the length, compared unsigned, is non-negative and so its own
+    /// normalization, and only the others take the normalized value and its check, off the hot
+    /// path (NEW-CORE-F2-WRAP-1). The check is counted once either way.
+    fn checkedIndex(self: *FunctionEmitter, out: *Out, inst: ir.Inst, list: []const u8, index: []const u8) Error![]const u8 {
+        const raw_ref = self.fromEndRaw(inst.b);
+        const plain = inst.op == .list_get and (inst.data == flags.pop_read or inst.data == flags.pop_index_read);
+        if (self.checkOf(inst) != .exact and raw_ref != .none and !plain) {
+            // A proven access whose index a dominating checked access normalized reuses its value.
+            const made = self.memory.checked.get(self.normalizedKey(inst, raw_ref) orelse return index) orelse return index;
+            return if (self.blockDominates(made.block, self.vectors.block)) made.name else index;
+        }
+        if (self.checkOf(inst) != .exact or raw_ref == .none or plain) {
+            try self.boundsCheck(out, inst, list, index);
+            return index;
+        }
+        const raw = try self.value(raw_ref);
+        const at = try self.fresh("%lh");
+        const len = try self.fresh("%len");
+        const written = try self.fresh("%rawout");
+        try out.print(self.a(), header_tagged_line, .{ at, list, len_offset, len, at });
+        const site_index = try self.site(.list_bounds, inst, "index");
+        if (self.count_fn != null) _ = try self.countSite(out, checkKind(self.state.sites.items[site_index].kind), "");
+        const entry = self.label;
+        const slow = try self.fresh("wrapped");
+        const join = try self.fresh(self.label);
+        try out.print(self.a(), "  {s} = icmp uge i64 {s}, {s}\n  br i1 {s}, label %{s}, label %{s}, !prof !9\n{s}:\n", .{ written, raw, len, written, slow, join, slow });
+        const outside = try self.fresh("%oob");
+        const trap = try self.fresh("trap");
+        const next = try self.fresh(slow);
+        try out.print(self.a(), "  {s} = icmp uge i64 {s}, {s}\n  br i1 {s}, label %{s}, label %{s}, !prof !0\n{s}:\n", .{ outside, index, len, outside, trap, next, trap });
+        try self.trapEnd(out, .{ .next = next, .site = site_index, .location = try self.trapLocation(site_index) }, .{ .left = raw, .right = len });
+        const chosen = try self.fresh("%index");
+        try out.print(self.a(), "  br label %{s}\n{s}:\n  {s} = phi i64 [ {s}, %{s} ], [ {s}, %{s} ]\n", .{ join, join, chosen, raw, entry, index, next });
+        self.label = join;
+        if (self.normalizedKey(inst, raw_ref)) |key| try self.memory.checked.put(self.a(), key, .{ .name = chosen, .block = self.vectors.block });
+        return chosen;
+    }
+
+    /// The key of an access's written index normalized against its list's length.
+    fn normalizedKey(self: *FunctionEmitter, inst: ir.Inst, raw: ir.Ref) ?NormalizedKey {
+        const keys = self.memory.keys orelse return null;
+        return .{ .index = keys.index(raw), .length = keys.length(inst.a) };
+    }
+
+    /// Whether IR block `dominator` dominates IR block `block` (each dominates itself).
+    fn blockDominates(self: *FunctionEmitter, dominator: u32, block: u32) bool {
+        const shape = self.memory.shape orelse return false;
+        var current: u32 = block;
+        var steps: usize = 0;
+        while (steps <= shape.idom.len) : (steps += 1) {
+            if (current == dominator) return true;
+            if (current == 0) return false;
+            const up = shape.idom[current] orelse return false;
+            current = @intCast(up.index());
+        }
+        return false;
+    }
+
+    /// The index the program wrote, when `index` is its Python normalization; else `.none`.
+    fn fromEndRaw(self: *FunctionEmitter, index: ir.Ref) ir.Ref {
+        const ref = self.function.resolve(index);
+        if (ref.index() >= self.memory.from_end.len) return .none;
+        return self.memory.from_end[ref.index()];
     }
 
     /// Trap unless `0 <= index < len(list)` (the index is unsigned here), for an exact check.
@@ -2927,9 +3020,8 @@ const FunctionEmitter = struct {
     fn listSet(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
         const m = self.state.module;
         const list = try self.value(inst.a);
-        const index = try self.value(inst.b);
         const element = m.compound(inst.ty).list;
-        try self.boundsCheck(out, inst, list, index);
+        const index = try self.checkedIndex(out, inst, list, try self.value(inst.b));
         const slot = try self.elementSlot(out, list, index, element);
         if (elements.storeBack(m, self.function, inst)) |back| return self.storeBackPointer(out, name, inst, back, slot);
         const managed = m.managed(element) and !flags.transferredSlot(self.function, inst);
@@ -2953,9 +3045,8 @@ const FunctionEmitter = struct {
     fn listSetField(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
         const m = self.state.module;
         const list = try self.value(inst.a);
-        const index = try self.value(inst.b);
         const element = m.compound(inst.ty).list;
-        try self.boundsCheck(out, inst, list, index);
+        const index = try self.checkedIndex(out, inst, list, try self.value(inst.b));
         const slot = try self.elementSlot(out, list, index, element);
         const path = elements.setPath(self.function, inst) orelse return error.UnsupportedInstruction;
         const target = m.pathTarget(element, path) orelse return error.UnsupportedInstruction;
@@ -3072,9 +3163,8 @@ const FunctionEmitter = struct {
     fn listGetField(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
         const m = self.state.module;
         const list = try self.value(inst.a);
-        const index = try self.value(inst.b);
         const element = m.compound(self.typeOf(inst.a)).list;
-        try self.boundsCheck(out, inst, list, index);
+        const index = try self.checkedIndex(out, inst, list, try self.value(inst.b));
         const slot = try self.elementSlot(out, list, index, element);
         const target = m.pathTarget(element, ir.FieldPath.unpack(inst.data)) orelse return error.UnsupportedInstruction;
         const at = try self.offsetPointer(out, slot, target.offset);

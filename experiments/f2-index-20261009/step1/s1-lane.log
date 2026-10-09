@@ -1,0 +1,9 @@
+lox vm/step.10000000: base 16720Mi 2539Mc i/base 1.000 c/base 1.000 | s1 13670Mi 2118Mc i/base 0.818 c/base 0.834
+lox vm/fib.34: base 36652Mi 6955Mc i/base 1.000 c/base 1.000 | s1 32020Mi 5905Mc i/base 0.874 c/base 0.849
+lox vm/string_equality.100000: base 49596Mi 7571Mc i/base 1.000 c/base 1.000 | s1 39122Mi 6068Mc i/base 0.789 c/base 0.802
+lox vm/invocation.1500000: base 66074Mi 13627Mc i/base 1.000 c/base 1.000 | s1 60072Mi 11805Mc i/base 0.909 c/base 0.866
+lox vm/method_call.500000: base 59180Mi 11477Mc i/base 1.000 c/base 1.000 | s1 52631Mi 9458Mc i/base 0.889 c/base 0.824
+lox tree/invocation.150000: base 10099Mi 2137Mc i/base 1.000 c/base 1.000 | s1 9967Mi 1979Mc i/base 0.987 c/base 0.926
+lox tree/equality.300000: base 7417Mi 1289Mc i/base 1.000 c/base 1.000 | s1 7206Mi 1211Mc i/base 0.972 c/base 0.939
+eda rds3+flat: base 971Mi 280Mc i/base 1.000 c/base 1.000 | s1 962Mi 278Mc i/base 0.991 c/base 0.991
+eda labstation: base 725Mi 193Mc i/base 1.000 c/base 1.000 | s1 722Mi 191Mc i/base 0.995 c/base 0.986

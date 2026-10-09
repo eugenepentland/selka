@@ -140,6 +140,7 @@ fn sabotageFlag(arg: []const u8) ?@FieldType(pipeline.Options, "facts") {
         .{ "--sabotage-facts=widening", .sabotage_widening },
         .{ "--sabotage-facts=length", .sabotage_length },
         .{ "--sabotage-facts=overflow", .sabotage_overflow },
+        .{ "--sabotage-facts=index", .sabotage_index },
     };
     for (flags) |flag| if (std.mem.eql(u8, arg, flag[0])) return flag[1];
     return null;

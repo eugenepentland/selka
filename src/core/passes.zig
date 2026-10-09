@@ -9,6 +9,7 @@ const inline_leaves = @import("inline.zig");
 const vector = @import("vector.zig");
 const version = @import("version.zig");
 const own = @import("own.zig");
+const index_checks = @import("index_checks.zig");
 const effects = @import("effects.zig");
 const origins = @import("inline_origins.zig");
 
@@ -18,8 +19,9 @@ pub const Error = std.mem.Allocator.Error;
 /// How the fact pass runs: `trusted` facts drive the vector lowering; `verify` keeps
 /// comparisons unfolded and plans no vectors; `sabotage`, `sabotage_widening` and
 /// `sabotage_length` are verify with one wrong rule (`facts.Sabotage`), and
-/// `sabotage_overflow` verify with the overflow facts' rules off by one.
-pub const Mode = enum { off, trusted, verify, sabotage, sabotage_widening, sabotage_length, sabotage_overflow };
+/// `sabotage_overflow` verify with the overflow facts' rules off by one, and `sabotage_index`
+/// verify with a dominating check taken to cover the next index too (`index_checks`).
+pub const Mode = enum { off, trusted, verify, sabotage, sabotage_widening, sabotage_length, sabotage_overflow, sabotage_index };
 
 /// What the passes produced, per function, and what they did.
 pub const Result = struct {
@@ -99,6 +101,7 @@ pub fn run(arena: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Resul
         .sabotage_widening => .widening,
         .sabotage_length => .length,
         .sabotage_overflow => .overflow,
+        .sabotage_index => .index,
         else => .none,
     };
     // A first fact pass with every parameter unknown gives each call site's argument
@@ -150,6 +153,10 @@ pub fn run(arena: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Resul
         // Ownership after the facts: the instructions and blocks it adds have none.
         result.per_function[index].own = try own.function(arena, module, function, .{ .verify = verify, .facts = &known, .provenance = &result.provenance, .function_index = @intCast(index), .effects = &summaries });
         result.own.add(result.per_function[index].own);
+        // Checks a dominating check already made, among them those ownership split (NEW-CORE-F2-INDEX-3).
+        const covered = try index_checks.run(arena, function, &known, sabotage == .index);
+        result.counts.proven += covered;
+        result.per_function[index].counts.proven += covered;
         try extend(arena, &known, function);
         slot.* = known;
         // Vector code comes only from trusted facts, never in a verify build.

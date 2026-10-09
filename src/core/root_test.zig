@@ -69,6 +69,7 @@ comptime {
     _ = @import("ce2_effects_test.zig");
     _ = @import("ce2_results_test.zig");
     _ = @import("f1_facts_test.zig");
+    _ = @import("f2_index_test.zig");
     _ = @import("trace_test.zig");
     _ = @import("s2_ir_test.zig");
     _ = @import("iteration_test.zig");
