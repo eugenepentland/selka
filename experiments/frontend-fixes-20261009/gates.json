@@ -28,5 +28,182 @@
     "log_sha256": "9c97402922113df242996a9af449dc6b4fba63670421962c4628476178df534c",
     "log_bytes": 396020,
     "note": "TMPDIR outside checkout; unchanged test sources"
+  },
+  {
+    "phase": "F1-red-core",
+    "command": "scripts/build-slot.sh build zig build test-core -Dtest-filter=F1 --summary all",
+    "source_commit": "ede3e6a589f4c61a1bc9d3ab7777c0b49b6d0b9e",
+    "status": 1,
+    "summary": "Build Summary: 6/8 steps succeeded (1 failed); 0/1 tests passed (1 failed)",
+    "test_verdicts": {
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0
+    },
+    "failures": [
+      "frontend_test.test.F1 validation sessions omit Core allocation contracts after a bounded body edit"
+    ],
+    "log_sha256": "e4c81fb81df1eac9bf5da6ffd207774aef1bbe2d2bcb506414d9e9f3c074c460",
+    "log_bytes": 2788
+  },
+  {
+    "phase": "F1-red-cli",
+    "command": "scripts/build-slot.sh build zig build test-cli -Dtest-filter=F1 --summary all",
+    "source_commit": "ede3e6a589f4c61a1bc9d3ab7777c0b49b6d0b9e",
+    "status": 1,
+    "summary": "Build Summary: 6/8 steps succeeded (1 failed); 2/5 tests passed (3 failed)",
+    "test_verdicts": {
+      "passed": 2,
+      "failed": 3,
+      "skipped": 0
+    },
+    "failures": [
+      "integration.test.F1 check accepts direct and transitive noalloc allocations without warnings",
+      "integration.test.F1 run reports a noalloc warning and preserves the program result",
+      "integration.test.F1 lint blocks noalloc allocations in every profile"
+    ],
+    "log_sha256": "2670f956b3027e54f4d9d3e201b46c8a6f1d20536835e7d4b136cdb7a4b9d686",
+    "log_bytes": 7709
+  },
+  {
+    "phase": "F1-red-replay",
+    "command": "scripts/build-slot.sh build zig build test-cli -Dtest-filter=\"F1 test receipts\" --summary all",
+    "source_commit": "ede3e6a589f4c61a1bc9d3ab7777c0b49b6d0b9e",
+    "status": 1,
+    "summary": "Build Summary: 6/8 steps succeeded (1 failed); 2/3 tests passed (1 failed)",
+    "test_verdicts": {
+      "passed": 2,
+      "failed": 1,
+      "skipped": 0
+    },
+    "failures": [
+      "integration.test.F1 test receipts retain allocation warnings on replay"
+    ],
+    "log_sha256": "440ef2bdca5d460021508424f4d06149b39baf8b35bb968a94c470886b52bbdf",
+    "log_bytes": 2391
+  },
+  {
+    "phase": "F1-green-cli",
+    "command": "scripts/build-slot.sh build zig build test-cli -Dtest-filter=\"F1 \" --summary all",
+    "source_commit": "ede3e6a589f4c61a1bc9d3ab7777c0b49b6d0b9e",
+    "status": 0,
+    "summary": "Build Summary: 8/8 steps succeeded; 8/8 tests passed",
+    "test_verdicts": {
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "9f760f167b04bfc3d983f830e025835cfa0e6b8973591b70d1c75e611beee736",
+    "log_bytes": 2044
+  },
+  {
+    "phase": "F1-green-core",
+    "command": "scripts/build-slot.sh build zig build test-core -Dtest-filter=F1 --summary all",
+    "source_commit": "ede3e6a589f4c61a1bc9d3ab7777c0b49b6d0b9e",
+    "status": 0,
+    "summary": "Build Summary: 8/8 steps succeeded; 1/1 tests passed",
+    "test_verdicts": {
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "46fc92a5d1da0d52247b027d8ab517e29eeafc81aef008bec7c54f2482f25fc1",
+    "log_bytes": 948
+  },
+  {
+    "phase": "F1-first-full",
+    "command": "scripts/build-slot.sh gate zig build test --summary all",
+    "source_commit": "ede3e6a589f4c61a1bc9d3ab7777c0b49b6d0b9e",
+    "status": 1,
+    "summary": "Build Summary: 35/95 steps succeeded (10 failed); 2267/23514 tests passed (21231 skipped, 16 failed)",
+    "test_verdicts": {
+      "passed": 2267,
+      "failed": 16,
+      "skipped": 0
+    },
+    "failures": [
+      "interface_files_test.test.an interface file renders every public declaration in source order without bodies",
+      "interfaces_test.test.exported functions publish their inferred ceiling while explicit ceilings stay upper bounds",
+      "interface_files_test.test.signature, contract, field, ceiling and deprecation edits change the interface file",
+      "python_bytes_test.test.PY-BYTES-1 byte strings are immutable and never convert through str",
+      "stdlib_time_random_test.test.standard time random calls preserve effect ceilings and reproducible draws",
+      "interfaces_test.test.cross module effect and recoverable result obligations are enforced",
+      "dictionary_views_test.test.direct dictionary view iteration remains noalloc while snapshots allocate",
+      "interface_files_test.test.api --write writes missing files and deletes generated orphans; --check then passes",
+      "constants_test.test.managed constants require matching literal types and keep byte or generic reads allocating",
+      "check_scale_test.test.an import alias retargeted to an identical declaration elsewhere re-checks its users",
+      "python_bytes_test.test.PY-BYTES-RANGE-1 range parsing and scalar counting clamp without a view allocation",
+      "check_scale_test.test.a callee whose inferred effects change makes the check repeat in full",
+      "python_bytes_test.test.PY-BYTES-9 numeric parsing is accepted under noalloc and a view is not",
+      "managed_lists_test.test.noalloc rejects transitive managed allocation while permitting fixed-slot mutation",
+      "python_bytes_test.test.PY-BYTES-FUSED-RANGE-1 immediate slices and views parse under noalloc"
+    ],
+    "log_sha256": "27bfd77ef3042a1879a226ac4f17685386fdda177ae0cd7ad2a8540a4b3f7f7b",
+    "log_bytes": 100722
+  },
+  {
+    "phase": "F1-second-full",
+    "command": "scripts/build-slot.sh gate zig build test --summary all",
+    "source_commit": "ede3e6a589f4c61a1bc9d3ab7777c0b49b6d0b9e",
+    "status": 1,
+    "summary": "Build Summary: 90/95 steps succeeded (4 failed); 2292/23535 tests passed (21241 skipped, 2 failed)",
+    "test_verdicts": {
+      "passed": 2292,
+      "failed": 2,
+      "skipped": 0
+    },
+    "failures": [
+      "managed_lists_test.test.explicit effects reject transitive managed allocation while permitting fixed-slot mutation",
+      "check_scale_test.test.allocation contract summaries retain concrete bounded closures across reordered declarations"
+    ],
+    "log_sha256": "c18725203facb2132f66142c5f000ce9983d935456a9d63636c2fbfc2ad2733d",
+    "log_bytes": 411411
+  },
+  {
+    "phase": "F1-final-cli",
+    "command": "scripts/build-slot.sh build zig build test-cli -Dtest-filter=\"F1 \" --summary all",
+    "source_commit": "ede3e6a589f4c61a1bc9d3ab7777c0b49b6d0b9e",
+    "status": 0,
+    "summary": "Build Summary: 8/8 steps succeeded; 8/8 tests passed",
+    "test_verdicts": {
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "1899ebbe0c699ab28a8ee461d6087c23250458df3d58512bfaf9c576cf72a7a6",
+    "log_bytes": 1924
+  },
+  {
+    "phase": "F1-corrected-fixtures",
+    "command": "scripts/build-slot.sh build zig build test-units -Dtest-filter=\"allocation contract summaries\" -Dtest-filter=\"explicit effects reject transitive\" --summary all",
+    "source_commit": "ede3e6a589f4c61a1bc9d3ab7777c0b49b6d0b9e",
+    "status": 0,
+    "summary": "Build Summary: 8/8 steps succeeded; 9/9 tests passed",
+    "test_verdicts": {
+      "passed": 9,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "adf6952034aa4222afad68a5d545be8690b4af008ead333ddecedc6c2ad29685",
+    "log_bytes": 1955
+  },
+  {
+    "phase": "F1-full",
+    "command": "scripts/build-slot.sh gate zig build test --summary all",
+    "source_commit": "ede3e6a589f4c61a1bc9d3ab7777c0b49b6d0b9e",
+    "status": 0,
+    "summary": "Build Summary: 95/95 steps succeeded; 2294/23535 tests passed (21241 skipped)",
+    "test_verdicts": {
+      "passed": 2294,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "f6ccba96aa8186cba1881ddda8b5d18bfc4339a295125c31d0792192aafd0220",
+    "log_bytes": 397263
   }
 ]

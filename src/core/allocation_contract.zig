@@ -7,7 +7,7 @@ const passes = @import("passes.zig");
 const build = @import("build.zig");
 
 /// A static may-allocate site, including unresolved foreign/callback calls.
-pub const Violation = struct { function: []const u8, callee: []const u8, span: u32, unresolved: bool, unsupported: ?[]const u8 = null };
+pub const Violation = struct { function: []const u8, callee: []const u8, span: u32, unresolved: bool, unsupported: ?[]const u8 = null, bound: language.source.Span = .{ .start = 0, .end = 0 } };
 
 /// One diagnostic owner shared by frontend CLI and Core Session rendering.
 pub fn diagnostic(a: std.mem.Allocator, failure: Violation) std.mem.Allocator.Error!language.diagnostic.Diagnostic {
@@ -15,7 +15,7 @@ pub fn diagnostic(a: std.mem.Allocator, failure: Violation) std.mem.Allocator.Er
         try std.fmt.allocPrint(a, "cannot verify allocation contract of {s}: Core does not support {s}", .{ failure.function, reason })
     else
         try std.fmt.allocPrint(a, "allocation contract of {s} is exceeded by {s}: static Core site may allocate{s}", .{ failure.function, failure.callee, if (failure.unresolved) " (unresolved call)" else "" });
-    return .{ .severity = .err, .code = "E_CORE_ALLOCATION_BOUND", .span = .{ .start = failure.span, .end = failure.span }, .message = message };
+    return .{ .severity = .warning, .code = "W_NOALLOC_ALLOCATES", .span = .{ .start = failure.span, .end = failure.span }, .message = message, .related = .{ .span = failure.bound, .message = "noalloc promise declared here" } };
 }
 
 /// Check all explicitly written noalloc bounds in a built module without changing it.
@@ -44,10 +44,16 @@ fn validateOwned(a: std.mem.Allocator, program: language.typed.Program, source: 
     return null;
 }
 
-/// Check unused concrete bounded functions as well as executable roots.
-/// All roots share one lowering and one ownership pass. Unsupported lowering is
-/// retried per root solely to attribute the unverifiable contract precisely.
+/// Return the first bounded-function witness for callers inspecting a single contract.
 pub fn checkProgram(a: std.mem.Allocator, program: language.typed.Program, source: language.source.Source) std.mem.Allocator.Error!?Violation {
+    const failures = try collectProgram(a, program, source);
+    defer a.free(failures);
+    return if (failures.len == 0) null else failures[0];
+}
+
+/// Collect a witness for every violated concrete noalloc declaration, including unused roots.
+/// Unsupported lowering is retried per root so other contracts still receive diagnostics.
+pub fn collectProgram(a: std.mem.Allocator, program: language.typed.Program, source: language.source.Source) std.mem.Allocator.Error![]Violation {
     var scratch = std.heap.ArenaAllocator.init(a);
     defer scratch.deinit();
     const temporary = scratch.allocator();
@@ -57,32 +63,58 @@ pub fn checkProgram(a: std.mem.Allocator, program: language.typed.Program, sourc
         if (!language.effect_set.coreAllocationBound(source, bound) or function.policy.c_abi or function.policy.host != null) continue;
         try roots.append(temporary, @fromBackingInt(@intCast(index)));
     }
-    if (roots.items.len == 0) return null;
+    var failures: std.ArrayList(Violation) = .empty;
+    if (roots.items.len != 0) try collectRoots(temporary, .{ .program = program, .source = source }, roots.items, &failures);
+    // Core names and refusal reasons belong to the scratch arena; copy all escaping text.
+    const result = try a.dupe(Violation, failures.items);
+    for (result) |*failure| {
+        failure.function = try a.dupe(u8, failure.function);
+        failure.callee = try a.dupe(u8, failure.callee);
+        if (failure.unsupported) |reason| failure.unsupported = try a.dupe(u8, reason);
+    }
+    return result;
+}
+
+const CheckedSource = struct { program: language.typed.Program, source: language.source.Source };
+
+fn collectRoots(a: std.mem.Allocator, checked: CheckedSource, roots: []const language.typed.FunctionId, failures: *std.ArrayList(Violation)) std.mem.Allocator.Error!void {
     var refusal: build.Refusal = .{};
-    var module = build.buildRootsSource(temporary, program, roots.items, source, &refusal) catch |err| switch (err) {
-        error.Unsupported => {
-            for (roots.items) |root| {
-                _ = build.buildRootsSource(temporary, program, &.{root}, source, &refusal) catch |individual| switch (individual) {
-                    error.OutOfMemory => return error.OutOfMemory,
-                    error.Unsupported => {
-                        const function = program.functions[@backingInt(root)];
-                        return .{ .function = function.name, .callee = function.name, .span = refusal.span, .unresolved = true, .unsupported = try a.dupe(u8, refusal.reason) };
-                    },
-                };
-            }
-            unreachable;
-        },
+    var module = build.buildRootsSource(a, checked.program, roots, checked.source, &refusal) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
+        error.Unsupported => {
+            if (roots.len > 1) {
+                for (roots) |root| try collectRoots(a, checked, &.{root}, failures);
+            } else {
+                const function = checked.program.functions[@backingInt(roots[0])];
+                try appendUnique(a, failures, .{ .function = function.name, .callee = function.name, .span = refusal.span, .unresolved = true, .unsupported = refusal.reason, .bound = function.policy.effect_bound.?.span });
+            }
+            return;
+        },
     };
-    _ = try passes.debug(temporary, &module);
-    if (try validateOwned(temporary, program, source, &module)) |failure| return .{
-        .function = try a.dupe(u8, failure.function),
-        .callee = try a.dupe(u8, failure.callee),
-        .span = failure.span,
-        .unresolved = failure.unresolved,
-        .unsupported = failure.unsupported,
-    };
-    return null;
+    _ = try passes.debug(a, &module);
+    const summaries = try summarize(a, checked.program, &module);
+    for (module.functions.items, 0..) |function, index| {
+        const failure = summaries[index] orelse continue;
+        if (function.signature.linkage != .internal) continue;
+        for (checked.program.functions) |source_function| {
+            if (source_function.declaration.start != function.span or !std.mem.eql(u8, source_function.name, function.name)) continue;
+            const bound = source_function.policy.effect_bound orelse break;
+            if (!language.effect_set.coreAllocationBound(checked.source, bound)) break;
+            var diagnostic_failure = failure;
+            diagnostic_failure.function = function.name;
+            diagnostic_failure.bound = bound.span;
+            try appendUnique(a, failures, diagnostic_failure);
+            break;
+        }
+    }
+}
+
+/// A root retry may include a bounded callee already seen through another root.
+fn appendUnique(a: std.mem.Allocator, failures: *std.ArrayList(Violation), failure: Violation) std.mem.Allocator.Error!void {
+    for (failures.items) |existing| {
+        if (existing.bound.start == failure.bound.start and std.mem.eql(u8, existing.function, failure.function)) return;
+    }
+    try failures.append(a, failure);
 }
 
 /// Shared call-graph fixed point. Reverse edges propagate each first witness

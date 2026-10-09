@@ -109,6 +109,8 @@ pub const Facts = struct {
     syntax: ast.Program,
     functions: []const quality.Function,
     roots: Roots,
+    /// Backend warnings supplied by the lint command after concrete Core checking.
+    diagnostics: []const diagnostic.Diagnostic = &.{},
 
     /// Whether `id` names a discovered test.
     pub fn isTest(self: *const Facts, id: typed.FunctionId) bool {
@@ -228,6 +230,7 @@ const rule_output_in_library = "output-in-library";
 const rule_positional_literal = "positional-literal";
 const rule_sentinel_int = "sentinel-int";
 const rule_derived_effects = "derived-effects";
+const rule_noalloc_allocates = "noalloc-allocates";
 
 /// Advisory size-budget defaults for the report-only rules (plan section 9).
 const default_max_function_lines: usize = 80;
@@ -252,6 +255,12 @@ const default_min_chars: usize = 12;
 /// Every rule the driver knows. Wave 1 ships the configuration, the finding
 /// family, waivers and exit codes; the semantic rules follow.
 pub const rules = [_]Rule{
+    .{
+        .name = rule_noalloc_allocates,
+        .description = "written noalloc has a static Core allocation witness or unsupported body",
+        .modes = .{ .agent = .block, .strict = .block, .safety = .block },
+        .run = runNoallocAllocates,
+    },
     .{
         .name = rule_untested_export,
         .description = "an exported declaration no discovered test reaches under `agent`, or does not call directly under `strict`",
@@ -640,6 +649,7 @@ pub fn evaluate(request: Request, scratch: std.mem.Allocator) RunError!Outcome {
         .src = request.compilation.src,
         .syntax = request.compilation.syntax,
         .functions = analysis.functions,
+        .diagnostics = request.compilation.diagnostics.items.items,
         .roots = .{ .exports = exports, .tests = test_ids.items, .test_flags = test_flags, .export_flags = export_flags },
     };
 
@@ -780,7 +790,7 @@ fn baselineRow(scratch: std.mem.Allocator, finding: Finding) std.mem.Allocator.E
 /// silence a later refusal that no reviewer ever saw; they are never adopted
 /// and an existing row never suppresses them.
 fn baselineEligible(rule: []const u8) bool {
-    return !std.mem.eql(u8, rule, rule_change_without_test);
+    return !std.mem.eql(u8, rule, rule_change_without_test) and !std.mem.eql(u8, rule, rule_noalloc_allocates);
 }
 
 /// Whether a blocking finding's row is already accepted debt. A missing or
@@ -823,7 +833,8 @@ pub const Waiver = struct {
 
 /// True when a waiver on the line above `finding`'s declaration covers it.
 pub fn isWaived(waivers: []const Waiver, finding: Finding, src: source.Source) bool {
-    const line = src.physicalLocation(finding.span.start).line;
+    const span = if (std.mem.eql(u8, finding.rule, rule_noalloc_allocates) and finding.related != null) finding.related.?.span else finding.span;
+    const line = src.physicalLocation(span.start).line;
     for (waivers) |waiver| {
         if (waiver.line + 1 == line and std.mem.eql(u8, waiver.rule, finding.rule)) return true;
     }
@@ -2226,7 +2237,7 @@ fn runDerivedEffects(context: *RuleContext) std.mem.Allocator.Error!void {
     for (facts.program.functions) |function| {
         if (function.policy.host != null or function.policy.c_abi) continue;
         const bound = function.policy.effect_bound orelse continue;
-        if (!derived_effects.writtenClause(facts.src, bound.span)) continue;
+        if (!derived_effects.writtenClause(facts.src, bound.span) or effect_set.coreAllocationBound(facts.src, bound)) continue;
         const derived = derived_effects.derivedCeiling(facts.program.records, function);
         if (derived & ~bound.allowed != 0) continue;
         if (!derived_effects.negativeClause(facts.src, bound.span) and bound.allowed & ~derived != 0) continue;
@@ -2238,6 +2249,28 @@ fn runDerivedEffects(context: *RuleContext) std.mem.Allocator.Error!void {
             .span = bound.span,
             .message = message,
             .subject = .{ .module = moduleName(function.name), .qualified = function.name },
+        });
+    }
+}
+
+/// Convert Core warnings into findings so profile modes, waivers and gate status agree.
+fn runNoallocAllocates(context: *RuleContext) std.mem.Allocator.Error!void {
+    for (context.facts.diagnostics) |item| {
+        if (!std.mem.eql(u8, item.code, "W_NOALLOC_ALLOCATES")) continue;
+        var subject: Subject = .{};
+        if (item.related) |related| for (context.facts.program.functions) |function| {
+            const bound = function.policy.effect_bound orelse continue;
+            if (bound.span.start != related.span.start) continue;
+            subject = .{ .module = moduleName(function.name), .qualified = function.name };
+            break;
+        };
+        try context.findings.append(context.memory, .{
+            .code = "L_NOALLOC_ALLOCATES",
+            .rule = rule_noalloc_allocates,
+            .span = item.span,
+            .message = item.message,
+            .related = item.related,
+            .subject = subject,
         });
     }
 }

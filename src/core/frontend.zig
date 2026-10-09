@@ -22,6 +22,7 @@ const Settings = struct {
     /// Name a header-less file by the path it was given, as the `mylang` CLI does,
     /// rather than by its base name (`mylang-core`).
     given_path: bool = false,
+    allocation_contracts: bool = true,
 };
 const Graph = struct {
     index: language.interfaces.Index = undefined,
@@ -37,6 +38,7 @@ pub const Module = language.project.Module;
 pub const Checked = struct {
     program: language.typed.Program,
     src: language.source.Source,
+    allocation_warnings: []const u8 = "",
 };
 
 /// Why a load stopped: diagnostics were already rendered into `report`.
@@ -122,7 +124,8 @@ pub const Session = struct {
     /// Validation-only commands can omit unchanged bodies; builds/tests retain
     /// the default complete typed trees and use summaries for pass facts only.
     pub fn validationOnly(self: *Session) void {
-        if (self.cache) |*state| state.request.body_policy = .allocation_contracts;
+        self.graph.settings.allocation_contracts = false;
+        if (self.cache) |*state| state.request.body_policy = .summaries;
     }
 
     /// Attach opt-in phase instrumentation without changing checking behavior.
@@ -238,12 +241,15 @@ pub const Session = struct {
     }
 
     fn checkAllocationContracts(self: *Session, allocator: std.mem.Allocator, checked: Checked, report: *std.ArrayList(u8)) Error!Checked {
-        if (try @import("allocation_contract.zig").checkProgram(allocator, checked.program, checked.src)) |failure| {
+        if (!self.graph.settings.allocation_contracts) return checked;
+        const start = report.items.len;
+        for (try @import("allocation_contract.zig").collectProgram(allocator, checked.program, checked.src)) |failure| {
             const item = try @import("allocation_contract.zig").diagnostic(allocator, failure);
             try report.appendSlice(allocator, try language.diagnostic_output.render(allocator, item, checked.src, self.graph.settings.format));
-            return error.SourceError;
         }
-        return checked;
+        var result = checked;
+        result.allocation_warnings = try allocator.dupe(u8, report.items[start..]);
+        return result;
     }
 
     /// The file provider: the disk, with `entry_suffix` appended to the entry file when set.

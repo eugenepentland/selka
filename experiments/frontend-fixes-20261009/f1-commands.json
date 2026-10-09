@@ -1,0 +1,116 @@
+{
+  "compiler_sha256": "e1e59259e9ab95722528a0c679a67dfd9cb11fdbaf78aa0f8e02d33346e85a67",
+  "commands": [
+    {
+      "command": "check",
+      "status": 0,
+      "expected_status": 0,
+      "diagnostic_code": "",
+      "warning_count": 0,
+      "lint_count": 0,
+      "passed": true,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "command": "check-project",
+      "status": 0,
+      "expected_status": 0,
+      "diagnostic_code": "",
+      "warning_count": 0,
+      "lint_count": 0,
+      "passed": true,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "command": "build",
+      "status": 0,
+      "expected_status": 0,
+      "diagnostic_code": "W_NOALLOC_ALLOCATES",
+      "warning_count": 1,
+      "lint_count": 0,
+      "passed": true,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "415947a40436753093687e9d2c19e5698dd8ef2c2dc2f4acc4addaaa6f8ece5c"
+    },
+    {
+      "command": "run",
+      "status": 0,
+      "expected_status": 0,
+      "diagnostic_code": "W_NOALLOC_ALLOCATES",
+      "warning_count": 1,
+      "lint_count": 0,
+      "passed": true,
+      "stdout_sha256": "acc07b62f23f458923737c4cd4a66bd05d1e71eb4f384003baaf2dcc760d6349",
+      "stderr_sha256": "415947a40436753093687e9d2c19e5698dd8ef2c2dc2f4acc4addaaa6f8ece5c"
+    },
+    {
+      "command": "build --run",
+      "status": 0,
+      "expected_status": 0,
+      "diagnostic_code": "W_NOALLOC_ALLOCATES",
+      "warning_count": 1,
+      "lint_count": 0,
+      "passed": true,
+      "stdout_sha256": "acc07b62f23f458923737c4cd4a66bd05d1e71eb4f384003baaf2dcc760d6349",
+      "stderr_sha256": "415947a40436753093687e9d2c19e5698dd8ef2c2dc2f4acc4addaaa6f8ece5c"
+    },
+    {
+      "command": "test",
+      "status": 0,
+      "expected_status": 0,
+      "diagnostic_code": "W_NOALLOC_ALLOCATES",
+      "warning_count": 1,
+      "lint_count": 0,
+      "passed": true,
+      "stdout_sha256": "c036ee2809fee29e0d1edebe53e0b2409aea4199e5a0c50194ac66f97e45cd1d",
+      "stderr_sha256": "40278ce1cd275868c518771dd22748ff7d370b77cf48c10ff7d7164c0506f77c"
+    },
+    {
+      "command": "test replay",
+      "status": 0,
+      "expected_status": 0,
+      "diagnostic_code": "W_NOALLOC_ALLOCATES",
+      "warning_count": 1,
+      "lint_count": 0,
+      "passed": true,
+      "stdout_sha256": "368080a1a69392afbe0efdb0e2a97c7a824dfdfdcd7b230c8e7d848d5434dbef",
+      "stderr_sha256": "40278ce1cd275868c518771dd22748ff7d370b77cf48c10ff7d7164c0506f77c"
+    },
+    {
+      "command": "lint",
+      "status": 0,
+      "expected_status": 0,
+      "diagnostic_code": "L_NOALLOC_ALLOCATES",
+      "warning_count": 1,
+      "lint_count": 1,
+      "passed": true,
+      "stdout_sha256": "ba084a9f1b0e6c204a9612e4532be72e53f120e64b6af58c5e8768eebaea3cf8",
+      "stderr_sha256": "adee6296b2baf0d1106aee04d60eb0e6071da19f95d4679094bb8899050dc63f"
+    },
+    {
+      "command": "lint --gate",
+      "status": 3,
+      "expected_status": 3,
+      "diagnostic_code": "L_NOALLOC_ALLOCATES",
+      "warning_count": 1,
+      "lint_count": 1,
+      "passed": true,
+      "stdout_sha256": "291dec6b6bc68ca064318d1039696dc28f9fed501321b94edc7ed284f77dabb6",
+      "stderr_sha256": "628013364a2c8a36ae42cfcb9b5363c45cb5edf533b162f58be96caea4681426"
+    },
+    {
+      "command": "cost",
+      "status": 0,
+      "expected_status": 0,
+      "diagnostic_code": "",
+      "warning_count": 0,
+      "lint_count": 0,
+      "passed": true,
+      "stdout_sha256": "a7d89fdaa7cfa6e76cb19f82ee330a14aebe9eedf1044f781ce002fa210d8915",
+      "stderr_sha256": "cd8efca51655d2d11d93188dd03c802265cd8a5f6afd6c358ade19b8c97f9439",
+      "allocation_sites": 4
+    }
+  ]
+}

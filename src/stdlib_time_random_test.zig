@@ -64,7 +64,7 @@ const seeded =
 // spec: STANDARD-TIME-RANDOM-3
 test "standard time random calls preserve effect ceilings and reproducible draws" {
     try fixture.reject(t.allocator, "import time\nfunc main(c: Clock) -> int effects():\n    _ = time.now(c)\n    return 0\n");
-    try fixture.reject(t.allocator, "import random\nfunc main(c: Entropy) -> int noalloc:\n    _ = random.from_entropy(c)\n    return 0\n");
+    try fixture.reject(t.allocator, "import random\nfunc main(c: Entropy) -> int effects(random):\n    _ = random.from_entropy(c)\n    return 0\n");
     try fixture.expect(t.allocator, seeded, .{ .arguments = &.{"--allow-random=42"} }, 42);
     try fixture.expect(t.allocator, seeded, .{}, 42);
 }

@@ -26,7 +26,7 @@ pub const Context = struct {
 };
 /// A file's exact identity, including absence for optional generated interfaces.
 pub const Dependency = struct { path: []const u8, digest: ?Digest };
-const Snapshot = struct { base: Digest, dependencies: []const Dependency, report: []const u8 };
+const Snapshot = struct { base: Digest, dependencies: []const Dependency, report: []const u8, warnings: []const u8 = "" };
 const Envelope = struct { version: []const u8, payload: []const u8, checksum: Digest };
 
 /// Complete settings, compiler/runtime/toolchain identity, native inputs and the
@@ -236,8 +236,11 @@ pub fn save(context: Context, identity: Digest) Error!void {
     try atomic(context, try receiptPath(context, identity), try success(context.arena, identity));
 }
 
+/// A validated report and the warnings to emit only when the caller accepts it.
+pub const Replay = struct { report: []const u8, warnings: []const u8 };
+
 /// Look up a complete successful file run after resolving configuration anew.
-pub fn replay(context: Context, base: Digest) Error!?[]const u8 {
+pub fn replay(context: Context, base: Digest) Error!?Replay {
     if (!reusable(context)) return null;
     if (!try toolUnchanged(context)) return null;
     return replayProvisional(context, base);
@@ -246,7 +249,7 @@ pub fn replay(context: Context, base: Digest) Error!?[]const u8 {
 /// Read-only replay for a verified same-compiler parent ticket. The parent must
 /// validate its full tool generation before accepting any borrowed child result.
 /// A miss must establish a local identity before checking or cache publication.
-pub fn replayProvisional(context: Context, base: Digest) Error!?[]const u8 {
+pub fn replayProvisional(context: Context, base: Digest) Error!?Replay {
     if (!reusable(context)) return null;
     if (context.entry.configuration) |configured| if (configured.document.interface_files) return null;
     const a = context.arena;
@@ -275,7 +278,7 @@ pub fn replayProvisional(context: Context, base: Digest) Error!?[]const u8 {
     try value.object.put(a, "cached", .{ .integer = @intCast(tests.array.items.len) });
     if (context.options.json) {
         const encoded = try std.fmt.allocPrint(a, "{s}\n", .{try std.json.Stringify.valueAlloc(a, value, .{})});
-        return encoded;
+        return .{ .report = encoded, .warnings = snapshot.warnings };
     }
     const verdicts = try a.alloc(report.Verdict, tests.array.items.len);
     for (tests.array.items, verdicts) |test_value, *verdict| {
@@ -284,7 +287,7 @@ pub fn replayProvisional(context: Context, base: Digest) Error!?[]const u8 {
         verdict.* = .{ .name = name.string, .status = .cached };
     }
     const rendered = try report.text(a, verdicts);
-    return rendered;
+    return .{ .report = rendered, .warnings = snapshot.warnings };
 }
 
 // Explicit native links may include headers not captured by this runner. Until
@@ -389,9 +392,9 @@ pub fn unchanged(context: Context, files: []const Dependency) Error!bool {
 }
 
 /// Save a manifest only after all selected tests succeeded under unchanged inputs.
-pub fn remember(context: Context, base: Digest, files: []const Dependency, json: []const u8) Error!void {
+pub fn remember(context: Context, base: Digest, files: []const Dependency, json: []const u8, warnings: []const u8) Error!void {
     if (!try unchanged(context, files) or !try toolUnchanged(context)) return;
-    const payload = try std.json.Stringify.valueAlloc(context.arena, Snapshot{ .base = base, .dependencies = files, .report = json }, .{});
+    const payload = try std.json.Stringify.valueAlloc(context.arena, Snapshot{ .base = base, .dependencies = files, .report = json, .warnings = warnings }, .{});
     var checksum: Digest = undefined;
     std.crypto.hash.Blake3.hash(payload, &checksum, .{});
     const envelope: Envelope = .{ .version = "core-test-manifest-v2", .payload = payload, .checksum = checksum };
@@ -563,7 +566,7 @@ test "readDigest fileDigest and toolUnchanged refuse missing inputs and damaged 
     try std.Io.Dir.cwd().writeFile(context.io, .{ .sub_path = context.entry.path, .data = "source" });
     const files = try dependencies(context, &.{context.entry.path});
     const valid = try report.jsonSources(a, &.{.{ .name = "app::test_one", .status = .passed }}, &.{context.entry.path});
-    try remember(context, identity, files, valid);
+    try remember(context, identity, files, valid, "");
     try std.testing.expect(try replay(context, identity) != null);
     try std.testing.expect(try replayProvisional(context, identity) != null);
     try std.Io.Dir.cwd().writeFile(context.io, .{ .sub_path = context.entry.path, .data = "edited" });

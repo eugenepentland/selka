@@ -10075,3 +10075,75 @@ test "CLI list-interfaces --cost output appends exact release costs without chan
         \\    return unknown()
     , &.{"--cost"}, 1, "", "unknown");
 }
+
+// spec-case: FRONTEND-CORE-NOALLOC-1
+test "F1 check accepts direct and transitive noalloc allocations without warnings" {
+    try invoke("check", "func main() -> int noalloc:\n    const xs = [1]\n    return len(xs) - 1\n", 0, "", "");
+    try invoke("check", "public func bounded(mut xs: int[]) -> Unit noalloc:\n    xs[0] = 1\n", 0, "", "");
+}
+
+// spec-case: FRONTEND-CORE-NOALLOC-1
+test "F1 run reports a noalloc warning and preserves the program result" {
+    try invoke("run", "func main() -> int noalloc:\n    const xs = [1]\n    return len(xs) - 1\n", 0, "0\n", "warning[W_NOALLOC_ALLOCATES]");
+}
+
+fn expectNoallocLint(profile: []const u8) !void {
+    const outcome = try runFixture("lint", "public func bounded(mut xs: int[]) -> Unit noalloc:\n    xs[0] = 1\nfunc main() -> int:\n    return 0\n", &.{ "--gate", profile });
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 3 }, outcome.term);
+    try testing.expect(std.mem.indexOf(u8, outcome.stderr, "L_NOALLOC_ALLOCATES") != null);
+}
+
+// spec-case: FRONTEND-CORE-NOALLOC-1
+test "F1 lint blocks noalloc allocations in every profile" {
+    try expectNoallocLint("--profile=agent");
+    try expectNoallocLint("--profile=strict");
+    try expectNoallocLint("--profile=safety");
+}
+
+// spec-case: FRONTEND-CORE-NOALLOC-1
+test "F1 lint accepts a reasoned noalloc waiver on a library declaration" {
+    const outcome = try runFixture("lint", "# lint: allow noalloc-allocates reason=\"this benchmark measures COW\"\npublic func bounded(mut xs: int[]) -> Unit noalloc:\n    xs[0] = 1\n", &.{"--gate"});
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
+    try testing.expect(std.mem.indexOf(u8, outcome.stderr, "L_NOALLOC_ALLOCATES") == null);
+}
+
+// spec-case: FRONTEND-CORE-NOALLOC-1
+test "F1 test receipts retain allocation warnings on replay" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data = "func bounded() -> int noalloc:\n    const xs = [1]\n    return len(xs)\npublic func test_one() -> bool:\n    return bounded() == 1\n" });
+    for (0..2) |_| {
+        const result = try runInDirectory(temp.dir, &(.{ compiler_path, "test", "input.my" } ++ tools));
+        defer freeRun(result);
+        try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
+        try testing.expectEqual(@as(usize, 1), std.mem.count(u8, result.stderr, "warning[W_NOALLOC_ALLOCATES]"));
+    }
+}
+
+const unsupported_noalloc =
+    \\record Grid:
+    \\    port: Stream
+    \\    label: str
+    \\public func bounded(out: Stream) -> int noalloc:
+    \\    out.print(Grid(port=out, label="a"))
+    \\    return 0
+    \\public func another(mut values: int[]) -> Unit noalloc:
+    \\    values[0] = 1
+    \\func main() -> int:
+    \\    return 0
+;
+
+// spec-case: FRONTEND-CORE-NOALLOC-1
+test "F1 unsupported unused bounded bodies warn with a reason and still block lint" {
+    try invoke("check", unsupported_noalloc, 0, "", "");
+    try invoke("run", unsupported_noalloc, 0, "0\n", "Core does not support rendering a non-value source type");
+    const result = try runFixture("lint", unsupported_noalloc, &.{"--gate"});
+    defer freeRun(result);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 3 }, result.term);
+    try testing.expectEqual(@as(usize, 2), std.mem.count(u8, result.stderr, "L_NOALLOC_ALLOCATES"));
+    try testing.expect(std.mem.indexOf(u8, result.stderr, "Core does not support rendering a non-value source type") != null);
+}

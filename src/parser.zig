@@ -1374,7 +1374,8 @@ pub const Parser = struct {
         const spelling = self.src.text(token.span);
         if (std.mem.eql(u8, spelling, "noalloc") or std.mem.eql(u8, spelling, "noio")) {
             self.cursor.pos += 1;
-            const excluded = if (std.mem.eql(u8, spelling, "noalloc")) sets.bit(.managed_allocation) else sets.io;
+            // Written noalloc is a Core warning contract, not a checker ceiling.
+            const excluded = if (std.mem.eql(u8, spelling, "noalloc")) 0 else sets.io;
             return .{ .span = token.span, .allowed = sets.all & ~excluded };
         }
         if (!std.mem.eql(u8, spelling, "effects")) return null;

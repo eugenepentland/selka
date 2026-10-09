@@ -17,8 +17,9 @@ whose type carries an owned resource contributes that resource's effect too. A
 body that exceeds that ceiling is rejected in that body, and the diagnostic names
 the parameter to add.
 
-`noalloc`, `noio` and an explicit `effects(...)` list go after the return type
-and only ever narrow that derived ceiling. A clause that permits exactly what the
+`noio` and an explicit `effects(...)` list go after the return type
+and narrow that derived ceiling. `noalloc` uses the same position and is a
+Core allocation warning contract, described below. A clause that permits exactly what the
 parameters imply — `effects(host, managed_allocation)` on a function whose only
 capability parameter is `Host` — is `W_DERIVED_EFFECTS` and says to remove it; a
 clause that names an effect no parameter can supply is `E_DERIVED_EFFECTS` at the
@@ -104,9 +105,14 @@ source error.
 | `host` | calling a host-provided implementation, such as an `extern func` |
 | `mutation` | writing caller-owned managed state reachable from an input, subject to the declared `mut` parameter set |
 
-`noalloc` and `noio` are shorthands for the two common ceilings. `noalloc`
-excludes `managed_allocation`; compiler commands also verify its concrete Core body for managed backing and runtime scratch allocation after debug ownership expansion, before release optimization. Every internal callee and every block contributes, including cold paths. Existing `effects(...)` lists describe guest-level effects even when allocation is omitted; they do not opt into the stronger Core promise. `noio` excludes
-`filesystem`, `network` and `output` together, and permits allocation, the clock,
+`noio` excludes input/output effects. `noalloc` asks the build to inspect the
+ownership-expanded Core body for managed heap and runtime scratch allocation,
+before optimization. Every callee and cold path contributes. A violation reports
+`W_NOALLOC_ALLOCATES` without failing the build, run or test. `check` and
+`check-project` do not compute this contract. `mylang lint --gate` turns the same
+witness into the blocking `noalloc-allocates` rule (`L_NOALLOC_ALLOCATES`).
+Explicit `effects(...)` lists retain their guest-level effect ceilings.
+`noio` excludes `filesystem`, `network` and `output` together, and permits allocation, the clock,
 randomness and the environment. Neither promises determinism, termination, bounded
 memory or freedom from traps. Writing definitely-fresh local storage or fixed
 scalar/record storage is not an observable effect; writing caller-owned managed
@@ -136,7 +142,7 @@ func labels() -> str[]:
     names.append("alpha")
     return names
 
-func count() -> int noalloc:
+func count() -> int effects():
     return len(labels())
 
 func main() -> int:
@@ -145,22 +151,22 @@ func main() -> int:
 
 ## Limits
 
-- A function takes at most one effect annotation, and it is a ceiling on the
-  inferred set rather than a signature the callee must match exactly.
-- Frontend `managed_allocation` facts remain guest-level facts for capabilities,
-  generic abstract checking and interface summaries. Compiler commands additionally
-  enforce explicitly written `noalloc` promises through the shared Core cost classifier.
-  Stack storage is permitted; managed heap and runtime scratch may-allocate sites
-  are rejected. This does not constrain compiler allocation or process startup.
-- Core allocation failures use `E_CORE_ALLOCATION_BOUND` at the allocation site.
-  Copy-on-write branches count even if a particular run would take the unique
-  branch. Unresolved callbacks and foreign calls are conservative. A concrete
-  bounded body that Core cannot lower is rejected with the unsupported construct,
-  rather than treated as allocation-free. Abstract generic bodies retain frontend
-  checking; instantiated bounded bodies receive the concrete check.
-- The low-level frontend-only `Compilation.check` and `checkLibrary` APIs expose
-  frontend effect verdicts. CLI check/build/run/test/cost commands add the Core
-  check for explicit `noalloc` declarations; frontend library checking itself never retains an executable.
+- A function takes at most one effect annotation. `noio` and `effects(...)`
+  constrain inferred guest effects; `noalloc` is a separate Core warning promise.
+- Frontend effect facts remain available to capabilities, generic checking and
+  interface summaries. `check` and `check-project` do no whole-program Core
+  allocation work, including after a bounded body changes.
+- `build`, `run`, `build --run` and `test` report `W_NOALLOC_ALLOCATES` at the
+  allocation site, naming the bounded function and callee. Copy-on-write and
+  runtime scratch count even on cold paths. Unresolved callbacks and foreign
+  calls count conservatively. An unsupported concrete body warns with its reason.
+  Concrete generic instances receive the same check; no annotation is required
+  on callees. These warnings do not change the command's success status.
+- `lint` reports `L_NOALLOC_ALLOCATES`; its `noalloc-allocates` rule defaults to
+  block mode in every profile, making `lint --gate` exit 3. A reasoned waiver
+  uses the ordinary lint mechanism. `cost` continues to show static allocation
+  sites. Stack storage is permitted; compiler allocation and process startup
+  are outside this function contract.
 - The bound is not an authority grant. A function annotated `effects(filesystem)`
   still needs a `Filesystem` value to do anything with the filesystem, and that
   value comes from the entry point's parameters — which `mylang run` provisions
