@@ -251,18 +251,24 @@ myl_block *myl_core_ir_str_char(myl_block *text, uint64_t offset) {
     return str_from((const char *)block_data(text) + offset, (size_t)width);
 }
 
-/* A fresh text of the `len` octets at `bytes`. A span of an ASCII text is ASCII, so a
-   caller that knows its source is ASCII skips the re-scan (NEW-CORE-S1-ASCII-1). */
-static myl_block *core_text_known(const unsigned char *bytes, size_t len, bool ascii) {
-    if (!ascii) return str_from((const char *)bytes, len);
+/* A fresh block of the `len` octets at `bytes`, flagged ASCII only when `ascii` says
+   so, with no scan: a span of an ASCII text is ASCII (NEW-CORE-S1-ASCII-1). A clear flag
+   is always safe; every reader of the flag falls back to the general path. */
+static myl_block *core_octets_copy(const unsigned char *bytes, size_t len, bool ascii) {
     myl_block *text = block_new(MYL_KIND_STR, (int64_t)len, 1);
     memcpy(block_data(text), bytes, len);
     block_data(text)[len] = 0;
     text->len = (int64_t)len;
     text->kind &= ~(MYL_TEXT_ASCII | MYL_TEXT_HASHED | MYL_TEXT_SCALARS | MYL_TEXT_CURSOR | MYL_TEXT_TAIL);
     text->reserved = 0;
-    text->kind |= MYL_TEXT_ASCII;
+    if (ascii) text->kind |= MYL_TEXT_ASCII;
     return text;
+}
+
+/* A fresh text of the `len` octets at `bytes`: scanned for its ASCII flag unless its
+   source is known ASCII. */
+static myl_block *core_text_known(const unsigned char *bytes, size_t len, bool ascii) {
+    return ascii ? core_octets_copy(bytes, len, true) : str_from((const char *)bytes, len);
 }
 
 myl_block *myl_core_ir_str_from_view(const unsigned char *data, uint64_t len) { return str_from((const char *)data, (size_t)len); }
@@ -505,7 +511,8 @@ myl_block *myl_core_bytes_from_list(myl_block *list) {
 myl_block *myl_core_bytes_concat(const myl_block *a, const myl_block *b) { myl_block *out = myl_core_str_concat(a, b); out->kind = (out->kind & ~MYL_KIND_MASK) | MYL_KIND_BYTES; return out; }
 myl_block *myl_core_bytes_slice(myl_block *text, int64_t start, int64_t end) {
     start = core_text_clamp(start, text->len); end = core_text_clamp(end, text->len);
-    myl_block *out = str_from((const char *)block_data(text) + start, (size_t)(end > start ? end - start : 0));
+    /* Octets need no ASCII flag; a slice of an ASCII block keeps it, without a scan. */
+    myl_block *out = core_octets_copy(block_data(text) + start, (size_t)(end > start ? end - start : 0), (text->kind & MYL_TEXT_ASCII) != 0);
     out->kind = (out->kind & ~MYL_KIND_MASK) | MYL_KIND_BYTES;
     return out;
 }
@@ -547,7 +554,7 @@ static myl_block *core_text_slice_step(myl_block *text, int64_t start, int64_t e
         i += step;
     }
     block_data(out)[out->len] = 0;
-    core_text_publish_known(out, unicode && (text->kind & MYL_TEXT_ASCII));
+    core_text_publish_known(out, (text->kind & MYL_TEXT_ASCII) != 0);
     if (!unicode) out->kind = (out->kind & ~MYL_KIND_MASK) | MYL_KIND_BYTES;
     return out;
 }

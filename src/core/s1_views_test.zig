@@ -277,3 +277,35 @@ test "a borrowed key of at most 16 octets is compared inline by overlapping word
         try std.testing.expectEqual(@as(u8, 0), ran.status);
     }
 }
+
+/// What `test/core/s1_bytes.my` prints: the base compiler's answers.
+const bytes_expected =
+    \\3 hé 2 False -1
+    \\2 é 1 False -1
+    \\1 !invalid UTF-8 in byte string 29 False -1
+    \\0  0 False -1
+    \\3 ell 3 True 1
+    \\5 world 5 False 3
+    \\3 wö 2 False -1
+    \\4 !invalid UTF-8 in byte string 29 False 2
+    \\13 héllo wörld 11 False 3
+    \\3 hel 3 False 2
+    \\10 3 3
+    \\hellohé 7 h 6 elloh
+    \\
+;
+
+// spec-case: NEW-CORE-S1-ASCII-1
+test "a byte-string slice copies its octets without a scan and decodes, compares, searches and keys as before" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
+    for (modes) |flags| {
+        const ran = try fixture(a, root, "s1_bytes", flags, "");
+        try std.testing.expectEqualStrings(bytes_expected, ran.stdout);
+        try std.testing.expectEqual(@as(u8, 0), ran.status);
+    }
+}
