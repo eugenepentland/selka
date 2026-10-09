@@ -496,6 +496,10 @@ fn boundsPlan(arena: std.mem.Allocator, f: *ir.Function, known: facts.Facts, cou
     const start = f.resolve(counted.start);
     if (f.inst(counter).ty != .i64 or f.inst(bound).ty != .i64 or f.inst(start).ty != .i64) return null;
     if (defined[bound.index()] or defined[start.index()]) return null;
+    // Only loops that carry and leave nothing but scalars: a copy that carries a list or a record
+    // out of the loop gives ownership joins to reason through (a function of such copies took
+    // minutes to compile), and the loops that gain are reductions and searches.
+    if (!scalarOnly(f, defined, counted.loop)) return null;
     // A trip count computed afresh in each pass of an enclosing loop (fannkuch's flips) is
     // data, often a few trips, which the guard's cost outweighs; a bound fixed for every
     // enclosing loop is the problem's size.
@@ -561,6 +565,37 @@ fn entryList(f: *const ir.Function, defined: []const bool, loop: ir.Loop, raw: i
         }
     }
     return null;
+}
+
+/// Whether every value `loop`'s header carries, and every value the loop defines that code
+/// after it reads, is an integer, a float or a boolean.
+fn scalarOnly(f: *const ir.Function, defined: []const bool, loop: ir.Loop) bool {
+    for (f.blocks.items[loop.header.index()].insts.items) |ref| {
+        const inst = f.inst(ref);
+        if (inst.op == .phi and !scalar(inst.ty)) return false;
+    }
+    for (f.blocks.items, 0..) |block, b| {
+        if (b < defined.len and isLoopBlock(f, defined, b)) continue;
+        for (block.insts.items) |ref| {
+            const operands = f.valueOperands(f.inst(ref));
+            for (0..operands.len()) |k| {
+                const used = f.resolve(operands.get(k));
+                if (used == .none or used.index() >= defined.len or !defined[used.index()]) continue;
+                if (!scalar(f.inst(used).ty)) return false;
+            }
+        }
+    }
+    return true;
+}
+
+/// Whether block `b` holds an instruction of the loop (`defined` marks the loop's instructions).
+fn isLoopBlock(f: *const ir.Function, defined: []const bool, b: usize) bool {
+    const insts = f.blocks.items[b].insts.items;
+    return insts.len != 0 and insts[0].index() < defined.len and defined[insts[0].index()];
+}
+
+fn scalar(ty: ir.Type) bool {
+    return ty == .bool or ty == .f64 or ty.integer() != null;
 }
 
 /// Whether `raw` is defined inside a loop that encloses `loop`.
