@@ -427,28 +427,32 @@ myl_block *myl_core_str_join(const myl_block *separator, myl_block *parts) {
 }
 
 /* Bytewise search keeps UTF-8 boundaries because both needle and haystack are valid. */
-static int64_t core_text_find_bytes(const myl_block *text, const myl_block *needle, int64_t start) {
-    if (!needle->len) return start;
-    const unsigned char *data = (const unsigned char *)text + MYL_HEADER;
-    const unsigned char *wanted = (const unsigned char *)needle + MYL_HEADER;
-    if (needle->len > text->len - start) return -1;
+/* The first octet offset at or after `start` where the `wanted_len` octets at `wanted`
+   occur in the `len` octets at `data`, or -1. */
+static int64_t core_span_find(const unsigned char *data, int64_t len, const unsigned char *wanted, int64_t wanted_len, int64_t start) {
+    if (!wanted_len) return start;
+    if (wanted_len > len - start) return -1;
     for (unsigned tried = 0; tried < 8; ++tried) {
-        const unsigned char *hit = memchr(data + start, wanted[0], (size_t)(text->len - needle->len - start + 1));
+        const unsigned char *hit = memchr(data + start, wanted[0], (size_t)(len - wanted_len - start + 1));
         if (!hit) return -1;
         start = hit - data;
         /* The rest of a candidate is short in every search here: a loop that stops at
            the first difference costs less than a `memcmp` call per candidate. */
         int64_t same = 1;
-        while (same < needle->len && hit[same] == wanted[same]) ++same;
-        if (same == needle->len) return start;
+        while (same < wanted_len && hit[same] == wanted[same]) ++same;
+        if (same == wanted_len) return start;
         ++start;
-        if (start > text->len - needle->len) return -1;
+        if (start > len - wanted_len) return -1;
     }
     /* libc's bounded linear search handles repeated first bytes after a few cheap candidates. */
     extern void *memmem(const void *, size_t, const void *, size_t);
-    const unsigned char *hit = memmem(data + start, (size_t)(text->len - start), wanted, (size_t)needle->len);
+    const unsigned char *hit = memmem(data + start, (size_t)(len - start), wanted, (size_t)wanted_len);
     if (hit) return hit - data;
     return -1;
+}
+
+static int64_t core_text_find_bytes(const myl_block *text, const myl_block *needle, int64_t start) {
+    return core_span_find(block_data(text), text->len, block_data(needle), needle->len, start);
 }
 
 /* Scalars that start in bytes [from, to): every byte that is not a UTF-8 continuation. */
@@ -473,6 +477,14 @@ int64_t myl_core_str_find(myl_block *text, myl_block *needle) {
 }
 
 bool myl_core_str_contains(myl_block *text, myl_block *needle) { return core_text_find_bytes(text, needle, 0) >= 0; }
+
+/* NEW-CORE-S1-VIEW-4: the reading helpers over borrowed `(data, length)` spans, each
+   answering what its `myl_core_str_*` form answers for the texts those octets spell. */
+bool myl_core_span_eq(const unsigned char *a, uint64_t a_len, const unsigned char *b, uint64_t b_len) { return a_len == b_len && memcmp(a, b, (size_t)a_len) == 0; }
+uint64_t myl_core_span_chars(const unsigned char *a, uint64_t a_len) { return core_text_starts(a, 0, a_len); }
+bool myl_core_span_starts(const unsigned char *a, uint64_t a_len, const unsigned char *b, uint64_t b_len) { return b_len <= a_len && memcmp(a, b, (size_t)b_len) == 0; }
+bool myl_core_span_ends(const unsigned char *a, uint64_t a_len, const unsigned char *b, uint64_t b_len) { return b_len <= a_len && memcmp(a + a_len - b_len, b, (size_t)b_len) == 0; }
+bool myl_core_span_contains(const unsigned char *a, uint64_t a_len, const unsigned char *b, uint64_t b_len) { return core_span_find(a, (int64_t)a_len, b, (int64_t)b_len, 0) >= 0; }
 bool myl_core_str_starts(myl_block *text, myl_block *needle) { return needle->len <= text->len && memcmp(block_data(text), block_data(needle), (size_t)needle->len) == 0; }
 bool myl_core_str_ends(myl_block *text, myl_block *needle) { return needle->len <= text->len && memcmp(block_data(text) + text->len - needle->len, block_data(needle), (size_t)needle->len) == 0; }
 

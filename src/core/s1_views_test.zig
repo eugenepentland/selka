@@ -68,10 +68,12 @@ const kmers =
     \\
     \\def keyed(seq: str, k: int) -> int:
     \\    counts: dict[str, int] = {}
+    \\    kept: list[str] = []
     \\    for i in range(len(seq) - k + 1):
     \\        key = seq[i:i + k]
-    \\        counts[key] = len(key)
-    \\    return len(counts)
+    \\        counts[key] = 1
+    \\        kept.append(key)
+    \\    return len(counts) + len(kept)
     \\
     \\def main(out: Stream) -> int:
     \\    out.print(len(frequencies("ACGTACGT", 2)), keyed("ACGT", 2))
@@ -306,6 +308,71 @@ test "a byte-string slice copies its octets without a scan and decodes, compares
     for (modes) |flags| {
         const ran = try fixture(a, root, "s1_bytes", flags, "");
         try std.testing.expectEqualStrings(bytes_expected, ran.stdout);
+        try std.testing.expectEqual(@as(u8, 0), ran.status);
+    }
+}
+
+/// What `test/core/s1_reads.my` prints: CPython's answers.
+const reads_expected =
+    "0:66,0:66,1:2,0:2,0:66,0:66,0:66,1:2,2:55,2:55,2:55,0:66,0:66,0:2,0:2,0:66,0:66,0:66,1:16,1:16,1:16,4:42,0:2,1:10,2:10,3:58,4:42,5:58,5:58,5:58,0:2,0:" ++
+    "2,1:2,2:55,3:34,4:50,4:50,4:50,0:2,0:2,1:16,2:2,3:50,3:50,3:50,0:2,0:2,1:2,2:55,2:55,2:55,0:2,0:2,1:16,1:16,1:16,0:2,0:66,0:66,0:66,0:66,0:66,0:66\n" ++
+    "0:66,0:66,1:10,0:2,0:66,0:66,0:66,1:10,2:15,2:15,2:15,0:66,0:66,0:2,0:2,0:66,0:66,0:66,1:2,1:2,1:2,4:10,0:2,1:10,2:15,3:10,4:10,5:10,5:10,5:10,0:2,0:2" ++
+    ",1:2,2:2,3:2,4:2,4:2,4:2,0:2,0:2,1:2,2:2,3:2,3:2,3:2,0:2,0:2,1:10,2:15,2:15,2:15,0:2,0:2,1:2,1:2,1:2,0:2,0:66,0:66,0:66,0:66,0:66,0:66\n" ++
+    "0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71\n" ++
+    "614 300\n" ++
+    "ba\n" ++
+    "2\n" ++
+    "same+abcdef!?3 xé!?3\n";
+
+const reread =
+    \\def rebound(s: str) -> int:
+    \\    total = 0
+    \\    t = s
+    \\    for i in range(len(s)):
+    \\        head = t[0:i]
+    \\        t = t + "x"
+    \\        if head == s[0:i]:
+    \\            total += len(head)
+    \\    return total
+    \\
+    \\def main(out: Stream) -> int:
+    \\    out.print(rebound("abc"))
+    \\    return 0
+    \\
+;
+
+// spec: NEW-CORE-S1-VIEW-4
+test "a slice that is only compared, measured or searched borrows its source unless the source is updated in place" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    // Every read of the slice calls the runtime's span form; the slice is a view.
+    const source_path = try std.fmt.allocPrint(a, "{s}/s1_reads.my", .{options.fixtures});
+    const source = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, source_path, a, .limited(1 << 20));
+    const text = try support.optimizedText(a, source);
+    const reads = try functionIr(a, text, "reads");
+    try std.testing.expect(!contains(reads, "= str_slice str"));
+    try std.testing.expect(contains(reads, "call bool myl_core_span_eq("));
+    try std.testing.expect(contains(reads, "call u64 myl_core_span_chars("));
+    try std.testing.expect(contains(reads, "call bool myl_core_span_starts("));
+    try std.testing.expect(contains(reads, "call bool myl_core_span_ends("));
+    try std.testing.expect(contains(reads, "call bool myl_core_span_contains("));
+    // A source updated in place (`t = t + "x"`), or flowing into a phi that is (`s`, the
+    // first `t`), keeps its slices copies, so the update stays in place.
+    const guarded = try functionIr(a, try support.optimizedText(a, reread), "rebound");
+    try std.testing.expect(contains(guarded, "= str_slice str %"));
+    try std.testing.expect(contains(guarded, "= str_slice str param0"));
+    try std.testing.expect(!contains(guarded, "str_slice_view"));
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
+    // Equality both ways, inequality, prefixes, suffixes, containment and lengths over
+    // ASCII and non-ASCII text with clamped, empty and reversed bounds; a source rebound
+    // or handed to a list and extended while the slice is live; a slice also printed.
+    for (modes) |flags| {
+        const ran = try fixture(a, root, "s1_reads", flags, "");
+        try std.testing.expectEqualStrings(reads_expected, ran.stdout);
+        try std.testing.expectEqualStrings("", ran.stderr);
         try std.testing.expectEqual(@as(u8, 0), ran.status);
     }
 }
