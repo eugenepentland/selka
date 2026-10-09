@@ -755,6 +755,25 @@ pub const Module = struct {
         }
         return .{ .ty = current, .offset = offset, .tag_of = tag_of };
     }
+
+    /// Whether `path` inside a `ty` value passes through a union (its tag or a case's
+    /// payload): bytes a union's cases share, which keep the generic data tag.
+    pub fn pathCrossesUnion(self: *const Module, ty: Type, path: FieldPath) bool {
+        var current = ty;
+        for (path.slice()) |step| {
+            const k = self.kind(current) orelse return false;
+            switch (k) {
+                .array => current = self.compound(current).array.elem,
+                .record => {
+                    const fields = self.compound(current).record;
+                    if (step >= fields.len) return false;
+                    current = fields[step];
+                },
+                else => return true,
+            }
+        }
+        return false;
+    }
 };
 
 /// Where a `FieldPath` leads inside an element.

@@ -133,6 +133,18 @@ fn dumpIr(init: std.process.Init, path: []const u8, with_facts: bool) !u8 {
     return 0;
 }
 
+/// The fact mode a `--sabotage-facts[=RULE]` flag selects: verify with one wrong rule.
+fn sabotageFlag(arg: []const u8) ?@FieldType(pipeline.Options, "facts") {
+    const flags = [_]struct { []const u8, @FieldType(pipeline.Options, "facts") }{
+        .{ "--sabotage-facts", .sabotage },
+        .{ "--sabotage-facts=widening", .sabotage_widening },
+        .{ "--sabotage-facts=length", .sabotage_length },
+        .{ "--sabotage-facts=overflow", .sabotage_overflow },
+    };
+    for (flags) |flag| if (std.mem.eql(u8, arg, flag[0])) return flag[1];
+    return null;
+}
+
 /// The developer build (`mylang build` given `--sabotage-facts`,
 /// `--generic-vectors` or `--trap-frames=`, S5-D8): the core's own flag set,
 /// every failure exit 1, the source path displayed relative to its directory.
@@ -166,12 +178,8 @@ pub fn buildCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
             options.show.cache_report = .text;
         } else if (std.mem.eql(u8, arg, "--verify-facts")) {
             options.facts = .verify;
-        } else if (std.mem.eql(u8, arg, "--sabotage-facts")) {
-            options.facts = .sabotage;
-        } else if (std.mem.eql(u8, arg, "--sabotage-facts=widening")) {
-            options.facts = .sabotage_widening;
-        } else if (std.mem.eql(u8, arg, "--sabotage-facts=length")) {
-            options.facts = .sabotage_length;
+        } else if (sabotageFlag(arg)) |mode| {
+            options.facts = mode;
         } else if (std.mem.eql(u8, arg, "-o") and has_value) {
             index += 1;
             options.output = args[index];

@@ -1,0 +1,8 @@
+conformance engine=vm gc=normal: 246/246 passed
+conformance engine=vm gc=gc-stress: 246/246 passed
+conformance engine=tree gc=normal: 241/241 passed
+conformance engine=tree gc=gc-stress: 241/241 passed
+
+real	0m8.850s
+user	0m3.223s
+sys	0m6.533s

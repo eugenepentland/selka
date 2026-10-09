@@ -289,6 +289,8 @@ const Analysis = struct {
     /// Numeric upper bounds that hold in every block a given block dominates: (block, value, hi).
     caps: std.ArrayList(struct { block: ir.BlockId, value: ir.Ref, hi: i128 }) = .empty,
     sabotage: Sabotage = .none,
+    /// Per module function, the interval its calls return (`Options.returns`).
+    returns: []const ?Interval = &.{},
     /// The round of the fixed-point iteration being run (the first is 0).
     round: usize = 0,
     /// Per list phi, how many times its element hull or common length changed (widened past eight).
@@ -304,7 +306,8 @@ const Analysis = struct {
         return switch (i.op) {
             .iconst => if (typeRange(i.ty) != null) Interval.point(constantValue(i)) else null,
             .param => self.facts.ranges[ref.index()] orelse typeRange(i.ty),
-            .undef, .call, .union_payload => typeRange(i.ty),
+            .undef, .union_payload => typeRange(i.ty),
+            .call => self.facts.ranges[ref.index()] orelse typeRange(i.ty),
             else => self.facts.ranges[ref.index()],
         };
     }
@@ -407,7 +410,7 @@ fn constantValue(i: ir.Inst) i128 {
 fn refine(self: *Analysis, range: Interval, ref: ir.Ref, cmp: ir.Inst, taken: bool) Interval {
     const left = self.f.resolve(cmp.a);
     const right = self.f.resolve(cmp.b);
-    if (left != ref and right != ref) return range;
+    if (left != ref and right != ref) return refineSquare(self, range, ref, cmp, taken);
     var predicate: ir.Predicate = @fromBackingInt(@intCast(cmp.data));
     if (!taken) predicate = switch (predicate) {
         .eq => .ne,
@@ -439,6 +442,47 @@ fn refine(self: *Analysis, range: Interval, ref: ir.Ref, cmp: ir.Inst, taken: bo
     return out;
 }
 
+/// Whether `raw` is `x * x` for `x` = `ref`, computed exactly: a checked product traps
+/// instead of wrapping, and a proven one cannot leave its type.
+fn squareOf(self: *Analysis, raw: ir.Ref, ref: ir.Ref) bool {
+    const product = self.inst(raw);
+    return product.op == .mul and product.check != .none and self.f.resolve(product.a) == ref and self.f.resolve(product.b) == ref;
+}
+
+/// `x * x <= y`, `x * x < y` or `x * x == y` on an edge bounds `|x|` by the integer square
+/// root of `y`'s top (NEW-CORE-F1-OVERFLOW-2): `while i * i <= n` keeps `i` small.
+fn refineSquare(self: *Analysis, range: Interval, ref: ir.Ref, cmp: ir.Inst, taken: bool) Interval {
+    const on_left = squareOf(self, cmp.a, ref);
+    if (!on_left and !squareOf(self, cmp.b, ref)) return range;
+    var predicate: ir.Predicate = @fromBackingInt(@intCast(cmp.data));
+    if (!taken) predicate = switch (predicate) {
+        .eq => .ne,
+        .ne => .eq,
+        .lt => .ge,
+        .le => .gt,
+        .gt => .le,
+        .ge => .lt,
+    };
+    // Put the square on the left: `y >= x * x` is `x * x <= y`.
+    if (!on_left) predicate = switch (predicate) {
+        .lt => .gt,
+        .le => .ge,
+        .gt => .lt,
+        .ge => .le,
+        else => predicate,
+    };
+    const bound = self.base(if (on_left) cmp.b else cmp.a) orelse return range;
+    const top: i128 = switch (predicate) {
+        .lt => bound.hi - 1,
+        .le, .eq => bound.hi,
+        else => return range,
+    };
+    if (top < 0) return range;
+    var root: i128 = std.math.sqrt(@as(u128, @intCast(top)));
+    if (self.sabotage == .overflow and root > 0) root -= 1;
+    return range.meet(.{ .lo = -root, .hi = root });
+}
+
 /// The fact pass only allocates.
 pub const Error = std.mem.Allocator.Error;
 
@@ -452,6 +496,9 @@ pub const Options = struct {
     /// Per parameter position, the interval every caller's argument lies in
     /// (`passes.parameterRanges`); null or missing is the parameter type's range.
     params: []const ?Interval = &.{},
+    /// Per module function, the interval every call of it returns (`returnRange`,
+    /// NEW-CORE-F1-OVERFLOW-3); null or missing is the return type's range.
+    returns: []const ?Interval = &.{},
     /// Turn the checks the facts rule out into `proven` and fold decided
     /// comparisons; false computes the facts without changing the function.
     mark: bool = true,
@@ -467,6 +514,10 @@ pub const Sabotage = enum {
     widening,
     /// `len(xs)` of a list parameter is taken to be strictly below `len(xs)`.
     length,
+    /// The overflow facts' rules (NEW-CORE-F1-OVERFLOW-1..3) are each off by one on the
+    /// inside: a counter's per-iteration growth is one less, `x * x <= y` bounds `x` by
+    /// one less than its square root, and a callee's return interval loses its top.
+    overflow,
 };
 
 /// The bounds a widened interval may stop at before its type's own: 0, the
@@ -567,6 +618,7 @@ pub fn analyze(arena: std.mem.Allocator, f: *ir.Function, options: Options) Erro
     var a: Analysis = .{
         .arena = arena,
         .sabotage = options.sabotage,
+        .returns = options.returns,
         .f = f,
         .shape = try shape(arena, f),
         .facts = .{
@@ -628,6 +680,8 @@ pub fn analyze(arena: std.mem.Allocator, f: *ir.Function, options: Options) Erro
     if (converged) {
         if (options.mark) mark(&a, options.fold);
     } else {
+        // Reachability short of a fixed point may miss blocks: every block counts as reachable.
+        @memset(a.facts.reachable, true);
         @memset(a.facts.ranges, null);
         @memset(a.facts.floats, null);
         @memset(a.facts.aggregates.lists, .{});
@@ -838,8 +892,39 @@ fn transfer(a: *Analysis, ref: ir.Ref, block: ir.BlockId) ?Interval {
             break :blk .{ .lo = 1 - x.hi, .hi = 1 - x.lo };
         },
         .iconst => if (full != null) Interval.point(constantValue(i)) else null,
+        .call => callRange(a, i) orelse full,
         else => full,
     };
+}
+
+/// A direct call's result lies in its callee's return interval (NEW-CORE-F1-OVERFLOW-3).
+fn callRange(a: *Analysis, i: ir.Inst) ?Interval {
+    const callee = i.a.index();
+    if (callee >= a.returns.len) return null;
+    const range = a.returns[callee] orelse return null;
+    const limits = typeRange(i.ty) orelse return null;
+    return range.meet(limits);
+}
+
+/// The interval of every value `f` returns (NEW-CORE-F1-OVERFLOW-3): the hull of each
+/// reachable `ret` operand's interval where it returns, or null for a non-integer result
+/// or one without an interval. Computed with `f`'s own parameters unknown (and its
+/// callees' return intervals), it holds for every call, whatever the arguments.
+pub fn returnRange(known: *const Facts, f: *const ir.Function, sabotage: Sabotage) ?Interval {
+    if (typeRange(f.signature.ret) == null) return null;
+    var out: ?Interval = null;
+    for (f.blocks.items, 0..) |block, b| {
+        if (b >= known.reachable.len or !known.reachable[b]) continue;
+        if (block.insts.items.len == 0) continue;
+        const last = f.inst(block.insts.items[block.insts.items.len - 1]);
+        if (last.op != .ret) continue;
+        const range = valueRange(known, f, last.a) orelse return null;
+        out = if (out) |so_far| so_far.hull(range) else range;
+    }
+    if (sabotage == .overflow) if (out) |range| {
+        if (range.hi > range.lo) return .{ .lo = range.lo, .hi = range.hi - 1 };
+    };
+    return out;
 }
 
 fn floatOf(a: *Analysis, raw: ir.Ref) ?FloatInterval {
@@ -1248,22 +1333,87 @@ fn counterRange(a: *Analysis, ref: ir.Ref, block: ir.BlockId) ?Interval {
     return null;
 }
 
-/// `acc = phi(init, acc + s)` in a counted loop: `init + trips * s`, when `s` is non-negative.
+/// `acc = phi(init, next)` in a counted loop, where each iteration moves `acc` by an
+/// amount in `[lo, hi]` (`growth`): after at most `trips` iterations it lies in
+/// `[init.lo + min(0, trips * lo), init.hi + max(0, trips * hi)]` (NEW-CORE-F1-OVERFLOW-1).
+/// The growth may be conditional (`if data[i] == 109: count += 1`) and may pass through
+/// an inner counted loop (`count += pass_index` then the inner loop's own counter).
 fn reduction(a: *Analysis, ref: ir.Ref, block: ir.BlockId) ?Interval {
     for (a.counted.items) |counted| {
         if (counted.loop.header != block or counted.counter == ref) continue;
         const header = a.f.blocks.items[block.index()];
         const latch_index: usize = if (header.preds.items[0] == counted.loop.latch) 0 else 1;
         const operands = a.f.operands(a.f.inst(ref).data);
-        const update = a.inst(operands[latch_index]);
-        if (update.op != .add) return null;
-        const step = if (a.f.resolve(update.a) == ref) update.b else if (a.f.resolve(update.b) == ref) update.a else return null;
-        const where = a.shape.block_of[a.f.resolve(operands[latch_index]).index()] orelse return null;
-        const s = a.rangeAt(step, where) orelse return null;
+        var budget: u32 = growth_budget;
+        var step = growth(a, ref, operands[latch_index], &budget) orelse return null;
+        if (a.sabotage == .overflow) step.hi -= 1;
         const start = a.rangeAt(operands[1 - latch_index], header.preds.items[1 - latch_index]) orelse return null;
         const trips = tripBound(a, block) orelse return null;
-        if (s.lo < 0) return null;
-        return .{ .lo = start.lo, .hi = start.hi +| mulSat(trips, s.hi) };
+        return grown(start, step, trips);
+    }
+    return null;
+}
+
+/// How many values one `reduction` may look through before it gives up.
+const growth_budget: u32 = 64;
+
+/// `start` after at most `trips` steps, each in `step`.
+fn grown(start: Interval, step: Interval, trips: i128) Interval {
+    return .{ .lo = start.lo +| @min(0, mulSat(trips, step.lo)), .hi = start.hi +| @max(0, mulSat(trips, step.hi)) };
+}
+
+/// How far value `raw` lies from `acc` in the same iteration, as an interval of `raw - acc`,
+/// or null when `raw` is not `acc` moved by checked additions and subtractions, joins of
+/// such values, and inner counted loops that move it.
+fn growth(a: *Analysis, acc: ir.Ref, raw: ir.Ref, budget: *u32) ?Interval {
+    if (budget.* == 0) return null;
+    budget.* -= 1;
+    const ref = a.f.resolve(raw);
+    if (ref == acc) return Interval.point(0);
+    const i = a.f.inst(ref);
+    const where = a.shape.block_of[ref.index()] orelse return null;
+    switch (i.op) {
+        .add, .sub => {
+            // A wrapping operation may wrap: only checked or proven ones move by their operand.
+            if (i.check == .none) return null;
+            if (growth(a, acc, i.a, budget)) |x| {
+                const y = a.rangeAt(i.b, where) orelse return null;
+                if (i.op == .add) return .{ .lo = x.lo +| y.lo, .hi = x.hi +| y.hi };
+                return .{ .lo = x.lo -| y.hi, .hi = x.hi -| y.lo };
+            }
+            if (i.op == .sub) return null;
+            const y = growth(a, acc, i.b, budget) orelse return null;
+            const x = a.rangeAt(i.a, where) orelse return null;
+            return .{ .lo = x.lo +| y.lo, .hi = x.hi +| y.hi };
+        },
+        .phi => {
+            for (a.f.loops.items) |loop| {
+                if (loop.header == where) return innerGrowth(a, acc, ref, where, budget);
+            }
+            var out: ?Interval = null;
+            for (a.f.operands(i.data), a.f.blocks.items[where.index()].preds.items) |operand, pred| {
+                if (!a.edgeLive(pred, where)) continue;
+                const moved = growth(a, acc, operand, budget) orelse return null;
+                out = if (out) |so_far| so_far.hull(moved) else moved;
+            }
+            return out;
+        },
+        else => return null,
+    }
+}
+
+/// The growth of a phi in the header of an inner counted loop: its entry value's growth,
+/// plus at most the inner loop's trips of its own per-iteration growth.
+fn innerGrowth(a: *Analysis, acc: ir.Ref, phi: ir.Ref, header_block: ir.BlockId, budget: *u32) ?Interval {
+    for (a.counted.items) |inner| {
+        if (inner.loop.header != header_block) continue;
+        const header = a.f.blocks.items[header_block.index()];
+        const latch_index: usize = if (header.preds.items[0] == inner.loop.latch) 0 else 1;
+        const operands = a.f.operands(a.f.inst(phi).data);
+        const entry = growth(a, acc, operands[1 - latch_index], budget) orelse return null;
+        const step = growth(a, phi, operands[latch_index], budget) orelse return null;
+        const trips = tripBound(a, header_block) orelse return null;
+        return grown(entry, step, trips);
     }
     return null;
 }

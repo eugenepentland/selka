@@ -267,3 +267,93 @@ fn repeatedAccess(f: *const ir.Function, later: []const ir.Ref, read: ir.Inst) ?
     }
     return null;
 }
+
+/// A store-back of a block pointer into the element slot a transferred read took it
+/// from (NEW-CORE-F1-STOREBACK-1): `row = c[i]` (transferred), `row[j] = v` in place,
+/// `c[i] = row`. The slot still holds the read's pointer, since the list operand is the
+/// same SSA value (nothing wrote the list in between), so the store only matters when
+/// the pointer changed.
+pub const StoreBack = struct {
+    /// The transferred read of the same element (and field).
+    read: ir.Ref,
+    /// Every path from the read to the stored value is an in-place update (`list_set`,
+    /// `list_set_field`, `list_pop`), so the pointer is the read's: no store at all.
+    /// Otherwise a copy on write, growth or replacement may have moved it, and the
+    /// store runs only when the pointer differs from the read's.
+    same: bool,
+};
+
+/// Phis being traced, for loops that carry the stored value.
+const Tracing = struct { stack: [16]ir.Ref = undefined, len: usize = 0 };
+
+/// The store-back form of `inst` (a `list_set`, or a `list_set_field` of a block-pointer
+/// field reached without crossing a union), or null when it is an ordinary store.
+pub fn storeBack(module: *const ir.Module, f: *const ir.Function, inst: ir.Inst) ?StoreBack {
+    const element = module.compound(inst.ty).list;
+    const field: ?u64 = switch (inst.op) {
+        .list_set => blk: {
+            if (!module.isBlock(element)) return null;
+            break :blk null;
+        },
+        .list_set_field => blk: {
+            const path = setPath(f, inst) orelse return null;
+            const target = module.pathTarget(element, path) orelse return null;
+            if (target.tag_of != .void or !module.isBlock(target.ty) or module.pathCrossesUnion(element, path)) return null;
+            break :blk f.inst(f.resolve(f.operands(inst.data)[1])).data;
+        },
+        else => return null,
+    };
+    if (!flags.transferredSlot(f, inst)) return null;
+    const match: Match = .{ .list = f.resolve(inst.a), .index = f.resolve(inst.b), .field = field };
+    var tracing: Tracing = .{};
+    const found = trace(f, match, f.operands(inst.data)[0], &tracing, 0) orelse return null;
+    return if (found.read == .none) null else found;
+}
+
+/// The element a store-back writes: its list value, index and field path.
+const Match = struct { list: ir.Ref, index: ir.Ref, field: ?u64 };
+
+fn matches(f: *const ir.Function, match: Match, read: ir.Inst) bool {
+    if (!flags.transferredRead(read) or f.resolve(read.a) != match.list or f.resolve(read.b) != match.index) return false;
+    return switch (read.op) {
+        .list_get => match.field == null,
+        .list_get_field => match.field != null and read.data & ~flags.place_read == match.field.?,
+        else => false,
+    };
+}
+
+/// Follow the stored value back to the transferred read through updates of the block.
+fn trace(f: *const ir.Function, match: Match, raw: ir.Ref, tracing: *Tracing, depth: u32) ?StoreBack {
+    const ref = f.resolve(raw);
+    const inst = f.inst(ref);
+    if (matches(f, match, inst)) return .{ .read = ref, .same = true };
+    if (depth >= 32) return null;
+    switch (inst.op) {
+        // In-place updates whose result is their operand's pointer.
+        .list_set, .list_set_field, .list_pop => return trace(f, match, inst.a, tracing, depth + 1),
+        // A copy, a growth or a replacement: the pointer may differ.
+        .list_copy, .list_push, .list_sort, .str_append, .str_append_char, .buffer_copy, .buffer_set, .buffer_push, .buffer_pop, .buffer_append, .dict_copy, .dict_set_value, .dict_insert, .dict_remove, .dict_clear => {
+            const found = trace(f, match, inst.a, tracing, depth + 1) orelse return null;
+            return .{ .read = found.read, .same = false };
+        },
+        .phi => {
+            for (tracing.stack[0..tracing.len]) |open| if (open == ref) return .{ .read = .none, .same = true };
+            if (tracing.len == tracing.stack.len) return null;
+            tracing.stack[tracing.len] = ref;
+            tracing.len += 1;
+            defer tracing.len -= 1;
+            var read: ir.Ref = .none;
+            var same = true;
+            for (f.operands(inst.data)) |operand| {
+                const found = trace(f, match, operand, tracing, depth + 1) orelse return null;
+                same = same and found.same;
+                // `.none` is a phi still being traced, around a loop: it adds no source.
+                if (found.read == .none) continue;
+                if (read != .none and read != found.read) return null;
+                read = found.read;
+            }
+            return .{ .read = read, .same = same };
+        },
+        else => return null,
+    }
+}

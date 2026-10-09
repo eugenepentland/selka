@@ -1,0 +1,54 @@
+## matmul inner loop, optimized LLVM (zig cc -O3 -march=native of --emit-llvm), after F1 steps 1-2
+vector.body:                                      ; preds = %vector.body, %vector.ph
+  %index = phi i64 [ 0, %vector.ph ], [ %index.next, %vector.body ]
+  %4 = getelementptr inbounds nuw double, ptr %data.148.i, i64 %index
+  %5 = getelementptr inbounds nuw i8, ptr %4, i64 32
+  %6 = getelementptr inbounds nuw i8, ptr %4, i64 64
+  %7 = getelementptr inbounds nuw i8, ptr %4, i64 96
+  %wide.load = load <4 x double>, ptr %4, align 8, !tbaa !13, !alias.scope !32, !noalias !35
+  %wide.load71 = load <4 x double>, ptr %5, align 8, !tbaa !13, !alias.scope !32, !noalias !35
+  %wide.load72 = load <4 x double>, ptr %6, align 8, !tbaa !13, !alias.scope !32, !noalias !35
+  %wide.load73 = load <4 x double>, ptr %7, align 8, !tbaa !13, !alias.scope !32, !noalias !35
+  %8 = getelementptr inbounds nuw double, ptr %data.184.i, i64 %index
+  %9 = getelementptr inbounds nuw i8, ptr %8, i64 32
+  %10 = getelementptr inbounds nuw i8, ptr %8, i64 64
+  %11 = getelementptr inbounds nuw i8, ptr %8, i64 96
+  %wide.load74 = load <4 x double>, ptr %8, align 8, !tbaa !13, !alias.scope !35
+  %wide.load75 = load <4 x double>, ptr %9, align 8, !tbaa !13, !alias.scope !35
+  %wide.load76 = load <4 x double>, ptr %10, align 8, !tbaa !13, !alias.scope !35
+  %wide.load77 = load <4 x double>, ptr %11, align 8, !tbaa !13, !alias.scope !35
+  %12 = fmul <4 x double> %broadcast.splat, %wide.load74
+  %13 = fmul <4 x double> %broadcast.splat, %wide.load75
+  %14 = fmul <4 x double> %broadcast.splat, %wide.load76
+  %15 = fmul <4 x double> %broadcast.splat, %wide.load77
+  %16 = fadd <4 x double> %wide.load, %12
+  %17 = fadd <4 x double> %wide.load71, %13
+  %18 = fadd <4 x double> %wide.load72, %14
+  %19 = fadd <4 x double> %wide.load73, %15
+  store <4 x double> %16, ptr %4, align 8, !tbaa !13, !alias.scope !32, !noalias !35
+  store <4 x double> %17, ptr %5, align 8, !tbaa !13, !alias.scope !32, !noalias !35
+  store <4 x double> %18, ptr %6, align 8, !tbaa !13, !alias.scope !32, !noalias !35
+  store <4 x double> %19, ptr %7, align 8, !tbaa !13, !alias.scope !32, !noalias !35
+  %index.next = add nuw i64 %index, 16
+  %20 = icmp eq i64 %index.next, %n.vec
+  br i1 %20, label %b42.i.preheader, label %vector.body, !llvm.loop !37
+
+## before (main cafe7fea7): the j loop's block
+b52.228.i:                                        ; preds = %b42.i
+  %v182.i = load ptr, ptr %elt.139.i, align 8, !tbaa !13
+  %data.148.i = getelementptr inbounds nuw i8, ptr %v182.i, i64 32
+  %elt.149.i = getelementptr inbounds nuw double, ptr %data.148.i, i64 %v16771.i
+  %v193.i = load double, ptr %elt.149.i, align 8, !tbaa !13
+  %data.184.i = getelementptr inbounds nuw i8, ptr %v212.i, i64 32
+  %elt.185.i = getelementptr inbounds nuw double, ptr %data.184.i, i64 %v16771.i
+  %v224.i = load double, ptr %elt.185.i, align 8, !tbaa !13
+  %v227.i = fmul double %v161.i, %v224.i
+  %v230.i = fadd double %v193.i, %v227.i
+  store double %v230.i, ptr %elt.149.i, align 8, !tbaa !13
+  store ptr %v182.i, ptr %elt.139.i, align 8, !tbaa !13
+  %v271.i = add nuw nsw i64 %v16771.i, 1
+  %v212.i.1 = load ptr, ptr %elt.167.i, align 8, !tbaa !13
+  %lh.176.i.1 = getelementptr inbounds nuw i8, ptr %v212.i.1, i64 8
+  %len.177.i.1 = load i64, ptr %lh.176.i.1, align 8, !tbaa !11
+  %oob.178.not.i.1 = icmp ult i64 %v271.i, %len.177.i.1
+  br i1 %oob.178.not.i.1, label %b52.228.i.1, label %trap.179.i, !prof !27
