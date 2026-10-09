@@ -10,6 +10,7 @@ const stage = @import("stage_store.zig");
 const flags = @import("flags.zig");
 const render = @import("build_render.zig");
 const demand = @import("lowering_demand.zig");
+const demand_ir = @import("demand_ir.zig");
 
 const Error = snapshot.Error;
 /// Checked-to-physical type mapping, recorded in discovery order.
@@ -41,6 +42,7 @@ const Delta = struct {
     types: []TypeBinding,
 };
 const Wire = struct { function: Function, delta: Delta };
+const Header = struct { wire: Wire, local_positions: bool };
 /// Inputs needed to publish one successful function without repeating arguments.
 pub const Publication = struct { key: stage.Digest, before: Before, checked: typed.Function };
 
@@ -51,10 +53,102 @@ pub const Cache = struct {
     lowered: usize = 0,
     reused: usize = 0,
     demand: ?*demand.Context = null,
+    lazy: ?*Deferred = null,
 
     /// Bind immutable durable storage; counters start empty for this build.
     pub fn init(store: *const stage.Store) Cache {
         return .{ .store = store };
+    }
+};
+
+const Handle = struct { key: stage.Digest, start: usize, old_strings: usize, new_strings: usize, string_count: usize };
+
+/// Compact discovery survives without decoding unchanged instruction arrays.
+/// The owning pipeline updates module/source after moving and retaining them.
+pub const Deferred = struct {
+    arena: std.mem.Allocator,
+    store: *const stage.Store,
+    input: struct { module: *ir.Module = undefined, source: ?language.source.Source = null } = .{},
+    tables: struct {
+        handles: std.ArrayList(?Handle) = .empty,
+        keys: std.ArrayList(?stage.Digest) = .empty,
+        loaded: std.ArrayList(bool) = .empty,
+    } = .{},
+    context: demand_ir.Context = undefined,
+    restored: usize = 0,
+    force_eager: bool = false,
+
+    fn extend(self: *Deferred, count: usize) std.mem.Allocator.Error!void {
+        while (self.tables.keys.items.len < count) {
+            try self.tables.keys.append(self.arena, null);
+            try self.tables.handles.append(self.arena, null);
+            try self.tables.loaded.append(self.arena, true);
+        }
+    }
+
+    fn record(self: *Deferred, index: usize, key: stage.Digest, handle: ?Handle) std.mem.Allocator.Error!void {
+        try self.extend(index + 1);
+        self.tables.keys.items[index] = key;
+        self.tables.handles.items[index] = handle;
+        self.tables.loaded.items[index] = handle == null;
+    }
+
+    /// Final catalog and each original file guard debug locations and numeric IDs.
+    /// Merged offsets may shift while an unchanged original file remains reusable.
+    pub fn prepare(self: *Deferred, module: *ir.Module, source: ?language.source.Source) std.mem.Allocator.Error!void {
+        self.input.module = module;
+        self.input.source = source;
+        try self.extend(module.functions.items.len);
+        var scratch = std.heap.ArenaAllocator.init(self.store.backing);
+        defer scratch.deinit();
+        const layout = try snapshot.layout(scratch.allocator(), .{ .module = module, .source = source });
+        const count = if (source) |s| @max(1, s.origins.len) else 1;
+        const digests = try scratch.allocator().alloc(stage.Digest, count);
+        if (source) |s| {
+            if (s.origins.len == 0) std.crypto.hash.Blake3.hash(s.bytes, &digests[0], .{}) else {
+                for (s.origins, digests) |origin, *digest| std.crypto.hash.Blake3.hash(origin.original.bytes, digest, .{});
+            }
+        } else @memset(digests, @splat(0));
+        for (self.tables.keys.items, module.functions.items) |*key, function| {
+            const raw = key.* orelse continue;
+            var origin: usize = 0;
+            if (source) |s| if (s.origins.len != 0) {
+                const at = s.originalSpan(.{ .start = function.span, .end = function.span }) catch {
+                    key.* = null;
+                    continue;
+                };
+                origin = at.input;
+            };
+            key.* = self.store.key("demand-raw-v1", &.{ &raw, &layout, &digests[origin] });
+        }
+        self.context = .{ .pointer = self, .ensure_fn = ensure, .keys = self.tables.keys.items, .loaded = self.tables.loaded.items, .force_eager = self.force_eager };
+    }
+
+    fn ensure(pointer: *anyopaque, index: u32) demand_ir.Error!void {
+        const self: *Deferred = @ptrCast(@alignCast(pointer));
+        const handle = self.tables.handles.items[index] orelse return error.CacheMiss;
+        var scratch = std.heap.ArenaAllocator.init(self.store.backing);
+        defer scratch.deinit();
+        const a = scratch.allocator();
+        const wire = try self.store.loadValue(a, handle.key, Wire) orelse return error.CacheMiss;
+        var prefix = self.input.module.*;
+        if (handle.new_strings > prefix.strings.items.len or handle.string_count > prefix.strings.items.len - handle.new_strings) return error.CacheMiss;
+        prefix.strings.items = prefix.strings.items[0 .. handle.new_strings + handle.string_count];
+        const source: snapshot.Context = .{ .module = &prefix, .source = self.input.source };
+        const candidate = restoreFunction(a, source, handle.start, wire.function, handle.old_strings, handle.new_strings) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            error.InvalidSnapshot => return error.CacheMiss,
+        };
+        const declared = self.input.module.functions.items[index];
+        if (!std.mem.eql(u8, candidate.name, declared.name)) return error.CacheMiss;
+        if (!sameSignature(candidate.signature, declared.signature)) return error.CacheMiss;
+        if (!try safeFunction(a, self.input.module, candidate)) return error.CacheMiss;
+        self.input.module.functions.items[index] = restoreFunction(self.arena, source, handle.start, wire.function, handle.old_strings, handle.new_strings) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            error.InvalidSnapshot => return error.CacheMiss,
+        };
+        try @import("lowering_finish.zig").function(self.arena, self.input.module, index);
+        self.restored += 1;
     }
 };
 /// Table lengths before lowering one function.
@@ -149,9 +243,10 @@ pub const Session = struct {
     /// Decode and validate with private scratch and temporary discovery deltas.
     /// Every accepted pointer is then copied onto the result arena.
     pub fn restore(self: *Session, scratch: std.mem.Allocator, key_value: stage.Digest, mb: Context, checked: typed.Function, declared: ir.Function) std.mem.Allocator.Error!?ir.Function {
-        const wire = try self.cache.store.loadValue(scratch, key_value, Wire) orelse return null;
+        const header = if (self.cache.lazy != null and !self.cache.lazy.?.force_eager) try self.cache.store.loadValue(scratch, self.cache.store.key("lowered-header-v1", &.{&key_value}), Header) else null;
+        const wire = if (header) |metadata| metadata.wire else try self.cache.store.loadValue(scratch, key_value, Wire) orelse return null;
         const before = Before.init(mb);
-        if (!localPositions(wire, before.functions)) if (self.cache.demand) |queries| {
+        if (!(if (header) |metadata| metadata.local_positions else localPositions(wire, before.functions))) if (self.cache.demand) |queries| {
             queries.reject(checked.id);
             if (queries.omitted(checked.id)) return null;
         };
@@ -165,43 +260,25 @@ pub const Session = struct {
             candidate.functions.shrinkRetainingCapacity(before.functions);
             candidate.strings.shrinkRetainingCapacity(before.strings);
         };
-        try candidate.compounds.appendSlice(mb.arena, wire.delta.compounds);
-        for (wire.delta.compounds) |compound| if (!validCompound(candidate, compound)) return null;
-        try candidate.strings.appendSlice(mb.arena, wire.delta.strings);
+        const exposed = exposeDelta(scratch, mb, checked, wire, before) catch |err| {
+            if (err == error.OutOfMemory) return error.OutOfMemory;
+            return null;
+        };
+        if (!exposed) return null;
         const context: snapshot.Context = .{ .module = candidate, .source = mb.input.source };
-        for (wire.delta.declarations) |f| {
-            const restored = restoreFunction(scratch, context, checked, f, wire.delta.string_start, before.strings) catch |err| {
-                if (err == error.OutOfMemory) return error.OutOfMemory;
-                return null;
-            };
-            try candidate.functions.append(mb.arena, restored);
-        }
-        for (wire.delta.functions) |binding| {
-            if (@backingInt(binding.checked) >= mb.input.program.functions.len or mb.discovery.ids.contains(@backingInt(binding.checked))) return null;
-            if (binding.physical < before.functions or binding.physical >= candidate.functions.items.len) return null;
-            const fresh = mb.input.program.functions[@backingInt(binding.checked)];
-            const f = candidate.functions.items[binding.physical];
-            if (!std.mem.eql(u8, normalizedName(fresh.name), normalizedName(f.name))) return null;
-            candidate.functions.items[binding.physical].name = fresh.name;
-            candidate.functions.items[binding.physical].span = std.math.cast(u32, fresh.declaration.start) orelse return null;
-        }
-        for (wire.delta.types) |binding| {
-            if (!binding.checked.isAggregate() or binding.checked.recordIndex() >= mb.input.program.records.len) return null;
-            if (!candidate.valid(binding.physical) or mb.types.contains(binding.checked)) return null;
-        }
-        const built = restoreFunction(scratch, context, checked, wire.function, wire.delta.string_start, before.strings) catch |err| {
+        const built = restoreFunction(scratch, context, checked.declaration.start, wire.function, wire.delta.string_start, before.strings) catch |err| {
             if (err == error.OutOfMemory) return error.OutOfMemory;
             return null;
         };
         if (!std.mem.eql(u8, built.name, declared.name) or !sameSignature(built.signature, declared.signature)) return null;
-        if (!try safeFunction(scratch, candidate, built)) return null;
+        if (header == null and !try safeFunction(scratch, candidate, built)) return null;
         // Clone slice-owned wire tables before scratch disappears. Function DTOs
         // are already validated; their raw string slots are relocated below.
         for (wire.delta.compounds, 0..) |compound, i| candidate.compounds.items[before.compounds + i] = try clone(mb.arena, ir.Compound, compound);
         for (wire.delta.strings, 0..) |bytes, i| candidate.strings.items[before.strings + i] = try mb.arena.dupe(u8, bytes);
         const live: snapshot.Context = .{ .module = mb.module, .source = mb.input.source };
         for (wire.delta.declarations, 0..) |f, i| {
-            const restored = restoreFunction(mb.arena, live, checked, f, wire.delta.string_start, before.strings) catch |err| switch (err) {
+            const restored = restoreFunction(mb.arena, live, checked.declaration.start, f, wire.delta.string_start, before.strings) catch |err| switch (err) {
                 error.OutOfMemory => return error.OutOfMemory,
                 error.InvalidSnapshot => unreachable,
             };
@@ -216,12 +293,22 @@ pub const Session = struct {
         }
         for (wire.delta.types) |binding| try mb.types.put(mb.arena, binding.checked, binding.physical);
         try mb.discovery.types.appendSlice(mb.arena, wire.delta.types);
-        const result = restoreFunction(mb.arena, live, checked, wire.function, wire.delta.string_start, before.strings) catch |err| switch (err) {
+        const result = restoreFunction(mb.arena, live, checked.declaration.start, wire.function, wire.delta.string_start, before.strings) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
             error.InvalidSnapshot => unreachable,
         };
         committed = true;
         self.cache.reused += 1;
+        if (header == null) if (self.cache.lazy) |lazy| {
+            lazy.restored += 1;
+        };
+        if (self.cache.lazy) |lazy| try lazy.record(mb.discovery.ids.get(@backingInt(checked.id)).?, key_value, if (header != null) .{
+            .key = key_value,
+            .start = checked.declaration.start,
+            .old_strings = wire.delta.string_start,
+            .new_strings = before.strings,
+            .string_count = wire.delta.strings.len,
+        } else null);
         return result;
     }
 
@@ -254,8 +341,45 @@ pub const Session = struct {
         };
         if (!localPositions(wire, before.functions)) if (self.cache.demand) |queries| queries.reject(checked.id);
         try self.cache.store.storeValue(publication.key, Wire, wire);
+        var header = wire;
+        header.function.value.insts = &.{};
+        header.function.value.blocks = &.{};
+        header.function.value.extra = &.{};
+        header.function.value.loops = &.{};
+        header.function.positions = function.positions[0..1];
+        try self.cache.store.storeValue(self.cache.store.key("lowered-header-v1", &.{&publication.key}), Header, .{
+            .wire = header,
+            .local_positions = localPositions(wire, before.functions),
+        });
+        if (self.cache.lazy) |lazy| try lazy.record(mb.discovery.ids.get(@backingInt(checked.id)).?, publication.key, null);
     }
 };
+
+fn exposeDelta(scratch: std.mem.Allocator, mb: Context, checked: typed.Function, wire: Wire, before: Before) Error!bool {
+    const candidate = mb.module;
+    try candidate.compounds.appendSlice(mb.arena, wire.delta.compounds);
+    for (wire.delta.compounds) |compound| if (!validCompound(candidate, compound)) return false;
+    try candidate.strings.appendSlice(mb.arena, wire.delta.strings);
+    const context: snapshot.Context = .{ .module = candidate, .source = mb.input.source };
+    for (wire.delta.declarations) |f| {
+        const restored = try restoreFunction(scratch, context, checked.declaration.start, f, wire.delta.string_start, before.strings);
+        try candidate.functions.append(mb.arena, restored);
+    }
+    for (wire.delta.functions) |binding| {
+        if (@backingInt(binding.checked) >= mb.input.program.functions.len or mb.discovery.ids.contains(@backingInt(binding.checked))) return false;
+        if (binding.physical < before.functions or binding.physical >= candidate.functions.items.len) return false;
+        const fresh = mb.input.program.functions[@backingInt(binding.checked)];
+        const f = candidate.functions.items[binding.physical];
+        if (!std.mem.eql(u8, normalizedName(fresh.name), normalizedName(f.name))) return false;
+        candidate.functions.items[binding.physical].name = fresh.name;
+        candidate.functions.items[binding.physical].span = std.math.cast(u32, fresh.declaration.start) orelse return false;
+    }
+    for (wire.delta.types) |binding| {
+        if (!binding.checked.isAggregate() or binding.checked.recordIndex() >= mb.input.program.records.len) return false;
+        if (!candidate.valid(binding.physical) or mb.types.contains(binding.checked)) return false;
+    }
+    return true;
+}
 
 fn localPositions(wire: Wire, first: usize) bool {
     for (wire.function.positions) |at| if (at == .external) return false;
@@ -379,10 +503,10 @@ fn position(context: snapshot.Context, program: typed.Program, checked: typed.Fu
     return .{ .external = try snapshot.locate(context, span) };
 }
 
-fn offset(context: snapshot.Context, checked: typed.Function, value: Position) Error!u32 {
+fn offset(context: snapshot.Context, start: usize, value: Position) Error!u32 {
     return switch (value) {
         .zero => 0,
-        .local => |delta| std.math.cast(u32, checked.declaration.start + delta) orelse error.InvalidSnapshot,
+        .local => |delta| std.math.cast(u32, start + delta) orelse error.InvalidSnapshot,
         .external => |loc| snapshot.relocate(context, loc),
     };
 }
@@ -402,7 +526,7 @@ fn relocatedString(raw: usize, old: usize, new: usize, count: usize) Error!u32 {
     return std.math.cast(u32, new + (raw - old)) orelse error.InvalidSnapshot;
 }
 
-fn restoreFunction(a: std.mem.Allocator, context: snapshot.Context, checked: typed.Function, dto: Function, old: usize, new: usize) Error!ir.Function {
+fn restoreFunction(a: std.mem.Allocator, context: snapshot.Context, start: usize, dto: Function, old: usize, new: usize) Error!ir.Function {
     const f = dto.value;
     if (dto.positions.len != f.insts.len + 1 or new > context.module.strings.items.len) return error.InvalidSnapshot;
     const count = context.module.strings.items.len - new;
@@ -416,7 +540,7 @@ fn restoreFunction(a: std.mem.Allocator, context: snapshot.Context, checked: typ
     const insts = try a.dupe(ir.Inst, f.insts);
     for (insts, 0..) |*inst, i| {
         if (!context.module.valid(inst.ty)) return error.InvalidSnapshot;
-        inst.span = try offset(context, checked, dto.positions[i + 1]);
+        inst.span = try offset(context, start, dto.positions[i + 1]);
         if (inst.op == .str_const) inst.data = try relocatedString(std.math.cast(usize, inst.data) orelse return error.InvalidSnapshot, old, new, count);
         if (inst.op == .@"unreachable" and inst.data & flags.assertion_trap != 0) inst.data = (inst.data & 0xffffffff00000000) | try relocatedString(@as(u32, @truncate(inst.data)), old, new, count);
     }
@@ -431,7 +555,7 @@ fn restoreFunction(a: std.mem.Allocator, context: snapshot.Context, checked: typ
     return .{
         .name = try a.dupe(u8, name),
         .signature = sig,
-        .span = try offset(context, checked, dto.positions[0]),
+        .span = try offset(context, start, dto.positions[0]),
         .insts = .{ .items = insts, .capacity = insts.len },
         .blocks = .{ .items = blocks, .capacity = blocks.len },
         .extra = .{ .items = try a.dupe(ir.Ref, f.extra), .capacity = f.extra.len },

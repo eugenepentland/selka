@@ -157,7 +157,7 @@ fn textOf(emitted: []const units.Unit, path: []const u8) ![]const u8 {
 }
 
 fn numericHelper(emitted: []const units.Unit) bool {
-    for (emitted) |unit| if (unit.kind == .helper and unit.number) return true;
+    for (emitted) |unit| if (unit.kind == .helper and unit.dependencies.number) return true;
     return false;
 }
 
@@ -266,7 +266,7 @@ test "S4 numeric buffer operations declare reached helpers in owner and imported
         try std.testing.expect(result.term == .exited and result.term.exited == 0);
         try std.testing.expectEqualStrings("5 45 55 49 46 53\n", result.stdout);
         try std.testing.expectEqualStrings("", result.stderr);
-        for (emitted) |unit| if (std.mem.eql(u8, unit.source_path, "other.my")) try std.testing.expect(!unit.number);
+        for (emitted) |unit| if (std.mem.eql(u8, unit.source_path, "other.my")) try std.testing.expect(!unit.dependencies.number);
     }
 }
 
@@ -281,7 +281,7 @@ test "S4 integer-only numeric buffer operations avoid the float helper dependenc
     const integer = "public func formatted() -> byte_buffer:\n    mut empty: int[] = []\n" ++
         "    mut buffer = byte_buffer(empty)\n    _ = buffer.append_int(-7)\n    return buffer\n";
     const emitted = try snapshot(a, .{ integer_caller, integer, other }, false);
-    for (emitted) |unit| try std.testing.expect(!unit.number);
+    for (emitted) |unit| try std.testing.expect(!unit.dependencies.number);
     const result = try native(a, emitted);
     try std.testing.expectEqualStrings("2 45 55\n", result.stdout);
     try std.testing.expectEqualStrings("", result.stderr);
@@ -395,7 +395,7 @@ test "S4 a float renderer outside entry carries the formatter link dependency on
     const emitted = try snapshot(a, .{ app, rendering, other }, false);
     var helper_number = false;
     for (emitted) |unit| {
-        helper_number = helper_number or (unit.kind == .helper and unit.number);
+        helper_number = helper_number or (unit.kind == .helper and unit.dependencies.number);
     }
     try std.testing.expect(helper_number);
     const result = try native(a, emitted);
@@ -586,6 +586,24 @@ fn encodedFacts(a: std.mem.Allocator, known: []const ?fact_tables.Facts) !deferr
     return table;
 }
 
+fn durableFacts(a: std.mem.Allocator, store: *const stages.Store, table: *deferred_facts.Table) !void {
+    for (table.entries, 0..) |entry, index| if (entry) |artifact| {
+        const key = store.key("emission-durable-facts-test", &.{&artifact.digest});
+        try std.testing.expect(try store.save(key, artifact.bytes));
+        try table.deferArtifact(a, index, store, key, artifact);
+    };
+}
+
+fn loseDurableFacts(a: std.mem.Allocator, store: *const stages.Store, table: *const deferred_facts.Table) !void {
+    var seen: std.AutoHashMapUnmanaged(deferred_facts.Digest, void) = .empty;
+    defer seen.deinit(a);
+    for (table.handles) |entry| if (entry) |handle| {
+        if ((try seen.getOrPut(a, handle.key)).found_existing) continue;
+        const path = try std.fmt.allocPrint(a, "{s}/{s}.stage", .{ store.root, std.fmt.bytesToHex(handle.key, .lower) });
+        try std.Io.Dir.cwd().deleteFile(std.testing.io, path);
+    };
+}
+
 fn sameUnits(expected: []const units.Unit, actual: []const units.Unit) !void {
     try std.testing.expectEqual(expected.len, actual.len);
     for (expected, actual) |left, right| {
@@ -593,9 +611,9 @@ fn sameUnits(expected: []const units.Unit, actual: []const units.Unit) !void {
         try std.testing.expectEqualStrings(left.source_path, right.source_path);
         try std.testing.expectEqualStrings(left.llvm, right.llvm);
         try std.testing.expectEqual(left.kind, right.kind);
-        try std.testing.expectEqual(left.number, right.number);
-        try std.testing.expectEqual(left.math, right.math);
-        try std.testing.expectEqual(left.counting, right.counting);
+        try std.testing.expectEqual(left.dependencies.number, right.dependencies.number);
+        try std.testing.expectEqual(left.dependencies.math, right.dependencies.math);
+        try std.testing.expectEqual(left.dependencies.counting, right.dependencies.counting);
     }
 }
 
@@ -650,12 +668,20 @@ test "S4 generated helper seeds and completed units survive scratch and cache hi
     const context: u8 = 0;
     const options: emitter.Options = .{ .locator = .{ .context = &context, .locate = fixedLocation }, .source_path = "lifetime.my", .main = .{ .parameters = &.{"out"} }, .counters = true };
     const fresh = try units.emitWithScratch(a, std.testing.allocator, &module, options);
+    const source = try language.source.Source.init(a, "lifetime.my", "helper source");
+    var loader: FinalLoaderFixture = .{ .module = &module, .bodies = try a.dupe(ir.Function, module.functions.items) };
+    const receipt_context: emission_cache.ReceiptContext = .{
+        .finals = try receiptFinals(a, &module, options.locator),
+        .source = &source,
+        .layout = try @import("ir_snapshot.zig").layout(a, try @import("ir_snapshot.zig").Context.init(a, &module, source)),
+        .loader = .{ .pointer = &loader, .ensure_fn = FinalLoaderFixture.ensure },
+    };
     var cold: emission_cache.Counts = .{};
-    const first = try units.emitCached(a, std.testing.allocator, &module, options, .{ .store = &store, .lanes = 2, .counts = &cold });
+    const first = try units.emitCached(a, std.testing.allocator, &module, options, .{ .store = &store, .lanes = 2, .counts = &cold, .receipts = receipt_context });
     try sameUnits(fresh, first);
     try std.testing.expect(cold.seeds_rendered > 0);
     var warm: emission_cache.Counts = .{};
-    const repeated = try units.emitCached(a, std.testing.allocator, &module, options, .{ .store = &store, .lanes = 3, .counts = &warm });
+    const repeated = try units.emitCached(a, std.testing.allocator, &module, options, .{ .store = &store, .lanes = 3, .counts = &warm, .receipts = receipt_context });
     try sameUnits(fresh, repeated);
     try std.testing.expectEqual(cold.seeds_rendered, warm.seeds_reused);
     try std.testing.expectEqual(@as(u32, 0), warm.seeds_rendered);
@@ -664,11 +690,21 @@ test "S4 generated helper seeds and completed units survive scratch and cache hi
     var math = false;
     var counting = false;
     for (repeated) |emitted| {
-        math = math or emitted.math;
-        counting = counting or emitted.counting;
+        math = math or emitted.dependencies.math;
+        counting = counting or emitted.dependencies.counting;
     }
     try std.testing.expect(math);
     try std.testing.expect(counting);
+    var native_counts: emission_cache.Counts = .{};
+    const native_units = try units.emitCached(a, std.testing.allocator, &module, options, .{
+        .store = &store,
+        .counts = &native_counts,
+        .receipts = receipt_context,
+        .native_handles = true,
+    });
+    try sameNativeHandles(fresh, native_units);
+    try std.testing.expectEqual(warm.seeds_reused, native_counts.seeds_reused);
+    try std.testing.expectEqual(@as(u64, 0), native_counts.work.llvm_loaded_bytes);
 }
 
 // spec-case: NEW-CORE-STAGE-CACHE-5
@@ -694,7 +730,8 @@ test "S4 deferred fact bytes share eager cache keys and render equal LLVM" {
     const fresh = try units.emitWithScratch(a, std.testing.allocator, &module, options);
     const eager = try units.emitCached(a, std.testing.allocator, &module, options, .{ .store = &store });
     try sameUnits(fresh, eager);
-    const table = try encodedFacts(a, result.known);
+    var table = try encodedFacts(a, result.known);
+    try durableFacts(a, &store, &table);
     options.analysis.facts = &.{};
     var warm: emission_cache.Counts = .{};
     const reused = try units.emitCached(a, std.testing.allocator, &module, options, .{ .store = &store, .deferred = &table, .counts = &warm });
@@ -713,6 +750,8 @@ test "S4 deferred fact bytes share eager cache keys and render equal LLVM" {
     options.analysis.facts = &.{};
     const fallback = try units.emitCached(a, std.testing.allocator, &module, options, .{ .store = &store, .deferred = &table });
     try sameUnits(fallback_oracle, fallback);
+    try loseDurableFacts(a, &store, &table);
+    try std.testing.expectError(error.CacheMiss, units.emitCached(a, std.testing.allocator, &module, options, .{ .store = &empty, .deferred = &table }));
 }
 
 // spec-case: NEW-CORE-STAGE-CACHE-5
@@ -792,4 +831,153 @@ test "S4 emission inputs canonicalize global identities and invalidate effect an
     try ancestry.frames.append(a, .{ .function = original.root, .call_span = 21, .parent = null });
     ancestry.frames.items[0].parent = 1;
     try std.testing.expect(!std.mem.eql(u8, &inlined, &try fixtureKey(a, original, options)));
+}
+
+const FinalLoaderFixture = struct {
+    module: *ir.Module,
+    bodies: []const ir.Function,
+    restored: usize = 0,
+    fn ensure(pointer: *anyopaque, index: u32) @import("demand_ir.zig").Error!void {
+        const self: *FinalLoaderFixture = @ptrCast(@alignCast(pointer));
+        if (self.module.functions.items[index].blocks.items.len != 0) return;
+        self.module.functions.items[index] = self.bodies[index];
+        self.restored += 1;
+    }
+    fn restoreAll(self: *FinalLoaderFixture) void {
+        for (self.module.functions.items, self.bodies) |*function, body| function.* = body;
+    }
+    fn hide(self: *FinalLoaderFixture) void {
+        self.restored = 0;
+        for (self.module.functions.items) |*function| {
+            function.insts = .empty;
+            function.blocks = .empty;
+            function.extra = .empty;
+            function.loops = .empty;
+        }
+    }
+};
+
+fn receiptFinals(a: std.mem.Allocator, module: *const ir.Module, locator: emitter.Locator) ![]?@import("optimization_cache.zig").FinalMetadata {
+    const finals = try a.alloc(?@import("optimization_cache.zig").FinalMetadata, module.functions.items.len);
+    var canon = try @import("canonical_ir.zig").Canon.prepare(a, module, locator);
+    for (finals, 0..) |*final, index| {
+        const digest = try canon.functionDigest(@intCast(index));
+        final.* = .{
+            .key = digest,
+            .body = digest,
+            .outgoing = try @import("optimizer_shortcut.zig").Index.targets(a, &module.functions.items[index]),
+            .analysis = .{ .digest = @splat(0), .loop_ids = &.{} },
+            .state = .{ .known = null, .plans = &.{}, .counts = .{}, .own = .{} },
+        };
+    }
+    return finals;
+}
+
+fn removeExactEmissionArtifacts(a: std.mem.Allocator, directory: std.Io.Dir, store: *const stages.Store) !void {
+    var files = try directory.openDir(std.testing.io, "stages-v1", .{ .iterate = true });
+    defer files.close(std.testing.io);
+    var iterator = files.iterate();
+    var removals: std.ArrayList([]const u8) = .empty;
+    while (try iterator.next(std.testing.io)) |entry| {
+        if (entry.kind != .file or !std.mem.endsWith(u8, entry.name, ".stage")) continue;
+        var digest: stages.Digest = undefined;
+        _ = try std.fmt.hexToBytes(&digest, entry.name[0..64]);
+        if (try store.loadValue(a, digest, emission_cache.Receipt) == null)
+            try removals.append(a, try a.dupe(u8, entry.name));
+    }
+    try std.testing.expect(removals.items.len != 0);
+    for (removals.items) |name| try files.deleteFile(std.testing.io, name);
+}
+
+fn sameNativeHandles(expected: []const units.Unit, actual: []const units.Unit) !void {
+    try std.testing.expectEqual(expected.len, actual.len);
+    for (expected, actual) |left, right| {
+        try std.testing.expectEqualStrings(left.name, right.name);
+        try std.testing.expectEqualStrings(left.source_path, right.source_path);
+        try std.testing.expectEqual(left.kind, right.kind);
+        try std.testing.expectEqualDeep(left.dependencies, right.dependencies);
+        try std.testing.expectEqual(@as(usize, 0), right.llvm.len);
+        try std.testing.expect(right.artifact != null);
+    }
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-5
+test "S4 emissionJob compact emission receipts leave untouched final bodies deferred and reject changed source" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
+    var store = try stages.Store.init(std.testing.allocator, std.testing.io, root);
+    defer store.deinit();
+    var module = try unitLifetimeModule(a);
+    const bodies = try a.dupe(ir.Function, module.functions.items);
+    var loader: FinalLoaderFixture = .{ .module = &module, .bodies = bodies };
+    const location: u8 = 0;
+    const summaries = try @import("effects.zig").analyze(a, &module);
+    const options: emitter.Options = .{ .locator = .{ .context = &location, .locate = fixedLocation }, .source_path = "lifetime.my", .main = .{}, .analysis = .{ .effects = &summaries } };
+    var source = try language.source.Source.init(a, "lifetime.my", "stable source\n");
+    const finals = try receiptFinals(a, &module, options.locator);
+    var context: emission_cache.Context = .{
+        .store = &store,
+        .receipts = .{
+            .finals = finals,
+            .source = &source,
+            .layout = try @import("ir_snapshot.zig").layout(a, try @import("ir_snapshot.zig").Context.init(a, &module, source)),
+            .loader = .{ .pointer = &loader, .ensure_fn = FinalLoaderFixture.ensure },
+        },
+        .lanes = 4,
+    };
+    const expected = try units.emitWithScratch(a, std.testing.allocator, &module, options);
+    loader.hide();
+    var cold: emission_cache.Counts = .{};
+    context.counts = &cold;
+    context.native_handles = true;
+    try sameUnits(expected, try units.emitCached(a, std.testing.allocator, &module, options, context));
+    try std.testing.expectEqual(@as(usize, 32), loader.restored);
+    try std.testing.expectEqual(@as(u32, 33), cold.work.keys_built);
+    try std.testing.expect(cold.work.llvm_loaded_bytes > 0);
+    context.native_handles = false;
+    loader.hide();
+    var warm: emission_cache.Counts = .{};
+    context.counts = &warm;
+    try sameUnits(expected, try units.emitCached(a, std.testing.allocator, &module, options, context));
+    try std.testing.expectEqual(@as(usize, 0), loader.restored);
+    try std.testing.expectEqual(@as(u32, 0), warm.work.keys_built);
+    try std.testing.expectEqual(@as(u32, 33), warm.work.receipts_checked);
+    try std.testing.expectEqual(@as(u32, 33), warm.reused);
+    bodies[7].insts.items[0].data = 81;
+    finals[7].?.key[0] ^= 1;
+    finals[7].?.body[0] ^= 1;
+    loader.hide();
+    var edited_counts: emission_cache.Counts = .{};
+    context.counts = &edited_counts;
+    const edited = try units.emitCached(a, std.testing.allocator, &module, options, context);
+    try std.testing.expectEqual(@as(usize, 1), loader.restored);
+    try std.testing.expectEqual(@as(u32, 1), edited_counts.work.keys_built);
+    try std.testing.expectEqual(@as(u32, 32), edited_counts.reused);
+    loader.restoreAll();
+    try sameUnits(try units.emitWithScratch(a, std.testing.allocator, &module, options), edited);
+    loader.hide();
+    source = try language.source.Source.init(a, "lifetime.my", "edited source\n");
+    var moved: emission_cache.Counts = .{};
+    context.counts = &moved;
+    _ = try units.emitCached(a, std.testing.allocator, &module, options, context);
+    try std.testing.expectEqual(@as(usize, 32), loader.restored);
+    try std.testing.expectEqual(@as(u32, 32), moved.work.keys_built);
+    // Remove exact artifacts while keeping compact receipts. A receipt cannot
+    // authorize rendering an empty body: the coordinator must retry eagerly.
+    try removeExactEmissionArtifacts(a, directory.dir, &store);
+    loader.hide();
+    try std.testing.expectError(error.CacheMiss, units.emitCached(a, std.testing.allocator, &module, options, context));
+    try std.testing.expectEqual(@as(usize, 0), loader.restored);
+    context.native_handles = true;
+    var native_counts: emission_cache.Counts = .{};
+    context.counts = &native_counts;
+    const handles = try units.emitCached(a, std.testing.allocator, &module, options, context);
+    try sameNativeHandles(edited, handles);
+    try std.testing.expectEqual(@as(u32, 33), native_counts.work.native_handles);
+    try std.testing.expectEqual(@as(u64, 0), native_counts.work.llvm_loaded_bytes);
+    try std.testing.expectEqual(@as(usize, 0), loader.restored);
 }

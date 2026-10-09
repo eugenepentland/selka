@@ -59,3 +59,39 @@ test "deferred final facts retain compact bytes reclaim scratch and preserve nes
     try std.testing.expect((try table.load(a, 0)) == null);
     try std.testing.expectEqual(ir.Ref.none, restored.aggregates.lists[0].length);
 }
+
+// spec-case: NEW-CORE-STAGE-CACHE-4
+test "deferArtifact retains only durable fact handles and load rejects cache loss after admission" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const stages = @import("stage_store.zig");
+    var store = try stages.Store.init(std.testing.allocator, std.testing.io, try directory.dir.realPathFileAlloc(std.testing.io, ".", a));
+    defer store.deinit();
+    var scratch = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer scratch.deinit();
+    const known = try fixture(scratch.allocator());
+    const expected = try known.clone(a);
+    const artifact = try deferred.encode(scratch.allocator(), known);
+    const key = store.key("durable-facts-test", &.{&artifact.digest});
+    try std.testing.expect(try store.save(key, artifact.bytes));
+    var table = try deferred.Table.init(a, 1);
+    try table.deferArtifact(a, 0, &store, key, artifact);
+    const identity = table.identity(0).?;
+    try std.testing.expect(table.entries[0] == null);
+    try std.testing.expectEqual(@as(usize, 1), table.handles[0].?.loop_ids.len);
+    try std.testing.expect(artifact.bytes.len > @sizeOf(deferred.Handle) * 100);
+    _ = scratch.reset(.free_all);
+    try std.testing.expectEqualDeep(expected, (try table.load(a, 0)).?);
+    const name = try std.fmt.allocPrint(a, "stages-v1/{s}.stage", .{std.fmt.bytesToHex(key, .lower)});
+    try directory.dir.deleteFile(std.testing.io, name);
+    try std.testing.expectEqual(identity, table.identity(0).?);
+    try std.testing.expectError(error.CacheMiss, table.load(a, 0));
+    try std.testing.expect(try store.save(key, "changed payload with a valid stage checksum"));
+    try std.testing.expectError(error.CacheMiss, table.load(a, 0));
+    // Fresh facts are usable even when publication was never available.
+    table.entries[0] = try deferred.encode(a, expected);
+    try std.testing.expectEqualDeep(expected, (try table.load(a, 0)).?);
+}

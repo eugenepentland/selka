@@ -9,6 +9,8 @@ comptime {
     _ = @import("shared_counts_test.zig");
     _ = @import("frontend_test.zig");
     _ = @import("demand_build_test.zig");
+    _ = @import("build_retry.zig");
+    _ = @import("native_receipt_test.zig");
     _ = @import("cli.zig");
     _ = @import("cost_test.zig");
     _ = @import("count_test.zig");
@@ -22,6 +24,7 @@ comptime {
     _ = @import("inline_origins_test.zig");
     _ = @import("driver.zig");
     _ = @import("driver_test.zig");
+    _ = @import("driver_handles_test.zig");
     _ = @import("pipeline_emission_test.zig");
     _ = @import("backend_owned_test.zig");
     _ = @import("driver_native_cache_test.zig");

@@ -594,11 +594,11 @@ test "a retained checked tree whose touched record shape no longer matches misse
     try t.expect(cache.entries.len != 0);
     try checkRetained(&files, &cache);
     const reason = @backingInt(language.semantic_cache.MissReason.record_shape_changed);
-    try t.expectEqual(@as(usize, 0), cache.statistics.misses[reason]);
+    try t.expectEqual(@as(usize, 0), cache.statistics.rejections.total[reason]);
     corruptRecordShapes(&cache);
     const reused_before = cache.statistics.reused;
     try checkRetained(&files, &cache);
-    try t.expect(cache.statistics.misses[reason] != 0);
+    try t.expect(cache.statistics.rejections.total[reason] != 0);
     try t.expectEqual(reused_before, cache.statistics.reused);
 }
 
@@ -852,7 +852,7 @@ test "summary validation and retained body caches both reject dotted import sign
     const signature = formattedDependencyProject("public func total(extra: int) -> int:\n    return extra\n");
     try t.expectError(error.SourceError, checkRetained(&signature, &cache));
     const context_reason = @backingInt(language.semantic_cache.MissReason.context_changed);
-    try t.expect(cache.statistics.misses[context_reason] != 0);
+    try t.expect(cache.statistics.rejections.total[context_reason] != 0);
     try checkRetained(&original, &cache);
     const privacy = formattedDependencyProject("func total() -> int:\n    return 1\n");
     try t.expectError(error.SourceError, checkRetained(&privacy, &cache));

@@ -173,7 +173,10 @@ test "report prints the cache report as one JSON line and says when a build repl
     try std.testing.expect(record.object.get("units").?.integer > 0);
     try std.testing.expect(record.object.get("processes").?.integer > 0);
     const stages = record.object.get("stages").?.object;
-    try std.testing.expectEqualStrings("stage-report-v1", stages.get("version").?.string);
+    try std.testing.expectEqualStrings("stage-report-v2", stages.get("version").?.string);
+    try std.testing.expect(stages.get("lowering").?.object.get("materialized").?.integer > 0);
+    const misses = stages.get("frontend_misses").?.object;
+    try std.testing.expect(misses.contains("lookup") and misses.contains("retention"));
     try std.testing.expect(stages.get("nanoseconds").?.object.get("native").?.integer > 0);
     const second = try context.compiler(&.{ "run", "main.my", "--cache-dir", "cache", "--report" });
     try std.testing.expectEqual(@as(u8, 42), second.status);

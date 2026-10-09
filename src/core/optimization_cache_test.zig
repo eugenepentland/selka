@@ -1,5 +1,6 @@
 //! Persistent optimizer stages are checked against the uncached pass oracle.
 const std = @import("std");
+const demand_ir = @import("demand_ir.zig");
 const support = @import("test_support.zig");
 const passes = @import("passes.zig");
 const cache = @import("optimization_cache.zig");
@@ -81,7 +82,7 @@ fn compile(a: std.mem.Allocator, backing: std.mem.Allocator, text: []const u8, s
     else
         try passes.debugWithScratch(a, backing, &module);
     try support.verified(a, &module, result.plans);
-    const llvm = try emit.emitModuleWithScratch(a, backing, &module, .{ .locator = locator, .source_path = "test.my", .main = .{ .parameters = &.{"out"} }, .analysis = support.analysis(&result), .verify = result.verifying });
+    const llvm = try emit.emitModuleWithScratch(a, backing, &module, .{ .locator = locator, .source_path = "test.my", .main = .{ .parameters = &.{"out"} }, .analysis = support.analysis(&result), .verify = result.emission.verifying });
     return .{ .llvm = llvm, .core = try print.module(a, &module), .result = result, .statistics = if (storage != null) context.statistics else .{} };
 }
 
@@ -346,4 +347,287 @@ test "optimizer cache relocates later declarations and nested inline ancestry af
     try std.testing.expectEqualDeep(oracle.ancestry, cached.ancestry);
     try std.testing.expectEqualDeep(oracle.ancestry, repeated.ancestry);
     try std.testing.expectEqual(@as(usize, 0), total(&repeated.statistics.misses));
+}
+
+const DemandProduced = struct { output: Produced, loaded: usize, omitted: usize, emission: @import("emission_cache.zig").Counts, final_restored: usize };
+const DemandFinalLoader = struct {
+    arena: std.mem.Allocator,
+    context: *cache.Context,
+    result: *passes.Result,
+    restored: usize = 0,
+    fn ensure(pointer: *anyopaque, index: u32) demand_ir.Error!void {
+        const self: *DemandFinalLoader = @ptrCast(@alignCast(pointer));
+        if (self.context.source.module.functions.items[index].signature.linkage != .internal or self.context.lazy.loaded[index]) return;
+        var scratch = std.heap.ArenaAllocator.init(self.arena);
+        defer scratch.deinit();
+        try passes.restoreDeferredFinal(self.arena, scratch.allocator(), self.context, index, self.result);
+        self.restored += 1;
+    }
+};
+const DemandLoader = struct {
+    arena: std.mem.Allocator,
+    context: snapshot.Context,
+    bodies: []snapshot.Wire,
+
+    fn ensure(pointer: *anyopaque, index: u32) demand_ir.Error!void {
+        const self: *DemandLoader = @ptrCast(@alignCast(pointer));
+        self.context.module.functions.items[index] = snapshot.restore(self.arena, self.context, self.bodies[index]) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            error.InvalidSnapshot => return error.CacheMiss,
+        };
+    }
+};
+
+const DemandSettings = struct { omit: bool, force_eager: bool = false };
+fn verifyFinalDigests(a: std.mem.Allocator, locator: emit.Locator, context: *const cache.Context) !void {
+    var fresh = try @import("canonical_ir.zig").Canon.prepare(a, context.source.module, locator);
+    for (context.lazy.finals, context.lazy.loaded, 0..) |metadata, present, index| {
+        if (!present) continue;
+        const record = metadata orelse continue;
+        const digest = try fresh.functionDigest(@intCast(index));
+        try std.testing.expectEqualSlices(u8, &digest, &record.body);
+    }
+}
+
+fn compileDemand(a: std.mem.Allocator, backing: std.mem.Allocator, text: []const u8, storage: *store.Store, omit: bool) !DemandProduced {
+    return compileDemandGuarded(a, backing, text, storage, .{ .omit = omit });
+}
+fn compileDemandGuarded(a: std.mem.Allocator, backing: std.mem.Allocator, text: []const u8, storage: *store.Store, settings: DemandSettings) !DemandProduced {
+    var refusal: build.Refusal = .{};
+    var module = try support.buildSource(a, text, &refusal);
+    const token: u8 = 0;
+    const locator: emit.Locator = .{ .context = &token, .locate = locate };
+    const source_context = try snapshot.Context.init(a, &module, null);
+    const raw_layout = try snapshot.layout(a, source_context);
+    const count = module.functions.items.len;
+    const bodies = try a.alloc(snapshot.Wire, count);
+    const keys = try a.alloc(?store.Digest, count);
+    const loaded = try a.alloc(bool, count);
+    for (module.functions.items, bodies, keys, loaded) |*function, *body, *key, *present| {
+        body.* = try snapshot.capture(a, source_context, function.*);
+        const body_digest = try snapshot.digest(a, source_context, function.*);
+        key.* = storage.key("test-demand-lowering", &.{ &raw_layout, &body_digest });
+        present.* = !settings.omit or function.signature.linkage != .internal;
+        if (!present.*) function.* = .{ .name = function.name, .signature = function.signature, .span = function.span };
+    }
+    var loader: DemandLoader = .{ .arena = a, .context = source_context, .bodies = bodies };
+    var demand: demand_ir.Context = .{ .keys = keys, .loaded = loaded, .pointer = &loader, .ensure_fn = DemandLoader.ensure, .force_eager = settings.force_eager };
+    var context = cache.Context.init(storage, source_context, locator);
+    context.lazy.raw = &demand;
+    var table = try deferred.Table.init(a, count);
+    var result = try passes.runCachedDeferred(a, backing, &module, .verify, &context, &table);
+    try verifyFinalDigests(a, locator, &context);
+    var materialized: usize = 0;
+    for (loaded) |present| materialized += @intFromBool(present);
+    var omitted: usize = 0;
+    for (module.functions.items, 0..) |function, index| {
+        if (function.signature.linkage == .internal and !context.lazy.loaded[index]) omitted += 1;
+    }
+    var final_loader: DemandFinalLoader = .{ .arena = a, .context = &context, .result = &result };
+    const original_source = try source.Source.init(a, "test.my", text);
+    var emission_counts: @import("emission_cache.zig").Counts = .{};
+    var analysis = support.analysis(&result);
+    analysis.effects = if (result.emission.effects) |*summaries| summaries else null;
+    const emission_options: emit.Options = .{ .locator = locator, .source_path = "test.my", .main = .{ .parameters = &.{"out"} }, .analysis = analysis, .verify = result.emission.verifying };
+    const emitted = try @import("emit_units.zig").emitCached(a, backing, &module, emission_options, .{
+        .store = storage,
+        .counts = &emission_counts,
+        .deferred = &table,
+        .receipts = .{
+            .finals = context.lazy.finals,
+            .source = &original_source,
+            .layout = context.layoutDigest().?,
+            .loader = .{ .pointer = &final_loader, .ensure_fn = DemandFinalLoader.ensure },
+        },
+    });
+    const emission_restored = final_loader.restored;
+    for (module.functions.items, 0..) |function, index| {
+        if (function.signature.linkage != .internal) continue;
+        if (!context.lazy.loaded[index]) {
+            try passes.restoreDeferredFinal(a, a, &context, @intCast(index), &result);
+        }
+        result.known[index] = try table.load(a, index);
+    }
+    try support.verified(a, &module, result.plans);
+    const fresh_units = try @import("emit_units.zig").emitWithScratch(a, backing, &module, emission_options);
+    try std.testing.expectEqual(emitted.len, fresh_units.len);
+    for (emitted, fresh_units) |actual, expected| {
+        try std.testing.expectEqualStrings(expected.name, actual.name);
+        try std.testing.expectEqualStrings(expected.llvm, actual.llvm);
+        try std.testing.expectEqual(expected.dependencies.number, actual.dependencies.number);
+        try std.testing.expectEqual(expected.dependencies.math, actual.dependencies.math);
+        try std.testing.expectEqual(expected.dependencies.counting, actual.dependencies.counting);
+    }
+    const llvm = try emit.emitModuleWithScratch(a, backing, &module, .{
+        .locator = locator,
+        .source_path = "test.my",
+        .main = .{ .parameters = &.{"out"} },
+        .analysis = support.analysis(&result),
+        .verify = result.emission.verifying,
+    });
+    return .{
+        .loaded = materialized,
+        .omitted = omitted,
+        .emission = emission_counts,
+        .final_restored = emission_restored,
+        .output = .{ .llvm = llvm, .core = try print.module(a, &module), .result = result, .statistics = context.statistics },
+    };
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-8
+test "optimizer demand leaves identity raw and final bodies unloaded while preserving the eager oracle" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var storage = try store.Store.init(std.testing.allocator, std.testing.io, try temporary.dir.realPathFileAlloc(std.testing.io, ".", a));
+    defer storage.deinit();
+    const oracle = try compile(a, std.testing.allocator, basic, null, .verify);
+    const cold = try compileDemand(a, std.testing.allocator, basic, &storage, false);
+    const warm = try compileDemand(a, std.testing.allocator, basic, &storage, true);
+    try equal(oracle, cold.output);
+    try equal(oracle, warm.output);
+    try std.testing.expect(warm.loaded < cold.loaded);
+    try std.testing.expect(warm.omitted > 0);
+    try std.testing.expectEqual(@as(usize, 0), warm.final_restored);
+    try std.testing.expectEqual(@as(u32, 0), warm.emission.work.keys_built);
+    try std.testing.expect(warm.emission.work.receipts_checked > 0);
+    const edited = try fixture(a, .parameters, true);
+    const changed = try compileDemand(a, std.testing.allocator, edited, &storage, true);
+    const edited_oracle = try compile(a, std.testing.allocator, edited, null, .verify);
+    try equal(edited_oracle, changed.output);
+    for ([_]Scenario{ .callee, .parameters, .effects, .recursion }) |scenario| {
+        const seed_text = try fixture(a, scenario, false);
+        _ = try compileDemand(a, std.testing.allocator, seed_text, &storage, false);
+        const seeded_warm = try compileDemand(a, std.testing.allocator, seed_text, &storage, true);
+        try equal(try compile(a, std.testing.allocator, seed_text, null, .verify), seeded_warm.output);
+        const changed_text = try fixture(a, scenario, true);
+        const demand_changed = try compileDemand(a, std.testing.allocator, changed_text, &storage, true);
+        const fresh_changed = try compile(a, std.testing.allocator, changed_text, null, .verify);
+        try equal(fresh_changed, demand_changed.output);
+    }
+    const moved_text = try std.mem.concat(a, u8, &.{ "\n\n", basic });
+    const moved = try compileDemand(a, std.testing.allocator, moved_text, &storage, true);
+    try equal(try compile(a, std.testing.allocator, moved_text, null, .verify), moved.output);
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-8
+test "restoreDeferredFinal rejects missing metadata and corrupted fact artifacts before changing a body" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    var storage = try store.Store.init(std.testing.allocator, std.testing.io, try directory.dir.realPathFileAlloc(std.testing.io, ".", a));
+    defer storage.deinit();
+    var refusal: build.Refusal = .{};
+    var module = try support.buildSource(a, basic, &refusal);
+    const token: u8 = 0;
+    const locator: emit.Locator = .{ .context = &token, .locate = locate };
+    const source_context = try snapshot.Context.init(a, &module, null);
+    const raw_layout = try snapshot.layout(a, source_context);
+    const count = module.functions.items.len;
+    const keys = try a.alloc(?store.Digest, count);
+    const loaded = try a.alloc(bool, count);
+    const bodies = try a.alloc(snapshot.Wire, count);
+    for (module.functions.items, bodies, keys, loaded) |function, *body, *key, *present| {
+        body.* = try snapshot.capture(a, source_context, function);
+        const digest = try snapshot.digest(a, source_context, function);
+        key.* = storage.key("test-demand-lowering", &.{ &raw_layout, &digest });
+        present.* = true;
+    }
+    var loader: DemandLoader = .{ .arena = a, .context = source_context, .bodies = bodies };
+    var demand: demand_ir.Context = .{ .keys = keys, .loaded = loaded, .pointer = &loader, .ensure_fn = DemandLoader.ensure };
+    var context = cache.Context.init(&storage, source_context, locator);
+    context.lazy.raw = &demand;
+    var table = try deferred.Table.init(a, count);
+    var result = try passes.runCachedDeferred(a, std.testing.allocator, &module, .verify, &context, &table);
+    const metadata = context.lazy.finals[0].?;
+    const before = try print.module(a, &module);
+    context.lazy.loaded[0] = false;
+    context.lazy.finals[0] = null;
+    try std.testing.expectError(error.CacheMiss, passes.restoreDeferredFinal(a, a, &context, 0, &result));
+    try std.testing.expectEqualStrings(before, try print.module(a, &module));
+    context.lazy.finals[0] = metadata;
+    try std.testing.expect(try storage.save(context.factsKey(metadata.analysis.digest), "corrupt fact payload with a valid stage checksum"));
+    try std.testing.expectError(error.CacheMiss, passes.restoreDeferredFinal(a, a, &context, 0, &result));
+    try std.testing.expectEqualStrings(before, try print.module(a, &module));
+    try std.testing.expect(!context.lazy.loaded[0]);
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-8
+test "optimizer demand rejects a stale postfusion catalog guard and an eager recovery refreshes it" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    var storage = try store.Store.init(std.testing.allocator, std.testing.io, try directory.dir.realPathFileAlloc(std.testing.io, ".", a));
+    defer storage.deinit();
+    _ = try compileDemand(a, std.testing.allocator, basic, &storage, false);
+    const DemandRecord = struct { entries: []@import("optimizer_shortcut.zig").Entry, layout: ?store.Digest };
+    const index_key = storage.key("optimizer-demand-v1", &.{ "", &.{@backingInt(passes.Mode.verify)} });
+    var record = (try storage.loadValue(a, index_key, DemandRecord)).?;
+    record.layout.?[0] ^= 1;
+    // The stage checksum is valid, but the independently checked final catalog
+    // guard is stale. No deferred body may be used under this index.
+    try storage.storeValue(index_key, DemandRecord, record);
+    try std.testing.expectError(error.CacheMiss, compileDemand(a, std.testing.allocator, basic, &storage, true));
+    const oracle = try compile(a, std.testing.allocator, basic, null, .verify);
+    const recovered = try compileDemandGuarded(a, std.testing.allocator, basic, &storage, .{ .omit = false, .force_eager = true });
+    const repeated = try compileDemand(a, std.testing.allocator, basic, &storage, true);
+    try equal(oracle, recovered.output);
+    try equal(oracle, repeated.output);
+    try std.testing.expectEqual(@as(u32, 0), repeated.emission.work.keys_built);
+}
+
+fn savedFusionIdentity(a: std.mem.Allocator, storage: *store.Store, text: []const u8, name: []const u8) !bool {
+    var refusal: build.Refusal = .{};
+    const module = try support.buildSource(a, text, &refusal);
+    const Saved = struct { entries: []@import("optimizer_shortcut.zig").Entry, layout: ?store.Digest };
+    const key = storage.key("optimizer-demand-v1", &.{ "", &.{@backingInt(passes.Mode.verify)} });
+    const saved = (try storage.loadValue(a, key, Saved)) orelse return error.TestUnexpectedResult;
+    for (module.functions.items, 0..) |function, index| {
+        if (std.mem.eql(u8, function.name, name)) return saved.entries[index].demand.fused_identity;
+    }
+    return error.TestUnexpectedResult;
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-8
+test "optimizer demand preserves known fusion identity only across matching lowering inputs" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    var storage = try store.Store.init(std.testing.allocator, std.testing.io, try directory.dir.realPathFileAlloc(std.testing.io, ".", a));
+    defer storage.deinit();
+    const original =
+        \\func borrow(s: str) -> bool:
+        \\    return s == "x"
+        \\func main() -> int:
+        \\    if borrow("abc"):
+        \\        return 1
+        \\    return 0
+    ;
+    const fused =
+        \\func borrow(s: str) -> bool:
+        \\    return s[0:1] == "x"
+        \\func main() -> int:
+        \\    if borrow("abc"):
+        \\        return 1
+        \\    return 0
+    ;
+    _ = try compileDemand(a, std.testing.allocator, original, &storage, false);
+    try std.testing.expect(try savedFusionIdentity(a, &storage, original, "borrow"));
+    const changed = try compileDemand(a, std.testing.allocator, fused, &storage, true);
+    try equal(try compile(a, std.testing.allocator, fused, null, .verify), changed.output);
+    try std.testing.expect(!try savedFusionIdentity(a, &storage, fused, "borrow"));
+    const warm = try compileDemand(a, std.testing.allocator, fused, &storage, true);
+    try equal(changed.output, warm.output);
+    try std.testing.expect(!try savedFusionIdentity(a, &storage, fused, "borrow"));
+    const restored = try compileDemand(a, std.testing.allocator, original, &storage, true);
+    try equal(try compile(a, std.testing.allocator, original, null, .verify), restored.output);
+    try std.testing.expect(try savedFusionIdentity(a, &storage, original, "borrow"));
 }

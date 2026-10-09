@@ -455,6 +455,20 @@ fn mixRecord(hash: *Hash, record: typed.Record, records: []const typed.Record) v
             std.mem.writeInt(u16, &encoded, position, .little);
             hash.update(&encoded);
         }
+        switch (callback.return_origin) {
+            .fresh => frame(hash, "fresh"),
+            .unknown => frame(hash, "unknown"),
+            .params => |positions| {
+                frame(hash, "params");
+                std.mem.writeInt(u64, &count, positions.len, .little);
+                hash.update(&count);
+                for (positions) |position| {
+                    var encoded: [2]u8 = undefined;
+                    std.mem.writeInt(u16, &encoded, position, .little);
+                    hash.update(&encoded);
+                }
+            },
+        }
     }
 }
 

@@ -19,6 +19,7 @@ pub const Prepared = struct {
     options: llvm.Options,
     catalog: *const constants.Catalog,
     deferred: ?*const deferred_facts.Table = null,
+    ready: []bool = &.{},
 
     /// Prepare immutable function identities before individual unit graph walks.
     pub fn init(a: std.mem.Allocator, module: *const ir.Module, options: llvm.Options, catalog: *const constants.Catalog) Error!Prepared {
@@ -27,6 +28,13 @@ pub const Prepared = struct {
         errdefer a.free(digests);
         for (digests, 0..) |*digest, index| digest.* = try canon.functionDigest(@intCast(index));
         return .{ .canon = canon, .digests = digests, .options = options, .catalog = catalog };
+    }
+
+    /// Demand emission hashes only bodies whose compact receipt missed.
+    pub fn initLazy(a: std.mem.Allocator, module: *const ir.Module, options: llvm.Options, catalog: *const constants.Catalog) Error!Prepared {
+        const ready = try a.alloc(bool, module.functions.items.len);
+        @memset(ready, false);
+        return .{ .canon = try identity.Canon.prepare(a, module, options.locator), .digests = try a.alloc(Digest, ready.len), .options = options, .catalog = catalog, .ready = ready };
     }
 
     /// Hash exactly the immutable inputs a render can consult, without global IR IDs.
@@ -59,6 +67,10 @@ pub const Prepared = struct {
 
     fn functionInputs(self: *Prepared, hash: *std.crypto.hash.Blake3, graph: *Graph, selection: llvm.Selection, index: u32) Error!void {
         const function = self.canon.module.functions.items[index];
+        if (self.ready.len != 0 and !self.ready[index]) {
+            @constCast(self.digests)[index] = try self.canon.functionDigest(index);
+            self.ready[index] = true;
+        }
         hash.update(&self.digests[index]);
         value(hash, selection.exported[index]);
         value(hash, selection.symbols[index]);
@@ -206,3 +218,110 @@ fn value(hash: *std.crypto.hash.Blake3, item: anytype) void {
         else => @compileError("unsupported emission-key input: " ++ @typeName(T)),
     }
 }
+
+/// Conservative receipts bind all metadata a renderer can consult while final
+/// artifact keys bind optimized bodies and their analysis/provenance dependencies.
+/// Ordinary strings are covered by those body keys, not a program-wide guard.
+pub const Compact = struct {
+    guard: Digest,
+    context: @import("emission_cache.zig").Context,
+    sources: std.StringHashMapUnmanaged(Digest) = .empty,
+
+    /// Prepare one conservative metadata guard shared by all unit receipts.
+    pub fn init(a: std.mem.Allocator, module: *const ir.Module, options: llvm.Options, catalog: *const constants.Catalog, exported: []const bool, context: @import("emission_cache.zig").Context) std.mem.Allocator.Error!?Compact {
+        const receipt = context.receipts orelse return null;
+        const layout = receipt.layout;
+        const summaries = options.analysis.effects orelse return null;
+        var hash = std.crypto.hash.Blake3.init(.{});
+        value(&hash, "core-emission-receipt-v1");
+        value(&hash, layout);
+        value(&hash, options.target);
+        value(&hash, options.verify);
+        value(&hash, options.counters);
+        value(&hash, options.source_path);
+        value(&hash, options.main);
+        value(&hash, exported);
+        for (module.functions.items, 0..) |function, index| {
+            value(&hash, function.name);
+            value(&hash, function.signature);
+            value(&hash, summaries.may[index]);
+            for (summaries.params[index]) |effect| {
+                for ([_]@import("effects.zig").Paths{ effect.reads, effect.writes, effect.when_true, effect.when_false }) |paths| {
+                    value(&hash, paths.whole);
+                    value(&hash, paths.items.items);
+                }
+            }
+        }
+        // Sort names explicitly: hash-map allocation history is not an input.
+        const names = try a.alloc([]const u8, catalog.globals.count());
+        var iterator = catalog.globals.keyIterator();
+        var next: usize = 0;
+        while (iterator.next()) |name| : (next += 1) names[next] = name.*;
+        std.mem.sort([]const u8, names, {}, struct {
+            fn less(_: void, left: []const u8, right: []const u8) bool {
+                return std.mem.lessThan(u8, left, right);
+            }
+        }.less);
+        value(&hash, catalog.prelude);
+        for (names) |name| {
+            value(&hash, name);
+            value(&hash, catalog.globals.get(name).?);
+        }
+        var guard: Digest = undefined;
+        hash.final(&guard);
+        return .{ .guard = guard, .context = context };
+    }
+
+    /// Bind selected final handles and their source files without body walks.
+    pub fn key(self: *Compact, a: std.mem.Allocator, module: *const ir.Module, options: llvm.Options, selection: llvm.Selection) std.mem.Allocator.Error!?Digest {
+        var hash = std.crypto.hash.Blake3.init(.{});
+        value(&hash, self.guard);
+        value(&hash, selection.source_path);
+        value(&hash, selection.entry);
+        value(&hash, selection.functions);
+        for (selection.functions) |index| {
+            const function = module.functions.items[index];
+            value(&hash, selection.symbols[index]);
+            const path = options.locator.locate(options.locator.context, function.span).path;
+            const source = try self.sourceIdentity(a, if (path.len == 0) options.source_path else path) orelse return null;
+            value(&hash, source);
+            if (index < self.context.receipts.?.finals.len) if (self.context.receipts.?.finals[index]) |final| {
+                value(&hash, final.key);
+                value(&hash, final.body);
+                value(&hash, final.analysis.digest);
+                value(&hash, final.state.plans);
+                for (final.outgoing) |target| {
+                    if (target >= selection.symbols.len) return null;
+                    value(&hash, target);
+                    value(&hash, selection.symbols[target]);
+                }
+                continue;
+            };
+            // Generated runtime adapters render from their name and descriptor
+            // metadata; their placeholder IR is deliberately not visited.
+            if (!values.generated(&function)) return null;
+            value(&hash, function.name);
+        }
+        if (selection.entry) {
+            value(&hash, module.entry);
+            value(&hash, selection.symbols[module.entry]);
+        }
+        var digest: Digest = undefined;
+        hash.final(&digest);
+        return self.context.store.key("llvm-compact-receipt-v1", &.{&digest});
+    }
+
+    fn sourceIdentity(self: *Compact, a: std.mem.Allocator, path: []const u8) std.mem.Allocator.Error!?Digest {
+        if (self.sources.get(path)) |digest| return digest;
+        const source = self.context.receipts.?.source;
+        const original = if (source.origins.len == 0) source else blk: {
+            for (source.origins) |*origin| if (std.mem.eql(u8, origin.original.path, path)) break :blk &origin.original;
+            return null;
+        };
+        if (!std.mem.eql(u8, original.path, path)) return null;
+        var digest: Digest = undefined;
+        std.crypto.hash.Blake3.hash(original.bytes, &digest, .{});
+        try self.sources.put(a, path, digest);
+        return digest;
+    }
+};

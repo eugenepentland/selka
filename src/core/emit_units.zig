@@ -10,6 +10,10 @@ const cache = @import("emission_cache.zig");
 const key_policy = @import("emission_key.zig");
 const deferred_facts = @import("deferred_facts.zig");
 const facts = @import("facts.zig");
+const helper_format = "myl.helper.{s}";
+const module_format = "module-{s}";
+const content_format = "{s}-{s}";
+pub const Error = llvm.Error || error{CacheMiss};
 
 /// Native input suffix shared by the driver and ordered test-program identity.
 pub const native_extension = @import("native_artifact.zig").extension;
@@ -20,10 +24,8 @@ pub const Unit = struct {
     source_path: []const u8,
     kind: Kind,
     llvm: []const u8,
-    number: bool,
-    math: bool,
-    /// Emitted with `--counters`: the build links the counting runtime (`count_runtime.zig`).
-    counting: bool,
+    dependencies: cache.Dependencies,
+    artifact: ?cache.NativeArtifact = null,
 };
 
 /// Source modules, instantiated functions, compiler adapters, the C entry, and the
@@ -71,6 +73,13 @@ const Partition = struct {
 };
 
 fn partition(a: std.mem.Allocator, module: *const ir.Module, given: llvm.Options) llvm.Error!Partition {
+    return partitionDemand(a, module, given, null) catch |err| switch (err) {
+        error.CacheMiss => return error.UnsupportedInstruction,
+        else => |other| return other,
+    };
+}
+
+fn partitionDemand(a: std.mem.Allocator, module: *const ir.Module, given: llvm.Options, context: ?cache.Context) Error!Partition {
     var options = given;
     if (options.analysis.effects == null) {
         const summaries = try a.create(effects.Summaries);
@@ -101,8 +110,18 @@ fn partition(a: std.mem.Allocator, module: *const ir.Module, given: llvm.Options
         owner[index] = target;
         try groups.items[target].functions.append(a, @intCast(index));
     }
-    for (module.functions.items, 0..) |function, index| {
-        for (function.insts.items) |inst| {
+    for (module.functions.items, 0..) |_, index| {
+        if (context) |ctx| {
+            if (ctx.receipts) |receipt| if (index < receipt.finals.len) if (receipt.finals[index]) |final| {
+                for (final.outgoing) |target| {
+                    if (target >= owner.len) return error.UnsupportedInstruction;
+                    if (owner[target] != null and owner[target] != owner[index]) exported[target] = true;
+                }
+                continue;
+            };
+            try ctx.ensure(@intCast(index));
+        }
+        for (module.functions.items[index].insts.items) |inst| {
             const target: usize = switch (inst.op) {
                 .call => inst.a.index(),
                 .func_ref => @intCast(inst.data),
@@ -154,7 +173,7 @@ pub fn emitWithScratch(allocator: std.mem.Allocator, backing: std.mem.Allocator,
             .constants = &catalog,
         });
         defer backing.free(seed);
-        symbols[index] = try std.fmt.allocPrint(a, "myl.helper.{s}", .{try digest(a, seed)});
+        symbols[index] = try std.fmt.allocPrint(a, helper_format, .{try digest(a, seed)});
     }
     var units: std.ArrayList(Unit) = .empty;
     errdefer for (units.items) |emitted| {
@@ -173,7 +192,7 @@ pub fn emitWithScratch(allocator: std.mem.Allocator, backing: std.mem.Allocator,
             .constants = &catalog,
         });
         errdefer allocator.free(text);
-        const name = if (group.kind == .module) try std.fmt.allocPrint(a, "module-{s}", .{try digest(a, group.path)}) else try std.fmt.allocPrint(a, "{s}-{s}", .{ @tagName(group.kind), try digest(a, text) });
+        const name = if (group.kind == .module) try std.fmt.allocPrint(a, module_format, .{try digest(a, group.path)}) else try std.fmt.allocPrint(a, content_format, .{ @tagName(group.kind), try digest(a, text) });
         try append(allocator, a, &units, &names, unit(name, group.path, group.kind, text));
     }
     {
@@ -197,7 +216,10 @@ fn append(allocator: std.mem.Allocator, scratch: std.mem.Allocator, units: *std.
         const previous = units.items[entry.value_ptr.*];
         // Equal closed adapters may arise from separate nominal source types.
         // Their callers already share the canonical symbol; emit its body once.
-        if (previous.kind != next.kind or !std.mem.eql(u8, previous.llvm, next.llvm)) return error.UnsupportedInstruction;
+        if (previous.kind != next.kind or !std.meta.eql(previous.dependencies, next.dependencies)) return error.UnsupportedInstruction;
+        if (previous.llvm.len != 0 and next.llvm.len != 0) {
+            if (!std.mem.eql(u8, previous.llvm, next.llvm)) return error.UnsupportedInstruction;
+        } else if (previous.artifact == null or next.artifact == null) return error.UnsupportedInstruction;
         allocator.free(next.llvm);
         return;
     }
@@ -225,33 +247,42 @@ fn digest(a: std.mem.Allocator, text: []const u8) ![]const u8 {
 pub fn unit(name: []const u8, path: []const u8, kind: Kind, text: []const u8) Unit {
     const math = std.mem.indexOf(u8, text, "llvm.sin.f64") != null or std.mem.indexOf(u8, text, "llvm.cos.f64") != null;
     const counting = std.mem.indexOf(u8, text, "@myl_count_current") != null;
-    return .{ .name = name, .source_path = path, .kind = kind, .llvm = text, .number = number_runtime.needed(text), .math = math, .counting = counting };
+    return .{ .name = name, .source_path = path, .kind = kind, .llvm = text, .dependencies = .{ .number = number_runtime.needed(text), .math = math, .counting = counting } };
 }
 
 fn emissionArtifact(text: []const u8) cache.Artifact {
     const dependencies = unit("", "", .program, text);
-    return .{ .text = text, .number = dependencies.number, .math = dependencies.math, .counting = dependencies.counting };
+    return .{ .text = text, .number = dependencies.dependencies.number, .math = dependencies.dependencies.math, .counting = dependencies.dependencies.counting };
 }
 
 /// Reuse completed LLVM by canonical inputs; changed units render in bounded batches.
 /// `backing` must support concurrent allocation; `allocator` is coordinator-only.
-pub fn emitCached(allocator: std.mem.Allocator, backing: std.mem.Allocator, module: *const ir.Module, options: llvm.Options, context: cache.Context) llvm.Error![]Unit {
+pub fn emitCached(allocator: std.mem.Allocator, backing: std.mem.Allocator, module: *const ir.Module, options: llvm.Options, context: cache.Context) Error![]Unit {
     var scratch = std.heap.ArenaAllocator.init(backing);
     defer scratch.deinit();
     const a = scratch.allocator();
-    var plan = try partition(a, module, options);
-    var keys = key_policy.Prepared.init(a, module, plan.options, &plan.catalog) catch |err| switch (err) {
-        error.UnknownMetadata => return emitUncached(allocator, backing, module, options, context.deferred),
+    var plan = try partitionDemand(a, module, options, context);
+    var keys = (if (context.receipts != null) key_policy.Prepared.initLazy(a, module, plan.options, &plan.catalog) else key_policy.Prepared.init(a, module, plan.options, &plan.catalog)) catch |err| switch (err) {
+        error.UnknownMetadata => {
+            for (module.functions.items, 0..) |_, index| try context.ensure(@intCast(index));
+            return emitUncached(allocator, backing, module, options, context.deferred);
+        },
         error.OutOfMemory => return error.OutOfMemory,
         error.UnsupportedEntry => return error.UnsupportedEntry,
         error.UnsupportedInstruction => return error.UnsupportedInstruction,
     };
     keys.deferred = context.deferred;
-    try helperSymbols(a, backing, &plan, &keys, context);
+    var compact = try key_policy.Compact.init(a, module, plan.options, &plan.catalog, plan.exported, context);
+    try helperSymbols(a, backing, &plan, &keys, &compact, context);
     const jobs = try a.alloc(EmissionJob, plan.groups.items.len + 1);
-    for (plan.groups.items, jobs[0..plan.groups.items.len]) |group, *job| job.* = try emissionJob(backing, &plan, &keys, context, group, false);
-    jobs[jobs.len - 1] = try emissionJob(backing, &plan, &keys, context, .{ .kind = .entry, .path = options.source_path }, true);
-    defer for (jobs) |*job| job.deinit();
+    var initialized: usize = 0;
+    defer for (jobs[0..initialized]) |*job| job.deinit();
+    for (plan.groups.items, jobs[0..plan.groups.items.len]) |group, *job| {
+        job.* = try emissionJob(.{ .arena = a, .backing = backing, .plan = &plan, .keys = &keys, .compact = &compact, .context = context }, group, false);
+        initialized += 1;
+    }
+    jobs[jobs.len - 1] = try emissionJob(.{ .arena = a, .backing = backing, .plan = &plan, .keys = &keys, .compact = &compact, .context = context }, .{ .kind = .entry, .path = options.source_path }, true);
+    initialized += 1;
     var result: std.ArrayList(Unit) = .empty;
     errdefer for (result.items) |emitted| {
         allocator.free(emitted.name);
@@ -272,15 +303,18 @@ pub fn emitCached(allocator: std.mem.Allocator, backing: std.mem.Allocator, modu
             const artifact = job.artifact.?;
             const text = try allocator.dupe(u8, artifact.text);
             errdefer allocator.free(text);
-            const name = try emissionName(a, job, text);
+            const name = if (context.native_handles and job.receipt_hit != null) try emissionNameDigest(a, job, job.receipt_hit.?.text_digest) else try emissionName(a, job, text);
+            if (context.counts) |counts| {
+                counts.work.llvm_loaded_bytes += text.len;
+                if (context.native_handles and text.len == 0) counts.work.native_handles += 1;
+            }
             try append(allocator, a, &result, &names, .{
                 .name = name,
                 .source_path = job.group.path,
                 .kind = job.group.kind,
                 .llvm = text,
-                .number = artifact.number,
-                .math = artifact.math,
-                .counting = artifact.counting,
+                .dependencies = .{ .number = artifact.number, .math = artifact.math, .counting = artifact.counting },
+                .artifact = if (context.native_handles) .{ .store = context.store, .key = job.key } else null,
             });
             if (context.counts) |counts| {
                 counts.units += 1;
@@ -295,11 +329,23 @@ pub fn emitCached(allocator: std.mem.Allocator, backing: std.mem.Allocator, modu
 
 fn emissionName(a: std.mem.Allocator, job: *const EmissionJob, text: []const u8) llvm.Error![]const u8 {
     if (job.entry) return "entry";
-    if (job.group.kind == .module) return std.fmt.allocPrint(a, "module-{s}", .{try digest(a, job.group.path)});
-    return std.fmt.allocPrint(a, "{s}-{s}", .{ @tagName(job.group.kind), try digest(a, text) });
+    if (job.group.kind == .module) return std.fmt.allocPrint(a, module_format, .{try digest(a, job.group.path)});
+    return std.fmt.allocPrint(a, content_format, .{ @tagName(job.group.kind), try digest(a, text) });
 }
 
-fn emitUncached(allocator: std.mem.Allocator, backing: std.mem.Allocator, module: *const ir.Module, options: llvm.Options, deferred: ?*const deferred_facts.Table) llvm.Error![]Unit {
+fn emissionNameDigest(a: std.mem.Allocator, job: *const EmissionJob, text_digest: key_policy.Digest) llvm.Error![]const u8 {
+    if (job.entry) return "entry";
+    if (job.group.kind == .module) return std.fmt.allocPrint(a, module_format, .{try digest(a, job.group.path)});
+    return std.fmt.allocPrint(a, content_format, .{ @tagName(job.group.kind), std.fmt.bytesToHex(text_digest, .lower) });
+}
+
+fn receiptArtifact(key: key_policy.Digest, artifact: cache.Artifact) cache.Receipt {
+    var text_digest: key_policy.Digest = undefined;
+    std.crypto.hash.Blake3.hash(artifact.text, &text_digest, .{});
+    return .{ .artifact = key, .text_digest = text_digest, .dependencies = .{ .number = artifact.number, .math = artifact.math, .counting = artifact.counting } };
+}
+
+fn emitUncached(allocator: std.mem.Allocator, backing: std.mem.Allocator, module: *const ir.Module, options: llvm.Options, deferred: ?*const deferred_facts.Table) Error![]Unit {
     if (deferred == null) return emitWithScratch(allocator, backing, module, options);
     var scratch = std.heap.ArenaAllocator.init(backing);
     defer scratch.deinit();
@@ -310,7 +356,7 @@ fn emitUncached(allocator: std.mem.Allocator, backing: std.mem.Allocator, module
     return emitWithScratch(allocator, backing, module, loaded);
 }
 
-fn factsOptions(a: std.mem.Allocator, given: llvm.Options, table: *const deferred_facts.Table, functions: []const u32) llvm.Error!llvm.Options {
+fn factsOptions(a: std.mem.Allocator, given: llvm.Options, table: *const deferred_facts.Table, functions: []const u32) Error!llvm.Options {
     var needed = false;
     for (functions) |index| needed = needed or table.identity(index) != null;
     if (!needed) return given;
@@ -326,7 +372,7 @@ fn factsOptions(a: std.mem.Allocator, given: llvm.Options, table: *const deferre
     return options;
 }
 
-fn helperSymbols(a: std.mem.Allocator, backing: std.mem.Allocator, plan: *Partition, keys: *key_policy.Prepared, context: cache.Context) llvm.Error!void {
+fn helperSymbols(a: std.mem.Allocator, backing: std.mem.Allocator, plan: *Partition, keys: *key_policy.Prepared, compact: *?key_policy.Compact, context: cache.Context) Error!void {
     for (plan.groups.items) |group| {
         const index = group.functions.items[0];
         if (group.kind != .helper or !values.generated(&plan.module.functions.items[index])) continue;
@@ -334,6 +380,24 @@ fn helperSymbols(a: std.mem.Allocator, backing: std.mem.Allocator, plan: *Partit
         var local = std.heap.ArenaAllocator.init(backing);
         defer local.deinit();
         const temp = local.allocator();
+        const receipt = if (compact.*) |*policy| try policy.key(a, plan.module, plan.options, plan.selection(group, false)) else null;
+        if (receipt) |receipt_key| {
+            if (context.counts) |counts| counts.work.receipts_checked += 1;
+            if (try context.store.loadValue(temp, receipt_key, cache.Receipt)) |record| {
+                if (context.native_handles) {
+                    plan.symbols[index] = try std.fmt.allocPrint(a, helper_format, .{std.fmt.bytesToHex(record.text_digest, .lower)});
+                    if (context.counts) |counts| counts.seeds_reused += 1;
+                    continue;
+                }
+                if (try context.store.loadValue(temp, record.artifact, cache.Artifact)) |artifact| {
+                    plan.symbols[index] = try std.fmt.allocPrint(a, helper_format, .{try digest(a, artifact.text)});
+                    if (context.counts) |counts| counts.seeds_reused += 1;
+                    continue;
+                }
+            }
+        }
+        try context.ensure(index);
+        if (context.counts) |counts| counts.work.keys_built += 1;
         const input = keys.key(temp, plan.selection(group, false)) catch |err| return emissionKeyError(err);
         const key = context.store.key("llvm-helper-seed-v1", &.{&input});
         const served = context.store.loadValue(temp, key, cache.Artifact) catch return error.OutOfMemory;
@@ -342,7 +406,8 @@ fn helperSymbols(a: std.mem.Allocator, backing: std.mem.Allocator, plan: *Partit
             try context.store.storeValue(key, cache.Artifact, emissionArtifact(text));
             break :blk text;
         };
-        plan.symbols[index] = try std.fmt.allocPrint(a, "myl.helper.{s}", .{try digest(a, seed)});
+        if (receipt) |receipt_key| try context.store.storeValue(receipt_key, cache.Receipt, receiptArtifact(key, emissionArtifact(seed)));
+        plan.symbols[index] = try std.fmt.allocPrint(a, helper_format, .{try digest(a, seed)});
         if (context.counts) |counts| {
             if (served != null) counts.seeds_reused += 1 else counts.seeds_rendered += 1;
         }
@@ -356,13 +421,36 @@ fn emissionKeyError(err: key_policy.Error) llvm.Error {
     };
 }
 
-fn emissionJob(backing: std.mem.Allocator, plan: *const Partition, keys: *key_policy.Prepared, context: cache.Context, group: Group, entry: bool) llvm.Error!EmissionJob {
+const JobInputs = struct { arena: std.mem.Allocator, backing: std.mem.Allocator, plan: *const Partition, keys: *key_policy.Prepared, compact: *?key_policy.Compact, context: cache.Context };
+
+fn emissionJob(inputs: JobInputs, group: Group, entry: bool) Error!EmissionJob {
+    const a = inputs.arena;
+    const backing = inputs.backing;
+    const plan = inputs.plan;
+    const keys = inputs.keys;
+    const compact = inputs.compact;
+    const context = inputs.context;
+    const receipt = if (compact.*) |*policy| try policy.key(a, plan.module, plan.options, plan.selection(group, entry)) else null;
+    var job: EmissionJob = .{ .plan = plan, .context = context, .group = group, .entry = entry, .key = @splat(0), .receipt = receipt, .weight = 1, .backing = backing, .scratch = .init(backing) };
+    errdefer job.deinit();
+    if (receipt) |receipt_key| {
+        if (context.counts) |counts| counts.work.receipts_checked += 1;
+        if (try context.store.loadValue(job.scratch.allocator(), receipt_key, cache.Receipt)) |record| {
+            job.key = record.artifact;
+            job.receipt_hit = record;
+            return job;
+        }
+    }
+    for (group.functions.items) |index| try context.ensure(index);
     var scratch = std.heap.ArenaAllocator.init(backing);
     defer scratch.deinit();
+    if (context.counts) |counts| counts.work.keys_built += 1;
     const input = keys.key(scratch.allocator(), plan.selection(group, entry)) catch |err| return emissionKeyError(err);
     var instructions: usize = 0;
     for (group.functions.items) |index| instructions += plan.module.functions.items[index].insts.items.len;
-    return .{ .plan = plan, .context = context, .group = group, .entry = entry, .key = context.store.key("llvm-unit-v1", &.{&input}), .weight = cache.weight(instructions), .backing = backing, .scratch = .init(backing) };
+    job.key = context.store.key("llvm-unit-v1", &.{&input});
+    job.weight = cache.weight(instructions);
+    return job;
 }
 
 const EmissionJob = struct {
@@ -371,12 +459,14 @@ const EmissionJob = struct {
     group: Group,
     entry: bool,
     key: key_policy.Digest,
+    receipt: ?key_policy.Digest = null,
     weight: usize,
     backing: std.mem.Allocator,
     scratch: std.heap.ArenaAllocator,
     artifact: ?cache.Artifact = null,
-    failure: ?llvm.Error = null,
+    failure: ?Error = null,
     hit: bool = false,
+    receipt_hit: ?cache.Receipt = null,
 
     fn deinit(self: *EmissionJob) void {
         self.scratch.deinit();
@@ -390,21 +480,34 @@ const EmissionJob = struct {
         };
     }
 
-    fn execute(self: *EmissionJob) llvm.Error!void {
+    fn execute(self: *EmissionJob) Error!void {
+        if (self.artifact != null) return;
         const a = self.scratch.allocator();
+        if (self.receipt_hit) |record| {
+            if (self.context.native_handles) {
+                self.artifact = .{ .text = "", .number = record.dependencies.number, .math = record.dependencies.math, .counting = record.dependencies.counting };
+                self.hit = true;
+                return;
+            }
+            self.artifact = try self.context.store.loadValue(a, self.key, cache.Artifact) orelse return error.CacheMiss;
+            self.hit = true;
+            return;
+        }
         self.artifact = self.context.store.loadValue(a, self.key, cache.Artifact) catch return error.OutOfMemory;
         if (self.artifact != null) {
             self.hit = true;
+            if (self.receipt) |receipt| try self.context.store.storeValue(receipt, cache.Receipt, receiptArtifact(self.key, self.artifact.?));
             return;
         }
         const options = if (self.context.deferred) |table| try factsOptions(a, self.plan.options, table, self.group.functions.items) else self.plan.options;
         const text = try llvm.emitUnitWithScratch(a, self.backing, self.plan.module, options, self.plan.selection(self.group, self.entry));
         self.artifact = emissionArtifact(text);
         self.context.store.storeValue(self.key, cache.Artifact, self.artifact.?) catch return error.OutOfMemory;
+        if (self.receipt) |receipt| try self.context.store.storeValue(receipt, cache.Receipt, receiptArtifact(self.key, self.artifact.?));
     }
 };
 
-fn runBatch(a: std.mem.Allocator, jobs: []EmissionJob) llvm.Error!void {
+fn runBatch(a: std.mem.Allocator, jobs: []EmissionJob) Error!void {
     const threads = try a.alloc(std.Thread, jobs.len - 1);
     var started: usize = 0;
     for (threads, jobs[1..]) |*thread, *job| {

@@ -165,7 +165,7 @@ fn buildCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
         error.SourceError, error.Unsupported => 1,
         error.PolicyDenied => 3,
         error.ConfigurationFailed => 2,
-        error.ToolFailed, error.WriteFailed, error.InvalidIr => 2,
+        error.ToolFailed, error.WriteFailed, error.InvalidIr, error.CacheMiss => 2,
     };
     try write(init, report.items);
     return status;

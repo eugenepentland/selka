@@ -278,6 +278,12 @@ const Checker = struct {
         return self.finishFunction(i, function, body);
     }
     fn checkFunction(self: *Checker, i: usize) Error!typed.Function {
+        // Loop targets belong to one body, including synthesized loops. Keeping
+        // their numbering local makes fresh and retained bodies identical even
+        // when preceding bodies were skipped or acquired another loop. CoreIR
+        // inlining separately assigns IDs in the caller when it moves loops.
+        std.debug.assert(self.loops.active.items.len == 0);
+        self.loops.next = 0;
         self.checked_index = i;
         if (i >= self.lambda_start and i < self.lambda_start + self.syntax.lambdas.len)
             return self.checkLambdaFunction(i - self.lambda_start);

@@ -17,6 +17,7 @@ const shortcut_mod = @import("optimizer_shortcut.zig");
 
 /// Passes only allocate.
 pub const Error = std.mem.Allocator.Error;
+pub const CachedError = @import("demand_ir.zig").Error;
 
 /// How the fact pass runs: `trusted` facts drive the vector lowering; `verify` keeps
 /// comparisons unfolded and plans no vectors; `sabotage`, `sabotage_widening` and
@@ -32,7 +33,7 @@ pub const Result = struct {
     /// Exactly the same pass events, indexed by physical Core function.
     per_function: []FunctionStats = &.{},
     /// Verify builds re-emit checks the fact pass has proved.
-    verifying: bool = false,
+    emission: struct { verifying: bool = false, effects: ?effects.Summaries = null } = .{},
     /// What ownership did: copy-on-write forms, retains and releases.
     own: own.Stats = .{},
     /// Sparse source frames of instructions and blocks cloned by these passes.
@@ -114,24 +115,25 @@ pub fn run(arena: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Resul
 
 /// Keep final IR/facts on `arena`; use `backing` for independently reclaimable pass storage.
 pub fn runWithScratch(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Result {
-    return runInternal(arena, backing, module, mode, null);
+    return runInternal(arena, backing, module, mode, null) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        error.CacheMiss => unreachable, // No cache or lowering handles on this path.
+    };
 }
 
 /// Apply stages in the same order as `runWithScratch`, restoring only validated functions.
-pub fn runCached(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir.Module, mode: Mode, cache: *cache_mod.Context) Error!Result {
+pub fn runCached(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir.Module, mode: Mode, cache: *cache_mod.Context) CachedError!Result {
     return runInternal(arena, backing, module, mode, cache);
 }
 
 /// Development emission retains compact verified facts and decodes only LLVM misses.
-pub fn runCachedDeferred(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir.Module, mode: Mode, cache: *cache_mod.Context, table: *deferred_facts.Table) Error!Result {
+pub fn runCachedDeferred(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir.Module, mode: Mode, cache: *cache_mod.Context, table: *deferred_facts.Table) CachedError!Result {
     cache.deferred = table;
     return runInternal(arena, backing, module, mode, cache);
 }
 
-fn runInternal(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir.Module, mode: Mode, cache: ?*cache_mod.Context) Error!Result {
-    try @import("fuse_text.zig").whitespace(arena, module);
-    _ = try @import("fuse_slice_key.zig").run(arena, module);
-    if (cache) |context| try context.prepare(arena);
+fn runInternal(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir.Module, mode: Mode, cache: ?*cache_mod.Context) CachedError!Result {
+    var shortcut = try prepareOptimizer(arena, backing, module, mode, cache);
     var result: Result = .{
         .known = try arena.alloc(?facts.Facts, module.functions.items.len),
         .plans = try arena.alloc([]const vector.Plan, module.functions.items.len),
@@ -140,7 +142,6 @@ fn runInternal(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir
     @memset(result.known, null);
     @memset(result.plans, &.{});
     @memset(result.per_function, .{});
-    var shortcut = try prepareShortcut(arena, cache, mode);
     const green: []const bool = if (shortcut) |index| index.green else &.{};
     const inlined = try arena.alloc(u32, module.functions.items.len);
     @memset(inlined, 0);
@@ -160,7 +161,7 @@ fn runInternal(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir
         return result;
     }
     const verify = mode != .trusted;
-    result.verifying = verify;
+    result.emission.verifying = verify;
     const sabotage: facts.Sabotage = switch (mode) {
         .sabotage => .remainder,
         .sabotage_widening => .widening,
@@ -172,7 +173,7 @@ fn runInternal(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir
     // intervals; `parameterRanges` turns them into the parameter intervals the real
     // pass starts from. It changes no function. It runs callees first, so each
     // function's return interval (NEW-CORE-F1-OVERFLOW-3) is known at its calls.
-    var parameter_summary = try ParameterSummary.init(arena, module);
+    var parameter_summary = try ParameterSummary.initIndexed(arena, module, if (shortcut) |*state| state else null);
     // Only compact call/return summaries survive the exploratory pass. These
     // arenas have independent backing so resetting them really releases memory.
     var temporary = std.heap.ArenaAllocator.init(backing);
@@ -192,6 +193,9 @@ fn runInternal(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir
     }, &temporary, &scratch, &parameter_summary);
     const parameters = parameter_summary.finish();
     if (shortcut) |*state| try state.parameters(arena, parameters);
+    if (cache) |context| if (context.lazy.raw) |handles| {
+        for (green, 0..) |green_body, index| if (!green_body) try handles.ensure(@intCast(index));
+    };
     // Closed caller bounds can prove an affine callback safe only after the
     // all-call parameter pass. Deliberately corrupted facts cannot prove safety.
     if (sabotage == .none) result.counts.inlined += if (cache) |context|
@@ -199,10 +203,66 @@ fn runInternal(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir
     else
         try inline_leaves.withParametersCountedWithScratch(arena, backing, module, parameters, &result.provenance, inlined);
     // The effect summaries of the inlined module; the passes below keep every function's meaning.
-    const summaries = try effects.analyze(arena, module);
+    const summaries = try prepareEffects(arena, module, cache, if (shortcut) |*state| state else null);
+    try finalFunctions(.{ .arena = arena, .backing = backing, .temporary = &temporary, .scratch = &scratch }, module, cache, .{
+        .result = &result,
+        .effects = &summaries,
+        .parameters = parameters,
+        .returns = returns,
+        .inlined = inlined,
+        .options = .{ .mode = mode, .verify = verify, .sabotage = sabotage },
+        .shortcut = if (shortcut) |*state| state else null,
+    });
+    try retainEmissionEffects(arena, module, cache, if (shortcut) |*state| state else null, &result);
+    if (shortcut) |*state| try state.save();
+    return result;
+}
+
+const FinalMemory = struct { arena: std.mem.Allocator, backing: std.mem.Allocator, temporary: *std.heap.ArenaAllocator, scratch: *std.heap.ArenaAllocator };
+const FinalRound = struct {
+    result: *Result,
+    effects: *const effects.Summaries,
+    parameters: []const []const ?facts.Interval,
+    returns: []const ?facts.Interval,
+    inlined: []const u32,
+    options: struct { mode: Mode, verify: bool, sabotage: facts.Sabotage },
+    shortcut: ?*shortcut_mod.Index,
+};
+
+fn finalFunctions(memory: FinalMemory, module: *ir.Module, cache: ?*cache_mod.Context, round: FinalRound) CachedError!void {
+    const arena = memory.arena;
+    const backing = memory.backing;
+    const temporary = memory.temporary;
+    const scratch = memory.scratch;
+    const result = round.result;
+    const summaries = round.effects.*;
+    const parameters = round.parameters;
+    const returns = round.returns;
+    const inlined = round.inlined;
+    const mode = round.options.mode;
+    const verify = round.options.verify;
+    const sabotage = round.options.sabotage;
+    const shortcut = round.shortcut;
+    const green: []const bool = if (shortcut) |index| index.green else &.{};
     for (module.functions.items, result.known, result.plans, parameters, 0..) |*function, *slot, *plan, params, index| {
         if (function.signature.linkage != .internal) continue;
         result.per_function[index].counts.inlined = inlined[index];
+        if (cache) |context| if (context.lazy.raw != null and index < green.len and green[index]) {
+            const metadata = shortcut.?.entries[index].demand.metadata orelse return error.CacheMiss;
+            context.lazy.finals[index] = metadata;
+            context.lazy.loaded[index] = false;
+            result.per_function[index] = .{ .counts = metadata.state.counts, .own = metadata.state.own };
+            result.counts.proven += metadata.state.counts.proven;
+            result.counts.versioned += metadata.state.counts.versioned;
+            result.counts.vectorized += metadata.state.counts.vectorized;
+            result.own.add(metadata.state.own);
+            context.statistics.bypassed += 1;
+            continue;
+        };
+        if (cache) |context| {
+            context.statistics.active_functions += 1;
+            context.statistics.final_loaded += 1;
+        }
         const key = if (index < green.len and green[index]) shortcut.?.entries[index].final else if (cache) |context| try context.key(temporary.allocator(), .{
             .stage = .final,
             .function = @intCast(index),
@@ -215,7 +275,7 @@ fn runInternal(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir
                 .events = .{ inlined[index], result.per_function[index].counts.unswitched },
             },
         }) else null;
-        if (shortcut) |*state| try state.final(arena, index, params, key, .{ inlined[index], result.per_function[index].counts.unswitched });
+        if (shortcut) |state| try state.final(arena, index, params, key, .{ inlined[index], result.per_function[index].counts.unswitched });
         if (try cachedFinal(arena, temporary.allocator(), cache, .{ .function = @intCast(index), .key = key, .provenance = &result.provenance })) |cached| {
             if (index < green.len and green[index]) cache.?.statistics.bypassed += 1;
             function.* = cached.function;
@@ -226,9 +286,11 @@ fn runInternal(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir
             result.counts.versioned += cached.state.counts.versioned;
             result.counts.vectorized += cached.state.counts.vectorized;
             result.own.add(cached.state.own);
+            if (shortcut) |state| if (key) |digest| try rememberFinal(arena, cache.?, state, index, .{ .key = digest, .state = cached.state, .analysis = cached.analysis });
             _ = temporary.reset(.retain_capacity);
             continue;
         }
+        if (cache) |context| context.statistics.fresh_work += 1;
         const options: facts.Options = .{ .fold = !verify, .sabotage = sabotage, .params = params, .returns = returns };
         var known = try facts.analyzeWithScratch(temporary.allocator(), scratch.allocator(), function, options);
         _ = scratch.reset(.retain_capacity);
@@ -272,13 +334,143 @@ fn runInternal(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir
                 .artifact = artifact,
             });
         }
+        if (shortcut) |state| if (key) |digest| if (artifact) |encoded| try rememberFinal(arena, cache.?, state, index, .{
+            .key = digest,
+            .state = .{ .known = null, .plans = plan.*, .counts = result.per_function[index].counts, .own = result.per_function[index].own },
+            .analysis = .{ .digest = encoded.digest, .loop_ids = encoded.loop_ids },
+        });
         _ = temporary.reset(.retain_capacity);
     }
-    if (shortcut) |*state| try state.save();
-    return result;
 }
 
-fn prepareShortcut(arena: std.mem.Allocator, cache: ?*cache_mod.Context, mode: Mode) Error!?shortcut_mod.Index {
+fn prepareOptimizer(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir.Module, mode: Mode, cache: ?*cache_mod.Context) CachedError!?shortcut_mod.Index {
+    var shortcut: ?shortcut_mod.Index = if (cache) |context| if (context.lazy.raw != null and (mode == .verify or mode == .trusted)) try shortcut_mod.Index.prepareDemand(arena, context, @backingInt(mode)) else null else null;
+    if (shortcut == null) if (cache) |context| if (context.lazy.raw) |handles| {
+        for (module.functions.items, 0..) |_, index| try handles.ensure(@intCast(index));
+    };
+    var fusion_scratch = std.heap.ArenaAllocator.init(backing);
+    defer fusion_scratch.deinit();
+    const before_fusions = try arena.alloc(?[32]u8, module.functions.items.len);
+    @memset(before_fusions, null);
+    if (shortcut) |state| for (state.green, 0..) |green_body, index| {
+        // A matching lowering key binds this body and the full raw catalog.
+        // Fusions read no other bodies or parameter facts, so their prior identity
+        // remains valid even when later inlining makes the function non-green.
+        if (green_body or state.entries[index].raw != null) continue;
+        before_fusions[index] = @import("ir_snapshot.zig").digest(fusion_scratch.allocator(), cache.?.source, module.functions.items[index]) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            error.InvalidSnapshot => null,
+        };
+        _ = fusion_scratch.reset(.retain_capacity);
+    };
+    try @import("fuse_text.zig").whitespace(arena, module);
+    _ = try @import("fuse_slice_key.zig").run(arena, module);
+    if (cache) |context| try context.prepare(arena);
+    if (shortcut) |*state| {
+        if (state.layout) |old| if (hasDeferredBodies(state, module)) {
+            const current = cache.?.layoutDigest() orelse return error.CacheMiss;
+            if (!std.mem.eql(u8, &old, &current)) return error.CacheMiss;
+        };
+        try state.extend(arena);
+
+        for (state.entries, state.green, 0..) |*entry, green_body, index| {
+            if (green_body) {
+                cache.?.prepared.?.digests[index] = entry.raw;
+                continue;
+            }
+            const identity_known = entry.raw != null;
+            entry.raw = try cache.?.bodyDigest(@intCast(index));
+            if (identity_known or index >= before_fusions.len) continue;
+            const after = @import("ir_snapshot.zig").digest(fusion_scratch.allocator(), cache.?.source, module.functions.items[index]) catch |err| switch (err) {
+                error.OutOfMemory => return error.OutOfMemory,
+                error.InvalidSnapshot => null,
+            };
+            _ = fusion_scratch.reset(.retain_capacity);
+            entry.demand.fused_identity = before_fusions[index] != null and after != null and std.mem.eql(u8, &before_fusions[index].?, &after.?);
+        }
+    } else shortcut = try prepareShortcut(arena, cache, mode);
+    return shortcut;
+}
+
+fn hasDeferredBodies(state: *const shortcut_mod.Index, module: *const ir.Module) bool {
+    for (state.green, module.functions.items[0..state.green.len]) |green, function| {
+        if (green and function.signature.linkage == .internal) return true;
+    }
+    return false;
+}
+
+fn prepareEffects(arena: std.mem.Allocator, module: *ir.Module, cache: ?*cache_mod.Context, shortcut: ?*shortcut_mod.Index) Error!effects.Summaries {
+    const reused_effects = try arena.alloc(?effects.Reused, module.functions.items.len);
+    @memset(reused_effects, null);
+    if (shortcut) |state| for (state.green, state.entries, reused_effects) |green_body, entry, *slot| {
+        if (green_body) slot.* = entry.demand.effect;
+    };
+    const summaries = try effects.analyzeReused(arena, module, reused_effects);
+    if (cache) |context| {
+        context.lazy.finals = try arena.alloc(?cache_mod.FinalMetadata, module.functions.items.len);
+        @memset(context.lazy.finals, null);
+        context.lazy.loaded = try arena.alloc(bool, module.functions.items.len);
+        @memset(context.lazy.loaded, true);
+    }
+    if (shortcut) |state| for (state.entries, summaries.params, summaries.may) |*entry, params_effect, answers| {
+        entry.demand.effect = try effects.retain(arena, .{ .params = params_effect, .may = answers });
+    };
+    return summaries;
+}
+
+fn retainEmissionEffects(arena: std.mem.Allocator, module: *ir.Module, cache: ?*cache_mod.Context, shortcut: ?*shortcut_mod.Index, result: *Result) Error!void {
+    if (cache) |context| if (context.lazy.raw != null) {
+        const final_reused = try arena.alloc(?effects.Reused, module.functions.items.len);
+        @memset(final_reused, null);
+        for (context.lazy.finals, context.lazy.loaded, final_reused) |metadata, present, *slot| {
+            if (!present) slot.* = metadata.?.emission_effect;
+        }
+        const final_effects = try effects.analyzeReused(arena, module, final_reused);
+        result.emission.effects = final_effects;
+        if (shortcut) |state| for (context.lazy.finals, final_effects.params, final_effects.may, 0..) |*metadata, param_effects, answers, index| {
+            if (metadata.*) |*record| {
+                record.emission_effect = try effects.retain(arena, .{ .params = param_effects, .may = answers });
+                state.entries[index].demand.metadata = record.*;
+            }
+        };
+    };
+}
+
+const FinalInput = struct { key: [32]u8, state: cache_mod.FinalState, analysis: cache_mod.Analysis };
+
+fn rememberFinal(arena: std.mem.Allocator, context: *cache_mod.Context, shortcut: *shortcut_mod.Index, index: usize, input: FinalInput) Error!void {
+    const state = input.state;
+    const analysis = input.analysis;
+    const body = try context.bodyDigest(@intCast(index)) orelse return;
+    var retained = state;
+    retained.known = null;
+    retained.artifact = null;
+    retained.plans = try cache_mod.retainPlans(arena, state.plans);
+    const metadata: cache_mod.FinalMetadata = .{
+        .key = input.key,
+        .body = body,
+        .outgoing = try shortcut_mod.Index.targets(arena, &context.source.module.functions.items[index]),
+        .analysis = .{ .digest = analysis.digest, .loop_ids = try arena.dupe(usize, analysis.loop_ids) },
+        .state = retained,
+    };
+    shortcut.entries[index].demand.metadata = metadata;
+    if (index < context.lazy.finals.len) context.lazy.finals[index] = metadata;
+}
+
+/// Restore a deferred final body and its verified facts before an emission miss.
+pub fn restoreDeferredFinal(arena: std.mem.Allocator, work: std.mem.Allocator, context: *cache_mod.Context, index: u32, result: *Result) CachedError!void {
+    if (index >= context.lazy.loaded.len or context.lazy.loaded[index]) return;
+    if (index >= context.lazy.finals.len) return error.CacheMiss;
+    const metadata = context.lazy.finals[index] orelse return error.CacheMiss;
+    const value = try cachedFinal(arena, work, context, .{ .function = index, .key = metadata.key, .provenance = &result.provenance }) orelse return error.CacheMiss;
+    context.source.module.functions.items[index] = value.function;
+    result.known[index] = value.state.known;
+    result.plans[index] = value.state.plans;
+    context.lazy.loaded[index] = true;
+    context.statistics.final_loaded += 1;
+}
+
+fn prepareShortcut(arena: std.mem.Allocator, cache: ?*cache_mod.Context, mode: Mode) CachedError!?shortcut_mod.Index {
     if (mode == .off) return null;
     const context = cache orelse return null;
     return shortcut_mod.Index.prepare(arena, context, @backingInt(mode));
@@ -299,7 +491,7 @@ fn exploratorySummaries(arena: std.mem.Allocator, module: *ir.Module, input: Exp
     for (module.functions.items) |*function| {
         if (function.signature.linkage != .internal) try parameter_summary.add(arena, module, function, null);
     }
-    for (try calleesFirst(arena, module)) |index| {
+    for (try calleesFirstIndexed(arena, module, input.shortcut)) |index| {
         const function = &module.functions.items[index];
         if (input.cache == null) {
             const known = try facts.analyzeWithScratch(temporary.allocator(), scratch.allocator(), function, .{ .fold = input.mode == .trusted, .sabotage = input.sabotage, .mark = false, .returns = input.returns });
@@ -353,7 +545,7 @@ fn retainedArtifact(arena: std.mem.Allocator, artifact: deferred_facts.Artifact)
 }
 
 const FinalRequest = struct { function: u32, key: ?[32]u8, provenance: *origins.Table };
-const CachedFinal = struct { function: ir.Function, state: cache_mod.FinalState };
+const CachedFinal = struct { function: ir.Function, state: cache_mod.FinalState, analysis: cache_mod.Analysis };
 
 fn cachedFinal(arena: std.mem.Allocator, work: std.mem.Allocator, cache: ?*cache_mod.Context, request: FinalRequest) Error!?CachedFinal {
     const context = cache orelse return null;
@@ -371,10 +563,11 @@ fn cachedFinal(arena: std.mem.Allocator, work: std.mem.Allocator, cache: ?*cache
     if (cache_mod.validFinal(value, true)) if (try context.restore(arena, request.function, value.function, value.provenance, request.provenance)) |restored| {
         var state = value.state;
         if (context.deferred) |table| {
-            table.entries[request.function] = try retainedArtifact(arena, artifact);
+            try table.deferArtifact(arena, request.function, context.store, context.factsKey(description.digest), artifact);
         } else state.known = if (state.known) |known| try known.clone(arena) else null;
         state.plans = try cache_mod.retainPlans(arena, state.plans);
-        return .{ .function = restored, .state = state };
+        context.statistics.final_restores += 1;
+        return .{ .function = restored, .state = state, .analysis = description };
     };
     context.rejected(.final);
     return null;
@@ -440,7 +633,7 @@ const InlineRound = struct {
     green: []const bool = &.{},
 };
 
-fn inlineCached(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir.Module, round: InlineRound) Error!u32 {
+fn inlineCached(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir.Module, round: InlineRound) CachedError!u32 {
     const cache = round.cache;
     const provenance = round.provenance;
     const parameters = round.parameters;
@@ -462,9 +655,9 @@ fn inlineCached(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *i
         };
         if (changed == null) {
             changed = if (stage == .inline_cfg)
-                try inline_leaves.cfgCaller(arena, module, @intCast(index), provenance)
+                try inline_leaves.cfgCallerDemand(arena, module, @intCast(index), provenance, cache.lazy.raw)
             else
-                try inline_leaves.leafCallerWithScratch(arena, work.allocator(), module, @intCast(index), params, provenance);
+                try inline_leaves.leafCallerDemand(arena, work.allocator(), module, @intCast(index), params, .{ .provenance = provenance, .raw = cache.lazy.raw });
             cache.changed(index);
             if (key) |digest| try cache.saveTransform(work.allocator(), digest, @intCast(index), provenance, changed.?);
         }
@@ -479,6 +672,10 @@ fn inlineCached(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *i
 /// (a depth-first postorder of the direct-call graph); a cycle is broken where the
 /// search meets a function still open, whose calls then see no return interval.
 fn calleesFirst(arena: std.mem.Allocator, module: *const ir.Module) Error![]const u32 {
+    return calleesFirstIndexed(arena, module, null);
+}
+
+fn calleesFirstIndexed(arena: std.mem.Allocator, module: *const ir.Module, shortcut: ?*shortcut_mod.Index) Error![]const u32 {
     const count = module.functions.items.len;
     const state = try arena.alloc(enum { new, open, done }, count);
     @memset(state, .new);
@@ -491,11 +688,16 @@ fn calleesFirst(arena: std.mem.Allocator, module: *const ir.Module) Error![]cons
         while (stack.items.len != 0) {
             const top = &stack.items[stack.items.len - 1];
             const insts = module.functions.items[top.function].insts.items;
-            if (top.next < insts.len) {
-                const inst = insts[top.next];
+            const cached_calls: ?[]const u32 = if (shortcut) |indexed| if (indexed.context.lazy.raw != null and indexed.green[top.function]) indexed.entries[top.function].demand.direct_calls else null else null;
+            const edge_count = if (cached_calls) |calls| calls.len else insts.len;
+            if (top.next < edge_count) {
+                const next = top.next;
                 top.next += 1;
-                if (inst.op != .call) continue;
-                const callee = inst.a.index();
+                const callee = if (cached_calls) |calls| calls[next] else blk: {
+                    const inst = insts[next];
+                    if (inst.op != .call) continue;
+                    break :blk inst.a.index();
+                };
                 if (callee >= count or state[callee] != .new or module.functions.items[callee].signature.linkage != .internal) continue;
                 state[callee] = .open;
                 try stack.append(arena, .{ .function = @intCast(callee), .next = 0 });
@@ -531,6 +733,10 @@ const ParameterSummary = struct {
     merged: []?[]?facts.Interval,
 
     fn init(arena: std.mem.Allocator, module: *const ir.Module) Error!ParameterSummary {
+        return initIndexed(arena, module, null);
+    }
+
+    fn initIndexed(arena: std.mem.Allocator, module: *const ir.Module, shortcut: ?*shortcut_mod.Index) Error!ParameterSummary {
         const count = module.functions.items.len;
         const out = try arena.alloc([]const ?facts.Interval, count);
         errdefer arena.free(out);
@@ -541,7 +747,13 @@ const ParameterSummary = struct {
         const merged = try arena.alloc(?[]?facts.Interval, count);
         errdefer arena.free(merged);
         @memset(merged, null);
-        for (module.functions.items) |function| {
+        for (module.functions.items, 0..) |function, index| {
+            if (shortcut) |state| if (state.context.lazy.raw != null and state.green[index]) {
+                for (state.entries[index].demand.references) |target| if (target < count) {
+                    usable[target] = false;
+                };
+                continue;
+            };
             for (function.insts.items) |inst| {
                 if (inst.op == .func_ref and inst.data < count) usable[@intCast(inst.data)] = false;
             }

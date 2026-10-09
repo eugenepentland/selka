@@ -16,7 +16,15 @@ const codec = @import("mylang").persist_codec;
 pub const Stage = enum { inline_leaf, inline_cfg, unswitch, first_facts, parameter_inline, final, debug };
 const stage_count = @typeInfo(Stage).@"enum".field_names.len;
 /// Observed store lookups; no reuse is inferred from unchanged source bytes.
-pub const Statistics = struct { hits: [stage_count]usize = @splat(0), misses: [stage_count]usize = @splat(0), bypassed: usize = 0 };
+pub const Statistics = struct {
+    hits: [stage_count]usize = @splat(0),
+    misses: [stage_count]usize = @splat(0),
+    bypassed: usize = 0,
+    active_functions: usize = 0,
+    fresh_work: usize = 0,
+    final_restores: usize = 0,
+    final_loaded: usize = 0,
+};
 /// Outside facts and earlier pass events consulted by the requested stage.
 pub const Inputs = struct {
     parameters: []const ?facts.Interval = &.{},
@@ -41,6 +49,8 @@ pub const Context = struct {
     locator: @import("emit_llvm.zig").Locator,
     prepared: ?struct { layout: [32]u8, canon: identity.Canon, digests: []?[32]u8, before: []?[32]u8 } = null,
     statistics: Statistics = .{},
+    /// Optional lowering handles for development optimizer demand loading.
+    lazy: struct { raw: ?*@import("demand_ir.zig").Context = null, finals: []?FinalMetadata = &.{}, loaded: []bool = &.{} } = .{},
     /// Deferred tables keep verified encoded facts for development emission misses.
     deferred: ?*deferred_facts.Table = null,
 
@@ -215,11 +225,8 @@ pub const Context = struct {
 
     /// Verify encoded analysis before any cached final IR reaches the module.
     pub fn loadFacts(self: *Context, a: std.mem.Allocator, description: Analysis) std.mem.Allocator.Error!?deferred_facts.Artifact {
-        const bytes = try self.store.load(a, self.factsKey(description.digest)) orelse return null;
-        var digest: [32]u8 = undefined;
-        std.crypto.hash.Blake3.hash(bytes, &digest, .{});
-        if (!std.mem.eql(u8, &digest, &description.digest)) return null;
-        return .{ .bytes = bytes, .digest = digest, .loop_ids = description.loop_ids };
+        const bytes = try self.store.loadExpected(a, self.factsKey(description.digest), description.digest) orelse return null;
+        return .{ .bytes = bytes, .digest = description.digest, .loop_ids = description.loop_ids };
     }
 
     /// A no-op artifact validates against the live body and ancestry without copying IR.
@@ -274,6 +281,15 @@ pub const FinalState = struct {
     own: own.Stats,
     /// Transient encoding reused by publication; never duplicated in metadata.
     artifact: ?deferred_facts.Artifact = null,
+};
+/// Compact emission identity and final pass state, without body or fact payloads.
+pub const FinalMetadata = struct {
+    key: [32]u8,
+    body: [32]u8,
+    outgoing: []const u32 = &.{},
+    emission_effect: ?effects.Reused = null,
+    analysis: Analysis,
+    state: FinalState,
 };
 /// Complete final-stage artifact with portable function and inline ancestry.
 pub const Final = struct { function: snapshot.Wire, provenance: Provenance, state: FinalState, analysis: ?Analysis = null };
@@ -387,6 +403,9 @@ pub const Provenance = struct {
 
     /// Snapshot one physical body's sparse ancestry with local frame numbers.
     pub fn capture(a: std.mem.Allocator, context: snapshot.Context, table: *const origins.Table, function: u32) snapshot.Error!Provenance {
+        // Sparse ancestry setters register the physical function before storing
+        // any block or instruction entry. Most bodies therefore need no scan.
+        if (!table.functions.contains(function)) return .{ .frames = &.{}, .blocks = &.{}, .instructions = &.{}, .present = false };
         var blocks: std.ArrayList(Block) = .empty;
         var instructions: std.ArrayList(Instruction) = .empty;
         const f = context.module.functions.items[function];

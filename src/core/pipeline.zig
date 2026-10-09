@@ -87,7 +87,7 @@ pub const Diagnostics = enum { errors, text, json };
 pub const CacheReport = enum { off, text, json };
 
 /// Why a build stopped after its report was written.
-pub const Error = error{ SourceError, Unsupported, ToolFailed, WriteFailed, OutOfMemory, InvalidIr, PolicyDenied, ConfigurationFailed };
+pub const Error = error{ SourceError, Unsupported, ToolFailed, WriteFailed, OutOfMemory, InvalidIr, PolicyDenied, ConfigurationFailed, CacheMiss };
 
 /// Build `path` into `options.output`. An unchanged build replays its last
 /// identical build's executable (`build_replay.zig`) before checking anything.
@@ -107,21 +107,37 @@ pub fn resolveEntry(init: std.process.Init, path: []const u8, report: *std.Array
 }
 
 fn buildWith(init: std.process.Init, path: []const u8, options: Options, budget: ?run_budget.RunBudget, report: *std.ArrayList(u8)) Error!u8 {
+    const request: BuildRequest = .{ .init = init, .path = path, .options = options, .budget = budget, .report = report };
+    return @import("build_retry.zig").run(request, report, BuildRequest.attempt);
+}
+
+const BuildRequest = struct {
+    init: std.process.Init,
+    path: []const u8,
+    options: Options,
+    budget: ?run_budget.RunBudget,
+    report: *std.ArrayList(u8),
+
+    fn attempt(self: BuildRequest, lazy: bool) Error!u8 {
+        return buildAttempt(self.init, self.path, self.options, self.budget, self.report, lazy);
+    }
+};
+
+fn buildAttempt(init: std.process.Init, path: []const u8, options: Options, budget: ?run_budget.RunBudget, report: *std.ArrayList(u8), allow_lazy: bool) Error!u8 {
     const allocator = init.arena.allocator();
     const entry = try project_entry.resolve(allocator, init.io, path, report);
     const replaying = options.show.llvm == null;
     const context: build_replay.Context = .{ .arena = allocator, .io = init.io, .environment = init.environ_map, .cache = options.cache, .zig = options.zig, .flags = try flags(init, options, budget), .entry = entry };
-    if (replaying and !options.show.verify_cache) if (try build_replay.replay(context, options.output, report)) {
-        if (options.show.cache_report != .off) try cacheReport(allocator, options.show.cache_report, null, null, report);
-        return 0;
-    };
+    if (try replayBuild(context, options, report)) return 0;
     var storage = try stage_store.Store.init(init.gpa, init.io, options.cache);
     defer storage.deinit();
     var stages: stage_metrics.Report = .{};
+    if (!allow_lazy) stages.lowering.fallbacks = 1;
     var lowered_arena = std.heap.ArenaAllocator.init(init.gpa);
     defer lowered_arena.deinit();
     var demand_enabled = !options.show.verify_cache;
-    const Prepared = struct { module: ir.Module, unit: Unit, sources: ?[]const @import("unit_cache.zig").Dependency };
+    const lazy_allowed = useDemandBodies(options, budget);
+    const Prepared = struct { module: ir.Module, unit: Unit, sources: ?[]const @import("unit_cache.zig").Dependency, lazy: ?*lowering_cache.Deferred };
     var prepared: Prepared = while (true) {
         const checked_start = stage_metrics.now(init.io);
         const report_start = report.items.len;
@@ -142,7 +158,7 @@ fn buildWith(init: std.process.Init, path: []const u8, options: Options, budget:
         try entry.validate(allocator, &session, report);
         stages.nanoseconds.frontend += stage_metrics.elapsed(init.io, checked_start);
         stages.frontend = session.statistics();
-        if (session.cache) |cache| stages.frontend_misses = cache.semantic.statistics.misses;
+        frontendMetrics(&stages, &session);
         if (session.demandState()) |state| demand.attach(state.prepared, state.omitted);
         const lowering_start = stage_metrics.now(init.io);
         var refusal: build_ir.Refusal = .{};
@@ -150,6 +166,9 @@ fn buildWith(init: std.process.Init, path: []const u8, options: Options, budget:
         var lowering = lowering_cache.Cache.init(&storage);
         lowering.demand = &demand;
         const a = lowered_arena.allocator();
+        const lazy = if (lazy_allowed) try a.create(lowering_cache.Deferred) else null;
+        if (lazy) |state| state.* = .{ .arena = a, .store = &storage, .force_eager = !allow_lazy };
+        lowering.lazy = lazy;
         const lowered = if (options.show.verify_cache) build_ir.buildExecutable(a, input, &refusal) else build_ir.buildExecutableCached(a, input, &refusal, &lowering);
         var module = lowered catch |err| switch (err) {
             error.CacheMiss => {
@@ -175,11 +194,20 @@ fn buildWith(init: std.process.Init, path: []const u8, options: Options, budget:
         if (budget) |installed| try run_budget.instrumentRun(a, &module, installed);
         const unit = try retainUnit(a, &module, try unitFor(a, checked, entry.path, session.single != null));
         stages.nanoseconds.lowering += stage_metrics.elapsed(init.io, lowering_start);
-        break .{ .module = module, .unit = unit, .sources = sources };
+        if (lazy) |state| try state.prepare(&module, unit.src);
+        break .{ .module = module, .unit = unit, .sources = sources, .lazy = lazy };
     };
     const module = &prepared.module;
-    const caches: StageContext = .{ .storage = if (options.show.verify_cache) null else &storage, .io = init.io, .lanes = @import("unit_cache.zig").width(init.environ_map, module.functions.items.len), .metrics = &stages };
+    if (prepared.lazy) |state| state.input.module = module;
+    const caches: StageContext = .{
+        .storage = if (options.show.verify_cache) null else &storage,
+        .io = init.io,
+        .lanes = @import("unit_cache.zig").width(init.environ_map, module.functions.items.len),
+        .metrics = &stages,
+        .demand = if (prepared.lazy) |state| &state.context else null,
+    };
     const outcome = try linkEmittedCached(init, module, prepared.unit, options, caches, report);
+    materializationMetrics(&stages, prepared.lazy);
     // A record that cannot be written costs the next build its replay, nothing more.
     if (replaying) build_replay.remember(context, prepared.sources, outcome.tool, .{ .program = outcome.program, .foreign = outcome.foreign }, report.items) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
@@ -187,6 +215,35 @@ fn buildWith(init: std.process.Init, path: []const u8, options: Options, budget:
     };
     if (options.show.cache_report != .off) try cacheReport(allocator, options.show.cache_report, outcome, &stages, report);
     return 0;
+}
+
+fn replayBuild(context: build_replay.Context, options: Options, report: *std.ArrayList(u8)) Error!bool {
+    if (options.show.llvm != null or options.show.verify_cache) return false;
+    if (!try build_replay.replay(context, options.output, report)) return false;
+    if (options.show.cache_report != .off) try cacheReport(context.arena, options.show.cache_report, null, null, report);
+    return true;
+}
+
+fn useDemandBodies(options: Options, budget: ?run_budget.RunBudget) bool {
+    if (budget != null or verify_ir.enabled) return false;
+    if (options.mode != .optimized_debug or options.facts != .on) return false;
+    return !options.show.stats and options.show.llvm == null and !options.show.verify_cache;
+}
+
+fn frontendMetrics(stages: *stage_metrics.Report, session: *const frontend.Session) void {
+    const cache = session.cache orelse return;
+    stages.frontend_misses = cache.semantic.statistics.rejections;
+}
+
+fn materializationMetrics(stages: *stage_metrics.Report, lazy: ?*lowering_cache.Deferred) void {
+    const state = lazy orelse {
+        stages.lowering.materialized = stages.lowering.reused + stages.lowering.lowered;
+        return;
+    };
+    stages.lowering.materialized = state.restored + stages.lowering.lowered;
+    for (state.tables.loaded.items) |loaded| {
+        if (!loaded) stages.lowering.unloaded += 1;
+    }
 }
 
 /// Report the new core's refusal of a construct at `refusal`, as text or as a
@@ -338,7 +395,7 @@ pub fn emittedWithScratch(allocator: std.mem.Allocator, scratch: std.mem.Allocat
     return emittedCached(.{ .result = allocator, .scratch = scratch }, module, unit, options, null, report);
 }
 
-const StageContext = struct { storage: ?*stage_store.Store, io: std.Io, lanes: usize, metrics: *stage_metrics.Report };
+const StageContext = struct { storage: ?*stage_store.Store, io: std.Io, lanes: usize, metrics: *stage_metrics.Report, demand: ?*@import("demand_ir.zig").Context = null };
 
 const Memory = struct { result: std.mem.Allocator, scratch: std.mem.Allocator };
 
@@ -363,14 +420,18 @@ fn emittedCached(memory: Memory, module: *ir.Module, unit: Unit, options: Option
     const defer_analysis = ordinary_optimized and !options.show.stats and options.show.llvm == null;
     var deferred: deferred_facts.Table = .{};
     const optimizer_start = if (stage) |s| stage_metrics.now(s.io) else std.Io.Timestamp.zero;
+    var optimizer_context: ?*optimization_cache.Context = null;
     var result = if (stage != null and stage.?.storage != null) cached: {
-        var context = optimization_cache.Context.init(stage.?.storage.?, try ir_snapshot.Context.init(allocator, module, unit.src), locator(&unit.src));
+        const context = try allocator.create(optimization_cache.Context);
+        context.* = optimization_cache.Context.init(stage.?.storage.?, try ir_snapshot.Context.init(allocator, module, unit.src), locator(&unit.src));
+        optimizer_context = context;
+        context.lazy.raw = stage.?.demand;
         const result = if (defer_analysis)
-            try passes.runCachedDeferred(allocator, scratch, module, mode, &context, &deferred)
+            try passes.runCachedDeferred(allocator, scratch, module, mode, context, &deferred)
         else if (optimized)
-            try passes.runCached(allocator, scratch, module, mode, &context)
+            try passes.runCached(allocator, scratch, module, mode, context)
         else
-            try passes.debugCached(allocator, scratch, module, &context);
+            try passes.debugCached(allocator, scratch, module, context);
         stage.?.metrics.optimizer = context.statistics;
         break :cached result;
     } else if (optimized) try passes.runWithScratch(allocator, scratch, module, mode) else try passes.debugWithScratch(allocator, scratch, module);
@@ -379,7 +440,7 @@ fn emittedCached(memory: Memory, module: *ir.Module, unit: Unit, options: Option
     const measured = if (options.show.stats) try cost.measure(allocator, module, &result, null) else null;
     if (measured) |snapshot| try cost.stats(allocator, report, snapshot.totals);
     // One summary of the final IR serves every unit a debug build emits.
-    const summaries = try @import("effects.zig").analyze(allocator, module);
+    const summaries = result.emission.effects orelse try @import("effects.zig").analyze(allocator, module);
     const emission: emit_llvm.Options = .{
         .locator = locator(&unit.src),
         .source_path = unit.source_path,
@@ -391,6 +452,7 @@ fn emittedCached(memory: Memory, module: *ir.Module, unit: Unit, options: Option
     };
     // S4-1a: a release build is one unit, so LLVM optimizes across every module
     // boundary; development modes keep module units and reuse unchanged text.
+    var final_restorer: FinalRestorer = .{ .arena = allocator, .backing = scratch, .context = optimizer_context, .result = &result };
     const emission_start = if (stage) |s| stage_metrics.now(s.io) else std.Io.Timestamp.zero;
     const split = if (options.mode == .release) emit_units.wholeWithScratch(allocator, scratch, module, emission) else if (stage != null and stage.?.storage != null) emit_units.emitCached(allocator, scratch, module, emission, .{
         .store = stage.?.storage.?,
@@ -398,15 +460,21 @@ fn emittedCached(memory: Memory, module: *ir.Module, unit: Unit, options: Option
         .memory_budget_bytes = stage_metrics.workerBudget(stage.?.io),
         .counts = &stage.?.metrics.emission,
         .deferred = if (defer_analysis) &deferred else null,
+        .receipts = final_restorer.receipts(&unit.src),
+        .native_handles = final_restorer.receipts(&unit.src) != null,
     }) else emit_units.emitWithScratch(allocator, scratch, module, emission);
     const units = split catch |err| switch (err) {
+        error.CacheMiss => return error.CacheMiss,
         error.OutOfMemory => return error.OutOfMemory,
         else => {
             try report.print(allocator, "error[E_CORE_UNSUPPORTED]: LLVM emission failed: {s}\n", .{@errorName(err)});
             return error.Unsupported;
         },
     };
-    if (stage) |s| s.metrics.nanoseconds.emission = stage_metrics.elapsed(s.io, emission_start);
+    if (stage) |s| {
+        s.metrics.nanoseconds.emission = stage_metrics.elapsed(s.io, emission_start);
+        if (optimizer_context) |ctx| s.metrics.optimizer = ctx.statistics;
+    }
     if (options.show.llvm == null) return .{ .units = units, .cost_report = measured };
     if (options.mode == .release) return .{ .units = units, .whole = units[0].llvm, .cost_report = measured };
     const whole = emit_llvm.emitModuleWithScratch(allocator, scratch, module, emission) catch |err| switch (err) {
@@ -415,6 +483,33 @@ fn emittedCached(memory: Memory, module: *ir.Module, unit: Unit, options: Option
     };
     return .{ .units = units, .whole = whole, .cost_report = measured };
 }
+
+const FinalRestorer = struct {
+    arena: std.mem.Allocator,
+    backing: std.mem.Allocator,
+    context: ?*optimization_cache.Context,
+    result: *passes.Result,
+
+    fn receipts(self: *FinalRestorer, source: *const language.source.Source) ?@import("emission_cache.zig").ReceiptContext {
+        const ctx = self.context orelse return null;
+        const raw = ctx.lazy.raw orelse return null;
+        if (raw.force_eager) return null;
+        return .{
+            .finals = ctx.lazy.finals,
+            .source = source,
+            .layout = ctx.layoutDigest() orelse return null,
+            .loader = .{ .pointer = self, .ensure_fn = ensure },
+        };
+    }
+
+    fn ensure(pointer: *anyopaque, index: u32) @import("demand_ir.zig").Error!void {
+        const self: *FinalRestorer = @ptrCast(@alignCast(pointer));
+        const context = self.context orelse return;
+        var scratch = std.heap.ArenaAllocator.init(self.backing);
+        defer scratch.deinit();
+        try passes.restoreDeferredFinal(self.arena, scratch.allocator(), context, index, self.result);
+    }
+};
 
 /// How emission finds a span's file, line and column in the merged source `src`.
 pub fn locator(src: *const language.source.Source) emit_llvm.Locator {

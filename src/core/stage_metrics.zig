@@ -8,14 +8,14 @@ const language = @import("mylang");
 pub const Times = struct { frontend: u64 = 0, lowering: u64 = 0, optimizer: u64 = 0, emission: u64 = 0, native: u64 = 0, linker: u64 = 0 };
 /// Counts reflect work actually restored or computed during this build.
 pub const Report = struct {
-    version: []const u8 = "stage-report-v1",
+    version: []const u8 = "stage-report-v2",
     nanoseconds: Times = .{},
     frontend: @import("frontend_reuse.zig").Statistics = .{},
-    lowering: struct { reused: usize = 0, lowered: usize = 0, deferred: usize = 0, fallbacks: usize = 0 } = .{},
+    lowering: struct { reused: usize = 0, lowered: usize = 0, deferred: usize = 0, fallbacks: usize = 0, materialized: usize = 0, unloaded: usize = 0 } = .{},
     optimizer: optimization.Statistics = .{},
     emission: emission.Counts = .{},
     /// Indexed by semantic_cache.MissReason; counts include publication bypasses.
-    frontend_misses: language.semantic_cache.MissCounts = @splat(0),
+    frontend_misses: language.semantic_cache.MissDetail = .{},
 };
 
 /// Monotonic timestamp used by stage measurements.

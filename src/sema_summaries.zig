@@ -296,7 +296,10 @@ pub const Plan = struct {
         const positions = try allocator.alloc(u32, indices.len);
         const shapes = try allocator.alloc(summary.Shape, indices.len);
         for (indices, positions, shapes) |index, *position, *shape| {
-            const name = program.records[index].name;
+            const name = (try self.session.recordIdentity(allocator, index)) orelse {
+                entry.stubbable = false;
+                return;
+            };
             position.* = try names.intern(allocator, name);
             const digest = (try self.session.shapeOf(name)) orelse {
                 entry.stubbable = false;

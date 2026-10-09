@@ -21,6 +21,7 @@ const number_runtime = @import("number_runtime.zig");
 const tool_identity = @import("tool_identity.zig");
 const emit_units = @import("emit_units.zig");
 const unit_cache = @import("unit_cache.zig");
+const native_receipt = @import("native_receipt.zig");
 const count_runtime = @import("count_runtime.zig");
 const sanitize_llvm = @import("sanitize_llvm.zig");
 const Digest = unit_cache.Digest;
@@ -53,7 +54,7 @@ pub const Request = struct {
 };
 
 /// Why a native build failed; the tool's output was written to `log`.
-pub const Error = error{ ToolFailed, OutOfMemory, WriteFailed };
+pub const Error = error{ ToolFailed, OutOfMemory, WriteFailed, CacheMiss };
 
 /// What one build did, for `--cache-report` and the tests.
 pub const Counts = struct {
@@ -170,7 +171,7 @@ pub fn linkWithScratch(allocator: std.mem.Allocator, backing: ?std.mem.Allocator
         .cacheable = guest.cacheable,
     };
     var needs: Dependencies = .{};
-    for (request.units) |unit| needs = .{ .number = needs.number or unit.number, .math = needs.math or unit.math, .counting = needs.counting or unit.counting };
+    for (request.units) |unit| needs = .{ .number = needs.number or unit.dependencies.number, .math = needs.math or unit.dependencies.math, .counting = needs.counting or unit.dependencies.counting };
     const runtime = try runtimeFor(allocator, needs.counting, environ, log);
     const settings: unit_cache.Settings = .{ .tool = guest.digest, .cpu = guest.native_target, .mode = request.mode, .runtime = runtime.abi };
     var objects: std.ArrayList(Object) = .empty;
@@ -305,7 +306,11 @@ pub fn optimizationRemarks(a: std.mem.Allocator, io: std.Io, environ: *const std
         const source = try std.fmt.allocPrint(a, "{s}/{d}.ll", .{ staging, index });
         const object = try std.fmt.allocPrint(a, "{s}/{d}.o", .{ staging, index });
         const records = try std.fmt.allocPrint(a, "{s}/{d}.opt.yaml", .{ staging, index });
-        std.Io.Dir.cwd().writeFile(io, .{ .sub_path = source, .data = try instrumented(a, environ, unit.llvm) }) catch return result;
+        const text = unitText(a, unit) catch |err| {
+            if (err == error.OutOfMemory) return error.OutOfMemory;
+            return result;
+        };
+        std.Io.Dir.cwd().writeFile(io, .{ .sub_path = source, .data = try instrumented(a, environ, text) }) catch return result;
         var args: std.ArrayList([]const u8) = .empty;
         try args.appendSlice(a, try compileArguments(native, request.mode.level(), object, source));
         try args.appendSlice(a, &.{ "-fsave-optimization-record", try std.fmt.allocPrint(a, "-foptimization-record-file={s}", .{records}) });
@@ -380,6 +385,26 @@ fn publishOutput(native: Native, program: []const u8, output: []const u8) Error!
 /// One unit this build compiles: a store miss, or a hit `--verify-cache` checks.
 const Pending = struct { unit: emit_units.Unit, key: Digest, object: []const u8, slot: usize, served: ?unit_cache.Found };
 
+const UnitInput = struct { unit: emit_units.Unit, key: Digest };
+
+fn unitText(a: std.mem.Allocator, unit: emit_units.Unit) Error![]const u8 {
+    if (unit.llvm.len != 0) return unit.llvm;
+    const handle = unit.artifact orelse return unit.llvm;
+    const artifact = try native_receipt.materialize(a, handle);
+    return artifact.text;
+}
+
+fn unitInput(a: std.mem.Allocator, settings: unit_cache.Settings, cacheable: bool, given: emit_units.Unit) Error!UnitInput {
+    var unit = given;
+    if (cacheable and unit.llvm.len == 0) if (unit.artifact) |handle| {
+        if (try native_receipt.lookup(a, handle, settings)) |key| return .{ .unit = unit, .key = key };
+    };
+    unit.llvm = try unitText(a, unit);
+    const key = unit_cache.key(settings, unit.llvm);
+    if (cacheable) if (unit.artifact) |handle| try native_receipt.remember(handle, settings, key);
+    return .{ .unit = unit, .key = key };
+}
+
 /// Serve each distinct unit from the store, compile the rest in parallel, and
 /// append every object in unit order.
 fn unitObjects(native: Native, places: Places, settings: unit_cache.Settings, request: Request, objects: *std.ArrayList(Object)) Error!void {
@@ -388,8 +413,10 @@ fn unitObjects(native: Native, places: Places, settings: unit_cache.Settings, re
     var seen: std.AutoHashMapUnmanaged(Digest, void) = .empty;
     var pending: std.ArrayList(Pending) = .empty;
     var jobs: std.ArrayList(unit_cache.Job) = .empty;
-    for (request.units) |unit| {
-        const key = unit_cache.key(settings, unit.llvm);
+    for (request.units) |given| {
+        const input = try unitInput(a, settings, places.cacheable, given);
+        var unit = input.unit;
+        const key = input.key;
         // Equal text is one object: linking it twice would define its symbols twice.
         if ((try seen.getOrPut(a, key)).found_existing) continue;
         native.counts.units += 1;
@@ -397,6 +424,9 @@ fn unitObjects(native: Native, places: Places, settings: unit_cache.Settings, re
         if (served != null) native.counts.reused += 1;
         try objects.append(a, if (served) |hit| .{ .path = hit.path, .digest = hit.digest } else .{ .path = "", .digest = key });
         if (served != null and !request.verify) continue;
+        unit.llvm = try unitText(a, unit);
+        // The exact text key remains authoritative on every compile or verify.
+        if (!std.mem.eql(u8, &key, &unit_cache.key(settings, unit.llvm))) return error.CacheMiss;
         const stem = try std.fs.path.join(a, &.{ places.staging, &std.fmt.bytesToHex(key, .lower) });
         // A miss compiles beside its store entry, so publishing is a rename even
         // when the store is on another file system than the work directory.

@@ -111,11 +111,17 @@ pub const Statistics = struct {
     /// alignment. This is the field `check-session` reports as
     /// `functions.retained_bytes`.
     retained_bytes: usize = 0,
-    /// Conservative per-reason miss counts for bodies that were not reused. These
-    /// name an exact cause even when the body is checked fresh.
-    misses: MissCounts = @splat(0),
+    /// Lookup rejection and retention eligibility are distinct observations.
+    rejections: MissDetail = .{},
     /// Per-kind breakdown and eviction count for the shared budget.
     retention: RetentionDetail = .{},
+};
+
+/// Conservative reasons split by lookup and retention, with a legacy total.
+pub const MissDetail = struct {
+    total: MissCounts = @splat(0),
+    lookup: MissCounts = @splat(0),
+    retention: MissCounts = @splat(0),
 };
 
 /// Per-kind retained storage and eviction detail exposed beside the existing
@@ -468,8 +474,8 @@ pub const Session = struct {
         copy.sortFunctionRemaps(functions);
         const records = try allocator.alloc(copy.RecordRemap, entry.meta.record_refs.len);
         for (entry.meta.record_refs, records) |reference, *out| {
-            const fresh = self.remap.records.get(reference.key) orelse return self.reason(.missing_record);
-            if (fresh == std.math.maxInt(usize)) return self.reason(.ambiguous_record);
+            var fresh = self.remap.records.get(reference.key) orelse return self.reason(.missing_record);
+            if (fresh == std.math.maxInt(usize)) fresh = (try uniqueRecordShape(&self.remap.shapes, reference.key, reference.shape)) orelse return self.reason(.ambiguous_record);
             const shape = (try self.remap.shapes.digest(fresh)) orelse return self.reason(.missing_record);
             if (!std.mem.eql(u8, &shape, &reference.shape)) return self.reason(.record_shape_changed);
             out.* = .{ .old = reference.index, .fresh = @fromBackingInt(fresh + typed.Type.record_base) };
@@ -495,10 +501,36 @@ pub const Session = struct {
         self.cache.statistics.reused += 1;
         return function;
     }
-    /// The transitive shape digest of the fresh catalog record named `name`, or
-    /// null when no record, or more than one, has that name.
-    pub fn shapeOf(self: *Session, name: []const u8) error{OutOfMemory}!?[32]u8 {
-        const index = self.remap.records.get(name) orelse return null;
+    /// A summary identity names nominal records directly. Callable spellings
+    /// omit return origins, so include their exact schema to distinguish them.
+    pub fn recordIdentity(self: *Session, allocator: std.mem.Allocator, index: usize) error{OutOfMemory}!?[]const u8 {
+        if (index >= self.remap.shapes.records.len) return null;
+        const record = self.remap.shapes.records[index];
+        if (record.contract.callback == null) return record.name;
+        const digest = (try self.remap.shapes.digest(index)) orelse return null;
+        const named = self.remap.records.get(record.name) orelse return null;
+        if (named == std.math.maxInt(usize) and (try uniqueRecordShape(&self.remap.shapes, record.name, digest)) == null) return null;
+        const hex = std.fmt.bytesToHex(digest, .lower);
+        const identity = try std.fmt.allocPrint(allocator, "{s}\x00{s}", .{ record.name, hex });
+        return identity;
+    }
+    /// Resolve a stored nominal name or callable name plus exact schema.
+    /// Old name-only summaries remain conservative for ambiguous spellings.
+    pub fn shapeOf(self: *Session, identity: []const u8) error{OutOfMemory}!?[32]u8 {
+        if (std.mem.indexOfScalar(u8, identity, 0)) |separator| {
+            const hex = identity[separator + 1 ..];
+            if (hex.len != 64) return null;
+            var expected: [32]u8 = undefined;
+            _ = std.fmt.hexToBytes(&expected, hex) catch return null;
+            const name = identity[0..separator];
+            var index = self.remap.records.get(name) orelse return null;
+            if (index == std.math.maxInt(usize)) index = (try uniqueRecordShape(&self.remap.shapes, name, expected)) orelse return null;
+            if (self.remap.shapes.records[index].contract.callback == null) return null;
+            const digest = (try self.remap.shapes.digest(index)) orelse return null;
+            if (!std.mem.eql(u8, &digest, &expected)) return null;
+            return digest;
+        }
+        const index = self.remap.records.get(identity) orelse return null;
         if (index == std.math.maxInt(usize)) return null;
         return self.remap.shapes.digest(index);
     }
@@ -509,7 +541,8 @@ pub const Session = struct {
         self.cache.statistics.reused += 1;
     }
     fn reason(self: *Session, why: MissReason) ?typed.Function {
-        self.cache.statistics.misses[@backingInt(why)] += 1;
+        self.cache.statistics.rejections.lookup[@backingInt(why)] += 1;
+        self.cache.statistics.rejections.total[@backingInt(why)] += 1;
         return null;
     }
     fn relocationMiss(self: *Session, err: copy.Error) error{ OutOfMemory, InternalError }!?typed.Function {
@@ -570,13 +603,19 @@ pub const Session = struct {
                 break;
             }
             const name = program.records[index.*].name;
-            const fresh_index = self.remap.records.get(name) orelse {
+            var fresh_index = self.remap.records.get(name) orelse {
                 unstable = .missing_record;
                 break;
             };
             if (fresh_index == std.math.maxInt(usize)) {
-                unstable = .ambiguous_record;
-                break;
+                const expected = (try self.remap.shapes.digest(index.*)) orelse {
+                    unstable = .missing_record;
+                    break;
+                };
+                fresh_index = (try uniqueRecordShape(&self.remap.shapes, name, expected)) orelse {
+                    unstable = .ambiguous_record;
+                    break;
+                };
             }
             const shape = (try self.remap.shapes.digest(fresh_index)) orelse {
                 unstable = .missing_record;
@@ -602,7 +641,8 @@ pub const Session = struct {
     }
     /// Count one body that cannot be retained, with the exact conservative reason.
     fn freshMiss(self: *Session, why: MissReason) ?owned.Entry {
-        self.cache.statistics.misses[@backingInt(why)] += 1;
+        self.cache.statistics.rejections.retention[@backingInt(why)] += 1;
+        self.cache.statistics.rejections.total[@backingInt(why)] += 1;
         return null;
     }
 
@@ -832,4 +872,36 @@ const Reuse = struct {
 /// contracts interned while checking are handled as `interned_record` misses.
 fn declaredCallback(records: []const typed.Record, index: usize) bool {
     return index < records.len and records[index].contract.callback != null;
+}
+
+/// A duplicate spelling can still identify one catalog record by its exact
+/// transitive schema. Multiple matching records remain conservative misses.
+fn uniqueRecordShape(shapes: *key.Shapes, name: []const u8, expected: [32]u8) error{OutOfMemory}!?usize {
+    var found: ?usize = null;
+    for (shapes.records, 0..) |record, index| {
+        if (record.contract.callback == null) continue;
+        if (!std.mem.eql(u8, record.name, name)) continue;
+        const digest = (try shapes.digest(index)) orelse continue;
+        if (!std.mem.eql(u8, &digest, &expected)) continue;
+        if (found != null) return null;
+        found = index;
+    }
+    return found;
+}
+
+test "semantic cache duplicate callable names require one exact shape" {
+    const t = std.testing;
+    const callback: typed.Callable = .{ .parameters = &.{}, .return_type = .i64, .effects = 0 };
+    var records = [_]typed.Record{
+        .{ .id = @fromBackingInt(typed.Type.record_base), .name = "func() -> i64", .declaration = .{ .start = 0, .end = 0 }, .fields = &.{}, .shape = .{ .domain = .u64 }, .contract = .{ .callback = callback } },
+        .{ .id = @fromBackingInt(typed.Type.record_base + 1), .name = "func() -> i64", .declaration = .{ .start = 0, .end = 0 }, .fields = &.{}, .shape = .{ .domain = .u64 }, .contract = .{ .callback = callback } },
+    };
+    records[1].contract.callback.?.return_origin = .fresh;
+    var shapes: key.Shapes = .{ .allocator = t.allocator, .records = &records };
+    defer shapes.deinit();
+    const first = (try shapes.digest(0)).?;
+    try t.expectEqual(@as(?usize, 0), try uniqueRecordShape(&shapes, records[0].name, first));
+    records[1].contract.callback.?.return_origin = .unknown;
+    shapes.memo.clearRetainingCapacity();
+    try t.expectEqual(@as(?usize, null), try uniqueRecordShape(&shapes, records[0].name, first));
 }

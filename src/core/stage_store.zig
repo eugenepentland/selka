@@ -54,6 +54,12 @@ pub const Store = struct {
     /// Read an owned payload after validating its complete key and checksum.
     /// Absent, oversized, truncated, foreign, and damaged entries are misses.
     pub fn load(self: *const Store, a: std.mem.Allocator, digest: Digest) Error!?[]u8 {
+        return self.loadExpected(a, digest, null);
+    }
+
+    /// Validate a known canonical payload digest during the ordinary checksum
+    /// pass, avoiding a second hash by callers that already know its identity.
+    pub fn loadExpected(self: *const Store, a: std.mem.Allocator, digest: Digest, expected: ?Digest) Error!?[]u8 {
         var scratch = std.heap.ArenaAllocator.init(self.backing);
         defer scratch.deinit();
         const work = scratch.allocator();
@@ -63,6 +69,7 @@ pub const Store = struct {
         };
         if (bytes.len < header_size or !std.mem.eql(u8, bytes[0..magic.len], magic)) return null;
         if (!std.mem.eql(u8, bytes[magic.len..][0..32], &digest)) return null;
+        if (expected) |known| if (!std.mem.eql(u8, bytes[magic.len + 32 ..][0..32], &known)) return null;
         const payload = bytes[header_size..];
         var actual: Digest = undefined;
         std.crypto.hash.Blake3.hash(payload, &actual, .{});

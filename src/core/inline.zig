@@ -10,6 +10,7 @@
 //! A checked body is copied only with proof that its checks cannot fail; unsafe
 //! or unproved bodies retain their source frames until LLVM inlining.
 const std = @import("std");
+const demand_ir = @import("demand_ir.zig");
 const ir = @import("ir.zig");
 const facts = @import("facts.zig");
 const proof = @import("inline_proof.zig");
@@ -17,7 +18,7 @@ const cfg = @import("inline_cfg.zig");
 const origins = @import("inline_origins.zig");
 
 /// Inlining only allocates.
-pub const Error = std.mem.Allocator.Error;
+pub const Error = demand_ir.Error;
 
 /// Inline every qualifying call in `module`'s internal functions; returns how many.
 pub fn inlineLeaves(arena: std.mem.Allocator, module: *ir.Module, provenance: *origins.Table) Error!u32 {
@@ -50,6 +51,11 @@ fn inlineCfg(arena: std.mem.Allocator, module: *ir.Module, provenance: *origins.
 
 /// Apply the existing CFG round to one caller in module mutation order.
 pub fn cfgCaller(arena: std.mem.Allocator, module: *ir.Module, index: u32, provenance: *origins.Table) Error!u32 {
+    return cfgCallerDemand(arena, module, index, provenance, null);
+}
+
+/// Resolve a callee only when an uncached CFG inline trial examines its body.
+pub fn cfgCallerDemand(arena: std.mem.Allocator, module: *ir.Module, index: u32, provenance: *origins.Table, demand: ?*demand_ir.Context) Error!u32 {
     const caller = &module.functions.items[index];
     var count: u32 = 0;
     var b: usize = 0;
@@ -59,6 +65,7 @@ pub fn cfgCaller(arena: std.mem.Allocator, module: *ir.Module, index: u32, prove
             const ref = caller.blocks.items[b].insts.items[at];
             const call = caller.inst(ref);
             if (call.op != .call or call.a.index() == index) continue;
+            if (demand) |handles| try handles.ensure(@intCast(call.a.index()));
             const callee = &module.functions.items[call.a.index()];
             if (!cfg.qualifies(callee)) continue;
             var clone = try provenance.prepare(arena, .{ .caller = @intCast(index), .callee = @intCast(call.a.index()), .block = @intCast(b), .ref = ref, .span = call.span }, callee) orelse continue;
@@ -97,6 +104,16 @@ pub fn leafCaller(arena: std.mem.Allocator, module: *ir.Module, index: u32, para
 
 /// Scratch facts and trial copies never escape; only cloned IR uses `arena`.
 pub fn leafCallerWithScratch(arena: std.mem.Allocator, scratch: std.mem.Allocator, module: *ir.Module, index: u32, parameters: []const ?facts.Interval, provenance: *origins.Table) Error!u32 {
+    return leafCallerDemand(arena, scratch, module, index, parameters, .{ .provenance = provenance });
+}
+
+/// Shared source ancestry and optional lowering handles for an inline trial.
+pub const DemandState = struct { provenance: *origins.Table, raw: ?*demand_ir.Context = null };
+
+/// Resolve only the callees reached by this actual leaf inline trial.
+pub fn leafCallerDemand(arena: std.mem.Allocator, scratch: std.mem.Allocator, module: *ir.Module, index: u32, parameters: []const ?facts.Interval, state: DemandState) Error!u32 {
+    const provenance = state.provenance;
+    const demand = state.raw;
     const caller = &module.functions.items[index];
     // A child arena reuses its largest trial; the caller's known facts remain
     // on parent scratch until this invocation finishes.
@@ -112,6 +129,7 @@ pub fn leafCallerWithScratch(arena: std.mem.Allocator, scratch: std.mem.Allocato
             @import("build_fn.zig").directTarget(caller, &call);
             caller.insts.items[ref.index()] = call;
             if (call.op != .call or call.a.index() == index) continue;
+            if (demand) |handles| try handles.ensure(@intCast(call.a.index()));
             const callee = &module.functions.items[call.a.index()];
             const result = leaf(callee) orelse continue;
             if (proof.needsProof(callee)) {

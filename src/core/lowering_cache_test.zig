@@ -11,6 +11,8 @@ const emit = @import("emit_llvm.zig");
 const frontend_reuse = @import("frontend_reuse.zig");
 
 const report = std.debug.print;
+const cached_path = "cached.my";
+const source_name = "cached.my";
 
 const Work = struct { lowered: usize, reused: usize };
 
@@ -38,7 +40,7 @@ fn sameModule(a: std.mem.Allocator, cached: *const ir.Module, fresh: *const ir.M
         }
     }
     const context: u8 = 0;
-    const options: emit.Options = .{ .locator = .{ .context = &context, .locate = firstLine }, .source_path = "cached.my", .main = .{ .parameters = &.{"out"} } };
+    const options: emit.Options = .{ .locator = .{ .context = &context, .locate = firstLine }, .source_path = source_name, .main = .{ .parameters = &.{"out"} } };
     try std.testing.expectEqualStrings(try emit.emitModule(a, fresh, options), try emit.emitModule(a, cached, options));
 }
 
@@ -46,7 +48,7 @@ fn compare(root: []const u8, backing: std.mem.Allocator, bytes: []const u8, drop
     var arena = std.heap.ArenaAllocator.init(backing);
     defer arena.deinit();
     const a = arena.allocator();
-    var unit = try language.Compilation.init(a, "cached.my", bytes);
+    var unit = try language.Compilation.init(a, source_name, bytes);
     defer unit.deinit();
     unit.check() catch |err| {
         for (unit.diagnostics.items) |diagnostic| report("{s}", .{try diagnostic.render(a, unit.src)});
@@ -98,6 +100,57 @@ const arithmetic =
     \\    return first(second(20))
     \\
 ;
+
+// spec-case: NEW-CORE-STAGE-CACHE-3
+test "demand raw headers materialize only requested bodies and reject lost payloads" {
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
+    _ = try compare(root, std.testing.allocator, arithmetic, false);
+    var unit = try language.Compilation.init(a, source_name, arithmetic);
+    defer unit.deinit();
+    try unit.check();
+    var store = try stage.Store.init(std.testing.allocator, std.testing.io, root);
+    defer store.deinit();
+    var lazy: lowering.Deferred = .{ .arena = a, .store = &store };
+    var cache = lowering.Cache.init(&store);
+    cache.lazy = &lazy;
+    var refusal: build.Refusal = .{};
+    const input: build.Input = .{ .program = unit.program.?, .source = unit.src };
+    var module = try build.buildExecutableCached(a, input, &refusal, &cache);
+    try lazy.prepare(&module, unit.src);
+    try std.testing.expectEqual(@as(usize, 0), lazy.restored);
+    try std.testing.expectEqual(@as(usize, 3), cache.reused);
+    try std.testing.expectEqual(@as(usize, 0), module.functions.items[module.entry].insts.items.len);
+    try lazy.context.ensure(module.entry);
+    try std.testing.expectEqual(@as(usize, 1), lazy.restored);
+    try std.testing.expect(module.functions.items[module.entry].insts.items.len > 0);
+    try lazy.context.ensure(module.entry);
+    try std.testing.expectEqual(@as(usize, 1), lazy.restored);
+    for (0..module.functions.items.len) |index| try lazy.context.ensure(@intCast(index));
+    const fresh = try build.buildExecutable(a, input, &refusal);
+    try sameModule(a, &module, &fresh);
+
+    var lost: lowering.Deferred = .{ .arena = a, .store = &store };
+    cache.lazy = &lost;
+    var replayed = try build.buildExecutableCached(a, input, &refusal, &cache);
+    try lost.prepare(&replayed, unit.src);
+    try damagePayloads(store.root);
+    try std.testing.expectError(error.CacheMiss, lost.context.ensure(replayed.entry));
+    try std.testing.expect(!lost.tables.loaded.items[replayed.entry]);
+}
+
+fn damagePayloads(root: []const u8) !void {
+    var directory = try std.Io.Dir.cwd().openDir(std.testing.io, root, .{ .iterate = true });
+    defer directory.close(std.testing.io);
+    var iterator = directory.iterate();
+    while (try iterator.next(std.testing.io)) |entry| {
+        if (entry.kind == .file) try directory.writeFile(std.testing.io, .{ .sub_path = entry.name, .data = "damaged after admission" });
+    }
+}
 
 // spec: NEW-CORE-STAGE-CACHE-3
 test "lowered function artifacts survive new sessions, local edits and source shifts" {
@@ -184,7 +237,8 @@ test "damaged lowering entries miss without changing the uncached result" {
         try stages.writeFile(std.testing.io, .{ .sub_path = entry.name, .data = "damaged" });
         count += 1;
     }
-    try std.testing.expectEqual(@as(usize, 3), count);
+    // Each of the three functions publishes a body and a discovery header.
+    try std.testing.expectEqual(@as(usize, 6), count);
     try std.testing.expectEqualDeep(Work{ .lowered = 3, .reused = 0 }, try compare(root, std.testing.allocator, arithmetic, false));
     try std.testing.expectEqualDeep(Work{ .lowered = 0, .reused = 3 }, try compare(root, std.testing.allocator, arithmetic, false));
 }
@@ -226,4 +280,129 @@ test "core durable body retention fits project size with bounded saturating arit
     try std.testing.expectEqual(@as(usize, 4) << 30, limits.max_bytes);
     try std.testing.expectEqual(@as(usize, 1 << 20), limits.max_entries);
     try std.testing.expectEqual(single, limits.max_entry_bytes);
+}
+
+fn compareRetainedLoops(root: []const u8, backing: std.mem.Allocator, semantic: *language.semantic_cache.Cache, bytes: []const u8) !Work {
+    var arena = std.heap.ArenaAllocator.init(backing);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var retained = try language.Compilation.init(a, source_name, bytes);
+    defer retained.deinit();
+    try retained.checkWithCache(semantic);
+    var fresh = try language.Compilation.init(a, source_name, bytes);
+    defer fresh.deinit();
+    try fresh.check();
+    var refusal: build.Refusal = .{};
+    const retained_module = try build.buildExecutable(a, .{ .program = retained.program.?, .source = retained.src }, &refusal);
+    const fresh_module = try build.buildExecutable(a, .{ .program = fresh.program.?, .source = fresh.src }, &refusal);
+    try sameModule(a, &retained_module, &fresh_module);
+    return compareChecked(root, backing, a, &retained, false);
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-3
+// spec-case: SEMANTIC-CACHE-6
+test "function local loop IDs preserve exact retained CoreIR after preceding loops change" {
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", std.testing.allocator);
+    defer std.testing.allocator.free(root);
+    var semantic = language.semantic_cache.Cache.init(std.testing.allocator, 4 << 20);
+    defer semantic.deinit();
+    const head =
+        \\func first(n: int) -> int:
+        \\    mut i = 0
+        \\    while i < n:
+        \\        i += 1
+        \\    return i
+        \\
+    ;
+    const tail =
+        \\func nested(n: int) -> int:
+        \\    mut total = 0
+        \\    for i in range(n):
+        \\        for j in range(n):
+        \\            if j == 1:
+        \\                continue
+        \\            total += i + j
+        \\            if total > 100:
+        \\                break
+        \\    return total
+        \\
+        \\func main(out: Stream) -> int:
+        \\    out.print("loops")
+        \\    return nested(first(3))
+        \\
+    ;
+    try std.testing.expectEqualDeep(Work{ .lowered = 3, .reused = 0 }, try compareRetainedLoops(root, std.testing.allocator, &semantic, head ++ tail));
+    try std.testing.expectEqualDeep(Work{ .lowered = 0, .reused = 3 }, try compareRetainedLoops(root, std.testing.allocator, &semantic, head ++ tail));
+    const changed_head =
+        \\func first(n: int) -> int:
+        \\    mut i = 0
+        \\    for ignored in range(1):
+        \\        while i < n:
+        \\            i += 1
+        \\    return i
+        \\
+    ;
+    try std.testing.expectEqualDeep(Work{ .lowered = 1, .reused = 2 }, try compareRetainedLoops(root, std.testing.allocator, &semantic, changed_head ++ tail));
+    try std.testing.expect(semantic.statistics.reused >= 2);
+    // A separate fresh frontend must hit those same durable raw artifacts.
+    try std.testing.expectEqualDeep(Work{ .lowered = 0, .reused = 3 }, try compare(root, std.testing.allocator, changed_head ++ tail, false));
+}
+
+// twin-drift-ok: this independently restores demand headers before comparing with the eager builder; compareMapped seeds the eager artifacts used by these tests.
+fn compareDemandMapped(root: []const u8, backing: std.mem.Allocator, left: []const u8, right: []const u8) !Work {
+    var arena = std.heap.ArenaAllocator.init(backing);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const sources = [_]language.source.Source{
+        try language.source.Source.init(a, "templates.my", left),
+        try language.source.Source.init(a, "entry.my", right),
+    };
+    const merged = try language.source.Source.initMapped(a, &sources);
+    var unit = try language.Compilation.init(a, merged.path, merged.bytes);
+    defer unit.deinit();
+    unit.src = merged;
+    try unit.check();
+    var store = try stage.Store.init(backing, std.testing.io, root);
+    defer store.deinit();
+    var lazy: lowering.Deferred = .{ .arena = a, .store = &store };
+    var cache = lowering.Cache.init(&store);
+    cache.lazy = &lazy;
+    var refusal: build.Refusal = .{};
+    const input: build.Input = .{ .program = unit.program.?, .source = unit.src };
+    var module = try build.buildExecutableCached(a, input, &refusal, &cache);
+    try lazy.prepare(&module, unit.src);
+    try std.testing.expectEqual(@as(usize, 0), lazy.restored);
+    for (0..module.functions.items.len) |index| try lazy.context.ensure(@intCast(index));
+    try std.testing.expectEqual(cache.reused, lazy.restored);
+    const fresh = try build.buildExecutable(a, input, &refusal);
+    try sameModule(a, &module, &fresh);
+    return .{ .lowered = cache.lowered, .reused = cache.reused };
+}
+
+const demand_entry = "func main(out: Stream) -> int:\n    out.print(\"before\")\n    return helper(out)\n";
+const demand_helper = "func helper(out: Stream) -> int:\n    out.print(\"helper payload\")\n    return 42\n";
+
+// spec-case: NEW-CORE-STAGE-CACHE-3
+test "demand raw headers preserve mapped source positions after preceding file grows" {
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", std.testing.allocator);
+    defer std.testing.allocator.free(root);
+    _ = try compareMapped(root, std.testing.allocator, demand_entry, demand_helper);
+    const work = try compareDemandMapped(root, std.testing.allocator, demand_entry ++ "\n\n\n", demand_helper);
+    try std.testing.expectEqualDeep(Work{ .lowered = 0, .reused = 2 }, work);
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-3
+test "demand raw headers relocate strings after preceding function adds a string" {
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", std.testing.allocator);
+    defer std.testing.allocator.free(root);
+    _ = try compareMapped(root, std.testing.allocator, demand_entry, demand_helper);
+    const edited = "func main(out: Stream) -> int:\n    out.print(\"before\")\n    out.print(\"new neighbor string\")\n    return helper(out)\n";
+    const work = try compareDemandMapped(root, std.testing.allocator, edited, demand_helper);
+    try std.testing.expectEqualDeep(Work{ .lowered = 1, .reused = 1 }, work);
 }

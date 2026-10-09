@@ -4,10 +4,20 @@
 const std = @import("std");
 const facts = @import("facts.zig");
 const cache = @import("optimization_cache.zig");
+const effects = @import("effects.zig");
 
 /// Inputs and final artifact of a function whose earlier checkpoints were identity.
 pub const Entry = struct {
     raw: ?[32]u8 = null,
+    demand: struct {
+        lowered: ?[32]u8 = null,
+        fused_identity: bool = false,
+        calls: []const u32 = &.{},
+        direct_calls: []const u32 = &.{},
+        references: []const u32 = &.{},
+        effect: ?effects.Reused = null,
+        metadata: ?cache.FinalMetadata = null,
+    } = .{},
     stable: bool = false,
     summary: ?cache.Summary = null,
     parameters: []const ?facts.Interval = &.{},
@@ -21,12 +31,13 @@ pub const Index = struct {
     entries: []Entry,
     green: []bool,
     parents: []const std.ArrayList(u32),
+    layout: ?[32]u8 = null,
 
     /// Prepare build-arena-owned records and reverse calls. Failed preparation
     /// leaves partial allocations on that arena, reclaimed with the owning build.
     pub fn prepare(a: std.mem.Allocator, context: *cache.Context, mode: u8) std.mem.Allocator.Error!?Index {
         const layout = context.layoutDigest() orelse return null;
-        const key = context.store.key("optimizer-shortcut-v1", &.{ &layout, &.{mode} });
+        const key = context.store.key("optimizer-shortcut-v2", &.{ &layout, &.{mode} });
         const previous = try context.store.loadValue(a, key, []Entry);
         const module = context.source.module;
         const count = module.functions.items.len;
@@ -39,7 +50,7 @@ pub const Index = struct {
         for (module.functions.items, entries, green, 0..) |function, *entry, *reusable, index| {
             const raw = try context.bodyDigest(@intCast(index));
             entry.* = .{ .raw = raw };
-            if (previous) |prior| if (prior.len == count) {
+            if (previous) |prior| if (prior.len >= count) {
                 const old = prior[index];
                 if (old.raw != null and raw != null and std.mem.eql(u8, &old.raw.?, &raw.?)) {
                     entry.* = old;
@@ -62,6 +73,100 @@ pub const Index = struct {
         try invalidateCycles(a, parents, green, &queue);
         try invalidateCallers(a, parents, green, &queue);
         return .{ .context = context, .key = key, .entries = entries, .green = green, .parents = parents };
+    }
+
+    /// Previous dependency-closed identity bodies can remain lowering handles.
+    pub fn prepareDemand(a: std.mem.Allocator, context: *cache.Context, mode: u8) @import("demand_ir.zig").Error!Index {
+        const demand = context.lazy.raw.?;
+        const name = if (context.source.source) |source| source.path else "";
+        const key = context.store.key("optimizer-demand-v1", &.{ name, &.{mode} });
+        const saved = if (demand.force_eager) null else try context.store.loadValue(a, key, DemandIndex);
+        const previous = if (saved) |value| value.entries else null;
+        const module = context.source.module;
+        const count = module.functions.items.len;
+        const entries = try a.alloc(Entry, count);
+        const green = try a.alloc(bool, count);
+        @memset(green, false);
+        const parents = try a.alloc(std.ArrayList(u32), count);
+        @memset(parents, .empty);
+        var queue: std.ArrayList(u32) = .empty;
+        for (module.functions.items, entries, green, 0..) |function, *entry, *reusable, index| {
+            const lowered = if (index < demand.keys.len) demand.keys[index] else null;
+            entry.* = .{ .demand = .{ .lowered = lowered } };
+            if (previous) |prior| if (prior.len >= count) {
+                const old = prior[index];
+                if (old.demand.lowered != null and lowered != null and std.mem.eql(u8, &old.demand.lowered.?, &lowered.?)) {
+                    entry.* = old;
+                    reusable.* = reusableEntry(old, module, index);
+                }
+            };
+            if (function.signature.linkage != .internal) reusable.* = true;
+            if (!reusable.*) try queue.append(a, @intCast(index));
+            if (reusable.*) {
+                for (entry.demand.calls) |target| {
+                    if (target >= count) return error.CacheMiss;
+                    try parents[target].append(a, @intCast(index));
+                }
+            } else {
+                try demand.ensure(@intCast(index));
+                entry.demand.calls = try targets(a, &module.functions.items[index]);
+                entry.demand.direct_calls = try targetsOf(a, &module.functions.items[index], .call);
+                entry.demand.references = try targetsOf(a, &module.functions.items[index], .func_ref);
+                for (entry.demand.calls) |target| if (target < count) try parents[target].append(a, @intCast(index));
+            }
+        }
+        try invalidateCycles(a, parents, green, &queue);
+        try invalidateCallers(a, parents, green, &queue);
+        for (green, 0..) |reusable, index| if (!reusable) try demand.ensure(@intCast(index));
+        return .{ .context = context, .key = key, .entries = entries, .green = green, .parents = parents, .layout = if (saved) |value| value.layout else null };
+    }
+
+    /// Optimizer fusions may append immutable runtime declarations.
+    pub fn extend(self: *Index, a: std.mem.Allocator) @import("demand_ir.zig").Error!void {
+        const module = self.context.source.module;
+        const old_count = self.entries.len;
+        const count = module.functions.items.len;
+        if (count == old_count) return;
+        if (count < old_count) return error.CacheMiss;
+        const entries = try a.alloc(Entry, count);
+        const green = try a.alloc(bool, count);
+        const parents = try a.alloc(std.ArrayList(u32), count);
+        @memcpy(entries[0..old_count], self.entries);
+        @memcpy(green[0..old_count], self.green);
+        @memcpy(parents[0..old_count], self.parents);
+        for (module.functions.items[old_count..], entries[old_count..], green[old_count..], parents[old_count..]) |function, *entry, *reusable, *callers| {
+            if (function.signature.linkage == .internal) return error.CacheMiss;
+            entry.* = .{};
+            reusable.* = true;
+            callers.* = .empty;
+        }
+        self.entries = entries;
+        self.green = green;
+        self.parents = parents;
+    }
+
+    /// Keep the raw call graph outside materialized instruction bodies.
+    // twin-drift-ok: Preserve repeated edges in instruction order for optimizer DFS; test discovery deduplicates its set of callees.
+    pub fn targets(a: std.mem.Allocator, function: *const @import("ir.zig").Function) std.mem.Allocator.Error![]const u32 {
+        var out: std.ArrayList(u32) = .empty;
+        for (function.insts.items) |inst| {
+            const target: u32 = switch (inst.op) {
+                .call => @intCast(inst.a.index()),
+                .func_ref => @intCast(inst.data),
+                else => continue,
+            };
+            try out.append(a, target);
+        }
+        return out.items;
+    }
+
+    fn targetsOf(a: std.mem.Allocator, function: *const @import("ir.zig").Function, op: @import("ir.zig").Op) std.mem.Allocator.Error![]const u32 {
+        var out: std.ArrayList(u32) = .empty;
+        for (function.insts.items) |inst| {
+            if (inst.op != op) continue;
+            try out.append(a, if (op == .call) @intCast(inst.a.index()) else @intCast(inst.data));
+        }
+        return out.items;
     }
 
     /// Incoming caller intervals must still match before the parameter-dependent round.
@@ -95,9 +200,24 @@ pub const Index = struct {
 
     /// Atomically replace the advisory index; absent final artifacts still miss normally.
     pub fn save(self: *const Index) std.mem.Allocator.Error!void {
-        try self.context.store.storeValue(self.key, []Entry, self.entries);
+        if (self.context.lazy.raw != null) {
+            try self.context.store.storeValue(self.key, DemandIndex, .{ .entries = self.entries, .layout = self.context.layoutDigest() });
+        } else try self.context.store.storeValue(self.key, []Entry, self.entries);
     }
 };
+
+const DemandIndex = struct { entries: []Entry, layout: ?[32]u8 };
+
+fn reusableEntry(entry: Entry, module: *const @import("ir.zig").Module, index: usize) bool {
+    if (!entry.stable or !entry.demand.fused_identity) return false;
+    if (entry.raw == null or entry.final == null) return false;
+    const summary = entry.summary orelse return false;
+    if (!summary.valid(module)) return false;
+    const effect = entry.demand.effect orelse return false;
+    if (effect.params.len != module.functions.items[index].signature.params.len) return false;
+    const metadata = entry.demand.metadata orelse return false;
+    return metadata.emission_effect != null;
+}
 
 fn equalRanges(left: []const ?facts.Interval, right: []const ?facts.Interval) bool {
     if (left.len != right.len) return false;

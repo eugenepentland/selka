@@ -1,0 +1,710 @@
+{
+  "12/baseline/entry_edit": {
+    "wall_s": {
+      "median": 6.402256096946076,
+      "min": 6.002486364915967,
+      "max": 7.794076328165829
+    },
+    "peak_rss_gib": 1.22314453125,
+    "raw_bodies_materialized": [
+      8857,
+      8857,
+      8857
+    ],
+    "final_bodies_materialized": [
+      8857,
+      8857,
+      8857
+    ],
+    "full_emission_keys_built": [
+      760,
+      760,
+      760
+    ],
+    "llvm_bytes_materialized_by_emission": [
+      null,
+      null,
+      null
+    ],
+    "native_artifact_handles": [
+      null,
+      null,
+      null
+    ],
+    "native_units_compiled": [
+      1,
+      1,
+      1
+    ],
+    "frontend_checked": [
+      1106,
+      1106,
+      1106
+    ],
+    "fallbacks": [
+      0,
+      0,
+      0
+    ],
+    "all_paired_binaries_identical": false,
+    "all_allocated_executable_sections_identical": true,
+    "all_edited_native_objects_identical": true,
+    "all_execution_checks_passed": true,
+    "median_stage_seconds": {
+      "frontend": 0.996180732,
+      "lowering": 0.376828647,
+      "optimizer": 1.42240385,
+      "emission": 1.866294574,
+      "native": 1.474870313
+    }
+  },
+  "12/baseline/helper_edit": {
+    "wall_s": {
+      "median": 5.034902547020465,
+      "min": 4.9207840010058135,
+      "max": 5.330564233940095
+    },
+    "peak_rss_gib": 1.2250785827636719,
+    "raw_bodies_materialized": [
+      8857,
+      8857,
+      8857
+    ],
+    "final_bodies_materialized": [
+      8857,
+      8857,
+      8857
+    ],
+    "full_emission_keys_built": [
+      760,
+      760,
+      760
+    ],
+    "llvm_bytes_materialized_by_emission": [
+      null,
+      null,
+      null
+    ],
+    "native_artifact_handles": [
+      null,
+      null,
+      null
+    ],
+    "native_units_compiled": [
+      1,
+      1,
+      1
+    ],
+    "frontend_checked": [
+      1108,
+      1108,
+      1108
+    ],
+    "fallbacks": [
+      0,
+      0,
+      0
+    ],
+    "all_paired_binaries_identical": false,
+    "all_allocated_executable_sections_identical": true,
+    "all_edited_native_objects_identical": true,
+    "all_execution_checks_passed": true,
+    "median_stage_seconds": {
+      "frontend": 0.994506689,
+      "lowering": 0.345753893,
+      "optimizer": 1.344824687,
+      "emission": 1.643317621,
+      "native": 0.423040537
+    }
+  },
+  "12/baseline/three_file_edit": {
+    "wall_s": {
+      "median": 6.331202056026086,
+      "min": 6.085844113957137,
+      "max": 7.1168595750350505
+    },
+    "peak_rss_gib": 1.2221107482910156,
+    "raw_bodies_materialized": [
+      8857,
+      8857,
+      8857
+    ],
+    "final_bodies_materialized": [
+      8857,
+      8857,
+      8857
+    ],
+    "full_emission_keys_built": [
+      760,
+      760,
+      760
+    ],
+    "llvm_bytes_materialized_by_emission": [
+      null,
+      null,
+      null
+    ],
+    "native_artifact_handles": [
+      null,
+      null,
+      null
+    ],
+    "native_units_compiled": [
+      3,
+      3,
+      3
+    ],
+    "frontend_checked": [
+      1113,
+      1113,
+      1113
+    ],
+    "fallbacks": [
+      0,
+      0,
+      0
+    ],
+    "all_paired_binaries_identical": false,
+    "all_allocated_executable_sections_identical": true,
+    "all_edited_native_objects_identical": true,
+    "all_execution_checks_passed": true,
+    "median_stage_seconds": {
+      "frontend": 1.009620667,
+      "lowering": 0.402839474,
+      "optimizer": 1.442466357,
+      "emission": 1.758726397,
+      "native": 1.43992024
+    }
+  },
+  "12/candidate/entry_edit": {
+    "wall_s": {
+      "median": 3.8737114989198744,
+      "min": 3.8189033959060907,
+      "max": 5.064574377145618
+    },
+    "peak_rss_gib": 0.49942779541015625,
+    "raw_bodies_materialized": [
+      2600,
+      2600,
+      2600
+    ],
+    "final_bodies_materialized": [
+      2600,
+      2600,
+      2600
+    ],
+    "full_emission_keys_built": [
+      1,
+      1,
+      1
+    ],
+    "llvm_bytes_materialized_by_emission": [
+      1034007,
+      1034008,
+      1034009
+    ],
+    "native_artifact_handles": [
+      759,
+      759,
+      759
+    ],
+    "native_units_compiled": [
+      1,
+      1,
+      1
+    ],
+    "frontend_checked": [
+      1106,
+      1106,
+      1106
+    ],
+    "fallbacks": [
+      0,
+      0,
+      0
+    ],
+    "all_paired_binaries_identical": false,
+    "all_allocated_executable_sections_identical": true,
+    "all_edited_native_objects_identical": true,
+    "all_execution_checks_passed": true,
+    "median_stage_seconds": {
+      "frontend": 0.953967427,
+      "lowering": 0.158721521,
+      "optimizer": 1.450450036,
+      "emission": 0.091878664,
+      "native": 1.116064805
+    }
+  },
+  "12/candidate/helper_edit": {
+    "wall_s": {
+      "median": 3.0789533860515803,
+      "min": 3.0760651619639248,
+      "max": 3.144276980077848
+    },
+    "peak_rss_gib": 0.5025711059570312,
+    "raw_bodies_materialized": [
+      2732,
+      2732,
+      2732
+    ],
+    "final_bodies_materialized": [
+      2732,
+      2732,
+      2732
+    ],
+    "full_emission_keys_built": [
+      1,
+      1,
+      1
+    ],
+    "llvm_bytes_materialized_by_emission": [
+      66220,
+      66220,
+      66220
+    ],
+    "native_artifact_handles": [
+      759,
+      759,
+      759
+    ],
+    "native_units_compiled": [
+      1,
+      1,
+      1
+    ],
+    "frontend_checked": [
+      1108,
+      1108,
+      1108
+    ],
+    "fallbacks": [
+      0,
+      0,
+      0
+    ],
+    "all_paired_binaries_identical": false,
+    "all_allocated_executable_sections_identical": true,
+    "all_edited_native_objects_identical": true,
+    "all_execution_checks_passed": true,
+    "median_stage_seconds": {
+      "frontend": 1.00495581,
+      "lowering": 0.171421264,
+      "optimizer": 1.585498131,
+      "emission": 0.080627743,
+      "native": 0.166679649
+    }
+  },
+  "12/candidate/three_file_edit": {
+    "wall_s": {
+      "median": 4.253848309861496,
+      "min": 4.142076254123822,
+      "max": 4.976605000905693
+    },
+    "peak_rss_gib": 0.5021095275878906,
+    "raw_bodies_materialized": [
+      2869,
+      2869,
+      2869
+    ],
+    "final_bodies_materialized": [
+      2869,
+      2869,
+      2869
+    ],
+    "full_emission_keys_built": [
+      3,
+      3,
+      3
+    ],
+    "llvm_bytes_materialized_by_emission": [
+      1166447,
+      1166448,
+      1166449
+    ],
+    "native_artifact_handles": [
+      757,
+      757,
+      757
+    ],
+    "native_units_compiled": [
+      3,
+      3,
+      3
+    ],
+    "frontend_checked": [
+      1113,
+      1113,
+      1113
+    ],
+    "fallbacks": [
+      0,
+      0,
+      0
+    ],
+    "all_paired_binaries_identical": false,
+    "all_allocated_executable_sections_identical": true,
+    "all_edited_native_objects_identical": true,
+    "all_execution_checks_passed": true,
+    "median_stage_seconds": {
+      "frontend": 1.032723002,
+      "lowering": 0.174712023,
+      "optimizer": 1.660782368,
+      "emission": 0.099283986,
+      "native": 1.222778801
+    }
+  },
+  "32/baseline/entry_edit": {
+    "wall_s": {
+      "median": 13.68608829495497,
+      "min": 13.64847259502858,
+      "max": 22.70282220398076
+    },
+    "peak_rss_gib": 3.24688720703125,
+    "raw_bodies_materialized": [
+      23597,
+      23597,
+      23597
+    ],
+    "final_bodies_materialized": [
+      23597,
+      23597,
+      23597
+    ],
+    "full_emission_keys_built": [
+      2020,
+      2020,
+      2020
+    ],
+    "llvm_bytes_materialized_by_emission": [
+      null,
+      null,
+      null
+    ],
+    "native_artifact_handles": [
+      null,
+      null,
+      null
+    ],
+    "native_units_compiled": [
+      1,
+      1,
+      1
+    ],
+    "frontend_checked": [
+      2946,
+      2946,
+      2946
+    ],
+    "fallbacks": [
+      0,
+      0,
+      0
+    ],
+    "all_paired_binaries_identical": false,
+    "all_allocated_executable_sections_identical": true,
+    "all_edited_native_objects_identical": true,
+    "all_execution_checks_passed": true,
+    "median_stage_seconds": {
+      "frontend": 3.247678917,
+      "lowering": 0.792457074,
+      "optimizer": 3.538464016,
+      "emission": 4.009437158,
+      "native": 1.714114564
+    }
+  },
+  "32/baseline/helper_edit": {
+    "wall_s": {
+      "median": 13.12559635587968,
+      "min": 12.990626048995182,
+      "max": 13.575785005930811
+    },
+    "peak_rss_gib": 3.249835968017578,
+    "raw_bodies_materialized": [
+      23597,
+      23597,
+      23597
+    ],
+    "final_bodies_materialized": [
+      23597,
+      23597,
+      23597
+    ],
+    "full_emission_keys_built": [
+      2020,
+      2020,
+      2020
+    ],
+    "llvm_bytes_materialized_by_emission": [
+      null,
+      null,
+      null
+    ],
+    "native_artifact_handles": [
+      null,
+      null,
+      null
+    ],
+    "native_units_compiled": [
+      1,
+      1,
+      1
+    ],
+    "frontend_checked": [
+      2948,
+      2948,
+      2948
+    ],
+    "fallbacks": [
+      0,
+      0,
+      0
+    ],
+    "all_paired_binaries_identical": false,
+    "all_allocated_executable_sections_identical": true,
+    "all_edited_native_objects_identical": true,
+    "all_execution_checks_passed": true,
+    "median_stage_seconds": {
+      "frontend": 3.124830501,
+      "lowering": 0.843217248,
+      "optimizer": 3.629460691,
+      "emission": 3.905407166,
+      "native": 0.853265019
+    }
+  },
+  "32/baseline/three_file_edit": {
+    "wall_s": {
+      "median": 14.20427005016245,
+      "min": 13.632532828953117,
+      "max": 14.427532135974616
+    },
+    "peak_rss_gib": 3.2524185180664062,
+    "raw_bodies_materialized": [
+      23597,
+      23597,
+      23597
+    ],
+    "final_bodies_materialized": [
+      23597,
+      23597,
+      23597
+    ],
+    "full_emission_keys_built": [
+      2020,
+      2020,
+      2020
+    ],
+    "llvm_bytes_materialized_by_emission": [
+      null,
+      null,
+      null
+    ],
+    "native_artifact_handles": [
+      null,
+      null,
+      null
+    ],
+    "native_units_compiled": [
+      3,
+      3,
+      3
+    ],
+    "frontend_checked": [
+      2953,
+      2953,
+      2953
+    ],
+    "fallbacks": [
+      0,
+      0,
+      0
+    ],
+    "all_paired_binaries_identical": false,
+    "all_allocated_executable_sections_identical": true,
+    "all_edited_native_objects_identical": true,
+    "all_execution_checks_passed": true,
+    "median_stage_seconds": {
+      "frontend": 3.377683622,
+      "lowering": 0.956821466,
+      "optimizer": 3.728665238,
+      "emission": 3.888856464,
+      "native": 1.68168267
+    }
+  },
+  "32/candidate/entry_edit": {
+    "wall_s": {
+      "median": 8.981782326009125,
+      "min": 8.589230690849945,
+      "max": 14.28055255790241
+    },
+    "peak_rss_gib": 1.3109893798828125,
+    "raw_bodies_materialized": [
+      6920,
+      6920,
+      6920
+    ],
+    "final_bodies_materialized": [
+      6920,
+      6920,
+      6920
+    ],
+    "full_emission_keys_built": [
+      1,
+      1,
+      1
+    ],
+    "llvm_bytes_materialized_by_emission": [
+      1034007,
+      1034008,
+      1034009
+    ],
+    "native_artifact_handles": [
+      2019,
+      2019,
+      2019
+    ],
+    "native_units_compiled": [
+      1,
+      1,
+      1
+    ],
+    "frontend_checked": [
+      2946,
+      2946,
+      2946
+    ],
+    "fallbacks": [
+      0,
+      0,
+      0
+    ],
+    "all_paired_binaries_identical": false,
+    "all_allocated_executable_sections_identical": true,
+    "all_edited_native_objects_identical": true,
+    "all_execution_checks_passed": true,
+    "median_stage_seconds": {
+      "frontend": 3.101301764,
+      "lowering": 0.393728032,
+      "optimizer": 4.052109755,
+      "emission": 0.198350144,
+      "native": 1.09432517
+    }
+  },
+  "32/candidate/helper_edit": {
+    "wall_s": {
+      "median": 8.139581422088668,
+      "min": 8.064202012959868,
+      "max": 8.58216451201588
+    },
+    "peak_rss_gib": 1.313690185546875,
+    "raw_bodies_materialized": [
+      7052,
+      7052,
+      7052
+    ],
+    "final_bodies_materialized": [
+      7052,
+      7052,
+      7052
+    ],
+    "full_emission_keys_built": [
+      1,
+      1,
+      1
+    ],
+    "llvm_bytes_materialized_by_emission": [
+      66220,
+      66220,
+      66220
+    ],
+    "native_artifact_handles": [
+      2019,
+      2019,
+      2019
+    ],
+    "native_units_compiled": [
+      1,
+      1,
+      1
+    ],
+    "frontend_checked": [
+      2948,
+      2948,
+      2948
+    ],
+    "fallbacks": [
+      0,
+      0,
+      0
+    ],
+    "all_paired_binaries_identical": false,
+    "all_allocated_executable_sections_identical": true,
+    "all_edited_native_objects_identical": true,
+    "all_execution_checks_passed": true,
+    "median_stage_seconds": {
+      "frontend": 3.155506804,
+      "lowering": 0.391317661,
+      "optimizer": 3.989022637,
+      "emission": 0.203614948,
+      "native": 0.275025343
+    }
+  },
+  "32/candidate/three_file_edit": {
+    "wall_s": {
+      "median": 9.011504608904943,
+      "min": 8.725311758928001,
+      "max": 9.28555424301885
+    },
+    "peak_rss_gib": 1.3141632080078125,
+    "raw_bodies_materialized": [
+      7189,
+      7189,
+      7189
+    ],
+    "final_bodies_materialized": [
+      7189,
+      7189,
+      7189
+    ],
+    "full_emission_keys_built": [
+      3,
+      3,
+      3
+    ],
+    "llvm_bytes_materialized_by_emission": [
+      1166447,
+      1166448,
+      1166449
+    ],
+    "native_artifact_handles": [
+      2017,
+      2017,
+      2017
+    ],
+    "native_units_compiled": [
+      3,
+      3,
+      3
+    ],
+    "frontend_checked": [
+      2953,
+      2953,
+      2953
+    ],
+    "fallbacks": [
+      0,
+      0,
+      0
+    ],
+    "all_paired_binaries_identical": false,
+    "all_allocated_executable_sections_identical": true,
+    "all_edited_native_objects_identical": true,
+    "all_execution_checks_passed": true,
+    "median_stage_seconds": {
+      "frontend": 3.142006299,
+      "lowering": 0.382424536,
+      "optimizer": 3.931599943,
+      "emission": 0.223215678,
+      "native": 1.231610763
+    }
+  }
+}

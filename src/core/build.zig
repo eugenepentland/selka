@@ -140,15 +140,12 @@ fn buildRootsCached(allocator: std.mem.Allocator, roots: []const typed.FunctionI
             mb.module.functions.items[index] = built;
         }
     }
-    // Element reads that are only taken apart become field reads, before ownership sees their uses of the list.
-    for (mb.module.functions.items) |*function| {
-        if (function.signature.linkage == .internal) {
-            _ = try fuse.projections(allocator, function, &mb.module);
-            _ = try slices.loops(allocator, &mb.module, function);
-            _ = try fuse_text.cursors(allocator, &mb.module, function);
-            _ = try build_fn.specialize(allocator, function);
-            _ = try fuse_dict.probes(allocator, function);
-        }
+    // Unmaterialized functions receive the same local normalization on demand.
+    for (0..mb.module.functions.items.len) |index| {
+        if (cache) |stored| if (stored.lazy) |lazy| {
+            if (index < lazy.tables.loaded.items.len and !lazy.tables.loaded.items[index]) continue;
+        };
+        try @import("lowering_finish.zig").function(allocator, &mb.module, index);
     }
     // Ownership (copies before shared updates, counting) is `own.zig`'s, after the release passes.
     if (cache) |stored| if (stored.demand) |queries| try queries.recordReachable(mb.discovery.pending.items);

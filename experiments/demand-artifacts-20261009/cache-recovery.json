@@ -1,0 +1,557 @@
+{
+  "headers_preserved": [
+    "eb02a3d83dea3ed7469665d23a42e3202f790917e21eee38b04258066973dcbd.stage"
+  ],
+  "artifacts_removed_and_repaired": [
+    "aebdf67ecaacd56c04c5c4c305be08d1d10b750df5f1d2d191707239c462f59d.stage",
+    "b7101f9c8869fae0549f6a9faba810c406a658ba6afc7bf2420fe6ad12b5491f.stage",
+    "02e7c803425f6e29e8c43cf1fe2fcee3c81179c3314c5a5c217692c322aee536.stage",
+    "e566a2b2d65ef0798ff7f81c1eac26a75250e711f799c6d624f4cac0537559a5.stage"
+  ],
+  "records": [
+    {
+      "phase": "setup",
+      "cache": {
+        "version": "cache-report-v1",
+        "program": "linked",
+        "units": 2,
+        "reused": 0,
+        "compiled": 2,
+        "verified": 0,
+        "processes": 4,
+        "stages": {
+          "version": "stage-report-v2",
+          "nanoseconds": {
+            "frontend": 576929,
+            "lowering": 188598,
+            "optimizer": 378570,
+            "emission": 489650,
+            "native": 5658388806,
+            "linker": 43927224
+          },
+          "frontend": {
+            "checked": 1,
+            "reused": 0,
+            "summaries": 0,
+            "syntax_hits": 0,
+            "syntax_misses": 1,
+            "stored": 1,
+            "damaged": 0
+          },
+          "lowering": {
+            "reused": 0,
+            "lowered": 1,
+            "deferred": 0,
+            "fallbacks": 0,
+            "materialized": 1,
+            "unloaded": 0
+          },
+          "optimizer": {
+            "hits": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "misses": [
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              0
+            ],
+            "bypassed": 0,
+            "active_functions": 1,
+            "fresh_work": 1,
+            "final_restores": 0,
+            "final_loaded": 1
+          },
+          "emission": {
+            "units": 2,
+            "reused": 0,
+            "rendered": 2,
+            "seeds_reused": 0,
+            "seeds_rendered": 0,
+            "workers": 1,
+            "work": {
+              "receipts_checked": 2,
+              "keys_built": 2,
+              "llvm_loaded_bytes": 11483,
+              "native_handles": 0
+            }
+          },
+          "frontend_misses": {
+            "total": [
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "lookup": [
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "retention": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      },
+      "sha256": "fa2ad33d1dc6a74eb98b2c9e2699cbdf858b2b2f0dba0bd3db193c9b80d6b3de"
+    },
+    {
+      "phase": "native-reuse-without-llvm",
+      "cache": {
+        "version": "cache-report-v1",
+        "program": "reused",
+        "units": 2,
+        "reused": 2,
+        "compiled": 0,
+        "verified": 0,
+        "processes": 0,
+        "stages": {
+          "version": "stage-report-v2",
+          "nanoseconds": {
+            "frontend": 353165,
+            "lowering": 196467,
+            "optimizer": 117913,
+            "emission": 62362,
+            "native": 2692879,
+            "linker": 0
+          },
+          "frontend": {
+            "checked": 0,
+            "reused": 1,
+            "summaries": 0,
+            "syntax_hits": 1,
+            "syntax_misses": 0,
+            "stored": 0,
+            "damaged": 0
+          },
+          "lowering": {
+            "reused": 1,
+            "lowered": 0,
+            "deferred": 0,
+            "fallbacks": 0,
+            "materialized": 0,
+            "unloaded": 1
+          },
+          "optimizer": {
+            "hits": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "misses": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "bypassed": 1,
+            "active_functions": 0,
+            "fresh_work": 0,
+            "final_restores": 0,
+            "final_loaded": 0
+          },
+          "emission": {
+            "units": 2,
+            "reused": 2,
+            "rendered": 0,
+            "seeds_reused": 0,
+            "seeds_rendered": 0,
+            "workers": 1,
+            "work": {
+              "receipts_checked": 2,
+              "keys_built": 0,
+              "llvm_loaded_bytes": 0,
+              "native_handles": 2
+            }
+          },
+          "frontend_misses": {
+            "total": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "lookup": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "retention": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      },
+      "sha256": "fa2ad33d1dc6a74eb98b2c9e2699cbdf858b2b2f0dba0bd3db193c9b80d6b3de"
+    },
+    {
+      "phase": "repair",
+      "cache": {
+        "version": "cache-report-v1",
+        "program": "reused",
+        "units": 2,
+        "reused": 0,
+        "compiled": 2,
+        "verified": 0,
+        "processes": 2,
+        "stages": {
+          "version": "stage-report-v2",
+          "nanoseconds": {
+            "frontend": 220925,
+            "lowering": 272372,
+            "optimizer": 282526,
+            "emission": 6464718,
+            "native": 82621456,
+            "linker": 0
+          },
+          "frontend": {
+            "checked": 0,
+            "reused": 1,
+            "summaries": 0,
+            "syntax_hits": 1,
+            "syntax_misses": 0,
+            "stored": 0,
+            "damaged": 0
+          },
+          "lowering": {
+            "reused": 0,
+            "lowered": 1,
+            "deferred": 0,
+            "fallbacks": 1,
+            "materialized": 1,
+            "unloaded": 0
+          },
+          "optimizer": {
+            "hits": [
+              1,
+              1,
+              1,
+              1,
+              1,
+              0,
+              0
+            ],
+            "misses": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0
+            ],
+            "bypassed": 0,
+            "active_functions": 1,
+            "fresh_work": 1,
+            "final_restores": 0,
+            "final_loaded": 1
+          },
+          "emission": {
+            "units": 2,
+            "reused": 0,
+            "rendered": 2,
+            "seeds_reused": 0,
+            "seeds_rendered": 0,
+            "workers": 1,
+            "work": {
+              "receipts_checked": 0,
+              "keys_built": 2,
+              "llvm_loaded_bytes": 11483,
+              "native_handles": 0
+            }
+          },
+          "frontend_misses": {
+            "total": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "lookup": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "retention": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      },
+      "sha256": "fa2ad33d1dc6a74eb98b2c9e2699cbdf858b2b2f0dba0bd3db193c9b80d6b3de"
+    },
+    {
+      "phase": "warm-after-repair",
+      "cache": {
+        "version": "cache-report-v1",
+        "program": "reused",
+        "units": 2,
+        "reused": 2,
+        "compiled": 0,
+        "verified": 0,
+        "processes": 0,
+        "stages": {
+          "version": "stage-report-v2",
+          "nanoseconds": {
+            "frontend": 354781,
+            "lowering": 234355,
+            "optimizer": 153085,
+            "emission": 62809,
+            "native": 3649356,
+            "linker": 0
+          },
+          "frontend": {
+            "checked": 0,
+            "reused": 1,
+            "summaries": 0,
+            "syntax_hits": 1,
+            "syntax_misses": 0,
+            "stored": 0,
+            "damaged": 0
+          },
+          "lowering": {
+            "reused": 1,
+            "lowered": 0,
+            "deferred": 0,
+            "fallbacks": 0,
+            "materialized": 0,
+            "unloaded": 1
+          },
+          "optimizer": {
+            "hits": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "misses": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "bypassed": 1,
+            "active_functions": 0,
+            "fresh_work": 0,
+            "final_restores": 0,
+            "final_loaded": 0
+          },
+          "emission": {
+            "units": 2,
+            "reused": 2,
+            "rendered": 0,
+            "seeds_reused": 0,
+            "seeds_rendered": 0,
+            "workers": 1,
+            "work": {
+              "receipts_checked": 2,
+              "keys_built": 0,
+              "llvm_loaded_bytes": 0,
+              "native_handles": 2
+            }
+          },
+          "frontend_misses": {
+            "total": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "lookup": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "retention": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      },
+      "sha256": "fa2ad33d1dc6a74eb98b2c9e2699cbdf858b2b2f0dba0bd3db193c9b80d6b3de"
+    }
+  ]
+}

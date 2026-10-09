@@ -30,9 +30,17 @@ test "stage store validates payloads and separates compiler stage and delimited 
     try std.testing.expectEqual(@as(u64, 1) << 63, @as(u64, @bitCast(value.number)));
     const path = try std.fmt.allocPrint(a, "{s}/{s}.stage", .{ storage.root, std.fmt.bytesToHex(key, .lower) });
     const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, path, a, .unlimited);
+    const payload = (try storage.load(a, key)).?;
+    var expected: store.Digest = undefined;
+    std.crypto.hash.Blake3.hash(payload, &expected, .{});
+    try std.testing.expectEqualSlices(u8, payload, (try storage.loadExpected(a, key, expected)).?);
+    var wrong = expected;
+    wrong[0] ^= 1;
+    try std.testing.expect((try storage.loadExpected(a, key, wrong)) == null);
     bytes[bytes.len - 1] ^= 1;
     try std.Io.Dir.cwd().writeFile(std.testing.io, .{ .sub_path = path, .data = bytes });
     try std.testing.expectEqual(@as(?[]u8, null), try storage.load(a, key));
+    try std.testing.expect((try storage.loadExpected(a, key, expected)) == null);
     try std.Io.Dir.cwd().writeFile(std.testing.io, .{ .sub_path = path, .data = "truncated" });
     try std.testing.expectEqual(@as(?[]u8, null), try storage.load(a, key));
     try std.testing.expect(try storage.save(key, "bad schema"));

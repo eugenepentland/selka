@@ -206,11 +206,11 @@ test "a same-length body edit misses the retained body and reuses its neighbours
     try compare(t.allocator, &cache, original, 42);
     const checked = cache.statistics.checked;
     const reused = cache.statistics.reused;
-    const misses = cache.statistics.misses[@backingInt(language.semantic_cache.MissReason.region_bytes_changed)];
+    const misses = cache.statistics.rejections.total[@backingInt(language.semantic_cache.MissReason.region_bytes_changed)];
     try compare(t.allocator, &cache, mutated, 44);
     try t.expectEqual(checked + 1, cache.statistics.checked);
     try t.expectEqual(reused + 2, cache.statistics.reused);
-    try t.expectEqual(misses + 1, cache.statistics.misses[@backingInt(language.semantic_cache.MissReason.region_bytes_changed)]);
+    try t.expectEqual(misses + 1, cache.statistics.rejections.total[@backingInt(language.semantic_cache.MissReason.region_bytes_changed)]);
 }
 
 // spec-case: SEMANTIC-CACHE-16
@@ -221,12 +221,12 @@ test "a same-length declaration edit misses with the dependency reason it always
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
     defer cache.deinit();
     try compare(t.allocator, &cache, original, 41);
-    const misses = cache.statistics.misses[@backingInt(language.semantic_cache.MissReason.context_changed)];
+    const misses = cache.statistics.rejections.total[@backingInt(language.semantic_cache.MissReason.context_changed)];
     try compare(t.allocator, &cache, mutated, 41);
     // The renamed parameter changes the edited declaration's own region text and
     // the fingerprint its caller depends on, so both miss as a dependency change
     // and neither is served from the retained pair.
-    try t.expectEqual(misses + 2, cache.statistics.misses[@backingInt(language.semantic_cache.MissReason.context_changed)]);
+    try t.expectEqual(misses + 2, cache.statistics.rejections.total[@backingInt(language.semantic_cache.MissReason.context_changed)]);
     try t.expectEqual(@as(usize, 0), cache.statistics.reused);
 }
 // spec: SEMANTIC-CACHE-3
@@ -605,7 +605,7 @@ test "declared callback slots and matching function values reuse when the contra
     try t.expectEqual(@as(usize, 3), cache.statistics.checked);
     // The declared callback parameter is interned before checking and `one`'s
     // contract matches it exactly, so the callable slot has a stable remap.
-    try t.expectEqual(@as(usize, 0), cache.statistics.misses[@backingInt(language.semantic_cache.MissReason.function_value)]);
+    try t.expectEqual(@as(usize, 0), cache.statistics.rejections.total[@backingInt(language.semantic_cache.MissReason.function_value)]);
 
     // Only the callee body changes: `main` still stores the same declared
     // callback contract, so its body reuses and revalidates globally.
@@ -646,7 +646,7 @@ test "a function value with no matching declared callback misses with its exact 
     try compare(t.allocator, &cache, program, 42);
     // `one`'s own contract differs from the declared callback parameter, so its
     // callable contract record is interned while checking and cannot be remapped.
-    try t.expect(cache.statistics.misses[@backingInt(language.semantic_cache.MissReason.function_value)] > 0);
+    try t.expect(cache.statistics.rejections.total[@backingInt(language.semantic_cache.MissReason.function_value)] > 0);
     const before = cache.statistics.reused;
     try compare(t.allocator, &cache, program, 42);
     // `apply` and `one` reuse; `main` is rechecked with its reported reason.
@@ -671,7 +671,7 @@ test "generic specialization bodies reuse while their callers miss with their ex
         \\    return identity[i64](42)
     ;
     try compare(t.allocator, &cache, program, 42);
-    try t.expect(cache.statistics.misses[@backingInt(language.semantic_cache.MissReason.generic_specialization)] > 0);
+    try t.expect(cache.statistics.rejections.total[@backingInt(language.semantic_cache.MissReason.generic_specialization)] > 0);
     const before = cache.statistics.reused;
     const before_specialization = cache.reuse.specializations.statistics.reused;
     try compare(t.allocator, &cache, program, 42);
@@ -680,7 +680,7 @@ test "generic specialization bodies reuse while their callers miss with their ex
     // are not retained without a validated instance-key remap.
     try t.expectEqual(before + 1, cache.statistics.reused);
     try t.expectEqual(before_specialization + 1, cache.reuse.specializations.statistics.reused);
-    try t.expect(cache.statistics.misses[@backingInt(language.semantic_cache.MissReason.generic_specialization)] > 0);
+    try t.expect(cache.statistics.rejections.total[@backingInt(language.semantic_cache.MissReason.generic_specialization)] > 0);
 }
 
 // spec-case: SEMANTIC-CACHE-7
@@ -821,7 +821,7 @@ fn transientDurableRun(root: []const u8, bytes: []const u8, expected: i64) !Dura
         .reused = cache.statistics.reused,
         .stored = store.statistics.stored,
         .damaged = store.statistics.damaged,
-        .misses = cache.statistics.misses,
+        .misses = cache.statistics.rejections.total,
     };
 }
 
@@ -2093,4 +2093,33 @@ test "callback provider identities retain named labels and mutation positions" {
     const renamed = try semantic_key.providerIdentity(t.allocator, &.{callback_type}, &changed);
     defer t.allocator.free(renamed);
     try t.expect(!std.mem.eql(u8, original, renamed));
+}
+
+test "summary callable record identities distinguish return origins and reject shape changes" {
+    var unit = try language.Compilation.init(t.allocator, "edited.my", prefix ++ suffix);
+    defer unit.deinit();
+    try unit.check();
+    var cache = Cache.init(t.allocator, 4 << 20);
+    defer cache.deinit();
+    const callback: checked_typed.Callable = .{ .parameters = &.{}, .return_type = .i64, .effects = 0 };
+    var records = [_]checked_typed.Record{
+        .{ .id = @fromBackingInt(checked_typed.Type.record_base), .name = "func() -> i64", .declaration = .{ .start = 0, .end = 0 }, .fields = &.{}, .shape = .{ .domain = .u64 }, .contract = .{ .callback = callback } },
+        .{ .id = @fromBackingInt(checked_typed.Type.record_base + 1), .name = "func() -> i64", .declaration = .{ .start = 0, .end = 0 }, .fields = &.{}, .shape = .{ .domain = .u64 }, .contract = .{ .callback = callback } },
+    };
+    records[1].contract.callback.?.return_origin = .fresh;
+    const a = unit.arena.allocator();
+    var before = try cache.begin(a, unit.src, unit.syntax.?, &records);
+    const identity = (try before.recordIdentity(a, 0)).?;
+    const other = (try before.recordIdentity(a, 1)).?;
+    try t.expect(!std.mem.eql(u8, identity, other));
+    try t.expect((try before.shapeOf(records[0].name)) == null);
+    const expected = (try before.shapeOf(identity)).?;
+    std.mem.swap(checked_typed.Record, &records[0], &records[1]);
+    records[0].id = @fromBackingInt(checked_typed.Type.record_base);
+    records[1].id = @fromBackingInt(checked_typed.Type.record_base + 1);
+    var reordered = try cache.begin(a, unit.src, unit.syntax.?, &records);
+    try t.expectEqualSlices(u8, &expected, &(try reordered.shapeOf(identity)).?);
+    records[1].contract.callback.?.effects = 1;
+    var changed = try cache.begin(a, unit.src, unit.syntax.?, &records);
+    try t.expect((try changed.shapeOf(identity)) == null);
 }

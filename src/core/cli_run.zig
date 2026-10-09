@@ -104,7 +104,7 @@ pub fn run(init: std.process.Init, request: cli_args.Request, command: []const u
             error.SourceError, error.Unsupported => 1,
             error.PolicyDenied => 3,
             error.ConfigurationFailed => 2,
-            error.ToolFailed, error.WriteFailed, error.InvalidIr => 2,
+            error.ToolFailed, error.WriteFailed, error.InvalidIr, error.CacheMiss => 2,
         };
     };
     try emit(init, report.items, json);
