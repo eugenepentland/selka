@@ -1454,8 +1454,8 @@ pub const Parser = struct {
             if (newline_boundary and lex.implicitTerminator(self.src.bytes, self.tokens, at)) break;
             at += 1;
             switch (tag) {
-                .lparen, .lbracket => delimiters += 1,
-                .rparen, .rbracket => delimiters -|= 1,
+                .lparen, .lbracket, .lbrace => delimiters += 1,
+                .rparen, .rbracket, .rbrace => delimiters -|= 1,
                 .indent => nesting += 1,
                 .dedent => {
                     nesting -= 1;

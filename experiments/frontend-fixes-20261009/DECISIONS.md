@@ -84,3 +84,11 @@ Options: replace the project's problem API, or retain the parser batch beside it
 Evidence: new CLI tests report one error instead of two at 2:15 and 6:15, and attach both binding repairs to the first diagnostic. Project already has seven fields; Problem has six.
 Choice: retain the arena-owned parser diagnostic slice in Problem's seventh field. Text and JSON rendering visit the batch. The primary problem and its own fix remain available to existing callers; unrelated edits are never flattened into it. No partial syntax is published. The existing variant-batch test keeps its minimum of three edits, counted across diagnostics instead of requiring all edits on the first one. The pinned Lox migration still makes 412 edits in 9 files over 30 rounds (heap: 147); its log now correctly includes E_FRONTEND_SYNTAX, whose repairs were previously misattributed to the first diagnostic.
 Reversibility: in-memory diagnostic transport only, no cache format or syntax change.
+
+## D11 — F4 balances dictionary and set delimiters during recovery
+
+Question: where should a damaged multiline literal stop recovery?
+Options: restart at each newline, or honor braces like the existing parentheses and brackets.
+Evidence: the four-line dictionary regression produces four diagnostics instead of one and never publishes syntax.
+Choice: count opening and closing braces in the existing recovery scan. The same regression requires exactly one diagnostic on the damaged entry and no partial syntax.
+Reversibility: recovery synchronization only; accepted syntax is unchanged.

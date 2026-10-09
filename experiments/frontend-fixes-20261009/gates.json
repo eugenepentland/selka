@@ -379,5 +379,52 @@
     "failures": [],
     "log_sha256": "e6ca22d78ed81233f8cd5b9de19beeb55809cb8d1d2fb074fc9ca7feb538a4e4",
     "log_bytes": 332478
+  },
+  {
+    "phase": "F4-red",
+    "command": "zig build test-units -Dtest-filter=F4 parser --summary all",
+    "source_commit": "f97c31441e1f72a60fc9e8f48186e36c7483ea60",
+    "status": 1,
+    "summary": "Build Summary: 6/8 steps succeeded (1 failed); 7/8 tests passed (1 failed)",
+    "test_verdicts": {
+      "passed": 7,
+      "failed": 1,
+      "skipped": 0
+    },
+    "failures": [
+      "formatter_test.test.F4 parser recovery counts braces in a four-line dictionary literal"
+    ],
+    "log_sha256": "593b80dabc52e8bb348a59c31ccdee8cb8c7c1cc2c38debaf6eeb7c3950d1321",
+    "log_bytes": 2715
+  },
+  {
+    "phase": "F4-focused",
+    "command": "zig build test-units -Dtest-filter=F4 parser --summary all",
+    "source_commit": "f97c31441e1f72a60fc9e8f48186e36c7483ea60",
+    "status": 0,
+    "summary": "Build Summary: 8/8 steps succeeded; 8/8 tests passed",
+    "test_verdicts": {
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "b9af441c5b33c024984ded8a38219d9da76c8d9b13fbdec341994def26227cfa",
+    "log_bytes": 1671
+  },
+  {
+    "phase": "F4-full",
+    "command": "zig build test --summary all",
+    "source_commit": "f97c31441e1f72a60fc9e8f48186e36c7483ea60",
+    "status": 0,
+    "summary": "Build Summary: 95/95 steps succeeded; 2298/23571 tests passed (21273 skipped)",
+    "test_verdicts": {
+      "passed": 2298,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "66eaff5a4b36186086e9fb816deb0c43e89444c7e989e6f4a30aeea2434b6468",
+    "log_bytes": 395725
   }
 ]

@@ -526,3 +526,14 @@ fn boundedRecoveryMutations() !void {
 test "parser recovery bounded nested token mutations keep all diagnostic spans owned" {
     try boundedRecoveryMutations();
 }
+
+// spec-case: PARSE-RECOVERY-1
+test "F4 parser recovery counts braces in a four-line dictionary literal" {
+    const input = "func main() -> int:\n    const values = {\n        1: ,\n        2: 3,\n    }\n    return 0\n";
+    var compilation = try language.Compilation.init(t.allocator, "braces.my", input);
+    defer compilation.deinit();
+    try t.expectError(error.SourceError, compilation.parse());
+    try t.expect(compilation.syntax == null);
+    try t.expectEqual(@as(usize, 1), compilation.diagnostics.items.len);
+    try t.expectEqual(@as(usize, 3), compilation.src.locate(compilation.diagnostics.items[0].span.start).line);
+}
