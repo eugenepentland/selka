@@ -1,0 +1,16 @@
+{
+  "families": {
+    "bit-counting": {
+      "directions_agree": [
+        true
+      ],
+      "passed": false,
+      "relative_errors": [
+        0.05413841783314899
+      ]
+    }
+  },
+  "passed": false,
+  "scope": "agreement for these changes and inputs, not a universal coverage guarantee",
+  "version": "juice-scenario-validation-v1"
+}

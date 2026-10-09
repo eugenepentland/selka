@@ -72,6 +72,9 @@ TOKEN_LIMIT = 40
 # Paths owned by one build step. Checked in order; the first prefix that
 # matches a changed path owns it.
 HOST_STEPS = (
+    ("scripts/juice", "test-juice"),
+    ("tests/test_juice.py", "test-juice"),
+    ("examples/juice/", "test-juice"),
     ("src/core/", "test-core"),
     ("test/core/", "test-core"),
     ("test/golden_parity.zig", "test-golden"),

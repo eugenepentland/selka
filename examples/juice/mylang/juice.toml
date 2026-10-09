@@ -1,0 +1,28 @@
+version = 1
+name = "juice-mylang-example"
+adapter = "mylang"
+sources = ["main.my"]
+
+[build]
+compiler = "mylang"
+entry = "main.my"
+# Change this when counter hook meanings change, even if the JSON schema does not.
+counter_semantics = "core-count-p1-c26c95de7"
+tools = []
+
+[[workloads]]
+name = "sum-quick"
+family = "list-sum"
+args = ["4096", "64"]
+unit = "record"
+units = 262144
+expected_stdout = "12530112\n"
+
+[[workloads]]
+name = "sum-validation"
+family = "list-sum"
+tier = "validation"
+args = ["4096", "512"]
+unit = "record"
+units = 2097152
+expected_stdout = "100240896\n"

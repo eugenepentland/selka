@@ -98,6 +98,9 @@ pub const parser_hints = [_][]const u8{
 /// `tests/test_friction_harvest.py`: the harvester and its replay fixture.
 pub const friction = [_][]const u8{ "tests/test_friction_harvest.py", "velocity/friction/" };
 
+/// Juice's isolated runner, format, comparison and calibration tests.
+pub const juice = [_][]const u8{ "tests/test_juice.py", "scripts/juice", "scripts/juice_tool/", "scripts/juice_validate.py", "examples/juice/" };
+
 /// `mylang doctest .`: every page it walks.
 pub const doctest = [_][]const u8{ "README.md", "SPEC.md", "docs/**/*.md" };
 

@@ -1,0 +1,147 @@
+{
+  "base": "native-baseline",
+  "base_id": "96c548cb3bf24f86a8264b3e971ff496f2a7ec5cd965714250527b9e160b2bac",
+  "candidate": "native-loaded",
+  "candidate_id": "cb995988646b8cfdd1cbef9cac098fa478af55298f0f5d12c9635a5455f3aa23",
+  "change_id": "352c72875efecc7476e2d0a111b20ea0a351559a18937ae16d83564bccb9bace",
+  "code": {
+    "available": true,
+    "functions": {},
+    "scope": "static bytes and instruction sites, not executions",
+    "sections": {}
+  },
+  "collector": {
+    "cpu": 0,
+    "event": "cpu_core/instructions/u",
+    "kind": "perf",
+    "scope": "user instructions; process and inherited children; whole workload",
+    "tool": {
+      "path": "/usr/bin/perf",
+      "sha256": "1371ae5cb9fa59632d1d0e34b877d7251df4029810ba67dc56e946545e87b531",
+      "version": "perf version 7.0.14"
+    }
+  },
+  "context_id": "9c89cf0fee8b7828fc84d7d906eebe5d40bb8a1eca3c983ade909658ec2b973a",
+  "library_changes": {},
+  "max_spread": 0.005,
+  "meaning": "100 \u00d7 candidate instructions per completed unit / baseline; not a time ratio",
+  "min_change": 0.001,
+  "mode": "combined",
+  "runtime_prediction": {
+    "status": "uncalibrated"
+  },
+  "source_roots": {
+    "base": "/home/epentland/ai/canopy/mylang-performance-proxy/.mylang-cache/juice-qualification-release/native",
+    "candidate": "/home/epentland/ai/canopy/mylang-performance-proxy/.mylang-cache/juice-qualification-release/native"
+  },
+  "static_cost": {
+    "status": "unavailable or incompatible"
+  },
+  "suite_juice": 99.99999960149691,
+  "suite_meaning": "weighted geometric mean of selected scenarios; not whole-job runtime",
+  "version": "juice-comparison-v1",
+  "workloads": {
+    "bits-quick": {
+      "assessment": "unchanged",
+      "coverage": "measured scenario only; whole-job representativeness unverified",
+      "direction": "unchanged",
+      "envelope_meaning": "observed min/max repeat range, not a statistical confidence interval",
+      "family": "bit-counting",
+      "functions": [],
+      "instruction_ratio": 1.0,
+      "juice": 100.0,
+      "lines": [],
+      "metrics": {
+        "instructions": {
+          "base": {
+            "max": 62816714,
+            "median": 62816713,
+            "min": 62816710,
+            "samples": [
+              62816714,
+              62816710,
+              62816713
+            ],
+            "spread": 6.367732103397388e-08
+          },
+          "candidate": {
+            "max": 62816713,
+            "median": 62816713,
+            "min": 62816713,
+            "samples": [
+              62816713,
+              62816713,
+              62816713
+            ],
+            "spread": 0.0
+          }
+        }
+      },
+      "ratio_envelope": [
+        0.99999998408067,
+        1.0000000477579931
+      ],
+      "repeatable": true,
+      "risks": [],
+      "scope": "complete scenario",
+      "semantic": {
+        "status": "unavailable"
+      },
+      "tier": "quick",
+      "unit": "record",
+      "units": 262144,
+      "weight": 1
+    },
+    "bits-validation": {
+      "assessment": "unchanged",
+      "coverage": "measured scenario only; whole-job representativeness unverified",
+      "direction": "unchanged",
+      "envelope_meaning": "observed min/max repeat range, not a statistical confidence interval",
+      "family": "bit-counting",
+      "functions": [],
+      "instruction_ratio": 0.9999999920299381,
+      "juice": 99.9999992029938,
+      "lines": [],
+      "metrics": {
+        "instructions": {
+          "base": {
+            "max": 125469541,
+            "median": 125469539,
+            "min": 125469536,
+            "samples": [
+              125469539,
+              125469541,
+              125469536
+            ],
+            "spread": 3.985030980308296e-08
+          },
+          "candidate": {
+            "max": 125469543,
+            "median": 125469538,
+            "min": 125469537,
+            "samples": [
+              125469537,
+              125469538,
+              125469543
+            ],
+            "spread": 4.782037214483088e-08
+          }
+        }
+      },
+      "ratio_envelope": [
+        0.9999999681197527,
+        1.0000000557904352
+      ],
+      "repeatable": true,
+      "risks": [],
+      "scope": "complete scenario",
+      "semantic": {
+        "status": "unavailable"
+      },
+      "tier": "validation",
+      "unit": "record",
+      "units": 524288,
+      "weight": 1
+    }
+  }
+}

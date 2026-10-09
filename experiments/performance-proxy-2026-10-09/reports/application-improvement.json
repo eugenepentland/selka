@@ -1,0 +1,207 @@
+{
+  "base": "native-baseline",
+  "base_id": "96c548cb3bf24f86a8264b3e971ff496f2a7ec5cd965714250527b9e160b2bac",
+  "candidate": "native-improved",
+  "candidate_id": "2bb5f92655b622f07b3834af742f61990ba22c7a00efd51f68d2d592dde8f263",
+  "change_id": "6e2f10edce4c3d2ca894fb243d542a8b3c9a5e1a5fcea3d8b8b2924e1c37a86a",
+  "code": {
+    "available": true,
+    "functions": {
+      "__popcountdi2": {
+        "base": null,
+        "candidate": {
+          "bytes": 94
+        }
+      },
+      "bit_count": {
+        "base": {
+          "bytes": 52
+        },
+        "candidate": {
+          "bytes": 20
+        }
+      },
+      "process_records": {
+        "base": {
+          "bytes": 90
+        },
+        "candidate": {
+          "bytes": 116
+        }
+      }
+    },
+    "scope": "static bytes and instruction sites, not executions",
+    "sections": {
+      ".debug_abbrev": {
+        "base": 466,
+        "candidate": 472
+      },
+      ".debug_info": {
+        "base": 1107,
+        "candidate": 1088
+      },
+      ".debug_line": {
+        "base": 596,
+        "candidate": 538
+      },
+      ".debug_loclists": {
+        "base": 532,
+        "candidate": 503
+      },
+      ".debug_rnglists": {
+        "base": 105,
+        "candidate": 86
+      },
+      ".debug_str": {
+        "base": 454,
+        "candidate": 468
+      },
+      ".eh_frame": {
+        "base": 224,
+        "candidate": 296
+      },
+      ".eh_frame_hdr": {
+        "base": 68,
+        "candidate": 76
+      },
+      ".text": {
+        "base": 698,
+        "candidate": 798
+      }
+    }
+  },
+  "collector": {
+    "cpu": 0,
+    "event": "cpu_core/instructions/u",
+    "kind": "perf",
+    "scope": "user instructions; process and inherited children; whole workload",
+    "tool": {
+      "path": "/usr/bin/perf",
+      "sha256": "1371ae5cb9fa59632d1d0e34b877d7251df4029810ba67dc56e946545e87b531",
+      "version": "perf version 7.0.14"
+    }
+  },
+  "context_id": "9c89cf0fee8b7828fc84d7d906eebe5d40bb8a1eca3c983ade909658ec2b973a",
+  "library_changes": {},
+  "max_spread": 0.005,
+  "meaning": "100 \u00d7 candidate instructions per completed unit / baseline; not a time ratio",
+  "min_change": 0.001,
+  "mode": "application",
+  "runtime_prediction": {
+    "status": "uncalibrated"
+  },
+  "source_roots": {
+    "base": "/home/epentland/ai/canopy/mylang-performance-proxy/.mylang-cache/juice-qualification-release/native",
+    "candidate": "/home/epentland/ai/canopy/mylang-performance-proxy/.mylang-cache/juice-qualification-release/native"
+  },
+  "static_cost": {
+    "status": "unavailable or incompatible"
+  },
+  "suite_juice": 14.394306375881152,
+  "suite_meaning": "weighted geometric mean of selected scenarios; not whole-job runtime",
+  "version": "juice-comparison-v1",
+  "workloads": {
+    "bits-quick": {
+      "assessment": "less-work",
+      "coverage": "measured scenario only; whole-job representativeness unverified",
+      "direction": "less-work",
+      "envelope_meaning": "observed min/max repeat range, not a statistical confidence interval",
+      "family": "bit-counting",
+      "functions": [],
+      "instruction_ratio": 0.1445029127837364,
+      "juice": 14.450291278373639,
+      "lines": [],
+      "metrics": {
+        "instructions": {
+          "base": {
+            "max": 62816714,
+            "median": 62816713,
+            "min": 62816710,
+            "samples": [
+              62816714,
+              62816710,
+              62816713
+            ],
+            "spread": 6.367732103397388e-08
+          },
+          "candidate": {
+            "max": 9077199,
+            "median": 9077198,
+            "min": 9077197,
+            "samples": [
+              9077198,
+              9077199,
+              9077197
+            ],
+            "spread": 2.2033230959597884e-07
+          }
+        }
+      },
+      "ratio_envelope": [
+        0.14450289456401683,
+        0.14450293560423652
+      ],
+      "repeatable": true,
+      "risks": [],
+      "scope": "complete scenario",
+      "semantic": {
+        "status": "unavailable"
+      },
+      "tier": "quick",
+      "unit": "record",
+      "units": 262144,
+      "weight": 1
+    },
+    "bits-validation": {
+      "assessment": "less-work",
+      "coverage": "measured scenario only; whole-job representativeness unverified",
+      "direction": "less-work",
+      "envelope_meaning": "observed min/max repeat range, not a statistical confidence interval",
+      "family": "bit-counting",
+      "functions": [],
+      "instruction_ratio": 0.14338538376234888,
+      "juice": 14.338538376234888,
+      "lines": [],
+      "metrics": {
+        "instructions": {
+          "base": {
+            "max": 125469541,
+            "median": 125469539,
+            "min": 125469536,
+            "samples": [
+              125469539,
+              125469541,
+              125469536
+            ],
+            "spread": 3.985030980308296e-08
+          },
+          "candidate": {
+            "max": 17990499,
+            "median": 17990498,
+            "min": 17990497,
+            "samples": [
+              17990497,
+              17990499,
+              17990498
+            ],
+            "spread": 1.1116979641141674e-07
+          }
+        }
+      },
+      "ratio_envelope": [
+        0.1433853735067063,
+        0.1433853951607823
+      ],
+      "repeatable": true,
+      "risks": [],
+      "scope": "complete scenario",
+      "semantic": {
+        "status": "unavailable"
+      },
+      "tier": "validation",
+      "unit": "record",
+      "units": 524288,
+      "weight": 1
+    }
+  }
+}

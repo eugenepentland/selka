@@ -1,0 +1,237 @@
+{
+  "base": "native-baseline",
+  "base_id": "96c548cb3bf24f86a8264b3e971ff496f2a7ec5cd965714250527b9e160b2bac",
+  "candidate": "native-unoptimized",
+  "candidate_id": "5488512ace50400de71b55ba28aac2306864493f7f053c29ae9043b49c43f0bc",
+  "change_id": "372b17ba7b799b3b90363b113a6be087a85354131c9cb27309c1b1fa4118e88e",
+  "code": {
+    "available": true,
+    "functions": {
+      "__printf_chk@plt": {
+        "base": {
+          "bytes": 0
+        },
+        "candidate": null
+      },
+      "bit_count": {
+        "base": {
+          "bytes": 52
+        },
+        "candidate": {
+          "bytes": 60
+        }
+      },
+      "main": {
+        "base": {
+          "bytes": 289
+        },
+        "candidate": {
+          "bytes": 329
+        }
+      },
+      "printf@plt": {
+        "base": null,
+        "candidate": {
+          "bytes": 0
+        }
+      },
+      "process_records": {
+        "base": {
+          "bytes": 90
+        },
+        "candidate": {
+          "bytes": 127
+        }
+      }
+    },
+    "scope": "static bytes and instruction sites, not executions",
+    "sections": {
+      ".bss": {
+        "base": 8,
+        "candidate": 16
+      },
+      ".debug_abbrev": {
+        "base": 466,
+        "candidate": 302
+      },
+      ".debug_aranges": {
+        "base": 64,
+        "candidate": 48
+      },
+      ".debug_info": {
+        "base": 1107,
+        "candidate": 809
+      },
+      ".debug_line": {
+        "base": 596,
+        "candidate": 394
+      },
+      ".debug_line_str": {
+        "base": 438,
+        "candidate": 423
+      },
+      ".debug_loclists": {
+        "base": 532,
+        "candidate": null
+      },
+      ".debug_rnglists": {
+        "base": 105,
+        "candidate": null
+      },
+      ".debug_str": {
+        "base": 454,
+        "candidate": 415
+      },
+      ".dynstr": {
+        "base": 201,
+        "candidate": 183
+      },
+      ".eh_frame": {
+        "base": 224,
+        "candidate": 236
+      },
+      ".gnu.version_r": {
+        "base": 80,
+        "candidate": 64
+      },
+      ".text": {
+        "base": 698,
+        "candidate": 749
+      }
+    }
+  },
+  "collector": {
+    "cpu": 0,
+    "event": "cpu_core/instructions/u",
+    "kind": "perf",
+    "scope": "user instructions; process and inherited children; whole workload",
+    "tool": {
+      "path": "/usr/bin/perf",
+      "sha256": "1371ae5cb9fa59632d1d0e34b877d7251df4029810ba67dc56e946545e87b531",
+      "version": "perf version 7.0.14"
+    }
+  },
+  "context_id": "9c89cf0fee8b7828fc84d7d906eebe5d40bb8a1eca3c983ade909658ec2b973a",
+  "library_changes": {},
+  "max_spread": 0.005,
+  "meaning": "100 \u00d7 candidate instructions per completed unit / baseline; not a time ratio",
+  "min_change": 0.001,
+  "mode": "backend",
+  "runtime_prediction": {
+    "status": "uncalibrated"
+  },
+  "source_roots": {
+    "base": "/home/epentland/ai/canopy/mylang-performance-proxy/.mylang-cache/juice-qualification-release/native",
+    "candidate": "/home/epentland/ai/canopy/mylang-performance-proxy/.mylang-cache/juice-qualification-release/native"
+  },
+  "static_cost": {
+    "status": "unavailable or incompatible"
+  },
+  "suite_juice": 145.5466773611157,
+  "suite_meaning": "weighted geometric mean of selected scenarios; not whole-job runtime",
+  "version": "juice-comparison-v1",
+  "workloads": {
+    "bits-quick": {
+      "assessment": "more-work",
+      "coverage": "measured scenario only; whole-job representativeness unverified",
+      "direction": "more-work",
+      "envelope_meaning": "observed min/max repeat range, not a statistical confidence interval",
+      "family": "bit-counting",
+      "functions": [],
+      "instruction_ratio": 1.4552668968845919,
+      "juice": 145.5266896884592,
+      "lines": [],
+      "metrics": {
+        "instructions": {
+          "base": {
+            "max": 62816714,
+            "median": 62816713,
+            "min": 62816710,
+            "samples": [
+              62816714,
+              62816710,
+              62816713
+            ],
+            "spread": 6.367732103397388e-08
+          },
+          "candidate": {
+            "max": 91415084,
+            "median": 91415083,
+            "min": 91415078,
+            "samples": [
+              91415083,
+              91415078,
+              91415084
+            ],
+            "spread": 6.563468306428164e-08
+          }
+        }
+      },
+      "ratio_envelope": [
+        1.4552667941210677,
+        1.4552669823045492
+      ],
+      "repeatable": true,
+      "risks": [],
+      "scope": "complete scenario",
+      "semantic": {
+        "status": "unavailable"
+      },
+      "tier": "quick",
+      "unit": "record",
+      "units": 262144,
+      "weight": 1
+    },
+    "bits-validation": {
+      "assessment": "more-work",
+      "coverage": "measured scenario only; whole-job representativeness unverified",
+      "direction": "more-work",
+      "envelope_meaning": "observed min/max repeat range, not a statistical confidence interval",
+      "family": "bit-counting",
+      "functions": [],
+      "instruction_ratio": 1.4556666777902165,
+      "juice": 145.56666777902166,
+      "lines": [],
+      "metrics": {
+        "instructions": {
+          "base": {
+            "max": 125469541,
+            "median": 125469539,
+            "min": 125469536,
+            "samples": [
+              125469539,
+              125469541,
+              125469536
+            ],
+            "spread": 3.985030980308296e-08
+          },
+          "candidate": {
+            "max": 182641831,
+            "median": 182641827,
+            "min": 182641824,
+            "samples": [
+              182641831,
+              182641824,
+              182641827
+            ],
+            "spread": 3.8326379641395066e-08
+          }
+        }
+      },
+      "ratio_envelope": [
+        1.455666630676524,
+        1.4556667444757267
+      ],
+      "repeatable": true,
+      "risks": [],
+      "scope": "complete scenario",
+      "semantic": {
+        "status": "unavailable"
+      },
+      "tier": "validation",
+      "unit": "record",
+      "units": 524288,
+      "weight": 1
+    }
+  }
+}

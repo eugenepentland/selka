@@ -712,6 +712,13 @@ pub fn build(b: *std.Build) void {
     spec_merge_run.setCwd(b.path("."));
     spec_merge_step.dependOn(&spec_merge_run.step);
     test_step.dependOn(spec_merge_step);
+    // Work-based performance comparisons have no PMU/Valgrind dependency in
+    // the gate; real collector qualification is an explicit developer run.
+    const juice_step = b.step("test-juice", "Verify performance proxy contracts, collectors and comparison integrity");
+    const juice_run = driver(b, "python3 tests/test_juice.py", rss.script, "juice");
+    juice_run.addArgs(&.{ "python3", "tests/test_juice.py" });
+    juice_step.dependOn(&juice_run.step);
+    test_step.dependOn(juice_step);
     // The compiler's `compiler_identity` comes from a make-phase run of
     // `build_identity.zig`. This driver runs that file on throwaway trees that
     // share one Zig cache, the way a stale digest once reached an installed compiler.

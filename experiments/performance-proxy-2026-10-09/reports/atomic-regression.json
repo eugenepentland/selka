@@ -1,0 +1,396 @@
+{
+  "base": "reference-improved",
+  "base_id": "504b6775ccd137449106943414bd78f016e17d8b7ea3633976db8a7b565897f9",
+  "candidate": "reference-atomic",
+  "candidate_id": "2a2089bc2fa39ba74b3b25728ea17978cfe07fbe4b4f07cbba8dfe385517cb93",
+  "change_id": "f21023373c091fe15642cfc6cff764219acdae1ca81477801352fc6faf3f0f4d",
+  "code": {
+    "available": true,
+    "functions": {
+      "process_records": {
+        "base": {
+          "bytes": 116
+        },
+        "candidate": {
+          "atomic_sites": 1,
+          "bytes": 146
+        }
+      }
+    },
+    "scope": "static bytes and instruction sites, not executions",
+    "sections": {
+      ".bss": {
+        "base": 8,
+        "candidate": 16
+      },
+      ".debug_abbrev": {
+        "base": 472,
+        "candidate": 502
+      },
+      ".debug_info": {
+        "base": 1088,
+        "candidate": 1149
+      },
+      ".debug_line": {
+        "base": 538,
+        "candidate": 610
+      },
+      ".debug_line_str": {
+        "base": 438,
+        "candidate": 450
+      },
+      ".debug_loclists": {
+        "base": 503,
+        "candidate": 550
+      },
+      ".debug_rnglists": {
+        "base": 86,
+        "candidate": 93
+      },
+      ".debug_str": {
+        "base": 468,
+        "candidate": 594
+      },
+      ".text": {
+        "base": 798,
+        "candidate": 830
+      }
+    }
+  },
+  "collector": {
+    "cpu": 0,
+    "engines": {
+      "callgrind-amd64-linux": "f7eb0d5742a3df65f807f0a52b9623b8263f4747a536121d3cfe70736ae29f66",
+      "callgrind-x86-linux": "7dc573796c1e7b64e5ade946b10fa680aa2e88c138d67dd16b7c485e4fbf01f4"
+    },
+    "event": "Ir",
+    "kind": "callgrind",
+    "scope": "user instructions; process and inherited children; whole workload",
+    "tool": {
+      "path": "/home/epentland/.cache/juice-deps/usr/bin/valgrind",
+      "sha256": "4652774bd116cb49951ef74115ad4237cad5021b2bd4d80002f09d986ec438b9",
+      "version": "valgrind-3.26.0"
+    }
+  },
+  "context_id": "ecac734791fe937b5e3049b49db49f71fc6b68db4d73f280f792310e67291a2c",
+  "library_changes": {},
+  "max_spread": 0.005,
+  "meaning": "100 \u00d7 candidate instructions per completed unit / baseline; not a time ratio",
+  "min_change": 0.001,
+  "mode": "combined",
+  "runtime_prediction": {
+    "status": "uncalibrated"
+  },
+  "source_roots": {
+    "base": "/home/epentland/ai/canopy/mylang-performance-proxy/.mylang-cache/juice-qualification-release/native",
+    "candidate": "/home/epentland/ai/canopy/mylang-performance-proxy/.mylang-cache/juice-qualification-release/native"
+  },
+  "static_cost": {
+    "status": "unavailable or incompatible"
+  },
+  "suite_juice": 102.897828474685,
+  "suite_meaning": "weighted geometric mean of selected scenarios; not whole-job runtime",
+  "version": "juice-comparison-v1",
+  "workloads": {
+    "bits-quick": {
+      "assessment": "more-work",
+      "coverage": "measured scenario only; whole-job representativeness unverified",
+      "direction": "more-work",
+      "envelope_meaning": "observed min/max repeat range, not a statistical confidence interval",
+      "family": "bit-counting",
+      "functions": [
+        {
+          "base_per_unit": 7.001567840576172,
+          "candidate_per_unit": 8.001567840576172,
+          "delta_per_unit": 1.0,
+          "file": "{root}/kernel.c",
+          "function": "process_records",
+          "line": null,
+          "match": "same location",
+          "object": "{work}/program"
+        },
+        {
+          "base_per_unit": 0.0,
+          "candidate_per_unit": 1.52587890625e-05,
+          "delta_per_unit": 1.52587890625e-05,
+          "file": "???",
+          "function": "0x0000000004001400",
+          "line": null,
+          "match": "added or removed location",
+          "object": "???"
+        },
+        {
+          "base_per_unit": 1.52587890625e-05,
+          "candidate_per_unit": 0.0,
+          "delta_per_unit": -1.52587890625e-05,
+          "file": "???",
+          "function": "0x00000000040013e0",
+          "line": null,
+          "match": "added or removed location",
+          "object": "???"
+        }
+      ],
+      "instruction_ratio": 1.0288361352820252,
+      "juice": 102.88361352820252,
+      "lines": [
+        {
+          "base_per_unit": 0.0,
+          "candidate_per_unit": 2.0,
+          "delta_per_unit": 2.0,
+          "file": "{root}/kernel.c",
+          "function": "process_records",
+          "line": 42,
+          "match": "added or removed location",
+          "object": "{work}/program"
+        },
+        {
+          "base_per_unit": 2.0,
+          "candidate_per_unit": 1.0,
+          "delta_per_unit": -1.0,
+          "file": "{root}/kernel.c",
+          "function": "process_records",
+          "line": 44,
+          "match": "same location",
+          "object": "{work}/program"
+        },
+        {
+          "base_per_unit": 0.0,
+          "candidate_per_unit": 1.52587890625e-05,
+          "delta_per_unit": 1.52587890625e-05,
+          "file": "???",
+          "function": "0x0000000004001400",
+          "line": 0,
+          "match": "added or removed location",
+          "object": "???"
+        },
+        {
+          "base_per_unit": 1.52587890625e-05,
+          "candidate_per_unit": 0.0,
+          "delta_per_unit": -1.52587890625e-05,
+          "file": "???",
+          "function": "0x00000000040013e0",
+          "line": 0,
+          "match": "added or removed location",
+          "object": "???"
+        }
+      ],
+      "metrics": {
+        "atomics": {
+          "base": {
+            "max": 17,
+            "median": 17,
+            "min": 17,
+            "samples": [
+              17,
+              17,
+              17
+            ],
+            "spread": 0.0
+          },
+          "candidate": {
+            "max": 262161,
+            "median": 262161,
+            "min": 262161,
+            "samples": [
+              262161,
+              262161,
+              262161
+            ],
+            "spread": 0.0
+          }
+        },
+        "instructions": {
+          "base": {
+            "max": 9090816,
+            "median": 9090816,
+            "min": 9090816,
+            "samples": [
+              9090816,
+              9090816,
+              9090816
+            ],
+            "spread": 0.0
+          },
+          "candidate": {
+            "max": 9352960,
+            "median": 9352960,
+            "min": 9352960,
+            "samples": [
+              9352960,
+              9352960,
+              9352960
+            ],
+            "spread": 0.0
+          }
+        }
+      },
+      "ratio_envelope": [
+        1.0288361352820252,
+        1.0288361352820252
+      ],
+      "repeatable": true,
+      "risks": [
+        "static atomic_sites increased (0 \u2192 1); hotness unresolved",
+        "atomics per completed unit increased"
+      ],
+      "scope": "complete scenario",
+      "semantic": {
+        "status": "unavailable"
+      },
+      "tier": "quick",
+      "unit": "record",
+      "units": 262144,
+      "weight": 1
+    },
+    "bits-validation": {
+      "assessment": "more-work",
+      "coverage": "measured scenario only; whole-job representativeness unverified",
+      "direction": "more-work",
+      "envelope_meaning": "observed min/max repeat range, not a statistical confidence interval",
+      "family": "bit-counting",
+      "functions": [
+        {
+          "base_per_unit": 7.001516342163086,
+          "candidate_per_unit": 8.001516342163086,
+          "delta_per_unit": 1.0,
+          "file": "{root}/kernel.c",
+          "function": "process_records",
+          "line": null,
+          "match": "same location",
+          "object": "{work}/program"
+        },
+        {
+          "base_per_unit": 0.0,
+          "candidate_per_unit": 7.62939453125e-06,
+          "delta_per_unit": 7.62939453125e-06,
+          "file": "???",
+          "function": "0x0000000004001400",
+          "line": null,
+          "match": "added or removed location",
+          "object": "???"
+        },
+        {
+          "base_per_unit": 7.62939453125e-06,
+          "candidate_per_unit": 0.0,
+          "delta_per_unit": -7.62939453125e-06,
+          "file": "???",
+          "function": "0x00000000040013e0",
+          "line": null,
+          "match": "added or removed location",
+          "object": "???"
+        }
+      ],
+      "instruction_ratio": 1.0291204538518,
+      "juice": 102.91204538518,
+      "lines": [
+        {
+          "base_per_unit": 0.0,
+          "candidate_per_unit": 2.0,
+          "delta_per_unit": 2.0,
+          "file": "{root}/kernel.c",
+          "function": "process_records",
+          "line": 42,
+          "match": "added or removed location",
+          "object": "{work}/program"
+        },
+        {
+          "base_per_unit": 2.0,
+          "candidate_per_unit": 1.0,
+          "delta_per_unit": -1.0,
+          "file": "{root}/kernel.c",
+          "function": "process_records",
+          "line": 44,
+          "match": "same location",
+          "object": "{work}/program"
+        },
+        {
+          "base_per_unit": 0.0,
+          "candidate_per_unit": 7.62939453125e-06,
+          "delta_per_unit": 7.62939453125e-06,
+          "file": "???",
+          "function": "0x0000000004001400",
+          "line": 0,
+          "match": "added or removed location",
+          "object": "???"
+        },
+        {
+          "base_per_unit": 7.62939453125e-06,
+          "candidate_per_unit": 0.0,
+          "delta_per_unit": -7.62939453125e-06,
+          "file": "???",
+          "function": "0x00000000040013e0",
+          "line": 0,
+          "match": "added or removed location",
+          "object": "???"
+        }
+      ],
+      "metrics": {
+        "atomics": {
+          "base": {
+            "max": 17,
+            "median": 17,
+            "min": 17,
+            "samples": [
+              17,
+              17,
+              17
+            ],
+            "spread": 0.0
+          },
+          "candidate": {
+            "max": 524305,
+            "median": 524305,
+            "min": 524305,
+            "samples": [
+              524305,
+              524305,
+              524305
+            ],
+            "spread": 0.0
+          }
+        },
+        "instructions": {
+          "base": {
+            "max": 18004115,
+            "median": 18004115,
+            "min": 18004115,
+            "samples": [
+              18004115,
+              18004115,
+              18004115
+            ],
+            "spread": 0.0
+          },
+          "candidate": {
+            "max": 18528403,
+            "median": 18528403,
+            "min": 18528403,
+            "samples": [
+              18528403,
+              18528403,
+              18528403
+            ],
+            "spread": 0.0
+          }
+        }
+      },
+      "ratio_envelope": [
+        1.0291204538518,
+        1.0291204538518
+      ],
+      "repeatable": true,
+      "risks": [
+        "static atomic_sites increased (0 \u2192 1); hotness unresolved",
+        "atomics per completed unit increased"
+      ],
+      "scope": "complete scenario",
+      "semantic": {
+        "status": "unavailable"
+      },
+      "tier": "validation",
+      "unit": "record",
+      "units": 524288,
+      "weight": 1
+    }
+  }
+}

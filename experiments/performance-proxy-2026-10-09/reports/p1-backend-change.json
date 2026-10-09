@@ -1,0 +1,1539 @@
+{
+  "base": "pre-p1",
+  "base_id": "2c015c3642abdfd2e79655903bffde9eb742fd99d0dce3cb6f033264c9b09d53",
+  "candidate": "mylang-baseline",
+  "candidate_id": "2686d6d2e195718f4bde2720e164cc048f69c10098fd0a7527293732c13cfae9",
+  "change_id": "82c4d7ec5a5446ecd2578c2debdf35ee83d0f4d813afd8330177dc07ad0cc2fa",
+  "code": {
+    "available": true,
+    "functions": {
+      "__sched_cpucount@plt": {
+        "base": null,
+        "candidate": {
+          "bytes": 0
+        }
+      },
+      "__sysv_signal@plt": {
+        "base": {
+          "bytes": 0
+        },
+        "candidate": null
+      },
+      "block_alloc": {
+        "base": {
+          "bytes": 389
+        },
+        "candidate": {
+          "atomic_sites": 4,
+          "bytes": 580
+        }
+      },
+      "block_free": {
+        "base": {
+          "bytes": 115
+        },
+        "candidate": {
+          "atomic_sites": 2,
+          "bytes": 224
+        }
+      },
+      "core_buffer_grow": {
+        "base": {
+          "bytes": 246
+        },
+        "candidate": {
+          "atomic_sites": 2,
+          "bytes": 361
+        }
+      },
+      "core_dict_children": {
+        "base": null,
+        "candidate": {
+          "bytes": 344
+        }
+      },
+      "core_fatal_begin": {
+        "base": null,
+        "candidate": {
+          "atomic_sites": 1,
+          "bytes": 232
+        }
+      },
+      "core_floor_fault": {
+        "base": {
+          "bytes": 668
+        },
+        "candidate": {
+          "bytes": 759
+        }
+      },
+      "core_floor_install": {
+        "base": null,
+        "candidate": {
+          "bytes": 266,
+          "vector_sites": 7
+        }
+      },
+      "core_group_wait": {
+        "base": null,
+        "candidate": {
+          "atomic_sites": 3,
+          "bytes": 457,
+          "vector_sites": 8
+        }
+      },
+      "core_io_cap": {
+        "base": {
+          "bytes": 332
+        },
+        "candidate": {
+          "bytes": 232
+        }
+      },
+      "core_io_cleanup": {
+        "base": {
+          "bytes": 573,
+          "vector_sites": 4
+        },
+        "candidate": {
+          "bytes": 670,
+          "vector_sites": 4
+        }
+      },
+      "core_io_environment_read": {
+        "base": {
+          "bytes": 1550
+        },
+        "candidate": {
+          "bytes": 1905
+        }
+      },
+      "core_io_failure": {
+        "base": {
+          "bytes": 466
+        },
+        "candidate": {
+          "bytes": 485
+        }
+      },
+      "core_io_option_error": {
+        "base": {
+          "bytes": 244
+        },
+        "candidate": {
+          "bytes": 216
+        }
+      },
+      "core_io_provider": {
+        "base": {
+          "bytes": 704,
+          "vector_sites": 15
+        },
+        "candidate": {
+          "bytes": 590,
+          "vector_sites": 16
+        }
+      },
+      "core_io_raw_result": {
+        "base": {
+          "bytes": 267
+        },
+        "candidate": null
+      },
+      "core_io_read": {
+        "base": {
+          "bytes": 432
+        },
+        "candidate": {
+          "bytes": 594
+        }
+      },
+      "core_io_resource_acquire": {
+        "base": {
+          "bytes": 1326,
+          "vector_sites": 9
+        },
+        "candidate": {
+          "atomic_sites": 4,
+          "bytes": 1583,
+          "vector_sites": 10
+        }
+      },
+      "core_io_result": {
+        "base": {
+          "bytes": 277
+        },
+        "candidate": null
+      },
+      "core_io_scope": {
+        "base": {
+          "bytes": 511
+        },
+        "candidate": {
+          "bytes": 601
+        }
+      },
+      "core_io_write": {
+        "base": {
+          "bytes": 343
+        },
+        "candidate": {
+          "bytes": 496
+        }
+      },
+      "core_release_child": {
+        "base": null,
+        "candidate": {
+          "bytes": 54
+        }
+      },
+      "core_run_timed_out": {
+        "base": {
+          "bytes": 36
+        },
+        "candidate": {
+          "bytes": 46
+        }
+      },
+      "core_share_child": {
+        "base": null,
+        "candidate": {
+          "bytes": 141
+        }
+      },
+      "core_start_refuse": {
+        "base": {
+          "bytes": 627
+        },
+        "candidate": {
+          "bytes": 204
+        }
+      },
+      "core_task_execute": {
+        "base": null,
+        "candidate": {
+          "atomic_sites": 3,
+          "bytes": 375,
+          "vector_sites": 8
+        }
+      },
+      "core_task_find": {
+        "base": null,
+        "candidate": {
+          "atomic_sites": 4,
+          "bytes": 261
+        }
+      },
+      "core_task_report": {
+        "base": null,
+        "candidate": {
+          "bytes": 625
+        }
+      },
+      "core_task_worker_main": {
+        "base": null,
+        "candidate": {
+          "atomic_sites": 2,
+          "bytes": 502
+        }
+      },
+      "core_tasks_quiesce": {
+        "base": null,
+        "candidate": {
+          "bytes": 165
+        }
+      },
+      "core_text_append_bytes": {
+        "base": {
+          "bytes": 623
+        },
+        "candidate": {
+          "atomic_sites": 2,
+          "bytes": 724
+        }
+      },
+      "core_text_locate": {
+        "base": {
+          "bytes": 315
+        },
+        "candidate": {
+          "bytes": 316
+        }
+      },
+      "core_text_move": {
+        "base": {
+          "bytes": 570,
+          "vector_sites": 37
+        },
+        "candidate": {
+          "bytes": 572,
+          "vector_sites": 37
+        }
+      },
+      "core_text_slice_step": {
+        "base": {
+          "bytes": 1542,
+          "vector_sites": 48
+        },
+        "candidate": {
+          "bytes": 1543,
+          "vector_sites": 48
+        }
+      },
+      "core_thread_key_initialize": {
+        "base": null,
+        "candidate": {
+          "bytes": 34
+        }
+      },
+      "core_thread_register_slow": {
+        "base": null,
+        "candidate": {
+          "bytes": 186
+        }
+      },
+      "core_thread_retire": {
+        "base": null,
+        "candidate": {
+          "bytes": 94
+        }
+      },
+      "count_free_shared": {
+        "base": null,
+        "candidate": {
+          "bytes": 33
+        }
+      },
+      "count_release_shared": {
+        "base": null,
+        "candidate": {
+          "atomic_sites": 1,
+          "bytes": 50
+        }
+      },
+      "count_saturate_plain": {
+        "base": null,
+        "candidate": {
+          "bytes": 49
+        }
+      },
+      "dict_release_part": {
+        "base": null,
+        "candidate": {
+          "bytes": 270
+        }
+      },
+      "dwarf_frames": {
+        "base": {
+          "bytes": 7650,
+          "divide_sites": 2,
+          "vector_sites": 307
+        },
+        "candidate": {
+          "bytes": 7457,
+          "divide_sites": 2,
+          "vector_sites": 307
+        }
+      },
+      "error_end": {
+        "base": {
+          "bytes": 366
+        },
+        "candidate": null
+      },
+      "flush_all": {
+        "base": {
+          "bytes": 112
+        },
+        "candidate": {
+          "bytes": 29
+        }
+      },
+      "heap_exhausted": {
+        "base": {
+          "bytes": 27
+        },
+        "candidate": {
+          "bytes": 16
+        }
+      },
+      "live_count": {
+        "base": {
+          "bytes": 151
+        },
+        "candidate": {
+          "bytes": 383
+        }
+      },
+      "main": {
+        "base": {
+          "bytes": 1149,
+          "vector_sites": 28
+        },
+        "candidate": {
+          "bytes": 1133,
+          "vector_sites": 28
+        }
+      },
+      "memcpy@plt-0x10": {
+        "base": {
+          "bytes": 0
+        },
+        "candidate": null
+      },
+      "myl_core_args": {
+        "base": {
+          "bytes": 886
+        },
+        "candidate": {
+          "bytes": 842
+        }
+      },
+      "myl_core_assert_fail": {
+        "base": {
+          "bytes": 887
+        },
+        "candidate": {
+          "atomic_sites": 1,
+          "bytes": 870
+        }
+      },
+      "myl_core_buffer_append_checked": {
+        "base": {
+          "bytes": 285
+        },
+        "candidate": {
+          "bytes": 305
+        }
+      },
+      "myl_core_buffer_push_checked": {
+        "base": {
+          "bytes": 199
+        },
+        "candidate": {
+          "bytes": 219
+        }
+      },
+      "myl_core_bytes_utf8_error": {
+        "base": {
+          "bytes": 207,
+          "vector_sites": 7
+        },
+        "candidate": {
+          "bytes": 104,
+          "vector_sites": 4
+        }
+      },
+      "myl_core_cap_dir": {
+        "base": {
+          "bytes": 248
+        },
+        "candidate": {
+          "bytes": 352
+        }
+      },
+      "myl_core_cap_grant": {
+        "base": {
+          "bytes": 1311,
+          "vector_sites": 61
+        },
+        "candidate": {
+          "bytes": 1785,
+          "vector_sites": 76
+        }
+      },
+      "myl_core_cap_host": {
+        "base": {
+          "bytes": 262
+        },
+        "candidate": {
+          "bytes": 293
+        }
+      },
+      "myl_core_cap_restrict": {
+        "base": {
+          "bytes": 27
+        },
+        "candidate": {
+          "bytes": 134
+        }
+      },
+      "myl_core_clock_advance": {
+        "base": {
+          "bytes": 103
+        },
+        "candidate": {
+          "bytes": 215
+        }
+      },
+      "myl_core_dict_clear": {
+        "base": {
+          "bytes": 449,
+          "vector_sites": 2
+        },
+        "candidate": {
+          "bytes": 227,
+          "vector_sites": 2
+        }
+      },
+      "myl_core_dict_copy": {
+        "base": {
+          "bytes": 476
+        },
+        "candidate": {
+          "bytes": 569
+        }
+      },
+      "myl_core_dict_insert": {
+        "base": {
+          "bytes": 939,
+          "vector_sites": 4
+        },
+        "candidate": {
+          "atomic_sites": 2,
+          "bytes": 1013,
+          "vector_sites": 4
+        }
+      },
+      "myl_core_dict_remove": {
+        "base": {
+          "bytes": 545,
+          "vector_sites": 4
+        },
+        "candidate": {
+          "bytes": 360,
+          "vector_sites": 4
+        }
+      },
+      "myl_core_dict_set": {
+        "base": {
+          "bytes": 342
+        },
+        "candidate": {
+          "bytes": 87
+        }
+      },
+      "myl_core_environment_fixed": {
+        "base": {
+          "bytes": 908
+        },
+        "candidate": {
+          "bytes": 1240,
+          "vector_sites": 7
+        }
+      },
+      "myl_core_environment_names": {
+        "base": {
+          "bytes": 2184,
+          "vector_sites": 2
+        },
+        "candidate": {
+          "bytes": 2071
+        }
+      },
+      "myl_core_environment_only": {
+        "base": {
+          "bytes": 135
+        },
+        "candidate": {
+          "bytes": 180
+        }
+      },
+      "myl_core_environment_raw": {
+        "base": {
+          "bytes": 195
+        },
+        "candidate": {
+          "bytes": 335
+        }
+      },
+      "myl_core_environment_text": {
+        "base": {
+          "bytes": 624
+        },
+        "candidate": {
+          "bytes": 723
+        }
+      },
+      "myl_core_err_trace": {
+        "base": {
+          "bytes": 54
+        },
+        "candidate": {
+          "bytes": 57
+        }
+      },
+      "myl_core_err_trace_origin_preserve_most": {
+        "base": {
+          "bytes": 24
+        },
+        "candidate": {
+          "bytes": 28
+        }
+      },
+      "myl_core_exit": {
+        "base": {
+          "bytes": 1198
+        },
+        "candidate": {
+          "bytes": 1453
+        }
+      },
+      "myl_core_external_read": {
+        "base": {
+          "bytes": 353,
+          "vector_sites": 2
+        },
+        "candidate": {
+          "bytes": 523,
+          "vector_sites": 2
+        }
+      },
+      "myl_core_file_access": {
+        "base": {
+          "bytes": 2417,
+          "vector_sites": 4
+        },
+        "candidate": {
+          "bytes": 2124,
+          "vector_sites": 2
+        }
+      },
+      "myl_core_file_method": {
+        "base": {
+          "bytes": 936,
+          "vector_sites": 7
+        },
+        "candidate": {
+          "bytes": 985,
+          "vector_sites": 6
+        }
+      },
+      "myl_core_file_scope_close": {
+        "base": {
+          "bytes": 56
+        },
+        "candidate": {
+          "bytes": 155
+        }
+      },
+      "myl_core_free_block": {
+        "base": {
+          "bytes": 940,
+          "vector_sites": 9
+        },
+        "candidate": {
+          "bytes": 786,
+          "vector_sites": 9
+        }
+      },
+      "myl_core_group_close": {
+        "base": null,
+        "candidate": {
+          "bytes": 93
+        }
+      },
+      "myl_core_group_open": {
+        "base": null,
+        "candidate": {
+          "bytes": 128,
+          "vector_sites": 3
+        }
+      },
+      "myl_core_host_check": {
+        "base": {
+          "bytes": 48
+        },
+        "candidate": {
+          "bytes": 127
+        }
+      },
+      "myl_core_host_grant": {
+        "base": {
+          "bytes": 46
+        },
+        "candidate": {
+          "bytes": 130
+        }
+      },
+      "myl_core_io_at": {
+        "base": {
+          "bytes": 13
+        },
+        "candidate": {
+          "bytes": 15
+        }
+      },
+      "myl_core_io_bytes_from_u8_list": {
+        "base": {
+          "bytes": 96
+        },
+        "candidate": {
+          "bytes": 177
+        }
+      },
+      "myl_core_ir_str_slice_span": {
+        "base": {
+          "bytes": 654,
+          "vector_sites": 50
+        },
+        "candidate": {
+          "bytes": 655,
+          "vector_sites": 50
+        }
+      },
+      "myl_core_list_copy": {
+        "base": {
+          "bytes": 416,
+          "divide_sites": 2
+        },
+        "candidate": {
+          "bytes": 425,
+          "divide_sites": 2
+        }
+      },
+      "myl_core_list_grow": {
+        "base": {
+          "bytes": 528,
+          "divide_sites": 2
+        },
+        "candidate": {
+          "atomic_sites": 4,
+          "bytes": 697,
+          "divide_sites": 2
+        }
+      },
+      "myl_core_main_error_bool": {
+        "base": {
+          "bytes": 650
+        },
+        "candidate": {
+          "bytes": 132
+        }
+      },
+      "myl_core_main_error_i64": {
+        "base": {
+          "bytes": 280
+        },
+        "candidate": {
+          "bytes": 365
+        }
+      },
+      "myl_core_main_error_str": {
+        "base": {
+          "bytes": 454
+        },
+        "candidate": {
+          "bytes": 105
+        }
+      },
+      "myl_core_main_error_u64": {
+        "base": {
+          "bytes": 714
+        },
+        "candidate": {
+          "bytes": 287
+        }
+      },
+      "myl_core_map_chunks": {
+        "base": null,
+        "candidate": {
+          "bytes": 55
+        }
+      },
+      "myl_core_none_text": {
+        "base": {
+          "bytes": 188,
+          "vector_sites": 3
+        },
+        "candidate": {
+          "bytes": 85
+        }
+      },
+      "myl_core_output_begin": {
+        "base": null,
+        "candidate": {
+          "bytes": 37
+        }
+      },
+      "myl_core_output_end": {
+        "base": null,
+        "candidate": {
+          "bytes": 132
+        }
+      },
+      "myl_core_print_bool": {
+        "base": {
+          "bytes": 342
+        },
+        "candidate": {
+          "bytes": 65
+        }
+      },
+      "myl_core_print_end": {
+        "base": {
+          "bytes": 308
+        },
+        "candidate": {
+          "bytes": 92
+        }
+      },
+      "myl_core_print_i64": {
+        "base": {
+          "bytes": 406
+        },
+        "candidate": {
+          "bytes": 287
+        }
+      },
+      "myl_core_print_sep": {
+        "base": {
+          "bytes": 162
+        },
+        "candidate": {
+          "bytes": 49
+        }
+      },
+      "myl_core_print_str": {
+        "base": {
+          "bytes": 150
+        },
+        "candidate": {
+          "bytes": 45
+        }
+      },
+      "myl_core_print_u64": {
+        "base": {
+          "bytes": 406
+        },
+        "candidate": {
+          "bytes": 272
+        }
+      },
+      "myl_core_release": {
+        "base": {
+          "bytes": 33
+        },
+        "candidate": {
+          "bytes": 49
+        }
+      },
+      "myl_core_release_slow": {
+        "base": null,
+        "candidate": {
+          "bytes": 29
+        }
+      },
+      "myl_core_resource_acquire": {
+        "base": {
+          "bytes": 56
+        },
+        "candidate": {
+          "bytes": 216
+        }
+      },
+      "myl_core_resource_complete": {
+        "base": {
+          "bytes": 13
+        },
+        "candidate": {
+          "bytes": 108
+        }
+      },
+      "myl_core_resource_read": {
+        "base": {
+          "bytes": 156
+        },
+        "candidate": {
+          "bytes": 303
+        }
+      },
+      "myl_core_resource_write": {
+        "base": {
+          "bytes": 54
+        },
+        "candidate": {
+          "bytes": 217
+        }
+      },
+      "myl_core_retain_slow": {
+        "base": null,
+        "candidate": {
+          "atomic_sites": 1,
+          "bytes": 42
+        }
+      },
+      "myl_core_s2_sort_keyed": {
+        "base": {
+          "bytes": 3658,
+          "vector_sites": 89
+        },
+        "candidate": {
+          "bytes": 3662,
+          "vector_sites": 89
+        }
+      },
+      "myl_core_s2_unsupported": {
+        "base": {
+          "bytes": 45
+        },
+        "candidate": {
+          "bytes": 81
+        }
+      },
+      "myl_core_share": {
+        "base": null,
+        "candidate": {
+          "bytes": 571,
+          "vector_sites": 2
+        }
+      },
+      "myl_core_stand_in": {
+        "base": {
+          "bytes": 91
+        },
+        "candidate": {
+          "bytes": 297,
+          "vector_sites": 2
+        }
+      },
+      "myl_core_start": {
+        "base": {
+          "bytes": 1790,
+          "divide_sites": 2,
+          "vector_sites": 29
+        },
+        "candidate": {
+          "bytes": 1585,
+          "divide_sites": 2,
+          "vector_sites": 22
+        }
+      },
+      "myl_core_str_chars": {
+        "base": {
+          "bytes": 497,
+          "vector_sites": 48
+        },
+        "candidate": {
+          "bytes": 498,
+          "vector_sites": 48
+        }
+      },
+      "myl_core_str_find": {
+        "base": {
+          "bytes": 2867,
+          "vector_sites": 284
+        },
+        "candidate": {
+          "bytes": 2803,
+          "vector_sites": 284
+        }
+      },
+      "myl_core_str_from_bool": {
+        "base": {
+          "bytes": 375,
+          "vector_sites": 6
+        },
+        "candidate": {
+          "bytes": 133
+        }
+      },
+      "myl_core_str_hash": {
+        "base": {
+          "bytes": 322
+        },
+        "candidate": {
+          "bytes": 323
+        }
+      },
+      "myl_core_str_index_offset": {
+        "base": {
+          "bytes": 542,
+          "vector_sites": 50
+        },
+        "candidate": {
+          "bytes": 543,
+          "vector_sites": 50
+        }
+      },
+      "myl_core_str_split": {
+        "base": {
+          "bytes": 643,
+          "vector_sites": 2
+        },
+        "candidate": {
+          "bytes": 444
+        }
+      },
+      "myl_core_str_split_whitespace": {
+        "base": {
+          "bytes": 775,
+          "vector_sites": 2
+        },
+        "candidate": {
+          "bytes": 573
+        }
+      },
+      "myl_core_stream_write": {
+        "base": {
+          "bytes": 150
+        },
+        "candidate": {
+          "bytes": 63
+        }
+      },
+      "myl_core_stream_write_buffer": {
+        "base": {
+          "bytes": 150
+        },
+        "candidate": {
+          "bytes": 63
+        }
+      },
+      "myl_core_stream_write_bytes": {
+        "base": {
+          "bytes": 150
+        },
+        "candidate": {
+          "bytes": 63
+        }
+      },
+      "myl_core_task_call": {
+        "base": null,
+        "candidate": {
+          "bytes": 8
+        }
+      },
+      "myl_core_task_item": {
+        "base": null,
+        "candidate": {
+          "bytes": 15
+        }
+      },
+      "myl_core_task_result": {
+        "base": null,
+        "candidate": {
+          "bytes": 180
+        }
+      },
+      "myl_core_task_submit": {
+        "base": null,
+        "candidate": {
+          "atomic_sites": 4,
+          "bytes": 2120,
+          "vector_sites": 11
+        }
+      },
+      "myl_core_test_open": {
+        "base": {
+          "bytes": 181
+        },
+        "candidate": {
+          "bytes": 215
+        }
+      },
+      "myl_core_test_run": {
+        "base": {
+          "bytes": 1917,
+          "vector_sites": 2
+        },
+        "candidate": {
+          "bytes": 1898,
+          "vector_sites": 2
+        }
+      },
+      "myl_core_test_trace": {
+        "base": {
+          "bytes": 270
+        },
+        "candidate": {
+          "bytes": 101
+        }
+      },
+      "myl_core_text_encode": {
+        "base": {
+          "bytes": 20
+        },
+        "candidate": {
+          "bytes": 45
+        }
+      },
+      "myl_core_text_search": {
+        "base": {
+          "bytes": 2217,
+          "vector_sites": 184
+        },
+        "candidate": {
+          "bytes": 2282,
+          "vector_sites": 184
+        }
+      },
+      "myl_core_text_splitlines": {
+        "base": {
+          "bytes": 436,
+          "vector_sites": 2
+        },
+        "candidate": {
+          "bytes": 298
+        }
+      },
+      "myl_core_text_zfill": {
+        "base": {
+          "bytes": 888,
+          "vector_sites": 48
+        },
+        "candidate": {
+          "bytes": 889,
+          "vector_sites": 48
+        }
+      },
+      "myl_core_threads": {
+        "base": null,
+        "candidate": {
+          "bytes": 274,
+          "vector_sites": 6
+        }
+      },
+      "myl_core_trap": {
+        "base": {
+          "bytes": 1719,
+          "vector_sites": 29
+        },
+        "candidate": {
+          "atomic_sites": 1,
+          "bytes": 1718,
+          "vector_sites": 29
+        }
+      },
+      "os_exit": {
+        "base": null,
+        "candidate": {
+          "bytes": 56
+        }
+      },
+      "os_write": {
+        "base": {
+          "bytes": 101
+        },
+        "candidate": null
+      },
+      "out_of_memory": {
+        "base": {
+          "bytes": 307
+        },
+        "candidate": {
+          "atomic_sites": 1,
+          "bytes": 471
+        }
+      },
+      "output_refused": {
+        "base": null,
+        "candidate": {
+          "atomic_sites": 1,
+          "bytes": 279
+        }
+      },
+      "pthread_attr_destroy@plt": {
+        "base": null,
+        "candidate": {
+          "bytes": 0
+        }
+      },
+      "pthread_attr_getstack@plt": {
+        "base": null,
+        "candidate": {
+          "bytes": 0
+        }
+      },
+      "pthread_attr_init@plt": {
+        "base": null,
+        "candidate": {
+          "bytes": 0
+        }
+      },
+      "pthread_attr_setguardsize@plt": {
+        "base": null,
+        "candidate": {
+          "bytes": 0
+        }
+      },
+      "pthread_attr_setstacksize@plt": {
+        "base": null,
+        "candidate": {
+          "bytes": 0
+        }
+      },
+      "pthread_create@plt": {
+        "base": null,
+        "candidate": {
+          "bytes": 0
+        }
+      },
+      "pthread_getattr_np@plt": {
+        "base": null,
+        "candidate": {
+          "bytes": 0
+        }
+      },
+      "pthread_key_create@plt": {
+        "base": null,
+        "candidate": {
+          "bytes": 0
+        }
+      },
+      "pthread_mutex_lock@plt": {
+        "base": null,
+        "candidate": {
+          "bytes": 0
+        }
+      },
+      "pthread_mutex_trylock@plt": {
+        "base": null,
+        "candidate": {
+          "bytes": 0
+        }
+      },
+      "pthread_mutex_unlock@plt": {
+        "base": null,
+        "candidate": {
+          "bytes": 0
+        }
+      },
+      "pthread_once@plt": {
+        "base": null,
+        "candidate": {
+          "bytes": 0
+        }
+      },
+      "pthread_self@plt": {
+        "base": null,
+        "candidate": {
+          "bytes": 0
+        }
+      },
+      "pthread_setspecific@plt": {
+        "base": null,
+        "candidate": {
+          "bytes": 0
+        }
+      },
+      "pthread_sigmask@plt": {
+        "base": null,
+        "candidate": {
+          "bytes": 0
+        }
+      },
+      "sched_getaffinity@plt": {
+        "base": null,
+        "candidate": {
+          "bytes": 0
+        }
+      },
+      "sigaddset@plt": {
+        "base": null,
+        "candidate": {
+          "bytes": 0
+        }
+      },
+      "signal@plt": {
+        "base": null,
+        "candidate": {
+          "bytes": 0
+        }
+      },
+      "stream_commit": {
+        "base": null,
+        "candidate": {
+          "atomic_sites": 1,
+          "bytes": 754
+        }
+      },
+      "stream_flush": {
+        "base": {
+          "bytes": 168
+        },
+        "candidate": {
+          "bytes": 455
+        }
+      },
+      "stream_flush_unlocked": {
+        "base": null,
+        "candidate": {
+          "atomic_sites": 1,
+          "bytes": 388
+        }
+      },
+      "stream_write": {
+        "base": {
+          "bytes": 150
+        },
+        "candidate": {
+          "bytes": 542
+        }
+      },
+      "syscall@plt": {
+        "base": null,
+        "candidate": {
+          "bytes": 0
+        }
+      },
+      "trace_write": {
+        "base": {
+          "bytes": 1097
+        },
+        "candidate": {
+          "bytes": 751
+        }
+      },
+      "trap_omitted": {
+        "base": {
+          "bytes": 322
+        },
+        "candidate": {
+          "bytes": 135
+        }
+      },
+      "value_render": {
+        "base": {
+          "bytes": 3262,
+          "vector_sites": 8
+        },
+        "candidate": {
+          "bytes": 3300,
+          "vector_sites": 8
+        }
+      },
+      "write@plt-0x10": {
+        "base": null,
+        "candidate": {
+          "bytes": 0
+        }
+      }
+    },
+    "scope": "static bytes and instruction sites, not executions",
+    "sections": {
+      ".bss": {
+        "base": 151120,
+        "candidate": 150720
+      },
+      ".data": {
+        "base": 24,
+        "candidate": 16
+      },
+      ".dynamic": {
+        "base": 336,
+        "candidate": 352
+      },
+      ".dynstr": {
+        "base": 823,
+        "candidate": 1197
+      },
+      ".dynsym": {
+        "base": 2160,
+        "candidate": 2616
+      },
+      ".eh_frame": {
+        "base": 12236,
+        "candidate": 13396
+      },
+      ".eh_frame_hdr": {
+        "base": 2380,
+        "candidate": 2628
+      },
+      ".gnu.version": {
+        "base": 180,
+        "candidate": 218
+      },
+      ".gnu.version_r": {
+        "base": 96,
+        "candidate": 160
+      },
+      ".got.plt": {
+        "base": 712,
+        "candidate": 864
+      },
+      ".hash": {
+        "base": 728,
+        "candidate": 880
+      },
+      ".plt": {
+        "base": 1392,
+        "candidate": 1696
+      },
+      ".rela.plt": {
+        "base": 2064,
+        "candidate": 2520
+      },
+      ".relro_padding": {
+        "base": 3616,
+        "candidate": 3320
+      },
+      ".rodata": {
+        "base": 13980,
+        "candidate": 14156
+      },
+      ".tbss": {
+        "base": null,
+        "candidate": 720
+      },
+      ".tdata": {
+        "base": null,
+        "candidate": 4
+      },
+      ".text": {
+        "base": 191606,
+        "candidate": 200502
+      }
+    }
+  },
+  "collector": {
+    "cpu": 0,
+    "event": "cpu_core/instructions/u",
+    "kind": "perf",
+    "scope": "user instructions; process and inherited children; whole workload",
+    "tool": {
+      "path": "/usr/bin/perf",
+      "sha256": "1371ae5cb9fa59632d1d0e34b877d7251df4029810ba67dc56e946545e87b531",
+      "version": "perf version 7.0.14"
+    }
+  },
+  "context_id": "9195565a2577804bc85904e05e7890228646cbead0c8a692c6a240587836fdb4",
+  "library_changes": {
+    "/usr/lib/x86_64-linux-gnu/libpthread.so.0": {
+      "base": null,
+      "candidate": "1327fc40710691dbd94e88b6cf4efce27fefe8fbb93f7d1164a75b4dccaea696"
+    }
+  },
+  "max_spread": 0.005,
+  "meaning": "100 \u00d7 candidate instructions per completed unit / baseline; not a time ratio",
+  "min_change": 0.001,
+  "mode": "backend",
+  "runtime_prediction": {
+    "status": "uncalibrated"
+  },
+  "source_roots": {
+    "base": "/home/epentland/ai/canopy/mylang-performance-proxy/.mylang-cache/juice-qualification-release/mylang",
+    "candidate": "/home/epentland/ai/canopy/mylang-performance-proxy/.mylang-cache/juice-qualification-release/mylang"
+  },
+  "static_cost": {
+    "scope": "static Core sites/LLVM remarks, not executions",
+    "totals": {}
+  },
+  "suite_juice": 100.34831579952561,
+  "suite_meaning": "weighted geometric mean of selected scenarios; not whole-job runtime",
+  "version": "juice-comparison-v1",
+  "workloads": {
+    "sum-quick": {
+      "assessment": "more-work",
+      "coverage": "measured scenario only; whole-job representativeness unverified",
+      "direction": "more-work",
+      "envelope_meaning": "observed min/max repeat range, not a statistical confidence interval",
+      "family": "list-sum",
+      "functions": [],
+      "instruction_ratio": 1.0062217980405639,
+      "juice": 100.62217980405639,
+      "lines": [],
+      "metrics": {
+        "instructions": {
+          "base": {
+            "max": 4520077,
+            "median": 4520076,
+            "min": 4520076,
+            "samples": [
+              4520076,
+              4520077,
+              4520076
+            ],
+            "spread": 2.2123521816889806e-07
+          },
+          "candidate": {
+            "max": 4548199,
+            "median": 4548199,
+            "min": 4548198,
+            "samples": [
+              4548199,
+              4548199,
+              4548198
+            ],
+            "spread": 2.1986724855266887e-07
+          }
+        }
+      },
+      "ratio_envelope": [
+        1.006221354193745,
+        1.0062217980405639
+      ],
+      "repeatable": true,
+      "risks": [
+        "linked library set changed; costs include library startup/work",
+        "static atomic_sites increased (0 \u2192 45); hotness unresolved",
+        "semantic counter contracts changed"
+      ],
+      "scope": "complete scenario",
+      "semantic": {
+        "reason": "counter hook contracts differ",
+        "status": "incompatible"
+      },
+      "tier": "quick",
+      "unit": "record",
+      "units": 262144,
+      "weight": 1
+    },
+    "sum-validation": {
+      "assessment": "unchanged",
+      "coverage": "measured scenario only; whole-job representativeness unverified",
+      "direction": "unchanged",
+      "envelope_meaning": "observed min/max repeat range, not a statistical confidence interval",
+      "family": "list-sum",
+      "functions": [],
+      "instruction_ratio": 1.000751971723373,
+      "juice": 100.07519717233731,
+      "lines": [],
+      "metrics": {
+        "instructions": {
+          "base": {
+            "max": 35018606,
+            "median": 35018604,
+            "min": 35018602,
+            "samples": [
+              35018606,
+              35018602,
+              35018604
+            ],
+            "spread": 1.1422499880349314e-07
+          },
+          "candidate": {
+            "max": 35044943,
+            "median": 35044937,
+            "min": 35044937,
+            "samples": [
+              35044937,
+              35044937,
+              35044943
+            ],
+            "spread": 1.712087540633901e-07
+          }
+        }
+      },
+      "ratio_envelope": [
+        1.00075191456793,
+        1.0007522002163307
+      ],
+      "repeatable": true,
+      "risks": [
+        "linked library set changed; costs include library startup/work",
+        "static atomic_sites increased (0 \u2192 45); hotness unresolved",
+        "semantic counter contracts changed"
+      ],
+      "scope": "complete scenario",
+      "semantic": {
+        "reason": "counter hook contracts differ",
+        "status": "incompatible"
+      },
+      "tier": "validation",
+      "unit": "record",
+      "units": 2097152,
+      "weight": 1
+    }
+  }
+}

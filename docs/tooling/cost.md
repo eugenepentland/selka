@@ -1,5 +1,8 @@
 # Per-function cost
 
+[Juice](juice.md) combines this static report with short, verified workload
+runs to compare application and backend changes without an elapsed-time gate.
+
 `mylang cost ENTRY.my [FUNCTION]` runs the same reachable Core construction and
 release passes as `mylang build ENTRY.my --release --stats`, then compiles the
 identical emitted LLVM units to capture optimization remarks. It does not link

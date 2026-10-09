@@ -1,0 +1,30 @@
+module main
+
+def checksum(count: int) -> int:
+    values: list[int] = []
+    for i in range(count):
+        values.append(i % 97)
+    result = 0
+    for value in values:
+        result += value
+    return result
+
+def number(text: str) -> int:
+    match int(text):
+        case Some(value):
+            return value
+        case None:
+            return 0
+
+def main(args: list[str], out: Stream) -> int:
+    if len(args) != 2:
+        return 2
+    count = number(args[0])
+    rounds = number(args[1])
+    if count < 1 or count > 1000000 or rounds < 1 or rounds > 10000:
+        return 2
+    result = 0
+    for round in range(rounds):
+        result += checksum(count)
+    out.print(result)
+    return 0
