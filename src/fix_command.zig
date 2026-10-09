@@ -6,7 +6,8 @@
 //! entry, so the fixes are exactly the `fix` fields of `diagnostic-v1`, located
 //! by file and UTF-8 byte range. A round applies every fix whose edits do not
 //! collide with another fix's; a colliding fix is left for the next round,
-//! which sees the updated source. `--check` runs one round and writes nothing.
+//! which sees the updated source, and a fix whose own edits overlap is never
+//! applied (`fix_plan.zig`). `--check` runs one round and writes nothing.
 const std = @import("std");
 const project_config = @import("mylang").project_config;
 const reach = @import("project_reach.zig");
@@ -31,10 +32,10 @@ const Options = struct {
     no_cache: bool = false,
 };
 
-/// One edit a child check published, with its file resolved to an absolute path.
-const Edit = struct { path: []const u8, start: usize, end: usize, text: []const u8 };
-/// One diagnostic's fix: all of its edits apply together or not at all.
-const Fix = struct { code: []const u8, edits: []const Edit };
+const fix_plan = @import("fix_plan.zig");
+const Edit = fix_plan.Edit;
+const Fix = fix_plan.Fix;
+const Planned = fix_plan.Planned;
 
 /// What `fix` did to one file: how many edits, and which codes they repaired.
 const Tally = struct { edits: usize = 0, codes: std.ArrayList([]const u8) = .empty };
@@ -202,7 +203,9 @@ fn fixEntry(session: *Session, entry: []const u8) !u8 {
             return 2;
         }
         const fixes = try collect(session, root, result.stderr);
-        const chosen = try select(session.allocator, fixes);
+        const plan = try fix_plan.select(session.allocator, fixes);
+        try withhold(session, plan.withheld);
+        const chosen = plan.chosen;
         if (chosen.len == 0) break;
         session.report.rounds += 1;
         try record(session, chosen);
@@ -282,46 +285,15 @@ fn collect(session: *Session, root: []const u8, stderr: []const u8) ![]const Fix
     return fixes.items;
 }
 
-/// The distinct edits one round applies, each with the code of the fix that
-/// asked for it: every fix in order whose edits collide with no edit already
-/// chosen. An edit identical to a chosen one (the same repair reported twice,
-/// as a generic function's instances do) is a duplicate, not a collision, and
-/// is applied once.
-fn select(allocator: std.mem.Allocator, fixes: []const Fix) ![]const Planned {
-    var taken: std.ArrayList(Planned) = .empty;
-    for (fixes) |fix| {
-        if (collides(fix, taken.items)) continue;
-        for (fix.edits) |edit| {
-            const seen = for (taken.items) |other| {
-                if (same(edit, other.edit)) break true;
-            } else false;
-            if (!seen) try taken.append(allocator, .{ .code = fix.code, .edit = edit });
-        }
+/// Name a withheld fix, whose own edits overlap one another, on stderr once
+/// per invocation; it is never applied, so its diagnostic stays for a person.
+fn withhold(session: *Session, withheld: []const Fix) !void {
+    for (withheld) |fix| {
+        const shown = try std.fs.path.relativePosix(session.allocator, session.cwd, session.cwd, fix.edits[0].path);
+        const message = try std.fmt.allocPrint(session.allocator, "mylang fix: {s}: withheld a {s} fix whose edits overlap one another\n", .{ shown, fix.code });
+        const seen = try session.report.printed.getOrPut(session.allocator, message);
+        if (!seen.found_existing) try std.Io.File.stderr().writeStreamingAll(session.io, message);
     }
-    return taken.items;
-}
-
-/// Whether any edit of `fix` overlaps a different edit already taken.
-fn collides(fix: Fix, taken: []const Planned) bool {
-    for (fix.edits) |edit| for (taken) |other| {
-        if (!same(edit, other.edit) and overlaps(edit, other.edit)) return true;
-    };
-    return false;
-}
-
-/// One edit a round applies and the diagnostic code whose fix it belongs to.
-const Planned = struct { code: []const u8, edit: Edit };
-
-fn same(a: Edit, b: Edit) bool {
-    return a.start == b.start and a.end == b.end and std.mem.eql(u8, a.path, b.path) and std.mem.eql(u8, a.text, b.text);
-}
-
-/// Whether two different edits of one file touch the same bytes or the same
-/// insertion point, where applying both would depend on their order.
-fn overlaps(a: Edit, b: Edit) bool {
-    if (!std.mem.eql(u8, a.path, b.path)) return false;
-    if (a.start == b.start) return true;
-    return a.start < b.end and b.start < a.end;
 }
 
 /// Count the chosen edits against the files they change.

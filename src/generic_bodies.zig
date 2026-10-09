@@ -1440,7 +1440,9 @@ const Checker = struct {
                 const target = if (floating) "parse_float" else "parse_int";
                 const claimed = self.active.contains(target) or self.functions.contains(target) or self.catalog.names.contains(target) or self.catalog.templates.names.contains(target) or
                     if (self.module_names) |names| try names.topLevelSpelling(invocation.name, target) else false;
-                return numeric_surface.rejectTextConversion(self.sink, invocation.name, target, claimed);
+                const operand = self.program.nodes.items[@backingInt(invocation.arguments[0])];
+                const conversion: numeric_surface.TextConversion = .{ .name = invocation.name, .call = span, .operand = self.src.text(operand.span), .primary = numeric_surface.primaryOperand(operand), .method = false };
+                return numeric_surface.rejectTextConversion(self.sink, conversion, target, claimed);
             }
             const parsed = try self.optionType(if (floating) self.floatType() else .{ .concrete = .i64 });
             return parsed;

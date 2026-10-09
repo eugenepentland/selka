@@ -52,7 +52,7 @@ pub fn publish(src: source.Source, program: ast.Program, tokens: []const lex.Tok
             }
         },
         .conditional => |conditional| {
-            if (pass.canonicalConditional(node.span)) continue;
+            if (pass.canonicalConditional(node.span, conditional)) continue;
             const condition = src.text(program.nodes.items[@backingInt(conditional.condition)].span);
             const yes = src.text(program.nodes.items[@backingInt(conditional.then_value)].span);
             const no = src.text(program.nodes.items[@backingInt(conditional.else_value)].span);
@@ -75,7 +75,13 @@ const Pass = struct {
     covered: std.ArrayList(Span) = .empty,
     changed: bool = false,
 
-    fn canonicalConditional(self: *const Pass, span: Span) bool {
+    fn canonicalConditional(self: *const Pass, span: Span, conditional: @FieldType(@FieldType(ast.Node, "data"), "conditional")) bool {
+        // The reading-order form puts its condition before its value. Text alone
+        // misreads a legacy conditional whose value is an already migrated one,
+        // `(if a then b else c) if d else e`, as canonical (FIX-MIGRATION-OVERLAP-1).
+        const condition = self.program.nodes.items[@backingInt(conditional.condition)].span;
+        const value = self.program.nodes.items[@backingInt(conditional.then_value)].span;
+        if (condition.start != value.start) return condition.start < value.start;
         // Interpolation expressions live inside a single outer string token.
         const text = std.mem.trimStart(u8, self.src.text(span), "( \t\r\n");
         if (!std.mem.startsWith(u8, text, "if")) return false;

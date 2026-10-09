@@ -1,0 +1,17 @@
+module main
+
+# Removed float helpers migrate to the prelude builtins, except where this file
+# declares the builtin's name: `f64_abs` inside `abs` must not become `abs(x)`,
+# a call of the wrapper itself. `sqrt` is not declared, so `f64_sqrt` migrates.
+
+
+def root(x: float) -> float:
+    return f64_sqrt(x)
+
+
+def abs(x: float) -> float:
+    return f64_abs(x)
+
+
+def main() -> int:
+    return int(abs(-4.0) + root(9.0))

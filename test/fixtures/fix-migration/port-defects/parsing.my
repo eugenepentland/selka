@@ -1,0 +1,34 @@
+module parsing
+
+# Pre-redesign text parsing wrappers from the EDA port (support_parse): each
+# wraps the builtin parser under the builtin's own new name. `mylang fix` once
+# rewrote `int(s)` here to `parse_int(s)`, a call of the wrapper itself.
+
+
+# Zig `std.fmt.parseInt(i64, s, 10) catch null`.
+public def parse_int(s: str) -> Option[int]:
+    if len(s) == 0:
+        return None
+    return int(s)
+
+
+# Zig `std.fmt.parseInt(u32, s, 10) catch null`.
+public def parse_u32(s: str) -> Option[int]:
+    v = parse_int(s)
+    if v is None:
+        return None
+    if v < 0 or v > 4294967295:
+        return None
+    return Some(v)
+
+
+# Zig `std.fmt.parseFloat(f64, s) catch null`; the operand is a method call.
+public def parse_float(s: str) -> Option[float]:
+    if len(s) == 0:
+        return None
+    return float(s.strip())
+
+
+# A non-primary operand keeps its meaning inside the receiver's parentheses.
+public def parse_signed(sign: str, digits: str) -> Option[int]:
+    return int(sign + digits)
