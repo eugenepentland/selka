@@ -1,0 +1,6 @@
+Emitted release LLVM (--emit-llvm), base cafe7fea7 compiler vs final (c7d815440):
+- Lox port (ports/mylang/main.my): identical except two added prelude declarations
+  (myl_core_ir_str_slice_span, myl_core_ir_str_from_span).
+- Parity programs (28): identical except those two declarations, except
+  knucleotide (views, inline span probe), text_ops (strings.repeat's COW copy passes the
+  ASCII hint), dict_count (whitespace-split keys: inline span probe for indexed tables).
