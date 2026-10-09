@@ -532,6 +532,7 @@ const ModuleState = struct {
             \\declare ptr @myl_core_ir_str_append_char(ptr, ptr, i64) nounwind
             \\declare ptr @myl_core_ir_str_slice(ptr, i64, i64) nounwind
             \\declare ptr @myl_core_ir_str_from_view(ptr, i64) nounwind
+            \\declare { i64, i64 } @myl_core_ir_str_slice_span(ptr, i64, i64) nounwind
             \\declare ptr @myl_core_s2_sort_in_place(ptr, i64, i1 zeroext) nounwind
             \\declare ptr @myl_core_list_copy(ptr, i64) nounwind
             \\declare zeroext i1 @myl_core_str_parse_int(ptr, ptr) nounwind
@@ -1905,7 +1906,7 @@ const FunctionEmitter = struct {
             .param, .iconst, .fconst, .undef, .str_const, .func_ref, .copy, .phi => {},
             .dict_new, .dict_len, .dict_find, .dict_entry_key, .dict_entry_value, .dict_set_value => try emit_dict.instruction(@TypeOf(self), self, out, name, inst),
             .dict_insert, .dict_remove, .dict_entries, .dict_entry_live, .dict_copy, .dict_clear => try emit_dict.instruction(@TypeOf(self), self, out, name, inst),
-            .str_char, .str_width, .str_code, .str_append, .str_append_char, .str_slice, .str_view_of, .str_from_view => try emit_text.instruction(self, out, name, inst),
+            .str_char, .str_width, .str_code, .str_append, .str_append_char, .str_slice, .str_view_of, .str_slice_view, .str_from_view => try emit_text.instruction(self, out, name, inst),
             .list_sort, .array_get, .array_set, .call_indirect => try emit_fn.instruction(self, out, name, inst),
             .buffer_new, .buffer_copy, .buffer_set, .buffer_push, .buffer_pop, .buffer_append => try emit_bytes.instruction(self, out, name, inst),
             .shift_left, .shift_right, .saturating_add, .float_unary => try emit_number.instruction(self, out, name, inst),

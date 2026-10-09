@@ -69,6 +69,7 @@ pub fn debug(arena: std.mem.Allocator, module: *ir.Module) Error!Result {
 /// Run the release passes over `module`.
 pub fn run(arena: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Result {
     try @import("fuse_text.zig").whitespace(arena, module);
+    _ = try @import("fuse_slice_key.zig").run(arena, module);
     var result: Result = .{
         .known = try arena.alloc(?facts.Facts, module.functions.items.len),
         .plans = try arena.alloc([]const vector.Plan, module.functions.items.len),

@@ -1,0 +1,328 @@
+{
+ "cpu": 6,
+ "rounds": 5,
+ "events": [
+  "instructions",
+  "cycles",
+  "branches",
+  "branch-misses",
+  "L1-dcache-loads",
+  "L1-dcache-load-misses",
+  "LLC-load-misses",
+  "mem_inst_retired.all_stores"
+ ],
+ "arms": [
+  {
+   "program": "knucleotide",
+   "arm": "base",
+   "status": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "median": {
+    "instructions": 2852741369,
+    "cycles": 903155712,
+    "branches": 568298642,
+    "branch-misses": 1194387,
+    "L1-dcache-loads": 624670089,
+    "L1-dcache-load-misses": 7990838,
+    "LLC-load-misses": 43711,
+    "mem_inst_retired.all_stores": 413002140
+   },
+   "samples": [
+    {
+     "status": 0,
+     "instructions": 2852741372,
+     "cycles": 907681986,
+     "branches": 568298645,
+     "branch-misses": 1189713,
+     "L1-dcache-loads": 624670092,
+     "L1-dcache-load-misses": 7982912,
+     "LLC-load-misses": 54356,
+     "mem_inst_retired.all_stores": 413002140
+    },
+    {
+     "status": 0,
+     "instructions": 2852741369,
+     "cycles": 899875600,
+     "branches": 568298642,
+     "branch-misses": 1187085,
+     "L1-dcache-loads": 624670089,
+     "L1-dcache-load-misses": 8015792,
+     "LLC-load-misses": 40258,
+     "mem_inst_retired.all_stores": 413002140
+    },
+    {
+     "status": 0,
+     "instructions": 2852741366,
+     "cycles": 914673719,
+     "branches": 568298639,
+     "branch-misses": 1212990,
+     "L1-dcache-loads": 624670086,
+     "L1-dcache-load-misses": 8001155,
+     "LLC-load-misses": 43711,
+     "mem_inst_retired.all_stores": 413002140
+    },
+    {
+     "status": 0,
+     "instructions": 2852741366,
+     "cycles": 901418378,
+     "branches": 568298639,
+     "branch-misses": 1219455,
+     "L1-dcache-loads": 624670086,
+     "L1-dcache-load-misses": 7990838,
+     "LLC-load-misses": 41810,
+     "mem_inst_retired.all_stores": 413002140
+    },
+    {
+     "status": 0,
+     "instructions": 2852741374,
+     "cycles": 903155712,
+     "branches": 568298647,
+     "branch-misses": 1194387,
+     "L1-dcache-loads": 624670094,
+     "L1-dcache-load-misses": 7968055,
+     "LLC-load-misses": 53823,
+     "mem_inst_retired.all_stores": 413002140
+    }
+   ]
+  },
+  {
+   "program": "knucleotide",
+   "arm": "v1a",
+   "status": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "median": {
+    "instructions": 1499222846,
+    "cycles": 451398325,
+    "branches": 242018547,
+    "branch-misses": 1841424,
+    "L1-dcache-loads": 331124086,
+    "L1-dcache-load-misses": 8781229,
+    "LLC-load-misses": 34289,
+    "mem_inst_retired.all_stores": 159524978
+   },
+   "samples": [
+    {
+     "status": 0,
+     "instructions": 1499222840,
+     "cycles": 449626518,
+     "branches": 242018541,
+     "branch-misses": 1844147,
+     "L1-dcache-loads": 331124080,
+     "L1-dcache-load-misses": 8776927,
+     "LLC-load-misses": 27866,
+     "mem_inst_retired.all_stores": 159524978
+    },
+    {
+     "status": 0,
+     "instructions": 1499222846,
+     "cycles": 451398325,
+     "branches": 242018547,
+     "branch-misses": 1845120,
+     "L1-dcache-loads": 331124086,
+     "L1-dcache-load-misses": 8763798,
+     "LLC-load-misses": 34734,
+     "mem_inst_retired.all_stores": 159524978
+    },
+    {
+     "status": 0,
+     "instructions": 1499222851,
+     "cycles": 451384618,
+     "branches": 242018552,
+     "branch-misses": 1817423,
+     "L1-dcache-loads": 331124091,
+     "L1-dcache-load-misses": 9071773,
+     "LLC-load-misses": 46820,
+     "mem_inst_retired.all_stores": 159524978
+    },
+    {
+     "status": 0,
+     "instructions": 1499222842,
+     "cycles": 451824388,
+     "branches": 242018543,
+     "branch-misses": 1834485,
+     "L1-dcache-loads": 331124082,
+     "L1-dcache-load-misses": 8781229,
+     "LLC-load-misses": 31448,
+     "mem_inst_retired.all_stores": 159524978
+    },
+    {
+     "status": 0,
+     "instructions": 1499222849,
+     "cycles": 454770935,
+     "branches": 242018550,
+     "branch-misses": 1841424,
+     "L1-dcache-loads": 331124089,
+     "L1-dcache-load-misses": 8806529,
+     "LLC-load-misses": 34289,
+     "mem_inst_retired.all_stores": 159524978
+    }
+   ]
+  },
+  {
+   "program": "knucleotide",
+   "arm": "v1b",
+   "status": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "median": {
+    "instructions": 1226642635,
+    "cycles": 443957590,
+    "branches": 226065804,
+    "branch-misses": 1957251,
+    "L1-dcache-loads": 258600368,
+    "L1-dcache-load-misses": 8356226,
+    "LLC-load-misses": 39275,
+    "mem_inst_retired.all_stores": 91163544
+   },
+   "samples": [
+    {
+     "status": 0,
+     "instructions": 1226642653,
+     "cycles": 443957590,
+     "branches": 226065822,
+     "branch-misses": 1957251,
+     "L1-dcache-loads": 258600386,
+     "L1-dcache-load-misses": 8356226,
+     "LLC-load-misses": 44061,
+     "mem_inst_retired.all_stores": 91163544
+    },
+    {
+     "status": 0,
+     "instructions": 1226642649,
+     "cycles": 451513831,
+     "branches": 226065818,
+     "branch-misses": 1945842,
+     "L1-dcache-loads": 258600382,
+     "L1-dcache-load-misses": 8089550,
+     "LLC-load-misses": 28642,
+     "mem_inst_retired.all_stores": 91163544
+    },
+    {
+     "status": 0,
+     "instructions": 1226642627,
+     "cycles": 443079217,
+     "branches": 226065796,
+     "branch-misses": 1958904,
+     "L1-dcache-loads": 258600360,
+     "L1-dcache-load-misses": 8436163,
+     "LLC-load-misses": 39275,
+     "mem_inst_retired.all_stores": 91163544
+    },
+    {
+     "status": 0,
+     "instructions": 1226642634,
+     "cycles": 442771820,
+     "branches": 226065803,
+     "branch-misses": 1921242,
+     "L1-dcache-loads": 258600367,
+     "L1-dcache-load-misses": 8422937,
+     "LLC-load-misses": 37529,
+     "mem_inst_retired.all_stores": 91163544
+    },
+    {
+     "status": 0,
+     "instructions": 1226642635,
+     "cycles": 444057628,
+     "branches": 226065804,
+     "branch-misses": 2000500,
+     "L1-dcache-loads": 258600368,
+     "L1-dcache-load-misses": 8338610,
+     "LLC-load-misses": 42054,
+     "mem_inst_retired.all_stores": 91163544
+    }
+   ]
+  },
+  {
+   "program": "knucleotide",
+   "arm": "zig-safe",
+   "status": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "median": {
+    "instructions": 1377192341,
+    "cycles": 415555317,
+    "branches": 287777861,
+    "branch-misses": 3325236,
+    "L1-dcache-loads": 292517830,
+    "L1-dcache-load-misses": 8318348,
+    "LLC-load-misses": 638,
+    "mem_inst_retired.all_stores": 144174868
+   },
+   "samples": [
+    {
+     "status": 0,
+     "instructions": 1377192346,
+     "cycles": 415555317,
+     "branches": 287777869,
+     "branch-misses": 3315826,
+     "L1-dcache-loads": 292517839,
+     "L1-dcache-load-misses": 8313758,
+     "LLC-load-misses": 3012,
+     "mem_inst_retired.all_stores": 144174867
+    },
+    {
+     "status": 0,
+     "instructions": 1377192341,
+     "cycles": 414099819,
+     "branches": 287777861,
+     "branch-misses": 3328214,
+     "L1-dcache-loads": 292517830,
+     "L1-dcache-load-misses": 8331005,
+     "LLC-load-misses": 148,
+     "mem_inst_retired.all_stores": 144174868
+    },
+    {
+     "status": 0,
+     "instructions": 1377192340,
+     "cycles": 417776910,
+     "branches": 287777860,
+     "branch-misses": 3325236,
+     "L1-dcache-loads": 292517829,
+     "L1-dcache-load-misses": 8327076,
+     "LLC-load-misses": 567,
+     "mem_inst_retired.all_stores": 144174868
+    },
+    {
+     "status": 0,
+     "instructions": 1377192329,
+     "cycles": 414573438,
+     "branches": 287777852,
+     "branch-misses": 3319280,
+     "L1-dcache-loads": 292517822,
+     "L1-dcache-load-misses": 8315325,
+     "LLC-load-misses": 638,
+     "mem_inst_retired.all_stores": 144174867
+    },
+    {
+     "status": 0,
+     "instructions": 1377192344,
+     "cycles": 415800358,
+     "branches": 287777864,
+     "branch-misses": 3330520,
+     "L1-dcache-loads": 292517833,
+     "L1-dcache-load-misses": 8318348,
+     "LLC-load-misses": 916,
+     "mem_inst_retired.all_stores": 144174868
+    }
+   ]
+  }
+ ]
+}

@@ -329,12 +329,19 @@ static int64_t core_text_clamp(int64_t index, int64_t len) {
     return index < 0 ? 0 : index > len ? len : index;
 }
 
-myl_block *myl_core_ir_str_slice(myl_block *text, int64_t start, int64_t end) {
+/* The octets `text[start:end]` covers: where they begin and how many (two registers). */
+typedef struct { uint64_t at, len; } core_text_span;
+core_text_span myl_core_ir_str_slice_span(myl_block *text, int64_t start, int64_t end) {
     int64_t len = (int64_t)myl_core_str_chars(text);
     start = core_text_clamp(start, len); end = core_text_clamp(end, len);
     uint64_t a = myl_core_str_offset(text, (uint64_t)start), b = a;
     if (end > start) b = (text->kind & MYL_TEXT_ASCII) ? (uint64_t)end : core_text_locate(text, (uint64_t)end, (core_anchor){(uint64_t)start, a});
-    return str_from((const char *)block_data(text) + a, (size_t)(b - a));
+    return (core_text_span){a, b - a};
+}
+
+myl_block *myl_core_ir_str_slice(myl_block *text, int64_t start, int64_t end) {
+    core_text_span span = myl_core_ir_str_slice_span(text, start, end);
+    return str_from((const char *)block_data(text) + span.at, (size_t)span.len);
 }
 
 static inline void core_text_copy(unsigned char *output, const unsigned char *input, size_t count) {
