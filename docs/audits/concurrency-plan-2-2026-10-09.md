@@ -1,10 +1,18 @@
 # Concurrency, part 2: P1 fixes, zero-tax mode and the language surface (2026-10-09)
 
-Status: **ready for Codex.** The user accepted D1–D4 as recommended on 2026-10-09 (§3). This plan follows `docs/audits/concurrency-plan-2026-10-08.md` ("plan 1"), whose package P1 is merged into `main`. One Codex run does three packages in order: **P1F** (fixes from Claude's review of P1), **T** (zero-tax mode) and **P2** (the language surface, in the redesigned syntax). Then it stops.
+Status: **ready to resume (revision 1, 2026-10-09).** The run stopped at §9 hard stop 2: merging `main` `8a2fccd2f` would bring in an upstream one-line span change to `src/core/own.zig`. The rule meant edits **by Codex**, not upstream changes; revision 1 says so (§9). P1F is accepted; T is implemented but not yet gated; P2 is not started. The user accepted D1–D4 as recommended on 2026-10-09 (§3).
 - **Size (estimates):** P1F about 4–12 h; T about 10–16 h; P2 about 30–45 h.
 - **Runtime design:** plan 1's §3–§4 (including revisions R1–R11) stays the runtime design. This plan changes the surface (§6) and how programs without tasks are compiled (§5).
 
 ## Launch instruction (for Codex)
+
+> **Resume (revision 1).** On `codex/concurrency-2`:
+> 1. Merge `claude/concurrency-plan-2` (this revision) with a real merge commit.
+> 2. Merge `main` (`8a2fccd2f` or later) with a real merge commit. The upstream `own.zig` change is allowed (§9, hard stop 2 as revised).
+> 3. Rerun P1F's gates on the merged tree, then finish T's gates (G-T1 to G-T4), then do P2.
+>
+> Everything below otherwise stands.
+
 
 > **One run: P1F, then T, then P2.**
 > - Create `codex/concurrency-2` from `claude/concurrency-plan-2`.
@@ -296,7 +304,7 @@ P2-0's table stands: helper calls, `func_ref`, `box_make`/`box_get`, generated t
 - **Thunks stay reachable** for unit partitioning (`emit_units.zig`).
 - **Mode:** any lowered task construct makes the executable `threads` (§5).
 
-**No `ir.zig` or `own.zig` change** (a §9 hard stop). If P2's executable proofs expose a real gap, stop and report the smallest change that would close it.
+**No `ir.zig` or `own.zig` edit by you** (a §9 hard stop; upstream changes merged from `main` are fine). If P2's executable proofs expose a real gap, stop and report the smallest change that would close it.
 
 ### 6.4 CLI and test runner (plan 1's P2-3)
 
@@ -389,7 +397,7 @@ Plan 1's §9 rules apply. In brief:
 
 **Hard stops (report and stop only for these):**
 1. **A semantic change:** to D1–D4 as the user decides them, to plan 1's C1, C3 and C5–C7 or its R1–R11, or to the redesign's syntax rules.
-2. **A forbidden file:** `src/core/ir.zig` or `src/core/own.zig`.
+2. **A forbidden file:** an edit **by you** to `src/core/ir.zig` or `src/core/own.zig`. Changes to those files that arrive through a merge of `main` are not edits by you; merge them, and record them in `DECISIONS.md`. If the T baseline arm's reverse patch then conflicts, resolve the conflict in the scratch baseline only.
 3. **A relaxed gate:** lowering a numeric threshold or skipping a gate. Measuring better is allowed and gets logged.
 4. **A failed identity:** G-T1 shows function-body differences you cannot remove within about 6 hours. Report them; do not change the baseline arm to hide them.
 5. **An unfixable failure:** a correctness failure that about 8 hours of investigation does not fix.
