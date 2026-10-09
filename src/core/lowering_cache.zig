@@ -131,7 +131,7 @@ pub const Session = struct {
         try h.value(checked);
         const body = h.finish();
         const debug = [_]u8{@intFromBool(mb.input.drop_debug)};
-        return self.cache.store.key("lowered-function-v1", &.{ &self.catalog, &self.guard, &self.assets, &body, &debug });
+        return self.cache.store.key("lowered-function-v2", &.{ &self.catalog, &self.guard, &self.assets, &body, &debug });
     }
 
     /// Decode and validate with private scratch and temporary discovery deltas.

@@ -105,6 +105,60 @@ test "stage snapshot relocates shifted files and literal pools and restores appe
     try std.testing.expect(!std.mem.eql(u8, &old_layout, &try snapshot.layout(a, current)));
 }
 
+fn shiftedSnapshot(a: std.mem.Allocator, mapped: bool) !void {
+    var module = try fixture(a);
+    const before_file = try source.Source.init(a, "body.my", "short\nfunc f:\n    return 1\n");
+    const after_file = try source.Source.init(a, "body.my", "a substantially longer literal\nfunc f:\n    return 1\n");
+    const prefix = try source.Source.init(a, "prefix.my", "prefix\n");
+    const before = if (mapped) try source.Source.initMapped(a, &.{ prefix, before_file }) else before_file;
+    const after = if (mapped) try source.Source.initMapped(a, &.{ prefix, after_file }) else after_file;
+    module.functions.items[0].span = @intCast(std.mem.indexOf(u8, before.bytes, "func f").?);
+    module.functions.items[0].insts.items[0].span = @intCast(std.mem.indexOf(u8, before.bytes, "return 1").?);
+    const before_end = if (mapped) before.origins[1].start + before_file.bytes.len else before.bytes.len;
+    const after_end = if (mapped) after.origins[1].start + after_file.bytes.len else after.bytes.len;
+    module.functions.items[0].insts.items[1].span = @intCast(before_end);
+    const old_context = try snapshot.Context.init(a, &module, before);
+    const wire = try snapshot.capture(a, old_context, module.functions.items[0]);
+    const context = try snapshot.Context.init(a, &module, after);
+    const restored = try snapshot.restore(a, context, wire);
+    try std.testing.expectEqual(@as(u32, @intCast(std.mem.indexOf(u8, after.bytes, "func f").?)), restored.span);
+    try std.testing.expectEqual(@as(u32, @intCast(std.mem.indexOf(u8, after.bytes, "return 1").?)), restored.insts.items[0].span);
+    try std.testing.expectEqual(@as(u32, @intCast(after_end)), restored.insts.items[1].span);
+    try std.testing.expectEqual(try snapshot.digest(a, old_context, module.functions.items[0]), try snapshot.digest(a, context, restored));
+    try std.testing.expectEqual(@as(u32, 0), try snapshot.relocate(context, try snapshot.locate(old_context, 0)));
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-2
+test "stage snapshot source coordinates survive earlier same file literal length changes" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try shiftedSnapshot(arena.allocator(), false);
+    try shiftedSnapshot(arena.allocator(), true);
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-2
+test "stage snapshot rejects invalid source line columns and preserves source less offsets" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var module = try fixture(a);
+    const text = try source.Source.init(a, "body.my", "abc\n");
+    const context = try snapshot.Context.init(a, &module, text);
+    try std.testing.expectEqual(@as(u32, 3), try snapshot.relocate(context, .{ .offset = 0, .point = .{ .line = 1, .column = 4 } }));
+    try std.testing.expectEqual(@as(u32, 4), try snapshot.relocate(context, .{ .offset = 0, .point = .{ .line = 2, .column = 1 } }));
+    try std.testing.expectError(error.InvalidSnapshot, snapshot.relocate(context, .{ .offset = 0, .point = .{ .line = 0, .column = 1 } }));
+    try std.testing.expectError(error.InvalidSnapshot, snapshot.relocate(context, .{ .offset = 0, .point = .{ .line = 3, .column = 1 } }));
+    try std.testing.expectError(error.InvalidSnapshot, snapshot.relocate(context, .{ .offset = 0, .point = .{ .line = 2, .column = 2 } }));
+    try std.testing.expectError(error.InvalidSnapshot, snapshot.relocate(context, .{ .offset = 0, .point = .{ .line = 1, .column = 0 } }));
+    try std.testing.expectError(error.InvalidSnapshot, snapshot.relocate(context, .{ .offset = 1, .point = .{ .line = 1, .column = 1 } }));
+    try std.testing.expectError(error.InvalidSnapshot, snapshot.relocate(context, .{ .offset = 1 }));
+    const absent = try snapshot.Context.init(a, &module, null);
+    try std.testing.expectEqual(@as(u32, 100), try snapshot.relocate(absent, try snapshot.locate(absent, 100)));
+    try std.testing.expectError(error.InvalidSnapshot, snapshot.relocate(absent, .{ .offset = 0, .point = .{ .line = 1, .column = 1 } }));
+    const no_lines: source.Source = .{ .path = "missing.my", .bytes = "abc", .line_starts = &.{} };
+    try std.testing.expectError(error.InvalidSnapshot, snapshot.locate(.{ .module = &module, .source = no_lines }, 1));
+}
+
 // spec-case: NEW-CORE-STAGE-CACHE-2
 test "stage snapshot rejects malformed locations block references and literal indexes" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);

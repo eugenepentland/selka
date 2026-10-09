@@ -9,6 +9,7 @@ const emit = @import("emit_llvm.zig");
 const print = @import("print.zig");
 const build = @import("build.zig");
 const deferred = @import("deferred_facts.zig");
+const source = @import("mylang").source;
 
 const basic =
     \\func leaf(n: int) -> int:
@@ -60,7 +61,7 @@ const mutating =
     \\    return 0
 ;
 const Scenario = enum { callee, parameters, recursion, effects };
-const Produced = struct { llvm: []const u8, core: []const u8, result: passes.Result, statistics: cache.Statistics };
+const Produced = struct { llvm: []const u8, core: []const u8, result: passes.Result, statistics: cache.Statistics, ancestry: []const cache.Provenance = &.{} };
 
 fn locate(_: *const anyopaque, offset: u32) emit.Location {
     return .{ .line = 1, .column = offset + 1, .path = "test.my" };
@@ -223,4 +224,79 @@ test "optimizer stage deferred cold and warm results match eager and missing or 
     const missing = try compileDeferred(a, std.testing.allocator, basic, &storage);
     try equal(oracle, missing.output);
     try std.testing.expect(missing.output.statistics.misses[@backingInt(cache.Stage.final)] > 0);
+}
+
+const shifted_predecessor =
+    \\func before() -> str:
+    \\    return "tiny"
+    \\
+    \\func affine(x: int) -> int:
+    \\    return x * 3 + 7
+    \\
+    \\func caller(n: int) -> int:
+    \\    return affine(n % 100)
+    \\
+    \\func main(out: Stream) -> int:
+    \\    out.print(before(), caller(9), affine(12))
+    \\    return 0
+;
+
+fn sourceLocation(context: *const anyopaque, offset: u32) emit.Location {
+    const src: *const source.Source = @ptrCast(@alignCast(context));
+    const at = src.locate(offset);
+    return .{ .line = @intCast(at.line), .column = @intCast(at.column), .path = at.path };
+}
+
+fn compileLocated(a: std.mem.Allocator, backing: std.mem.Allocator, text: []const u8, storage: ?*store.Store) !Produced {
+    var refusal: build.Refusal = .{};
+    var module = try support.buildSource(a, text, &refusal);
+    const src = try source.Source.init(a, "test.my", text);
+    const locator: emit.Locator = .{ .context = &src, .locate = sourceLocation };
+    var context: cache.Context = undefined;
+    if (storage) |s| context = cache.Context.init(s, try snapshot.Context.init(a, &module, src), locator);
+    const result = if (storage != null)
+        try passes.runCached(a, backing, &module, .trusted, &context)
+    else
+        try passes.runWithScratch(a, backing, &module, .trusted);
+    try support.verified(a, &module, result.plans);
+    const llvm = try emit.emitModuleWithScratch(a, backing, &module, .{
+        .locator = locator,
+        .source_path = src.path,
+        .main = .{ .parameters = &.{"out"} },
+        .analysis = support.analysis(&result),
+    });
+    const ancestry = try a.alloc(cache.Provenance, module.functions.items.len);
+    const locations: snapshot.Context = .{ .module = &module, .source = src };
+    for (ancestry, 0..) |*scopes, index| scopes.* = try cache.Provenance.capture(a, locations, &result.provenance, @intCast(index));
+    return .{ .llvm = llvm, .core = try print.module(a, &module), .result = result, .statistics = if (storage != null) context.statistics else .{}, .ancestry = ancestry };
+}
+
+fn hasNestedAncestry(result: *const passes.Result) bool {
+    for (result.provenance.frames.items) |frame| if (frame.parent != null) return true;
+    return false;
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-4
+test "optimizer cache relocates later declarations and nested inline ancestry after an earlier same-line literal grows" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var storage = try store.Store.init(std.testing.allocator, std.testing.io, try temporary.dir.realPathFileAlloc(std.testing.io, ".", a));
+    defer storage.deinit();
+    const edited = try std.mem.replaceOwned(u8, a, shifted_predecessor, "tiny", "significantly longer preceding literal");
+    _ = try compileLocated(a, std.testing.allocator, shifted_predecessor, &storage);
+    const oracle = try compileLocated(a, std.testing.allocator, edited, null);
+    const cached = try compileLocated(a, std.testing.allocator, edited, &storage);
+    const repeated = try compileLocated(a, std.testing.allocator, edited, &storage);
+    try std.testing.expect(hasNestedAncestry(&oracle.result));
+    try std.testing.expect(std.mem.indexOf(u8, oracle.llvm, "!DILocation(") != null);
+    try std.testing.expect(cached.statistics.hits[@backingInt(cache.Stage.inline_leaf)] > 0);
+    try std.testing.expect(cached.statistics.hits[@backingInt(cache.Stage.final)] >= 2);
+    try equal(oracle, cached);
+    try equal(oracle, repeated);
+    try std.testing.expectEqualDeep(oracle.ancestry, cached.ancestry);
+    try std.testing.expectEqualDeep(oracle.ancestry, repeated.ancestry);
+    try std.testing.expectEqual(@as(usize, 0), total(&repeated.statistics.misses));
 }

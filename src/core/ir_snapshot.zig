@@ -12,8 +12,13 @@ pub const Error = error{ OutOfMemory, InvalidSnapshot };
 /// A normalized snapshot or declaration-layout digest.
 pub const Digest = [32]u8;
 
-/// A merged-source-independent byte offset. Null names the single unmapped source.
-pub const Location = struct { origin: ?u32 = null, offset: u32 };
+/// Original line/column survives earlier same-line edits in a source file.
+/// Raw offsets are reserved for source-less IR and the zero-span sentinel.
+pub const Location = struct {
+    origin: ?u32 = null,
+    offset: u32,
+    point: ?struct { line: u32, column: u32 } = null,
+};
 
 /// Lazily index literal bytes already in the live module, avoiding duplicate strings.
 pub const StringIndex = struct {
@@ -54,28 +59,49 @@ pub const Wire = struct { function: Function, strings: []const []const u8, locat
 /// Normalize a source offset without retaining merged-source starts in a key.
 pub fn locate(context: Context, span: u32) Error!Location {
     const source = context.source orelse return .{ .offset = span };
+    if (span == 0) return .{ .offset = 0 };
     if (source.origins.len == 0) {
-        if (span > source.bytes.len) return error.InvalidSnapshot;
-        return .{ .offset = span };
+        return sourceLocation(source, span, null);
     }
     const original = source.originalSpan(.{ .start = span, .end = span }) catch return error.InvalidSnapshot;
-    return .{ .origin = @intCast(original.input), .offset = @intCast(original.span.start) };
+    return sourceLocation(source.origins[original.input].original, original.span.start, @intCast(original.input));
+}
+
+fn sourceLocation(source: language.source.Source, offset: usize, origin: ?u32) Error!Location {
+    if (offset > source.bytes.len or source.line_starts.len == 0) return error.InvalidSnapshot;
+    const at = source.physicalLocation(offset);
+    return .{ .origin = origin, .offset = 0, .point = .{
+        .line = std.math.cast(u32, at.line) orelse return error.InvalidSnapshot,
+        .column = std.math.cast(u32, at.column) orelse return error.InvalidSnapshot,
+    } };
+}
+
+fn sourceOffset(source: language.source.Source, location: Location) Error!usize {
+    const point = location.point orelse return error.InvalidSnapshot;
+    if (location.offset != 0 or point.line == 0 or point.column == 0) return error.InvalidSnapshot;
+    if (point.line > source.line_starts.len) return error.InvalidSnapshot;
+    const index = point.line - 1;
+    const start = source.line_starts[index];
+    const end = if (point.line < source.line_starts.len) source.line_starts[point.line] - 1 else source.bytes.len;
+    if (start > end or point.column - 1 > end - start) return error.InvalidSnapshot;
+    return start + point.column - 1;
 }
 
 /// Restore a normalized location only when it fits the current source mapping.
 pub fn relocate(context: Context, location: Location) Error!u32 {
     const source = context.source orelse {
-        if (location.origin != null) return error.InvalidSnapshot;
+        if (location.origin != null or location.point != null) return error.InvalidSnapshot;
         return location.offset;
     };
     if (location.origin) |index| {
         if (index >= source.origins.len) return error.InvalidSnapshot;
         const original = source.origins[index];
-        if (location.offset > original.original.bytes.len) return error.InvalidSnapshot;
-        return std.math.cast(u32, original.start + location.offset) orelse error.InvalidSnapshot;
+        const offset = try sourceOffset(original.original, location);
+        return std.math.cast(u32, original.start + offset) orelse error.InvalidSnapshot;
     }
-    if (source.origins.len != 0 or location.offset > source.bytes.len) return error.InvalidSnapshot;
-    return location.offset;
+    if (location.point == null and location.offset == 0) return 0;
+    if (source.origins.len != 0) return error.InvalidSnapshot;
+    return std.math.cast(u32, try sourceOffset(source, location)) orelse error.InvalidSnapshot;
 }
 
 /// Guard the numeric function/type catalogs and source-file ordering. Ordinary
@@ -83,6 +109,7 @@ pub fn relocate(context: Context, location: Location) Error!u32 {
 pub fn layout(a: std.mem.Allocator, context: Context) std.mem.Allocator.Error!Digest {
     var writer = codec.Writer.init(a);
     defer writer.deinit();
+    try writer.write([]const u8, "source-line-column-v2");
     try writer.write([]const ir.Compound, context.module.compounds.items);
     try writer.write(u64, context.module.functions.items.len);
     for (context.module.functions.items) |function| {
