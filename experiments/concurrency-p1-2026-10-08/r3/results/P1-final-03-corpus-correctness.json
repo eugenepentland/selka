@@ -1,0 +1,912 @@
+{
+  "source": "c26c95de73529132755e2bb39d98c6e5aa2e5d94",
+  "compiler_sha256": "923d9cb1388188e4ea88e2183cee256f05f8f493a33b83147bc75074952b49d8",
+  "mode": "correctness only: one execution per cell",
+  "cells": {
+    "parity/suite/binary_trees/my": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/correctness/P1-final-03/suite-binary_trees-my"
+      ],
+      "status": 0,
+      "stdout": "stretch tree of depth 17\t check: 262143\n65536\t trees of depth 4\t check: 2031616\n16384\t trees of depth 6\t check: 2080768\n4096\t trees of depth 8\t check: 2093056\n1024\t trees of depth 10\t check: 2096128\n256\t trees of depth 12\t check: 2096896\n64\t trees of depth 14\t check: 2097088\n16\t trees of depth 16\t check: 2097136\nlong lived tree of depth 16\t check: 131071\n",
+      "stderr": "",
+      "expected_sha256": "3b9e63e2b3523d282d08c35b889a2343c0ee7a24a2540ce6a41bc58f782cd7ff",
+      "stdout_sha256": "3b9e63e2b3523d282d08c35b889a2343c0ee7a24a2540ce6a41bc58f782cd7ff",
+      "binary_sha256": "ab0eee2a28049b786ab5a0b856d937363669b4274cbb482227437da47c977c67",
+      "matches_expected": true
+    },
+    "parity/suite/binary_trees/my-arena": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/correctness/P1-final-03/suite-binary_trees-my-arena"
+      ],
+      "status": 0,
+      "stdout": "stretch tree of depth 17\t check: 262143\n65536\t trees of depth 4\t check: 2031616\n16384\t trees of depth 6\t check: 2080768\n4096\t trees of depth 8\t check: 2093056\n1024\t trees of depth 10\t check: 2096128\n256\t trees of depth 12\t check: 2096896\n64\t trees of depth 14\t check: 2097088\n16\t trees of depth 16\t check: 2097136\nlong lived tree of depth 16\t check: 131071\n",
+      "stderr": "",
+      "expected_sha256": "3b9e63e2b3523d282d08c35b889a2343c0ee7a24a2540ce6a41bc58f782cd7ff",
+      "stdout_sha256": "3b9e63e2b3523d282d08c35b889a2343c0ee7a24a2540ce6a41bc58f782cd7ff",
+      "binary_sha256": "9ec4c8b07a6b2d40a15eed7efd146e7e4f1debfd1ed37086dc79766b3568c4f7",
+      "matches_expected": true
+    },
+    "parity/suite/binary_trees_recursive/my": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/correctness/P1-final-03/suite-binary_trees_recursive-my"
+      ],
+      "status": 0,
+      "stdout": "stretch tree of depth 17\t check: 262143\n65536\t trees of depth 4\t check: 2031616\n16384\t trees of depth 6\t check: 2080768\n4096\t trees of depth 8\t check: 2093056\n1024\t trees of depth 10\t check: 2096128\n256\t trees of depth 12\t check: 2096896\n64\t trees of depth 14\t check: 2097088\n16\t trees of depth 16\t check: 2097136\nlong lived tree of depth 16\t check: 131071\n",
+      "stderr": "",
+      "expected_sha256": "3b9e63e2b3523d282d08c35b889a2343c0ee7a24a2540ce6a41bc58f782cd7ff",
+      "stdout_sha256": "3b9e63e2b3523d282d08c35b889a2343c0ee7a24a2540ce6a41bc58f782cd7ff",
+      "binary_sha256": "7501469a3133cbb1e559f340b41548b8f37f26de636c36474d5d1387543cc0f7",
+      "matches_expected": true
+    },
+    "parity/suite/fannkuch_redux/my": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/correctness/P1-final-03/suite-fannkuch_redux-my"
+      ],
+      "status": 0,
+      "stdout": "73196\nPfannkuchen(10) = 38\n",
+      "stderr": "",
+      "expected_sha256": "26f4debed9b9f8db7609e17f35756a3f72c1d85d40977a4377a1ef34ffc4d4c8",
+      "stdout_sha256": "26f4debed9b9f8db7609e17f35756a3f72c1d85d40977a4377a1ef34ffc4d4c8",
+      "binary_sha256": "1aefd0d1c1b3e414a9ef9a2fc3ebc0ba2e3403e21709498b0abd0d05717fed0f",
+      "matches_expected": true
+    },
+    "parity/suite/fannkuch_redux/my-array": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/correctness/P1-final-03/suite-fannkuch_redux-my-array"
+      ],
+      "status": 0,
+      "stdout": "73196\nPfannkuchen(10) = 38\n",
+      "stderr": "",
+      "expected_sha256": "26f4debed9b9f8db7609e17f35756a3f72c1d85d40977a4377a1ef34ffc4d4c8",
+      "stdout_sha256": "26f4debed9b9f8db7609e17f35756a3f72c1d85d40977a4377a1ef34ffc4d4c8",
+      "binary_sha256": "2ac9cc9b4fe1063537eb9b4263b82ced5f83fbb6994f42dd0a6dac5315c547a3",
+      "matches_expected": true
+    },
+    "parity/suite/fannkuch_redux/my-tuned": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/correctness/P1-final-03/suite-fannkuch_redux-my-tuned"
+      ],
+      "status": 0,
+      "stdout": "73196\nPfannkuchen(10) = 38\n",
+      "stderr": "",
+      "expected_sha256": "26f4debed9b9f8db7609e17f35756a3f72c1d85d40977a4377a1ef34ffc4d4c8",
+      "stdout_sha256": "26f4debed9b9f8db7609e17f35756a3f72c1d85d40977a4377a1ef34ffc4d4c8",
+      "binary_sha256": "ee8a7f1841e22c1af013ff93fabce8d679954ce1a410d7665c65eb3348070e14",
+      "matches_expected": true
+    },
+    "parity/suite/knucleotide/my": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/correctness/P1-final-03/suite-knucleotide-my"
+      ],
+      "status": 0,
+      "stdout": "G 250155\nT 250058\nC 249923\nA 249864\nGT 62591\nCG 62559\nGG 62557\nTG 62543\nGA 62535\nTT 62521\nTA 62509\nCC 62498\nAG 62496\nTC 62484\nAT 62480\nGC 62472\nAC 62468\nCT 62466\nAA 62420\nCA 62400\n15691\tGGT\n3912\tGGTA\n231\tGGTATT\n0\tGGTATTTTAATT\n0\tGGTATTTTAATTTATAGT\n",
+      "stderr": "",
+      "expected_sha256": "85ef61714a76ad7ce4c0b54cc49ec081c54c2966978de102da6a53e2d208c0bb",
+      "stdout_sha256": "85ef61714a76ad7ce4c0b54cc49ec081c54c2966978de102da6a53e2d208c0bb",
+      "binary_sha256": "2e31ec9e7455f0bd6b75d3e793ff56ea58f3932fbdc410c97a12f5359b60004f",
+      "matches_expected": true
+    },
+    "parity/suite/knucleotide/my-arena": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/correctness/P1-final-03/suite-knucleotide-my-arena"
+      ],
+      "status": 0,
+      "stdout": "G 250155\nT 250058\nC 249923\nA 249864\nGT 62591\nCG 62559\nGG 62557\nTG 62543\nGA 62535\nTT 62521\nTA 62509\nCC 62498\nAG 62496\nTC 62484\nAT 62480\nGC 62472\nAC 62468\nCT 62466\nAA 62420\nCA 62400\n15691\tGGT\n3912\tGGTA\n231\tGGTATT\n0\tGGTATTTTAATT\n0\tGGTATTTTAATTTATAGT\n",
+      "stderr": "",
+      "expected_sha256": "85ef61714a76ad7ce4c0b54cc49ec081c54c2966978de102da6a53e2d208c0bb",
+      "stdout_sha256": "85ef61714a76ad7ce4c0b54cc49ec081c54c2966978de102da6a53e2d208c0bb",
+      "binary_sha256": "a143d5f8d699579d20508b3926b43fa7165f718d8f480db5c538c9b3167c5fd4",
+      "matches_expected": true
+    },
+    "parity/suite/knucleotide/my-tuned": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/correctness/P1-final-03/suite-knucleotide-my-tuned"
+      ],
+      "status": 0,
+      "stdout": "G 250155\nT 250058\nC 249923\nA 249864\nGT 62591\nCG 62559\nGG 62557\nTG 62543\nGA 62535\nTT 62521\nTA 62509\nCC 62498\nAG 62496\nTC 62484\nAT 62480\nGC 62472\nAC 62468\nCT 62466\nAA 62420\nCA 62400\n15691\tGGT\n3912\tGGTA\n231\tGGTATT\n0\tGGTATTTTAATT\n0\tGGTATTTTAATTTATAGT\n",
+      "stderr": "",
+      "expected_sha256": "85ef61714a76ad7ce4c0b54cc49ec081c54c2966978de102da6a53e2d208c0bb",
+      "stdout_sha256": "85ef61714a76ad7ce4c0b54cc49ec081c54c2966978de102da6a53e2d208c0bb",
+      "binary_sha256": "a320ff3bcf4fc069261152d770b0e883cbebac43e3eaa0824f19467c1f722691",
+      "matches_expected": true
+    },
+    "parity/suite/mandelbrot/my": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/correctness/P1-final-03/suite-mandelbrot-my"
+      ],
+      "status": 0,
+      "stdout": "P4 1600 1600\n209816799\n",
+      "stderr": "",
+      "expected_sha256": "81099b928a218f1185879f016cab56946854dfda8fad9735bd1e45e8091fd28b",
+      "stdout_sha256": "81099b928a218f1185879f016cab56946854dfda8fad9735bd1e45e8091fd28b",
+      "binary_sha256": "390446a3bc7b36bdb5e9fda8b2f110b92431116e33900bfb7db1cc4f6e9a256d",
+      "matches_expected": true
+    },
+    "parity/suite/matmul/my": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/correctness/P1-final-03/suite-matmul-my"
+      ],
+      "status": 0,
+      "stdout": "62489758\n31249063032\n",
+      "stderr": "",
+      "expected_sha256": "808e7e925cc6db0490c4ba77159937c810a33790b95990cb679a12cf17113bab",
+      "stdout_sha256": "808e7e925cc6db0490c4ba77159937c810a33790b95990cb679a12cf17113bab",
+      "binary_sha256": "870ecbb99de0e232232e49576256498183dda5996666b5f0b9c7d916e2e858dd",
+      "matches_expected": true
+    },
+    "parity/suite/matmul/my-flat": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/correctness/P1-final-03/suite-matmul-my-flat"
+      ],
+      "status": 0,
+      "stdout": "62489758\n31249063032\n",
+      "stderr": "",
+      "expected_sha256": "808e7e925cc6db0490c4ba77159937c810a33790b95990cb679a12cf17113bab",
+      "stdout_sha256": "808e7e925cc6db0490c4ba77159937c810a33790b95990cb679a12cf17113bab",
+      "binary_sha256": "e4f835086fa0384a91ae894716c3b46f66d522cbe7edcd7e4dd2c5b0340a84f9",
+      "matches_expected": true
+    },
+    "parity/suite/matmul/my-tuned": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/correctness/P1-final-03/suite-matmul-my-tuned"
+      ],
+      "status": 0,
+      "stdout": "62489758\n31249063032\n",
+      "stderr": "",
+      "expected_sha256": "808e7e925cc6db0490c4ba77159937c810a33790b95990cb679a12cf17113bab",
+      "stdout_sha256": "808e7e925cc6db0490c4ba77159937c810a33790b95990cb679a12cf17113bab",
+      "binary_sha256": "e31f36348427ee308279f658c1cd186d6d098610a0c0530725a07d4622120ba7",
+      "matches_expected": true
+    },
+    "parity/suite/nbody/my": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/correctness/P1-final-03/suite-nbody-my"
+      ],
+      "status": 0,
+      "stdout": "-169075163\n-169083133\n",
+      "stderr": "",
+      "expected_sha256": "179a443bca1492bd09db9648ca9f9d7f3ae224f95c6e59a3bcb3601907c98245",
+      "stdout_sha256": "179a443bca1492bd09db9648ca9f9d7f3ae224f95c6e59a3bcb3601907c98245",
+      "binary_sha256": "f6622ea4de5145133a6c659bc2f5d88b063c8c9a062c7c85665342dc209ce227",
+      "matches_expected": true
+    },
+    "parity/suite/nbody/my-class": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/correctness/P1-final-03/suite-nbody-my-class"
+      ],
+      "status": 0,
+      "stdout": "-169075163\n-169083133\n",
+      "stderr": "",
+      "expected_sha256": "179a443bca1492bd09db9648ca9f9d7f3ae224f95c6e59a3bcb3601907c98245",
+      "stdout_sha256": "179a443bca1492bd09db9648ca9f9d7f3ae224f95c6e59a3bcb3601907c98245",
+      "binary_sha256": "2abe6a076d9defd515db0a4b0893babbb4d124f072d67fd2d8edfa0dc7ec660f",
+      "matches_expected": true
+    },
+    "parity/suite/raytrace/my": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/correctness/P1-final-03/suite-raytrace-my"
+      ],
+      "status": 0,
+      "stdout": "203351956\n",
+      "stderr": "",
+      "expected_sha256": "b939e42eec95f2858153e10ced40ac145579904f397ad58553fb49b2f7f4105b",
+      "stdout_sha256": "b939e42eec95f2858153e10ced40ac145579904f397ad58553fb49b2f7f4105b",
+      "binary_sha256": "6457272b198186dfc335a2e721a561a3291800b6e8661508ff0a3ba5e3d5a05f",
+      "matches_expected": true
+    },
+    "parity/suite/raytrace/my-tuned": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/correctness/P1-final-03/suite-raytrace-my-tuned"
+      ],
+      "status": 0,
+      "stdout": "203351956\n",
+      "stderr": "",
+      "expected_sha256": "b939e42eec95f2858153e10ced40ac145579904f397ad58553fb49b2f7f4105b",
+      "stdout_sha256": "b939e42eec95f2858153e10ced40ac145579904f397ad58553fb49b2f7f4105b",
+      "binary_sha256": "041e7517cd90086b0afa1543f767fff91aeebbe0cd78bf752ec1f1164dbc3024",
+      "matches_expected": true
+    },
+    "parity/suite/sieve/my": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/correctness/P1-final-03/suite-sieve-my"
+      ],
+      "status": 0,
+      "stdout": "1270607\n",
+      "stderr": "",
+      "expected_sha256": "cf9c0ad3d037bc30d279b430355c9cfab624c7b170305ceee94acb2d79a1be5e",
+      "stdout_sha256": "cf9c0ad3d037bc30d279b430355c9cfab624c7b170305ceee94acb2d79a1be5e",
+      "binary_sha256": "8efc14a84871a14b475d5b758407113a5ad97a795dbdc88b9e0a114899cc3b5a",
+      "matches_expected": true
+    },
+    "parity/suite/sieve/my-tuned": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/correctness/P1-final-03/suite-sieve-my-tuned"
+      ],
+      "status": 0,
+      "stdout": "1270607\n",
+      "stderr": "",
+      "expected_sha256": "cf9c0ad3d037bc30d279b430355c9cfab624c7b170305ceee94acb2d79a1be5e",
+      "stdout_sha256": "cf9c0ad3d037bc30d279b430355c9cfab624c7b170305ceee94acb2d79a1be5e",
+      "binary_sha256": "bf333d80ccf24cf173240a9326605cf5266322afcaeeb93365044726b74c6a57",
+      "matches_expected": true
+    },
+    "parity/suite/sort_builtin/my": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/correctness/P1-final-03/suite-sort_builtin-my"
+      ],
+      "status": 0,
+      "stdout": "321 1074397298 2147483273\n318620633\n",
+      "stderr": "",
+      "expected_sha256": "3ed8d60b4a0df990e6dd04272765b81f07a2851bef6265fe0625295796d2d526",
+      "stdout_sha256": "3ed8d60b4a0df990e6dd04272765b81f07a2851bef6265fe0625295796d2d526",
+      "binary_sha256": "f183d9bb6ea0bcdead5e26ccdac10be72083513379d43df1dc621750f40a837e",
+      "matches_expected": true
+    },
+    "parity/suite/sort_quick/my": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/correctness/P1-final-03/suite-sort_quick-my"
+      ],
+      "status": 0,
+      "stdout": "321 1074397298 2147483273\n318620633\n",
+      "stderr": "",
+      "expected_sha256": "3ed8d60b4a0df990e6dd04272765b81f07a2851bef6265fe0625295796d2d526",
+      "stdout_sha256": "3ed8d60b4a0df990e6dd04272765b81f07a2851bef6265fe0625295796d2d526",
+      "binary_sha256": "d292a18243e0ba963296d15214889b167b47574bf5dbabd25406ac86c633f9cc",
+      "matches_expected": true
+    },
+    "parity/suite/sort_records/my": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/correctness/P1-final-03/suite-sort_records-my"
+      ],
+      "status": 0,
+      "stdout": "0 99999\n551029697\n",
+      "stderr": "",
+      "expected_sha256": "70b262bab78d435e643072f077431ebca2c4bb096339676bcf5ecd475d0934d1",
+      "stdout_sha256": "70b262bab78d435e643072f077431ebca2c4bb096339676bcf5ecd475d0934d1",
+      "binary_sha256": "47944b73916413d2af523f1d4ce30037e1fc95e15049c0123726c0ad36bf1659",
+      "matches_expected": true
+    },
+    "parity/suite/sort_records/my-keyed": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/correctness/P1-final-03/suite-sort_records-my-keyed"
+      ],
+      "status": 0,
+      "stdout": "0 99999\n551029697\n",
+      "stderr": "",
+      "expected_sha256": "70b262bab78d435e643072f077431ebca2c4bb096339676bcf5ecd475d0934d1",
+      "stdout_sha256": "70b262bab78d435e643072f077431ebca2c4bb096339676bcf5ecd475d0934d1",
+      "binary_sha256": "9356a3453fc6c3941baf8c90913949dc4975e8da52044b303082d00fc8f1cb04",
+      "matches_expected": true
+    },
+    "parity/suite/sort_records/my-sorted": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/correctness/P1-final-03/suite-sort_records-my-sorted"
+      ],
+      "status": 0,
+      "stdout": "0 99999\n551029697\n",
+      "stderr": "",
+      "expected_sha256": "70b262bab78d435e643072f077431ebca2c4bb096339676bcf5ecd475d0934d1",
+      "stdout_sha256": "70b262bab78d435e643072f077431ebca2c4bb096339676bcf5ecd475d0934d1",
+      "binary_sha256": "5888b9d492655e8453ee99ba3b3276d4fcb4808561de71b196cbb677ccee9b42",
+      "matches_expected": true
+    },
+    "parity/suite/spectral_norm/my": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/correctness/P1-final-03/suite-spectral_norm-my"
+      ],
+      "status": 0,
+      "stdout": "1274224152\n",
+      "stderr": "",
+      "expected_sha256": "ce457b58748ed3834ca9c4264b0817d08facda1f697dcd05b18dfd3bdf238050",
+      "stdout_sha256": "ce457b58748ed3834ca9c4264b0817d08facda1f697dcd05b18dfd3bdf238050",
+      "binary_sha256": "c36f5415f88e208b18e958bc4e45ed9430e37ad0217b0792b3bb36d887feeae6",
+      "matches_expected": true
+    },
+    "parity/suite/spectral_norm/my-tuned": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/correctness/P1-final-03/suite-spectral_norm-my-tuned"
+      ],
+      "status": 0,
+      "stdout": "1274224152\n",
+      "stderr": "",
+      "expected_sha256": "ce457b58748ed3834ca9c4264b0817d08facda1f697dcd05b18dfd3bdf238050",
+      "stdout_sha256": "ce457b58748ed3834ca9c4264b0817d08facda1f697dcd05b18dfd3bdf238050",
+      "binary_sha256": "bf097f1e761f51bc16931d45aa98346557e4ae9fe3e2c9e1eed9fce2896f8641",
+      "matches_expected": true
+    },
+    "parity/suite/text_ops/my": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/correctness/P1-final-03/suite-text_ops-my"
+      ],
+      "status": 0,
+      "stdout": "10000066287 599994 20000\n4066669 3666669 22228\n",
+      "stderr": "",
+      "expected_sha256": "0967b572d16c244fceff04c57b479c96e1e0fc0580feae10a3dbaa6c6e0a76bf",
+      "stdout_sha256": "0967b572d16c244fceff04c57b479c96e1e0fc0580feae10a3dbaa6c6e0a76bf",
+      "binary_sha256": "e0f1fb7ac0d4726dd2248c45dafc0b11eb8f64c4d819bcf6a32ed6020783b504",
+      "matches_expected": true
+    },
+    "parity/suite/text_ops/my-tuned": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/correctness/P1-final-03/suite-text_ops-my-tuned"
+      ],
+      "status": 0,
+      "stdout": "10000066287 599994 20000\n4066669 3666669 22228\n",
+      "stderr": "",
+      "expected_sha256": "0967b572d16c244fceff04c57b479c96e1e0fc0580feae10a3dbaa6c6e0a76bf",
+      "stdout_sha256": "0967b572d16c244fceff04c57b479c96e1e0fc0580feae10a3dbaa6c6e0a76bf",
+      "binary_sha256": "dc771dddd00a120336077c3ebef8df885373ad604225fcc9e76f57ff5652bff2",
+      "matches_expected": true
+    },
+    "parity/lib/scan_count/my": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/correctness/P1-final-03/lib-scan_count-my"
+      ],
+      "status": 0,
+      "stdout": "4032710 24640 220000 122210 188539 6664668\n",
+      "stderr": "",
+      "expected_sha256": "ed19251b9e188ce793cf598d9ddb5ce7a53a896a68efeed98423cdf3b592c9db",
+      "stdout_sha256": "ed19251b9e188ce793cf598d9ddb5ce7a53a896a68efeed98423cdf3b592c9db",
+      "binary_sha256": "6cdab2566d4007222f4c6382876408ca48426923de4d951d184be5fee8ecff90",
+      "matches_expected": true
+    },
+    "parity/lib/scan_replace/my": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/correctness/P1-final-03/lib-scan_replace-my"
+      ],
+      "status": 0,
+      "stdout": "3592710 4472710 3404390 45879240\n",
+      "stderr": "",
+      "expected_sha256": "3d8a3742b117ed70e76fc626cb9d3a353d29890edf73d686abd9ee1a1afeb052",
+      "stdout_sha256": "3d8a3742b117ed70e76fc626cb9d3a353d29890edf73d686abd9ee1a1afeb052",
+      "binary_sha256": "86c9ed052f130c8296a62d3c54c5ce00bd9a6255672243cb86c6da03a8b416b2",
+      "matches_expected": true
+    },
+    "parity/lib/scan_split/my": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/correctness/P1-final-03/lib-scan_split-my"
+      ],
+      "status": 0,
+      "stdout": "660003 11438130 1320003 565620 8704428\n",
+      "stderr": "",
+      "expected_sha256": "acd0b3e0d83a905f4007e5ade083a9293c977a9e53239489b3ab0b8c5f951a0d",
+      "stdout_sha256": "acd0b3e0d83a905f4007e5ade083a9293c977a9e53239489b3ab0b8c5f951a0d",
+      "binary_sha256": "67539fc99cf4330081c15f08603bb48c12093f662c34523e8fd1f06c173df5a8",
+      "matches_expected": true
+    },
+    "parity/micro/alloc_churn/my": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/correctness/P1-final-03/micro-alloc_churn-my"
+      ],
+      "status": 0,
+      "stdout": "999739\n",
+      "stderr": "",
+      "expected_sha256": "52b8ac479aedeaea1e9da11e3d85b1828bc0ca8b06c48875723325d749fb9f70",
+      "stdout_sha256": "52b8ac479aedeaea1e9da11e3d85b1828bc0ca8b06c48875723325d749fb9f70",
+      "binary_sha256": "17f142a5d0cd832da8b6228bb0eb772303bee3d670b96e91eed8933907d7596c",
+      "matches_expected": true
+    },
+    "parity/micro/alloc_churn/my-arena": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/correctness/P1-final-03/micro-alloc_churn-my-arena"
+      ],
+      "status": 0,
+      "stdout": "999739\n",
+      "stderr": "",
+      "expected_sha256": "52b8ac479aedeaea1e9da11e3d85b1828bc0ca8b06c48875723325d749fb9f70",
+      "stdout_sha256": "52b8ac479aedeaea1e9da11e3d85b1828bc0ca8b06c48875723325d749fb9f70",
+      "binary_sha256": "870babe26be1635e30390d82e0f0cfa08b9b57c3a5873e63e3ad81d5bcd71f08",
+      "matches_expected": true
+    },
+    "parity/micro/bytes_scan/my": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/correctness/P1-final-03/micro-bytes_scan-my"
+      ],
+      "status": 0,
+      "stdout": "8388728\n",
+      "stderr": "",
+      "expected_sha256": "6bad0207281a4d36c465d56f11f4cb248fa0b9c7dedba4591d717f815e861c7a",
+      "stdout_sha256": "6bad0207281a4d36c465d56f11f4cb248fa0b9c7dedba4591d717f815e861c7a",
+      "binary_sha256": "c063c47d8b59dff388fdecb96184d4f2d5431ed2b681abd7100d2d385c38ab88",
+      "matches_expected": true
+    },
+    "parity/micro/bytes_scan/my-wrapping": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/correctness/P1-final-03/micro-bytes_scan-my-wrapping"
+      ],
+      "status": 0,
+      "stdout": "8388728\n",
+      "stderr": "",
+      "expected_sha256": "6bad0207281a4d36c465d56f11f4cb248fa0b9c7dedba4591d717f815e861c7a",
+      "stdout_sha256": "6bad0207281a4d36c465d56f11f4cb248fa0b9c7dedba4591d717f815e861c7a",
+      "binary_sha256": "423081f0d8fcaf7b0e3d1eedd25adb9f94fc85408cb0a65e99e01c5da1c63188",
+      "matches_expected": true
+    },
+    "parity/micro/calls/my": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/correctness/P1-final-03/micro-calls-my"
+      ],
+      "status": 0,
+      "stdout": "4095\n",
+      "stderr": "",
+      "expected_sha256": "93acd367386ad3b42a26b3815a580aae055ca2f18ea40258ccaa29f7e6921380",
+      "stdout_sha256": "93acd367386ad3b42a26b3815a580aae055ca2f18ea40258ccaa29f7e6921380",
+      "binary_sha256": "13718d8bf01c0cdcfd9643891f79cc29d725d5357fd150057c95d8d1bc7039e9",
+      "matches_expected": true
+    },
+    "parity/micro/dict_count/my": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/correctness/P1-final-03/micro-dict_count-my"
+      ],
+      "status": 0,
+      "stdout": "779967\n",
+      "stderr": "",
+      "expected_sha256": "4561c81a11a51b8dc19629f530cf4b4d5f27edb937a404d61e9c1ecea9ad7a04",
+      "stdout_sha256": "4561c81a11a51b8dc19629f530cf4b4d5f27edb937a404d61e9c1ecea9ad7a04",
+      "binary_sha256": "f4748a1679babd4d08fc28e6973a34920fd3480c4d27ef1424f0694eefbefa91",
+      "matches_expected": true
+    },
+    "parity/micro/fib/my": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/correctness/P1-final-03/micro-fib-my"
+      ],
+      "status": 0,
+      "stdout": "14930352\n",
+      "stderr": "",
+      "expected_sha256": "653226562ad6143cebbec0872e5596358984edb431588afde338b77586d860c6",
+      "stdout_sha256": "653226562ad6143cebbec0872e5596358984edb431588afde338b77586d860c6",
+      "binary_sha256": "8fdeba12450579584da85d8ab3ac36c081cf44a9fc3a5b990d4f0fedb1607019",
+      "matches_expected": true
+    },
+    "parity/micro/float_loop/my": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/correctness/P1-final-03/micro-float_loop-my"
+      ],
+      "status": 0,
+      "stdout": "4472024148\n",
+      "stderr": "",
+      "expected_sha256": "18857ead20b4390f11fa3f83075eac1fe493a9c167053a4e4f2986f603cd3d38",
+      "stdout_sha256": "18857ead20b4390f11fa3f83075eac1fe493a9c167053a4e4f2986f603cd3d38",
+      "binary_sha256": "a417b254e916e7a627df144a05d377a32824d2868a440edf1a05ab5cc3701d1b",
+      "matches_expected": true
+    },
+    "parity/micro/intloop/my": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/correctness/P1-final-03/micro-intloop-my"
+      ],
+      "status": 0,
+      "stdout": "28665\n",
+      "stderr": "",
+      "expected_sha256": "3e7f5ece27d4e9e45a39c15df220019984badbca4a8e78992344f1ade32b2714",
+      "stdout_sha256": "3e7f5ece27d4e9e45a39c15df220019984badbca4a8e78992344f1ade32b2714",
+      "binary_sha256": "b20685c6fe47abd82165ccb31bc53bd40a6cd54ad8481f17ce793405689746d8",
+      "matches_expected": true
+    },
+    "parity/micro/list_append_sum/my": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/correctness/P1-final-03/micro-list_append_sum-my"
+      ],
+      "status": 0,
+      "stdout": "127999992000000\n",
+      "stderr": "",
+      "expected_sha256": "ecea822e423e436f316f3a4402edf9858cd7c64191481740276675bd6abacc71",
+      "stdout_sha256": "ecea822e423e436f316f3a4402edf9858cd7c64191481740276675bd6abacc71",
+      "binary_sha256": "7dab72f993ffa44fa92284b46c3c32920b164c60eb5d098b9a9985387a2e9078",
+      "matches_expected": true
+    },
+    "parity/micro/list_records/my": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/correctness/P1-final-03/micro-list_records-my"
+      ],
+      "status": 0,
+      "stdout": "20000030000045\n",
+      "stderr": "",
+      "expected_sha256": "8a4d740c5439703ae4eb250524b47c5352b838feece3f8ca42055ce22f1ffa9f",
+      "stdout_sha256": "8a4d740c5439703ae4eb250524b47c5352b838feece3f8ca42055ce22f1ffa9f",
+      "binary_sha256": "c4a679949ebb77aeeabed4297a2f87da6aa8a9def217fd0921504c319528b487",
+      "matches_expected": true
+    },
+    "parity/micro/list_records/my-wrapping": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/correctness/P1-final-03/micro-list_records-my-wrapping"
+      ],
+      "status": 0,
+      "stdout": "20000030000045\n",
+      "stderr": "",
+      "expected_sha256": "8a4d740c5439703ae4eb250524b47c5352b838feece3f8ca42055ce22f1ffa9f",
+      "stdout_sha256": "8a4d740c5439703ae4eb250524b47c5352b838feece3f8ca42055ce22f1ffa9f",
+      "binary_sha256": "1d2296a6feec84330aeee4810a28d5a7eed7fb909ee47c03de6c2f3523ebee90",
+      "matches_expected": true
+    },
+    "parity/micro/records/my": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/correctness/P1-final-03/micro-records-my"
+      ],
+      "status": 0,
+      "stdout": "5310\n",
+      "stderr": "",
+      "expected_sha256": "0ff7e248711867ad5a1bfa1f13922a0de635c92a8ed527363e232827ab66c6c0",
+      "stdout_sha256": "0ff7e248711867ad5a1bfa1f13922a0de635c92a8ed527363e232827ab66c6c0",
+      "binary_sha256": "1f49828a001ceade1f0edb857e352397bef06744dffac78d77a7c4488424d99d",
+      "matches_expected": true
+    },
+    "parity/micro/str_build/my": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/correctness/P1-final-03/micro-str_build-my"
+      ],
+      "status": 0,
+      "stdout": "128000000 828534\n",
+      "stderr": "",
+      "expected_sha256": "e8e4291ddf65fcad3e471a7587aada2668080c48b025d42dbd6c7ec2b9453b34",
+      "stdout_sha256": "e8e4291ddf65fcad3e471a7587aada2668080c48b025d42dbd6c7ec2b9453b34",
+      "binary_sha256": "a551197fae28e2d890f3ac10ec13350fd20648761145d23bd47bd9150d610a4e",
+      "matches_expected": true
+    },
+    "lox/binary_trees/tree": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/bin/P1-final-03/lox-plain",
+        "--engine=tree",
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/lox-scripts/binary_trees-10.lox"
+      ],
+      "status": 0,
+      "stdout": "stretch tree of depth:\n11\ncheck:\n-1\nnum trees:\n2048\ndepth:\n4\ncheck:\n-2048\nnum trees:\n512\ndepth:\n6\ncheck:\n-512\nnum trees:\n128\ndepth:\n8\ncheck:\n-128\nnum trees:\n32\ndepth:\n10\ncheck:\n-32\nlong lived tree of depth:\n10\ncheck:\n-1\n",
+      "stderr": "",
+      "expected_sha256": "e650f48ff7ae14c0fcef891bc854d8c3b3778ffd7d8278b6b7aa52e2050f7056",
+      "stdout_sha256": "e650f48ff7ae14c0fcef891bc854d8c3b3778ffd7d8278b6b7aa52e2050f7056",
+      "binary_sha256": "12356f6d420167359df0a6eaed8be0b7b2c3a9c4e6ee3ae3c1813a7451541cda",
+      "matches_expected": true
+    },
+    "lox/binary_trees/vm": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/bin/P1-final-03/lox-plain",
+        "--engine=vm",
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/lox-scripts/binary_trees-13.lox"
+      ],
+      "status": 0,
+      "stdout": "stretch tree of depth:\n14\ncheck:\n-1\nnum trees:\n16384\ndepth:\n4\ncheck:\n-16384\nnum trees:\n4096\ndepth:\n6\ncheck:\n-4096\nnum trees:\n1024\ndepth:\n8\ncheck:\n-1024\nnum trees:\n256\ndepth:\n10\ncheck:\n-256\nnum trees:\n64\ndepth:\n12\ncheck:\n-64\nlong lived tree of depth:\n13\ncheck:\n-1\n",
+      "stderr": "",
+      "expected_sha256": "ac96b16fc414cbbcc2b2c0782cb9bc3f5b8d2a6d9560ed76948953643e981f76",
+      "stdout_sha256": "ac96b16fc414cbbcc2b2c0782cb9bc3f5b8d2a6d9560ed76948953643e981f76",
+      "binary_sha256": "12356f6d420167359df0a6eaed8be0b7b2c3a9c4e6ee3ae3c1813a7451541cda",
+      "matches_expected": true
+    },
+    "lox/closures/tree": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/bin/P1-final-03/lox-plain",
+        "--engine=tree",
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/lox-scripts/closures-200000.lox"
+      ],
+      "status": 0,
+      "stdout": "20000700000\n200410000\n",
+      "stderr": "",
+      "expected_sha256": "8dacb3b0327cbd368e9c06434c1dd66b88f2a69dba30a2f64fc0dd78570cf7f0",
+      "stdout_sha256": "8dacb3b0327cbd368e9c06434c1dd66b88f2a69dba30a2f64fc0dd78570cf7f0",
+      "binary_sha256": "12356f6d420167359df0a6eaed8be0b7b2c3a9c4e6ee3ae3c1813a7451541cda",
+      "matches_expected": true
+    },
+    "lox/closures/vm": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/bin/P1-final-03/lox-plain",
+        "--engine=vm",
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/lox-scripts/closures-2000000.lox"
+      ],
+      "status": 0,
+      "stdout": "2000007000000\n20004100000\n",
+      "stderr": "",
+      "expected_sha256": "5c1bc928b1aa3275718aed95eabf1c87b836a3122be2ab4b376856b2e44029db",
+      "stdout_sha256": "5c1bc928b1aa3275718aed95eabf1c87b836a3122be2ab4b376856b2e44029db",
+      "binary_sha256": "12356f6d420167359df0a6eaed8be0b7b2c3a9c4e6ee3ae3c1813a7451541cda",
+      "matches_expected": true
+    },
+    "lox/equality/tree": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/bin/P1-final-03/lox-plain",
+        "--engine=tree",
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/lox-scripts/equality-300000.lox"
+      ],
+      "status": 0,
+      "stdout": "300000\n",
+      "stderr": "",
+      "expected_sha256": "2d5c043a952d70ef9564858b25a01a30613abfb3d1562f67ef8d089646bbf786",
+      "stdout_sha256": "2d5c043a952d70ef9564858b25a01a30613abfb3d1562f67ef8d089646bbf786",
+      "binary_sha256": "12356f6d420167359df0a6eaed8be0b7b2c3a9c4e6ee3ae3c1813a7451541cda",
+      "matches_expected": true
+    },
+    "lox/equality/vm": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/bin/P1-final-03/lox-plain",
+        "--engine=vm",
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/lox-scripts/equality-3000000.lox"
+      ],
+      "status": 0,
+      "stdout": "3000000\n",
+      "stderr": "",
+      "expected_sha256": "86462511f5bae5ed2d407ecc8d2699a032b2ee003e4d10c3e38511780dd6d016",
+      "stdout_sha256": "86462511f5bae5ed2d407ecc8d2699a032b2ee003e4d10c3e38511780dd6d016",
+      "binary_sha256": "12356f6d420167359df0a6eaed8be0b7b2c3a9c4e6ee3ae3c1813a7451541cda",
+      "matches_expected": true
+    },
+    "lox/fib/tree": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/bin/P1-final-03/lox-plain",
+        "--engine=tree",
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/lox-scripts/fib-28.lox"
+      ],
+      "status": 0,
+      "stdout": "317811\n",
+      "stderr": "",
+      "expected_sha256": "a2926b4c752026e4c4fb427a6c468ba4cd1a584ecc8f6ff23fa80c09fdfcb655",
+      "stdout_sha256": "a2926b4c752026e4c4fb427a6c468ba4cd1a584ecc8f6ff23fa80c09fdfcb655",
+      "binary_sha256": "12356f6d420167359df0a6eaed8be0b7b2c3a9c4e6ee3ae3c1813a7451541cda",
+      "matches_expected": true
+    },
+    "lox/fib/vm": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/bin/P1-final-03/lox-plain",
+        "--engine=vm",
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/lox-scripts/fib-34.lox"
+      ],
+      "status": 0,
+      "stdout": "5702887\n",
+      "stderr": "",
+      "expected_sha256": "3e01be60139c8e55182a9388e0133537d417649b097c820c766aaf403dcdfc11",
+      "stdout_sha256": "3e01be60139c8e55182a9388e0133537d417649b097c820c766aaf403dcdfc11",
+      "binary_sha256": "12356f6d420167359df0a6eaed8be0b7b2c3a9c4e6ee3ae3c1813a7451541cda",
+      "matches_expected": true
+    },
+    "lox/instantiation/tree": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/bin/P1-final-03/lox-plain",
+        "--engine=tree",
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/lox-scripts/instantiation-50000.lox"
+      ],
+      "status": 0,
+      "stdout": "50000\n",
+      "stderr": "",
+      "expected_sha256": "1833dec4f1106eb4e293cc1cdf906c6c3c576d000a51b001d8da50a853dd22ec",
+      "stdout_sha256": "1833dec4f1106eb4e293cc1cdf906c6c3c576d000a51b001d8da50a853dd22ec",
+      "binary_sha256": "12356f6d420167359df0a6eaed8be0b7b2c3a9c4e6ee3ae3c1813a7451541cda",
+      "matches_expected": true
+    },
+    "lox/instantiation/vm": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/bin/P1-final-03/lox-plain",
+        "--engine=vm",
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/lox-scripts/instantiation-500000.lox"
+      ],
+      "status": 0,
+      "stdout": "500000\n",
+      "stderr": "",
+      "expected_sha256": "eea5daac8b1d1b7b82edaaa7fadadf6b48a439a874efd036fb0666e68c17462e",
+      "stdout_sha256": "eea5daac8b1d1b7b82edaaa7fadadf6b48a439a874efd036fb0666e68c17462e",
+      "binary_sha256": "12356f6d420167359df0a6eaed8be0b7b2c3a9c4e6ee3ae3c1813a7451541cda",
+      "matches_expected": true
+    },
+    "lox/invocation/tree": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/bin/P1-final-03/lox-plain",
+        "--engine=tree",
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/lox-scripts/invocation-150000.lox"
+      ],
+      "status": 0,
+      "stdout": "150000\n",
+      "stderr": "",
+      "expected_sha256": "aceaf168c6709487a120d0059d87a99ab4aad4ee7f8a4d05a91c8ee20161ef75",
+      "stdout_sha256": "aceaf168c6709487a120d0059d87a99ab4aad4ee7f8a4d05a91c8ee20161ef75",
+      "binary_sha256": "12356f6d420167359df0a6eaed8be0b7b2c3a9c4e6ee3ae3c1813a7451541cda",
+      "matches_expected": true
+    },
+    "lox/invocation/vm": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/bin/P1-final-03/lox-plain",
+        "--engine=vm",
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/lox-scripts/invocation-1500000.lox"
+      ],
+      "status": 0,
+      "stdout": "1500000\n",
+      "stderr": "",
+      "expected_sha256": "1acf1e94660bf03b23b1265ac476eeb5c504e8b4a0e7ba3e2667bf1a59ea9895",
+      "stdout_sha256": "1acf1e94660bf03b23b1265ac476eeb5c504e8b4a0e7ba3e2667bf1a59ea9895",
+      "binary_sha256": "12356f6d420167359df0a6eaed8be0b7b2c3a9c4e6ee3ae3c1813a7451541cda",
+      "matches_expected": true
+    },
+    "lox/method_call/tree": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/bin/P1-final-03/lox-plain",
+        "--engine=tree",
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/lox-scripts/method_call-50000.lox"
+      ],
+      "status": 0,
+      "stdout": "true\ntrue\n",
+      "stderr": "",
+      "expected_sha256": "21d91041c5d1a59661f8936571ee5c87e96f6f0c7a532b52ec17c5b9bea8220b",
+      "stdout_sha256": "21d91041c5d1a59661f8936571ee5c87e96f6f0c7a532b52ec17c5b9bea8220b",
+      "binary_sha256": "12356f6d420167359df0a6eaed8be0b7b2c3a9c4e6ee3ae3c1813a7451541cda",
+      "matches_expected": true
+    },
+    "lox/method_call/vm": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/bin/P1-final-03/lox-plain",
+        "--engine=vm",
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/lox-scripts/method_call-500000.lox"
+      ],
+      "status": 0,
+      "stdout": "true\ntrue\n",
+      "stderr": "",
+      "expected_sha256": "21d91041c5d1a59661f8936571ee5c87e96f6f0c7a532b52ec17c5b9bea8220b",
+      "stdout_sha256": "21d91041c5d1a59661f8936571ee5c87e96f6f0c7a532b52ec17c5b9bea8220b",
+      "binary_sha256": "12356f6d420167359df0a6eaed8be0b7b2c3a9c4e6ee3ae3c1813a7451541cda",
+      "matches_expected": true
+    },
+    "lox/properties/tree": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/bin/P1-final-03/lox-plain",
+        "--engine=tree",
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/lox-scripts/properties-100000.lox"
+      ],
+      "status": 0,
+      "stdout": "100000\n",
+      "stderr": "",
+      "expected_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+      "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+      "binary_sha256": "12356f6d420167359df0a6eaed8be0b7b2c3a9c4e6ee3ae3c1813a7451541cda",
+      "matches_expected": true
+    },
+    "lox/properties/vm": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/bin/P1-final-03/lox-plain",
+        "--engine=vm",
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/lox-scripts/properties-1000000.lox"
+      ],
+      "status": 0,
+      "stdout": "1000000\n",
+      "stderr": "",
+      "expected_sha256": "085c348f64a3b543e973a33749e90ba20847b99016a87e5228847597d61ce582",
+      "stdout_sha256": "085c348f64a3b543e973a33749e90ba20847b99016a87e5228847597d61ce582",
+      "binary_sha256": "12356f6d420167359df0a6eaed8be0b7b2c3a9c4e6ee3ae3c1813a7451541cda",
+      "matches_expected": true
+    },
+    "lox/string_equality/tree": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/bin/P1-final-03/lox-plain",
+        "--engine=tree",
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/lox-scripts/string_equality-10000.lox"
+      ],
+      "status": 0,
+      "stdout": "10000\n",
+      "stderr": "",
+      "expected_sha256": "876e13f4e07bb39705302c01f445ffd2d2c3b180a207e4d959d6b671c67da09b",
+      "stdout_sha256": "876e13f4e07bb39705302c01f445ffd2d2c3b180a207e4d959d6b671c67da09b",
+      "binary_sha256": "12356f6d420167359df0a6eaed8be0b7b2c3a9c4e6ee3ae3c1813a7451541cda",
+      "matches_expected": true
+    },
+    "lox/string_equality/vm": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/bin/P1-final-03/lox-plain",
+        "--engine=vm",
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/lox-scripts/string_equality-100000.lox"
+      ],
+      "status": 0,
+      "stdout": "100000\n",
+      "stderr": "",
+      "expected_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+      "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+      "binary_sha256": "12356f6d420167359df0a6eaed8be0b7b2c3a9c4e6ee3ae3c1813a7451541cda",
+      "matches_expected": true
+    },
+    "lox/strings/tree": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/bin/P1-final-03/lox-plain",
+        "--engine=tree",
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/lox-scripts/strings-300000.lox"
+      ],
+      "status": 0,
+      "stdout": "9375\n309375\n",
+      "stderr": "",
+      "expected_sha256": "e4d563316c0e9f5ccddf477f14ca54e9e5a7a58bee5f2e7a60382f48fd5bf988",
+      "stdout_sha256": "e4d563316c0e9f5ccddf477f14ca54e9e5a7a58bee5f2e7a60382f48fd5bf988",
+      "binary_sha256": "12356f6d420167359df0a6eaed8be0b7b2c3a9c4e6ee3ae3c1813a7451541cda",
+      "matches_expected": true
+    },
+    "lox/strings/vm": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/bin/P1-final-03/lox-plain",
+        "--engine=vm",
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/lox-scripts/strings-3000000.lox"
+      ],
+      "status": 0,
+      "stdout": "93750\n3093750\n",
+      "stderr": "",
+      "expected_sha256": "0f7e292d6d3f127e610758bf15d4de8e77fc8d8893a2bf115f177c511ebc06f9",
+      "stdout_sha256": "0f7e292d6d3f127e610758bf15d4de8e77fc8d8893a2bf115f177c511ebc06f9",
+      "binary_sha256": "12356f6d420167359df0a6eaed8be0b7b2c3a9c4e6ee3ae3c1813a7451541cda",
+      "matches_expected": true
+    },
+    "lox/trees/tree": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/bin/P1-final-03/lox-plain",
+        "--engine=tree",
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/lox-scripts/trees-5.lox"
+      ],
+      "status": 0,
+      "stdout": "24412\n0\n",
+      "stderr": "",
+      "expected_sha256": "17ab3b16ce7c5de5f4592400fb2b7e34eedbc57f86b65d948015ebfe1bd33ff5",
+      "stdout_sha256": "17ab3b16ce7c5de5f4592400fb2b7e34eedbc57f86b65d948015ebfe1bd33ff5",
+      "binary_sha256": "12356f6d420167359df0a6eaed8be0b7b2c3a9c4e6ee3ae3c1813a7451541cda",
+      "matches_expected": true
+    },
+    "lox/trees/vm": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/bin/P1-final-03/lox-plain",
+        "--engine=vm",
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/lox-scripts/trees-40.lox"
+      ],
+      "status": 0,
+      "stdout": "122068\n0\n",
+      "stderr": "",
+      "expected_sha256": "dc00383fb2d24fef0a8ace503018e64f1689080590e548654660115226860676",
+      "stdout_sha256": "dc00383fb2d24fef0a8ace503018e64f1689080590e548654660115226860676",
+      "binary_sha256": "12356f6d420167359df0a6eaed8be0b7b2c3a9c4e6ee3ae3c1813a7451541cda",
+      "matches_expected": true
+    },
+    "lox/zoo/tree": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/bin/P1-final-03/lox-plain",
+        "--engine=tree",
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/lox-scripts/zoo-3000000.lox"
+      ],
+      "status": 0,
+      "stdout": "3000000\n",
+      "stderr": "",
+      "expected_sha256": "86462511f5bae5ed2d407ecc8d2699a032b2ee003e4d10c3e38511780dd6d016",
+      "stdout_sha256": "86462511f5bae5ed2d407ecc8d2699a032b2ee003e4d10c3e38511780dd6d016",
+      "binary_sha256": "12356f6d420167359df0a6eaed8be0b7b2c3a9c4e6ee3ae3c1813a7451541cda",
+      "matches_expected": true
+    },
+    "lox/zoo/vm": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/bin/P1-final-03/lox-plain",
+        "--engine=vm",
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/lox-scripts/zoo-30000000.lox"
+      ],
+      "status": 0,
+      "stdout": "30000000\n",
+      "stderr": "",
+      "expected_sha256": "8c217ae070c7680521435fddb8edd68c135921797f283c90d4397e50423ca834",
+      "stdout_sha256": "8c217ae070c7680521435fddb8edd68c135921797f283c90d4397e50423ca834",
+      "binary_sha256": "12356f6d420167359df0a6eaed8be0b7b2c3a9c4e6ee3ae3c1813a7451541cda",
+      "matches_expected": true
+    },
+    "lox/zoo_batch/tree": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/bin/P1-final-03/lox-plain",
+        "--engine=tree",
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/lox-scripts/zoo_batch-40.lox"
+      ],
+      "status": 0,
+      "stdout": "2400000\n40\n",
+      "stderr": "",
+      "expected_sha256": "96c7f4674ee2ab05724af164ad07904320aa13dd5cd3ca8b72b29c07c662b8bf",
+      "stdout_sha256": "96c7f4674ee2ab05724af164ad07904320aa13dd5cd3ca8b72b29c07c662b8bf",
+      "binary_sha256": "12356f6d420167359df0a6eaed8be0b7b2c3a9c4e6ee3ae3c1813a7451541cda",
+      "matches_expected": true
+    },
+    "lox/zoo_batch/vm": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/bin/P1-final-03/lox-plain",
+        "--engine=vm",
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/.mylang-cache/concurrency-p1/ce/lox-scripts/zoo_batch-400.lox"
+      ],
+      "status": 0,
+      "stdout": "24000000\n400\n",
+      "stderr": "",
+      "expected_sha256": "aa4aa5edcd6410f05e8a1009af4d4e18b980d686b752d7e1127fb624f985997b",
+      "stdout_sha256": "aa4aa5edcd6410f05e8a1009af4d4e18b980d686b752d7e1127fb624f985997b",
+      "binary_sha256": "12356f6d420167359df0a6eaed8be0b7b2c3a9c4e6ee3ae3c1813a7451541cda",
+      "matches_expected": true
+    }
+  },
+  "pass": true
+}

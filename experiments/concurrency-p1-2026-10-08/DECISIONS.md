@@ -462,3 +462,33 @@ Guardian’s whole-tree commit check caught that SHARED-COUNTS-1 still described
 - **Choice:** Build an exact archive of `main` at `35df839be` as the comparison compiler, then run the existing 132 counted/plain corpus cells for main and the selected package. Compare output correctness plus allocation, copy and logical-operation totals; retain any differences with explanations. Address-dependent realloc moves and peak lifetime may differ and must not be treated as elapsed-time evidence. No alignment sweep is needed for counts. Existing emitted-count/TBAA tests and a fresh typed runtime inventory verify the merged code paths.
 - **Evidence:** Final merged focus passes 26/26 tests and fmt; source pins and full compiler/source hashes will be retained. The historical timing base stays `94dc1c3a2`; the proxy baseline is explicitly the new main, with no P1 runtime. No baseline branch or main worktree is changed.
 - **Limit/reversal:** This detects extra counted work and incorrect outputs, not instruction latency, cache effects or runtime overhead. A later wall-time suite remains necessary to certify the numeric target.
+
+## 2026-10-09 — final correctness includes every benchmark output; stale Guardian retry
+
+- **Question:** The timing waiver removes the repeated benchmark sweep, but its output checks must remain covered.
+- **Choice:** Add `tools/corpus_correctness.py` to build all 45 parity arms through shared slots and execute each once against its exact expected bytes. Also run the existing 26 Lox benchmark engine/case cells once. No elapsed-time ratios, timing CPU or idle-hardware requirement is used. The separate 132 counted/plain comparisons remain unchanged. The new `deterministic_proxy.py` retains every counter delta and ELF section/symbol byte count; it cannot issue a timing pass.
+- **Build retry evidence:** The isolated main compiler install took 318.98 seconds and failed Guardian's stale-prebuilt `selfcheck` (binary `1b6c13222675`, source `a624fa6f37bc`). Another lane refreshed that shared binary while our build ran; the subsequent package/full Debug gates already confirm the matching source. The compiler compilation itself succeeded and is cached, so retry the identical baseline install once. No Guardian bypass or shared repository modification. The >5-minute cost was concurrent ReleaseFast compilation after the early selfcheck failure, not a corpus stall. Preserve the failed build log/result.
+
+## 2026-10-09 — keep final fuzz's tracked-tree guard intact
+
+- **Failure:** The first final merged fuzz50 command was rejected before generating any case: the guard requires all tracked files clean, including report/review prose. The compiler source itself remained exactly `c26c95de7`.
+- **Choice:** Preserve the three in-progress documentation edits in this task's private draft directory, restore only those files to their committed bytes, and retry the unchanged fuzz command at the same source pin. Keep the rejected command/log in `failed_attempts`; do not weaken the guard. No source, oracle, threshold or case count changes. Defer restoring/editing tracked evidence until both final matrices finish.
+- **Reversal:** Drafts are restored byte for byte after the matrices; no user work is discarded.
+
+## 2026-10-09 — control paths in the deterministic proxy
+
+- **Finding:** The first proxy passes all 132 outputs, but its tags differ in length by seven characters. All 34 EDA cells show seven fewer appended bytes and related path-copy/growth deltas in P1, because the existing CE harness includes tag-dependent output paths in guest inputs. This is not evidence that P1 removed guest work.
+- **Choice:** Retain the first proxy/raw counts, then repeat counts only with both arms copied to the same binary namespace and using the exact same EDA output paths. Snapshot each result separately, and record the shared namespace. No rebuild, alignment sweep, timing lock or time ratio. Keep all heap-size, realloc-movement and instrumentation-counter differences in the result; no new threshold or timing pass is inferred.
+- **Reversal:** The original comparison is retained for audit. The paired fixed-path count run is reproducible from the pinned binaries.
+
+## 2026-10-09 — fixed-path proxy result and interpretation
+
+- **Evidence:** All 132 paired cells match outputs, allocation/free/copy/growth/call counts and every emitted-operation count/byte total. Both 132-document arms report zero exit live bytes. Runtime-retain totals differ in 80 cells because the hook moved from unconditional retain_block entry to the common non-immortal count_retain helper, including previously direct provider/startup holds. The only differing emitted-kind field is list_push.extra (45 cells), which records realloc movement. Rounded usable allocation bytes, realloc movement and some peak-live values also differ; all deltas remain visible.
+- **Choice:** Report matching logical work with those limitations, without claiming zero runtime/memory tax. Retain both initial path-confounded and fixed-path raw comparisons. ELF size is diagnostic: EDA .text grows from 1,067,670 to 1,203,286 bytes; Lox from 474,710 to 513,558; json::read_value from 7,286 to 8,338. No time ratio is inferred. `tools/controlled_counters.py` makes the identical-path procedure reproducible with fresh namespace/snapshot tags.
+- **Reversal:** Every source/compiler/binary pin and raw counter document is retained, so the diagnostic can be rerun or supplemented by future timings.
+
+## 2026-10-09 — final correctness closes the package
+
+- **Evidence:** At `c26c95de7`, the final full Debug gate passes 88/88 steps with 2,144 executed tests, qualification passes 553 Core tests and 1518/0/0 conformance in both modes, frozen 9×50 and 9×200 pass with unchanged source/oracles, and the exact native/capture/range TSan binaries pass all 300 eight-thread executions with zero reports. External Lox/EDA, all 132 counted/plain cells, 45 parity arms and 26 Lox benchmark outputs pass. The controlled 132-cell proxy preserves logical work and zero exit live bytes in both arms.
+- **Choice:** P1 and read-only P2-0 are complete under the explicit timing waiver. Preserve historical strict misses and report final elapsed-time performance unverified. Package evidence losslessly below 10,000,000 bytes, record Guardian feedback, commit the report and stop without P2, push or modifying main.
+- **Cost:** Final fuzz200 took 620.55 seconds, comparable to the previously investigated 632.57-second mandatory 9×200 matrix; final TSan took 682.32 seconds for the unchanged 100×3 repetitions. No slow workload was shortened.

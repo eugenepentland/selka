@@ -1,6 +1,6 @@
 # P1 review before final qualification and measurement
 
-Reviewed the complete implementation against comparison base `94dc1c3a2`, through `9f911528f` plus the measured local-exec substitution. The original P1-0 inventory is retained in [REPORT.md](REPORT.md#2-accepted-p1-0-inventory-and-abi-findings). The [fresh typed-AST inventory](r3/final-inventory/inventory.json) finds **128 static declarations and 8 managed count-access lines**, all covered below. It records every included runtime file hash and the source diff hash (the three-file TLS substitution), without replacing P1-0's source facts. The native object compile passes; the pinned wrapper's known AST-only FileNotFound status is retained with the complete parsed AST result, as in P1-0.
+Reviewed the complete implementation against comparison base `94dc1c3a2`, through `9f911528f` plus the measured local-exec substitution. The original P1-0 inventory is retained in [HISTORY.md](HISTORY.md#2-accepted-p1-0-inventory-and-abi-findings). The [fresh typed-AST inventory](r3/final-inventory/inventory.json) finds **128 static declarations and 8 managed count-access lines**, all covered below. It records every included runtime file hash and the source diff hash (the three-file TLS substitution), without replacing P1-0's source facts. The native object compile passes; the pinned wrapper's known AST-only FileNotFound status is retained with the complete parsed AST result, as in P1-0.
 
 ## Counts and managed edges
 
@@ -56,9 +56,19 @@ The runtime only calls emitted thunks through the retained `weak_odr hidden` C-t
 
 Layout K=4/5/6 is passed to every emitted unit and runtime compile and salts their identities. ThreadSanitizer marks every LLVM definition and instruments C/runtime/foreign sources, linking the same sanitizer. The foreign-source manifest has its own sanitizer salt; it cannot rely on the runtime ABI key. Ordinary/sanitized/replayed builds are tested in both directions. Invalid sanitizer values fail before compilation.
 
-Local-exec TLS was selected from the complete paired row sweep; C and both LLVM emitters agree. No front-end `src/*.zig`, `src/core/ir.zig`, `src/core/own.zig` or `core_host.c` changed. No accepted semantics, threshold or required gate was relaxed. Main remains the merged `cafe7fea7`; no push or modification of main/Claude occurred.
+Local-exec TLS was selected from the complete paired row sweep; C and both LLVM emitters agree. At that historical review, no front-end `src/*.zig`, `src/core/ir.zig`, `src/core/own.zig` or `core_host.c` changed. The final integration and user-authorized timing waiver are recorded below. No push or modification of main/Claude occurred.
 
 Remaining phase-1 limits are intentional: workers, old rings, small-allocation chunks and their registry records live for the process; shared marks are permanent; provider operations serialize; fatal workers skip external cleanup; task handles have no user surface until P2. P2 must enforce confinement, Host/resource exclusions, all-exit close lowering and CLI stack/job accounting. [P2-0](P2-0.md) proves the lowering vocabulary and identifies those files; it does not authorize P2.
 
 
 The first final full gate additionally exposed two pre-existing native-only harnesses in `own_test.zig` that needed the C task adapter. Both now provide it; their focused million-deep release/allocator tests pass. This corrects the earlier incomplete fixture inventory without changing the runtime or the forbidden ownership pass.
+
+## Final merged-source review — c26c95de7
+
+Real merge `1844fcc33` integrates main `35df839be`. Reviewed the resulting emitter diff against that main: upstream scalar TBAA nodes 11–22 and the free-path memory barrier are intact; P1's 32:1 node is 23, fact-node allocation follows it, and the retained task bridge and local-exec declarations remain. The existing emitted-count test now verifies the unique branch-weight node/reference. Incoming `ir.zig` and `own.zig`, plus all `src/*.zig`, exactly equal main; there is no P1-authored change to those frozen files. `core_host.c` also equals main.
+
+The [final typed inventory](r3/selected-inventory/inventory.json) records the committed source with an empty source diff, successful object compile, **128 static declarations and eight managed count-access lines**. The known AST-only Zig wrapper FileNotFound remains separate from the successful native object and complete parsed AST. All new S1 text/span helpers either read input storage or initialize a fresh block; they introduce no shared cache writes. Existing cache guards remain in place, and the new span-materialization counter hook is retained.
+
+Selected candidate C exactly matches its measured core_rt.c hash. Common child and release visitors are forced inline; dictionary enumeration remains ordinary. The TLS registration check is inline, with a cold preserve-most allocation/registration function. `live_blocks` remains atomic: before pool publication only the main runtime thread can update it, so relaxed load/store is sufficient; publication precedes every worker creation, and all subsequent updates use atomic RMW. No transition back to the single-thread mode exists. Byte-budget charging is unchanged. The stronger eight-worker fixture checks 1,024 small/large allocations simultaneously live at a barrier and zero after retirement, so lost increments/decrements cannot cancel unnoticed.
+
+The complete historical C timing sweep is retained, including target misses. By the user's explicit instruction, final merged-source wall-time checks are waived. Allocation/copy counters and emitted-code checks are diagnostic proxies, not a passed overhead gate. All correctness gates remain required. Final results are recorded in REPORT.md.
