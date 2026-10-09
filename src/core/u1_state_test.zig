@@ -75,3 +75,60 @@ test "a large byte buffer grows with realloc, and every append, reserve and shar
     try std.testing.expect(functionCounter(counts, "u1_growth::byte_appends", "reallocs") >= 6);
     try std.testing.expect(functionCounter(counts, "u1_growth::byte_appends", "buffer_grow_bytes") < 1024);
 }
+
+/// The sum of `name` over the sites of `kind` emitted in `function`.
+fn siteSum(counts: std.json.Value, kind: []const u8, function: []const u8, name: []const u8) i64 {
+    var sum: i64 = 0;
+    for (counts.object.get("sites").?.array.items) |site| {
+        const object = site.object;
+        if (!std.mem.eql(u8, object.get("kind").?.string, kind) or !std.mem.eql(u8, object.get("function").?.string, function)) continue;
+        sum += object.get(name).?.integer;
+    }
+    return sum;
+}
+
+const hoist_expected = "90230 33 2\n865079466 962860009 86651320\n458455359 976384266 554113001 8718774604\n814298128 890434128 128128\n605789002 676242 22549 41868000\n343010 32 598486 343010\n";
+const hoist_expected_more = "373724 33 2\n102650968 453315009 88748160\n948059408 36681838 395256001 9223654218\n814298128 175119 128128\n58046002 676242 63229 950607000\n54592 32 317729 54592\n";
+
+// spec: NEW-CORE-U1-HOIST-1
+test "a loop's updates of a value nothing in the loop shares test its count once, on the loop's entry edge" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
+    for ([_][]const []const u8{ &.{"--counters"}, &.{ "--release", "--counters" } }) |flags| {
+        const ran = try leakChecked(a, root, "u1_hoist", flags, &.{});
+        try std.testing.expectEqualStrings(hoist_expected, ran.stdout);
+        const counts = try countsOf(a, root, "u1_hoist", flags);
+        // `nested_mut` updates the `mut` list its caller shares 2 * (1 + 2 + 3 + 4) times in
+        // its inner loop: one test, which finds it shared, before the outer loop.
+        try std.testing.expectEqual(@as(i64, 1), siteSum(counts, "unique_test", "u1_hoist::nested_mut", "count"));
+        try std.testing.expectEqual(@as(i64, 0), siteSum(counts, "unique_test", "u1_hoist::nested_mut", "extra"));
+        // A list a call returned: one test, which finds it unique, for 20 appends.
+        try std.testing.expectEqual(@as(i64, 1), siteSum(counts, "unique_test", "u1_hoist::from_call", "count"));
+        try std.testing.expectEqual(@as(i64, 1), siteSum(counts, "unique_test", "u1_hoist::from_call", "extra"));
+        // An alias held until the loop's third iteration: the entering list is still needed,
+        // so each of the 20 appends keeps its test.
+        try std.testing.expectEqual(@as(i64, 20), siteSum(counts, "unique_test", "u1_hoist::dropped_alias", "count"));
+    }
+}
+
+// spec-case: NEW-CORE-U1-HOIST-1
+test "hoisted tests keep every answer: aliases made, kept or dropped in the loop, rows, rebinding, control flow, calls, text, dictionaries, buffers" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
+    for (modes) |flags| {
+        const plain = try leakChecked(a, root, "u1_hoist", flags, &.{});
+        try std.testing.expectEqualStrings(hoist_expected, plain.stdout);
+        try std.testing.expectEqualStrings("", plain.stderr);
+        const more = try leakChecked(a, root, "u1_hoist", flags, &.{"x"});
+        try std.testing.expectEqualStrings(hoist_expected_more, more.stdout);
+        try std.testing.expectEqual(@as(u8, 0), more.status);
+    }
+}

@@ -141,6 +141,7 @@ pub fn function(arena: std.mem.Allocator, module: *const ir.Module, f: *ir.Funct
     }
     try mergeFieldReads(arena, f);
     try takeFields(arena, module, f, &marks);
+    try hoistTests(arena, module, f, &marks);
     var phase_a = try Analysis.of(arena, module, f, &marks);
     try phase_a.analyze();
     try copyOnWrite(&phase_a, options, &stats);
@@ -242,6 +243,9 @@ const Marks = struct {
     taken: std.AutoHashMapUnmanaged(u32, void) = .empty,
     /// Records whose block-holding fields were all read out (`takeFields`): never counted.
     emptied: std.AutoHashMapUnmanaged(u32, void) = .empty,
+    /// Phis that join a value and its copy right after an `is_unique` test on a loop's
+    /// entry edge (`hoistTests`): each holds a block of count 1 where it is defined.
+    ensured: std.AutoHashMapUnmanaged(u32, void) = .empty,
 };
 
 /// Where a value is live, by block.
@@ -662,6 +666,13 @@ fn isUpdate(op: ir.Op) bool {
 /// from an allocation, a copy or another update (or phis of those), and no use
 /// before shares it.
 fn staticallyUnique(a: *const Analysis, value: ir.Ref, site: ir.Ref) Error!bool {
+    return uniqueWeb(a, value, site, &.{});
+}
+
+/// `staticallyUnique` with the loop-entry operands `cuts` taken as fresh blocks that
+/// nothing else holds (what a test on each of those edges would make them,
+/// `hoistTests`). A cut operand that also reaches the web another way is not fresh.
+fn uniqueWeb(a: *const Analysis, value: ir.Ref, site: ir.Ref, cuts: []const Cut) Error!bool {
     if (!a.module.isBlock(a.inst(value).ty)) return false;
     var web: std.ArrayList(ir.Ref) = .empty;
     var index: std.AutoHashMapUnmanaged(u32, u6) = .empty;
@@ -676,12 +687,18 @@ fn staticallyUnique(a: *const Analysis, value: ir.Ref, site: ir.Ref) Error!bool 
             .list_get => if (flags.transferredRead(instruction)) {
                 if (!try exclusiveChildren(a, instruction.a)) return false;
             } else return false,
-            .phi => for (a.f.operands(instruction.data)) |operand| {
+            // An ensured join holds a block of count 1, like a fresh copy.
+            .phi => if (!a.marks.ensured.contains(@backingInt(current))) for (a.f.operands(instruction.data), 0..) |operand, k| {
+                if (isCut(cuts, current, k)) continue;
                 const source = a.f.resolve(operand);
                 if (std.mem.indexOfScalar(ir.Ref, web.items, source) == null) try web.append(a.arena, source);
             },
             else => if (instruction.op.consumesOperand0()) {} else return false,
         }
+    }
+    for (cuts) |cut| {
+        const operand = a.f.resolve(a.f.operands(a.inst(cut.phi).data)[cut.operand]);
+        if (std.mem.indexOfScalar(ir.Ref, web.items, operand) != null) return false;
     }
     for (web.items, 0..) |member, i| try index.put(a.arena, @backingInt(member), @intCast(i));
     for (web.items) |member| {
@@ -863,6 +880,196 @@ fn enter(f: *const ir.Function, web: Web, from: u32, to: u32, holders: u64) u64 
         if ((web.bit(operand) orelse 0) & holders != 0) out |= b else out &= ~b;
     }
     return out;
+}
+
+// ---- hoisted uniqueness tests (NEW-CORE-U1-HOIST-1) ------------------------------
+
+/// Operand `operand` of a loop header's `phi`, on an edge that enters the loop (from a
+/// predecessor the header does not dominate).
+const Cut = struct { phi: ir.Ref, operand: usize };
+
+fn isCut(cuts: []const Cut, phi: ir.Ref, operand: usize) bool {
+    for (cuts) |cut| {
+        if (cut.phi == phi and cut.operand == operand) return true;
+    }
+    return false;
+}
+
+/// Move uniqueness tests out of loops. An update of a value that may be shared (form 2)
+/// tests the count each time it runs. When the value reaches the update through a loop
+/// header's phi and nothing in the loop can share it, one test on each edge entering the
+/// loop does: there the entering value is made unique, copied when shared
+/// (`ensureUnique`), and the loop's own updates keep it unique, so phase A finds every
+/// update of it in the loop statically unique (form 1). The outermost such loop is
+/// chosen. Nothing is hoisted for a value the loop may share: a copy or a second owner
+/// made in the loop, a call that may keep it, a store of it into another value, or an
+/// entering value still needed in the loop.
+fn hoistTests(arena: std.mem.Allocator, module: *const ir.Module, f: *ir.Function, marks: *Marks) Error!void {
+    var a = try Analysis.of(arena, module, f, marks);
+    try a.analyze();
+    var shape: ?facts.Shape = null;
+    var cuts: std.ArrayList(Cut) = .empty;
+    for (f.blocks.items, 0..) |block, b| {
+        if (!a.present(b)) continue;
+        for (block.insts.items, 0..) |ref, pos| {
+            const instruction = f.inst(ref);
+            if (!isUpdate(instruction.op) or marks.taken.contains(@backingInt(ref))) continue;
+            if (instruction.op == .list_push and instruction.data == promotion.stack_push) continue;
+            const list = f.resolve(instruction.a);
+            if (!a.counted(list) or a.liveAfter(list, @intCast(b), @intCast(pos))) continue;
+            if (try staticallyUnique(&a, list, ref)) continue;
+            if (shape == null) shape = try facts.shape(arena, f);
+            try hoistable(&a, .{ .shape = shape.?, .site = ref, .block = @intCast(b) }, list, &cuts);
+        }
+    }
+    if (cuts.items.len == 0) return;
+    const e: Editor = .{ .arena = arena, .f = f, .origin = marks.origin };
+    var done: std.ArrayList(Cut) = .empty;
+    for (cuts.items) |cut| {
+        if (isCut(done.items, cut.phi, cut.operand)) continue;
+        try done.append(arena, cut);
+        const ensured = try ensureUnique(e, module, cut);
+        try marks.ensured.put(arena, @backingInt(ensured), {});
+    }
+}
+
+/// The update `hoistable` weighs: its instruction and block, and the function's dominators.
+const Hoisting = struct { shape: facts.Shape, site: ir.Ref, block: u32 };
+
+/// Append the loop-entry cuts after which `list`'s web is statically unique at `at.site`:
+/// those of the outermost loop holding the update whose header joins the web, if any
+/// loop's do.
+fn hoistable(a: *const Analysis, at: Hoisting, list: ir.Ref, cuts: *std.ArrayList(Cut)) Error!void {
+    const f = a.f;
+    // The web's phis at the headers of loops holding the update.
+    var headers: std.ArrayList(ir.Ref) = .empty;
+    var web: std.ArrayList(ir.Ref) = .empty;
+    try web.append(a.arena, list);
+    var next: usize = 0;
+    while (next < web.items.len and web.items.len <= 64) : (next += 1) {
+        const current = web.items[next];
+        const instruction = a.inst(current);
+        if (instruction.op != .phi) continue;
+        if (try loopHolds(a.arena, f, at.shape, a.where[current.index()].block, at.block)) try headers.append(a.arena, current);
+        for (f.operands(instruction.data)) |operand| try addUnique(a.arena, &web, f.resolve(operand));
+    }
+    // Outermost first: a header dominates the headers of the loops inside its own.
+    std.mem.sort(ir.Ref, headers.items, OuterFirst{ .a = a, .shape = at.shape }, OuterFirst.lessThan);
+    for (headers.items) |phi| {
+        const home = a.where[phi.index()].block;
+        var local: std.ArrayList(Cut) = .empty;
+        var plain = true;
+        for (f.blocks.items[home].preds.items, 0..) |pred, k| {
+            if (dominates(at.shape, home, @backingInt(pred))) continue;
+            // The entering edge is retargeted: one jump, or one arm of a branch.
+            const insts = f.blocks.items[pred.index()].insts.items;
+            const term = f.inst(insts[insts.len - 1]);
+            const targets = ir.unpackTargets(term.data);
+            plain = plain and (term.op == .jump or (term.op == .branch and targets.then != targets.otherwise));
+            try local.append(a.arena, .{ .phi = phi, .operand = k });
+        }
+        if (!plain) continue;
+        if (local.items.len == 0 or !enterable(a, phi, local.items)) continue;
+        if (!try uniqueWeb(a, list, at.site, local.items)) continue;
+        try cuts.appendSlice(a.arena, local.items);
+        return;
+    }
+}
+
+/// Whether every value entering through `cuts` can be tested there: an owned block
+/// whose edge into the header is its last use.
+fn enterable(a: *const Analysis, phi: ir.Ref, cuts: []const Cut) bool {
+    const home = a.where[phi.index()].block;
+    for (cuts) |cut| {
+        const operand = a.f.resolve(a.f.operands(a.inst(phi).data)[cut.operand]);
+        if (!a.module.isBlock(a.inst(operand).ty) or !a.counted(operand)) return false;
+        if (a.where[operand.index()].block == no_block or a.liveInto(operand, home)) return false;
+        // Taken by the phi on its edge (not consumed twice there).
+        for (a.uses[operand.index()].items) |use| {
+            if (use.onEdge() and use.succ == home and use.consume > 1) return false;
+        }
+    }
+    return true;
+}
+
+/// Orders header phis so that an outer loop's comes first.
+const OuterFirst = struct {
+    a: *const Analysis,
+    shape: facts.Shape,
+
+    fn lessThan(self: OuterFirst, left: ir.Ref, right: ir.Ref) bool {
+        const l = self.a.where[left.index()].block;
+        const r = self.a.where[right.index()].block;
+        return l != r and dominates(self.shape, l, r);
+    }
+};
+
+/// Whether block `parent` dominates block `child` (an unreachable block is dominated by none).
+fn dominates(shape: facts.Shape, parent: u32, child: u32) bool {
+    var at: ?ir.BlockId = @fromBackingInt(child);
+    while (at) |block| {
+        if (block.index() == parent) return true;
+        if (block.index() == 0) return false;
+        at = shape.idom[block.index()];
+    }
+    return false;
+}
+
+/// Whether block `header` heads a loop that holds block `block`: `block` is the header or
+/// reaches one of its back edges' sources without passing the header.
+fn loopHolds(arena: std.mem.Allocator, f: *const ir.Function, shape: facts.Shape, header: u32, block: u32) Error!bool {
+    if (header == no_block or !dominates(shape, header, block)) return false;
+    for (f.blocks.items[header].preds.items) |pred_id| {
+        const pred = @backingInt(pred_id);
+        if (!dominates(shape, header, pred)) continue;
+        if (block == header or block == pred or try blockReachable(arena, f, block, pred, header)) return true;
+    }
+    return false;
+}
+
+/// Put `if is_unique(v)` on the entry edge of `cut`: the edge carries `v` on when it is
+/// unique, else a copy of it (`v` released), joined in a phi that replaces `v` as the
+/// header phi's operand. Returns the join.
+fn ensureUnique(e: Editor, module: *const ir.Module, cut: Cut) Error!ir.Ref {
+    const f = e.f;
+    const phi = f.inst(cut.phi);
+    const home = e.locate(cut.phi).block;
+    const header: ir.BlockId = @fromBackingInt(@intCast(home));
+    const pred = f.blocks.items[home].preds.items[cut.operand];
+    const value = f.resolve(f.operands(phi.data)[cut.operand]);
+    const ty = f.inst(value).ty;
+    const frame = e.frameAt(cut.phi);
+    const test_block = try e.newBlock();
+    const copy_block = try e.newBlock();
+    const join = try e.newBlock();
+    if (e.origin) |origin| for ([_]ir.BlockId{ test_block, copy_block, join }) |block| try origin.setBlock(e.arena, @intCast(block.index()), frame);
+    // The predecessor now leaves for the test block instead of the header.
+    const pred_insts = f.blocks.items[pred.index()].insts.items;
+    const term = &f.insts.items[pred_insts[pred_insts.len - 1].index()];
+    if (term.op == .jump) {
+        term.data = @backingInt(test_block);
+    } else {
+        const targets = ir.unpackTargets(term.data);
+        term.data = ir.packTargets(if (targets.then == header) test_block else targets.then, if (targets.otherwise == header) test_block else targets.otherwise);
+    }
+    try f.blocks.items[test_block.index()].preds.append(e.arena, pred);
+    const unique = try e.append(test_block, .{ .op = .is_unique, .ty = .bool, .a = value, .span = phi.span });
+    try e.terminate(test_block, .{ .op = .branch, .ty = .void, .a = unique, .data = ir.packTargets(join, copy_block), .span = phi.span }, &.{ join, copy_block });
+    const marker = try e.append(copy_block, .{ .op = .copy, .ty = ty, .a = value });
+    const copy = try copyBefore(e, module, marker, value);
+    _ = try e.append(copy_block, .{ .op = .release, .ty = .void, .a = value, .span = phi.span });
+    try e.terminate(copy_block, .{ .op = .jump, .ty = .void, .data = @backingInt(join), .span = phi.span }, &.{join});
+    // The join's predecessors are [test_block, copy_block], in that order.
+    const ensured = try e.newInst(.{ .op = .phi, .ty = ty, .data = try e.extraOf(&.{ value, copy }), .span = phi.span });
+    try e.inherit(ensured, cut.phi);
+    try f.blocks.items[join.index()].insts.append(e.arena, ensured);
+    _ = try e.append(join, .{ .op = .jump, .ty = .void, .data = @backingInt(header), .span = phi.span });
+    f.blocks.items[home].preds.items[cut.operand] = join;
+    // The header phi takes the join on that edge (its operands copied to a slot of its own).
+    const operands = try e.arena.dupe(ir.Ref, f.operands(phi.data));
+    operands[cut.operand] = ensured;
+    f.insts.items[cut.phi.index()].data = try e.extraOf(operands);
+    return ensured;
 }
 
 /// Phase A: give every in-place update its form, extract the fields `record_set`
