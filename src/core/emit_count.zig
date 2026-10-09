@@ -147,9 +147,11 @@ pub const Table = struct {
 
 /// The runtime globals a counting unit names.
 pub const declarations =
-    \\@myl_count_current = external global ptr
-    \\@myl_count_copy_site = external global ptr
-    \\@myl_count_push_site = external global ptr
+    \\declare ptr @myl_count_function_local(ptr) nounwind
+    \\declare ptr @myl_count_site_local(ptr) nounwind
+    \\@myl_count_current = external thread_local(initialexec) global ptr
+    \\@myl_count_copy_site = external thread_local(initialexec) global ptr
+    \\@myl_count_push_site = external thread_local(initialexec) global ptr
     \\
 ;
 
@@ -159,17 +161,21 @@ pub const Increment = struct { record: []const u8, offset: u32, amount: []const 
 
 /// Emit one `Increment`: a load, an add and a store, with no new block.
 pub fn increment(a: std.mem.Allocator, out: *std.ArrayList(u8), step: Increment) std.mem.Allocator.Error!void {
-    const at = "ptr getelementptr inbounds (i8, ptr {s}, i64 {d})";
-    try out.print(a, "  {s} = load i64, " ++ at ++ ", align 8\n  {s} = add i64 {s}, {s}\n  store i64 {s}, " ++ at ++ ", align 8\n", .{
-        step.loaded, step.record, step.offset, step.sum, step.loaded, step.amount, step.sum, step.record, step.offset,
+    const record = if (std.mem.startsWith(u8, step.record, "%")) step.record else local: {
+        const name = try std.fmt.allocPrint(a, "{s}.record", .{step.loaded});
+        try out.print(a, "  {s} = call ptr @myl_count_{s}_local(ptr {s})\n", .{ name, if (step.offset == function_calls) "function" else "site", step.record });
+        break :local name;
+    };
+    try out.print(a, "  {s}.at = getelementptr inbounds i8, ptr {s}, i64 {d}\n", .{ step.loaded, record, step.offset });
+    try out.print(a, "  {s} = load i64, ptr {s}.at, align 8\n  {s} = add i64 {s}, {s}\n  store i64 {s}, ptr {s}.at, align 8\n", .{
+        step.loaded, step.loaded, step.sum, step.loaded, step.amount, step.sum, step.loaded,
     });
 }
 
 /// The function prologue: save the caller's record, make `@myl.cf.N` current and count the call.
 pub fn prologue(a: std.mem.Allocator, out: *std.ArrayList(u8), record: u32) std.mem.Allocator.Error!void {
-    try out.print(a, "  %myl.cnt.saved = load ptr, ptr @myl_count_current, align 8\n  store ptr @myl.cf.{d}, ptr @myl_count_current, align 8\n", .{record});
-    const name = try std.fmt.allocPrint(a, "@myl.cf.{d}", .{record});
-    try increment(a, out, .{ .record = name, .offset = function_calls, .amount = "1", .loaded = "%myl.cnt.calls", .sum = "%myl.cnt.calls.1" });
+    try out.print(a, "  %myl.cnt.saved = load ptr, ptr @myl_count_current, align 8\n  %myl.cnt.active = call ptr @myl_count_function_local(ptr @myl.cf.{d})\n  store ptr %myl.cnt.active, ptr @myl_count_current, align 8\n", .{record});
+    try increment(a, out, .{ .record = "%myl.cnt.active", .offset = function_calls, .amount = "1", .loaded = "%myl.cnt.calls", .sum = "%myl.cnt.calls.1" });
 }
 
 /// Before a return: the caller's record is current again.
@@ -179,7 +185,7 @@ pub const epilogue = "  store ptr %myl.cnt.saved, ptr @myl_count_current, align 
 /// `emit_llvm.runtime_fast_paths`, but every list allocation and every free goes
 /// through the runtime, which counts it. Pushes with room stay inline.
 pub const fast_paths =
-    \\@myl_core_free_lists = external global [33 x ptr]
+    \\@myl_core_free_lists = external thread_local(initialexec) global [33 x ptr]
     \\declare preserve_mostcc void @myl_core_retain_slow(ptr) nounwind cold
     \\declare preserve_mostcc void @myl_core_release_slow(ptr) nounwind cold
     \\declare ptr @myl_core_list_new_slow(i64, i64) nounwind

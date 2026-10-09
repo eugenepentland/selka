@@ -2,10 +2,10 @@
 
 ## Current progress — 2026-10-09
 
-- **Done:** Fast-forwarded to `0ee93b396`; R9/R10 committed at `9477f7673`; main `cafe7fea7` merged by real merge `42041fa45`. Comparison baseline: `94dc1c3a2`. C1’s full correctness/qualification/fuzz checkpoint is retained. B2’s selected emitter is adopted and its fresh full correctness checkpoint passes at `9c2559a45`. No push or main/Claude modification occurred.
-- **Measured:** B2 wins the prescribed R9 comparison and completes all corpus timing: rows **0.9990390412**, EDA **1.0207970965**, Lox tree **1.0140140429**, Lox VM **1.0165376601**, parity **1.0005911305**. Every corpus is below 1.03. The target remains missed in rows, EDA and both Lox engines; every failure is retained below.
-- **Decided:** Keep B’s single preserve-most slow call with a still-unlikely 32:1 count branch and the refined internal helpers. This resolves C1’s Lox VM premise failure under R9’s selection rule. Close the early performance investigation with recorded checkpoint misses; P1-2 changes the runtime again, and P1-6 will supply the binding tax decision.
-- **Next:** Integrate P1-2 through P1-5, perform final review/gates/tax and finish P2-0. Later steps remain isolated drafts. **P1 is not complete.**
+- **Done:** P1-1's B2 checkpoint is complete at `5042d85a5` (implementation `9c2559a45`). P1-2 per-thread runtime state is integrated and passes focused tests, the full Debug gate and fmt. Main remains `cafe7fea7`, merged by real merge `42041fa45`; comparison base remains `94dc1c3a2`. No push or main/Claude modification occurred.
+- **Measured:** Early B2 tax is recorded below; all corpus geomeans are below 1.03, with target misses retained. P1-2's initial-exec/local-exec comparison is next.
+- **Decided:** Use private TLS state with narrow shared locks/atomics, persistent retired-thread allocator records, whole-output-unit staging and bounded fatal reporting. Keep the B2 emitter and the logged last-owner acquire CAS. Initial-exec is provisional pending measurement.
+- **Next:** Measure TLS models and integrate P1-3 through P1-5, then whole-package review, final correctness/TSan/tax and P2-0. **P1 is not complete.**
 
 ### Revision-3 correctness checkpoint
 
@@ -726,3 +726,9 @@ At `9c2559a45`, the full Debug gate passes **88/88 steps and 2,101 tests**, with
 [External gates](r3/results/B2-external.json) pass: Lox **246 VM / 241 tree** in normal and stress modes and **65 port tests**; EDA **310 tests / 34 goldens**. All **132 counted/plain cells** match (48 Lox, 34 EDA, 4 parity, 46 rows), with zero statuses and valid counters. [Counter summaries](results/r3-B2/) and [original decoded JSON](raw/r3-counter-history.tar.xz) retain the evidence. The complete tax run also validates all **45 parity arms**. This closes P1-1's required correctness checkpoint.
 
 The first qualification launch failed before compilation because the generic evidence basename collided with an older private cache directory. Its failed log is retained in `r3/B2-gates/qualify.log.gz`; the successful retry used the unique `B2-committed-qualify` name. The checkpoint helper now uses a tag-specific qualification name and explicitly binds fuzz to the recorded committed HEAD. Long prototype/port-test waits were shared-slot admission, not slow test execution; no other lane was interrupted.
+
+### P1-2: per-thread runtime integrated
+
+The allocator, error/site state, stacks and counting records now use TLS; shared accounting is atomic, provider operations serialize, and output commits complete units. Retired-thread allocator records remain valid for quiescent leak/text reports. Fatal fixtures cover one-winner behavior, held IO/stream locks and worker stack overflow; normal fixtures cover eight workers, cross-thread frees, exact counts and large output units. Dynamic print boundaries are emitted by `src/core/build_cap.zig`; native pthread flags are in `src/core/driver.zig`.
+
+Validation: **18/18 focused tests**, full Debug **88/88 steps succeeded; 2107/21680 tests passed (19573 skipped)**, and **fmt passed**. [Focused evidence](r3/logs/P1-2-focused.log.gz), [full gate](r3/logs/P1-2-full.log.gz), [fmt](r3/logs/P1-2-fmt.log.gz). TLS-model timing remains pending; final package gates will cover the later scheduler integration.

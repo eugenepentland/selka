@@ -181,6 +181,7 @@ pub fn link(allocator: std.mem.Allocator, io: std.Io, environ: *const std.proces
     try argv.appendSlice(allocator, &.{ guest.path, "cc", unit_cache.level(request.release), "-target", target_policy.native_link_target });
     try argv.appendSlice(allocator, target.cpu_flags);
     if (sanitizer.len != 0) try argv.append(allocator, sanitizer);
+    try argv.append(allocator, "-pthread");
     try argv.appendSlice(allocator, &.{ "-Wno-override-module", "-o", linked });
     for (objects.items) |object| try argv.append(allocator, object.path);
     if (needs.math) try argv.append(allocator, "-lm");
@@ -648,7 +649,7 @@ fn runtimeObject(native: Native, directory: []const u8, runtime: Runtime) Error!
     try argv.appendSlice(allocator, &.{ "-target", target_policy.native_link_target });
     try argv.appendSlice(allocator, target.cpu_flags);
     try argv.appendSlice(allocator, layoutArguments(native.environment));
-    try argv.appendSlice(allocator, &.{ "-std=c11", "-o", partial, source });
+    try argv.appendSlice(allocator, &.{ "-std=c11", "-pthread", "-o", partial, source });
     try run(native, argv.items);
     try native.guard.check(native.log);
     cwd.rename(partial, cwd, object, io) catch return error.WriteFailed;

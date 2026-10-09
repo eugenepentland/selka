@@ -3687,7 +3687,7 @@ const Debug = struct {
 /// else calls the runtime. Free-list accesses carry no TBAA tag; nothing is counted
 /// here (the leak check counts free-list entries at exit).
 const runtime_fast_paths =
-    \\@myl_core_free_lists = external global [33 x ptr]
+    \\@myl_core_free_lists = external thread_local(initialexec) global [33 x ptr]
     \\declare preserve_mostcc void @myl_core_retain_slow(ptr) nounwind cold
     \\declare preserve_mostcc void @myl_core_release_slow(ptr) nounwind cold
     \\declare ptr @myl_core_list_new_slow(i64, i64) nounwind

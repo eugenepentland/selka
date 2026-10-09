@@ -5,12 +5,11 @@ enum { MYL_TEXT_ASCII = 1u << 8, MYL_TEXT_HASHED = 2u << 8,
 /* Octets the scalar-position walks of this process have stepped over. With
    MYL_CORE_TEXTWALK=1 the total is reported on stderr at exit, so a test can bound
    the lookup work of a scan without timing it (NEW-CORE-TEXT-CURSOR-1). */
-static uint64_t core_text_walked;
 static void core_text_walk_report(void) {
     const char *flag = getenv("MYL_CORE_TEXTWALK");
     if (!flag || strcmp(flag, "1") != 0) return;
     char text[64];
-    int len = snprintf(text, sizeof text, "myl-core textwalk: %llu octets\n", (unsigned long long)core_text_walked);
+    int len = snprintf(text, sizeof text, "myl-core textwalk: %llu octets\n", (unsigned long long)core_thread_walk_total());
     os_write(2, (const unsigned char *)text, (size_t)len);
 }
 

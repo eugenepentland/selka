@@ -11,6 +11,7 @@
  *
  * Output: one buffer per standard stream, flushed when full, at exit and before a
  * trap report, so stdout keeps program order relative to a trap. */
+#define _GNU_SOURCE
 #define _POSIX_C_SOURCE 200809L
 /* XSI: the signal stack the stack-floor report runs on (`sigaltstack`, `SA_ONSTACK`). */
 #define _XOPEN_SOURCE 700
@@ -27,6 +28,23 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <malloc.h>
+#include <pthread.h>
+#include <stdatomic.h>
+#include <signal.h>
+#include <errno.h>
+#include <sched.h>
+#include <sys/syscall.h>
+#include <linux/futex.h>
+
+/* RUNTIME-THREADS-1: the executable owns TLS; no dynamic library can unload it. */
+#define MYL_TLS _Thread_local __attribute__((tls_model("initial-exec")))
+static _Atomic bool core_pool_started;
+static _Atomic uint32_t core_fatal_winner;
+static MYL_TLS bool core_fatal_owner, core_fatal_raw;
+static pthread_mutex_t core_stream_mutex = PTHREAD_MUTEX_INITIALIZER;
+typedef struct { uintptr_t submit, group; int64_t item; } core_task_context;
+static MYL_TLS core_task_context core_running_task;
+static bool core_parallel(void) { return atomic_load_explicit(&core_pool_started, memory_order_acquire); }
 
 /* ---- platform layer (POSIX) ------------------------------------------------
  * Every operating-system call the runtime makes goes through these functions;
@@ -50,12 +68,14 @@ static bool os_write(int fd, const unsigned char *bytes, size_t len) {
 /* End the process now, with no atexit handlers (a trap or a fatal error). */
 static void core_io_cleanup(void);
 static void core_host_cleanup(void);
-static void os_exit(int status) { core_io_cleanup(); _exit(status); }
+static void core_fatal_begin(void);
+static void core_task_report(void);
+static void os_exit(int status) { if (core_parallel()) { core_fatal_begin(); core_task_report(); _exit(status ? 1 : 0); } core_task_report(); core_io_cleanup(); _exit(status); }
 
 /* The return addresses on the stack, innermost first, walked through `.eh_frame`
    (glibc's `backtrace`, which is libgcc's `_Unwind_Backtrace`; no unwinder is
    linked into the program). */
-static int os_stack(void **pcs, int capacity) { return backtrace(pcs, capacity); }
+static int os_stack(void **pcs, int capacity) { return core_fatal_raw ? 0 : backtrace(pcs, capacity); }
 
 /* This executable's bytes, mapped read-only (for its DWARF sections), or NULL. */
 static const unsigned char *os_map_self(size_t *size) {
@@ -114,16 +134,15 @@ __attribute__((cold, noinline, preserve_most)) void myl_core_retain_slow(myl_blo
 }
 
 /* Drop a shared owner; only the thread that removed the last one may free.
-   The acquire fence makes every prior owner's release visible to destruction. */
+   Its acquire makes every prior owner's release visible to destruction. */
 __attribute__((cold, noinline, preserve_most)) static bool count_release_shared(myl_block *block) {
     uint32_t count = count_load(block);
     while (count != MYL_SATURATED) {
+        /* Acquire on the last-owner RMW is equivalent to the following acquire
+           fence, and is visible to TSan's atomic synchronization model. */
+        const int order = count == MYL_SHARED + 1 ? __ATOMIC_ACQ_REL : __ATOMIC_RELEASE;
         if (__atomic_compare_exchange_n(&block->count, &count, count - 1, true,
-                                        __ATOMIC_RELEASE, __ATOMIC_RELAXED)) {
-            if (count != MYL_SHARED + 1) return false;
-            __atomic_thread_fence(__ATOMIC_ACQUIRE);
-            return true;
-        }
+                                        order, __ATOMIC_RELAXED)) return count == MYL_SHARED + 1;
     }
     return false;
 }
@@ -173,27 +192,34 @@ static void core_io_failure(const char *code);
    the inline fast paths and every program built without a ceiling pay nothing.
    Exceeding it traps `R_MEMORY_BUDGET`, as the old core's managed heap does;
    the process's `RLIMIT_AS` at the ceiling plus 256 MiB backs everything else. */
-static uint64_t heap_ceiling, heap_held;
+static uint64_t heap_ceiling;
+static _Atomic uint64_t heap_held;
 
 __attribute__((cold, noinline)) static void heap_exhausted(void) {
-    heap_ceiling = 0;
     core_io_failure("R_MEMORY_BUDGET");
 }
 
 static void heap_charge(size_t bytes) {
     if (!heap_ceiling) return;
-    heap_held += bytes;
-    if (heap_held > heap_ceiling) heap_exhausted();
+    uint64_t held = atomic_load_explicit(&heap_held, memory_order_relaxed);
+    for (;;) {
+        if (held > heap_ceiling || bytes > heap_ceiling - held) heap_exhausted();
+        if (atomic_compare_exchange_weak_explicit(&heap_held, &held, held + bytes,
+                memory_order_relaxed, memory_order_relaxed)) return;
+    }
 }
 
 static void heap_refund(size_t bytes) {
-    if (heap_ceiling) heap_held -= bytes < heap_held ? bytes : heap_held;
+    if (!heap_ceiling) return;
+    uint64_t held = atomic_load_explicit(&heap_held, memory_order_relaxed);
+    while (!atomic_compare_exchange_weak_explicit(&heap_held, &held, held - (bytes < held ? bytes : held),
+            memory_order_relaxed, memory_order_relaxed)) {}
 }
 
 /* Blocks ever carved from chunks plus large blocks not yet freed. A small block is
    live exactly when it was carved and is not on a free list, so the
    MYL_CORE_LEAKCHECK=1 count (`live_count`) needs no counting on the fast paths. */
-static int64_t live_blocks;
+static _Atomic int64_t live_blocks;
 
 /* ---- allocation ----------------------------------------------------------------
  * Blocks of up to MYL_SMALL bytes (header included) come from per-size-class free
@@ -202,7 +228,7 @@ static int64_t live_blocks;
  * `malloc`ed, and a large list grows with `realloc`. The class sits in the high
  * byte of `kind` (0: large), so a free needs no size. A list's `cap` is all its
  * block holds, so a small list grows within its class without moving.
- * Single-threaded, like the counts. The common cases (a small list from a free
+ * Free lists and chunk cursors belong to the current thread. The common cases (a small list from a free
  * list, a push with room, a free of a small block without children) are emitted
  * inline by `emit_llvm.zig` against `myl_core_free_lists`; these functions are
  * the rest. */
@@ -213,15 +239,72 @@ enum { MYL_GRANULE = 32, MYL_SMALL = 1024, MYL_CLASSES = MYL_SMALL / MYL_GRANULE
    `stackList`): nothing releases it and its pushes skip `myl_core_list_grow`, so no
    function here ever sees one. */
 
-void *myl_core_free_lists[MYL_CLASSES + 1];
+MYL_TLS void *myl_core_free_lists[MYL_CLASSES + 1];
 #define free_lists myl_core_free_lists
-static unsigned char *chunk_next, *chunk_end;
+static MYL_TLS unsigned char *chunk_next, *chunk_end;
+static MYL_TLS uint64_t core_text_walked;
+
+/* Keep thread allocator identities until exit. Pool workers live until process
+   exit; the destructor also preserves free lists from short-lived native test
+   threads, so a registry entry never points into retired TLS. Report readers
+   hold this mutex and run only after task quiescence. */
+typedef struct core_thread_record {
+    void **lists;
+    uint64_t *walked;
+    void *retired_lists[MYL_CLASSES + 1];
+    uint64_t retired_walked;
+    struct core_thread_record *next;
+} core_thread_record;
+static core_thread_record *core_thread_records;
+static pthread_mutex_t core_thread_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_once_t core_thread_key_once = PTHREAD_ONCE_INIT;
+static pthread_key_t core_thread_key;
+static MYL_TLS core_thread_record *core_thread_registered;
+
+static void core_thread_retire(void *pointer) {
+    core_thread_record *record = pointer;
+    pthread_mutex_lock(&core_thread_mutex);
+    memcpy(record->retired_lists, record->lists, sizeof record->retired_lists);
+    record->retired_walked = *record->walked;
+    record->lists = record->retired_lists;
+    record->walked = &record->retired_walked;
+    pthread_mutex_unlock(&core_thread_mutex);
+}
+
+static void core_thread_key_initialize(void) {
+    if (pthread_key_create(&core_thread_key, core_thread_retire)) out_of_memory();
+}
+
+static void core_thread_register(void) {
+    if (core_thread_registered) return;
+    core_thread_record *record = calloc(1, sizeof *record);
+    if (!record) out_of_memory();
+    record->lists = free_lists;
+    record->walked = &core_text_walked;
+    pthread_once(&core_thread_key_once, core_thread_key_initialize);
+    if (pthread_setspecific(core_thread_key, record)) out_of_memory();
+    pthread_mutex_lock(&core_thread_mutex);
+    record->next = core_thread_records;
+    core_thread_records = record;
+    pthread_mutex_unlock(&core_thread_mutex);
+    core_thread_registered = record;
+}
+
+static uint64_t core_thread_walk_total(void) {
+    uint64_t total = 0;
+    core_thread_register();
+    pthread_mutex_lock(&core_thread_mutex);
+    for (core_thread_record *at = core_thread_records; at; at = at->next) total += *at->walked;
+    pthread_mutex_unlock(&core_thread_mutex);
+    return total;
+}
 
 static uint32_t kind_of(const myl_block *block) { return block->kind & MYL_KIND_MASK; }
 static uint32_t class_of(const myl_block *block) { return block->kind >> MYL_CLASS_SHIFT; }
 
 /* A small block of `class` granules: from its free list, else carved from a chunk. */
 static void *small_alloc(uint32_t class) {
+    core_thread_register();
     void *block = free_lists[class];
     if (block) {
         free_lists[class] = *(void **)block;
@@ -236,7 +319,7 @@ static void *small_alloc(uint32_t class) {
     }
     block = chunk_next;
     chunk_next += bytes;
-    ++live_blocks;
+    atomic_fetch_add_explicit(&live_blocks, 1, memory_order_relaxed);
     return block;
 }
 
@@ -256,7 +339,7 @@ static myl_block *block_alloc(uint32_t kind, size_t data, size_t *room) {
         if (!block) out_of_memory();
         if (heap_ceiling) heap_charge(malloc_usable_size(block));
         *room = data;
-        ++live_blocks;
+        atomic_fetch_add_explicit(&live_blocks, 1, memory_order_relaxed);
     }
     block->count = 1;
     block->kind = kind | (class << MYL_CLASS_SHIFT);
@@ -277,17 +360,22 @@ static myl_block *block_new(uint32_t kind, int64_t cap, int64_t element_size) {
 
 /* Blocks allocated and not freed: carved and large ones, less those on free lists. */
 static int64_t live_count(void) {
-    int64_t live = live_blocks;
-    for (int class = 1; class <= MYL_CLASSES; ++class) {
-        for (void *at = free_lists[class]; at; at = *(void **)at) --live;
+    int64_t live = atomic_load_explicit(&live_blocks, memory_order_relaxed);
+    pthread_mutex_lock(&core_thread_mutex);
+    for (core_thread_record *record = core_thread_records; record; record = record->next) {
+        for (int class = 1; class <= MYL_CLASSES; ++class) {
+            for (void *at = record->lists[class]; at; at = *(void **)at) --live;
+        }
     }
+    pthread_mutex_unlock(&core_thread_mutex);
     return live;
 }
 
 static void block_free(myl_block *block) {
     uint32_t class = class_of(block);
+    core_thread_register();
     if (class == 0) {
-        --live_blocks;
+        atomic_fetch_sub_explicit(&live_blocks, 1, memory_order_relaxed);
         if (heap_ceiling) heap_refund(malloc_usable_size(block));
         free(block);
         return;
@@ -351,23 +439,37 @@ static myl_stream *stream_for(int64_t fd) { return &streams[fd == 2 ? 1 : 0]; }
    exiting with `main`'s status. Output is buffered, so the report has no location. */
 static void output_refused(void);
 
-static void stream_flush(myl_stream *stream) {
+/* A complete print/write is staged privately, including units larger than the
+   ordinary 64 KiB stream buffer. The stream lock covers the complete append. */
+typedef struct { unsigned char *bytes; size_t used, capacity, depth; } core_stage;
+static MYL_TLS core_stage core_staging[2];
+
+static void core_fatal_begin(void) {
+    if (!core_parallel() || core_fatal_owner) return;
+    uint32_t expected = 0;
+    if (!atomic_compare_exchange_strong_explicit(&core_fatal_winner, &expected, 1,
+            memory_order_acq_rel, memory_order_relaxed)) {
+        for (;;) (void)syscall(SYS_futex, &core_fatal_winner, FUTEX_WAIT_PRIVATE, 1, NULL, NULL, 0);
+    }
+    core_fatal_owner = true;
+    /* Never wait for a thread stopped inside a stream write, especially when
+       this is a synchronous signal on the lock's own thread. */
+    for (unsigned attempt = 0; attempt < 1024; ++attempt) {
+        if (!pthread_mutex_trylock(&core_stream_mutex)) return;
+    }
+    core_fatal_raw = true;
+}
+
+static void stream_flush_unlocked(myl_stream *stream) {
     size_t used = stream->used;
     stream->used = 0;
     if (!os_write(stream == &streams[1] ? 2 : 1, stream->bytes, used) && stream == &streams[0]) output_refused();
 }
 
-static void output_refused(void) {
-    static const char text[] = "error[R_OUTPUT]: native execution failed\nstandard output refused a write\n";
-    stream_flush(&streams[1]);
-    os_write(2, (const unsigned char *)text, sizeof text - 1);
-    os_exit(1);
-}
-
-static void stream_write(myl_stream *stream, const void *data, size_t len) {
+static void stream_write_unlocked(myl_stream *stream, const void *data, size_t len) {
     const unsigned char *bytes = data;
     while (len > 0) {
-        if (stream->used == sizeof stream->bytes) stream_flush(stream);
+        if (stream->used == sizeof stream->bytes) stream_flush_unlocked(stream);
         size_t room = sizeof stream->bytes - stream->used;
         size_t take = len < room ? len : room;
         memcpy(stream->bytes + stream->used, bytes, take);
@@ -377,12 +479,62 @@ static void stream_write(myl_stream *stream, const void *data, size_t len) {
     }
 }
 
+static void stream_commit(myl_stream *stream) {
+    if (!core_parallel() || core_fatal_owner) return;
+    core_stage *stage = &core_staging[stream == &streams[1]];
+    if (!stage->used || stage->depth) return;
+    pthread_mutex_lock(&core_stream_mutex);
+    stream_write_unlocked(stream, stage->bytes, stage->used);
+    stage->used = 0;
+    if (stream == &streams[1]) stream_flush_unlocked(stream);
+    pthread_mutex_unlock(&core_stream_mutex);
+}
+
+static void stream_flush(myl_stream *stream) {
+    if (!core_parallel()) { stream_flush_unlocked(stream); return; }
+    if (core_fatal_raw) return;
+    if (core_fatal_owner) { stream_flush_unlocked(stream); return; }
+    stream_commit(stream);
+    pthread_mutex_lock(&core_stream_mutex);
+    stream_flush_unlocked(stream);
+    pthread_mutex_unlock(&core_stream_mutex);
+}
+
+static void output_refused(void) {
+    core_fatal_begin();
+    static const char text[] = "error[R_OUTPUT]: native execution failed\nstandard output refused a write\n";
+    stream_flush(&streams[1]);
+    os_write(2, (const unsigned char *)text, sizeof text - 1);
+    os_exit(1);
+}
+
+static void stream_write(myl_stream *stream, const void *data, size_t len) {
+    if (!core_parallel()) { stream_write_unlocked(stream, data, len); return; }
+    if (core_fatal_raw) { os_write(2, data, len); return; }
+    if (core_fatal_owner) { stream_write_unlocked(stream, data, len); return; }
+    core_stage *stage = &core_staging[stream == &streams[1]];
+    if (len > SIZE_MAX - stage->used) out_of_memory();
+    size_t need = stage->used + len;
+    if (need > stage->capacity) {
+        size_t capacity = stage->capacity ? stage->capacity : 256;
+        while (capacity < need && capacity <= SIZE_MAX / 2) capacity *= 2;
+        if (capacity < need) capacity = need;
+        unsigned char *grown = realloc(stage->bytes, capacity);
+        if (!grown) out_of_memory();
+        stage->bytes = grown;
+        stage->capacity = capacity;
+    }
+    if (len) memcpy(stage->bytes + stage->used, data, len);
+    stage->used += len;
+}
+
 static void flush_all(void) {
     stream_flush(&streams[0]);
     stream_flush(&streams[1]);
 }
 
 static void out_of_memory(void) {
+    core_fatal_begin();
     flush_all();
     /* Under a test's byte ceiling the OS refusal is its `RLIMIT_AS` backstop: the same trap,
        reported without the frame walk, which may itself need memory. */
@@ -413,7 +565,21 @@ void myl_core_print_sep(int64_t fd) { stream_write(stream_for(fd), " ", 1); }
 
 void myl_core_print_end(int64_t fd) {
     stream_write(stream_for(fd), "\n", 1);
+    stream_commit(stream_for(fd));
     if (fd == 2) stream_flush(stream_for(fd));
+}
+
+/* A print with dynamic separator/terminator lowers to several write helpers.
+   Nest those writes in one unit; arguments were evaluated before begin. */
+void myl_core_output_begin(int64_t fd) {
+    if (core_parallel()) ++core_staging[fd == 2].depth;
+}
+void myl_core_output_end(int64_t fd) {
+    if (!core_parallel()) return;
+    core_stage *stage = &core_staging[fd == 2];
+    if (stage->depth) --stage->depth;
+    stream_commit(stream_for(fd));
+    if (fd == 2 && !stage->depth) stream_flush(stream_for(fd));
 }
 
 /* ---- lists and strings ------------------------------------------------------ */
@@ -568,7 +734,7 @@ typedef struct {
 
 
 enum { TRACE_RING = 32 };
-static struct {
+static MYL_TLS struct {
     const myl_core_site *origin;
     uint64_t count;
     const myl_core_site *ring[TRACE_RING];
@@ -930,10 +1096,10 @@ static const char *dw_file(const dw_unit *unit, uint64_t index, char *out, size_
 
 /* While set, frame lines are not written: the first one is kept here instead
    (`trap_caller`), so a report can name its caller before it lists its frames. */
-static char *trap_capture;
-static size_t trap_capture_size;
+static MYL_TLS char *trap_capture;
+static MYL_TLS size_t trap_capture_size;
 /* Frame lines a report may still print; negative: no limit. */
-static int trap_lines_left = -1;
+static MYL_TLS int trap_lines_left = -1;
 static void trap_frame_line(const char *text, size_t length) {
     if (!trap_capture) {
         if (trap_lines_left == 0) return;
@@ -1061,6 +1227,7 @@ static size_t core_operation_record(char *record, size_t capacity, const char *o
    line per frame and the `MYLANG-TRAP` record on stderr) and exit 1. The trapping
    frame comes from the site table, its callers from `trap_frames`. */
 void myl_core_trap(const myl_core_site *site, int64_t a, int64_t b) {
+    core_fatal_begin();
     char detail[256] = "";
     char record[256] = "";
     const char *code = "R_OVERFLOW";
@@ -1152,6 +1319,38 @@ void myl_core_trap(const myl_core_site *site, int64_t a, int64_t b) {
     os_exit(1);
 }
 
+/* R5: resolve captured return PCs through the ordinary guest DWARF lookup.
+   The raw fallback cannot enter shared debug-section initialization. */
+static const char *core_task_location(uintptr_t pc, char *text, size_t capacity) {
+    if (!pc || core_fatal_raw) return "<unknown>";
+    text[0] = 0;
+    trap_capture = text;
+    trap_capture_size = capacity;
+    (void)dwarf_frames(pc - 1, 0);
+    trap_capture = NULL;
+    char *where = strstr(text, " at ");
+    if (!where) return "<unknown>";
+    char *newline = strchr(where, '\n');
+    if (newline) *newline = 0;
+    return where + 4;
+}
+
+static void core_task_report(void) {
+    if (!core_running_task.submit) return;
+    char submit[1024], group[1024], text[2304];
+    const char *site = core_task_location(core_running_task.submit, submit, sizeof submit);
+    int length;
+    if (core_running_task.item < 0) length = snprintf(text, sizeof text, "in task submitted at %s\n", site);
+    else if (!strcmp(site, "<unknown>")) length = snprintf(text, sizeof text, "in task submitted at <unknown> (item %lld)\n", (long long)core_running_task.item);
+    else length = snprintf(text, sizeof text, "in parallel.map item %lld at %s\n", (long long)core_running_task.item, site);
+    os_write(2, (const unsigned char *)text, (size_t)length);
+    if (core_running_task.group) {
+        site = core_task_location(core_running_task.group, group, sizeof group);
+        length = snprintf(text, sizeof text, "  group opened at %s\n", site);
+        os_write(2, (const unsigned char *)text, (size_t)length);
+    }
+}
+
 /* The old core's description of a budget's trap, with its advice (docs/tooling/runtime-budgets.md). */
 static const char *core_budget_hint(const char *code){
     if(!strcmp(code,"R_STEP_LIMIT"))return "instruction budget exhausted; raise it with --max-steps=N";
@@ -1159,11 +1358,12 @@ static const char *core_budget_hint(const char *code){
     if(!strcmp(code,"R_MEMORY_BUDGET"))return "memory budget exhausted; raise it with --max-memory=SIZE";
     return NULL;
 }
-static const myl_core_site *core_io_site;
+static MYL_TLS const myl_core_site *core_io_site;
 void myl_core_io_at(const myl_core_site *site){core_io_site=site;}
 /* Runtime effects keep their checked call site; walk past C adapters before
    printing the guest callers, just as a generated trap keeps its site frame. */
 __attribute__((cold,noinline)) static void core_io_failure(const char *code){
+    core_fatal_begin();
     stream_flush(&streams[0]);char text[1024];int length;
     /* A budget's trap is described as the old core describes it (BUDGET-HINT-1). It
        names no site: a budget is charged anywhere, and the last I/O site may be stale,
@@ -1422,6 +1622,7 @@ myl_block *myl_core_list_sort(myl_block *list, int64_t kind) {
    first line, the `in f at` frames and the `MYLANG-TRAP` record are those of any trap, the record
    carrying only the message. Exit status 1. */
 void myl_core_assert_fail(const myl_core_site *site) {
+    core_fatal_begin();
     static const char *const codes[] = {"R_ASSERT", "R_REQUIRES", "R_ENSURES", "R_INVARIANT"};
     /* The old core's description of each (NEW-CORE-S5-CONTRACT-1). */
     static const char *const described[] = {"native execution failed", "precondition violated", "postcondition violated", "invariant violated"};

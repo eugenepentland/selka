@@ -22,7 +22,7 @@ const Patch = struct { anchor: []const u8, before: []const u8 = "", after: []con
 
 const patches = [_]Patch{
     .{ .anchor = "#include <malloc.h>\n", .after = header },
-    .{ .anchor = "static void os_exit(int status) { ", .after = "myl_count_dump(); " },
+    .{ .anchor = "static void os_exit(int status) { ", .after = "if (!core_parallel()) myl_count_dump(); " },
     // Every block: carved from a chunk or a free list, or a large aligned allocation.
     .{ .anchor = "    block->count = 1;\n    block->kind = kind | (class << MYL_CLASS_SHIFT);\n", .before = "    myl_count_alloc(class ? (size_t)class * MYL_GRANULE : malloc_usable_size(block));\n" },
     .{
