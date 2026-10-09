@@ -360,3 +360,61 @@ fn unusedImportEdit() !struct { start: i64, end: i64, deletes: bool } {
     }
     return error.TestUnexpectedResult;
 }
+
+/// Check one legacy program and require that its removed spelling reports no
+/// rename, because the file declares or binds the new name.
+fn withheldRename(source: []const u8) !void {
+    var c = try language.Compilation.init(t.allocator, fixture_path, source);
+    defer c.deinit();
+    try t.expectError(error.SourceError, c.check());
+    const item = c.diagnostics.items[0];
+    try t.expectEqualStrings("E_REMOVED_SPELLING", item.code);
+    try t.expect(item.provenance.fix == null);
+    try t.expect(std.mem.indexOf(u8, item.message, "rename the call by hand") != null);
+}
+
+/// Check one legacy program and require its first round of fixes to produce `expected`.
+fn keptRename(source: []const u8, expected: []const u8) !void {
+    const outcome = try round(source);
+    defer outcome.deinit();
+    try t.expectEqual(@as(usize, 1), outcome.fixes);
+    try t.expect(std.mem.indexOf(u8, outcome.fixed, expected) != null);
+}
+
+// spec: FIX-MIGRATION-CAPTURE-1
+test "a removed float or capability spelling is not renamed onto a name the file declares" {
+    try withheldRename("def abs(x: float) -> float:\n    return f64_abs(x)\n");
+    try withheldRename("def main() -> int:\n    floor = 2.5\n    return int(f64_floor(floor))\n");
+    try withheldRename("def scale(x: float, ceil: float) -> float:\n    return f64_ceil(x) + ceil\n");
+    try withheldRename("record Filesystem:\n    x: int\n\n\ndef helper(fs: filesystem_cap) -> int:\n    return 0\n");
+    try withheldRename("import util as sqrt\n\n\ndef root(x: float) -> float:\n    return f64_sqrt(x)\n");
+    try withheldRename("def total(xs: list[float]) -> float:\n    s = 0.0\n    for trunc in xs:\n        s = s + f64_trunc(trunc)\n    return s\n");
+    try withheldRename("def pick(x: float) -> float:\n    match x:\n        case abs:\n            return f64_abs(abs)\n");
+}
+
+// spec-case: FIX-MIGRATION-CAPTURE-1
+test "a removed spelling is still renamed when the file only uses the new name" {
+    try keptRename("def g(x: float) -> float:\n    return abs(x) + f64_abs(x)\n", "return abs(x) + abs(x)");
+    try keptRename("def g(m: Model) -> float:\n    return m.sqrt + f64_sqrt(m.sqrt)\n", "return m.sqrt + sqrt(m.sqrt)");
+    try keptRename("def g(fs: Filesystem, other: filesystem_cap) -> Filesystem:\n    return fs\n", "other: Filesystem");
+    try keptRename("module main\n\n\ndef root(x: float) -> float:\n    return f64_sqrt(x)\n", "return sqrt(x)");
+}
+
+// spec-case: FIX-MIGRATION-OVERLAP-1
+test "fix edits collide when they overlap or share an insertion point, never when identical" {
+    const Edit = language.diagnostic.Edit;
+    const outer: Edit = .{ .span = .{ .start = 10, .end = 40 }, .text = "x" };
+    const inner: Edit = .{ .span = .{ .start = 20, .end = 30 }, .text = "y" };
+    const after: Edit = .{ .span = .{ .start = 40, .end = 41 }, .text = "" };
+    const insert: Edit = .{ .span = .{ .start = 10, .end = 10 }, .text = "mut " };
+    try t.expect(outer.collides(inner));
+    try t.expect(!outer.collides(after));
+    try t.expect(outer.collides(insert));
+    try t.expect(outer.same(outer));
+    try t.expect(!outer.collides(outer));
+    const whole: language.diagnostic.Fix = .{ .edit = outer, .more = &.{after} };
+    try t.expect(!whole.collides(&.{}));
+    try t.expect(whole.collides(&.{inner}));
+    const broken: language.diagnostic.Fix = .{ .edit = outer, .more = &.{inner} };
+    try t.expect(broken.collides(&.{}));
+}

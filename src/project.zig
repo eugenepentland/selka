@@ -270,7 +270,14 @@ pub const Project = struct {
         const tokens = lex.lex(scratch.allocator(), src.bytes, &sink) catch |err| {
             if (err == error.OutOfMemory) return err;
             const problem = sink.items.items[0];
-            return self.fail(problem.code, problem.message, .{ .module = id, .span = problem.span }, null);
+            const failure = self.fail(problem.code, problem.message, .{ .module = id, .span = problem.span }, null);
+            // A removed spelling's rename stays a structured fix in a project
+            // module too, so `mylang fix` migrates it (FIX-MIGRATION-CAPTURE-1).
+            if (problem.provenance.fix) |fix| {
+                self.problem.?.fix = fix.edit;
+                self.problem.?.fix_more = fix.more;
+            }
+            return failure;
         };
         var scanner: Scanner = .{ .project = self, .id = id, .tokens = tokens };
         _ = try self.moduleDeclaration(&scanner, options.legacy_headers);

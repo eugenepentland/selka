@@ -483,3 +483,64 @@ test "D2 rejects the former held receiver snapshot history and aggregate view co
     try storedViewCorpus("live_view_snapshots.my", @embedFile("fixtures/view-storage/live_view_snapshots.my"));
     try storedViewCorpus("rc_semantic_history.my", @embedFile("fixtures/view-storage/rc_semantic_history.my"));
 }
+
+/// The shapes from the EDA and Lox port migrations (2026-10-09) that `mylang
+/// fix` once broke: parse wrappers named for the builtin parser, and an
+/// imported module whose union payloads, nested comprehensions, nested
+/// conditionals and byte-literal conditionals carry overlapping repairs.
+const port_defects = [_]File{
+    .{ .path = "mylang.json", .data = @embedFile("fixtures/fix-migration/port-defects/mylang.json") },
+    .{ .path = "main.my", .data = @embedFile("fixtures/fix-migration/port-defects/main.my") },
+    .{ .path = "parsing.my", .data = @embedFile("fixtures/fix-migration/port-defects/parsing.my") },
+    .{ .path = "shapes.my", .data = @embedFile("fixtures/fix-migration/port-defects/shapes.my") },
+};
+
+// spec: FIX-MIGRATION-OVERLAP-1
+// spec-case: FRONTEND-NUMERIC-MIGRATION-3
+// spec-case: FRONTEND-BYTES-PARENS-1
+test "CLI fix migrates the port defect shapes without capture, overlapping edits or mangling" {
+    var project = try Project.init(&port_defects);
+    defer project.deinit();
+    const migrated = try project.run("fix", ".", &.{});
+    defer migrated.deinit();
+    try testing.expectEqual(@as(u8, 0), migrated.status);
+    try testing.expectEqualStrings("", migrated.stderr);
+    const parsing = try project.read("parsing.my");
+    defer testing.allocator.free(parsing);
+    try testing.expect(contains(parsing, "public func parse_int(s: str) -> int?:\n    if len(s) == 0:\n        return None\n    return s.parse_int()\n"));
+    try testing.expect(contains(parsing, "    return s.strip().parse_float()\n"));
+    try testing.expect(contains(parsing, "    return (sign + digits).parse_int()\n"));
+    const shapes = try project.read("shapes.my");
+    defer testing.allocator.free(shapes);
+    try testing.expect(contains(shapes, "public enum Tag:\n    items(value: Item[])\n    atom(value: bytes)\n    count(value: int)\n"));
+    try testing.expect(contains(shapes, "    board\n    polygon(value: FixedArray[float, 2][])\n"));
+    try testing.expect(contains(shapes, "    return [for part in parts yield PartSpec(title=part.name, pads=[for p in part.pins yield p + 1])]\n"));
+    try testing.expect(contains(shapes, "    return (if (c) then (1) else ((if (d) then (2) else (3))))\n"));
+    try testing.expect(contains(shapes, "    return [for x in xs yield (if (x > 0) then (x) else (-x))]\n"));
+    try testing.expect(contains(shapes, "(if (desc is None) then (b\"\") else (desc))"));
+    // The migrated program computes what the original did: no wrapper calls itself.
+    const ran = try project.run("run", "main.my", &.{});
+    defer ran.deinit();
+    try testing.expectEqual(@as(u8, 71), ran.status);
+    const settled = try project.run("fix", ".", &.{"--check"});
+    defer settled.deinit();
+    try testing.expectEqual(@as(u8, 0), settled.status);
+    try testing.expectEqualStrings("fix: nothing to fix\n", settled.stdout);
+}
+
+// spec-case: FIX-MIGRATION-CAPTURE-1
+test "CLI fix leaves a float rename that would call the user's own wrapper for a hand edit" {
+    const original = @embedFile("fixtures/fix-migration/capture.my");
+    var project = try Project.init(&.{.{ .path = "main.my", .data = original }});
+    defer project.deinit();
+    const fixed = try project.run("fix", "main.my", &.{});
+    defer fixed.deinit();
+    try testing.expectEqual(@as(u8, 1), fixed.status);
+    try testing.expect(contains(fixed.stdout, "fixed main.my: 1 edit (E_REMOVED_SPELLING)"));
+    try testing.expect(contains(fixed.stderr, "this file declares or binds `abs`, so rename the call by hand"));
+    const after = try project.read("main.my");
+    defer testing.allocator.free(after);
+    try testing.expect(contains(after, "    return sqrt(x)\n"));
+    try testing.expect(contains(after, "    return f64_abs(x)\n"));
+    try testing.expect(!contains(after, "return abs(x)"));
+}

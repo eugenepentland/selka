@@ -250,7 +250,9 @@ fn checkNumericConversion(comptime Checker: type, self: *Checker, node: ast.Node
             const target = if (floating) "parse_float" else "parse_int";
             const claimed = self.active.contains(target) or self.functions.contains(target) or self.catalog.names.contains(target) or self.catalog.templates.names.contains(target) or
                 if (self.catalog.module_names) |names| try names.topLevelSpelling(call.name, target) else false;
-            return numeric_surface.rejectTextConversion(self.sink, call.name, target, claimed);
+            const operand = self.syntax.nodes.items[@backingInt(call.arguments[0])];
+            const conversion: numeric_surface.TextConversion = .{ .name = call.name, .call = node.span, .operand = self.src.text(operand.span), .primary = numeric_surface.primaryOperand(operand) };
+            return numeric_surface.rejectTextConversion(self.sink, conversion, target, claimed);
         }
         const builder: collections.Builder(Checker) = .{ .checker = self, .span = node.span };
         out.* = try builder.access(value, if (floating) .parse_float else .parse_int, &.{}, false);

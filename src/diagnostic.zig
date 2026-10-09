@@ -48,11 +48,40 @@ pub const Related = struct { span: source.Span, message: []const u8, role: Role 
 pub const Trace = struct { function: []const u8, span: source.Span };
 /// An exact replacement in the diagnostic's source, mapped to an original
 /// module by diagnostic-v1 before a migration tool applies it.
-pub const Edit = struct { span: source.Span, text: []const u8 };
+pub const Edit = struct {
+    span: source.Span,
+    text: []const u8,
+
+    /// Whether two edits replace the same bytes with the same text.
+    pub fn same(self: Edit, other: Edit) bool {
+        return self.span.start == other.span.start and self.span.end == other.span.end and std.mem.eql(u8, self.text, other.text);
+    }
+
+    /// Whether two different edits of one source touch the same bytes or the
+    /// same insertion point, so applying both at once would depend on their
+    /// order or leave one edit's offsets stale under the other. An identical
+    /// edit is a duplicate, not a collision.
+    pub fn collides(self: Edit, other: Edit) bool {
+        if (self.same(other)) return false;
+        if (self.span.start == other.span.start) return true;
+        return self.span.start < other.span.end and other.span.start < self.span.end;
+    }
+};
 /// All edits of a repair are applied together; one-edit repairs allocate none.
 pub const Fix = struct {
     edit: Edit,
     more: []const Edit = &.{},
+
+    /// Whether any edit of this repair collides with another of its own edits
+    /// or with one of `others`; such a repair cannot be applied in one pass.
+    pub fn collides(self: Fix, others: []const Edit) bool {
+        for (0..self.count()) |index| {
+            const edit = self.at(index);
+            for (others) |other| if (edit.collides(other)) return true;
+            for (index + 1..self.count()) |later| if (edit.collides(self.at(later))) return true;
+        }
+        return false;
+    }
 
     /// Count every edit in this repair.
     pub fn count(self: Fix) usize {

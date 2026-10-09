@@ -6,6 +6,7 @@ const language = @import("compiler.zig");
 const diagnostic = @import("diagnostic.zig");
 const migration = @import("frontend_migration.zig");
 const migration_path = "migration.my";
+const numeric_parse_code = @import("numeric_surface.zig").numeric_parse_code;
 
 // spec-case: FRONTEND-NUMBERS-1
 test "frontend text conversion repair changes only the builtin callee" {
@@ -13,7 +14,7 @@ test "frontend text conversion repair changes only the builtin callee" {
     defer compilation.deinit();
     try t.expectError(error.SourceError, compilation.checkLibrary());
     const item = compilation.diagnostics.items[0];
-    try t.expectEqualStrings("E_NUMERIC_PARSE", item.code);
+    try t.expectEqualStrings(numeric_parse_code, item.code);
     const edit = item.provenance.fix.?.edit;
     try t.expectEqualStrings("int", compilation.src.text(edit.span));
     try t.expectEqualStrings("parse_int", edit.text);
@@ -641,31 +642,57 @@ test "frontend comprehension binder does not hide a source read before initializ
     try refusedBinding("func main() -> int:\n    const total = sum(it for it in it if it > 0)\n    it = [1]\n    return total\n");
 }
 
+/// Apply a text-conversion repair whose bare parser name is claimed, and
+/// require the str method form `expected` and a clean check of the result.
+fn methodNumericRepair(text: []const u8, expected: []const u8) !void {
+    var compilation = try language.Compilation.init(t.allocator, migration_path, text);
+    defer compilation.deinit();
+    try t.expectError(error.SourceError, compilation.checkLibrary());
+    const item = compilation.diagnostics.items[0];
+    try t.expectEqualStrings(numeric_parse_code, item.code);
+    try t.expect(std.mem.indexOf(u8, item.message, "str method") != null);
+    const repaired = try repairedFields(text);
+    defer t.allocator.free(repaired);
+    try t.expect(std.mem.indexOf(u8, repaired, expected) != null);
+    var fixed = try language.Compilation.init(t.allocator, migration_path, repaired);
+    defer fixed.deinit();
+    try fixed.checkLibrary();
+}
+
+// spec: FRONTEND-NUMERIC-MIGRATION-3
+test "frontend numeric migration calls the str method inside parse wrappers instead of recursing" {
+    try methodNumericRepair("func parse_int(text: str) -> int?:\n    return int(text)\n", "    return text.parse_int()\n");
+    try methodNumericRepair("func parse_float(text: str) -> float?:\n    return float(text)\n", "    return text.parse_float()\n");
+}
+
+// spec-case: FRONTEND-NUMERIC-MIGRATION-3
+test "frontend numeric method repair parenthesizes an operand that is not primary" {
+    try methodNumericRepair("func parse_int(text: str) -> int?:\n    return int(text.strip())\n", "    return text.strip().parse_int()\n");
+    try methodNumericRepair("func parse_int(sign: str, text: str) -> int?:\n    return int(sign + text)\n", "    return (sign + text).parse_int()\n");
+    try methodNumericRepair("func parse_float(texts: str[]) -> float?:\n    return float(texts[0])\n", "    return texts[0].parse_float()\n");
+    try methodNumericRepair("func parse_int() -> int?:\n    return int(\"12\")\n", "    return \"12\".parse_int()\n");
+}
+
+// spec: FRONTEND-NUMERIC-MIGRATION-2
+test "frontend numeric migration takes the method form where parameters and locals claim the name" {
+    try methodNumericRepair("func parse(text: str, parse_int: int) -> int?:\n    return int(text)\n", "    return text.parse_int()\n");
+    try methodNumericRepair("func parse(text: str) -> float?:\n    const parse_float = 7\n    return float(text)\n", "    return text.parse_float()\n");
+}
+
 fn refusedNumericRepair(text: []const u8) !void {
     var compilation = try language.Compilation.init(t.allocator, migration_path, text);
     defer compilation.deinit();
     try t.expectError(error.SourceError, compilation.checkLibrary());
-    for (compilation.diagnostics.items) |item| {
-        if (!std.mem.eql(u8, item.code, "E_NUMERIC_PARSE")) continue;
-        try t.expect(item.provenance.fix == null);
-        try t.expect(std.mem.indexOf(u8, item.message, "rename that binding") != null);
-        return;
-    }
-    return t.expect(false);
-}
-
-// spec: FRONTEND-NUMERIC-MIGRATION-2
-test "frontend numeric migration withholds repairs that would recurse into parse wrappers" {
-    try refusedNumericRepair("func parse_int(text: str) -> int?:\n    return int(text)\n");
-    try refusedNumericRepair("func parse_float(text: str) -> float?:\n    return float(text)\n");
-    try refusedNumericRepair("func parse_int[T](text: str, value: T) -> int?:\n    return int(text)\n");
-    try refusedNumericRepair("func parse_float[T](text: str, value: T) -> float?:\n    return float(text)\n");
+    const item = compilation.diagnostics.items[0];
+    try t.expectEqualStrings(numeric_parse_code, item.code);
+    try t.expect(item.provenance.fix == null);
+    try t.expect(std.mem.indexOf(u8, item.message, "rename that binding") != null);
 }
 
 // spec-case: FRONTEND-NUMERIC-MIGRATION-2
-test "frontend numeric migration withholds repairs claimed by parameters and locals" {
-    try refusedNumericRepair("func parse(text: str, parse_int: int) -> int?:\n    return int(text)\n");
-    try refusedNumericRepair("func parse(text: str) -> float?:\n    const parse_float = 7\n    return float(text)\n");
+test "frontend numeric migration withholds a claimed repair inside generic bodies" {
+    try refusedNumericRepair("func parse_int[T](text: str, value: T) -> int?:\n    return int(text)\n");
+    try refusedNumericRepair("func parse_float[T](text: str, value: T) -> float?:\n    return float(text)\n");
     try refusedNumericRepair("func parse[T](text: str, parse_int: T) -> int?:\n    return int(text)\n");
     try refusedNumericRepair("func parse[T](text: str, value: T) -> float?:\n    const parse_float = value\n    return float(text)\n");
 }
@@ -680,7 +707,7 @@ const NumericImports = struct {
     }
 };
 
-fn importedNumericRepair(text: []const u8, target: []const u8, claimed: bool) !void {
+fn importedNumericRepair(text: []const u8, target: []const u8) !void {
     var files: NumericImports = .{ .app = text };
     var project = language.project.Project.init(t.allocator);
     defer project.deinit();
@@ -689,8 +716,7 @@ fn importedNumericRepair(text: []const u8, target: []const u8, claimed: bool) !v
     var compilation = try language.project_compile.Compilation.init(&index);
     try t.expectError(error.SourceError, compilation.checkLibrary());
     for (compilation.diagnostics.items.items) |item| {
-        if (!std.mem.eql(u8, item.code, "E_NUMERIC_PARSE")) continue;
-        if (claimed) return t.expect(item.provenance.fix == null);
+        if (!std.mem.eql(u8, item.code, numeric_parse_code)) continue;
         const fix = item.provenance.fix orelse return error.TestUnexpectedResult;
         return t.expectEqualStrings(target, fix.edit.text);
     }
@@ -699,10 +725,10 @@ fn importedNumericRepair(text: []const u8, target: []const u8, claimed: bool) !v
 
 // spec-case: FRONTEND-NUMERIC-MIGRATION-2
 test "frontend numeric migration checks import aliases in ordinary and generic module contexts" {
-    try importedNumericRepair("import helper as parse_int\nfunc parse(text: str) -> int?:\n    return int(text)\n", "parse_int", true);
-    try importedNumericRepair("import helper as parse_float\nfunc parse[T](text: str, value: T) -> float?:\n    return float(text)\n", "parse_float", true);
-    try importedNumericRepair("import helper\nfunc parse(text: str) -> int?:\n    return int(text)\n", "parse_int", false);
-    try importedNumericRepair("import helper\nfunc parse[T](text: str, value: T) -> float?:\n    return float(text)\n", "parse_float", false);
+    try importedNumericRepair("import helper as parse_int\nfunc parse(text: str) -> int?:\n    return int(text)\n", "text.parse_int()");
+    try importedNumericRepair("import helper as parse_float\nfunc parse(text: str) -> float?:\n    return float(text)\n", "text.parse_float()");
+    try importedNumericRepair("import helper\nfunc parse(text: str) -> int?:\n    return int(text)\n", "parse_int");
+    try importedNumericRepair("import helper\nfunc parse[T](text: str, value: T) -> float?:\n    return float(text)\n", "parse_float");
 }
 
 // spec-case: FRONTEND-NUMERIC-MIGRATION-2
@@ -716,8 +742,44 @@ test "frontend unshadowed float text repair converges to the builtin parser" {
 }
 
 // spec-case: FRONTEND-NUMERIC-MIGRATION-2
-test "frontend rejectTextConversion propagates allocation failure for withheld repair guidance" {
+test "frontend rejectTextConversion propagates allocation failure for the method repair" {
+    const conversion: @import("numeric_surface.zig").TextConversion = .{ .name = .{ .start = 0, .end = 3 }, .call = .{ .start = 0, .end = 9 }, .operand = "a + b", .primary = false };
     var failing = t.FailingAllocator.init(t.allocator, .{ .fail_index = 0 });
     var sink: diagnostic.Sink = .{ .allocator = failing.allocator() };
-    try t.expect(@import("numeric_surface.zig").rejectTextConversion(&sink, .{ .start = 0, .end = 3 }, "parse_int", true) == error.OutOfMemory);
+    try t.expect(@import("numeric_surface.zig").rejectTextConversion(&sink, conversion, "parse_int", true) == error.OutOfMemory);
+    var later_failing = t.FailingAllocator.init(t.allocator, .{ .fail_index = 1 });
+    var later_sink: diagnostic.Sink = .{ .allocator = later_failing.allocator() };
+    try t.expect(@import("numeric_surface.zig").rejectTextConversion(&later_sink, conversion, "parse_int", true) == error.OutOfMemory);
+}
+
+// spec-case: FIX-MIGRATION-OVERLAP-1
+test "frontend migration still repairs a legacy conditional whose value was migrated first" {
+    const repaired = try migrated("func main() -> int:\n    const c = True\n    return (if (not c) then (1) else (2)) if c else 3\n");
+    defer t.allocator.free(repaired);
+    try t.expectEqualStrings("func main() -> int:\n    const c = True\n    return (if (c) then ((if (not c) then (1) else (2))) else (3))\n", repaired);
+}
+
+/// An entry importing a legacy library whose nested conditional and
+/// comprehension repairs would overlap if they travelled in one pass.
+const OverlapImports = struct {
+    library: []const u8,
+    fn read(context: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
+        const self: *OverlapImports = @ptrCast(@alignCast(context.?));
+        if (std.mem.eql(u8, path, "app.my")) return allocator.dupe(u8, "import lib\nfunc main() -> int:\n    return lib.pick(True, False)\n");
+        if (std.mem.eql(u8, path, "lib.my")) return allocator.dupe(u8, self.library);
+        return error.NotFound;
+    }
+};
+
+// spec-case: FIX-MIGRATION-OVERLAP-1
+test "an imported module's parser repairs travel on one problem without colliding edits" {
+    var files: OverlapImports = .{ .library = "public def pick(c: bool, d: bool) -> int:\n    return 1 if c else (2 if d else 3)\n\n\npublic def magnitudes(xs: list[int]) -> list[int]:\n    return [x if x > 0 else -x for x in xs]\n" };
+    var project = language.project.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(.{ .context = &files, .read = OverlapImports.read }, "app", .{});
+    try t.expectError(error.SourceError, language.interfaces.build(&project));
+    const problem = project.problem.?;
+    const fix: diagnostic.Fix = .{ .edit = problem.fix.?, .more = problem.fix_more };
+    try t.expect(!fix.collides(&.{}));
+    try t.expectEqual(@as(usize, 6), fix.count());
 }

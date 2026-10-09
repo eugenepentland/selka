@@ -1646,12 +1646,25 @@ fn moduleSyntax(project: *graph.Project, module_id: usize, cache: ?*SyntaxCache,
     if (frontend) |disk| try disk.rememberSyntax(module.src, module.header.body_start, syntax);
     return syntax;
 }
+/// Carry a module's parser repairs on its one reported problem. A repair joins
+/// whole or not at all, and only when none of its edits collides with an edit
+/// already carried or with another of its own: a nested legacy expression and
+/// its enclosing one replace overlapping bytes, so the later repair waits for
+/// the next `mylang fix` round, which reparses the updated file
+/// (FIX-MIGRATION-OVERLAP-1).
 fn preserveParserFixes(project: *graph.Project, problems: []const diagnostic.Diagnostic) std.mem.Allocator.Error!void {
     var edits: std.ArrayList(diagnostic.Edit) = .empty;
     const allocator = project.arena.allocator();
     for (problems) |problem| {
         const fix = problem.provenance.fix orelse continue;
-        for (0..fix.count()) |index| try edits.append(allocator, fix.at(index));
+        if (fix.collides(edits.items)) continue;
+        for (0..fix.count()) |index| {
+            const edit = fix.at(index);
+            const repeated = for (edits.items) |kept| {
+                if (kept.same(edit)) break true;
+            } else false;
+            if (!repeated) try edits.append(allocator, edit);
+        }
     }
     if (edits.items.len == 0) return;
     project.problem.?.fix = edits.items[0];

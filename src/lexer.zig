@@ -291,10 +291,12 @@ fn keywordPairs() [keyword_words.len + keyword_aliases.len]struct { []const u8, 
 fn keyword(word: []const u8) Tag {
     return keyword_map.get(word) orelse .ident;
 }
-fn rejectRemovedWord(sink: *diagnostic.Sink, bytes: []const u8, start: usize, end: usize) diagnostic.Error!void {
+fn rejectRemovedWord(sink: *diagnostic.Sink, removed: Removed, bytes: []const u8, start: usize, end: usize) diagnostic.Error!void {
+    if (removed == .scan) return;
     _ = try removed_names.rejectLexical(sink, .{ .start = start, .end = end }, bytes[start..end]);
 }
-fn rejectRemovedPunctuation(sink: *diagnostic.Sink, ch: u8, next: u8, start: usize, end: usize) diagnostic.Error!void {
+fn rejectRemovedPunctuation(sink: *diagnostic.Sink, removed: Removed, ch: u8, next: u8, start: usize, end: usize) diagnostic.Error!void {
+    if (removed == .scan) return;
     if (ch == '=' and next == '>') _ = try removed_names.reject(sink, .{ .start = start, .end = end + 1 }, "=>");
 }
 /// How a token is written in source, for diagnostics that name what was expected.
@@ -365,7 +367,8 @@ pub fn isIdentifier(word: []const u8) bool {
 }
 /// Allocate source-spanned tokens and report invalid input through the supplied diagnostic sink.
 pub fn lex(allocator: std.mem.Allocator, bytes: []const u8, sink: *diagnostic.Sink) diagnostic.Error![]Token {
-    const raw = try tokenize(allocator, bytes, .{ .start = 0, .end = bytes.len }, sink);
+    const first = sink.items.items.len;
+    const raw = tokenize(allocator, bytes, .{ .start = 0, .end = bytes.len }, sink, .reject) catch |err| return withheld(allocator, bytes, sink, first, err);
     defer allocator.free(raw);
     return @import("python_layout.zig").lower(Token, allocator, bytes, raw, sink);
 }
@@ -373,7 +376,82 @@ pub fn lex(allocator: std.mem.Allocator, bytes: []const u8, sink: *diagnostic.Si
 /// Tokenize one byte range with absolute source spans and no indentation lowering.
 /// Format-string interpolations reuse the ordinary grammar through this entry point.
 pub fn lexRange(allocator: std.mem.Allocator, bytes: []const u8, span: Span, sink: *diagnostic.Sink) diagnostic.Error![]Token {
-    return tokenize(allocator, bytes, span, sink);
+    const first = sink.items.items.len;
+    return tokenize(allocator, bytes, span, sink, .reject) catch |err| withheld(allocator, bytes, sink, first, err);
+}
+
+/// Whether tokenizing rejects removed spellings (every compile) or only scans
+/// names, which `claims` does to decide whether a rename fix is safe.
+const Removed = enum { reject, scan };
+
+/// Return a tokenize failure after withholding any rename it reported that
+/// would capture a name this file declares.
+fn withheld(allocator: std.mem.Allocator, bytes: []const u8, sink: *diagnostic.Sink, first: usize, err: diagnostic.Error) diagnostic.Error {
+    if (err == error.SourceError) try withholdClaimedRenames(allocator, bytes, sink, first);
+    return err;
+}
+
+/// Withhold the rename fix of every removed spelling reported since `first`
+/// whose replacement this file declares or binds. `f64_abs(x)` inside a user
+/// `func abs` would otherwise become `abs(x)`, a call of itself, and
+/// `filesystem_cap` beside a user `record Filesystem` would name that record:
+/// a fix must never capture a user declaration (FIX-MIGRATION-CAPTURE-1).
+fn withholdClaimedRenames(allocator: std.mem.Allocator, bytes: []const u8, sink: *diagnostic.Sink, first: usize) diagnostic.Error!void {
+    var scan = std.heap.ArenaAllocator.init(allocator);
+    defer scan.deinit();
+    var file: ?[]const Token = null;
+    for (sink.items.items[first..]) |*item| {
+        if (!std.mem.eql(u8, item.code, removed_names.code)) continue;
+        const fix = item.provenance.fix orelse continue;
+        if (fix.more.len != 0 or !isIdentifier(fix.edit.text)) continue;
+        if (file == null) {
+            var scratch: diagnostic.Sink = .{ .allocator = scan.allocator() };
+            file = tokenize(scan.allocator(), bytes, .{ .start = 0, .end = bytes.len }, &scratch, .scan) catch |err| switch (err) {
+                error.OutOfMemory => return error.OutOfMemory,
+                else => &.{},
+            };
+        }
+        if (!claims(bytes, file.?, fix.edit.text)) continue;
+        item.provenance.fix = null;
+        item.message = try std.fmt.allocPrint(sink.allocator, "{s}; this file declares or binds `{s}`, so rename the call by hand", .{ item.message, fix.edit.text });
+    }
+}
+
+/// Whether `name` occurs in `tokens` anywhere but a certain use. An empty
+/// token list (a file that does not tokenize) claims every name.
+fn claims(bytes: []const u8, tokens: []const Token, name: []const u8) bool {
+    if (tokens.len == 0) return true;
+    for (tokens, 0..) |token, index| {
+        if (token.tag != .ident or !std.mem.eql(u8, bytes[token.span.start..token.span.end], name)) continue;
+        if (!certainUse(bytes, tokens, index)) return true;
+    }
+    return false;
+}
+
+/// Whether the identifier at `index` only refers to a name: a member after
+/// `.`, a type after `:` or `->`, or a call whose callee follows an operator
+/// or expression keyword on the same line. A declaration, parameter, binding,
+/// loop variable, pattern capture, import alias or keyword argument is never
+/// one, so every way of declaring the name is counted as a claim.
+fn certainUse(bytes: []const u8, tokens: []const Token, index: usize) bool {
+    if (index == 0) return false;
+    const previous = tokens[index - 1];
+    if (std.mem.indexOfScalar(u8, bytes[previous.span.end..tokens[index].span.start], '\n') != null) return false;
+    switch (previous.tag) {
+        .dot, .colon, .arrow => return true,
+        else => {},
+    }
+    const calls = index + 1 < tokens.len and tokens[index + 1].tag == .lparen;
+    return calls and !declares(previous.tag);
+}
+
+/// Whether a token directly before a name may introduce it: a declaring
+/// keyword, or an identifier such as the contextual `record`, `import` or `mut`.
+fn declares(tag: Tag) bool {
+    return switch (tag) {
+        .ident, .kw_def, .kw_class, .kw_enum, .kw_union, .kw_domain, .kw_type, .kw_as, .kw_for, .kw_const, .kw_case, .kw_private, .kw_conversion => true,
+        else => false,
+    };
 }
 
 /// Scan one quoted literal at `start` and return the index past its closing
@@ -396,7 +474,7 @@ fn followsOperand(tokens: []const Token, start: usize) bool {
     };
 }
 
-fn tokenize(allocator: std.mem.Allocator, bytes: []const u8, span: Span, sink: *diagnostic.Sink) diagnostic.Error![]Token {
+fn tokenize(allocator: std.mem.Allocator, bytes: []const u8, span: Span, sink: *diagnostic.Sink, removed: Removed) diagnostic.Error![]Token {
     var tokens: std.ArrayList(Token) = .empty;
     errdefer tokens.deinit(allocator);
     // Source averages well over three bytes per token; reserving that many
@@ -432,7 +510,7 @@ fn tokenize(allocator: std.mem.Allocator, bytes: []const u8, span: Span, sink: *
             if (std.ascii.isAlphabetic(ch) or ch == '_') {
                 i += 1;
                 while (i < limit and (std.ascii.isAlphanumeric(bytes[i]) or bytes[i] == '_')) i += 1;
-                try rejectRemovedWord(sink, bytes, start, i);
+                try rejectRemovedWord(sink, removed, bytes, start, i);
                 break :blk keyword(bytes[start..i]);
             }
             // A number is one token whatever its spelling: `0xFF`, `1_000`, `.5`, `5.`,
@@ -443,7 +521,7 @@ fn tokenize(allocator: std.mem.Allocator, bytes: []const u8, span: Span, sink: *
             }
             i += 1;
             const next = if (i < limit) bytes[i] else 0;
-            try rejectRemovedPunctuation(sink, ch, next, start, i);
+            try rejectRemovedPunctuation(sink, removed, ch, next, start, i);
             // `//=` is the one three-byte operator; every other augmented form is a pair.
             if (ch == '/' and next == '/' and i + 1 < limit and bytes[i + 1] == '=') {
                 i += 2;

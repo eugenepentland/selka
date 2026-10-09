@@ -34,13 +34,18 @@ The diagnostics that carry a fix today:
 | `E_BINDING_DECLARATION` | introduce `mut` where an implicit local is confined to its block |
 | `E_FRONTEND_VARIANT` | migrate a local union declaration and its known payload fields to named enum syntax |
 | `E_NAMED_FIELDS`, `E_NAMED_PATTERN` | add labels from the resolved record or enum field declaration, preserving operand order |
-| `E_NUMERIC_PARSE` | replace text calls to numeric casts with `parse_int` or `parse_float` |
+| `E_NUMERIC_PARSE` | replace text calls to numeric casts with `parse_int` or `parse_float`; where a declaration or binding claims that name, call the builtin as a `str` method instead (`s.parse_int()`) |
 | `E_FIXED_ARRAY_LITERAL` | wrap a known fixed-length literal in an explicit `FixedArray[T, N]` constructor |
 | `E_NONE_UNIT` | replace an old Unit value `None` with `()` where its expected type is known |
-| `E_REMOVED_SPELLING` | rename `push`→`append`, `List`→`list`, `filesystem_cap` and the other `*_cap` names→their capability types, `f64_sqrt`/`floor`/`ceil`/`trunc`/`abs`→the float builtin; `&value` in an argument→`mut value`; a declaration's `mutates(a, b)` clause→`mut` on `a` and `b` |
+| `E_REMOVED_SPELLING` | rename `push`→`append`, `List`→`list`, `filesystem_cap` and the other `*_cap` names→their capability types, `f64_sqrt`/`floor`/`ceil`/`trunc`/`abs`→the float builtin, unless the file declares or binds the new name; `&value` in an argument→`mut value`; a declaration's `mutates(a, b)` clause→`mut` on `a` and `b` |
 | `E_EXPLICIT_DISCARD_REQUIRED` | insert `_ = ` before a standalone value that is not a result |
 | `E_KEYWORD_ONLY` | insert `name=` before each positional operand that reaches a keyword-only parameter |
 | `W_UNUSED_IMPORT` | delete the import's line when it holds only that import |
+
+A fix never captures a user declaration. A wrapper named for the builtin it
+wraps, such as `func parse_int(s: str) -> int?` around `int(s)`, gets
+`s.parse_int()`, not a call of itself; a removed float helper inside a user
+`func abs` keeps its diagnostic without a fix, for a hand edit.
 
 A repair that needs judgement carries no fix: an escaping implicit block local
 (`E_BINDING_SCOPE_MIGRATION`) or embedded propagation (`E_TRY_POSITION`) needs
@@ -88,7 +93,9 @@ one aliasing rewrite the compiler cannot choose for you.
   lines; `--cache-dir=DIR` and `--no-cache` apply to the checks it runs.
 - Within a round, a fix whose edits would overlap another's waits for the next
   round, which sees the updated file; the same edit reported twice (a generic
-  function's instances) is applied once.
+  function's instances) is applied once. A nested legacy expression and the one
+  around it therefore migrate in successive rounds. A fix whose own edits
+  overlap is never applied: `fix` names it on stderr and leaves the file alone.
 
 Exit status: 0 when nothing is left to fix and every entry checks (warnings
 allowed), 1 when errors remain or `--check` found a change, 2 on a usage or host
