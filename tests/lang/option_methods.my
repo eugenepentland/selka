@@ -1,33 +1,32 @@
-module option_methods
 
-def head[T: copy + storable](values: list[T]) -> Option[T]:
+func head[T: copy + storable](values: T[]) -> T?:
     if len(values) == 0:
         return None
     return Some(values[0])
 
-def default_of[T: copy + storable](value: Option[T], fallback: T) -> T:
+func default_of[T: copy + storable](value: T?, fallback: T) -> T:
     return value.unwrap_or(fallback)
 
-def presence[T: copy + storable](value: Option[T]) -> bool:
+func presence[T: copy + storable](value: T?) -> bool:
     return value.is_some() and not value.is_none()
 
-def absence[T: copy + storable](value: Option[T]) -> bool:
+func absence[T: copy + storable](value: T?) -> bool:
     return value.is_none() and not value.is_some()
 
-def narrowed_default(value: Option[int]) -> int:
+func narrowed_default(value: int?) -> int:
     if value is None:
         return 9
     return value.unwrap_or(9)
 
-def bounded(value: Option[int], fallback: int) -> int noalloc:
+func bounded(value: int?, fallback: int) -> int noalloc:
     if value.is_none():
         return fallback
     return value.unwrap_or(fallback)
 
-def bounded_default(value: Option[int], fallback: int) -> int noalloc:
+func bounded_default(value: int?, fallback: int) -> int noalloc:
     return value.unwrap_or(fallback)
 
-def measured(value: Option[int]) -> int:
+func measured(value: int?) -> int:
     _ = value.is_none()
     _ = value.is_some()
     _ = value.unwrap_or(4)
@@ -36,39 +35,39 @@ def measured(value: Option[int]) -> int:
     return bounded_default(value, 5)
 
 # spec-case: OPTION-METHODS-1
-public def test_option_methods_default_on_some_and_none() -> bool:
-    present: Option[int] = Some(42)
-    absent: Option[int] = None
+public func test_option_methods_default_on_some_and_none() -> bool:
+    mut present: int? = Some(42)
+    mut absent: int? = None
     return present.unwrap_or(7) == 42 and absent.unwrap_or(7) == 7
 
 # spec-case: OPTION-METHODS-1
-public def test_option_methods_presence_tests() -> bool:
-    present: Option[int] = Some(1)
-    absent: Option[int] = None
+public func test_option_methods_presence_tests() -> bool:
+    mut present: int? = Some(1)
+    mut absent: int? = None
     return present.is_some() and not present.is_none() and absent.is_none() and not absent.is_some()
 
 # spec-case: OPTION-METHODS-2
-public def test_option_methods_generic_bodies() -> bool:
-    values = [3, 4]
-    empty: list[int] = []
+public func test_option_methods_generic_bodies() -> bool:
+    mut values = [3, 4]
+    mut empty: int[] = []
     return default_of(head(values), 0) == 3 and default_of(head(empty), 9) == 9 and presence(head(values)) and absence(head(empty))
 
 # spec-case: OPTION-METHODS-1
-public def test_option_methods_literal_default_adopts_payload_type() -> bool:
-    narrow: list[u8] = [u8(5)]
-    missing: list[u8] = []
-    adopted: u8 = head(narrow).unwrap_or(7)
-    fallback: u8 = head(missing).unwrap_or(7)
+public func test_option_methods_literal_default_adopts_payload_type() -> bool:
+    mut narrow: u8[] = [u8(5)]
+    mut missing: u8[] = []
+    mut adopted: u8 = head(narrow).unwrap_or(7)
+    mut fallback: u8 = head(missing).unwrap_or(7)
     return adopted == u8(5) and fallback == u8(7)
 
 # spec-case: OPTION-METHODS-2
-public def test_option_methods_under_noalloc() -> bool:
+public func test_option_methods_under_noalloc() -> bool:
     return bounded(Some(3), 8) == 3 and bounded(None, 8) == 8 and bounded_default(None, 5) == 5 and bounded_default(Some(2), 5) == 2
 
 # spec-case: OPTION-METHODS-1
-public def test_option_methods_presence_after_narrowing() -> bool:
+public func test_option_methods_presence_after_narrowing() -> bool:
     return narrowed_default(Some(4)) == 4 and narrowed_default(None) == 9
 
 # spec-case: OPTION-METHODS-2
-public def test_option_methods_as_statements_and_arguments() -> bool:
+public func test_option_methods_as_statements_and_arguments() -> bool:
     return measured(Some(3)) == 4 and measured(None) == 5

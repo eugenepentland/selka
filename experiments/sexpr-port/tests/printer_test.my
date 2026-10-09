@@ -1,4 +1,3 @@
-module tests.printer_test
 # Tests for sexpr.printer, ported from the inline `test "..."` blocks in
 # eda/src/sexpr/printer.zig. Every expectation the Zig file makes is reproduced
 # here with the same input, except:
@@ -32,12 +31,12 @@ import sexpr.view as view
 # node carries a view of the document it came from. These helpers produce that
 # view for a literal in a test body, so a hand-built tree looks the way it did
 # before text became a source range.
-def view_of_text(text: str) -> view.View:
-    data = text.encode()
+func view_of_text(text: str) -> view.View:
+    mut data = text.encode()
     return view.View(source=data, start=0, end=len(data))
 
 
-def text_in(found: view.View) -> str:
+func text_in(found: view.View) -> str:
     match view.text_of(found):
         case Ok(text):
             return text
@@ -46,30 +45,30 @@ def text_in(found: view.View) -> str:
 
 
 # ── helpers ───────────────────────────────────────────────────────────
-def parse_ok(src: bytes) -> list[ast.Node]:
+func parse_ok(src: bytes) -> ast.Node[]:
     match parser.parse(src):
         case Ok(nodes):
             return nodes
         case Err(_):
-            empty: list[ast.Node] = []
+            mut empty: ast.Node[] = []
             return empty
 
 
-def render_src(src: bytes) -> str:
+func render_src(src: bytes) -> str:
     return printer.render(parse_ok(src))
 
 
-def render_bytes_src(src: bytes) -> bytes:
+func render_bytes_src(src: bytes) -> bytes:
     return printer.render_bytes(parse_ok(src))
 
 
-def has_newline(text: str) -> bool:
+func has_newline(text: str) -> bool:
     return text.find("\n") >= 0
 
 
-def repeated(text: str, count: int) -> str:
-    out = ""
-    index = 0
+func repeated(text: str, count: int) -> str:
+    mut out = ""
+    mut index = 0
     while index < count:
         out = out + text
         index = index + 1
@@ -77,27 +76,27 @@ def repeated(text: str, count: int) -> str:
 
 
 # ── Zig test: "print simple list" ─────────────────────────────────────
-public def test_print_simple_list() -> bool:
+public func test_print_simple_list() -> bool:
     return render_src(b"(hello 42 \"world\")") == "(hello 42 \"world\")"
 
 
 # ── Zig test: "print short nested lists inline" ───────────────────────
-public def test_print_short_nested_lists_inline() -> bool:
+public func test_print_short_nested_lists_inline() -> bool:
     # Zig asserts `indexOf(output, "\n") == null`.
     return has_newline(render_src(b"(pad 1 smd rect (pos -1.25 1.75) (size 0.7 0.3))")) == False
 
 
-public def test_print_short_nested_lists_inline_exact() -> bool:
+public func test_print_short_nested_lists_inline_exact() -> bool:
     return render_src(b"(pad 1 smd rect (pos -1.25 1.75) (size 0.7 0.3))") == "(pad 1 smd rect (pos -1.25 1.75) (size 0.7 0.3))"
 
 
 # ── Zig test: "print long nested lists multiline" ─────────────────────
-public def test_print_long_nested_lists_multiline() -> bool:
+public func test_print_long_nested_lists_multiline() -> bool:
     # Zig asserts `indexOf(output, "\n") != null`.
     return has_newline(render_src(b"(footprint \"QFN9-3.3x4.5\" (pad 1 smd rect (pos -1.25 1.75) (size 0.7 0.3)) (pad 2 smd rect (pos -1.25 0.75) (size 0.7 0.3)))"))
 
 
-public def test_print_long_nested_lists_multiline_exact() -> bool:
+public func test_print_long_nested_lists_multiline_exact() -> bool:
     # The first child stays on the "(" line; every later child gets its own
     # line indented by two spaces. The nested pad lists are short and stay
     # inline (the depth cutoff is measured from each list, not from the root).
@@ -105,7 +104,7 @@ public def test_print_long_nested_lists_multiline_exact() -> bool:
 
 
 # ── Zig test: "print keeps a literal's unit" ──────────────────────────
-public def test_literal_source_spelling_is_kept() -> bool:
+public func test_literal_source_spelling_is_kept() -> bool:
     # Zig parses `100nF 10% 4.7k 2.5`, keeps each suffixed literal's spelling on
     # the node and prints the input unchanged. The ported AST carries the same
     # spelling on the decimal case's `literal` field, so
@@ -114,138 +113,138 @@ public def test_literal_source_spelling_is_kept() -> bool:
 
 
 # ── Zig test: "round-trip parse-print-parse" ──────────────────────────
-public def test_round_trip_parse_print_parse() -> bool:
-    printed = render_src(b"(net \"VIN\" (pin \"U1\" 6) (pin \"C1\" 1))")
+public func test_round_trip_parse_print_parse() -> bool:
+    mut printed = render_src(b"(net \"VIN\" (pin \"U1\" 6) (pin \"C1\" 1))")
     return printed == "(net \"VIN\" (pin \"U1\" 6) (pin \"C1\" 1))" and render_src(printed.encode()) == printed and len(parse_ok(printed.encode())) == 1
 
 
 # ── fixtures/units.sexp (inlined; guest tests have no filesystem) ─────
-public def test_fixture_dimensions_bare_units() -> bool:
+public func test_fixture_dimensions_bare_units() -> bool:
     # `3.5`-style values are not involved: the bare measures normalise to mm
     # and the printer appends "mm" to each.
     return render_src(b"(dimensions (width 2.5mm) (height 10mil) (clearance 0.5mm))") == "(dimensions (width 2.5mm) (height 0.254mm) (clearance 0.5mm))"
 
 
-public def test_fixture_vendor_becomes_multiline() -> bool:
+public func test_fixture_vendor_becomes_multiline() -> bool:
     return render_src(b"(vendor (model PMA3-24323LN+.stp) (pad P$1) (mpn \"74AHCT1G125GF,132.stp\"))") == "(vendor\n  (model PMA3-24323LN+.stp)\n  (pad P$1)\n  (mpn \"74AHCT1G125GF,132.stp\"))"
 
 
-public def test_fixture_oddities_stay_one_line() -> bool:
+public func test_fixture_oddities_stay_one_line() -> bool:
     # `100kHz`, `12.5abc`, `204928-0301.stp` and `3m` all fall back to atoms,
     # so the form round-trips verbatim.
     return render_src(b"(oddities (freq 100kHz) (bad 12.5abc) (part 204928-0301.stp) (bare 3m))") == "(oddities (freq 100kHz) (bad 12.5abc) (part 204928-0301.stp) (bare 3m))"
 
 
-public def test_fixture_nested_depth_cutoff() -> bool:
+public func test_fixture_nested_depth_cutoff() -> bool:
     # The outer list cannot measure its child: the atom `d` sits at depth 4, so
     # `estimateWidth` gives up and forces the multi-line layout, while the
     # child list is re-measured from depth 0 and fits on one line.
     return render_src(b"(nested (a (b (c (d)))))") == "(nested\n  (a (b (c (d)))))"
 
 
-public def test_fixture_note_string_is_verbatim() -> bool:
+public func test_fixture_note_string_is_verbatim() -> bool:
     return render_src(b"(note \"escaped \\\"quote\\\" and \\\\ backslash\")") == "(note \"escaped \\\"quote\\\" and \\\\ backslash\")"
 
 
-public def test_fixture_electrical_literals_keep_the_form_on_one_line() -> bool:
+public func test_fixture_electrical_literals_keep_the_form_on_one_line() -> bool:
     # Zig keeps `220k`/`100nF`/`3.3V`/`10mA`/`5%` (71 columns of estimate) and
     # prints one line. The decimal case's `literal` restores the same spelling and
     # therefore the same width, so this is the Zig layout byte for byte; without
     # it the decoded values measure 75 columns and break the form.
-    src = b"(electrical (res 220k) (cap 100nF) (rail 3.3V) (current 10mA) (tol 5%))"
+    mut src = b"(electrical (res 220k) (cap 100nF) (rail 3.3V) (current 10mA) (tol 5%))"
     return render_src(src) == "(electrical (res 220k) (cap 100nF) (rail 3.3V) (current 10mA) (tol 5%))"
 
 
 # ── the 72-column rule and the depth cutoff ───────────────────────────
-public def test_width_boundary_is_72_columns() -> bool:
+public func test_width_boundary_is_72_columns() -> bool:
     # `(a <N x's>)` estimates 4 + N columns; 72 fits, 73 does not.
-    at_limit: bytes = b"(a " + repeated("x", 68).encode() + b")"
-    over_limit: bytes = b"(a " + repeated("x", 69).encode() + b")"
+    mut at_limit: bytes = b"(a " + repeated("x", 68).encode() + b")"
+    mut over_limit: bytes = b"(a " + repeated("x", 69).encode() + b")"
     return has_newline(render_src(at_limit)) == False and has_newline(render_src(over_limit))
 
 
-public def test_depth_cutoff_breaks_at_five_levels() -> bool:
+public func test_depth_cutoff_breaks_at_five_levels() -> bool:
     # Depth 3 nesting (`(d)` inside `(c)` inside `(b)`) is measurable; one
     # level deeper makes the estimate unknown and the list multi-line.
     return render_src(b"(a (b (c (d))))") == "(a (b (c (d))))" and render_src(b"(a (b (c (d (e)))))") == "(a\n  (b (c (d (e)))))"
 
 
-public def test_indentation_accumulates_through_nesting() -> bool:
+public func test_indentation_accumulates_through_nesting() -> bool:
     return render_src(b"(a (b (c (d (e (f))))))") == "(a\n  (b\n    (c (d (e (f))))))"
 
 
 # ── top-level joining and the hand-built tree ─────────────────────────
-public def test_top_level_forms_join_with_one_newline() -> bool:
-    nodes: list[ast.Node] = [ast.Node.atom(view_of_text("a"), ast.zero_span()), ast.Node.integer(2, ast.zero_span()), ast.Node.form([ast.Node.atom(view_of_text("b"), ast.zero_span())], ast.zero_span())]
+public func test_top_level_forms_join_with_one_newline() -> bool:
+    mut nodes: ast.Node[] = [ast.Node.atom(text=view_of_text("a"), span=ast.zero_span()), ast.Node.integer(value=2, span=ast.zero_span()), ast.Node.form(items=[ast.Node.atom(text=view_of_text("b"), span=ast.zero_span())], span=ast.zero_span())]
     return printer.render(nodes) == "a\n2\n(b)"
 
 
-public def test_top_level_output_has_no_trailing_newline() -> bool:
-    nodes: list[ast.Node] = [ast.Node.atom(view_of_text("a"), ast.zero_span()), ast.Node.atom(view_of_text("b"), ast.zero_span())]
+public func test_top_level_output_has_no_trailing_newline() -> bool:
+    mut nodes: ast.Node[] = [ast.Node.atom(text=view_of_text("a"), span=ast.zero_span()), ast.Node.atom(text=view_of_text("b"), span=ast.zero_span())]
     return printer.render(nodes).endswith("\n") == False
 
 
-public def test_render_empty_document() -> bool:
-    nodes: list[ast.Node] = []
+public func test_render_empty_document() -> bool:
+    mut nodes: ast.Node[] = []
     return printer.render(nodes) == ""
 
 
-public def test_render_node_is_one_node_at_indent_zero() -> bool:
-    return printer.render_node(ast.Node.form([], ast.zero_span())) == "()" and printer.render_node(ast.Node.atom(view_of_text("GND"), ast.zero_span())) == "GND"
+public func test_render_node_is_one_node_at_indent_zero() -> bool:
+    return printer.render_node(ast.Node.form(items=[], span=ast.zero_span())) == "()" and printer.render_node(ast.Node.atom(text=view_of_text("GND"), span=ast.zero_span())) == "GND"
 
 
-public def test_render_hand_built_tree() -> bool:
-    tree = ast.Node.form([ast.Node.atom(view_of_text("footprint"), ast.zero_span()), ast.Node.string(view_of_text("QFN9-3.3x4.5"), ast.zero_span()), ast.Node.form([ast.Node.atom(view_of_text("pad"), ast.zero_span()), ast.Node.integer(1, ast.zero_span()), ast.Node.atom(view_of_text("smd"), ast.zero_span())], ast.zero_span()), ast.Node.form([ast.Node.atom(view_of_text("pos"), ast.zero_span()), ast.Node.decimal(-1.25, ast.zero_span()), ast.Node.measure(0.7, ast.zero_span())], ast.zero_span()), ast.Node.form([], ast.zero_span())], ast.zero_span())
+public func test_render_hand_built_tree() -> bool:
+    mut tree = ast.Node.form(items=[ast.Node.atom(text=view_of_text("footprint"), span=ast.zero_span()), ast.Node.string(text=view_of_text("QFN9-3.3x4.5"), span=ast.zero_span()), ast.Node.form(items=[ast.Node.atom(text=view_of_text("pad"), span=ast.zero_span()), ast.Node.integer(value=1, span=ast.zero_span()), ast.Node.atom(text=view_of_text("smd"), span=ast.zero_span())], span=ast.zero_span()), ast.Node.form(items=[ast.Node.atom(text=view_of_text("pos"), span=ast.zero_span()), ast.Node.decimal(value=-1.25, span=ast.zero_span()), ast.Node.measure(value=0.7, span=ast.zero_span())], span=ast.zero_span()), ast.Node.form(items=[], span=ast.zero_span())], span=ast.zero_span())
     return printer.render_node(tree) == "(footprint \"QFN9-3.3x4.5\" (pad 1 smd) (pos -1.25 0.7mm) ())"
 
 
 # The byte renderer shares layout and spelling with the established text API.
 # These samples cover every node kind, multiline indentation, source-preserved
 # numeric literals, normalized measures and verbatim string escapes.
-public def test_render_bytes_matches_text_for_representative_goldens() -> bool:
-    samples: list[bytes] = [b"(hello 42 \"world\")", b"(footprint \"QFN9-3.3x4.5\" (pad 1 smd rect (pos -1.25 1.75) (size 0.7 0.3)) (pad 2 smd rect (pos -1.25 0.75) (size 0.7 0.3)))", b"(dimensions (width 2.5mm) (height 10mil) (clearance 0.5mm))", b"(cap-0402 100nF 10% 4.7k 2.5)", b"(note \"escaped \\\"quote\\\" and \\\\ backslash\")", b"(nested (a (b (c (d (e))))))"]
+public func test_render_bytes_matches_text_for_representative_goldens() -> bool:
+    mut samples: bytes[] = [b"(hello 42 \"world\")", b"(footprint \"QFN9-3.3x4.5\" (pad 1 smd rect (pos -1.25 1.75) (size 0.7 0.3)) (pad 2 smd rect (pos -1.25 0.75) (size 0.7 0.3)))", b"(dimensions (width 2.5mm) (height 10mil) (clearance 0.5mm))", b"(cap-0402 100nF 10% 4.7k 2.5)", b"(note \"escaped \\\"quote\\\" and \\\\ backslash\")", b"(nested (a (b (c (d (e))))))"]
     for sample in samples:
         if render_bytes_src(sample) != render_src(sample).encode():
             return False
     return True
 
 
-public def test_render_node_bytes_matches_numeric_and_string_nodes() -> bool:
-    nodes: list[ast.Node] = [ast.Node.integer(-42, ast.zero_span()), ast.Node.decimal(100.0, ast.zero_span()), ast.Node.measure(0.254, ast.zero_span()), ast.Node.string(view_of_text("hé \\\"quoted\\\""), ast.zero_span())]
+public func test_render_node_bytes_matches_numeric_and_string_nodes() -> bool:
+    mut nodes: ast.Node[] = [ast.Node.integer(value=-42, span=ast.zero_span()), ast.Node.decimal(value=100.0, span=ast.zero_span()), ast.Node.measure(value=0.254, span=ast.zero_span()), ast.Node.string(text=view_of_text("hé \\\"quoted\\\""), span=ast.zero_span())]
     for node in nodes:
         if printer.render_node_bytes(node) != printer.render_node(node).encode():
             return False
     return True
 
 
-public def test_render_bytes_unicode_width_counts_scalars_not_utf8_bytes() -> bool:
+public func test_render_bytes_unicode_width_counts_scalars_not_utf8_bytes() -> bool:
     # Quotes contribute two columns, so 66 non-ASCII scalars land exactly at
     # 72. Their 132 UTF-8 bytes must not force a multiline layout.
-    at_limit = b"(a \"" + repeated("é", 66).encode() + b"\")"
-    over_limit = b"(a \"" + repeated("é", 67).encode() + b"\")"
+    mut at_limit = b"(a \"" + repeated("é", 66).encode() + b"\")"
+    mut over_limit = b"(a \"" + repeated("é", 67).encode() + b"\")"
     return (render_bytes_src(at_limit).find(b"\n") == -1 and render_bytes_src(over_limit).find(b"\n") >= 0 and render_bytes_src(at_limit) == render_src(at_limit).encode())
 
 
-public def test_render_bytes_document_boundaries() -> bool:
-    nodes: list[ast.Node] = [ast.Node.atom(view_of_text("é"), ast.zero_span()), ast.Node.integer(2, ast.zero_span())]
-    empty: list[ast.Node] = []
+public func test_render_bytes_document_boundaries() -> bool:
+    mut nodes: ast.Node[] = [ast.Node.atom(text=view_of_text("é"), span=ast.zero_span()), ast.Node.integer(value=2, span=ast.zero_span())]
+    mut empty: ast.Node[] = []
     return printer.render_bytes(nodes) == b"\xc3\xa9\n2" and printer.render_bytes(empty) == b""
 
 
 # ── per-node rendering ────────────────────────────────────────────────
-public def test_integer_rendering() -> bool:
-    return printer.render_node(ast.Node.integer(-42, ast.zero_span())) == "-42" and printer.render_node(ast.Node.integer(0, ast.zero_span())) == "0"
+public func test_integer_rendering() -> bool:
+    return printer.render_node(ast.Node.integer(value=-42, span=ast.zero_span())) == "-42" and printer.render_node(ast.Node.integer(value=0, span=ast.zero_span())) == "0"
 
 
-public def test_decimal_rendering_keeps_the_float_int_distinction() -> bool:
-    return (printer.render_node(ast.Node.decimal(3.3, ast.zero_span())) == "3.3" and printer.render_node(ast.Node.decimal(100.0, ast.zero_span())) == "100.0" and printer.render_node(ast.Node.decimal(0.0, ast.zero_span())) == "0.0" and printer.render_node(ast.Node.decimal(0.0000001, ast.zero_span())) == "0.0000001")
+public func test_decimal_rendering_keeps_the_float_int_distinction() -> bool:
+    return (printer.render_node(ast.Node.decimal(value=3.3, span=ast.zero_span())) == "3.3" and printer.render_node(ast.Node.decimal(value=100.0, span=ast.zero_span())) == "100.0" and printer.render_node(ast.Node.decimal(value=0.0, span=ast.zero_span())) == "0.0" and printer.render_node(ast.Node.decimal(value=0.0000001, span=ast.zero_span())) == "0.0000001")
 
 
-public def test_measure_rendering_appends_mm() -> bool:
-    return (printer.render_node(ast.Node.measure(0.7, ast.zero_span())) == "0.7mm" and printer.render_node(ast.Node.measure(3.0, ast.zero_span())) == "3.0mm" and printer.render_node(ast.Node.measure(0.254, ast.zero_span())) == "0.254mm")
+public func test_measure_rendering_appends_mm() -> bool:
+    return (printer.render_node(ast.Node.measure(value=0.7, span=ast.zero_span())) == "0.7mm" and printer.render_node(ast.Node.measure(value=3.0, span=ast.zero_span())) == "3.0mm" and printer.render_node(ast.Node.measure(value=0.254, span=ast.zero_span())) == "0.254mm")
 
 
-public def test_string_rendering_is_verbatim() -> bool:
+public func test_string_rendering_is_verbatim() -> bool:
     # The content is the raw slice between the quotes; a `\"` in it must not be
     # re-escaped to `\\\"`.
-    return printer.render_node(ast.Node.string(view_of_text("a\\\"b"), ast.zero_span())) == "\"a\\\"b\"" and printer.render_node(ast.Node.string(view_of_text("VIN"), ast.zero_span())) == "\"VIN\""
+    return printer.render_node(ast.Node.string(text=view_of_text("a\\\"b"), span=ast.zero_span())) == "\"a\\\"b\"" and printer.render_node(ast.Node.string(text=view_of_text("VIN"), span=ast.zero_span())) == "\"VIN\""

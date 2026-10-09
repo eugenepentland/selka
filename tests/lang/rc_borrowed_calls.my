@@ -3,48 +3,48 @@ record Node:
     key: int
 
 
-def pick(nodes: list[Node], key: int) -> Node:
-    i = 0
+func pick(nodes: Node[], key: int) -> Node:
+    mut i = 0
     while i < len(nodes):
-        node = nodes[i]
+        mut node = nodes[i]
         if node.key == key:
             return node
         i += 1
-    return Node(b"", -1)
+    return Node(text=b"", key=-1)
 
 
-def rank(node: Node, nodes: list[Node]) -> int:
-    i = 0
-    score = node.key
+func rank(node: Node, nodes: Node[]) -> int:
+    mut i = 0
+    mut score = node.key
     while i < len(nodes):
-        candidate = nodes[i]
+        mut candidate = nodes[i]
         if candidate.key < node.key:
             score += 1
         i += 1
     return score
 
 
-def choose(nodes: list[Node], first: int, second: int) -> Node:
-    a = pick(nodes, first)
-    b = pick(nodes, second)
+func choose(nodes: Node[], first: int, second: int) -> Node:
+    mut a = pick(nodes, first)
+    mut b = pick(nodes, second)
     if rank(a, nodes) < rank(b, nodes):
         return a
     return b
 
 
-def swapped(left: list[Node], right: list[Node]) -> Node:
+func swapped(left: Node[], right: Node[]) -> Node:
     return choose(right, 1, 2)
 
 
-def unchanged(value: bytes) -> bytes:
+func unchanged(value: bytes) -> bytes:
     if len(value) == 0:
         return b""
     return value
 
 
-def late(first: bytes, second: bytes) -> bytes:
-    result = unchanged(first)
-    i = 0
+func late(first: bytes, second: bytes) -> bytes:
+    mut result = unchanged(first)
+    mut i = 0
     while i < 2:
         if i > 0:
             return result
@@ -53,39 +53,39 @@ def late(first: bytes, second: bytes) -> bytes:
     return first
 
 
-public def test_nested_calls_preserve_results_after_parent_replacement() -> bool:
-    nodes = [Node(bytes([65]), 1), Node(bytes([66]), 2)]
-    result = choose(nodes, 1, 2)
-    fallback = choose(nodes, 3, 4)
-    snapshot = nodes
-    nodes[0] = Node(bytes([67]), 1)
+public func test_nested_calls_preserve_results_after_parent_replacement() -> bool:
+    mut nodes = [Node(text=bytes([65]), key=1), Node(text=bytes([66]), key=2)]
+    mut result = choose(nodes, 1, 2)
+    mut fallback = choose(nodes, 3, 4)
+    mut snapshot = nodes
+    nodes[0] = Node(text=bytes([67]), key=1)
     nodes.clear()
     return result.text == b"A" and snapshot[0].text == b"A" and fallback.text == b""
 
 
-public def test_reordered_arguments_map_to_the_actual_parent() -> bool:
-    left = [Node(bytes([76]), 1)]
-    right = [Node(bytes([82]), 1), Node(bytes([83]), 2)]
-    result = swapped(left, right)
+public func test_reordered_arguments_map_to_the_actual_parent() -> bool:
+    mut left = [Node(text=bytes([76]), key=1)]
+    mut right = [Node(text=bytes([82]), key=1), Node(text=bytes([83]), key=2)]
+    mut result = swapped(left, right)
     left.clear()
     right.clear()
     return result.text == b"R"
 
 
-public def test_indirect_composed_entry_returns_owned_bits() -> bool:
-    selected = choose
-    nodes = [Node(bytes([81]), 1), Node(bytes([82]), 2)]
-    result = selected(nodes, 1, 2)
+public func test_indirect_composed_entry_returns_owned_bits() -> bool:
+    mut selected = choose
+    mut nodes = [Node(text=bytes([81]), key=1), Node(text=bytes([82]), key=2)]
+    mut result = selected(nodes, 1, 2)
     nodes.clear()
     return result.text == b"Q"
 
 
-public def test_backedge_callee_mapping_remains_owned() -> bool:
-    result = late(bytes([65]), bytes([66]))
+public func test_backedge_callee_mapping_remains_owned() -> bool:
+    mut result = late(bytes([65]), bytes([66]))
     return result == b"B"
 
 
-def main(out: Stream) -> int:
+func main(out: Stream) -> int:
     out.print(test_nested_calls_preserve_results_after_parent_replacement())
     out.print(test_reordered_arguments_map_to_the_actual_parent())
     out.print(test_indirect_composed_entry_returns_owned_bits())

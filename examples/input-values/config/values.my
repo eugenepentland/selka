@@ -1,9 +1,8 @@
 # generated input manifest v1 sha256=6ca8cdea081d108206338c3f12b79f794fa34fafe9e6433a275a0cdf62fb4746
-module config.values
 
-public def batch_size() -> u16 effects():
+public func batch_size() -> u16 effects():
     return 64u16
 
 
-public def enabled() -> bool effects():
+public func enabled() -> bool effects():
     return True

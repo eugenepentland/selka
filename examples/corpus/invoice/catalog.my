@@ -1,12 +1,11 @@
-module catalog
 import money
 
 public enum Product:
-    book,
-    cable,
+    book
+    cable
     adapter
 
 
-public def price(product: Product) -> money.Cents effects():
-    prices: [Product] u64 = {Product.book: 2000u64, Product.cable: 500u64, Product.adapter: 750u64}
+public func price(product: Product) -> money.Cents effects():
+    mut prices: [Product] u64 = {Product.book: 2000u64, Product.cable: 500u64, Product.adapter: 750u64}
     return money.Cents.make(prices[product])

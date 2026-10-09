@@ -1,13 +1,12 @@
-module propagation_case_9
 
 
-union Detail:
-    Malformed: str,
-    Code: i64
+enum Detail:
+    Malformed(value: str)
+    Code(value: i64)
 
 
-union Wrapped:
-    Nested: Detail
+enum Wrapped:
+    Nested(value: Detail)
 
 
 result Inner:
@@ -20,19 +19,20 @@ result Outer:
     err: Wrapped
 
 
-def inner(kind: i64) -> Inner:
+func inner(kind: i64) -> Inner:
     if kind == 0:
         return Ok(5)
     if kind == 1:
-        return Err(Detail.Malformed("bad"))
-    return Err(Detail.Code(9))
+        return Err(Detail.Malformed(value="bad"))
+    return Err(Detail.Code(value=9))
 
 
-def outer(kind: i64) -> Outer:
-    return Ok(inner(kind)? > 3)
+func outer(kind: i64) -> Outer:
+    const value = try inner(kind)
+    return Ok(value > 3)
 
 
-def handle(value: Outer) -> i64:
+func handle(value: Outer) -> i64:
     match value:
         case Outer.ok(flag):
             if flag:
@@ -40,15 +40,15 @@ def handle(value: Outer) -> i64:
             return 0
         case Outer.err(error):
             match error:
-                case Wrapped.Nested(detail):
+                case Wrapped.Nested(value=detail):
                     match detail:
-                        case Detail.Malformed(text):
+                        case Detail.Malformed(value=text):
                             if text == "bad":
                                 return 7
                             return 8
-                        case Detail.Code(code):
+                        case Detail.Code(value=code):
                             return 20 + code
 
 
-public def program() -> i64:
+public func program() -> i64:
     return handle(outer(0)) + handle(outer(1)) + handle(outer(2))

@@ -1,4 +1,3 @@
-module aggregate_refs
 
 # Aggregate parameters cross the native boundary by address: a callee that only
 # reads one reads the caller's value where it lives, and a callee that writes one
@@ -17,102 +16,104 @@ public record Box:
     point: Point
 
 
-public union Slot:
-    filled(point: Point, tag: i64),
+public enum Slot:
+    filled(point: Point, tag: i64)
     empty
 
 
-def bump(point: Point) -> i64:
+func bump(input_point: Point) -> i64:
+    mut point = input_point
     point = Point(x=point.x + 100, y=point.y + 200)
     return point.x
 
 
-def bump_field(point: Point) -> i64:
+func bump_field(input_point: Point) -> i64:
+    mut point = input_point
     point.x = point.x + 100
     return point.x
 
 
-def shifted(point: Point) -> Point:
+func shifted(point: Point) -> Point:
     return Point(x=point.x + 1, y=point.y + 2)
 
 
-def pack(left: Point, right: Point) -> i64:
+func pack(left: Point, right: Point) -> i64:
     return left.x * 1000 + left.y + right.x * 10 + right.y
 
 
-def pick_first[T](items: list[T]) -> T:
+func pick_first[T](items: T[]) -> T:
     return items[0]
 
 
-def classify(slot: Slot) -> i64:
+func classify(slot: Slot) -> i64:
     match slot:
-        case Slot.filled(point, tag):
+        case Slot.filled(point=point, tag=tag):
             return point.x * 10 + tag
         case Slot.empty:
             return 0
 
 
-def append_then_read(items: mut list[Point], first: Point) -> i64:
+func append_then_read(mut items: Point[], first: Point) -> i64:
     items.append(Point(x=100, y=200))
     return first.x * 1000 + first.y
 
 
-public def test_a_written_record_parameter_leaves_the_callers_value_alone() -> bool:
-    original = Point(x=1, y=2)
-    inside = bump(original)
+public func test_a_written_record_parameter_leaves_the_callers_value_alone() -> bool:
+    mut original = Point(x=1, y=2)
+    mut inside = bump(original)
     return inside == 101 and original.x == 1 and original.y == 2
 
 
-public def test_a_field_write_inside_a_callee_leaves_the_callers_value_alone() -> bool:
-    original = Point(x=5, y=6)
-    inside = bump_field(original)
+public func test_a_field_write_inside_a_callee_leaves_the_callers_value_alone() -> bool:
+    mut original = Point(x=5, y=6)
+    mut inside = bump_field(original)
     return inside == 105 and original.x == 5 and original.y == 6
 
 
-public def test_a_returned_record_stored_into_a_local_carries_its_fields() -> bool:
-    base = Point(x=10, y=20)
-    moved = shifted(base)
+public func test_a_returned_record_stored_into_a_local_carries_its_fields() -> bool:
+    mut base = Point(x=10, y=20)
+    mut moved = shifted(base)
     return moved.x == 11 and moved.y == 22 and base.x == 10 and base.y == 20
 
 
-public def test_a_returned_record_passed_straight_into_another_call() -> bool:
+public func test_a_returned_record_passed_straight_into_another_call() -> bool:
     return pack(shifted(Point(x=1, y=2)), shifted(Point(x=3, y=4))) == 2050
 
 
-public def test_a_record_read_from_a_list_argument_keeps_its_value_across_a_write() -> bool:
-    items: list[Point] = [Point(x=7, y=8)]
-    read = append_then_read(mut items, items[0])
+public func test_a_record_read_from_a_list_argument_keeps_its_value_across_a_write() -> bool:
+    mut items: Point[] = [Point(x=7, y=8)]
+    mut read = append_then_read(mut items, items[0])
     return read == 7008 and len(items) == 2 and items[0].x == 7 and items[1].x == 100
 
 
-public def test_a_record_returned_from_a_generic_body_keeps_its_value() -> bool:
-    items: list[Point] = [Point(x=11, y=12), Point(x=13, y=14)]
-    got = pick_first[Point](items)
-    boxes: list[Box] = [Box(label="one", point=Point(x=21, y=22))]
-    held = pick_first[Box](boxes)
+public func test_a_record_returned_from_a_generic_body_keeps_its_value() -> bool:
+    mut items: Point[] = [Point(x=11, y=12), Point(x=13, y=14)]
+    mut got = pick_first[Point](items)
+    mut boxes: Box[] = [Box(label="one", point=Point(x=21, y=22))]
+    mut held = pick_first[Box](boxes)
     return got.x == 11 and got.y == 12 and held.point.y == 22 and len(held.label) == 3
 
 
-public def test_a_match_payload_bound_from_a_record_local_keeps_the_local_intact() -> bool:
-    point = Point(x=3, y=4)
-    slot = Slot.filled(point, 5)
-    score = classify(slot)
+public func test_a_match_payload_bound_from_a_record_local_keeps_the_local_intact() -> bool:
+    mut point = Point(x=3, y=4)
+    mut slot = Slot.filled(point=point, tag=5)
+    mut score = classify(slot)
     return score == 35 and point.x == 3 and point.y == 4
 
 
-public def test_a_returned_union_payload_reaches_the_caller_unchanged() -> bool:
-    held = Slot.filled(shifted(Point(x=2, y=3)), 9)
+public func test_a_returned_union_payload_reaches_the_caller_unchanged() -> bool:
+    mut held = Slot.filled(point=shifted(Point(x=2, y=3)), tag=9)
     return classify(held) == 39
 
 
-def guarded(count: i64) -> Point:
+func guarded(count: i64) -> Point:
     if count < 0:
         assert count >= 0, "count must not be negative"
     return Point(x=count, y=count + 1)
 
 
-public def test_a_returning_path_still_returns_its_record_next_to_a_trapping_one() -> bool:
-    got = guarded(4)
+public func test_a_returning_path_still_returns_its_record_next_to_a_trapping_one() -> bool:
+    mut got = guarded(4)
     return got.x == 4 and got.y == 5
 
 
@@ -123,8 +124,8 @@ public def test_a_returning_path_still_returns_its_record_next_to_a_trapping_one
 # real stack, and a copy the callee returns leaves the argument alone.
 
 
-def ones() -> [1024]i64:
-    return [
+func ones() -> FixedArray[i64, 1024]:
+    return FixedArray[int, 1024]([
         1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
         1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
         1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -157,56 +158,56 @@ def ones() -> [1024]i64:
         1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
         1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
         1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-    ]
+    ])
 
 
-def first_of(values: [1024]i64) -> i64:
+func first_of(values: FixedArray[i64, 1024]) -> i64:
     return values[0]
 
 
-def sum_of(values: [1024]i64) -> i64:
-    index = 0u64
-    total = 0
+func sum_of(values: FixedArray[i64, 1024]) -> i64:
+    mut index = 0u64
+    mut total = 0
     while index < 1024u64:
         total += values[index]
         index += 1u64
     return total
 
 
-def first_after(values: [1024]i64, depth: i64) -> i64:
+func first_after(values: FixedArray[i64, 1024], depth: i64) -> i64:
     if depth == 0:
         return values[0]
     return first_after(values, depth - 1) + 1
 
 
-def relay(values: [1024]i64) -> i64:
+func relay(values: FixedArray[i64, 1024]) -> i64:
     return first_of(values) + sum_of(values)
 
 
-def bumped(values: [1024]i64) -> [1024]i64:
+func bumped(values: FixedArray[i64, 1024]) -> FixedArray[i64, 1024]:
     return replace(values, 0, values[0] + 1)
 
 
-public def test_a_large_array_parameter_is_read_where_it_lives_across_many_calls() -> bool:
-    data: [1024]i64 = ones()
-    total = 0
-    call = 0
+public func test_a_large_array_parameter_is_read_where_it_lives_across_many_calls() -> bool:
+    mut data: FixedArray[i64, 1024] = ones()
+    mut total = 0
+    mut call = 0
     while call < 2000:
         total += first_of(data)
         call += 1
     return total == 2000 and data[0] == 1 and data[1023] == 1
 
 
-public def test_a_large_array_parameter_survives_deep_recursion_and_a_relay() -> bool:
-    data: [1024]i64 = ones()
+public func test_a_large_array_parameter_survives_deep_recursion_and_a_relay() -> bool:
+    mut data: FixedArray[i64, 1024] = ones()
     return first_after(data, 200) == 201 and relay(data) == 1025
 
 
-public def test_a_copy_returned_from_a_large_array_parameter_leaves_the_argument_alone() -> bool:
-    data: [1024]i64 = ones()
-    turned: [1024]i64 = bumped(data)
+public func test_a_copy_returned_from_a_large_array_parameter_leaves_the_argument_alone() -> bool:
+    mut data: FixedArray[i64, 1024] = ones()
+    mut turned: FixedArray[i64, 1024] = bumped(data)
     return turned[0] == 2 and data[0] == 1 and sum_of(turned) == 1025 and sum_of(data) == 1024
 
 
-def main() -> int:
+func main() -> int:
     return 0

@@ -1,9 +1,8 @@
-module rc_capability_values
 
 import test_capabilities
 
 
-public def test_repeated_capability_lists_preserve_their_owned_results() -> bool:
+public func test_repeated_capability_lists_preserve_their_owned_results() -> bool:
     for index in range(8):
         if not test_capabilities.test_fixed_environment_answers_only_its_pairs():
             return False
@@ -14,6 +13,6 @@ public def test_repeated_capability_lists_preserve_their_owned_results() -> bool
     return True
 
 
-def main() -> int:
+func main() -> int:
     assert test_repeated_capability_lists_preserve_their_owned_results()
     return 0

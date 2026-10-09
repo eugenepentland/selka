@@ -3,10 +3,10 @@ const std = @import("std");
 const support = @import("test_support.zig");
 
 const filled_then_read =
-    \\def main(args: list[str], out: Stream) -> int:
-    \\    n = len(args) + 100
-    \\    values = [(j * 7) % 1009 for j in range(n)]
-    \\    total = 0
+    \\func main(args: str[], out: Stream) -> int:
+    \\    mut n = len(args) + 100
+    \\    mut values = [for j in range(n) yield (j * 7) % 1009]
+    \\    mut total = 0
     \\    for j in range(n):
     \\        total += values[j] // 3
     \\    out.print(total)
@@ -31,14 +31,14 @@ test "a list filled by a counted loop and read under the same bound needs no bou
 }
 
 const unknown_sources =
-    \\def total(values: list[int], n: int) -> int:
-    \\    acc = 0
+    \\func total(values: int[], n: int) -> int:
+    \\    mut acc = 0
     \\    for j in range(n):
     \\        acc += values[j]
     \\    return acc
     \\
     \\
-    \\def main(args: list[str], out: Stream) -> int:
+    \\func main(args: str[], out: Stream) -> int:
     \\    out.print(total([1, 2, 3], len(args)))
     \\    return 0
     \\
@@ -58,10 +58,10 @@ test "a list parameter or an unbounded sum keeps its checks" {
 const facts = @import("facts.zig");
 
 const wide_elements =
-    \\def main(args: list[str], out: Stream) -> int:
-    \\    n = len(args) + 100
-    \\    values = [(j * 7) % 1000000 for j in range(n)]
-    \\    total = 0
+    \\func main(args: str[], out: Stream) -> int:
+    \\    mut n = len(args) + 100
+    \\    mut values = [for j in range(n) yield (j * 7) % 1000000]
+    \\    mut total = 0
     \\    for j in range(n):
     \\        total += values[j]
     \\    out.print(total)
@@ -83,11 +83,11 @@ test "the 2^47 list-length rule bounds reductions: 1008 * 2^47 fits i64 and 9999
 }
 
 const searching =
-    \\def search(values: list[int], key: int) -> int:
-    \\    low = 0
-    \\    high = len(values)
+    \\func search(values: int[], key: int) -> int:
+    \\    mut low = 0
+    \\    mut high = len(values)
     \\    while low < high:
-    \\        middle = (low + high) // 2
+    \\        mut middle = (low + high) // 2
     \\        if values[middle] < key:
     \\            low = middle + 1
     \\        else:
@@ -95,7 +95,7 @@ const searching =
     \\    return low
     \\
     \\
-    \\def main(out: Stream) -> int:
+    \\func main(out: Stream) -> int:
     \\    out.print(search([1, 3, 5], 4))
     \\    return 0
     \\
@@ -167,11 +167,11 @@ test "widening moves a growing bound to the nearest threshold that holds it and 
 }
 
 const almost_searching =
-    \\def wide(values: list[int], key: int) -> int:
-    \\    low = 0
-    \\    high = len(values) + 1
+    \\func wide(values: int[], key: int) -> int:
+    \\    mut low = 0
+    \\    mut high = len(values) + 1
     \\    while low < high:
-    \\        middle = (low + high) // 2
+    \\        mut middle = (low + high) // 2
     \\        if values[middle] < key:
     \\            low = middle + 1
     \\        else:
@@ -179,11 +179,11 @@ const almost_searching =
     \\    return low
     \\
     \\
-    \\def inclusive(values: list[int], key: int) -> int:
-    \\    low = 0
-    \\    high = len(values)
+    \\func inclusive(values: int[], key: int) -> int:
+    \\    mut low = 0
+    \\    mut high = len(values)
     \\    while low <= high:
-    \\        middle = (low + high) // 2
+    \\        mut middle = (low + high) // 2
     \\        if values[middle] < key:
     \\            low = middle + 1
     \\        else:
@@ -191,11 +191,11 @@ const almost_searching =
     \\    return low
     \\
     \\
-    \\def other(values: list[int], keys: list[int], key: int) -> int:
-    \\    low = 0
-    \\    high = len(values)
+    \\func other(values: int[], keys: int[], key: int) -> int:
+    \\    mut low = 0
+    \\    mut high = len(values)
     \\    while low < high:
-    \\        middle = (low + high) // 2
+    \\        mut middle = (low + high) // 2
     \\        if keys[middle] < key:
     \\            low = middle + 1
     \\        else:
@@ -203,7 +203,7 @@ const almost_searching =
     \\    return low
     \\
     \\
-    \\def main(out: Stream) -> int:
+    \\func main(out: Stream) -> int:
     \\    out.print(wide([1, 3, 5], 4) + inclusive([1, 3, 5], 4) + other([1, 3, 5], [2, 4], 4))
     \\    return 0
     \\
@@ -221,28 +221,28 @@ test "a search whose high may reach the length, or that reads another list, keep
 }
 
 const guarded_reads =
-    \\def first_or_zero(values: list[int], i: int) -> int:
+    \\func first_or_zero(values: int[], i: int) -> int:
     \\    if i >= 0:
     \\        if i < len(values):
     \\            return values[i]
     \\    return 0
     \\
     \\
-    \\def total(values: list[int]) -> int:
-    \\    acc = 0
+    \\func total(values: int[]) -> int:
+    \\    mut acc = 0
     \\    for j in range(len(values)):
     \\        acc += values[j] % 7
     \\    return acc
     \\
     \\
-    \\def off_by_one(values: list[int], i: int) -> int:
+    \\func off_by_one(values: int[], i: int) -> int:
     \\    if i >= 0:
     \\        if i <= len(values):
     \\            return values[i]
     \\    return 0
     \\
     \\
-    \\def main(out: Stream) -> int:
+    \\func main(out: Stream) -> int:
     \\    out.print(first_or_zero([1, 2], 1) + total([3, 4]) + off_by_one([5], 0))
     \\    return 0
     \\
@@ -258,9 +258,9 @@ test "a read under index < len(list) of a list parameter needs no bounds check, 
 }
 
 const huge_reduction =
-    \\def main(args: list[str], out: Stream) -> int:
-    \\    n = len(args)
-    \\    total = 0
+    \\func main(args: str[], out: Stream) -> int:
+    \\    mut n = len(args)
+    \\    mut total = 0
     \\    for j in range(0 - 9223372036854775807, n):
     \\        total += 4611686018427387904
     \\    out.print(total)

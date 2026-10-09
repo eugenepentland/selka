@@ -30,7 +30,7 @@ Because the ceiling follows from the signature, it is what the interfaces
 publish: `list-interfaces` prints `ceiling(...)` for a declaration whose body was
 never checked, the contract manifest and public schema publish it, and it is part
 of `interface_sha256` while the inferred body set is not. A foreign declaration
-(`extern def`) has no body to derive from, so its `effects(...)`
+(`extern func`) has no body to derive from, so its `effects(...)`
 clause stays its ceiling as written.
 
 A compile-time `str` literal is an immutable constant, not an allocation:
@@ -41,13 +41,13 @@ literal.
 
 ```mylang
 # doc: expect 42
-def area(width: int, height: int) -> int:
+func area(width: int, height: int) -> int:
     return width * height
 
-def report(width: int, height: int) -> int noalloc:
+func report(width: int, height: int) -> int noalloc:
     return area(width, height)
 
-def main(out: Stream) -> int effects(output):
+func main(out: Stream) -> int effects(output):
     out.print(report(6, 7))
     return 0
 ```
@@ -61,13 +61,13 @@ through, and `relay` must take one too before it can call it.
 
 ```mylang
 # doc: expect 7
-def emit(out: Stream, value: int) -> None:
+func emit(out: Stream, value: int) -> Unit:
     out.print(value)
 
-def relay(out: Stream, value: int) -> None:
+func relay(out: Stream, value: int) -> Unit:
     emit(out, value)
 
-def main(out: Stream) -> int:
+func main(out: Stream) -> int:
     relay(out, 7)
     return 0
 ```
@@ -77,10 +77,10 @@ signature claims authority the body cannot use:
 
 ```mylang
 # doc: expect-error E_UNUSED_CAPABILITY
-def equal(host: Host, a: int, b: int) -> bool:
+func equal(host: Host, a: int, b: int) -> bool:
     return a == b
 
-def main(host: Host) -> int:
+func main(host: Host) -> int:
     if equal(host, 1, 1):
         return 0
     return 1
@@ -101,7 +101,7 @@ source error.
 | `random` | drawing from the entropy stream |
 | `environment` | reading process environment variables |
 | `output` | `print` |
-| `host` | calling a host-provided implementation, such as an `extern def` |
+| `host` | calling a host-provided implementation, such as an `extern func` |
 | `mutation` | writing caller-owned managed state reachable from an input, subject to the declared `mut` parameter set |
 
 `noalloc` and `noio` are shorthands for the two common ceilings. `noalloc`
@@ -111,7 +111,7 @@ randomness and the environment. Neither promises determinism, termination, bound
 memory or freedom from traps. Writing definitely-fresh local storage or fixed
 scalar/record storage is not an observable effect; writing caller-owned managed
 state is the separate `mutation` effect described below. A function that needs one effect and no others writes it out, as
-in `def present(fs: Filesystem, path: str) -> bool effects(filesystem):`.
+in `func present(fs: Filesystem, path: str) -> bool effects(filesystem):`.
 
 Callback parameters follow the same rule directionally: a callable whose
 declared ceiling is a subset of the destination contract's ceiling may fill that
@@ -131,15 +131,15 @@ and syntactically present branches count even when they cannot be taken.
 
 ```mylang
 # doc: expect-error E_EFFECT_BOUND
-def labels() -> list[str]:
-    names: list[str] = []
+func labels() -> str[]:
+    mut names: str[] = []
     names.append("alpha")
     return names
 
-def count() -> int noalloc:
+func count() -> int noalloc:
     return len(labels())
 
-def main() -> int:
+func main() -> int:
     return count()
 ```
 
@@ -161,23 +161,17 @@ def main() -> int:
 
 ## Mutation contracts
 
-A parameter a function writes through is declared `name: mut T`, and those
-parameters are the function's mutation footprint: the positions whose reachable
-mutable objects the call may write. A caller marks each argument it binds to one
-of them — `restock(mut inventory, "bolt", 5)` — so the write is visible on the
-call line as well as in the signature. The marker is required exactly where the
-callee declares `mut` and rejected where it does not, and a `mut` parameter the
-body never writes is an error too, because a stale marker is the lie the spelling
-exists to prevent. A receiver is never marked: `values.append(1)` and
-`mapping.sort()` need nothing.
+A parameter declared `mut name: T` names caller storage. A caller marks the
+corresponding argument, as in `restock(mut inventory, "bolt", 5)`, making the
+update capability visible in the signature and call. Call sites mark exactly
+the declared mut positions. A declared capability may be unused or used only
+on some paths; callers and callback contracts still preserve it.
 
-`mut` is accepted only on a type that can carry a write back to the caller:
-`list`, `dict`, `[N]T`, `byte_buffer`, and a `record`, union,
-option or result holding one. A scalar, `str` or `bytes` parameter declared `mut`
-is rejected, because no write through it could be observed. A fixed array is a
-value with no reference of its own, so a `mut [N]T` parameter names the caller's
-variable itself and its argument must be one; see
-[passing an array to be written](records-and-unions.md#passing-an-array-to-be-written).
+Mut parameters accept ordinary scalar and aggregate values, including text,
+bytes, fixed arrays and collections. Whole-value rebinding, field writes and
+element writes update the captured caller place. Arguments may be writable
+variables, fields or indexed slots rooted in writable storage. A receiver is
+not marked: `values.append(1)` updates its writable binding directly.
 
 The guarantee covers the complete value, including managed descendants of records,
 arrays, options, unions and collections. Assignment and non-`mut` passing preserve
@@ -188,26 +182,26 @@ always be built and mutated.
 
 ```mylang
 # doc: expect 7
-def replace_first(values: mut list[int], replacement: int) -> None effects(mutation):
+func replace_first(mut values: int[], replacement: int) -> Unit effects(mutation):
     values[0] = replacement
 
-def main(out: Stream) -> int effects(managed_allocation, output):
-    values = [1]
+func main(out: Stream) -> int effects(managed_allocation, output):
+    mut values = [1]
     replace_first(mut values, 7)
     out.print(values[0])
     return 0
 ```
 
 A write through a parameter that is not declared `mut` is rejected at the write
-site with the declaration to paste:
+site with `E_IMMUTABLE`:
 
 ```mylang
-# doc: expect-error E_MUTATION_MARKER
-def overwrite(values: list[int]) -> None effects(mutation):
+# doc: expect-error E_IMMUTABLE
+func overwrite(values: int[]) -> Unit effects(mutation):
     values[0] = 42
 
-def main() -> int:
-    values = [1]
+func main() -> int:
+    mut values = [1]
     overwrite(values)
     return 0
 ```
@@ -220,13 +214,13 @@ only through a `mut` parameter and a marked argument:
 ```mylang
 # doc: expect 1
 # doc: expect 5
-def set_first(values: mut list[int], replacement: int) -> None effects(mutation):
+func set_first(mut values: int[], replacement: int) -> Unit effects(mutation):
     values[0] = replacement
 
 
-def main(out: Stream) -> int effects(managed_allocation, output):
-    original = [1, 2]
-    copy = original
+func main(out: Stream) -> int effects(managed_allocation, output):
+    mut original = [1, 2]
+    mut copy = original
     set_first(mut copy, 5)
     out.print(original[0])
     out.print(copy[0])
@@ -240,9 +234,9 @@ share storage until a write, but that sharing has no observable mutation effect:
 ```mylang
 # doc: expect 1
 # doc: expect 9
-def main(out: Stream) -> int effects(managed_allocation, output):
-    original = [[1]]
-    copy = original
+func main(out: Stream) -> int effects(managed_allocation, output):
+    mut original = [[1]]
+    mut copy = original
     copy[0][0] = 9
     out.print(original[0][0])
     out.print(copy[0][0])
@@ -258,14 +252,14 @@ or `f(mut a, mut a[0])` (see
 
 ```mylang
 # doc: expect 23
-def touch(target: mut list[int], source: list[int]) -> int effects(mutation, managed_allocation):
+func touch(mut target: int[], source: int[]) -> int effects(mutation, managed_allocation):
     target.append(len(source))
     return len(source)
 
 
-def main() -> int:
-    a = [1, 2]
-    seen = touch(mut a, a)
+func main() -> int:
+    mut a = [1, 2]
+    mut seen = touch(mut a, a)
     return seen * 10 + len(a)
 ```
 
@@ -279,13 +273,13 @@ remains `E_MUTATION_MARKER`.
 ```mylang
 # doc: expect 1
 # doc: expect 9
-def identity(values: list[int]) -> list[int] effects():
+func identity(values: int[]) -> int[] effects():
     return values
 
 
-def main(out: Stream) -> int effects(managed_allocation, output):
-    original = [1]
-    picked = identity(original)
+func main(out: Stream) -> int effects(managed_allocation, output):
+    mut original = [1]
+    mut picked = identity(original)
     picked[0] = 9
     out.print(original[0])
     out.print(picked[0])
@@ -304,16 +298,16 @@ caller can also write a returned value without changing the input:
 ```mylang
 # doc: expect 1
 # doc: expect 9
-def doubled(values: list[int]) -> list[int] effects(managed_allocation):
-    out: list[int] = []
+func doubled(values: int[]) -> int[] effects(managed_allocation):
+    mut out: int[] = []
     for value in values:
         out.append(value * 2)
     return out
 
 
-def main(out: Stream) -> int effects(managed_allocation, output):
-    values = [1, 2]
-    extra = doubled(values)
+func main(out: Stream) -> int effects(managed_allocation, output):
+    mut values = [1, 2]
+    mut extra = doubled(values)
     extra[0] = 9
     out.print(values[0])
     out.print(extra[0])
@@ -331,8 +325,8 @@ bracket spelling `restrict_resource[...]` is removed and reports
 
 ```mylang
 # doc: check
-def main(fs: Filesystem) -> int:
-    read_only = fs.read_only()
+func main(fs: Filesystem) -> int:
+    mut read_only = fs.read_only()
     return 0
 ```
 
@@ -354,40 +348,39 @@ record Context:
     fs: Filesystem
     env: Environment
 
-def read_note(ctx: Context, path: str) -> int:
+func read_note(ctx: Context, path: str) -> int:
     match ctx.fs.read_text(path):
         case Ok(text):
             return len(text)
         case Err(_):
             return -1
 
-def main(fs: Filesystem, env: Environment) -> int:
-    ctx = Context(fs=fs, env=env)
+func main(fs: Filesystem, env: Environment) -> int:
+    mut ctx = Context(fs=fs, env=env)
     return read_note(ctx, "note.txt") + len(ctx.env.names())
 ```
 
 ## Declaration-site mutation errors
 
-The `mut` spelling is checked in both directions, always. A parameter the body
-writes with no `mut` is rejected at its declaration with the parameter to paste:
+Ordinary parameters are readonly snapshots. A parameter the body
+writes with no `mut` is rejected at the write with `E_IMMUTABLE`:
 
 ```mylang
-# doc: expect-error E_MUTATION_MARKER
-def touch(values: list[int]) -> None:
+# doc: expect-error E_IMMUTABLE
+func touch(values: int[]) -> Unit:
     values[0] = 1
 
 
-def main() -> int:
-    values = [1]
+func main() -> int:
+    mut values = [1]
     touch(values)
     return 0
 ```
 
-A `mut` parameter the body never writes is rejected too, so a marker cannot go
-stale, and a `mut` on a type with nothing to write — a scalar, `str` or `bytes`
-— is rejected at the declaration. The retired `mutates(...)` clause and the
-opt-in `&` argument marker are removed spellings that name `mut` in their
-diagnostics.
+A declared mut parameter may be unused and need not be written on every return
+path. Scalars, `str` and `bytes` can be reassigned through mut parameters too.
+The retired `mutates(...)` clause and the opt-in `&` argument marker are removed
+spellings that name `mut` in their diagnostics.
 
 ## Filesystem dir
 
@@ -404,9 +397,9 @@ result Open:
     ok: File,
     err: int
 
-def main(fs: Filesystem) -> int:
-    scoped = fs.dir("data")
-    request: [1]u8 = [42u8]
+func main(fs: Filesystem) -> int:
+    mut scoped = fs.dir("data")
+    mut request: FixedArray[u8, 1] = FixedArray[u8, 1]([42u8])
     match acquire_resource[Open](scoped, request):
         case Open.ok(file):
             _ = file
@@ -431,10 +424,10 @@ result Connected:
     ok: Socket,
     err: int
 
-def main(net: Network) -> int:
+func main(net: Network) -> int:
     # The narrowed capability pins the endpoint; the request below is ignored.
-    scoped = net.host("127.0.0.1:8000")
-    request: [1]u8 = [0u8]
+    mut scoped = net.host("127.0.0.1:8000")
+    mut request: FixedArray[u8, 1] = FixedArray[u8, 1]([0u8])
     match acquire_resource[Connected](scoped, request):
         case Connected.ok(socket):
             _ = socket
@@ -461,7 +454,7 @@ parameters supply no `clock` can therefore hold only a simulated clock, and
 reading it is not an effect of that function: it neither widens the function's
 inferred effects nor breaks the ceiling its signature implies. The same holds for
 `random`, `filesystem`, `network` and `environment`. A function with a `Host`
-parameter and an `extern def` can reach the host by other means,
+parameter and an `extern func` can reach the host by other means,
 so for them nothing is contained. That is what lets a caller with no capability
 at all test code that takes one:
 
@@ -470,7 +463,7 @@ at all test code that takes one:
 import filesystem
 import time
 
-def uptime(clock: Clock, boot: time.Instant) -> int:
+func uptime(clock: Clock, boot: time.Instant) -> int:
     match time.now(clock):
         case Ok(current):
             match time.elapsed(boot, current):
@@ -481,17 +474,17 @@ def uptime(clock: Clock, boot: time.Instant) -> int:
         case Err(_):
             return -1
 
-def remember(fs: Filesystem, note: str) -> bool:
+func remember(fs: Filesystem, note: str) -> bool:
     _ = fs.write_text("note.txt", note)
     return fs.exists("note.txt")
 
-def check() -> int:
-    boot = time.from_unix_nanoseconds(0)
-    clock = time.simulated_clock(boot)
+func check() -> int:
+    mut boot = time.from_unix_nanoseconds(0)
+    mut clock = time.simulated_clock(boot)
     _ = time.advance(clock, time.nanoseconds(1000000000))
     return uptime(clock, boot)
 
-def main(out: Stream) -> int:
+func main(out: Stream) -> int:
     out.print(check(), remember(filesystem.memory(), "hi"))
     return 0
 ```

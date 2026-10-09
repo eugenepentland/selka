@@ -1,4 +1,3 @@
-module constant_methods_support
 
 # Constants that constant_methods.my reads through an import.
 public const WORDS: str = "one two  three"

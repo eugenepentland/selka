@@ -1,4 +1,3 @@
-module sexpr.ast
 
 # AST for the S-expression reader, ported from eda/src/sexpr/ast.zig.
 # Shared by sexpr.tokenizer, sexpr.parser and sexpr.printer.
@@ -35,11 +34,11 @@ public record Span:
 
 # The largest document the port parses: one byte past this cannot be addressed
 # by `Span.offset`.
-public def max_source_bytes() -> int:
+public func max_source_bytes() -> int:
     return 4294967295
 
 
-public def zero_span() -> Span:
+public func zero_span() -> Span:
     return Span(line=1, col=1, offset=0)
 
 
@@ -51,18 +50,18 @@ public def zero_span() -> Span:
 #   integer - a plain integer literal
 #   decimal - a float literal, with the source spelling when one was written
 #   measure - a `mm`/`mil` dimension, normalised to millimetres
-public union Node:
-    form(items: list[Node], span: Span),
-    atom(text: view.View, span: Span),
-    string(text: view.View, span: Span),
-    integer(value: int, span: Span),
-    decimal(value: float, span: Span, literal: Option[view.View] = None),
+public enum Node:
+    form(items: Node[], span: Span)
+    atom(text: view.View, span: Span)
+    string(text: view.View, span: Span)
+    integer(value: int, span: Span)
+    decimal(value: float, span: Span, literal: view.View? = None)
     measure(value: float, span: Span)
 
 
-public def is_form(node: Node, name: str) -> bool:
+public func is_form(node: Node, name: str) -> bool:
     match node:
-        case Node.form(entries, _):
+        case Node.form(items=entries, span=_):
             if len(entries) == 0:
                 return False
             return is_atom_named(entries[0], name)
@@ -70,57 +69,57 @@ public def is_form(node: Node, name: str) -> bool:
             return False
 
 
-def is_atom_named(node: Node, name: str) -> bool:
+func is_atom_named(node: Node, name: str) -> bool:
     match node:
-        case Node.atom(text, _):
+        case Node.atom(text=text, span=_):
             return view.matches(text, name)
         case _:
             return False
 
 
-public def as_items(node: Node) -> Option[list[Node]]:
+public func as_items(node: Node) -> Node[]?:
     match node:
-        case Node.form(entries, _):
+        case Node.form(items=entries, span=_):
             return Some(entries)
         case _:
             return None
 
 
-public def as_atom(node: Node) -> Option[view.View]:
+public func as_atom(node: Node) -> view.View?:
     match node:
-        case Node.atom(text, _):
+        case Node.atom(text=text, span=_):
             return Some(text)
         case _:
             return None
 
 
-public def as_string(node: Node) -> Option[view.View]:
+public func as_string(node: Node) -> view.View?:
     match node:
-        case Node.string(text, _):
+        case Node.string(text=text, span=_):
             return Some(text)
         case _:
             return None
 
 
 # The source range of a string or atom node; None for forms and numbers.
-public def as_text(node: Node) -> Option[view.View]:
+public func as_text(node: Node) -> view.View?:
     match node:
-        case Node.string(text, _):
+        case Node.string(text=text, span=_):
             return Some(text)
-        case Node.atom(text, _):
+        case Node.atom(text=text, span=_):
             return Some(text)
         case _:
             return None
 
 
 # The numeric value of an integer, decimal or measure node.
-public def as_number(node: Node) -> Option[float]:
+public func as_number(node: Node) -> float?:
     match node:
-        case Node.integer(value, _):
+        case Node.integer(value=value, span=_):
             return Some(float(value))
-        case Node.decimal(value, _, _):
+        case Node.decimal(value=value, span=_, literal=_):
             return Some(value)
-        case Node.measure(value, _):
+        case Node.measure(value=value, span=_):
             return Some(value)
         case _:
             return None
@@ -129,44 +128,44 @@ public def as_number(node: Node) -> Option[float]:
 # The source spelling of a suffixed literal, else a string's or atom's range.
 # None for a plain number, a measure or a form. This is the single reader of
 # `literal`, so the precedence cannot drift between callers.
-public def value_text(node: Node) -> Option[view.View]:
+public func value_text(node: Node) -> view.View?:
     match node:
-        case Node.decimal(_, _, literal):
+        case Node.decimal(value=_, span=_, literal=literal):
             match literal:
                 case Some(text):
                     return Some(text)
                 case None:
                     return None
-        case Node.string(text, _):
+        case Node.string(text=text, span=_):
             return Some(text)
-        case Node.atom(text, _):
+        case Node.atom(text=text, span=_):
             return Some(text)
         case _:
             return None
 
 
 # The source span of a node's first token.
-public def span_of(node: Node) -> Span:
+public func span_of(node: Node) -> Span:
     match node:
-        case Node.form(_, span):
+        case Node.form(items=_, span=span):
             return span
-        case Node.atom(_, span):
+        case Node.atom(text=_, span=span):
             return span
-        case Node.string(_, span):
+        case Node.string(text=_, span=span):
             return span
-        case Node.integer(_, span):
+        case Node.integer(value=_, span=span):
             return span
-        case Node.decimal(_, span, _):
+        case Node.decimal(value=_, span=span, literal=_):
             return span
-        case Node.measure(_, span):
+        case Node.measure(value=_, span=span):
             return span
 
 
 # The children of a form, or an empty list for every other node.
-public def children(node: Node) -> list[Node]:
+public func children(node: Node) -> Node[]:
     match node:
-        case Node.form(entries, _):
+        case Node.form(items=entries, span=_):
             return entries
         case _:
-            empty: list[Node] = []
+            mut empty: Node[] = []
             return empty

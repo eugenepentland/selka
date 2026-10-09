@@ -1,6 +1,6 @@
 # Functions and calls
 
-`def` declares every callable in the language. There are no methods, no
+`func` declares every callable in the language. There are no methods, no
 inheritance, no nested definitions and no closures, so a call's meaning follows
 entirely from the declaration its name resolves to. This page covers how a call
 supplies its arguments, what a function may return, and the one form — a function
@@ -20,18 +20,18 @@ literal — a number, `True` or `False`, a string, or `None` — so no two calls
 ever share a mutable default; required parameters must precede every parameter
 that has one, and the other order reports `E_DEFAULT_ARGUMENT`. Unknown,
 duplicate, missing, excess and misplaced arguments are all rejected, and a
-default's declared type is checked even in a function nothing calls. Intrinsics
-such as `len` and calls made through a callback value take positional arguments
-only.
+default's declared type is checked even in a function nothing calls. Intrinsics such as `len` have their own argument rules. A callable type may
+include `named` labels; calls through the value honor those labels and its exact
+`mut` parameter positions.
 
 ```mylang
 # doc: expect 42
-def offset(value: int, amount: int = 2, scale: int = 1) -> int:
+func offset(value: int, amount: int = 2, scale: int = 1) -> int:
     return value * scale + amount
 
-def main() -> int:
-    plain = offset(38)
-    keyword = offset(amount=2, value=38)
+func main() -> int:
+    mut plain = offset(38)
+    mut keyword = offset(amount=2, value=38)
     if plain != keyword:
         return 1
     return plain + offset(0, scale=2)
@@ -44,22 +44,26 @@ list](#explicit-call-type-arguments) is written out.
 
 ### Keyword-only parameters
 
-A bare `*` ends the positional group: every parameter after it binds by name
-only. Keyword-only parameters may be passed in any order, and required and
-defaulted ones may sit in either order, because the required-before-defaulted
-rule holds inside the positional group alone. A call that passes a keyword-only
-parameter positionally is `E_KEYWORD_ONLY`, and the rejection names the
-parameter and prints the whole call as it must be written.
+Mark each parameter that requires a label with `named`: `named amount: int`.
+Positional parameters come first, then named parameters. Repeat the modifier for
+each named parameter; a bare `*` separator is not part of the canonical grammar.
+Named parameters may be supplied in any order. Required and defaulted named
+parameters may appear in either order, while positional parameters retain the
+required-before-defaulted rule. Arguments evaluate once in their written order.
+A missing label reports `E_KEYWORD_ONLY` with the labelled call.
+
+Combine permissions as `named mut points: Point[]` and call it with
+`points=mut points`. The name and mutation permission are both part of the contract.
 
 ```mylang
 # doc: expect 1204
-def issue(host: int, *, code: int, file: int = 0, position: int = 4) -> int:
+func issue(host: int, named code: int, named file: int = 0, named position: int = 4) -> int:
     return host * 1000 + code * 100 + file * 10 + position
 
 
-def main() -> int:
-    written = issue(1, position=4, code=2)
-    defaulted = issue(1, code=2)
+func main() -> int:
+    mut written = issue(1, position=4, code=2)
+    mut defaulted = issue(1, code=2)
     if written != defaulted:
         return 0
     return written
@@ -67,10 +71,8 @@ def main() -> int:
 
 So `io.issue(host, 13, 0, span.start)` reports
 `` `code` is keyword-only; write `io.issue(host, code=13, file=0, position=span.start)` ``.
-The rendered interface signature carries the same `*`, so
-[`mylang list-interfaces`](tooling/navigation.md) prints
-`def(host:int,*,code:int,file:int=0,position:int=4)->i64`, and a reader of the
-contract knows which parameters a call may pass positionally.
+Rendered interfaces repeat `named` and prefix `mut` so a reader can see the
+same call contract as in the source declaration.
 
 ### Wide signatures
 
@@ -82,39 +84,34 @@ it earlier, or group related parameters into a record and pass that.
 
 ## Unit procedures
 
-A function that produces no value is a procedure. Write `-> None` or omit the
-return annotation entirely; both declare the same unit result. The body may end
-by falling off the bottom or with a bare `return`, and both paths release the
-frame's owned values through the ordinary cleanup. Unit is a real type rather
-than an absence, which has one consequence worth remembering: an expression used
-as a standalone statement must have it, so a call whose result you mean to throw
-away needs `_ = work(...)` and a bare non-unit value reports
-`E_EXPLICIT_DISCARD_REQUIRED`. Unit appears in a module's public schema as
-`kind: unit` and stays callable from other language modules, but it is rejected
-at the data, wire and host ABI boundaries, so a procedure is not callable across
-the C ABI. There is no unit literal: a bare `return`, falling off the end, or a
-unit-returning call produces it, and `type Name = None` may name it. Unit is an
-ordinary value of one shape rather than an absence, so it flows through generic
-functions, callbacks, bindings and result payloads, and `fallible()?` propagates
-a failed result whose success payload is unit.
+A procedure produces `Unit`. Write `-> Unit` or omit the return annotation.
+The unit value is `()`. Falling off the body or a bare `return` succeeds with
+unit, and ordinary cleanup runs on both paths. A fallible procedure writes
+`func save(...) fails SaveError:` and uses `fail error` for failure.
+
+A standalone call statement must produce unit. Use `_ = work(...)` to explicitly
+discard an ordinary non-unit result; checked results still require handling.
+Unit flows through generic functions, callbacks, bindings and result payloads.
+`try save(...)` propagates a fallible procedure's error at a statement boundary.
+Unit remains unsuitable for ordinary wire data and has its existing C ABI rules.
 
 ```mylang
 # doc: expect 42
-def bump(values: mut list[int]):
+func bump(mut values: int[]):
     values.append(0)
 
-def add(values: mut list[int], value: int) -> None:
+func add(mut values: int[], value: int) -> Unit:
     if value < 0:
         return
     values.append(value)
 
-def main() -> int:
-    values: list[int] = []
+func main() -> int:
+    mut values: int[] = []
     add(mut values, 40)
     add(mut values, -1)
     add(mut values, 2)
     bump(mut values)
-    total = 0
+    mut total = 0
     for value in values:
         total += value
     return total
@@ -122,35 +119,30 @@ def main() -> int:
 
 `add` returns early for the negative value, `bump` falls off the end, and neither
 needs a return annotation to say so. Both write through `values`, so both declare
-`values: mut list[int]` and every caller marks the argument.
+`mut values: int[]` and every caller marks the argument.
 
 ## Entry point signatures
 
-`main` is the entry point and may be written `-> int`, `-> None`,
-`-> Result[int, E]` or `-> Result[None, E]`, where the error type `E` is anything
-`print` can render. All of them adapt to one status convention. An `int` result,
-or the `int` carried by `Ok` or by an `int` `Err`, becomes the process exit status
-(truncated to the low 8 bits) and is also what `mylang run --print-result` prints
-after the program's own output; the `None` forms have no value of their own and
-report `0`. An `Err` is also written to standard error as `error:` and the value,
-followed by its [error return trace](results-and-options.md#error-return-traces),
-and an error of any type but `int` exits 1. The `Result` forms exist so the entry
-point can end a failure with `?` instead of matching it at the top level. `main` may also declare capability parameters,
-which is how a program asks for the filesystem, the clock, entropy or the
-environment — see [printing, files and command-line
-authority](io.md) — and it may not be generic.
+`main` may return `int`, `Unit`, `int fails E`, or unit with `fails E`.
+A successful integer becomes the process exit status, truncated to its low eight
+bits; successful unit exits zero. An integer error supplies its status, and
+another error exits one. Errors are printed to standard error with their
+[error return trace](results-and-options.md#error-return-traces).
+`mylang run --print-result` additionally prints a successful integer.
+Capability parameters remain available on the entry point; runtime arguments
+use the existing command conventions.
 
 ```mylang
 # doc: expect 42
-def parse(value: int) -> Result[int, int]:
+func parse(value: int) -> int fails int:
     if value < 0:
-        return Err(2)
-    return Ok(value)
+        fail 2
+    return value
 
-def main() -> Result[int, int]:
-    first = parse(40)?
-    second = parse(2)?
-    return Ok(first + second)
+func main() -> int fails int:
+    mut first = try parse(40)
+    mut second = try parse(2)
+    return first + second
 ```
 
 ## Explicit call type arguments
@@ -168,26 +160,26 @@ record otherwise, so `Box[int](item=0)` remains record construction.
 
 ```mylang
 # doc: expect 42
-def identity[T](value: T) -> T:
+func identity[T](value: T) -> T:
     return value
 
 record Box[T]:
     item: T
 
-def main() -> int:
-    explicit = identity[int](2)
-    inferred = identity(40)
-    boxed = Box[int](item=0)
+func main() -> int:
+    mut explicit = identity[int](2)
+    mut inferred = identity(40)
+    mut boxed = Box[int](item=0)
     return explicit + inferred + boxed.item
 ```
 
 ## Function values
 
 The name of a declared function, written without a call, is a function value. Its
-type is spelled `def(parameters) -> result effects(...)`, with the parameter
+type is spelled `func(parameters) -> result effects(...)`, with the parameter
 types, the result type and the effect ceiling all written out, and a value of
 that type can be stored in a local, passed as an argument and returned. A
-function value captures nothing. There are no closures and no nested `def`, so
+function value captures nothing. There are no closures and no nested `func`, so
 the value is an immediate function identity and everything it needs arrives
 through its parameters; an attempt to capture the enclosing environment is
 rejected rather than boxed. Function values are ordinary copied values with no
@@ -197,17 +189,17 @@ to `print` is rejected with `E_IO_ARGUMENT`.
 
 ```mylang
 # doc: expect 42
-def double(value: int) -> int effects():
+func double(value: int) -> int effects():
     return value * 2
 
-def chosen() -> def(int) -> int effects():
+func chosen() -> func(int) -> int effects():
     return double
 
-def apply(callback: def(int) -> int effects(), value: int) -> int:
+func apply(callback: func(int) -> int effects(), value: int) -> int:
     return callback(value)
 
-def main() -> int:
-    op = chosen()
+func main() -> int:
+    mut op = chosen()
     return apply(op, 18) + op(3)
 ```
 
@@ -219,7 +211,7 @@ implementation's declared effect ceiling may be a subset of the destination's:
 a pure callback may fill an `effects(output)` slot, while a callback that may
 print may not fill an `effects()` slot. Rejected substitutions report `E_TYPE`
 with both canonical source contracts and named effects; a rejected substitution
-reads `expected def(int) -> int effects(), found def(int) -> int effects(output)`.
+reads `expected func(int) -> int effects(), found func(int) -> int effects(output)`.
 Calls through stored or returned callbacks still use the destination
 contract's ceiling, so a helper that calls an `effects(output)` callback must
 admit `output` in its own bound even when the concrete target passed in is pure.
@@ -232,17 +224,17 @@ callback that needs context takes it as another parameter.
 # doc: expect 40
 # doc: expect 2
 # doc: expect 42
-def announce(value: int, out: Stream) -> int effects(output):
+func announce(value: int, out: Stream) -> int effects(output):
     out.print(value)
     return value
 
-def sum_announced(values: list[int], report: def(int, Stream) -> int effects(output), out: Stream) -> int effects(output):
-    total = 0
+func sum_announced(values: int[], report: func(int, Stream) -> int effects(output), out: Stream) -> int effects(output):
+    mut total = 0
     for value in values:
         total += report(value, out)
     return total
 
-def main(out: Stream) -> int:
+func main(out: Stream) -> int:
     out.print(sum_announced([40, 2], announce, out))
     return 0
 ```
@@ -258,17 +250,17 @@ be passed where one is expected. Its body is then held to that ceiling: an
 unannotated function whose body can print, touch the filesystem or reach any other
 effect the slot forbids — including allocation for an `effects()` slot — is rejected
 with `E_EFFECT_BOUND` at the place the value is passed. A sort key may allocate: its
-slot is `def(T) -> K effects(managed_allocation)`.
+slot is `func(T) -> K effects(managed_allocation)`.
 
 ```mylang
 # doc: expect 3
 import sort
 
-def negate(value: int) -> int:
+func negate(value: int) -> int:
     return 0 - value
 
-def main() -> int:
-    ordered = sort.sort_by_key([1, 3, 2], negate)
+func main() -> int:
+    mut ordered = sort.sort_by_key([1, 3, 2], negate)
     return ordered[0]
 ```
 
@@ -280,23 +272,23 @@ origin, so the caller still needs permission for the mutation:
 
 ```mylang
 # doc: expect 7
-def apply(values: mut list[int], f: def(values: mut list[int]) -> None effects(mutation)) -> None effects(mutation):
+func apply(mut values: int[], f: func(mut values: int[]) -> Unit effects(mutation)) -> Unit effects(mutation):
     f(mut values)
 
 
-def set_first(values: mut list[int]) -> None effects(mutation):
+func set_first(mut values: int[]) -> Unit effects(mutation):
     values[0] = 7
 
 
-def main(out: Stream) -> int effects(managed_allocation, output):
-    values = [1]
+func main(out: Stream) -> int effects(managed_allocation, output):
+    mut values = [1]
     apply(mut values, set_first)
     out.print(values[0])
     return 0
 ```
 
-The binder name is only a label: it does not become a keyword argument and it is
-excluded from callable identity. An implementation may write fewer inputs than the
+A positional binder name is a documentation label. A `named` binder requires
+that call label, and its name participates in callable identity. An implementation may write fewer inputs than the
 destination footprint permits, and a call through a stored or returned callback
 uses the destination's footprint just as it uses the destination's effect ceiling.
 A call through a function value follows the same exclusivity rule as a direct
@@ -322,21 +314,21 @@ round-trip through `fmt`.
 ```mylang
 # doc: expect 9
 @deprecated("use square_v2; removed after api_version 3")
-def square(x: int) -> int effects():
+func square(x: int) -> int effects():
     return x * x
 
 
 @test
-def square_of_three() -> bool effects():
+func square_of_three() -> bool effects():
     return square(3) == 9
 
 
 @allow("dead-private", reason="kept for the doctest example")
-def helper() -> int effects():
+func helper() -> int effects():
     return 1
 
 
-def main(out: Stream) -> int:
+func main(out: Stream) -> int:
     out.print(square(3))
     return 0
 ```
@@ -365,7 +357,7 @@ declaration's own name; it reports under the `agent` profile and blocks under
 
 ```mylang
 # doc: expect 14
-def area(width: int, height: int) -> int effects():
+func area(width: int, height: int) -> int effects():
     """The rectangle's area in square units.
 
     A docstring is inert, so this text never reaches the program.
@@ -373,7 +365,7 @@ def area(width: int, height: int) -> int effects():
     return width * height
 
 
-def main() -> int effects():
+func main() -> int effects():
     return area(2, 7)
 ```
 

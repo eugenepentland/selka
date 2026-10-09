@@ -81,16 +81,15 @@ pub const Manifest = struct {
         var output: std.Io.Writer.Allocating = .init(allocator);
         errdefer output.deinit();
         const writer = &output.writer;
-        try writer.print("# generated input manifest v1 sha256={s}\nmodule {s}\n", .{ std.fmt.bytesToHex(self.digest, .lower), self.parsed.value.module });
+        try writer.print("# generated input manifest v1 sha256={s}\n", .{std.fmt.bytesToHex(self.digest, .lower)});
         for (self.parsed.value.values, 0..) |entry, index| {
             const boolean = std.mem.eql(u8, entry.type, "bool");
             const suffix = if (boolean or std.mem.eql(u8, entry.type, "i64")) "" else entry.type;
             // A manifest spells a boolean the way JSON does; the source spells it the way the guest does.
             const value = if (!boolean) entry.value else if (std.mem.eql(u8, entry.value, "true")) "True" else "False";
-            // The canonical layout has one blank line after the header directive
-            // group and two between top-level declarations.
-            if (index == 0) try writer.print("\n", .{}) else try writer.print("\n\n", .{});
-            try writer.print("public def {s}() -> {s} effects():\n    return {s}{s}\n", .{ entry.name, entry.type, value, suffix });
+            // Keep the digest attached to the first declaration and two blank lines between declarations.
+            if (index != 0) try writer.print("\n\n", .{});
+            try writer.print("public func {s}() -> {s} effects():\n    return {s}{s}\n", .{ entry.name, entry.type, value, suffix });
         }
         return output.toOwnedSlice();
     }

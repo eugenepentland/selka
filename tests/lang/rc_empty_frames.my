@@ -4,46 +4,46 @@ record Point:
     y: int
 
 
-def advance(points: mut list[Point], index: int, delta: int) -> int:
-    old = points[index]
+func advance(mut points: Point[], index: int, delta: int) -> int:
+    mut old = points[index]
     points[index].x = old.x + delta
     return points[index].x
 
 
-def loop(points: mut list[Point], count: int) -> int:
-    i = 0
+func loop(mut points: Point[], count: int) -> int:
+    mut i = 0
     while i < count:
-        old = points[0]
+        mut old = points[0]
         points[0].x = old.x + 1
         i += 1
     return points[0].x
 
 
-public def test_caller_snapshot_and_negative_index_survive_unlinked_callee() -> bool:
-    points = [Point(3, 5), Point(7, 11)]
-    before = points
-    result = advance(mut points, -1, 13)
+public func test_caller_snapshot_and_negative_index_survive_unlinked_callee() -> bool:
+    mut points = [Point(x=3, y=5), Point(x=7, y=11)]
+    mut before = points
+    mut result = advance(mut points, -1, 13)
     return result == 20 and points[1].x == 20 and before[1].x == 7 and points[0].y == 5
 
 
-def changed(points: mut list[Point]) -> int:
-    points.append(Point(17, 19))
+func changed(mut points: Point[]) -> int:
+    points.append(Point(x=17, y=19))
     return 0
 
 
-def callback(points: mut list[Point]):
-    mutation_result_57 = changed(mut points)
+func callback(mut points: Point[]):
+    mut mutation_result_57 = changed(mut points)
     points[mutation_result_57].x = 23
 
 
-public def test_completed_callback_keeps_caller_and_snapshot_independent() -> bool:
-    points = [Point(3, 5)]
-    before = points
+public func test_completed_callback_keeps_caller_and_snapshot_independent() -> bool:
+    mut points = [Point(x=3, y=5)]
+    mut before = points
     callback(mut points)
     return points[0].x == 23 and len(points) == 2 and before[0].x == 3 and len(before) == 1
 
 
-def main() -> int:
+func main() -> int:
     assert test_caller_snapshot_and_negative_index_survive_unlinked_callee()
     assert test_completed_callback_keeps_caller_and_snapshot_independent()
     return 0

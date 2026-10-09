@@ -6,36 +6,36 @@
 # stack: the Lox benchmark printed `true` for `false`. `stain` fills a deep
 # stack region with a chosen byte pattern first, so each check starts on stale
 # ones (all bits set) or stale zeros instead of on whatever happened to be there.
-union Payload:
-    empty,
-    flag: bool,
-    tiny: i8,
-    short: i16,
-    word: i32,
-    octet: u8,
-    wide: u16,
-    text: str
+enum Payload:
+    empty
+    flag(value: bool)
+    tiny(value: i8)
+    short(value: i16)
+    word(value: i32)
+    octet(value: u8)
+    wide(value: u16)
+    text(value: str)
 
 
-union Value:
-    nil,
-    boolean: bool,
-    number: float,
-    obj: int
+enum Value:
+    nil
+    boolean(value: bool)
+    number(value: float)
+    obj(value: int)
 
 
-def stain(seed: int) -> int:
-    values: [64]int = [seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed]
-    total = 0
+func stain(seed: int) -> int:
+    mut values: FixedArray[int, 64] = FixedArray[int, 64]([seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed, seed])
+    mut total = 0
     for item in values:
         total += item
     return total
 
 
-def flag_text(item: Payload) -> str:
-    result = "other"
+func flag_text(item: Payload) -> str:
+    mut result = "other"
     match item:
-        case Payload.flag(value):
+        case Payload.flag(value=value):
             if value:
                 result = "true"
             else:
@@ -45,36 +45,36 @@ def flag_text(item: Payload) -> str:
     return result
 
 
-def flag_checks(item: Payload) -> list[bool]:
-    result = [False]
+func flag_checks(item: Payload) -> bool[]:
+    mut result = [False]
     match item:
-        case Payload.flag(value):
+        case Payload.flag(value=value):
             result = [not value, value == False, value != True]
         case _:
             result = [False]
     return result
 
 
-def signed_checks(item: Payload) -> list[bool]:
-    result = [False]
+func signed_checks(item: Payload) -> bool[]:
+    mut result = [False]
     match item:
-        case Payload.tiny(number):
+        case Payload.tiny(value=number):
             result = [number == -1, number < 0, int(number) == -1, str(number) == "-1"]
-        case Payload.short(number):
+        case Payload.short(value=number):
             result = [number == -2, number < 0, int(number) == -2, str(number) == "-2"]
-        case Payload.word(number):
+        case Payload.word(value=number):
             result = [number == -3, number < 0, int(number) == -3, str(number) == "-3"]
         case _:
             result = [False]
     return result
 
 
-def unsigned_checks(item: Payload) -> list[bool]:
-    result = [False]
+func unsigned_checks(item: Payload) -> bool[]:
+    mut result = [False]
     match item:
-        case Payload.octet(number):
+        case Payload.octet(value=number):
             result = [number == 200, int(number) == 200, str(number) == "200"]
-        case Payload.wide(number):
+        case Payload.wide(value=number):
             result = [number == 60000, int(number) == 60000, str(number) == "60000"]
         case _:
             result = [False]
@@ -82,58 +82,58 @@ def unsigned_checks(item: Payload) -> list[bool]:
 
 
 # The Lox port's `value_text`: an early return from inside the bool arm.
-def value_text(item: Value) -> bytes:
+func value_text(item: Value) -> bytes:
     match item:
         case Value.nil:
             return b"nil"
-        case Value.boolean(flag):
+        case Value.boolean(value=flag):
             if flag:
                 return b"true"
             return b"false"
-        case Value.number(_):
+        case Value.number(value=_):
             return b"number"
-        case Value.obj(_):
+        case Value.obj(value=_):
             return b"object"
 
 
-def all_true(checks: list[bool]) -> bool:
+func all_true(checks: bool[]) -> bool:
     for check in checks:
         if not check:
             return False
     return len(checks) > 1
 
 
-public def test_bool_payload_binding_ignores_stale_slot_bytes() -> bool:
+public func test_bool_payload_binding_ignores_stale_slot_bytes() -> bool:
     _ = stain(-1)
-    text_false = flag_text(Payload.flag(False))
+    mut text_false = flag_text(Payload.flag(value=False))
     _ = stain(-1)
-    checks = flag_checks(Payload.flag(False))
+    mut checks = flag_checks(Payload.flag(value=False))
     _ = stain(0)
-    text_true = flag_text(Payload.flag(True))
+    mut text_true = flag_text(Payload.flag(value=True))
     return text_false == "false" and all_true(checks) and text_true == "true"
 
 
-public def test_signed_payload_bindings_are_sign_extended() -> bool:
+public func test_signed_payload_bindings_are_sign_extended() -> bool:
     _ = stain(0)
-    tiny = signed_checks(Payload.tiny(-1))
+    mut tiny = signed_checks(Payload.tiny(value=-1))
     _ = stain(0)
-    short = signed_checks(Payload.short(-2))
+    mut short = signed_checks(Payload.short(value=-2))
     _ = stain(0)
-    word = signed_checks(Payload.word(-3))
+    mut word = signed_checks(Payload.word(value=-3))
     return all_true(tiny) and all_true(short) and all_true(word)
 
 
-public def test_unsigned_payload_bindings_are_zero_extended() -> bool:
+public func test_unsigned_payload_bindings_are_zero_extended() -> bool:
     _ = stain(-1)
-    octet = unsigned_checks(Payload.octet(200))
+    mut octet = unsigned_checks(Payload.octet(value=200))
     _ = stain(-1)
-    wide = unsigned_checks(Payload.wide(60000))
+    mut wide = unsigned_checks(Payload.wide(value=60000))
     return all_true(octet) and all_true(wide)
 
 
-public def test_lox_value_text_prints_false() -> bool:
+public func test_lox_value_text_prints_false() -> bool:
     _ = stain(-1)
-    falsy = value_text(Value.boolean(False))
+    mut falsy = value_text(Value.boolean(value=False))
     _ = stain(-1)
-    truthy = value_text(Value.boolean(True))
+    mut truthy = value_text(Value.boolean(value=True))
     return falsy == b"false" and truthy == b"true" and value_text(Value.nil) == b"nil"

@@ -1,10 +1,9 @@
-module generic_arrays_case_3
 
 
-def count[T](a: [2]T) -> int:
-    n: int = len(a)
+func count[T](a: FixedArray[T, 2]) -> int:
+    mut n: int = len(a)
     return n
 
 
-public def program() -> int:
-    return count[int]([7, 8])
+public func program() -> int:
+    return count[int](FixedArray[int, 2]([7, 8]))

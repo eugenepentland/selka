@@ -1,4 +1,3 @@
-module dictionary_hash_index
 
 # The dictionary carries an open-addressing index beside its insertion-ordered
 # entry list. These programs are sized so a linear scan would still answer them,
@@ -7,26 +6,26 @@ module dictionary_hash_index
 # escape out of an arena, and lookups that must still miss.
 
 
-def counted(size: i64) -> dict[str, i64]:
-    counts: dict[str, i64] = {}
+func counted(size: i64) -> dict[str, i64]:
+    mut counts: dict[str, i64] = {}
     for i in range(size):
         counts["key" + str(i)] = i
     return counts
 
 
-def numbered(size: i64) -> dict[i64, i64]:
-    counts: dict[i64, i64] = {}
+func numbered(size: i64) -> dict[i64, i64]:
+    mut counts: dict[i64, i64] = {}
     for i in range(size):
         counts[i * 7919 - 4000] = i
     return counts
 
 
 # spec: PY-DICT-2
-public def test_thousands_of_string_keys_read_write_and_miss_through_the_index() -> bool:
-    counts = counted(4000)
+public func test_thousands_of_string_keys_read_write_and_miss_through_the_index() -> bool:
+    mut counts = counted(4000)
     if len(counts) != 4000:
         return False
-    total = 0
+    mut total = 0
     for i in range(4000):
         total += counts["key" + str(i)]
     if total != 7998000:
@@ -40,22 +39,22 @@ public def test_thousands_of_string_keys_read_write_and_miss_through_the_index()
 
 
 # spec-case: PY-DICT-2
-public def test_insertion_order_survives_growth_and_pop_rebuilds_the_index() -> bool:
-    counts = counted(600)
-    keys = list(counts.keys())
+public func test_insertion_order_survives_growth_and_pop_rebuilds_the_index() -> bool:
+    mut counts = counted(600)
+    mut keys = list(counts.keys())
     if keys[0] != "key0" or keys[599] != "key599" or len(keys) != 600:
         return False
     # Popping shifts every later entry down one slot, so every later key must
     # still be found afterwards.
-    dropped = counts.pop("key0")
+    mut dropped = counts.pop("key0")
     dropped += counts.pop("key300")
     dropped += counts.pop("key599")
     if dropped != 899 or len(counts) != 597:
         return False
-    after = list(counts.keys())
+    mut after = list(counts.keys())
     if after[0] != "key1" or after[596] != "key598":
         return False
-    found = 0
+    mut found = 0
     for i in range(600):
         if ("key" + str(i)) in counts:
             found += 1
@@ -63,25 +62,25 @@ public def test_insertion_order_survives_growth_and_pop_rebuilds_the_index() -> 
         return False
     # Reinserting a popped key appends it at the end and reads back.
     counts["key0"] = 42
-    tail = list(counts.keys())
+    mut tail = list(counts.keys())
     return tail[597] == "key0" and counts["key0"] == 42 and counts["key598"] == 598
 
 
 # spec-case: PY-DICT-2
-public def test_setdefault_update_clear_and_copy_agree_with_the_index() -> bool:
-    counts = counted(500)
+public func test_setdefault_update_clear_and_copy_agree_with_the_index() -> bool:
+    mut counts = counted(500)
     if counts.setdefault("key7", 99) != 7 or counts.setdefault("fresh", 99) != 99:
         return False
     if len(counts) != 501 or counts["fresh"] != 99:
         return False
-    other: dict[str, i64] = {}
+    mut other: dict[str, i64] = {}
     for i in range(500, 900):
         other["key" + str(i)] = i
     other["key7"] = -7
     counts.update(other)
     if len(counts) != 901 or counts["key7"] != -7 or counts["key899"] != 899:
         return False
-    duplicate = counts.copy()
+    mut duplicate = counts.copy()
     duplicate["key7"] = 5
     if counts["key7"] != -7 or duplicate["key7"] != 5 or len(duplicate) != 901:
         return False
@@ -93,9 +92,9 @@ public def test_setdefault_update_clear_and_copy_agree_with_the_index() -> bool:
 
 
 # spec-case: PY-DICT-2
-public def test_large_dictionaries_still_compare_by_content_not_by_index_layout() -> bool:
-    forward: dict[str, i64] = {}
-    backward: dict[str, i64] = {}
+public func test_large_dictionaries_still_compare_by_content_not_by_index_layout() -> bool:
+    mut forward: dict[str, i64] = {}
+    mut backward: dict[str, i64] = {}
     for i in range(400):
         forward["key" + str(i)] = i
     for i in range(400):
@@ -106,23 +105,23 @@ public def test_large_dictionaries_still_compare_by_content_not_by_index_layout(
     if forward == backward:
         return False
     backward["key399"] = 399
-    dropped = backward.pop("key0")
+    mut dropped = backward.pop("key0")
     return forward != backward and dropped == 0
 
 
 # spec-case: PY-DICT-2
-public def test_integer_keys_hash_the_bytes_their_equality_compares() -> bool:
-    counts = numbered(3000)
+public func test_integer_keys_hash_the_bytes_their_equality_compares() -> bool:
+    mut counts = numbered(3000)
     if len(counts) != 3000:
         return False
-    total = 0
+    mut total = 0
     for i in range(3000):
         total += counts[i * 7919 - 4000]
     if total != 4498500:
         return False
     if (0 - 4000) not in counts or 1 in counts:
         return False
-    narrow: dict[u8, i64] = {}
+    mut narrow: dict[u8, i64] = {}
     for i in range(256):
         narrow[u8(i)] = i
     return len(narrow) == 256 and narrow[255u8] == 255 and narrow[0u8] == 0
@@ -134,18 +133,18 @@ public def test_integer_keys_hash_the_bytes_their_equality_compares() -> bool:
 # the answer to the live entry list, and a text built at run time with the same
 # content lands on the same entry.
 # spec: DICT-GETORPUT-1
-public def test_repeated_probes_of_one_key_survive_a_shift_between_them() -> bool:
-    counts: dict[str, i64] = {}
+public func test_repeated_probes_of_one_key_survive_a_shift_between_them() -> bool:
+    mut counts: dict[str, i64] = {}
     for i in range(40):
         counts["k" + str(i)] = i
-    key = "k7"
-    seen = counts.get(key, 0)
+    mut key = "k7"
+    mut seen = counts.get(key, 0)
     counts["k39"] = 39
     _ = counts.pop("k1")
     counts[key] = seen + 1
     if counts[key] != 8 or len(counts) != 39:
         return False
-    equal_content = chr(107) + chr(55)
+    mut equal_content = chr(107) + chr(55)
     seen = counts.get(equal_content, 0)
     counts[equal_content] = seen + 1
     if counts[key] != 9 or len(counts) != 39:
@@ -160,5 +159,5 @@ public def test_repeated_probes_of_one_key_survive_a_shift_between_them() -> boo
     return True
 
 
-def main() -> int:
+func main() -> int:
     return 0

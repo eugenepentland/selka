@@ -1,21 +1,20 @@
-module main
 
 public record Stats:
     sum: int
     squares: int
 
 
-public def analyze(values: [4]int) -> Stats effects():
-    sum = 0
-    squares = 0
-    i = 0u64
+public func analyze(values: FixedArray[int, 4]) -> Stats effects():
+    mut sum = 0
+    mut squares = 0
+    mut i = 0u64
     while i < 4u64:
-        n = values[i]
+        mut n = values[i]
         sum += n
         squares += n * n
         i += 1u64
     return Stats(sum=sum, squares=squares)
 
 
-def main() -> int:
+func main() -> int:
     return 0

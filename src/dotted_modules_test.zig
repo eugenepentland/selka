@@ -13,7 +13,6 @@ const Files = struct {
     }
 };
 const api =
-    \\module library.api
     \\
     \\
     \\public record Inputs:
@@ -28,38 +27,38 @@ const api =
     \\    value: i64
     \\
     \\
-    \\public def parse(input: Inputs) -> i64 effects():
+    \\public func parse(input: Inputs) -> i64 effects():
     \\    return input.value + 1
     \\
     \\
-    \\public def identity[T](value: T) -> T effects():
+    \\public func identity[T](value: T) -> T effects():
     \\    return value
     \\
     \\
-    \\public def extra() -> i64 effects():
+    \\public func extra() -> i64 effects():
     \\    return 1
     \\
     \\
-    \\public def len(value: i64) -> i64 effects():
+    \\public func len(value: i64) -> i64 effects():
     \\    return value + 1
     \\
     \\
-    \\public def replace(value: i64) -> i64 effects():
+    \\public func replace(value: i64) -> i64 effects():
     \\    return len(value) - 1
     \\
     \\
-    \\def hidden() -> i64:
+    \\func hidden() -> i64:
     \\    return 99
     \\
     \\
     \\public domain Distance: i64:
-    \\    private def raw(x: i64) -> Distance:
+    \\    private func raw(x: i64) -> Distance:
     \\        return wrap[Distance](x)
     \\
-    \\    def make(x: i64) -> Distance effects():
+    \\    func make(x: i64) -> Distance effects():
     \\        return Distance.raw(x)
     \\
-    \\    def number(x: Distance) -> i64 effects():
+    \\    func number(x: Distance) -> i64 effects():
     \\        return unwrap(x)
 ;
 
@@ -84,7 +83,7 @@ fn scenario(allocator: std.mem.Allocator, main: []const u8, expected_error: ?[]c
     try t.expect(expected_error == null);
     try t.expectEqual(@as(i64, 42), (try native.run(&compilation)).value);
 }
-const header = "module main\nimport library.api as api\n";
+const header = "import library.api as api\n";
 const dotted = header ++
     \\
     \\
@@ -92,32 +91,32 @@ const dotted = header ++
     \\    input: api.Inputs
     \\
     \\
-    \\def main() -> i64:
-    \\    values: list[i64] = []
+    \\func main() -> i64:
+    \\    mut values: i64[] = []
     \\    values.append(40)
-    \\    input = api.Inputs(value=values[0])
-    \\    boxed = api.Box[api.Inputs](value=input)
-    \\    copy = api.identity[api.Inputs](boxed.value)
-    \\    distance = api.Distance.make(api.parse(copy))
+    \\    mut input = api.Inputs(value=values[0])
+    \\    mut boxed = api.Box[api.Inputs](value=input)
+    \\    mut copy = api.identity[api.Inputs](boxed.value)
+    \\    mut distance = api.Distance.make(api.parse(copy))
     \\    return api.Distance.number(distance) + api.extra()
 ;
 
 // spec-case: PRELUDE-SHADOW-2
 test "module builtin callable shadows resolve locally and through imports" {
     try scenario(t.allocator, header ++
-        \\def replace(value: i64) -> i64:
+        \\func replace(value: i64) -> i64:
         \\    return value + 1
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return replace(api.replace(api.len(38))) + len([1, 2])
     , null);
     try scenario(t.allocator, header ++
-        \\def len(value: i64) -> i64:
+        \\func len(value: i64) -> i64:
         \\    return value + 1
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return api.replace(len(41))
     , null);
 }
@@ -135,13 +134,13 @@ test "dotted imports resolve calls types generic records and domains beside list
 // spec: MODULE-DOT-2
 test "dotted imports preserve function values and generic body type references" {
     try scenario(t.allocator, header ++
-        \\def use[T: copy](unused: T, input: api.Inputs) -> i64:
+        \\func use[T: copy](unused: T, input: api.Inputs) -> i64:
         \\    return api.parse(input)
         \\
         \\
-        \\def main() -> i64:
-        \\    parse = api.parse
-        \\    input = api.Inputs(value=40)
+        \\func main() -> i64:
+        \\    mut parse = api.parse
+        \\    mut input = api.Inputs(value=40)
         \\    return parse(input) + use[i64](0, api.Inputs(value=0))
     , null);
 }
@@ -155,12 +154,12 @@ test "dotted module parsing and name resolution release every failed allocation"
 // spec: MODULE-DOT-3
 test "dotted imports retain private symbol private domain and alias shadow checks" {
     try scenario(t.allocator, header ++
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return api.hidden()
     , "E_PRIVATE_SYMBOL");
     try scenario(t.allocator, header ++
-        \\def main() -> i64:
-        \\    _ = api.Distance.raw(42)
+        \\func main() -> i64:
+        \\    mut _ = api.Distance.raw(42)
         \\    return 42
     , "E_PRIVATE_SYMBOL");
     try scenario(t.allocator, header ++
@@ -170,54 +169,54 @@ test "dotted imports retain private symbol private domain and alias shadow check
         \\    input: api.Hidden
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 42
     , "E_PRIVATE_SYMBOL");
     try scenario(t.allocator, header ++
-        \\def main() -> i64:
-        \\    api = 42
+        \\func main() -> i64:
+        \\    mut api = 42
         \\    return api
     , "E_SHADOWING");
 }
 
 // spec: MODULE-DOT-6
 test "unaliased dotted imports resolve the full module path and the trailing alias" {
-    const unaliased = "module main\nimport library.api\n\n";
+    const unaliased = "import library.api\n\n";
     try scenario(t.allocator, unaliased ++
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return library.api.parse(library.api.Inputs(value=41))
     , null);
     try scenario(t.allocator, unaliased ++
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return api.parse(api.Inputs(value=41))
     , null);
 }
 
 // spec-case: MODULE-DOT-6
 test "a bare dotted-import prefix stays an ordinary name beside the qualified path" {
-    const unaliased = "module main\nimport library.api\n\n";
+    const unaliased = "import library.api\n\n";
     // A local may reuse the first segment and read its own fields.
     try scenario(t.allocator, unaliased ++
         \\record Holder:
         \\    value: i64
         \\
         \\
-        \\def main() -> i64:
-        \\    library = Holder(value=42)
+        \\func main() -> i64:
+        \\    mut library = Holder(value=42)
         \\    return library.value
     , null);
     // A parameter may reuse it too.
     try scenario(t.allocator, unaliased ++
-        \\def read(library: i64) -> i64:
+        \\func read(library: i64) -> i64:
         \\    return library
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return read(42)
     , null);
     // An explicit alias still admits the full dotted module path.
-    try scenario(t.allocator, "module main\nimport library.api as api\n\n" ++
-        \\def main() -> i64:
+    try scenario(t.allocator, "import library.api as api\n\n" ++
+        \\func main() -> i64:
         \\    return library.api.parse(library.api.Inputs(value=41))
     , null);
 }
@@ -228,7 +227,7 @@ const ImportReport = struct { unused: usize, unused_message: []const u8, unused_
 /// Check one embedded project and summarize its import warnings. The message is
 /// copied because the compilation that owns it is released before returning.
 fn checkImports(main: []const u8) !ImportReport {
-    const other = "module library.other\n\n\npublic def value() -> i64 effects():\n    return 1\n";
+    const other = "\n\npublic func value() -> i64 effects():\n    return 1\n";
     var files: Files = .{ .entries = &.{
         .{ .path = "main.my", .bytes = main },
         .{ .path = "library/api.my", .bytes = api },
@@ -254,13 +253,12 @@ fn checkImports(main: []const u8) !ImportReport {
 // spec: UNUSED-IMPORT-1
 test "an import no resolved reference goes through reports W_UNUSED_IMPORT" {
     const main =
-        \\module main
         \\import library.api
         \\import library.other
         \\
         \\
-        \\def main() -> i64:
-        \\    note = "library.other.value()"
+        \\func main() -> i64:
+        \\    mut note = "library.other.value()"
         \\    return library.api.parse(library.api.Inputs(value=41))
     ;
     const report = try checkImports(main);
@@ -274,15 +272,14 @@ test "an import no resolved reference goes through reports W_UNUSED_IMPORT" {
 // spec-case: UNUSED-IMPORT-1
 test "an import a signature or a call resolves through is not unused" {
     const main =
-        \\module main
         \\import library.api
         \\
         \\
-        \\def read(input: library.api.Inputs) -> i64:
+        \\func read(input: library.api.Inputs) -> i64:
         \\    return input.value
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return read(library.api.Inputs(value=41))
     ;
     const report = try checkImports(main);

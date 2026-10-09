@@ -9,22 +9,20 @@ import subprocess
 import tempfile
 import time
 
-IO = '''module io
+IO = '''
 
 
-
-public host def length() -> int effects(host)
-public host def byte(index: int) -> u8 effects(host)
-public host def put(value: u8) -> int effects(host)
+public host func length() -> int effects(host)
+public host func byte(index: int) -> u8 effects(host)
+public host func put(value: u8) -> int effects(host)
 '''
 
-GUEST = '''module main
-import io
+GUEST = '''import io
 
 
-def main() -> int:
+func main() -> int:
     with arena():
-        values: list[int] = []
+        mut values: int[] = []
         values.append(VALUE)
         _ = io.put(u8(values[0]))
         OPERATION

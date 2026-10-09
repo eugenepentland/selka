@@ -12,17 +12,18 @@ result Total:
     ok: int
 
 
-def divide(n: int, d: int) -> Quotient:
+func divide(n: int, d: int) -> Quotient:
     if d == 0:
         return Err(ArithmeticError.zero)
     return Ok(divtrunc(n, d))
 
 
-def calculate(denominator: int) -> Total:
-    return Ok(10 + divide(21, denominator)?)
+func calculate(denominator: int) -> Total:
+    const divided = try divide(21, denominator)
+    return Ok(10 + divided)
 
 
-def handle(outcome: Total) -> int:
+func handle(outcome: Total) -> int:
     match outcome:
         case Total.ok(value):
             return value
@@ -30,5 +31,5 @@ def handle(outcome: Total) -> int:
             return 3
 
 
-def main() -> int:
+func main() -> int:
     return handle(calculate(3)) + handle(calculate(0))

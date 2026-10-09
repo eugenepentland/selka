@@ -27,17 +27,16 @@ Host allocation failure aborts execution as usual.
 
 ```mylang
 # doc: expect 42
-module main
 import time
 
-def main() -> int:
+func main() -> int:
     match time.seconds(9223372037):
         case Ok(_):
             return 1
         case Err(_):
             return bounded()
 
-def bounded() -> int:
+func bounded() -> int:
     match time.milliseconds(42):
         case Ok(step):
             if time.to_milliseconds(step) != 42 or time.compare(step, step) != 0:
@@ -68,19 +67,18 @@ in-place Fisher-Yates pass.
 
 ```mylang
 # doc: expect 42
-module main
 import random
 
-def main() -> int:
-    first = random.seeded(0)
+func main() -> int:
+    mut first = random.seeded(0)
     if random.next_word(mut first) != 16294208416658607535u64:
         return 1
     if random.next_word(mut first) != 7960286522194355700u64:
         return 2
-    replay = random.seeded(0)
+    mut replay = random.seeded(0)
     if random.next_word(mut replay) != 16294208416658607535u64:
         return 3
-    snapshot = replay
+    mut snapshot = replay
     if random.next_word(mut snapshot) != 7960286522194355700u64:
         return 4
     if random.next_word(mut replay) != 7960286522194355700u64:
@@ -89,11 +87,11 @@ def main() -> int:
         return 7
     return sampled()
 
-def sampled() -> int:
-    generator = random.seeded(11)
-    lowest = 42
-    highest = 42
-    index = 0
+func sampled() -> int:
+    mut generator = random.seeded(11)
+    mut lowest = 42
+    mut highest = 42
+    mut index = 0
     while index < 200:
         match random.randint(mut generator, 42, 43):
             case Ok(value):
@@ -130,29 +128,28 @@ from `mylang test` ([capability parameters](tooling/guest-tests.md#capability-pa
 
 ```mylang
 # doc: expect True
-module main
 import random
 import time
 
-def first(entropy: Entropy) -> u64:
+func first(entropy: Entropy) -> u64:
     match random.from_entropy(entropy):
         case Ok(sampled):
-            generator = sampled
+            mut generator = sampled
             return random.next_word(mut generator)
         case Err(_):
             return 0u64
 
-def reading(clock: Clock) -> int:
+func reading(clock: Clock) -> int:
     match time.now(clock):
         case Ok(instant):
             return instant.unix_nanoseconds
         case Err(_):
             return -1
 
-def main(out: Stream) -> int:
-    clock = time.simulated_clock(time.from_unix_nanoseconds(5))
+func main(out: Stream) -> int:
+    mut clock = time.simulated_clock(time.from_unix_nanoseconds(5))
     _ = time.advance(clock, time.nanoseconds(10))
-    same = first(random.seeded_entropy(9)) == first(random.seeded_entropy(9))
+    mut same = first(random.seeded_entropy(9)) == first(random.seeded_entropy(9))
     out.print(same and reading(clock) == 15)
     return 0
 ```

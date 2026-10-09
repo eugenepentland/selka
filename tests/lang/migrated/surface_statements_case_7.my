@@ -1,6 +1,5 @@
-module surface_statements_case_7
 
 
-public def program() -> i64:
-    value = 40 + 2
+public func program() -> i64:
+    mut value = 40 + 2
     return value

@@ -131,7 +131,7 @@ fn variantShape(comptime Context: type, b: Context, record: typed.Record, varian
     const names = try b.allocator().alloc([]const u8, cases.len);
     for (variants.cases, cases, 0..) |case, stored, i| {
         children[i] = try descriptor(Context, b, case.payload orelse .unit, stored, span);
-        present[i] = @intFromBool(case.payload != null);
+        present[i] = if (case.fielded) 2 else @intFromBool(case.payload != null);
         // Exact constructor spelling from native_render.caseName and io_render.variant.
         const anonymous = std.mem.eql(u8, case.name, if (case.payload != null) "some" else "none");
         names[i] = if (variants.fallible or anonymous) spelling(case.name) else try std.fmt.allocPrint(b.allocator(), "{s}.{s}", .{ shortName(record.name), case.name });

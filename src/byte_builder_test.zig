@@ -16,11 +16,10 @@ test "standard byte builder remains rooted when every managed allocation collect
 // spec-case: STANDARD-BYTE-BUILDER-1
 test "standard byte builder keeps its published call surface unchanged" {
     try fixture.run(t.allocator,
-        \\module main
         \\import byte_builder
         \\
-        \\def build() -> bool:
-        \\    out = byte_builder.create()
+        \\func build() -> bool:
+        \\    mut out = byte_builder.create()
         \\    byte_builder.append(mut out, b"ab")
         \\    byte_builder.append_text(mut out, "cd")
         \\    if not byte_builder.append_byte(mut out, 101):
@@ -29,7 +28,7 @@ test "standard byte builder keeps its published call surface unchanged" {
         \\        return False
         \\    return byte_builder.finish(out) == b"abcde  "
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    if not build():
         \\        return 1
         \\    return 42
@@ -40,19 +39,18 @@ test "standard byte builder keeps its published call surface unchanged" {
 // spec-case: STANDARD-BYTE-BUILDER-1
 test "standard byte builder freezes a snapshot that is appended back into its builder" {
     try fixture.run(t.allocator,
-        \\module main
         \\import byte_builder
         \\
-        \\def main() -> int:
-        \\    out = byte_builder.create()
+        \\func main() -> int:
+        \\    mut out = byte_builder.create()
         \\    byte_builder.append_text(mut out, "λ")
-        \\    first = byte_builder.finish(out)
+        \\    mut first = byte_builder.finish(out)
         \\    byte_builder.append(mut out, first)
         \\    if not byte_builder.append_range(mut out, first, 1, 2):
         \\        return 1
-        \\    smallest = -9223372036854775808
+        \\    mut smallest = -9223372036854775808
         \\    byte_builder.append_int(mut out, smallest)
-        \\    expected = b"\xce\xbb\xce\xbb\xbb-9223372036854775808"
+        \\    mut expected = b"\xce\xbb\xce\xbb\xbb-9223372036854775808"
         \\    if first != b"\xce\xbb":
         \\        return 2
         \\    if byte_builder.finish(out) != expected:
@@ -69,23 +67,22 @@ test "standard byte builder freezes a snapshot that is appended back into its bu
 // spec-case: PY-BYTES-6
 test "a byte buffer appended to itself copies its earlier range across growth" {
     try fixture.run(t.allocator,
-        \\module main
         \\
-        \\def main() -> int:
-        \\    empty: list[int] = []
-        \\    small = byte_buffer(empty)
+        \\func main() -> int:
+        \\    mut empty: int[] = []
+        \\    mut small = byte_buffer(empty)
         \\    if not small.append_range(b"ab", 0, 2):
         \\        return 1
         \\    if not small.append_range(small, 0, len(small)):
         \\        return 2
         \\    if small != b"abab":
         \\        return 3
-        \\    long = byte_buffer(empty)
-        \\    index = 0
+        \\    mut long = byte_buffer(empty)
+        \\    mut index = 0
         \\    while index < 200:
         \\        _ = long.append_byte(index % 256)
         \\        index += 1
-        \\    before = bytes(long)
+        \\    mut before = bytes(long)
         \\    if not long.append_range(long, 0, len(long)):
         \\        return 4
         \\    if len(long) != 400:
@@ -100,28 +97,25 @@ test "a byte buffer appended to itself copies its earlier range across growth" {
 // spec-case: PY-BYTES-6
 test "byte buffer methods are rejected on receivers that are not byte buffers" {
     try fixture.reject(t.allocator,
-        \\module main
         \\
-        \\def main() -> int:
-        \\    text = "abc"
+        \\func main() -> int:
+        \\    mut text = "abc"
         \\    _ = text.append_byte(65)
         \\    return 0
         \\
     );
     try fixture.reject(t.allocator,
-        \\module main
         \\
-        \\def main() -> int:
-        \\    values: list[int] = []
+        \\func main() -> int:
+        \\    mut values: int[] = []
         \\    _ = values.append_utf8("x")
         \\    return 0
         \\
     );
     try fixture.reject(t.allocator,
-        \\module main
         \\
-        \\def main() -> int:
-        \\    table: dict[str, int] = {}
+        \\func main() -> int:
+        \\    mut table: dict[str, int] = {}
         \\    _ = table.reserve(3)
         \\    return 0
         \\
@@ -129,61 +123,55 @@ test "byte buffer methods are rejected on receivers that are not byte buffers" {
     // A `bytes` value is immutable, so the in-place methods are not even
     // declared for it: the checker names the mutable receiver to use instead.
     try fixture.reject(t.allocator,
-        \\module main
         \\
-        \\def main() -> int:
-        \\    literal = b"abc"
+        \\func main() -> int:
+        \\    mut literal = b"abc"
         \\    _ = literal.append_byte(65)
         \\    return 0
         \\
     );
     try fixture.reject(t.allocator,
-        \\module main
         \\
-        \\def main() -> int:
-        \\    empty: list[int] = []
-        \\    data = bytes(empty)
+        \\func main() -> int:
+        \\    mut empty: int[] = []
+        \\    mut data = bytes(empty)
         \\    _ = data.append_range(b"abc", 0, 3)
         \\    return 0
         \\
     );
     try fixture.reject(t.allocator,
-        \\module main
         \\
-        \\def main() -> int:
-        \\    empty: list[int] = []
-        \\    data = bytes(empty)
+        \\func main() -> int:
+        \\    mut empty: int[] = []
+        \\    mut data = bytes(empty)
         \\    _ = data.reserve(3)
         \\    return 0
         \\
     );
     // The mutable buffer takes only the matching operand types.
     try fixture.reject(t.allocator,
-        \\module main
         \\
-        \\def main() -> int:
-        \\    empty: list[int] = []
-        \\    data = byte_buffer(empty)
+        \\func main() -> int:
+        \\    mut empty: int[] = []
+        \\    mut data = byte_buffer(empty)
         \\    _ = data.append_range(b"abc", 0)
         \\    return 0
         \\
     );
     try fixture.reject(t.allocator,
-        \\module main
         \\
-        \\def main() -> int:
-        \\    empty: list[int] = []
-        \\    data = byte_buffer(empty)
+        \\func main() -> int:
+        \\    mut empty: int[] = []
+        \\    mut data = byte_buffer(empty)
         \\    _ = data.append_utf8(b"x")
         \\    return 0
         \\
     );
     try fixture.reject(t.allocator,
-        \\module main
         \\
-        \\def main() -> int:
-        \\    empty: list[int] = []
-        \\    data = byte_buffer(empty)
+        \\func main() -> int:
+        \\    mut empty: int[] = []
+        \\    mut data = byte_buffer(empty)
         \\    _ = data.append_range(12, 0, 1)
         \\    return 0
         \\
@@ -193,14 +181,13 @@ test "byte buffer methods are rejected on receivers that are not byte buffers" {
 // spec-case: PY-BYTES-6
 test "byte buffer methods compile and run in discard position" {
     try fixture.run(t.allocator,
-        \\module main
         \\import byte_builder
         \\
-        \\def main() -> int:
-        \\    out = byte_builder.create()
+        \\func main() -> int:
+        \\    mut out = byte_builder.create()
         \\    byte_builder.append(mut out, b"seed")
-        \\    empty: list[int] = []
-        \\    data = byte_buffer(empty)
+        \\    mut empty: int[] = []
+        \\    mut data = byte_buffer(empty)
         \\    _ = data.append_range(b"hello", 1, 3)
         \\    _ = data.append_utf8("λ")
         \\    _ = data.append_int(0 - 42)
@@ -219,11 +206,10 @@ test "byte buffer methods compile and run in discard position" {
 // spec: PY-BYTES-6
 test "byte buffer methods write in place and every snapshot stays immutable" {
     try fixture.run(t.allocator,
-        \\module main
         \\
-        \\def main() -> int:
-        \\    empty: list[int] = []
-        \\    buffer = byte_buffer(empty)
+        \\func main() -> int:
+        \\    mut empty: int[] = []
+        \\    mut buffer = byte_buffer(empty)
         \\    if not buffer.append_byte(65):
         \\        return 7
         \\    if not buffer.append_range(b"0123456789", 1, 4):
@@ -236,12 +222,12 @@ test "byte buffer methods write in place and every snapshot stays immutable" {
         \\        return 11
         \\    if not buffer.append_utf8("λ"):
         \\        return 12
-        \\    smallest = -9223372036854775808
+        \\    mut smallest = -9223372036854775808
         \\    if not buffer.append_int(smallest):
         \\        return 13
         \\    if not buffer.append_int(0):
         \\        return 14
-        \\    spelling = b"A123\xce\xbb-92233720368547758080"
+        \\    mut spelling = b"A123\xce\xbb-92233720368547758080"
         \\    if buffer != spelling:
         \\        return 15
         \\    if buffer.append_byte(256):
@@ -251,7 +237,7 @@ test "byte buffer methods write in place and every snapshot stays immutable" {
         \\    if buffer.reserve(0 - 1):
         \\        return 18
         \\    # Reserving and appending change neither an earlier snapshot nor a literal.
-        \\    snapshot = bytes(buffer)
+        \\    mut snapshot = bytes(buffer)
         \\    if not buffer.reserve(1024):
         \\        return 19
         \\    if bytes(buffer) != snapshot or len(snapshot) != len(spelling) or snapshot != spelling:
@@ -272,21 +258,20 @@ test "byte buffer methods write in place and every snapshot stays immutable" {
 // spec-case: PY-BYTES-6
 test "byte buffer growth keeps every earlier copy intact under collection" {
     try fixture.run(t.allocator,
-        \\module main
         \\
-        \\def main() -> int:
-        \\    empty: list[int] = []
-        \\    buffer = byte_buffer(empty)
+        \\func main() -> int:
+        \\    mut empty: int[] = []
+        \\    mut buffer = byte_buffer(empty)
         \\    if not buffer.reserve(5000):
         \\        return 1
-        \\    index = 0
+        \\    mut index = 0
         \\    while index < 5000:
         \\        if not buffer.append_byte(index % 256):
         \\            return 2
         \\        index += 1
         \\    if len(buffer) != 5000:
         \\        return 3
-        \\    early = bytes(buffer)
+        \\    mut early = bytes(buffer)
         \\    if not buffer.append_utf8("😀"):
         \\        return 4
         \\    if not buffer.append_int(0 - 5):
@@ -303,17 +288,16 @@ test "byte buffer growth keeps every earlier copy intact under collection" {
 // spec: PY-BYTES-SNAPSHOT-1
 test "PY-BYTES-SNAPSHOT-1 a published snapshot survives the builder's later writes" {
     try fixture.run(t.allocator,
-        \\module main
         \\import byte_builder
         \\
-        \\def main() -> int:
-        \\    out = byte_builder.create()
+        \\func main() -> int:
+        \\    mut out = byte_builder.create()
         \\    byte_builder.append_text(mut out, "abc")
-        \\    first = byte_builder.finish(out)
+        \\    mut first = byte_builder.finish(out)
         \\    # The snapshot reads the buffer's own octets; the append that follows
         \\    # moves them into a private block, so `first` cannot change.
         \\    byte_builder.append_text(mut out, "def")
-        \\    second = byte_builder.finish(out)
+        \\    mut second = byte_builder.finish(out)
         \\    if first != b"abc" or len(first) != 3:
         \\        return 1
         \\    if second != b"abcdef":
@@ -321,7 +305,7 @@ test "PY-BYTES-SNAPSHOT-1 a published snapshot survives the builder's later writ
         \\    # Appending an earlier snapshot back into its own builder reads the
         \\    # detached block, which the snapshot retains.
         \\    byte_builder.append(mut out, first)
-        \\    third = byte_builder.finish(out)
+        \\    mut third = byte_builder.finish(out)
         \\    if third != b"abcdefabc":
         \\        return 3
         \\    if second != b"abcdef" or first != b"abc":
@@ -329,8 +313,8 @@ test "PY-BYTES-SNAPSHOT-1 a published snapshot survives the builder's later writ
         \\    if third[0] != 97 or third[8] != 99:
         \\        return 5
         \\    # A snapshot of an empty buffer, then a reserve and one append.
-        \\    other = byte_builder.create()
-        \\    blank = byte_builder.finish(other)
+        \\    mut other = byte_builder.create()
+        \\    mut blank = byte_builder.finish(other)
         \\    if len(blank) != 0:
         \\        return 6
         \\    if not byte_builder.reserve(mut other, 32):
@@ -347,16 +331,15 @@ test "PY-BYTES-SNAPSHOT-1 a published snapshot survives the builder's later writ
 // spec-case: PY-BYTES-SNAPSHOT-1
 test "a snapshot taken under collection keeps its octets across later appends" {
     try fixture.run(t.allocator,
-        \\module main
         \\import byte_builder
         \\
-        \\def main() -> int:
-        \\    out = byte_builder.create()
-        \\    index = 0
+        \\func main() -> int:
+        \\    mut out = byte_builder.create()
+        \\    mut index = 0
         \\    while index < 64:
         \\        byte_builder.append_text(mut out, "piece")
         \\        index += 1
-        \\    published = byte_builder.finish(out)
+        \\    mut published = byte_builder.finish(out)
         \\    if len(published) != 320:
         \\        return 1
         \\    index = 0

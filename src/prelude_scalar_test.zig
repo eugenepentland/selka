@@ -32,8 +32,8 @@ fn trapped(text: []const u8, code: []const u8) !void {
 test "split with no argument breaks on runs of whitespace and drops empty parts" {
     // spec: SPLIT-WHITESPACE-1
     try run(
-        \\def main() -> int:
-        \\    parts = "a  b\tc".split()
+        \\func main() -> int:
+        \\    mut parts = "a  b\tc".split()
         \\    if len(parts) != 3:
         \\        return 1
         \\    if parts[0] != "a" or parts[1] != "b" or parts[2] != "c":
@@ -54,7 +54,7 @@ test "split with no argument breaks on runs of whitespace and drops empty parts"
 test "split with a separator keeps its exact-separator meaning" {
     // spec: SPLIT-WHITESPACE-2
     try run(
-        \\def main() -> int:
+        \\func main() -> int:
         \\    if len("a,b,c".split(",")) != 3:
         \\        return 1
         \\    if len("a,,b".split(",")) != 3:
@@ -69,8 +69,8 @@ test "split with a separator keeps its exact-separator meaning" {
 test "bytes split with no argument breaks on the six ASCII whitespace octets" {
     // spec: SPLIT-WHITESPACE-3
     try run(
-        \\def main() -> int:
-        \\    parts = b" a\tb "
+        \\func main() -> int:
+        \\    mut parts = b" a\tb "
         \\    if len(parts.split()) != 2:
         \\        return 1
         \\    if parts.split()[0] != b"a":
@@ -87,15 +87,15 @@ test "bytes split with no argument breaks on the six ASCII whitespace octets" {
 test "ord and chr fold a one-scalar literal and run any one Unicode scalar" {
     // spec: PRELUDE-SCALAR-1
     try run(
-        \\def main() -> int:
+        \\func main() -> int:
         \\    if ord("A") != 65 or ord("m") != 109 or ord("\u00e9") != 233:
         \\        return 1
-        \\    text = "m"
+        \\    mut text = "m"
         \\    if ord(text) != 109:
         \\        return 2
         \\    if chr(65) != "A" or chr(233) != "\u00e9":
         \\        return 3
-        \\    wide = chr(128512)
+        \\    mut wide = chr(128512)
         \\    if len(wide) != 1 or ord(wide) != 128512:
         \\        return 4
         \\    if ord(chr(1114111)) != 1114111:
@@ -107,17 +107,17 @@ test "ord and chr fold a one-scalar literal and run any one Unicode scalar" {
 
 test "ord and chr trap R_TEXT_SCALAR on anything but one Unicode scalar" {
     // spec: PRELUDE-SCALAR-2
-    try trapped("def main() -> int:\n    return ord(\"ab\")\n", "R_TEXT_SCALAR");
-    try trapped("def main() -> int:\n    return ord(\"\")\n", "R_TEXT_SCALAR");
-    try trapped("def main() -> int:\n    text = \"ab\"\n    return ord(text)\n", "R_TEXT_SCALAR");
-    try trapped("def main() -> int:\n    return len(chr(0 - 1))\n", "R_TEXT_SCALAR");
-    try trapped("def main() -> int:\n    return len(chr(55296))\n", "R_TEXT_SCALAR");
-    try trapped("def main() -> int:\n    return len(chr(1114112))\n", "R_TEXT_SCALAR");
+    try trapped("func main() -> int:\n    return ord(\"ab\")\n", "R_TEXT_SCALAR");
+    try trapped("func main() -> int:\n    return ord(\"\")\n", "R_TEXT_SCALAR");
+    try trapped("func main() -> int:\n    mut text = \"ab\"\n    return ord(text)\n", "R_TEXT_SCALAR");
+    try trapped("func main() -> int:\n    return len(chr(0 - 1))\n", "R_TEXT_SCALAR");
+    try trapped("func main() -> int:\n    return len(chr(55296))\n", "R_TEXT_SCALAR");
+    try trapped("func main() -> int:\n    return len(chr(1114112))\n", "R_TEXT_SCALAR");
 }
 
 test "requireArgument attaches the callee signature to a rejected argument" {
     // spec: DIAGNOSTIC-SITES-1
-    var compilation = try language.Compilation.init(t.allocator, "sites.my", "def main() -> int:\n    return len(\"abc\".find(1))\n");
+    var compilation = try language.Compilation.init(t.allocator, "sites.my", "func main() -> int:\n    return len(\"abc\".find(1))\n");
     defer compilation.deinit();
     try t.expectError(error.SourceError, compilation.check());
     const diag = compilation.diagnostics.items[0];
@@ -136,7 +136,7 @@ test "requireArgument attaches the callee signature to a rejected argument" {
 
 test "methodArityFailure prints the signature and the whitespace alternative" {
     // spec: DIAGNOSTIC-SITES-2
-    var compilation = try language.Compilation.init(t.allocator, "sites.my", "def main() -> int:\n    parts = \"a b\".split(\",\", 2)\n    return len(parts)\n");
+    var compilation = try language.Compilation.init(t.allocator, "sites.my", "func main() -> int:\n    mut parts = \"a b\".split(\",\", 2)\n    return len(parts)\n");
     defer compilation.deinit();
     try t.expectError(error.SourceError, compilation.check());
     const diag = compilation.diagnostics.items[0];
@@ -148,7 +148,7 @@ test "methodArityFailure prints the signature and the whitespace alternative" {
 
 test "an unknown method names the receiver type and its accepted repair" {
     // spec: DIAGNOSTIC-SITES-3
-    var compilation = try language.Compilation.init(t.allocator, "sites.my", "def main() -> int:\n    s = \"{} items\".format(3)\n    return len(s)\n");
+    var compilation = try language.Compilation.init(t.allocator, "sites.my", "func main() -> int:\n    mut s = \"{} items\".format(3)\n    return len(s)\n");
     defer compilation.deinit();
     try t.expectError(error.SourceError, compilation.check());
     const diag = compilation.diagnostics.items[0];
@@ -188,7 +188,7 @@ test "a rendered collection signature counts its own parameters" {
 
 test "a bare print carries its accepted spelling as an alternative note" {
     // spec: DIAGNOSTIC-SITES-5
-    var compilation = try language.Compilation.init(t.allocator, "print.my", "def main() -> int:\n    print(\"ready\")\n    return 42\n");
+    var compilation = try language.Compilation.init(t.allocator, "print.my", "func main() -> int:\n    print(\"ready\")\n    return 42\n");
     defer compilation.deinit();
     try t.expectError(error.SourceError, compilation.check());
     const diag = compilation.diagnostics.items[0];
@@ -214,7 +214,7 @@ fn diagnostic_role(role: @import("diagnostic.zig").Role) @import("diagnostic.zig
 
 test "a signature note renders without a location and keeps the call's span" {
     // spec: DIAGNOSTIC-ROLE-2
-    var compilation = try language.Compilation.init(t.allocator, "role.my", "def main() -> int:\n    print(\"ready\")\n    return 42\n");
+    var compilation = try language.Compilation.init(t.allocator, "role.my", "func main() -> int:\n    print(\"ready\")\n    return 42\n");
     defer compilation.deinit();
     try t.expectError(error.SourceError, compilation.check());
     const diag = compilation.diagnostics.items[0];
@@ -232,7 +232,7 @@ test "a signature note renders without a location and keeps the call's span" {
 
 test "a note without a declared role keeps its evidence slot" {
     // spec: DIAGNOSTIC-ROLE-1
-    var compilation = try language.Compilation.init(t.allocator, "note.my", "record P:\n    x: int\n    y: int\n\n\ndef main() -> int:\n    p = P(x=1)\n    return p.x\n");
+    var compilation = try language.Compilation.init(t.allocator, "note.my", "record P:\n    x: int\n    y: int\n\n\nfunc main() -> int:\n    mut p = P(x=1)\n    return p.x\n");
     defer compilation.deinit();
     try t.expectError(error.SourceError, compilation.check());
     const diag = compilation.diagnostics.items[0];
@@ -249,7 +249,7 @@ test "a note without a declared role keeps its evidence slot" {
 
 test "a call-site rejection carries the accepted callee as a signature note" {
     // spec: DIAGNOSTIC-SITES-6
-    var printed = try language.Compilation.init(t.allocator, "signature.my", "def main() -> int:\n    print(\"ready\")\n    return 42\n");
+    var printed = try language.Compilation.init(t.allocator, "signature.my", "func main() -> int:\n    print(\"ready\")\n    return 42\n");
     defer printed.deinit();
     try t.expectError(error.SourceError, printed.check());
     const print_diag = printed.diagnostics.items[0];
@@ -259,7 +259,7 @@ test "a call-site rejection carries the accepted callee as a signature note" {
     const print_text = try diagnostic_output.render(t.allocator, print_diag, printed.src, .text);
     defer t.allocator.free(print_text);
     try t.expect(std.mem.indexOf(u8, print_text, "signature: stream.print(values..., sep: str, end: str) -> None") != null);
-    var sorted = try language.Compilation.init(t.allocator, "signature.my", "def main() -> int:\n    xs = sorted([3, 1, 2], cmp=True)\n    return xs[0]\n");
+    var sorted = try language.Compilation.init(t.allocator, "signature.my", "func main() -> int:\n    mut xs = sorted([3, 1, 2], cmp=True)\n    return xs[0]\n");
     defer sorted.deinit();
     try t.expectError(error.SourceError, sorted.check());
     const sorted_diag = sorted.diagnostics.items[0];

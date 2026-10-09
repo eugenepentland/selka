@@ -53,7 +53,8 @@ pub const TypedValue = struct { ty: Span, value: NodeId };
 pub const Node = struct {
     span: Span,
     data: union(enum) {
-        field_assignment: struct { target: NodeId, value: NodeId, op: AssignmentOp = .set },
+        synthetic_name: []const u8,
+        field_assignment: struct { target: NodeId, value: NodeId, op: AssignmentOp = .set, declaration: ?bool = null },
         index_assignment: struct { target: NodeId, op: AssignmentOp, value: NodeId },
         list_literal: []const NodeId,
         /// `receiver.name(arguments)` on an expression receiver, with the keyword
@@ -126,6 +127,7 @@ pub const Node = struct {
         conditional: struct { condition: NodeId, then_value: NodeId, else_value: NodeId },
         /// The `mut` call-argument marker wrapping its target. No type of its own.
         mut_argument: NodeId,
+        match_expression: struct { value: NodeId, arms: []const MatchArm },
     },
 };
 /// Parsed statement and control-flow structure before ownership and type checking.
@@ -137,6 +139,8 @@ pub const Statement = struct {
         block: []const StatementId,
         assertion: Assertion,
         ret: NodeId,
+        fail: NodeId,
+        yield_value: NodeId,
         loop_exit: bool,
         for_each: struct { name: Span, index_name: ?Span, iterable: NodeId, body: StatementId, enumerated: bool = false },
         for_range: struct { name: Span, start: NodeId, end: NodeId, body: StatementId, step: ?NodeId = null },
@@ -168,7 +172,7 @@ pub fn appendNested(allocator: std.mem.Allocator, work: *std.ArrayList(Statement
         .for_each => |each| try work.append(allocator, each.body),
         .for_range => |range| try work.append(allocator, range.body),
         .with_scope => |scope| try work.append(allocator, scope.body),
-        .assertion, .ret, .loop_exit, .discard, .binding, .assignment, .gather_step => {},
+        .assertion, .ret, .fail, .yield_value, .loop_exit, .discard, .binding, .assignment, .gather_step => {},
     }
 }
 /// The bounds of one `range(...)` iteration source: a unit `start` is the implicit
@@ -206,7 +210,19 @@ pub const Assertion = struct { condition: NodeId, message: []const u8, literal: 
 /// Expression match case with its payload bindings and its yielded value.
 /// `bindings` is empty for a payload-free pattern, holds one entry per named
 /// field of a parenthesized case, and a null entry discards that field.
-pub const MatchArm = struct { ty: Span, name: Span, bindings: []const ?Span = &.{}, body: StatementId };
+pub const Pattern = struct { span: Span, data: union(enum) { binding: ?Span, variant: struct { ty: Span, name: Span, fields: []const PatternField } } };
+/// One optional field label and its recursively nested payload pattern.
+pub const PatternField = struct { name: ?Span = null, pattern: Pattern };
+/// One source match case, its payload pattern, and its scoped body.
+pub const MatchArm = struct {
+    internal: struct { names: []const []const u8 = &.{}, wildcard: bool = false } = .{},
+    payload_patterns: []const PatternField = &.{},
+    binding_names: []const ?Span = &.{},
+    ty: Span,
+    name: Span,
+    bindings: []const ?Span = &.{},
+    body: StatementId,
+};
 /// Source-spelled case name, its optional single payload type, and the named
 /// fields a parenthesized case declares. `payload` and `fields` are exclusive.
 pub const Variant = struct { name: Span, payload: ?Span, fields: []const Parameter = &.{} };
@@ -221,6 +237,7 @@ pub const FieldInit = struct { name: Span, value: NodeId, default: bool = false 
 pub const Record = struct { managed: bool = false, type_parameters: []const TypeParameter = &.{}, name: Span, fields: []const Parameter };
 /// Source parameter name, declared type, and optional literal default.
 pub const Parameter = struct {
+    named: bool = false,
     default_value: ?NodeId = null,
     name: Span,
     ty: Span,
@@ -279,9 +296,9 @@ pub const FunctionSignature = struct {
     /// This set is the declared mutation footprint of the function.
     mut_positions: []const u16 = &.{},
     /// Abstract-checked direct input positions, retained for interface consumers.
-    inferred_mutates: []const u16 = &.{},
+    inferred: struct { mutates: []const u16 = &.{}, mutation_writes: bool = false } = .{},
     /// Whether the abstract body performed a managed receiver write.
-    inferred_mutation_writes: bool = false,
+    failure_type: ?Span = null,
     /// Zero-based index of the first keyword-only parameter, or null when the
     /// list has no `*`. Equal to the positional parameter count.
     keyword_only_from: ?usize = null,
@@ -421,6 +438,7 @@ pub const TypeAlias = struct { name: Span, target: Span };
 /// Structural type syntax, concrete nominal applications and transparent aliases.
 /// Noncapturing callable value signature with an explicit effect ceiling.
 pub const CallbackType = struct {
+    failure_type: ?Span = null,
     span: Span,
     parameters: []const Span,
     /// Optional binder spelling per parameter; names are excluded from identity.
@@ -429,9 +447,18 @@ pub const CallbackType = struct {
     effect_bound: effect_set.Bound,
     /// One flag per parameter in source order, true where the declared type was
     /// preceded by `mut`. The set is the callable's declared mutation footprint.
-    mut_parameters: []const bool = &.{},
+    parameter_modes: struct { mut: []const bool = &.{}, named: []const bool = &.{} } = .{},
 };
 /// One `tuple[T1, ..., Tn]` type spelling with its element type spans.
 pub const TupleType = struct { span: Span, elements: []const Span };
 /// Source catalog of structural types and nominal type applications.
-pub const TypeExpressions = struct { callbacks: []const CallbackType = &.{}, arrays: []const ArrayType = &.{}, applications: []const TypeApplication = &.{}, aliases: []const TypeAlias = &.{}, tuples: []const TupleType = &.{} };
+pub const TypeSuffix = struct { span: Span, base: Span, kind: enum { growable, optional } };
+/// Source structural types, applications, and transparent aliases.
+pub const TypeExpressions = struct {
+    suffixes: []const TypeSuffix = &.{},
+    callbacks: []const CallbackType = &.{},
+    arrays: []const ArrayType = &.{},
+    applications: []const TypeApplication = &.{},
+    aliases: []const TypeAlias = &.{},
+    tuples: []const TupleType = &.{},
+};

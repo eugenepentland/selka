@@ -1,81 +1,80 @@
-module v_unions
 
 record Point:
     x: int
     y: int
 
 
-union Shape:
-    circle: int,
-    square: Point,
+enum Shape:
+    circle(value: int)
+    square(value: Point)
     unit
 
 
 enum Level:
-    low,
-    mid,
+    low
+    mid
     high
 
 
-union Expr:
-    num(value: int),
-    add(left: Expr, right: Expr),
+enum Expr:
+    num(value: int)
+    add(left: Expr, right: Expr)
     neg(inner: Expr)
 
 
 record Node:
     value: int
-    left: Option[Node]
-    right: Option[Node]
+    left: Node?
+    right: Node?
 
 
-def area(s: Shape) -> int:
+func area(s: Shape) -> int:
     match s:
-        case Shape.circle(r):
+        case Shape.circle(value=r):
             return r * r
-        case Shape.square(p):
+        case Shape.square(value=p):
             return p.x * p.y
         case Shape.unit:
             return 1
 
 
-def half(x: int) -> Option[int]:
+func half(x: int) -> int?:
     if x % 2 == 0:
         return Some(x // 2)
     return None
 
 
-def quarter(x: int) -> Option[int]:
-    h = half(x)?
-    k = half(h)?
+func quarter(x: int) -> int?:
+    mut h = try half(x)
+    mut k = try half(h)
     return Some(h + k)
 
 
-def checked(x: int) -> Result[int, str]:
+func checked(x: int) -> Result[int, str]:
     if x < 0:
         return Err("negative")
     return Ok(x * 2)
 
 
-def chain(x: int) -> Result[int, str]:
-    v = checked(x)?
-    w = checked(v - 5)?
+func chain(x: int) -> Result[int, str]:
+    mut v = try checked(x)
+    mut w = try checked(v - 5)
     return Ok(w + 1)
 
 
-def unit_result(x: int) -> Result[None, str]:
+func unit_result(x: int) -> Result[Unit, str]:
     if x < 0:
         return Err("neg")
-    return Ok(None)
+    return Ok(())
 
 
-def two_steps(x: int) -> Result[int, str]:
-    unit_result(x)?
-    unit_result(x - 5)?
+func two_steps(x: int) -> Result[int, str]:
+    try unit_result(x)
+    try unit_result(x - 5)
     return Ok(x)
 
 
-def level_of(n: int) -> Level:
+func level_of(n: int) -> Level:
     if n < 3:
         return Level.low
     if n < 6:
@@ -83,7 +82,7 @@ def level_of(n: int) -> Level:
     return Level.high
 
 
-def weight(l: Level) -> int:
+func weight(l: Level) -> int:
     match l:
         case Level.low:
             return 1
@@ -93,18 +92,18 @@ def weight(l: Level) -> int:
             return 300
 
 
-def evaluate(e: Expr) -> int:
+func evaluate(e: Expr) -> int:
     match e:
-        case Expr.num(v):
+        case Expr.num(value=v):
             return v
-        case Expr.add(l, r):
+        case Expr.add(left=l, right=r):
             return evaluate(l) + evaluate(r)
-        case Expr.neg(inner):
+        case Expr.neg(inner=inner):
             return -evaluate(inner)
 
 
-def total(node: Node) -> int:
-    sum = node.value
+func total(node: Node) -> int:
+    mut sum = node.value
     match node.left:
         case Some(child):
             sum += total(child)
@@ -118,11 +117,11 @@ def total(node: Node) -> int:
     return sum
 
 
-def leaf(v: int) -> Node:
+func leaf(v: int) -> Node:
     return Node(value=v, left=None, right=None)
 
 
-def show(r: Result[int, str], out: Stream) -> int:
+func show(r: Result[int, str], out: Stream) -> int:
     match r:
         case Ok(v):
             out.print("ok", v)
@@ -132,9 +131,9 @@ def show(r: Result[int, str], out: Stream) -> int:
             return -1
 
 
-def main(out: Stream) -> int:
-    out.print(area(Shape.circle(3)), area(Shape.square(Point(x=4, y=5))), area(Shape.unit))
-    total_opt = 0
+func main(out: Stream) -> int:
+    out.print(area(Shape.circle(value=3)), area(Shape.square(value=Point(x=4, y=5))), area(Shape.unit))
+    mut total_opt = 0
     for i in range(8):
         match half(i):
             case Some(v):
@@ -147,10 +146,10 @@ def main(out: Stream) -> int:
             case None:
                 total_opt += 1
     out.print(total_opt)
-    a = show(chain(10), out)
-    b = show(chain(1), out)
-    c = show(chain(-3), out)
-    d = show(two_steps(9), out) if False else 0
+    mut a = show(chain(10), out)
+    mut b = show(chain(1), out)
+    mut c = show(chain(-3), out)
+    mut d = if (False) then (show(two_steps(9), out)) else (0)
     out.print(a + b + c + d)
     for v in [10, 3, -1]:
         match two_steps(v):
@@ -159,8 +158,8 @@ def main(out: Stream) -> int:
             case Err(e):
                 out.print("err", e)
     out.print(weight(level_of(1)) + weight(level_of(4)) + weight(level_of(9)))
-    e = Expr.add(Expr.num(4), Expr.neg(Expr.add(Expr.num(1), Expr.num(2))))
+    mut e = Expr.add(left=Expr.num(value=4), right=Expr.neg(inner=Expr.add(left=Expr.num(value=1), right=Expr.num(value=2))))
     out.print(evaluate(e))
-    t = Node(value=1, left=Some(leaf(2)), right=Some(Node(value=3, left=Some(leaf(4)), right=None)))
+    mut t = Node(value=1, left=Some(leaf(2)), right=Some(Node(value=3, left=Some(leaf(4)), right=None)))
     out.print(total(t))
     return 0

@@ -1,7 +1,6 @@
-module compiler___signed_division_and_remainder_implement_trun_3
 
-public def test_signed_division_and_remainder_implement_trun_3() -> bool:
+public func test_signed_division_and_remainder_implement_trun_3() -> bool:
     return divtrunc(-7, -3) == 2
 
-def main() -> int:
+func main() -> int:
     return 0

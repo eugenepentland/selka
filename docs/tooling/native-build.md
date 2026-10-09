@@ -17,7 +17,7 @@ build keeps, see [the caches](#the-caches) below.
    function per program function, generic instance and generated adapter. A
    construct the front end accepts but the core cannot build yet stops with
    `E_CORE_UNSUPPORTED` naming it.
-3. **Passes.** A release build computes facts (integer ranges, lengths, ownership),
+3. **Passes.** A release or `--optimize-debug` build computes facts (integer ranges, lengths, ownership),
    inlines, unswitches and versions loops, and removes the checks the facts prove
    cannot fire. A debug build keeps every check and runs no optimizing pass.
 4. **LLVM text.** The IR is emitted as LLVM units (`src/core/emit_*.zig`).
@@ -33,7 +33,8 @@ and nothing is collected or traced.
 ## Debug and release builds
 
 A build is a **debug** build unless `--release` (or `--mode ReleaseFast`) asks for
-the optimized one. The two differ in how the program is cut into units:
+the optimized one. The experimental `--optimize-debug` flag offers an optimized
+development build:
 
 - **Debug** emits one unit per source module, plus one per generic instance, one per
   generated adapter and the entry unit. A unit's text depends only on its own
@@ -44,6 +45,13 @@ the optimized one. The two differ in how the program is cut into units:
   across every module boundary. Its object is cached by its text like any unit, so
   an unchanged release build compiles nothing, but any edit recompiles the whole
   program. Use it for a binary you ship or time.
+- **Optimized debug** runs the same Core passes as Release, then compiles each
+  module unit at LLVM `-O2`. It retains `debug(...)` output and source locations in
+  trap traces. An edit recompiles units whose emitted text changes; inlining and
+  propagated facts can also change callers' units. Optimization adds build work,
+  so measure cold builds and edits as well as runtime before choosing it for your
+  edit loop. It is a prototype, not a guarantee of Release speed on every program.
+  See the [tested debugger limitations](#interactive-debugger-qualification).
 
 ```console
 $ mylang build app/main.my -o app --cache-report
@@ -52,17 +60,41 @@ $ mylang build app/main.my -o app-fast --release --cache-report
 mylang-core: cache: 1 units, 0 reused, 1 compiled, 0 verified; program linked; 2 processes
 ```
 
-Both modes keep every check the program can reach (see
-[checks in every build](#checks-in-every-build)), report traps identically and give
-the same output. `mylang test --release` runs a suite on release builds;
-`--verify-facts` (release) also checks at run time every fact the passes relied on
+All modes keep every check the program can reach (see
+[checks in every build](#checks-in-every-build)) and report traps identically.
+Release standalone builds omit `debug(...)` output; ordinary output is unchanged.
+`mylang test --release` runs a suite on release builds;
+`--verify-facts` (release or optimized debug) also checks at run time every fact the passes relied on
 and traps `R_CORE_FACT` if one does not hold, and `--no-facts` turns the fact pass
 off to measure what it buys.
+
+### Effective optimization levels
+
+The flags MyLang requests and the optimization the pinned toolchain actually runs
+are distinct. With Zig `0.17.0-dev.1683+5ceec001b` (Clang 22.1.8), `zig cc -###`
+reports Clang `-O0` for requested `-O0`, and Clang `-O2` for requested `-O1`, `-O2`
+or `-O3`. This holds for both generated LLVM and linked C sources on the native
+x86-64 target used here. The runtime's requested level remains `-O2`.
+
+Compiling the identical Release-generated LLVM for each of the six parity
+benchmarks with requested `-O2` and `-O3`, then linking the same runtime objects,
+produced byte-identical executable `.text` sections in every case. All outputs
+matched the expected files. Thus the current `-O3` spelling provides no additional
+optimization; Release still enables whole-program LLVM optimization and omits
+`debug(...)` from standalone builds. Recheck the mapping after a toolchain upgrade.
+
+[Driver commands, effective flags and code hashes](../../bench/parity/optimization_driver_20261009.json)
+are checked in. Reproduce with the pinned Zig, GNU `objcopy` and a new directory:
+
+```bash
+python3 scripts/qualify_optimization_driver.py --compiler zig-out/bin/mylang \
+  --output /tmp/optimization-driver-qualification
+```
 
 ## `mylang build`
 
 ```bash
-mylang build FILE.my -o OUT [--release] [--link FILE.c]... [--emit-llvm PATH]
+mylang build FILE.my -o OUT [--release | --optimize-debug] [--link FILE.c]... [--emit-llvm PATH]
              [--cache-dir DIR] [--no-cache] [--zig PATH]
              [--report | --cache-report] [--verify-cache] [--stats]
              [--diagnostics=text|json] [--no-facts | --verify-facts]
@@ -80,6 +112,10 @@ mylang build FILE.my --run [run options] [-- ARGS...]
   `--` is the program's.
 - **`--link FILE.c`** (repeatable) compiles a C source and links it in; see
   [direct C imports](../c-ffi.md).
+- **`--optimize-debug`** also works on `run`, `run-project`, `build --run` and
+  `test`. It cannot be combined with a selected ReleaseFast mode. Build replay,
+  native objects and test receipts distinguish the modes; switching modes in one
+  cache cannot reuse a result from the other mode. The shared runtime stays `-O2`.
 - **`--emit-llvm PATH`** also writes the emitted LLVM text. Such a build is neither
   replayed nor recorded.
 - **`--diagnostics=json`** prints warnings, errors, refusals and (with `--run`) a
@@ -147,6 +183,41 @@ fires; a call does no bookkeeping for it. The runtime also writes one
 machine-readable `MYLANG-TRAP` record after the text, which `mylang run` hides and
 `--diagnostics=json` turns into the `trap_detail` of a `diagnostic-v1` record
 ([runtime diagnostics](../io.md#runtime-diagnostics)).
+
+## Interactive debugger qualification
+
+The emitted debug information currently describes functions, call sites and trap
+locations. It contains no source-variable declarations or variable locations.
+Preserving trap reports therefore does not imply full source-level debugging.
+
+GDB 17.1 probes on 2026-10-09 compared ordinary Debug, optimized Debug and Release
+using a two-module loop and a separate tiny helper. Both programs returned the
+expected output in every mode. The table describes those fixtures, not a promise
+that every function or source line supports the same operations:
+
+| Probe | Debug | Optimized Debug | Release |
+|---|---|---|---|
+| Named loop-function breakpoint | Hits entry; caller frame correct | Hits entry; caller frame correct | Relocates to a trap location; not hit on normal execution |
+| Caller line breakpoint, then step into loop function | Hits; steps into function | Hits; steps into function | No compiled code for that line |
+| Arithmetic source-line breakpoint | Accepted, but only on trap path; normal execution does not stop | Relocates to another line; normal execution does not stop | No compiled code for that line |
+| Statement `step` / `next` inside loop function | Skips source body | Skips source body | No active frame after missed entry breakpoint |
+| Tiny helper's named breakpoint | Hits | Helper eliminated; no named function | Helper eliminated; no named function |
+| Inspect source arguments and locals | No symbols | No symbols | No frame or source symbols |
+
+Optimized Debug retains useful function and call-site breakpoints, but can remove
+helpers that ordinary Debug keeps. Neither mode currently supports normal
+statement stepping or local-variable inspection. Supporting those requires
+statement locations on normal execution paths and variable/type/location metadata
+through optimization. Exact trap traces and `debug(...)` retention are checked
+separately by the compiler's regression tests.
+
+[Sources and full GDB transcripts](../../bench/parity/debugger_20261009.json) are
+checked in. Reproduce with GDB built with Python support and a new directory:
+
+```bash
+python3 scripts/qualify_debugger.py --compiler zig-out/bin/mylang \
+  --gdb gdb --output /tmp/debugger-qualification
+```
 
 ## The caches
 

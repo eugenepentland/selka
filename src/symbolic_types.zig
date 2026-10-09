@@ -12,6 +12,7 @@ pub const Callback = struct {
     result: Value,
     effects: effect_set.Mask,
     mutates: []const u16 = &.{},
+    labels: []const []const u8 = &.{},
     return_origin: typed.ReturnOrigin = .unknown,
 };
 /// Symbolic applications keep declaration identity and ordered arguments, with lazy stored-member caches.
@@ -66,7 +67,9 @@ fn sameCallback(a: Callback, other: Value, catalog: Catalog) bool {
     if (other == .callback) {
         const b = other.callback;
         if (a.effects != b.effects) return false;
-        if (!std.mem.eql(u16, a.mutates, b.mutates) or !typed.ReturnOrigin.eql(a.return_origin, b.return_origin)) return false;
+        if (!callables.equalLabels(a.labels, b.labels)) return false;
+        if (!std.mem.eql(u16, a.mutates, b.mutates)) return false;
+        if (!typed.ReturnOrigin.eql(a.return_origin, b.return_origin)) return false;
         if (a.parameters.len != b.parameters.len or !same(a.result, b.result, catalog)) return false;
         for (a.parameters, b.parameters) |x, y| if (!same(x, y, catalog)) return false;
         return true;
@@ -74,7 +77,9 @@ fn sameCallback(a: Callback, other: Value, catalog: Catalog) bool {
     if (other != .concrete) return false;
     const b = @import("callables.zig").signature(other.concrete, catalog.records) orelse return false;
     if (a.effects != b.effects) return false;
-    if (!std.mem.eql(u16, a.mutates, b.mutates) or !typed.ReturnOrigin.eql(a.return_origin, b.return_origin)) return false;
+    if (!callables.equalLabels(a.labels, b.labels)) return false;
+    if (!std.mem.eql(u16, a.mutates, b.mutates)) return false;
+    if (!typed.ReturnOrigin.eql(a.return_origin, b.return_origin)) return false;
     if (a.parameters.len != b.parameters.len or !same(a.result, .{ .concrete = b.return_type }, catalog)) return false;
     for (a.parameters, b.parameters) |x, y| if (!same(x, .{ .concrete = y }, catalog)) return false;
     return true;
@@ -144,12 +149,21 @@ fn callbackReturnOrigin(value: Value, catalog: Catalog) ?typed.ReturnOrigin {
         else => null,
     };
 }
+fn callbackLabels(value: Value, catalog: Catalog) ?[]const []const u8 {
+    if (value == .callback) return value.callback.labels;
+    if (value != .concrete) return null;
+    const signature = callables.signature(value.concrete, catalog.records) orelse return null;
+    return signature.labels;
+}
 /// Directional callback assignability for symbolic values: parameters and result
 /// stay exact, while the implementation effect ceiling must be a subset.
 pub fn callbackAssignable(implementation: Value, destination: Value, catalog: Catalog) bool {
     const implementation_effects = callbackEffects(implementation, catalog) orelse return false;
     const destination_effects = callbackEffects(destination, catalog) orelse return false;
     if (implementation_effects & ~destination_effects != 0) return false;
+    const implementation_labels = callbackLabels(implementation, catalog) orelse return false;
+    const destination_labels = callbackLabels(destination, catalog) orelse return false;
+    if (!callables.equalLabels(implementation_labels, destination_labels)) return false;
     const implementation_mutates = callbackMutates(implementation, catalog) orelse return false;
     const destination_mutates = callbackMutates(destination, catalog) orelse return false;
     if (!callables.positionSubset(implementation_mutates, destination_mutates)) return false;
@@ -179,7 +193,9 @@ fn sameIdentity(value: Value, id: @import("nominal_layouts.zig").Id, catalog: Ca
         if (node.key.base != .callback or node.key.arguments.len != callback.parameters.len + 1) return false;
         const contract = node.key.base.callback;
         if (callback.effects != contract.effects) return false;
-        if (!std.mem.eql(u16, callback.mutates, contract.mutates) or !typed.ReturnOrigin.eql(callback.return_origin, contract.return_origin)) return false;
+        if (!callables.equalLabels(callback.labels, contract.labels)) return false;
+        if (!std.mem.eql(u16, callback.mutates, contract.mutates)) return false;
+        if (!typed.ReturnOrigin.eql(callback.return_origin, contract.return_origin)) return false;
         for (callback.parameters, node.key.arguments[0..callback.parameters.len]) |parameter, key| if (!sameIdentity(parameter, key, catalog)) return false;
         return sameIdentity(callback.result, node.key.arguments[callback.parameters.len], catalog);
     }
@@ -211,7 +227,12 @@ pub fn supports(value: Value, requirement: requirements.Requirement, parameters:
         .parameter => |index| parameters[index].requirements.contains(requirement),
         .array => |shape| (requirement == .copy or requirement == .storable) and ((shape.length_parameter == null and shape.length == 0) or supports(shape.element, requirement, parameters, catalog)),
         .nominal => |value_type| result: {
-            const declaration = catalog.templates.store.?.index.declarations.items[value_type.declaration];
+            const index = catalog.templates.store.?.index;
+            const declaration = index.declarations.items[value_type.declaration];
+            if (requirement == .equality and index.names.get("Option") == value_type.declaration) {
+                if (value_type.arguments.len != 1) break :result false;
+                break :result supports(value_type.arguments[0], requirement, parameters, catalog);
+            }
             // A tuple's requirements are its elements': its declaration owns no
             // fields, so a blanket declaration-level guarantee would be unsound.
             if (declaration.kind != .tuple) break :result declaration.guarantees.contains(requirement);

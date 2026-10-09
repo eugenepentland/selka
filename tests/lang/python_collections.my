@@ -1,11 +1,10 @@
-module python_collections
 
 
 record Box:
-    items: list[i64]
+    items: i64[]
 
 
-def make_box() -> Box:
+func make_box() -> Box:
     return Box(items=[40])
 
 
@@ -17,17 +16,17 @@ record ReceiverPoint:
     x: i64
 
 
-def logged_receiver(log: mut list[i64], rows: list[ReceiverPoint]) -> list[ReceiverPoint]:
+func logged_receiver(mut log: i64[], rows: ReceiverPoint[]) -> ReceiverPoint[]:
     log.append(1)
     return rows
 
 
-def log_index(log: mut list[i64]) -> i64:
+func log_index(mut log: i64[]) -> i64:
     log.append(2)
     return 0
 
 
-def emit_value(log: mut list[i64]) -> i64:
+func emit_value(mut log: i64[]) -> i64:
     log.append(3)
     return 42
 
@@ -36,7 +35,7 @@ record Cell[T]:
     value: T
 
 
-def set_cell[T](cells: mut list[Cell[T]], value: T) effects(mutation):
+func set_cell[T](mut cells: Cell[T][], value: T) effects(mutation):
     cells[0].value = value
 
 
@@ -45,13 +44,13 @@ record WritebackPoint:
     y: i64
 
 
-def writeback(rows: mut list[WritebackPoint]) -> i64 effects(mutation):
+func writeback(mut rows: WritebackPoint[]) -> i64 effects(mutation):
     rows[0].y = 2
     return 40
 
 
-def range_total() -> i64:
-    sum = 0
+func range_total() -> i64:
+    mut sum = 0
     for i in range(7):
         sum += i
     return sum
@@ -60,16 +59,16 @@ def range_total() -> i64:
 const RANGE_TOTAL: i64 = range_total()
 
 
-def duplicate[T: copy + storable](value: T) -> list[T]:
-    values: list[T] = [value]
+func duplicate[T: copy + storable](value: T) -> T[]:
+    mut values: T[] = [value]
     values.append(value)
-    copy = values[:]
+    mut copy = values[:]
     for item in copy:
         _ = item
     return copy
 
 
-def first_key[K, V](counts: dict[K, V], fallback: K) -> K:
+func first_key[K, V](counts: dict[K, V], fallback: K) -> K:
     for key, value in counts.items():
         _ = value
         return key
@@ -77,33 +76,33 @@ def first_key[K, V](counts: dict[K, V], fallback: K) -> K:
 
 
 # spec: PY-COLLECTIONS-1
-public def test_inferred_literal_indexing_negative_indices_and_append() -> bool:
-    items = [40, 1]
+public func test_inferred_literal_indexing_negative_indices_and_append() -> bool:
+    mut items = [40, 1]
     items.append(2)
     return items[0] + items[-1] == 42
 
 
 # spec: PY-COLLECTIONS-4
-public def test_contextual_nested_lists_and_receiver_fields() -> bool:
-    b = make_box()
+public func test_contextual_nested_lists_and_receiver_fields() -> bool:
+    mut b = make_box()
     b.items.append(2)
-    rows: list[list[i64]] = [b.items, []]
+    mut rows: i64[][] = [b.items, []]
     return rows[0][0] + rows[0][-1] == 42
 
 
 # spec: PY-COLLECTIONS-2
-public def test_slice_copies_clamps_and_length_uses_signed_index_type() -> bool:
-    items = [1, 40, 2, 8]
-    copy = items[-3:99]
+public func test_slice_copies_clamps_and_length_uses_signed_index_type() -> bool:
+    mut items = [1, 40, 2, 8]
+    mut copy = items[-3:99]
     copy[0] = 0
-    middle = items[1:3]
+    mut middle = items[1:3]
     return middle[0] + len(middle) == 42
 
 
 # spec: PY-COLLECTIONS-3
-public def test_foreach_enumerate_range_and_continue() -> bool:
-    items = [10, 20, 9]
-    sum = 0
+public func test_foreach_enumerate_range_and_continue() -> bool:
+    mut items = [10, 20, 9]
+    mut sum = 0
     for i, x in enumerate(items):
         sum += i + x
     for i in range(3):
@@ -114,22 +113,22 @@ public def test_foreach_enumerate_range_and_continue() -> bool:
 
 
 # spec: PY-COLLECTIONS-5
-public def test_record_fields_update_values_and_list_slots_without_changing_prior_copies() -> bool:
-    point = Point(x=1)
+public func test_record_fields_update_values_and_list_slots_without_changing_prior_copies() -> bool:
+    mut point = Point(x=1)
     point.x = 2
-    rows = [point]
-    before = rows[0]
+    mut rows = [point]
+    mut before = rows[0]
     rows[0].x = 40
     return before.x + rows[0].x == 42
 
 
 # spec: PY-COLLECTIONS-7
-public def test_field_receiver_index_and_right_side_run_once_in_order_under_collection_stress() -> bool:
-    log: list[i64] = []
-    rows = [ReceiverPoint(x=0)]
-    next_value = emit_value(mut log)
-    target = logged_receiver(mut log, rows)
-    position = log_index(mut log)
+public func test_field_receiver_index_and_right_side_run_once_in_order_under_collection_stress() -> bool:
+    mut log: i64[] = []
+    mut rows = [ReceiverPoint(x=0)]
+    mut next_value = emit_value(mut log)
+    mut target = logged_receiver(mut log, rows)
+    mut position = log_index(mut log)
     target[position].x = next_value
     rows = target
     if len(log) != 3:
@@ -140,16 +139,16 @@ public def test_field_receiver_index_and_right_side_run_once_in_order_under_coll
 
 
 # spec: PY-COLLECTIONS-9
-public def test_generic_record_slot_updates_and_list_aliases_remain_copyable() -> bool:
-    cells: list[Cell[i64]] = [Cell[i64](value=1)]
+public func test_generic_record_slot_updates_and_list_aliases_remain_copyable() -> bool:
+    mut cells: Cell[i64][] = [Cell[i64](value=1)]
     set_cell(mut cells, 42)
     return cells[0].value == 42
 
 
 # spec: PY-COLLECTIONS-10
-public def test_slice_negative_clamp_empty_and_copy_alias_semantics() -> bool:
-    items = [40, 2, 8]
-    copy = items[-99:-1]
+public func test_slice_negative_clamp_empty_and_copy_alias_semantics() -> bool:
+    mut items = [40, 2, 8]
+    mut copy = items[-99:-1]
     copy[0] = 1
     if len(items[99:]) != 0 or len(items[2:1]) != 0:
         return False
@@ -157,9 +156,9 @@ public def test_slice_negative_clamp_empty_and_copy_alias_semantics() -> bool:
 
 
 # spec: PY-COLLECTIONS-14
-public def test_slice_step_selects_every_nth_element_of_a_list_and_of_text_in_both_directions() -> bool:
-    items = [1, 2, 3, 4, 5, 6]
-    text = "abcdef"
+public func test_slice_step_selects_every_nth_element_of_a_list_and_of_text_in_both_directions() -> bool:
+    mut items = [1, 2, 3, 4, 5, 6]
+    mut text = "abcdef"
     if len(items[0:6:2]) != 3 or items[0:6:2][1] != 3:
         return False
     if len(items[::-1]) != 6 or items[::-1][0] != 6:
@@ -176,18 +175,18 @@ public def test_slice_step_selects_every_nth_element_of_a_list_and_of_text_in_bo
 
 
 # spec: PY-AUGASSIGN-1
-public def test_augmented_assignment_applies_each_binding_types_own_operator_rules() -> bool:
-    n = 5
+public func test_augmented_assignment_applies_each_binding_types_own_operator_rules() -> bool:
+    mut n = 5
     n *= 8
     n += 2
-    m = 17
+    mut m = 17
     m //= 2
     if m != 8:
         return False
     m %= 5
     if m != 3:
         return False
-    ratio = 1.0
+    mut ratio = 1.0
     ratio += 2.5
     ratio *= 2.0
     if int(ratio) != 7:
@@ -195,7 +194,7 @@ public def test_augmented_assignment_applies_each_binding_types_own_operator_rul
     ratio -= 0.5
     if int(ratio) != 6:
         return False
-    label = "a"
+    mut label = "a"
     label += "b"
     if label != "ab":
         return False
@@ -203,14 +202,14 @@ public def test_augmented_assignment_applies_each_binding_types_own_operator_rul
 
 
 # spec: PY-AUGASSIGN-2
-public def test_augmented_assignment_writes_a_list_slot_and_a_dictionary_entry_in_place() -> bool:
-    xs = [1, 2]
+public func test_augmented_assignment_writes_a_list_slot_and_a_dictionary_entry_in_place() -> bool:
+    mut xs = [1, 2]
     xs[0] += 5
     xs[1] *= 3
     xs[-1] -= 6
-    counts = {"a": 1}
+    mut counts = {"a": 1}
     counts["a"] += 41
-    label = {"k": "a"}
+    mut label = {"k": "a"}
     label["k"] += "b"
     if xs[0] != 6 or xs[1] != 0:
         return False
@@ -220,8 +219,8 @@ public def test_augmented_assignment_writes_a_list_slot_and_a_dictionary_entry_i
 
 
 # spec: PY-COLLECTIONS-15
-public def test_list_methods_mutate_in_place_with_python_shaped_bounds() -> bool:
-    xs = [3, 1, 2]
+public func test_list_methods_mutate_in_place_with_python_shaped_bounds() -> bool:
+    mut xs = [3, 1, 2]
     xs.sort()
     if xs[0] != 1 or xs[2] != 3:
         return False
@@ -237,10 +236,10 @@ public def test_list_methods_mutate_in_place_with_python_shaped_bounds() -> bool
     xs.extend([7, 8])
     if len(xs) != 5 or xs[4] != 8:
         return False
-    last = xs.pop()
+    mut last = xs.pop()
     if last != 8 or len(xs) != 4:
         return False
-    middle = xs.pop(1)
+    mut middle = xs.pop(1)
     if middle != 2 or len(xs) != 3:
         return False
     xs.clear()
@@ -250,11 +249,11 @@ public def test_list_methods_mutate_in_place_with_python_shaped_bounds() -> bool
 
 
 # spec: PY-COLLECTIONS-16
-public def test_list_index_and_copy_are_read_forms_with_first_occurrence_order() -> bool:
-    xs = [10, 20, 30, 20]
+public func test_list_index_and_copy_are_read_forms_with_first_occurrence_order() -> bool:
+    mut xs = [10, 20, 30, 20]
     if xs.index(20) != 1:
         return False
-    ys = xs.copy()
+    mut ys = xs.copy()
     ys.append(99)
     if len(xs) != 4 or len(ys) != 5:
         return False
@@ -262,8 +261,8 @@ public def test_list_index_and_copy_are_read_forms_with_first_occurrence_order()
 
 
 # spec: PY-COLLECTIONS-17
-public def test_dictionary_pop_update_and_setdefault_keep_insertion_order() -> bool:
-    d = {"a": 1, "b": 2}
+public func test_dictionary_pop_update_and_setdefault_keep_insertion_order() -> bool:
+    mut d = {"a": 1, "b": 2}
     if d.pop("a") != 1:
         return False
     if d.pop("z", 7) != 7:
@@ -281,14 +280,14 @@ public def test_dictionary_pop_update_and_setdefault_keep_insertion_order() -> b
 
 
 # spec: PY-COLLECTIONS-18
-public def test_list_extends_in_place_and_items_binds_key_then_value_in_insertion_order() -> bool:
-    xs = [1]
-    alias = xs.copy()
+public func test_list_extends_in_place_and_items_binds_key_then_value_in_insertion_order() -> bool:
+    mut xs = [1]
+    mut alias = xs.copy()
     xs += [2, 3]
     if len(xs) != 3 or alias != [1]:
         return False
-    d = {10: 100, 20: 200}
-    total = 0
+    mut d = {10: 100, 20: 200}
+    mut total = 0
     for key, value in d.items():
         total += key + value
     if total != 330:
@@ -297,43 +296,43 @@ public def test_list_extends_in_place_and_items_binds_key_then_value_in_insertio
 
 
 # spec-case: PY-COLLECTIONS-18
-public def test_generic_bodies_bind_items_key_then_value_in_insertion_order() -> bool:
-    counts = {10: 100, 20: 200}
+public func test_generic_bodies_bind_items_key_then_value_in_insertion_order() -> bool:
+    mut counts = {10: 100, 20: 200}
     return first_key(counts, 0) == 10
 
 
 # spec: PY-COLLECTIONS-11
-public def test_outer_annotated_postfix_expressions_do_not_contaminate_literal_element_inference() -> bool:
-    value: i64 = [42][0]
-    row: list[i64] = [[value]][0]
+public func test_outer_annotated_postfix_expressions_do_not_contaminate_literal_element_inference() -> bool:
+    mut value: i64 = [42][0]
+    mut row: i64[] = [[value]][0]
     return row[0] == 42
 
 
 # spec: PY-COLLECTIONS-12
-public def test_range_end_syntax_agrees_in_constant_and_runtime_evaluation() -> bool:
+public func test_range_end_syntax_agrees_in_constant_and_runtime_evaluation() -> bool:
     return RANGE_TOTAL * 2 == 42
 
 
 # spec: PY-COLLECTIONS-13
-public def test_field_writeback_preserves_sibling_changes_made_by_its_right_hand_side() -> bool:
-    rows = [WritebackPoint(x=0, y=0)]
-    mutation_result_320 = writeback(mut rows)
+public func test_field_writeback_preserves_sibling_changes_made_by_its_right_hand_side() -> bool:
+    mut rows = [WritebackPoint(x=0, y=0)]
+    mut mutation_result_320 = writeback(mut rows)
     rows[0].x = mutation_result_320
     return rows[0].x + rows[0].y == 42
 
 
 # spec: PY-COLLECTIONS-6
-public def test_generic_lists_preserve_literal_foreach_slice_and_write_element_types() -> bool:
-    xs = duplicate(21)
+public func test_generic_lists_preserve_literal_foreach_slice_and_write_element_types() -> bool:
+    mut xs = duplicate(21)
     return xs[0] + xs[1] == 42
 
 
-public def test_scalar_element_reads_load_every_width_from_backing_storage() -> bool:
-    narrow = [1i16, 2i16, 300i16]
-    wide = [7i64, 8i64, 9i64]
-    flags = [False, True]
-    raw = b"abc"
-    total = i64(narrow[-1]) + i64(narrow[1]) + wide[-2] + i64(raw[2])
+public func test_scalar_element_reads_load_every_width_from_backing_storage() -> bool:
+    mut narrow = [1i16, 2i16, 300i16]
+    mut wide = [7i64, 8i64, 9i64]
+    mut flags = [False, True]
+    mut raw = b"abc"
+    mut total = i64(narrow[-1]) + i64(narrow[1]) + wide[-2] + i64(raw[2])
     if flags[-1]:
         total = total + 100
     return total == 509
@@ -343,16 +342,16 @@ public def test_scalar_element_reads_load_every_width_from_backing_storage() -> 
 # so a long append run keeps every element it already stored, keeps the element
 # identity of the list, and still reads back through the index it was built with.
 # spec: LIST-GROWTH-1
-public def test_append_past_the_segment_threshold_keeps_every_element() -> bool:
-    seed = [index % 1009 for index in range(4096)]
-    values: list[int] = []
-    writes = 0
+public func test_append_past_the_segment_threshold_keeps_every_element() -> bool:
+    mut seed = [for index in range(4096) yield index % 1009]
+    mut values: int[] = []
+    mut writes = 0
     while writes < 80:
         values.extend(seed)
         writes += 1
     if len(values) != 4096 * 80:
         return False
-    check = 0
+    mut check = 0
     while check < 4096 * 80:
         if values[check] != (check % 4096) % 1009:
             return False
@@ -363,5 +362,5 @@ public def test_append_past_the_segment_threshold_keeps_every_element() -> bool:
     return values[4096 * 80] == 0 - 1 and len(values) == 4096 * 80 + 1
 
 
-def main() -> int:
+func main() -> int:
     return 0

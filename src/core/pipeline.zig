@@ -1,4 +1,4 @@
-//! One `mylang-core build`: check, build the Core IR, compute facts (release),
+//! One `mylang-core build`: check, build the Core IR, compute facts (optimized modes),
 //! emit LLVM IR and link. Every failure is rendered into `report`.
 const std = @import("std");
 const language = @import("mylang");
@@ -21,12 +21,12 @@ const run_budget = @import("run_budget.zig");
 pub const Options = struct {
     zig: []const u8,
     output: []const u8 = "",
-    release: bool = false,
+    mode: @import("build_mode.zig").Mode = .debug,
     links: []const []const u8 = &.{},
     /// What to show besides the executable.
     show: Show = .{},
     cache: []const u8 = ".mylang-cache/core",
-    /// Fact pass mode in a release build: `on`, `off` (`--no-facts`, to measure
+    /// Fact pass mode in an optimized build: `on`, `off` (`--no-facts`, to measure
     /// what facts buy), `verify` (`--verify-facts`: every fact the build relies on
     /// is also checked at run time and traps `R_CORE_FACT` when it does not hold),
     /// or `sabotage` (`--sabotage-facts`, test only: verify with one wrong rule), with
@@ -43,7 +43,7 @@ pub const Options = struct {
 pub const Show = struct {
     /// Also write the emitted LLVM IR here (`--emit-llvm`).
     llvm: ?[]const u8 = null,
-    /// Print what the release passes did (`--stats`) to the report.
+    /// Print what the optimization passes did (`--stats`) to the report.
     stats: bool = false,
     /// What the emitted code itself does beyond the program: vector lowering, trap
     /// frames and run-time counters.
@@ -124,7 +124,7 @@ fn buildWith(init: std.process.Init, path: []const u8, options: Options, budget:
     try entry.validate(allocator, &session, report);
     var refusal: build_ir.Refusal = .{};
     // A `build --release` executable drops `debug(...)`; a run keeps it (DEBUG-LINE-1).
-    const input: build_ir.Input = .{ .program = checked.program, .source = checked.src, .drop_debug = options.release and budget == null };
+    const input: build_ir.Input = .{ .program = checked.program, .source = checked.src, .drop_debug = options.mode == .release and budget == null };
     var module = build_ir.buildExecutable(allocator, input, &refusal) catch |err| switch (err) {
         error.Unsupported => {
             try refused(allocator, checked.src, refusal, options.show.diagnostics, report);
@@ -177,7 +177,7 @@ fn flags(init: std.process.Init, options: Options, budget: ?run_budget.RunBudget
     const links = try allocator.alloc([]const u8, options.links.len);
     for (options.links, links) |link, *absolute| absolute.* = std.Io.Dir.cwd().realPathFileAlloc(init.io, link, allocator) catch link;
     return std.json.Stringify.valueAlloc(allocator, .{
-        .release = options.release,
+        .mode = options.mode,
         .facts = options.facts,
         .stats = options.show.stats,
         .vectors = options.show.codegen.generic_vectors,
@@ -225,7 +225,7 @@ pub const Unit = struct {
     main: emit_llvm.Main,
 };
 
-/// The back half of `build`: run the release passes on `module`, emit LLVM IR, and
+/// The back half of `build`: run the selected passes on `module`, emit LLVM IR, and
 /// link the executable. `mylang-core test` reaches it with a module of its own making.
 pub fn finish(init: std.process.Init, module: *ir.Module, unit: Unit, options: Options, report: *std.ArrayList(u8)) Error!u8 {
     _ = try linkEmitted(init, module, unit, options, report);
@@ -240,14 +240,14 @@ fn linkEmitted(init: std.process.Init, module: *ir.Module, unit: Unit, options: 
         .zig = options.zig,
         .work = options.cache,
         .output = options.output,
-        .release = options.release,
+        .mode = options.mode,
         .links = options.links,
         .units = emission.units,
         .verify = options.show.verify_cache,
     }, report) catch |err| return err;
     if (emission.cost_report) |measured| {
         var final = measured;
-        const remarks = try driver.optimizationRemarks(allocator, init.io, init.environ_map, .{ .zig = options.zig, .work = options.cache, .output = "", .release = options.release, .links = &.{}, .units = emission.units });
+        const remarks = try driver.optimizationRemarks(allocator, init.io, init.environ_map, .{ .zig = options.zig, .work = options.cache, .output = "", .mode = options.mode, .links = &.{}, .units = emission.units });
         if (remarks.yaml) |yaml| cost_remarks.apply(&final, yaml);
         try cost.llvmStats(allocator, report, final.totals, remarks);
         outcome.counts.processes += remarks.processes;
@@ -261,9 +261,9 @@ pub const Emission = struct { units: []const emit_units.Unit, whole: ?[]const u8
 /// Run the same passes and emission used for linking, without invoking a tool.
 /// Test receipts hash this exact reachable program.
 pub fn emitted(allocator: std.mem.Allocator, module: *ir.Module, unit: Unit, options: Options, report: *std.ArrayList(u8)) Error!Emission {
-    // A debug build of the compiler checks the IR it built, and again after the release passes.
+    // A debug build of the compiler checks the IR it built, and again after optimization.
     if (verify_ir.enabled) try verify_ir.check(allocator, module, &.{}, report);
-    // Release builds compute facts and drop the checks they rule out; debug builds keep every check.
+    // Optimized modes compute facts; ordinary debug keeps every check.
     const verify = options.facts != .on and options.facts != .off;
     const mode: passes.Mode = switch (options.facts) {
         .on => .trusted,
@@ -277,7 +277,8 @@ pub fn emitted(allocator: std.mem.Allocator, module: *ir.Module, unit: Unit, opt
         .sabotage_field => .sabotage_field,
         .sabotage_version => .sabotage_version,
     };
-    var result = if (options.release) try passes.run(allocator, module, mode) else try passes.debug(allocator, module);
+    const optimized = options.mode != .debug;
+    var result = if (optimized) try passes.run(allocator, module, mode) else try passes.debug(allocator, module);
     if (verify_ir.enabled) try verify_ir.check(allocator, module, result.plans, report);
     const measured = if (options.show.stats) try cost.measure(allocator, module, &result, null) else null;
     if (measured) |snapshot| try cost.stats(allocator, report, snapshot.totals);
@@ -288,13 +289,13 @@ pub fn emitted(allocator: std.mem.Allocator, module: *ir.Module, unit: Unit, opt
         .source_path = unit.source_path,
         .main = unit.main,
         .analysis = .{ .facts = result.known, .vectors = result.plans, .provenance = &result.provenance, .effects = &summaries },
-        .verify = verify and options.release,
+        .verify = verify and optimized,
         .target = targetFor(options.show),
         .counters = options.show.codegen.counters,
     };
     // S4-1a: a release build is one unit, so LLVM optimizes across every module
-    // boundary; a debug build is one unit per module, so an edit recompiles one unit.
-    const split = if (options.release) emit_units.whole(allocator, module, emission) else emit_units.emit(allocator, module, emission);
+    // boundary; development modes keep module units and reuse unchanged text.
+    const split = if (options.mode == .release) emit_units.whole(allocator, module, emission) else emit_units.emit(allocator, module, emission);
     const units = split catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         else => {
@@ -303,7 +304,7 @@ pub fn emitted(allocator: std.mem.Allocator, module: *ir.Module, unit: Unit, opt
         },
     };
     if (options.show.llvm == null) return .{ .units = units, .cost_report = measured };
-    if (options.release) return .{ .units = units, .whole = units[0].llvm, .cost_report = measured };
+    if (options.mode == .release) return .{ .units = units, .whole = units[0].llvm, .cost_report = measured };
     const whole = emit_llvm.emitModule(allocator, module, emission) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         else => return error.Unsupported,

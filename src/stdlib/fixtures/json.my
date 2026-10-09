@@ -1,8 +1,7 @@
-module main
 import json
 
 
-def roundtrip(source: str) -> str:
+func roundtrip(source: str) -> str:
     match json.loads(source):
         case Ok(value):
             return json.dumps(value)
@@ -10,7 +9,7 @@ def roundtrip(source: str) -> str:
             return "!" + json.message(error)
 
 
-def rejects(source: str) -> bool:
+func rejects(source: str) -> bool:
     match json.loads(source):
         case Ok(_):
             return False
@@ -18,7 +17,7 @@ def rejects(source: str) -> bool:
             return True
 
 
-def shapes() -> int:
+func shapes() -> int:
     if roundtrip("{\"a\":[1,2.5,true,null,\"x\"]}") != "{\"a\":[1,2.5,true,null,\"x\"]}":
         return 1
     if roundtrip("  \t[]  ") != "[]" or roundtrip("{}") != "{}":
@@ -38,7 +37,7 @@ def shapes() -> int:
     return overflowing()
 
 
-def overflowing() -> int:
+func overflowing() -> int:
     match json.loads("9223372036854775808"):
         case Ok(value):
             match json.as_int(value):
@@ -57,7 +56,7 @@ def overflowing() -> int:
     return 0
 
 
-def refusals() -> int:
+func refusals() -> int:
     if not rejects("{\"a\":1,\"a\":2}"):
         return 20
     if not rejects("01") or not rejects("1.") or not rejects("1e") or not rejects("-"):
@@ -75,15 +74,15 @@ def refusals() -> int:
     return 0
 
 
-def depth() -> int:
-    deep = ""
-    index = 0
+func depth() -> int:
+    mut deep = ""
+    mut index = 0
     while index < 70:
         deep = deep + "["
         index += 1
     if not rejects(deep):
         return 30
-    nested = ""
+    mut nested = ""
     index = 0
     while index < 60:
         nested = nested + "["
@@ -98,7 +97,7 @@ def depth() -> int:
     return 0
 
 
-def navigation() -> int:
+func navigation() -> int:
     match json.loads("{\"n\":{\"k\":[10,20]}}"):
         case Ok(document):
             if json.type_name(document) != "object":
@@ -117,7 +116,7 @@ def navigation() -> int:
             return 43
 
 
-def reach(inner: json.Json) -> int:
+func reach(inner: json.Json) -> int:
     match json.get(inner, "k"):
         case Some(items):
             match json.at(items, 1):
@@ -140,8 +139,8 @@ def reach(inner: json.Json) -> int:
     return 0
 
 
-def accessors() -> int:
-    built: dict[str, json.Json] = {}
+func accessors() -> int:
+    mut built: dict[str, json.Json] = {}
     built["ok"] = json.boolean(True)
     built["score"] = json.number(1.5)
     built["tags"] = json.array([json.text("a"), json.null_value()])
@@ -189,8 +188,8 @@ def accessors() -> int:
     return 0
 
 
-def main() -> int:
-    checks = [shapes(), refusals(), depth(), navigation(), accessors()]
+func main() -> int:
+    mut checks = [shapes(), refusals(), depth(), navigation(), accessors()]
     for value in checks:
         if value != 0:
             return value

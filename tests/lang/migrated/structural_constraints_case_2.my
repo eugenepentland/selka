@@ -1,9 +1,8 @@
-module structural_constraints_case_2
 
 
-constraint A[P] = copy + op(identity(x: list[P]) -> int effects())
-constraint B[Q] = copy + op(identity(x: list[Q]) -> int effects())
-def use[T: A + B](x: T) -> int:
+constraint A[P] = copy + op(identity(x: P[]) -> int effects())
+constraint B[Q] = copy + op(identity(x: Q[]) -> int effects())
+func use[T: A + B](x: T) -> int:
     return 0
-public def program() -> int:
+public func program() -> int:
     return 0

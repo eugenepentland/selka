@@ -1,8 +1,7 @@
-module python_format_case_2
 
 
-public def program() -> int:
-    score = 0
+public func program() -> int:
+    mut score = 0
     if f"{{literal}}" == "{literal}":
         score = score + 1
     if f"" == "":

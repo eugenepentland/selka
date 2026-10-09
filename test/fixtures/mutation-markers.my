@@ -1,8 +1,8 @@
-def shuffle(xs: mut list[int]) -> None effects(mutation):
+func shuffle(mut xs: int[]) -> Unit effects(mutation):
     xs[0] = xs[0] + 1
 
 
-def main() -> int:
-    xs = [7]
+func main() -> int:
+    mut xs = [7]
     shuffle(mut xs)
     return xs[0]

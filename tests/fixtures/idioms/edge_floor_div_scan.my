@@ -1,3 +1,4 @@
-def main() -> int:
-    n = 4 // 2; raw: bytes = "hi".encode()
+func main() -> int:
+    mut n = 4 // 2
+    mut raw: bytes = "hi".encode()
     return len(raw) + n

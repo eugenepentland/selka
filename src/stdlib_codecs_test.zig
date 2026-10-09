@@ -10,15 +10,15 @@ test "standard base64 and hex match their vectors and reject noncanonical input"
 
 // spec-case: STANDARD-CODECS-1
 test "standard base64 round-trips every byte value under collection stress" {
-    try fixture.run(t.allocator, "module main\nimport base64\n" ++
-        "def main() -> int:\n" ++
-        "    octets: list[int] = []\n" ++
-        "    value = 0\n" ++
+    try fixture.run(t.allocator, "import base64\n" ++
+        "func main() -> int:\n" ++
+        "    mut octets: int[] = []\n" ++
+        "    mut value = 0\n" ++
         "    while value < 256:\n" ++
         "        octets.append(value)\n" ++
         "        value += 1\n" ++
-        "    raw = bytes(octets)\n" ++
-        "    encoded = base64.b64encode(raw)\n" ++
+        "    mut raw = bytes(octets)\n" ++
+        "    mut encoded = base64.b64encode(raw)\n" ++
         "    if len(encoded) != 344:\n" ++
         "        return 1\n" ++
         "    match base64.b64decode(encoded):\n" ++

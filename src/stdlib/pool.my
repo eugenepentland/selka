@@ -1,14 +1,13 @@
-module pool
 
 
 # A slot store with generational handles. Under value semantics a Pool is a
 # value: pass it with `mut` to change its slots, and keep handles with it.
 public record Pool[T: copy + storable]:
-    slots: list[T]
-    generations: list[int]
-    live: list[bool]
-    free: list[int]
-    counters: list[int]
+    slots: T[]
+    generations: int[]
+    live: bool[]
+    free: int[]
+    counters: int[]
 
 
 # A copyable reference to one slot. A handle whose slot was reused or removed
@@ -19,27 +18,27 @@ public record Handle[T: copy + storable]:
 
 
 # Generations wrap far past any reachable insert count, so they never overflow.
-def next_generation(current: int) -> int:
+func next_generation(current: int) -> int:
     return (current + 1) % 4611686018427387904
 
 
 # A pool holding the given values, in order, with one live handle each.
-public def create[T: copy + storable](values: list[T]) -> Pool[T]:
-    slots: list[T] = []
-    generations: list[int] = []
-    live: list[bool] = []
-    free: list[int] = []
-    counters: list[int] = []
+public func create[T: copy + storable](values: T[]) -> Pool[T]:
+    mut slots: T[] = []
+    mut generations: int[] = []
+    mut live: bool[] = []
+    mut free: int[] = []
+    mut counters: int[] = []
     counters.append(0)
     counters.append(0)
-    store = Pool[T](slots=slots, generations=generations, live=live, free=free, counters=counters)
+    mut store = Pool[T](slots=slots, generations=generations, live=live, free=free, counters=counters)
     for value in values:
         _ = insert(mut store, value)
     return store
 
 
 # Whether a handle still names a live slot of this pool.
-public def occupied[T: copy + storable](store: Pool[T], handle: Handle[T]) -> bool effects():
+public func occupied[T: copy + storable](store: Pool[T], handle: Handle[T]) -> bool effects():
     if handle.index < 0 or handle.index >= len(store.slots):
         return False
     if not store.live[handle.index]:
@@ -48,11 +47,11 @@ public def occupied[T: copy + storable](store: Pool[T], handle: Handle[T]) -> bo
 
 
 # Add a value and return the handle that names it.
-public def insert[T: copy + storable](store: mut Pool[T], value: T) -> Handle[T]:
+public func insert[T: copy + storable](mut store: Pool[T], value: T) -> Handle[T]:
     store.counters[1] = store.counters[1] + 1
-    top = store.counters[0]
+    mut top = store.counters[0]
     if top > 0:
-        slot = store.free[top - 1]
+        mut slot = store.free[top - 1]
         store.counters[0] = top - 1
         store.slots[slot] = value
         store.live[slot] = True
@@ -64,14 +63,14 @@ public def insert[T: copy + storable](store: mut Pool[T], value: T) -> Handle[T]
 
 
 # The value a handle names, or nothing for a stale or foreign handle.
-public def get[T: copy + storable](store: Pool[T], handle: Handle[T]) -> Option[T]:
+public func get[T: copy + storable](store: Pool[T], handle: Handle[T]) -> T?:
     if not occupied(store, handle):
         return None
     return Some(store.slots[handle.index])
 
 
 # Replace the value a handle names, reporting whether the handle was live.
-public def set[T: copy + storable](store: mut Pool[T], handle: Handle[T], value: T) -> bool:
+public func set[T: copy + storable](mut store: Pool[T], handle: Handle[T], value: T) -> bool:
     if not occupied(store, handle):
         return False
     store.slots[handle.index] = value
@@ -79,14 +78,14 @@ public def set[T: copy + storable](store: mut Pool[T], handle: Handle[T], value:
 
 
 # Release the slot a handle names, reporting whether the handle was live.
-public def remove[T: copy + storable](store: mut Pool[T], handle: Handle[T]) -> bool:
+public func remove[T: copy + storable](mut store: Pool[T], handle: Handle[T]) -> bool:
     if not occupied(store, handle):
         return False
-    slot = handle.index
+    mut slot = handle.index
     store.live[slot] = False
     store.generations[slot] = next_generation(store.generations[slot])
     store.counters[1] = store.counters[1] - 1
-    top = store.counters[0]
+    mut top = store.counters[0]
     if top < len(store.free):
         store.free[top] = slot
     else:
@@ -96,18 +95,18 @@ public def remove[T: copy + storable](store: mut Pool[T], handle: Handle[T]) -> 
 
 
 # How many slots are live.
-public def count[T: copy + storable](store: Pool[T]) -> int effects():
+public func count[T: copy + storable](store: Pool[T]) -> int effects():
     return store.counters[1]
 
 
 # How many slots have ever been allocated, including released ones.
-public def capacity[T: copy + storable](store: Pool[T]) -> int effects():
+public func capacity[T: copy + storable](store: Pool[T]) -> int effects():
     return len(store.slots)
 
 
 # Every live handle, in slot order.
-public def handles[T: copy + storable](store: Pool[T]) -> list[Handle[T]]:
-    out: list[Handle[T]] = []
+public func handles[T: copy + storable](store: Pool[T]) -> Handle[T][]:
+    mut out: Handle[T][] = []
     for index, alive in enumerate(store.live):
         if alive:
             out.append(Handle[T](index=index, generation=store.generations[index]))

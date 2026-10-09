@@ -7,13 +7,13 @@ result Quotient:
     err: DivisionError
 
 
-def divide(numerator: int, denominator: int) -> Quotient:
+func divide(numerator: int, denominator: int) -> Quotient:
     if denominator == 0:
         return Err(DivisionError.zero)
     return Ok(divtrunc(numerator, denominator))
 
 
-def value_or_zero(outcome: Quotient) -> int:
+func value_or_zero(outcome: Quotient) -> int:
     match outcome:
         case Quotient.ok(value):
             return value
@@ -21,8 +21,8 @@ def value_or_zero(outcome: Quotient) -> int:
             return 0
 
 
-def main() -> int:
-    first = divide(21, 3)
-    total = value_or_zero(first) + value_or_zero(divide(21, 0))
+func main() -> int:
+    mut first = divide(21, 3)
+    mut total = value_or_zero(first) + value_or_zero(divide(21, 0))
     _ = divide(1, 0)
     return total

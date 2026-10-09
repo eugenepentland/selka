@@ -1,20 +1,19 @@
-module core.stats
 import core.shapes
 
 
-public def total_area(boxes: list[core.shapes.Box]) -> int:
-    total = 0
+public func total_area(boxes: core.shapes.Box[]) -> int:
+    mut total = 0
     for box in boxes:
         total += core.shapes.area(box)
     return total
 
 
-public def widest(boxes: list[core.shapes.Box]) -> int:
-    widths: list[int] = []
+public func widest(boxes: core.shapes.Box[]) -> int:
+    mut widths: int[] = []
     for box in boxes:
         widths.append(box.width)
     return core.shapes.largest(widths)
 
 
-public def test_widest() -> bool:
+public func test_widest() -> bool:
     return widest([core.shapes.Box(width=3, height=4), core.shapes.Box(width=5, height=2)]) == 5

@@ -1,10 +1,7 @@
-module loop_rebinding
 
-# A `for` loop variable is rebound from the loop at the top of every
-# iteration, as in Python (PY-FOR-REBIND-1): assigning it in the body changes
-# the variable for the rest of that iteration and never which iteration comes
-# next. Every loop form is pinned here; the traced elements run under
-# `--gc-stress`.
+# Loop iteration bindings are read-only. A mutable local copy lets a body
+# rewrite its current value without changing which iteration comes next.
+# Every loop form is pinned here; traced elements run under `--gc-stress`.
 
 
 record Pair:
@@ -12,40 +9,44 @@ record Pair:
     right: i64
 
 
-def label(index: i64) -> str:
+func label(index: i64) -> str:
     return "w" + str(index)
 
 
-def churn(rounds: i64) -> i64:
-    total = 0
+func churn(rounds: i64) -> i64:
+    mut total = 0
     for round in range(rounds):
-        words = [label(round), label(round + 1)]
+        mut words = [label(round), label(round + 1)]
         total += len(words[0]) + len(words[1])
     return total
 
 
-def pair(left: i64, right: i64) -> tuple[i64, i64]:
+func pair(left: i64, right: i64) -> tuple[i64, i64]:
     return left, right
 
 
-def first_of[T: copy + storable](values: list[T], fallback: T) -> T:
-    seen = fallback
-    count = 0
-    for index, value in enumerate(values):
+func first_of[T: copy + storable](values: T[], fallback: T) -> T:
+    mut seen = fallback
+    mut count = 0
+    for iteration_index, iteration_value in enumerate(values):
+        mut index = iteration_index
+        mut value = iteration_value
         if index == 0:
             seen = value
         index = 100
         value = fallback
         count += 1
-    for position in range(len(values)):
+    for iteration_position in range(len(values)):
+        mut position = iteration_position
         position += 50
         count += 1
-    return seen if count == 2 * len(values) else fallback
+    return if (count == 2 * len(values)) then (seen) else (fallback)
 
 
-def rebinding_steps() -> i64:
-    steps = 0
-    for index in range(4):
+func rebinding_steps() -> i64:
+    mut steps = 0
+    for iteration_index in range(4):
+        mut index = iteration_index
         index = index * 10
         steps += index
     return steps
@@ -55,10 +56,11 @@ const REBOUND_STEPS: i64 = rebinding_steps()
 
 
 # spec: PY-FOR-REBIND-1
-public def test_assigning_a_range_variable_does_not_end_the_loop() -> bool:
-    runs = 0
-    seen: list[i64] = []
-    for index in range(5):
+public func test_assigning_a_range_variable_does_not_end_the_loop() -> bool:
+    mut runs = 0
+    mut seen: i64[] = []
+    for iteration_index in range(5):
+        mut index = iteration_index
         seen.append(index)
         index = 10
         runs += 1
@@ -67,20 +69,23 @@ public def test_assigning_a_range_variable_does_not_end_the_loop() -> bool:
 
 
 # spec-case: PY-FOR-REBIND-1
-public def test_a_two_bound_range_takes_every_value_after_an_augmented_write() -> bool:
-    seen: list[i64] = []
-    for index in range(2, 6):
+public func test_a_two_bound_range_takes_every_value_after_an_augmented_write() -> bool:
+    mut seen: i64[] = []
+    for iteration_index in range(2, 6):
+        mut index = iteration_index
         index += 100
         seen.append(index)
     return seen == [102, 103, 104, 105]
 
 
 # spec-case: PY-FOR-REBIND-1
-public def test_an_enumerate_position_the_body_assigns_does_not_end_the_loop() -> bool:
-    values = [label(1), label(2), label(3), label(4)]
-    positions: list[i64] = []
-    words: list[str] = []
-    for position, word in enumerate(values):
+public func test_an_enumerate_position_the_body_assigns_does_not_end_the_loop() -> bool:
+    mut values = [label(1), label(2), label(3), label(4)]
+    mut positions: i64[] = []
+    mut words: str[] = []
+    for iteration_position, iteration_word in enumerate(values):
+        mut position = iteration_position
+        mut word = iteration_word
         positions.append(position)
         position = 10
         word = word + "!"
@@ -91,10 +96,12 @@ public def test_an_enumerate_position_the_body_assigns_does_not_end_the_loop() -
 
 
 # spec-case: PY-FOR-REBIND-1
-public def test_a_destructuring_write_to_an_enumerate_position_does_not_end_the_loop() -> bool:
-    runs = 0
-    total = 0
-    for position, value in enumerate([5, 6, 7]):
+public func test_a_destructuring_write_to_an_enumerate_position_does_not_end_the_loop() -> bool:
+    mut runs = 0
+    mut total = 0
+    for iteration_position, iteration_value in enumerate([5, 6, 7]):
+        mut position = iteration_position
+        mut value = iteration_value
         total += position
         position, value = pair(7, 8)
         total += position + value
@@ -103,10 +110,11 @@ public def test_a_destructuring_write_to_an_enumerate_position_does_not_end_the_
 
 
 # spec-case: PY-FOR-REBIND-1
-public def test_an_enumerate_position_over_a_fixed_array_is_rebound() -> bool:
-    values: [4]i64 = [1, 2, 3, 4]
-    total = 0
-    for position, value in enumerate(values):
+public func test_an_enumerate_position_over_a_fixed_array_is_rebound() -> bool:
+    mut values: FixedArray[i64, 4] = FixedArray[int, 4]([1, 2, 3, 4])
+    mut total = 0
+    for iteration_position, value in enumerate(values):
+        mut position = iteration_position
         position = position - 4
         # A negative position counts from the end (PY-ARRAY-NEGATIVE-1).
         total += values[position] * value
@@ -114,14 +122,16 @@ public def test_an_enumerate_position_over_a_fixed_array_is_rebound() -> bool:
 
 
 # spec-case: PY-FOR-REBIND-1
-public def test_continue_after_a_write_still_advances_the_loop() -> bool:
-    seen: list[i64] = []
-    for index in range(6):
+public func test_continue_after_a_write_still_advances_the_loop() -> bool:
+    mut seen: i64[] = []
+    for iteration_index in range(6):
+        mut index = iteration_index
         if index % 2 == 0:
             index = -1
             continue
         seen.append(index)
-    for position, value in enumerate([10, 11, 12, 13]):
+    for iteration_position, value in enumerate([10, 11, 12, 13]):
+        mut position = iteration_position
         if value == 11:
             position = 99
             continue
@@ -130,9 +140,10 @@ public def test_continue_after_a_write_still_advances_the_loop() -> bool:
 
 
 # spec-case: PY-FOR-REBIND-1
-public def test_break_after_a_write_leaves_the_written_value() -> bool:
-    last = 0
-    for index in range(10):
+public func test_break_after_a_write_leaves_the_written_value() -> bool:
+    mut last = 0
+    for iteration_index in range(10):
+        mut index = iteration_index
         index = index * 3
         last = index
         if last >= 6:
@@ -141,39 +152,46 @@ public def test_break_after_a_write_leaves_the_written_value() -> bool:
 
 
 # spec-case: PY-FOR-REBIND-1
-public def test_element_variables_are_rebound_every_iteration() -> bool:
-    words = [label(1), label(2), label(3)]
-    kept: list[str] = []
-    for word in words:
+public func test_element_variables_are_rebound_every_iteration() -> bool:
+    mut words = [label(1), label(2), label(3)]
+    mut kept: str[] = []
+    for iteration_word in words:
+        mut word = iteration_word
         word = word + "?"
         _ = churn(2)
         kept.append(word)
-    letters = ""
-    for letter in "abc":
+    mut letters = ""
+    for iteration_letter in "abc":
+        mut letter = iteration_letter
         letter = letter + letter
         letters += letter
-    numbers: [3]i64 = [4, 5, 6]
-    total = 0
-    for number in numbers:
+    mut numbers: FixedArray[i64, 3] = FixedArray[i64, 3]([4, 5, 6])
+    mut total = 0
+    for iteration_number in numbers:
+        mut number = iteration_number
         number += 1
         total += number
-    octets = 0
-    for octet in b"AB":
+    mut octets = 0
+    for iteration_octet in b"AB":
+        mut octet = iteration_octet
         octet = 0
         octets += 1
     return kept == ["w1?", "w2?", "w3?"] and words == ["w1", "w2", "w3"] and letters == "aabbcc" and total == 18 and numbers[0] == 4 and octets == 2
 
 
 # spec-case: PY-FOR-REBIND-1
-public def test_reversed_and_zip_names_are_rebound() -> bool:
-    backwards: list[str] = []
-    for word in reversed([label(1), label(2), label(3)]):
+public func test_reversed_and_zip_names_are_rebound() -> bool:
+    mut backwards: str[] = []
+    for iteration_word in reversed([label(1), label(2), label(3)]):
+        mut word = iteration_word
         backwards.append(word)
         word = "gone"
         _ = churn(2)
-    total = 0
-    runs = 0
-    for left, right in zip([1, 2, 3], [4, 5, 6]):
+    mut total = 0
+    mut runs = 0
+    for iteration_left, iteration_right in zip([1, 2, 3], [4, 5, 6]):
+        mut left = iteration_left
+        mut right = iteration_right
         total += left * right
         left = 0
         right = 0
@@ -182,61 +200,68 @@ public def test_reversed_and_zip_names_are_rebound() -> bool:
 
 
 # spec-case: PY-FOR-REBIND-1
-public def test_dictionary_and_tuple_names_are_rebound() -> bool:
-    counts: dict[str, i64] = {label(1): 1, label(2): 2, label(3): 3}
-    keys = ""
-    total = 0
-    for key in counts:
+public func test_dictionary_and_tuple_names_are_rebound() -> bool:
+    mut counts: dict[str, i64] = {label(1): 1, label(2): 2, label(3): 3}
+    mut keys = ""
+    mut total = 0
+    for iteration_key in counts:
+        mut key = iteration_key
         keys += key
         key = "zz"
-    for name, count in counts.items():
+    for iteration_name, iteration_count in counts.items():
+        mut name = iteration_name
+        mut count = iteration_count
         total += count
         name = "zz"
         count = 0
         _ = churn(2)
-    pairs: list[tuple[i64, i64]] = [(1, 2), (3, 4)]
-    sums = 0
-    for left, right in pairs:
+    mut pairs: tuple[i64, i64][] = [(1, 2), (3, 4)]
+    mut sums = 0
+    for iteration_left, right in pairs:
+        mut left = iteration_left
         sums += left + right
         left = 100
     return keys == "w1w2w3" and total == 6 and sums == 10 and len(counts) == 3
 
 
 # spec-case: PY-FOR-REBIND-1
-public def test_nested_loops_rebind_each_variable() -> bool:
-    runs = 0
-    for row in range(3):
-        for column in range(3):
+public func test_nested_loops_rebind_each_variable() -> bool:
+    mut runs = 0
+    for iteration_row in range(3):
+        mut row = iteration_row
+        for iteration_column in range(3):
+            mut column = iteration_column
             column = 99
             runs += 1
         row = 99
-        for position, value in enumerate([1, 2]):
+        for iteration_position, value in enumerate([1, 2]):
+            mut position = iteration_position
             position = -1
             runs += value
     return runs == 9 + 3 * 3
 
 
 # spec-case: PY-FOR-REBIND-1
-public def test_a_generic_body_may_assign_its_loop_variables() -> bool:
+public func test_a_generic_body_may_assign_its_loop_variables() -> bool:
     return first_of([label(7), label(8)], "none") == "w7" and first_of([3, 4, 5], 0) == 3
 
 
 # spec-case: PY-FOR-REBIND-1
-public def test_a_compile_time_range_loop_may_assign_its_variable() -> bool:
+public func test_a_compile_time_range_loop_may_assign_its_variable() -> bool:
     return REBOUND_STEPS == 0 + 10 + 20 + 30
 
 
 # spec-case: PY-FOR-REBIND-1
-public def test_a_loop_that_never_assigns_its_variable_still_counts() -> bool:
-    values: [4]i64 = [1, 2, 3, 4]
-    total = 0
+public func test_a_loop_that_never_assigns_its_variable_still_counts() -> bool:
+    mut values: FixedArray[i64, 4] = FixedArray[int, 4]([1, 2, 3, 4])
+    mut total = 0
     for index in range(4):
         total += values[index]
     for position, value in enumerate(values):
         total += values[position] * value
-    squares = [values[index] * values[index] for index in range(4)]
+    mut squares = [for index in range(4) yield values[index] * values[index]]
     return total == 10 + 30 and squares == [1, 4, 9, 16]
 
 
-def main() -> int:
+func main() -> int:
     return 0

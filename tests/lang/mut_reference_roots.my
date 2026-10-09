@@ -1,51 +1,50 @@
-module mut_reference_roots
 
 record Packet:
-    items: list[int]
+    items: int[]
 
 
-def bump(packet: mut Packet) -> int:
+func bump(mut packet: Packet) -> int:
     packet.items.append(9)
     return len(packet.items)
 
 
-def bump_array(slots: mut [1]list[int]) -> int:
+func bump_array(mut slots: FixedArray[int[], 1]) -> int:
     slots[0].append(9)
     return len(slots[0])
 
 
-public def test_record_reference_after_allocation() -> bool:
-    kept = Packet([1, 2, 3])
-    scratch = [4, 5]
-    result = bump(mut kept)
+public func test_record_reference_after_allocation() -> bool:
+    mut kept = Packet(items=[1, 2, 3])
+    mut scratch = [4, 5]
+    mut result = bump(mut kept)
     return result == 4 and len(scratch) == 2
 
 
-public def test_array_reference_after_allocation() -> bool:
-    kept: [1]list[int] = [[1, 2, 3]]
-    scratch = [4, 5]
-    result = bump_array(mut kept)
+public func test_array_reference_after_allocation() -> bool:
+    mut kept: FixedArray[int[], 1] = FixedArray[int[], 1]([[1, 2, 3]])
+    mut scratch = [4, 5]
+    mut result = bump_array(mut kept)
     return result == 4 and len(scratch) == 2
 
 
-def selected(take: bool) -> bool:
-    kept = Packet([1, 2, 3])
-    scratch = [4, 5]
-    result = 0
+func selected(take: bool) -> bool:
+    mut kept = Packet(items=[1, 2, 3])
+    mut scratch = [4, 5]
+    mut result = 0
     if take:
         result = bump(mut kept)
     return result == 4 and len(scratch) == 2
 
 
-public def test_reference_through_forward_branch() -> bool:
+public func test_reference_through_forward_branch() -> bool:
     return selected(True)
 
 
-def through_parameter(packet: mut Packet) -> int:
-    scratch = [4, 5]
+func through_parameter(mut packet: Packet) -> int:
+    mut scratch = [4, 5]
     return bump(mut packet) + len(scratch)
 
 
-public def test_forwarded_reference_after_allocation() -> bool:
-    kept = Packet([1, 2, 3])
+public func test_forwarded_reference_after_allocation() -> bool:
+    mut kept = Packet(items=[1, 2, 3])
     return through_parameter(mut kept) == 6

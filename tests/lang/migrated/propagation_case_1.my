@@ -1,4 +1,3 @@
-module propagation_case_1
 
 
 result R:
@@ -11,11 +10,13 @@ result Outer:
     err: i64
 
 
-def flatten(r: Outer) -> R:
-    return Ok(r??)
+func flatten(r: Outer) -> R:
+    const inner = try r
+    const value = try inner
+    return Ok(value)
 
 
-def handle(r: R) -> i64:
+func handle(r: R) -> i64:
     match r:
         case R.ok(n):
             return n
@@ -23,5 +24,5 @@ def handle(r: R) -> i64:
             return e
 
 
-public def program() -> i64:
+public func program() -> i64:
     return handle(flatten(Ok(Ok(1)))) + handle(flatten(Ok(Err(2)))) + handle(flatten(Err(3)))

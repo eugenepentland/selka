@@ -9,9 +9,9 @@ const direct =
     \\record Entry:
     \\    view: DictValues[int, Entry]
     \\
-    \\def main() -> int:
-    \\    mapping: dict[int, Entry] = {}
-    \\    live = mapping.values()
+    \\func main() -> int:
+    \\    mut mapping: dict[int, Entry] = {}
+    \\    mut live = mapping.values()
     \\    mapping[0] = Entry(view=live)
     \\    return 0
 ;
@@ -33,10 +33,10 @@ test "D2 declarations reject direct mutual and generic view cycles" {
     try rejected(direct);
     try rejected(
         \\record First:
-        \\    entries: list[Second]
+        \\    entries: Second[]
         \\record Second:
         \\    view: DictKeys[int, First]
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     );
     try rejected(
@@ -44,16 +44,16 @@ test "D2 declarations reject direct mutual and generic view cycles" {
         \\    value: T
         \\record Entry:
         \\    value: Wrapper[DictItems[int, Entry]]
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     );
     try rejected(
-        \\union Link:
-        \\    end,
-        \\    more: Entry
+        \\enum Link:
+        \\    end
+        \\    more(value: Entry)
         \\record Entry:
-        \\    views: [2]DictValues[int, Link]
-        \\def main() -> int:
+        \\    views: FixedArray[DictValues[int, Link], 2]
+        \\func main() -> int:
         \\    return 0
     );
 }
@@ -61,25 +61,25 @@ test "D2 declarations reject direct mutual and generic view cycles" {
 test "live view cycle admission keeps ordinary views snapshots and recursion" {
     try accepted(
         \\record Node:
-        \\    children: list[Node]
-        \\    next: Option[Node]
+        \\    children: Node[]
+        \\    next: Node?
         \\record Saved:
-        \\    view: list[int]
-        \\def retain(mapping: dict[int, int]) -> Saved:
+        \\    view: int[]
+        \\func retain(mapping: dict[int, int]) -> Saved:
         \\    return Saved(view=list(mapping.values()))
-        \\def main() -> int:
-        \\    mapping = {1: 4}
-        \\    snapshot = mapping
-        \\    retained = retain(snapshot)
+        \\func main() -> int:
+        \\    mut mapping = {1: 4}
+        \\    mut snapshot = mapping
+        \\    mut retained = retain(snapshot)
         \\    mapping[1] = 7
-        \\    node = Node(children=[], next=None)
+        \\    mut node = Node(children=[], next=None)
         \\    return len(retained.view) + len(node.children)
     );
     try accepted(
         \\record Entry:
-        \\    values: list[Entry]
-        \\def main() -> int:
-        \\    mapping: dict[int, Entry] = {}
+        \\    values: Entry[]
+        \\func main() -> int:
+        \\    mut mapping: dict[int, Entry] = {}
         \\    mapping[0] = Entry(values=list(mapping.values()))
         \\    return len(mapping)
     );
@@ -91,16 +91,16 @@ test "D2 rejects phantom and empty array view annotations but permits user names
         \\    pass
         \\record Entry:
         \\    marker: Phantom[DictValues[int, Entry]]
-        \\    empty: [0]DictValues[int, Entry]
-        \\def main() -> int:
+        \\    empty: FixedArray[DictValues[int, Entry], 0]
+        \\func main() -> int:
         \\    return 0
     );
     try accepted(
         \\record DictValues[K, V]:
-        \\    values: list[V]
+        \\    values: V[]
         \\record Entry:
         \\    nested: DictValues[int, Entry]
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     );
 }

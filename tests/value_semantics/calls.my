@@ -1,47 +1,46 @@
-module calls
 
 
 record Carrier:
-    items: list[int]
+    items: int[]
 
 
-def touch(target: mut list[int], source: list[int]) -> int:
+func touch(mut target: int[], source: int[]) -> int:
     target.append(len(source))
     return len(source)
 
 
-def reversed(source: list[int], target: mut list[int]) -> int:
+func reversed(source: int[], mut target: int[]) -> int:
     target.append(len(source))
     return len(source)
 
 
-def touch_both(first: mut list[int], second: mut list[int], source: list[int]) -> int:
+func touch_both(mut first: int[], mut second: int[], source: int[]) -> int:
     first.append(len(source))
     second.append(len(source))
     return len(source)
 
 
 # spec-case: VALUE-SEMANTICS-5
-public def test_a_mut_argument_before_or_after_its_snapshot() -> bool:
-    first = [1, 2]
-    seen_first = touch(mut first, first)
-    second = [1, 2]
-    seen_second = reversed(second, mut second)
+public func test_a_mut_argument_before_or_after_its_snapshot() -> bool:
+    mut first = [1, 2]
+    mut seen_first = touch(mut first, first)
+    mut second = [1, 2]
+    mut seen_second = reversed(second, mut second)
     return seen_first == 2 and seen_second == 2 and first == [1, 2, 2] and second == [1, 2, 2]
 
 
 # `touch_both(mut items, mut items, items)` is E_MUTATION_OVERLAP
 # (MUT-EXCLUSIVE-1); a read-only snapshot of one `mut` operand stays legal.
 # spec-case: VALUE-SEMANTICS-5
-public def test_two_mut_operands_and_a_snapshot_of_one_of_them() -> bool:
-    items = [1, 2]
-    others = [7]
-    seen = touch_both(mut items, mut others, items)
+public func test_two_mut_operands_and_a_snapshot_of_one_of_them() -> bool:
+    mut items = [1, 2]
+    mut others = [7]
+    mut seen = touch_both(mut items, mut others, items)
     return seen == 2 and items == [1, 2, 2] and others == [7, 2]
 
 
 # spec-case: VALUE-SEMANTICS-5
-public def test_a_mut_record_field_is_redirected_after_a_later_snapshot() -> bool:
-    holder = Carrier(items=[1, 2])
-    seen = touch(mut holder.items, holder.items)
+public func test_a_mut_record_field_is_redirected_after_a_later_snapshot() -> bool:
+    mut holder = Carrier(items=[1, 2])
+    mut seen = touch(mut holder.items, holder.items)
     return seen == 2 and holder.items == [1, 2, 2]

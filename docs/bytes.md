@@ -12,10 +12,10 @@ an `int` in `0..255`, slicing copies a byte range, and `+` concatenates.
 
 ```mylang
 # doc: expect 42
-def main() -> int:
-    header = b"my"
-    body = b"lang"
-    whole = header + body
+func main() -> int:
+    mut header = b"my"
+    mut body = b"lang"
+    mut whole = header + body
     if len(whole) != 6:
         return 1
     if whole[0] != 109:
@@ -42,15 +42,15 @@ alias replaced.
 
 ```mylang
 # doc: expect 30
-def main() -> int:
-    frame = b"\x01\x02\x03\x04"
+func main() -> int:
+    mut frame = b"\x01\x02\x03\x04"
     if len(frame[2:99]) != 2:
         return 1
     if len(frame[-1:0]) != 0:
         return 2
     if frame[-2] != 3:
         return 3
-    total = 0
+    mut total = 0
     for value in frame:
         total += value
     for index, value in enumerate(frame):
@@ -67,8 +67,8 @@ subsequence. `b.find(x)` returns the first index of a subsequence or `-1`, and
 
 ```mylang
 # doc: expect 15
-def main() -> int:
-    record = b"GET /index.html"
+func main() -> int:
+    mut record = b"GET /index.html"
     if not record.startswith(b"GET "):
         return 1
     if record.endswith(b".css"):
@@ -99,8 +99,8 @@ one of several terminators without first copying the bytes that remain.
 
 ```mylang
 # doc: expect 24
-def main() -> int:
-    record = b"GET /index.html HTTP/1.1"
+func main() -> int:
+    mut record = b"GET /index.html HTTP/1.1"
     if record.find_any(b" \r\n", 4) != 15:
         return 1
     if record.find_any(b"/", 5) != 20:
@@ -122,16 +122,16 @@ string from a `list[bytes]`.
 
 ```mylang
 # doc: expect 11
-def main() -> int:
-    line = b"name,age,city"
-    fields = line.split(b",")
+func main() -> int:
+    mut line = b"name,age,city"
+    mut fields = line.split(b",")
     if len(fields) != 3:
         return 1
     if fields[1] != b"age":
         return 2
     if b",".join(fields) != line:
         return 3
-    widths = 0
+    mut widths = 0
     for field in fields:
         widths += len(field)
     return widths
@@ -145,12 +145,12 @@ traps with `R_BYTE_RANGE`, so range-check untrusted input before converting.
 
 ```mylang
 # doc: expect 177
-def main() -> int:
-    values: list[int] = [72, 105]
-    greeting = bytes(values)
+func main() -> int:
+    mut values: int[] = [72, 105]
+    mut greeting = bytes(values)
     if greeting != b"Hi":
         return 1
-    octets = greeting.to_list()
+    mut octets = greeting.to_list()
     if len(octets) != 2:
         return 2
     if octets[1] != 105:
@@ -165,12 +165,12 @@ provided, so a byte string never turns into its own debug spelling by accident.
 
 ```mylang
 # doc: expect 6
-def text_of(raw: bytes) -> Result[str, str]:
+func text_of(raw: bytes) -> Result[str, str]:
     return raw.decode()
 
 
-def main() -> int:
-    encoded = "héllo".encode()
+func main() -> int:
+    mut encoded = "héllo".encode()
     if len(encoded) != 6:
         return 1
     match text_of(encoded):
@@ -191,12 +191,12 @@ back, returning `Result[bytes, str]` for odd lengths and non-hexadecimal digits.
 
 ```mylang
 # doc: expect 54
-def parse(digits: str) -> Result[bytes, str]:
+func parse(digits: str) -> Result[bytes, str]:
     return bytes.fromhex(digits)
 
 
-def main() -> int:
-    raw = b"\x0f\xa0"
+func main() -> int:
+    mut raw = b"\x0f\xa0"
     if raw.hex() != "0fa0":
         return 1
     match parse("0fa0"):
@@ -225,19 +225,19 @@ record Packet:
     payload: bytes
 
 
-def main() -> int:
-    packets: list[Packet] = [Packet(kind="hello", payload=b"\x01"), Packet(kind="data", payload=b"\x02\x03")]
-    index: dict[str, bytes] = {}
+func main() -> int:
+    mut packets: Packet[] = [Packet(kind="hello", payload=b"\x01"), Packet(kind="data", payload=b"\x02\x03")]
+    mut index: dict[str, bytes] = {}
     for packet in packets:
         index[packet.kind] = packet.payload
     if len(index) != 2:
         return 1
     if index["data"] != b"\x02\x03":
         return 2
-    alias = packets[1]
+    mut alias = packets[1]
     if alias.payload != packets[1].payload:
         return 3
-    total = 0
+    mut total = 0
     for value in index["data"]:
         total += value
     return total + len(index["hello"])
@@ -253,7 +253,7 @@ function cannot construct them. Building octets in place is what the separate
 
 Like `str`, `bytes` is accepted in exported module signatures but is not an
 ordinary data type at wire boundaries. JSON encoding and decoding reject it with
-`E_JSON_CODEC`, and an `extern def` signature rejects it with
+`E_JSON_CODEC`, and an `extern func` signature rejects it with
 `E_EXTERN_SIGNATURE`. Every byte-string operation is native code over the C
 runtime's byte routines, which mirror its text routines with a one-byte stride.
 
@@ -279,18 +279,18 @@ a view (`v[a:b]`) copies too, exactly like slicing a byte string.
 
 ```mylang
 # doc: expect 42
-def strip_quotes(line: bytes) -> bytes:
+func strip_quotes(line: bytes) -> bytes:
     if len(line) < 2 or line[0] != 34:
         return line
     return line.view(1, len(line) - 1)
 
 
-def main() -> int:
-    line = b'"content-length: 42"'
-    field = strip_quotes(line)
+func main() -> int:
+    mut line = b'"content-length: 42"'
+    mut field = strip_quotes(line)
     if field != b"content-length: 42":
         return 1
-    name = field.view(0, 14)
+    mut name = field.view(0, 14)
     if name != b"content-length" or len(name) != 14:
         return 2
     if field.view(16, 18) != b"42":
@@ -298,7 +298,7 @@ def main() -> int:
     # Clamping matches a slice: negative endpoints count from the end.
     if field.view(0 - 2, 99) != b"42":
         return 4
-    owned = name.copy()
+    mut owned = name.copy()
     if owned != b"content-length" or owned == b"content-lengt":
         return 5
     if line == field or len(line) != 20:
@@ -341,14 +341,13 @@ gamma
 # doc: project embedding
 # doc: file main.my
 # doc: expect 3
-module main
 
 const WORDS: str = embed_str("words.txt")
 
 
-def main() -> int:
-    text = WORDS
-    total = 0
+func main() -> int:
+    mut text = WORDS
+    mut total = 0
     for line in text.split("\n"):
         if len(line) != 0 and line[0] != "#":
             total += 1
@@ -382,14 +381,14 @@ symbolic link that stays inside the root is followed.
 
 ```mylang
 # doc: expect-error E_EMBED_MISSING
-def main() -> int:
+func main() -> int:
     return len(embed_bytes("no-such-file.bin"))
 ```
 
 ```mylang
 # doc: expect-error E_EMBED_ARGUMENT
-def main() -> int:
-    name = "table.bin"
+func main() -> int:
+    mut name = "table.bin"
     return len(embed_bytes(name))
 ```
 
@@ -443,15 +442,15 @@ also avoids a view, but may allocate the error string for invalid UTF-8 and is
 therefore not accepted under `noalloc`.
 
 `b.parse_int()` and `b.parse_float()` answer `Option[int]` and `Option[float]` by
-reading the octets through the same pinned grammar as `int(text)` and
-`float(text)`: surrounding ASCII whitespace, one optional sign, decimal digits
+reading the octets through the same pinned grammar as `parse_int(text)` and
+`parse_float(text)`: surrounding ASCII whitespace, one optional sign, decimal digits
 with single `_` separators between them, a fraction, an exponent, and the
 `inf`/`infinity`/`nan` spellings. An overflowing integer answers `None` rather
 than wrapping, and neither parse allocates, so a `noalloc` function may call them.
 
 ```mylang
 # doc: expect 42
-def measure(raw: bytes) -> int:
+func measure(raw: bytes) -> int:
     match raw.scalar_count():
         case Ok(width):
             return width
@@ -459,11 +458,11 @@ def measure(raw: bytes) -> int:
             return 0 - 1
 
 
-def main() -> int:
-    ascii = b"hello"
+func main() -> int:
+    mut ascii = b"hello"
     if measure(ascii) != 5:
         return 1
-    mixed = b"a\xce\xbbb\xf0\x9f\x98\x80c"
+    mut mixed = b"a\xce\xbbb\xf0\x9f\x98\x80c"
     if measure(mixed) != 5:
         return 2
     if measure(b"\xff") != 0 - 1:
@@ -487,7 +486,7 @@ def main() -> int:
             return 9
         case None:
             pass
-    token = b"size=2.5mm".view(5, 8)
+    mut token = b"size=2.5mm".view(5, 8)
     match token.parse_float():
         case Some(value):
             if value != 2.5:
@@ -538,9 +537,9 @@ its snapshot with `bytes(buffer)`.
 
 ```mylang
 # doc: expect 42
-def main() -> int:
-    empty: list[int] = []
-    buffer = byte_buffer(empty)
+func main() -> int:
+    mut empty: int[] = []
+    mut buffer = byte_buffer(empty)
     if not buffer.append_range(b"hello world", 0, 5):
         return 1
     if not buffer.append_byte(44):
@@ -551,7 +550,7 @@ def main() -> int:
         return 4
     if not buffer.append_float(2.5):
         return 9
-    snapshot = bytes(buffer)
+    mut snapshot = bytes(buffer)
     if not buffer.reserve(64):
         return 5
     if not buffer.append_byte(33):
@@ -567,15 +566,15 @@ compiling. Everywhere else a byte literal is a `bytes` value.
 
 ```mylang
 # doc: expect 131
-def checksum(view: bytes) -> int:
-    total = 0
+func checksum(view: bytes) -> int:
+    mut total = 0
     for byte in view:
         total += byte
     return total
 
 
-def main() -> int:
-    managed = b"AB"
+func main() -> int:
+    mut managed = b"AB"
     if len(managed) != 2:
         return 1
     return checksum(b"AB") + managed[0] - 65
@@ -593,10 +592,10 @@ decoded bytes, beyond which it reports `E_BYTE_LITERAL_LIMIT`.
 
 ```mylang
 # doc: expect 42
-def main() -> int:
+func main() -> int:
     if b'ok' != b"ok":
         return 1
-    escapes = b"\x2a\t\n\r\0\\\""
+    mut escapes = b"\x2a\t\n\r\0\\\""
     if len(escapes) != 7:
         return 2
     if escapes[4] != 0 or escapes[6] != 34:

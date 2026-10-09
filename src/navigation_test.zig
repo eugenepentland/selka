@@ -11,14 +11,13 @@ const Files = struct {
     fn read(context: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) graph.ReadError![]u8 {
         const self: *Files = @ptrCast(@alignCast(context.?));
         const data_source =
-            \\module data
             \\
             \\
             \\public record Box:
             \\    value: i64
             \\
             \\
-            \\public def read(x: Box) -> i64 effects():
+            \\public func read(x: Box) -> i64 effects():
             \\    return x.value
         ;
         const bytes = if (std.mem.eql(u8, path, "main.my")) self.main else if (std.mem.eql(u8, path, "data.my")) data_source else return error.NotFound;
@@ -27,16 +26,15 @@ const Files = struct {
     }
 };
 const fixture =
-    \\module main
     \\import data
     \\
     \\
-    \\def read(x: i64) -> i64:
+    \\func read(x: i64) -> i64:
     \\    return x
     \\
     \\
-    \\def main() -> i64:
-    \\    b = data.Box(value=3)
+    \\func main() -> i64:
+    \\    mut b = data.Box(value=3)
     \\    return read(data.read(b))
 ;
 fn emitted(allocator: std.mem.Allocator, compilation: *pc.Compilation) !void {
@@ -77,10 +75,9 @@ test "navigation resolves qualified calls fields and source identities without e
 }
 test "navigation exposes declarations but never checked references after a semantic failure" {
     var files: Files = .{ .main =
-        \\module main
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return missing()
     };
     var project = graph.Project.init(t.allocator);
@@ -100,10 +97,9 @@ test "navigation exposes declarations but never checked references after a seman
 
 test "navigation syntax failure retains lexical declarations without resolving comments or calls" {
     var files: Files = .{ .main =
-        \\module main
         \\import data
-        \\# def invented()
-        \\def broken() -> i64:
+        \\# func invented()
+        \\func broken() -> i64:
         \\    return +
     };
     var project = graph.Project.init(t.allocator);
@@ -157,20 +153,19 @@ fn typeTargets(value: std.json.Value) !void {
 }
 test "navigation synthesized array shapes never resolve to function local or field declarations" {
     const parsed = try document(
-        \\module main
         \\
         \\
         \\record Box:
         \\    n: i64
         \\
         \\
-        \\def repeat[T](v: T) -> [1]T:
-        \\    return [v]
+        \\func repeat[T](v: T) -> FixedArray[T, 1]:
+        \\    return FixedArray[T, 1]([v])
         \\
         \\
-        \\def main() -> i64:
-        \\    value = Box(n=3)
-        \\    items = repeat[Box](value)
+        \\func main() -> i64:
+        \\    mut value = Box(n=3)
+        \\    mut items = repeat[Box](value)
         \\    return items[0].n
     );
     defer parsed.deinit();
@@ -209,25 +204,24 @@ test "navigation jsonStringify preserves flat wire facts and reports a full writ
 // spec-case: NAVIGATION-1
 test "navigation publishes declared mutation footprints and return origins" {
     const parsed = try document(
-        \\module main
         \\
         \\
-        \\def touch(values: mut list[int]) -> None effects(mutation):
+        \\func touch(mut values: int[]) -> Unit effects(mutation):
         \\    values[0] = 1
         \\
         \\
-        \\def pick(values: list[int]) -> list[int] effects():
+        \\func pick(values: int[]) -> int[] effects():
         \\    return values
         \\
         \\
-        \\def total(values: list[int]) -> int effects():
+        \\func total(values: int[]) -> int effects():
         \\    return len(values)
         \\
         \\
-        \\def main() -> int:
-        \\    values = [1]
+        \\func main() -> int:
+        \\    mut values = [1]
         \\    touch(mut values)
-        \\    picked = pick(values)
+        \\    mut picked = pick(values)
         \\    picked[0] = 2
         \\    return total(picked)
     );
@@ -259,14 +253,14 @@ test "navigation publishes declared mutation footprints and return origins" {
 }
 
 test "navigation excerpts retain complete UTF8 at the size bound" {
-    const prefix = "module main\nimport data\n\n\ndef main() -> i64:\n    # ";
+    const prefix = "import data\n\n\nfunc main() -> i64:\n    # ";
     const name_start = std.mem.indexOf(u8, prefix, "main() -> i64").?;
     const padding = name_start + 16383 - prefix.len;
     var bytes: std.ArrayList(u8) = .empty;
     defer bytes.deinit(t.allocator);
     try bytes.appendSlice(t.allocator, prefix);
     try bytes.appendNTimes(t.allocator, 'x', padding);
-    try bytes.appendSlice(t.allocator, "é remaining comment\n    b = data.Box(value=3)\n    return data.read(b)");
+    try bytes.appendSlice(t.allocator, "é remaining comment\n    const b = data.Box(value=3)\n    return data.read(b)");
     const parsed = try document(bytes.items);
     defer parsed.deinit();
     var found = false;
@@ -291,7 +285,7 @@ test "navigation excerpts preserve original module qualified calls" {
         linked_found = true;
         try t.expectEqualStrings(
             \\main() -> i64:
-            \\    b = data.Box(value=3)
+            \\    mut b = data.Box(value=3)
             \\    return read(data.read(b))
         , item.object.get("snippet").?.string);
     }
@@ -301,26 +295,25 @@ test "navigation excerpts preserve original module qualified calls" {
 // spec: TESTS-FOR-1
 test "renderTestsFor reports direct and transitive tests for a declaration" {
     var files: Files = .{ .main =
-        \\module main
         \\
         \\
-        \\def parse(value: i64) -> i64:
+        \\func parse(value: i64) -> i64:
         \\    return helper(value)
         \\
         \\
-        \\def helper(value: i64) -> i64:
+        \\func helper(value: i64) -> i64:
         \\    return value
         \\
         \\
-        \\def test_parse() -> bool effects():
+        \\func test_parse() -> bool effects():
         \\    return parse(1) == 1
         \\
         \\
-        \\def test_end_to_end() -> bool effects():
+        \\func test_end_to_end() -> bool effects():
         \\    return helper(2) == 2
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     };
     var project = graph.Project.init(t.allocator);
@@ -347,19 +340,18 @@ fn expectUnavailableFacts(symbol: std.json.ObjectMap) !void {
 // spec: NAVIGATION-FACTS-1
 test "navigation publishes null inferred facts and a status when bodies were not checked" {
     var files: Files = .{ .main =
-        \\module main
         \\import data
         \\
         \\
-        \\def double(x: i64) -> i64 effects(managed_allocation):
+        \\func double(x: i64) -> i64 effects(managed_allocation):
         \\    return x * 2
         \\
         \\
-        \\def unfinished(x: i64) -> i64:
+        \\func unfinished(x: i64) -> i64:
         \\    return todo[i64]()
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return data.read(data.Box(value=double(2)))
     };
     var project = graph.Project.init(t.allocator);
@@ -416,16 +408,15 @@ test "navigation keeps a checked symbol's exact field set with no analysis claus
 // spec: NAVIGATION-FACTS-2
 test "navigation marks a generic no instantiation used as a template" {
     var files: Files = .{ .main =
-        \\module main
         \\
         \\
-        \\def build[T](x: T) -> i64:
-        \\    items: list[i64] = []
+        \\func build[T](x: T) -> i64:
+        \\    mut items: i64[] = []
         \\    items.append(1)
         \\    return items[0]
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     };
     var project = graph.Project.init(t.allocator);
@@ -453,9 +444,8 @@ test "navigation marks a generic no instantiation used as a template" {
 // spec: NAVIGATION-FACTS-3
 test "lexical-only navigation candidates publish a status and no inferred facts" {
     var files: Files = .{ .main =
-        \\module main
         \\import data
-        \\def broken() -> i64:
+        \\func broken() -> i64:
         \\    return +
     };
     var project = graph.Project.init(t.allocator);

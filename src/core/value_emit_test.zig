@@ -29,27 +29,28 @@ const wide =
     \\    f: int
     \\
     \\
-    \\def mk(i: int) -> Wide:
+    \\func mk(i: int) -> Wide:
     \\    return Wide(a=i, b=i + 1, c=i + 2, d=i + 3, e=i + 4, f=i + 5)
     \\
     \\
-    \\def widen(w: Wide, k: int) -> Wide:
+    \\func widen(input: Wide, k: int) -> Wide:
+    \\    mut w = input
     \\    w.a = w.a + k
     \\    w.f = w.f * 2
     \\    return w
     \\
     \\
-    \\def swap_loop(a0: Wide, b0: Wide, n: int) -> int:
-    \\    a = a0
-    \\    b = b0
+    \\func swap_loop(a0: Wide, b0: Wide, n: int) -> int:
+    \\    mut a = a0
+    \\    mut b = b0
     \\    for i in range(n):
-    \\        t = a
+    \\        mut t = a
     \\        a = widen(b, i)
     \\        b = t
     \\    return a.a * 1000 + b.a
     \\
     \\
-    \\def main(out: Stream) -> int:
+    \\func main(out: Stream) -> int:
     \\    out.print(swap_loop(mk(1), mk(100), 5))
     \\    return 0
     \\
@@ -94,28 +95,28 @@ const stores =
     \\    flag: bool
     \\
     \\
-    \\union Value:
-    \\    integer: int,
-    \\    cell: Cell
+    \\enum Value:
+    \\    integer(value: int)
+    \\    cell(value: Cell)
     \\
     \\
-    \\def values(n: int) -> list[Value]:
-    \\    vs: list[Value] = []
+    \\func values(n: int) -> Value[]:
+    \\    mut vs: Value[] = []
     \\    for i in range(n):
-    \\        vs.append(Value.cell(Cell(code=i, weight=i, flag=True)))
-    \\        vs.append(Value.integer(i))
+    \\        vs.append(Value.cell(value=Cell(code=i, weight=i, flag=True)))
+    \\        vs.append(Value.integer(value=i))
     \\    return vs
     \\
     \\
-    \\def peek(vs: list[Value], i: int) -> int:
+    \\func peek(vs: Value[], i: int) -> int:
     \\    match vs[i]:
-    \\        case Value.integer(n):
+    \\        case Value.integer(value=n):
     \\            return n
-    \\        case Value.cell(c):
+    \\        case Value.cell(value=c):
     \\            return c.code * 10 + c.weight
     \\
     \\
-    \\def main(out: Stream) -> int:
+    \\func main(out: Stream) -> int:
     \\    out.print(peek(values(3), 4))
     \\    return 0
     \\

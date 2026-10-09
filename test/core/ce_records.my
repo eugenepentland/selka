@@ -1,4 +1,3 @@
-module ce_records
 # CE-A (records in the emitter): records over four words share homes, are read where
 # they lie, updated in place and passed in-out. Every case prints what value semantics
 # says it must; the copies the emitter removed must not be observable.
@@ -24,14 +23,14 @@ record Pair:
 
 record Bag:
     name: str
-    items: list[int]
+    items: int[]
     count: int
     total: int
     last: int
 
 
 record Runtime:
-    stack: list[int]
+    stack: int[]
     top: int
     a: int
     b: int
@@ -44,13 +43,13 @@ record Interp:
     depth: int
 
 
-union Shape:
-    none,
-    dot: Span,
-    bag: Bag
+enum Shape:
+    none
+    dot(value: Span)
+    bag(value: Bag)
 
 
-def advance(src: bytes, t: mut Cursor):
+func advance(src: bytes, mut t: Cursor):
     if t.pos < len(src):
         if src[t.pos] == 10:
             t.line += 1
@@ -60,15 +59,15 @@ def advance(src: bytes, t: mut Cursor):
         t.pos += 1
 
 
-def mark(t: mut Cursor):
+func mark(mut t: Cursor):
     t.span = Span(line=t.line, col=t.col, offset=t.pos)
 
 
 # A phi in a loop with break and continue: the cursor is carried around the loop,
 # changed on some paths only, and read after it.
-def scan(src: bytes) -> int:
-    t = Cursor(pos=0, line=1, col=1, span=Span(line=0, col=0, offset=0))
-    seen = 0
+func scan(src: bytes) -> int:
+    mut t = Cursor(pos=0, line=1, col=1, span=Span(line=0, col=0, offset=0))
+    mut seen = 0
     while t.pos < len(src):
         if src[t.pos] == 35:
             mark(mut t)
@@ -83,21 +82,21 @@ def scan(src: bytes) -> int:
 
 # A snapshot taken before an in-place update keeps the old value: here the old
 # version is read after the write, so the write must not reuse its home.
-def snapshot() -> int:
-    t = Cursor(pos=5, line=2, col=3, span=Span(line=1, col=1, offset=1))
-    old = t
+func snapshot() -> int:
+    mut t = Cursor(pos=5, line=2, col=3, span=Span(line=1, col=1, offset=1))
+    mut old = t
     t.pos += 10
-    nested = t.span
+    mut nested = t.span
     t.span.offset = 99
     return old.pos * 1000 + t.pos * 10 + nested.offset + t.span.offset * 100000
 
 
 # Two loop-carried records swapped each iteration (a parallel copy on the back edge).
-def swaps(n: int) -> int:
-    a = Cursor(pos=1, line=0, col=0, span=Span(line=0, col=0, offset=0))
-    b = Cursor(pos=2, line=0, col=0, span=Span(line=0, col=0, offset=0))
+func swaps(n: int) -> int:
+    mut a = Cursor(pos=1, line=0, col=0, span=Span(line=0, col=0, offset=0))
+    mut b = Cursor(pos=2, line=0, col=0, span=Span(line=0, col=0, offset=0))
     for i in range(n):
-        t = a
+        mut t = a
         a = b
         b = t
         b.col += i
@@ -105,16 +104,16 @@ def swaps(n: int) -> int:
 
 
 # A field moved from one memory field of a record to another of the same record.
-def shuffle() -> int:
-    p = Pair(left=Span(line=1, col=2, offset=3), right=Span(line=4, col=5, offset=6))
-    q = p
+func shuffle() -> int:
+    mut p = Pair(left=Span(line=1, col=2, offset=3), right=Span(line=4, col=5, offset=6))
+    mut q = p
     p.right = p.left
     p.left = Span(line=7, col=8, offset=9)
     return p.left.line * 100000 + p.right.line * 10000 + q.right.line * 1000 + q.left.col * 100 + p.right.offset
 
 
 # Records with counted children: a list and a text field, updated in place and through `mut`.
-def push_all(b: mut Bag, n: int):
+func push_all(mut b: Bag, n: int):
     for i in range(n):
         b.items.append(i)
         b.count += 1
@@ -122,11 +121,11 @@ def push_all(b: mut Bag, n: int):
         b.last = i
 
 
-def counted() -> int:
-    b = Bag(name="bag", items=[], count=0, total=0, last=-1)
-    keep = b
+func counted() -> int:
+    mut b = Bag(name="bag", items=[], count=0, total=0, last=-1)
+    mut keep = b
     push_all(mut b, 5)
-    copy = b
+    mut copy = b
     b.items.append(100)
     b.name = b.name + "!"
     push_all(mut b, 2)
@@ -134,16 +133,16 @@ def counted() -> int:
 
 
 # Unions over four words: a payload read where it lies, and a match on an updated copy.
-def shapes(k: int) -> int:
-    s = Shape.dot(Span(line=k, col=k + 1, offset=k + 2))
+func shapes(k: int) -> int:
+    mut s = Shape.dot(value=Span(line=k, col=k + 1, offset=k + 2))
     if k > 2:
-        s = Shape.bag(Bag(name="b", items=[k, k], count=2, total=2 * k, last=k))
-    total = 0
+        s = Shape.bag(value=Bag(name="b", items=[k, k], count=2, total=2 * k, last=k))
+    mut total = 0
     match s:
-        case Shape.dot(d):
+        case Shape.dot(value=d):
             total = d.line + d.col + d.offset
-        case Shape.bag(g):
-            h = g
+        case Shape.bag(value=g):
+            mut h = g
             h.total += 1
             total = g.total * 1000 + h.total + len(g.items)
         case Shape.none:
@@ -152,7 +151,7 @@ def shapes(k: int) -> int:
 
 
 # Result payloads propagated with `?` next to a `mut` record.
-def step(t: mut Cursor, limit: int) -> Result[Span, str]:
+func step(mut t: Cursor, limit: int) -> Result[Span, str]:
     if t.pos >= limit:
         return Err("end")
     t.pos += 1
@@ -160,21 +159,21 @@ def step(t: mut Cursor, limit: int) -> Result[Span, str]:
     return Ok(t.span)
 
 
-def steps(t: mut Cursor, limit: int) -> Result[int, str]:
-    first = step(mut t, limit)?
-    second = step(mut t, limit)?
+func steps(mut t: Cursor, limit: int) -> Result[int, str]:
+    mut first = try step(mut t, limit)
+    mut second = try step(mut t, limit)
     return Ok(first.offset * 10 + second.offset)
 
 
-def results() -> int:
-    t = Cursor(pos=0, line=3, col=4, span=Span(line=0, col=0, offset=0))
-    a = 0
+func results() -> int:
+    mut t = Cursor(pos=0, line=3, col=4, span=Span(line=0, col=0, offset=0))
+    mut a = 0
     match steps(mut t, 10):
         case Ok(v):
             a = v
         case Err(e):
             a = -len(e)
-    b = 0
+    mut b = 0
     match steps(mut t, 3):
         case Ok(v):
             b = v
@@ -184,67 +183,67 @@ def results() -> int:
 
 
 # Recursion through a `mut` record.
-def climb(t: mut Cursor, depth: int) -> int:
+func climb(mut t: Cursor, depth: int) -> int:
     if depth == 0:
         return t.pos
     t.pos += depth
-    below = climb(mut t, depth - 1)
+    mut below = climb(mut t, depth - 1)
     t.col += 1
     return below + t.col
 
 
-def recursion() -> int:
-    t = Cursor(pos=0, line=0, col=0, span=Span(line=0, col=0, offset=0))
-    r = climb(mut t, 6)
+func recursion() -> int:
+    mut t = Cursor(pos=0, line=0, col=0, span=Span(line=0, col=0, offset=0))
+    mut r = climb(mut t, 6)
     return r * 1000 + t.pos * 10 + t.col
 
 
 # A `mut` argument next to read-only arguments that read it, or a part of it: they see
 # the value from before the call.
-def overlap(t: mut Cursor, before: Cursor, part: Span) -> int:
+func overlap(mut t: Cursor, before: Cursor, part: Span) -> int:
     t.pos = 1000
     t.span.offset = 77
     return before.pos + part.offset + t.pos
 
 
-def overlaps() -> int:
-    t = Cursor(pos=3, line=0, col=0, span=Span(line=0, col=0, offset=4))
-    r = overlap(mut t, t, t.span)
+func overlaps() -> int:
+    mut t = Cursor(pos=3, line=0, col=0, span=Span(line=0, col=0, offset=4))
+    mut r = overlap(mut t, t, t.span)
     return r * 1000 + t.span.offset
 
 
 # Two `mut` records passed in one call, and a `mut` record updated twice by one helper.
-def trade(a: mut Cursor, b: mut Cursor) -> int:
-    keep = a
+func trade(mut a: Cursor, mut b: Cursor) -> int:
+    mut keep = a
     a = b
     b = keep
     a.col += 1
     return a.pos * 10 + b.pos
 
 
-def apply(t: mut Cursor) -> int:
+func apply(mut t: Cursor) -> int:
     mark(mut t)
     t.pos += 1
     mark(mut t)
     return t.span.offset
 
 
-def two() -> int:
-    a = Cursor(pos=1, line=0, col=0, span=Span(line=0, col=0, offset=0))
-    b = Cursor(pos=2, line=0, col=5, span=Span(line=0, col=0, offset=0))
-    r = trade(mut a, mut b)
-    t = Cursor(pos=9, line=8, col=7, span=Span(line=0, col=0, offset=0))
-    s = apply(mut t)
+func two() -> int:
+    mut a = Cursor(pos=1, line=0, col=0, span=Span(line=0, col=0, offset=0))
+    mut b = Cursor(pos=2, line=0, col=5, span=Span(line=0, col=0, offset=0))
+    mut r = trade(mut a, mut b)
+    mut t = Cursor(pos=9, line=8, col=7, span=Span(line=0, col=0, offset=0))
+    mut s = apply(mut t)
     return r * 100000 + a.pos * 10000 + a.col * 1000 + b.pos * 100 + s
 
 
 # A record built in the caller's destination and returned through several paths.
-def build(k: int) -> Cursor:
-    c = Cursor(pos=k, line=k, col=k, span=Span(line=k, col=k, offset=k))
+func build(k: int) -> Cursor:
+    mut c = Cursor(pos=k, line=k, col=k, span=Span(line=k, col=k, offset=k))
     if k % 2 == 0:
         c.pos += 1
         return c
-    other = c
+    mut other = c
     other.line = 50
     if k > 5:
         return other
@@ -252,58 +251,58 @@ def build(k: int) -> Cursor:
     return c
 
 
-def built() -> int:
-    total = 0
+func built() -> int:
+    mut total = 0
     for k in range(9):
-        c = build(k)
+        mut c = build(k)
         total = total * 3 + c.pos + c.line + c.col
     return total
 
 
 # Write-backs (`wb = it.rt; push(mut wb, v); it.rt = wb`): built in the field itself, except
 # where a snapshot of the old field is still read after the update.
-def push(rt: mut Runtime, v: int):
+func push(mut rt: Runtime, v: int):
     rt.stack[rt.top] = v
     rt.top = rt.top + 1
 
 
-def pop(rt: mut Runtime) -> int:
+func pop(mut rt: Runtime) -> int:
     rt.top = rt.top - 1
     return rt.stack[rt.top]
 
 
-def interp_step(it: mut Interp, v: int) -> int:
-    wb = it.rt
+func interp_step(mut it: Interp, v: int) -> int:
+    mut wb = it.rt
     push(mut wb, v)
     it.rt = wb
     if v % 2 == 0:
-        wb2 = it.rt
-        x = pop(mut wb2)
+        mut wb2 = it.rt
+        mut x = pop(mut wb2)
         it.rt = wb2
         return x
-    snap = it.rt
-    wb3 = it.rt
+    mut snap = it.rt
+    mut wb3 = it.rt
     push(mut wb3, v + 100)
     it.rt = wb3
     return snap.top * 1000 + it.rt.top
 
 
-def writebacks() -> int:
-    it = Interp(name="i", rt=Runtime(stack=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], top=0, a=0, b=0, c=0), depth=0)
-    shared = it
-    total = 0
+func writebacks() -> int:
+    mut it = Interp(name="i", rt=Runtime(stack=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], top=0, a=0, b=0, c=0), depth=0)
+    mut shared = it
+    mut total = 0
     for i in range(7):
         total = total * 7 + interp_step(mut it, i)
     return total * 1000 + it.rt.top * 100 + it.rt.stack[1] + shared.rt.top + len(shared.rt.stack)
 
 
 # A trap in the middle of an update: the counted overflow traps after the earlier lines printed.
-def overflow(t: mut Cursor, by: int):
+func overflow(mut t: Cursor, by: int):
     t.col += 1
     t.pos += by
 
 
-def main(args: list[str], out: Stream) -> int:
+func main(args: str[], out: Stream) -> int:
     out.print(scan(b"ab\ncd#ef\ngh!ij"))
     out.print(snapshot())
     out.print(swaps(5), swaps(6))
@@ -317,7 +316,7 @@ def main(args: list[str], out: Stream) -> int:
     out.print(built())
     out.print(writebacks())
     if len(args) > 0:
-        t = Cursor(pos=9223372036854775807, line=0, col=0, span=Span(line=0, col=0, offset=0))
+        mut t = Cursor(pos=9223372036854775807, line=0, col=0, span=Span(line=0, col=0, offset=0))
         overflow(mut t, len(args))
         out.print(t.pos)
     return 0

@@ -125,8 +125,8 @@ test "runtime thread output boundaries preserve dynamic print separators and ter
     const support = @import("test_support.zig");
     var refusal: @import("build.zig").Refusal = .{};
     var module = try support.buildSource(arena.allocator(),
-        \\def main(out: Stream) -> int:
-        \\    xs = [1, 2]
+        \\func main(out: Stream) -> int:
+        \\    const xs = [1, 2]
         \\    out.print(xs[0], xs[1], sep="|", end="!")
         \\    return 0
     , &refusal);

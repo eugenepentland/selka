@@ -2,30 +2,30 @@ record Box[T]:
     value: T
 
 
-union Slot[T]:
-    none,
-    some: T
+enum Slot[T]:
+    none
+    some(value: T)
 
 
-def pack[T](x: T) -> Box[T]:
+func pack[T](x: T) -> Box[T]:
     return Box[T](value=x)
 
 
-def extract[T](box: Box[T]) -> T:
+func extract[T](box: Box[T]) -> T:
     return box.value
 
 
-def slot[T](x: T) -> Slot[T]:
-    return Slot.some(x)
+func slot[T](x: T) -> Slot[T]:
+    return Slot.some(value=x)
 
 
-def choose[T](x: Slot[T], fallback: T) -> T:
+func choose[T](x: Slot[T], fallback: T) -> T:
     match x:
         case Slot.none:
             return fallback
-        case Slot.some(value):
+        case Slot.some(value=value):
             return value
 
 
-def main() -> int:
+func main() -> int:
     return extract[int](pack[int](choose[int](slot[int](7), 0)))

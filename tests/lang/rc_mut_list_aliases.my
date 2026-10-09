@@ -18,85 +18,85 @@ record Pin:
 
 
 record Frame:
-    rows: list[list[int]]
+    rows: int[][]
     n: int
 
 
-def span(text: bytes) -> Span:
+func span(text: bytes) -> Span:
     return Span(source=text, start=0, end=len(text))
 
 
-def pin(part: int, net: bytes) -> Pin:
+func pin(part: int, net: bytes) -> Pin:
     return Pin(part=part, net=span(net), net_id=-1)
 
 
-def churn() -> int:
-    junk: list[bytes] = []
+func churn() -> int:
+    mut junk: bytes[] = []
     for i in range(60):
         junk.append(b"zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz" + b"yyyyyyyyyyyyyyyyyyyyyyyyyy")
     return len(junk)
 
 
-def replace_first(pins: mut list[Pin], other: mut list[Pin]) -> int:
+func replace_first(mut pins: Pin[], mut other: Pin[]) -> int:
     pins.append(pin(9, b"x"))
-    first = pins[0]
+    mut first = pins[0]
     other[0] = pin(1, b"qq" + b"qq")
-    n = churn()
+    mut n = churn()
     return first.part * 1000 + len(first.net.source) * 10 + int(first.net.source[0]) + n * 0
 
 
-def clear_other(pins: mut list[Pin], other: mut list[Pin]) -> int:
+func clear_other(mut pins: Pin[], mut other: Pin[]) -> int:
     pins.append(pin(9, b"x"))
-    first = pins[0]
+    mut first = pins[0]
     other.clear()
-    n = churn()
+    mut n = churn()
     return first.part * 1000 + len(first.net.source) * 10 + int(first.net.source[0]) + n * 0
 
 
-def wipe(rows: mut list[list[int]]) -> int:
+func wipe(mut rows: int[][]) -> int:
     rows.clear()
-    junk: list[list[list[int]]] = []
+    mut junk: int[][][] = []
     for i in range(40):
         junk.append([[i], [i, i]])
     return 0
 
 
-def contained(frame: mut Frame, rows: mut list[list[int]]) -> int:
+func contained(mut frame: Frame, mut rows: int[][]) -> int:
     frame.n = frame.n + 1
-    first = frame.rows[0]
-    k = wipe(mut rows)
+    mut first = frame.rows[0]
+    mut k = wipe(mut rows)
     return len(first) * 10 + k
 
 
-public def test_an_element_read_survives_a_store_through_another_mut_list() -> bool:
-    a = [pin(3, b"abc" + b"def"), pin(4, b"de")]
-    other = a
-    seen = replace_first(mut a, mut other)
+public func test_an_element_read_survives_a_store_through_another_mut_list() -> bool:
+    mut a = [pin(3, b"abc" + b"def"), pin(4, b"de")]
+    mut other = a
+    mut seen = replace_first(mut a, mut other)
     return seen == 3157 and len(a) == 3 and a[0].part == 3 and other[0].part == 1 and len(other) == 2
 
 
-public def test_an_element_read_survives_a_clear_through_another_mut_list() -> bool:
-    b = [pin(3, b"abc" + b"def"), pin(4, b"de")]
-    other = b
-    seen = clear_other(mut b, mut other)
+public func test_an_element_read_survives_a_clear_through_another_mut_list() -> bool:
+    mut b = [pin(3, b"abc" + b"def"), pin(4, b"de")]
+    mut other = b
+    mut seen = clear_other(mut b, mut other)
     return seen == 3157 and len(b) == 3 and len(other) == 0
 
 
-public def test_distinct_mut_lists_still_answer_the_same() -> bool:
-    a = [pin(3, b"abc" + b"def"), pin(4, b"de")]
-    c = [pin(5, b"zz")]
-    seen = replace_first(mut a, mut c)
+public func test_distinct_mut_lists_still_answer_the_same() -> bool:
+    mut a = [pin(3, b"abc" + b"def"), pin(4, b"de")]
+    mut c = [pin(5, b"zz")]
+    mut seen = replace_first(mut a, mut c)
     return seen == 3157 and len(a) == 3 and c[0].part == 1
 
 
-public def test_a_record_read_survives_a_wipe_through_a_held_mut_list() -> bool:
-    frame = Frame([[1, 2], [3]], 0)
-    rows = frame.rows
-    seen = contained(mut frame, mut rows)
+public func test_a_record_read_survives_a_wipe_through_a_held_mut_list() -> bool:
+    mut frame = Frame(rows=[[1, 2], [3]], n=0)
+    mut rows = frame.rows
+    mut seen = contained(mut frame, mut rows)
     return seen == 20 and frame.rows == [[1, 2], [3]] and frame.n == 1 and len(rows) == 0
 
 
-def main(out: Stream) -> int:
+func main(out: Stream) -> int:
     out.print(test_an_element_read_survives_a_store_through_another_mut_list())
     out.print(test_an_element_read_survives_a_clear_through_another_mut_list())
     out.print(test_distinct_mut_lists_still_answer_the_same())

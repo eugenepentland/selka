@@ -5,6 +5,7 @@
 //! kind, including the loops in `sema_loops.zig`. Each check is a free function
 //! over the concrete checker type; `Checks` exposes the ones the rest of the
 //! checker calls as `self.name(...)`.
+const frontend_failures = @import("frontend_failures.zig");
 const sema_shared = @import("sema_shared.zig");
 const collections = @import("collection_lower.zig");
 const eResultPath = diagnostic.result_path;
@@ -13,6 +14,8 @@ const eImmutable = diagnostic.immutable;
 const eResultDiscard = diagnostic.result_discard;
 const variantDeclaredHere = sema_shared.variantDeclaredHere;
 const std = @import("std");
+const eNamedPattern = "E_NAMED_PATTERN";
+const frontend_patterns = @import("frontend_patterns.zig");
 const ast = @import("ast.zig");
 const typed = @import("typed.zig");
 const source = @import("source.zig");
@@ -24,10 +27,11 @@ const StatementFlow = sema_shared.StatementFlow;
 const prelude = @import("prelude.zig");
 const variant_calls = @import("variant_calls.zig");
 const eWildcardArm = "E_WILDCARD_ARM";
-const ePatternPayload = "E_PATTERN_PAYLOAD";
+const ePatternPayload = diagnostic.pattern_payload;
 /// Managed collection methods whose only argument has the receiver's own sequence type.
 /// Recognize `case _`, the contextual arm that stands for every remaining variant.
 fn wildcard(src: source.Source, arm: anytype) bool {
+    if (@hasField(@TypeOf(arm), "internal")) if (arm.internal.wildcard) return true;
     if (arm.ty.start != arm.ty.end or arm.bindings.len != 0) return false;
     return std.mem.eql(u8, src.text(arm.name), "_");
 }
@@ -39,6 +43,10 @@ pub fn Checks(comptime Checker: type) type {
         /// Check one statement and report whether control flow can continue after it.
         pub fn statement(self: *Checker, statement_id: ast.StatementId) Error!CheckedStatement {
             return impl.statement(Checker, self, statement_id);
+        }
+        /// Check an exhaustive expression match whose arms yield a common value.
+        pub fn matchExpression(self: *Checker, node: ast.Node) Error!typed.Node {
+            return impl.matchExpression(Checker, self, node);
         }
         /// Append the implicit `return` a unit function's body falls through to, after
         /// requiring every result-bearing local to be handled.
@@ -74,7 +82,7 @@ fn statementWithFile(comptime Checker: type, self: *Checker, stmt: ast.Statement
     if (try self.shadows(declared)) return self.sink.fail(eShadowing, declared, "file name shadows an active name");
     if (!std.mem.eql(u8, name, "_")) for (self.arenas.items) |active| if (std.mem.eql(u8, active.name, name)) return self.sink.fail(eShadowing, declared, "file name shadows an enclosing arena scope");
     const slot: typed.LocalId = @fromBackingInt(self.locals.items.len);
-    try self.locals.append(self.allocator, .{ .name = name, .declaration = declared, .ty = value_type, .mutable = false, .ownership = .{ .initialized = true }, .usage = .{ .reads = 1 } });
+    try self.locals.append(self.allocator, .{ .name = name, .declaration = declared, .ty = value_type, .mutable = false, .ownership = .{ .initialized = true, .scoped_file = true }, .usage = .{ .reads = 1 } });
     const hidden = try self.bindScoped(name, slot);
     defer self.unbindScoped(name, hidden);
     const body = try statement(Checker, self, scope.body);
@@ -100,11 +108,10 @@ fn statementWithScope(comptime Checker: type, self: *Checker, stmt: ast.Statemen
 }
 fn statementBlock(comptime Checker: type, self: *Checker, stmt: ast.Statement, children: @FieldType(@FieldType(ast.Statement, "data"), "block"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
     const first_local = self.locals.items.len;
-    // Plain (copyable and garbage-collected) locals are function-scoped and stay
-    // visible after the block. A move-only resource carries a cleanup obligation
-    // discharged at block exit, so it remains confined to the block.
+    // Every declaration belongs to its lexical block. Slots remain available
+    // to lowering, but their source names leave the active environment here.
     defer for (self.locals.items[first_local..]) |local| {
-        if (typed.moveOnly(local.ty, self.catalog.records)) _ = self.active.remove(local.name);
+        _ = self.active.remove(local.name);
     };
     var checked: std.ArrayList(typed.StatementId) = .empty;
     var looping = false;
@@ -183,12 +190,14 @@ fn bindArmPayload(comptime Checker: type, self: *Checker, case_schema: typed.Var
     );
     if (arm.bindings.len == 0) return .{};
     const binding = arm.bindings[0] orelse return .{};
-    const name = self.src.text(binding);
-    if (try self.topLevel(binding) or self.active.contains(name)) return self.sink.fail(eShadowing, binding, "payload binding shadows an active binding or top-level name");
+    const internal = arm.internal.names.len != 0 and arm.internal.names[0].len != 0;
+    const name = if (internal) arm.internal.names[0] else self.src.text(binding);
+    if (!internal) if (try self.topLevel(binding) or self.active.contains(name)) return self.sink.fail(eShadowing, binding, "payload binding shadows an active binding or top-level name");
     const slot: typed.LocalId = @fromBackingInt(self.locals.items.len);
     try self.locals.append(self.allocator, .{
         .ownership = .{ .initialized = true, .transfer_available = self.transfers(payload.?) },
         .name = name,
+        .usage = .{ .temporary = internal },
         .declaration = binding,
         .ty = payload.?,
         .mutable = false,
@@ -202,6 +211,37 @@ fn bindArmPayload(comptime Checker: type, self: *Checker, case_schema: typed.Var
 fn bindFieldedPayload(comptime Checker: type, self: *Checker, case_schema: typed.Variant, arm: ast.MatchArm) Error!ArmBindings {
     const payload = case_schema.payload orelse return error.InternalError;
     const record = try self.catalog.record(payload, arm.name, self.sink);
+    const labels = try self.allocator.alloc([]const u8, record.fields.len);
+    for (record.fields, labels) |field, *label| label.* = field.name;
+    const sites = try self.allocator.alloc(source.Span, arm.bindings.len);
+    for (arm.bindings, sites, 0..) |binding, *site, position| {
+        site.* = if (position < arm.payload_patterns.len) arm.payload_patterns[position].pattern.span else binding orelse arm.name;
+    }
+    try @import("frontend_named_fields.zig").require(self.sink, arm.name, eNamedPattern, .{ .labels = labels, .sites = sites, .names = arm.binding_names });
+    var normalized = arm;
+    if (arm.binding_names.len != 0) {
+        const bindings = try self.allocator.alloc(?source.Span, record.fields.len);
+        const internal_names = try self.allocator.alloc([]const u8, record.fields.len);
+        @memset(internal_names, "");
+        const seen = try self.allocator.alloc(bool, record.fields.len);
+        @memset(bindings, null);
+        @memset(seen, false);
+        for (arm.bindings, arm.binding_names, 0..) |binding, label, position| {
+            const name = label orelse return self.sink.fail(eNamedPattern, arm.name, "named enum payload fields require labelled patterns");
+            const index = try self.catalog.field(record.id, self.src, name, self.sink);
+            if (seen[index]) return self.sink.fail("E_DUPLICATE_FIELD", name, "pattern field is bound more than once");
+            seen[index] = true;
+            bindings[index] = binding;
+            if (arm.internal.names.len != 0) internal_names[index] = arm.internal.names[position];
+        }
+        for (seen) |present| if (!present) return self.sink.fail(ePatternPayload, arm.name, "pattern must name every enum payload field; use `_` to discard one");
+        normalized.bindings = bindings;
+        normalized.internal.names = internal_names;
+    } else return self.sink.fail(eNamedPattern, arm.name, "named enum payload fields require labelled patterns");
+    return bindOrderedFieldedPayload(Checker, self, case_schema, normalized, record);
+}
+fn bindOrderedFieldedPayload(comptime Checker: type, self: *Checker, case_schema: typed.Variant, arm: ast.MatchArm, record: typed.Record) Error!ArmBindings {
+    const payload = case_schema.payload orelse return error.InternalError;
     if (arm.bindings.len != record.fields.len) return self.sink.failRelated(
         ePatternPayload,
         arm.name,
@@ -240,12 +280,14 @@ fn bindFieldedPayload(comptime Checker: type, self: *Checker, case_schema: typed
             );
             continue;
         };
-        const name = self.src.text(binding_span);
-        if (try self.topLevel(binding_span) or self.active.contains(name)) return self.sink.fail(eShadowing, binding_span, "payload binding shadows an active binding or top-level name");
+        const internal = arm.internal.names.len != 0 and arm.internal.names[index].len != 0;
+        const name = if (internal) arm.internal.names[index] else self.src.text(binding_span);
+        if (!internal) if (try self.topLevel(binding_span) or self.active.contains(name)) return self.sink.fail(eShadowing, binding_span, "payload binding shadows an active binding or top-level name");
         const binding_slot: typed.LocalId = @fromBackingInt(self.locals.items.len);
         try self.locals.append(self.allocator, .{
             .ownership = .{ .initialized = true, .transfer_available = self.transfers(field_info.ty) },
             .name = name,
+            .usage = .{ .temporary = internal },
             .declaration = binding_span,
             .ty = field_info.ty,
             .mutable = false,
@@ -261,6 +303,120 @@ fn bindFieldedPayload(comptime Checker: type, self: *Checker, case_schema: typed
     }
     return .{ .slot = slot, .prologue = try prologue.toOwnedSlice(self.allocator), .names = try names.toOwnedSlice(self.allocator), .fielded = true };
 }
+fn statementYield(comptime Checker: type, self: *Checker, expression: ast.NodeId, span: source.Span) Error!@FieldType(typed.Statement, "data") {
+    const context = self.match_yield orelse return self.sink.fail("E_YIELD_CONTEXT", span, "yield requires a match expression arm");
+    const value = if (context.ty) |expected| try self.expressionExpected(expression, expected) else try self.expression(expression);
+    const actual = self.nodes.items[@backingInt(value)].ty;
+    if (context.ty) |expected| try self.require(actual, expected, span);
+    self.match_yield.?.ty = actual;
+    self.locals.items[@backingInt(context.slot)].ty = actual;
+    self.locals.items[@backingInt(context.slot)].ownership.initialized = true;
+    self.locals.items[@backingInt(context.slot)].ownership.transfer_available = self.transfers(actual);
+    return .{ .initialize = .{ .slot = context.slot, .value = value } };
+}
+fn yieldsEveryPath(syntax: ast.Program, id: ast.StatementId) bool {
+    return switch (syntax.statements.items[@backingInt(id)].data) {
+        .yield_value, .ret, .fail => true,
+        .block => |children| blk: {
+            if (children.len == 0) break :blk false;
+            // A yielded arm value is its final operation, never a loop accumulator.
+            for (children[0 .. children.len - 1]) |child| if (syntax.statements.items[@backingInt(child)].data == .yield_value) break :blk false;
+            break :blk yieldsEveryPath(syntax, children[children.len - 1]);
+        },
+        .branch => |branch| yieldsEveryPath(syntax, branch.then_body) and if (branch.else_body) |otherwise| yieldsEveryPath(syntax, otherwise) else false,
+        else => false,
+    };
+}
+fn matchExpression(comptime Checker: type, self: *Checker, node: ast.Node) Error!typed.Node {
+    const match = node.data.match_expression;
+    for (match.arms) |arm| if (!yieldsEveryPath(self.syntax, arm.body)) return self.sink.fail("E_MATCH_YIELD", arm.name, "every continuing path of a match expression arm must end with yield");
+    const saved = self.match_yield;
+    defer self.match_yield = saved;
+    const slot: typed.LocalId = @fromBackingInt(self.locals.items.len);
+    const expected = self.expected_types.get(node.span);
+    try self.locals.append(self.allocator, .{ .name = "", .declaration = node.span, .ty = expected orelse .unit, .mutable = true, .usage = .{ .temporary = true, .reads = 1 } });
+    self.match_yield = .{ .slot = slot, .ty = expected };
+    var flow: StatementFlow = .{};
+    const data = try statementMatch(Checker, self, .{ .span = node.span, .data = .{ .match = .{ .value = match.value, .arms = match.arms } } }, .{ .value = match.value, .arms = match.arms }, &flow);
+    const result_type = self.match_yield.?.ty orelse return self.sink.fail("E_MATCH_YIELD", node.span, "match expression requires at least one yielded value");
+    const body: typed.StatementId = @fromBackingInt(self.statements.items.len);
+    try self.statements.append(self.allocator, .{ .span = node.span, .terminates = flow.terminates, .data = data });
+    const value: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+    try self.nodes.append(self.allocator, .{ .span = node.span, .ty = result_type, .data = .{ .local = slot } });
+    self.locals.items[@backingInt(slot)].ownership.transfer_available = false;
+    return .{ .span = node.span, .ty = result_type, .data = .{ .block_value = .{ .body = body, .value = value } } };
+}
+fn nestedField(arm: ast.MatchArm) ?usize {
+    for (arm.payload_patterns, 0..) |field, index| if (field.pattern.data == .variant) return index;
+    return null;
+}
+fn nestedMatchArms(comptime Checker: type, self: *Checker, value_type: typed.Type, input: []const ast.MatchArm) Error![]const ast.MatchArm {
+    var output: std.ArrayList(ast.MatchArm) = .empty;
+    const used = try self.allocator.alloc(bool, input.len);
+    @memset(used, false);
+    for (input, 0..) |arm, index| {
+        if (used[index]) continue;
+        const nested_index = nestedField(arm);
+        if (nested_index == null) {
+            try output.append(self.allocator, arm);
+            continue;
+        }
+        const outer_tag = try patternTag(Checker, self, value_type, arm.ty, arm.name);
+        const variants = try self.catalog.variants(value_type, arm.name, self.sink);
+        const payload = variants.cases[outer_tag].payload orelse return self.sink.fail(ePatternPayload, arm.name, "nested variant pattern requires a payload");
+        const fielded = variants.cases[outer_tag].fielded;
+        const projected_name = if (fielded) arm.payload_patterns[nested_index.?].pattern.data.variant.name else arm.name;
+        var inner_arms: std.ArrayList(ast.MatchArm) = .empty;
+        for (input[index..], index..) |candidate, candidate_index| {
+            if (wildcard(self.src, candidate)) continue;
+            if (try patternTag(Checker, self, value_type, candidate.ty, candidate.name) != outer_tag) continue;
+            const candidate_nested = nestedField(candidate) orelse
+                return self.sink.fail(ePatternPayload, candidate.name, "nested variant arms require explicit patterns for every payload variant");
+            if (fielded) {
+                const expected_label = arm.payload_patterns[nested_index.?].name orelse return error.InternalError;
+                const label = candidate.payload_patterns[candidate_nested].name orelse return error.InternalError;
+                if (!std.mem.eql(u8, self.src.text(expected_label), self.src.text(label)))
+                    return self.sink.fail(ePatternPayload, label, "nested arms must match the same enum field");
+            }
+            const nested = candidate.payload_patterns[candidate_nested].pattern.data.variant;
+            const bindings = try self.allocator.alloc(?source.Span, nested.fields.len);
+            const labels = try self.allocator.alloc(?source.Span, nested.fields.len);
+            for (nested.fields, bindings, labels) |field, *binding, *label| {
+                binding.* = if (field.pattern.data == .binding) field.pattern.data.binding else null;
+                label.* = field.name;
+            }
+            try inner_arms.append(self.allocator, .{ .ty = nested.ty, .name = nested.name, .bindings = bindings, .binding_names = labels, .payload_patterns = nested.fields, .body = candidate.body });
+            used[candidate_index] = true;
+        }
+        // The hidden outer payload binding uses the outer case's own source span;
+        // it exists only while its recursively exhaustive inner match is checked.
+        const name_node: ast.NodeId = @fromBackingInt(self.syntax.nodes.items.len);
+        try self.syntax.nodes.append(self.allocator, .{ .span = projected_name, .data = .{ .name = projected_name } });
+        try self.resolved_nodes.ensureUnusedCapacity(self.allocator, 1);
+        self.resolved = try self.allocator.realloc(self.resolved, self.syntax.nodes.items.len);
+        self.resolved[@backingInt(name_node)] = null;
+        const body: ast.StatementId = @fromBackingInt(self.syntax.statements.items.len);
+        try self.syntax.statements.append(self.allocator, .{ .span = arm.name, .data = .{ .match = .{ .value = name_node, .arms = try inner_arms.toOwnedSlice(self.allocator) } } });
+        var outer = arm;
+        if (fielded) {
+            const bindings = try self.allocator.dupe(?source.Span, arm.bindings);
+            bindings[nested_index.?] = projected_name;
+            outer.bindings = bindings;
+        } else {
+            outer.bindings = try self.allocator.dupe(?source.Span, &.{projected_name});
+            outer.binding_names = &.{};
+        }
+        outer.payload_patterns = &.{};
+        outer.body = body;
+        try output.append(self.allocator, outer);
+        _ = payload;
+    }
+    return output.toOwnedSlice(self.allocator);
+}
+fn completeCases(seen: []const ?source.Span) bool {
+    for (seen) |item| if (item == null) return false;
+    return true;
+}
 fn statementMatch(comptime Checker: type, self: *Checker, stmt: ast.Statement, match: @FieldType(@FieldType(ast.Statement, "data"), "match"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
     for (match.arms) |arm| try self.invalidateOptions(arm.body);
     const match_facts = try self.option_facts.snapshot(self.allocator);
@@ -268,6 +424,8 @@ fn statementMatch(comptime Checker: type, self: *Checker, stmt: ast.Statement, m
     try self.hintOptionOperand(match.value);
     const value = try self.expression(match.value);
     const value_type = self.nodes.items[@backingInt(value)].ty;
+    const product_arms = try frontend_patterns.normalize(Checker, self, match.arms);
+    const normalized_arms = try nestedMatchArms(Checker, self, value_type, product_arms);
     const variants = try self.catalog.variants(value_type, stmt.span, self.sink);
     const seen = try self.allocator.alloc(?source.Span, variants.cases.len);
     @memset(seen, null);
@@ -277,13 +435,14 @@ fn statementMatch(comptime Checker: type, self: *Checker, stmt: ast.Statement, m
     var continuation: ?[]Pending = null;
     var continuation_init: ?[]bool = null;
     flow.terminates = true;
-    for (match.arms, 0..) |arm, position| {
+    for (normalized_arms, 0..) |arm, position| {
         self.option_facts.restore(match_facts);
         self.restorePending(before);
         // Every arm starts from the same pre-match definite-assignment state.
         self.initRestore(init_before);
         if (wildcard(self.src, arm)) {
-            if (position + 1 != match.arms.len) return self.sink.fail(eWildcardArm, arm.name, "`case _` must be the last arm of a match");
+            if (arm.internal.wildcard and completeCases(seen)) continue;
+            if (position + 1 != normalized_arms.len) return self.sink.fail(eWildcardArm, arm.name, "`case _` must be the last arm of a match");
             const body = try statement(Checker, self, arm.body);
             if (!body.terminates) {
                 try self.mergeMatchInit(&continuation_init);
@@ -378,8 +537,9 @@ fn statementBranch(comptime Checker: type, self: *Checker, stmt: ast.Statement, 
 }
 fn unitFallthrough(comptime Checker: type, self: *Checker, body: CheckedStatement, span: source.Span) Error!CheckedStatement {
     try self.requireHandled(0, span);
-    const value: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+    const unit: typed.NodeId = @fromBackingInt(self.nodes.items.len);
     try self.nodes.append(self.allocator, .{ .span = span, .ty = .unit, .data = .unit });
+    const value = try frontend_failures.wrapSuccess(Checker, self, unit, span);
     // The implicit end of a procedure is a normal return: its postconditions hold there too.
     const data: @FieldType(typed.Statement, "data") = if (self.contract.ensures.len != 0) try self.contractReturn(value, span) else .{ .ret = value };
     const ret: typed.StatementId = @fromBackingInt(self.statements.items.len);
@@ -390,8 +550,7 @@ fn unitFallthrough(comptime Checker: type, self: *Checker, body: CheckedStatemen
     return .{ .id = block, .terminates = true };
 }
 fn statementRet(comptime Checker: type, self: *Checker, stmt: ast.Statement, expr: @FieldType(@FieldType(ast.Statement, "data"), "ret"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
-    const value = try self.expressionExpected(expr, self.return_type);
-    try self.require(self.nodes.items[@backingInt(value)].ty, self.return_type, stmt.span);
+    const value = try frontend_failures.checkReturn(Checker, self, expr, stmt.span);
     try self.requireHandled(0, stmt.span);
     flow.terminates = true;
     if (self.contract.ensures.len != 0) return self.contractReturn(value, stmt.span);
@@ -436,10 +595,10 @@ fn statementBinding(comptime Checker: type, self: *Checker, _: ast.Statement, b:
     try self.active.put(self.allocator, name, slot);
     return .{ .initialize = .{ .slot = slot, .value = value } };
 }
-fn statementAssignment(comptime Checker: type, self: *Checker, stmt: ast.Statement, a: @FieldType(@FieldType(ast.Statement, "data"), "assignment"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
+fn statementAssignment(comptime Checker: type, self: *Checker, stmt: ast.Statement, a: @FieldType(@FieldType(ast.Statement, "data"), "assignment"), _: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
     const unbound = !self.active.contains(self.src.text(a.name));
     if (a.op == .set and unbound)
-        return statementBinding(Checker, self, stmt, .{ .name = a.name, .mutable = true, .annotation = null, .value = a.value }, flow);
+        return self.sink.failFix(diagnostic.binding_declaration, a.name, "assignment requires a declared binding; introduce a writable local with `mut`", .{ .span = .{ .start = a.name.start, .end = a.name.start }, .text = "mut " });
     const slot = try self.resolve(a.name);
     if (!self.locals.items[@backingInt(slot)].mutable)
         return self.sink.fail(eImmutable, a.name, "this binding cannot be assigned");
@@ -492,6 +651,13 @@ fn statement(comptime Checker: type, self: *Checker, statement_id: ast.Statement
         .branch => |branch| try statementBranch(Checker, self, stmt, branch, &flow),
         .loop => |loop| try self.statementLoop(stmt, loop, &flow),
         .ret => |expr| try statementRet(Checker, self, stmt, expr, &flow),
+        .fail => |expr| blk: {
+            const value = try frontend_failures.checkFail(Checker, self, expr, stmt.span);
+            try self.requireHandled(0, stmt.span);
+            flow.terminates = true;
+            break :blk .{ .ret = value };
+        },
+        .yield_value => |value| try statementYield(Checker, self, value, stmt.span),
         .loop_exit => |continuing| try self.statementLoopExit(stmt, continuing, &flow),
         .for_each => |each| try self.statementForEach(stmt, each),
         .for_range => |range| try self.statementForRange(stmt, range),

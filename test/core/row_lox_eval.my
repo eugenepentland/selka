@@ -1,62 +1,61 @@
-module row_lox_eval
 
 # Split from benchmarks/runtime/expanded/collections/main.my; identical timed work.
 
-extern def runtime_bench_now(host: Host) -> i64 effects(host)
+extern func runtime_bench_now(host: Host) -> i64 effects(host)
 
-union Value:
-    integer: int,
-    boolean: bool
+enum Value:
+    integer(value: int)
+    boolean(value: bool)
 
 record Instruction:
     op: int
     arg: int
 
-def integer(value: Value) -> int:
+func integer(value: Value) -> int:
     match value:
-        case Value.integer(n):
+        case Value.integer(value=n):
             return n
-        case Value.boolean(_):
+        case Value.boolean(value=_):
             return 0
 
-def boolean(value: Value) -> bool:
+func boolean(value: Value) -> bool:
     match value:
-        case Value.boolean(b):
+        case Value.boolean(value=b):
             return b
-        case Value.integer(_):
+        case Value.integer(value=_):
             return False
 
-def execute(program: list[Instruction], size: int, seed: int) -> int:
-    stack: list[Value] = []
-    returns: list[int] = []
-    variables = [0, 0]
-    pc = 0
+func execute(program: Instruction[], size: int, seed: int) -> int:
+    mut stack: Value[] = []
+    mut returns: int[] = []
+    mut variables = [0, 0]
+    mut pc = 0
     while True:
-        ins = program[pc]
+        mut ins = program[pc]
         pc += 1
         if ins.op == 0:
-            stack.append(Value.integer(seed))
+            stack.append(Value.integer(value=seed))
         elif ins.op == 1:
-            stack.append(Value.integer(size))
+            stack.append(Value.integer(value=size))
         elif ins.op == 2:
-            stack.append(Value.integer(ins.arg))
+            stack.append(Value.integer(value=ins.arg))
         elif ins.op == 3:
-            stack.append(Value.integer(variables[ins.arg]))
+            stack.append(Value.integer(value=variables[ins.arg]))
         elif ins.op == 4:
             variables[ins.arg] = integer(stack.pop())
         elif ins.op >= 5 and ins.op <= 9:
-            b = integer(stack.pop())
-            a = integer(stack.pop())
+            mut b = integer(stack.pop())
+            mut a = integer(stack.pop())
             if ins.op == 5:
-                stack.append(Value.integer(a + b))
+                stack.append(Value.integer(value=a + b))
             elif ins.op == 6:
-                stack.append(Value.integer(a * b))
+                stack.append(Value.integer(value=a * b))
             elif ins.op == 7:
-                stack.append(Value.integer(a % b))
+                stack.append(Value.integer(value=a % b))
             elif ins.op == 8:
-                stack.append(Value.boolean(a < b))
+                stack.append(Value.boolean(value=a < b))
             else:
-                stack.append(Value.boolean(a == b))
+                stack.append(Value.boolean(value=a == b))
         elif ins.op == 10:
             if not boolean(stack.pop()):
                 pc = ins.arg
@@ -71,32 +70,32 @@ def execute(program: list[Instruction], size: int, seed: int) -> int:
             return integer(stack.pop())
     return 0
 
-def parse_number(text: str) -> int:
-    match int(text):
+func parse_number(text: str) -> int:
+    match parse_int(text):
         case Some(n):
             return n
         case None:
             return 0
 
-def batch_result(size: int, batch: int, seed: int, program: list[Instruction]) -> int:
+func batch_result(size: int, batch: int, seed: int, program: Instruction[]) -> int:
     return execute(program, size, seed + batch)
 
-def main(args: list[str], host: Host, out: Stream) -> int:
+func main(args: str[], host: Host, out: Stream) -> int:
     if len(args) != 3:
         return 2
-    size = parse_number(args[0])
-    iterations = parse_number(args[1])
-    seed = parse_number(args[2])
+    mut size = parse_number(args[0])
+    mut iterations = parse_number(args[1])
+    mut seed = parse_number(args[2])
     if size < 2 or iterations < 1 or seed < 1 or seed > 1000000:
         return 2
-    program = [Instruction(op=0, arg=0), Instruction(op=4, arg=0), Instruction(op=2, arg=0), Instruction(op=4, arg=1), Instruction(op=3, arg=1), Instruction(op=1, arg=0), Instruction(op=8, arg=0), Instruction(op=10, arg=29), Instruction(op=3, arg=1), Instruction(op=2, arg=2), Instruction(op=7, arg=0), Instruction(op=2, arg=0), Instruction(op=9, arg=0), Instruction(op=10, arg=18), Instruction(op=3, arg=0), Instruction(op=12, arg=31), Instruction(op=4, arg=0), Instruction(op=11, arg=24), Instruction(op=3, arg=0), Instruction(op=3, arg=1), Instruction(op=5, arg=0), Instruction(op=2, arg=1000003), Instruction(op=7, arg=0), Instruction(op=4, arg=0), Instruction(op=3, arg=1), Instruction(op=2, arg=1), Instruction(op=5, arg=0), Instruction(op=4, arg=1), Instruction(op=11, arg=4), Instruction(op=3, arg=0), Instruction(op=14, arg=0), Instruction(op=2, arg=3), Instruction(op=6, arg=0), Instruction(op=2, arg=7), Instruction(op=5, arg=0), Instruction(op=2, arg=1000003), Instruction(op=7, arg=0), Instruction(op=13, arg=0)]
-    checksum = 0
-    start = runtime_bench_now(host)
+    mut program = [Instruction(op=0, arg=0), Instruction(op=4, arg=0), Instruction(op=2, arg=0), Instruction(op=4, arg=1), Instruction(op=3, arg=1), Instruction(op=1, arg=0), Instruction(op=8, arg=0), Instruction(op=10, arg=29), Instruction(op=3, arg=1), Instruction(op=2, arg=2), Instruction(op=7, arg=0), Instruction(op=2, arg=0), Instruction(op=9, arg=0), Instruction(op=10, arg=18), Instruction(op=3, arg=0), Instruction(op=12, arg=31), Instruction(op=4, arg=0), Instruction(op=11, arg=24), Instruction(op=3, arg=0), Instruction(op=3, arg=1), Instruction(op=5, arg=0), Instruction(op=2, arg=1000003), Instruction(op=7, arg=0), Instruction(op=4, arg=0), Instruction(op=3, arg=1), Instruction(op=2, arg=1), Instruction(op=5, arg=0), Instruction(op=4, arg=1), Instruction(op=11, arg=4), Instruction(op=3, arg=0), Instruction(op=14, arg=0), Instruction(op=2, arg=3), Instruction(op=6, arg=0), Instruction(op=2, arg=7), Instruction(op=5, arg=0), Instruction(op=2, arg=1000003), Instruction(op=7, arg=0), Instruction(op=13, arg=0)]
+    mut checksum = 0
+    mut start = runtime_bench_now(host)
     for batch in range(iterations):
-        part = batch_result(size, batch, seed, program)
+        mut part = batch_result(size, batch, seed, program)
         if part < 0:
             return 2
         checksum = (checksum + part) % 1000000007
-    elapsed = runtime_bench_now(host) - start
+    mut elapsed = runtime_bench_now(host) - start
     out.print(checksum, elapsed)
     return 0

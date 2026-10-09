@@ -191,14 +191,21 @@ const Context = struct {
     }
     fn typeChildren(self: Context, span: source.Span) Error![]const source.Span {
         const expressions = self.program.types.expressions;
+        for (expressions.suffixes) |suffix| {
+            if (std.meta.eql(suffix.span, span)) return self.allocator.dupe(source.Span, &.{suffix.base});
+        }
+        for (expressions.tuples) |tuple| {
+            if (std.meta.eql(tuple.span, span)) return tuple.elements;
+        }
         for (expressions.applications) |application| {
             if (std.meta.eql(application.span, span)) return application.arguments;
         }
         for (expressions.callbacks) |callback| {
             if (!std.meta.eql(callback.span, span)) continue;
-            const children = try self.allocator.alloc(source.Span, callback.parameters.len + 1);
+            const children = try self.allocator.alloc(source.Span, callback.parameters.len + 1 + @intFromBool(callback.failure_type != null));
             @memcpy(children[0..callback.parameters.len], callback.parameters);
             children[callback.parameters.len] = callback.return_type;
+            if (callback.failure_type) |failure| children[callback.parameters.len + 1] = failure;
             return children;
         }
         for (expressions.arrays) |array| {

@@ -21,21 +21,21 @@ const lint = language.lint;
 
 const marked_dead_private =
     \\@allow("dead-private", reason="kept for the follow-up change")
-    \\def helper() -> int:
+    \\func helper() -> int:
     \\    return 1
     \\
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return 0
 ;
 
 const unreasoned_dead_private =
     \\@allow("dead-private")
-    \\def helper() -> int:
+    \\func helper() -> int:
     \\    return 1
     \\
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return 0
 ;
 
@@ -74,101 +74,95 @@ test "an @allow attribute waives its declaration finding and records a missing r
 
 /// Committed fixture: a private helper with one direct test and a main.
 const initial_fixture =
-    \\module main
     \\
     \\
-    \\def helper(value: int) -> int:
+    \\func helper(value: int) -> int:
     \\    return value + 1
     \\
     \\
-    \\def test_helper() -> bool effects():
+    \\func test_helper() -> bool effects():
     \\    return helper(1) == 2
     \\
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return 0
 ;
 
 /// The helper body changed; its test did not.
 const changed_helper =
-    \\module main
     \\
     \\
-    \\def helper(value: int) -> int:
+    \\func helper(value: int) -> int:
     \\    return value + 2
     \\
     \\
-    \\def test_helper() -> bool effects():
+    \\func test_helper() -> bool effects():
     \\    return helper(1) == 2
     \\
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return 0
 ;
 
 /// Both the helper and the test that calls it changed.
 const changed_helper_and_test =
-    \\module main
     \\
     \\
-    \\def helper(value: int) -> int:
+    \\func helper(value: int) -> int:
     \\    return value + 2
     \\
     \\
-    \\def test_helper() -> bool effects():
+    \\func test_helper() -> bool effects():
     \\    return helper(2) == 4
     \\
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return 0
 ;
 
 /// The helper changed and no test calls it at all.
 const changed_helper_uncalled =
-    \\module main
     \\
     \\
-    \\def helper(value: int) -> int:
+    \\func helper(value: int) -> int:
     \\    return value + 2
     \\
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return 0
 ;
 
 /// The helper changed under a directive-comment waiver.
 const waived_comment =
-    \\module main
     \\
     \\
     \\# lint: allow change-without-test reason="exercised by the integration suite"
-    \\def helper(value: int) -> int:
+    \\func helper(value: int) -> int:
     \\    return value + 2
     \\
     \\
-    \\def test_helper() -> bool effects():
+    \\func test_helper() -> bool effects():
     \\    return helper(1) == 2
     \\
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return 0
 ;
 
 /// The helper changed under an `@allow` attribute waiver.
 const waived_attribute =
-    \\module main
     \\
     \\
     \\@allow("change-without-test", reason="exercised by the integration suite")
-    \\def helper(value: int) -> int:
+    \\func helper(value: int) -> int:
     \\    return value + 2
     \\
     \\
-    \\def test_helper() -> bool effects():
+    \\func test_helper() -> bool effects():
     \\    return helper(1) == 2
     \\
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return 0
 ;
 
@@ -404,7 +398,6 @@ test "change-without-test names the tests that call a changed helper" {
 
 /// Section 9 advisory fixture: one module that trips every shipped report rule.
 const advisory_fixture =
-    \\module main
     \\
     \\
     \\record Big:
@@ -418,43 +411,43 @@ const advisory_fixture =
     \\    h: int
     \\
     \\
-    \\def repeat(value: int) -> int:
+    \\func repeat(value: int) -> int:
     \\    return value + 7 + 7 + 7
     \\
     \\
-    \\def pair(left: int, right: int) -> int:
+    \\func pair(left: int, right: int) -> int:
     \\    return left + right
     \\
     \\
-    \\def alpha(value: int) -> int:
-    \\    total = value + 3
+    \\func alpha(value: int) -> int:
+    \\    mut total = value + 3
     \\    total += 4
     \\    return total
     \\
     \\
-    \\def beta(value: int) -> int:
-    \\    total = value + 3
+    \\func beta(value: int) -> int:
+    \\    mut total = value + 3
     \\    total += 4
     \\    return total
     \\
     \\
-    \\def gate(a: bool, b: bool, c: bool, d: bool) -> bool:
+    \\func gate(a: bool, b: bool, c: bool, d: bool) -> bool:
     \\    if a and b and c and d and a:
     \\        return True
     \\    return False
     \\
     \\
-    \\def vague() -> int:
-    \\    tmp = 1
+    \\func vague() -> int:
+    \\    mut tmp = 1
     \\    return tmp
     \\
     \\
-    \\def printer(out: Stream) -> int:
+    \\func printer(out: Stream) -> int:
     \\    out.print("hello")
     \\    return 0
     \\
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return 0
 ;
 
@@ -477,15 +470,14 @@ test "integration-tests flags a capability test outside an integration module an
     const root = try temp.dir.realPathFileAlloc(t.io, ".", t.allocator);
     defer t.allocator.free(root);
     try writeFixture(&temp,
-        \\module main
         \\
         \\
-        \\def test_io(fs: Filesystem) -> bool effects():
+        \\func test_io(fs: Filesystem) -> bool effects():
         \\    _ = fs
         \\    return True
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     );
     var arena = std.heap.ArenaAllocator.init(t.allocator);
@@ -510,22 +502,21 @@ test "lint attaches the transitive tests that reach a finding as a related note"
     const root = try temp.dir.realPathFileAlloc(t.io, ".", t.allocator);
     defer t.allocator.free(root);
     try writeFixture(&temp,
-        \\module main
         \\
         \\
-        \\public def outer() -> int:
+        \\public func outer() -> int:
         \\    return 1
         \\
         \\
-        \\def middle() -> int:
+        \\func middle() -> int:
         \\    return outer()
         \\
         \\
-        \\def test_end_to_end() -> bool effects():
+        \\func test_end_to_end() -> bool effects():
         \\    return middle() == 1
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     );
     var arena = std.heap.ArenaAllocator.init(t.allocator);
@@ -584,7 +575,6 @@ test "section-9 advisory rules report records files literals params naming condi
 /// One declared function and one record whose calls carry positional literals
 /// beside the negated cases: a named call, a short call, and an intrinsic.
 const positional_literal_fixture =
-    \\module main
     \\
     \\
     \\record Point:
@@ -593,18 +583,18 @@ const positional_literal_fixture =
     \\    z: int
     \\
     \\
-    \\def draw(canvas: int, x: int, y: int, filled: bool) -> int:
+    \\func draw(canvas: int, x: int, y: int, filled: bool) -> int:
     \\    _ = canvas
     \\    _ = filled
     \\    return x + y
     \\
     \\
-    \\def short(a: int, b: int) -> int:
+    \\func short(a: int, b: int) -> int:
     \\    return a + b
     \\
     \\
-    \\def main() -> int:
-    \\    canvas = 0
+    \\func main() -> int:
+    \\    mut canvas = 0
     \\    _ = draw(canvas=1, x=10, y=20, filled=True)
     \\    _ = short(1, 2)
     \\    return draw(canvas, 10, 20, True)
@@ -628,13 +618,12 @@ test "the positional-literal lint names the parameter a positional literal binds
 }
 
 // spec-case: KEYWORD-ONLY-4
-test "the positional-literal lint names the field a positional record literal binds to" {
+test "named record construction needs no positional literal advisory" {
     var temp = t.tmpDir(.{});
     defer temp.cleanup();
     const root = try temp.dir.realPathFileAlloc(t.io, ".", t.allocator);
     defer t.allocator.free(root);
     try writeFixture(&temp,
-        \\module main
         \\
         \\
         \\record Point:
@@ -643,8 +632,8 @@ test "the positional-literal lint names the field a positional record literal bi
         \\    z: int
         \\
         \\
-        \\def main() -> int:
-        \\    point = Point(1, 2, 3)
+        \\func main() -> int:
+        \\    mut point = Point(x=1, y=2, z=3)
         \\    return point.x
     );
     var arena = std.heap.ArenaAllocator.init(t.allocator);
@@ -652,8 +641,7 @@ test "the positional-literal lint names the field a positional record literal bi
     const scratch = arena.allocator();
     const outcome = try evaluateFixture(scratch, root, .{});
     const finding = findFinding(outcome, "L_POSITIONAL_LITERAL");
-    try t.expect(finding != null);
-    try t.expectEqualStrings("`3` is passed positionally to `Point`'s 3rd field `z`; name it: `Point(x=1, y=2, z=3)`", finding.?.message);
+    try t.expect(finding == null);
 }
 
 // spec-case: KEYWORD-ONLY-4
@@ -663,15 +651,14 @@ test "the positional-literal lint exempts named operands and an intrinsic" {
     const root = try temp.dir.realPathFileAlloc(t.io, ".", t.allocator);
     defer t.allocator.free(root);
     try writeFixture(&temp,
-        \\module main
         \\
         \\
-        \\def draw(canvas: int, x: int, y: int) -> int:
+        \\func draw(canvas: int, x: int, y: int) -> int:
         \\    _ = canvas
         \\    return x + y
         \\
         \\
-        \\def main(out: Stream) -> int:
+        \\func main(out: Stream) -> int:
         \\    out.print(1, 2, 3)
         \\    return draw(canvas=1, x=2, y=3)
     );

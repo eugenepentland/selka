@@ -4,7 +4,7 @@
 #
 # The key is a named function: sort.sort_by_key(records, lambda r: r.key) is
 # rejected with E_LAMBDA_CONTEXT (a lambda cannot fill the generic callback
-# parameter `key: def(T) -> int effects()`).
+# parameter `key: func(T) -> int effects()`).
 import sort
 
 
@@ -13,30 +13,31 @@ record Rec:
     id: int
 
 
-def xorshift(x: u64) -> u64:
+func xorshift(input: u64) -> u64:
+    mut x = input
     x = bit_xor(x, shift_left(x, 13u64))
     x = bit_xor(x, shift_right(x, 7u64))
     return bit_xor(x, shift_left(x, 17u64))
 
 
-def mix(c: int, v: int) -> int:
+func mix(c: int, v: int) -> int:
     return (c * 31 + v) % 1000000007
 
 
-def by_key(r: Rec) -> int effects():
+func by_key(r: Rec) -> int effects():
     return r.key
 
 
-def main(out: Stream) -> int:
-    n = 1000000
-    state = 88172645463325252u64
-    records: list[Rec] = []
+func main(out: Stream) -> int:
+    mut n = 1000000
+    mut state = 88172645463325252u64
+    mut records: Rec[] = []
     for i in range(n):
         state = xorshift(state)
         records.append(Rec(key=int(shift_right(state, 33u64)) % 100000, id=i))
-    ordered = sort.sort_by_key(records, by_key)
+    mut ordered = sort.sort_by_key(records, by_key)
     out.print(ordered[0].key, ordered[n - 1].key)
-    c = 0
+    mut c = 0
     for r in ordered:
         c = mix(c, r.id)
     out.print(c)

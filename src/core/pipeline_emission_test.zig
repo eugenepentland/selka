@@ -5,10 +5,10 @@ const build = @import("build.zig");
 const pipeline = @import("pipeline.zig");
 const driver = @import("driver.zig");
 
-const app = "module app\nimport leaf\ndef main() -> int:\n    xs = [1]\n    return leaf.origin(mut xs, 2)\n";
-const leaf = "module leaf\npublic def origin(xs: mut list[int], x: int) -> int:\n    xs.append(2)\n    return xs[x]\n";
+const app = "import leaf\nfunc main() -> int:\n    mut xs = [1]\n    return leaf.origin(mut xs, 2)\n";
+const leaf = "public func origin(mut xs: int[], x: int) -> int:\n    xs.append(2)\n    return xs[x]\n";
 
-fn snapshot(a: std.mem.Allocator, release: bool, whole: bool) !pipeline.Emission {
+fn snapshot(a: std.mem.Allocator, mode: @import("build_mode.zig").Mode, whole: bool) !pipeline.Emission {
     var dir = std.testing.tmpDir(.{});
     defer dir.cleanup();
     try dir.dir.writeFile(std.testing.io, .{ .sub_path = "app.my", .data = app });
@@ -22,7 +22,7 @@ fn snapshot(a: std.mem.Allocator, release: bool, whole: bool) !pipeline.Emission
     var module = try build.buildModuleSource(a, checked.program, checked.src, &refusal);
     const emitted = try pipeline.emitted(a, &module, .{ .src = checked.src, .source_path = "app.my", .main = .{} }, .{
         .zig = "unused",
-        .release = release,
+        .mode = mode,
         .show = .{ .llvm = if (whole) "unused" else null, .stats = true },
     }, &report);
     try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, report.items, "mylang-core: inlined "));
@@ -35,21 +35,22 @@ test "pipeline emitted optional whole output preserves every native unit and clo
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const a = arena.allocator();
-    for ([_]bool{ false, true }) |release| {
-        const split = try snapshot(a, release, false);
-        const both = try snapshot(a, release, true);
+    inline for (.{ .debug, .optimized_debug, .release }) |mode| {
+        const split = try snapshot(a, mode, false);
+        const both = try snapshot(a, mode, true);
         try std.testing.expect(split.whole == null);
         try std.testing.expectEqual(split.units.len, both.units.len);
+        if (mode == .optimized_debug) try std.testing.expect(split.units.len > 1);
         for (split.units, both.units) |left, right| {
             try std.testing.expectEqualStrings(left.name, right.name);
             try std.testing.expectEqualStrings(left.llvm, right.llvm);
         }
         try std.testing.expect(std.mem.indexOf(u8, both.whole.?, "!DIFile(filename: \"leaf.my\"") != null);
-        if (release) try std.testing.expect(std.mem.indexOf(u8, both.whole.?, "inlinedAt:") != null);
+        if (mode != .debug) try std.testing.expect(std.mem.indexOf(u8, both.whole.?, "inlinedAt:") != null);
     }
 }
 
-fn native(a: std.mem.Allocator, emission: pipeline.Emission, split: bool) !std.process.RunResult {
+fn native(a: std.mem.Allocator, emission: pipeline.Emission, split: bool, mode: @import("build_mode.zig").Mode) !std.process.RunResult {
     var dir = std.testing.tmpDir(.{});
     defer dir.cleanup();
     const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
@@ -62,7 +63,7 @@ fn native(a: std.mem.Allocator, emission: pipeline.Emission, split: bool) !std.p
         .zig = environment.get("MYLANG_ZIG") orelse "zig",
         .work = root,
         .output = output,
-        .release = true,
+        .mode = mode,
         .links = &.{},
         .units = if (split) emission.units else &.{driver.wholeUnit(emission.whole.?)},
     }, &report);
@@ -74,14 +75,18 @@ test "pipeline emitted split and whole native traps preserve exact consuming cal
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const a = arena.allocator();
-    const emission = try snapshot(a, true, true);
-    const split = try native(a, emission, true);
-    const whole = try native(a, emission, false);
+    const emission = try snapshot(a, .release, true);
+    const split = try native(a, emission, true, .release);
+    const whole = try native(a, emission, false, .release);
     try std.testing.expectEqual(@as(u8, 1), split.term.exited);
     try std.testing.expectEqual(@as(u8, 1), whole.term.exited);
     try std.testing.expectEqualStrings("", split.stdout);
     try std.testing.expectEqualStrings(split.stdout, whole.stdout);
     try std.testing.expectEqualStrings(split.stderr, whole.stderr);
-    try std.testing.expect(std.mem.indexOf(u8, split.stderr, "in leaf::origin at leaf.my:4:12") != null);
-    try std.testing.expect(std.mem.indexOf(u8, split.stderr, "in app::main at app.my:5:12") != null);
+    try std.testing.expect(std.mem.indexOf(u8, split.stderr, "in leaf::origin at leaf.my:3:12") != null);
+    try std.testing.expect(std.mem.indexOf(u8, split.stderr, "in app::main at app.my:4:12") != null);
+    const development = try native(a, try snapshot(a, .optimized_debug, false), true, .optimized_debug);
+    try std.testing.expectEqual(@as(u8, 1), development.term.exited);
+    try std.testing.expectEqualStrings(whole.stdout, development.stdout);
+    try std.testing.expectEqualStrings(whole.stderr, development.stderr);
 }

@@ -130,6 +130,7 @@ fn statementForEach(comptime Checker: type, self: *Checker, stmt: ast.Statement,
     if (each.index_name) |name| if (!isDiscard(self.src, name) and std.mem.eql(u8, self.src.text(name), self.src.text(each.name))) return self.sink.fail(eShadowing, name, "iteration names must differ");
     var hidden = [_]?typed.LocalId{ null, null };
     for (names, slots, &hidden) |maybe_name, slot, *earlier| if (maybe_name) |name| {
+        self.locals.items[@backingInt(slot)].mutable = false;
         self.locals.items[@backingInt(slot)].name = self.src.text(name);
         self.locals.items[@backingInt(slot)].declaration = name;
         self.locals.items[@backingInt(slot)].ownership.initialized = true;
@@ -295,6 +296,7 @@ fn preludeIteration(comptime Checker: type, self: *Checker, stmt: ast.Statement,
     var hidden = [_]?typed.LocalId{ null, null };
     for (names, slots, &hidden) |maybe_name, slot, *earlier| if (maybe_name) |name| {
         if (try self.shadows(name)) return self.sink.fail(eShadowing, name, eIterationShadow);
+        self.locals.items[@backingInt(slot)].mutable = false;
         self.locals.items[@backingInt(slot)].name = self.src.text(name);
         self.locals.items[@backingInt(slot)].declaration = name;
         // `reversed`/`zip` bind their names before the body checks, exactly like
@@ -421,7 +423,7 @@ fn statementForRange(comptime Checker: type, self: *Checker, stmt: ast.Statement
 /// assigns it: an ordinary mutable local, bound for the whole body.
 fn reboundVariable(comptime Checker: type, self: *Checker, name: source.Span, element: typed.Type) Error!typed.LocalId {
     const slot: typed.LocalId = @fromBackingInt(self.locals.items.len);
-    try self.locals.append(self.allocator, .{ .name = self.src.text(name), .declaration = name, .ty = element, .mutable = true, .ownership = .{ .initialized = true }, .usage = .{ .reads = 1 }, .origin = .iteration });
+    try self.locals.append(self.allocator, .{ .name = self.src.text(name), .declaration = name, .ty = element, .mutable = false, .ownership = .{ .initialized = true }, .usage = .{ .reads = 1 }, .origin = .iteration });
     return slot;
 }
 /// One iteration of a counting loop whose body assigns its variable: the
@@ -444,7 +446,7 @@ fn statementLoopExit(comptime Checker: type, self: *Checker, stmt: ast.Statement
 /// The checker fields `reboundVariable` writes, so a test can rebind a loop variable alone.
 const LocalStub = struct { allocator: std.mem.Allocator, src: source.Source, locals: std.ArrayList(typed.Local) = .empty };
 
-test "a loop variable the body writes is rebound on a fresh mutable local" {
+test "each loop variable receives a fresh readonly local" {
     var stub: LocalStub = .{ .allocator = std.testing.allocator, .src = .{ .path = "loop.my", .bytes = "for item in items", .line_starts = &.{} } };
     defer stub.locals.deinit(std.testing.allocator);
     const name: source.Span = .{ .start = 4, .end = 8 };
@@ -453,6 +455,6 @@ test "a loop variable the body writes is rebound on a fresh mutable local" {
     try std.testing.expectEqual(@as(usize, 0), @backingInt(first));
     try std.testing.expectEqual(@as(usize, 1), @backingInt(second));
     try std.testing.expectEqualStrings("item", stub.locals.items[1].name);
-    try std.testing.expect(stub.locals.items[1].mutable);
+    try std.testing.expect(!stub.locals.items[1].mutable);
     try std.testing.expectEqual(typed.Type.u8, stub.locals.items[1].ty);
 }

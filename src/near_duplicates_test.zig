@@ -4,19 +4,19 @@ const t = std.testing;
 const language = @import("compiler.zig");
 const discovery = language.duplicates;
 const source =
-    \\def a(x: i64) -> i64:
+    \\func a(x: i64) -> i64:
     \\    return x * 2 + 1
     \\
     \\
-    \\def copy(y: i64) -> i64:
+    \\func copy(y: i64) -> i64:
     \\    return y * 2 + 1
     \\
     \\
-    \\def b(x: i64) -> i64:
+    \\func b(x: i64) -> i64:
     \\    return x * 2 + 3
     \\
     \\
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    return 0
 ;
 
@@ -47,34 +47,34 @@ test "approximate discovery reports literal drift once per exact-group represent
 }
 test "near reports explain changed operators and resolved callees" {
     for ([_][]const u8{
-        \\def a(x: i64) -> i64:
+        \\func a(x: i64) -> i64:
         \\    return x * 2 + 1
         \\
         \\
-        \\def b(x: i64) -> i64:
+        \\func b(x: i64) -> i64:
         \\    return x * 2 - 1
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
         ,
-        \\def left(x: i64) -> i64:
+        \\func left(x: i64) -> i64:
         \\    return x
         \\
         \\
-        \\def right(x: i64) -> i64:
+        \\func right(x: i64) -> i64:
         \\    return x
         \\
         \\
-        \\def a(x: i64) -> i64:
+        \\func a(x: i64) -> i64:
         \\    return left(x) * 2
         \\
         \\
-        \\def b(x: i64) -> i64:
+        \\func b(x: i64) -> i64:
         \\    return right(x) * 2
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
         ,
     }, [_][]const u8{ "sub", "callee 5:right" }) |text, expected| {
@@ -92,33 +92,33 @@ test "near reports explain changed operators and resolved callees" {
 test "near search retains signature effect and nominal boundaries and excludes unrelated bodies" {
     const text =
         \\domain D: i64:
-        \\    def make(x: i64) -> D:
+        \\    func make(x: i64) -> D:
         \\        return wrap[D](x)
         \\
         \\
-        \\def a(x: i64) -> i64:
+        \\func a(x: i64) -> i64:
         \\    return x * 2 + 1
         \\
         \\
-        \\def b(x: i64) -> i64 effects():
+        \\func b(x: i64) -> i64 effects():
         \\    return x * 2 + 3
         \\
         \\
-        \\def c(x: bool) -> bool:
+        \\func c(x: bool) -> bool:
         \\    return not x
         \\
         \\
-        \\def d(x: D) -> D:
+        \\func d(x: D) -> D:
         \\    return x
         \\
         \\
-        \\def e(x: i64) -> i64:
+        \\func e(x: i64) -> i64:
         \\    if x > 0:
         \\        return x
         \\    return 0
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     ;
     var c = try language.Compilation.init(t.allocator, "near.my", text);
@@ -161,7 +161,7 @@ test "near comparison matrix output and rendering release every failed allocatio
 
 test "near pair limits bound repeated drift reports while exact groups remain complete" {
     const text = source ++ "\n\n\n" ++
-        \\def more(x: i64) -> i64:
+        \\func more(x: i64) -> i64:
         \\    return x * 2 + 5
     ;
     var c = try language.Compilation.init(t.allocator, "near.my", text);

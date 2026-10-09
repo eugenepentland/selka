@@ -7,8 +7,8 @@ const native = @import("native_execute.zig");
 // spec: PY-COLLECTIONS-19
 test "push is rejected with a migration diagnostic naming append" {
     var compilation = try language.Compilation.init(t.allocator, "push.my",
-        \\def main() -> i64:
-        \\    xs = [1]
+        \\func main() -> i64:
+        \\    mut xs = [1]
         \\    xs.push(2)
         \\    return len(xs)
     );
@@ -22,18 +22,18 @@ test "push is rejected with a migration diagnostic naming append" {
 test "absent list and dictionary values trap instead of returning a sentinel" {
     const cases = [_]struct { source: []const u8, code: []const u8 }{
         .{ .source =
-        \\def main() -> i64:
-        \\    xs = [1, 2]
+        \\func main() -> i64:
+        \\    mut xs = [1, 2]
         \\    return xs.index(9)
         , .code = "R_LIST_VALUE" },
         .{ .source =
-        \\def main() -> i64:
-        \\    xs: list[i64] = []
+        \\func main() -> i64:
+        \\    mut xs: i64[] = []
         \\    return xs.pop()
         , .code = "R_LIST_BOUNDS" },
         .{ .source =
-        \\def main() -> i64:
-        \\    d = {"a": 1}
+        \\func main() -> i64:
+        \\    mut d = {"a": 1}
         \\    return d.pop("z")
         , .code = "R_MISSING_KEY" },
     };
@@ -49,8 +49,8 @@ test "absent list and dictionary values trap instead of returning a sentinel" {
 // spec: PY-COLLECTIONS-8
 test "iteration break exits a grown list without another iteration check" {
     var compilation = try language.Compilation.init(t.allocator, "mutation.my",
-        \\def main() -> i64:
-        \\    items = [1]
+        \\func main() -> i64:
+        \\    mut items = [1]
         \\    for x in items:
         \\        _ = x
         \\        items.append(42)
@@ -64,9 +64,9 @@ test "iteration break exits a grown list without another iteration check" {
 test "record field growth refreshes the active iterator place" {
     var compilation = try language.Compilation.init(t.allocator, "field_iteration.my",
         \\record Holder:
-        \\    items: list[int]
-        \\def main() -> int:
-        \\    holder = Holder([7])
+        \\    items: int[]
+        \\func main() -> int:
+        \\    mut holder = Holder(items=[7])
         \\    for value in holder.items:
         \\        _ = value
         \\        if value == 7:

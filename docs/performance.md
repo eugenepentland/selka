@@ -40,17 +40,17 @@ record Point:
     y: int
 
 
-def shifted(point: Point) -> Point:
+func shifted(point: Point) -> Point:
     return Point(x=point.x + 1, y=point.y + 1)
 
 
-def total(point: Point) -> int:
+func total(point: Point) -> int:
     return point.x + point.y
 
 
-def main() -> int:
-    start = Point(x=1, y=2)
-    moved = shifted(start)
+func main() -> int:
+    mut start = Point(x=1, y=2)
+    mut moved = shifted(start)
     if start.x != 1 or start.y != 2:
         return 1
     if moved.x != 2 or moved.y != 3:
@@ -77,6 +77,7 @@ ownership), then LLVM optimizes across every module boundary.
 ```bash
 mylang build prog.my -o prog                  # debug: the edit-loop build
 mylang build prog.my -o prog-fast --release   # optimized whole program
+mylang build prog.my -o prog-dev --optimize-debug  # experimental: Core passes + per-module -O2
 mylang run prog.my --release
 mylang test tests/ --release
 ```
@@ -84,8 +85,23 @@ mylang test tests/ --release
 Use `--release` for a binary you ship or time, and the default in the edit loop: a
 release build recompiles the whole program after any change, while a debug build
 recompiles only the changed modules. C sources passed with `--link` are compiled at
-the program's level (`-O0` in debug, `-O3` in release); the runtime is compiled once
-per machine at `-O2` in both.
+the program's requested level (`-O0` in debug, `-O2` with `--optimize-debug`, `-O3`
+in release); the runtime is compiled once per machine at `-O2` in every mode.
+The pinned Zig driver maps both requested `-O2` and `-O3` to Clang `-O2`, so the
+current Release advantage comes from whole-program compilation and omitting
+`debug(...)` output from standalone builds, not a higher LLVM optimization level.
+See the [driver qualification](tooling/native-build.md#effective-optimization-levels).
+
+The experimental `--optimize-debug` mode keeps module units and `debug(...)` lines
+while applying the Core optimization passes and LLVM `-O2`. It also works for
+`run` and `test`, including with `--verify-facts`. This targets programs that spend
+too long running in the default debug mode. It adds optimization work to builds;
+inlining and propagated facts may also invalidate callers after an edit. Compare
+runtime and rebuild time on your project. Source locations in trap traces are
+retained. GDB qualification found that variable inspection and normal statement
+stepping are unavailable in both ordinary and optimized Debug; optimization also
+removes some helper-function breakpoints. See the
+[debugger results](tooling/native-build.md#interactive-debugger-qualification).
 
 Nothing about the language's safety changes with the mode. Overflow, narrowing-cast,
 bounds, division-by-zero and budget checks run in every build and trap with the same
@@ -95,18 +111,57 @@ pass shows can never fail is not emitted.
 
 ```mylang
 # doc: expect 45
-def total(values: list[int]) -> int:
-    sum = 0
+func total(values: int[]) -> int:
+    mut sum = 0
     for value in values:
         sum += value
     return sum
 
 
-def main() -> int:
-    values: list[int] = []
+func main() -> int:
+    mut values: int[] = []
     for i in range(10):
         values.append(i)
     return total(values)
+```
+
+### Optimized-debug prototype measurements
+
+On 2026-10-09, the six unchanged parity workloads below all met the prototype's
+target of taking at most twice Release's runtime. These are medians of seven
+interleaved runs of prebuilt executables pinned to CPU 2, including process startup.
+Every output matched its checked-in expected file; an untimed run also checked
+for leaks. The C runtime remained at `-O2` in every mode.
+
+| Workload | Debug / Release time | Optimized Debug / Release time |
+|---|---:|---:|
+| Integer loop | 1.86 | 1.00 |
+| Calls | 1.85 | 1.00 |
+| Byte scanning | 14.34 | 1.00 |
+| List append and sum | 1.84 | 1.01 |
+| Dictionary counting | 1.91 | 1.04 |
+| Matrix multiplication (500 × 500) | 29.77 | 0.98 |
+
+On the small nine-module invoice example, optimized Debug's median cold build
+was 204 ms versus Debug's 183 ms. A leaf body edit took 94 ms versus 92 ms;
+both rebuilt one unit and reused nine. Identical builds replayed in about 12 ms.
+These builds used a Debug-built compiler, fresh guest-object caches per trial,
+and prewarmed runtime and toolchain caches. Larger projects and edits that change
+inlined code or propagated facts need separate measurements.
+
+The prototype also passed all 1,772 language, value-semantics and ported tests
+with leak checking, both normally and with `--verify-facts`. The regression tests
+cover cache separation, debug output, exact trap frames across modules, and
+deliberately false facts. Separate GDB probes record the debugger limitations
+linked above. These measurements do not establish a runtime bound for arbitrary
+programs.
+
+[Raw samples and qualification counts](../bench/parity/debug_speedup_20261009.json)
+are checked in. Reproduce with a Debug-built compiler and a new output directory:
+
+```bash
+python3 scripts/benchmark_debug_runtime.py --compiler zig-out/bin/mylang \
+  --host-mode Debug --cpu 2 --repeats 7 --output /tmp/debug-runtime-measurement
 ```
 
 ## Loops that prove their own checks
@@ -134,21 +189,21 @@ original loop reports a failing index at the same iteration with the same messag
 
 ```mylang
 # doc: expect 42
-def scale(row: mut list[float], factor: float) -> None:
+func scale(mut row: float[], factor: float) -> Unit:
     for j in range(len(row)):
         row[j] = row[j] * factor
 
 
-def count(data: list[int], wanted: int) -> int:
-    found = 0
+func count(data: int[], wanted: int) -> int:
+    mut found = 0
     for value in data:
         if value == wanted:
             found += 1
     return found
 
 
-def main() -> int:
-    row = [1.0, 2.0, 3.0]
+func main() -> int:
+    mut row = [1.0, 2.0, 3.0]
     scale(mut row, 2.0)
     if row[2] != 6.0:
         return 1
@@ -198,9 +253,9 @@ copy of the array (`array_set` in `mylang dump-ir`).
 
 ```mylang
 # doc: expect 14
-def main() -> int:
-    data: [8]int = [1, 1, 1, 1, 1, 1, 1, 1]
-    index = 0
+func main() -> int:
+    mut data: FixedArray[int, 8] = FixedArray[int, 8]([1, 1, 1, 1, 1, 1, 1, 1])
+    mut index = 0
     while index < 8:
         data = replace(data, index, index * 2)
         index += 1
@@ -213,16 +268,16 @@ not known up front. A `bytes` value is the immutable byte-shaped alternative.
 
 ## Call C when you need a library
 
-`extern def` declares a C function with scalar parameters, and `--link FILE.c`
+`extern func` declares a C function with scalar parameters, and `--link FILE.c`
 compiles a C source and links it into the program. A C library function such as
 `hypot` needs no flag:
 
 ```console
 $ cat > hyp.my <<'EOF'
-extern def hypot(host: Host, a: float, b: float) -> float effects(host)
+extern func hypot(host: Host, a: float, b: float) -> float effects(host)
 
 
-def main(host: Host) -> int:
+func main(host: Host) -> int:
     return int(hypot(host, 3.0, 4.0)) * 10 + int(hypot(host, 5.0, 12.0))
 EOF
 $ mylang run hyp.my --print-result
@@ -297,16 +352,16 @@ record Point:
     y: int
 
 
-def first(values: list[int]) -> int noalloc:
+func first(values: int[]) -> int noalloc:
     return values[0]
 
 
-def dot(a: Point, b: Point) -> int noalloc:
+func dot(a: Point, b: Point) -> int noalloc:
     return a.x * b.x + a.y * b.y
 
 
-def main() -> int:
-    values: list[int] = [7, 39]
+func main() -> int:
+    mut values: int[] = [7, 39]
     return first(values) + dot(Point(x=3, y=4), Point(x=5, y=6))
 ```
 
@@ -318,6 +373,6 @@ Build a list inside `first` and the checker answers `E_EFFECT_BOUND` (effect
 - [Native builds](tooling/native-build.md): the driver, its caches and `--report`.
 - [Runtime budgets](tooling/runtime-budgets.md): step, frame and byte ceilings.
 - [Value semantics](value-semantics.md): when a write copies.
-- [C interop](c-ffi.md): the exact `extern def` surface.
+- [C interop](c-ffi.md): the exact `extern func` surface.
 - [Standard library](standard-library.md) and [floating point](floating-point.md):
   what the shipped modules provide.

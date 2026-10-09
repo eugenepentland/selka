@@ -1,4 +1,3 @@
-module sexpr.parser
 
 import sexpr.ast as ast
 import sexpr.tokenizer as tk
@@ -10,10 +9,10 @@ public record ParseError:
     col: int
     offset: int
 
-def max_parse_depth() -> int:
+func max_parse_depth() -> int:
     return 10000
 
-def mil_to_mm() -> float:
+func mil_to_mm() -> float:
     return 0.0254
 
 # One-token lookahead shared by recursive calls through `mut Cursor`. Token
@@ -22,25 +21,25 @@ def mil_to_mm() -> float:
 record Cursor:
     src: bytes
     lexer: tk.Lexer
-    current: list[tk.RawToken]
+    current: tk.RawToken[]
     cap: int
 
-def located(span: ast.Span, message: str) -> ParseError:
+func located(span: ast.Span, message: str) -> ParseError:
     return ParseError(message=message, line=int(span.line), col=int(span.col), offset=int(span.offset))
 
-def invalid_number(span: ast.Span) -> ParseError:
+func invalid_number(span: ast.Span) -> ParseError:
     return located(span, "invalid number literal")
 
-def lex_failure(src: bytes, problem: tk.LexError) -> ParseError:
-    span = tk.span_at(src, problem.offset)
-    message = problem.message
+func lex_failure(src: bytes, problem: tk.LexError) -> ParseError:
+    mut span = tk.span_at(src, problem.offset)
+    mut message = problem.message
     if len(message) == 0:
         message = "unexpected character"
     return ParseError(message=message, line=int(span.line), col=int(span.col), offset=problem.offset)
 
-def advance(cursor: mut Cursor) -> Result[bool, ParseError]:
-    lx = cursor.lexer
-    outcome = tk.next_raw(mut lx)
+func advance(mut cursor: Cursor) -> Result[bool, ParseError]:
+    mut lx = cursor.lexer
+    mut outcome = tk.next_raw(mut lx)
     cursor.lexer = lx
     match outcome:
         case Ok(token):
@@ -51,38 +50,38 @@ def advance(cursor: mut Cursor) -> Result[bool, ParseError]:
 
 # The source range a token's `Token.text` spelling occupies. A node keeps this
 # range instead of a decoded copy, so an atom or a string costs no allocation.
-def view_of(src: bytes, start: int, end: int) -> view.View:
+func view_of(src: bytes, start: int, end: int) -> view.View:
     return view.View(source=src, start=start, end=end)
 
 # Whether the token's spelling ends with the two ASCII bytes `first`, `second`.
 # The suffix letters are ASCII, which no continuation byte can equal, so reading
 # them straight out of the source is the same test as reading the decoded tail.
-def spelling_ends_with(src: bytes, raw: tk.RawToken, first: int, second: int) -> bool:
-    end = raw.text_end
+func spelling_ends_with(src: bytes, raw: tk.RawToken, first: int, second: int) -> bool:
+    mut end = raw.text_end
     return end - 2 >= raw.text_start and src[end - 2] == first and src[end - 1] == second
 
 
 # Whether the token's spelling ends with the three ASCII bytes `mil`.
-def spelling_ends_with_mil(src: bytes, raw: tk.RawToken) -> bool:
-    end = raw.text_end
+func spelling_ends_with_mil(src: bytes, raw: tk.RawToken) -> bool:
+    mut end = raw.text_end
     return end - 3 >= raw.text_start and src[end - 3] == 109 and src[end - 2] == 105 and src[end - 1] == 108
 
-def source_has_mil_suffix(src: bytes, raw: tk.RawToken) -> bool:
-    after = raw.text_end
+func source_has_mil_suffix(src: bytes, raw: tk.RawToken) -> bool:
+    mut after = raw.text_end
     return after + 3 <= len(src) and src[after] == 109 and src[after + 1] == 105 and src[after + 2] == 108
 
 # A `mm`/`mil` dimension: the number part has already been read as a float,
 # `mil` scales to millimetres, and the node stores the normalised value, exactly
 # as before.
-def parse_unit(raw: tk.RawToken, value: float, is_mil: bool) -> ast.Node:
-    mm_value = value
+func parse_unit(raw: tk.RawToken, value: float, is_mil: bool) -> ast.Node:
+    mut mm_value = value
     if is_mil:
         mm_value = value * mil_to_mm()
-    return ast.Node.measure(mm_value, raw.source.span)
+    return ast.Node.measure(value=mm_value, span=raw.source.span)
 
 # The scale a one-byte SI suffix selects. The suffix byte is read from the
 # source octet: ASCII `k`, `M`, `G`, `m`, `u`, `n`, `p`, and 1.0 otherwise.
-def si_scale(letter: int) -> float:
+func si_scale(letter: int) -> float:
     if letter == ord("k"):
         return 1e3
     if letter == ord("M"):
@@ -99,7 +98,7 @@ def si_scale(letter: int) -> float:
         return 1e-12
     return 1.0
 
-def is_si_number_char(byte: int, index: int) -> bool:
+func is_si_number_char(byte: int, index: int) -> bool:
     return (byte >= 48 and byte <= 57) or byte == 46 or (byte == 45 and index == 0)
 
 # The byte length of the number part of an SI literal: its digits, an optional
@@ -107,8 +106,8 @@ def is_si_number_char(byte: int, index: int) -> bool:
 # suffix is a scale letter, a unit letter or `%`, none of which a number part
 # can contain, so the scan stops exactly where the value ends. The scan reads
 # the source range in place, so no copy of the spelling is made.
-def si_number_end(src: bytes, raw: tk.RawToken) -> int:
-    end = 0
+func si_number_end(src: bytes, raw: tk.RawToken) -> int:
+    mut end = 0
     while raw.text_start + end < raw.text_end and is_si_number_char(src[raw.text_start + end], end):
         end = end + 1
     return end
@@ -118,40 +117,40 @@ def si_number_end(src: bytes, raw: tk.RawToken) -> int:
 # byte selects the multiplier, exactly as the scalar form's `text[end]` did. The
 # number part is parsed from its octets, and the node keeps the whole source
 # spelling, so printing it reproduces `100nF` rather than the `1e-7` value.
-def parse_si(src: bytes, raw: tk.RawToken) -> Result[ast.Node, ParseError]:
-    span = raw.source.span
-    end = si_number_end(src, raw)
+func parse_si(src: bytes, raw: tk.RawToken) -> Result[ast.Node, ParseError]:
+    mut span = raw.source.span
+    mut end = si_number_end(src, raw)
     if end == 0 or end >= raw.text_end - raw.text_start:
         return Err(invalid_number(span))
     match src.parse_float_range(raw.text_start, raw.text_start + end):
         case Some(value):
-            letter = src[raw.text_start + end]
-            return Ok(ast.Node.decimal(value * si_scale(letter), span, Some(view_of(src, raw.text_start, raw.text_end))))
+            mut letter = src[raw.text_start + end]
+            return Ok(ast.Node.decimal(value=value * si_scale(letter), span=span, literal=Some(view_of(src, raw.text_start, raw.text_end))))
         case None:
             return Err(invalid_number(span))
 
 # One leaf. Punctuation, EOF and the `string` kind are handled by the caller.
 # The numeric kinds read their octets in place, so no spelling is decoded on the
 # way to `int` or `float`.
-def parse_leaf(src: bytes, raw: tk.RawToken) -> Result[ast.Node, ParseError]:
-    span = raw.source.span
+func parse_leaf(src: bytes, raw: tk.RawToken) -> Result[ast.Node, ParseError]:
+    mut span = raw.source.span
     if raw.kind == tk.Kind.atom:
-        return Ok(ast.Node.atom(view_of(src, raw.text_start, raw.text_end), span))
+        return Ok(ast.Node.atom(text=view_of(src, raw.text_start, raw.text_end), span=span))
     if raw.kind == tk.Kind.int_val:
         match src.parse_int_range(raw.text_start, raw.text_end):
             case Some(value):
-                return Ok(ast.Node.integer(value, span))
+                return Ok(ast.Node.integer(value=value, span=span))
             case None:
                 return Err(invalid_number(span))
     if raw.kind == tk.Kind.float_val:
         match src.parse_float_range(raw.text_start, raw.text_end):
             case Some(value):
-                return Ok(ast.Node.decimal(value, span))
+                return Ok(ast.Node.decimal(value=value, span=span))
             case None:
                 return Err(invalid_number(span))
     if raw.kind == tk.Kind.unit_val:
-        is_mil = False
-        number_end = raw.text_end
+        mut is_mil = False
+        mut number_end = raw.text_end
         if spelling_ends_with_mil(src, raw):
             number_end = raw.text_end - 3
             is_mil = True
@@ -168,11 +167,11 @@ def parse_leaf(src: bytes, raw: tk.RawToken) -> Result[ast.Node, ParseError]:
         return parse_si(src, raw)
     return Err(located(span, "unexpected token"))
 
-def parse_node(cursor: mut Cursor, depth: int) -> Result[ast.Node, ParseError]:
-    raw = cursor.current[0]
+func parse_node(mut cursor: Cursor, depth: int) -> Result[ast.Node, ParseError]:
+    mut raw = cursor.current[0]
     match raw.kind:
         case tk.Kind.lparen:
-            _ = advance(mut cursor)?
+            _ = try advance(mut cursor)
             return parse_list(mut cursor, depth, raw.source.span)
         case tk.Kind.rparen:
             return Err(located(raw.source.span, "unexpected ')' — no matching '(' is open here"))
@@ -181,32 +180,33 @@ def parse_node(cursor: mut Cursor, depth: int) -> Result[ast.Node, ParseError]:
         case tk.Kind.string:
             # A string node keeps the bytes between the quotes with escapes
             # intact, which is exactly the tokenizer's text range.
-            node = ast.Node.string(view_of(cursor.src, raw.text_start, raw.text_end), raw.source.span)
-            _ = advance(mut cursor)?
+            const node = ast.Node.string(text=view_of(cursor.src, raw.text_start, raw.text_end), span=raw.source.span)
+            _ = try advance(mut cursor)
             return Ok(node)
         case _:
-            node = parse_leaf(cursor.src, raw)?
-            _ = advance(mut cursor)?
+            const node = try parse_leaf(cursor.src, raw)
+            _ = try advance(mut cursor)
             return Ok(node)
 
-def parse_list(cursor: mut Cursor, depth: int, open_span: ast.Span) -> Result[ast.Node, ParseError]:
+func parse_list(mut cursor: Cursor, depth: int, open_span: ast.Span) -> Result[ast.Node, ParseError]:
     if depth >= cursor.cap:
         return Err(located(open_span, "s-expression nesting is too deep"))
-    entries: list[ast.Node] = []
+    mut entries: ast.Node[] = []
     while True:
         if cursor.current[0].kind == tk.Kind.eof:
             return Err(located(open_span, "unexpected end of input — a '(' was never closed"))
         if cursor.current[0].kind == tk.Kind.rparen:
-            _ = advance(mut cursor)?
-            return Ok(ast.Node.form(entries, open_span))
-        entries.append(parse_node(mut cursor, depth + 1)?)
+            _ = try advance(mut cursor)
+            return Ok(ast.Node.form(items=entries, span=open_span))
+        const child = try parse_node(mut cursor, depth + 1)
+        entries.append(child)
 
 # The old parser tokenized all input first. Drain only the syntax-error path so
 # a later lexical failure retains its historical precedence.
-def finish_after_syntax_error(cursor: mut Cursor, syntax: ParseError) -> Result[list[ast.Node], ParseError]:
+func finish_after_syntax_error(mut cursor: Cursor, syntax: ParseError) -> Result[ast.Node[], ParseError]:
     while cursor.current[0].kind != tk.Kind.eof:
-        lx = cursor.lexer
-        outcome = tk.next_raw(mut lx)
+        mut lx = cursor.lexer
+        mut outcome = tk.next_raw(mut lx)
         cursor.lexer = lx
         match outcome:
             case Ok(token):
@@ -215,25 +215,25 @@ def finish_after_syntax_error(cursor: mut Cursor, syntax: ParseError) -> Result[
                 return Err(lex_failure(cursor.src, problem))
     return Err(syntax)
 
-public def parse(src: bytes) -> Result[list[ast.Node], ParseError]:
+public func parse(src: bytes) -> Result[ast.Node[], ParseError]:
     return parse_with_depth_cap(src, max_parse_depth())
 
-public def parse_with_depth_cap(src: bytes, cap: int) -> Result[list[ast.Node], ParseError]:
+public func parse_with_depth_cap(src: bytes, cap: int) -> Result[ast.Node[], ParseError]:
     # `Span` addresses a document in 32 bits, so the whole-document bound is
     # checked here, once, before any span exists. Every narrowing conversion in
     # the tokenizer and this module is therefore in range, and an oversized
     # document is an ordinary located failure rather than a conversion trap.
     if len(src) > ast.max_source_bytes():
         return Err(ParseError(message="document exceeds the 4 GiB source range", line=1, col=1, offset=0))
-    lx = tk.lexer(src)
-    first = tk.RawToken(kind=tk.Kind.eof, source=tk.SpanToken(start=0, end=0, span=ast.Span(line=1, col=1, offset=0)), text_start=0, text_end=0)
+    mut lx = tk.lexer(src)
+    mut first = tk.RawToken(kind=tk.Kind.eof, source=tk.SpanToken(start=0, end=0, span=ast.Span(line=1, col=1, offset=0)), text_start=0, text_end=0)
     match tk.next_raw(mut lx):
         case Ok(token):
             first = token
         case Err(problem):
             return Err(lex_failure(src, problem))
-    cursor = Cursor(src=src, lexer=lx, current=[first], cap=cap)
-    nodes: list[ast.Node] = []
+    mut cursor = Cursor(src=src, lexer=lx, current=[first], cap=cap)
+    mut nodes: ast.Node[] = []
     while cursor.current[0].kind != tk.Kind.eof:
         match parse_node(mut cursor, 0):
             case Ok(node):

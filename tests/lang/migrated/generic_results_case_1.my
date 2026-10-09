@@ -1,9 +1,8 @@
-module generic_results_case_1
 
 
-union AppError:
-    Detail: str,
-    Missing: i64
+enum AppError:
+    Detail(value: str)
+    Missing(value: i64)
 
 
 result Inner:
@@ -16,18 +15,19 @@ result Outer:
     err: AppError
 
 
-def inner(flag: bool) -> Inner:
+func inner(flag: bool) -> Inner:
     if flag:
         return Err("bad")
     return Ok(5)
 
 
-def outer[T](flag: bool, seed: T) -> Outer:
+func outer[T](flag: bool, seed: T) -> Outer:
     _ = seed
-    return Ok(inner(flag)? > 3)
+    const value = try inner(flag)
+    return Ok(value > 3)
 
 
-def handle(value: Outer) -> i64:
+func handle(value: Outer) -> i64:
     match value:
         case Outer.ok(flag):
             if flag:
@@ -35,13 +35,13 @@ def handle(value: Outer) -> i64:
             return 0
         case Outer.err(error):
             match error:
-                case AppError.Detail(text):
+                case AppError.Detail(value=text):
                     if text == "bad":
                         return 7
                     return 8
-                case AppError.Missing(code):
+                case AppError.Missing(value=code):
                     return 100 + code
 
 
-public def program() -> i64:
+public func program() -> i64:
     return handle(outer[i64](True, 0)) + handle(outer[i64](False, 0))

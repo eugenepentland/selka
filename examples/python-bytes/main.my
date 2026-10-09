@@ -1,4 +1,3 @@
-module main
 
 # Parse a length-prefixed binary record set the way Python code would: managed
 # byte strings, integer octets, and a checked result instead of an exception.
@@ -7,34 +6,34 @@ record Record:
     body: bytes
 
 
-def checksum(body: bytes) -> int:
-    total = 0
+func checksum(body: bytes) -> int:
+    mut total = 0
     for octet in body:
         total = (total + octet) % 251
     return total
 
 
-def split_records(payload: bytes) -> Result[list[Record], str]:
-    records: list[Record] = []
-    cursor = 0
+func split_records(payload: bytes) -> Result[Record[], str]:
+    mut records: Record[] = []
+    mut cursor = 0
     while cursor < len(payload):
         if cursor + 1 >= len(payload):
             return Err("truncated record header")
-        size = payload[cursor + 1]
-        start = cursor + 2
-        stop = start + size
+        mut size = payload[cursor + 1]
+        mut start = cursor + 2
+        mut stop = start + size
         if stop > len(payload):
             return Err("record body runs past the payload")
-        tag = bytes([payload[cursor]]).decode()?
+        mut tag = try bytes([payload[cursor]]).decode()
         records.append(Record(tag=tag, body=payload[start:stop]))
         cursor = stop
     return Ok(records)
 
 
-def report(payload: bytes) -> Result[int, str]:
+func report(payload: bytes) -> Result[int, str]:
     if not payload.startswith(b"A"):
         return Err("payload does not start with the A record")
-    records = split_records(payload)?
+    mut records = try split_records(payload)
     if len(records) != 3:
         return Err("expected three records")
     if records[0].tag != "A" or records[0].body != b"abc":
@@ -43,18 +42,18 @@ def report(payload: bytes) -> Result[int, str]:
         return Err("second record is not ff01")
     if len(records[2].body) != 0:
         return Err("third record should be empty")
-    names: dict[str, bytes] = {}
+    mut names: dict[str, bytes] = {}
     for record in records:
         names[record.tag] = record.body
     if b"bc" not in names["A"]:
         return Err("subsequence search failed")
-    total = 0
+    mut total = 0
     for record in records:
         total += checksum(record.body)
     return Ok(total + len(names))
 
 
-def main() -> int:
+func main() -> int:
     match report(b"A\x03abcB\x02\xff\x01C\x00"):
         case Ok(value):
             return value

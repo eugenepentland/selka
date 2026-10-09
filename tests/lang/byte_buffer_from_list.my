@@ -1,4 +1,3 @@
-module byte_buffer_from_list
 
 # `byte_buffer(values)` is a fresh value (VALUE-BUFFER-FRESH-1): storing it into
 # a local places no copy, so nothing may depend on that copy having been made.
@@ -11,105 +10,105 @@ record Packet:
 
 
 record Source:
-    items: list[int]
+    items: int[]
 
 
-def widen(values: list[int]) -> byte_buffer:
+func widen(values: int[]) -> byte_buffer:
     return byte_buffer(values)
 
 
-def fill(values: list[int], rounds: int) -> byte_buffer:
-    buffer = byte_buffer(values)
+func fill(values: int[], rounds: int) -> byte_buffer:
+    mut buffer = byte_buffer(values)
     for i in range(rounds):
         _ = buffer.append_byte(i % 256)
     return buffer
 
 
-def total(buffer: byte_buffer) -> int:
-    sum = 0
+func total(buffer: byte_buffer) -> int:
+    mut sum = 0
     for i in range(len(buffer)):
         sum = sum + buffer[i]
     return sum
 
 
-public def test_writing_a_buffer_built_from_a_list_leaves_the_list_alone() -> bool:
-    values = [1, 2, 3]
-    buffer = byte_buffer(values)
+public func test_writing_a_buffer_built_from_a_list_leaves_the_list_alone() -> bool:
+    mut values = [1, 2, 3]
+    mut buffer = byte_buffer(values)
     _ = buffer.append_byte(4)
     return values == [1, 2, 3] and buffer == b"\x01\x02\x03\x04"
 
 
-public def test_writing_the_list_after_the_conversion_leaves_the_buffer_alone() -> bool:
-    values = [1, 2, 3]
-    buffer = byte_buffer(values)
+public func test_writing_the_list_after_the_conversion_leaves_the_buffer_alone() -> bool:
+    mut values = [1, 2, 3]
+    mut buffer = byte_buffer(values)
     values.append(9)
     values[0] = 7
     return buffer == b"\x01\x02\x03" and values == [7, 2, 3, 9]
 
 
-public def test_two_buffers_built_from_one_list_are_independent() -> bool:
-    values = [10, 20]
-    a = byte_buffer(values)
-    b = byte_buffer(values)
+public func test_two_buffers_built_from_one_list_are_independent() -> bool:
+    mut values = [10, 20]
+    mut a = byte_buffer(values)
+    mut b = byte_buffer(values)
     _ = a.append_byte(1)
     _ = b.append_byte(2)
     return a == b"\x0a\x14\x01" and b == b"\x0a\x14\x02" and values == [10, 20]
 
 
-public def test_a_buffer_built_from_a_record_field_leaves_the_field_alone() -> bool:
-    source = Source([5, 6])
-    buffer = byte_buffer(source.items)
+public func test_a_buffer_built_from_a_record_field_leaves_the_field_alone() -> bool:
+    mut source = Source(items=[5, 6])
+    mut buffer = byte_buffer(source.items)
     _ = buffer.append_byte(7)
     source.items[0] = 1
     return source.items == [1, 6] and buffer == b"\x05\x06\x07"
 
 
-public def test_a_returned_buffer_owns_its_octets() -> bool:
-    values = [1, 2, 3]
-    buffer = widen(values)
+public func test_a_returned_buffer_owns_its_octets() -> bool:
+    mut values = [1, 2, 3]
+    mut buffer = widen(values)
     _ = buffer.append_byte(4)
-    again = widen(values)
+    mut again = widen(values)
     return buffer == b"\x01\x02\x03\x04" and again == b"\x01\x02\x03" and values == [1, 2, 3]
 
 
-public def test_a_buffer_grown_in_a_callee_is_independent_of_its_list() -> bool:
-    values = [1]
-    buffer = fill(values, 300)
+public func test_a_buffer_grown_in_a_callee_is_independent_of_its_list() -> bool:
+    mut values = [1]
+    mut buffer = fill(values, 300)
     return len(buffer) == 301 and values == [1] and buffer[0] == 1 and buffer[300] == 43
 
 
-public def test_a_snapshot_taken_before_a_write_keeps_its_octets() -> bool:
-    values = [1, 2]
-    buffer = byte_buffer(values)
-    snapshot = bytes(buffer)
+public func test_a_snapshot_taken_before_a_write_keeps_its_octets() -> bool:
+    mut values = [1, 2]
+    mut buffer = byte_buffer(values)
+    mut snapshot = bytes(buffer)
     _ = buffer.append_byte(3)
-    later = bytes(buffer)
+    mut later = bytes(buffer)
     _ = buffer.append_byte(4)
     return snapshot == b"\x01\x02" and later == b"\x01\x02\x03" and buffer == b"\x01\x02\x03\x04"
 
 
-public def test_a_rebuilt_buffer_in_a_loop_starts_from_the_list_every_time() -> bool:
-    values = [9]
-    sums = 0
+public func test_a_rebuilt_buffer_in_a_loop_starts_from_the_list_every_time() -> bool:
+    mut values = [9]
+    mut sums = 0
     for i in range(3):
-        buffer = byte_buffer(values)
+        mut buffer = byte_buffer(values)
         _ = buffer.append_byte(i)
         sums = sums + total(buffer) * 10 + len(buffer)
     return sums == 9 * 10 + 2 + (10 * 10 + 2) + (11 * 10 + 2)
 
 
-public def test_a_renamed_buffer_is_still_a_value_of_its_own() -> bool:
-    values = [1, 2]
-    buffer = byte_buffer(values)
-    other = buffer
+public func test_a_renamed_buffer_is_still_a_value_of_its_own() -> bool:
+    mut values = [1, 2]
+    mut buffer = byte_buffer(values)
+    mut other = buffer
     _ = other.append_byte(3)
     return buffer == b"\x01\x02" and other == b"\x01\x02\x03"
 
 
-public def test_a_buffer_stored_in_a_record_is_a_value_of_its_own() -> bool:
-    values = [1, 2]
-    buffer = byte_buffer(values)
-    packet = Packet("q", buffer)
+public func test_a_buffer_stored_in_a_record_is_a_value_of_its_own() -> bool:
+    mut values = [1, 2]
+    mut buffer = byte_buffer(values)
+    mut packet = Packet(tag="q", body=buffer)
     _ = buffer.append_byte(3)
     _ = packet.body.append_byte(4)
     return buffer == b"\x01\x02\x03" and packet.body == b"\x01\x02\x04"

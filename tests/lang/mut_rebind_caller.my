@@ -1,31 +1,31 @@
 # Whole mut bindings are caller variables; readonly arguments remain snapshots.
 record Box:
-    items: list[int]
+    items: int[]
     n: int
 
 
-def list_paths(items: mut list[int], other: list[int], choose: bool):
+func list_paths(mut items: int[], other: int[], choose: bool):
     items.append(3)
     if choose:
         items = other
     items.append(4)
 
 
-def dict_paths(items: mut dict[int, int], other: dict[int, int], choose: bool):
+func dict_paths(mut items: dict[int, int], other: dict[int, int], choose: bool):
     items[3] = 3
     if choose:
         items = other
     items[4] = 4
 
 
-def set_paths(items: mut set[int], other: set[int], choose: bool):
+func set_paths(mut items: set[int], other: set[int], choose: bool):
     items.add(3)
     if choose:
         items = other
     items.add(4)
 
 
-def record_paths(value: mut Box, other: Box, choose: bool):
+func record_paths(mut value: Box, other: Box, choose: bool):
     value.n += 3
     if choose:
         value = other
@@ -34,110 +34,110 @@ def record_paths(value: mut Box, other: Box, choose: bool):
 
 
 # spec: MUT-REBIND-CALLER-1
-public def test_conditional_list_rebind_reaches_caller_and_preserves_sources() -> bool:
-    items = [1]
-    saved = items
-    other = [2]
+public func test_conditional_list_rebind_reaches_caller_and_preserves_sources() -> bool:
+    mut items = [1]
+    mut saved = items
+    mut other = [2]
     list_paths(mut items, other, True)
-    untouched = [1]
+    mut untouched = [1]
     list_paths(mut untouched, other, False)
     return items == [2, 4] and saved == [1] and other == [2] and untouched == [1, 3, 4]
 
 
 # spec-case: MUT-REBIND-CALLER-1
-public def test_conditional_dict_rebind_reaches_caller_and_preserves_sources() -> bool:
-    items = {1: 1}
-    saved = items
-    other = {2: 2}
+public func test_conditional_dict_rebind_reaches_caller_and_preserves_sources() -> bool:
+    mut items = {1: 1}
+    mut saved = items
+    mut other = {2: 2}
     dict_paths(mut items, other, True)
-    untouched = {1: 1}
+    mut untouched = {1: 1}
     dict_paths(mut untouched, other, False)
     return items == {2: 2, 4: 4} and saved == {1: 1} and other == {2: 2} and untouched == {1: 1, 3: 3, 4: 4}
 
 
 # spec-case: MUT-REBIND-CALLER-1
-public def test_conditional_set_rebind_reaches_caller_and_preserves_sources() -> bool:
-    items = {1}
-    saved = items
-    other = {2}
+public func test_conditional_set_rebind_reaches_caller_and_preserves_sources() -> bool:
+    mut items = {1}
+    mut saved = items
+    mut other = {2}
     set_paths(mut items, other, True)
-    untouched = {1}
+    mut untouched = {1}
     set_paths(mut untouched, other, False)
     return items == {2, 4} and saved == {1} and other == {2} and untouched == {1, 3, 4}
 
 
 # spec-case: MUT-REBIND-CALLER-1
-public def test_conditional_record_rebind_reaches_caller_and_preserves_sources() -> bool:
-    value = Box([1], 1)
-    saved = value
-    other = Box([2], 2)
+public func test_conditional_record_rebind_reaches_caller_and_preserves_sources() -> bool:
+    mut value = Box(items=[1], n=1)
+    mut saved = value
+    mut other = Box(items=[2], n=2)
     record_paths(mut value, other, True)
-    untouched = Box([1], 1)
+    mut untouched = Box(items=[1], n=1)
     record_paths(mut untouched, other, False)
-    return value == Box([2, 4], 6) and saved == Box([1], 1) and other == Box([2], 2) and untouched == Box([1, 4], 8)
+    return value == Box(items=[2, 4], n=6) and saved == Box(items=[1], n=1) and other == Box(items=[2], n=2) and untouched == Box(items=[1, 4], n=8)
 
 
-def list_loop(items: mut list[int]):
+func list_loop(mut items: int[]):
     for index in range(3):
         items.append(9)
         items = [index]
         items.append(7)
 
 
-def dict_loop(items: mut dict[int, int]):
+func dict_loop(mut items: dict[int, int]):
     for index in range(3):
         items[9] = 9
         items = {index: index}
         items[7] = 7
 
 
-def set_loop(items: mut set[int]):
+func set_loop(mut items: set[int]):
     for index in range(3):
         items.add(9)
         items = {index}
         items.add(7)
 
 
-def record_loop(value: mut Box):
+func record_loop(mut value: Box):
     for index in range(3):
         value.n += 9
-        value = Box([index], index)
+        value = Box(items=[index], n=index)
         value.items.append(7)
 
 
 # spec-case: MUT-REBIND-CALLER-1
-public def test_loop_list_rebind_writes_final_value() -> bool:
-    items = [1]
-    saved = items
+public func test_loop_list_rebind_writes_final_value() -> bool:
+    mut items = [1]
+    mut saved = items
     list_loop(mut items)
     return items == [2, 7] and saved == [1]
 
 
 # spec-case: MUT-REBIND-CALLER-1
-public def test_loop_dict_rebind_writes_final_value() -> bool:
-    items = {1: 1}
-    saved = items
+public func test_loop_dict_rebind_writes_final_value() -> bool:
+    mut items = {1: 1}
+    mut saved = items
     dict_loop(mut items)
     return items == {2: 2, 7: 7} and saved == {1: 1}
 
 
 # spec-case: MUT-REBIND-CALLER-1
-public def test_loop_set_rebind_writes_final_value() -> bool:
-    items = {1}
-    saved = items
+public func test_loop_set_rebind_writes_final_value() -> bool:
+    mut items = {1}
+    mut saved = items
     set_loop(mut items)
     return items == {2, 7} and saved == {1}
 
 
 # spec-case: MUT-REBIND-CALLER-1
-public def test_loop_record_rebind_writes_final_value() -> bool:
-    value = Box([1], 1)
-    saved = value
+public func test_loop_record_rebind_writes_final_value() -> bool:
+    mut value = Box(items=[1], n=1)
+    mut saved = value
     record_loop(mut value)
-    return value == Box([2, 7], 2) and saved == Box([1], 1)
+    return value == Box(items=[2, 7], n=2) and saved == Box(items=[1], n=1)
 
 
-def forwarding(items: mut list[int], depth: int):
+func forwarding(mut items: int[], depth: int):
     if depth > 0:
         recursive(mut items, depth - 1)
     else:
@@ -145,238 +145,238 @@ def forwarding(items: mut list[int], depth: int):
     items.append(depth)
 
 
-def recursive(items: mut list[int], depth: int):
+func recursive(mut items: int[], depth: int):
     forwarding(mut items, depth)
 
 
 # spec-case: MUT-REBIND-CALLER-1
-public def test_recursive_forwarding_propagates_rebind_without_order_dependence() -> bool:
-    items = [1]
-    saved = items
+public func test_recursive_forwarding_propagates_rebind_without_order_dependence() -> bool:
+    mut items = [1]
+    mut saved = items
     recursive(mut items, 2)
     return items == [8, 0, 1, 2] and saved == [1]
 
 
 # spec-case: MUT-REBIND-CALLER-1
-public def test_function_value_uses_caller_variable_for_rebinding() -> bool:
-    action = list_paths
-    items = [1]
-    other = [2]
+public func test_function_value_uses_caller_variable_for_rebinding() -> bool:
+    mut action = list_paths
+    mut items = [1]
+    mut other = [2]
     action(mut items, other, True)
     return items == [2, 4] and other == [2]
 
 
 # spec-case: MUT-REBIND-CALLER-1
-public def test_nested_element_and_field_places_receive_rebound_values() -> bool:
-    rows = [[1], [2]]
-    saved = rows
-    other = [3]
+public func test_nested_element_and_field_places_receive_rebound_values() -> bool:
+    mut rows = [[1], [2]]
+    mut saved = rows
+    mut other = [3]
     list_paths(mut rows[0], other, True)
-    value = Box([1], 1)
-    record_saved = value
+    mut value = Box(items=[1], n=1)
+    mut record_saved = value
     list_paths(mut value.items, other, True)
-    return rows == [[3, 4], [2]] and saved == [[1], [2]] and value == Box([3, 4], 1) and record_saved == Box([1], 1) and other == [3]
+    return rows == [[3, 4], [2]] and saved == [[1], [2]] and value == Box(items=[3, 4], n=1) and record_saved == Box(items=[1], n=1) and other == [3]
 
 
 record Collections:
-    rows: list[list[int]]
-    mapping: dict[int, list[int]]
+    rows: int[][]
+    mapping: dict[int, int[]]
     flags: set[int]
 
 
 # spec-case: MUT-REBIND-CALLER-1
-public def test_nested_dictionary_and_set_fields_receive_final_values() -> bool:
-    value = Collections([[1]], {1: [2]}, {3})
-    saved = value
+public func test_nested_dictionary_and_set_fields_receive_final_values() -> bool:
+    mut value = Collections(rows=[[1]], mapping={1: [2]}, flags={3})
+    mut saved = value
     list_paths(mut value.mapping[1], [4], True)
     set_paths(mut value.flags, {5}, True)
-    return value == Collections([[1]], {1: [4, 4]}, {5, 4}) and saved == Collections([[1]], {1: [2]}, {3})
+    return value == Collections(rows=[[1]], mapping={1: [4, 4]}, flags={5, 4}) and saved == Collections(rows=[[1]], mapping={1: [2]}, flags={3})
 
 
 # spec-case: MUT-REBIND-CALLER-1
-public def test_keyword_interior_arguments_keep_source_order_and_writeback() -> bool:
-    value = Collections([[1]], {1: [2]}, {3})
-    saved = value
-    other = [7]
+public func test_keyword_interior_arguments_keep_source_order_and_writeback() -> bool:
+    mut value = Collections(rows=[[1]], mapping={1: [2]}, flags={3})
+    mut saved = value
+    mut other = [7]
     list_paths(choose=True, items=mut value.mapping[1], other=other)
     list_paths(other=other, choose=True, items=mut value.rows[0])
-    return value.mapping == {1: [7, 4]} and value.rows == [[7, 4]] and saved == Collections([[1]], {1: [2]}, {3}) and other == [7]
+    return value.mapping == {1: [7, 4]} and value.rows == [[7, 4]] and saved == Collections(rows=[[1]], mapping={1: [2]}, flags={3}) and other == [7]
 
 
 # spec-case: MUT-REBIND-CALLER-1
-public def test_function_value_interior_argument_rebinds_its_place() -> bool:
-    action = list_paths
-    rows = [[1]]
-    saved = rows
+public func test_function_value_interior_argument_rebinds_its_place() -> bool:
+    mut action = list_paths
+    mut rows = [[1]]
+    mut saved = rows
     action(mut rows[0], [2], True)
     return rows == [[2, 4]] and saved == [[1]]
 
 
-def wide_read(a0: int, a1: int, a2: int, a3: int, a4: int, a5: int, a6: int, a7: int, a8: int, a9: int, a10: int, a11: int, a12: int, a13: int, a14: int, a15: int, value: int) -> int:
+func wide_read(a0: int, a1: int, a2: int, a3: int, a4: int, a5: int, a6: int, a7: int, a8: int, a9: int, a10: int, a11: int, a12: int, a13: int, a14: int, a15: int, value: int) -> int:
     return a0 + a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8 + a9 + a10 + a11 + a12 + a13 + a14 + a15 + value
 
 
 # spec-case: MUT-REBIND-CALLER-1
-public def test_wide_readonly_signature_remains_supported() -> bool:
+public func test_wide_readonly_signature_remains_supported() -> bool:
     return wide_read(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9) == 9
 
 
-def replace_only(items: mut list[int], mapping: mut dict[int, int], flags: mut set[int], box: mut Box):
+func replace_only(mut items: int[], mut mapping: dict[int, int], mut flags: set[int], mut box: Box):
     items = [2]
     mapping = {2: 3}
     flags = {4}
-    box = Box([5], 6)
+    box = Box(items=[5], n=6)
 
 
 # spec-case: MUT-REBIND-CALLER-1
-public def test_assignment_alone_is_a_caller_mutation() -> bool:
-    items = [1]
-    mapping = {0: 1}
-    flags = {1}
-    box = Box([1], 1)
+public func test_assignment_alone_is_a_caller_mutation() -> bool:
+    mut items = [1]
+    mut mapping = {0: 1}
+    mut flags = {1}
+    mut box = Box(items=[1], n=1)
     replace_only(mut items, mut mapping, mut flags, mut box)
-    return items == [2] and mapping == {2: 3} and flags == {4} and box == Box([5], 6)
+    return items == [2] and mapping == {2: 3} and flags == {4} and box == Box(items=[5], n=6)
 
 
-def replace_rows(first: mut list[int], second: mut list[int], left: list[int], right: list[int]):
+func replace_rows(mut first: int[], mut second: int[], left: int[], right: int[]):
     first = left
     second = right
 
 
 # spec-case: MUT-REBIND-CALLER-1
-public def test_multiple_interior_references_survive_later_argument_allocations() -> bool:
-    rows = [[1], [2]]
-    saved = rows
+public func test_multiple_interior_references_survive_later_argument_allocations() -> bool:
+    mut rows = [[1], [2]]
+    mut saved = rows
     replace_rows(mut rows[0], mut rows[1], [3], [4])
     return rows == [[3], [4]] and saved == [[1], [2]]
 
 
-def replace_child(rows: mut list[list[int]]):
+func replace_child(mut rows: int[][]):
     list_paths(mut rows[0], [9], True)
     rows[1][0] = 7
 
 
 # spec-case: MUT-REBIND-CALLER-1
-public def test_child_rebinding_through_payload_parent_preserves_snapshots() -> bool:
-    rows = [[1], [2]]
-    saved = rows
+public func test_child_rebinding_through_payload_parent_preserves_snapshots() -> bool:
+    mut rows = [[1], [2]]
+    mut saved = rows
     replace_child(mut rows)
-    callback = replace_child
-    other = [[3], [4]]
-    other_saved = other
+    mut callback = replace_child
+    mut other = [[3], [4]]
+    mut other_saved = other
     callback(mut other)
     return rows == [[9, 4], [7]] and saved == [[1], [2]] and other == rows and other_saved == [[3], [4]]
 
 
-def rebind_selected_mapping(target: mut dict[int, int], source: dict[int, dict[int, int]]) -> int:
-    before = target[1]
+func rebind_selected_mapping(mut target: dict[int, int], source: dict[int, dict[int, int]]) -> int:
+    mut before = target[1]
     target = {1: 13}
     return before * 10000 + target[1] * 100 + source[0][1]
 
 
-def replace_mapping_entry(root: mut dict[int, dict[int, int]]) -> dict[int, dict[int, int]]:
+func replace_mapping_entry(mut root: dict[int, dict[int, int]]) -> dict[int, dict[int, int]]:
     root[0] = {1: 21}
     return root
 
 
 # spec-case: MUT-REBIND-CALLER-1
 # spec-case: COW-MUT-ARGUMENT-1
-public def test_direct_and_callback_rebind_keep_the_entry_selected_before_replacement() -> bool:
-    direct = {0: {1: 7}}
-    direct_saved = direct
-    first = rebind_selected_mapping(mut direct[0], replace_mapping_entry(mut direct))
-    indirect = {0: {1: 7}}
-    indirect_saved = indirect
-    action = rebind_selected_mapping
-    second = action(mut indirect[0], replace_mapping_entry(mut indirect))
+public func test_direct_and_callback_rebind_keep_the_entry_selected_before_replacement() -> bool:
+    mut direct = {0: {1: 7}}
+    mut direct_saved = direct
+    mut first = rebind_selected_mapping(mut direct[0], replace_mapping_entry(mut direct))
+    mut indirect = {0: {1: 7}}
+    mut indirect_saved = indirect
+    mut action = rebind_selected_mapping
+    mut second = action(mut indirect[0], replace_mapping_entry(mut indirect))
     return first == 71321 and second == 71321 and direct == {0: {1: 21}} and indirect == direct and direct_saved == {0: {1: 7}} and indirect_saved == direct_saved
 
 
-def rebind_selected_row(target: mut list[int], source: list[list[int]]) -> int:
-    before = target[0]
+func rebind_selected_row(mut target: int[], source: int[][]) -> int:
+    mut before = target[0]
     target = [13]
     return before * 10000 + target[0] * 100 + source[0][0]
 
 
-def replace_row_entry(root: mut list[list[int]]) -> list[list[int]]:
+func replace_row_entry(mut root: int[][]) -> int[][]:
     root[0] = [21]
     return root
 
 
-def replace_row_root(root: mut list[list[int]]) -> list[list[int]]:
+func replace_row_root(mut root: int[][]) -> int[][]:
     root = [[21]]
     return root
 
 
 # spec-case: MUT-REBIND-CALLER-1
 # spec-case: COW-MUT-ARGUMENT-1
-public def test_direct_and_callback_rebind_keep_a_list_entry_selected_before_replacement() -> bool:
-    direct = [[7]]
-    saved = direct
-    first = rebind_selected_row(mut direct[0], replace_row_entry(mut direct))
-    indirect = [[7]]
-    action = rebind_selected_row
-    second = action(mut indirect[0], replace_row_entry(mut indirect))
+public func test_direct_and_callback_rebind_keep_a_list_entry_selected_before_replacement() -> bool:
+    mut direct = [[7]]
+    mut saved = direct
+    mut first = rebind_selected_row(mut direct[0], replace_row_entry(mut direct))
+    mut indirect = [[7]]
+    mut action = rebind_selected_row
+    mut second = action(mut indirect[0], replace_row_entry(mut indirect))
     return first == 71321 and second == 71321 and direct == [[21]] and indirect == direct and saved == [[7]]
 
 
 # spec-case: MUT-REBIND-CALLER-1
 # spec-case: COW-MUT-ARGUMENT-1
-public def test_direct_and_callback_rebind_keep_the_old_parent_after_root_replacement() -> bool:
-    direct = [[7]]
-    saved = direct
-    first = rebind_selected_row(mut direct[0], replace_row_root(mut direct))
-    indirect = [[7]]
-    action = rebind_selected_row
-    second = action(mut indirect[0], replace_row_root(mut indirect))
+public func test_direct_and_callback_rebind_keep_the_old_parent_after_root_replacement() -> bool:
+    mut direct = [[7]]
+    mut saved = direct
+    mut first = rebind_selected_row(mut direct[0], replace_row_root(mut direct))
+    mut indirect = [[7]]
+    mut action = rebind_selected_row
+    mut second = action(mut indirect[0], replace_row_root(mut indirect))
     return first == 71321 and second == 71321 and direct == [[21]] and indirect == direct and saved == [[7]]
 
 
-def rebind_selected_field(target: mut list[int], source: Box) -> int:
-    before = target[0]
+func rebind_selected_field(mut target: int[], source: Box) -> int:
+    mut before = target[0]
     target = [13]
     return before * 10000 + target[0] * 100 + source.items[0]
 
 
-def replace_box_field(box: mut Box) -> Box:
+func replace_box_field(mut box: Box) -> Box:
     box.items = [21]
     return box
 
 
 # spec-case: MUT-REBIND-CALLER-1
 # spec-case: COW-MUT-ARGUMENT-1
-public def test_direct_and_callback_rebind_keep_the_field_selected_before_replacement() -> bool:
-    direct = Box([7], 1)
-    saved = direct
-    first = rebind_selected_field(mut direct.items, replace_box_field(mut direct))
-    indirect = Box([7], 1)
-    action = rebind_selected_field
-    second = action(mut indirect.items, replace_box_field(mut indirect))
-    return first == 71321 and second == 71321 and direct == Box([21], 1) and indirect == direct and saved == Box([7], 1)
+public func test_direct_and_callback_rebind_keep_the_field_selected_before_replacement() -> bool:
+    mut direct = Box(items=[7], n=1)
+    mut saved = direct
+    mut first = rebind_selected_field(mut direct.items, replace_box_field(mut direct))
+    mut indirect = Box(items=[7], n=1)
+    mut action = rebind_selected_field
+    mut second = action(mut indirect.items, replace_box_field(mut indirect))
+    return first == 71321 and second == 71321 and direct == Box(items=[21], n=1) and indirect == direct and saved == Box(items=[7], n=1)
 
 
-def replace_equal_row(root: mut list[list[int]]) -> list[list[int]]:
+func replace_equal_row(mut root: int[][]) -> int[][]:
     root[0] = [7]
     return root
 
 
 # spec-case: MUT-REBIND-CALLER-1
 # spec-case: COW-MUT-ARGUMENT-1
-public def test_equal_replacement_still_keeps_the_selected_payload_identity() -> bool:
-    rows = [[7]]
-    action = rebind_selected_row
-    seen = action(mut rows[0], replace_equal_row(mut rows))
+public func test_equal_replacement_still_keeps_the_selected_payload_identity() -> bool:
+    mut rows = [[7]]
+    mut action = rebind_selected_row
+    mut seen = action(mut rows[0], replace_equal_row(mut rows))
     return seen == 71307 and rows == [[7]]
 
 
-def rebind_selected_pair(left: mut list[int], right: mut list[int], source: list[list[int]]) -> int:
-    before = left[0] + right[0]
+func rebind_selected_pair(mut left: int[], mut right: int[], source: int[][]) -> int:
+    mut before = left[0] + right[0]
     left = [13]
     right = [17]
     return before * 10000 + left[0] * 100 + right[0] + source[0][0] + source[1][0]
 
 
-def replace_row_pair(rows: mut list[list[int]]) -> list[list[int]]:
+func replace_row_pair(mut rows: int[][]) -> int[][]:
     rows[0] = [21]
     rows[1] = [22]
     return rows
@@ -384,55 +384,55 @@ def replace_row_pair(rows: mut list[list[int]]) -> list[list[int]]:
 
 # spec-case: MUT-REBIND-CALLER-1
 # spec-case: COW-MUT-ARGUMENT-1
-public def test_multiple_references_keep_independent_selected_values_after_replacement() -> bool:
-    direct = [[7], [8]]
-    first = rebind_selected_pair(mut direct[0], mut direct[1], replace_row_pair(mut direct))
-    indirect = [[7], [8]]
-    action = rebind_selected_pair
-    second = action(mut indirect[0], mut indirect[1], replace_row_pair(mut indirect))
+public func test_multiple_references_keep_independent_selected_values_after_replacement() -> bool:
+    mut direct = [[7], [8]]
+    mut first = rebind_selected_pair(mut direct[0], mut direct[1], replace_row_pair(mut direct))
+    mut indirect = [[7], [8]]
+    mut action = rebind_selected_pair
+    mut second = action(mut indirect[0], mut indirect[1], replace_row_pair(mut indirect))
     return first == 151360 and second == 151360 and direct == [[21], [22]] and indirect == direct
 
 
-def returned_items(box: mut Box) -> list[int]:
+func returned_items(mut box: Box) -> int[]:
     box.n = box.n + 1
     return box.items
 
 
-def compare_returned(first: list[int], second: list[int]) -> bool:
+func compare_returned(first: int[], second: int[]) -> bool:
     return first == [7] and second == [8]
 
 
 # spec-case: MUT-REBIND-CALLER-1
-public def test_returned_collection_is_rooted_as_a_value_across_later_allocation() -> bool:
-    box = Box([7], 1)
-    saved = box
-    seen = compare_returned(returned_items(mut box), [8])
-    return seen and box == Box([7], 2) and saved == Box([7], 1)
+public func test_returned_collection_is_rooted_as_a_value_across_later_allocation() -> bool:
+    mut box = Box(items=[7], n=1)
+    mut saved = box
+    mut seen = compare_returned(returned_items(mut box), [8])
+    return seen and box == Box(items=[7], n=2) and saved == Box(items=[7], n=1)
 
 
-def replace_whole_and_copy(items: mut list[int]) -> list[int]:
+func replace_whole_and_copy(mut items: int[]) -> int[]:
     items = [21]
     return items
 
 
-def append_current(items: mut list[int], source: list[int]) -> int:
-    before = items[0]
+func append_current(mut items: int[], source: int[]) -> int:
+    mut before = items[0]
     items.append(13)
     return before * 10000 + items[0] * 100 + source[0]
 
 
 # spec-case: MUT-REBIND-CALLER-1
-public def test_payload_call_uses_the_current_whole_caller_variable() -> bool:
-    direct = [7]
-    saved = direct
-    first = append_current(mut direct, replace_whole_and_copy(mut direct))
+public func test_payload_call_uses_the_current_whole_caller_variable() -> bool:
+    mut direct = [7]
+    mut saved = direct
+    mut first = append_current(mut direct, replace_whole_and_copy(mut direct))
     return first == 212121 and direct == [21, 13] and saved == [7]
 
 
 # spec-case: MUT-REBIND-CALLER-1
-public def test_callback_call_uses_the_current_whole_caller_variable() -> bool:
-    indirect = [7]
-    saved = indirect
-    action = append_current
-    second = action(mut indirect, replace_whole_and_copy(mut indirect))
+public func test_callback_call_uses_the_current_whole_caller_variable() -> bool:
+    mut indirect = [7]
+    mut saved = indirect
+    mut action = append_current
+    mut second = action(mut indirect, replace_whole_and_copy(mut indirect))
     return second == 212121 and indirect == [21, 13] and saved == [7]

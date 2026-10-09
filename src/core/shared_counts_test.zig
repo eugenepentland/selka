@@ -109,14 +109,14 @@ test "shared count emission uses unordered reads, plain thresholds and cold help
     defer arena.deinit();
     var refusal: @import("build.zig").Refusal = .{};
     var module = try support.buildSource(arena.allocator(),
-        \\def held(xs: list[int]) -> list[int]:
+        \\func held(xs: int[]) -> int[]:
         \\    return xs
-        \\def changed(xs: list[int]) -> list[int]:
-        \\    ys = xs
+        \\func changed(xs: int[]) -> int[]:
+        \\    mut ys = xs
         \\    ys.append(1)
         \\    return ys
-        \\def main(out: Stream) -> int:
-        \\    xs = [1, 2]
+        \\func main(out: Stream) -> int:
+        \\    const xs = [1, 2]
         \\    out.print(changed(xs), held(xs), xs)
         \\    return 0
     , &refusal);
@@ -139,11 +139,11 @@ test "shared count cold dispatch preserves immortal and allocated strings throug
     defer arena.deinit();
     var refusal: @import("build.zig").Refusal = .{};
     var module = try support.buildSource(arena.allocator(),
-        \\def choose(flag: bool, text: str) -> str:
-        \\    return "constant" if flag else text
-        \\def main(out: Stream) -> int:
+        \\func choose(flag: bool, text: str) -> str:
+        \\    return if flag then "constant" else text
+        \\func main(out: Stream) -> int:
         \\    for i in range(4):
-        \\        text = str(40 + i)
+        \\        const text = str(40 + i)
         \\        out.print(choose(i % 2 == 0, text), text)
         \\    return 0
     , &refusal);

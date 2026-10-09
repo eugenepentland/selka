@@ -64,6 +64,7 @@ runtime's terminal `cleanup` hook, which `dir()` registers exactly as
 ## Doc example (proposed for docs/effects.md)
 
 ```mylang
+# doc: skip Historical pre-redesign syntax retained as audit evidence.
 resource File: filesystem
 
 result Open:

@@ -7,14 +7,14 @@ const operations = @import("buffer_operations.zig");
 const loop_rebinding = @import("loop_rebinding.zig");
 const Error = @import("diagnostic.zig").Error;
 
-/// A statement loop body or a comprehension's produced expression.
-pub const Body = union(enum) { statement: ast.StatementId, expression: ast.NodeId };
+/// Syntax evaluated by a loop, including both a comprehension filter and yield.
+pub const Body = union(enum) { statement: ast.StatementId, expression: ast.NodeId, expressions: []const ast.NodeId };
 
 /// Whether a body replaces the root syntactically. Expressions cannot assign it.
 pub fn rebinds(comptime Checker: type, checker: *Checker, body: Body, name: []const u8, immutable: bool) Error!bool {
     return switch (body) {
         .statement => |id| loop_rebinding.rebinds(checker.allocator, .{ .program = checker.syntax, .src = checker.src }, id, name, immutable),
-        .expression => false,
+        .expression, .expressions => false,
     };
 }
 
@@ -25,6 +25,7 @@ pub fn changes(comptime Checker: type, checker: *Checker, body: Body, name: []co
     defer walk.work.deinit(checker.allocator);
     try walk.append(body);
     while (walk.work.pop()) |item| switch (item) {
+        .expressions => |ids| for (ids) |id| try walk.append(Body{ .expression = id }),
         .statement => |id| try walk.append(checker.syntax.statements.items[@backingInt(id)].data),
         .expression => |id| {
             const node = checker.syntax.nodes.items[@backingInt(id)];

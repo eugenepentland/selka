@@ -1,4 +1,3 @@
-module items
 
 
 public record Item:
@@ -6,5 +5,5 @@ public record Item:
     weight: int
 
 
-public def weight_of(item: Item) -> int effects():
+public func weight_of(item: Item) -> int effects():
     return item.weight

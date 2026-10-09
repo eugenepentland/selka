@@ -13,7 +13,7 @@ result Read:
     err: i64
 
 
-def value(input: Read) -> i64:
+func value(input: Read) -> i64:
     match input:
         case Read.ok(number):
             return number
@@ -21,7 +21,7 @@ def value(input: Read) -> i64:
             return -code
 
 
-def main(out: Stream) -> i64:
+func main(out: Stream) -> i64:
     out.print(value(Ok(42)))
     return 0
 ```
@@ -52,28 +52,28 @@ own arm.
 
 ```mylang
 # doc: expect-error E_WILDCARD_ARM
-union Event:
-    start,
-    tick: int,
-    stop: int
+enum Event:
+    start
+    tick(value: int)
+    stop(value: int)
 
 
-def weight(event: Event) -> int:
+func weight(event: Event) -> int:
     match event:
-        case Event.tick(count):
+        case Event.tick(value=count):
             return count
         case _:
             return 0
 
 
-def misplaced(event: Event) -> int:
+func misplaced(event: Event) -> int:
     match event:
         case _:
             return 0
-        case Event.tick(count):
+        case Event.tick(value=count):
             return count
 
 
-def main() -> int:
-    return weight(Event.tick(42))
+func main() -> int:
+    return weight(Event.tick(value=42))
 ```

@@ -1,4 +1,3 @@
-module surface_statements
 
 
 import surface_statements_case_1 as c1
@@ -12,36 +11,36 @@ import surface_statements_case_8 as c8
 
 
 # spec: SURFACE-STMT-7
-public def test_condition_calls_admit_nested_record_construc() -> bool:
+public func test_condition_calls_admit_nested_record_construc() -> bool:
     return c1.program() == 42
 
 # spec: SURFACE-STMT-8
-public def test_nested_generic_record_constructors_retain_li() -> bool:
+public func test_nested_generic_record_constructors_retain_li() -> bool:
     return c2.program() == 42
 
 # spec: SURFACE-STMT-3
-public def test_parentheses_spell_unit_types_values_and_bare() -> bool:
+public func test_parentheses_spell_unit_types_values_and_bare() -> bool:
     return c3.program() == 42
 
 # spec: SURFACE-STMT-2
-public def test_postfix_question_propagates_success_and_erro_1() -> bool:
+public func test_postfix_question_propagates_success_and_erro_1() -> bool:
     return c4.program() == 42
 
 # spec-case: SURFACE-STMT-2
-public def test_postfix_question_propagates_success_and_erro_2() -> bool:
+public func test_postfix_question_propagates_success_and_erro_2() -> bool:
     return c5.program() == 42
 
 # spec: SURFACE-STMT-4
-public def test_trailing_call_commas_and_multiline_binary_op_1() -> bool:
+public func test_trailing_call_commas_and_multiline_binary_op_1() -> bool:
     return c6.program() == 42
 
 # spec-case: SURFACE-STMT-4
-public def test_trailing_call_commas_and_multiline_binary_op_2() -> bool:
+public func test_trailing_call_commas_and_multiline_binary_op_2() -> bool:
     return c7.program() == 42
 
 # spec-case: SURFACE-STMT-4
-public def test_trailing_call_commas_and_multiline_binary_op_3() -> bool:
+public func test_trailing_call_commas_and_multiline_binary_op_3() -> bool:
     return c8.program() == 42
 
-def main() -> int:
+func main() -> int:
     return 0

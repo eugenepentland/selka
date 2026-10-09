@@ -2,7 +2,11 @@
 const call_arguments = @import("call_arguments.zig");
 const embed = @import("embed.zig");
 const eResultDiscard = diagnostic.result_discard;
+const fixed_array_name = "FixedArray";
+const ePatternPayload = diagnostic.pattern_payload;
+const eMatchYield = "E_MATCH_YIELD";
 const std = @import("std");
+const frontend_patterns = @import("frontend_patterns.zig");
 const option_flow = @import("option_flow.zig");
 const dictionary_views = @import("dictionary_views.zig");
 const numeric_surface = @import("numeric_surface.zig");
@@ -73,6 +77,7 @@ const FunctionMap = std.StringHashMapUnmanaged(usize);
 
 const Pending = struct { available: bool, transfer_span: ?source.Span };
 const Local = struct {
+    internal_name: ?[]const u8 = null,
     name: source.Span,
     ty: Symbolic,
     mutable: bool,
@@ -101,6 +106,7 @@ const Checker = struct {
     parameters: []const requirements.Parameter,
     requirement_aliases: []const requirements.SubjectAlias = &.{},
     result: Symbolic,
+    match_yield: ?struct { value: ?Symbolic } = null,
     expected_types: std.AutoHashMapUnmanaged(source.Span, Symbolic) = .empty,
     option_facts: option_flow.State = .{},
     functions: *const FunctionMap,
@@ -137,18 +143,21 @@ const Checker = struct {
         } else _ = self.active.remove(text);
     }
     fn checkFunction(self: *Checker, function: ast.Function) Error!void {
+        self.program.nodes = .{ .items = try self.field_arena.allocator().dupe(ast.Node, self.program.nodes.items), .capacity = self.program.nodes.items.len };
+        self.program.statements = .{ .items = try self.field_arena.allocator().dupe(ast.Statement, self.program.statements.items), .capacity = self.program.statements.items.len };
         const sink = self.sink;
         if (function.policy.conversion) return sink.fail(eUnsupported, function.name, "generic conversions still need abstract checking");
         for (self.parameters) |parameter| if (try self.topLevel(parameter.name)) return sink.fail(eShadowing, parameter.name, "type parameter shadows a top-level declaration or import");
         try self.validateStructural();
-        self.result = try self.ty(function.signature.return_type);
+        const success = try self.ty(function.signature.return_type);
+        self.result = if (function.signature.failure_type) |failure| try self.resultType(success, try self.ty(failure), function.name) else success;
         try self.seedCleanup(self.result);
         for (function.signature.parameters) |parameter| {
             const parameter_type = try self.ty(parameter.ty);
             if (parameter.default_value) |value| try self.compatible(try self.expressionExpected(value, parameter_type), parameter_type, parameter.ty);
-            try self.bindMode(parameter.name, parameter_type, function.policy.host == null);
+            try self.bindMode(parameter.name, parameter_type, parameter.mut and function.policy.host == null);
         }
-        const implicit_unit = symbolic.same(self.result, .{ .concrete = .unit }, self.catalog);
+        const implicit_unit = symbolic.same(success, .{ .concrete = .unit }, self.catalog);
         const terminates = try self.statement(function.body);
         if (!terminates and !implicit_unit) return sink.fail("E_MISSING_RETURN", function.name, "template may fall through without returning its declared type");
         if (!terminates) try self.requireHandled(0, function.name);
@@ -165,7 +174,14 @@ const Checker = struct {
         };
     }
     fn properties(self: *Checker, value: Symbolic) Error!symbolic.Properties {
-        return self.shapes().properties(value, self.program.functions[self.function_index].name);
+        const span = if (self.function_index < self.program.functions.len)
+            self.program.functions[self.function_index].name
+        else switch (value) {
+            .nominal => |nominal| self.catalog.templates.store.?.index.declarations.items[nominal.declaration].name,
+            .parameter => |index| self.parameters[index].name,
+            else => source.Span{ .start = 0, .end = 0 },
+        };
+        return self.shapes().properties(value, span);
     }
     fn carriesRegion(self: *Checker, value: Symbolic) Error!bool {
         return (try self.properties(value)).region;
@@ -175,22 +191,34 @@ const Checker = struct {
         self.depth += 1;
         self.work += 1;
     }
+    fn resultType(self: *Checker, success: Symbolic, failure: Symbolic, span: source.Span) Error!Symbolic {
+        _ = span;
+        return self.shapes().nominal(self.catalog.templates.store.?.index.names.get("Result").?, &.{ success, failure });
+    }
     fn ty(self: *Checker, span: source.Span) Error!Symbolic {
+        for (self.program.types.expressions.suffixes) |suffix| if (suffix.span.start == span.start and suffix.span.end == span.end) {
+            try self.enter(span);
+            defer self.depth -= 1;
+            return self.shapes().nominal(self.catalog.templates.store.?.index.names.get(if (suffix.kind == .growable) "list" else "Option").?, &.{try self.ty(suffix.base)});
+        };
         for (self.program.types.expressions.callbacks) |callback| if (callback.span.start == span.start) {
             try self.enter(span);
             defer self.depth -= 1;
             const parameters = try self.field_arena.allocator().alloc(Symbolic, callback.parameters.len);
             for (callback.parameters, parameters) |input, *out| out.* = try self.ty(input);
-            return self.callbackType(callback, parameters, try self.ty(callback.return_type));
+            return self.callbackType(callback, parameters, if (callback.failure_type) |failure| try self.resultType(try self.ty(callback.return_type), try self.ty(failure), span) else try self.ty(callback.return_type));
         };
-        if (self.catalog.templates.applications.get(span.start)) |template| {
+        if (self.catalog.templates.store) |store| if (store.index.syntax.applications.get(span.start)) |syntax| {
+            if (syntax.span.end == span.end) return self.sourceApplication(syntax);
+        };
+        if (self.catalog.templates.applications.get(span.start)) |template| if (template.syntax.span.end == span.end) {
             try self.enter(span);
             defer self.depth -= 1;
             var arguments: [16]Symbolic = undefined;
             const required = self.catalog.templates.store.?.index.declarations.items[template.declaration].parameters;
             for (template.syntax.arguments, required, 0..) |argument, parameter, i| arguments[i] = if (parameter.constant_length) try self.lengthType(argument) else try self.ty(argument);
             return self.shapes().nominal(template.declaration, arguments[0..template.arguments.len]);
-        }
+        };
         if (self.catalog.arrays.templates.get(span.start)) |template| {
             try self.enter(span);
             defer self.depth -= 1;
@@ -220,13 +248,48 @@ const Checker = struct {
         }
         return self.concreteType(span);
     }
+    fn sourceApplication(self: *Checker, syntax: ast.TypeApplication) Error!Symbolic {
+        const store = self.catalog.templates.store.?;
+        if (std.mem.eql(u8, self.src.text(syntax.name), fixed_array_name)) {
+            if (syntax.arguments.len != 2) return self.sink.fail(diagnostic.generic_arity, syntax.span, "FixedArray needs an element type and a constant length");
+            return self.arrayWithLength(try self.lengthType(syntax.arguments[1]), try self.ty(syntax.arguments[0]), syntax.span);
+        }
+        const type_expression = try store.index.expression(syntax.span, self.parameters);
+        if (type_expression != .application) return error.InternalError;
+        const template = type_expression.application;
+        const required = store.index.declarations.items[template.declaration].parameters;
+        const arguments = try self.field_arena.allocator().alloc(Symbolic, required.len);
+        for (syntax.arguments, required, arguments) |argument, parameter, *out| {
+            out.* = if (parameter.constant_length) try self.lengthType(argument) else try self.ty(argument);
+        }
+        return self.shapes().nominal(template.declaration, arguments);
+    }
+    fn substitutedApplication(self: *Checker, syntax: ast.TypeApplication, parameters: []const ast.TypeParameter, arguments: []const Symbolic) Error!Symbolic {
+        const store = self.catalog.templates.store.?;
+        if (std.mem.eql(u8, self.src.text(syntax.name), fixed_array_name)) {
+            if (syntax.arguments.len != 2) return self.sink.fail(diagnostic.generic_arity, syntax.span, "FixedArray needs an element type and a constant length");
+            const length = try self.substitutedLength(syntax.arguments[1], parameters, arguments);
+            return self.arrayWithLength(length, try self.substituted(syntax.arguments[0], parameters, arguments), syntax.span);
+        }
+        const resolved = try requirements.resolve(self.field_arena.allocator(), self.src, parameters, self.sink);
+        const type_expression = try store.index.expression(syntax.span, resolved);
+        if (type_expression != .application) return error.InternalError;
+        const template = type_expression.application;
+        const required = store.index.declarations.items[template.declaration].parameters;
+        const values = try self.field_arena.allocator().alloc(Symbolic, required.len);
+        for (syntax.arguments, required, values) |argument, parameter, *out| {
+            out.* = if (parameter.constant_length) try self.substitutedLength(argument, parameters, arguments) else try self.substituted(argument, parameters, arguments);
+        }
+        return self.shapes().nominal(template.declaration, values);
+    }
     fn callbackType(self: *Checker, syntax: ast.CallbackType, parameters: []const Symbolic, result: Symbolic) Error!Symbolic {
         const signature = try self.field_arena.allocator().create(symbolic.Callback);
         signature.* = .{
             .parameters = parameters,
             .result = result,
             .effects = syntax.effect_bound.allowed,
-            .mutates = try ast.mutPositions(self.field_arena.allocator(), syntax.mut_parameters),
+            .labels = try @import("callables.zig").syntaxLabels(self.field_arena.allocator(), self.src, syntax),
+            .mutates = try ast.mutPositions(self.field_arena.allocator(), syntax.parameter_modes.mut),
             .return_origin = .unknown,
         };
         return .{ .callback = signature };
@@ -363,6 +426,7 @@ const Checker = struct {
     fn compatible(self: *Checker, actual: Symbolic, expected: Symbolic, span: source.Span) Error!void {
         if (symbolic.same(actual, expected, self.catalog)) return;
         if (symbolic.callbackAssignable(actual, expected, self.catalog)) return;
+        if (try self.shapes().matchOption(expected, span)) |option| return self.compatible(actual, option.element, span);
         return self.sink.fail("E_GENERIC_TYPE", span, "types differ; distinct type parameters remain distinct even with identical requirements");
     }
     fn supports(self: *Checker, ty_value: Symbolic, requirement: requirements.Requirement, span: source.Span) Error!void {
@@ -382,6 +446,15 @@ const Checker = struct {
             return self.sink.fail(eUnsupported, lambda.span, lambda_in_generic_body);
         const index = self.active.get(self.src.text(span)) orelse return self.sink.fail("E_UNKNOWN_NAME", span, "name is not defined in this template scope");
         return &self.locals.items[index];
+    }
+    fn syntheticValue(self: *Checker, name: []const u8, span: source.Span) Error!Symbolic {
+        const binding = &self.locals.items[self.active.get(name) orelse return error.InternalError];
+        if (try self.transfers(binding.ty)) {
+            if (!binding.available) return self.sink.fail("E_RESULT_CONSUMED", span, "pattern value was already transferred");
+            binding.available = false;
+            binding.transfer_span = span;
+        }
+        return binding.ty;
     }
     fn namedValue(self: *Checker, span: source.Span) Error!Symbolic {
         for (self.parameters) |parameter| {
@@ -411,7 +484,7 @@ const Checker = struct {
     }
     fn endScope(self: *Checker, before: usize) void {
         self.option_facts.endScope(before);
-        for (self.locals.items[before..]) |item| _ = self.active.remove(self.src.text(item.name));
+        for (self.locals.items[before..]) |item| _ = self.active.remove(item.internal_name orelse self.src.text(item.name));
         self.locals.shrinkRetainingCapacity(before);
         // A nested `_` hid an outer one for its scope; the outer binding is visible again.
         var outer = self.locals.items.len;
@@ -422,12 +495,41 @@ const Checker = struct {
             break;
         }
     }
-    fn returnValue(self: *Checker, value: ast.NodeId, span: source.Span) Error!void {
-        try self.compatible(try self.expressionExpected(value, self.result), self.result, span);
+    fn yieldValue(self: *Checker, value: ast.NodeId, span: source.Span) Error!bool {
+        const context = self.match_yield orelse return self.sink.fail("E_YIELD_CONTEXT", span, "yield requires a match expression arm");
+        const actual = if (context.value) |expected| try self.expressionExpected(value, expected) else try self.expression(value);
+        if (context.value) |expected| try self.compatible(actual, expected, span);
+        self.match_yield.?.value = context.value orelse actual;
+        return false;
+    }
+    fn failValue(self: *Checker, value: ast.NodeId, span: source.Span) Error!bool {
+        const failure = self.program.functions[self.function_index].signature.failure_type orelse
+            return self.sink.fail("E_FAIL_CONTEXT", span, "fail requires a fails clause");
+        const expected = try self.ty(failure);
+        const actual = try self.expressionExpected(value, expected);
+        if (!try self.wrappingErrorCase(expected, actual, span)) try self.compatible(actual, expected, span);
         try self.requireHandled(0, span);
+        return true;
+    }
+    fn returnValue(self: *Checker, value: ast.NodeId, span: source.Span) Error!void {
+        const signature = self.program.functions[self.function_index].signature;
+        const expected = if (signature.failure_type != null) (try self.resultShape(self.result, span, "E_FAIL_CONTEXT")).ok_type else self.result;
+        try self.compatible(try self.expressionExpected(value, expected), expected, span);
+        try self.requireHandled(0, span);
+    }
+    fn bindingDeclaration(self: *Checker, name: source.Span) Error {
+        const insertion: source.Span = .{ .start = name.start, .end = name.start };
+        return self.sink.failFix(diagnostic.binding_declaration, name, "assignment requires a declared binding; introduce a writable local with `mut`", .{ .span = insertion, .text = "mut " });
     }
     fn bind(self: *Checker, name: source.Span, ty_value: Symbolic, mutable: bool) Error!void {
         return self.bindMode(name, ty_value, mutable);
+    }
+    fn bindPattern(self: *Checker, arm: ast.MatchArm, position: usize, name: source.Span, value: Symbolic) Error!void {
+        if (arm.internal.names.len == 0 or arm.internal.names[position].len == 0) return self.bind(name, value, false);
+        const internal = arm.internal.names[position];
+        try self.active.put(self.allocator, internal, self.locals.items.len);
+        try self.locals.append(self.allocator, .{ .name = name, .internal_name = internal, .ty = value, .mutable = false });
+        try self.seedCleanup(value);
     }
     fn bindMode(self: *Checker, name: source.Span, ty_value: Symbolic, mutable: bool) Error!void {
         const text = self.src.text(name);
@@ -486,14 +588,27 @@ const Checker = struct {
         return self.lengthType(span);
     }
     fn substituted(self: *Checker, span: source.Span, parameters: []const ast.TypeParameter, arguments: []const Symbolic) Error!Symbolic {
+        for (self.program.types.expressions.suffixes) |suffix| if (suffix.span.start == span.start and suffix.span.end == span.end) {
+            try self.enter(span);
+            defer self.depth -= 1;
+            return self.shapes().nominal(self.catalog.templates.store.?.index.names.get(if (suffix.kind == .growable) "list" else "Option").?, &.{try self.substituted(suffix.base, parameters, arguments)});
+        };
         for (self.program.types.expressions.callbacks) |callback| if (callback.span.start == span.start) {
             try self.enter(span);
             defer self.depth -= 1;
             const inputs = try self.field_arena.allocator().alloc(Symbolic, callback.parameters.len);
             for (callback.parameters, inputs) |input, *out| out.* = try self.substituted(input, parameters, arguments);
-            return self.callbackType(callback, inputs, try self.substituted(callback.return_type, parameters, arguments));
+            const success = try self.substituted(callback.return_type, parameters, arguments);
+            const result = if (callback.failure_type) |failure|
+                try self.resultType(success, try self.substituted(failure, parameters, arguments), span)
+            else
+                success;
+            return self.callbackType(callback, inputs, result);
         };
-        if (self.catalog.templates.applications.get(span.start)) |template| {
+        if (self.catalog.templates.store) |store| if (store.index.syntax.applications.get(span.start)) |syntax| {
+            if (syntax.span.end == span.end) return self.substitutedApplication(syntax, parameters, arguments);
+        };
+        if (self.catalog.templates.applications.get(span.start)) |template| if (template.syntax.span.end == span.end) {
             try self.enter(span);
             defer self.depth -= 1;
             var values: [16]Symbolic = undefined;
@@ -502,7 +617,7 @@ const Checker = struct {
                 values[i] = if (parameter.constant_length) try self.substitutedLength(argument, parameters, arguments) else try self.substituted(argument, parameters, arguments);
             }
             return self.shapes().nominal(template.declaration, values[0..template.arguments.len]);
-        }
+        };
         if (self.catalog.arrays.templates.get(span.start)) |template| {
             try self.enter(span);
             defer self.depth -= 1;
@@ -562,14 +677,35 @@ const Checker = struct {
             const ty_value = try self.concreteValue(value, invocation.name);
             const signature = @import("callables.zig").signature(ty_value, self.catalog.records) orelse return self.sink.fail("E_CALLBACK_TYPE", invocation.name, "called local is not a function value");
             for (signature.parameters, 0..) |parameter, i| concrete_parameters[i] = .{ .concrete = parameter };
-            break :concrete .{ .parameters = concrete_parameters[0..signature.parameters.len], .result = .{ .concrete = signature.return_type }, .effects = signature.effects };
+            break :concrete .{ .parameters = concrete_parameters[0..signature.parameters.len], .result = .{ .concrete = signature.return_type }, .effects = signature.effects, .labels = signature.labels, .mutates = signature.mutates };
         };
         if (invocation.type_arguments.len != 0 or invocation.arguments.len != contract.parameters.len) return self.sink.fail("E_ARITY", invocation.name, "callback arguments must match its signature");
-        for (invocation.arguments, contract.parameters) |input, parameter| {
-            try self.compatible(try self.expression(input), parameter, invocation.name);
+        const bound = try self.callbackArguments(invocation, contract);
+        for (bound, contract.parameters) |input, parameter| {
+            try self.compatible(try self.expressionExpected(input, parameter), parameter, invocation.name);
         }
         self.effect_masks[self.function_index] |= contract.effects;
         return contract.result;
+    }
+    fn callbackArguments(self: *Checker, invocation: Call, contract: symbolic.Callback) Error![]const ast.NodeId {
+        const values = try self.field_arena.allocator().alloc(ast.NodeId, invocation.arguments.len);
+        const filled = try self.field_arena.allocator().alloc(bool, values.len);
+        @memset(filled, false);
+        for (invocation.arguments, 0..) |input, index| {
+            const label = if (invocation.argument_names.len == 0) null else invocation.argument_names[index];
+            const target = if (label) |name| target: {
+                for (contract.labels, 0..) |candidate, position| {
+                    if (candidate.len != 0 and std.mem.eql(u8, candidate, self.src.text(name))) break :target position;
+                }
+                return self.sink.fail(eCallArgument, name, "keyword names no named callback parameter");
+            } else index;
+            if (target >= values.len or filled[target]) return self.sink.fail(eCallArgument, invocation.name, "callback parameter receives more than one argument");
+            if (label == null and target < contract.labels.len and contract.labels[target].len != 0)
+                return self.sink.fail("E_KEYWORD_ONLY", invocation.name, "callback parameter must be supplied by name");
+            filled[target] = true;
+            values[target] = input;
+        }
+        return values;
     }
     fn collectionElement(self: *Checker, owner: Symbolic, span: source.Span) Error!Symbolic {
         if (dictionary_views.symbolicKind(self.catalog, owner)) |kind| if (kind != .item)
@@ -658,8 +794,29 @@ const Checker = struct {
     }
     /// `x, y = value` inside a template body: the value must be a tuple whose
     /// arity matches the names, and each name binds one positional element.
+    fn validateTupleTargets(self: *Checker, target: ast.Node, declaration: ?bool) Error!void {
+        var unknown: ?source.Span = null;
+        var all_unknown = true;
+        for (target.data.tuple) |id| {
+            const node = self.program.nodes.items[@backingInt(id)];
+            if (node.data != .name) {
+                if (declaration != null) return self.sink.fail("E_ASSIGNMENT_TARGET", node.span, "a destructuring declaration requires binding names");
+                all_unknown = false;
+                continue;
+            }
+            const name = node.data.name;
+            if (std.mem.eql(u8, self.src.text(name), "_")) continue;
+            if (self.active.contains(self.src.text(name))) all_unknown = false else unknown = unknown orelse name;
+        }
+        if (declaration != null or unknown == null) return;
+        if (!all_unknown) return self.sink.fail(diagnostic.binding_declaration, unknown.?, "destructuring assignment requires declared bindings");
+        const at = target.span.start;
+        return self.sink.failFix(diagnostic.binding_declaration, unknown.?, "introduce writable tuple bindings with mut", .{ .span = .{ .start = at, .end = at }, .text = "mut " });
+    }
     fn tupleAssignment(self: *Checker, assignment: @FieldType(@FieldType(ast.Node, "data"), "field_assignment"), span: source.Span) Error!Symbolic {
-        const names = self.program.nodes.items[@backingInt(assignment.target)].data.tuple;
+        const target = self.program.nodes.items[@backingInt(assignment.target)];
+        const names = target.data.tuple;
+        try self.validateTupleTargets(target, assignment.declaration);
         const value = try self.expression(assignment.value);
         const arity = symbolic_shapes.tupleArity(self.catalog, value) orelse {
             const found = try self.symbolicText(value);
@@ -675,12 +832,14 @@ const Checker = struct {
             }
             const name = self.program.nodes.items[@backingInt(name_id)].data.name;
             if (std.mem.eql(u8, self.src.text(name), "_")) continue;
-            if (self.active.contains(self.src.text(name))) {
-                const target = try self.local(name);
-                if (!target.mutable) return self.sink.fail(diagnostic.immutable, name, "assignment requires a mutable binding");
-                try self.compatible(element, target.ty, name);
+            if (assignment.declaration) |mutable| {
+                try self.bind(name, element, mutable);
+            } else if (self.active.contains(self.src.text(name))) {
+                const target_binding = try self.local(name);
+                if (!target_binding.mutable) return self.sink.fail(diagnostic.immutable, name, "assignment requires a mutable binding");
+                try self.compatible(element, target_binding.ty, name);
                 self.option_facts.forget(self.active.get(self.src.text(name)).?);
-            } else try self.bind(name, element, true);
+            } else return self.bindingDeclaration(name);
         }
         return .{ .concrete = .unit };
     }
@@ -782,8 +941,13 @@ const Checker = struct {
         const hidden = self.active.get(text);
         try self.bind(each.name, element, false);
         defer self.unbindScoped(text, hidden);
+        const facts = try self.option_facts.snapshot(self.field_arena.allocator());
+        defer self.option_facts.restore(facts);
+        if (each.filter) |condition| {
+            try self.compatible(try self.expression(condition), .{ .concrete = .bool }, span);
+            try self.assumeOption(condition, true);
+        }
         const produced = try self.expression(each.output);
-        if (each.filter) |condition| try self.compatible(try self.expression(condition), .{ .concrete = .bool }, span);
         try self.supports(produced, .copy, span);
         try self.supports(produced, .storable, span);
         self.seedEffect(.managed_allocation);
@@ -872,7 +1036,7 @@ const Checker = struct {
     fn listLiteral(self: *Checker, node: ast.Node, inputs: []const ast.NodeId) Error!Symbolic {
         var expected = self.expected_types.get(node.span);
         if (expected) |ty_value| if (symbolic.array(ty_value, self.catalog.records)) |shape| {
-            if (shape.key == null) return self.fixedArrayLiteral(node, inputs, ty_value);
+            if (shape.key == null) return self.sink.fail("E_FIXED_ARRAY_LITERAL", node.span, "array literals are growable; construct FixedArray explicitly");
         };
         var element: ?Symbolic = if (expected) |ty_value| try self.collectionElement(ty_value, node.span) else null;
         if (inputs.len == 0 and expected == null) return self.sink.fail("E_LIST_INFERENCE", node.span, "empty list requires an expected List type");
@@ -1252,14 +1416,46 @@ const Checker = struct {
     fn scalarConstructor(self: *Checker, invocation: Call, span: source.Span) Error!?Symbolic {
         if (invocation.owner != null or invocation.type_arguments.len != 0) return null;
         const name = self.src.text(invocation.name);
-        const floating = std.mem.eql(u8, name, "float");
-        if (!floating and !std.mem.eql(u8, name, "int")) return null;
+        const floating = std.mem.eql(u8, name, "float") or std.mem.eql(u8, name, "parse_float");
+        if (!floating) {
+            if (!std.mem.eql(u8, name, "int") and !std.mem.eql(u8, name, "parse_int")) return null;
+        }
         if (self.active.contains(name) or self.functions.contains(name)) return null;
         if (self.module_names) |names| if (try names.topLevel(invocation.name)) return null;
         if (invocation.arguments.len != 1) return self.sink.fail("E_ARITY", span, "numeric conversions require one argument");
         const input = try self.expression(invocation.arguments[0]);
+        if (try self.numericParse(invocation, input, floating, span)) |parsed| return parsed;
         if (!self.isFloat(input)) try self.supports(input, .integer, span);
         return if (floating) self.floatType() else .{ .concrete = .i64 };
+    }
+    fn surfaceUnit(self: *Checker, node: ast.Node) Error!Symbolic {
+        if (!@import("frontend_units.zig").isNone(self.src, node.span)) return .{ .concrete = .unit };
+        if (self.expected_types.get(node.span)) |expected| {
+            if (expected == .concrete and expected.concrete == .unit) return self.sink.failFix(
+                "E_NONE_UNIT",
+                node.span,
+                "None means optional absence; write () for the Unit value",
+                .{ .span = node.span, .text = "()" },
+            );
+            _ = try self.optionElement(expected, node.span);
+            return expected;
+        }
+        return self.sink.fail("E_NONE_CONTEXT", node.span, "None requires an expected optional type");
+    }
+    fn numericParse(self: *Checker, invocation: Call, input: Symbolic, floating: bool, span: source.Span) Error!?Symbolic {
+        const parses = std.mem.startsWith(u8, self.src.text(invocation.name), "parse_");
+        if (self.shapes().collectionKind(input) == .string) {
+            if (!parses) return self.sink.failFix(
+                "E_NUMERIC_PARSE",
+                invocation.name,
+                "parse text explicitly with parse_int or parse_float; int and float convert numbers",
+                .{ .span = invocation.name, .text = if (floating) "parse_float" else "parse_int" },
+            );
+            const parsed = try self.optionType(if (floating) self.floatType() else .{ .concrete = .i64 });
+            return parsed;
+        }
+        if (parses) return self.sink.fail("E_TYPE", span, "parse_int and parse_float require a str argument");
+        return null;
     }
     fn optionElement(self: *Checker, value: Symbolic, span: source.Span) Error!Symbolic {
         const shape = try self.shapes().schema(value, span);
@@ -1581,10 +1777,15 @@ const Checker = struct {
             },
         }
     }
+    fn namedVariantCall(self: *Checker, invocation: Call) Error!bool {
+        const owner = invocation.owner orelse return false;
+        if (self.active.contains(self.src.text(owner))) return false;
+        return variant_calls.caseFielded(self.src, self.catalog, owner, invocation.name, self.sink);
+    }
     fn call(self: *Checker, input_call: Call, span: source.Span) Error!Symbolic {
         if (try self.specialCall(input_call, span)) |value| {
             const named = std.mem.eql(u8, self.src.text(input_call.name), "Cell") or keywordSort(self, input_call) or std.mem.eql(u8, self.src.text(input_call.name), "sorted");
-            if (!named) try call_arguments.positional(input_call, self.sink);
+            if (!named and !try self.namedVariantCall(input_call)) try call_arguments.positional(input_call, self.sink);
             return value;
         }
         const resolved = try self.resolveCall(input_call);
@@ -1592,7 +1793,7 @@ const Checker = struct {
         const signature = function.signature;
         const invocation = try call_arguments.bind(self.field_arena.allocator(), self.src, self.program.nodes.items, resolved, signature, self.sink);
         if (function.policy.conversion) return self.sink.fail(eUnsupported, span, "generic conversions still need abstract checking");
-        if (invocation.type_arguments.len != 0 and invocation.type_arguments.len != signature.type_parameters.len) return self.sink.fail("E_GENERIC_ARITY", span, "explicit type argument count does not match generic parameters");
+        if (invocation.type_arguments.len != 0 and invocation.type_arguments.len != signature.type_parameters.len) return self.sink.fail(diagnostic.generic_arity, span, "explicit type argument count does not match generic parameters");
         if (invocation.arguments.len != signature.parameters.len) return self.sink.fail("E_ARITY", span, "argument count does not match function parameters");
         var provider: constraint_lookup.Provider = .{ .program = self.program, .src = self.src, .names = self.module_names };
         const required = try requirements.resolveBounds(self.allocator, self.src, signature.type_parameters, self.sink, provider.lookup());
@@ -1616,7 +1817,8 @@ const Checker = struct {
             const node = self.program.nodes.items[@backingInt(input)];
             try self.compatible(if (actuals) |values| values[input_index] else try self.expressionExpected(input, expected), expected, node.span);
         }
-        return self.substituted(signature.return_type, signature.type_parameters, arguments);
+        const success = try self.substituted(signature.return_type, signature.type_parameters, arguments);
+        return if (signature.failure_type) |failure| try self.resultType(success, try self.substituted(failure, signature.type_parameters, arguments), span) else success;
     }
     fn inferredRequirement(self: *Checker, argument: Symbolic, parameter: requirements.Parameter, argument_span: source.Span) Error!void {
         const satisfies = switch (argument) {
@@ -1769,15 +1971,41 @@ const Checker = struct {
         );
         return .{ .concrete = backing };
     }
+    fn dynamicFixedArray(self: *Checker, input: ast.NodeId, target: Symbolic, span: source.Span) Error!Symbolic {
+        const value = try self.expression(input);
+        if (self.shapes().collectionKind(value) != .list)
+            return self.sink.fail("E_TYPE", span, "runtime FixedArray conversion requires a growable array");
+        const shape = try self.arrayShape(target, span);
+        try self.compatible(try self.collectionElement(value, span), shape.element, span);
+        const failure = try self.shapes().nominal(self.catalog.templates.store.?.index.names.get(@import("frontend_type_names.zig").fixed_length_error).?, &.{});
+        return self.resultType(target, failure, span);
+    }
+    fn fixedConstructor(self: *Checker, node: ast.Node) Error!?Symbolic {
+        const invocation = node.data.call;
+        for (self.program.types.expressions.applications) |application| {
+            if (application.span.start != invocation.name.start or application.span.end != invocation.name.end) continue;
+            if (!std.mem.eql(u8, self.src.text(application.name), fixed_array_name)) return null;
+            if (invocation.arguments.len != 1) return self.sink.fail("E_ARITY", node.span, "FixedArray construction requires one explicit array literal");
+            const input = self.program.nodes.items[@backingInt(invocation.arguments[0])];
+            if (input.data != .list_literal) {
+                const converted = try self.dynamicFixedArray(invocation.arguments[0], try self.ty(application.span), node.span);
+                return converted;
+            }
+            const checked = try self.fixedArrayLiteral(node, input.data.list_literal, try self.ty(application.span));
+            return checked;
+        }
+        return null;
+    }
     fn expressionValue(self: *Checker, id: ast.NodeId) Error!Symbolic {
         var node = self.program.nodes.items[@backingInt(id)];
-        if (node.data == .call) if (try @import("record_calls.zig").lower(self.field_arena.allocator(), self.src, self.catalog, node.data.call, self.sink)) |record| {
+        if (node.data == .call) if (try @import("record_calls.zig").lower(self.field_arena.allocator(), self.src, self.catalog, self.program.nodes.items, node.data.call, self.sink)) |record| {
             node.data = record.data;
         };
         try self.enter(node.span);
         defer self.depth -= 1;
         return switch (node.data) {
             .format_field => |field| try self.formattedField(field.value, node.span),
+            .synthetic_name => |name| try self.syntheticValue(name, node.span),
             .name => |name| try self.namedValue(name),
             .wrap => |wrap| result: {
                 const operand = try self.expression(wrap.value);
@@ -1801,7 +2029,7 @@ const Checker = struct {
                 if (value_type.resourceKind() == null) return self.sink.fail("E_TYPE", node.span, "restriction requires filesystem or network capability authority");
                 break :result value;
             },
-            .call => |invocation| try self.call(invocation, node.span),
+            .call => |invocation| (try self.fixedConstructor(node)) orelse try self.call(invocation, node.span),
             .propagate => |operand| try self.propagateValue(operand, node.span),
             .bytes => try self.byteLiteral(node),
             .text => try self.concreteType(node.span),
@@ -1813,13 +2041,7 @@ const Checker = struct {
                 break :member .{ .concrete = .bool };
             },
             .dictionary_literal => |entries| try self.dictionaryLiteral(node, entries),
-            .unit => unit: {
-                if (self.expected_types.get(node.span)) |expected| if (self.shapes().kind(expected) == .variants) {
-                    _ = try self.optionElement(expected, node.span);
-                    break :unit expected;
-                };
-                break :unit .{ .concrete = .unit };
-            },
+            .unit => try self.surfaceUnit(node),
             .boolean => .{ .concrete = .bool },
             .integer => |span| try self.numericLiteral(span, false),
             .unary => |unary| try self.unaryValue(unary),
@@ -1886,6 +2108,13 @@ const Checker = struct {
             // which re-checks every call with the declared footprint and the
             // full origin analysis.
             .mut_argument => |inner| try self.expression(inner),
+            .match_expression => |match| blk: {
+                const previous = self.match_yield;
+                defer self.match_yield = previous;
+                self.match_yield = .{ .value = self.expected_types.get(node.span) };
+                _ = try self.matchValue(.{ .value = match.value, .arms = match.arms }, node.span);
+                break :blk self.match_yield.?.value orelse return self.sink.fail(eMatchYield, node.span, "match requires at least one yielded value");
+            },
         };
     }
     /// A fixed-width cast accepts a concrete float or an integer-constrained operand.
@@ -2056,6 +2285,12 @@ const Checker = struct {
         for (shape.fields) |field| {
             const declared = field.ty orelse continue;
             if (symbolic.same(declared, payload, self.catalog)) return true;
+            if (field.fielded) {
+                const record = try self.shapes().schema(declared, span);
+                if (record.fields.len == 1) if (record.fields[0].ty) |element| {
+                    if (symbolic.same(element, payload, self.catalog)) return true;
+                };
+            }
         }
         return false;
     }
@@ -2126,13 +2361,18 @@ const Checker = struct {
     // shape arena; the binding rules themselves are identical.
     fn caseInitializers(self: *Checker, record: symbolic.Schema, values: []const ast.NodeId, names: []const ?source.Span, span: source.Span) Error![]const ast.FieldInit {
         if (values.len > record.fields.len) return self.sink.fail("E_ARITY", span, "too many field arguments for this variant case");
+        const labels = try self.field_arena.allocator().alloc([]const u8, record.fields.len);
+        for (record.fields, labels) |field, *label| label.* = field.name;
+        const sites = try self.field_arena.allocator().alloc(source.Span, values.len);
+        for (values, sites) |value, *site| site.* = self.program.nodes.items[@backingInt(value)].span;
+        try @import("frontend_named_fields.zig").require(self.sink, span, "E_NAMED_FIELDS", .{ .labels = labels, .sites = sites, .names = names });
         var initializers: std.ArrayList(ast.FieldInit) = .empty;
         const supplied = try self.allocator.alloc(bool, record.fields.len);
         defer self.allocator.free(supplied);
         @memset(supplied, false);
         for (values, 0..) |value, source_index| {
             const keyword = if (names.len == 0) null else names[source_index];
-            const index = if (keyword) |name| try self.shapes().memberIndex(record, name) else source_index;
+            const index = if (keyword) |name| try self.shapes().memberIndex(record, name) else return self.sink.fail("E_NAMED_FIELDS", span, "variant payload fields must be supplied by name");
             if (supplied[index]) return self.sink.fail("E_DUPLICATE_FIELD", keyword orelse span, "field is initialized more than once");
             supplied[index] = true;
             try initializers.append(self.allocator, .{ .name = if (keyword) |name| name else record.fields[index].span, .value = value });
@@ -2153,12 +2393,78 @@ const Checker = struct {
         for (variants.fields, 0..) |candidate, index| if (std.mem.eql(u8, candidate.name, canonical)) return index;
         return self.sink.fail("E_UNKNOWN_VARIANT", name, "case is not a variant of the matched type");
     }
+    fn nestedPatternIndex(arm: ast.MatchArm) ?usize {
+        for (arm.payload_patterns, 0..) |field, index| if (field.pattern.data == .variant) return index;
+        return null;
+    }
+    fn nestedArms(self: *Checker, value: Symbolic, variants: symbolic.Schema, input: []const ast.MatchArm) Error![]const ast.MatchArm {
+        var output: std.ArrayList(ast.MatchArm) = .empty;
+        const used = try self.field_arena.allocator().alloc(bool, input.len);
+        @memset(used, false);
+        for (input, 0..) |arm, index| {
+            if (used[index]) continue;
+            const nested_index = nestedPatternIndex(arm) orelse {
+                try output.append(self.field_arena.allocator(), arm);
+                continue;
+            };
+            const tag = try self.patternTag(value, variants, arm.ty, arm.name);
+            const fielded = variants.fields[tag].fielded;
+            const projected_name = if (fielded) arm.payload_patterns[nested_index].pattern.data.variant.name else arm.name;
+            var inner: std.ArrayList(ast.MatchArm) = .empty;
+            for (input[index..], index..) |candidate, candidate_index| {
+                if (try self.patternTag(value, variants, candidate.ty, candidate.name) != tag) continue;
+                const candidate_nested = nestedPatternIndex(candidate) orelse return self.sink.fail(ePatternPayload, candidate.name, "nested arms require explicit payload variants");
+                const pattern = candidate.payload_patterns[candidate_nested].pattern.data.variant;
+                const bindings = try self.field_arena.allocator().alloc(?source.Span, pattern.fields.len);
+                const labels = try self.field_arena.allocator().alloc(?source.Span, pattern.fields.len);
+                for (pattern.fields, bindings, labels) |field, *binding, *label| {
+                    binding.* = if (field.pattern.data == .binding) field.pattern.data.binding else null;
+                    label.* = field.name;
+                }
+                try inner.append(self.field_arena.allocator(), .{ .ty = pattern.ty, .name = pattern.name, .bindings = bindings, .binding_names = labels, .payload_patterns = pattern.fields, .body = candidate.body });
+                used[candidate_index] = true;
+            }
+            const node: ast.NodeId = @fromBackingInt(self.program.nodes.items.len);
+            try self.program.nodes.append(self.field_arena.allocator(), .{ .span = projected_name, .data = .{ .name = projected_name } });
+            const body: ast.StatementId = @fromBackingInt(self.program.statements.items.len);
+            try self.program.statements.append(self.field_arena.allocator(), .{ .span = arm.name, .data = .{ .match = .{ .value = node, .arms = try inner.toOwnedSlice(self.field_arena.allocator()) } } });
+            var outer = arm;
+            const bindings = if (fielded) try self.field_arena.allocator().dupe(?source.Span, arm.bindings) else try self.field_arena.allocator().alloc(?source.Span, 1);
+            bindings[if (fielded) nested_index else 0] = projected_name;
+            outer.bindings = bindings;
+            if (!fielded) outer.binding_names = &.{};
+            outer.payload_patterns = &.{};
+            outer.body = body;
+            try output.append(self.field_arena.allocator(), outer);
+        }
+        return output.toOwnedSlice(self.field_arena.allocator());
+    }
+    fn wildcardBody(self: *Checker, arm: ast.MatchArm, span: source.Span, state: struct { incoming_len: usize, seen: []const bool, continuation: *?[]Pending }) Error!bool {
+        if (std.mem.allEqual(bool, state.seen, true)) return true;
+        const continuation = state.continuation;
+        const returns = try self.statement(arm.body);
+        if (!returns) {
+            if (continuation.*) |pending| try self.samePending(pending, span, eResultPath) else continuation.* = try self.pendingState(state.incoming_len);
+        }
+        return returns;
+    }
+    fn requirePatternLabels(self: *Checker, arm: ast.MatchArm, shape: symbolic.Schema) Error!void {
+        const labels = try self.field_arena.allocator().alloc([]const u8, shape.fields.len);
+        for (shape.fields, labels) |field, *label| label.* = field.name;
+        const sites = try self.field_arena.allocator().alloc(source.Span, arm.bindings.len);
+        for (arm.bindings, sites, 0..) |binding, *site, position| {
+            site.* = if (position < arm.payload_patterns.len) arm.payload_patterns[position].pattern.span else binding orelse arm.name;
+        }
+        try @import("frontend_named_fields.zig").require(self.sink, arm.name, "E_NAMED_PATTERN", .{ .labels = labels, .sites = sites, .names = arm.binding_names });
+    }
     fn matchValue(self: *Checker, match: @FieldType(@FieldType(ast.Statement, "data"), "match"), span: source.Span) Error!bool {
         for (match.arms) |arm| try self.invalidateOptions(arm.body);
         const match_facts = try self.option_facts.snapshot(self.field_arena.allocator());
         defer self.option_facts.restore(match_facts);
         const value = try self.rawOptionExpression(match.value);
         const variants = try self.shapes().requireVariants(value, span);
+        const product_arms = try frontend_patterns.normalize(Checker, self, match.arms);
+        const normalized_arms = try self.nestedArms(value, variants, product_arms);
         const seen = try self.allocator.alloc(bool, variants.fields.len);
         defer self.allocator.free(seen);
         @memset(seen, false);
@@ -2167,9 +2473,14 @@ const Checker = struct {
         var continuation: ?[]Pending = null;
         defer if (continuation) |state| self.allocator.free(state);
         var terminated = true;
-        for (match.arms) |arm| {
+        for (normalized_arms) |arm| {
             self.option_facts.restore(match_facts);
             self.restorePending(incoming);
+            if (arm.internal.wildcard) {
+                terminated = try self.wildcardBody(arm, span, .{ .incoming_len = incoming.len, .seen = seen, .continuation = &continuation }) and terminated;
+                @memset(seen, true);
+                continue;
+            }
             const tag = try self.patternTag(value, variants, arm.ty, arm.name);
             if (seen[tag]) return self.sink.fail("E_DUPLICATE_ARM", arm.name, "variant has more than one match arm");
             seen[tag] = true;
@@ -2178,7 +2489,8 @@ const Checker = struct {
             defer self.endScope(before);
             if (payload != null and variants.fields[tag].fielded) {
                 const shape = try self.shapes().schema(payload.?, arm.name);
-                if (arm.bindings.len != shape.fields.len) return self.sink.fail("E_PATTERN_PAYLOAD", arm.name, "a named-field case pattern binds exactly one name per field, using `_` to discard one");
+                try self.requirePatternLabels(arm, shape);
+                if (arm.bindings.len != shape.fields.len) return self.sink.fail(ePatternPayload, arm.name, "a named-field case pattern binds exactly one name per field, using `_` to discard one");
                 var all_discard = true;
                 for (arm.bindings) |binding| if (binding != null) {
                     all_discard = false;
@@ -2186,17 +2498,19 @@ const Checker = struct {
                 };
                 if (all_discard) {
                     if (try self.requiresHandling(payload.?)) return self.sink.fail(eResultDiscard, arm.name, "nested result payload requires explicit handling");
-                } else for (arm.bindings, shape.fields) |binding, field| {
-                    const field_type = field.ty orelse return error.InternalError;
+                } else for (arm.bindings, 0..) |binding, position| {
+                    const label = if (arm.binding_names.len != 0) arm.binding_names[position] else null;
+                    const field_index = if (label) |name| try self.shapes().memberIndex(shape, name) else position;
+                    const field_type = shape.fields[field_index].ty orelse return error.InternalError;
                     if (binding) |at| {
-                        try self.bind(at, field_type, false);
+                        try self.bindPattern(arm, position, at, field_type);
                     } else if (try self.requiresHandling(field_type)) return self.sink.fail(eResultDiscard, arm.name, "discarding a result-bearing field requires a binding and explicit handling");
                 }
             } else {
                 const discards_payload = arm.bindings.len == 1 and arm.bindings[0] == null;
                 if (discards_payload and payload != null and (try self.requiresHandling(payload.?))) return self.sink.fail(eResultDiscard, arm.name, "nested result payload requires explicit handling");
-                if (arm.bindings.len > 1 or (payload != null) != (arm.bindings.len == 1)) return self.sink.fail("E_PATTERN_PAYLOAD", arm.name, "payload cases require a binding or discard; empty cases take neither");
-                if (arm.bindings.len == 1) if (arm.bindings[0]) |binding| try self.bind(binding, payload.?, false);
+                if (arm.bindings.len > 1 or (payload != null) != (arm.bindings.len == 1)) return self.sink.fail(ePatternPayload, arm.name, "payload cases require a binding or discard; empty cases take neither");
+                if (arm.bindings.len == 1) if (arm.bindings[0]) |binding| try self.bindPattern(arm, 0, binding, payload.?);
             }
             const returns = try self.statement(arm.body);
             if (!returns) {
@@ -2480,6 +2794,8 @@ const Checker = struct {
             .block => |statements| return self.block(statements),
             .with_scope => return self.sink.fail(eUnsupported, statement_value.span, "`with` resource scopes are not supported inside generic function bodies"),
             .match => |match| return self.matchValue(match, statement_value.span),
+            .fail => |value| return self.failValue(value, statement_value.span),
+            .yield_value => |value| return self.yieldValue(value, statement_value.span),
             .ret => |value| {
                 try self.returnValue(value, statement_value.span);
                 return true;
@@ -2494,11 +2810,7 @@ const Checker = struct {
                 try self.bind(binding.name, value, binding.mutable);
             },
             .assignment => |assignment| {
-                if (assignment.op == .set and !self.active.contains(self.src.text(assignment.name))) {
-                    const value = try self.expression(assignment.value);
-                    try self.bind(assignment.name, value, true);
-                    return false;
-                }
+                if (!self.active.contains(self.src.text(assignment.name))) return self.bindingDeclaration(assignment.name);
                 const target = try self.local(assignment.name);
                 if (!target.mutable) return self.sink.fail(diagnostic.immutable, assignment.name, "assignment requires a mutable binding");
                 const value = try self.expressionExpected(assignment.value, target.ty);
@@ -2541,16 +2853,16 @@ const Checker = struct {
                 if (each.index_name != null and !each.enumerated) {
                     if (symbolic_shapes.tupleArity(self.catalog, element)) |arity| {
                         if (arity != 2) return self.sink.fail(eTupleArity, statement_value.span, try self.twoNameLoopMessage(arity));
-                        try self.bind(each.index_name.?, symbolic_shapes.tupleElement(self.catalog, element, 0).?, true);
-                        try self.bind(each.name, symbolic_shapes.tupleElement(self.catalog, element, 1).?, true);
+                        try self.bind(each.index_name.?, symbolic_shapes.tupleElement(self.catalog, element, 0).?, false);
+                        try self.bind(each.name, symbolic_shapes.tupleElement(self.catalog, element, 1).?, false);
                     } else {
                         if (dictionary_views.symbolicKind(self.catalog, element) != .item) return self.sink.fail("E_ITERATION", statement_value.span, "two iteration names require dictionary items, enumerate or zip");
                         const shape = try self.shapes().schema(element, statement_value.span);
-                        try self.bind(each.index_name.?, shape.fields[0].ty.?, true);
-                        try self.bind(each.name, shape.fields[1].ty.?, true);
+                        try self.bind(each.index_name.?, shape.fields[0].ty.?, false);
+                        try self.bind(each.name, shape.fields[1].ty.?, false);
                     }
                 } else {
-                    try self.bind(each.name, element, true);
+                    try self.bind(each.name, element, false);
                     if (each.index_name) |name| try self.bind(name, .{ .concrete = .i64 }, true);
                 }
                 defer self.endScope(first);
@@ -2571,7 +2883,7 @@ const Checker = struct {
                 try self.compatible(try self.expression(range.end), element, range.name);
                 if (range.step) |step| try self.compatible(try self.expression(step), element, range.name);
                 const first = self.locals.items.len;
-                try self.bind(range.name, element, true);
+                try self.bind(range.name, element, false);
                 defer self.endScope(first);
                 const before = try self.pendingState(self.locals.items.len);
                 defer self.allocator.free(before);
@@ -2916,8 +3228,8 @@ pub fn checkWithCatalogCached(allocator: std.mem.Allocator, src: source.Source, 
             if (mask & (@as(u16, 1) << @intCast(bit)) != 0) try inferred_mutates.append(allocator, bit);
         }
         const mutable = @constCast(&program.functions[index]);
-        mutable.signature.inferred_mutates = try inferred_mutates.toOwnedSlice(allocator);
-        mutable.signature.inferred_mutation_writes = function.signature.inferred_mutation_writes or mask != 0 or mutation_write_masks[index];
+        mutable.signature.inferred.mutates = try inferred_mutates.toOwnedSlice(allocator);
+        mutable.signature.inferred.mutation_writes = function.signature.inferred.mutation_writes or mask != 0 or mutation_write_masks[index];
     }
     try effects.checkAbstract(allocator, program.functions, effect_masks, effect_calls.items, exported, sink);
     // Publish only after the whole abstract graph passed. A rejected request

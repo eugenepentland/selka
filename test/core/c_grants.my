@@ -1,15 +1,14 @@
-module c_grants
 import random
 import time
 
-def show(out: Stream, result: Result[str, str]):
+func show(out: Stream, result: Result[str, str]):
     match result:
         case Ok(value):
             out.print(value)
         case Err(message):
             out.print(message)
 
-def main(fs: Filesystem, env: Environment, entropy: Entropy, clock: Clock, out: Stream) -> int:
+func main(fs: Filesystem, env: Environment, entropy: Entropy, clock: Clock, out: Stream) -> int:
     # Fixture directory, environment allowlist and entropy seed are explicit.
     show(out, fs.read_text("input.txt"))
     show(out, fs.read_text("../outside.txt"))
@@ -27,7 +26,7 @@ def main(fs: Filesystem, env: Environment, entropy: Entropy, clock: Clock, out: 
             out.print("missing")
     match random.from_entropy(entropy):
         case Ok(sampled):
-            generator = sampled
+            mut generator = sampled
             out.print(random.next_word(mut generator))
         case Err(message):
             out.print(message)
@@ -36,7 +35,7 @@ def main(fs: Filesystem, env: Environment, entropy: Entropy, clock: Clock, out: 
             out.print("advanced")
         case Err(message):
             out.print(message)
-    separator = ":"
-    terminator = "!\n"
+    mut separator = ":"
+    mut terminator = "!\n"
     out.print("left", 7, "right", sep=separator, end=terminator)
     return 0

@@ -1,12 +1,11 @@
-module main
 import math
 
 
-def close(a: float, b: float) -> bool:
+func close(a: float, b: float) -> bool:
     return math.fabs(a - b) <= 1.0e-12 * math.fmax(1.0, math.fabs(b))
 
 
-def roots() -> int:
+func roots() -> int:
     if math.sqrt(1764.0) != 42.0:
         return 1
     if not close(math.sqrt(2.0), 1.4142135623730951):
@@ -22,7 +21,7 @@ def roots() -> int:
     return 0
 
 
-def rounding() -> int:
+func rounding() -> int:
     if math.floor(0.0 - 1.5) != 0.0 - 2.0 or math.ceil(0.0 - 1.5) != 0.0 - 1.0:
         return 10
     if math.floor(1.5) != 1.0 or math.ceil(1.5) != 2.0:
@@ -40,7 +39,7 @@ def rounding() -> int:
     return 0
 
 
-def classification() -> int:
+func classification() -> int:
     if not math.is_inf(math.infinity()) or math.is_finite(math.nan()):
         return 20
     if math.is_nan(1.0) or not math.is_finite(1.7976931348623157e308):
@@ -54,7 +53,7 @@ def classification() -> int:
     return 0
 
 
-def powers() -> int:
+func powers() -> int:
     if math.pow(2.0, 10) != 1024.0 or math.pow(2.0, 0 - 2) != 0.25:
         return 30
     if math.pow(3.0, 0) != 1.0 or math.pow(0.0, 3) != 0.0:
@@ -68,7 +67,7 @@ def powers() -> int:
     return 0
 
 
-def integers() -> int:
+func integers() -> int:
     if math.min(3, 9) != 3 or math.max(3, 9) != 9:
         return 40
     if math.clamp(99, 0, 42) != 42 or math.clamp(0 - 5, 0, 42) != 0:
@@ -82,7 +81,7 @@ def integers() -> int:
     return 0
 
 
-def divisors() -> int:
+func divisors() -> int:
     match math.gcd(0 - 12, 18):
         case Ok(value):
             if value != 6:
@@ -114,7 +113,7 @@ def divisors() -> int:
     return 0
 
 
-def square_roots() -> int:
+func square_roots() -> int:
     match math.isqrt(9223372036854775807):
         case Ok(value):
             if value != 3037000499:
@@ -146,8 +145,8 @@ def square_roots() -> int:
     return 0
 
 
-def main() -> int:
-    checks = [roots(), rounding(), classification(), powers(), integers(), divisors(), square_roots()]
+func main() -> int:
+    mut checks = [roots(), rounding(), classification(), powers(), integers(), divisors(), square_roots()]
     for value in checks:
         if value != 0:
             return value

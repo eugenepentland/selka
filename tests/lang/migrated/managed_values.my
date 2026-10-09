@@ -1,4 +1,3 @@
-module managed_values
 
 
 import managed_values_case_1 as c1
@@ -15,41 +14,41 @@ import managed_values_case_11 as c11
 
 
 # spec: PY-DICT-1
-public def test_managed_dictionary_source_literals_indexing_1() -> bool:
+public func test_managed_dictionary_source_literals_indexing_1() -> bool:
     return c1.program() == 42
 
 # spec-case: PY-DICT-1
-public def test_managed_dictionary_source_literals_indexing_2() -> bool:
+public func test_managed_dictionary_source_literals_indexing_2() -> bool:
     return c2.program() == 42
 
 # spec-case: PY-DICT-1
-public def test_managed_dictionary_source_literals_indexing_3() -> bool:
+public func test_managed_dictionary_source_literals_indexing_3() -> bool:
     return c3.program() == 4
 
-public def test_managed_equality_source_compares_values_rath_1() -> bool:
+public func test_managed_equality_source_compares_values_rath_1() -> bool:
     return c4.program() == 42
 
-public def test_managed_equality_source_compares_values_rath_2() -> bool:
+public func test_managed_equality_source_compares_values_rath_2() -> bool:
     return c5.program() == 42
 
-public def test_managed_equality_source_compares_values_rath_3() -> bool:
+public func test_managed_equality_source_compares_values_rath_3() -> bool:
     return c6.program() == 42
 
-public def test_managed_membership_source_searches_list_valu_1() -> bool:
+public func test_managed_membership_source_searches_list_valu_1() -> bool:
     return c7.program() == 42
 
-public def test_managed_membership_source_searches_list_valu_2() -> bool:
+public func test_managed_membership_source_searches_list_valu_2() -> bool:
     return c8.program() == 42
 
-public def test_managed_membership_source_searches_list_valu_3() -> bool:
+public func test_managed_membership_source_searches_list_valu_3() -> bool:
     return c9.program() == 42
 
-public def test_managed_str_conversion_source_evaluates_argu() -> bool:
+public func test_managed_str_conversion_source_evaluates_argu() -> bool:
     return c10.program() == 1
 
 # spec: PY-TEXT-1
-public def test_managed_text_source_literals_concat_equality() -> bool:
+public func test_managed_text_source_literals_concat_equality() -> bool:
     return c11.program() == 4
 
-def main() -> int:
+func main() -> int:
     return 0

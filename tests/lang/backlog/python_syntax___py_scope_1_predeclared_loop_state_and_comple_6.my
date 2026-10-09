@@ -1,11 +1,10 @@
-module python_syntax___py_scope_1_predeclared_loop_state_and_comple_6
 
-def main() -> int:
-    total = 0
+func main() -> int:
+    mut total = 0
     for a, b in zip([1, 2], [3, 4]):
         total = total + a * b
     return total
 
 # spec-case: PY-SCOPE-1
-public def test_py_scope_1_predeclared_loop_state_and_comple_6() -> bool:
+public func test_py_scope_1_predeclared_loop_state_and_comple_6() -> bool:
     return main() == 11

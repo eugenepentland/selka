@@ -1,37 +1,36 @@
-module byte_iteration_reductions
 
 
-def reduce(raw: bytes, mask: int, seed: int) -> int:
-    total = seed
+func reduce(raw: bytes, mask: int, seed: int) -> int:
+    mut total = seed
     for value in raw:
         total += value ^ mask
     return total
 
 
-def indexed(raw: bytes, mask: int, seed: int) -> int:
-    total = seed
+func indexed(raw: bytes, mask: int, seed: int) -> int:
+    mut total = seed
     for index in range(len(raw)):
         total += raw[index] ^ mask
     return total
 
 
-public def test_byte_iteration_lengths_views_and_unbounded_masks() -> bool:
-    masks = [0, 1, 127, 255, -1, 256, 1000003]
+public func test_byte_iteration_lengths_views_and_unbounded_masks() -> bool:
+    mut masks = [0, 1, 127, 255, -1, 256, 1000003]
     for length in [0, 1, 15, 16, 17, 31, 32, 1024, 1041]:
-        source = bytes([(i * 37 + 11) % 256 for i in range(length + 17)])
-        raw = source[7:7 + length]
+        mut source = bytes([for i in range(length + 17) yield (i * 37 + 11) % 256])
+        mut raw = source[7:7 + length]
         for mask in masks:
             if reduce(raw, mask, 13) != indexed(raw, mask, 13):
                 return False
     return reduce(b"", 255, -9223372036854775808) == -9223372036854775808
 
 
-public def test_byte_iteration_keeps_immutable_snapshot_storage() -> bool:
-    empty: list[int] = []
-    builder = byte_buffer(empty)
+public func test_byte_iteration_keeps_immutable_snapshot_storage() -> bool:
+    mut empty: int[] = []
+    mut builder = byte_buffer(empty)
     for i in range(64):
         _ = builder.append_byte(i)
-    raw = bytes(builder)
+    mut raw = bytes(builder)
     for i in range(32):
         _ = builder.append_byte(255)
     return len(raw) == 64 and reduce(raw, 17, 0) == indexed(raw, 17, 0) and len(builder) == 96

@@ -12,23 +12,21 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts'))
 import store  # noqa: E402  (the store lives beside the other repository scripts)
 
-MAIN = b'''module main
-import helper
+MAIN = b'''import helper
 
 
 # The entry keeps one comment so comment attachment is exercised.
-def main() -> i64:
+func main() -> i64:
     return helper.twice(21)
 '''
-HELPER = b'''module helper
+HELPER = b'''
 
 
-
-public def twice(value: i64) -> i64:
+public func twice(value: i64) -> i64:
     return value + value
 
 
-def unused() -> i64:
+func unused() -> i64:
     return 0
 '''
 
@@ -74,7 +72,7 @@ def declarations(report, compiler, work, results):
 
     twice = database.declaration('base', 'helper::twice')
     results.ok(twice['exported'] and twice['kind'] == 'fn', 'helper::twice is an exported fn')
-    results.ok(twice['signature'] == 'def twice(value: i64) -> i64', 'signature is the head of the declaration')
+    results.ok(twice['signature'] == 'func twice(value: i64) -> i64', 'signature is the head of the declaration')
     entry = database.declaration('base', 'main::main')
     results.ok(entry['doc'].startswith('The entry keeps'), 'leading comments become the declaration doc')
     results.ok(entry['canonical_source'].startswith(b'# The entry'), 'canonical source carries its comments')
@@ -82,7 +80,7 @@ def declarations(report, compiler, work, results):
     results.raises('unknown declaration', lambda: database.declaration('base', 'helper::missing'), 'no declaration')
 
     # If-match rejection leaves the branch untouched.
-    body = b'def twice(value: i64) -> i64:\n    return value * 2\n'
+    body = b'func twice(value: i64) -> i64:\n    return value * 2\n'
     results.raises('replace with a stale hash', lambda: database.replace(
         'base', 'helper::twice', body, '0' * 64, compiler=compiler), 'if-match rejected')
     results.raises('remove with a stale hash', lambda: database.remove('base', 'helper::twice', '0' * 64),
@@ -92,23 +90,23 @@ def declarations(report, compiler, work, results):
     results.ok(replaced != twice['hash'], 'a matching if-match replaces the declaration')
     results.ok(database.declaration('base', 'helper::twice')['exported'], 'replace keeps the exported flag')
     results.raises('rename through replace', lambda: database.replace(
-        'base', 'helper::twice', b'def thrice() -> i64:\n    return 3\n', replaced, compiler=compiler), 'keeps the')
+        'base', 'helper::twice', b'func thrice() -> i64:\n    return 3\n', replaced, compiler=compiler), 'keeps the')
     results.raises('two declarations in one source', lambda: database.replace(
-        'base', 'helper::twice', b'def a() -> i64:\n    return 1\n\n\ndef b() -> i64:\n    return 2\n', replaced,
+        'base', 'helper::twice', b'func a() -> i64:\n    return 1\n\n\nfunc b() -> i64:\n    return 2\n', replaced,
         compiler=compiler), 'exactly one top-level declaration')
 
     # Branch creation and independent edits.
     database.create_branch('base', 'work')
     results.raises('duplicate branch', lambda: database.create_branch('base', 'work'), 'already exists')
     results.raises('unknown source branch', lambda: database.create_branch('none', 'other'), 'no such branch')
-    database.add('work', 'helper', b'def thrice(value: i64) -> i64:\n    return value * 3\n', compiler=compiler,
+    database.add('work', 'helper', b'func thrice(value: i64) -> i64:\n    return value * 3\n', compiler=compiler,
                  after='twice', exported=True)
     positions = [(row['name'], row['position']) for row in database.list_branch('work', 'helper')]
     results.ok(positions == [('twice', 0), ('thrice', 1), ('unused', 2)], 'add places a declaration after a sibling')
     results.ok([row['name'] for row in database.list_branch('base', 'helper')] == ['twice', 'unused'],
                'the source branch is unchanged by an edit on its copy')
     results.raises('duplicate name', lambda: database.add(
-        'work', 'helper', b'def thrice() -> i64:\n    return 3\n', compiler=compiler), 'already exists')
+        'work', 'helper', b'func thrice() -> i64:\n    return 3\n', compiler=compiler), 'already exists')
     unused = database.declaration('work', 'helper::unused')
     database.remove('work', 'helper::unused', unused['hash'])
     results.ok([row['position'] for row in database.list_branch('work', 'helper')] == [0, 1],
@@ -118,8 +116,8 @@ def declarations(report, compiler, work, results):
     database.render_branch('base', work / 'render-base', compiler=compiler)
     database.render_branch('work', work / 'render-work', compiler=compiler)
     rendered = (work / 'render-work/helper.my').read_text()
-    results.ok(rendered.index('export twice') < rendered.index('export thrice'), 'exports keep their order')
-    results.ok('def thrice' in rendered and 'def unused' not in rendered, 'the edited branch renders its edits')
+    results.ok(rendered.index('public func twice') < rendered.index('public func thrice'), 'exports keep their order')
+    results.ok('func thrice' in rendered and 'func unused' not in rendered, 'the edited branch renders its edits')
     results.ok((work / 'render-base/.trial-public/cases.json').read_bytes() == b'{"cases":[]}\n',
                'assets render back to their original relative paths')
     results.raises('non-empty output', lambda: database.render_branch('base', work / 'render-base', compiler=compiler),
@@ -151,7 +149,7 @@ def bounds(work, results):
     """Bounded inputs: byte, file-count and symlink limits reject before anything is stored."""
     big = work / 'big'
     big.mkdir()
-    (big / 'main.my').write_bytes(b'module main\n\n\ndef main() -> i64:\n    return 0\n')
+    (big / 'main.my').write_bytes(b'\n\nfunc main() -> i64:\n    return 0\n')
     results.raises('oversized file', lambda: store.bounded_read(big / 'main.my', 4), 'bounded regular files')
     results.raises('exhausted budget', lambda: store.bounded_read(big / 'main.my', 0), 'byte budget exhausted')
     (big / 'link').symlink_to(work / 'source')

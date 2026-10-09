@@ -80,10 +80,10 @@ Proposed common interaction, using ordinary source on stdin:
 
 ```sh
 code change --ticket w7 --namespace cache <<'PY'
-def active(created, ttl, now):
+func active(created, ttl, now):
     return now < created + ttl
 
-def test_active_boundary():
+func test_active_boundary():
     assert active(10, 5, 14)
     assert not active(10, 5, 15)
 PY

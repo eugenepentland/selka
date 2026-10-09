@@ -260,6 +260,7 @@ const keyword_words = .{
     "assert",
 };
 const keyword_aliases = .{
+    .{ "func", Tag.kw_def },
     .{ "def", Tag.kw_def },
     .{ "class", Tag.kw_class },
     .{ "True", Tag.kw_true },
@@ -306,7 +307,7 @@ pub fn spelling(comptime tag: Tag) []const u8 {
         .integer => "a number",
         .bytes => "a string",
         .format => "a formatted string",
-        .kw_def => "def",
+        .kw_def => "func",
         .kw_class => "class",
         .kw_none => "None",
         .kw_true => "True",

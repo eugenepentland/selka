@@ -1,9 +1,9 @@
-public def test_room_and_growth_preserve_every_scalar_width() -> bool:
-    small: list[u8] = []
-    medium: list[u16] = []
-    wide: list[i32] = []
-    flags: list[bool] = []
-    numbers: list[float] = []
+public func test_room_and_growth_preserve_every_scalar_width() -> bool:
+    mut small: u8[] = []
+    mut medium: u16[] = []
+    mut wide: i32[] = []
+    mut flags: bool[] = []
+    mut numbers: float[] = []
     for index in range(65):
         small.append(u8(index))
         medium.append(u16(index + 256))
@@ -13,37 +13,37 @@ public def test_room_and_growth_preserve_every_scalar_width() -> bool:
     return len(small) == 65 and small[64] == u8(64) and medium[64] == u16(320) and wide[64] == i32(-192) and flags[64] and not flags[63] and numbers[64] == 64.5
 
 
-public def test_aliasing_reads_and_named_snapshots_survive_growth() -> bool:
-    items = [7]
-    saved = items
+public func test_aliasing_reads_and_named_snapshots_survive_growth() -> bool:
+    mut items = [7]
+    mut saved = items
     for index in range(80):
         items.append(items[-1] + 1)
     return saved == [7] and len(items) == 81 and items[80] == 87
 
 
-def callback(items: mut list[int]) -> int:
+func callback(mut items: int[]) -> int:
     items.clear()
     items.append(9)
     return 7
 
 
-public def test_callback_changes_receiver_before_append_publication() -> bool:
-    items = [1]
-    saved = items
-    mutation_result_36 = callback(mut items)
+public func test_callback_changes_receiver_before_append_publication() -> bool:
+    mut items = [1]
+    mut saved = items
+    mut mutation_result_36 = callback(mut items)
     items.append(mutation_result_36)
     return items == [9, 7] and saved == [1]
 
 
-def grow(items: mut list[int]) -> unit:
+func grow(mut items: int[]) -> unit:
     for index in range(40):
         items.append(index)
 
 
-public def test_plain_and_managed_elements_preserve_snapshots() -> bool:
-    row = [7]
-    rows: list[list[int]] = []
-    pairs: list[tuple[int, int]] = []
+public func test_plain_and_managed_elements_preserve_snapshots() -> bool:
+    mut row = [7]
+    mut rows: int[][] = []
+    mut pairs: tuple[int, int][] = []
     for index in range(9):
         rows.append(row)
         pairs.append((index, index + 1))
@@ -52,7 +52,7 @@ public def test_plain_and_managed_elements_preserve_snapshots() -> bool:
     return rows[0] == [7, 9] and rows[8] == [7] and row == [7, 8] and pairs[8] == (8, 9)
 
 
-def main() -> int:
+func main() -> int:
     assert test_room_and_growth_preserve_every_scalar_width()
     assert test_aliasing_reads_and_named_snapshots_survive_growth()
     assert test_callback_changes_receiver_before_append_publication()
@@ -60,47 +60,47 @@ def main() -> int:
     return 0
 
 
-union PlainValue:
-    integer: int,
-    boolean: bool
+enum PlainValue:
+    integer(value: int)
+    boolean(value: bool)
 
 
-def plain_score(value: PlainValue) -> int:
+func plain_score(value: PlainValue) -> int:
     match value:
-        case PlainValue.integer(n):
+        case PlainValue.integer(value=n):
             return n
-        case PlainValue.boolean(flag):
-            return 1 if flag else 0
+        case PlainValue.boolean(value=flag):
+            return if (flag) then (1) else (0)
 
 
-public def test_plain_variant_stack_room_growth_and_shared_snapshot() -> bool:
-    values: list[PlainValue] = []
+public func test_plain_variant_stack_room_growth_and_shared_snapshot() -> bool:
+    mut values: PlainValue[] = []
     for index in range(65):
-        values.append(PlainValue.integer(index))
-    saved = values
+        values.append(PlainValue.integer(value=index))
+    mut saved = values
     for _ in range(64):
-        old = values.pop()
-        values.append(PlainValue.boolean(plain_score(old) % 2 == 0))
+        mut old = values.pop()
+        values.append(PlainValue.boolean(value=plain_score(old) % 2 == 0))
     return len(values) == 65 and plain_score(saved[-1]) == 64 and plain_score(values[-1]) == 0
 
 
-public def test_plain_tuple_append_reads_same_backing_across_growth() -> bool:
-    pairs = [(3, 4)]
-    saved = pairs
+public func test_plain_tuple_append_reads_same_backing_across_growth() -> bool:
+    mut pairs = [(3, 4)]
+    mut saved = pairs
     for _ in range(129):
         pairs.append(pairs[0])
     return len(pairs) == 130 and pairs[-1] == (3, 4) and saved == [(3, 4)]
 
 
-public def test_plain_tail_removal_clears_and_reuses_every_slot() -> bool:
-    items: list[tuple[int, bool]] = []
+public func test_plain_tail_removal_clears_and_reuses_every_slot() -> bool:
+    mut items: tuple[int, bool][] = []
     for index in range(129):
         items.append((index, index % 2 == 0))
-    total = 0
+    mut total = 0
     for index in range(129):
-        value = items.pop()
+        mut value = items.pop()
         assert value == (128 - index, index % 2 == 0)
-        head, _ = value
+        const head, _ = value
         total += head
     items.append((999, True))
     return total == 8256 and items.pop() == (999, True) and len(items) == 0

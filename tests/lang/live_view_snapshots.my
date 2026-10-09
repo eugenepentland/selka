@@ -1,31 +1,30 @@
-module live_view_snapshots
 
 # spec-case: D2-VIEW-STORAGE-1
-public def test_explicit_snapshot_preserves_prior_values() -> bool:
-    mapping = {1: 7}
-    saved = list(mapping.values())
+public func test_explicit_snapshot_preserves_prior_values() -> bool:
+    mut mapping = {1: 7}
+    mut saved = list(mapping.values())
     mapping[1] = 9
     mapping[2] = 11
     return saved == [7] and list(mapping.values()) == [9, 11]
 
 record Saved:
-    values: list[int]
+    values: int[]
 
-union Choice:
-    values: list[int],
+enum Choice:
+    values(value: int[])
     empty
 
 # spec-case: D2-VIEW-STORAGE-1
-public def test_record_array_list_and_variant_store_independent_snapshots() -> bool:
-    mapping = {1: 7}
-    record = Saved(list(mapping.values()))
-    array: [1]Saved = [record]
-    rows = [record]
-    choice = Choice.values(list(mapping.values()))
+public func test_record_array_list_and_variant_store_independent_snapshots() -> bool:
+    mut mapping = {1: 7}
+    mut record = Saved(values=list(mapping.values()))
+    mut array: FixedArray[Saved, 1] = FixedArray[Saved, 1]([record])
+    mut rows = [record]
+    mut choice = Choice.values(value=list(mapping.values()))
     mapping[1] = 13
     rows[0].values.append(11)
     match choice:
-        case Choice.values(values):
+        case Choice.values(value=values):
             return record.values == [7] and array[0].values == [7] and rows[0].values == [7, 11] and values == [7]
         case Choice.empty:
             return False

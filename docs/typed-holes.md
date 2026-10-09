@@ -23,14 +23,14 @@ record Invoice:
     subtotal: int
     tax: int
 
-def total(invoice: Invoice) -> int:
+func total(invoice: Invoice) -> int:
     return invoice.subtotal + invoice.tax
 
-def discount(invoice: Invoice) -> int:
+func discount(invoice: Invoice) -> int:
     return todo[int]()
 
-def main() -> int:
-    invoice = Invoice(subtotal=40, tax=2)
+func main() -> int:
+    mut invoice = Invoice(subtotal=40, tax=2)
     return total(invoice) - discount(invoice)
 ```
 

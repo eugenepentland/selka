@@ -7,24 +7,24 @@ record TaggedReading:
     value: int
 
 
-def value[T: copy + field(value: int)](item: T) -> int:
+func value[T: copy + field(value: int)](item: T) -> int:
     return item.value
 
 
-def forward[U: copy + field(value: int)](item: U) -> int:
+func forward[U: copy + field(value: int)](item: U) -> int:
     return value[U](item)
 
 
 domain Counter: int:
-    def make(n: int) -> Counter:
+    func make(n: int) -> Counter:
         return wrap[Counter](n)
-    def score(item: Counter) -> int effects():
+    func score(item: Counter) -> int effects():
         return unwrap(item)
 
 
-def score[T: copy + op(score(item: T) -> int effects())](item: T) -> int effects():
+func score[T: copy + op(score(item: T) -> int effects())](item: T) -> int effects():
     return T.score(item)
 
 
-def main() -> int:
+func main() -> int:
     return value[Reading](Reading(value=2)) + forward[TaggedReading](TaggedReading(tag=True, value=3)) + score[Counter](Counter.make(7))

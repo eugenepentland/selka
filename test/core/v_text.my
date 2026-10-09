@@ -1,25 +1,24 @@
-module v_text
 
 
 record Labelled:
     name: str
-    next: Option[Labelled]
+    next: Labelled?
 
 
-def label(count: int, items: list[int]) -> str:
+func label(count: int, items: int[]) -> str:
     return f"total {count} of {len(items)} items"
 
 
-def chain(count: int) -> Labelled:
-    head = Labelled(name="end", next=None)
+func chain(count: int) -> Labelled:
+    mut head = Labelled(name="end", next=None)
     for index in range(count):
         head = Labelled(name="n" + str(index), next=Some(head))
     return head
 
 
-def length(item: Labelled) -> int:
-    total = 1
-    current = item.next
+func length(item: Labelled) -> int:
+    mut total = 1
+    mut current = item.next
     while current is not None:
         if len(current.name) > 0:
             total = total + 1
@@ -27,21 +26,21 @@ def length(item: Labelled) -> int:
     return total
 
 
-def words(n: int) -> list[str]:
-    out: list[str] = []
+func words(n: int) -> str[]:
+    mut out: str[] = []
     for i in range(n):
         out.append("w" + str(i * i))
     return out
 
 
-def main(out: Stream) -> int:
-    out.print(label(7, [1, 2, 3]), f"{1 + 1}", f"{True} {None}", f"a-x{'b'}")
+func main(out: Stream) -> int:
+    out.print(label(7, [1, 2, 3]), f"{1 + 1}", f"{True} {()}", f"a-x{'b'}")
     out.print(str(-9223372036854775807), str(18446744073709551615u64), str(i8(-5)), str(u8(200)), str(False))
     out.print("hé" + "llo", len("hé" + "llo"), "" + "", "a" + "" == "a")
     out.print(", ".join(words(4)), "-".join(words(1)), "-".join(words(0)) == "", "".join(words(3)))
-    total = 0
+    mut total = 0
     for count in range(30):
         total = total + length(chain(count))
-    labelled = chain(5)
+    mut labelled = chain(5)
     out.print(total, labelled.name, length(labelled))
     return 0

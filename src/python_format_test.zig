@@ -23,8 +23,8 @@ fn reject(source: []const u8, code: []const u8) !void {
 
 // spec-case: PY-FSTRING-2
 test "malformed format strings and unconvertible values are rejected" {
-    const header = "def main() -> int:\n    x = 1\n    _ = ";
-    const capability = "def main(fs: Filesystem) -> int:\n    _ = f\"{fs}\"\n    return 0\n";
+    const header = "func main() -> int:\n    const x = 1\n    _ = ";
+    const capability = "func main(fs: Filesystem) -> int:\n    _ = f\"{fs}\"\n    return 0\n";
     try reject(capability, "E_TEXT_CONVERSION");
     const cases = [_]struct { body: []const u8, code: []const u8 }{
         .{ .body = "f\"{}\"", .code = "E_FORMAT_STRING" },
@@ -49,21 +49,21 @@ const rendered_holes =
     \\    y: int
     \\
     \\enum Colour:
-    \\    red,
+    \\    red
     \\    green
     \\
-    \\def pick(n: int) -> Result[int, str]:
+    \\func pick(n: int) -> Result[int, str]:
     \\    if n < 0:
     \\        return Err("nope")
     \\    return Ok(n)
     \\
-    \\def main(out: Stream) -> int:
-    \\    score = 0
-    \\    values = [1, 2]
-    \\    counts: dict[str, int] = {"k": 1}
-    \\    spot = Point(x=1, y=2)
-    \\    found: Option[int] = Some(4)
-    \\    raw = b"ab"
+    \\func main(out: Stream) -> int:
+    \\    mut score = 0
+    \\    mut values = [1, 2]
+    \\    mut counts: dict[str, int] = {"k": 1}
+    \\    mut spot = Point(x=1, y=2)
+    \\    mut found: int? = Some(4)
+    \\    mut raw = b"ab"
     \\    out.print(values, f"{values}")
     \\    out.print(counts, f"{counts}")
     \\    out.print(spot, f"{spot}")
@@ -108,11 +108,11 @@ test "a native build spells an interpolated aggregate exactly as print writes it
 // spec-case: PY-FSTRING-1
 test "a single f-string piece checks under noalloc" {
     var c = try language.Compilation.init(t.allocator, "format.my",
-        \\def identity(value: str) -> str noalloc:
+        \\func identity(value: str) -> str noalloc:
         \\    return f"{value}"
-        \\def generic[T: integer](value: str, unused: T) -> str noalloc:
+        \\func generic[T: integer](value: str, unused: T) -> str noalloc:
         \\    return f"{value}"
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return len(generic(identity("hello"), 1)) + len(f"")
     );
     defer c.deinit();
@@ -123,15 +123,15 @@ test "a single f-string piece checks under noalloc" {
 // spec-case: PY-FSTRING-1
 test "f-string holes still evaluate once from left to right including generic holes" {
     const source =
-        \\def mark(out: Stream, value: int) -> int effects(output):
+        \\func mark(out: Stream, value: int) -> int effects(output):
         \\    out.print(value, end="")
         \\    return value
         \\
-        \\def generic[T: integer](value: T) -> str:
+        \\func generic[T: integer](value: T) -> str:
         \\    return f"{value}"
         \\
-        \\def main(out: Stream) -> int:
-        \\    text = f"{mark(out, 1)}{mark(out, 2)}"
+        \\func main(out: Stream) -> int:
+        \\    mut text = f"{mark(out, 1)}{mark(out, 2)}"
         \\    out.print(text, end="")
         \\    out.print()
         \\    if generic(42) == "42":
@@ -148,10 +148,10 @@ test "f-string holes still evaluate once from left to right including generic ho
 // spec-case: PY-FSTRING-1
 test "a failing later f-string hole writes none of the unfinished result" {
     var c = try language.Compilation.init(t.allocator, "format.my",
-        \\def fail(value: int) -> int:
+        \\func fail(value: int) -> int:
         \\    return 1 // value
         \\
-        \\def main(out: Stream) -> int:
+        \\func main(out: Stream) -> int:
         \\    out.print(f"ready {fail(0)}")
         \\    return 0
     );
@@ -179,27 +179,27 @@ fn canonical(source: []const u8) !void {
 
 // spec: SYNTAX-FMT-1
 test "foundation syntax: fmt round-trips the mut star tuple and conditional spellings unchanged" {
-    try canonical("def fill(values: mut list[int], count: int) -> None:\n    return\n");
-    try canonical("def issue(host: int, *, code: int, file: int) -> None:\n    return\n");
-    try canonical("def main() -> int:\n    push(mut values, 1)\n    return 0\n");
-    try canonical("def swap(a: int, b: int) -> None:\n    a, b = b, a\n    return\n");
-    try canonical("def split(text: str) -> tuple[str, str]:\n    return text, text\n");
-    try canonical("def choose(flag: bool) -> int:\n    y = 1 if flag else 2\n    return y\n");
-    try canonical("def label(flag: bool) -> int:\n    pair = (1, 2)\n    return pair[0] if flag else pair[1]\n");
+    try canonical("func fill(mut values: int[], count: int) -> Unit:\n    return\n");
+    try canonical("func issue(host: int, named code: int, named file: int) -> Unit:\n    return\n");
+    try canonical("func main() -> int:\n    push(mut values, 1)\n    return 0\n");
+    try canonical("func swap(a: int, b: int) -> Unit:\n    a, b = b, a\n    return\n");
+    try canonical("func split(text: str) -> tuple[str, str]:\n    return text, text\n");
+    try canonical("func choose(flag: bool) -> int:\n    mut y = if (flag) then (1) else (2)\n    return y\n");
+    try canonical("func label(flag: bool) -> int:\n    mut pair = (1, 2)\n    return if (flag) then (pair[0]) else (pair[1])\n");
 }
 
 // spec-case: SYNTAX-FMT-1
 test "foundation syntax: fmt drops a redundant trailing comma after the last tuple element" {
-    try canonical("def main() -> int:\n    pair = (1, 2)\n    return pair[0]\n");
-    var c = try language.Compilation.init(t.allocator, "canonical.my", "def main() -> int:\n    pair = (1, 2,)\n    return pair[0]\n");
+    try canonical("func main() -> int:\n    mut pair = (1, 2)\n    return pair[0]\n");
+    var c = try language.Compilation.init(t.allocator, "canonical.my", "func main() -> int:\n    mut pair = (1, 2,)\n    return pair[0]\n");
     defer c.deinit();
     const formatted = try c.format(t.allocator);
     defer t.allocator.free(formatted);
-    try t.expectEqualStrings("def main() -> int:\n    pair = (1, 2)\n    return pair[0]\n", formatted);
+    try t.expectEqualStrings("func main() -> int:\n    mut pair = (1, 2)\n    return pair[0]\n", formatted);
 }
 
 // spec-case: CONDITIONAL-EXPR-2
 test "a nested conditional and one inside a call argument survive fmt unchanged" {
-    try canonical("def main() -> int:\n    x = 1 if False else 2 if False else 3\n    return x\n");
-    try canonical("def main() -> int:\n    return describe(1 if True else 2)\n");
+    try canonical("func main() -> int:\n    mut x = if (False) then (1) else if ((False)) then ((2)) else ((3))\n    return x\n");
+    try canonical("func main() -> int:\n    return describe(if (True) then (1) else (2))\n");
 }

@@ -1,4 +1,3 @@
-module pricing
 import money
 import quantity
 import catalog
@@ -38,29 +37,35 @@ public result Invoice:
     err: quantity.InvalidQuantity
 
 
-conversion def receipt(totals: Totals) -> Receipt:
+conversion func receipt(totals: Totals) -> Receipt:
     return Receipt(gross=money.Cents.number(totals.gross), discount=money.Cents.number(totals.discount), tax=money.Cents.number(totals.tax), delivery=money.Cents.number(totals.delivery), packaging=money.Cents.number(totals.packaging), handling=money.Cents.number(totals.handling), total=money.Cents.number(totals.total), items=totals.items)
 
 
-public def calculate(books: int, cables: int, adapters: int) -> Invoice effects():
-    lines: [3]Line = [Line(product=catalog.Product.book, count=quantity.Count.parse(books)?), Line(product=catalog.Product.cable, count=quantity.Count.parse(cables)?), Line(product=catalog.Product.adapter, count=quantity.Count.parse(adapters)?)]
-    gross = money.Cents.make(0u64)
-    items = 0u16
-    index = 0
+public func calculate(books: int, cables: int, adapters: int) -> Invoice effects():
+    const book_count = try quantity.Count.parse(books)
+    const book_line = Line(product=catalog.Product.book, count=book_count)
+    const cable_count = try quantity.Count.parse(cables)
+    const cable_line = Line(product=catalog.Product.cable, count=cable_count)
+    const adapter_count = try quantity.Count.parse(adapters)
+    const adapter_line = Line(product=catalog.Product.adapter, count=adapter_count)
+    const lines = FixedArray[Line, 3]([book_line, cable_line, adapter_line])
+    mut gross = money.Cents.make(0u64)
+    mut items = 0u16
+    mut index = 0
     while index < len(lines):
-        line = lines[index]
-        count = quantity.Count.number(line.count)
-        cents = money.Cents.number(catalog.price(line.product)) * int(count)
+        mut line = lines[index]
+        mut count = quantity.Count.number(line.count)
+        mut cents = money.Cents.number(catalog.price(line.product)) * int(count)
         gross = money.Cents.add(gross, money.Cents.make(u64(cents)))
         items += count
         index += 1
-    discount = 0
+    mut discount = 0
     if items >= 10u16:
         discount = divtrunc(money.Cents.number(gross), 10)
-    taxable = money.Cents.number(gross) - discount
-    tax = divtrunc(taxable * 750 + 5000, 10000)
-    shipping = delivery.fee(int(items))
-    packing = packaging.fee(int(items))
-    service = handling.fee(int(items))
-    totals = Totals(gross=gross, discount=money.Cents.make(u64(discount)), tax=money.Cents.make(u64(tax)), delivery=money.Cents.make(u64(shipping)), packaging=money.Cents.make(u64(packing)), handling=money.Cents.make(u64(service)), total=money.Cents.make(u64(taxable + tax + shipping + packing + service)), items=items)
+    mut taxable = money.Cents.number(gross) - discount
+    mut tax = divtrunc(taxable * 750 + 5000, 10000)
+    mut shipping = delivery.fee(int(items))
+    mut packing = packaging.fee(int(items))
+    mut service = handling.fee(int(items))
+    mut totals = Totals(gross=gross, discount=money.Cents.make(u64(discount)), tax=money.Cents.make(u64(tax)), delivery=money.Cents.make(u64(shipping)), packaging=money.Cents.make(u64(packing)), handling=money.Cents.make(u64(service)), total=money.Cents.make(u64(taxable + tax + shipping + packing + service)), items=items)
     return Ok(receipt(totals))

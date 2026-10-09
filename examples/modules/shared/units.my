@@ -1,11 +1,10 @@
-module shared.units
 
 public domain Distance: int:
-    private def raw(value: int) -> Distance:
+    private func raw(value: int) -> Distance:
         return wrap[Distance](value)
-    def make(value: int) -> Distance effects():
+    func make(value: int) -> Distance effects():
         if value < 0:
             return Distance.raw(0)
         return Distance.raw(value)
-    def number(value: Distance) -> int effects():
+    func number(value: Distance) -> int effects():
         return unwrap(value)

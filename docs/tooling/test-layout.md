@@ -14,7 +14,7 @@ gives you, and lists the Zig tests that still belong on the mylang side as of
 
 | What the test checks | Where it lives | How you run one |
 | --- | --- | --- |
-| A guest program's value or output | `tests/lang/<area>.my`, a `public def test_*() -> bool` | `mylang test tests/lang/<area>.my --filter <name> --cache-dir .mylang-cache/lang-tests`; add `--release --verify-facts` (with `MYL_CORE_LEAKCHECK=1`) and `--cache-dir .mylang-cache/lang-tests-release` for the release run |
+| A guest program's value or output | `tests/lang/<area>.my`, a `public func test_*() -> bool` | `mylang test tests/lang/<area>.my --filter <name> --cache-dir .mylang-cache/lang-tests`; add `--release --verify-facts` (with `MYL_CORE_LEAKCHECK=1`) and `--cache-dir .mylang-cache/lang-tests-release` for the release run |
 | A source that must be rejected with a diagnostic code | Zig, `src/<area>_test.zig` | `python3 scripts/focused_test.py units <name>` |
 | A guest that must trap with a runtime code | Zig | same |
 | A guest that needs a real `Filesystem`, `Environment` or stdin fixture | Zig | same |

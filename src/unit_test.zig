@@ -4,20 +4,20 @@ const t = std.testing;
 const language = @import("compiler.zig");
 const native = @import("native_execute.zig");
 const program =
-    \\def set(x: i64):
+    \\func set(x: i64):
     \\    _ = x
     \\
     \\
-    \\def skip[T](x: T):
+    \\func skip[T](x: T):
     \\    _ = x
     \\
     \\
-    \\def noop():
+    \\func noop():
     \\    return
     \\
     \\
-    \\def main() -> i64:
-    \\    x = 0
+    \\func main() -> i64:
+    \\    mut x = 0
     \\    x = 42
     \\    set(x)
     \\    skip[i64](x)
@@ -42,10 +42,10 @@ test "unit data and extern boundaries reject unsupported ABI values explicitly" 
     try t.expectEqual(@as(?u3, null), typed.Type.unit.capabilityIndex());
     try t.expectError(error.NotDataType, @import("data_type.zig").check(t.allocator, &.{}, .unit, true));
     var c = try language.Compilation.init(t.allocator, "host.my",
-        \\extern def f(host: Host, x: unit) -> i64 effects(host)
+        \\extern func f(host: Host, x: unit) -> i64 effects(host)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     );
     defer c.deinit();
@@ -55,14 +55,13 @@ test "unit data and extern boundaries reject unsupported ABI values explicitly" 
 fn publicUnit(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
     if (!std.mem.eql(u8, path, "main.my")) return error.NotFound;
     return allocator.dupe(u8,
-        \\module main
         \\
         \\
-        \\public def finish() effects():
+        \\public func finish() effects():
         \\    pass
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    finish()
         \\    return 42
     );
@@ -88,23 +87,23 @@ test "unit result payloads still require handling and propagation only drops suc
         \\    err: i64
         \\
         \\
-        \\def noop():
+        \\func noop():
         \\    pass
         \\
         \\
-        \\def done() -> Done:
+        \\func done() -> Done:
         \\    return Ok(noop())
         \\
         \\
         \\
     ;
     var valid = try language.Compilation.init(t.allocator, "result.my", header ++
-        \\def chained() -> Done:
-        \\    done()?
+        \\func chained() -> Done:
+        \\    try done()
         \\    return done()
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    match chained():
         \\        case Done.ok(_):
         \\            return 42
@@ -125,7 +124,7 @@ test "unit result payloads still require handling and propagation only drops suc
 // spec: UNIT-2
 test "unit remains distinct and implicit discard cannot lose ordinary or fallible values" {
     const invalid = [_][]const u8{
-        \\def main() -> bool:
+        \\func main() -> bool:
         \\    return True
         ,
         \\result Done:
@@ -133,11 +132,11 @@ test "unit remains distinct and implicit discard cannot lose ordinary or fallibl
         \\    err: i64
         \\
         \\
-        \\def leak(x: Done):
+        \\func leak(x: Done):
         \\    pass
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
         ,
         \\result Done:
@@ -145,59 +144,59 @@ test "unit remains distinct and implicit discard cannot lose ordinary or fallibl
         \\    err: i64
         \\
         \\
-        \\def leak[T](x: Done):
+        \\func leak[T](x: Done):
         \\    pass
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
         ,
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return
         ,
-        \\def f():
+        \\func f():
         \\    return 0
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
         ,
-        \\def f() -> i64:
+        \\func f() -> i64:
         \\    return 7
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    f()
         \\    return 0
         ,
-        \\def f[T](x: T):
+        \\func f[T](x: T):
         \\    x
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
         ,
-        \\def f():
+        \\func f():
         \\    pass
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return f()
         ,
-        \\def f():
+        \\func f():
         \\    pass
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    if f():
         \\        return 1
         \\    return 0
         ,
-        \\def f():
+        \\func f():
         \\    pass
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return f() + 1
         ,
     };

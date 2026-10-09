@@ -59,23 +59,23 @@ const views_expected =
 ;
 
 const kmers =
-    \\def frequencies(seq: str, k: int) -> dict[str, int]:
-    \\    counts: dict[str, int] = {}
+    \\func frequencies(seq: str, k: int) -> dict[str, int]:
+    \\    mut counts: dict[str, int] = {}
     \\    for i in range(len(seq) - k + 1):
-    \\        key = seq[i:i + k]
+    \\        mut key = seq[i:i + k]
     \\        counts[key] = counts.get(key, 0) + 1
     \\    return counts
     \\
-    \\def keyed(seq: str, k: int) -> int:
-    \\    counts: dict[str, int] = {}
-    \\    kept: list[str] = []
+    \\func keyed(seq: str, k: int) -> int:
+    \\    mut counts: dict[str, int] = {}
+    \\    mut kept: str[] = []
     \\    for i in range(len(seq) - k + 1):
-    \\        key = seq[i:i + k]
+    \\        mut key = seq[i:i + k]
     \\        counts[key] = 1
     \\        kept.append(key)
     \\    return len(counts) + len(kept)
     \\
-    \\def main(out: Stream) -> int:
+    \\func main(out: Stream) -> int:
     \\    out.print(len(frequencies("ACGTACGT", 2)), keyed("ACGT", 2))
     \\    return 0
     \\
@@ -325,17 +325,17 @@ const reads_expected =
     "same+abcdef!?3 xé!?3\n";
 
 const reread =
-    \\def rebound(s: str) -> int:
-    \\    total = 0
-    \\    t = s
+    \\func rebound(s: str) -> int:
+    \\    mut total = 0
+    \\    mut t = s
     \\    for i in range(len(s)):
-    \\        head = t[0:i]
+    \\        mut head = t[0:i]
     \\        t = t + "x"
     \\        if head == s[0:i]:
     \\            total += len(head)
     \\    return total
     \\
-    \\def main(out: Stream) -> int:
+    \\func main(out: Stream) -> int:
     \\    out.print(rebound("abc"))
     \\    return 0
     \\

@@ -1,4 +1,3 @@
-module text_report
 
 # A text/list transformation that returns a typed report, callable through
 # `mylang invoke` with no handwritten JSON plumbing:
@@ -18,11 +17,11 @@ public record Summary:
     empty: i64
 
 
-public def summarize(text: str, pieces: list[str]) -> Summary effects():
-    longest = 0
-    empty = 0
+public func summarize(text: str, pieces: str[]) -> Summary effects():
+    mut longest = 0
+    mut empty = 0
     for piece in pieces:
-        width = len(piece)
+        mut width = len(piece)
         if width > longest:
             longest = width
         if width == 0:
@@ -30,9 +29,9 @@ public def summarize(text: str, pieces: list[str]) -> Summary effects():
     return Summary(scalars=len(text), pieces=len(pieces), longest=longest, empty=empty)
 
 
-public def join(pieces: list[str], separator: str) -> str:
-    total = ""
-    index = 0
+public func join(pieces: str[], separator: str) -> str:
+    mut total = ""
+    mut index = 0
     for piece in pieces:
         if index != 0:
             total = total + separator
@@ -41,16 +40,16 @@ public def join(pieces: list[str], separator: str) -> str:
     return total
 
 
-public def widths(pieces: list[str]) -> list[i64]:
-    return [len(piece) for piece in pieces]
+public func widths(pieces: str[]) -> i64[]:
+    return [for piece in pieces yield len(piece)]
 
 
-public def bracket_all(text: str) -> list[str]:
+public func bracket_all(text: str) -> str[]:
     return ["[" + text + "]", text]
 
 
-def main() -> int:
-    report = summarize(text="hello", pieces=["a", "bb", ""])
+func main() -> int:
+    mut report = summarize(text="hello", pieces=["a", "bb", ""])
     if report.empty != 1:
         return 1
     if report.longest != 2:

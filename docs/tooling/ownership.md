@@ -35,14 +35,14 @@ copy, retains and releases emitted, pairs elided, and lists placed on the stack.
 
 ```console
 $ cat fill.my
-def fill(n: int) -> list[int]:
+func fill(n: int) -> list[int]:
     out: list[int] = []
     for i in range(n):
         out.append(i * i)
     return out
 
 
-def main() -> int:
+func main() -> int:
     squares = fill(10)
     copy = squares
     copy.append(1)

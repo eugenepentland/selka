@@ -1,15 +1,14 @@
-module managed_values_case_10
 
 
-def next(xs: mut list[i64]) -> i64:
+func next(mut xs: i64[]) -> i64:
     xs.append(1)
     return 42
 
 
-public def program() -> i64:
-    xs: list[i64] = []
-    s = str(next(mut xs))
-    expected: str = b"42"
+public func program() -> i64:
+    mut xs: i64[] = []
+    mut s = str(next(mut xs))
+    mut expected: str = b"42"
     if s == expected:
         return len(xs)
     return 0

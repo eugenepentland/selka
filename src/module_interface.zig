@@ -28,7 +28,7 @@ const source = @import("source.zig");
 const embed = @import("embed.zig");
 
 /// Payload version; bump for any layout or meaning change so old artifacts miss.
-pub const format_version = "module-interface-v7";
+pub const format_version = "module-interface-v8";
 /// File extension of one stored interface.
 pub const extension = ".myi";
 

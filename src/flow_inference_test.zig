@@ -13,20 +13,20 @@ fn reject(text: []const u8, code: []const u8) !void {
 // spec-case: OPTION-FLOW-3
 test "flow inference forgets reassigned and branch-dependent Option facts" {
     try reject(
-        \\def main() -> int:
-        \\    value: Option[int] = Some(42)
+        \\func main() -> int:
+        \\    mut value: int? = Some(42)
         \\    if value is None:
         \\        return 0
         \\    value = None
         \\    return value
     , "E_TYPE");
     try reject(
-        \\def get(value: Option[int], flag: bool) -> int:
+        \\func get(value: int?, flag: bool) -> int:
         \\    if flag:
         \\        if value is None:
         \\            return 0
         \\    return value
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return get(None, False)
     , "E_TYPE");
 }
@@ -34,24 +34,24 @@ test "flow inference forgets reassigned and branch-dependent Option facts" {
 // spec-case: OPTION-FLOW-3
 test "flow inference rejects stale loop-carried and zero-iteration facts" {
     try reject(
-        \\def get(value: Option[int], flag: bool) -> int:
+        \\func get(value: int?, flag: bool) -> int:
         \\    if value is None:
         \\        return 0
         \\    while flag:
         \\        _ = value + 1
         \\        value = None
         \\    return 0
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return get(Some(1), False)
     , "E_TYPE");
     try reject(
-        \\def get(value: Option[int]) -> int:
+        \\func get(value: int?) -> int:
         \\    for i in range(0):
         \\        _ = i
         \\        if value is None:
         \\            return 0
         \\    return value
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return get(None)
     , "E_TYPE");
 }
@@ -59,11 +59,11 @@ test "flow inference rejects stale loop-carried and zero-iteration facts" {
 // spec-case: OPTION-FLOW-2
 test "flow inference does not infer presence from an unsafe Boolean alternative" {
     try reject(
-        \\def get(value: Option[int], flag: bool) -> int:
+        \\func get(value: int?, flag: bool) -> int:
         \\    if value is not None or flag:
         \\        return value
         \\    return 0
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return get(None, True)
     , "E_TYPE");
 }
@@ -71,12 +71,13 @@ test "flow inference does not infer presence from an unsafe Boolean alternative"
 // spec-case: OPTION-FLOW-3
 test "flow inference rejects unsafe uninstantiated template paths" {
     try reject(
-        \\def unsafe[T: copy + storable](value: Option[T], other: T) -> T:
+        \\func unsafe[T: copy + storable](input: T?, other: T) -> T:
+        \\    mut value = input
         \\    if value is None:
         \\        return other
         \\    value = None
         \\    return value
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     , "E_GENERIC_TYPE");
 }
@@ -98,24 +99,24 @@ test "flow inference formatter preserves guards and inferred specialization reus
 // spec: GENERIC-EXPECTED-3
 test "flow inference rejects conflicting missing and unsatisfied contextual arguments" {
     try reject(
-        \\def identity[T](value: T) -> T:
+        \\func identity[T](value: T) -> T:
         \\    return value
-        \\def main() -> int:
-        \\    value: int = identity(1u8)
-        \\    return value
-    , "E_GENERIC_INFERENCE");
-    try reject(
-        \\def zero[T: integer]() -> T:
-        \\    return T(0)
-        \\def main() -> int:
-        \\    value = zero()
+        \\func main() -> int:
+        \\    mut value: int = identity(1u8)
         \\    return value
     , "E_GENERIC_INFERENCE");
     try reject(
-        \\def zero[T: integer]() -> T:
+        \\func zero[T: integer]() -> T:
         \\    return T(0)
-        \\def main() -> int:
-        \\    value: bool = zero()
+        \\func main() -> int:
+        \\    mut value = zero()
+        \\    return value
+    , "E_GENERIC_INFERENCE");
+    try reject(
+        \\func zero[T: integer]() -> T:
+        \\    return T(0)
+        \\func main() -> int:
+        \\    mut value: bool = zero()
         \\    if value:
         \\        return 0
         \\    return 1
@@ -125,25 +126,25 @@ test "flow inference rejects conflicting missing and unsatisfied contextual argu
 // spec-case: GENERIC-EXPECTED-2
 test "flow inference retains symbolic conflicts in uninstantiated templates" {
     try reject(
-        \\def identity[T](value: T) -> T:
+        \\func identity[T](value: T) -> T:
         \\    return value
-        \\def conflict[U](value: U) -> int:
+        \\func conflict[U](value: U) -> int:
         \\    return identity(value)
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     , "E_GENERIC_INFERENCE");
 }
 
 const checked_source =
-    \\def zero[T: integer]() -> T:
+    \\func zero[T: integer]() -> T:
     \\    return T(0)
-    \\def fallback[T: copy + storable](value: Option[T], other: T) -> T:
+    \\func fallback[T: copy + storable](value: T?, other: T) -> T:
     \\    if value is None:
     \\        return other
     \\    return value
-    \\def main() -> int:
-    \\    optional: Option[int] = Some(42)
-    \\    value: int = fallback(optional, zero())
+    \\func main() -> int:
+    \\    mut optional: int? = Some(42)
+    \\    mut value: int = fallback(optional, zero())
     \\    if optional is not None and optional > 0:
     \\        return value + optional
     \\    return zero[int]()

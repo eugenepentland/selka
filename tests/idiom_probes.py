@@ -196,7 +196,7 @@ def cpython_oracle(path, timeout=TIMEOUT):
     The probe executes with ``runpy`` under a non-``__main__`` name, so a
     ``if __name__ == "__main__"`` guard does not run it twice, and ``main()`` is
     called once. Its return value is truncated to the low byte exactly as the
-    language truncates a ``def main() -> int`` value, and ``None`` means success.
+    language truncates a ``func main() -> int`` value, and ``None`` means success.
 
     A returned mapping always carries ``status`` (``None`` when the oracle
     failed), ``stdout``, ``stderr``, ``error`` and ``ok``. ``ok`` is false for a

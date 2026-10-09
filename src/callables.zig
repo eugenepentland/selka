@@ -9,6 +9,16 @@ pub fn signature(ty: typed.Type, records: []const typed.Record) ?typed.Callable 
     if (!ty.isAggregate() or ty.recordIndex() >= records.len) return null;
     return records[ty.recordIndex()].contract.callback;
 }
+/// Compare named labels independently of positional binder names.
+pub const equalLabels = @import("callback_labels.zig").equalLabels;
+/// Resolve the named parameter labels in a callable type.
+pub const syntaxLabels = @import("callback_labels.zig").syntaxLabels;
+/// Capture declared named labels while excluding positional binder names from identity.
+pub fn functionLabels(allocator: std.mem.Allocator, src: source.Source, parameters: []const @import("ast.zig").Parameter) error{OutOfMemory}![]const []const u8 {
+    const labels = try allocator.alloc([]const u8, parameters.len);
+    for (parameters, labels) |parameter, *label| label.* = if (parameter.named) src.text(parameter.name) else "";
+    return labels;
+}
 /// Whether every position in `subset` is present in `superset`.
 pub fn positionSubset(subset: []const u16, superset: []const u16) bool {
     for (subset) |position| {
@@ -36,24 +46,25 @@ pub fn originSubset(implementation: typed.ReturnOrigin, destination: typed.Retur
 /// Exact parameter and result identity; ceilings must agree at value boundaries.
 /// This remains the identity relation used when interning or comparing schema records.
 pub fn equal(a: typed.Callable, b: typed.Callable) bool {
-    return a.return_type == b.return_type and a.effects == b.effects and
+    return equalLabels(a.labels, b.labels) and a.return_type == b.return_type and a.effects == b.effects and
         std.mem.eql(typed.Type, a.parameters, b.parameters) and
         std.mem.eql(u16, a.mutates, b.mutates) and typed.ReturnOrigin.eql(a.return_origin, b.return_origin);
 }
 /// Parameter and result identity is invariant for directional assignability.
 fn sameShape(implementation: typed.Callable, destination: typed.Callable) bool {
+    if (!equalLabels(implementation.labels, destination.labels)) return false;
     if (implementation.return_type != destination.return_type) return false;
     return std.mem.eql(typed.Type, implementation.parameters, destination.parameters);
 }
 /// Whether an implementation may be used where `destination` is expected.
 ///
-/// Effects may shrink, the implementation mutation footprint must be a subset
-/// of the destination footprint, and the return-origin bound must be no wider
+/// Effects may shrink; mutation positions and named labels must match exactly
+/// so both sides use the same caller-storage ABI, and the return-origin bound must be no wider
 /// than the destination's. Parameter and result identity stays invariant.
 pub fn assignable(implementation: typed.Callable, destination: typed.Callable) bool {
     if (!sameShape(implementation, destination)) return false;
     if (implementation.effects & ~destination.effects != 0) return false;
-    if (!positionSubset(implementation.mutates, destination.mutates)) return false;
+    if (!std.mem.eql(u16, implementation.mutates, destination.mutates)) return false;
     if (!originSubset(implementation.return_origin, destination.return_origin)) return false;
     return true;
 }
@@ -64,6 +75,7 @@ pub fn accepts(destination: typed.Callable, function: anytype) bool {
     for (function.scope.locals[0..function.signature.parameter_count], 0..) |parameter, index| parameters[index] = parameter.ty;
     const ceiling = function.policy.effect_bound orelse return false;
     const implementation: typed.Callable = .{
+        .labels = function.scope.parameter_labels,
         .parameters = parameters[0..function.signature.parameter_count],
         .return_type = function.signature.return_type,
         .effects = ceiling.allowed,
@@ -105,9 +117,12 @@ pub fn intern(allocator: std.mem.Allocator, catalog: *@import("type_catalog.zig"
     const parameters = try allocator.dupe(typed.Type, contract.parameters);
     var name: std.Io.Writer.Allocating = .init(allocator);
     defer name.deinit();
-    name.writer.writeAll("def(") catch return error.OutOfMemory;
+    name.writer.writeAll("func(") catch return error.OutOfMemory;
     for (parameters, 0..) |parameter, i| {
         if (i != 0) name.writer.writeAll(", ") catch return error.OutOfMemory;
+        if (i < contract.labels.len and contract.labels[i].len != 0) {
+            name.writer.print("named {s}: ", .{contract.labels[i]}) catch return error.OutOfMemory;
+        }
         name.writer.writeAll(typed.typeName(parameter, catalog.records)) catch return error.OutOfMemory;
     }
     name.writer.writeAll(") -> ") catch return error.OutOfMemory;
@@ -128,7 +143,7 @@ pub fn intern(allocator: std.mem.Allocator, catalog: *@import("type_catalog.zig"
         .declaration = span,
         .fields = &.{},
         .shape = .{ .domain = .u64 },
-        .contract = .{ .callback = .{ .parameters = parameters, .return_type = contract.return_type, .effects = contract.effects, .mutates = contract.mutates, .return_origin = contract.return_origin } },
+        .contract = .{ .callback = .{ .labels = contract.labels, .parameters = parameters, .return_type = contract.return_type, .effects = contract.effects, .mutates = contract.mutates, .return_origin = contract.return_origin } },
     });
     return id;
 }

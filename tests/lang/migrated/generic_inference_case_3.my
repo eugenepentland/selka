@@ -1,17 +1,16 @@
-module generic_inference_case_3
 
 
 record Chunk[T, const N: u64]:
     items: [N]T
 
 
-def first[T, const N: u64](x: Chunk[T, N]) -> T:
+func first[T, const N: u64](x: Chunk[T, N]) -> T:
     return x.items[0]
 
 
-def forward[U, const M: u64](x: Chunk[U, M]) -> U:
+func forward[U, const M: u64](x: Chunk[U, M]) -> U:
     return first(x)
 
 
-public def program() -> i64:
-    return forward(Chunk[i64, 2](items=[8, 9]))
+public func program() -> i64:
+    return forward(Chunk[i64, 2](items=FixedArray[int, 2]([8, 9])))

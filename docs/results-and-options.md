@@ -1,12 +1,18 @@
 # Results and options
 
-The language has no exceptions. A call that can fail returns `Result[T, E]`, and a call
-that can find nothing returns `Option[T]`. The two are deliberately different: a
-`Result` carries a handling obligation the checker enforces, while an `Option` is
-ordinary data that may be ignored. Both are prelude types with one identity everywhere,
-so no module declares or imports them, and both are taken apart with the `match`
-statement described in [records, unions and enums](records-and-unions.md#tagged-unions).
-Options also support local presence guards.
+A fallible function declares its successful type and error separately:
+`func parse(text: str) -> Point fails ParseError`. `return point` succeeds;
+`fail error` returns a declared failure. Calling it produces a checked result
+that must be handled, stored or transferred according to the result rules.
+`try parse(text)` extracts success and propagates compatible failure from the
+enclosing fallible function.
+
+An optional value is written `T?` and represents a value or `None`.
+Absence is ordinary data; it carries no result handling obligation. Return or
+assign a `T` directly where `T?` is expected. Presence guards narrow locals,
+and explicit matching remains available for both optional and result values.
+Stored results may still be typed as `Result[T, E]`, and rare nominal `result`
+declarations preserve their existing identities.
 
 ## Flow-sensitive Option guards
 
@@ -19,15 +25,15 @@ return from the absent branch leaves the payload available on the continuing pat
 record Node:
     width: int
 
-def width(node: Option[Node]) -> int:
+func width(node: Node?) -> int:
     if node is None:
         return 0
     return node.width
 
-def positive(value: Option[int]) -> bool:
+func positive(value: int?) -> bool:
     return value is not None and value > 0
 
-def main() -> int:
+func main() -> int:
     if positive(Some(42)):
         return width(Some(Node(width=42)))
     return 0
@@ -39,7 +45,7 @@ After a join, a fact survives only if every continuing branch preserves it. Reas
 the binding invalidates its fact; loop bodies are checked with assignments from later
 iterations in mind, and a loop that might never run establishes no new fact afterwards.
 
-The declared binding remains an Option. Assign `None` or `Some(...)` to replace it;
+The declared binding remains an Option. Assign `None` or a payload value to replace a writable optional local;
 an annotated destination or parameter expecting that same Option type receives the
 original wrapper. Repeated `is None` tests and explicit `match` also see the wrapper.
 Narrowed record field and collection updates preserve the wrapper.
@@ -56,29 +62,29 @@ not promise redundant-check elimination or prove integer bounds.
 
 ## Option methods
 
-`Option[T]` answers three intrinsic methods and nothing else: `unwrap_or(default: T) -> T`
+`T?` answers three intrinsic methods and nothing else: `unwrap_or(default: T) -> T`
 returns the payload or the default, `is_none() -> bool` answers whether the value is
 absent, and `is_some() -> bool` answers whether it is present. All three are pure and
 allocate nothing, so a `noalloc` ceiling accepts them, and all three work in a generic
-body whose parameter is an `Option[T]`. `unwrap_or`'s default is checked against the
+body whose parameter is an `T?`. `unwrap_or`'s default is checked against the
 payload type, and an integer literal adopts that type exactly as it does in a binding,
 so a `u8` payload makes `unwrap_or(7)` a `u8` default.
 
 ```mylang
 # doc: expect 47
-def parse(text: str) -> Option[int]:
-    return int(text)
+func parse(text: str) -> int?:
+    return parse_int(text)
 
-def head[T: copy + storable](values: list[T]) -> Option[T]:
+func head[T: copy + storable](values: T[]) -> T?:
     if len(values) == 0:
         return None
     return Some(values[0])
 
-def width(text: str) -> int noalloc:
+func width(text: str) -> int noalloc:
     return parse(text).unwrap_or(0)
 
-def main() -> int:
-    total = parse("nope").unwrap_or(7)
+func main() -> int:
+    mut total = parse("nope").unwrap_or(7)
     total = total + head([40, 1]).unwrap_or(0)
     if parse("2").is_none():
         total = total + 100
@@ -110,18 +116,18 @@ obligation for the whole wrapper.
 
 ```mylang
 # doc: expect-error E_RESULT_UNHANDLED
-def divide(numerator: int, denominator: int) -> Result[int, str]:
+func divide(numerator: int, denominator: int) -> int fails str:
     if denominator == 0:
-        return Err("division by zero")
-    return Ok(numerator // denominator)
+        fail "division by zero"
+    return numerator // denominator
 
-def main(out: Stream) -> int:
+func main(out: Stream) -> int:
     match divide(21, 3):
         case Ok(value):
             out.print(value)
         case Err(message):
             out.print(message)
-    ignored = divide(1, 0)
+    mut ignored = divide(1, 0)
     return 0
 ```
 
@@ -133,42 +139,43 @@ host failures, none of which turn into an `Err`.
 
 ## Postfix error propagation
 
-`expression?` unwraps a successful `Result` into its payload and, on failure, returns the
-error from the enclosing function immediately. The enclosing function must itself return
-a compatible `Result` — the error payloads are matched by case, and an error of an
-unrelated type is rejected, so a function whose errors are `int` cannot propagate a `str`
-error. The one implicit conversion is the wrapping case: when the enclosing error union
-carries the propagated error type as a case payload, the error converts into that case
-and no hand-written translation helper is needed. `?` on a value that is neither a
-result nor an option is rejected, as is `?` in a function that returns a plain value. The early return
-releases the scope it leaves the way an ordinary `return` does, including closing an open
-file.
+Use `try operation()` at a statement value boundary: a declaration initializer,
+an assignment value, a `return` value, a standalone operation, or a resource
+head such as `with try open(...) as file:`. Nested propagation inside arguments
+or arithmetic is rejected; first extract the fallible operation into a local.
+`return try other()` forwards the successful value and compatible failure.
+
+The enclosing function must declare a compatible failure type. Existing error
+case conversions remain available, including wrapping an error in a declared
+error case whose payload has that type. Unrelated errors do not widen
+implicitly. Propagation releases the scopes it exits, including open files,
+just as `return` and `fail` do. The `?` suffix belongs to optional types.
 
 ```mylang
 # doc: expect 37
-def divide(n: int, d: int) -> Result[int, str]:
+func divide(n: int, d: int) -> int fails str:
     if d == 0:
-        return Err("division by zero")
-    return Ok(n // d)
+        fail "division by zero"
+    return n // d
 
-def average(total: int, parts: int) -> Result[int, str]:
-    share = divide(total, parts)?
-    return Ok(share + 1)
+func average(total: int, parts: int) -> int fails str:
+    mut share = try divide(total, parts)
+    return share + 1
 
-def report(total: int, parts: int) -> int:
+func report(total: int, parts: int) -> int:
     match average(total, parts):
         case Ok(value):
             return value
         case Err(message):
             return len(message)
 
-def main() -> int:
+func main() -> int:
     return report(40, 2) + report(40, 0)
 ```
 
 This returns `37`: `21` from the successful path, and `16` — the length of the propagated
 message — from the failing one. `average` never mentions the error case, which is the
-point of the form. `with open(fs, path, mode)? as f:` is the same operator at a `with`
+point of the form. `with try open(fs, path, mode) as f:` is propagation at a `with`
 head; see [printing, files and command-line authority](io.md).
 
 When the enclosing error union has a case whose payload is exactly the propagated error
@@ -182,35 +189,35 @@ result Inner:
     err: str
 
 
-union AppError:
-    Detail: str,
-    Missing: int
+enum AppError:
+    Detail(value: str)
+    Missing(value: int)
 
 
-def load(flag: bool) -> Inner:
+func load(flag: bool) -> Inner:
     if flag:
         return Err("no value")
     return Ok(20)
 
 
-def convert(flag: bool) -> Result[int, AppError]:
-    value = load(flag)?
-    return Ok(value)
+func convert(flag: bool) -> int fails AppError:
+    mut value = try load(flag)
+    return value
 
 
-def rate(flag: bool) -> int:
+func rate(flag: bool) -> int:
     match convert(flag):
         case Ok(value):
             return value - 8
         case Err(error):
             match error:
-                case AppError.Detail(text):
+                case AppError.Detail(value=text):
                     return len(text)
-                case AppError.Missing(code):
+                case AppError.Missing(value=code):
                     return code
 
 
-def main() -> int:
+func main() -> int:
     return rate(False) + rate(True)
 ```
 
@@ -219,26 +226,26 @@ becomes the payload of `AppError.Detail`, so `rate(True)` returns `8` and the pr
 prints `20`. A propagated error type that is not a case payload of the enclosing union
 still fails with `E_TYPE`.
 
-`?` also works on an `Option[T]` inside a function returning an `Option`: `Some(value)`
-unwraps to `value` and `None` returns `None` from the enclosing function at once. `None`
-carries no payload, so the enclosing function's element type does not have to match: a
-function returning `Option[int]` can walk an `Option[Node]` with `?`.
+Optional absence is handled with a presence guard or `match`. A local known to
+be present exposes its payload type; return `None` explicitly for the absent path.
 
 ```mylang
 # doc: expect 4
 record Node:
     value: int
-    left: Option[Node]
+    left: Node?
 
 
-def left_value(node: Node) -> Option[int]:
-    child = node.left?
-    return Some(child.value)
+func left_value(node: Node) -> int?:
+    const child = node.left
+    if child is None:
+        return None
+    return child.value
 
 
-def main() -> int:
-    leaf = Node(value=4, left=None)
-    root = Node(value=1, left=Some(leaf))
+func main() -> int:
+    mut leaf = Node(value=4, left=None)
+    mut root = Node(value=1, left=Some(leaf))
     return left_value(root).unwrap_or(0) + left_value(leaf).unwrap_or(0)
 ```
 
@@ -248,7 +255,7 @@ An `Err` that reaches the end of `main`, or fails a test, says where it came fro
 Every program keeps one error return trace, in every build mode and on both
 backends: constructing an `Err(...)` value starts a fresh trace at that construction,
 and a runtime operation that answers `Err` — reading a missing file, say — starts one
-at its call. After that, each `?` that passes the error on adds its site, and says
+at its call. After that, each `try` that passes the error on adds its site, and says
 which union case it converted the error into when it wrapped it; a `return` of an
 `Err` the statement did not construct itself — a variable, a call's result, a
 conditional expression — adds the `return`. Handling an error with `match` or `_ =`
@@ -256,30 +263,30 @@ adds nothing, so the trace always describes the most recent `Err` the program ma
 
 ```mylang
 # doc: expect reading the configuration
-union AppError:
-    Config: str,
-    Usage: int
+enum AppError:
+    Config(value: str)
+    Usage(value: int)
 
 
-def parse_port(text: str) -> Result[int, str]:
+func parse_port(text: str) -> int fails str:
     if len(text) == 0:
-        return Err("empty port")
-    return Ok(len(text))
+        fail "empty port"
+    return len(text)
 
 
-def read_config(text: str) -> Result[int, str]:
-    port = parse_port(text)?
-    return Ok(port + 1)
+func read_config(text: str) -> int fails str:
+    mut port = try parse_port(text)
+    return port + 1
 
 
-def load(text: str) -> Result[int, AppError]:
-    return Ok(read_config(text)?)
+func load(text: str) -> int fails AppError:
+    return try read_config(text)
 
 
-def main(out: Stream) -> Result[int, AppError]:
+func main(out: Stream) -> int fails AppError:
     out.print("reading the configuration")
-    port = load("")?
-    return Ok(port)
+    mut port = try load("")
+    return port
 ```
 
 When `main` returns the `Err`, the program writes `error:` and the error, rendered as
@@ -300,7 +307,7 @@ $ echo $?
 `main` may fail with any error type `print` can render. An `int` error is still the
 exit status; any other error exits 1. `mylang test` prints the same trace under a
 test whose value is an `Err`, and a test declared `-> Result[bool, E]` expects
-`Ok(True)`, so it can use `?` and fail with the trace of the error it propagated.
+`Ok(True)`, so it can use `try` and fail with the trace of the error it propagated.
 A trap is reported as before, with its call stack instead.
 
 The trace keeps the origin and the last 32 sites after it. A deeper chain, such as
@@ -308,7 +315,7 @@ a recursive descent, reports how many sites in between were dropped:
 `... 9 more entries dropped ...`. Each site is a function's position table and an
 instruction index the compiler already emits, so no text is built while the
 program runs. Recording a site is one call to a small runtime recorder, on the
-error path only: an `Ok` passing through `?`, and a
+error path only: an `Ok` passing through `try`, and a
 `return Ok(...)`, execute nothing extra. A `return` whose value could be either
 case tests the returned case once. In an LLVM build the recorder keeps every
 register but one intact, so a recording does not make an optimized loop spill
@@ -316,39 +323,39 @@ and reload the values it holds in registers.
 
 ## Option constructors
 
-`Option[T]` represents a value that may be absent. `Some(value)` builds the present case
-and a bare `None` builds the absent one, and both take their `Option[T]` type from the
+`T?` represents a value that may be absent. `Some(value)` builds the present case
+and a bare `None` builds the absent one, and both take their `T?` type from the
 surrounding context: a binding annotation, a parameter, a record field or the enclosing
 function's return type. `Some(value)` with no such context is rejected with
 `E_OPTION_INFERENCE`, and outside an `Option` context `None` is the ordinary unit value a
 procedure returns, not an empty option. Take an option apart with `case Some(value)` and
 `case None`. An option carrying only ordinary data has no handling obligation, so it may
 be ignored or discarded; that is the difference from a `Result`, and the reason the
-standard library returns `Option[T]` for a lookup that found nothing and `Result[T, E]`
+standard library returns `T?` for a lookup that found nothing and `Result[T, E]`
 for an operation that failed.
 
 ```mylang
 # doc: expect 47
-def lookup(values: list[int], index: int) -> Option[int]:
+func lookup(values: int[], index: int) -> int?:
     if index < 0 or index >= len(values):
         return None
     return Some(values[index])
 
-def main() -> int:
-    values = [10, 20, 30]
-    total = 0
+func main() -> int:
+    mut values = [10, 20, 30]
+    mut total = 0
     match lookup(values, 1):
         case Some(value):
             total = total + value
         case None:
             total = total - 1
-    missing: Option[int] = lookup(values, 9)
+    mut missing: int? = lookup(values, 9)
     match missing:
         case Some(value):
             total = total + value
         case None:
             total = total + 5
-    parsed = int("22")
+    mut parsed = parse_int("22")
     match parsed:
         case Some(value):
             total = total + value
@@ -357,7 +364,7 @@ def main() -> int:
     return total
 ```
 
-This returns `47`. `int(text)` and `float(text)` return options for the same reason: text
+This returns `47`. `parse_int(text)` and `parse_float(text)` return options for the same reason: text
 that is not exactly one number answers `None` instead of raising.
 
 ## Contextual empty constructors
@@ -366,32 +373,32 @@ An empty `[]`, an empty `{}`, `Ok(...)` and `Err(...)` carry no type of their ow
 takes the type it needs from the place it is written: an annotated binding, a record
 field, a list element, a concrete call argument, or the enclosing function's declared
 result. This is what lets `Batch(names=[], counts={})` construct a record whose fields
-are a `list[str]` and a `dict[str, int]`, and lets `return Err("empty")` name no types at
+are a `str[]` and a `dict[str, int]`, and lets `return Err("empty")` name no types at
 all. Where no expected type reaches the expression the compiler says so rather than
 guessing: a contextless empty list is rejected with `E_LIST_INFERENCE` and a contextless
-`Ok` or `Err` with `E_RESULT_INFERENCE`. Nesting works, so an expected `list[list[int]]`
+`Ok` or `Err` with `E_RESULT_INFERENCE`. Nesting works, so an expected `int[][]`
 pushes its element type into an inner `[]`.
 
 ```mylang
 # doc: expect 9
 record Batch:
-    names: list[str]
+    names: str[]
     counts: dict[str, int]
 
-def empty_batch() -> Batch:
+func empty_batch() -> Batch:
     return Batch(names=[], counts={})
 
-def first(values: list[int]) -> Result[int, str]:
+func first(values: int[]) -> int fails str:
     if len(values) == 0:
-        return Err("empty")
-    return Ok(values[0])
+        fail "empty"
+    return values[0]
 
-def main() -> int:
-    batch = empty_batch()
+func main() -> int:
+    mut batch = empty_batch()
     batch.names.append("alpha")
     batch.counts["alpha"] = 3
-    pending: list[int] = []
-    total = 0
+    mut pending: int[] = []
+    mut total = 0
     match first(pending):
         case Ok(value):
             total = total + value
@@ -407,7 +414,7 @@ function instead; the contextual constructors never shadow a declaration you wro
 
 The operand beside `==` or `!=` is a place that supplies a type too. `Some(...)`,
 `None`, `Ok(...)` and `Err(...)` take the type of the other operand, in either order,
-whatever that operand is: a local, a field, a call, a method call or an `int(text)`
+whatever that operand is: a local, a field, a call, a method call or an `parse_int(text)`
 conversion. The other operand is checked first, so `lookup(values, 1) == Some(20)` and
 `None != lookup(values, 9)` need no temporary binding. Two operands that both wait for
 a type, such as `Some(1) == Some(1)`, still have nothing to infer from and are rejected
@@ -415,19 +422,19 @@ with `E_OPTION_INFERENCE`. Each equality link in a comparison chain uses the sam
 
 ```mylang
 # doc: expect 4
-def lookup(values: list[int], index: int) -> Option[int]:
+func lookup(values: int[], index: int) -> int?:
     if index < 0 or index >= len(values):
         return None
     return Some(values[index])
 
-def main() -> int:
-    values = [10, 20, 30]
-    score = 0
+func main() -> int:
+    mut values = [10, 20, 30]
+    mut score = 0
     if lookup(values, 1) == Some(20):
         score += 1
     if None != lookup(values, 2):
         score += 1
-    if lookup(values, 9) == None and int("5") == Some(5):
+    if lookup(values, 9) == None and parse_int("5") == Some(5):
         score += 1
     if Some(20) == lookup(values, 1) == Some(20):
         score += 1
@@ -436,25 +443,25 @@ def main() -> int:
 
 ## Builtin list and result types
 
-`list[T]` and `Result[T, E]` are part of the prelude. They need no `record` declaration
+`T[]` and `Result[T, E]` are part of the prelude. They need no `record` declaration
 and no import, they are spellable in annotations, record fields, parameters, return types
 and exported module signatures, and they use the same managed-list and checked-result
 semantics as everything else on this page. Both work under generic type parameters, so a
-generic function can build a `list[T]` or an `Ok(value)` whose payload type is still
+generic function can build a `T[]` or an `Ok(value)` whose payload type is still
 symbolic. A module that declares its own `List` or `Result` type keeps its own nominal
 identity inside that module, and unrelated modules continue to resolve the prelude one.
 
 ```mylang
 # doc: expect 12
-def head[T](values: list[T]) -> Result[T, str]:
+func head[T](values: T[]) -> T fails str:
     if len(values) == 0:
-        return Err("empty")
-    return Ok(values[0])
+        fail "empty"
+    return values[0]
 
-def main() -> int:
-    numbers: list[int] = [7, 8, 9]
-    words: list[str] = ["alpha"]
-    total = 0
+func main() -> int:
+    mut numbers: int[] = [7, 8, 9]
+    mut words: str[] = ["alpha"]
+    mut total = 0
     match head[int](numbers):
         case Ok(value):
             total = total + value
@@ -484,18 +491,17 @@ declaration of one of these names shadows the prelude inside that module alone.
 
 ```mylang
 # doc: expect 6
-module main
 import strings
 
-def summarise(counts: dict[str, int]) -> Result[str, str]:
+func summarise(counts: dict[str, int]) -> str fails str:
     if len(counts) == 0:
-        return Err("no counts")
-    names: list[str] = list(counts.keys())
-    return Ok(names[0])
+        fail "no counts"
+    mut names: str[] = list(counts.keys())
+    return names[0]
 
-def main() -> int:
-    counts: dict[str, int] = {"lang": 4}
-    total = 0
+func main() -> int:
+    mut counts: dict[str, int] = {"lang": 4}
+    mut total = 0
     match strings.find("mylang", "lang"):
         case Some(index):
             total = total + index
@@ -503,14 +509,14 @@ def main() -> int:
             total = total - 1
     match summarise(counts):
         case Ok(name):
-            raw: bytes = name.encode()
+            mut raw: bytes = name.encode()
             total = total + len(raw)
         case Err(message):
             total = total - len(message)
     return total
 ```
 
-This returns `6`. `strings.find` returns the prelude `Option[int]` and `summarise`
+This returns `6`. `strings.find` returns the prelude `int?` and `summarise`
 returns the prelude `Result[str, str]`, and neither declaration nor import mentions a
 prelude module.
 

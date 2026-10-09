@@ -1,6 +1,9 @@
 # D1: Keep function-scoped locals with sound definite assignment
 
-Status: accepted for `bootstrap-v1`; implementation landed in the Wave 1.1 stabilization pass.
+Status: superseded by the October 2026 frontend redesign. Current locals use lexical
+block scope, explicit `const`/`mut` declarations, and no active-name shadowing; see
+[current binding rules](../statements.md#assignments-and-value-records). The decision below
+records the former bootstrap behavior.
 
 ## Rule
 

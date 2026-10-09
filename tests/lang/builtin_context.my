@@ -1,29 +1,28 @@
-module builtin_context
 
 
-def pick_list[T](value: T) -> list[T]:
-    values: list[T] = []
+func pick_list[T](value: T) -> T[]:
+    mut values: T[] = []
     values.append(value)
     return values
 
 
-def pick_answer[T](value: T) -> Result[T, i64]:
+func pick_answer[T](value: T) -> Result[T, i64]:
     return Ok(value)
 
 
-def builtin_answer_1() -> Result[i64, i64]:
+func builtin_answer_1() -> Result[i64, i64]:
     return Ok(42)
 
 
-def empty_list() -> list[i64]:
+func empty_list() -> i64[]:
     return []
 
 
-def builtin_answer_2() -> Result[i64, i64]:
+func builtin_answer_2() -> Result[i64, i64]:
     return Ok(42)
 
 
-def recover_result(value: Result[i64, i64]) -> i64:
+func recover_result(value: Result[i64, i64]) -> i64:
     match value:
         case Result.ok(n):
             return n
@@ -32,25 +31,25 @@ def recover_result(value: Result[i64, i64]) -> i64:
 
 
 record Holder:
-    values: list[i64]
+    values: i64[]
 
 
-def choose_holder(value: mut Holder, other: list[i64]) -> i64:
+func choose_holder(mut value: Holder, other: i64[]) -> i64:
     _ = other
-    xs = value.values
+    mut xs = value.values
     xs.append(42)
     value.values = xs
     return xs[0u64]
 
 
-def unit_done() -> Result[None, i64]:
-    return Ok(None)
+func unit_done() -> Result[Unit, i64]:
+    return Ok(())
 
 
 # spec: BUILTIN-CONTEXT-5
-public def test_generic_list_result_and_contextual_constructors_keep_symbolic_type_parameters() -> bool:
-    values = pick_list(42)
-    value = values[0]
+public func test_generic_list_result_and_contextual_constructors_keep_symbolic_type_parameters() -> bool:
+    mut values = pick_list(42)
+    mut value = values[0]
     match pick_answer(value):
         case Result.ok(n):
             return n == 42
@@ -59,8 +58,8 @@ public def test_generic_list_result_and_contextual_constructors_keep_symbolic_ty
 
 
 # spec: BUILTIN-CONTEXT-1
-public def test_builtin_list_and_result_resolve_without_imports_or_explicit_declarations() -> bool:
-    values: list[i64] = []
+public func test_builtin_list_and_result_resolve_without_imports_or_explicit_declarations() -> bool:
+    mut values: i64[] = []
     values.append(42)
     match builtin_answer_1():
         case Result.ok(n):
@@ -70,25 +69,25 @@ public def test_builtin_list_and_result_resolve_without_imports_or_explicit_decl
 
 
 # spec: BUILTIN-CONTEXT-2
-public def test_empty_lists_and_ok_err_inherit_binding_return_and_argument_contexts() -> bool:
-    values: list[i64] = []
+public func test_empty_lists_and_ok_err_inherit_binding_return_and_argument_contexts() -> bool:
+    mut values: i64[] = []
     values.append(42)
-    result: Result[i64, i64] = Err(values[0u64])
+    mut result: Result[i64, i64] = Err(values[0u64])
     _ = result
     return recover_result(Ok(42)) == 42
 
 
 # spec: BUILTIN-CONTEXT-3
-public def test_record_fields_and_nested_list_elements_propagate_empty_list_context() -> bool:
-    nested: list[list[i64]] = []
-    inner: list[i64] = []
+public func test_record_fields_and_nested_list_elements_propagate_empty_list_context() -> bool:
+    mut nested: i64[][] = []
+    mut inner: i64[] = []
     nested.append(inner)
-    holder = Holder(values=[])
+    mut holder = Holder(values=[])
     return choose_holder(mut holder, []) == 42
 
 
 # spec: BUILTIN-CONTEXT-4
-public def test_ok_unit_values_preserve_fallible_result_handling() -> bool:
+public func test_ok_unit_values_preserve_fallible_result_handling() -> bool:
     match unit_done():
         case Result.ok(_):
             return True
@@ -96,5 +95,5 @@ public def test_ok_unit_values_preserve_fallible_result_handling() -> bool:
             return e == 42
 
 
-def main() -> int:
+func main() -> int:
     return 0

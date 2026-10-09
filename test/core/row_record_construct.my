@@ -1,6 +1,5 @@
-module row_record_construct
 
-extern def runtime_bench_now(host: Host) -> i64 effects(host)
+extern func runtime_bench_now(host: Host) -> i64 effects(host)
 
 # Row `record_construct` of benchmarks/runtime/expanded/compute/main.my as a program of its own, like compute_s0.my: arguments
 # `size iterations seed` (the original takes the row name first), the same setup, kernel,
@@ -13,39 +12,39 @@ record Triple:
     c: int
 
 
-def score(record: Triple) -> int:
+func score(record: Triple) -> int:
     return record.a + record.b * 3 + record.c * 5
 
 
-def parse_number(text: str) -> int:
-    match int(text):
+func parse_number(text: str) -> int:
+    match parse_int(text):
         case Some(value):
             return value
         case None:
             return 0
 
 
-def main(args: list[str], host: Host, out: Stream) -> int:
+func main(args: str[], host: Host, out: Stream) -> int:
     if len(args) != 3:
         return 2
-    size = parse_number(args[0])
-    iterations = parse_number(args[1])
-    seed = parse_number(args[2])
+    mut size = parse_number(args[0])
+    mut iterations = parse_number(args[1])
+    mut seed = parse_number(args[2])
     if size < 2 or iterations < 1 or seed < 1 or seed > 1000000:
         return 2
-    values = [(seed + j * 37) % 1009 for j in range(size)]
-    checksum = 0
-    start = runtime_bench_now(host)
+    mut values = [for j in range(size) yield (seed + j * 37) % 1009]
+    mut checksum = 0
+    mut start = runtime_bench_now(host)
     for batch in range(iterations):
-        phase = batch % 17
-        pass_total = 0
+        mut phase = batch % 17
+        mut pass_total = 0
         for j in range(size):
-            x = values[j]
-            value = 0
-            record = Triple(a=x + phase, b=x % 17, c=(x * 3 + phase) % 101)
+            mut x = values[j]
+            mut value = 0
+            mut record = Triple(a=x + phase, b=x % 17, c=(x * 3 + phase) % 101)
             value = score(record)
             pass_total += value
         checksum = (checksum + pass_total) % 1000000007
-    elapsed = runtime_bench_now(host) - start
+    mut elapsed = runtime_bench_now(host) - start
     out.print(checksum, elapsed)
     return 0

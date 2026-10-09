@@ -1,9 +1,8 @@
-module main
 import random
 import time
 
 
-def sample(clock: Clock, rng: Entropy) -> Result[int, str] effects(clock, random, managed_allocation):
+func sample(clock: Clock, rng: Entropy) -> Result[int, str] effects(clock, random, managed_allocation):
     match time.now(clock):
         case Ok(instant):
             match random.from_entropy(rng):
@@ -16,7 +15,7 @@ def sample(clock: Clock, rng: Entropy) -> Result[int, str] effects(clock, random
             return Err(message)
 
 
-def main(clock: Clock, rng: Entropy) -> int:
+func main(clock: Clock, rng: Entropy) -> int:
     match sample(clock, rng):
         case Ok(now):
             return now

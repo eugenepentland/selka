@@ -1,8 +1,7 @@
-module main
 
-def configured_limit() -> int:
+func configured_limit() -> int:
     return 7
 
 
-def main() -> int:
+func main() -> int:
     return configured_limit()

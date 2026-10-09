@@ -1,9 +1,8 @@
-module main
 import base64
 import hex
 
 
-def roundtrip(data: bytes) -> bool:
+func roundtrip(data: bytes) -> bool:
     match base64.b64decode(base64.b64encode(data)):
         case Ok(value):
             return value == data
@@ -11,7 +10,7 @@ def roundtrip(data: bytes) -> bool:
             return False
 
 
-def rejects(text: bytes) -> bool:
+func rejects(text: bytes) -> bool:
     match base64.b64decode(text):
         case Ok(_):
             return False
@@ -19,7 +18,7 @@ def rejects(text: bytes) -> bool:
             return True
 
 
-def vectors() -> int:
+func vectors() -> int:
     if base64.b64encode(b"") != b"" or base64.b64encode(b"f") != b"Zg==":
         return 1
     if base64.b64encode(b"fo") != b"Zm8=" or base64.b64encode(b"foo") != b"Zm9v":
@@ -44,7 +43,7 @@ def vectors() -> int:
     return 0
 
 
-def refusals() -> int:
+func refusals() -> int:
     if not rejects(b"Zg=") or not rejects(b"Zg") or not rejects(b"Z==="):
         return 10
     if not rejects(b"Zg=A") or not rejects(b"=Zg=") or not rejects(b"Zm9*"):
@@ -60,7 +59,7 @@ def refusals() -> int:
     return 0
 
 
-def digits() -> int:
+func digits() -> int:
     if hex.encode(b"\x0f\xa0") != "0fa0" or hex.encode_upper(b"\x0f\xa0") != "0FA0":
         return 20
     if hex.encode(b"") != "":
@@ -81,8 +80,8 @@ def digits() -> int:
     return 0
 
 
-def main() -> int:
-    checks = [vectors(), refusals(), digits()]
+func main() -> int:
+    mut checks = [vectors(), refusals(), digits()]
     for value in checks:
         if value != 0:
             return value

@@ -42,7 +42,14 @@ fn build(a: std.mem.Allocator, root: []const u8, options: Options) Error!Artifac
     try environment.put("MYLANG_COUNTERS", try std.fs.path.join(a, &.{ root, "counts.json" }));
     const binary = try std.fs.path.join(a, &.{ root, "task-hand" });
     var log: std.ArrayList(u8) = .empty;
-    const linked = driver.link(a, io, &environment, .{ .zig = environment.get("ZIG") orelse "zig", .work = root, .output = binary, .release = options.release, .links = &.{}, .units = &.{driver.wholeUnit(llvm)} }, &log);
+    const linked = driver.link(a, io, &environment, .{
+        .zig = environment.get("ZIG") orelse "zig",
+        .work = root,
+        .output = binary,
+        .mode = if (options.release) .release else .debug,
+        .links = &.{},
+        .units = &.{driver.wholeUnit(llvm)},
+    }, &log);
     try std.testing.expectEqualStrings("", log.items);
     _ = try linked;
     return .{ .binary = binary, .llvm = llvm, .environment = environment };

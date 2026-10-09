@@ -4,23 +4,23 @@ const t = std.testing;
 const language = @import("compiler.zig");
 const native = @import("native_execute.zig");
 const text =
-    \\def id[T](x: T) -> T:
+    \\func id[T](x: T) -> T:
     \\    return x
     \\
     \\
-    \\def sum[T: integer](x: T) -> T:
+    \\func sum[T: integer](x: T) -> T:
     \\    if x == T(0):
     \\        return x
     \\    return x + sum[T](x - T(1))
     \\
     \\
-    \\def forward[U: integer](x: U) -> U:
+    \\func forward[U: integer](x: U) -> U:
     \\    return id[U](sum[U](x))
     \\
     \\
-    \\def main() -> i64:
-    \\    small = forward[u8](4u8)
-    \\    wide = forward[i64](5)
+    \\func main() -> i64:
+    \\    mut small = forward[u8](4u8)
+    \\    mut wide = forward[i64](5)
     \\    if id[bool](True):
     \\        return i64(small) + wide + sum[i64](2)
     \\    return 0
@@ -48,13 +48,13 @@ test "generic execution preserves nominal values through copy contracts" {
         \\    x: i64
         \\
         \\
-        \\def id[T](x: T) -> T:
+        \\func id[T](x: T) -> T:
         \\    return x
         \\
         \\
-        \\def main() -> i64:
-        \\    a = id[A](A(x=3))
-        \\    b = id[B](B(x=4))
+        \\func main() -> i64:
+        \\    mut a = id[A](A(x=3))
+        \\    mut b = id[B](B(x=4))
         \\    return a.x + b.x
     );
     defer compilation.deinit();
@@ -67,8 +67,8 @@ test "generic execution preserves nominal values through copy contracts" {
 fn declarations(count: usize) !void {
     var text_buffer: std.Io.Writer.Allocating = .init(t.allocator);
     defer text_buffer.deinit();
-    for (0..count) |index| try text_buffer.writer.print("def g{d}[T]() -> i64:\n    return 0\n\n\n", .{index});
-    try text_buffer.writer.writeAll("def main() -> i64:\n");
+    for (0..count) |index| try text_buffer.writer.print("func g{d}[T]() -> i64:\n    return 0\n\n\n", .{index});
+    try text_buffer.writer.writeAll("func main() -> i64:\n");
     for (0..count) |index| try text_buffer.writer.print("    _ = g{d}[i64]()\n", .{index});
     try text_buffer.writer.writeAll("    return g0[i64]()\n");
     var compilation = try language.Compilation.init(t.allocator, "limit.my", text_buffer.written());
@@ -79,11 +79,11 @@ fn declarations(count: usize) !void {
 // spec-case: GENERIC-INSTANCE-BUDGET-1
 test "polymorphic recursion in one declaration still stops at a generic limit" {
     var compilation = try language.Compilation.init(t.allocator, "recursion.my",
-        \\def grow[T](x: T) -> i64:
-        \\    return grow[list[T]]([x])
+        \\func grow[T](x: T) -> i64:
+        \\    return grow[T[]]([x])
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return grow[i64](1)
     );
     defer compilation.deinit();
@@ -100,22 +100,22 @@ test "generic execution reuses instances and counts them per declaration, not pe
 // spec: GENERIC-DIAGNOSTIC-1
 test "generic diagnostics name concrete types independently of discovery order" {
     const cases = [_][]const u8{
-        \\def id[T](x: T) -> T:
+        \\func id[T](x: T) -> T:
         \\    return x
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return id[i64](2)
         ,
-        \\def id[T](x: T) -> T:
+        \\func id[T](x: T) -> T:
         \\    return x
         \\
         \\
-        \\def extra() -> bool:
+        \\func extra() -> bool:
         \\    return id[bool](True)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return id[i64](2)
         ,
     };
@@ -134,15 +134,15 @@ test "generic diagnostics name concrete types independently of discovery order" 
 }
 test "generic diagnostics retain instantiated names in runtime traces" {
     var compilation = try language.Compilation.init(t.allocator, "trace.my",
-        \\def divide[T: integer](x: T) -> T:
+        \\func divide[T: integer](x: T) -> T:
         \\    return divtrunc(x, T(0))
         \\
         \\
-        \\def forward[U: integer](x: U) -> U:
+        \\func forward[U: integer](x: U) -> U:
         \\    return divide[U](x)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return i64(forward[u8](1u8))
     );
     defer compilation.deinit();
@@ -156,40 +156,40 @@ test "generic diagnostics retain instantiated names in runtime traces" {
 test "generic execution rejects concrete requirement and arity violations" {
     const cases = [_]struct { source: []const u8, code: []const u8 }{
         .{ .source =
-        \\def f[T: integer](x: T) -> T:
+        \\func f[T: integer](x: T) -> T:
         \\    return x
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    _ = f[bool](True)
         \\    return 0
         , .code = "E_GENERIC_ARGUMENT" },
         .{ .source =
-        \\def f[T, U](x: T) -> T:
+        \\func f[T, U](x: T) -> T:
         \\    return x
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return f(1)
         , .code = "E_GENERIC_INFERENCE" },
         .{ .source =
-        \\def f[T](x: T) -> T:
+        \\func f[T](x: T) -> T:
         \\    return x
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return f[i64](True)
         , .code = "E_TYPE" },
         .{ .source =
-        \\def main[T]() -> i64:
+        \\func main[T]() -> i64:
         \\    return 0
         , .code = "E_MAIN" },
         .{ .source =
-        \\def bad[T](x: T) -> T:
+        \\func bad[T](x: T) -> T:
         \\    return x + x
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return bad[i64](2)
         , .code = "E_GENERIC_OPERATION" },
     };

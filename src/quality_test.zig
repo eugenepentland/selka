@@ -8,29 +8,29 @@ fn index(c: *language.Compilation, name: []const u8) !usize {
 }
 const graph =
     \\domain D: i64:
-    \\    private def hidden() -> i64:
+    \\    private func hidden() -> i64:
     \\        return 1
     \\
     \\
-    \\def leaf(x: i64) -> i64:
+    \\func leaf(x: i64) -> i64:
     \\    return x
     \\
     \\
-    \\def a(n: i64) -> i64:
+    \\func a(n: i64) -> i64:
     \\    if n <= 0:
     \\        return 0
     \\    return b(n - 1)
     \\
     \\
-    \\def b(n: i64) -> i64:
+    \\func b(n: i64) -> i64:
     \\    return a(n)
     \\
     \\
-    \\def unused() -> i64:
+    \\func unused() -> i64:
     \\    return leaf(1)
     \\
     \\
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    if False:
     \\        _ = a(1)
     \\    return leaf(2) + leaf(3)
@@ -56,7 +56,7 @@ test "resolved reachability includes untaken call paths cycles and incoming site
 
 test "zero thresholds disable metric signals without hiding facts or changing source checking" {
     var c = try language.Compilation.init(t.allocator, "quality.my",
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    if True:
         \\        return 1
         \\    return 0
@@ -102,11 +102,11 @@ test "static call reachability traverses a long chain without host recursion" {
 
 test "explicit quality roots validate bounds and tolerate duplicate or empty roots" {
     var c = try language.Compilation.init(t.allocator, "roots.my",
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
         \\
         \\
-        \\def api() -> i64:
+        \\func api() -> i64:
         \\    return 1
     );
     defer c.deinit();
@@ -125,21 +125,21 @@ test "explicit quality roots validate bounds and tolerate duplicate or empty roo
 }
 
 fn writeCallChain(output: *std.Io.Writer.Allocating) !void {
-    for (0..2000) |i| try output.writer.print("def f{d}() -> i64:\n    return f{d}()\n\n\n", .{ i, i + 1 });
+    for (0..2000) |i| try output.writer.print("func f{d}() -> i64:\n    return f{d}()\n\n\n", .{ i, i + 1 });
     try output.writer.writeAll(
-        \\def f2000() -> i64:
+        \\func f2000() -> i64:
         \\    return 7
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return f0()
     );
 }
 
 test "structural metrics count branches loops short circuits nesting and physical source lines" {
     const text =
-        \\def work(x: i64, flag: bool) -> i64:
-        \\    n = x
+        \\func work(x: i64, flag: bool) -> i64:
+        \\    mut n = x
         \\    if flag and n > 0:
         \\        while n > 0:
         \\            n -= 1
@@ -148,7 +148,7 @@ test "structural metrics count branches loops short circuits nesting and physica
         \\    return x
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return work(2, True)
     ;
     var c = try language.Compilation.init(t.allocator, "quality.my", text);
@@ -161,7 +161,7 @@ test "structural metrics count branches loops short circuits nesting and physica
     try t.expectEqual(@as(usize, 2), metrics.structure.parameters);
     try t.expectEqual(@as(usize, 2), metrics.structure.nesting);
     try t.expectEqual(@as(usize, 4), metrics.structure.decisions);
-    try t.expectEqual(@as(usize, "def work(x: i64, flag: bool) -> i64:".len), metrics.structure.longest_line);
+    try t.expectEqual(@as(usize, "func work(x: i64, flag: bool) -> i64:".len), metrics.structure.longest_line);
     const first = try quality.render(t.allocator, result, c.program.?, c.src);
     defer t.allocator.free(first);
     const second = try quality.render(t.allocator, result, c.program.?, c.src);

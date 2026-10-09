@@ -1,6 +1,6 @@
-def main() -> int:
-    total = 0
-    i = 0
+func main() -> int:
+    mut total = 0
+    mut i = 0
     while i < 100:
         total += i
         i += 1

@@ -1,17 +1,16 @@
-module math_trig
 import math
 
-def close(a: float, b: float) -> bool:
+func close(a: float, b: float) -> bool:
     return math.fabs(a - b) < 1.0e-15
 
 
-def generic_wave[T](value: float, tag: T) -> float:
+func generic_wave[T](value: float, tag: T) -> float:
     _ = tag
     return math.sin(value) + math.cos(value)
 
 
 # spec: STANDARD-MATH-TRIG-1
-public def test_principal_angles_and_finite_range_reduction() -> bool:
+public func test_principal_angles_and_finite_range_reduction() -> bool:
     assert math.sin(0.0) == 0.0 and math.cos(0.0) == 1.0
     assert math.sin(math.pi() / 2.0) == 1.0
     assert math.cos(math.pi()) == -1.0
@@ -25,7 +24,7 @@ public def test_principal_angles_and_finite_range_reduction() -> bool:
 
 
 # spec-case: STANDARD-MATH-TRIG-1
-public def test_zero_sign_subnormal_and_nonfinite_arguments() -> bool:
+public func test_zero_sign_subnormal_and_nonfinite_arguments() -> bool:
     assert str(math.sin(-0.0)) == "-0.0"
     assert str(math.cos(-0.0)) == "1.0"
     assert math.sin(5.0e-324) == 5.0e-324
@@ -39,17 +38,17 @@ public def test_zero_sign_subnormal_and_nonfinite_arguments() -> bool:
 
 
 # spec-case: STANDARD-MATH-TRIG-1
-public def test_rotated_paste_window_preserves_native_geometry() -> bool:
-    angle = 45.0 * math.pi() / 180.0
-    x = 3.0 + 2.0 * math.cos(angle) - 1.0 * math.sin(angle)
-    y = 4.0 + 2.0 * math.sin(angle) + 1.0 * math.cos(angle)
+public func test_rotated_paste_window_preserves_native_geometry() -> bool:
+    mut angle = 45.0 * math.pi() / 180.0
+    mut x = 3.0 + 2.0 * math.cos(angle) - 1.0 * math.sin(angle)
+    mut y = 4.0 + 2.0 * math.sin(angle) + 1.0 * math.cos(angle)
     assert close(x, 3.7071067811865475)
     assert close(y, 6.121320343559643)
     return True
 
 
 # spec-case: STANDARD-MATH-TRIG-1
-public def test_generic_trigonometry_uses_the_public_wrappers() -> bool:
+public func test_generic_trigonometry_uses_the_public_wrappers() -> bool:
     assert generic_wave[int](0.0, 1) == 1.0
     assert close(generic_wave[bool](math.pi() / 2.0, True), 1.0)
     assert math.is_nan(generic_wave[bytes](math.infinity(), b"tag"))

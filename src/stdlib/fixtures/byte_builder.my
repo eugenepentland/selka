@@ -1,8 +1,7 @@
-module main
 import byte_builder
 
-def main() -> int:
-    output = byte_builder.create()
+func main() -> int:
+    mut output = byte_builder.create()
     byte_builder.append(mut output, b"head:")
     if not byte_builder.append_byte(mut output, 0):
         return 1
@@ -13,28 +12,28 @@ def main() -> int:
         return 3
     if not byte_builder.append_spaces(mut output, 66):
         return 4
-    indent = byte_builder.create()
+    mut indent = byte_builder.create()
     if not byte_builder.append_spaces(mut indent, 63):
         return 11
-    indentation = byte_builder.finish(indent)
+    mut indentation = byte_builder.finish(indent)
     if len(indentation) != 63:
         return 12
     for octet in indentation:
         if octet != 32:
             return 13
-    first = byte_builder.finish(output)
-    expected = b"head:\0h\xc3\xa9                                                                  "
+    mut first = byte_builder.finish(output)
+    mut expected = b"head:\0h\xc3\xa9                                                                  "
     if first != expected:
         return 5
     if not byte_builder.append_byte(mut output, 33):
         return 6
-    second = byte_builder.finish(output)
+    mut second = byte_builder.finish(output)
     if first != expected:
         return 7
     if second != expected + b"!":
         return 8
     byte_builder.append(mut output, second)
-    third = byte_builder.finish(output)
+    mut third = byte_builder.finish(output)
     if third != second + second:
         return 9
     if byte_builder.finish(output) != third:
@@ -42,8 +41,8 @@ def main() -> int:
 
     # Range appends: the front, a middle interval and the tail of one span
     # rebuild that span exactly, and an empty range changes nothing.
-    span = b"0123456789"
-    ranged = byte_builder.create()
+    mut span = b"0123456789"
+    mut ranged = byte_builder.create()
     if not byte_builder.append_range(mut ranged, span, 0, 3):
         return 14
     if not byte_builder.append_range(mut ranged, span, 3, 8):
@@ -75,7 +74,7 @@ def main() -> int:
 
     # Multi-byte UTF-8: a two-byte scalar, a four-byte emoji and another
     # four-byte scalar outside the surrogate range.
-    scalars = byte_builder.create()
+    mut scalars = byte_builder.create()
     byte_builder.append_text(mut scalars, "λ")
     byte_builder.append_text(mut scalars, "😀")
     byte_builder.append_text(mut scalars, "𐍈")
@@ -84,7 +83,7 @@ def main() -> int:
 
     # Integer spellings: zero, a positive value, negatives, both extrema and
     # values whose spelling ends in zeros.
-    numbers = byte_builder.create()
+    mut numbers = byte_builder.create()
     byte_builder.append_int(mut numbers, 0)
     byte_builder.append_int(mut numbers, 7)
     byte_builder.append_int(mut numbers, 0 - 1234)
@@ -93,10 +92,10 @@ def main() -> int:
     byte_builder.append_int(mut numbers, -9223372036854775808)
     byte_builder.append_int(mut numbers, 0 - 10)
     byte_builder.append_int(mut numbers, 0 - 100)
-    spelling = b"07-123410000009223372036854775807-9223372036854775808-10-100"
+    mut spelling = b"07-123410000009223372036854775807-9223372036854775808-10-100"
     if byte_builder.finish(numbers) != spelling:
         return 28
-    frozen = byte_builder.finish(numbers)
+    mut frozen = byte_builder.finish(numbers)
     byte_builder.append_int(mut numbers, 0 - 5)
     if byte_builder.finish(numbers) != spelling + b"-5":
         return 29
@@ -105,7 +104,7 @@ def main() -> int:
 
     # Float spellings: the canonical text `str(value)` prints, written into the
     # buffer's capacity, with the non-finite values spelled by name.
-    floats = byte_builder.create()
+    mut floats = byte_builder.create()
     for value in [0.1, 2.5, 0.0 - 2.5e-7, 1.0 / 3.0]:
         if not byte_builder.append_float(mut floats, value):
             return 50
@@ -113,8 +112,8 @@ def main() -> int:
             return 51
     if byte_builder.finish(floats) != b"0.1 2.5 -0.00000025 0.3333333333333333 ":
         return 48
-    huge = 1e300 * 1e300
-    nonfinite = byte_builder.create()
+    mut huge = 1e300 * 1e300
+    mut nonfinite = byte_builder.create()
     for value in [huge, 0.0 - huge]:
         if not byte_builder.append_float(mut nonfinite, value):
             return 52
@@ -125,7 +124,7 @@ def main() -> int:
 
     # Reserve changes neither the finished length nor the content, and the
     # builder keeps appending afterwards.
-    reserved = byte_builder.create()
+    mut reserved = byte_builder.create()
     byte_builder.append(mut reserved, b"seed")
     if not byte_builder.reserve(mut reserved, 4096):
         return 31
@@ -143,22 +142,22 @@ def main() -> int:
 
     # Growth past several capacity doublings, with an interleaved snapshot
     # that a later append must not change.
-    growing = byte_builder.create()
-    total = 0
-    index = 0
+    mut growing = byte_builder.create()
+    mut total = 0
+    mut index = 0
     while index < 100000:
         if not byte_builder.append_byte(mut growing, index % 256):
             return 37
         total += index % 256
         index += 1
-    early = byte_builder.finish(growing)
+    mut early = byte_builder.finish(growing)
     if len(early) != 100000:
         return 38
     if total != 12742320:
         return 39
     if not byte_builder.append_byte(mut growing, 65):
         return 40
-    grown = byte_builder.finish(growing)
+    mut grown = byte_builder.finish(growing)
     if len(grown) != 100001:
         return 41
     if len(early) != 100000 or early[0] != 0 or early[255] != 255 or early[99999] != 159:

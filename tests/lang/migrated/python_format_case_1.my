@@ -1,6 +1,5 @@
-module python_format_case_1
 
 
-public def program() -> i64:
-    f = 42
+public func program() -> i64:
+    mut f = 42
     return f

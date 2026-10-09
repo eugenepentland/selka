@@ -182,7 +182,7 @@ const Writer = struct {
             if (!isCloser(tag)) try self.space();
             self.force_space_after_colon = false;
         } else if (!named_equal) {
-            const separate_word = self.isMutationClause(token) or self.followsApplication(index);
+            const separate_word = self.isMutationClause(token) or self.followsApplication(index) or self.followsPrefix(index);
             if (self.needSpaceBefore(tag) or separate_word) try self.space();
         }
 
@@ -218,6 +218,17 @@ const Writer = struct {
     fn isMutationClause(self: *const Writer, token: lex.Token) bool {
         if (token.tag != .ident or self.prev_tag != .rparen) return false;
         return std.mem.eql(u8, self.bytes[token.span.start..token.span.end], "mutates");
+    }
+
+    /// Contextual expression words stay separated from a parenthesized value
+    /// or array literal, including `try (load())` and `then [value]`.
+    fn followsPrefix(self: *const Writer, index: usize) bool {
+        const previous = self.prev_real[index] orelse return false;
+        const token = self.tokens[previous];
+        if (token.tag != .ident) return false;
+        const word = self.bytes[token.span.start..token.span.end];
+        return std.mem.eql(u8, word, "try") or std.mem.eql(u8, word, "fail") or
+            std.mem.eql(u8, word, "yield") or std.mem.eql(u8, word, "then");
     }
 
     /// FMT-CLAUSE-SPACE-1: an identifier right after a `]` that closes a type
@@ -418,6 +429,7 @@ const Writer = struct {
         if (isBinary(current)) return true;
         if (isPrefixKeyword(prev)) return true;
         if (isWordLike(prev) and isWordLike(current)) return true;
+        if ((prev == .rparen or prev == .rbrace or prev == .question) and isWordLike(current)) return true;
         // An operand followed by a keyword, e.g. `with arena() as scratch` or
         // `key in table`. An identifier after `]` stays tight because it is the
         // element type of an array spelling such as `[2]u.Value`.
@@ -553,7 +565,7 @@ fn isOperandEnd(tag: Tag) bool {
 
 fn isPrefixKeyword(tag: Tag) bool {
     return switch (tag) {
-        .kw_return, .kw_if, .kw_elif, .kw_while, .kw_assert, .kw_in, .kw_match, .kw_case, .kw_with, .kw_as, .kw_for, .bang => true,
+        .kw_return, .kw_if, .kw_else, .kw_elif, .kw_while, .kw_assert, .kw_in, .kw_match, .kw_case, .kw_with, .kw_as, .kw_for, .bang => true,
         else => false,
     };
 }

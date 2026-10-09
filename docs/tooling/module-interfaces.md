@@ -37,7 +37,7 @@ artifact is a versioned binary serialization with no pointers, paths or times;
 - **Bodies only where a dependent reads them.** A function body stays in the
   text when its role says a dependent reads it: a generic template (the user
   instantiates it), a constant (the user evaluates it), a function a constant's
-  value calls (`evaluated`), a conversion, an `extern def`, and a small leaf
+  value calls (`evaluated`), a conversion, an `extern func`, and a small leaf
   the interface lowering's inliner may splice into a caller (`inlined`, in a
   lowering with or without `debug` statements). Every other body is replaced by
   `pass` (`declared`).

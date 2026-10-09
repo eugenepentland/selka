@@ -1,9 +1,8 @@
-module shapes
 
 
 public enum Color:
-    red,
-    green,
+    red
+    green
     blue
 
 
@@ -14,15 +13,15 @@ public record Inner:
 
 
 public record Holder:
-    items: list[Inner]
+    items: Inner[]
     index: dict[str, Inner]
-    maybe: Option[Inner]
+    maybe: Inner?
     tint: Color
 
 
-public union Event:
-    moved(to: Inner, steps: int),
-    tagged: Inner,
+public enum Event:
+    moved(to: Inner, steps: int)
+    tagged(value: Inner)
     idle
 
 
@@ -30,5 +29,5 @@ record Hidden:
     secret: int
 
 
-public def origin() -> Inner:
+public func origin() -> Inner:
     return Inner(x=0, y=0)

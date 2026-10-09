@@ -1,42 +1,41 @@
-module callbacks
 
 
-def build(n: int) -> int effects():
+func build(n: int) -> int effects():
     return n * 2
 
 
-def apply(callback: def(int) -> int effects(), n: int) -> int effects():
+func apply(callback: func(int) -> int effects(), n: int) -> int effects():
     return callback(n)
 
 
-def identity(callback: def(int) -> int effects()) -> def(int) -> int effects():
+func identity(callback: func(int) -> int effects()) -> func(int) -> int effects():
     return callback
 
 
-def double_apply(callback: def(int) -> int effects(), n: int) -> int effects():
+func double_apply(callback: func(int) -> int effects(), n: int) -> int effects():
     return apply(callback, apply(callback, n))
 
 
-def add(a: int, b: int) -> int noalloc:
+func add(a: int, b: int) -> int noalloc:
     return a + b
 
 
-def scale(value: int) -> int noalloc:
+func scale(value: int) -> int noalloc:
     return add(value, value) * 3
 
 
-public def test_callbacks() -> bool effects():
-    callback = identity(build)
+public func test_callbacks() -> bool effects():
+    mut callback = identity(build)
     if apply(callback, 7) != 14:
         return False
     return double_apply(callback, 3) == 12
 
 
-public def test_effect_ceilings() -> bool effects():
+public func test_effect_ceilings() -> bool effects():
     if scale(7) != 42:
         return False
     return add(20, 22) == 42
 
 
-def main() -> int:
+func main() -> int:
     return 0

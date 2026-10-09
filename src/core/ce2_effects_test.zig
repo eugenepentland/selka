@@ -39,54 +39,54 @@ fn spell(arena: std.mem.Allocator, set: *const effects.Paths) ![]const u8 {
 const summaries_source =
     \\record Inner:
     \\    a: int
-    \\    b: list[int]
+    \\    b: int[]
     \\
     \\
     \\record State:
     \\    ip: int
     \\    inner: Inner
-    \\    code: list[int]
+    \\    code: int[]
     \\    count: int
     \\
     \\
-    \\def bump(s: mut State) -> int:
+    \\func bump(mut s: State) -> int:
     \\    s.ip = s.ip + 1
     \\    return s.ip
     \\
     \\
-    \\def read_code(s: mut State) -> int:
+    \\func read_code(mut s: State) -> int:
     \\    return s.code[bump(mut s)]
     \\
     \\
-    \\def deep(s: mut State):
+    \\func deep(mut s: State):
     \\    s.inner.a = 5
     \\
     \\
-    \\def grow(s: mut State, x: int):
+    \\func grow(mut s: State, x: int):
     \\    s.inner.b.append(x)
     \\
     \\
-    \\def replace(s: mut State, t: State):
+    \\func replace(mut s: State, t: State):
     \\    s = t
     \\
     \\
-    \\def countdown(s: mut State, n: int):
+    \\func countdown(mut s: State, n: int):
     \\    if n > 0:
     \\        s.count = s.count + 1
     \\        countdown(mut s, n - 1)
     \\
     \\
-    \\def ping(s: mut State, n: int):
+    \\func ping(mut s: State, n: int):
     \\    if n > 0:
     \\        pong(mut s, n - 1)
     \\
     \\
-    \\def pong(s: mut State, n: int):
+    \\func pong(mut s: State, n: int):
     \\    s.ip = s.ip + 2
     \\    ping(mut s, n)
     \\
     \\
-    \\def check(s: mut State) -> bool:
+    \\func check(mut s: State) -> bool:
     \\    if s.count > 3:
     \\        s.count = 0
     \\        return False
@@ -94,26 +94,26 @@ const summaries_source =
     \\    return True
     \\
     \\
-    \\def relay(s: mut State) -> bool:
+    \\func relay(mut s: State) -> bool:
     \\    return check(mut s)
     \\
     \\
-    \\def refuse(s: mut State) -> bool:
+    \\func refuse(mut s: State) -> bool:
     \\    s.count = 0
     \\    return False
     \\
     \\
-    \\def length(s: State) -> int:
+    \\func length(s: State) -> int:
     \\    return len(s.code)
     \\
     \\
-    \\def through(s: State, f: def(State) -> int) -> int:
+    \\func through(s: State, f: func(State) -> int) -> int:
     \\    return f(s)
     \\
     \\
-    \\def main(out: Stream) -> int:
-    \\    s = State(ip=0, inner=Inner(a=1, b=[]), code=[1, 2, 3], count=0)
-    \\    t = s
+    \\func main(out: Stream) -> int:
+    \\    mut s = State(ip=0, inner=Inner(a=1, b=[]), code=[1, 2, 3], count=0)
+    \\    mut t = s
     \\    out.print(read_code(mut s), length(s), through(s, length))
     \\    deep(mut s)
     \\    grow(mut s, 4)
@@ -236,8 +236,8 @@ const fields_expected =
 
 const view_source =
     \\record Code:
-    \\    consts: list[int]
-    \\    lines: list[int]
+    \\    consts: int[]
+    \\    lines: int[]
     \\    name: str
     \\    n: int
     \\    m: int
@@ -246,23 +246,23 @@ const view_source =
     \\record Frame:
     \\    closure: int
     \\    code: Code
-    \\    ops: list[int]
+    \\    ops: int[]
     \\    ip: int
     \\    base: int
     \\
     \\
-    \\def next_op(frame: mut Frame) -> int:
-    \\    op = frame.ops[frame.ip]
+    \\func next_op(mut frame: Frame) -> int:
+    \\    mut op = frame.ops[frame.ip]
     \\    frame.ip = frame.ip + 1
     \\    return op
     \\
     \\
-    \\def read_const(frame: mut Frame) -> int:
+    \\func read_const(mut frame: Frame) -> int:
     \\    return frame.code.consts[next_op(mut frame)]
     \\
     \\
-    \\def main(out: Stream) -> int:
-    \\    frame = Frame(closure=0, code=Code(consts=[5, 6], lines=[], name="x", n=0, m=0), ops=[1, 0], ip=0, base=0)
+    \\func main(out: Stream) -> int:
+    \\    mut frame = Frame(closure=0, code=Code(consts=[5, 6], lines=[], name="x", n=0, m=0), ops=[1, 0], ip=0, base=0)
     \\    out.print(read_const(mut frame), read_const(mut frame))
     \\    return 0
     \\
@@ -313,25 +313,25 @@ const loop_source =
     \\record Frame:
     \\    closure: int
     \\    name: str
-    \\    ops: list[int]
+    \\    ops: int[]
     \\    ip: int
     \\    base: int
     \\
     \\
     \\record Machine:
-    \\    frames: list[Frame]
+    \\    frames: Frame[]
     \\    count: int
-    \\    stack: list[int]
+    \\    stack: int[]
     \\
     \\
-    \\def next_op(frame: mut Frame) -> int:
-    \\    op = frame.ops[frame.ip]
+    \\func next_op(mut frame: Frame) -> int:
+    \\    mut op = frame.ops[frame.ip]
     \\    frame.ip = frame.ip + 1
     \\    return op
     \\
     \\
-    \\def fail(m: mut Machine) -> bool:
-    \\    total = 0
+    \\func fail(mut m: Machine) -> bool:
+    \\    mut total = 0
     \\    for frame in m.frames:
     \\        total = total + frame.ip
     \\    m.stack.append(total)
@@ -339,23 +339,23 @@ const loop_source =
     \\    return False
     \\
     \\
-    \\def checked(m: mut Machine, x: int) -> bool:
+    \\func checked(mut m: Machine, x: int) -> bool:
     \\    if x > 9:
     \\        return fail(mut m)
     \\    m.stack.append(x)
     \\    return True
     \\
     \\
-    \\def report(m: Machine) -> int:
+    \\func report(m: Machine) -> int:
     \\    return 0 - m.frames[len(m.frames) - 1].ip
     \\
     \\
-    \\def run(m: mut Machine) -> int:
-    \\    frame = m.frames[m.count - 1]
+    \\func run(mut m: Machine) -> int:
+    \\    mut frame = m.frames[m.count - 1]
     \\    while True:
-    \\        op = next_op(mut frame)
+    \\        mut op = next_op(mut frame)
     \\        m.frames[m.count - 1] = frame
-    \\        ok = True
+    \\        mut ok = True
     \\        if op == 0:
     \\            return len(m.stack)
     \\        elif op == 1:
@@ -367,9 +367,9 @@ const loop_source =
     \\            return report(m)
     \\
     \\
-    \\def main(out: Stream) -> int:
-    \\    frame = Frame(closure=0, name="f", ops=[1, 4, 2, 5, 2, 12, 0], ip=0, base=0)
-    \\    m = Machine(frames=[frame, frame], count=1, stack=[])
+    \\func main(out: Stream) -> int:
+    \\    mut frame = Frame(closure=0, name="f", ops=[1, 4, 2, 5, 2, 12, 0], ip=0, base=0)
+    \\    mut m = Machine(frames=[frame, frame], count=1, stack=[])
     \\    out.print(run(mut m), m.frames[0].ip, m.frames[1].ip, m.stack[0])
     \\    return 0
     \\
@@ -438,10 +438,10 @@ test "an element store a later store of the same element overwrites before anyth
         const read_trap = try fixture(a, root, flags, &.{"x"});
         try std.testing.expectEqual(@as(u8, 1), read_trap.status);
         try std.testing.expectEqualStrings(fields_expected ++ takes_expected ++ stores_expected, read_trap.stdout);
-        try std.testing.expect(contains(read_trap.stderr, "ce2_effects.my:239:30: error[R_LIST_BOUNDS]: native execution failed (index 7, length 1)\n"));
+        try std.testing.expect(contains(read_trap.stderr, "ce2_effects.my:238:30: error[R_LIST_BOUNDS]: native execution failed (index 7, length 1)\n"));
         const store_trap = try fixture(a, root, flags, &.{"y"});
         try std.testing.expectEqual(@as(u8, 1), store_trap.status);
-        try std.testing.expect(contains(store_trap.stderr, "ce2_effects.my:247:9: error[R_LIST_BOUNDS]: native execution failed (index 10, length 4)\n"));
+        try std.testing.expect(contains(store_trap.stderr, "ce2_effects.my:246:9: error[R_LIST_BOUNDS]: native execution failed (index 10, length 4)\n"));
     }
 }
 
@@ -474,11 +474,11 @@ const takes_expected =
 
 const take_source =
     \\record Machine:
-    \\    frames: list[int]
+    \\    frames: int[]
     \\    count: int
-    \\    stack: list[int]
+    \\    stack: int[]
     \\    top: int
-    \\    log: list[str]
+    \\    log: str[]
     \\
     \\
     \\record Interp:
@@ -488,19 +488,19 @@ const take_source =
     \\    depth: int
     \\
     \\
-    \\def take_pop(m: mut Machine) -> int:
+    \\func take_pop(mut m: Machine) -> int:
     \\    m.top = m.top - 1
     \\    return m.stack[m.top]
     \\
     \\
-    \\def return_value(it: mut Interp):
-    \\    wb = it.m
+    \\func return_value(mut it: Interp):
+    \\    mut wb = it.m
     \\    it.returned = take_pop(mut wb)
     \\    it.m = wb
     \\
     \\
-    \\def main(out: Stream) -> int:
-    \\    it = Interp(name="i", m=Machine(frames=[], count=0, stack=[4, 5, 6], top=3, log=[]), returned=0, depth=0)
+    \\func main(out: Stream) -> int:
+    \\    mut it = Interp(name="i", m=Machine(frames=[], count=0, stack=[4, 5, 6], top=3, log=[]), returned=0, depth=0)
     \\    return_value(mut it)
     \\    return_value(mut it)
     \\    out.print(it.returned, it.m.top, len(it.m.stack))
@@ -532,21 +532,21 @@ const construct_source =
     \\record Frame:
     \\    closure: int
     \\    name: str
-    \\    ops: list[int]
+    \\    ops: int[]
     \\    ip: int
     \\    base: int
     \\
     \\
-    \\def put(frames: mut list[Frame], at: int, name: str, ops: list[int]) -> int:
+    \\func put(mut frames: Frame[], at: int, name: str, ops: int[]) -> int:
     \\    frames[at] = Frame(closure=at, name=name, ops=ops, ip=0, base=len(ops))
     \\    return len(frames)
     \\
     \\
-    \\def main(out: Stream) -> int:
-    \\    frames = [Frame(closure=0, name="a", ops=[1], ip=3, base=0), Frame(closure=1, name="b", ops=[], ip=4, base=1)]
-    \\    keep = frames
-    \\    n = put(mut frames, -1, "c", [7, 8])
-    \\    m = put(mut frames, 0, "d", [9])
+    \\func main(out: Stream) -> int:
+    \\    mut frames = [Frame(closure=0, name="a", ops=[1], ip=3, base=0), Frame(closure=1, name="b", ops=[], ip=4, base=1)]
+    \\    mut keep = frames
+    \\    mut n = put(mut frames, -1, "c", [7, 8])
+    \\    mut m = put(mut frames, 0, "d", [9])
     \\    out.print(n, m, frames[0].name, frames[1].name, frames[1].base, keep[1].name, keep[0].ip)
     \\    return 0
     \\
@@ -582,17 +582,17 @@ const rotate_source =
     \\    f5: int
     \\
     \\
-    \\def rotate(s: State, x: int) -> State:
-    \\    t = (s.f0 * 31 + x) % 1009
+    \\func rotate(s: State, x: int) -> State:
+    \\    mut t = (s.f0 * 31 + x) % 1009
     \\    return State(f0=s.f1, f1=s.f2, f2=s.f3, f3=s.f4, f4=s.f5, f5=t)
     \\
     \\
-    \\def main(out: Stream) -> int:
-    \\    s = State(f0=1, f1=2, f2=3, f3=4, f4=5, f5=6)
+    \\func main(out: Stream) -> int:
+    \\    mut s = State(f0=1, f1=2, f2=3, f3=4, f4=5, f5=6)
     \\    for j in range(20):
     \\        s = rotate(s, j)
-    \\    kept = s
-    \\    t = rotate(s, 7)
+    \\    mut kept = s
+    \\    mut t = rotate(s, 7)
     \\    out.print(s.f0, s.f5, kept.f5, t.f5)
     \\    return 0
     \\

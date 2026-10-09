@@ -17,6 +17,7 @@ fact surfaces (`list-interfaces`, `index-project`, `list-interfaces --contracts`
 `/tmp/w0probe/hole.my` (the W0 baseline fixture, unchanged):
 
 ```mylang
+# doc: skip Historical pre-redesign syntax retained as audit evidence.
 # doc: expect-error E_TYPED_HOLE
 module hole
 

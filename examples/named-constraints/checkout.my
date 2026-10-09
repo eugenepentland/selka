@@ -1,5 +1,4 @@
-module checkout
 import contracts
 
-public def total[P: contracts.Prices](policy: P, subtotal: int) -> int effects():
+public func total[P: contracts.Prices](policy: P, subtotal: int) -> int effects():
     return P.price(policy, subtotal) + 500

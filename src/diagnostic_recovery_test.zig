@@ -6,15 +6,15 @@ const native = @import("native_execute.zig");
 
 fn faults(allocator: std.mem.Allocator) !void {
     const text =
-        \\def first() -> i64:
+        \\func first() -> i64:
         \\    return missing_first
         \\
         \\
-        \\def second() -> i64:
+        \\func second() -> i64:
         \\    return missing_second
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return first() + second()
     ;
     var compilation = try language.Compilation.init(allocator, "faults.my", text);
@@ -59,19 +59,19 @@ test "independent body faults survive either repair and forbid execution under a
 }
 test "generic and ordinary function failures are recovered at separate boundaries" {
     var compilation = try language.Compilation.init(t.allocator, "generics.my",
-        \\def first[T](x: T) -> T:
+        \\func first[T](x: T) -> T:
         \\    return missing_first
         \\
         \\
-        \\def second[T](x: T) -> T:
+        \\func second[T](x: T) -> T:
         \\    return missing_second
         \\
         \\
-        \\def ordinary() -> i64:
+        \\func ordinary() -> i64:
         \\    return missing_third
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     );
     defer compilation.deinit();
@@ -81,19 +81,19 @@ test "generic and ordinary function failures are recovered at separate boundarie
 }
 test "dependent signature failures collapse to one source diagnostic" {
     var compilation = try language.Compilation.init(t.allocator, "signature.my",
-        \\def broken(x: Unknown) -> i64:
+        \\func broken(x: Unknown) -> i64:
         \\    return 0
         \\
         \\
-        \\def first() -> i64:
+        \\func first() -> i64:
         \\    return broken(1)
         \\
         \\
-        \\def second() -> i64:
+        \\func second() -> i64:
         \\    return broken(2)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return first() + second()
     );
     defer compilation.deinit();
@@ -106,18 +106,16 @@ test "project diagnostics retain each module location and reject repeated loweri
     const Files = struct {
         fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
             if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8,
-                \\module main
                 \\import helper
                 \\
                 \\
-                \\def main() -> i64:
+                \\func main() -> i64:
                 \\    return missing_main
             );
             if (std.mem.eql(u8, path, "helper.my")) return allocator.dupe(u8,
-                \\module helper
                 \\
                 \\
-                \\def broken() -> i64:
+                \\func broken() -> i64:
                 \\    return missing_helper
             );
             return error.NotFound;

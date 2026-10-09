@@ -1,8 +1,7 @@
-module main
 import math
 
 
-def bounds[T: integer](low: T, high: T) -> bool:
+func bounds[T: integer](low: T, high: T) -> bool:
     if math.min(low, high) != low or math.min(high, low) != low:
         return False
     if math.max(low, high) != high or math.max(high, low) != high:
@@ -12,7 +11,7 @@ def bounds[T: integer](low: T, high: T) -> bool:
     return math.clamp(low, low, high) == low and math.clamp(high, low, high) == high
 
 
-def widths() -> int:
+func widths() -> int:
     if not bounds(i8(0 - 128), i8(127)):
         return 1
     if not bounds(i16(0 - 32768), i16(32767)):
@@ -32,7 +31,7 @@ def widths() -> int:
     return 0
 
 
-def signs() -> int:
+func signs() -> int:
     if math.min(0 - 9223372036854775807 - 1, 9223372036854775807) != 0 - 9223372036854775807 - 1:
         return 10
     if math.max(0 - 9, 0 - 1) != 0 - 1 or math.min(0 - 9, 0 - 1) != 0 - 9:
@@ -48,7 +47,7 @@ def signs() -> int:
     return 0
 
 
-def main() -> int:
+func main() -> int:
     if widths() != 0:
         return widths()
     if signs() != 0:

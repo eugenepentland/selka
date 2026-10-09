@@ -262,7 +262,7 @@ fn runLlvm(arena: std.mem.Allocator, llvm: []const u8, options: RunOptions) RunE
         .zig = zig,
         .work = root,
         .output = output,
-        .release = release,
+        .mode = if (release) .release else .debug,
         .links = &.{},
         .units = &.{driver.wholeUnit(llvm)},
     }, &log) catch |err| {

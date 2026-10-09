@@ -3,7 +3,7 @@ import time
 import random
 
 
-def code_of(message: str) -> int:
+func code_of(message: str) -> int:
     if message == "clock capability was denied" or message == "entropy capability was denied":
         return 42
     if message == "clock capability is unavailable" or message == "entropy capability is unavailable":
@@ -11,14 +11,14 @@ def code_of(message: str) -> int:
     return 44
 
 
-def main(clock: clock_cap, entropy: random_cap) -> int:
+func main(clock: clock_cap, entropy: random_cap) -> int:
     match time.now(clock):
         case Ok(instant):
             if instant.unix_nanoseconds != 0 - 7:
                 return 1
         case Err(message):
             return code_of(message)
-    first = 0u64
+    mut first = 0u64
     match random.from_entropy(entropy):
         case Ok(generator):
             first = generator.state[0]

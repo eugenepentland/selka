@@ -1,12 +1,11 @@
-module generic_arrays_case_1
 
 
-public def pair[T](a: T, b: T) -> [2]T effects():
-    return [a, b]
+public func pair[T](a: T, b: T) -> FixedArray[T, 2] effects():
+    return FixedArray[T, 2]([a, b])
 
 
-public def contains[T: equality](a: [2]T, n: T) -> bool effects():
-    i = 0
+public func contains[T: equality](a: FixedArray[T, 2], n: T) -> bool effects():
+    mut i = 0
     while i < len(a):
         if a[i] == n:
             return True
@@ -14,19 +13,19 @@ public def contains[T: equality](a: [2]T, n: T) -> bool effects():
     return False
 
 
-def matrix[T](x: T) -> [2][2]T:
-    return pair[[2]T](pair[T](x, x), pair[T](x, x))
+func matrix[T](x: T) -> FixedArray[FixedArray[T, 2], 2]:
+    return pair[FixedArray[T, 2]](pair[T](x, x), pair[T](x, x))
 
 
-def concrete(a: [2]i64) -> i64:
+func concrete(a: FixedArray[i64, 2]) -> i64:
     return a[0] + a[1]
 
 
-def caller[T](x: T) -> i64:
+func caller[T](x: T) -> i64:
     _ = matrix[T](x)
     return concrete(pair[i64](3, 4))
 
 
-public def program() -> i64:
-    a = matrix[i64](9)
+public func program() -> i64:
+    mut a = matrix[i64](9)
     return a[1][0] + caller[bool](True)

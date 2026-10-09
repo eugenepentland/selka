@@ -87,21 +87,20 @@ change earlier results. All mutating operations carry `mutation` and
 
 ```mylang
 # doc: expect 42
-module main
 import byte_builder
 
-def main() -> int:
-    output = byte_builder.create()
+func main() -> int:
+    mut output = byte_builder.create()
     byte_builder.append_text(mut output, "λ")
     if not byte_builder.append_byte(mut output, 0):
         return 1
     if not byte_builder.append_spaces(mut output, 3):
         return 2
-    smallest = -9223372036854775808
+    mut smallest = -9223372036854775808
     byte_builder.append_int(mut output, smallest)
     if not byte_builder.append_range(mut output, b"0123456789", 4, 6):
         return 3
-    snapshot = byte_builder.finish(output)
+    mut snapshot = byte_builder.finish(output)
     if byte_builder.append_range(mut output, b"0123456789", 6, 99):
         return 4
     if not byte_builder.reserve(mut output, 128):
@@ -139,10 +138,9 @@ leave the signed range.
 
 ```mylang
 # doc: expect 42
-module main
 import math
 
-def main() -> int:
+func main() -> int:
     if math.sqrt(1764.0) != 42.0:
         return 1
     if math.floor(0.0 - 1.5) != 0.0 - 2.0 or math.ceil(0.0 - 1.5) != 0.0 - 1.0:
@@ -168,10 +166,9 @@ not-a-number. These are pure operations and require no `Host` capability.
 
 ```mylang
 # doc: expect 0.0 1.0
-module main
 import math
 
-def main(out: Stream) -> int:
+func main(out: Stream) -> int:
     out.print(math.sin(0.0), math.cos(0.0))
     return 0
 ```
@@ -217,10 +214,9 @@ the rendering, and `message(error)` returns the human-readable reason.
 
 ```mylang
 # doc: expect 42
-module main
 import strings
 
-def main() -> int:
+func main() -> int:
     if not strings.starts_with("answer=42", "answer"):
         return 1
     if strings.strip("  spaced \t") != "spaced":
@@ -231,7 +227,7 @@ def main() -> int:
         case None:
             return 3
 
-def decoded(body: str) -> int:
+func decoded(body: str) -> int:
     match strings.to_int(body):
         case Some(value):
             return value
@@ -240,7 +236,7 @@ def decoded(body: str) -> int:
 ```
 
 `to_int` rejects anything the signed range cannot hold, including
-`9223372036854775808`. `to_float` delegates to `float(text)`, so both spellings
+`9223372036854775808`. `to_float` delegates to `parse_float(text)`, so both spellings
 use the pinned numeric grammar and parser. This includes surrounding ASCII
 whitespace, single underscores between digits, and `inf`, `infinity`, and `nan`;
 these forms were rejected by the older `strings.to_float` implementation.
@@ -262,7 +258,7 @@ compare_strs(a: str, b: str) -> int
 sort_ints(values: list[int]) -> list[int]
 sort_floats(values: list[float]) -> list[float]
 sort_strs(values: list[str]) -> list[str]
-sort_by_key[T: copy + storable](values: list[T], key: def(T) -> int effects()) -> list[T]
+sort_by_key[T: copy + storable](values: list[T], key: func(T) -> int effects()) -> list[T]
 is_sorted_ints(values: list[int]) -> bool
 binary_search(values: list[int], target: int) -> Option[int]
 min_int(values: list[int]) -> Option[int]
@@ -299,21 +295,20 @@ contract.
 
 ```mylang
 # doc: expect 42
-module main
 import sort
 
 record Entry:
     name: str
     score: int
 
-def by_score(entry: Entry) -> int effects():
+func by_score(entry: Entry) -> int effects():
     return entry.score
 
-def main() -> int:
-    ranked = sort.sort_by_key([Entry(name="c", score=30), Entry(name="a", score=12)], by_score)
+func main() -> int:
+    mut ranked = sort.sort_by_key([Entry(name="c", score=30), Entry(name="a", score=12)], by_score)
     if ranked[0].name != "a":
         return 1
-    ordered = sort.sort_ints([9, 1, 4])
+    mut ordered = sort.sort_ints([9, 1, 4])
     match sort.binary_search(ordered, 9):
         case Some(position):
             return ranked[0].score + ranked[1].score * position // 2
@@ -342,11 +337,10 @@ link and need no capability, so they are usable inside a `noio` function.
 
 ```mylang
 # doc: expect 42
-module main
 import path
 
-def main() -> int:
-    full = path.join("/usr/local", "lib/mylang/../answer.txt")
+func main() -> int:
+    mut full = path.join("/usr/local", "lib/mylang/../answer.txt")
     if path.normalize(full) != "/usr/local/lib/answer.txt":
         return 1
     if path.extension(full) != ".txt" or path.stem(full) != "answer":
@@ -371,11 +365,10 @@ codecs do.
 
 ```mylang
 # doc: expect 42
-module main
 import hex
 
-def main() -> int:
-    text = hex.encode(b"\x0f\xa0")
+func main() -> int:
+    mut text = hex.encode(b"\x0f\xa0")
     if text != "0fa0" or hex.encode_upper(b"\x0f\xa0") != "0FA0":
         return 1
     if not hex.is_hex(text) or hex.is_hex("0fg0"):
@@ -407,12 +400,11 @@ exactly one encoding of any byte string decodes.
 
 ```mylang
 # doc: expect 42
-module main
 import base64
 import hex
 
-def main() -> int:
-    encoded = base64.b64encode(b"foobar")
+func main() -> int:
+    mut encoded = base64.b64encode(b"foobar")
     if encoded != b"Zm9vYmFy" or base64.b64encode(b"f") != b"Zg==":
         return 1
     match base64.b64decode(encoded):
@@ -423,7 +415,7 @@ def main() -> int:
         case Err(message):
             return 0 - len(message)
 
-def refused() -> int:
+func refused() -> int:
     match base64.b64decode(b"Zh=="):
         case Ok(_):
             return 1
@@ -474,26 +466,25 @@ with `?` and no hand-written translation.
 
 ```mylang
 # doc: expect 42
-module main
 import json
 
-def main() -> int:
+func main() -> int:
     match json.loads("{\"rows\":[{\"n\":40},{\"n\":2}]}"):
         case Ok(document):
             return total(document)
         case Err(error):
             return 0 - len(json.message(error))
 
-def total(document: json.Json) -> int:
+func total(document: json.Json) -> int:
     match json.get(document, "rows"):
         case Some(rows):
             return summed(rows)
         case None:
             return 1
 
-def summed(rows: json.Json) -> int:
-    sum = 0
-    index = 0
+func summed(rows: json.Json) -> int:
+    mut sum = 0
+    mut index = 0
     while index < 2:
         match json.at(rows, index):
             case Some(row):
@@ -503,7 +494,7 @@ def summed(rows: json.Json) -> int:
         index += 1
     return sum
 
-def field(row: json.Json) -> int:
+func field(row: json.Json) -> int:
     match json.get(row, "n"):
         case Some(value):
             match json.as_int(value):
@@ -553,17 +544,16 @@ the live population, because `len` is a reserved word.
 
 ```mylang
 # doc: expect 42
-module main
 import pool
 
-def main() -> int:
-    seed: list[int] = []
-    store = pool.create(seed)
-    first = pool.insert(mut store, 10)
-    second = pool.insert(mut store, 32)
+func main() -> int:
+    mut seed: int[] = []
+    mut store = pool.create(seed)
+    mut first = pool.insert(mut store, 10)
+    mut second = pool.insert(mut store, 32)
     if not pool.remove(mut store, first) or pool.remove(mut store, first):
         return 1
-    third = pool.insert(mut store, 10)
+    mut third = pool.insert(mut store, 10)
     if pool.capacity(store) != 2 or pool.count(store) != 2:
         return 2
     match pool.get(store, first):
@@ -572,7 +562,7 @@ def main() -> int:
         case None:
             return live(store, second) + live(store, third)
 
-def live(store: pool.Pool[int], handle: pool.Handle[int]) -> int:
+func live(store: pool.Pool[int], handle: pool.Handle[int]) -> int:
     match pool.get(store, handle):
         case Some(value):
             return value
@@ -627,11 +617,10 @@ this Network is a deterministic stand-in`.
 
 ```mylang
 # doc: expect 6 network access is denied in this context: this Network is a deterministic stand-in
-module main
 import network
 
-def main(out: Stream) -> int:
-    net = network.denied()
+func main(out: Stream) -> int:
+    mut net = network.denied()
     match network.connect(net.host("127.0.0.1:8000")):
         case network.Connected.ok(_):
             out.print("connected")
@@ -671,12 +660,11 @@ stand-in `Entropy` whose words are the SplitMix64 stream of its seed, so
 
 ```mylang
 # doc: expect 42
-module main
 import random
 
-def main() -> int:
-    generator = random.seeded(7)
-    index = 0
+func main() -> int:
+    mut generator = random.seeded(7)
+    mut index = 0
     while index < 100:
         match random.randint(mut generator, 0 - 5, 5):
             case Ok(value):
@@ -685,19 +673,19 @@ def main() -> int:
             case Err(message):
                 return 0 - len(message)
         index += 1
-    items = [1, 2, 3, 4, 5]
+    mut items = [1, 2, 3, 4, 5]
     random.shuffle(mut generator, mut items)
-    total = 0
+    mut total = 0
     for value in items:
         total += value
     if random.random(mut generator) >= 1.0:
         return 2
     return total + 27 - drawn(random.seeded_entropy(3)) + drawn(random.seeded_entropy(3))
 
-def drawn(entropy: Entropy) -> int:
+func drawn(entropy: Entropy) -> int:
     match random.from_entropy(entropy):
         case Ok(sampled):
-            generator = sampled
+            mut generator = sampled
             return int(random.next_word(mut generator) % 1000u64)
         case Err(_):
             return 500
@@ -745,10 +733,9 @@ Copies of it share one reading. A host-granted clock cannot be moved, and
 
 ```mylang
 # doc: expect 90
-module main
 import time
 
-def since(clock: Clock, start: time.Instant) -> int:
+func since(clock: Clock, start: time.Instant) -> int:
     match time.now(clock):
         case Ok(current):
             match time.elapsed(start, current):
@@ -759,9 +746,9 @@ def since(clock: Clock, start: time.Instant) -> int:
         case Err(_):
             return -1
 
-def main() -> int:
-    start = time.from_unix_nanoseconds(0)
-    clock = time.simulated_clock(start)
+func main() -> int:
+    mut start = time.from_unix_nanoseconds(0)
+    mut clock = time.simulated_clock(start)
     match time.seconds(90):
         case Ok(step):
             _ = time.advance(clock, step)
@@ -772,18 +759,17 @@ def main() -> int:
 
 ```mylang
 # doc: expect 42
-module main
 import time
 
-def main() -> int:
-    start = time.from_unix_nanoseconds(1000000000)
+func main() -> int:
+    mut start = time.from_unix_nanoseconds(1000000000)
     match time.milliseconds(1500):
         case Ok(step):
             return advanced(start, step)
         case Err(message):
             return 0 - len(message)
 
-def advanced(start: time.Instant, step: time.Duration) -> int:
+func advanced(start: time.Instant, step: time.Duration) -> int:
     match time.after(start, step):
         case Ok(deadline):
             if not time.expired(deadline, deadline) or time.expired(deadline, start):
@@ -792,7 +778,7 @@ def advanced(start: time.Instant, step: time.Duration) -> int:
         case Err(message):
             return 0 - len(message)
 
-def measured(start: time.Instant, deadline: time.Instant) -> int:
+func measured(start: time.Instant, deadline: time.Instant) -> int:
     match time.elapsed(start, deadline):
         case Ok(span):
             if time.to_milliseconds(span) != 1500 or time.to_seconds(span) != 1.5:
@@ -822,14 +808,13 @@ which order it was written. It never touches the disk.
 
 ```mylang
 # doc: expect Ok(['data', 'notes.txt']) Ok('hello')
-module main
 import filesystem
 
-def save(fs: Filesystem, text: str) -> Result[None, str]:
+func save(fs: Filesystem, text: str) -> Result[Unit, str]:
     return fs.write_text("notes.txt", text)
 
-def main(out: Stream) -> int:
-    fs = filesystem.memory()
+func main(out: Stream) -> int:
+    mut fs = filesystem.memory()
     _ = save(fs, "hello")
     _ = fs.mkdir("data")
     out.print(fs.listdir(""), fs.read_text("notes.txt"))
@@ -852,18 +837,17 @@ nonempty, at most 128 bytes and free of `=`, and a value at most 16384 bytes
 
 ```mylang
 # doc: expect /home/test ['HOME', 'LANG']
-module main
 import environment
 
-def home(env: Environment) -> str:
+func home(env: Environment) -> str:
     match env.get("HOME"):
         case Some(value):
             return value
         case None:
             return "/"
 
-def main(out: Stream) -> int:
-    env = environment.fixed({"HOME": "/home/test", "LANG": "C"})
+func main(out: Stream) -> int:
+    mut env = environment.fixed({"HOME": "/home/test", "LANG": "C"})
     out.print(home(env), env.names())
     return 0
 ```
@@ -912,25 +896,24 @@ union, the error wraps in that case with no hand-written translation helper.
 
 ```mylang
 # doc: expect 42
-module main
 import json
 
-union AppError:
-    Json: json.Error
+enum AppError:
+    Json(value: json.Error)
 
 
-def size(source: str) -> Result[int, AppError]:
-    document = json.loads(source)?
+func size(source: str) -> Result[int, AppError]:
+    mut document = try json.loads(source)
     return Ok(len(json.dumps(document)))
 
 
-def main() -> int:
+func main() -> int:
     match size("{bad}"):
         case Ok(_):
             return 1
         case Err(error):
             match error:
-                case AppError.Json(detail):
+                case AppError.Json(value=detail):
                     if len(json.message(detail)) > 0:
                         return 42
                     return 2

@@ -2,8 +2,8 @@
 # are `int`, as `len(d)` is, and print as the old core prints them.
 
 
-def main(out: Stream) -> int:
-    d = {"a": 1, "b": 2, "c": 3}
-    keys = len(d.keys())
+func main(out: Stream) -> int:
+    mut d = {"a": 1, "b": 2, "c": 3}
+    mut keys = len(d.keys())
     out.print(keys, len(d.values()), 0 + len(d.keys()))
     return len(d.values()) - 1

@@ -35,12 +35,10 @@ ROW = re.compile(
     r'\.message = "([^"]*)", \.accepted = "([^"]*)"')
 
 # One shape per hinted idiom, with the source that must classify as that idiom.
-UNION_SOURCE = 'union Event:\n    heartbeat\n    count: int\n'
 CLASSIFY_CASES = [
     ('module-constant', 'E_SYNTAX', PROBES / 'a37_const.my'),
     ('method', 'E_SYNTAX', PROBES / 'a38_class_methods.my'),
     ('from-import', 'E_SYNTAX', PROBES / 'a39_dataclass.my'),
-    ('union-cases', 'E_SYNTAX', None),
     ('chained-assign', 'E_SYNTAX', PROBES / 'a10_chained_assign.my'),
     ('exceptions', 'E_SYNTAX', PROBES / 'a40_try_except.my'),
     ('match-literal', 'E_SYNTAX', PROBES / 'a49_match_literal.my'),
@@ -71,7 +69,7 @@ PROBE_CASES = [
 
 HEADERLESS = """import strings
 
-def main() -> int:
+func main() -> int:
     match strings.ord("m"):
         case Ok(value):
             return value - 67
@@ -127,12 +125,12 @@ def check_tables(verbose):
                    for rule in rules):
             failures.append(f'{idiom}: no E_SYNTAX rule in the classifier')
     for idiom, code, path in CLASSIFY_CASES:
-        source = UNION_SOURCE if path is None else path.read_text()
+        source = path.read_text()
         observed = classify(source, code, rules)
         if observed != idiom:
             failures.append(f'{idiom}: the classifier answers {observed!r}')
         elif verbose:
-            print(f'classified {idiom:16s} from {path.name if path else "inline union source"}')
+            print(f'classified {idiom:16s} from {path.name}')
     if failures:
         for failure in failures:
             print(f'table disagreement: {failure}', file=sys.stderr)
@@ -160,13 +158,13 @@ def compiler_failures(compiler, accepted):
         if not note or not note[0].endswith(accepted[idiom]):
             failures.append(f'{name}: alternative note {note} does not name {accepted[idiom]!r}')
     with tempfile.TemporaryDirectory() as work:
-        union = Path(work) / 'union_comma.my'
-        union.write_text(UNION_SOURCE)
+        enum = Path(work) / 'enum_cases.my'
+        enum.write_text('enum Event:\n    heartbeat\n    count(value: int)\n')
         result = subprocess.run(
-            [str(compiler), 'check', str(union)],
+            [str(compiler), 'check', str(enum)],
             capture_output=True, text=True, timeout=TIMEOUT)
-        if f'{union.name}:3:5:' not in result.stderr or 'union cases are separated by commas' not in result.stderr:
-            failures.append('union_comma.my: expected the comma rule at 3:5')
+        if result.returncode != 0:
+            failures.append('enum_cases.my: newline enum cases should parse and check')
         script = Path(work) / 'probe4.my'
         script.write_text(HEADERLESS)
         checked = subprocess.run(

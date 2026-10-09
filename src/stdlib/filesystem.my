@@ -1,4 +1,3 @@
-module filesystem
 
 
 # An empty in-memory Filesystem. Every whole-path helper, `open`, `fs.dir(...)`,
@@ -6,5 +5,5 @@ module filesystem
 # accepts only relative paths, sorts its listings by name, and never touches the
 # real filesystem. It grants no real authority, so building one needs no
 # capability and is not an effect.
-public def memory() -> Filesystem:
+public func memory() -> Filesystem:
     return __stand_in[Filesystem](0)

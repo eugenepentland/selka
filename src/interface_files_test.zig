@@ -28,32 +28,29 @@ const Files = struct {
 };
 
 const entry =
-    \\module main
     \\import pkg.shapes
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return 0
     \\
 ;
 
 const units =
-    \\module pkg.units
     \\
     \\public domain Metres: int:
-    \\    private def raw(value: int) -> Metres:
+    \\    private func raw(value: int) -> Metres:
     \\        return wrap[Metres](value)
     \\
     \\    @requires(value >= 0)
-    \\    def of(value: int) -> Metres effects():
+    \\    func of(value: int) -> Metres effects():
     \\        return Metres.raw(value)
     \\
-    \\    def value(m: Metres) -> int effects():
+    \\    func value(m: Metres) -> int effects():
     \\        return unwrap(m)
     \\
 ;
 
 const shapes =
-    \\module pkg.shapes
     \\import pkg.units
     \\"""Shapes and their areas.
     \\
@@ -74,12 +71,12 @@ const shapes =
     \\
     \\
     \\public class Canvas[T: copy]:
-    \\    items: list[T]
+    \\    items: T[]
     \\
     \\
-    \\public union Shape:
-    \\    empty,
-    \\    square: int,
+    \\public enum Shape:
+    \\    empty
+    \\    square(value: int)
     \\    rect(width: int, height: int)
     \\
     \\
@@ -88,7 +85,7 @@ const shapes =
     \\    err: str
     \\
     \\
-    \\public type Scale = def(int) -> int effects()
+    \\public type Scale = func(int) -> int effects()
     \\
     \\
     \\public constraint Sized[S] = copy + field(width: int)
@@ -97,25 +94,25 @@ const shapes =
     \\@requires(rect.width >= 0,
     \\          "width is never negative")
     \\@ensures(result >= 0)
-    \\public def area(rect: Rect, *, scale: int = 1) -> int noalloc:
+    \\public func area(rect: Rect, named scale: int = 1) -> int noalloc:
     \\    """The area, scaled."""
     \\    return rect.width * rect.height * scale
     \\
     \\
-    \\public def draw(canvas: mut Canvas[int], out: Stream) -> int:
+    \\public func draw(mut canvas: Canvas[int], out: Stream) -> int:
     \\    out.print("draw")
     \\    return 0
     \\
     \\
-    \\public def stamp(fs: Filesystem, clock: Clock, env: Environment) -> int:
+    \\public func stamp(fs: Filesystem, clock: Clock, env: Environment) -> int:
     \\    return 0
     \\
     \\
-    \\public def widest[S: Sized](items: list[S]) -> int:
+    \\public func widest[S: Sized](items: S[]) -> int:
     \\    return 0
     \\
     \\
-    \\def helper() -> int:
+    \\func helper() -> int:
     \\    return 1
     \\
 ;
@@ -135,30 +132,30 @@ const shapes_interface =
     \\    height: int
     \\
     \\public class Canvas[T: copy]:
-    \\    items: list[T]
+    \\    items: T[]
     \\
-    \\public union Shape:
-    \\    empty,
-    \\    square: int,
+    \\public enum Shape:
+    \\    empty
+    \\    square(value: int)
     \\    rect(width: int, height: int)
     \\
     \\public result Parsed:
     \\    ok: Rect,
     \\    err: str
     \\
-    \\public type Scale = def(int) -> int effects()
+    \\public type Scale = func(int) -> int effects()
     \\
     \\public constraint Sized[S] = copy + field(width:int)
     \\
     \\@requires(rect.width >= 0, "width is never negative")
     \\@ensures(result >= 0)
-    \\public def area(rect: Rect, *, scale: int = 1) -> int noalloc ceiling()
+    \\public func area(rect: Rect, named scale: int = 1) -> int noalloc ceiling()
     \\
-    \\public def draw(canvas: mut Canvas[int], out: Stream) -> int ceiling(managed_allocation,output,mutation)
+    \\public func draw(mut canvas: Canvas[int], out: Stream) -> int ceiling(managed_allocation,output,mutation)
     \\
-    \\public def stamp(fs: Filesystem, clock: Clock, env: Environment) -> int ceiling(filesystem,clock,environment,managed_allocation)
+    \\public func stamp(fs: Filesystem, clock: Clock, env: Environment) -> int ceiling(filesystem,clock,environment,managed_allocation)
     \\
-    \\public def widest[S: Sized](items: list[S]) -> int ceiling(managed_allocation)
+    \\public func widest[S: Sized](items: S[]) -> int ceiling(managed_allocation)
     \\
 ;
 
@@ -168,8 +165,8 @@ const units_interface =
     \\
     \\public domain Metres: int:
     \\    @requires(value >= 0)
-    \\    def of(value: int) -> Metres effects() ceiling()
-    \\    def value(m: Metres) -> int effects() ceiling()
+    \\    func of(value: int) -> Metres effects() ceiling()
+    \\    func value(m: Metres) -> int effects() ceiling()
     \\
 ;
 
@@ -212,10 +209,10 @@ test "an interface file renders every public declaration in source order without
 test "an interface file is byte-identical after a body, private, comment or formatting edit" {
     const base = try renderShapes(t.allocator, shapes, shapes_module);
     defer t.allocator.free(base);
-    const body = try renderEdited(t.allocator, "    return rect.width * rect.height * scale", "    total = rect.height * rect.width\n    return total * scale");
+    const body = try renderEdited(t.allocator, "    return rect.width * rect.height * scale", "    const total = rect.height * rect.width\n    return total * scale");
     defer t.allocator.free(body);
     try t.expectEqualStrings(base, body);
-    const private = try renderEdited(t.allocator, "def helper() -> int:\n    return 1", "def helper(x: int) -> str:\n    return \"changed\"");
+    const private = try renderEdited(t.allocator, "func helper() -> int:\n    return 1", "func helper(x: int) -> str:\n    return \"changed\"");
     defer t.allocator.free(private);
     try t.expectEqualStrings(base, private);
     const comment = try renderEdited(t.allocator, "# A comment the interface never shows.", "# A different comment.\n# And another.");
@@ -224,7 +221,7 @@ test "an interface file is byte-identical after a body, private, comment or form
     const docstring = try renderEdited(t.allocator, "\"\"\"The area, scaled.\"\"\"", "\"\"\"A rewritten function docstring.\"\"\"");
     defer t.allocator.free(docstring);
     try t.expectEqualStrings(base, docstring);
-    const layout = try renderEdited(t.allocator, "public def stamp(fs: Filesystem, clock: Clock, env: Environment) -> int:", "public def stamp(fs: Filesystem,\n               clock: Clock,   env: Environment) -> int:");
+    const layout = try renderEdited(t.allocator, "public func stamp(fs: Filesystem, clock: Clock, env: Environment) -> int:", "public func stamp(fs: Filesystem,\n               clock: Clock,   env: Environment) -> int:");
     defer t.allocator.free(layout);
     try t.expectEqualStrings(base, layout);
 }
@@ -233,36 +230,35 @@ test "an interface file is byte-identical after a body, private, comment or form
 test "signature, contract, field, ceiling and deprecation edits change the interface file" {
     const signature = try renderEdited(t.allocator, "scale: int = 1)", "scale: int = 2)");
     defer t.allocator.free(signature);
-    try t.expect(std.mem.indexOf(u8, signature, "public def area(rect: Rect, *, scale: int = 2) -> int noalloc ceiling()\n") != null);
+    try t.expect(std.mem.indexOf(u8, signature, "public func area(rect: Rect, named scale: int = 2) -> int noalloc ceiling()\n") != null);
     const contract = try renderEdited(t.allocator, "@ensures(result >= 0)", "@ensures(result > 0)");
     defer t.allocator.free(contract);
-    try t.expect(std.mem.indexOf(u8, contract, "\n@ensures(result > 0)\npublic def area(") != null);
+    try t.expect(std.mem.indexOf(u8, contract, "\n@ensures(result > 0)\npublic func area(") != null);
     const field = try renderEdited(t.allocator, "    width: int\n    height: int\n", "    width: int\n    height: int\n    depth: int\n");
     defer t.allocator.free(field);
     try t.expect(std.mem.indexOf(u8, field, "    height: int\n    depth: int\n") != null);
     const ceiling = try renderEdited(t.allocator, "-> int noalloc:", "-> int:");
     defer t.allocator.free(ceiling);
     try t.expect(std.mem.indexOf(u8, ceiling, "scale: int = 1) -> int ceiling(managed_allocation)\n") != null);
-    const deprecated = try renderEdited(t.allocator, "public def widest", "@deprecated(\"use area\")\npublic def widest");
+    const deprecated = try renderEdited(t.allocator, "public func widest", "@deprecated(\"use area\")\npublic func widest");
     defer t.allocator.free(deprecated);
-    try t.expect(std.mem.indexOf(u8, deprecated, "\n@deprecated(\"use area\")\npublic def widest[S: Sized]") != null);
+    try t.expect(std.mem.indexOf(u8, deprecated, "\n@deprecated(\"use area\")\npublic func widest[S: Sized]") != null);
     const docstring = try renderEdited(t.allocator, "\"\"\"Shapes and their areas.", "\"\"\"Shapes, areas and perimeters.");
     defer t.allocator.free(docstring);
-    try t.expect(std.mem.indexOf(u8, docstring, "module pkg.shapes\n\"\"\"Shapes, areas and perimeters.\"\"\"\n") != null);
+    try t.expect(std.mem.indexOf(u8, docstring, "\"\"\"Shapes, areas and perimeters.\"\"\"\n") != null);
 }
 
 // spec-case: NUM-LITERAL-7
 test "an interface file prints an array length in decimal whichever spelling the source used" {
     const rendered = try renderShapes(t.allocator,
-        \\module pkg.shapes
         \\
         \\
-        \\public def block(data: [0x10]u8) -> [1_0]u8 effects():
-        \\    return [0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8]
+        \\public func block(data: FixedArray[u8, 0x10]) -> FixedArray[u8, 1_0] effects():
+        \\    return FixedArray[u8, 10]([0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8])
         \\
     , shapes_module);
     defer t.allocator.free(rendered);
-    try t.expect(std.mem.indexOf(u8, rendered, "public def block(data: [16]u8) -> [10]u8") != null);
+    try t.expect(std.mem.indexOf(u8, rendered, "public func block(data: FixedArray[u8, 16]) -> FixedArray[u8, 10]") != null);
     try t.expect(std.mem.indexOf(u8, rendered, "0x10") == null);
 }
 
@@ -278,8 +274,8 @@ test "declaration comparison names added, removed and changed declarations and d
         \\
         \\public domain Metres: int:
         \\    @requires(value > 0)
-        \\    def of(value: int) -> Metres effects() ceiling()
-        \\    def feet(m: Metres) -> int effects() ceiling()
+        \\    func of(value: int) -> Metres effects() ceiling()
+        \\    func feet(m: Metres) -> int effects() ceiling()
         \\
         \\public const SCALE: int = 3
         \\
@@ -289,7 +285,7 @@ test "declaration comparison names added, removed and changed declarations and d
     try t.expectEqualStrings("Metres", old[0].name);
     try t.expectEqualStrings("public domain Metres: int:", old[0].text);
     try t.expectEqualStrings("Metres.of", old[1].name);
-    try t.expectEqualStrings("    @requires(value >= 0)\n    def of(value: int) -> Metres effects() ceiling()", old[1].text);
+    try t.expectEqualStrings("    @requires(value >= 0)\n    func of(value: int) -> Metres effects() ceiling()", old[1].text);
     const changes = try interface_files.compare(arena, old, try interface_files.declarations(arena, edited));
     try t.expectEqual(@as(usize, 3), changes.added.len);
     try t.expectEqualStrings(interface_files.docstring_name, changes.added[0]);
@@ -345,11 +341,11 @@ test "api --write writes missing files and deletes generated orphans; --check th
     defer temp.cleanup();
     const root = try temp.dir.realPathFileAlloc(t.io, ".", t.allocator);
     defer t.allocator.free(root);
-    try writeTmp(&temp, "pkg/gone.api", "# generated by mylang api; do not edit\nmodule pkg.gone\n\npublic def f() -> int ceiling()\n");
+    try writeTmp(&temp, "pkg/gone.api", "# generated by mylang api; do not edit\nmodule pkg.gone\n\npublic func f() -> int ceiling()\n");
     try writeTmp(&temp, "pkg/notes.api", "hand written, never touched\n");
-    try writeTmp(&temp, "pkg/kept.api", "# generated by mylang api; do not edit\nmodule pkg.kept\n");
-    try writeTmp(&temp, "pkg/kept.my", "module pkg.kept\n");
-    try writeTmp(&temp, ".hidden/gone.api", "# generated by mylang api; do not edit\nmodule gone\n");
+    try writeTmp(&temp, "pkg/kept.api", "# generated by mylang api; do not edit\n");
+    try writeTmp(&temp, "pkg/kept.my", "");
+    try writeTmp(&temp, ".hidden/gone.api", "# generated by mylang api; do not edit\n");
 
     const checked = try runApi(root, .check, false);
     defer t.allocator.free(checked.report);
@@ -384,7 +380,7 @@ test "api --check --json names each stale module's changed declarations" {
     defer t.allocator.free(root);
     const written = try runApi(root, .write, false);
     t.allocator.free(written.report);
-    const stale = try std.mem.replaceOwned(u8, t.allocator, units_interface, "    def value(m: Metres) -> int effects() ceiling()\n", "");
+    const stale = try std.mem.replaceOwned(u8, t.allocator, units_interface, "    func value(m: Metres) -> int effects() ceiling()\n", "");
     defer t.allocator.free(stale);
     try writeTmp(&temp, "pkg/units.api", stale);
 
@@ -406,7 +402,6 @@ test "api reports a project root it cannot read as a host failure" {
 // spec-case: CONST-FLOAT-1
 test "float constant interfaces retain arithmetic spellings aliases and negative zero" {
     const rendered = try renderShapes(t.allocator,
-        \\module pkg.shapes
         \\public const PI: float = 3.14
         \\public const TAU: float = PI * 2.0
         \\public const NEGATIVE_ZERO: float = -0.0
@@ -418,4 +413,63 @@ test "float constant interfaces retain arithmetic spellings aliases and negative
     try t.expect(std.mem.indexOf(u8, rendered, "public const TAU: float = PI * 2.0") != null);
     try t.expect(std.mem.indexOf(u8, rendered, "public const NEGATIVE_ZERO: float = -0.0") != null);
     try t.expect(std.mem.indexOf(u8, rendered, "public const ALIASED: float = 2.718") != null);
+}
+
+/// Render a small canonical-dialect API without checking implementation bodies.
+fn renderRedesign(allocator: std.mem.Allocator, api: []const u8) ![]u8 {
+    var files: Files = .{ .entries = &.{
+        .{ .path = "main.my", .bytes = "import api\nfunc main() -> int:\n    return 0\n" },
+        .{ .path = "api.my", .bytes = api },
+    } };
+    var project = graph.Project.init(allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "main", .{});
+    var index = try interfaces.build(&project);
+    return interface_files.render(allocator, &index, project.names.get("api").?);
+}
+
+// spec-case: API-FILE-1
+test "redesign interfaces render named mutation optional arrays and failures" {
+    const source =
+        \\public enum ReadError:
+        \\    invalid
+        \\    code(value: int = 7)
+        \\public record Point:
+        \\    x: int
+        \\public type Handler = func(named mut points: Point[]) -> Point? fails ReadError effects()
+        \\public func read(named mut points: Point[], named limit: int) -> Point? fails ReadError effects():
+        \\    pass
+        \\public func fixed(values: FixedArray[Point, 2]) -> Unit effects():
+        \\    pass
+    ;
+    const rendered = try renderRedesign(t.allocator, source);
+    defer t.allocator.free(rendered);
+    try t.expect(std.mem.indexOf(u8, rendered, "func read(named mut points: Point[], named limit: int) -> Point? fails ReadError") != null);
+    try t.expect(std.mem.indexOf(u8, rendered, "func(named mut points: Point[]) -> Point? fails ReadError") != null);
+    try t.expect(std.mem.indexOf(u8, rendered, "FixedArray[Point, 2]") != null);
+    try t.expect(std.mem.indexOf(u8, rendered, "-> Unit") != null);
+    try t.expect(std.mem.indexOf(u8, rendered, "    invalid\n    code(value: int = 7)\n") != null);
+}
+
+// spec-case: API-FILE-1
+test "redesign callable labels and failure types change published interface identity" {
+    const original = "public enum FirstError:\n    bad\npublic enum SecondError:\n    bad\npublic type Handler = func(named amount: int) -> int fails FirstError effects()\n";
+    const renamed = try std.mem.replaceOwned(u8, t.allocator, original, "named amount", "named offset");
+    defer t.allocator.free(renamed);
+    const changed_failure = try std.mem.replaceOwned(u8, t.allocator, original, "fails FirstError", "fails SecondError");
+    defer t.allocator.free(changed_failure);
+    const before = try renderRedesign(t.allocator, original);
+    defer t.allocator.free(before);
+    const label = try renderRedesign(t.allocator, renamed);
+    defer t.allocator.free(label);
+    const failure = try renderRedesign(t.allocator, changed_failure);
+    defer t.allocator.free(failure);
+    try t.expect(!std.mem.eql(u8, before, label));
+    try t.expect(!std.mem.eql(u8, before, failure));
+}
+
+// spec-case: API-FILE-1
+test "redesign interfaces reject private types through optional array and failure signatures" {
+    try t.expectError(error.SourceError, renderRedesign(t.allocator, "record Hidden:\n    value: int\npublic func hidden(values: Hidden[]?) -> Unit effects():\n    pass\n"));
+    try t.expectError(error.SourceError, renderRedesign(t.allocator, "enum HiddenError:\n    bad\npublic func hidden() -> Unit fails HiddenError effects():\n    pass\n"));
 }

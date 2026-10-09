@@ -31,9 +31,9 @@ def main():
     for path, expected in [('callbacks.my', '17\n'), ('gc-default/main.my', '142\n'), ('python-bytes/main.my', '51\n'), ('python-word-count/main.my', '42\n')]:
         examples.append((path, (ROOT / 'examples' / path).read_text(), expected, None))
     examples.extend([
-        ('unknown-f64-alias-excluded', 'def main() -> f64:\n    return 0\n', '', 'E_UNKNOWN_TYPE'),
-        ('stored-references-excluded', 'class View:\n    value: &i64\n\n\ndef main() -> i64:\n    return 0\n', '', 'E_TOKEN'),
-        ('unresolved-hole-excluded', 'def main() -> i64:\n    return todo[i64]()\n', '', 'E_TYPED_HOLE'),
+        ('unknown-f64-alias-excluded', 'func main() -> f64:\n    return 0\n', '', 'E_UNKNOWN_TYPE'),
+        ('stored-references-excluded', 'record View:\n    value: &i64\n\n\nfunc main() -> i64:\n    return 0\n', '', 'E_TYPE'),
+        ('unresolved-hole-excluded', 'func main() -> i64:\n    return todo[i64]()\n', '', 'E_TYPED_HOLE'),
     ])
     rows = []
     with tempfile.TemporaryDirectory(prefix='feature-surface-') as temporary:

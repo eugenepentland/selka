@@ -1,16 +1,15 @@
-module python_syntax___python_generics_default_to_copy_and_none_mea
 
-def keep[T](value: T) -> T:
-    result = value
+func keep[T](value: T) -> T:
+    mut result = value
     return result
 
-def noop() -> None:
-    return None
+func noop() -> Unit:
+    return ()
 
-def main() -> int:
+func main() -> int:
     noop()
     return keep(42)
 
 # spec: PYTHON-2
-public def test_python_generics_default_to_copy_and_none_mea() -> bool:
+public func test_python_generics_default_to_copy_and_none_mea() -> bool:
     return main() == 42

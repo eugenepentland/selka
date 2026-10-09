@@ -86,9 +86,9 @@ const everyday_help =
 /// Every command and option, after `everyday_help`, and what a malformed front-end
 /// command line prints. `build`, `run`, `run-project`, `test`, `dump-ir`,
 /// `dump-typed` and `coverage` print their own usage (`src/core/cli.zig`).
-const usage = "usage: mylang build <file.my> (-o <output> | --run [-- ARGS...]) [--release] [--link FILE.c]... (native build; `mylang build` prints the options)\n" ++
+const usage = "usage: mylang build <file.my> (-o <output> | --run [-- ARGS...]) [--release | --optimize-debug] [--link FILE.c]... (native build; `mylang build` prints the options)\n" ++
     "       mylang run <file.my> [options] [-- ARGS...] | run-project <entry.my> [options] [-- ARGS...] (build and run; `mylang run` prints the options)\n" ++
-    "       mylang test <entry.my|directory> [--filter GLOB] [--json] [--release] [--affected --against REF] (run the public test_* functions)\n" ++
+    "       mylang test <entry.my|directory> [--filter GLOB] [--json] [--release | --optimize-debug] [--affected --against REF] (run the public test_* functions)\n" ++
     "       mylang dump-ir <file.my> [--facts] | dump-typed <file.my> [FUNCTION] | coverage <file.my>... (developer views of the new core)\n" ++
     "       mylang juice <doctor|analyze|record|compare|validate|calibrate> (performance work proxy)\n" ++
     "       mylang cost <entry.my> [FUNCTION] [--json] [--debug | --no-facts | --verify-facts] [--llvm-remarks FILE.opt.yaml] (per-function Core costs)\n" ++
@@ -108,7 +108,7 @@ const usage = "usage: mylang build <file.my> (-o <output> | --run [-- ARGS...]) 
     "-project|check-module|check-policy> <file.my>\n  schema-project: --schema-report (include " ++
     "checked source and compiler identities)\n  " ++
     "check: type-check a program; a file that declares no main is checked as a library, like check-module; " ++
-    "a file that opens with a module header or an import/export directive checks its reachable module graph\n  " ++
+    "imports, public declarations or project configuration select module-graph checking\n  " ++
     "check-module: type-check a library module and its imports without an executable main\n  " ++
     "input-module: reads a typed JSON manifest and writes generated " ++
     "module source\n  " ++
@@ -164,7 +164,7 @@ fn dispatchCommandLine(init: std.process.Init) void {
 }
 
 const project_config = @import("mylang").project_config;
-const module_syntax = @import("module_syntax.zig");
+const module_syntax = language.module_syntax;
 const input_probe = @import("input_probe.zig");
 /// Per-stage observations collected when an invalidation explanation ran.
 const StageTally = struct { hits: usize = 0, misses: usize = 0, skipped: usize = 0 };
@@ -429,11 +429,10 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
     // loading imports, parsing, checking or lowering. It is the reference for
     // the differential self-host lexer.
     if (parsed.command == .@"dump-tokens") return dumpTokens(init, parsed, bytes);
-    // `check` accepts a project entry: a file that opens with a module header
-    // (or a module-only import/export) loads its reachable graph exactly as
-    // `check-project` does. A plain single-file program skips this and keeps the
-    // original one-unit path byte-for-byte.
-    if (parsed.command == .check and module_syntax.usesModuleSyntax(bytes)) {
+    // Imports, public declarations and configured interface gates select the
+    // same reachable graph as `check-project`. Private standalone programs
+    // retain their single-unit checking path.
+    if (parsed.command == .check and try checksProjectInterface(init, parsed.path, bytes)) {
         var project = parsed;
         project.command = .@"check-project";
         project.library_fallback = true;
@@ -599,6 +598,19 @@ fn attachEmbeds(init: Context, compilation: *language.Compilation, path: []const
     const roots: language.embed.Roots = .{ .io = init.io, .import_root = import_root, .root = (try embedRoot(init, path)) orelse import_root };
     try language.embed.resolve(arena, roots, std.fs.path.basename(path), found);
     compilation.src.embeds = found;
+}
+
+/// Public declarations and configured interface gates require a module index.
+fn checksProjectInterface(init: Context, path: []const u8, bytes: []const u8) !bool {
+    if (module_syntax.usesModuleSyntax(bytes)) return true;
+    if (!validEntryBasename(std.fs.path.basename(path))) return false;
+    var lines = std.mem.splitScalar(u8, bytes, '\n');
+    while (lines.next()) |line| {
+        if (std.mem.startsWith(u8, line, "public ")) return true;
+    }
+    const configured = try project_config.discover(init.gpa, init.io, path);
+    defer if (configured) |found| init.gpa.free(found);
+    return configured != null;
 }
 
 /// Record the checked node count of a single unit; a library check retains no program.

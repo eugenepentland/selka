@@ -1,24 +1,23 @@
-module integers
 
 
-public def test_width_conversions() -> bool effects():
-    byte: u8 = 255u8
-    signed_byte: i8 = -128i8
-    half: u16 = 65535u16
-    small: i32 = -2147483648i32
+public func test_width_conversions() -> bool effects():
+    mut byte: u8 = 255u8
+    mut signed_byte: i8 = -128i8
+    mut half: u16 = 65535u16
+    mut small: i32 = -2147483648i32
     if int(byte) != 255 or int(signed_byte) != -128:
         return False
     if int(half) != 65535 or int(small) != -2147483648:
         return False
-    widened: u64 = u64(byte)
-    narrowed: u16 = u16(200)
+    mut widened: u64 = u64(byte)
+    mut narrowed: u16 = u16(200)
     return int(widened) == 255 and int(narrowed) == 200
 
 
-public def test_extremes() -> bool effects():
-    signed_max = 9223372036854775807
-    signed_min = -9223372036854775807 - 1
-    unsigned: u64 = 18446744073709551615u64
+public func test_extremes() -> bool effects():
+    mut signed_max = 9223372036854775807
+    mut signed_min = -9223372036854775807 - 1
+    mut unsigned: u64 = 18446744073709551615u64
     if signed_max != 9223372036854775807 or signed_min != -9223372036854775807 - 1:
         return False
     if unsigned != 18446744073709551615u64:
@@ -26,8 +25,8 @@ public def test_extremes() -> bool effects():
     return int(signed_max - 9223372036854775765) == 42
 
 
-public def test_wrapping_arithmetic() -> bool effects():
-    level: u8 = 250u8
+public func test_wrapping_arithmetic() -> bool effects():
+    mut level: u8 = 250u8
     if wrapping_add(level, 10u8) != 4u8:
         return False
     if wrapping_sub(0u8, 1u8) != 255u8:
@@ -39,8 +38,8 @@ public def test_wrapping_arithmetic() -> bool effects():
     return wrapping_sub(-9223372036854775807 - 1, 1) == 9223372036854775807
 
 
-public def test_saturating_arithmetic() -> bool effects():
-    level: u8 = 250u8
+public func test_saturating_arithmetic() -> bool effects():
+    mut level: u8 = 250u8
     if saturating_add(level, 10u8) != 255u8:
         return False
     if saturating_sub(3u8, 10u8) != 0u8:
@@ -52,8 +51,8 @@ public def test_saturating_arithmetic() -> bool effects():
     return saturating_sub(-9223372036854775807 - 1, 5) == -9223372036854775807 - 1
 
 
-public def test_bitwise_and_shifts() -> bool effects():
-    flags: u8 = 12u8
+public func test_bitwise_and_shifts() -> bool effects():
+    mut flags: u8 = 12u8
     if bit_and(flags, 10u8) != 8u8:
         return False
     if bit_or(flags, 10u8) != 14u8:
@@ -67,7 +66,7 @@ public def test_bitwise_and_shifts() -> bool effects():
     return shift_right(-16i32, 2i32) == -4i32
 
 
-public def test_checked_division() -> bool effects():
+public func test_checked_division() -> bool effects():
     if divtrunc(-85, 2) != -42 or remtrunc(-85, 2) != -1:
         return False
     if -85 // 2 != -43 or -85 % 2 != 1:
@@ -75,5 +74,5 @@ public def test_checked_division() -> bool effects():
     return divtrunc(85, -2) == -42 and remtrunc(85, -2) == 1
 
 
-def main() -> int:
+func main() -> int:
     return 0

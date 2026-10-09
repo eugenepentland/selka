@@ -6,13 +6,13 @@ const t = std.testing;
 const compiler = @import("compiler.zig");
 const values = @import("value_semantics.zig");
 
-const entry = "\n\ndef main() -> int:\n    return 0\n";
+const entry = "\n\nfunc main() -> int:\n    return 0\n";
 
 // spec-case: DICT-VIEWS-1
 test "live dictionary view transfer policy follows builtin declaration identity" {
     const sources = [_][]const u8{
-        "def saved(mapping: dict[int,int]) -> int:\n    for value in mapping.values():\n        return value\n    return 0\n" ++ entry,
-        "record DictValues[K, V]:\n    values: list[V]\n\ndef saved(value: DictValues[int, int]) -> int:\n    return 0\n" ++ entry,
+        "func saved(mapping: dict[int,int]) -> int:\n    for value in mapping.values():\n        return value\n    return 0\n" ++ entry,
+        "record DictValues[K, V]:\n    values: V[]\n\nfunc saved(value: DictValues[int, int]) -> int:\n    return 0\n" ++ entry,
     };
     for (sources, 0..) |source, index| {
         var compilation = try compiler.Compilation.init(t.allocator, "views.my", source);
@@ -34,8 +34,8 @@ test "live dictionary view transfer policy follows builtin declaration identity"
 // spec-case: VALUE-SEMANTICS-2
 test "recursive type reachability finds collections without treating a cycle as one" {
     const sources = [_][]const u8{
-        "record Node:\n    value: int\n    next: Option[Node]\n\n" ++ entry,
-        "record Node:\n    items: list[int]\n    next: Option[Node]\n\n" ++ entry,
+        "record Node:\n    value: int\n    next: Node?\n\n" ++ entry,
+        "record Node:\n    items: int[]\n    next: Node?\n\n" ++ entry,
     };
     for (sources, 0..) |source, index| {
         var compilation = try compiler.Compilation.init(t.allocator, "node.my", source);
@@ -88,34 +88,33 @@ fn switchedMessage(a: std.mem.Allocator, body: []const u8) ![]const u8 {
 
 // spec-case: VALUE-SEMANTICS-4
 test "a write to a local copy of a parameter needs no mut" {
-    try expectCode("def f(xs: list[int]) -> list[int]:\n    ys = xs\n    ys.append(1)\n    return ys\n", "ok");
-    try expectCode("def f(xss: list[list[int]]) -> list[list[int]]:\n    ys = xss.copy()\n    ys[0].append(1)\n    return ys\n", "ok");
-    try expectCode("def f(xss: list[list[int]]) -> int:\n    row = xss[0]\n    row.append(1)\n    return len(row)\n", "ok");
-    try expectCode("def identity(xs: list[int]) -> list[int]:\n    return xs\n\ndef f(xs: list[int]) -> int:\n    picked = identity(xs)\n    picked.append(0)\n    return len(picked)\n", "ok");
-    try expectCode("def f(grid: list[list[int]]) -> int:\n    total = 0\n    for row in grid:\n        local = row\n        local.append(0)\n        total = total + len(local)\n    return total\n", "ok");
+    try expectCode("func f(xs: int[]) -> int[]:\n    mut ys = xs\n    ys.append(1)\n    return ys\n", "ok");
+    try expectCode("func f(xss: int[][]) -> int[][]:\n    mut ys = xss.copy()\n    ys[0].append(1)\n    return ys\n", "ok");
+    try expectCode("func f(xss: int[][]) -> int:\n    mut row = xss[0]\n    row.append(1)\n    return len(row)\n", "ok");
+    try expectCode("func identity(xs: int[]) -> int[]:\n    return xs\n\nfunc f(xs: int[]) -> int:\n    mut picked = identity(xs)\n    picked.append(0)\n    return len(picked)\n", "ok");
+    try expectCode("func f(grid: int[][]) -> int:\n    mut total = 0\n    for row in grid:\n        mut local = row\n        local.append(0)\n        total = total + len(local)\n    return total\n", "ok");
 }
 
 // spec-case: VALUE-SEMANTICS-4
 test "a parameter stays read-only and says so" {
-    try expectCode("def f(xs: list[int]) -> None:\n    xs.append(1)\n", "E_MUTATION_MARKER");
-    try expectCode("record R:\n    items: list[int]\n\ndef f(r: R) -> None:\n    r.items.append(1)\n", "E_MUTATION_MARKER");
+    try expectCode("func f(xs: int[]) -> Unit:\n    xs.append(1)\n", "E_IMMUTABLE");
+    try expectCode("record R:\n    items: int[]\n\nfunc f(r: R) -> Unit:\n    r.items.append(1)\n", "E_IMMUTABLE");
     var arena = std.heap.ArenaAllocator.init(t.allocator);
     defer arena.deinit();
-    const message = try switchedMessage(arena.allocator(), "def f(xs: list[int]) -> None:\n    xs.append(1)\n");
-    try t.expect(std.mem.indexOf(u8, message, "read-only here; declare `xs: mut list[int]`") != null);
-    try t.expect(std.mem.indexOf(u8, message, "assign it to a local (`copy = xs`)") != null);
+    const message = try switchedMessage(arena.allocator(), "func f(xs: int[]) -> Unit:\n    xs.append(1)\n");
+    try t.expect(std.mem.indexOf(u8, message, "writable binding") != null);
 }
 
 // spec-case: VALUE-SEMANTICS-4
 test "a write through a loop or match binding is a binding write" {
-    try expectCode("def f(grid: list[list[int]]) -> None:\n    for row in grid:\n        row.append(0)\n", "E_VALUE_BINDING_WRITE");
-    try expectCode("def f(grid: list[list[int]]) -> None:\n    for i, row in enumerate(grid):\n        row.append(i)\n", "E_VALUE_BINDING_WRITE");
-    try expectCode("def f(d: dict[str, list[int]]) -> None:\n    for v in d.values():\n        v.append(0)\n", "E_VALUE_BINDING_WRITE");
-    try expectCode("def f(d: dict[str, list[int]]) -> None:\n    for k, v in d.items():\n        v.append(0)\n", "E_VALUE_BINDING_WRITE");
-    try expectCode("record P:\n    x: int\n\ndef f(ps: list[P]) -> None:\n    for p in ps:\n        p.x = 1\n", "E_VALUE_BINDING_WRITE");
-    try expectCode("def fill(xs: mut list[int]) -> None:\n    xs.append(1)\n\ndef f(grid: list[list[int]]) -> None:\n    for row in grid:\n        fill(mut row)\n", "E_VALUE_BINDING_WRITE");
+    try expectCode("func f(grid: int[][]) -> Unit:\n    for row in grid:\n        row.append(0)\n", "E_IMMUTABLE");
+    try expectCode("func f(grid: int[][]) -> Unit:\n    for i, row in enumerate(grid):\n        row.append(i)\n", "E_IMMUTABLE");
+    try expectCode("func f(d: dict[str, int[]]) -> Unit:\n    for v in d.values():\n        v.append(0)\n", "E_IMMUTABLE");
+    try expectCode("func f(d: dict[str, int[]]) -> Unit:\n    for k, v in d.items():\n        v.append(0)\n", "E_IMMUTABLE");
+    try expectCode("record P:\n    x: int\n\nfunc f(ps: P[]) -> Unit:\n    for p in ps:\n        p.x = 1\n", "E_IMMUTABLE");
+    try expectCode("func fill(mut xs: int[]) -> Unit:\n    xs.append(1)\n\nfunc f(grid: int[][]) -> Unit:\n    for row in grid:\n        fill(mut row)\n", "E_IMMUTABLE");
     const payload =
-        \\def f(opt: Option[list[int]]) -> int:
+        \\func f(opt: int[]?) -> int:
         \\    match opt:
         \\        case Some(v):
         \\            v.append(1)
@@ -124,19 +123,19 @@ test "a write through a loop or match binding is a binding write" {
         \\            return 0
         \\
     ;
-    try expectCode(payload, "E_VALUE_BINDING_WRITE");
+    try expectCode(payload, "E_IMMUTABLE");
 }
 
 // spec-case: VALUE-SEMANTICS-4
-test "a record loop binding is read-only and a match on a call result stays writable" {
-    const loop_write = "record Body:\n    items: list[int]\n\ndef f(bodies: mut list[Body]) -> None:\n    for b in bodies:\n        b.items.append(1)\n";
-    try expectCode(loop_write, "E_MUTATION_MARKER");
-    try t.expectEqual(@as(usize, 1), try countCode(loop_write, "E_VALUE_BINDING_WRITE"));
+test "record loops and match payloads remain readonly even for temporary results" {
+    const loop_write = "record Body:\n    items: int[]\n\nfunc f(mut bodies: Body[]) -> Unit:\n    for b in bodies:\n        b.items.append(1)\n";
+    try expectCode(loop_write, "E_IMMUTABLE");
+    try t.expectEqual(@as(usize, 1), try countCode(loop_write, "E_IMMUTABLE"));
     const call_result =
-        \\def make() -> Option[list[int]]:
+        \\func make() -> int[]?:
         \\    return Some([1])
         \\
-        \\def f() -> int:
+        \\func f() -> int:
         \\    match make():
         \\        case Some(v):
         \\            v.append(2)
@@ -145,96 +144,89 @@ test "a record loop binding is read-only and a match on a call result stays writ
         \\            return 0
         \\
     ;
-    try expectCode(call_result, "ok");
-    try expectCode("def f(grid: list[list[int]]) -> int:\n    total = 0\n    for row in grid:\n        total = total + len(row)\n    return total\n", "ok");
+    try expectCode(call_result, "E_IMMUTABLE");
+    try expectCode("func f(grid: int[][]) -> int:\n    mut total = 0\n    for row in grid:\n        total = total + len(row)\n    return total\n", "ok");
 }
 
 // spec-case: VALUE-SEMANTICS-4
 test "a write into a returned value is a temporary write" {
     const returned =
         \\record Env:
-        \\    slots: list[int]
+        \\    slots: int[]
         \\
-        \\def env_of(envs: list[Env], index: int) -> Env:
+        \\func env_of(envs: Env[], index: int) -> Env:
         \\    return envs[index]
         \\
-        \\def f(envs: list[Env]) -> None:
+        \\func f(envs: Env[]) -> Unit:
         \\    env_of(envs, 0).slots.append(1)
         \\
     ;
-    try expectCode(returned, "E_VALUE_TEMPORARY_WRITE");
+    try expectCode(returned, "E_ASSIGNMENT_TARGET");
 }
 
 // spec-case: VALUE-SEMANTICS-3
-test "a mut record parameter is inout and its argument must be a local" {
-    try expectCode("record C:\n    n: int\n\ndef f(c: mut C) -> None:\n    c.n = c.n + 1\n", "ok");
-    try expectCode("record Inner:\n    x: int\n    items: list[int]\n\nrecord Outer:\n    inner: Inner\n\ndef f(o: mut Outer) -> None:\n    o.inner.x = 3\n    o.inner.items.append(1)\n", "ok");
+test "mut scalar record and nested field parameters expose caller updates" {
+    try expectCode("record C:\n    n: int\n\nfunc f(mut c: C) -> Unit:\n    c.n = c.n + 1\n", "ok");
+    try expectCode("record Inner:\n    x: int\n    items: int[]\n\nrecord Outer:\n    inner: Inner\n\nfunc f(mut o: Outer) -> Unit:\n    o.inner.x = 3\n    o.inner.items.append(1)\n", "ok");
     const field_argument =
         \\record C:
         \\    n: int
-        \\    items: list[int]
+        \\    items: int[]
         \\
         \\record Holder:
         \\    c: C
         \\
-        \\def f(c: mut C) -> None:
+        \\func f(mut c: C) -> Unit:
         \\    c.items.append(1)
         \\
-        \\def g(h: mut Holder) -> None:
+        \\func g(mut h: Holder) -> Unit:
         \\    f(mut h.c)
         \\
     ;
-    try expectCode(field_argument, "E_MUTATION_MARKER");
-    var arena = std.heap.ArenaAllocator.init(t.allocator);
-    defer arena.deinit();
-    try t.expect(std.mem.indexOf(u8, try switchedMessage(arena.allocator(), field_argument), "`mut` on a record passes a variable itself") != null);
-    try expectCode("def f(n: mut int) -> None:\n    n = n + 1\n", "E_MUTATION_MARKER");
-    try t.expect(std.mem.indexOf(u8, try switchedMessage(arena.allocator(), "def f(n: mut int) -> None:\n    n = n + 1\n"), "return the new value instead") != null);
+    try expectCode(field_argument, "ok");
+    try expectCode("func f(mut n: int) -> Unit:\n    n = n + 1\n", "ok");
 }
 
 // spec: VALUE-SEMANTICS-6
-test "a mut parameter whose only change went to a local copy says to store it back" {
+test "writes to a private copy remain independent of unused caller-update capability" {
     const lost =
-        \\def smooth(row: mut list[int]) -> None:
+        \\func smooth(mut row: int[]) -> Unit:
         \\    row.append(0)
         \\
-        \\def smooth_rows(rows: mut list[list[int]]) -> None:
+        \\func smooth_rows(mut rows: int[][]) -> Unit:
         \\    for i in range(len(rows)):
-        \\        row = rows[i]
+        \\        mut row = rows[i]
         \\        smooth(mut row)
         \\
     ;
-    var arena = std.heap.ArenaAllocator.init(t.allocator);
-    defer arena.deinit();
-    const switched = try verdict(arena.allocator(), lost);
-    try t.expectEqualStrings("E_MUTATION_MARKER", switched.code);
-    try t.expect(std.mem.indexOf(u8, switched.message, "the only change goes to `row`, a copy of `rows[i]`") != null);
-    try t.expect(std.mem.indexOf(u8, switched.message, "store the copy back after changing it (`rows[i] = row`)") != null);
-    try t.expect(std.mem.indexOf(u8, switched.message, "remove `mut`") == null);
-    const whole = try switchedMessage(arena.allocator(), "def grow(xs: mut list[int]) -> None:\n    ys = xs\n    ys.append(1)\n");
-    try t.expect(std.mem.indexOf(u8, whole, "change `xs` in place") != null);
+    try expectCode(lost, "ok");
+    var compilation = try compiler.Compilation.init(t.allocator, "local-copy.my", lost ++
+        "\nfunc main() -> int:\n    mut rows = [[1], [2]]\n    smooth_rows(mut rows)\n    return len(rows[0])\n");
+    defer compilation.deinit();
+    const result = try @import("native_execute.zig").run(&compilation);
+    try t.expectEqual(@as(i64, 1), result.value);
 }
 
 // spec-case: VALUE-SEMANTICS-7
 test "old of a collection is a value" {
-    const captured = "@ensures(len(xs) == len(old(xs)) + 1)\ndef push(xs: mut list[int]) -> None:\n    xs.append(1)\n";
+    const captured = "@ensures(len(xs) == len(old(xs)) + 1)\nfunc push(mut xs: int[]) -> Unit:\n    xs.append(1)\n";
     try expectCode(captured, "ok");
-    const class_capture = "class Box:\n    n: int\n\n@ensures(old(b).n <= b.n)\ndef bump(b: mut Box) -> None:\n    b.n = b.n + 1\n";
+    const class_capture = "class Box:\n    n: int\n\n@ensures(old(b).n <= b.n)\nfunc bump(mut b: Box) -> Unit:\n    b.n = b.n + 1\n";
     try expectCode(class_capture, "E_VALUE_CLASS");
 }
 
 // spec: VALUE-SEMANTICS-10
 test "class and builtin Cell are retired" {
     try expectCode("class Box:\n    n: int\n", "E_VALUE_CLASS");
-    try expectCode("def peek(slot: Cell[int]) -> int:\n    return slot.value\n", "E_VALUE_CELL");
-    try expectCode("def make() -> int:\n    slot = Cell(value=3)\n    return slot.value\n", "E_VALUE_CELL");
-    try expectCode("record Cell:\n    value: int\n\ndef make() -> int:\n    return Cell(value=3).value\n", "ok");
+    try expectCode("func peek(slot: Cell[int]) -> int:\n    return slot.value\n", "E_VALUE_CELL");
+    try expectCode("func make() -> int:\n    mut slot = Cell(value=3)\n    return slot.value\n", "E_VALUE_CELL");
+    try expectCode("record Cell:\n    value: int\n\nfunc make() -> int:\n    return Cell(value=3).value\n", "ok");
     var arena = std.heap.ArenaAllocator.init(t.allocator);
     defer arena.deinit();
     const class_message = try switchedMessage(arena.allocator(), "class Box:\n    n: int\n");
     try t.expect(std.mem.indexOf(u8, class_message, "recursive union") != null);
     try t.expect(std.mem.indexOf(u8, class_message, "pool handle") != null);
-    const cell_message = try switchedMessage(arena.allocator(), "def peek(slot: Cell[int]) -> int:\n    return slot.value\n");
+    const cell_message = try switchedMessage(arena.allocator(), "func peek(slot: Cell[int]) -> int:\n    return slot.value\n");
     try t.expect(std.mem.indexOf(u8, cell_message, "store-back") != null);
 }
 
@@ -255,14 +247,14 @@ fn countCode(body: []const u8, code: []const u8) !usize {
 
 // spec-case: VALUE-SEMANTICS-3
 test "rebinding a mut record parameter is a use that reaches the caller" {
-    const reset = "record Counter:\n    n: int\n    items: list[int]\n\ndef reset(c: mut Counter) -> None:\n    c = Counter(n=0, items=[])\n";
+    const reset = "record Counter:\n    n: int\n    items: int[]\n\nfunc reset(mut c: Counter) -> Unit:\n    c = Counter(n=0, items=[])\n";
     try t.expectEqual(@as(usize, 0), try countCode(reset, "W_UNUSED_BINDING"));
     try t.expectEqual(@as(usize, 0), try countCode(reset, "E_MUTATION_MARKER"));
 }
 
 // spec-case: D2-VIEW-STORAGE-1
 test "D2 declarations reject nested recursive view projection storage" {
-    const source = "record Viewed:\n    next: Option[Viewed]\n    views: [1]list[DictValues[int,int]]\n" ++ entry;
+    const source = "record Viewed:\n    next: Viewed?\n    views: FixedArray[DictValues[int,int][], 1]\n" ++ entry;
     var compilation = try compiler.Compilation.init(t.allocator, "reach.my", source);
     defer compilation.deinit();
     try t.expectError(error.SourceError, compilation.check());

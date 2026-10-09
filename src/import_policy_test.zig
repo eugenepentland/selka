@@ -123,9 +123,9 @@ test "policy bounds and duplicate rule validation are explicit" {
 
 fn fixtureBytes(path: []const u8) ?[]const u8 {
     const files = std.StaticStringMap([]const u8).initComptime(.{
-        .{ "main.my", "module main; import core.service; import io.fs;" },
-        .{ "core/service.my", "module core.service; import io.fs;" },
-        .{ "io/fs.my", "module io.fs;" },
+        .{ "main.my", "import core.service\nimport io.fs\n" },
+        .{ "core/service.my", "import io.fs\n" },
+        .{ "io/fs.my", "" },
     });
     return files.get(path);
 }
@@ -169,7 +169,7 @@ test "project config discovery walks up from the entry and resolves policy besid
     try writeTmp(&temp, "mylang.json", "{\"version\":1}");
     try writeTmp(&temp, "nested/policy.json", valid_policy);
     try writeTmp(&temp, "nested/mylang.json", "{\"version\":1,\"import_policy\":\"policy.json\"}");
-    try writeTmp(&temp, "nested/deeper/entry.my", "module entry\n");
+    try writeTmp(&temp, "nested/deeper/entry.my", "");
 
     const entry = try temp.dir.realPathFileAlloc(t.io, "nested/deeper/entry.my", t.allocator);
     defer t.allocator.free(entry);

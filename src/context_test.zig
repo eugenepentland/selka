@@ -59,34 +59,32 @@ const Files = struct {
 /// a field of a nominal type and calls the private `model::check`, and one
 /// discovered test calls `validate` directly.
 const main_source =
-    \\module main
     \\import model
     \\
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return model.entry_value()
 ;
 const model_source =
-    \\module model
     \\
     \\
     \\public record Box:
     \\    value: int
     \\
     \\
-    \\public def validate(box: Box) -> int effects():
+    \\public func validate(box: Box) -> int effects():
     \\    return check(box.value)
     \\
     \\
-    \\public def entry_value() -> int:
+    \\public func entry_value() -> int:
     \\    return 1
     \\
     \\
-    \\def check(value: int) -> int:
+    \\func check(value: int) -> int:
     \\    return value + 1
     \\
     \\
-    \\def test_validate_increments() -> bool:
+    \\func test_validate_increments() -> bool:
     \\    return validate(Box(value=1)) == 2
 ;
 const healthy_entries = [_]File{
@@ -98,18 +96,17 @@ const healthy_entries = [_]File{
 /// bodies do not check; a test still calls `validate`, so an answer that reused
 /// an earlier successful check would publish the edge.
 const broken_model_source =
-    \\module model
     \\
     \\
-    \\public def validate(value: int) -> int:
+    \\public func validate(value: int) -> int:
     \\    return True
     \\
     \\
-    \\public def entry_value() -> int:
+    \\public func entry_value() -> int:
     \\    return 1
     \\
     \\
-    \\def test_validate_ignores_the_declared_type() -> bool:
+    \\func test_validate_ignores_the_declared_type() -> bool:
     \\    return validate(1) == 1
 ;
 const broken_entries = [_]File{
@@ -119,10 +116,9 @@ const broken_entries = [_]File{
 
 /// `model::validate`'s body is not even an expression, so no declaration merges.
 const syntax_broken_model_source =
-    \\module model
     \\
     \\
-    \\public def validate(value: int) -> int:
+    \\public func validate(value: int) -> int:
     \\    return +
 ;
 const syntax_broken_entries = [_]File{
@@ -131,7 +127,7 @@ const syntax_broken_entries = [_]File{
 };
 
 /// `model_source` with one added declaration: the bytes a file edit leaves.
-const edited_model_source = model_source ++ "\n\ndef extra() -> int:\n    return 2\n";
+const edited_model_source = model_source ++ "\n\nfunc extra() -> int:\n    return 2\n";
 const edited_entries = [_]File{
     .{ .path = "main.my", .bytes = main_source },
     .{ .path = model_path, .bytes = edited_model_source },
@@ -141,62 +137,56 @@ const edited_entries = [_]File{
 /// select either of them.
 const ambiguous_entries = [_]File{
     .{ .path = "main.my", .bytes =
-    \\module main
     \\import alpha
     \\import beta
     \\
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return alpha.first() + beta.second()
     },
     .{ .path = "alpha.my", .bytes =
-    \\module alpha
     \\
     \\
-    \\public def validate(value: int) -> int:
+    \\public func validate(value: int) -> int:
     \\    return value + 1
     \\
     \\
-    \\public def first() -> int:
+    \\public func first() -> int:
     \\    return 1
     },
     .{ .path = "beta.my", .bytes =
-    \\module beta
     \\
     \\
-    \\public def validate(value: int) -> int:
+    \\public func validate(value: int) -> int:
     \\    return value + 2
     \\
     \\
-    \\public def second() -> int:
+    \\public func second() -> int:
     \\    return 2
     },
 };
 
-/// `spare` is imported and never referenced, so `main.my:3:10` is covered by the
+/// `spare` is imported and never referenced, so `main.my:2:10` is covered by the
 /// `W_UNUSED_IMPORT` diagnostic and by no declaration.
 const warning_entries = [_]File{
     .{ .path = "main.my", .bytes =
-    \\module main
     \\import model
     \\import spare
     \\
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return model.entry_value()
     },
     .{ .path = model_path, .bytes =
-    \\module model
     \\
     \\
-    \\public def entry_value() -> int:
+    \\public func entry_value() -> int:
     \\    return 1
     },
     .{ .path = "spare.my", .bytes =
-    \\module spare
     \\
     \\
-    \\def helper() -> int:
+    \\func helper() -> int:
     \\    return 1
     },
 };
@@ -300,10 +290,10 @@ fn hubSource(allocator: std.mem.Allocator, dependencies: usize) ![]u8 {
     var out: std.Io.Writer.Allocating = .init(allocator);
     errdefer out.deinit();
     const writer = &out.writer;
-    writer.writeAll("module model\n\n\npublic def hub(value: int) -> int:\n    total = value\n") catch return error.OutOfMemory;
+    writer.writeAll("\n\npublic func hub(value: int) -> int:\n    mut total = value\n") catch return error.OutOfMemory;
     for (0..dependencies) |index| writer.print("    total = step_{d:0>2}(total)\n", .{index}) catch return error.OutOfMemory;
-    writer.writeAll("    return total\n\n\npublic def entry_value() -> int:\n    return 1\n") catch return error.OutOfMemory;
-    for (0..dependencies) |index| writer.print("\n\ndef step_{d:0>2}(value: int) -> int:\n    return value + 1\n", .{index}) catch return error.OutOfMemory;
+    writer.writeAll("    return total\n\n\npublic func entry_value() -> int:\n    return 1\n") catch return error.OutOfMemory;
+    for (0..dependencies) |index| writer.print("\n\nfunc step_{d:0>2}(value: int) -> int:\n    return value + 1\n", .{index}) catch return error.OutOfMemory;
     return out.toOwnedSlice();
 }
 
@@ -616,19 +606,19 @@ test "context resolves a position to the innermost declaration or its diagnostic
     var files: Files = .{ .entries = &healthy_entries };
     const scene = try Scene.open(t.allocator, &files, "main");
     defer scene.close();
-    // Line 9 column 12 is inside `validate`'s body, which its span covers.
-    const body = try scene.render(atOptions("model.my:9:12"));
+    // Line 8 column 12 is inside `validate`'s body, which its span covers.
+    const body = try scene.render(atOptions("model.my:8:12"));
     defer t.allocator.free(body.bytes);
     const body_parsed = try envelope(body);
     defer body_parsed.deinit();
     try t.expectEqual(context.Status.ok, body.status);
     try t.expectEqualStrings("model::validate", nestedString(body_parsed.value, &.{ "selector", "resolved" }));
     try t.expectEqualStrings("model::validate", stringAt(record(body_parsed.value, "declaration"), "id"));
-    try t.expectEqualStrings("model.my:9:12", nestedString(body_parsed.value, &.{ "selector", "at" }));
+    try t.expectEqualStrings("model.my:8:12", nestedString(body_parsed.value, &.{ "selector", "at" }));
     try t.expectEqualStrings("at", nestedString(body_parsed.value, &.{ "selector", "kind" }));
 
     // The parameter declared inside that body is the innermost declaration.
-    const parameter = try scene.render(atOptions("model.my:8:22"));
+    const parameter = try scene.render(atOptions("model.my:7:22"));
     defer t.allocator.free(parameter.bytes);
     const parameter_parsed = try envelope(parameter);
     defer parameter_parsed.deinit();
@@ -637,7 +627,7 @@ test "context resolves a position to the innermost declaration or its diagnostic
     try t.expectEqualStrings("parameter", stringAt(record(parameter_parsed.value, "declaration"), "declaration_kind"));
 
     // A field of the nominal type is selected at its own name, not at its owner.
-    const field_at = try scene.render(atOptions("model.my:5:5"));
+    const field_at = try scene.render(atOptions("model.my:4:5"));
     defer t.allocator.free(field_at.bytes);
     const field_parsed = try envelope(field_at);
     defer field_parsed.deinit();
@@ -648,7 +638,7 @@ test "context resolves a position to the innermost declaration or its diagnostic
     var warning_files: Files = .{ .entries = &warning_entries };
     const warning_scene = try Scene.open(t.allocator, &warning_files, "main");
     defer warning_scene.close();
-    const warning = try warning_scene.render(atOptions("main.my:3:10"));
+    const warning = try warning_scene.render(atOptions("main.my:2:10"));
     defer t.allocator.free(warning.bytes);
     const warning_parsed = try envelope(warning);
     defer warning_parsed.deinit();
@@ -666,7 +656,7 @@ test "context resolves a position to the innermost declaration or its diagnostic
     var wide_files: Files = .{ .entries = &.{ .{ .path = "main.my", .bytes = main_source }, .{ .path = model_path, .bytes = wide } } };
     const wide_scene = try Scene.open(t.allocator, &wide_files, "main");
     defer wide_scene.close();
-    var wide_options = atOptions("model.my:1206:5");
+    var wide_options = atOptions("model.my:1205:5");
     // The 1200 dependencies carry the answer past the default budget; this test
     // is about the span, so it asks for room for the whole answer.
     wide_options.context_bytes = 1024 * 1024;
@@ -862,7 +852,7 @@ test "context rejects an answer when a source changes while it is assembled" {
     const swap = try Scene.open(t.allocator, &swap_files, "main");
     defer swap.close();
     const model = try moduleNamed(swap, "model");
-    const edited = try std.fmt.allocPrint(t.allocator, "{s}\n\ndef extra() -> int:\n    return 2\n", .{model_source});
+    const edited = try std.fmt.allocPrint(t.allocator, "{s}\n\nfunc extra() -> int:\n    return 2\n", .{model_source});
     defer t.allocator.free(edited);
     model.src = try source.Source.init(swap.project.arena.allocator(), model_path, edited);
     const swapped = try swap.render(symbolOptions("model::validate"));
@@ -955,7 +945,7 @@ test "context answers an incomplete project and never reuses checked edges" {
 
     // A position selector resolves against the same recovered candidates, so a
     // caller who knows only where the declaration is gets the same declaration.
-    const lexical_at = try lexical.render(atOptions("model.my:4:12"));
+    const lexical_at = try lexical.render(atOptions("model.my:3:15"));
     defer t.allocator.free(lexical_at.bytes);
     try t.expectEqual(context.Status.partial, lexical_at.status);
     const lexical_at_parsed = try envelope(lexical_at);
@@ -963,7 +953,7 @@ test "context answers an incomplete project and never reuses checked edges" {
     try t.expectEqualStrings("model::validate", nestedString(lexical_at_parsed.value, &.{ "selector", "resolved" }));
 }
 
-const embedded_entries = [_]File{.{ .path = "main.my", .bytes = "module main\n\nconst DATA: bytes = embed_bytes(\"data.bin\")\n\ndef main() -> int:\n    return len(DATA)\n" }};
+const embedded_entries = [_]File{.{ .path = "main.my", .bytes = "\nconst DATA: bytes = embed_bytes(\"data.bin\")\n\nfunc main() -> int:\n    return len(DATA)\n" }};
 
 // spec: EMBED-CONTEXT-1
 test "context includes embedded identities and rejects same-length edits and missing files" {

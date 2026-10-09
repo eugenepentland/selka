@@ -15,36 +15,36 @@
 # its replace() compiles to a plain store.
 
 
-def fannkuch() -> tuple[int, int]:
-    n = 10
-    perm: [10]int = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    perm1: [10]int = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-    count: [10]int = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    max_flips = 0
-    checksum = 0
-    perm_count = 0
-    r = n
+func fannkuch() -> tuple[int, int]:
+    mut n = 10
+    mut perm: FixedArray[int, 10] = FixedArray[int, 10]([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    mut perm1: FixedArray[int, 10] = FixedArray[int, 10]([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+    mut count: FixedArray[int, 10] = FixedArray[int, 10]([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    mut max_flips = 0
+    mut checksum = 0
+    mut perm_count = 0
+    mut r = n
     while True:
         while r != 1:
             count = replace(count, r - 1, r)
             r = r - 1
         perm = perm1
-        flips = 0
-        k = perm[0]
+        mut flips = 0
+        mut k = perm[0]
         while k != 0:
-            k2 = shift_right(k + 1, 1)
+            mut k2 = shift_right(k + 1, 1)
             for i in range(k2):
-                temp = perm[i]
+                mut temp = perm[i]
                 perm = replace(perm, i, perm[k - i])
                 perm = replace(perm, k - i, temp)
             flips = flips + 1
             k = perm[0]
         max_flips = max(max_flips, flips)
-        checksum = checksum + (flips if perm_count % 2 == 0 else -flips)
+        checksum = checksum + (if (perm_count % 2 == 0) then (flips) else (-flips))
         while True:
             if r == n:
                 return checksum, max_flips
-            perm0 = perm1[0]
+            mut perm0 = perm1[0]
             for i in range(r):
                 perm1 = replace(perm1, i, perm1[i + 1])
             perm1 = replace(perm1, r, perm0)
@@ -55,8 +55,8 @@ def fannkuch() -> tuple[int, int]:
         perm_count = perm_count + 1
 
 
-def main(out: Stream) -> int:
-    checksum, max_flips = fannkuch()
+func main(out: Stream) -> int:
+    mut checksum, max_flips = fannkuch()
     out.print(checksum)
     out.print(f"Pfannkuchen(10) = {max_flips}")
     return 0

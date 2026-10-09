@@ -91,7 +91,7 @@ a `reference-v1` envelope:
     {
       "name": "sort::sort_ints",
       "kind": "function",
-      "signature": "def(values:list[i64])->list[i64]",
+      "signature": "func(values:list[i64])->list[i64]",
       "analysis": "checked",
       "effects": ["managed_allocation"],
       "ceiling": ["managed_allocation"],
@@ -122,13 +122,14 @@ These are the boundaries where mylang differs from Python most often, and each b
 below is executed by the documentation gate. The same text is what
 `mylang reference --query <id>` reports, with `python` naming the difference.
 
-Locals are function-scoped: an assignment anywhere in the body is one binding, and a
-loop may run zero times, so a name first assigned inside one is not bound after it.
+Locals have lexical block scope. Declare a binding with `const` or `mut`; assignment
+updates a writable binding. Declare shared results before a branch or loop when code
+after that block needs them. Active names cannot be shadowed.
 
 ```mylang
 # doc: expect 6
-def main() -> int:
-    total = 0
+func main() -> int:
+    mut total = 0
     for value in [1, 2, 3]:
         total += value
     return total
@@ -138,8 +139,8 @@ def main() -> int:
 
 ```mylang
 # doc: expect 9
-def main() -> int:
-    squares = [x * x for x in range(4)]
+func main() -> int:
+    mut squares = [for x in range(4) yield x * x]
     return squares[3]
 ```
 
@@ -152,11 +153,11 @@ record Pair:
     left: int
     right: int
 
-def swap(pair: Pair) -> Pair effects():
+func swap(pair: Pair) -> Pair effects():
     return Pair(left=pair.right, right=pair.left)
 
-def main() -> int:
-    swapped = swap(Pair(left=1, right=2))
+func main() -> int:
+    mut swapped = swap(Pair(left=1, right=2))
     return swapped.left * 10 + swapped.right
 ```
 
@@ -164,7 +165,7 @@ Printing goes through a `Stream` parameter rather than an ambient stdout.
 
 ```mylang
 # doc: expect hello
-def main(out: Stream) -> int:
+func main(out: Stream) -> int:
     out.print("hello")
     return 0
 ```
@@ -173,7 +174,7 @@ File access needs a capability parameter, and using it shows up in the effect se
 
 ```mylang
 # doc: check
-def read_length(fs: Filesystem) -> int effects(filesystem):
+func read_length(fs: Filesystem) -> int effects(filesystem):
     match fs.read_text("answer.txt"):
         case Ok(text):
             return len(text)
@@ -186,8 +187,8 @@ Python spells them.
 
 ```mylang
 # doc: expect 7
-def main() -> int:
-    big = 9223372036854775807
+func main() -> int:
+    mut big = 9223372036854775807
     return big % 10
 ```
 
@@ -195,9 +196,9 @@ The bare builtin spellings an agent reaches for first.
 
 ```mylang
 # doc: expect 9
-def main() -> int:
-    values = [3, 1, 2]
-    ordered = sorted(values)
+func main() -> int:
+    mut values = [3, 1, 2]
+    mut ordered = sorted(values)
     return sum(ordered) + len(ordered)
 ```
 

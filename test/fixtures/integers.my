@@ -6,12 +6,12 @@ record WideSample:
     value: u64
 
 
-conversion def widen(sample: Sample) -> WideSample:
+conversion func widen(sample: Sample) -> WideSample:
     return WideSample(value=u64(sample.value))
 
 
-def main() -> int:
-    small = Sample(value=255u8)
-    wide = widen(small)
-    quotient = 18446744073709551615u64 // 3u64
+func main() -> int:
+    mut small = Sample(value=255u8)
+    mut wide = widen(small)
+    mut quotient = 18446744073709551615u64 // 3u64
     return int(quotient - wide.value)

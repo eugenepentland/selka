@@ -1,17 +1,16 @@
-module main
 import random
 import time
 
-def streams() -> int:
-    generator = random.seeded(0)
+func streams() -> int:
+    mut generator = random.seeded(0)
     if random.next_word(mut generator) != 16294208416658607535u64:
         return 1
     if random.next_word(mut generator) != 7960286522194355700u64:
         return 2
-    replay = random.seeded(0)
+    mut replay = random.seeded(0)
     if random.next_word(mut replay) != 16294208416658607535u64:
         return 3
-    snapshot = replay
+    mut snapshot = replay
     if random.next_word(mut snapshot) != 7960286522194355700u64:
         return 4
     if random.next_word(mut replay) != 7960286522194355700u64:
@@ -21,8 +20,8 @@ def streams() -> int:
     return 0
 
 
-def bounds() -> int:
-    generator = random.seeded(3)
+func bounds() -> int:
+    mut generator = random.seeded(3)
     match random.randint(mut generator, 4, 3):
         case Ok(_):
             return 10
@@ -33,7 +32,7 @@ def bounds() -> int:
             _ = 0
         case Err(_):
             return 11
-    draws = 0
+    mut draws = 0
     while draws < 200:
         match random.randint(mut generator, 0, 9):
             case Ok(value):
@@ -45,9 +44,9 @@ def bounds() -> int:
     return 0
 
 
-def limits() -> int:
-    earliest = time.from_unix_nanoseconds(0 - 9223372036854775807 - 1)
-    latest = time.from_unix_nanoseconds(9223372036854775807)
+func limits() -> int:
+    mut earliest = time.from_unix_nanoseconds(0 - 9223372036854775807 - 1)
+    mut latest = time.from_unix_nanoseconds(9223372036854775807)
     match time.elapsed(earliest, latest):
         case Ok(_):
             return 20
@@ -79,8 +78,8 @@ def limits() -> int:
     return 0
 
 
-def main() -> int:
-    checks = [streams(), bounds(), limits()]
+func main() -> int:
+    mut checks = [streams(), bounds(), limits()]
     for value in checks:
         if value != 0:
             return value

@@ -1,88 +1,88 @@
-def fold(items: list[int]) -> int:
-    total = 0
+func fold(items: int[]) -> int:
+    mut total = 0
     for value in items:
         total += value
     return total
 
 
-def fresh() -> int:
-    total = 0
+func fresh() -> int:
+    mut total = 0
     for value in [1, 2, 3, 4, 5, 6, 7, 8, 9]:
         total += value
     return total
 
 
-def owned(count: int, offset: int) -> int:
-    items = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-    total = 0
+func owned(count: int, offset: int) -> int:
+    mut items = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    mut total = 0
     for index in range(count):
         total += items[index + offset]
     return total
 
 
-def borrowed(items: list[int], count: int) -> int:
-    noise = [7]
-    total = 0
+func borrowed(items: int[], count: int) -> int:
+    mut noise = [7]
+    mut total = 0
     for index in range(count):
         total += items[index]
     return total + noise[0]
 
 
-public def test_owned_held_and_empty_read_loops() -> bool:
+public func test_owned_held_and_empty_read_loops() -> bool:
     return owned(9, 0) == 45 and owned(0, 999) == 0 and owned(-1, 999) == 0 and fold([]) == 0 and fresh() == 45
 
 
-public def test_short_and_negative_index_fallbacks() -> bool:
+public func test_short_and_negative_index_fallbacks() -> bool:
     return owned(4, -9) == 10 and owned(1, -1) == 9 and borrowed([2, 4, 6], 3) == 19
 
 
-public def test_snapshot_and_callback_after_fold_keep_original_owners() -> bool:
-    items = [3, 9, 17]
-    snapshot = items
-    total = fold(items)
+public func test_snapshot_and_callback_after_fold_keep_original_owners() -> bool:
+    mut items = [3, 9, 17]
+    mut snapshot = items
+    mut total = fold(items)
     items.append(total)
     return total == 29 and snapshot == [3, 9, 17] and items == [3, 9, 17, 29]
 
 
-public def test_nested_dynamic_entries_retain_each_iterator() -> bool:
-    total = 0
+public func test_nested_dynamic_entries_retain_each_iterator() -> bool:
+    mut total = 0
     for outer in range(4):
         for item in [outer, outer + 1, outer + 2]:
             total += item
     return total == 30
 
 
-public def test_narrow_and_boolean_elements_keep_width_semantics() -> bool:
-    values = [u8(1), u8(127), u8(255)]
-    total = 0
+public func test_narrow_and_boolean_elements_keep_width_semantics() -> bool:
+    mut values = [u8(1), u8(127), u8(255)]
+    mut total = 0
     for value in values:
         total += int(value)
-    flags = [True, False, True, True]
-    count = 0
+    mut flags = [True, False, True, True]
+    mut count = 0
     for flag in flags:
         if flag:
             count += 1
     return total == 383 and count == 3
 
 
-public def test_multiple_stable_sources_keep_each_owner() -> bool:
-    left = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-    right = [9, 8, 7, 6, 5, 4, 3, 2, 1]
-    total = 0
+public func test_multiple_stable_sources_keep_each_owner() -> bool:
+    mut left = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    mut right = [9, 8, 7, 6, 5, 4, 3, 2, 1]
+    mut total = 0
     for index in range(9):
         total += left[index] * right[index]
     return total == 165
 
 
-public def test_unrelated_managed_values_remain_journaled() -> bool:
-    values = [[1, 2], [3, 4]]
-    total = fresh()
+public func test_unrelated_managed_values_remain_journaled() -> bool:
+    mut values = [[1, 2], [3, 4]]
+    mut total = fresh()
     for item in values:
         total += fold(item)
     return total == 55 and values == [[1, 2], [3, 4]]
 
 
-def main() -> int:
+func main() -> int:
     assert test_owned_held_and_empty_read_loops()
     assert test_short_and_negative_index_fallbacks()
     assert test_snapshot_and_callback_after_fold_keep_original_owners()

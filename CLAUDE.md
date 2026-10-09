@@ -1,6 +1,6 @@
 # mylang — working rules
 
-A Python-syntax statically checked language. Zig compiler (`src/`) whose back end is
+A statically checked language with Python-inspired indentation and explicit declarations. Zig compiler (`src/`) whose back end is
 the new core (`src/core/`): the checked program becomes Core IR, then LLVM text, which
 the pinned Zig toolchain's clang (`zig cc`) compiles and links with the core C runtime
 (`src/core/runtime/`), amd64 Linux only. `mylang run` builds the program and executes
@@ -88,7 +88,7 @@ go on the reserved timing CPUs, never beside a gate.
 
 ## Where tests live
 
-Language behaviour is tested in the language: a `public def test_*() -> bool` in
+Language behaviour is tested in the language: a `public func test_*() -> bool` in
 `tests/lang/<area>.my`, run by `mylang test` (`zig build test-lang`). The new core's
 own tests (IR, passes, emission, driver, caches, test runner) are Zig tests under
 `src/core/` with fixtures in `test/core`. Diagnostics, traps, host fixtures, caches,
@@ -226,19 +226,21 @@ use a ```mylang block; `kind: "tooling"` features may use a ```bash or ```consol
 
 ## Where the language differs from Python
 
-- **Locals are function-scoped, like Python.** An assignment to a name anywhere in the
-  body is one binding, in scope from its first assignment to the end of the function, and
-  a nested block reassigns the same binding. Reading a name on a path that may not have
-  assigned it yet is a static `E_UNBOUND`; a name never assigned is `E_UNKNOWN_NAME`.
-  Because every `while`, ordinary `for`, `range`, `reversed` and `zip` loop may execute
-  zero times, an assignment made only in the loop body does not make the name definitely
-  assigned after the loop; predeclare it before the loop. The `for` loop variable and
-  `match` payload binding stay scoped to their block. `with arena():` is retired: it
-  runs as a plain block and warns `W_ARENA_RETIRED`; remove the line and dedent.
-- **`range()` is a comprehension source, just like in a `for` loop.** `[x for x in
-  range(10)]` and `[x for x in range(a, b)]` build a list of the range's integer values;
+- **Locals have lexical block scope.** Declare immutable values with `const` and
+  writable values with `mut`; assignment only updates an existing writable binding.
+  A declaration disappears at its block's end, and an active name cannot be shadowed.
+  Declare a writable result before an `if` or loop when later code needs it.
+  Loop variables and match payloads are readonly bindings scoped to their bodies.
+  Ordinary parameters are readonly snapshots; a `mut` parameter updates caller
+  storage, including scalar rebinding and nested fields or elements. Ordinary values
+  have independent snapshot semantics, with copy-on-write for managed contents.
+  Spell arrays `T[]`, options `T?`, fixed arrays `FixedArray[T, N]`, and unit `Unit`.
+  A fallible function declares `-> T fails E`; extract a checked result with boundary
+  `try`, or return its error with `fail`. `with arena():` remains retired.
+- **`range()` is a comprehension source, just like in a `for` loop.** `[for x in
+  range(10) yield x]` and `[for x in range(a, b) yield x]` build a list of the range's integer values;
   comprehending over a list, string or dictionary works too.
-- **`def main() -> int`'s value is the process exit status**, truncated to the low 8
+- **`func main() -> int`'s value is the process exit status**, truncated to the low 8
   bits (POSIX `status = value & 0xFF`), for `mylang run`, `run-project` and a native
   executable — the way Python and Go return an exit code. `--print-result` still prints
   the value to stdout and is orthogonal to the status. A runtime trap outranks the
@@ -256,9 +258,9 @@ use a ```mylang block; `kind: "tooling"` features may use a ```bash or ```consol
   (`--gc-runtime`, `--gc-stress`, `--rc-runtime` are refused). See
   `docs/managed-memory.md`.
 - **File access needs a capability parameter on the entry point.** Write
-  `def main(fs: Filesystem) -> int` and thread `fs` through; there is no ambient
+  `func main(fs: Filesystem) -> int` and thread `fs` through; there is no ambient
   filesystem. `Network`, `Clock`, `Entropy` and `Environment` work the same way.
-- **Printing goes through a `Stream` parameter.** Write `def main(out: Stream) -> int`
+- **Printing goes through a `Stream` parameter.** Write `func main(out: Stream) -> int`
   and call `out.print(...)`; `err: Stream` is standard error. The runtime supplies both
   streams, so printing itself needs no host grant. `stream.print` contributes the
   `output` effect, which an explicit `noio` bound withholds — write `effects(output)` on
@@ -269,8 +271,8 @@ use a ```mylang block; `kind: "tooling"` features may use a ```bash or ```consol
   every capability too and hands `main` its argv unchanged; runtime options such as
   `--restrict`, `--allow-*` and `--print-result` go in the `MYLANG_OPTIONS`
   environment variable instead (`MYLANG_OPTIONS=--restrict ./prog`).
-- **C interop is `extern def` plus `--link FILE.c`.** Scalar arguments only, `host:
-  Host` first. `host def`, `mylang invoke` and the host applications are retired.
+- **C interop is `extern func` plus `--link FILE.c`.** Scalar arguments only, `host:
+  Host` first. `host func`, `mylang invoke` and the host applications are retired.
 - Integers have fixed width, conditions must be `bool`, lists are homogeneous, ranges
   take one or two arguments, and slices have no step.
 

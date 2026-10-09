@@ -38,13 +38,13 @@ test "text and bytes preserve Unicode scalars, empty pieces, shared appends and 
 }
 
 const octet_reduction =
-    \\def score(text: str) -> int:
-    \\    total = 0
+    \\func score(text: str) -> int:
+    \\    mut total = 0
     \\    for octet in text.encode():
     \\        total += octet ^ 7
     \\    return total
     \\
-    \\def main(out: Stream) -> int:
+    \\func main(out: Stream) -> int:
     \\    out.print(score("01230123012301230123012301230123"))
     \\    return 0
     \\
@@ -61,17 +61,17 @@ test "bounded byte XOR reductions widen octets and preserve the scalar remainder
 }
 
 const fast_paths =
-    \\def main(out: Stream) -> int:
-    \\    long_a = "".join(["é" for j in range(200)])
-    \\    long_b = "".join(["é" for j in range(199)]) + "ê"
-    \\    long_c = "ê" + "".join(["é" for j in range(199)])
-    \\    long_d = "".join(["é" for j in range(200)])
-    \\    middle_a = "".join(["ab" for j in range(60)])
-    \\    middle_b = "".join(["ab" for j in range(59)]) + "aB"
-    \\    out.print(long_a == long_b, long_a == long_c, long_a == long_d, middle_a == middle_b, middle_a == "".join(["ab" for j in range(60)]))
+    \\func main(out: Stream) -> int:
+    \\    mut long_a = "".join([for j in range(200) yield "é"])
+    \\    mut long_b = "".join([for j in range(199) yield "é"]) + "ê"
+    \\    mut long_c = "ê" + "".join([for j in range(199) yield "é"])
+    \\    mut long_d = "".join([for j in range(200) yield "é"])
+    \\    mut middle_a = "".join([for j in range(60) yield "ab"])
+    \\    mut middle_b = "".join([for j in range(59) yield "ab"]) + "aB"
+    \\    out.print(long_a == long_b, long_a == long_c, long_a == long_d, middle_a == middle_b, middle_a == "".join([for j in range(60) yield "ab"]))
     \\    out.print("abcdefghij" == "abcdefghiJ", "abcdefghij" == "Abcdefghij", "abc" == "abc", "ab" == "aB", "é" == "é", "" == "")
-    \\    hay = "".join(["a" for j in range(300)]) + ";café;needle;"
-    \\    front = "né" + "".join(["a" for j in range(300)])
+    \\    mut hay = "".join([for j in range(300) yield "a"]) + ";café;needle;"
+    \\    mut front = "né" + "".join([for j in range(300) yield "a"])
     \\    out.print(hay.find("needle"), hay.find("é"), hay.find(";c"), hay.find("absent"), hay.find("aa"), front.find("é"), front.find("aaa"), hay.find("a;"))
     \\    return 0
     \\
@@ -143,9 +143,9 @@ test "remaining text methods preserve exact scalar and octet semantics with chec
 }
 
 const extended_list =
-    \\def main() -> int:
-    \\    xs = ["a", "é"]
-    \\    saved = xs
+    \\func main() -> int:
+    \\    mut xs = ["a", "é"]
+    \\    mut saved = xs
     \\    xs.extend(xs)
     \\    xs.reverse()
     \\    return len(saved) + len(xs)
@@ -163,14 +163,15 @@ test "self extension and reverse build list updates whose ownership preserves th
 }
 
 const split_keys =
-    \\def counts(text: str) -> dict[str, int]:
-    \\    result: dict[str, int] = {}
+    \\func counts(text: str) -> dict[str, int]:
+    \\    mut result: dict[str, int] = {}
     \\    for word in text.split():
-    \\        result[word] = result[word] + 1 if word in result else 1
+    \\        result[word] = if (word in result) then (result[word] + 1) else (1)
     \\    return result
     \\
-    \\def rebound(text: str) -> dict[str, int]:
-    \\    result: dict[str, int] = {}
+    \\func rebound(source: str) -> dict[str, int]:
+    \\    mut text = source
+    \\    mut result: dict[str, int] = {}
     \\    for word in text.split():
     \\        text = "changed"
     \\        result[word] = 1
@@ -180,25 +181,25 @@ const split_keys =
     \\            break
     \\    return result
     \\
-    \\def main(out: Stream) -> int:
-    \\    empty = counts(" \t\n\r\x0b\x0c")
-    \\    unicode = counts("é\t😀\né\rnaïve\x0bcafé\x0cx\u00a0y")
-    \\    many = counts(" ".join(["alpha", "beta", "gamma", "delta", "epsilon", "zeta", "eta", "theta", "iota", "kappa", "lambda", "mu", "alpha", "abcdefghijklmnopabcdefghijklmnop", "abcdefghijklmnopabcdefghijklmnop"]))
-    \\    saved = many
+    \\func main(out: Stream) -> int:
+    \\    mut empty = counts(" \t\n\r\x0b\x0c")
+    \\    mut unicode = counts("é\t😀\né\rnaïve\x0bcafé\x0cx\u00a0y")
+    \\    mut many = counts(" ".join(["alpha", "beta", "gamma", "delta", "epsilon", "zeta", "eta", "theta", "iota", "kappa", "lambda", "mu", "alpha", "abcdefghijklmnopabcdefghijklmnop", "abcdefghijklmnopabcdefghijklmnop"]))
+    \\    mut saved = many
     \\    many["alpha"] = 9
-    \\    snapshot = rebound(" ".join(["a", "b", "c", "d"]))
-    \\    deleted = counts("a b c")
+    \\    mut snapshot = rebound(" ".join(["a", "b", "c", "d"]))
+    \\    mut deleted = counts("a b c")
     \\    _ = deleted.pop("b")
     \\    for word in "a b d".split():
     \\        deleted[word] = 2
-    \\    collided = counts("collision002553 collision005a0e collision002553")
-    \\    sources = [" ".join(["a", "b", "c"])]
-    \\    from_list: dict[str, int] = {}
+    \\    mut collided = counts("collision002553 collision005a0e collision002553")
+    \\    mut sources = [" ".join(["a", "b", "c"])]
+    \\    mut from_list: dict[str, int] = {}
     \\    for word in sources[0].split():
     \\        sources[0] = "changed"
     \\        from_list[word] = 1
-    \\    source_dict: dict[str, str] = {"input": " ".join(["a", "b", "c"])}
-    \\    from_dict: dict[str, int] = {}
+    \\    mut source_dict: dict[str, str] = {"input": " ".join(["a", "b", "c"])}
+    \\    mut from_dict: dict[str, int] = {}
     \\    for word in source_dict["input"].split():
     \\        source_dict["input"] = "changed"
     \\        from_dict[word] = 1
@@ -236,9 +237,9 @@ test "private split dictionary keys preserve whitespace, UTF8, source snapshots,
 }
 
 const escaped_split =
-    \\def main(out: Stream) -> int:
-    \\    words = "one two".split()
-    \\    keys: dict[str, int] = {}
+    \\func main(out: Stream) -> int:
+    \\    mut words = "one two".split()
+    \\    mut keys: dict[str, int] = {}
     \\    for word in words:
     \\        keys[word] = 1
     \\    out.print(len(words), words[0])
@@ -247,9 +248,9 @@ const escaped_split =
 ;
 
 const escaped_word =
-    \\def main(out: Stream) -> int:
-    \\    keys: dict[str, int] = {}
-    \\    words: list[str] = []
+    \\func main(out: Stream) -> int:
+    \\    mut keys: dict[str, int] = {}
+    \\    mut words: str[] = []
     \\    for word in "one two".split():
     \\        keys[word] = 1
     \\        words.append(word)
@@ -259,8 +260,8 @@ const escaped_word =
 ;
 
 const indexed_word =
-    \\def main(out: Stream) -> int:
-    \\    keys: dict[str, int] = {}
+    \\func main(out: Stream) -> int:
+    \\    mut keys: dict[str, int] = {}
     \\    for index, word in enumerate("one two".split()):
     \\        keys[word] = index
     \\    out.print(keys["two"])
@@ -269,11 +270,11 @@ const indexed_word =
 ;
 
 const called_word =
-    \\def inspect(word: str) -> int:
+    \\func inspect(word: str) -> int:
     \\    return len(word)
     \\
-    \\def main(out: Stream) -> int:
-    \\    keys: dict[str, int] = {}
+    \\func main(out: Stream) -> int:
+    \\    mut keys: dict[str, int] = {}
     \\    for word in "one two".split():
     \\        keys[word] = inspect(word)
     \\    out.print(keys["two"])
@@ -282,9 +283,9 @@ const called_word =
 ;
 
 const phi_word =
-    \\def main(out: Stream) -> int:
-    \\    keys: dict[str, int] = {}
-    \\    saved = ""
+    \\func main(out: Stream) -> int:
+    \\    mut keys: dict[str, int] = {}
+    \\    mut saved = ""
     \\    for word in "one two".split():
     \\        keys[word] = 1
     \\        saved = word
@@ -320,31 +321,31 @@ test "private split fusion requires the authorized runtime declaration even with
 }
 
 const moving_scans =
-    \\def appended(n: int) -> str:
-    \\    out = ""
+    \\func appended(n: int) -> str:
+    \\    mut out = ""
     \\    for i in range(n):
     \\        out += "é€"[i % 2]
     \\    return out
     \\
-    \\def scan(s: str) -> int:
-    \\    n = len(s)
-    \\    total = 0
-    \\    start = 0
+    \\func scan(s: str) -> int:
+    \\    mut n = len(s)
+    \\    mut total = 0
+    \\    mut start = 0
     \\    while s.find("é", start) >= 0:
     \\        start = s.index("é", start) + 1
     \\        total += start
-    \\    end = n
+    \\    mut end = n
     \\    while s.rfind("é", 0, end) >= 0:
     \\        end = s.rfind("é", 0, end)
     \\        total += end
-    \\    i = n - 1
+    \\    mut i = n - 1
     \\    while i >= 0:
     \\        total += ord(s[i]) + len(s[i:i + 2])
     \\        i -= 1
     \\    total += ord(s[::-1][0]) + len(s[::-3])
     \\    return total
     \\
-    \\def main(out: Stream) -> int:
+    \\func main(out: Stream) -> int:
     \\    out.print(scan("é" * 20000), scan(appended(20000)))
     \\    return 0
     \\

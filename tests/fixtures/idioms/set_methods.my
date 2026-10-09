@@ -1,5 +1,5 @@
-def main() -> int:
-    seen: set[str] = set()
+func main() -> int:
+    mut seen: set[str] = set()
     for word in ["a", "b", "a", "c"]:
         seen.add(word)
     seen.discard("z")

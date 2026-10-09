@@ -10,9 +10,9 @@ const number_literal = @import("number_literal.zig");
 
 const Case = struct { body: []const u8, code: []const u8, fragment: []const u8 };
 
-/// Check `def main() -> i64:` around one body and return the first diagnostic.
+/// Check `func main() -> i64:` around one body and return the first diagnostic.
 fn firstDiagnostic(arena: std.mem.Allocator, body: []const u8) !struct { code: []const u8, message: []const u8 } {
-    const text = try std.fmt.allocPrint(arena, "def main() -> i64:\n    {s}\n    return 0\n", .{body});
+    const text = try std.fmt.allocPrint(arena, "func main() -> i64:\n    {s}\n    return 0\n", .{body});
     var compilation = try language.Compilation.init(arena, "literal.my", text);
     try t.expectError(error.SourceError, compilation.check());
     const first = compilation.diagnostics.items[0];
@@ -62,7 +62,7 @@ test "decimal integers reject leading zeros and say how to write octal" {
         .{ .body = "_ = 007u8", .code = "E_INTEGER_LITERAL", .fragment = "leading zeros are not allowed" },
         .{ .body = "_ = -0009223372036854775808", .code = "E_INTEGER_LITERAL", .fragment = "or `755` for decimal" },
     });
-    try expectConstantRejected("const MODE: u32 = 0644\n\n\ndef main() -> i64:\n    return 0\n", "E_INTEGER_LITERAL");
+    try expectConstantRejected("const MODE: u32 = 0644\n\n\nfunc main() -> i64:\n    return 0\n", "E_INTEGER_LITERAL");
 }
 
 // spec-case: NUM-LITERAL-1
@@ -95,13 +95,13 @@ test "malformed float spellings and imaginary literals are rejected with a messa
 // spec-case: NUM-LITERAL-5
 test "a literal outside its expected or suffixed type is E_INTEGER_RANGE in every base" {
     try expectRejected(&.{
-        .{ .body = "n: u8 = 256", .code = "E_INTEGER_RANGE", .fragment = "does not fit" },
-        .{ .body = "n: u8 = 0x100", .code = "E_INTEGER_RANGE", .fragment = "does not fit" },
-        .{ .body = "n: u8 = 0b1_0000_0000", .code = "E_INTEGER_RANGE", .fragment = "does not fit" },
-        .{ .body = "n: u8 = 0o400", .code = "E_INTEGER_RANGE", .fragment = "does not fit" },
-        .{ .body = "n: u32 = 0x1_0000_0000", .code = "E_INTEGER_RANGE", .fragment = "does not fit" },
-        .{ .body = "n: i32 = 0xFFFFFFFF", .code = "E_INTEGER_RANGE", .fragment = "does not fit" },
-        .{ .body = "n: i8 = -0x81", .code = "E_INTEGER_RANGE", .fragment = "does not fit" },
+        .{ .body = "const n: u8 = 256", .code = "E_INTEGER_RANGE", .fragment = "does not fit" },
+        .{ .body = "const n: u8 = 0x100", .code = "E_INTEGER_RANGE", .fragment = "does not fit" },
+        .{ .body = "const n: u8 = 0b1_0000_0000", .code = "E_INTEGER_RANGE", .fragment = "does not fit" },
+        .{ .body = "const n: u8 = 0o400", .code = "E_INTEGER_RANGE", .fragment = "does not fit" },
+        .{ .body = "const n: u32 = 0x1_0000_0000", .code = "E_INTEGER_RANGE", .fragment = "does not fit" },
+        .{ .body = "const n: i32 = 0xFFFFFFFF", .code = "E_INTEGER_RANGE", .fragment = "does not fit" },
+        .{ .body = "const n: i8 = -0x81", .code = "E_INTEGER_RANGE", .fragment = "does not fit" },
         .{ .body = "_ = 0xFFi8", .code = "E_INTEGER_RANGE", .fragment = "does not fit" },
         .{ .body = "_ = 0x10000000000000000", .code = "E_INTEGER_RANGE", .fragment = "does not fit" },
         .{ .body = "_ = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", .code = "E_INTEGER_RANGE", .fragment = "too large" },
@@ -118,10 +118,10 @@ fn expectConstantRejected(text: []const u8, code: []const u8) !void {
 
 // spec-case: NUM-LITERAL-5
 test "constant initializers reject a literal that does not fit the declared type" {
-    try expectConstantRejected("const LOW: u8 = 0x100\n\n\ndef main() -> i64:\n    return 0\n", "E_INTEGER_RANGE");
-    try expectConstantRejected("const HIGH: u32 = 4294967296\n\n\ndef main() -> i64:\n    return 0\n", "E_INTEGER_RANGE");
-    try expectConstantRejected("const BAD: u32 = 0xFFFF_FFFF_1\n\n\ndef main() -> i64:\n    return 0\n", "E_INTEGER_RANGE");
-    try expectConstantRejected("const BAD: u32 = 0x_\n\n\ndef main() -> i64:\n    return 0\n", "E_INTEGER_LITERAL");
+    try expectConstantRejected("const LOW: u8 = 0x100\n\n\nfunc main() -> i64:\n    return 0\n", "E_INTEGER_RANGE");
+    try expectConstantRejected("const HIGH: u32 = 4294967296\n\n\nfunc main() -> i64:\n    return 0\n", "E_INTEGER_RANGE");
+    try expectConstantRejected("const BAD: u32 = 0xFFFF_FFFF_1\n\n\nfunc main() -> i64:\n    return 0\n", "E_INTEGER_RANGE");
+    try expectConstantRejected("const BAD: u32 = 0x_\n\n\nfunc main() -> i64:\n    return 0\n", "E_INTEGER_LITERAL");
 }
 
 const Piece = struct { tag: lexer.Tag, text: []const u8 };
@@ -190,15 +190,15 @@ test "the formatter reproduces every numeric spelling byte for byte" {
         \\const MASK: u32 = 0xFF00_0000
         \\
         \\
-        \\def main() -> int:
-        \\    a = 0XDEAD_beef
-        \\    b = 0o17
-        \\    c = 0B1010_1010
-        \\    d = 1_000u32
-        \\    e = .5
-        \\    f = 5.
-        \\    g = 1_000.5e1_0
-        \\    h = 0x_FFu8
+        \\func main() -> int:
+        \\    mut a = 0XDEAD_beef
+        \\    mut b = 0o17
+        \\    mut c = 0B1010_1010
+        \\    mut d = 1_000u32
+        \\    mut e = .5
+        \\    mut f = 5.
+        \\    mut g = 1_000.5e1_0
+        \\    mut h = 0x_FFu8
         \\    return 0
         \\
     ;
@@ -213,7 +213,7 @@ fn expectLengthRejected(length: []const u8, code: []const u8, fragment: []const 
     var arena_state = std.heap.ArenaAllocator.init(t.allocator);
     defer arena_state.deinit();
     const arena = arena_state.allocator();
-    const text = try std.fmt.allocPrint(arena, "def main() -> i64:\n    a: [{s}]i64 = [1]\n    return a[0]\n", .{length});
+    const text = try std.fmt.allocPrint(arena, "func main() -> i64:\n    const a: FixedArray[i64, {s}] = FixedArray[i64, 1]([1])\n    return a[0]\n", .{length});
     var compilation = try language.Compilation.init(arena, "length.my", text);
     try t.expectError(error.SourceError, compilation.check());
     const first = compilation.diagnostics.items[0];
@@ -248,32 +248,32 @@ fn expectChecks(text: []const u8) !void {
 // spec-case: NUM-LITERAL-7
 test "one array type has one identity whichever integer spelling writes its length" {
     try expectChecks(
-        \\def take(a: [16]u8) -> u8:
+        \\func take(a: FixedArray[u8, 16]) -> u8:
         \\    return a[0]
         \\
         \\
-        \\def main() -> i64:
-        \\    hex: [0x10]u8 = [0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8]
+        \\func main() -> i64:
+        \\    mut hex: FixedArray[u8, 0x10] = FixedArray[u8, 16]([0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8])
         \\    return i64(take(hex))
         \\
     );
     try expectChecks(
-        \\def make[T, const N: u64](items: [N]T) -> T:
+        \\func make[T, const N: u64](items: FixedArray[T, N]) -> T:
         \\    return items[0]
         \\
         \\
-        \\def main() -> i64:
-        \\    values: [2]i64 = [40, 2]
+        \\func main() -> i64:
+        \\    mut values: FixedArray[i64, 2] = FixedArray[int, 2]([40, 2])
         \\    return make[i64, 0x2](values) + make[i64, 0b10](values) + make[i64, 0o2](values) + make[i64, 2](values)
         \\
     );
     try expectChecks(
         \\record Chunk[T, const N: u64]:
-        \\    items: [N]T
+        \\    items: FixedArray[T, N]
         \\
         \\
-        \\def main() -> i64:
-        \\    chunk = Chunk[i64, 0x2](items=[4, 5])
+        \\func main() -> i64:
+        \\    mut chunk = Chunk[i64, 0x2](items=FixedArray[int, 2]([4, 5]))
         \\    return chunk.items[1]
         \\
     );
@@ -291,7 +291,8 @@ fn expectLengthArgumentRejected(length: []const u8, fragment: []const u8) !void 
     var arena_state = std.heap.ArenaAllocator.init(t.allocator);
     defer arena_state.deinit();
     const arena = arena_state.allocator();
-    const text = try std.fmt.allocPrint(arena, "def pick[T, const N: u64](items: [N]T) -> T:\n    return items[0]\n\n\ndef main() -> i64:\n    values: [2]i64 = [40, 2]\n    return pick[i64, {s}](values)\n", .{length});
+    const text = try std.fmt.allocPrint(arena, "func pick[T, const N: u64](items: FixedArray[T, N]) -> T:\n    return items[0]" ++
+        "\n\n\nfunc main() -> i64:\n    const values = FixedArray[i64, 2]([40, 2])\n    return pick[i64, {s}](values)\n", .{length});
     var compilation = try language.Compilation.init(arena, "argument.my", text);
     try t.expectError(error.SourceError, compilation.check());
     const first = compilation.diagnostics.items[0];

@@ -9,85 +9,85 @@ record Row:
 
 
 record HeldRow:
-    view: list[int]
+    view: int[]
     number: int
 
 
-def selected(rows: list[Row], at: int, output: mut list[int]) -> int:
-    number = rows[at].label.number
+func selected(rows: Row[], at: int, mut output: int[]) -> int:
+    mut number = rows[at].label.number
     output.append(number)
     return number
 
 
-def total(rows: list[Row]) -> int:
-    i = 0
-    answer = 0
+func total(rows: Row[]) -> int:
+    mut i = 0
+    mut answer = 0
     while i < len(rows):
-        row = rows[i]
+        mut row = rows[i]
         answer += row.label.number
         i += 1
     return answer
 
 
-def replace(rows: mut list[Row]) -> int:
-    rows[0] = Row(Label(b"new", 9), 11)
+func replace(mut rows: Row[]) -> int:
+    rows[0] = Row(label=Label(text=b"new", number=9), other=11)
     return 0
 
 
-def callback(rows: mut list[Row]) -> int:
+func callback(mut rows: Row[]) -> int:
     return rows[replace(mut rows)].label.number
 
 
-def materialize(rows: list[Row], at: int, output: mut list[int]) -> Row:
-    row = rows[at]
+func materialize(rows: Row[], at: int, mut output: int[]) -> Row:
+    mut row = rows[at]
     output.append(row.other)
     return row
 
 
-def held(rows: list[HeldRow], output: mut list[int]) -> int:
-    number = rows[0].number
+func held(rows: HeldRow[], mut output: int[]) -> int:
+    mut number = rows[0].number
     output.append(number)
     return number
 
 
-public def test_nested_fields_keep_bounds_and_copy_the_scalar() -> bool:
-    rows = [Row(Label(b"a" + bytes([49]), 3), 7), Row(Label(b"b" + bytes([50]), 5), 11)]
-    output: list[int] = []
-    first = selected(rows, 0, mut output)
-    last = selected(rows, -1, mut output)
-    rows[0] = Row(Label(b"changed", 99), 101)
+public func test_nested_fields_keep_bounds_and_copy_the_scalar() -> bool:
+    mut rows = [Row(label=Label(text=b"a" + bytes([49]), number=3), other=7), Row(label=Label(text=b"b" + bytes([50]), number=5), other=11)]
+    mut output: int[] = []
+    mut first = selected(rows, 0, mut output)
+    mut last = selected(rows, -1, mut output)
+    rows[0] = Row(label=Label(text=b"changed", number=99), other=101)
     return first == 3 and last == 5 and output == [3, 5]
 
 
-public def test_readonly_length_loop_keeps_managed_local_bits_borrowed() -> bool:
-    rows = [Row(Label(b"a" + bytes([49]), 3), 7), Row(Label(b"b" + bytes([50]), 5), 11)]
+public func test_readonly_length_loop_keeps_managed_local_bits_borrowed() -> bool:
+    mut rows = [Row(label=Label(text=b"a" + bytes([49]), number=3), other=7), Row(label=Label(text=b"b" + bytes([50]), number=5), other=11)]
     return total(rows) == 8 and total([]) == 0 and rows[0].label.text == b"a1"
 
 
-public def test_callback_keeps_the_receiver_snapshot() -> bool:
-    rows = [Row(Label(b"old" + bytes([49]), 3), 7)]
-    value = callback(mut rows)
+public func test_callback_keeps_the_receiver_snapshot() -> bool:
+    mut rows = [Row(label=Label(text=b"old" + bytes([49]), number=3), other=7)]
+    mut value = callback(mut rows)
     return value == 3 and rows[0].label.number == 9
 
 
-public def test_escaped_record_keeps_ordinary_ownership() -> bool:
-    rows = [Row(Label(b"old" + bytes([49]), 3), 7)]
-    output: list[int] = []
-    row = materialize(rows, 0, mut output)
+public func test_escaped_record_keeps_ordinary_ownership() -> bool:
+    mut rows = [Row(label=Label(text=b"old" + bytes([49]), number=3), other=7)]
+    mut output: int[] = []
+    mut row = materialize(rows, 0, mut output)
     rows.clear()
     return row.label.text == b"old1" and row.label.number == 3 and output == [7]
 
 
-public def test_snapshot_sibling_stays_independent() -> bool:
-    mapping = {1: 7}
-    rows = [HeldRow(list(mapping.values()), 3)]
-    output: list[int] = []
-    value = held(rows, mut output)
+public func test_snapshot_sibling_stays_independent() -> bool:
+    mut mapping = {1: 7}
+    mut rows = [HeldRow(view=list(mapping.values()), number=3)]
+    mut output: int[] = []
+    mut value = held(rows, mut output)
     mapping[1] = 9
     return value == 3 and output == [3] and list(rows[0].view) == [7]
 
 
-def main(out: Stream) -> int:
+func main(out: Stream) -> int:
     out.print(test_nested_fields_keep_bounds_and_copy_the_scalar())
     out.print(test_readonly_length_loop_keeps_managed_local_bits_borrowed())
     out.print(test_callback_keeps_the_receiver_snapshot())

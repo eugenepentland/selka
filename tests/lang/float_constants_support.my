@@ -1,4 +1,3 @@
-module float_constants_support
 
 # Float constants that float_constants.my reads through an import.
 public const TAU: float = 6.28

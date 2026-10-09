@@ -44,7 +44,7 @@ fn headerEdit(a: std.mem.Allocator, release: bool) !void {
     const sentinel = try std.fs.path.join(a, &.{ global, "keep" });
     try cwd.writeFile(io, .{ .sub_path = sentinel, .data = "caller-owned" });
     try environment.put("ZIG_GLOBAL_CACHE_DIR", global);
-    try temporary.dir.writeFile(io, .{ .sub_path = "app.my", .data = "module app\nextern def linked_value(host: Host) -> i32 effects(host)\ndef main(host: Host) -> int:\n    return int(linked_value(host))\n" });
+    try temporary.dir.writeFile(io, .{ .sub_path = "app.my", .data = "extern func linked_value(host: Host) -> i32 effects(host)\nfunc main(host: Host) -> int:\n    return int(linked_value(host))\n" });
     try temporary.dir.writeFile(io, .{ .sub_path = "value.c", .data = "#include \"value.h\"\nint linked_value(void) { return VALUE; }\n" });
     try temporary.dir.writeFile(io, .{ .sub_path = "value.h", .data = "#define VALUE 7\n" });
     const before = try temporary.dir.statFile(io, "value.h", .{});
@@ -116,7 +116,7 @@ test "linkNative refuses unproved tool native reuse and cleans private caches af
         .zig = try std.fs.path.join(a, &.{ root, "zig" }),
         .work = try std.fs.path.join(a, &.{ root, "cache" }),
         .output = try std.fs.path.join(a, &.{ root, "output" }),
-        .release = false,
+        .mode = .debug,
         .links = &.{},
     };
     var log: std.ArrayList(u8) = .empty;

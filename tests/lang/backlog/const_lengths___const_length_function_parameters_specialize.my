@@ -1,19 +1,18 @@
-module const_lengths___const_length_function_parameters_specialize
 
-def first[T, const N: u64](items: [N]T) -> T:
+func first[T, const N: u64](items: [N]T) -> T:
     return items[0]
 
 
-def size[const N: u64]() -> u64:
+func size[const N: u64]() -> u64:
     return N
 
 
-def forward[T, const N: u64](items: [N]T) -> T:
+func forward[T, const N: u64](items: [N]T) -> T:
     return first[T, N](items)
 
 
-def main() -> i64:
-    return forward[i64, 2]([40, 0]) + i64(size[2]())
+func main() -> i64:
+    return forward[i64, 2](FixedArray[int, 2]([40, 0])) + i64(size[2]())
 
-public def test_const_length_function_parameters_specialize() -> bool:
+public func test_const_length_function_parameters_specialize() -> bool:
     return main() == 42

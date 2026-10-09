@@ -34,7 +34,7 @@ pub const entries = [_]Entry{
         .python = "Python's print() reaches an ambient stdout from anywhere. mylang makes the stream a parameter, so a function " ++
             "that prints says so in its signature and in its effect set, and a caller can pass a different stream.",
         .example =
-        \\def main(out: Stream) -> int:
+        \\func main(out: Stream) -> int:
         \\    out.print("hello")
         \\    return 0
         ,
@@ -48,8 +48,8 @@ pub const entries = [_]Entry{
         .python = "Python binds the name on the executed path and leaves it unbound otherwise. mylang rejects a read on a path " ++
             "that may not have assigned the name yet with E_UNBOUND, and a name that is never assigned is E_UNKNOWN_NAME.",
         .example =
-        \\def main() -> int:
-        \\    total = 0
+        \\func main() -> int:
+        \\    mut total = 0
         \\    for value in [1, 2, 3]:
         \\        total += value
         \\    return total
@@ -63,8 +63,8 @@ pub const entries = [_]Entry{
         .python = "The comprehension syntax is Python's, with no step argument and no open-ended form: a range takes one or two " ++
             "arguments, and every loop it drives may execute zero times.",
         .example =
-        \\def main() -> int:
-        \\    squares = [x * x for x in range(4)]
+        \\func main() -> int:
+        \\    mut squares = [for x in range(4) yield x * x]
         \\    return squares[3]
         ,
     },
@@ -81,11 +81,11 @@ pub const entries = [_]Entry{
         \\    left: int
         \\    right: int
         \\
-        \\def swap(pair: Pair) -> Pair effects():
+        \\func swap(pair: Pair) -> Pair effects():
         \\    return Pair(left=pair.right, right=pair.left)
         \\
-        \\def main() -> int:
-        \\    swapped = swap(Pair(left=1, right=2))
+        \\func main() -> int:
+        \\    mut swapped = swap(Pair(left=1, right=2))
         \\    return swapped.left * 10 + swapped.right
         ,
     },
@@ -98,7 +98,7 @@ pub const entries = [_]Entry{
         .python = "Python's open() reaches the ambient filesystem from any function. mylang passes the capability in, so the " ++
             "authority a program can use is visible in the signatures it calls and in the effects it declares.",
         .example =
-        \\def read_length(fs: Filesystem) -> int effects(filesystem):
+        \\func read_length(fs: Filesystem) -> int effects(filesystem):
         \\    match fs.read_text("answer.txt"):
         \\        case Ok(text):
         \\            return len(text)
@@ -115,8 +115,8 @@ pub const entries = [_]Entry{
         .python = "Python integers are arbitrary precision and every value is truthy or falsy. mylang checks the fixed width at " ++
             "run time and rejects a non-bool condition at check time.",
         .example =
-        \\def main() -> int:
-        \\    big = 9223372036854775807
+        \\func main() -> int:
+        \\    mut big = 9223372036854775807
         \\    return big % 10
         ,
     },
@@ -132,9 +132,9 @@ pub const entries = [_]Entry{
         .python = "Most of these read exactly as they do in Python. There is no bare print (see the Stream entry), no `range` step, " ++
             "no `enumerate(start=...)`, no truthiness, and collections are homogeneous.",
         .example =
-        \\def main() -> int:
-        \\    values = [3, 1, 2]
-        \\    ordered = sorted(values)
+        \\func main() -> int:
+        \\    mut values = [3, 1, 2]
+        \\    mut ordered = sorted(values)
         \\    return sum(ordered) + len(ordered)
         ,
     },

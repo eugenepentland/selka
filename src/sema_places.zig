@@ -40,6 +40,25 @@ fn augmentedOperator(op: ast.AssignmentOp) ast.BinaryOp {
 const eTextOperator = "E_TEXT_OPERATOR";
 /// The accepted spelling beside a rejected tuple arity.
 const tuple_arity_alternative = "a tuple has between 2 and 8 elements; declare a record for a larger group";
+/// Follow an assignable source path to its binding before permitting a write.
+fn requireWritableRoot(comptime Checker: type, self: *Checker, target: ast.NodeId) Error!void {
+    var current = target;
+    while (true) {
+        const node = self.syntax.nodes.items[@backingInt(current)];
+        switch (node.data) {
+            .name => |name| {
+                const slot = try self.resolve(name);
+                if (!self.locals.items[@backingInt(slot)].mutable) return self.sink.fail(eImmutable, node.span, "this binding and its nested data are read-only; declare it with `mut` to update it");
+                self.locals.items[@backingInt(slot)].usage.writes += 1;
+                return;
+            },
+            .field => |field| current = field.base,
+            .index => |index| current = index.base,
+            .mut_argument => |value| current = value,
+            else => return self.sink.fail(eAssignmentTarget, node.span, "a write requires a writable variable, field or element"),
+        }
+    }
+}
 const FieldDestination = struct { owner: typed.LocalId, index: ?typed.NodeId, value: typed.NodeId, refresh: ?typed.StatementId };
 /// One step of an assignment path below the value it rebuilds: a record field,
 /// or an element of the fixed array or enum table the path has reached.
@@ -58,6 +77,10 @@ const impl = @This();
 /// Bind assignment-target checking to the concrete checker without an import cycle.
 pub fn Checks(comptime Checker: type) type {
     return struct {
+        /// Reject updates through an immutable root, including nested fields and elements.
+        pub fn requireWritableRoot(self: *Checker, target: ast.NodeId) Error!void {
+            return impl.requireWritableRoot(Checker, self, target);
+        }
         /// Apply `PY-ARRAY-NEGATIVE-1` to one fixed-array index. A table key is an
         /// enumeration member and never negative. A constant in `-N .. -1` is
         /// folded to its position from the start, so `a[-1]` costs what `a[N - 1]`
@@ -188,6 +211,7 @@ fn checkTuple(comptime Checker: type, self: *Checker, node: ast.Node, inputs: []
 fn checkTupleAssignment(comptime Checker: type, self: *Checker, assignment: @FieldType(@FieldType(ast.Node, "data"), "field_assignment"), temporaries: []const typed.Type) Error!typed.Node {
     const target = self.syntax.nodes.items[@backingInt(assignment.target)];
     const names = target.data.tuple;
+    try validateTupleTargets(Checker, self, target, assignment.declaration);
     const checked = try self.expressionWithTemporaries(assignment.value, temporaries);
     const value_type = self.nodes.items[@backingInt(checked)].ty;
     const schema = record_layouts.tupleRecord(self.catalog.records, value_type) orelse {
@@ -203,12 +227,35 @@ fn checkTupleAssignment(comptime Checker: type, self: *Checker, assignment: @Fie
     for (names, 0..) |target_id, index| {
         const element = try b.node(schema.fields[index].ty, .{ .field = .{ .base = try b.read(value_slot), .index = index } });
         switch (self.syntax.nodes.items[@backingInt(target_id)].data) {
-            .name => |name| try bindDestructured(Checker, self, name, element, &statements),
+            .name => |name| try bindDestructured(Checker, self, name, element, assignment.declaration, &statements),
             else => try statements.append(self.allocator, try b.stmt(.{ .discard = try destructuredPlace(Checker, self, target_id, element, temporaries) })),
         }
     }
     return b.block(statements.items, try b.node(.unit, .unit));
 }
+/// Declarations bind names only; assignments never introduce unknown tuple targets.
+fn validateTupleTargets(comptime Checker: type, self: *Checker, target: ast.Node, declaration: ?bool) Error!void {
+    var unknown: ?source.Span = null;
+    var all_unknown = true;
+    for (target.data.tuple) |id| {
+        const node = self.syntax.nodes.items[@backingInt(id)];
+        if (node.data != .name) {
+            if (declaration != null) return self.sink.fail(eAssignmentTarget, node.span, "a destructuring declaration requires binding names");
+            all_unknown = false;
+            continue;
+        }
+        const name = node.data.name;
+        if (std.mem.eql(u8, self.src.text(name), "_")) continue;
+        if (declaration != null) continue;
+        if (try self.shadows(name)) all_unknown = false else unknown = name;
+    }
+    if (unknown) |name| {
+        const message = "destructuring assignment requires declared bindings; declare the targets with const or mut";
+        if (all_unknown) return self.sink.failFix(diagnostic.binding_declaration, name, message, .{ .span = .{ .start = target.span.start, .end = target.span.start }, .text = "mut " });
+        return self.sink.fail(diagnostic.binding_declaration, name, message);
+    }
+}
+
 /// PY-DESTRUCTURE-PLACE-1: write one element of an already-evaluated tuple
 /// into an element or field target exactly as `target = value` would, so
 /// `a[i], a[j] = a[j], a[i]` swaps. The target's own node is never checked
@@ -249,15 +296,16 @@ fn twoNameLoopMessage(comptime Checker: type, self: *Checker, elements: usize) E
         .{elements},
     );
 }
-/// Bind one destructuring target: a fresh function-scoped local for a name
-/// that is not bound yet, an assignment into the existing binding otherwise,
+/// Bind one explicitly declared tuple name, or update an existing writable target,
 /// and nothing at all for `_`, which needs no slot and reads no element.
-fn bindDestructured(comptime Checker: type, self: *Checker, name: source.Span, value: typed.NodeId, statements: *std.ArrayList(typed.StatementId)) Error!void {
+fn bindDestructured(comptime Checker: type, self: *Checker, name: source.Span, value: typed.NodeId, declaration: ?bool, statements: *std.ArrayList(typed.StatementId)) Error!void {
     const text = self.src.text(name);
     if (std.mem.eql(u8, text, "_")) return;
     const b: collections.Builder(Checker) = .{ .checker = self, .span = name };
     const value_type = self.nodes.items[@backingInt(value)].ty;
+    if (declaration != null and try self.shadows(name)) return self.sink.fail(eShadowing, name, "binding shadows an active declaration");
     if (self.active.get(text)) |slot| {
+        try self.require(value_type, self.locals.items[@backingInt(slot)].ty, name);
         if (!self.locals.items[@backingInt(slot)].mutable) return self.sink.fail(eImmutable, name, "this binding cannot be assigned");
         try requireRebindable(Checker, self, slot, name);
         if (self.transfers(self.locals.items[@backingInt(slot)].ty)) {
@@ -279,7 +327,7 @@ fn bindDestructured(comptime Checker: type, self: *Checker, name: source.Span, v
         .name = text,
         .declaration = name,
         .ty = value_type,
-        .mutable = true,
+        .mutable = declaration orelse return self.sink.fail(diagnostic.binding_declaration, name, "destructuring assignment requires declared bindings"),
     });
     try self.active.put(self.allocator, text, slot);
     try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = slot, .value = value } }));
@@ -288,6 +336,7 @@ fn checkFieldAssignment(comptime Checker: type, self: *Checker, node: ast.Node, 
     const assignment = node.data.field_assignment;
     if (self.syntax.nodes.items[@backingInt(assignment.target)].data == .tuple)
         return checkTupleAssignment(Checker, self, assignment, temporaries);
+    try requireWritableRoot(Checker, self, assignment.target);
     // PY-ARRAY-WRITE-2: `a[i].f op= v` keeps its operator.
     if (try arrayPlace(Checker, self, assignment.target, null)) |place|
         return checkArrayPlace(Checker, self, node, place, .{ .op = assignment.op, .value = assignment.value }, temporaries);
@@ -390,6 +439,7 @@ fn checkFieldAssignment(comptime Checker: type, self: *Checker, node: ast.Node, 
 /// the operator's ordinary rules and writing the result back through the same slot.
 fn checkIndexAugmented(comptime Checker: type, self: *Checker, node: ast.Node, temporaries: []const typed.Type) Error!typed.Node {
     const assignment = node.data.index_assignment;
+    try requireWritableRoot(Checker, self, assignment.target);
     if (try arrayPlace(Checker, self, assignment.target, null)) |place|
         return checkArrayPlace(Checker, self, node, place, .{ .op = assignment.op, .value = assignment.value }, temporaries);
     const b: collections.Builder(Checker) = .{ .checker = self, .span = node.span };
@@ -528,13 +578,9 @@ fn referenceRecordParameter(comptime Checker: type, self: *Checker, slot: typed.
 /// or overwrite the caller's fixed array; the program says which it means
 /// by writing elements or copying to a local.
 fn requireRebindable(comptime Checker: type, self: *Checker, slot: typed.LocalId, name: source.Span) Error!void {
-    if (!referenceParameter(Checker, self, slot)) return;
-    const text = self.src.text(name);
-    return self.sink.fail(eAssignmentTarget, name, try std.fmt.allocPrint(
-        self.allocator,
-        "`{s}` is a `mut` array parameter and names the caller's array; write its elements (`{s}[i] = value`), or copy it into a local first",
-        .{ text, text },
-    ));
+    _ = self;
+    _ = slot;
+    _ = name;
 }
 /// The array place an assignment target names, or null when its path writes
 /// no fixed array or table element and the list, dictionary and record rules

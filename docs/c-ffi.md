@@ -1,19 +1,19 @@
 # Direct C imports
 
-An `extern def` calls a fixed-arity C function with scalar arguments directly from a
+An `extern func` calls a fixed-arity C function with scalar arguments directly from a
 native build. No adapter or registration is needed; the C code is compiled with the
 program through `--link`:
 
 ```mylang
 # doc: check
 # Calling libc needs a native build; `mylang build main.my --run` links and runs it.
-extern def abs(host: Host, value: i32) -> i32 effects(host)
+extern func abs(host: Host, value: i32) -> i32 effects(host)
 
 
-extern def floor(host: Host, value: float) -> float effects(host)
+extern func floor(host: Host, value: float) -> float effects(host)
 
 
-def main(host: Host) -> i64:
+func main(host: Host) -> i64:
     return i64(abs(host, -42))
 ```
 
@@ -42,7 +42,7 @@ with `myl_` or `mylang_` are reserved.
 
 ## The host parameter
 
-Every `extern def` takes `host: Host` as its first parameter and declares
+Every `extern func` takes `host: Host` as its first parameter and declares
 `effects(host)`, and may declare more effects; omitting either is
 `E_HOST_CAPABILITY` or `E_HOST_EFFECTS`. The checker verifies the `host` argument at
 each call, and the C ABI drops it before the foreign call, so the C function sees
@@ -96,14 +96,14 @@ prototype; a linker cannot verify C types. Foreign calls bypass capability grant
 other than `host`, and step and frame budgets do not count time spent inside them;
 `--timeout` and a test's `--timeout-ms` still apply.
 
-A test cannot call an `extern def`: no test is ever handed a `Host`.
+A test cannot call an `extern func`: no test is ever handed a `Host`.
 
 This covers scalar calls. Aggregate parameters and results (records, arrays, unions,
 `str`, collections, capabilities) and `mut` parameters are rejected by the checker
 (`E_EXTERN_SIGNATURE`, `E_MUTATION_MARKER`); raw pointers, C strings, variadic
 functions, C callbacks and automatic binding generation remain future work.
 
-`host def` declarations, registered host adapters, `--library`, `--provider` and
-the host applications built on them were retired in S5 (2026-10); `extern def` with
-`--link` is the C interop that remains. A `host def` is refused at check time with
-`E_HOST_RETIRED`: declare the function `extern def` and link its C implementation.
+`host func` declarations, registered host adapters, `--library`, `--provider` and
+the host applications built on them were retired in S5 (2026-10); `extern func` with
+`--link` is the C interop that remains. A `host func` is refused at check time with
+`E_HOST_RETIRED`: declare the function `extern func` and link its C implementation.

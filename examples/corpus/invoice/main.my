@@ -1,8 +1,7 @@
-module main
 import inputs
 import pricing
 
-def main() -> int:
+func main() -> int:
     match pricing.calculate(inputs.books(), inputs.cables(), inputs.adapters()):
         case pricing.Invoice.ok(receipt):
             return receipt.total

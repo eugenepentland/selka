@@ -28,9 +28,9 @@ def main():
     compiler = parser.parse_args().compiler.resolve()
     with tempfile.TemporaryDirectory(prefix='dependency graph ') as temporary:
         root = Path(temporary)
-        (root / 'main.my').write_text('module main\nimport leaf as renamed\nimport config.values as v\n\ndef main() -> i64:\n    return renamed.value() + v.count()\n')
+        (root / 'main.my').write_text('import leaf as renamed\nimport config.values as v\n\nfunc main() -> i64:\n    return renamed.value() + v.count()\n')
         leaf = root / 'leaf.my'
-        leaf.write_text('module leaf\n\n\npublic def value() -> i64:\n    return 4\n')
+        leaf.write_text('\n\npublic func value() -> i64:\n    return 4\n')
         manifest = root / 'inputs.json'
         manifest.write_text(json.dumps({'version': 1, 'module': 'config.values', 'values': [{'name': 'count', 'type': 'i64', 'value': '7'}]}))
 
@@ -64,7 +64,7 @@ def main():
         assert report()['manifests'][0]['sha256'] != first['manifests'][0]['sha256']
         leaf.write_text(leaf.read_text().replace('return 4', 'return 5'))
         assert next(s for s in report()['inputs'] if s['module'] == 'leaf')['sha256'] != sources['leaf']['sha256']
-        for text in ('module leaf\n\n\npublic def value() -> i64:\n    return True\n', 'module leaf\nimport missing\n'):
+        for text in ('\n\npublic func value() -> i64:\n    return True\n', 'import missing\n'):
             leaf.write_text(text)
             result = invoke()
             assert result.returncode != 0 and not result.stdout and b'E_' in result.stderr, result
@@ -79,8 +79,8 @@ def embedded_receipts(compiler):
     with tempfile.TemporaryDirectory(prefix='embedded inputs ') as temporary:
         root = Path(temporary)
         (root / 'assets').mkdir()
-        (root / 'main.my').write_text('module main\nimport data\n\n\ndef main() -> int:\n    return len(data.TABLE)\n')
-        (root / 'data.my').write_text('module data\n\npublic const TABLE: bytes = embed_bytes("assets/table.bin")\n')
+        (root / 'main.my').write_text('import data\n\n\nfunc main() -> int:\n    return len(data.TABLE)\n')
+        (root / 'data.my').write_text('\npublic const TABLE: bytes = embed_bytes("assets/table.bin")\n')
         table = root / 'assets' / 'table.bin'
         table.write_bytes(b'\x00\x01table')
 

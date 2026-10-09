@@ -1,12 +1,11 @@
-module python_values
 
 
 record ValuesBox:
     values: dict[str,int]
 
 
-def package[T:copy+storable](value: T) -> dict[str,T]:
-    values: dict[str,T] = {}
+func package[T:copy+storable](value: T) -> dict[str,T]:
+    mut values: dict[str,T] = {}
     values["key"] = value
     for key in values:
         if key not in values:
@@ -14,14 +13,14 @@ def package[T:copy+storable](value: T) -> dict[str,T]:
     return values
 
 
-def label[T:integer](number: T) -> str:
+func label[T:integer](number: T) -> str:
     return "n=" + str(number)
 
 
 # spec-case: PY-TEXT-1
-public def test_python_values_unicode_literals_chained_methods_indexing_and_membership() -> bool:
-    text = "hé🙂,x,"
-    parts = text.split(",")
+public func test_python_values_unicode_literals_chained_methods_indexing_and_membership() -> bool:
+    mut text = "hé🙂,x,"
+    mut parts = text.split(",")
     if ",".join(parts) != text:
         return False
     if "é🙂" not in text:
@@ -32,9 +31,9 @@ public def test_python_values_unicode_literals_chained_methods_indexing_and_memb
 
 
 # spec-case: PY-DICT-1
-public def test_python_values_dictionary_snapshot_and_arbitrary_method_receivers() -> bool:
-    box = ValuesBox(values={"one": 1})
-    before = box.values.copy()
+public func test_python_values_dictionary_snapshot_and_arbitrary_method_receivers() -> bool:
+    mut box = ValuesBox(values={"one": 1})
+    mut before = box.values.copy()
     box.values["two"] = 40
     if "two" in before or "two" not in box.values:
         return False
@@ -44,9 +43,9 @@ public def test_python_values_dictionary_snapshot_and_arbitrary_method_receivers
 
 
 # spec-case: PY-DICT-1
-public def test_python_values_dictionary_and_unicode_text_iteration_preserve_order() -> bool:
-    values = {"a": 10,"b": 20}
-    total = 0
+public func test_python_values_dictionary_and_unicode_text_iteration_preserve_order() -> bool:
+    mut values = {"a": 10,"b": 20}
+    mut total = 0
     for key in values:
         total += values[key]
     for index, ch in enumerate("é🙂"):
@@ -55,9 +54,9 @@ public def test_python_values_dictionary_and_unicode_text_iteration_preserve_ord
 
 
 # spec-case: PY-TEXT-1
-public def test_python_values_unicode_slicing_clamps_endpoints_and_returns_independent_text() -> bool:
-    text = "aé🙂z"
-    middle = text[1:-1]
+public func test_python_values_unicode_slicing_clamps_endpoints_and_returns_independent_text() -> bool:
+    mut text = "aé🙂z"
+    mut middle = text[1:-1]
     if middle != "é🙂":
         return False
     if text[-99:99] != text:
@@ -68,12 +67,12 @@ public def test_python_values_unicode_slicing_clamps_endpoints_and_returns_indep
 
 
 # spec-case: PY-DICT-1
-public def test_python_values_generic_dictionary_preserves_symbolic_value_types() -> bool:
+public func test_python_values_generic_dictionary_preserves_symbolic_value_types() -> bool:
     return package(42)["key"] == 42
 
 
 # spec-case: PY-TEXT-1
-public def test_python_values_generic_str_conversion_and_unicode_escapes() -> bool:
+public func test_python_values_generic_str_conversion_and_unicode_escapes() -> bool:
     if label(42) != "n=42":
         return False
     if "\u00e9\U0001f642" != "é🙂":
@@ -82,13 +81,13 @@ public def test_python_values_generic_str_conversion_and_unicode_escapes() -> bo
 
 
 # spec-case: PY-DICT-1
-public def test_python_values_collection_float_equality_and_membership_preserve_numeric_semantics() -> bool:
-    zeros = [0.0]
-    negative = [-0.0]
+public func test_python_values_collection_float_equality_and_membership_preserve_numeric_semantics() -> bool:
+    mut zeros = [0.0]
+    mut negative = [-0.0]
     if zeros != negative or -0.0 not in zeros:
         return False
-    nan = 0.0 / 0.0
-    nans = [nan]
+    mut nan = 0.0 / 0.0
+    mut nans = [nan]
     if nans == nans or nan in nans:
         return False
     if {"value": 0.0} != {"value": -0.0}:
@@ -100,15 +99,15 @@ public def test_python_values_collection_float_equality_and_membership_preserve_
     return True
 
 
-def read_scalar(text: str, index: int) -> str:
+func read_scalar(text: str, index: int) -> str:
     return text[index]
 
 
 # spec-case: PY-TEXT-1
-public def test_ascii_scalar_indexing_survives_frame_restores_and_collections() -> bool:
-    text = "abcdefghijklmnopqrstuvwxyz0123456789"
-    kept: list[str] = []
-    index = 0
+public func test_ascii_scalar_indexing_survives_frame_restores_and_collections() -> bool:
+    mut text = "abcdefghijklmnopqrstuvwxyz0123456789"
+    mut kept: str[] = []
+    mut index = 0
     while index < 512:
         kept.append(read_scalar(text, index % len(text)))
         index = index + 1
@@ -123,5 +122,5 @@ public def test_ascii_scalar_indexing_survives_frame_restores_and_collections() 
     return True
 
 
-def main() -> int:
+func main() -> int:
     return 0

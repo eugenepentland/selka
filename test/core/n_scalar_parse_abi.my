@@ -1,17 +1,16 @@
-module n_scalar_parse_abi
 
-def integer(raw: bytes, start: int, end: int) -> Option[int] noalloc:
+func integer(raw: bytes, start: int, end: int) -> int? noalloc:
     return raw.parse_int_range(start, end)
 
-def floating(raw: bytes, start: int, end: int) -> Option[float] noalloc:
+func floating(raw: bytes, start: int, end: int) -> float? noalloc:
     return raw.parse_float_range(start, end)
 
 # spec-case: NEW-CORE-S3-NUMBER-1
-public def test_integer_option_c_abi_keeps_signed_limits_and_none_tags() -> bool:
+public func test_integer_option_c_abi_keeps_signed_limits_and_none_tags() -> bool:
     return integer(b"-9223372036854775808", 0, 20) == Some(-9223372036854775808) and integer(b"9223372036854775807", 0, 19) == Some(9223372036854775807) and integer(b"9223372036854775808", 0, 19) == None and integer(b"garbage", 0, 7) == None
 
 # spec-case: NEW-CORE-S3-NUMBER-1
-public def test_float_option_c_abi_keeps_signed_zero_nonfinite_and_none_tags() -> bool:
+public func test_float_option_c_abi_keeps_signed_zero_nonfinite_and_none_tags() -> bool:
     match floating(b"-0.0", 0, 4):
         case Some(value):
             if str(value) != "-0.0":
@@ -32,5 +31,5 @@ public def test_float_option_c_abi_keeps_signed_zero_nonfinite_and_none_tags() -
             return False
     return floating(b"1e+", 0, 3) == None and floating(b"0.125", 0, 5) == Some(0.125)
 
-def main() -> int:
+func main() -> int:
     return 0

@@ -109,6 +109,7 @@ hard blocker, not a corner: minimal reproducer, QBE builds and returns 8, LLVM
 exited 2:
 
 ```mylang
+# doc: skip Historical pre-redesign syntax retained as audit evidence.
 def inc(n: int) -> int:
     return n + 1
 

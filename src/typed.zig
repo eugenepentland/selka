@@ -63,7 +63,7 @@ pub const Node = struct {
         unit,
         block_value: struct { body: StatementId, value: NodeId },
         function_value: FunctionId,
-        invoke: struct { callee: NodeId, arguments: []const NodeId },
+        invoke: struct { evaluation_order: []const usize = &.{}, callee: NodeId, arguments: []const NodeId, evaluation: ?struct { body: StatementId, cleanup: []const LocalId } = null },
         local: LocalId,
         propagate: struct { value: NodeId, output: Type },
         buffer_operation: struct { kind: @import("buffer_operations.zig").Kind, owner: LocalId, arguments: []const NodeId },
@@ -101,7 +101,7 @@ pub const Node = struct {
         record: []const FieldInit,
         update: struct { base: NodeId, fields: []const FieldInit },
         field: struct { base: NodeId, index: usize },
-        call: struct { evaluation: ?struct { body: StatementId, cleanup: []const LocalId } = null, function: FunctionId, arguments: []const NodeId },
+        call: struct { evaluation_order: []const usize = &.{}, evaluation: ?struct { body: StatementId, cleanup: []const LocalId } = null, function: FunctionId, arguments: []const NodeId },
         unary: struct { op: UnaryOp, operand: NodeId, op_span: Span },
         binary: struct { op: BinaryOp, left: NodeId, right: NodeId, op_span: Span },
     },
@@ -237,6 +237,8 @@ pub const ReturnOrigin = union(enum) {
 /// Checked obligations, type-argument visibility and an optional explicit domain wire contract.
 /// Exact value parameter/result types, declared effect ceiling and mutation contract.
 pub const Callable = struct {
+    /// Required labels by parameter position; empty entries denote positional inputs.
+    labels: []const []const u8 = &.{},
     parameters: []const Type,
     return_type: Type,
     effects: effect_set.Mask,
@@ -297,9 +299,22 @@ pub fn wrappingCase(records: []const Record, container: Type, payload: Type) ?us
     const variants = records[container.recordIndex()].shape.variants orelse return null;
     if (!variants.is_union) return null;
     for (variants.cases, 0..) |case, tag| {
-        if (case.payload) |declared| if (declared == payload) return tag;
+        if (case.payload) |declared| {
+            if (declared == payload) return tag;
+            if (wrappingRecord(records, container, tag, payload) != null) return tag;
+        }
     }
     return null;
+}
+/// Single named-field payload record required when widening an error into an enum case.
+pub fn wrappingRecord(records: []const Record, container: Type, tag: usize, payload: Type) ?Type {
+    if (!container.isAggregate() or container.recordIndex() >= records.len) return null;
+    const variants = records[container.recordIndex()].shape.variants orelse return null;
+    if (tag >= variants.cases.len or !variants.cases[tag].fielded) return null;
+    const declared = variants.cases[tag].payload orelse return null;
+    if (!declared.isAggregate() or declared.recordIndex() >= records.len) return null;
+    const fields = records[declared.recordIndex()].fields;
+    return if (fields.len == 1 and fields[0].ty == payload) declared else null;
 }
 /// Equality supported by concrete expressions and generic equality requirements.
 /// Scalars, enums and domains compare directly; records, fixed arrays, unions,
@@ -442,7 +457,51 @@ fn writableDepth(records: []const Record, ty: Type, depth: usize) bool {
 
 /// Render a type the way source spells it, for user-facing diagnostics.
 pub fn surfaceTypeName(allocator: std.mem.Allocator, ty: Type, records: []const Record) std.mem.Allocator.Error![]const u8 {
+    const builtin = switch (ty) {
+        .unit => "Unit",
+        .clock_cap => "Clock",
+        .random_cap => "Random",
+        .filesystem_cap => "Filesystem",
+        .network_cap => "Network",
+        .environment_cap => "Environment",
+        .stream_cap => "Stream",
+        .host_cap => "Host",
+        else => null,
+    };
+    if (builtin) |name| return allocator.dupe(u8, name);
+    if (ty.isAggregate()) {
+        const record = records[ty.recordIndex()];
+        if (record.shape.array) |array| if (array.key == null) {
+            const element = try surfaceTypeName(allocator, array.element, records);
+            defer allocator.free(element);
+            return std.fmt.allocPrint(allocator, "FixedArray[{s}, {d}]", .{ element, array.length });
+        };
+        if (record.collection.kind == .list) if (record.shape.buffer) |payload| {
+            const element = try surfaceTypeName(allocator, payload, records);
+            defer allocator.free(element);
+            return std.fmt.allocPrint(allocator, "{s}[]", .{element});
+        };
+        if (surfaceOptionalPayload(record)) |payload| {
+            const element = try surfaceTypeName(allocator, payload, records);
+            defer allocator.free(element);
+            return std.fmt.allocPrint(allocator, "{s}?", .{element});
+        }
+    }
     return surfaceTypeText(allocator, typeName(ty, records));
+}
+/// Identify the builtin optional schema without depending on the prelude module.
+fn surfaceOptionalPayload(record: Record) ?Type {
+    if (!std.mem.startsWith(u8, record.name, "Option<") and
+        !std.mem.startsWith(u8, record.name, "std_result::Option<")) return null;
+    const variants = record.shape.variants orelse return null;
+    if (!variants.is_union or variants.fallible or variants.cases.len != 2) return null;
+    var payload: ?Type = null;
+    var empty = false;
+    for (variants.cases) |variant| {
+        if (std.mem.eql(u8, variant.name, "some")) payload = variant.payload;
+        if (std.mem.eql(u8, variant.name, "none") and variant.payload == null) empty = true;
+    }
+    return if (empty) payload else null;
 }
 /// Rewrite an internal type or signature spelling into the source surface spelling.
 pub fn surfaceTypeText(allocator: std.mem.Allocator, raw: []const u8) std.mem.Allocator.Error![]const u8 {
@@ -485,6 +544,8 @@ pub fn surfaceTypeText(allocator: std.mem.Allocator, raw: []const u8) std.mem.Al
                 try out.appendSlice(allocator, "int");
             } else if (std.mem.eql(u8, word, "f64")) {
                 try out.appendSlice(allocator, "float");
+            } else if (std.mem.eql(u8, word, "def")) {
+                try out.appendSlice(allocator, "func");
             } else {
                 try out.appendSlice(allocator, word);
             }
@@ -608,7 +669,7 @@ pub const Local = struct {
     origin: LocalOrigin = .local,
 };
 /// Compile-time ownership availability, definite-assignment, and arena confinement.
-pub const LocalOwnership = struct { transfer_span: ?Span = null, initialized: bool = false, transfer_available: bool = false };
+pub const LocalOwnership = struct { scoped_file: bool = false, transfer_span: ?Span = null, initialized: bool = false, transfer_available: bool = false };
 /// Static binding reads and writes used by quality diagnostics.
 pub const LocalUsage = struct {
     temporary: bool = false,
@@ -670,6 +731,8 @@ pub const FunctionSignature = struct {
 };
 /// Checked function body and its lexical local table.
 pub const FunctionScope = struct {
+    /// Named parameter labels retained for runtime callable contract validation.
+    parameter_labels: []const []const u8 = &.{},
     body: StatementId,
     locals: []const Local = &.{},
 };

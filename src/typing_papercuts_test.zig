@@ -25,28 +25,28 @@ fn evaluates(text: []const u8, expected: i64) !void {
 // spec-case: DISCARD-NAME-1
 test "a loop variable that is not the discard name still may not reuse an active name" {
     try reject(
-        \\def main() -> int:
-        \\    total = 0
+        \\func main() -> int:
+        \\    mut total = 0
         \\    for i in range(2):
         \\        for i in range(3):
         \\            total += 1
         \\    return total
     , "E_SHADOWING");
     try reject(
-        \\def main() -> int:
-        \\    total = 0
+        \\func main() -> int:
+        \\    mut total = 0
         \\    for total in range(2):
         \\        pass
         \\    return total
     , "E_SHADOWING");
     try reject(
-        \\def main() -> int:
-        \\    x = 1
-        \\    ys = [x for x in [1, 2]]
+        \\func main() -> int:
+        \\    mut x = 1
+        \\    mut ys = [for x in [1, 2] yield x]
         \\    return len(ys)
     , "E_SHADOWING");
     try reject(
-        \\def main() -> int:
+        \\func main() -> int:
         \\    for a, a in enumerate([1]):
         \\        pass
         \\    return 0
@@ -56,18 +56,18 @@ test "a loop variable that is not the discard name still may not reuse an active
 // spec-case: DISCARD-NAME-1
 test "the discard name is not readable after its scope and a discarded assignment binds nothing" {
     try reject(
-        \\def main() -> int:
+        \\func main() -> int:
         \\    for _ in range(2):
         \\        pass
         \\    return _
     , "E_UNKNOWN_NAME");
     try reject(
-        \\def main() -> int:
+        \\func main() -> int:
         \\    _ = 5
         \\    return _
     , "E_UNKNOWN_NAME");
     try evaluates(
-        \\def main() -> int:
+        \\func main() -> int:
         \\    _ = 5
         \\    for _ in range(2):
         \\        pass
@@ -78,33 +78,33 @@ test "the discard name is not readable after its scope and a discarded assignmen
 // spec-case: OPTION-EQ-1
 test "an equality with two operands that await a type, or a wrong payload, is still rejected" {
     try reject(
-        \\def main() -> int:
+        \\func main() -> int:
         \\    if Some(1) == Some(1):
         \\        return 1
         \\    return 0
     , "E_OPTION_INFERENCE");
     try reject(
-        \\def half(value: int) -> Option[int]:
+        \\func half(value: int) -> int?:
         \\    return Some(value)
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    if half(4) == Some("a"):
         \\        return 1
         \\    return 0
     , "E_TYPE");
     try reject(
-        \\def whole(value: int) -> int:
+        \\func whole(value: int) -> int:
         \\    return value
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    if whole(4) == Some(4):
         \\        return 1
         \\    return 0
     , "E_TYPE");
     try reject(
-        \\def main() -> int:
+        \\func main() -> int:
         \\    if Ok(1) == Ok(1):
         \\        return 1
         \\    return 0
@@ -117,35 +117,35 @@ test "a method on a str or bytes constant keeps the receiver's diagnostics and e
         \\const NAME: str = "hello"
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return len(NAME.frobnicate())
     , "E_COLLECTION_METHOD");
     try reject(
         \\const NAME: str = "hello"
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return len(NAME.upper(1))
     , "E_ARITY");
     try reject(
         \\const DATA: bytes = b"a,b"
         \\
         \\
-        \\def main() -> int effects():
+        \\func main() -> int effects():
         \\    return DATA.find(b",")
     , "E_EFFECT_BOUND");
     try reject(
         \\const LIMIT: int = 4
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return LIMIT.bit_length()
     , "E_UNKNOWN_TYPE");
     try evaluates(
         \\const NAME: str = "hello"
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return len(NAME.upper()) + NAME.find("l")
     , 7);
 }

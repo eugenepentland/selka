@@ -5,31 +5,31 @@ const language = @import("compiler.zig");
 const native = @import("native_execute.zig");
 const schema =
     \\record Sample:
-    \\    values: [2]i64
+    \\    values: FixedArray[i64, 2]
     \\    tag: u8
     \\
     \\
     \\
 ;
 const program = schema ++
-    \\def make[T: integer](x: T) -> Sample:
-    \\    return Sample(values=[i64(x), i64(x) + 1], tag=7u8)
+    \\func make[T: integer](x: T) -> Sample:
+    \\    return Sample(values=FixedArray[int, 2]([i64(x), i64(x) + 1]), tag=7u8)
     \\
     \\
-    \\def total[T](x: T, s: Sample) -> i64:
+    \\func total[T](x: T, s: Sample) -> i64:
     \\    _ = x
     \\    return s.values[0] + s.values[1] + i64(len(s.values))
     \\
     \\
-    \\def choose[T](x: T, a: Sample, b: Sample) -> Sample:
+    \\func choose[T](x: T, a: Sample, b: Sample) -> Sample:
     \\    _ = x
     \\    if a.tag == b.tag:
     \\        return a
     \\    return b
     \\
     \\
-    \\def main() -> i64:
-    \\    p = make[u8](7u8)
+    \\func main() -> i64:
+    \\    mut p = make[u8](7u8)
     \\    return total[bool](True, choose[i64](0, p, p))
 ;
 fn scenario(allocator: std.mem.Allocator) !void {
@@ -51,19 +51,19 @@ fn reject(bytes: []const u8, expected: []const u8) !void {
 }
 const updates =
     \\record Pair:
-    \\    values: [2]i64
+    \\    values: FixedArray[i64, 2]
     \\    flag: bool
     \\
     \\
-    \\def change[T: integer](p: Pair, index: T, value: i64) -> Pair:
-    \\    q = p
+    \\func change[T: integer](p: Pair, index: T, value: i64) -> Pair:
+    \\    mut q = p
     \\    q.values = replace(p.values, index, value)
     \\    return q
     \\
     \\
-    \\def main() -> i64:
-    \\    original = Pair(values=[7, 8], flag=True)
-    \\    changed = change[u8](original, 0u8, 20)
+    \\func main() -> i64:
+    \\    mut original = Pair(values=FixedArray[int, 2]([7, 8]), flag=True)
+    \\    mut changed = change[u8](original, 0u8, 20)
     \\    if changed.flag:
     \\        return original.values[0] + changed.values[0] + changed.values[1]
     \\    return 0
@@ -74,17 +74,17 @@ fn updateScenario(allocator: std.mem.Allocator) !void {
     try t.expectEqual(@as(i64, 35), (try native.run(&c)).value);
     var table = try language.Compilation.init(allocator, "table-update.my",
         \\enum Key:
-        \\    first,
+        \\    first
         \\    second
         \\
         \\
-        \\def put[T: integer](p: [Key]i64, key: Key, value: T) -> [Key]i64:
+        \\func put[T: integer](p: [Key]i64, key: Key, value: T) -> [Key]i64:
         \\    return replace(p, key, i64(value))
         \\
         \\
-        \\def main() -> i64:
-        \\    old: [Key]i64 = {Key.first: 1, Key.second: 2}
-        \\    changed = put[u8](old, Key.first, 8u8)
+        \\func main() -> i64:
+        \\    mut old: [Key]i64 = {Key.first: 1, Key.second: 2}
+        \\    mut changed = put[u8](old, Key.first, 8u8)
         \\    return old[Key.first] + changed[Key.first]
     );
     defer table.deinit();
@@ -102,38 +102,38 @@ const variants =
     \\
     \\
     \\enum Color:
-    \\    red,
+    \\    red
     \\    blue
     \\
     \\
-    \\union Choice:
-    \\    none,
-    \\    value: Payload
+    \\enum Choice:
+    \\    none
+    \\    value(value: Payload)
     \\
     \\
-    \\def make[T: integer](x: T) -> Choice:
-    \\    return Choice.value(Payload(n=i64(x)))
+    \\func make[T: integer](x: T) -> Choice:
+    \\    return Choice.value(value=Payload(n=i64(x)))
     \\
     \\
-    \\def score[T](context: T, x: Choice) -> i64:
+    \\func score[T](context: T, x: Choice) -> i64:
     \\    _ = context
     \\    match x:
     \\        case Choice.none:
     \\            return 0
-    \\        case Choice.value(p):
+    \\        case Choice.value(value=p):
     \\            return p.n
     \\
     \\
-    \\def color[T](context: T) -> Color:
+    \\func color[T](context: T) -> Color:
     \\    _ = context
     \\    return Color.blue
     \\
     \\
-    \\def mapping[T: integer](x: T) -> [Color]i64:
+    \\func mapping[T: integer](x: T) -> [Color]i64:
     \\    return {Color.red: i64(x), Color.blue: 0}
     \\
     \\
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    match color[bool](True):
     \\        case Color.red:
     \\            return 0
@@ -162,11 +162,11 @@ test "generic concrete shapes reject mismatched nominal values and malformed con
         \\    n: i64
         \\
         \\
-        \\def f[T](x: A) -> B:
+        \\func f[T](x: A) -> B:
         \\    return x
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_GENERIC_TYPE");
     try reject(
@@ -174,12 +174,12 @@ test "generic concrete shapes reject mismatched nominal values and malformed con
         \\    n: i64
         \\
         \\
-        \\def f[T](x: T) -> A:
+        \\func f[T](x: T) -> A:
         \\    _ = x
         \\    return A()
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_MISSING_FIELD");
     try reject(
@@ -188,12 +188,12 @@ test "generic concrete shapes reject mismatched nominal values and malformed con
         \\    m: i64
         \\
         \\
-        \\def f[T](x: T) -> A:
+        \\func f[T](x: T) -> A:
         \\    _ = x
         \\    return A(n=1, n=2)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_DUPLICATE_FIELD");
     try reject(
@@ -201,36 +201,36 @@ test "generic concrete shapes reject mismatched nominal values and malformed con
         \\    n: i64
         \\
         \\
-        \\def f[T](x: A) -> i64:
+        \\func f[T](x: A) -> i64:
         \\    return x.other
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_UNKNOWN_FIELD");
     try reject(
-        \\def f[T](x: T) -> [2]i64:
+        \\func f[T](x: T) -> FixedArray[i64, 2]:
         \\    _ = x
-        \\    return [1]
+        \\    return FixedArray[i64, 2]([1])
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_ARRAY_LENGTH");
     try reject(
-        \\def f[T](x: [2]i64) -> i64:
+        \\func f[T](x: FixedArray[i64, 2]) -> i64:
         \\    return x[True]
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_GENERIC_OPERATION");
     try reject(
-        \\def f[T](x: T) -> i64:
+        \\func f[T](x: T) -> i64:
         \\    return x.n
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_GENERIC_BODY_UNSUPPORTED");
 }
@@ -238,17 +238,17 @@ test "generic concrete shapes reject mismatched nominal values and malformed con
 test "generic concrete variants reject incomplete duplicate and malformed uncalled matches" {
     try reject(
         \\enum E:
-        \\    a,
+        \\    a
         \\    b
         \\
         \\
-        \\def f[T](x: E) -> i64:
+        \\func f[T](x: E) -> i64:
         \\    match x:
         \\        case E.a:
         \\            return 1
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_INCOMPLETE_MATCH");
     try reject(
@@ -256,7 +256,7 @@ test "generic concrete variants reject incomplete duplicate and malformed uncall
         \\    a
         \\
         \\
-        \\def f[T](x: E) -> i64:
+        \\func f[T](x: E) -> i64:
         \\    match x:
         \\        case E.a:
         \\            return 1
@@ -264,21 +264,21 @@ test "generic concrete variants reject incomplete duplicate and malformed uncall
         \\            return 2
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_DUPLICATE_ARM");
     try reject(
-        \\union E:
-        \\    a: i64
+        \\enum E:
+        \\    a(value: i64)
         \\
         \\
-        \\def f[T](x: E) -> i64:
+        \\func f[T](x: E) -> i64:
         \\    match x:
         \\        case E.a:
         \\            return 1
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_PATTERN_PAYLOAD");
     try reject(
@@ -286,39 +286,39 @@ test "generic concrete variants reject incomplete duplicate and malformed uncall
         \\    a
         \\
         \\
-        \\def f[T](x: E) -> i64:
+        \\func f[T](x: E) -> i64:
         \\    match x:
         \\        case E.a(p):
         \\            return p
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_PATTERN_PAYLOAD");
     try reject(
-        \\union E:
-        \\    a: i64
+        \\enum E:
+        \\    a(value: i64)
         \\
         \\
-        \\def f[T](x: T) -> E:
+        \\func f[T](x: T) -> E:
         \\    _ = x
-        \\    return E.a(True)
+        \\    return E.a(value=True)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_GENERIC_TYPE");
     try reject(
-        \\union E:
-        \\    a: i64
+        \\enum E:
+        \\    a(value: i64)
         \\
         \\
-        \\def f[T](x: T) -> E:
+        \\func f[T](x: T) -> E:
         \\    _ = x
         \\    return E.a
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_VARIANT_PAYLOAD");
     try reject(
@@ -330,62 +330,62 @@ test "generic concrete variants reject incomplete duplicate and malformed uncall
         \\    a
         \\
         \\
-        \\def f[T](x: E) -> i64:
+        \\func f[T](x: E) -> i64:
         \\    match x:
         \\        case F.a:
         \\            return 1
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_GENERIC_TYPE");
 }
 
 test "generic match payload scopes and fallthrough preserve independent arm checking" {
     var c = try language.Compilation.init(t.allocator, "arms.my",
-        \\union U:
-        \\    left: i64,
-        \\    right: i64
+        \\enum U:
+        \\    left(value: i64)
+        \\    right(value: i64)
         \\
         \\
-        \\def f[T](x: T, u: U) -> i64:
+        \\func f[T](x: T, u: U) -> i64:
         \\    _ = x
-        \\    out = 0
+        \\    mut out = 0
         \\    match u:
-        \\        case U.left(p):
+        \\        case U.left(value=p):
         \\            out = p
-        \\        case U.right(p):
+        \\        case U.right(value=p):
         \\            out = p + 1
         \\    return out
         \\
         \\
-        \\def main() -> i64:
-        \\    return f[bool](True, U.left(7)) + f[bool](False, U.right(8))
+        \\func main() -> i64:
+        \\    return f[bool](True, U.left(value=7)) + f[bool](False, U.right(value=8))
     );
     defer c.deinit();
     try t.expectEqual(@as(i64, 16), (try native.run(&c)).value);
     try reject(
-        \\union U:
-        \\    a: i64
+        \\enum U:
+        \\    a(value: i64)
         \\
         \\
-        \\def f[T](u: U) -> i64:
+        \\func f[T](u: U) -> i64:
         \\    match u:
-        \\        case U.a(p):
+        \\        case U.a(value=p):
         \\            _ = p
         \\    return p
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_UNKNOWN_NAME");
     try reject(
         \\enum U:
-        \\    a,
+        \\    a
         \\    b
         \\
         \\
-        \\def f[T](u: U) -> i64:
+        \\func f[T](u: U) -> i64:
         \\    match u:
         \\        case U.a:
         \\            pass
@@ -394,16 +394,16 @@ test "generic match payload scopes and fallthrough preserve independent arm chec
         \\    return 0
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_GENERIC_TYPE");
     try reject(
         \\enum U:
-        \\    a,
+        \\    a
         \\    b
         \\
         \\
-        \\def f[T](u: U) -> i64:
+        \\func f[T](u: U) -> i64:
         \\    match u:
         \\        case U.a:
         \\            pass
@@ -411,7 +411,7 @@ test "generic match payload scopes and fallthrough preserve independent arm chec
         \\            return 1
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_MISSING_RETURN");
 }
@@ -419,31 +419,31 @@ test "generic match payload scopes and fallthrough preserve independent arm chec
 test "generic concrete enum tables require complete unique nominal keys" {
     var c = try language.Compilation.init(t.allocator, "table.my",
         \\enum K:
-        \\    a,
+        \\    a
         \\    b
         \\
         \\
-        \\def table[T: integer](x: T) -> [K]i64:
+        \\func table[T: integer](x: T) -> [K]i64:
         \\    return {K.a: i64(x), K.b: 2}
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return table[u8](7u8)[K.a]
     );
     defer c.deinit();
     try t.expectEqual(@as(i64, 7), (try native.run(&c)).value);
     try reject(
         \\enum K:
-        \\    a,
+        \\    a
         \\    b
         \\
         \\
-        \\def f[T](x: T) -> [K]i64:
+        \\func f[T](x: T) -> [K]i64:
         \\    _ = x
         \\    return {K.a: 1}
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_INCOMPLETE_TABLE");
     try reject(
@@ -451,12 +451,12 @@ test "generic concrete enum tables require complete unique nominal keys" {
         \\    a
         \\
         \\
-        \\def f[T](x: T) -> [K]i64:
+        \\func f[T](x: T) -> [K]i64:
         \\    _ = x
         \\    return {K.a: 1, K.a: 2}
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_DUPLICATE_KEY");
 }
@@ -518,18 +518,18 @@ test "canonical specialization keys distinguish every keyed dimension and argume
 // spec: MUT-PARAM-7
 test "a mut argument marker inside a generic body forwards to a declared mut parameter" {
     var c = try language.Compilation.init(t.allocator, "mut_generic.my",
-        \\def push(values: mut list[i64], value: i64) -> None:
+        \\func push(mut values: i64[], value: i64) -> Unit:
         \\    values.append(value)
         \\
         \\
-        \\def twice[T](values: mut list[i64], tag: T) -> None:
+        \\func twice[T](mut values: i64[], tag: T) -> Unit:
         \\    _ = tag
         \\    push(mut values, 1)
         \\    push(mut values, 2)
         \\
         \\
-        \\def main() -> i64:
-        \\    values: list[i64] = []
+        \\func main() -> i64:
+        \\    mut values: i64[] = []
         \\    twice[bool](mut values, True)
         \\    return values[0] + values[1]
     );

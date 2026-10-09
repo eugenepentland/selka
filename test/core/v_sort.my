@@ -1,79 +1,78 @@
-module v_sort
 
 
 record Bucket:
-    items: list[int]
-    words: list[str]
+    items: int[]
+    words: str[]
 
 
-def digest(xs: list[int]) -> int:
-    h = len(xs)
+func digest(xs: int[]) -> int:
+    mut h = len(xs)
     for x in xs:
         h = (h * 31 + x) % 1000000007
     return h
 
 
-def ord_sum(word: str) -> int:
+func ord_sum(word: str) -> int:
     return len(word) * 3
 
 
-def words_digest(words: list[str]) -> int:
-    h = len(words)
+func words_digest(words: str[]) -> int:
+    mut h = len(words)
     for word in words:
         h = (h * 131 + len(word) * 7 + ord_sum(word)) % 1000000007
     return h
 
 
-def pseudo(n: int, seed: int) -> list[int]:
-    state = seed
-    out: list[int] = []
+func pseudo(n: int, seed: int) -> int[]:
+    mut state = seed
+    mut out: int[] = []
     for i in range(n):
         state = (state * 1103515245 + 12345) % 2147483648
         out.append(state % 1000 - 500)
     return out
 
 
-def shape(x: float) -> int:
+func shape(x: float) -> int:
     if x != x:
         return 1000
     if x == 0.0:
-        return 1 if 1.0 / x < 0.0 else 2
+        return if (1.0 / x < 0.0) then (1) else (2)
     return int(x * 100.0)
 
 
-def sorted_prefix(xs: list[int]) -> str:
-    ys = sorted(xs)
+func sorted_prefix(xs: int[]) -> str:
+    mut ys = sorted(xs)
     return str(ys[0]) + "," + str(ys[len(ys) // 2]) + "," + str(ys[len(ys) - 1])
 
 
-def main(out: Stream) -> int:
+func main(out: Stream) -> int:
     for n in [0, 1, 2, 15, 16, 17, 100, 1000, 5000]:
-        xs = pseudo(n, n + 3)
-        ys = sorted(xs)
-        ok = True
+        mut xs = pseudo(n, n + 3)
+        mut ys = sorted(xs)
+        mut ok = True
         for i in range(1, len(ys)):
             if ys[i - 1] > ys[i]:
                 ok = False
         out.print(n, ok, digest(xs), digest(ys), digest(sorted(ys)))
-    values = [5, -3, 9, 0, -3, 12, 7]
-    snapshot = values
+    mut values = [5, -3, 9, 0, -3, 12, 7]
+    mut snapshot = values
     values.sort()
     out.print(digest(values), digest(snapshot), values[0], values[6])
-    words = ["pear", "fig", "apple", "fig", "éclair", "zebra", "Apple", ""]
-    ordered = sorted(words)
+    mut words = ["pear", "fig", "apple", "fig", "éclair", "zebra", "Apple", ""]
+    mut ordered = sorted(words)
     out.print(", ".join(ordered), words_digest(ordered), len(words))
-    narrow = [i8(5), i8(-100), i8(127), i8(-128), i8(0)]
+    mut narrow = [i8(5), i8(-100), i8(127), i8(-128), i8(0)]
     narrow.sort()
-    wide = [18446744073709551615u64, 0u64, 9223372036854775808u64, 1u64]
+    mut wide = [18446744073709551615u64, 0u64, 9223372036854775808u64, 1u64]
     wide.sort()
-    small = [u8(200), u8(3), u8(255), u8(0)]
+    mut small = [u8(200), u8(3), u8(255), u8(0)]
     small.sort()
     out.print(narrow[0], narrow[1], narrow[4], wide[0], wide[3], small[0], small[3])
-    nan = 0.0 / 0.0
-    floats = [3.5, nan, -1.0, 0.0, -0.0, 2.0, nan, -7.25]
+    mut nan = 0.0 / 0.0
+    mut floats = [3.5, nan, -1.0, 0.0, -0.0, 2.0, nan, -7.25]
     floats.sort()
     out.print(shape(floats[0]), shape(floats[1]), shape(floats[2]), shape(floats[3]), shape(floats[4]), shape(floats[5]), shape(floats[6]), shape(floats[7]))
-    bucket = Bucket(items=[3, 1, 2], words=["b", "a"])
+    mut bucket = Bucket(items=[3, 1, 2], words=["b", "a"])
     bucket.items.sort()
     bucket.words.sort()
     out.print(digest(bucket.items), bucket.words[0], sorted_prefix(pseudo(50, 9)))

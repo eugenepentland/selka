@@ -16,14 +16,15 @@
 # inner loop) 0.51 s; hoisting `ci = c[i]` / `bk = b[k]` alone 2.44 s.
 
 
-def lcg(seed: int) -> int:
+func lcg(seed: int) -> int:
     return (seed * 3877 + 29573) % 139968
 
 
-def random_matrix(n: int, seed: int) -> tuple[list[list[float]], int]:
-    rows: list[list[float]] = []
+func random_matrix(n: int, input_seed: int) -> tuple[float[][], int]:
+    mut seed = input_seed
+    mut rows: float[][] = []
     for i in range(n):
-        row: list[float] = []
+        mut row: float[] = []
         for j in range(n):
             seed = lcg(seed)
             row.append(float(seed) / 139968.0)
@@ -31,22 +32,23 @@ def random_matrix(n: int, seed: int) -> tuple[list[list[float]], int]:
     return rows, seed
 
 
-def main(out: Stream) -> int:
-    n = 500
-    a, seed = random_matrix(n, 42)
-    b, seed = random_matrix(n, seed)
-    c: list[list[float]] = []
+func main(out: Stream) -> int:
+    mut n = 500
+    mut a, seed = random_matrix(n, 42)
+    const b, next_seed = random_matrix(n, seed)
+    seed = next_seed
+    mut c: float[][] = []
     for i in range(n):
-        ci = [0.0 for j in range(n)]
+        mut ci = [for j in range(n) yield 0.0]
         for k in range(n):
-            aik = a[i][k]
-            bk = b[k]
-            ci = [ci[j] + aik * bk[j] for j in range(n)]
+            mut aik = a[i][k]
+            mut bk = b[k]
+            ci = [for j in range(n) yield ci[j] + aik * bk[j]]
         c.append(ci)
-    trace = 0.0
+    mut trace = 0.0
     for i in range(n):
         trace = trace + c[i][i]
-    total = 0.0
+    mut total = 0.0
     for i in range(n):
         for j in range(n):
             total = total + c[i][j]

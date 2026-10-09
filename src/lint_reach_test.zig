@@ -19,26 +19,25 @@ const lint = language.lint;
 /// (`as_text` <- `render` <- `test_render`), one export no test reaches at all
 /// (`orphan`), and an entry point.
 const reach_fixture =
-    \\module main
     \\
     \\
-    \\public def as_text(value: int) -> int:
+    \\public func as_text(value: int) -> int:
     \\    return value + 1
     \\
     \\
-    \\def render(value: int) -> int:
+    \\func render(value: int) -> int:
     \\    return as_text(value)
     \\
     \\
-    \\public def orphan(value: int) -> int:
+    \\public func orphan(value: int) -> int:
     \\    return value - 1
     \\
     \\
-    \\def test_render() -> bool effects():
+    \\func test_render() -> bool effects():
     \\    return render(1) == 2
     \\
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return 0
 ;
 

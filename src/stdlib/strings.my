@@ -1,44 +1,43 @@
-module strings
 import math
 
 
 # The ten decimal digits, in value order.
-public def digits() -> str:
+public func digits() -> str:
     return "0123456789"
 
 
 # One rejected string operation, carrying the human-readable reason.
-public union Error:
-    Invalid: str,
-    Overflow: str
+public enum Error:
+    Invalid(value: str)
+    Overflow(value: str)
 
 
 # The human-readable reason carried by a rejected string operation.
-public def message(error: Error) -> str:
+public func message(error: Error) -> str:
     match error:
-        case Error.Invalid(detail):
+        case Error.Invalid(value=detail):
             return detail
-        case Error.Overflow(detail):
+        case Error.Overflow(value=detail):
             return detail
 
 
 # The thirty-six digits used by bases up to 36, in value order.
-def base_digits() -> str:
+func base_digits() -> str:
     return "0123456789abcdefghijklmnopqrstuvwxyz"
 
 
 # The twenty-six lowercase ASCII letters followed by the uppercase ones.
-public def letters() -> str:
+public func letters() -> str:
     return "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 
 # The ASCII characters treated as whitespace by this module.
-public def whitespace() -> str:
+public func whitespace() -> str:
     return " \t\n\r"
 
 
 # Position of a single character inside a table, or -1 when it is absent.
-def table_index(table: str, character: str) -> int:
+func table_index(table: str, character: str) -> int:
     for index, entry in enumerate(table):
         if entry == character:
             return index
@@ -46,7 +45,7 @@ def table_index(table: str, character: str) -> int:
 
 
 # Whether every character belongs to a table, rejecting the empty text.
-def all_in(table: str, text: str) -> bool:
+func all_in(table: str, text: str) -> bool:
     if len(text) == 0:
         return False
     for character in text:
@@ -56,68 +55,68 @@ def all_in(table: str, text: str) -> bool:
 
 
 # Whether the text is nonempty and made only of decimal digits.
-public def is_digit(text: str) -> bool effects():
+public func is_digit(text: str) -> bool effects():
     return text.isdigit()
 
 
 # Whether the text is nonempty and made only of ASCII letters.
-public def is_alpha(text: str) -> bool effects():
+public func is_alpha(text: str) -> bool effects():
     return text.isalpha()
 
 
 # Whether the text is nonempty and made only of ASCII letters and digits.
-public def is_alnum(text: str) -> bool:
+public func is_alnum(text: str) -> bool:
     return all_in(letters() + digits(), text)
 
 
 # Whether the text is nonempty and made only of spaces, tabs and line breaks.
-public def is_space(text: str) -> bool effects():
+public func is_space(text: str) -> bool effects():
     return text.isspace()
 
 
 # Whether the text begins with a prefix; every text starts with the empty one.
-public def starts_with(text: str, prefix: str) -> bool effects():
+public func starts_with(text: str, prefix: str) -> bool effects():
     return text.startswith(prefix)
 
 
 # Whether the text ends with a suffix; every text ends with the empty one.
-public def ends_with(text: str, suffix: str) -> bool effects():
+public func ends_with(text: str, suffix: str) -> bool effects():
     return text.endswith(suffix)
 
 
 # First position where a nonempty needle occurs, searching from the front.
-public def find(text: str, needle: str) -> Option[int] effects():
-    position = text.find(needle)
+public func find(text: str, needle: str) -> int? effects():
+    mut position = text.find(needle)
     if position < 0:
         return None
     return Some(position)
 
 
 # Number of nonoverlapping occurrences of a nonempty needle.
-public def count(text: str, needle: str) -> int effects():
+public func count(text: str, needle: str) -> int effects():
     if len(needle) == 0:
         return 0
     return text.count(needle)
 
 
 # Text without leading whitespace.
-public def lstrip(text: str) -> str:
+public func lstrip(text: str) -> str:
     return text.lstrip()
 
 
 # Text without trailing whitespace.
-public def rstrip(text: str) -> str:
+public func rstrip(text: str) -> str:
     return text.rstrip()
 
 
 # Text without leading or trailing whitespace.
-public def strip(text: str) -> str:
+public func strip(text: str) -> str:
     return text.strip()
 
 
 # Text split on line feeds, with one trailing carriage return removed per line.
-public def lines(text: str) -> list[str]:
-    out: list[str] = []
+public func lines(text: str) -> str[]:
+    mut out: str[] = []
     if len(text) == 0:
         return out
     for piece in text.split("\n"):
@@ -132,13 +131,13 @@ public def lines(text: str) -> list[str]:
 # `copies` copies and is appended to itself while that stays within `times`, and
 # one prefix of it tops up the rest, so building the answer copies each octet
 # of it at most three times instead of copying the growing answer once per copy.
-public def repeat(text: str, times: int) -> Result[str, Error]:
+public func repeat(text: str, times: int) -> Result[str, Error]:
     if times < 0:
-        return Err(Error.Invalid("repeat count must not be negative"))
+        return Err(Error.Invalid(value="repeat count must not be negative"))
     if times == 0 or len(text) == 0:
         return Ok("")
-    out = text
-    copies = 1
+    mut out = text
+    mut copies = 1
     while copies <= times - copies:
         out = out + out
         copies = copies * 2
@@ -148,63 +147,65 @@ public def repeat(text: str, times: int) -> Result[str, Error]:
 
 
 # Text padded on the left with a single fill character up to a width.
-public def pad_left(text: str, width: int, fill: str) -> Result[str, Error]:
+public func pad_left(text: str, width: int, fill: str) -> Result[str, Error]:
     if len(fill) != 1:
-        return Err(Error.Invalid("pad fill must be exactly one character"))
+        return Err(Error.Invalid(value="pad fill must be exactly one character"))
     if len(text) >= width:
         return Ok(text)
-    return Ok(repeat(fill, width - len(text))? + text)
+    const padding = try repeat(fill, width - len(text))
+    return Ok(padding + text)
 
 
 # Text padded on the right with a single fill character up to a width.
-public def pad_right(text: str, width: int, fill: str) -> Result[str, Error]:
+public func pad_right(text: str, width: int, fill: str) -> Result[str, Error]:
     if len(fill) != 1:
-        return Err(Error.Invalid("pad fill must be exactly one character"))
+        return Err(Error.Invalid(value="pad fill must be exactly one character"))
     if len(text) >= width:
         return Ok(text)
-    return Ok(text + repeat(fill, width - len(text))?)
+    const padding = try repeat(fill, width - len(text))
+    return Ok(text + padding)
 
 
 # Text with ASCII lowercase letters replaced by their uppercase forms.
-public def upper(text: str) -> str:
+public func upper(text: str) -> str:
     return text.upper()
 
 
 # Text with ASCII uppercase letters replaced by their lowercase forms.
-public def lower(text: str) -> str:
+public func lower(text: str) -> str:
     return text.lower()
 
 
 # Every nonoverlapping occurrence of a nonempty needle replaced by a substitute.
-public def substitute(text: str, needle: str, insertion: str) -> Result[str, Error]:
+public func substitute(text: str, needle: str, insertion: str) -> Result[str, Error]:
     if len(needle) == 0:
-        return Err(Error.Invalid("replacement needle must not be empty"))
+        return Err(Error.Invalid(value="replacement needle must not be empty"))
     return Ok(text.replace(needle, insertion))
 
 
 # Signed decimal text converted to an integer, rejecting overflow and junk.
-public def to_int(text: str) -> Option[int]:
-    return int(text)
+public func to_int(text: str) -> int?:
+    return parse_int(text)
 
 
 # Text converted through the pinned float grammar shared with byte parsing.
-public def to_float(text: str) -> Option[float]:
-    return float(text)
+public func to_float(text: str) -> float?:
+    return parse_float(text)
 
 
 # Integer rendered in a base between 2 and 36 using lowercase digits.
-public def format_int(value: int, base: int) -> Result[str, Error]:
+public func format_int(value: int, base: int) -> Result[str, Error]:
     if base < 2 or base > 36:
-        return Err(Error.Invalid("integer base must be between 2 and 36"))
+        return Err(Error.Invalid(value="integer base must be between 2 and 36"))
     if value == 0:
         return Ok("0")
-    magnitude = 0u64
+    mut magnitude = 0u64
     if value < 0:
         magnitude = u64(0 - (value + 1)) + 1u64
     else:
         magnitude = u64(value)
-    radix = u64(base)
-    out = ""
+    mut radix = u64(base)
+    mut out = ""
     while magnitude > 0u64:
         out = base_digits()[i64(magnitude % radix)] + out
         magnitude = magnitude // radix
@@ -215,72 +216,65 @@ public def format_int(value: int, base: int) -> Result[str, Error]:
 
 # The exact rounding error of `a * b`, whose rounded value is `product`: Dekker's
 # two-product over Veltkamp halves, exact while no partial product overflows.
-def product_error(a: float, b: float, product: float) -> float:
-    a_split = 134217729.0 * a
-    a_high = a_split - (a_split - a)
-    a_low = a - a_high
-    b_split = 134217729.0 * b
-    b_high = b_split - (b_split - b)
-    b_low = b - b_high
+func product_error(a: float, b: float, product: float) -> float:
+    mut a_split = 134217729.0 * a
+    mut a_high = a_split - (a_split - a)
+    mut a_low = a - a_high
+    mut b_split = 134217729.0 * b
+    mut b_high = b_split - (b_split - b)
+    mut b_low = b - b_high
     return ((a_high * b_high - product) + a_high * b_low + a_low * b_high) + a_low * b_low
 
 
 # Float rendered with a fixed number of decimals, rounding the exact binary value and
 # sending exact halves away from zero.
-public def format_float(value: float, decimals: int) -> Result[str, Error]:
+public func format_float(value: float, decimals: int) -> Result[str, Error]:
     if decimals < 0 or decimals > 17:
-        return Err(Error.Invalid("decimal count must be between 0 and 17"))
+        return Err(Error.Invalid(value="decimal count must be between 0 and 17"))
     if math.is_nan(value):
         return Ok("nan")
     if math.is_inf(value):
         if value < 0.0:
             return Ok("-inf")
         return Ok("inf")
-    magnitude = math.fabs(value)
-    scale = math.pow(10.0, decimals)
-    product = magnitude * scale
-    shifted = math.round(product)
+    mut magnitude = math.fabs(value)
+    mut scale = math.pow(10.0, decimals)
+    mut product = magnitude * scale
+    mut shifted = math.round(product)
     if shifted >= 9223372036854775808.0:
-        return Err(Error.Overflow("value is too large to render with fixed decimals"))
+        return Err(Error.Overflow(value="value is too large to render with fixed decimals"))
     # A product that rounded onto an exact half (2.675 * 100.0 == 267.5) is only a tie
     # if the unrounded product is one; below it, the value rounds toward zero.
     if shifted - product == 0.5 and product_error(magnitude, scale, product) < 0.0:
         shifted = shifted - 1.0
-    scaled = int(shifted)
-    body = format_int(scaled, 10)?
+    mut scaled = int(shifted)
+    mut body = try format_int(scaled, 10)
     if decimals == 0:
         if value < 0.0 and scaled != 0:
             return Ok("-" + body)
         return Ok(body)
-    body = pad_left(body, decimals + 1, "0")?
-    whole = body[0:len(body) - decimals]
-    fraction = body[len(body) - decimals:len(body)]
+    body = try pad_left(body, decimals + 1, "0")
+    mut whole = body[0:len(body) - decimals]
+    mut fraction = body[len(body) - decimals:len(body)]
     if value < 0.0 and scaled != 0:
         return Ok("-" + whole + "." + fraction)
     return Ok(whole + "." + fraction)
 
 
 # Unicode scalar value of a single-character text, or `Err` for any other length.
-public def ord(text: str) -> Result[int, Error]:
+public func ord(text: str) -> Result[int, Error]:
     if len(text) != 1:
-        return Err(Error.Invalid("ord requires exactly one character"))
-    encoded = text.encode()
-    first = encoded[0]
+        return Err(Error.Invalid(value="ord requires exactly one character"))
+    mut encoded = text.encode()
+    mut first = encoded[0]
     if first < 128:
         return Ok(first)
-    if first < 224:
-        width = 2
-        mask = 31
-    elif first < 240:
-        width = 3
-        mask = 15
-    else:
-        width = 4
-        mask = 7
+    const width = if first < 224 then 2 else if first < 240 then 3 else 4
+    const mask = if first < 224 then 31 else if first < 240 then 15 else 7
     if len(encoded) != width:
-        return Err(Error.Invalid("ord requires exactly one character"))
-    value = bit_and(first, mask)
-    index = 1
+        return Err(Error.Invalid(value="ord requires exactly one character"))
+    mut value = bit_and(first, mask)
+    mut index = 1
     while index < width:
         value = value * 64 + bit_and(encoded[index], 63)
         index = index + 1
@@ -289,14 +283,14 @@ public def ord(text: str) -> Result[int, Error]:
 
 # One-character text for a Unicode scalar value. Surrogates and code points past
 # `0x10FFFF` are rejected rather than encoded as replacement bytes.
-public def chr(code: int) -> Result[str, Error]:
+public func chr(code: int) -> Result[str, Error]:
     if code < 0:
-        return Err(Error.Invalid("chr requires a non-negative code point"))
+        return Err(Error.Invalid(value="chr requires a non-negative code point"))
     if code > 1114111:
-        return Err(Error.Overflow("chr requires a code point at most 0x10FFFF"))
+        return Err(Error.Overflow(value="chr requires a code point at most 0x10FFFF"))
     if code >= 55296 and code <= 57343:
-        return Err(Error.Invalid("chr rejects surrogate code points"))
-    values: list[int] = []
+        return Err(Error.Invalid(value="chr rejects surrogate code points"))
+    mut values: int[] = []
     if code < 128:
         values.append(code)
     elif code < 2048:
@@ -315,4 +309,4 @@ public def chr(code: int) -> Result[str, Error]:
         case Ok(text):
             return Ok(text)
         case Err(_):
-            return Err(Error.Invalid("chr could not encode the code point"))
+            return Err(Error.Invalid(value="chr could not encode the code point"))

@@ -41,7 +41,7 @@ pub const Request = struct {
     /// The build's cache directory: foreign objects, linked programs and staging.
     work: []const u8,
     output: []const u8,
-    release: bool,
+    mode: @import("build_mode.zig").Mode = .debug,
     /// Extra C sources to compile and link (`--link`).
     links: []const []const u8,
     /// Independent LLVM inputs, in link order (`emit_units`, or `wholeUnit`).
@@ -163,13 +163,13 @@ pub fn link(allocator: std.mem.Allocator, io: std.Io, environ: *const std.proces
     var needs: Dependencies = .{};
     for (request.units) |unit| needs = .{ .number = needs.number or unit.number, .math = needs.math or unit.math, .counting = needs.counting or unit.counting };
     const runtime = try runtimeFor(allocator, needs.counting, environ, log);
-    const settings: unit_cache.Settings = .{ .tool = guest.digest, .cpu = guest.native_target, .release = request.release, .runtime = runtime.abi };
+    const settings: unit_cache.Settings = .{ .tool = guest.digest, .cpu = guest.native_target, .mode = request.mode, .runtime = runtime.abi };
     var objects: std.ArrayList(Object) = .empty;
     try objects.append(allocator, try runtimeObject(native, places.shared, runtime));
     try unitObjects(native, places, settings, request, &objects);
     if (needs.number) try objects.append(allocator, .{ .path = try number_runtime.object(allocator, io, places.shared), .digest = number_runtime.digest() });
     outcome.foreign = try foreignObjects(native, places, settings, request.links, &objects);
-    const sanitizer = linkSanitizer(request.release, request.links.len);
+    const sanitizer = linkSanitizer(request.mode == .release, request.links.len);
     const program_key = programKey(settings, objects.items, needs.math, sanitizer);
     const programs: unit_cache.Store = .{ .directory = try std.fs.path.join(allocator, &.{ places.local, "programs-v1" }) };
     if (places.cacheable) if (try programs.lookup(allocator, io, program_key, "")) |found| {
@@ -180,7 +180,7 @@ pub fn link(allocator: std.mem.Allocator, io: std.Io, environ: *const std.proces
     };
     const linked = try std.fs.path.join(allocator, &.{ staging, "program" });
     var argv: std.ArrayList([]const u8) = .empty;
-    try argv.appendSlice(allocator, &.{ guest.path, "cc", unit_cache.level(request.release), "-target", target_policy.native_link_target });
+    try argv.appendSlice(allocator, &.{ guest.path, "cc", request.mode.level(), "-target", target_policy.native_link_target });
     try argv.appendSlice(allocator, target.cpu_flags);
     if (sanitizer.len != 0) try argv.append(allocator, sanitizer);
     try argv.appendSlice(allocator, sanitizeArguments(environ));
@@ -296,7 +296,7 @@ pub fn optimizationRemarks(a: std.mem.Allocator, io: std.Io, environ: *const std
         const records = try std.fmt.allocPrint(a, "{s}/{d}.opt.yaml", .{ staging, index });
         std.Io.Dir.cwd().writeFile(io, .{ .sub_path = source, .data = try instrumented(a, environ, unit.llvm) }) catch return result;
         var args: std.ArrayList([]const u8) = .empty;
-        try args.appendSlice(a, try compileArguments(native, request.release, object, source));
+        try args.appendSlice(a, try compileArguments(native, request.mode.level(), object, source));
         try args.appendSlice(a, &.{ "-fsave-optimization-record", try std.fmt.allocPrint(a, "-foptimization-record-file={s}", .{records}) });
         const started = std.Io.Timestamp.now(io, .awake);
         run(native, args.items) catch |err| {
@@ -346,7 +346,7 @@ fn programKey(settings: unit_cache.Settings, objects: []const Object, math: bool
     unit_cache.field(&hash, "core-program-v1");
     unit_cache.field(&hash, sanitizer);
     unit_cache.field(&hash, unit_cache.format);
-    unit_cache.field(&hash, unit_cache.level(settings.release));
+    unit_cache.field(&hash, settings.mode.level());
     unit_cache.field(&hash, target_policy.native_link_target);
     for (target.cpu_flags) |flag| unit_cache.field(&hash, flag);
     unit_cache.field(&hash, &settings.cpu);
@@ -394,7 +394,7 @@ fn unitObjects(native: Native, places: Places, settings: unit_cache.Settings, re
         // Only units that compile are written out; a hit never rewrites its text.
         std.Io.Dir.cwd().writeFile(native.io, .{ .sub_path = source, .data = try instrumented(a, native.environment, unit.llvm) }) catch return error.WriteFailed;
         try pending.append(a, .{ .unit = unit, .key = key, .object = object, .slot = objects.items.len - 1, .served = served });
-        try jobs.append(a, .{ .argv = try compileArguments(native, request.release, object, source), .weight = unit.llvm.len });
+        try jobs.append(a, .{ .argv = try compileArguments(native, request.mode.level(), object, source), .weight = unit.llvm.len });
     }
     // Partials of a failed build are removed; published ones already moved away.
     defer for (pending.items) |item| removeFile(native.io, item.object);
@@ -424,9 +424,9 @@ fn verifyServed(native: Native, item: Pending, served: unit_cache.Found) Error!v
     native.counts.verified += 1;
 }
 
-fn compileArguments(native: Native, release: bool, object: []const u8, source: []const u8) std.mem.Allocator.Error![]const []const u8 {
+fn compileArguments(native: Native, level: []const u8, object: []const u8, source: []const u8) std.mem.Allocator.Error![]const []const u8 {
     var argv: std.ArrayList([]const u8) = .empty;
-    try argv.appendSlice(native.arena, &.{ native.zig, "cc", "-c", unit_cache.level(release), "-target", target_policy.native_link_target });
+    try argv.appendSlice(native.arena, &.{ native.zig, "cc", "-c", level, "-target", target_policy.native_link_target });
     try argv.appendSlice(native.arena, target.cpu_flags);
     try argv.appendSlice(native.arena, layoutArguments(native.environment));
     try argv.appendSlice(native.arena, sanitizeArguments(native.environment));
@@ -468,7 +468,7 @@ fn foreignObjects(native: Native, places: Places, settings: unit_cache.Settings,
         const object = try std.fmt.allocPrint(a, "{s}.o", .{stem});
         const depfile = try std.fmt.allocPrint(a, "{s}.d", .{stem});
         var argv: std.ArrayList([]const u8) = .empty;
-        try argv.appendSlice(a, &.{ native.zig, "cc", "-c", unit_cache.level(settings.release), "-target", target_policy.native_link_target });
+        try argv.appendSlice(a, &.{ native.zig, "cc", "-c", settings.mode.level(), "-target", target_policy.native_link_target });
         try argv.appendSlice(a, target.cpu_flags);
         try argv.appendSlice(a, sanitizeArguments(native.environment));
         try argv.appendSlice(a, &.{ "-MMD", "-MF", depfile, "-o", object, source });
@@ -529,7 +529,7 @@ fn foreignKey(native: Native, settings: unit_cache.Settings, source: []const u8)
     unit_cache.field(&hash, source);
     unit_cache.field(&hash, std.Io.Dir.cwd().realPathFileAlloc(native.io, ".", a) catch "");
     unit_cache.field(&hash, if (content) |*digest| digest else "absent");
-    unit_cache.field(&hash, unit_cache.level(settings.release));
+    unit_cache.field(&hash, settings.mode.level());
     unit_cache.field(&hash, target_policy.native_link_target);
     for (target.cpu_flags) |flag| unit_cache.field(&hash, flag);
     unit_cache.field(&hash, &settings.cpu);
@@ -800,7 +800,7 @@ test "layout compile arguments and runtime identity include the internal alignme
     try environment.put("MYLANG_CORE_LAYOUT", "5");
     const aligned = try runtimeFor(a, false, &environment, &log);
     try std.testing.expect(!std.mem.eql(u8, &default.abi, &aligned.abi));
-    const arguments = try compileArguments(native, true, "out.o", "in.ll");
+    const arguments = try compileArguments(native, "-O3", "out.o", "in.ll");
     try std.testing.expectEqualStrings("-mllvm", arguments[arguments.len - 6]);
     try std.testing.expectEqualStrings("-align-all-functions=5", arguments[arguments.len - 5]);
     try environment.put("MYLANG_CORE_LAYOUT", "7");
@@ -846,7 +846,7 @@ test "cost optimizationRemarks returns unknown for unwritable staging missing to
     var environment = try std.testing.environ.createMap(a);
     defer environment.deinit();
     const units = [_]emit_units.Unit{wholeUnit("invalid LLVM module")};
-    var request: Request = .{ .zig = environment.get("MYLANG_ZIG") orelse "zig", .work = root, .output = "", .release = true, .links = &.{}, .units = &units };
+    var request: Request = .{ .zig = environment.get("MYLANG_ZIG") orelse "zig", .work = root, .output = "", .mode = .release, .links = &.{}, .units = &units };
     try std.testing.expectError(error.OutOfMemory, optimizationRemarks(std.testing.failing_allocator, std.testing.io, &environment, request));
     try directory.dir.writeFile(std.testing.io, .{ .sub_path = "blocked", .data = "file" });
     request.work = try std.fs.path.join(a, &.{ root, "blocked" });

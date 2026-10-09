@@ -1,4 +1,3 @@
-module sets
 
 # `set[T]` is an insertion-ordered set over any hashable element type: a
 # dictionary from its elements to unit, so membership, `add`, `remove` and
@@ -18,57 +17,57 @@ record Labelled:
     at: SetPoint
 
 
-union SetShape:
-    empty,
-    radius: int,
-    label: str
+enum SetShape:
+    empty
+    radius(value: int)
+    label(value: str)
 
 
 enum SetColor:
-    red,
-    green,
+    red
+    green
     blue
 
 
-def grow(target: mut set[int], value: int) -> None:
+func grow(mut target: set[int], value: int) -> Unit:
     target.add(value)
 
 
-def members(values: set[str]) -> int:
-    count = 0
+func members(values: set[str]) -> int:
+    mut count = 0
     for value in values:
         if value in values:
             count += 1
     return count
 
 
-def squares(count: int) -> set[SetPoint]:
-    points: set[SetPoint] = set()
+func squares(count: int) -> set[SetPoint]:
+    mut points: set[SetPoint] = set()
     for i in range(count):
         points.add(SetPoint(x=i, y=i * i))
     return points
 
 
 # spec: SET-1
-public def test_a_set_literal_keeps_first_insertion_order_and_renders_like_python() -> bool:
-    values = {3, 1, 2, 3, 1}
-    empty: set[str] = set()
+public func test_a_set_literal_keeps_first_insertion_order_and_renders_like_python() -> bool:
+    mut values = {3, 1, 2, 3, 1}
+    mut empty: set[str] = set()
     if len(values) != 3 or f"{values}" != "{3, 1, 2}":
         return False
     if f"{empty}" != "set()" or len(empty) != 0:
         return False
-    nested: list[set[int]] = [{1}, set()]
+    mut nested: set[int][] = [{1}, set()]
     return f"{nested}" == "[{1}, set()]"
 
 
 # spec-case: SET-1
-public def test_a_set_comprehension_and_set_of_an_iterable_build_fresh_sets() -> bool:
-    evens = {x * 2 for x in range(6) if x % 2 == 0}
-    letters = set("banana")
-    keys = set({"b": 1, "a": 2})
-    copied = set(evens)
-    counted = set(range(4))
-    octets = set(b"abca")
+public func test_a_set_comprehension_and_set_of_an_iterable_build_fresh_sets() -> bool:
+    mut evens = {x * 2 for x in range(6) if x % 2 == 0}
+    mut letters = set("banana")
+    mut keys = set({"b": 1, "a": 2})
+    mut copied = set(evens)
+    mut counted = set(range(4))
+    mut octets = set(b"abca")
     if f"{evens}" != "{0, 4, 8}" or f"{letters}" != "{'b', 'a', 'n'}":
         return False
     if f"{keys}" != "{'b', 'a'}" or copied != evens or len(counted) != 4:
@@ -78,8 +77,8 @@ public def test_a_set_comprehension_and_set_of_an_iterable_build_fresh_sets() ->
 
 
 # spec-case: SET-1
-public def test_add_remove_discard_pop_clear_copy_and_update() -> bool:
-    values: set[int] = set()
+public func test_add_remove_discard_pop_clear_copy_and_update() -> bool:
+    mut values: set[int] = set()
     values.add(5)
     values.add(7)
     values.add(5)
@@ -89,28 +88,28 @@ public def test_add_remove_discard_pop_clear_copy_and_update() -> bool:
         return False
     values.remove(7)
     values.discard(9)
-    last = values.pop()
+    mut last = values.pop()
     if last != 11 or f"{values}" != "{5}":
         return False
-    snapshot = values.copy()
+    mut snapshot = values.copy()
     values.clear()
     return len(values) == 0 and 5 in snapshot and 5 not in values
 
 
 # spec-case: SET-1
-public def test_a_set_copy_is_independent_and_mut_writes_its_caller() -> bool:
-    values: set[int] = {1}
-    alias = values.copy()
+public func test_a_set_copy_is_independent_and_mut_writes_its_caller() -> bool:
+    mut values: set[int] = {1}
+    mut alias = values.copy()
     alias.add(2)
     grow(mut values, 3)
-    words = {"x", "y", "x"}
+    mut words = {"x", "y", "x"}
     return len(values) == 2 and 2 not in values and 3 in values and 2 in alias and 3 not in alias and members(words) == 2
 
 
 # spec-case: SET-1
-public def test_a_set_iterates_sorts_and_folds_in_insertion_order() -> bool:
-    values = {30, 10, 20}
-    order: list[int] = []
+public func test_a_set_iterates_sorts_and_folds_in_insertion_order() -> bool:
+    mut values = {30, 10, 20}
+    mut order: int[] = []
     for value in values:
         order.append(value)
     if order != [30, 10, 20] or list(values) != [30, 10, 20]:
@@ -121,9 +120,9 @@ public def test_a_set_iterates_sorts_and_folds_in_insertion_order() -> bool:
 
 
 # spec: SET-OPERATORS-1
-public def test_the_combining_operators_keep_left_order_then_new_right_elements() -> bool:
-    left = {1, 2, 3, 4}
-    right = {6, 4, 2, 5}
+public func test_the_combining_operators_keep_left_order_then_new_right_elements() -> bool:
+    mut left = {1, 2, 3, 4}
+    mut right = {6, 4, 2, 5}
     if f"{left | right}" != "{1, 2, 3, 4, 6, 5}" or f"{left & right}" != "{2, 4}":
         return False
     if f"{left - right}" != "{1, 3}" or f"{left ^ right}" != "{1, 3, 6, 5}":
@@ -136,9 +135,9 @@ public def test_the_combining_operators_keep_left_order_then_new_right_elements(
 
 
 # spec-case: SET-OPERATORS-1
-public def test_subset_superset_and_disjoint_answer_like_python() -> bool:
-    small = {2, 3}
-    large = {1, 2, 3}
+public func test_subset_superset_and_disjoint_answer_like_python() -> bool:
+    mut small = {2, 3}
+    mut large = {1, 2, 3}
     if not (small <= large) or not (small < large) or large <= small:
         return False
     if not (large >= small) or not (large > small) or large > large or not (large >= large):
@@ -149,49 +148,49 @@ public def test_subset_superset_and_disjoint_answer_like_python() -> bool:
 
 
 # spec-case: SET-OPERATORS-1
-public def test_set_equality_ignores_insertion_order() -> bool:
-    first = {1, 2, 3}
-    second = {3, 1, 2}
+public func test_set_equality_ignores_insertion_order() -> bool:
+    mut first = {1, 2, 3}
+    mut second = {3, 1, 2}
     second.discard(3)
     second.add(3)
     return first == second and first != {1, 2} and {"a"} == set("a")
 
 
 # spec: HASH-KEYS-2
-public def test_records_tuples_unions_options_enums_bools_and_bytes_key_by_value() -> bool:
-    grid: dict[SetPoint, str] = {SetPoint(x=1, y=2): "a"}
+public func test_records_tuples_unions_options_enums_bools_and_bytes_key_by_value() -> bool:
+    mut grid: dict[SetPoint, str] = {SetPoint(x=1, y=2): "a"}
     grid[SetPoint(x=3, y=4)] = "b"
-    stem = "no"
-    names: dict[Labelled, int] = {Labelled(name=stem + "de", at=SetPoint(x=0, y=0)): 7}
-    pairs: dict[tuple[int, str], int] = {(1, "x"): 5}
-    flags: dict[bool, int] = {True: 1, False: 0}
-    shapes = {SetShape.radius(3), SetShape.label("hi"), SetShape.empty}
-    colors = {SetColor.blue, SetColor.red}
-    nothing: Option[int] = None
-    three: Option[int] = Some(3)
-    maybe: set[Option[int]] = {nothing, Some(3)}
-    blobs = {b"ab", b"cd"}
+    mut stem = "no"
+    mut names: dict[Labelled, int] = {Labelled(name=stem + "de", at=SetPoint(x=0, y=0)): 7}
+    mut pairs: dict[tuple[int, str], int] = {(1, "x"): 5}
+    mut flags: dict[bool, int] = {True: 1, False: 0}
+    mut shapes = {SetShape.radius(value=3), SetShape.label(value="hi"), SetShape.empty}
+    mut colors = {SetColor.blue, SetColor.red}
+    mut nothing: int? = None
+    mut three: int? = Some(3)
+    mut maybe: set[int?] = {nothing, Some(3)}
+    mut blobs = {b"ab", b"cd"}
     if grid[SetPoint(x=3, y=4)] != "b" or names[Labelled(name="node", at=SetPoint(x=0, y=0))] != 7:
         return False
     if pairs[(1, "x")] != 5 or (2, "x") in pairs or flags[False] != 0:
         return False
-    if SetShape.label("h" + "i") not in shapes or SetShape.radius(4) in shapes or SetColor.green in colors:
+    if SetShape.label(value="h" + "i") not in shapes or SetShape.radius(value=4) in shapes or SetColor.green in colors:
         return False
     return nothing in maybe and three in maybe and b"a" + b"b" in blobs and f"{colors}" == "{SetColor.blue, SetColor.red}"
 
 
 # spec-case: HASH-KEYS-2
-public def test_a_stored_key_is_a_copy_the_source_binding_cannot_change() -> bool:
-    point = SetPoint(x=1, y=1)
-    seen: set[SetPoint] = {point}
+public func test_a_stored_key_is_a_copy_the_source_binding_cannot_change() -> bool:
+    mut point = SetPoint(x=1, y=1)
+    mut seen: set[SetPoint] = {point}
     point.x = 9
     return SetPoint(x=1, y=1) in seen and point not in seen and len(seen) == 1
 
 
 # spec-case: HASH-KEYS-2
-public def test_thousands_of_record_keys_are_found_through_the_index() -> bool:
-    points = squares(3000)
-    hits = 0
+public func test_thousands_of_record_keys_are_found_through_the_index() -> bool:
+    mut points = squares(3000)
+    mut hits = 0
     for i in range(3000):
         if SetPoint(x=i, y=i * i) in points:
             hits += 1
@@ -199,8 +198,8 @@ public def test_thousands_of_record_keys_are_found_through_the_index() -> bool:
 
 
 # spec: DICT-REMOVE-1
-public def test_removals_in_the_middle_keep_order_membership_and_growth() -> bool:
-    values: set[int] = set()
+public func test_removals_in_the_middle_keep_order_membership_and_growth() -> bool:
+    mut values: set[int] = set()
     for i in range(2000):
         values.add(i)
     for i in range(2000):
@@ -210,50 +209,50 @@ public def test_removals_in_the_middle_keep_order_membership_and_growth() -> boo
         return False
     for i in range(2000, 2600):
         values.add(i)
-    order: list[int] = []
+    mut order: int[] = []
     for value in values:
         order.append(value)
     if order[0] != 0 or order[1] != 3 or order[666] != 1998 or order[667] != 2000:
         return False
-    counts: dict[str, int] = {"a": 1, "b": 2, "c": 3}
+    mut counts: dict[str, int] = {"a": 1, "b": 2, "c": 3}
     _ = counts.pop("b")
     counts["b"] = 4
     return len(values) == 1267 and f"{counts}" == "{'a': 1, 'c': 3, 'b': 4}"
 
 
 # spec-case: DICT-REMOVE-1
-public def test_a_set_pop_after_removals_answers_the_newest_live_element() -> bool:
-    values = {1, 2, 3, 4, 5}
+public func test_a_set_pop_after_removals_answers_the_newest_live_element() -> bool:
+    mut values = {1, 2, 3, 4, 5}
     values.remove(5)
     values.remove(2)
-    first = values.pop()
-    second = values.pop()
+    mut first = values.pop()
+    mut second = values.pop()
     return first == 4 and second == 3 and f"{values}" == "{1}"
 
 
 # spec-case: SET-1
-public def test_set_of_a_str_a_list_and_a_range_collects_its_elements() -> bool:
-    letters = set("banana")
-    numbers = set([4, 1, 4, 2])
-    counted = set(range(3))
+public func test_set_of_a_str_a_list_and_a_range_collects_its_elements() -> bool:
+    mut letters = set("banana")
+    mut numbers = set([4, 1, 4, 2])
+    mut counted = set(range(3))
     return len(letters) == 3 and "n" in letters and len(numbers) == 3 and len(counted) == 3 and 2 in counted
 
 
 # spec-case: SET-1
-public def test_set_of_a_dictionary_and_its_views_collects_keys_or_values() -> bool:
-    counts = {"a": 1, "b": 2}
-    keys = set(counts)
-    values = set(counts.values())
+public func test_set_of_a_dictionary_and_its_views_collects_keys_or_values() -> bool:
+    mut counts = {"a": 1, "b": 2}
+    mut keys = set(counts)
+    mut values = set(counts.values())
     return "b" in keys and 2 in values and len(keys) == 2 and len(values) == 2
 
 
 # The method forms collect any iterable first, as CPython's do; the operators
 # still take two sets.
 # spec-case: SET-1
-public def test_the_method_forms_accept_any_iterable() -> bool:
-    a = {1, 2, 3}
-    counts = {3: "c", 4: "d"}
-    grown: set[int] = {0}
+public func test_the_method_forms_accept_any_iterable() -> bool:
+    mut a = {1, 2, 3}
+    mut counts = {3: "c", 4: "d"}
+    mut grown: set[int] = {0}
     grown.update([5, 6])
     return a.union([4]) == {1, 2, 3, 4} and a.intersection([2, 3, 9]) == {2, 3} and a.difference([1]) == {2, 3} and a.symmetric_difference([3, 4]) == {1, 2, 4} and a.issubset([1, 2, 3, 4]) and not a.isdisjoint(counts) and a.issuperset([1]) and len(grown) == 3
 
@@ -262,30 +261,30 @@ public def test_the_method_forms_accept_any_iterable() -> bool:
 # Python ranks them: `|` loosest, then `^`, then `&`. Every expected value is
 # what CPython 3 answers.
 # spec: PY-SET-OPS-1
-public def test_bitwise_operators_on_integers_follow_python_precedence() -> bool:
-    x = 10 & 255 | 1
-    y = 6 ^ 3 & 1
-    z = 1 | 2 ^ 3
+public func test_bitwise_operators_on_integers_follow_python_precedence() -> bool:
+    mut x = 10 & 255 | 1
+    mut y = 6 ^ 3 & 1
+    mut z = 1 | 2 ^ 3
     return x == 11 and y == 7 and z == 1 and (5 & 3) == 1 and (5 | 3) == 7 and (5 ^ 3) == 6
 
 
 # `list`, `sorted` and the folds of a dictionary read its keys in insertion
 # order, and of a view that view's snapshot, as CPython does.
 # spec: PRELUDE-KEYS-1
-public def test_list_sorted_and_the_folds_of_a_dictionary_read_its_keys() -> bool:
-    ages = {"cy": 3, "al": 1, "bo": 2}
-    widths = {4: "a", 9: "b", 1: "c"}
-    keys = list(ages)
-    ordered = sorted(ages)
+public func test_list_sorted_and_the_folds_of_a_dictionary_read_its_keys() -> bool:
+    mut ages = {"cy": 3, "al": 1, "bo": 2}
+    mut widths = {4: "a", 9: "b", 1: "c"}
+    mut keys = list(ages)
+    mut ordered = sorted(ages)
     return keys == ["cy", "al", "bo"] and ordered == ["al", "bo", "cy"] and sum(widths) == 14 and max(widths) == 9 and min(list(ages.values())) == 1 and sorted(ages.values()) == [1, 2, 3]
 
 
 # Benchmarks: one operation builds a set of `size` records, probes every one of
 # them and removes half. With expected-constant-time probes the time per
 # element stays flat from the small size to the large one.
-def churn(size: int) -> bool:
-    points = squares(size)
-    hits = 0
+func churn(size: int) -> bool:
+    mut points = squares(size)
+    mut hits = 0
     for i in range(size):
         if SetPoint(x=i, y=i * i) in points:
             hits += 1
@@ -295,9 +294,9 @@ def churn(size: int) -> bool:
     return hits == size and len(points) == size // 2
 
 
-public def bench_set_churn_1k() -> bool:
+public func bench_set_churn_1k() -> bool:
     return churn(1000)
 
 
-public def bench_set_churn_16k() -> bool:
+public func bench_set_churn_16k() -> bool:
     return churn(16000)

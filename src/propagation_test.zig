@@ -1,4 +1,4 @@
-//! Error propagation with `?`: unwrapping success, forwarding compatible error
+//! Error propagation with `try`: unwrapping success, forwarding compatible error
 //! payloads by case name, and the cleanup each propagation path performs.
 const fixture_path = "propagation.my";
 const std = @import("std");
@@ -26,7 +26,7 @@ const owned_source =
     \\
     \\
     \\record Error:
-    \\    detail: [2]Item
+    \\    detail: FixedArray[Item, 2]
     \\
     \\
     \\result Inner:
@@ -36,23 +36,25 @@ const owned_source =
     \\
     \\result Outer:
     \\    err: Error,
-    \\    ok: [2]Item
+    \\    ok: FixedArray[Item, 2]
     \\
     \\
-    \\def fail(flag: bool) -> Inner:
+    \\func attempt(flag: bool) -> Inner:
     \\    if flag:
-    \\        return Err(Error(detail=[Item(n=7), Item(n=8)]))
+    \\        return Err(Error(detail=FixedArray[Item, 2]([Item(n=7), Item(n=8)])))
     \\    return Ok(9)
     \\
     \\
-    \\def build(flag: bool) -> Outer:
-    \\    counter = 0
+    \\func build(flag: bool) -> Outer:
+    \\    mut counter = 0
     \\    counter = 1
     \\    _ = counter
-    \\    return Ok([Item(n=3), Item(n=fail(flag)?)])
+    \\    const first = Item(n=3)
+    \\    const value = try attempt(flag)
+    \\    return Ok(FixedArray[Item, 2]([first, Item(n=value)]))
     \\
     \\
-    \\def main() -> i64:
+    \\func main() -> i64:
     \\    match build(True):
     \\        case Outer.ok(items):
     \\            return items[1].n
@@ -79,8 +81,8 @@ test "propagation releases partial aggregate operands and survives every allocat
 // spec-case: TRY-CONVERT-1
 test "try rejects an error type that is not a case payload of the enclosing error union" {
     try reject(
-        \\union Other:
-        \\    Text: str
+        \\enum Other:
+        \\    Text(value: str)
         \\
         \\
         \\result Wrapped:
@@ -88,66 +90,72 @@ test "try rejects an error type that is not a case payload of the enclosing erro
         \\    err: Other
         \\
         \\
-        \\def f(r: R) -> Wrapped:
-        \\    return Ok(r?)
+        \\func f(r: R) -> Wrapped:
+        \\    const value = try r
+        \\    return Ok(value)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_TYPE");
 }
 
 test "propagation cannot abandon pending locals parameters or unfinished expression results" {
     try reject(
-        \\def f(r: R, other: R) -> R:
-        \\    return R.ok(r?)
+        \\func f(r: R, other: R) -> R:
+        \\    const value = try r
+        \\    return R.ok(value)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_RESULT_UNHANDLED");
     try reject(
-        \\def f(r: R) -> R:
-        \\    ignored = R.err(3)
-        \\    value = r?
+        \\func f(r: R) -> R:
+        \\    mut ignored = R.err(3)
+        \\    mut value = try r
         \\    _ = ignored
         \\    return R.ok(value)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     , "E_RESULT_UNHANDLED");
     try reject(
-        \\def consume(r: R, n: i64) -> i64:
+        \\func consume(r: R, n: i64) -> i64:
         \\    _ = r
         \\    return n
         \\
         \\
-        \\def f(r: R) -> R:
-        \\    return R.ok(consume(R.err(7), r?))
+        \\func f(r: R) -> R:
+        \\    const pending = R.err(7)
+        \\    const value = try r
+        \\    return R.ok(consume(pending, value))
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
-    , "E_RESULT_PROPAGATION");
+    , "E_RESULT_UNHANDLED");
     try reject(
         \\record Wrapper:
         \\    r: R
         \\
         \\
-        \\def consume(w: Wrapper, n: i64) -> i64:
+        \\func consume(w: Wrapper, n: i64) -> i64:
         \\    _ = w
         \\    return n
         \\
         \\
-        \\def f(r: R) -> R:
-        \\    first = R.err(7)
-        \\    return R.ok(consume(Wrapper(r=first), r?))
+        \\func f(r: R) -> R:
+        \\    mut first = R.err(7)
+        \\    const pending = Wrapper(r=first)
+        \\    const value = try r
+        \\    return R.ok(consume(pending, value))
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
-    , "E_RESULT_PROPAGATION");
+    , "E_RESULT_UNHANDLED");
     try reject(
         \\record Pair:
         \\    first: R
@@ -159,25 +167,28 @@ test "propagation cannot abandon pending locals parameters or unfinished express
         \\    err: i64
         \\
         \\
-        \\def f(r: R) -> Wrapped:
-        \\    return Ok(Pair(first=R.err(7), second=r?))
+        \\func f(r: R) -> Wrapped:
+        \\    const first = R.err(7)
+        \\    const value = try r
+        \\    return Ok(Pair(first=first, second=value))
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
-    , "E_RESULT_PROPAGATION");
+    , "E_RESULT_UNHANDLED");
     try result(
         \\result R:
         \\    ok: i64,
         \\    err: i64
         \\
         \\
-        \\def f(r: R, other: R) -> R:
+        \\func f(r: R, other: R) -> R:
         \\    _ = other
-        \\    return Ok(r?)
+        \\    const value = try r
+        \\    return Ok(value)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    match f(Err(7), Ok(1)):
         \\        case R.ok(n):
         \\            return n
@@ -193,15 +204,17 @@ test "duplicate discovery retains propagation operations and target result types
         \\    err: i64
         \\
         \\
-        \\def a(r: R) -> R:
-        \\    return Ok(r? + 1)
+        \\func a(r: R) -> R:
+        \\    const value = try r
+        \\    return Ok(value + 1)
         \\
         \\
-        \\def b(other: R) -> R:
-        \\    return Ok(other? + 1)
+        \\func b(other: R) -> R:
+        \\    const value = try other
+        \\    return Ok(value + 1)
         \\
         \\
-        \\def c(r: R) -> R:
+        \\func c(r: R) -> R:
         \\    match r:
         \\        case R.ok(n):
         \\            return Ok(n + 1)
@@ -209,7 +222,7 @@ test "duplicate discovery retains propagation operations and target result types
         \\            return Err(e)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     );
     defer compilation.deinit();

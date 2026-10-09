@@ -55,18 +55,16 @@ fn projectInterfaceHash(allocator: std.mem.Allocator, bytes: []const u8) ![]cons
 test "module and declaration identities ignore body edits and interface fingerprints follow signatures" {
     var entries = [_]File{
         .{ .path = "main.my", .bytes =
-        \\module main
         \\import data
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
         },
         .{ .path = "data.my", .bytes =
-        \\module data
         \\
         \\
-        \\public def value() -> i64 effects():
+        \\public func value() -> i64 effects():
         \\    return 41
         },
     };
@@ -77,10 +75,9 @@ test "module and declaration identities ignore body edits and interface fingerpr
     const first_interface = first.project_interface_sha256;
 
     entries[1].bytes =
-        \\module data
         \\
         \\
-        \\public def value() -> i64 effects():
+        \\public func value() -> i64 effects():
         \\    # a comment in the body
         \\    return 41
     ;
@@ -91,10 +88,9 @@ test "module and declaration identities ignore body edits and interface fingerpr
     try t.expectEqualStrings(first_interface, second.project_interface_sha256);
 
     entries[1].bytes =
-        \\module data
         \\
         \\
-        \\public def value(step: i64) -> i64 effects():
+        \\public func value(step: i64) -> i64 effects():
         \\    return 41 + step
     ;
     const third = try describe(&entries, t.allocator);
@@ -115,18 +111,17 @@ fn nominal(report: incremental.Report, name: []const u8) incremental.Nominal {
 test "whitespace and comment edits preserve module, declaration, interface and body identities" {
     var entries = [_]File{
         .{ .path = "main.my", .bytes =
-        \\module main
         \\
         \\
-        \\def value() -> i64:
+        \\func value() -> i64:
         \\    return 41
         \\
         \\
-        \\def helper() -> i64:
+        \\func helper() -> i64:
         \\    return value()
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return helper()
         },
     };
@@ -148,20 +143,19 @@ test "whitespace and comment edits preserve module, declaration, interface and b
     defer t.allocator.free(first_helper_body);
 
     entries[0].bytes =
-        \\module main
         \\# a comment before the declarations
         \\
         \\
-        \\def value() -> i64:
+        \\func value() -> i64:
         \\    return 41
         \\
         \\
         \\# a comment between declarations
-        \\def helper() -> i64:
+        \\func helper() -> i64:
         \\    return value()
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return helper()
     ;
     const second = try describe(&entries, t.allocator);
@@ -174,19 +168,18 @@ test "whitespace and comment edits preserve module, declaration, interface and b
     try t.expectEqualStrings(first_helper_body, declaration(second, "main", "helper").body_sha256.?);
 
     entries[0].bytes =
-        \\module main
         \\
         \\
-        \\def value() -> i64:
+        \\func value() -> i64:
         \\    # a comment inside the body
         \\    return 41
         \\
         \\
-        \\def helper() -> i64:
+        \\func helper() -> i64:
         \\    return value()
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return helper()
     ;
     const third = try describe(&entries, t.allocator);
@@ -201,14 +194,13 @@ test "whitespace and comment edits preserve module, declaration, interface and b
 test "private body edits preserve identities while signature edits change the interface hash" {
     var entries = [_]File{
         .{ .path = "main.my", .bytes =
-        \\module main
         \\
         \\
-        \\def helper(x: i64) -> i64:
+        \\func helper(x: i64) -> i64:
         \\    return x
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return helper(1)
         },
     };
@@ -221,14 +213,13 @@ test "private body edits preserve identities while signature edits change the in
     defer t.allocator.free(interface);
 
     entries[0].bytes =
-        \\module main
         \\
         \\
-        \\def helper(x: i64) -> i64:
+        \\func helper(x: i64) -> i64:
         \\    return x + 1
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return helper(1)
     ;
     const second = try describe(&entries, t.allocator);
@@ -237,14 +228,13 @@ test "private body edits preserve identities while signature edits change the in
     try t.expectEqualStrings(interface, declaration(second, "main", "helper").interface_sha256.?);
 
     entries[0].bytes =
-        \\module main
         \\
         \\
-        \\def helper(x: i64, y: i64) -> i64:
+        \\func helper(x: i64, y: i64) -> i64:
         \\    return x + y
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return helper(1, 2)
     ;
     const third = try describe(&entries, t.allocator);
@@ -256,15 +246,14 @@ test "private body edits preserve identities while signature edits change the in
 test "effect-bound edits change the function interface hash" {
     var entries = [_]File{
         .{ .path = "main.my", .bytes =
-        \\module main
         \\
         \\
-        \\def touch(clock: Clock) -> i64 effects(clock):
+        \\func touch(clock: Clock) -> i64 effects(clock):
         \\    _ = clock
         \\    return 0
         \\
         \\
-        \\def main(clock: Clock) -> i64:
+        \\func main(clock: Clock) -> i64:
         \\    return touch(clock)
         },
     };
@@ -276,15 +265,14 @@ test "effect-bound edits change the function interface hash" {
     defer t.allocator.free(interface);
 
     entries[0].bytes =
-        \\module main
         \\
         \\
-        \\def touch(entropy: Entropy) -> i64 effects(random):
+        \\func touch(entropy: Entropy) -> i64 effects(random):
         \\    _ = entropy
         \\    return 0
         \\
         \\
-        \\def main(entropy: Entropy) -> i64:
+        \\func main(entropy: Entropy) -> i64:
         \\    return touch(entropy)
     ;
     const second = try describe(&entries, t.allocator);
@@ -300,29 +288,27 @@ test "an unannotated body edit inside the derived ceiling preserves the API fing
     // that ceiling therefore leaves the declaration interface -- and every
     // caller's type check -- untouched.
     const printing_body =
-        \\module main
         \\
         \\
-        \\public def emit(out: Stream) -> i64:
+        \\public func emit(out: Stream) -> i64:
         \\    out.print("x")
         \\    return 0
         \\
         \\
-        \\def main(out: Stream) -> i64:
+        \\func main(out: Stream) -> i64:
         \\    return emit(out)
     ;
     const allocating_body =
-        \\module main
         \\
         \\
-        \\public def emit(out: Stream) -> i64:
-        \\    items: list[i64] = []
+        \\public func emit(out: Stream) -> i64:
+        \\    mut items: i64[] = []
         \\    items.append(1)
         \\    out.print("x")
         \\    return items[0]
         \\
         \\
-        \\def main(out: Stream) -> i64:
+        \\func main(out: Stream) -> i64:
         \\    return emit(out)
     ;
     var entries = [_]File{.{ .path = "main.my", .bytes = printing_body }};
@@ -344,29 +330,27 @@ test "an unannotated body edit inside the derived ceiling preserves the API fing
 // spec-case: EFFECT-CEILING-1
 test "an exported body edit inside its declared ceiling preserves the API fingerprint and still changes the body hash" {
     const output_body =
-        \\module main
         \\
         \\
-        \\public def emit(out: Stream) -> i64 effects(output, managed_allocation):
+        \\public func emit(out: Stream) -> i64 effects(output, managed_allocation):
         \\    out.print("x")
         \\    return 0
         \\
         \\
-        \\def main(out: Stream) -> i64:
+        \\func main(out: Stream) -> i64:
         \\    return emit(out)
     ;
     const allocation_body =
-        \\module main
         \\
         \\
-        \\public def emit(out: Stream) -> i64 effects(output, managed_allocation):
-        \\    items: list[i64] = []
+        \\public func emit(out: Stream) -> i64 effects(output, managed_allocation):
+        \\    mut items: i64[] = []
         \\    items.append(1)
         \\    out.print("x")
         \\    return items[0]
         \\
         \\
-        \\def main(out: Stream) -> i64:
+        \\func main(out: Stream) -> i64:
         \\    return emit(out)
     ;
     var entries = [_]File{.{ .path = "main.my", .bytes = output_body }};
@@ -391,25 +375,23 @@ test "an exported body edit inside its declared ceiling preserves the API finger
 
 test "declared mut positions change function and project fingerprints while write order does not" {
     const mutates_a =
-        \\module main
         \\
         \\
-        \\public def change(a: mut list[int], b: list[int]) -> None:
+        \\public func change(mut a: int[], b: int[]) -> Unit:
         \\    a[0] = b[0]
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     ;
     const mutates_b =
-        \\module main
         \\
         \\
-        \\public def change(a: list[int], b: mut list[int]) -> None:
+        \\public func change(a: int[], mut b: int[]) -> Unit:
         \\    b[0] = a[0]
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     ;
     const mutates_a_interface = try functionInterfaceHash(t.allocator, mutates_a, "change");
@@ -426,27 +408,25 @@ test "declared mut positions change function and project fingerprints while writ
     // The footprint is the set of `mut` parameters, so the order the body
     // writes them in is not part of the contract identity.
     const ordered =
-        \\module main
         \\
         \\
-        \\public def change(a: mut list[int], b: mut list[int]) -> None:
+        \\public func change(mut a: int[], mut b: int[]) -> Unit:
         \\    a[0] = 1
         \\    b[0] = 2
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     ;
     const reordered =
-        \\module main
         \\
         \\
-        \\public def change(a: mut list[int], b: mut list[int]) -> None:
+        \\public func change(mut a: int[], mut b: int[]) -> Unit:
         \\    b[0] = 2
         \\    a[0] = 1
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     ;
     const ordered_interface = try functionInterfaceHash(t.allocator, ordered, "change");
@@ -464,27 +444,25 @@ test "declared mut positions change function and project fingerprints while writ
     // a checked ordinary-function body in the manifest. The marker must still
     // participate there.
     const generic_a =
-        \\module main
         \\
         \\
-        \\public def pick[T](value: T, a: mut list[int], b: list[int]) -> list[int]:
+        \\public func pick[T](value: T, mut a: int[], b: int[]) -> int[]:
         \\    a[0] = b[0]
         \\    return b
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     ;
     const generic_b =
-        \\module main
         \\
         \\
-        \\public def pick[T](value: T, a: list[int], b: mut list[int]) -> list[int]:
+        \\public func pick[T](value: T, a: int[], mut b: int[]) -> int[]:
         \\    b[0] = a[0]
         \\    return b
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     ;
     const generic_a_interface = try functionInterfaceHash(t.allocator, generic_a, "pick");
@@ -501,25 +479,23 @@ test "declared mut positions change function and project fingerprints while writ
 
 test "exported return-origin bound is the declared unknown default and excludes inferred bodies" {
     const returns_param =
-        \\module main
         \\
         \\
-        \\public def pick(a: list[int], b: list[int]) -> list[int] effects(managed_allocation):
+        \\public func pick(a: int[], b: int[]) -> int[] effects(managed_allocation):
         \\    return a
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     ;
     const returns_fresh =
-        \\module main
         \\
         \\
-        \\public def pick(a: list[int], b: list[int]) -> list[int] effects(managed_allocation):
+        \\public func pick(a: int[], b: int[]) -> int[] effects(managed_allocation):
         \\    return [1]
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     ;
     // The inferred origin differs (`params(0)` versus `fresh`), but the public
@@ -541,19 +517,18 @@ test "exported return-origin bound is the declared unknown default and excludes 
 test "record field and union case edits change the nominal interface hash" {
     var entries = [_]File{
         .{ .path = "main.my", .bytes =
-        \\module main
         \\
         \\
         \\record Point:
         \\    x: i64
         \\
         \\
-        \\union Event:
-        \\    count: i64,
-        \\    flag: bool
+        \\enum Event:
+        \\    count(value: i64)
+        \\    flag(value: bool)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
         },
     };
@@ -569,7 +544,6 @@ test "record field and union case edits change the nominal interface hash" {
     defer t.allocator.free(event_interface);
 
     entries[0].bytes =
-        \\module main
         \\
         \\
         \\record Point:
@@ -577,12 +551,12 @@ test "record field and union case edits change the nominal interface hash" {
         \\    y: i64
         \\
         \\
-        \\union Event:
-        \\    count: i64,
-        \\    flag: bool
+        \\enum Event:
+        \\    count(value: i64)
+        \\    flag(value: bool)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     ;
     const second = try describe(&entries, t.allocator);
@@ -591,20 +565,19 @@ test "record field and union case edits change the nominal interface hash" {
     try t.expect(!std.mem.eql(u8, point_interface, nominal(second, "main::Point").interface_sha256.?));
 
     entries[0].bytes =
-        \\module main
         \\
         \\
         \\record Point:
         \\    x: i64
         \\
         \\
-        \\union Event:
-        \\    count: i64,
-        \\    flag: bool,
+        \\enum Event:
+        \\    count(value: i64)
+        \\    flag(value: bool)
         \\    empty
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     ;
     const third = try describe(&entries, t.allocator);
@@ -616,14 +589,13 @@ test "record field and union case edits change the nominal interface hash" {
 test "inserting a declaration or comment does not change a later declaration identity" {
     var entries = [_]File{
         .{ .path = "main.my", .bytes =
-        \\module main
         \\
         \\
-        \\def later() -> i64:
+        \\func later() -> i64:
         \\    return 7
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return later()
         },
     };
@@ -635,19 +607,18 @@ test "inserting a declaration or comment does not change a later declaration ide
     defer t.allocator.free(interface);
 
     entries[0].bytes =
-        \\module main
         \\# inserted comment
         \\
         \\
-        \\def inserted() -> i64:
+        \\func inserted() -> i64:
         \\    return 1
         \\
         \\
-        \\def later() -> i64:
+        \\func later() -> i64:
         \\    return 7
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return later()
     ;
     const second = try describe(&entries, t.allocator);
@@ -689,23 +660,21 @@ test "typeIdentity distinguishes a nominal type from a generic template of the s
 // spec: INCREMENTAL-INTERFACE-1
 test "project interface follows exported constants and effect ceilings but not comments" {
     const consts_41 =
-        \\module main
         \\
         \\
         \\public const K: i64 = 41
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return K
     ;
     const consts_42 =
-        \\module main
         \\
         \\
         \\public const K: i64 = 42
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return K
     ;
     var consts = [_]File{.{ .path = "main.my", .bytes = consts_41 }};
@@ -719,27 +688,25 @@ test "project interface follows exported constants and effect ceilings but not c
     // The ceiling is the signature's own, so a different capability parameter is
     // what makes a different published ceiling -- and a different fingerprint.
     const effect_clock =
-        \\module main
         \\
         \\
-        \\public def tick(clock: Clock) -> i64 effects(clock):
+        \\public func tick(clock: Clock) -> i64 effects(clock):
         \\    _ = clock
         \\    return 1
         \\
         \\
-        \\def main(clock: Clock) -> i64:
+        \\func main(clock: Clock) -> i64:
         \\    return tick(clock)
     ;
     const effect_random =
-        \\module main
         \\
         \\
-        \\public def tick(entropy: Entropy) -> i64 effects(random):
+        \\public func tick(entropy: Entropy) -> i64 effects(random):
         \\    _ = entropy
         \\    return 1
         \\
         \\
-        \\def main(entropy: Entropy) -> i64:
+        \\func main(entropy: Entropy) -> i64:
         \\    return tick(entropy)
     ;
     var effects = [_]File{.{ .path = "main.my", .bytes = effect_clock }};
@@ -751,26 +718,24 @@ test "project interface follows exported constants and effect ceilings but not c
     try t.expect(!std.mem.eql(u8, e0.project_interface_sha256, e1.project_interface_sha256));
 
     const generic =
-        \\module main
         \\
         \\
-        \\public def id[T](n: T) -> T effects():
+        \\public func id[T](n: T) -> T effects():
         \\    return n
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return id[i64](41)
     ;
     const generic_comment =
-        \\module main
         \\# unrelated comment before the generic
         \\
         \\
-        \\public def id[T](n: T) -> T effects():
+        \\public func id[T](n: T) -> T effects():
         \\    return n
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return id[i64](41)
     ;
     var generic_files = [_]File{.{ .path = "main.my", .bytes = generic }};
@@ -785,25 +750,23 @@ test "project interface follows exported constants and effect ceilings but not c
 // spec-case: INCREMENTAL-INTERFACE-1
 test "default argument values change the declaration interface" {
     const default_41 =
-        \\module main
         \\
         \\
-        \\public def value(n: i64 = 41) -> i64 effects():
+        \\public func value(n: i64 = 41) -> i64 effects():
         \\    return n
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return value()
     ;
     const default_42 =
-        \\module main
         \\
         \\
-        \\public def value(n: i64 = 42) -> i64 effects():
+        \\public func value(n: i64 = 42) -> i64 effects():
         \\    return n
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return value()
     ;
     var entries = [_]File{.{ .path = "main.my", .bytes = default_41 }};
@@ -821,25 +784,23 @@ test "default argument values change the declaration interface" {
 // spec-case: EFFECT-CEILING-1
 test "keyword parameter names and generic requirements stay in the public contract" {
     const named_step =
-        \\module main
         \\
         \\
-        \\public def value(step: i64 = 1) -> i64 effects():
+        \\public func value(step: i64 = 1) -> i64 effects():
         \\    return step
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return value()
     ;
     const named_n =
-        \\module main
         \\
         \\
-        \\public def value(n: i64 = 1) -> i64 effects():
+        \\public func value(n: i64 = 1) -> i64 effects():
         \\    return n
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return value()
     ;
     var entries = [_]File{.{ .path = "main.my", .bytes = named_step }};
@@ -854,25 +815,23 @@ test "keyword parameter names and generic requirements stay in the public contra
     try t.expect(!std.mem.eql(u8, named_first.project_interface_sha256, named_second.project_interface_sha256));
 
     const unconstrained =
-        \\module main
         \\
         \\
-        \\public def identity[T](x: T) -> T effects():
+        \\public func identity[T](x: T) -> T effects():
         \\    return x
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return identity[i64](1)
     ;
     const constrained =
-        \\module main
         \\
         \\
-        \\public def identity[T: copy](x: T) -> T effects():
+        \\public func identity[T: copy](x: T) -> T effects():
         \\    return x
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return identity[i64](1)
     ;
     var generic_entries = [_]File{.{ .path = "main.my", .bytes = unconstrained }};
@@ -891,7 +850,6 @@ test "keyword parameter names and generic requirements stay in the public contra
 // spec-case: INCREMENTAL-SPEC-1
 test "specialization key follows the concrete provider shape and target contract" {
     const payload_one =
-        \\module main
         \\public constraint HasValue[T] = copy + field(value: i64)
         \\
         \\
@@ -899,15 +857,14 @@ test "specialization key follows the concrete provider shape and target contract
         \\    value: i64
         \\
         \\
-        \\public def value_of[T: HasValue](item: T) -> i64 effects():
+        \\public func value_of[T: HasValue](item: T) -> i64 effects():
         \\    return item.value
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return value_of(Payload(value=7))
     ;
     const payload_padded =
-        \\module main
         \\public constraint HasValue[T] = copy + field(value: i64)
         \\
         \\
@@ -916,11 +873,11 @@ test "specialization key follows the concrete provider shape and target contract
         \\    value: i64
         \\
         \\
-        \\public def value_of[T: HasValue](item: T) -> i64 effects():
+        \\public func value_of[T: HasValue](item: T) -> i64 effects():
         \\    return item.value
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return value_of(Payload(padding=0, value=7))
     ;
     var entries = [_]File{.{ .path = "main.my", .bytes = payload_one }};
@@ -951,10 +908,9 @@ test "materialize, dupModule, dupDeclaration, dupNominal, dupSpecialization and 
 fn allocationScenario(allocator: std.mem.Allocator) !void {
     var entries = [_]File{
         .{ .path = "main.my", .bytes =
-        \\module main
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
         },
     };
@@ -965,38 +921,35 @@ fn allocationScenario(allocator: std.mem.Allocator) !void {
 // spec: ATTR-3
 test "a declaration attribute participates in the interface fingerprint but the body does not" {
     const marked =
-        \\module main
         \\
         \\
         \\@deprecated("use value_v2")
-        \\public def value() -> i64 effects():
+        \\public func value() -> i64 effects():
         \\    return 41
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     ;
     const plain =
-        \\module main
         \\
         \\
-        \\public def value() -> i64 effects():
+        \\public func value() -> i64 effects():
         \\    return 41
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     ;
     const edited_body =
-        \\module main
         \\
         \\
         \\@deprecated("use value_v2")
-        \\public def value() -> i64 effects():
+        \\public func value() -> i64 effects():
         \\    return 42
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return 0
     ;
     const marked_hash = try functionInterfaceHash(t.allocator, marked, "value");

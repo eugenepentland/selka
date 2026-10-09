@@ -1,14 +1,13 @@
-module generic_inference_case_1
 
 
-def first[T, const N: u64](x: [N]T) -> T:
+func first[T, const N: u64](x: [N]T) -> T:
     return x[0]
 
 
-def forward[U, const M: u64](x: [M]U) -> U:
+func forward[U, const M: u64](x: [M]U) -> U:
     return first(x)
 
 
-public def program() -> i64:
-    values: [2]i64 = [7, 9]
+public func program() -> i64:
+    mut values: FixedArray[i64, 2] = FixedArray[int, 2]([7, 9])
     return forward(values)

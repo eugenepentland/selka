@@ -29,14 +29,14 @@ fn guest(allocator: std.mem.Allocator) !void {
         \\const MASK: u8 = bit_or(128u8, 1u8)
         \\
         \\
-        \\def add[T: integer](a: T, b: T) -> T:
+        \\func add[T: integer](a: T, b: T) -> T:
         \\    return wrapping_add(a, b)
         \\
         \\
-        \\def main() -> i64:
-        \\    a = add[u8](MASK, 127u8)
-        \\    b = shift_right(-8i8, 2i8)
-        \\    c = wrapping_mul(255u8, 255u8)
+        \\func main() -> i64:
+        \\    mut a = add[u8](MASK, 127u8)
+        \\    mut b = shift_right(-8i8, 2i8)
+        \\    mut c = wrapping_mul(255u8, 255u8)
         \\    return i64(a) + i64(b) + i64(c) + i64(bit_and(7u8, 3u8))
     ;
     var compilation = try language.Compilation.init(allocator, "numbers.my", source);
@@ -53,7 +53,7 @@ test "named integer operations share constant generic and runtime semantics acro
 }
 test "invalid runtime shifts are located and constant shifts reject before execution" {
     var runtime = try language.Compilation.init(t.allocator, "shift.my",
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return shift_left(1, 64)
     );
     defer runtime.deinit();
@@ -63,7 +63,7 @@ test "invalid runtime shifts are located and constant shifts reject before execu
         \\const X: i64 = shift_right(1, -1)
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return X
     );
     defer constant.deinit();

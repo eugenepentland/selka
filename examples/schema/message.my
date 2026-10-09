@@ -1,7 +1,6 @@
-module message
 
 public enum Status:
-    ready,
+    ready
     failed
 
 
@@ -10,6 +9,6 @@ public record Header:
     status: Status
 
 
-public union Message:
-    heartbeat,
-    reading: Header
+public enum Message:
+    heartbeat
+    reading(value: Header)

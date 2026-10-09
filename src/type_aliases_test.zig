@@ -8,7 +8,7 @@ fn scenario(allocator: std.mem.Allocator) !void {
         \\type Count = i64
         \\
         \\
-        \\type Counts = [2]Count
+        \\type Counts = FixedArray[Count, 2]
         \\
         \\
         \\type Chosen = Pair[Count]
@@ -25,17 +25,17 @@ fn scenario(allocator: std.mem.Allocator) !void {
         \\const ANSWER: Count = 42
         \\
         \\
-        \\def identity[T](value: T) -> T:
+        \\func identity[T](value: T) -> T:
         \\    return value
         \\
         \\
-        \\def read_value(value: Chosen) -> Count:
+        \\func read_value(value: Chosen) -> Count:
         \\    return value.left
         \\
         \\
-        \\def main() -> i64:
-        \\    pair = Other(left=ANSWER, right=0)
-        \\    values: Counts = [read_value(pair), 1]
+        \\func main() -> i64:
+        \\    mut pair = Other(left=ANSWER, right=0)
+        \\    mut values: Counts = FixedArray[int, 2]([read_value(pair), 1])
         \\    return identity[Count](values[0]) + values[1]
     ;
     var compilation = try language.Compilation.init(allocator, "aliases.my", text);
@@ -60,7 +60,7 @@ test "aliases preserve nominal domains and owned result obligations and reject c
         \\type B = A
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
         , .code = "E_ALIAS_CYCLE" },
         .{ .text =
@@ -70,7 +70,7 @@ test "aliases preserve nominal domains and owned result obligations and reject c
         \\type A = bool
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
         , .code = "E_DUPLICATE_TYPE" },
         .{ .text =
@@ -81,7 +81,7 @@ test "aliases preserve nominal domains and owned result obligations and reject c
         \\type A = i64
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
         , .code = "E_DUPLICATE_TYPE" },
         .{ .text =
@@ -92,8 +92,8 @@ test "aliases preserve nominal domains and owned result obligations and reject c
         \\type Alias = D
         \\
         \\
-        \\def main() -> i64:
-        \\    value: Alias = 1
+        \\func main() -> i64:
+        \\    mut value: Alias = 1
         \\    return 0
         , .code = "E_TYPE" },
         .{ .text =
@@ -105,8 +105,8 @@ test "aliases preserve nominal domains and owned result obligations and reject c
         \\type Alias = R
         \\
         \\
-        \\def main() -> i64:
-        \\    value: Alias = Ok(1)
+        \\func main() -> i64:
+        \\    mut value: Alias = Ok(1)
         \\    return 0
         , .code = "E_RESULT_UNHANDLED" },
     };
@@ -120,15 +120,14 @@ test "aliases preserve nominal domains and owned result obligations and reject c
 fn provider(context: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
     const hidden = context != null;
     const text = if (std.mem.eql(u8, path, "main.my"))
-        \\module main
         \\import shapes
         \\
         \\
-        \\def main() -> i64:
-        \\    value: shapes.Count = 42
+        \\func main() -> i64:
+        \\    mut value: shapes.Count = 42
         \\    return value
     else if (std.mem.eql(u8, path, "shapes.my"))
-        if (hidden) "module shapes\ntype Count = i64\n" else "module shapes\npublic type Count = i64\n"
+        if (hidden) "type Count = i64\n" else "public type Count = i64\n"
     else
         return error.NotFound;
     return allocator.dupe(u8, text);
@@ -146,7 +145,6 @@ test "module aliases export canonical types while private aliases remain inacces
 fn privateTarget(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
     if (!std.mem.eql(u8, path, "main.my")) return error.NotFound;
     return allocator.dupe(u8,
-        \\module main
         \\
         \\
         \\record Secret:
@@ -156,7 +154,7 @@ fn privateTarget(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8,
         \\public type Public = Secret
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     );
 }
@@ -168,7 +166,6 @@ test "exported aliases cannot expose private nominal types" {
 fn schemaAliases(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
     if (!std.mem.eql(u8, path, "main.my")) return error.NotFound;
     return allocator.dupe(u8,
-        \\module main
         \\
         \\
         \\public type Count = i64
@@ -184,14 +181,14 @@ fn schemaAliases(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8,
         \\public type Other = Chosen
         \\
         \\
-        \\public type Array = [2]Count
+        \\public type Array = FixedArray[Count, 2]
         \\
         \\
         \\type Hidden = bool
         \\
         \\
-        \\def main() -> i64:
-        \\    x = Other(value=42)
+        \\func main() -> i64:
+        \\    mut x = Other(value=42)
         \\    return x.value
     );
 }

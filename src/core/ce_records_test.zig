@@ -47,7 +47,7 @@ const cursor =
     \\
     \\
     \\record Runtime:
-    \\    stack: list[int]
+    \\    stack: int[]
     \\    top: int
     \\    a: int
     \\    b: int
@@ -60,9 +60,9 @@ const cursor =
     \\    depth: int
     \\
     \\
-    \\def wander(n: int) -> int:
-    \\    w = Cursor(pos=0, line=1, col=1, span=Span(line=0, col=0, offset=0))
-    \\    i = 0
+    \\func wander(n: int) -> int:
+    \\    mut w = Cursor(pos=0, line=1, col=1, span=Span(line=0, col=0, offset=0))
+    \\    mut i = 0
     \\    while i < n:
     \\        i += 1
     \\        if i % 3 == 0:
@@ -75,34 +75,34 @@ const cursor =
     \\    return w.pos * 100 + w.col
     \\
     \\
-    \\def write_backs(n: int) -> int:
-    \\    it = Interp(name="i", rt=Runtime(stack=[], top=0, a=0, b=0, c=0), depth=0)
+    \\func write_backs(n: int) -> int:
+    \\    mut it = Interp(name="i", rt=Runtime(stack=[], top=0, a=0, b=0, c=0), depth=0)
     \\    for i in range(n):
-    \\        wb = it.rt
+    \\        mut wb = it.rt
     \\        wb.top += i
     \\        wb.a = wb.top * 2
     \\        it.rt = wb
     \\    return it.rt.top + it.rt.a
     \\
     \\
-    \\def nested(k: int) -> int:
-    \\    it = Interp(name="n", rt=Runtime(stack=[], top=k, a=k, b=k, c=k), depth=k)
+    \\func nested(k: int) -> int:
+    \\    mut it = Interp(name="n", rt=Runtime(stack=[], top=k, a=k, b=k, c=k), depth=k)
     \\    return it.rt.top + it.depth
     \\
     \\
-    \\def push(rt: mut Runtime, v: int):
+    \\func push(mut rt: Runtime, v: int):
     \\    rt.stack.append(v)
     \\    rt.top += 1
     \\
     \\
-    \\def pushes(it: mut Interp, n: int):
+    \\func pushes(mut it: Interp, n: int):
     \\    for i in range(n):
-    \\        wb = it.rt
+    \\        mut wb = it.rt
     \\        push(mut wb, i)
     \\        it.rt = wb
     \\
     \\
-    \\def advance(src: bytes, t: mut Cursor):
+    \\func advance(src: bytes, mut t: Cursor):
     \\    if t.pos < len(src):
     \\        if src[t.pos] == 10:
     \\            t.line += 1
@@ -112,9 +112,9 @@ const cursor =
     \\        t.pos += 1
     \\
     \\
-    \\def walk(src: bytes, n: int) -> int:
-    \\    t = Cursor(pos=0, line=1, col=1, span=Span(line=0, col=0, offset=0))
-    \\    i = 0
+    \\func walk(src: bytes, n: int) -> int:
+    \\    mut t = Cursor(pos=0, line=1, col=1, span=Span(line=0, col=0, offset=0))
+    \\    mut i = 0
     \\    while i < n:
     \\        i += 1
     \\        if i % 3 == 0:
@@ -127,41 +127,43 @@ const cursor =
     \\    return t.pos * 100 + t.col
     \\
     \\
-    \\def weight(c: Cursor) -> int:
+    \\func weight(c: Cursor) -> int:
     \\    return c.pos + c.col
     \\
     \\
-    \\def through(o: Outer) -> int:
+    \\func through(o: Outer) -> int:
     \\    return weight(o.inner) + o.tag
     \\
     \\
-    \\def bumped(c: Cursor, k: int) -> Cursor:
+    \\func bumped(input: Cursor, k: int) -> Cursor:
+    \\    mut c = input
     \\    c.pos += k
     \\    c.col *= 2
     \\    return c
     \\
     \\
-    \\def kept(c: Cursor) -> int:
-    \\    old = c
+    \\func kept(input: Cursor) -> int:
+    \\    mut c = input
+    \\    mut old = c
     \\    c.pos = 7
     \\    return old.pos + c.pos
     \\
     \\
-    \\def overlap(t: mut Cursor, before: Cursor, part: Span) -> int:
+    \\func overlap(mut t: Cursor, before: Cursor, part: Span) -> int:
     \\    t.pos = 1000
     \\    return before.pos + part.offset + t.pos
     \\
     \\
-    \\def overlapping() -> int:
-    \\    t = Cursor(pos=3, line=0, col=0, span=Span(line=0, col=0, offset=4))
-    \\    r = overlap(mut t, t, t.span)
+    \\func overlapping() -> int:
+    \\    mut t = Cursor(pos=3, line=0, col=0, span=Span(line=0, col=0, offset=4))
+    \\    mut r = overlap(mut t, t, t.span)
     \\    return r + t.pos
     \\
     \\
-    \\def main(out: Stream) -> int:
+    \\func main(out: Stream) -> int:
     \\    out.print(walk(b"ab\ncd", 9), through(Outer(inner=bumped(Cursor(pos=1, line=2, col=3, span=Span(line=0, col=0, offset=0)), 4), tag=5)))
     \\    out.print(kept(Cursor(pos=1, line=0, col=0, span=Span(line=0, col=0, offset=0))), overlapping())
-    \\    it = Interp(name="i", rt=Runtime(stack=[], top=0, a=0, b=0, c=0), depth=0)
+    \\    mut it = Interp(name="i", rt=Runtime(stack=[], top=0, a=0, b=0, c=0), depth=0)
     \\    pushes(mut it, 4)
     \\    out.print(wander(9), write_backs(5), it.rt.top, len(it.rt.stack), nested(3))
     \\    return 0
@@ -264,9 +266,9 @@ test "a function of more than 64 parameters is emitted and called with no in-out
 /// `wide(a0, ..., a{n-1}) -> int` and a `main` that calls it.
 fn wideSource(a: std.mem.Allocator, n: usize) ![]const u8 {
     var source: std.ArrayList(u8) = .empty;
-    try source.appendSlice(a, "def wide(");
+    try source.appendSlice(a, "func wide(");
     for (0..n) |i| try source.print(a, "{s}a{d}: int", .{ if (i == 0) "" else ", ", i });
-    try source.print(a, ") -> int:\n    return a0 + a{d}\n\n\ndef main(out: Stream) -> int:\n    out.print(wide(", .{n - 1});
+    try source.print(a, ") -> int:\n    return a0 + a{d}\n\n\nfunc main(out: Stream) -> int:\n    out.print(wide(", .{n - 1});
     for (0..n) |i| try source.print(a, "{s}{d}", .{ if (i == 0) "" else ", ", i });
     try source.appendSlice(a, "))\n    return 0\n");
     return source.items;
@@ -362,7 +364,7 @@ test "shared homes, views, in-place updates and in-out calls keep value semantic
         const trapped = try fixtureRun(arena.allocator(), root, tag, flags, &.{"x"});
         try std.testing.expectEqualStrings(fixture_expected, trapped.stdout);
         try std.testing.expect(contains(trapped.stderr, "error[R_OVERFLOW]"));
-        try std.testing.expect(contains(trapped.stderr, "in ce_records::overflow"));
+        try std.testing.expect(contains(trapped.stderr, "in overflow"));
         try std.testing.expect(trapped.term == .exited and trapped.term.exited == 1);
     }
 }
@@ -397,20 +399,20 @@ const swapped_return =
     \\    y: Big
     \\
     \\
-    \\def make_pair(k: int) -> Pair:
+    \\func make_pair(k: int) -> Pair:
     \\    return Pair(x=Big(a=k, b=k + 1, c=k + 2, d=k + 3, e=k + 4), y=Big(a=10 * k, b=0, c=0, d=0, e=10 * k + 4))
     \\
     \\
-    \\def pick(k: int, flag: bool) -> Pair:
-    \\    w = make_pair(k)
+    \\func pick(k: int, flag: bool) -> Pair:
+    \\    mut w = make_pair(k)
     \\    if flag:
     \\        return w
     \\    return Pair(x=w.y, y=w.x)
     \\
     \\
-    \\def main(out: Stream) -> int:
-    \\    p = pick(1, False)
-    \\    q = pick(2, True)
+    \\func main(out: Stream) -> int:
+    \\    mut p = pick(1, False)
+    \\    mut q = pick(2, True)
     \\    out.print(p.x.a, p.x.e, p.y.a, p.y.e, q.x.a, q.y.e)
     \\    return 0
     \\

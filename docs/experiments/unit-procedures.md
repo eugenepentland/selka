@@ -6,12 +6,12 @@ end returns unit naturally. The canonical guide is [Functions and calls](../func
 
 ```mylang
 # doc: expect 42
-def add(values: mut list[int], value: int):
+func add(mut values: int[], value: int):
     values.append(value)
 
 
-def main() -> int:
-    values: list[int] = []
+func main() -> int:
+    mut values: int[] = []
     add(mut values, 42)
     return values[0]
 ```

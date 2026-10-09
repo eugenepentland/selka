@@ -26,46 +26,44 @@ fn expectMessage(text: []const u8, code: []const u8, message: []const u8) !void 
 const Modules = struct {
     fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
         if (std.mem.eql(u8, path, "values.my")) return allocator.dupe(u8,
-            \\module values
-            \\public def answer() -> Result[int, int] effects():
+            \\public func answer() -> Result[int, int] effects():
             \\    return Ok(42)
-            \\public def maybe() -> Option[int] effects():
+            \\public func maybe() -> int? effects():
             \\    return Some(1)
-            \\public def items() -> list[int] effects(managed_allocation):
+            \\public func items() -> int[] effects(managed_allocation):
             \\    return [1, 2]
-            \\public def live_values[T: copy + storable](mapping: dict[str, T]) -> list[T]:
+            \\public func live_values[T: copy + storable](mapping: dict[str, T]) -> T[]:
             \\    return list(mapping.values())
-            \\public def item_total(entries: list[DictItem[str, list[int]]]) -> int noalloc:
-            \\    total = 0
+            \\public func item_total(entries: DictItem[str, int[]][]) -> int noalloc:
+            \\    mut total = 0
             \\    for key, value in entries:
             \\        total += len(key) + value[0]
             \\    return total
         );
         if (!std.mem.eql(u8, path, "main.my")) return error.NotFound;
         return allocator.dupe(u8,
-            \\module main
             \\import values
             \\
             \\
-            \\def main() -> i64:
-            \\    option: Option[i64] = values.maybe()
+            \\func main() -> i64:
+            \\    mut option: i64? = values.maybe()
             \\    match option:
             \\        case Option.some(n):
             \\            if n != 1:
             \\                return 1
             \\        case Option.none:
             \\            return 2
-            \\    numbers: list[i64] = values.items()
+            \\    mut numbers: i64[] = values.items()
             \\    if len(numbers) != 2:
             \\        return 3
-            \\    mapping = {"a": [10], "bb": [20]}
-            \\    live = values.live_values(mapping)
-            \\    snapshot = list(live)
-            \\    items = list(mapping.items())
-            \\    alias = mapping
+            \\    mut mapping = {"a": [10], "bb": [20]}
+            \\    mut live = values.live_values(mapping)
+            \\    mut snapshot = list(live)
+            \\    mut items = list(mapping.items())
+            \\    mut alias = mapping
             \\    alias["a"] = [1]
             \\    for index in range(200):
-            \\        garbage = [index, index + 1]
+            \\        mut garbage = [index, index + 1]
             \\        if len(garbage) != 2:
             \\            return 4
             \\    if snapshot[0][0] != 10 or list(live)[0][0] != 10:
@@ -94,19 +92,19 @@ test "prelude containers results options and dictionary views keep one identity 
 // spec: PYTHON-CORE-2
 test "unit and checked-result main adapt to scalar status without changing guest call signatures" {
     try run(
-        \\def main():
+        \\func main():
         \\    pass
     , 0);
     try run(
-        \\def main() -> Result[None, i64]:
-        \\    return Ok(None)
+        \\func main() -> Result[Unit, i64]:
+        \\    return Ok(())
     , 0);
     try run(
-        \\def main() -> Result[None, i64]:
+        \\func main() -> Result[Unit, i64]:
         \\    return Err(42)
     , 42);
     try run(
-        \\def main() -> Result[i64, i64]:
+        \\func main() -> Result[i64, i64]:
         \\    return Ok(42)
     , 42);
 }
@@ -114,15 +112,14 @@ test "unit and checked-result main adapt to scalar status without changing guest
 const Entries = struct {
     fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
         if (!std.mem.eql(u8, path, "main.my")) return error.NotFound;
-        return allocator.dupe(u8, "module main\n\ndef main() -> Result[None, int]:\n    return Ok(None)\n");
+        return allocator.dupe(u8, "\nfunc main() -> Result[Unit, int]:\n    return Ok(())\n");
     }
 };
 const PythonModules = struct {
     fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
         if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8,
-            \\module main
             \\import helpers
-            \\def main() -> int:
+            \\func main() -> int:
             \\    if helpers.Kind.atom != helpers.Kind.atom:
             \\        return 1
             \\    match helpers.answer([42], "answer", 1.5):
@@ -132,13 +129,12 @@ const PythonModules = struct {
             \\            return code
         );
         if (std.mem.eql(u8, path, "helpers.my")) return allocator.dupe(u8,
-            \\module helpers
             \\public enum Kind:
-            \\    atom,
+            \\    atom
             \\    group
             \\
             \\
-            \\public def answer(values: list[int], key: str, number: float) -> Result[dict[str, int], int] effects(managed_allocation):
+            \\public func answer(values: int[], key: str, number: float) -> Result[dict[str, int], int] effects(managed_allocation):
             \\    if number != 1.5:
             \\        return Err(2)
             \\    return Ok({key: values[0]})
@@ -159,24 +155,24 @@ test "Python exported module signatures share builtin types and resolve enum mem
 // spec: PYTHON-CORE-3
 test "representable integer literals inherit parameter local and expression contexts" {
     try run(
-        \\def widen(x: u8) -> i64:
+        \\func widen(x: u8) -> i64:
         \\    return i64(x)
         \\
         \\
-        \\def main() -> i64:
-        \\    n: u8 = 40
+        \\func main() -> i64:
+        \\    mut n: u8 = 40
         \\    return widen(n + 2)
     , 42);
     try run(
-        \\def main() -> i64:
-        \\    n: i8 = -128
-        \\    wide: u64 = 18446744073709551615
+        \\func main() -> i64:
+        \\    mut n: i8 = -128
+        \\    mut wide: u64 = 18446744073709551615
         \\    _ = wide
         \\    return i64(n) + 170
     , 42);
     var compilation = try language.Compilation.init(t.allocator, "range.my",
-        \\def main() -> i64:
-        \\    x: u8 = 256
+        \\func main() -> i64:
+        \\    mut x: u8 = 256
         \\    _ = x
         \\    return 0
     );
@@ -187,16 +183,16 @@ test "representable integer literals inherit parameter local and expression cont
 // spec-case: CALLBACK-EFFECTS-1
 test "an explicit narrow callback ceiling still rejects a wider function value" {
     var compilation = try language.Compilation.init(t.allocator, "callback-bound.my",
-        \\def tick(value: int) -> int effects(clock):
+        \\func tick(value: int) -> int effects(clock):
         \\    _ = value
         \\    return 1
         \\
         \\
-        \\def apply(f: def(int) -> int effects(), x: int) -> int:
+        \\func apply(f: func(int) -> int effects(), x: int) -> int:
         \\    return f(x)
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return apply(tick, 1)
     );
     defer compilation.deinit();
@@ -208,109 +204,107 @@ test "an unannotated function whose body exceeds the slot it fills is rejected a
     // A direct call fixes the slot up front; `run` is noio, so accepting the
     // value would let `output` through a callback its bound never sees.
     try expectMessage(
-        \\def key(out: Stream, x: int) -> int:
+        \\func key(out: Stream, x: int) -> int:
         \\    out.print(x)
         \\    return x
         \\
         \\
-        \\def run(out: Stream, f: def(Stream, int) -> int effects(), x: int) -> int noio:
+        \\func run(out: Stream, f: func(Stream, int) -> int effects(), x: int) -> int noio:
         \\    return f(out, x)
         \\
         \\
-        \\def main(out: Stream) -> int:
+        \\func main(out: Stream) -> int:
         \\    return run(out, key, 1)
-    , "E_EFFECT_BOUND", "`key` fills a callback slot of type `def(stream_cap, int) -> int effects()`, but its body has effect `output`: key; keep the body within the slot's ceiling, or widen the callback type's `effects(...)`");
+    , "E_EFFECT_BOUND", "`key` fills a callback slot of type `func(stream_cap, int) -> int effects()`, but its body has effect `output`: key; keep the body within the slot's ceiling, or widen the callback type's `effects(...)`");
     // A generic callee's slot is concrete only after inference; the same rule
     // holds there, with the witness path through the helper the body calls.
     try expectMessage(
-        \\def show(out: Stream, x: int) -> int:
+        \\func show(out: Stream, x: int) -> int:
         \\    out.print(x)
         \\    return x
         \\
         \\
-        \\def key(out: Stream, x: int) -> int:
+        \\func key(out: Stream, x: int) -> int:
         \\    return show(out, x)
         \\
         \\
-        \\def run[T: copy + storable](out: Stream, f: def(Stream, T) -> int effects(), x: T) -> int:
+        \\func run[T: copy + storable](out: Stream, f: func(Stream, T) -> int effects(), x: T) -> int:
         \\    return f(out, x)
         \\
         \\
-        \\def main(out: Stream) -> int:
+        \\func main(out: Stream) -> int:
         \\    return run(out, key, 1)
-    , "E_EFFECT_BOUND", "`key` fills a callback slot of type `def(stream_cap, int) -> int effects()`, but its body has effect `output`: key -> show; keep the body within the slot's ceiling, or widen the callback type's `effects(...)`");
+    , "E_EFFECT_BOUND", "`key` fills a callback slot of type `func(stream_cap, int) -> int effects()`, but its body has effect `output`: key -> show; keep the body within the slot's ceiling, or widen the callback type's `effects(...)`");
     // Allocation is held to the slot too: `run` is noalloc and calls through
     // an `effects()` slot, so an allocating helper cannot fill it.
     try expectMessage(
-        \\def key(x: int) -> int:
+        \\func key(x: int) -> int:
         \\    return len(str(x))
         \\
         \\
-        \\def run(f: def(int) -> int effects(), x: int) -> int noalloc:
+        \\func run(f: func(int) -> int effects(), x: int) -> int noalloc:
         \\    return f(x)
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return run(key, 123)
-    , "E_EFFECT_BOUND", "`key` fills a callback slot of type `def(int) -> int effects()`, but its body has effect `managed_allocation`: key; keep the body within the slot's ceiling, or widen the callback type's `effects(...)`");
+    , "E_EFFECT_BOUND", "`key` fills a callback slot of type `func(int) -> int effects()`, but its body has effect `managed_allocation`: key; keep the body within the slot's ceiling, or widen the callback type's `effects(...)`");
 }
 // spec: DEAD-RECORD-WRITE-1
-test "dead record writes reject parameter and collection copies but not fresh locals" {
+test "record parameters are read-only and explicitly mutable local copies are writable" {
     var parameter = try language.Compilation.init(t.allocator, "dead-parameter.my",
         \\record Counter:
         \\    n: int
         \\
         \\
-        \\def bump(counter: Counter):
+        \\func bump(counter: Counter):
         \\    counter.n = 1
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    bump(Counter(n=0))
         \\    return 0
     );
     defer parameter.deinit();
     try t.expectError(error.SourceError, parameter.check());
-    try t.expectEqualStrings("E_DEAD_RECORD_WRITE", parameter.diagnostics.items[0].code);
-    // A self-referential right-hand side reads the copy as part of the write, so
-    // it still counts as a dead write when nothing observes the binding later.
+    try t.expectEqualStrings("E_IMMUTABLE", parameter.diagnostics.items[0].code);
+    // Reading the parameter in its own update does not make it mutable.
     var increment = try language.Compilation.init(t.allocator, "dead-increment.my",
         \\record Counter:
         \\    n: int
         \\
         \\
-        \\def bump(counter: Counter):
+        \\func bump(counter: Counter):
         \\    counter.n = counter.n + 1
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    bump(Counter(n=0))
         \\    return 0
     );
     defer increment.deinit();
     try t.expectError(error.SourceError, increment.check());
-    try t.expectEqualStrings("E_DEAD_RECORD_WRITE", increment.diagnostics.items[0].code);
+    try t.expectEqualStrings("E_IMMUTABLE", increment.diagnostics.items[0].code);
     var collection = try language.Compilation.init(t.allocator, "dead-collection.my",
         \\record Node:
         \\    value: int
         \\
         \\
-        \\def main() -> int:
-        \\    nodes = [Node(value=1)]
-        \\    node = nodes[0]
+        \\func main() -> int:
+        \\    mut nodes = [Node(value=1)]
+        \\    mut node = nodes[0]
         \\    node.value = 42
         \\    return 0
     );
     defer collection.deinit();
-    try t.expectError(error.SourceError, collection.check());
-    try t.expectEqualStrings("E_DEAD_RECORD_WRITE", collection.diagnostics.items[0].code);
+    try collection.check();
     var fresh = try language.Compilation.init(t.allocator, "fresh-record.my",
         \\record Point:
         \\    x: int
         \\
         \\
-        \\def main() -> int:
-        \\    point = Point(x=1)
+        \\func main() -> int:
+        \\    mut point = Point(x=1)
         \\    point.x = 3
         \\    return point.x
     );
@@ -319,18 +313,19 @@ test "dead record writes reject parameter and collection copies but not fresh lo
     try t.expectEqual(@as(usize, 0), fresh.diagnostics.items.len);
 }
 // spec-case: DEAD-RECORD-WRITE-1
-test "reading a parameter copy after a field write keeps the write accepted" {
+test "an explicitly mutable copy of a parameter accepts a field write" {
     var observed = try language.Compilation.init(t.allocator, "read-after-write.my",
         \\record Counter:
         \\    n: int
         \\
         \\
-        \\def bump(counter: Counter) -> int:
-        \\    counter.n = 5
-        \\    return counter.n
+        \\func bump(counter: Counter) -> int:
+        \\    mut local = counter
+        \\    local.n = 5
+        \\    return local.n
         \\
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return bump(Counter(n=0))
     );
     defer observed.deinit();
@@ -340,27 +335,27 @@ test "reading a parameter copy after a field write keeps the write accepted" {
 // spec-case: DIAG-ORACLE-1
 test "DIAG-ORACLE-1 unknown local names suggest close declared bindings" {
     try expectMessage(
-        \\def main() -> int:
-        \\    value = 1
+        \\func main() -> int:
+        \\    mut value = 1
         \\    return valu
     , "E_UNKNOWN_NAME", "name is not defined in this scope; did you mean `value`?");
 }
 // spec-case: DIAG-ORACLE-1
 test "DIAG-ORACLE-1 unknown local names without a close candidate carry no suggestion" {
     try expectMessage(
-        \\def main() -> int:
-        \\    value = 1
+        \\func main() -> int:
+        \\    mut value = 1
         \\    return zzz
     , "E_UNKNOWN_NAME", "name is not defined in this scope");
 }
 // spec-case: DIAG-ORACLE-1
 test "DIAG-ORACLE-1 unknown list methods name the accepted spellings" {
     try expectMessage(
-        \\def main() -> int:
-        \\    items = [1, 2]
+        \\func main() -> int:
+        \\    mut items = [1, 2]
         \\    items.appnd(3)
         \\    return 0
-    , "E_LIST_METHOD", "unknown method for a list[int] receiver; accepted methods: append, clear, copy, extend, index, insert, pop, remove, reverse, sort");
+    , "E_LIST_METHOD", "unknown method for a int[] receiver; accepted methods: append, clear, copy, extend, index, insert, pop, remove, reverse, sort");
 }
 
 /// Assert the first diagnostic's code and the accepted spelling it carries under
@@ -379,9 +374,9 @@ fn expectAlternative(text: []const u8, code: []const u8, accepted: []const u8) !
 // spec: DIAG-ALTERNATIVE-1
 test "a dict get without its fallback names the operand the accepted call carries" {
     try expectAlternative(
-        \\def main() -> int:
-        \\    d = {"a": 1}
-        \\    v = d.get("b")
+        \\func main() -> int:
+        \\    mut d = {"a": 1}
+        \\    mut v = d.get("b")
         \\    return v
     , "E_ARITY", "a dictionary `get` always takes its fallback: `d.get(key, default)`");
 }
@@ -389,8 +384,8 @@ test "a dict get without its fallback names the operand the accepted call carrie
 // spec: CONDITIONAL-EXPR-1
 test "conditional arms must agree on one type without widening between them" {
     try expectMessage(
-        \\def main() -> int:
-        \\    x = 1 if True else "a"
+        \\func main() -> int:
+        \\    mut x = if (True) then (1) else ("a")
         \\    return 0
     , "E_TYPE", "conditional arms must agree: `int` here, `str` in the else arm");
 }
@@ -398,8 +393,8 @@ test "conditional arms must agree on one type without widening between them" {
 // spec: CONDITIONAL-EXPR-2
 test "a conditional condition is bool" {
     try expectMessage(
-        \\def main() -> int:
-        \\    x = 1 if 2 else 3
+        \\func main() -> int:
+        \\    mut x = if (2) then (1) else (3)
         \\    return 0
     , "E_TYPE", "expected bool, found int");
 }
@@ -407,17 +402,17 @@ test "a conditional condition is bool" {
 // spec: CONDITIONAL-EXPR-3
 test "only the chosen conditional arm runs and a standalone conditional needs a discard" {
     try run(
-        \\def fails() -> int:
-        \\    zero = 0
+        \\func fails() -> int:
+        \\    mut zero = 0
         \\    return 1 // zero
         \\
         \\
-        \\def main() -> int:
-        \\    return 42 if True else fails()
+        \\func main() -> int:
+        \\    return if (True) then (42) else (fails())
     , 42);
     try expectMessage(
-        \\def main() -> int:
-        \\    1 if True else 2
+        \\func main() -> int:
+        \\    if (True) then (1) else (2)
         \\    return 0
     , "E_EXPLICIT_DISCARD_REQUIRED", "a standalone non-unit value requires `_ =` or result handling");
 }
@@ -425,18 +420,18 @@ test "only the chosen conditional arm runs and a standalone conditional needs a 
 // spec-case: CONDITIONAL-EXPR-3
 test "both conditional arms count for definite assignment and for effects" {
     try expectMessage(
-        \\def main() -> int:
+        \\func main() -> int:
         \\    if True:
-        \\        y = 1
-        \\    return 0 if False else y
-    , "E_UNBOUND", "name may be read before it is assigned; some control-flow path reaching here leaves it unbound");
+        \\        const y = 1
+        \\    return if (False) then (0) else (y)
+    , "E_UNKNOWN_NAME", "name is not defined in this scope");
     try expectMessage(
-        \\def shout(out: Stream) -> int effects():
-        \\    _ = out.print("a") if False else out.print("b")
+        \\func shout(out: Stream) -> int effects():
+        \\    _ = if (False) then (out.print("a")) else (out.print("b"))
         \\    return 0
         \\
         \\
-        \\def main(out: Stream) -> int:
+        \\func main(out: Stream) -> int:
         \\    return shout(out)
     , "E_EFFECT_BOUND", "effect `output` exceeds declared bound: shout; inferred bound is effects(output)");
 }
@@ -444,27 +439,27 @@ test "both conditional arms count for definite assignment and for effects" {
 // spec: CONDITIONAL-EXPR-4
 test "a conditional takes its type from the expected type and nests in its else arm" {
     try run(
-        \\def pick(value: bool) -> u8:
-        \\    return 1 if value else 2
+        \\func pick(value: bool) -> u8:
+        \\    return if (value) then (1) else (2)
         \\
         \\
-        \\def lookup(found: bool) -> Option[int]:
-        \\    return Some(7) if found else None
+        \\func lookup(found: bool) -> int?:
+        \\    return if (found) then (Some(7)) else (None)
         \\
         \\
-        \\def describe(value: int) -> int:
+        \\func describe(value: int) -> int:
         \\    return value + 1
         \\
         \\
-        \\def main() -> int:
-        \\    x: u8 = pick(True)
-        \\    y = 9 if False else 8 if False else 7
-        \\    label = f"{y} {'item' if y == 1 else 'items'}"
+        \\func main() -> int:
+        \\    mut x: u8 = pick(True)
+        \\    mut y = if (False) then (9) else if ((False)) then ((8)) else ((7))
+        \\    mut label = f"{y} {if (y == 1) then ('item') else ('items')}"
         \\    if label != "7 items":
         \\        return 0
         \\    match lookup(True):
         \\        case Some(index):
-        \\            return describe(index if True else 0) + int(x) - 1
+        \\            return describe(if (True) then (index) else (0)) + int(x) - 1
         \\        case None:
         \\            return 0
     , 8);

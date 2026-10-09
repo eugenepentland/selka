@@ -96,19 +96,6 @@ pub fn resolve(allocator: std.mem.Allocator, io: std.Io, path: []const u8, repor
     if (located) |test_entry| {
         entry.root = test_entry.root;
         entry.name = test_entry.name;
-    } else {
-        const bytes = std.Io.Dir.cwd().readFileAlloc(io, absolute, allocator, .limited(64 << 20)) catch |err| {
-            if (err == error.OutOfMemory) return error.OutOfMemory;
-            try report.print(allocator, "error: cannot read {s}: {s}\n", .{ absolute, @errorName(err) });
-            return error.SourceError;
-        };
-        if (declaredModule(bytes)) |name| {
-            const relative = language.project.modulePath(allocator, name) catch return error.OutOfMemory;
-            if (rootFor(absolute, relative)) |root| {
-                entry.root = root;
-                entry.name = name;
-            }
-        }
     }
     const discovered = config.discover(allocator, io, absolute) catch |err| {
         if (err == error.OutOfMemory) return error.OutOfMemory;
@@ -131,34 +118,11 @@ pub fn resolve(allocator: std.mem.Allocator, io: std.Io, path: []const u8, repor
     return entry;
 }
 
-fn rootFor(path: []const u8, relative: []const u8) ?[]const u8 {
-    if (!std.mem.endsWith(u8, path, relative) or path.len <= relative.len) return null;
-    const separator = path.len - relative.len - 1;
-    if (path[separator] != std.fs.path.sep) return null;
-    return if (separator == 0) path[0..1] else path[0..separator];
-}
-
-fn declaredModule(bytes: []const u8) ?[]const u8 {
-    var lines = std.mem.splitScalar(u8, bytes, '\n');
-    while (lines.next()) |raw| {
-        const line = std.mem.trim(u8, raw, " \t\r");
-        if (line.len == 0 or line[0] == '#') continue;
-        if (!std.mem.startsWith(u8, line, "module ")) return null;
-        var words = std.mem.tokenizeAny(u8, line["module ".len..], " \t\r#");
-        const name = words.next() orelse return null;
-        return if (language.project.validName(name)) name else null;
-    }
-    return null;
-}
-
 // spec: NEW-CORE-S4-PROJECT-1
-test "nested module root resolution respects file boundaries and mismatched declarations" {
-    try std.testing.expectEqualStrings("/project/src", rootFor("/project/src/types/shape.my", "types/shape.my").?);
-    try std.testing.expectEqualStrings("/", rootFor("/main.my", "main.my").?);
-    try std.testing.expect(rootFor("/project/my_main.my", "main.my") == null);
-    try std.testing.expect(rootFor("/project/main.my", "wrong.my") == null);
-    try std.testing.expectEqualStrings("types.shape", declaredModule("# comment\n\nmodule types.shape\n").?);
-    try std.testing.expect(declaredModule("module ../escape\n") == null);
+test "unconfigured entry identity comes from its file path" {
+    const entry = frontend.entryOf("/project/src/types/shape.my");
+    try std.testing.expectEqualStrings("/project/src/types", entry.root);
+    try std.testing.expectEqualStrings("shape", entry.module);
 }
 
 // spec: NEW-CORE-S5-POLICY-1
@@ -168,8 +132,8 @@ test "an import the configured policy denies is its own failure, with the policy
     const a = arena.allocator();
     var tmp = std.testing.tmpDir(.{});
     defer tmp.cleanup();
-    try tmp.dir.writeFile(std.testing.io, .{ .sub_path = "main.my", .data = "module main\nimport helper\ndef main() -> int:\n    return helper.value()\n" });
-    try tmp.dir.writeFile(std.testing.io, .{ .sub_path = "helper.my", .data = "module helper\npublic def value() -> int effects():\n    return 7\n" });
+    try tmp.dir.writeFile(std.testing.io, .{ .sub_path = "main.my", .data = "import helper\nfunc main() -> int:\n    return helper.value()\n" });
+    try tmp.dir.writeFile(std.testing.io, .{ .sub_path = "helper.my", .data = "public func value() -> int effects():\n    return 7\n" });
     try tmp.dir.writeFile(std.testing.io, .{ .sub_path = "mylang.json", .data = "{\"version\":1,\"import_policy\":\"policy.json\"}" });
     try tmp.dir.writeFile(std.testing.io, .{ .sub_path = "policy.json", .data = "{\"version\":1,\"default_action\":\"deny\",\"rules\":[]}" });
     const path = try tmp.dir.realPathFileAlloc(std.testing.io, "main.my", a);

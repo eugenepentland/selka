@@ -24,9 +24,9 @@ import sys
 import tempfile
 from pathlib import Path
 
-DEF = re.compile(r"^(public )?def (\w+)\((.*)\)( -> [^:]+)?:$", re.M)
-FIELD = re.compile(r"^    (\w+): ([\w\[\]., ]+)$", re.M)
-CASE = re.compile(r"^    (\w+)(\(.*\)|: [\w\[\]., ]+)?(,?)$", re.M)
+DEF = re.compile(r"^(public )?func (\w+)\((.*)\)( -> [^:]+)?:$", re.M)
+FIELD = re.compile(r"^    (\w+): ([\w\[\]., ?]+)$", re.M)
+CASE = re.compile(r"^    (\w+)(\(.*\)|: [\w\[\]., ?]+)?(,?)$", re.M)
 LITERAL = re.compile(r"(?<![\w.])(\d+)(?![\w.])")
 
 
@@ -39,23 +39,23 @@ def mutations(text, rng):
             out.append(("return int->bool", text.replace(line, line.replace("-> int", "-> bool"), 1)))
         if ": int" in m.group(3):
             out.append(("param int->float", text.replace(line, line.replace(": int", ": float", 1), 1)))
-        if ": mut " in m.group(3):
-            out.append(("drop mut", text.replace(line, line.replace(": mut ", ": ", 1), 1)))
+        if "mut " in m.group(3):
+            out.append(("drop mut", text.replace(line, line.replace("mut ", "", 1), 1)))
         if m.group(3):
             out.append(("add param", text.replace(line, line.replace(")", ", extra_param: int)", 1), 1)))
-        out.append(("rename def", text.replace(line, line.replace(f"def {m.group(2)}(", f"def {m.group(2)}_renamed(", 1), 1)))
+        out.append(("rename def", text.replace(line, line.replace(f"func {m.group(2)}(", f"func {m.group(2)}_renamed(", 1), 1)))
         if m.group(1):
             out.append(("unpublic", text.replace(line, line[len("public "):], 1)))
-        out.append(("body type error", text.replace(line + "\n", line + '\n    zz_bad: int = "x"\n', 1)))
-        out.append(("body no-op", text.replace(line + "\n", line + "\n    zz_ok: int = 1\n", 1)))
+        out.append(("body type error", text.replace(line + "\n", line + '\n    const zz_bad: int = "x"\n', 1)))
+        out.append(("body no-op", text.replace(line + "\n", line + "\n    const zz_ok: int = 1\n", 1)))
     for m in FIELD.finditer(text):
         line = m.group(0)
         out.append(("rename field", text.replace(line, f"    {m.group(1)}_x: {m.group(2)}", 1)))
         if m.group(2) == "int":
             out.append(("field int->float", text.replace(line, f"    {m.group(1)}: float", 1)))
             out.append(("field int->bool", text.replace(line, f"    {m.group(1)}: bool", 1)))
-        if m.group(2).startswith("list["):
-            out.append(("field list->Option", text.replace(line, f"    {m.group(1)}: Option[{m.group(2)[5:-1]}]", 1)))
+        if m.group(2).endswith("[]"):
+            out.append(("field list->Option", text.replace(line, f"    {m.group(1)}: {m.group(2)[:-2]}?", 1)))
     for m in CASE.finditer(text):
         line = m.group(0)
         if FIELD.fullmatch(line):

@@ -5,8 +5,8 @@ flat tuple keys. Bytes order by unsigned octets, with a shorter prefix first.
 Sorting is stable, including reverse sorting, and a key runs once per element.
 
 ```mylang
-def main() -> int:
-    values = [b"\xff", b"a", b""]
+func main() -> int:
+    mut values = [b"\xff", b"a", b""]
     assert sorted(values) == [b"", b"a", b"\xff"]
     values.sort(reverse=True)
     assert values == [b"\xff", b"a", b""]
@@ -22,7 +22,7 @@ whitespace; bytes uses space, tab, newline, carriage return, vertical tab and fo
 feed. The separate split and classification methods retain their ASCII rules.
 
 ```mylang
-def main() -> int:
+func main() -> int:
     assert "éabvaluebaé".strip("abé") == "value"
     assert "\u2007value\u3000".strip() == "value"
     assert b"\xff\x00value\xff".strip(b"\xff\x00") == b"value"
@@ -45,7 +45,7 @@ checks return True. Invalid or reversed windows yield -1, a checked miss, zero,
 or False respectively. Empty split separators and replace needles still trap.
 
 ```mylang
-def main() -> int:
+func main() -> int:
     assert "aéaéa".rfind("é", 1, -1) == 3
     assert "abc".find("", 3, 3) == 3
     assert "abc".find("", 4, 9) == -1
@@ -66,7 +66,7 @@ outside this typed surface. Repr reports `E_REPR_TYPE` for unsupported values.
 Like other names, a binding or declaration may shadow the repr builtin.
 
 ```mylang
-def main() -> int:
+func main() -> int:
     assert repr("'") == "\"'\""
     assert repr("\u00a0") == "'\\xa0'"
     assert repr(b"\xff") == "b'\\xff'"

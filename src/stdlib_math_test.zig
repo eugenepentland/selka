@@ -10,8 +10,8 @@ test "standard math roots rounding classification and checked integer helpers" {
 
 // spec-case: STANDARD-MATH-1
 test "standard math results keep the must-handle obligation of a checked failure" {
-    try fixture.reject(t.allocator, "module main\nimport math\ndef main() -> int:\n    math.abs(0 - 1)\n    return 0\n");
-    try fixture.reject(t.allocator, "module main\nimport math\ndef main() -> int:\n    return math.sqrt(1.0)\n");
+    try fixture.reject(t.allocator, "import math\nfunc main() -> int:\n    math.abs(0 - 1)\n    return 0\n");
+    try fixture.reject(t.allocator, "import math\nfunc main() -> int:\n    return math.sqrt(1.0)\n");
 }
 
 // spec: STANDARD-INTEGER-EXTREMA-1

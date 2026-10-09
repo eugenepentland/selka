@@ -1,8 +1,7 @@
-module structural_constraints_case_1
 
 
 constraint Id[P] = copy + op(identity(x: P) -> P effects())
-def forward[T: Id + op(identity(x: T) -> T effects())](x: T) -> T effects():
+func forward[T: Id + op(identity(x: T) -> T effects())](x: T) -> T effects():
     return T.identity(x)
-public def program() -> int:
+public func program() -> int:
     return 0

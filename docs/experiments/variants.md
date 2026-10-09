@@ -8,8 +8,8 @@ tables](tables.md) are also implemented, finishing A2.
 
 ```mylang
 enum Color:
-    red,
-    green,
+    red
+    green
     blue
 
 
@@ -18,24 +18,24 @@ record Point:
     y: i64
 
 
-union Shape:
-    point: Point,
-    radius: i64,
+enum Shape:
+    point(value: Point)
+    radius(value: i64)
     empty
 
 
-def score(shape: Shape) -> i64:
+func score(shape: Shape) -> i64:
     match shape:
         case Shape.empty:
             return 0
-        case Shape.radius(r):
+        case Shape.radius(value=r):
             return r * r
-        case Shape.point(p):
+        case Shape.point(value=p):
             return p.x + p.y
 
 
-def main() -> i64:
-    return score(Shape.point(Point(x=2, y=3)))
+func main() -> i64:
+    return score(Shape.point(value=Point(x=2, y=3)))
 ```
 
 Enums contain named, payload-free variants. Tagged unions contain named variants

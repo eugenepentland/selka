@@ -24,7 +24,7 @@ def chain(directory, count):
         function = 'main' if i == 0 else 'value'
         expression = 'next.value() + 1' if imports else '1'
         (directory / f'{name}.my').write_text(
-            f'module {name}\n{imports}{visibility}def {function}() -> i64:\n'
+            f'{imports}{visibility}func {function}() -> i64:\n'
             f'    return {expression}\n', encoding='utf-8')
     return directory / 'main.my'
 
@@ -38,7 +38,7 @@ def dense(directory, edge_count):
         imports = ''.join(f'import m{j}\n' for j in targets)
         function = 'main' if i == 0 else 'value'
         (directory / f'{name}.my').write_text(
-            f'module {name}\n{imports}def {function}() -> i64:\n    return 0\n',
+            f'{imports}func {function}() -> i64:\n    return 0\n',
             encoding='utf-8')
     assert remaining == 0
     return directory / 'main.my'
@@ -85,12 +85,12 @@ def main():
         for command in ('report-project-quality', 'discover-project-duplicates'):
             rejected = invoke(compiler, command, entry, status=1)
             assert rejected.stdout == '' and 'm255.my:4:' in rejected.stderr, rejected.stderr
-        leaf.write_text(saved.replace('module m255', 'module m255\nimport main'), encoding='utf-8')
+        leaf.write_text(saved.replace('', 'import main'), encoding='utf-8')
         cycle = invoke(compiler, 'check-project', entry, status=1, code='E_IMPORT_CYCLE')
         assert 'm255.my:2:' in cycle.stderr and 'main.my:1:' in cycle.stderr, cycle.stderr
         chain(deep, 257)
         invoke(compiler, 'check-project', entry, status=1, code='E_MODULE_LIMIT')
-        print('module scaling: 256-module checking/execution/formatting, stable order, '
+        print(''
               'quality/duplicate reports, leaf edits/diagnostics, cycle/frame boundaries, '
               'and 257-module rejection passed')
 
@@ -105,7 +105,7 @@ def main():
         assert invoke(compiler, 'run-project', entry, '--print-result').stdout == '0\n'
         dense(wide, 4097)
         invoke(compiler, 'check-project', entry, status=1, code='E_IMPORT_LIMIT')
-        print('module scaling: shared 92-module DAG at 4096 imports, deterministic '
+        print(''
               'report/execution, and 4097-import rejection passed')
 
 

@@ -1,24 +1,23 @@
-module hex
 import strings
 
 
 # Lowercase hexadecimal text for a byte string, two digits per octet.
-public def encode(data: bytes) -> str:
+public func encode(data: bytes) -> str:
     return data.hex()
 
 
 # Uppercase hexadecimal text for a byte string, two digits per octet.
-public def encode_upper(data: bytes) -> str:
+public func encode_upper(data: bytes) -> str:
     return strings.upper(data.hex())
 
 
 # Bytes for even-length hexadecimal text, accepting either letter case.
-public def decode(text: str) -> Result[bytes, str]:
+public func decode(text: str) -> Result[bytes, str]:
     return bytes.fromhex(text)
 
 
 # Whether text is even-length hexadecimal that decode would accept.
-public def is_hex(text: str) -> bool:
+public func is_hex(text: str) -> bool:
     match bytes.fromhex(text):
         case Ok(_):
             return True

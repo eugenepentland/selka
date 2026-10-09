@@ -1,9 +1,8 @@
-module summary
 
-def line_count(source: str) -> int:
+func line_count(source: str) -> int:
     if len(source) == 0:
         return 0
-    count = 1
+    mut count = 1
     for character in source:
         if character == "\n":
             count += 1
@@ -12,5 +11,5 @@ def line_count(source: str) -> int:
     return count
 
 
-public def render(source: str) -> str:
+public func render(source: str) -> str:
     return "{\"lines\":" + str(line_count(source)) + ",\"characters\":" + str(len(source)) + "}"

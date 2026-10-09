@@ -50,17 +50,17 @@ test "caller root overrides survive movement and duplication into a cloned block
 }
 
 const looping =
-    \\def origin(xs: mut list[int], x: int, kind: int) -> int:
+    \\func origin(mut xs: int[], x: int, kind: int) -> int:
     \\    xs.append(2)
-    \\    total = 0
+    \\    mut total = 0
     \\    for i in range(x):
     \\        if kind == 0:
     \\            total += xs[i]
     \\        else:
     \\            total += xs[i] + 1
     \\    return total
-    \\def main(args: list[str]) -> int:
-    \\    xs = [1]
+    \\func main(args: str[]) -> int:
+    \\    mut xs = [1]
     \\    return origin(mut xs, 3, len(args))
 ;
 

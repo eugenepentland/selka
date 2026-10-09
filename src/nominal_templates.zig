@@ -1,4 +1,5 @@
 //! Declaration-scoped nominal template expressions, before concrete layout specialization.
+const eGenericArity = diagnostic.generic_arity;
 const eRequirement = "E_GENERIC_REQUIREMENT";
 const eResultSchema = "E_RESULT_SCHEMA";
 const std = @import("std");
@@ -48,6 +49,7 @@ pub const Declaration = struct {
 };
 const Alias = struct { declaration: ast.TypeAlias, visiting: bool = false };
 const Syntax = struct {
+    suffixes: []const ast.TypeSuffix = &.{},
     callbacks: std.AutoHashMapUnmanaged(usize, ast.CallbackType) = .empty,
     aliases: std.StringHashMapUnmanaged(Alias) = .empty,
     arrays: std.AutoHashMapUnmanaged(usize, ast.ArrayType) = .empty,
@@ -142,7 +144,19 @@ pub const Index = struct {
         fields_out[1] = .{ .name = span, .ty = .{ .parameter = 0 }, .builtin_name = "some" };
         declaration.fields = fields_out;
     }
+    fn addFixedArrayError(self: *Index) Error!void {
+        const name = @import("frontend_type_names.zig").fixed_length_error;
+        try self.addBuiltin(name, 0, .enumeration);
+        const declaration = &self.declarations.items[self.names.get(name).?];
+        if (declaration.name.end != 0) return;
+        declaration.fields = try self.context.allocator.dupe(Field, &.{.{
+            .name = .{ .start = 0, .end = 0 },
+            .ty = null,
+            .builtin_name = "wrong_length",
+        }});
+    }
     fn addPrelude(self: *Index, program: ast.Program) Error!void {
+        try self.addFixedArrayError();
         try self.addCell();
         try self.addBuiltin("List", 1, .buffer);
         if (!self.names.contains("list")) try self.names.put(self.context.allocator, "list", self.names.get("List").?);
@@ -352,6 +366,51 @@ pub const Index = struct {
         if (site.start == span.start and site.end == span.end) return self.context.sink.fail("E_GENERIC_LIMIT", site, message);
         return self.context.sink.failRelated("E_GENERIC_LIMIT", site, message, .{ .span = span, .message = "resolution reached this type" });
     }
+    fn applicationExpression(self: *Index, syntax: ast.TypeApplication, parameters: []const requirements.Parameter) Error!Expression {
+        const ctx = self.context;
+        if (self.parameter(syntax.name, parameters) != null) return ctx.sink.fail("E_TYPE_APPLICATION", syntax.name, "a type parameter cannot be used as a type constructor");
+        if (std.mem.eql(u8, ctx.src.text(syntax.name), "FixedArray")) {
+            if (syntax.arguments.len != 2) return ctx.sink.fail(eGenericArity, syntax.span, "FixedArray requires an element type and a constant length");
+            const length = syntax.arguments[1];
+            const array_syntax: ast.ArrayType = .{
+                .span = syntax.span,
+                .element = syntax.arguments[0],
+                .index = if (self.lengthParameter(length, parameters) != null) .{ .enum_type = length } else .{ .length = length },
+            };
+            return self.arrayExpression(array_syntax, parameters);
+        }
+        const id = try self.lookup(syntax.name);
+        if (syntax.arguments.len != self.declarations.items[id].parameters.len) return ctx.sink.fail(eGenericArity, syntax.span, "type application requires exactly the declared number of arguments");
+        const arguments = try ctx.allocator.alloc(Expression, syntax.arguments.len);
+        for (syntax.arguments, self.declarations.items[id].parameters, arguments) |argument, required, *out| {
+            out.* = if (required.constant_length) try self.lengthExpression(argument, parameters) else try self.expression(argument, parameters);
+        }
+        const application = try ctx.allocator.create(Application);
+        application.* = .{ .syntax = syntax, .declaration = id, .arguments = arguments };
+        return .{ .application = application };
+    }
+    fn callbackExpression(self: *Index, syntax: ast.CallbackType, parameters: []const requirements.Parameter) Error!Expression {
+        const allocator = self.context.allocator;
+        const arguments = try allocator.alloc(Expression, syntax.parameters.len + 1);
+        for (syntax.parameters, arguments[0..syntax.parameters.len]) |input, *out| out.* = try self.expression(input, parameters);
+        const success = try self.expression(syntax.return_type, parameters);
+        var result = success;
+        if (syntax.failure_type) |failure| {
+            const error_type = try self.expression(failure, parameters);
+            const payloads = try allocator.dupe(Expression, &.{ success, error_type });
+            const sites = try allocator.dupe(Span, &.{ syntax.return_type, failure });
+            result = try self.preludeExpression("Result", payloads, sites, syntax.span);
+        }
+        arguments[syntax.parameters.len] = result;
+        const callback = try allocator.create(Callback);
+        callback.* = .{ .syntax = syntax, .arguments = arguments };
+        return .{ .callback = callback };
+    }
+    fn preludeExpression(self: *Index, name: []const u8, arguments: []const Expression, sites: []const Span, span: Span) Error!Expression {
+        const application = try self.context.allocator.create(Application);
+        application.* = .{ .syntax = .{ .span = span, .name = span, .arguments = sites }, .declaration = self.names.get(name) orelse return error.InternalError, .arguments = arguments };
+        return .{ .application = application };
+    }
     /// Resolve syntax to declaration identities without substituting representative concrete types.
     pub fn expression(self: *Index, span: Span, parameters: []const requirements.Parameter) Error!Expression {
         const ctx = self.context;
@@ -360,28 +419,15 @@ pub const Index = struct {
         self.budget.depth += 1;
         self.budget.work += 1;
         defer self.budget.depth -= 1;
-        if (self.syntax.callbacks.get(span.start)) |syntax| {
-            const arguments = try ctx.allocator.alloc(Expression, syntax.parameters.len + 1);
-            for (syntax.parameters, arguments[0..syntax.parameters.len]) |input, *out| out.* = try self.expression(input, parameters);
-            arguments[syntax.parameters.len] = try self.expression(syntax.return_type, parameters);
-            const callback = try ctx.allocator.create(Callback);
-            callback.* = .{ .syntax = syntax, .arguments = arguments };
-            return .{ .callback = callback };
-        }
+        for (self.syntax.suffixes) |suffix| if (suffix.span.start == span.start and suffix.span.end == span.end) {
+            const arguments = try ctx.allocator.alloc(Expression, 1);
+            arguments[0] = try self.expression(suffix.base, parameters);
+            return self.preludeExpression(if (suffix.kind == .growable) "list" else "Option", arguments, &.{suffix.base}, span);
+        };
+        if (self.syntax.callbacks.get(span.start)) |syntax| return self.callbackExpression(syntax, parameters);
         if (self.syntax.tuples.get(span.start)) |syntax| return self.tupleExpression(syntax, parameters);
         if (self.syntax.arrays.get(span.start)) |syntax| return self.arrayExpression(syntax, parameters);
-        if (self.syntax.applications.get(span.start)) |syntax| {
-            if (self.parameter(syntax.name, parameters) != null) return ctx.sink.fail("E_TYPE_APPLICATION", syntax.name, "a type parameter cannot be used as a type constructor");
-            const id = try self.lookup(syntax.name);
-            if (syntax.arguments.len != self.declarations.items[id].parameters.len) return ctx.sink.fail("E_GENERIC_ARITY", syntax.span, "type application requires exactly the declared number of arguments");
-            const arguments = try ctx.allocator.alloc(Expression, syntax.arguments.len);
-            for (syntax.arguments, self.declarations.items[id].parameters, arguments) |argument, required, *out| {
-                out.* = if (required.constant_length) try self.lengthExpression(argument, parameters) else try self.expression(argument, parameters);
-            }
-            const application = try ctx.allocator.create(Application);
-            application.* = .{ .syntax = syntax, .declaration = id, .arguments = arguments };
-            return .{ .application = application };
-        }
+        if (self.syntax.applications.get(span.start)) |syntax| return self.applicationExpression(syntax, parameters);
         if (self.parameter(span, parameters)) |id| {
             if (parameters[id].constant_length) return ctx.sink.fail(diagnostic.generic_length, span, "a const length parameter is a value, not a type");
             return .{ .parameter = id };
@@ -404,7 +450,7 @@ pub const Index = struct {
             }
         }
         const id = try self.lookup(span);
-        if (self.declarations.items[id].parameters.len != 0) return ctx.sink.fail("E_GENERIC_ARITY", span, "nominal template requires explicit type arguments");
+        if (self.declarations.items[id].parameters.len != 0) return ctx.sink.fail(eGenericArity, span, "nominal template requires explicit type arguments");
         return .{ .named = id };
     }
     fn checkParameters(self: *Index, program: ast.Program) Error!void {
@@ -653,6 +699,7 @@ pub fn collect(allocator: std.mem.Allocator, src: source.Source, program: ast.Pr
     }
     try index.checkParameters(program);
     try index.addPrelude(program);
+    index.syntax.suffixes = program.types.expressions.suffixes;
     for (program.types.expressions.callbacks) |syntax| try index.syntax.callbacks.put(allocator, syntax.span.start, syntax);
     for (program.types.expressions.arrays) |syntax| try index.syntax.arrays.put(allocator, syntax.span.start, syntax);
     for (program.types.expressions.tuples) |syntax| try index.syntax.tuples.put(allocator, syntax.span.start, syntax);

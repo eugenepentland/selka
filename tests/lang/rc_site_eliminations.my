@@ -1,20 +1,20 @@
 # Ownership operations `--rc-runtime=sites` showed the compiler could drop,
 # each with the near misses that must keep them. Every test checks values
 # only; the operation counts are asserted by the sites build test.
-union Value:
-    nil,
-    number: float,
-    text: str
+enum Value:
+    nil
+    number(value: float)
+    text(value: str)
 
 
 record Runtime:
-    stack: list[Value]
+    stack: Value[]
     top: int
 
 
 record Chunk:
-    code: list[int]
-    names: list[str]
+    code: int[]
+    names: str[]
 
 
 record Frame:
@@ -28,38 +28,38 @@ record CallFrame:
 
 
 record Machine:
-    stack: list[Value]
-    frames: list[CallFrame]
-    names: list[str]
+    stack: Value[]
+    frames: CallFrame[]
+    names: str[]
     top: int
     count: int
 
 
-def push(m: mut Machine, item: Value):
+func push(mut m: Machine, item: Value):
     m.stack[m.top] = item
     m.top = m.top + 1
 
 
-def step(m: mut Machine, ip: int):
+func step(mut m: Machine, ip: int):
     m.frames[m.count - 1].ip = ip
 
 
-def grow_stack(m: mut Machine) -> int:
+func grow_stack(mut m: Machine) -> int:
     m.stack = [Value.nil, Value.nil, Value.nil]
     return 1
 
 
-def replaced_receiver(m: mut Machine, item: Value):
-    mutation_result_53 = grow_stack(mut m)
+func replaced_receiver(mut m: Machine, item: Value):
+    mut mutation_result_53 = grow_stack(mut m)
     m.stack[mutation_result_53] = item
 
 
-def rename(m: mut Machine, name: str):
+func rename(mut m: Machine, name: str):
     m.names[0] = name
 
 
-def local_machine(item: Value) -> list[Value]:
-    m = Machine([Value.nil, Value.nil], [], [], 0, 0)
+func local_machine(item: Value) -> Value[]:
+    mut m = Machine(stack=[Value.nil, Value.nil], frames=[], names=[], top=0, count=0)
     m.stack[m.top] = item
     m.stack[-1] = item
     return m.stack
@@ -71,7 +71,7 @@ record Name:
 
 
 record Code:
-    ops: list[int]
+    ops: int[]
 
 
 record Callable:
@@ -79,111 +79,111 @@ record Callable:
     code: Code
 
 
-union Obj:
-    free,
-    name: Name,
-    callable: Callable
+enum Obj:
+    free
+    name(value: Name)
+    callable(value: Callable)
 
 
-def arity_of(objects: list[Obj], at: int) -> int:
+func arity_of(objects: Obj[], at: int) -> int:
     match objects[at]:
-        case Obj.callable(payload):
+        case Obj.callable(value=payload):
             return payload.arity + len(payload.code.ops)
         case _:
             return -1
 
 
-def name_of(objects: list[Obj], at: int) -> Name:
+func name_of(objects: Obj[], at: int) -> Name:
     match objects[at]:
-        case Obj.name(payload):
+        case Obj.name(value=payload):
             return payload
         case _:
-            return Name(b"", 0u32)
+            return Name(chars=b"", hash=0u32)
 
 
-def freed_arity(objects: mut list[Obj], at: int) -> int:
+func freed_arity(mut objects: Obj[], at: int) -> int:
     match objects[at]:
-        case Obj.callable(payload):
+        case Obj.callable(value=payload):
             objects[at] = Obj.free
             return payload.arity + len(payload.code.ops)
         case _:
             return -1
 
 
-def joined(left: bytes, right: bytes) -> Name:
-    made = Name(left + right, 3u32)
+func joined(left: bytes, right: bytes) -> Name:
+    mut made = Name(chars=left + right, hash=3u32)
     return made
 
 
-def same(value: Name) -> Name:
+func same(value: Name) -> Name:
     return value
 
 
-record Unit:
+record CodeUnit:
     arity: int
     chunk: Chunk
 
 
 record Loaded:
-    code: list[int]
-    names: list[str]
+    code: int[]
+    names: str[]
     at: int
 
 
-def load(unit: Unit, at: int) -> Loaded:
+func load(unit: CodeUnit, at: int) -> Loaded:
     return Loaded(code=unit.chunk.code, names=unit.chunk.names, at=at)
 
 
-def load_mut(unit: mut Unit) -> Loaded:
-    loaded = Loaded(code=unit.chunk.code, names=unit.chunk.names, at=unit.arity)
+func load_mut(mut unit: CodeUnit) -> Loaded:
+    mut loaded = Loaded(code=unit.chunk.code, names=unit.chunk.names, at=unit.arity)
     unit.chunk.code.append(99)
     return loaded
 
 
-def made_unit() -> Unit:
-    return Unit(3, Chunk([4, 5], ["made"]))
+func made_unit() -> CodeUnit:
+    return CodeUnit(arity=3, chunk=Chunk(code=[4, 5], names=["made"]))
 
 
-def load_made() -> Loaded:
+func load_made() -> Loaded:
     return Loaded(code=made_unit().chunk.code, names=made_unit().chunk.names, at=0)
 
 
 record Table:
-    objects: list[Obj]
+    objects: Obj[]
     count: int
 
 
-def table_arity(table: Table, at: int) -> int:
+func table_arity(table: Table, at: int) -> int:
     match table.objects[at]:
-        case Obj.callable(payload):
+        case Obj.callable(value=payload):
             return payload.arity + len(payload.code.ops)
         case _:
             return -1
 
 
-def table_name(table: Table, at: int) -> Name:
+func table_name(table: Table, at: int) -> Name:
     match table.objects[at]:
-        case Obj.name(payload):
+        case Obj.name(value=payload):
             return payload
         case _:
-            return Name(b"", 0u32)
+            return Name(chars=b"", hash=0u32)
 
 
-def table_ops(table: Table, at: int) -> list[int]:
+func table_ops(table: Table, at: int) -> int[]:
     match table.objects[at]:
-        case Obj.callable(payload):
+        case Obj.callable(value=payload):
             return payload.code.ops
         case _:
             return []
 
 
-def nested_anchor(table: Table) -> int:
-    total = 0
+func nested_anchor(table: Table) -> int:
+    mut total = 0
     for i in range(len(table.objects)):
         match table.objects[i]:
-            case Obj.callable(outer):
+            case Obj.callable(value=outer):
                 match table.objects[outer.arity]:
-                    case Obj.name(inner):
+                    case Obj.name(value=inner):
                         total += len(inner.chars)
                     case _:
                         total += 100
@@ -192,10 +192,10 @@ def nested_anchor(table: Table) -> int:
     return total
 
 
-def replaced_table(table: mut Table, at: int) -> int:
+func replaced_table(mut table: Table, at: int) -> int:
     table.count = table.count + 1
     match table.objects[at]:
-        case Obj.callable(payload):
+        case Obj.callable(value=payload):
             table.objects[at] = Obj.free
             return payload.arity + len(payload.code.ops)
         case _:
@@ -203,59 +203,59 @@ def replaced_table(table: mut Table, at: int) -> int:
 
 
 record Cursor:
-    code: list[int]
+    code: int[]
     ip: int
 
 
-def advance(cursor: mut Cursor) -> int:
+func advance(mut cursor: Cursor) -> int:
     cursor.ip = cursor.ip + 1
     return cursor.code[cursor.ip - 1]
 
 
-def fetch(rt: mut Runtime, cursor: mut Cursor) -> Value:
+func fetch(mut rt: Runtime, mut cursor: Cursor) -> Value:
     rt.top = rt.top + 1
     return rt.stack[advance(mut cursor)]
 
 
-def reset_stack(rt: mut Runtime) -> int:
-    rt.stack = [Value.text("fresh")]
+func reset_stack(mut rt: Runtime) -> int:
+    rt.stack = [Value.text(value="fresh")]
     return 0
 
 
-def fetch_reset(rt: mut Runtime) -> Value:
+func fetch_reset(mut rt: Runtime) -> Value:
     return rt.stack[reset_stack(mut rt)]
 
 
 record Globals:
-    entries: list[Value]
+    entries: Value[]
 
 
 record Vm:
     globals: Globals
-    names: list[str]
+    names: str[]
     top: int
 
 
-def entry_at(globals: Globals, at: int) -> Value:
+func entry_at(globals: Globals, at: int) -> Value:
     return globals.entries[at]
 
 
-def name_length(vm: Vm, at: int) -> int:
+func name_length(vm: Vm, at: int) -> int:
     return len(vm.names[at])
 
 
-def global_value(vm: mut Vm, at: int) -> Value:
+func global_value(mut vm: Vm, at: int) -> Value:
     vm.top = vm.top + 1
     return entry_at(vm.globals, name_length(vm, at))
 
 
-def find_entry(globals: Globals, at: int) -> Option[Value]:
+func find_entry(globals: Globals, at: int) -> Value?:
     if at < len(globals.entries):
         return Some(globals.entries[at])
     return None
 
 
-def matched_global(vm: mut Vm, at: int) -> Value:
+func matched_global(mut vm: Vm, at: int) -> Value:
     vm.top = vm.top + 1
     match find_entry(vm.globals, name_length(vm, at)):
         case Some(found):
@@ -264,46 +264,46 @@ def matched_global(vm: mut Vm, at: int) -> Value:
             return Value.nil
 
 
-def wipe(vm: mut Vm) -> int:
-    vm.globals = Globals([Value.text("wiped")])
+func wipe(mut vm: Vm) -> int:
+    vm.globals = Globals(entries=[Value.text(value="wiped")])
     return 0
 
 
-def wiped_value(vm: mut Vm) -> Value:
+func wiped_value(mut vm: Vm) -> Value:
     return entry_at(vm.globals, wipe(mut vm))
 
 
-def table_name_hash(table: Table, at: int) -> u32:
+func table_name_hash(table: Table, at: int) -> u32:
     return table_name(table, at).hash
 
 
-def table_name_chars(table: Table, at: int) -> bytes:
+func table_name_chars(table: Table, at: int) -> bytes:
     return table_name(table, at).chars
 
 
 record Bytecode:
-    constants: list[Value]
-    code: list[int]
+    constants: Value[]
+    code: int[]
     ip: int
 
 
-def read_op(frame: mut Bytecode) -> int:
-    byte = frame.code[frame.ip]
+func read_op(mut frame: Bytecode) -> int:
+    mut byte = frame.code[frame.ip]
     frame.ip = frame.ip + 1
     return byte
 
 
-def read_value(frame: mut Bytecode) -> Value:
+func read_value(mut frame: Bytecode) -> Value:
     return frame.constants[read_op(mut frame)]
 
 
-def reload_constants(frame: mut Bytecode) -> int:
-    frame.constants = [Value.text("reloaded")]
+func reload_constants(mut frame: Bytecode) -> int:
+    frame.constants = [Value.text(value="reloaded")]
     frame.ip = 0
     return 0
 
 
-def read_reloaded(frame: mut Bytecode) -> Value:
+func read_reloaded(mut frame: Bytecode) -> Value:
     return frame.constants[reload_constants(mut frame)]
 
 
@@ -313,11 +313,11 @@ record Wire:
     open: bool
 
 
-def matching_wires(wires: list[Wire], wanted: int) -> int:
-    total = 0
-    j = 0
+func matching_wires(wires: Wire[], wanted: int) -> int:
+    mut total = 0
+    mut j = 0
     while j < len(wires):
-        other = wires[j]
+        mut other = wires[j]
         if j == 2:
             other = wires[0]
         if not other.open and other.part == wanted:
@@ -326,251 +326,251 @@ def matching_wires(wires: list[Wire], wanted: int) -> int:
     return total
 
 
-def first_wire(wires: list[Wire]) -> Wire:
-    other = wires[0]
+func first_wire(wires: Wire[]) -> Wire:
+    mut other = wires[0]
     return other
 
 
-def pop(rt: mut Runtime) -> Value:
+func pop(mut rt: Runtime) -> Value:
     rt.top = rt.top - 1
     return rt.stack[rt.top]
 
 
-def peek(rt: Runtime, distance: int) -> Value:
+func peek(rt: Runtime, distance: int) -> Value:
     return rt.stack[rt.top - 1 - distance]
 
 
-def number(item: Value) -> float:
+func number(item: Value) -> float:
     match item:
-        case Value.number(x):
+        case Value.number(value=x):
             return x
         case _:
             return -1.0
 
 
-def swap_stack(rt: mut Runtime) -> int:
-    rt.stack = [Value.number(99.0)]
+func swap_stack(mut rt: Runtime) -> int:
+    rt.stack = [Value.number(value=99.0)]
     return 0
 
 
-def replaced_during_index(rt: mut Runtime) -> Value:
+func replaced_during_index(mut rt: Runtime) -> Value:
     return rt.stack[swap_stack(mut rt)]
 
 
-def next_name(frame: mut Frame) -> str:
+func next_name(mut frame: Frame) -> str:
     frame.at = frame.at + 1
     return frame.chunk.names[frame.at - 1]
 
 
-def owned_rows(count: int) -> list[Value]:
-    rows: list[Value] = []
+func owned_rows(count: int) -> Value[]:
+    mut rows: Value[] = []
     for i in range(count):
-        rows.append(Value.number(float(i)))
+        rows.append(Value.number(value=float(i)))
     return rows
 
 
-def last_owned(count: int) -> Value:
+func last_owned(count: int) -> Value:
     return owned_rows(count)[-1]
 
 
-public def test_loaned_field_reads_keep_values_through_their_temporaries() -> bool:
-    rt = Runtime([Value.number(1.5), Value.nil, Value.number(2.5)], 3)
-    snapshot = rt
-    first = number(pop(mut rt))
-    second = pop(mut rt)
-    third = number(pop(mut rt))
+public func test_loaned_field_reads_keep_values_through_their_temporaries() -> bool:
+    mut rt = Runtime(stack=[Value.number(value=1.5), Value.nil, Value.number(value=2.5)], top=3)
+    mut snapshot = rt
+    mut first = number(pop(mut rt))
+    mut second = pop(mut rt)
+    mut third = number(pop(mut rt))
     return first == 2.5 and second == Value.nil and third == 1.5 and rt.top == 0 and snapshot.stack == rt.stack
 
 
-public def test_loaned_reads_through_negative_indices_and_readonly_parameters() -> bool:
-    rt = Runtime([Value.number(4.0), Value.text("x")], 0)
-    return pop(mut rt) == Value.text("x") and number(peek(rt, 0)) == 4.0 and rt.top == -1
+public func test_loaned_reads_through_negative_indices_and_readonly_parameters() -> bool:
+    mut rt = Runtime(stack=[Value.number(value=4.0), Value.text(value="x")], top=0)
+    return pop(mut rt) == Value.text(value="x") and number(peek(rt, 0)) == 4.0 and rt.top == -1
 
 
-public def test_index_callback_replacing_the_list_keeps_the_loaned_original() -> bool:
-    rt = Runtime([Value.number(7.0), Value.number(8.0)], 2)
-    item = replaced_during_index(mut rt)
-    return number(item) == 7.0 and rt.stack == [Value.number(99.0)]
+public func test_index_callback_replacing_the_list_keeps_the_loaned_original() -> bool:
+    mut rt = Runtime(stack=[Value.number(value=7.0), Value.number(value=8.0)], top=2)
+    mut item = replaced_during_index(mut rt)
+    return number(item) == 7.0 and rt.stack == [Value.number(value=99.0)]
 
 
-public def test_managed_elements_and_nested_record_fields_relocate_whole_values() -> bool:
-    frame = Frame(Chunk([1, 2], ["alpha", "beta"]), 0)
-    saved = frame
-    names = next_name(mut frame) + next_name(mut frame)
+public func test_managed_elements_and_nested_record_fields_relocate_whole_values() -> bool:
+    mut frame = Frame(chunk=Chunk(code=[1, 2], names=["alpha", "beta"]), at=0)
+    mut saved = frame
+    mut names = next_name(mut frame) + next_name(mut frame)
     return names == "alphabeta" and frame.at == 2 and saved.at == 0 and saved.chunk.names == ["alpha", "beta"]
 
 
-public def test_owned_temporaries_are_taken_not_relocated() -> bool:
+public func test_owned_temporaries_are_taken_not_relocated() -> bool:
     return number(last_owned(5)) == 4.0 and number(last_owned(1)) == 0.0
 
 
-public def test_field_receivers_write_through_mut_records_and_keep_snapshots() -> bool:
-    m = Machine([Value.nil, Value.nil, Value.nil], [CallFrame(0, 0), CallFrame(5, 1)], ["a"], 0, 2)
-    before = m
-    push(mut m, Value.number(1.0))
-    push(mut m, Value.text("two"))
+public func test_field_receivers_write_through_mut_records_and_keep_snapshots() -> bool:
+    mut m = Machine(stack=[Value.nil, Value.nil, Value.nil], frames=[CallFrame(ip=0, base=0), CallFrame(ip=5, base=1)], names=["a"], top=0, count=2)
+    mut before = m
+    push(mut m, Value.number(value=1.0))
+    push(mut m, Value.text(value="two"))
     step(mut m, 9)
     step(mut m, 11)
-    return m.stack == [Value.number(1.0), Value.text("two"), Value.nil] and m.top == 2 and m.frames[1].ip == 11 and m.frames[0].ip == 0 and before.stack == [Value.nil, Value.nil, Value.nil] and before.frames[1].ip == 5
+    return m.stack == [Value.number(value=1.0), Value.text(value="two"), Value.nil] and m.top == 2 and m.frames[1].ip == 11 and m.frames[0].ip == 0 and before.stack == [Value.nil, Value.nil, Value.nil] and before.frames[1].ip == 5
 
 
-public def test_field_receivers_of_local_records_and_negative_indices() -> bool:
-    return local_machine(Value.number(3.0)) == [Value.number(3.0), Value.number(3.0)]
+public func test_field_receivers_of_local_records_and_negative_indices() -> bool:
+    return local_machine(Value.number(value=3.0)) == [Value.number(value=3.0), Value.number(value=3.0)]
 
 
-public def test_completed_callback_replaces_the_field_list_before_update() -> bool:
-    m = Machine([Value.nil, Value.nil], [], [], 0, 0)
-    replaced_receiver(mut m, Value.number(4.0))
-    return m.stack == [Value.nil, Value.number(4.0), Value.nil]
+public func test_completed_callback_replaces_the_field_list_before_update() -> bool:
+    mut m = Machine(stack=[Value.nil, Value.nil], frames=[], names=[], top=0, count=0)
+    replaced_receiver(mut m, Value.number(value=4.0))
+    return m.stack == [Value.nil, Value.number(value=4.0), Value.nil]
 
 
-public def test_managed_element_field_stores_keep_their_scope() -> bool:
-    m = Machine([], [], ["a", "b"], 0, 0)
-    saved = m
+public func test_managed_element_field_stores_keep_their_scope() -> bool:
+    mut m = Machine(stack=[], frames=[], names=["a", "b"], top=0, count=0)
+    mut saved = m
     rename(mut m, "c")
     return m.names == ["c", "b"] and saved.names == ["a", "b"]
 
 
-public def test_payload_bindings_read_in_place_keep_their_owner() -> bool:
-    objects = [Obj.free, Obj.callable(Callable(2, Code([1, 2, 3])))]
-    saved = objects
-    total = 0
+public func test_payload_bindings_read_in_place_keep_their_owner() -> bool:
+    mut objects = [Obj.free, Obj.callable(value=Callable(arity=2, code=Code(ops=[1, 2, 3])))]
+    mut saved = objects
+    mut total = 0
     for i in range(4):
         total += arity_of(objects, 1) + arity_of(objects, 0)
     return total == 16 and saved == objects
 
 
-public def test_payload_bindings_outliving_a_scrutinee_write_keep_their_copy() -> bool:
-    objects = [Obj.callable(Callable(4, Code([9])))]
-    first = freed_arity(mut objects, 0)
-    second = freed_arity(mut objects, 0)
+public func test_payload_bindings_outliving_a_scrutinee_write_keep_their_copy() -> bool:
+    mut objects = [Obj.callable(value=Callable(arity=4, code=Code(ops=[9])))]
+    mut first = freed_arity(mut objects, 0)
+    mut second = freed_arity(mut objects, 0)
     return first == 5 and second == -1 and objects == [Obj.free]
 
 
-public def test_returned_bindings_and_locals_move_their_owner() -> bool:
-    objects = [Obj.name(Name(b"ab" + b"c", 7u32)), Obj.free]
-    found = name_of(objects, 0)
+public func test_returned_bindings_and_locals_move_their_owner() -> bool:
+    mut objects = [Obj.name(value=Name(chars=b"ab" + b"c", hash=7u32)), Obj.free]
+    mut found = name_of(objects, 0)
     objects[0] = Obj.free
-    made = joined(b"x", b"yz")
+    mut made = joined(b"x", b"yz")
     return found.chars == b"abc" and found.hash == 7u32 and made.chars == b"xyz" and name_of(objects, 1).chars == b""
 
 
-public def test_returned_parameters_keep_the_callers_value() -> bool:
-    original = Name(b"k" + b"eep", 1u32)
-    copy = same(original)
-    again = same(copy)
+public func test_returned_parameters_keep_the_callers_value() -> bool:
+    mut original = Name(chars=b"k" + b"eep", hash=1u32)
+    mut copy = same(original)
+    mut again = same(copy)
     return copy.chars == b"keep" and again.chars == b"keep" and original.chars == b"keep"
 
 
-public def test_nested_field_copies_into_constructors_stay_independent() -> bool:
-    unit = Unit(1, Chunk([1, 2], ["a", "b"]))
-    loaded = load(unit, 7)
+public func test_nested_field_copies_into_constructors_stay_independent() -> bool:
+    mut unit = CodeUnit(arity=1, chunk=Chunk(code=[1, 2], names=["a", "b"]))
+    mut loaded = load(unit, 7)
     loaded.code.append(3)
     loaded.names[0] = "z"
     return loaded.code == [1, 2, 3] and loaded.names == ["z", "b"] and unit.chunk.code == [1, 2] and unit.chunk.names == ["a", "b"] and loaded.at == 7
 
 
-public def test_nested_field_copies_from_mut_parameters_and_call_results() -> bool:
-    unit = Unit(2, Chunk([8], ["m"]))
-    loaded = load_mut(mut unit)
-    made = load_made()
+public func test_nested_field_copies_from_mut_parameters_and_call_results() -> bool:
+    mut unit = CodeUnit(arity=2, chunk=Chunk(code=[8], names=["m"]))
+    mut loaded = load_mut(mut unit)
+    mut made = load_made()
     return loaded.code == [8] and unit.chunk.code == [8, 99] and loaded.at == 2 and made.code == [4, 5] and made.names == ["made"]
 
 
-public def test_readonly_table_reads_borrow_payloads_in_place() -> bool:
-    table = Table([Obj.callable(Callable(1, Code([4, 5]))), Obj.name(Name(b"n" + b"ame", 9u32))], 2)
-    saved = table
-    arity = table_arity(table, 0) + table_arity(table, 1)
-    name = table_name(table, 1)
-    ops = table_ops(table, 0)
+public func test_readonly_table_reads_borrow_payloads_in_place() -> bool:
+    mut table = Table(objects=[Obj.callable(value=Callable(arity=1, code=Code(ops=[4, 5]))), Obj.name(value=Name(chars=b"n" + b"ame", hash=9u32))], count=2)
+    mut saved = table
+    mut arity = table_arity(table, 0) + table_arity(table, 1)
+    mut name = table_name(table, 1)
+    mut ops = table_ops(table, 0)
     ops.append(6)
     table.objects[1] = Obj.free
-    return arity == 2 and name.chars == b"name" and ops == [4, 5, 6] and saved.objects[1] == Obj.name(Name(b"name", 9u32)) and table_ops(saved, 0) == [4, 5]
+    return arity == 2 and name.chars == b"name" and ops == [4, 5, 6] and saved.objects[1] == Obj.name(value=Name(chars=b"name", hash=9u32)) and table_ops(saved, 0) == [4, 5]
 
 
-public def test_nested_readonly_matches_in_loops() -> bool:
-    table = Table([Obj.callable(Callable(1, Code([]))), Obj.name(Name(b"abc", 1u32)), Obj.free], 3)
+public func test_nested_readonly_matches_in_loops() -> bool:
+    mut table = Table(objects=[Obj.callable(value=Callable(arity=1, code=Code(ops=[]))), Obj.name(value=Name(chars=b"abc", hash=1u32)), Obj.free], count=3)
     return nested_anchor(table) == 5
 
 
-public def test_mut_roots_keep_owned_bindings() -> bool:
-    table = Table([Obj.callable(Callable(3, Code([1])))], 0)
-    first = replaced_table(mut table, 0)
+public func test_mut_roots_keep_owned_bindings() -> bool:
+    mut table = Table(objects=[Obj.callable(value=Callable(arity=3, code=Code(ops=[1])))], count=0)
+    mut first = replaced_table(mut table, 0)
     return first == 4 and table.count == 1 and table.objects == [Obj.free]
 
 
-public def test_mut_root_list_reads_across_unrelated_calls() -> bool:
-    rt = Runtime([Value.number(1.0), Value.text("b"), Value.nil], 0)
-    cursor = Cursor([2, 0, 1], 0)
-    first = fetch(mut rt, mut cursor)
-    second = fetch(mut rt, mut cursor)
-    third = fetch(mut rt, mut cursor)
-    return first == Value.nil and number(second) == 1.0 and third == Value.text("b") and rt.top == 3 and cursor.ip == 3
+public func test_mut_root_list_reads_across_unrelated_calls() -> bool:
+    mut rt = Runtime(stack=[Value.number(value=1.0), Value.text(value="b"), Value.nil], top=0)
+    mut cursor = Cursor(code=[2, 0, 1], ip=0)
+    mut first = fetch(mut rt, mut cursor)
+    mut second = fetch(mut rt, mut cursor)
+    mut third = fetch(mut rt, mut cursor)
+    return first == Value.nil and number(second) == 1.0 and third == Value.text(value="b") and rt.top == 3 and cursor.ip == 3
 
 
-public def test_mut_root_list_reads_keep_the_list_a_call_replaces() -> bool:
-    rt = Runtime([Value.number(8.0), Value.nil], 0)
-    item = fetch_reset(mut rt)
-    return number(item) == 8.0 and rt.stack == [Value.text("fresh")]
+public func test_mut_root_list_reads_keep_the_list_a_call_replaces() -> bool:
+    mut rt = Runtime(stack=[Value.number(value=8.0), Value.nil], top=0)
+    mut item = fetch_reset(mut rt)
+    return number(item) == 8.0 and rt.stack == [Value.text(value="fresh")]
 
 
-public def test_mut_root_fields_passed_to_calls_read_the_current_value() -> bool:
-    vm = Vm(Globals([Value.nil, Value.number(1.0), Value.text("two")]), ["a", "bb"], 0)
-    first = global_value(mut vm, 0)
-    second = global_value(mut vm, 1)
-    return number(first) == 1.0 and second == Value.text("two") and vm.top == 2
+public func test_mut_root_fields_passed_to_calls_read_the_current_value() -> bool:
+    mut vm = Vm(globals=Globals(entries=[Value.nil, Value.number(value=1.0), Value.text(value="two")]), names=["a", "bb"], top=0)
+    mut first = global_value(mut vm, 0)
+    mut second = global_value(mut vm, 1)
+    return number(first) == 1.0 and second == Value.text(value="two") and vm.top == 2
 
 
-public def test_mut_root_fields_passed_to_calls_whose_results_are_matched() -> bool:
-    vm = Vm(Globals([Value.nil, Value.text("one")]), ["a", "bbb"], 0)
-    first = matched_global(mut vm, 0)
-    second = matched_global(mut vm, 1)
-    return first == Value.text("one") and second == Value.nil and vm.top == 2
+public func test_mut_root_fields_passed_to_calls_whose_results_are_matched() -> bool:
+    mut vm = Vm(globals=Globals(entries=[Value.nil, Value.text(value="one")]), names=["a", "bbb"], top=0)
+    mut first = matched_global(mut vm, 0)
+    mut second = matched_global(mut vm, 1)
+    return first == Value.text(value="one") and second == Value.nil and vm.top == 2
 
 
 # The collector lends the argument's field in place, so it reads the list the
 # later `mut` call installed; RC keeps its loan on the list read first. Both
 # must survive the replacement; the counted build checks nothing leaks.
-public def test_mut_root_fields_keep_the_value_a_later_mut_call_replaces() -> bool:
-    vm = Vm(Globals([Value.number(6.0)]), [], 0)
-    item = wiped_value(mut vm)
-    return (number(item) == 6.0 or item == Value.text("wiped")) and vm.globals.entries == [Value.text("wiped")]
+public func test_mut_root_fields_keep_the_value_a_later_mut_call_replaces() -> bool:
+    mut vm = Vm(globals=Globals(entries=[Value.number(value=6.0)]), names=[], top=0)
+    mut item = wiped_value(mut vm)
+    return (number(item) == 6.0 or item == Value.text(value="wiped")) and vm.globals.entries == [Value.text(value="wiped")]
 
 
-public def test_borrowed_match_accessors_read_in_place_and_copy_when_kept() -> bool:
-    table = Table([Obj.name(Name(b"ke" + b"y", 11u32)), Obj.free], 2)
-    hash = table_name_hash(table, 0) + table_name_hash(table, 1)
-    chars = table_name_chars(table, 0)
-    kept = table_name(table, 0)
+public func test_borrowed_match_accessors_read_in_place_and_copy_when_kept() -> bool:
+    mut table = Table(objects=[Obj.name(value=Name(chars=b"ke" + b"y", hash=11u32)), Obj.free], count=2)
+    mut hash = table_name_hash(table, 0) + table_name_hash(table, 1)
+    mut chars = table_name_chars(table, 0)
+    mut kept = table_name(table, 0)
     table.objects[0] = Obj.free
     return hash == 11u32 and chars == b"key" and kept.chars == b"key" and table_name_hash(table, 0) == 0u32
 
 
-public def test_borrowed_fields_across_calls_that_only_advance_the_root() -> bool:
-    frame = Bytecode([Value.number(1.0), Value.text("b"), Value.nil], [2, 0, 1], 0)
-    first = read_value(mut frame)
-    second = read_value(mut frame)
-    third = read_value(mut frame)
-    return first == Value.nil and number(second) == 1.0 and third == Value.text("b") and frame.ip == 3
+public func test_borrowed_fields_across_calls_that_only_advance_the_root() -> bool:
+    mut frame = Bytecode(constants=[Value.number(value=1.0), Value.text(value="b"), Value.nil], code=[2, 0, 1], ip=0)
+    mut first = read_value(mut frame)
+    mut second = read_value(mut frame)
+    mut third = read_value(mut frame)
+    return first == Value.nil and number(second) == 1.0 and third == Value.text(value="b") and frame.ip == 3
 
 
-public def test_borrowed_fields_across_calls_that_replace_them() -> bool:
-    frame = Bytecode([Value.number(5.0)], [0], 0)
-    item = read_reloaded(mut frame)
-    return (number(item) == 5.0 or item == Value.text("reloaded")) and frame.constants == [Value.text("reloaded")]
+public func test_borrowed_fields_across_calls_that_replace_them() -> bool:
+    mut frame = Bytecode(constants=[Value.number(value=5.0)], code=[0], ip=0)
+    mut item = read_reloaded(mut frame)
+    return (number(item) == 5.0 or item == Value.text(value="reloaded")) and frame.constants == [Value.text(value="reloaded")]
 
 
-public def test_records_copied_out_of_readonly_lists_into_named_locals() -> bool:
-    wires = [Wire(Name(b"ab" + b"c", 1u32), 1, False), Wire(Name(b"d", 2u32), 2, False), Wire(Name(b"e", 3u32), 1, True)]
-    kept = first_wire(wires)
-    wires[0] = Wire(Name(b"", 0u32), 9, True)
+public func test_records_copied_out_of_readonly_lists_into_named_locals() -> bool:
+    mut wires = [Wire(net=Name(chars=b"ab" + b"c", hash=1u32), part=1, open=False), Wire(net=Name(chars=b"d", hash=2u32), part=2, open=False), Wire(net=Name(chars=b"e", hash=3u32), part=1, open=True)]
+    mut kept = first_wire(wires)
+    wires[0] = Wire(net=Name(chars=b"", hash=0u32), part=9, open=True)
     return matching_wires(wires, 1) == 0 and matching_wires([kept, kept], 1) == 6 and kept.net.chars == b"abc"
 
 
 # Run every test once, so `mylang run --rc-runtime=stats` shows balanced counts
 # for the whole file; the result is the number of failures.
-def main() -> int:
-    failures = 0
+func main() -> int:
+    mut failures = 0
     for passed in [
         test_loaned_field_reads_keep_values_through_their_temporaries(),
         test_loaned_reads_through_negative_indices_and_readonly_parameters(),

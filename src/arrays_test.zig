@@ -20,30 +20,30 @@ fn reject(source: []const u8, code: []const u8) !void {
 // spec: CORE-6
 test "fixed arrays have structural types preserve copies and support every integer index width" {
     try result(
-        \\def first(a: [2]i64) -> i64:
+        \\func first(a: FixedArray[i64, 2]) -> i64:
         \\    return a[0]
         \\
         \\
-        \\def main() -> i64:
-        \\    a: [0x2]i64 = [3, 4]
-        \\    b = replace(a, 0, 8)
+        \\func main() -> i64:
+        \\    mut a: FixedArray[i64, 0x2] = FixedArray[int, 2]([3, 4])
+        \\    mut b = replace(a, 0, 8)
         \\    return first(a) + b[0] + b[1]
     , 15);
     for ([_][]const u8{ "i8", "i16", "i32", "i64", "u8", "u16", "u32", "u64" }) |width| {
-        const source = try std.fmt.allocPrint(testing.allocator, "def main() -> i64:\n    a: [2]u8 = [7u8, 9u8]\n    return i64(a[1{s}])\n", .{width});
+        const source = try std.fmt.allocPrint(testing.allocator, "func main() -> i64:\n    const a = FixedArray[u8, 2]([7u8, 9u8])\n    return i64(a[1{s}])\n", .{width});
         defer testing.allocator.free(source);
         try result(source, 9);
     }
     try result(
-        \\def empty(a: [0]bool) -> [0]bool:
+        \\func empty(a: FixedArray[bool, 0]) -> FixedArray[bool, 0]:
         \\    return a
         \\
         \\
-        \\def main() -> i64:
-        \\    return i64(len(empty([])))
+        \\func main() -> i64:
+        \\    return i64(len(empty(FixedArray[bool, 0]([]))))
     , 0);
     try result(
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return -[4][0] + 10
     , 6);
 }
@@ -53,13 +53,13 @@ const allocation_source =
     \\    n: i64
     \\
     \\
-    \\def id(a: [2]Box) -> [2]Box:
+    \\func id(a: FixedArray[Box, 2]) -> FixedArray[Box, 2]:
     \\    return a
     \\
     \\
-    \\def main() -> i64:
-    \\    a = id([Box(n=7), Box(n=9)])
-    \\    b = replace(a, 1u8, Box(n=11))
+    \\func main() -> i64:
+    \\    mut a = id(FixedArray[Box, 2]([Box(n=7), Box(n=9)]))
+    \\    mut b = replace(a, 1u8, Box(n=11))
     \\    return a[1].n + b[1].n + i64(len(b))
 ;
 fn allocationScenario(allocator: std.mem.Allocator) !void {
@@ -78,39 +78,39 @@ test "array compiler dump and discovery clean up at every allocation failure" {
 
 test "array duplicate identity preserves length element type index replacement and order" {
     const source =
-        \\def a(x: [2]i64) -> i64:
+        \\func a(x: FixedArray[i64, 2]) -> i64:
         \\    return x[0]
         \\
         \\
-        \\def b(y: [0x2]i64) -> i64:
+        \\func b(y: FixedArray[i64, 0x2]) -> i64:
         \\    return y[0]
         \\
         \\
-        \\def c(x: [3]i64) -> i64:
+        \\func c(x: FixedArray[i64, 3]) -> i64:
         \\    return x[0]
         \\
         \\
-        \\def d(x: [2]i64) -> i64:
+        \\func d(x: FixedArray[i64, 2]) -> i64:
         \\    return x[1]
         \\
         \\
-        \\def e(x: [2]u8) -> i64:
+        \\func e(x: FixedArray[u8, 2]) -> i64:
         \\    return i64(x[0])
         \\
         \\
-        \\def f(x: [2]i64) -> i64:
+        \\func f(x: FixedArray[i64, 2]) -> i64:
         \\    return replace(x, 0, 1)[0]
         \\
         \\
-        \\def g() -> [2]i64:
-        \\    return [1, 2]
+        \\func g() -> FixedArray[i64, 2]:
+        \\    return FixedArray[int, 2]([1, 2])
         \\
         \\
-        \\def h() -> [2]i64:
-        \\    return [2, 1]
+        \\func h() -> FixedArray[i64, 2]:
+        \\    return FixedArray[int, 2]([2, 1])
         \\
         \\
-        \\def main() -> i64:
+        \\func main() -> i64:
         \\    return 0
     ;
     var compilation = try language.Compilation.init(testing.allocator, "duplicates.my", source);
@@ -130,6 +130,6 @@ test "deep array type syntax observes the shared parser budget" {
     defer source.deinit();
     try source.writer.writeAll("record Deep:\n    value: ");
     for (0..300) |_| try source.writer.writeAll("[1]");
-    try source.writer.writeAll("i64\n\n\ndef main() -> i64:\n    return 0\n");
+    try source.writer.writeAll("i64\n\n\nfunc main() -> i64:\n    return 0\n");
     try reject(source.written(), "E_NESTING_LIMIT");
 }

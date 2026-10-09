@@ -42,7 +42,7 @@ def run(mylang, entry):
         mirror = Path(temporary.name) / "src"
         shutil.copytree(entry.parent, mirror, ignore=shutil.ignore_patterns(".mylang-cache"))
         target = mirror / entry.name
-        target.write_text(f"module {entry.stem}; " + source)
+        target.write_text(source)
     started = time.perf_counter()
     proc = subprocess.run([mylang, "interfaces", "oracle", str(target)], capture_output=True, text=True,
                           env=dict(os.environ))

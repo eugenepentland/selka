@@ -1,4 +1,3 @@
-module rc_byte_receivers
 # RC-INERT-BYTES-RECEIVER-1 and RC-OPERAND-ANCHOR-2: a byte buffer held in a
 # `mut` record is appended to and measured in place, with value semantics kept.
 
@@ -8,12 +7,12 @@ record Output:
     failed: bool
 
 
-def output() -> Output:
-    values: list[int] = []
+func output() -> Output:
+    mut values: int[] = []
     return Output(buffer=byte_buffer(values), failed=False)
 
 
-def append(out: mut Output, value: bytes):
+func append(mut out: Output, value: bytes):
     if out.failed:
         return
     if len(out.buffer) > 64 - len(value):
@@ -24,7 +23,7 @@ def append(out: mut Output, value: bytes):
     return
 
 
-def append_byte(out: mut Output, value: u8):
+func append_byte(mut out: Output, value: u8):
     if len(out.buffer) == 64:
         out.failed = True
         return
@@ -32,31 +31,31 @@ def append_byte(out: mut Output, value: u8):
         out.failed = True
 
 
-def append_int(out: mut Output, value: int):
+func append_int(mut out: Output, value: int):
     if not out.buffer.append_int(value):
         out.failed = True
 
 
-def append_text(out: mut Output, value: str):
+func append_text(mut out: Output, value: str):
     if not out.buffer.append_utf8(value):
         out.failed = True
 
 
 # Near misses: a computed or rebound input keeps the receiver scope.
-def append_twice(out: mut Output, value: bytes):
+func append_twice(mut out: Output, value: bytes):
     if not out.buffer.append_range(value + value, 0, 2 * len(value)):
         out.failed = True
 
 
-def append_rebound(out: mut Output, value: bytes):
-    copy = value
+func append_rebound(mut out: Output, value: bytes):
+    mut copy = value
     copy = copy + b"!"
     if not out.buffer.append_range(copy, 1, len(copy)):
         out.failed = True
 
 
-public def test_appends_through_a_mut_record_field_write_in_place() -> bool:
-    out = output()
+public func test_appends_through_a_mut_record_field_write_in_place() -> bool:
+    mut out = output()
     append(mut out, b"ab")
     append_byte(mut out, 67u8)
     append_int(mut out, -12)
@@ -64,25 +63,25 @@ public def test_appends_through_a_mut_record_field_write_in_place() -> bool:
     return bytes(out.buffer) == b"abC-12\xce\xbb" and not out.failed
 
 
-public def test_appending_a_snapshot_of_the_same_buffer_reads_the_old_octets() -> bool:
-    out = output()
+public func test_appending_a_snapshot_of_the_same_buffer_reads_the_old_octets() -> bool:
+    mut out = output()
     append(mut out, b"abc")
-    snapshot = bytes(out.buffer)
+    mut snapshot = bytes(out.buffer)
     append(mut out, snapshot)
     append(mut out, bytes(out.buffer))
     return bytes(out.buffer) == b"abcabcabcabc" and snapshot == b"abc"
 
 
-public def test_computed_and_rebound_inputs_keep_their_scopes() -> bool:
-    out = output()
+public func test_computed_and_rebound_inputs_keep_their_scopes() -> bool:
+    mut out = output()
     append_twice(mut out, b"ab")
     append_rebound(mut out, b"cd")
     return bytes(out.buffer) == b"ababd!"
 
 
-public def test_length_limits_read_the_field_in_place() -> bool:
-    out = output()
-    i = 0
+public func test_length_limits_read_the_field_in_place() -> bool:
+    mut out = output()
+    mut i = 0
     while i < 40:
         append(mut out, b"0123")
         i += 1

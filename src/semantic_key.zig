@@ -441,12 +441,20 @@ fn mixRecord(hash: *Hash, record: typed.Record, records: []const typed.Record) v
     }
     if (record.contract.callback) |callback| {
         frame(hash, "callback");
+        for (callback.parameters, 0..) |_, index| frame(hash, if (index < callback.labels.len) callback.labels[index] else "");
         std.mem.writeInt(u64, &count, callback.parameters.len, .little);
         hash.update(&count);
         for (callback.parameters) |parameter| frame(hash, typed.typeName(parameter, records));
         frame(hash, typed.typeName(callback.return_type, records));
         std.mem.writeInt(u64, &count, callback.effects, .little);
         hash.update(&count);
+        std.mem.writeInt(u64, &count, callback.mutates.len, .little);
+        hash.update(&count);
+        for (callback.mutates) |position| {
+            var encoded: [2]u8 = undefined;
+            std.mem.writeInt(u16, &encoded, position, .little);
+            hash.update(&encoded);
+        }
     }
 }
 
@@ -1193,7 +1201,7 @@ fn expectExportDigestParity(bytes: []const u8, index: *const ExportIndex, names:
 // spec-case: SEMANTIC-CACHE-7
 test "a module export index reproduces the per-declaration scan byte for byte" {
     const bytes =
-        "module m;\n" ++
+        "" ++
         "export alpha\nexport  spaced \t\n" ++
         "  export tabbed;\n" ++
         "export\tnot-a-directive\n" ++
@@ -1246,7 +1254,7 @@ test "export indexing scans many small and fewer large modules once each" {
 fn exportScaleFixture(allocator: std.mem.Allocator, declarations: usize) ![]u8 {
     var text: std.ArrayList(u8) = .empty;
     errdefer text.deinit(allocator);
-    try text.appendSlice(allocator, "module scale;\n");
+    try text.appendSlice(allocator, "");
     var declaration: usize = 0;
     while (declaration < declarations) : (declaration += 1) {
         var buffer: [64]u8 = undefined;

@@ -75,6 +75,7 @@ pub fn check(comptime Checker: type, self: *Checker, call_name: source.Span, arg
     for (places.items, 0..) |first, index| {
         for (places.items[index + 1 ..]) |second| {
             const overlap = compare(first, second) orelse continue;
+            if (overlap.reason == .unknown_key or overlap.reason == .from_end) continue;
             return report(Checker, self, call_name, .{ first, second }, overlap);
         }
     }

@@ -8,15 +8,15 @@ record View:
     distance: int
 
 
-def combine(x: int, y: int) -> int:
+func combine(x: int, y: int) -> int:
     return x + y
 
 
-conversion def to_view(source: Source) -> View:
+conversion func to_view(source: Source) -> View:
     _ = source.note
     return View(distance=combine(source.x, source.y))
 
 
-def main() -> int:
-    source = Source(x=4, y=7, note=True)
+func main() -> int:
+    mut source = Source(x=4, y=7, note=True)
     return to_view(source).distance

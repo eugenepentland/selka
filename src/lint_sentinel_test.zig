@@ -16,7 +16,6 @@ const lint = language.lint;
 /// The plan's `find_pin`/`wire` pair: one path returns `-1` and the caller
 /// tests the result against a negative literal.
 const sentinel_fixture =
-    \\module main
     \\
     \\
     \\record Pin:
@@ -24,76 +23,74 @@ const sentinel_fixture =
     \\    net: int
     \\
     \\
-    \\def find_pin(pins: list[Pin], name: str) -> int:
+    \\func find_pin(pins: Pin[], name: str) -> int:
     \\    for index, pin in enumerate(pins):
     \\        if pin.name == name:
     \\            return index
     \\    return -1
     \\
     \\
-    \\def wire(pins: list[Pin], name: str) -> int:
-    \\    index = find_pin(pins, name)
+    \\func wire(pins: Pin[], name: str) -> int:
+    \\    mut index = find_pin(pins, name)
     \\    if index < 0:
     \\        return 0
     \\    return pins[index].net
     \\
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return 0
 ;
 
 /// `find` returns `-1` by contract, and `str.find`/`bytes.find` mirror it, so a
 /// project function of that name is exempt and its caller is quiet.
 const find_fixture =
-    \\module main
     \\
     \\
-    \\def find(text: str, needle: str) -> int:
+    \\func find(text: str, needle: str) -> int:
     \\    for index, value in enumerate(text):
     \\        if value == needle:
     \\            return index
     \\    return -1
     \\
     \\
-    \\def scan(text: str, needle: str) -> int:
-    \\    at = find(text, needle)
+    \\func scan(text: str, needle: str) -> int:
+    \\    mut at = find(text, needle)
     \\    if at < 0:
     \\        return 0
     \\    return at
     \\
     \\
-    \\def locate(raw: bytes) -> int:
+    \\func locate(raw: bytes) -> int:
     \\    return raw.find(b"z")
     \\
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return 0
 ;
 
 /// One record field and one parameter, each compared against `-1` twice.
 const repeated_fixture =
-    \\module main
     \\
     \\
     \\record Probe:
     \\    state: int
     \\
     \\
-    \\def failed(probe: Probe) -> bool:
+    \\func failed(probe: Probe) -> bool:
     \\    return probe.state == -1
     \\
     \\
-    \\def cleared(probe: Probe) -> bool:
+    \\func cleared(probe: Probe) -> bool:
     \\    return probe.state != -1
     \\
     \\
-    \\def repeated(code: int) -> bool:
+    \\func repeated(code: int) -> bool:
     \\    if code == -1:
     \\        return False
     \\    return code != -1
     \\
     \\
-    \\def main() -> int:
+    \\func main() -> int:
     \\    return 0
 ;
 

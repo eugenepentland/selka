@@ -69,7 +69,7 @@ main.my with that invalid imported production.my                             -> 
 
 ## Known pre-existing issues (not caused by this change)
 
-- `mylang check <module-file>` reports `E_SYNTAX: expected def` for any module
+- `mylang check <module-file>` reports `E_SYNTAX: expected func` for any module
   file, including `examples/modules/main.my` at the base commit. Use `run`,
   `test`, or `list-modules` for module projects.
 

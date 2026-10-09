@@ -24,8 +24,8 @@ test "binary64 IEEE boundaries canonical NaNs signed zero and FloatConversion" {
 }
 
 const intrinsic_source =
-    \\def main() -> int:
-    \\    root = int(sqrt(1764.0))
+    \\func main() -> int:
+    \\    mut root = int(sqrt(1764.0))
     \\    return root
 ;
 fn intrinsicScenario(allocator: std.mem.Allocator) !void {
@@ -36,7 +36,7 @@ fn intrinsicScenario(allocator: std.mem.Allocator) !void {
 // spec-case: FLOAT-DOMAIN-1
 test "float intrinsics evaluate at runtime and reject raw operands" {
     var bad = try language.Compilation.init(t.allocator, "float.my",
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return int(sqrt(1))
     );
     defer bad.deinit();
@@ -48,9 +48,9 @@ test "float intrinsics evaluate at runtime and reject raw operands" {
 // spec: FLOAT-INTRINSIC-FLOAT-1
 test "a float-in float-out intrinsic takes a float operand and answers a float" {
     var c = try language.Compilation.init(t.allocator, "float.my",
-        \\def main() -> int:
-        \\    value = 1764.0
-        \\    root = sqrt(value)
+        \\func main() -> int:
+        \\    mut value = 1764.0
+        \\    mut root = sqrt(value)
         \\    if root != 42.0:
         \\        return 1
         \\    if floor(0.0 - 1.5) != 0.0 - 2.0 or ceil(0.0 - 1.5) != 0.0 - 1.0:
@@ -65,7 +65,7 @@ test "a float-in float-out intrinsic takes a float operand and answers a float" 
     try t.expectEqual(@as(i64, 42), (try native.run(&c)).value);
     // Every removed raw spelling is a located migration diagnostic.
     var raw = try language.Compilation.init(t.allocator, "float.my",
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return int(f64_to_u64(f64_sqrt(1764.0)))
     );
     defer raw.deinit();
@@ -76,7 +76,7 @@ test "a float-in float-out intrinsic takes a float operand and answers a float" 
 // spec: INTERNAL-NAME-1
 test "the reserved intrinsic spelling is rejected in ordinary source" {
     var c = try language.Compilation.init(t.allocator, "float.my",
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return int(__float_sqrt(1764.0))
     );
     defer c.deinit();
@@ -85,7 +85,7 @@ test "the reserved intrinsic spelling is rejected in ordinary source" {
     // A source path that merely looks like the embedded library does not grant
     // the intrinsic: the bytes must be the compiler-owned module.
     var spoof = try language.Compilation.init(t.allocator, "@stdlib/math.my",
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return int(__float_sqrt(1764.0))
     );
     defer spoof.deinit();
@@ -102,11 +102,11 @@ test "trigonometric intrinsics retain native bits and require trusted library so
     try t.expectEqual(@as(u64, 1), try floats.unary(.f64_sin, @bitCast(tiny)));
     try t.expectEqual(@as(u64, @bitCast(@sin(@as(f64, 1.0e300)))), try floats.unary(.f64_sin, @bitCast(@as(f64, 1.0e300))));
     try t.expectEqual(@as(u64, @bitCast(@cos(@as(f64, 1.0e300)))), try floats.unary(.f64_cos, @bitCast(@as(f64, 1.0e300))));
-    var raw = try language.Compilation.init(t.allocator, "trig.my", "def main() -> int:\n    return int(__float_sin(0.0))\n");
+    var raw = try language.Compilation.init(t.allocator, "trig.my", "func main() -> int:\n    return int(__float_sin(0.0))\n");
     defer raw.deinit();
     try t.expectError(error.SourceError, raw.check());
     try t.expectEqualStrings("E_INTERNAL_NAME", raw.diagnostics.items[0].code);
-    var spoof = try language.Compilation.init(t.allocator, "@stdlib/math.my", "def main() -> int:\n    return int(__float_cos(0.0))\n");
+    var spoof = try language.Compilation.init(t.allocator, "@stdlib/math.my", "func main() -> int:\n    return int(__float_cos(0.0))\n");
     defer spoof.deinit();
     try t.expectError(error.SourceError, spoof.check());
     try t.expectEqualStrings("E_INTERNAL_NAME", spoof.diagnostics.items[0].code);
@@ -124,7 +124,7 @@ test "checked float conversion truncates before exact half-open range checks" {
 
 /// Add the program converting `value` to `target`, which must trap at the conversion.
 fn conversionTrap(programs: *native.Batch, target: []const u8, value: []const u8) !void {
-    const text = try std.fmt.allocPrint(t.allocator, "def main() -> int:\n    value = {s}\n    _ = {s}(value)\n    return 0\n", .{ value, target });
+    const text = try std.fmt.allocPrint(t.allocator, "func main() -> int:\n    const value = {s}\n    _ = {s}(value)\n    return 0\n", .{ value, target });
     defer t.allocator.free(text);
     try programs.add("float-cast.my", text, .{});
 }

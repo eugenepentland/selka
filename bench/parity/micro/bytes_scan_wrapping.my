@@ -9,15 +9,15 @@
 # unchecked form chooses it at the operation.
 
 
-def main(out: Stream) -> int:
-    empty: list[int] = []
-    buffer = byte_buffer(empty)
-    piece = b"mylang micro benchmark kernel payload 0123456789 abcdefghijklmno"
+func main(out: Stream) -> int:
+    mut empty: int[] = []
+    mut buffer = byte_buffer(empty)
+    mut piece = b"mylang micro benchmark kernel payload 0123456789 abcdefghijklmno"
     for i in range(131072):
         _ = buffer.append_range(piece, 0, 64)
-    data = bytes(buffer)
-    size = len(data)
-    count = 0
+    mut data = bytes(buffer)
+    mut size = len(data)
+    mut count = 0
     for pass_index in range(16):
         count = wrapping_add(count, pass_index)
         for i in range(size):

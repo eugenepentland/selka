@@ -25,30 +25,30 @@ fn expectTrap(text: []const u8, line: u64, column: u64) !void {
 
 // spec: PY-ASSERT-1
 test "a satisfied assert runs on and a failed one traps R_ASSERT" {
-    try execute("def main() -> int:\n    assert 1 < 2\n    return 42\n", 42);
-    try expectTrap("def main() -> int:\n    total = 1\n    assert total > 3\n    return 0\n", 3, 12);
+    try execute("func main() -> int:\n    assert 1 < 2\n    return 42\n", 42);
+    try expectTrap("func main() -> int:\n    mut total = 1\n    assert total > 3\n    return 0\n", 3, 12);
 }
 
 // spec: PY-ASSERT-2
 test "an assert carrying a message raises the same located R_ASSERT as a bare one" {
-    try expectTrap("def main() -> int:\n    assert False, \"budget must remain positive\"\n    return 0\n", 2, 12);
+    try expectTrap("func main() -> int:\n    assert False, \"budget must remain positive\"\n    return 0\n", 2, 12);
 }
 
 // spec-case: PY-ASSERT-1
 // spec-case: PY-ASSERT-2
 test "assert checks a Boolean condition under any effect bound and inside loops" {
     try execute(
-        \\def total(values: list[int]) -> int:
-        \\    sum = 0
+        \\func total(values: int[]) -> int:
+        \\    mut sum = 0
         \\    for value in values:
         \\        assert value >= 0, "counts are never negative"
         \\        sum = sum + value
         \\    return sum
         \\
-        \\def main() -> int:
+        \\func main() -> int:
         \\    return total([40, 2])
     , 42);
-    var c = try language.Compilation.init(t.allocator, unit, "def main() -> int:\n    assert 1\n    return 0\n");
+    var c = try language.Compilation.init(t.allocator, unit, "func main() -> int:\n    assert 1\n    return 0\n");
     defer c.deinit();
     try t.expectError(error.SourceError, c.check());
     try t.expectEqualStrings("E_TYPE", c.diagnostics.items[0].code);
@@ -56,16 +56,16 @@ test "assert checks a Boolean condition under any effect bound and inside loops"
 
 // spec: PY-ASSERT-3
 test "a valued assert renders its message to stderr only when the condition is false" {
-    var passing = try language.Compilation.init(t.allocator, unit, "def half(value: int) -> int:\n" ++
+    var passing = try language.Compilation.init(t.allocator, unit, "func half(value: int) -> int:\n" ++
         "    assert value % 2 == 0, f\"half needs an even value, got {value}\"\n" ++
         "    return value // 2\n\n" ++
-        "def main() -> int:\n" ++
+        "func main() -> int:\n" ++
         "    return half(84)\n");
     defer passing.deinit();
     try t.expectEqual(@as(i64, 42), (try native.run(&passing)).value);
 
-    var failed = try language.Compilation.init(t.allocator, unit, "def main() -> int:\n" ++
-        "    n = 3\n" ++
+    var failed = try language.Compilation.init(t.allocator, unit, "func main() -> int:\n" ++
+        "    const n = 3\n" ++
         "    assert n > 5, f\"n was {n}\"\n" ++
         "    return 0\n");
     defer failed.deinit();
@@ -76,14 +76,14 @@ test "a valued assert renders its message to stderr only when the condition is f
 
     // A passing assertion never evaluates its message: an out-of-bounds index
     // inside the rendered text would trap if the expression ran.
-    var lazy = try language.Compilation.init(t.allocator, unit, "def main() -> int:\n" ++
-        "    values = [1, 2]\n" ++
+    var lazy = try language.Compilation.init(t.allocator, unit, "func main() -> int:\n" ++
+        "    const values = [1, 2]\n" ++
         "    assert 1 < 2, f\"{values[5]}\"\n" ++
         "    return 7\n");
     defer lazy.deinit();
     try t.expectEqual(@as(i64, 7), (try native.run(&lazy)).value);
 
-    var mistyped = try language.Compilation.init(t.allocator, unit, "def main() -> int:\n    assert 1 > 0, 5\n    return 0\n");
+    var mistyped = try language.Compilation.init(t.allocator, unit, "func main() -> int:\n    assert 1 > 0, 5\n    return 0\n");
     defer mistyped.deinit();
     try t.expectError(error.SourceError, mistyped.check());
     try t.expectEqualStrings("E_TYPE", mistyped.diagnostics.items[0].code);

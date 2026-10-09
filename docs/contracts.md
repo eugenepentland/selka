@@ -7,8 +7,8 @@ checks them in every build: debug and `--release`, `mylang run` and
 
 | clause | attaches to | checked | sees | trap |
 |---|---|---|---|---|
-| `@requires(cond[, "message"])` | a `def` | at entry, before the body | the parameters | `R_REQUIRES` |
-| `@ensures(cond[, "message"])` | a `def` | at every normal return | the parameters, `result`, `old(...)` | `R_ENSURES` |
+| `@requires(cond[, "message"])` | a `func` | at entry, before the body | the parameters | `R_REQUIRES` |
+| `@ensures(cond[, "message"])` | a `func` | at every normal return | the parameters, `result`, `old(...)` | `R_ENSURES` |
 | `@invariant(cond[, "message"])` | a `record` or `domain` | where a value is built or changed | `self` | `R_INVARIANT` |
 
 Each clause may repeat, and the clauses of one kind are checked in source order.
@@ -22,16 +22,16 @@ The optional message is a plain string literal.
 @requires(len(accounts) > 0)
 @ensures(result <= amount)
 @ensures(len(log) == old(len(log)) + 1)
-def withdraw(accounts: list[int], log: mut list[str], amount: int) -> int:
+func withdraw(accounts: int[], mut log: str[], amount: int) -> int:
     log.append("withdraw")
     if accounts[0] < amount:
         return accounts[0]
     return amount
 
 
-def main() -> int:
-    log: list[str] = []
-    taken = withdraw([3], mut log, 5) + withdraw([10], mut log, 1)
+func main() -> int:
+    mut log: str[] = []
+    mut taken = withdraw([3], mut log, 5) + withdraw([10], mut log, 1)
     return taken + len(log) - 1
 ```
 
@@ -68,12 +68,12 @@ or an explicit copy there.
 ```mylang
 # doc: expect 2
 @ensures(len(items) == len(old(items)) + 1)
-def add(items: mut list[int], value: int):
+func add(mut items: int[], value: int):
     items.append(value)
 
 
-def main() -> int:
-    items = [1]
+func main() -> int:
+    mut items = [1]
     add(mut items, 2)
     return len(items)
 ```
@@ -87,13 +87,13 @@ it is checked only on an `Ok` return, with `result` naming the `T` payload. An
 ```mylang
 # doc: expect 3
 @ensures(result >= 0, "a length is never negative")
-def measure(text: str) -> Result[int, str]:
+func measure(text: str) -> Result[int, str]:
     if text == "":
         return Err("empty")
     return Ok(len(text))
 
 
-def main() -> int:
+func main() -> int:
     match measure("abc"):
         case Ok(length):
             return length
@@ -125,17 +125,17 @@ record Range:
 
 @invariant(unwrap(self) <= 1000u32)
 domain Millimeters: u32:
-    def from(value: u32) -> Millimeters:
+    func from(value: u32) -> Millimeters:
         return wrap[Millimeters](value)
 
-    def number(value: Millimeters) -> u32:
+    func number(value: Millimeters) -> u32:
         return unwrap(value)
 
 
-def main() -> int:
-    span = Range(1, 5)
+func main() -> int:
+    mut span = Range(low=1, high=5)
     span.high = 9
-    wider = replace(span, low=0)
+    mut wider = replace(span, low=0)
     return wider.high - 2 + int(Millimeters.number(Millimeters.from(700u32)))
 ```
 
@@ -151,7 +151,7 @@ ranges.my:12:5: error[R_INVARIANT]: invariant violated: Range invariant `self.lo
 Invariants attach to non-generic records and domains. A `class` (shared by
 reference, so a write elsewhere could break it unseen), a `union`, an `enum`,
 a type alias, a constraint and a generic record carry none, and neither does an
-`extern` or `host` def carry `@requires` or `@ensures`: each is
+`extern` or `host` func carry `@requires` or `@ensures`: each is
 `E_CONTRACT_TARGET`.
 
 ## Conditions are pure
@@ -170,12 +170,12 @@ only observes.
 ```mylang
 # doc: expect-error E_CONTRACT_EFFECT
 @requires(items.pop() > 0)
-def first(items: mut list[int]) -> int:
+func first(mut items: int[]) -> int:
     return items[0]
 
 
-def main() -> int:
-    items = [1]
+func main() -> int:
+    mut items = [1]
     return first(mut items)
 ```
 

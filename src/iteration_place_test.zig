@@ -16,8 +16,8 @@ fn trapsOnRefreshedPlace(source: []const u8) !void {
 // spec-case: D1-LIVE-PLACE
 test "D1 live list shrink traps on the final continued step" {
     try trapsOnRefreshedPlace(
-        \\def main() -> int:
-        \\    items = [1, 2]
+        \\func main() -> int:
+        \\    mut items = [1, 2]
         \\    for value in items:
         \\        _ = value
         \\        _ = items.pop()
@@ -29,8 +29,8 @@ test "D1 live list shrink traps on the final continued step" {
 // spec-case: D1-LIVE-PLACE
 test "D1 growth then shrink traps against the last observed length" {
     try trapsOnRefreshedPlace(
-        \\def main() -> int:
-        \\    items = [1]
+        \\func main() -> int:
+        \\    mut items = [1]
         \\    for value in items:
         \\        if value == 1:
         \\            items.append(2)
@@ -43,8 +43,8 @@ test "D1 growth then shrink traps against the last observed length" {
 // spec-case: D1-LIVE-PLACE
 test "D1 indexed ancestor growth traps before switching storage" {
     try trapsOnRefreshedPlace(
-        \\def main() -> int:
-        \\    rows = [[1, 2]]
+        \\func main() -> int:
+        \\    mut rows = [[1, 2]]
         \\    for value in rows[0]:
         \\        rows.append([value])
         \\    return 0
@@ -54,10 +54,10 @@ test "D1 indexed ancestor growth traps before switching storage" {
 // spec-case: D1-LIVE-PLACE
 test "D1 indexed ancestor shrink by mut callee traps" {
     try trapsOnRefreshedPlace(
-        \\def shrink(rows: mut list[list[int]]) -> None:
+        \\func shrink(mut rows: int[][]) -> Unit:
         \\    rows.clear()
-        \\def main() -> int:
-        \\    rows = [[1, 2]]
+        \\func main() -> int:
+        \\    mut rows = [[1, 2]]
         \\    for value in rows[0]:
         \\        _ = value
         \\        shrink(mut rows)
@@ -68,9 +68,9 @@ test "D1 indexed ancestor shrink by mut callee traps" {
 // spec-case: D1-LIVE-PLACE
 test "D1 shared dictionary growth still traps" {
     try trapsOnRefreshedPlace(
-        \\def main() -> int:
-        \\    values = {1: 10}
-        \\    snapshot = values
+        \\func main() -> int:
+        \\    mut values = {1: 10}
+        \\    mut snapshot = values
         \\    for key in values:
         \\        values[2] = key
         \\    return len(snapshot)
@@ -80,9 +80,9 @@ test "D1 shared dictionary growth still traps" {
 // spec-case: D1-LIVE-PLACE
 test "D1 shared set growth still traps" {
     try trapsOnRefreshedPlace(
-        \\def main() -> int:
-        \\    values = {1}
-        \\    snapshot = values
+        \\func main() -> int:
+        \\    mut values = {1}
+        \\    mut snapshot = values
         \\    for value in values:
         \\        values.add(value + 1)
         \\    return len(snapshot)
@@ -92,8 +92,8 @@ test "D1 shared set growth still traps" {
 // spec-case: D1-LIVE-PLACE
 test "D1 dictionary ancestor growth traps before indexed list refresh" {
     try trapsOnRefreshedPlace(
-        \\def main() -> int:
-        \\    rows = {1: [1, 2]}
+        \\func main() -> int:
+        \\    mut rows = {1: [1, 2]}
         \\    for value in rows[1]:
         \\        rows[2] = [value]
         \\    return 0
@@ -103,10 +103,10 @@ test "D1 dictionary ancestor growth traps before indexed list refresh" {
 // spec-case: D1-LIVE-PLACE
 test "D1 managed ancestor of a fixed array still guards length" {
     try trapsOnRefreshedPlace(
-        \\def main() -> int:
-        \\    rows: list[[2]int] = [[1, 2]]
+        \\func main() -> int:
+        \\    mut rows: FixedArray[int, 2][] = [FixedArray[int, 2]([1, 2])]
         \\    for value in rows[0]:
-        \\        rows.append([value, value])
+        \\        rows.append(FixedArray[int, 2]([value, value]))
         \\    return 0
     );
 }
@@ -114,9 +114,9 @@ test "D1 managed ancestor of a fixed array still guards length" {
 // spec-case: D1-LIVE-PLACE
 test "D1 managed ancestor of immutable text still guards length" {
     try trapsOnRefreshedPlace(
-        \\def main() -> int:
-        \\    rows = ["a🙂"]
-        \\    snapshot = rows
+        \\func main() -> int:
+        \\    mut rows = ["a🙂"]
+        \\    mut snapshot = rows
         \\    for letter in rows[0]:
         \\        _ = letter
         \\        rows.clear()
@@ -127,9 +127,9 @@ test "D1 managed ancestor of immutable text still guards length" {
 // spec-case: D1-LIVE-PLACE
 test "D1 managed ancestor of immutable bytes still guards length" {
     try trapsOnRefreshedPlace(
-        \\def main() -> int:
-        \\    rows = [b"ab"]
-        \\    snapshot = rows
+        \\func main() -> int:
+        \\    mut rows = [b"ab"]
+        \\    mut snapshot = rows
         \\    for octet in rows[0]:
         \\        rows.append(b"cd")
         \\        _ = octet

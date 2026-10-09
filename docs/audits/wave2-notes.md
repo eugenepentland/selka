@@ -65,6 +65,7 @@ precise WIP (below).
 ## Doc example (proposed for docs/effects.md)
 
 ```mylang
+# doc: skip Historical pre-redesign syntax retained as audit evidence.
 resource File: filesystem
 
 result Open:
