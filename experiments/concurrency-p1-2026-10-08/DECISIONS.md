@@ -97,3 +97,78 @@ The historical fuzz archives were also transcoded from gzip to xz with identical
 - **Evidence:** Both refined variants ran the same 92 cells, three paired layouts and seven rounds. Their R9 five-cell geomeans are B1 1.023796 and C1 1.013078, selecting C1. Full-row geomeans are 0.998804/0.996360; `string_join/64` is 1.011527/0.996833, resolving original B's 1.295063 miss. EDA improves to B1 1.015979 and C1 1.004482 (C1 has no cell above 1.03). C1 retains six row misses listed in REPORT.md. JSON `read_value` remains 8061 bytes for B1 and 8472 for C1 at each K. The internal helper experiment passes three focused shared-count tests with live assertions. The adopted C tree passes the full Debug gate (88 steps, 2101 executed tests), fmt, pre-commit qualification (510 Core tests; both conformance modes 1518/0/0), both Lox conformance modes/65 tests, EDA 310 tests/all goldens and all 132 counted/plain cells.
 - **Choice:** Adopt refined C, requalify the committed implementation and run both frozen fuzz matrices, then finish its Lox/parity tax. Continue into P1-2 if no corpus exceeds the §9.1 hard stop after investigation. Do not erase initial or refined-B failures. The ordinary/refined code and R9's variant selection are both measured; none of C1–C7 or R1–R11 changes. The short-guest build settle=0 setting is also used for this repeated counted/plain build; slot/memory/CPU admission still applies.
 - **Reversibility:** Easy; all three compiler hashes, the C emitter patch, the helper patch, complete samples and prior commits are retained. No frozen IR or ownership pass is edited.
+
+## 2026-10-09 · P1-1 checkpoint — committed qualification, fuzz and evidence
+
+- **Question:** How should source identity, lengthy admission and the evidence cap be handled before the remaining tax runs?
+- **Options:** Rely only on dirty-tree qualification, bypass shared slots, or retain a committed qualification and both full matrices with verified compression.
+- **Evidence:** `73737b94f` passes 510 Core tests and both 1518/0/0 conformance modes with compiler SHA-256 `29403c1f5044779991e607b4c44fa957c4f8514575b845cee4920d8a9af2c117`. Both frozen matrices are complete and qualified with source/oracles unchanged. The 50-case matrix took 210.69 s; the 200-case matrix took 733.13 s, with individual kinds 70.69–254.05 s. A separate native probe waited 597 s before obtaining a slot, then compiled and ran promptly. Another lane was using the same three build slots.
+- **Choice:** Keep admission unchanged; this is queue delay, not a reason to reduce the workload. Store all six historical/current fuzz runs in one solid xz archive, preserving original package-relative paths and every member byte. Store the two resumed counter runs together, with exact decoded JSON. Retain original archives privately and record replacement hashes in `r3/evidence-archives.json`; the fuzz member manifest is `r3/fuzz-history-manifest.json.gz`. The package is 9.65 MB at this point. Later prototypes remain in ignored scratch files while C1 is measured.
+- **Reversibility:** Easy: archives restore every original member; no gate or raw measurement was discarded.
+
+## 2026-10-09 · P1-2 prototype — last-owner synchronization visible to TSan
+
+- **Question:** Why does the first real scheduler TSan run report a race between the last owner's free-list write and another thread's release CAS?
+- **Options:** Suppress the report; replace every shared release with acquire-release; acquire on the last-owner CAS instead of the trailing acquire fence.
+- **Evidence:** The 8-thread million-submit prototype reports this exact edge in `.tmp/p1-task-stage/tsan-run.log`. The pinned toolchain's `lib/libtsan/tsan_interface_atomic.cpp:486–492` implements `OpFence::Atomic` with a hardware fence and `FIXME: not implemented`, without recording synchronization. The original release-RMW plus acquire-fence is the intended C11 synchronization, but this TSan cannot observe the fence. Moving the acquire to only the last-owner compare-exchange passes the same million-submit workload and three additional repeats (4.25–4.85 s each), with zero reports and zero live blocks.
+- **Choice:** Carry the equivalent last-owner acquire-release CAS in the P1-2 draft. Other releases remain release CAS, retains remain relaxed, and saturation remains sticky. No suppression, annotation or sanitizer-only behavior is added. This is an implementation detail of R11's accepted CAS protocol. P1-1's selected C code and its tax binaries remain unchanged; P1-2 adoption and P1-6's binding gates will include this adjustment. Preserve the failed probe as well as the successful reruns.
+- **Reversibility:** Easy at source level, but reverting would restore a known TSan reporting gap. Final acceptance still requires the full C and emitted-IR suite, 100 repetitions at eight threads.
+
+## 2026-10-09 · P1-1 investigation — Lox VM crosses the premise boundary
+
+- **Question:** Does refined C's Lox result permit the P1-1 checkpoint to close?
+- **Options:** Pool the two engines; stop immediately; investigate the approved paths and their cold-path placement before applying the hard stop.
+- **Evidence:** C1's completed sweep gives tree 0.9972673812 and VM 1.0313247132, with VM per-alignment geomeans 1.0301348688, 1.0319328087 and 1.0359049233. All goldens pass. Combining engines gives 1.0141530929 but would hide the VM failure. Static inspection of K4 `my.vm::run` gives baseline 30,451 bytes, B1 32,723 and C1 34,275; C1 adds 161 slow-call sites and its inline immortal checks increase instruction count. This is consistent across alignments, not a flaky-looking run.
+- **Choice:** Treat each engine as its own corpus. Preserve this failure; compare B1 directly, and try a less extreme cold-branch weight while retaining the required unlikely slow branch, inline plain path and preserve-most ABI. The existing count branch assumes 2000:1 plain/nonplain, although immortal values also take the nonplain branch; the plan does not fix that probability. No checkpoint is declared passed, and no later prototype is adopted until the investigation resolves or reaches §9.1's hard stop. R9 still selects between B and C using the same five cells; a diagnostic on Lox alone cannot override it.
+- **Reversibility:** Easy: use isolated source variants, retain patches, binaries and every measured table. No thresholds, inputs or rounds change.
+
+## 2026-10-09 · P1-3 draft — saturation must preserve the publication invariant
+
+- **Question:** Can the share walk stop at an immortal aggregate that saturated while still plain?
+- **Options:** Walk every immortal root (including read-only literals); weaken the invariant; share a plain aggregate's descendants before making its count immortal.
+- **Evidence:** The count helper currently changes a plain saturated aggregate directly to `UINT32_MAX`, although its children can still have plain counts. A later `myl_core_share(root)` must stop at that root under §4.2 and would miss its children. Shared saturation is already safe because publication has marked the graph. Literal immortals are immutable and must never be written.
+- **Choice:** Prepare a cold preserve-most plain-saturation adapter that calls the same iterative share walk before storing the immortal sentinel. This establishes the existing invariant instead of changing stop-at-immortal or sticky saturation. The draft adds a separate heap-backed boundary fixture: immortal box, shared leaf, repeated publication and eight real child retain/release workers. Its two permanently live blocks are intentional and isolated from leak-free differential cases. Adoption remains part of P1-3 after the P1-1 investigation.
+- **Reversibility:** Local and easy at source level; reverting would reintroduce the demonstrated publication gap. Ordinary plain counts and shared CAS semantics are unchanged.
+
+## 2026-10-09 · P1-1 reporting — separate engine verdicts
+
+- **Question:** How should the harness prevent a combined Lox summary from obscuring an engine failure?
+- **Options:** Keep manual engine calculations only; present separate engine results alongside the combined diagnostic figure.
+- **Evidence:** Refined C's combined 1.014153 figure obscures VM 1.031325. The raw files already retain every engine/script cell, so separate calculations need no new samples.
+- **Choice:** The timing adapter and renderer now calculate each engine's geomean and verdict. The current comparison was already running with the earlier adapter and retains its original raw summary; its full per-cell data yields the same separate-engine calculations in the renderer. No samples or thresholds change.
+- **Reversibility:** Easy; this adds explicit reporting and tightens the harness's summary to the existing per-corpus rule.
+
+
+## 2026-10-09 · P1-1 investigation — select B with a 32:1 count branch
+
+- **Question:** Does a still-unlikely, less extreme count-branch probability resolve refined C’s Lox VM premise failure?
+- **Options:** Keep the 2000:1 C path; measure both approved paths at 32:1; change the R9 selection corpus.
+- **Evidence:** With the common refined runtime and 32:1 probability, B2 wins the prescribed five cells: 1.0227152622 versus C2 1.0307566171. JSON read_value sizes are B2 8052/8052/8052 and C2 8466/8466/8466 bytes. Lox’s engine geomeans are B2 tree 1.0140140429 and VM 1.0165376601, below the 1.03 premise boundary; C2’s VM remains 1.0328550234. B1’s control gives tree 1.0127688215 and VM 1.0151924911. Complete samples and failures remain in count-weight-five/lox.json.gz and their rendered tables.
+- **Choice:** Select B2 by R9, retaining the unlikely single preserve-most slow call and unchanged sticky CAS semantics. Complete its remaining rows/EDA/parity sweep and correctness gates before P1-2. The Lox target is still missed, with seven B2 cells above 1.03; these remain recorded for the binding P1-6 investigation. No threshold or corpus is changed.
+- **Reversibility:** Easy: exact B2/C2 patches, source/compiler hashes, symbol sizes and all paired samples are retained.
+
+## 2026-10-09 · P1-1 evidence capacity
+
+- **Question:** How can further required gates fit beneath the package’s 10 MB evidence limit?
+- **Options:** Omit historical raw evidence; keep the existing 8 MiB xz dictionary; recompress the same exact tar bytes with a 64 MiB dictionary.
+- **Evidence:** Verified decompression equality reduces fuzz-history.tar.xz from 4,945,788 to 4,224,712 bytes and counter-history.tar.xz from 1,090,692 to 1,054,960. Completed probability-run JSON is also gzip-compressed without changing samples. The package is 8,925,908 bytes before this entry. Compression completed before this lane’s next timing started.
+- **Choice:** Retain the smaller archives, record old/new compressed hashes and uncompressed tar hashes in evidence-archives.json, and keep originals in the private cache. No raw gate output is removed.
+- **Reversibility:** Exact decompressed bytes and original containers remain available.
+
+## 2026-10-09 · P1-4/P2-0 draft — exact range-item trap sites
+
+- **Question:** How does a generated range thunk report the actual failing item after its first iteration?
+- **Options:** Report only the submitted range start; add a Core IR operation; use an internal runtime helper from existing ordinary calls.
+- **Evidence:** P2-0’s range proof loops over several items, while the submit ABI captures only the range’s starting item. A failure at item 17 in a range starting at 16 would otherwise name 16. Section 3.4 requires the actual map item, and R5 requires the exact unknown-site fallback.
+- **Choice:** Add the internal `myl_core_task_item(index)` helper in the scheduler draft; generated range thunks call it before each body. Existing nested-task context save/restore also preserves the cursor. Known map sites use `in parallel.map item N at PATH:LINE:COL`; unknown sites retain `in task submitted at <unknown>` with the item appended. Plain submits pass −1. Prepare an emitted-IR trap test for item 17 at 1/2/8 threads, including the multi-item range case. This completes the existing semantics without changing frozen IR/front-end files. Adoption/validation remains pending.
+- **Reversibility:** A local ABI addition, easy to change before P2 lowering; omitting an equivalent cursor update would leave the required report incorrect.
+
+## 2026-10-09 · P1-1 checkpoint — continue with B2 after complete tax investigation
+
+- **Question:** Should the early performance investigation continue after B2 resolves the premise failure but misses the target?
+- **Options:** Spend the remainder of the roughly six-hour allowance tuning code that P1-2 will change; stop despite §5’s checkpoint rule; retain measured misses and proceed to correctness/P1-2.
+- **Evidence:** Complete B2 results are rows 0.9990390412 (five cell misses), EDA 1.0207970965 (one), Lox tree 1.0140140429 (three), Lox VM 1.0165376601 (four), parity 1.0005911305 (none). All outputs/checksums match. The investigation tried both approved count paths, internal helper preservation and the revised count probability; B2 wins R9’s five-cell criterion. No selected corpus exceeds 1.03. The EDA sweep also waited for another lane’s CPU-10 lock; rounds were not shortened.
+- **Choice:** Adopt the exact measured B2 emitter, retain all target misses, rerun correctness and then continue into P1-2. The investigation is bounded by “up to” about six hours, not a requirement to consume it; P1-6 will investigate the final runtime’s binding measurements. Compiler source equivalence was checked against the isolated archive, with only the alternative emitter and older test source differing.
+- **Reversibility:** Easy through the retained commits/patches/compiler identities. This accepts only an early checkpoint miss, not a final target pass.
+
+Guardian’s whole-tree commit check caught that SHARED-COUNTS-1 still described the C alternative’s inline immortal skip after B2 adoption. The specification now describes the measured B path’s single slow call, including immortals; existing tests already exercise those calls on read-only literals and live shared counts. The change-classification gate is rerun without exemptions.

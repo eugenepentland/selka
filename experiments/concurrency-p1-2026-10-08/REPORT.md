@@ -2,10 +2,10 @@
 
 ## Current progress — 2026-10-09
 
-- **Done:** Fast-forwarded to `0ee93b396`; R9/R10 committed at `9477f7673`; main `cafe7fea7` merged by real merge `42041fa45`. Comparison baseline: `94dc1c3a2`. Checkpoint `9f68e16d2` restores real native contention and records every initial tax failure. No push or main/Claude modification occurred.
-- **Measured:** The runtime-helper investigation removes the large string-join regression. With the common refined runtime, **C wins R9's five-cell comparison**: 1.013078× versus B's 1.023796×. C's 92-cell row geomean is **0.996360×**, and EDA passes at **1.004482×** with no cell above 1.03. Its full Debug gate passes **88/88 steps, 2,101 executed tests**; fmt passes; pre-commit qualification passes **510 Core tests and 1518/0/0 conformance in both modes**. Lox conformance/65 port tests, EDA 310 tests/34 goldens, and all 132 counted/plain cells pass again.
-- **Decided:** Adopt C and the internal preserve-most release/free adapters. The initial B/C run remains below; the new comparison gives both variants the same runtime refinement and again follows R9's five-cell rule. Six row cells remain above 1.03 and stay recorded for the final P1-6 check. EDA's initial proximity to the 1.03 hard stop was resolved by this investigation.
-- **Next:** Qualify the committed C implementation, run the frozen fuzz matrices, and complete C's Lox/parity tax before the P1-1 checkpoint. Then continue P1-2 through P1-6 and read-only P2-0. **P1 is not complete.**
+- **Done:** Fast-forwarded to `0ee93b396`; R9/R10 committed at `9477f7673`; main `cafe7fea7` merged by real merge `42041fa45`. Comparison baseline: `94dc1c3a2`. C1’s full correctness/qualification/fuzz checkpoint is retained. B2’s selected emitter is now adopted; its fresh correctness checkpoint is next. No push or main/Claude modification occurred.
+- **Measured:** B2 wins the prescribed R9 comparison and completes all corpus timing: rows **0.9990390412**, EDA **1.0207970965**, Lox tree **1.0140140429**, Lox VM **1.0165376601**, parity **1.0005911305**. Every corpus is below 1.03. The target remains missed in rows, EDA and both Lox engines; every failure is retained below.
+- **Decided:** Keep B’s single preserve-most slow call with a still-unlikely 32:1 count branch and the refined internal helpers. This resolves C1’s Lox VM premise failure under R9’s selection rule. Close the early performance investigation with recorded checkpoint misses; P1-2 changes the runtime again, and P1-6 will supply the binding tax decision.
+- **Next:** Rerun P1-1 correctness on adopted B2, then integrate P1-2 through P1-5, perform final review/gates/tax and finish P2-0. Later steps remain isolated drafts. **P1 is not complete.**
 
 ### Revision-3 correctness checkpoint
 
@@ -13,7 +13,7 @@ The integrated B implementation passes the full Debug gate (**88/88 steps, 2,100
 
 **Native fixture correction:** `zig cc -O2` defines `NDEBUG`, and the historical shared-count fixture put thread creation and validation inside `assert`. Those prior native contention/TSan claims are superseded. The fixture now explicitly enables assertions and reports **8 workers**; the rerun full gate passes **88/88 steps, 2,093 executed tests**, with the remaining seven tests cached. Its real contention and near-saturation checks passed. Final P1 will require fresh, asserted C and emitted-IR TSan evidence.
 
-Raw logs, including failed attempts, are in [the P1-1 log archive](r3/p1-1-logs.tar.xz). [Qualification](r3/p1-1-qualify/), [fuzz 50](r3/p1-1-fuzz50.tar.xz), [fuzz 200](r3/p1-1-fuzz200.tar.xz), [counter JSON](raw/r3-p1-1.tar.xz) and [counted/plain summaries](results/r3-p1-1/) retain the underlying evidence. Archives retain paths relative to this package; counter members contain the original JSON bytes with their individual gzip layer removed. [Archive hashes](r3/evidence-archives.json) document the verified compression. Unpacked copies remain in this worktree's private cache.
+Raw logs, including failed attempts, are in [the P1-1 log archive](r3/p1-1-logs.tar.xz). [Qualification](r3/p1-1-qualify/), [fuzz 50](r3/fuzz-history.tar.xz), [fuzz 200](r3/fuzz-history.tar.xz), [counter JSON](raw/r3-counter-history.tar.xz) and [counted/plain summaries](results/r3-p1-1/) retain the underlying evidence. Archives retain paths relative to this package; counter members contain the original JSON bytes with their individual gzip layer removed. [Archive hashes](r3/evidence-archives.json) document the verified compression. Unpacked copies remain in this worktree's private cache.
 
 ### Revision-3 initial tax — selected B
 
@@ -44,7 +44,47 @@ The emitted slow path remains the approved C alternative: a cold immortal check 
 | EDA cells above 1.03 | 1 | 0 |
 | `json::read_value` bytes, K=4/5/6 | 8061/8061/8061 | 8472/8472/8472 |
 
-[Every row, base/package time and alignment](r3/results/helper-tax-rows.md); [every EDA case](r3/results/helper-tax-eda.md); [compiler identities and sizes](r3/results/helper-variants.json); [build, native-test, full-gate and external logs](r3/helper-logs.tar.xz). C's remaining row misses are `list_append/64` 1.038567, `string_search/64` 1.040646, `csv_aggregate/4096` 1.037795, `csv_aggregate/64` 1.039146, `record_pass/4096` 1.051673 and `union_find/4096` 1.042637. These are checkpoint misses, not passes. [Pre-commit qualification](r3/C1-qualify/summary.json), [external status/times](r3/results/C1-external.json), [counted/plain summaries](results/r3-C1/), and [counter JSON](raw/r3-C1.tar.xz) retain this candidate's correctness evidence. The ReleaseFast compiler was built from the isolated C1 source archive before adoption; its implementation files match the adopted emitter/runtime (apart from a comment), and its binary hash is retained.
+[Every row, base/package time and alignment](r3/results/helper-tax-rows.md); [every EDA case](r3/results/helper-tax-eda.md); [compiler identities and sizes](r3/results/helper-variants.json); [build, native-test, full-gate and external logs](r3/helper-logs.tar.xz). C's remaining row misses are `list_append/64` 1.038567, `string_search/64` 1.040646, `csv_aggregate/4096` 1.037795, `csv_aggregate/64` 1.039146, `record_pass/4096` 1.051673 and `union_find/4096` 1.042637. These are checkpoint misses, not passes. [Pre-commit qualification](r3/C1-qualify/summary.json), [external status/times](r3/results/C1-external.json), [counted/plain summaries](results/r3-C1/), and [counter JSON](raw/r3-counter-history.tar.xz) retain this candidate's correctness evidence. The ReleaseFast compiler was built from the isolated C1 source archive before adoption; its implementation files match the adopted emitter/runtime (apart from a comment), and its binary hash is retained.
+
+Committed qualification at `73737b94f` also passes **510 Core tests and 1518/0/0 in both modes**; [its source/compiler identity and logs](r3/C1-committed-qualify/summary.json) are retained separately from the pre-commit run. Frozen fuzz **9×50 and 9×200** passes with source/oracles unchanged. All historical and resumed fuzz runs are now in [one verified archive](r3/fuzz-history.tar.xz), with [member hashes](r3/fuzz-history-manifest.json.gz). Both resumed counter runs are in [one counter archive](raw/r3-counter-history.tar.xz), retaining original decoded JSON and paths. Earlier archive names in historical manifests refer to originals retained in the private cache; the replacement ledger names the current archives.
+
+### Refined C: completed Lox and parity sweep
+
+| corpus | cells | geomean | cells >1.03 | one-minute load range | detail |
+|---|---:|---:|---:|---|---|
+| Lox tree | 13 | 0.9972673812 | 0 | 0.35–2.59 | [all cells / alignments](r3/results/helper-tax-lox.md) |
+| Lox VM | 13 | **1.0313247132** | 6 | same run | same detail |
+| parity | 45 | 1.0001035352 | 0 | 0.78–1.30 | [all cells / alignments](r3/results/helper-tax-parity.md) |
+
+The VM's per-alignment geomeans are **1.0301348688 / 1.0319328087 / 1.0359049233**. Its misses are closures 1.061041, equality 1.064152, fib 1.042783, invocation 1.048654, string_equality 1.040079 and strings 1.047803. All outputs pass. The combined-engine 1.014153 figure is retained in the raw summary but does not hide the separate VM failure. This is an open §9.1 premise investigation, not a passed checkpoint. The 958.29-second parity orchestration included waiting for another lane's CPU-10 lock; timing samples begin only after acquiring it.
+
+P1-2 through P1-5 and P2-0 drafts remain in this worktree's ignored scratch directories, not the implementation. The latest native scheduler prototype passes an asserted eight-thread run with **1,010,000 simple submits, binary depth 12, a 2,048-level chain, zero live blocks and zero TSan reports**. This is preliminary C evidence, not the required final 100-repetition C/emitted-IR gate.
+
+### Count-branch probability investigation — B2 selected
+
+Count branches remain unlikely, but use 32:1 instead of 2000:1; allocator weights remain unchanged. Both approved paths share the refined runtime. [Five-cell comparison](r3/results/count-weight-five.md), [all Lox cells and alignments](r3/results/count-weight-lox.md), [compiler identities](r3/results/count-weight-identities.json) and [symbol sizes](r3/results/count-weight-sizes.json) retain the full comparison. B2 wins R9 at **1.0227152622**, versus C2 **1.0307566171**. JSON read_value is 8052 bytes at every alignment for B2 and 8466 for C2.
+
+| arm | Lox tree | Lox VM | tree / VM cells >1.03 |
+|---|---:|---:|---:|
+| B1 control | 1.0127688215 | 1.0151924911 | 1 / 4 |
+| **B2 selected** | **1.0140140429** | **1.0165376601** | **3 / 4** |
+| C2 | 1.0201026497 | **1.0328550234** | 4 / 7 |
+
+B2 resolves the premise failure under the mandated selection rule; target misses remain explicit. Its remaining corpus sweep is recorded below; its fresh correctness gates are pending.
+
+### Selected B2: complete early tax checkpoint
+
+| corpus | cells | geomean | cells >1.03 | one-minute load range | detail |
+|---|---:|---:|---:|---|---|
+| rows | 92 | 0.9990390412 | 5 | 2.21–5.19 | [all cells / alignments](r3/results/count-weight-rows.md) |
+| eda | 34 | 1.0207970965 | 1 | 2.40–3.25 | [all cells / alignments](r3/results/count-weight-eda.md) |
+| parity | 45 | 1.0005911305 | 0 | 1.16–2.40 | [all cells / alignments](r3/results/count-weight-parity.md) |
+
+Lox’s separate engine results and complete table are immediately above. The five row misses are string_search/64 **1.056308**, string_join/64 **1.041056**, csv_aggregate/4096 **1.036686**, csv_aggregate/64 **1.090253** and json_transform/64 **1.030965**. EDA’s only cell above 1.03 is adf5901 **1.033970**. Parity has no misses. These are not rounded into passes.
+
+The early investigation compared the original paths, internal register-preservation refinement, a direct B1 control and both paths at the revised branch probability. B2 resolves the broken-premise boundary while following the prescribed five-cell selection. Further tuning is deferred to the binding P1-6 check because TLS, publication and scheduling still change the same runtime. No correctness gate is waived; the adopted B2 checkpoint is pending.
+
+The timing compiler’s implementation matches the adopted source: the experiment archive differs only in its alternate C2 emitter and an older test file; the saved B2 emitter hash matches this worktree exactly. [Build logs](r3/count-weight-logs.tar.xz) and all compiler/binary hashes remain available. [Prototype source/log snapshot](r3/prototypes-before-integration.tar.xz) retains the failed native TSan probe and successful follow-ups, as preliminary evidence only; it does not replace the final integrated gate.
 
 ## Historical P1-1 report (before revisions 2 and 3)
 
@@ -322,8 +362,8 @@ and end-to-end confirmation remain pending after this P1-1 tax stop.
 | `zig build fmt-check` | PASS, exit 0 after the full gate |
 | `qualify_merge.py`, 64 Core shards | PASS, 505 tests; 32.68 s |
 | Frozen full conformance with verification/leak checks | Debug 1518 matching / 0 mismatching / 0 unsupported; Release 1518/0/0; 23.16 s |
-| Frozen fuzz 9×50 | PASS, all nine kinds, 450 accepted cases; [matrix](evidence/fuzz50.json), [full evidence archive](fuzz50.tar.xz) |
-| Frozen fuzz 9×200 | PASS, all nine kinds, 1,800 accepted cases; [matrix](evidence/fuzz200.json), [full evidence archive](fuzz200.tar.xz) |
+| Frozen fuzz 9×50 | PASS, all nine kinds, 450 accepted cases; [matrix](evidence/fuzz50.json), [full evidence archive](r3/fuzz-history.tar.xz) |
+| Frozen fuzz 9×200 | PASS, all nine kinds, 1,800 accepted cases; [matrix](evidence/fuzz200.json), [full evidence archive](r3/fuzz-history.tar.xz) |
 | Compiler/source identity during fuzz | Both matrices confirm unchanged source and oracle hashes |
 | New shared-count tests | PASS, boundary/encoding, emitted paths and typed source guard; included in the full/Core gates |
 | Current C count harness under TSan | PASS, one run with 8 workers, 0 reports, `shared counts ok`; [manifest](evidence/counts-tsan.json), [log](logs/counts-tsan-run.log.gz) |

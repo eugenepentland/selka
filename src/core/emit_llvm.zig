@@ -202,7 +202,7 @@ const tbaa_data = "!tbaa !7";
 /// A count is never 0 while its block is reachable: `[1, 0)`, i.e. 1 through saturated.
 const count_range = "!range !8";
 /// The first `!range` node number free for fact intervals.
-const first_range_node = 10;
+const first_range_node = 11;
 /// The TBAA scaffold and the count range, as numbered above.
 const tbaa_metadata =
     \\!1 = !{!"myl.tbaa"}
@@ -215,6 +215,7 @@ const tbaa_metadata =
     \\!8 = !{i32 1, i32 0}
     \\!9 = !{!"branch_weights", i32 1, i32 2000}
     \\!10 = !{!"branch_weights", i32 2000, i32 1}
+    \\!11 = !{!"branch_weights", i32 32, i32 1}
     \\
 ;
 /// `  %x = load i64, ptr %at` of one data word (a union's tag word or payload word).
@@ -3191,7 +3192,7 @@ const FunctionEmitter = struct {
     }
 
     /// Plain counts update inline after one threshold test. Shared counts and plain
-    /// saturation use one cold preserve-most call; the cold arm skips immortals inline.
+    /// saturation use one cold preserve-most call; immortal constants stay read-only.
     fn countBlock(self: *FunctionEmitter, out: *Out, mode: Counting, block: []const u8, block_type: ir.Type) !void {
         if (self.may_be_empty) {
             // An `undef` value is all null pointers (`undefValue`): nothing to count.
@@ -3209,14 +3210,12 @@ const FunctionEmitter = struct {
         }
         const count = try self.fresh("%rc");
         const plain = try self.fresh("%rp");
-        const saturated = try self.fresh("%rs");
-        const shared = try self.fresh("rc.shared");
         const update = try self.fresh(if (mode == .retain) "rc.inc" else "rc.dec");
         const slow = try self.fresh("rc.slow");
         const done = try self.fresh(self.label);
         const next = try self.fresh("%rn");
         try out.print(self.a(), count_load_line, .{ count, block });
-        try out.print(self.a(), "  {s} = icmp ult i32 {s}, {d}\n  br i1 {s}, label %{s}, label %{s}, !prof !10\n{s}:\n", .{ plain, count, @as(u32, if (mode == .retain) 0x7ffffffe else 0x80000000), plain, update, slow, update });
+        try out.print(self.a(), "  {s} = icmp ult i32 {s}, {d}\n  br i1 {s}, label %{s}, label %{s}, !prof !11\n{s}:\n", .{ plain, count, @as(u32, if (mode == .retain) 0x7ffffffe else 0x80000000), plain, update, slow, update });
         if (mode == .retain) {
             try out.print(self.a(), "  {s} = add nuw i32 {s}, 1\n  store i32 {s}, ptr {s}, align 8, " ++ tbaa_count ++ "\n  br label %{s}\n", .{ next, count, next, block, done });
         } else {
@@ -3227,7 +3226,7 @@ const FunctionEmitter = struct {
             try out.print(self.a(), "{s}:\n  store i32 {s}, ptr {s}, align 8, " ++ tbaa_count ++ "\n  br label %{s}\n", .{ keep, next, block, done });
             try out.print(self.a(), "{s}:\n  call void @myl_core_free(ptr {s})\n  br label %{s}\n", .{ free, block, done });
         }
-        try out.print(self.a(), "{s}:\n  {s} = icmp eq i32 {s}, -1\n  br i1 {s}, label %{s}, label %{s}\n{s}:\n", .{ slow, saturated, count, saturated, done, shared, shared });
+        try out.print(self.a(), "{s}:\n", .{slow});
         try out.print(self.a(), "  call preserve_mostcc void @myl_core_{s}_slow(ptr {s})\n  br label %{s}\n{s}:\n", .{ @tagName(mode), block, done, done });
         self.label = done;
     }

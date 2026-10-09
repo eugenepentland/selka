@@ -132,6 +132,17 @@ def measure(group, tags, output):
         failures = {key: ratio for key, ratio in ratios.items() if ratio > 1.03}
         report['summary'][tag] = {'geomean': gm, 'rows_over_1_03': failures, 'ratios': ratios,
                                   'pass': gm <= 1.010 and not failures}
+        if group == 'lox':
+            engines = {}
+            for engine in ('tree', 'vm'):
+                chosen = {key: ratio for key, ratio in ratios.items() if key.endswith('/' + engine)}
+                engine_gm = math.exp(statistics.mean(math.log(r) for r in chosen.values()))
+                engine_misses = {key: ratio for key, ratio in chosen.items() if ratio > 1.03}
+                engines[engine] = {'geomean': engine_gm, 'rows_over_1_03': engine_misses,
+                                   'pass': engine_gm <= 1.010 and not engine_misses}
+                print(group, engine, tag, 'geomean', engine_gm, 'over 1.03', engine_misses, flush=True)
+            report['summary'][tag]['engines'] = engines
+            report['summary'][tag]['pass'] = all(e['pass'] for e in engines.values())
         print(group, tag, 'geomean', gm, 'over 1.03', failures, flush=True)
     output.write_text(json.dumps(report, separators=(',', ':')) + '\n')
 

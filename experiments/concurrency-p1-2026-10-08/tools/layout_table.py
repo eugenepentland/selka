@@ -2,6 +2,7 @@
 """Render every alignment and the binding median ratio from R10 tax JSON."""
 import gzip
 import json
+import math
 from pathlib import Path
 import statistics
 import sys
@@ -18,6 +19,13 @@ def render(path):
     for tag in data['tags'][1:]:
         summary = data['summary'][tag]
         lines.append(f"| {data.get('corpus', 'rows')} / {tag} | {len(data['rows'])} | {summary['geomean']:.6f} | {len(summary['rows_over_1_03'])} | {'PASS' if summary['pass'] else 'MISS'} |")
+        if data.get('corpus') == 'lox':
+            for engine in ('tree', 'vm'):
+                ratios = {key: ratio for key, ratio in summary['ratios'].items() if key.endswith('/' + engine)}
+                gm = math.exp(statistics.mean(math.log(r) for r in ratios.values()))
+                misses = sum(r > 1.03 for r in ratios.values())
+                verdict = 'PASS' if gm <= 1.010 and not misses else 'MISS'
+                lines.append(f"| Lox {engine} / {tag} | {len(ratios)} | {gm:.10f} | {misses} | {verdict} |")
     lines += ['', f"[Raw samples, wall times, load and hashes]({path.name}). Times below are milliseconds; ratios use each batch's paired medians.", '',
               '| cell | arm | K4 base → arm | K4 ratio | K5 base → arm | K5 ratio | K6 base → arm | K6 ratio | median ratio |',
               '|---|---|---:|---:|---:|---:|---:|---:|---:|']

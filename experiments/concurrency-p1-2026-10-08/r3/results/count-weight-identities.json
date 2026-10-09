@@ -1,0 +1,14 @@
+{
+  "B2": {
+    "compiler": "/home/epentland/.cache/mylang/conc-r3-B2-73737/bin/mylang",
+    "compiler_sha256": "0d0c0b9117f361338d564234e2b78bd4b436e95374e4093280db81d6b1c162d1",
+    "emitter_sha256": "265e204fcdd7b9a41685b9af4521963534f29a7ef50d8e121ad74739b1ac4b25",
+    "build_seconds": 246.314988180995
+  },
+  "C2": {
+    "compiler": "/home/epentland/.cache/mylang/conc-r3-C2-73737/bin/mylang",
+    "compiler_sha256": "090c09ca6f228c701ef962dccfe6cd5fa397f3a1c7951a928b83dc711ecf747c",
+    "emitter_sha256": "a3279fabd13233284729f0043686f68da89d43c1cb59a56a4c3f572bed72d332",
+    "build_seconds": 217.62851704703644
+  }
+}
