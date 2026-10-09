@@ -103,3 +103,19 @@
 - Evidence: 108 completed count cells summarize to 193,361 bytes with every cell's totals and the required hot sites retained. Raw fuzz JSONL journals compress losslessly; their generated source trees can be archived without affecting the completed matrix verdict.
 - Choice: exact counting JSON stays in .mylang-cache/rp3/ce/raw/<tag>; committed summaries retain all totals/kinds, raw hashes and hot-site detail. Completed fuzz JSONL is gzipped and generated sources are tar-gzipped, retaining all original bytes. Only workers with exit 0 are compacted; summaries and oracle identities remain unchanged.
 - Reversibility: every raw datum is retained or losslessly archived; no gate is skipped or weakened.
+
+## M0-014 — pin parity qualification as well as compilation
+
+- Question: the inherited parity harness restores unrestricted affinity after its build context, before output qualification. This allows heavy qualification programs onto reserved CPUs outside the quiet guard.
+- Options: retain that omission or correct the adapter before accepting timing.
+- Evidence: the queued parity process had affinity 0–19 after all 153 builds and output checks. Its quiet guard had not been acquired and no timing JSON existed. A first attempted global pin was correctly rejected by the runner's CPU-availability preflight.
+- Choice: stop only that owned queued process, retain hashes of all 153 binaries/sources/flags, and repeat the complete qualification with parity_prebuilt.py. The adapter now preserves the real CPU-availability preflight, then pins away from reserved CPUs before the first tool probe; timed blocks select CPU 10 only after quiet admission. No timing from the earlier attempt is accepted. The omission is recorded rather than claiming its original qualification had the required affinity.
+- Reversibility: harness correction only; all original builds, outputs, workload sizes and timing rounds remain covered.
+
+## M0-015 — interleave X parity arms in each round
+
+- Question: inherited part3.sh runs final and base parity in separate sessions, while wave 3 requires them interleaved.
+- Options: retain the old session split or extend the unchanged benchmark runner's arm registry.
+- Evidence: the complete registry contains 45 mylang arms and 108 references. A paired registry validates 45 base + 45 candidate + 108 reference arms with unique names.
+- Choice: parity_pair.py adds base-my* arms to each benchmark's shuffled rounds, builds both compilers with separate compiler-tagged object/runtime caches, and uses the shared quiet guard. validate_parity.py rejects any missing arm, failed build/output or incomplete timing; speed misses remain reported independently against the plan's targets. No threshold file is rewritten.
+- Reversibility: measurement tooling only.

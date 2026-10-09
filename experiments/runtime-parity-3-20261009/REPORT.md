@@ -23,6 +23,7 @@ Final head: pending X.
 - Counting: 74 Lox cells (all 48 historical cases plus all 26 current full-size cells) and all 34 EDA designs match with counters on/off. Exact count files remain in owned cache; committed summaries retain every cell's totals and detailed hot sites. Parity and row counting remain pending.
 - Rows timing: the retained pilot validates all 46 rows at both sizes against the inherited gate references. csv_aggregate is above Zig RS at both sizes (1.118× / 1.128×); this is a base gap. Three fresh 7-round batches additionally include all rebuilt Go and Zig RF arms; their strict method and thresholds are unchanged.
 - Counterfactuals: all six Lox CPU-8 probes match. Both EDA reference_at-inlining probes match; EDA inline-norc and checks+norc abort and provide no valid bound. A diagnostic C-runtime stub removes the abort but changes EDA's answer, confirming that these probes cannot be used as speed evidence. All valid arms await CPU-10 confirmation. No production compiler or runtime source changed.
+- Timing adapters: parity qualification now remains off reserved CPUs after availability preflight; all 153 completed builds are hashed and requalified before any timing. X's paired parity registry validates 45 base + 45 candidate + 108 reference arms interleaved in each round, with separate compiler caches.
 - U2, S2, R: pending M0 exit; parallel worktrees will branch from M0's final commit.
 - X: pending lane hand-offs.
 

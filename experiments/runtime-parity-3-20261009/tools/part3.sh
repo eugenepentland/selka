@@ -41,17 +41,15 @@ parity)
   mkdir -p $P/tmp $P/zig-global
   export TMPDIR=$P/tmp ZIG_GLOBAL_CACHE_DIR=$P/zig-global PATH=$HOME/.cargo/bin:$PATH
   cd $WT
-  # The base run times only the mylang arms (zig-fast is always kept, for the ratios): the other
-  # reference arms are timed once, in the final run (coordinator's cut, 2026-10-08).
-  MY_ARMS="my my-arena my-array my-class my-flat my-keyed my-sorted my-tuned my-wrapping"
-  for who in final base; do
-    comp=$C; arms=""; [ $who = base ] && comp=$B && arms="--arms $MY_ARMS"
-    load "parity $who start"
-    python3 $X/tools/parity_locked.py run --mylang $comp --zig zig --rustc $HOME/.cargo/bin/rustc $arms ${PARITY_FILTER:+--filter $PARITY_FILTER} \
-      --cpu 10 --rounds 9 --warmups 2 --jobs 4 --work $P/work-$who --json $X/results/parity-$who.json \
-      > $X/logs/parity-$who.stdout.txt 2> $X/logs/parity-$who.stderr.txt; echo "parity $who=$?"
-    load "parity $who end"
-  done ;;
+  load "parity base/final interleaved start"
+  rp3_status=0
+  python3 $X/tools/parity_pair.py --base "$B" run --mylang "$C" --zig zig --rustc "$HOME/.cargo/bin/rustc" \
+    --cpu 10 --rounds 9 --warmups 2 --jobs 3 --work $P/pair --json $X/results/parity-pair.json \
+    > $X/logs/parity-pair.stdout.txt 2> $X/logs/parity-pair.stderr.txt || rp3_status=$?
+  [ "$rp3_status" -le 1 ] || exit "$rp3_status"
+  # Exit 1 can be a speed miss. Missing arms or incorrect outputs still fail.
+  python3 $X/tools/validate_parity.py $X/results/parity-pair.json --pair
+  load "parity base/final interleaved end" ;;
 rows)
   n=${2:?run number}
   cd $WT

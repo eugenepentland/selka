@@ -8,12 +8,29 @@ qualification run before that, without the lock, so no build runs while the lock
 usage: parity_locked.py run ARGS...   (the arguments of `bench_parity.py`)
 """
 import sys
+import os
 import subprocess
 from quiet import quiet
 from pathlib import Path
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "bench/parity"))
 import bench_parity as bp
+
+# Let the runner verify CPU-10 availability, then pin before its first tool
+# probe. Build, output qualification and post-timing processing stay off the
+# reserved CPUs; Pinned temporarily selects CPU 10 only after quiet admission.
+original_find_rustc = bp.find_rustc
+
+
+def find_rustc(explicit):
+    allowed = os.sched_getaffinity(0) - {2, 3, 10, 11}
+    if not allowed:
+        raise RuntimeError("no non-reserved CPU is available")
+    os.sched_setaffinity(0, allowed)
+    return original_find_rustc(explicit)
+
+
+bp.find_rustc = find_rustc
 
 class SlottedProcesses:
     """Keep each compiler invocation within the shared build admission limit."""
