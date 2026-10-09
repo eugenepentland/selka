@@ -59,7 +59,35 @@ for round_ in range(200):
             progressed = True
             break
         if not m or "?" in m.group(3):
-            continue
+            # General form: a call `f(args)?` inside a one-line statement whose text before the
+            # call makes no call of its own (only reads of names and literals), whose arguments
+            # carry no `mut` and no other `?`, and which is not an `elif`, loop or `match`
+            # header: the call moves into a `try` declaration just before the statement. It ran
+            # first among the statement's effects before as well, so the order is unchanged.
+            col = int(d["col"]) - 1
+            call = re.match(r"[A-Za-z_][\w.]*\(", src[col:])
+            head = src[:col]
+            stripped = head.strip()
+            if call is None or re.search(r"[A-Za-z_][\w.]*\(", head) or re.match(r"(elif|while|for|match|case|else)\b", stripped):
+                continue
+            depth, end = 0, None
+            for k in range(col + call.end() - 1, len(src)):
+                depth += {"(": 1, ")": -1}.get(src[k], 0)
+                if depth == 0:
+                    end = k
+                    break
+            if end is None or end + 1 >= len(src) or src[end + 1] != "?" or "mut " in src[col:end] or "?" in src[col:end]:
+                continue
+            k, text = 1, "\n".join(lines)
+            while re.search(rf"\btry_value{k}\b", text):
+                k += 1
+            name = f"try_value{k}"
+            indent = re.match(r"\s*", src).group(0)
+            lines[i:i + 1] = [f"{indent}mut {name} = try {src[col:end + 1]}", src[:col] + name + src[end + 2:]]
+            path.write_text("\n".join(lines))
+            print(f"hand: {d['path']}:{d['line']}: {src.strip()} -> mut {name} = try {src[col:end + 1]}; ...{name}...")
+            progressed = True
+            break
         base = m.group(2).split(".")[-1] + ("_value" if " = Some(" in src else "_item")
         name, k, text = base, 1, "\n".join(lines)
         while re.search(rf"\b{name}\b", text):

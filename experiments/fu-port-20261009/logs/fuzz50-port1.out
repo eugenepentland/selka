@@ -1,0 +1,12 @@
+evidence=/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/fu-port-20261009/fuzz50-port1
+source_commit=0acc4e41850e919fbe2a59770e914531813bb8e9
+number: STOP; 0.018071981146931648s
+s1: STOP; 0.011419299058616161s
+rc: STOP; 0.008411977905780077s
+rebinding: STOP; 0.011623808182775974s
+s0: STOP; 0.006702307146042585s
+iteration: STOP; 0.011743639130145311s
+dict: STOP; 0.011710007907822728s
+text: STOP; 0.008818747941404581s
+functions: STOP; 0.0129106140229851s
+STOP: strict matrix failed; inspect retained evidence

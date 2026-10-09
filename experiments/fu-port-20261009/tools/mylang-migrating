@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# FU-PORT: the frozen fuzz corpus generates old-syntax programs, which every compiler since the
+# readable syntax redesign rejects. Used as fuzz_matrix's `--new`, this runs the compiler named by
+# FU_PORT_REAL on a migrated copy: `build FILE.my ...` copies FILE.my into a private directory
+# beside it (same basename), migrates the copy with fix_loop.py (`mylang fix` plus `mut` on
+# sibling-branch locals) and builds that. The frozen references, keyed by the original source's
+# digest, still answer for the old core. Every other command goes to the real compiler unchanged.
+set -u
+real=${FU_PORT_REAL:?FU_PORT_REAL names the compiler under test}
+if [ "${1:-}" = build ] && [ $# -ge 2 ] && [[ "$2" == *.my ]]; then
+  src=$2; shift 2
+  dir=$(mktemp -d "$(dirname "$src")/migrated.XXXXXX")
+  cp "$src" "$dir/$(basename "$src")"
+  python3 "$(dirname "$0")/fix_loop.py" "$real" "$dir" "$dir/.fix-cache" > "$dir/.fix.log" 2>&1
+  exec "$real" build "$dir/$(basename "$src")" "$@"
+fi
+exec "$real" "$@"
