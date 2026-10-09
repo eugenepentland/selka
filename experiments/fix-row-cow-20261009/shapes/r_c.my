@@ -1,0 +1,9 @@
+# expect: 8.0 4.0
+def main(out: Stream) -> int:
+    rows3 = [[1.0, 2.0], [3.0, 4.0]]
+    keep3 = rows3[1]
+    for i in range(2):
+        for j in range(2):
+            rows3[i][j] = rows3[i][j] * 2.0
+    out.print(rows3[1][1], keep3[1])
+    return 0

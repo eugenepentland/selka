@@ -1,0 +1,9 @@
+# expect: 3 7 0
+def main(out: Stream) -> int:
+    b = [[i * 2 + j + 1 for j in range(2)] for i in range(3)]
+    k = b[1]
+    z = b[2]
+    for i in range(3):
+        b[i][0] = 7
+    out.print(k[0], b[1][0], z[0] - 5)
+    return 0

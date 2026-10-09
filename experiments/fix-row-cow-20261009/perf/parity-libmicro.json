@@ -1,0 +1,1162 @@
+{
+ "cpu": 8,
+ "rounds": 5,
+ "programs": {
+  "scan_count": {
+   "median": {
+    "base": {
+     "instructions": 1440104684,
+     "cycles": 474827704
+    },
+    "fix": {
+     "instructions": 1440104713,
+     "cycles": 474325273
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 1440104683,
+      "cycles": 476117854
+     },
+     {
+      "status": 0,
+      "instructions": 1440104681,
+      "cycles": 472583192
+     },
+     {
+      "status": 0,
+      "instructions": 1440104684,
+      "cycles": 478157419
+     },
+     {
+      "status": 0,
+      "instructions": 1440104686,
+      "cycles": 474827704
+     },
+     {
+      "status": 0,
+      "instructions": 1440104685,
+      "cycles": 468697846
+     }
+    ],
+    "fix": [
+     {
+      "status": 0,
+      "instructions": 1440104709,
+      "cycles": 475874531
+     },
+     {
+      "status": 0,
+      "instructions": 1440104714,
+      "cycles": 473072428
+     },
+     {
+      "status": 0,
+      "instructions": 1440104713,
+      "cycles": 470291944
+     },
+     {
+      "status": 0,
+      "instructions": 1440104713,
+      "cycles": 474325273
+     },
+     {
+      "status": 0,
+      "instructions": 1440104712,
+      "cycles": 475436593
+     }
+    ]
+   }
+  },
+  "scan_replace": {
+   "median": {
+    "base": {
+     "instructions": 955138755,
+     "cycles": 275642712
+    },
+    "fix": {
+     "instructions": 955138747,
+     "cycles": 274943443
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 955138755,
+      "cycles": 275519921
+     },
+     {
+      "status": 0,
+      "instructions": 955138762,
+      "cycles": 276126520
+     },
+     {
+      "status": 0,
+      "instructions": 955138752,
+      "cycles": 275642712
+     },
+     {
+      "status": 0,
+      "instructions": 955138761,
+      "cycles": 275123165
+     },
+     {
+      "status": 0,
+      "instructions": 955138745,
+      "cycles": 276020818
+     }
+    ],
+    "fix": [
+     {
+      "status": 0,
+      "instructions": 955138746,
+      "cycles": 274943443
+     },
+     {
+      "status": 0,
+      "instructions": 955138758,
+      "cycles": 274898190
+     },
+     {
+      "status": 0,
+      "instructions": 955138749,
+      "cycles": 274907933
+     },
+     {
+      "status": 0,
+      "instructions": 955138747,
+      "cycles": 276069886
+     },
+     {
+      "status": 0,
+      "instructions": 955138747,
+      "cycles": 275673954
+     }
+    ]
+   }
+  },
+  "scan_split": {
+   "median": {
+    "base": {
+     "instructions": 846786230,
+     "cycles": 250447123
+    },
+    "fix": {
+     "instructions": 846786257,
+     "cycles": 250162060
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 846786230,
+      "cycles": 259987528
+     },
+     {
+      "status": 0,
+      "instructions": 846786221,
+      "cycles": 248117802
+     },
+     {
+      "status": 0,
+      "instructions": 846786256,
+      "cycles": 250293640
+     },
+     {
+      "status": 0,
+      "instructions": 846786233,
+      "cycles": 250447123
+     },
+     {
+      "status": 0,
+      "instructions": 846786229,
+      "cycles": 250513900
+     }
+    ],
+    "fix": [
+     {
+      "status": 0,
+      "instructions": 846786255,
+      "cycles": 257596408
+     },
+     {
+      "status": 0,
+      "instructions": 846786257,
+      "cycles": 248604037
+     },
+     {
+      "status": 0,
+      "instructions": 846786260,
+      "cycles": 250162060
+     },
+     {
+      "status": 0,
+      "instructions": 846786258,
+      "cycles": 249560573
+     },
+     {
+      "status": 0,
+      "instructions": 846786257,
+      "cycles": 253937045
+     }
+    ]
+   }
+  },
+  "alloc_churn": {
+   "median": {
+    "base": {
+     "instructions": 244181612,
+     "cycles": 236963642
+    },
+    "fix": {
+     "instructions": 244181612,
+     "cycles": 236962788
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 244181612,
+      "cycles": 236973140
+     },
+     {
+      "status": 0,
+      "instructions": 244181608,
+      "cycles": 236959838
+     },
+     {
+      "status": 0,
+      "instructions": 244181615,
+      "cycles": 236968047
+     },
+     {
+      "status": 0,
+      "instructions": 244181610,
+      "cycles": 236963642
+     },
+     {
+      "status": 0,
+      "instructions": 244181612,
+      "cycles": 236961330
+     }
+    ],
+    "fix": [
+     {
+      "status": 0,
+      "instructions": 244181614,
+      "cycles": 236963799
+     },
+     {
+      "status": 0,
+      "instructions": 244181612,
+      "cycles": 236962788
+     },
+     {
+      "status": 0,
+      "instructions": 244181617,
+      "cycles": 236964813
+     },
+     {
+      "status": 0,
+      "instructions": 244181610,
+      "cycles": 236962419
+     },
+     {
+      "status": 0,
+      "instructions": 244181609,
+      "cycles": 236956680
+     }
+    ]
+   }
+  },
+  "alloc_churn_arena": {
+   "median": {
+    "base": {
+     "instructions": 244181657,
+     "cycles": 236958837
+    },
+    "fix": {
+     "instructions": 244181656,
+     "cycles": 236959677
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 244181660,
+      "cycles": 237079039
+     },
+     {
+      "status": 0,
+      "instructions": 244181658,
+      "cycles": 236960188
+     },
+     {
+      "status": 0,
+      "instructions": 244181657,
+      "cycles": 236958837
+     },
+     {
+      "status": 0,
+      "instructions": 244181656,
+      "cycles": 236954261
+     },
+     {
+      "status": 0,
+      "instructions": 244181654,
+      "cycles": 236949163
+     }
+    ],
+    "fix": [
+     {
+      "status": 0,
+      "instructions": 244181660,
+      "cycles": 237079104
+     },
+     {
+      "status": 0,
+      "instructions": 244181655,
+      "cycles": 236969074
+     },
+     {
+      "status": 0,
+      "instructions": 244181656,
+      "cycles": 236959313
+     },
+     {
+      "status": 0,
+      "instructions": 244181656,
+      "cycles": 236959325
+     },
+     {
+      "status": 0,
+      "instructions": 244181656,
+      "cycles": 236959677
+     }
+    ]
+   }
+  },
+  "bytes_scan": {
+   "median": {
+    "base": {
+     "instructions": 958861215,
+     "cycles": 193289238
+    },
+    "fix": {
+     "instructions": 958861246,
+     "cycles": 193262413
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 958861212,
+      "cycles": 194532833
+     },
+     {
+      "status": 0,
+      "instructions": 958861215,
+      "cycles": 192882017
+     },
+     {
+      "status": 0,
+      "instructions": 958861220,
+      "cycles": 193289238
+     },
+     {
+      "status": 0,
+      "instructions": 958861211,
+      "cycles": 192429872
+     },
+     {
+      "status": 0,
+      "instructions": 958861221,
+      "cycles": 193297477
+     }
+    ],
+    "fix": [
+     {
+      "status": 0,
+      "instructions": 958861248,
+      "cycles": 193587054
+     },
+     {
+      "status": 0,
+      "instructions": 958861243,
+      "cycles": 192711001
+     },
+     {
+      "status": 0,
+      "instructions": 958861246,
+      "cycles": 193262413
+     },
+     {
+      "status": 0,
+      "instructions": 958861244,
+      "cycles": 193124697
+     },
+     {
+      "status": 0,
+      "instructions": 958861247,
+      "cycles": 193904953
+     }
+    ]
+   }
+  },
+  "bytes_scan_wrapping": {
+   "median": {
+    "base": {
+     "instructions": 195498166,
+     "cycles": 55588956
+    },
+    "fix": {
+     "instructions": 195498167,
+     "cycles": 55295844
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 195498166,
+      "cycles": 55087534
+     },
+     {
+      "status": 0,
+      "instructions": 195498164,
+      "cycles": 55882202
+     },
+     {
+      "status": 0,
+      "instructions": 195498170,
+      "cycles": 55599718
+     },
+     {
+      "status": 0,
+      "instructions": 195498166,
+      "cycles": 55588956
+     },
+     {
+      "status": 0,
+      "instructions": 195498169,
+      "cycles": 55444237
+     }
+    ],
+    "fix": [
+     {
+      "status": 0,
+      "instructions": 195498167,
+      "cycles": 58172173
+     },
+     {
+      "status": 0,
+      "instructions": 195498164,
+      "cycles": 55511438
+     },
+     {
+      "status": 0,
+      "instructions": 195498167,
+      "cycles": 55270554
+     },
+     {
+      "status": 0,
+      "instructions": 195498167,
+      "cycles": 55295844
+     },
+     {
+      "status": 0,
+      "instructions": 195498166,
+      "cycles": 55153723
+     }
+    ]
+   }
+  },
+  "calls": {
+   "median": {
+    "base": {
+     "instructions": 510181672,
+     "cycles": 514481754
+    },
+    "fix": {
+     "instructions": 510181673,
+     "cycles": 514480987
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 510181672,
+      "cycles": 514551257
+     },
+     {
+      "status": 0,
+      "instructions": 510181674,
+      "cycles": 514445502
+     },
+     {
+      "status": 0,
+      "instructions": 510181672,
+      "cycles": 514483520
+     },
+     {
+      "status": 0,
+      "instructions": 510181667,
+      "cycles": 514453892
+     },
+     {
+      "status": 0,
+      "instructions": 510181664,
+      "cycles": 514481754
+     }
+    ],
+    "fix": [
+     {
+      "status": 0,
+      "instructions": 510181677,
+      "cycles": 514491416
+     },
+     {
+      "status": 0,
+      "instructions": 510181673,
+      "cycles": 514475089
+     },
+     {
+      "status": 0,
+      "instructions": 510181665,
+      "cycles": 514483973
+     },
+     {
+      "status": 0,
+      "instructions": 510181674,
+      "cycles": 514480987
+     },
+     {
+      "status": 0,
+      "instructions": 510181669,
+      "cycles": 514456884
+     }
+    ]
+   }
+  },
+  "dict_count": {
+   "median": {
+    "base": {
+     "instructions": 167152062,
+     "cycles": 36905227
+    },
+    "fix": {
+     "instructions": 167152089,
+     "cycles": 36943408
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 167152064,
+      "cycles": 40161753
+     },
+     {
+      "status": 0,
+      "instructions": 167152062,
+      "cycles": 36611644
+     },
+     {
+      "status": 0,
+      "instructions": 167152060,
+      "cycles": 36710519
+     },
+     {
+      "status": 0,
+      "instructions": 167152063,
+      "cycles": 40788595
+     },
+     {
+      "status": 0,
+      "instructions": 167152060,
+      "cycles": 36905227
+     }
+    ],
+    "fix": [
+     {
+      "status": 0,
+      "instructions": 167152093,
+      "cycles": 44115624
+     },
+     {
+      "status": 0,
+      "instructions": 167152090,
+      "cycles": 37546831
+     },
+     {
+      "status": 0,
+      "instructions": 167152089,
+      "cycles": 36943408
+     },
+     {
+      "status": 0,
+      "instructions": 167152087,
+      "cycles": 35524862
+     },
+     {
+      "status": 0,
+      "instructions": 167152088,
+      "cycles": 35511937
+     }
+    ]
+   }
+  },
+  "fib": {
+   "median": {
+    "base": {
+     "instructions": 749073957,
+     "cycles": 252419770
+    },
+    "fix": {
+     "instructions": 749073955,
+     "cycles": 252409570
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 749073957,
+      "cycles": 252395917
+     },
+     {
+      "status": 0,
+      "instructions": 749073963,
+      "cycles": 252407588
+     },
+     {
+      "status": 0,
+      "instructions": 749073954,
+      "cycles": 252419770
+     },
+     {
+      "status": 0,
+      "instructions": 749073959,
+      "cycles": 252436660
+     },
+     {
+      "status": 0,
+      "instructions": 749073951,
+      "cycles": 253481477
+     }
+    ],
+    "fix": [
+     {
+      "status": 0,
+      "instructions": 749073962,
+      "cycles": 252417156
+     },
+     {
+      "status": 0,
+      "instructions": 749073952,
+      "cycles": 252384528
+     },
+     {
+      "status": 0,
+      "instructions": 749073959,
+      "cycles": 252414758
+     },
+     {
+      "status": 0,
+      "instructions": 749073955,
+      "cycles": 252409570
+     },
+     {
+      "status": 0,
+      "instructions": 749073955,
+      "cycles": 252405115
+     }
+    ]
+   }
+  },
+  "float_loop": {
+   "median": {
+    "base": {
+     "instructions": 104181601,
+     "cycles": 140708764
+    },
+    "fix": {
+     "instructions": 104181629,
+     "cycles": 140710912
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 104181604,
+      "cycles": 140708764
+     },
+     {
+      "status": 0,
+      "instructions": 104181600,
+      "cycles": 140767640
+     },
+     {
+      "status": 0,
+      "instructions": 104181601,
+      "cycles": 140686005
+     },
+     {
+      "status": 0,
+      "instructions": 104181602,
+      "cycles": 140725125
+     },
+     {
+      "status": 0,
+      "instructions": 104181600,
+      "cycles": 140704592
+     }
+    ],
+    "fix": [
+     {
+      "status": 0,
+      "instructions": 104181633,
+      "cycles": 140729221
+     },
+     {
+      "status": 0,
+      "instructions": 104181629,
+      "cycles": 140714657
+     },
+     {
+      "status": 0,
+      "instructions": 104181629,
+      "cycles": 140709304
+     },
+     {
+      "status": 0,
+      "instructions": 104181629,
+      "cycles": 140704646
+     },
+     {
+      "status": 0,
+      "instructions": 104181632,
+      "cycles": 140710912
+     }
+    ]
+   }
+  },
+  "intloop": {
+   "median": {
+    "base": {
+     "instructions": 480181691,
+     "cycles": 466306355
+    },
+    "fix": {
+     "instructions": 480181690,
+     "cycles": 466303072
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 480181697,
+      "cycles": 466306355
+     },
+     {
+      "status": 0,
+      "instructions": 480181690,
+      "cycles": 466300147
+     },
+     {
+      "status": 0,
+      "instructions": 480181696,
+      "cycles": 466300765
+     },
+     {
+      "status": 0,
+      "instructions": 480181689,
+      "cycles": 466403536
+     },
+     {
+      "status": 0,
+      "instructions": 480181691,
+      "cycles": 466420983
+     }
+    ],
+    "fix": [
+     {
+      "status": 0,
+      "instructions": 480181696,
+      "cycles": 466415946
+     },
+     {
+      "status": 0,
+      "instructions": 480181695,
+      "cycles": 466309309
+     },
+     {
+      "status": 0,
+      "instructions": 480181690,
+      "cycles": 466296787
+     },
+     {
+      "status": 0,
+      "instructions": 480181689,
+      "cycles": 466294526
+     },
+     {
+      "status": 0,
+      "instructions": 480181689,
+      "cycles": 466303072
+     }
+    ]
+   }
+  },
+  "list_append_sum": {
+   "median": {
+    "base": {
+     "instructions": 151219134,
+     "cycles": 76856174
+    },
+    "fix": {
+     "instructions": 151219135,
+     "cycles": 76778981
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 151219133,
+      "cycles": 76773427
+     },
+     {
+      "status": 0,
+      "instructions": 151219135,
+      "cycles": 76810530
+     },
+     {
+      "status": 0,
+      "instructions": 151219134,
+      "cycles": 76932504
+     },
+     {
+      "status": 0,
+      "instructions": 151219132,
+      "cycles": 77065872
+     },
+     {
+      "status": 0,
+      "instructions": 151219139,
+      "cycles": 76856174
+     }
+    ],
+    "fix": [
+     {
+      "status": 0,
+      "instructions": 151219141,
+      "cycles": 77957487
+     },
+     {
+      "status": 0,
+      "instructions": 151219137,
+      "cycles": 77065315
+     },
+     {
+      "status": 0,
+      "instructions": 151219133,
+      "cycles": 76628409
+     },
+     {
+      "status": 0,
+      "instructions": 151219135,
+      "cycles": 76670663
+     },
+     {
+      "status": 0,
+      "instructions": 151219132,
+      "cycles": 76778981
+     }
+    ]
+   }
+  },
+  "list_records": {
+   "median": {
+    "base": {
+     "instructions": 178203155,
+     "cycles": 147082808
+    },
+    "fix": {
+     "instructions": 178203154,
+     "cycles": 147475999
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 178203160,
+      "cycles": 154502966
+     },
+     {
+      "status": 0,
+      "instructions": 178203155,
+      "cycles": 147476305
+     },
+     {
+      "status": 0,
+      "instructions": 178203153,
+      "cycles": 146096645
+     },
+     {
+      "status": 0,
+      "instructions": 178203156,
+      "cycles": 147082808
+     },
+     {
+      "status": 0,
+      "instructions": 178203155,
+      "cycles": 146936900
+     }
+    ],
+    "fix": [
+     {
+      "status": 0,
+      "instructions": 178203161,
+      "cycles": 153378123
+     },
+     {
+      "status": 0,
+      "instructions": 178203162,
+      "cycles": 147124756
+     },
+     {
+      "status": 0,
+      "instructions": 178203154,
+      "cycles": 146799644
+     },
+     {
+      "status": 0,
+      "instructions": 178203154,
+      "cycles": 147475999
+     },
+     {
+      "status": 0,
+      "instructions": 178203153,
+      "cycles": 147691450
+     }
+    ]
+   }
+  },
+  "list_records_wrapping": {
+   "median": {
+    "base": {
+     "instructions": 68203845,
+     "cycles": 106954966
+    },
+    "fix": {
+     "instructions": 68203842,
+     "cycles": 106247053
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 68203844,
+      "cycles": 120117159
+     },
+     {
+      "status": 0,
+      "instructions": 68203845,
+      "cycles": 106080175
+     },
+     {
+      "status": 0,
+      "instructions": 68203843,
+      "cycles": 107002689
+     },
+     {
+      "status": 0,
+      "instructions": 68203845,
+      "cycles": 106954966
+     },
+     {
+      "status": 0,
+      "instructions": 68203847,
+      "cycles": 106896181
+     }
+    ],
+    "fix": [
+     {
+      "status": 0,
+      "instructions": 68203842,
+      "cycles": 108875157
+     },
+     {
+      "status": 0,
+      "instructions": 68203841,
+      "cycles": 106109107
+     },
+     {
+      "status": 0,
+      "instructions": 68203843,
+      "cycles": 105642595
+     },
+     {
+      "status": 0,
+      "instructions": 68203842,
+      "cycles": 106247053
+     },
+     {
+      "status": 0,
+      "instructions": 68203844,
+      "cycles": 107176751
+     }
+    ]
+   }
+  },
+  "records": {
+   "median": {
+    "base": {
+     "instructions": 324181696,
+     "cycles": 281080660
+    },
+    "fix": {
+     "instructions": 324181695,
+     "cycles": 281100068
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 324181697,
+      "cycles": 281086998
+     },
+     {
+      "status": 0,
+      "instructions": 324181695,
+      "cycles": 281079116
+     },
+     {
+      "status": 0,
+      "instructions": 324181697,
+      "cycles": 281080660
+     },
+     {
+      "status": 0,
+      "instructions": 324181695,
+      "cycles": 281103793
+     },
+     {
+      "status": 0,
+      "instructions": 324181696,
+      "cycles": 281080395
+     }
+    ],
+    "fix": [
+     {
+      "status": 0,
+      "instructions": 324181706,
+      "cycles": 281100068
+     },
+     {
+      "status": 0,
+      "instructions": 324181693,
+      "cycles": 281082933
+     },
+     {
+      "status": 0,
+      "instructions": 324181695,
+      "cycles": 281078470
+     },
+     {
+      "status": 0,
+      "instructions": 324181696,
+      "cycles": 281101545
+     },
+     {
+      "status": 0,
+      "instructions": 324181694,
+      "cycles": 281185079
+     }
+    ]
+   }
+  },
+  "str_build": {
+   "median": {
+    "base": {
+     "instructions": 255184093,
+     "cycles": 140395887
+    },
+    "fix": {
+     "instructions": 255184094,
+     "cycles": 140505624
+    }
+   },
+   "samples": {
+    "base": [
+     {
+      "status": 0,
+      "instructions": 255184093,
+      "cycles": 140395887
+     },
+     {
+      "status": 0,
+      "instructions": 255184092,
+      "cycles": 140025130
+     },
+     {
+      "status": 0,
+      "instructions": 255184094,
+      "cycles": 140104069
+     },
+     {
+      "status": 0,
+      "instructions": 255184096,
+      "cycles": 140662288
+     },
+     {
+      "status": 0,
+      "instructions": 255184092,
+      "cycles": 140589702
+     }
+    ],
+    "fix": [
+     {
+      "status": 0,
+      "instructions": 255184094,
+      "cycles": 140505624
+     },
+     {
+      "status": 0,
+      "instructions": 255184092,
+      "cycles": 139919250
+     },
+     {
+      "status": 0,
+      "instructions": 255184094,
+      "cycles": 140858085
+     },
+     {
+      "status": 0,
+      "instructions": 255184096,
+      "cycles": 140733481
+     },
+     {
+      "status": 0,
+      "instructions": 255184094,
+      "cycles": 140500014
+     }
+    ]
+   }
+  }
+ }
+}

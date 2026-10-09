@@ -1,0 +1,20 @@
+# expect: 3 7
+# expect: 3 7
+record Grid:
+    w: int
+    rows: list[list[int]]
+
+
+def main(out: Stream) -> int:
+    g = Grid(w=2, rows=[[1, 2], [3, 4]])
+    k = g.rows[1]
+    for i in range(2):
+        g.rows[i][0] = 7
+    out.print(k[0], g.rows[1][0])
+    h = Grid(w=2, rows=[[1, 2], [3, 4]])
+    kh = h.rows[1]
+    rows = h.rows
+    for i in range(2):
+        rows[i][0] = 7
+    out.print(kh[0], rows[1][0])
+    return 0

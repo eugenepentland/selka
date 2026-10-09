@@ -1,0 +1,26 @@
+# expect: 3 7 3
+# expect: 2 2
+# expect: 1 5
+record Bag:
+    n: int
+    items: list[int]
+
+
+def main(out: Stream) -> int:
+    xs = [Bag(n=1, items=[1, 2]), Bag(n=2, items=[3, 4])]
+    kept = xs[1]
+    ki = xs[1].items
+    for i in range(2):
+        xs[i].items[0] = 7
+    out.print(kept.items[0], xs[1].items[0], ki[0])
+    ys = [Bag(n=1, items=[1, 2]), Bag(n=2, items=[3, 4])]
+    ky = ys[1].items
+    for i in range(2):
+        ys[i].items.append(5)
+    out.print(len(ky), len(ys[1].items) - 1)
+    zs = [Bag(n=1, items=[1]), Bag(n=2, items=[3])]
+    kz = zs[0]
+    for i in range(2):
+        zs[i].n = 5
+    out.print(kz.n, zs[0].n)
+    return 0

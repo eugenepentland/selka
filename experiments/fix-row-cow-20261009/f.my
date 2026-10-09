@@ -1,0 +1,21 @@
+def main(out: Stream) -> int:
+    a = [[1, 2], [3, 4]]
+    ka = a[1]
+    a[1][0] = a[1][0] * 2
+    out.print("readwrite-const", a[1][0], ka[0])
+    b = [[1, 2], [3, 4]]
+    kb = b[1]
+    for i in range(2):
+        b[i][0] = 7
+    out.print("loop-write", b[1][0], kb[0])
+    c = [[1, 2], [3, 4]]
+    kc = c[1]
+    for i in range(2):
+        c[i][0] = c[i][0] * 2
+    out.print("loop-readwrite", c[1][0], kc[0])
+    d = [[1, 2], [3, 4]]
+    kd = d[1]
+    i = 1
+    d[i][0] = d[i][0] + 10
+    out.print("var-readwrite", d[1][0], kd[0])
+    return 0

@@ -1,0 +1,16 @@
+# expect: 3 7
+# expect: 3 7
+def main(out: Stream) -> int:
+    d = {"a": [1, 2], "b": [3, 4]}
+    k = d["b"]
+    for key in ["a", "b"]:
+        d[key][0] = 7
+    out.print(k[0], d["b"][0])
+    e: dict[int, list[int]] = {}
+    e[0] = [1, 2]
+    e[1] = [3, 4]
+    ke = e[1]
+    for i in range(2):
+        e[i][0] = 7
+    out.print(ke[0], e[1][0])
+    return 0

@@ -1,0 +1,4 @@
+same mylang_main.release
+same src_main.release
+same mylang_main.debug
+same src_main.debug
