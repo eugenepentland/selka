@@ -2,7 +2,7 @@
 # FU-X driver (coordinator, 2026-10-09): the ReleaseFast compiler of the F/U integration (lanes F2
 # and U1) at ~/.cache/mylang/fu-final-x, then Part 1 (part1a beside timing-prep + part1b), a strict
 # check of every Part 1 line, and Part 3 one step at a time on CPU 10. No timing if a check fails.
-# Base is main 35df839be (~/.cache/mylang/main-35df839b). All 26 Lox cells are timed: both lanes
+# Base is main ab85c16c2 (~/.cache/mylang/main-ab85c16c). All 26 Lox cells are timed: both lanes
 # change the Lox VM.
 set -u
 WT=/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure

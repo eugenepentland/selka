@@ -8,7 +8,7 @@ WT=/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure
 source $WT/experiments/fu-x-20261009/tools/env.sh
 X=$WT/experiments/fu-x-20261009
 C=/home/epentland/.cache/mylang/fu-final-x/bin/mylang
-B=/home/epentland/.cache/mylang/main-35df839b/bin/mylang
+B=/home/epentland/.cache/mylang/main-ab85c16c/bin/mylang
 LOCK=/run/user/1000/mylang-slots/cpu10.lock
 L=$WT/.mylang-cache/lox
 EDA=/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore

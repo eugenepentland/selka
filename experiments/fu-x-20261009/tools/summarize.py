@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """FU-X Part 3 summaries (from CE2-X's) (coordinator, 2026-10-08; from CE-X's): reads the timing evidence in results/ and
 writes results/{lox,eda,parity,rows}-summary.md, printing the aggregates REPORT.md quotes.
-"final" is the F/U integration (claude/fu-x: lanes F2 and U1), "base" main 35df839be (~/.cache/mylang/main-35df839b).
+"final" is the F/U integration (claude/fu-x: lanes F2 and U1), "base" main ab85c16c2 (~/.cache/mylang/main-ab85c16c).
 usage: summarize.py [EVIDENCE_DIR]"""
 import gzip, json, math, statistics, sys
 from pathlib import Path
@@ -22,7 +22,7 @@ def gm(xs):
 
 
 def lox():
-    lines = ["# Lox runtime, final against base (main 35df839be, CPU 10, median of 3 rounds)", "",
+    lines = ["# Lox runtime, final against base (main ab85c16c2, CPU 10, median of 3 rounds)", "",
              "| cell | final s | base s | final/base | final/Zig | base/Zig | final/Zig-safe | final/Rust | final/Go |",
              "|---|---:|---:|---:|---:|---:|---:|---:|---:|"]
     agg = {}
@@ -62,7 +62,7 @@ def eda():
         f, b, z = (c[k]["median_s"] for k in ("mylang-final", "mylang-base", "zig-fast"))
         rows.append((f / b, name, f, b, z))
     rows.sort()
-    lines = ["# EDA runtime, final against base (main 35df839be, CPU 10, median of 10 rounds)", "",
+    lines = ["# EDA runtime, final against base (main ab85c16c2, CPU 10, median of 10 rounds)", "",
              f"All outputs verified: {r['all_outputs_verified']}. Sorted by final/base.", "",
              "| design | final ms | base ms | Zig ms | final/base | final/Zig | base/Zig |", "|---|---:|---:|---:|---:|---:|---:|"]
     lines += [f"| {n} | {f * 1e3:.1f} | {b * 1e3:.1f} | {z * 1e3:.1f} | {x:.3f} | {f / z:.2f} | {b / z:.2f} |" for x, n, f, b, z in rows]
@@ -88,7 +88,7 @@ def parity():
             rows.append((fr / br, name, arm, br, fr, fa["wall_median"] / ba["wall_median"],
                          ba["ratio_wall"]["lo"], ba["ratio_wall"]["hi"], fa["ratio_wall"]["lo"], fa["ratio_wall"]["hi"]))
     rows.sort()
-    lines = ["# Parity, final against base (main 35df839be, CPU 10, 9 rounds, 2 warm-ups; same session)", "",
+    lines = ["# Parity, final against base (main ab85c16c2, CPU 10, 9 rounds, 2 warm-ups; same session)", "",
              "final/base is the ratio of each run's my/zig-fast ratio; wall is the ratio of raw medians.", "",
              "| program | arm | base/Zig (95% CI) | final/Zig (95% CI) | final/base | wall final/base |", "|---|---|---:|---:|---:|---:|"]
     lines += [f"| {n} | {a} | {br:.2f} ({bl:.2f}–{bh:.2f}) | {fr:.2f} ({fl:.2f}–{fh:.2f}) | {x:.3f} | {w:.3f} |"
@@ -109,7 +109,7 @@ def rows46():
         z = statistics.median([r["rows"][name]["sizes"][size]["new_over_zig"] for r in batches])
         out.append((statistics.median(v), name, size, v, z))
     out.sort()
-    lines = ["# 46 rows, final (new) against base (old) (main 35df839be, CPU 10, cycles, 3 batches of 7 interleaved rounds)", "",
+    lines = ["# 46 rows, final (new) against base (old) (main ab85c16c2, CPU 10, cycles, 3 batches of 7 interleaved rounds)", "",
              f"Batches valid: {[r['valid'] for r in batches]}. Sorted by the median of the three batches.", "",
              "| row | size | batch 1 | batch 2 | batch 3 | median | final/Zig-safe |", "|---|---:|---:|---:|---:|---:|---:|"]
     lines += [f"| {n} | {s} | {v[0]:.3f} | {v[1]:.3f} | {v[2]:.3f} | {m:.3f} | {z:.3f} |" for m, n, s, v, z in out]

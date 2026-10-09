@@ -7,7 +7,7 @@ source $WT/experiments/fu-x-20261009/tools/env.sh
 cd $WT
 X=experiments/fu-x-20261009; T=$X/tools/ce.py
 C=/home/epentland/.cache/mylang/fu-final-x/bin/mylang
-B=/home/epentland/.cache/mylang/main-35df839b/bin/mylang
+B=/home/epentland/.cache/mylang/main-ab85c16c/bin/mylang
 SLOT=$WT/scripts/build-slot.sh
 CPUS=0,1,4-9,12-19
 echo "final $(sha256sum < $C | cut -c1-16) base $(sha256sum < $B | cut -c1-16) start $(date -u +%T)"
