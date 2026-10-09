@@ -21,7 +21,7 @@ const codec = @import("persist_codec.zig");
 const semantic_key = @import("semantic_key.zig");
 
 /// Payload version; bump for any layout or meaning change so old payloads miss.
-pub const format_version = "check-summaries-v7";
+pub const format_version = "check-summaries-v8";
 
 /// One stored diagnostic without related notes, its span relative to the start
 /// of its function's declaration region.
@@ -121,6 +121,20 @@ pub const Index = struct {
     }
 };
 
+/// Prepared declaration identities shared with demand-driven lowering hosts.
+pub const Prepared = semantic_key.Prepared;
+
+/// A lowering host's proof that a stored artifact can replace one checked body.
+/// The omission mask records actual skipped bodies by ordinary instance index.
+pub const Demand = struct {
+    context: *const anyopaque,
+    allow: *const fn (context: *const anyopaque, key: []const u8, context_digest: [32]u8, region_digest: [32]u8) bool,
+    omitted: []bool = &.{},
+};
+
+/// Optional declared-interface and demand-lowering policies for one request.
+pub const Policy = struct { declared: bool = false, demand: ?Demand = null };
+
 /// One check request's summary state, carried by the semantic cache context.
 pub const Request = struct {
     /// Summaries of this entry's last successful check; null checks every body.
@@ -132,9 +146,9 @@ pub const Request = struct {
     retry: bool = false,
     /// Bodies a summary stood in for in the check that produced the result.
     stood_in: usize = 0,
-    /// A command that lowers the checked program needs every body's checked
-    /// tree: its bodies are all checked, and summaries stand in only for the
-    /// cross-function facts (and the pass diagnostics) of unchanged ones.
+    /// Lowering requires complete trees unless the optional demand host proves
+    /// an unchanged body's artifact reusable. Otherwise summaries supply only
+    /// cross-function facts and pass diagnostics, and every tree is checked.
     facts_only: bool = false,
     /// The request's prepared declaration identities (stable keys,
     /// dependency contexts, region digests), kept for the build's
@@ -143,7 +157,7 @@ pub const Request = struct {
     /// MODULE-INTERFACE-1: `previous` holds the declared functions of imported
     /// module interfaces, whose bodies the compilation does not have. Each one
     /// stands in by its stable key alone, with the facts its interface carries.
-    declared: bool = false,
+    policy: Policy = .{},
 };
 
 /// Convert the passes' in-memory facts to the persisted shape.

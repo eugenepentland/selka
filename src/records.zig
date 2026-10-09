@@ -17,6 +17,10 @@ pub fn collectWithNames(allocator: std.mem.Allocator, src: Source, program: ast.
         const ty = try @import("nominal_catalog.zig").instantiateLengths(&catalog, state.index.names.get("str").?, &.{}, &.{}, node.span);
         try catalog.arrays.resolved.put(allocator, node.span.start, ty);
     } else if (node.data == .bytes) {
+        // Managed bytes need no array schema; concrete fixed-array contexts
+        // intern their decoded shape when the expression is checked.
+        const spelling = src.text(node.span);
+        if (spelling.len != 0 and spelling[0] == 'b') continue;
         const ty = try catalog.instantiateArray(allocator, .u8, node.data.bytes.len, node.span, sink);
         try catalog.arrays.resolved.put(allocator, node.span.start, ty);
     };

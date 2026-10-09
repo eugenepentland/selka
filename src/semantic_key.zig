@@ -22,7 +22,7 @@ const Hash = std.crypto.hash.sha2.Sha256;
 
 /// Domain for per-function dependency digests. Bump when the tracked dependency
 /// model changes so stale entries are never admitted.
-pub const functions_domain = "semantic-functions-v7";
+pub const functions_domain = "semantic-functions-v8";
 /// Domain for the module export-directive digest. Kept in one place so the
 /// indexed and per-declaration scan oracle hash the same prefix.
 const export_domain = "export-v1";
@@ -633,19 +633,32 @@ const Builder = struct {
         return null;
     }
 
+    /// Find the longest direct-import qualifier, retaining any domain suffix.
+    /// Dotted module imports bind their full path, not its first segment.
+    fn importedReference(self: *Builder, module: usize, text: []const u8) ?Binding {
+        var index = text.len;
+        while (index != 0) {
+            index -= 1;
+            const separator = text[index];
+            if (separator != '.' and separator != ':') continue;
+            const end = index + 1;
+            if (separator == ':') {
+                if (index == 0 or text[index - 1] != ':') continue;
+                index -= 1;
+            }
+            if (end >= text.len) continue;
+            const target = self.importTarget(module, text[0..index]) orelse continue;
+            return .{ .module = target, .key = text[end..] };
+        }
+        return null;
+    }
+
     /// Resolve one reference text to the declarations it lexically binds. A
     /// missing binding is recorded as a module-scoped negative lookup.
     fn resolve(self: *Builder, module: usize, name: []const u8, owner: ?[]const u8, refs: *Refs, negatives: *Negatives) error{OutOfMemory}!void {
-        if (owner) |owner_text| {
-            if (splitHead(owner_text)) |head| if (self.importTarget(module, head.alias)) |target| {
-                const key = if (head.rest.len == 0) name else try std.fmt.allocPrint(self.allocator, "{s}.{s}", .{ head.rest, name });
-                return self.resolveKey(target, key, refs, negatives);
-            };
-            const key = try std.fmt.allocPrint(self.allocator, "{s}.{s}", .{ owner_text, name });
-            return self.resolveKey(module, key, refs, negatives);
-        }
-        if (splitHead(name)) |head| if (self.importTarget(module, head.alias)) |target| return self.resolveKey(target, head.rest, refs, negatives);
-        return self.resolveKey(module, name, refs, negatives);
+        const key = if (owner) |prefix| try std.fmt.allocPrint(self.allocator, "{s}.{s}", .{ prefix, name }) else name;
+        if (self.importedReference(module, key)) |binding| return self.resolveKey(binding.module, binding.key, refs, negatives);
+        return self.resolveKey(module, key, refs, negatives);
     }
 
     fn resolveKey(self: *Builder, module: usize, key: []const u8, refs: *Refs, negatives: *Negatives) error{OutOfMemory}!void {
@@ -1109,19 +1122,7 @@ fn isIdentifierStart(byte: u8) bool {
 fn isIdentifierContinue(byte: u8) bool {
     return isIdentifierStart(byte) or std.ascii.isDigit(byte) or byte == '.' or byte == ':';
 }
-const Qualified = struct { alias: []const u8, rest: []const u8 };
-/// Split a qualified reference at its first module separator.
-fn splitHead(text: []const u8) ?Qualified {
-    const at = std.mem.indexOfAny(u8, text, ".:") orelse return null;
-    if (at == 0) return null;
-    var rest_start = at + 1;
-    if (text[at] == ':') {
-        if (rest_start >= text.len or text[rest_start] != ':') return null;
-        rest_start += 1;
-    }
-    if (rest_start >= text.len) return null;
-    return .{ .alias = text[0..at], .rest = text[rest_start..] };
-}
+const Binding = struct { module: usize, key: []const u8 };
 fn lessString(_: void, a: []const u8, b: []const u8) bool {
     return std.mem.order(u8, a, b) == .lt;
 }

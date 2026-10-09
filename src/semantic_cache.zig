@@ -341,8 +341,11 @@ pub const Cache = struct {
             request.facts_only and self.context.retain_summary_trees
         else
             true;
+        // Demand requests decode only bodies their host cannot replace, after
+        // summary planning; Session.lookup retains the ordinary lazy miss path.
+        const lazy_trees = if (self.context.summaries) |request| request.policy.demand != null else false;
         if (self.context.persistent) |persistent| {
-            if (self.entries.len == 0 and needs_trees) {
+            if (self.entries.len == 0 and needs_trees and !lazy_trees) {
                 const io_start = if (profile) |p| p.now() else std.Io.Timestamp.zero;
                 try self.loadPersistent(persistent, prepared);
                 if (profile) |p| p.addSince("retention_store_io", io_start, false);

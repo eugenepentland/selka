@@ -13,6 +13,7 @@ const effects = @import("effects.zig");
 const origins = @import("inline_origins.zig");
 const deferred_facts = @import("deferred_facts.zig");
 const cache_mod = @import("optimization_cache.zig");
+const shortcut_mod = @import("optimizer_shortcut.zig");
 
 /// Passes only allocate.
 pub const Error = std.mem.Allocator.Error;
@@ -139,11 +140,13 @@ fn runInternal(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir
     @memset(result.known, null);
     @memset(result.plans, &.{});
     @memset(result.per_function, .{});
+    var shortcut = try prepareShortcut(arena, cache, mode);
+    const green: []const bool = if (shortcut) |index| index.green else &.{};
     const inlined = try arena.alloc(u32, module.functions.items.len);
     @memset(inlined, 0);
     result.counts.inlined = if (cache) |context|
-        try inlineCached(arena, backing, module, .{ .cache = context, .provenance = &result.provenance, .counts = inlined, .stage = .inline_leaf, .mode = mode }) +
-            try inlineCached(arena, backing, module, .{ .cache = context, .provenance = &result.provenance, .counts = inlined, .stage = .inline_cfg, .mode = mode })
+        try inlineCached(arena, backing, module, .{ .cache = context, .provenance = &result.provenance, .counts = inlined, .stage = .inline_leaf, .mode = mode, .green = green }) +
+            try inlineCached(arena, backing, module, .{ .cache = context, .provenance = &result.provenance, .counts = inlined, .stage = .inline_cfg, .mode = mode, .green = green })
     else
         try inline_leaves.inlineLeavesCountedWithScratch(arena, backing, module, &result.provenance, inlined);
     if (mode == .off) {
@@ -178,39 +181,21 @@ fn runInternal(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir
     defer scratch.deinit();
     const returns = try arena.alloc(?facts.Interval, module.functions.items.len);
     @memset(returns, null);
-    try unswitchFunctions(arena, module, &result, cache, mode, &temporary);
-    // Unanalysed callers still invalidate their callees' parameter intervals.
-    for (module.functions.items) |*function| {
-        if (function.signature.linkage != .internal) try parameter_summary.add(arena, module, function, null);
-    }
-    for (try calleesFirst(arena, module)) |index| {
-        const function = &module.functions.items[index];
-        if (cache == null) {
-            const known = try facts.analyzeWithScratch(temporary.allocator(), scratch.allocator(), function, .{ .fold = !verify, .sabotage = sabotage, .mark = false, .returns = returns });
-            try parameter_summary.add(arena, module, function, known);
-            returns[index] = facts.returnRange(&known, function, sabotage);
-            _ = temporary.reset(.retain_capacity);
-            _ = scratch.reset(.retain_capacity);
-            continue;
-        }
-        const key = if (cache) |context| try context.key(temporary.allocator(), .{ .stage = .first_facts, .function = index, .mode = @backingInt(mode), .provenance = &result.provenance, .inputs = .{ .returns = returns } }) else null;
-        const summary = try firstSummary(temporary.allocator(), scratch.allocator(), .{
-            .module = module,
-            .function = index,
-            .options = .{ .fold = !verify, .sabotage = sabotage, .mark = false, .returns = returns },
-            .cache = cache.?,
-            .key = key,
-        });
-        try parameter_summary.addSummary(arena, summary);
-        returns[index] = summary.returned;
-        _ = temporary.reset(.retain_capacity);
-        _ = scratch.reset(.retain_capacity);
-    }
+    try unswitchFunctions(arena, module, &result, .{ .cache = cache, .green = green }, mode, &temporary);
+    try exploratorySummaries(arena, module, .{
+        .cache = cache,
+        .mode = mode,
+        .sabotage = sabotage,
+        .returns = returns,
+        .shortcut = if (shortcut) |*state| state else null,
+        .provenance = &result.provenance,
+    }, &temporary, &scratch, &parameter_summary);
     const parameters = parameter_summary.finish();
+    if (shortcut) |*state| try state.parameters(arena, parameters);
     // Closed caller bounds can prove an affine callback safe only after the
     // all-call parameter pass. Deliberately corrupted facts cannot prove safety.
     if (sabotage == .none) result.counts.inlined += if (cache) |context|
-        try inlineCached(arena, backing, module, .{ .cache = context, .provenance = &result.provenance, .counts = inlined, .parameters = parameters, .stage = .parameter_inline, .mode = mode })
+        try inlineCached(arena, backing, module, .{ .cache = context, .provenance = &result.provenance, .counts = inlined, .parameters = parameters, .stage = .parameter_inline, .mode = mode, .green = green })
     else
         try inline_leaves.withParametersCountedWithScratch(arena, backing, module, parameters, &result.provenance, inlined);
     // The effect summaries of the inlined module; the passes below keep every function's meaning.
@@ -218,7 +203,7 @@ fn runInternal(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir
     for (module.functions.items, result.known, result.plans, parameters, 0..) |*function, *slot, *plan, params, index| {
         if (function.signature.linkage != .internal) continue;
         result.per_function[index].counts.inlined = inlined[index];
-        const key = if (cache) |context| try context.key(temporary.allocator(), .{
+        const key = if (index < green.len and green[index]) shortcut.?.entries[index].final else if (cache) |context| try context.key(temporary.allocator(), .{
             .stage = .final,
             .function = @intCast(index),
             .mode = @backingInt(mode),
@@ -230,7 +215,9 @@ fn runInternal(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir
                 .events = .{ inlined[index], result.per_function[index].counts.unswitched },
             },
         }) else null;
+        if (shortcut) |*state| try state.final(arena, index, params, key, .{ inlined[index], result.per_function[index].counts.unswitched });
         if (try cachedFinal(arena, temporary.allocator(), cache, .{ .function = @intCast(index), .key = key, .provenance = &result.provenance })) |cached| {
+            if (index < green.len and green[index]) cache.?.statistics.bypassed += 1;
             function.* = cached.function;
             slot.* = cached.state.known;
             plan.* = cached.state.plans;
@@ -287,7 +274,67 @@ fn runInternal(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir
         }
         _ = temporary.reset(.retain_capacity);
     }
+    if (shortcut) |*state| try state.save();
     return result;
+}
+
+fn prepareShortcut(arena: std.mem.Allocator, cache: ?*cache_mod.Context, mode: Mode) Error!?shortcut_mod.Index {
+    if (mode == .off) return null;
+    const context = cache orelse return null;
+    return shortcut_mod.Index.prepare(arena, context, @backingInt(mode));
+}
+
+const Exploration = struct {
+    cache: ?*cache_mod.Context,
+    mode: Mode,
+    sabotage: facts.Sabotage,
+    returns: []?facts.Interval,
+    shortcut: ?*shortcut_mod.Index,
+    provenance: *const origins.Table,
+};
+
+fn exploratorySummaries(arena: std.mem.Allocator, module: *ir.Module, input: Exploration, temporary: *std.heap.ArenaAllocator, scratch: *std.heap.ArenaAllocator, parameter_summary: *ParameterSummary) Error!void {
+    const green: []const bool = if (input.shortcut) |index| index.green else &.{};
+    // Unanalysed callers still invalidate their callees' parameter intervals.
+    for (module.functions.items) |*function| {
+        if (function.signature.linkage != .internal) try parameter_summary.add(arena, module, function, null);
+    }
+    for (try calleesFirst(arena, module)) |index| {
+        const function = &module.functions.items[index];
+        if (input.cache == null) {
+            const known = try facts.analyzeWithScratch(temporary.allocator(), scratch.allocator(), function, .{ .fold = input.mode == .trusted, .sabotage = input.sabotage, .mark = false, .returns = input.returns });
+            try parameter_summary.add(arena, module, function, known);
+            input.returns[index] = facts.returnRange(&known, function, input.sabotage);
+            _ = temporary.reset(.retain_capacity);
+            _ = scratch.reset(.retain_capacity);
+            continue;
+        }
+        if (index < green.len and green[index]) {
+            const summary = input.shortcut.?.entries[index].summary.?;
+            try parameter_summary.addSummary(arena, summary);
+            input.returns[index] = summary.returned;
+            continue;
+        }
+        const key = if (input.cache) |context| try context.key(temporary.allocator(), .{
+            .stage = .first_facts,
+            .function = index,
+            .mode = @backingInt(input.mode),
+            .provenance = input.provenance,
+            .inputs = .{ .returns = input.returns },
+        }) else null;
+        const summary = try firstSummary(temporary.allocator(), scratch.allocator(), .{
+            .module = module,
+            .function = index,
+            .options = .{ .fold = input.mode == .trusted, .sabotage = input.sabotage, .mark = false, .returns = input.returns },
+            .cache = input.cache.?,
+            .key = key,
+        });
+        try parameter_summary.addSummary(arena, summary);
+        if (input.shortcut) |state| try state.summary(arena, index, summary);
+        input.returns[index] = summary.returned;
+        _ = temporary.reset(.retain_capacity);
+        _ = scratch.reset(.retain_capacity);
+    }
 }
 
 fn retainFinalFacts(arena: std.mem.Allocator, work: std.mem.Allocator, cache: ?*cache_mod.Context, index: usize, known: *facts.Facts) Error!?deferred_facts.Artifact {
@@ -353,9 +400,13 @@ fn firstSummary(work: std.mem.Allocator, scratch: std.mem.Allocator, request: Fi
     return summary;
 }
 
-fn unswitchFunctions(arena: std.mem.Allocator, module: *ir.Module, result: *Result, cache: ?*cache_mod.Context, mode: Mode, temporary: *std.heap.ArenaAllocator) Error!void {
+const StageControl = struct { cache: ?*cache_mod.Context, green: []const bool };
+
+fn unswitchFunctions(arena: std.mem.Allocator, module: *ir.Module, result: *Result, control: StageControl, mode: Mode, temporary: *std.heap.ArenaAllocator) Error!void {
+    const cache = control.cache;
     for (module.functions.items, 0..) |*function, index| {
         if (function.signature.linkage != .internal) continue;
+        if (index < control.green.len and control.green[index]) continue;
         const key = if (cache) |context| try context.key(temporary.allocator(), .{ .stage = .unswitch, .function = @intCast(index), .mode = @backingInt(mode), .provenance = &result.provenance }) else null;
         var changed: ?u32 = null;
         if (cache) |context| if (key) |digest| {
@@ -386,6 +437,7 @@ const InlineRound = struct {
     parameters: []const []const ?facts.Interval = &.{},
     stage: cache_mod.Stage,
     mode: Mode,
+    green: []const bool = &.{},
 };
 
 fn inlineCached(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir.Module, round: InlineRound) Error!u32 {
@@ -398,6 +450,7 @@ fn inlineCached(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *i
     var total: u32 = 0;
     for (module.functions.items, 0..) |*function, index| {
         if (function.signature.linkage != .internal) continue;
+        if (index < round.green.len and round.green[index]) continue;
         const params = if (index < parameters.len) parameters[index] else &.{};
         const key = try cache.key(work.allocator(), .{ .stage = stage, .function = @intCast(index), .mode = @backingInt(round.mode), .provenance = provenance, .inputs = .{ .parameters = params } });
         var changed: ?u32 = null;

@@ -321,7 +321,7 @@ pub const Single = struct {
             .index = undefined,
             .compilation = undefined,
             .cache = semantic_cache.Cache.init(gpa, 0),
-            .request = .{ .declared = true },
+            .request = .{ .policy = .{ .declared = true } },
             .entry = .{ .root = "", .name = if (request.is_entry) request.module else root_module, .bytes = request.bytes, .assets = request.assets, .limits = request.limits },
         };
         const arena = self.project.arena.allocator();
@@ -350,7 +350,7 @@ pub const Single = struct {
     /// Whether every declared function the check met was stood in, with no
     /// fallback to a full check (which would have read no body for them).
     pub fn declaredOnly(self: *const Single) bool {
-        return self.request.declared;
+        return self.request.policy.declared;
     }
 
     /// This check's canonical result, with interface-text positions mapped
@@ -453,7 +453,7 @@ fn resultOf(allocator: std.mem.Allocator, inputs: ResultInputs) Error!Result {
 fn standIns(allocator: std.mem.Allocator, inputs: ResultInputs, count: usize) Error![]const bool {
     const marks = try allocator.alloc(bool, count);
     @memset(marks, false);
-    if (!inputs.request.declared) return marks;
+    if (!inputs.request.policy.declared) return marks;
     const declared = inputs.request.previous orelse return marks;
     const prepared = inputs.request.prepared orelse return marks;
     for (prepared.ordinary_ast, 0..) |ast_index, instance| {

@@ -11,7 +11,7 @@ pub const Report = struct {
     version: []const u8 = "stage-report-v1",
     nanoseconds: Times = .{},
     frontend: @import("frontend_reuse.zig").Statistics = .{},
-    lowering: struct { reused: usize = 0, lowered: usize = 0 } = .{},
+    lowering: struct { reused: usize = 0, lowered: usize = 0, deferred: usize = 0, fallbacks: usize = 0 } = .{},
     optimizer: optimization.Statistics = .{},
     emission: emission.Counts = .{},
     /// Indexed by semantic_cache.MissReason; counts include publication bypasses.

@@ -241,6 +241,53 @@ const shifted_predecessor =
     \\    return 0
 ;
 
+// spec: NEW-CORE-STAGE-CACHE-8
+test "optimizer shortcut leaves independent identity checkpoints untouched across a callee edit" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var storage = try store.Store.init(std.testing.allocator, std.testing.io, try temporary.dir.realPathFileAlloc(std.testing.io, ".", a));
+    defer storage.deinit();
+    const edited = try fixture(a, .callee, true);
+    const cold = try compile(a, std.testing.allocator, basic, &storage, .trusted);
+    const warm = try compile(a, std.testing.allocator, basic, &storage, .trusted);
+    const oracle = try compile(a, std.testing.allocator, edited, null, .trusted);
+    const changed = try compile(a, std.testing.allocator, edited, &storage, .trusted);
+    const repeated = try compile(a, std.testing.allocator, edited, &storage, .trusted);
+    try equal(cold, warm);
+    try equal(oracle, changed);
+    try equal(oracle, repeated);
+    try std.testing.expect(warm.statistics.bypassed >= 2);
+    try std.testing.expect(changed.statistics.bypassed >= 1);
+    try std.testing.expect(warm.statistics.hits[@backingInt(cache.Stage.first_facts)] < cold.statistics.misses[@backingInt(cache.Stage.first_facts)]);
+    try std.testing.expect(changed.statistics.hits[@backingInt(cache.Stage.final)] > changed.statistics.hits[@backingInt(cache.Stage.inline_leaf)]);
+    try std.testing.expectEqual(@as(usize, 0), total(&repeated.statistics.misses));
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-8
+test "optimizer shortcut demotes an unchanged callee when its incoming caller interval changes" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var storage = try store.Store.init(std.testing.allocator, std.testing.io, try temporary.dir.realPathFileAlloc(std.testing.io, ".", a));
+    defer storage.deinit();
+    const edited = try fixture(a, .parameters, true);
+    _ = try compile(a, std.testing.allocator, basic, &storage, .trusted);
+    const warm = try compile(a, std.testing.allocator, basic, &storage, .trusted);
+    const oracle = try compile(a, std.testing.allocator, edited, null, .trusted);
+    const changed = try compile(a, std.testing.allocator, edited, &storage, .trusted);
+    const repeated = try compile(a, std.testing.allocator, edited, &storage, .trusted);
+    try equal(oracle, changed);
+    try equal(oracle, repeated);
+    try std.testing.expect(changed.statistics.bypassed < warm.statistics.bypassed);
+    try std.testing.expect(changed.statistics.misses[@backingInt(cache.Stage.final)] > 0);
+    try std.testing.expectEqual(warm.statistics.bypassed, repeated.statistics.bypassed);
+}
+
 fn sourceLocation(context: *const anyopaque, offset: u32) emit.Location {
     const src: *const source.Source = @ptrCast(@alignCast(context));
     const at = src.locate(offset);

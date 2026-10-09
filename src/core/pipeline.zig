@@ -20,6 +20,7 @@ const stage_store = @import("stage_store.zig");
 const stage_metrics = @import("stage_metrics.zig");
 const optimization_cache = @import("optimization_cache.zig");
 const lowering_cache = @import("lowering_cache.zig");
+const lowering_demand = @import("lowering_demand.zig");
 const ir_snapshot = @import("ir_snapshot.zig");
 const deferred_facts = @import("deferred_facts.zig");
 const backend_owned = @import("backend_owned.zig");
@@ -117,46 +118,70 @@ fn buildWith(init: std.process.Init, path: []const u8, options: Options, budget:
     var storage = try stage_store.Store.init(init.gpa, init.io, options.cache);
     defer storage.deinit();
     var stages: stage_metrics.Report = .{};
-    const checked_start = stage_metrics.now(init.io);
-    var session = frontend.Session.init(init.gpa, init.io, entry.root);
-    var session_live = true;
-    defer if (session_live) session.deinit();
-    entry.configure(&session);
-    if (options.show.diagnostics != .errors) session.setFormat(if (options.show.diagnostics == .json) .json else .text);
-    if (!options.show.verify_cache) try session.enableCache(init.gpa, options.cache);
-    const checked = session.checkFile(allocator, if (options.show.diagnostics == .errors) entry.path else path, report) catch |err| switch (err) {
-        error.OutOfMemory => return error.OutOfMemory,
-        else => return error.SourceError,
+    var lowered_arena = std.heap.ArenaAllocator.init(init.gpa);
+    defer lowered_arena.deinit();
+    var demand_enabled = !options.show.verify_cache;
+    const Prepared = struct { module: ir.Module, unit: Unit, sources: ?[]const @import("unit_cache.zig").Dependency };
+    var prepared: Prepared = while (true) {
+        const checked_start = stage_metrics.now(init.io);
+        const report_start = report.items.len;
+        var session = frontend.Session.init(init.gpa, init.io, entry.root);
+        defer session.deinit();
+        entry.configure(&session);
+        if (options.show.diagnostics != .errors) session.setFormat(if (options.show.diagnostics == .json) .json else .text);
+        const drop_debug = options.mode == .release and budget == null;
+        var demand = try lowering_demand.Context.init(lowered_arena.allocator(), &storage, entry.path, drop_debug);
+        if (!options.show.verify_cache) try session.enableCache(init.gpa, options.cache);
+        if (demand_enabled) session.configureDemand(demand.callback());
+        const checked = session.checkFile(allocator, if (options.show.diagnostics == .errors) entry.path else path, report) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            else => return error.SourceError,
+        };
+        if (options.show.diagnostics != .errors) try report.appendSlice(allocator, try session.warnings(allocator));
+        const sources = if (replaying) try build_replay.inputs(context, &session) else null;
+        try entry.validate(allocator, &session, report);
+        stages.nanoseconds.frontend += stage_metrics.elapsed(init.io, checked_start);
+        stages.frontend = session.statistics();
+        if (session.cache) |cache| stages.frontend_misses = cache.semantic.statistics.misses;
+        if (session.demandState()) |state| demand.attach(state.prepared, state.omitted);
+        const lowering_start = stage_metrics.now(init.io);
+        var refusal: build_ir.Refusal = .{};
+        const input: build_ir.Input = .{ .program = checked.program, .source = checked.src, .drop_debug = drop_debug };
+        var lowering = lowering_cache.Cache.init(&storage);
+        lowering.demand = &demand;
+        const a = lowered_arena.allocator();
+        const lowered = if (options.show.verify_cache) build_ir.buildExecutable(a, input, &refusal) else build_ir.buildExecutableCached(a, input, &refusal, &lowering);
+        var module = lowered catch |err| switch (err) {
+            error.CacheMiss => {
+                // A cache can disappear after admission. Discard partial IR and
+                // diagnostics, then check complete trees exactly once.
+                stages.nanoseconds.lowering += stage_metrics.elapsed(init.io, lowering_start);
+                stages.lowering.fallbacks += 1;
+                demand_enabled = false;
+                report.shrinkRetainingCapacity(report_start);
+                _ = lowered_arena.reset(.free_all);
+                continue;
+            },
+            error.Unsupported => {
+                try refused(allocator, checked.src, refusal, options.show.diagnostics, report);
+                return error.Unsupported;
+            },
+            else => |other| return other,
+        };
+        stages.lowering.reused = lowering.reused;
+        stages.lowering.lowered = lowering.lowered;
+        stages.lowering.deferred = demand.count();
+        if (!options.show.verify_cache) try demand.finish();
+        if (budget) |installed| try run_budget.instrumentRun(a, &module, installed);
+        const unit = try retainUnit(a, &module, try unitFor(a, checked, entry.path, session.single != null));
+        stages.nanoseconds.lowering += stage_metrics.elapsed(init.io, lowering_start);
+        break .{ .module = module, .unit = unit, .sources = sources };
     };
-    if (options.show.diagnostics != .errors) try report.appendSlice(allocator, try session.warnings(allocator));
-    const sources = if (replaying) try build_replay.inputs(context, &session) else null;
-    try entry.validate(allocator, &session, report);
-    stages.nanoseconds.frontend = stage_metrics.elapsed(init.io, checked_start);
-    stages.frontend = session.statistics();
-    if (session.cache) |cache| stages.frontend_misses = cache.semantic.statistics.misses;
-    const lowering_start = stage_metrics.now(init.io);
-    var refusal: build_ir.Refusal = .{};
-    // A `build --release` executable drops `debug(...)`; a run keeps it (DEBUG-LINE-1).
-    const input: build_ir.Input = .{ .program = checked.program, .source = checked.src, .drop_debug = options.mode == .release and budget == null };
-    var lowering = lowering_cache.Cache.init(&storage);
-    const lowered = if (options.show.verify_cache) build_ir.buildExecutable(allocator, input, &refusal) else build_ir.buildExecutableCached(allocator, input, &refusal, &lowering);
-    var module = lowered catch |err| switch (err) {
-        error.Unsupported => {
-            try refused(allocator, checked.src, refusal, options.show.diagnostics, report);
-            return error.Unsupported;
-        },
-        else => |other| return other,
-    };
-    stages.lowering = .{ .reused = lowering.reused, .lowered = lowering.lowered };
-    if (budget) |installed| try run_budget.instrumentRun(allocator, &module, installed);
-    const unit = try retainUnit(allocator, &module, try unitFor(allocator, checked, entry.path, session.single != null));
-    session.deinit();
-    session_live = false;
-    stages.nanoseconds.lowering = stage_metrics.elapsed(init.io, lowering_start);
+    const module = &prepared.module;
     const caches: StageContext = .{ .storage = if (options.show.verify_cache) null else &storage, .io = init.io, .lanes = @import("unit_cache.zig").width(init.environ_map, module.functions.items.len), .metrics = &stages };
-    const outcome = try linkEmittedCached(init, &module, unit, options, caches, report);
+    const outcome = try linkEmittedCached(init, module, prepared.unit, options, caches, report);
     // A record that cannot be written costs the next build its replay, nothing more.
-    if (replaying) build_replay.remember(context, sources, outcome.tool, .{ .program = outcome.program, .foreign = outcome.foreign }, report.items) catch |err| switch (err) {
+    if (replaying) build_replay.remember(context, prepared.sources, outcome.tool, .{ .program = outcome.program, .foreign = outcome.foreign }, report.items) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         error.WriteFailed => {},
     };

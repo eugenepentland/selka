@@ -62,3 +62,55 @@ test "byte literal decoded size limit reports E_BYTE_LITERAL_LIMIT before loweri
     try t.expectError(error.SourceError, c.check());
     try t.expectEqualStrings("E_BYTE_LITERAL_LIMIT", c.diagnostics.items[0].code);
 }
+
+// spec-case: PY-BYTES-1
+test "managed byte literals create no unused fixed-array catalog entries" {
+    var c = try language.Compilation.init(t.allocator, "managed-byte-catalog.my",
+        \\const usage: bytes = b"abcdefghijklmnopq"
+        \\func main() -> int:
+        \\    mut inferred = b"abcdefghijklmnopqrs"
+        \\    return len(usage) + len(inferred)
+    );
+    defer c.deinit();
+    try c.check();
+    for (c.program.?.records) |record| {
+        if (record.shape.array) |array| {
+            try t.expect(array.element != .u8 or (array.length != 17 and array.length != 19));
+        }
+    }
+}
+
+// spec-case: PY-BYTES-1
+// spec-case: GENERIC-INFERENCE-1
+test "byte literals retain contextual fixed arrays and generic length inference" {
+    var c = try language.Compilation.init(t.allocator, "fixed-byte-catalog.my",
+        \\func literal[T](marker: T) -> FixedArray[u8, 3]:
+        \\    return b"xyz"
+        \\func count[const N: u64](value: [N]u8) -> int:
+        \\    return len(value)
+        \\func main() -> int:
+        \\    mut explicit: FixedArray[u8, 5] = b"abcde"
+        \\    return count(explicit) + count(literal[int](0))
+    );
+    defer c.deinit();
+    try c.check();
+    var three = false;
+    var five = false;
+    for (c.program.?.records) |record| {
+        if (record.shape.array) |array| {
+            if (array.element != .u8) continue;
+            three = three or array.length == 3;
+            five = five or array.length == 5;
+        }
+    }
+    try t.expect(three and five);
+    var bad = try language.Compilation.init(t.allocator, "wrong-fixed-byte.my",
+        \\func literal[T](marker: T) -> FixedArray[u8, 3]:
+        \\    return b"long"
+        \\func main() -> int:
+        \\    return 0
+    );
+    defer bad.deinit();
+    try t.expectError(error.SourceError, bad.check());
+    try t.expectEqualStrings("E_GENERIC_TYPE", bad.diagnostics.items[0].code);
+}

@@ -48,6 +48,8 @@ pub const Plan = struct {
     checked: std.ArrayList(Checked) = .empty,
     /// Instance index of the entry point, which is always checked.
     main: usize,
+    /// Previous summary positions invalidated through their actual consumers.
+    affected: []bool = &.{},
 
     /// Plan stand-ins for one request. `main` is the entry point's instance.
     pub fn init(allocator: std.mem.Allocator, request: *summary.Request, session: *semantic_cache.Session, main: usize) error{OutOfMemory}!Plan {
@@ -58,7 +60,7 @@ pub const Plan = struct {
         @memset(stand_ins, null);
         request.stood_in = 0;
         request.prepared = prepared.*;
-        if (request.declared) {
+        if (request.policy.declared) {
             // An imported interface's declared function has no body here, so
             // its stored facts stand in unconditionally (MODULE-INTERFACE-1).
             const previous = request.previous orelse return .{ .request = request, .prepared = prepared, .session = session, .stand_ins = stand_ins, .main = main };
@@ -86,7 +88,46 @@ pub const Plan = struct {
                 request.stood_in += 1;
             }
         }
-        return .{ .request = request, .prepared = prepared, .session = session, .stand_ins = stand_ins, .main = main };
+        var plan: Plan = .{ .request = request, .prepared = prepared, .session = session, .stand_ins = stand_ins, .main = main };
+        if (!request.policy.declared) try plan.prepareConsumers(allocator);
+        if (request.policy.demand != null) try plan.prepareDemand(allocator);
+        return plan;
+    }
+
+    /// Close changed declaration contracts and touched shapes over the checked
+    /// dependency graph, including names syntax-only keys may not resolve.
+    fn prepareConsumers(self: *Plan, allocator: std.mem.Allocator) error{OutOfMemory}!void {
+        const previous = self.request.previous orelse return;
+        self.affected = try allocator.alloc(bool, previous.summaries.len);
+        @memset(self.affected, true);
+        const body_changes = self.request.policy.demand != null;
+        for (self.prepared.ordinary_ast, 0..) |ast_index, instance| {
+            const position = previous.find(self.prepared.keys[ast_index]) orelse continue;
+            const stored = previous.summaries[position];
+            self.affected[position] = !std.mem.eql(u8, &stored.context, &self.prepared.contexts[ast_index]) or
+                (body_changes and !std.mem.eql(u8, &stored.region.digest, &self.prepared.recalled.digests[ast_index])) or
+                (stored.stubbable and self.stand_ins[instance] == null and
+                    std.mem.eql(u8, &stored.region.digest, &self.prepared.recalled.digests[ast_index]));
+        }
+        try invalidateConsumers(allocator, previous, self.affected);
+        for (self.stand_ins) |*stand| {
+            const position = stand.* orelse continue;
+            if (!self.affected[position]) continue;
+            stand.* = null;
+            self.request.stood_in -= 1;
+        }
+    }
+
+    /// Ask the lowering host which unchanged bodies have safe raw artifacts.
+    fn prepareDemand(self: *Plan, allocator: std.mem.Allocator) error{OutOfMemory}!void {
+        const demand = &self.request.policy.demand.?;
+        demand.omitted = try allocator.alloc(bool, self.stand_ins.len);
+        @memset(demand.omitted, false);
+        for (self.stand_ins, 0..) |stand, instance| {
+            if (stand == null) continue;
+            const ast_index = self.prepared.ordinary_ast[instance];
+            demand.omitted[instance] = demand.allow(demand.context, self.prepared.keys[ast_index], self.prepared.contexts[ast_index], self.prepared.recalled.digests[ast_index]);
+        }
     }
 
     /// The previous summary standing in for ordinary instance `i`'s
@@ -98,10 +139,12 @@ pub const Plan = struct {
     }
 
     /// The previous summary standing in for ordinary instance `i`'s whole
-    /// body, or null when the body must be checked (always, for a command that
-    /// lowers the checked program).
+    /// body, or null when checking needs its tree. A lowering host must admit
+    /// a safe persisted artifact before a demand request may omit the body.
     pub fn bodyStandIn(self: *const Plan, i: usize) ?*const summary.Summary {
-        if (self.request.facts_only) return null;
+        if (self.request.policy.demand) |demand| {
+            if (i >= demand.omitted.len or !demand.omitted[i]) return null;
+        } else if (self.request.facts_only) return null;
         return self.standIn(i);
     }
 
@@ -156,6 +199,7 @@ pub const Plan = struct {
         for (self.prepared.ordinary_ast, 0..) |ast_index, instance| {
             if (self.standIn(instance) != null or instance >= facts.len) continue;
             const position = previous.find(self.prepared.keys[ast_index]) orelse continue;
+            if (self.request.policy.demand != null and position < self.affected.len and self.affected[position]) continue;
             if (!summary.sameFact(summary.fromFact(facts[instance]), previous.summaries[position].fact)) return false;
         }
         return !try self.mixedCycle(allocator, program);
@@ -177,9 +221,10 @@ pub const Plan = struct {
         var stack: std.ArrayList(u32) = .empty;
         for (self.checked.items) |record| {
             const start = checked_edges[record.instance] orelse continue;
-            @memset(visited, false);
             stack.clearRetainingCapacity();
             for (start) |target| if (self.standIn(target) != null) try stack.append(allocator, target);
+            if (stack.items.len == 0) continue;
+            @memset(visited, false);
             while (stack.pop()) |node| {
                 if (node == record.instance) return true;
                 if (node >= visited.len or visited[node]) continue;
@@ -209,7 +254,7 @@ pub const Plan = struct {
     /// lowers publishes one only when it had none to stand in (or repeated in
     /// full), so the next such command does not repeat the passes again.
     pub fn publishes(self: *const Plan) bool {
-        return !self.request.facts_only or self.request.previous == null;
+        return self.request.policy.demand != null or !self.request.facts_only or self.request.previous == null;
     }
 
     /// This request's summary table, one entry per ordinary instance in order.
@@ -281,7 +326,7 @@ pub const Plan = struct {
             },
             .fact = summary.fromFact(checked.fact),
             .notes = .{ .body = body_notes, .pass = pass_notes },
-            .uses = .{ .callees = if (checked.record) |record| try callTargets(allocator, program, record) else &.{} },
+            .uses = .{ .callees = if (checked.record) |record| try storedCallTargets(allocator, program, record, self.prepared.ordinary_ast.len) else &.{} },
             .stubbable = stubbable,
         };
     }
@@ -290,6 +335,31 @@ pub const Plan = struct {
         return self.prepared.regions[self.prepared.ordinary_ast[i]];
     }
 };
+
+/// Propagate invalidation through direct calls and function-value consumers in
+/// linear graph work; removed declarations begin as changed nodes too.
+fn invalidateConsumers(allocator: std.mem.Allocator, previous: *const summary.Index, affected: []bool) error{OutOfMemory}!void {
+    const consumers = try allocator.alloc(std.ArrayList(u32), previous.summaries.len);
+    defer allocator.free(consumers);
+    @memset(consumers, .empty);
+    defer for (consumers) |*list| list.deinit(allocator);
+    var pending: std.ArrayList(u32) = .empty;
+    defer pending.deinit(allocator);
+    for (previous.summaries, 0..) |stored, instance| {
+        if (affected[instance]) try pending.append(allocator, @intCast(instance));
+        for (stored.uses.callees) |callee| {
+            if (callee < consumers.len) try consumers[callee].append(allocator, @intCast(instance));
+        }
+    }
+    var next: usize = 0;
+    while (next < pending.items.len) : (next += 1) {
+        for (consumers[pending.items[next]].items) |consumer| {
+            if (affected[consumer]) continue;
+            affected[consumer] = true;
+            try pending.append(allocator, consumer);
+        }
+    }
+}
 
 /// One checked ordinary instance, its check record when it has one, and the
 /// facts the passes inferred for it.
@@ -319,18 +389,34 @@ fn admitsStandIn(function: typed.Function, declared: ast.Function) bool {
 }
 
 /// The ordinary instances one checked body calls directly, deduplicated.
-fn callTargets(allocator: std.mem.Allocator, program: typed.Program, record: Checked) error{OutOfMemory}![]const u32 {
+fn callTargets(allocator: std.mem.Allocator, program: typed.Program, record: Checked) error{OutOfMemory}![]u32 {
     var targets: std.ArrayList(u32) = .empty;
     const end = @min(record.nodes.end, program.nodes.len);
     var index = @min(record.nodes.start, end);
     while (index < end) : (index += 1) {
         const node = program.nodes[index];
-        if (node.data != .call) continue;
-        const callee: u32 = @intCast(@backingInt(node.data.call.function));
+        const callee: u32 = switch (node.data) {
+            .call => |call| @intCast(@backingInt(call.function)),
+            .function_value => |id| @intCast(@backingInt(id)),
+            else => continue,
+        };
         if (callee == record.instance) continue;
         if (std.mem.indexOfScalar(u32, targets.items, callee) == null) try targets.append(allocator, callee);
     }
     return targets.toOwnedSlice(allocator);
+}
+
+/// Persist ordinary declaration edges only. Concrete instances and lambdas
+/// have no position in the summary table; their callers remain unstubbable.
+fn storedCallTargets(allocator: std.mem.Allocator, program: typed.Program, record: Checked, ordinary_count: usize) error{OutOfMemory}![]const u32 {
+    const targets = try callTargets(allocator, program, record);
+    var count: usize = 0;
+    for (targets) |target| {
+        if (target >= ordinary_count) continue;
+        targets[count] = target;
+        count += 1;
+    }
+    return targets[0..count];
 }
 
 /// Map stored callee positions to this request's instances; a callee that no

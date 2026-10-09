@@ -333,6 +333,91 @@ companion takes `--input <completed-matrix-root> --output <fresh-result-root>
 saves the original edited files, and requires exactly one or three native
 compiles for every fresh edit. It leaves the fixture in its final edited state.
 
+### Demand-driven body reuse (2026-10-09)
+
+Edited builds can now omit an unchanged ordinary function's checked tree. The
+frontend validates its declaration region, semantic dependencies and touched
+record shapes, then propagates changes through the persisted reverse call and
+function-reference graph. The remaining functions may use their saved facts and
+diagnostics when a compact lowering manifest supplies their prior typed-body
+digest or records that the previous completed build never reached them. Demand
+checks publish updated summaries after every successful check.
+Concrete generic-instance IDs are excluded from the ordinary summary table's
+edges; those instances and their unsupported consumers still check normally.
+Managed byte literals no longer eagerly create unused fixed-array types. Growing
+a `b"..."` constant therefore leaves unrelated type-catalog entries stable;
+actual fixed-array contexts still intern and check the decoded element count.
+Type-suffix resolution shares an index keyed by both ends of each source span.
+Nested list/optional suffixes can start at the same byte, so indexing only the
+start is insufficient. This removes repeated scans of every suffix in the program
+from ordinary, generic and symbolic type resolution.
+
+Dependency keys resolve full dotted import qualifiers and retain domain suffixes.
+Signature, visibility and record-shape changes invalidate stored consumers in
+validation-only checks too. If checking with stand-ins encounters a body error,
+it repeats without stand-ins so cached checks report the same complete error diagnostics
+as a fresh check. Regression tests cover retained typed-body caches as well as
+summary-only checking.
+
+The manifest does not bypass raw lowering's ordered catalog, discovery, source
+position or artifact validation. Only trees with local source positions receive
+receipts; ordinary callee declaration positions relocate through the fresh
+catalog. If an omitted body's artifact is missing or invalid, the pipeline
+discards partial IR and diagnostics and repeats with complete checked trees.
+Previously unreachable bodies use the same fallback if an edit makes them
+reachable. Missing receipts and reached functions with unsafe source positions
+never count as proof of unreachability. Lambda offsets are normalized only in
+catalog and discovery guards; restored declarations take fresh names and spans,
+so growing earlier text does not invalidate every unrelated lowered body.
+`stages.lowering.deferred` counts actual frontend body omissions, and `fallbacks`
+counts these retries. `--verify-cache` keeps the full-check oracle.
+
+The optimizer also stores a compact index of raw bodies, exploratory summaries,
+incoming parameter intervals and final artifact keys. An unchanged function can
+skip intermediate stage lookups when all of its earlier transformation stages
+were identity. Changed callees and function references invalidate callers;
+changed incoming intervals demote candidates before parameter-aware inlining.
+Recursive cycles use the existing ordered path. Final IR and facts still undergo
+artifact validation. `stages.optimizer.bypassed` counts accepted final shortcuts.
+
+This reduces repeated body work without promising that every build visits only
+changed functions. Declaration collection, catalog validation, raw IR restoration,
+some module analyses and LLVM-unit handling still process the wider program.
+Declaration/type changes can invalidate the ordered catalog, and call-graph
+changes can alter lowering's discovery order; either can trigger a broad fallback.
+The optimizer still guards full names of reachable lambdas, so moving those
+names can invalidate its layout even when raw lowering reuses unrelated bodies.
+Native compilation remains per source module.
+
+The paired harness `experiments/demand-builds-20261009/compare.py` runs both compiler
+versions on identical source paths and fresh edits, with separate caches and
+alternating execution order. Every sample changes source length. Changed native objects must have identical code,
+literal values/references, debugger data and trap descriptors; only literal-pool
+ordering/alignment may differ. Each executable must execute every replica and
+pass the export goldens with leak checking.
+Its setup starts with empty intermediate caches and validated cold native objects;
+setup and validation time are excluded from edited-build medians.
+
+The completed paired run is recorded in
+[`experiments/demand-builds-20261009/README.md`](../../experiments/demand-builds-20261009/README.md):
+
+| Lines | Edit | Previous median | Demand median |
+|---:|---|---:|---:|
+| 191,416 | Entry / helper / three files | 9.17 / 6.81 / 7.68 s | 5.94 / 4.83 / 5.45 s |
+| 510,436 | Entry / helper / three files | 25.47 / 23.94 / 23.04 s | 14.25 / 12.69 / 13.65 s |
+
+Eight of nine 510k edits finish within 15 seconds; the first entry edit after
+setup takes 19.04 seconds, so the strict maximum remains unmet. Later edits range
+from 12.49 to 14.25 seconds. Median incremental peak RSS is about 3.25 GiB at
+510k lines. All 20 paired executables and 30 edited native-object pairs are
+byte-identical. The full gate passes 93/93 steps with 2,275 executed tests.
+
+The first-edit misses still include checked loop ordinals that differ between a
+cold check and one that skips cached bodies. Fixing those requires consistent
+function-local numbering through Core loop metadata and downstream receipts;
+hash-only normalization would not preserve the exact fresh-IR oracle. Wider
+artifact loading and validation also remain on the incremental path.
+
 ## 7. Tests S4 adds
 
 - **Unit text stability:**

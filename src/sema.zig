@@ -1407,7 +1407,7 @@ fn checkGenericContracts(
 fn declaredMasks(allocator: std.mem.Allocator, cache: ?*semantic_cache.Cache, session: *?semantic_cache.Session) Error![]const ?effect_set.Mask {
     const c = cache orelse return &.{};
     const request = c.context.summaries orelse return &.{};
-    if (!request.declared) return &.{};
+    if (!request.policy.declared) return &.{};
     const previous = request.previous orelse return &.{};
     const queries = if (session.*) |*opened| opened else return &.{};
     const masks = try allocator.alloc(?effect_set.Mask, queries.prepared.keys.len);
@@ -1823,7 +1823,7 @@ fn checkCore(allocator: std.mem.Allocator, src: source.Source, program: ast.Prog
     // library checking neither adapts, returns nor caches the checked program.
     const main = if (options.entry_required) try checkEntry(&checker, module_names, failed) else @as(typed.FunctionId, @fromBackingInt(0));
     var plan = try openPlan(cache, &session, allocator, @backingInt(main));
-    const functions = try checkBodies(.{
+    const functions = checkBodies(.{
         .checker = &checker,
         .session = &session,
         .spec_session = &spec_session,
@@ -1831,7 +1831,7 @@ fn checkCore(allocator: std.mem.Allocator, src: source.Source, program: ast.Prog
         .plan = &plan,
         .allocator = allocator,
         .index = 0,
-    }, contracts_failed, failed);
+    }, contracts_failed, failed) catch |err| return retryOr(&plan, err);
     const pass_start = sink.items.items.len;
     try @import("c_abi.zig").validateImports(allocator, functions, sink);
     var executable_names: std.StringHashMapUnmanaged(typed.FunctionId) = .empty;

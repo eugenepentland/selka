@@ -39,6 +39,12 @@ pub const Checked = struct {
     src: language.source.Source,
 };
 
+/// Prepared declaration identities and actual body omissions from a demand check.
+pub const DemandState = struct {
+    prepared: language.semantic_summary.Prepared,
+    omitted: []const bool,
+};
+
 /// Why a load stopped: diagnostics were already rendered into `report`.
 pub const Error = error{ SourceError, OutOfMemory, InternalError };
 
@@ -123,6 +129,19 @@ pub const Session = struct {
     /// the default complete typed trees and use summaries for pass facts only.
     pub fn validationOnly(self: *Session) void {
         if (self.cache) |*state| state.request.facts_only = false;
+    }
+
+    /// Let a lowering host admit unchanged body artifacts before checking.
+    pub fn configureDemand(self: *Session, demand: language.semantic_summary.Demand) void {
+        if (self.cache) |*state| state.request.policy.demand = demand;
+    }
+
+    /// Actual skipped bodies and declaration identities, valid after checking.
+    pub fn demandState(self: *const Session) ?DemandState {
+        const state = self.cache orelse return null;
+        const prepared = state.request.prepared orelse return null;
+        const omitted = if (state.request.policy.demand) |demand| demand.omitted else &.{};
+        return .{ .prepared = prepared, .omitted = omitted };
     }
 
     /// Attach opt-in phase instrumentation without changing checking behavior.

@@ -25,6 +25,8 @@ const Outcome = struct {
     /// Bodies (or, for a lowering command, body facts) a summary stood in for
     /// in the final check; zero after a repeat in full.
     stood_in: usize,
+    /// Actual omitted body trees admitted by a lowering host.
+    omitted: usize,
     /// Every diagnostic rendered in order; owned by `t.allocator`.
     diagnostics: []u8,
     /// Every checked function's published effect and mutation facts, one line
@@ -42,7 +44,19 @@ const Outcome = struct {
 
 /// How a check runs: as `check` (summaries stand in for bodies) or as a command
 /// that lowers the program (every body checked, summaries stand in for facts).
-const Mode = enum { check, lowering };
+const Mode = enum { check, lowering, demand, demand_missing };
+
+fn admitDemand(context: *const anyopaque, key: []const u8, _: [32]u8, _: [32]u8) bool {
+    const mode: *const Mode = @ptrCast(@alignCast(context));
+    return mode.* != .demand_missing or !std.mem.endsWith(u8, key, "\x1fplain");
+}
+
+fn omissionCount(request: summary.Request) usize {
+    const demand = request.policy.demand orelse return 0;
+    var count: usize = 0;
+    for (demand.omitted) |omitted| count += @intFromBool(omitted);
+    return count;
+}
 
 /// Check the project `files` (entry module `main`) with the given previous
 /// summaries, exactly as `check` or a lowering command does through a cache.
@@ -57,10 +71,13 @@ fn checkProject(files: []const File, previous: ?[]const u8, mode: Mode) !Outcome
     defer cache.deinit();
     var arena_state = std.heap.ArenaAllocator.init(t.allocator);
     defer arena_state.deinit();
-    var request: summary.Request = .{ .facts_only = mode == .lowering };
+    var request: summary.Request = .{ .facts_only = mode != .check };
+    if (mode == .demand or mode == .demand_missing) request.policy.demand = .{ .context = &mode, .allow = admitDemand };
     var decoded: summary.Index = .{};
     if (previous) |payload| {
-        decoded = summary.decode(arena_state.allocator(), payload).?;
+        const restored = summary.decode(arena_state.allocator(), payload);
+        try t.expect(restored != null);
+        decoded = restored.?;
         request.previous = &decoded;
     }
     cache.context.summaries = &request;
@@ -89,6 +106,7 @@ fn checkProject(files: []const File, previous: ?[]const u8, mode: Mode) !Outcome
     return .{
         .checked = cache.statistics.checked,
         .stood_in = request.stood_in,
+        .omitted = omissionCount(request),
         .diagnostics = try rendered.toOwnedSlice(),
         .facts = try facts.toOwnedSlice(),
         .summaries = if (request.produced) |produced| try summary.encode(t.allocator, produced) else null,
@@ -216,8 +234,8 @@ test "a record shape edit re-checks every body that uses the record" {
     const outcome = try checkAfterEdit(&original, &widened);
     defer outcome.warm.deinit();
     defer outcome.cold.deinit();
-    // `gather` builds `Acc`; its callers' contexts name only its signature.
-    try t.expectEqual(@as(usize, 2), outcome.warm.checked);
+    // `gather` touches `Acc`; the persisted graph also invalidates `twice`.
+    try t.expectEqual(@as(usize, 3), outcome.warm.checked);
     try t.expectEqualStrings(outcome.cold.diagnostics, outcome.warm.diagnostics);
     // A field type edit breaks the body that builds the record: the same error.
     const retyped = projectFiles(libEdited("    total: int\n", "    total: str\n"));
@@ -336,6 +354,13 @@ test "a lowering command whose edit changes a callee's facts publishes the facts
     try t.expect(repeated.warm.summaries != null);
     try t.expectEqualStrings(repeated.cold.facts, repeated.warm.facts);
     try t.expectEqualStrings(repeated.cold.diagnostics, repeated.warm.diagnostics);
+    // Published changed facts must support the next lowering request without
+    // another full repeat; stale allocating facts would fail this comparison.
+    const next = try checkProject(&pure, repeated.warm.summaries.?, .lowering);
+    defer next.deinit();
+    try t.expectEqual(@as(usize, 6), next.stood_in);
+    try t.expectEqualStrings(repeated.cold.facts, next.facts);
+    try t.expectEqualStrings(repeated.cold.diagnostics, next.diagnostics);
 }
 
 /// A recall over one earlier preparation's own names, or over wrong digests.
@@ -690,4 +715,150 @@ test "reserved words removed spellings and layout lex exactly as before the keyw
         .kw_def, .ident, .lparen, .rparen, .arrow, .ident, .indent, .ident, .equal, .bytes, .kw_return, .ident, .dedent, .ident, .equal, .integer, .eof,
     };
     try t.expectEqualSlices(lexer.Tag, &layout_expected, layout);
+}
+
+// spec: FRONTEND-DEMAND-1
+test "demand lowering omits unrelated trees and checks changed functions with their transitive consumers" {
+    const original = projectFiles(lib_source);
+    const changed = projectFiles(libEdited("xs.append(k * 2)", "xs.append(k * 3)"));
+    const outcome = try checkAfterEditAs(&original, &changed, .demand);
+    defer outcome.warm.deinit();
+    defer outcome.cold.deinit();
+    try t.expectEqual(@as(usize, 3), outcome.warm.checked);
+    try t.expectEqual(@as(usize, 4), outcome.warm.omitted);
+    try t.expectEqualStrings(outcome.cold.facts, outcome.warm.facts);
+    try t.expectEqualStrings(outcome.cold.diagnostics, outcome.warm.diagnostics);
+    try t.expect(outcome.warm.summaries != null);
+}
+
+// spec-case: FRONTEND-DEMAND-1
+test "demand lowering propagates changed inferred facts without reconstructing unrelated bodies" {
+    const original = projectFiles(lib_source);
+    const pure = projectFiles(libEdited("    mut ys: int[] = [n, n + 1]\n    mut unused = 3\n    return ys[0] + ys[1]\n", "    mut unused = 3\n    return n + n + 1\n"));
+    const outcome = try checkAfterEditAs(&original, &pure, .demand);
+    defer outcome.warm.deinit();
+    defer outcome.cold.deinit();
+    try t.expectEqual(@as(usize, 3), outcome.warm.checked);
+    try t.expectEqual(@as(usize, 4), outcome.warm.omitted);
+    try t.expectEqualStrings(outcome.cold.facts, outcome.warm.facts);
+    try t.expectEqualStrings(outcome.cold.diagnostics, outcome.warm.diagnostics);
+    try t.expect(outcome.warm.summaries != null);
+}
+
+// spec-case: FRONTEND-DEMAND-1
+test "demand lowering requires a host artifact and falls back fully for changed contract diagnostics" {
+    const original = projectFiles(lib_source);
+    const changed = projectFiles(libEdited("xs.append(k * 2)", "xs.append(k * 3)"));
+    const missing = try checkAfterEditAs(&original, &changed, .demand_missing);
+    defer missing.warm.deinit();
+    defer missing.cold.deinit();
+    try t.expectEqual(@as(usize, 4), missing.warm.checked);
+    try t.expectEqual(@as(usize, 3), missing.warm.omitted);
+    try t.expectEqualStrings(missing.cold.facts, missing.warm.facts);
+    try t.expectEqualStrings(missing.cold.diagnostics, missing.warm.diagnostics);
+    const allocating = projectFiles(libEdited("    return n + 1\n", "    mut ws: int[] = [n]\n    return ws[0] + 1\n"));
+    const rejected = try checkAfterEditAs(&original, &allocating, .demand);
+    defer rejected.warm.deinit();
+    defer rejected.cold.deinit();
+    try t.expectEqual(@as(usize, 0), rejected.warm.omitted);
+    try t.expectEqual(@as(usize, 0), rejected.warm.stood_in);
+    try t.expectEqualStrings(rejected.cold.diagnostics, rejected.warm.diagnostics);
+    try t.expect(std.mem.indexOf(u8, rejected.warm.diagnostics, "E_EFFECT_BOUND") != null);
+}
+
+// spec-case: FRONTEND-DEMAND-1
+test "demand lowering retains usable ordinary summaries beside a generic specialization" {
+    const original = [_]File{.{ .path = "main.my", .bytes =
+        \\func identity[T](value: T) -> T:
+        \\    return value
+        \\func specialized() -> int:
+        \\    return identity(2)
+        \\func independent(n: int) -> int:
+        \\    return n + 1
+        \\func main() -> int:
+        \\    return specialized() + independent(1)
+        \\
+    }};
+    const changed = [_]File{.{ .path = "main.my", .bytes =
+        \\func identity[T](value: T) -> T:
+        \\    return value
+        \\func specialized() -> int:
+        \\    return identity(2)
+        \\func independent(n: int) -> int:
+        \\    return n + 1
+        \\func main() -> int:
+        \\    return specialized() + independent(2)
+        \\
+    }};
+    const outcome = try checkAfterEditAs(&original, &changed, .demand);
+    defer outcome.warm.deinit();
+    defer outcome.cold.deinit();
+    try t.expectEqual(@as(usize, 3), outcome.warm.checked);
+    try t.expectEqual(@as(usize, 1), outcome.warm.omitted);
+    try t.expectEqualStrings(outcome.cold.facts, outcome.warm.facts);
+    try t.expectEqualStrings(outcome.cold.diagnostics, outcome.warm.diagnostics);
+    try t.expect(outcome.warm.summaries != null);
+}
+
+const formatted_dependency_main = "import report\nfunc main(out: Stream) -> int:\n    return report.describe(out)\n";
+const formatted_dependency_report = "import core.stats\npublic func describe(out: Stream) -> int:\n    out.print(f\"value {core.stats.total()}\")\n    return 0\n";
+
+fn formattedDependencyProject(stats: []const u8) [3]File {
+    return .{
+        .{ .path = "main.my", .bytes = formatted_dependency_main },
+        .{ .path = "report.my", .bytes = formatted_dependency_report },
+        .{ .path = "core/stats.my", .bytes = stats },
+    };
+}
+
+// spec: CHECK-SUMMARY-3
+test "summary validation invalidates formatted cross-module consumers after signature and visibility edits" {
+    const original = formattedDependencyProject("public func total() -> int:\n    return 1\n");
+    const signature = formattedDependencyProject("public func total(extra: int) -> int:\n    return extra\n");
+    const arity = try checkAfterEdit(&original, &signature);
+    defer arity.warm.deinit();
+    defer arity.cold.deinit();
+    try t.expectEqualStrings(arity.cold.diagnostics, arity.warm.diagnostics);
+    try t.expect(std.mem.indexOf(u8, arity.warm.diagnostics, "E_ARITY") != null);
+    try t.expect(arity.warm.summaries == null);
+    const privacy = formattedDependencyProject("func total() -> int:\n    return 1\n");
+    const private = try checkAfterEdit(&original, &privacy);
+    defer private.warm.deinit();
+    defer private.cold.deinit();
+    try t.expectEqualStrings(private.cold.diagnostics, private.warm.diagnostics);
+    try t.expect(std.mem.indexOf(u8, private.warm.diagnostics, "error[") != null);
+    try t.expect(private.warm.summaries == null);
+}
+
+// spec-case: CHECK-SUMMARY-3
+test "summary validation retries failed bodies in full to report every dependent diagnostic" {
+    const original = formattedDependencyProject("public func total() -> int:\n    return 1\npublic func direct() -> int:\n    return total()\n");
+    const renamed = formattedDependencyProject("public func total_renamed() -> int:\n    return 1\npublic func direct() -> int:\n    return total()\n");
+    const outcome = try checkAfterEdit(&original, &renamed);
+    defer outcome.warm.deinit();
+    defer outcome.cold.deinit();
+    try t.expectEqualStrings(outcome.cold.diagnostics, outcome.warm.diagnostics);
+    try t.expect(std.mem.indexOf(u8, outcome.warm.diagnostics, "E_UNKNOWN_SYMBOL") != null);
+    try t.expect(outcome.warm.summaries == null);
+}
+
+// spec-case: CHECK-SUMMARY-3
+test "summary validation and retained body caches both reject dotted import signature and privacy edits" {
+    const original = formattedDependencyProject("public func total() -> int:\n    return 1\n");
+    var cache = language.semantic_cache.Cache.init(t.allocator, 16 * 1024 * 1024);
+    defer cache.deinit();
+    try checkRetained(&original, &cache);
+    try t.expect(cache.entries.len != 0);
+    const signature = formattedDependencyProject("public func total(extra: int) -> int:\n    return extra\n");
+    try t.expectError(error.SourceError, checkRetained(&signature, &cache));
+    const context_reason = @backingInt(language.semantic_cache.MissReason.context_changed);
+    try t.expect(cache.statistics.misses[context_reason] != 0);
+    try checkRetained(&original, &cache);
+    const privacy = formattedDependencyProject("func total() -> int:\n    return 1\n");
+    try t.expectError(error.SourceError, checkRetained(&privacy, &cache));
+    const lowering = try checkAfterEditAs(&original, &signature, .lowering);
+    defer lowering.warm.deinit();
+    defer lowering.cold.deinit();
+    try t.expectEqualStrings(lowering.cold.diagnostics, lowering.warm.diagnostics);
+    try t.expect(std.mem.indexOf(u8, lowering.warm.diagnostics, "E_ARITY") != null);
 }

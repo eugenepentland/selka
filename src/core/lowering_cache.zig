@@ -9,6 +9,7 @@ const snapshot = @import("ir_snapshot.zig");
 const stage = @import("stage_store.zig");
 const flags = @import("flags.zig");
 const render = @import("build_render.zig");
+const demand = @import("lowering_demand.zig");
 
 const Error = snapshot.Error;
 /// Checked-to-physical type mapping, recorded in discovery order.
@@ -49,6 +50,7 @@ pub const Cache = struct {
     store: *const stage.Store,
     lowered: usize = 0,
     reused: usize = 0,
+    demand: ?*demand.Context = null,
 
     /// Bind immutable durable storage; counters start empty for this build.
     pub fn init(store: *const stage.Store) Cache {
@@ -85,7 +87,7 @@ pub const Session = struct {
         try h.value(mb.input.program.functions.len);
         for (mb.input.program.functions) |f| {
             try h.value(f.id);
-            try h.value(f.name);
+            try h.value(normalizedName(f.name));
             try h.value(f.type_arguments);
             try h.value(f.policy);
             try h.value(f.signature);
@@ -127,11 +129,21 @@ pub const Session = struct {
     /// Checked nodes/statements are dereferenced, so allocator order and global
     /// node ordinals cannot invalidate unrelated bodies. Local spans relocate.
     pub fn key(self: *const Session, mb: Context, checked: typed.Function) Error!stage.Digest {
-        var h = TreeHash.init(mb.input.program, .{ .module = mb.module, .source = mb.input.source }, checked);
-        try h.value(checked);
-        const body = h.finish();
+        const body = if (self.cache.demand) |queries| if (queries.omitted(checked.id))
+            queries.body(checked.id) orelse return error.InvalidSnapshot
+        else
+            try self.bodyKey(mb, checked) else try self.bodyKey(mb, checked);
+        if (self.cache.demand) |queries| if (queries.omitted(checked.id)) try queries.record(checked.id, body);
         const debug = [_]u8{@intFromBool(mb.input.drop_debug)};
         return self.cache.store.key("lowered-function-v2", &.{ &self.catalog, &self.guard, &self.assets, &body, &debug });
+    }
+
+    fn bodyKey(self: *const Session, mb: Context, checked: typed.Function) Error!stage.Digest {
+        var h = TreeHash.init(mb.input.program, .{ .module = mb.module, .source = mb.input.source }, checked);
+        try h.value(checked);
+        const digest = h.finish();
+        if (h.local_positions) if (self.cache.demand) |queries| try queries.record(checked.id, digest);
+        return digest;
     }
 
     /// Decode and validate with private scratch and temporary discovery deltas.
@@ -139,6 +151,10 @@ pub const Session = struct {
     pub fn restore(self: *Session, scratch: std.mem.Allocator, key_value: stage.Digest, mb: Context, checked: typed.Function, declared: ir.Function) std.mem.Allocator.Error!?ir.Function {
         const wire = try self.cache.store.loadValue(scratch, key_value, Wire) orelse return null;
         const before = Before.init(mb);
+        if (!localPositions(wire, before.functions)) if (self.cache.demand) |queries| {
+            queries.reject(checked.id);
+            if (queries.omitted(checked.id)) return null;
+        };
         // Temporarily expose only the discovery delta, using the result arena
         // for table capacity. Roll back lengths before decoded scratch expires
         // on every miss/error. Never copy the module's growing catalog prefix.
@@ -165,7 +181,8 @@ pub const Session = struct {
             if (binding.physical < before.functions or binding.physical >= candidate.functions.items.len) return null;
             const fresh = mb.input.program.functions[@backingInt(binding.checked)];
             const f = candidate.functions.items[binding.physical];
-            if (!std.mem.eql(u8, fresh.name, f.name)) return null;
+            if (!std.mem.eql(u8, normalizedName(fresh.name), normalizedName(f.name))) return null;
+            candidate.functions.items[binding.physical].name = fresh.name;
             candidate.functions.items[binding.physical].span = std.math.cast(u32, fresh.declaration.start) orelse return null;
         }
         for (wire.delta.types) |binding| {
@@ -193,7 +210,9 @@ pub const Session = struct {
         for (wire.delta.functions) |binding| {
             try mb.discovery.ids.put(mb.arena, @backingInt(binding.checked), binding.physical);
             try mb.discovery.pending.append(mb.arena, binding.checked);
-            mb.module.functions.items[binding.physical].span = @intCast(mb.input.program.functions[@backingInt(binding.checked)].declaration.start);
+            const fresh = mb.input.program.functions[@backingInt(binding.checked)];
+            mb.module.functions.items[binding.physical].name = try mb.arena.dupe(u8, fresh.name);
+            mb.module.functions.items[binding.physical].span = @intCast(fresh.declaration.start);
         }
         for (wire.delta.types) |binding| try mb.types.put(mb.arena, binding.checked, binding.physical);
         try mb.discovery.types.appendSlice(mb.arena, wire.delta.types);
@@ -222,7 +241,7 @@ pub const Session = struct {
         };
         const functions = try a.alloc(FunctionBinding, mb.discovery.pending.items.len - before.pending);
         for (functions, mb.discovery.pending.items[before.pending..]) |*binding, id| binding.* = .{ .checked = id, .physical = mb.discovery.ids.get(@backingInt(id)).? };
-        try self.cache.store.storeValue(publication.key, Wire, .{
+        const wire: Wire = .{
             .function = function,
             .delta = .{
                 .declarations = declarations,
@@ -232,9 +251,30 @@ pub const Session = struct {
                 .functions = functions,
                 .types = mb.discovery.types.items[before.types..],
             },
-        });
+        };
+        if (!localPositions(wire, before.functions)) if (self.cache.demand) |queries| queries.reject(checked.id);
+        try self.cache.store.storeValue(publication.key, Wire, wire);
     }
 };
+
+fn localPositions(wire: Wire, first: usize) bool {
+    for (wire.function.positions) |at| if (at == .external) return false;
+    for (wire.delta.declarations, 0..) |decl, index| {
+        for (decl.positions, 0..) |at, position_index| {
+            if (at != .external) continue;
+            // Ordinary callees' declaration positions are overwritten from the
+            // current checked catalog during restore; helper positions are not.
+            if (position_index != 0) return false;
+            var bound = false;
+            for (wire.delta.functions) |binding| if (binding.physical == first + index) {
+                bound = true;
+                break;
+            };
+            if (!bound) return false;
+        }
+    }
+    return true;
+}
 
 fn sameSignature(a: ir.Signature, b: ir.Signature) bool {
     return a.ret == b.ret and a.linkage == b.linkage and a.owned == b.owned and a.views == b.views and std.mem.eql(ir.Type, a.params, b.params);
@@ -314,6 +354,15 @@ fn acyclicCopies(a: std.mem.Allocator, f: ir.Function) std.mem.Allocator.Error!b
 }
 
 fn normalizedName(name: []const u8) []const u8 {
+    // Lambda ordinals and signatures are guarded by the ordered catalog. Their
+    // byte-offset suffix is a relocatable symbol spelling, not a declaration ID.
+    // Keep actual body keys and final symbols fresh; only catalog/guard names use this.
+    if (std.mem.startsWith(u8, name, "lambda@")) {
+        const start = if (std.mem.lastIndexOf(u8, name, "::")) |at| at + 2 else "lambda@".len;
+        if (start == name.len) return name;
+        for (name[start..]) |byte| if (!std.ascii.isDigit(byte)) return name;
+        return name[0..start];
+    }
     if (std.mem.startsWith(u8, name, render.declaration_prefix)) {
         const tail = name[render.declaration_prefix.len..];
         if (std.mem.indexOfScalar(u8, tail, '_')) |at| return tail[at..];
@@ -423,6 +472,7 @@ const TreeHash = struct {
     program: typed.Program,
     context: snapshot.Context,
     checked: ?typed.Function,
+    local_positions: bool = true,
 
     fn init(program: typed.Program, context: snapshot.Context, checked: ?typed.Function) TreeHash {
         return .{ .program = program, .context = context, .checked = checked };
@@ -440,7 +490,9 @@ const TreeHash = struct {
         if (T == typed.StatementId) return self.value(self.program.statements[@backingInt(v)]);
         if (T == language.source.Span) {
             if (self.checked) |checked| {
-                try self.value(try position(self.context, self.program, checked, std.math.cast(u32, v.start) orelse return error.InvalidSnapshot));
+                const at = try position(self.context, self.program, checked, std.math.cast(u32, v.start) orelse return error.InvalidSnapshot);
+                if (at == .external) self.local_positions = false;
+                try self.value(at);
                 try self.value(v.end - v.start);
             }
             return;

@@ -16,7 +16,7 @@ const codec = @import("mylang").persist_codec;
 pub const Stage = enum { inline_leaf, inline_cfg, unswitch, first_facts, parameter_inline, final, debug };
 const stage_count = @typeInfo(Stage).@"enum".field_names.len;
 /// Observed store lookups; no reuse is inferred from unchanged source bytes.
-pub const Statistics = struct { hits: [stage_count]usize = @splat(0), misses: [stage_count]usize = @splat(0) };
+pub const Statistics = struct { hits: [stage_count]usize = @splat(0), misses: [stage_count]usize = @splat(0), bypassed: usize = 0 };
 /// Outside facts and earlier pass events consulted by the requested stage.
 pub const Inputs = struct {
     parameters: []const ?facts.Interval = &.{},
@@ -81,6 +81,20 @@ pub const Context = struct {
         const digest = try state.canon.functionDigest(function);
         state.digests[function] = digest;
         return digest;
+    }
+
+    /// Expose the guarded catalog identity to compact whole-pipeline indexes.
+    pub fn layoutDigest(self: *const Context) ?[32]u8 {
+        return if (self.prepared) |state| state.layout else null;
+    }
+
+    /// Read the current canonical body memo, disabling shortcuts for unknown metadata.
+    pub fn bodyDigest(self: *Context, function: u32) std.mem.Allocator.Error!?[32]u8 {
+        if (self.prepared == null) return null;
+        return self.body(function) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            error.UnknownMetadata => null,
+        };
     }
 
     /// Hash body, ancestry, and the precise kinds of outside facts this stage reads.

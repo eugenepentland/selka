@@ -195,7 +195,7 @@ fn checkTextLiteral(comptime Checker: type, self: *Checker, node: ast.Node, byte
         }
         out.data = .{ .array = try points.toOwnedSlice(self.allocator) };
     } else {
-        out.ty = try self.ty(node.span);
+        out.ty = try self.catalog.instantiateArray(self.allocator, .u8, bytes.len, node.span, self.sink);
         out.data = .{ .array = try byteValues(Checker, self, bytes, node.span) };
     }
 }

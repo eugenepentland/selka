@@ -8,6 +8,7 @@ comptime {
     _ = @import("runtime_threads_test.zig");
     _ = @import("shared_counts_test.zig");
     _ = @import("frontend_test.zig");
+    _ = @import("demand_build_test.zig");
     _ = @import("cli.zig");
     _ = @import("cost_test.zig");
     _ = @import("count_test.zig");

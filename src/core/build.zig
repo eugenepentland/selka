@@ -37,6 +37,9 @@ const view_value_marker: u32 = 1 << 31;
 
 /// Why building stopped.
 pub const Error = error{ OutOfMemory, Unsupported };
+/// An omitted checked body whose lowering artifact is absent requires a fresh
+/// frontend check; it must never be lowered as an empty function.
+pub const CachedError = Error || error{CacheMiss};
 
 /// The first unsupported construct: a short reason and its source offset.
 pub const Refusal = struct { reason: []const u8 = "", span: u32 = 0 };
@@ -70,7 +73,7 @@ pub fn buildExecutable(allocator: std.mem.Allocator, input: Input, refusal: *Ref
 }
 
 /// Reuse validated function lowering artifacts, preserving the uncached oracle.
-pub fn buildExecutableCached(allocator: std.mem.Allocator, input: Input, refusal: *Refusal, cache: *lowering_cache.Cache) Error!ir.Module {
+pub fn buildExecutableCached(allocator: std.mem.Allocator, input: Input, refusal: *Refusal, cache: *lowering_cache.Cache) CachedError!ir.Module {
     return buildRootsCached(allocator, &.{input.program.main}, input, refusal, cache);
 }
 
@@ -80,10 +83,13 @@ pub fn buildRootsSource(allocator: std.mem.Allocator, program: typed.Program, ro
 }
 
 fn buildRootsInput(allocator: std.mem.Allocator, roots: []const typed.FunctionId, input: Input, refusal: *Refusal) Error!ir.Module {
-    return buildRootsCached(allocator, roots, input, refusal, null);
+    return buildRootsCached(allocator, roots, input, refusal, null) catch |err| switch (err) {
+        error.CacheMiss => unreachable,
+        else => |other| return other,
+    };
 }
 
-fn buildRootsCached(allocator: std.mem.Allocator, roots: []const typed.FunctionId, input: Input, refusal: *Refusal, cache: ?*lowering_cache.Cache) Error!ir.Module {
+fn buildRootsCached(allocator: std.mem.Allocator, roots: []const typed.FunctionId, input: Input, refusal: *Refusal, cache: ?*lowering_cache.Cache) CachedError!ir.Module {
     const program = input.program;
     var mb: ModuleBuilder = .{ .allocator = allocator, .input = input, .refusal = refusal, .discovery = .{ .enabled = cache != null } };
     defer mb.discovery.ids.deinit(allocator);
@@ -98,6 +104,7 @@ fn buildRootsCached(allocator: std.mem.Allocator, roots: []const typed.FunctionI
         error.OutOfMemory => return error.OutOfMemory,
         error.InvalidSnapshot => null,
     } else null;
+    if (reuse == null) if (cache) |stored| if (stored.demand) |queries| if (queries.count() != 0) return error.CacheMiss;
     if (reuse) |*session| {
         var scratch = std.heap.ArenaAllocator.init(session.cache.store.backing);
         defer scratch.deinit();
@@ -123,6 +130,7 @@ fn buildRootsCached(allocator: std.mem.Allocator, roots: []const typed.FunctionI
                     try session.advance(a, before, mb.lowering());
                     break :blk cached;
                 };
+                if (session.cache.demand) |queries| if (queries.omitted(id)) return error.CacheMiss;
                 const fresh = try buildFunction(&mb, function, mb.module.functions.items[index]);
                 session.cache.lowered += 1;
                 if (key) |digest| try session.remember(a, mb.lowering(), .{ .key = digest, .before = before, .checked = function }, fresh);
@@ -143,6 +151,7 @@ fn buildRootsCached(allocator: std.mem.Allocator, roots: []const typed.FunctionI
         }
     }
     // Ownership (copies before shared updates, counting) is `own.zig`'s, after the release passes.
+    if (cache) |stored| if (stored.demand) |queries| try queries.recordReachable(mb.discovery.pending.items);
     return mb.module;
 }
 

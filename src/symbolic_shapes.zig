@@ -122,13 +122,10 @@ pub const Context = struct {
     }
     fn sourceSuffix(self: Context, span: source.Span, depth: usize, aliases: []const @import("generic_requirements.zig").SubjectAlias) Error!?Value {
         const store = self.catalog.templates.store orelse return null;
-        for (store.index.syntax.suffixes) |suffix| {
-            if (suffix.span.start != span.start or suffix.span.end != span.end) continue;
-            const element = try self.sourceType(suffix.base, depth + 1, aliases);
-            const value = try self.nominal(store.index.names.get(if (suffix.kind == .growable) "list" else "Option").?, &.{element});
-            return value;
-        }
-        return null;
+        const suffix = store.index.syntax.suffixes.get(span) orelse return null;
+        const element = try self.sourceType(suffix.base, depth + 1, aliases);
+        const value = try self.nominal(store.index.names.get(if (suffix.kind == .growable) "list" else "Option").?, &.{element});
+        return value;
     }
     fn sourceType(self: Context, span: source.Span, depth: usize, aliases: []const generic_requirements.SubjectAlias) Error!Value {
         try self.charge(span);
