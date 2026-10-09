@@ -1,0 +1,14 @@
+install-core: /home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/fu-port-20261009/qualify-remerge/install-core.log
+test-core: /home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/fu-port-20261009/qualify-remerge/test-core.log
+full-conformance: /home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/fu-port-20261009/qualify-remerge/full-conformance.log
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/new-core-s5-20261007/tools/qualify_merge.py", line 61, in <module>
+    if __name__=='__main__': main()
+                             ~~~~^^
+  File "/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/new-core-s5-20261007/tools/qualify_merge.py", line 54, in main
+    run('full-conformance',['python3','experiments/new-core-s5-20261007/tools/conformance_ref.py','--references',str(REFERENCES),'--set','all','--core',str(core),'--cache-dir',str(temporary.parent/'conformance'),'--jobs','4','--why','--leakcheck','--verify'])
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/new-core-s5-20261007/tools/qualify_merge.py", line 36, in run
+    report=log.read_text(); seconds=float(timer.read_text()) if timer.exists() else None
+                                    ~~~~~^^^^^^^^^^^^^^^^^^^
+ValueError: could not convert string to float: 'Command exited with non-zero status 1\n22.27\n'

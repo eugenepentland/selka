@@ -1,0 +1,25 @@
+commit 9e97801f6 start 17:00:56
+gate=1 17:02:59
+Build Summary: 91/94 steps succeeded (2 failed); 2288/23499 tests passed (21211 skipped)
+fmt=1
+releasefast=0 17:06:44
+qualify=1 17:08:10
+  debug    matching 1516, mismatching 4, unsupported 0 (of 1518 tests; 1520 supported)
+  release  matching 1516, mismatching 4, unsupported 0 (of 1518 tests; 1520 supported)
+outputs build=0
+outputs eda=0
+eda: 34 cases, 34 byte-identical to the goldens, differing: []
+outputs parity=0
+parity: 45 programs, 45 equal to .expected, differing: []
+lox conformance=0
+conformance engine=vm gc=normal: 246/246 passed
+conformance engine=vm gc=gc-stress: 246/246 passed
+conformance engine=tree gc=normal: 241/241 passed
+conformance engine=tree gc=gc-stress: 241/241 passed
+lox port tests=0
+65 passed, 0 cached, 0 failed, 0 skipped
+eda tests=0
+310 passed, 0 cached, 0 failed, 0 skipped
+fuzz=0 17:15:40
+s0: PASS; 39.062337446026504s number: PASS; 48.37200844916515s s1: PASS; 57.906892058905214s rc: PASS; 28.774089451879263s rebinding: PASS; 48.24223504518159s iteration: PASS; 66.93796804291196s text: PASS; 46.69336850917898s dict: PASS; 80.30210230080411s functions: PASS; 39.59409272600897s 
+done 17:15:40

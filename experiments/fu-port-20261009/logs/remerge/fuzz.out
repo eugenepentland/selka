@@ -1,0 +1,11 @@
+evidence=/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/fu-port-20261009/fuzz50-remerge
+source_commit=9e97801f6b837b4cb05aeb3de5b5a5cbeb022682
+s0: PASS; 39.062337446026504s
+number: PASS; 48.37200844916515s
+s1: PASS; 57.906892058905214s
+rc: PASS; 28.774089451879263s
+rebinding: PASS; 48.24223504518159s
+iteration: PASS; 66.93796804291196s
+text: PASS; 46.69336850917898s
+dict: PASS; 80.30210230080411s
+functions: PASS; 39.59409272600897s

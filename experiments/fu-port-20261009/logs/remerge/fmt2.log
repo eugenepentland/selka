@@ -1,0 +1,23 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: all 3 build slot(s) busy; waiting (60s so far)
+build-slot: build slot 1 after 81s (all 3 build slot(s) busy)
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 17d5fc936519)
+guardian: diff-scoped vs 8a2fccd2f1e42c9f09adeecb6c0bb158127f1375: 20/573 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 15 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 1 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 632 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs 8a2fccd2f1e42c9f09adeecb6c0bb158127f1375, 20 file(s) in scope
+fmt-check
++- verify .my formatting gate w
+......
+----------------------------------------------------------------------
+Ran 6 tests in 0.317s
+
+OK
+failed command: cd . && sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig sh -c "exec \"\$@\" 1>&2" driver python3 tests/test_my_format.py --compiler ./zig-out/bin/mylang
+
+fmt-check
++- check live .my corpus formatting w
+.my format: 761 checked, 257 deliberate exclusions, 0 failures; experiments/ is historical and outside the live roots
+failed command: cd . && sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig sh -c "exec \"\$@\" 1>&2" driver python3 scripts/check_my_format.py --compiler ./zig-out/bin/mylang
+
