@@ -647,5 +647,67 @@
     "failures": [],
     "log_sha256": "fc78661dc6fab75f7cf0ba6e295d1a13a71787c0805ef3f9a1f79bcd84d9611c",
     "log_bytes": 395738
+  },
+  {
+    "phase": "F9-red",
+    "command": "zig build test-cli -Dtest-filter=F9 CLI --summary all",
+    "source_commit": "fbc5ec1e741d217a1779ef61e5506beecddd35da",
+    "status": 1,
+    "summary": "Build Summary: 6/8 steps succeeded (1 failed); 2/3 tests passed (1 failed)",
+    "test_verdicts": {
+      "passed": 2,
+      "failed": 1,
+      "skipped": 0
+    },
+    "failures": [
+      "fix_cli_test.test.F9 CLI fix repairs both sequential arena blocks reusing a name"
+    ],
+    "log_sha256": "2e31166310000ca858ddd4a09d58170a2999b40bd758067e75427f51eeadca53",
+    "log_bytes": 2601
+  },
+  {
+    "phase": "F9-focused",
+    "command": "zig build test-cli -Dtest-filter=F9 CLI --summary all",
+    "source_commit": "fbc5ec1e741d217a1779ef61e5506beecddd35da",
+    "status": 0,
+    "summary": "Build Summary: 8/8 steps succeeded; 4/4 tests passed",
+    "test_verdicts": {
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "940d23119984a488584112087deae26aa70f7b63b98af94606d05b7e93587477",
+    "log_bytes": 1711
+  },
+  {
+    "phase": "F9-full-first",
+    "command": "zig build test --summary all",
+    "source_commit": "fbc5ec1e741d217a1779ef61e5506beecddd35da",
+    "status": 1,
+    "summary": "Build Summary: 43/95 steps succeeded (2 failed); 2303/23700 tests passed (21397 skipped)",
+    "test_verdicts": {
+      "passed": 2303,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "51948230f67680f4bf41b89d9177b1dd6920d230bf5d2427a1a84da6adf83a4d",
+    "log_bytes": 81688
+  },
+  {
+    "phase": "F9-full",
+    "command": "zig build test --summary all",
+    "source_commit": "fbc5ec1e741d217a1779ef61e5506beecddd35da",
+    "status": 0,
+    "summary": "Build Summary: 95/95 steps succeeded; 2312/23709 tests passed (21397 skipped)",
+    "test_verdicts": {
+      "passed": 2312,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "d2d6f0f04ab876636365da5752b5e7a25a7faef37e268ea4670d780155c4bb92",
+    "log_bytes": 397419
   }
 ]

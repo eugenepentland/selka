@@ -128,3 +128,13 @@ Choice: derive the formatter's temporary source context from exact name/byte ide
 Reversibility: formatter context and manifest coverage only; no syntax or trust is granted to modified ordinary source.
 
 F8 validation follow-up: once parsing is permitted, all six standard modules expose two leading blank lines left by their old module headers. Apply their formatter output (exactly those two newlines removed in each file) and rebuild the embedded sources. The first focused green attempt also exposed a Zig module-ownership boundary; keep source-context derivation in Compilation rather than importing its module directly from the separate CLI root. Guardian requires the new formatter contract on a tagged SPEC bullet, so add FRONTEND-FORMAT-STDLIB-1 with the CLI regression as its primary test.
+
+## D16 — F9 distinguishes disjoint arena bindings from shadowing
+
+Question: does a same-name resource binder in another non-nested block make this arena's escape calls ambiguous?
+Options: refuse every repeated spelling, or compare the blocks' source containment.
+Evidence: the sequential-block CLI regression initially exits 1 without applying both repairs.
+Choice: ignore another with_scope binder when neither statement contains the other. Keep nested binders and ordinary local/parameter collisions conservative. The CLI regression requires both arenas and escape calls removed, two remaining expressions, a successful check and an idempotent second fix. A nested same-name regression requires refusal and unchanged source bytes.
+Reversibility: fix eligibility only; the retired arena syntax remains rejected.
+
+F9 gate follow-up: Guardian rejects the combined containment condition's four boolean operators (cap three). Name the containment predicate inside the with_scope branch; retain the same logic and threshold. Update the existing tagged arena-fix SPEC bullet with the disjoint-scope contract, and correct its stale W_ARENA_RETIRED/post-check wording to the already-established E_ARENA_REMOVED/syntax-derived behavior. No diagnostic behavior is changed by that documentation correction.

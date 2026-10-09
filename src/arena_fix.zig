@@ -42,6 +42,12 @@ fn bindingsCertain(src: source.Source, syntax: ast.Program, statement: ast.State
         if (parameterNamed(src, syntax, region, name) or lambdaNamed(src, syntax, region, name)) return false;
         for (syntax.statements.items) |other| {
             if (other.span.start == statement.span.start or !inside(other.span, region)) continue;
+            // Disjoint resource scopes can reuse a name without shadowing this
+            // binding. Nested scopes still make escape ownership ambiguous.
+            if (other.data == .with_scope) {
+                const nested = inside(other.span, statement.span) or inside(statement.span, other.span);
+                if (!nested) continue;
+            }
             if (bindsName(src, other, name)) return false;
             if (other.data == .assignment and sameName(src, other.data.assignment.name, name)) return false;
         }
