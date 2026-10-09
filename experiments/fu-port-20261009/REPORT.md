@@ -8,7 +8,7 @@
 
 **Where.** Branch `claude/fu-port`, head `24a48c29c`. It is `claude/fu-x`, `80f1d6ce5`, with `main` `e23651f6a` merged (`b0f5bee76`, no textual conflicts) and the migration added (`a46365913`). Not merged into `main`, not pushed.
 
-**`main` has moved on.** It is now `8a2fccd2f`, the frontend follow-through, 16 commits. `git merge-tree` shows a clean merge; the gates need to run again after it.
+**`main` moved on, and the port followed it.** `main` became `8a2fccd2f`, the frontend follow-through, 16 commits. The coordinator merged it into the port and ran the gates again (see "Re-merge" below). `main` was then fast-forwarded to `b51a43b76` on 2026-10-09.
 
 ## What the port did
 
@@ -84,3 +84,27 @@
 - **Migrated EDA copy:** `claude-main-ce/.mylang-cache/eda-src`. Its `mylang.json` is in `src/`.
 - **Compilers:** `.mylang-cache/compilers/port-a4636591` and `main-e23651f6`, both ReleaseFast.
 - **Tools:** `experiments/fu-port-20261009/tools/` holds `fix_loop.py`, `mylang-migrating`, `llvm_identity.py`, `llvm_functions.py`, `instructions.py` and `outputs.py`.
+
+## Re-merge with `main` `8a2fccd2f` (coordinator, 2026-10-09)
+
+**Commits on `claude/fu-port`:**
+- `a57541cc4`: merge of `main` `8a2fccd2f`. The merge was clean.
+- `9e97801f6`: the gate driver, `tools/remerge-gates.sh`.
+- `b51a43b76`: formatting fixes. `main`'s new `.my` formatting gate (`scripts/check_my_format.py`) wanted the nine U1 and F2 fixtures in canonical layout. `mylang fmt` removed only blank lines, 4 per file. F2's 14 asserted trap locations moved up by the removed lines, and `f2_index_test.zig` follows them.
+
+`main` was fast-forwarded to `b51a43b76`. The receipts are in `logs/remerge/`, `qualify-remerge/` and `fuzz50-remerge/`:
+
+| gate | result |
+|---|---|
+| `zig build test --summary all` | 94/94 steps, 2288 tests (`gate2.log`) |
+| `.my` format and `fmt-check` | 761 checked, 0 failures (`fmt2.log`) |
+| `qualify_merge` | conformance 1516/4/0 in debug and in release; the same four mismatches as `main`'s own |
+| Lox | 974/974; port tests 65/65 |
+| EDA | 34/34 goldens; 310/310 tests |
+| parity `.expected` | 45/45 |
+| frozen fuzz 9×50, through `tools/mylang-migrating` | all 9 kinds PASS |
+
+**The first gate run failed only 2 of `tests/test_migrate_embedded.py`'s 12 tests** (`gate.log`, 91/94).
+- They failed because that run's `TMPDIR` lay inside the worktree, and it affects `main` the same way.
+- With `TMPDIR` outside the checkout, all 12 pass, which is what `gate2.log` shows.
+- The tests were fixed on `claude/fix-embedded-tmpdir`.
