@@ -60,6 +60,10 @@ const patches = [_]Patch{
         .anchor = "static bool count_release_shared(myl_block *block) {\n    uint32_t count = count_load(block);\n",
         .after = "    if (count != MYL_SATURATED) myl_count_event(MYL_COUNT_SHARED_RELEASES, 0);\n",
     },
+    .{
+        .anchor = "    child->count = count | MYL_SHARED;\n",
+        .after = "    uint32_t myl_share_class = class_of(child);\n    myl_count_event(MYL_COUNT_SHARE_MARKS, myl_share_class ? (size_t)myl_share_class * MYL_GRANULE : malloc_usable_size(child));\n",
+    },
     .{ .anchor = "    memcpy(other->hashes, meta->hashes, (size_t)meta->elen * 8);\n", .after = "    myl_count_copy(MYL_COUNT_DICT_COPIES, (size_t)meta->elen * ((size_t)meta->desc->stride + 8));\n" },
     .{
         .anchor = "    memcpy(block_data(grown), block_data(dict), (size_t)meta->elen * meta->desc->stride);\n",

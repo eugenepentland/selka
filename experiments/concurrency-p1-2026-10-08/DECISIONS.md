@@ -224,3 +224,22 @@ Guardian’s whole-tree commit check caught that SHARED-COUNTS-1 still described
 - **Choice:** Move allocation cursors/free lists, traces, sites, stack metadata, text counters and counting slots into TLS. A persistent pthread-key registry snapshots retired free lists and sums only after quiescence. Shared heap/live-byte accounting uses atomics; provider operations use one IO mutex. Output stages complete units after pool start; fatal handling has a bounded try-lock/raw-fd fallback and skips IO/Host cleanup. Preserve startup behavior and the selected B2 emitter. Adopt the previously logged last-owner acquire CAS and idempotent main stack installation.
 - **Files outside the expected list:** `src/core/build_cap.zig` wraps dynamic print writes in begin/end helpers after evaluating arguments, so one print remains one output unit. `src/core/root_test.zig` imports the new focused tests. `src/core/driver.zig` adds pthread runtime compile/link flags (the plan permits flags wherever assembled). No front-end, `ir.zig`, `own.zig` or Host implementation changes.
 - **Reversal:** Local to the runtime/emitter and internal builder; TLS-model selection remains reversible and will be measured using committed source archives.
+
+
+## 2026-10-09 — P1-3: one child iterator for publication and destruction
+
+- **Question:** How should sharing cover every managed edge without diverging from destruction?
+- **Options:** Maintain separate walks per block kind or share one callback-based child enumeration with independent share/release worklists.
+- **Evidence:** The isolated differential fixture checks explicit edge multiplicities and ownership decrements for aliases, nested union guards, dictionary tombstones, boxed views, IO authority/resource/provider pairs, nulls and read-only immortals. A 100,000-deep graph is marked and freed iteratively, with exactly 100,033 marks overall and no managed leak. The separate plain-saturation fixture marks its two blocks (128 bytes) before eight threads retain/release the immortal root's child.
+- **Choice:** Use one iterator; keep dictionary storage finalization after its children are enumerated and provider pair release in the iterator. Mark each plain block before queuing it, stopping at already shared/immortal values. Adopt the previously logged saturation adapter so later publication can safely stop at an immortal aggregate.
+- **Files:** `native_fixture.zig` is shared test support; `root_test.zig` imports the new tests. Runtime dictionary/IO changes are precisely the permitted common child enumeration and finalization changes. No frozen file changes.
+- **Reversal:** Local and reversible, but independent walks would require duplicating the verified edge rules.
+
+
+## 2026-10-09 — P1-3: satisfy whole-tree fixture checks at the step boundary
+
+- **Question:** How should shared fixture support be introduced before its P1-5 export consumer exists?
+- **Options:** Add an artificial use/exemption, or introduce the export method with its real later consumer and fix initialization cleanup now.
+- **Evidence:** The whole-tree commit gate caught `dead-pub` on `native_fixture.exportBinary` and `errdefer-in-init` on the environment map in `Fixture.init`. Focused build gates were diff-scoped and did not cover that newly staged file until commit.
+- **Choice:** Defer the export method to P1-5, where sanitizer repetitions use it; add `errdefer environment.deinit()` after constructing the environment. No exemptions or dummy references. Retain the failed commit-gate log and rerun focused tests/formatting after the helper change.
+- **Reversal:** Easy; the export method is already staged for its actual consumer.

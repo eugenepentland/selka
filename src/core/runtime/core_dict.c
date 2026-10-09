@@ -330,20 +330,22 @@ myl_block *myl_core_dict_clear(myl_block *dict) {
     return dict;
 }
 
-/* Join the existing iterative RC worklist; a dictionary of deeply nested
- * managed values uses no recursive teardown and frees its untracked index. */
-static void core_dict_free_pending(myl_block *dict, myl_block **pending) {
+/* Dictionary storage has tombstones and its own entry descriptor, but supplies
+   children to the same visitor used for both sharing and destruction. */
+static void core_dict_children(myl_block *dict, core_child_visitor visit, void *context) {
     core_dict_meta *meta = dict_meta(dict);
-    if (meta->desc->layout) for (uint64_t i = 0; i < meta->elen; ++i) {
+    if (!meta->desc->layout) return;
+    for (uint64_t i = 0; i < meta->elen; ++i) {
         if (!dict_live(meta, i)) continue;
         for (int32_t r = 0; r < meta->desc->layout[1]; ++r) {
             myl_block *child = reference_at(meta->desc->layout, dict_entry(dict, i), r);
-            if (count_release(child)) {
-                child->cap = (int64_t)(intptr_t)*pending;
-                *pending = child;
-            }
+            if (child) visit(child, context);
         }
     }
+}
+
+static void core_dict_finalize(myl_block *dict) {
+    core_dict_meta *meta = dict_meta(dict);
     free(meta->index);
     free(meta->hashes);
     free(meta->dead);

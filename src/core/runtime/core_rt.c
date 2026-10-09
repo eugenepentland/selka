@@ -118,13 +118,21 @@ static uint32_t count_load(const myl_block *block) {
 static bool count_is_unique(const myl_block *block) { return count_load(block) == 1; }
 static bool count_can_cache(const myl_block *block) { return count_load(block) < MYL_SHARED; }
 
+/* A plain aggregate becoming immortal must first mark its descendants:
+   later publication stops at an immortal root, just as at a shared root. */
+void myl_core_share(myl_block *root);
+__attribute__((cold, noinline, preserve_most)) static void count_saturate_plain(myl_block *block) {
+    myl_core_share(block);
+    block->count = MYL_SATURATED;
+}
+
 /* CAS keeps immortality sticky even if a retain saturates while a release is
    in flight. An unconditional fetch-add/sub after testing for immortality
    could wrap or decrement the immortal sentinel. Both operations are cold. */
 __attribute__((cold, noinline, preserve_most)) void myl_core_retain_slow(myl_block *block) {
     uint32_t count = count_load(block);
     if (count < MYL_SHARED) {
-        block->count = MYL_SATURATED;
+        count_saturate_plain(block);
         return;
     }
     while (count != MYL_SATURATED) {
@@ -676,10 +684,41 @@ myl_block *myl_core_box_new(int64_t size) {
  * and `reserved`), so freeing a list of lists nested a million deep uses no
  * stack. The emitted release does not store the final 0, so a dying block is
  * recognized by the caller, never by its count. */
-static void core_dict_free_pending(myl_block *dict, myl_block **pending);
+/* SHARED-COUNTS-2: destruction and publication use this one enumeration.
+   Each occurrence is visited, including aliases; guards exclude inactive arms. */
+typedef void (*core_child_visitor)(myl_block *, void *);
+static void core_dict_children(myl_block *dict, core_child_visitor visit, void *context);
+static void core_dict_finalize(myl_block *dict);
 static void core_io_finalize(myl_block *block);
 static void core_text_walk_report(void);
 static int64_t core_io_live_handles(void);
+
+static void core_children(myl_block *block, core_child_visitor visit, void *context) {
+    unsigned kind = kind_of(block);
+    if (kind == MYL_KIND_DICT) {
+        core_dict_children(block, visit, context);
+        return;
+    }
+    if (kind == MYL_KIND_STR || kind == MYL_KIND_BYTES) return;
+    myl_layout *layout = layout_of(block);
+    if (!layout) return;
+    int64_t count = element_count(block);
+    for (int64_t i = 0; i < count; ++i) {
+        const unsigned char *element = block_data(block) + i * (int64_t)layout[0];
+        for (int32_t r = 0; r < layout[1]; ++r) {
+            myl_block *child = reference_at(layout, element, r);
+            if (child) visit(child, context);
+        }
+    }
+}
+
+static void core_release_child(myl_block *child, void *context) {
+    myl_block **pending = context;
+    if (count_release(child)) {
+        child->cap = (int64_t)(intptr_t)*pending;
+        *pending = child;
+    }
+}
 
 __attribute__((cold)) void myl_core_free_block(myl_block *block) {
     block->cap = 0;
@@ -688,24 +727,36 @@ __attribute__((cold)) void myl_core_free_block(myl_block *block) {
         myl_block *dying = pending;
         pending = (myl_block *)(intptr_t)dying->cap;
         core_io_finalize(dying);
-        myl_layout *layout = layout_of(dying);
-        if (kind_of(dying) == MYL_KIND_DICT) {
-            core_dict_free_pending(dying, &pending);
-        } else if (layout && kind_of(dying) != MYL_KIND_STR && kind_of(dying) != MYL_KIND_BYTES) {
-            int64_t count = element_count(dying);
-            for (int64_t i = 0; i < count; ++i) {
-                const unsigned char *element = block_data(dying) + i * (int64_t)layout[0];
-                for (int32_t r = 0; r < layout[1]; ++r) {
-                    myl_block *child = reference_at(layout, element, r);
-                    if (count_release(child)) {
-                        child->cap = (int64_t)(intptr_t)pending;
-                        pending = child;
-                    }
-                }
-            }
-        }
+        core_children(dying, core_release_child, &pending);
+        if (kind_of(dying) == MYL_KIND_DICT) core_dict_finalize(dying);
         block_free(dying);
     }
+}
+
+typedef struct { myl_block **blocks; size_t length, capacity; } core_share_work;
+static void core_share_child(myl_block *child, void *context) {
+    uint32_t count = count_load(child);
+    if (count >= MYL_SHARED) return;
+    /* A plain block is confined to this thread until the whole walk returns. */
+    child->count = count | MYL_SHARED;
+    core_share_work *work = context;
+    if (work->length == work->capacity) {
+        size_t capacity = work->capacity ? work->capacity * 2 : 32;
+        if (capacity < work->capacity || capacity > SIZE_MAX / sizeof *work->blocks) out_of_memory();
+        myl_block **blocks = realloc(work->blocks, capacity * sizeof *blocks);
+        if (!blocks) out_of_memory();
+        work->blocks = blocks;
+        work->capacity = capacity;
+    }
+    work->blocks[work->length++] = child;
+}
+
+void myl_core_share(myl_block *root) {
+    if (!root || count_load(root) >= MYL_SHARED) return;
+    core_share_work work = {0};
+    core_share_child(root, &work);
+    while (work.length) core_children(work.blocks[--work.length], core_share_child, &work);
+    free(work.blocks);
 }
 
 /* Drop one owner of `block` out of line: the C entry's `args` and `main`'s error. */

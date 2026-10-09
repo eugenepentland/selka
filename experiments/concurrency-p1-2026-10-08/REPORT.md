@@ -2,10 +2,10 @@
 
 ## Current progress — 2026-10-09
 
-- **Done:** P1-1's B2 checkpoint is complete at `5042d85a5` (implementation `9c2559a45`). P1-2 per-thread runtime state is integrated and passes focused tests, the full Debug gate and fmt. Main remains `cafe7fea7`, merged by real merge `42041fa45`; comparison base remains `94dc1c3a2`. No push or main/Claude modification occurred.
+- **Done:** P1-1's B2 checkpoint is complete at `5042d85a5` (implementation `9c2559a45`). P1-2 per-thread runtime state is committed at `9d2524f5e` and passes the full Debug gate and fmt. P1-3’s shared child iterator now passes its focused tests and fmt. Main remains `cafe7fea7`, merged by real merge `42041fa45`; comparison base remains `94dc1c3a2`. No push or main/Claude modification occurred.
 - **Measured:** Early B2 tax is recorded below; all corpus geomeans are below 1.03, with target misses retained. P1-2's initial-exec/local-exec comparison is next.
-- **Decided:** Use private TLS state with narrow shared locks/atomics, persistent retired-thread allocator records, whole-output-unit staging and bounded fatal reporting. Keep the B2 emitter and the logged last-owner acquire CAS. Initial-exec is provisional pending measurement.
-- **Next:** Measure TLS models and integrate P1-3 through P1-5, then whole-package review, final correctness/TSan/tax and P2-0. **P1 is not complete.**
+- **Decided:** Use private TLS state with narrow shared locks/atomics, persistent retired-thread allocator records, whole-output-unit staging and bounded fatal reporting. Keep the B2 emitter and the logged last-owner acquire CAS. Initial-exec is provisional pending measurement; both TLS archives are pinned to the P1-2 implementation.
+- **Next:** Finish the TLS-model comparison and integrate P1-4/P1-5, then whole-package review, final correctness/TSan/tax and P2-0. **P1 is not complete.**
 
 ### Revision-3 correctness checkpoint
 
@@ -732,3 +732,11 @@ The first qualification launch failed before compilation because the generic evi
 The allocator, error/site state, stacks and counting records now use TLS; shared accounting is atomic, provider operations serialize, and output commits complete units. Retired-thread allocator records remain valid for quiescent leak/text reports. Fatal fixtures cover one-winner behavior, held IO/stream locks and worker stack overflow; normal fixtures cover eight workers, cross-thread frees, exact counts and large output units. Dynamic print boundaries are emitted by `src/core/build_cap.zig`; native pthread flags are in `src/core/driver.zig`.
 
 Validation: **18/18 focused tests**, full Debug **88/88 steps succeeded; 2107/21680 tests passed (19573 skipped)**, and **fmt passed**. [Focused evidence](r3/logs/P1-2-focused.log.gz), [full gate](r3/logs/P1-2-full.log.gz), [fmt](r3/logs/P1-2-fmt.log.gz). TLS-model timing remains pending; final package gates will cover the later scheduler integration.
+
+### P1-3: shared child traversal integrated
+
+Publication and destruction now enumerate the same managed edges, including dictionary tombstones, guarded payloads, view owners and provider pairs. The iterative walk marks before enqueueing children, preserves alias ownership multiplicity, and stops at shared/immortal nodes. Plain saturation first publishes descendants before making the root immortal.
+
+The focused matrix passes **14/14 tests**, including the independent child/ownership differential, a **100,000-level** graph, exact **100,033** share marks, and the eight-thread saturation boundary (**2 marks / 128 bytes**). Existing count/source-guard/counting checks also pass, as does fmt. [Focused evidence](r3/logs/P1-3-focused.log.gz), [fmt](r3/logs/P1-3-fmt.log.gz).
+
+P1-3’s whole-tree commit check caught an unused future export and missing fixture environment cleanup. Both were fixed without exemptions; the affected two tests and fmt passed again. [Failure](r3/logs/P1-3-commit-01.log.gz), [rerun](r3/logs/P1-3-helper-retry.log.gz).

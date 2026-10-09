@@ -155,7 +155,7 @@ test "shared count cold dispatch preserves immortal and allocated strings throug
 // even through a typedef or a renamed pointer; unrelated .count fields survive.
 fn guarded(a: std.mem.Allocator, source: []const u8) Error![]const u8 {
     var text = try std.mem.replaceOwned(u8, a, source, "    uint32_t count;\n    uint32_t kind;", "    uint32_t guarded_rc;\n    uint32_t kind;");
-    const allowed = [_][]const u8{ "count_load", "myl_core_retain_slow", "count_release_shared", "count_retain", "count_release", "block_alloc" };
+    const allowed = [_][]const u8{ "count_load", "count_saturate_plain", "core_share_child", "myl_core_retain_slow", "count_release_shared", "count_retain", "count_release", "block_alloc" };
     for (allowed) |name| {
         const signature = try std.fmt.allocPrint(a, "{s}(", .{name});
         const start = std.mem.indexOf(u8, text, signature) orelse return error.TestUnexpectedResult;

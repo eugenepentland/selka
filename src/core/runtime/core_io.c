@@ -991,12 +991,12 @@ static myl_block *core_io_string(const void *bytes,size_t len,int text) {
 static void core_io_retain(myl_block *block) { count_retain(block); }
 static const int32_t core_io_cap_layout[]={32,3,0,8,0,16,0,24,0};
 static const int32_t core_io_resource_layout[]={64,1,0,0,0};
-static const int32_t core_io_provider_layout[]={1,0,0};
 static const int32_t core_io_result_pointer_layout[]={24,2,0,8,0,16,0};
 static const int32_t core_io_result_scalar_layout[]={24,1,0,16,0};
 static const int32_t core_io_list_layout[]={8,1,0,0,0};
 typedef struct { unsigned family,rights;myl_block *provider,*parent,*scope; } CoreIoAuthority;
 typedef struct { unsigned family,test;int64_t value;MemoryFs *memory;myl_block *pairs;CoreIoResourceProvider adapter; } CoreIoState;
+static const int32_t core_io_provider_layout[]={sizeof(CoreIoState),1,0,offsetof(CoreIoState,pairs),0};
 typedef struct CoreIoResource { myl_block *authority;uint64_t handle;unsigned family,rights,open,text;struct CoreIoResource *previous,*next;myl_block *block; } CoreIoResource;
 static CoreIoResource *core_io_tail;
 static int64_t core_io_open_count;static unsigned core_io_family_open[2];
@@ -1052,7 +1052,7 @@ static void core_io_finalize(myl_block *block) {
     if (kind != 7 && kind != 8) return;
     CORE_IO_GUARD;
     if(kind_of(block)==7)core_io_close((CoreIoResource *)block_data(block));
-    if(kind_of(block)==8){CoreIoState *state=(CoreIoState *)block_data(block);if(state->memory)core_io_memory_free(state->memory);myl_core_release(state->pairs);}
+    if(kind_of(block)==8){CoreIoState *state=(CoreIoState *)block_data(block);if(state->memory)core_io_memory_free(state->memory);}
 }
 /* Three fields in an explicit result slot. Pointer/scalar helpers choose the
    matching child descriptor, never scanning a status or numeric word. */
