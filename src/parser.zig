@@ -1451,7 +1451,7 @@ pub const Parser = struct {
             const tag = self.tokens[at].tag;
             if (tag == .dedent and nesting == 0) break;
             const newline_boundary = at > start and nesting == 0 and delimiters == 0 and tag != .indent;
-            if (newline_boundary and lex.implicitTerminator(self.src.bytes, self.tokens, at)) break;
+            if (newline_boundary and !self.recoveryContinuation(at) and lex.implicitTerminator(self.src.bytes, self.tokens, at)) break;
             at += 1;
             switch (tag) {
                 .lparen, .lbracket, .lbrace => delimiters += 1,
@@ -1459,13 +1459,34 @@ pub const Parser = struct {
                 .indent => nesting += 1,
                 .dedent => {
                     nesting -= 1;
-                    if (nesting == 0 and at >= self.cursor.pos) break;
+                    if (nesting == 0 and at >= self.cursor.pos and !self.recoveryContinuation(at)) break;
                 },
                 .semicolon => if (nesting == 0 and at >= self.cursor.pos) break,
                 else => {},
             }
         }
         self.cursor.pos = at;
+    }
+
+    /// A continuation belongs to the damaged compound statement, so neither a
+    /// newline nor the preceding suite's dedent can restart parsing there.
+    fn recoveryContinuation(self: *const Parser, at: usize) bool {
+        const token = self.tokens[at];
+        switch (token.tag) {
+            .kw_elif, .kw_else, .kw_case => return true,
+            .ident => {},
+            else => return false,
+        }
+        // Exception clauses are unsupported syntax, not reserved names. Only
+        // skip their header form; a local named `except` or `finally` is valid.
+        const text = self.src.text(token.span);
+        if (!std.mem.eql(u8, text, "except") and !std.mem.eql(u8, text, "finally")) return false;
+        var next = at + 1;
+        while (self.tokens[next].tag != .eof and self.tokens[next].tag != .dedent) : (next += 1) {
+            if (self.tokens[next].tag == .indent) return true;
+            if (lex.implicitTerminator(self.src.bytes, self.tokens, next)) return false;
+        }
+        return false;
     }
 
     fn block(self: *Parser, owner: ?Span) diagnostic.Error!ast.StatementId {

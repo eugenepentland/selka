@@ -474,5 +474,52 @@
     "failures": [],
     "log_sha256": "2aa8781e4dd6dd6df16d104523bc094bc2903f0dba936a099eecb5c883b81c71",
     "log_bytes": 395198
+  },
+  {
+    "phase": "F6-red",
+    "command": "zig build test-units -Dtest-filter=F6 parser --summary all",
+    "source_commit": "20b74bf4f3424d3751b8a32bde89eaf9c0c6fbcc",
+    "status": 1,
+    "summary": "Build Summary: 6/8 steps succeeded (1 failed); 7/8 tests passed (1 failed)",
+    "test_verdicts": {
+      "passed": 7,
+      "failed": 1,
+      "skipped": 0
+    },
+    "failures": [
+      "formatter_test.test.F6 parser recovery skips continuations after a malformed elif header"
+    ],
+    "log_sha256": "bbcf197fa57c5d120060abccbe4d266a5b72f8c47d23b7d1c0e0dca84de0eef3",
+    "log_bytes": 2723
+  },
+  {
+    "phase": "F6-focused",
+    "command": "zig build test-units -Dtest-filter=parser recovery --summary all",
+    "source_commit": "20b74bf4f3424d3751b8a32bde89eaf9c0c6fbcc",
+    "status": 0,
+    "summary": "Build Summary: 8/8 steps succeeded; 16/16 tests passed",
+    "test_verdicts": {
+      "passed": 16,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "4ce5657a172facc68890310d1385eee38d5bdeb9ebe50f6e8a5208aced32db9a",
+    "log_bytes": 1833
+  },
+  {
+    "phase": "F6-full",
+    "command": "zig build test --summary all",
+    "source_commit": "20b74bf4f3424d3751b8a32bde89eaf9c0c6fbcc",
+    "status": 0,
+    "summary": "Build Summary: 95/95 steps succeeded; 2305/23655 tests passed (21350 skipped)",
+    "test_verdicts": {
+      "passed": 2305,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "a0f5dbdd5ab559258ed45ef23601352d837e255c960f9996e6655299c0a56d85",
+    "log_bytes": 395680
   }
 ]

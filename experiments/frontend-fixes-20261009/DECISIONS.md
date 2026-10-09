@@ -100,3 +100,11 @@ Options: enumerate only expression names, or share arena term matching and inclu
 Evidence: both requested regressions initially offer E_BINDING_DECLARATION instead of E_BINDING_SCOPE_MIGRATION. arena_fix.termNamed covers directly stored call/operation owners; method receivers and field/index targets also have child nodes in the complete node array. Simple and augmented assignments instead store their target on the statement.
 Choice: share termNamed, scan assignment targets, and resolve both against declarations available in the containing lexical block. Skip initial assignment targets themselves: they declare independent identities, as the existing sibling-scope migration contract requires. A new outer plain assignment remains repairable; an unresolved augmented assignment does not. Cover call, buffer/file/resource owners, nested receivers, field/index writes and independent declarations in tests.
 Reversibility: migration diagnostic/fix eligibility only; no accepted syntax or runtime semantics change.
+
+## D13 — F6 keeps continuation clauses inside recovery
+
+Question: which restart boundaries must reject continuation tokens?
+Options: guard only newline restarts, or also the dedent that ends the damaged suite.
+Evidence: the requested malformed-elif regression produces two diagnostics instead of one. Recovery can stop on either boundary.
+Choice: guard both with one continuation predicate. elif/else/case are tokens; except/finally are ordinary identifiers in this language, so recognize only their unsupported clause-header form ending in an indent token. This avoids swallowing independent assignments to valid locals named except or finally. Tests cover all five clause forms, subsequent independent errors and those identifier assignments. No partial tree is published.
+Reversibility: error synchronization only; no exception syntax or new reserved word is introduced.
