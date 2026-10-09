@@ -238,7 +238,7 @@ Then continue with T.
 
 ### 6.1 Semantics
 
-```mylang
+```mylang notest
 import parallel
 
 record Sheet:
