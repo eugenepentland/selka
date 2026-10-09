@@ -119,3 +119,19 @@
 - Evidence: the complete registry contains 45 mylang arms and 108 references. A paired registry validates 45 base + 45 candidate + 108 reference arms with unique names.
 - Choice: parity_pair.py adds base-my* arms to each benchmark's shuffled rounds, builds both compilers with separate compiler-tagged object/runtime caches, and uses the shared quiet guard. validate_parity.py rejects any missing arm, failed build/output or incomplete timing; speed misses remain reported independently against the plan's targets. No threshold file is rewritten.
 - Reversibility: measurement tooling only.
+
+## M0-016 — derive paired runtime caches from compiler identity
+
+- Question: environment-only runtime-cache tags are easy to reuse accidentally when timing-prep builds both a base and a candidate compiler's guests.
+- Options: rely on caller discipline or make the retargeted builders derive an owned cache path from the compiler binary hash.
+- Evidence: the inherited paired row and Lox preparation wrappers pass both compilers through one shell environment. The current M0 counting run explicitly uses base-fast, but future mixed-compiler preparation needs stronger isolation.
+- Choice: ce.py, outputs.py, prepare_rows.py and timing-prep.sh select compiler-hash runtime caches automatically. This isolates future base/candidate compile timings without changing code generation, inputs, or already-qualified guest outputs.
+- Reversibility: cache placement only.
+
+## M0-017 — batch remaining counting builds within one admitted slot
+
+- Question: short guest compilations repeatedly wait behind other projects' long builds and pay admission settling for every binary.
+- Options: continue two queued per-binary workers or run the unfinished compiler invocations serially inside one admitted build slot.
+- Evidence: the two owned row-build workers waited more than 10 and 4 minutes at one checkpoint, while 118 completed counting/plain binaries were already available.
+- Choice: stop only the owned waiting build and continuation processes, hash all retained binaries and the compiler in count-build-resume.json, and finish through build_count_batch.py inside scripts/build-slot.sh build. The batch asserts that it owns a build-slot descriptor, runs only one compiler at a time, and verifies every reused hash. The supported one-second poll setting changes admission responsiveness; slot counts, memory thresholds, affinity restrictions, workloads and gates are unchanged.
+- Reversibility: scheduling/tooling only; the complete counting and output gates still follow the build.

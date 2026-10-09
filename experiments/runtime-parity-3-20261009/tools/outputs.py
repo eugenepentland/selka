@@ -28,10 +28,12 @@ def sha(data):
     return hashlib.sha256(data).hexdigest()
 
 
-def run(argv, cwd=ROOT, slot=False, timeout=3600):
+def run(argv, cwd=ROOT, slot=False, timeout=3600, extra_env=None):
     full = [str(SLOT), "build", *map(str, argv)] if slot else ["taskset", "-c", CPUS, *map(str, argv)]
+    environment = env()
+    environment.update(extra_env or {})
     try:
-        done = subprocess.run(full, cwd=cwd, env=env(), capture_output=True, timeout=timeout)
+        done = subprocess.run(full, cwd=cwd, env=environment, capture_output=True, timeout=timeout)
         return done.returncode, done.stdout, done.stderr
     except subprocess.TimeoutExpired as expired:
         return "timeout", expired.stdout or b"", expired.stderr or b""
@@ -59,9 +61,11 @@ def main():
     bins = CACHE / "bin" / args.tag
     bins.mkdir(parents=True, exist_ok=True)
     cache = CACHE / "cache" / args.tag
+    runtime_cache = CACHE / "runtime" / sha(compiler.read_bytes())[:16]
+    runtime_cache.mkdir(parents=True, exist_ok=True)
 
     def build(source, output, cwd):
-        status, _, err = run([compiler, "build", source, "-o", output, "--cache-dir", cache, "--release"], cwd=cwd, slot=True)
+        status, _, err = run([compiler, "build", source, "-o", output, "--cache-dir", cache, "--release"], cwd=cwd, slot=True, extra_env={"MYLANG_CORE_RUNTIME_CACHE": str(runtime_cache)})
         if status != 0:
             raise SystemExit(f"build failed: {source}\n{err.decode(errors='replace')[-3000:]}")
 

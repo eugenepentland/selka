@@ -63,6 +63,9 @@ class Lane:
         self.bins = CACHE / "bin" / tag
         self.raw = CACHE / "raw" / tag
         self.cache = CACHE / "cache" / tag
+        identity = digest(self.compiler)[:16] if self.compiler else tag
+        self.runtime_cache = CACHE / "runtime" / identity
+        self.runtime_cache.mkdir(parents=True, exist_ok=True)
 
     def build(self, label, source, output, cwd, counting, links=()):
         argv = [self.compiler, "build", source, "-o", output, "--cache-dir", self.cache, "--release"]
@@ -70,7 +73,7 @@ class Lane:
             argv.append("--counters")
         for link in links:
             argv += ["--link", link]
-        status, _, err = run(argv, cwd=cwd, slot=True)
+        status, _, err = run(argv, cwd=cwd, extra_env={"MYLANG_CORE_RUNTIME_CACHE": str(self.runtime_cache)}, slot=True)
         if status != 0:
             raise SystemExit(f"build failed: {label}\n{err.decode(errors='replace')[-3000:]}")
 
