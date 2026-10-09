@@ -351,7 +351,7 @@ const Analysis = struct {
                     break :blk .borrowed;
                 } else .owned,
                 .copy => .none,
-                .list_get, .list_get_field, .record_get, .union_payload, .box_get, .dict_entry_key, .dict_entry_value, .array_get, .str_view_of => blk: {
+                .list_get, .list_get_field, .record_get, .union_payload, .box_get, .dict_entry_key, .dict_entry_value, .array_get, .str_view_of, .str_slice_view => blk: {
                     if (self.marks.owned_get.contains(@intCast(i))) break :blk .owned;
                     self.parent[i] = f.resolve(instruction.a);
                     break :blk .borrowed;
@@ -958,7 +958,10 @@ fn useUpdatedOperand(e: Editor, update: ir.Ref, value: ir.Ref) Error!void {
     const inst = e.f.inst(update);
     if (inst.op == .dict_insert) {
         const old_probe = e.f.inst(e.f.resolve(inst.b));
-        const probe = try e.insertBefore(update, .{ .op = .dict_find, .ty = .i64, .a = value, .b = old_probe.b, .span = inst.span });
+        // A borrowed span's lifetime ends where liveness put it; the copy is probed
+        // with the owned key the insert itself consumes (NEW-CORE-S1-VIEW-1).
+        const key = if (e.f.inst(e.f.resolve(old_probe.b)).ty == .str_view) e.f.operands(inst.data)[0] else old_probe.b;
+        const probe = try e.insertBefore(update, .{ .op = .dict_find, .ty = .i64, .a = value, .b = key, .span = inst.span });
         e.f.insts.items[update.index()].b = probe;
     }
     e.f.insts.items[update.index()].a = value;

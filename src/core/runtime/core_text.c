@@ -25,11 +25,14 @@ static bool core_text_ascii(const unsigned char *bytes, uint64_t len) {
     return true;
 }
 
-static void core_text_publish(myl_block *text) {
+/* Reset a fresh text's flags and cache; `ascii` says its octets are known ASCII. */
+static void core_text_publish_known(myl_block *text, bool ascii) {
     text->kind &= ~(MYL_TEXT_ASCII | MYL_TEXT_HASHED | MYL_TEXT_SCALARS | MYL_TEXT_CURSOR | MYL_TEXT_TAIL);
     text->reserved = 0;
-    if (core_text_ascii(block_data(text), (uint64_t)text->len)) text->kind |= MYL_TEXT_ASCII;
+    if (ascii || core_text_ascii(block_data(text), (uint64_t)text->len)) text->kind |= MYL_TEXT_ASCII;
 }
+
+static void core_text_publish(myl_block *text) { core_text_publish_known(text, false); }
 
 static uint64_t core_text_fold(uint64_t a, uint64_t b) {
     __uint128_t product = (__uint128_t)a * b;
@@ -248,7 +251,28 @@ myl_block *myl_core_ir_str_char(myl_block *text, uint64_t offset) {
     return str_from((const char *)block_data(text) + offset, (size_t)width);
 }
 
+/* A fresh block of the `len` octets at `bytes`, flagged ASCII only when `ascii` says
+   so, with no scan: a span of an ASCII text is ASCII (NEW-CORE-S1-ASCII-1). A clear flag
+   is always safe; every reader of the flag falls back to the general path. */
+static myl_block *core_octets_copy(const unsigned char *bytes, size_t len, bool ascii) {
+    myl_block *text = block_new(MYL_KIND_STR, (int64_t)len, 1);
+    memcpy(block_data(text), bytes, len);
+    block_data(text)[len] = 0;
+    text->len = (int64_t)len;
+    text->kind &= ~(MYL_TEXT_ASCII | MYL_TEXT_HASHED | MYL_TEXT_SCALARS | MYL_TEXT_CURSOR | MYL_TEXT_TAIL);
+    text->reserved = 0;
+    if (ascii) text->kind |= MYL_TEXT_ASCII;
+    return text;
+}
+
+/* A fresh text of the `len` octets at `bytes`: scanned for its ASCII flag unless its
+   source is known ASCII. */
+static myl_block *core_text_known(const unsigned char *bytes, size_t len, bool ascii) {
+    return ascii ? core_octets_copy(bytes, len, true) : str_from((const char *)bytes, len);
+}
+
 myl_block *myl_core_ir_str_from_view(const unsigned char *data, uint64_t len) { return str_from((const char *)data, (size_t)len); }
+myl_block *myl_core_ir_str_from_span(const unsigned char *data, uint64_t len, bool ascii) { return core_text_known(data, (size_t)len, ascii); }
 myl_block *myl_core_ir_span_materialize(const unsigned char *data, uint64_t len) { return myl_core_ir_str_from_view(data, len); }
 
 static myl_block *str_new(int64_t len) {
@@ -329,12 +353,19 @@ static int64_t core_text_clamp(int64_t index, int64_t len) {
     return index < 0 ? 0 : index > len ? len : index;
 }
 
-myl_block *myl_core_ir_str_slice(myl_block *text, int64_t start, int64_t end) {
+/* The octets `text[start:end]` covers: where they begin and how many (two registers). */
+typedef struct { uint64_t at, len; } core_text_span;
+core_text_span myl_core_ir_str_slice_span(myl_block *text, int64_t start, int64_t end) {
     int64_t len = (int64_t)myl_core_str_chars(text);
     start = core_text_clamp(start, len); end = core_text_clamp(end, len);
     uint64_t a = myl_core_str_offset(text, (uint64_t)start), b = a;
     if (end > start) b = (text->kind & MYL_TEXT_ASCII) ? (uint64_t)end : core_text_locate(text, (uint64_t)end, (core_anchor){(uint64_t)start, a});
-    return str_from((const char *)block_data(text) + a, (size_t)(b - a));
+    return (core_text_span){a, b - a};
+}
+
+myl_block *myl_core_ir_str_slice(myl_block *text, int64_t start, int64_t end) {
+    core_text_span span = myl_core_ir_str_slice_span(text, start, end);
+    return core_text_known(block_data(text) + span.at, (size_t)span.len, (text->kind & MYL_TEXT_ASCII) != 0);
 }
 
 static inline void core_text_copy(unsigned char *output, const unsigned char *input, size_t count) {
@@ -396,28 +427,32 @@ myl_block *myl_core_str_join(const myl_block *separator, myl_block *parts) {
 }
 
 /* Bytewise search keeps UTF-8 boundaries because both needle and haystack are valid. */
-static int64_t core_text_find_bytes(const myl_block *text, const myl_block *needle, int64_t start) {
-    if (!needle->len) return start;
-    const unsigned char *data = (const unsigned char *)text + MYL_HEADER;
-    const unsigned char *wanted = (const unsigned char *)needle + MYL_HEADER;
-    if (needle->len > text->len - start) return -1;
+/* The first octet offset at or after `start` where the `wanted_len` octets at `wanted`
+   occur in the `len` octets at `data`, or -1. */
+static int64_t core_span_find(const unsigned char *data, int64_t len, const unsigned char *wanted, int64_t wanted_len, int64_t start) {
+    if (!wanted_len) return start;
+    if (wanted_len > len - start) return -1;
     for (unsigned tried = 0; tried < 8; ++tried) {
-        const unsigned char *hit = memchr(data + start, wanted[0], (size_t)(text->len - needle->len - start + 1));
+        const unsigned char *hit = memchr(data + start, wanted[0], (size_t)(len - wanted_len - start + 1));
         if (!hit) return -1;
         start = hit - data;
         /* The rest of a candidate is short in every search here: a loop that stops at
            the first difference costs less than a `memcmp` call per candidate. */
         int64_t same = 1;
-        while (same < needle->len && hit[same] == wanted[same]) ++same;
-        if (same == needle->len) return start;
+        while (same < wanted_len && hit[same] == wanted[same]) ++same;
+        if (same == wanted_len) return start;
         ++start;
-        if (start > text->len - needle->len) return -1;
+        if (start > len - wanted_len) return -1;
     }
     /* libc's bounded linear search handles repeated first bytes after a few cheap candidates. */
     extern void *memmem(const void *, size_t, const void *, size_t);
-    const unsigned char *hit = memmem(data + start, (size_t)(text->len - start), wanted, (size_t)needle->len);
+    const unsigned char *hit = memmem(data + start, (size_t)(len - start), wanted, (size_t)wanted_len);
     if (hit) return hit - data;
     return -1;
+}
+
+static int64_t core_text_find_bytes(const myl_block *text, const myl_block *needle, int64_t start) {
+    return core_span_find((const unsigned char *)text + MYL_HEADER, text->len, (const unsigned char *)needle + MYL_HEADER, needle->len, start);
 }
 
 /* Scalars that start in bytes [from, to): every byte that is not a UTF-8 continuation. */
@@ -442,6 +477,14 @@ int64_t myl_core_str_find(myl_block *text, myl_block *needle) {
 }
 
 bool myl_core_str_contains(myl_block *text, myl_block *needle) { return core_text_find_bytes(text, needle, 0) >= 0; }
+
+/* NEW-CORE-S1-VIEW-4: the reading helpers over borrowed `(data, length)` spans, each
+   answering what its `myl_core_str_*` form answers for the texts those octets spell. */
+bool myl_core_span_eq(const unsigned char *a, uint64_t a_len, const unsigned char *b, uint64_t b_len) { return a_len == b_len && memcmp(a, b, (size_t)a_len) == 0; }
+uint64_t myl_core_span_chars(const unsigned char *a, uint64_t a_len) { return core_text_starts(a, 0, a_len); }
+bool myl_core_span_starts(const unsigned char *a, uint64_t a_len, const unsigned char *b, uint64_t b_len) { return b_len <= a_len && memcmp(a, b, (size_t)b_len) == 0; }
+bool myl_core_span_ends(const unsigned char *a, uint64_t a_len, const unsigned char *b, uint64_t b_len) { return b_len <= a_len && memcmp(a + a_len - b_len, b, (size_t)b_len) == 0; }
+bool myl_core_span_contains(const unsigned char *a, uint64_t a_len, const unsigned char *b, uint64_t b_len) { return core_span_find(a, (int64_t)a_len, b, (int64_t)b_len, 0) >= 0; }
 bool myl_core_str_starts(myl_block *text, myl_block *needle) { return needle->len <= text->len && memcmp(block_data(text), block_data(needle), (size_t)needle->len) == 0; }
 bool myl_core_str_ends(myl_block *text, myl_block *needle) { return needle->len <= text->len && memcmp(block_data(text) + text->len - needle->len, block_data(needle), (size_t)needle->len) == 0; }
 
@@ -480,7 +523,8 @@ myl_block *myl_core_bytes_from_list(myl_block *list) {
 myl_block *myl_core_bytes_concat(const myl_block *a, const myl_block *b) { myl_block *out = myl_core_str_concat(a, b); out->kind = (out->kind & ~MYL_KIND_MASK) | MYL_KIND_BYTES; return out; }
 myl_block *myl_core_bytes_slice(myl_block *text, int64_t start, int64_t end) {
     start = core_text_clamp(start, text->len); end = core_text_clamp(end, text->len);
-    myl_block *out = str_from((const char *)block_data(text) + start, (size_t)(end > start ? end - start : 0));
+    /* Octets need no ASCII flag; a slice of an ASCII block keeps it, without a scan. */
+    myl_block *out = core_octets_copy(block_data(text) + start, (size_t)(end > start ? end - start : 0), (text->kind & MYL_TEXT_ASCII) != 0);
     out->kind = (out->kind & ~MYL_KIND_MASK) | MYL_KIND_BYTES;
     return out;
 }
@@ -522,7 +566,7 @@ static myl_block *core_text_slice_step(myl_block *text, int64_t start, int64_t e
         i += step;
     }
     block_data(out)[out->len] = 0;
-    core_text_publish(out);
+    core_text_publish_known(out, (text->kind & MYL_TEXT_ASCII) != 0);
     if (!unicode) out->kind = (out->kind & ~MYL_KIND_MASK) | MYL_KIND_BYTES;
     return out;
 }
@@ -816,7 +860,7 @@ myl_block *myl_core_text_trim(myl_block *input, myl_block *chars, int32_t ends, 
         high = next;
     }
     free(set.wide);
-    return str_from((const char *)block_data(input) + low, high - low);
+    return core_text_known(block_data(input) + low, high - low, (input->kind & MYL_TEXT_ASCII) != 0);
 }
 
 myl_block *myl_core_bytes_trim(myl_block *input, myl_block *chars, int32_t ends, bool explicit_chars) {

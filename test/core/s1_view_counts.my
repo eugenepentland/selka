@@ -1,0 +1,27 @@
+# The knucleotide count (NEW-CORE-S1-VIEW-1): a counting build of it allocates in
+# `frequencies` only for the keys it inserts and for the table's growth.
+
+
+def generate(length: int) -> str:
+    parts: list[str] = []
+    seed = 42
+    for _ in range(length):
+        seed = (seed * 3877 + 29573) % 139968
+        parts.append("ACGT"[seed * 4 // 139968])
+    return "".join(parts)
+
+
+def frequencies(seq: str, k: int) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for i in range(len(seq) - k + 1):
+        key = seq[i:i + k]
+        counts[key] = counts.get(key, 0) + 1
+    return counts
+
+
+def main(out: Stream) -> int:
+    seq = generate(20000)
+    small = frequencies(seq, 2)
+    large = frequencies(seq, 6)
+    out.print(len(small), small["GG"], len(large), large.get("GGTATT", 0))
+    return 0

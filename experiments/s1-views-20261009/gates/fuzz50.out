@@ -1,0 +1,11 @@
+evidence=/home/epentland/ai/canopy/mylang-worktrees/claude-vk-vp3/experiments/s1-views-20261009/fuzz50
+source_commit=c7d8154402dfab2b5164ae1b7d66728a181de8d0
+s0: PASS; 24.651582336053252s
+s1: PASS; 31.484630886930972s
+rc: PASS; 18.234147768002003s
+number: PASS; 33.51238673902117s
+rebinding: PASS; 29.1006546379067s
+iteration: PASS; 45.535198162076995s
+text: PASS; 32.885281942086294s
+functions: PASS; 24.229599948972464s
+dict: PASS; 66.48806003504433s

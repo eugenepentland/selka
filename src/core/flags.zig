@@ -55,7 +55,12 @@ pub const list_sort_symbol = "myl_core_s2_sort_in_place";
 
 /// Whether `symbol` names a runtime function that only reads the blocks it is passed.
 pub fn readsOnly(symbol: []const u8) bool {
-    return std.mem.eql(u8, symbol, str_eq_symbol);
+    if (std.mem.eql(u8, symbol, str_eq_symbol)) return true;
+    // The span forms of the reading text helpers (NEW-CORE-S1-VIEW-4).
+    for ([_][]const u8{ "myl_core_span_eq", "myl_core_span_chars", "myl_core_span_starts", "myl_core_span_ends", "myl_core_span_contains" }) |span| {
+        if (std.mem.eql(u8, symbol, span)) return true;
+    }
+    return false;
 }
 
 /// Located text traps pack their explicit TrapKind in the low byte.
