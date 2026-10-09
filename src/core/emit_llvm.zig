@@ -201,8 +201,28 @@ const tbaa_header = "!tbaa !5";
 const tbaa_data = "!tbaa !7";
 /// A count is never 0 while its block is reachable: `[1, 0)`, i.e. 1 through saturated.
 const count_range = "!range !8";
-/// The first `!range` node number free for fact intervals.
-const first_range_node = 10;
+/// The first `!range` node number free for fact intervals (after the element tags).
+const first_range_node = 22;
+
+/// The TBAA tag of one list element scalar by its LLVM storage type (NEW-CORE-F1-TBAA-1):
+/// each is a child of `myl.data`, so it aliases the generic tag and no other child.
+const ElementTag = struct { storage: []const u8, tag: []const u8 };
+
+/// Element data tagged by scalar type. Only the list operations' element accesses use
+/// these (`FunctionEmitter.element_tags`): an element's bytes at one offset always hold
+/// the same scalar for the life of its block, since a list's element type is fixed. A
+/// union's tag and payload, every whole-value copy (`llvm.memcpy`), and every access that
+/// is not a list element (homes, boxes, return slots, dictionary entries) keep the
+/// generic `myl.data`, which aliases every child. Reuse of a freed block for a list of
+/// another element type is ordered by the compiler barrier in `myl_core_free`.
+const element_tags = [_]ElementTag{
+    .{ .storage = "double", .tag = "!tbaa !12" },
+    .{ .storage = "i64", .tag = "!tbaa !14" },
+    .{ .storage = "i32", .tag = "!tbaa !16" },
+    .{ .storage = "i16", .tag = "!tbaa !18" },
+    .{ .storage = "i8", .tag = "!tbaa !20" },
+    .{ .storage = "ptr", .tag = "!tbaa !22" },
+};
 /// The TBAA scaffold and the count range, as numbered above.
 const tbaa_metadata =
     \\!1 = !{!"myl.tbaa"}
@@ -215,6 +235,18 @@ const tbaa_metadata =
     \\!8 = !{i32 1, i32 0}
     \\!9 = !{!"branch_weights", i32 1, i32 2000}
     \\!10 = !{!"branch_weights", i32 2000, i32 1}
+    \\!11 = !{!"myl.data.double", !6, i64 0}
+    \\!12 = !{!11, !11, i64 0}
+    \\!13 = !{!"myl.data.i64", !6, i64 0}
+    \\!14 = !{!13, !13, i64 0}
+    \\!15 = !{!"myl.data.i32", !6, i64 0}
+    \\!16 = !{!15, !15, i64 0}
+    \\!17 = !{!"myl.data.i16", !6, i64 0}
+    \\!18 = !{!17, !17, i64 0}
+    \\!19 = !{!"myl.data.i8", !6, i64 0}
+    \\!20 = !{!19, !19, i64 0}
+    \\!21 = !{!"myl.data.ptr", !6, i64 0}
+    \\!22 = !{!21, !21, i64 0}
     \\
 ;
 /// `  %x = load i64, ptr %at` of one data word (a union's tag word or payload word).
@@ -906,6 +938,9 @@ const FunctionEmitter = struct {
     current: ir.Ref = .none,
     /// A counter site detail that names a step of the operation (`list_set.old`), or null.
     count_detail: ?[]const u8 = null,
+    /// Scalar loads and stores are list element data: tag them by scalar type
+    /// (`element_tags`) instead of the generic `myl.data`.
+    element_tags: bool = false,
 
     const SourceScope = struct {
         definition: u32 = 0,
@@ -2407,9 +2442,11 @@ const FunctionEmitter = struct {
         const slot = try self.elementSlot(out, list, index, inst.ty);
         // A lent element (`lentElements`) is its slot: no copy.
         if (self.lent(self.current)) return out.print(self.a(), identity_line, .{ name, slot });
+        const saved = self.tagElements(true);
+        defer _ = self.tagElements(saved);
         if (inst.ty == .bool or inst.ty.isCompound()) return self.loadValue(out, inst.ty, slot, name);
         const stored = storageType(inst.ty);
-        try out.print(self.a(), "  {s} = load {s}, ptr {s}, align {d}{s}, " ++ tbaa_data ++ "\n", .{ name, stored, slot, elementSize(inst.ty), try self.loadRange(name, inst.ty) });
+        try out.print(self.a(), "  {s} = load {s}, ptr {s}, align {d}{s}, {s}\n", .{ name, stored, slot, elementSize(inst.ty), try self.loadRange(name, inst.ty), self.dataTag(stored) });
     }
 
     /// Trap unless `0 <= index < len(list)` (the index is unsigned here), for an exact check.
@@ -2507,6 +2544,21 @@ const FunctionEmitter = struct {
         return slot;
     }
 
+    /// The TBAA tag of a scalar load or store of LLVM type `storage`: its element tag
+    /// inside a list operation (`element_tags`), else the generic data tag.
+    fn dataTag(self: *const FunctionEmitter, storage: []const u8) []const u8 {
+        if (!self.element_tags) return tbaa_data;
+        for (element_tags) |entry| if (std.mem.eql(u8, entry.storage, storage)) return entry.tag;
+        return tbaa_data;
+    }
+
+    /// Enter (or, given the saved state, leave) a list operation's element accesses.
+    fn tagElements(self: *FunctionEmitter, on: bool) bool {
+        const saved = self.element_tags;
+        self.element_tags = on;
+        return saved;
+    }
+
     /// Load the memory image of a `ty` value at `ptr` into register value `result`: field
     /// by field for records and unions, so no aggregate load is emitted (§3).
     /// Load a typed value field by field from an operation sub-emitter slot.
@@ -2523,11 +2575,12 @@ const FunctionEmitter = struct {
         }
         if (value_type == .bool) {
             const byte = try self.fresh("%lb");
-            try out.print(self.a(), "  {s} = load i8, ptr {s}, align 1, " ++ tbaa_data ++ "\n  {s} = trunc i8 {s} to i1\n", .{ byte, ptr, result, byte });
+            try out.print(self.a(), "  {s} = load i8, ptr {s}, align 1, {s}\n  {s} = trunc i8 {s} to i1\n", .{ byte, ptr, self.dataTag("i8"), result, byte });
             return;
         }
         if (!value_type.isCompound() or m.isBlock(value_type) or m.kind(value_type) == .@"fn") {
-            try out.print(self.a(), "  {s} = load {s}, ptr {s}, align {d}, " ++ tbaa_data ++ "\n", .{ result, try self.ty(value_type), ptr, m.size(value_type) });
+            const llvm_type = try self.ty(value_type);
+            try out.print(self.a(), "  {s} = load {s}, ptr {s}, align {d}, {s}\n", .{ result, llvm_type, ptr, m.size(value_type), self.dataTag(llvm_type) });
             return;
         }
         const tyname = try self.ty(value_type);
@@ -2547,6 +2600,9 @@ const FunctionEmitter = struct {
                 }
             },
             .@"union" => {
+                // A union's tag and payload words keep the generic tag: the cases share them.
+                const saved = self.tagElements(false);
+                defer _ = self.tagElements(saved);
                 const layout = m.unionLayout(value_type);
                 if (layout.form == .niche) {
                     try out.print(self.a(), "  {s} = load ptr, ptr {s}, align 8, " ++ tbaa_data ++ "\n", .{ result, ptr });
@@ -2597,11 +2653,12 @@ const FunctionEmitter = struct {
         if (m.passedInMemory(value_type)) return self.copyBytes(out, ptr, text, m.size(value_type), false);
         if (value_type == .bool) {
             const byte = try self.fresh("%sb");
-            try out.print(self.a(), "  {s} = zext i1 {s} to i8\n  store i8 {s}, ptr {s}, align 1, " ++ tbaa_data ++ "\n", .{ byte, text, byte, ptr });
+            try out.print(self.a(), "  {s} = zext i1 {s} to i8\n  store i8 {s}, ptr {s}, align 1, {s}\n", .{ byte, text, byte, ptr, self.dataTag("i8") });
             return;
         }
         if (!value_type.isCompound() or m.isBlock(value_type) or m.kind(value_type) == .@"fn") {
-            try out.print(self.a(), "  store {s} {s}, ptr {s}, align {d}, " ++ tbaa_data ++ "\n", .{ try self.ty(value_type), text, ptr, m.size(value_type) });
+            const llvm_type = try self.ty(value_type);
+            try out.print(self.a(), "  store {s} {s}, ptr {s}, align {d}, {s}\n", .{ llvm_type, text, ptr, m.size(value_type), self.dataTag(llvm_type) });
             return;
         }
         const tyname = try self.ty(value_type);
@@ -2612,6 +2669,8 @@ const FunctionEmitter = struct {
                 try self.storeValue(out, field, field_value, try self.offsetPointer(out, ptr, m.fieldOffset(value_type, i)));
             },
             .@"union" => {
+                const saved = self.tagElements(false);
+                defer _ = self.tagElements(saved);
                 const layout = m.unionLayout(value_type);
                 if (layout.form == .niche) {
                     try out.print(self.a(), "  store ptr {s}, ptr {s}, align 8, " ++ tbaa_data ++ "\n", .{ text, ptr });
@@ -2670,6 +2729,8 @@ const FunctionEmitter = struct {
                 try self.storeOperand(out, field, operand, try self.offsetPointer(out, dst, m.fieldOffset(inst.ty, i)));
             },
             .union_make => {
+                const saved = self.tagElements(false);
+                defer _ = self.tagElements(saved);
                 try out.print(self.a(), "  store i64 {d}, ptr {s}, align 8, " ++ tbaa_data ++ "\n", .{ inst.data, dst });
                 if (inst.a == .none) return;
                 try self.storeOperand(out, m.compound(inst.ty).@"union"[@intCast(inst.data)], inst.a, try self.offsetPointer(out, dst, 8));
@@ -2862,11 +2923,15 @@ const FunctionEmitter = struct {
         const slot = try self.elementSlot(out, list, index, element);
         const managed = m.managed(element) and !flags.transferredSlot(self.function, inst);
         var held: std.ArrayList(Held) = .empty;
+        const saved = self.tagElements(true);
+        defer _ = self.tagElements(saved);
         // A counting build names a copy of the old element made to release it.
         self.count_detail = if (self.count_fn != null) "list_set.old" else null;
         if (managed) try self.holdManaged(out, element, slot, &held, null);
         self.count_detail = null;
         try self.storeOperand(out, element, self.function.operands(inst.data)[0], slot);
+        // The releases read their own blocks, not this element: generic tags again.
+        _ = self.tagElements(false);
         try self.releaseHeld(out, held.items);
         try out.print(self.a(), identity_line, .{ name, list });
     }
@@ -2884,12 +2949,16 @@ const FunctionEmitter = struct {
         const path = elements.setPath(self.function, inst) orelse return error.UnsupportedInstruction;
         const target = m.pathTarget(element, path) orelse return error.UnsupportedInstruction;
         const at = try self.offsetPointer(out, slot, target.offset);
+        const saved = self.tagElements(!m.pathCrossesUnion(element, path));
+        defer _ = self.tagElements(saved);
         var held: std.ArrayList(Held) = .empty;
         self.count_detail = if (self.count_fn != null) "list_set_field.old" else null;
         // A field a transferred read took over (`xs[i].items.append(v)`, CE2-B) is not released.
         if (!flags.transferredSlot(self.function, inst)) try self.holdManaged(out, target.ty, at, &held, null);
         self.count_detail = null;
         try self.storeOperand(out, target.ty, self.function.operands(inst.data)[0], at);
+        // The releases read their own blocks, not this element: generic tags again.
+        _ = self.tagElements(false);
         try self.releaseHeld(out, held.items);
         try out.print(self.a(), identity_line, .{ name, list });
     }
@@ -2913,6 +2982,8 @@ const FunctionEmitter = struct {
                 return;
             },
             .@"union" => |cases| {
+                const saved = self.tagElements(false);
+                defer _ = self.tagElements(saved);
                 const word = try self.fresh("%oldw");
                 const tag = try self.fresh("%oldt");
                 try out.print(self.a(), tag_load_line, .{ word, ptr, tag, word });
@@ -2980,6 +3051,8 @@ const FunctionEmitter = struct {
         const target = m.pathTarget(element, ir.FieldPath.unpack(inst.data)) orelse return error.UnsupportedInstruction;
         const at = try self.offsetPointer(out, slot, target.offset);
         if (target.tag_of == .void and self.lent(self.current)) return out.print(self.a(), identity_line, .{ name, at });
+        const saved = self.tagElements(!m.pathCrossesUnion(element, ir.FieldPath.unpack(inst.data)));
+        defer _ = self.tagElements(saved);
         if (target.tag_of == .void) return self.loadValue(out, target.ty, at, name);
         const layout = m.unionLayout(target.tag_of);
         const loaded = try self.fresh("%gt");
@@ -3379,10 +3452,12 @@ const FunctionEmitter = struct {
             if (self.state.options.verify) try self.assertFillRoom(out, name, len_at, len, inst);
         } else try out.print(self.a(), header_tagged_line, .{ len_at, name, len_offset, len, len_at });
         const slot = try self.elementSlot(out, name, len, element);
+        const saved = self.tagElements(true);
+        defer _ = self.tagElements(saved);
         if (element == .bool or element.isCompound()) {
             try self.storeOperand(out, element, inst.b, slot);
         } else {
-            try out.print(self.a(), "  store {s}, ptr {s}, align {d}, " ++ tbaa_data ++ "\n", .{ try self.typedValue(inst.b), slot, elementSize(element) });
+            try out.print(self.a(), "  store {s}, ptr {s}, align {d}, {s}\n", .{ try self.typedValue(inst.b), slot, elementSize(element), self.dataTag(storageType(element)) });
         }
         try out.print(self.a(), "  {s} = add nuw nsw i64 {s}, 1\n  store i64 {s}, ptr {s}, align 8, " ++ tbaa_header ++ "\n", .{ next, len, next, len_at });
     }
@@ -3683,7 +3758,11 @@ const Debug = struct {
 /// "allocation"): a small list taken from its size class's free list, a push into a
 /// list with room, and the free of a small block that holds no blocks. Everything
 /// else calls the runtime. Free-list accesses carry no TBAA tag; nothing is counted
-/// here (the leak check counts free-list entries at exit).
+/// here (the leak check counts free-list entries at exit). The inline free starts with
+/// a compiler barrier (an empty `asm` that clobbers memory, NEW-CORE-F1-TBAA-2): a block
+/// it frees may come back from the inline `myl_core_list_new` as a list of another
+/// element type, whose element tag says it cannot alias the old one's, so no access
+/// may move across the free.
 const runtime_fast_paths =
     \\@myl_core_free_lists = external global [33 x ptr]
     \\declare ptr @myl_core_list_new_slow(i64, i64) nounwind
@@ -3761,6 +3840,7 @@ const runtime_fast_paths =
     \\  %fast = and i1 %small, %plain
     \\  br i1 %fast, label %push, label %call, !prof !10
     \\push:
+    \\  call void asm sideeffect "", "~{memory}"()
     \\  %class = zext i32 %class32 to i64
     \\  %slot = getelementptr inbounds [33 x ptr], ptr @myl_core_free_lists, i64 0, i64 %class
     \\  %head = load ptr, ptr %slot, align 8

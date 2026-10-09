@@ -1,0 +1,132 @@
+module f1_tbaa
+
+# Element data tagged by scalar type (NEW-CORE-F1-TBAA-1, -2): adversarial shapes
+# where a wrong alias fact would change an answer. Every answer here is the base
+# compiler's (main cafe7fea7, one generic data tag).
+
+
+record P:
+    x: float
+    n: int
+
+
+union Num:
+    i: int,
+    f: float,
+    none
+
+
+record Holder:
+    tag: Num
+    weight: float
+
+
+# A list of records: an element copied whole, then a field of it and of the list read,
+# with field stores and whole-element stores interleaved.
+def records(rounds: int) -> int:
+    ps = [P(x=1.5, n=2), P(x=2.5, n=3), P(x=-1.0, n=7)]
+    total = 0
+    for k in range(rounds):
+        q = ps[k % 3]
+        ps[k % 3].x = q.x + 1.0
+        ps[k % 3].n = q.n + k
+        ps[(k + 1) % 3] = q
+        total = total + ps[0].n + int(ps[1].x * 10.0) + q.n
+    return total + int(ps[2].x * 100.0)
+
+
+# A list of unions whose cases put an int and a float in the same payload word.
+def unions(rounds: int) -> int:
+    xs = [Num.i(3), Num.f(0.5), Num.none, Num.i(-4)]
+    total = 0
+    for k in range(rounds):
+        i = k % 4
+        match xs[i]:
+            case Num.i(v):
+                xs[i] = Num.f(float(v) * 0.5)
+                total = total + v
+            case Num.f(v):
+                xs[i] = Num.i(int(v * 8.0))
+                total = total + int(v * 4.0)
+            case Num.none:
+                xs[i] = Num.i(k)
+    return total
+
+
+# Records holding a union, stored whole and read by field and by payload.
+def holders(rounds: int) -> int:
+    hs = [Holder(tag=Num.f(1.25), weight=2.0), Holder(tag=Num.i(5), weight=0.5)]
+    total = 0
+    for k in range(rounds):
+        h = hs[k % 2]
+        match h.tag:
+            case Num.i(v):
+                hs[k % 2] = Holder(tag=Num.f(float(v) + h.weight), weight=h.weight + 1.0)
+                total = total + v
+            case Num.f(v):
+                hs[k % 2] = Holder(tag=Num.i(int(v * 2.0)), weight=h.weight * 0.5)
+                total = total + int(v)
+            case Num.none:
+                total = total - 1
+        hs[k % 2].weight = hs[k % 2].weight + 0.25
+    return total + int(hs[0].weight * 100.0) + int(hs[1].weight * 100.0)
+
+
+# A list of floats and a list of lists in one loop: each float store sits between reads
+# of row pointers, row lengths and other rows' elements.
+def mixed(n: int) -> int:
+    grid = [[float(i * n + j) for j in range(n)] for i in range(n)]
+    flat = [0.5 for _ in range(n)]
+    for i in range(n):
+        for j in range(n):
+            flat[j] = flat[j] + grid[i][j]
+            grid[(i + 1) % n][j] = grid[i][j] * 0.5 + flat[j]
+            if j == 1:
+                grid[i] = [flat[k] for k in range(n)]
+    total = 0.0
+    for row in grid:
+        for v in row:
+            total = total + v
+    for v in flat:
+        total = total + v
+    return int(total)
+
+
+# A block freed and its memory reused for a list of another element type in one
+# function (same size class, so the inline allocator hands the block back).
+def churn(rounds: int) -> int:
+    total = 0
+    for r in range(rounds):
+        fs = [float(r) + 0.25, 1.5, 2.5, 3.5]
+        a = int(fs[0] * 4.0 + fs[3])
+        fs = []
+        ns = [r, r + 1, r + 2, r + 3]
+        b = ns[0] + ns[3]
+        ns = []
+        bs = [r % 2 == 0, True, False, r % 3 == 0]
+        c = 0
+        if bs[0]:
+            c = c + 1
+        if bs[3]:
+            c = c + 2
+        total = total + a + b + c + len(fs) + len(ns)
+    return total
+
+
+# Nested lists that alias by value: writing one copy's row leaves the other's alone.
+def nested(n: int) -> int:
+    a = [[float(i + j) for j in range(n)] for i in range(n)]
+    b = a
+    b[0][0] = 1000.0
+    c = a
+    for i in range(n):
+        for j in range(n):
+            c[i][j] = c[i][j] + a[j][i]
+    return int(a[0][0] * 10.0 + b[0][0] * 100.0 + c[0][0] + c[n - 1][0] * 7.0)
+
+
+def main(args: list[str], out: Stream) -> int:
+    rounds = 100 + len(args)
+    out.print(records(rounds), unions(rounds), holders(rounds))
+    out.print(mixed(6 + len(args)), churn(rounds), nested(5 + len(args)))
+    return 0
