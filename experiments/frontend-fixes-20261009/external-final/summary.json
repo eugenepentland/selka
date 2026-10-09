@@ -1,0 +1,82 @@
+{
+  "compiler_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fixes-20261009/zig-out/bin/mylang",
+  "compiler_sha256": "a156c8c0351757a787dc2cea9c54a6e8f2cba45432c1bb491b1f92d73969a923",
+  "corpora": {
+    "eda": {
+      "modes": {
+        "commands": 366,
+        "labels_sha256": "be274df591bf6270f125863439fc2345bde96018084f335369b96f8b13d6798a",
+        "module_mapping": "src. prefix",
+        "passed": 366
+      },
+      "native": {
+        "answers_sha256": "81b978be7504a675c20c18c6c1614aeb2fb6790f27e8f8892be6bf02dab00210",
+        "binary_sha256": "b5c907f7bf5dc5adc854fe2a936c343070052a5ef7fe014e01a18ffce570391d",
+        "binary_unchanged": true,
+        "build": {
+          "seconds": 30.421631413977593,
+          "status": 0,
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "case_membership_sha256": "e0d8351d52d653e4379ba6efc8115c5dacac2540ffceec7c4f2ed3e6eca4fa64",
+        "cases": 34,
+        "mismatches": [],
+        "passed": true,
+        "reference_answers_sha256": "81b978be7504a675c20c18c6c1614aeb2fb6790f27e8f8892be6bf02dab00210",
+        "reference_file_sha256": "0e5af1338a2f3b5ef95e577182a34cb6a6c915797252e9dfb347e544cb6bb77b"
+      }
+    },
+    "lox": {
+      "modes": {
+        "commands": 84,
+        "labels_sha256": "b2ca5cd8afc20cfd2931495f8bca8428293ba30a758335b0296bd31cfe511dcc",
+        "module_mapping": "identity",
+        "passed": 84
+      },
+      "native": {
+        "answers_sha256": "f54838f37be08689996e1008fe9130b1b3557beac19f7f608e7a246692de54f0",
+        "binary_sha256": "676d910fbc6dddad5a9fd512da421a6327dcf1cad6de818681fee294e54b9d82",
+        "binary_unchanged": true,
+        "build": {
+          "seconds": 8.641190852969885,
+          "status": 0,
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "case_membership_sha256": "ba7897eaf08221d2832c01c9d7cf90b9b401c0fcabd4bf6660d9093711b80d0a",
+        "cases": 974,
+        "mismatches": [],
+        "passed": true,
+        "reference_answers_sha256": "f54838f37be08689996e1008fe9130b1b3557beac19f7f608e7a246692de54f0",
+        "reference_file_sha256": "279768e8be1785480e80e5be3b4d942def54a2af686688a5e2c79f7f15dbdf6e"
+      }
+    }
+  },
+  "historical_runner_sha256": {
+    "qualify_modes.py": "c95c911f44c93cbfff8fee3b12399dc8e8378b9df6a8aa1b1a084c01d0d0c86b",
+    "tools/frontend_external_oracle.py": "b9efd864a0a7cb1a1ccc986581057cc72a9a35ce448e371f31cd24d11f2117e5"
+  },
+  "qualified": true,
+  "reference_commit": "0bbfeb740",
+  "reference_root": "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-integration/experiments/frontend-current-lang-oracle-20261008",
+  "runner_sha256": "a232ed5adbdac2e818dbdacb937edd2b56fd623f696c4a9d5612c07ad1d8c81b",
+  "source_commit": "cb7906d331e8799a8fe84f8b28f6336283ee2270",
+  "source_guard": {
+    "build_unchanged": true,
+    "compiler_unchanged": true,
+    "production_inventory_sha256": "e8745503320fbd2b87503f152a9d78bc6977720e5007a322c1fd264a56f5c956",
+    "production_unchanged": true,
+    "runner_unchanged": true,
+    "source_inventories_sha256": {
+      "eda": "c1c9a883cd07872be68da1b4fbf53c6903fd39ddc0b6ea1baf689f0047040eb0",
+      "lox": "56eb238f20fdb90787f5331ba371dc38debe3aa757be18f4c2ff874f2e579d4d"
+    },
+    "sources_match_frozen_reference": true,
+    "sources_unchanged": true
+  },
+  "source_roots": {
+    "eda": "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda",
+    "lox": "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/lox"
+  }
+}

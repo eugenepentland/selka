@@ -771,5 +771,35 @@
     "failures": [],
     "log_sha256": "a1131fa439bdccfd3abc7d37ed12753df9e6dfadbbf05073d300f3496e494711",
     "log_bytes": 395103
+  },
+  {
+    "phase": "final-full",
+    "command": "scripts/build-slot.sh gate zig build test --summary all",
+    "source_commit": "350a9e05786b8d4f8b69335069b5f3f75964915b",
+    "status": 0,
+    "summary": "Build Summary: 95/95 steps succeeded; 600/4800 tests passed (4200 skipped)",
+    "test_verdicts": {
+      "passed": 600,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "258343eb9e76aeeaa51c0454e1b7962b160e9ec0b81025470c69046c3f133e0a",
+    "log_bytes": 316899
+  },
+  {
+    "phase": "final-format-after-harness",
+    "command": "scripts/build-slot.sh gate zig build fmt-check --summary all",
+    "source_commit": "350a9e05786b8d4f8b69335069b5f3f75964915b",
+    "status": 0,
+    "summary": "Build Summary: 15/15 steps succeeded",
+    "test_verdicts": {
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "9086fecea8391caba3f3ff4ec6968ee522aa9ca6f1e237015d9807998c955f56",
+    "log_bytes": 1972
   }
 ]

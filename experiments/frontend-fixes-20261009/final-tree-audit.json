@@ -1,0 +1,18 @@
+{
+  "source_commit": "350a9e05786b8d4f8b69335069b5f3f75964915b",
+  "branch": "codex/frontend-fixes-20261009",
+  "main": "b51a43b76b29e4e01fe482e3e5d017c782814b3a",
+  "plan_base": "b52b6edb2602f73ef02c750ba2678419cc6d3bea",
+  "plan_base_is_ancestor": true,
+  "protected_files_unmodified_by_task": true,
+  "guardian_policy_and_baselines_unchanged": true,
+  "production_unchanged_since_external_qualification": true,
+  "compiler_sha256": "a156c8c0351757a787dc2cea9c54a6e8f2cba45432c1bb491b1f92d73969a923",
+  "source_files": 622,
+  "source_inventory_sha256": "c8d4df58dd914033c3fd639a8874bdbb88db571b1cff95e6bea9240a4bf04925",
+  "archived_files": 35,
+  "archived_bytes": 2208312,
+  "dangling_archived_report_links": [],
+  "frozen_s5_reference_sha256": "b6703c9fc0f135844131130cab4c0c8e263d2966ac5e85d24d380ae5deece3bc",
+  "guardian_feedback_commit": "0f21bd84ae75f7dd03b962a3f0b4eed57763640f"
+}
