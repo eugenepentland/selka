@@ -1,0 +1,3466 @@
+fn main() -> i64
+b0:
+  %0 = call bool test_nested_scalar_writes_keep_the_original_snapshot()
+  branch %0, b2, b1
+b1: ; preds b0
+  unreachable
+b2: ; preds b0
+  %3 = call bool test_callback_publication_keeps_full_pending_receiver_pins()
+  branch %3, b4, b3
+b3: ; preds b2
+  unreachable
+b4: ; preds b2
+  %6 = call bool test_managed_publication_still_establishes_independent_values()
+  branch %6, b6, b5
+b5: ; preds b4
+  unreachable
+b6: ; preds b4
+  %9 = call bool test_conditional_indices_and_zero_iterations_preserve_owners()
+  branch %9, b8, b7
+b7: ; preds b6
+  unreachable
+b8: ; preds b6
+  %12 = call bool test_three_level_shared_projection_keeps_named_row_and_outer_snapshot()
+  branch %12, b10, b9
+b9: ; preds b8
+  unreachable
+b10: ; preds b8
+  %15 = call bool test_plain_record_writes_keep_snapshot_and_negative_index()
+  branch %15, b12, b11
+b11: ; preds b10
+  unreachable
+b12: ; preds b10
+  %18 = call bool test_plain_record_call_finishes_before_selection_and_keeps_snapshot()
+  branch %18, b14, b13
+b13: ; preds b12
+  unreachable
+b14: ; preds b12
+  ret 0:i64
+fn test_nested_scalar_writes_keep_the_original_snapshot() -> bool
+b0:
+  %1 = list_new list[list[i64]] 2:i64
+  %3 = list_new list[i64] 2:i64
+  %5 = list_push list[i64] %3, 1:i64
+  %7 = list_push list[i64] %5, 2:i64
+  %8 = list_push list[list[i64]] %1, %7
+  %10 = list_new list[i64] 2:i64
+  %12 = list_push list[i64] %10, 3:i64
+  %14 = list_push list[i64] %12, 4:i64
+  %15 = list_push list[list[i64]] %8, %14
+  jump b66
+b1: ; preds b108 b3
+  %19 = phi i64 0:i64, %91
+  %23 = phi list[list[i64]] %15, %84
+  %21 = cmp.lt bool %19, 20:i64
+  branch %21, b2, b4
+b2: ; preds b1
+  jump b44
+b3: ; preds b189
+  %91 = add.exact i64 %19, 1:i64
+  jump b1
+b4: ; preds b1 b49 b69 b89 b109 b129 b149 b169
+  %357 = phi list[list[i64]] %23, %257, %363, %468, %573, %678, %783, %888
+  %98 = list_new list[list[i64]] 2:i64
+  %100 = list_new list[i64] 2:i64
+  %102 = list_push list[i64] %100, 1:i64
+  %104 = list_push list[i64] %102, 21:i64
+  %105 = list_push list[list[i64]] %98, %104
+  %107 = list_new list[i64] 2:i64
+  %109 = list_push list[i64] %107, 3:i64
+  %111 = list_push list[i64] %109, 19:i64
+  %112 = list_push list[list[i64]] %105, %111
+  %113 = list_len u64 %357
+  %114 = list_len u64 %112
+  %115 = iconst bool 1
+  branch 1:bool, b15, b237
+b5: ; preds b43
+  %32 = list_len u64 %251
+  %33 = convert.exact i64 %32
+  %34 = add.exact i64 %33, %28
+  jump b6
+b6: ; preds b43 b5
+  %36 = phi i64 %28, %34
+  %38 = list_get.exact list[i64] %251, %36
+  %40 = neg.exact i64 1:i64
+  %42 = cmp.lt bool %40, 0:i64
+  branch %42, b7, b8
+b7: ; preds b6
+  %44 = list_len u64 %38
+  %45 = convert.exact i64 %44
+  %46 = add.exact i64 %45, %40
+  jump b8
+b8: ; preds b6 b7
+  %48 = phi i64 %40, %46
+  %50 = list_get.exact i64 %38, %48
+  %52 = add.exact i64 %50, 2:i64
+  %57 = cmp.lt bool 0:i64, 0:i64
+  branch 0:bool, b9, b10
+b9: ; preds b8
+  %59 = list_len u64 %251
+  %60 = convert.exact i64 %59
+  %61 = add.exact i64 %60, 0:i64
+  jump b10
+b10: ; preds b8 b9
+  %63 = phi i64 0:i64, %61
+  %65 = list_get.exact list[i64] %251, %63
+  %67 = neg.exact i64 1:i64
+  %69 = cmp.lt bool %67, 0:i64
+  branch %69, b11, b12
+b11: ; preds b10
+  %71 = list_len u64 %65
+  %72 = convert.exact i64 %71
+  %73 = add.exact i64 %72, %67
+  jump b12
+b12: ; preds b10 b11
+  %75 = phi i64 %67, %73
+  %82 = list_get.exact list[i64] %251, %63
+  %990 = is_unique bool %82
+  branch %990, b189, b190
+b13: ; preds b15 b25
+  %119 = phi u64 0:u64, %147
+  %162 = phi list[list[i64]] %15, %162
+  %120 = cmp.lt bool %119, %113
+  branch %120, b16, b17
+b14: ; preds b237 b26 b17
+  %153 = phi bool 1:bool, 0:bool, 1:bool
+  %155 = phi list[list[i64]] %15, %162, %162
+  branch %153, b27, b238
+b15: ; preds b4
+  jump b13
+b16: ; preds b13
+  %122 = list_get list[i64] %357, %119
+  %123 = list_get list[i64] %112, %119
+  %124 = list_len u64 %122
+  %125 = list_len u64 %123
+  %126 = cmp.eq bool %124, %125
+  branch %126, b20, b19
+b17: ; preds b13
+  release %112
+  release %357
+  jump b14
+b18: ; preds b20 b23
+  %130 = phi u64 0:u64, %138
+  %131 = cmp.lt bool %130, %124
+  branch %131, b21, b22
+b19: ; preds b16 b24 b22
+  %144 = phi bool %126, 0:bool, 1:bool
+  branch %144, b25, b26
+b20: ; preds b16
+  jump b18
+b21: ; preds b18
+  %133 = list_get i64 %122, %130
+  %134 = list_get i64 %123, %130
+  %135 = cmp.eq bool %133, %134
+  branch %135, b23, b24
+b22: ; preds b18
+  jump b19
+b23: ; preds b21
+  %138 = add u64 %130, 1:u64
+  jump b18
+b24: ; preds b21
+  jump b19
+b25: ; preds b19
+  %147 = add u64 %119, 1:u64
+  jump b13
+b26: ; preds b19
+  release %112
+  release %357
+  jump b14
+b27: ; preds b14
+  %165 = list_new list[list[i64]] 2:i64
+  %167 = list_new list[i64] 2:i64
+  %169 = list_push list[i64] %167, 1:i64
+  %171 = list_push list[i64] %169, 2:i64
+  %172 = list_push list[list[i64]] %165, %171
+  %174 = list_new list[i64] 2:i64
+  %176 = list_push list[i64] %174, 3:i64
+  %178 = list_push list[i64] %176, 4:i64
+  %179 = list_push list[list[i64]] %172, %178
+  %180 = list_len u64 %155
+  %181 = list_len u64 %179
+  %182 = iconst bool 1
+  branch 1:bool, b31, b239
+b28: ; preds b238 b30
+  %222 = phi bool %153, %220
+  ret %222
+b29: ; preds b31 b41
+  %186 = phi u64 0:u64, %214
+  %187 = cmp.lt bool %186, %180
+  branch %187, b32, b33
+b30: ; preds b239 b42 b33
+  %220 = phi bool 1:bool, 0:bool, 1:bool
+  jump b28
+b31: ; preds b27
+  jump b29
+b32: ; preds b29
+  %189 = list_get list[i64] %155, %186
+  %190 = list_get list[i64] %179, %186
+  %191 = list_len u64 %189
+  %192 = list_len u64 %190
+  %193 = cmp.eq bool %191, %192
+  branch %193, b36, b35
+b33: ; preds b29
+  release %155
+  release %179
+  jump b30
+b34: ; preds b36 b39
+  %197 = phi u64 0:u64, %205
+  %198 = cmp.lt bool %197, %191
+  branch %198, b37, b38
+b35: ; preds b32 b40 b38
+  %211 = phi bool %193, 0:bool, 1:bool
+  branch %211, b41, b42
+b36: ; preds b32
+  jump b34
+b37: ; preds b34
+  %200 = list_get i64 %189, %197
+  %201 = list_get i64 %190, %197
+  %202 = cmp.eq bool %200, %201
+  branch %202, b39, b40
+b38: ; preds b34
+  jump b35
+b39: ; preds b37
+  %205 = add u64 %197, 1:u64
+  jump b34
+b40: ; preds b37
+  jump b35
+b41: ; preds b35
+  %214 = add u64 %186, 1:u64
+  jump b29
+b42: ; preds b35
+  release %155
+  release %179
+  jump b30
+b43: ; preds b193
+  %28 = neg.exact i64 1:i64
+  %30 = cmp.lt bool %28, 0:i64
+  branch %30, b5, b6
+b44: ; preds b2
+  %225 = cmp.lt bool -1:i64, 0:i64
+  branch 0:bool, b45, b46
+b45: ; preds b44
+  %227 = list_len u64 %23
+  %228 = convert.exact i64 %227
+  %229 = add.exact i64 %228, -1:i64
+  jump b46
+b46: ; preds b44 b45
+  %231 = phi i64 -1:i64, %229
+  %233 = list_get.exact list[i64] %23, %231
+  %236 = cmp.lt bool -1:i64, 0:i64
+  branch 0:bool, b47, b48
+b47: ; preds b46
+  %238 = list_len u64 %233
+  %239 = convert.exact i64 %238
+  %240 = add.exact i64 %239, -1:i64
+  jump b48
+b48: ; preds b46 b47
+  %242 = phi i64 -1:i64, %240
+  %997 = is_unique bool %23
+  branch %997, b191, b192
+b49: ; preds b148 b51
+  %254 = phi i64 0:i64, %261
+  %257 = phi list[list[i64]] %15, %320
+  %258 = cmp.lt bool %254, 20:i64
+  branch %258, b50, b4
+b50: ; preds b49
+  jump b61
+b51: ; preds b195
+  %261 = add.exact i64 %254, 1:i64
+  jump b49
+b52: ; preds b60
+  %263 = list_len u64 %351
+  %264 = convert.exact i64 %263
+  %265 = add.exact i64 %264, %323
+  jump b53
+b53: ; preds b60 b52
+  %267 = phi i64 %323, %265
+  %273 = list_get.exact list[i64] %351, %267
+  %274 = neg.exact i64 1:i64
+  %275 = cmp.lt bool %274, 0:i64
+  branch %275, b54, b55
+b54: ; preds b53
+  %277 = list_len u64 %273
+  %278 = convert.exact i64 %277
+  %279 = add.exact i64 %278, %274
+  jump b55
+b55: ; preds b53 b54
+  %281 = phi i64 %274, %279
+  %287 = list_get.exact i64 %273, %281
+  %288 = add.exact i64 %287, 2:i64
+  %289 = cmp.lt bool 0:i64, 0:i64
+  branch 0:bool, b56, b57
+b56: ; preds b55
+  %291 = list_len u64 %351
+  %292 = convert.exact i64 %291
+  %293 = add.exact i64 %292, 0:i64
+  jump b57
+b57: ; preds b55 b56
+  %295 = phi i64 0:i64, %293
+  %302 = list_get.exact list[i64] %351, %295
+  %303 = neg.exact i64 1:i64
+  %304 = cmp.lt bool %303, 0:i64
+  branch %304, b58, b59
+b58: ; preds b57
+  %306 = list_len u64 %302
+  %307 = convert.exact i64 %306
+  %308 = add.exact i64 %307, %303
+  jump b59
+b59: ; preds b57 b58
+  %310 = phi i64 %303, %308
+  %318 = list_get.exact list[i64] %351, %295
+  %1011 = is_unique bool %318
+  branch %1011, b195, b196
+b60: ; preds b199
+  %323 = neg.exact i64 1:i64
+  %324 = cmp.lt bool %323, 0:i64
+  branch %324, b52, b53
+b61: ; preds b50
+  %326 = cmp.lt bool -1:i64, 0:i64
+  branch 1:bool, b62, b63
+b62: ; preds b61
+  %328 = list_len u64 %257
+  %329 = convert.exact i64 %328
+  %330 = add.exact i64 %329, -1:i64
+  jump b63
+b63: ; preds b61 b62
+  %332 = phi i64 -1:i64, %330
+  %337 = list_get.exact list[i64] %257, %332
+  %338 = cmp.lt bool -1:i64, 0:i64
+  branch 0:bool, b64, b65
+b64: ; preds b63
+  %340 = list_len u64 %337
+  %341 = convert.exact i64 %340
+  %342 = add.exact i64 %341, -1:i64
+  jump b65
+b65: ; preds b63 b64
+  %344 = phi i64 -1:i64, %342
+  %1018 = is_unique bool %257
+  branch %1018, b197, b198
+b66: ; preds b0
+  %353 = iconst bool 1
+  branch 1:bool, b67, b68
+b67: ; preds b66
+  jump b126
+b68: ; preds b66
+  jump b86
+b69: ; preds b168 b71
+  %360 = phi i64 0:i64, %367
+  %363 = phi list[list[i64]] %15, %426
+  %364 = cmp.lt bool %360, 20:i64
+  branch %364, b70, b4
+b70: ; preds b69
+  jump b81
+b71: ; preds b201
+  %367 = add.exact i64 %360, 1:i64
+  jump b69
+b72: ; preds b80
+  %369 = list_len u64 %457
+  %370 = convert.exact i64 %369
+  %371 = add.exact i64 %370, %429
+  jump b73
+b73: ; preds b80 b72
+  %373 = phi i64 %429, %371
+  %379 = list_get.exact list[i64] %457, %373
+  %380 = neg.exact i64 1:i64
+  %381 = cmp.lt bool %380, 0:i64
+  branch %381, b74, b75
+b74: ; preds b73
+  %383 = list_len u64 %379
+  %384 = convert.exact i64 %383
+  %385 = add.exact i64 %384, %380
+  jump b75
+b75: ; preds b73 b74
+  %387 = phi i64 %380, %385
+  %393 = list_get.exact i64 %379, %387
+  %394 = add.exact i64 %393, 2:i64
+  %395 = cmp.lt bool 0:i64, 0:i64
+  branch 0:bool, b76, b77
+b76: ; preds b75
+  %397 = list_len u64 %457
+  %398 = convert.exact i64 %397
+  %399 = add.exact i64 %398, 0:i64
+  jump b77
+b77: ; preds b75 b76
+  %401 = phi i64 0:i64, %399
+  %408 = list_get.exact list[i64] %457, %401
+  %409 = neg.exact i64 1:i64
+  %410 = cmp.lt bool %409, 0:i64
+  branch %410, b78, b79
+b78: ; preds b77
+  %412 = list_len u64 %408
+  %413 = convert.exact i64 %412
+  %414 = add.exact i64 %413, %409
+  jump b79
+b79: ; preds b77 b78
+  %416 = phi i64 %409, %414
+  %424 = list_get.exact list[i64] %457, %401
+  %1032 = is_unique bool %424
+  branch %1032, b201, b202
+b80: ; preds b205
+  %429 = neg.exact i64 1:i64
+  %430 = cmp.lt bool %429, 0:i64
+  branch %430, b72, b73
+b81: ; preds b70
+  %432 = cmp.lt bool -1:i64, 0:i64
+  branch 0:bool, b82, b83
+b82: ; preds b81
+  %434 = list_len u64 %363
+  %435 = convert.exact i64 %434
+  %436 = add.exact i64 %435, -1:i64
+  jump b83
+b83: ; preds b81 b82
+  %438 = phi i64 -1:i64, %436
+  %443 = list_get.exact list[i64] %363, %438
+  %444 = cmp.lt bool -1:i64, 0:i64
+  branch 1:bool, b84, b85
+b84: ; preds b83
+  %446 = list_len u64 %443
+  %447 = convert.exact i64 %446
+  %448 = add.exact i64 %447, -1:i64
+  jump b85
+b85: ; preds b83 b84
+  %450 = phi i64 -1:i64, %448
+  %1039 = is_unique bool %363
+  branch %1039, b203, b204
+b86: ; preds b68
+  %459 = cmp.lt bool -1:i64, 0:i64
+  branch %459, b87, b88
+b87: ; preds b86
+  jump b166
+b88: ; preds b86
+  jump b106
+b89: ; preds b107 b91
+  %465 = phi i64 0:i64, %472
+  %468 = phi list[list[i64]] %15, %531
+  %469 = cmp.lt bool %465, 20:i64
+  branch %469, b90, b4
+b90: ; preds b89
+  jump b101
+b91: ; preds b207
+  %472 = add.exact i64 %465, 1:i64
+  jump b89
+b92: ; preds b100
+  %474 = list_len u64 %562
+  %475 = convert.exact i64 %474
+  %476 = add.exact i64 %475, %534
+  jump b93
+b93: ; preds b100 b92
+  %478 = phi i64 %534, %476
+  %484 = list_get.exact list[i64] %562, %478
+  %485 = neg.exact i64 1:i64
+  %486 = cmp.lt bool %485, 0:i64
+  branch %486, b94, b95
+b94: ; preds b93
+  %488 = list_len u64 %484
+  %489 = convert.exact i64 %488
+  %490 = add.exact i64 %489, %485
+  jump b95
+b95: ; preds b93 b94
+  %492 = phi i64 %485, %490
+  %498 = list_get.exact i64 %484, %492
+  %499 = add.exact i64 %498, 2:i64
+  %500 = cmp.lt bool 0:i64, 0:i64
+  branch 1:bool, b96, b97
+b96: ; preds b95
+  %502 = list_len u64 %562
+  %503 = convert.exact i64 %502
+  %504 = add.exact i64 %503, 0:i64
+  jump b97
+b97: ; preds b95 b96
+  %506 = phi i64 0:i64, %504
+  %513 = list_get.exact list[i64] %562, %506
+  %514 = neg.exact i64 1:i64
+  %515 = cmp.lt bool %514, 0:i64
+  branch %515, b98, b99
+b98: ; preds b97
+  %517 = list_len u64 %513
+  %518 = convert.exact i64 %517
+  %519 = add.exact i64 %518, %514
+  jump b99
+b99: ; preds b97 b98
+  %521 = phi i64 %514, %519
+  %529 = list_get.exact list[i64] %562, %506
+  %1053 = is_unique bool %529
+  branch %1053, b207, b208
+b100: ; preds b211
+  %534 = neg.exact i64 1:i64
+  %535 = cmp.lt bool %534, 0:i64
+  branch %535, b92, b93
+b101: ; preds b90
+  %537 = cmp.lt bool -1:i64, 0:i64
+  branch 0:bool, b102, b103
+b102: ; preds b101
+  %539 = list_len u64 %468
+  %540 = convert.exact i64 %539
+  %541 = add.exact i64 %540, -1:i64
+  jump b103
+b103: ; preds b101 b102
+  %543 = phi i64 -1:i64, %541
+  %548 = list_get.exact list[i64] %468, %543
+  %549 = cmp.lt bool -1:i64, 0:i64
+  branch 0:bool, b104, b105
+b104: ; preds b103
+  %551 = list_len u64 %548
+  %552 = convert.exact i64 %551
+  %553 = add.exact i64 %552, -1:i64
+  jump b105
+b105: ; preds b103 b104
+  %555 = phi i64 -1:i64, %553
+  %1060 = is_unique bool %468
+  branch %1060, b209, b210
+b106: ; preds b88
+  %564 = cmp.lt bool 0:i64, 0:i64
+  branch %564, b107, b108
+b107: ; preds b106
+  retain %15
+  jump b89
+b108: ; preds b106
+  retain %15
+  jump b1
+b109: ; preds b188 b111
+  %570 = phi i64 0:i64, %577
+  %573 = phi list[list[i64]] %15, %636
+  %574 = cmp.lt bool %570, 20:i64
+  branch %574, b110, b4
+b110: ; preds b109
+  jump b121
+b111: ; preds b213
+  %577 = add.proven i64 %570, 1:i64
+  jump b109
+b112: ; preds b120
+  %579 = list_len u64 %667
+  %580 = convert.proven i64 %579
+  %581 = add.proven i64 %580, %639
+  jump b113
+b113: ; preds b120 b112
+  %583 = phi i64 %639, %581
+  %589 = list_get.exact list[i64] %667, %583
+  %590 = neg.proven i64 1:i64
+  %591 = cmp.lt bool %590, 0:i64
+  branch %591, b114, b115
+b114: ; preds b113
+  %593 = list_len u64 %589
+  %594 = convert.proven i64 %593
+  %595 = add.proven i64 %594, %590
+  jump b115
+b115: ; preds b113 b114
+  %597 = phi i64 %590, %595
+  %603 = list_get.exact i64 %589, %597
+  %604 = add.exact i64 %603, 2:i64
+  %605 = iconst bool 0
+  branch 0:bool, b116, b117
+b116: ; preds b115
+  %607 = list_len u64 %667
+  %608 = convert.exact i64 %607
+  %609 = add.exact i64 %608, 0:i64
+  jump b117
+b117: ; preds b115 b116
+  %611 = phi i64 0:i64, %609
+  %618 = list_get.proven list[i64] %667, %611
+  %619 = neg.proven i64 1:i64
+  %620 = cmp.lt bool %619, 0:i64
+  branch %620, b118, b119
+b118: ; preds b117
+  %622 = list_len u64 %618
+  %623 = convert.proven i64 %622
+  %624 = add.proven i64 %623, %619
+  jump b119
+b119: ; preds b117 b118
+  %626 = phi i64 %619, %624
+  %634 = list_get.proven list[i64] %667, %611
+  %1074 = is_unique bool %634
+  branch %1074, b213, b214
+b120: ; preds b217
+  %639 = neg.proven i64 1:i64
+  %640 = cmp.lt bool %639, 0:i64
+  branch %640, b112, b113
+b121: ; preds b110
+  %642 = iconst bool 1
+  branch 1:bool, b122, b123
+b122: ; preds b121
+  %644 = list_len u64 %573
+  %645 = convert.proven i64 %644
+  %646 = add.proven i64 %645, -1:i64
+  jump b123
+b123: ; preds b121 b122
+  %648 = phi i64 -1:i64, %646
+  %653 = list_get.proven list[i64] %573, %648
+  %654 = iconst bool 1
+  branch 1:bool, b124, b125
+b124: ; preds b123
+  %656 = list_len u64 %653
+  %657 = convert.proven i64 %656
+  %658 = add.proven i64 %657, -1:i64
+  jump b125
+b125: ; preds b123 b124
+  %660 = phi i64 -1:i64, %658
+  %1081 = is_unique bool %573
+  branch %1081, b215, b216
+b126: ; preds b67
+  %669 = iconst bool 1
+  branch 1:bool, b127, b128
+b127: ; preds b126
+  jump b186
+b128: ; preds b126
+  jump b146
+b129: ; preds b147 b131
+  %675 = phi i64 0:i64, %682
+  %678 = phi list[list[i64]] %15, %741
+  %679 = cmp.lt bool %675, 20:i64
+  branch %679, b130, b4
+b130: ; preds b129
+  jump b141
+b131: ; preds b219
+  %682 = add.exact i64 %675, 1:i64
+  jump b129
+b132: ; preds b140
+  %684 = list_len u64 %772
+  %685 = convert.exact i64 %684
+  %686 = add.exact i64 %685, %744
+  jump b133
+b133: ; preds b140 b132
+  %688 = phi i64 %744, %686
+  %694 = list_get.exact list[i64] %772, %688
+  %695 = neg.exact i64 1:i64
+  %696 = cmp.lt bool %695, 0:i64
+  branch %696, b134, b135
+b134: ; preds b133
+  %698 = list_len u64 %694
+  %699 = convert.exact i64 %698
+  %700 = add.exact i64 %699, %695
+  jump b135
+b135: ; preds b133 b134
+  %702 = phi i64 %695, %700
+  %708 = list_get.exact i64 %694, %702
+  %709 = add.exact i64 %708, 2:i64
+  %710 = cmp.lt bool 0:i64, 0:i64
+  branch 1:bool, b136, b137
+b136: ; preds b135
+  %712 = list_len u64 %772
+  %713 = convert.exact i64 %712
+  %714 = add.exact i64 %713, 0:i64
+  jump b137
+b137: ; preds b135 b136
+  %716 = phi i64 0:i64, %714
+  %723 = list_get.exact list[i64] %772, %716
+  %724 = neg.exact i64 1:i64
+  %725 = cmp.lt bool %724, 0:i64
+  branch %725, b138, b139
+b138: ; preds b137
+  %727 = list_len u64 %723
+  %728 = convert.exact i64 %727
+  %729 = add.exact i64 %728, %724
+  jump b139
+b139: ; preds b137 b138
+  %731 = phi i64 %724, %729
+  %739 = list_get.exact list[i64] %772, %716
+  %1095 = is_unique bool %739
+  branch %1095, b219, b220
+b140: ; preds b223
+  %744 = neg.exact i64 1:i64
+  %745 = cmp.lt bool %744, 0:i64
+  branch %745, b132, b133
+b141: ; preds b130
+  %747 = cmp.lt bool -1:i64, 0:i64
+  branch 1:bool, b142, b143
+b142: ; preds b141
+  %749 = list_len u64 %678
+  %750 = convert.exact i64 %749
+  %751 = add.exact i64 %750, -1:i64
+  jump b143
+b143: ; preds b141 b142
+  %753 = phi i64 -1:i64, %751
+  %758 = list_get.exact list[i64] %678, %753
+  %759 = cmp.lt bool -1:i64, 0:i64
+  branch 0:bool, b144, b145
+b144: ; preds b143
+  %761 = list_len u64 %758
+  %762 = convert.exact i64 %761
+  %763 = add.exact i64 %762, -1:i64
+  jump b145
+b145: ; preds b143 b144
+  %765 = phi i64 -1:i64, %763
+  %1102 = is_unique bool %678
+  branch %1102, b221, b222
+b146: ; preds b128
+  %774 = cmp.lt bool 0:i64, 0:i64
+  branch %774, b147, b148
+b147: ; preds b146
+  retain %15
+  jump b129
+b148: ; preds b146
+  retain %15
+  jump b49
+b149: ; preds b167 b151
+  %780 = phi i64 0:i64, %787
+  %783 = phi list[list[i64]] %15, %846
+  %784 = cmp.lt bool %780, 20:i64
+  branch %784, b150, b4
+b150: ; preds b149
+  jump b161
+b151: ; preds b225
+  %787 = add.exact i64 %780, 1:i64
+  jump b149
+b152: ; preds b160
+  %789 = list_len u64 %877
+  %790 = convert.exact i64 %789
+  %791 = add.exact i64 %790, %849
+  jump b153
+b153: ; preds b160 b152
+  %793 = phi i64 %849, %791
+  %799 = list_get.exact list[i64] %877, %793
+  %800 = neg.exact i64 1:i64
+  %801 = cmp.lt bool %800, 0:i64
+  branch %801, b154, b155
+b154: ; preds b153
+  %803 = list_len u64 %799
+  %804 = convert.exact i64 %803
+  %805 = add.exact i64 %804, %800
+  jump b155
+b155: ; preds b153 b154
+  %807 = phi i64 %800, %805
+  %813 = list_get.exact i64 %799, %807
+  %814 = add.exact i64 %813, 2:i64
+  %815 = cmp.lt bool 0:i64, 0:i64
+  branch 1:bool, b156, b157
+b156: ; preds b155
+  %817 = list_len u64 %877
+  %818 = convert.exact i64 %817
+  %819 = add.exact i64 %818, 0:i64
+  jump b157
+b157: ; preds b155 b156
+  %821 = phi i64 0:i64, %819
+  %828 = list_get.exact list[i64] %877, %821
+  %829 = neg.exact i64 1:i64
+  %830 = cmp.lt bool %829, 0:i64
+  branch %830, b158, b159
+b158: ; preds b157
+  %832 = list_len u64 %828
+  %833 = convert.exact i64 %832
+  %834 = add.exact i64 %833, %829
+  jump b159
+b159: ; preds b157 b158
+  %836 = phi i64 %829, %834
+  %844 = list_get.exact list[i64] %877, %821
+  %1116 = is_unique bool %844
+  branch %1116, b225, b226
+b160: ; preds b229
+  %849 = neg.exact i64 1:i64
+  %850 = cmp.lt bool %849, 0:i64
+  branch %850, b152, b153
+b161: ; preds b150
+  %852 = cmp.lt bool -1:i64, 0:i64
+  branch 0:bool, b162, b163
+b162: ; preds b161
+  %854 = list_len u64 %783
+  %855 = convert.exact i64 %854
+  %856 = add.exact i64 %855, -1:i64
+  jump b163
+b163: ; preds b161 b162
+  %858 = phi i64 -1:i64, %856
+  %863 = list_get.exact list[i64] %783, %858
+  %864 = cmp.lt bool -1:i64, 0:i64
+  branch 1:bool, b164, b165
+b164: ; preds b163
+  %866 = list_len u64 %863
+  %867 = convert.exact i64 %866
+  %868 = add.exact i64 %867, -1:i64
+  jump b165
+b165: ; preds b163 b164
+  %870 = phi i64 -1:i64, %868
+  %1123 = is_unique bool %783
+  branch %1123, b227, b228
+b166: ; preds b87
+  %879 = cmp.lt bool 0:i64, 0:i64
+  branch %879, b167, b168
+b167: ; preds b166
+  retain %15
+  jump b149
+b168: ; preds b166
+  retain %15
+  jump b69
+b169: ; preds b187 b171
+  %885 = phi i64 0:i64, %892
+  %888 = phi list[list[i64]] %15, %951
+  %889 = cmp.lt bool %885, 20:i64
+  branch %889, b170, b4
+b170: ; preds b169
+  jump b181
+b171: ; preds b231
+  %892 = add.exact i64 %885, 1:i64
+  jump b169
+b172: ; preds b180
+  %894 = list_len u64 %982
+  %895 = convert.exact i64 %894
+  %896 = add.exact i64 %895, %954
+  jump b173
+b173: ; preds b180 b172
+  %898 = phi i64 %954, %896
+  %904 = list_get.exact list[i64] %982, %898
+  %905 = neg.exact i64 1:i64
+  %906 = cmp.lt bool %905, 0:i64
+  branch %906, b174, b175
+b174: ; preds b173
+  %908 = list_len u64 %904
+  %909 = convert.exact i64 %908
+  %910 = add.exact i64 %909, %905
+  jump b175
+b175: ; preds b173 b174
+  %912 = phi i64 %905, %910
+  %918 = list_get.exact i64 %904, %912
+  %919 = add.exact i64 %918, 2:i64
+  %920 = cmp.lt bool 0:i64, 0:i64
+  branch 1:bool, b176, b177
+b176: ; preds b175
+  %922 = list_len u64 %982
+  %923 = convert.exact i64 %922
+  %924 = add.exact i64 %923, 0:i64
+  jump b177
+b177: ; preds b175 b176
+  %926 = phi i64 0:i64, %924
+  %933 = list_get.exact list[i64] %982, %926
+  %934 = neg.exact i64 1:i64
+  %935 = cmp.lt bool %934, 0:i64
+  branch %935, b178, b179
+b178: ; preds b177
+  %937 = list_len u64 %933
+  %938 = convert.exact i64 %937
+  %939 = add.exact i64 %938, %934
+  jump b179
+b179: ; preds b177 b178
+  %941 = phi i64 %934, %939
+  %949 = list_get.exact list[i64] %982, %926
+  %1137 = is_unique bool %949
+  branch %1137, b231, b232
+b180: ; preds b235
+  %954 = neg.exact i64 1:i64
+  %955 = cmp.lt bool %954, 0:i64
+  branch %955, b172, b173
+b181: ; preds b170
+  %957 = cmp.lt bool -1:i64, 0:i64
+  branch 1:bool, b182, b183
+b182: ; preds b181
+  %959 = list_len u64 %888
+  %960 = convert.exact i64 %959
+  %961 = add.exact i64 %960, -1:i64
+  jump b183
+b183: ; preds b181 b182
+  %963 = phi i64 -1:i64, %961
+  %968 = list_get.exact list[i64] %888, %963
+  %969 = cmp.lt bool -1:i64, 0:i64
+  branch 1:bool, b184, b185
+b184: ; preds b183
+  %971 = list_len u64 %968
+  %972 = convert.exact i64 %971
+  %973 = add.exact i64 %972, -1:i64
+  jump b185
+b185: ; preds b183 b184
+  %975 = phi i64 -1:i64, %973
+  %1144 = is_unique bool %888
+  branch %1144, b233, b234
+b186: ; preds b127
+  %984 = iconst bool 0
+  branch 0:bool, b187, b188
+b187: ; preds b186
+  retain %15
+  jump b169
+b188: ; preds b186
+  retain %15
+  jump b109
+b189: ; preds b12 b190
+  %996 = phi list[i64] %82, %993
+  %83 = list_set.exact list[i64] %996, %75, %52
+  %84 = list_set.exact list[list[i64]] %251, %63, %83
+  jump b3
+b190: ; preds b12
+  %993 = list_copy list[i64] %82
+  release %82
+  jump b189
+b191: ; preds b48 b192
+  %1003 = phi list[list[i64]] %23, %1000
+  %249 = list_get.exact list[i64] %1003, %231
+  %1004 = is_unique bool %249
+  branch %1004, b193, b194
+b192: ; preds b48
+  %1000 = list_copy list[list[i64]] %23
+  release %23
+  jump b191
+b193: ; preds b191 b194
+  %1010 = phi list[i64] %249, %1007
+  %250 = list_set.exact list[i64] %1010, %242, %19
+  %251 = list_set.exact list[list[i64]] %1003, %231, %250
+  jump b43
+b194: ; preds b191
+  %1007 = list_copy list[i64] %249
+  release %249
+  jump b193
+b195: ; preds b59 b196
+  %1017 = phi list[i64] %318, %1014
+  %319 = list_set.exact list[i64] %1017, %310, %288
+  %320 = list_set.exact list[list[i64]] %351, %295, %319
+  jump b51
+b196: ; preds b59
+  %1014 = list_copy list[i64] %318
+  release %318
+  jump b195
+b197: ; preds b65 b198
+  %1024 = phi list[list[i64]] %257, %1021
+  %349 = list_get.exact list[i64] %1024, %332
+  %1025 = is_unique bool %349
+  branch %1025, b199, b200
+b198: ; preds b65
+  %1021 = list_copy list[list[i64]] %257
+  release %257
+  jump b197
+b199: ; preds b197 b200
+  %1031 = phi list[i64] %349, %1028
+  %350 = list_set.exact list[i64] %1031, %344, %254
+  %351 = list_set.exact list[list[i64]] %1024, %332, %350
+  jump b60
+b200: ; preds b197
+  %1028 = list_copy list[i64] %349
+  release %349
+  jump b199
+b201: ; preds b79 b202
+  %1038 = phi list[i64] %424, %1035
+  %425 = list_set.exact list[i64] %1038, %416, %394
+  %426 = list_set.exact list[list[i64]] %457, %401, %425
+  jump b71
+b202: ; preds b79
+  %1035 = list_copy list[i64] %424
+  release %424
+  jump b201
+b203: ; preds b85 b204
+  %1045 = phi list[list[i64]] %363, %1042
+  %455 = list_get.exact list[i64] %1045, %438
+  %1046 = is_unique bool %455
+  branch %1046, b205, b206
+b204: ; preds b85
+  %1042 = list_copy list[list[i64]] %363
+  release %363
+  jump b203
+b205: ; preds b203 b206
+  %1052 = phi list[i64] %455, %1049
+  %456 = list_set.exact list[i64] %1052, %450, %360
+  %457 = list_set.exact list[list[i64]] %1045, %438, %456
+  jump b80
+b206: ; preds b203
+  %1049 = list_copy list[i64] %455
+  release %455
+  jump b205
+b207: ; preds b99 b208
+  %1059 = phi list[i64] %529, %1056
+  %530 = list_set.exact list[i64] %1059, %521, %499
+  %531 = list_set.exact list[list[i64]] %562, %506, %530
+  jump b91
+b208: ; preds b99
+  %1056 = list_copy list[i64] %529
+  release %529
+  jump b207
+b209: ; preds b105 b210
+  %1066 = phi list[list[i64]] %468, %1063
+  %560 = list_get.exact list[i64] %1066, %543
+  %1067 = is_unique bool %560
+  branch %1067, b211, b212
+b210: ; preds b105
+  %1063 = list_copy list[list[i64]] %468
+  release %468
+  jump b209
+b211: ; preds b209 b212
+  %1073 = phi list[i64] %560, %1070
+  %561 = list_set.exact list[i64] %1073, %555, %465
+  %562 = list_set.exact list[list[i64]] %1066, %543, %561
+  jump b100
+b212: ; preds b209
+  %1070 = list_copy list[i64] %560
+  release %560
+  jump b211
+b213: ; preds b119 b214
+  %1080 = phi list[i64] %634, %1077
+  %635 = list_set.exact list[i64] %1080, %626, %604
+  %636 = list_set.proven list[list[i64]] %667, %611, %635
+  jump b111
+b214: ; preds b119
+  %1077 = list_copy list[i64] %634
+  release %634
+  jump b213
+b215: ; preds b125 b216
+  %1087 = phi list[list[i64]] %573, %1084
+  %665 = list_get.proven list[i64] %1087, %648
+  %1088 = is_unique bool %665
+  branch %1088, b217, b218
+b216: ; preds b125
+  %1084 = list_copy list[list[i64]] %573
+  release %573
+  jump b215
+b217: ; preds b215 b218
+  %1094 = phi list[i64] %665, %1091
+  %666 = list_set.exact list[i64] %1094, %660, %570
+  %667 = list_set.proven list[list[i64]] %1087, %648, %666
+  jump b120
+b218: ; preds b215
+  %1091 = list_copy list[i64] %665
+  release %665
+  jump b217
+b219: ; preds b139 b220
+  %1101 = phi list[i64] %739, %1098
+  %740 = list_set.exact list[i64] %1101, %731, %709
+  %741 = list_set.exact list[list[i64]] %772, %716, %740
+  jump b131
+b220: ; preds b139
+  %1098 = list_copy list[i64] %739
+  release %739
+  jump b219
+b221: ; preds b145 b222
+  %1108 = phi list[list[i64]] %678, %1105
+  %770 = list_get.exact list[i64] %1108, %753
+  %1109 = is_unique bool %770
+  branch %1109, b223, b224
+b222: ; preds b145
+  %1105 = list_copy list[list[i64]] %678
+  release %678
+  jump b221
+b223: ; preds b221 b224
+  %1115 = phi list[i64] %770, %1112
+  %771 = list_set.exact list[i64] %1115, %765, %675
+  %772 = list_set.exact list[list[i64]] %1108, %753, %771
+  jump b140
+b224: ; preds b221
+  %1112 = list_copy list[i64] %770
+  release %770
+  jump b223
+b225: ; preds b159 b226
+  %1122 = phi list[i64] %844, %1119
+  %845 = list_set.exact list[i64] %1122, %836, %814
+  %846 = list_set.exact list[list[i64]] %877, %821, %845
+  jump b151
+b226: ; preds b159
+  %1119 = list_copy list[i64] %844
+  release %844
+  jump b225
+b227: ; preds b165 b228
+  %1129 = phi list[list[i64]] %783, %1126
+  %875 = list_get.exact list[i64] %1129, %858
+  %1130 = is_unique bool %875
+  branch %1130, b229, b230
+b228: ; preds b165
+  %1126 = list_copy list[list[i64]] %783
+  release %783
+  jump b227
+b229: ; preds b227 b230
+  %1136 = phi list[i64] %875, %1133
+  %876 = list_set.exact list[i64] %1136, %870, %780
+  %877 = list_set.exact list[list[i64]] %1129, %858, %876
+  jump b160
+b230: ; preds b227
+  %1133 = list_copy list[i64] %875
+  release %875
+  jump b229
+b231: ; preds b179 b232
+  %1143 = phi list[i64] %949, %1140
+  %950 = list_set.exact list[i64] %1143, %941, %919
+  %951 = list_set.exact list[list[i64]] %982, %926, %950
+  jump b171
+b232: ; preds b179
+  %1140 = list_copy list[i64] %949
+  release %949
+  jump b231
+b233: ; preds b185 b234
+  %1150 = phi list[list[i64]] %888, %1147
+  %980 = list_get.exact list[i64] %1150, %963
+  %1151 = is_unique bool %980
+  branch %1151, b235, b236
+b234: ; preds b185
+  %1147 = list_copy list[list[i64]] %888
+  release %888
+  jump b233
+b235: ; preds b233 b236
+  %1157 = phi list[i64] %980, %1154
+  %981 = list_set.exact list[i64] %1157, %975, %885
+  %982 = list_set.exact list[list[i64]] %1150, %963, %981
+  jump b180
+b236: ; preds b233
+  %1154 = list_copy list[i64] %980
+  release %980
+  jump b235
+b237: ; preds b4
+  release %112
+  release %357
+  jump b14
+b238: ; preds b14
+  release %155
+  jump b28
+b239: ; preds b27
+  release %155
+  release %179
+  jump b30
+fn test_callback_publication_keeps_full_pending_receiver_pins() -> bool
+b0:
+  %1 = list_new list[list[i64]] 1:i64
+  %3 = list_new list[i64] 1:i64
+  %5 = list_push list[i64] %3, 1:i64
+  %6 = list_push list[list[i64]] %1, %5
+  %8 = list_new list[list[list[i64]]] 0:i64
+  %11 = iconst bool 0
+  branch 0:bool, b1, b2
+b1: ; preds b0
+  %13 = list_len u64 %6
+  %14 = convert.exact i64 %13
+  %15 = add.exact i64 %14, 0:i64
+  jump b2
+b2: ; preds b0 b1
+  %17 = phi i64 0:i64, %15
+  retain %6
+  %159 = list_push list[list[list[i64]]] %8, %6
+  %160 = record_make record{i64, list[list[list[i64]]]} 7:i64, %159
+  %23 = record_get i64 %160, field0
+  %24 = record_get list[list[list[i64]]] %160, field1
+  %161 = is_unique bool %6
+  branch %161, b40, b41
+b3: ; preds b5 b15
+  %44 = phi u64 0:u64, %72
+  %82 = phi list[list[list[i64]]] %24, %82
+  %45 = cmp.lt bool %44, %38
+  branch %45, b6, b7
+b4: ; preds b44 b16 b7
+  %78 = phi bool 1:bool, 0:bool, 1:bool
+  %80 = phi list[list[list[i64]]] %24, %82, %82
+  branch %78, b17, b45
+b5: ; preds b42
+  jump b3
+b6: ; preds b3
+  %47 = list_get list[i64] %28, %44
+  %48 = list_get list[i64] %37, %44
+  %49 = list_len u64 %47
+  %50 = list_len u64 %48
+  %51 = cmp.eq bool %49, %50
+  branch %51, b10, b9
+b7: ; preds b3
+  release %28
+  release %37
+  jump b4
+b8: ; preds b10 b13
+  %55 = phi u64 0:u64, %63
+  %56 = cmp.lt bool %55, %49
+  branch %56, b11, b12
+b9: ; preds b6 b14 b12
+  %69 = phi bool %51, 0:bool, 1:bool
+  branch %69, b15, b16
+b10: ; preds b6
+  jump b8
+b11: ; preds b8
+  %58 = list_get i64 %47, %55
+  %59 = list_get i64 %48, %55
+  %60 = cmp.eq bool %58, %59
+  branch %60, b13, b14
+b12: ; preds b8
+  jump b9
+b13: ; preds b11
+  %63 = add u64 %55, 1:u64
+  jump b8
+b14: ; preds b11
+  jump b9
+b15: ; preds b9
+  %72 = add u64 %44, 1:u64
+  jump b3
+b16: ; preds b9
+  release %28
+  release %37
+  jump b4
+b17: ; preds b4
+  %85 = list_new list[list[list[i64]]] 1:i64
+  %87 = list_new list[list[i64]] 1:i64
+  %89 = list_new list[i64] 1:i64
+  %91 = list_push list[i64] %89, 1:i64
+  %92 = list_push list[list[i64]] %87, %91
+  %93 = list_push list[list[list[i64]]] %85, %92
+  %94 = list_len u64 %80
+  %95 = list_len u64 %93
+  %96 = cmp.eq bool %94, %95
+  branch %96, b21, b46
+b18: ; preds b45 b20
+  %156 = phi bool %78, %154
+  ret %156
+b19: ; preds b21 b38
+  %100 = phi u64 0:u64, %148
+  %101 = cmp.lt bool %100, %94
+  branch %101, b22, b23
+b20: ; preds b46 b39 b23
+  %154 = phi bool %96, 0:bool, 1:bool
+  jump b18
+b21: ; preds b17
+  jump b19
+b22: ; preds b19
+  %103 = list_get list[list[i64]] %80, %100
+  %104 = list_get list[list[i64]] %93, %100
+  %105 = list_len u64 %103
+  %106 = list_len u64 %104
+  %107 = cmp.eq bool %105, %106
+  branch %107, b26, b25
+b23: ; preds b19
+  release %80
+  release %93
+  jump b20
+b24: ; preds b26 b36
+  %111 = phi u64 0:u64, %139
+  %112 = cmp.lt bool %111, %105
+  branch %112, b27, b28
+b25: ; preds b22 b37 b28
+  %145 = phi bool %107, 0:bool, 1:bool
+  branch %145, b38, b39
+b26: ; preds b22
+  jump b24
+b27: ; preds b24
+  %114 = list_get list[i64] %103, %111
+  %115 = list_get list[i64] %104, %111
+  %116 = list_len u64 %114
+  %117 = list_len u64 %115
+  %118 = cmp.eq bool %116, %117
+  branch %118, b31, b30
+b28: ; preds b24
+  jump b25
+b29: ; preds b31 b34
+  %122 = phi u64 0:u64, %130
+  %123 = cmp.lt bool %122, %116
+  branch %123, b32, b33
+b30: ; preds b27 b35 b33
+  %136 = phi bool %118, 0:bool, 1:bool
+  branch %136, b36, b37
+b31: ; preds b27
+  jump b29
+b32: ; preds b29
+  %125 = list_get i64 %114, %122
+  %126 = list_get i64 %115, %122
+  %127 = cmp.eq bool %125, %126
+  branch %127, b34, b35
+b33: ; preds b29
+  jump b30
+b34: ; preds b32
+  %130 = add u64 %122, 1:u64
+  jump b29
+b35: ; preds b32
+  jump b30
+b36: ; preds b30
+  %139 = add u64 %111, 1:u64
+  jump b24
+b37: ; preds b30
+  jump b25
+b38: ; preds b25
+  %148 = add u64 %100, 1:u64
+  jump b19
+b39: ; preds b25
+  release %80
+  release %93
+  jump b20
+b40: ; preds b2 b41
+  %167 = phi list[list[i64]] %6, %164
+  %26 = list_get.proven list[i64] %167, %17
+  %168 = is_unique bool %26
+  branch %168, b42, b43
+b41: ; preds b2
+  %164 = list_copy list[list[i64]] %6
+  release %6
+  jump b40
+b42: ; preds b40 b43
+  %174 = phi list[i64] %26, %171
+  %27 = list_push list[i64] %174, %23
+  %28 = list_set.proven list[list[i64]] %167, %17, %27
+  %30 = list_new list[list[i64]] 1:i64
+  %32 = list_new list[i64] 2:i64
+  %34 = list_push list[i64] %32, 1:i64
+  %36 = list_push list[i64] %34, 7:i64
+  %37 = list_push list[list[i64]] %30, %36
+  %38 = list_len u64 %28
+  %39 = list_len u64 %37
+  %40 = iconst bool 1
+  branch 1:bool, b5, b44
+b43: ; preds b40
+  %171 = list_copy list[i64] %26
+  release %26
+  jump b42
+b44: ; preds b42
+  release %28
+  release %37
+  jump b4
+b45: ; preds b4
+  release %80
+  jump b18
+b46: ; preds b17
+  release %80
+  release %93
+  jump b20
+fn test_managed_publication_still_establishes_independent_values() -> bool
+b0:
+  %1 = list_new list[list[i64]] 2:i64
+  %3 = list_new list[i64] 1:i64
+  %5 = list_push list[i64] %3, 1:i64
+  %6 = list_push list[list[i64]] %1, %5
+  %8 = list_new list[i64] 1:i64
+  %10 = list_push list[i64] %8, 2:i64
+  %11 = list_push list[list[i64]] %6, %10
+  %14 = iconst bool 0
+  branch 0:bool, b1, b2
+b1: ; preds b0
+  %16 = list_len u64 %11
+  %17 = convert.exact i64 %16
+  %18 = add.exact i64 %17, 1:i64
+  jump b2
+b2: ; preds b0 b1
+  %20 = phi i64 1:i64, %18
+  %22 = list_get.proven list[i64] %11, %20
+  %26 = iconst bool 0
+  branch 0:bool, b3, b4
+b3: ; preds b2
+  %28 = list_len u64 %11
+  %29 = convert.exact i64 %28
+  %30 = add.exact i64 %29, 0:i64
+  jump b4
+b4: ; preds b2 b3
+  %32 = phi i64 0:i64, %30
+  %173 = list_copy list[list[i64]] %11
+  retain %22
+  %36 = list_set.proven list[list[i64]] %173, %32, %22
+  %39 = iconst bool 0
+  branch 0:bool, b5, b6
+b5: ; preds b4
+  %41 = list_len u64 %36
+  %42 = convert.exact i64 %41
+  %43 = add.exact i64 %42, 0:i64
+  jump b6
+b6: ; preds b4 b5
+  %45 = phi i64 0:i64, %43
+  %51 = list_get.proven list[i64] %36, %45
+  %174 = is_unique bool %51
+  branch %174, b37, b38
+b7: ; preds b9 b19
+  %74 = phi u64 0:u64, %102
+  %115 = phi list[list[i64]] %11, %115
+  %75 = cmp.lt bool %74, %68
+  branch %75, b10, b11
+b8: ; preds b39 b20 b11
+  %108 = phi bool 1:bool, 0:bool, 1:bool
+  %110 = phi list[list[i64]] %11, %115, %115
+  branch %108, b21, b40
+b9: ; preds b37
+  jump b7
+b10: ; preds b7
+  %77 = list_get list[i64] %53, %74
+  %78 = list_get list[i64] %67, %74
+  %79 = list_len u64 %77
+  %80 = list_len u64 %78
+  %81 = cmp.eq bool %79, %80
+  branch %81, b14, b13
+b11: ; preds b7
+  release %53
+  release %67
+  jump b8
+b12: ; preds b14 b17
+  %85 = phi u64 0:u64, %93
+  %86 = cmp.lt bool %85, %79
+  branch %86, b15, b16
+b13: ; preds b10 b18 b16
+  %99 = phi bool %81, 0:bool, 1:bool
+  branch %99, b19, b20
+b14: ; preds b10
+  jump b12
+b15: ; preds b12
+  %88 = list_get i64 %77, %85
+  %89 = list_get i64 %78, %85
+  %90 = cmp.eq bool %88, %89
+  branch %90, b17, b18
+b16: ; preds b12
+  jump b13
+b17: ; preds b15
+  %93 = add u64 %85, 1:u64
+  jump b12
+b18: ; preds b15
+  jump b13
+b19: ; preds b13
+  %102 = add u64 %74, 1:u64
+  jump b7
+b20: ; preds b13
+  release %53
+  release %67
+  jump b8
+b21: ; preds b8
+  %118 = list_new list[list[i64]] 2:i64
+  %120 = list_new list[i64] 1:i64
+  %122 = list_push list[i64] %120, 1:i64
+  %123 = list_push list[list[i64]] %118, %122
+  %125 = list_new list[i64] 1:i64
+  %127 = list_push list[i64] %125, 2:i64
+  %128 = list_push list[list[i64]] %123, %127
+  %129 = list_len u64 %110
+  %130 = list_len u64 %128
+  %131 = iconst bool 1
+  branch 1:bool, b25, b41
+b22: ; preds b40 b24
+  %171 = phi bool %108, %169
+  ret %171
+b23: ; preds b25 b35
+  %135 = phi u64 0:u64, %163
+  %136 = cmp.lt bool %135, %129
+  branch %136, b26, b27
+b24: ; preds b41 b36 b27
+  %169 = phi bool 1:bool, 0:bool, 1:bool
+  jump b22
+b25: ; preds b21
+  jump b23
+b26: ; preds b23
+  %138 = list_get list[i64] %110, %135
+  %139 = list_get list[i64] %128, %135
+  %140 = list_len u64 %138
+  %141 = list_len u64 %139
+  %142 = cmp.eq bool %140, %141
+  branch %142, b30, b29
+b27: ; preds b23
+  release %110
+  release %128
+  jump b24
+b28: ; preds b30 b33
+  %146 = phi u64 0:u64, %154
+  %147 = cmp.lt bool %146, %140
+  branch %147, b31, b32
+b29: ; preds b26 b34 b32
+  %160 = phi bool %142, 0:bool, 1:bool
+  branch %160, b35, b36
+b30: ; preds b26
+  jump b28
+b31: ; preds b28
+  %149 = list_get i64 %138, %146
+  %150 = list_get i64 %139, %146
+  %151 = cmp.eq bool %149, %150
+  branch %151, b33, b34
+b32: ; preds b28
+  jump b29
+b33: ; preds b31
+  %154 = add u64 %146, 1:u64
+  jump b28
+b34: ; preds b31
+  jump b29
+b35: ; preds b29
+  %163 = add u64 %135, 1:u64
+  jump b23
+b36: ; preds b29
+  release %110
+  release %128
+  jump b24
+b37: ; preds b6 b38
+  %180 = phi list[i64] %51, %177
+  %52 = list_push list[i64] %180, 3:i64
+  %53 = list_set.proven list[list[i64]] %36, %45, %52
+  %55 = list_new list[list[i64]] 2:i64
+  %57 = list_new list[i64] 2:i64
+  %59 = list_push list[i64] %57, 2:i64
+  %61 = list_push list[i64] %59, 3:i64
+  %62 = list_push list[list[i64]] %55, %61
+  %64 = list_new list[i64] 1:i64
+  %66 = list_push list[i64] %64, 2:i64
+  %67 = list_push list[list[i64]] %62, %66
+  %68 = list_len u64 %53
+  %69 = list_len u64 %67
+  %70 = iconst bool 1
+  branch 1:bool, b9, b39
+b38: ; preds b6
+  %177 = list_copy list[i64] %51
+  release %51
+  jump b37
+b39: ; preds b37
+  release %53
+  release %67
+  jump b8
+b40: ; preds b8
+  release %110
+  jump b22
+b41: ; preds b21
+  release %110
+  release %128
+  jump b24
+fn test_conditional_indices_and_zero_iterations_preserve_owners() -> bool
+b0:
+  %1 = list_new list[list[i64]] 1:i64
+  %3 = list_new list[i64] 2:i64
+  %5 = list_push list[i64] %3, 1:i64
+  %7 = list_push list[i64] %5, 2:i64
+  %8 = list_push list[list[i64]] %1, %7
+  jump b57
+b1: ; preds b59 b3
+  %12 = phi i64 0:i64, %50
+  %17 = phi list[list[i64]] %8, %46
+  %14 = iconst bool 0
+  branch 0:bool, b2, b4
+b2: ; preds b1
+  %20 = cmp.lt bool 0:i64, 0:i64
+  branch 0:bool, b5, b6
+b3: ; preds b75
+  %50 = add.exact i64 %12, 1:i64
+  jump b1
+b4: ; preds b1 b50
+  %271 = phi list[list[i64]] %17, %230
+  jump b70
+b5: ; preds b2
+  %22 = list_len u64 %17
+  %23 = convert.exact i64 %22
+  %24 = add.exact i64 %23, 0:i64
+  jump b6
+b6: ; preds b2 b5
+  %26 = phi i64 0:i64, %24
+  %28 = list_get.exact list[i64] %17, %26
+  %31 = cmp.lt bool %12, 0:i64
+  branch %31, b7, b8
+b7: ; preds b6
+  %33 = list_len u64 %28
+  %34 = convert.exact i64 %33
+  %35 = add.exact i64 %34, %12
+  jump b8
+b8: ; preds b6 b7
+  %37 = phi i64 %12, %35
+  %333 = is_unique bool %17
+  branch %333, b73, b74
+b9: ; preds b72 b11
+  %57 = phi i64 0:i64, %107
+  %61 = phi list[list[i64]] %271, %102
+  %59 = cmp.lt bool %57, 10:i64
+  branch %59, b10, b12
+b10: ; preds b9
+  %64 = iconst bool 0
+  branch 0:bool, b13, b14
+b11: ; preds b79
+  %107 = add.proven i64 %57, 1:i64
+  jump b9
+b12: ; preds b9 b60
+  %330 = phi list[list[i64]] %61, %277
+  %113 = list_new list[list[i64]] 1:i64
+  %115 = list_new list[i64] 2:i64
+  %117 = list_push list[i64] %115, 9:i64
+  %119 = list_push list[i64] %117, 4:i64
+  %120 = list_push list[list[i64]] %113, %119
+  %121 = list_len u64 %330
+  %122 = list_len u64 %120
+  %123 = iconst bool 1
+  branch 1:bool, b22, b89
+b13: ; preds b10
+  %66 = list_len u64 %61
+  %67 = convert.exact i64 %66
+  %68 = add.exact i64 %67, 0:i64
+  jump b14
+b14: ; preds b10 b13
+  %70 = phi i64 0:i64, %68
+  %72 = list_get.proven list[i64] %61, %70
+  %75 = cmp.lt bool %57, 5:i64
+  branch %75, b15, b17
+b15: ; preds b14
+  %78 = neg.proven i64 1:i64
+  jump b16
+b16: ; preds b15 b17
+  %82 = phi i64 %78, 0:i64
+  %84 = cmp.lt bool %82, 0:i64
+  branch %84, b18, b19
+b17: ; preds b14
+  jump b16
+b18: ; preds b16
+  %87 = list_len u64 %72
+  %88 = convert.proven i64 %87
+  %89 = add.proven i64 %88, %82
+  jump b19
+b19: ; preds b16 b18
+  %91 = phi i64 %82, %89
+  %347 = is_unique bool %61
+  branch %347, b77, b78
+b20: ; preds b22 b32
+  %127 = phi u64 0:u64, %155
+  %172 = phi list[list[i64]] %8, %172
+  %128 = cmp.lt bool %127, %121
+  branch %128, b23, b24
+b21: ; preds b89 b33 b24
+  %161 = phi bool 1:bool, 0:bool, 1:bool
+  %163 = phi list[list[i64]] %8, %172, %172
+  branch %161, b34, b90
+b22: ; preds b12
+  jump b20
+b23: ; preds b20
+  %130 = list_get list[i64] %330, %127
+  %131 = list_get list[i64] %120, %127
+  %132 = list_len u64 %130
+  %133 = list_len u64 %131
+  %134 = cmp.eq bool %132, %133
+  branch %134, b27, b26
+b24: ; preds b20
+  release %120
+  release %330
+  jump b21
+b25: ; preds b27 b30
+  %138 = phi u64 0:u64, %146
+  %139 = cmp.lt bool %138, %132
+  branch %139, b28, b29
+b26: ; preds b23 b31 b29
+  %152 = phi bool %134, 0:bool, 1:bool
+  branch %152, b32, b33
+b27: ; preds b23
+  jump b25
+b28: ; preds b25
+  %141 = list_get i64 %130, %138
+  %142 = list_get i64 %131, %138
+  %143 = cmp.eq bool %141, %142
+  branch %143, b30, b31
+b29: ; preds b25
+  jump b26
+b30: ; preds b28
+  %146 = add u64 %138, 1:u64
+  jump b25
+b31: ; preds b28
+  jump b26
+b32: ; preds b26
+  %155 = add u64 %127, 1:u64
+  jump b20
+b33: ; preds b26
+  release %120
+  release %330
+  jump b21
+b34: ; preds b21
+  %175 = list_new list[list[i64]] 1:i64
+  %177 = list_new list[i64] 2:i64
+  %179 = list_push list[i64] %177, 1:i64
+  %181 = list_push list[i64] %179, 2:i64
+  %182 = list_push list[list[i64]] %175, %181
+  %183 = list_len u64 %163
+  %184 = list_len u64 %182
+  %185 = iconst bool 1
+  branch 1:bool, b38, b91
+b35: ; preds b90 b37
+  %225 = phi bool %161, %223
+  ret %225
+b36: ; preds b38 b48
+  %189 = phi u64 0:u64, %217
+  %190 = cmp.lt bool %189, %183
+  branch %190, b39, b40
+b37: ; preds b91 b49 b40
+  %223 = phi bool 1:bool, 0:bool, 1:bool
+  jump b35
+b38: ; preds b34
+  jump b36
+b39: ; preds b36
+  %192 = list_get list[i64] %163, %189
+  %193 = list_get list[i64] %182, %189
+  %194 = list_len u64 %192
+  %195 = list_len u64 %193
+  %196 = cmp.eq bool %194, %195
+  branch %196, b43, b42
+b40: ; preds b36
+  release %163
+  release %182
+  jump b37
+b41: ; preds b43 b46
+  %200 = phi u64 0:u64, %208
+  %201 = cmp.lt bool %200, %194
+  branch %201, b44, b45
+b42: ; preds b39 b47 b45
+  %214 = phi bool %196, 0:bool, 1:bool
+  branch %214, b48, b49
+b43: ; preds b39
+  jump b41
+b44: ; preds b41
+  %203 = list_get i64 %192, %200
+  %204 = list_get i64 %193, %200
+  %205 = cmp.eq bool %203, %204
+  branch %205, b46, b47
+b45: ; preds b41
+  jump b42
+b46: ; preds b44
+  %208 = add u64 %200, 1:u64
+  jump b41
+b47: ; preds b44
+  jump b42
+b48: ; preds b42
+  %217 = add u64 %189, 1:u64
+  jump b36
+b49: ; preds b42
+  release %163
+  release %182
+  jump b37
+b50: ; preds b58 b52
+  %227 = phi i64 0:i64, %235
+  %230 = phi list[list[i64]] %8, %265
+  %231 = cmp.lt bool %227, 0:i64
+  branch %231, b51, b4
+b51: ; preds b50
+  %233 = cmp.lt bool 0:i64, 0:i64
+  branch 1:bool, b53, b54
+b52: ; preds b83
+  %235 = add.exact i64 %227, 1:i64
+  jump b50
+b53: ; preds b51
+  %237 = list_len u64 %230
+  %238 = convert.exact i64 %237
+  %239 = add.exact i64 %238, 0:i64
+  jump b54
+b54: ; preds b51 b53
+  %241 = phi i64 0:i64, %239
+  %248 = list_get.exact list[i64] %230, %241
+  %249 = cmp.lt bool %227, 0:i64
+  branch %249, b55, b56
+b55: ; preds b54
+  %251 = list_len u64 %248
+  %252 = convert.exact i64 %251
+  %253 = add.exact i64 %252, %227
+  jump b56
+b56: ; preds b54 b55
+  %255 = phi i64 %227, %253
+  %361 = is_unique bool %230
+  branch %361, b81, b82
+b57: ; preds b0
+  %267 = iconst bool 0
+  branch 0:bool, b58, b59
+b58: ; preds b57
+  retain %8
+  jump b50
+b59: ; preds b57
+  retain %8
+  jump b1
+b60: ; preds b71 b62
+  %274 = phi i64 0:i64, %282
+  %277 = phi list[list[i64]] %271, %324
+  %278 = cmp.lt bool %274, 10:i64
+  branch %278, b61, b12
+b61: ; preds b60
+  %280 = cmp.lt bool 0:i64, 0:i64
+  branch 1:bool, b63, b64
+b62: ; preds b87
+  %282 = add.exact i64 %274, 1:i64
+  jump b60
+b63: ; preds b61
+  %284 = list_len u64 %277
+  %285 = convert.exact i64 %284
+  %286 = add.exact i64 %285, 0:i64
+  jump b64
+b64: ; preds b61 b63
+  %288 = phi i64 0:i64, %286
+  %295 = list_get.exact list[i64] %277, %288
+  %296 = cmp.lt bool %274, 5:i64
+  branch %296, b65, b67
+b65: ; preds b64
+  %298 = neg.exact i64 1:i64
+  jump b66
+b66: ; preds b65 b67
+  %300 = phi i64 %298, 0:i64
+  %307 = cmp.lt bool %300, 0:i64
+  branch %307, b68, b69
+b67: ; preds b64
+  jump b66
+b68: ; preds b66
+  %310 = list_len u64 %295
+  %311 = convert.exact i64 %310
+  %312 = add.exact i64 %311, %300
+  jump b69
+b69: ; preds b66 b68
+  %314 = phi i64 %300, %312
+  %375 = is_unique bool %277
+  branch %375, b85, b86
+b70: ; preds b4
+  %326 = iconst bool 0
+  branch 0:bool, b71, b72
+b71: ; preds b70
+  jump b60
+b72: ; preds b70
+  jump b9
+b73: ; preds b8 b74
+  %339 = phi list[list[i64]] %17, %336
+  %44 = list_get.exact list[i64] %339, %26
+  %340 = is_unique bool %44
+  branch %340, b75, b76
+b74: ; preds b8
+  %336 = list_copy list[list[i64]] %17
+  release %17
+  jump b73
+b75: ; preds b73 b76
+  %346 = phi list[i64] %44, %343
+  %45 = list_set.exact list[i64] %346, %37, 7:i64
+  %46 = list_set.exact list[list[i64]] %339, %26, %45
+  jump b3
+b76: ; preds b73
+  %343 = list_copy list[i64] %44
+  release %44
+  jump b75
+b77: ; preds b19 b78
+  %353 = phi list[list[i64]] %61, %350
+  %100 = list_get.proven list[i64] %353, %70
+  %354 = is_unique bool %100
+  branch %354, b79, b80
+b78: ; preds b19
+  %350 = list_copy list[list[i64]] %61
+  release %61
+  jump b77
+b79: ; preds b77 b80
+  %360 = phi list[i64] %100, %357
+  %101 = list_set.exact list[i64] %360, %91, %57
+  %102 = list_set.proven list[list[i64]] %353, %70, %101
+  jump b11
+b80: ; preds b77
+  %357 = list_copy list[i64] %100
+  release %100
+  jump b79
+b81: ; preds b56 b82
+  %367 = phi list[list[i64]] %230, %364
+  %263 = list_get.exact list[i64] %367, %241
+  %368 = is_unique bool %263
+  branch %368, b83, b84
+b82: ; preds b56
+  %364 = list_copy list[list[i64]] %230
+  release %230
+  jump b81
+b83: ; preds b81 b84
+  %374 = phi list[i64] %263, %371
+  %264 = list_set.exact list[i64] %374, %255, 7:i64
+  %265 = list_set.exact list[list[i64]] %367, %241, %264
+  jump b52
+b84: ; preds b81
+  %371 = list_copy list[i64] %263
+  release %263
+  jump b83
+b85: ; preds b69 b86
+  %381 = phi list[list[i64]] %277, %378
+  %322 = list_get.exact list[i64] %381, %288
+  %382 = is_unique bool %322
+  branch %382, b87, b88
+b86: ; preds b69
+  %378 = list_copy list[list[i64]] %277
+  release %277
+  jump b85
+b87: ; preds b85 b88
+  %388 = phi list[i64] %322, %385
+  %323 = list_set.exact list[i64] %388, %314, %274
+  %324 = list_set.exact list[list[i64]] %381, %288, %323
+  jump b62
+b88: ; preds b85
+  %385 = list_copy list[i64] %322
+  release %322
+  jump b87
+b89: ; preds b12
+  release %120
+  release %330
+  jump b21
+b90: ; preds b21
+  release %163
+  jump b35
+b91: ; preds b34
+  release %163
+  release %182
+  jump b37
+fn test_three_level_shared_projection_keeps_named_row_and_outer_snapshot() -> bool
+b0:
+  %1 = list_new list[i64] 2:i64
+  %3 = list_push list[i64] %1, 1:i64
+  %5 = list_push list[i64] %3, 2:i64
+  %7 = list_new list[list[i64]] 2:i64
+  retain %5
+  %8 = list_push list[list[i64]] %7, %5
+  retain %5
+  %9 = list_push list[list[i64]] %8, %5
+  %11 = list_new list[list[list[i64]]] 2:i64
+  retain %9
+  %12 = list_push list[list[list[i64]]] %11, %9
+  %13 = list_push list[list[list[i64]]] %12, %9
+  %16 = iconst bool 0
+  branch 0:bool, b1, b2
+b1: ; preds b0
+  %18 = list_len u64 %13
+  %19 = convert.exact i64 %18
+  %20 = add.exact i64 %19, 0:i64
+  jump b2
+b2: ; preds b0 b1
+  %22 = phi i64 0:i64, %20
+  %24 = list_get.proven list[list[i64]] %13, %22
+  %27 = iconst bool 0
+  branch 0:bool, b3, b4
+b3: ; preds b2
+  %29 = list_len u64 %24
+  %30 = convert.exact i64 %29
+  %31 = add.exact i64 %30, 1:i64
+  jump b4
+b4: ; preds b2 b3
+  %33 = phi i64 1:i64, %31
+  %35 = list_get.exact list[i64] %24, %33
+  %41 = iconst bool 0
+  branch 0:bool, b5, b6
+b5: ; preds b4
+  %43 = list_len u64 %13
+  %44 = convert.exact i64 %43
+  %45 = add.exact i64 %44, 0:i64
+  jump b6
+b6: ; preds b4 b5
+  %47 = phi i64 0:i64, %45
+  %49 = list_get.proven list[list[i64]] %13, %47
+  %52 = iconst bool 0
+  branch 0:bool, b7, b8
+b7: ; preds b6
+  %54 = list_len u64 %49
+  %55 = convert.exact i64 %54
+  %56 = add.exact i64 %55, 1:i64
+  jump b8
+b8: ; preds b6 b7
+  %58 = phi i64 1:i64, %56
+  %60 = list_get.exact list[i64] %49, %58
+  %62 = neg.proven i64 1:i64
+  %64 = cmp.lt bool %62, 0:i64
+  branch %64, b9, b10
+b9: ; preds b8
+  %66 = list_len u64 %60
+  %67 = convert.proven i64 %66
+  %68 = add.proven i64 %67, %62
+  jump b10
+b10: ; preds b8 b9
+  %70 = phi i64 %62, %68
+  %78 = list_copy list[list[list[i64]]] %13
+  %79 = list_get.proven list[list[i64]] %78, %47
+  %461 = is_unique bool %79
+  branch %461, b82, b83
+b11: ; preds b84
+  %90 = list_len u64 %84
+  %91 = convert.exact i64 %90
+  %92 = add.exact i64 %91, 1:i64
+  jump b12
+b12: ; preds b84 b11
+  %94 = phi i64 1:i64, %92
+  %96 = list_get.proven list[list[i64]] %84, %94
+  %99 = iconst bool 0
+  branch 0:bool, b13, b14
+b13: ; preds b12
+  %101 = list_len u64 %96
+  %102 = convert.exact i64 %101
+  %103 = add.exact i64 %102, 0:i64
+  jump b14
+b14: ; preds b12 b13
+  %105 = phi i64 0:i64, %103
+  %107 = list_get.exact list[i64] %96, %105
+  %113 = list_len u64 %35
+  %114 = convert.proven i64 %113
+  %116 = cmp.eq bool %114, 2:i64
+  branch %116, b15, b17
+b15: ; preds b14
+  jump b16
+b16: ; preds b15 b17
+  %122 = phi i64 0:i64, 1:i64
+  %124 = iconst bool 0
+  branch 0:bool, b18, b19
+b17: ; preds b14
+  jump b16
+b18: ; preds b16
+  %127 = list_len u64 %107
+  %128 = convert.exact i64 %127
+  %129 = add.exact i64 %128, %122
+  jump b19
+b19: ; preds b16 b18
+  %131 = phi i64 %122, %129
+  %142 = list_get.proven list[list[i64]] %84, %94
+  %475 = is_unique bool %142
+  branch %475, b86, b87
+b20: ; preds b22 b39
+  %190 = phi u64 0:u64, %238
+  %257 = phi list[list[list[i64]]] %13, %256
+  %366 = phi list[i64] %35, %365
+  %419 = phi list[i64] %5, %418
+  %191 = cmp.lt bool %190, %184
+  branch %191, b23, b24
+b21: ; preds b90 b40 b24
+  %244 = phi bool 1:bool, 0:bool, 1:bool
+  %246 = phi list[list[list[i64]]] %13, %256, %257
+  %362 = phi list[i64] %35, %365, %366
+  %408 = phi list[i64] %5, %418, %419
+  branch %244, b41, b91
+b22: ; preds b88
+  retain %35
+  jump b20
+b23: ; preds b20
+  %193 = list_get list[list[i64]] %147, %190
+  %194 = list_get list[list[i64]] %183, %190
+  %195 = list_len u64 %193
+  %196 = list_len u64 %194
+  %197 = cmp.eq bool %195, %196
+  branch %197, b27, b26
+b24: ; preds b20
+  release %147
+  release %183
+  jump b21
+b25: ; preds b27 b37
+  %201 = phi u64 0:u64, %229
+  %259 = phi list[list[list[i64]]] %257, %259
+  %368 = phi list[i64] %366, %368
+  %421 = phi list[i64] %419, %421
+  %202 = cmp.lt bool %201, %195
+  branch %202, b28, b29
+b26: ; preds b23 b38 b29
+  %235 = phi bool %197, 0:bool, 1:bool
+  %256 = phi list[list[list[i64]]] %257, %259, %259
+  %365 = phi list[i64] %366, %368, %368
+  %418 = phi list[i64] %419, %421, %421
+  branch %235, b39, b40
+b27: ; preds b23
+  jump b25
+b28: ; preds b25
+  %204 = list_get list[i64] %193, %201
+  %205 = list_get list[i64] %194, %201
+  %206 = list_len u64 %204
+  %207 = list_len u64 %205
+  %208 = cmp.eq bool %206, %207
+  branch %208, b32, b31
+b29: ; preds b25
+  jump b26
+b30: ; preds b32 b35
+  %212 = phi u64 0:u64, %220
+  %213 = cmp.lt bool %212, %206
+  branch %213, b33, b34
+b31: ; preds b28 b36 b34
+  %226 = phi bool %208, 0:bool, 1:bool
+  branch %226, b37, b38
+b32: ; preds b28
+  jump b30
+b33: ; preds b30
+  %215 = list_get i64 %204, %212
+  %216 = list_get i64 %205, %212
+  %217 = cmp.eq bool %215, %216
+  branch %217, b35, b36
+b34: ; preds b30
+  jump b31
+b35: ; preds b33
+  %220 = add u64 %212, 1:u64
+  jump b30
+b36: ; preds b33
+  jump b31
+b37: ; preds b31
+  %229 = add u64 %201, 1:u64
+  jump b25
+b38: ; preds b31
+  jump b26
+b39: ; preds b26
+  %238 = add u64 %190, 1:u64
+  jump b20
+b40: ; preds b26
+  release %147
+  release %183
+  jump b21
+b41: ; preds b21
+  %262 = list_new list[list[list[i64]]] 2:i64
+  %264 = list_new list[list[i64]] 2:i64
+  %266 = list_new list[i64] 2:i64
+  %268 = list_push list[i64] %266, 1:i64
+  %270 = list_push list[i64] %268, 2:i64
+  %271 = list_push list[list[i64]] %264, %270
+  %273 = list_new list[i64] 2:i64
+  %275 = list_push list[i64] %273, 1:i64
+  %277 = list_push list[i64] %275, 2:i64
+  %278 = list_push list[list[i64]] %271, %277
+  %279 = list_push list[list[list[i64]]] %262, %278
+  %281 = list_new list[list[i64]] 2:i64
+  %283 = list_new list[i64] 2:i64
+  %285 = list_push list[i64] %283, 1:i64
+  %287 = list_push list[i64] %285, 2:i64
+  %288 = list_push list[list[i64]] %281, %287
+  %290 = list_new list[i64] 2:i64
+  %292 = list_push list[i64] %290, 1:i64
+  %294 = list_push list[i64] %292, 2:i64
+  %295 = list_push list[list[i64]] %288, %294
+  %296 = list_push list[list[list[i64]]] %279, %295
+  %297 = list_len u64 %246
+  %298 = list_len u64 %296
+  %299 = iconst bool 1
+  branch 1:bool, b45, b92
+b42: ; preds b91 b44
+  %359 = phi bool %244, %357
+  %361 = phi list[i64] %362, %370
+  %407 = phi list[i64] %408, %423
+  branch %359, b64, b93
+b43: ; preds b45 b62
+  %303 = phi u64 0:u64, %351
+  %372 = phi list[i64] %362, %371
+  %425 = phi list[i64] %408, %424
+  %304 = cmp.lt bool %303, %297
+  branch %304, b46, b47
+b44: ; preds b92 b63 b47
+  %357 = phi bool 1:bool, 0:bool, 1:bool
+  %370 = phi list[i64] %362, %371, %372
+  %423 = phi list[i64] %408, %424, %425
+  jump b42
+b45: ; preds b41
+  jump b43
+b46: ; preds b43
+  %306 = list_get list[list[i64]] %246, %303
+  %307 = list_get list[list[i64]] %296, %303
+  %308 = list_len u64 %306
+  %309 = list_len u64 %307
+  %310 = cmp.eq bool %308, %309
+  branch %310, b50, b49
+b47: ; preds b43
+  release %246
+  release %296
+  jump b44
+b48: ; preds b50 b60
+  %314 = phi u64 0:u64, %342
+  %374 = phi list[i64] %372, %374
+  %427 = phi list[i64] %425, %427
+  %315 = cmp.lt bool %314, %308
+  branch %315, b51, b52
+b49: ; preds b46 b61 b52
+  %348 = phi bool %310, 0:bool, 1:bool
+  %371 = phi list[i64] %372, %374, %374
+  %424 = phi list[i64] %425, %427, %427
+  branch %348, b62, b63
+b50: ; preds b46
+  jump b48
+b51: ; preds b48
+  %317 = list_get list[i64] %306, %314
+  %318 = list_get list[i64] %307, %314
+  %319 = list_len u64 %317
+  %320 = list_len u64 %318
+  %321 = cmp.eq bool %319, %320
+  branch %321, b55, b54
+b52: ; preds b48
+  jump b49
+b53: ; preds b55 b58
+  %325 = phi u64 0:u64, %333
+  %326 = cmp.lt bool %325, %319
+  branch %326, b56, b57
+b54: ; preds b51 b59 b57
+  %339 = phi bool %321, 0:bool, 1:bool
+  branch %339, b60, b61
+b55: ; preds b51
+  jump b53
+b56: ; preds b53
+  %328 = list_get i64 %317, %325
+  %329 = list_get i64 %318, %325
+  %330 = cmp.eq bool %328, %329
+  branch %330, b58, b59
+b57: ; preds b53
+  jump b54
+b58: ; preds b56
+  %333 = add u64 %325, 1:u64
+  jump b53
+b59: ; preds b56
+  jump b54
+b60: ; preds b54
+  %342 = add u64 %314, 1:u64
+  jump b48
+b61: ; preds b54
+  jump b49
+b62: ; preds b49
+  %351 = add u64 %303, 1:u64
+  jump b43
+b63: ; preds b49
+  release %246
+  release %296
+  jump b44
+b64: ; preds b42
+  %377 = list_new list[i64] 2:i64
+  %379 = list_push list[i64] %377, 1:i64
+  %381 = list_push list[i64] %379, 2:i64
+  %382 = list_len u64 %361
+  %383 = list_len u64 %381
+  %384 = cmp.eq bool %382, %383
+  branch %384, b68, b94
+b65: ; preds b93 b67
+  %404 = phi bool %359, %402
+  branch %404, b73, b95
+b66: ; preds b68 b71
+  %388 = phi u64 0:u64, %396
+  %389 = cmp.lt bool %388, %382
+  branch %389, b69, b70
+b67: ; preds b94 b72 b70
+  %402 = phi bool %384, 0:bool, 1:bool
+  jump b65
+b68: ; preds b64
+  jump b66
+b69: ; preds b66
+  %391 = list_get i64 %361, %388
+  %392 = list_get i64 %381, %388
+  %393 = cmp.eq bool %391, %392
+  branch %393, b71, b72
+b70: ; preds b66
+  release %361
+  jump b67
+b71: ; preds b69
+  %396 = add u64 %388, 1:u64
+  jump b66
+b72: ; preds b69
+  release %361
+  jump b67
+b73: ; preds b65
+  %432 = list_new list[i64] 2:i64
+  %434 = list_push list[i64] %432, 1:i64
+  %436 = list_push list[i64] %434, 2:i64
+  %437 = list_len u64 %407
+  %438 = list_len u64 %436
+  %439 = iconst bool 1
+  branch 1:bool, b77, b96
+b74: ; preds b95 b76
+  %459 = phi bool %404, %457
+  ret %459
+b75: ; preds b77 b80
+  %443 = phi u64 0:u64, %451
+  %444 = cmp.lt bool %443, %437
+  branch %444, b78, b79
+b76: ; preds b96 b81 b79
+  %457 = phi bool 1:bool, 0:bool, 1:bool
+  jump b74
+b77: ; preds b73
+  jump b75
+b78: ; preds b75
+  %446 = list_get i64 %407, %443
+  %447 = list_get i64 %436, %443
+  %448 = cmp.eq bool %446, %447
+  branch %448, b80, b81
+b79: ; preds b75
+  release %407
+  jump b76
+b80: ; preds b78
+  %451 = add u64 %443, 1:u64
+  jump b75
+b81: ; preds b78
+  release %407
+  jump b76
+b82: ; preds b10 b83
+  %467 = phi list[list[i64]] %79, %464
+  %81 = list_get.exact list[i64] %467, %58
+  %468 = is_unique bool %81
+  branch %468, b84, b85
+b83: ; preds b10
+  %464 = list_copy list[list[i64]] %79
+  release %79
+  jump b82
+b84: ; preds b82 b85
+  %474 = phi list[i64] %81, %471
+  %82 = list_set.exact list[i64] %474, %70, 7:i64
+  %83 = list_set.exact list[list[i64]] %467, %58, %82
+  %84 = list_set.proven list[list[list[i64]]] %78, %47, %83
+  %88 = iconst bool 0
+  branch 0:bool, b11, b12
+b85: ; preds b82
+  %471 = list_copy list[i64] %81
+  release %81
+  jump b84
+b86: ; preds b19 b87
+  %481 = phi list[list[i64]] %142, %478
+  %144 = list_get.exact list[i64] %481, %105
+  %482 = is_unique bool %144
+  branch %482, b88, b89
+b87: ; preds b19
+  %478 = list_copy list[list[i64]] %142
+  release %142
+  jump b86
+b88: ; preds b86 b89
+  %488 = phi list[i64] %144, %485
+  %145 = list_set.exact list[i64] %488, %131, 9:i64
+  %146 = list_set.exact list[list[i64]] %481, %105, %145
+  %147 = list_set.proven list[list[list[i64]]] %84, %94, %146
+  %149 = list_new list[list[list[i64]]] 2:i64
+  %151 = list_new list[list[i64]] 2:i64
+  %153 = list_new list[i64] 2:i64
+  %155 = list_push list[i64] %153, 1:i64
+  %157 = list_push list[i64] %155, 2:i64
+  %158 = list_push list[list[i64]] %151, %157
+  %160 = list_new list[i64] 2:i64
+  %162 = list_push list[i64] %160, 1:i64
+  %164 = list_push list[i64] %162, 7:i64
+  %165 = list_push list[list[i64]] %158, %164
+  %166 = list_push list[list[list[i64]]] %149, %165
+  %168 = list_new list[list[i64]] 2:i64
+  %170 = list_new list[i64] 2:i64
+  %172 = list_push list[i64] %170, 9:i64
+  %174 = list_push list[i64] %172, 2:i64
+  %175 = list_push list[list[i64]] %168, %174
+  %177 = list_new list[i64] 2:i64
+  %179 = list_push list[i64] %177, 1:i64
+  %181 = list_push list[i64] %179, 2:i64
+  %182 = list_push list[list[i64]] %175, %181
+  %183 = list_push list[list[list[i64]]] %166, %182
+  %184 = list_len u64 %147
+  %185 = list_len u64 %183
+  %186 = iconst bool 1
+  branch 1:bool, b22, b90
+b89: ; preds b86
+  %485 = list_copy list[i64] %144
+  release %144
+  jump b88
+b90: ; preds b88
+  retain %35
+  release %147
+  release %183
+  jump b21
+b91: ; preds b21
+  release %246
+  jump b42
+b92: ; preds b41
+  release %246
+  release %296
+  jump b44
+b93: ; preds b42
+  release %361
+  jump b65
+b94: ; preds b64
+  release %361
+  jump b67
+b95: ; preds b65
+  release %407
+  jump b74
+b96: ; preds b73
+  release %407
+  jump b76
+fn test_plain_record_writes_keep_snapshot_and_negative_index() -> bool
+b0:
+  %1 = list_new list[record{i64, i64}] 1:i64
+  %4 = record_make record{i64, i64} 3:i64, 7:i64
+  %5 = list_push list[record{i64, i64}] %1, %4
+  jump b40
+b1: ; preds b70 b3
+  %9 = phi i64 0:i64, %51
+  %13 = phi list[record{i64, i64}] %5, %46
+  %11 = cmp.lt bool %9, 4:i64
+  branch %11, b2, b4
+b2: ; preds b1
+  jump b26
+b3: ; preds b8
+  %51 = add.exact i64 %9, 1:i64
+  jump b1
+b4: ; preds b1 b29 b43 b57 b71 b85 b99 b113
+  %212 = phi list[record{i64, i64}] %13, %154, %218, %281, %344, %407, %470, %533
+  %56 = list_new list[record{i64, i64}] 1:i64
+  %59 = record_make record{i64, i64} 3:i64, 13:i64
+  %60 = list_push list[record{i64, i64}] %56, %59
+  %61 = list_len u64 %212
+  %62 = list_len u64 %60
+  %63 = iconst bool 1
+  branch 1:bool, b11, b145
+b5: ; preds b25
+  %20 = list_len u64 %148
+  %21 = convert.exact i64 %20
+  %22 = add.exact i64 %21, 0:i64
+  jump b6
+b6: ; preds b25 b5
+  %24 = phi i64 0:i64, %22
+  %27 = list_get_field.exact i64 %148, %24, path 0
+  %29 = add.exact i64 %27, 10:i64
+  %33 = cmp.lt bool 0:i64, 0:i64
+  branch 0:bool, b7, b8
+b7: ; preds b6
+  %35 = list_len u64 %148
+  %36 = convert.exact i64 %35
+  %37 = add.exact i64 %36, 0:i64
+  jump b8
+b8: ; preds b6 b7
+  %39 = phi i64 0:i64, %37
+  %46 = list_set_field.exact list[record{i64, i64}] %148, %39, path 1, %29
+  jump b3
+b9: ; preds b11 b14
+  %67 = phi u64 0:u64, %83
+  %68 = cmp.lt bool %67, %61
+  branch %68, b12, b13
+b10: ; preds b145 b15 b13
+  %89 = phi bool 1:bool, 0:bool, 1:bool
+  branch %89, b16, b143
+b11: ; preds b4
+  jump b9
+b12: ; preds b9
+  %73 = list_get_field i64 %212, %67, path 0
+  %74 = list_get_field i64 %60, %67, path 0
+  %75 = cmp.eq bool %73, %74
+  %76 = bit_and bool 1:bool, %75
+  %77 = list_get_field i64 %212, %67, path 1
+  %78 = list_get_field i64 %60, %67, path 1
+  %79 = cmp.eq bool %77, %78
+  %80 = bit_and bool %76, %79
+  branch %80, b14, b15
+b13: ; preds b9
+  release %212
+  jump b10
+b14: ; preds b12
+  %83 = add u64 %67, 1:u64
+  jump b9
+b15: ; preds b12
+  release %212
+  jump b10
+b16: ; preds b10
+  %97 = list_new list[record{i64, i64}] 1:i64
+  %100 = record_make record{i64, i64} 3:i64, 7:i64
+  %101 = list_push list[record{i64, i64}] %97, %100
+  %102 = list_len u64 %5
+  %103 = list_len u64 %101
+  %104 = iconst bool 1
+  branch 1:bool, b20, b144
+b17: ; preds b143 b19
+  %132 = phi bool %89, %130
+  ret %132
+b18: ; preds b20 b23
+  %108 = phi u64 0:u64, %124
+  %109 = cmp.lt bool %108, %102
+  branch %109, b21, b22
+b19: ; preds b144 b24 b22
+  %130 = phi bool 1:bool, 0:bool, 1:bool
+  jump b17
+b20: ; preds b16
+  jump b18
+b21: ; preds b18
+  %114 = list_get_field i64 %5, %108, path 0
+  %115 = list_get_field i64 %101, %108, path 0
+  %116 = cmp.eq bool %114, %115
+  %117 = bit_and bool 1:bool, %116
+  %118 = list_get_field i64 %5, %108, path 1
+  %119 = list_get_field i64 %101, %108, path 1
+  %120 = cmp.eq bool %118, %119
+  %121 = bit_and bool %117, %120
+  branch %121, b23, b24
+b22: ; preds b18
+  release %5
+  jump b19
+b23: ; preds b21
+  %124 = add u64 %108, 1:u64
+  jump b18
+b24: ; preds b21
+  release %5
+  jump b19
+b25: ; preds b127
+  %18 = cmp.lt bool 0:i64, 0:i64
+  branch 0:bool, b5, b6
+b26: ; preds b2
+  %135 = cmp.lt bool -1:i64, 0:i64
+  branch 0:bool, b27, b28
+b27: ; preds b26
+  %137 = list_len u64 %13
+  %138 = convert.exact i64 %137
+  %139 = add.exact i64 %138, -1:i64
+  jump b28
+b28: ; preds b26 b27
+  %141 = phi i64 -1:i64, %139
+  %609 = is_unique bool %13
+  branch %609, b127, b128
+b29: ; preds b98 b31
+  %151 = phi i64 0:i64, %158
+  %154 = phi list[record{i64, i64}] %5, %188
+  %155 = cmp.lt bool %151, 4:i64
+  branch %155, b30, b4
+b30: ; preds b29
+  jump b37
+b31: ; preds b35
+  %158 = add.proven i64 %151, 1:i64
+  jump b29
+b32: ; preds b36
+  %160 = list_len u64 %206
+  %161 = convert.exact i64 %160
+  %162 = add.exact i64 %161, 0:i64
+  jump b33
+b33: ; preds b36 b32
+  %164 = phi i64 0:i64, %162
+  %170 = list_get_field.proven i64 %206, %164, path 0
+  %171 = add.exact i64 %170, 10:i64
+  %172 = iconst bool 0
+  branch 0:bool, b34, b35
+b34: ; preds b33
+  %174 = list_len u64 %206
+  %175 = convert.exact i64 %174
+  %176 = add.exact i64 %175, 0:i64
+  jump b35
+b35: ; preds b33 b34
+  %178 = phi i64 0:i64, %176
+  %188 = list_set_field.proven list[record{i64, i64}] %206, %178, path 1, %171
+  jump b31
+b36: ; preds b129
+  %191 = iconst bool 0
+  branch 0:bool, b32, b33
+b37: ; preds b30
+  %193 = iconst bool 1
+  branch 1:bool, b38, b39
+b38: ; preds b37
+  %195 = list_len u64 %154
+  %196 = convert.proven i64 %195
+  %197 = add.proven i64 %196, -1:i64
+  jump b39
+b39: ; preds b37 b38
+  %199 = phi i64 -1:i64, %197
+  %616 = is_unique bool %154
+  branch %616, b129, b130
+b40: ; preds b0
+  %208 = iconst bool 1
+  branch 1:bool, b41, b42
+b41: ; preds b40
+  jump b82
+b42: ; preds b40
+  jump b54
+b43: ; preds b112 b45
+  %215 = phi i64 0:i64, %222
+  %218 = phi list[record{i64, i64}] %5, %252
+  %219 = cmp.lt bool %215, 4:i64
+  branch %219, b44, b4
+b44: ; preds b43
+  jump b51
+b45: ; preds b49
+  %222 = add.exact i64 %215, 1:i64
+  jump b43
+b46: ; preds b50
+  %224 = list_len u64 %270
+  %225 = convert.exact i64 %224
+  %226 = add.exact i64 %225, 0:i64
+  jump b47
+b47: ; preds b50 b46
+  %228 = phi i64 0:i64, %226
+  %234 = list_get_field.exact i64 %270, %228, path 0
+  %235 = add.exact i64 %234, 10:i64
+  %236 = cmp.lt bool 0:i64, 0:i64
+  branch 0:bool, b48, b49
+b48: ; preds b47
+  %238 = list_len u64 %270
+  %239 = convert.exact i64 %238
+  %240 = add.exact i64 %239, 0:i64
+  jump b49
+b49: ; preds b47 b48
+  %242 = phi i64 0:i64, %240
+  %252 = list_set_field.exact list[record{i64, i64}] %270, %242, path 1, %235
+  jump b45
+b50: ; preds b131
+  %255 = cmp.lt bool 0:i64, 0:i64
+  branch 1:bool, b46, b47
+b51: ; preds b44
+  %257 = cmp.lt bool -1:i64, 0:i64
+  branch 0:bool, b52, b53
+b52: ; preds b51
+  %259 = list_len u64 %218
+  %260 = convert.exact i64 %259
+  %261 = add.exact i64 %260, -1:i64
+  jump b53
+b53: ; preds b51 b52
+  %263 = phi i64 -1:i64, %261
+  %623 = is_unique bool %218
+  branch %623, b131, b132
+b54: ; preds b42
+  %272 = cmp.lt bool 0:i64, 0:i64
+  branch %272, b55, b56
+b55: ; preds b54
+  jump b110
+b56: ; preds b54
+  jump b68
+b57: ; preds b69 b59
+  %278 = phi i64 0:i64, %285
+  %281 = phi list[record{i64, i64}] %5, %315
+  %282 = cmp.lt bool %278, 4:i64
+  branch %282, b58, b4
+b58: ; preds b57
+  jump b65
+b59: ; preds b63
+  %285 = add.exact i64 %278, 1:i64
+  jump b57
+b60: ; preds b64
+  %287 = list_len u64 %333
+  %288 = convert.exact i64 %287
+  %289 = add.exact i64 %288, 0:i64
+  jump b61
+b61: ; preds b64 b60
+  %291 = phi i64 0:i64, %289
+  %297 = list_get_field.exact i64 %333, %291, path 0
+  %298 = add.exact i64 %297, 10:i64
+  %299 = cmp.lt bool 0:i64, 0:i64
+  branch 1:bool, b62, b63
+b62: ; preds b61
+  %301 = list_len u64 %333
+  %302 = convert.exact i64 %301
+  %303 = add.exact i64 %302, 0:i64
+  jump b63
+b63: ; preds b61 b62
+  %305 = phi i64 0:i64, %303
+  %315 = list_set_field.exact list[record{i64, i64}] %333, %305, path 1, %298
+  jump b59
+b64: ; preds b133
+  %318 = cmp.lt bool 0:i64, 0:i64
+  branch 0:bool, b60, b61
+b65: ; preds b58
+  %320 = cmp.lt bool -1:i64, 0:i64
+  branch 0:bool, b66, b67
+b66: ; preds b65
+  %322 = list_len u64 %281
+  %323 = convert.exact i64 %322
+  %324 = add.exact i64 %323, -1:i64
+  jump b67
+b67: ; preds b65 b66
+  %326 = phi i64 -1:i64, %324
+  %630 = is_unique bool %281
+  branch %630, b133, b134
+b68: ; preds b56
+  %335 = cmp.lt bool 0:i64, 0:i64
+  branch %335, b69, b70
+b69: ; preds b68
+  retain %5
+  jump b57
+b70: ; preds b68
+  retain %5
+  jump b1
+b71: ; preds b126 b73
+  %341 = phi i64 0:i64, %348
+  %344 = phi list[record{i64, i64}] %5, %378
+  %345 = cmp.lt bool %341, 4:i64
+  branch %345, b72, b4
+b72: ; preds b71
+  jump b79
+b73: ; preds b77
+  %348 = add.exact i64 %341, 1:i64
+  jump b71
+b74: ; preds b78
+  %350 = list_len u64 %396
+  %351 = convert.exact i64 %350
+  %352 = add.exact i64 %351, 0:i64
+  jump b75
+b75: ; preds b78 b74
+  %354 = phi i64 0:i64, %352
+  %360 = list_get_field.exact i64 %396, %354, path 0
+  %361 = add.exact i64 %360, 10:i64
+  %362 = cmp.lt bool 0:i64, 0:i64
+  branch 0:bool, b76, b77
+b76: ; preds b75
+  %364 = list_len u64 %396
+  %365 = convert.exact i64 %364
+  %366 = add.exact i64 %365, 0:i64
+  jump b77
+b77: ; preds b75 b76
+  %368 = phi i64 0:i64, %366
+  %378 = list_set_field.exact list[record{i64, i64}] %396, %368, path 1, %361
+  jump b73
+b78: ; preds b135
+  %381 = cmp.lt bool 0:i64, 0:i64
+  branch 1:bool, b74, b75
+b79: ; preds b72
+  %383 = cmp.lt bool -1:i64, 0:i64
+  branch 1:bool, b80, b81
+b80: ; preds b79
+  %385 = list_len u64 %344
+  %386 = convert.exact i64 %385
+  %387 = add.exact i64 %386, -1:i64
+  jump b81
+b81: ; preds b79 b80
+  %389 = phi i64 -1:i64, %387
+  %637 = is_unique bool %344
+  branch %637, b135, b136
+b82: ; preds b41
+  %398 = iconst bool 0
+  branch 0:bool, b83, b84
+b83: ; preds b82
+  jump b124
+b84: ; preds b82
+  jump b96
+b85: ; preds b97 b87
+  %404 = phi i64 0:i64, %411
+  %407 = phi list[record{i64, i64}] %5, %441
+  %408 = cmp.lt bool %404, 4:i64
+  branch %408, b86, b4
+b86: ; preds b85
+  jump b93
+b87: ; preds b91
+  %411 = add.exact i64 %404, 1:i64
+  jump b85
+b88: ; preds b92
+  %413 = list_len u64 %459
+  %414 = convert.exact i64 %413
+  %415 = add.exact i64 %414, 0:i64
+  jump b89
+b89: ; preds b92 b88
+  %417 = phi i64 0:i64, %415
+  %423 = list_get_field.exact i64 %459, %417, path 0
+  %424 = add.exact i64 %423, 10:i64
+  %425 = cmp.lt bool 0:i64, 0:i64
+  branch 1:bool, b90, b91
+b90: ; preds b89
+  %427 = list_len u64 %459
+  %428 = convert.exact i64 %427
+  %429 = add.exact i64 %428, 0:i64
+  jump b91
+b91: ; preds b89 b90
+  %431 = phi i64 0:i64, %429
+  %441 = list_set_field.exact list[record{i64, i64}] %459, %431, path 1, %424
+  jump b87
+b92: ; preds b137
+  %444 = cmp.lt bool 0:i64, 0:i64
+  branch 0:bool, b88, b89
+b93: ; preds b86
+  %446 = cmp.lt bool -1:i64, 0:i64
+  branch 1:bool, b94, b95
+b94: ; preds b93
+  %448 = list_len u64 %407
+  %449 = convert.exact i64 %448
+  %450 = add.exact i64 %449, -1:i64
+  jump b95
+b95: ; preds b93 b94
+  %452 = phi i64 -1:i64, %450
+  %644 = is_unique bool %407
+  branch %644, b137, b138
+b96: ; preds b84
+  %461 = iconst bool 0
+  branch 0:bool, b97, b98
+b97: ; preds b96
+  retain %5
+  jump b85
+b98: ; preds b96
+  retain %5
+  jump b29
+b99: ; preds b111 b101
+  %467 = phi i64 0:i64, %474
+  %470 = phi list[record{i64, i64}] %5, %504
+  %471 = cmp.lt bool %467, 4:i64
+  branch %471, b100, b4
+b100: ; preds b99
+  jump b107
+b101: ; preds b105
+  %474 = add.exact i64 %467, 1:i64
+  jump b99
+b102: ; preds b106
+  %476 = list_len u64 %522
+  %477 = convert.exact i64 %476
+  %478 = add.exact i64 %477, 0:i64
+  jump b103
+b103: ; preds b106 b102
+  %480 = phi i64 0:i64, %478
+  %486 = list_get_field.exact i64 %522, %480, path 0
+  %487 = add.exact i64 %486, 10:i64
+  %488 = cmp.lt bool 0:i64, 0:i64
+  branch 1:bool, b104, b105
+b104: ; preds b103
+  %490 = list_len u64 %522
+  %491 = convert.exact i64 %490
+  %492 = add.exact i64 %491, 0:i64
+  jump b105
+b105: ; preds b103 b104
+  %494 = phi i64 0:i64, %492
+  %504 = list_set_field.exact list[record{i64, i64}] %522, %494, path 1, %487
+  jump b101
+b106: ; preds b139
+  %507 = cmp.lt bool 0:i64, 0:i64
+  branch 1:bool, b102, b103
+b107: ; preds b100
+  %509 = cmp.lt bool -1:i64, 0:i64
+  branch 0:bool, b108, b109
+b108: ; preds b107
+  %511 = list_len u64 %470
+  %512 = convert.exact i64 %511
+  %513 = add.exact i64 %512, -1:i64
+  jump b109
+b109: ; preds b107 b108
+  %515 = phi i64 -1:i64, %513
+  %651 = is_unique bool %470
+  branch %651, b139, b140
+b110: ; preds b55
+  %524 = cmp.lt bool 0:i64, 0:i64
+  branch %524, b111, b112
+b111: ; preds b110
+  retain %5
+  jump b99
+b112: ; preds b110
+  retain %5
+  jump b43
+b113: ; preds b125 b115
+  %530 = phi i64 0:i64, %537
+  %533 = phi list[record{i64, i64}] %5, %567
+  %534 = cmp.lt bool %530, 4:i64
+  branch %534, b114, b4
+b114: ; preds b113
+  jump b121
+b115: ; preds b119
+  %537 = add.exact i64 %530, 1:i64
+  jump b113
+b116: ; preds b120
+  %539 = list_len u64 %585
+  %540 = convert.exact i64 %539
+  %541 = add.exact i64 %540, 0:i64
+  jump b117
+b117: ; preds b120 b116
+  %543 = phi i64 0:i64, %541
+  %549 = list_get_field.exact i64 %585, %543, path 0
+  %550 = add.exact i64 %549, 10:i64
+  %551 = cmp.lt bool 0:i64, 0:i64
+  branch 1:bool, b118, b119
+b118: ; preds b117
+  %553 = list_len u64 %585
+  %554 = convert.exact i64 %553
+  %555 = add.exact i64 %554, 0:i64
+  jump b119
+b119: ; preds b117 b118
+  %557 = phi i64 0:i64, %555
+  %567 = list_set_field.exact list[record{i64, i64}] %585, %557, path 1, %550
+  jump b115
+b120: ; preds b141
+  %570 = cmp.lt bool 0:i64, 0:i64
+  branch 1:bool, b116, b117
+b121: ; preds b114
+  %572 = cmp.lt bool -1:i64, 0:i64
+  branch 1:bool, b122, b123
+b122: ; preds b121
+  %574 = list_len u64 %533
+  %575 = convert.exact i64 %574
+  %576 = add.exact i64 %575, -1:i64
+  jump b123
+b123: ; preds b121 b122
+  %578 = phi i64 -1:i64, %576
+  %658 = is_unique bool %533
+  branch %658, b141, b142
+b124: ; preds b83
+  %587 = cmp.lt bool 0:i64, 0:i64
+  branch %587, b125, b126
+b125: ; preds b124
+  retain %5
+  jump b113
+b126: ; preds b124
+  retain %5
+  jump b71
+b127: ; preds b28 b128
+  %615 = phi list[record{i64, i64}] %13, %612
+  %148 = list_set_field.exact list[record{i64, i64}] %615, %141, path 0, %9
+  jump b25
+b128: ; preds b28
+  %612 = list_copy list[record{i64, i64}] %13
+  release %13
+  jump b127
+b129: ; preds b39 b130
+  %622 = phi list[record{i64, i64}] %154, %619
+  %206 = list_set_field.proven list[record{i64, i64}] %622, %199, path 0, %151
+  jump b36
+b130: ; preds b39
+  %619 = list_copy list[record{i64, i64}] %154
+  release %154
+  jump b129
+b131: ; preds b53 b132
+  %629 = phi list[record{i64, i64}] %218, %626
+  %270 = list_set_field.exact list[record{i64, i64}] %629, %263, path 0, %215
+  jump b50
+b132: ; preds b53
+  %626 = list_copy list[record{i64, i64}] %218
+  release %218
+  jump b131
+b133: ; preds b67 b134
+  %636 = phi list[record{i64, i64}] %281, %633
+  %333 = list_set_field.exact list[record{i64, i64}] %636, %326, path 0, %278
+  jump b64
+b134: ; preds b67
+  %633 = list_copy list[record{i64, i64}] %281
+  release %281
+  jump b133
+b135: ; preds b81 b136
+  %643 = phi list[record{i64, i64}] %344, %640
+  %396 = list_set_field.exact list[record{i64, i64}] %643, %389, path 0, %341
+  jump b78
+b136: ; preds b81
+  %640 = list_copy list[record{i64, i64}] %344
+  release %344
+  jump b135
+b137: ; preds b95 b138
+  %650 = phi list[record{i64, i64}] %407, %647
+  %459 = list_set_field.exact list[record{i64, i64}] %650, %452, path 0, %404
+  jump b92
+b138: ; preds b95
+  %647 = list_copy list[record{i64, i64}] %407
+  release %407
+  jump b137
+b139: ; preds b109 b140
+  %657 = phi list[record{i64, i64}] %470, %654
+  %522 = list_set_field.exact list[record{i64, i64}] %657, %515, path 0, %467
+  jump b106
+b140: ; preds b109
+  %654 = list_copy list[record{i64, i64}] %470
+  release %470
+  jump b139
+b141: ; preds b123 b142
+  %664 = phi list[record{i64, i64}] %533, %661
+  %585 = list_set_field.exact list[record{i64, i64}] %664, %578, path 0, %530
+  jump b120
+b142: ; preds b123
+  %661 = list_copy list[record{i64, i64}] %533
+  release %533
+  jump b141
+b143: ; preds b10
+  release %5
+  jump b17
+b144: ; preds b16
+  release %5
+  jump b19
+b145: ; preds b4
+  release %212
+  jump b10
+fn test_plain_record_call_finishes_before_selection_and_keeps_snapshot() -> bool
+b0:
+  %1 = list_new list[record{i64, i64}] 1:i64
+  %4 = record_make record{i64, i64} 3:i64, 7:i64
+  %5 = list_push list[record{i64, i64}] %1, %4
+  %7 = list_new list[list[record{i64, i64}]] 0:i64
+  jump b27
+b1: ; preds b26
+  %16 = list_len u64 %145
+  %17 = convert.proven i64 %16
+  %18 = add.proven i64 %17, -1:i64
+  jump b2
+b2: ; preds b26 b1
+  %20 = phi i64 -1:i64, %18
+  %27 = list_set_field.proven list[record{i64, i64}] %145, %20, path 0, 13:i64
+  %29 = list_new list[record{i64, i64}] 1:i64
+  %32 = record_make record{i64, i64} 13:i64, 9:i64
+  %33 = list_push list[record{i64, i64}] %29, %32
+  %34 = list_len u64 %27
+  %35 = list_len u64 %33
+  %36 = iconst bool 1
+  branch 1:bool, b5, b32
+b3: ; preds b5 b8
+  %40 = phi u64 0:u64, %56
+  %41 = cmp.lt bool %40, %34
+  branch %41, b6, b7
+b4: ; preds b32 b9 b7
+  %62 = phi bool 1:bool, 0:bool, 1:bool
+  branch %62, b10, b34
+b5: ; preds b2
+  jump b3
+b6: ; preds b3
+  %46 = list_get_field i64 %27, %40, path 0
+  %47 = list_get_field i64 %33, %40, path 0
+  %48 = cmp.eq bool %46, %47
+  %49 = bit_and bool 1:bool, %48
+  %50 = list_get_field i64 %27, %40, path 1
+  %51 = list_get_field i64 %33, %40, path 1
+  %52 = cmp.eq bool %50, %51
+  %53 = bit_and bool %49, %52
+  branch %53, b8, b9
+b7: ; preds b3
+  release %27
+  jump b4
+b8: ; preds b6
+  %56 = add u64 %40, 1:u64
+  jump b3
+b9: ; preds b6
+  release %27
+  jump b4
+b10: ; preds b4
+  %68 = list_new list[list[record{i64, i64}]] 1:i64
+  %70 = list_new list[record{i64, i64}] 1:i64
+  %73 = record_make record{i64, i64} 3:i64, 7:i64
+  %74 = list_push list[record{i64, i64}] %70, %73
+  %75 = list_push list[list[record{i64, i64}]] %68, %74
+  %76 = list_len u64 %128
+  %77 = list_len u64 %75
+  %78 = iconst bool 1
+  branch 1:bool, b14, b33
+b11: ; preds b34 b13
+  %126 = phi bool %62, %124
+  ret %126
+b12: ; preds b14 b24
+  %82 = phi u64 0:u64, %118
+  %83 = cmp.lt bool %82, %76
+  branch %83, b15, b16
+b13: ; preds b33 b25 b16
+  %124 = phi bool 1:bool, 0:bool, 1:bool
+  jump b11
+b14: ; preds b10
+  jump b12
+b15: ; preds b12
+  %85 = list_get list[record{i64, i64}] %128, %82
+  %86 = list_get list[record{i64, i64}] %75, %82
+  %87 = list_len u64 %85
+  %88 = list_len u64 %86
+  %89 = cmp.eq bool %87, %88
+  branch %89, b19, b18
+b16: ; preds b12
+  release %75
+  release %128
+  jump b13
+b17: ; preds b19 b22
+  %93 = phi u64 0:u64, %109
+  %94 = cmp.lt bool %93, %87
+  branch %94, b20, b21
+b18: ; preds b15 b23 b21
+  %115 = phi bool %89, 0:bool, 1:bool
+  branch %115, b24, b25
+b19: ; preds b15
+  jump b17
+b20: ; preds b17
+  %99 = list_get_field i64 %85, %93, path 0
+  %100 = list_get_field i64 %86, %93, path 0
+  %101 = cmp.eq bool %99, %100
+  %102 = bit_and bool 1:bool, %101
+  %103 = list_get_field i64 %85, %93, path 1
+  %104 = list_get_field i64 %86, %93, path 1
+  %105 = cmp.eq bool %103, %104
+  %106 = bit_and bool %102, %105
+  branch %106, b22, b23
+b21: ; preds b17
+  jump b18
+b22: ; preds b20
+  %109 = add u64 %93, 1:u64
+  jump b17
+b23: ; preds b20
+  jump b18
+b24: ; preds b18
+  %118 = add u64 %82, 1:u64
+  jump b12
+b25: ; preds b18
+  release %75
+  release %128
+  jump b13
+b26: ; preds b30
+  %14 = iconst bool 1
+  branch 1:bool, b1, b2
+b27: ; preds b0
+  retain %5
+  %128 = list_push list[list[record{i64, i64}]] %7, %5
+  %132 = iconst bool 0
+  branch 0:bool, b28, b29
+b28: ; preds b27
+  %134 = list_len u64 %5
+  %135 = convert.exact i64 %134
+  %136 = add.exact i64 %135, 0:i64
+  jump b29
+b29: ; preds b27 b28
+  %138 = phi i64 0:i64, %136
+  %153 = is_unique bool %5
+  branch %153, b30, b31
+b30: ; preds b29 b31
+  %159 = phi list[record{i64, i64}] %5, %156
+  %145 = list_set_field.proven list[record{i64, i64}] %159, %138, path 1, 9:i64
+  jump b26
+b31: ; preds b29
+  %156 = list_copy list[record{i64, i64}] %5
+  release %5
+  jump b30
+b32: ; preds b2
+  release %27
+  jump b4
+b33: ; preds b10
+  release %75
+  release %128
+  jump b13
+b34: ; preds b4
+  release %128
+  jump b11
+fn write(list[list[i64]], i64, i64, i64) -> list[list[i64]]
+b0:
+  %5 = cmp.lt bool param1, 0:i64
+  branch %5, b1, b2
+b1: ; preds b0
+  %7 = list_len u64 param0
+  %8 = convert.proven i64 %7
+  %9 = add.proven i64 %8, param1
+  jump b2
+b2: ; preds b0 b1
+  %11 = phi i64 param1, %9
+  %13 = list_get.exact list[i64] param0, %11
+  %16 = cmp.lt bool param2, 0:i64
+  branch %16, b3, b4
+b3: ; preds b2
+  %18 = list_len u64 %13
+  %19 = convert.proven i64 %18
+  %20 = add.proven i64 %19, param2
+  jump b4
+b4: ; preds b2 b3
+  %22 = phi i64 param2, %20
+  %33 = is_unique bool param0
+  branch %33, b5, b6
+b5: ; preds b4 b6
+  %39 = phi list[list[i64]] param0, %36
+  %29 = list_get.exact list[i64] %39, %11
+  %40 = is_unique bool %29
+  branch %40, b7, b8
+b6: ; preds b4
+  %36 = list_copy list[list[i64]] param0
+  release param0
+  jump b5
+b7: ; preds b5 b8
+  %46 = phi list[i64] %29, %43
+  %30 = list_set.exact list[i64] %46, %22, param3
+  %31 = list_set.exact list[list[i64]] %39, %11, %30
+  ret %31
+b8: ; preds b5
+  %43 = list_copy list[i64] %29
+  release %29
+  jump b7
+fn save(list[list[i64]], list[list[list[i64]]]) -> record{i64, list[list[list[i64]]]}
+b0:
+  %6 = is_unique bool param1
+  branch %6, b1, b2
+b1: ; preds b0 b2
+  %12 = phi list[list[list[i64]]] param1, %9
+  retain param0
+  %2 = list_push list[list[list[i64]]] %12, param0
+  %4 = record_make record{i64, list[list[list[i64]]]} 7:i64, %2
+  ret %4
+b2: ; preds b0
+  %9 = list_copy list[list[list[i64]]] param1
+  release param1
+  jump b1
+fn write_point(list[record{i64, i64}], i64, i64) -> list[record{i64, i64}]
+b0:
+  %4 = cmp.lt bool param1, 0:i64
+  branch %4, b1, b2
+b1: ; preds b0
+  %6 = list_len u64 param0
+  %7 = convert.proven i64 %6
+  %8 = add.proven i64 %7, param1
+  jump b2
+b2: ; preds b0 b1
+  %10 = phi i64 param1, %8
+  %20 = is_unique bool param0
+  branch %20, b3, b4
+b3: ; preds b2 b4
+  %26 = phi list[record{i64, i64}] param0, %23
+  %17 = list_set_field.exact list[record{i64, i64}] %26, %10, path 0, param2
+  ret %17
+b4: ; preds b2
+  %23 = list_copy list[record{i64, i64}] param0
+  release param0
+  jump b3
+fn save_points(list[record{i64, i64}], list[list[record{i64, i64}]]) -> record{i64, list[record{i64, i64}], list[list[record{i64, i64}]]}
+b0:
+  %25 = is_unique bool param1
+  branch %25, b3, b4
+b1: ; preds b3
+  %8 = list_len u64 param0
+  %9 = convert.exact i64 %8
+  %10 = add.exact i64 %9, 0:i64
+  jump b2
+b2: ; preds b3 b1
+  %12 = phi i64 0:i64, %10
+  %32 = is_unique bool param0
+  branch %32, b5, b6
+b3: ; preds b0 b4
+  %31 = phi list[list[record{i64, i64}]] param1, %28
+  retain param0
+  %2 = list_push list[list[record{i64, i64}]] %31, param0
+  %6 = iconst bool 0
+  branch 0:bool, b1, b2
+b4: ; preds b0
+  %28 = list_copy list[list[record{i64, i64}]] param1
+  release param1
+  jump b3
+b5: ; preds b2 b6
+  %38 = phi list[record{i64, i64}] param0, %35
+  %19 = list_set_field.exact list[record{i64, i64}] %38, %12, path 1, 9:i64
+  %22 = record_make record{i64, list[record{i64, i64}], list[list[record{i64, i64}]]} -1:i64, %19, %2
+  ret %22
+b6: ; preds b2
+  %35 = list_copy list[record{i64, i64}] param0
+  release param0
+  jump b5
+facts main: %0=[0,1] %3=[0,1] %6=[0,1] %9=[0,1] %12=[0,1] %15=[0,1] %18=[0,1]
+facts test_nested_scalar_writes_keep_the_original_snapshot: %113=[2,2] %114=[2,2] %115=[1,1] %119=[0,2] %120=[0,1] %124=[0,140737488355328] %125=[0,140737488355328] %126=[0,1] %130=[0,140737488355328] %131=[0,1] %133=[-9223372036854775808,9223372036854775807] %134=[-9223372036854775808,9223372036854775807] %135=[0,1] %138=[1,140737488355328] %144=[0,1] %147=[1,2] %153=[0,1] %180=[2,2] %181=[2,2] %182=[1,1] %186=[0,2] %187=[0,1] %191=[0,140737488355328] %192=[0,140737488355328] %193=[0,1] %197=[0,140737488355328] %198=[0,1] %200=[-9223372036854775808,9223372036854775807] %201=[-9223372036854775808,9223372036854775807] %202=[0,1] %205=[1,140737488355328] %211=[0,1] %214=[1,2] %220=[0,1] %222=[0,1] %353=[1,1] %570=[0,20] %572=[-9223372036854775808,9223372036854775807] %574=[0,1] %577=[1,20] %579=[2,2] %580=[2,2] %581=[-9223372036854775806,1] %583=[-9223372036854775808,9223372036854775807] %585=[-9223372036854775808,9223372036854775807] %586=[-9223372036854775808,9223372036854775807] %590=[-9223372036854775808,9223372036854775807] %591=[0,1] %593=[0,140737488355328] %594=[0,140737488355328] %595=[-9223372036854775808,140737488355327] %597=[-9223372036854775808,9223372036854775807] %599=[-9223372036854775808,9223372036854775807] %600=[-9223372036854775808,9223372036854775807] %603=[-9223372036854775808,9223372036854775807] %604=[-9223372036854775806,9223372036854775807] %605=[0,0] %611=[0,0] %613=[-9223372036854775808,9223372036854775807] %614=[-9223372036854775808,9223372036854775807] %616=[-9223372036854775808,9223372036854775807] %619=[-9223372036854775808,9223372036854775807] %620=[0,1] %622=[0,140737488355328] %623=[0,140737488355328] %624=[-9223372036854775808,140737488355327] %626=[-9223372036854775808,9223372036854775807] %628=[-9223372036854775808,9223372036854775807] %629=[-9223372036854775808,9223372036854775807] %632=[-9223372036854775808,9223372036854775807] %639=[-9223372036854775808,9223372036854775807] %640=[0,1] %642=[1,1] %644=[2,2] %645=[2,2] %646=[1,1] %648=[1,1] %650=[-9223372036854775808,9223372036854775807] %651=[-9223372036854775808,9223372036854775807] %654=[1,1] %656=[0,140737488355328] %657=[0,140737488355328] %658=[-1,140737488355327] %660=[-1,140737488355327] %663=[-9223372036854775808,9223372036854775807] %669=[1,1] %984=[0,0]
+list test_nested_scalar_writes_keep_the_original_snapshot %1: settled=true length=%-1 len=[0,0]
+list test_nested_scalar_writes_keep_the_original_snapshot %3: settled=true length=%-1 len=[0,0]
+list test_nested_scalar_writes_keep_the_original_snapshot %5: settled=true length=%-1 elements=[1,1] len=[1,1]
+list test_nested_scalar_writes_keep_the_original_snapshot %7: settled=true length=%-1 elements=[1,2] len=[2,2]
+list test_nested_scalar_writes_keep_the_original_snapshot %8: settled=true length=%-1 len=[1,1]
+list test_nested_scalar_writes_keep_the_original_snapshot %10: settled=true length=%-1 len=[0,0]
+list test_nested_scalar_writes_keep_the_original_snapshot %12: settled=true length=%-1 elements=[3,3] len=[1,1]
+list test_nested_scalar_writes_keep_the_original_snapshot %14: settled=true length=%-1 elements=[3,4] len=[2,2]
+list test_nested_scalar_writes_keep_the_original_snapshot %15: settled=true length=%-1 len=[2,2]
+list test_nested_scalar_writes_keep_the_original_snapshot %98: settled=true length=%-1 len=[0,0]
+list test_nested_scalar_writes_keep_the_original_snapshot %100: settled=true length=%-1 len=[0,0]
+list test_nested_scalar_writes_keep_the_original_snapshot %102: settled=true length=%-1 elements=[1,1] len=[1,1]
+list test_nested_scalar_writes_keep_the_original_snapshot %104: settled=true length=%-1 elements=[1,21] len=[2,2]
+list test_nested_scalar_writes_keep_the_original_snapshot %105: settled=true length=%-1 len=[1,1]
+list test_nested_scalar_writes_keep_the_original_snapshot %107: settled=true length=%-1 len=[0,0]
+list test_nested_scalar_writes_keep_the_original_snapshot %109: settled=true length=%-1 elements=[3,3] len=[1,1]
+list test_nested_scalar_writes_keep_the_original_snapshot %111: settled=true length=%-1 elements=[3,19] len=[2,2]
+list test_nested_scalar_writes_keep_the_original_snapshot %112: settled=true length=%-1 len=[2,2]
+list test_nested_scalar_writes_keep_the_original_snapshot %122: settled=true length=%-1
+list test_nested_scalar_writes_keep_the_original_snapshot %123: settled=true length=%-1
+list test_nested_scalar_writes_keep_the_original_snapshot %133: settled=true length=%-1
+list test_nested_scalar_writes_keep_the_original_snapshot %134: settled=true length=%-1
+list test_nested_scalar_writes_keep_the_original_snapshot %155: settled=true length=%-1 len=[2,2]
+list test_nested_scalar_writes_keep_the_original_snapshot %162: settled=true length=%-1 len=[2,2]
+list test_nested_scalar_writes_keep_the_original_snapshot %165: settled=true length=%-1 len=[0,0]
+list test_nested_scalar_writes_keep_the_original_snapshot %167: settled=true length=%-1 len=[0,0]
+list test_nested_scalar_writes_keep_the_original_snapshot %169: settled=true length=%-1 elements=[1,1] len=[1,1]
+list test_nested_scalar_writes_keep_the_original_snapshot %171: settled=true length=%-1 elements=[1,2] len=[2,2]
+list test_nested_scalar_writes_keep_the_original_snapshot %172: settled=true length=%-1 len=[1,1]
+list test_nested_scalar_writes_keep_the_original_snapshot %174: settled=true length=%-1 len=[0,0]
+list test_nested_scalar_writes_keep_the_original_snapshot %176: settled=true length=%-1 elements=[3,3] len=[1,1]
+list test_nested_scalar_writes_keep_the_original_snapshot %178: settled=true length=%-1 elements=[3,4] len=[2,2]
+list test_nested_scalar_writes_keep_the_original_snapshot %179: settled=true length=%-1 len=[2,2]
+list test_nested_scalar_writes_keep_the_original_snapshot %189: settled=true length=%-1
+list test_nested_scalar_writes_keep_the_original_snapshot %190: settled=true length=%-1
+list test_nested_scalar_writes_keep_the_original_snapshot %200: settled=true length=%-1
+list test_nested_scalar_writes_keep_the_original_snapshot %201: settled=true length=%-1
+list test_nested_scalar_writes_keep_the_original_snapshot %357: settled=true length=%-1 len=[2,2]
+list test_nested_scalar_writes_keep_the_original_snapshot %573: settled=true length=%-1 len=[2,2]
+list test_nested_scalar_writes_keep_the_original_snapshot %589: settled=true length=%-1
+list test_nested_scalar_writes_keep_the_original_snapshot %603: settled=true length=%-1
+list test_nested_scalar_writes_keep_the_original_snapshot %618: settled=true length=%-1
+list test_nested_scalar_writes_keep_the_original_snapshot %633: settled=true length=%-1 len=[2,2]
+list test_nested_scalar_writes_keep_the_original_snapshot %634: settled=true length=%-1
+list test_nested_scalar_writes_keep_the_original_snapshot %635: settled=true length=%-1
+list test_nested_scalar_writes_keep_the_original_snapshot %636: settled=true length=%-1 len=[2,2]
+list test_nested_scalar_writes_keep_the_original_snapshot %653: settled=true length=%-1
+list test_nested_scalar_writes_keep_the_original_snapshot %664: settled=true length=%-1 len=[2,2]
+list test_nested_scalar_writes_keep_the_original_snapshot %665: settled=true length=%-1
+list test_nested_scalar_writes_keep_the_original_snapshot %666: settled=true length=%-1
+list test_nested_scalar_writes_keep_the_original_snapshot %667: settled=true length=%-1 len=[2,2]
+facts test_callback_publication_keeps_full_pending_receiver_pins: %11=[0,0] %17=[0,0] %23=[7,7] %38=[1,1] %39=[1,1] %40=[1,1] %44=[0,1] %45=[0,1] %49=[0,140737488355328] %50=[0,140737488355328] %51=[0,1] %55=[0,140737488355328] %56=[0,1] %58=[-9223372036854775808,9223372036854775807] %59=[-9223372036854775808,9223372036854775807] %60=[0,1] %63=[1,140737488355328] %69=[0,1] %72=[1,1] %78=[0,1] %94=[0,140737488355328] %95=[1,1] %96=[0,1] %100=[0,140737488355328] %101=[0,1] %105=[0,140737488355328] %106=[0,140737488355328] %107=[0,1] %111=[0,140737488355328] %112=[0,1] %116=[0,140737488355328] %117=[0,140737488355328] %118=[0,1] %122=[0,140737488355328] %123=[0,1] %125=[-9223372036854775808,9223372036854775807] %126=[-9223372036854775808,9223372036854775807] %127=[0,1] %130=[1,140737488355328] %136=[0,1] %139=[1,140737488355328] %145=[0,1] %148=[1,140737488355328] %154=[0,1] %156=[0,1]
+list test_callback_publication_keeps_full_pending_receiver_pins %1: settled=true length=%-1 len=[0,0]
+list test_callback_publication_keeps_full_pending_receiver_pins %3: settled=true length=%-1 len=[0,0]
+list test_callback_publication_keeps_full_pending_receiver_pins %5: settled=true length=%-1 elements=[1,1] len=[1,1]
+list test_callback_publication_keeps_full_pending_receiver_pins %6: settled=true length=%-1 len=[1,1]
+list test_callback_publication_keeps_full_pending_receiver_pins %8: settled=true length=%-1 len=[0,0]
+list test_callback_publication_keeps_full_pending_receiver_pins %19: settled=true length=%-1
+list test_callback_publication_keeps_full_pending_receiver_pins %25: settled=true length=%-1 len=[1,1]
+list test_callback_publication_keeps_full_pending_receiver_pins %26: settled=true length=%-1
+list test_callback_publication_keeps_full_pending_receiver_pins %27: settled=true length=%-1
+list test_callback_publication_keeps_full_pending_receiver_pins %28: settled=true length=%-1 len=[1,1]
+list test_callback_publication_keeps_full_pending_receiver_pins %30: settled=true length=%-1 len=[0,0]
+list test_callback_publication_keeps_full_pending_receiver_pins %32: settled=true length=%-1 len=[0,0]
+list test_callback_publication_keeps_full_pending_receiver_pins %34: settled=true length=%-1 elements=[1,1] len=[1,1]
+list test_callback_publication_keeps_full_pending_receiver_pins %36: settled=true length=%-1 elements=[1,7] len=[2,2]
+list test_callback_publication_keeps_full_pending_receiver_pins %37: settled=true length=%-1 len=[1,1]
+list test_callback_publication_keeps_full_pending_receiver_pins %47: settled=true length=%-1
+list test_callback_publication_keeps_full_pending_receiver_pins %48: settled=true length=%-1
+list test_callback_publication_keeps_full_pending_receiver_pins %58: settled=true length=%-1
+list test_callback_publication_keeps_full_pending_receiver_pins %59: settled=true length=%-1
+list test_callback_publication_keeps_full_pending_receiver_pins %80: settled=true length=%-1
+list test_callback_publication_keeps_full_pending_receiver_pins %82: settled=true length=%-1
+list test_callback_publication_keeps_full_pending_receiver_pins %85: settled=true length=%-1 len=[0,0]
+list test_callback_publication_keeps_full_pending_receiver_pins %87: settled=true length=%-1 len=[0,0]
+list test_callback_publication_keeps_full_pending_receiver_pins %89: settled=true length=%-1 len=[0,0]
+list test_callback_publication_keeps_full_pending_receiver_pins %91: settled=true length=%-1 elements=[1,1] len=[1,1]
+list test_callback_publication_keeps_full_pending_receiver_pins %92: settled=true length=%-1 len=[1,1]
+list test_callback_publication_keeps_full_pending_receiver_pins %93: settled=true length=%-1 len=[1,1]
+list test_callback_publication_keeps_full_pending_receiver_pins %103: settled=true length=%-1
+list test_callback_publication_keeps_full_pending_receiver_pins %104: settled=true length=%-1
+list test_callback_publication_keeps_full_pending_receiver_pins %114: settled=true length=%-1
+list test_callback_publication_keeps_full_pending_receiver_pins %115: settled=true length=%-1
+list test_callback_publication_keeps_full_pending_receiver_pins %125: settled=true length=%-1
+list test_callback_publication_keeps_full_pending_receiver_pins %126: settled=true length=%-1
+list test_callback_publication_keeps_full_pending_receiver_pins %159: settled=true length=%-1 len=[1,1]
+facts test_managed_publication_still_establishes_independent_values: %14=[0,0] %20=[1,1] %26=[0,0] %32=[0,0] %39=[0,0] %45=[0,0] %68=[2,2] %69=[2,2] %70=[1,1] %74=[0,2] %75=[0,1] %79=[0,140737488355328] %80=[0,140737488355328] %81=[0,1] %85=[0,140737488355328] %86=[0,1] %88=[-9223372036854775808,9223372036854775807] %89=[-9223372036854775808,9223372036854775807] %90=[0,1] %93=[1,140737488355328] %99=[0,1] %102=[1,2] %108=[0,1] %129=[2,2] %130=[2,2] %131=[1,1] %135=[0,2] %136=[0,1] %140=[0,140737488355328] %141=[0,140737488355328] %142=[0,1] %146=[0,140737488355328] %147=[0,1] %149=[-9223372036854775808,9223372036854775807] %150=[-9223372036854775808,9223372036854775807] %151=[0,1] %154=[1,140737488355328] %160=[0,1] %163=[1,2] %169=[0,1] %171=[0,1]
+list test_managed_publication_still_establishes_independent_values %1: settled=true length=%-1 len=[0,0]
+list test_managed_publication_still_establishes_independent_values %3: settled=true length=%-1 len=[0,0]
+list test_managed_publication_still_establishes_independent_values %5: settled=true length=%-1 elements=[1,1] len=[1,1]
+list test_managed_publication_still_establishes_independent_values %6: settled=true length=%-1 len=[1,1]
+list test_managed_publication_still_establishes_independent_values %8: settled=true length=%-1 len=[0,0]
+list test_managed_publication_still_establishes_independent_values %10: settled=true length=%-1 elements=[2,2] len=[1,1]
+list test_managed_publication_still_establishes_independent_values %11: settled=true length=%-1 len=[2,2]
+list test_managed_publication_still_establishes_independent_values %22: settled=true length=%-1
+list test_managed_publication_still_establishes_independent_values %36: settled=true length=%-1 len=[2,2]
+list test_managed_publication_still_establishes_independent_values %47: settled=true length=%-1
+list test_managed_publication_still_establishes_independent_values %50: settled=true length=%-1 len=[2,2]
+list test_managed_publication_still_establishes_independent_values %51: settled=true length=%-1
+list test_managed_publication_still_establishes_independent_values %52: settled=true length=%-1
+list test_managed_publication_still_establishes_independent_values %53: settled=true length=%-1 len=[2,2]
+list test_managed_publication_still_establishes_independent_values %55: settled=true length=%-1 len=[0,0]
+list test_managed_publication_still_establishes_independent_values %57: settled=true length=%-1 len=[0,0]
+list test_managed_publication_still_establishes_independent_values %59: settled=true length=%-1 elements=[2,2] len=[1,1]
+list test_managed_publication_still_establishes_independent_values %61: settled=true length=%-1 elements=[2,3] len=[2,2]
+list test_managed_publication_still_establishes_independent_values %62: settled=true length=%-1 len=[1,1]
+list test_managed_publication_still_establishes_independent_values %64: settled=true length=%-1 len=[0,0]
+list test_managed_publication_still_establishes_independent_values %66: settled=true length=%-1 elements=[2,2] len=[1,1]
+list test_managed_publication_still_establishes_independent_values %67: settled=true length=%-1 len=[2,2]
+list test_managed_publication_still_establishes_independent_values %77: settled=true length=%-1
+list test_managed_publication_still_establishes_independent_values %78: settled=true length=%-1
+list test_managed_publication_still_establishes_independent_values %88: settled=true length=%-1
+list test_managed_publication_still_establishes_independent_values %89: settled=true length=%-1
+list test_managed_publication_still_establishes_independent_values %110: settled=true length=%-1 len=[2,2]
+list test_managed_publication_still_establishes_independent_values %115: settled=true length=%-1 len=[2,2]
+list test_managed_publication_still_establishes_independent_values %118: settled=true length=%-1 len=[0,0]
+list test_managed_publication_still_establishes_independent_values %120: settled=true length=%-1 len=[0,0]
+list test_managed_publication_still_establishes_independent_values %122: settled=true length=%-1 elements=[1,1] len=[1,1]
+list test_managed_publication_still_establishes_independent_values %123: settled=true length=%-1 len=[1,1]
+list test_managed_publication_still_establishes_independent_values %125: settled=true length=%-1 len=[0,0]
+list test_managed_publication_still_establishes_independent_values %127: settled=true length=%-1 elements=[2,2] len=[1,1]
+list test_managed_publication_still_establishes_independent_values %128: settled=true length=%-1 len=[2,2]
+list test_managed_publication_still_establishes_independent_values %138: settled=true length=%-1
+list test_managed_publication_still_establishes_independent_values %139: settled=true length=%-1
+list test_managed_publication_still_establishes_independent_values %149: settled=true length=%-1
+list test_managed_publication_still_establishes_independent_values %150: settled=true length=%-1
+facts test_conditional_indices_and_zero_iterations_preserve_owners: %12=[0,0] %13=[-9223372036854775808,9223372036854775807] %14=[0,0] %57=[0,10] %58=[-9223372036854775808,9223372036854775807] %59=[0,1] %64=[0,0] %70=[0,0] %73=[-9223372036854775808,9223372036854775807] %75=[0,1] %78=[-9223372036854775808,9223372036854775807] %82=[-9223372036854775808,9223372036854775807] %84=[0,1] %87=[0,140737488355328] %88=[0,140737488355328] %89=[-9223372036854775808,140737488355327] %91=[-9223372036854775808,9223372036854775807] %92=[-9223372036854775808,9223372036854775807] %93=[-9223372036854775808,9223372036854775807] %94=[-9223372036854775808,9223372036854775807] %104=[-9223372036854775808,9223372036854775807] %105=[-9223372036854775808,9223372036854775807] %107=[1,10] %109=[-9223372036854775808,9223372036854775807] %110=[-9223372036854775808,9223372036854775807] %111=[-9223372036854775808,9223372036854775807] %121=[1,1] %122=[1,1] %123=[1,1] %127=[0,1] %128=[0,1] %132=[0,140737488355328] %133=[0,140737488355328] %134=[0,1] %138=[0,140737488355328] %139=[0,1] %141=[-9223372036854775808,9223372036854775807] %142=[-9223372036854775808,9223372036854775807] %143=[0,1] %146=[1,140737488355328] %152=[0,1] %155=[1,1] %161=[0,1] %183=[1,1] %184=[1,1] %185=[1,1] %189=[0,1] %190=[0,1] %194=[0,140737488355328] %195=[0,140737488355328] %196=[0,1] %200=[0,140737488355328] %201=[0,1] %203=[-9223372036854775808,9223372036854775807] %204=[-9223372036854775808,9223372036854775807] %205=[0,1] %208=[1,140737488355328] %214=[0,1] %217=[1,1] %223=[0,1] %225=[0,1] %267=[0,0] %326=[0,0]
+list test_conditional_indices_and_zero_iterations_preserve_owners %1: settled=true length=%-1 len=[0,0]
+list test_conditional_indices_and_zero_iterations_preserve_owners %3: settled=true length=%-1 len=[0,0]
+list test_conditional_indices_and_zero_iterations_preserve_owners %5: settled=true length=%-1 elements=[1,1] len=[1,1]
+list test_conditional_indices_and_zero_iterations_preserve_owners %7: settled=true length=%-1 elements=[1,2] len=[2,2]
+list test_conditional_indices_and_zero_iterations_preserve_owners %8: settled=true length=%-1 len=[1,1]
+list test_conditional_indices_and_zero_iterations_preserve_owners %17: settled=true length=%-1 len=[1,1]
+list test_conditional_indices_and_zero_iterations_preserve_owners %61: settled=true length=%-1 len=[1,1]
+list test_conditional_indices_and_zero_iterations_preserve_owners %72: settled=true length=%-1
+list test_conditional_indices_and_zero_iterations_preserve_owners %99: settled=true length=%-1 len=[1,1]
+list test_conditional_indices_and_zero_iterations_preserve_owners %100: settled=true length=%-1
+list test_conditional_indices_and_zero_iterations_preserve_owners %101: settled=true length=%-1
+list test_conditional_indices_and_zero_iterations_preserve_owners %102: settled=true length=%-1 len=[1,1]
+list test_conditional_indices_and_zero_iterations_preserve_owners %113: settled=true length=%-1 len=[0,0]
+list test_conditional_indices_and_zero_iterations_preserve_owners %115: settled=true length=%-1 len=[0,0]
+list test_conditional_indices_and_zero_iterations_preserve_owners %117: settled=true length=%-1 elements=[9,9] len=[1,1]
+list test_conditional_indices_and_zero_iterations_preserve_owners %119: settled=true length=%-1 elements=[4,9] len=[2,2]
+list test_conditional_indices_and_zero_iterations_preserve_owners %120: settled=true length=%-1 len=[1,1]
+list test_conditional_indices_and_zero_iterations_preserve_owners %130: settled=true length=%-1
+list test_conditional_indices_and_zero_iterations_preserve_owners %131: settled=true length=%-1
+list test_conditional_indices_and_zero_iterations_preserve_owners %141: settled=true length=%-1
+list test_conditional_indices_and_zero_iterations_preserve_owners %142: settled=true length=%-1
+list test_conditional_indices_and_zero_iterations_preserve_owners %163: settled=true length=%-1 len=[1,1]
+list test_conditional_indices_and_zero_iterations_preserve_owners %172: settled=true length=%-1 len=[1,1]
+list test_conditional_indices_and_zero_iterations_preserve_owners %175: settled=true length=%-1 len=[0,0]
+list test_conditional_indices_and_zero_iterations_preserve_owners %177: settled=true length=%-1 len=[0,0]
+list test_conditional_indices_and_zero_iterations_preserve_owners %179: settled=true length=%-1 elements=[1,1] len=[1,1]
+list test_conditional_indices_and_zero_iterations_preserve_owners %181: settled=true length=%-1 elements=[1,2] len=[2,2]
+list test_conditional_indices_and_zero_iterations_preserve_owners %182: settled=true length=%-1 len=[1,1]
+list test_conditional_indices_and_zero_iterations_preserve_owners %192: settled=true length=%-1
+list test_conditional_indices_and_zero_iterations_preserve_owners %193: settled=true length=%-1
+list test_conditional_indices_and_zero_iterations_preserve_owners %203: settled=true length=%-1
+list test_conditional_indices_and_zero_iterations_preserve_owners %204: settled=true length=%-1
+list test_conditional_indices_and_zero_iterations_preserve_owners %271: settled=true length=%-1 len=[1,1]
+list test_conditional_indices_and_zero_iterations_preserve_owners %330: settled=true length=%-1 len=[1,1]
+facts test_three_level_shared_projection_keeps_named_row_and_outer_snapshot: %16=[0,0] %22=[0,0] %27=[0,0] %33=[1,1] %41=[0,0] %47=[0,0] %52=[0,0] %58=[1,1] %62=[-9223372036854775808,9223372036854775807] %64=[0,1] %66=[0,140737488355328] %67=[0,140737488355328] %68=[-9223372036854775808,140737488355327] %70=[-9223372036854775808,9223372036854775807] %71=[-9223372036854775808,9223372036854775807] %72=[-9223372036854775808,9223372036854775807] %73=[-9223372036854775808,9223372036854775807] %88=[0,0] %94=[1,1] %99=[0,0] %105=[0,0] %113=[0,140737488355328] %114=[0,140737488355328] %116=[0,1] %122=[0,1] %124=[0,0] %131=[0,1] %132=[-9223372036854775808,9223372036854775807] %133=[-9223372036854775808,9223372036854775807] %134=[-9223372036854775808,9223372036854775807] %135=[-9223372036854775808,9223372036854775807] %184=[2,2] %185=[2,2] %186=[1,1] %190=[0,2] %191=[0,1] %195=[0,140737488355328] %196=[0,140737488355328] %197=[0,1] %201=[0,140737488355328] %202=[0,1] %206=[0,140737488355328] %207=[0,140737488355328] %208=[0,1] %212=[0,140737488355328] %213=[0,1] %215=[-9223372036854775808,9223372036854775807] %216=[-9223372036854775808,9223372036854775807] %217=[0,1] %220=[1,140737488355328] %226=[0,1] %229=[1,140737488355328] %235=[0,1] %238=[1,2] %244=[0,1] %297=[2,2] %298=[2,2] %299=[1,1] %303=[0,2] %304=[0,1] %308=[0,140737488355328] %309=[0,140737488355328] %310=[0,1] %314=[0,140737488355328] %315=[0,1] %319=[0,140737488355328] %320=[0,140737488355328] %321=[0,1] %325=[0,140737488355328] %326=[0,1] %328=[-9223372036854775808,9223372036854775807] %329=[-9223372036854775808,9223372036854775807] %330=[0,1] %333=[1,140737488355328] %339=[0,1] %342=[1,140737488355328] %348=[0,1] %351=[1,2] %357=[0,1] %359=[0,1] %382=[0,140737488355328] %383=[2,2] %384=[0,1] %388=[0,140737488355328] %389=[0,1] %391=[-9223372036854775808,9223372036854775807] %392=[1,2] %393=[0,1] %396=[1,140737488355328] %402=[0,1] %404=[0,1] %437=[2,2] %438=[2,2] %439=[1,1] %443=[0,2] %444=[0,1] %446=[1,2] %447=[1,2] %448=[0,1] %451=[1,2] %457=[0,1] %459=[0,1]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %1: settled=true length=%-1 len=[0,0]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %3: settled=true length=%-1 elements=[1,1] len=[1,1]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %5: settled=true length=%-1 elements=[1,2] len=[2,2]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %7: settled=true length=%-1 len=[0,0]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %8: settled=true length=%-1 len=[1,1]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %9: settled=true length=%-1 len=[2,2]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %11: settled=true length=%-1 len=[0,0]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %12: settled=true length=%-1 len=[1,1]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %13: settled=true length=%-1 len=[2,2]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %24: settled=true length=%-1
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %35: settled=true length=%-1
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %49: settled=true length=%-1
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %60: settled=true length=%-1
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %78: settled=true length=%-1 len=[2,2]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %79: settled=true length=%-1
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %80: settled=true length=%-1
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %81: settled=true length=%-1
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %82: settled=true length=%-1
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %83: settled=true length=%-1
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %84: settled=true length=%-1 len=[2,2]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %96: settled=true length=%-1
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %107: settled=true length=%-1
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %141: settled=true length=%-1 len=[2,2]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %142: settled=true length=%-1
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %143: settled=true length=%-1
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %144: settled=true length=%-1
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %145: settled=true length=%-1
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %146: settled=true length=%-1
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %147: settled=true length=%-1 len=[2,2]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %149: settled=true length=%-1 len=[0,0]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %151: settled=true length=%-1 len=[0,0]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %153: settled=true length=%-1 len=[0,0]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %155: settled=true length=%-1 elements=[1,1] len=[1,1]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %157: settled=true length=%-1 elements=[1,2] len=[2,2]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %158: settled=true length=%-1 len=[1,1]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %160: settled=true length=%-1 len=[0,0]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %162: settled=true length=%-1 elements=[1,1] len=[1,1]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %164: settled=true length=%-1 elements=[1,7] len=[2,2]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %165: settled=true length=%-1 len=[2,2]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %166: settled=true length=%-1 len=[1,1]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %168: settled=true length=%-1 len=[0,0]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %170: settled=true length=%-1 len=[0,0]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %172: settled=true length=%-1 elements=[9,9] len=[1,1]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %174: settled=true length=%-1 elements=[2,9] len=[2,2]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %175: settled=true length=%-1 len=[1,1]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %177: settled=true length=%-1 len=[0,0]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %179: settled=true length=%-1 elements=[1,1] len=[1,1]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %181: settled=true length=%-1 elements=[1,2] len=[2,2]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %182: settled=true length=%-1 len=[2,2]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %183: settled=true length=%-1 len=[2,2]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %193: settled=true length=%-1
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %194: settled=true length=%-1
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %204: settled=true length=%-1
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %205: settled=true length=%-1
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %215: settled=true length=%-1
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %216: settled=true length=%-1
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %246: settled=true length=%-1 len=[2,2]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %256: settled=true length=%-1 len=[2,2]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %257: settled=true length=%-1 len=[2,2]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %259: settled=true length=%-1 len=[2,2]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %262: settled=true length=%-1 len=[0,0]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %264: settled=true length=%-1 len=[0,0]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %266: settled=true length=%-1 len=[0,0]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %268: settled=true length=%-1 elements=[1,1] len=[1,1]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %270: settled=true length=%-1 elements=[1,2] len=[2,2]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %271: settled=true length=%-1 len=[1,1]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %273: settled=true length=%-1 len=[0,0]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %275: settled=true length=%-1 elements=[1,1] len=[1,1]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %277: settled=true length=%-1 elements=[1,2] len=[2,2]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %278: settled=true length=%-1 len=[2,2]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %279: settled=true length=%-1 len=[1,1]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %281: settled=true length=%-1 len=[0,0]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %283: settled=true length=%-1 len=[0,0]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %285: settled=true length=%-1 elements=[1,1] len=[1,1]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %287: settled=true length=%-1 elements=[1,2] len=[2,2]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %288: settled=true length=%-1 len=[1,1]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %290: settled=true length=%-1 len=[0,0]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %292: settled=true length=%-1 elements=[1,1] len=[1,1]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %294: settled=true length=%-1 elements=[1,2] len=[2,2]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %295: settled=true length=%-1 len=[2,2]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %296: settled=true length=%-1 len=[2,2]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %306: settled=true length=%-1
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %307: settled=true length=%-1
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %317: settled=true length=%-1
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %318: settled=true length=%-1
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %328: settled=true length=%-1
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %329: settled=true length=%-1
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %361: settled=true length=%-1
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %362: settled=true length=%-1
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %365: settled=true length=%-1
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %366: settled=true length=%-1
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %368: settled=true length=%-1
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %370: settled=true length=%-1
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %371: settled=true length=%-1
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %372: settled=true length=%-1
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %374: settled=true length=%-1
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %377: settled=true length=%-1 len=[0,0]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %379: settled=true length=%-1 elements=[1,1] len=[1,1]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %381: settled=true length=%-1 elements=[1,2] len=[2,2]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %391: settled=true length=%-1
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %392: settled=true length=%-1
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %407: settled=true length=%-1 elements=[1,2] len=[2,2]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %408: settled=true length=%-1 elements=[1,2] len=[2,2]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %418: settled=true length=%-1 elements=[1,2] len=[2,2]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %419: settled=true length=%-1 elements=[1,2] len=[2,2]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %421: settled=true length=%-1 elements=[1,2] len=[2,2]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %423: settled=true length=%-1 elements=[1,2] len=[2,2]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %424: settled=true length=%-1 elements=[1,2] len=[2,2]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %425: settled=true length=%-1 elements=[1,2] len=[2,2]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %427: settled=true length=%-1 elements=[1,2] len=[2,2]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %432: settled=true length=%-1 len=[0,0]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %434: settled=true length=%-1 elements=[1,1] len=[1,1]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %436: settled=true length=%-1 elements=[1,2] len=[2,2]
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %446: settled=true length=%-1
+list test_three_level_shared_projection_keeps_named_row_and_outer_snapshot %447: settled=true length=%-1
+facts test_plain_record_writes_keep_snapshot_and_negative_index: %61=[1,1] %62=[1,1] %63=[1,1] %67=[0,1] %68=[0,1] %73=[-9223372036854775808,9223372036854775807] %74=[-9223372036854775808,9223372036854775807] %75=[0,1] %76=[0,1] %77=[-9223372036854775808,9223372036854775807] %78=[-9223372036854775808,9223372036854775807] %79=[0,1] %80=[0,1] %83=[1,1] %89=[0,1] %102=[1,1] %103=[1,1] %104=[1,1] %108=[0,1] %109=[0,1] %114=[-9223372036854775808,9223372036854775807] %115=[-9223372036854775808,9223372036854775807] %116=[0,1] %117=[0,1] %118=[-9223372036854775808,9223372036854775807] %119=[-9223372036854775808,9223372036854775807] %120=[0,1] %121=[0,1] %124=[1,1] %130=[0,1] %132=[0,1] %151=[0,4] %153=[-9223372036854775808,9223372036854775807] %155=[0,1] %158=[1,4] %164=[0,0] %166=[-9223372036854775808,9223372036854775807] %167=[-9223372036854775808,9223372036854775807] %170=[-9223372036854775808,9223372036854775807] %171=[-9223372036854775798,9223372036854775807] %172=[0,0] %178=[0,0] %180=[-9223372036854775808,9223372036854775807] %181=[-9223372036854775808,9223372036854775807] %183=[-9223372036854775808,9223372036854775807] %191=[0,0] %193=[1,1] %195=[1,1] %196=[1,1] %197=[0,0] %199=[0,0] %201=[-9223372036854775808,9223372036854775807] %208=[1,1] %398=[0,0] %461=[0,0]
+list test_plain_record_writes_keep_snapshot_and_negative_index %1: settled=true length=%-1 len=[0,0]
+list test_plain_record_writes_keep_snapshot_and_negative_index %5: settled=true length=%-1 len=[1,1]
+list test_plain_record_writes_keep_snapshot_and_negative_index %56: settled=true length=%-1 len=[0,0]
+list test_plain_record_writes_keep_snapshot_and_negative_index %60: settled=true length=%-1 len=[1,1]
+list test_plain_record_writes_keep_snapshot_and_negative_index %97: settled=true length=%-1 len=[0,0]
+list test_plain_record_writes_keep_snapshot_and_negative_index %101: settled=true length=%-1 len=[1,1]
+list test_plain_record_writes_keep_snapshot_and_negative_index %154: settled=true length=%-1 len=[1,1]
+list test_plain_record_writes_keep_snapshot_and_negative_index %185: settled=true length=%-1
+list test_plain_record_writes_keep_snapshot_and_negative_index %186: settled=true length=%-1
+list test_plain_record_writes_keep_snapshot_and_negative_index %188: settled=true length=%-1 len=[1,1]
+list test_plain_record_writes_keep_snapshot_and_negative_index %203: settled=true length=%-1
+list test_plain_record_writes_keep_snapshot_and_negative_index %204: settled=true length=%-1
+list test_plain_record_writes_keep_snapshot_and_negative_index %206: settled=true length=%-1 len=[1,1]
+list test_plain_record_writes_keep_snapshot_and_negative_index %212: settled=true length=%-1 len=[1,1]
+facts test_plain_record_call_finishes_before_selection_and_keeps_snapshot: %9=[-9223372036854775808,9223372036854775807] %14=[1,1] %16=[1,1] %17=[1,1] %18=[0,0] %20=[0,0] %24=[-9223372036854775808,9223372036854775807] %34=[1,1] %35=[1,1] %36=[1,1] %40=[0,1] %41=[0,1] %46=[-9223372036854775808,9223372036854775807] %47=[-9223372036854775808,9223372036854775807] %48=[0,1] %49=[0,1] %50=[-9223372036854775808,9223372036854775807] %51=[-9223372036854775808,9223372036854775807] %52=[0,1] %53=[0,1] %56=[1,1] %62=[0,1] %76=[1,1] %77=[1,1] %78=[1,1] %82=[0,1] %83=[0,1] %87=[0,140737488355328] %88=[0,140737488355328] %89=[0,1] %93=[0,140737488355328] %94=[0,1] %99=[-9223372036854775808,9223372036854775807] %100=[-9223372036854775808,9223372036854775807] %101=[0,1] %102=[0,1] %103=[-9223372036854775808,9223372036854775807] %104=[-9223372036854775808,9223372036854775807] %105=[0,1] %106=[0,1] %109=[1,140737488355328] %115=[0,1] %118=[1,1] %124=[0,1] %126=[0,1] %132=[0,0] %138=[0,0] %142=[-9223372036854775808,9223372036854775807]
+list test_plain_record_call_finishes_before_selection_and_keeps_snapshot %1: settled=true length=%-1 len=[0,0]
+list test_plain_record_call_finishes_before_selection_and_keeps_snapshot %5: settled=true length=%-1 len=[1,1]
+list test_plain_record_call_finishes_before_selection_and_keeps_snapshot %7: settled=true length=%-1 len=[0,0]
+list test_plain_record_call_finishes_before_selection_and_keeps_snapshot %22: settled=true length=%-1
+list test_plain_record_call_finishes_before_selection_and_keeps_snapshot %23: settled=true length=%-1
+list test_plain_record_call_finishes_before_selection_and_keeps_snapshot %27: settled=true length=%-1 len=[1,1]
+list test_plain_record_call_finishes_before_selection_and_keeps_snapshot %29: settled=true length=%-1 len=[0,0]
+list test_plain_record_call_finishes_before_selection_and_keeps_snapshot %33: settled=true length=%-1 len=[1,1]
+list test_plain_record_call_finishes_before_selection_and_keeps_snapshot %68: settled=true length=%-1 len=[0,0]
+list test_plain_record_call_finishes_before_selection_and_keeps_snapshot %70: settled=true length=%-1 len=[0,0]
+list test_plain_record_call_finishes_before_selection_and_keeps_snapshot %74: settled=true length=%-1 len=[1,1]
+list test_plain_record_call_finishes_before_selection_and_keeps_snapshot %75: settled=true length=%-1 len=[1,1]
+list test_plain_record_call_finishes_before_selection_and_keeps_snapshot %85: settled=true length=%-1
+list test_plain_record_call_finishes_before_selection_and_keeps_snapshot %86: settled=true length=%-1
+list test_plain_record_call_finishes_before_selection_and_keeps_snapshot %128: settled=true length=%-1 len=[1,1]
+list test_plain_record_call_finishes_before_selection_and_keeps_snapshot %140: settled=true length=%-1
+list test_plain_record_call_finishes_before_selection_and_keeps_snapshot %141: settled=true length=%-1
+list test_plain_record_call_finishes_before_selection_and_keeps_snapshot %145: settled=true length=%-1 len=[1,1]
+facts write: %5=[0,1] %7=[0,140737488355328] %8=[0,140737488355328] %9=[-9223372036854775808,140737488355327] %11=[-9223372036854775808,9223372036854775807] %14=[-9223372036854775808,9223372036854775807] %16=[0,1] %18=[0,140737488355328] %19=[0,140737488355328] %20=[-9223372036854775808,140737488355327] %22=[-9223372036854775808,9223372036854775807] %23=[-9223372036854775808,9223372036854775807] %24=[-9223372036854775808,9223372036854775807]
+list write %13: settled=true length=%-1
+list write %28: settled=true length=%-1
+list write %29: settled=true length=%-1
+list write %30: settled=true length=%-1
+list write %31: settled=true length=%-1
+facts save:
+list save %2: settled=true length=%-1
+facts write_point: %4=[0,1] %6=[0,140737488355328] %7=[0,140737488355328] %8=[-9223372036854775808,140737488355327] %10=[-9223372036854775808,9223372036854775807] %14=[-9223372036854775808,9223372036854775807]
+list write_point %12: settled=true length=%-1
+list write_point %13: settled=true length=%-1
+list write_point %17: settled=true length=%-1
+facts save_points: %6=[0,0] %12=[0,0] %16=[-9223372036854775808,9223372036854775807]
+list save_points %2: settled=true length=%-1
+list save_points %14: settled=true length=%-1
+list save_points %15: settled=true length=%-1
+list save_points %19: settled=true length=%-1

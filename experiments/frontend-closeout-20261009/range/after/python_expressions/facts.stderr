@@ -1,0 +1,3 @@
+python_expressions.my:1:1: error[E_MAIN]: the program requires an entry point: func main() -> int; `mylang check FILE` type-checks a library that has no main
+  # Python expression idioms, each checked against the answer CPython gives for the
+  ^

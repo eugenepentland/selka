@@ -1,0 +1,587 @@
+fn main() -> i64
+b0:
+  %0 = call bool test_full_short_empty_and_negative_byte_scans()
+  branch %0, b2, b1
+b1: ; preds b0
+  unreachable
+b2: ; preds b0
+  %3 = call bool test_byte_snapshot_and_rebound_source_keep_canonical_backing()
+  branch %3, b4, b3
+b3: ; preds b2
+  unreachable
+b4: ; preds b2
+  %6 = call bool test_held_byte_iteration_and_mutable_buffer_keep_fallbacks()
+  branch %6, b6, b5
+b5: ; preds b4
+  unreachable
+b6: ; preds b4
+  %9 = call bool test_empty_backing_and_multiple_byte_owners()
+  branch %9, b8, b7
+b7: ; preds b6
+  unreachable
+b8: ; preds b6
+  ret 0:i64
+fn test_full_short_empty_and_negative_byte_scans() -> bool
+b0:
+  %2 = call i64 owned(0:i64, 20:i64)
+  %4 = cmp.eq bool %2, 210:i64
+  branch %4, b1, b2
+b1: ; preds b0
+  %8 = call i64 owned(0:i64, 3:i64)
+  %10 = cmp.eq bool %8, 6:i64
+  jump b2
+b2: ; preds b0 b1
+  %12 = phi bool %4, %10
+  branch %12, b3, b4
+b3: ; preds b2
+  %16 = call i64 owned(7:i64, 7:i64)
+  %18 = cmp.eq bool %16, 0:i64
+  jump b4
+b4: ; preds b2 b3
+  %20 = phi bool %12, %18
+  branch %20, b5, b6
+b5: ; preds b4
+  %24 = call i64 owned(-20:i64, 0:i64)
+  %26 = cmp.eq bool %24, 210:i64
+  jump b6
+b6: ; preds b4 b5
+  %28 = phi bool %20, %26
+  branch %28, b7, b8
+b7: ; preds b6
+  %32 = call i64 owned(-1:i64, 0:i64)
+  %34 = cmp.eq bool %32, 20:i64
+  jump b8
+b8: ; preds b6 b7
+  %36 = phi bool %28, %34
+  ret %36
+fn test_byte_snapshot_and_rebound_source_keep_canonical_backing() -> bool
+b0:
+  %1 = list_new list[i64] 20:i64
+  %3 = list_push list[i64] %1, 1:i64
+  %5 = list_push list[i64] %3, 2:i64
+  %7 = list_push list[i64] %5, 3:i64
+  %9 = list_push list[i64] %7, 4:i64
+  %11 = list_push list[i64] %9, 5:i64
+  %13 = list_push list[i64] %11, 6:i64
+  %15 = list_push list[i64] %13, 7:i64
+  %17 = list_push list[i64] %15, 8:i64
+  %19 = list_push list[i64] %17, 9:i64
+  %21 = list_push list[i64] %19, 10:i64
+  %23 = list_push list[i64] %21, 11:i64
+  %25 = list_push list[i64] %23, 12:i64
+  %27 = list_push list[i64] %25, 13:i64
+  %29 = list_push list[i64] %27, 14:i64
+  %31 = list_push list[i64] %29, 15:i64
+  %33 = list_push list[i64] %31, 16:i64
+  %35 = list_push list[i64] %33, 17:i64
+  %37 = list_push list[i64] %35, 18:i64
+  %39 = list_push list[i64] %37, 19:i64
+  %41 = list_push list[i64] %39, 20:i64
+  %42 = call bool myl_core_bytes_valid_list(%41)
+  branch %42, b1, b2
+b1: ; preds b0
+  %45 = call byte_buffer myl_core_buffer_from_list(%41)
+  release %41
+  %46 = call bytes myl_core_buffer_snapshot(%45)
+  %49 = iconst bool 1
+  %51 = iconst bool 1
+  %52 = bit_and bool 1:bool, 1:bool
+  %53 = call byte_buffer myl_core_buffer_push_checked(%45, 99:i64)
+  %56 = list_len u64 %46
+  %57 = convert.proven i64 %56
+  jump b3
+b2: ; preds b0
+  unreachable
+b3: ; preds b1 b5
+  %59 = phi i64 0:i64, %71
+  %63 = phi i64 0:i64, %68
+  %61 = cmp.lt bool %59, %57
+  branch %61, b4, b6
+b4: ; preds b3
+  %66 = list_get.proven u8 %46, %59
+  %67 = convert i64 %66
+  %68 = add.proven i64 %63, %67
+  jump b5
+b5: ; preds b4
+  %71 = add.proven i64 %59, 1:i64
+  jump b3
+b6: ; preds b3
+  %74 = call bytes myl_core_buffer_snapshot(%53)
+  release %53
+  %76 = list_len u64 %74
+  %77 = convert.proven i64 %76
+  jump b7
+b7: ; preds b6 b9
+  %79 = phi i64 0:i64, %91
+  %83 = phi i64 %63, %88
+  %81 = cmp.lt bool %79, %77
+  branch %81, b8, b10
+b8: ; preds b7
+  %86 = list_get.proven u8 %74, %79
+  %87 = convert i64 %86
+  %88 = add.proven i64 %83, %87
+  jump b9
+b9: ; preds b8
+  %91 = add.proven i64 %79, 1:i64
+  jump b7
+b10: ; preds b7
+  %94 = cmp.eq bool %83, 519:i64
+  branch %94, b11, b15
+b11: ; preds b10
+  %98 = list_len u64 %46
+  release %46
+  %99 = convert.proven i64 %98
+  %101 = cmp.eq bool %99, 20:i64
+  jump b12
+b12: ; preds b15 b11
+  %103 = phi bool %94, %101
+  branch %103, b13, b16
+b13: ; preds b12
+  %108 = list_get.exact u8 %74, 20:i64
+  release %74
+  %109 = convert i64 %108
+  %111 = cmp.eq bool %109, 99:i64
+  jump b14
+b14: ; preds b16 b13
+  %113 = phi bool %103, %111
+  ret %113
+b15: ; preds b10
+  release %46
+  jump b12
+b16: ; preds b12
+  release %74
+  jump b14
+fn test_held_byte_iteration_and_mutable_buffer_keep_fallbacks() -> bool
+b0:
+  %1 = list_new list[i64] 20:i64
+  %3 = list_push list[i64] %1, 1:i64
+  %5 = list_push list[i64] %3, 2:i64
+  %7 = list_push list[i64] %5, 3:i64
+  %9 = list_push list[i64] %7, 4:i64
+  %11 = list_push list[i64] %9, 5:i64
+  %13 = list_push list[i64] %11, 6:i64
+  %15 = list_push list[i64] %13, 7:i64
+  %17 = list_push list[i64] %15, 8:i64
+  %19 = list_push list[i64] %17, 9:i64
+  %21 = list_push list[i64] %19, 10:i64
+  %23 = list_push list[i64] %21, 11:i64
+  %25 = list_push list[i64] %23, 12:i64
+  %27 = list_push list[i64] %25, 13:i64
+  %29 = list_push list[i64] %27, 14:i64
+  %31 = list_push list[i64] %29, 15:i64
+  %33 = list_push list[i64] %31, 16:i64
+  %35 = list_push list[i64] %33, 17:i64
+  %37 = list_push list[i64] %35, 18:i64
+  %39 = list_push list[i64] %37, 19:i64
+  %41 = list_push list[i64] %39, 20:i64
+  %42 = call bool myl_core_bytes_valid_list(%41)
+  branch %42, b1, b2
+b1: ; preds b0
+  %45 = call bytes myl_core_bytes_from_list(%41)
+  release %41
+  %48 = list_len u64 %45
+  %49 = convert.proven i64 %48
+  jump b3
+b2: ; preds b0
+  unreachable
+b3: ; preds b1 b5
+  %51 = phi i64 0:i64, %63
+  %55 = phi i64 0:i64, %60
+  %53 = cmp.lt bool %51, %49
+  branch %53, b4, b6
+b4: ; preds b3
+  %58 = list_get.proven u8 %45, %51
+  %59 = convert i64 %58
+  %60 = add.proven i64 %55, %59
+  jump b5
+b5: ; preds b4
+  %63 = add.proven i64 %51, 1:i64
+  jump b3
+b6: ; preds b3
+  %66 = list_len u64 %45
+  %67 = convert.proven i64 %66
+  jump b7
+b7: ; preds b6 b9
+  %69 = phi i64 0:i64, %80
+  %76 = phi i64 %55, %77
+  %71 = cmp.lt bool %69, %67
+  branch %71, b8, b10
+b8: ; preds b7
+  %74 = list_get.proven u8 %45, %69
+  %75 = convert i64 %74
+  %77 = add.proven i64 %76, %75
+  jump b9
+b9: ; preds b8
+  %80 = add.proven i64 %69, 1:i64
+  jump b7
+b10: ; preds b7
+  release %45
+  %83 = list_new list[i64] 20:i64
+  %85 = list_push list[i64] %83, 1:i64
+  %87 = list_push list[i64] %85, 2:i64
+  %89 = list_push list[i64] %87, 3:i64
+  %91 = list_push list[i64] %89, 4:i64
+  %93 = list_push list[i64] %91, 5:i64
+  %95 = list_push list[i64] %93, 6:i64
+  %97 = list_push list[i64] %95, 7:i64
+  %99 = list_push list[i64] %97, 8:i64
+  %101 = list_push list[i64] %99, 9:i64
+  %103 = list_push list[i64] %101, 10:i64
+  %105 = list_push list[i64] %103, 11:i64
+  %107 = list_push list[i64] %105, 12:i64
+  %109 = list_push list[i64] %107, 13:i64
+  %111 = list_push list[i64] %109, 14:i64
+  %113 = list_push list[i64] %111, 15:i64
+  %115 = list_push list[i64] %113, 16:i64
+  %117 = list_push list[i64] %115, 17:i64
+  %119 = list_push list[i64] %117, 18:i64
+  %121 = list_push list[i64] %119, 19:i64
+  %123 = list_push list[i64] %121, 20:i64
+  %124 = call bool myl_core_bytes_valid_list(%123)
+  branch %124, b11, b12
+b11: ; preds b10
+  %127 = call byte_buffer myl_core_buffer_from_list(%123)
+  release %123
+  %129 = list_len u64 %127
+  %130 = convert.proven i64 %129
+  jump b13
+b12: ; preds b10
+  unreachable
+b13: ; preds b11 b15
+  %132 = phi i64 0:i64, %151
+  %136 = phi i64 %76, %141
+  %137 = phi byte_buffer %127, %148
+  %134 = cmp.lt bool %132, %130
+  branch %134, b14, b16
+b14: ; preds b13
+  %139 = list_get.exact u8 %137, %132
+  %140 = convert i64 %139
+  %141 = add.proven i64 %136, %140
+  %144 = iconst bool 1
+  %146 = iconst bool 1
+  %147 = bit_and bool 1:bool, 1:bool
+  %148 = call byte_buffer myl_core_buffer_push_checked(%137, 0:i64)
+  jump b15
+b15: ; preds b14
+  %151 = add.proven i64 %132, 1:i64
+  jump b13
+b16: ; preds b13
+  %154 = cmp.eq bool %136, 630:i64
+  branch %154, b17, b19
+b17: ; preds b16
+  %158 = list_get.exact u8 %137, 39:i64
+  release %137
+  %159 = convert i64 %158
+  %161 = cmp.eq bool %159, 0:i64
+  jump b18
+b18: ; preds b19 b17
+  %163 = phi bool %154, %161
+  ret %163
+b19: ; preds b16
+  release %137
+  jump b18
+fn test_empty_backing_and_multiple_byte_owners() -> bool
+b0:
+  %1 = list_new list[i64] 0:i64
+  %2 = call bool myl_core_bytes_valid_list(%1)
+  branch %2, b1, b2
+b1: ; preds b0
+  %5 = call bytes myl_core_bytes_from_list(%1)
+  release %1
+  %8 = list_len u64 %5
+  %9 = convert.proven i64 %8
+  jump b3
+b2: ; preds b0
+  unreachable
+b3: ; preds b1 b5
+  %11 = phi i64 0:i64, %23
+  %15 = phi i64 0:i64, %20
+  %13 = cmp.lt bool %11, %9
+  branch %13, b4, b6
+b4: ; preds b3
+  %18 = list_get.proven u8 %5, %11
+  %19 = convert i64 %18
+  %20 = add.proven i64 %15, %19
+  jump b5
+b5: ; preds b4
+  %23 = add.proven i64 %11, 1:i64
+  jump b3
+b6: ; preds b3
+  release %5
+  %26 = list_new list[i64] 20:i64
+  %28 = list_push list[i64] %26, 1:i64
+  %30 = list_push list[i64] %28, 2:i64
+  %32 = list_push list[i64] %30, 3:i64
+  %34 = list_push list[i64] %32, 4:i64
+  %36 = list_push list[i64] %34, 5:i64
+  %38 = list_push list[i64] %36, 6:i64
+  %40 = list_push list[i64] %38, 7:i64
+  %42 = list_push list[i64] %40, 8:i64
+  %44 = list_push list[i64] %42, 9:i64
+  %46 = list_push list[i64] %44, 10:i64
+  %48 = list_push list[i64] %46, 11:i64
+  %50 = list_push list[i64] %48, 12:i64
+  %52 = list_push list[i64] %50, 13:i64
+  %54 = list_push list[i64] %52, 14:i64
+  %56 = list_push list[i64] %54, 15:i64
+  %58 = list_push list[i64] %56, 16:i64
+  %60 = list_push list[i64] %58, 17:i64
+  %62 = list_push list[i64] %60, 18:i64
+  %64 = list_push list[i64] %62, 19:i64
+  %66 = list_push list[i64] %64, 20:i64
+  %67 = call bool myl_core_bytes_valid_list(%66)
+  branch %67, b7, b8
+b7: ; preds b6
+  %70 = call bytes myl_core_bytes_from_list(%66)
+  release %66
+  %72 = list_new list[i64] 20:i64
+  %74 = list_push list[i64] %72, 20:i64
+  %76 = list_push list[i64] %74, 19:i64
+  %78 = list_push list[i64] %76, 18:i64
+  %80 = list_push list[i64] %78, 17:i64
+  %82 = list_push list[i64] %80, 16:i64
+  %84 = list_push list[i64] %82, 15:i64
+  %86 = list_push list[i64] %84, 14:i64
+  %88 = list_push list[i64] %86, 13:i64
+  %90 = list_push list[i64] %88, 12:i64
+  %92 = list_push list[i64] %90, 11:i64
+  %94 = list_push list[i64] %92, 10:i64
+  %96 = list_push list[i64] %94, 9:i64
+  %98 = list_push list[i64] %96, 8:i64
+  %100 = list_push list[i64] %98, 7:i64
+  %102 = list_push list[i64] %100, 6:i64
+  %104 = list_push list[i64] %102, 5:i64
+  %106 = list_push list[i64] %104, 4:i64
+  %108 = list_push list[i64] %106, 3:i64
+  %110 = list_push list[i64] %108, 2:i64
+  %112 = list_push list[i64] %110, 1:i64
+  %113 = call bool myl_core_bytes_valid_list(%112)
+  branch %113, b9, b10
+b8: ; preds b6
+  unreachable
+b9: ; preds b7
+  %116 = call bytes myl_core_bytes_from_list(%112)
+  release %112
+  %118 = list_len u64 %70
+  %119 = convert.proven i64 %118
+  jump b11
+b10: ; preds b7
+  unreachable
+b11: ; preds b9 b13
+  %121 = phi i64 0:i64, %138
+  %125 = phi i64 %15, %135
+  %123 = cmp.lt bool %121, %119
+  branch %123, b12, b14
+b12: ; preds b11
+  %128 = list_get.proven u8 %70, %121
+  %129 = convert i64 %128
+  %132 = list_get.exact u8 %116, %121
+  %133 = convert i64 %132
+  %134 = add.proven i64 %129, %133
+  %135 = add.proven i64 %125, %134
+  jump b13
+b13: ; preds b12
+  %138 = add.proven i64 %121, 1:i64
+  jump b11
+b14: ; preds b11
+  release %70
+  release %116
+  %141 = cmp.eq bool %125, 420:i64
+  ret %141
+fn owned(i64, i64) -> i64
+b0:
+  %3 = list_new list[i64] 20:i64
+  %5 = list_push list[i64] %3, 1:i64
+  %7 = list_push list[i64] %5, 2:i64
+  %9 = list_push list[i64] %7, 3:i64
+  %11 = list_push list[i64] %9, 4:i64
+  %13 = list_push list[i64] %11, 5:i64
+  %15 = list_push list[i64] %13, 6:i64
+  %17 = list_push list[i64] %15, 7:i64
+  %19 = list_push list[i64] %17, 8:i64
+  %21 = list_push list[i64] %19, 9:i64
+  %23 = list_push list[i64] %21, 10:i64
+  %25 = list_push list[i64] %23, 11:i64
+  %27 = list_push list[i64] %25, 12:i64
+  %29 = list_push list[i64] %27, 13:i64
+  %31 = list_push list[i64] %29, 14:i64
+  %33 = list_push list[i64] %31, 15:i64
+  %35 = list_push list[i64] %33, 16:i64
+  %37 = list_push list[i64] %35, 17:i64
+  %39 = list_push list[i64] %37, 18:i64
+  %41 = list_push list[i64] %39, 19:i64
+  %43 = list_push list[i64] %41, 20:i64
+  %44 = call bool myl_core_bytes_valid_list(%43)
+  branch %44, b1, b2
+b1: ; preds b0
+  %47 = call bytes myl_core_bytes_from_list(%43)
+  release %43
+  jump b3
+b2: ; preds b0
+  unreachable
+b3: ; preds b1 b5
+  %50 = phi i64 param0, %62
+  %54 = phi i64 0:i64, %59
+  %52 = cmp.lt bool %50, param1
+  branch %52, b4, b6
+b4: ; preds b3
+  %56 = call u64 myl_core_bytes_index_offset(%47, %50)
+  %57 = list_get.exact u8 %47, %56
+  %58 = convert i64 %57
+  %59 = add.proven i64 %54, %58
+  jump b5
+b5: ; preds b4
+  %62 = add.proven i64 %50, 1:i64
+  jump b3
+b6: ; preds b3
+  release %47
+  ret %54
+fn myl_core_bytes_valid_list(list[i64]) -> bool extern
+fn myl_core_buffer_from_list(list[i64]) -> byte_buffer extern
+fn myl_core_buffer_snapshot(byte_buffer) -> bytes extern
+fn myl_core_buffer_push_checked(byte_buffer, i64) -> byte_buffer extern
+fn myl_core_bytes_index_offset(bytes, i64) -> u64 runtime
+fn myl_core_bytes_from_list(list[i64]) -> bytes extern
+fn myl_core_bytes_index_offset(byte_buffer, i64) -> u64 runtime
+facts main: %0=[0,1] %3=[0,1] %6=[0,1] %9=[0,1]
+facts test_full_short_empty_and_negative_byte_scans: %2=[0,9223372036854775807] %4=[0,1] %8=[0,9223372036854775807] %10=[0,1] %12=[0,1] %16=[0,9223372036854775807] %18=[0,1] %20=[0,1] %24=[0,9223372036854775807] %26=[0,1] %28=[0,1] %32=[0,9223372036854775807] %34=[0,1] %36=[0,1]
+facts test_byte_snapshot_and_rebound_source_keep_canonical_backing: %42=[0,1] %49=[1,1] %51=[1,1] %52=[0,1] %56=[0,140737488355328] %57=[0,140737488355328] %59=[0,140737488355328] %60=[-9223372036854775808,9223372036854775807] %61=[0,1] %63=[0,35888059530608640] %65=[-9223372036854775808,9223372036854775807] %66=[0,255] %67=[0,255] %68=[0,35888059530608895] %71=[1,140737488355328] %76=[0,140737488355328] %77=[0,140737488355328] %79=[0,140737488355328] %80=[-9223372036854775808,9223372036854775807] %81=[0,1] %83=[0,71776119061217280] %85=[-9223372036854775808,9223372036854775807] %86=[0,255] %87=[0,255] %88=[0,71776119061217535] %91=[1,140737488355328] %94=[0,1] %98=[0,140737488355328] %99=[0,140737488355328] %101=[0,1] %103=[0,1] %107=[-9223372036854775808,9223372036854775807] %108=[0,255] %109=[0,255] %111=[0,1] %113=[0,1]
+list test_byte_snapshot_and_rebound_source_keep_canonical_backing %1: settled=true length=%-1 len=[0,0]
+list test_byte_snapshot_and_rebound_source_keep_canonical_backing %3: settled=true length=%-1 elements=[1,1] len=[1,1]
+list test_byte_snapshot_and_rebound_source_keep_canonical_backing %5: settled=true length=%-1 elements=[1,2] len=[2,2]
+list test_byte_snapshot_and_rebound_source_keep_canonical_backing %7: settled=true length=%-1 elements=[1,3] len=[3,3]
+list test_byte_snapshot_and_rebound_source_keep_canonical_backing %9: settled=true length=%-1 elements=[1,4] len=[4,4]
+list test_byte_snapshot_and_rebound_source_keep_canonical_backing %11: settled=true length=%-1 elements=[1,5] len=[5,5]
+list test_byte_snapshot_and_rebound_source_keep_canonical_backing %13: settled=true length=%-1 elements=[1,6] len=[6,6]
+list test_byte_snapshot_and_rebound_source_keep_canonical_backing %15: settled=true length=%-1 elements=[1,7] len=[7,7]
+list test_byte_snapshot_and_rebound_source_keep_canonical_backing %17: settled=true length=%-1 elements=[1,8] len=[8,8]
+list test_byte_snapshot_and_rebound_source_keep_canonical_backing %19: settled=true length=%-1 elements=[1,9] len=[9,9]
+list test_byte_snapshot_and_rebound_source_keep_canonical_backing %21: settled=true length=%-1 elements=[1,10] len=[10,10]
+list test_byte_snapshot_and_rebound_source_keep_canonical_backing %23: settled=true length=%-1 elements=[1,11] len=[11,11]
+list test_byte_snapshot_and_rebound_source_keep_canonical_backing %25: settled=true length=%-1 elements=[1,12] len=[12,12]
+list test_byte_snapshot_and_rebound_source_keep_canonical_backing %27: settled=true length=%-1 elements=[1,13] len=[13,13]
+list test_byte_snapshot_and_rebound_source_keep_canonical_backing %29: settled=true length=%-1 elements=[1,14] len=[14,14]
+list test_byte_snapshot_and_rebound_source_keep_canonical_backing %31: settled=true length=%-1 elements=[1,15] len=[15,15]
+list test_byte_snapshot_and_rebound_source_keep_canonical_backing %33: settled=true length=%-1 elements=[1,16] len=[16,16]
+list test_byte_snapshot_and_rebound_source_keep_canonical_backing %35: settled=true length=%-1 elements=[1,17] len=[17,17]
+list test_byte_snapshot_and_rebound_source_keep_canonical_backing %37: settled=true length=%-1 elements=[1,18] len=[18,18]
+list test_byte_snapshot_and_rebound_source_keep_canonical_backing %39: settled=true length=%-1 elements=[1,19] len=[19,19]
+list test_byte_snapshot_and_rebound_source_keep_canonical_backing %41: settled=true length=%-1 elements=[1,20] len=[20,20]
+list test_byte_snapshot_and_rebound_source_keep_canonical_backing %66: settled=true length=%-1
+list test_byte_snapshot_and_rebound_source_keep_canonical_backing %86: settled=true length=%-1
+list test_byte_snapshot_and_rebound_source_keep_canonical_backing %108: settled=true length=%-1
+facts test_held_byte_iteration_and_mutable_buffer_keep_fallbacks: %42=[0,1] %48=[0,140737488355328] %49=[0,140737488355328] %51=[0,140737488355328] %52=[-9223372036854775808,9223372036854775807] %53=[0,1] %55=[0,35888059530608640] %57=[-9223372036854775808,9223372036854775807] %58=[0,255] %59=[0,255] %60=[0,35888059530608895] %63=[1,140737488355328] %66=[0,140737488355328] %67=[0,140737488355328] %69=[0,140737488355328] %70=[-9223372036854775808,9223372036854775807] %71=[0,1] %74=[0,255] %75=[0,255] %76=[0,71776119061217280] %77=[0,71776119061217535] %80=[1,140737488355328] %124=[0,1] %129=[0,140737488355328] %130=[0,140737488355328] %132=[0,140737488355328] %133=[-9223372036854775808,9223372036854775807] %134=[0,1] %136=[0,107664178591825920] %138=[-9223372036854775808,9223372036854775807] %139=[0,255] %140=[0,255] %141=[0,107664178591826175] %144=[1,1] %146=[1,1] %147=[0,1] %151=[1,140737488355328] %154=[0,1] %157=[-9223372036854775808,9223372036854775807] %158=[0,255] %159=[0,255] %161=[0,1] %163=[0,1]
+list test_held_byte_iteration_and_mutable_buffer_keep_fallbacks %1: settled=true length=%-1 len=[0,0]
+list test_held_byte_iteration_and_mutable_buffer_keep_fallbacks %3: settled=true length=%-1 elements=[1,1] len=[1,1]
+list test_held_byte_iteration_and_mutable_buffer_keep_fallbacks %5: settled=true length=%-1 elements=[1,2] len=[2,2]
+list test_held_byte_iteration_and_mutable_buffer_keep_fallbacks %7: settled=true length=%-1 elements=[1,3] len=[3,3]
+list test_held_byte_iteration_and_mutable_buffer_keep_fallbacks %9: settled=true length=%-1 elements=[1,4] len=[4,4]
+list test_held_byte_iteration_and_mutable_buffer_keep_fallbacks %11: settled=true length=%-1 elements=[1,5] len=[5,5]
+list test_held_byte_iteration_and_mutable_buffer_keep_fallbacks %13: settled=true length=%-1 elements=[1,6] len=[6,6]
+list test_held_byte_iteration_and_mutable_buffer_keep_fallbacks %15: settled=true length=%-1 elements=[1,7] len=[7,7]
+list test_held_byte_iteration_and_mutable_buffer_keep_fallbacks %17: settled=true length=%-1 elements=[1,8] len=[8,8]
+list test_held_byte_iteration_and_mutable_buffer_keep_fallbacks %19: settled=true length=%-1 elements=[1,9] len=[9,9]
+list test_held_byte_iteration_and_mutable_buffer_keep_fallbacks %21: settled=true length=%-1 elements=[1,10] len=[10,10]
+list test_held_byte_iteration_and_mutable_buffer_keep_fallbacks %23: settled=true length=%-1 elements=[1,11] len=[11,11]
+list test_held_byte_iteration_and_mutable_buffer_keep_fallbacks %25: settled=true length=%-1 elements=[1,12] len=[12,12]
+list test_held_byte_iteration_and_mutable_buffer_keep_fallbacks %27: settled=true length=%-1 elements=[1,13] len=[13,13]
+list test_held_byte_iteration_and_mutable_buffer_keep_fallbacks %29: settled=true length=%-1 elements=[1,14] len=[14,14]
+list test_held_byte_iteration_and_mutable_buffer_keep_fallbacks %31: settled=true length=%-1 elements=[1,15] len=[15,15]
+list test_held_byte_iteration_and_mutable_buffer_keep_fallbacks %33: settled=true length=%-1 elements=[1,16] len=[16,16]
+list test_held_byte_iteration_and_mutable_buffer_keep_fallbacks %35: settled=true length=%-1 elements=[1,17] len=[17,17]
+list test_held_byte_iteration_and_mutable_buffer_keep_fallbacks %37: settled=true length=%-1 elements=[1,18] len=[18,18]
+list test_held_byte_iteration_and_mutable_buffer_keep_fallbacks %39: settled=true length=%-1 elements=[1,19] len=[19,19]
+list test_held_byte_iteration_and_mutable_buffer_keep_fallbacks %41: settled=true length=%-1 elements=[1,20] len=[20,20]
+list test_held_byte_iteration_and_mutable_buffer_keep_fallbacks %58: settled=true length=%-1
+list test_held_byte_iteration_and_mutable_buffer_keep_fallbacks %74: settled=true length=%-1
+list test_held_byte_iteration_and_mutable_buffer_keep_fallbacks %83: settled=true length=%-1 len=[0,0]
+list test_held_byte_iteration_and_mutable_buffer_keep_fallbacks %85: settled=true length=%-1 elements=[1,1] len=[1,1]
+list test_held_byte_iteration_and_mutable_buffer_keep_fallbacks %87: settled=true length=%-1 elements=[1,2] len=[2,2]
+list test_held_byte_iteration_and_mutable_buffer_keep_fallbacks %89: settled=true length=%-1 elements=[1,3] len=[3,3]
+list test_held_byte_iteration_and_mutable_buffer_keep_fallbacks %91: settled=true length=%-1 elements=[1,4] len=[4,4]
+list test_held_byte_iteration_and_mutable_buffer_keep_fallbacks %93: settled=true length=%-1 elements=[1,5] len=[5,5]
+list test_held_byte_iteration_and_mutable_buffer_keep_fallbacks %95: settled=true length=%-1 elements=[1,6] len=[6,6]
+list test_held_byte_iteration_and_mutable_buffer_keep_fallbacks %97: settled=true length=%-1 elements=[1,7] len=[7,7]
+list test_held_byte_iteration_and_mutable_buffer_keep_fallbacks %99: settled=true length=%-1 elements=[1,8] len=[8,8]
+list test_held_byte_iteration_and_mutable_buffer_keep_fallbacks %101: settled=true length=%-1 elements=[1,9] len=[9,9]
+list test_held_byte_iteration_and_mutable_buffer_keep_fallbacks %103: settled=true length=%-1 elements=[1,10] len=[10,10]
+list test_held_byte_iteration_and_mutable_buffer_keep_fallbacks %105: settled=true length=%-1 elements=[1,11] len=[11,11]
+list test_held_byte_iteration_and_mutable_buffer_keep_fallbacks %107: settled=true length=%-1 elements=[1,12] len=[12,12]
+list test_held_byte_iteration_and_mutable_buffer_keep_fallbacks %109: settled=true length=%-1 elements=[1,13] len=[13,13]
+list test_held_byte_iteration_and_mutable_buffer_keep_fallbacks %111: settled=true length=%-1 elements=[1,14] len=[14,14]
+list test_held_byte_iteration_and_mutable_buffer_keep_fallbacks %113: settled=true length=%-1 elements=[1,15] len=[15,15]
+list test_held_byte_iteration_and_mutable_buffer_keep_fallbacks %115: settled=true length=%-1 elements=[1,16] len=[16,16]
+list test_held_byte_iteration_and_mutable_buffer_keep_fallbacks %117: settled=true length=%-1 elements=[1,17] len=[17,17]
+list test_held_byte_iteration_and_mutable_buffer_keep_fallbacks %119: settled=true length=%-1 elements=[1,18] len=[18,18]
+list test_held_byte_iteration_and_mutable_buffer_keep_fallbacks %121: settled=true length=%-1 elements=[1,19] len=[19,19]
+list test_held_byte_iteration_and_mutable_buffer_keep_fallbacks %123: settled=true length=%-1 elements=[1,20] len=[20,20]
+facts test_empty_backing_and_multiple_byte_owners: %2=[0,1] %8=[0,140737488355328] %9=[0,140737488355328] %11=[0,140737488355328] %12=[-9223372036854775808,9223372036854775807] %13=[0,1] %15=[0,35888059530608640] %17=[-9223372036854775808,9223372036854775807] %18=[0,255] %19=[0,255] %20=[0,35888059530608895] %23=[1,140737488355328] %67=[0,1] %113=[0,1] %118=[0,140737488355328] %119=[0,140737488355328] %121=[0,140737488355328] %122=[-9223372036854775808,9223372036854775807] %123=[0,1] %125=[0,107664178591825920] %127=[-9223372036854775808,9223372036854775807] %128=[0,255] %129=[0,255] %131=[-9223372036854775808,9223372036854775807] %132=[0,255] %133=[0,255] %134=[0,510] %135=[0,107664178591826430] %138=[1,140737488355328] %141=[0,1]
+list test_empty_backing_and_multiple_byte_owners %1: settled=true length=%-1 len=[0,0]
+list test_empty_backing_and_multiple_byte_owners %18: settled=true length=%-1
+list test_empty_backing_and_multiple_byte_owners %26: settled=true length=%-1 len=[0,0]
+list test_empty_backing_and_multiple_byte_owners %28: settled=true length=%-1 elements=[1,1] len=[1,1]
+list test_empty_backing_and_multiple_byte_owners %30: settled=true length=%-1 elements=[1,2] len=[2,2]
+list test_empty_backing_and_multiple_byte_owners %32: settled=true length=%-1 elements=[1,3] len=[3,3]
+list test_empty_backing_and_multiple_byte_owners %34: settled=true length=%-1 elements=[1,4] len=[4,4]
+list test_empty_backing_and_multiple_byte_owners %36: settled=true length=%-1 elements=[1,5] len=[5,5]
+list test_empty_backing_and_multiple_byte_owners %38: settled=true length=%-1 elements=[1,6] len=[6,6]
+list test_empty_backing_and_multiple_byte_owners %40: settled=true length=%-1 elements=[1,7] len=[7,7]
+list test_empty_backing_and_multiple_byte_owners %42: settled=true length=%-1 elements=[1,8] len=[8,8]
+list test_empty_backing_and_multiple_byte_owners %44: settled=true length=%-1 elements=[1,9] len=[9,9]
+list test_empty_backing_and_multiple_byte_owners %46: settled=true length=%-1 elements=[1,10] len=[10,10]
+list test_empty_backing_and_multiple_byte_owners %48: settled=true length=%-1 elements=[1,11] len=[11,11]
+list test_empty_backing_and_multiple_byte_owners %50: settled=true length=%-1 elements=[1,12] len=[12,12]
+list test_empty_backing_and_multiple_byte_owners %52: settled=true length=%-1 elements=[1,13] len=[13,13]
+list test_empty_backing_and_multiple_byte_owners %54: settled=true length=%-1 elements=[1,14] len=[14,14]
+list test_empty_backing_and_multiple_byte_owners %56: settled=true length=%-1 elements=[1,15] len=[15,15]
+list test_empty_backing_and_multiple_byte_owners %58: settled=true length=%-1 elements=[1,16] len=[16,16]
+list test_empty_backing_and_multiple_byte_owners %60: settled=true length=%-1 elements=[1,17] len=[17,17]
+list test_empty_backing_and_multiple_byte_owners %62: settled=true length=%-1 elements=[1,18] len=[18,18]
+list test_empty_backing_and_multiple_byte_owners %64: settled=true length=%-1 elements=[1,19] len=[19,19]
+list test_empty_backing_and_multiple_byte_owners %66: settled=true length=%-1 elements=[1,20] len=[20,20]
+list test_empty_backing_and_multiple_byte_owners %72: settled=true length=%-1 len=[0,0]
+list test_empty_backing_and_multiple_byte_owners %74: settled=true length=%-1 elements=[20,20] len=[1,1]
+list test_empty_backing_and_multiple_byte_owners %76: settled=true length=%-1 elements=[19,20] len=[2,2]
+list test_empty_backing_and_multiple_byte_owners %78: settled=true length=%-1 elements=[18,20] len=[3,3]
+list test_empty_backing_and_multiple_byte_owners %80: settled=true length=%-1 elements=[17,20] len=[4,4]
+list test_empty_backing_and_multiple_byte_owners %82: settled=true length=%-1 elements=[16,20] len=[5,5]
+list test_empty_backing_and_multiple_byte_owners %84: settled=true length=%-1 elements=[15,20] len=[6,6]
+list test_empty_backing_and_multiple_byte_owners %86: settled=true length=%-1 elements=[14,20] len=[7,7]
+list test_empty_backing_and_multiple_byte_owners %88: settled=true length=%-1 elements=[13,20] len=[8,8]
+list test_empty_backing_and_multiple_byte_owners %90: settled=true length=%-1 elements=[12,20] len=[9,9]
+list test_empty_backing_and_multiple_byte_owners %92: settled=true length=%-1 elements=[11,20] len=[10,10]
+list test_empty_backing_and_multiple_byte_owners %94: settled=true length=%-1 elements=[10,20] len=[11,11]
+list test_empty_backing_and_multiple_byte_owners %96: settled=true length=%-1 elements=[9,20] len=[12,12]
+list test_empty_backing_and_multiple_byte_owners %98: settled=true length=%-1 elements=[8,20] len=[13,13]
+list test_empty_backing_and_multiple_byte_owners %100: settled=true length=%-1 elements=[7,20] len=[14,14]
+list test_empty_backing_and_multiple_byte_owners %102: settled=true length=%-1 elements=[6,20] len=[15,15]
+list test_empty_backing_and_multiple_byte_owners %104: settled=true length=%-1 elements=[5,20] len=[16,16]
+list test_empty_backing_and_multiple_byte_owners %106: settled=true length=%-1 elements=[4,20] len=[17,17]
+list test_empty_backing_and_multiple_byte_owners %108: settled=true length=%-1 elements=[3,20] len=[18,18]
+list test_empty_backing_and_multiple_byte_owners %110: settled=true length=%-1 elements=[2,20] len=[19,19]
+list test_empty_backing_and_multiple_byte_owners %112: settled=true length=%-1 elements=[1,20] len=[20,20]
+list test_empty_backing_and_multiple_byte_owners %128: settled=true length=%-1
+list test_empty_backing_and_multiple_byte_owners %132: settled=true length=%-1
+facts owned: %0=[-20,7] %1=[0,20] %44=[0,1] %50=[-20,20] %51=[-9223372036854775808,9223372036854775807] %52=[0,1] %54=[0,10200] %56=[0,18446744073709551615] %57=[0,255] %58=[0,255] %59=[0,10455] %62=[-19,20]
+list owned %3: settled=true length=%-1 len=[0,0]
+list owned %5: settled=true length=%-1 elements=[1,1] len=[1,1]
+list owned %7: settled=true length=%-1 elements=[1,2] len=[2,2]
+list owned %9: settled=true length=%-1 elements=[1,3] len=[3,3]
+list owned %11: settled=true length=%-1 elements=[1,4] len=[4,4]
+list owned %13: settled=true length=%-1 elements=[1,5] len=[5,5]
+list owned %15: settled=true length=%-1 elements=[1,6] len=[6,6]
+list owned %17: settled=true length=%-1 elements=[1,7] len=[7,7]
+list owned %19: settled=true length=%-1 elements=[1,8] len=[8,8]
+list owned %21: settled=true length=%-1 elements=[1,9] len=[9,9]
+list owned %23: settled=true length=%-1 elements=[1,10] len=[10,10]
+list owned %25: settled=true length=%-1 elements=[1,11] len=[11,11]
+list owned %27: settled=true length=%-1 elements=[1,12] len=[12,12]
+list owned %29: settled=true length=%-1 elements=[1,13] len=[13,13]
+list owned %31: settled=true length=%-1 elements=[1,14] len=[14,14]
+list owned %33: settled=true length=%-1 elements=[1,15] len=[15,15]
+list owned %35: settled=true length=%-1 elements=[1,16] len=[16,16]
+list owned %37: settled=true length=%-1 elements=[1,17] len=[17,17]
+list owned %39: settled=true length=%-1 elements=[1,18] len=[18,18]
+list owned %41: settled=true length=%-1 elements=[1,19] len=[19,19]
+list owned %43: settled=true length=%-1 elements=[1,20] len=[20,20]
+list owned %57: settled=true length=%-1

@@ -1,0 +1,245 @@
+fn main() -> i64
+b0:
+  %0 = call bool test_caller_and_callee_snapshots_survive_mutable_scalar_writes()
+  branch %0, b2, b1
+b1: ; preds b0
+  unreachable
+b2: ; preds b0
+  %3 = call bool test_rebinding_a_mutable_parameter_requires_fresh_uniqueness()
+  branch %3, b4, b3
+b3: ; preds b2
+  unreachable
+b4: ; preds b2
+  ret 0:i64
+fn test_caller_and_callee_snapshots_survive_mutable_scalar_writes() -> bool
+b0:
+  %1 = list_new list[i64] 2:i64
+  %3 = list_push list[i64] %1, 1:i64
+  %5 = list_push list[i64] %3, 2:i64
+  %6 = call record{list[i64], list[i64]} capture_and_write(%5)
+  %7 = record_get list[i64] %6, field0
+  %8 = record_get list[i64] %6, field1
+  %10 = list_new list[i64] 2:i64
+  %12 = list_push list[i64] %10, 21:i64
+  %14 = list_push list[i64] %12, 22:i64
+  %15 = list_len u64 %8
+  %16 = list_len u64 %14
+  %17 = cmp.eq bool %15, %16
+  branch %17, b3, b2
+b1: ; preds b3 b6
+  %21 = phi u64 0:u64, %29
+  %22 = cmp.lt bool %21, %15
+  branch %22, b4, b5
+b2: ; preds b0 b7 b5
+  %35 = phi bool %17, 0:bool, 1:bool
+  branch %35, b8, b9
+b3: ; preds b0
+  jump b1
+b4: ; preds b1
+  %24 = list_get i64 %8, %21
+  %25 = list_get i64 %14, %21
+  %26 = cmp.eq bool %24, %25
+  branch %26, b6, b7
+b5: ; preds b1
+  jump b2
+b6: ; preds b4
+  %29 = add u64 %21, 1:u64
+  jump b1
+b7: ; preds b4
+  jump b2
+b8: ; preds b2
+  %40 = list_new list[i64] 2:i64
+  %42 = list_push list[i64] %40, 1:i64
+  %44 = list_push list[i64] %42, 2:i64
+  %45 = list_len u64 %5
+  %46 = list_len u64 %44
+  %47 = cmp.eq bool %45, %46
+  branch %47, b12, b11
+b9: ; preds b2 b11
+  %67 = phi bool %35, %65
+  branch %67, b17, b18
+b10: ; preds b12 b15
+  %51 = phi u64 0:u64, %59
+  %52 = cmp.lt bool %51, %45
+  branch %52, b13, b14
+b11: ; preds b8 b16 b14
+  %65 = phi bool %47, 0:bool, 1:bool
+  jump b9
+b12: ; preds b8
+  jump b10
+b13: ; preds b10
+  %54 = list_get i64 %5, %51
+  %55 = list_get i64 %44, %51
+  %56 = cmp.eq bool %54, %55
+  branch %56, b15, b16
+b14: ; preds b10
+  jump b11
+b15: ; preds b13
+  %59 = add u64 %51, 1:u64
+  jump b10
+b16: ; preds b13
+  jump b11
+b17: ; preds b9
+  %75 = list_new list[i64] 2:i64
+  %77 = list_push list[i64] %75, 1:i64
+  %79 = list_push list[i64] %77, 2:i64
+  %80 = list_len u64 %7
+  %81 = list_len u64 %79
+  %82 = cmp.eq bool %80, %81
+  branch %82, b21, b20
+b18: ; preds b9 b20
+  %102 = phi bool %67, %100
+  ret %102
+b19: ; preds b21 b24
+  %86 = phi u64 0:u64, %94
+  %87 = cmp.lt bool %86, %80
+  branch %87, b22, b23
+b20: ; preds b17 b25 b23
+  %100 = phi bool %82, 0:bool, 1:bool
+  jump b18
+b21: ; preds b17
+  jump b19
+b22: ; preds b19
+  %89 = list_get i64 %7, %86
+  %90 = list_get i64 %79, %86
+  %91 = cmp.eq bool %89, %90
+  branch %91, b24, b25
+b23: ; preds b19
+  jump b20
+b24: ; preds b22
+  %94 = add u64 %86, 1:u64
+  jump b19
+b25: ; preds b22
+  jump b20
+fn test_rebinding_a_mutable_parameter_requires_fresh_uniqueness() -> bool
+b0:
+  %1 = list_new list[i64] 1:i64
+  %3 = list_push list[i64] %1, 1:i64
+  %5 = list_new list[i64] 1:i64
+  %7 = list_push list[i64] %5, 2:i64
+  %8 = call record{list[i64], list[i64]} replace_and_write(%3, %7)
+  %9 = record_get list[i64] %8, field0
+  %10 = record_get list[i64] %8, field1
+  %12 = list_new list[i64] 1:i64
+  %14 = list_push list[i64] %12, 7:i64
+  %15 = list_len u64 %9
+  %16 = list_len u64 %14
+  %17 = cmp.eq bool %15, %16
+  branch %17, b3, b2
+b1: ; preds b3 b6
+  %21 = phi u64 0:u64, %29
+  %22 = cmp.lt bool %21, %15
+  branch %22, b4, b5
+b2: ; preds b0 b7 b5
+  %35 = phi bool %17, 0:bool, 1:bool
+  branch %35, b8, b9
+b3: ; preds b0
+  jump b1
+b4: ; preds b1
+  %24 = list_get i64 %9, %21
+  %25 = list_get i64 %14, %21
+  %26 = cmp.eq bool %24, %25
+  branch %26, b6, b7
+b5: ; preds b1
+  jump b2
+b6: ; preds b4
+  %29 = add u64 %21, 1:u64
+  jump b1
+b7: ; preds b4
+  jump b2
+b8: ; preds b2
+  %40 = list_new list[i64] 1:i64
+  %42 = list_push list[i64] %40, 2:i64
+  %43 = list_len u64 %7
+  %44 = list_len u64 %42
+  %45 = cmp.eq bool %43, %44
+  branch %45, b12, b11
+b9: ; preds b2 b11
+  %65 = phi bool %35, %63
+  ret %65
+b10: ; preds b12 b15
+  %49 = phi u64 0:u64, %57
+  %50 = cmp.lt bool %49, %43
+  branch %50, b13, b14
+b11: ; preds b8 b16 b14
+  %63 = phi bool %45, 0:bool, 1:bool
+  jump b9
+b12: ; preds b8
+  jump b10
+b13: ; preds b10
+  %52 = list_get i64 %7, %49
+  %53 = list_get i64 %42, %49
+  %54 = cmp.eq bool %52, %53
+  branch %54, b15, b16
+b14: ; preds b10
+  jump b11
+b15: ; preds b13
+  %57 = add u64 %49, 1:u64
+  jump b10
+b16: ; preds b13
+  jump b11
+fn capture_and_write(list[i64]) -> record{list[i64], list[i64]}
+b0:
+  jump b1
+b1: ; preds b0 b3
+  %4 = phi i64 0:i64, %25
+  %8 = phi list[i64] param0, %21
+  %6 = cmp.lt bool %4, 20:i64
+  branch %6, b2, b4
+b2: ; preds b1
+  %11 = cmp.lt bool 0:i64, 0:i64
+  branch %11, b5, b6
+b3: ; preds b6
+  %25 = add.exact i64 %4, 1:i64
+  jump b1
+b4: ; preds b1
+  %29 = call list[i64] overwrite(%8, 21:i64)
+  %32 = neg.exact i64 1:i64
+  %34 = cmp.lt bool %32, 0:i64
+  branch %34, b7, b8
+b5: ; preds b2
+  %13 = list_len u64 %8
+  %14 = convert.exact i64 %13
+  %15 = add.exact i64 %14, 0:i64
+  jump b6
+b6: ; preds b2 b5
+  %17 = phi i64 0:i64, %15
+  %21 = list_set.exact list[i64] %8, %17, %4
+  jump b3
+b7: ; preds b4
+  %36 = list_len u64 %29
+  %37 = convert.exact i64 %36
+  %38 = add.exact i64 %37, %32
+  jump b8
+b8: ; preds b4 b7
+  %40 = phi i64 %32, %38
+  %44 = list_set.exact list[i64] %29, %40, 22:i64
+  %48 = record_make record{list[i64], list[i64]} param0, %44
+  ret %48
+fn replace_and_write(list[i64], list[i64]) -> record{list[i64], list[i64]}
+b0:
+  %5 = cmp.lt bool 0:i64, 0:i64
+  branch %5, b1, b2
+b1: ; preds b0
+  %7 = list_len u64 param1
+  %8 = convert.exact i64 %7
+  %9 = add.exact i64 %8, 0:i64
+  jump b2
+b2: ; preds b0 b1
+  %11 = phi i64 0:i64, %9
+  %15 = list_set.exact list[i64] param1, %11, 7:i64
+  %16 = record_make record{list[i64], list[i64]} %15, %15
+  ret %16
+fn overwrite(list[i64], i64) -> list[i64]
+b0:
+  %4 = cmp.lt bool 0:i64, 0:i64
+  branch %4, b1, b2
+b1: ; preds b0
+  %6 = list_len u64 param0
+  %7 = convert.exact i64 %6
+  %8 = add.exact i64 %7, 0:i64
+  jump b2
+b2: ; preds b0 b1
+  %10 = phi i64 0:i64, %8
+  %14 = list_set.exact list[i64] param0, %10, param1
+  ret %14

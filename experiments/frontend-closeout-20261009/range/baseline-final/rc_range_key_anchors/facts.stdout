@@ -1,0 +1,479 @@
+fn main() -> i64
+b0:
+  %0 = call bool test_counted_slices_store_owned_copies_of_new_keys()
+  branch %0, b2, b1
+b1: ; preds b0
+  unreachable
+b2: ; preds b0
+  %3 = call bool test_empty_and_whole_slices_count_the_same()
+  branch %3, b4, b3
+b3: ; preds b2
+  unreachable
+b4: ; preds b2
+  %6 = call bool test_contains_and_get_read_the_borrowed_span()
+  branch %6, b6, b5
+b5: ; preds b4
+  unreachable
+b6: ; preds b4
+  %9 = call bool test_a_rewritten_parameter_keeps_owned_slices()
+  branch %9, b8, b7
+b7: ; preds b6
+  unreachable
+b8: ; preds b6
+  %12 = call bool test_slices_that_escape_are_built_as_texts()
+  branch %12, b10, b9
+b9: ; preds b8
+  unreachable
+b10: ; preds b8
+  ret 0:i64
+fn test_counted_slices_store_owned_copies_of_new_keys() -> bool
+b0:
+  %58 = str_len u64 str5
+  %59 = str_view_of str_view str5, 0:u64, %58
+  %60 = str_from_view str %59
+  %2 = str_append str %60, str6
+  %4 = call dict[str, i64] frequencies(%2, 2:i64)
+  release %2
+  %7 = dict_find i64 %4, str8
+  %9 = cmp.ge bool %7, 0:i64
+  branch %9, b1, b2
+b1: ; preds b0
+  %12 = dict_entry_value i64 %4, %7
+  %14 = cmp.eq bool %12, 2:i64
+  branch %14, b3, b4
+b2: ; preds b0
+  unreachable
+b3: ; preds b1
+  %17 = dict_find i64 %4, str9
+  %19 = cmp.ge bool %17, 0:i64
+  branch %19, b5, b6
+b4: ; preds b1 b5
+  %26 = phi bool %14, %24
+  branch %26, b7, b8
+b5: ; preds b3
+  %22 = dict_entry_value i64 %4, %17
+  %24 = cmp.eq bool %22, 2:i64
+  jump b4
+b6: ; preds b3
+  unreachable
+b7: ; preds b4
+  %30 = dict_find i64 %4, str10
+  %32 = cmp.ge bool %30, 0:i64
+  branch %32, b9, b10
+b8: ; preds b4 b9
+  %39 = phi bool %26, %37
+  branch %39, b11, b15
+b9: ; preds b7
+  %35 = dict_entry_value i64 %4, %30
+  %37 = cmp.eq bool %35, 1:i64
+  jump b8
+b10: ; preds b7
+  unreachable
+b11: ; preds b8
+  %42 = dict_len u64 %4
+  release %4
+  %43 = convert.proven i64 %42
+  %45 = cmp.eq bool %43, 7:i64
+  jump b12
+b12: ; preds b15 b11
+  %47 = phi bool %39, %45
+  branch %47, b13, b14
+b13: ; preds b12
+  %53 = call bool myl_core_str_eq(str7, str11)
+  jump b14
+b14: ; preds b12 b13
+  %55 = phi bool %47, %53
+  ret %55
+b15: ; preds b8
+  release %4
+  jump b12
+fn test_empty_and_whole_slices_count_the_same() -> bool
+b0:
+  %2 = call dict[str, i64] frequencies(str12, 4:i64)
+  %5 = call dict[str, i64] frequencies(str13, 5:i64)
+  %8 = call dict[str, i64] frequencies(str14, 1:i64)
+  %10 = dict_find i64 %2, str15
+  %12 = cmp.ge bool %10, 0:i64
+  branch %12, b1, b2
+b1: ; preds b0
+  %15 = dict_entry_value i64 %2, %10
+  %17 = cmp.eq bool %15, 1:i64
+  branch %17, b3, b9
+b2: ; preds b0
+  unreachable
+b3: ; preds b1
+  %19 = dict_len u64 %2
+  release %2
+  %20 = convert.proven i64 %19
+  %22 = cmp.eq bool %20, 1:i64
+  jump b4
+b4: ; preds b9 b3
+  %24 = phi bool %17, %22
+  branch %24, b5, b10
+b5: ; preds b4
+  %27 = dict_len u64 %5
+  release %5
+  %28 = convert.proven i64 %27
+  %30 = cmp.eq bool %28, 0:i64
+  jump b6
+b6: ; preds b10 b5
+  %32 = phi bool %24, %30
+  branch %32, b7, b11
+b7: ; preds b6
+  %36 = dict_len u64 %8
+  release %8
+  %37 = convert.proven i64 %36
+  %39 = cmp.eq bool %37, 0:i64
+  jump b8
+b8: ; preds b11 b7
+  %41 = phi bool %32, %39
+  ret %41
+b9: ; preds b1
+  release %2
+  jump b4
+b10: ; preds b4
+  release %5
+  jump b6
+b11: ; preds b6
+  release %8
+  jump b8
+fn test_contains_and_get_read_the_borrowed_span() -> bool
+b0:
+  %2 = call i64 presence(str16, str17)
+  %4 = cmp.eq bool %2, 404:i64
+  branch %4, b1, b2
+b1: ; preds b0
+  %8 = call i64 presence(str18, str19)
+  %10 = cmp.eq bool %8, 303:i64
+  jump b2
+b2: ; preds b0 b1
+  %12 = phi bool %4, %10
+  ret %12
+fn test_a_rewritten_parameter_keeps_owned_slices() -> bool
+b0:
+  %2 = call dict[str, i64] rewritten(str20, 2:i64)
+  %4 = dict_find i64 %2, str21
+  %6 = cmp.ge bool %4, 0:i64
+  branch %6, b1, b2
+b1: ; preds b0
+  %9 = dict_entry_value i64 %2, %4
+  %11 = cmp.eq bool %9, 1:i64
+  branch %11, b3, b4
+b2: ; preds b0
+  unreachable
+b3: ; preds b1
+  %14 = dict_find i64 %2, str22
+  %16 = cmp.ge bool %14, 0:i64
+  branch %16, b5, b6
+b4: ; preds b1 b5
+  %23 = phi bool %11, %21
+  branch %23, b7, b8
+b5: ; preds b3
+  %19 = dict_entry_value i64 %2, %14
+  %21 = cmp.eq bool %19, 1:i64
+  jump b4
+b6: ; preds b3
+  unreachable
+b7: ; preds b4
+  %27 = dict_find i64 %2, str23
+  %29 = cmp.ge bool %27, 0:i64
+  branch %29, b9, b10
+b8: ; preds b4 b9
+  %36 = phi bool %23, %34
+  branch %36, b11, b13
+b9: ; preds b7
+  %32 = dict_entry_value i64 %2, %27
+  %34 = cmp.eq bool %32, 1:i64
+  jump b8
+b10: ; preds b7
+  unreachable
+b11: ; preds b8
+  %39 = dict_len u64 %2
+  release %2
+  %40 = convert.proven i64 %39
+  %42 = cmp.eq bool %40, 3:i64
+  jump b12
+b12: ; preds b13 b11
+  %44 = phi bool %36, %42
+  ret %44
+b13: ; preds b8
+  release %2
+  jump b12
+fn test_slices_that_escape_are_built_as_texts() -> bool
+b0:
+  %42 = str_len u64 str24
+  %43 = str_view_of str_view str24, 0:u64, %42
+  %44 = str_from_view str %43
+  %2 = str_append str %44, str25
+  %4 = call list[str] kept(%2, 2:i64)
+  release %2
+  %7 = list_new list[str] 2:i64
+  %9 = list_push list[str] %7, str27
+  %11 = list_push list[str] %9, str28
+  %12 = list_len u64 %4
+  %13 = list_len u64 %11
+  %14 = cmp.eq bool %12, %13
+  branch %14, b3, b10
+b1: ; preds b3 b6
+  %18 = phi u64 0:u64, %26
+  %19 = cmp.lt bool %18, %12
+  branch %19, b4, b5
+b2: ; preds b10 b7 b5
+  %32 = phi bool %14, 0:bool, 1:bool
+  branch %32, b8, b9
+b3: ; preds b0
+  jump b1
+b4: ; preds b1
+  %21 = list_get str %4, %18
+  %22 = list_get str %11, %18
+  %23 = call bool myl_core_str_eq(%21, %22)
+  branch %23, b6, b7
+b5: ; preds b1
+  release %4
+  release %11
+  jump b2
+b6: ; preds b4
+  %26 = add u64 %18, 1:u64
+  jump b1
+b7: ; preds b4
+  release %4
+  release %11
+  jump b2
+b8: ; preds b2
+  %37 = call bool myl_core_str_eq(str26, str29)
+  jump b9
+b9: ; preds b2 b8
+  %39 = phi bool %32, %37
+  ret %39
+b10: ; preds b0
+  release %4
+  release %11
+  jump b2
+fn frequencies(str, i64) -> dict[str, i64]
+b0:
+  %3 = dict_new dict[str, i64] 0:u64
+  %5 = call u64 myl_core_str_chars(param0)
+  %6 = convert.exact i64 %5
+  %7 = sub.proven i64 %6, param1
+  %9 = add.proven i64 %7, 1:i64
+  jump b1
+b1: ; preds b0 b3
+  %11 = phi i64 0:i64, %46
+  %19 = phi dict[str, i64] %3, %41
+  %13 = cmp.lt bool %11, %9
+  branch %13, b2, b4
+b2: ; preds b1
+  %17 = add.exact i64 %11, param1
+  %18 = str_slice_view str_view param0, %11, %17
+  %21 = dict_find i64 %19, %18
+  %23 = cmp.ge bool %21, 0:i64
+  branch %23, b5, b6
+b3: ; preds b10
+  %46 = add.proven i64 %11, 1:i64
+  jump b1
+b4: ; preds b1
+  ret %19
+b5: ; preds b2
+  %25 = dict_entry_value i64 %19, %21
+  jump b7
+b6: ; preds b2
+  jump b7
+b7: ; preds b5 b6
+  %28 = phi i64 %25, 0:i64
+  %30 = add.exact i64 %28, 1:i64
+  %35 = cmp.ge bool %21, 0:i64
+  branch %35, b8, b9
+b8: ; preds b7
+  %37 = dict_set_value dict[str, i64] %19, %21, %30
+  jump b10
+b9: ; preds b7
+  %55 = str_from_view str %18
+  %39 = dict_insert dict[str, i64] %19, %21, %55, %30
+  jump b10
+b10: ; preds b8 b9
+  %41 = phi dict[str, i64] %37, %39
+  jump b3
+fn myl_core_str_eq(str, str) -> bool runtime
+fn presence(str, str) -> i64
+b0:
+  %4 = dict_new dict[str, i64] 0:u64
+  %6 = dict_find i64 %4, param1
+  %8 = cmp.ge bool %6, 0:i64
+  branch %8, b1, b2
+b1: ; preds b0
+  %10 = dict_set_value dict[str, i64] %4, %6, 0:i64
+  jump b3
+b2: ; preds b0
+  retain param1
+  %12 = dict_insert dict[str, i64] %4, %6, param1, 0:i64
+  jump b3
+b3: ; preds b1 b2
+  %14 = phi dict[str, i64] %10, %12
+  %17 = call u64 myl_core_str_chars(param0)
+  %18 = convert.exact i64 %17
+  jump b4
+b4: ; preds b3 b6
+  %20 = phi i64 0:i64, %66
+  %28 = phi dict[str, i64] %14, %60
+  %33 = phi i64 0:i64, %77
+  %22 = cmp.lt bool %20, %18
+  branch %22, b5, b7
+b5: ; preds b4
+  %26 = add.proven i64 %20, 1:i64
+  %27 = str_slice_view str_view param0, %20, %26
+  %29 = dict_find i64 %28, %27
+  %31 = cmp.ge bool %29, 0:i64
+  branch %31, b8, b9
+b6: ; preds b15
+  %66 = add.proven i64 %20, 1:i64
+  jump b4
+b7: ; preds b4
+  %79 = mul.exact i64 %33, 100:i64
+  %85 = dict_find i64 %28, param1
+  %87 = cmp.ge bool %85, 0:i64
+  branch %87, b16, b17
+b8: ; preds b5
+  %35 = add.exact i64 %33, 1:i64
+  jump b9
+b9: ; preds b5 b8
+  %77 = phi i64 %33, %35
+  %42 = cmp.ge bool %29, 0:i64
+  branch %42, b10, b11
+b10: ; preds b9
+  %44 = dict_entry_value i64 %28, %29
+  jump b12
+b11: ; preds b9
+  jump b12
+b12: ; preds b10 b11
+  %47 = phi i64 %44, 0:i64
+  %49 = add.exact i64 %47, 1:i64
+  %54 = cmp.ge bool %29, 0:i64
+  branch %54, b13, b14
+b13: ; preds b12
+  %56 = dict_set_value dict[str, i64] %28, %29, %49
+  jump b15
+b14: ; preds b12
+  %93 = str_from_view str %27
+  %58 = dict_insert dict[str, i64] %28, %29, %93, %49
+  jump b15
+b15: ; preds b13 b14
+  %60 = phi dict[str, i64] %56, %58
+  jump b6
+b16: ; preds b7
+  %90 = dict_entry_value i64 %28, %85
+  release %28
+  %91 = add.exact i64 %79, %90
+  ret %91
+b17: ; preds b7
+  unreachable
+fn rewritten(str, i64) -> dict[str, i64]
+b0:
+  %3 = dict_new dict[str, i64] 0:u64
+  %5 = call u64 myl_core_str_chars(param0)
+  %6 = convert.exact i64 %5
+  %7 = sub.proven i64 %6, param1
+  %9 = add.proven i64 %7, 1:i64
+  retain param0
+  jump b1
+b1: ; preds b0 b3
+  %11 = phi i64 0:i64, %54
+  %15 = phi str param0, %49
+  %19 = phi dict[str, i64] %3, %41
+  %13 = cmp.lt bool %11, %9
+  branch %13, b2, b4
+b2: ; preds b1
+  %17 = add.proven i64 %11, param1
+  %18 = str_slice_view str_view %15, %11, %17
+  %21 = dict_find i64 %19, %18
+  %23 = cmp.ge bool %21, 0:i64
+  branch %23, b5, b6
+b3: ; preds b11
+  %54 = add.proven i64 %11, 1:i64
+  jump b1
+b4: ; preds b1
+  release %15
+  ret %19
+b5: ; preds b2
+  %25 = dict_entry_value i64 %19, %21
+  jump b7
+b6: ; preds b2
+  jump b7
+b7: ; preds b5 b6
+  %28 = phi i64 %25, 0:i64
+  %30 = add.exact i64 %28, 1:i64
+  %35 = cmp.ge bool %21, 0:i64
+  branch %35, b8, b9
+b8: ; preds b7
+  %37 = dict_set_value dict[str, i64] %19, %21, %30
+  jump b10
+b9: ; preds b7
+  %61 = str_from_view str %18
+  %39 = dict_insert dict[str, i64] %19, %21, %61, %30
+  jump b10
+b10: ; preds b8 b9
+  %41 = phi dict[str, i64] %37, %39
+  %45 = call u64 myl_core_str_chars(%15)
+  %46 = convert.exact i64 %45
+  %47 = str_slice str %15, 1:i64, %46
+  release %15
+  %62 = is_unique bool %47
+  branch %62, b11, b12
+b11: ; preds b10 b12
+  %71 = phi str %47, %68
+  %49 = str_append str %71, str30
+  jump b3
+b12: ; preds b10
+  %66 = str_len u64 %47
+  %67 = str_view_of str_view %47, 0:u64, %66
+  %68 = str_from_view str %67
+  release %47
+  jump b11
+fn kept(str, i64) -> list[str]
+b0:
+  %3 = list_new list[str] 0:i64
+  %5 = call u64 myl_core_str_chars(param0)
+  %6 = convert.exact i64 %5
+  %7 = sub.proven i64 %6, param1
+  %9 = add.proven i64 %7, 1:i64
+  jump b1
+b1: ; preds b0 b3
+  %11 = phi i64 0:i64, %23
+  %19 = phi list[str] %3, %20
+  %13 = cmp.lt bool %11, %9
+  branch %13, b2, b4
+b2: ; preds b1
+  %17 = add.proven i64 %11, param1
+  %18 = str_slice str param0, %11, %17
+  %20 = list_push list[str] %19, %18
+  jump b3
+b3: ; preds b2
+  %23 = add.proven i64 %11, 1:i64
+  jump b1
+b4: ; preds b1
+  ret %19
+fn myl_core_str_chars(str) -> u64 extern
+facts main: %0=[0,1] %3=[0,1] %6=[0,1] %9=[0,1] %12=[0,1]
+facts test_counted_slices_store_owned_copies_of_new_keys: %7=[-9223372036854775808,9223372036854775807] %9=[0,1] %12=[-9223372036854775808,9223372036854775807] %14=[0,1] %17=[-9223372036854775808,9223372036854775807] %19=[0,1] %22=[-9223372036854775808,9223372036854775807] %24=[0,1] %26=[0,1] %30=[-9223372036854775808,9223372036854775807] %32=[0,1] %35=[-9223372036854775808,9223372036854775807] %37=[0,1] %39=[0,1] %42=[0,140737488355328] %43=[0,140737488355328] %45=[0,1] %47=[0,1] %53=[0,1] %55=[0,1]
+facts test_empty_and_whole_slices_count_the_same: %10=[-9223372036854775808,9223372036854775807] %12=[0,1] %15=[-9223372036854775808,9223372036854775807] %17=[0,1] %19=[0,140737488355328] %20=[0,140737488355328] %22=[0,1] %24=[0,1] %27=[0,140737488355328] %28=[0,140737488355328] %30=[0,1] %32=[0,1] %36=[0,140737488355328] %37=[0,140737488355328] %39=[0,1] %41=[0,1]
+facts test_contains_and_get_read_the_borrowed_span: %2=[-9223372036854775808,9223372036854775807] %4=[0,1] %8=[-9223372036854775808,9223372036854775807] %10=[0,1] %12=[0,1]
+facts test_a_rewritten_parameter_keeps_owned_slices: %4=[-9223372036854775808,9223372036854775807] %6=[0,1] %9=[-9223372036854775808,9223372036854775807] %11=[0,1] %14=[-9223372036854775808,9223372036854775807] %16=[0,1] %19=[-9223372036854775808,9223372036854775807] %21=[0,1] %23=[0,1] %27=[-9223372036854775808,9223372036854775807] %29=[0,1] %32=[-9223372036854775808,9223372036854775807] %34=[0,1] %36=[0,1] %39=[0,140737488355328] %40=[0,140737488355328] %42=[0,1] %44=[0,1]
+facts test_slices_that_escape_are_built_as_texts: %12=[0,140737488355328] %13=[2,2] %14=[0,1] %18=[0,140737488355328] %19=[0,1] %23=[0,1] %26=[1,140737488355328] %32=[0,1] %37=[0,1] %39=[0,1]
+list test_slices_that_escape_are_built_as_texts %7: settled=true length=%-1 len=[0,0]
+list test_slices_that_escape_are_built_as_texts %9: settled=true length=%-1 len=[1,1]
+list test_slices_that_escape_are_built_as_texts %11: settled=true length=%-1 len=[2,2]
+list test_slices_that_escape_are_built_as_texts %21: settled=true length=%-1
+list test_slices_that_escape_are_built_as_texts %22: settled=true length=%-1
+facts frequencies: %1=[1,5] %5=[0,18446744073709551615] %6=[0,9223372036854775807] %7=[-5,9223372036854775806] %9=[-4,9223372036854775807] %11=[0,9223372036854775807] %12=[-9223372036854775808,9223372036854775807] %13=[0,1] %16=[-9223372036854775808,9223372036854775807] %17=[1,9223372036854775807] %21=[-9223372036854775808,9223372036854775807] %23=[0,1] %25=[-9223372036854775807,9223372036854775807] %28=[-9223372036854775807,9223372036854775807] %30=[-9223372036854775806,9223372036854775807] %33=[-9223372036854775808,9223372036854775807] %35=[0,1] %43=[-9223372036854775808,9223372036854775807] %44=[-9223372036854775808,9223372036854775807] %46=[1,9223372036854775807] %48=[-9223372036854775808,9223372036854775807] %49=[-9223372036854775808,9223372036854775807] %52=[-9223372036854775808,9223372036854775807] %53=[-9223372036854775808,9223372036854775807]
+list frequencies %19: settled=true length=%-1
+list frequencies %41: settled=true length=%-1
+facts presence: %6=[-9223372036854775808,9223372036854775807] %8=[0,1] %17=[0,18446744073709551615] %18=[0,9223372036854775807] %20=[0,9223372036854775807] %21=[-9223372036854775808,9223372036854775807] %22=[0,1] %26=[1,9223372036854775807] %29=[-9223372036854775808,9223372036854775807] %31=[0,1] %33=[0,9223372036854775807] %35=[1,9223372036854775807] %40=[-9223372036854775808,9223372036854775807] %42=[0,1] %44=[-9223372036854775808,9223372036854775807] %47=[-9223372036854775808,9223372036854775807] %49=[-9223372036854775807,9223372036854775807] %52=[-9223372036854775808,9223372036854775807] %54=[0,1] %62=[-9223372036854775808,9223372036854775807] %63=[-9223372036854775808,9223372036854775807] %64=[-9223372036854775808,9223372036854775807] %66=[1,9223372036854775807] %68=[-9223372036854775808,9223372036854775807] %69=[-9223372036854775808,9223372036854775807] %70=[-9223372036854775808,9223372036854775807] %74=[-9223372036854775808,9223372036854775807] %75=[-9223372036854775808,9223372036854775807] %76=[-9223372036854775808,9223372036854775807] %77=[0,9223372036854775807] %79=[0,9223372036854775807] %85=[-9223372036854775808,9223372036854775807] %87=[0,1] %90=[-9223372036854775808,9223372036854775807] %91=[-9223372036854775808,9223372036854775807]
+list presence %14: settled=true length=%-1
+list presence %28: settled=true length=%-1
+list presence %60: settled=true length=%-1
+facts rewritten: %1=[2,2] %5=[0,18446744073709551615] %6=[0,9223372036854775807] %7=[-2,9223372036854775805] %9=[-1,9223372036854775806] %11=[0,9223372036854775806] %12=[-9223372036854775808,9223372036854775807] %13=[0,1] %16=[-9223372036854775808,9223372036854775807] %17=[2,9223372036854775807] %21=[-9223372036854775808,9223372036854775807] %23=[0,1] %25=[-9223372036854775807,9223372036854775807] %28=[-9223372036854775807,9223372036854775807] %30=[-9223372036854775806,9223372036854775807] %33=[-9223372036854775808,9223372036854775807] %35=[0,1] %45=[0,18446744073709551615] %46=[0,9223372036854775807] %51=[-9223372036854775808,9223372036854775807] %52=[-9223372036854775808,9223372036854775807] %54=[1,9223372036854775806] %56=[-9223372036854775808,9223372036854775807] %57=[-9223372036854775808,9223372036854775807] %58=[-9223372036854775808,9223372036854775807] %59=[-9223372036854775808,9223372036854775807]
+list rewritten %19: settled=true length=%-1
+list rewritten %41: settled=true length=%-1
+facts kept: %1=[2,2] %5=[0,18446744073709551615] %6=[0,9223372036854775807] %7=[-2,9223372036854775805] %9=[-1,9223372036854775806] %11=[0,9223372036854775806] %12=[-9223372036854775808,9223372036854775807] %13=[0,1] %16=[-9223372036854775808,9223372036854775807] %17=[2,9223372036854775807] %23=[1,9223372036854775806]
+list kept %3: settled=true length=%-1 len=[0,0]
+list kept %19: settled=true length=%9 len=[0,140737488355328]
+list kept %20: settled=true length=%-1 len=[1,140737488355328]

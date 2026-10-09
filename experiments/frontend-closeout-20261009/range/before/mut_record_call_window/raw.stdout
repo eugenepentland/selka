@@ -1,0 +1,1236 @@
+fn main(cap) -> i64
+b0:
+  %1 = call bool test_a_scalar_read_after_the_reference_sees_the_value_before_the_call()
+  print param0, %1
+  %3 = call bool test_a_match_binding_read_for_a_scalar_survives_the_callee_replacing_its_element()
+  print param0, %3
+  %5 = call bool test_a_borrow_read_after_the_call_keeps_the_value_before_it()
+  print param0, %5
+  %7 = call bool test_a_collection_argument_read_from_the_borrow_is_a_snapshot()
+  print param0, %7
+  %9 = call bool test_the_whole_borrow_as_an_argument_is_a_snapshot()
+  print param0, %9
+  %11 = call bool test_an_operand_pushed_before_the_reference_is_a_snapshot()
+  print param0, %11
+  %13 = call bool test_a_scalar_and_a_collection_from_one_borrow_in_one_call()
+  print param0, %13
+  %15 = call bool test_a_match_binding_collection_argument_is_a_snapshot()
+  print param0, %15
+  %17 = call bool test_a_nested_writing_call_between_the_reference_and_the_scalar_read()
+  print param0, %17
+  %19 = call bool test_two_mut_states_with_a_scalar_from_a_borrow()
+  print param0, %19
+  %21 = call bool test_a_loop_of_scalar_reads_through_a_growing_state()
+  print param0, %21
+  ret 0:i64
+fn test_a_scalar_read_after_the_reference_sees_the_value_before_the_call() -> bool
+b0:
+  %1 = list_new list[record{i64, list[i64]}] 1:i64
+  %4 = list_new list[i64] 2:i64
+  %6 = list_push list[i64] %4, 1:i64
+  %8 = list_push list[i64] %6, 2:i64
+  %9 = record_make record{i64, list[i64]} 4:i64, %8
+  %10 = list_push list[record{i64, list[i64]}] %1, %9
+  %12 = record_make record{list[record{i64, list[i64]}], i64} %10, 0:i64
+  %13 = record_get list[record{i64, list[i64]}] %12, field0
+  %16 = cmp.lt bool 0:i64, 0:i64
+  branch %16, b1, b2
+b1: ; preds b0
+  %18 = list_len u64 %13
+  %19 = convert.exact i64 %18
+  %20 = add.exact i64 %19, 0:i64
+  jump b2
+b2: ; preds b0 b1
+  %22 = phi i64 0:i64, %20
+  %26 = list_get_field.exact i64 %13, %22, path 0
+  %27 = call record{list[record{i64, list[i64]}], i64} replace_first(%12, %26)
+  %28 = record_get list[record{i64, list[i64]}] %27, field0
+  %31 = cmp.lt bool 0:i64, 0:i64
+  branch %31, b3, b4
+b3: ; preds b2
+  %33 = list_len u64 %28
+  %34 = convert.exact i64 %33
+  %35 = add.exact i64 %34, 0:i64
+  jump b4
+b4: ; preds b2 b3
+  %37 = phi i64 0:i64, %35
+  %40 = list_get_field.exact i64 %28, %37, path 0
+  %42 = cmp.eq bool %40, 40:i64
+  branch %42, b5, b6
+b5: ; preds b4
+  %45 = record_get list[record{i64, list[i64]}] %27, field0
+  %48 = cmp.lt bool 0:i64, 0:i64
+  branch %48, b7, b8
+b6: ; preds b4 b10
+  %88 = phi bool %42, %86
+  branch %88, b16, b17
+b7: ; preds b5
+  %50 = list_len u64 %45
+  %51 = convert.exact i64 %50
+  %52 = add.exact i64 %51, 0:i64
+  jump b8
+b8: ; preds b5 b7
+  %54 = phi i64 0:i64, %52
+  %57 = list_get_field.exact list[i64] %45, %54, path 1
+  %59 = list_new list[i64] 3:i64
+  %61 = list_push list[i64] %59, 4:i64
+  %63 = list_push list[i64] %61, 4:i64
+  %65 = list_push list[i64] %63, 4:i64
+  %66 = list_len u64 %57
+  %67 = list_len u64 %65
+  %68 = cmp.eq bool %66, %67
+  branch %68, b11, b10
+b9: ; preds b11 b14
+  %72 = phi u64 0:u64, %80
+  %73 = cmp.lt bool %72, %66
+  branch %73, b12, b13
+b10: ; preds b8 b15 b13
+  %86 = phi bool %68, 0:bool, 1:bool
+  jump b6
+b11: ; preds b8
+  jump b9
+b12: ; preds b9
+  %75 = list_get i64 %57, %72
+  %76 = list_get i64 %65, %72
+  %77 = cmp.eq bool %75, %76
+  branch %77, b14, b15
+b13: ; preds b9
+  jump b10
+b14: ; preds b12
+  %80 = add u64 %72, 1:u64
+  jump b9
+b15: ; preds b12
+  jump b10
+b16: ; preds b6
+  %94 = record_get i64 %27, field1
+  %96 = cmp.eq bool %94, 36:i64
+  jump b17
+b17: ; preds b6 b16
+  %98 = phi bool %88, %96
+  ret %98
+fn test_a_match_binding_read_for_a_scalar_survives_the_callee_replacing_its_element() -> bool
+b0:
+  %1 = list_new list[option[record{record{i64, list[i64]}}]] 1:i64
+  %4 = list_new list[i64] 1:i64
+  %6 = list_push list[i64] %4, 9:i64
+  %7 = record_make record{i64, list[i64]} 5:i64, %6
+  %8 = record_make record{record{i64, list[i64]}} %7
+  %9 = union_make option[record{record{i64, list[i64]}}] tag1 %8
+  %10 = list_push list[option[record{record{i64, list[i64]}}]] %1, %9
+  %12 = record_make record{list[option[record{record{i64, list[i64]}}]], i64} %10, 0:i64
+  %13 = record_get list[option[record{record{i64, list[i64]}}]] %12, field0
+  %16 = cmp.lt bool 0:i64, 0:i64
+  branch %16, b1, b2
+b1: ; preds b0
+  %18 = list_len u64 %13
+  %19 = convert.exact i64 %18
+  %20 = add.exact i64 %19, 0:i64
+  jump b2
+b2: ; preds b0 b1
+  %22 = phi i64 0:i64, %20
+  %25 = list_get_field.exact u32 %13, %22, path 0
+  %27 = cmp.eq bool %25, 1:u32
+  branch %27, b4, b5
+b3: ; preds b4
+  %38 = record_get list[option[record{record{i64, list[i64]}}]] %33, field0
+  %41 = cmp.lt bool 0:i64, 0:i64
+  branch %41, b7, b8
+b4: ; preds b2
+  %32 = list_get_field i64 %13, %22, path 2.0.0
+  %33 = call record{list[option[record{record{i64, list[i64]}}]], i64} refill(%12, %32)
+  jump b3
+b5: ; preds b2
+  jump b6
+b6: ; preds b5
+  ret 0:bool
+b7: ; preds b3
+  %43 = list_len u64 %38
+  %44 = convert.exact i64 %43
+  %45 = add.exact i64 %44, 0:i64
+  jump b8
+b8: ; preds b3 b7
+  %47 = phi i64 0:i64, %45
+  %50 = list_get_field.exact u32 %38, %47, path 0
+  %52 = cmp.eq bool %50, 1:u32
+  branch %52, b10, b11
+b9:
+b10: ; preds b8
+  %56 = list_get_field i64 %38, %47, path 2.0.0
+  %58 = cmp.eq bool %56, 6:i64
+  branch %58, b12, b13
+b11: ; preds b8
+  jump b23
+b12: ; preds b10
+  %60 = list_get_field list[i64] %38, %47, path 2.0.1
+  %62 = list_new list[i64] 1:i64
+  %64 = list_push list[i64] %62, 5:i64
+  %65 = list_len u64 %60
+  %66 = list_len u64 %64
+  %67 = cmp.eq bool %65, %66
+  branch %67, b16, b15
+b13: ; preds b10 b15
+  %87 = phi bool %58, %85
+  branch %87, b21, b22
+b14: ; preds b16 b19
+  %71 = phi u64 0:u64, %79
+  %72 = cmp.lt bool %71, %65
+  branch %72, b17, b18
+b15: ; preds b12 b20 b18
+  %85 = phi bool %67, 0:bool, 1:bool
+  jump b13
+b16: ; preds b12
+  jump b14
+b17: ; preds b14
+  %74 = list_get i64 %60, %71
+  %75 = list_get i64 %64, %71
+  %76 = cmp.eq bool %74, %75
+  branch %76, b19, b20
+b18: ; preds b14
+  jump b15
+b19: ; preds b17
+  %79 = add u64 %71, 1:u64
+  jump b14
+b20: ; preds b17
+  jump b15
+b21: ; preds b13
+  %93 = record_get i64 %33, field1
+  %95 = cmp.eq bool %93, 5:i64
+  jump b22
+b22: ; preds b13 b21
+  %97 = phi bool %87, %95
+  ret %97
+b23: ; preds b11
+  ret 0:bool
+fn test_a_borrow_read_after_the_call_keeps_the_value_before_it() -> bool
+b0:
+  %1 = list_new list[record{i64, list[i64]}] 1:i64
+  %4 = list_new list[i64] 1:i64
+  %6 = list_push list[i64] %4, 1:i64
+  %7 = record_make record{i64, list[i64]} 3:i64, %6
+  %8 = list_push list[record{i64, list[i64]}] %1, %7
+  %10 = record_make record{list[record{i64, list[i64]}], i64} %8, 0:i64
+  %11 = record_get list[record{i64, list[i64]}] %10, field0
+  %14 = cmp.lt bool 0:i64, 0:i64
+  branch %14, b1, b2
+b1: ; preds b0
+  %16 = list_len u64 %11
+  %17 = convert.exact i64 %16
+  %18 = add.exact i64 %17, 0:i64
+  jump b2
+b2: ; preds b0 b1
+  %20 = phi i64 0:i64, %18
+  %22 = list_get.exact record{i64, list[i64]} %11, %20
+  %24 = record_get i64 %22, field0
+  %25 = call record{list[record{i64, list[i64]}], i64} replace_first(%10, %24)
+  %26 = record_get i64 %22, field0
+  %28 = cmp.eq bool %26, 3:i64
+  branch %28, b3, b4
+b3: ; preds b2
+  %30 = record_get list[i64] %22, field1
+  %32 = list_new list[i64] 1:i64
+  %34 = list_push list[i64] %32, 1:i64
+  %35 = list_len u64 %30
+  %36 = list_len u64 %34
+  %37 = cmp.eq bool %35, %36
+  branch %37, b7, b6
+b4: ; preds b2 b6
+  %57 = phi bool %28, %55
+  branch %57, b12, b13
+b5: ; preds b7 b10
+  %41 = phi u64 0:u64, %49
+  %42 = cmp.lt bool %41, %35
+  branch %42, b8, b9
+b6: ; preds b3 b11 b9
+  %55 = phi bool %37, 0:bool, 1:bool
+  jump b4
+b7: ; preds b3
+  jump b5
+b8: ; preds b5
+  %44 = list_get i64 %30, %41
+  %45 = list_get i64 %34, %41
+  %46 = cmp.eq bool %44, %45
+  branch %46, b10, b11
+b9: ; preds b5
+  jump b6
+b10: ; preds b8
+  %49 = add u64 %41, 1:u64
+  jump b5
+b11: ; preds b8
+  jump b6
+b12: ; preds b4
+  %62 = record_get list[record{i64, list[i64]}] %25, field0
+  %65 = cmp.lt bool 0:i64, 0:i64
+  branch %65, b14, b15
+b13: ; preds b4 b17
+  %105 = phi bool %57, %103
+  ret %105
+b14: ; preds b12
+  %67 = list_len u64 %62
+  %68 = convert.exact i64 %67
+  %69 = add.exact i64 %68, 0:i64
+  jump b15
+b15: ; preds b12 b14
+  %71 = phi i64 0:i64, %69
+  %74 = list_get_field.exact list[i64] %62, %71, path 1
+  %76 = list_new list[i64] 3:i64
+  %78 = list_push list[i64] %76, 3:i64
+  %80 = list_push list[i64] %78, 3:i64
+  %82 = list_push list[i64] %80, 3:i64
+  %83 = list_len u64 %74
+  %84 = list_len u64 %82
+  %85 = cmp.eq bool %83, %84
+  branch %85, b18, b17
+b16: ; preds b18 b21
+  %89 = phi u64 0:u64, %97
+  %90 = cmp.lt bool %89, %83
+  branch %90, b19, b20
+b17: ; preds b15 b22 b20
+  %103 = phi bool %85, 0:bool, 1:bool
+  jump b13
+b18: ; preds b15
+  jump b16
+b19: ; preds b16
+  %92 = list_get i64 %74, %89
+  %93 = list_get i64 %82, %89
+  %94 = cmp.eq bool %92, %93
+  branch %94, b21, b22
+b20: ; preds b16
+  jump b17
+b21: ; preds b19
+  %97 = add u64 %89, 1:u64
+  jump b16
+b22: ; preds b19
+  jump b17
+fn test_a_collection_argument_read_from_the_borrow_is_a_snapshot() -> bool
+b0:
+  %1 = list_new list[record{i64, list[i64]}] 1:i64
+  %4 = list_new list[i64] 2:i64
+  %6 = list_push list[i64] %4, 5:i64
+  %8 = list_push list[i64] %6, 6:i64
+  %9 = record_make record{i64, list[i64]} 2:i64, %8
+  %10 = list_push list[record{i64, list[i64]}] %1, %9
+  %12 = record_make record{list[record{i64, list[i64]}], i64} %10, 0:i64
+  %13 = record_get list[record{i64, list[i64]}] %12, field0
+  %16 = cmp.lt bool 0:i64, 0:i64
+  branch %16, b1, b2
+b1: ; preds b0
+  %18 = list_len u64 %13
+  %19 = convert.exact i64 %18
+  %20 = add.exact i64 %19, 0:i64
+  jump b2
+b2: ; preds b0 b1
+  %22 = phi i64 0:i64, %20
+  %26 = list_get_field.exact list[i64] %13, %22, path 1
+  %27 = call record{i64, record{list[record{i64, list[i64]}], i64}} keep(%12, %26)
+  %28 = record_get i64 %27, field0
+  %29 = record_get record{list[record{i64, list[i64]}], i64} %27, field1
+  %31 = cmp.eq bool %28, 205:i64
+  branch %31, b3, b4
+b3: ; preds b2
+  %33 = record_get list[record{i64, list[i64]}] %29, field0
+  %36 = cmp.lt bool 0:i64, 0:i64
+  branch %36, b5, b6
+b4: ; preds b2 b6
+  %49 = phi bool %31, %47
+  branch %49, b7, b8
+b5: ; preds b3
+  %38 = list_len u64 %33
+  %39 = convert.exact i64 %38
+  %40 = add.exact i64 %39, 0:i64
+  jump b6
+b6: ; preds b3 b5
+  %42 = phi i64 0:i64, %40
+  %45 = list_get_field.exact i64 %33, %42, path 0
+  %47 = cmp.eq bool %45, 0:i64
+  jump b4
+b7: ; preds b4
+  %53 = record_get list[record{i64, list[i64]}] %29, field0
+  %56 = cmp.lt bool 0:i64, 0:i64
+  branch %56, b9, b10
+b8: ; preds b4 b10
+  %71 = phi bool %49, %69
+  ret %71
+b9: ; preds b7
+  %58 = list_len u64 %53
+  %59 = convert.exact i64 %58
+  %60 = add.exact i64 %59, 0:i64
+  jump b10
+b10: ; preds b7 b9
+  %62 = phi i64 0:i64, %60
+  %65 = list_get_field.exact list[i64] %53, %62, path 1
+  %66 = list_len u64 %65
+  %67 = convert.exact i64 %66
+  %69 = cmp.eq bool %67, 0:i64
+  jump b8
+fn test_the_whole_borrow_as_an_argument_is_a_snapshot() -> bool
+b0:
+  %1 = list_new list[record{i64, list[i64]}] 1:i64
+  %4 = list_new list[i64] 3:i64
+  %6 = list_push list[i64] %4, 1:i64
+  %8 = list_push list[i64] %6, 2:i64
+  %10 = list_push list[i64] %8, 3:i64
+  %11 = record_make record{i64, list[i64]} 8:i64, %10
+  %12 = list_push list[record{i64, list[i64]}] %1, %11
+  %14 = record_make record{list[record{i64, list[i64]}], i64} %12, 0:i64
+  %15 = record_get list[record{i64, list[i64]}] %14, field0
+  %18 = cmp.lt bool 0:i64, 0:i64
+  branch %18, b1, b2
+b1: ; preds b0
+  %20 = list_len u64 %15
+  %21 = convert.exact i64 %20
+  %22 = add.exact i64 %21, 0:i64
+  jump b2
+b2: ; preds b0 b1
+  %24 = phi i64 0:i64, %22
+  %26 = list_get.exact record{i64, list[i64]} %15, %24
+  %28 = call record{i64, record{list[record{i64, list[i64]}], i64}} hold(%14, %26)
+  %29 = record_get i64 %28, field0
+  %30 = record_get record{list[record{i64, list[i64]}], i64} %28, field1
+  %32 = cmp.eq bool %29, 308:i64
+  branch %32, b3, b4
+b3: ; preds b2
+  %34 = record_get list[record{i64, list[i64]}] %30, field0
+  %37 = cmp.lt bool 0:i64, 0:i64
+  branch %37, b5, b6
+b4: ; preds b2 b8
+  %79 = phi bool %32, %77
+  ret %79
+b5: ; preds b3
+  %39 = list_len u64 %34
+  %40 = convert.exact i64 %39
+  %41 = add.exact i64 %40, 0:i64
+  jump b6
+b6: ; preds b3 b5
+  %43 = phi i64 0:i64, %41
+  %46 = list_get_field.exact list[i64] %34, %43, path 1
+  %48 = list_new list[i64] 4:i64
+  %50 = list_push list[i64] %48, 1:i64
+  %52 = list_push list[i64] %50, 2:i64
+  %54 = list_push list[i64] %52, 3:i64
+  %56 = list_push list[i64] %54, 7:i64
+  %57 = list_len u64 %46
+  %58 = list_len u64 %56
+  %59 = cmp.eq bool %57, %58
+  branch %59, b9, b8
+b7: ; preds b9 b12
+  %63 = phi u64 0:u64, %71
+  %64 = cmp.lt bool %63, %57
+  branch %64, b10, b11
+b8: ; preds b6 b13 b11
+  %77 = phi bool %59, 0:bool, 1:bool
+  jump b4
+b9: ; preds b6
+  jump b7
+b10: ; preds b7
+  %66 = list_get i64 %46, %63
+  %67 = list_get i64 %56, %63
+  %68 = cmp.eq bool %66, %67
+  branch %68, b12, b13
+b11: ; preds b7
+  jump b8
+b12: ; preds b10
+  %71 = add u64 %63, 1:u64
+  jump b7
+b13: ; preds b10
+  jump b8
+fn test_an_operand_pushed_before_the_reference_is_a_snapshot() -> bool
+b0:
+  %1 = list_new list[record{i64, list[i64]}] 1:i64
+  %4 = list_new list[i64] 1:i64
+  %6 = list_push list[i64] %4, 4:i64
+  %7 = record_make record{i64, list[i64]} 1:i64, %6
+  %8 = list_push list[record{i64, list[i64]}] %1, %7
+  %10 = record_make record{list[record{i64, list[i64]}], i64} %8, 0:i64
+  %11 = record_get list[record{i64, list[i64]}] %10, field0
+  %14 = cmp.lt bool 0:i64, 0:i64
+  branch %14, b1, b2
+b1: ; preds b0
+  %16 = list_len u64 %11
+  %17 = convert.exact i64 %16
+  %18 = add.exact i64 %17, 0:i64
+  jump b2
+b2: ; preds b0 b1
+  %20 = phi i64 0:i64, %18
+  %23 = list_get_field.exact list[i64] %11, %20, path 1
+  %25 = call record{i64, record{list[record{i64, list[i64]}], i64}} first(%23, %10)
+  %26 = record_get i64 %25, field0
+  %27 = record_get record{list[record{i64, list[i64]}], i64} %25, field1
+  %29 = cmp.eq bool %26, 1:i64
+  branch %29, b3, b4
+b3: ; preds b2
+  %31 = record_get list[record{i64, list[i64]}] %27, field0
+  %34 = cmp.lt bool 0:i64, 0:i64
+  branch %34, b5, b6
+b4: ; preds b2 b8
+  %72 = phi bool %29, %70
+  ret %72
+b5: ; preds b3
+  %36 = list_len u64 %31
+  %37 = convert.exact i64 %36
+  %38 = add.exact i64 %37, 0:i64
+  jump b6
+b6: ; preds b3 b5
+  %40 = phi i64 0:i64, %38
+  %43 = list_get_field.exact list[i64] %31, %40, path 1
+  %45 = list_new list[i64] 2:i64
+  %47 = list_push list[i64] %45, 4:i64
+  %49 = list_push list[i64] %47, 7:i64
+  %50 = list_len u64 %43
+  %51 = list_len u64 %49
+  %52 = cmp.eq bool %50, %51
+  branch %52, b9, b8
+b7: ; preds b9 b12
+  %56 = phi u64 0:u64, %64
+  %57 = cmp.lt bool %56, %50
+  branch %57, b10, b11
+b8: ; preds b6 b13 b11
+  %70 = phi bool %52, 0:bool, 1:bool
+  jump b4
+b9: ; preds b6
+  jump b7
+b10: ; preds b7
+  %59 = list_get i64 %43, %56
+  %60 = list_get i64 %49, %56
+  %61 = cmp.eq bool %59, %60
+  branch %61, b12, b13
+b11: ; preds b7
+  jump b8
+b12: ; preds b10
+  %64 = add u64 %56, 1:u64
+  jump b7
+b13: ; preds b10
+  jump b8
+fn test_a_scalar_and_a_collection_from_one_borrow_in_one_call() -> bool
+b0:
+  %1 = list_new list[record{i64, list[i64]}] 1:i64
+  %4 = list_new list[i64] 2:i64
+  %6 = list_push list[i64] %4, 1:i64
+  %8 = list_push list[i64] %6, 1:i64
+  %9 = record_make record{i64, list[i64]} 6:i64, %8
+  %10 = list_push list[record{i64, list[i64]}] %1, %9
+  %12 = record_make record{list[record{i64, list[i64]}], i64} %10, 0:i64
+  %13 = record_get list[record{i64, list[i64]}] %12, field0
+  %16 = cmp.lt bool 0:i64, 0:i64
+  branch %16, b1, b2
+b1: ; preds b0
+  %18 = list_len u64 %13
+  %19 = convert.exact i64 %18
+  %20 = add.exact i64 %19, 0:i64
+  jump b2
+b2: ; preds b0 b1
+  %22 = phi i64 0:i64, %20
+  %26 = list_get_field.exact i64 %13, %22, path 0
+  %27 = list_get_field list[i64] %13, %22, path 1
+  %28 = call record{i64, record{list[record{i64, list[i64]}], i64}} mixed(%12, %26, %27)
+  %29 = record_get i64 %28, field0
+  %30 = record_get record{list[record{i64, list[i64]}], i64} %28, field1
+  %32 = cmp.eq bool %29, 2:i64
+  branch %32, b3, b4
+b3: ; preds b2
+  %34 = record_get list[record{i64, list[i64]}] %30, field0
+  %37 = cmp.lt bool 0:i64, 0:i64
+  branch %37, b5, b6
+b4: ; preds b2 b8
+  %77 = phi bool %32, %75
+  ret %77
+b5: ; preds b3
+  %39 = list_len u64 %34
+  %40 = convert.exact i64 %39
+  %41 = add.exact i64 %40, 0:i64
+  jump b6
+b6: ; preds b3 b5
+  %43 = phi i64 0:i64, %41
+  %46 = list_get_field.exact list[i64] %34, %43, path 1
+  %48 = list_new list[i64] 3:i64
+  %50 = list_push list[i64] %48, 1:i64
+  %52 = list_push list[i64] %50, 1:i64
+  %54 = list_push list[i64] %52, 6:i64
+  %55 = list_len u64 %46
+  %56 = list_len u64 %54
+  %57 = cmp.eq bool %55, %56
+  branch %57, b9, b8
+b7: ; preds b9 b12
+  %61 = phi u64 0:u64, %69
+  %62 = cmp.lt bool %61, %55
+  branch %62, b10, b11
+b8: ; preds b6 b13 b11
+  %75 = phi bool %57, 0:bool, 1:bool
+  jump b4
+b9: ; preds b6
+  jump b7
+b10: ; preds b7
+  %64 = list_get i64 %46, %61
+  %65 = list_get i64 %54, %61
+  %66 = cmp.eq bool %64, %65
+  branch %66, b12, b13
+b11: ; preds b7
+  jump b8
+b12: ; preds b10
+  %69 = add u64 %61, 1:u64
+  jump b7
+b13: ; preds b10
+  jump b8
+fn test_a_match_binding_collection_argument_is_a_snapshot() -> bool
+b0:
+  %1 = list_new list[option[record{record{i64, list[i64]}}]] 1:i64
+  %4 = list_new list[i64] 3:i64
+  %6 = list_push list[i64] %4, 3:i64
+  %8 = list_push list[i64] %6, 4:i64
+  %10 = list_push list[i64] %8, 5:i64
+  %11 = record_make record{i64, list[i64]} 1:i64, %10
+  %12 = record_make record{record{i64, list[i64]}} %11
+  %13 = union_make option[record{record{i64, list[i64]}}] tag1 %12
+  %14 = list_push list[option[record{record{i64, list[i64]}}]] %1, %13
+  %16 = record_make record{list[option[record{record{i64, list[i64]}}]], i64} %14, 0:i64
+  %18 = record_get list[option[record{record{i64, list[i64]}}]] %16, field0
+  %21 = cmp.lt bool 0:i64, 0:i64
+  branch %21, b1, b2
+b1: ; preds b0
+  %23 = list_len u64 %18
+  %24 = convert.exact i64 %23
+  %25 = add.exact i64 %24, 0:i64
+  jump b2
+b2: ; preds b0 b1
+  %27 = phi i64 0:i64, %25
+  %30 = list_get_field.exact u32 %18, %27, path 0
+  %32 = cmp.eq bool %30, 1:u32
+  branch %32, b4, b5
+b3: ; preds b4 b6
+  %45 = phi record{list[option[record{record{i64, list[i64]}}]], i64} %40, %16
+  %66 = phi i64 %39, -1:i64
+  %46 = record_get list[option[record{record{i64, list[i64]}}]] %45, field0
+  %49 = cmp.lt bool 0:i64, 0:i64
+  branch %49, b7, b8
+b4: ; preds b2
+  %37 = list_get_field list[i64] %18, %27, path 2.0.1
+  %38 = call record{i64, record{list[option[record{record{i64, list[i64]}}]], i64}} keep_slot(%16, %37)
+  %39 = record_get i64 %38, field0
+  %40 = record_get record{list[option[record{record{i64, list[i64]}}]], i64} %38, field1
+  jump b3
+b5: ; preds b2
+  jump b6
+b6: ; preds b5
+  jump b3
+b7: ; preds b3
+  %51 = list_len u64 %46
+  %52 = convert.exact i64 %51
+  %53 = add.exact i64 %52, 0:i64
+  jump b8
+b8: ; preds b3 b7
+  %55 = phi i64 0:i64, %53
+  %58 = list_get_field.exact u32 %46, %55, path 0
+  %60 = cmp.eq bool %58, 1:u32
+  branch %60, b10, b11
+b9:
+b10: ; preds b8
+  ret 0:bool
+b11: ; preds b8
+  jump b12
+b12: ; preds b11
+  %68 = cmp.eq bool %66, 3:i64
+  branch %68, b13, b14
+b13: ; preds b12
+  %71 = record_get i64 %45, field1
+  %73 = cmp.eq bool %71, 1:i64
+  jump b14
+b14: ; preds b12 b13
+  %75 = phi bool %68, %73
+  ret %75
+fn test_a_nested_writing_call_between_the_reference_and_the_scalar_read() -> bool
+b0:
+  %1 = list_new list[record{i64, list[i64]}] 1:i64
+  %4 = list_new list[i64] 1:i64
+  %6 = list_push list[i64] %4, 1:i64
+  %7 = record_make record{i64, list[i64]} 2:i64, %6
+  %8 = list_push list[record{i64, list[i64]}] %1, %7
+  %10 = record_make record{list[record{i64, list[i64]}], i64} %8, 0:i64
+  %11 = record_get list[record{i64, list[i64]}] %10, field0
+  %14 = cmp.lt bool 0:i64, 0:i64
+  branch %14, b1, b2
+b1: ; preds b0
+  %16 = list_len u64 %11
+  %17 = convert.exact i64 %16
+  %18 = add.exact i64 %17, 0:i64
+  jump b2
+b2: ; preds b0 b1
+  %20 = phi i64 0:i64, %18
+  %22 = list_get.exact record{i64, list[i64]} %11, %20
+  %24 = call record{i64, record{list[record{i64, list[i64]}], i64}} count_boxes(%10)
+  %25 = record_get i64 %24, field0
+  %26 = record_get record{list[record{i64, list[i64]}], i64} %24, field1
+  %27 = record_get i64 %22, field0
+  %28 = call record{i64, record{list[record{i64, list[i64]}], i64}} outer(%26, %25, %27)
+  %29 = record_get i64 %28, field0
+  %30 = record_get record{list[record{i64, list[i64]}], i64} %28, field1
+  %32 = cmp.eq bool %29, 102:i64
+  branch %32, b3, b4
+b3: ; preds b2
+  %34 = record_get list[record{i64, list[i64]}] %30, field0
+  %37 = cmp.lt bool 0:i64, 0:i64
+  branch %37, b5, b6
+b4: ; preds b2 b8
+  %75 = phi bool %32, %73
+  branch %75, b14, b15
+b5: ; preds b3
+  %39 = list_len u64 %34
+  %40 = convert.exact i64 %39
+  %41 = add.exact i64 %40, 0:i64
+  jump b6
+b6: ; preds b3 b5
+  %43 = phi i64 0:i64, %41
+  %46 = list_get_field.exact list[i64] %34, %43, path 1
+  %48 = list_new list[i64] 2:i64
+  %50 = list_push list[i64] %48, 1:i64
+  %52 = list_push list[i64] %50, 2:i64
+  %53 = list_len u64 %46
+  %54 = list_len u64 %52
+  %55 = cmp.eq bool %53, %54
+  branch %55, b9, b8
+b7: ; preds b9 b12
+  %59 = phi u64 0:u64, %67
+  %60 = cmp.lt bool %59, %53
+  branch %60, b10, b11
+b8: ; preds b6 b13 b11
+  %73 = phi bool %55, 0:bool, 1:bool
+  jump b4
+b9: ; preds b6
+  jump b7
+b10: ; preds b7
+  %62 = list_get i64 %46, %59
+  %63 = list_get i64 %52, %59
+  %64 = cmp.eq bool %62, %63
+  branch %64, b12, b13
+b11: ; preds b7
+  jump b8
+b12: ; preds b10
+  %67 = add u64 %59, 1:u64
+  jump b7
+b13: ; preds b10
+  jump b8
+b14: ; preds b4
+  %81 = record_get i64 %30, field1
+  %83 = cmp.eq bool %81, 1:i64
+  jump b15
+b15: ; preds b4 b14
+  %85 = phi bool %75, %83
+  ret %85
+fn test_two_mut_states_with_a_scalar_from_a_borrow() -> bool
+b0:
+  %1 = list_new list[record{i64, list[i64]}] 1:i64
+  %4 = list_new list[i64] 1:i64
+  %6 = list_push list[i64] %4, 1:i64
+  %7 = record_make record{i64, list[i64]} 9:i64, %6
+  %8 = list_push list[record{i64, list[i64]}] %1, %7
+  %10 = record_make record{list[record{i64, list[i64]}], i64} %8, 0:i64
+  %11 = record_get list[record{i64, list[i64]}] %10, field0
+  %14 = cmp.lt bool 0:i64, 0:i64
+  branch %14, b1, b2
+b1: ; preds b0
+  %16 = list_len u64 %11
+  %17 = convert.exact i64 %16
+  %18 = add.exact i64 %17, 0:i64
+  jump b2
+b2: ; preds b0 b1
+  %20 = phi i64 0:i64, %18
+  %24 = list_get_field.exact i64 %11, %20, path 0
+  %25 = call record{i64, record{list[record{i64, list[i64]}], i64}, record{list[record{i64, list[i64]}], i64}} pair(%10, %10, %24)
+  %26 = record_get i64 %25, field0
+  %27 = record_get record{list[record{i64, list[i64]}], i64} %25, field1
+  %28 = record_get record{list[record{i64, list[i64]}], i64} %25, field2
+  %30 = cmp.eq bool %26, 20:i64
+  branch %30, b3, b4
+b3: ; preds b2
+  %32 = record_get list[record{i64, list[i64]}] %27, field0
+  %35 = cmp.lt bool 0:i64, 0:i64
+  branch %35, b5, b6
+b4: ; preds b2 b8
+  %73 = phi bool %30, %71
+  branch %73, b14, b15
+b5: ; preds b3
+  %37 = list_len u64 %32
+  %38 = convert.exact i64 %37
+  %39 = add.exact i64 %38, 0:i64
+  jump b6
+b6: ; preds b3 b5
+  %41 = phi i64 0:i64, %39
+  %44 = list_get_field.exact list[i64] %32, %41, path 1
+  %46 = list_new list[i64] 2:i64
+  %48 = list_push list[i64] %46, 1:i64
+  %50 = list_push list[i64] %48, 9:i64
+  %51 = list_len u64 %44
+  %52 = list_len u64 %50
+  %53 = cmp.eq bool %51, %52
+  branch %53, b9, b8
+b7: ; preds b9 b12
+  %57 = phi u64 0:u64, %65
+  %58 = cmp.lt bool %57, %51
+  branch %58, b10, b11
+b8: ; preds b6 b13 b11
+  %71 = phi bool %53, 0:bool, 1:bool
+  jump b4
+b9: ; preds b6
+  jump b7
+b10: ; preds b7
+  %60 = list_get i64 %44, %57
+  %61 = list_get i64 %50, %57
+  %62 = cmp.eq bool %60, %61
+  branch %62, b12, b13
+b11: ; preds b7
+  jump b8
+b12: ; preds b10
+  %65 = add u64 %57, 1:u64
+  jump b7
+b13: ; preds b10
+  jump b8
+b14: ; preds b4
+  %79 = record_get list[record{i64, list[i64]}] %28, field0
+  %82 = cmp.lt bool 0:i64, 0:i64
+  branch %82, b16, b17
+b15: ; preds b4 b17
+  %95 = phi bool %73, %93
+  branch %95, b18, b19
+b16: ; preds b14
+  %84 = list_len u64 %79
+  %85 = convert.exact i64 %84
+  %86 = add.exact i64 %85, 0:i64
+  jump b17
+b17: ; preds b14 b16
+  %88 = phi i64 0:i64, %86
+  %91 = list_get_field.exact i64 %79, %88, path 0
+  %93 = cmp.eq bool %91, 9:i64
+  jump b15
+b18: ; preds b15
+  %99 = record_get list[record{i64, list[i64]}] %28, field0
+  %102 = cmp.lt bool 0:i64, 0:i64
+  branch %102, b20, b21
+b19: ; preds b15 b21
+  %117 = phi bool %95, %115
+  ret %117
+b20: ; preds b18
+  %104 = list_len u64 %99
+  %105 = convert.exact i64 %104
+  %106 = add.exact i64 %105, 0:i64
+  jump b21
+b21: ; preds b18 b20
+  %108 = phi i64 0:i64, %106
+  %111 = list_get_field.exact list[i64] %99, %108, path 1
+  %112 = list_len u64 %111
+  %113 = convert.exact i64 %112
+  %115 = cmp.eq bool %113, 0:i64
+  jump b19
+fn test_a_loop_of_scalar_reads_through_a_growing_state() -> bool
+b0:
+  %1 = list_new list[record{i64, list[i64]}] 1:i64
+  %4 = list_new list[i64] 1:i64
+  %6 = list_push list[i64] %4, 0:i64
+  %7 = record_make record{i64, list[i64]} 1:i64, %6
+  %8 = list_push list[record{i64, list[i64]}] %1, %7
+  %10 = record_make record{list[record{i64, list[i64]}], i64} %8, 0:i64
+  jump b1
+b1: ; preds b0 b3
+  %15 = phi i64 0:i64, %43
+  %19 = phi record{list[record{i64, list[i64]}], i64} %10, %36
+  %38 = phi i64 0:i64, %40
+  %17 = cmp.lt bool %15, 20:i64
+  branch %17, b2, b4
+b2: ; preds b1
+  %20 = record_get list[record{i64, list[i64]}] %19, field0
+  %23 = cmp.lt bool 0:i64, 0:i64
+  branch %23, b5, b6
+b3: ; preds b6
+  %43 = add.exact i64 %15, 1:i64
+  jump b1
+b4: ; preds b1
+  %46 = record_get list[record{i64, list[i64]}] %19, field0
+  %49 = cmp.lt bool 0:i64, 0:i64
+  branch %49, b7, b8
+b5: ; preds b2
+  %25 = list_len u64 %20
+  %26 = convert.exact i64 %25
+  %27 = add.exact i64 %26, 0:i64
+  jump b6
+b6: ; preds b2 b5
+  %29 = phi i64 0:i64, %27
+  %33 = list_get_field.exact i64 %20, %29, path 0
+  %35 = add.exact i64 %33, %15
+  %36 = call record{list[record{i64, list[i64]}], i64} grow_first(%19, %35)
+  %39 = record_get i64 %36, field1
+  %40 = add.exact i64 %38, %39
+  jump b3
+b7: ; preds b4
+  %51 = list_len u64 %46
+  %52 = convert.exact i64 %51
+  %53 = add.exact i64 %52, 0:i64
+  jump b8
+b8: ; preds b4 b7
+  %55 = phi i64 0:i64, %53
+  %58 = list_get_field.exact list[i64] %46, %55, path 1
+  %59 = list_len u64 %58
+  %60 = convert.exact i64 %59
+  %62 = cmp.eq bool %60, 21:i64
+  branch %62, b9, b10
+b9: ; preds b8
+  %65 = record_get i64 %19, field1
+  %67 = cmp.eq bool %65, 210:i64
+  jump b10
+b10: ; preds b8 b9
+  %69 = phi bool %62, %67
+  branch %69, b11, b12
+b11: ; preds b10
+  %74 = cmp.eq bool %38, 1540:i64
+  jump b12
+b12: ; preds b10 b11
+  %76 = phi bool %69, %74
+  ret %76
+fn replace_first(record{list[record{i64, list[i64]}], i64}, i64) -> record{list[record{i64, list[i64]}], i64}
+b0:
+  %3 = mul.exact i64 param1, 10:i64
+  %5 = list_new list[i64] 3:i64
+  %6 = list_push list[i64] %5, param1
+  %7 = list_push list[i64] %6, param1
+  %8 = list_push list[i64] %7, param1
+  %9 = record_make record{i64, list[i64]} %3, %8
+  %10 = record_get list[record{i64, list[i64]}] param0, field0
+  %13 = cmp.lt bool 0:i64, 0:i64
+  branch %13, b1, b2
+b1: ; preds b0
+  %15 = list_len u64 %10
+  %16 = convert.exact i64 %15
+  %17 = add.exact i64 %16, 0:i64
+  jump b2
+b2: ; preds b0 b1
+  %19 = phi i64 0:i64, %17
+  %23 = list_set.exact list[record{i64, list[i64]}] %10, %19, %9
+  %24 = record_set record{list[record{i64, list[i64]}], i64} param0, field0, %23
+  %26 = list_new list[list[i64]] 0:i64
+  jump b3
+b3: ; preds b2 b5
+  %30 = phi i64 0:i64, %44
+  %40 = phi list[list[i64]] %26, %41
+  %32 = cmp.lt bool %30, 32:i64
+  branch %32, b4, b6
+b4: ; preds b3
+  %35 = list_new list[i64] 2:i64
+  %36 = list_push list[i64] %35, %30
+  %38 = add.exact i64 %30, 1:i64
+  %39 = list_push list[i64] %36, %38
+  %41 = list_push list[list[i64]] %40, %39
+  jump b5
+b5: ; preds b4
+  %44 = add.exact i64 %30, 1:i64
+  jump b3
+b6: ; preds b3
+  %47 = record_get i64 %24, field1
+  %50 = add.exact i64 %47, param1
+  %51 = list_len u64 %40
+  %52 = convert.exact i64 %51
+  %53 = add.exact i64 %50, %52
+  %54 = record_set record{list[record{i64, list[i64]}], i64} %24, field1, %53
+  ret %54
+fn refill(record{list[option[record{record{i64, list[i64]}}]], i64}, i64) -> record{list[option[record{record{i64, list[i64]}}]], i64}
+b0:
+  %3 = add.exact i64 param1, 1:i64
+  %5 = list_new list[i64] 1:i64
+  %6 = list_push list[i64] %5, param1
+  %7 = record_make record{i64, list[i64]} %3, %6
+  %8 = record_make record{record{i64, list[i64]}} %7
+  %9 = union_make option[record{record{i64, list[i64]}}] tag1 %8
+  %10 = record_get list[option[record{record{i64, list[i64]}}]] param0, field0
+  %13 = cmp.lt bool 0:i64, 0:i64
+  branch %13, b1, b2
+b1: ; preds b0
+  %15 = list_len u64 %10
+  %16 = convert.exact i64 %15
+  %17 = add.exact i64 %16, 0:i64
+  jump b2
+b2: ; preds b0 b1
+  %19 = phi i64 0:i64, %17
+  %23 = list_set.exact list[option[record{record{i64, list[i64]}}]] %10, %19, %9
+  %24 = record_set record{list[option[record{record{i64, list[i64]}}]], i64} param0, field0, %23
+  %25 = record_get i64 %24, field1
+  %27 = add.exact i64 %25, param1
+  %28 = record_set record{list[option[record{record{i64, list[i64]}}]], i64} %24, field1, %27
+  ret %28
+fn keep(record{list[record{i64, list[i64]}], i64}, list[i64]) -> record{i64, record{list[record{i64, list[i64]}], i64}}
+b0:
+  %2 = record_get list[record{i64, list[i64]}] param0, field0
+  %5 = cmp.lt bool 0:i64, 0:i64
+  branch %5, b1, b2
+b1: ; preds b0
+  %7 = list_len u64 %2
+  %8 = convert.exact i64 %7
+  %9 = add.exact i64 %8, 0:i64
+  jump b2
+b2: ; preds b0 b1
+  %11 = phi i64 0:i64, %9
+  %14 = list_get_field.exact list[i64] %2, %11, path 1
+  %17 = list_push list[i64] %14, 7:i64
+  %18 = record_get list[record{i64, list[i64]}] param0, field0
+  %19 = list_copy list[record{i64, list[i64]}] %18
+  %20 = list_get.exact record{i64, list[i64]} %19, %11
+  %21 = record_set record{i64, list[i64]} %20, field1, %17
+  %22 = list_set.exact list[record{i64, list[i64]}] %19, %11, %21
+  %23 = record_set record{list[record{i64, list[i64]}], i64} param0, field0, %22
+  %26 = list_new list[i64] 0:i64
+  %27 = record_make record{i64, list[i64]} 0:i64, %26
+  %28 = record_get list[record{i64, list[i64]}] %23, field0
+  %31 = cmp.lt bool 0:i64, 0:i64
+  branch %31, b3, b4
+b3: ; preds b2
+  %33 = list_len u64 %28
+  %34 = convert.exact i64 %33
+  %35 = add.exact i64 %34, 0:i64
+  jump b4
+b4: ; preds b2 b3
+  %37 = phi i64 0:i64, %35
+  %41 = list_set.exact list[record{i64, list[i64]}] %28, %37, %27
+  %42 = record_set record{list[record{i64, list[i64]}], i64} %23, field0, %41
+  %45 = list_len u64 param1
+  %46 = convert.exact i64 %45
+  %48 = mul.exact i64 %46, 100:i64
+  %51 = cmp.lt bool 0:i64, 0:i64
+  branch %51, b5, b6
+b5: ; preds b4
+  %53 = list_len u64 param1
+  %54 = convert.exact i64 %53
+  %55 = add.exact i64 %54, 0:i64
+  jump b6
+b6: ; preds b4 b5
+  %57 = phi i64 0:i64, %55
+  %59 = list_get.exact i64 param1, %57
+  %60 = add.exact i64 %48, %59
+  %62 = record_make record{i64, record{list[record{i64, list[i64]}], i64}} %60, %42
+  ret %62
+fn hold(record{list[record{i64, list[i64]}], i64}, record{i64, list[i64]}) -> record{i64, record{list[record{i64, list[i64]}], i64}}
+b0:
+  %2 = record_get list[record{i64, list[i64]}] param0, field0
+  %5 = cmp.lt bool 0:i64, 0:i64
+  branch %5, b1, b2
+b1: ; preds b0
+  %7 = list_len u64 %2
+  %8 = convert.exact i64 %7
+  %9 = add.exact i64 %8, 0:i64
+  jump b2
+b2: ; preds b0 b1
+  %11 = phi i64 0:i64, %9
+  %14 = list_get_field.exact list[i64] %2, %11, path 1
+  %17 = list_push list[i64] %14, 7:i64
+  %18 = record_get list[record{i64, list[i64]}] param0, field0
+  %19 = list_copy list[record{i64, list[i64]}] %18
+  %20 = list_get.exact record{i64, list[i64]} %19, %11
+  %21 = record_set record{i64, list[i64]} %20, field1, %17
+  %22 = list_set.exact list[record{i64, list[i64]}] %19, %11, %21
+  %23 = record_set record{list[record{i64, list[i64]}], i64} param0, field0, %22
+  %25 = record_get list[i64] param1, field1
+  %26 = list_len u64 %25
+  %27 = convert.exact i64 %26
+  %29 = mul.exact i64 %27, 100:i64
+  %30 = record_get i64 param1, field0
+  %31 = add.exact i64 %29, %30
+  %32 = record_make record{i64, record{list[record{i64, list[i64]}], i64}} %31, %23
+  ret %32
+fn first(list[i64], record{list[record{i64, list[i64]}], i64}) -> record{i64, record{list[record{i64, list[i64]}], i64}}
+b0:
+  %2 = record_get list[record{i64, list[i64]}] param1, field0
+  %5 = cmp.lt bool 0:i64, 0:i64
+  branch %5, b1, b2
+b1: ; preds b0
+  %7 = list_len u64 %2
+  %8 = convert.exact i64 %7
+  %9 = add.exact i64 %8, 0:i64
+  jump b2
+b2: ; preds b0 b1
+  %11 = phi i64 0:i64, %9
+  %14 = list_get_field.exact list[i64] %2, %11, path 1
+  %17 = list_push list[i64] %14, 7:i64
+  %18 = record_get list[record{i64, list[i64]}] param1, field0
+  %19 = list_copy list[record{i64, list[i64]}] %18
+  %20 = list_get.exact record{i64, list[i64]} %19, %11
+  %21 = record_set record{i64, list[i64]} %20, field1, %17
+  %22 = list_set.exact list[record{i64, list[i64]}] %19, %11, %21
+  %23 = record_set record{list[record{i64, list[i64]}], i64} param1, field0, %22
+  %25 = list_len u64 param0
+  %26 = convert.exact i64 %25
+  %27 = record_make record{i64, record{list[record{i64, list[i64]}], i64}} %26, %23
+  ret %27
+fn mixed(record{list[record{i64, list[i64]}], i64}, i64, list[i64]) -> record{i64, record{list[record{i64, list[i64]}], i64}}
+b0:
+  %3 = record_get list[record{i64, list[i64]}] param0, field0
+  %6 = cmp.lt bool 0:i64, 0:i64
+  branch %6, b1, b2
+b1: ; preds b0
+  %8 = list_len u64 %3
+  %9 = convert.exact i64 %8
+  %10 = add.exact i64 %9, 0:i64
+  jump b2
+b2: ; preds b0 b1
+  %12 = phi i64 0:i64, %10
+  %15 = list_get_field.exact list[i64] %3, %12, path 1
+  %18 = list_push list[i64] %15, param1
+  %19 = record_get list[record{i64, list[i64]}] param0, field0
+  %20 = list_copy list[record{i64, list[i64]}] %19
+  %21 = list_get.exact record{i64, list[i64]} %20, %12
+  %22 = record_set record{i64, list[i64]} %21, field1, %18
+  %23 = list_set.exact list[record{i64, list[i64]}] %20, %12, %22
+  %24 = record_set record{list[record{i64, list[i64]}], i64} param0, field0, %23
+  %26 = list_len u64 param2
+  %27 = convert.exact i64 %26
+  %28 = record_make record{i64, record{list[record{i64, list[i64]}], i64}} %27, %24
+  ret %28
+fn keep_slot(record{list[option[record{record{i64, list[i64]}}]], i64}, list[i64]) -> record{i64, record{list[option[record{record{i64, list[i64]}}]], i64}}
+b0:
+  %2 = union_make option[record{record{i64, list[i64]}}] tag0
+  %3 = record_get list[option[record{record{i64, list[i64]}}]] param0, field0
+  %6 = cmp.lt bool 0:i64, 0:i64
+  branch %6, b1, b2
+b1: ; preds b0
+  %8 = list_len u64 %3
+  %9 = convert.exact i64 %8
+  %10 = add.exact i64 %9, 0:i64
+  jump b2
+b2: ; preds b0 b1
+  %12 = phi i64 0:i64, %10
+  %16 = list_set.exact list[option[record{record{i64, list[i64]}}]] %3, %12, %2
+  %17 = record_set record{list[option[record{record{i64, list[i64]}}]], i64} param0, field0, %16
+  %18 = record_get i64 %17, field1
+  %20 = add.exact i64 %18, 1:i64
+  %21 = record_set record{list[option[record{record{i64, list[i64]}}]], i64} %17, field1, %20
+  %23 = list_len u64 param1
+  %24 = convert.exact i64 %23
+  %25 = record_make record{i64, record{list[option[record{record{i64, list[i64]}}]], i64}} %24, %21
+  ret %25
+fn outer(record{list[record{i64, list[i64]}], i64}, i64, i64) -> record{i64, record{list[record{i64, list[i64]}], i64}}
+b0:
+  %3 = record_get list[record{i64, list[i64]}] param0, field0
+  %6 = cmp.lt bool 0:i64, 0:i64
+  branch %6, b1, b2
+b1: ; preds b0
+  %8 = list_len u64 %3
+  %9 = convert.exact i64 %8
+  %10 = add.exact i64 %9, 0:i64
+  jump b2
+b2: ; preds b0 b1
+  %12 = phi i64 0:i64, %10
+  %15 = list_get_field.exact list[i64] %3, %12, path 1
+  %18 = list_push list[i64] %15, param2
+  %19 = record_get list[record{i64, list[i64]}] param0, field0
+  %20 = list_copy list[record{i64, list[i64]}] %19
+  %21 = list_get.exact record{i64, list[i64]} %20, %12
+  %22 = record_set record{i64, list[i64]} %21, field1, %18
+  %23 = list_set.exact list[record{i64, list[i64]}] %20, %12, %22
+  %24 = record_set record{list[record{i64, list[i64]}], i64} param0, field0, %23
+  %27 = mul.exact i64 param1, 100:i64
+  %28 = record_get list[record{i64, list[i64]}] %24, field0
+  %31 = cmp.lt bool 0:i64, 0:i64
+  branch %31, b3, b4
+b3: ; preds b2
+  %33 = list_len u64 %28
+  %34 = convert.exact i64 %33
+  %35 = add.exact i64 %34, 0:i64
+  jump b4
+b4: ; preds b2 b3
+  %37 = phi i64 0:i64, %35
+  %40 = list_get_field.exact list[i64] %28, %37, path 1
+  %41 = list_len u64 %40
+  %42 = convert.exact i64 %41
+  %43 = add.exact i64 %27, %42
+  %45 = record_make record{i64, record{list[record{i64, list[i64]}], i64}} %43, %24
+  ret %45
+fn count_boxes(record{list[record{i64, list[i64]}], i64}) -> record{i64, record{list[record{i64, list[i64]}], i64}}
+b0:
+  %1 = record_get i64 param0, field1
+  %3 = add.exact i64 %1, 1:i64
+  %4 = record_set record{list[record{i64, list[i64]}], i64} param0, field1, %3
+  %5 = record_get list[record{i64, list[i64]}] %4, field0
+  %6 = list_len u64 %5
+  %7 = convert.exact i64 %6
+  %8 = record_make record{i64, record{list[record{i64, list[i64]}], i64}} %7, %4
+  ret %8
+fn pair(record{list[record{i64, list[i64]}], i64}, record{list[record{i64, list[i64]}], i64}, i64) -> record{i64, record{list[record{i64, list[i64]}], i64}, record{list[record{i64, list[i64]}], i64}}
+b0:
+  %3 = record_get list[record{i64, list[i64]}] param0, field0
+  %6 = cmp.lt bool 0:i64, 0:i64
+  branch %6, b1, b2
+b1: ; preds b0
+  %8 = list_len u64 %3
+  %9 = convert.exact i64 %8
+  %10 = add.exact i64 %9, 0:i64
+  jump b2
+b2: ; preds b0 b1
+  %12 = phi i64 0:i64, %10
+  %15 = list_get_field.exact list[i64] %3, %12, path 1
+  %18 = list_push list[i64] %15, param2
+  %19 = record_get list[record{i64, list[i64]}] param0, field0
+  %20 = list_copy list[record{i64, list[i64]}] %19
+  %21 = list_get.exact record{i64, list[i64]} %20, %12
+  %22 = record_set record{i64, list[i64]} %21, field1, %18
+  %23 = list_set.exact list[record{i64, list[i64]}] %20, %12, %22
+  %24 = record_set record{list[record{i64, list[i64]}], i64} param0, field0, %23
+  %26 = list_new list[i64] 0:i64
+  %27 = record_make record{i64, list[i64]} param2, %26
+  %29 = record_get list[record{i64, list[i64]}] param1, field0
+  %32 = cmp.lt bool 0:i64, 0:i64
+  branch %32, b3, b4
+b3: ; preds b2
+  %34 = list_len u64 %29
+  %35 = convert.exact i64 %34
+  %36 = add.exact i64 %35, 0:i64
+  jump b4
+b4: ; preds b2 b3
+  %38 = phi i64 0:i64, %36
+  %42 = list_set.exact list[record{i64, list[i64]}] %29, %38, %27
+  %43 = record_set record{list[record{i64, list[i64]}], i64} param1, field0, %42
+  %45 = record_get list[record{i64, list[i64]}] %24, field0
+  %48 = cmp.lt bool 0:i64, 0:i64
+  branch %48, b5, b6
+b5: ; preds b4
+  %50 = list_len u64 %45
+  %51 = convert.exact i64 %50
+  %52 = add.exact i64 %51, 0:i64
+  jump b6
+b6: ; preds b4 b5
+  %54 = phi i64 0:i64, %52
+  %57 = list_get_field.exact list[i64] %45, %54, path 1
+  %58 = list_len u64 %57
+  %59 = convert.exact i64 %58
+  %61 = mul.exact i64 %59, 10:i64
+  %63 = record_get list[record{i64, list[i64]}] %43, field0
+  %66 = cmp.lt bool 0:i64, 0:i64
+  branch %66, b7, b8
+b7: ; preds b6
+  %68 = list_len u64 %63
+  %69 = convert.exact i64 %68
+  %70 = add.exact i64 %69, 0:i64
+  jump b8
+b8: ; preds b6 b7
+  %72 = phi i64 0:i64, %70
+  %75 = list_get_field.exact list[i64] %63, %72, path 1
+  %76 = list_len u64 %75
+  %77 = convert.exact i64 %76
+  %78 = add.exact i64 %61, %77
+  %82 = record_make record{i64, record{list[record{i64, list[i64]}], i64}, record{list[record{i64, list[i64]}], i64}} %78, %24, %43
+  ret %82
+fn grow_first(record{list[record{i64, list[i64]}], i64}, i64) -> record{list[record{i64, list[i64]}], i64}
+b0:
+  %2 = record_get list[record{i64, list[i64]}] param0, field0
+  %5 = cmp.lt bool 0:i64, 0:i64
+  branch %5, b1, b2
+b1: ; preds b0
+  %7 = list_len u64 %2
+  %8 = convert.exact i64 %7
+  %9 = add.exact i64 %8, 0:i64
+  jump b2
+b2: ; preds b0 b1
+  %11 = phi i64 0:i64, %9
+  %14 = list_get_field.exact list[i64] %2, %11, path 1
+  %17 = list_push list[i64] %14, param1
+  %18 = record_get list[record{i64, list[i64]}] param0, field0
+  %19 = list_copy list[record{i64, list[i64]}] %18
+  %20 = list_get.exact record{i64, list[i64]} %19, %11
+  %21 = record_set record{i64, list[i64]} %20, field1, %17
+  %22 = list_set.exact list[record{i64, list[i64]}] %19, %11, %21
+  %23 = record_set record{list[record{i64, list[i64]}], i64} param0, field0, %22
+  %24 = record_get i64 %23, field1
+  %25 = add.exact i64 %24, param1
+  %26 = record_set record{list[record{i64, list[i64]}], i64} %23, field1, %25
+  ret %26

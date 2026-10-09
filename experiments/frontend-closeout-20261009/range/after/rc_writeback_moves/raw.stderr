@@ -1,0 +1,3 @@
+rc_writeback_moves.my:1:1: error[E_MAIN]: the program requires an entry point: func main() -> int; `mylang check FILE` type-checks a library that has no main
+  # `wb = owner.f; change(mut wb); owner.f = wb` is a move of `owner.f` under
+  ^

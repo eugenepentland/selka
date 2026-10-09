@@ -1,0 +1,140 @@
+fn main(cap) -> i64
+b0:
+  %1 = call bool test_adjacent_dictionary_and_byte_loops_keep_their_own_guard_context()
+  branch %1, b2, b1
+b1: ; preds b0
+  unreachable
+b2: ; preds b0
+  %5 = call i64 adjacent(20:i64)
+  print param0, %5
+  ret 0:i64
+fn test_adjacent_dictionary_and_byte_loops_keep_their_own_guard_context() -> bool
+b0:
+  %1 = call i64 adjacent(20:i64)
+  %3 = cmp.eq bool %1, 220:i64
+  branch %3, b1, b2
+b1: ; preds b0
+  %6 = call i64 adjacent(0:i64)
+  %8 = cmp.eq bool %6, 210:i64
+  jump b2
+b2: ; preds b0 b1
+  %10 = phi bool %3, %8
+  ret %10
+fn adjacent(i64) -> i64
+b0:
+  %2 = list_new list[str] 2:i64
+  %5 = str_append str str1, str2
+  %6 = list_push list[str] %2, %5
+  %8 = list_push list[str] %6, str3
+  %10 = list_new list[i64] 20:i64
+  %12 = list_push list[i64] %10, 1:i64
+  %14 = list_push list[i64] %12, 2:i64
+  %16 = list_push list[i64] %14, 3:i64
+  %18 = list_push list[i64] %16, 4:i64
+  %20 = list_push list[i64] %18, 5:i64
+  %22 = list_push list[i64] %20, 6:i64
+  %24 = list_push list[i64] %22, 7:i64
+  %26 = list_push list[i64] %24, 8:i64
+  %28 = list_push list[i64] %26, 9:i64
+  %30 = list_push list[i64] %28, 10:i64
+  %32 = list_push list[i64] %30, 11:i64
+  %34 = list_push list[i64] %32, 12:i64
+  %36 = list_push list[i64] %34, 13:i64
+  %38 = list_push list[i64] %36, 14:i64
+  %40 = list_push list[i64] %38, 15:i64
+  %42 = list_push list[i64] %40, 16:i64
+  %44 = list_push list[i64] %42, 17:i64
+  %46 = list_push list[i64] %44, 18:i64
+  %48 = list_push list[i64] %46, 19:i64
+  %50 = list_push list[i64] %48, 20:i64
+  %51 = call bool myl_core_bytes_valid_list(%50)
+  branch %51, b1, b2
+b1: ; preds b0
+  %54 = call bytes myl_core_bytes_from_list(%50)
+  %56 = dict_new dict[str, i64] 0:u64
+  jump b3
+b2: ; preds b0
+  unreachable
+b3: ; preds b1 b5
+  %59 = phi i64 0:i64, %105
+  %77 = phi dict[str, i64] %56, %99
+  %61 = cmp.lt bool %59, param0
+  branch %61, b4, b6
+b4: ; preds b3
+  %65 = floor_rem.exact i64 %59, 2:i64
+  %67 = cmp.lt bool %65, 0:i64
+  branch %67, b7, b8
+b5: ; preds b14
+  %105 = add.exact i64 %59, 1:i64
+  jump b3
+b6: ; preds b3
+  %119 = list_len u64 %54
+  %120 = convert.exact i64 %119
+  jump b15
+b7: ; preds b4
+  %69 = list_len u64 %8
+  %70 = convert.exact i64 %69
+  %71 = add.exact i64 %70, %65
+  jump b8
+b8: ; preds b4 b7
+  %73 = phi i64 %65, %71
+  %75 = list_get.exact str %8, %73
+  %79 = dict_find i64 %77, %75
+  %81 = cmp.ge bool %79, 0:i64
+  branch %81, b9, b10
+b9: ; preds b8
+  %83 = dict_entry_value i64 %77, %79
+  jump b11
+b10: ; preds b8
+  jump b11
+b11: ; preds b9 b10
+  %86 = phi i64 %83, 0:i64
+  %88 = add.exact i64 %86, 1:i64
+  %93 = cmp.ge bool %79, 0:i64
+  branch %93, b12, b13
+b12: ; preds b11
+  %95 = dict_set_value dict[str, i64] %77, %79, %88
+  jump b14
+b13: ; preds b11
+  %97 = dict_insert dict[str, i64] %77, %79, %75, %88
+  jump b14
+b14: ; preds b12 b13
+  %99 = phi dict[str, i64] %95, %97
+  jump b5
+b15: ; preds b6 b17
+  %122 = phi i64 0:i64, %134
+  %126 = phi i64 0:i64, %131
+  %124 = cmp.lt bool %122, %120
+  branch %124, b16, b18
+b16: ; preds b15
+  %128 = call u64 myl_core_bytes_index_offset(%54, %122)
+  %129 = list_get.exact u8 %54, %128
+  %130 = convert i64 %129
+  %131 = add.exact i64 %126, %130
+  jump b17
+b17: ; preds b16
+  %134 = add.exact i64 %122, 1:i64
+  jump b15
+b18: ; preds b15
+  %137 = list_len u64 %8
+  %138 = convert.exact i64 %137
+  %140 = cmp.eq bool %138, 2:i64
+  branch %140, b20, b19
+b19: ; preds b18
+  unreachable
+b20: ; preds b18
+  %146 = dict_find i64 %77, str5
+  %148 = cmp.ge bool %146, 0:i64
+  branch %148, b21, b22
+b21: ; preds b20
+  %150 = dict_entry_value i64 %77, %146
+  jump b23
+b22: ; preds b20
+  jump b23
+b23: ; preds b21 b22
+  %153 = phi i64 %150, 0:i64
+  %154 = add.exact i64 %126, %153
+  ret %154
+fn myl_core_bytes_valid_list(list[i64]) -> bool extern
+fn myl_core_bytes_from_list(list[i64]) -> bytes extern
+fn myl_core_bytes_index_offset(bytes, i64) -> u64 runtime

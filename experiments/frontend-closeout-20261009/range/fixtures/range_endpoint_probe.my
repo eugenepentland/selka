@@ -1,0 +1,18 @@
+func mark(mut log: int[], value: int) -> int:
+    log.append(value)
+    return value
+
+
+func generic_sum[T: integer](start: T, stop: T, stride: T) -> int:
+    mut total = 0
+    for item in range(start, stop, stride):
+        total += int(item)
+    return total
+
+
+func main() -> int:
+    mut log: int[] = []
+    mut total = 0
+    for item in range(mark(mut log, 1), mark(mut log, 9), mark(mut log, 2)):
+        total += item
+    return total + generic_sum[int](1, 9, 2) + generic_sum[int](9, 0, -2) + log[0] * 100 + log[1] * 10 + log[2]

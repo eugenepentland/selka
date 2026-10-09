@@ -1,0 +1,29 @@
+{
+  "python_expressions_driver.my": {
+    "source": "tests/lang/python_expressions.my",
+    "sha256": "24b07101baf1a51849c3ce764ff94f5f6afcdf872d2053d04d33291d4ec17b6b",
+    "adaptation": "exact source bytes followed by main invoking all exported parameterless bool tests",
+    "tests": [
+      "test_str_orders_by_code_point_with_a_prefix_first",
+      "test_a_generic_body_orders_its_str_operands",
+      "test_bytes_order_by_octet_with_a_prefix_first",
+      "test_a_comparison_chain_reads_as_python_and",
+      "test_a_chain_evaluates_each_operand_once_and_stops_at_a_false_link",
+      "test_a_chain_types_each_literal_by_its_neighbour",
+      "test_a_parenthesized_comparison_is_a_bool_operand",
+      "test_a_constant_chain_folds_and_short_circuits",
+      "test_a_generic_body_checks_each_link_of_a_chain",
+      "test_range_counts_by_its_step_in_either_direction",
+      "test_a_stepped_range_feeds_a_comprehension_and_list",
+      "test_the_last_step_never_overflows_the_counter_type",
+      "test_str_and_bytes_repeat_by_an_integer_on_either_side",
+      "test_an_int_times_a_float_is_still_arithmetic",
+      "test_a_list_repeats_by_an_integer_into_independent_values",
+      "test_a_repetition_evaluates_its_operands_once_in_order",
+      "test_a_generic_body_repeats_text"
+    ]
+  },
+  "range_semantics.my": {
+    "adaptation": "new explicit differential probe for endpoint effects, dynamic/descending strides, continue/break, rebinding, generic range, u8 overflow, nesting"
+  }
+}

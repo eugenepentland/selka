@@ -1,0 +1,3 @@
+@stdlib/network.my:73:12: error[E_CORE_ALLOCATION_BOUND]: allocation contract of network::connect is exceeded by network::connect: static Core site may allocate
+      return acquire_resource[Connected](net, request)
+             ^

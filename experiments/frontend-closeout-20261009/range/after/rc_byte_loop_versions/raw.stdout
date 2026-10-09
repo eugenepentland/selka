@@ -1,0 +1,429 @@
+fn main() -> i64
+b0:
+  %0 = call bool test_full_short_empty_and_negative_byte_scans()
+  branch %0, b2, b1
+b1: ; preds b0
+  unreachable
+b2: ; preds b0
+  %3 = call bool test_byte_snapshot_and_rebound_source_keep_canonical_backing()
+  branch %3, b4, b3
+b3: ; preds b2
+  unreachable
+b4: ; preds b2
+  %6 = call bool test_held_byte_iteration_and_mutable_buffer_keep_fallbacks()
+  branch %6, b6, b5
+b5: ; preds b4
+  unreachable
+b6: ; preds b4
+  %9 = call bool test_empty_backing_and_multiple_byte_owners()
+  branch %9, b8, b7
+b7: ; preds b6
+  unreachable
+b8: ; preds b6
+  ret 0:i64
+fn test_full_short_empty_and_negative_byte_scans() -> bool
+b0:
+  %2 = call i64 owned(0:i64, 20:i64)
+  %4 = cmp.eq bool %2, 210:i64
+  branch %4, b1, b2
+b1: ; preds b0
+  %8 = call i64 owned(0:i64, 3:i64)
+  %10 = cmp.eq bool %8, 6:i64
+  jump b2
+b2: ; preds b0 b1
+  %12 = phi bool %4, %10
+  branch %12, b3, b4
+b3: ; preds b2
+  %16 = call i64 owned(7:i64, 7:i64)
+  %18 = cmp.eq bool %16, 0:i64
+  jump b4
+b4: ; preds b2 b3
+  %20 = phi bool %12, %18
+  branch %20, b5, b6
+b5: ; preds b4
+  %24 = call i64 owned(-20:i64, 0:i64)
+  %26 = cmp.eq bool %24, 210:i64
+  jump b6
+b6: ; preds b4 b5
+  %28 = phi bool %20, %26
+  branch %28, b7, b8
+b7: ; preds b6
+  %32 = call i64 owned(-1:i64, 0:i64)
+  %34 = cmp.eq bool %32, 20:i64
+  jump b8
+b8: ; preds b6 b7
+  %36 = phi bool %28, %34
+  ret %36
+fn test_byte_snapshot_and_rebound_source_keep_canonical_backing() -> bool
+b0:
+  %1 = list_new list[i64] 20:i64
+  %3 = list_push list[i64] %1, 1:i64
+  %5 = list_push list[i64] %3, 2:i64
+  %7 = list_push list[i64] %5, 3:i64
+  %9 = list_push list[i64] %7, 4:i64
+  %11 = list_push list[i64] %9, 5:i64
+  %13 = list_push list[i64] %11, 6:i64
+  %15 = list_push list[i64] %13, 7:i64
+  %17 = list_push list[i64] %15, 8:i64
+  %19 = list_push list[i64] %17, 9:i64
+  %21 = list_push list[i64] %19, 10:i64
+  %23 = list_push list[i64] %21, 11:i64
+  %25 = list_push list[i64] %23, 12:i64
+  %27 = list_push list[i64] %25, 13:i64
+  %29 = list_push list[i64] %27, 14:i64
+  %31 = list_push list[i64] %29, 15:i64
+  %33 = list_push list[i64] %31, 16:i64
+  %35 = list_push list[i64] %33, 17:i64
+  %37 = list_push list[i64] %35, 18:i64
+  %39 = list_push list[i64] %37, 19:i64
+  %41 = list_push list[i64] %39, 20:i64
+  %42 = call bool myl_core_bytes_valid_list(%41)
+  branch %42, b1, b2
+b1: ; preds b0
+  %45 = call byte_buffer myl_core_buffer_from_list(%41)
+  %46 = call bytes myl_core_buffer_snapshot(%45)
+  %49 = cmp.ge bool 99:i64, 0:i64
+  %51 = cmp.le bool 99:i64, 255:i64
+  %52 = bit_and bool %49, %51
+  %53 = call byte_buffer myl_core_buffer_push_checked(%45, 99:i64)
+  %56 = list_len u64 %46
+  %57 = convert.exact i64 %56
+  jump b3
+b2: ; preds b0
+  unreachable
+b3: ; preds b1 b5
+  %59 = phi i64 0:i64, %71
+  %63 = phi i64 0:i64, %68
+  %61 = cmp.lt bool %59, %57
+  branch %61, b4, b6
+b4: ; preds b3
+  %65 = call u64 myl_core_bytes_index_offset(%46, %59)
+  %66 = list_get.exact u8 %46, %65
+  %67 = convert i64 %66
+  %68 = add.exact i64 %63, %67
+  jump b5
+b5: ; preds b4
+  %71 = add.exact i64 %59, 1:i64
+  jump b3
+b6: ; preds b3
+  %74 = call bytes myl_core_buffer_snapshot(%53)
+  %76 = list_len u64 %74
+  %77 = convert.exact i64 %76
+  jump b7
+b7: ; preds b6 b9
+  %79 = phi i64 0:i64, %91
+  %83 = phi i64 %63, %88
+  %81 = cmp.lt bool %79, %77
+  branch %81, b8, b10
+b8: ; preds b7
+  %85 = call u64 myl_core_bytes_index_offset(%74, %79)
+  %86 = list_get.exact u8 %74, %85
+  %87 = convert i64 %86
+  %88 = add.exact i64 %83, %87
+  jump b9
+b9: ; preds b8
+  %91 = add.exact i64 %79, 1:i64
+  jump b7
+b10: ; preds b7
+  %94 = cmp.eq bool %83, 519:i64
+  branch %94, b11, b12
+b11: ; preds b10
+  %98 = list_len u64 %46
+  %99 = convert.exact i64 %98
+  %101 = cmp.eq bool %99, 20:i64
+  jump b12
+b12: ; preds b10 b11
+  %103 = phi bool %94, %101
+  branch %103, b13, b14
+b13: ; preds b12
+  %107 = call u64 myl_core_bytes_index_offset(%74, 20:i64)
+  %108 = list_get.exact u8 %74, %107
+  %109 = convert i64 %108
+  %111 = cmp.eq bool %109, 99:i64
+  jump b14
+b14: ; preds b12 b13
+  %113 = phi bool %103, %111
+  ret %113
+fn test_held_byte_iteration_and_mutable_buffer_keep_fallbacks() -> bool
+b0:
+  %1 = list_new list[i64] 20:i64
+  %3 = list_push list[i64] %1, 1:i64
+  %5 = list_push list[i64] %3, 2:i64
+  %7 = list_push list[i64] %5, 3:i64
+  %9 = list_push list[i64] %7, 4:i64
+  %11 = list_push list[i64] %9, 5:i64
+  %13 = list_push list[i64] %11, 6:i64
+  %15 = list_push list[i64] %13, 7:i64
+  %17 = list_push list[i64] %15, 8:i64
+  %19 = list_push list[i64] %17, 9:i64
+  %21 = list_push list[i64] %19, 10:i64
+  %23 = list_push list[i64] %21, 11:i64
+  %25 = list_push list[i64] %23, 12:i64
+  %27 = list_push list[i64] %25, 13:i64
+  %29 = list_push list[i64] %27, 14:i64
+  %31 = list_push list[i64] %29, 15:i64
+  %33 = list_push list[i64] %31, 16:i64
+  %35 = list_push list[i64] %33, 17:i64
+  %37 = list_push list[i64] %35, 18:i64
+  %39 = list_push list[i64] %37, 19:i64
+  %41 = list_push list[i64] %39, 20:i64
+  %42 = call bool myl_core_bytes_valid_list(%41)
+  branch %42, b1, b2
+b1: ; preds b0
+  %45 = call bytes myl_core_bytes_from_list(%41)
+  %48 = list_len u64 %45
+  %49 = convert.exact i64 %48
+  jump b3
+b2: ; preds b0
+  unreachable
+b3: ; preds b1 b5
+  %51 = phi i64 0:i64, %63
+  %55 = phi i64 0:i64, %60
+  %53 = cmp.lt bool %51, %49
+  branch %53, b4, b6
+b4: ; preds b3
+  %57 = call u64 myl_core_bytes_index_offset(%45, %51)
+  %58 = list_get.exact u8 %45, %57
+  %59 = convert i64 %58
+  %60 = add.exact i64 %55, %59
+  jump b5
+b5: ; preds b4
+  %63 = add.exact i64 %51, 1:i64
+  jump b3
+b6: ; preds b3
+  %66 = list_len u64 %45
+  %67 = convert.exact i64 %66
+  jump b7
+b7: ; preds b6 b9
+  %69 = phi i64 0:i64, %80
+  %76 = phi i64 %55, %77
+  %71 = cmp.lt bool %69, %67
+  branch %71, b8, b10
+b8: ; preds b7
+  %74 = list_get.exact u8 %45, %69
+  %75 = convert i64 %74
+  %77 = add.exact i64 %76, %75
+  jump b9
+b9: ; preds b8
+  %80 = add.exact i64 %69, 1:i64
+  jump b7
+b10: ; preds b7
+  %83 = list_new list[i64] 20:i64
+  %85 = list_push list[i64] %83, 1:i64
+  %87 = list_push list[i64] %85, 2:i64
+  %89 = list_push list[i64] %87, 3:i64
+  %91 = list_push list[i64] %89, 4:i64
+  %93 = list_push list[i64] %91, 5:i64
+  %95 = list_push list[i64] %93, 6:i64
+  %97 = list_push list[i64] %95, 7:i64
+  %99 = list_push list[i64] %97, 8:i64
+  %101 = list_push list[i64] %99, 9:i64
+  %103 = list_push list[i64] %101, 10:i64
+  %105 = list_push list[i64] %103, 11:i64
+  %107 = list_push list[i64] %105, 12:i64
+  %109 = list_push list[i64] %107, 13:i64
+  %111 = list_push list[i64] %109, 14:i64
+  %113 = list_push list[i64] %111, 15:i64
+  %115 = list_push list[i64] %113, 16:i64
+  %117 = list_push list[i64] %115, 17:i64
+  %119 = list_push list[i64] %117, 18:i64
+  %121 = list_push list[i64] %119, 19:i64
+  %123 = list_push list[i64] %121, 20:i64
+  %124 = call bool myl_core_bytes_valid_list(%123)
+  branch %124, b11, b12
+b11: ; preds b10
+  %127 = call byte_buffer myl_core_buffer_from_list(%123)
+  %129 = list_len u64 %127
+  %130 = convert.exact i64 %129
+  jump b13
+b12: ; preds b10
+  unreachable
+b13: ; preds b11 b15
+  %132 = phi i64 0:i64, %151
+  %136 = phi i64 %76, %141
+  %137 = phi byte_buffer %127, %148
+  %134 = cmp.lt bool %132, %130
+  branch %134, b14, b16
+b14: ; preds b13
+  %138 = call u64 myl_core_bytes_index_offset(%137, %132)
+  %139 = list_get.exact u8 %137, %138
+  %140 = convert i64 %139
+  %141 = add.exact i64 %136, %140
+  %144 = cmp.ge bool 0:i64, 0:i64
+  %146 = cmp.le bool 0:i64, 255:i64
+  %147 = bit_and bool %144, %146
+  %148 = call byte_buffer myl_core_buffer_push_checked(%137, 0:i64)
+  jump b15
+b15: ; preds b14
+  %151 = add.exact i64 %132, 1:i64
+  jump b13
+b16: ; preds b13
+  %154 = cmp.eq bool %136, 630:i64
+  branch %154, b17, b18
+b17: ; preds b16
+  %157 = call u64 myl_core_bytes_index_offset(%137, 39:i64)
+  %158 = list_get.exact u8 %137, %157
+  %159 = convert i64 %158
+  %161 = cmp.eq bool %159, 0:i64
+  jump b18
+b18: ; preds b16 b17
+  %163 = phi bool %154, %161
+  ret %163
+fn test_empty_backing_and_multiple_byte_owners() -> bool
+b0:
+  %1 = list_new list[i64] 0:i64
+  %2 = call bool myl_core_bytes_valid_list(%1)
+  branch %2, b1, b2
+b1: ; preds b0
+  %5 = call bytes myl_core_bytes_from_list(%1)
+  %8 = list_len u64 %5
+  %9 = convert.exact i64 %8
+  jump b3
+b2: ; preds b0
+  unreachable
+b3: ; preds b1 b5
+  %11 = phi i64 0:i64, %23
+  %15 = phi i64 0:i64, %20
+  %13 = cmp.lt bool %11, %9
+  branch %13, b4, b6
+b4: ; preds b3
+  %17 = call u64 myl_core_bytes_index_offset(%5, %11)
+  %18 = list_get.exact u8 %5, %17
+  %19 = convert i64 %18
+  %20 = add.exact i64 %15, %19
+  jump b5
+b5: ; preds b4
+  %23 = add.exact i64 %11, 1:i64
+  jump b3
+b6: ; preds b3
+  %26 = list_new list[i64] 20:i64
+  %28 = list_push list[i64] %26, 1:i64
+  %30 = list_push list[i64] %28, 2:i64
+  %32 = list_push list[i64] %30, 3:i64
+  %34 = list_push list[i64] %32, 4:i64
+  %36 = list_push list[i64] %34, 5:i64
+  %38 = list_push list[i64] %36, 6:i64
+  %40 = list_push list[i64] %38, 7:i64
+  %42 = list_push list[i64] %40, 8:i64
+  %44 = list_push list[i64] %42, 9:i64
+  %46 = list_push list[i64] %44, 10:i64
+  %48 = list_push list[i64] %46, 11:i64
+  %50 = list_push list[i64] %48, 12:i64
+  %52 = list_push list[i64] %50, 13:i64
+  %54 = list_push list[i64] %52, 14:i64
+  %56 = list_push list[i64] %54, 15:i64
+  %58 = list_push list[i64] %56, 16:i64
+  %60 = list_push list[i64] %58, 17:i64
+  %62 = list_push list[i64] %60, 18:i64
+  %64 = list_push list[i64] %62, 19:i64
+  %66 = list_push list[i64] %64, 20:i64
+  %67 = call bool myl_core_bytes_valid_list(%66)
+  branch %67, b7, b8
+b7: ; preds b6
+  %70 = call bytes myl_core_bytes_from_list(%66)
+  %72 = list_new list[i64] 20:i64
+  %74 = list_push list[i64] %72, 20:i64
+  %76 = list_push list[i64] %74, 19:i64
+  %78 = list_push list[i64] %76, 18:i64
+  %80 = list_push list[i64] %78, 17:i64
+  %82 = list_push list[i64] %80, 16:i64
+  %84 = list_push list[i64] %82, 15:i64
+  %86 = list_push list[i64] %84, 14:i64
+  %88 = list_push list[i64] %86, 13:i64
+  %90 = list_push list[i64] %88, 12:i64
+  %92 = list_push list[i64] %90, 11:i64
+  %94 = list_push list[i64] %92, 10:i64
+  %96 = list_push list[i64] %94, 9:i64
+  %98 = list_push list[i64] %96, 8:i64
+  %100 = list_push list[i64] %98, 7:i64
+  %102 = list_push list[i64] %100, 6:i64
+  %104 = list_push list[i64] %102, 5:i64
+  %106 = list_push list[i64] %104, 4:i64
+  %108 = list_push list[i64] %106, 3:i64
+  %110 = list_push list[i64] %108, 2:i64
+  %112 = list_push list[i64] %110, 1:i64
+  %113 = call bool myl_core_bytes_valid_list(%112)
+  branch %113, b9, b10
+b8: ; preds b6
+  unreachable
+b9: ; preds b7
+  %116 = call bytes myl_core_bytes_from_list(%112)
+  %118 = list_len u64 %70
+  %119 = convert.exact i64 %118
+  jump b11
+b10: ; preds b7
+  unreachable
+b11: ; preds b9 b13
+  %121 = phi i64 0:i64, %138
+  %125 = phi i64 %15, %135
+  %123 = cmp.lt bool %121, %119
+  branch %123, b12, b14
+b12: ; preds b11
+  %127 = call u64 myl_core_bytes_index_offset(%70, %121)
+  %128 = list_get.exact u8 %70, %127
+  %129 = convert i64 %128
+  %131 = call u64 myl_core_bytes_index_offset(%116, %121)
+  %132 = list_get.exact u8 %116, %131
+  %133 = convert i64 %132
+  %134 = add.exact i64 %129, %133
+  %135 = add.exact i64 %125, %134
+  jump b13
+b13: ; preds b12
+  %138 = add.exact i64 %121, 1:i64
+  jump b11
+b14: ; preds b11
+  %141 = cmp.eq bool %125, 420:i64
+  ret %141
+fn owned(i64, i64) -> i64
+b0:
+  %3 = list_new list[i64] 20:i64
+  %5 = list_push list[i64] %3, 1:i64
+  %7 = list_push list[i64] %5, 2:i64
+  %9 = list_push list[i64] %7, 3:i64
+  %11 = list_push list[i64] %9, 4:i64
+  %13 = list_push list[i64] %11, 5:i64
+  %15 = list_push list[i64] %13, 6:i64
+  %17 = list_push list[i64] %15, 7:i64
+  %19 = list_push list[i64] %17, 8:i64
+  %21 = list_push list[i64] %19, 9:i64
+  %23 = list_push list[i64] %21, 10:i64
+  %25 = list_push list[i64] %23, 11:i64
+  %27 = list_push list[i64] %25, 12:i64
+  %29 = list_push list[i64] %27, 13:i64
+  %31 = list_push list[i64] %29, 14:i64
+  %33 = list_push list[i64] %31, 15:i64
+  %35 = list_push list[i64] %33, 16:i64
+  %37 = list_push list[i64] %35, 17:i64
+  %39 = list_push list[i64] %37, 18:i64
+  %41 = list_push list[i64] %39, 19:i64
+  %43 = list_push list[i64] %41, 20:i64
+  %44 = call bool myl_core_bytes_valid_list(%43)
+  branch %44, b1, b2
+b1: ; preds b0
+  %47 = call bytes myl_core_bytes_from_list(%43)
+  jump b3
+b2: ; preds b0
+  unreachable
+b3: ; preds b1 b5
+  %50 = phi i64 param0, %62
+  %54 = phi i64 0:i64, %59
+  %52 = cmp.lt bool %50, param1
+  branch %52, b4, b6
+b4: ; preds b3
+  %56 = call u64 myl_core_bytes_index_offset(%47, %50)
+  %57 = list_get.exact u8 %47, %56
+  %58 = convert i64 %57
+  %59 = add.exact i64 %54, %58
+  jump b5
+b5: ; preds b4
+  %62 = add.exact i64 %50, 1:i64
+  jump b3
+b6: ; preds b3
+  ret %54
+fn myl_core_bytes_valid_list(list[i64]) -> bool extern
+fn myl_core_buffer_from_list(list[i64]) -> byte_buffer extern
+fn myl_core_buffer_snapshot(byte_buffer) -> bytes extern
+fn myl_core_buffer_push_checked(byte_buffer, i64) -> byte_buffer extern
+fn myl_core_bytes_index_offset(bytes, i64) -> u64 runtime
+fn myl_core_bytes_from_list(list[i64]) -> bytes extern
+fn myl_core_bytes_index_offset(byte_buffer, i64) -> u64 runtime

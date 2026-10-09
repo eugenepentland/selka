@@ -1,0 +1,3561 @@
+fn main() -> i64
+b0:
+  %2 = list_new list[bool] 27:i64
+  %3 = call bool test_loaned_field_reads_keep_values_through_their_temporaries()
+  %4 = list_push list[bool] %2, %3
+  %5 = call bool test_loaned_reads_through_negative_indices_and_readonly_parameters()
+  %6 = list_push list[bool] %4, %5
+  %7 = call bool test_index_callback_replacing_the_list_keeps_the_loaned_original()
+  %8 = list_push list[bool] %6, %7
+  %9 = call bool test_managed_elements_and_nested_record_fields_relocate_whole_values()
+  %10 = list_push list[bool] %8, %9
+  %11 = call bool test_owned_temporaries_are_taken_not_relocated()
+  %12 = list_push list[bool] %10, %11
+  %13 = call bool test_field_receivers_write_through_mut_records_and_keep_snapshots()
+  %14 = list_push list[bool] %12, %13
+  %15 = call bool test_field_receivers_of_local_records_and_negative_indices()
+  %16 = list_push list[bool] %14, %15
+  %17 = call bool test_completed_callback_replaces_the_field_list_before_update()
+  %18 = list_push list[bool] %16, %17
+  %19 = call bool test_managed_element_field_stores_keep_their_scope()
+  %20 = list_push list[bool] %18, %19
+  %21 = call bool test_payload_bindings_read_in_place_keep_their_owner()
+  %22 = list_push list[bool] %20, %21
+  %23 = call bool test_payload_bindings_outliving_a_scrutinee_write_keep_their_copy()
+  %24 = list_push list[bool] %22, %23
+  %25 = call bool test_returned_bindings_and_locals_move_their_owner()
+  %26 = list_push list[bool] %24, %25
+  %27 = call bool test_returned_parameters_keep_the_callers_value()
+  %28 = list_push list[bool] %26, %27
+  %29 = call bool test_nested_field_copies_into_constructors_stay_independent()
+  %30 = list_push list[bool] %28, %29
+  %31 = call bool test_nested_field_copies_from_mut_parameters_and_call_results()
+  %32 = list_push list[bool] %30, %31
+  %33 = call bool test_readonly_table_reads_borrow_payloads_in_place()
+  %34 = list_push list[bool] %32, %33
+  %35 = call bool test_nested_readonly_matches_in_loops()
+  %36 = list_push list[bool] %34, %35
+  %37 = call bool test_mut_roots_keep_owned_bindings()
+  %38 = list_push list[bool] %36, %37
+  %39 = call bool test_mut_root_list_reads_across_unrelated_calls()
+  %40 = list_push list[bool] %38, %39
+  %41 = call bool test_mut_root_list_reads_keep_the_list_a_call_replaces()
+  %42 = list_push list[bool] %40, %41
+  %43 = call bool test_mut_root_fields_passed_to_calls_read_the_current_value()
+  %44 = list_push list[bool] %42, %43
+  %45 = call bool test_mut_root_fields_keep_the_value_a_later_mut_call_replaces()
+  %46 = list_push list[bool] %44, %45
+  %47 = call bool test_mut_root_fields_passed_to_calls_whose_results_are_matched()
+  %48 = list_push list[bool] %46, %47
+  %49 = call bool test_records_copied_out_of_readonly_lists_into_named_locals()
+  %50 = list_push list[bool] %48, %49
+  %51 = call bool test_borrowed_match_accessors_read_in_place_and_copy_when_kept()
+  %52 = list_push list[bool] %50, %51
+  %53 = call bool test_borrowed_fields_across_calls_that_only_advance_the_root()
+  %54 = list_push list[bool] %52, %53
+  %55 = call bool test_borrowed_fields_across_calls_that_replace_them()
+  %56 = list_push list[bool] %54, %55
+  %58 = list_len u64 %56
+  %59 = convert.exact i64 %58
+  jump b1
+b1: ; preds b0 b3
+  %61 = phi i64 0:i64, %75
+  %68 = phi i64 0:i64, %79
+  %63 = cmp.lt bool %61, %59
+  branch %63, b2, b4
+b2: ; preds b1
+  %66 = list_get.exact bool %56, %61
+  branch %66, b6, b5
+b3: ; preds b6
+  %75 = add.exact i64 %61, 1:i64
+  jump b1
+b4: ; preds b1
+  ret %68
+b5: ; preds b2
+  %70 = add.exact i64 %68, 1:i64
+  jump b6
+b6: ; preds b2 b5
+  %79 = phi i64 %68, %70
+  jump b3
+fn test_loaned_field_reads_keep_values_through_their_temporaries() -> bool
+b0:
+  %1 = list_new list[union{void, record{f64}, record{str}}] 3:i64
+  %3 = record_make record{f64} 1.5:f64
+  %4 = union_make union{void, record{f64}, record{str}} tag1 %3
+  %5 = list_push list[union{void, record{f64}, record{str}}] %1, %4
+  %6 = union_make union{void, record{f64}, record{str}} tag0
+  %7 = list_push list[union{void, record{f64}, record{str}}] %5, %6
+  %9 = record_make record{f64} 2.5:f64
+  %10 = union_make union{void, record{f64}, record{str}} tag1 %9
+  %11 = list_push list[union{void, record{f64}, record{str}}] %7, %10
+  %13 = record_make record{list[union{void, record{f64}, record{str}}], i64} %11, 3:i64
+  %14 = call record{union{void, record{f64}, record{str}}, record{list[union{void, record{f64}, record{str}}], i64}} pop(%13)
+  %15 = record_get union{void, record{f64}, record{str}} %14, field0
+  %16 = record_get record{list[union{void, record{f64}, record{str}}], i64} %14, field1
+  %17 = call f64 number(%15)
+  %18 = call record{union{void, record{f64}, record{str}}, record{list[union{void, record{f64}, record{str}}], i64}} pop(%16)
+  %19 = record_get union{void, record{f64}, record{str}} %18, field0
+  %20 = record_get record{list[union{void, record{f64}, record{str}}], i64} %18, field1
+  %21 = call record{union{void, record{f64}, record{str}}, record{list[union{void, record{f64}, record{str}}], i64}} pop(%20)
+  %22 = record_get union{void, record{f64}, record{str}} %21, field0
+  %23 = record_get record{list[union{void, record{f64}, record{str}}], i64} %21, field1
+  %24 = call f64 number(%22)
+  %26 = fcmp.eq bool %17, 2.5:f64
+  branch %26, b1, b2
+b1: ; preds b0
+  %28 = union_make union{void, record{f64}, record{str}} tag0
+  %29 = union_tag u32 %19
+  %30 = union_tag u32 %28
+  %31 = cmp.eq bool %29, %30
+  branch %31, b3, b4
+b2: ; preds b0 b4
+  %58 = phi bool %26, %56
+  branch %58, b9, b10
+b3: ; preds b1
+  %34 = cmp.eq bool %29, 1:u32
+  branch %34, b5, b6
+b4: ; preds b1 b5 b7 b8
+  %56 = phi bool %31, %42, %53, %31
+  jump b2
+b5: ; preds b3
+  %36 = union_payload record{f64} tag1 %19
+  %37 = union_payload record{f64} tag1 %28
+  %39 = record_get f64 %36, field0
+  %40 = record_get f64 %37, field0
+  %41 = fcmp.eq bool %39, %40
+  %42 = bit_and bool 1:bool, %41
+  jump b4
+b6: ; preds b3
+  %45 = cmp.eq bool %29, 2:u32
+  branch %45, b7, b8
+b7: ; preds b6
+  %47 = union_payload record{str} tag2 %19
+  %48 = union_payload record{str} tag2 %28
+  %50 = record_get str %47, field0
+  %51 = record_get str %48, field0
+  %52 = call bool myl_core_str_eq(%50, %51)
+  %53 = bit_and bool 1:bool, %52
+  jump b4
+b8: ; preds b6
+  jump b4
+b9: ; preds b2
+  %63 = fcmp.eq bool %24, 1.5:f64
+  jump b10
+b10: ; preds b2 b9
+  %65 = phi bool %58, %63
+  branch %65, b11, b12
+b11: ; preds b10
+  %70 = record_get i64 %23, field1
+  %72 = cmp.eq bool %70, 0:i64
+  jump b12
+b12: ; preds b10 b11
+  %74 = phi bool %65, %72
+  branch %74, b13, b14
+b13: ; preds b12
+  %80 = record_get list[union{void, record{f64}, record{str}}] %13, field0
+  %82 = record_get list[union{void, record{f64}, record{str}}] %23, field0
+  %83 = list_len u64 %80
+  %84 = list_len u64 %82
+  %85 = cmp.eq bool %83, %84
+  branch %85, b17, b16
+b14: ; preds b12 b16
+  %132 = phi bool %74, %130
+  ret %132
+b15: ; preds b17 b26
+  %89 = phi u64 0:u64, %124
+  %90 = cmp.lt bool %89, %83
+  branch %90, b18, b19
+b16: ; preds b13 b27 b19
+  %130 = phi bool %85, 0:bool, 1:bool
+  jump b14
+b17: ; preds b13
+  jump b15
+b18: ; preds b15
+  %94 = list_get_field u32 %80, %89, path 0
+  %95 = list_get_field u32 %82, %89, path 0
+  %96 = cmp.eq bool %94, %95
+  branch %96, b20, b21
+b19: ; preds b15
+  jump b16
+b20: ; preds b18
+  %99 = cmp.eq bool %94, 1:u32
+  branch %99, b22, b23
+b21: ; preds b18 b22 b24 b25
+  %121 = phi bool %96, %107, %118, %96
+  branch %121, b26, b27
+b22: ; preds b20
+  %104 = list_get_field f64 %80, %89, path 2.0
+  %105 = list_get_field f64 %82, %89, path 2.0
+  %106 = fcmp.eq bool %104, %105
+  %107 = bit_and bool 1:bool, %106
+  jump b21
+b23: ; preds b20
+  %110 = cmp.eq bool %94, 2:u32
+  branch %110, b24, b25
+b24: ; preds b23
+  %115 = list_get_field str %80, %89, path 3.0
+  %116 = list_get_field str %82, %89, path 3.0
+  %117 = call bool myl_core_str_eq(%115, %116)
+  %118 = bit_and bool 1:bool, %117
+  jump b21
+b25: ; preds b23
+  jump b21
+b26: ; preds b21
+  %124 = add u64 %89, 1:u64
+  jump b15
+b27: ; preds b21
+  jump b16
+fn test_loaned_reads_through_negative_indices_and_readonly_parameters() -> bool
+b0:
+  %1 = list_new list[union{void, record{f64}, record{str}}] 2:i64
+  %3 = record_make record{f64} 4:f64
+  %4 = union_make union{void, record{f64}, record{str}} tag1 %3
+  %5 = list_push list[union{void, record{f64}, record{str}}] %1, %4
+  %7 = record_make record{str} str0
+  %8 = union_make union{void, record{f64}, record{str}} tag2 %7
+  %9 = list_push list[union{void, record{f64}, record{str}}] %5, %8
+  %11 = record_make record{list[union{void, record{f64}, record{str}}], i64} %9, 0:i64
+  %12 = call record{union{void, record{f64}, record{str}}, record{list[union{void, record{f64}, record{str}}], i64}} pop(%11)
+  %13 = record_get union{void, record{f64}, record{str}} %12, field0
+  %14 = record_get record{list[union{void, record{f64}, record{str}}], i64} %12, field1
+  %16 = record_make record{str} str1
+  %17 = union_make union{void, record{f64}, record{str}} tag2 %16
+  %18 = union_tag u32 %13
+  %19 = union_tag u32 %17
+  %20 = cmp.eq bool %18, %19
+  branch %20, b1, b2
+b1: ; preds b0
+  %23 = cmp.eq bool %18, 1:u32
+  branch %23, b3, b4
+b2: ; preds b0 b3 b5 b6
+  %45 = phi bool %20, %31, %42, %20
+  branch %45, b7, b8
+b3: ; preds b1
+  %25 = union_payload record{f64} tag1 %13
+  %26 = union_payload record{f64} tag1 %17
+  %28 = record_get f64 %25, field0
+  %29 = record_get f64 %26, field0
+  %30 = fcmp.eq bool %28, %29
+  %31 = bit_and bool 1:bool, %30
+  jump b2
+b4: ; preds b1
+  %34 = cmp.eq bool %18, 2:u32
+  branch %34, b5, b6
+b5: ; preds b4
+  %36 = union_payload record{str} tag2 %13
+  %37 = union_payload record{str} tag2 %17
+  %39 = record_get str %36, field0
+  %40 = record_get str %37, field0
+  %41 = call bool myl_core_str_eq(%39, %40)
+  %42 = bit_and bool 1:bool, %41
+  jump b2
+b6: ; preds b4
+  jump b2
+b7: ; preds b2
+  %49 = call union{void, record{f64}, record{str}} peek(%14, 0:i64)
+  %50 = call f64 number(%49)
+  %52 = fcmp.eq bool %50, 4:f64
+  jump b8
+b8: ; preds b2 b7
+  %54 = phi bool %45, %52
+  branch %54, b9, b10
+b9: ; preds b8
+  %57 = record_get i64 %14, field1
+  %59 = cmp.eq bool %57, -1:i64
+  jump b10
+b10: ; preds b8 b9
+  %61 = phi bool %54, %59
+  ret %61
+fn test_index_callback_replacing_the_list_keeps_the_loaned_original() -> bool
+b0:
+  %1 = list_new list[union{void, record{f64}, record{str}}] 2:i64
+  %3 = record_make record{f64} 7:f64
+  %4 = union_make union{void, record{f64}, record{str}} tag1 %3
+  %5 = list_push list[union{void, record{f64}, record{str}}] %1, %4
+  %7 = record_make record{f64} 8:f64
+  %8 = union_make union{void, record{f64}, record{str}} tag1 %7
+  %9 = list_push list[union{void, record{f64}, record{str}}] %5, %8
+  %11 = record_make record{list[union{void, record{f64}, record{str}}], i64} %9, 2:i64
+  %12 = call record{union{void, record{f64}, record{str}}, record{list[union{void, record{f64}, record{str}}], i64}} replaced_during_index(%11)
+  %13 = record_get union{void, record{f64}, record{str}} %12, field0
+  %14 = record_get record{list[union{void, record{f64}, record{str}}], i64} %12, field1
+  %15 = call f64 number(%13)
+  %17 = fcmp.eq bool %15, 7:f64
+  branch %17, b1, b2
+b1: ; preds b0
+  %19 = record_get list[union{void, record{f64}, record{str}}] %14, field0
+  %21 = list_new list[union{void, record{f64}, record{str}}] 1:i64
+  %23 = record_make record{f64} 99:f64
+  %24 = union_make union{void, record{f64}, record{str}} tag1 %23
+  %25 = list_push list[union{void, record{f64}, record{str}}] %21, %24
+  %26 = list_len u64 %19
+  %27 = list_len u64 %25
+  %28 = cmp.eq bool %26, %27
+  branch %28, b5, b4
+b2: ; preds b0 b4
+  %75 = phi bool %17, %73
+  ret %75
+b3: ; preds b5 b14
+  %32 = phi u64 0:u64, %67
+  %33 = cmp.lt bool %32, %26
+  branch %33, b6, b7
+b4: ; preds b1 b15 b7
+  %73 = phi bool %28, 0:bool, 1:bool
+  jump b2
+b5: ; preds b1
+  jump b3
+b6: ; preds b3
+  %37 = list_get_field u32 %19, %32, path 0
+  %38 = list_get_field u32 %25, %32, path 0
+  %39 = cmp.eq bool %37, %38
+  branch %39, b8, b9
+b7: ; preds b3
+  jump b4
+b8: ; preds b6
+  %42 = cmp.eq bool %37, 1:u32
+  branch %42, b10, b11
+b9: ; preds b6 b10 b12 b13
+  %64 = phi bool %39, %50, %61, %39
+  branch %64, b14, b15
+b10: ; preds b8
+  %47 = list_get_field f64 %19, %32, path 2.0
+  %48 = list_get_field f64 %25, %32, path 2.0
+  %49 = fcmp.eq bool %47, %48
+  %50 = bit_and bool 1:bool, %49
+  jump b9
+b11: ; preds b8
+  %53 = cmp.eq bool %37, 2:u32
+  branch %53, b12, b13
+b12: ; preds b11
+  %58 = list_get_field str %19, %32, path 3.0
+  %59 = list_get_field str %25, %32, path 3.0
+  %60 = call bool myl_core_str_eq(%58, %59)
+  %61 = bit_and bool 1:bool, %60
+  jump b9
+b13: ; preds b11
+  jump b9
+b14: ; preds b9
+  %67 = add u64 %32, 1:u64
+  jump b3
+b15: ; preds b9
+  jump b4
+fn test_managed_elements_and_nested_record_fields_relocate_whole_values() -> bool
+b0:
+  %1 = list_new list[i64] 2:i64
+  %3 = list_push list[i64] %1, 1:i64
+  %5 = list_push list[i64] %3, 2:i64
+  %7 = list_new list[str] 2:i64
+  %9 = list_push list[str] %7, str2
+  %11 = list_push list[str] %9, str3
+  %12 = record_make record{list[i64], list[str]} %5, %11
+  %14 = record_make record{record{list[i64], list[str]}, i64} %12, 0:i64
+  %15 = call record{str, record{record{list[i64], list[str]}, i64}} next_name(%14)
+  %16 = record_get str %15, field0
+  %17 = record_get record{record{list[i64], list[str]}, i64} %15, field1
+  %18 = call record{str, record{record{list[i64], list[str]}, i64}} next_name(%17)
+  %19 = record_get str %18, field0
+  %20 = record_get record{record{list[i64], list[str]}, i64} %18, field1
+  %21 = str_append str %16, %19
+  %23 = call bool myl_core_str_eq(%21, str4)
+  branch %23, b1, b2
+b1: ; preds b0
+  %25 = record_get i64 %20, field1
+  %27 = cmp.eq bool %25, 2:i64
+  jump b2
+b2: ; preds b0 b1
+  %29 = phi bool %23, %27
+  branch %29, b3, b4
+b3: ; preds b2
+  %32 = record_get i64 %14, field1
+  %34 = cmp.eq bool %32, 0:i64
+  jump b4
+b4: ; preds b2 b3
+  %36 = phi bool %29, %34
+  branch %36, b5, b6
+b5: ; preds b4
+  %39 = record_get record{list[i64], list[str]} %14, field0
+  %40 = record_get list[str] %39, field1
+  %42 = list_new list[str] 2:i64
+  %44 = list_push list[str] %42, str5
+  %46 = list_push list[str] %44, str6
+  %47 = list_len u64 %40
+  %48 = list_len u64 %46
+  %49 = cmp.eq bool %47, %48
+  branch %49, b9, b8
+b6: ; preds b4 b8
+  %69 = phi bool %36, %67
+  ret %69
+b7: ; preds b9 b12
+  %53 = phi u64 0:u64, %61
+  %54 = cmp.lt bool %53, %47
+  branch %54, b10, b11
+b8: ; preds b5 b13 b11
+  %67 = phi bool %49, 0:bool, 1:bool
+  jump b6
+b9: ; preds b5
+  jump b7
+b10: ; preds b7
+  %56 = list_get str %40, %53
+  %57 = list_get str %46, %53
+  %58 = call bool myl_core_str_eq(%56, %57)
+  branch %58, b12, b13
+b11: ; preds b7
+  jump b8
+b12: ; preds b10
+  %61 = add u64 %53, 1:u64
+  jump b7
+b13: ; preds b10
+  jump b8
+fn test_owned_temporaries_are_taken_not_relocated() -> bool
+b0:
+  %1 = call union{void, record{f64}, record{str}} last_owned(5:i64)
+  %2 = call f64 number(%1)
+  %4 = fcmp.eq bool %2, 4:f64
+  branch %4, b1, b2
+b1: ; preds b0
+  %7 = call union{void, record{f64}, record{str}} last_owned(1:i64)
+  %8 = call f64 number(%7)
+  %10 = fcmp.eq bool %8, 0:f64
+  jump b2
+b2: ; preds b0 b1
+  %12 = phi bool %4, %10
+  ret %12
+fn test_field_receivers_write_through_mut_records_and_keep_snapshots() -> bool
+b0:
+  %1 = list_new list[union{void, record{f64}, record{str}}] 3:i64
+  %2 = union_make union{void, record{f64}, record{str}} tag0
+  %3 = list_push list[union{void, record{f64}, record{str}}] %1, %2
+  %4 = union_make union{void, record{f64}, record{str}} tag0
+  %5 = list_push list[union{void, record{f64}, record{str}}] %3, %4
+  %6 = union_make union{void, record{f64}, record{str}} tag0
+  %7 = list_push list[union{void, record{f64}, record{str}}] %5, %6
+  %9 = list_new list[record{i64, i64}] 2:i64
+  %12 = record_make record{i64, i64} 0:i64, 0:i64
+  %13 = list_push list[record{i64, i64}] %9, %12
+  %16 = record_make record{i64, i64} 5:i64, 1:i64
+  %17 = list_push list[record{i64, i64}] %13, %16
+  %19 = list_new list[str] 1:i64
+  %21 = list_push list[str] %19, str7
+  %24 = record_make record{list[union{void, record{f64}, record{str}}], list[record{i64, i64}], list[str], i64, i64} %7, %17, %21, 0:i64, 2:i64
+  %26 = record_make record{f64} 1:f64
+  %27 = union_make union{void, record{f64}, record{str}} tag1 %26
+  %28 = call record{list[union{void, record{f64}, record{str}}], list[record{i64, i64}], list[str], i64, i64} push(%24, %27)
+  %30 = record_make record{str} str8
+  %31 = union_make union{void, record{f64}, record{str}} tag2 %30
+  %32 = call record{list[union{void, record{f64}, record{str}}], list[record{i64, i64}], list[str], i64, i64} push(%28, %31)
+  %34 = call record{list[union{void, record{f64}, record{str}}], list[record{i64, i64}], list[str], i64, i64} step(%32, 9:i64)
+  %36 = call record{list[union{void, record{f64}, record{str}}], list[record{i64, i64}], list[str], i64, i64} step(%34, 11:i64)
+  %37 = record_get list[union{void, record{f64}, record{str}}] %36, field0
+  %39 = list_new list[union{void, record{f64}, record{str}}] 3:i64
+  %41 = record_make record{f64} 1:f64
+  %42 = union_make union{void, record{f64}, record{str}} tag1 %41
+  %43 = list_push list[union{void, record{f64}, record{str}}] %39, %42
+  %45 = record_make record{str} str9
+  %46 = union_make union{void, record{f64}, record{str}} tag2 %45
+  %47 = list_push list[union{void, record{f64}, record{str}}] %43, %46
+  %48 = union_make union{void, record{f64}, record{str}} tag0
+  %49 = list_push list[union{void, record{f64}, record{str}}] %47, %48
+  %50 = list_len u64 %37
+  %51 = list_len u64 %49
+  %52 = cmp.eq bool %50, %51
+  branch %52, b3, b2
+b1: ; preds b3 b12
+  %56 = phi u64 0:u64, %91
+  %101 = phi record{list[union{void, record{f64}, record{str}}], list[record{i64, i64}], list[str], i64, i64} %36, %101
+  %152 = phi record{list[union{void, record{f64}, record{str}}], list[record{i64, i64}], list[str], i64, i64} %24, %152
+  %57 = cmp.lt bool %56, %50
+  branch %57, b4, b5
+b2: ; preds b0 b13 b5
+  %97 = phi bool %52, 0:bool, 1:bool
+  %99 = phi record{list[union{void, record{f64}, record{str}}], list[record{i64, i64}], list[str], i64, i64} %36, %101, %101
+  %150 = phi record{list[union{void, record{f64}, record{str}}], list[record{i64, i64}], list[str], i64, i64} %24, %152, %152
+  branch %97, b14, b15
+b3: ; preds b0
+  jump b1
+b4: ; preds b1
+  %61 = list_get_field u32 %37, %56, path 0
+  %62 = list_get_field u32 %49, %56, path 0
+  %63 = cmp.eq bool %61, %62
+  branch %63, b6, b7
+b5: ; preds b1
+  jump b2
+b6: ; preds b4
+  %66 = cmp.eq bool %61, 1:u32
+  branch %66, b8, b9
+b7: ; preds b4 b8 b10 b11
+  %88 = phi bool %63, %74, %85, %63
+  branch %88, b12, b13
+b8: ; preds b6
+  %71 = list_get_field f64 %37, %56, path 2.0
+  %72 = list_get_field f64 %49, %56, path 2.0
+  %73 = fcmp.eq bool %71, %72
+  %74 = bit_and bool 1:bool, %73
+  jump b7
+b9: ; preds b6
+  %77 = cmp.eq bool %61, 2:u32
+  branch %77, b10, b11
+b10: ; preds b9
+  %82 = list_get_field str %37, %56, path 3.0
+  %83 = list_get_field str %49, %56, path 3.0
+  %84 = call bool myl_core_str_eq(%82, %83)
+  %85 = bit_and bool 1:bool, %84
+  jump b7
+b11: ; preds b9
+  jump b7
+b12: ; preds b7
+  %91 = add u64 %56, 1:u64
+  jump b1
+b13: ; preds b7
+  jump b2
+b14: ; preds b2
+  %102 = record_get i64 %99, field3
+  %104 = cmp.eq bool %102, 2:i64
+  jump b15
+b15: ; preds b2 b14
+  %106 = phi bool %97, %104
+  branch %106, b16, b17
+b16: ; preds b15
+  %109 = record_get list[record{i64, i64}] %99, field1
+  %112 = cmp.lt bool 1:i64, 0:i64
+  branch %112, b18, b19
+b17: ; preds b15 b19
+  %125 = phi bool %106, %123
+  branch %125, b20, b21
+b18: ; preds b16
+  %114 = list_len u64 %109
+  %115 = convert.exact i64 %114
+  %116 = add.exact i64 %115, 1:i64
+  jump b19
+b19: ; preds b16 b18
+  %118 = phi i64 1:i64, %116
+  %121 = list_get_field.exact i64 %109, %118, path 0
+  %123 = cmp.eq bool %121, 11:i64
+  jump b17
+b20: ; preds b17
+  %129 = record_get list[record{i64, i64}] %99, field1
+  %132 = cmp.lt bool 0:i64, 0:i64
+  branch %132, b22, b23
+b21: ; preds b17 b23
+  %145 = phi bool %125, %143
+  branch %145, b24, b25
+b22: ; preds b20
+  %134 = list_len u64 %129
+  %135 = convert.exact i64 %134
+  %136 = add.exact i64 %135, 0:i64
+  jump b23
+b23: ; preds b20 b22
+  %138 = phi i64 0:i64, %136
+  %141 = list_get_field.exact i64 %129, %138, path 0
+  %143 = cmp.eq bool %141, 0:i64
+  jump b21
+b24: ; preds b21
+  %155 = record_get list[union{void, record{f64}, record{str}}] %150, field0
+  %157 = list_new list[union{void, record{f64}, record{str}}] 3:i64
+  %158 = union_make union{void, record{f64}, record{str}} tag0
+  %159 = list_push list[union{void, record{f64}, record{str}}] %157, %158
+  %160 = union_make union{void, record{f64}, record{str}} tag0
+  %161 = list_push list[union{void, record{f64}, record{str}}] %159, %160
+  %162 = union_make union{void, record{f64}, record{str}} tag0
+  %163 = list_push list[union{void, record{f64}, record{str}}] %161, %162
+  %164 = list_len u64 %155
+  %165 = list_len u64 %163
+  %166 = cmp.eq bool %164, %165
+  branch %166, b28, b27
+b25: ; preds b21 b27
+  %213 = phi bool %145, %211
+  %215 = phi record{list[union{void, record{f64}, record{str}}], list[record{i64, i64}], list[str], i64, i64} %150, %216
+  branch %213, b39, b40
+b26: ; preds b28 b37
+  %170 = phi u64 0:u64, %205
+  %218 = phi record{list[union{void, record{f64}, record{str}}], list[record{i64, i64}], list[str], i64, i64} %150, %218
+  %171 = cmp.lt bool %170, %164
+  branch %171, b29, b30
+b27: ; preds b24 b38 b30
+  %211 = phi bool %166, 0:bool, 1:bool
+  %216 = phi record{list[union{void, record{f64}, record{str}}], list[record{i64, i64}], list[str], i64, i64} %150, %218, %218
+  jump b25
+b28: ; preds b24
+  jump b26
+b29: ; preds b26
+  %175 = list_get_field u32 %155, %170, path 0
+  %176 = list_get_field u32 %163, %170, path 0
+  %177 = cmp.eq bool %175, %176
+  branch %177, b31, b32
+b30: ; preds b26
+  jump b27
+b31: ; preds b29
+  %180 = cmp.eq bool %175, 1:u32
+  branch %180, b33, b34
+b32: ; preds b29 b33 b35 b36
+  %202 = phi bool %177, %188, %199, %177
+  branch %202, b37, b38
+b33: ; preds b31
+  %185 = list_get_field f64 %155, %170, path 2.0
+  %186 = list_get_field f64 %163, %170, path 2.0
+  %187 = fcmp.eq bool %185, %186
+  %188 = bit_and bool 1:bool, %187
+  jump b32
+b34: ; preds b31
+  %191 = cmp.eq bool %175, 2:u32
+  branch %191, b35, b36
+b35: ; preds b34
+  %196 = list_get_field str %155, %170, path 3.0
+  %197 = list_get_field str %163, %170, path 3.0
+  %198 = call bool myl_core_str_eq(%196, %197)
+  %199 = bit_and bool 1:bool, %198
+  jump b32
+b36: ; preds b34
+  jump b32
+b37: ; preds b32
+  %205 = add u64 %170, 1:u64
+  jump b26
+b38: ; preds b32
+  jump b27
+b39: ; preds b25
+  %219 = record_get list[record{i64, i64}] %215, field1
+  %222 = cmp.lt bool 1:i64, 0:i64
+  branch %222, b41, b42
+b40: ; preds b25 b42
+  %235 = phi bool %213, %233
+  ret %235
+b41: ; preds b39
+  %224 = list_len u64 %219
+  %225 = convert.exact i64 %224
+  %226 = add.exact i64 %225, 1:i64
+  jump b42
+b42: ; preds b39 b41
+  %228 = phi i64 1:i64, %226
+  %231 = list_get_field.exact i64 %219, %228, path 0
+  %233 = cmp.eq bool %231, 5:i64
+  jump b40
+fn test_field_receivers_of_local_records_and_negative_indices() -> bool
+b0:
+  %1 = record_make record{f64} 3:f64
+  %2 = union_make union{void, record{f64}, record{str}} tag1 %1
+  %3 = call list[union{void, record{f64}, record{str}}] local_machine(%2)
+  %5 = list_new list[union{void, record{f64}, record{str}}] 2:i64
+  %7 = record_make record{f64} 3:f64
+  %8 = union_make union{void, record{f64}, record{str}} tag1 %7
+  %9 = list_push list[union{void, record{f64}, record{str}}] %5, %8
+  %11 = record_make record{f64} 3:f64
+  %12 = union_make union{void, record{f64}, record{str}} tag1 %11
+  %13 = list_push list[union{void, record{f64}, record{str}}] %9, %12
+  %14 = list_len u64 %3
+  %15 = list_len u64 %13
+  %16 = cmp.eq bool %14, %15
+  branch %16, b3, b2
+b1: ; preds b3 b12
+  %20 = phi u64 0:u64, %55
+  %21 = cmp.lt bool %20, %14
+  branch %21, b4, b5
+b2: ; preds b0 b13 b5
+  %61 = phi bool %16, 0:bool, 1:bool
+  ret %61
+b3: ; preds b0
+  jump b1
+b4: ; preds b1
+  %25 = list_get_field u32 %3, %20, path 0
+  %26 = list_get_field u32 %13, %20, path 0
+  %27 = cmp.eq bool %25, %26
+  branch %27, b6, b7
+b5: ; preds b1
+  jump b2
+b6: ; preds b4
+  %30 = cmp.eq bool %25, 1:u32
+  branch %30, b8, b9
+b7: ; preds b4 b8 b10 b11
+  %52 = phi bool %27, %38, %49, %27
+  branch %52, b12, b13
+b8: ; preds b6
+  %35 = list_get_field f64 %3, %20, path 2.0
+  %36 = list_get_field f64 %13, %20, path 2.0
+  %37 = fcmp.eq bool %35, %36
+  %38 = bit_and bool 1:bool, %37
+  jump b7
+b9: ; preds b6
+  %41 = cmp.eq bool %25, 2:u32
+  branch %41, b10, b11
+b10: ; preds b9
+  %46 = list_get_field str %3, %20, path 3.0
+  %47 = list_get_field str %13, %20, path 3.0
+  %48 = call bool myl_core_str_eq(%46, %47)
+  %49 = bit_and bool 1:bool, %48
+  jump b7
+b11: ; preds b9
+  jump b7
+b12: ; preds b7
+  %55 = add u64 %20, 1:u64
+  jump b1
+b13: ; preds b7
+  jump b2
+fn test_completed_callback_replaces_the_field_list_before_update() -> bool
+b0:
+  %1 = list_new list[union{void, record{f64}, record{str}}] 2:i64
+  %2 = union_make union{void, record{f64}, record{str}} tag0
+  %3 = list_push list[union{void, record{f64}, record{str}}] %1, %2
+  %4 = union_make union{void, record{f64}, record{str}} tag0
+  %5 = list_push list[union{void, record{f64}, record{str}}] %3, %4
+  %7 = list_new list[record{i64, i64}] 0:i64
+  %9 = list_new list[str] 0:i64
+  %12 = record_make record{list[union{void, record{f64}, record{str}}], list[record{i64, i64}], list[str], i64, i64} %5, %7, %9, 0:i64, 0:i64
+  %14 = record_make record{f64} 4:f64
+  %15 = union_make union{void, record{f64}, record{str}} tag1 %14
+  %16 = call record{list[union{void, record{f64}, record{str}}], list[record{i64, i64}], list[str], i64, i64} replaced_receiver(%12, %15)
+  %17 = record_get list[union{void, record{f64}, record{str}}] %16, field0
+  %19 = list_new list[union{void, record{f64}, record{str}}] 3:i64
+  %20 = union_make union{void, record{f64}, record{str}} tag0
+  %21 = list_push list[union{void, record{f64}, record{str}}] %19, %20
+  %23 = record_make record{f64} 4:f64
+  %24 = union_make union{void, record{f64}, record{str}} tag1 %23
+  %25 = list_push list[union{void, record{f64}, record{str}}] %21, %24
+  %26 = union_make union{void, record{f64}, record{str}} tag0
+  %27 = list_push list[union{void, record{f64}, record{str}}] %25, %26
+  %28 = list_len u64 %17
+  %29 = list_len u64 %27
+  %30 = cmp.eq bool %28, %29
+  branch %30, b3, b2
+b1: ; preds b3 b12
+  %34 = phi u64 0:u64, %69
+  %35 = cmp.lt bool %34, %28
+  branch %35, b4, b5
+b2: ; preds b0 b13 b5
+  %75 = phi bool %30, 0:bool, 1:bool
+  ret %75
+b3: ; preds b0
+  jump b1
+b4: ; preds b1
+  %39 = list_get_field u32 %17, %34, path 0
+  %40 = list_get_field u32 %27, %34, path 0
+  %41 = cmp.eq bool %39, %40
+  branch %41, b6, b7
+b5: ; preds b1
+  jump b2
+b6: ; preds b4
+  %44 = cmp.eq bool %39, 1:u32
+  branch %44, b8, b9
+b7: ; preds b4 b8 b10 b11
+  %66 = phi bool %41, %52, %63, %41
+  branch %66, b12, b13
+b8: ; preds b6
+  %49 = list_get_field f64 %17, %34, path 2.0
+  %50 = list_get_field f64 %27, %34, path 2.0
+  %51 = fcmp.eq bool %49, %50
+  %52 = bit_and bool 1:bool, %51
+  jump b7
+b9: ; preds b6
+  %55 = cmp.eq bool %39, 2:u32
+  branch %55, b10, b11
+b10: ; preds b9
+  %60 = list_get_field str %17, %34, path 3.0
+  %61 = list_get_field str %27, %34, path 3.0
+  %62 = call bool myl_core_str_eq(%60, %61)
+  %63 = bit_and bool 1:bool, %62
+  jump b7
+b11: ; preds b9
+  jump b7
+b12: ; preds b7
+  %69 = add u64 %34, 1:u64
+  jump b1
+b13: ; preds b7
+  jump b2
+fn test_managed_element_field_stores_keep_their_scope() -> bool
+b0:
+  %1 = list_new list[union{void, record{f64}, record{str}}] 0:i64
+  %3 = list_new list[record{i64, i64}] 0:i64
+  %5 = list_new list[str] 2:i64
+  %7 = list_push list[str] %5, str10
+  %9 = list_push list[str] %7, str11
+  %12 = record_make record{list[union{void, record{f64}, record{str}}], list[record{i64, i64}], list[str], i64, i64} %1, %3, %9, 0:i64, 0:i64
+  %14 = call record{list[union{void, record{f64}, record{str}}], list[record{i64, i64}], list[str], i64, i64} rename(%12, str12)
+  %15 = record_get list[str] %14, field2
+  %17 = list_new list[str] 2:i64
+  %19 = list_push list[str] %17, str13
+  %21 = list_push list[str] %19, str14
+  %22 = list_len u64 %15
+  %23 = list_len u64 %21
+  %24 = cmp.eq bool %22, %23
+  branch %24, b3, b2
+b1: ; preds b3 b6
+  %28 = phi u64 0:u64, %36
+  %29 = cmp.lt bool %28, %22
+  branch %29, b4, b5
+b2: ; preds b0 b7 b5
+  %42 = phi bool %24, 0:bool, 1:bool
+  branch %42, b8, b9
+b3: ; preds b0
+  jump b1
+b4: ; preds b1
+  %31 = list_get str %15, %28
+  %32 = list_get str %21, %28
+  %33 = call bool myl_core_str_eq(%31, %32)
+  branch %33, b6, b7
+b5: ; preds b1
+  jump b2
+b6: ; preds b4
+  %36 = add u64 %28, 1:u64
+  jump b1
+b7: ; preds b4
+  jump b2
+b8: ; preds b2
+  %46 = record_get list[str] %12, field2
+  %48 = list_new list[str] 2:i64
+  %50 = list_push list[str] %48, str15
+  %52 = list_push list[str] %50, str16
+  %53 = list_len u64 %46
+  %54 = list_len u64 %52
+  %55 = cmp.eq bool %53, %54
+  branch %55, b12, b11
+b9: ; preds b2 b11
+  %75 = phi bool %42, %73
+  ret %75
+b10: ; preds b12 b15
+  %59 = phi u64 0:u64, %67
+  %60 = cmp.lt bool %59, %53
+  branch %60, b13, b14
+b11: ; preds b8 b16 b14
+  %73 = phi bool %55, 0:bool, 1:bool
+  jump b9
+b12: ; preds b8
+  jump b10
+b13: ; preds b10
+  %62 = list_get str %46, %59
+  %63 = list_get str %52, %59
+  %64 = call bool myl_core_str_eq(%62, %63)
+  branch %64, b15, b16
+b14: ; preds b10
+  jump b11
+b15: ; preds b13
+  %67 = add u64 %59, 1:u64
+  jump b10
+b16: ; preds b13
+  jump b11
+fn test_payload_bindings_read_in_place_keep_their_owner() -> bool
+b0:
+  %1 = list_new list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}] 2:i64
+  %2 = union_make union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}} tag0
+  %3 = list_push list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}] %1, %2
+  %6 = list_new list[i64] 3:i64
+  %8 = list_push list[i64] %6, 1:i64
+  %10 = list_push list[i64] %8, 2:i64
+  %12 = list_push list[i64] %10, 3:i64
+  %13 = record_make record{list[i64]} %12
+  %14 = record_make record{i64, record{list[i64]}} 2:i64, %13
+  %15 = record_make record{record{i64, record{list[i64]}}} %14
+  %16 = union_make union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}} tag2 %15
+  %17 = list_push list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}] %3, %16
+  jump b1
+b1: ; preds b0 b3
+  %22 = phi i64 0:i64, %36
+  %26 = phi i64 0:i64, %33
+  %24 = cmp.lt bool %22, 4:i64
+  branch %24, b2, b4
+b2: ; preds b1
+  %29 = call i64 arity_of(%17, 1:i64)
+  %31 = call i64 arity_of(%17, 0:i64)
+  %32 = add.exact i64 %29, %31
+  %33 = add.exact i64 %26, %32
+  jump b3
+b3: ; preds b2
+  %36 = add.exact i64 %22, 1:i64
+  jump b1
+b4: ; preds b1
+  %39 = cmp.eq bool %26, 16:i64
+  branch %39, b5, b6
+b5: ; preds b4
+  %42 = list_len u64 %17
+  %43 = list_len u64 %17
+  %44 = cmp.eq bool %42, %43
+  branch %44, b9, b8
+b6: ; preds b4 b8
+  %131 = phi bool %39, %129
+  ret %131
+b7: ; preds b9 b25
+  %48 = phi u64 0:u64, %123
+  %49 = cmp.lt bool %48, %42
+  branch %49, b10, b11
+b8: ; preds b5 b26 b11
+  %129 = phi bool %44, 0:bool, 1:bool
+  jump b6
+b9: ; preds b5
+  jump b7
+b10: ; preds b7
+  %53 = list_get_field u32 %17, %48, path 0
+  %54 = list_get_field u32 %17, %48, path 0
+  %55 = cmp.eq bool %53, %54
+  branch %55, b12, b13
+b11: ; preds b7
+  jump b8
+b12: ; preds b10
+  %58 = cmp.eq bool %53, 1:u32
+  branch %58, b14, b15
+b13: ; preds b10 b14 b19 b17
+  %120 = phi bool %55, %74, %117, %55
+  branch %120, b25, b26
+b14: ; preds b12
+  %63 = list_get_field record{bytes, u32} %17, %48, path 2.0
+  %64 = list_get_field record{bytes, u32} %17, %48, path 2.0
+  %66 = record_get bytes %63, field0
+  %67 = record_get bytes %64, field0
+  %68 = call bool myl_core_str_eq(%66, %67)
+  %69 = bit_and bool 1:bool, %68
+  %70 = record_get u32 %63, field1
+  %71 = record_get u32 %64, field1
+  %72 = cmp.eq bool %70, %71
+  %73 = bit_and bool %69, %72
+  %74 = bit_and bool 1:bool, %73
+  jump b13
+b15: ; preds b12
+  %77 = cmp.eq bool %53, 2:u32
+  branch %77, b16, b17
+b16: ; preds b15
+  %85 = list_get_field i64 %17, %48, path 3.0.0
+  %86 = list_get_field i64 %17, %48, path 3.0.0
+  %87 = cmp.eq bool %85, %86
+  %88 = bit_and bool 1:bool, %87
+  %92 = list_get_field list[i64] %17, %48, path 3.0.1.0
+  %93 = list_get_field list[i64] %17, %48, path 3.0.1.0
+  %94 = list_len u64 %92
+  %95 = list_len u64 %93
+  %96 = cmp.eq bool %94, %95
+  branch %96, b20, b19
+b17: ; preds b15
+  jump b13
+b18: ; preds b20 b23
+  %100 = phi u64 0:u64, %108
+  %101 = cmp.lt bool %100, %94
+  branch %101, b21, b22
+b19: ; preds b16 b24 b22
+  %114 = phi bool %96, 0:bool, 1:bool
+  %115 = bit_and bool 1:bool, %114
+  %116 = bit_and bool %88, %115
+  %117 = bit_and bool 1:bool, %116
+  jump b13
+b20: ; preds b16
+  jump b18
+b21: ; preds b18
+  %103 = list_get i64 %92, %100
+  %104 = list_get i64 %93, %100
+  %105 = cmp.eq bool %103, %104
+  branch %105, b23, b24
+b22: ; preds b18
+  jump b19
+b23: ; preds b21
+  %108 = add u64 %100, 1:u64
+  jump b18
+b24: ; preds b21
+  jump b19
+b25: ; preds b13
+  %123 = add u64 %48, 1:u64
+  jump b7
+b26: ; preds b13
+  jump b8
+fn test_payload_bindings_outliving_a_scrutinee_write_keep_their_copy() -> bool
+b0:
+  %1 = list_new list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}] 1:i64
+  %4 = list_new list[i64] 1:i64
+  %6 = list_push list[i64] %4, 9:i64
+  %7 = record_make record{list[i64]} %6
+  %8 = record_make record{i64, record{list[i64]}} 4:i64, %7
+  %9 = record_make record{record{i64, record{list[i64]}}} %8
+  %10 = union_make union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}} tag2 %9
+  %11 = list_push list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}] %1, %10
+  %13 = call record{i64, list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}]} freed_arity(%11, 0:i64)
+  %14 = record_get i64 %13, field0
+  %15 = record_get list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}] %13, field1
+  %17 = call record{i64, list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}]} freed_arity(%15, 0:i64)
+  %18 = record_get i64 %17, field0
+  %19 = record_get list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}] %17, field1
+  %21 = cmp.eq bool %14, 5:i64
+  branch %21, b1, b2
+b1: ; preds b0
+  %24 = cmp.eq bool %18, -1:i64
+  jump b2
+b2: ; preds b0 b1
+  %26 = phi bool %21, %24
+  branch %26, b3, b4
+b3: ; preds b2
+  %30 = list_new list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}] 1:i64
+  %31 = union_make union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}} tag0
+  %32 = list_push list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}] %30, %31
+  %33 = list_len u64 %19
+  %34 = list_len u64 %32
+  %35 = cmp.eq bool %33, %34
+  branch %35, b7, b6
+b4: ; preds b2 b6
+  %122 = phi bool %26, %120
+  ret %122
+b5: ; preds b7 b23
+  %39 = phi u64 0:u64, %114
+  %40 = cmp.lt bool %39, %33
+  branch %40, b8, b9
+b6: ; preds b3 b24 b9
+  %120 = phi bool %35, 0:bool, 1:bool
+  jump b4
+b7: ; preds b3
+  jump b5
+b8: ; preds b5
+  %44 = list_get_field u32 %19, %39, path 0
+  %45 = list_get_field u32 %32, %39, path 0
+  %46 = cmp.eq bool %44, %45
+  branch %46, b10, b11
+b9: ; preds b5
+  jump b6
+b10: ; preds b8
+  %49 = cmp.eq bool %44, 1:u32
+  branch %49, b12, b13
+b11: ; preds b8 b12 b17 b15
+  %111 = phi bool %46, %65, %108, %46
+  branch %111, b23, b24
+b12: ; preds b10
+  %54 = list_get_field record{bytes, u32} %19, %39, path 2.0
+  %55 = list_get_field record{bytes, u32} %32, %39, path 2.0
+  %57 = record_get bytes %54, field0
+  %58 = record_get bytes %55, field0
+  %59 = call bool myl_core_str_eq(%57, %58)
+  %60 = bit_and bool 1:bool, %59
+  %61 = record_get u32 %54, field1
+  %62 = record_get u32 %55, field1
+  %63 = cmp.eq bool %61, %62
+  %64 = bit_and bool %60, %63
+  %65 = bit_and bool 1:bool, %64
+  jump b11
+b13: ; preds b10
+  %68 = cmp.eq bool %44, 2:u32
+  branch %68, b14, b15
+b14: ; preds b13
+  %76 = list_get_field i64 %19, %39, path 3.0.0
+  %77 = list_get_field i64 %32, %39, path 3.0.0
+  %78 = cmp.eq bool %76, %77
+  %79 = bit_and bool 1:bool, %78
+  %83 = list_get_field list[i64] %19, %39, path 3.0.1.0
+  %84 = list_get_field list[i64] %32, %39, path 3.0.1.0
+  %85 = list_len u64 %83
+  %86 = list_len u64 %84
+  %87 = cmp.eq bool %85, %86
+  branch %87, b18, b17
+b15: ; preds b13
+  jump b11
+b16: ; preds b18 b21
+  %91 = phi u64 0:u64, %99
+  %92 = cmp.lt bool %91, %85
+  branch %92, b19, b20
+b17: ; preds b14 b22 b20
+  %105 = phi bool %87, 0:bool, 1:bool
+  %106 = bit_and bool 1:bool, %105
+  %107 = bit_and bool %79, %106
+  %108 = bit_and bool 1:bool, %107
+  jump b11
+b18: ; preds b14
+  jump b16
+b19: ; preds b16
+  %94 = list_get i64 %83, %91
+  %95 = list_get i64 %84, %91
+  %96 = cmp.eq bool %94, %95
+  branch %96, b21, b22
+b20: ; preds b16
+  jump b17
+b21: ; preds b19
+  %99 = add u64 %91, 1:u64
+  jump b16
+b22: ; preds b19
+  jump b17
+b23: ; preds b11
+  %114 = add u64 %39, 1:u64
+  jump b5
+b24: ; preds b11
+  jump b6
+fn test_returned_bindings_and_locals_move_their_owner() -> bool
+b0:
+  %1 = list_new list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}] 2:i64
+  %3 = call bytes myl_core_text_encode(str17)
+  %5 = call bytes myl_core_text_encode(str18)
+  %6 = call bytes myl_core_bytes_concat(%3, %5)
+  %8 = record_make record{bytes, u32} %6, 7:u32
+  %9 = record_make record{record{bytes, u32}} %8
+  %10 = union_make union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}} tag1 %9
+  %11 = list_push list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}] %1, %10
+  %12 = union_make union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}} tag0
+  %13 = list_push list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}] %11, %12
+  %15 = call record{bytes, u32} name_of(%13, 0:i64)
+  %16 = union_make union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}} tag0
+  %19 = cmp.lt bool 0:i64, 0:i64
+  branch %19, b1, b2
+b1: ; preds b0
+  %21 = list_len u64 %13
+  %22 = convert.exact i64 %21
+  %23 = add.exact i64 %22, 0:i64
+  jump b2
+b2: ; preds b0 b1
+  %25 = phi i64 0:i64, %23
+  %29 = list_set.exact list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}] %13, %25, %16
+  %31 = call bytes myl_core_text_encode(str19)
+  %33 = call bytes myl_core_text_encode(str20)
+  %34 = call record{bytes, u32} joined(%31, %33)
+  %36 = record_get bytes %15, field0
+  %38 = call bytes myl_core_text_encode(str21)
+  %39 = call bool myl_core_str_eq(%36, %38)
+  branch %39, b3, b4
+b3: ; preds b2
+  %41 = record_get u32 %15, field1
+  %43 = cmp.eq bool %41, 7:u32
+  jump b4
+b4: ; preds b2 b3
+  %45 = phi bool %39, %43
+  branch %45, b5, b6
+b5: ; preds b4
+  %48 = record_get bytes %34, field0
+  %50 = call bytes myl_core_text_encode(str22)
+  %51 = call bool myl_core_str_eq(%48, %50)
+  jump b6
+b6: ; preds b4 b5
+  %53 = phi bool %45, %51
+  branch %53, b7, b8
+b7: ; preds b6
+  %58 = call record{bytes, u32} name_of(%29, 1:i64)
+  %59 = record_get bytes %58, field0
+  %61 = call bytes myl_core_text_encode(str23)
+  %62 = call bool myl_core_str_eq(%59, %61)
+  jump b8
+b8: ; preds b6 b7
+  %64 = phi bool %53, %62
+  ret %64
+fn test_returned_parameters_keep_the_callers_value() -> bool
+b0:
+  %1 = call bytes myl_core_text_encode(str24)
+  %3 = call bytes myl_core_text_encode(str25)
+  %4 = call bytes myl_core_bytes_concat(%1, %3)
+  %6 = record_make record{bytes, u32} %4, 1:u32
+  %7 = call record{bytes, u32} same(%6)
+  %8 = call record{bytes, u32} same(%7)
+  %9 = record_get bytes %7, field0
+  %11 = call bytes myl_core_text_encode(str26)
+  %12 = call bool myl_core_str_eq(%9, %11)
+  branch %12, b1, b2
+b1: ; preds b0
+  %14 = record_get bytes %8, field0
+  %16 = call bytes myl_core_text_encode(str27)
+  %17 = call bool myl_core_str_eq(%14, %16)
+  jump b2
+b2: ; preds b0 b1
+  %19 = phi bool %12, %17
+  branch %19, b3, b4
+b3: ; preds b2
+  %22 = record_get bytes %6, field0
+  %24 = call bytes myl_core_text_encode(str28)
+  %25 = call bool myl_core_str_eq(%22, %24)
+  jump b4
+b4: ; preds b2 b3
+  %27 = phi bool %19, %25
+  ret %27
+fn test_nested_field_copies_into_constructors_stay_independent() -> bool
+b0:
+  %2 = list_new list[i64] 2:i64
+  %4 = list_push list[i64] %2, 1:i64
+  %6 = list_push list[i64] %4, 2:i64
+  %8 = list_new list[str] 2:i64
+  %10 = list_push list[str] %8, str29
+  %12 = list_push list[str] %10, str30
+  %13 = record_make record{list[i64], list[str]} %6, %12
+  %14 = record_make record{i64, record{list[i64], list[str]}} 1:i64, %13
+  %16 = call record{list[i64], list[str], i64} load(%14, 7:i64)
+  %17 = record_get list[i64] %16, field0
+  %19 = list_push list[i64] %17, 3:i64
+  %20 = record_set record{list[i64], list[str], i64} %16, field0, %19
+  %22 = record_get list[str] %20, field1
+  %25 = cmp.lt bool 0:i64, 0:i64
+  branch %25, b1, b2
+b1: ; preds b0
+  %27 = list_len u64 %22
+  %28 = convert.exact i64 %27
+  %29 = add.exact i64 %28, 0:i64
+  jump b2
+b2: ; preds b0 b1
+  %31 = phi i64 0:i64, %29
+  %35 = list_set.exact list[str] %22, %31, str31
+  %36 = record_set record{list[i64], list[str], i64} %20, field1, %35
+  %37 = record_get list[i64] %36, field0
+  %39 = list_new list[i64] 3:i64
+  %41 = list_push list[i64] %39, 1:i64
+  %43 = list_push list[i64] %41, 2:i64
+  %45 = list_push list[i64] %43, 3:i64
+  %46 = list_len u64 %37
+  %47 = list_len u64 %45
+  %48 = cmp.eq bool %46, %47
+  branch %48, b5, b4
+b3: ; preds b5 b8
+  %52 = phi u64 0:u64, %60
+  %53 = cmp.lt bool %52, %46
+  branch %53, b6, b7
+b4: ; preds b2 b9 b7
+  %66 = phi bool %48, 0:bool, 1:bool
+  branch %66, b10, b11
+b5: ; preds b2
+  jump b3
+b6: ; preds b3
+  %55 = list_get i64 %37, %52
+  %56 = list_get i64 %45, %52
+  %57 = cmp.eq bool %55, %56
+  branch %57, b8, b9
+b7: ; preds b3
+  jump b4
+b8: ; preds b6
+  %60 = add u64 %52, 1:u64
+  jump b3
+b9: ; preds b6
+  jump b4
+b10: ; preds b4
+  %70 = record_get list[str] %36, field1
+  %72 = list_new list[str] 2:i64
+  %74 = list_push list[str] %72, str32
+  %76 = list_push list[str] %74, str33
+  %77 = list_len u64 %70
+  %78 = list_len u64 %76
+  %79 = cmp.eq bool %77, %78
+  branch %79, b14, b13
+b11: ; preds b4 b13
+  %99 = phi bool %66, %97
+  branch %99, b19, b20
+b12: ; preds b14 b17
+  %83 = phi u64 0:u64, %91
+  %84 = cmp.lt bool %83, %77
+  branch %84, b15, b16
+b13: ; preds b10 b18 b16
+  %97 = phi bool %79, 0:bool, 1:bool
+  jump b11
+b14: ; preds b10
+  jump b12
+b15: ; preds b12
+  %86 = list_get str %70, %83
+  %87 = list_get str %76, %83
+  %88 = call bool myl_core_str_eq(%86, %87)
+  branch %88, b17, b18
+b16: ; preds b12
+  jump b13
+b17: ; preds b15
+  %91 = add u64 %83, 1:u64
+  jump b12
+b18: ; preds b15
+  jump b13
+b19: ; preds b11
+  %107 = record_get record{list[i64], list[str]} %14, field1
+  %108 = record_get list[i64] %107, field0
+  %110 = list_new list[i64] 2:i64
+  %112 = list_push list[i64] %110, 1:i64
+  %114 = list_push list[i64] %112, 2:i64
+  %115 = list_len u64 %108
+  %116 = list_len u64 %114
+  %117 = cmp.eq bool %115, %116
+  branch %117, b23, b22
+b20: ; preds b11 b22
+  %137 = phi bool %99, %135
+  branch %137, b28, b29
+b21: ; preds b23 b26
+  %121 = phi u64 0:u64, %129
+  %122 = cmp.lt bool %121, %115
+  branch %122, b24, b25
+b22: ; preds b19 b27 b25
+  %135 = phi bool %117, 0:bool, 1:bool
+  jump b20
+b23: ; preds b19
+  jump b21
+b24: ; preds b21
+  %124 = list_get i64 %108, %121
+  %125 = list_get i64 %114, %121
+  %126 = cmp.eq bool %124, %125
+  branch %126, b26, b27
+b25: ; preds b21
+  jump b22
+b26: ; preds b24
+  %129 = add u64 %121, 1:u64
+  jump b21
+b27: ; preds b24
+  jump b22
+b28: ; preds b20
+  %142 = record_get record{list[i64], list[str]} %14, field1
+  %143 = record_get list[str] %142, field1
+  %145 = list_new list[str] 2:i64
+  %147 = list_push list[str] %145, str34
+  %149 = list_push list[str] %147, str35
+  %150 = list_len u64 %143
+  %151 = list_len u64 %149
+  %152 = cmp.eq bool %150, %151
+  branch %152, b32, b31
+b29: ; preds b20 b31
+  %172 = phi bool %137, %170
+  branch %172, b37, b38
+b30: ; preds b32 b35
+  %156 = phi u64 0:u64, %164
+  %157 = cmp.lt bool %156, %150
+  branch %157, b33, b34
+b31: ; preds b28 b36 b34
+  %170 = phi bool %152, 0:bool, 1:bool
+  jump b29
+b32: ; preds b28
+  jump b30
+b33: ; preds b30
+  %159 = list_get str %143, %156
+  %160 = list_get str %149, %156
+  %161 = call bool myl_core_str_eq(%159, %160)
+  branch %161, b35, b36
+b34: ; preds b30
+  jump b31
+b35: ; preds b33
+  %164 = add u64 %156, 1:u64
+  jump b30
+b36: ; preds b33
+  jump b31
+b37: ; preds b29
+  %183 = record_get i64 %36, field2
+  %185 = cmp.eq bool %183, 7:i64
+  jump b38
+b38: ; preds b29 b37
+  %187 = phi bool %172, %185
+  ret %187
+fn test_nested_field_copies_from_mut_parameters_and_call_results() -> bool
+b0:
+  %2 = list_new list[i64] 1:i64
+  %4 = list_push list[i64] %2, 8:i64
+  %6 = list_new list[str] 1:i64
+  %8 = list_push list[str] %6, str36
+  %9 = record_make record{list[i64], list[str]} %4, %8
+  %10 = record_make record{i64, record{list[i64], list[str]}} 2:i64, %9
+  %11 = call record{record{list[i64], list[str], i64}, record{i64, record{list[i64], list[str]}}} load_mut(%10)
+  %12 = record_get record{list[i64], list[str], i64} %11, field0
+  %13 = record_get record{i64, record{list[i64], list[str]}} %11, field1
+  %14 = call record{list[i64], list[str], i64} load_made()
+  %15 = record_get list[i64] %12, field0
+  %17 = list_new list[i64] 1:i64
+  %19 = list_push list[i64] %17, 8:i64
+  %20 = list_len u64 %15
+  %21 = list_len u64 %19
+  %22 = cmp.eq bool %20, %21
+  branch %22, b3, b2
+b1: ; preds b3 b6
+  %26 = phi u64 0:u64, %34
+  %27 = cmp.lt bool %26, %20
+  branch %27, b4, b5
+b2: ; preds b0 b7 b5
+  %40 = phi bool %22, 0:bool, 1:bool
+  branch %40, b8, b9
+b3: ; preds b0
+  jump b1
+b4: ; preds b1
+  %29 = list_get i64 %15, %26
+  %30 = list_get i64 %19, %26
+  %31 = cmp.eq bool %29, %30
+  branch %31, b6, b7
+b5: ; preds b1
+  jump b2
+b6: ; preds b4
+  %34 = add u64 %26, 1:u64
+  jump b1
+b7: ; preds b4
+  jump b2
+b8: ; preds b2
+  %44 = record_get record{list[i64], list[str]} %13, field1
+  %45 = record_get list[i64] %44, field0
+  %47 = list_new list[i64] 2:i64
+  %49 = list_push list[i64] %47, 8:i64
+  %51 = list_push list[i64] %49, 99:i64
+  %52 = list_len u64 %45
+  %53 = list_len u64 %51
+  %54 = cmp.eq bool %52, %53
+  branch %54, b12, b11
+b9: ; preds b2 b11
+  %74 = phi bool %40, %72
+  branch %74, b17, b18
+b10: ; preds b12 b15
+  %58 = phi u64 0:u64, %66
+  %59 = cmp.lt bool %58, %52
+  branch %59, b13, b14
+b11: ; preds b8 b16 b14
+  %72 = phi bool %54, 0:bool, 1:bool
+  jump b9
+b12: ; preds b8
+  jump b10
+b13: ; preds b10
+  %61 = list_get i64 %45, %58
+  %62 = list_get i64 %51, %58
+  %63 = cmp.eq bool %61, %62
+  branch %63, b15, b16
+b14: ; preds b10
+  jump b11
+b15: ; preds b13
+  %66 = add u64 %58, 1:u64
+  jump b10
+b16: ; preds b13
+  jump b11
+b17: ; preds b9
+  %81 = record_get i64 %12, field2
+  %83 = cmp.eq bool %81, 2:i64
+  jump b18
+b18: ; preds b9 b17
+  %85 = phi bool %74, %83
+  branch %85, b19, b20
+b19: ; preds b18
+  %93 = record_get list[i64] %14, field0
+  %95 = list_new list[i64] 2:i64
+  %97 = list_push list[i64] %95, 4:i64
+  %99 = list_push list[i64] %97, 5:i64
+  %100 = list_len u64 %93
+  %101 = list_len u64 %99
+  %102 = cmp.eq bool %100, %101
+  branch %102, b23, b22
+b20: ; preds b18 b22
+  %122 = phi bool %85, %120
+  branch %122, b28, b29
+b21: ; preds b23 b26
+  %106 = phi u64 0:u64, %114
+  %107 = cmp.lt bool %106, %100
+  branch %107, b24, b25
+b22: ; preds b19 b27 b25
+  %120 = phi bool %102, 0:bool, 1:bool
+  jump b20
+b23: ; preds b19
+  jump b21
+b24: ; preds b21
+  %109 = list_get i64 %93, %106
+  %110 = list_get i64 %99, %106
+  %111 = cmp.eq bool %109, %110
+  branch %111, b26, b27
+b25: ; preds b21
+  jump b22
+b26: ; preds b24
+  %114 = add u64 %106, 1:u64
+  jump b21
+b27: ; preds b24
+  jump b22
+b28: ; preds b20
+  %127 = record_get list[str] %14, field1
+  %129 = list_new list[str] 1:i64
+  %131 = list_push list[str] %129, str37
+  %132 = list_len u64 %127
+  %133 = list_len u64 %131
+  %134 = cmp.eq bool %132, %133
+  branch %134, b32, b31
+b29: ; preds b20 b31
+  %154 = phi bool %122, %152
+  ret %154
+b30: ; preds b32 b35
+  %138 = phi u64 0:u64, %146
+  %139 = cmp.lt bool %138, %132
+  branch %139, b33, b34
+b31: ; preds b28 b36 b34
+  %152 = phi bool %134, 0:bool, 1:bool
+  jump b29
+b32: ; preds b28
+  jump b30
+b33: ; preds b30
+  %141 = list_get str %127, %138
+  %142 = list_get str %131, %138
+  %143 = call bool myl_core_str_eq(%141, %142)
+  branch %143, b35, b36
+b34: ; preds b30
+  jump b31
+b35: ; preds b33
+  %146 = add u64 %138, 1:u64
+  jump b30
+b36: ; preds b33
+  jump b31
+fn test_readonly_table_reads_borrow_payloads_in_place() -> bool
+b0:
+  %1 = list_new list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}] 2:i64
+  %4 = list_new list[i64] 2:i64
+  %6 = list_push list[i64] %4, 4:i64
+  %8 = list_push list[i64] %6, 5:i64
+  %9 = record_make record{list[i64]} %8
+  %10 = record_make record{i64, record{list[i64]}} 1:i64, %9
+  %11 = record_make record{record{i64, record{list[i64]}}} %10
+  %12 = union_make union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}} tag2 %11
+  %13 = list_push list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}] %1, %12
+  %15 = call bytes myl_core_text_encode(str38)
+  %17 = call bytes myl_core_text_encode(str39)
+  %18 = call bytes myl_core_bytes_concat(%15, %17)
+  %20 = record_make record{bytes, u32} %18, 9:u32
+  %21 = record_make record{record{bytes, u32}} %20
+  %22 = union_make union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}} tag1 %21
+  %23 = list_push list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}] %13, %22
+  %25 = record_make record{list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}], i64} %23, 2:i64
+  %27 = call i64 table_arity(%25, 0:i64)
+  %29 = call i64 table_arity(%25, 1:i64)
+  %30 = add.exact i64 %27, %29
+  %32 = call record{bytes, u32} table_name(%25, 1:i64)
+  %34 = call list[i64] table_ops(%25, 0:i64)
+  %36 = list_push list[i64] %34, 6:i64
+  %37 = union_make union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}} tag0
+  %38 = record_get list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}] %25, field0
+  %41 = cmp.lt bool 1:i64, 0:i64
+  branch %41, b1, b2
+b1: ; preds b0
+  %43 = list_len u64 %38
+  %44 = convert.exact i64 %43
+  %45 = add.exact i64 %44, 1:i64
+  jump b2
+b2: ; preds b0 b1
+  %47 = phi i64 1:i64, %45
+  %51 = list_set.exact list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}] %38, %47, %37
+  %52 = record_set record{list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}], i64} %25, field0, %51
+  %55 = cmp.eq bool %30, 2:i64
+  branch %55, b3, b4
+b3: ; preds b2
+  %58 = record_get bytes %32, field0
+  %60 = call bytes myl_core_text_encode(str40)
+  %61 = call bool myl_core_str_eq(%58, %60)
+  jump b4
+b4: ; preds b2 b3
+  %63 = phi bool %55, %61
+  branch %63, b5, b6
+b5: ; preds b4
+  %68 = list_new list[i64] 3:i64
+  %70 = list_push list[i64] %68, 4:i64
+  %72 = list_push list[i64] %70, 5:i64
+  %74 = list_push list[i64] %72, 6:i64
+  %75 = list_len u64 %36
+  %76 = list_len u64 %74
+  %77 = cmp.eq bool %75, %76
+  branch %77, b9, b8
+b6: ; preds b4 b8
+  %97 = phi bool %63, %95
+  branch %97, b14, b15
+b7: ; preds b9 b12
+  %81 = phi u64 0:u64, %89
+  %82 = cmp.lt bool %81, %75
+  branch %82, b10, b11
+b8: ; preds b5 b13 b11
+  %95 = phi bool %77, 0:bool, 1:bool
+  jump b6
+b9: ; preds b5
+  jump b7
+b10: ; preds b7
+  %84 = list_get i64 %36, %81
+  %85 = list_get i64 %74, %81
+  %86 = cmp.eq bool %84, %85
+  branch %86, b12, b13
+b11: ; preds b7
+  jump b8
+b12: ; preds b10
+  %89 = add u64 %81, 1:u64
+  jump b7
+b13: ; preds b10
+  jump b8
+b14: ; preds b6
+  %104 = record_get list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}] %25, field0
+  %107 = cmp.lt bool 1:i64, 0:i64
+  branch %107, b16, b17
+b15: ; preds b6 b19
+  %191 = phi bool %97, %189
+  branch %191, b31, b32
+b16: ; preds b14
+  %109 = list_len u64 %104
+  %110 = convert.exact i64 %109
+  %111 = add.exact i64 %110, 1:i64
+  jump b17
+b17: ; preds b14 b16
+  %113 = phi i64 1:i64, %111
+  %115 = list_get.exact union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}} %104, %113
+  %117 = call bytes myl_core_text_encode(str41)
+  %119 = record_make record{bytes, u32} %117, 9:u32
+  %120 = record_make record{record{bytes, u32}} %119
+  %121 = union_make union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}} tag1 %120
+  %122 = union_tag u32 %115
+  %123 = union_tag u32 %121
+  %124 = cmp.eq bool %122, %123
+  branch %124, b18, b19
+b18: ; preds b17
+  %127 = cmp.eq bool %122, 1:u32
+  branch %127, b20, b21
+b19: ; preds b17 b20 b25 b23
+  %189 = phi bool %124, %143, %186, %124
+  jump b15
+b20: ; preds b18
+  %129 = union_payload record{record{bytes, u32}} tag1 %115
+  %130 = union_payload record{record{bytes, u32}} tag1 %121
+  %132 = record_get record{bytes, u32} %129, field0
+  %133 = record_get record{bytes, u32} %130, field0
+  %135 = record_get bytes %132, field0
+  %136 = record_get bytes %133, field0
+  %137 = call bool myl_core_str_eq(%135, %136)
+  %138 = bit_and bool 1:bool, %137
+  %139 = record_get u32 %132, field1
+  %140 = record_get u32 %133, field1
+  %141 = cmp.eq bool %139, %140
+  %142 = bit_and bool %138, %141
+  %143 = bit_and bool 1:bool, %142
+  jump b19
+b21: ; preds b18
+  %146 = cmp.eq bool %122, 2:u32
+  branch %146, b22, b23
+b22: ; preds b21
+  %148 = union_payload record{record{i64, record{list[i64]}}} tag2 %115
+  %149 = union_payload record{record{i64, record{list[i64]}}} tag2 %121
+  %151 = record_get record{i64, record{list[i64]}} %148, field0
+  %152 = record_get record{i64, record{list[i64]}} %149, field0
+  %154 = record_get i64 %151, field0
+  %155 = record_get i64 %152, field0
+  %156 = cmp.eq bool %154, %155
+  %157 = bit_and bool 1:bool, %156
+  %158 = record_get record{list[i64]} %151, field1
+  %159 = record_get record{list[i64]} %152, field1
+  %161 = record_get list[i64] %158, field0
+  %162 = record_get list[i64] %159, field0
+  %163 = list_len u64 %161
+  %164 = list_len u64 %162
+  %165 = cmp.eq bool %163, %164
+  branch %165, b26, b25
+b23: ; preds b21
+  jump b19
+b24: ; preds b26 b29
+  %169 = phi u64 0:u64, %177
+  %170 = cmp.lt bool %169, %163
+  branch %170, b27, b28
+b25: ; preds b22 b30 b28
+  %183 = phi bool %165, 0:bool, 1:bool
+  %184 = bit_and bool 1:bool, %183
+  %185 = bit_and bool %157, %184
+  %186 = bit_and bool 1:bool, %185
+  jump b19
+b26: ; preds b22
+  jump b24
+b27: ; preds b24
+  %172 = list_get i64 %161, %169
+  %173 = list_get i64 %162, %169
+  %174 = cmp.eq bool %172, %173
+  branch %174, b29, b30
+b28: ; preds b24
+  jump b25
+b29: ; preds b27
+  %177 = add u64 %169, 1:u64
+  jump b24
+b30: ; preds b27
+  jump b25
+b31: ; preds b15
+  %199 = call list[i64] table_ops(%25, 0:i64)
+  %201 = list_new list[i64] 2:i64
+  %203 = list_push list[i64] %201, 4:i64
+  %205 = list_push list[i64] %203, 5:i64
+  %206 = list_len u64 %199
+  %207 = list_len u64 %205
+  %208 = cmp.eq bool %206, %207
+  branch %208, b35, b34
+b32: ; preds b15 b34
+  %228 = phi bool %191, %226
+  ret %228
+b33: ; preds b35 b38
+  %212 = phi u64 0:u64, %220
+  %213 = cmp.lt bool %212, %206
+  branch %213, b36, b37
+b34: ; preds b31 b39 b37
+  %226 = phi bool %208, 0:bool, 1:bool
+  jump b32
+b35: ; preds b31
+  jump b33
+b36: ; preds b33
+  %215 = list_get i64 %199, %212
+  %216 = list_get i64 %205, %212
+  %217 = cmp.eq bool %215, %216
+  branch %217, b38, b39
+b37: ; preds b33
+  jump b34
+b38: ; preds b36
+  %220 = add u64 %212, 1:u64
+  jump b33
+b39: ; preds b36
+  jump b34
+fn test_nested_readonly_matches_in_loops() -> bool
+b0:
+  %1 = list_new list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}] 3:i64
+  %4 = list_new list[i64] 0:i64
+  %5 = record_make record{list[i64]} %4
+  %6 = record_make record{i64, record{list[i64]}} 1:i64, %5
+  %7 = record_make record{record{i64, record{list[i64]}}} %6
+  %8 = union_make union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}} tag2 %7
+  %9 = list_push list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}] %1, %8
+  %11 = call bytes myl_core_text_encode(str42)
+  %13 = record_make record{bytes, u32} %11, 1:u32
+  %14 = record_make record{record{bytes, u32}} %13
+  %15 = union_make union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}} tag1 %14
+  %16 = list_push list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}] %9, %15
+  %17 = union_make union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}} tag0
+  %18 = list_push list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}] %16, %17
+  %20 = record_make record{list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}], i64} %18, 3:i64
+  %21 = call i64 nested_anchor(%20)
+  %23 = cmp.eq bool %21, 5:i64
+  ret %23
+fn test_mut_roots_keep_owned_bindings() -> bool
+b0:
+  %1 = list_new list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}] 1:i64
+  %4 = list_new list[i64] 1:i64
+  %6 = list_push list[i64] %4, 1:i64
+  %7 = record_make record{list[i64]} %6
+  %8 = record_make record{i64, record{list[i64]}} 3:i64, %7
+  %9 = record_make record{record{i64, record{list[i64]}}} %8
+  %10 = union_make union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}} tag2 %9
+  %11 = list_push list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}] %1, %10
+  %13 = record_make record{list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}], i64} %11, 0:i64
+  %15 = call record{i64, record{list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}], i64}} replaced_table(%13, 0:i64)
+  %16 = record_get i64 %15, field0
+  %17 = record_get record{list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}], i64} %15, field1
+  %19 = cmp.eq bool %16, 4:i64
+  branch %19, b1, b2
+b1: ; preds b0
+  %21 = record_get i64 %17, field1
+  %23 = cmp.eq bool %21, 1:i64
+  jump b2
+b2: ; preds b0 b1
+  %25 = phi bool %19, %23
+  branch %25, b3, b4
+b3: ; preds b2
+  %28 = record_get list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}] %17, field0
+  %30 = list_new list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}] 1:i64
+  %31 = union_make union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}} tag0
+  %32 = list_push list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}] %30, %31
+  %33 = list_len u64 %28
+  %34 = list_len u64 %32
+  %35 = cmp.eq bool %33, %34
+  branch %35, b7, b6
+b4: ; preds b2 b6
+  %122 = phi bool %25, %120
+  ret %122
+b5: ; preds b7 b23
+  %39 = phi u64 0:u64, %114
+  %40 = cmp.lt bool %39, %33
+  branch %40, b8, b9
+b6: ; preds b3 b24 b9
+  %120 = phi bool %35, 0:bool, 1:bool
+  jump b4
+b7: ; preds b3
+  jump b5
+b8: ; preds b5
+  %44 = list_get_field u32 %28, %39, path 0
+  %45 = list_get_field u32 %32, %39, path 0
+  %46 = cmp.eq bool %44, %45
+  branch %46, b10, b11
+b9: ; preds b5
+  jump b6
+b10: ; preds b8
+  %49 = cmp.eq bool %44, 1:u32
+  branch %49, b12, b13
+b11: ; preds b8 b12 b17 b15
+  %111 = phi bool %46, %65, %108, %46
+  branch %111, b23, b24
+b12: ; preds b10
+  %54 = list_get_field record{bytes, u32} %28, %39, path 2.0
+  %55 = list_get_field record{bytes, u32} %32, %39, path 2.0
+  %57 = record_get bytes %54, field0
+  %58 = record_get bytes %55, field0
+  %59 = call bool myl_core_str_eq(%57, %58)
+  %60 = bit_and bool 1:bool, %59
+  %61 = record_get u32 %54, field1
+  %62 = record_get u32 %55, field1
+  %63 = cmp.eq bool %61, %62
+  %64 = bit_and bool %60, %63
+  %65 = bit_and bool 1:bool, %64
+  jump b11
+b13: ; preds b10
+  %68 = cmp.eq bool %44, 2:u32
+  branch %68, b14, b15
+b14: ; preds b13
+  %76 = list_get_field i64 %28, %39, path 3.0.0
+  %77 = list_get_field i64 %32, %39, path 3.0.0
+  %78 = cmp.eq bool %76, %77
+  %79 = bit_and bool 1:bool, %78
+  %83 = list_get_field list[i64] %28, %39, path 3.0.1.0
+  %84 = list_get_field list[i64] %32, %39, path 3.0.1.0
+  %85 = list_len u64 %83
+  %86 = list_len u64 %84
+  %87 = cmp.eq bool %85, %86
+  branch %87, b18, b17
+b15: ; preds b13
+  jump b11
+b16: ; preds b18 b21
+  %91 = phi u64 0:u64, %99
+  %92 = cmp.lt bool %91, %85
+  branch %92, b19, b20
+b17: ; preds b14 b22 b20
+  %105 = phi bool %87, 0:bool, 1:bool
+  %106 = bit_and bool 1:bool, %105
+  %107 = bit_and bool %79, %106
+  %108 = bit_and bool 1:bool, %107
+  jump b11
+b18: ; preds b14
+  jump b16
+b19: ; preds b16
+  %94 = list_get i64 %83, %91
+  %95 = list_get i64 %84, %91
+  %96 = cmp.eq bool %94, %95
+  branch %96, b21, b22
+b20: ; preds b16
+  jump b17
+b21: ; preds b19
+  %99 = add u64 %91, 1:u64
+  jump b16
+b22: ; preds b19
+  jump b17
+b23: ; preds b11
+  %114 = add u64 %39, 1:u64
+  jump b5
+b24: ; preds b11
+  jump b6
+fn test_mut_root_list_reads_across_unrelated_calls() -> bool
+b0:
+  %1 = list_new list[union{void, record{f64}, record{str}}] 3:i64
+  %3 = record_make record{f64} 1:f64
+  %4 = union_make union{void, record{f64}, record{str}} tag1 %3
+  %5 = list_push list[union{void, record{f64}, record{str}}] %1, %4
+  %7 = record_make record{str} str43
+  %8 = union_make union{void, record{f64}, record{str}} tag2 %7
+  %9 = list_push list[union{void, record{f64}, record{str}}] %5, %8
+  %10 = union_make union{void, record{f64}, record{str}} tag0
+  %11 = list_push list[union{void, record{f64}, record{str}}] %9, %10
+  %13 = record_make record{list[union{void, record{f64}, record{str}}], i64} %11, 0:i64
+  %15 = list_new list[i64] 3:i64
+  %17 = list_push list[i64] %15, 2:i64
+  %19 = list_push list[i64] %17, 0:i64
+  %21 = list_push list[i64] %19, 1:i64
+  %23 = record_make record{list[i64], i64} %21, 0:i64
+  %24 = call record{union{void, record{f64}, record{str}}, record{list[union{void, record{f64}, record{str}}], i64}, record{list[i64], i64}} fetch(%13, %23)
+  %25 = record_get union{void, record{f64}, record{str}} %24, field0
+  %26 = record_get record{list[union{void, record{f64}, record{str}}], i64} %24, field1
+  %27 = record_get record{list[i64], i64} %24, field2
+  %28 = call record{union{void, record{f64}, record{str}}, record{list[union{void, record{f64}, record{str}}], i64}, record{list[i64], i64}} fetch(%26, %27)
+  %29 = record_get union{void, record{f64}, record{str}} %28, field0
+  %30 = record_get record{list[union{void, record{f64}, record{str}}], i64} %28, field1
+  %31 = record_get record{list[i64], i64} %28, field2
+  %32 = call record{union{void, record{f64}, record{str}}, record{list[union{void, record{f64}, record{str}}], i64}, record{list[i64], i64}} fetch(%30, %31)
+  %33 = record_get union{void, record{f64}, record{str}} %32, field0
+  %34 = record_get record{list[union{void, record{f64}, record{str}}], i64} %32, field1
+  %35 = record_get record{list[i64], i64} %32, field2
+  %36 = union_make union{void, record{f64}, record{str}} tag0
+  %37 = union_tag u32 %25
+  %38 = union_tag u32 %36
+  %39 = cmp.eq bool %37, %38
+  branch %39, b1, b2
+b1: ; preds b0
+  %42 = cmp.eq bool %37, 1:u32
+  branch %42, b3, b4
+b2: ; preds b0 b3 b5 b6
+  %64 = phi bool %39, %50, %61, %39
+  branch %64, b7, b8
+b3: ; preds b1
+  %44 = union_payload record{f64} tag1 %25
+  %45 = union_payload record{f64} tag1 %36
+  %47 = record_get f64 %44, field0
+  %48 = record_get f64 %45, field0
+  %49 = fcmp.eq bool %47, %48
+  %50 = bit_and bool 1:bool, %49
+  jump b2
+b4: ; preds b1
+  %53 = cmp.eq bool %37, 2:u32
+  branch %53, b5, b6
+b5: ; preds b4
+  %55 = union_payload record{str} tag2 %25
+  %56 = union_payload record{str} tag2 %36
+  %58 = record_get str %55, field0
+  %59 = record_get str %56, field0
+  %60 = call bool myl_core_str_eq(%58, %59)
+  %61 = bit_and bool 1:bool, %60
+  jump b2
+b6: ; preds b4
+  jump b2
+b7: ; preds b2
+  %67 = call f64 number(%29)
+  %69 = fcmp.eq bool %67, 1:f64
+  jump b8
+b8: ; preds b2 b7
+  %71 = phi bool %64, %69
+  branch %71, b9, b10
+b9: ; preds b8
+  %76 = record_make record{str} str44
+  %77 = union_make union{void, record{f64}, record{str}} tag2 %76
+  %78 = union_tag u32 %33
+  %79 = union_tag u32 %77
+  %80 = cmp.eq bool %78, %79
+  branch %80, b11, b12
+b10: ; preds b8 b12
+  %107 = phi bool %71, %105
+  branch %107, b17, b18
+b11: ; preds b9
+  %83 = cmp.eq bool %78, 1:u32
+  branch %83, b13, b14
+b12: ; preds b9 b13 b15 b16
+  %105 = phi bool %80, %91, %102, %80
+  jump b10
+b13: ; preds b11
+  %85 = union_payload record{f64} tag1 %33
+  %86 = union_payload record{f64} tag1 %77
+  %88 = record_get f64 %85, field0
+  %89 = record_get f64 %86, field0
+  %90 = fcmp.eq bool %88, %89
+  %91 = bit_and bool 1:bool, %90
+  jump b12
+b14: ; preds b11
+  %94 = cmp.eq bool %78, 2:u32
+  branch %94, b15, b16
+b15: ; preds b14
+  %96 = union_payload record{str} tag2 %33
+  %97 = union_payload record{str} tag2 %77
+  %99 = record_get str %96, field0
+  %100 = record_get str %97, field0
+  %101 = call bool myl_core_str_eq(%99, %100)
+  %102 = bit_and bool 1:bool, %101
+  jump b12
+b16: ; preds b14
+  jump b12
+b17: ; preds b10
+  %113 = record_get i64 %34, field1
+  %115 = cmp.eq bool %113, 3:i64
+  jump b18
+b18: ; preds b10 b17
+  %117 = phi bool %107, %115
+  branch %117, b19, b20
+b19: ; preds b18
+  %124 = record_get i64 %35, field1
+  %126 = cmp.eq bool %124, 3:i64
+  jump b20
+b20: ; preds b18 b19
+  %128 = phi bool %117, %126
+  ret %128
+fn test_mut_root_list_reads_keep_the_list_a_call_replaces() -> bool
+b0:
+  %1 = list_new list[union{void, record{f64}, record{str}}] 2:i64
+  %3 = record_make record{f64} 8:f64
+  %4 = union_make union{void, record{f64}, record{str}} tag1 %3
+  %5 = list_push list[union{void, record{f64}, record{str}}] %1, %4
+  %6 = union_make union{void, record{f64}, record{str}} tag0
+  %7 = list_push list[union{void, record{f64}, record{str}}] %5, %6
+  %9 = record_make record{list[union{void, record{f64}, record{str}}], i64} %7, 0:i64
+  %10 = call record{union{void, record{f64}, record{str}}, record{list[union{void, record{f64}, record{str}}], i64}} fetch_reset(%9)
+  %11 = record_get union{void, record{f64}, record{str}} %10, field0
+  %12 = record_get record{list[union{void, record{f64}, record{str}}], i64} %10, field1
+  %13 = call f64 number(%11)
+  %15 = fcmp.eq bool %13, 8:f64
+  branch %15, b1, b2
+b1: ; preds b0
+  %17 = record_get list[union{void, record{f64}, record{str}}] %12, field0
+  %19 = list_new list[union{void, record{f64}, record{str}}] 1:i64
+  %21 = record_make record{str} str45
+  %22 = union_make union{void, record{f64}, record{str}} tag2 %21
+  %23 = list_push list[union{void, record{f64}, record{str}}] %19, %22
+  %24 = list_len u64 %17
+  %25 = list_len u64 %23
+  %26 = cmp.eq bool %24, %25
+  branch %26, b5, b4
+b2: ; preds b0 b4
+  %73 = phi bool %15, %71
+  ret %73
+b3: ; preds b5 b14
+  %30 = phi u64 0:u64, %65
+  %31 = cmp.lt bool %30, %24
+  branch %31, b6, b7
+b4: ; preds b1 b15 b7
+  %71 = phi bool %26, 0:bool, 1:bool
+  jump b2
+b5: ; preds b1
+  jump b3
+b6: ; preds b3
+  %35 = list_get_field u32 %17, %30, path 0
+  %36 = list_get_field u32 %23, %30, path 0
+  %37 = cmp.eq bool %35, %36
+  branch %37, b8, b9
+b7: ; preds b3
+  jump b4
+b8: ; preds b6
+  %40 = cmp.eq bool %35, 1:u32
+  branch %40, b10, b11
+b9: ; preds b6 b10 b12 b13
+  %62 = phi bool %37, %48, %59, %37
+  branch %62, b14, b15
+b10: ; preds b8
+  %45 = list_get_field f64 %17, %30, path 2.0
+  %46 = list_get_field f64 %23, %30, path 2.0
+  %47 = fcmp.eq bool %45, %46
+  %48 = bit_and bool 1:bool, %47
+  jump b9
+b11: ; preds b8
+  %51 = cmp.eq bool %35, 2:u32
+  branch %51, b12, b13
+b12: ; preds b11
+  %56 = list_get_field str %17, %30, path 3.0
+  %57 = list_get_field str %23, %30, path 3.0
+  %58 = call bool myl_core_str_eq(%56, %57)
+  %59 = bit_and bool 1:bool, %58
+  jump b9
+b13: ; preds b11
+  jump b9
+b14: ; preds b9
+  %65 = add u64 %30, 1:u64
+  jump b3
+b15: ; preds b9
+  jump b4
+fn test_mut_root_fields_passed_to_calls_read_the_current_value() -> bool
+b0:
+  %1 = list_new list[union{void, record{f64}, record{str}}] 3:i64
+  %2 = union_make union{void, record{f64}, record{str}} tag0
+  %3 = list_push list[union{void, record{f64}, record{str}}] %1, %2
+  %5 = record_make record{f64} 1:f64
+  %6 = union_make union{void, record{f64}, record{str}} tag1 %5
+  %7 = list_push list[union{void, record{f64}, record{str}}] %3, %6
+  %9 = record_make record{str} str46
+  %10 = union_make union{void, record{f64}, record{str}} tag2 %9
+  %11 = list_push list[union{void, record{f64}, record{str}}] %7, %10
+  %12 = record_make record{list[union{void, record{f64}, record{str}}]} %11
+  %14 = list_new list[str] 2:i64
+  %16 = list_push list[str] %14, str47
+  %18 = list_push list[str] %16, str48
+  %20 = record_make record{record{list[union{void, record{f64}, record{str}}]}, list[str], i64} %12, %18, 0:i64
+  %22 = call record{union{void, record{f64}, record{str}}, record{record{list[union{void, record{f64}, record{str}}]}, list[str], i64}} global_value(%20, 0:i64)
+  %23 = record_get union{void, record{f64}, record{str}} %22, field0
+  %24 = record_get record{record{list[union{void, record{f64}, record{str}}]}, list[str], i64} %22, field1
+  %26 = call record{union{void, record{f64}, record{str}}, record{record{list[union{void, record{f64}, record{str}}]}, list[str], i64}} global_value(%24, 1:i64)
+  %27 = record_get union{void, record{f64}, record{str}} %26, field0
+  %28 = record_get record{record{list[union{void, record{f64}, record{str}}]}, list[str], i64} %26, field1
+  %29 = call f64 number(%23)
+  %31 = fcmp.eq bool %29, 1:f64
+  branch %31, b1, b2
+b1: ; preds b0
+  %34 = record_make record{str} str49
+  %35 = union_make union{void, record{f64}, record{str}} tag2 %34
+  %36 = union_tag u32 %27
+  %37 = union_tag u32 %35
+  %38 = cmp.eq bool %36, %37
+  branch %38, b3, b4
+b2: ; preds b0 b4
+  %65 = phi bool %31, %63
+  branch %65, b9, b10
+b3: ; preds b1
+  %41 = cmp.eq bool %36, 1:u32
+  branch %41, b5, b6
+b4: ; preds b1 b5 b7 b8
+  %63 = phi bool %38, %49, %60, %38
+  jump b2
+b5: ; preds b3
+  %43 = union_payload record{f64} tag1 %27
+  %44 = union_payload record{f64} tag1 %35
+  %46 = record_get f64 %43, field0
+  %47 = record_get f64 %44, field0
+  %48 = fcmp.eq bool %46, %47
+  %49 = bit_and bool 1:bool, %48
+  jump b4
+b6: ; preds b3
+  %52 = cmp.eq bool %36, 2:u32
+  branch %52, b7, b8
+b7: ; preds b6
+  %54 = union_payload record{str} tag2 %27
+  %55 = union_payload record{str} tag2 %35
+  %57 = record_get str %54, field0
+  %58 = record_get str %55, field0
+  %59 = call bool myl_core_str_eq(%57, %58)
+  %60 = bit_and bool 1:bool, %59
+  jump b4
+b8: ; preds b6
+  jump b4
+b9: ; preds b2
+  %69 = record_get i64 %28, field2
+  %71 = cmp.eq bool %69, 2:i64
+  jump b10
+b10: ; preds b2 b9
+  %73 = phi bool %65, %71
+  ret %73
+fn test_mut_root_fields_keep_the_value_a_later_mut_call_replaces() -> bool
+b0:
+  %1 = list_new list[union{void, record{f64}, record{str}}] 1:i64
+  %3 = record_make record{f64} 6:f64
+  %4 = union_make union{void, record{f64}, record{str}} tag1 %3
+  %5 = list_push list[union{void, record{f64}, record{str}}] %1, %4
+  %6 = record_make record{list[union{void, record{f64}, record{str}}]} %5
+  %8 = list_new list[str] 0:i64
+  %10 = record_make record{record{list[union{void, record{f64}, record{str}}]}, list[str], i64} %6, %8, 0:i64
+  %11 = call record{union{void, record{f64}, record{str}}, record{record{list[union{void, record{f64}, record{str}}]}, list[str], i64}} wiped_value(%10)
+  %12 = record_get union{void, record{f64}, record{str}} %11, field0
+  %13 = record_get record{record{list[union{void, record{f64}, record{str}}]}, list[str], i64} %11, field1
+  %14 = call f64 number(%12)
+  %16 = fcmp.eq bool %14, 6:f64
+  branch %16, b2, b1
+b1: ; preds b0
+  %19 = record_make record{str} str50
+  %20 = union_make union{void, record{f64}, record{str}} tag2 %19
+  %21 = union_tag u32 %12
+  %22 = union_tag u32 %20
+  %23 = cmp.eq bool %21, %22
+  branch %23, b3, b4
+b2: ; preds b0 b4
+  %50 = phi bool %16, %48
+  branch %50, b9, b10
+b3: ; preds b1
+  %26 = cmp.eq bool %21, 1:u32
+  branch %26, b5, b6
+b4: ; preds b1 b5 b7 b8
+  %48 = phi bool %23, %34, %45, %23
+  jump b2
+b5: ; preds b3
+  %28 = union_payload record{f64} tag1 %12
+  %29 = union_payload record{f64} tag1 %20
+  %31 = record_get f64 %28, field0
+  %32 = record_get f64 %29, field0
+  %33 = fcmp.eq bool %31, %32
+  %34 = bit_and bool 1:bool, %33
+  jump b4
+b6: ; preds b3
+  %37 = cmp.eq bool %21, 2:u32
+  branch %37, b7, b8
+b7: ; preds b6
+  %39 = union_payload record{str} tag2 %12
+  %40 = union_payload record{str} tag2 %20
+  %42 = record_get str %39, field0
+  %43 = record_get str %40, field0
+  %44 = call bool myl_core_str_eq(%42, %43)
+  %45 = bit_and bool 1:bool, %44
+  jump b4
+b8: ; preds b6
+  jump b4
+b9: ; preds b2
+  %54 = record_get record{list[union{void, record{f64}, record{str}}]} %13, field0
+  %55 = record_get list[union{void, record{f64}, record{str}}] %54, field0
+  %57 = list_new list[union{void, record{f64}, record{str}}] 1:i64
+  %59 = record_make record{str} str51
+  %60 = union_make union{void, record{f64}, record{str}} tag2 %59
+  %61 = list_push list[union{void, record{f64}, record{str}}] %57, %60
+  %62 = list_len u64 %55
+  %63 = list_len u64 %61
+  %64 = cmp.eq bool %62, %63
+  branch %64, b13, b12
+b10: ; preds b2 b12
+  %111 = phi bool %50, %109
+  ret %111
+b11: ; preds b13 b22
+  %68 = phi u64 0:u64, %103
+  %69 = cmp.lt bool %68, %62
+  branch %69, b14, b15
+b12: ; preds b9 b23 b15
+  %109 = phi bool %64, 0:bool, 1:bool
+  jump b10
+b13: ; preds b9
+  jump b11
+b14: ; preds b11
+  %73 = list_get_field u32 %55, %68, path 0
+  %74 = list_get_field u32 %61, %68, path 0
+  %75 = cmp.eq bool %73, %74
+  branch %75, b16, b17
+b15: ; preds b11
+  jump b12
+b16: ; preds b14
+  %78 = cmp.eq bool %73, 1:u32
+  branch %78, b18, b19
+b17: ; preds b14 b18 b20 b21
+  %100 = phi bool %75, %86, %97, %75
+  branch %100, b22, b23
+b18: ; preds b16
+  %83 = list_get_field f64 %55, %68, path 2.0
+  %84 = list_get_field f64 %61, %68, path 2.0
+  %85 = fcmp.eq bool %83, %84
+  %86 = bit_and bool 1:bool, %85
+  jump b17
+b19: ; preds b16
+  %89 = cmp.eq bool %73, 2:u32
+  branch %89, b20, b21
+b20: ; preds b19
+  %94 = list_get_field str %55, %68, path 3.0
+  %95 = list_get_field str %61, %68, path 3.0
+  %96 = call bool myl_core_str_eq(%94, %95)
+  %97 = bit_and bool 1:bool, %96
+  jump b17
+b21: ; preds b19
+  jump b17
+b22: ; preds b17
+  %103 = add u64 %68, 1:u64
+  jump b11
+b23: ; preds b17
+  jump b12
+fn test_mut_root_fields_passed_to_calls_whose_results_are_matched() -> bool
+b0:
+  %1 = list_new list[union{void, record{f64}, record{str}}] 2:i64
+  %2 = union_make union{void, record{f64}, record{str}} tag0
+  %3 = list_push list[union{void, record{f64}, record{str}}] %1, %2
+  %5 = record_make record{str} str52
+  %6 = union_make union{void, record{f64}, record{str}} tag2 %5
+  %7 = list_push list[union{void, record{f64}, record{str}}] %3, %6
+  %8 = record_make record{list[union{void, record{f64}, record{str}}]} %7
+  %10 = list_new list[str] 2:i64
+  %12 = list_push list[str] %10, str53
+  %14 = list_push list[str] %12, str54
+  %16 = record_make record{record{list[union{void, record{f64}, record{str}}]}, list[str], i64} %8, %14, 0:i64
+  %18 = call record{union{void, record{f64}, record{str}}, record{record{list[union{void, record{f64}, record{str}}]}, list[str], i64}} matched_global(%16, 0:i64)
+  %19 = record_get union{void, record{f64}, record{str}} %18, field0
+  %20 = record_get record{record{list[union{void, record{f64}, record{str}}]}, list[str], i64} %18, field1
+  %22 = call record{union{void, record{f64}, record{str}}, record{record{list[union{void, record{f64}, record{str}}]}, list[str], i64}} matched_global(%20, 1:i64)
+  %23 = record_get union{void, record{f64}, record{str}} %22, field0
+  %24 = record_get record{record{list[union{void, record{f64}, record{str}}]}, list[str], i64} %22, field1
+  %26 = record_make record{str} str55
+  %27 = union_make union{void, record{f64}, record{str}} tag2 %26
+  %28 = union_tag u32 %19
+  %29 = union_tag u32 %27
+  %30 = cmp.eq bool %28, %29
+  branch %30, b1, b2
+b1: ; preds b0
+  %33 = cmp.eq bool %28, 1:u32
+  branch %33, b3, b4
+b2: ; preds b0 b3 b5 b6
+  %55 = phi bool %30, %41, %52, %30
+  branch %55, b7, b8
+b3: ; preds b1
+  %35 = union_payload record{f64} tag1 %19
+  %36 = union_payload record{f64} tag1 %27
+  %38 = record_get f64 %35, field0
+  %39 = record_get f64 %36, field0
+  %40 = fcmp.eq bool %38, %39
+  %41 = bit_and bool 1:bool, %40
+  jump b2
+b4: ; preds b1
+  %44 = cmp.eq bool %28, 2:u32
+  branch %44, b5, b6
+b5: ; preds b4
+  %46 = union_payload record{str} tag2 %19
+  %47 = union_payload record{str} tag2 %27
+  %49 = record_get str %46, field0
+  %50 = record_get str %47, field0
+  %51 = call bool myl_core_str_eq(%49, %50)
+  %52 = bit_and bool 1:bool, %51
+  jump b2
+b6: ; preds b4
+  jump b2
+b7: ; preds b2
+  %58 = union_make union{void, record{f64}, record{str}} tag0
+  %59 = union_tag u32 %23
+  %60 = union_tag u32 %58
+  %61 = cmp.eq bool %59, %60
+  branch %61, b9, b10
+b8: ; preds b2 b10
+  %88 = phi bool %55, %86
+  branch %88, b15, b16
+b9: ; preds b7
+  %64 = cmp.eq bool %59, 1:u32
+  branch %64, b11, b12
+b10: ; preds b7 b11 b13 b14
+  %86 = phi bool %61, %72, %83, %61
+  jump b8
+b11: ; preds b9
+  %66 = union_payload record{f64} tag1 %23
+  %67 = union_payload record{f64} tag1 %58
+  %69 = record_get f64 %66, field0
+  %70 = record_get f64 %67, field0
+  %71 = fcmp.eq bool %69, %70
+  %72 = bit_and bool 1:bool, %71
+  jump b10
+b12: ; preds b9
+  %75 = cmp.eq bool %59, 2:u32
+  branch %75, b13, b14
+b13: ; preds b12
+  %77 = union_payload record{str} tag2 %23
+  %78 = union_payload record{str} tag2 %58
+  %80 = record_get str %77, field0
+  %81 = record_get str %78, field0
+  %82 = call bool myl_core_str_eq(%80, %81)
+  %83 = bit_and bool 1:bool, %82
+  jump b10
+b14: ; preds b12
+  jump b10
+b15: ; preds b8
+  %93 = record_get i64 %24, field2
+  %95 = cmp.eq bool %93, 2:i64
+  jump b16
+b16: ; preds b8 b15
+  %97 = phi bool %88, %95
+  ret %97
+fn test_records_copied_out_of_readonly_lists_into_named_locals() -> bool
+b0:
+  %1 = list_new list[record{record{bytes, u32}, i64, bool}] 3:i64
+  %3 = call bytes myl_core_text_encode(str56)
+  %5 = call bytes myl_core_text_encode(str57)
+  %6 = call bytes myl_core_bytes_concat(%3, %5)
+  %8 = record_make record{bytes, u32} %6, 1:u32
+  %11 = record_make record{record{bytes, u32}, i64, bool} %8, 1:i64, 0:bool
+  %12 = list_push list[record{record{bytes, u32}, i64, bool}] %1, %11
+  %14 = call bytes myl_core_text_encode(str58)
+  %16 = record_make record{bytes, u32} %14, 2:u32
+  %19 = record_make record{record{bytes, u32}, i64, bool} %16, 2:i64, 0:bool
+  %20 = list_push list[record{record{bytes, u32}, i64, bool}] %12, %19
+  %22 = call bytes myl_core_text_encode(str59)
+  %24 = record_make record{bytes, u32} %22, 3:u32
+  %27 = record_make record{record{bytes, u32}, i64, bool} %24, 1:i64, 1:bool
+  %28 = list_push list[record{record{bytes, u32}, i64, bool}] %20, %27
+  %29 = call record{record{bytes, u32}, i64, bool} first_wire(%28)
+  %31 = call bytes myl_core_text_encode(str60)
+  %33 = record_make record{bytes, u32} %31, 0:u32
+  %36 = record_make record{record{bytes, u32}, i64, bool} %33, 9:i64, 1:bool
+  %39 = cmp.lt bool 0:i64, 0:i64
+  branch %39, b1, b2
+b1: ; preds b0
+  %41 = list_len u64 %28
+  %42 = convert.exact i64 %41
+  %43 = add.exact i64 %42, 0:i64
+  jump b2
+b2: ; preds b0 b1
+  %45 = phi i64 0:i64, %43
+  %49 = list_set.exact list[record{record{bytes, u32}, i64, bool}] %28, %45, %36
+  %51 = call i64 matching_wires(%49, 1:i64)
+  %53 = cmp.eq bool %51, 0:i64
+  branch %53, b3, b4
+b3: ; preds b2
+  %56 = list_new list[record{record{bytes, u32}, i64, bool}] 2:i64
+  %58 = list_push list[record{record{bytes, u32}, i64, bool}] %56, %29
+  %59 = list_push list[record{record{bytes, u32}, i64, bool}] %58, %29
+  %61 = call i64 matching_wires(%59, 1:i64)
+  %63 = cmp.eq bool %61, 6:i64
+  jump b4
+b4: ; preds b2 b3
+  %65 = phi bool %53, %63
+  branch %65, b5, b6
+b5: ; preds b4
+  %68 = record_get record{bytes, u32} %29, field0
+  %69 = record_get bytes %68, field0
+  %71 = call bytes myl_core_text_encode(str61)
+  %72 = call bool myl_core_str_eq(%69, %71)
+  jump b6
+b6: ; preds b4 b5
+  %74 = phi bool %65, %72
+  ret %74
+fn test_borrowed_match_accessors_read_in_place_and_copy_when_kept() -> bool
+b0:
+  %1 = list_new list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}] 2:i64
+  %3 = call bytes myl_core_text_encode(str62)
+  %5 = call bytes myl_core_text_encode(str63)
+  %6 = call bytes myl_core_bytes_concat(%3, %5)
+  %8 = record_make record{bytes, u32} %6, 11:u32
+  %9 = record_make record{record{bytes, u32}} %8
+  %10 = union_make union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}} tag1 %9
+  %11 = list_push list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}] %1, %10
+  %12 = union_make union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}} tag0
+  %13 = list_push list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}] %11, %12
+  %15 = record_make record{list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}], i64} %13, 2:i64
+  %17 = call u32 table_name_hash(%15, 0:i64)
+  %19 = call u32 table_name_hash(%15, 1:i64)
+  %20 = add.exact u32 %17, %19
+  %22 = call bytes table_name_chars(%15, 0:i64)
+  %24 = call record{bytes, u32} table_name(%15, 0:i64)
+  %25 = union_make union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}} tag0
+  %26 = record_get list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}] %15, field0
+  %29 = cmp.lt bool 0:i64, 0:i64
+  branch %29, b1, b2
+b1: ; preds b0
+  %31 = list_len u64 %26
+  %32 = convert.exact i64 %31
+  %33 = add.exact i64 %32, 0:i64
+  jump b2
+b2: ; preds b0 b1
+  %35 = phi i64 0:i64, %33
+  %39 = list_set.exact list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}] %26, %35, %25
+  %40 = record_set record{list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}], i64} %15, field0, %39
+  %43 = cmp.eq bool %20, 11:u32
+  branch %43, b3, b4
+b3: ; preds b2
+  %47 = call bytes myl_core_text_encode(str64)
+  %48 = call bool myl_core_str_eq(%22, %47)
+  jump b4
+b4: ; preds b2 b3
+  %50 = phi bool %43, %48
+  branch %50, b5, b6
+b5: ; preds b4
+  %54 = record_get bytes %24, field0
+  %56 = call bytes myl_core_text_encode(str65)
+  %57 = call bool myl_core_str_eq(%54, %56)
+  jump b6
+b6: ; preds b4 b5
+  %59 = phi bool %50, %57
+  branch %59, b7, b8
+b7: ; preds b6
+  %64 = call u32 table_name_hash(%40, 0:i64)
+  %66 = cmp.eq bool %64, 0:u32
+  jump b8
+b8: ; preds b6 b7
+  %68 = phi bool %59, %66
+  ret %68
+fn test_borrowed_fields_across_calls_that_only_advance_the_root() -> bool
+b0:
+  %1 = list_new list[union{void, record{f64}, record{str}}] 3:i64
+  %3 = record_make record{f64} 1:f64
+  %4 = union_make union{void, record{f64}, record{str}} tag1 %3
+  %5 = list_push list[union{void, record{f64}, record{str}}] %1, %4
+  %7 = record_make record{str} str66
+  %8 = union_make union{void, record{f64}, record{str}} tag2 %7
+  %9 = list_push list[union{void, record{f64}, record{str}}] %5, %8
+  %10 = union_make union{void, record{f64}, record{str}} tag0
+  %11 = list_push list[union{void, record{f64}, record{str}}] %9, %10
+  %13 = list_new list[i64] 3:i64
+  %15 = list_push list[i64] %13, 2:i64
+  %17 = list_push list[i64] %15, 0:i64
+  %19 = list_push list[i64] %17, 1:i64
+  %21 = record_make record{list[union{void, record{f64}, record{str}}], list[i64], i64} %11, %19, 0:i64
+  %22 = call record{union{void, record{f64}, record{str}}, record{list[union{void, record{f64}, record{str}}], list[i64], i64}} read_value(%21)
+  %23 = record_get union{void, record{f64}, record{str}} %22, field0
+  %24 = record_get record{list[union{void, record{f64}, record{str}}], list[i64], i64} %22, field1
+  %25 = call record{union{void, record{f64}, record{str}}, record{list[union{void, record{f64}, record{str}}], list[i64], i64}} read_value(%24)
+  %26 = record_get union{void, record{f64}, record{str}} %25, field0
+  %27 = record_get record{list[union{void, record{f64}, record{str}}], list[i64], i64} %25, field1
+  %28 = call record{union{void, record{f64}, record{str}}, record{list[union{void, record{f64}, record{str}}], list[i64], i64}} read_value(%27)
+  %29 = record_get union{void, record{f64}, record{str}} %28, field0
+  %30 = record_get record{list[union{void, record{f64}, record{str}}], list[i64], i64} %28, field1
+  %31 = union_make union{void, record{f64}, record{str}} tag0
+  %32 = union_tag u32 %23
+  %33 = union_tag u32 %31
+  %34 = cmp.eq bool %32, %33
+  branch %34, b1, b2
+b1: ; preds b0
+  %37 = cmp.eq bool %32, 1:u32
+  branch %37, b3, b4
+b2: ; preds b0 b3 b5 b6
+  %59 = phi bool %34, %45, %56, %34
+  branch %59, b7, b8
+b3: ; preds b1
+  %39 = union_payload record{f64} tag1 %23
+  %40 = union_payload record{f64} tag1 %31
+  %42 = record_get f64 %39, field0
+  %43 = record_get f64 %40, field0
+  %44 = fcmp.eq bool %42, %43
+  %45 = bit_and bool 1:bool, %44
+  jump b2
+b4: ; preds b1
+  %48 = cmp.eq bool %32, 2:u32
+  branch %48, b5, b6
+b5: ; preds b4
+  %50 = union_payload record{str} tag2 %23
+  %51 = union_payload record{str} tag2 %31
+  %53 = record_get str %50, field0
+  %54 = record_get str %51, field0
+  %55 = call bool myl_core_str_eq(%53, %54)
+  %56 = bit_and bool 1:bool, %55
+  jump b2
+b6: ; preds b4
+  jump b2
+b7: ; preds b2
+  %62 = call f64 number(%26)
+  %64 = fcmp.eq bool %62, 1:f64
+  jump b8
+b8: ; preds b2 b7
+  %66 = phi bool %59, %64
+  branch %66, b9, b10
+b9: ; preds b8
+  %71 = record_make record{str} str67
+  %72 = union_make union{void, record{f64}, record{str}} tag2 %71
+  %73 = union_tag u32 %29
+  %74 = union_tag u32 %72
+  %75 = cmp.eq bool %73, %74
+  branch %75, b11, b12
+b10: ; preds b8 b12
+  %102 = phi bool %66, %100
+  branch %102, b17, b18
+b11: ; preds b9
+  %78 = cmp.eq bool %73, 1:u32
+  branch %78, b13, b14
+b12: ; preds b9 b13 b15 b16
+  %100 = phi bool %75, %86, %97, %75
+  jump b10
+b13: ; preds b11
+  %80 = union_payload record{f64} tag1 %29
+  %81 = union_payload record{f64} tag1 %72
+  %83 = record_get f64 %80, field0
+  %84 = record_get f64 %81, field0
+  %85 = fcmp.eq bool %83, %84
+  %86 = bit_and bool 1:bool, %85
+  jump b12
+b14: ; preds b11
+  %89 = cmp.eq bool %73, 2:u32
+  branch %89, b15, b16
+b15: ; preds b14
+  %91 = union_payload record{str} tag2 %29
+  %92 = union_payload record{str} tag2 %72
+  %94 = record_get str %91, field0
+  %95 = record_get str %92, field0
+  %96 = call bool myl_core_str_eq(%94, %95)
+  %97 = bit_and bool 1:bool, %96
+  jump b12
+b16: ; preds b14
+  jump b12
+b17: ; preds b10
+  %108 = record_get i64 %30, field2
+  %110 = cmp.eq bool %108, 3:i64
+  jump b18
+b18: ; preds b10 b17
+  %112 = phi bool %102, %110
+  ret %112
+fn test_borrowed_fields_across_calls_that_replace_them() -> bool
+b0:
+  %1 = list_new list[union{void, record{f64}, record{str}}] 1:i64
+  %3 = record_make record{f64} 5:f64
+  %4 = union_make union{void, record{f64}, record{str}} tag1 %3
+  %5 = list_push list[union{void, record{f64}, record{str}}] %1, %4
+  %7 = list_new list[i64] 1:i64
+  %9 = list_push list[i64] %7, 0:i64
+  %11 = record_make record{list[union{void, record{f64}, record{str}}], list[i64], i64} %5, %9, 0:i64
+  %12 = call record{union{void, record{f64}, record{str}}, record{list[union{void, record{f64}, record{str}}], list[i64], i64}} read_reloaded(%11)
+  %13 = record_get union{void, record{f64}, record{str}} %12, field0
+  %14 = record_get record{list[union{void, record{f64}, record{str}}], list[i64], i64} %12, field1
+  %15 = call f64 number(%13)
+  %17 = fcmp.eq bool %15, 5:f64
+  branch %17, b2, b1
+b1: ; preds b0
+  %20 = record_make record{str} str68
+  %21 = union_make union{void, record{f64}, record{str}} tag2 %20
+  %22 = union_tag u32 %13
+  %23 = union_tag u32 %21
+  %24 = cmp.eq bool %22, %23
+  branch %24, b3, b4
+b2: ; preds b0 b4
+  %51 = phi bool %17, %49
+  branch %51, b9, b10
+b3: ; preds b1
+  %27 = cmp.eq bool %22, 1:u32
+  branch %27, b5, b6
+b4: ; preds b1 b5 b7 b8
+  %49 = phi bool %24, %35, %46, %24
+  jump b2
+b5: ; preds b3
+  %29 = union_payload record{f64} tag1 %13
+  %30 = union_payload record{f64} tag1 %21
+  %32 = record_get f64 %29, field0
+  %33 = record_get f64 %30, field0
+  %34 = fcmp.eq bool %32, %33
+  %35 = bit_and bool 1:bool, %34
+  jump b4
+b6: ; preds b3
+  %38 = cmp.eq bool %22, 2:u32
+  branch %38, b7, b8
+b7: ; preds b6
+  %40 = union_payload record{str} tag2 %13
+  %41 = union_payload record{str} tag2 %21
+  %43 = record_get str %40, field0
+  %44 = record_get str %41, field0
+  %45 = call bool myl_core_str_eq(%43, %44)
+  %46 = bit_and bool 1:bool, %45
+  jump b4
+b8: ; preds b6
+  jump b4
+b9: ; preds b2
+  %55 = record_get list[union{void, record{f64}, record{str}}] %14, field0
+  %57 = list_new list[union{void, record{f64}, record{str}}] 1:i64
+  %59 = record_make record{str} str69
+  %60 = union_make union{void, record{f64}, record{str}} tag2 %59
+  %61 = list_push list[union{void, record{f64}, record{str}}] %57, %60
+  %62 = list_len u64 %55
+  %63 = list_len u64 %61
+  %64 = cmp.eq bool %62, %63
+  branch %64, b13, b12
+b10: ; preds b2 b12
+  %111 = phi bool %51, %109
+  ret %111
+b11: ; preds b13 b22
+  %68 = phi u64 0:u64, %103
+  %69 = cmp.lt bool %68, %62
+  branch %69, b14, b15
+b12: ; preds b9 b23 b15
+  %109 = phi bool %64, 0:bool, 1:bool
+  jump b10
+b13: ; preds b9
+  jump b11
+b14: ; preds b11
+  %73 = list_get_field u32 %55, %68, path 0
+  %74 = list_get_field u32 %61, %68, path 0
+  %75 = cmp.eq bool %73, %74
+  branch %75, b16, b17
+b15: ; preds b11
+  jump b12
+b16: ; preds b14
+  %78 = cmp.eq bool %73, 1:u32
+  branch %78, b18, b19
+b17: ; preds b14 b18 b20 b21
+  %100 = phi bool %75, %86, %97, %75
+  branch %100, b22, b23
+b18: ; preds b16
+  %83 = list_get_field f64 %55, %68, path 2.0
+  %84 = list_get_field f64 %61, %68, path 2.0
+  %85 = fcmp.eq bool %83, %84
+  %86 = bit_and bool 1:bool, %85
+  jump b17
+b19: ; preds b16
+  %89 = cmp.eq bool %73, 2:u32
+  branch %89, b20, b21
+b20: ; preds b19
+  %94 = list_get_field str %55, %68, path 3.0
+  %95 = list_get_field str %61, %68, path 3.0
+  %96 = call bool myl_core_str_eq(%94, %95)
+  %97 = bit_and bool 1:bool, %96
+  jump b17
+b21: ; preds b19
+  jump b17
+b22: ; preds b17
+  %103 = add u64 %68, 1:u64
+  jump b11
+b23: ; preds b17
+  jump b12
+fn number(union{void, record{f64}, record{str}}) -> f64
+b0:
+  %1 = union_tag u32 param0
+  %3 = cmp.eq bool %1, 1:u32
+  branch %3, b2, b3
+b1:
+b2: ; preds b0
+  %5 = union_payload record{f64} tag1 param0
+  %6 = record_get f64 %5, field0
+  ret %6
+b3: ; preds b0
+  %9 = cmp.eq bool %1, 0:u32
+  branch %9, b4, b5
+b4: ; preds b3
+  %12 = fneg f64 1:f64
+  ret %12
+b5: ; preds b3
+  jump b6
+b6: ; preds b5
+  %16 = fneg f64 1:f64
+  ret %16
+fn pop(record{list[union{void, record{f64}, record{str}}], i64}) -> record{union{void, record{f64}, record{str}}, record{list[union{void, record{f64}, record{str}}], i64}}
+b0:
+  %1 = record_get i64 param0, field1
+  %3 = sub.exact i64 %1, 1:i64
+  %4 = record_set record{list[union{void, record{f64}, record{str}}], i64} param0, field1, %3
+  %5 = record_get list[union{void, record{f64}, record{str}}] %4, field0
+  %6 = record_get i64 %4, field1
+  %8 = cmp.lt bool %6, 0:i64
+  branch %8, b1, b2
+b1: ; preds b0
+  %10 = list_len u64 %5
+  %11 = convert.exact i64 %10
+  %12 = add.exact i64 %11, %6
+  jump b2
+b2: ; preds b0 b1
+  %14 = phi i64 %6, %12
+  %16 = list_get.exact union{void, record{f64}, record{str}} %5, %14
+  %18 = record_make record{union{void, record{f64}, record{str}}, record{list[union{void, record{f64}, record{str}}], i64}} %16, %4
+  ret %18
+fn myl_core_str_eq(str, str) -> bool runtime
+fn peek(record{list[union{void, record{f64}, record{str}}], i64}, i64) -> union{void, record{f64}, record{str}}
+b0:
+  %2 = record_get list[union{void, record{f64}, record{str}}] param0, field0
+  %3 = record_get i64 param0, field1
+  %5 = sub.exact i64 %3, 1:i64
+  %6 = sub.exact i64 %5, param1
+  %8 = cmp.lt bool %6, 0:i64
+  branch %8, b1, b2
+b1: ; preds b0
+  %10 = list_len u64 %2
+  %11 = convert.exact i64 %10
+  %12 = add.exact i64 %11, %6
+  jump b2
+b2: ; preds b0 b1
+  %14 = phi i64 %6, %12
+  %16 = list_get.exact union{void, record{f64}, record{str}} %2, %14
+  ret %16
+fn replaced_during_index(record{list[union{void, record{f64}, record{str}}], i64}) -> record{union{void, record{f64}, record{str}}, record{list[union{void, record{f64}, record{str}}], i64}}
+b0:
+  %1 = record_get list[union{void, record{f64}, record{str}}] param0, field0
+  %2 = call record{i64, record{list[union{void, record{f64}, record{str}}], i64}} swap_stack(param0)
+  %3 = record_get i64 %2, field0
+  %4 = record_get record{list[union{void, record{f64}, record{str}}], i64} %2, field1
+  %6 = cmp.lt bool %3, 0:i64
+  branch %6, b1, b2
+b1: ; preds b0
+  %8 = list_len u64 %1
+  %9 = convert.exact i64 %8
+  %10 = add.exact i64 %9, %3
+  jump b2
+b2: ; preds b0 b1
+  %12 = phi i64 %3, %10
+  %14 = list_get.exact union{void, record{f64}, record{str}} %1, %12
+  %16 = record_make record{union{void, record{f64}, record{str}}, record{list[union{void, record{f64}, record{str}}], i64}} %14, %4
+  ret %16
+fn next_name(record{record{list[i64], list[str]}, i64}) -> record{str, record{record{list[i64], list[str]}, i64}}
+b0:
+  %1 = record_get i64 param0, field1
+  %3 = add.exact i64 %1, 1:i64
+  %4 = record_set record{record{list[i64], list[str]}, i64} param0, field1, %3
+  %5 = record_get record{list[i64], list[str]} %4, field0
+  %6 = record_get list[str] %5, field1
+  %7 = record_get i64 %4, field1
+  %9 = sub.exact i64 %7, 1:i64
+  %11 = cmp.lt bool %9, 0:i64
+  branch %11, b1, b2
+b1: ; preds b0
+  %13 = list_len u64 %6
+  %14 = convert.exact i64 %13
+  %15 = add.exact i64 %14, %9
+  jump b2
+b2: ; preds b0 b1
+  %17 = phi i64 %9, %15
+  %19 = list_get.exact str %6, %17
+  %21 = record_make record{str, record{record{list[i64], list[str]}, i64}} %19, %4
+  ret %21
+fn last_owned(i64) -> union{void, record{f64}, record{str}}
+b0:
+  %1 = call list[union{void, record{f64}, record{str}}] owned_rows(param0)
+  %3 = neg.exact i64 1:i64
+  %5 = cmp.lt bool %3, 0:i64
+  branch %5, b1, b2
+b1: ; preds b0
+  %7 = list_len u64 %1
+  %8 = convert.exact i64 %7
+  %9 = add.exact i64 %8, %3
+  jump b2
+b2: ; preds b0 b1
+  %11 = phi i64 %3, %9
+  %13 = list_get.exact union{void, record{f64}, record{str}} %1, %11
+  ret %13
+fn push(record{list[union{void, record{f64}, record{str}}], list[record{i64, i64}], list[str], i64, i64}, union{void, record{f64}, record{str}}) -> record{list[union{void, record{f64}, record{str}}], list[record{i64, i64}], list[str], i64, i64}
+b0:
+  %2 = record_get list[union{void, record{f64}, record{str}}] param0, field0
+  %3 = record_get i64 param0, field3
+  %5 = cmp.lt bool %3, 0:i64
+  branch %5, b1, b2
+b1: ; preds b0
+  %7 = list_len u64 %2
+  %8 = convert.exact i64 %7
+  %9 = add.exact i64 %8, %3
+  jump b2
+b2: ; preds b0 b1
+  %11 = phi i64 %3, %9
+  %15 = list_set.exact list[union{void, record{f64}, record{str}}] %2, %11, param1
+  %16 = record_set record{list[union{void, record{f64}, record{str}}], list[record{i64, i64}], list[str], i64, i64} param0, field0, %15
+  %17 = record_get i64 %16, field3
+  %19 = add.exact i64 %17, 1:i64
+  %20 = record_set record{list[union{void, record{f64}, record{str}}], list[record{i64, i64}], list[str], i64, i64} %16, field3, %19
+  ret %20
+fn step(record{list[union{void, record{f64}, record{str}}], list[record{i64, i64}], list[str], i64, i64}, i64) -> record{list[union{void, record{f64}, record{str}}], list[record{i64, i64}], list[str], i64, i64}
+b0:
+  %2 = record_get list[record{i64, i64}] param0, field1
+  %3 = record_get i64 param0, field4
+  %5 = sub.exact i64 %3, 1:i64
+  %7 = cmp.lt bool %5, 0:i64
+  branch %7, b1, b2
+b1: ; preds b0
+  %9 = list_len u64 %2
+  %10 = convert.exact i64 %9
+  %11 = add.exact i64 %10, %5
+  jump b2
+b2: ; preds b0 b1
+  %13 = phi i64 %5, %11
+  %15 = list_get.exact record{i64, i64} %2, %13
+  %16 = list_get.exact record{i64, i64} %2, %13
+  %18 = record_set record{i64, i64} %16, field0, param1
+  %20 = list_set.exact list[record{i64, i64}] %2, %13, %18
+  %21 = record_set record{list[union{void, record{f64}, record{str}}], list[record{i64, i64}], list[str], i64, i64} param0, field1, %20
+  ret %21
+fn local_machine(union{void, record{f64}, record{str}}) -> list[union{void, record{f64}, record{str}}]
+b0:
+  %2 = list_new list[union{void, record{f64}, record{str}}] 2:i64
+  %3 = union_make union{void, record{f64}, record{str}} tag0
+  %4 = list_push list[union{void, record{f64}, record{str}}] %2, %3
+  %5 = union_make union{void, record{f64}, record{str}} tag0
+  %6 = list_push list[union{void, record{f64}, record{str}}] %4, %5
+  %8 = list_new list[record{i64, i64}] 0:i64
+  %10 = list_new list[str] 0:i64
+  %13 = record_make record{list[union{void, record{f64}, record{str}}], list[record{i64, i64}], list[str], i64, i64} %6, %8, %10, 0:i64, 0:i64
+  %14 = record_get list[union{void, record{f64}, record{str}}] %13, field0
+  %15 = record_get i64 %13, field3
+  %17 = cmp.lt bool %15, 0:i64
+  branch %17, b1, b2
+b1: ; preds b0
+  %19 = list_len u64 %14
+  %20 = convert.exact i64 %19
+  %21 = add.exact i64 %20, %15
+  jump b2
+b2: ; preds b0 b1
+  %23 = phi i64 %15, %21
+  %27 = list_set.exact list[union{void, record{f64}, record{str}}] %14, %23, param0
+  %28 = record_set record{list[union{void, record{f64}, record{str}}], list[record{i64, i64}], list[str], i64, i64} %13, field0, %27
+  %30 = record_get list[union{void, record{f64}, record{str}}] %28, field0
+  %32 = neg.exact i64 1:i64
+  %34 = cmp.lt bool %32, 0:i64
+  branch %34, b3, b4
+b3: ; preds b2
+  %36 = list_len u64 %30
+  %37 = convert.exact i64 %36
+  %38 = add.exact i64 %37, %32
+  jump b4
+b4: ; preds b2 b3
+  %40 = phi i64 %32, %38
+  %44 = list_set.exact list[union{void, record{f64}, record{str}}] %30, %40, param0
+  %45 = record_set record{list[union{void, record{f64}, record{str}}], list[record{i64, i64}], list[str], i64, i64} %28, field0, %44
+  %46 = record_get list[union{void, record{f64}, record{str}}] %45, field0
+  ret %46
+fn replaced_receiver(record{list[union{void, record{f64}, record{str}}], list[record{i64, i64}], list[str], i64, i64}, union{void, record{f64}, record{str}}) -> record{list[union{void, record{f64}, record{str}}], list[record{i64, i64}], list[str], i64, i64}
+b0:
+  %2 = call record{i64, record{list[union{void, record{f64}, record{str}}], list[record{i64, i64}], list[str], i64, i64}} grow_stack(param0)
+  %3 = record_get i64 %2, field0
+  %4 = record_get record{list[union{void, record{f64}, record{str}}], list[record{i64, i64}], list[str], i64, i64} %2, field1
+  %5 = record_get list[union{void, record{f64}, record{str}}] %4, field0
+  %7 = cmp.lt bool %3, 0:i64
+  branch %7, b1, b2
+b1: ; preds b0
+  %9 = list_len u64 %5
+  %10 = convert.exact i64 %9
+  %11 = add.exact i64 %10, %3
+  jump b2
+b2: ; preds b0 b1
+  %13 = phi i64 %3, %11
+  %17 = list_set.exact list[union{void, record{f64}, record{str}}] %5, %13, param1
+  %18 = record_set record{list[union{void, record{f64}, record{str}}], list[record{i64, i64}], list[str], i64, i64} %4, field0, %17
+  ret %18
+fn rename(record{list[union{void, record{f64}, record{str}}], list[record{i64, i64}], list[str], i64, i64}, str) -> record{list[union{void, record{f64}, record{str}}], list[record{i64, i64}], list[str], i64, i64}
+b0:
+  %2 = record_get list[str] param0, field2
+  %5 = cmp.lt bool 0:i64, 0:i64
+  branch %5, b1, b2
+b1: ; preds b0
+  %7 = list_len u64 %2
+  %8 = convert.exact i64 %7
+  %9 = add.exact i64 %8, 0:i64
+  jump b2
+b2: ; preds b0 b1
+  %11 = phi i64 0:i64, %9
+  %15 = list_set.exact list[str] %2, %11, param1
+  %16 = record_set record{list[union{void, record{f64}, record{str}}], list[record{i64, i64}], list[str], i64, i64} param0, field2, %15
+  ret %16
+fn arity_of(list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}], i64) -> i64
+b0:
+  %3 = cmp.lt bool param1, 0:i64
+  branch %3, b1, b2
+b1: ; preds b0
+  %5 = list_len u64 param0
+  %6 = convert.exact i64 %5
+  %7 = add.exact i64 %6, param1
+  jump b2
+b2: ; preds b0 b1
+  %9 = phi i64 param1, %7
+  %12 = list_get_field.exact u32 param0, %9, path 0
+  %14 = cmp.eq bool %12, 2:u32
+  branch %14, b4, b5
+b3:
+b4: ; preds b2
+  %18 = list_get_field i64 param0, %9, path 3.0.0
+  %20 = list_get_field list[i64] param0, %9, path 3.0.1.0
+  %21 = list_len u64 %20
+  %22 = convert.exact i64 %21
+  %23 = add.exact i64 %18, %22
+  ret %23
+b5: ; preds b2
+  %26 = cmp.eq bool %12, 0:u32
+  branch %26, b6, b7
+b6: ; preds b5
+  ret -1:i64
+b7: ; preds b5
+  jump b8
+b8: ; preds b7
+  ret -1:i64
+fn myl_core_str_eq(bytes, bytes) -> bool runtime
+fn freed_arity(list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}], i64) -> record{i64, list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}]}
+b0:
+  %3 = cmp.lt bool param1, 0:i64
+  branch %3, b1, b2
+b1: ; preds b0
+  %5 = list_len u64 param0
+  %6 = convert.exact i64 %5
+  %7 = add.exact i64 %6, param1
+  jump b2
+b2: ; preds b0 b1
+  %9 = phi i64 param1, %7
+  %12 = list_get_field.exact u32 param0, %9, path 0
+  %14 = cmp.eq bool %12, 2:u32
+  branch %14, b4, b5
+b3:
+b4: ; preds b2
+  %17 = list_get_field record{i64, record{list[i64]}} param0, %9, path 3.0
+  %18 = union_make union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}} tag0
+  %22 = cmp.lt bool param1, 0:i64
+  branch %22, b6, b7
+b5: ; preds b2
+  %43 = cmp.eq bool %12, 0:u32
+  branch %43, b8, b9
+b6: ; preds b4
+  %24 = list_len u64 param0
+  %25 = convert.exact i64 %24
+  %26 = add.exact i64 %25, param1
+  jump b7
+b7: ; preds b4 b6
+  %28 = phi i64 param1, %26
+  %32 = list_set.exact list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}] param0, %28, %18
+  %34 = record_get i64 %17, field0
+  %35 = record_get record{list[i64]} %17, field1
+  %36 = record_get list[i64] %35, field0
+  %37 = list_len u64 %36
+  %38 = convert.exact i64 %37
+  %39 = add.exact i64 %34, %38
+  %40 = record_make record{i64, list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}]} %39, %32
+  ret %40
+b8: ; preds b5
+  %46 = record_make record{i64, list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}]} -1:i64, param0
+  ret %46
+b9: ; preds b5
+  jump b10
+b10: ; preds b9
+  %50 = record_make record{i64, list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}]} -1:i64, param0
+  ret %50
+fn myl_core_text_encode(str) -> bytes extern
+fn myl_core_bytes_concat(bytes, bytes) -> bytes extern
+fn name_of(list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}], i64) -> record{bytes, u32}
+b0:
+  %3 = cmp.lt bool param1, 0:i64
+  branch %3, b1, b2
+b1: ; preds b0
+  %5 = list_len u64 param0
+  %6 = convert.exact i64 %5
+  %7 = add.exact i64 %6, param1
+  jump b2
+b2: ; preds b0 b1
+  %9 = phi i64 param1, %7
+  %12 = list_get_field.exact u32 param0, %9, path 0
+  %14 = cmp.eq bool %12, 1:u32
+  branch %14, b4, b5
+b3:
+b4: ; preds b2
+  %17 = list_get_field record{bytes, u32} param0, %9, path 2.0
+  ret %17
+b5: ; preds b2
+  %20 = cmp.eq bool %12, 0:u32
+  branch %20, b6, b7
+b6: ; preds b5
+  %23 = call bytes myl_core_text_encode(str70)
+  %25 = record_make record{bytes, u32} %23, 0:u32
+  ret %25
+b7: ; preds b5
+  jump b8
+b8: ; preds b7
+  %29 = call bytes myl_core_text_encode(str71)
+  %31 = record_make record{bytes, u32} %29, 0:u32
+  ret %31
+fn joined(bytes, bytes) -> record{bytes, u32}
+b0:
+  %2 = call bytes myl_core_bytes_concat(param0, param1)
+  %4 = record_make record{bytes, u32} %2, 3:u32
+  ret %4
+fn same(record{bytes, u32}) -> record{bytes, u32}
+b0:
+  ret param0
+fn load(record{i64, record{list[i64], list[str]}}, i64) -> record{list[i64], list[str], i64}
+b0:
+  %2 = record_get record{list[i64], list[str]} param0, field1
+  %3 = record_get list[i64] %2, field0
+  %4 = record_get record{list[i64], list[str]} param0, field1
+  %5 = record_get list[str] %4, field1
+  %6 = record_make record{list[i64], list[str], i64} %3, %5, param1
+  ret %6
+fn load_mut(record{i64, record{list[i64], list[str]}}) -> record{record{list[i64], list[str], i64}, record{i64, record{list[i64], list[str]}}}
+b0:
+  %1 = record_get record{list[i64], list[str]} param0, field1
+  %2 = record_get list[i64] %1, field0
+  %3 = record_get record{list[i64], list[str]} param0, field1
+  %4 = record_get list[str] %3, field1
+  %5 = record_get i64 param0, field0
+  %6 = record_make record{list[i64], list[str], i64} %2, %4, %5
+  %7 = record_get record{list[i64], list[str]} param0, field1
+  %8 = record_get list[i64] %7, field0
+  %10 = list_push list[i64] %8, 99:i64
+  %11 = record_get record{list[i64], list[str]} param0, field1
+  %12 = record_set record{list[i64], list[str]} %11, field0, %10
+  %13 = record_set record{i64, record{list[i64], list[str]}} param0, field1, %12
+  %14 = record_make record{record{list[i64], list[str], i64}, record{i64, record{list[i64], list[str]}}} %6, %13
+  ret %14
+fn load_made() -> record{list[i64], list[str], i64}
+b0:
+  %0 = call record{i64, record{list[i64], list[str]}} made_unit()
+  %1 = record_get record{list[i64], list[str]} %0, field1
+  %2 = record_get list[i64] %1, field0
+  %3 = call record{i64, record{list[i64], list[str]}} made_unit()
+  %4 = record_get record{list[i64], list[str]} %3, field1
+  %5 = record_get list[str] %4, field1
+  %7 = record_make record{list[i64], list[str], i64} %2, %5, 0:i64
+  ret %7
+fn table_arity(record{list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}], i64}, i64) -> i64
+b0:
+  %2 = record_get list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}] param0, field0
+  %4 = cmp.lt bool param1, 0:i64
+  branch %4, b1, b2
+b1: ; preds b0
+  %6 = list_len u64 %2
+  %7 = convert.exact i64 %6
+  %8 = add.exact i64 %7, param1
+  jump b2
+b2: ; preds b0 b1
+  %10 = phi i64 param1, %8
+  %13 = list_get_field.exact u32 %2, %10, path 0
+  %15 = cmp.eq bool %13, 2:u32
+  branch %15, b4, b5
+b3:
+b4: ; preds b2
+  %19 = list_get_field i64 %2, %10, path 3.0.0
+  %21 = list_get_field list[i64] %2, %10, path 3.0.1.0
+  %22 = list_len u64 %21
+  %23 = convert.exact i64 %22
+  %24 = add.exact i64 %19, %23
+  ret %24
+b5: ; preds b2
+  %27 = cmp.eq bool %13, 0:u32
+  branch %27, b6, b7
+b6: ; preds b5
+  ret -1:i64
+b7: ; preds b5
+  jump b8
+b8: ; preds b7
+  ret -1:i64
+fn table_name(record{list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}], i64}, i64) -> record{bytes, u32}
+b0:
+  %2 = record_get list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}] param0, field0
+  %4 = cmp.lt bool param1, 0:i64
+  branch %4, b1, b2
+b1: ; preds b0
+  %6 = list_len u64 %2
+  %7 = convert.exact i64 %6
+  %8 = add.exact i64 %7, param1
+  jump b2
+b2: ; preds b0 b1
+  %10 = phi i64 param1, %8
+  %13 = list_get_field.exact u32 %2, %10, path 0
+  %15 = cmp.eq bool %13, 1:u32
+  branch %15, b4, b5
+b3:
+b4: ; preds b2
+  %18 = list_get_field record{bytes, u32} %2, %10, path 2.0
+  ret %18
+b5: ; preds b2
+  %21 = cmp.eq bool %13, 0:u32
+  branch %21, b6, b7
+b6: ; preds b5
+  %24 = call bytes myl_core_text_encode(str72)
+  %26 = record_make record{bytes, u32} %24, 0:u32
+  ret %26
+b7: ; preds b5
+  jump b8
+b8: ; preds b7
+  %30 = call bytes myl_core_text_encode(str73)
+  %32 = record_make record{bytes, u32} %30, 0:u32
+  ret %32
+fn table_ops(record{list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}], i64}, i64) -> list[i64]
+b0:
+  %2 = record_get list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}] param0, field0
+  %4 = cmp.lt bool param1, 0:i64
+  branch %4, b1, b2
+b1: ; preds b0
+  %6 = list_len u64 %2
+  %7 = convert.exact i64 %6
+  %8 = add.exact i64 %7, param1
+  jump b2
+b2: ; preds b0 b1
+  %10 = phi i64 param1, %8
+  %13 = list_get_field.exact u32 %2, %10, path 0
+  %15 = cmp.eq bool %13, 2:u32
+  branch %15, b4, b5
+b3:
+b4: ; preds b2
+  %20 = list_get_field list[i64] %2, %10, path 3.0.1.0
+  ret %20
+b5: ; preds b2
+  %23 = cmp.eq bool %13, 0:u32
+  branch %23, b6, b7
+b6: ; preds b5
+  %26 = list_new list[i64] 0:i64
+  ret %26
+b7: ; preds b5
+  jump b8
+b8: ; preds b7
+  %30 = list_new list[i64] 0:i64
+  ret %30
+fn nested_anchor(record{list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}], i64}) -> i64
+b0:
+  %3 = record_get list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}] param0, field0
+  %4 = list_len u64 %3
+  %5 = convert.exact i64 %4
+  jump b1
+b1: ; preds b0 b3
+  %7 = phi i64 0:i64, %83
+  %50 = phi i64 0:i64, %92
+  %9 = cmp.lt bool %7, %5
+  branch %9, b2, b4
+b2: ; preds b1
+  %12 = record_get list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}] param0, field0
+  %14 = cmp.lt bool %7, 0:i64
+  branch %14, b5, b6
+b3: ; preds b7
+  %83 = add.exact i64 %7, 1:i64
+  jump b1
+b4: ; preds b1
+  ret %50
+b5: ; preds b2
+  %16 = list_len u64 %12
+  %17 = convert.exact i64 %16
+  %18 = add.exact i64 %17, %7
+  jump b6
+b6: ; preds b2 b5
+  %20 = phi i64 %7, %18
+  %23 = list_get_field.exact u32 %12, %20, path 0
+  %25 = cmp.eq bool %23, 2:u32
+  branch %25, b8, b9
+b7: ; preds b12 b18 b20
+  %92 = phi i64 %93, %71, %75
+  jump b3
+b8: ; preds b6
+  %30 = record_get list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}] param0, field0
+  %31 = list_get_field i64 %12, %20, path 3.0.0
+  %33 = cmp.lt bool %31, 0:i64
+  branch %33, b10, b11
+b9: ; preds b6
+  %68 = cmp.eq bool %23, 0:u32
+  branch %68, b18, b19
+b10: ; preds b8
+  %35 = list_len u64 %30
+  %36 = convert.exact i64 %35
+  %37 = add.exact i64 %36, %31
+  jump b11
+b11: ; preds b8 b10
+  %39 = phi i64 %31, %37
+  %42 = list_get_field.exact u32 %30, %39, path 0
+  %44 = cmp.eq bool %42, 1:u32
+  branch %44, b13, b14
+b12: ; preds b13 b15 b17
+  %93 = phi i64 %54, %60, %64
+  jump b7
+b13: ; preds b11
+  %51 = list_get_field bytes %30, %39, path 2.0.0
+  %52 = list_len u64 %51
+  %53 = convert.exact i64 %52
+  %54 = add.exact i64 %50, %53
+  jump b12
+b14: ; preds b11
+  %57 = cmp.eq bool %42, 0:u32
+  branch %57, b15, b16
+b15: ; preds b14
+  %60 = add.exact i64 %50, 100:i64
+  jump b12
+b16: ; preds b14
+  jump b17
+b17: ; preds b16
+  %64 = add.exact i64 %50, 100:i64
+  jump b12
+b18: ; preds b9
+  %71 = add.exact i64 %50, 1:i64
+  jump b7
+b19: ; preds b9
+  jump b20
+b20: ; preds b19
+  %75 = add.exact i64 %50, 1:i64
+  jump b7
+fn replaced_table(record{list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}], i64}, i64) -> record{i64, record{list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}], i64}}
+b0:
+  %2 = record_get i64 param0, field1
+  %4 = add.exact i64 %2, 1:i64
+  %5 = record_set record{list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}], i64} param0, field1, %4
+  %6 = record_get list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}] %5, field0
+  %8 = cmp.lt bool param1, 0:i64
+  branch %8, b1, b2
+b1: ; preds b0
+  %10 = list_len u64 %6
+  %11 = convert.exact i64 %10
+  %12 = add.exact i64 %11, param1
+  jump b2
+b2: ; preds b0 b1
+  %14 = phi i64 param1, %12
+  %17 = list_get_field.exact u32 %6, %14, path 0
+  %19 = cmp.eq bool %17, 2:u32
+  branch %19, b4, b5
+b3:
+b4: ; preds b2
+  %22 = list_get_field record{i64, record{list[i64]}} %6, %14, path 3.0
+  %23 = union_make union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}} tag0
+  %25 = record_get list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}] %5, field0
+  %28 = cmp.lt bool param1, 0:i64
+  branch %28, b6, b7
+b5: ; preds b2
+  %50 = cmp.eq bool %17, 0:u32
+  branch %50, b8, b9
+b6: ; preds b4
+  %30 = list_len u64 %25
+  %31 = convert.exact i64 %30
+  %32 = add.exact i64 %31, param1
+  jump b7
+b7: ; preds b4 b6
+  %34 = phi i64 param1, %32
+  %38 = list_set.exact list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}] %25, %34, %23
+  %39 = record_set record{list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}], i64} %5, field0, %38
+  %41 = record_get i64 %22, field0
+  %42 = record_get record{list[i64]} %22, field1
+  %43 = record_get list[i64] %42, field0
+  %44 = list_len u64 %43
+  %45 = convert.exact i64 %44
+  %46 = add.exact i64 %41, %45
+  %47 = record_make record{i64, record{list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}], i64}} %46, %39
+  ret %47
+b8: ; preds b5
+  %53 = record_make record{i64, record{list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}], i64}} -1:i64, %5
+  ret %53
+b9: ; preds b5
+  jump b10
+b10: ; preds b9
+  %57 = record_make record{i64, record{list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}], i64}} -1:i64, %5
+  ret %57
+fn fetch(record{list[union{void, record{f64}, record{str}}], i64}, record{list[i64], i64}) -> record{union{void, record{f64}, record{str}}, record{list[union{void, record{f64}, record{str}}], i64}, record{list[i64], i64}}
+b0:
+  %2 = record_get i64 param0, field1
+  %4 = add.exact i64 %2, 1:i64
+  %5 = record_set record{list[union{void, record{f64}, record{str}}], i64} param0, field1, %4
+  %6 = record_get list[union{void, record{f64}, record{str}}] %5, field0
+  %7 = call record{i64, record{list[i64], i64}} advance(param1)
+  %8 = record_get i64 %7, field0
+  %9 = record_get record{list[i64], i64} %7, field1
+  %11 = cmp.lt bool %8, 0:i64
+  branch %11, b1, b2
+b1: ; preds b0
+  %13 = list_len u64 %6
+  %14 = convert.exact i64 %13
+  %15 = add.exact i64 %14, %8
+  jump b2
+b2: ; preds b0 b1
+  %17 = phi i64 %8, %15
+  %19 = list_get.exact union{void, record{f64}, record{str}} %6, %17
+  %22 = record_make record{union{void, record{f64}, record{str}}, record{list[union{void, record{f64}, record{str}}], i64}, record{list[i64], i64}} %19, %5, %9
+  ret %22
+fn fetch_reset(record{list[union{void, record{f64}, record{str}}], i64}) -> record{union{void, record{f64}, record{str}}, record{list[union{void, record{f64}, record{str}}], i64}}
+b0:
+  %1 = record_get list[union{void, record{f64}, record{str}}] param0, field0
+  %2 = call record{i64, record{list[union{void, record{f64}, record{str}}], i64}} reset_stack(param0)
+  %3 = record_get i64 %2, field0
+  %4 = record_get record{list[union{void, record{f64}, record{str}}], i64} %2, field1
+  %6 = cmp.lt bool %3, 0:i64
+  branch %6, b1, b2
+b1: ; preds b0
+  %8 = list_len u64 %1
+  %9 = convert.exact i64 %8
+  %10 = add.exact i64 %9, %3
+  jump b2
+b2: ; preds b0 b1
+  %12 = phi i64 %3, %10
+  %14 = list_get.exact union{void, record{f64}, record{str}} %1, %12
+  %16 = record_make record{union{void, record{f64}, record{str}}, record{list[union{void, record{f64}, record{str}}], i64}} %14, %4
+  ret %16
+fn global_value(record{record{list[union{void, record{f64}, record{str}}]}, list[str], i64}, i64) -> record{union{void, record{f64}, record{str}}, record{record{list[union{void, record{f64}, record{str}}]}, list[str], i64}}
+b0:
+  %2 = record_get i64 param0, field2
+  %4 = add.exact i64 %2, 1:i64
+  %5 = record_set record{record{list[union{void, record{f64}, record{str}}]}, list[str], i64} param0, field2, %4
+  %6 = record_get record{list[union{void, record{f64}, record{str}}]} %5, field0
+  %7 = call i64 name_length(%5, param1)
+  %8 = call union{void, record{f64}, record{str}} entry_at(%6, %7)
+  %9 = record_make record{union{void, record{f64}, record{str}}, record{record{list[union{void, record{f64}, record{str}}]}, list[str], i64}} %8, %5
+  ret %9
+fn wiped_value(record{record{list[union{void, record{f64}, record{str}}]}, list[str], i64}) -> record{union{void, record{f64}, record{str}}, record{record{list[union{void, record{f64}, record{str}}]}, list[str], i64}}
+b0:
+  %1 = record_get record{list[union{void, record{f64}, record{str}}]} param0, field0
+  %2 = call record{i64, record{record{list[union{void, record{f64}, record{str}}]}, list[str], i64}} wipe(param0)
+  %3 = record_get i64 %2, field0
+  %4 = record_get record{record{list[union{void, record{f64}, record{str}}]}, list[str], i64} %2, field1
+  %5 = call union{void, record{f64}, record{str}} entry_at(%1, %3)
+  %6 = record_make record{union{void, record{f64}, record{str}}, record{record{list[union{void, record{f64}, record{str}}]}, list[str], i64}} %5, %4
+  ret %6
+fn matched_global(record{record{list[union{void, record{f64}, record{str}}]}, list[str], i64}, i64) -> record{union{void, record{f64}, record{str}}, record{record{list[union{void, record{f64}, record{str}}]}, list[str], i64}}
+b0:
+  %2 = record_get i64 param0, field2
+  %4 = add.exact i64 %2, 1:i64
+  %5 = record_set record{record{list[union{void, record{f64}, record{str}}]}, list[str], i64} param0, field2, %4
+  %6 = record_get record{list[union{void, record{f64}, record{str}}]} %5, field0
+  %7 = call i64 name_length(%5, param1)
+  %8 = call option[union{void, record{f64}, record{str}}] find_entry(%6, %7)
+  %9 = union_tag u32 %8
+  %11 = cmp.eq bool %9, 1:u32
+  branch %11, b2, b3
+b1:
+b2: ; preds b0
+  %13 = union_payload union{void, record{f64}, record{str}} tag1 %8
+  %14 = record_make record{union{void, record{f64}, record{str}}, record{record{list[union{void, record{f64}, record{str}}]}, list[str], i64}} %13, %5
+  ret %14
+b3: ; preds b0
+  jump b4
+b4: ; preds b3
+  %17 = union_make union{void, record{f64}, record{str}} tag0
+  %18 = record_make record{union{void, record{f64}, record{str}}, record{record{list[union{void, record{f64}, record{str}}]}, list[str], i64}} %17, %5
+  ret %18
+fn first_wire(list[record{record{bytes, u32}, i64, bool}]) -> record{record{bytes, u32}, i64, bool}
+b0:
+  %3 = cmp.lt bool 0:i64, 0:i64
+  branch %3, b1, b2
+b1: ; preds b0
+  %5 = list_len u64 param0
+  %6 = convert.exact i64 %5
+  %7 = add.exact i64 %6, 0:i64
+  jump b2
+b2: ; preds b0 b1
+  %9 = phi i64 0:i64, %7
+  %11 = list_get.exact record{record{bytes, u32}, i64, bool} param0, %9
+  ret %11
+fn matching_wires(list[record{record{bytes, u32}, i64, bool}], i64) -> i64
+b0:
+  jump b1
+b1: ; preds b0 b3
+  %5 = phi i64 0:i64, %62
+  %50 = phi i64 0:i64, %69
+  %7 = list_len u64 param0
+  %8 = convert.exact i64 %7
+  %9 = cmp.lt bool %5, %8
+  branch %9, b2, b4
+b2: ; preds b1
+  %12 = cmp.lt bool %5, 0:i64
+  branch %12, b5, b6
+b3: ; preds b12
+  jump b1
+b4: ; preds b1
+  ret %50
+b5: ; preds b2
+  %14 = list_len u64 param0
+  %15 = convert.exact i64 %14
+  %16 = add.exact i64 %15, %5
+  jump b6
+b6: ; preds b2 b5
+  %18 = phi i64 %5, %16
+  %20 = list_get.exact record{record{bytes, u32}, i64, bool} param0, %18
+  %23 = cmp.eq bool %5, 2:i64
+  branch %23, b7, b8
+b7: ; preds b6
+  %28 = cmp.lt bool 0:i64, 0:i64
+  branch %28, b9, b10
+b8: ; preds b6 b10
+  %38 = phi record{record{bytes, u32}, i64, bool} %20, %36
+  %39 = record_get bool %38, field2
+  branch %39, b12, b13
+b9: ; preds b7
+  %30 = list_len u64 param0
+  %31 = convert.exact i64 %30
+  %32 = add.exact i64 %31, 0:i64
+  jump b10
+b10: ; preds b7 b9
+  %34 = phi i64 0:i64, %32
+  %36 = list_get.exact record{record{bytes, u32}, i64, bool} param0, %34
+  jump b8
+b11: ; preds b13
+  %52 = record_get record{bytes, u32} %38, field0
+  %53 = record_get bytes %52, field0
+  %54 = list_len u64 %53
+  %55 = convert.exact i64 %54
+  %56 = add.exact i64 %50, %55
+  jump b12
+b12: ; preds b8 b13 b11
+  %69 = phi i64 %50, %50, %56
+  %62 = add.exact i64 %5, 1:i64
+  jump b3
+b13: ; preds b8
+  %41 = record_get i64 %38, field1
+  %46 = cmp.eq bool %41, param1
+  branch %46, b11, b12
+fn table_name_hash(record{list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}], i64}, i64) -> u32
+b0:
+  %2 = call record{bytes, u32} table_name(param0, param1)
+  %3 = record_get u32 %2, field1
+  ret %3
+fn table_name_chars(record{list[union{void, record{record{bytes, u32}}, record{record{i64, record{list[i64]}}}}], i64}, i64) -> bytes
+b0:
+  %2 = call record{bytes, u32} table_name(param0, param1)
+  %3 = record_get bytes %2, field0
+  ret %3
+fn read_value(record{list[union{void, record{f64}, record{str}}], list[i64], i64}) -> record{union{void, record{f64}, record{str}}, record{list[union{void, record{f64}, record{str}}], list[i64], i64}}
+b0:
+  %1 = record_get list[union{void, record{f64}, record{str}}] param0, field0
+  %2 = call record{i64, record{list[union{void, record{f64}, record{str}}], list[i64], i64}} read_op(param0)
+  %3 = record_get i64 %2, field0
+  %4 = record_get record{list[union{void, record{f64}, record{str}}], list[i64], i64} %2, field1
+  %6 = cmp.lt bool %3, 0:i64
+  branch %6, b1, b2
+b1: ; preds b0
+  %8 = list_len u64 %1
+  %9 = convert.exact i64 %8
+  %10 = add.exact i64 %9, %3
+  jump b2
+b2: ; preds b0 b1
+  %12 = phi i64 %3, %10
+  %14 = list_get.exact union{void, record{f64}, record{str}} %1, %12
+  %16 = record_make record{union{void, record{f64}, record{str}}, record{list[union{void, record{f64}, record{str}}], list[i64], i64}} %14, %4
+  ret %16
+fn read_reloaded(record{list[union{void, record{f64}, record{str}}], list[i64], i64}) -> record{union{void, record{f64}, record{str}}, record{list[union{void, record{f64}, record{str}}], list[i64], i64}}
+b0:
+  %1 = record_get list[union{void, record{f64}, record{str}}] param0, field0
+  %2 = call record{i64, record{list[union{void, record{f64}, record{str}}], list[i64], i64}} reload_constants(param0)
+  %3 = record_get i64 %2, field0
+  %4 = record_get record{list[union{void, record{f64}, record{str}}], list[i64], i64} %2, field1
+  %6 = cmp.lt bool %3, 0:i64
+  branch %6, b1, b2
+b1: ; preds b0
+  %8 = list_len u64 %1
+  %9 = convert.exact i64 %8
+  %10 = add.exact i64 %9, %3
+  jump b2
+b2: ; preds b0 b1
+  %12 = phi i64 %3, %10
+  %14 = list_get.exact union{void, record{f64}, record{str}} %1, %12
+  %16 = record_make record{union{void, record{f64}, record{str}}, record{list[union{void, record{f64}, record{str}}], list[i64], i64}} %14, %4
+  ret %16
+fn swap_stack(record{list[union{void, record{f64}, record{str}}], i64}) -> record{i64, record{list[union{void, record{f64}, record{str}}], i64}}
+b0:
+  %2 = list_new list[union{void, record{f64}, record{str}}] 1:i64
+  %4 = record_make record{f64} 99:f64
+  %5 = union_make union{void, record{f64}, record{str}} tag1 %4
+  %6 = list_push list[union{void, record{f64}, record{str}}] %2, %5
+  %7 = record_set record{list[union{void, record{f64}, record{str}}], i64} param0, field0, %6
+  %9 = record_make record{i64, record{list[union{void, record{f64}, record{str}}], i64}} 0:i64, %7
+  ret %9
+fn owned_rows(i64) -> list[union{void, record{f64}, record{str}}]
+b0:
+  %2 = list_new list[union{void, record{f64}, record{str}}] 0:i64
+  jump b1
+b1: ; preds b0 b3
+  %5 = phi i64 0:i64, %16
+  %12 = phi list[union{void, record{f64}, record{str}}] %2, %13
+  %7 = cmp.lt bool %5, param0
+  branch %7, b2, b4
+b2: ; preds b1
+  %9 = int_to_float f64 %5
+  %10 = record_make record{f64} %9
+  %11 = union_make union{void, record{f64}, record{str}} tag1 %10
+  %13 = list_push list[union{void, record{f64}, record{str}}] %12, %11
+  jump b3
+b3: ; preds b2
+  %16 = add.exact i64 %5, 1:i64
+  jump b1
+b4: ; preds b1
+  ret %12
+fn grow_stack(record{list[union{void, record{f64}, record{str}}], list[record{i64, i64}], list[str], i64, i64}) -> record{i64, record{list[union{void, record{f64}, record{str}}], list[record{i64, i64}], list[str], i64, i64}}
+b0:
+  %2 = list_new list[union{void, record{f64}, record{str}}] 3:i64
+  %3 = union_make union{void, record{f64}, record{str}} tag0
+  %4 = list_push list[union{void, record{f64}, record{str}}] %2, %3
+  %5 = union_make union{void, record{f64}, record{str}} tag0
+  %6 = list_push list[union{void, record{f64}, record{str}}] %4, %5
+  %7 = union_make union{void, record{f64}, record{str}} tag0
+  %8 = list_push list[union{void, record{f64}, record{str}}] %6, %7
+  %9 = record_set record{list[union{void, record{f64}, record{str}}], list[record{i64, i64}], list[str], i64, i64} param0, field0, %8
+  %11 = record_make record{i64, record{list[union{void, record{f64}, record{str}}], list[record{i64, i64}], list[str], i64, i64}} 1:i64, %9
+  ret %11
+fn made_unit() -> record{i64, record{list[i64], list[str]}}
+b0:
+  %2 = list_new list[i64] 2:i64
+  %4 = list_push list[i64] %2, 4:i64
+  %6 = list_push list[i64] %4, 5:i64
+  %8 = list_new list[str] 1:i64
+  %10 = list_push list[str] %8, str74
+  %11 = record_make record{list[i64], list[str]} %6, %10
+  %12 = record_make record{i64, record{list[i64], list[str]}} 3:i64, %11
+  ret %12
+fn advance(record{list[i64], i64}) -> record{i64, record{list[i64], i64}}
+b0:
+  %1 = record_get i64 param0, field1
+  %3 = add.exact i64 %1, 1:i64
+  %4 = record_set record{list[i64], i64} param0, field1, %3
+  %5 = record_get list[i64] %4, field0
+  %6 = record_get i64 %4, field1
+  %8 = sub.exact i64 %6, 1:i64
+  %10 = cmp.lt bool %8, 0:i64
+  branch %10, b1, b2
+b1: ; preds b0
+  %12 = list_len u64 %5
+  %13 = convert.exact i64 %12
+  %14 = add.exact i64 %13, %8
+  jump b2
+b2: ; preds b0 b1
+  %16 = phi i64 %8, %14
+  %18 = list_get.exact i64 %5, %16
+  %20 = record_make record{i64, record{list[i64], i64}} %18, %4
+  ret %20
+fn reset_stack(record{list[union{void, record{f64}, record{str}}], i64}) -> record{i64, record{list[union{void, record{f64}, record{str}}], i64}}
+b0:
+  %2 = list_new list[union{void, record{f64}, record{str}}] 1:i64
+  %4 = record_make record{str} str75
+  %5 = union_make union{void, record{f64}, record{str}} tag2 %4
+  %6 = list_push list[union{void, record{f64}, record{str}}] %2, %5
+  %7 = record_set record{list[union{void, record{f64}, record{str}}], i64} param0, field0, %6
+  %9 = record_make record{i64, record{list[union{void, record{f64}, record{str}}], i64}} 0:i64, %7
+  ret %9
+fn entry_at(record{list[union{void, record{f64}, record{str}}]}, i64) -> union{void, record{f64}, record{str}}
+b0:
+  %2 = record_get list[union{void, record{f64}, record{str}}] param0, field0
+  %4 = cmp.lt bool param1, 0:i64
+  branch %4, b1, b2
+b1: ; preds b0
+  %6 = list_len u64 %2
+  %7 = convert.exact i64 %6
+  %8 = add.exact i64 %7, param1
+  jump b2
+b2: ; preds b0 b1
+  %10 = phi i64 param1, %8
+  %12 = list_get.exact union{void, record{f64}, record{str}} %2, %10
+  ret %12
+fn name_length(record{record{list[union{void, record{f64}, record{str}}]}, list[str], i64}, i64) -> i64
+b0:
+  %2 = record_get list[str] param0, field1
+  %4 = cmp.lt bool param1, 0:i64
+  branch %4, b1, b2
+b1: ; preds b0
+  %6 = list_len u64 %2
+  %7 = convert.exact i64 %6
+  %8 = add.exact i64 %7, param1
+  jump b2
+b2: ; preds b0 b1
+  %10 = phi i64 param1, %8
+  %12 = list_get.exact str %2, %10
+  %13 = call u64 myl_core_str_chars(%12)
+  %14 = convert.exact i64 %13
+  ret %14
+fn wipe(record{record{list[union{void, record{f64}, record{str}}]}, list[str], i64}) -> record{i64, record{record{list[union{void, record{f64}, record{str}}]}, list[str], i64}}
+b0:
+  %2 = list_new list[union{void, record{f64}, record{str}}] 1:i64
+  %4 = record_make record{str} str76
+  %5 = union_make union{void, record{f64}, record{str}} tag2 %4
+  %6 = list_push list[union{void, record{f64}, record{str}}] %2, %5
+  %7 = record_make record{list[union{void, record{f64}, record{str}}]} %6
+  %8 = record_set record{record{list[union{void, record{f64}, record{str}}]}, list[str], i64} param0, field0, %7
+  %10 = record_make record{i64, record{record{list[union{void, record{f64}, record{str}}]}, list[str], i64}} 0:i64, %8
+  ret %10
+fn find_entry(record{list[union{void, record{f64}, record{str}}]}, i64) -> option[union{void, record{f64}, record{str}}]
+b0:
+  %2 = record_get list[union{void, record{f64}, record{str}}] param0, field0
+  %3 = list_len u64 %2
+  %4 = convert.exact i64 %3
+  %5 = cmp.lt bool param1, %4
+  branch %5, b1, b2
+b1: ; preds b0
+  %7 = record_get list[union{void, record{f64}, record{str}}] param0, field0
+  %9 = cmp.lt bool param1, 0:i64
+  branch %9, b3, b4
+b2: ; preds b0
+  %20 = union_make option[union{void, record{f64}, record{str}}] tag0
+  ret %20
+b3: ; preds b1
+  %11 = list_len u64 %7
+  %12 = convert.exact i64 %11
+  %13 = add.exact i64 %12, param1
+  jump b4
+b4: ; preds b1 b3
+  %15 = phi i64 param1, %13
+  %17 = list_get.exact union{void, record{f64}, record{str}} %7, %15
+  %18 = union_make option[union{void, record{f64}, record{str}}] tag1 %17
+  ret %18
+fn read_op(record{list[union{void, record{f64}, record{str}}], list[i64], i64}) -> record{i64, record{list[union{void, record{f64}, record{str}}], list[i64], i64}}
+b0:
+  %1 = record_get list[i64] param0, field1
+  %2 = record_get i64 param0, field2
+  %4 = cmp.lt bool %2, 0:i64
+  branch %4, b1, b2
+b1: ; preds b0
+  %6 = list_len u64 %1
+  %7 = convert.exact i64 %6
+  %8 = add.exact i64 %7, %2
+  jump b2
+b2: ; preds b0 b1
+  %10 = phi i64 %2, %8
+  %12 = list_get.exact i64 %1, %10
+  %14 = record_get i64 param0, field2
+  %16 = add.exact i64 %14, 1:i64
+  %17 = record_set record{list[union{void, record{f64}, record{str}}], list[i64], i64} param0, field2, %16
+  %18 = record_make record{i64, record{list[union{void, record{f64}, record{str}}], list[i64], i64}} %12, %17
+  ret %18
+fn reload_constants(record{list[union{void, record{f64}, record{str}}], list[i64], i64}) -> record{i64, record{list[union{void, record{f64}, record{str}}], list[i64], i64}}
+b0:
+  %2 = list_new list[union{void, record{f64}, record{str}}] 1:i64
+  %4 = record_make record{str} str77
+  %5 = union_make union{void, record{f64}, record{str}} tag2 %4
+  %6 = list_push list[union{void, record{f64}, record{str}}] %2, %5
+  %7 = record_set record{list[union{void, record{f64}, record{str}}], list[i64], i64} param0, field0, %6
+  %9 = record_set record{list[union{void, record{f64}, record{str}}], list[i64], i64} %7, field2, 0:i64
+  %11 = record_make record{i64, record{list[union{void, record{f64}, record{str}}], list[i64], i64}} 0:i64, %9
+  ret %11
+fn myl_core_str_chars(str) -> u64 extern

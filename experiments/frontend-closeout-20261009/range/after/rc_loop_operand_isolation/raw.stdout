@@ -1,0 +1,148 @@
+fn main(cap) -> i64
+b0:
+  %1 = call bool test_isolated_words_cover_zero_both_branches_and_outer_reentry()
+  branch %1, b2, b1
+b1: ; preds b0
+  unreachable
+b2: ; preds b0
+  %4 = call bool test_isolated_words_keep_real_iterator_tokens_and_snapshots()
+  branch %4, b4, b3
+b3: ; preds b2
+  unreachable
+b4: ; preds b2
+  %9 = call i64 scan(64:i64, 3:i64)
+  print param0, %9
+  ret 0:i64
+fn test_isolated_words_cover_zero_both_branches_and_outer_reentry() -> bool
+b0:
+  %2 = call i64 scan(0:i64, 4:i64)
+  %4 = cmp.eq bool %2, 0:i64
+  branch %4, b1, b2
+b1: ; preds b0
+  %8 = call i64 scan(1:i64, 3:i64)
+  %10 = cmp.eq bool %8, 3:i64
+  jump b2
+b2: ; preds b0 b1
+  %12 = phi bool %4, %10
+  branch %12, b3, b4
+b3: ; preds b2
+  %16 = call i64 scan(64:i64, 3:i64)
+  %18 = cmp.eq bool %16, 12:i64
+  jump b4
+b4: ; preds b2 b3
+  %20 = phi bool %12, %18
+  ret %20
+fn test_isolated_words_keep_real_iterator_tokens_and_snapshots() -> bool
+b0:
+  %0 = call i64 real_iterator()
+  %2 = cmp.eq bool %0, 10:i64
+  ret %2
+fn scan(i64, i64) -> i64
+b0:
+  %3 = call bytes myl_core_text_encode(str2)
+  jump b1
+b1: ; preds b0 b3
+  %7 = phi i64 0:i64, %43
+  %37 = phi i64 0:i64, %25
+  %9 = cmp.lt bool %7, param1
+  branch %9, b2, b4
+b2: ; preds b1
+  jump b5
+b3: ; preds b8
+  %43 = add.exact i64 %7, 1:i64
+  jump b1
+b4: ; preds b1
+  ret %37
+b5: ; preds b2 b7
+  %14 = phi i64 0:i64, %32
+  %25 = phi i64 %37, %38
+  %16 = cmp.lt bool %14, param0
+  branch %16, b6, b8
+b6: ; preds b5
+  %19 = call u64 myl_core_bytes_index_offset(%3, %14)
+  %20 = list_get.exact u8 %3, %19
+  %21 = convert i64 %20
+  %23 = cmp.eq bool %21, 109:i64
+  branch %23, b9, b10
+b7: ; preds b10
+  %32 = add.exact i64 %14, 1:i64
+  jump b5
+b8: ; preds b5
+  jump b3
+b9: ; preds b6
+  %27 = add.exact i64 %25, 1:i64
+  jump b10
+b10: ; preds b6 b9
+  %38 = phi i64 %25, %27
+  jump b7
+fn real_iterator() -> i64
+b0:
+  %1 = call bytes myl_core_text_encode(str3)
+  %3 = list_new list[i64] 1:i64
+  %5 = list_push list[i64] %3, 109:i64
+  %6 = call bool myl_core_bytes_valid_list(%5)
+  branch %6, b1, b2
+b1: ; preds b0
+  %9 = call bytes myl_core_bytes_from_list(%5)
+  %10 = call bytes myl_core_bytes_concat(%1, %9)
+  %13 = list_len u64 %10
+  %14 = convert.exact i64 %13
+  jump b3
+b2: ; preds b0
+  unreachable
+b3: ; preds b1 b5
+  %16 = phi i64 0:i64, %34
+  %27 = phi i64 0:i64, %38
+  %18 = cmp.lt bool %16, %14
+  branch %18, b4, b6
+b4: ; preds b3
+  %21 = call u64 myl_core_bytes_index_offset(%10, %16)
+  %22 = list_get.exact u8 %10, %21
+  %23 = convert i64 %22
+  %25 = cmp.eq bool %23, 109:i64
+  branch %25, b7, b8
+b5: ; preds b8
+  %34 = add.exact i64 %16, 1:i64
+  jump b3
+b6: ; preds b3
+  %40 = list_len u64 %10
+  %41 = convert.exact i64 %40
+  jump b9
+b7: ; preds b4
+  %29 = add.exact i64 %27, 1:i64
+  jump b8
+b8: ; preds b4 b7
+  %38 = phi i64 %27, %29
+  jump b5
+b9: ; preds b6 b11
+  %43 = phi i64 0:i64, %60
+  %53 = phi i64 %27, %64
+  %45 = cmp.lt bool %43, %41
+  branch %45, b10, b12
+b10: ; preds b9
+  %48 = list_get.exact u8 %10, %43
+  %49 = convert i64 %48
+  %51 = cmp.eq bool %49, 109:i64
+  branch %51, b13, b14
+b11: ; preds b14
+  %60 = add.exact i64 %43, 1:i64
+  jump b9
+b12: ; preds b9
+  %71 = call bool myl_core_str_eq(%10, %10)
+  branch %71, b16, b15
+b13: ; preds b10
+  %55 = add.exact i64 %53, 1:i64
+  jump b14
+b14: ; preds b10 b13
+  %64 = phi i64 %53, %55
+  jump b11
+b15: ; preds b12
+  unreachable
+b16: ; preds b12
+  ret %53
+fn myl_core_text_encode(str) -> bytes extern
+fn myl_core_bytes_index_offset(bytes, i64) -> u64 runtime
+fn myl_core_bytes_valid_list(list[i64]) -> bool extern
+fn myl_core_bytes_from_list(list[i64]) -> bytes extern
+fn myl_core_bytes_concat(bytes, bytes) -> bytes extern
+fn myl_core_str_eq(bytes, bytes) -> bool runtime

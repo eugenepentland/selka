@@ -1,0 +1,3 @@
+rc_element_moves.my:1:1: error[E_MAIN]: the program requires an entry point: func main() -> int; `mylang check FILE` type-checks a library that has no main
+  # A field read out of a dead record local moves its owner under RC
+  ^

@@ -1,0 +1,3 @@
+python_collections.my:46:5: error[E_CORE_ALLOCATION_BOUND]: allocation contract of writeback is exceeded by writeback: static Core site may allocate
+      rows[0].y = 2
+      ^
