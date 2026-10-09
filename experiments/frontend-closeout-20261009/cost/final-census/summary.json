@@ -1,0 +1,841 @@
+{
+  "lox": {
+    "entry": "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/lox/benchmarks/lox/ports/mylang/main.my",
+    "selection": "One selected executable entry; all checked body instances in its loaded graph.",
+    "returncode": 0,
+    "compiler_sha256": "aca89445a3f2d4f2dddbf68b6441c3473374cd37b2e6cde68929e0690def737f",
+    "counts": {
+      "list.in_or_not_in": [
+        0,
+        0,
+        0
+      ],
+      "list.eq": [
+        0,
+        0,
+        0
+      ],
+      "list.ne": [
+        0,
+        0,
+        0
+      ],
+      "record.eq": [
+        0,
+        0,
+        0
+      ],
+      "record.ne": [
+        0,
+        0,
+        0
+      ],
+      "dict.eq": [
+        0,
+        0,
+        0
+      ],
+      "dict.ne": [
+        0,
+        0,
+        0
+      ],
+      "set.eq": [
+        0,
+        0,
+        0
+      ],
+      "set.ne": [
+        0,
+        0,
+        0
+      ],
+      "list.add": [
+        0,
+        0,
+        0
+      ],
+      "sequence.mul": [
+        0,
+        0,
+        0
+      ],
+      "list.slice_without_step": [
+        0,
+        0,
+        0
+      ],
+      "list.slice_step": [
+        0,
+        0,
+        0
+      ],
+      "str.slice_or_tail": [
+        0,
+        0,
+        0
+      ],
+      "str.slice_step": [
+        0,
+        0,
+        0
+      ],
+      "bytes.slice": [
+        1,
+        0,
+        0
+      ],
+      "bytes.view": [
+        3,
+        1,
+        0
+      ],
+      "str.add_in_loop": [
+        0,
+        0,
+        0
+      ],
+      "list.contains_method": [
+        0,
+        0,
+        0
+      ],
+      "literal.fixed_array": [
+        0,
+        0,
+        0
+      ],
+      "literal.packed_list": [
+        0,
+        0,
+        0
+      ]
+    },
+    "uncounted_visible_nodes": {
+      "equality.unknown_nominal": 48,
+      "opaque.external_read": 1,
+      "opaque.file_access": 1,
+      "opaque.stand_in": 2,
+      "opaque.stream_write": 4,
+      "opaque.unit": 336
+    },
+    "functions": 382,
+    "record_types_certified_by_constructor": [
+      "Expr.assign",
+      "Expr.binary",
+      "Expr.call",
+      "Expr.get",
+      "Expr.grouping",
+      "Expr.literal",
+      "Expr.logical",
+      "Expr.set",
+      "Expr.super_access",
+      "Expr.this",
+      "Expr.unary",
+      "Expr.variable",
+      "Obj.bound_method",
+      "Obj.closure",
+      "Obj.env",
+      "Obj.function",
+      "Obj.instance",
+      "Obj.klass",
+      "Obj.native",
+      "Obj.string",
+      "Obj.tree_function",
+      "Obj.upvalue",
+      "Stmt.block",
+      "Stmt.class_decl",
+      "Stmt.expression",
+      "Stmt.function",
+      "Stmt.if_stmt",
+      "Stmt.print",
+      "Stmt.return_stmt",
+      "Stmt.var_decl",
+      "Stmt.while_stmt",
+      "Value.boolean",
+      "Value.number",
+      "Value.obj",
+      "ast::AssignExpr",
+      "ast::BinaryExpr",
+      "ast::BlockStmt",
+      "ast::CallExpr",
+      "ast::ClassStmt",
+      "ast::FunctionDecl",
+      "ast::GetExpr",
+      "ast::GroupingExpr",
+      "ast::IfStmt",
+      "ast::LiteralExpr",
+      "ast::LogicalExpr",
+      "ast::Param",
+      "ast::Program",
+      "ast::ReturnStmt",
+      "ast::SetExpr",
+      "ast::SuperExpr",
+      "ast::ThisExpr",
+      "ast::UnaryExpr",
+      "ast::VarStmt",
+      "ast::VariableExpr",
+      "ast::WhileStmt",
+      "chunk::Chunk",
+      "compiler::ClassCompiler",
+      "compiler::FnCompiler",
+      "compiler::Local",
+      "compiler::Parser",
+      "compiler::UpvalueRef",
+      "driver::RunResult",
+      "heap::CallFrame",
+      "heap::Marker",
+      "heap::Runtime",
+      "interpreter::Interpreter",
+      "interpreter::RuntimeError",
+      "object::BoundMethodObj",
+      "object::ClassObj",
+      "object::ClosureObj",
+      "object::EnvObj",
+      "object::FunctionObj",
+      "object::InstanceObj",
+      "object::NativeObj",
+      "object::StringObj",
+      "object::TreeFunctionObj",
+      "object::UpvalueObj",
+      "output::Output",
+      "parser::ParseError",
+      "parser::Parser",
+      "resolver::Address",
+      "resolver::Resolver",
+      "resolver::Scope",
+      "resolver::ScopeEntry",
+      "scanner::Scanner",
+      "scanner::Token",
+      "table::Entry",
+      "table::Table",
+      "time::Duration",
+      "time::Instant"
+    ],
+    "uncounted_constructs": {
+      "list_plain_slice": "uncounted: anonymous copy-loop lowering has no original slice identity",
+      "sequence_repetition": "uncounted: anonymous gather-loop lowering has no original multiply identity",
+      "list_nonpacked_literal": "uncounted: acquire/append lowering also represents comprehensions and other constructors",
+      "uninstantiated_generic_templates": "uncounted: dump contains checked specializations, not the bodies of unused generic templates",
+      "record_equality_without_visible_constructor": "uncounted: dump omits aggregate schema tags; nominal equality may be enum/domain/variant/record",
+      "source_loop_depth": "uncounted: reported depth is typed loop nesting, which includes generated loops",
+      "hidden_operands": "uncounted: opaque nodes and print separator/terminator omit subtrees",
+      "fused_slice_or_view": "uncounted: immediately consumed byte slices/views may lower to range operations without slice/view identity"
+    }
+  },
+  "eda": {
+    "entry": "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-followthrough-20261009/external/sources/eda/mylang/src/main.my",
+    "selection": "One selected executable entry; all checked body instances in its loaded graph.",
+    "returncode": 0,
+    "compiler_sha256": "aca89445a3f2d4f2dddbf68b6441c3473374cd37b2e6cde68929e0690def737f",
+    "counts": {
+      "list.in_or_not_in": [
+        0,
+        2,
+        2
+      ],
+      "list.eq": [
+        0,
+        0,
+        0
+      ],
+      "list.ne": [
+        2,
+        1,
+        0
+      ],
+      "record.eq": [
+        0,
+        2,
+        0
+      ],
+      "record.ne": [
+        0,
+        0,
+        0
+      ],
+      "dict.eq": [
+        0,
+        0,
+        0
+      ],
+      "dict.ne": [
+        0,
+        0,
+        0
+      ],
+      "set.eq": [
+        0,
+        0,
+        0
+      ],
+      "set.ne": [
+        0,
+        0,
+        0
+      ],
+      "list.add": [
+        0,
+        0,
+        0
+      ],
+      "sequence.mul": [
+        0,
+        0,
+        0
+      ],
+      "list.slice_without_step": [
+        0,
+        0,
+        0
+      ],
+      "list.slice_step": [
+        0,
+        0,
+        0
+      ],
+      "str.slice_or_tail": [
+        19,
+        5,
+        0
+      ],
+      "str.slice_step": [
+        0,
+        0,
+        0
+      ],
+      "bytes.slice": [
+        43,
+        13,
+        0
+      ],
+      "bytes.view": [
+        6,
+        1,
+        1
+      ],
+      "str.add_in_loop": [
+        0,
+        62,
+        4
+      ],
+      "list.contains_method": [
+        0,
+        0,
+        0
+      ],
+      "literal.fixed_array": [
+        7,
+        2,
+        0
+      ],
+      "literal.packed_list": [
+        1,
+        0,
+        0
+      ]
+    },
+    "uncounted_visible_nodes": {
+      "equality.unknown_nominal": 83,
+      "opaque.file_access": 18,
+      "opaque.function_value": 10,
+      "opaque.invoke": 9,
+      "opaque.stream_write": 5,
+      "opaque.unit": 512
+    },
+    "functions": 1213,
+    "record_types_certified_by_constructor": [
+      "DictKeys<str,List<str>>",
+      "DictKeys<str,bool>",
+      "DictKeys<str,src.export_kicad_sch::Comp>",
+      "DictValues<str,List<i64>>",
+      "DictValues<str,List<src.kicad_sch_gang::PinAt>>",
+      "DictValues<str,src.eval_env::PowerRail>",
+      "Endpoint.net",
+      "Endpoint.pin",
+      "Tag.atom",
+      "Tag.float",
+      "Tag.int",
+      "Tag.list",
+      "Tag.string",
+      "Tag.unit_val",
+      "byte_builder::Builder",
+      "src.board_layers::GerberId",
+      "src.board_layers::LayerSet",
+      "src.board_layers::LayerTable",
+      "src.board_layers::Naming",
+      "src.board_layers::PlaneCarry",
+      "src.board_layers::Row",
+      "src.board_layers::SignalIndex",
+      "src.board_layers::StackIndex",
+      "src.board_layers::TechSpec",
+      "src.board_layers::Text",
+      "src.design_model::Diag",
+      "src.design_model::Model",
+      "src.diagram_membership::Membership",
+      "src.eval_env::BoardSpec",
+      "src.eval_env::BoardThermalAssemblySpec",
+      "src.eval_env::ComponentDocs",
+      "src.eval_env::DecoupleBind",
+      "src.eval_env::DesignBlock",
+      "src.eval_env::DesignRulesSpec",
+      "src.eval_env::EdgeRules",
+      "src.eval_env::ElectricalDecl",
+      "src.eval_env::Env",
+      "src.eval_env::EnvScope",
+      "src.eval_env::Instance",
+      "src.eval_env::InstanceBinds",
+      "src.eval_env::InstanceThermal",
+      "src.eval_env::InstanceVariants",
+      "src.eval_env::LayoutSpec",
+      "src.eval_env::MaskRules",
+      "src.eval_env::NearBind",
+      "src.eval_env::Net",
+      "src.eval_env::NetEnvelopeTable",
+      "src.eval_env::NetTie",
+      "src.eval_env::NoteRef",
+      "src.eval_env::Part",
+      "src.eval_env::PartPin",
+      "src.eval_env::PerimeterFenceSpec",
+      "src.eval_env::PerimeterKeepoutBlocks",
+      "src.eval_env::PerimeterKeepoutSpec",
+      "src.eval_env::PinGroup",
+      "src.eval_env::PinRef",
+      "src.eval_env::PinoutFacts",
+      "src.eval_env::Port",
+      "src.eval_env::PourRules",
+      "src.eval_env::PowerRail",
+      "src.eval_env::PowerRailRatedVoltage",
+      "src.eval_env::Property",
+      "src.eval_env::Revision",
+      "src.eval_env::RoughSpec",
+      "src.eval_env::Section",
+      "src.eval_env::SectionPort",
+      "src.eval_env::StackupSpec",
+      "src.eval_env::SubBlock",
+      "src.eval_env::VariantScope",
+      "src.eval_env::ViaRules",
+      "src.export_kicad_footprint::AnchorRect",
+      "src.export_kicad_footprint::PadPos",
+      "src.export_kicad_model::FlatSection",
+      "src.export_kicad_model::ModelTransform",
+      "src.export_kicad_sch::Builder",
+      "src.export_kicad_sch::Comp",
+      "src.export_kicad_sch::FpInfo",
+      "src.export_kicad_sch::Options",
+      "src.export_kicad_sch::Output",
+      "src.export_kicad_sch::PadNets",
+      "src.export_kicad_sch::SchFile",
+      "src.export_kicad_sch::SheetItems",
+      "src.export_kicad_sch::SheetPlan",
+      "src.export_kicad_sch::Stats",
+      "src.flat_netlist::FlatInstance",
+      "src.flat_netlist::FlatNet",
+      "src.flat_netlist::FlatPin",
+      "src.flat_netlist::FlatTie",
+      "src.flat_netlist::NetTieSets",
+      "src.footprint_paste::Aperture",
+      "src.infra_fs::CacheProbe",
+      "src.infra_fs::ReadTrace",
+      "src.kicad_sch_bank::Bank",
+      "src.kicad_sch_bank::Candidate",
+      "src.kicad_sch_bank::Frame",
+      "src.kicad_sch_bank::Member",
+      "src.kicad_sch_compose::Bind",
+      "src.kicad_sch_compose::ClusterPlan",
+      "src.kicad_sch_compose::NetFacts",
+      "src.kicad_sch_compose::Packed",
+      "src.kicad_sch_compose::Placeable",
+      "src.kicad_sch_compose::Poses",
+      "src.kicad_sch_compose::Request",
+      "src.kicad_sch_compose::Result",
+      "src.kicad_sch_compose::Run",
+      "src.kicad_sch_compose::Site",
+      "src.kicad_sch_compose::Slotting",
+      "src.kicad_sch_compose::State",
+      "src.kicad_sch_emit::Caption",
+      "src.kicad_sch_emit::Doc",
+      "src.kicad_sch_emit::Flag",
+      "src.kicad_sch_emit::FreeLabel",
+      "src.kicad_sch_emit::Identity",
+      "src.kicad_sch_emit::Part",
+      "src.kicad_sch_emit::Power",
+      "src.kicad_sch_emit::PowerPlacement",
+      "src.kicad_sch_emit::Rail",
+      "src.kicad_sch_emit::RailPin",
+      "src.kicad_sch_emit::Rect",
+      "src.kicad_sch_emit::Sheet",
+      "src.kicad_sch_emit::SheetRef",
+      "src.kicad_sch_emit::Wiring",
+      "src.kicad_sch_gang::Gang",
+      "src.kicad_sch_gang::PinAt",
+      "src.kicad_sch_plan::Member",
+      "src.kicad_sch_plan::Placement",
+      "src.kicad_sch_project::Sidecar",
+      "src.kicad_sch_shape::Edges",
+      "src.kicad_sch_shape::Metrics",
+      "src.kicad_sch_shape::Names",
+      "src.kicad_sch_shape::PadName",
+      "src.kicad_sch_shape::PartSpec",
+      "src.kicad_sch_shape::Pin",
+      "src.kicad_sch_shape::Request",
+      "src.kicad_sch_shape::SchematicUnit",
+      "src.kicad_sch_shape::Shape",
+      "src.kicad_sch_shape::Style",
+      "src.kicad_sch_shape::UnitPads",
+      "src.kicad_sch_sheet::Block",
+      "src.kicad_sch_sheet::Cell",
+      "src.kicad_sch_sheet::Layout",
+      "src.kicad_sch_sheet::Spot",
+      "src.kicad_sch_stagger::Order",
+      "src.kicad_sch_stagger::Run",
+      "src.kicad_sch_stub::Split",
+      "src.kicad_sch_textbox::Box",
+      "src.kicad_sch_textbox::Item",
+      "src.kicad_sch_textbox::LibPin",
+      "src.kicad_sch_textbox::LibSymbol",
+      "src.kicad_sch_textbox::NamedText",
+      "src.kicad_sch_textbox::Pair",
+      "src.kicad_sch_textbox::Placement",
+      "src.kicad_sch_textbox::Pose",
+      "src.kicad_sch_textbox::Report",
+      "src.kicad_sch_textbox::Sheet2",
+      "src.kicad_sch_textbox::Span",
+      "src.kicad_sch_vendor::Box",
+      "src.kicad_sch_vendor::Ctx",
+      "src.kicad_sch_verify::Expect",
+      "src.kicad_sch_verify::Found",
+      "src.kicad_sch_verify::Geometry",
+      "src.kicad_sch_verify::LibPin",
+      "src.kicad_sch_verify::Multiset",
+      "src.kicad_sch_verify::Placed",
+      "src.kicad_sch_verify::Pt",
+      "src.kicad_sch_verify::Seg",
+      "src.kicad_sch_wire::Box",
+      "src.kicad_sch_wire::End",
+      "src.kicad_sch_wire::Field",
+      "src.kicad_sch_wire::Path",
+      "src.kicad_sch_wire::Point",
+      "src.kicad_sch_wire::Seg",
+      "src.kicad_sym_library::Library",
+      "src.kicad_sym_reader::Acc",
+      "src.kicad_sym_reader::Graphic",
+      "src.kicad_sym_reader::Pin",
+      "src.kicad_sym_reader::Point",
+      "src.kicad_sym_reader::SchematicUnit",
+      "src.kicad_sym_reader::Style",
+      "src.kicad_sym_reader::Symbol",
+      "src.kicad_sym_reader::UnitId",
+      "src.main::Args",
+      "src.placement_geometry::CopperPourKeepout",
+      "src.placement_geometry::Ext",
+      "src.placement_geometry::FootprintFeatures",
+      "src.placement_geometry::Geom",
+      "src.placement_geometry::Pad",
+      "src.placement_geometry::PadOverrides",
+      "src.placement_geometry::SilkCircle",
+      "src.placement_geometry::SilkLine",
+      "src.placement_pin_roles::ComponentElec",
+      "src.placement_pin_roles::PadFunction",
+      "src.placement_pin_roles::PadReq",
+      "src.placement_pin_roles::PartRoles",
+      "src.render_block_types::NameRule",
+      "src.render_svg_context::AdjEntry",
+      "src.render_svg_context::FlatInst",
+      "src.render_svg_context::FlatInstSource",
+      "src.render_svg_context::FlatNet",
+      "src.render_svg_context::IslandAnchorChoice",
+      "src.render_svg_context::IslandAnchorInputs",
+      "src.render_svg_context::PassiveIsland",
+      "src.render_svg_context::RenderCtx",
+      "src.render_svg_context::RenderScratch",
+      "src.sexpr_ast::Node",
+      "src.sexpr_ast::Span",
+      "src.sexpr_parser::ParseDiagnostic",
+      "src.sexpr_tokenizer::Cursor",
+      "src.sexpr_tokenizer::SiScale",
+      "src.sexpr_tokenizer::Token",
+      "src.sexpr_tokenizer::Tokenizer",
+      "src.stdlib::Found",
+      "src.stdlib::Roots",
+      "src.stdlib::StemIterator",
+      "src.stdlib_embed::Entry",
+      "src.zipfile::Entry"
+    ],
+    "uncounted_constructs": {
+      "list_plain_slice": "uncounted: anonymous copy-loop lowering has no original slice identity",
+      "sequence_repetition": "uncounted: anonymous gather-loop lowering has no original multiply identity",
+      "list_nonpacked_literal": "uncounted: acquire/append lowering also represents comprehensions and other constructors",
+      "uninstantiated_generic_templates": "uncounted: dump contains checked specializations, not the bodies of unused generic templates",
+      "record_equality_without_visible_constructor": "uncounted: dump omits aggregate schema tags; nominal equality may be enum/domain/variant/record",
+      "source_loop_depth": "uncounted: reported depth is typed loop nesting, which includes generated loops",
+      "hidden_operands": "uncounted: opaque nodes and print separator/terminator omit subtrees",
+      "fused_slice_or_view": "uncounted: immediately consumed byte slices/views may lower to range operations without slice/view identity"
+    }
+  },
+  "stdlib": {
+    "entry": "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/cost/operations/stdlib.my",
+    "selection": "One selected executable entry; all checked body instances in its loaded graph.",
+    "returncode": 0,
+    "compiler_sha256": "aca89445a3f2d4f2dddbf68b6441c3473374cd37b2e6cde68929e0690def737f",
+    "counts": {
+      "list.in_or_not_in": [
+        0,
+        0,
+        0
+      ],
+      "list.eq": [
+        0,
+        0,
+        0
+      ],
+      "list.ne": [
+        0,
+        0,
+        0
+      ],
+      "record.eq": [
+        0,
+        0,
+        0
+      ],
+      "record.ne": [
+        0,
+        0,
+        0
+      ],
+      "dict.eq": [
+        0,
+        0,
+        0
+      ],
+      "dict.ne": [
+        0,
+        0,
+        0
+      ],
+      "set.eq": [
+        0,
+        0,
+        0
+      ],
+      "set.ne": [
+        0,
+        0,
+        0
+      ],
+      "list.add": [
+        0,
+        0,
+        0
+      ],
+      "sequence.mul": [
+        0,
+        0,
+        0
+      ],
+      "list.slice_without_step": [
+        0,
+        0,
+        0
+      ],
+      "list.slice_step": [
+        0,
+        0,
+        0
+      ],
+      "str.slice_or_tail": [
+        3,
+        1,
+        0
+      ],
+      "str.slice_step": [
+        0,
+        0,
+        0
+      ],
+      "bytes.slice": [
+        1,
+        0,
+        0
+      ],
+      "bytes.view": [
+        0,
+        0,
+        0
+      ],
+      "str.add_in_loop": [
+        0,
+        2,
+        0
+      ],
+      "list.contains_method": [
+        0,
+        0,
+        0
+      ],
+      "literal.fixed_array": [
+        0,
+        0,
+        0
+      ],
+      "literal.packed_list": [
+        0,
+        0,
+        0
+      ]
+    },
+    "uncounted_visible_nodes": {
+      "opaque.unit": 20
+    },
+    "functions": 110,
+    "record_types_certified_by_constructor": [
+      "Error.Invalid",
+      "Error.Malformed",
+      "Error.Overflow",
+      "Json.array",
+      "Json.boolean",
+      "Json.integer",
+      "Json.number",
+      "Json.object",
+      "Json.text",
+      "json::Scanner"
+    ],
+    "uncounted_constructs": {
+      "list_plain_slice": "uncounted: anonymous copy-loop lowering has no original slice identity",
+      "sequence_repetition": "uncounted: anonymous gather-loop lowering has no original multiply identity",
+      "list_nonpacked_literal": "uncounted: acquire/append lowering also represents comprehensions and other constructors",
+      "uninstantiated_generic_templates": "uncounted: dump contains checked specializations, not the bodies of unused generic templates",
+      "record_equality_without_visible_constructor": "uncounted: dump omits aggregate schema tags; nominal equality may be enum/domain/variant/record",
+      "source_loop_depth": "uncounted: reported depth is typed loop nesting, which includes generated loops",
+      "hidden_operands": "uncounted: opaque nodes and print separator/terminator omit subtrees",
+      "fused_slice_or_view": "uncounted: immediately consumed byte slices/views may lower to range operations without slice/view identity"
+    }
+  },
+  "language": {
+    "entry": "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/cost/operations/main.my",
+    "selection": "One selected executable entry; all checked body instances in its loaded graph.",
+    "returncode": 0,
+    "compiler_sha256": "aca89445a3f2d4f2dddbf68b6441c3473374cd37b2e6cde68929e0690def737f",
+    "counts": {
+      "list.in_or_not_in": [
+        1,
+        0,
+        0
+      ],
+      "list.eq": [
+        1,
+        0,
+        0
+      ],
+      "list.ne": [
+        0,
+        0,
+        0
+      ],
+      "record.eq": [
+        0,
+        0,
+        0
+      ],
+      "record.ne": [
+        0,
+        0,
+        0
+      ],
+      "dict.eq": [
+        0,
+        0,
+        0
+      ],
+      "dict.ne": [
+        0,
+        0,
+        0
+      ],
+      "set.eq": [
+        0,
+        0,
+        0
+      ],
+      "set.ne": [
+        0,
+        0,
+        0
+      ],
+      "list.add": [
+        0,
+        0,
+        0
+      ],
+      "sequence.mul": [
+        0,
+        0,
+        0
+      ],
+      "list.slice_without_step": [
+        0,
+        0,
+        0
+      ],
+      "list.slice_step": [
+        0,
+        0,
+        0
+      ],
+      "str.slice_or_tail": [
+        0,
+        0,
+        0
+      ],
+      "str.slice_step": [
+        0,
+        0,
+        0
+      ],
+      "bytes.slice": [
+        1,
+        0,
+        0
+      ],
+      "bytes.view": [
+        1,
+        0,
+        0
+      ],
+      "str.add_in_loop": [
+        0,
+        1,
+        0
+      ],
+      "list.contains_method": [
+        0,
+        0,
+        0
+      ],
+      "literal.fixed_array": [
+        0,
+        0,
+        0
+      ],
+      "literal.packed_list": [
+        0,
+        0,
+        0
+      ]
+    },
+    "uncounted_visible_nodes": {},
+    "functions": 3,
+    "record_types_certified_by_constructor": [],
+    "uncounted_constructs": {
+      "list_plain_slice": "uncounted: anonymous copy-loop lowering has no original slice identity",
+      "sequence_repetition": "uncounted: anonymous gather-loop lowering has no original multiply identity",
+      "list_nonpacked_literal": "uncounted: acquire/append lowering also represents comprehensions and other constructors",
+      "uninstantiated_generic_templates": "uncounted: dump contains checked specializations, not the bodies of unused generic templates",
+      "record_equality_without_visible_constructor": "uncounted: dump omits aggregate schema tags; nominal equality may be enum/domain/variant/record",
+      "source_loop_depth": "uncounted: reported depth is typed loop nesting, which includes generated loops",
+      "hidden_operands": "uncounted: opaque nodes and print separator/terminator omit subtrees",
+      "fused_slice_or_view": "uncounted: immediately consumed byte slices/views may lower to range operations without slice/view identity"
+    }
+  }
+}

@@ -1,0 +1,285 @@
+fn checksum #0 params=1 ret=i64 cabi=false host=false
+  local %0 count: i64
+  local %1 <collection>: List<i64> mut
+  local %2 values: List<i64> mut
+  local %3 text: str mut
+  local %4 i: i64
+  local %5 <range-limit>: i64
+  local %6 result: i64 mut
+  local %7 <collection>: List<i64> mut
+  local %8 <collection>: i64 mut
+  local %9 <collection>: i64 mut
+  local %10 value: i64
+  local %11 copy: List<i64>
+  local %12 <membership>: i64
+  local %13 <membership>: List<i64>
+  local %14 data: bytes
+  local %15 <collection>: bytes mut
+  local %16 owned: bytes
+  local %17 viewed: bytes
+  block
+    initialize %2
+      block_value : List<i64>
+        block
+          initialize %1
+            acquire_buffer : List<i64>
+              integer : i64 0
+        local : List<i64> %1
+    initialize %3
+      array : str
+    range_loop binding=87 id=0
+      start:
+        integer : i64 0
+      end:
+        local : i64 %0
+      setup:
+      loop:
+        condition:
+          binary : bool lt
+            local : i64 %4
+            local : i64 %5
+        body:
+          block
+            discard
+              buffer_operation : unit append owner=%2
+                local : i64 %4
+            assign %3
+              binary : str add
+                local : str %3
+                array : str
+                  integer : u32 46
+        step:
+          assign %4
+            binary : i64 add
+              local : i64 %4
+              integer : i64 1
+    initialize %6
+      length : i64
+        local : str %3
+    block
+      initialize %7
+        local : List<i64> %2
+      initialize %8
+        integer : i64 0
+      initialize %9
+        cast : i64
+          buffer_operation : u64 length owner=%7
+      loop id=1
+        binary : bool lt
+          local : i64 %8
+          local : i64 %9
+        block
+          block
+            discard
+              buffer_operation : unit iteration_check owner=%7
+                local : i64 %9
+          initialize %10
+            buffer_operation : i64 read owner=%7
+              local : i64 %8
+          block
+            assign %6
+              binary : i64 add
+                local : i64 %6
+                local : i64 %10
+        step:
+          block
+            block
+              discard
+                buffer_operation : unit iteration_check owner=%7
+                  local : i64 %9
+            assign %8
+              binary : i64 add
+                local : i64 %8
+                integer : i64 1
+    initialize %11
+      local : List<i64> %2
+    branch
+      binary : bool eq
+        local : List<i64> %2
+        local : List<i64> %11
+      block
+        assign %6
+          binary : i64 add
+            local : i64 %6
+            integer : i64 1
+    branch
+      block_value : bool
+        block
+          initialize %12
+            integer : i64 17
+          initialize %13
+            local : List<i64> %2
+        buffer_operation : bool contains owner=%13
+          local : i64 %12
+      block
+        assign %6
+          binary : i64 add
+            local : i64 %6
+            integer : i64 1
+    initialize %14
+      array : bytes
+        integer : u8 97
+        integer : u8 98
+        integer : u8 99
+        integer : u8 100
+        integer : u8 101
+        integer : u8 102
+        integer : u8 103
+        integer : u8 104
+    initialize %16
+      block_value : bytes
+        block
+          initialize %15
+            local : bytes %14
+        buffer_operation : bytes slice owner=%15
+          integer : i64 1
+          integer : i64 4
+    initialize %17
+      buffer_operation : bytes view owner=%14
+        integer : i64 1
+        integer : i64 4
+    ret
+      binary : i64 add
+        binary : i64 add
+          local : i64 %6
+          length : i64
+            local : bytes %16
+        length : i64
+          local : bytes %17
+fn number #1 params=1 ret=i64 cabi=false host=false
+  local %0 text: str
+  local %1 <collection>: str mut
+  local %2 value: i64
+  block
+    match borrowed=false
+      block_value : Option<i64>
+        block
+          initialize %1
+            local : str %0
+        buffer_operation : Option<i64> parse_int owner=%1
+      arm tag=1 bind=%2
+        block
+          ret
+            local : i64 %2
+      arm tag=0
+        block
+          ret
+            integer : i64 0
+fn main #2 params=2 ret=i64 cabi=false host=false
+  local %0 args: List<str>
+  local %1 out: stream_cap
+  local %2 <collection>: List<str> mut
+  local %3 <collection>: List<str> mut
+  local %4 <collection>: i64 mut
+  local %5 count: i64
+  local %6 <collection>: List<str> mut
+  local %7 <collection>: i64 mut
+  local %8 rounds: i64
+  local %9 result: i64 mut
+  local %10 round: i64
+  local %11 <range-limit>: i64
+  block
+    branch
+      binary : bool ne
+        block_value : i64
+          block
+            initialize %2
+              local : List<str> %0
+          cast : i64
+            buffer_operation : u64 length owner=%2
+        integer : i64 2
+      block
+        ret
+          integer : i64 2
+    initialize %5
+      call : i64 number
+        block_value : str
+          block
+            initialize %3
+              local : List<str> %0
+          buffer_operation : str read owner=%3
+            block_value : i64
+              block
+                initialize %4
+                  integer : i64 0
+                branch
+                  binary : bool lt
+                    local : i64 %4
+                    integer : i64 0
+                  assign %4
+                    binary : i64 add
+                      cast : i64
+                        buffer_operation : u64 length owner=%3
+                      local : i64 %4
+              local : i64 %4
+    initialize %8
+      call : i64 number
+        block_value : str
+          block
+            initialize %6
+              local : List<str> %0
+          buffer_operation : str read owner=%6
+            block_value : i64
+              block
+                initialize %7
+                  integer : i64 1
+                branch
+                  binary : bool lt
+                    local : i64 %7
+                    integer : i64 0
+                  assign %7
+                    binary : i64 add
+                      cast : i64
+                        buffer_operation : u64 length owner=%6
+                      local : i64 %7
+              local : i64 %7
+    branch
+      binary : bool logical_or
+        binary : bool logical_or
+          binary : bool logical_or
+            binary : bool lt
+              local : i64 %5
+              integer : i64 18
+            binary : bool gt
+              local : i64 %5
+              integer : i64 10000
+          binary : bool lt
+            local : i64 %8
+            integer : i64 1
+        binary : bool gt
+          local : i64 %8
+          integer : i64 1000
+      block
+        ret
+          integer : i64 2
+    initialize %9
+      integer : i64 0
+    range_loop binding=889 id=2
+      start:
+        integer : i64 0
+      end:
+        local : i64 %8
+      setup:
+      loop:
+        condition:
+          binary : bool lt
+            local : i64 %10
+            local : i64 %11
+        body:
+          block
+            assign %9
+              binary : i64 add
+                local : i64 %9
+                call : i64 checksum
+                  local : i64 %5
+        step:
+          assign %10
+            binary : i64 add
+              local : i64 %10
+              integer : i64 1
+    discard
+      print : unit sink=stdout debug=false
+        local : stream_cap %1
+        local : i64 %9
+    ret
+      integer : i64 0

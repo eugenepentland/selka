@@ -1,0 +1,40 @@
+func checksum(count: int) -> int:
+    mut values: int[] = []
+    mut text = ""
+    for i in range(count):
+        values.append(i)
+        text += "."
+    mut result = len(text)
+    for value in values:
+        result += value
+    const copy = values
+    if values == copy:
+        result += 1
+    if 17 in values:
+        result += 1
+    const data = b"abcdefgh"
+    const owned = data[1:4]
+    const viewed = data.view(1, 4)
+    return result + len(owned) + len(viewed)
+
+
+func number(text: str) -> int:
+    match parse_int(text):
+        case Some(value):
+            return value
+        case None:
+            return 0
+
+
+func main(args: str[], out: Stream) -> int:
+    if len(args) != 2:
+        return 2
+    const count = number(args[0])
+    const rounds = number(args[1])
+    if count < 18 or count > 10000 or rounds < 1 or rounds > 1000:
+        return 2
+    mut result = 0
+    for round in range(rounds):
+        result += checksum(count)
+    out.print(result)
+    return 0

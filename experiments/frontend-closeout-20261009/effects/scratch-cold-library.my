@@ -1,0 +1,8 @@
+func probe(values: dict[FixedArray[Unit, 2], int], key: FixedArray[Unit, 2]) -> bool:
+    return key in values
+
+
+func bounded(values: dict[FixedArray[Unit, 2], int], key: FixedArray[Unit, 2]) -> bool noalloc:
+    if False:
+        return probe(values, key)
+    return False

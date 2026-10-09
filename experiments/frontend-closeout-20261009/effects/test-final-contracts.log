@@ -1,0 +1,35 @@
+test-core
++- run test 5 pass, 1 fail (6 total)
+guardian/test: test wall 0.26s; slowest over 50ms:
+guardian/test:   0.24s  cost_test.test.Core allocation contracts distinguish compiler runtime scalar helpers from source extern names
+guardian/test: FAIL — 1 failed of 6
+guardian/test: RESULT {"passed":5,"failed":1,"skipped":0}
+error: 'cost_test.test.Core allocation contracts distinguish compiler runtime scalar helpers from source extern names' failed:
+       guardian/test: 6 test(s) selected
+       /home/epentland/ai/canopy/mylang-frontend-redesign/src/sema.zig:1603:21: 0x17c957b in checkBodies (compiler.zig)
+               if (failed) return error.SourceError;
+                           ^
+       /home/epentland/ai/canopy/mylang-frontend-redesign/src/sema.zig:1839:23: 0x15b0696 in checkProgram (compiler.zig)
+           const functions = try checkBodies(.{
+                             ^
+       /home/epentland/ai/canopy/mylang-frontend-redesign/src/sema.zig:1743:9: 0x159b13f in checkCore (compiler.zig)
+               return err;
+               ^
+       /home/epentland/ai/canopy/mylang-frontend-redesign/src/sema.zig:1712:5: 0x159ab39 in checkLibraryProgram (compiler.zig)
+           return checkCore(allocator, src, program, sink, .{ .names = names, .entry_required = false });
+           ^
+       /home/epentland/ai/canopy/mylang-frontend-redesign/src/compiler.zig:202:9: 0x1599b4f in checkLibraryProgram (compiler.zig)
+               return sema.checkLibraryProgram(sink.allocator, self.src, self.syntax.?, &sink, null);
+               ^
+       /home/epentland/ai/canopy/mylang-frontend-redesign/src/core/cost_test.zig:450:29: 0x13413ce in test.Core allocation contracts distinguish compiler runtime scalar helpers from source extern names (root_test.zig)
+           const ordinal_program = try ordinal.checkLibraryProgram();
+                                   ^
+failed command: ./.zig-cache/o/16cde22f4fd5c6e7e0e397729270c3fe/test --cache-dir=./.zig-cache --seed=0x854b4f2f --listen=-
+
+Build Summary: 6/8 steps succeeded (1 failed); 5/6 tests passed (1 failed)
+test-core transitive failure
++- run test 5 pass, 1 fail (6 total)
+
+real 16.80
+user 10.90
+sys 1.31

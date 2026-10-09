@@ -1,0 +1,10 @@
+# relocated
+func apply(f: func(i64) -> i64 effects(output), x: i64) -> i64 effects(output):
+    return f(x)
+
+func one(x: i64) -> i64 effects():
+    return x + 1
+
+func main(out: Stream) -> i64:
+    _ = out
+    return apply(one, 41)

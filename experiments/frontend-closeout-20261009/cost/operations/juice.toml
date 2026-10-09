@@ -1,0 +1,18 @@
+version = 1
+name = "frontend-closeout-operations-20261009"
+adapter = "mylang"
+sources = ["main.my", "juice.toml"]
+
+[build]
+compiler = "mylang"
+entry = "main.my"
+counter_semantics = "core-count-p1-c26c95de7"
+tools = []
+
+[[workloads]]
+name = "operations-quick"
+family = "list-text-bytes"
+args = ["32", "4"]
+unit = "input-record"
+units = 128
+expected_stdout = "2144\n"

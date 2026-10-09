@@ -1,0 +1,33 @@
+[
+  {
+    "case": "cow-library.my",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/.zig-cache/o/20f023b6f32b8c1d8962024206119d82/mylang",
+      "check",
+      "experiments/frontend-closeout-20261009/effects/cow-library.my",
+      "--diagnostics=json"
+    ],
+    "status": 1,
+    "seconds": 0.0055161649361252785
+  },
+  {
+    "case": "scratch-cold-library.my",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/.zig-cache/o/20f023b6f32b8c1d8962024206119d82/mylang",
+      "check",
+      "experiments/frontend-closeout-20261009/effects/scratch-cold-library.my"
+    ],
+    "status": 1,
+    "seconds": 0.0050054509192705154
+  },
+  {
+    "case": "foreign-spoof.my",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-frontend-redesign/.zig-cache/o/20f023b6f32b8c1d8962024206119d82/mylang",
+      "check",
+      "experiments/frontend-closeout-20261009/effects/foreign-spoof.my"
+    ],
+    "status": 1,
+    "seconds": 0.003665996016934514
+  }
+]

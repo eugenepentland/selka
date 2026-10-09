@@ -1,0 +1,318 @@
+{
+  "compiler": "cf7c620dc installed baseline; source preserved in baseline.my",
+  "contention": "shared machine; elapsed is observational, no performance claim",
+  "requests": [
+    {
+      "elapsed_seconds": 0.04677791893482208,
+      "response": {
+        "version": "check-session-v1",
+        "action": "check",
+        "status": 0,
+        "failure": null,
+        "reuse": {
+          "hits": 0,
+          "misses": 1
+        },
+        "cache": {
+          "hits": 0,
+          "misses": 1,
+          "stored": 1,
+          "evicted": 0,
+          "bypassed": 0,
+          "retained_bytes": 8752
+        },
+        "semantic": {
+          "hits": 0,
+          "misses": 1,
+          "stored": 1,
+          "bypassed": 0,
+          "retained_bytes": 666
+        },
+        "functions": {
+          "reused": 0,
+          "checked": 3,
+          "stored": 1,
+          "bypassed": 0,
+          "retained_bytes": 4534,
+          "misses": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "retention": {
+            "ordinary_bytes": 4534,
+            "symbolic_bytes": 0,
+            "specialization_bytes": 0,
+            "evicted": 0
+          }
+        },
+        "semantic_retention": {
+          "retained_bytes": 4534,
+          "ordinary_bytes": 4534,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "semantic_miss_reasons": {
+          "ordinary": [
+            {
+              "reason": "function-value",
+              "count": 1
+            }
+          ],
+          "symbolic": [],
+          "specializations": []
+        },
+        "symbolic_templates": {
+          "checked": 0,
+          "reused": 0,
+          "stored": 0
+        },
+        "specialization_bodies": {
+          "checked": 0,
+          "reused": 0,
+          "stored": 0
+        },
+        "work": {
+          "version": "work-report-v1",
+          "fingerprint_unchanged": null,
+          "reused": false,
+          "request": {
+            "parsed_modules": {
+              "performed": 1,
+              "reused": 0
+            },
+            "checked_bodies": {
+              "performed": 3,
+              "reused": 0
+            },
+            "instantiated_specializations": {
+              "performed": 0,
+              "reused": 0
+            },
+            "lowered_functions": {
+              "performed": 0,
+              "reused": 0
+            },
+            "emitted_fragments": {
+              "performed": 0,
+              "reused": 0
+            },
+            "links": {
+              "performed": 0,
+              "reused": 0
+            },
+            "executed_tests": {
+              "performed": 0,
+              "reused": 0
+            }
+          },
+          "session": {
+            "parsed_modules": {
+              "performed": 1,
+              "reused": 0
+            },
+            "checked_bodies": {
+              "performed": 3,
+              "reused": 0
+            },
+            "instantiated_specializations": {
+              "performed": 0,
+              "reused": 0
+            },
+            "lowered_functions": {
+              "performed": 0,
+              "reused": 0
+            },
+            "emitted_fragments": {
+              "performed": 0,
+              "reused": 0
+            },
+            "links": {
+              "performed": 0,
+              "reused": 0
+            },
+            "executed_tests": {
+              "performed": 0,
+              "reused": 0
+            }
+          },
+          "reused_results": 0,
+          "session_reused_results": 0,
+          "bypassed": []
+        }
+      }
+    },
+    {
+      "elapsed_seconds": 0.003442299086600542,
+      "response": {
+        "version": "check-session-v1",
+        "action": "check",
+        "status": 0,
+        "failure": null,
+        "reuse": {
+          "hits": 0,
+          "misses": 1
+        },
+        "cache": {
+          "hits": 0,
+          "misses": 2,
+          "stored": 2,
+          "evicted": 0,
+          "bypassed": 0,
+          "retained_bytes": 21040
+        },
+        "semantic": {
+          "hits": 0,
+          "misses": 2,
+          "stored": 2,
+          "bypassed": 0,
+          "retained_bytes": 530
+        },
+        "functions": {
+          "reused": 2,
+          "checked": 4,
+          "stored": 2,
+          "bypassed": 0,
+          "retained_bytes": 4534,
+          "misses": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            2,
+            0,
+            0
+          ],
+          "retention": {
+            "ordinary_bytes": 4534,
+            "symbolic_bytes": 0,
+            "specialization_bytes": 0,
+            "evicted": 0
+          }
+        },
+        "semantic_retention": {
+          "retained_bytes": 4534,
+          "ordinary_bytes": 4534,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "semantic_miss_reasons": {
+          "ordinary": [
+            {
+              "reason": "no-retained-body",
+              "count": 1
+            },
+            {
+              "reason": "function-value",
+              "count": 2
+            }
+          ],
+          "symbolic": [],
+          "specializations": []
+        },
+        "symbolic_templates": {
+          "checked": 0,
+          "reused": 0,
+          "stored": 0
+        },
+        "specialization_bodies": {
+          "checked": 0,
+          "reused": 0,
+          "stored": 0
+        },
+        "work": {
+          "version": "work-report-v1",
+          "fingerprint_unchanged": null,
+          "reused": true,
+          "request": {
+            "parsed_modules": {
+              "performed": 1,
+              "reused": 0
+            },
+            "checked_bodies": {
+              "performed": 1,
+              "reused": 2
+            },
+            "instantiated_specializations": {
+              "performed": 0,
+              "reused": 0
+            },
+            "lowered_functions": {
+              "performed": 0,
+              "reused": 0
+            },
+            "emitted_fragments": {
+              "performed": 0,
+              "reused": 0
+            },
+            "links": {
+              "performed": 0,
+              "reused": 0
+            },
+            "executed_tests": {
+              "performed": 0,
+              "reused": 0
+            }
+          },
+          "session": {
+            "parsed_modules": {
+              "performed": 2,
+              "reused": 0
+            },
+            "checked_bodies": {
+              "performed": 4,
+              "reused": 2
+            },
+            "instantiated_specializations": {
+              "performed": 0,
+              "reused": 0
+            },
+            "lowered_functions": {
+              "performed": 0,
+              "reused": 0
+            },
+            "emitted_fragments": {
+              "performed": 0,
+              "reused": 0
+            },
+            "links": {
+              "performed": 0,
+              "reused": 0
+            },
+            "executed_tests": {
+              "performed": 0,
+              "reused": 0
+            }
+          },
+          "reused_results": 0,
+          "session_reused_results": 0,
+          "bypassed": []
+        }
+      }
+    }
+  ]
+}

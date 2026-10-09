@@ -1,0 +1,6 @@
+func fixed(mut values: int[]) -> Unit effects(mutation):
+    values[0] = 42
+
+
+func apply(f: func(int) -> int effects(), x: int) -> int effects():
+    return f(x)

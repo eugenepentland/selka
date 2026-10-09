@@ -1,0 +1,22 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 3 after 5s (all 3 build slot(s) busy)
+test-core
++- run test
+   +- compile test debug native 1 errors
+src/core/cost_test.zig:404:11: error: local constant shadows declaration of 'program'
+    const program = try unit.checkLibraryProgram();
+          ^~~~~~~
+src/core/cost_test.zig:12:1: note: declared here
+const program =
+^~~~~
+error: 1 compilation errors
+failed command: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig test -ODebug --dep mylang --dep core_tool_platform --dep build_identity --dep memory_budget --dep core_test_options --dep core_number_text_object -Mroot=src/core/root_test.zig -ODebug --dep memory_budget -Mmylang=src/compiler.zig -Mcore_tool_platform=src/config_core_tool_platform.zig -ODebug -Mbuild_identity=.zig-cache/o/55a3f41cdd70c701be961e2d8e2020a2/build_identity/identity.zig -ferror-tracing -ODebug -Mmemory_budget=src/memory_budget.zig -Mcore_test_options=.zig-cache/o/d05b46abb538a1b3ae6507f95546170f/options.zig -Mcore_number_text_object=.zig-cache/o/613a15d57de9e110f222ab5a539d578c/core_number_text.o --test-filter "Core allocation contracts" --test-runner ../guardian-zig/src/test_runner.zig --cache-dir .zig-cache --global-cache-dir /home/epentland/ai/canopy/.zig-global-cache --name test --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+
+Build Summary: 5/8 steps succeeded (1 failed)
+test-core transitive failure
++- run test transitive failure
+   +- compile test debug native 1 errors
+
+real 15.86
+user 11.87
+sys 1.26

@@ -1,0 +1,54 @@
+{
+  "argv": [
+    "experiments/frontend-closeout-20261009/artifacts/mylang-candidate-1",
+    "juice",
+    "record",
+    "experiments/frontend-closeout-20261009/cost/operations/juice.toml",
+    "--name",
+    "candidate1",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/cost/juice-cache",
+    "--repeats",
+    "3",
+    "--static"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-frontend-redesign",
+  "started_at": "2026-10-09T13:23:18.159184+00:00",
+  "elapsed_seconds": 19.88502764608711,
+  "returncode": 0,
+  "cpu_affinity": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "other_heavy_processes": [
+    "2342448      10 /bin/bash -lc env ZIG_LOCAL_CACHE_DIR=/home/epentland/ai/canopy/mylang-frontend-redesign/.zig-cache ZIG_GLOBAL_CACHE_DIR=/home/epentland/ai/canopy/.zig-global-cache TMPDIR=/home/epentland/.cache/mylang-tmp/frontend-redesign MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig /usr/bin/time -p flock /run/user/1000/mylang-slots/bench-compile.lock scripts/build-slot.sh gate -- /usr/bin/time -p /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build test --summary all > experiments/frontend-closeout-20261009/full-gate-1.log 2>&1",
+    "2342458      10 /usr/bin/time -p flock /run/user/1000/mylang-slots/bench-compile.lock scripts/build-slot.sh gate -- /usr/bin/time -p /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build test --summary all",
+    "2342459      10 flock /run/user/1000/mylang-slots/bench-compile.lock scripts/build-slot.sh gate -- /usr/bin/time -p /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build test --summary all",
+    "2342460      10 /usr/bin/time -p /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build test --summary all",
+    "2352034       2 /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig cc -c -O3 -target x86_64-linux-gnu.2.31 -march=native -mllvm -x86-experimental-pref-innermost-loop-alignment=6 -Wno-override-module -o /home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/core-runtime/units-v1/e333f36b2eb65e2b0897a8e663e04f788aa8956fd77c2bcff6c4a0d92b6283fd.o.85d884c198b19d5eb38d6fe1c36f7215.partial /home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/cex/ce/cache/base/native-link-4ee6bdadee47b1eb6ddddca39feca13f/e333f36b2eb65e2b0897a8e663e04f788aa8956fd77c2bcff6c4a0d92b6283fd.ll",
+    "2361500       0 /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig cc -c -O0 -target x86_64-linux-gnu.2.31 -march=native -mllvm -x86-experimental-pref-innermost-loop-alignment=6 -Wno-override-module -o /home/epentland/.cache/mylang/core-runtime/units-v1/0955963fe481f68fcbbbd930670a0606ba61f70616134c4448f4ab586cb40871.o.608c03ed6c5c1390b3357ef59f3d9217.partial /home/epentland/ai/canopy/mylang-frontend-redesign/.zig-cache/tmp/rzqWoDHNOjRvLCfp/cache/native-link-9070a98891a69bdcec71a29704ce4904/0955963fe481f68fcbbbd930670a0606ba61f70616134c4448f4ab586cb40871.ll"
+  ],
+  "inputs_sha256": {
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/artifacts/mylang-candidate-1": "235875cbc2796d0eda1883b75b55265b268696771b1a45ad95968e6bd5e0ab47",
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/cost/operations/main.my": "46356643f7ce475a7d32ca82b647c164461e017f54f6a89627ba51b0744c290a",
+    "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/cost/operations/juice.toml": "55c4401f1027af529d8c6c23746cf6de741dd77f2a0e83e776871e087bd7a858"
+  },
+  "inputs_unchanged": true,
+  "stdout_sha256": "5e9cb231079d17cb55c081a4a4e3e21563174e57faa8ca40c5c16ddb579a7605",
+  "stderr_sha256": "7b27ada7e42024dcb685d67c6fd9d965279ca97d83e9ba6bbe991b4c43e9c853",
+  "timing_claim": "Shared-machine observation; not an uncontended speed measurement."
+}

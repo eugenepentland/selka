@@ -1,0 +1,168 @@
+{
+  "entry": "/home/epentland/ai/canopy/mylang-frontend-redesign/experiments/frontend-closeout-20261009/cost/operations/main.my",
+  "selection": "One selected executable entry; all checked body instances in its loaded graph.",
+  "returncode": 0,
+  "compiler_sha256": "235875cbc2796d0eda1883b75b55265b268696771b1a45ad95968e6bd5e0ab47",
+  "counts": {
+    "list.in_or_not_in": [
+      1,
+      0,
+      0
+    ],
+    "list.eq": [
+      1,
+      0,
+      0
+    ],
+    "list.ne": [
+      0,
+      0,
+      0
+    ],
+    "record.eq": [
+      0,
+      0,
+      0
+    ],
+    "record.ne": [
+      0,
+      0,
+      0
+    ],
+    "dict.eq": [
+      0,
+      0,
+      0
+    ],
+    "dict.ne": [
+      0,
+      0,
+      0
+    ],
+    "set.eq": [
+      0,
+      0,
+      0
+    ],
+    "set.ne": [
+      0,
+      0,
+      0
+    ],
+    "list.add": [
+      0,
+      0,
+      0
+    ],
+    "sequence.mul": [
+      0,
+      0,
+      0
+    ],
+    "list.slice_without_step": [
+      0,
+      0,
+      0
+    ],
+    "list.slice_step": [
+      0,
+      0,
+      0
+    ],
+    "str.slice_or_tail": [
+      0,
+      0,
+      0
+    ],
+    "str.slice_step": [
+      0,
+      0,
+      0
+    ],
+    "bytes.slice": [
+      1,
+      0,
+      0
+    ],
+    "bytes.view": [
+      1,
+      0,
+      0
+    ],
+    "str.add_in_loop": [
+      0,
+      1,
+      0
+    ],
+    "list.contains_method": [
+      0,
+      0,
+      0
+    ],
+    "literal.fixed_array": [
+      0,
+      0,
+      0
+    ],
+    "literal.packed_list": [
+      0,
+      0,
+      0
+    ]
+  },
+  "uncounted_visible_nodes": {},
+  "events": [
+    {
+      "row": "str.add_in_loop",
+      "loop_depth": 1,
+      "function": "checksum",
+      "dump_line": 47,
+      "node": "binary : str add",
+      "body_index": 0
+    },
+    {
+      "row": "list.eq",
+      "loop_depth": 0,
+      "function": "checksum",
+      "dump_line": 97,
+      "node": "binary : bool eq",
+      "body_index": 0
+    },
+    {
+      "row": "list.in_or_not_in",
+      "loop_depth": 0,
+      "function": "checksum",
+      "dump_line": 112,
+      "node": "buffer_operation : bool contains owner=%13",
+      "body_index": 0
+    },
+    {
+      "row": "bytes.slice",
+      "loop_depth": 0,
+      "function": "checksum",
+      "dump_line": 134,
+      "node": "buffer_operation : bytes slice owner=%15",
+      "body_index": 0
+    },
+    {
+      "row": "bytes.view",
+      "loop_depth": 0,
+      "function": "checksum",
+      "dump_line": 138,
+      "node": "buffer_operation : bytes view owner=%14",
+      "body_index": 0
+    }
+  ],
+  "functions": 3,
+  "record_types_certified_by_constructor": [],
+  "uncounted_constructs": {
+    "list_plain_slice": "uncounted: anonymous copy-loop lowering has no original slice identity",
+    "sequence_repetition": "uncounted: anonymous gather-loop lowering has no original multiply identity",
+    "list_nonpacked_literal": "uncounted: acquire/append lowering also represents comprehensions and other constructors",
+    "uninstantiated_generic_templates": "uncounted: dump contains checked specializations, not the bodies of unused generic templates",
+    "record_equality_without_visible_constructor": "uncounted: dump omits aggregate schema tags; nominal equality may be enum/domain/variant/record",
+    "source_loop_depth": "uncounted: reported depth is typed loop nesting, which includes generated loops",
+    "hidden_operands": "uncounted: opaque nodes and print separator/terminator omit subtrees",
+    "fused_slice_or_view": "uncounted: immediately consumed byte slices/views may lower to range operations without slice/view identity"
+  }
+}
