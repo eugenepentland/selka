@@ -244,3 +244,36 @@ test "a text copied from part of an ASCII text is ASCII without a re-scan, and a
         try std.testing.expectEqual(@as(u8, 0), ran.status);
     }
 }
+
+/// What `test/core/s1_collisions.my` prints: CPython's answers.
+const collisions_expected = "50\n" ++ collisions_row ++ "\n" ++ collisions_row ++ "\n";
+/// Every pair: a miss, both values intact, a hit, two keys.
+const collisions_row = collisions_ten ++ collisions_ten ++ collisions_ten ++ collisions_ten ++ collisions_last;
+const collisions_ten = "01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,";
+const collisions_last = "01212,01212,01212,01212,01212,01212,01212,01212,01212,01212";
+
+// spec: NEW-CORE-S1-VIEW-3
+test "a borrowed key of at most 16 octets is compared inline by overlapping words and every octet counts" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const llvm = try support.releaseLlvmText(a, kmers);
+    const start = std.mem.indexOf(u8, llvm, ".span_same(ptr %stored") orelse return error.TestUnexpectedResult;
+    const same = llvm[start..(std.mem.indexOfPos(u8, llvm, start, "\n}\n") orelse llvm.len)];
+    // Words of eight and four octets, three single octets below four, `memcmp` only past 16.
+    try std.testing.expect(contains(same, "%short = icmp ule i64 %length, 16"));
+    try std.testing.expect(contains(same, ".span_pair.i64(ptr %bytes, ptr %data, i64 %tail8)"));
+    try std.testing.expect(contains(same, ".span_pair.i32(ptr %bytes, ptr %data, i64 %tail4)"));
+    try std.testing.expectEqual(@as(usize, 3), std.mem.count(u8, same, ".span_octet("));
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, same, "@memcmp"));
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
+    // Keys of 3 to 20 octets whose hashes are equal and which differ only at the start, the
+    // middle or the end: each probe reaches the compare, which must tell them apart.
+    for (modes) |flags| {
+        const ran = try fixture(a, root, "s1_collisions", flags, "");
+        try std.testing.expectEqualStrings(collisions_expected, ran.stdout);
+        try std.testing.expectEqual(@as(u8, 0), ran.status);
+    }
+}
