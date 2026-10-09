@@ -56,7 +56,7 @@ rows)
   n=${2:?run number}
   cd $WT
   load "rows $n start"
-  python3 "$X/tools/quiet.py" -- python3 experiments/new-core-s4-20261006/integration/measure_all46.py --mylang $B --core $C --runner /home/epentland/.cache/mylang/rp3-rows-41ed360fb/bin \
+  python3 "$X/tools/quiet.py" -- python3 experiments/runtime-parity-3-20261009/tools/rows_allrefs.py --mylang $B --core $C --runner /home/epentland/.cache/mylang/rp3-rows-41ed360fb/bin \
     --bin $WT/.mylang-cache/rp3/all46 --json $X/results/all46-$n.json > $X/logs/all46-$n.log 2>&1; echo "rows $n=$?"
   load "rows $n end" ;;
 *) echo "usage: part3.sh feasible|lox|eda|parity|rows N" >&2; exit 2 ;;

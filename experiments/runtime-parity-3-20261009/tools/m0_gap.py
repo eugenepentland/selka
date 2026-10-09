@@ -82,7 +82,7 @@ def main():
         for size in ('4096', '64'):
             configs = [batch['rows'][name]['sizes'][size]['configurations'] for batch in batches]
             median = {key: statistics.median(config[key]['cycles_per_unit'] for config in configs) for key in configs[0]}
-            refs = {short: median[key] for short, key in (('zig-safe', 'Zig ReleaseSafe'), ('rust', 'Rust'), ('go', 'Go')) if key in median}
+            refs = {short: median[key] for short, key in (('zig-safe', 'Zig ReleaseSafe'), ('zig-fast', 'Zig ReleaseFast'), ('rust', 'Rust'), ('go', 'Go')) if key in median}
             lines.append(row(name + '/' + size, median['new core release'], refs, 1.1)[0])
     (M0 / 'gap.md').write_text('\n'.join(lines) + '\n')
     print('gap.md: 45 parity arms, 26 Lox cells, 34 EDA designs, 92 row cells')

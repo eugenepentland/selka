@@ -1,0 +1,42 @@
+source_commit=da7759b05bead885c49413ba5d293626fb0ca4bd
+$ scripts/build-slot.sh gate -- bash -c '"$@"; result=$?; exit "$result"' -- scripts/build-slot.sh build -- python3 experiments/new-core-s3-20261006/wave-a/exclusive_core.py -- /usr/bin/time -q -f %e -o /home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/M0/qualify-base-41ed360fb-01/install-core.seconds zig build install --summary all
+build-slot: all 1 gate slot(s) busy; waiting (0s so far)
+build-slot: all 1 gate slot(s) busy; waiting (60s so far)
+build-slot: all 1 gate slot(s) busy; waiting (120s so far)
+build-slot: all 1 gate slot(s) busy; waiting (181s so far)
+build-slot: all 1 gate slot(s) busy; waiting (241s so far)
+build-slot: all 1 gate slot(s) busy; waiting (301s so far)
+build-slot: all 1 gate slot(s) busy; waiting (361s so far)
+build-slot: all 1 gate slot(s) busy; waiting (421s so far)
+build-slot: all 1 gate slot(s) busy; waiting (481s so far)
+build-slot: all 1 gate slot(s) busy; waiting (541s so far)
+build-slot: all 1 gate slot(s) busy; waiting (602s so far)
+build-slot: all 1 gate slot(s) busy; waiting (662s so far)
+build-slot: all 1 gate slot(s) busy; waiting (722s so far)
+build-slot: all 1 gate slot(s) busy; waiting (782s so far)
+build-slot: all 1 gate slot(s) busy; waiting (842s so far)
+build-slot: all 1 gate slot(s) busy; waiting (902s so far)
+build-slot: all 1 gate slot(s) busy; waiting (962s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1022s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1083s so far)
+build-slot: all 1 gate slot(s) busy; waiting (1143s so far)
+build-slot: gate slot 1 after 1193s (all 1 gate slot(s) busy)
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 1 after 20s (all 3 build slot(s) busy)
+core-exclusive: all 3 build slots held; other-build wait=166.927s; gate wrapper excludes gate execution
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 17d5fc936519)
+guardian: diff-scoped vs 41ed360fb361c49938488ad111795bad8a726b73: 0/575 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 15 finding(s), none in scope — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs 41ed360fb361c49938488ad111795bad8a726b73, 0 file(s) in scope
+Build Summary: 9/9 steps succeeded
+install success
++- install mylang cached
+|  +- compile exe mylang debug native cached 7ms MaxRSS:41M
+|  |  +- run exe build-identity (build_identity) cached
+|  |  |  +- compile exe build-identity debug native cached 6ms MaxRSS:41M
+|  |  +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 6ms MaxRSS:42M
+|  +- run ../guardian-zig/zig-out/bin/guardian-check success 895ms
+|     +- guardian-selfcheck success
+|        +- run ../guardian-zig/zig-out/bin/guardian-check success 4ms
++- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+

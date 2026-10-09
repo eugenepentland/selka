@@ -87,3 +87,19 @@
 - Evidence: both norc and checks+norc exit by SIGABRT on both designs. An owned diagnostic runtime with the C retain/release helpers stubbed removes the abort but produces `WireNotOrthogonal` instead of the rds3+flat golden output. Count removal changes copy-on-write decisions, so this diagnostic does not preserve EDA's answer. Production source and all correctness oracles remain unchanged; the counting-on/off EDA gate passes 34/34.
 - Choice: keep both CPU-8 attempts as invalid, omit their bogus ratios from the bound table, and confirm every valid arm on CPU 10. No required U2 cell exit is lost: its four norc-based exits are Lox cells with matching outputs; EDA retains its explicit 0.93×-base exit and the valid reference_at-inline bound. CPU-10 confirmation applies to cells that set exits; the invalid EDA probes set none. This is diagnostic invalidity, not a correctness-gate waiver.
 - Reversibility: evidence-only decision. A valid count-removal EDA probe can be added later without changing any gate or compiler behavior.
+
+## M0-012 — include all rebuilt row references in timing
+
+- Question: the inherited 46-row timing registry times only Rust and Zig RS for its first 40 rows, although M0 rebuilt Go and Zig RF too; the six S4 rows already include Go.
+- Options: report the narrower inherited comparison or extend its configuration table while retaining the exact timing, startup-subtraction, checksum and threshold rules.
+- Evidence: all 16 expanded reference binaries pass 480 edge probes. The first pilot batch validates every row against the inherited gate references, but does not time the extra available arms.
+- Choice: rows_allrefs.py adds Go and Zig RF for those 40 rows, keeps the six S4 rows' existing reference arms, and runs three fresh 7-round batches. The pilot is retained separately. The queued second pilot batch was stopped before timing began; no completed measurements were overwritten. X uses the same extended registry.
+- Reversibility: additive measurement coverage only; no compiler, workload, reference source or gate threshold changes.
+
+## M0-013 — keep complete evidence within the delivery size limit
+
+- Question: per-cell count journals and the frozen fuzz command journals grow beyond the 10 MB deliverable budget.
+- Options: discard measurements or preserve exact raw data in owned scratch with compact reviewable summaries and compressed archives.
+- Evidence: 108 completed count cells summarize to 193,361 bytes with every cell's totals and the required hot sites retained. Raw fuzz JSONL journals compress losslessly; their generated source trees can be archived without affecting the completed matrix verdict.
+- Choice: exact counting JSON stays in .mylang-cache/rp3/ce/raw/<tag>; committed summaries retain all totals/kinds, raw hashes and hot-site detail. Completed fuzz JSONL is gzipped and generated sources are tar-gzipped, retaining all original bytes. Only workers with exit 0 are compacted; summaries and oracle identities remain unchanged.
+- Reversibility: every raw datum is retained or losslessly archived; no gate is skipped or weakened.
