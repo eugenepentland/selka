@@ -448,3 +448,17 @@ Guardian’s whole-tree commit check caught that SHARED-COUNTS-1 still described
 - **Question:** Available disk fell to 5.6 GB after other workspace activity; final correctness needs working space.
 - **Evidence/choice:** Delete only this task's `.tmp/p1-final-C-src` through `-G-src` reconstructed source archives and their local caches (about 8.5 GB). Their committed source pins, patches, compiler hashes/binaries and evidence are retained. No live own candidate build remains. No shared caches or another lane's files are touched.
 - **Reversal:** Reconstruct from the recorded commit and patch.
+
+## 2026-10-09 — select C and strengthen accounting proof
+
+- **Question:** Which measured final runtime change should be retained without another wall-time investigation?
+- **Evidence:** C's complete historical corpus geomeans are rows 1.0027158207, EDA 1.0190069662, parity 1.0035887383, Lox tree 1.0145199288 and VM 1.0024991900. All are below the premise boundary. A/B/F exceed 1.03 on EDA; G is incomplete.
+- **Choice:** Apply exactly C's core_rt.c patch: inline common-child/release visitor, ordinary dictionary traversal, inline TLS registration check with cold preserve-most registration, and atomic load/store live-block updates only before worker publication. Keep post-publication RMW. Add the staged 1,024-live-block quiescent accounting fixture, which catches lost updates that a final-zero assertion could miss; preserve its eight-worker cross-thread-free checks. Update RUNTIME-THREADS-1. Extend the existing emitted-count test to verify the merged 32:1 metadata node.
+- **Verification pending:** All gates rerun against this committed merged source, including final 300 TSan executions. No new performance certification is claimed. Easy to reverse independently of the scheduler.
+
+## 2026-10-09 — deterministic final proxy
+
+- **Question:** What useful evidence can replace waiting for quiet hardware without pretending to prove timing?
+- **Choice:** Build an exact archive of `main` at `35df839be` as the comparison compiler, then run the existing 132 counted/plain corpus cells for main and the selected package. Compare output correctness plus allocation, copy and logical-operation totals; retain any differences with explanations. Address-dependent realloc moves and peak lifetime may differ and must not be treated as elapsed-time evidence. No alignment sweep is needed for counts. Existing emitted-count/TBAA tests and a fresh typed runtime inventory verify the merged code paths.
+- **Evidence:** Final merged focus passes 26/26 tests and fmt; source pins and full compiler/source hashes will be retained. The historical timing base stays `94dc1c3a2`; the proxy baseline is explicitly the new main, with no P1 runtime. No baseline branch or main worktree is changed.
+- **Limit/reversal:** This detects extra counted work and incorrect outputs, not instruction latency, cache effects or runtime overhead. A later wall-time suite remains necessary to certify the numeric target.

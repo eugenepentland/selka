@@ -22,6 +22,7 @@ static void *thread_body(void *input) {
     core_text_walked += (uint64_t)id + 1;
     for (int i = 0; i < 1000; ++i) assert(!myl_core_clock_advance(clock_cap, 1));
     pthread_barrier_wait(&gate);
+    pthread_barrier_wait(&gate); /* main reads live_count while every worker is quiescent */
     assert(error_trace.origin == &locations[id]);
     assert(core_io_site == &locations[id]);
     myl_core_release(transferred[(id + 1) % 8]);
@@ -39,6 +40,32 @@ static void *thread_body(void *input) {
     myl_core_output_end(1);
     myl_core_release(text);
     return NULL;
+}
+/* Hold both carved and large blocks live together: final zero alone could hide
+ * equal lost increments/decrements in a broken atomic accounting path. */
+static void *accounting_body(void *unused) {
+    (void)unused;
+    core_worker_runtime_start();
+    myl_block *blocks[128];
+    for (unsigned i = 0; i < 128; ++i) blocks[i] = myl_core_list_new_slow(i & 1 ? 1024 : 10, 8);
+    pthread_barrier_wait(&gate);
+    pthread_barrier_wait(&gate);
+    for (unsigned i = 0; i < 128; ++i) myl_core_release(blocks[i]);
+    return NULL;
+}
+static void accounting_mode(void) {
+    int64_t baseline = live_count();
+    assert(!pthread_barrier_init(&gate, NULL, 9));
+    pthread_t threads[8];
+    for (unsigned i = 0; i < 8; ++i) assert(!pthread_create(&threads[i], NULL, accounting_body, NULL));
+    pthread_barrier_wait(&gate);
+    assert(live_count() == baseline + 1024);
+    pthread_barrier_wait(&gate);
+    for (unsigned i = 0; i < 8; ++i) assert(!pthread_join(threads[i], NULL));
+    assert(live_count() == baseline);
+    myl_core_release(clock_cap);
+    assert(live_count() == 0);
+    puts("live accounting: 1024 concurrent small/large blocks, zero after retirement");
 }
 static const myl_core_site fatal_site = {TRAP_DIVISION_BY_ZERO, 7, 3, 64, "//", "task", "thread-probe.my"};
 static void *fatal_body(void *input) {
@@ -95,10 +122,18 @@ int main(int argc, char **argv) {
     core_thread_register();
     clock_cap = myl_core_stand_in(0, 0);
     atomic_store_explicit(&core_pool_started, true, memory_order_release);
+    if (argc > 1 && !strcmp(argv[1], "accounting")) {
+        accounting_mode();
+        return myl_core_exit(0);
+    }
     if (argc > 1 && strcmp(argv[1], "normal")) return fatal_mode(argv[1]);
-    assert(!pthread_barrier_init(&gate, NULL, 8));
+    int64_t baseline = live_count();
+    assert(!pthread_barrier_init(&gate, NULL, 9));
     pthread_t threads[8];
     for (intptr_t id = 0; id < 8; ++id) assert(!pthread_create(&threads[id], NULL, thread_body, (void *)id));
+    pthread_barrier_wait(&gate);
+    assert(live_count() == baseline + 8);
+    pthread_barrier_wait(&gate);
     for (int id = 0; id < 8; ++id) assert(!pthread_join(threads[id], NULL));
     assert(core_io_state(clock_cap)->value == 8000);
     myl_core_release(clock_cap);

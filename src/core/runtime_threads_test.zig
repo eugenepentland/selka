@@ -138,3 +138,19 @@ test "runtime thread output boundaries preserve dynamic print separators and ter
     try std.testing.expect(std.mem.indexOf(u8, run.llvm, "@myl_core_output_end") != null);
     try std.testing.expect(std.mem.indexOf(u8, run.llvm, "@myl_core_free_lists = external thread_local(") != null);
 }
+
+// spec-case: RUNTIME-THREADS-1
+test "runtime threads preserve exact live counts at quiescent mid-flight and retirement checkpoints" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const run = try runFixture(arena.allocator(), true, "accounting");
+    try std.testing.expectEqual(@as(u8, 0), run.status);
+    try std.testing.expectEqualStrings("", run.stderr);
+    try std.testing.expectEqualStrings(
+        "live accounting: 1024 concurrent small/large blocks, zero after retirement\n",
+        run.stdout,
+    );
+    try std.testing.expect(std.mem.indexOf(u8, run.counts, "\"allocs\":1026") != null);
+    try std.testing.expect(std.mem.indexOf(u8, run.counts, "\"frees\":1026") != null);
+    try std.testing.expect(std.mem.indexOf(u8, run.counts, "\"live_bytes_at_exit\":0") != null);
+}

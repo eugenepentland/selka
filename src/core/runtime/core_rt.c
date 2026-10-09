@@ -229,6 +229,18 @@ static void heap_refund(size_t bytes) {
    MYL_CORE_LEAKCHECK=1 count (`live_count`) needs no counting on the fast paths. */
 static _Atomic int64_t live_blocks;
 
+/* The caller is the only runtime thread until pool publication, which precedes
+   pthread_create. Keep atomic storage, but need no locked RMW before that point. */
+__attribute__((always_inline)) static inline void core_live_add(int64_t delta) {
+    if (!core_parallel()) {
+        int64_t live = atomic_load_explicit(&live_blocks, memory_order_relaxed);
+        atomic_store_explicit(&live_blocks, live + delta, memory_order_relaxed);
+    } else {
+        atomic_fetch_add_explicit(&live_blocks, delta, memory_order_relaxed);
+    }
+}
+
+
 /* ---- allocation ----------------------------------------------------------------
  * Blocks of up to MYL_SMALL bytes (header included) come from per-size-class free
  * lists, one class per 32-byte granule, carved from 64 KiB chunks that are never
@@ -283,8 +295,7 @@ static void core_thread_key_initialize(void) {
     if (pthread_key_create(&core_thread_key, core_thread_retire)) out_of_memory();
 }
 
-static void core_thread_register(void) {
-    if (core_thread_registered) return;
+__attribute__((cold, noinline, preserve_most)) static void core_thread_register_slow(void) {
     core_thread_record *record = calloc(1, sizeof *record);
     if (!record) out_of_memory();
     record->lists = free_lists;
@@ -296,6 +307,10 @@ static void core_thread_register(void) {
     core_thread_records = record;
     pthread_mutex_unlock(&core_thread_mutex);
     core_thread_registered = record;
+}
+
+__attribute__((always_inline)) static inline void core_thread_register(void) {
+    if (!core_thread_registered) core_thread_register_slow();
 }
 
 static uint64_t core_thread_walk_total(void) {
@@ -327,7 +342,7 @@ static void *small_alloc(uint32_t class) {
     }
     block = chunk_next;
     chunk_next += bytes;
-    atomic_fetch_add_explicit(&live_blocks, 1, memory_order_relaxed);
+    core_live_add(1);
     return block;
 }
 
@@ -347,7 +362,7 @@ static myl_block *block_alloc(uint32_t kind, size_t data, size_t *room) {
         if (!block) out_of_memory();
         if (heap_ceiling) heap_charge(malloc_usable_size(block));
         *room = data;
-        atomic_fetch_add_explicit(&live_blocks, 1, memory_order_relaxed);
+        core_live_add(1);
     }
     block->count = 1;
     block->kind = kind | (class << MYL_CLASS_SHIFT);
@@ -383,7 +398,7 @@ static void block_free(myl_block *block) {
     uint32_t class = class_of(block);
     core_thread_register();
     if (class == 0) {
-        atomic_fetch_sub_explicit(&live_blocks, 1, memory_order_relaxed);
+        core_live_add(-1);
         if (heap_ceiling) heap_refund(malloc_usable_size(block));
         free(block);
         return;
@@ -695,7 +710,7 @@ static void core_io_finalize(myl_block *block);
 static void core_text_walk_report(void);
 static int64_t core_io_live_handles(void);
 
-static void core_children(myl_block *block, core_child_visitor visit, void *context) {
+__attribute__((always_inline)) static inline void core_children(myl_block *block, core_child_visitor visit, void *context) {
     unsigned kind = kind_of(block);
     if (kind == MYL_KIND_DICT) {
         core_dict_children(block, visit, context);
@@ -714,7 +729,7 @@ static void core_children(myl_block *block, core_child_visitor visit, void *cont
     }
 }
 
-static void core_release_child(myl_block *child, void *context) {
+__attribute__((always_inline)) static inline void core_release_child(myl_block *child, void *context) {
     myl_block **pending = context;
     if (count_release(child)) {
         child->cap = (int64_t)(intptr_t)*pending;

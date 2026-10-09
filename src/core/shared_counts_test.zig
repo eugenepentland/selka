@@ -124,6 +124,8 @@ test "shared count emission uses unordered reads, plain thresholds and cold help
     const text = ran.llvm;
     try std.testing.expect(ran.status == 0);
     try std.testing.expect(std.mem.indexOf(u8, text, "load atomic i32") != null);
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, text, "!23 = !{!\"branch_weights\", i32 32, i32 1}"));
+    try std.testing.expect(std.mem.indexOf(u8, text, "!prof !23") != null);
     try std.testing.expect(std.mem.indexOf(u8, text, "unordered, align 8, !tbaa !3, !range !8") != null);
     try std.testing.expect(std.mem.indexOf(u8, text, ", 2147483646\n") != null);
     try std.testing.expect(std.mem.indexOf(u8, text, ", 2147483648\n") != null);

@@ -1,0 +1,7 @@
+Auto-merging SPEC.md
+Auto-merging src/core/count_runtime.zig
+Auto-merging src/core/emit_llvm.zig
+CONFLICT (content): Merge conflict in src/core/emit_llvm.zig
+Auto-merging src/core/root_test.zig
+Auto-merging src/core/runtime/core_text.c
+Automatic merge failed; fix conflicts and then commit the result.

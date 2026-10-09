@@ -5,7 +5,8 @@
 - **Done:** P1 implementation and P2-0 analysis; full correctness and 300 TSan repetitions pass at `98cb3a49f`.
 - **Measured:** Seven final runtime candidates have retained evidence. C has a complete five-corpus sweep below the 1.03 premise boundary, with strict target misses. G has only complete rows/EDA results and an interrupted parity run.
 - **Decided:** Main advanced to `35df839be`; merge it with a real merge commit and adopt the simpler, fully measured candidate C. The user's latest instruction waives rerunning wall-time performance checks after integration. Hardware-independent output, counter and generated-code checks will supplement fresh correctness. Earlier timings do not certify performance on the merged version.
-- **Next:** Integrate, rerun correctness, finalize evidence/report. P1 is not yet complete. No push or modification of main/Claude occurred.
+- **Integrated:** Real merge `1844fcc33` preserves main `35df839be`; frozen files exactly equal main. Candidate C and the stronger live-accounting fixture pass **26/26 focused tests** and fmt.
+- **Next:** Run final correctness and deterministic proxies on the committed merged runtime; finalize evidence/report. P1 is not yet complete. No push or modification of main/Claude occurred.
 
 ### Revision-3 correctness checkpoint
 
