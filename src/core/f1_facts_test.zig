@@ -136,3 +136,62 @@ test "typed element tags keep every answer: records copied whole, unions, mixed 
         try std.testing.expectEqual(@as(u8, 0), more.status);
     }
 }
+
+const store_backs =
+    \\def fill(n: int) -> int:
+    \\    c = [[0.5 for j in range(n)] for i in range(n)]
+    \\    for i in range(n):
+    \\        for j in range(n):
+    \\            c[i][j] = c[i][j] + float(j)
+    \\    return int(c[n - 1][n - 1])
+    \\
+    \\
+    \\def scale(c: mut list[list[float]], n: int):
+    \\    for i in range(n):
+    \\        for j in range(n):
+    \\            c[i][j] = c[i][j] * 2.0
+    \\
+    \\
+    \\def main(out: Stream) -> int:
+    \\    rows = [[1.0, 2.0], [3.0, 4.0]]
+    \\    scale(mut rows, 2)
+    \\    out.print(fill(4), rows[1][1])
+    \\    return 0
+    \\
+;
+
+// spec: NEW-CORE-F1-STOREBACK-1
+test "a row updated in place is not stored back; a row copy on write may move is stored only when it moved" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const llvm = try support.releaseLlvmText(arena.allocator(), store_backs);
+    // `fill`'s rows are unique, so `c[i][j] = …` updates the row in place and its pointer
+    // never changes: the only element pointer store left is the comprehension's push.
+    const fill = try definition(llvm, "@\"my.fill\"");
+    try std.testing.expectEqual(@as(usize, 1), linesWith(fill, "store ptr", "!tbaa !22"));
+    try std.testing.expect(!contains(fill, "%moved"));
+    // `scale`'s rows may be shared, so the row's update may copy it: every store-back
+    // runs only when the pointer differs from the one the slot holds.
+    const scale = try definition(llvm, "@\"my.scale\"");
+    const moved = linesWith(scale, "%moved", "icmp ne ptr");
+    try std.testing.expect(moved >= 1);
+    try std.testing.expectEqual(moved, linesWith(scale, "store ptr", "!tbaa !22"));
+}
+
+// spec-case: NEW-CORE-F1-STOREBACK-1
+test "store-backs keep every answer: shared rows, rows replaced in the loop, aliasing rows, break and early return, list fields and text" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
+    for (modes) |flags| {
+        const plain = try leakChecked(a, root, "f1_storeback", flags, &.{});
+        try std.testing.expectEqualStrings("7000070 600 457114\n-2513 -2993 -3000 8053\n", plain.stdout);
+        try std.testing.expectEqualStrings("", plain.stderr);
+        const more = try leakChecked(a, root, "f1_storeback", flags, &.{ "x", "y" });
+        try std.testing.expectEqualStrings("25970094 1750 1399118\n-10353 -11753 -11760 14003\n", more.stdout);
+        try std.testing.expectEqual(@as(u8, 0), more.status);
+    }
+}

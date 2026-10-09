@@ -223,6 +223,13 @@ const element_tags = [_]ElementTag{
     .{ .storage = "i8", .tag = "!tbaa !20" },
     .{ .storage = "ptr", .tag = "!tbaa !22" },
 };
+
+/// The element tag of LLVM storage type `storage`, or the generic tag for any other type.
+fn elementTag(storage: []const u8) []const u8 {
+    for (element_tags) |entry| if (std.mem.eql(u8, entry.storage, storage)) return entry.tag;
+    return tbaa_data;
+}
+
 /// The TBAA scaffold and the count range, as numbered above.
 const tbaa_metadata =
     \\!1 = !{!"myl.tbaa"}
@@ -2547,9 +2554,7 @@ const FunctionEmitter = struct {
     /// The TBAA tag of a scalar load or store of LLVM type `storage`: its element tag
     /// inside a list operation (`element_tags`), else the generic data tag.
     fn dataTag(self: *const FunctionEmitter, storage: []const u8) []const u8 {
-        if (!self.element_tags) return tbaa_data;
-        for (element_tags) |entry| if (std.mem.eql(u8, entry.storage, storage)) return entry.tag;
-        return tbaa_data;
+        return if (self.element_tags) elementTag(storage) else tbaa_data;
     }
 
     /// Enter (or, given the saved state, leave) a list operation's element accesses.
@@ -2921,6 +2926,7 @@ const FunctionEmitter = struct {
         const element = m.compound(inst.ty).list;
         try self.boundsCheck(out, inst, list, index);
         const slot = try self.elementSlot(out, list, index, element);
+        if (elements.storeBack(m, self.function, inst)) |back| return self.storeBackPointer(out, name, inst, back, slot);
         const managed = m.managed(element) and !flags.transferredSlot(self.function, inst);
         var held: std.ArrayList(Held) = .empty;
         const saved = self.tagElements(true);
@@ -2949,6 +2955,7 @@ const FunctionEmitter = struct {
         const path = elements.setPath(self.function, inst) orelse return error.UnsupportedInstruction;
         const target = m.pathTarget(element, path) orelse return error.UnsupportedInstruction;
         const at = try self.offsetPointer(out, slot, target.offset);
+        if (elements.storeBack(m, self.function, inst)) |back| return self.storeBackPointer(out, name, inst, back, at);
         const saved = self.tagElements(!m.pathCrossesUnion(element, path));
         defer _ = self.tagElements(saved);
         var held: std.ArrayList(Held) = .empty;
@@ -2961,6 +2968,22 @@ const FunctionEmitter = struct {
         _ = self.tagElements(false);
         try self.releaseHeld(out, held.items);
         try out.print(self.a(), identity_line, .{ name, list });
+    }
+
+    /// A store-back of a block pointer into the slot its transferred read took it from
+    /// (`elements.storeBack`, NEW-CORE-F1-STOREBACK-1): nothing when the pointer is the
+    /// read's on every path, else a store only when it differs. The old pointer's owner
+    /// went with the read, so nothing is released either way.
+    fn storeBackPointer(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst, back: elements.StoreBack, slot: []const u8) !void {
+        if (!back.same) {
+            const stored = try self.value(self.function.operands(inst.data)[0]);
+            const changed = try self.fresh("%moved");
+            try out.print(self.a(), "  {s} = icmp ne ptr {s}, {s}\n", .{ changed, stored, try self.value(back.read) });
+            const join = try self.enterIf(out, changed);
+            try out.print(self.a(), "  store ptr {s}, ptr {s}, align 8, {s}\n", .{ stored, slot, elementTag("ptr") });
+            try self.leaveIf(out, join);
+        }
+        try out.print(self.a(), identity_line, .{ name, try self.value(inst.a) });
     }
 
     /// Read the managed parts of the `value_type` value at `ptr` that a store is about to
