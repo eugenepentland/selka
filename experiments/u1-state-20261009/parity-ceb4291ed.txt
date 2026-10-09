@@ -1,0 +1,45 @@
+scan_count                   instr 1.000 cycles 0.997
+scan_replace                 instr 1.000 cycles 0.996
+scan_split                   instr 1.000 cycles 0.997  ÷zig-safe 1.139
+alloc_churn                  instr 1.000 cycles 1.000
+alloc_churn_arena            instr 1.000 cycles 1.000
+bytes_scan                   instr 0.995 cycles 0.928  ÷zig-safe 0.295
+bytes_scan_wrapping          instr 0.995 cycles 0.929
+calls                        instr 1.000 cycles 1.000  ÷zig-safe 0.990
+dict_count                   instr 0.988 cycles 0.994
+fib                          instr 1.000 cycles 1.003  ÷zig-safe 1.040
+float_loop                   instr 1.000 cycles 0.999
+intloop                      instr 1.000 cycles 1.000  ÷zig-safe 1.026
+list_append_sum              instr 0.894 cycles 0.790
+list_records                 instr 0.910 cycles 1.014
+list_records_wrapping        instr 0.912 cycles 1.001
+records                      instr 1.000 cycles 1.000
+str_build                    instr 0.510 cycles 0.292  ÷zig-safe 0.472
+binary_trees                 instr 1.000 cycles 0.978
+binary_trees_arena           instr 1.000 cycles 1.008
+binary_trees_recursive       instr 1.000 cycles 0.991
+fannkuch_redux               instr 1.000 cycles 1.001  ÷zig-safe 0.724
+fannkuch_redux_array         instr 1.000 cycles 0.999
+fannkuch_redux_tuned         instr 1.000 cycles 1.000
+knucleotide                  instr 1.000 cycles 1.007  ÷zig-safe 0.945
+knucleotide_arena            instr 1.000 cycles 1.001
+knucleotide_tuned            instr 1.000 cycles 1.003
+mandelbrot                   instr 1.000 cycles 1.000
+matmul                       instr 1.000 cycles 1.003  ÷zig-safe 0.312
+matmul_flat                  instr 1.000 cycles 1.001
+matmul_tuned                 instr 1.000 cycles 1.009
+nbody                        instr 0.775 cycles 0.825  ÷zig-safe 1.336
+nbody_class                  instr 0.775 cycles 0.830
+raytrace                     instr 1.000 cycles 1.000
+raytrace_tuned               instr 1.000 cycles 1.000
+sieve                        instr 0.961 cycles 0.920  ÷zig-safe 0.785
+sieve_tuned                  instr 0.961 cycles 0.919
+sort_builtin                 instr 0.997 cycles 1.002  ÷zig-safe 0.429
+sort_quick                   instr 0.873 cycles 0.982  ÷zig-safe 1.084
+sort_records                 instr 0.972 cycles 0.992
+sort_records_keyed           instr 0.973 cycles 0.987
+sort_records_sorted          instr 0.973 cycles 0.984
+spectral_norm                instr 1.000 cycles 1.000
+spectral_norm_tuned          instr 1.000 cycles 1.000
+text_ops                     instr 1.000 cycles 1.002  ÷zig-safe 2.543
+text_ops_tuned               instr 0.895 cycles 0.920

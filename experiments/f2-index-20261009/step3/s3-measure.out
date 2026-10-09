@@ -1,0 +1,34 @@
+45/45 match .expected
+build s3 lox-plain: 0
+build s3 eda-plain: 0
+build s3 lox-count: 0
+build s3 eda-count: 0
+lox cells counting on/off identical: 7/7 (all exit 0: True)
+eda: counting on/off identical 34/34; golden 34/34
+rows built: 92 ok, 0 failed
+92 cells; above 1.02x instructions or 1.03x cycles: ['sort_int/64', 'sort_records/4096', 'packet_decode/4096']
+== parity (instructions or cycles above 1.02 vs base)
+  scan_split: instr 0.996 cycles 0.993 zig-safe 1.100
+  bytes_scan: instr 1.000 cycles 1.001 zig-safe 0.313
+  calls: instr 1.000 cycles 1.000 zig-safe 0.997
+  fib: instr 1.000 cycles 1.000 zig-safe 1.037
+  intloop: instr 1.000 cycles 1.000 zig-safe 1.026
+  str_build: instr 1.000 cycles 1.004 zig-safe 1.610
+  fannkuch_redux: instr 1.189 cycles 0.940 zig-safe 0.676
+  knucleotide: instr 1.000 cycles 0.999 zig-safe 0.945
+  matmul: instr 1.000 cycles 1.000 zig-safe 0.313
+  nbody: instr 0.835 cycles 1.016 zig-safe 1.646
+  sieve: instr 0.817 cycles 0.996 zig-safe 0.848
+  sort_builtin: instr 1.000 cycles 0.998 zig-safe 0.430
+  sort_quick: instr 0.759 cycles 0.888 zig-safe 0.982
+  text_ops: instr 0.999 cycles 0.992 zig-safe 2.460
+== lox/eda
+lox vm/step.10000000: base 16720Mi 2532Mc i/base 1.000 c/base 1.000 | s3 13200Mi 2137Mc i/base 0.789 c/base 0.844
+lox vm/fib.34: base 36652Mi 7057Mc i/base 1.000 c/base 1.000 | s3 31466Mi 5745Mc i/base 0.859 c/base 0.814
+lox vm/string_equality.100000: base 49596Mi 7561Mc i/base 1.000 c/base 1.000 | s3 37580Mi 5833Mc i/base 0.758 c/base 0.771
+lox vm/invocation.1500000: base 66074Mi 13666Mc i/base 1.000 c/base 1.000 | s3 59529Mi 10864Mc i/base 0.901 c/base 0.795
+lox vm/method_call.500000: base 59180Mi 11480Mc i/base 1.000 c/base 1.000 | s3 52086Mi 9257Mc i/base 0.880 c/base 0.806
+lox tree/invocation.150000: base 10099Mi 2163Mc i/base 1.000 c/base 1.000 | s3 9967Mi 2031Mc i/base 0.987 c/base 0.939
+lox tree/equality.300000: base 7417Mi 1290Mc i/base 1.000 c/base 1.000 | s3 7205Mi 1204Mc i/base 0.971 c/base 0.933
+eda rds3+flat: base 971Mi 276Mc i/base 1.000 c/base 1.000 | s3 960Mi 276Mc i/base 0.989 c/base 1.001
+eda labstation: base 725Mi 190Mc i/base 1.000 c/base 1.000 | s3 721Mi 190Mc i/base 0.994 c/base 1.002

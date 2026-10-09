@@ -1,0 +1,218 @@
+{
+ "vm/step": {
+  "check": "my",
+  "arms": {
+   "my": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm-lox/cf/lox/real",
+    "--engine=vm",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/lox/step.10000000.lox"
+   ],
+   "cf-base": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm-lox/cf/lox/base.exe",
+    "--engine=vm",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/lox/step.10000000.lox"
+   ],
+   "cf-bounds": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm-lox/cf/lox/bounds.exe",
+    "--engine=vm",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/lox/step.10000000.lox"
+   ],
+   "cf-checks": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm-lox/cf/lox/checks.exe",
+    "--engine=vm",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/lox/step.10000000.lox"
+   ],
+   "cf-norc": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm-lox/cf/lox/norc.exe",
+    "--engine=vm",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/lox/step.10000000.lox"
+   ],
+   "cf-checks+norc": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm-lox/cf/lox/checks+norc.exe",
+    "--engine=vm",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/lox/step.10000000.lox"
+   ],
+   "rung0": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm-lox/ladders/loxvm.r0",
+    "10000000"
+   ],
+   "rung2": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm-lox/ladders/loxvm.r2",
+    "10000000"
+   ],
+   "rung5": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm-lox/ladders/loxvm.r5",
+    "10000000"
+   ],
+   "rung6": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm-lox/ladders/loxvm.r6",
+    "10000000"
+   ],
+   "zig-safe": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/.tmp/lox-bench/cache/zig-release-safe/out-release-safe/bin/lox",
+    "--engine=vm",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/lox/step.10000000.lox"
+   ],
+   "zig-fast": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/.tmp/lox-bench/cache/zig-release/out-release/bin/lox",
+    "--engine=vm",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/lox/step.10000000.lox"
+   ],
+   "rust": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/.tmp/lox-bench/cache/rust-release/target/release/lox",
+    "--engine=vm",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/lox/step.10000000.lox"
+   ]
+  }
+ },
+ "vm/fib": {
+  "check": "my",
+  "arms": {
+   "my": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm-lox/cf/lox/real",
+    "--engine=vm",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/lox/fib.34.lox"
+   ],
+   "cf-base": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm-lox/cf/lox/base.exe",
+    "--engine=vm",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/lox/fib.34.lox"
+   ],
+   "cf-bounds": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm-lox/cf/lox/bounds.exe",
+    "--engine=vm",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/lox/fib.34.lox"
+   ],
+   "cf-checks": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm-lox/cf/lox/checks.exe",
+    "--engine=vm",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/lox/fib.34.lox"
+   ],
+   "cf-norc": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm-lox/cf/lox/norc.exe",
+    "--engine=vm",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/lox/fib.34.lox"
+   ],
+   "cf-checks+norc": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm-lox/cf/lox/checks+norc.exe",
+    "--engine=vm",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/lox/fib.34.lox"
+   ],
+   "zig-safe": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/.tmp/lox-bench/cache/zig-release-safe/out-release-safe/bin/lox",
+    "--engine=vm",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/lox/fib.34.lox"
+   ],
+   "zig-fast": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/.tmp/lox-bench/cache/zig-release/out-release/bin/lox",
+    "--engine=vm",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/lox/fib.34.lox"
+   ],
+   "rust": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/.tmp/lox-bench/cache/rust-release/target/release/lox",
+    "--engine=vm",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/lox/fib.34.lox"
+   ]
+  }
+ },
+ "vm/string_equality": {
+  "check": "my",
+  "arms": {
+   "my": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm-lox/cf/lox/real",
+    "--engine=vm",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/lox/string_equality.100000.lox"
+   ],
+   "cf-base": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm-lox/cf/lox/base.exe",
+    "--engine=vm",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/lox/string_equality.100000.lox"
+   ],
+   "cf-bounds": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm-lox/cf/lox/bounds.exe",
+    "--engine=vm",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/lox/string_equality.100000.lox"
+   ],
+   "cf-checks": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm-lox/cf/lox/checks.exe",
+    "--engine=vm",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/lox/string_equality.100000.lox"
+   ],
+   "cf-norc": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm-lox/cf/lox/norc.exe",
+    "--engine=vm",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/lox/string_equality.100000.lox"
+   ],
+   "cf-checks+norc": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm-lox/cf/lox/checks+norc.exe",
+    "--engine=vm",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/lox/string_equality.100000.lox"
+   ],
+   "zig-safe": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/.tmp/lox-bench/cache/zig-release-safe/out-release-safe/bin/lox",
+    "--engine=vm",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/lox/string_equality.100000.lox"
+   ],
+   "zig-fast": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/.tmp/lox-bench/cache/zig-release/out-release/bin/lox",
+    "--engine=vm",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/lox/string_equality.100000.lox"
+   ],
+   "rust": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/.tmp/lox-bench/cache/rust-release/target/release/lox",
+    "--engine=vm",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/lox/string_equality.100000.lox"
+   ]
+  }
+ },
+ "vm/invocation": {
+  "check": "my",
+  "arms": {
+   "my": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm-lox/cf/lox/real",
+    "--engine=vm",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/lox/invocation.1500000.lox"
+   ],
+   "cf-base": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm-lox/cf/lox/base.exe",
+    "--engine=vm",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/lox/invocation.1500000.lox"
+   ],
+   "cf-bounds": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm-lox/cf/lox/bounds.exe",
+    "--engine=vm",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/lox/invocation.1500000.lox"
+   ],
+   "cf-checks": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm-lox/cf/lox/checks.exe",
+    "--engine=vm",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/lox/invocation.1500000.lox"
+   ],
+   "cf-norc": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm-lox/cf/lox/norc.exe",
+    "--engine=vm",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/lox/invocation.1500000.lox"
+   ],
+   "cf-checks+norc": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/confirm-lox/cf/lox/checks+norc.exe",
+    "--engine=vm",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/lox/invocation.1500000.lox"
+   ],
+   "zig-safe": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/.tmp/lox-bench/cache/zig-release-safe/out-release-safe/bin/lox",
+    "--engine=vm",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/lox/invocation.1500000.lox"
+   ],
+   "zig-fast": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/.tmp/lox-bench/cache/zig-release/out-release/bin/lox",
+    "--engine=vm",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/lox/invocation.1500000.lox"
+   ],
+   "rust": [
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/.tmp/lox-bench/cache/rust-release/target/release/lox",
+    "--engine=vm",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/lox/invocation.1500000.lox"
+   ]
+  }
+ }
+}

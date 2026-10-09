@@ -10,6 +10,7 @@ const print = @import("print.zig");
 const pipeline = @import("pipeline.zig");
 const passes = @import("passes.zig");
 const facts = @import("facts.zig");
+const ir = @import("ir.zig");
 const test_runner = @import("test_runner.zig");
 const check_command = @import("check_command.zig");
 const cli_run = @import("cli_run.zig");
@@ -108,8 +109,10 @@ fn dumpIr(init: std.process.Init, path: []const u8, with_facts: bool) !u8 {
         else => return err,
     };
     var ranges: std.ArrayList(u8) = .empty;
+    var result_known: []const ?facts.Facts = &.{};
     if (with_facts) {
         const result = try passes.run(allocator, &module, .trusted);
+        result_known = result.known;
         for (module.functions.items, result.known) |function, maybe| {
             const known = maybe orelse continue;
             try ranges.print(allocator, "facts {s}:", .{function.name});
@@ -128,6 +131,17 @@ fn dumpIr(init: std.process.Init, path: []const u8, with_facts: bool) !u8 {
             }
         }
     }
+    if (with_facts) {
+        // Whole-program field intervals (NEW-CORE-F2-FIELD-1), from the final facts' writes.
+        const table = try @import("fields.zig").hulls(allocator, &module, result_known, try @import("fields.zig").closedTypes(allocator, &module), false);
+        for (table.types, 0..) |maybe, k| {
+            const fields = maybe orelse continue;
+            for (fields, 0..) |range, field| if (range) |r| {
+                const full = facts.typeRange(module.compound(@fromBackingInt(@as(u32, @intCast(k + ir.Type.first_compound)))).record[field]) orelse continue;
+                if (r.lo > full.lo or r.hi < full.hi) try ranges.print(allocator, "field type{d}.{d}: [{d}, {d}]\n", .{ k + ir.Type.first_compound, field, r.lo, r.hi });
+            };
+        }
+    }
     const text = try print.module(allocator, &module);
     try std.Io.File.stdout().writeStreamingAll(init.io, text);
     try std.Io.File.stdout().writeStreamingAll(init.io, ranges.items);
@@ -141,6 +155,9 @@ fn sabotageFlag(arg: []const u8) ?@FieldType(pipeline.Options, "facts") {
         .{ "--sabotage-facts=widening", .sabotage_widening },
         .{ "--sabotage-facts=length", .sabotage_length },
         .{ "--sabotage-facts=overflow", .sabotage_overflow },
+        .{ "--sabotage-facts=index", .sabotage_index },
+        .{ "--sabotage-facts=field", .sabotage_field },
+        .{ "--sabotage-facts=version", .sabotage_version },
     };
     for (flags) |flag| if (std.mem.eql(u8, arg, flag[0])) return flag[1];
     return null;

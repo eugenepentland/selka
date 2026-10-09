@@ -1,0 +1,207 @@
+# Index facts (lane F2, NEW-CORE-F2-*): a written index tested as written before its
+# normalization from the end, a fill loop's length only after the loop, a dominating
+# `i < len(other)` for a list of the same length, and checks a dominating check already
+# made. `main` runs every scenario that must succeed; a first argument names one scenario
+# (some of them must trap), and each further argument makes it larger.
+record Point:
+    x: int
+    y: int
+
+
+record Stack:
+    items: int[]
+    top: int
+
+
+func at(xs: int[], i: int) -> int:
+    return xs[i]
+
+
+func put(mut xs: int[], i: int, v: int):
+    xs[i] = v
+
+
+func shift(mut ps: Point[], i: int, dx: int) -> int:
+    ps[i].x = ps[i].x + dx
+    return ps[i].x * 100 + ps[i].y
+
+
+# Negative indexes count from the end, read, written, and in element fields.
+func wraps(size: int) -> int:
+    mut xs = [10, 20, 30, 40 + size]
+    mut total = at(xs, 0) + at(xs, -1) * 10 + at(xs, -4) * 100
+    put(mut xs, -2, 7)
+    put(mut xs, 1, 9)
+    mut ps = [Point(x=1, y=2), Point(x=3, y=4)]
+    mut moved = shift(mut ps, -1, 5) + shift(mut ps, -2, size)
+    return total * 1000000 + xs[1] * 10000 + xs[2] * 100 + moved
+
+
+# An index that is negative on one path only: both reads see the same element.
+func one_path(xs: int[], negative: bool, size: int) -> int:
+    mut i = 1
+    if negative:
+        i = -1 - size
+    mut a = xs[i]
+    mut b = xs[i]
+    return a * 10 + b
+
+
+# A list read inside the loop that fills it: shorter than the fill bound there.
+func fill_inside(n: int) -> int:
+    mut zs: int[] = []
+    mut total = 0
+    for i in range(n):
+        total = total + zs[i]
+        zs.append(i)
+    return total
+
+
+# The same list read after its fill loop has exited: in range.
+func fill_after(n: int) -> int:
+    mut ys: int[] = []
+    for i in range(n):
+        ys.append(i * 3)
+    mut total = 0
+    for i in range(n):
+        total = total + ys[i]
+    return total
+
+
+# A pop between two reads of one index: the second read is checked again.
+func shrink(mut xs: int[], i: int) -> int:
+    mut a = xs[i]
+    _ = xs.pop()
+    mut b = xs[i]
+    return a * 100 + b
+
+
+func drop(mut xs: int[]):
+    _ = xs.pop()
+
+
+# A loop whose list loses elements in the body, directly or through a `mut` callee.
+func loop_shrink(mut xs: int[], through_callee: bool) -> int:
+    mut total = 0
+    for i in range(len(xs)):
+        total = total + xs[i]
+        if i == 1:
+            if through_callee:
+                drop(mut xs)
+            else:
+                _ = xs.pop()
+    return total
+
+
+# A field written between two reads: the second index is another value.
+func bump(mut s: Stack) -> int:
+    mut a = s.items[s.top]
+    s.top = s.top + 1
+    mut b = s.items[s.top]
+    return a * 100 + b
+
+
+# Hoare partition's swap after its scans (sort_quick's shape), and a list of the same
+# length written through a copy.
+func partition(mut xs: int[], lo: int, hi: int) -> int:
+    mut pivot = xs[lo + (hi - lo) // 2]
+    mut i = lo
+    mut j = hi
+    while i <= j:
+        while xs[i] < pivot:
+            i = i + 1
+        while xs[j] > pivot:
+            j = j - 1
+        if i <= j:
+            mut temp = xs[i]
+            xs[i] = xs[j]
+            xs[j] = temp
+            i = i + 1
+            j = j - 1
+    return i * 1000 + j
+
+
+func same_length(xs: int[], extra: int) -> int:
+    mut ys = xs
+    ys[0] = 99
+    mut zs = [for _ in range(extra) yield 1]
+    mut total = 0
+    for i in range(len(xs)):
+        total = total + ys[i] * 10 + xs[i]
+    for i in range(len(zs)):
+        total = total + xs[i]
+    return total
+
+
+# A stack as the Lox VM keeps it: a top field and a frame count read before each write.
+func machine(steps: int) -> int:
+    mut s = Stack(items=[for _ in range(8) yield 0], top=0)
+    mut frames = [Point(x=0, y=0), Point(x=0, y=0)]
+    mut count = 1
+    mut acc = 0
+    for k in range(steps):
+        mut frame = frames[count - 1]
+        frame.x = frame.x + 1
+        frames[count - 1] = frame
+        s.items[s.top] = k
+        s.top = s.top + 1
+        if s.top == 8:
+            while s.top > 0:
+                s.top = s.top - 1
+                acc = acc + s.items[s.top] * s.items[s.top - 1 - 0 + 1 - 1]
+        frames[count - 1] = frame
+    return acc * 10 + frames[0].x
+
+
+# The next index after a checked one: in range only while `i + 1 < len(xs)`.
+func next_index(xs: int[], i: int) -> int:
+    mut a = xs[i]
+    mut b = xs[i + 1]
+    return a * 100 + b
+
+
+func scenario(name: str, size: int, out: Stream) -> int:
+    mut xs = [5, 3, 8, 1, 9, 2, 7 + size]
+    if name == "wraps" or name == "all":
+        out.print(wraps(size))
+    if name == "one_path" or name == "all":
+        out.print(one_path(xs, False, size), one_path(xs, True, size))
+    if name == "fill_after" or name == "all":
+        out.print(fill_after(10 + size))
+    if name == "fill_inside":
+        out.print(fill_inside(3 + size))
+    if name == "shrink" or name == "all":
+        mut ys = [1, 2, 3, 4 + size]
+        out.print(shrink(mut ys, 1), shrink(mut ys, -1))
+    if name == "shrink_trap":
+        mut ys = [1, 2, 3, 4 + size]
+        out.print(shrink(mut ys, 3))
+    if name == "loop_shrink":
+        mut ys = [1, 2, 3, 4 + size]
+        out.print(loop_shrink(mut ys, size > 0))
+    if name == "bump" or name == "all":
+        mut s = Stack(items=[4, 5, 6 + size], top=0)
+        out.print(bump(mut s), s.top)
+    if name == "bump_trap":
+        mut s = Stack(items=[4, 5, 6 + size], top=2 + size)
+        out.print(bump(mut s))
+    if name == "partition" or name == "all":
+        mut ys = [5, 3, 8, 1, 9, 2, 7 + size, 4, 6]
+        out.print(partition(mut ys, 0, len(ys) - 1), ys[0], ys[8])
+    if name == "same_length" or name == "all":
+        out.print(same_length(xs, 3 + size))
+    if name == "same_length_trap":
+        out.print(same_length(xs, 8 + size))
+    if name == "machine" or name == "all":
+        out.print(machine(20 + size))
+    if name == "next" or name == "all":
+        out.print(next_index(xs, 2 + size))
+    if name == "next_trap":
+        out.print(next_index(xs, 6))
+    return 0
+
+
+func main(args: str[], out: Stream) -> int:
+    if len(args) == 0:
+        return scenario("all", 0, out)
+    return scenario(args[0], len(args) - 1, out)

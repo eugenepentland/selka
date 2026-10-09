@@ -1,0 +1,39 @@
+== test/core/u1_appends.my
+fixed test/core/u1_appends.my: 54 edits (E_MODULE_HEADER, E_BINDING_DECLARATION, E_FRONTEND_SYNTAX)
+fix: 54 edits in 1 file over 2 rounds
+== test/core/u1_growth.my
+fixed test/core/u1_growth.my: 32 edits (E_MODULE_HEADER, E_BINDING_DECLARATION, E_FRONTEND_SYNTAX)
+fix: 32 edits in 1 file over 2 rounds
+== test/core/u1_hoist.my
+fixed test/core/u1_hoist.my: 84 edits (E_MODULE_HEADER, E_BINDING_DECLARATION, E_FRONTEND_SYNTAX)
+fix: 84 edits in 1 file over 2 rounds
+== test/core/u1_sink.my
+fixed test/core/u1_sink.my: 36 edits (E_MODULE_HEADER, E_BINDING_DECLARATION, E_FRONTEND_SYNTAX)
+fix: 36 edits in 1 file over 2 rounds
+== test/core/u1_state.my
+fixed test/core/u1_state.my: 45 edits (E_MODULE_HEADER, E_BINDING_DECLARATION, E_FRONTEND_SYNTAX)
+fix: 45 edits in 1 file over 2 rounds
+== test/core/f2_fields.my
+fixed test/core/f2_fields.my: 33 edits (E_MODULE_HEADER, E_BINDING_DECLARATION, E_FRONTEND_SYNTAX)
+fix: 33 edits in 1 file over 2 rounds
+== test/core/f2_header.my
+fixed test/core/f2_header.my: 14 edits (E_MODULE_HEADER, E_BINDING_DECLARATION, E_FRONTEND_SYNTAX)
+fix: 14 edits in 1 file over 2 rounds
+== test/core/f2_index.my
+/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/test/core/f2_index.my:190:9: error[E_BINDING_SCOPE_MIGRATION]: this implicit local is used outside its block; declare the state in the enclosing block or rewrite the branches as a value expression
+          s = Stack(items=[4, 5, 6 + size], top=2 + size)
+          ^
+/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/test/core/f2_index.my:193:9: error[E_BINDING_SCOPE_MIGRATION]: this implicit local is used outside its block; declare the state in the enclosing block or rewrite the branches as a value expression
+          ys = [5, 3, 8, 1, 9, 2, 7 + size, 4, 6]
+          ^
+fixed test/core/f2_index.my: 72 edits (E_MODULE_HEADER, E_BINDING_DECLARATION, E_FRONTEND_EXPRESSION, E_FRONTEND_SYNTAX)
+fix: 72 edits in 1 file over 2 rounds
+== test/core/f2_version.my
+/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/test/core/f2_version.my:63:9: error[E_BINDING_SCOPE_MIGRATION]: this implicit local is used outside its block; declare the state in the enclosing block or rewrite the branches as a value expression
+          m = [for k in range(12) yield k * k]
+          ^
+/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/test/core/f2_version.my:75:9: error[E_BINDING_SCOPE_MIGRATION]: this implicit local is used outside its block; declare the state in the enclosing block or rewrite the branches as a value expression
+          m = [for k in range(12) yield k]
+          ^
+fixed test/core/f2_version.my: 24 edits (E_MODULE_HEADER, E_BINDING_DECLARATION, E_FRONTEND_EXPRESSION, E_FRONTEND_SYNTAX)
+fix: 24 edits in 1 file over 2 rounds

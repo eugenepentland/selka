@@ -1,0 +1,738 @@
+{
+ "record_reads/4096": {
+  "instructions": 0.9999765361064576,
+  "cycles": 1.002288408368388,
+  "branch_misses": [
+   3287,
+   3245
+  ]
+ },
+ "record_reads/64": {
+  "instructions": 0.9999997212686011,
+  "cycles": 0.9996275595807809,
+  "branch_misses": [
+   3116,
+   3117
+  ]
+ },
+ "tagged_stack/4096": {
+  "instructions": 1.0000000313238318,
+  "cycles": 1.000723406310055,
+  "branch_misses": [
+   3171,
+   3186
+  ]
+ },
+ "tagged_stack/64": {
+  "instructions": 1.000000018797421,
+  "cycles": 0.9999411226507581,
+  "branch_misses": [
+   3162,
+   3174
+  ]
+ },
+ "mutate_unique/4096": {
+  "instructions": 1.0,
+  "cycles": 0.9997766706288574,
+  "branch_misses": [
+   3096,
+   3073
+  ]
+ },
+ "mutate_unique/64": {
+  "instructions": 0.9999999866186995,
+  "cycles": 1.0000885561844763,
+  "branch_misses": [
+   3064,
+   3074
+  ]
+ },
+ "mutate_shared/4096": {
+  "instructions": 1.0,
+  "cycles": 0.9995439242998536,
+  "branch_misses": [
+   3189,
+   3182
+  ]
+ },
+ "mutate_shared/64": {
+  "instructions": 1.0,
+  "cycles": 0.9906522241924293,
+  "branch_misses": [
+   3082,
+   3092
+  ]
+ },
+ "record_construct/4096": {
+  "instructions": 0.9999835482130573,
+  "cycles": 0.9996904122174036,
+  "branch_misses": [
+   7089,
+   7106
+  ]
+ },
+ "record_construct/64": {
+  "instructions": 0.9994877866230245,
+  "cycles": 0.9997681714954979,
+  "branch_misses": [
+   3270,
+   3262
+  ]
+ },
+ "record_update/4096": {
+  "instructions": 0.9999774962152751,
+  "cycles": 0.9999088371517949,
+  "branch_misses": [
+   7093,
+   7132
+  ]
+ },
+ "record_update/64": {
+  "instructions": 0.9995335396766678,
+  "cycles": 0.9996677941021075,
+  "branch_misses": [
+   3860,
+   3607
+  ]
+ },
+ "option_handle/4096": {
+  "instructions": 1.0000401408625503,
+  "cycles": 0.9912963017197878,
+  "branch_misses": [
+   7087,
+   7067
+  ]
+ },
+ "option_handle/64": {
+  "instructions": 1.0037507686690093,
+  "cycles": 0.9959547261544064,
+  "branch_misses": [
+   253043,
+   230881
+  ]
+ },
+ "result_propagate/4096": {
+  "instructions": 0.9999676664744884,
+  "cycles": 0.9374949387753302,
+  "branch_misses": [
+   189255,
+   71317
+  ]
+ },
+ "result_propagate/64": {
+  "instructions": 0.9986436981997069,
+  "cycles": 1.0037921770854548,
+  "branch_misses": [
+   3221,
+   3246
+  ]
+ },
+ "list_scan/4096": {
+  "instructions": 0.9999765071215767,
+  "cycles": 1.0029895456711655,
+  "branch_misses": [
+   7084,
+   7079
+  ]
+ },
+ "list_scan/64": {
+  "instructions": 0.9992649525632522,
+  "cycles": 1.003737794626635,
+  "branch_misses": [
+   3425,
+   5786
+  ]
+ },
+ "list_append/4096": {
+  "instructions": 0.999999998442619,
+  "cycles": 1.0000770818827365,
+  "branch_misses": [
+   11179,
+   11239
+  ]
+ },
+ "list_append/64": {
+  "instructions": 0.9999999984361359,
+  "cycles": 1.0091006845627695,
+  "branch_misses": [
+   214261,
+   233911
+  ]
+ },
+ "list_filter/4096": {
+  "instructions": 0.9850819124348016,
+  "cycles": 0.9987826231503776,
+  "branch_misses": [
+   262648,
+   253840
+  ]
+ },
+ "list_filter/64": {
+  "instructions": 0.9889120828306032,
+  "cycles": 0.9350885380168755,
+  "branch_misses": [
+   134429,
+   135282
+  ]
+ },
+ "alloc_short/4096": {
+  "instructions": 0.9999999819506974,
+  "cycles": 0.98625092588794,
+  "branch_misses": [
+   4099,
+   4070
+  ]
+ },
+ "alloc_short/64": {
+  "instructions": 1.0000000094956298,
+  "cycles": 1.0013764391730353,
+  "branch_misses": [
+   14900,
+   25054
+  ]
+ },
+ "alloc_retained/4096": {
+  "instructions": 0.9874794619558361,
+  "cycles": 0.9533223903476398,
+  "branch_misses": [
+   19227,
+   20218
+  ]
+ },
+ "alloc_retained/64": {
+  "instructions": 0.9894498204260262,
+  "cycles": 1.0171833915102653,
+  "branch_misses": [
+   222961,
+   249511
+  ]
+ },
+ "mutate_nested/4096": {
+  "instructions": 1.0000000082247176,
+  "cycles": 1.0761274524694766,
+  "branch_misses": [
+   4995,
+   5209
+  ]
+ },
+ "mutate_nested/64": {
+  "instructions": 1.0,
+  "cycles": 1.00947821261741,
+  "branch_misses": [
+   80239,
+   80279
+  ]
+ },
+ "bytes_scan/4096": {
+  "instructions": 1.0000002790099165,
+  "cycles": 1.002833075175906,
+  "branch_misses": [
+   3301,
+   3383
+  ]
+ },
+ "bytes_scan/64": {
+  "instructions": 1.0,
+  "cycles": 0.9979873087432318,
+  "branch_misses": [
+   3099,
+   3087
+  ]
+ },
+ "string_equal/4096": {
+  "instructions": 1.0,
+  "cycles": 0.9997249799052356,
+  "branch_misses": [
+   3669,
+   3657
+  ]
+ },
+ "string_equal/64": {
+  "instructions": 0.9999999306807538,
+  "cycles": 0.9838389572077297,
+  "branch_misses": [
+   3253,
+   3222
+  ]
+ },
+ "string_search/4096": {
+  "instructions": 1.0,
+  "cycles": 1.0001207866869752,
+  "branch_misses": [
+   13312,
+   13316
+  ]
+ },
+ "string_search/64": {
+  "instructions": 1.0,
+  "cycles": 1.0008003890442747,
+  "branch_misses": [
+   23105,
+   23072
+  ]
+ },
+ "string_split/4096": {
+  "instructions": 1.0000011119486467,
+  "cycles": 1.0229719347436779,
+  "branch_misses": [
+   16822,
+   17249
+  ]
+ },
+ "string_split/64": {
+  "instructions": 1.000001112359466,
+  "cycles": 1.0098763331031655,
+  "branch_misses": [
+   157269,
+   168463
+  ]
+ },
+ "string_join/4096": {
+  "instructions": 1.0,
+  "cycles": 1.029217489968269,
+  "branch_misses": [
+   6684,
+   7844
+  ]
+ },
+ "string_join/64": {
+  "instructions": 1.0,
+  "cycles": 0.9995919838275833,
+  "branch_misses": [
+   3292,
+   3266
+  ]
+ },
+ "dict_lookup/4096": {
+  "instructions": 0.9999960218954568,
+  "cycles": 1.000282883959586,
+  "branch_misses": [
+   262702,
+   267020
+  ]
+ },
+ "dict_lookup/64": {
+  "instructions": 0.9999999481009506,
+  "cycles": 1.004051295434443,
+  "branch_misses": [
+   496103,
+   503471
+  ]
+ },
+ "dict_lookup_str/4096": {
+  "instructions": 0.9999998918297258,
+  "cycles": 0.993738359001961,
+  "branch_misses": [
+   579186,
+   527074
+  ]
+ },
+ "dict_lookup_str/64": {
+  "instructions": 1.0000000202276278,
+  "cycles": 0.9912069296471377,
+  "branch_misses": [
+   453142,
+   417887
+  ]
+ },
+ "dict_update/4096": {
+  "instructions": 0.999997209096904,
+  "cycles": 1.0095501437254812,
+  "branch_misses": [
+   380520,
+   382572
+  ]
+ },
+ "dict_update/64": {
+  "instructions": 0.9999999595448172,
+  "cycles": 1.0238158581399928,
+  "branch_misses": [
+   1130334,
+   1128683
+  ]
+ },
+ "dict_update_str/4096": {
+  "instructions": 0.9944968475921221,
+  "cycles": 1.0080833137713925,
+  "branch_misses": [
+   738081,
+   741614
+  ]
+ },
+ "dict_update_str/64": {
+  "instructions": 0.9949103893928952,
+  "cycles": 1.002064750035149,
+  "branch_misses": [
+   1112221,
+   1109840
+  ]
+ },
+ "set_dedup/4096": {
+  "instructions": 0.9999977113311038,
+  "cycles": 1.0251646149798765,
+  "branch_misses": [
+   490927,
+   497978
+  ]
+ },
+ "set_dedup/64": {
+  "instructions": 1.0001289990854152,
+  "cycles": 1.014194941725307,
+  "branch_misses": [
+   579235,
+   574896
+  ]
+ },
+ "int_parse/4096": {
+  "instructions": 1.0109490251265643,
+  "cycles": 1.0037334699125757,
+  "branch_misses": [
+   27749,
+   24436
+  ]
+ },
+ "int_parse/64": {
+  "instructions": 1.0111200464751737,
+  "cycles": 1.0223866281129772,
+  "branch_misses": [
+   65827,
+   65780
+  ]
+ },
+ "int_format/4096": {
+  "instructions": 0.9999869232595935,
+  "cycles": 1.0011630509632352,
+  "branch_misses": [
+   7871,
+   8331
+  ]
+ },
+ "int_format/64": {
+  "instructions": 0.9999997770386441,
+  "cycles": 1.0051330812602328,
+  "branch_misses": [
+   65958,
+   66241
+  ]
+ },
+ "call_indirect/4096": {
+  "instructions": 1.0000002178613798,
+  "cycles": 1.001213962390716,
+  "branch_misses": [
+   7136,
+   7071
+  ]
+ },
+ "call_indirect/64": {
+  "instructions": 1.0000000809945417,
+  "cycles": 1.0006275226097698,
+  "branch_misses": [
+   3092,
+   3072
+  ]
+ },
+ "sort_int/4096": {
+  "instructions": 1.0000000094159642,
+  "cycles": 1.0036990277472635,
+  "branch_misses": [
+   104216,
+   106808
+  ]
+ },
+ "sort_int/64": {
+  "instructions": 1.0000000123963746,
+  "cycles": 1.0128083958286918,
+  "branch_misses": [
+   42857,
+   45575
+  ]
+ },
+ "sort_records/4096": {
+  "instructions": 1.0,
+  "cycles": 0.9876647261455219,
+  "branch_misses": [
+   12291,
+   12033
+  ]
+ },
+ "sort_records/64": {
+  "instructions": 0.9999999967994045,
+  "cycles": 0.9818677398943905,
+  "branch_misses": [
+   145862,
+   118981
+  ]
+ },
+ "int_math/4096": {
+  "instructions": 1.0006029062956345,
+  "cycles": 0.9996402579613642,
+  "branch_misses": [
+   7071,
+   7048
+  ]
+ },
+ "int_math/64": {
+  "instructions": 1.0246363951736834,
+  "cycles": 1.002248037809725,
+  "branch_misses": [
+   3051,
+   3048
+  ]
+ },
+ "float_math/4096": {
+  "instructions": 0.9999478118251106,
+  "cycles": 0.997318668526522,
+  "branch_misses": [
+   7072,
+   7095
+  ]
+ },
+ "float_math/64": {
+  "instructions": 0.9999993883662562,
+  "cycles": 0.9998980604051232,
+  "branch_misses": [
+   3084,
+   3102
+  ]
+ },
+ "call_direct/4096": {
+  "instructions": 1.0005744489216624,
+  "cycles": 1.001153391347225,
+  "branch_misses": [
+   7085,
+   7107
+  ]
+ },
+ "call_direct/64": {
+  "instructions": 1.0306811502555269,
+  "cycles": 0.9992638477718844,
+  "branch_misses": [
+   3062,
+   3084
+  ]
+ },
+ "branch_predictable/4096": {
+  "instructions": 1.0003594377029108,
+  "cycles": 0.9969902174374873,
+  "branch_misses": [
+   7088,
+   7128
+  ]
+ },
+ "branch_predictable/64": {
+  "instructions": 1.0227643069596082,
+  "cycles": 0.996911692140348,
+  "branch_misses": [
+   3044,
+   3075
+  ]
+ },
+ "branch_mixed/4096": {
+  "instructions": 0.9996334915013066,
+  "cycles": 1.0003863922992733,
+  "branch_misses": [
+   7115,
+   7080
+  ]
+ },
+ "branch_mixed/64": {
+  "instructions": 0.9925786963194331,
+  "cycles": 1.0009344750241969,
+  "branch_misses": [
+   3066,
+   3047
+  ]
+ },
+ "binary_search/4096": {
+  "instructions": 0.9910643961404632,
+  "cycles": 1.009378748542053,
+  "branch_misses": [
+   106360,
+   100890
+  ]
+ },
+ "binary_search/64": {
+  "instructions": 0.986223001627764,
+  "cycles": 1.0137939173992812,
+  "branch_misses": [
+   20768,
+   23218
+  ]
+ },
+ "word_count/4096": {
+  "instructions": 1.0000000107075835,
+  "cycles": 1.0480066119320237,
+  "branch_misses": [
+   5172,
+   5161
+  ]
+ },
+ "word_count/64": {
+  "instructions": 1.0000000086038139,
+  "cycles": 1.0555067340178395,
+  "branch_misses": [
+   41376,
+   45003
+  ]
+ },
+ "csv_aggregate/4096": {
+  "instructions": 0.9997967584250512,
+  "cycles": 1.0017908625556964,
+  "branch_misses": [
+   356937,
+   351153
+  ]
+ },
+ "csv_aggregate/64": {
+  "instructions": 0.9998374986996745,
+  "cycles": 0.99431498533631,
+  "branch_misses": [
+   397828,
+   399614
+  ]
+ },
+ "json_transform/4096": {
+  "instructions": 0.9806944556017042,
+  "cycles": 0.9790193786956779,
+  "branch_misses": [
+   209793,
+   224345
+  ]
+ },
+ "json_transform/64": {
+  "instructions": 0.9815446238117953,
+  "cycles": 0.9867525703293509,
+  "branch_misses": [
+   299174,
+   284705
+  ]
+ },
+ "packet_decode/4096": {
+  "instructions": 1.0311015010797124,
+  "cycles": 1.016394829956053,
+  "branch_misses": [
+   3704,
+   3720
+  ]
+ },
+ "packet_decode/64": {
+  "instructions": 1.0318721129622046,
+  "cycles": 0.9770062585571252,
+  "branch_misses": [
+   28156,
+   28553
+  ]
+ },
+ "lox_eval/4096": {
+  "instructions": 1.0000000063062824,
+  "cycles": 0.9988439653817965,
+  "branch_misses": [
+   3370,
+   3366
+  ]
+ },
+ "lox_eval/64": {
+  "instructions": 1.0,
+  "cycles": 0.9999294204043775,
+  "branch_misses": [
+   5892,
+   5886
+  ]
+ },
+ "tree_build_walk/4096": {
+  "instructions": 1.0000000062718781,
+  "cycles": 1.0022057331764562,
+  "branch_misses": [
+   167717,
+   163728
+  ]
+ },
+ "tree_build_walk/64": {
+  "instructions": 1.0000000083863438,
+  "cycles": 0.9980233192738509,
+  "branch_misses": [
+   72714,
+   71925
+  ]
+ },
+ "record_pass/4096": {
+  "instructions": 0.9999977527824591,
+  "cycles": 1.000448052820955,
+  "branch_misses": [
+   13260,
+   13014
+  ]
+ },
+ "record_pass/64": {
+  "instructions": 0.9999980834068019,
+  "cycles": 1.000485714990393,
+  "branch_misses": [
+   38168,
+   39539
+  ]
+ },
+ "grid_dp/4096": {
+  "instructions": 0.9988394267151337,
+  "cycles": 0.9873625405203589,
+  "branch_misses": [
+   77783,
+   98453
+  ]
+ },
+ "grid_dp/64": {
+  "instructions": 0.9949707100035393,
+  "cycles": 0.9020387781562272,
+  "branch_misses": [
+   52082,
+   31447
+  ]
+ },
+ "union_find/4096": {
+  "instructions": 1.0,
+  "cycles": 1.0011084116342692,
+  "branch_misses": [
+   1574291,
+   1573188
+  ]
+ },
+ "union_find/64": {
+  "instructions": 1.0000000033908842,
+  "cycles": 1.0001690464329365,
+  "branch_misses": [
+   241486,
+   241679
+  ]
+ },
+ "float_format/4096": {
+  "instructions": 0.9999999780980513,
+  "cycles": 1.0010263299608364,
+  "branch_misses": [
+   27486,
+   28118
+  ]
+ },
+ "float_format/64": {
+  "instructions": 0.9999999952528494,
+  "cycles": 1.000392463807005,
+  "branch_misses": [
+   33087,
+   33180
+  ]
+ },
+ "buffer_write/4096": {
+  "instructions": 0.8645045432440182,
+  "cycles": 0.9565531512328342,
+  "branch_misses": [
+   35303,
+   34735
+  ]
+ },
+ "buffer_write/64": {
+  "instructions": 0.8742046842382729,
+  "cycles": 0.9392423965566281,
+  "branch_misses": [
+   59602,
+   46001
+  ]
+ }
+}

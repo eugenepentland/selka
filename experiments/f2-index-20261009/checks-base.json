@@ -1,0 +1,49 @@
+{
+ "sieve": {
+  "counting_matches": true,
+  "kinds": {
+   "bounds_check": 66592510,
+   "division_check": 0,
+   "other_check": 0,
+   "overflow_check": 4472,
+   "shift_check": 0
+  },
+  "sites": {
+   "bounds_check@sieve.my:12": 4471,
+   "bounds_check@sieve.my:15": 46588036,
+   "bounds_check@sieve.my:19": 20000001,
+   "bounds_check@sieve.my:8": 1,
+   "bounds_check@sieve.my:9": 1,
+   "overflow_check@sieve.my:11": 4472
+  },
+  "stdout_sha256": "cf9c0ad3d037bc30d279b430355c9cfab624c7b170305ceee94acb2d79a1be5e"
+ },
+ "sort_quick": {
+  "counting_matches": true,
+  "kinds": {
+   "bounds_check": 101152963,
+   "division_check": 0,
+   "other_check": 0,
+   "overflow_check": 64263155,
+   "shift_check": 0
+  },
+  "sites": {
+   "bounds_check@sort_quick.my:18": 1780915,
+   "bounds_check@sort_quick.my:22": 26442009,
+   "bounds_check@sort_quick.my:24": 29840020,
+   "bounds_check@sort_quick.my:27": 10272504,
+   "bounds_check@sort_quick.my:28": 20545008,
+   "bounds_check@sort_quick.my:29": 10272504,
+   "bounds_check@sort_quick.my:48": 3,
+   "bounds_check@sort_quick.my:50": 2000000,
+   "overflow_check@sort_quick.my:13": 2000000,
+   "overflow_check@sort_quick.my:18": 3561830,
+   "overflow_check@sort_quick.my:23": 15598238,
+   "overflow_check@sort_quick.my:25": 18996249,
+   "overflow_check@sort_quick.my:30": 10272504,
+   "overflow_check@sort_quick.my:31": 10272504,
+   "overflow_check@sort_quick.my:32": 3561830
+  },
+  "stdout_sha256": "3ed8d60b4a0df990e6dd04272765b81f07a2851bef6265fe0625295796d2d526"
+ }
+}

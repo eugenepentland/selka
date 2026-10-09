@@ -1,0 +1,11 @@
+evidence=/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/experiments/fu-x-20261009/fuzz200-fux3
+source_commit=5c8decfd4217c68ac086abc1368653f76530161a
+number: PASS; 152.22192641114816s
+s1: PASS; 154.75967770908028s
+rc: PASS; 77.19907042686827s
+s0: PASS; 111.91433858103119s
+rebinding: PASS; 134.54592426097952s
+text: PASS; 66.28509573102929s
+iteration: PASS; 218.58055539382622s
+functions: PASS; 113.52955507999286s
+dict: PASS; 304.3615819090046s

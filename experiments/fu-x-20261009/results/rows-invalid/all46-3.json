@@ -1,0 +1,7 @@
+{
+  "valid": false,
+  "cpu": 10,
+  "rounds": 7,
+  "rows": {},
+  "error": "missing Rust reference for ports in /home/epentland/ai/canopy/mylang-worktrees/runtime-baseline-20261003/.mylang-cache/runtime-expanded/runner/bin"
+}

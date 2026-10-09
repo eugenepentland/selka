@@ -1,0 +1,29 @@
+test-core
++- run test w
+guardian/test: 18 test(s) selected
+guardian/test: test wall 2.74s; slowest over 50ms:
+guardian/test:   0.48s  f2_index_test.test.F2 index: dominating checks keep every answer and trap where they must: a pop between reads, a field written between reads, a shorter list
+guardian/test:   0.42s  f2_index_test.test.F2 index: written indexes keep every answer and trap where they must: negatives that wrap, one-path negatives, too-negative indexes
+guardian/test:   0.36s  f2_index_test.test.F2 index: a list read inside its own fill loop traps in every build mode
+guardian/test:   0.35s  f2_index_test.test.F2 index: versioned loops keep every answer and trap where they must: guards that fail, indexes that wrap, early exits, prints before a trap, huge offsets
+guardian/test:   0.32s  f2_index_test.test.F2 index: field intervals keep every answer: fields written negative far away, element field stores, copies, recursion, function values
+guardian/test:   0.30s  f2_index_test.test.F2 index: a verify build catches a dominating check taken to cover the next index too
+guardian/test:   0.24s  f2_index_test.test.F2 index: header-edge coverage keeps every answer: indexes that wrap below zero, and the trap past the list
+guardian/test:   0.09s  f2_index_test.test.F2 index: a verify build catches a bounds guard that admits one index past the end
+guardian/test:   0.09s  f2_index_test.test.F2 index: a verify build catches a field interval that lost its top
+guardian/test: PASS — 18 passed
+guardian/test: RESULT {"passed":18,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/8fcf97b61de23219ccab8200fc55202c/test --cache-dir=./.zig-cache --seed=0x2faf490 --listen=-
+
+Build Summary: 8/8 steps succeeded; 18/18 tests passed
+test-core success
++- run test 18 pass (18 total) 2s MaxRSS:44M
+   +- compile test debug native success 1s MaxRSS:347M
+      +- run exe build-identity (build_identity) cached
+      |  +- compile exe build-identity debug native cached 4ms MaxRSS:38M
+      +- options cached
+      |  +- compile exe mylang debug native cached 6ms MaxRSS:38M
+      |     +- run exe build-identity (build_identity) (+1 more reused dependencies)
+      |     +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 4ms MaxRSS:39M
+      +- compile obj core_number_text fast x86_64-linux-gnu.2.31 (reused)
+

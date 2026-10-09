@@ -38,6 +38,15 @@ const patches = [_]Patch{
         .anchor = "        if (heap_ceiling) heap_charge(malloc_usable_size(moved));\n        moved->cap = cap;\n",
         .after = "        myl_count_realloc(myl_count_held, malloc_usable_size(moved), (uintptr_t)moved != myl_count_from, MYL_HEADER + (size_t)moved->len * (size_t)element_size);\n",
     },
+    // A large buffer grows with realloc too (NEW-CORE-U1-GROW-1).
+    .{
+        .anchor = "        if (heap_ceiling) heap_refund(malloc_usable_size(buffer));\n        myl_block *grown = realloc(buffer, bytes);\n",
+        .before = "        size_t myl_count_held = malloc_usable_size(buffer);\n        uintptr_t myl_count_from = (uintptr_t)buffer;\n",
+    },
+    .{
+        .anchor = "        if (heap_ceiling) heap_charge(malloc_usable_size(grown));\n        grown->cap = capacity;\n",
+        .after = "        myl_count_realloc(myl_count_held, malloc_usable_size(grown), (uintptr_t)grown != myl_count_from, MYL_HEADER + (size_t)grown->len);\n",
+    },
     // A small list grows into a fresh block of the next class.
     .{
         .anchor = "    myl_block *grown = block_new(MYL_KIND_LIST, cap, element_size);\n    memcpy(block_data(grown), block_data(list), (size_t)list->len * (size_t)element_size);\n",

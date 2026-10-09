@@ -1,0 +1,614 @@
+{
+ "lox vm/step.10000000": {
+  "median": {
+   "base": {
+    "instructions": 16720488476,
+    "cycles": 2538663519
+   },
+   "final": {
+    "instructions": 15020473019,
+    "cycles": 2277850626
+   }
+  },
+  "samples": {
+   "base": [
+    {
+     "status": 0,
+     "instructions": 16720488490,
+     "cycles": 2539725626
+    },
+    {
+     "status": 0,
+     "instructions": 16720488501,
+     "cycles": 2538547577
+    },
+    {
+     "status": 0,
+     "instructions": 16720488451,
+     "cycles": 2537663436
+    },
+    {
+     "status": 0,
+     "instructions": 16720488476,
+     "cycles": 2538663519
+    },
+    {
+     "status": 0,
+     "instructions": 16720488450,
+     "cycles": 2541375056
+    }
+   ],
+   "final": [
+    {
+     "status": 0,
+     "instructions": 15020473002,
+     "cycles": 2277584907
+    },
+    {
+     "status": 0,
+     "instructions": 15020473019,
+     "cycles": 2278118149
+    },
+    {
+     "status": 0,
+     "instructions": 15020473028,
+     "cycles": 2277522703
+    },
+    {
+     "status": 0,
+     "instructions": 15020473030,
+     "cycles": 2278146143
+    },
+    {
+     "status": 0,
+     "instructions": 15020473016,
+     "cycles": 2277850626
+    }
+   ]
+  }
+ },
+ "lox vm/fib.34": {
+  "median": {
+   "base": {
+    "instructions": 36651967534,
+    "cycles": 7053771102
+   },
+   "final": {
+    "instructions": 35258604942,
+    "cycles": 6702420539
+   }
+  },
+  "samples": {
+   "base": [
+    {
+     "status": 0,
+     "instructions": 36651967432,
+     "cycles": 6932073567
+    },
+    {
+     "status": 0,
+     "instructions": 36651967786,
+     "cycles": 8269928088
+    },
+    {
+     "status": 0,
+     "instructions": 36651967534,
+     "cycles": 7053771102
+    },
+    {
+     "status": 0,
+     "instructions": 36651967476,
+     "cycles": 6891049840
+    },
+    {
+     "status": 0,
+     "instructions": 36651967586,
+     "cycles": 7076521721
+    }
+   ],
+   "final": [
+    {
+     "status": 0,
+     "instructions": 35258604917,
+     "cycles": 6702420539
+    },
+    {
+     "status": 0,
+     "instructions": 35258604926,
+     "cycles": 6760823087
+    },
+    {
+     "status": 0,
+     "instructions": 35258604942,
+     "cycles": 6691045405
+    },
+    {
+     "status": 0,
+     "instructions": 35258604970,
+     "cycles": 6678011849
+    },
+    {
+     "status": 0,
+     "instructions": 35258605002,
+     "cycles": 6825182924
+    }
+   ]
+  }
+ },
+ "lox vm/string_equality.100000": {
+  "median": {
+   "base": {
+    "instructions": 49596172838,
+    "cycles": 7564668406
+   },
+   "final": {
+    "instructions": 40807984622,
+    "cycles": 6359318199
+   }
+  },
+  "samples": {
+   "base": [
+    {
+     "status": 0,
+     "instructions": 49596172845,
+     "cycles": 7562553744
+    },
+    {
+     "status": 0,
+     "instructions": 49596172838,
+     "cycles": 7564668406
+    },
+    {
+     "status": 0,
+     "instructions": 49596173310,
+     "cycles": 7565992848
+    },
+    {
+     "status": 0,
+     "instructions": 49596172814,
+     "cycles": 7561392975
+    },
+    {
+     "status": 0,
+     "instructions": 49596172769,
+     "cycles": 7573035790
+    }
+   ],
+   "final": [
+    {
+     "status": 0,
+     "instructions": 40807984649,
+     "cycles": 6359318199
+    },
+    {
+     "status": 0,
+     "instructions": 40807984622,
+     "cycles": 6360418865
+    },
+    {
+     "status": 0,
+     "instructions": 40807984616,
+     "cycles": 6356166807
+    },
+    {
+     "status": 0,
+     "instructions": 40807984644,
+     "cycles": 6359028416
+    },
+    {
+     "status": 0,
+     "instructions": 40807984605,
+     "cycles": 6374151294
+    }
+   ]
+  }
+ },
+ "lox vm/invocation.1500000": {
+  "median": {
+   "base": {
+    "instructions": 66073596401,
+    "cycles": 13819786273
+   },
+   "final": {
+    "instructions": 64099584273,
+    "cycles": 12359509283
+   }
+  },
+  "samples": {
+   "base": [
+    {
+     "status": 0,
+     "instructions": 66073596428,
+     "cycles": 13823816057
+    },
+    {
+     "status": 0,
+     "instructions": 66073596212,
+     "cycles": 13492997942
+    },
+    {
+     "status": 0,
+     "instructions": 66073596401,
+     "cycles": 13819786273
+    },
+    {
+     "status": 0,
+     "instructions": 66073596346,
+     "cycles": 13697898310
+    },
+    {
+     "status": 0,
+     "instructions": 66073596743,
+     "cycles": 15280660246
+    }
+   ],
+   "final": [
+    {
+     "status": 0,
+     "instructions": 64099584182,
+     "cycles": 12336339603
+    },
+    {
+     "status": 0,
+     "instructions": 64099584598,
+     "cycles": 12577252813
+    },
+    {
+     "status": 0,
+     "instructions": 64099584494,
+     "cycles": 12840173855
+    },
+    {
+     "status": 0,
+     "instructions": 64099584243,
+     "cycles": 12359509283
+    },
+    {
+     "status": 0,
+     "instructions": 64099584273,
+     "cycles": 12313832649
+    }
+   ]
+  }
+ },
+ "lox vm/method_call.500000": {
+  "median": {
+   "base": {
+    "instructions": 59179930950,
+    "cycles": 11417449315
+   },
+   "final": {
+    "instructions": 56857250033,
+    "cycles": 10461254339
+   }
+  },
+  "samples": {
+   "base": [
+    {
+     "status": 0,
+     "instructions": 59179930950,
+     "cycles": 11493723398
+    },
+    {
+     "status": 0,
+     "instructions": 59179930937,
+     "cycles": 11263583766
+    },
+    {
+     "status": 0,
+     "instructions": 59179931028,
+     "cycles": 11714944998
+    },
+    {
+     "status": 0,
+     "instructions": 59179931487,
+     "cycles": 11417449315
+    },
+    {
+     "status": 0,
+     "instructions": 59179930876,
+     "cycles": 11162550267
+    }
+   ],
+   "final": [
+    {
+     "status": 0,
+     "instructions": 56857250073,
+     "cycles": 10504362566
+    },
+    {
+     "status": 0,
+     "instructions": 56857250033,
+     "cycles": 10461254339
+    },
+    {
+     "status": 0,
+     "instructions": 56857250000,
+     "cycles": 10458157624
+    },
+    {
+     "status": 0,
+     "instructions": 56857250266,
+     "cycles": 11257633513
+    },
+    {
+     "status": 0,
+     "instructions": 56857250026,
+     "cycles": 10438818848
+    }
+   ]
+  }
+ },
+ "lox tree/invocation.150000": {
+  "median": {
+   "base": {
+    "instructions": 10098859502,
+    "cycles": 2128736475
+   },
+   "final": {
+    "instructions": 10117130456,
+    "cycles": 2148699213
+   }
+  },
+  "samples": {
+   "base": [
+    {
+     "status": 0,
+     "instructions": 10098859492,
+     "cycles": 2105419339
+    },
+    {
+     "status": 0,
+     "instructions": 10098859491,
+     "cycles": 2128736475
+    },
+    {
+     "status": 0,
+     "instructions": 10098859520,
+     "cycles": 2133864864
+    },
+    {
+     "status": 0,
+     "instructions": 10098859502,
+     "cycles": 2097722326
+    },
+    {
+     "status": 0,
+     "instructions": 10098859508,
+     "cycles": 2141065174
+    }
+   ],
+   "final": [
+    {
+     "status": 0,
+     "instructions": 10117130450,
+     "cycles": 2155269608
+    },
+    {
+     "status": 0,
+     "instructions": 10117130465,
+     "cycles": 2160021460
+    },
+    {
+     "status": 0,
+     "instructions": 10117130456,
+     "cycles": 2140613223
+    },
+    {
+     "status": 0,
+     "instructions": 10117130440,
+     "cycles": 2148699213
+    },
+    {
+     "status": 0,
+     "instructions": 10117130464,
+     "cycles": 2145074033
+    }
+   ]
+  }
+ },
+ "lox tree/equality.300000": {
+  "median": {
+   "base": {
+    "instructions": 7416823966,
+    "cycles": 1286087813
+   },
+   "final": {
+    "instructions": 7417988236,
+    "cycles": 1285978035
+   }
+  },
+  "samples": {
+   "base": [
+    {
+     "status": 0,
+     "instructions": 7416823966,
+     "cycles": 1286202149
+    },
+    {
+     "status": 0,
+     "instructions": 7416823958,
+     "cycles": 1285393441
+    },
+    {
+     "status": 0,
+     "instructions": 7416823966,
+     "cycles": 1284053304
+    },
+    {
+     "status": 0,
+     "instructions": 7416823974,
+     "cycles": 1286087813
+    },
+    {
+     "status": 0,
+     "instructions": 7416823990,
+     "cycles": 1290696105
+    }
+   ],
+   "final": [
+    {
+     "status": 0,
+     "instructions": 7417988236,
+     "cycles": 1283720504
+    },
+    {
+     "status": 0,
+     "instructions": 7417988235,
+     "cycles": 1284956124
+    },
+    {
+     "status": 0,
+     "instructions": 7417988241,
+     "cycles": 1286589062
+    },
+    {
+     "status": 0,
+     "instructions": 7417988253,
+     "cycles": 1288462018
+    },
+    {
+     "status": 0,
+     "instructions": 7417988234,
+     "cycles": 1285978035
+    }
+   ]
+  }
+ },
+ "eda rds3+flat": {
+  "median": {
+   "base": {
+    "instructions": 970706572,
+    "cycles": 279626178
+   },
+   "final": {
+    "instructions": 967195795,
+    "cycles": 277404204
+   }
+  },
+  "samples": {
+   "base": [
+    {
+     "status": 0,
+     "instructions": 970706549,
+     "cycles": 279626178
+    },
+    {
+     "status": 0,
+     "instructions": 970706589,
+     "cycles": 280282452
+    },
+    {
+     "status": 0,
+     "instructions": 970706572,
+     "cycles": 280978956
+    },
+    {
+     "status": 0,
+     "instructions": 970706528,
+     "cycles": 278866573
+    },
+    {
+     "status": 0,
+     "instructions": 970706594,
+     "cycles": 278867817
+    }
+   ],
+   "final": [
+    {
+     "status": 0,
+     "instructions": 967195811,
+     "cycles": 281155659
+    },
+    {
+     "status": 0,
+     "instructions": 967195813,
+     "cycles": 277404204
+    },
+    {
+     "status": 0,
+     "instructions": 967195795,
+     "cycles": 277222101
+    },
+    {
+     "status": 0,
+     "instructions": 967195729,
+     "cycles": 276376941
+    },
+    {
+     "status": 0,
+     "instructions": 967195715,
+     "cycles": 279742689
+    }
+   ]
+  }
+ },
+ "eda labstation": {
+  "median": {
+   "base": {
+    "instructions": 725052829,
+    "cycles": 189739635
+   },
+   "final": {
+    "instructions": 721689451,
+    "cycles": 189593067
+   }
+  },
+  "samples": {
+   "base": [
+    {
+     "status": 0,
+     "instructions": 725052940,
+     "cycles": 189297131
+    },
+    {
+     "status": 0,
+     "instructions": 725052829,
+     "cycles": 188938446
+    },
+    {
+     "status": 0,
+     "instructions": 725052827,
+     "cycles": 189739635
+    },
+    {
+     "status": 0,
+     "instructions": 725052756,
+     "cycles": 190913773
+    },
+    {
+     "status": 0,
+     "instructions": 725052830,
+     "cycles": 192736661
+    }
+   ],
+   "final": [
+    {
+     "status": 0,
+     "instructions": 721689547,
+     "cycles": 188497289
+    },
+    {
+     "status": 0,
+     "instructions": 721689325,
+     "cycles": 190077868
+    },
+    {
+     "status": 0,
+     "instructions": 721689547,
+     "cycles": 191015814
+    },
+    {
+     "status": 0,
+     "instructions": 721689274,
+     "cycles": 189593067
+    },
+    {
+     "status": 0,
+     "instructions": 721689451,
+     "cycles": 188599829
+    }
+   ]
+  }
+ }
+}

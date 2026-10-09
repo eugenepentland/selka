@@ -1,0 +1,18 @@
+{
+ "sort_records/4096": {
+  "instructions": 0.9665987492605763,
+  "cycles": 0.9944548265789823,
+  "branch_misses": [
+   11499,
+   12078
+  ]
+ },
+ "sort_records/64": {
+  "instructions": 0.9739951468476671,
+  "cycles": 0.9522681824386607,
+  "branch_misses": [
+   137832,
+   143455
+  ]
+ }
+}

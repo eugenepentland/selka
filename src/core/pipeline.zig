@@ -32,8 +32,11 @@ pub const Options = struct {
     /// or `sabotage` (`--sabotage-facts`, test only: verify with one wrong rule), with
     /// `sabotage_widening` and `sabotage_length` for the other wrong rules of `facts.Sabotage`
     /// (`--sabotage-facts=widening`, `--sabotage-facts=length`), and `sabotage_overflow`
-    /// for the overflow facts' rules (`--sabotage-facts=overflow`).
-    facts: enum { on, off, verify, sabotage, sabotage_widening, sabotage_length, sabotage_overflow } = .on,
+    /// for the overflow facts' rules (`--sabotage-facts=overflow`), and `sabotage_index` for
+    /// the dominating-check rule (`--sabotage-facts=index`), and `sabotage_field` for the
+    /// whole-program field intervals (`--sabotage-facts=field`), and `sabotage_version` for
+    /// the bounds versioning guard (`--sabotage-facts=version`).
+    facts: enum { on, off, verify, sabotage, sabotage_widening, sabotage_length, sabotage_overflow, sabotage_index, sabotage_field, sabotage_version } = .on,
 };
 
 /// Extra outputs of a build.
@@ -270,6 +273,9 @@ pub fn emitted(allocator: std.mem.Allocator, module: *ir.Module, unit: Unit, opt
         .sabotage_widening => .sabotage_widening,
         .sabotage_length => .sabotage_length,
         .sabotage_overflow => .sabotage_overflow,
+        .sabotage_index => .sabotage_index,
+        .sabotage_field => .sabotage_field,
+        .sabotage_version => .sabotage_version,
     };
     const optimized = options.mode != .debug;
     var result = if (optimized) try passes.run(allocator, module, mode) else try passes.debug(allocator, module);

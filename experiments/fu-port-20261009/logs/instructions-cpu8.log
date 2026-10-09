@@ -1,0 +1,22 @@
+start 16:40:05 load 25.09 21.51 11.30
+round 1 done
+round 2 done
+round 3 done
+round 4 done
+round 5 done
+cell                              port instr      main instr P/M instr  P/M cyc X/A instr
+parity/matmul                    145,117,259     145,109,353     1.000    1.016     0.999  same_stdout=True
+parity/sort_quick                833,653,300   1,100,511,628     0.758    0.890     0.757  same_stdout=True
+parity/sieve                     379,131,305     510,366,327     0.743    0.939     0.739  same_stdout=True
+parity/nbody                   2,419,427,469   3,489,883,342     0.693    0.813     0.693  same_stdout=True
+parity/str_build                 131,343,049     272,170,497     0.483    0.289     0.482  same_stdout=True
+parity/knucleotide             1,198,523,205   1,198,658,452     1.000    1.001       1.0  same_stdout=True
+parity/list_append_sum           143,250,314     152,302,028     0.941    0.804     0.941  same_stdout=True
+lox/vm/fib                    31,020,334,867  37,294,329,738     0.832    0.784     0.832  same_stdout=True
+lox/vm/invocation             59,449,332,534  67,191,373,168     0.885    0.745     0.885  same_stdout=True
+lox/vm/method_call            51,717,638,876  60,309,221,193     0.858    0.777     0.858  same_stdout=True
+lox/vm/string_equality        31,496,741,291  50,568,989,906     0.623    0.604     0.623  same_stdout=True
+lox/tree/equality              7,028,944,627   7,445,393,198     0.944    0.890     0.944  same_stdout=True
+lox/tree/invocation           10,021,242,800  10,265,914,871     0.976    0.939     0.976  same_stdout=True
+eda/34 designs                13,645,116,286  13,729,644,039     0.994    0.968     0.993  same_stdout=True
+exit=0 end 16:45:21 load 9.55 13.27 10.44

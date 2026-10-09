@@ -12,6 +12,7 @@
 const std = @import("std");
 const ir = @import("ir.zig");
 const facts = @import("facts.zig");
+const index_keys = @import("index_keys.zig");
 const vector = @import("vector.zig");
 const c_abi = @import("c_abi.zig");
 const flags = @import("flags.zig");
@@ -30,6 +31,7 @@ const emit_constants = @import("emit_constants.zig");
 const emit_count = @import("emit_count.zig");
 const origins = @import("inline_origins.zig");
 const emit_homes = @import("emit_homes.zig");
+const emit_state = @import("emit_state.zig");
 const effects = @import("effects.zig");
 const fuse = @import("fuse.zig");
 
@@ -819,7 +821,26 @@ const MemoryState = struct {
     uses: []u32 = &.{},
     /// Per instruction: a list element over four words lent to calls where it lies (CE2-B).
     borrowed: []bool = &.{},
+    /// The lists and buffers whose length a loop keeps in slots while it appends (`emit_state.zig`).
+    states: emit_state.Plan = .{},
+    /// Per instruction: the index the program wrote, when it is a Python index normalization
+    /// phi (`facts.normalizedRaw`), else `.none` (NEW-CORE-F2-WRAP-1).
+    from_end: []ir.Ref = &.{},
+    /// A normalized index's checked value (`checkedIndex`), by the written index's key and its
+    /// list's length key: the LLVM value and the IR block it was made in, for the later
+    /// accesses that block dominates.
+    checked: std.AutoHashMapUnmanaged(NormalizedKey, CheckedIndex) = .empty,
+    /// Dominators of the IR blocks (`facts.shape`), for `checked`.
+    shape: ?facts.Shape = null,
+    /// Value and length identities (`index_keys`), for `checked`.
+    keys: ?index_keys.Keys = null,
 };
+
+/// A written index normalized against a list's length: equal keys, equal normalized values.
+const NormalizedKey = struct { index: index_keys.IndexKey, length: index_keys.Key };
+
+/// One normalized index a checked access made (NEW-CORE-F2-WRAP-1).
+const CheckedIndex = struct { name: []const u8, block: u32 };
 
 /// Per instruction, what an in-out call (CE-A P7) needs: its in-out arguments, and whether its
 /// result record must also hold the final values.
@@ -1087,6 +1108,8 @@ const FunctionEmitter = struct {
         // pointer the callee updates in place (`InOutAbi`).
         const abi = inOutAbi(m, f.signature);
         try self.analyzeMemory();
+        self.memory.states = try emit_state.plan(self.a(), m, f);
+        try emit_state.allocas(&self.memory.states, &self.state.allocas, self.a());
         try self.defineLine(out, abi);
         try self.collectBoundLengths();
         if (self.state.options.counters) self.count_fn = try self.state.count.function(self.a(), f.name);
@@ -1107,6 +1130,7 @@ const FunctionEmitter = struct {
                 const inst = f.inst(ref);
                 if (inst.op == .phi) {
                     self.selectInstruction(@intCast(b), ref);
+                    try self.currentHeader(&bodies[b], ref);
                     try self.captureBoundLength(&bodies[b], ref);
                     try self.assertFacts(&bodies[b], ref, inst);
                 }
@@ -1117,6 +1141,7 @@ const FunctionEmitter = struct {
                 self.selectInstruction(@intCast(b), ref);
                 self.current = ref;
                 try self.instruction(&bodies[b], ref, inst);
+                if (!inst.op.terminates()) try self.currentHeader(&bodies[b], ref);
                 if (inst.op != .param and inst.op != .str_const) try self.captureBoundLength(&bodies[b], ref);
                 // A construction stored straight into its consumer never exists as a value to assert about.
                 if (!inst.op.terminates() and !self.memory.fused[ref.index()]) try self.assertFacts(&bodies[b], ref, inst);
@@ -1146,6 +1171,14 @@ const FunctionEmitter = struct {
             try out.appendSlice(self.a(), bodies[b].items);
         }
         try out.appendSlice(self.a(), "}\n");
+    }
+
+    /// Verify builds read a list's header to check its facts: a list whose length is kept in
+    /// slots (`emit_state.zig`) has it stored back first.
+    fn currentHeader(self: *FunctionEmitter, out: *Out, ref: ir.Ref) !void {
+        if (self.knownFacts() == null) return;
+        const slots = self.memory.states.of(ref) orelse return;
+        try emit_state.store(*FunctionEmitter, self, out, try self.value(ref), slots);
     }
 
     /// The `define` line up to its parameters: a value over four words is used where the caller keeps
@@ -1211,6 +1244,15 @@ const FunctionEmitter = struct {
             phis[b] = mine.items;
         }
         mem.phis = phis;
+        mem.checked = .empty;
+        mem.shape = try facts.shape(self.a(), f);
+        mem.keys = try index_keys.compute(self.a(), f, mem.shape.?.rpo);
+        mem.from_end = try self.a().alloc(ir.Ref, count);
+        @memset(mem.from_end, .none);
+        for (f.blocks.items, 0..) |block, b| for (block.insts.items) |ref| {
+            if (f.inst(ref).op != .phi) continue;
+            mem.from_end[ref.index()] = facts.normalizedRaw(f, @fromBackingInt(@intCast(b)), ref) orelse .none;
+        };
         const abi = inOutAbi(m, f.signature);
         // A construction whose only use stores it (a push, a write, a return through `sret`, a box,
         // or a field of a construction that is itself stored so or lives in memory) is never built
@@ -1600,14 +1642,19 @@ const FunctionEmitter = struct {
         const sides = [2]usize{ targets.then.index(), targets.otherwise.index() };
         var labels: [2][]const u8 = undefined;
         var moves: [2][]const Move = undefined;
-        for (sides, &labels, &moves) |target, *label, *side| {
+        // An edge that leaves a region whose appends keep the length in slots stores it back
+        // there (`emit_state.zig`), in a block of its own.
+        var leaving: [2][]const emit_state.Exit = .{ &.{}, &.{} };
+        for (sides, &labels, &moves, &leaving) |target, *label, *side, *exits| {
             side.* = try self.edgeMoves(pred, target);
-            label.* = if (side.len != 0) try self.fresh("edge") else try std.fmt.allocPrint(self.a(), "b{d}", .{target});
+            exits.* = self.memory.states.exit(@intCast(pred), @intCast(target));
+            label.* = if (side.len != 0 or exits.len != 0) try self.fresh("edge") else try std.fmt.allocPrint(self.a(), "b{d}", .{target});
         }
         try out.print(self.a(), "  br i1 {s}, label %{s}, label %{s}\n", .{ try self.value(inst.a), labels[0], labels[1] });
-        for (sides, labels, moves) |target, label, side| {
-            if (side.len == 0) continue;
+        for (sides, labels, moves, leaving) |target, label, side, exits| {
+            if (side.len == 0 and exits.len == 0) continue;
             try out.print(self.a(), "{s}:\n", .{label});
+            for (exits) |stored| try emit_state.store(*FunctionEmitter, self, out, try self.value(stored.value), stored.slots);
             try self.moveAll(out, side);
             try out.print(self.a(), "  br label %b{d}\n", .{target});
             try self.memory.edges.put(self.a(), edgeKey(pred, target), label);
@@ -2086,6 +2133,7 @@ const FunctionEmitter = struct {
             .call => try self.call(out, name, inst),
             .print => try self.print(out, inst),
             .jump => {
+                try emit_state.jump(*FunctionEmitter, self, out, self.vectors.block, @intCast(inst.data));
                 try self.vectorPrologue(out, @intCast(inst.data));
                 try self.fillMemoryPhis(out, self.vectors.block, @intCast(inst.data));
                 try out.print(self.a(), "  br label %b{d}\n", .{inst.data});
@@ -2446,8 +2494,7 @@ const FunctionEmitter = struct {
 
     fn listGet(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
         const list = try self.value(inst.a);
-        const index = try self.value(inst.b);
-        try self.boundsCheck(out, inst, list, index);
+        const index = try self.checkedIndex(out, inst, list, try self.value(inst.b));
         // A read nothing uses is only its bounds check: the element is never loaded (a verify
         // build still loads it, for the fact assertions that name it).
         if (self.memory.uses[self.current.index()] == 0 and inst.data == 0 and self.knownFacts() == null) return;
@@ -2459,6 +2506,73 @@ const FunctionEmitter = struct {
         if (inst.ty == .bool or inst.ty.isCompound()) return self.loadValue(out, inst.ty, slot, name);
         const stored = storageType(inst.ty);
         try out.print(self.a(), "  {s} = load {s}, ptr {s}, align {d}{s}, {s}\n", .{ name, stored, slot, elementSize(inst.ty), try self.loadRange(name, inst.ty), self.dataTag(stored) });
+    }
+
+    /// `boundsCheck`, answering the index the element's address takes. An index the builder
+    /// normalized from the end (`facts.normalizedRaw`) is first tested as the program wrote it:
+    /// a written index below the length, compared unsigned, is non-negative and so its own
+    /// normalization, and only the others take the normalized value and its check, off the hot
+    /// path (NEW-CORE-F2-WRAP-1). The check is counted once either way.
+    fn checkedIndex(self: *FunctionEmitter, out: *Out, inst: ir.Inst, list: []const u8, index: []const u8) Error![]const u8 {
+        const raw_ref = self.fromEndRaw(inst.b);
+        const plain = inst.op == .list_get and (inst.data == flags.pop_read or inst.data == flags.pop_index_read);
+        if (self.checkOf(inst) != .exact and raw_ref != .none and !plain) {
+            // A proven access whose index a dominating checked access normalized reuses its value.
+            const made = self.memory.checked.get(self.normalizedKey(inst, raw_ref) orelse return index) orelse return index;
+            return if (self.blockDominates(made.block, self.vectors.block)) made.name else index;
+        }
+        if (self.checkOf(inst) != .exact or raw_ref == .none or plain) {
+            try self.boundsCheck(out, inst, list, index);
+            return index;
+        }
+        const raw = try self.value(raw_ref);
+        const at = try self.fresh("%lh");
+        const len = try self.fresh("%len");
+        const written = try self.fresh("%rawout");
+        try out.print(self.a(), header_tagged_line, .{ at, list, len_offset, len, at });
+        const site_index = try self.site(.list_bounds, inst, "index");
+        if (self.count_fn != null) _ = try self.countSite(out, checkKind(self.state.sites.items[site_index].kind), "");
+        const entry = self.label;
+        const slow = try self.fresh("wrapped");
+        const join = try self.fresh(self.label);
+        try out.print(self.a(), "  {s} = icmp uge i64 {s}, {s}\n  br i1 {s}, label %{s}, label %{s}, !prof !9\n{s}:\n", .{ written, raw, len, written, slow, join, slow });
+        const outside = try self.fresh("%oob");
+        const trap = try self.fresh("trap");
+        const next = try self.fresh(slow);
+        try out.print(self.a(), "  {s} = icmp uge i64 {s}, {s}\n  br i1 {s}, label %{s}, label %{s}, !prof !0\n{s}:\n", .{ outside, index, len, outside, trap, next, trap });
+        try self.trapEnd(out, .{ .next = next, .site = site_index, .location = try self.trapLocation(site_index) }, .{ .left = raw, .right = len });
+        const chosen = try self.fresh("%index");
+        try out.print(self.a(), "  br label %{s}\n{s}:\n  {s} = phi i64 [ {s}, %{s} ], [ {s}, %{s} ]\n", .{ join, join, chosen, raw, entry, index, next });
+        self.label = join;
+        if (self.normalizedKey(inst, raw_ref)) |key| try self.memory.checked.put(self.a(), key, .{ .name = chosen, .block = self.vectors.block });
+        return chosen;
+    }
+
+    /// The key of an access's written index normalized against its list's length.
+    fn normalizedKey(self: *FunctionEmitter, inst: ir.Inst, raw: ir.Ref) ?NormalizedKey {
+        const keys = self.memory.keys orelse return null;
+        return .{ .index = keys.index(raw), .length = keys.length(inst.a) };
+    }
+
+    /// Whether IR block `dominator` dominates IR block `block` (each dominates itself).
+    fn blockDominates(self: *FunctionEmitter, dominator: u32, block: u32) bool {
+        const shape = self.memory.shape orelse return false;
+        var current: u32 = block;
+        var steps: usize = 0;
+        while (steps <= shape.idom.len) : (steps += 1) {
+            if (current == dominator) return true;
+            if (current == 0) return false;
+            const up = shape.idom[current] orelse return false;
+            current = @intCast(up.index());
+        }
+        return false;
+    }
+
+    /// The index the program wrote, when `index` is its Python normalization; else `.none`.
+    fn fromEndRaw(self: *FunctionEmitter, index: ir.Ref) ir.Ref {
+        const ref = self.function.resolve(index);
+        if (ref.index() >= self.memory.from_end.len) return .none;
+        return self.memory.from_end[ref.index()];
     }
 
     /// Trap unless `0 <= index < len(list)` (the index is unsigned here), for an exact check.
@@ -2927,9 +3041,8 @@ const FunctionEmitter = struct {
     fn listSet(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
         const m = self.state.module;
         const list = try self.value(inst.a);
-        const index = try self.value(inst.b);
         const element = m.compound(inst.ty).list;
-        try self.boundsCheck(out, inst, list, index);
+        const index = try self.checkedIndex(out, inst, list, try self.value(inst.b));
         const slot = try self.elementSlot(out, list, index, element);
         if (elements.storeBack(m, self.function, inst)) |back| return self.storeBackPointer(out, name, inst, back, slot);
         const managed = m.managed(element) and !flags.transferredSlot(self.function, inst);
@@ -2953,9 +3066,8 @@ const FunctionEmitter = struct {
     fn listSetField(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
         const m = self.state.module;
         const list = try self.value(inst.a);
-        const index = try self.value(inst.b);
         const element = m.compound(inst.ty).list;
-        try self.boundsCheck(out, inst, list, index);
+        const index = try self.checkedIndex(out, inst, list, try self.value(inst.b));
         const slot = try self.elementSlot(out, list, index, element);
         const path = elements.setPath(self.function, inst) orelse return error.UnsupportedInstruction;
         const target = m.pathTarget(element, path) orelse return error.UnsupportedInstruction;
@@ -3072,9 +3184,8 @@ const FunctionEmitter = struct {
     fn listGetField(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
         const m = self.state.module;
         const list = try self.value(inst.a);
-        const index = try self.value(inst.b);
         const element = m.compound(self.typeOf(inst.a)).list;
-        try self.boundsCheck(out, inst, list, index);
+        const index = try self.checkedIndex(out, inst, list, try self.value(inst.b));
         const slot = try self.elementSlot(out, list, index, element);
         const target = m.pathTarget(element, ir.FieldPath.unpack(inst.data)) orelse return error.UnsupportedInstruction;
         const at = try self.offsetPointer(out, slot, target.offset);
@@ -3486,6 +3597,8 @@ const FunctionEmitter = struct {
 
     /// Append in place: `myl_core_list_reserve` returns a block with room for one more element.
     fn listPush(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
+        // A push that is one of a web's updates (`emit_state.zig`), not merely of a web value.
+        if (self.memory.states.of(self.current)) |slots| return self.slotPush(out, name, inst, slots);
         const element = self.state.module.compound(inst.ty).list;
         const len_at = try self.fresh("%pl");
         const counter = if (inst.data == flags.fill_push) self.fillCounter(inst.a) else null;
@@ -3511,6 +3624,42 @@ const FunctionEmitter = struct {
             try out.print(self.a(), "  store {s}, ptr {s}, align {d}, {s}\n", .{ try self.typedValue(inst.b), slot, elementSize(element), self.dataTag(storageType(element)) });
         }
         try out.print(self.a(), "  {s} = add nuw nsw i64 {s}, 1\n  store i64 {s}, ptr {s}, align 8, " ++ tbaa_header ++ "\n", .{ next, len, next, len_at });
+    }
+
+    /// A push into a list whose length and capacity a loop keeps in slots (NEW-CORE-U1-STATE-2):
+    /// room is the slots' test; growth stores the length back, grows the block and loads the
+    /// grown capacity; the element goes at the slots' length, which then advances.
+    fn slotPush(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst, slots: emit_state.Slots) !void {
+        const element = self.state.module.compound(inst.ty).list;
+        const list = try self.value(inst.a);
+        const len = try self.fresh("%spl");
+        const cap = try self.fresh("%spc");
+        const room = try self.fresh("%spr");
+        const fits = try self.fresh("push.fits");
+        const grow = try self.fresh("push.grow");
+        const join = try self.fresh(self.label);
+        const grown = try self.fresh("%spg");
+        try out.print(self.a(), "  {s} = load i64, ptr {s}, align 8\n  {s} = load i64, ptr {s}, align 8\n  {s} = icmp ult i64 {s}, {s}\n", .{ len, slots.len, cap, slots.cap, room, len, cap });
+        try out.print(self.a(), "  br i1 {s}, label %{s}, label %{s}, !prof !10\n{s}:\n", .{ room, fits, grow, grow });
+        try emit_state.store(*FunctionEmitter, self, out, list, slots);
+        try out.print(self.a(), "  {s} = call ptr @myl_core_list_grow(ptr {s}, i64 {d})\n", .{ grown, list, self.state.stride(element) });
+        const cap_at = try self.fresh("%spc");
+        const grown_cap = try self.fresh("%spc");
+        try out.print(self.a(), header_tagged_line, .{ cap_at, grown, cap_offset, grown_cap, cap_at });
+        try out.print(self.a(), "  store i64 {s}, ptr {s}, align 8\n  br label %{s}\n{s}:\n  br label %{s}\n{s}:\n", .{ grown_cap, slots.cap, join, fits, join, join });
+        try out.print(self.a(), "  {s} = phi ptr [ {s}, %{s} ], [ {s}, %{s} ]\n", .{ name, list, fits, grown, grow });
+        self.label = join;
+        if (self.count_fn != null) try out.appendSlice(self.a(), "  store ptr null, ptr @myl_count_push_site, align 8\n");
+        const slot = try self.elementSlot(out, name, len, element);
+        const saved = self.tagElements(true);
+        defer _ = self.tagElements(saved);
+        if (element == .bool or element.isCompound()) {
+            try self.storeOperand(out, element, inst.b, slot);
+        } else {
+            try out.print(self.a(), "  store {s}, ptr {s}, align {d}, {s}\n", .{ try self.typedValue(inst.b), slot, elementSize(element), self.dataTag(storageType(element)) });
+        }
+        const next = try self.fresh("%spn");
+        try out.print(self.a(), "  {s} = add nuw nsw i64 {s}, 1\n  store i64 {s}, ptr {s}, align 8\n", .{ next, len, next, slots.len });
     }
 
     fn fillCounter(self: *FunctionEmitter, list: ir.Ref) ?ir.Ref {

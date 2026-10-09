@@ -1,0 +1,223 @@
+# Uniqueness tests hoisted out of loops (NEW-CORE-U1-HOIST-1): one test on the edge
+# entering a loop replaces the test of every update in it, unless the loop may share
+# the value. Each function below either shares the value inside its loop (the per-update
+# test must stay) or holds a second owner from before the loop (the entry test copies
+# it once). Every answer here is the base compiler's (main 35df839be).
+record Holder:
+    name: str
+    items: int[]
+
+
+func total(xs: int[]) -> int:
+    mut t = 0
+    for x in xs:
+        t = (t * 31 + x) % 1000003
+    return t
+
+
+func boxed(xs: int[]) -> int[][]:
+    return [xs]
+
+
+# The caller keeps `before`; the loop appends to the parameter it shares.
+func grow(mut xs: int[], n: int) -> Unit:
+    for i in range(n):
+        xs.append(i)
+
+
+# A copy made inside the loop each iteration: `kept` shares `xs` until the next append.
+func copy_inside(n: int) -> int:
+    mut xs: int[] = []
+    mut kept: int[] = []
+    for i in range(n):
+        kept = xs
+        xs.append(i)
+    return total(xs) * 1000 + total(kept) + len(kept)
+
+
+# An alias made before the loop and dropped inside it.
+func dropped_alias(n: int) -> int:
+    mut xs = [1, 2, 3]
+    mut snap = xs
+    for i in range(n):
+        if i == 2:
+            snap = [9]
+        xs.append(i)
+    return total(xs) * 1000 + total(snap)
+
+
+# The list appended to another list inside the loop, then updated again.
+func appended_to_other(n: int) -> int:
+    mut xs = [5]
+    mut outer: int[][] = []
+    for i in range(n):
+        outer.append(xs)
+        xs.append(i)
+    mut t = 0
+    for row in outer:
+        t = (t * 7 + total(row)) % 1000003
+    return t * 100 + len(outer)
+
+
+# The list stored into a record field inside the loop.
+func stored_in_record(n: int) -> int:
+    mut xs = [7]
+    mut h = Holder(name="h", items=[])
+    for i in range(n):
+        h.items = xs
+        xs.append(i)
+    return total(xs) * 1000 + total(h.items)
+
+
+# A call that keeps the list it is given.
+func kept_by_call(n: int) -> int:
+    mut xs = [3]
+    mut held: int[][] = []
+    for i in range(n):
+        held = boxed(xs)
+        xs.append(i)
+    return total(xs) * 1000 + total(held[0])
+
+
+# The list rebound inside the loop.
+func rebound(n: int) -> int:
+    mut xs = [1]
+    mut keep = xs
+    for i in range(n):
+        if i % 3 == 0:
+            xs = [i, i]
+        xs.append(i)
+    return total(xs) * 1000 + total(keep)
+
+
+# A row read out and kept while its list of rows is updated in the loop.
+func rows(n: int) -> int:
+    mut b = [[1, 2], [3, 4], [5]]
+    mut kb = b[1]
+    for i in range(n):
+        b[i % 3].append(i)
+        b[0][0] = i
+    return total(b[0]) * 10000 + total(b[1]) * 100 + total(kb) + len(b[2])
+
+
+# Zero trips, a break, a continue and an early return around a shared list's updates.
+func control(n: int, stop: int) -> int:
+    mut xs = [4, 4]
+    mut keep = xs
+    for i in range(n):
+        if i == stop:
+            break
+        if i % 2 == 0:
+            continue
+        xs.append(i)
+        if i > 50:
+            return total(xs) + total(keep)
+    return total(xs) * 1000 + total(keep)
+
+
+func step(mut xs: int[], v: int) -> Unit:
+    xs.append(v)
+
+
+# The update made by a callee with `mut`, and by a function value.
+func through_calls(n: int) -> int:
+    mut xs = [2]
+    mut keep = xs
+    for i in range(n):
+        step(mut xs, i)
+    mut f = total
+    return f(xs) * 1000 + f(keep)
+
+
+# Recursion: each level appends in a loop to the list the caller still holds.
+func recurse(xs: int[], depth: int) -> int:
+    if depth == 0:
+        return total(xs)
+    mut ys = xs
+    for i in range(depth):
+        ys.append(depth * 10 + i)
+    return recurse(ys, depth - 1) * 3 % 1000003 + total(xs)
+
+
+# Text, a dictionary and a byte buffer shared when their loops start.
+func others(n: int) -> int:
+    mut s = "ab"
+    mut s_keep = s
+    for i in range(n):
+        s += str(i % 10)
+    mut d = {1: 1}
+    mut d_keep = d
+    for i in range(n):
+        d[i] = i * 2
+    mut empty: int[] = []
+    mut buffer = byte_buffer(empty)
+    _ = buffer.append_byte(1)
+    mut b_keep = buffer
+    for i in range(n):
+        _ = buffer.append_byte(i % 256)
+    return len(s) * 1000 + len(s_keep) * 100 + len(d) * 10 + len(d_keep) + len(buffer) * 7 + len(b_keep)
+
+
+# Nested loops: the outer loop's entry is the hoisting point.
+func nested(n: int) -> int:
+    mut xs = [0]
+    mut keep = xs
+    for i in range(n):
+        for j in range(i):
+            xs[0] = xs[0] + j
+            xs.append(j)
+    return total(xs) * 1000 + total(keep)
+
+
+# A `mut` list nested loops update, which the caller shares: one test before the outer
+# loop copies it. The call to `total` keeps the function out of its caller.
+func nested_mut(mut xs: int[], n: int) -> int:
+    for i in range(n):
+        for j in range(i):
+            xs[0] = xs[0] + j
+            xs.append(j)
+    return total(xs)
+
+
+# Two loops update the `mut` list the caller shares: the first loop's entry test copies it,
+# and the second loop finds it unique without a test of its own.
+func two_loops(mut xs: int[], n: int) -> int:
+    for i in range(n):
+        xs.append(i)
+    for i in range(n):
+        xs[i] = xs[i] * 2
+    return total(xs)
+
+
+func make(n: int) -> int[]:
+    mut out = [n]
+    if n > 1000:
+        return make(n - 1)
+    return out
+
+
+# A list a call returned: its count is unknown until tested, once before the loop.
+func from_call(n: int) -> int:
+    mut xs = make(n)
+    for i in range(n):
+        xs.append(i * i)
+    return total(xs)
+
+
+func main(args: str[], out: Stream) -> int:
+    mut n = 20 + len(args) * 40
+    mut before = [1, 2]
+    mut alias = before
+    grow(mut before, n)
+    out.print(total(before), total(alias), len(alias))
+    out.print(copy_inside(n), dropped_alias(n), appended_to_other(n))
+    out.print(stored_in_record(n), kept_by_call(n), rebound(n), rows(n))
+    out.print(control(n, 7), control(n, 100), control(0, 3))
+    out.print(through_calls(n), recurse([1, 2, 3], 4), others(n), nested(n // 4))
+    mut shared = [1, 1]
+    mut other = shared
+    out.print(nested_mut(mut shared, n // 4), total(other), from_call(n), total(shared))
+    mut again = [3]
+    mut kept = again
+    out.print(two_loops(mut again, n), total(kept), len(again))
+    return 0
