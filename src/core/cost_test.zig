@@ -181,6 +181,67 @@ const reduction =
     \\    return 0
 ;
 
+// spec: NEW-CORE-FSX-VERSION-1
+test "a reduction loop is versioned only when its body makes no call and holds no other loop" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    // A flat body: the clone proves the sum, so the loop is versioned.
+    const flat = try measured(a,
+        \\def main(args: list[str], out: Stream) -> int:
+        \\    n = len(args) + 100
+        \\    values = [(j * 37) % 1009 for j in range(n)]
+        \\    total = 0
+        \\    for j in range(n):
+        \\        total += int((float(values[j]) / 8.0 + 0.5) * 128000.0)
+        \\    out.print(total)
+        \\    return 0
+    , .trusted);
+    try std.testing.expect(flat.totals.loops.versioned > 0);
+    // The sum of a call's results (its return interval bounds each summand): no clone.
+    const called = try measured(a,
+        \\def search(values: list[int], key: int) -> int:
+        \\    low = 0
+        \\    high = len(values)
+        \\    while low < high:
+        \\        middle = (low + high) // 2
+        \\        if values[middle] < key:
+        \\            low = middle + 1
+        \\        else:
+        \\            high = middle
+        \\    return low
+        \\def main(args: list[str], out: Stream) -> int:
+        \\    n = len(args) + 100
+        \\    values = [j * 3 for j in range(n)]
+        \\    total = 0
+        \\    for j in range(n):
+        \\        total += search(values, j)
+        \\    out.print(total)
+        \\    return 0
+    , .trusted);
+    try std.testing.expectEqual(@as(u32, 0), called.totals.loops.versioned);
+    // The same sum with the search written inline, an inner loop: no clone either.
+    const nested = try measured(a,
+        \\def main(args: list[str], out: Stream) -> int:
+        \\    n = len(args) + 100
+        \\    values = [j * 3 for j in range(n)]
+        \\    total = 0
+        \\    for j in range(n):
+        \\        low = 0
+        \\        high = len(values)
+        \\        while low < high:
+        \\            middle = (low + high) // 2
+        \\            if values[middle] < j:
+        \\                low = middle + 1
+        \\            else:
+        \\                high = middle
+        \\        total += low
+        \\    out.print(total)
+        \\    return 0
+    , .trusted);
+    try std.testing.expectEqual(@as(u32, 0), nested.totals.loops.versioned);
+}
+
 // spec-case: FRONTEND-COST-1
 test "cost includes real vector plans loop guards and unswitched cloned body events" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);

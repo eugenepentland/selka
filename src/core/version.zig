@@ -28,9 +28,30 @@ pub fn versionReductions(arena: std.mem.Allocator, f: *ir.Function, known: facts
     var count: u32 = 0;
     for (known.counted) |counted| {
         const limit = tripLimit(f, known, counted) orelse continue;
+        if (!try flat(arena, f, counted.loop)) continue;
         if (try version(arena, f, counted, limit, provenance)) count += 1;
     }
     return count;
+}
+
+/// Whether `loop`'s body makes no call and holds no other loop. Only such a body gains
+/// from the clone: it saves one check per trip, which matters when LLVM can then
+/// vectorize or unroll a small body, and nothing around a call or an inner loop, where
+/// the duplicated code only changes LLVM's choices (a binary search called from a
+/// versioned loop lost its conditional moves and ran 3.7 times slower).
+fn flat(arena: std.mem.Allocator, f: *const ir.Function, loop: ir.Loop) Error!bool {
+    const inside = try members(arena, f, loop);
+    for (f.loops.items) |other| {
+        if (other.header != loop.header and inside[other.header.index()]) return false;
+    }
+    for (inside, 0..) |member, b| {
+        if (!member) continue;
+        for (f.blocks.items[b].insts.items) |ref| switch (f.inst(ref).op) {
+            .call, .call_indirect => return false,
+            else => {},
+        };
+    }
+    return true;
 }
 
 /// The largest trip count for which every reduction of the loop is safe, when

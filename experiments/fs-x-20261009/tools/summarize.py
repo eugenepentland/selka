@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""CE2-X Part 3 summaries (coordinator, 2026-10-08; from CE-X's): reads the timing evidence in results/ and
+"""FS-X Part 3 summaries (from CE2-X's) (coordinator, 2026-10-08; from CE-X's): reads the timing evidence in results/ and
 writes results/{lox,eda,parity,rows}-summary.md, printing the aggregates REPORT.md quotes.
-"final" is the CE2 merge (93547d310), "base" the CE-X compiler (41931120d).
+"final" is the F/S integration (claude/fs-x: F1 + S1 + the shared-row fix), "base" main cafe7fea7 (PM-1 compiler pm-a677da7a).
 usage: summarize.py [EVIDENCE_DIR]"""
 import gzip, json, math, statistics, sys
 from pathlib import Path
@@ -22,7 +22,7 @@ def gm(xs):
 
 
 def lox():
-    lines = ["# Lox runtime, final against base (CE-X, CPU 10, median of 3 rounds)", "",
+    lines = ["# Lox runtime, final against base (main cafe7fea7, CPU 10, median of 3 rounds)", "",
              "| cell | final s | base s | final/base | final/Zig | base/Zig | final/Zig-safe | final/Rust | final/Go |",
              "|---|---:|---:|---:|---:|---:|---:|---:|---:|"]
     agg = {}
@@ -62,7 +62,7 @@ def eda():
         f, b, z = (c[k]["median_s"] for k in ("mylang-final", "mylang-base", "zig-fast"))
         rows.append((f / b, name, f, b, z))
     rows.sort()
-    lines = ["# EDA runtime, final against base (CE-X, CPU 10, median of 10 rounds)", "",
+    lines = ["# EDA runtime, final against base (main cafe7fea7, CPU 10, median of 10 rounds)", "",
              f"All outputs verified: {r['all_outputs_verified']}. Sorted by final/base.", "",
              "| design | final ms | base ms | Zig ms | final/base | final/Zig | base/Zig |", "|---|---:|---:|---:|---:|---:|---:|"]
     lines += [f"| {n} | {f * 1e3:.1f} | {b * 1e3:.1f} | {z * 1e3:.1f} | {x:.3f} | {f / z:.2f} | {b / z:.2f} |" for x, n, f, b, z in rows]
@@ -88,7 +88,7 @@ def parity():
             rows.append((fr / br, name, arm, br, fr, fa["wall_median"] / ba["wall_median"],
                          ba["ratio_wall"]["lo"], ba["ratio_wall"]["hi"], fa["ratio_wall"]["lo"], fa["ratio_wall"]["hi"]))
     rows.sort()
-    lines = ["# Parity, final against base (CE-X, CPU 10, 9 rounds, 2 warm-ups; same session)", "",
+    lines = ["# Parity, final against base (main cafe7fea7, CPU 10, 9 rounds, 2 warm-ups; same session)", "",
              "final/base is the ratio of each run's my/zig-fast ratio; wall is the ratio of raw medians.", "",
              "| program | arm | base/Zig (95% CI) | final/Zig (95% CI) | final/base | wall final/base |", "|---|---|---:|---:|---:|---:|"]
     lines += [f"| {n} | {a} | {br:.2f} ({bl:.2f}–{bh:.2f}) | {fr:.2f} ({fl:.2f}–{fh:.2f}) | {x:.3f} | {w:.3f} |"

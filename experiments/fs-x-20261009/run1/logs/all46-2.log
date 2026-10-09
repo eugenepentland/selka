@@ -1,0 +1,515 @@
+
+### record_reads (cycles per iteration, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 17.862 | 17.599 | same |
+| new core release | 17.814 | 18.531 | same |
+| Rust | 17.666 | 17.280 | same |
+| Zig ReleaseSafe | 24.277 | 24.649 | same |
+| new / old | 0.997 | 1.053 | same |
+| new / Zig | 0.734 | 0.752 | same |
+| new / Rust | 1.008 | 1.072 | same |
+
+### tagged_stack (cycles per iteration, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 33.307 | 33.368 | same |
+| new core release | 33.094 | 33.075 | same |
+| Rust | 25.962 | 25.932 | same |
+| Zig ReleaseSafe | 48.367 | 47.842 | same |
+| new / old | 0.994 | 0.991 | same |
+| new / Zig | 0.684 | 0.691 | same |
+| new / Rust | 1.275 | 1.275 | same |
+
+### mutate_unique (cycles per iteration, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 14.582 | 14.565 | same |
+| new core release | 14.590 | 14.565 | same |
+| Rust | 13.231 | 13.150 | same |
+| Zig ReleaseSafe | 16.974 | 16.925 | same |
+| new / old | 1.001 | 1.000 | same |
+| new / Zig | 0.860 | 0.861 | same |
+| new / Rust | 1.103 | 1.108 | same |
+
+### mutate_shared (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 0.627 | 0.660 | same |
+| new core release | 0.621 | 0.648 | same |
+| Rust | 0.592 | 0.658 | same |
+| Zig ReleaseSafe | 1.124 | 1.011 | same |
+| new / old | 0.990 | 0.982 | same |
+| new / Zig | 0.552 | 0.641 | same |
+| new / Rust | 1.048 | 0.986 | same |
+
+### record_construct (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 6.048 | 6.327 | same |
+| new core release | 6.054 | 6.273 | same |
+| Rust | 6.900 | 7.465 | same |
+| Zig ReleaseSafe | 10.495 | 11.400 | same |
+| new / old | 1.001 | 0.991 | same |
+| new / Zig | 0.577 | 0.550 | same |
+| new / Rust | 0.877 | 0.840 | same |
+
+### record_update (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 6.243 | 6.345 | same |
+| new core release | 6.239 | 6.337 | same |
+| Rust | 6.866 | 7.331 | same |
+| Zig ReleaseSafe | 11.150 | 11.638 | same |
+| new / old | 0.999 | 0.999 | same |
+| new / Zig | 0.560 | 0.545 | same |
+| new / Rust | 0.909 | 0.864 | same |
+
+### option_handle (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 3.041 | 2.363 | same |
+| new core release | 2.835 | 2.482 | same |
+| Rust | 4.758 | 3.154 | same |
+| Zig ReleaseSafe | 10.302 | 7.405 | same |
+| new / old | 0.932 | 1.050 | same |
+| new / Zig | 0.275 | 0.335 | same |
+| new / Rust | 0.596 | 0.787 | same |
+
+### result_propagate (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 3.637 | 3.504 | same |
+| new core release | 3.856 | 3.512 | same |
+| Rust | 3.515 | 4.124 | same |
+| Zig ReleaseSafe | 7.184 | 7.456 | same |
+| new / old | 1.060 | 1.002 | same |
+| new / Zig | 0.537 | 0.471 | same |
+| new / Rust | 1.097 | 0.852 | same |
+
+### list_scan (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 4.006 | 4.077 | same |
+| new core release | 3.859 | 3.878 | same |
+| Rust | 2.703 | 2.794 | same |
+| Zig ReleaseSafe | 4.573 | 4.663 | same |
+| new / old | 0.963 | 0.951 | same |
+| new / Zig | 0.844 | 0.832 | same |
+| new / Rust | 1.427 | 1.388 | same |
+
+### list_append (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 6.380 | 6.586 | same |
+| new core release | 6.327 | 6.598 | same |
+| Rust | 6.194 | 10.258 | same |
+| Zig ReleaseSafe | 12.304 | 16.769 | same |
+| new / old | 0.992 | 1.002 | same |
+| new / Zig | 0.514 | 0.393 | same |
+| new / Rust | 1.021 | 0.643 | same |
+
+### list_filter (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 7.440 | 8.803 | same |
+| new core release | 7.461 | 8.823 | same |
+| Rust | 5.742 | 10.047 | same |
+| Zig ReleaseSafe | 10.602 | 13.898 | same |
+| new / old | 1.003 | 1.002 | same |
+| new / Zig | 0.704 | 0.635 | same |
+| new / Rust | 1.299 | 0.878 | same |
+
+### alloc_short (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 4.720 | 5.087 | same |
+| new core release | 4.777 | 5.088 | same |
+| Rust | 5.011 | 5.352 | same |
+| Zig ReleaseSafe | 21.807 | 22.207 | same |
+| new / old | 1.012 | 1.000 | same |
+| new / Zig | 0.219 | 0.229 | same |
+| new / Rust | 0.953 | 0.951 | same |
+
+### alloc_retained (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 39.683 | 35.799 | same |
+| new core release | 38.539 | 36.041 | same |
+| Rust | 79.964 | 82.496 | same |
+| Zig ReleaseSafe | 80.704 | 78.598 | same |
+| new / old | 0.971 | 1.007 | same |
+| new / Zig | 0.478 | 0.459 | same |
+| new / Rust | 0.482 | 0.437 | same |
+
+### mutate_nested (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 12.591 | 14.753 | same |
+| new core release | 12.370 | 14.855 | same |
+| Rust | 81.702 | 72.364 | same |
+| Zig ReleaseSafe | 75.585 | 74.116 | same |
+| new / old | 0.982 | 1.007 | same |
+| new / Zig | 0.164 | 0.200 | same |
+| new / Rust | 0.151 | 0.205 | same |
+
+### bytes_scan (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 0.049 | 0.245 | same |
+| new core release | 0.049 | 0.240 | same |
+| Rust | 1.136 | 1.201 | same |
+| Zig ReleaseSafe | 1.391 | 1.815 | same |
+| new / old | 1.010 | 0.980 | same |
+| new / Zig | 0.035 | 0.132 | same |
+| new / Rust | 0.043 | 0.200 | same |
+
+### string_equal (cycles per iteration, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 50.403 | 13.914 | same |
+| new core release | 50.467 | 14.748 | same |
+| Rust | 136.232 | 12.735 | same |
+| Zig ReleaseSafe | 277.632 | 16.903 | same |
+| new / old | 1.001 | 1.060 | same |
+| new / Zig | 0.182 | 0.873 | same |
+| new / Rust | 0.370 | 1.158 | same |
+
+### string_search (cycles per iteration, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 434.469 | 69.460 | same |
+| new core release | 432.082 | 83.592 | same |
+| Rust | 5579.673 | 183.916 | same |
+| Zig ReleaseSafe | 12926.911 | 387.410 | same |
+| new / old | 0.995 | 1.203 | same |
+| new / Zig | 0.033 | 0.216 | same |
+| new / Rust | 0.077 | 0.455 | same |
+
+### string_split (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 60.004 | 65.838 | same |
+| new core release | 61.568 | 66.973 | same |
+| Rust | 27.602 | 34.649 | same |
+| Zig ReleaseSafe | 65.636 | 68.960 | same |
+| new / old | 1.026 | 1.017 | same |
+| new / Zig | 0.938 | 0.971 | same |
+| new / Rust | 2.231 | 1.933 | same |
+
+### string_join (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 4.531 | 5.449 | same |
+| new core release | 4.474 | 5.329 | same |
+| Rust | 14.411 | 14.874 | same |
+| Zig ReleaseSafe | 18.048 | 20.116 | same |
+| new / old | 0.988 | 0.978 | same |
+| new / Zig | 0.248 | 0.265 | same |
+| new / Rust | 0.310 | 0.358 | same |
+
+### dict_lookup (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 15.409 | 15.156 | same |
+| new core release | 15.401 | 15.247 | same |
+| Rust | 42.079 | 40.840 | same |
+| Zig ReleaseSafe | 52.860 | 30.968 | same |
+| new / old | 1.000 | 1.006 | same |
+| new / Zig | 0.291 | 0.492 | same |
+| new / Rust | 0.366 | 0.373 | same |
+
+### dict_lookup_str (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 23.503 | 19.643 | same |
+| new core release | 23.213 | 19.666 | same |
+| Rust | 60.794 | 57.304 | same |
+| Zig ReleaseSafe | 62.391 | 31.859 | same |
+| new / old | 0.988 | 1.001 | same |
+| new / Zig | 0.372 | 0.617 | same |
+| new / Rust | 0.382 | 0.343 | same |
+
+### dict_update (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 196.836 | 193.733 | same |
+| new core release | 193.818 | 236.622 | same |
+| Rust | 414.385 | 400.692 | same |
+| Zig ReleaseSafe | 551.203 | 312.858 | same |
+| new / old | 0.985 | 1.221 | same |
+| new / Zig | 0.352 | 0.756 | same |
+| new / Rust | 0.468 | 0.591 | same |
+
+### dict_update_str (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 273.608 | 249.192 | same |
+| new core release | 270.996 | 251.882 | same |
+| Rust | 921.637 | 868.645 | same |
+| Zig ReleaseSafe | 732.720 | 410.978 | same |
+| new / old | 0.990 | 1.011 | same |
+| new / Zig | 0.370 | 0.613 | same |
+| new / Rust | 0.294 | 0.290 | same |
+
+### set_dedup (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 26.188 | 30.651 | same |
+| new core release | 25.842 | 29.314 | same |
+| Rust | 64.887 | 65.758 | same |
+| Zig ReleaseSafe | 83.915 | 38.844 | same |
+| new / old | 0.987 | 0.956 | same |
+| new / Zig | 0.308 | 0.755 | same |
+| new / Rust | 0.398 | 0.446 | same |
+
+### int_parse (cycles per iteration, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 29.509 | 27.087 | same |
+| new core release | 29.564 | 27.184 | same |
+| Rust | 22.825 | 19.623 | same |
+| Zig ReleaseSafe | 31.027 | 25.585 | same |
+| new / old | 1.002 | 1.004 | same |
+| new / Zig | 0.953 | 1.062 | same |
+| new / Rust | 1.295 | 1.385 | same |
+
+### int_format (cycles per iteration, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 68.753 | 63.066 | same |
+| new core release | 62.050 | 56.945 | same |
+| Rust | 66.504 | 60.660 | same |
+| Zig ReleaseSafe | 223.387 | 197.386 | same |
+| new / old | 0.903 | 0.903 | same |
+| new / Zig | 0.278 | 0.288 | same |
+| new / Rust | 0.933 | 0.939 | same |
+
+### call_indirect (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 0.301 | 0.312 | same |
+| new core release | 0.301 | 0.313 | same |
+| Rust | 7.329 | 7.769 | same |
+| Zig ReleaseSafe | 9.007 | 9.503 | same |
+| new / old | 0.999 | 1.001 | same |
+| new / Zig | 0.033 | 0.033 | same |
+| new / Rust | 0.041 | 0.040 | same |
+
+### sort_int (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 46.736 | 9.690 | same |
+| new core release | 46.593 | 9.523 | same |
+| Rust | 69.973 | 15.393 | same |
+| Zig ReleaseSafe | 67.481 | 17.714 | same |
+| new / old | 0.997 | 0.983 | same |
+| new / Zig | 0.690 | 0.538 | same |
+| new / Rust | 0.666 | 0.619 | same |
+
+### sort_records (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 31.686 | 40.422 | same |
+| new core release | 35.083 | 40.636 | same |
+| Rust | 41.512 | 44.684 | same |
+| Zig ReleaseSafe | 117.565 | 50.847 | same |
+| new / old | 1.107 | 1.005 | same |
+| new / Zig | 0.298 | 0.799 | same |
+| new / Rust | 0.845 | 0.909 | same |
+
+### int_math (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 0.355 | 0.495 | same |
+| new core release | 0.355 | 0.494 | same |
+| Rust | 5.698 | 6.182 | same |
+| Zig ReleaseSafe | 7.804 | 8.314 | same |
+| new / old | 1.000 | 0.998 | same |
+| new / Zig | 0.045 | 0.059 | same |
+| new / Rust | 0.062 | 0.080 | same |
+
+### float_math (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 1.564 | 1.703 | same |
+| new core release | 1.566 | 1.703 | same |
+| Rust | 6.967 | 7.324 | same |
+| Zig ReleaseSafe | 6.511 | 7.029 | same |
+| new / old | 1.002 | 1.000 | same |
+| new / Zig | 0.241 | 0.242 | same |
+| new / Rust | 0.225 | 0.233 | same |
+
+### call_direct (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 0.300 | 0.327 | same |
+| new core release | 0.304 | 0.324 | same |
+| Rust | 2.057 | 3.010 | same |
+| Zig ReleaseSafe | 3.017 | 4.178 | same |
+| new / old | 1.013 | 0.991 | same |
+| new / Zig | 0.101 | 0.078 | same |
+| new / Rust | 0.148 | 0.108 | same |
+
+### branch_predictable (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 0.396 | 0.497 | same |
+| new core release | 0.400 | 0.496 | same |
+| Rust | 3.292 | 3.252 | same |
+| Zig ReleaseSafe | 7.799 | 7.920 | same |
+| new / old | 1.010 | 0.999 | same |
+| new / Zig | 0.051 | 0.063 | same |
+| new / Rust | 0.122 | 0.153 | same |
+
+### branch_mixed (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 0.395 | 0.495 | same |
+| new core release | 0.395 | 0.495 | same |
+| Rust | 4.868 | 4.518 | same |
+| Zig ReleaseSafe | 9.281 | 8.992 | same |
+| new / old | 1.000 | 1.000 | same |
+| new / Zig | 0.043 | 0.055 | same |
+| new / Rust | 0.081 | 0.110 | same |
+
+### binary_search (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 30.824 | 18.271 | same |
+| new core release | 115.191 | 15.610 | same |
+| Rust | 37.318 | 19.520 | same |
+| Zig ReleaseSafe | 136.736 | 27.930 | same |
+| new / old | 3.737 | 0.854 | same |
+| new / Zig | 0.842 | 0.559 | same |
+| new / Rust | 3.087 | 0.800 | same |
+
+### word_count (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 34.336 | 46.949 | same |
+| new core release | 33.060 | 44.527 | same |
+| Rust | 59.527 | 66.197 | same |
+| Zig ReleaseSafe | 49.442 | 51.070 | same |
+| new / old | 0.963 | 0.948 | same |
+| new / Zig | 0.669 | 0.872 | same |
+| new / Rust | 0.555 | 0.673 | same |
+
+### csv_aggregate (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 1081.746 | 1033.482 | same |
+| new core release | 1072.886 | 1026.078 | same |
+| Rust | 1165.678 | 1060.495 | same |
+| Zig ReleaseSafe | 1037.850 | 986.787 | same |
+| new / old | 0.992 | 0.993 | same |
+| new / Zig | 1.034 | 1.040 | same |
+| new / Rust | 0.920 | 0.968 | same |
+
+### json_transform (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 2509.239 | 2684.413 | same |
+| new core release | 2579.492 | 2723.772 | same |
+| Rust | 1727.655 | 1971.018 | same |
+| Zig ReleaseSafe | 2814.979 | 2844.977 | same |
+| new / old | 1.028 | 1.015 | same |
+| new / Zig | 0.916 | 0.957 | same |
+| new / Rust | 1.493 | 1.382 | same |
+
+### packet_decode (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 14.953 | 14.502 | same |
+| new core release | 13.972 | 14.262 | same |
+| Rust | 10.403 | 10.745 | same |
+| Zig ReleaseSafe | 18.936 | 19.589 | same |
+| new / old | 0.934 | 0.983 | same |
+| new / Zig | 0.738 | 0.728 | same |
+| new / Rust | 1.343 | 1.327 | same |
+
+### lox_eval (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 207.661 | 215.562 | same |
+| new core release | 207.465 | 215.815 | same |
+| Rust | 164.548 | 172.051 | same |
+| Zig ReleaseSafe | 504.698 | 520.815 | same |
+| new / old | 0.999 | 1.001 | same |
+| new / Zig | 0.411 | 0.414 | same |
+| new / Rust | 1.261 | 1.254 | same |
+
+### tree_build_walk (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 67.952 | 66.335 | same |
+| new core release | 69.081 | 66.917 | same |
+| Rust | 91.870 | 88.472 | same |
+| Zig ReleaseSafe | 97.517 | 97.669 | same |
+| Go | 76.437 | 67.849 | same |
+| new / old | 1.017 | 1.009 | same |
+| new / Zig | 0.708 | 0.685 | same |
+| new / Rust | 0.752 | 0.756 | same |
+
+### record_pass (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 12.010 | 13.081 | same |
+| new core release | 11.707 | 12.705 | same |
+| Rust | 11.465 | 12.087 | same |
+| Zig ReleaseSafe | 17.646 | 18.552 | same |
+| Go | 45.883 | 46.920 | same |
+| new / old | 0.975 | 0.971 | same |
+| new / Zig | 0.663 | 0.685 | same |
+| new / Rust | 1.021 | 1.051 | same |
+
+### grid_dp (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 14.516 | 15.902 | same |
+| new core release | 10.707 | 15.641 | same |
+| Rust | 12.636 | 15.073 | same |
+| Zig ReleaseSafe | 14.840 | 16.000 | same |
+| Go | 18.504 | 29.844 | same |
+| new / old | 0.738 | 0.984 | same |
+| new / Zig | 0.722 | 0.978 | same |
+| new / Rust | 0.847 | 1.038 | same |
+
+### union_find (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 43.881 | 29.272 | same |
+| new core release | 45.256 | 26.840 | same |
+| Rust | 41.476 | 24.184 | same |
+| Zig ReleaseSafe | 41.574 | 28.341 | same |
+| Go | 49.299 | 38.311 | same |
+| new / old | 1.031 | 0.917 | same |
+| new / Zig | 1.089 | 0.947 | same |
+| new / Rust | 1.091 | 1.110 | same |
+
+### float_format (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 280.697 | 276.133 | same |
+| new core release | 274.161 | 269.792 | same |
+| Rust | 371.745 | 346.371 | same |
+| Zig ReleaseSafe | 371.564 | 365.555 | same |
+| Go | 236.637 | 234.299 | same |
+| new / old | 0.977 | 0.977 | same |
+| new / Zig | 0.738 | 0.738 | same |
+| new / Rust | 0.737 | 0.779 | same |
+
+### buffer_write (cycles per element, median of 7 interleaved rounds, CPU 10)
+| configuration | 4096 | 64 | checksum |
+|---|---:|---:|---|
+| old core --release | 115.407 | 108.941 | same |
+| new core release | 115.363 | 108.824 | same |
+| Rust | 147.150 | 138.532 | same |
+| Zig ReleaseSafe | 168.866 | 155.250 | same |
+| Go | 136.242 | 124.756 | same |
+| new / old | 1.000 | 0.999 | same |
+| new / Zig | 0.683 | 0.701 | same |
+| new / Rust | 0.784 | 0.786 | same |
+
+valid rows: 46; speed gate misses: ['string_search/64', 'dict_update/64', 'sort_records/4096', 'binary_search/4096']
+Both new/old and new/Zig must be at most 1.10. binary_search misses require the plan's identical-code/layout-noise review; all other misses require repair.
