@@ -46,7 +46,7 @@ parity)
   for who in final base; do
     comp=$C; arms=""; [ $who = base ] && comp=$B && arms="--arms $MY_ARMS"
     load "parity $who start"
-    python3 $X/tools/parity_locked.py run --mylang $comp --zig zig --rustc $HOME/.cargo/bin/rustc $arms \
+    python3 $X/tools/parity_locked.py run --mylang $comp --zig zig --rustc $HOME/.cargo/bin/rustc $arms ${PARITY_FILTER:+--filter $PARITY_FILTER} \
       --cpu 10 --rounds 9 --warmups 2 --jobs 4 --work $P/work-$who --json $X/results/parity-$who.json \
       > $X/logs/parity-$who.stdout.txt 2> $X/logs/parity-$who.stderr.txt; echo "parity $who=$?"
     load "parity $who end"
