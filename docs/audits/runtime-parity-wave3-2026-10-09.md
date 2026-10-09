@@ -18,7 +18,7 @@ Status: **ready for Codex.** This is the last wave of `runtime-parity-plan-2026-
 ## Launch instruction (for Codex)
 
 > **One run: M0, then U2, S2 and R in parallel, then the integration X.**
-> - Create `codex/runtime-parity-3` from `claude/runtime-parity-3-plan` in a worktree of your own. Record `main`'s hash (`0689d3407` or later) in `REPORT.md`.
+> - Create `codex/runtime-parity-3` from `main` (which holds this plan) in a worktree of your own. Record `main`'s hash in `REPORT.md`.
 > - Read this plan whole. Then read:
 >   - `docs/audits/runtime-parity-plan-2026-10-08.md` §2, §6 and §8;
 >   - `experiments/parity-measure-20261008/REPORT.md`;
