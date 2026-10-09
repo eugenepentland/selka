@@ -1,0 +1,10 @@
+Operands must be two numbers or two strings.
+[line 1] in f()
+[line 2] in script
+vm.my:534:16: error[R_ASSERT]: native execution failed: frame_count below 1 at the dispatch tail
+  in vm::run at vm.my:534:16
+  in vm::interpret at vm.my:553:12
+  in driver::execute at driver.my:28:19
+  in driver::run_file at driver.my:76:14
+  in main::main at main.my:38:20
+MYLANG-TRAP {"version":1,"operation":"frame_count below 1 at the dispatch tail"}

@@ -28,9 +28,6 @@ pub const Key = struct {
 /// An index: the value of `base` plus `offset`.
 pub const IndexKey = struct { base: Key, offset: i64 = 0 };
 
-/// A list length key not computed yet (a phi waiting for its operands).
-const pending: Key = .{ .ref = .none, .field = std.math.maxInt(u32) };
-
 /// The keys of one function.
 pub const Keys = struct {
     f: *const ir.Function,
@@ -64,6 +61,11 @@ pub const Keys = struct {
             } else only = key;
         }
         return only orelse own;
+    }
+
+    /// The key of field `slot` of record value `record` (`field`).
+    pub fn fieldOf(self: *const Keys, record: ir.Ref, slot: u32) Key {
+        return self.field(record, slot);
     }
 
     /// The key of field `slot` of record value `record`: through `record_set`s of other
@@ -189,28 +191,9 @@ pub fn compute(arena: std.mem.Allocator, f: *const ir.Function, rpo: []const ir.
         if (inst.op == .record_get) keys.values[ref.index()] = keys.field(inst.a, @intCast(inst.data));
         if (inst.op == .phi) keys.values[ref.index()] = keys.trivial(block, ref);
     };
-    for (rpo) |block| for (f.blocks.items[block.index()].insts.items) |ref| {
-        if (f.inst(ref).op == .phi) keys.lengths[ref.index()] = pending;
-    };
-    // Phis move only from pending to a key to their own key, but a single-operand phi may
-    // follow its operand from one key to another; a pass that does not settle gives up.
-    var rounds: usize = 0;
-    var settled = false;
-    while (rounds < 64 and !settled) : (rounds += 1) {
-        settled = true;
-        for (rpo) |block| for (f.blocks.items[block.index()].insts.items) |ref| {
-            const next = lengthOf(&keys, ref);
-            if (!std.meta.eql(next, keys.lengths[ref.index()])) {
-                keys.lengths[ref.index()] = next;
-                settled = false;
-            }
-        };
-    }
-    for (keys.lengths, 0..) |*slot, i| {
-        if (!settled or std.meta.eql(slot.*, pending)) slot.* = Key.of(@fromBackingInt(@intCast(i)));
-    }
-    // A phi keeps a key only when every operand has it, so a key never rests on an operand
-    // that stayed pending (a phi nothing enters) or on a round that did not settle.
+    try lengthKeys(arena, &keys, rpo);
+    // A phi keeps a key only when every operand has it, and every other value only when its
+    // own step gives it: whatever the search above found, no key rests on anything else.
     var changed = true;
     while (changed) {
         changed = false;
@@ -239,26 +222,169 @@ fn lengthOf(keys: *const Keys, ref: ir.Ref) Key {
     const f = keys.f;
     const inst = f.inst(ref);
     const own = Key.of(ref);
-    if (keepsLength(inst.op)) return keys.length(inst.a);
     switch (inst.op) {
-        .record_get => {
-            const read = keys.value(ref);
-            if (read.field == 0 and read.ref != ref) return keys.length(read.ref);
-            return read;
-        },
-        .copy => return if (f.resolve(ref) == ref) own else keys.length(inst.a),
         .phi => {
-            if (std.meta.eql(keys.lengths[ref.index()], own)) return own;
             var chosen: ?Key = null;
             for (f.operands(inst.data)) |operand| {
                 const key = keys.length(operand);
-                if (std.meta.eql(key, pending)) continue;
                 if (chosen) |other| {
                     if (!std.meta.eql(other, key)) return own;
                 } else chosen = key;
             }
-            return chosen orelse pending;
+            return chosen orelse own;
         },
-        else => return own,
+        else => {
+            const source = lengthSource(keys, ref) orelse return own;
+            return switch (source) {
+                .value => |value| keys.length(value),
+                .key => |key| key,
+            };
+        },
     }
 }
+
+/// Where a value other than a phi takes its length from: the value it keeps the length of,
+/// a field key, or nothing (its own key).
+const Source = union(enum) { value: ir.Ref, key: Key };
+
+fn lengthSource(keys: *const Keys, ref: ir.Ref) ?Source {
+    const f = keys.f;
+    const inst = f.inst(ref);
+    if (keepsLength(inst.op)) return .{ .value = f.resolve(inst.a) };
+    switch (inst.op) {
+        .record_get => {
+            const read = keys.value(ref);
+            if (read.field == 0 and read.ref != ref) return .{ .value = read.ref };
+            return .{ .key = read };
+        },
+        .copy => return if (f.resolve(ref) == ref) null else .{ .value = f.resolve(ref) },
+        else => return null,
+    }
+}
+
+/// The length keys of every value the blocks `rpo` lists define, by strongly connected
+/// components of the "has the length of" graph (a phi to its operands, a length-keeping
+/// operation to its operand), operands' components first: a component whose edges out all
+/// reach one key takes it (a loop that only writes elements keeps its list's key), and any
+/// other gives each member its own.
+fn lengthKeys(arena: std.mem.Allocator, keys: *Keys, rpo: []const ir.BlockId) std.mem.Allocator.Error!void {
+    const f = keys.f;
+    const count = f.insts.items.len;
+    const in_block = try arena.alloc(bool, count);
+    @memset(in_block, false);
+    for (rpo) |block| for (f.blocks.items[block.index()].insts.items) |ref| {
+        in_block[ref.index()] = true;
+    };
+    // Tarjan's algorithm, iteratively.
+    const unvisited = std.math.maxInt(u32);
+    const order = try arena.alloc(u32, count);
+    const low = try arena.alloc(u32, count);
+    const on_stack = try arena.alloc(bool, count);
+    @memset(order, unvisited);
+    @memset(on_stack, false);
+    var next_order: u32 = 0;
+    var stack: std.ArrayList(u32) = .empty;
+    const Frame = struct { node: u32, edge: usize };
+    var work: std.ArrayList(Frame) = .empty;
+    var component: std.ArrayList(u32) = .empty;
+    for (rpo) |block| for (f.blocks.items[block.index()].insts.items) |root| {
+        if (order[root.index()] != unvisited) continue;
+        try work.append(arena, .{ .node = @intCast(root.index()), .edge = 0 });
+        order[root.index()] = next_order;
+        low[root.index()] = next_order;
+        next_order += 1;
+        try stack.append(arena, @intCast(root.index()));
+        on_stack[root.index()] = true;
+        while (work.items.len != 0) {
+            const top = &work.items[work.items.len - 1];
+            const node = top.node;
+            if (edgeOf(keys, @fromBackingInt(node), top.edge)) |target| {
+                top.edge += 1;
+                const t = target.index();
+                if (t >= count or !in_block[t]) continue;
+                if (order[t] == unvisited) {
+                    order[t] = next_order;
+                    low[t] = next_order;
+                    next_order += 1;
+                    try stack.append(arena, @intCast(t));
+                    on_stack[t] = true;
+                    try work.append(arena, .{ .node = @intCast(t), .edge = 0 });
+                } else if (on_stack[t]) low[node] = @min(low[node], order[t]);
+                continue;
+            }
+            _ = work.pop();
+            if (work.items.len != 0) {
+                const parent = work.items[work.items.len - 1].node;
+                low[parent] = @min(low[parent], low[node]);
+            }
+            if (low[node] != order[node]) continue;
+            component.clearRetainingCapacity();
+            while (stack.pop()) |member| {
+                on_stack[member] = false;
+                try component.append(arena, member);
+                if (member == node) break;
+            }
+            settleComponent(keys, component.items);
+        }
+    };
+}
+
+/// The `edge`-th "has the length of" edge of `node`, or null past its last.
+fn edgeOf(keys: *const Keys, node: ir.Ref, edge: usize) ?ir.Ref {
+    const f = keys.f;
+    const inst = f.inst(node);
+    if (inst.op == .phi) {
+        const operands = f.operands(inst.data);
+        return if (edge < operands.len) f.resolve(operands[edge]) else null;
+    }
+    if (edge != 0) return null;
+    const source = lengthSource(keys, node) orelse return null;
+    return switch (source) {
+        .value => |value| value,
+        .key => null,
+    };
+}
+
+/// Give one finished component its keys: the one key its edges out reach, or each member its own.
+fn settleComponent(keys: *Keys, members: []const u32) void {
+    if (members.len == 1) {
+        const ref: ir.Ref = @fromBackingInt(members[0]);
+        keys.lengths[members[0]] = lengthOf(keys, ref);
+        // A phi of itself and one other value has that value's key.
+        if (keys.f.inst(ref).op == .phi) keys.lengths[members[0]] = outsideKey(keys, members) orelse Key.of(ref);
+        return;
+    }
+    const key = outsideKey(keys, members);
+    for (members) |member| keys.lengths[member] = key orelse Key.of(@fromBackingInt(member));
+}
+
+/// The one key every edge leaving `members` reaches (a member that is a root leaves with its
+/// own source), or null when they disagree or there are none.
+fn outsideKey(keys: *const Keys, members: []const u32) ?Key {
+    var chosen: Agreement = .{};
+    for (members) |member| {
+        const ref: ir.Ref = @fromBackingInt(member);
+        if (keys.f.inst(ref).op != .phi) {
+            const source = lengthSource(keys, ref) orelse return null;
+            if (source == .key and !chosen.add(source.key)) return null;
+        }
+        var edge: usize = 0;
+        while (edgeOf(keys, ref, edge)) |target| : (edge += 1) {
+            if (std.mem.indexOfScalar(u32, members, @intCast(target.index())) != null) continue;
+            if (!chosen.add(keys.length(target))) return null;
+        }
+    }
+    return chosen.key;
+}
+
+/// The one key seen so far, if any.
+const Agreement = struct {
+    key: ?Key = null,
+
+    /// Take `key`; false when it differs from the one seen before.
+    fn add(self: *Agreement, key: Key) bool {
+        if (self.key) |other| return std.meta.eql(other, key);
+        self.key = key;
+        return true;
+    }
+};

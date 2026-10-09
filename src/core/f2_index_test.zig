@@ -400,3 +400,199 @@ test "F2 index: a verify build catches a field interval that lost its top" {
     try std.testing.expectEqual(@as(u8, 1), small.status);
     try std.testing.expect(contains(small.stderr, "error[R_CORE_FACT]: native execution failed (range [3, 6]: value 7"));
 }
+
+const element_writes =
+    \\record Body:
+    \\    x: float
+    \\    v: float
+    \\
+    \\
+    \\def advance(bodies: mut list[Body], dt: float):
+    \\    n = len(bodies)
+    \\    for i in range(n):
+    \\        for j in range(i + 1, n):
+    \\            bodies[j].v = bodies[j].v + bodies[j].x * dt
+    \\
+    \\
+    \\def flips(perm: mut list[int], n: int) -> int:
+    \\    total = 0
+    \\    while True:
+    \\        for i in range(n):
+    \\            perm[i] = perm[i] + 1
+    \\        total = total + perm[0]
+    \\        if total > 100:
+    \\            return total
+    \\
+    \\
+    \\def main(args: list[str], out: Stream) -> int:
+    \\    bodies = [Body(x=1.0, v=0.0), Body(x=2.0, v=0.0)]
+    \\    advance(mut bodies, 0.5)
+    \\    perm = [1, 2, 3]
+    \\    out.print(bodies[0].v, flips(mut perm, len(args)))
+    \\    return 0
+    \\
+;
+
+// spec-case: NEW-CORE-F2-INDEX-2
+test "F2 index: a list written only element by element across nested loops keeps its parameter's length key" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const text = try support.optimizedText(arena.allocator(), element_writes);
+    // Every `bodies[...]` access lies under `i < n` or `j < n` with `n = len(bodies)`; the inner
+    // loop's list phi and the outer one's form one cycle of element writes, entered from the parameter.
+    const advance = functionIr(text, "advance");
+    try std.testing.expect(!contains(advance, "list_get_field.exact"));
+    try std.testing.expect(!contains(advance, "list_set_field.exact"));
+}
+
+const versioned_loops =
+    \\def window(xs: list[int], off: int, n: int) -> int:
+    \\    total = 0
+    \\    for i in range(n):
+    \\        total = total + xs[off + i]
+    \\    return total
+    \\
+    \\
+    \\def weigh(x: int) -> int:
+    \\    return x * 3 + 1
+    \\
+    \\
+    \\def called(xs: list[int], n: int) -> int:
+    \\    total = 0
+    \\    for i in range(n):
+    \\        total = total + weigh(xs[i])
+    \\    return total
+    \\
+    \\
+    \\def main(args: list[str], out: Stream) -> int:
+    \\    xs = [1, 2, 3, 4]
+    \\    n = len(args)
+    \\    out.print(window(xs, n, 2), called(xs, n))
+    \\    return 0
+    \\
+;
+
+// spec: NEW-CORE-F2-VERSION-1
+test "F2 index: a small flat counted loop gets a copy with its index checks proven behind one guard; a loop that calls does not" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const text = try support.optimizedText(arena.allocator(), versioned_loops);
+    // `xs[off + i]`: the guard tests `off + 0 >= 0` and `off + n <= len(xs)` once; the copy
+    // reads unchecked, the original (taken when the guard fails) keeps its check.
+    const window = functionIr(text, "window");
+    try std.testing.expect(contains(window, "list_get.proven"));
+    try std.testing.expect(contains(window, "list_get.exact"));
+    try std.testing.expect(contains(window, "bit_and bool"));
+    // A body with a call is not copied (NEW-CORE-FSX-VERSION-1's rule).
+    const called = functionIr(text, "called");
+    try std.testing.expect(!contains(called, "bit_and bool"));
+    try std.testing.expect(!contains(called, "list_get.proven"));
+}
+
+// spec-case: NEW-CORE-F2-VERSION-1
+test "F2 index: versioned loops keep every answer and trap where they must: guards that fail, indexes that wrap, early exits, prints before a trap, huge offsets" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
+    for (modes) |flags| {
+        const plain = try leakChecked(a, root, "f2_version", flags, &.{});
+        try std.testing.expectEqualStrings("147 188\n126 149\n3 10 8\n7\n", plain.stdout);
+        try std.testing.expectEqualStrings("", plain.stderr);
+        const more = try leakChecked(a, root, "f2_version", flags, &.{ "all", "x" });
+        try std.testing.expectEqualStrings("209 189\n366 149\n2 10 8\n11\n", more.stdout);
+        const show = try leakChecked(a, root, "f2_version", flags, &.{"show"});
+        try std.testing.expectEqual(@as(u8, 1), show.status);
+        try std.testing.expectEqualStrings("0\n1\n2\n3\n4\n5\n6\n7\n8\n", show.stdout);
+        try std.testing.expect(contains(show.stderr, "f2_version.my:43:25: error[R_LIST_BOUNDS]: native execution failed (index 8, length 8)"));
+        const forms = try leakChecked(a, root, "f2_version", flags, &.{"forms_trap"});
+        try std.testing.expect(contains(forms.stderr, "f2_version.my:15:25: error[R_LIST_BOUNDS]: native execution failed (index 8, length 8)"));
+        const huge = try leakChecked(a, root, "f2_version", flags, &.{"huge"});
+        try std.testing.expect(contains(huge.stderr, "f2_version.my:15:25: error[R_LIST_BOUNDS]: native execution failed (index 4611686018427387904, length 8)"));
+    }
+}
+
+// spec: NEW-CORE-F2-VERSION-2
+test "F2 index: a verify build catches a bounds guard that admits one index past the end" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
+    const ran = try leakChecked(a, root, "f2_version", &.{ "--release", "--sabotage-facts=version" }, &.{"show"});
+    try std.testing.expectEqual(@as(u8, 1), ran.status);
+    try std.testing.expect(contains(ran.stderr, "f2_version.my:43:25: error[R_CORE_FACT]: native execution failed (index: value 8, other 8)"));
+}
+
+const header_edges =
+    \\record Machine:
+    \\    items: list[int]
+    \\    top: int
+    \\
+    \\
+    \\def run(m: mut Machine, steps: int) -> int:
+    \\    total = m.items[m.top - 1]
+    \\    k = 0
+    \\    while k < steps:
+    \\        total = total + m.items[m.top - 1]
+    \\        if total % 2 == 0:
+    \\            m.top = m.top - 1
+    \\        k += 1
+    \\        total = total + m.items[m.top - 1]
+    \\    return total
+    \\
+    \\
+    \\def unguarded(m: mut Machine, steps: int) -> int:
+    \\    total = 0
+    \\    k = 0
+    \\    while k < steps:
+    \\        total = total + m.items[m.top - 1]
+    \\        if total % 2 == 0:
+    \\            m.top = m.top - 1
+    \\        k += 1
+    \\        total = total + m.items[m.top - 1]
+    \\    return total
+    \\
+    \\
+    \\def main(args: list[str], out: Stream) -> int:
+    \\    m = Machine(items=[1, 2, 3, 4, 5, 6, 7, 8], top=8)
+    \\    out.print(run(mut m, 3 + len(args)), m.top)
+    \\    m2 = Machine(items=[1, 2, 3, 4, 5, 6, 7, 8], top=8)
+    \\    out.print(unguarded(mut m2, 3 + len(args)), m2.top)
+    \\    return 0
+    \\
+;
+
+// spec: NEW-CORE-F2-INDEX-5
+test "F2 index: an access reading a loop header's phi is covered when every edge into the header carries the same check" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const text = try support.optimizedText(arena.allocator(), header_edges);
+    // `run`: the read before the loop and the read at the end of a pass cover the read at the top.
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, functionIr(text, "run"), "list_get.proven"));
+    // `unguarded` has no read before its loop: nothing covers its entry edge.
+    try std.testing.expect(!contains(functionIr(text, "unguarded"), "list_get.proven"));
+}
+
+// spec-case: NEW-CORE-F2-INDEX-5
+test "F2 index: header-edge coverage keeps every answer: indexes that wrap below zero, and the trap past the list" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
+    const eight = [_][]const u8{ "x", "x", "x", "x", "x", "x", "x", "x" };
+    for (modes) |flags| {
+        const plain = try leakChecked(a, root, "f2_header", flags, &.{});
+        try std.testing.expectEqualStrings("47 5\n39 5\n", plain.stdout);
+        const wrapped = try leakChecked(a, root, "f2_header", flags, &eight);
+        try std.testing.expectEqualStrings("119 -3\n111 -3\n", wrapped.stdout);
+        const trapped = try leakChecked(a, root, "f2_header", flags, &(eight ++ eight ++ [_][]const u8{ "x", "x", "x", "x" }));
+        try std.testing.expectEqual(@as(u8, 1), trapped.status);
+        try std.testing.expect(contains(trapped.stderr, "f2_header.my:23:25: error[R_LIST_BOUNDS]: native execution failed (index -9, length 8)"));
+    }
+}

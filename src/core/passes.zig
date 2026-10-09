@@ -22,8 +22,9 @@ pub const Error = std.mem.Allocator.Error;
 /// `sabotage_length` are verify with one wrong rule (`facts.Sabotage`), and
 /// `sabotage_overflow` verify with the overflow facts' rules off by one, and `sabotage_index`
 /// verify with a dominating check taken to cover the next index too (`index_checks`), and
-/// `sabotage_field` verify with each field interval's top dropped (`fields.zig`).
-pub const Mode = enum { off, trusted, verify, sabotage, sabotage_widening, sabotage_length, sabotage_overflow, sabotage_index, sabotage_field };
+/// `sabotage_field` verify with each field interval's top dropped (`fields.zig`), and
+/// `sabotage_version` verify with each bounds guard admitting one index too many (`version.zig`).
+pub const Mode = enum { off, trusted, verify, sabotage, sabotage_widening, sabotage_length, sabotage_overflow, sabotage_index, sabotage_field, sabotage_version };
 
 /// What the passes produced, per function, and what they did.
 pub const Result = struct {
@@ -105,6 +106,7 @@ pub fn run(arena: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Resul
         .sabotage_overflow => .overflow,
         .sabotage_index => .index,
         .sabotage_field => .field,
+        .sabotage_version => .version,
         else => .none,
     };
     // A first fact pass with every parameter unknown gives each call site's argument
@@ -158,8 +160,16 @@ pub fn run(arena: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Resul
             result.counts.proven += known.proven;
             result.per_function[index].counts.proven += known.proven;
         }
-        result.counts.versioned += guarded;
-        result.per_function[index].counts.versioned = guarded;
+        // A small flat counted loop whose list indexes a guard can range-check before it gets
+        // a copy with those checks proven (NEW-CORE-F2-VERSION-1); the facts then run again.
+        const ranged = try version.versionBounds(arena, function, known, .{ .provenance = result.provenance.context(@intCast(index)), .sabotage = sabotage == .version });
+        if (ranged != 0) {
+            known = try facts.analyze(arena, function, options);
+            result.counts.proven += known.proven;
+            result.per_function[index].counts.proven += known.proven;
+        }
+        result.counts.versioned += guarded + ranged;
+        result.per_function[index].counts.versioned = guarded + ranged;
         result.per_function[index].counts.inlined = inlined[index];
         // Ownership after the facts: the instructions and blocks it adds have none.
         result.per_function[index].own = try own.function(arena, module, function, .{ .verify = verify, .facts = &known, .provenance = &result.provenance, .function_index = @intCast(index), .effects = &summaries });

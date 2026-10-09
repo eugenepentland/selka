@@ -62,8 +62,88 @@ pub fn run(arena: std.mem.Allocator, f: *ir.Function, known: ?*const facts.Facts
         }
         for (children[block.index()].items) |child| try stack.append(arena, .{ .block = child, .mark = 0, .entered = false });
     }
+    // Checks made on every edge into a loop header before an access that reads the header's
+    // phi (NEW-CORE-F2-INDEX-5).
+    const scope: Scope = .{ .f = f, .shape = &shape, .keys = &keys, .known = known, .sabotage = sabotage };
+    for (shape.rpo) |block| for (f.blocks.items[block.index()].insts.items) |ref| {
+        if (f.inst(ref).check != .exact) continue;
+        const access = accessOf(f, &shape, &keys, known, ref) orelse continue;
+        if (!scope.everyEdge(access, block)) continue;
+        f.insts.items[ref.index()].check = .proven;
+        proven += 1;
+    };
     return proven;
 }
+
+/// What the edge rule reads.
+const Scope = struct {
+    f: *const ir.Function,
+    shape: *const facts.Shape,
+    keys: *const index_keys.Keys,
+    known: ?*const facts.Facts,
+    sabotage: bool,
+
+    /// Whether an access whose list's length key and index key both name one phi `p` (a field of
+    /// it, or `p` itself) is covered on every edge into `p`'s block, which dominates the access:
+    /// on the edge from each predecessor, by a check made in that predecessor or a block
+    /// dominating it, with the keys the phi's operand on that edge gives. Entering the block,
+    /// the phi is that operand, and nothing defines it again before the access.
+    fn everyEdge(self: Scope, access: Shown, block: ir.BlockId) bool {
+        const phi = access.length.ref;
+        if (phi == .none or access.index.base.ref != phi) return false;
+        if (self.f.inst(phi).op != .phi) return false;
+        const header = self.shape.block_of[phi.index()] orelse return false;
+        if (!self.dominates(header, block)) return false;
+        const preds = self.f.blocks.items[header.index()].preds.items;
+        const operands = self.f.operands(self.f.inst(phi).data);
+        if (preds.len == 0 or preds.len != operands.len) return false;
+        for (preds, operands) |pred, operand| {
+            var moved = access;
+            moved.length = self.translate(access.length, operand, true);
+            moved.index.base = self.translate(access.index.base, operand, false);
+            if (!self.availableAt(pred, moved)) return false;
+        }
+        return true;
+    }
+
+    /// `key`, a field of the phi or the phi itself, with the phi replaced by `operand`: as a
+    /// length key when `length`, else as a value key.
+    fn translate(self: Scope, key: index_keys.Key, operand: ir.Ref, length: bool) index_keys.Key {
+        if (key.field == 0) return if (length) self.keys.length(operand) else self.keys.value(operand);
+        const field = self.keys.fieldOf(operand, key.field - 1);
+        if (!length or field.field != 0) return field;
+        return self.keys.length(field.ref);
+    }
+
+    /// Whether a check made in `pred` or a block dominating it covers `access`.
+    fn availableAt(self: Scope, pred: ir.BlockId, access: Shown) bool {
+        if (self.shape.order[pred.index()] == std.math.maxInt(u32)) return false;
+        var current: ?ir.BlockId = pred;
+        var steps: usize = 0;
+        while (current) |block| : (steps += 1) {
+            if (steps > self.f.blocks.items.len) return false;
+            for (self.f.blocks.items[block.index()].insts.items) |ref| {
+                const earlier = accessOf(self.f, self.shape, self.keys, self.known, ref) orelse continue;
+                if (covered(&.{earlier}, access, self.sabotage)) return true;
+            }
+            if (block.index() == 0) return false;
+            current = self.shape.idom[block.index()];
+        }
+        return false;
+    }
+
+    fn dominates(self: Scope, a: ir.BlockId, b: ir.BlockId) bool {
+        var current: ?ir.BlockId = b;
+        var steps: usize = 0;
+        while (current) |block| : (steps += 1) {
+            if (steps > self.f.blocks.items.len) return false;
+            if (block == a) return true;
+            if (block.index() == 0) return false;
+            current = self.shape.idom[block.index()];
+        }
+        return false;
+    }
+};
 
 /// What a list access's check shows, or null for any other instruction (and for the reads
 /// a pop starts with, whose index is the list's own last). An index the facts put at or

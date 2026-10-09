@@ -156,6 +156,7 @@ fn sabotageFlag(arg: []const u8) ?@FieldType(pipeline.Options, "facts") {
         .{ "--sabotage-facts=overflow", .sabotage_overflow },
         .{ "--sabotage-facts=index", .sabotage_index },
         .{ "--sabotage-facts=field", .sabotage_field },
+        .{ "--sabotage-facts=version", .sabotage_version },
     };
     for (flags) |flag| if (std.mem.eql(u8, arg, flag[0])) return flag[1];
     return null;

@@ -554,12 +554,17 @@ pub const FieldIntervals = struct {
 
     /// The interval of field `field` of every record of type `ty`, when known.
     pub fn get(self: FieldIntervals, ty: ir.Type, field: u64) ?Interval {
+        const fields = self.table(ty) orelse return null;
+        if (field >= fields.len) return null;
+        return fields[@intCast(field)];
+    }
+
+    /// The intervals of every field of every record of type `ty`, when it has any.
+    pub fn table(self: FieldIntervals, ty: ir.Type) ?[]const ?Interval {
         if (!ty.isCompound()) return null;
         const index = @backingInt(ty) - ir.Type.first_compound;
         if (index >= self.types.len) return null;
-        const table = self.types[index] orelse return null;
-        if (field >= table.len) return null;
-        return table[@intCast(field)];
+        return self.types[index];
     }
 
     /// The interval of the value at `path` inside an element of type `element`, when the
@@ -615,6 +620,8 @@ pub const Sabotage = enum {
     index,
     /// A record field's whole-program interval loses its top (`fields.zig`).
     field,
+    /// A bounds versioning guard admits one index past the end (`version.zig`).
+    version,
 };
 
 /// The bounds a widened interval may stop at before its type's own: 0, the
@@ -1071,9 +1078,13 @@ fn transferFloat(a: *Analysis, ref: ir.Ref, block: ir.BlockId) ?FloatInterval {
     };
 }
 
-/// The field intervals of record value `raw`, when known.
+/// The field intervals of record value `raw`, when known: this function's own, else every
+/// record of its type's (`FieldIntervals`, NEW-CORE-F2-FIELD-1), so a record a parameter,
+/// call or element read brings in starts from them and its updates and joins keep them.
 fn fieldsOf(a: *Analysis, raw: ir.Ref) ?[]const ?Interval {
-    return a.facts.aggregates.fields[a.f.resolve(raw).index()];
+    const ref = a.f.resolve(raw);
+    if (a.facts.aggregates.fields[ref.index()]) |own| return own;
+    return a.fields.table(a.f.inst(ref).ty);
 }
 
 /// The interval of an integer or boolean operand, null for any other type.

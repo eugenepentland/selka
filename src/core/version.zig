@@ -18,6 +18,8 @@ const std = @import("std");
 const ir = @import("ir.zig");
 const facts = @import("facts.zig");
 const origins = @import("inline_origins.zig");
+const index_keys = @import("index_keys.zig");
+const flags = @import("flags.zig");
 
 /// Versioning only allocates.
 pub const Error = std.mem.Allocator.Error;
@@ -143,16 +145,20 @@ fn preheaderOf(f: *const ir.Function, loop: ir.Loop) ?ir.BlockId {
 fn version(arena: std.mem.Allocator, f: *ir.Function, counted: facts.Counted, limit: i128, provenance: origins.Context) Error!bool {
     const span = f.inst(f.blocks.items[counted.loop.header.index()].insts.items[0]).span;
     const cap = try appendInst(arena, f, .{ .op = .iconst, .ty = .i64, .data = @bitCast(@as(i64, @intCast(limit + 1))) });
-    const condition: ir.Inst = .{ .op = .cmp, .ty = .bool, .a = f.resolve(counted.bound), .b = cap, .data = @backingInt(ir.Predicate.lt), .span = span };
+    const condition = try appendInst(arena, f, .{ .op = .cmp, .ty = .bool, .a = f.resolve(counted.bound), .b = cap, .data = @backingInt(ir.Predicate.lt), .span = span });
     const anchor = f.blocks.items[counted.loop.header.index()].insts.items[0];
-    const copies = try duplicate(arena, f, counted.loop, condition, provenance, provenance.at(@intCast(counted.loop.header.index()), anchor));
+    const copies = try duplicate(arena, f, counted.loop, .{ .insts = &.{condition}, .condition = condition }, provenance, provenance.at(@intCast(counted.loop.header.index()), anchor));
     return copies != null;
 }
+
+/// The guard a loop copy is entered by: `insts`, appended instructions the guard block
+/// holds in order, and `condition`, the one of them the guard branches on.
+const Guard = struct { insts: []const ir.Ref, condition: ir.Ref };
 
 /// Clone `loop` behind a guard block that evaluates `condition` and enters the clone
 /// when it holds, the original otherwise. Returns the maps from original to clone,
 /// or null (nothing changed) when the loop's shape does not allow it.
-fn duplicate(arena: std.mem.Allocator, f: *ir.Function, loop: ir.Loop, condition_inst: ir.Inst, provenance: origins.Context, frame: ?u32) Error!?Copies {
+fn duplicate(arena: std.mem.Allocator, f: *ir.Function, loop: ir.Loop, guard_insts: Guard, provenance: origins.Context, frame: ?u32) Error!?Copies {
     const preheader = preheaderOf(f, loop) orelse return null;
     const inside = try members(arena, f, loop);
     // The exit may also be entered by earlier copies of this loop; it must be entered from it.
@@ -239,9 +245,9 @@ fn duplicate(arena: std.mem.Allocator, f: *ir.Function, loop: ir.Loop, condition
     const pre_insts = f.blocks.items[preheader.index()].insts.items;
     f.insts.items[pre_insts[pre_insts.len - 1].index()].data = @backingInt(guard);
     const clone_header = block_map[loop.header.index()].?;
-    const condition = try appendInst(arena, f, condition_inst);
-    const branch = try appendInst(arena, f, .{ .op = .branch, .ty = .void, .a = condition, .data = ir.packTargets(entry, stay), .span = header_span });
-    try f.blocks.items[guard.index()].insts.appendSlice(arena, &.{ condition, branch });
+    const branch = try appendInst(arena, f, .{ .op = .branch, .ty = .void, .a = guard_insts.condition, .data = ir.packTargets(entry, stay), .span = header_span });
+    try f.blocks.items[guard.index()].insts.appendSlice(arena, guard_insts.insts);
+    try f.blocks.items[guard.index()].insts.append(arena, branch);
     try f.blocks.items[guard.index()].preds.append(arena, preheader);
     const enter = try appendInst(arena, f, .{ .op = .jump, .ty = .void, .data = @backingInt(clone_header), .span = header_span });
     try f.blocks.items[entry.index()].insts.append(arena, enter);
@@ -275,7 +281,8 @@ pub fn unswitch(arena: std.mem.Allocator, f: *ir.Function, provenance: origins.C
             const condition = f.resolve(f.inst(branch).a);
             const cmp = f.inst(condition);
             const frame = provenance.at(blockOf(f, condition) orelse @intCast(loop.header.index()), condition);
-            const copies = (try duplicate(arena, f, loop, cmp, provenance, frame)) orelse break;
+            const copy_condition = try appendInst(arena, f, cmp);
+            const copies = (try duplicate(arena, f, loop, .{ .insts = &.{copy_condition}, .condition = copy_condition }, provenance, frame)) orelse break;
             const yes = try appendInst(arena, f, .{ .op = .iconst, .ty = .bool, .data = 1 });
             const no = try appendInst(arena, f, .{ .op = .iconst, .ty = .bool, .data = 0 });
             f.insts.items[copies.inst_map[branch.index()].index()].a = yes;
@@ -435,3 +442,283 @@ fn use(arena: std.mem.Allocator, f: *ir.Function, c: Copies, uses: Uses, raw: ir
     uses.merged[ref.index()] = phi;
     return phi;
 }
+
+/// The most instructions a loop may hold to be versioned for its bounds checks: a clone of
+/// a small body pays where LLVM can then unroll or vectorize it (NEW-CORE-FSX-VERSION-1).
+const bounds_body_limit = 256;
+
+/// Integers a bounds guard adds or subtracts lie in `[-limit, limit]`, so its sums are exact.
+const bounds_value_limit: i128 = 1 << 60;
+
+/// Bounds versioning (NEW-CORE-F2-VERSION-1): a counted loop `i = S, S + 1, …` while
+/// `i < N`, whose small flat body checks list accesses at `I + i`, `i - I` or `I - i`, with
+/// `I`, `S`, `N` and each list's length fixed for the whole loop, is cloned behind one guard
+/// before it. The guard tests that every such index lies in `[0, len)` for every trip; the
+/// clone runs with those checks proven (and a written index's normalization from the end
+/// folded away), the original, unchanged, otherwise. Returns how many loops were versioned.
+pub fn versionBounds(arena: std.mem.Allocator, f: *ir.Function, known: facts.Facts, options: BoundsOptions) Error!u32 {
+    var count: u32 = 0;
+    const loops = try arena.dupe(facts.Counted, known.counted);
+    for (loops) |counted| {
+        if (!try flat(arena, f, counted.loop)) continue;
+        const plan = (try boundsPlan(arena, f, known, counted)) orelse continue;
+        if (try versionPlan(arena, f, counted, plan, options)) count += 1;
+    }
+    return count;
+}
+
+/// Where cloned blocks come from, and the deliberately wrong rule for testing the verify
+/// mode (`--sabotage-facts=version`: each guard admits one index past the end).
+pub const BoundsOptions = struct { provenance: origins.Context, sabotage: bool = false };
+
+/// How an access's index moves with the counter `i`: `I + i` (or `i` alone), `i - I`, `I - i`.
+const IndexForm = enum { plus, counter_minus, minus_counter };
+
+/// One access a bounds guard covers: the access, its index's form and invariant `I`
+/// (`.none` for `i` alone), its list's length key, and the branch that normalizes a
+/// written index from the end (`.none` when the index is not written).
+const Covered = struct { access: ir.Ref, form: IndexForm, invariant: ir.Ref, length: index_keys.Key, normalize: ir.Ref, list_type: ir.Type };
+
+/// The accesses of `counted`'s loop a guard can cover, or null when there are none or the
+/// loop does not qualify.
+fn boundsPlan(arena: std.mem.Allocator, f: *ir.Function, known: facts.Facts, counted: facts.Counted) Error!?Plan {
+    const inside = try members(arena, f, counted.loop);
+    var size: usize = 0;
+    const defined = try arena.alloc(bool, f.insts.items.len);
+    @memset(defined, false);
+    for (inside, 0..) |member, b| if (member) for (f.blocks.items[b].insts.items) |ref| {
+        defined[ref.index()] = true;
+        size += 1;
+    };
+    if (size > bounds_body_limit) return null;
+    const counter = f.resolve(counted.counter);
+    const bound = f.resolve(counted.bound);
+    const start = f.resolve(counted.start);
+    if (f.inst(counter).ty != .i64 or f.inst(bound).ty != .i64 or f.inst(start).ty != .i64) return null;
+    if (defined[bound.index()] or defined[start.index()]) return null;
+    // A trip count computed afresh in each pass of an enclosing loop (fannkuch's flips) is
+    // data, often a few trips, which the guard's cost outweighs; a bound fixed for every
+    // enclosing loop is the problem's size.
+    if (try insideEnclosing(arena, f, counted.loop, bound)) return null;
+    const shape = try facts.shape(arena, f);
+    const keys = try index_keys.compute(arena, f, shape.rpo);
+    var out: std.ArrayList(Covered) = .empty;
+    for (inside, 0..) |member, b| if (member) for (f.blocks.items[b].insts.items) |ref| {
+        const inst = f.inst(ref);
+        switch (inst.op) {
+            .list_get => if (inst.data == flags.pop_read or inst.data == flags.pop_index_read) continue,
+            .list_get_field, .list_set, .list_set_field => {},
+            else => continue,
+        }
+        if (inst.check != .exact) continue;
+        const index = f.resolve(inst.b);
+        const written: ?ir.Ref = if (shape.block_of[index.index()]) |join| facts.normalizedRaw(f, join, index) else null;
+        var normalize: ir.Ref = .none;
+        if (written != null) {
+            normalize = normalizeBranch(f, shape, index) orelse continue;
+            const test_block = shape.block_of[normalize.index()] orelse continue;
+            if (!inside[test_block.index()]) continue;
+        }
+        // A normalization the facts folded away (the index is at least 0) is its written index.
+        const seen = keys.value(written orelse index);
+        if (seen.field != 0) continue;
+        const form = indexForm(f, counter, seen.ref) orelse continue;
+        if (form.invariant != .none and !hoistable(f, defined, form.invariant, 4)) continue;
+        // The guard measures the list the loop is entered with, which it holds anyway: an
+        // older value of the same length would live longer and could cost a copy on write.
+        const entry = entryList(f, defined, counted.loop, inst.a) orelse continue;
+        if (!std.meta.eql(keys.length(entry), keys.length(inst.a))) continue;
+        try out.append(arena, .{ .access = ref, .form = form.form, .invariant = form.invariant, .length = .{ .ref = entry }, .normalize = normalize, .list_type = f.inst(entry).ty });
+    };
+    return if (out.items.len == 0) null else .{ .covered = out.items, .defined = defined, .known = known };
+}
+
+/// What a bounds guard covers: the accesses, the loop's own values, and the facts.
+const Plan = struct { covered: []const Covered, defined: []const bool, known: facts.Facts };
+
+/// The list value `raw` derives from as the loop is entered: itself when defined outside the
+/// loop, else through element writes, copies and sorts back to the loop header phi, whose
+/// operand from outside the loop it is. Null for any other derivation.
+fn entryList(f: *const ir.Function, defined: []const bool, loop: ir.Loop, raw: ir.Ref) ?ir.Ref {
+    var ref = f.resolve(raw);
+    var steps: usize = 0;
+    while (steps < 64) : (steps += 1) {
+        if (ref.index() >= defined.len or !defined[ref.index()]) return ref;
+        const inst = f.inst(ref);
+        switch (inst.op) {
+            .list_set, .list_set_field, .list_copy, .list_sort => ref = f.resolve(inst.a),
+            .phi => {
+                const header = f.blocks.items[loop.header.index()];
+                if (std.mem.indexOfScalar(ir.Ref, header.insts.items, ref) == null) return null;
+                const operands = f.operands(inst.data);
+                if (operands.len != header.preds.items.len) return null;
+                const outside = for (header.preds.items, 0..) |pred, k| {
+                    if (pred != loop.latch) break k;
+                } else return null;
+                ref = f.resolve(operands[outside]);
+            },
+            else => return null,
+        }
+    }
+    return null;
+}
+
+/// Whether `raw` is defined inside a loop that encloses `loop`.
+fn insideEnclosing(arena: std.mem.Allocator, f: *const ir.Function, loop: ir.Loop, raw: ir.Ref) Error!bool {
+    const ref = f.resolve(raw);
+    const shape = try facts.shape(arena, f);
+    const home = shape.block_of[ref.index()] orelse return false;
+    for (f.loops.items) |outer| {
+        if (outer.header == loop.header) continue;
+        const inside = try members(arena, f, outer);
+        if (inside[loop.header.index()] and inside[home.index()]) return true;
+    }
+    return false;
+}
+
+/// Whether `raw` is fixed for the whole loop and can be computed before it: defined outside
+/// the loop, or (within `depth` steps) an addition, subtraction or multiplication that cannot
+/// trap (proven or unchecked) of such values.
+fn hoistable(f: *const ir.Function, defined: []const bool, raw: ir.Ref, depth: u8) bool {
+    const ref = f.resolve(raw);
+    if (ref.index() >= defined.len or !defined[ref.index()]) return true;
+    if (depth == 0) return false;
+    const inst = f.inst(ref);
+    const pure = inst.op == .add or inst.op == .sub or inst.op == .mul;
+    if (!pure or inst.check == .exact or inst.ty != .i64) return false;
+    return hoistable(f, defined, inst.a, depth - 1) and hoistable(f, defined, inst.b, depth - 1);
+}
+
+/// Whether the facts put an integer value well inside `i64` (`bounds_value_limit`).
+fn small(f: *const ir.Function, known: facts.Facts, raw: ir.Ref) bool {
+    const range = rangeOf(f, known, raw) orelse return false;
+    return range.lo >= -bounds_value_limit and range.hi <= bounds_value_limit;
+}
+
+/// The branch that tests a written index `raw < 0` for the normalization phi `phi`.
+fn normalizeBranch(f: *const ir.Function, shape: facts.Shape, phi: ir.Ref) ?ir.Ref {
+    const join = shape.block_of[phi.index()] orelse return null;
+    for (f.blocks.items[join.index()].preds.items) |pred| {
+        const insts = f.blocks.items[pred.index()].insts.items;
+        const last = insts[insts.len - 1];
+        if (f.inst(last).op != .branch) continue;
+        if (f.inst(f.resolve(f.inst(last).a)).op == .cmp) return last;
+    }
+    return null;
+}
+
+/// How `raw` moves with `counter`: the counter itself, a checked or proven sum or
+/// difference of it and one other value, or null.
+fn indexForm(f: *const ir.Function, counter: ir.Ref, raw: ir.Ref) ?struct { form: IndexForm, invariant: ir.Ref } {
+    const ref = f.resolve(raw);
+    if (ref == counter) return .{ .form = .plus, .invariant = .none };
+    const inst = f.inst(ref);
+    if ((inst.op != .add and inst.op != .sub) or inst.check == .none or inst.ty != .i64) return null;
+    const a = f.resolve(inst.a);
+    const b = f.resolve(inst.b);
+    if (inst.op == .add) {
+        if (a == counter and b != counter) return .{ .form = .plus, .invariant = b };
+        if (b == counter and a != counter) return .{ .form = .plus, .invariant = a };
+        return null;
+    }
+    if (a == counter and b != counter) return .{ .form = .counter_minus, .invariant = b };
+    if (b == counter and a != counter) return .{ .form = .minus_counter, .invariant = a };
+    return null;
+}
+
+/// Build the guard for `plan`, clone the loop behind it, and prove the covered accesses in the clone.
+fn versionPlan(arena: std.mem.Allocator, f: *ir.Function, counted: facts.Counted, plan: Plan, options: BoundsOptions) Error!bool {
+    const provenance = options.provenance;
+    const span = f.inst(f.blocks.items[counted.loop.header.index()].insts.items[0]).span;
+    var guard: GuardBuilder = .{ .arena = arena, .f = f, .span = span, .defined = plan.defined };
+    const start = f.resolve(counted.start);
+    const bound = f.resolve(counted.bound);
+    const zero = try guard.constant(0);
+    const one = try guard.constant(1);
+    // The guard's sums are exact when every value it adds lies within the limit; a value the
+    // facts do not bound so is tested at run time, and the guard fails if it lies outside.
+    for ([_]ir.Ref{ start, bound }) |value| try guard.bounded(plan.known, value);
+    for (plan.covered) |covered| {
+        if (covered.invariant != .none) try guard.bounded(plan.known, covered.invariant);
+    }
+    for (plan.covered) |covered| {
+        const len = try guard.length(covered.length, covered.list_type);
+        // The least and the greatest index over the trips `start <= i <= bound - 1`.
+        const least, const most_plus_one = switch (covered.form) {
+            .plus => if (covered.invariant == .none) .{ start, bound } else .{ try guard.arith(.add, covered.invariant, start), try guard.arith(.add, covered.invariant, bound) },
+            .counter_minus => .{ try guard.arith(.sub, start, covered.invariant), try guard.arith(.sub, bound, covered.invariant) },
+            .minus_counter => .{ try guard.arith(.add, try guard.arith(.sub, covered.invariant, bound), one), try guard.arith(.add, try guard.arith(.sub, covered.invariant, start), one) },
+        };
+        try guard.require(.ge, least, zero);
+        try guard.require(.le, most_plus_one, if (options.sabotage) try guard.arith(.add, len, one) else len);
+    }
+    const condition = guard.condition orelse return false;
+    const anchor = f.blocks.items[counted.loop.header.index()].insts.items[0];
+    const copies = (try duplicate(arena, f, counted.loop, .{ .insts = guard.insts.items, .condition = condition }, provenance, provenance.at(@intCast(counted.loop.header.index()), anchor))) orelse return false;
+    const no = try appendInst(arena, f, .{ .op = .iconst, .ty = .bool, .data = 0 });
+    for (plan.covered) |covered| {
+        f.insts.items[copies.inst_map[covered.access.index()].index()].check = .proven;
+        // In the clone every covered index is at least 0: its normalization from the end never runs.
+        if (covered.normalize != .none) f.insts.items[copies.inst_map[covered.normalize.index()].index()].a = no;
+    }
+    return true;
+}
+
+/// The instructions of a bounds guard, appended to the function in order; `condition` is
+/// the conjunction so far.
+const GuardBuilder = struct {
+    arena: std.mem.Allocator,
+    f: *ir.Function,
+    span: u32,
+    /// The loop's own instructions: an invariant defined there is recomputed in the guard.
+    defined: []const bool,
+    insts: std.ArrayList(ir.Ref) = .empty,
+    condition: ?ir.Ref = null,
+
+    fn add(self: *GuardBuilder, inst: ir.Inst) Error!ir.Ref {
+        var placed = inst;
+        placed.span = self.span;
+        const ref = try appendInst(self.arena, self.f, placed);
+        try self.insts.append(self.arena, ref);
+        return ref;
+    }
+
+    fn constant(self: *GuardBuilder, value: i64) Error!ir.Ref {
+        return appendInst(self.arena, self.f, .{ .op = .iconst, .ty = .i64, .data = @bitCast(value) });
+    }
+
+    /// `a op b`, unchecked: exact whenever the guard's limit tests pass, and only then read.
+    fn arith(self: *GuardBuilder, op: ir.Op, a: ir.Ref, b: ir.Ref) Error!ir.Ref {
+        return self.add(.{ .op = op, .ty = .i64, .a = try self.hoist(a), .b = try self.hoist(b) });
+    }
+
+    /// `raw` where the guard runs: itself when defined outside the loop, else its computation
+    /// (`hoistable`) repeated in the guard, unchecked.
+    fn hoist(self: *GuardBuilder, raw: ir.Ref) Error!ir.Ref {
+        const ref = self.f.resolve(raw);
+        if (ref.index() >= self.defined.len or !self.defined[ref.index()]) return ref;
+        const inst = self.f.inst(ref);
+        return self.add(.{ .op = inst.op, .ty = inst.ty, .a = try self.hoist(inst.a), .b = try self.hoist(inst.b) });
+    }
+
+    /// Require `value` within `bounds_value_limit` unless the facts already put it there.
+    fn bounded(self: *GuardBuilder, known: facts.Facts, value: ir.Ref) Error!void {
+        if (small(self.f, known, value)) return;
+        const at = try self.hoist(value);
+        try self.require(.ge, at, try self.constant(@intCast(-bounds_value_limit)));
+        try self.require(.le, at, try self.constant(@intCast(bounds_value_limit)));
+    }
+
+    /// The length, as `i64`, of the lists with length key `key`, of type `list_type`.
+    fn length(self: *GuardBuilder, key: index_keys.Key, list_type: ir.Type) Error!ir.Ref {
+        const list = if (key.field == 0) key.ref else try self.add(.{ .op = .record_get, .ty = list_type, .a = key.ref, .data = key.field - 1 });
+        const raw = try self.add(.{ .op = .list_len, .ty = .u64, .a = list });
+        return self.add(.{ .op = .convert, .ty = .i64, .a = raw, .check = .proven });
+    }
+
+    /// And `a predicate b` into the condition.
+    fn require(self: *GuardBuilder, predicate: ir.Predicate, a: ir.Ref, b: ir.Ref) Error!void {
+        const test_ref = try self.add(.{ .op = .cmp, .ty = .bool, .a = a, .b = b, .data = @backingInt(predicate) });
+        self.condition = if (self.condition) |so_far| try self.add(.{ .op = .bit_and, .ty = .bool, .a = so_far, .b = test_ref }) else test_ref;
+    }
+};
