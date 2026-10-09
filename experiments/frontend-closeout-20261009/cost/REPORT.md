@@ -1,10 +1,12 @@
 # Selected cost visibility refresh
 
 This is a fresh, source-bound selection for phase 6, not the old FP2 full-corpus
-qualification or its unfinished timing budget. The final immutable compiler is
-`aca89445a3f2d4f2dddbf68b6441c3473374cd37b2e6cde68929e0690def737f`;
-`../candidate-final.json` binds its 612-file source inventory. Candidate 1 and
-its receipts remain preserved separately. All command receipts
+qualification or its unfinished timing budget. The qualified immutable compiler is
+`21319448ba51241f917c040004d1a3c7123e5516d5f0a766d7cff557294793f2`;
+`../candidate-qualified.json` binds its 614-file source inventory, including the
+root build_identity input. Candidate 1 and checkpoint final receipts remain
+preserved separately. Qualified recollection follows the reviewed cold UTF-8
+diagnostic lowering repair and explicit-noalloc fixture reconciliation. All command receipts
 record exact inputs, stdout/stderr hashes, affinity, elapsed observations and
 concurrent heavy-process context. No uncontended elapsed-time or speedup claim
 is made.
@@ -27,10 +29,10 @@ list/text/bytes workload described below.
 | stdlib | 110 | operations/stdlib.my, importing strings/json |
 | language | 3 | operations/main.my |
 
-All four final dumps and walkers succeeded. Per-operation rows at depth
+All four qualified dumps and walkers succeeded. Per-operation rows at depth
 0/1/2+ and per-event function/dump-line attribution are in
-`final-census/*-counts.json`; the compact view is
-`final-census/summary.json`. Selected visible examples are:
+`qualified-census/*-counts.json`; the compact view is
+`qualified-census/summary.json`. Selected visible examples are:
 
 | Operation | Lox | EDA | stdlib | language |
 | --- | --- | --- | --- | --- |
@@ -71,17 +73,17 @@ input records. The manifest fixes that result and
 `core-count-p1-c26c95de7` counter semantics.
 
 The completed source-bound Juice record is
-`juice-evidence/final/record.json`. All three ordinary samples and the
+`juice-evidence/qualified/record.json`. All three ordinary samples and the
 separate counted executable match the oracle. Raw perf records, sample streams,
 counted streams and counters are preserved beside it. Generated build binaries
 and local cache stay in the ignored `juice-cache/`; executable hashes and build
 recipes remain in the record. `static-cost.json` is the saved `cost-v1` report
 from the same source-bound build.
 
-| Observation | Final candidate |
+| Observation | Qualified candidate |
 | --- | ---: |
-| ordinary whole-scenario user instructions | 206326 / 206326 / 206325 |
-| median instructions per completed input record | 1611.921875 |
+| ordinary whole-scenario user instructions | 206326 / 206327 / 206327 |
+| median instructions per completed input record | 1611.9296875 |
 | static may-allocate sites in checksum | 6, including 2 unresolved |
 | managed allocations during four checksum calls | 24 |
 | total managed allocations, including outside emitted functions | 27 |
@@ -117,7 +119,7 @@ The new user guide `docs/tooling/cost-workflow.md` explains how to select equiva
 completed work, inspect a static function, run counters, preserve identity when
 joining function-name reports and use Juice for an actual comparison. It links
 the existing precise cost/counter contracts and this evidence. All four census selections and the complete cost/counter/Juice capture were
-recollected on the final immutable compiler. Counts, opaque/unknown observations,
-static cost and semantic runtime counters match candidate 1; the two captures
+recollected on the qualified immutable compiler. Counts, opaque/unknown observations,
+static cost and semantic runtime counters match both candidate 1 and checkpoint final; these captures
 are independent functional qualifications, not a performance comparison.
 A subsequent production compiler change would require another qualification.

@@ -116,3 +116,33 @@ Final noalloc-only Core suite passed 7/7 in test-final-seven.log (11.00s includi
 The coordinator owns full gates, corpus qualification and Guardian feedback.
 
 The final compatibility unit run `test-compatibility-final.log` passed 9/9 in13.64s: the unchanged managed_lists_test fixed-slot positive uses legacy effects(mutation), and the noalloc summary/reorder regression passes with the exact source-spelling predicate. No edit to that legacy test fixture was needed.
+
+## Full gate 2 followup: fixed UTF-8 diagnostic and resource contracts
+
+The full gate exposed two distinct real implementation allocations. The cold
+UTF-8 validation error called `myl_core_bytes_utf8_error`, whose implementation
+in core_text.c returns `str_from` of a fixed message. build_text_more.zig now
+lowers that message as pooled `str_const`, preserving its exact bytes and stable
+lifetime while removing the allocation. No helper was marked allocation-free.
+The regression lowers unused bounded `measure` and asserts zero static allocation
+sites; its native invalid-byte counterpart matches Err and checks the exact
+message `invalid UTF-8 in byte string`. The existing valid/numeric parsing case
+is retained.
+
+Resource attenuation is different: core_io_cap calls block_new for CoreIoAuthority;
+resource acquisition/completion also use allocating adapters and result boxes.
+A reduced no-main `bounded(fs: Filesystem) noalloc` calling `fs.read_only()`
+therefore remains rejected. Source and IO ownership tests, resources.my,
+resource-io.my, both matching examples and documentation now declare
+`effects(filesystem)` instead of `noalloc`. Their authority and ownership
+assertions remain unchanged. This deliberately restores their guest authority
+contract while retaining a dedicated strong noalloc negative; no classifier
+waiver permits allocating resource helpers.
+
+Focused followup receipts are retained under test-fullgate2-fixes.log and the
+subsequent Core regression log. Slot admission time is included in these timed
+receipts. The coordinator owns fresh installation, full gate and followup commit.
+
+Exactly seven resource function ceilings changed: two source-test mains, one IO-test main, two fixture mains, and two example mains; the documentation reproduces the resource-io example.
+
+Followup unit validation passed 13/13 selected tests (including seven mandatory unnamed blocks), exit0, in test-fullgate2-fixes.log: 418.75s total including slot admission. The native invalid UTF-8 exact error payload and existing PY-BYTES-9 valid/numeric cases passed; resource ownership acquisition/completion/move/read assertions passed. The harness printed a failed-command description after its PASS result despite successful outer exit; the complete receipt is preserved. The static Core regression then passed with all eight selected Core allocation contract tests in test-fullgate2-core.log, exit0, 9.27s: unused scalar-count root has zero allocation sites and unused noalloc capability attenuation remains rejected.

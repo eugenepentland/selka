@@ -1,0 +1,11 @@
+func measure(raw: bytes) -> int noalloc:
+    match raw.scalar_count():
+        case Ok(width):
+            return width
+        case Err(message):
+            if message == "invalid UTF-8 in byte string":
+                return 42
+            return 0
+
+func main() -> int:
+    return measure(b"\xff")

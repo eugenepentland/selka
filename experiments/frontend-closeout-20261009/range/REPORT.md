@@ -117,3 +117,18 @@ The integrated full gate/source gate and final immutable candidate qualification
 belong to the coordinator. Other iteration families remain deferred as required
 by the one-family-at-a-time plan. No guest/Core schema, nominality or generic
 acceptance rule is changed by this range lowering family.
+
+## Corrected qualified compiler replay
+
+After the integrated gate exposed unrelated UTF-8 cold-diagnostic allocation and
+resource-contract issues, the corrected frozen compiler was replayed separately:
+`artifacts/mylang-qualified`, SHA256
+`21319448ba51241f917c040004d1a3c7123e5516d5f0a766d7cff557294793f2`.
+The preceding checkpoint and its receipts remain unchanged. `final2.json` and
+`comparison-final2.json` again prove all 100 accepted Core/facts outputs exact
+against old5e and preserve all 72 baseline rejection statuses (172 commands).
+`native-final2` and `native-endpoints-final2` again prove exact Core, release LLVM
+and native outputs for the six accepted probes. The custom v2 release CFG
+rejection remains in both compilers and is still excluded from success counts.
+External replay and the corrected 614-file source guard are recorded separately
+under `../external-final2/`.

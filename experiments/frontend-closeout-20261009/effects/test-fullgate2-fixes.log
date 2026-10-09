@@ -1,0 +1,24 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: all 3 build slot(s) busy; waiting (60s so far)
+build-slot: all 3 build slot(s) busy; waiting (120s so far)
+build-slot: all 3 build slot(s) busy; waiting (180s so far)
+build-slot: all 3 build slot(s) busy; waiting (240s so far)
+build-slot: all 3 build slot(s) busy; waiting (300s so far)
+build-slot: all 3 build slot(s) busy; waiting (360s so far)
+build-slot: build slot 3 after 410s (all 3 build slot(s) busy)
+test-units
++- run test w
+guardian/test: 13 test(s) selected by filter: "PY-BYTES-9", "noalloc scalar counting", "source acquisition delegates" (+3 more) — 6 match by name, 7 unnamed test block(s) run regardless
+guardian/test: test wall 0.84s; slowest over 50ms:
+guardian/test:   0.34s  python_bytes_test.test.PY-BYTES-9 numeric parsing is accepted under noalloc and a view is not
+guardian/test:   0.15s  resource_io_test.test.source resource reads expose partial data EOF and padding while writes report actual progress
+guardian/test:   0.10s  resource_source_test.test.source acquisition delegates authority and failed completion returns owned resource for retry
+guardian/test:   0.09s  resource_source_test.test.RC completion takes its handle over whether the provider completes or refuses it
+guardian/test:   0.09s  python_bytes_test.test.noalloc scalar counting preserves the fixed invalid UTF8 payload
+guardian/test: PASS — 13 passed
+guardian/test: RESULT {"passed":13,"failed":0,"skipped":0}
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/a75ec0c3513bebd3c85090a6c79a1645/test --guardian-filter=PY-BYTES-9 "--guardian-filter=noalloc scalar counting" "--guardian-filter=source acquisition delegates" "--guardian-filter=RC completion takes" "--guardian-filter=RC moves a refused" "--guardian-filter=source resource reads" --cache-dir=./.zig-cache --seed=0x8f14dc07 --listen=-
+
+real 418.75
+user 15.58
+sys 2.44

@@ -82,3 +82,12 @@ immutable compiler aca89445a3f2d4f2dddbf68b6441c3473374cd37b2e6cde68929e0690def7
 The first request checks one specialization and stores one; the relocated
 request reuses one, with cumulative checked remaining one. Both requests pass.
 The final original-fixture cache suite passes 68/68 as recorded above.
+
+## Qualified compiler recollection
+
+After the narrow cold UTF-8 diagnostic lowering repair and explicit-noalloc
+fixture reconciliation, updated-nominal-session-qualified.json repeats the same
+source on immutable compiler
+21319448ba51241f917c040004d1a3c7123e5516d5f0a766d7cff557294793f2.
+Cold checked/stored are one/one; relocated reuse becomes one while cumulative
+checked remains one. Both requests pass. Checkpoint final receipts are preserved.
