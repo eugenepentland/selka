@@ -1,4 +1,4 @@
-module row_cow
+module v_row_cow
 
 # A write to an element of an inner list never changes another variable that holds
 # that inner list (NEW-CORE-ROW-COW-1, NEW-CORE-ROW-COW-2): the row a nested store
@@ -171,3 +171,7 @@ public def test_rows_nothing_kept_are_still_updated() -> bool:
             for k in range(n):
                 c[i][j] += a[i][k] * a[k][j]
     return c[0] == [5.0, 8.0, 11.0] and c[2][2] == 29.0
+
+
+def main() -> int:
+    return 0

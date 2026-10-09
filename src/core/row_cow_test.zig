@@ -90,5 +90,13 @@ test "every aliased-row shape prints the same at debug, release and verify-facts
         try std.testing.expect(ran.term == .exited and ran.term.exited == 0);
         try std.testing.expectEqualStrings("", ran.stderr);
         try std.testing.expectEqualStrings(expected, ran.stdout);
+        // The same shapes as guest tests (inside test functions rather than `main`).
+        var test_argv: std.ArrayList([]const u8) = .empty;
+        try test_argv.appendSlice(a, &.{ options.core_path, "test", try std.fs.path.join(a, &.{ options.fixtures, "v_row_cow.my" }), "--cache-dir", try std.fmt.allocPrint(a, "{s}/tests-{d}", .{ root, index }) });
+        try test_argv.appendSlice(a, flags);
+        const tested = try std.process.run(a, std.testing.io, .{ .argv = test_argv.items, .environ_map = &environment });
+        try std.testing.expect(tested.term == .exited and tested.term.exited == 0);
+        try std.testing.expectEqualStrings("", tested.stderr);
+        try std.testing.expect(std.mem.indexOf(u8, tested.stdout, "8 passed, 0 cached, 0 failed") != null);
     }
 }
