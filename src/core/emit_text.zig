@@ -39,10 +39,28 @@ pub fn instruction(context: anytype, out: anytype, name: []const u8, inst: ir.In
             const len = try context.fresh("%view");
             const view = try context.value(inst.a);
             try out.print(a, "  {s} = extractvalue {{ ptr, i64 }} {s}, 0\n  {s} = extractvalue {{ ptr, i64 }} {s}, 1\n", .{ pointer, view, len, view });
-            try out.print(a, "  {s} = call ptr @myl_core_ir_str_from_view(ptr {s}, i64 {s})\n", .{ name, pointer, len });
+            const ascii = try sourceAscii(@TypeOf(context), @TypeOf(out), context, out, inst.a) orelse
+                return out.print(a, "  {s} = call ptr @myl_core_ir_str_from_view(ptr {s}, i64 {s})\n", .{ name, pointer, len });
+            try out.print(a, "  {s} = call ptr @myl_core_ir_str_from_span(ptr {s}, i64 {s}, i1 zeroext {s})\n", .{ name, pointer, len, ascii });
         },
         else => try context.unsupported(out, name, inst),
     }
+}
+
+/// NEW-CORE-S1-ASCII-1: whether the text a view borrows from is ASCII (an `i1`), when the
+/// view's source is known; every span of an ASCII text is ASCII, so its copy skips the scan.
+fn sourceAscii(comptime Context: type, comptime Output: type, context: Context, out: Output, view: ir.Ref) Error!?[]const u8 {
+    const f = context.function;
+    const borrow = f.inst(f.resolve(view));
+    if (borrow.op != .str_view_of and borrow.op != .str_slice_view) return null;
+    const kind_at = try context.fresh("%viewkind");
+    const kind = try context.fresh("%viewkind");
+    const bit = try context.fresh("%viewascii");
+    const ascii = try context.fresh("%viewascii");
+    try out.print(context.a(), "  {s} = getelementptr inbounds i8, ptr {s}, i64 4\n  {s} = load i32, ptr {s}, align 4\n  {s} = and i32 {s}, 256\n  {s} = icmp ne i32 {s}, 0\n", .{
+        kind_at, try context.value(borrow.a), kind, kind_at, bit, kind, ascii, bit,
+    });
+    return ascii;
 }
 
 /// NEW-CORE-S1-VIEW-1: the span `str_slice` would copy, borrowed. An ASCII source's scalar

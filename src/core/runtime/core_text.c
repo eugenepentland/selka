@@ -25,11 +25,14 @@ static bool core_text_ascii(const unsigned char *bytes, uint64_t len) {
     return true;
 }
 
-static void core_text_publish(myl_block *text) {
+/* Reset a fresh text's flags and cache; `ascii` says its octets are known ASCII. */
+static void core_text_publish_known(myl_block *text, bool ascii) {
     text->kind &= ~(MYL_TEXT_ASCII | MYL_TEXT_HASHED | MYL_TEXT_SCALARS | MYL_TEXT_CURSOR | MYL_TEXT_TAIL);
     text->reserved = 0;
-    if (core_text_ascii(block_data(text), (uint64_t)text->len)) text->kind |= MYL_TEXT_ASCII;
+    if (ascii || core_text_ascii(block_data(text), (uint64_t)text->len)) text->kind |= MYL_TEXT_ASCII;
 }
+
+static void core_text_publish(myl_block *text) { core_text_publish_known(text, false); }
 
 static uint64_t core_text_fold(uint64_t a, uint64_t b) {
     __uint128_t product = (__uint128_t)a * b;
@@ -248,7 +251,22 @@ myl_block *myl_core_ir_str_char(myl_block *text, uint64_t offset) {
     return str_from((const char *)block_data(text) + offset, (size_t)width);
 }
 
+/* A fresh text of the `len` octets at `bytes`. A span of an ASCII text is ASCII, so a
+   caller that knows its source is ASCII skips the re-scan (NEW-CORE-S1-ASCII-1). */
+static myl_block *core_text_known(const unsigned char *bytes, size_t len, bool ascii) {
+    if (!ascii) return str_from((const char *)bytes, len);
+    myl_block *text = block_new(MYL_KIND_STR, (int64_t)len, 1);
+    memcpy(block_data(text), bytes, len);
+    block_data(text)[len] = 0;
+    text->len = (int64_t)len;
+    text->kind &= ~(MYL_TEXT_ASCII | MYL_TEXT_HASHED | MYL_TEXT_SCALARS | MYL_TEXT_CURSOR | MYL_TEXT_TAIL);
+    text->reserved = 0;
+    text->kind |= MYL_TEXT_ASCII;
+    return text;
+}
+
 myl_block *myl_core_ir_str_from_view(const unsigned char *data, uint64_t len) { return str_from((const char *)data, (size_t)len); }
+myl_block *myl_core_ir_str_from_span(const unsigned char *data, uint64_t len, bool ascii) { return core_text_known(data, (size_t)len, ascii); }
 myl_block *myl_core_ir_span_materialize(const unsigned char *data, uint64_t len) { return myl_core_ir_str_from_view(data, len); }
 
 static myl_block *str_new(int64_t len) {
@@ -341,7 +359,7 @@ core_text_span myl_core_ir_str_slice_span(myl_block *text, int64_t start, int64_
 
 myl_block *myl_core_ir_str_slice(myl_block *text, int64_t start, int64_t end) {
     core_text_span span = myl_core_ir_str_slice_span(text, start, end);
-    return str_from((const char *)block_data(text) + span.at, (size_t)span.len);
+    return core_text_known(block_data(text) + span.at, (size_t)span.len, (text->kind & MYL_TEXT_ASCII) != 0);
 }
 
 static inline void core_text_copy(unsigned char *output, const unsigned char *input, size_t count) {
@@ -529,7 +547,7 @@ static myl_block *core_text_slice_step(myl_block *text, int64_t start, int64_t e
         i += step;
     }
     block_data(out)[out->len] = 0;
-    core_text_publish(out);
+    core_text_publish_known(out, unicode && (text->kind & MYL_TEXT_ASCII));
     if (!unicode) out->kind = (out->kind & ~MYL_KIND_MASK) | MYL_KIND_BYTES;
     return out;
 }
@@ -823,7 +841,7 @@ myl_block *myl_core_text_trim(myl_block *input, myl_block *chars, int32_t ends, 
         high = next;
     }
     free(set.wide);
-    return str_from((const char *)block_data(input) + low, high - low);
+    return core_text_known(block_data(input) + low, high - low, (input->kind & MYL_TEXT_ASCII) != 0);
 }
 
 myl_block *myl_core_bytes_trim(myl_block *input, myl_block *chars, int32_t ends, bool explicit_chars) {

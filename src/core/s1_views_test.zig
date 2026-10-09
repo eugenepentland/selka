@@ -201,3 +201,46 @@ test "a borrowed key probe is inline for small, deleted-from and indexed tables 
     const ran = try fixture(a, root, "s1_views", &.{"--release"}, "");
     try std.testing.expectEqualStrings(views_expected, ran.stdout);
 }
+
+/// What `test/core/s1_ascii.my` prints: CPython's answers.
+const ascii_expected =
+    \\hé/2/é/-1
+    \\llo/3/o/0
+    \\wörld/5/d/3
+    \\rld/3/d/1
+    \\ell/3/l/1
+    \\ld/2/d/0
+    \\/0//-1
+    \\héllo wörld/11/d/2
+    \\é/1/é/-1
+    \\ab/2/b/-1
+    \\hlowrd/6/d/1
+    \\hlowrd/6/d/1
+    \\dlröw olléh/11/h/1
+    \\dlrow olleh/11/h/1
+    \\14 659485
+    \\1 2 a 12 é 11
+    \\
+;
+
+// spec: NEW-CORE-S1-ASCII-1
+test "a text copied from part of an ASCII text is ASCII without a re-scan, and any other copy is scanned" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    // A view's materialized key passes its source's ASCII flag to the runtime.
+    const llvm = try support.releaseLlvmText(a, kmers);
+    try std.testing.expect(contains(llvm, "call ptr @myl_core_ir_str_from_span(ptr %view."));
+    try std.testing.expect(contains(llvm, ", i1 zeroext %viewascii."));
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
+    // Slices, trims, stepped slices, view keys and copy-on-write copies of ASCII and
+    // non-ASCII texts: lengths, indexes and searches all read the flag.
+    for (modes) |flags| {
+        const ran = try fixture(a, root, "s1_ascii", flags, "");
+        try std.testing.expectEqualStrings(ascii_expected, ran.stdout);
+        try std.testing.expectEqualStrings("", ran.stderr);
+        try std.testing.expectEqual(@as(u8, 0), ran.status);
+    }
+}

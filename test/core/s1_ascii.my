@@ -1,0 +1,34 @@
+# A text copied from part of another inherits its ASCII flag (NEW-CORE-S1-ASCII-1): every
+# length, index and search below depends on the flag being exactly right. CPython's answers.
+
+
+def describe(p: str) -> str:
+    last = ""
+    if len(p) > 0:
+        last = p[len(p) - 1]
+    return p + "/" + str(len(p)) + "/" + last + "/" + str(p.find("l"))
+
+
+def main(out: Stream) -> int:
+    t = "héllo wörld"
+    a = "hello world"
+    parts = [t[0:2], t[2:5], t[6:], t[-3:], a[1:4], a[-2:], t[3:3], t.strip(), "  é ".strip(), " ab ".strip(), a[::2], t[::2], t[::-1], a[::-1]]
+    for p in parts:
+        out.print(describe(p))
+    keys: dict[str, int] = {}
+    for i in range(len(t) - 1):
+        keys[t[i:i + 2]] = keys.get(t[i:i + 2], 0) + 1
+    for i in range(len(a) - 1):
+        keys[a[i:i + 2]] = keys.get(a[i:i + 2], 0) + 1
+    total = 0
+    for key in sorted(list(keys.keys())):
+        total = total * 7 + len(key) * 3 + keys[key]
+        total = total % 1000003
+    out.print(len(keys), total)
+    s = "é"
+    u = s
+    u += "a"
+    v = a
+    v += "é"
+    out.print(len(s), len(u), u[1], len(v), v[11], len(a))
+    return 0

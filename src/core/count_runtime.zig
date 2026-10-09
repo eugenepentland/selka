@@ -59,6 +59,7 @@ const patches = [_]Patch{
         .after = "    myl_count_event(MYL_COUNT_DICT_GROWS, (size_t)meta->elen * ((size_t)meta->desc->stride + 8));\n",
     },
     .{ .anchor = "myl_block *myl_core_ir_str_from_view(const unsigned char *data, uint64_t len) { ", .after = "myl_count_copy(MYL_COUNT_TEXT_COPIES, (size_t)len); " },
+    .{ .anchor = "myl_block *myl_core_ir_str_from_span(const unsigned char *data, uint64_t len, bool ascii) { ", .after = "myl_count_copy(MYL_COUNT_TEXT_COPIES, (size_t)len); " },
     .{
         .anchor = "static inline myl_block *core_text_append_bytes(myl_block *a, const unsigned char *bytes, int64_t count, bool ascii) {\n",
         .after = "    myl_count_event(MYL_COUNT_TEXT_APPENDS, (size_t)count);\n",
