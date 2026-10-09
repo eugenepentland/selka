@@ -4,7 +4,7 @@
 # FU_PORT_REAL on a migrated copy: `build FILE.my ...` copies FILE.my into a private directory
 # beside it (same basename), migrates the copy with fix_loop.py (`mylang fix` plus `mut` on
 # sibling-branch locals) and builds that. The frozen references, keyed by the original source's
-# digest, still answer for the old core. Every other command goes to the real compiler unchanged.
+# digest, still answer for the old core. FU_PORT_LOG, when set, collects one line per migration. Every other command goes to the real compiler unchanged.
 set -u
 real=${FU_PORT_REAL:?FU_PORT_REAL names the compiler under test}
 if [ "${1:-}" = build ] && [ $# -ge 2 ] && [[ "$2" == *.my ]]; then
@@ -12,6 +12,11 @@ if [ "${1:-}" = build ] && [ $# -ge 2 ] && [[ "$2" == *.my ]]; then
   dir=$(mktemp -d "$(dirname "$src")/migrated.XXXXXX")
   cp "$src" "$dir/$(basename "$src")"
   python3 "$(dirname "$0")/fix_loop.py" "$real" "$dir" "$dir/.fix-cache" > "$dir/.fix.log" 2>&1
+  if [ -n "${FU_PORT_LOG:-}" ]; then
+    printf '%s %s hand=%s %s\n' "$(basename "$src")" "$(sha256sum < "$src" | cut -c1-16)" \
+      "$(grep -c '^hand' "$dir/.fix.log")" "$(tail -n 1 "$dir/.fix.log")" >> "$FU_PORT_LOG"
+    grep '^hand' "$dir/.fix.log" >> "$FU_PORT_LOG"
+  fi
   exec "$real" build "$dir/$(basename "$src")" "$@"
 fi
 exec "$real" "$@"
