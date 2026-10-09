@@ -1,6 +1,6 @@
-//! Counting builds (`--counters`, NEW-CORE-COUNTERS-1..4): the counts a program
-//! records, the counting runtime's insertions, and that a build without the flag
-//! emits no counter.
+//! Counting builds (`--counters`, NEW-CORE-COUNTERS-1..7): the counts a program
+//! records, the checks it executes, the counting runtime's insertions, and that a
+//! build without the flag emits no counter.
 const std = @import("std");
 const options = @import("core_test_options");
 const support = @import("test_support.zig");
@@ -18,14 +18,14 @@ fn contains(text: []const u8, needle: []const u8) bool {
     return std.mem.indexOf(u8, text, needle) != null;
 }
 
-/// What one run of `test/core/counters.my` printed and the counters it wrote.
+/// What one run of a `test/core` fixture printed and the counters it wrote.
 const Counted = struct { stdout: []const u8, stderr: []const u8, status: u8, counts: std.json.Value };
 
-/// Build `test/core/counters.my` with `flags` and run it with `arguments`, its
+/// Build `test/core/<fixture>` with `flags` and run it with `arguments`, its
 /// counters written to `<root>/<label>.json`.
-fn counted(a: std.mem.Allocator, root: []const u8, flags: []const []const u8, arguments: []const []const u8) !Counted {
-    const source = try std.fmt.allocPrint(a, "{s}/counters.my", .{options.fixtures});
-    const label = try std.fmt.allocPrint(a, "run{d}{d}", .{ flags.len, arguments.len });
+fn counted(a: std.mem.Allocator, root: []const u8, fixture: []const u8, flags: []const []const u8, arguments: []const []const u8) !Counted {
+    const source = try std.fmt.allocPrint(a, "{s}/{s}", .{ options.fixtures, fixture });
+    const label = try std.fmt.allocPrint(a, "{s}{d}{d}", .{ fixture[0 .. fixture.len - 3], flags.len, arguments.len });
     const binary = try std.fs.path.join(a, &.{ root, label });
     var argv: std.ArrayList([]const u8) = .empty;
     try argv.appendSlice(a, &.{ options.core_path, "build", source, "-o", binary, "--cache-dir", root });
@@ -65,6 +65,17 @@ fn sites(counts: std.json.Value, kind: []const u8, detail: []const u8, function:
     return total;
 }
 
+/// The sum of `count` over the sites of `kind` emitted in `function`, whatever their detail.
+fn executed(counts: std.json.Value, kind: []const u8, function: []const u8) i64 {
+    var total: i64 = 0;
+    for (counts.object.get("sites").?.array.items) |site| {
+        const object = site.object;
+        if (!std.mem.eql(u8, object.get("kind").?.string, kind) or !std.mem.eql(u8, object.get("function").?.string, function)) continue;
+        total += object.get("count").?.integer;
+    }
+    return total;
+}
+
 fn firstLine(_: *const anyopaque, offset: u32) emit_llvm.Location {
     return .{ .line = 1, .column = offset + 1 };
 }
@@ -84,8 +95,8 @@ test "a counting build records copies, count updates, uniqueness tests and memor
     var directory = std.testing.tmpDir(.{});
     defer directory.cleanup();
     const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
-    const plain = try counted(a, root, &.{}, &.{});
-    const debug = try counted(a, root, &.{"--counters"}, &.{});
+    const plain = try counted(a, root, "counters.my", &.{}, &.{});
+    const debug = try counted(a, root, "counters.my", &.{"--counters"}, &.{});
     try std.testing.expectEqualStrings("100 101 4\n", plain.stdout);
     try std.testing.expectEqualStrings(plain.stdout, debug.stdout);
     try std.testing.expectEqualStrings(plain.stderr, debug.stderr);
@@ -117,10 +128,10 @@ test "a counting build records copies, count updates, uniqueness tests and memor
     try std.testing.expectEqual(@as(i64, 0), field(debug.counts, &.{ "totals", "live_bytes_at_exit" }));
     try std.testing.expect(field(debug.counts, &.{ "totals", "peak_live_bytes" }) >= 800);
     // A release build counts the same copy; a trap still writes the counts.
-    const release = try counted(a, root, &.{ "--counters", "--release" }, &.{});
+    const release = try counted(a, root, "counters.my", &.{ "--counters", "--release" }, &.{});
     try std.testing.expectEqualStrings(plain.stdout, release.stdout);
     try std.testing.expectEqual(@as(i64, 800), field(release.counts, &.{ "kinds", "list_copy", "bytes" }));
-    const trapped = try counted(a, root, &.{"--counters"}, &.{"trap"});
+    const trapped = try counted(a, root, "counters.my", &.{"--counters"}, &.{"trap"});
     try std.testing.expectEqual(@as(u8, 1), trapped.status);
     try std.testing.expect(contains(trapped.stderr, "R_LIST_BOUNDS"));
     try std.testing.expectEqual(@as(i64, 800), field(trapped.counts, &.{ "kinds", "list_copy", "bytes" }));
@@ -250,4 +261,71 @@ test "cost --counters adds one counting run's executions per function after the 
     try std.testing.expectEqualStrings("c.json", command.parse(&.{ "p.my", "--counters", "c.json" }).?.counters.?);
     try std.testing.expectEqual(@as(?command.Request, null), command.parse(&.{ "p.my", "--counters", "a.json", "--counters", "b.json" }));
     try std.testing.expectEqual(@as(?command.Request, null), command.parse(&.{ "p.my", "--counters" }));
+}
+
+// spec: NEW-CORE-COUNTERS-6
+test "a counting build counts each bounds, overflow, division and shift check it executes, at its site" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
+    const plain = try counted(a, root, "counters_checks.my", &.{}, &.{});
+    const debug = try counted(a, root, "counters_checks.my", &.{"--counters"}, &.{});
+    try std.testing.expectEqualStrings("25\n", plain.stdout);
+    try std.testing.expectEqualStrings(plain.stdout, debug.stdout);
+    try std.testing.expectEqual(plain.status, debug.status);
+    // Four calls of each helper; `grow` runs three times per iteration.
+    try std.testing.expectEqual(@as(i64, 4), executed(debug.counts, "bounds_check", "pick"));
+    try std.testing.expectEqual(@as(i64, 4), sites(debug.counts, "bounds_check", "list_get", "pick", "count"));
+    try std.testing.expectEqual(@as(i64, 12), executed(debug.counts, "overflow_check", "grow"));
+    try std.testing.expectEqual(@as(i64, 4), executed(debug.counts, "division_check", "share"));
+    try std.testing.expectEqual(@as(i64, 4), executed(debug.counts, "shift_check", "lift"));
+    try std.testing.expectEqual(@as(i64, 0), executed(debug.counts, "bounds_check", "grow"));
+    try std.testing.expect(field(debug.counts, &.{ "kinds", "bounds_check", "count" }) >= 4);
+    try std.testing.expect(field(debug.counts, &.{ "kinds", "other_check", "count" }) >= 0);
+    // A release build prints the same and still counts the checks its passes kept.
+    const release = try counted(a, root, "counters_checks.my", &.{ "--counters", "--release" }, &.{});
+    try std.testing.expectEqualStrings(plain.stdout, release.stdout);
+    try std.testing.expect(field(release.counts, &.{ "kinds", "shift_check", "count" }) >= 4);
+    // A build without the flag counts nothing: its text names no check site.
+    const text = try support.llvmText(a, "def f(a: int, b: int) -> int:\n    return a // b\ndef main() -> int:\n    return f(7, 2)\n");
+    try std.testing.expect(!contains(text, "myl.cs."));
+}
+
+// spec: NEW-CORE-COUNTERS-7
+test "cost --counters adds the checks each function executed, by kind, to its row and the total" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const cost = @import("cost.zig");
+    const dynamic = @import("cost_dynamic.zig");
+    var functions = [_]cost.Function{ .{ .name = "main", .counts = .{} }, .{ .name = "pick", .counts = .{} } };
+    const static: cost.Report = .{ .functions = &functions, .totals = .{} };
+    const document =
+        \\{"version":"mylang-counters-v1","totals":{},"kinds":{},
+        \\"functions":[{"name":"main","calls":1},{"name":"pick","calls":4}],
+        \\"sites":[{"function":"pick","kind":"bounds_check","count":4,"bytes":0,"extra":0},
+        \\  {"function":"pick","kind":"bounds_check","count":2,"bytes":0,"extra":0},
+        \\  {"function":"main","kind":"overflow_check","count":12,"bytes":0,"extra":0},
+        \\  {"function":"main","kind":"division_check","count":4,"bytes":0,"extra":0},
+        \\  {"function":"main","kind":"shift_check","count":3,"bytes":0,"extra":0},
+        \\  {"function":"main","kind":"other_check","count":1,"bytes":0,"extra":0}]}
+    ;
+    const section = try dynamic.rows(a, static, document);
+    try std.testing.expectEqual(@as(u64, 6), section[1].checks.bounds);
+    try std.testing.expectEqual(@as(u64, 12), section[0].checks.overflow);
+    try std.testing.expectEqual(@as(u64, 4), section[0].checks.division);
+    try std.testing.expectEqual(@as(u64, 3), section[0].checks.shift);
+    try std.testing.expectEqual(@as(u64, 1), section[0].checks.other);
+    try std.testing.expectEqual(@as(u64, 0), section[0].checks.bounds);
+    var text: std.ArrayList(u8) = .empty;
+    try dynamic.render(a, &text, section);
+    try std.testing.expect(contains(text.items, "pick: calls 4;"));
+    try std.testing.expect(contains(text.items, "; checks: bounds 6, overflow 0, division 0, shift 0, other 0\n"));
+    try std.testing.expect(contains(text.items, "TOTAL: calls 5;"));
+    try std.testing.expect(contains(text.items, "checks: bounds 6, overflow 12, division 4, shift 3, other 1\n"));
+    const json = try std.json.Stringify.valueAlloc(a, section[1], .{});
+    try std.testing.expect(contains(json, "\"checks\":{\"bounds\":6,\"overflow\":0,\"division\":0,\"shift\":0,\"other\":0}"));
 }

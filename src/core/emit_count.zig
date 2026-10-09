@@ -1,4 +1,4 @@
-//! Counting builds (`mylang build --counters`, NEW-CORE-COUNTERS-1..5): what the
+//! Counting builds (`mylang build --counters`, NEW-CORE-COUNTERS-1..7): what the
 //! emitter adds to a unit so the program records, at run time, the count updates,
 //! uniqueness tests, copies and element traffic its emitted code executes, each at
 //! its own site. Nothing here runs unless `emit_llvm.Options.counters` is set; a
@@ -15,6 +15,9 @@
 //! - A copy the runtime performs for a Core copy instruction (`list_copy`,
 //!   `dict_copy`, `buffer_copy`, `str_from_view`) also credits the site the emitter
 //!   names in `myl_count_copy_site` just before the call.
+//! - Every conditional trap the emitter writes (`trapBegin`) counts its executions
+//!   at a check site (NEW-CORE-COUNTERS-6), by what it checks: bounds, overflow,
+//!   division, shift or other.
 const std = @import("std");
 
 /// What one site counts. `runtime/core_count.c` lists the same names in the same
@@ -46,6 +49,18 @@ pub const Kind = enum(u8) {
     element_load,
     /// A whole aggregate element (four words or less) written into a list: `c0`, `c1` bytes.
     element_store,
+    /// A list, text or byte index check, a pop's empty-list or index check, or a substring's
+    /// bounds check: `c0` executions.
+    bounds_check,
+    /// An integer overflow check (arithmetic, negation, `MIN // -1`): `c0` executions.
+    overflow_check,
+    /// A division or remainder's zero-divisor check: `c0` executions.
+    division_check,
+    /// A shift's amount check: `c0` executions.
+    shift_check,
+    /// Any other conditional trap (casts, float conversions, missing keys, fact
+    /// verification, assertions, …): `c0` executions.
+    other_check,
 };
 
 /// Byte offset of counter `c0` (executions) in a site record.

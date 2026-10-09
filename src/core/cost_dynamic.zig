@@ -1,6 +1,7 @@
 //! The dynamic section of `mylang cost ENTRY.my --counters FILE.json`
 //! (NEW-CORE-COUNTERS-5): what a counting build's run (`docs/tooling/counters.md`)
-//! recorded, per emitted function the static report lists. The static rows and
+//! recorded, per emitted function the static report lists, with the checks it
+//! executed (NEW-CORE-COUNTERS-7). The static rows and
 //! totals are printed exactly as without the flag; this section follows them.
 const std = @import("std");
 const cost = @import("cost.zig");
@@ -19,8 +20,16 @@ pub const Dynamic = struct {
     allocation: struct { blocks: u64 = 0, bytes: u64 = 0 } = .{},
 };
 
-/// One row of the section: a function of the static report and its run.
-pub const Row = struct { name: []const u8, run: Dynamic };
+/// The checks one function executed in the run, by what they check (NEW-CORE-COUNTERS-7).
+pub const Checks = struct { bounds: u64 = 0, overflow: u64 = 0, division: u64 = 0, shift: u64 = 0, other: u64 = 0 };
+
+/// One row of the section: a function of the static report, its run, and the checks it executed.
+pub const Row = struct { name: []const u8, run: Dynamic, checks: Checks = .{} };
+
+/// The check kinds of `emit_count.Kind` and the `Checks` field each one adds to.
+const check_kinds = [_]struct { []const u8, []const u8 }{
+    .{ "bounds_check", "bounds" }, .{ "overflow_check", "overflow" }, .{ "division_check", "division" }, .{ "shift_check", "shift" }, .{ "other_check", "other" },
+};
 
 /// Why the counters document cannot be used.
 pub const Error = error{ OutOfMemory, InvalidCounters };
@@ -57,7 +66,11 @@ pub fn rows(a: std.mem.Allocator, report: cost.Report, document: []const u8) Err
     const version = root.get("version") orelse return error.InvalidCounters;
     if (version != .string or !std.mem.eql(u8, version.string, "mylang-counters-v1")) return error.InvalidCounters;
     var by_name: std.array_hash_map.String(Dynamic) = .empty;
-    for (report.functions) |function| try by_name.put(a, function.name, .{});
+    var checks: std.array_hash_map.String(Checks) = .empty;
+    for (report.functions) |function| {
+        try by_name.put(a, function.name, .{});
+        try checks.put(a, function.name, .{});
+    }
     for (try items(root, "functions")) |entry| {
         if (entry != .object) return error.InvalidCounters;
         const row = by_name.getPtr(try text(entry.object, "name")) orelse continue;
@@ -74,6 +87,10 @@ pub fn rows(a: std.mem.Allocator, report: cost.Report, document: []const u8) Err
         const row = by_name.getPtr(try text(entry.object, "function")) orelse continue;
         const kind = try text(entry.object, "kind");
         const count = try number(entry.object, "count");
+        const executed = checks.getPtr(try text(entry.object, "function")).?;
+        inline for (check_kinds) |pair| {
+            if (std.mem.eql(u8, kind, pair[0])) @field(executed, pair[1]) += count;
+        }
         if (std.mem.eql(u8, kind, "retain")) row.rc.retains += count;
         if (std.mem.eql(u8, kind, "release") or std.mem.eql(u8, kind, "release_unique")) row.rc.releases += count;
         if (std.mem.eql(u8, kind, "unique_test")) {
@@ -87,7 +104,7 @@ pub fn rows(a: std.mem.Allocator, report: cost.Report, document: []const u8) Err
         }
     }
     const result = try a.alloc(Row, report.functions.len);
-    for (report.functions, result) |function, *row| row.* = .{ .name = function.name, .run = by_name.get(function.name).? };
+    for (report.functions, result) |function, *row| row.* = .{ .name = function.name, .run = by_name.get(function.name).?, .checks = checks.get(function.name).? };
     return result;
 }
 
@@ -95,8 +112,10 @@ pub fn rows(a: std.mem.Allocator, report: cost.Report, document: []const u8) Err
 pub fn render(a: std.mem.Allocator, out: *std.ArrayList(u8), section: []const Row) std.mem.Allocator.Error!void {
     try out.appendSlice(a, "counters (one counting run; executions and bytes, not sites)\n");
     var total: Dynamic = .{};
+    var executed: Checks = .{};
     for (section) |row| {
-        try line(a, out, row.name, row.run);
+        try line(a, out, row);
+        inline for (check_kinds) |pair| @field(executed, pair[1]) += @field(row.checks, pair[1]);
         total.calls += row.run.calls;
         total.rc.retains += row.run.rc.retains;
         total.rc.releases += row.run.rc.releases;
@@ -109,11 +128,15 @@ pub fn render(a: std.mem.Allocator, out: *std.ArrayList(u8), section: []const Ro
         total.allocation.blocks += row.run.allocation.blocks;
         total.allocation.bytes += row.run.allocation.bytes;
     }
-    try line(a, out, "TOTAL", total);
+    try line(a, out, .{ .name = "TOTAL", .run = total, .checks = executed });
 }
 
-fn line(a: std.mem.Allocator, out: *std.ArrayList(u8), name: []const u8, d: Dynamic) std.mem.Allocator.Error!void {
+fn line(a: std.mem.Allocator, out: *std.ArrayList(u8), row: Row) std.mem.Allocator.Error!void {
+    const d = row.run;
+    const c = row.checks;
     const format = "{s}: calls {d}; retains {d}; releases {d}; runtime count updates {d}; unique tests {d} ({d} shared); " ++
-        "copies {d} ({d} bytes); growth {d} bytes; allocations {d} ({d} bytes)\n";
-    try out.print(a, format, .{ name, d.calls, d.rc.retains, d.rc.releases, d.rc.runtime, d.unique.tests, d.unique.shared, d.copies, d.copied_bytes, d.growth_bytes, d.allocation.blocks, d.allocation.bytes });
+        "copies {d} ({d} bytes); growth {d} bytes; allocations {d} ({d} bytes); " ++
+        "checks: bounds {d}, overflow {d}, division {d}, shift {d}, other {d}\n";
+    const counts = .{ row.name, d.calls, d.rc.retains, d.rc.releases, d.rc.runtime, d.unique.tests, d.unique.shared, d.copies, d.copied_bytes, d.growth_bytes };
+    try out.print(a, format, counts ++ .{ d.allocation.blocks, d.allocation.bytes, c.bounds, c.overflow, c.division, c.shift, c.other });
 }

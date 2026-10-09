@@ -2,8 +2,9 @@
 
 `mylang cost` counts *sites*: what the emitted code may do. A counting build
 counts what a run actually does. `--counters` on `mylang build`, `build --run`
-or `run` emits a counter at every count update, uniqueness test, copy and list
-push the core emits, charges every allocation, free, growth and runtime copy to
+or `run` emits a counter at every count update, uniqueness test, copy, list
+push and check (bounds, overflow, division, shift and other conditional traps)
+the core emits, charges every allocation, free, growth and runtime copy to
 the emitted function that was running, and makes the program write the counts
 as JSON when it exits — or when a trap ends it.
 
@@ -57,6 +58,11 @@ Site kinds:
 | `record_copy` | `memcpy`/`memmove` of a record, union or array over four words | Bytes copied | |
 | `list_push` | Pushes into a list | Element bytes written | Bytes the growths this push caused moved (a small list's copy into the next class, a large list's bytes in use when `realloc` moved it) |
 | `element_load`, `element_store` | Whole aggregates of four words or less read from or written into a list | Element bytes | |
+| `bounds_check` | Executions of a list, text or byte index check, a pop's empty-list or index check, or a substring's bounds check | | |
+| `overflow_check` | Executions of an integer overflow check (arithmetic, negation, `MIN // -1`) | | |
+| `division_check` | Executions of a zero-divisor check | | |
+| `shift_check` | Executions of a shift-amount check | | |
+| `other_check` | Executions of any other conditional trap: casts, float conversions, missing keys, fact verification (`--verify-facts`), … | | |
 
 A `record_copy`'s detail names the operation: `list_get` (an element copied out),
 `list_set` (a value copied into an element), `list_set.old` (the old element
@@ -69,14 +75,42 @@ copy LLVM later removes is still counted, and nothing LLVM adds is. Dictionary
 side tables, text scratch and other `malloc`s outside managed blocks are not in
 the memory counters.
 
+A check site counts how often the emitted code reached that check. A check the
+core's own passes removed (a fact proved the index in range, say) is never
+emitted and never counted. A check LLVM removes or hoists later is still counted
+at every execution, so the check counts are an upper bound on the checks the
+optimized program runs. The counter's own load and store in a loop also keep
+LLVM from hoisting the check, which is one more reason a counting build's timing
+means nothing. Checks inside runtime functions (a text search, a byte-buffer
+range test in C) are not counted.
+
+### Per instruction retired
+
+The counters are executions of the counting build, and a counting build runs
+more instructions than the ordinary one. To state them per instruction, count
+the ordinary build's instructions with `perf stat` and divide:
+
+```bash
+mylang build program.my -o program --release
+perf stat -e instructions:u -x, ./program > /dev/null
+mylang build program.my -o program-counted --release --counters
+MYLANG_COUNTERS=counts.json ./program-counted > /dev/null
+```
+
+`kinds.bounds_check.count` ÷ instructions is then the bounds checks per
+instruction the program reached, and likewise for `retain`, `release`,
+`unique_test` and the other check kinds.
+
 ## Counts beside the static cost
 
 `mylang cost ENTRY.my --counters FILE.json` prints the ordinary
 [cost report](cost.md) and then one line per reported function with what the run
 in `FILE.json` did there: calls, inline retains and releases, the runtime's own
 count updates, uniqueness tests and how many found the block shared, copies and
-the bytes they moved, the bytes growth moved, and managed allocations. Build the
-counting run from the same source and mode as the report.
+the bytes they moved, the bytes growth moved, managed allocations, and the checks
+it executed by kind (`checks: bounds N, overflow N, division N, shift N, other
+N`; a `checks` object beside each row's `run` with `--json`). Build the counting
+run from the same source and mode as the report.
 
 ```bash
 mylang build program.my -o program --release --counters

@@ -1,0 +1,116 @@
+{
+ "program": "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/bench/parity/suite/sieve.my",
+ "name": "sieve",
+ "args": [],
+ "variants": {
+  "real": {
+   "median": {
+    "instructions": 675479329,
+    "cycles": 340831518,
+    "branch-misses": 2061180,
+    "L1-dcache-load-misses": 291792
+   },
+   "status": 0,
+   "output_matches_real": true
+  },
+  "base": {
+   "median": {
+    "instructions": 675479331,
+    "cycles": 332498464,
+    "branch-misses": 2058806,
+    "L1-dcache-load-misses": 289764
+   },
+   "status": 0,
+   "output_matches_real": true,
+   "llvm_lines_changed": 0
+  },
+  "bounds": {
+   "median": {
+    "instructions": 582294930,
+    "cycles": 318984939,
+    "branch-misses": 2061344,
+    "L1-dcache-load-misses": 290201
+   },
+   "status": 0,
+   "output_matches_real": true,
+   "llvm_lines_changed": 5
+  },
+  "overflow": {
+   "median": {
+    "instructions": 536715778,
+    "cycles": 246543778,
+    "branch-misses": 4330,
+    "L1-dcache-load-misses": 256626
+   },
+   "status": 0,
+   "output_matches_real": true,
+   "llvm_lines_changed": 14
+  },
+  "checks": {
+   "median": {
+    "instructions": 406929300,
+    "cycles": 244137787,
+    "branch-misses": 4352,
+    "L1-dcache-load-misses": 257198
+   },
+   "status": 0,
+   "output_matches_real": true,
+   "llvm_lines_changed": 26
+  },
+  "unique": {
+   "median": {
+    "instructions": 675479346,
+    "cycles": 333923689,
+    "branch-misses": 2057552,
+    "L1-dcache-load-misses": 293098
+   },
+   "status": 0,
+   "output_matches_real": true,
+   "llvm_lines_changed": 0
+  },
+  "norc": {
+   "median": {
+    "instructions": 675479341,
+    "cycles": 351328221,
+    "branch-misses": 2060899,
+    "L1-dcache-load-misses": 287722
+   },
+   "status": 0,
+   "output_matches_real": true,
+   "llvm_lines_changed": 0
+  },
+  "tbaa": {
+   "median": {
+    "instructions": 675479338,
+    "cycles": 334705563,
+    "branch-misses": 2058290,
+    "L1-dcache-load-misses": 290986
+   },
+   "status": 0,
+   "output_matches_real": true,
+   "llvm_lines_changed": 6
+  },
+  "checks+tbaa": {
+   "median": {
+    "instructions": 406929276,
+    "cycles": 241905305,
+    "branch-misses": 4325,
+    "L1-dcache-load-misses": 256400
+   },
+   "status": 0,
+   "output_matches_real": true,
+   "llvm_lines_changed": 32
+  },
+  "checks+tbaa+unique": {
+   "median": {
+    "instructions": 406929275,
+    "cycles": 247646105,
+    "branch-misses": 4285,
+    "L1-dcache-load-misses": 256417
+   },
+   "status": 0,
+   "output_matches_real": true,
+   "llvm_lines_changed": 32
+  }
+ }
+}

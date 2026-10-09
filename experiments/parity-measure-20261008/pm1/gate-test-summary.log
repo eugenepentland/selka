@@ -1,0 +1,129 @@
+Thu Oct  8 10:38:40 PM UTC 2026
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 1b6c13222675)
+guardian: diff-scoped vs 1edeef830913cf3557aed75417cc9adcd9fd3155: 16/525 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+...
+Build Summary: 88/88 steps succeeded; 2095/21584 tests passed (19489 skipped)
+test success
++- run ../guardian-zig/zig-out/bin/guardian-check success 1s
+|  +- guardian-selfcheck success
+|     +- run ../guardian-zig/zig-out/bin/guardian-check success 5ms
++- run test 7 pass (7 total) 24ms MaxRSS:8M
+|  +- compile test debug native success 370ms MaxRSS:150M
+|  +- install success
+|  |  +- install mylang success
+|  |  |  +- compile exe mylang debug native success 3s MaxRSS:486M
+|  |  |  |  +- run exe build-identity (build_identity) success 40ms
+|  |  |  |  |  +- compile exe build-identity debug native cached 4ms MaxRSS:41M
+|  |  |  |  +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 5ms MaxRSS:41M
+|  |  |  +- run ../guardian-zig/zig-out/bin/guardian-check success 1s
+|  |  |     +- guardian-selfcheck (+1 more reused dependencies)
+|  |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|  +- hash declared test inputs success 370ms
+|  +- record the test environment success 3ms
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 119 pass, 1222 skip (1341 total) 42s MaxRSS:59M
+|  +- compile test debug native success 7s MaxRSS:433M
+|  |  +- run exe build-identity (build_identity) (+1 more reused dependencies)
+|  |  +- options success
+|  |     +- compile exe mylang debug native (+2 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 112 pass, 1229 skip (1341 total) 10s MaxRSS:58M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 111 pass, 1230 skip (1341 total) 34s MaxRSS:139M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 111 pass, 1230 skip (1341 total) 15s MaxRSS:63M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 111 pass, 1230 skip (1341 total) 28s MaxRSS:92M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 111 pass, 1230 skip (1341 total) 16s MaxRSS:61M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 111 pass, 1230 skip (1341 total) 10s MaxRSS:63M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 111 pass, 1230 skip (1341 total) 18s MaxRSS:66M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 111 pass, 1230 skip (1341 total) 18s MaxRSS:62M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 111 pass, 1230 skip (1341 total) 15s MaxRSS:69M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 111 pass, 1230 skip (1341 total) 10s MaxRSS:58M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 111 pass, 1230 skip (1341 total) 13s MaxRSS:61M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 42 pass, 200 skip (242 total) 7s MaxRSS:62M
+|  +- compile test debug native success 1s MaxRSS:174M
+|  |  +- options success
+|  |     +- compile exe mylang debug native (+2 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 40 pass, 202 skip (242 total) 6s MaxRSS:63M
+|  +- compile test debug native (+1 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 40 pass, 202 skip (242 total) 24s MaxRSS:156M
+|  +- compile test debug native (+1 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 40 pass, 202 skip (242 total) 5s MaxRSS:61M
+|  +- compile test debug native (+1 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 40 pass, 202 skip (242 total) 59s MaxRSS:157M
+|  +- compile test debug native (+1 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 40 pass, 202 skip (242 total) 19s MaxRSS:158M
+|  +- compile test debug native (+1 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- test-golden success
+|  +- run test 1 pass (1 total) 31s MaxRSS:60M
+|     +- compile test debug native success 994ms MaxRSS:153M
+|     |  +- options (+1 more reused dependencies)
+|     +- install (+2 more reused dependencies)
+|     +- hash declared test inputs (reused)
+real	1m38.606s
+user	13m14.493s
+sys	3m17.476s
+EXIT 0
+Thu Oct  8 10:40:19 PM UTC 2026

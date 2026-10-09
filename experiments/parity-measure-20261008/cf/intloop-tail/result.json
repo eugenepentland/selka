@@ -1,0 +1,65 @@
+{
+ "program": "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/bench/parity/micro/intloop.my",
+ "name": "intloop-tail",
+ "cases": {
+  "run": {
+   "args": [],
+   "variants": {
+    "real": {
+     "median": {
+      "instructions": 480183046,
+      "cycles": 466308611,
+      "branch-misses": 2867,
+      "L1-dcache-load-misses": 2196
+     },
+     "status": 0,
+     "output_matches_real": true
+    },
+    "base": {
+     "median": {
+      "instructions": 480181666,
+      "cycles": 466303887,
+      "branch-misses": 2891,
+      "L1-dcache-load-misses": 2137
+     },
+     "status": 0,
+     "output_matches_real": true,
+     "llvm_lines_changed": 0
+    },
+    "tail": {
+     "median": {
+      "instructions": 480181666,
+      "cycles": 466309813,
+      "branch-misses": 2905,
+      "L1-dcache-load-misses": 2182
+     },
+     "status": 0,
+     "output_matches_real": true,
+     "llvm_lines_changed": 1
+    },
+    "overflow": {
+     "median": {
+      "instructions": 480181686,
+      "cycles": 466311505,
+      "branch-misses": 2891,
+      "L1-dcache-load-misses": 2194
+     },
+     "status": 0,
+     "output_matches_real": true,
+     "llvm_lines_changed": 0
+    },
+    "overflow+tail": {
+     "median": {
+      "instructions": 480181683,
+      "cycles": 466307216,
+      "branch-misses": 2879,
+      "L1-dcache-load-misses": 2139
+     },
+     "status": 0,
+     "output_matches_real": true,
+     "llvm_lines_changed": 1
+    }
+   }
+  }
+ }
+}

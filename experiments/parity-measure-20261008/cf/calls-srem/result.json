@@ -1,0 +1,43 @@
+{
+ "program": "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/bench/parity/micro/calls.my",
+ "name": "calls-srem",
+ "cases": {
+  "run": {
+   "args": [],
+   "variants": {
+    "real": {
+     "median": {
+      "instructions": 510183021,
+      "cycles": 514462674,
+      "branch-misses": 2895,
+      "L1-dcache-load-misses": 2185
+     },
+     "status": 0,
+     "output_matches_real": true
+    },
+    "base": {
+     "median": {
+      "instructions": 510181640,
+      "cycles": 514454280,
+      "branch-misses": 2930,
+      "L1-dcache-load-misses": 2171
+     },
+     "status": 0,
+     "output_matches_real": true,
+     "llvm_lines_changed": 0
+    },
+    "srem": {
+     "median": {
+      "instructions": 510181641,
+      "cycles": 514455344,
+      "branch-misses": 2872,
+      "L1-dcache-load-misses": 2176
+     },
+     "status": 0,
+     "output_matches_real": true,
+     "llvm_lines_changed": 0
+    }
+   }
+  }
+ }
+}
