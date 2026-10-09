@@ -1,3 +1,0 @@
-func bounded(fs: Filesystem) -> int noalloc:
-    _ = fs.read_only()
-    return 0

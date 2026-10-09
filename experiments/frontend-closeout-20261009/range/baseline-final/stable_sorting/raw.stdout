@@ -1,3 +1,0 @@
-fn stable_sorting::main() -> i64
-b0:
-  ret 0:i64

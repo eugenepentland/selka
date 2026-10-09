@@ -1,3 +1,0 @@
-rc_pin_elide.my:1:1: error[E_MAIN]: the program requires an entry point: func main() -> int; `mylang check FILE` type-checks a library that has no main
-  # A `mut` list argument is not pinned when the callee provably never shares it
-  ^

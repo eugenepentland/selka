@@ -43,9 +43,9 @@ The remaining bounded steps of the updated October 9 plan are complete.
 build helpers, and the locally preserved immutable executable
 `artifacts/mylang-qualified`, SHA-256
 `21319448ba51241f917c040004d1a3c7123e5516d5f0a766d7cff557294793f2`.
-`install-5.log` records the successful 9/9-step install. The installed compiler
-used by the final gate has this same hash. Earlier `candidate-1.json` and
-`candidate-final.json` describe preserved intermediate checkpoints, not the final
+`0bbfeb740:experiments/frontend-closeout-20261009/install-5.log` records the successful 9/9-step install. The installed compiler
+used by the final gate has this same hash. Earlier `0bbfeb740:experiments/frontend-closeout-20261009/candidate-1.json` and
+`0bbfeb740:experiments/frontend-closeout-20261009/candidate-final.json` describe preserved intermediate checkpoints, not the final
 qualified compiler. Compiled artifacts and
 generated caches are local products; raw captures, inputs, failed attempts and
 source-bound receipts are retained in the evidence commits.
@@ -96,12 +96,12 @@ exclusions remain. Gate body time is 122.58 seconds; outer time including
 admission is 128.43 seconds. This is a shared-machine correctness run, not an
 uncontended speed measurement.
 
-Whole-tree Guardian passes 88/88 on the final source (`commit-followup.log`).
-The earlier explicit whole-tree checkpoint is `guardian-full-3.log`. Focused
+Whole-tree Guardian passes 88/88 on the final source (`0bbfeb740:experiments/frontend-closeout-20261009/commit-followup.log`).
+The earlier explicit whole-tree checkpoint is `0bbfeb740:experiments/frontend-closeout-20261009/guardian-full-3.log`. Focused
 checks include 210 range/parser/semantic/navigation/quality cases, 68 cache cases,
 eight Core allocation regressions, 13 native followup cases, and four census walker
 tests. These overlapping suites are not summed into a unique-test total.
-Formatting passes 15/15 steps (`fmt-qualified.log`, 5.92 seconds body). The
+Formatting passes 15/15 steps (`0bbfeb740:experiments/frontend-closeout-20261009/fmt-qualified.log`, 5.92 seconds body). The
 corrected compiler's frozen external qualification passes all
 450 commands (84 Lox, 366 EDA) with exact case/mode/verdict membership. Native
 comparisons pass all 974 Lox answers and 34 byte-identical EDA outputs. The six
@@ -114,7 +114,7 @@ configured Lox source/settings fingerprints change; their preimage equivalence
 remains unproved, as in the first batch. No case names, providers, statuses or
 verdicts were relaxed. The complete report audit and original S5 differences
 are preserved in [qualified external evidence](external-final2/REPORT.md).
-The earlier successful corpus capture is retained in `external/`; it does not
+The earlier successful corpus capture is retained in `0bbfeb740:experiments/frontend-closeout-20261009/external`; it does not
 replace qualification of the corrected compiler. The fresh source guard verifies
 all 614 source hashes and the qualified executable after the complete capture.
 
@@ -140,7 +140,7 @@ exposed that compatibility error. The final shared predicate selects written
 Explicit noalloc negatives remain strict and ordinary callback/mutation
 contracts retain their original assertions.
 
-`full-gate-1.log` is rejected evidence: 55 failures and one interrupted test,
+`0bbfeb740:experiments/frontend-closeout-20261009/full-gate-1.log` is rejected evidence: 55 failures and one interrupted test,
 not a passing gate. A network integration test remained in socket accept after
 its client compiler failed. After observing the wait, the coordinator stopped
 only its own stuck test process; the interruption receipt records both signals.
@@ -175,3 +175,9 @@ Guardian feedback is appended and committed in guardian-zig as `675dac5`.
 Four evidenced ROI subjects were labeled locally; other findings were left
 unclassified. Large evidence commits are separated by directory, below the
 64 MiB diff-reader ceiling, with successful and rejected captures retained.
+
+## Archived full evidence
+
+Full captures and the original version of this report remain in commit `0bbfeb740`,
+reachable from `main` and `codex/frontend-followthrough-20261009`.
+Retrieve any archived path with `git show 0bbfeb740:PATH` (paths are repository-relative).

@@ -1,3 +1,0 @@
-experiments/frontend-closeout-20261009/effects/scratch-cold-library.my:2:12: error[E_CORE_ALLOCATION_BOUND]: allocation contract of bounded is exceeded by probe: static Core site may allocate
-      return key in values
-             ^
