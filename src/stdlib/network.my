@@ -1,5 +1,3 @@
-
-
 # One open stream returned by `connect`. It owns a host handle until `close`.
 public resource Connection: network
 

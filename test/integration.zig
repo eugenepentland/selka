@@ -10184,3 +10184,50 @@ test "F3 project migration edits belong to their own diagnostic" {
     }
     try testing.expectEqual(@as(usize, 2), count);
 }
+
+// spec: FRONTEND-FORMAT-STDLIB-1
+test "F8 formatter accepts the exact standard library sources that check accepts" {
+    for ([_][]const u8{ "environment", "filesystem", "math", "network", "random", "time" }) |name| {
+        const path = try std.fmt.allocPrint(testing.allocator, "src/stdlib/{s}.my", .{name});
+        defer testing.allocator.free(path);
+        const checked = try contractCommand(&.{ compiler_path, "check", path });
+        defer freeResult(checked);
+        try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, checked.term);
+        const formatted = try contractCommand(&.{ compiler_path, "fmt", path, "--check" });
+        defer freeResult(formatted);
+        try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, formatted.term);
+        try testing.expectEqualStrings("", formatted.stderr);
+    }
+}
+
+// spec-case: INTERNAL-NAME-1
+test "F8 formatter rejects internal intrinsics in an ordinary source named math" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "math.my", .data = "func main() -> float:\n    return __float_sqrt(4.0)\n" });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "math.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const result = try contractCommand(&.{ compiler_path, "fmt", path, "--check" });
+    defer freeResult(result);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, result.term);
+    try testing.expect(std.mem.indexOf(u8, result.stderr, "E_INTERNAL_NAME") != null);
+}
+
+// spec-case: INTERNAL-NAME-1
+test "F8 formatter withholds standard library trust when any source bytes differ" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const original = try std.Io.Dir.cwd().readFileAlloc(testing.io, "src/stdlib/math.my", testing.allocator, .limited(1 << 20));
+    defer testing.allocator.free(original);
+    const changed = try std.fmt.allocPrint(testing.allocator, "{s}\n", .{original});
+    defer testing.allocator.free(changed);
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "math.my", .data = changed });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "math.my", testing.allocator);
+    defer testing.allocator.free(path);
+    for ([_][]const u8{ "fmt", "fmt-module" }) |command| {
+        const result = try contractCommand(&.{ compiler_path, command, path, "--check" });
+        defer freeResult(result);
+        try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, result.term);
+        try testing.expect(std.mem.indexOf(u8, result.stderr, "E_INTERNAL_NAME") != null);
+    }
+}

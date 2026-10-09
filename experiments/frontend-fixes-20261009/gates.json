@@ -600,5 +600,52 @@
     "failures": [],
     "log_sha256": "9146b9a7fae2e40e3041a5a5a64d66ac87d0384884ff5fb6c7ba5c0729c5ba78",
     "log_bytes": 325493
+  },
+  {
+    "phase": "F8-red",
+    "command": "zig build test-cli -Dtest-filter=F8 formatter --summary all",
+    "source_commit": "104a1f29b8518d9d90d43e050ec2ed05f8ea0cf8",
+    "status": 1,
+    "summary": "Build Summary: 6/8 steps succeeded (1 failed); 3/4 tests passed (1 failed)",
+    "test_verdicts": {
+      "passed": 3,
+      "failed": 1,
+      "skipped": 0
+    },
+    "failures": [
+      "integration.test.F8 formatter accepts the exact standard library sources that check accepts"
+    ],
+    "log_sha256": "226640cecf33023fdd1e49691c4254694776d679098c26cb4f04041183a9bbb9",
+    "log_bytes": 3139
+  },
+  {
+    "phase": "F8-focused",
+    "command": "zig build test-cli -Dtest-filter=F8 formatter --summary all",
+    "source_commit": "104a1f29b8518d9d90d43e050ec2ed05f8ea0cf8",
+    "status": 0,
+    "summary": "Build Summary: 8/8 steps succeeded; 5/5 tests passed",
+    "test_verdicts": {
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "2f24f53fef8997e1928477fa5e3699b2db57989c651a87b2f7c1e5201f6faafe",
+    "log_bytes": 1737
+  },
+  {
+    "phase": "F8-full",
+    "command": "zig build test --summary all",
+    "source_commit": "104a1f29b8518d9d90d43e050ec2ed05f8ea0cf8",
+    "status": 0,
+    "summary": "Build Summary: 95/95 steps succeeded; 2310/23697 tests passed (21387 skipped)",
+    "test_verdicts": {
+      "passed": 2310,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "fc78661dc6fab75f7cf0ba6e295d1a13a71787c0805ef3f9a1f79bcd84d9611c",
+    "log_bytes": 395738
   }
 ]

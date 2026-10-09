@@ -1,0 +1,101 @@
+{
+  "removed_exclusions": [
+    "src/stdlib/environment.my",
+    "src/stdlib/filesystem.my",
+    "src/stdlib/math.my",
+    "src/stdlib/network.my",
+    "src/stdlib/random.my",
+    "src/stdlib/time.my",
+    "tests/fixtures/idioms/abs_int.my",
+    "tests/fixtures/idioms/any_all.my",
+    "tests/fixtures/idioms/augassign_float.my",
+    "tests/fixtures/idioms/augassign_str.my",
+    "tests/fixtures/idioms/bitwise_ops.my",
+    "tests/fixtures/idioms/chained_compare.my",
+    "tests/fixtures/idioms/dict_augassign.my",
+    "tests/fixtures/idioms/dict_comp_items.my",
+    "tests/fixtures/idioms/dict_comp_zip.my",
+    "tests/fixtures/idioms/dict_items.my",
+    "tests/fixtures/idioms/dict_pop.my",
+    "tests/fixtures/idioms/edge_bytes_without_token.my",
+    "tests/fixtures/idioms/edge_floor_div_scan.my",
+    "tests/fixtures/idioms/edge_main_result.my",
+    "tests/fixtures/idioms/elem_augassign.my",
+    "tests/fixtures/idioms/eq_none_option.my",
+    "tests/fixtures/idioms/genexp_any_all.my",
+    "tests/fixtures/idioms/genexp_collect.my",
+    "tests/fixtures/idioms/genexp_min_max.my",
+    "tests/fixtures/idioms/genexp_sum.my",
+    "tests/fixtures/idioms/is_none.my",
+    "tests/fixtures/idioms/list_augassign.my",
+    "tests/fixtures/idioms/list_concat.my",
+    "tests/fixtures/idioms/list_copy.my",
+    "tests/fixtures/idioms/list_extend.my",
+    "tests/fixtures/idioms/list_index_method.my",
+    "tests/fixtures/idioms/list_insert_pop.my",
+    "tests/fixtures/idioms/list_of_range.my",
+    "tests/fixtures/idioms/list_remove.my",
+    "tests/fixtures/idioms/list_repeat.my",
+    "tests/fixtures/idioms/list_reverse.my",
+    "tests/fixtures/idioms/list_slice_step.my",
+    "tests/fixtures/idioms/list_sort_method.my",
+    "tests/fixtures/idioms/min_max.my",
+    "tests/fixtures/idioms/nested_comp.my",
+    "tests/fixtures/idioms/reversed_list.my",
+    "tests/fixtures/idioms/rm_dict_contains.my",
+    "tests/fixtures/idioms/rm_dot_len.my",
+    "tests/fixtures/idioms/rm_list_alias.my",
+    "tests/fixtures/idioms/rm_push.my",
+    "tests/fixtures/idioms/round_builtin.my",
+    "tests/fixtures/idioms/run_import_single_file.my",
+    "tests/fixtures/idioms/set_comp.my",
+    "tests/fixtures/idioms/set_methods.my",
+    "tests/fixtures/idioms/set_ops.my",
+    "tests/fixtures/idioms/sorted_builtin.my",
+    "tests/fixtures/idioms/sorted_set.my",
+    "tests/fixtures/idioms/sum_list.my",
+    "tests/fixtures/idioms/ternary.my",
+    "tests/fixtures/idioms/tuple_swap.my",
+    "tests/fixtures/idioms/zip_pairs.my"
+  ],
+  "retained_idiom_probes": [
+    {
+      "path": "tests/fixtures/idioms/edge_const_bytes.my",
+      "status": 1,
+      "diagnostic": "tests/fixtures/idioms/edge_const_bytes.my:3:1: formatting differs"
+    },
+    {
+      "path": "tests/fixtures/idioms/edge_const_str.my",
+      "status": 1,
+      "diagnostic": "tests/fixtures/idioms/edge_const_str.my:3:1: formatting differs"
+    },
+    {
+      "path": "tests/fixtures/idioms/edge_declared_len_wins.my",
+      "status": 1,
+      "diagnostic": "tests/fixtures/idioms/edge_declared_len_wins.my:4:1: formatting differs"
+    },
+    {
+      "path": "tests/fixtures/idioms/edge_option_try.my",
+      "status": 1,
+      "diagnostic": "tests/fixtures/idioms/edge_option_try.my:4:1: formatting differs"
+    },
+    {
+      "path": "tests/fixtures/idioms/lambda_sort_key.my",
+      "status": 1,
+      "diagnostic": "tests/fixtures/idioms/lambda_sort_key.my:4:1: formatting differs"
+    },
+    {
+      "path": "tests/fixtures/idioms/rm_clock_cap.my",
+      "status": 1,
+      "diagnostic": "tests/fixtures/idioms/rm_clock_cap.my:1:17: error[E_REMOVED_SPELLING]: `clock_cap` was removed; use the `Clock` capability type\n  def read(clock: clock_cap) -> int:\n                  ^"
+    },
+    {
+      "path": "tests/fixtures/idioms/rm_f64_add.my",
+      "status": 1,
+      "diagnostic": "tests/fixtures/idioms/rm_f64_add.my:2:16: error[E_REMOVED_SPELLING]: `f64_to_u64` was removed; convert a `float` value with `int(value)`\n      return int(f64_to_u64(f64_add(f64_from_u64(1u64), f64_from_u64(2u64))))\n                 ^"
+    }
+  ],
+  "selected_sources": 818,
+  "remaining_exclusions": 200,
+  "format_failures": 0
+}

@@ -118,3 +118,13 @@ Choice: convert all seven .my cat payloads in five active guides to mylang fence
 Reversibility: documentation and documentation-gate coverage only; no guest syntax change.
 
 F7 validation follow-up: a grouped private test module cannot use an unrelated neutral main as evidence, because check-project checks only reachable modules; importing that test module would remove its private-access privilege. Add optional `# doc: entry <file>.my`, constrained to one file declared in the project, and check scanner_test.my as the entry. Its missing main receives the runner's existing neutral stub. The new planning regression first fails with action invalid; the actual documentation run validates the private call. No shell execution or new guest syntax is introduced.
+
+## D15 — F8 uses exact embedded-source identity for formatting
+
+Question: how can disk formatting accept the compiler's own intrinsics without trusting arbitrary paths?
+Options: permit internal names for every stdlib-looking path, or require the standard module name and all embedded bytes to match.
+Evidence: the CLI regression checks an embedded standard module successfully and fails fmt --check. The retained seven idioms comprise five one-blank-line declaration separators (formatter requires two), plus clock_cap and f64_* removed-spelling errors.
+Choice: derive the formatter's temporary source context from exact name/byte identity, for both fmt and fmt-module. Ordinary math.my and a real math.my with an extra newline still reject intrinsics. Keep checking behavior unchanged. Remove exactly 51 idiom exclusions and six standard-library exclusions; retain the seven specified oracle inputs with their actual spacing or removed-spelling reason.
+Reversibility: formatter context and manifest coverage only; no syntax or trust is granted to modified ordinary source.
+
+F8 validation follow-up: once parsing is permitted, all six standard modules expose two leading blank lines left by their old module headers. Apply their formatter output (exactly those two newlines removed in each file) and rebuild the embedded sources. The first focused green attempt also exposed a Zig module-ownership boundary; keep source-context derivation in Compilation rather than importing its module directly from the separate CLI root. Guardian requires the new formatter contract on a tagged SPEC bullet, so add FRONTEND-FORMAT-STDLIB-1 with the CLI regression as its primary test.
