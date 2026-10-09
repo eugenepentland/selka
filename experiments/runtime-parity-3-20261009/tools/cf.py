@@ -25,6 +25,7 @@ Variants (combine with '+'):
             -O3): how much a larger inlining budget would buy
   tbaa      element data tagged by scalar type (`myl.data.double`, `.ptr`, ...)
             instead of one `myl.data` tag
+  reference-inline  compile an owned runtime copy with reference_at always_inline
 
 usage: cf.py --program P.my --mylang M --work DIR --name N [--cwd DIR] [--rounds 3]
              [--variants base,checks,...] [--case LABEL='["arg", ...]' ...]
@@ -81,7 +82,22 @@ def edit(text: str, variant: str) -> str:
         # isUnique: `%rcN = load i32 ... !tbaa !3 ...` then `%v = icmp eq i32 %rcN, 1`.
         text = re.sub(r"^(  %\S+ = icmp eq i32 )(%rc[.\d]*), 1$", r"\g<1>1, 1", text, flags=re.M)
     if "norc" in parts:
+        original = text
         text = re.sub(r"^  br i1 (%rs[.\d]*), label %([.\w]+), label %rc\.(inc|dec)[.\d]*$", r"  br label %\2", text, flags=re.M)
+        # Concurrency P1 routes plain counts through rc.inc/dec and shared or
+        # immortal counts through rc.slow. Both paths join at the slow block's
+        # unconditional successor. Labels are local to a function.
+        current = text
+        def skip_count(m):
+            tail = current[m.end():].split("\n}", 1)[0]
+            slow = re.search(r"^" + re.escape(m.group(1)) + r":\n(?:  .*\n)*?  br label %([.\w]+)$", tail, re.M)
+            if slow is None:
+                raise RuntimeError("count slow-path join not found")
+            return "  br label %" + slow.group(1)
+        text = re.sub(r"^  br i1 %rp[.\d]+, label %rc\.(?:inc|dec)[.\d]+, label %(rc\.slow[.\d]+), !prof !\d+$",
+                      skip_count, text, flags=re.M)
+        if text == original:
+            raise RuntimeError("norc changed no count branches; update the probe before measuring")
     if "srem" in parts:
         text = re.sub(r"= urem i64 (%\S+), (\d+)$", r"= srem i64 \1, \2", text, flags=re.M)
         text = re.sub(r"= udiv i64 (%\S+), (\d+)$", r"= sdiv i64 \1, \2", text, flags=re.M)
@@ -109,6 +125,25 @@ def edit(text: str, variant: str) -> str:
 
 def run(argv, **kw):
     return subprocess.run(argv, check=True, **kw)
+
+
+def runtime_objects(variant, objects, work, zig, env):
+    if "reference-inline" not in variant.split("+"):
+        return objects
+    runtime = [Path(o) for o in objects if Path(o).name.startswith("core_rt-")]
+    if len(runtime) != 1:
+        raise RuntimeError("expected one non-counting runtime object")
+    original = runtime[0].with_suffix(".c").read_text()
+    anchor = "static myl_block *reference_at("
+    if original.count(anchor) != 1:
+        raise RuntimeError("reference_at declaration changed")
+    source = work / "runtime-reference-inline.c"
+    source.write_text(original.replace(anchor, "__attribute__((always_inline)) static inline myl_block *reference_at("))
+    output = work / "runtime-reference-inline.o"
+    run([zig, "cc", "-c", "-O2", "-g0", "-falign-functions=64", "-target", "x86_64-linux-gnu.2.31",
+         "-march=native", "-mllvm", "-x86-experimental-pref-innermost-loop-alignment=6",
+         "-std=c11", "-pthread", "-o", str(output), str(source)], env=env)
+    return [str(output) if Path(o) == runtime[0] else o for o in objects]
 
 
 def main() -> None:
@@ -148,8 +183,9 @@ def main() -> None:
         exe = work / f"{variant}.exe"
         extra = ["-mllvm", "-inline-threshold=1000"] if "inline" in variant.split("+") else []
         run([a.zig, "cc", "-c", *ZIG_FLAGS, *extra, "-o", str(obj), str(src)], env=env)
+        linked_objects = runtime_objects(variant, objects, work, a.zig, env)
         run([a.zig, "cc", "-O3", "-target", "x86_64-linux-gnu.2.31", "-march=native", "-mllvm",
-             "-x86-experimental-pref-innermost-loop-alignment=6", "-Wno-override-module", "-o", str(exe), *objects, str(obj), "-lm"], env=env)
+             "-x86-experimental-pref-innermost-loop-alignment=6", "-Wno-override-module", "-o", str(exe), *linked_objects, str(obj), "-lm"], env=env)
         binaries[variant] = exe
         notes[variant] = {"llvm_lines_changed": sum(1 for x, y in zip(text.splitlines(), edited.splitlines()) if x != y)}
         if not a.keep:

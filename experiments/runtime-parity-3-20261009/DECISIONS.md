@@ -47,3 +47,11 @@
 - Evidence: `row_json_transform.my:16` produces E_NUMERIC_PARSE; `row_union_find.my:10` assigns the immutable scalar parameter x. The current base's `mylang fix` changes only `int(text)` to `parse_int(text)` in the former.
 - Choice: retain private copies under `M0/row-sources`, changing numeric parsing to its current spelling and introducing a mutable local cursor initialized from x for union-find. Parent mutation and all timed work stay the same. `M0/row-migration.patch` captures the exact edits. Both base and final must use the same copies and pass the references' checksums.
 - Reversibility: source-compatibility bug fixes only; no repository benchmark or compiler file changes. Delete the copies when main supplies the equivalent migration.
+
+## M0-007 — reject the inherited no-op norc probe
+
+- Question: the old PM count-removal regex no longer matches current LLVM.
+- Options: accept the apparent zero gain, or retarget and remeasure.
+- Evidence: every first Lox `norc` result reports zero changed LLVM lines and unchanged instruction counts. P1 now branches through `rc.inc/dec` and `rc.slow` instead of PM's old skip shape.
+- Choice: reject the entire first counterfactual set, preserve a small invalid-attempt receipt, redirect both count paths to their existing continuation in owned probe LLVM, and fail immediately if zero count branches change. Rerun in a fresh v2 work directory. Production compiler/runtime and count encoding are untouched.
+- Reversibility: diagnostic measurement adapter only; outputs remain mandatory checks for every probe. Generated per-layout release has no existing cf.py stub; only the requested reference_at-inlining probe can be measured before U2 implements generation.

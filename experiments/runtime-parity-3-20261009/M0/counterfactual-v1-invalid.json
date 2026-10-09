@@ -1,0 +1,36 @@
+{
+ "valid": false,
+ "reason": "inherited norc matcher changed zero lines after concurrency P1 count-branch changes",
+ "cases": {
+  "vm/invocation": {
+   "base": 0,
+   "norc": 0,
+   "checks+norc": 572
+  },
+  "vm/fib": {
+   "base": 0,
+   "norc": 0,
+   "checks+norc": 572
+  },
+  "vm/method_call": {
+   "base": 0,
+   "norc": 0,
+   "checks+norc": 572
+  },
+  "vm/string_equality": {
+   "base": 0,
+   "norc": 0,
+   "checks+norc": 572
+  },
+  "tree/equality": {
+   "base": 0,
+   "norc": 0,
+   "checks+norc": 572
+  },
+  "tree/string_equality": {
+   "base": 0,
+   "norc": 0,
+   "checks+norc": 572
+  }
+ }
+}

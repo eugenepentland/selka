@@ -8,7 +8,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[3]
 AREA = Path(__file__).resolve().parents[1]
 COMPILER = "/home/epentland/.cache/mylang/rp3-base-41ed360fb/bin/mylang"
-WORK = ROOT / ".mylang-cache/rp3/counterfactuals"
+WORK = ROOT / ".mylang-cache/rp3/counterfactuals-v2"
 SLOT = ROOT / "scripts/build-slot.sh"
 
 
@@ -42,7 +42,7 @@ def main():
                 "--out-dir", str(output), *case["flags"]]
         command = [sys.executable, str(AREA / "tools/cf.py"), "--program", str(ROOT / ".mylang-cache/eda-src/src/main.my"),
                    "--mylang", COMPILER, "--work", str(WORK), "--name", "eda-" + name,
-                   "--cwd", str(ROOT / ".mylang-cache/eda-src"), "--variants", "base,norc,checks+norc",
+                   "--cwd", str(ROOT / ".mylang-cache/eda-src"), "--variants", "base,norc,checks+norc,reference-inline",
                    "--rounds", "5", "--cpu", "8", "--keep", "--outdir-check", str(output),
                    "--case", name + "=" + json.dumps(args)]
         with (ROOT / ".tmp/rp3" / ("cf-eda-" + name + ".log")).open("w") as log:

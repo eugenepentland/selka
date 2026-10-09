@@ -21,5 +21,5 @@ for pp in mylang:release mylang-base:release zig:release zig:release-safe rust:r
 done
 source $WT/experiments/runtime-parity-3-20261009/tools/env.sh
 cd $WT
-"$SLOT" build -- python3 experiments/new-core-s4-20261006/integration/measure_all46.py --build-only --mylang $B --core $C --bin $WT/.mylang-cache/rp3/all46 > $X/logs/all46-build.log 2>&1; echo "rows build=$?"
+python3 "$X/tools/prepare_rows.py" --base "$B" --candidate "$C" --bin "$WT/.mylang-cache/rp3/all46" > $X/logs/all46-build.log 2>&1; echo "rows build=$?"
 echo "prep done $(date -u +%T)"

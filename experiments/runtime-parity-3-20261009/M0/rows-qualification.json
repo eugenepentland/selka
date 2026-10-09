@@ -1,0 +1,3022 @@
+{
+ "rows": {
+  "record_reads": [
+   {
+    "size": 64,
+    "iterations": 7,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "4031 1171",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "4031 1098",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "4031 154",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "4031 244",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   },
+   {
+    "size": 4096,
+    "iterations": 2,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "795 20999",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "795 21111",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "795 118",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "795 122",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   }
+  ],
+  "tagged_stack": [
+   {
+    "size": 64,
+    "iterations": 7,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "7752 610",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "7752 824",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "7752 281",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "7752 385",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   },
+   {
+    "size": 4096,
+    "iterations": 2,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "2929 612",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "2929 718",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "2929 195",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "2929 262",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   }
+  ],
+  "mutate_unique": [
+   {
+    "size": 64,
+    "iterations": 7,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "29543 289",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "29543 102",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "29543 171",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "29543 216",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   },
+   {
+    "size": 4096,
+    "iterations": 2,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "2057997 84",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "2057997 76",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "2057997 143",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "2057997 196",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   }
+  ],
+  "mutate_shared": [
+   {
+    "size": 64,
+    "iterations": 7,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "32374 659",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "32374 446",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "32374 469",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "32374 766",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   },
+   {
+    "size": 4096,
+    "iterations": 2,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "2058414 24919",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "2058414 22246",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "2058414 9472",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "2058414 12200",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   }
+  ],
+  "record_construct": [
+   {
+    "size": 64,
+    "iterations": 7,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "327168 679",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "327168 567",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "327168 1293",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "327168 1787",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   },
+   {
+    "size": 4096,
+    "iterations": 2,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "6369790 6019",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "6369790 6773",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "6369790 16841",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "6369790 25900",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   }
+  ],
+  "record_update": [
+   {
+    "size": 64,
+    "iterations": 7,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "327168 1271",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "327168 991",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "327168 1275",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "327168 1873",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   },
+   {
+    "size": 4096,
+    "iterations": 2,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "6369790 9061",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "6369790 8919",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "6369790 17881",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "6369790 28632",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   }
+  ],
+  "option_handle": [
+   {
+    "size": 64,
+    "iterations": 7,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "464170 529",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "464170 715",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "464170 712",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "464170 1541",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   },
+   {
+    "size": 4096,
+    "iterations": 2,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "9325586 6018",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "9325586 6052",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "9325586 6796",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "9325586 17789",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   }
+  ],
+  "result_propagate": [
+   {
+    "size": 64,
+    "iterations": 7,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "507808 1207",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "507808 682",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "507808 842",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "507808 1647",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   },
+   {
+    "size": 4096,
+    "iterations": 2,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "9936047 10120",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "9936047 10084",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "9936047 9171",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "9936047 19697",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   }
+  ],
+  "list_scan": [
+   {
+    "size": 64,
+    "iterations": 7,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "187936 706",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "187936 875",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "187936 841",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "187936 1088",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   },
+   {
+    "size": 4096,
+    "iterations": 2,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "4115208 10697",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "4115208 10397",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "4115208 7063",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "4115208 11679",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   }
+  ],
+  "list_append": [
+   {
+    "size": 64,
+    "iterations": 7,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "8095360 1388",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "8095360 1511",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "8095360 4084",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "8095360 5128",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   },
+   {
+    "size": 4096,
+    "iterations": 2,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "455312982 24870",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "455312982 26213",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "455312982 24463",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "455312982 39832",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   }
+  ],
+  "list_filter": [
+   {
+    "size": 64,
+    "iterations": 7,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "917532 2952",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "917532 2720",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "917532 3395",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "917532 4811",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   },
+   {
+    "size": 4096,
+    "iterations": 2,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "943504812 31858",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "943504812 30928",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "943504812 29757",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "943504812 41656",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   }
+  ],
+  "alloc_short": [
+   {
+    "size": 64,
+    "iterations": 7,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "77056 859",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "77056 1105",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "77056 1148",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "77056 3750",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   },
+   {
+    "size": 4096,
+    "iterations": 2,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "67387392 11712",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "67387392 11779",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "67387392 14511",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "67387392 54927",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   }
+  ],
+  "alloc_retained": [
+   {
+    "size": 64,
+    "iterations": 7,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "77056 8205",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "77056 8128",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "77056 17968",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "77056 16771",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   },
+   {
+    "size": 4096,
+    "iterations": 2,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "67387392 196617",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "67387392 193444",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "67387392 301020",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "67387392 303169",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   }
+  ],
+  "mutate_nested": [
+   {
+    "size": 64,
+    "iterations": 7,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "112740 3462",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "112740 3093",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "112740 13261",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "112740 13702",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   },
+   {
+    "size": 4096,
+    "iterations": 2,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "8231500 3058608",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "8231500 51141",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "8231500 317864",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "8231500 267437",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   }
+  ],
+  "bytes_scan": [
+   {
+    "size": 64,
+    "iterations": 7,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "57568 691",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "57568 625",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "57568 713",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "57568 596",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   },
+   {
+    "size": 4096,
+    "iterations": 2,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "1044480 589",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "1044480 501",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "1044480 3461",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "1044480 3777",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   }
+  ],
+  "string_equal": [
+   {
+    "size": 64,
+    "iterations": 7,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "4 1145",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "4 852",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "4 545",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "4 424",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   },
+   {
+    "size": 4096,
+    "iterations": 2,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "2 4563",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "2 4380",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "2 459",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "2 478",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   }
+  ],
+  "string_search": [
+   {
+    "size": 64,
+    "iterations": 7,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "282 1887",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "282 1963",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "282 2153",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "282 2645",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   },
+   {
+    "size": 4096,
+    "iterations": 2,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "4102 1958",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "4102 2188",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "4102 2337",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "4102 12936",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   }
+  ],
+  "string_split": [
+   {
+    "size": 64,
+    "iterations": 7,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "191758 14266",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "191758 14011",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "191758 10378",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "191758 12991",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   },
+   {
+    "size": 4096,
+    "iterations": 2,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "3519772 269867",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "3519772 274562",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "3519772 97589",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "3519772 189446",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   }
+  ],
+  "string_join": [
+   {
+    "size": 64,
+    "iterations": 7,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "241983 1940",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "241983 2344",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "241983 3802",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "241983 3710",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   },
+   {
+    "size": 4096,
+    "iterations": 2,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "4457513 33874",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "4457513 32334",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "4457513 40282",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "4457513 54651",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   }
+  ],
+  "dict_lookup": [
+   {
+    "size": 64,
+    "iterations": 7,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "103035 4151",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "103035 4082",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "103035 6959",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "103035 10635",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   },
+   {
+    "size": 4096,
+    "iterations": 2,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "2243905 51138",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "2243905 51044",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "2243905 106080",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "2243905 179459",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   }
+  ],
+  "dict_lookup_str": [
+   {
+    "size": 64,
+    "iterations": 7,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "103035 7893",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "103035 7593",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "103035 10250",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "103035 10907",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   },
+   {
+    "size": 4096,
+    "iterations": 2,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "2243905 145178",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "2243905 141559",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "2243905 178100",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "2243905 228083",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   }
+  ],
+  "dict_update": [
+   {
+    "size": 64,
+    "iterations": 7,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "311584 43882",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "311584 43497",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "311584 65247",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "311584 74910",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   },
+   {
+    "size": 4096,
+    "iterations": 2,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "138480332 653757",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "138480332 661815",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "138480332 1246600",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "138480332 1643078",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   }
+  ],
+  "dict_update_str": [
+   {
+    "size": 64,
+    "iterations": 7,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "311584 59473",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "311584 49174",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "311584 143961",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "311584 91281",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   },
+   {
+    "size": 4096,
+    "iterations": 2,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "138480332 964296",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "138480332 938953",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "138480332 3866555",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "138480332 5189376",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   }
+  ],
+  "set_dedup": [
+   {
+    "size": 64,
+    "iterations": 7,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "840 7543",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "840 7948",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "840 10884",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "840 10930",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   },
+   {
+    "size": 4096,
+    "iterations": 2,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "1047552 84530",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "1047552 83860",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "1047552 173712",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "1047552 233826",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   }
+  ],
+  "int_parse": [
+   {
+    "size": 64,
+    "iterations": 7,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "291 1335",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "291 1580",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "291 487",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "291 891",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   },
+   {
+    "size": 4096,
+    "iterations": 2,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "137 20922",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "137 20849",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "137 384",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "137 819",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   }
+  ],
+  "int_format": [
+   {
+    "size": 64,
+    "iterations": 7,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "1514 1027",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "1514 1203",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "1514 1096",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "1514 7275",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   },
+   {
+    "size": 4096,
+    "iterations": 2,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "369 1086",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "369 1381",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "369 994",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "369 5481",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   }
+  ],
+  "call_indirect": [
+   {
+    "size": 64,
+    "iterations": 7,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "1048873 366",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "1048873 521",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "1048873 1458",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "1048873 1597",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   },
+   {
+    "size": 4096,
+    "iterations": 2,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "20737802 2454",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "20737802 2717",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "20737802 20765",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "20737802 22566",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   }
+  ],
+  "sort_int": [
+   {
+    "size": 64,
+    "iterations": 7,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "8095360 3759",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "8095360 2981",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "8095360 2532",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "8095360 4335",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   },
+   {
+    "size": 4096,
+    "iterations": 2,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "246099341 138436",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "246099341 136755",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "246099341 193429",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "246099341 217733",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   }
+  ],
+  "sort_records": [
+   {
+    "size": 64,
+    "iterations": 7,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "106832960 10683",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "106832960 11766",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "106832960 12740",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "106832960 14305",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   },
+   {
+    "size": 4096,
+    "iterations": 2,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "641141380 167700",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "641141380 163198",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "641141380 181291",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "641141380 369127",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   }
+  ],
+  "int_math": [
+   {
+    "size": 64,
+    "iterations": 7,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "205639 365",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "205639 515",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "205639 1126",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "205639 1446",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   },
+   {
+    "size": 4096,
+    "iterations": 2,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "3718790 2633",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "3718790 1633",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "3718790 15133",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "3718790 19575",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   }
+  ],
+  "float_math": [
+   {
+    "size": 64,
+    "iterations": 7,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "140689143 1355",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "140689143 1270",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "140689143 1222",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "140689143 1423",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   },
+   {
+    "size": 4096,
+    "iterations": 2,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "844332598 6287",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "844332598 6551",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "844332598 17502",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "844332598 16828",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   }
+  ],
+  "call_direct": [
+   {
+    "size": 64,
+    "iterations": 7,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "629503 416",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "629503 508",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "629503 748",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "629503 858",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   },
+   {
+    "size": 4096,
+    "iterations": 2,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "12445958 2668",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "12445958 1693",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "12445958 5265",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "12445958 7759",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   }
+  ],
+  "branch_predictable": [
+   {
+    "size": 64,
+    "iterations": 7,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "649019 560",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "649019 679",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "649019 816",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "649019 1450",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   },
+   {
+    "size": 4096,
+    "iterations": 2,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "12914178 3099",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "12914178 1916",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "12914178 8110",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "12914178 19339",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   }
+  ],
+  "branch_mixed": [
+   {
+    "size": 64,
+    "iterations": 7,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "810005 450",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "810005 673",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "810005 1111",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "810005 1894",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   },
+   {
+    "size": 4096,
+    "iterations": 2,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "16588170 3166",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "16588170 2946",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "16588170 15373",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "16588170 25702",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   }
+  ],
+  "binary_search": [
+   {
+    "size": 64,
+    "iterations": 7,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "4571 12339",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "4571 9278",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "4571 11084",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "4571 15878",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   },
+   {
+    "size": 4096,
+    "iterations": 2,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "461991 279253",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "461991 2281477",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "461991 308531",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "461991 464999",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   }
+  ],
+  "word_count": [
+   {
+    "size": 64,
+    "iterations": 7,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "3049738 10510",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "3049738 11341",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "3049738 23594",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "3049738 12920",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   },
+   {
+    "size": 4096,
+    "iterations": 2,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "450096341 91578",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "450096341 93724",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "450096341 184630",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "450096341 127743",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   }
+  ],
+  "csv_aggregate": [
+   {
+    "size": 64,
+    "iterations": 7,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "786219 197560",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "786219 181351",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "786219 205728",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "786219 183371",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   },
+   {
+    "size": 4096,
+    "iterations": 2,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "490090406 8807037",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "490090406 6695869",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "490090406 7756308",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "490090406 7014184",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   }
+  ],
+  "json_transform": [
+   {
+    "size": 64,
+    "iterations": 7,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "1157460 422043",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "1157460 428844",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "1157460 300108",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "1157460 433210",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   },
+   {
+    "size": 4096,
+    "iterations": 2,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "22576649 14534099",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "22576649 16827524",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "22576649 9925594",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "22576649 18568370",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   }
+  ],
+  "packet_decode": [
+   {
+    "size": 64,
+    "iterations": 7,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "309456 3529",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "309456 4125",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "309456 2259",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "309456 3207",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   },
+   {
+    "size": 4096,
+    "iterations": 2,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "68179968 60622",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "68179968 67283",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "68179968 26885",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "68179968 49198",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   }
+  ],
+  "lox_eval": [
+   {
+    "size": 64,
+    "iterations": 7,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "3506840 28578",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "3506840 28126",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "3506840 27388",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "3506840 74355",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   },
+   {
+    "size": 4096,
+    "iterations": 2,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "615983 483975",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "615983 483066",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "615983 433389",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "615983 1272876",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   }
+  ],
+  "tree_build_walk": [
+   {
+    "size": 64,
+    "iterations": 7,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "957712 12845",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "957712 11776",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "957712 15455",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "957712 20767",
+      "stderr": "",
+      "valid": true
+     },
+     "Go": {
+      "status": 0,
+      "stdout": "957712 14487",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   },
+   {
+    "size": 4096,
+    "iterations": 2,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "45274840 240153",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "45274840 256170",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "45274840 300818",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "45274840 328615",
+      "stderr": "",
+      "valid": true
+     },
+     "Go": {
+      "status": 0,
+      "stdout": "45274840 222893",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   }
+  ],
+  "record_pass": [
+   {
+    "size": 64,
+    "iterations": 7,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "253453 2435",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "253453 2379",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "253453 2448",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "253453 3893",
+      "stderr": "",
+      "valid": true
+     },
+     "Go": {
+      "status": 0,
+      "stdout": "253453 7475",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   },
+   {
+    "size": 4096,
+    "iterations": 2,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "70755 32675",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "70755 31662",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "70755 30830",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "70755 90680",
+      "stderr": "",
+      "valid": true
+     },
+     "Go": {
+      "status": 0,
+      "stdout": "70755 119759",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   }
+  ],
+  "grid_dp": [
+   {
+    "size": 64,
+    "iterations": 7,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "223433 3974",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "223433 4289",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "223433 4247",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "223433 7360",
+      "stderr": "",
+      "valid": true
+     },
+     "Go": {
+      "status": 0,
+      "stdout": "223433 6334",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   },
+   {
+    "size": 4096,
+    "iterations": 2,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "4036539 47647",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "4036539 46819",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "4036539 51883",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "4036539 63630",
+      "stderr": "",
+      "valid": true
+     },
+     "Go": {
+      "status": 0,
+      "stdout": "4036539 88840",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   }
+  ],
+  "union_find": [
+   {
+    "size": 64,
+    "iterations": 7,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "7023253 8745",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "7023253 7459",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "7023253 9480",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "7023253 12865",
+      "stderr": "",
+      "valid": true
+     },
+     "Go": {
+      "status": 0,
+      "stdout": "7023253 11509",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   },
+   {
+    "size": 4096,
+    "iterations": 2,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "35509382 137345",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "35509382 137006",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "35509382 126897",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "35509382 146209",
+      "stderr": "",
+      "valid": true
+     },
+     "Go": {
+      "status": 0,
+      "stdout": "35509382 168040",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   }
+  ],
+  "float_format": [
+   {
+    "size": 64,
+    "iterations": 7,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "412578235 39379",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "412578235 39736",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "412578235 48879",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "412578235 66391",
+      "stderr": "",
+      "valid": true
+     },
+     "Go": {
+      "status": 0,
+      "stdout": "412578235 36855",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   },
+   {
+    "size": 4096,
+    "iterations": 2,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "621510101 727674",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "621510101 740349",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "621510101 963492",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "621510101 2969684",
+      "stderr": "",
+      "valid": true
+     },
+     "Go": {
+      "status": 0,
+      "stdout": "621510101 658633",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   }
+  ],
+  "buffer_write": [
+   {
+    "size": 64,
+    "iterations": 7,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "212948317 13924",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "212948317 13916",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "212948317 19809",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "212948317 24256",
+      "stderr": "",
+      "valid": true
+     },
+     "Go": {
+      "status": 0,
+      "stdout": "212948317 18295",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   },
+   {
+    "size": 4096,
+    "iterations": 2,
+    "same_checksum": true,
+    "outputs": {
+     "old core --release": {
+      "status": 0,
+      "stdout": "577865184 289110",
+      "stderr": "",
+      "valid": true
+     },
+     "new core release": {
+      "status": 0,
+      "stdout": "577865184 288554",
+      "stderr": "",
+      "valid": true
+     },
+     "Rust": {
+      "status": 0,
+      "stdout": "577865184 379110",
+      "stderr": "",
+      "valid": true
+     },
+     "Zig ReleaseSafe": {
+      "status": 0,
+      "stdout": "577865184 438716",
+      "stderr": "",
+      "valid": true
+     },
+     "Go": {
+      "status": 0,
+      "stdout": "577865184 412270",
+      "stderr": "",
+      "valid": true
+     }
+    }
+   }
+  ]
+ },
+ "complete": true,
+ "passed": true
+}
