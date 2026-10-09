@@ -35,7 +35,7 @@ def build_one(compiler, tag, name, layout):
     output.parent.mkdir(parents=True, exist_ok=True)
     command = [str(compiler), "build", str(ce.row_sources()[name]), "--release", "-o", str(output),
                "--cache-dir", str(BIN / tag / str(layout) / "cache"), "--link", str(ROOT / "benchmarks/runtime/ports/native_clock.c")]
-    status, stdout, stderr = ce.run(command, slot=True, extra_env={"MYLANG_CORE_LAYOUT": str(layout)})
+    status, stdout, stderr = ce.run(command, slot=True, extra_env={"MYLANG_CORE_LAYOUT": str(layout), "MYLANG_SLOT_SETTLE": "0"})
     logs = AREA / "logs" / ("tax-build-" + tag + "-" + str(layout))
     logs.mkdir(exist_ok=True)
     (logs / (name + ".log")).write_text(json.dumps(command) + "\n" + stdout.decode() + stderr.decode() + f"\nexit={status}\n")

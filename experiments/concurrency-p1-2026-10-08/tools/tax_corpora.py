@@ -65,7 +65,7 @@ def build_one(compiler, tag, layout, cell):
     command = [str(compiler), 'build', str(cell['source']), '--release', '-o', str(directory / cell['program']),
                '--cache-dir', str(directory / 'cache')]
     status, stdout, stderr = ce.run(command, cwd=cell['cwd'], slot=True,
-                                    extra_env={'MYLANG_CORE_LAYOUT': str(layout)})
+                                    extra_env={'MYLANG_CORE_LAYOUT': str(layout), 'MYLANG_SLOT_SETTLE': '0'})
     log = AREA / 'logs' / f'tax-corpora-{tag}-{layout}' / (cell['program'] + '.log')
     log.parent.mkdir(parents=True, exist_ok=True)
     log.write_text(json.dumps(command) + '\n' + stdout.decode() + stderr.decode() + f'\nexit={status}\n')

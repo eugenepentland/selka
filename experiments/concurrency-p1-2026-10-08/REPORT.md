@@ -2,10 +2,10 @@
 
 ## Current progress — 2026-10-09
 
-- **Done:** Fast-forwarded to `0ee93b396`; read §4.8 and §9.1 before the launch instructions. Implemented R9 variant B and the isolated C comparison; R10's internal switch reaches both clang compile paths and all native cache identities. Added paired-layout adapters for every tax corpus.
-- **Measured:** Ten focused layout/shared-count tests pass, including all three alignments and return-to-layout replay/object/program reuse. Guardian's 88 build checks pass after extracting the layout-variable name. No new tax samples yet; all results below remain historical.
-- **Decided:** Keep the original evidence directory and preserve earlier results. Use exact CE-X inputs and rounds with each base/candidate pair at K=4,5,6. See [DECISIONS.md](DECISIONS.md). `main` moved from `12bf3f60b` to `cafe7fea7` during compiler preparation; a real merge and a corresponding updated comparison baseline precede further checks.
-- **Next:** Merge the moved main; rebuild baseline/B/C; select R9 on five cells and code size; complete the P1-1 tax and correctness checkpoint, then P1-2 through P1-6 and P2-0.
+- **Done:** Fast-forwarded to `0ee93b396`. R9/R10 code is committed at `9477f7673`. Merged moved main `cafe7fea7` through real merge `42041fa45`; updated comparison baseline is `94dc1c3a2` (a separate merge of `54eda9012` and the same main). No main or Claude branch/worktree was changed.
+- **Measured:** R9 five-cell geomean: B **0.997061×**, C **0.997773×**, both pass all median cell limits. B `json::read_value` is 8,061 bytes versus C's 8,472; baseline is 7,068/7,052/7,020 at K=4/5/6. [All alignment ratios and cells](r3/results/five-cell.md). Selected-B full Debug gate: **88/88 steps, 2,100 passed**; formatting passes. Qualification passes **509 Core tests** and **1518/0/0 conformance in both Debug and ReleaseFast**. The pre-merge focused layout/shared-count run passed 10 tests, and the full integrated gate includes them. Guardian's whole-tree commit gate passed 88 checks.
+- **Decided:** Keep B, the variant R9's criterion selects. Both clang compile paths and all native cache identities include the layout switch. Use exact CE-X inputs/rounds with paired K=4,5,6, all Lox cells and all mylang parity variants. See [DECISIONS.md](DECISIONS.md).
+- **Next:** Complete the P1-1 tax and correctness checkpoint, then P1-2 through P1-6 and P2-0. Results below are the preserved historical pre-revision-2 report, not this run's final verdict.
 
 ## Historical P1-1 report (before revisions 2 and 3)
 
