@@ -173,6 +173,46 @@ test "a scalar field a loop carries in a record is read from SSA values, not fro
     try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, body[0..end], "load i64, ptr %fp."));
 }
 
+/// The text of function `name` in a module's textual Core IR, up to the next function.
+fn functionText(text: []const u8, name: []const u8) []const u8 {
+    const header = std.mem.indexOf(u8, text, name) orelse return "";
+    const next = std.mem.indexOfPos(u8, text, header + name.len, "\nfn ") orelse text.len;
+    return text[header..next];
+}
+
+// spec-case: NEW-CORE-U1-STATE-1
+test "a field the loop only passes through stays a read; a field it writes becomes one phi" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const text = try support.optimizedText(a,
+        \\record Frame:
+        \\    code: list[int]
+        \\    ip: int
+        \\    base: int
+        \\    name: str
+        \\    hits: int
+        \\
+        \\
+        \\def run(frame: mut Frame, n: int) -> int:
+        \\    while frame.ip < n:
+        \\        frame.ip = frame.ip + frame.base
+        \\    return frame.ip
+        \\
+        \\
+        \\def main(args: list[str], out: Stream) -> int:
+        \\    frame = Frame(code=[1], ip=0, base=1 + len(args), name="f", hits=0)
+        \\    out.print(run(mut frame, 10), frame.ip)
+        \\    return 0
+        \\
+    );
+    const run = functionText(text, "fn run(");
+    // `ip` is written in the loop: one phi of integers; `base` is only passed along: its
+    // read stays in the loop, and `ip` is read once, where the parameter is defined.
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, run, "= phi i64"));
+    try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, run, "= record_get i64"));
+}
+
 // spec-case: NEW-CORE-U1-STATE-1
 test "promoted record state keeps every answer: calls that read or write it, copies, break, continue, early return, traps" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
@@ -190,5 +230,56 @@ test "promoted record state keeps every answer: calls that read or write it, cop
         try std.testing.expectEqualStrings("601814 6 132 7\n476744 90\n501100 5 6\n", trapped.stdout);
         try std.testing.expectEqual(@as(u8, 1), trapped.status);
         try std.testing.expect(std.mem.indexOf(u8, trapped.stderr, "error[R_LIST_BOUNDS]: native execution failed (index 101, length 64)") != null);
+    }
+}
+
+/// The sum of `name` over the sites of `kind` emitted in `function` at source line `line`.
+fn lineSum(counts: std.json.Value, kind: []const u8, function: []const u8, line: i64) i64 {
+    var sum: i64 = 0;
+    for (counts.object.get("sites").?.array.items) |site| {
+        const object = site.object;
+        if (!std.mem.eql(u8, object.get("kind").?.string, kind) or !std.mem.eql(u8, object.get("function").?.string, function)) continue;
+        if (object.get("line").?.integer == line) sum += object.get("count").?.integer;
+    }
+    return sum;
+}
+
+const sink_expected = "22017 1 6 17\n5797447\n20501002 1 120600\n6011\n";
+
+// spec: NEW-CORE-U1-SINK-1
+test "a store ahead of an if-elif ladder runs only in the arms that observe it" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
+    for ([_][]const []const u8{ &.{"--counters"}, &.{ "--release", "--counters" } }) |flags| {
+        const ran = try leakChecked(a, root, "u1_sink", flags, &.{});
+        try std.testing.expectEqualStrings(sink_expected, ran.stdout);
+        const counts = try countsOf(a, root, "u1_sink", flags);
+        // The frames store after each of the 1031 dispatches (line 52) is tested and made
+        // only where an arm reads the frames: the observations, calls, returns and the exit.
+        // Sunk one level (main's rule) it ran 216 times.
+        try std.testing.expect(lineSum(counts, "unique_test", "u1_sink::run", 52) <= 16);
+    }
+}
+
+// spec-case: NEW-CORE-U1-SINK-1
+test "sunk frame stores keep every answer, and a trap still reports the frames as stored" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
+    for (modes) |flags| {
+        const plain = try leakChecked(a, root, "u1_sink", flags, &.{});
+        try std.testing.expectEqualStrings(sink_expected, plain.stdout);
+        try std.testing.expectEqualStrings("", plain.stderr);
+        const trapped = try leakChecked(a, root, "u1_sink", flags, &.{"x"});
+        try std.testing.expectEqualStrings("22017 1 6 17\n5797447\n20501002 1 120600\n", trapped.stdout);
+        try std.testing.expectEqual(@as(u8, 1), trapped.status);
+        try std.testing.expect(std.mem.indexOf(u8, trapped.stderr, "error[R_LIST_BOUNDS]: native execution failed (index 6, length 1)") != null);
     }
 }

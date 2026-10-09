@@ -230,6 +230,12 @@ const Carrier = struct { ref: ir.Ref, path: effects.Path, key: Key, fixed: bool 
 /// The most steps one proof or one forward walk may take before it gives up.
 const budget: u32 = 20000;
 
+/// How many times one store may sink, one block further each time.
+const max_sink_depth: u32 = 48;
+
+/// How many branches down `worthSinking` looks for an arm that does not observe a store.
+const lookahead: u32 = 3;
+
 const Context = struct {
     arena: std.mem.Allocator,
     scratch: std.mem.Allocator,
@@ -485,7 +491,7 @@ const Context = struct {
         }
         // Later stores first: a store a later one overwrites goes once that one has settled.
         std.mem.reverse(ir.Ref, stores.items);
-        for (stores.items) |store| try self.deadStore(store, stats);
+        for (stores.items) |store| try self.deadStore(store, stats, 0);
     }
 
     /// The list a store writes, then the records it is put back into in its block, each the
@@ -508,7 +514,10 @@ const Context = struct {
         return chain.items;
     }
 
-    fn deadStore(self: *Context, store: ir.Ref, stats: *Stats) Error!void {
+    /// Remove `store` when nothing observes it, or sink it into the successors that do; a
+    /// sunk copy is weighed again where it lands (`depth` sinkings down), so a store ahead
+    /// of an if-elif ladder ends in the arms that observe it (NEW-CORE-U1-SINK-1).
+    fn deadStore(self: *Context, store: ir.Ref, stats: *Stats, depth: u32) Error!void {
         const f = self.fun();
         const inst = f.inst(store);
         const start: Carrier = .{ .ref = store, .path = .{}, .key = self.keyOf(inst.b, inst.a, &.{}), .fixed = true };
@@ -536,16 +545,58 @@ const Context = struct {
         }
         var dead_in: [2]bool = .{ false, false };
         var any = false;
+        const carried: Carrier = .{ .ref = top, .path = try self.chainPath(chain), .key = start.key, .fixed = true };
         for (succ.items[0..succ.len], 0..) |s, k| {
             self.steps = 0;
-            const carried: Carrier = .{ .ref = top, .path = try self.chainPath(chain), .key = start.key, .fixed = true };
             dead_in[k] = try self.unobserved(carried, s);
             any = any or dead_in[k];
         }
-        if (!any) return;
-        try self.sink(chain, succ, dead_in);
+        // Both successors observe the store somewhere: it still moves into both when one of
+        // them goes on to a branch with an arm that does not (an if-elif ladder whose arms
+        // alternate), so the copies keep sinking (NEW-CORE-U1-SINK-1).
+        if (!any) {
+            const ahead = depth < max_sink_depth and (try self.worthSinking(carried, succ.items[0], lookahead) or (succ.len > 1 and try self.worthSinking(carried, succ.items[1], lookahead)));
+            if (!ahead) return;
+        }
+        const clones = try self.sink(chain, succ, dead_in);
         stats.sunk += 1;
         self.graph = try Graph.of(self.scratch, f);
+        if (depth >= max_sink_depth) return;
+        for (clones) |clone| if (clone) |copy| try self.deadStore(copy, stats, depth + 1);
+    }
+
+    /// Whether a store chain moved to the start of block `s` could sink further and drop
+    /// out of some path: `s` branches to two blocks it alone enters, every use of the
+    /// chain's value `carried.ref` under `s` lies under one of them, and one of them does
+    /// not observe it, or (`depth` levels down) leads to one that does not.
+    fn worthSinking(self: *Context, carried: Carrier, s: u32, depth: u32) Error!bool {
+        if (depth == 0) return false;
+        const f = self.fun();
+        const next = successors(f, s);
+        if (next.len < 2) return false;
+        for (next.items[0..next.len]) |g| if (f.blocks.items[g].preds.items.len != 1) return false;
+        for (self.graph.users[carried.ref.index()]) |user| {
+            const inst = f.inst(user);
+            if (inst.op == .phi) {
+                const j = self.graph.block_of[user.index()];
+                for (f.operands(inst.data), f.blocks.items[j].preds.items) |operand, pred| {
+                    if (f.resolve(operand) != carried.ref or !self.graph.dominates(s, @intCast(pred.index()))) continue;
+                    if (self.under(@intCast(pred.index()), next) == null) return false;
+                }
+                continue;
+            }
+            const at = self.graph.block_of[user.index()];
+            if (at == none or !self.graph.dominates(s, at)) continue;
+            if (self.under(at, next) == null) return false;
+        }
+        for (next.items[0..next.len]) |g| {
+            self.steps = 0;
+            if (try self.unobserved(carried, g)) return true;
+        }
+        for (next.items[0..next.len]) |g| {
+            if (try self.worthSinking(carried, g, depth - 1)) return true;
+        }
+        return false;
     }
 
     /// The record fields from the chain's last value down to the stored list.
@@ -754,7 +805,7 @@ const Context = struct {
     /// Move the store chain out of its block: a copy of it starts each successor that observes
     /// it, the uses under each other successor take the values without the store, and the
     /// bounds check stays.
-    fn sink(self: *Context, chain: []const ir.Ref, succ: Successors, dead_in: [2]bool) Error!void {
+    fn sink(self: *Context, chain: []const ir.Ref, succ: Successors, dead_in: [2]bool) Error![2]?ir.Ref {
         const f = self.fun();
         const store = chain[0];
         const top = chain[chain.len - 1];
@@ -765,9 +816,10 @@ const Context = struct {
             const k = self.regionOfUse(top, user, succ).?;
             try uses[k].append(self.scratch, user);
         }
+        var clones: [2]?ir.Ref = .{ null, null };
         for (succ.items[0..succ.len], 0..) |s, k| {
             if (uses[k].items.len == 0) continue;
-            const replacement = if (dead_in[k]) try self.unstored(chain, s) else try self.cloneChain(chain, s);
+            const replacement = if (dead_in[k]) try self.unstored(chain, s) else try self.cloneChain(chain, s, &clones[k]);
             for (uses[k].items) |user| self.replaceUse(user, top, replacement, s);
         }
         // Out of the block: the chain goes, the bounds check stays.
@@ -783,6 +835,7 @@ const Context = struct {
             try kept.append(self.arena, ref);
         }
         f.blocks.items[b].insts = kept;
+        return clones;
     }
 
     /// Insert `inst` at the start of block `s` (after its phis); returns its value.
@@ -805,8 +858,9 @@ const Context = struct {
         return pos;
     }
 
-    /// A copy of the store chain at the start of `s`; returns its last value.
-    fn cloneChain(self: *Context, chain: []const ir.Ref, s: u32) Error!ir.Ref {
+    /// A copy of the store chain at the start of `s`; returns its last value, and the copy
+    /// of the store itself in `stored`.
+    fn cloneChain(self: *Context, chain: []const ir.Ref, s: u32, stored: *?ir.Ref) Error!ir.Ref {
         const f = self.fun();
         var at = self.startOf(s);
         // The records each level is put back into, read again here when the level below was
@@ -821,11 +875,15 @@ const Context = struct {
         }
         const store = f.inst(chain[0]);
         var copy = store;
+        // The bounds check stays where the store was (`sink`), ahead of this copy on every
+        // path to it, for the same list and index: the copy repeats nothing.
+        if (copy.check == .exact) copy.check = .proven;
         if (chain.len > 1) copy.a = try self.reread(store.a, f.inst(chain[1]), records[1], s, &at);
         const extra_start: u32 = @intCast(f.extra.items.len);
         try f.extra.appendSlice(self.arena, f.operands(store.data));
         copy.data = (ir.ExtraSlice{ .start = extra_start, .len = @intCast(f.operands(store.data).len) }).pack();
         var previous = try self.emitAtStart(s, copy, &at);
+        stored.* = previous;
         for (chain[1..], 1..) |member, k| {
             var wrap = f.inst(member);
             wrap.a = records[k];
