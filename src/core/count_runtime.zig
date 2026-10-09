@@ -29,14 +29,14 @@ const patches = [_]Patch{
         .anchor = "static void block_free(myl_block *block) {\n    uint32_t class = class_of(block);\n",
         .after = "    myl_count_free(class ? (size_t)class * MYL_GRANULE : malloc_usable_size(block));\n",
     },
-    // A large list grows with realloc, which may move it.
+    // A large list or buffer grows with realloc, which may move it.
     .{
-        .anchor = "        if (heap_ceiling) heap_refund(malloc_usable_size(list));\n        myl_block *moved = realloc(list, bytes);\n",
-        .before = "        size_t myl_count_held = malloc_usable_size(list);\n        uintptr_t myl_count_from = (uintptr_t)list;\n",
+        .anchor = "    if (heap_ceiling) heap_refund(malloc_usable_size(block));\n    myl_block *moved = realloc(block, bytes);\n",
+        .before = "    size_t myl_count_held = malloc_usable_size(block);\n    uintptr_t myl_count_from = (uintptr_t)block;\n",
     },
     .{
-        .anchor = "        if (heap_ceiling) heap_charge(malloc_usable_size(moved));\n        moved->cap = cap;\n",
-        .after = "        myl_count_realloc(myl_count_held, malloc_usable_size(moved), (uintptr_t)moved != myl_count_from, MYL_HEADER + (size_t)moved->len * (size_t)element_size);\n",
+        .anchor = "    if (heap_ceiling) heap_charge(malloc_usable_size(moved));\n    return moved;\n",
+        .before = "    myl_count_realloc(myl_count_held, malloc_usable_size(moved), (uintptr_t)moved != myl_count_from, used);\n",
     },
     // A small list grows into a fresh block of the next class.
     .{

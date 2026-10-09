@@ -19,6 +19,12 @@ static myl_block *core_buffer_grow(myl_block *buffer, int64_t needed) {
         if (capacity > INT64_MAX / 2) { capacity = needed; break; }
         capacity *= 2;
     }
+    if (class_of(buffer) == 0) {
+        /* A large buffer grows with `realloc`, like a large list (NEW-CORE-U1-GROW-1). */
+        myl_block *moved = large_regrow(buffer, MYL_HEADER + (size_t)capacity, MYL_HEADER + (size_t)buffer->len);
+        moved->cap = capacity;
+        return moved;
+    }
     myl_block *out = myl_core_buffer_new((uint64_t)capacity);
     out->len = buffer->len;
     memcpy(block_data(out), block_data(buffer), (size_t)buffer->len);
