@@ -1,0 +1,40 @@
+--- a/src/core/runtime/core_rt.c
++++ b/src/core/runtime/core_rt.c
+@@ -687,7 +687,7 @@
+ /* SHARED-COUNTS-2: destruction and publication use this one enumeration.
+    Each occurrence is visited, including aliases; guards exclude inactive arms. */
+ typedef void (*core_child_visitor)(myl_block *, void *);
+-static void core_dict_children(myl_block *dict, core_child_visitor visit, void *context);
++__attribute__((always_inline)) static inline void core_dict_children(myl_block *dict, core_child_visitor visit, void *context);
+ static void core_dict_finalize(myl_block *dict);
+ static void core_task_finalize(myl_block *block);
+ static void core_tasks_quiesce(void);
+@@ -695,7 +695,7 @@
+ static void core_text_walk_report(void);
+ static int64_t core_io_live_handles(void);
+ 
+-static void core_children(myl_block *block, core_child_visitor visit, void *context) {
++__attribute__((always_inline)) static inline void core_children(myl_block *block, core_child_visitor visit, void *context) {
+     unsigned kind = kind_of(block);
+     if (kind == MYL_KIND_DICT) {
+         core_dict_children(block, visit, context);
+@@ -714,7 +714,7 @@
+     }
+ }
+ 
+-static void core_release_child(myl_block *child, void *context) {
++__attribute__((always_inline)) static inline void core_release_child(myl_block *child, void *context) {
+     myl_block **pending = context;
+     if (count_release(child)) {
+         child->cap = (int64_t)(intptr_t)*pending;
+--- a/src/core/runtime/core_dict.c
++++ b/src/core/runtime/core_dict.c
+@@ -332,7 +332,7 @@
+ 
+ /* Dictionary storage has tombstones and its own entry descriptor, but supplies
+    children to the same visitor used for both sharing and destruction. */
+-static void core_dict_children(myl_block *dict, core_child_visitor visit, void *context) {
++__attribute__((always_inline)) static inline void core_dict_children(myl_block *dict, core_child_visitor visit, void *context) {
+     core_dict_meta *meta = dict_meta(dict);
+     if (!meta->desc->layout) return;
+     for (uint64_t i = 0; i < meta->elen; ++i) {

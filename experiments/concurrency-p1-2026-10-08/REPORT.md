@@ -2,10 +2,10 @@
 
 ## Current progress — 2026-10-09
 
-- **Done:** P1-1's B2 checkpoint is complete at `5042d85a5` (implementation `9c2559a45`). P1-2 per-thread runtime state is committed at `9d2524f5e` and passes the full Debug gate and fmt. P1-3’s shared child iterator is committed at `020ee5422`. P1-4’s scheduler is committed at `8a3782b05`. P1-5’s real emitted-code/sanitizer integration now passes its focused tests and fmt. Main remains `cafe7fea7`, merged by real merge `42041fa45`; comparison base remains `94dc1c3a2`. No push or main/Claude modification occurred.
-- **Measured:** The complete TLS row sweep selects local-exec (1.012443× versus initial-exec 1.015031×); neither passes all tax targets. Final binding measurements remain pending.
-- **Decided:** Preserve B2, local-exec TLS, the shared child iterator and the integrated scheduler/TSan path. The first final full gate found two missing C-only fixture bridges; both are repaired and pass focused tests. Production sources remain identical to `f4eb26606`.
-- **Next:** Rerun the final full gate/qualification/frozen fuzz matrices, finish 100×3 sanitizer repetitions, then binding tax and bounded investigation. External Lox/EDA and 132 counted/plain comparisons passed. P2-0 and package review are written. **P1 is not complete.**
+- **Done:** P1 implementation and P2-0 analysis; full correctness and 300 TSan repetitions pass at `98cb3a49f`.
+- **Measured:** Seven final runtime candidates have retained evidence. C has a complete five-corpus sweep below the 1.03 premise boundary, with strict target misses. G has only complete rows/EDA results and an interrupted parity run.
+- **Decided:** Main advanced to `35df839be`; merge it with a real merge commit and adopt the simpler, fully measured candidate C. The user's latest instruction waives rerunning wall-time performance checks after integration. Hardware-independent output, counter and generated-code checks will supplement fresh correctness. Earlier timings do not certify performance on the merged version.
+- **Next:** Integrate, rerun correctness, finalize evidence/report. P1 is not yet complete. No push or modification of main/Claude occurred.
 
 ### Revision-3 correctness checkpoint
 
@@ -13,7 +13,7 @@ The integrated B implementation passes the full Debug gate (**88/88 steps, 2,100
 
 **Native fixture correction:** `zig cc -O2` defines `NDEBUG`, and the historical shared-count fixture put thread creation and validation inside `assert`. Those prior native contention/TSan claims are superseded. The fixture now explicitly enables assertions and reports **8 workers**; the rerun full gate passes **88/88 steps, 2,093 executed tests**, with the remaining seven tests cached. Its real contention and near-saturation checks passed. Final P1 will require fresh, asserted C and emitted-IR TSan evidence.
 
-Raw logs, including failed attempts, are in [the P1-1 log archive](r3/p1-1-logs.tar.xz). [Qualification](r3/p1-1-qualify/), [fuzz 50](r3/fuzz-history.tar.xz), [fuzz 200](r3/fuzz-history.tar.xz), [counter JSON](raw/r3-counter-history.tar.xz) and [counted/plain summaries](results/r3-p1-1/) retain the underlying evidence. Archives retain paths relative to this package; counter members contain the original JSON bytes with their individual gzip layer removed. [Archive hashes](r3/evidence-archives.json) document the verified compression. Unpacked copies remain in this worktree's private cache.
+Raw logs, including failed attempts, are in [the P1-1 log archive](r3/p1-1-logs.tar.xz). [Qualification](r3/p1-1-qualify/), [fuzz 50](r3/fuzz-history.tar.xz), [fuzz 200](r3/fuzz-history.tar.xz), [counter JSON](raw/r3-counter-history.tar.xz) and [counted/plain summaries](results/r3-p1-1/) retain the underlying evidence. See [evidence storage and the lossless fuzz decoder](EVIDENCE.md). Archives retain paths relative to this package; counter members contain the original JSON bytes with their individual gzip layer removed. [Archive hashes](r3/evidence-archives.json) document the verified compression. Unpacked copies remain in this worktree's private cache.
 
 ### Revision-3 initial tax — selected B
 
@@ -46,7 +46,7 @@ The emitted slow path remains the approved C alternative: a cold immortal check 
 
 [Every row, base/package time and alignment](r3/results/helper-tax-rows.md); [every EDA case](r3/results/helper-tax-eda.md); [compiler identities and sizes](r3/results/helper-variants.json); [build, native-test, full-gate and external logs](r3/helper-logs.tar.xz). C's remaining row misses are `list_append/64` 1.038567, `string_search/64` 1.040646, `csv_aggregate/4096` 1.037795, `csv_aggregate/64` 1.039146, `record_pass/4096` 1.051673 and `union_find/4096` 1.042637. These are checkpoint misses, not passes. [Pre-commit qualification](r3/C1-qualify/summary.json), [external status/times](r3/results/C1-external.json), [counted/plain summaries](results/r3-C1/), and [counter JSON](raw/r3-counter-history.tar.xz) retain this candidate's correctness evidence. The ReleaseFast compiler was built from the isolated C1 source archive before adoption; its implementation files match the adopted emitter/runtime (apart from a comment), and its binary hash is retained.
 
-Committed qualification at `73737b94f` also passes **510 Core tests and 1518/0/0 in both modes**; [its source/compiler identity and logs](r3/C1-committed-qualify/summary.json) are retained separately from the pre-commit run. Frozen fuzz **9×50 and 9×200** passes with source/oracles unchanged. All historical and resumed fuzz runs are now in [one verified archive](r3/fuzz-history.tar.xz), with [member hashes](r3/fuzz-history-manifest.json.gz). Both resumed counter runs are in [one counter archive](raw/r3-counter-history.tar.xz), retaining original decoded JSON and paths. Earlier archive names in historical manifests refer to originals retained in the private cache; the replacement ledger names the current archives.
+Committed qualification at `73737b94f` also passes **510 Core tests and 1518/0/0 in both modes**; [its source/compiler identity and logs](r3/C1-committed-qualify/summary.json) are retained separately from the pre-commit run. Frozen fuzz **9×50 and 9×200** passes with source/oracles unchanged. All historical and resumed fuzz runs are now in [one verified archive](r3/fuzz-history.tar.xz), with [member hashes](r3/fuzz-history-manifest.json.xz). Both resumed counter runs are in [one counter archive](raw/r3-counter-history.tar.xz), retaining original decoded JSON and paths. Earlier archive names in historical manifests refer to originals retained in the private cache; the replacement ledger names the current archives.
 
 ### Refined C: completed Lox and parity sweep
 
@@ -358,7 +358,7 @@ and end-to-end confirmation remain pending after this P1-1 tax stop.
 
 | Check | Result |
 |---|---|
-| `zig build test --summary all` | PASS, 88/88 steps; [retry log](logs/p1-1-gate-retry.log.gz) |
+| `zig build test --summary all` | PASS, 88/88 steps; [retry log](r3/loose-logs.tar.xz) |
 | `zig build fmt-check` | PASS, exit 0 after the full gate |
 | `qualify_merge.py`, 64 Core shards | PASS, 505 tests; 32.68 s |
 | Frozen full conformance with verification/leak checks | Debug 1518 matching / 0 mismatching / 0 unsupported; Release 1518/0/0; 23.16 s |
@@ -366,7 +366,7 @@ and end-to-end confirmation remain pending after this P1-1 tax stop.
 | Frozen fuzz 9×200 | PASS, all nine kinds, 1,800 accepted cases; [matrix](evidence/fuzz200.json), [full evidence archive](r3/fuzz-history.tar.xz) |
 | Compiler/source identity during fuzz | Both matrices confirm unchanged source and oracle hashes |
 | New shared-count tests | PASS, boundary/encoding, emitted paths and typed source guard; included in the full/Core gates |
-| Current C count harness under TSan | PASS, one run with 8 workers, 0 reports, `shared counts ok`; [manifest](evidence/counts-tsan.json), [log](logs/counts-tsan-run.log.gz) |
+| Current C count harness under TSan | PASS, one run with 8 workers, 0 reports, `shared counts ok`; [manifest](evidence/counts-tsan.json), [log](r3/loose-logs.tar.xz) |
 | P1-0/R1 atomic-load probes | Historical evidence retained: monotonic and unordered each 100/100 without reports; ordinary load reproduced a race |
 | Timing checksum agreement | All arms agree in every measured startup and timed sample |
 | Counting output correctness | Existing counting tests pass in the full/Core gates; CE-X's complete ordinary/counting corpus comparison was not run |
@@ -377,18 +377,18 @@ and end-to-end confirmation remain pending after this P1-1 tax stop.
 | P1-5 generated thunks at 1/2/8 threads and 100 TSan repetitions | NOT IMPLEMENTED / NOT RUN; the C count harness is not a substitute |
 
 [Qualification summary](qualify/summary.json) and
-[full conformance log](qualify/full-conformance.log.gz) retain the commands and
+[full conformance log](r3/loose-logs.tar.xz) retain the commands and
 results. The first full gate had two failures: an existing RC test expected
 `load i32`, and the property-test timeout case failed its “not shrunk” text
 assertion. The RC expectation was updated. The timeout test passed unchanged
 on the complete retry (2.41 s versus 218.17 s initially); a standalone baseline
 probe also produced the expected timeout. Its initial failure remains an
 unexplained transient, not a claimed fixed runtime defect. Both full logs and
-[the baseline probe](logs/property-timeout-base.log.gz) are retained.
+[the baseline probe](r3/loose-logs.tar.xz) are retained.
 
 The first baseline archive build could not resolve the relative Guardian
 dependency; linking the scratch sibling path to the existing Guardian checkout
-resolved it. [The retry](logs/build-base-retry.log.gz) completed successfully.
+resolved it. [The retry](r3/loose-logs.tar.xz) completed successfully.
 
 Every build used `scripts/build-slot.sh`, with disk-backed temporary and cache
 paths. The full gate and fuzz matrix did not overlap. Timing waited for this
@@ -731,21 +731,21 @@ The first qualification launch failed before compilation because the generic evi
 
 The allocator, error/site state, stacks and counting records now use TLS; shared accounting is atomic, provider operations serialize, and output commits complete units. Retired-thread allocator records remain valid for quiescent leak/text reports. Fatal fixtures cover one-winner behavior, held IO/stream locks and worker stack overflow; normal fixtures cover eight workers, cross-thread frees, exact counts and large output units. Dynamic print boundaries are emitted by `src/core/build_cap.zig`; native pthread flags are in `src/core/driver.zig`.
 
-Validation: **18/18 focused tests**, full Debug **88/88 steps succeeded; 2107/21680 tests passed (19573 skipped)**, and **fmt passed**. [Focused evidence](r3/logs/P1-2-focused.log.gz), [full gate](r3/logs/P1-2-full.log.gz), [fmt](r3/logs/P1-2-fmt.log.gz). TLS-model timing remains pending; final package gates will cover the later scheduler integration.
+Validation: **18/18 focused tests**, full Debug **88/88 steps succeeded; 2107/21680 tests passed (19573 skipped)**, and **fmt passed**. [Focused evidence](r3/loose-logs.tar.xz), [full gate](r3/loose-logs.tar.xz), [fmt](r3/loose-logs.tar.xz). TLS-model timing remains pending; final package gates will cover the later scheduler integration.
 
 ### P1-3: shared child traversal integrated
 
 Publication and destruction now enumerate the same managed edges, including dictionary tombstones, guarded payloads, view owners and provider pairs. The iterative walk marks before enqueueing children, preserves alias ownership multiplicity, and stops at shared/immortal nodes. Plain saturation first publishes descendants before making the root immortal.
 
-The focused matrix passes **14/14 tests**, including the independent child/ownership differential, a **100,000-level** graph, exact **100,033** share marks, and the eight-thread saturation boundary (**2 marks / 128 bytes**). Existing count/source-guard/counting checks also pass, as does fmt. [Focused evidence](r3/logs/P1-3-focused.log.gz), [fmt](r3/logs/P1-3-fmt.log.gz).
+The focused matrix passes **14/14 tests**, including the independent child/ownership differential, a **100,000-level** graph, exact **100,033** share marks, and the eight-thread saturation boundary (**2 marks / 128 bytes**). Existing count/source-guard/counting checks also pass, as does fmt. [Focused evidence](r3/loose-logs.tar.xz), [fmt](r3/loose-logs.tar.xz).
 
-P1-3’s whole-tree commit check caught an unused future export and missing fixture environment cleanup. Both were fixed without exemptions; the affected two tests and fmt passed again. [Failure](r3/logs/P1-3-commit-01.log.gz), [rerun](r3/logs/P1-3-helper-retry.log.gz).
+P1-3’s whole-tree commit check caught an unused future export and missing fixture environment cleanup. Both were fixed without exemptions; the affected two tests and fmt passed again. [Failure](r3/loose-logs.tar.xz), [rerun](r3/loose-logs.tar.xz).
 
 ### P1-4: lazy work-stealing scheduler integrated
 
 The runtime now supports groups, submit/result, helping waits, range chunk counts and lazy N−1 worker creation. Chase–Lev queues use round-robin stealing and futex parking. Group ownership preserves task/result lifetimes; global quiescence precedes leak/text/count reports. Batch parents cannot start workers, and worker processes cannot fork trials. Every emitted unit supplies the retained C-to-fastcc bridge; generated range thunks can update their exact current item.
 
-[Focused tests](r3/logs/P1-4-focused.log.gz) and [fmt](r3/logs/P1-4-fmt.log.gz) pass. The scheduler matrix runs at **1, 2 and 8 threads**, with **1,010,000 submits**, binary depth **12**, chain depth **2,048**, own-deque waits, lazy/budget modes, post-close result ownership and fork guards. The retained share/thread/count tests also pass. TSan repetitions and actual emitted-code proof remain P1-5 work.
+[Focused tests](r3/loose-logs.tar.xz) and [fmt](r3/loose-logs.tar.xz) pass. The scheduler matrix runs at **1, 2 and 8 threads**, with **1,010,000 submits**, binary depth **12**, chain depth **2,048**, own-deque waits, lazy/budget modes, post-close result ownership and fork guards. The retained share/thread/count tests also pass. TSan repetitions and actual emitted-code proof remain P1-5 work.
 
 The P1-4 commit check also required the scheduler matrix to receive its allocator from the test body. That was corrected; the complete scheduler matrix passed again. The same review correction was applied to the forthcoming IR matrix helpers.
 
@@ -753,7 +753,7 @@ The P1-4 commit check also required the scheduler matrix to receive its allocato
 
 The internal sanitizer switch instruments every emitted LLVM definition, native runtime and linked C source, with separate cache identities. The hand-built IR proofs exercise lists, records, dictionaries, allocated strings and nested lists; mutate a parent after submission; read results twice; and gather range results in input order. Error tests resolve captured PCs, preserve the required unknown-site fallback and report the exact current map item.
 
-The integrated matrix passes **11/11 tests**, including Debug and counted/verified ownership at **1/2/8 threads**, actual LLVM ThreadSanitizer captures/ranges, native million-submit ThreadSanitizer, and ordinary/sanitized/ordinary cache separation. Fmt passes. [Initial run](r3/logs/P1-5-focused-01.log.gz), [post-review run](r3/logs/P1-5-focused.log.gz), [fmt](r3/logs/P1-5-fmt.log.gz). **The required 100 repetitions at eight threads are still pending**, as are final package gates/tax.
+The integrated matrix passes **11/11 tests**, including Debug and counted/verified ownership at **1/2/8 threads**, actual LLVM ThreadSanitizer captures/ranges, native million-submit ThreadSanitizer, and ordinary/sanitized/ordinary cache separation. Fmt passes. [Initial run](r3/loose-logs.tar.xz), [post-review run](r3/loose-logs.tar.xz), [fmt](r3/loose-logs.tar.xz). **The required 100 repetitions at eight threads are still pending**, as are final package gates/tax.
 
 ### P1-2: TLS comparison complete — local-exec selected
 
@@ -765,4 +765,72 @@ The integrated matrix passes **11/11 tests**, including Debug and counted/verifi
 Direct paired LE/IE GM: **0.9979028166**. Load: **0.47–1.98**. [Every cell, base/package time and K=4/5/6 ratio](r3/results/tls-rows.md), [raw samples](r3/results/tls-rows.json.xz), [compiler identities](r3/results/tls-identities.json), [source equivalence](r3/results/tls-source-equivalence.json). Source is P1-2 commit `9d2524f5e`; later steps were integrated separately while these immutable archives built. Both variants preserve outputs. Local-exec is now selected in C and both emitters. This does not claim the final package tax passes: P1-6 is binding.
 
 
-Local-exec integration passes **15/15 focused tests** and fmt ([tests](r3/logs/LE-focused.log.gz), [fmt](r3/logs/LE-fmt.log.gz)). The [whole-package review](SELF-REVIEW.md) is complete, with a [fresh typed inventory](r3/final-inventory/inventory.json) of **128 static declarations / 8 managed count-access lines**. [P2-0](P2-0.md) records the successful existing-IR lowering proof and future checker/builder work. Final qualification, 100-repetition TSan and binding tax remain outstanding.
+Local-exec integration passes **15/15 focused tests** and fmt ([tests](r3/loose-logs.tar.xz), [fmt](r3/loose-logs.tar.xz)). The [whole-package review](SELF-REVIEW.md) is complete, with a [fresh typed inventory](r3/final-inventory/inventory.json) of **128 static declarations / 8 managed count-access lines**. [P2-0](P2-0.md) records the successful existing-IR lowering proof and future checker/builder work. Final qualification, 100-repetition TSan and binding tax remain outstanding.
+
+
+### P1-6: final correctness complete before binding timing
+
+The first final full gate (`P1-final-01`) failed two old native C harness links because no LLVM unit supplied the task bridge; `98cb3a49f` adds their explicit C adapters and successful compile/run checks. The fresh `P1-final-02` checkpoint passes full Debug, fmt, qualification and both frozen matrices. All nine families are complete/qualified with unchanged source and oracle hashes. The ReleaseFast compiler built at `f4eb26606` is production-source-identical to the test-only fixture fix; [source equivalence](r3/results/final-compiler-source-equivalence.json) records all 577 identical source hashes.
+
+[P1-final-02 checkpoint](r3/P1-final-02/summary.json), [qualification](r3/P1-final-02/P1-final-02-qualify/summary.json), [external checks](r3/results/P1-final-01-external.json), and [sanitizer repetition manifest](r3/P1-final-02-tsan/summary.json) identify exact commits, commands, binaries and results. The [300 recorded outcomes](r3/P1-final-02-tsan/repetitions.jsonl.gz) preserve each status, stdout, stderr and duration without retries or suppressions. Native stress executes 1,010,000 simple submits plus nested/own-deque waits in every repetition. All outputs match their exact one-thread expectations.
+
+
+### P1-6 initial binding sweep — investigation required
+
+The source is `98cb3a49f`, using the production-identical f4eb26606 ReleaseFast compiler and matching base/candidate K=4/5/6 binaries. All completed cells have matching outputs/checksums, CPU 10 locked, and no own concurrent builds or stress. Lox is complete, with separate tree/VM verdicts. These misses remain evidence even if an improved candidate is later selected.
+
+| corpus | cells | geomean | cells >1.03 | one-minute load | all cells / alignments |
+|---|---:|---:|---:|---|---|
+| rows | 92 | 1.0246636851 | 25 | 1.34–4.41 | [table](r3/results/P1-final-01-tax-rows.md) |
+| EDA | 34 | 1.0269590951 | 11 | 1.11–1.34 | [table](r3/results/P1-final-01-tax-eda.md) |
+| parity | 45 | 1.0291120904 | 8 | 0.99–1.25 | [table](r3/results/P1-final-01-tax-parity.md) |
+| Lox tree | 13 | 1.0137666153 | 3 | 0.95–1.16 | [table](r3/results/P1-final-01-tax-lox.md) |
+| Lox VM | 13 | 1.0063016225 | 1 | same run | [table](r3/results/P1-final-01-tax-lox.md) |
+
+The largest retained misses include allocation-retained 1.242857/1.224735, string split 1.205813/1.199199, parity record sorting 1.282263 and parity binary-tree arms 1.205–1.216. The first private candidates inline the common child enumeration (A), or also inline the TLS registration check with a cold initializer and avoid locked live-count RMW before worker publication (B). Both retain atomic live storage and identical parallel accounting. No candidate is adopted before all-corpus comparison and subsequent correctness qualification.
+
+
+### P1-6 A/B investigation — allocation gains, dictionary-inlining regression
+
+Both private runtime candidates pass all 20 focused tests. All keep the B2 emitted-count path. A forces common/dictionary child traversal and the release visitor inline; B also uses inline registration checks with a cold initializer and cheaper pre-pool atomic accounting. Their exact source patches and compiler identities are retained in `r3/candidates/` and `r3/results/P1-final-candidates.json`. Neither is adopted: EDA exceeds 1.03 in both arms. The Lox sweep is complete; both engines are reported separately.
+
+| corpus | A geomean | A cells >1.03 | B geomean | B cells >1.03 | one-minute load | all cells / alignments |
+|---|---:|---:|---:|---:|---|---|
+| rows | 1.0146208208 | 20 | 1.0065124883 | 16 | 1.03–1.31 | [table](r3/results/P1-final-AB-tax-rows.md) |
+| eda | 1.0625164386 | 34 | 1.0315034862 | 21 | 1.01–1.31 | [table](r3/results/P1-final-AB-tax-eda.md) |
+| parity | 1.0187897081 | 7 | 1.0079163950 | 4 | 0.96–1.24 | [table](r3/results/P1-final-AB-tax-parity.md) |
+| Lox tree | 1.0180553953 | 2 | 1.0167185440 | 2 | 0.97–1.18 | [table](r3/results/P1-final-AB-tax-lox.md) |
+| Lox vm | 1.0044192526 | 1 | 1.0003576986 | 1 | 0.97–1.18 | [table](r3/results/P1-final-AB-tax-lox.md) |
+
+Candidate C keeps B’s allocation changes and generic/release inlining with ordinary dictionary traversal; D keeps B’s allocation changes with the original traversal structure. Both passed all 20 focused tests, built their ReleaseFast compilers and every benchmark, and are running the full matching-layout comparison. All failed cells and raw samples are retained.
+
+
+
+### P1-6 C/D investigation — complete matching-layout sweep
+
+The private source identities and exact patches are retained in `r3/results/P1-final-CD-candidates.json` and `r3/candidates/`. Every output/checksum passes. CPU 10 was locked; no own builds or stress overlapped timing. All three paired K=4/5/6 ratios and raw samples remain available, including failures. These candidates do not change the B2 emitted count path.
+
+| corpus | C geomean | C cells >1.03 | D geomean | D cells >1.03 | one-minute load | all cells / alignments |
+|---|---:|---:|---:|---:|---|---|
+| rows | 1.0027158207 | 12 | 1.0124092025 | 17 | 1.07–1.55 | [table](r3/results/P1-final-CD-tax-rows.md) |
+| eda | 1.0190069662 | 0 | 1.0013986091 | 0 | 1.07–1.19 | [table](r3/results/P1-final-CD-tax-eda.md) |
+| parity | 1.0035887383 | 1 | 1.0147620501 | 7 | 0.99–1.08 | [table](r3/results/P1-final-CD-tax-parity.md) |
+| Lox tree | 1.0145199288 | 2 | 1.0062901883 | 1 | 1.00–1.20 | [table](r3/results/P1-final-CD-tax-lox.md) |
+| Lox vm | 1.0024991900 | 0 | 1.0037479335 | 0 | 1.00–1.20 | [table](r3/results/P1-final-CD-tax-lox.md) |
+
+C improves rows and parity, while D gives the best EDA and tree-walk results in this sweep. Both pass the Lox VM target; no candidate corpus crosses the 1.03 premise boundary. The remaining misses motivate the final E/F registration-hoisting comparison, including the counting-hook anchor update recorded in DECISIONS.md. No production change has yet been adopted.
+
+
+### P1-6 E/F investigation — complete matching-layout sweep
+
+The private source identities and exact patches are retained in `r3/results/P1-final-EF-candidates.json` and `r3/candidates/`. Every output/checksum passes. CPU 10 was locked; no own builds or stress overlapped timing. All three paired K=4/5/6 ratios and raw samples remain available, including failures. These candidates do not change the B2 emitted count path.
+
+| corpus | E geomean | E cells >1.03 | F geomean | F cells >1.03 | one-minute load | all cells / alignments |
+|---|---:|---:|---:|---:|---|---|
+| rows | 1.0150209161 | 19 | 1.0006356946 | 8 | 1.04–1.75 | [table](r3/results/P1-final-EF-tax-rows.md) |
+| eda | 0.9965783262 | 0 | 1.0302100374 | 16 | 1.04–1.12 | [table](r3/results/P1-final-EF-tax-eda.md) |
+| parity | 1.0132406980 | 7 | 1.0036991700 | 0 | 1.01–1.11 | [table](r3/results/P1-final-EF-tax-parity.md) |
+| Lox tree | 1.0063927105 | 1 | 1.0142948885 | 3 | 1.00–1.39 | [table](r3/results/P1-final-EF-tax-lox.md) |
+| Lox vm | 1.0030616825 | 0 | 1.0064462021 | 0 | 1.00–1.39 | [table](r3/results/P1-final-EF-tax-lox.md) |
+
+E's registration hoist retains D's general tradeoff: EDA and Lox VM pass, but row and parity misses remain. F passes parity and Lox VM and reduces the row misses to eight, but its EDA geomean is 1.0302100374, above the premise boundary; F is not eligible for adoption. Its complete failure table remains. G is the single final follow-up: force the small already-registered free helper inline, retaining F's other behavior and its exact counter hook. It is tested and measured before selecting from the eligible candidates.

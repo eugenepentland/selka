@@ -1,0 +1,15 @@
+{
+  "full_roundtrip_before_storage_reorganization": {
+    "members": 11630,
+    "original_bytes": 391496600,
+    "archive_bytes": 4780592,
+    "sha256": "1e774a1a02f94afda3392a3c5423370f2b3e1f3e636fc84ab3ec9c784e332579",
+    "encoding": "decoded-command-streams-v1",
+    "verified": "Every restored member SHA-256 equals its original bytes"
+  },
+  "current_archive_sha256": "11effe7871785be46742fc1f5bc870044388e22ac43108b6bfaa1924b67dc617",
+  "current_archive_bytes": 1378596,
+  "stored_members_verified": 2558,
+  "historical_members_verified_in_git": 9072,
+  "logical_members_preserved": 11630
+}

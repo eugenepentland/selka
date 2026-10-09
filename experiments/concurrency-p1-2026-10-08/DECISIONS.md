@@ -103,7 +103,7 @@ The historical fuzz archives were also transcoded from gzip to xz with identical
 - **Question:** How should source identity, lengthy admission and the evidence cap be handled before the remaining tax runs?
 - **Options:** Rely only on dirty-tree qualification, bypass shared slots, or retain a committed qualification and both full matrices with verified compression.
 - **Evidence:** `73737b94f` passes 510 Core tests and both 1518/0/0 conformance modes with compiler SHA-256 `29403c1f5044779991e607b4c44fa957c4f8514575b845cee4920d8a9af2c117`. Both frozen matrices are complete and qualified with source/oracles unchanged. The 50-case matrix took 210.69 s; the 200-case matrix took 733.13 s, with individual kinds 70.69–254.05 s. A separate native probe waited 597 s before obtaining a slot, then compiled and ran promptly. Another lane was using the same three build slots.
-- **Choice:** Keep admission unchanged; this is queue delay, not a reason to reduce the workload. Store all six historical/current fuzz runs in one solid xz archive, preserving original package-relative paths and every member byte. Store the two resumed counter runs together, with exact decoded JSON. Retain original archives privately and record replacement hashes in `r3/evidence-archives.json`; the fuzz member manifest is `r3/fuzz-history-manifest.json.gz`. The package is 9.65 MB at this point. Later prototypes remain in ignored scratch files while C1 is measured.
+- **Choice:** Keep admission unchanged; this is queue delay, not a reason to reduce the workload. Store all six historical/current fuzz runs in one solid xz archive, preserving original package-relative paths and every member byte. Store the two resumed counter runs together, with exact decoded JSON. Retain original archives privately and record replacement hashes in `r3/evidence-archives.json`; the fuzz member manifest is `r3/fuzz-history-manifest.json.xz`. The package is 9.65 MB at this point. Later prototypes remain in ignored scratch files while C1 is measured.
 - **Reversibility:** Easy: archives restore every original member; no gate or raw measurement was discarded.
 
 ## 2026-10-09 · P1-2 prototype — last-owner synchronization visible to TSan
@@ -328,3 +328,110 @@ Guardian’s whole-tree commit check caught that SHARED-COUNTS-1 still described
 - **Evidence:** Guardian rejected the first bridge-only test-file change under change-classification because it changed fixture constants outside a tagged test body. Review found that both old harness tests checked output without explicit successful exit status.
 - **Choice:** Assert successful linking, successful execution and empty execution stderr in both harness paths, including the existing NEW-CORE-RC-6 tagged test. Preserve the rejected gate log and rerun the two substantive tests and fmt. No dummy assertion or spec exemption.
 - **Reversal:** Test strengthening only.
+
+
+## 2026-10-09 — P1-6: qualify the repaired tree and begin binding timing
+
+- **Question:** Which implementation and compiler identity does the binding tax measure?
+- **Options:** Rebuild the identical production compiler after a test-only change, or prove production-source equality and retain the already validated ReleaseFast binary.
+- **Evidence:** At `98cb3a49f`, full Debug is 88/88, fmt passes, qualification is 530 Core tests plus conformance 1518/0/0 twice, and both frozen 9×50/9×200 matrices are complete with unchanged source/oracles. All 300 actual native/emitted TSan executions pass at eight threads, with zero reports/leaks and exact output. The only source difference from the ReleaseFast compiler's f4eb26606 tree is the two repaired old C harnesses in own_test.zig; all 577 other source files are byte-identical. External checks and all 132 counted/plain cells passed.
+- **Choice:** Retain the compiler and prebuilt K=4/5/6 binaries, with their original source/hash identities and explicit source-equivalence metadata. Start timing only after correctness, sanitizer stress and evidence packing finish; no own builds or stress run beside timing. Every corpus remains mandatory and both Lox engines have separate verdicts.
+- **Reversal:** A new production change requires rebuilding and regating; test-only source equivalence does not excuse a runtime change.
+
+
+## 2026-10-09 — P1-6: investigate allocation and child-traversal overhead
+
+- **Question:** Which added runtime work explains the final row/EDA target misses?
+- **Options:** Accept the measured misses after investigation, specialize the shared source iterator at compile time, or additionally remove repeated registration calls and locked accounting before workers exist.
+- **Evidence:** The initial binding sweep gives rows GM 1.0246636851 (25 cells above 1.03) and EDA GM 1.0269590951 (11 misses). Allocation-retained rows are 1.242857/1.224735, split rows 1.205813/1.199199. Final code calls the generic child visitor out of line and calls core_thread_register on every small runtime allocation; K=5 block_alloc grew from 389 to 554 bytes. Every carved/large allocation also uses a locked live_blocks increment, even before the pool exists. Lox/parity measurements are still running and will be retained before any new builds.
+- **Choice:** Prepare two private, source-pinned candidates: A forces compile-time specialization of the common child iterator/release visitor; B additionally makes registration's TLS check inline with a cold preserve-most initializer and uses atomic load/store for live accounting before pool startup, retaining atomic RMW after startup. The scheduler publishes core_pool_started before pthread_create, and the native multi-thread runtime fixture does likewise. Keep the same atomic object and exact accounting; heap ceilings and shared counts are unchanged. Measure both after the current sweep, then choose from all-corpus evidence and rerun final correctness for any adopted runtime change. Production remains unchanged until that choice.
+- **Reversal:** Local runtime-only changes; no frozen file, accepted semantic, threshold or gate is altered. The common child enumeration remains one source of truth despite inlining.
+
+
+## 2026-10-09 — P1-6: retain all fuzz and counter evidence below the package limit
+
+- **Question:** How can all historical and final raw outcomes fit within the 10 MB package budget?
+- **Options:** Drop duplicate historical successes, or use a reversible representation before solid compression.
+- **Evidence:** Decoding base64 stdout/stderr and packing exact elapsed doubles reduced the eight historical matrices from 5,239,092 to 3,846,964 bytes; all 214,000 original command records and 9,304 original members round-tripped byte for byte. With both final matrices, the archive is 4,780,592 bytes for 11,630 members / 391,496,600 original bytes. All restored SHA-256 values match. The merged counter archive retains 528 original JSON documents in 1,101,700 bytes.
+- **Choice:** Retain every matrix and outcome; mark transformed command members `.decoded` and supply tools/fuzz_archive.py to restore exact original files. Preserve per-member hashes in xz manifests, verification metadata and the archive ledger. Move unpacked final evidence and prior archives into this worktree's private disk cache after verification. Timing JSON is compressed losslessly and its readable tables regenerated. EVIDENCE.md documents extraction. No gate or sample is removed.
+- **Reversal:** The supplied decoder reconstructs exact original bytes; earlier archive versions and unpacked final evidence also remain in the private cache.
+
+
+## 2026-10-09 — P1-6: separate dictionary inlining from the allocation improvements
+
+- **Question:** Does forcing dictionary traversal into the free/share callers explain the EDA regression?
+- **Options:** Keep all iterator inlining, leave only the dictionary traversal out of line, or retain the original traversal structure with the allocation improvements alone.
+- **Evidence:** The paired A/B sweep gives row GM 1.0146208208 for A and 1.0065124883 for B, versus the original final 1.0246636851. EDA instead worsens to 1.0625164386 / 1.0315034862, versus the original 1.0269590951. Both candidates pass 20 focused ownership/thread/share/scheduler/IR/TSan tests. The K=5 free routine grows from 620 to 1,015 bytes when the generic and dictionary loops are forcibly inlined. A/B are unadopted experiments; their remaining corpus results will also be preserved.
+- **Choice:** Prepare C with B's allocation changes and inline generic/release traversal but an ordinary dictionary iterator; prepare D with B's allocation changes and the original traversal structure. Build only after A/B timing finishes, test both, then compare every corpus against the same base. These are final-runtime candidates, distinct from R9's earlier emitted-count variants: all retain the selected B2 emitter.
+- **Reversal:** Local runtime changes; no source semantics, count ordering, frozen file or threshold changes. A candidate above the 1.03 premise boundary is not adopted while this investigation is in progress.
+
+
+## 2026-10-09 — P1-6: consolidate completed logs without losing failure detail
+
+- **Question:** How should verbose repeated gate/build logs fit alongside every timing table and fuzz matrix?
+- **Options:** Keep independent gzip layers, discard historical success logs, or compress decoded logs together.
+- **Evidence:** The first probe reduced 524 completed logs from 1,606,542 stored bytes to a 119,172-byte tar.xz while preserving all 3,480,688 decoded bytes. The subsequent consolidation also includes completed A/B logs, with every original and decoded hash checked. Active C/D logs are excluded. An additional command-interleaving fuzz probe saved only 125,548 bytes and was rejected to keep the existing decoder simple.
+- **Choice:** Use a standard log archive and explicit path/hash manifest; retain complete failed logs and original unpacked files in the private cache. Markdown links point to the archive, and EVIDENCE.md explains original-member lookup. Preserve the existing v1 fuzz encoding, already verified byte for byte.
+- **Reversal:** Extract the standard tar for original log text; prior storage-layer hashes and private originals are retained.
+
+
+## 2026-10-09 — P1-6: reference committed historical raw fuzz evidence
+
+- **Question:** How can final candidate validation fit below 10 MB without losing the earlier raw evidence?
+- **Options:** Add a more complex compression format, discard old raw data, or reference the already committed immutable archive for superseded successful matrices.
+- **Evidence:** The working package reached 9,919,627 bytes before the next final validation. The simple interleaving probe saved only 125,548 bytes. Commit `98cb3a49fff3ba4ad438cb9087f86aa517a32760` already contains the complete eight historical matrices in a 5,239,092-byte archive with SHA-256 `d250c551b5d8c2e23124534bbe3f61e709bf4f0ecf370871bad68535a354faad`. Every one of the 9,072 referenced raw/source members was checked against that object. The current archive retains every historical summary/manifest plus complete P1-final-02 raw evidence, with 2,558 verified members in 1,378,596 bytes, saving 3,401,996 bytes.
+- **Choice:** Record the exact Git object, member hashes and restore command in EVIDENCE.md and the archive ledger. Keep all failed measurements and the current final raw evidence in the working package. This supersedes the earlier storage choice to duplicate all historical raw streams in its current archive; no gate, outcome or recoverable evidence is removed. Additional final validation will be stored in full.
+- **Reversal:** Restore the ordinary tar archive directly with git show; complete ten-matrix copies also remain in the private disk cache.
+
+
+## 2026-10-09 — P1-6: hoist redundant allocator registration checks
+
+- **Question:** Can the remaining allocation-heavy misses be reduced without changing the common traversal semantics?
+- **Options:** Keep C/D unchanged, tune unrelated emitted code again, or remove redundant TLS registration checks where registration is already established.
+- **Evidence:** The C/D row comparison gives C GM 1.0027158207 with 12 cells above 1.03, and D GM 1.0124092025 with 17. C still has allocation-retained/64 at 1.106406; D is 1.175115/1.158536 on retained allocation. EDA favors D (1.0013986091; full pass) over C (1.0190069662; no cell >1.03). small_alloc checks registration even on a populated free list; the iterative destructor checks it again for every block. All writes that populate a list already register the owning thread, and scheduler workers register before guest code.
+- **Choice:** Prepare E from D and F from C. Pop a nonempty free list before the registration check; register once at iterative destruction entry and use a private already-registered free helper within that walk. Other free callers retain their registration wrapper. Preserve exact accounting, cold initialization, child enumeration and synchronization. Queue builds only after all C/D timing completes, then run focused tests and every paired corpus. This is the last planned runtime optimization round unless it exposes a correctness issue or a premise violation.
+- **Reversal:** Runtime-only source patches from the same immutable source. Existing candidates remain recoverable, and no candidate is adopted until complete corpus comparison and fresh final qualification.
+
+
+## 2026-10-09 — P1-6: preserve counter instrumentation through the free-helper split
+
+- **Question:** Does the registered-free helper preserve every counting hook?
+- **Options:** Leave the old textual anchor, or update it to the common helper that still executes every actual free.
+- **Evidence:** `src/core/count_runtime.zig` inserts `myl_count_free` immediately after the old block_free declaration and class computation. The E/F split moves that body into block_free_registered; the old anchor would correctly fail with AnchorMissing, and instrumenting only the wrapper would miss iterative frees.
+- **Choice:** Include the one-line anchor rename in both private candidates and explicitly run the existing test that requires every hook exactly once and rejects moved anchors. Counted thread and emitted-capture tests remain mandatory. This was caught in source review before E/F compilation; the waiting build orchestrator was restarted with both changed source paths in its identity proof.
+- **Reversal:** The anchor follows the selected function name; all counting behavior and slots are unchanged.
+
+
+## 2026-10-09 — P1-6: reclaim rejected candidate source archives
+
+- **Question:** How should final validation retain sufficient disk headroom after repeated compiler archives?
+- **Options:** Remove shared caches or other lanes, retain every reconstructible private copy, or remove only completed rejected candidate copies.
+- **Evidence:** E/F preparation reduced free disk to about 8.2 GiB. The A/B source archives occupy about 1.4 GiB each, are not worktrees, have no active process, and are reconstructible from immutable `98cb3a49f` plus their retained patches. Both are rejected by their EDA results. Their compiler binaries still match the recorded hashes.
+- **Choice:** Delete only the A/B private source directories after verifying their runtime bytes and compiler identities. Retain all raw measurements, logs, patches, source identities and measured binaries. The earlier A–D local build-cache cleanup also touched only these private completed builds.
+- **Reversal:** Recreate either archive from Git and apply its checked-in patch; no source or evidence depends on the deleted cache.
+
+
+## 2026-10-09 — P1-6: verify positive live accounting, not only final zero
+
+- **Question:** What regression check distinguishes correct parallel accounting from equal lost increments and decrements?
+- **Options:** Rely on final leak-zero checks, or also inspect an exact positive count while every worker is paused.
+- **Evidence:** The existing runtime fixture checks 18 counted allocations/frees and zero live blocks after eight worker retirements. Atomic load/store pairs could legally evade TSan while losing concurrent updates, and equal lost increments/decrements could cancel at exit. The selected allocation refinement retains RMW after pool publication, so this boundary deserves a direct invariant check.
+- **Choice:** Prepare a native accounting mode with eight workers holding 128 alternating small/large blocks each. Two nine-party barriers let main verify baseline + 1,024 before any free, baseline after retirement, then zero after releasing the two capability blocks. Its counted test requires exactly 1,026 allocations/frees and zero live bytes. The ordinary fixture additionally checks its eight outstanding transferred blocks. Adopt these tests with the selected runtime and run them in its fresh checkpoint; they are not yet claimed as passed.
+- **Reversal:** Test-only strengthening; no product behavior or benchmark changes.
+
+
+## 2026-10-09 — P1-6: one final targeted check of the remaining per-block free call
+
+- **Question:** Is the remaining out-of-line free call avoidable in the specialized iterative destructor?
+- **Options:** End the investigation with C/D/E as available alternatives, or make one small follow-up to the failed F experiment based on its generated assembly.
+- **Evidence:** F improves row GM to 1.0006356946 with eight misses, but EDA reaches 1.0302100374 with 16 misses, so F is ineligible for adoption. K=5 disassembly shows both C and F still call a separate free helper once per destroyed block. F's already-registered helper is 154 bytes; it remains out of line in the cold walk. Its ordinary registration wrapper already incorporates the helper body. The call is a remaining deallocation cost, not proof of EDA's regression cause. C and D remain below 1.03 in all corpora.
+- **Choice:** Prepare only G: F with the private already-registered helper forced inline, and its counting anchor updated to the attributed declaration. Preserve the same registration and accounting invariants. This is the one follow-up justified by F's premise-boundary failure and assembly evidence after the previously planned final round. Build after E/F timing, run the same 21 focused tests and every paired corpus, then choose an eligible measured runtime and finish qualification. No further performance variant is planned; targets and failure evidence are unchanged.
+- **Reversal:** Two source files in a private archive; C/D remain valid fallbacks and no production source has changed.
+
+## 2026-10-09 — P1-6: integrate main and honor the user's performance waiver
+
+- **Question:** Main advanced from `cafe7fea7` to `35df839be` during the last runtime experiment. The user asked: “Could you merge in without redoing the performance checks, or come up with some proxy that doesn't depend on the hardware being idle?”
+- **Options:** Repeat the complete timed suite after integration; use hardware-independent evidence; or retain completed historical timings with an explicit unverified final performance verdict.
+- **Evidence:** Candidate C completed all five old-base corpora below the 1.03 premise boundary, although rows, EDA, parity and Lox tree miss strict targets. Candidate G finished only rows and EDA before main moved. Its own parity orchestration was terminated (status -15), and Lox never began. No other lane's processes were stopped.
+- **Choice:** The user's direct instruction supersedes the plan's mandatory repeated timing gate and corresponding §9.1 gate-relaxation stop. Merge main with a real merge commit, adopt the simpler, fully measured candidate C, and run all final correctness gates. Do not schedule another timed suite or wait for idle hardware. Retain all earlier timings, including partial G, as historical evidence. Use exact counted/plain outputs, allocation counts and generated-code invariants as deterministic proxies; these cannot certify elapsed-time overhead. Report merged-version performance as unverified, never as a passed tax gate.
+- **Reversal:** Easy: the timing tools, inputs, earlier raw evidence and candidate patches remain available for a later explicitly requested measurement. No numeric threshold is changed.

@@ -1,0 +1,10 @@
+{
+  "commit": "98cb3a49fff3ba4ad438cb9087f86aa517a32760",
+  "archive_path": "experiments/concurrency-p1-2026-10-08/r3/fuzz-history.tar.xz",
+  "archive_sha256": "d250c551b5d8c2e23124534bbe3f61e709bf4f0ecf370871bad68535a354faad",
+  "archive_bytes": 5239092,
+  "referenced_members": 9072,
+  "members_manifest": "r3/historical-fuzz-members.json.xz",
+  "retained_here": "All historical summaries/manifests and complete P1-final-02 command streams/sources",
+  "verified": "Every referenced member SHA-256 equals its bytes in the immutable ancestor archive; every current member restored and verified."
+}

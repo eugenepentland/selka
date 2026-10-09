@@ -1,0 +1,36 @@
+{
+  "source": "98cb3a49fff3ba4ad438cb9087f86aa517a32760",
+  "identity": "P1-final-candidates.json",
+  "tags": [
+    "base",
+    "P1-final-A",
+    "P1-final-B"
+  ],
+  "steps": [
+    {
+      "group": "rows",
+      "status": 0,
+      "seconds": 218.488581425976,
+      "log": "r3/logs/P1-final-AB-tax-measure-rows.log"
+    },
+    {
+      "group": "eda",
+      "status": 0,
+      "seconds": 101.61268950393423,
+      "log": "r3/logs/P1-final-AB-tax-measure-eda.log"
+    },
+    {
+      "group": "parity",
+      "status": 0,
+      "seconds": 528.099674011115,
+      "log": "r3/logs/P1-final-AB-tax-measure-parity.log"
+    },
+    {
+      "group": "lox",
+      "status": 0,
+      "seconds": 1170.275473345071,
+      "log": "r3/logs/P1-final-AB-tax-measure-lox.log"
+    }
+  ],
+  "complete": true
+}

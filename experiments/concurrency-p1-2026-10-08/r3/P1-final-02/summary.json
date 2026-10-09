@@ -1,0 +1,114 @@
+{
+  "source": "98cb3a49fff3ba4ad438cb9087f86aa517a32760",
+  "steps": [
+    {
+      "name": "full-gate",
+      "command": [
+        "scripts/build-slot.sh",
+        "gate",
+        "zig",
+        "build",
+        "test",
+        "--summary",
+        "all"
+      ],
+      "status": 0,
+      "seconds": 73.5774254668504,
+      "log": "experiments/concurrency-p1-2026-10-08/r3/P1-final-02/full-gate.log"
+    },
+    {
+      "name": "fmt-check",
+      "command": [
+        "scripts/build-slot.sh",
+        "build",
+        "zig",
+        "build",
+        "fmt-check",
+        "--summary",
+        "all"
+      ],
+      "status": 0,
+      "seconds": 0.20305684208869934,
+      "log": "experiments/concurrency-p1-2026-10-08/r3/P1-final-02/fmt-check.log"
+    },
+    {
+      "name": "debug-install",
+      "command": [
+        "scripts/build-slot.sh",
+        "build",
+        "zig",
+        "build",
+        "install",
+        "--summary",
+        "all"
+      ],
+      "status": 0,
+      "seconds": 5.717720589134842,
+      "log": "experiments/concurrency-p1-2026-10-08/r3/P1-final-02/debug-install.log"
+    },
+    {
+      "name": "qualify",
+      "command": [
+        "python3",
+        "experiments/new-core-s5-20261007/tools/qualify_merge.py",
+        "--shards",
+        "64",
+        "--compiler",
+        "zig-out/bin/mylang",
+        "--install",
+        "install",
+        "--evidence",
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/experiments/concurrency-p1-2026-10-08/r3/P1-final-02/P1-final-02-qualify"
+      ],
+      "status": 0,
+      "seconds": 77.76279148296453,
+      "log": "experiments/concurrency-p1-2026-10-08/r3/P1-final-02/qualify.log"
+    },
+    {
+      "name": "fuzz50",
+      "command": [
+        "python3",
+        "experiments/new-core-s5-20261007/tools/fuzz_matrix.py",
+        "--references",
+        "experiments/new-core-s5-20261007/references/fuzz-v1.json.gz",
+        "--new",
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/zig-out/bin/mylang",
+        "--cases",
+        "50",
+        "--evidence",
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/experiments/concurrency-p1-2026-10-08/r3/P1-final-02/fuzz50",
+        "--jobs",
+        "3",
+        "--qualified-head",
+        "98cb3a49fff3ba4ad438cb9087f86aa517a32760"
+      ],
+      "status": 0,
+      "seconds": 108.94398081395775,
+      "log": "experiments/concurrency-p1-2026-10-08/r3/P1-final-02/fuzz50.log"
+    },
+    {
+      "name": "fuzz200",
+      "command": [
+        "python3",
+        "experiments/new-core-s5-20261007/tools/fuzz_matrix.py",
+        "--references",
+        "experiments/new-core-s5-20261007/references/fuzz-v1.json.gz",
+        "--new",
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/zig-out/bin/mylang",
+        "--cases",
+        "200",
+        "--evidence",
+        "/home/epentland/ai/canopy/mylang-concurrency-p1/experiments/concurrency-p1-2026-10-08/r3/P1-final-02/fuzz200",
+        "--jobs",
+        "3",
+        "--qualified-head",
+        "98cb3a49fff3ba4ad438cb9087f86aa517a32760"
+      ],
+      "status": 0,
+      "seconds": 632.5746739979368,
+      "log": "experiments/concurrency-p1-2026-10-08/r3/P1-final-02/fuzz200.log"
+    }
+  ],
+  "pass": true,
+  "compiler_sha256": "2a3ccd6ec5e3309a1d8cdd1f912bd61808127ecd9f8d50f2633009184f9003d5"
+}

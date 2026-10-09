@@ -34,19 +34,32 @@
   },
   "r3/fuzz-history.tar.xz": {
     "archive": "r3/fuzz-history.tar.xz",
-    "sha256": "d250c551b5d8c2e23124534bbe3f61e709bf4f0ecf370871bad68535a354faad",
-    "bytes": 5239092,
-    "members": 9304,
-    "previous_archive_sha256": "6c79f09c9e9687218326a3c90213e78f3f62e9861aa360fd6d0d6162e1f1c02c",
-    "verified": "Every decoded member compared byte-for-byte; member hashes in fuzz-history-manifest.json.gz.",
-    "compression": "LZMA2 128 MiB dictionary; corresponding paths grouped across every run. Every decoded member byte-verified."
+    "sha256": "11effe7871785be46742fc1f5bc870044388e22ac43108b6bfaa1924b67dc617",
+    "bytes": 1378596,
+    "members": 2558,
+    "previous_archive_sha256": "1e774a1a02f94afda3392a3c5423370f2b3e1f3e636fc84ab3ec9c784e332579",
+    "manifest": "r3/fuzz-history-manifest.json.xz",
+    "verified": "Every restored member SHA-256 matches its original bytes.",
+    "encoding": "decoded-command-streams-v1",
+    "restore": "python3 tools/fuzz_archive.py r3/fuzz-history.tar.xz DESTINATION",
+    "compression": "LZMA2 128 MiB; output bytes decoded from base64 and exact elapsed doubles packed before compression; reconstruction restores original JSON byte for byte.",
+    "historical_raw_reference": "r3/historical-fuzz-reference.json"
   },
   "raw/r3-counter-history.tar.xz": {
     "archive": "raw/r3-counter-history.tar.xz",
-    "sha256": "8beebbedb5677b4270b17e8a8dd70b61eb461b90ea983557bd2dc346b5fff2bb",
-    "bytes": 1075692,
-    "members": 396,
-    "previous_archive_sha256": "822528c1bb6a6a680eb79a0b09313391e4279f8aadd8128e0e4ecfff4db41af9",
-    "verified": "Every decoded member SHA-256 checked; member hashes in raw/r3-counter-history-manifest.json.gz."
+    "sha256": "480eca169613773e28ae65011049b2c91d38286d930d67ff5a9691d6911ccf78",
+    "bytes": 1101700,
+    "members": 528,
+    "previous_archive_sha256": "8beebbedb5677b4270b17e8a8dd70b61eb461b90ea983557bd2dc346b5fff2bb",
+    "manifest": "raw/r3-counter-history-manifest.json.xz",
+    "verified": "Every restored member SHA-256 matches its original bytes."
+  },
+  "r3/loose-logs.tar.xz": {
+    "archive": "r3/loose-logs.tar.xz",
+    "sha256": "25800a27b0d7ab85a7e870009f6e881ec3cb15699133b98bc28e78ddf0387931",
+    "bytes": 170616,
+    "members": 2534,
+    "manifest": "r3/loose-logs-manifest.json.xz",
+    "verified": "Every decoded log member byte/hash verified; former gzip layers removed. Original paths and compressed-byte hashes remain in the manifest."
   }
 }

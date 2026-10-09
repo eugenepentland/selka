@@ -1,0 +1,60 @@
+{
+  "source": "98cb3a49fff3ba4ad438cb9087f86aa517a32760",
+  "candidates": {
+    "G": {
+      "source_directory": "/home/epentland/ai/canopy/mylang-concurrency-p1/.tmp/p1-final-G-src",
+      "changes": {
+        "src/core/runtime/core_rt.c": {
+          "before_sha256": "6755a1a0a91b54d6491b4ebd317f03d89d7493bc6ddbab546c38c54da6e5ff2f",
+          "after_sha256": "5258a934f7f69079e32c0f5b59f1cec3de21b6923c97e07519c7209899c258d2"
+        },
+        "src/core/count_runtime.zig": {
+          "before_sha256": "ab2b4172c017b84e16e0719cfef6ec6737af0479b4a9211b3f07d02082090423",
+          "after_sha256": "207501368ccdffe03cad8c068dc1628670e8eb31d8b83151a705883a2be9261e"
+        }
+      },
+      "identical_other_source_files": 576,
+      "steps": [
+        {
+          "name": "G-focused",
+          "status": 0,
+          "seconds": 54.06567999487743,
+          "log": "r3/logs/P1-final-G-focused.log"
+        },
+        {
+          "name": "G-compiler",
+          "status": 0,
+          "seconds": 198.52345823612995,
+          "log": "r3/logs/P1-final-G-compiler.log"
+        },
+        {
+          "name": "G-rows-build",
+          "status": 0,
+          "seconds": 16.47458361997269,
+          "log": "r3/logs/P1-final-G-rows-build.log"
+        },
+        {
+          "name": "G-eda-build",
+          "status": 0,
+          "seconds": 30.666266069049016,
+          "log": "r3/logs/P1-final-G-eda-build.log"
+        },
+        {
+          "name": "G-lox-build",
+          "status": 0,
+          "seconds": 6.165293745929375,
+          "log": "r3/logs/P1-final-G-lox-build.log"
+        },
+        {
+          "name": "G-parity-build",
+          "status": 0,
+          "seconds": 7.5052745919674635,
+          "log": "r3/logs/P1-final-G-parity-build.log"
+        }
+      ],
+      "compiler": "/home/epentland/.cache/mylang/conc-p1-final-G-98cb3a49f/bin/mylang",
+      "sha256": "fae8c0210813982c3c2f0c068add057345a04db8635267a17232f4adb43460b3"
+    }
+  },
+  "complete": true
+}
