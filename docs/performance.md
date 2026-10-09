@@ -77,6 +77,7 @@ ownership), then LLVM optimizes across every module boundary.
 ```bash
 mylang build prog.my -o prog                  # debug: the edit-loop build
 mylang build prog.my -o prog-fast --release   # optimized whole program
+mylang build prog.my -o prog-dev --optimize-debug  # experimental: Core passes + per-module -O2
 mylang run prog.my --release
 mylang test tests/ --release
 ```
@@ -84,8 +85,17 @@ mylang test tests/ --release
 Use `--release` for a binary you ship or time, and the default in the edit loop: a
 release build recompiles the whole program after any change, while a debug build
 recompiles only the changed modules. C sources passed with `--link` are compiled at
-the program's level (`-O0` in debug, `-O3` in release); the runtime is compiled once
-per machine at `-O2` in both.
+the program's level (`-O0` in debug, `-O2` with `--optimize-debug`, `-O3` in release);
+the runtime is compiled once per machine at `-O2` in every mode.
+
+The experimental `--optimize-debug` mode keeps module units and `debug(...)` lines
+while applying the Core optimization passes and LLVM `-O2`. It also works for
+`run` and `test`, including with `--verify-facts`. This targets programs that spend
+too long running in the default debug mode. It adds optimization work to builds;
+inlining and propagated facts may also invalidate callers after an edit. Compare
+runtime and rebuild time on your project. Source locations in trap traces are
+retained; debugger variable inspection and exact statement stepping have not been
+qualified for this prototype.
 
 Nothing about the language's safety changes with the mode. Overflow, narrowing-cast,
 bounds, division-by-zero and budget checks run in every build and trap with the same
@@ -107,6 +117,44 @@ func main() -> int:
     for i in range(10):
         values.append(i)
     return total(values)
+```
+
+### Optimized-debug prototype measurements
+
+On 2026-10-09, the six unchanged parity workloads below all met the prototype's
+target of taking at most twice Release's runtime. These are medians of seven
+interleaved runs of prebuilt executables pinned to CPU 2, including process startup.
+Every output matched its checked-in expected file; an untimed run also checked
+for leaks. The C runtime remained at `-O2` in every mode.
+
+| Workload | Debug / Release time | Optimized Debug / Release time |
+|---|---:|---:|
+| Integer loop | 1.86 | 1.00 |
+| Calls | 1.85 | 1.00 |
+| Byte scanning | 14.34 | 1.00 |
+| List append and sum | 1.84 | 1.01 |
+| Dictionary counting | 1.91 | 1.04 |
+| Matrix multiplication (500 × 500) | 29.77 | 0.98 |
+
+On the small nine-module invoice example, optimized Debug's median cold build
+was 204 ms versus Debug's 183 ms. A leaf body edit took 94 ms versus 92 ms;
+both rebuilt one unit and reused nine. Identical builds replayed in about 12 ms.
+These builds used a Debug-built compiler, fresh guest-object caches per trial,
+and prewarmed runtime and toolchain caches. Larger projects and edits that change
+inlined code or propagated facts need separate measurements.
+
+The prototype also passed all 1,772 language, value-semantics and ported tests
+with leak checking, both normally and with `--verify-facts`. The regression tests
+cover cache separation, debug output, exact trap frames across modules, and
+deliberately false facts. This does not qualify debugger stepping or establish
+a runtime bound for arbitrary programs.
+
+[Raw samples and qualification counts](../bench/parity/debug_speedup_20261009.json)
+are checked in. Reproduce with a Debug-built compiler and a new output directory:
+
+```bash
+python3 scripts/benchmark_debug_runtime.py --compiler zig-out/bin/mylang \
+  --host-mode Debug --cpu 2 --repeats 7 --output /tmp/debug-runtime-measurement
 ```
 
 ## Loops that prove their own checks

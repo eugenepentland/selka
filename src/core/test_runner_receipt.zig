@@ -46,7 +46,7 @@ pub fn settings(context: Context, inputs: *std.ArrayList(Dependency)) Error!Dige
         field(&hash, context.case_bytes);
     }
     field(&hash, try std.json.Stringify.valueAlloc(a, .{
-        .release = context.options.build.release,
+        .mode = context.options.build.mode,
         .facts = context.options.build.facts,
         .vectors = context.options.build.show.codegen.generic_vectors,
         .frames = context.options.build.show.codegen.trap_frames,
@@ -601,6 +601,9 @@ test "receipt settings ignore shell and terminal variables and key toolchain and
     const context = try fakeToolContext(a, try temporary.dir.realPathFileAlloc(std.testing.io, ".", a), &environment);
     var inputs: std.ArrayList(Dependency) = .empty;
     const plain = try settings(context, &inputs);
+    var optimized = context;
+    optimized.options.build.mode = .optimized_debug;
+    try std.testing.expect(!std.mem.eql(u8, &plain, &try settings(optimized, &inputs)));
     try environment.put("_", "/usr/bin/time");
     try environment.put("OLDPWD", "/elsewhere");
     try environment.put("MYLANG_JOBS", "3");

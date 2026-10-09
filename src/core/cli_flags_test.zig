@@ -253,6 +253,61 @@ test "test names a bad flag value or unknown option before printing its own usag
 
 const debug_line = "func main(out: Stream) -> int:\n    debug(\"debugging\", 41)\n    out.print(42)\n    return 0\n";
 
+// spec-case: DEBUG-OPTIMIZE-1
+test "optimize-debug separates cached builds and test receipts and keeps debug output" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const context: Context = .{ .arena = arena.allocator(), .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", arena.allocator()) };
+    try context.write("main.my", debug_line);
+    try std.Io.Dir.cwd().createDirPath(std.testing.io, try context.path("suite"));
+    try context.write("suite/check.my", "func test_answer() -> bool:\n    return 6 * 7 == 42\n");
+    for ([_][]const []const u8{ &.{}, &.{"--optimize-debug"}, &.{"--release"} }) |mode| {
+        const build_args = try std.mem.concat(context.arena, []const u8, &.{ &.{ "build", "main.my", "-o", "program", "--cache-dir", "cache", "--report" }, mode });
+        const first = try context.compiler(build_args);
+        try std.testing.expectEqual(@as(u8, 0), first.status);
+        try std.testing.expect(contains(first.stderr, "\"program\":\"linked\""));
+        const again = try context.compiler(build_args);
+        try std.testing.expectEqual(@as(u8, 0), again.status);
+        try std.testing.expect(contains(again.stderr, "\"program\":\"replayed\""));
+        const ran = try context.spawn(&.{try context.path("program")});
+        try std.testing.expectEqualStrings("42\n", ran.stdout);
+        const release = mode.len != 0 and std.mem.eql(u8, mode[0], "--release");
+        try std.testing.expectEqualStrings(if (release) "" else "debugging 41\n", ran.stderr);
+        const test_args = try std.mem.concat(context.arena, []const u8, &.{ &.{ "test", "suite", "--cache-dir", "cache" }, mode });
+        const tested = try context.compiler(test_args);
+        try std.testing.expectEqual(@as(u8, 0), tested.status);
+        try std.testing.expect(contains(tested.stdout, "1 passed, 0 cached"));
+        const cached = try context.compiler(test_args);
+        try std.testing.expectEqual(@as(u8, 0), cached.status);
+        try std.testing.expect(contains(cached.stdout, "0 passed, 1 cached"));
+    }
+}
+
+// spec-case: DEBUG-OPTIMIZE-1
+test "optimize-debug run commands retain debug output and test rejects conflicting modes" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const context: Context = .{ .arena = arena.allocator(), .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", arena.allocator()) };
+    try context.write("main.my", debug_line);
+    for ([_][]const u8{ "run", "run-project" }) |command| {
+        const ran = try context.compiler(&.{ command, "main.my", "--optimize-debug", "--verify-facts" });
+        try std.testing.expectEqual(@as(u8, 0), ran.status);
+        try std.testing.expectEqualStrings("42\n", ran.stdout);
+        try std.testing.expect(contains(ran.stderr, "debugging 41\n"));
+    }
+    const through = try context.compiler(&.{ "build", "main.my", "--run", "--optimize-debug" });
+    try std.testing.expectEqual(@as(u8, 0), through.status);
+    try std.testing.expectEqualStrings("42\n", through.stdout);
+    try std.testing.expect(contains(through.stderr, "debugging 41\n"));
+    const conflict = try context.compiler(&.{ "test", "check.my", "--release", "--optimize-debug" });
+    try std.testing.expectEqual(@as(u8, 2), conflict.status);
+    try std.testing.expect(contains(conflict.stderr, "mutually exclusive"));
+}
+
 // spec: NEW-CORE-S5-DEBUG-RELEASE-1
 test "a build --release executable drops debug lines, a debug build and a run keep them" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);

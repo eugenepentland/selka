@@ -116,7 +116,7 @@ test "linkNative refuses unproved tool native reuse and cleans private caches af
         .zig = try std.fs.path.join(a, &.{ root, "zig" }),
         .work = try std.fs.path.join(a, &.{ root, "cache" }),
         .output = try std.fs.path.join(a, &.{ root, "output" }),
-        .release = false,
+        .mode = .debug,
         .links = &.{},
     };
     var log: std.ArrayList(u8) = .empty;

@@ -33,15 +33,10 @@ pub const Settings = struct {
     /// The resolved host CPU and code-generation flags (`tool_identity.nativeTarget`),
     /// so a store copied to another machine cannot serve an object for the wrong CPU.
     cpu: Digest,
-    release: bool,
+    mode: @import("build_mode.zig").Mode = .debug,
     /// The core runtime's ABI, identified by its complete source.
     runtime: Digest,
 };
-
-/// The optimization flag of a build's program code.
-pub fn level(release: bool) []const u8 {
-    return if (release) "-O3" else "-O0";
-}
 
 /// The store key of one unit: `format`, the optimization level, the target
 /// triple, the CPU flags and the resolved CPU, the toolchain, the runtime ABI and
@@ -49,7 +44,7 @@ pub fn level(release: bool) []const u8 {
 pub fn key(settings: Settings, text: []const u8) Digest {
     var hash = std.crypto.hash.Blake3.init(.{});
     field(&hash, format);
-    field(&hash, level(settings.release));
+    field(&hash, settings.mode.level());
     field(&hash, target_policy.native_link_target);
     for (target_policy.current.cpu_flags) |flag| field(&hash, flag);
     field(&hash, &settings.cpu);
@@ -316,13 +311,19 @@ fn removeFile(io: std.Io, path: []const u8) void {
 
 // spec: NEW-CORE-S4-CACHE-1
 test "unit keys cover the text, level, toolchain, CPU and runtime, and fields cannot run together" {
-    const base: Settings = .{ .tool = @splat(1), .cpu = @splat(2), .release = false, .runtime = @splat(3) };
+    const base: Settings = .{ .tool = @splat(1), .cpu = @splat(2), .mode = .debug, .runtime = @splat(3) };
     const original = key(base, "define i32 @f()");
     try std.testing.expectEqual(original, key(base, "define i32 @f()"));
     try std.testing.expect(!std.mem.eql(u8, &original, &key(base, "define i32 @g()")));
     var changed = base;
-    changed.release = true;
+    changed.mode = .release;
     try std.testing.expect(!std.mem.eql(u8, &original, &key(changed, "define i32 @f()")));
+    const release_key = key(changed, "define i32 @f()");
+    changed = base;
+    changed.mode = .optimized_debug;
+    try std.testing.expectEqualStrings("-O2", changed.mode.level());
+    try std.testing.expect(!std.mem.eql(u8, &original, &key(changed, "define i32 @f()")));
+    try std.testing.expect(!std.mem.eql(u8, &release_key, &key(changed, "define i32 @f()")));
     changed = base;
     changed.tool = @splat(9);
     try std.testing.expect(!std.mem.eql(u8, &original, &key(changed, "define i32 @f()")));

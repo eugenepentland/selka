@@ -5,14 +5,15 @@ checks the project, finds the exported functions whose names begin with `test_`,
 builds them with the compiler's core (Core IR, LLVM, `zig cc`) and runs each one
 in its own forked trial. Cases are configured with one JSON file rather than with a
 framework inside the language, and the runner needs no Python. A run builds a
-debug program by default; `--release` builds the optimized one, as
-`mylang build --release` does, and both keep every overflow, cast and bounds
+debug program by default; experimental `--optimize-debug` enables Core passes and
+per-module LLVM `-O2`. `--release` builds the optimized whole program, as
+`mylang build --release` does, and all modes keep every overflow, cast and bounds
 check. The design record is [the guest test workflow](../experiments/guest-tests.md).
 
 ## `mylang test`
 
 ```text
-mylang test FILE.my|DIR [--release] [--json] [--filter S] [--affected --against REF]
+mylang test FILE.my|DIR [--release | --optimize-debug] [--json] [--filter S] [--affected --against REF]
     [--no-cache] [--force] [--jobs N] [--cases PATH] [--max-steps N] [--max-frames N]
     [--max-memory SIZE] [--timeout-ms N] [--seed N] [--property-runs N] [--link FILE.c]
     [--verify-facts | --no-facts] [--cache-dir DIR] [--zig PATH]
@@ -432,7 +433,7 @@ library imported by a root is not run on its own: its tests run once, as part of
 that root.
 
 Each root runs as `mylang test ROOT --json` would, with the run's filter,
-budgets, seed, property runs, `--release`, `--verify-facts`/`--no-facts`,
+budgets, seed, property runs, `--release`/`--optimize-debug`, `--verify-facts`/`--no-facts`,
 `--force`, `--affected --against REF` and `--link` inputs. Most roots run in the
 directory run's own process (NEW-CORE-TEST-UNION-1). A root that opens with its
 `module` header and declares no `main`, in a project whose configuration names no
@@ -499,7 +500,7 @@ A receipt's identity (NEW-CORE-S4-TEST-3) is:
   a receipt emits no code. An edit to a function the test does not reach, or
   one that only moves code in another file, keeps the key; whitespace edits that
   move a reached function's lines do not;
-- **the settings**: `--release`, `--no-facts`/`--verify-facts`, the seed, the
+- **the settings**: `--release`/`--optimize-debug`, `--no-facts`/`--verify-facts`, the seed, the
   property runs, the step, frame, memory and time budgets, the test's own
   cases-file entry and the cases file's bytes;
 - **the compiler, runtime and toolchain identity**, including the `zig` the run

@@ -15,7 +15,7 @@ test "a compiler that cannot run fails the build with ToolFailed and says why" {
         .zig = "/nonexistent/mylang-core-test/zig",
         .work = root,
         .output = try std.fs.path.join(arena.allocator(), &.{ root, "p" }),
-        .release = false,
+        .mode = .debug,
         .links = &.{},
     }, &log);
     try std.testing.expectError(error.ToolFailed, outcome);

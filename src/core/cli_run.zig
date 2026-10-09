@@ -36,7 +36,7 @@ pub const run_usage =
     \\    --timeout N        elapsed-time cap in seconds
     \\    --max-memory SIZE  guest byte ceiling, K/M/G suffixes (default 4G; MYLANG_MEMORY_LIMIT names the same)
     \\  output: --print-result --diagnostics=text|json --timings (the program's run time on stderr)
-    \\  build: --release --zig=PATH --cache-dir=DIR --no-cache --report (one cache-report-v1 line on stderr)
+    \\  build: --release | --optimize-debug; --zig=PATH --cache-dir=DIR --no-cache --report (one cache-report-v1 line on stderr)
     \\  authority: --restrict --allow-read=DIR --allow-write=DIR --allow-endpoint=IP:PORT --allow-clock
     \\             --allow-random[=SEED] --allow-env[=NAME,...] --allow-host --allow-all
     \\  `mylang --help` lists every command

@@ -17,7 +17,7 @@ const cli_run = @import("cli_run.zig");
 const cache_dir_flag = "--cache-dir";
 
 const usage =
-    \\usage: mylang build FILE.my -o OUT [--release] [--link FILE.c]... [--emit-llvm PATH] [--no-facts | --verify-facts] [--stats] [--zig PATH] [--cache-dir DIR] [--verify-cache] [--cache-report]
+    \\usage: mylang build FILE.my -o OUT [--release | --optimize-debug] [--link FILE.c]... [--emit-llvm PATH] [--no-facts | --verify-facts] [--stats] [--zig PATH] [--cache-dir DIR] [--verify-cache] [--cache-report]
     \\       mylang check FILE.my [--typed] [--stats] [--timings=json] [--cache-dir DIR] [--no-cache]
     \\       mylang test FILE.my|DIR [options]   (`mylang test` alone lists them)
     \\       mylang coverage FILE.my...   (one line per function: ok with its checks, or the refusal reason)
@@ -29,7 +29,8 @@ const usage =
 /// `mylang test`'s usage: every flag `testCommand` and the CLI accept.
 const test_usage =
     \\usage: mylang test <entry.my|directory> [--filter SUBSTRING|GLOB] [--cases FILE] [--json]
-    \\  --release | --mode Debug|ReleaseFast    --no-facts | --verify-facts
+    \\  --release | --optimize-debug           --mode Debug|ReleaseFast
+    \\  --no-facts | --verify-facts
     \\  --affected --against REF                run only tests reaching a declaration changed since REF
     \\  --jobs N                                tests at once (default: CPUs, capped by free memory)
     \\  --max-steps N --max-frames N --max-memory SIZE --timeout-ms N   per-test budgets
@@ -158,12 +159,14 @@ pub fn buildCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
         const arg = args[index];
         const has_value = index + 1 < args.len;
         if (std.mem.eql(u8, arg, "--release")) {
-            options.release = true;
+            options.mode.select(.release) catch return 2;
+        } else if (std.mem.eql(u8, arg, "--optimize-debug")) {
+            options.mode.select(.optimized_debug) catch return 2;
         } else if (std.mem.eql(u8, arg, "--project")) {
             // Project configuration and graph checks are always applied.
         } else if (std.mem.eql(u8, arg, "--mode") and has_value) {
             index += 1;
-            if (std.mem.eql(u8, args[index], "ReleaseFast")) options.release = true else if (std.mem.eql(u8, args[index], "Debug")) options.release = false else return 2;
+            if (std.mem.eql(u8, args[index], "ReleaseFast")) options.mode.select(.release) catch return 2 else if (std.mem.eql(u8, args[index], "Debug")) options.mode.select(.debug) catch return 2 else return 2;
         } else if (std.mem.eql(u8, arg, "--no-facts")) {
             options.facts = .off;
         } else if (std.mem.eql(u8, arg, "--generic-vectors")) {
@@ -239,7 +242,9 @@ pub fn testCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
         } else if (flagValue(args, &index, "--against")) |reference| {
             options.controls.against = reference;
         } else if (std.mem.eql(u8, arg, "--release")) {
-            options.build.release = true;
+            options.build.mode.select(.release) catch return testUsage(init, "--release and --optimize-debug are mutually exclusive");
+        } else if (std.mem.eql(u8, arg, "--optimize-debug")) {
+            options.build.mode.select(.optimized_debug) catch return testUsage(init, "--release and --optimize-debug are mutually exclusive");
         } else if (std.mem.eql(u8, arg, "--json")) {
             options.json = true;
         } else if (std.mem.eql(u8, arg, "--no-facts")) {
@@ -310,7 +315,7 @@ fn testControls(options: *test_runner.Options, args: []const []const u8, index: 
     const has_value = index.* + 1 < args.len;
     if (std.mem.eql(u8, arg, "--mode") and has_value) {
         index.* += 1;
-        if (std.mem.eql(u8, args[index.*], "ReleaseFast")) options.build.release = true else if (std.mem.eql(u8, args[index.*], "Debug")) options.build.release = false else return error.Usage;
+        if (std.mem.eql(u8, args[index.*], "ReleaseFast")) try options.build.mode.select(.release) else if (std.mem.eql(u8, args[index.*], "Debug")) try options.build.mode.select(.debug) else return error.Usage;
     } else if (std.mem.eql(u8, arg, "--force")) {
         options.controls.force = true;
     } else if (std.mem.eql(u8, arg, "--cases") and has_value) {

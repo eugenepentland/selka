@@ -17,7 +17,7 @@ build keeps, see [the caches](#the-caches) below.
    function per program function, generic instance and generated adapter. A
    construct the front end accepts but the core cannot build yet stops with
    `E_CORE_UNSUPPORTED` naming it.
-3. **Passes.** A release build computes facts (integer ranges, lengths, ownership),
+3. **Passes.** A release or `--optimize-debug` build computes facts (integer ranges, lengths, ownership),
    inlines, unswitches and versions loops, and removes the checks the facts prove
    cannot fire. A debug build keeps every check and runs no optimizing pass.
 4. **LLVM text.** The IR is emitted as LLVM units (`src/core/emit_*.zig`).
@@ -33,7 +33,8 @@ and nothing is collected or traced.
 ## Debug and release builds
 
 A build is a **debug** build unless `--release` (or `--mode ReleaseFast`) asks for
-the optimized one. The two differ in how the program is cut into units:
+the optimized one. The experimental `--optimize-debug` flag offers an optimized
+development build:
 
 - **Debug** emits one unit per source module, plus one per generic instance, one per
   generated adapter and the entry unit. A unit's text depends only on its own
@@ -44,6 +45,13 @@ the optimized one. The two differ in how the program is cut into units:
   across every module boundary. Its object is cached by its text like any unit, so
   an unchanged release build compiles nothing, but any edit recompiles the whole
   program. Use it for a binary you ship or time.
+- **Optimized debug** runs the same Core passes as Release, then compiles each
+  module unit at LLVM `-O2`. It retains `debug(...)` output and source locations in
+  trap traces. An edit recompiles units whose emitted text changes; inlining and
+  propagated facts can also change callers' units. Optimization adds build work,
+  so measure cold builds and edits as well as runtime before choosing it for your
+  edit loop. It is a prototype, not a guarantee of Release speed on every program
+  or of debugger variable availability and statement-by-statement stepping.
 
 ```console
 $ mylang build app/main.my -o app --cache-report
@@ -52,17 +60,17 @@ $ mylang build app/main.my -o app-fast --release --cache-report
 mylang-core: cache: 1 units, 0 reused, 1 compiled, 0 verified; program linked; 2 processes
 ```
 
-Both modes keep every check the program can reach (see
+All modes keep every check the program can reach (see
 [checks in every build](#checks-in-every-build)), report traps identically and give
 the same output. `mylang test --release` runs a suite on release builds;
-`--verify-facts` (release) also checks at run time every fact the passes relied on
+`--verify-facts` (release or optimized debug) also checks at run time every fact the passes relied on
 and traps `R_CORE_FACT` if one does not hold, and `--no-facts` turns the fact pass
 off to measure what it buys.
 
 ## `mylang build`
 
 ```bash
-mylang build FILE.my -o OUT [--release] [--link FILE.c]... [--emit-llvm PATH]
+mylang build FILE.my -o OUT [--release | --optimize-debug] [--link FILE.c]... [--emit-llvm PATH]
              [--cache-dir DIR] [--no-cache] [--zig PATH]
              [--report | --cache-report] [--verify-cache] [--stats]
              [--diagnostics=text|json] [--no-facts | --verify-facts]
@@ -80,6 +88,10 @@ mylang build FILE.my --run [run options] [-- ARGS...]
   `--` is the program's.
 - **`--link FILE.c`** (repeatable) compiles a C source and links it in; see
   [direct C imports](../c-ffi.md).
+- **`--optimize-debug`** also works on `run`, `run-project`, `build --run` and
+  `test`. It cannot be combined with a selected ReleaseFast mode. Build replay,
+  native objects and test receipts distinguish the modes; switching modes in one
+  cache cannot reuse a result from the other mode. The shared runtime stays `-O2`.
 - **`--emit-llvm PATH`** also writes the emitted LLVM text. Such a build is neither
   replayed nor recorded.
 - **`--diagnostics=json`** prints warnings, errors, refusals and (with `--run`) a

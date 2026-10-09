@@ -1004,7 +1004,7 @@ fn buildExecutable(init: std.process.Init, options: Options, checked: frontend.C
         error.OutOfMemory => return error.OutOfMemory,
         else => return .{ .failed = .{ .name = name, .status = .unsupported, .reason = if (why.reason.len != 0) why.reason else "property copied-value adapter type" } },
     };
-    const flavor = if (options.build.release) "release" else "debug";
+    const flavor = @tagName(options.build.mode);
     const absolute = std.Io.Dir.cwd().realPathFileAlloc(init.io, options.path, allocator) catch options.path;
     var digest: [8]u8 = undefined;
     std.crypto.hash.Blake3.hash(absolute, &digest, .{});
