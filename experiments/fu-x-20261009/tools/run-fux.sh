@@ -23,7 +23,7 @@ fail=0
 check() { if eval "$2" >/dev/null 2>&1; then echo "ok   $1"; else echo "FAIL $1"; fail=1; fi; }
 L1=$X/logs/part1a.log; F=$X/logs/fuzz200.out; B1=$X/logs/part1b.log; R=$X/logs/timing-prep.log
 check "gate exit 0" "grep -q '^gate=0' $L1"
-check "gate 88/88" "grep -q '^Build Summary: 88/88 steps succeeded' $L1"
+check "gate all steps" "bash $T/gate_ok.sh $L1"
 check "fmt exit 0" "grep -q '^fmt=0' $L1"
 check "qualify exit 0" "grep -q '^qualify=0' $L1"
 check "conformance debug 1518/0/0" "grep -q 'debug    matching 1518, mismatching 0, unsupported 0' $L1"
