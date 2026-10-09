@@ -1,0 +1,86 @@
+== mylang
+scanner.my:171:13: error[E_BINDING_SCOPE_MIGRATION]: this implicit local is used outside its block; declare the state in the enclosing block or rewrite the branches as a value expression
+              second = s.source[s.start + 1]
+              ^
+fixed ast.my: 1 edit (E_MODULE_HEADER)
+fixed chunk.my: 9 edits (E_MODULE_HEADER, E_FRONTEND_SYNTAX)
+fixed compiler.my: 1 edit (E_MODULE_HEADER)
+fixed compiler_test.my: 1 edit (E_MODULE_HEADER)
+fixed driver.my: 1 edit (E_MODULE_HEADER)
+fixed driver_tests.my: 1 edit (E_MODULE_HEADER)
+fixed heap.my: 113 edits (E_MODULE_HEADER, E_BINDING_DECLARATION, E_NAMED_PATTERN, E_NAMED_FIELDS)
+fixed heap_test.my: 37 edits (E_MODULE_HEADER, E_BINDING_DECLARATION, E_NAMED_FIELDS)
+fixed interpreter.my: 1 edit (E_MODULE_HEADER)
+fixed lox_strings.my: 23 edits (E_MODULE_HEADER, E_BINDING_DECLARATION, E_NAMED_FIELDS)
+fixed lox_strings_test.my: 13 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+fixed main.my: 1 edit (E_MODULE_HEADER)
+fixed natives.my: 1 edit (E_MODULE_HEADER)
+fixed object.my: 44 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+fixed output.my: 25 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+fixed parser.my: 1 edit (E_MODULE_HEADER)
+fixed parser_test.my: 1 edit (E_MODULE_HEADER)
+fixed resolver.my: 1 edit (E_MODULE_HEADER)
+fixed resolver_test.my: 1 edit (E_MODULE_HEADER)
+fixed scanner.my: 72 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+fixed scanner_test.my: 1 edit (E_MODULE_HEADER)
+fixed table.my: 31 edits (E_MODULE_HEADER, E_BINDING_DECLARATION, E_NAMED_FIELDS)
+fixed table_test.my: 32 edits (E_MODULE_HEADER, E_BINDING_DECLARATION, E_NAMED_FIELDS)
+fixed value.my: 19 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+fixed value_test.my: 38 edits (E_MODULE_HEADER, E_BINDING_DECLARATION, E_NAMED_FIELDS)
+fixed vm.my: 1 edit (E_MODULE_HEADER)
+fix: 470 edits in 26 files over 59 rounds
+== mylang-base
+scanner.my:171:13: error[E_BINDING_SCOPE_MIGRATION]: this implicit local is used outside its block; declare the state in the enclosing block or rewrite the branches as a value expression
+              second = s.source[s.start + 1]
+              ^
+fixed ast.my: 1 edit (E_MODULE_HEADER)
+fixed chunk.my: 9 edits (E_MODULE_HEADER, E_FRONTEND_SYNTAX)
+fixed compiler.my: 1 edit (E_MODULE_HEADER)
+fixed compiler_test.my: 1 edit (E_MODULE_HEADER)
+fixed driver.my: 1 edit (E_MODULE_HEADER)
+fixed driver_tests.my: 1 edit (E_MODULE_HEADER)
+fixed heap.my: 113 edits (E_MODULE_HEADER, E_BINDING_DECLARATION, E_NAMED_PATTERN, E_NAMED_FIELDS)
+fixed heap_test.my: 37 edits (E_MODULE_HEADER, E_BINDING_DECLARATION, E_NAMED_FIELDS)
+fixed interpreter.my: 1 edit (E_MODULE_HEADER)
+fixed lox_strings.my: 23 edits (E_MODULE_HEADER, E_BINDING_DECLARATION, E_NAMED_FIELDS)
+fixed lox_strings_test.my: 13 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+fixed main.my: 1 edit (E_MODULE_HEADER)
+fixed natives.my: 1 edit (E_MODULE_HEADER)
+fixed object.my: 44 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+fixed output.my: 25 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+fixed parser.my: 1 edit (E_MODULE_HEADER)
+fixed parser_test.my: 1 edit (E_MODULE_HEADER)
+fixed resolver.my: 1 edit (E_MODULE_HEADER)
+fixed resolver_test.my: 1 edit (E_MODULE_HEADER)
+fixed scanner.my: 72 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+fixed scanner_test.my: 1 edit (E_MODULE_HEADER)
+fixed table.my: 31 edits (E_MODULE_HEADER, E_BINDING_DECLARATION, E_NAMED_FIELDS)
+fixed table_test.my: 32 edits (E_MODULE_HEADER, E_BINDING_DECLARATION, E_NAMED_FIELDS)
+fixed value.my: 19 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+fixed value_test.my: 38 edits (E_MODULE_HEADER, E_BINDING_DECLARATION, E_NAMED_FIELDS)
+fixed vm.my: 1 edit (E_MODULE_HEADER)
+fix: 470 edits in 26 files over 59 rounds
+== mylang round 2
+parser.my:158:9: error[E_BINDING_SCOPE_MIGRATION]: this implicit local is used outside its block; declare the state in the enclosing block or rewrite the branches as a value expression
+          token = previous(p)
+          ^
+fixed ast.my: 85 edits (E_BINDING_DECLARATION)
+fixed compiler.my: 238 edits (E_BINDING_DECLARATION, E_NAMED_FIELDS)
+fixed compiler_test.my: 32 edits (E_BINDING_DECLARATION, E_NAMED_FIELDS, E_NAMED_PATTERN)
+fixed natives.my: 9 edits (E_BINDING_DECLARATION)
+fixed output.my: 13 edits (E_NAMED_PATTERN)
+fixed parser.my: 227 edits (E_BINDING_DECLARATION)
+fixed scanner_test.my: 44 edits (E_BINDING_DECLARATION)
+fix: 648 edits in 7 files over 16 rounds
+== mylang-base round 2
+parser.my:158:9: error[E_BINDING_SCOPE_MIGRATION]: this implicit local is used outside its block; declare the state in the enclosing block or rewrite the branches as a value expression
+          token = previous(p)
+          ^
+fixed ast.my: 85 edits (E_BINDING_DECLARATION)
+fixed compiler.my: 238 edits (E_BINDING_DECLARATION, E_NAMED_FIELDS)
+fixed compiler_test.my: 32 edits (E_BINDING_DECLARATION, E_NAMED_FIELDS, E_NAMED_PATTERN)
+fixed natives.my: 9 edits (E_BINDING_DECLARATION)
+fixed output.my: 13 edits (E_NAMED_PATTERN)
+fixed parser.my: 227 edits (E_BINDING_DECLARATION)
+fixed scanner_test.my: 44 edits (E_BINDING_DECLARATION)
+fix: 648 edits in 7 files over 16 rounds

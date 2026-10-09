@@ -1,0 +1,55 @@
+== mylang
+hand: parser.my:158: mut token = previous(p)
+hand: parser.my:167: mut token = previous(p)
+hand: parser.my:287: mut name = target.name
+hand: parser.my:290: mut name = target.name
+fix: nothing to fix
+parser.my:189:26: error[E_TRY_POSITION]: extract this fallible operation into a declaration using 'try' before the enclosing expression
+          arguments.append(expression(mut p)?)
+                           ^
+
+STOP: no mechanical step left; fix edits 0
+== mylang-base
+hand: parser.my:158: mut token = previous(p)
+hand: parser.my:167: mut token = previous(p)
+hand: parser.my:287: mut name = target.name
+hand: parser.my:290: mut name = target.name
+fix: nothing to fix
+parser.my:189:26: error[E_TRY_POSITION]: extract this fallible operation into a declaration using 'try' before the enclosing expression
+          arguments.append(expression(mut p)?)
+                           ^
+
+STOP: no mechanical step left; fix edits 0
+round 0: fixed ast.my: 3 edits (E_NAMED_PATTERN)
+round 0: fixed parser.my: 32 edits (E_NAMED_FIELDS, E_NAMED_PATTERN)
+round 0: fixed parser_test.my: 12 edits (E_BINDING_DECLARATION, E_NAMED_PATTERN)
+round 0: fixed resolver.my: 64 edits (E_BINDING_DECLARATION)
+hand: resolver.my:147: mut address = resolve_local(r, node.name_ref)
+hand: resolver.my:173: mut address = resolve_local(r, SUPER_NAME)
+hand: resolver.my:179: mut address = resolve_local(r, THIS_NAME)
+hand: resolver.my:185: mut address = resolve_local(r, node.name_ref)
+hand: resolver.my:267: mut slot = declare(mut r, name_ref, name.line, name.start, name.length)
+hand: resolver.my:292: mut slot = declare(mut r, node.name_ref, node.name.line, node.name.start, node.name.length)
+round 6: fixed interpreter.my: 225 edits (E_BINDING_DECLARATION)
+round 6: fixed resolver.my: 31 edits (E_NAMED_PATTERN, E_NAMED_FIELDS)
+round 6: fixed resolver_test.my: 16 edits (E_BINDING_DECLARATION, E_NAMED_PATTERN)
+hand: interpreter.my:567: mut __wb_methods = it.rt
+hand: interpreter.my:585: mut __wb_methods = it.rt
+round 8: fixed vm.my: 156 edits (E_BINDING_DECLARATION)
+hand: vm.my:465: mut name = read_string(mut frame)
+hand: vm.my:482: mut offset = read_short(mut frame)
+hand: vm.my:485: mut offset = read_short(mut frame)
+hand: vm.my:489: mut offset = read_short(mut frame)
+hand: vm.my:492: mut count = read_byte(mut frame)
+hand: vm.my:498: mut method = read_string(mut frame)
+hand: vm.my:499: mut count = read_byte(mut frame)
+hand: vm.my:505: mut method = read_string(mut frame)
+hand: vm.my:506: mut count = read_byte(mut frame)
+hand: vm.my:527: mut name = read_string(mut frame)
+round 18: fixed driver.my: 16 edits (E_BINDING_DECLARATION)
+round 18: fixed driver_tests.my: 45 edits (E_BINDING_DECLARATION)
+round 18: fixed interpreter.my: 88 edits (E_NAMED_PATTERN, E_NAMED_FIELDS, E_NONE_UNIT)
+round 18: fixed main.my: 8 edits (E_BINDING_DECLARATION)
+round 18: fixed natives.my: 7 edits (E_NAMED_FIELDS)
+round 18: fixed vm.my: 44 edits (E_NAMED_PATTERN, E_NAMED_FIELDS)
+clean after 19 fix runs; fix edits 747

@@ -1,0 +1,1131 @@
+round 0: fixed board_layers.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed board_layers_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed decouple_key.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed decouple_key_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed design_model.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed design_model_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed diagram_membership.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed diagram_membership_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed escape.my: 15 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+round 0: fixed escape_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed eval_electrical.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed eval_electrical_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed eval_env.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed eval_env_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed eval_net_analysis.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed eval_net_analysis_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed eval_rails.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed eval_rails_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed export_kicad.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed export_kicad_footprint.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed export_kicad_footprint_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed export_kicad_model.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed export_kicad_netlist.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed export_kicad_netlist_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed export_kicad_sch.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed export_kicad_sch_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed export_kicad_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed flat_netlist.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed flat_netlist_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed footprint_paste.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed footprint_paste_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed infra_fs.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed infra_fs_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed infra_log.my: 4 edits (E_MODULE_HEADER, E_FRONTEND_SYNTAX)
+round 0: fixed json_writer.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed json_writer_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed kicad_pcb_format.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed kicad_pcb_format_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed kicad_sch_bank.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed kicad_sch_bank_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed kicad_sch_compose.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed kicad_sch_compose_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed kicad_sch_emit.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed kicad_sch_emit_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed kicad_sch_gang.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed kicad_sch_gang_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed kicad_sch_glyph_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed kicad_sch_plan.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed kicad_sch_plan_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed kicad_sch_project.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed kicad_sch_project_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed kicad_sch_shape.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed kicad_sch_shape_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed kicad_sch_sheet.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed kicad_sch_sheet_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed kicad_sch_stagger.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed kicad_sch_stagger_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed kicad_sch_stub.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed kicad_sch_stub_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed kicad_sch_testdata.my: 7 edits (E_MODULE_HEADER, E_FRONTEND_SYNTAX)
+round 0: fixed kicad_sch_textbox.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed kicad_sch_textbox_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed kicad_sch_vendor.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed kicad_sch_vendor_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed kicad_sch_verify.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed kicad_sch_verify_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed kicad_sch_wire.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed kicad_sch_wire_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed kicad_sym_library.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed kicad_sym_library_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed kicad_sym_reader.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed kicad_sym_reader_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed kicad_sym_testdata.my: 7 edits (E_MODULE_HEADER, E_FRONTEND_SYNTAX)
+round 0: fixed lib_limits.my: 6 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+round 0: fixed lib_limits_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed main.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed main_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed net_name.my: 11 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+round 0: fixed net_name_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed numeric.my: 18 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+round 0: fixed numeric_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed pad_neck_profile.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed placement_geometry.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed placement_geometry_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed placement_pin_roles.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed placement_pin_roles_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed poly_scanline.my: 22 edits (E_MODULE_HEADER, E_BINDING_DECLARATION, E_FIXED_ARRAY_LITERAL)
+round 0: fixed poly_scanline_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed render_block_types.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed render_svg_context.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed render_svg_context_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed render_svg_draw_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed sexpr_ast.my: 59 edits (E_MODULE_HEADER, E_FRONTEND_VARIANT)
+round 0: fixed sexpr_ast_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed sexpr_paren_span.my: 11 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+round 0: fixed sexpr_paren_span_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed sexpr_parser.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed sexpr_parser_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed sexpr_tokenizer.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed sexpr_tokenizer_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed stdlib.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed stdlib_embed.my: 159 edits (E_MODULE_HEADER, E_FRONTEND_SYNTAX)
+round 0: fixed stdlib_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed support_crc32.my: 5 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+round 0: fixed support_crc32_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed support_expect.my: 11 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+round 0: fixed support_expect_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed support_float_fmt.my: 19 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+round 0: fixed support_float_fmt_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed support_parse.my: 13 edits (E_MODULE_HEADER, E_BINDING_DECLARATION, E_NUMERIC_PARSE)
+round 0: fixed support_parse_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed support_sha256.my: 44 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+round 0: fixed support_sha256_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed support_sort.my: 55 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+round 0: fixed support_sort_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed support_strs.my: 69 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+round 0: fixed support_strs_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed uuid.my: 6 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+round 0: fixed uuid_test.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed zipfile.my: 1 edit (E_MODULE_HEADER)
+round 0: fixed zipfile_test.my: 1 edit (E_MODULE_HEADER)
+fixed board_layers.my: 1 edit (E_MODULE_HEADER)
+fixed board_layers_test.my: 1 edit (E_MODULE_HEADER)
+fixed decouple_key.my: 1 edit (E_MODULE_HEADER)
+fixed decouple_key_test.my: 1 edit (E_MODULE_HEADER)
+fixed design_model.my: 1 edit (E_MODULE_HEADER)
+fixed design_model_test.my: 1 edit (E_MODULE_HEADER)
+fixed diagram_membership.my: 1 edit (E_MODULE_HEADER)
+fixed diagram_membership_test.my: 1 edit (E_MODULE_HEADER)
+fixed escape.my: 15 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+fixed escape_test.my: 1 edit (E_MODULE_HEADER)
+fixed eval_electrical.my: 1 edit (E_MODULE_HEADER)
+fixed eval_electrical_test.my: 1 edit (E_MODULE_HEADER)
+fixed eval_env.my: 1 edit (E_MODULE_HEADER)
+fixed eval_env_test.my: 1 edit (E_MODULE_HEADER)
+fixed eval_net_analysis.my: 1 edit (E_MODULE_HEADER)
+fixed eval_net_analysis_test.my: 1 edit (E_MODULE_HEADER)
+fixed eval_rails.my: 1 edit (E_MODULE_HEADER)
+fixed eval_rails_test.my: 1 edit (E_MODULE_HEADER)
+fixed export_kicad.my: 1 edit (E_MODULE_HEADER)
+fixed export_kicad_footprint.my: 1 edit (E_MODULE_HEADER)
+fixed export_kicad_footprint_test.my: 1 edit (E_MODULE_HEADER)
+fixed export_kicad_model.my: 1 edit (E_MODULE_HEADER)
+fixed export_kicad_netlist.my: 1 edit (E_MODULE_HEADER)
+fixed export_kicad_netlist_test.my: 1 edit (E_MODULE_HEADER)
+fixed export_kicad_sch.my: 1 edit (E_MODULE_HEADER)
+fixed export_kicad_sch_test.my: 1 edit (E_MODULE_HEADER)
+fixed export_kicad_test.my: 1 edit (E_MODULE_HEADER)
+fixed flat_netlist.my: 1 edit (E_MODULE_HEADER)
+fixed flat_netlist_test.my: 1 edit (E_MODULE_HEADER)
+fixed footprint_paste.my: 1 edit (E_MODULE_HEADER)
+fixed footprint_paste_test.my: 1 edit (E_MODULE_HEADER)
+fixed infra_fs.my: 1 edit (E_MODULE_HEADER)
+fixed infra_fs_test.my: 1 edit (E_MODULE_HEADER)
+fixed infra_log.my: 4 edits (E_MODULE_HEADER, E_FRONTEND_SYNTAX)
+fixed json_writer.my: 1 edit (E_MODULE_HEADER)
+fixed json_writer_test.my: 1 edit (E_MODULE_HEADER)
+fixed kicad_pcb_format.my: 1 edit (E_MODULE_HEADER)
+fixed kicad_pcb_format_test.my: 1 edit (E_MODULE_HEADER)
+fixed kicad_sch_bank.my: 1 edit (E_MODULE_HEADER)
+fixed kicad_sch_bank_test.my: 1 edit (E_MODULE_HEADER)
+fixed kicad_sch_compose.my: 1 edit (E_MODULE_HEADER)
+fixed kicad_sch_compose_test.my: 1 edit (E_MODULE_HEADER)
+fixed kicad_sch_emit.my: 1 edit (E_MODULE_HEADER)
+fixed kicad_sch_emit_test.my: 1 edit (E_MODULE_HEADER)
+fixed kicad_sch_gang.my: 1 edit (E_MODULE_HEADER)
+fixed kicad_sch_gang_test.my: 1 edit (E_MODULE_HEADER)
+fixed kicad_sch_glyph_test.my: 1 edit (E_MODULE_HEADER)
+fixed kicad_sch_plan.my: 1 edit (E_MODULE_HEADER)
+fixed kicad_sch_plan_test.my: 1 edit (E_MODULE_HEADER)
+fixed kicad_sch_project.my: 1 edit (E_MODULE_HEADER)
+fixed kicad_sch_project_test.my: 1 edit (E_MODULE_HEADER)
+fixed kicad_sch_shape.my: 1 edit (E_MODULE_HEADER)
+fixed kicad_sch_shape_test.my: 1 edit (E_MODULE_HEADER)
+fixed kicad_sch_sheet.my: 1 edit (E_MODULE_HEADER)
+fixed kicad_sch_sheet_test.my: 1 edit (E_MODULE_HEADER)
+fixed kicad_sch_stagger.my: 1 edit (E_MODULE_HEADER)
+fixed kicad_sch_stagger_test.my: 1 edit (E_MODULE_HEADER)
+fixed kicad_sch_stub.my: 1 edit (E_MODULE_HEADER)
+fixed kicad_sch_stub_test.my: 1 edit (E_MODULE_HEADER)
+fixed kicad_sch_testdata.my: 7 edits (E_MODULE_HEADER, E_FRONTEND_SYNTAX)
+fixed kicad_sch_textbox.my: 1 edit (E_MODULE_HEADER)
+fixed kicad_sch_textbox_test.my: 1 edit (E_MODULE_HEADER)
+fixed kicad_sch_vendor.my: 1 edit (E_MODULE_HEADER)
+fixed kicad_sch_vendor_test.my: 1 edit (E_MODULE_HEADER)
+fixed kicad_sch_verify.my: 1 edit (E_MODULE_HEADER)
+fixed kicad_sch_verify_test.my: 1 edit (E_MODULE_HEADER)
+fixed kicad_sch_wire.my: 1 edit (E_MODULE_HEADER)
+fixed kicad_sch_wire_test.my: 1 edit (E_MODULE_HEADER)
+fixed kicad_sym_library.my: 1 edit (E_MODULE_HEADER)
+fixed kicad_sym_library_test.my: 1 edit (E_MODULE_HEADER)
+fixed kicad_sym_reader.my: 1 edit (E_MODULE_HEADER)
+fixed kicad_sym_reader_test.my: 1 edit (E_MODULE_HEADER)
+fixed kicad_sym_testdata.my: 7 edits (E_MODULE_HEADER, E_FRONTEND_SYNTAX)
+fixed lib_limits.my: 6 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+fixed lib_limits_test.my: 1 edit (E_MODULE_HEADER)
+fixed main.my: 1 edit (E_MODULE_HEADER)
+fixed main_test.my: 1 edit (E_MODULE_HEADER)
+fixed net_name.my: 11 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+fixed net_name_test.my: 1 edit (E_MODULE_HEADER)
+fixed numeric.my: 18 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+fixed numeric_test.my: 1 edit (E_MODULE_HEADER)
+fixed pad_neck_profile.my: 1 edit (E_MODULE_HEADER)
+fixed placement_geometry.my: 1 edit (E_MODULE_HEADER)
+fixed placement_geometry_test.my: 1 edit (E_MODULE_HEADER)
+fixed placement_pin_roles.my: 1 edit (E_MODULE_HEADER)
+fixed placement_pin_roles_test.my: 1 edit (E_MODULE_HEADER)
+fixed poly_scanline.my: 22 edits (E_MODULE_HEADER, E_BINDING_DECLARATION, E_FIXED_ARRAY_LITERAL)
+fixed poly_scanline_test.my: 1 edit (E_MODULE_HEADER)
+fixed render_block_types.my: 1 edit (E_MODULE_HEADER)
+fixed render_svg_context.my: 1 edit (E_MODULE_HEADER)
+fixed render_svg_context_test.my: 1 edit (E_MODULE_HEADER)
+fixed render_svg_draw_test.my: 1 edit (E_MODULE_HEADER)
+fixed sexpr_ast.my: 59 edits (E_MODULE_HEADER, E_FRONTEND_VARIANT)
+fixed sexpr_ast_test.my: 1 edit (E_MODULE_HEADER)
+fixed sexpr_paren_span.my: 11 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+fixed sexpr_paren_span_test.my: 1 edit (E_MODULE_HEADER)
+fixed sexpr_parser.my: 1 edit (E_MODULE_HEADER)
+fixed sexpr_parser_test.my: 1 edit (E_MODULE_HEADER)
+fixed sexpr_tokenizer.my: 1 edit (E_MODULE_HEADER)
+fixed sexpr_tokenizer_test.my: 1 edit (E_MODULE_HEADER)
+fixed stdlib.my: 1 edit (E_MODULE_HEADER)
+fixed stdlib_embed.my: 159 edits (E_MODULE_HEADER, E_FRONTEND_SYNTAX)
+fixed stdlib_test.my: 1 edit (E_MODULE_HEADER)
+fixed support_crc32.my: 5 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+fixed support_crc32_test.my: 1 edit (E_MODULE_HEADER)
+fixed support_expect.my: 11 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+fixed support_expect_test.my: 1 edit (E_MODULE_HEADER)
+fixed support_float_fmt.my: 19 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+fixed support_float_fmt_test.my: 1 edit (E_MODULE_HEADER)
+fixed support_parse.my: 13 edits (E_MODULE_HEADER, E_BINDING_DECLARATION, E_NUMERIC_PARSE)
+fixed support_parse_test.my: 1 edit (E_MODULE_HEADER)
+fixed support_sha256.my: 44 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+fixed support_sha256_test.my: 1 edit (E_MODULE_HEADER)
+fixed support_sort.my: 55 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+fixed support_sort_test.my: 1 edit (E_MODULE_HEADER)
+fixed support_strs.my: 69 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+fixed support_strs_test.my: 1 edit (E_MODULE_HEADER)
+fixed uuid.my: 6 edits (E_MODULE_HEADER, E_BINDING_DECLARATION)
+fixed uuid_test.my: 1 edit (E_MODULE_HEADER)
+fixed zipfile.my: 1 edit (E_MODULE_HEADER)
+fixed zipfile_test.my: 1 edit (E_MODULE_HEADER)
+fix: 643 edits in 121 files over 142 rounds
+src/main.my:5:8: error[E_MODULE_READ]: cannot load design_model.my: NotFound
+  import design_model
+         ^
+src/board_layers_test.my:2:8: error[E_MODULE_READ]: cannot load board_layers.my: NotFound
+  import board_layers as m
+         ^
+src/decouple_key_test.my:2:8: error[E_MODULE_READ]: cannot load decouple_key.my: NotFound
+  import decouple_key as m
+         ^
+src/design_model_test.my:2:8: error[E_MODULE_READ]: cannot load design_model.my: NotFound
+  import design_model as m
+         ^
+src/diagram_membership_test.my:2:8: error[E_MODULE_READ]: cannot load diagram_membership.my: NotFound
+  import diagram_membership as m
+         ^
+src/escape_test.my:5:8: error[E_MODULE_READ]: cannot load escape.my: NotFound
+  import escape
+         ^
+src/eval_electrical_test.my:2:8: error[E_MODULE_READ]: cannot load eval_electrical.my: NotFound
+  import eval_electrical as m
+         ^
+src/eval_env_test.my:2:8: error[E_MODULE_READ]: cannot load eval_env.my: NotFound
+  import eval_env as m
+         ^
+src/eval_net_analysis_test.my:2:8: error[E_MODULE_READ]: cannot load eval_net_analysis.my: NotFound
+  import eval_net_analysis as m
+         ^
+src/eval_rails_test.my:2:8: error[E_MODULE_READ]: cannot load eval_rails.my: NotFound
+  import eval_rails as m
+         ^
+src/export_kicad_footprint_test.my:2:8: error[E_MODULE_READ]: cannot load export_kicad_footprint.my: NotFound
+  import export_kicad_footprint as m
+         ^
+src/export_kicad_netlist_test.my:2:8: error[E_MODULE_READ]: cannot load export_kicad_netlist.my: NotFound
+  import export_kicad_netlist as m
+         ^
+src/export_kicad_sch_test.my:2:8: error[E_MODULE_READ]: cannot load export_kicad_sch.my: NotFound
+  import export_kicad_sch as m
+         ^
+src/export_kicad_test.my:2:8: error[E_MODULE_READ]: cannot load export_kicad.my: NotFound
+  import export_kicad as m
+         ^
+src/flat_netlist_test.my:2:8: error[E_MODULE_READ]: cannot load flat_netlist.my: NotFound
+  import flat_netlist as m
+         ^
+src/footprint_paste_test.my:2:8: error[E_MODULE_READ]: cannot load footprint_paste.my: NotFound
+  import footprint_paste as m
+         ^
+src/infra_fs_test.my:2:8: error[E_MODULE_READ]: cannot load infra_fs.my: NotFound
+  import infra_fs as m
+         ^
+src/json_writer_test.my:2:8: error[E_MODULE_READ]: cannot load json_writer.my: NotFound
+  import json_writer as m
+         ^
+src/kicad_pcb_format_test.my:2:8: error[E_MODULE_READ]: cannot load kicad_pcb_format.my: NotFound
+  import kicad_pcb_format as m
+         ^
+src/kicad_sch_bank_test.my:2:8: error[E_MODULE_READ]: cannot load kicad_sch_bank.my: NotFound
+  import kicad_sch_bank as m
+         ^
+src/kicad_sch_compose_test.my:2:8: error[E_MODULE_READ]: cannot load kicad_sch_compose.my: NotFound
+  import kicad_sch_compose as m
+         ^
+src/kicad_sch_emit_test.my:2:8: error[E_MODULE_READ]: cannot load kicad_sch_emit.my: NotFound
+  import kicad_sch_emit as m
+         ^
+src/kicad_sch_gang_test.my:2:8: error[E_MODULE_READ]: cannot load kicad_sch_gang.my: NotFound
+  import kicad_sch_gang as m
+         ^
+src/kicad_sch_glyph_test.my:2:8: error[E_MODULE_READ]: cannot load kicad_sch_shape.my: NotFound
+  import kicad_sch_shape as m
+         ^
+src/kicad_sch_plan_test.my:2:8: error[E_MODULE_READ]: cannot load kicad_sch_plan.my: NotFound
+  import kicad_sch_plan as m
+         ^
+src/kicad_sch_project_test.my:2:8: error[E_MODULE_READ]: cannot load kicad_sch_project.my: NotFound
+  import kicad_sch_project as m
+         ^
+src/kicad_sch_shape_test.my:2:8: error[E_MODULE_READ]: cannot load kicad_sch_shape.my: NotFound
+  import kicad_sch_shape as m
+         ^
+src/kicad_sch_sheet_test.my:2:8: error[E_MODULE_READ]: cannot load kicad_sch_sheet.my: NotFound
+  import kicad_sch_sheet as m
+         ^
+src/kicad_sch_stagger_test.my:2:8: error[E_MODULE_READ]: cannot load kicad_sch_stagger.my: NotFound
+  import kicad_sch_stagger as m
+         ^
+src/kicad_sch_stub_test.my:2:8: error[E_MODULE_READ]: cannot load kicad_sch_stub.my: NotFound
+  import kicad_sch_stub as m
+         ^
+src/kicad_sch_textbox_test.my:2:8: error[E_MODULE_READ]: cannot load kicad_sch_textbox.my: NotFound
+  import kicad_sch_textbox as m
+         ^
+src/kicad_sch_vendor_test.my:2:8: error[E_MODULE_READ]: cannot load kicad_sch_vendor.my: NotFound
+  import kicad_sch_vendor as m
+         ^
+src/kicad_sch_verify_test.my:2:8: error[E_MODULE_READ]: cannot load kicad_sch_verify.my: NotFound
+  import kicad_sch_verify as m
+         ^
+src/kicad_sch_wire_test.my:2:8: error[E_MODULE_READ]: cannot load kicad_sch_wire.my: NotFound
+  import kicad_sch_wire as m
+         ^
+src/kicad_sym_library_test.my:2:8: error[E_MODULE_READ]: cannot load kicad_sym_library.my: NotFound
+  import kicad_sym_library as m
+         ^
+src/kicad_sym_reader_test.my:2:8: error[E_MODULE_READ]: cannot load kicad_sym_reader.my: NotFound
+  import kicad_sym_reader as m
+         ^
+src/lib_limits_test.my:2:8: error[E_MODULE_READ]: cannot load lib_limits.my: NotFound
+  import lib_limits as m
+         ^
+src/main_test.my:2:8: error[E_MODULE_READ]: cannot load main.my: NotFound
+  import main as entry
+         ^
+src/net_name_test.my:3:8: error[E_MODULE_READ]: cannot load net_name.my: NotFound
+  import net_name
+         ^
+src/numeric_test.my:4:8: error[E_MODULE_READ]: cannot load numeric.my: NotFound
+  import numeric
+         ^
+src/placement_geometry_test.my:2:8: error[E_MODULE_READ]: cannot load placement_geometry.my: NotFound
+  import placement_geometry as m
+         ^
+src/placement_pin_roles_test.my:2:8: error[E_MODULE_READ]: cannot load placement_pin_roles.my: NotFound
+  import placement_pin_roles as m
+         ^
+src/poly_scanline_test.my:2:8: error[E_MODULE_READ]: cannot load poly_scanline.my: NotFound
+  import poly_scanline as m
+         ^
+src/render_svg_context_test.my:2:8: error[E_MODULE_READ]: cannot load eval_env.my: NotFound
+  import eval_env as env_mod
+         ^
+src/render_svg_draw_test.my:5:8: error[E_MODULE_READ]: cannot load render_svg_context.my: NotFound
+  import render_svg_context as m
+         ^
+src/sexpr_ast_test.my:3:8: error[E_MODULE_READ]: cannot load sexpr_ast.my: NotFound
+  import sexpr_ast as ast
+         ^
+src/sexpr_paren_span_test.my:3:8: error[E_MODULE_READ]: cannot load sexpr_paren_span.my: NotFound
+  import sexpr_paren_span as ps
+         ^
+src/sexpr_parser_test.my:7:8: error[E_MODULE_READ]: cannot load sexpr_ast.my: NotFound
+  import sexpr_ast as ast
+         ^
+src/sexpr_tokenizer_test.my:5:8: error[E_MODULE_READ]: cannot load sexpr_tokenizer.my: NotFound
+  import sexpr_tokenizer as tk
+         ^
+src/stdlib_test.my:2:8: error[E_MODULE_READ]: cannot load stdlib.my: NotFound
+  import stdlib as m
+         ^
+src/support_crc32_test.my:2:8: error[E_MODULE_READ]: cannot load support_crc32.my: NotFound
+  import support_crc32 as crc
+         ^
+src/support_expect_test.my:2:8: error[E_MODULE_READ]: cannot load support_expect.my: NotFound
+  import support_expect as ex
+         ^
+src/support_float_fmt_test.my:2:8: error[E_MODULE_READ]: cannot load support_float_fmt.my: NotFound
+  import support_float_fmt as ff
+         ^
+src/support_parse_test.my:2:8: error[E_MODULE_READ]: cannot load support_parse.my: NotFound
+  import support_parse as sp
+         ^
+src/support_sha256_test.my:2:8: error[E_MODULE_READ]: cannot load support_expect.my: NotFound
+  import support_expect as ex
+         ^
+src/support_sort_test.my:2:8: error[E_MODULE_READ]: cannot load support_sort.my: NotFound
+  import support_sort as ss
+         ^
+src/support_strs_test.my:2:8: error[E_MODULE_READ]: cannot load support_expect.my: NotFound
+  import support_expect as ex
+         ^
+src/uuid_test.my:3:8: error[E_MODULE_READ]: cannot load uuid.my: NotFound
+  import uuid
+         ^
+src/zipfile_test.my:2:8: error[E_MODULE_READ]: cannot load zipfile.my: NotFound
+  import zipfile as m
+         ^
+src/board_layers.my:2:8: error[E_MODULE_READ]: cannot load support_strs.my: NotFound
+  import support_strs as strs
+         ^
+src/decouple_key.my:2:8: error[E_MODULE_READ]: cannot load support_strs.my: NotFound
+  import support_strs as strs
+         ^
+src/design_model.my:2:8: error[E_MODULE_READ]: cannot load eval_env.my: NotFound
+  import eval_env as env_mod
+         ^
+src/diagram_membership.my:2:8: error[E_MODULE_READ]: cannot load eval_env.my: NotFound
+  import eval_env as env_mod
+         ^
+src/eval_electrical.my:2:8: error[E_MODULE_READ]: cannot load sexpr_ast.my: NotFound
+  import sexpr_ast as ast
+         ^
+src/eval_env.my:2:8: error[E_MODULE_READ]: cannot load sexpr_ast.my: NotFound
+  import sexpr_ast as ast
+         ^
+src/eval_net_analysis.my:2:8: error[E_MODULE_READ]: cannot load eval_env.my: NotFound
+  import eval_env as env_mod
+         ^
+src/eval_rails.my:2:8: error[E_MODULE_READ]: cannot load eval_env.my: NotFound
+  import eval_env as env_mod
+         ^
+src/export_kicad.my:2:8: error[E_MODULE_READ]: cannot load eval_env.my: NotFound
+  import eval_env as env_mod
+         ^
+src/export_kicad_footprint.my:2:8: error[E_MODULE_READ]: cannot load sexpr_ast.my: NotFound
+  import sexpr_ast as ast
+         ^
+src/export_kicad_model.my:2:8: error[E_MODULE_READ]: cannot load eval_env.my: NotFound
+  import eval_env as env_mod
+         ^
+src/export_kicad_netlist.my:2:8: error[E_MODULE_READ]: cannot load flat_netlist.my: NotFound
+  import flat_netlist
+         ^
+src/export_kicad_sch.my:2:8: error[E_MODULE_READ]: cannot load eval_env.my: NotFound
+  import eval_env as env_mod
+         ^
+src/flat_netlist.my:2:8: error[E_MODULE_READ]: cannot load eval_env.my: NotFound
+  import eval_env as env_mod
+         ^
+src/footprint_paste.my:3:8: error[E_MODULE_READ]: cannot load sexpr_ast.my: NotFound
+  import sexpr_ast as ast
+         ^
+src/infra_fs.my:2:8: error[E_MODULE_READ]: cannot load support_sha256.my: NotFound
+  import support_sha256 as sha
+         ^
+src/json_writer.my:3:8: error[E_MODULE_READ]: cannot load support_strs.my: NotFound
+  import support_strs as strs
+         ^
+src/kicad_pcb_format.my:2:8: error[E_MODULE_READ]: cannot load sexpr_ast.my: NotFound
+  import sexpr_ast as ast
+         ^
+src/kicad_sch_bank.my:2:8: error[E_MODULE_READ]: cannot load kicad_sch_shape.my: NotFound
+  import kicad_sch_shape as shape_mod
+         ^
+src/kicad_sch_compose.my:2:8: error[E_MODULE_READ]: cannot load kicad_sch_emit.my: NotFound
+  import kicad_sch_emit as emit
+         ^
+src/kicad_sch_emit.my:2:8: error[E_MODULE_READ]: cannot load eval_env.my: NotFound
+  import eval_env as env_mod
+         ^
+src/kicad_sch_gang.my:2:8: error[E_MODULE_READ]: cannot load kicad_sch_shape.my: NotFound
+  import kicad_sch_shape as shape_mod
+         ^
+src/kicad_sch_plan.my:2:8: error[E_MODULE_READ]: cannot load net_name.my: NotFound
+  import net_name
+         ^
+src/kicad_sch_project.my:2:8: error[E_MODULE_READ]: cannot load kicad_sch_emit.my: NotFound
+  import kicad_sch_emit as emit
+         ^
+src/kicad_sch_shape.my:2:8: error[E_MODULE_READ]: cannot load kicad_sym_reader.my: NotFound
+  import kicad_sym_reader as kicad_sym
+         ^
+src/kicad_sch_sheet.my:2:8: error[E_MODULE_READ]: cannot load kicad_sch_shape.my: NotFound
+  import kicad_sch_shape as shape_mod
+         ^
+src/kicad_sch_stagger.my:2:8: error[E_MODULE_READ]: cannot load kicad_sch_shape.my: NotFound
+  import kicad_sch_shape as shape
+         ^
+src/kicad_sch_stub.my:2:8: error[E_MODULE_READ]: cannot load flat_netlist.my: NotFound
+  import flat_netlist as flat
+         ^
+src/kicad_sch_textbox.my:2:8: error[E_MODULE_READ]: cannot load sexpr_ast.my: NotFound
+  import sexpr_ast as ast
+         ^
+src/kicad_sch_vendor.my:2:8: error[E_MODULE_READ]: cannot load kicad_sym_library.my: NotFound
+  import kicad_sym_library as library
+         ^
+src/kicad_sch_verify.my:2:8: error[E_MODULE_READ]: cannot load kicad_sch_textbox.my: NotFound
+  import kicad_sch_textbox as textbox
+         ^
+src/kicad_sch_wire.my:2:8: error[E_MODULE_READ]: cannot load kicad_sch_shape.my: NotFound
+  import kicad_sch_shape as shape_mod
+         ^
+src/kicad_sym_library.my:2:8: error[E_MODULE_READ]: cannot load kicad_sym_reader.my: NotFound
+  import kicad_sym_reader as reader
+         ^
+src/kicad_sym_reader.my:2:8: error[E_MODULE_READ]: cannot load sexpr_ast.my: NotFound
+  import sexpr_ast as ast
+         ^
+src/placement_geometry.my:2:8: error[E_MODULE_READ]: cannot load footprint_paste.my: NotFound
+  import footprint_paste as paste_mod
+         ^
+src/placement_pin_roles.my:2:8: error[E_MODULE_READ]: cannot load sexpr_ast.my: NotFound
+  import sexpr_ast as ast
+         ^
+src/render_block_types.my:2:8: error[E_MODULE_READ]: cannot load eval_env.my: NotFound
+  import eval_env as env_mod
+         ^
+src/render_svg_context.my:3:8: error[E_MODULE_READ]: cannot load eval_env.my: NotFound
+  import eval_env as env_mod
+         ^
+src/sexpr_ast.my:19:29: error[E_SYNTAX]: unexpected token; expected a dedent
+      list(value: list[Node]) atom(value: bytes)
+                              ^
+src/sexpr_parser.my:7:8: error[E_MODULE_READ]: cannot load sexpr_ast.my: NotFound
+  import sexpr_ast as ast
+         ^
+src/sexpr_tokenizer.my:8:8: error[E_MODULE_READ]: cannot load sexpr_ast.my: NotFound
+  import sexpr_ast as ast
+         ^
+src/stdlib.my:2:8: error[E_MODULE_READ]: cannot load stdlib_embed.my: NotFound
+  import stdlib_embed as embed
+         ^
+src/zipfile.my:3:8: error[E_MODULE_READ]: cannot load support_crc32.my: NotFound
+  import support_crc32 as crc_mod
+         ^
+
+STOP: no mechanical step left; fix edits 643
+hand: sexpr_ast.my:19: split 'list(value: list[Node]) atom(value: bytes)' (fixer joined two variants on one line)
+round 0: fixed sexpr_ast.my: 1 edit (E_FRONTEND_SYNTAX)
+fixed sexpr_ast.my: 1 edit (E_FRONTEND_SYNTAX)
+fix: 1 edit in 1 file over 1 round
+src/main.my:5:8: error[E_MODULE_READ]: cannot load design_model.my: NotFound
+  import design_model
+         ^
+src/board_layers_test.my:2:8: error[E_MODULE_READ]: cannot load board_layers.my: NotFound
+  import board_layers as m
+         ^
+src/decouple_key_test.my:2:8: error[E_MODULE_READ]: cannot load decouple_key.my: NotFound
+  import decouple_key as m
+         ^
+src/design_model_test.my:2:8: error[E_MODULE_READ]: cannot load design_model.my: NotFound
+  import design_model as m
+         ^
+src/diagram_membership_test.my:2:8: error[E_MODULE_READ]: cannot load diagram_membership.my: NotFound
+  import diagram_membership as m
+         ^
+src/escape_test.my:5:8: error[E_MODULE_READ]: cannot load escape.my: NotFound
+  import escape
+         ^
+src/eval_electrical_test.my:2:8: error[E_MODULE_READ]: cannot load eval_electrical.my: NotFound
+  import eval_electrical as m
+         ^
+src/eval_env_test.my:2:8: error[E_MODULE_READ]: cannot load eval_env.my: NotFound
+  import eval_env as m
+         ^
+src/eval_net_analysis_test.my:2:8: error[E_MODULE_READ]: cannot load eval_net_analysis.my: NotFound
+  import eval_net_analysis as m
+         ^
+src/eval_rails_test.my:2:8: error[E_MODULE_READ]: cannot load eval_rails.my: NotFound
+  import eval_rails as m
+         ^
+src/export_kicad_footprint_test.my:2:8: error[E_MODULE_READ]: cannot load export_kicad_footprint.my: NotFound
+  import export_kicad_footprint as m
+         ^
+src/export_kicad_netlist_test.my:2:8: error[E_MODULE_READ]: cannot load export_kicad_netlist.my: NotFound
+  import export_kicad_netlist as m
+         ^
+src/export_kicad_sch_test.my:2:8: error[E_MODULE_READ]: cannot load export_kicad_sch.my: NotFound
+  import export_kicad_sch as m
+         ^
+src/export_kicad_test.my:2:8: error[E_MODULE_READ]: cannot load export_kicad.my: NotFound
+  import export_kicad as m
+         ^
+src/flat_netlist_test.my:2:8: error[E_MODULE_READ]: cannot load flat_netlist.my: NotFound
+  import flat_netlist as m
+         ^
+src/footprint_paste_test.my:2:8: error[E_MODULE_READ]: cannot load footprint_paste.my: NotFound
+  import footprint_paste as m
+         ^
+src/infra_fs_test.my:2:8: error[E_MODULE_READ]: cannot load infra_fs.my: NotFound
+  import infra_fs as m
+         ^
+src/json_writer_test.my:2:8: error[E_MODULE_READ]: cannot load json_writer.my: NotFound
+  import json_writer as m
+         ^
+src/kicad_pcb_format_test.my:2:8: error[E_MODULE_READ]: cannot load kicad_pcb_format.my: NotFound
+  import kicad_pcb_format as m
+         ^
+src/kicad_sch_bank_test.my:2:8: error[E_MODULE_READ]: cannot load kicad_sch_bank.my: NotFound
+  import kicad_sch_bank as m
+         ^
+src/kicad_sch_compose_test.my:2:8: error[E_MODULE_READ]: cannot load kicad_sch_compose.my: NotFound
+  import kicad_sch_compose as m
+         ^
+src/kicad_sch_emit_test.my:2:8: error[E_MODULE_READ]: cannot load kicad_sch_emit.my: NotFound
+  import kicad_sch_emit as m
+         ^
+src/kicad_sch_gang_test.my:2:8: error[E_MODULE_READ]: cannot load kicad_sch_gang.my: NotFound
+  import kicad_sch_gang as m
+         ^
+src/kicad_sch_glyph_test.my:2:8: error[E_MODULE_READ]: cannot load kicad_sch_shape.my: NotFound
+  import kicad_sch_shape as m
+         ^
+src/kicad_sch_plan_test.my:2:8: error[E_MODULE_READ]: cannot load kicad_sch_plan.my: NotFound
+  import kicad_sch_plan as m
+         ^
+src/kicad_sch_project_test.my:2:8: error[E_MODULE_READ]: cannot load kicad_sch_project.my: NotFound
+  import kicad_sch_project as m
+         ^
+src/kicad_sch_shape_test.my:2:8: error[E_MODULE_READ]: cannot load kicad_sch_shape.my: NotFound
+  import kicad_sch_shape as m
+         ^
+src/kicad_sch_sheet_test.my:2:8: error[E_MODULE_READ]: cannot load kicad_sch_sheet.my: NotFound
+  import kicad_sch_sheet as m
+         ^
+src/kicad_sch_stagger_test.my:2:8: error[E_MODULE_READ]: cannot load kicad_sch_stagger.my: NotFound
+  import kicad_sch_stagger as m
+         ^
+src/kicad_sch_stub_test.my:2:8: error[E_MODULE_READ]: cannot load kicad_sch_stub.my: NotFound
+  import kicad_sch_stub as m
+         ^
+src/kicad_sch_textbox_test.my:2:8: error[E_MODULE_READ]: cannot load kicad_sch_textbox.my: NotFound
+  import kicad_sch_textbox as m
+         ^
+src/kicad_sch_vendor_test.my:2:8: error[E_MODULE_READ]: cannot load kicad_sch_vendor.my: NotFound
+  import kicad_sch_vendor as m
+         ^
+src/kicad_sch_verify_test.my:2:8: error[E_MODULE_READ]: cannot load kicad_sch_verify.my: NotFound
+  import kicad_sch_verify as m
+         ^
+src/kicad_sch_wire_test.my:2:8: error[E_MODULE_READ]: cannot load kicad_sch_wire.my: NotFound
+  import kicad_sch_wire as m
+         ^
+src/kicad_sym_library_test.my:2:8: error[E_MODULE_READ]: cannot load kicad_sym_library.my: NotFound
+  import kicad_sym_library as m
+         ^
+src/kicad_sym_reader_test.my:2:8: error[E_MODULE_READ]: cannot load kicad_sym_reader.my: NotFound
+  import kicad_sym_reader as m
+         ^
+src/lib_limits_test.my:2:8: error[E_MODULE_READ]: cannot load lib_limits.my: NotFound
+  import lib_limits as m
+         ^
+src/main_test.my:2:8: error[E_MODULE_READ]: cannot load main.my: NotFound
+  import main as entry
+         ^
+src/net_name_test.my:3:8: error[E_MODULE_READ]: cannot load net_name.my: NotFound
+  import net_name
+         ^
+src/numeric_test.my:4:8: error[E_MODULE_READ]: cannot load numeric.my: NotFound
+  import numeric
+         ^
+src/placement_geometry_test.my:2:8: error[E_MODULE_READ]: cannot load placement_geometry.my: NotFound
+  import placement_geometry as m
+         ^
+src/placement_pin_roles_test.my:2:8: error[E_MODULE_READ]: cannot load placement_pin_roles.my: NotFound
+  import placement_pin_roles as m
+         ^
+src/poly_scanline_test.my:2:8: error[E_MODULE_READ]: cannot load poly_scanline.my: NotFound
+  import poly_scanline as m
+         ^
+src/render_svg_context_test.my:2:8: error[E_MODULE_READ]: cannot load eval_env.my: NotFound
+  import eval_env as env_mod
+         ^
+src/render_svg_draw_test.my:5:8: error[E_MODULE_READ]: cannot load render_svg_context.my: NotFound
+  import render_svg_context as m
+         ^
+src/sexpr_ast_test.my:3:8: error[E_MODULE_READ]: cannot load sexpr_ast.my: NotFound
+  import sexpr_ast as ast
+         ^
+src/sexpr_paren_span_test.my:3:8: error[E_MODULE_READ]: cannot load sexpr_paren_span.my: NotFound
+  import sexpr_paren_span as ps
+         ^
+src/sexpr_parser_test.my:7:8: error[E_MODULE_READ]: cannot load sexpr_ast.my: NotFound
+  import sexpr_ast as ast
+         ^
+src/sexpr_tokenizer_test.my:5:8: error[E_MODULE_READ]: cannot load sexpr_tokenizer.my: NotFound
+  import sexpr_tokenizer as tk
+         ^
+src/stdlib_test.my:2:8: error[E_MODULE_READ]: cannot load stdlib.my: NotFound
+  import stdlib as m
+         ^
+src/support_crc32_test.my:2:8: error[E_MODULE_READ]: cannot load support_crc32.my: NotFound
+  import support_crc32 as crc
+         ^
+src/support_expect_test.my:2:8: error[E_MODULE_READ]: cannot load support_expect.my: NotFound
+  import support_expect as ex
+         ^
+src/support_float_fmt_test.my:2:8: error[E_MODULE_READ]: cannot load support_float_fmt.my: NotFound
+  import support_float_fmt as ff
+         ^
+src/support_parse_test.my:2:8: error[E_MODULE_READ]: cannot load support_parse.my: NotFound
+  import support_parse as sp
+         ^
+src/support_sha256_test.my:2:8: error[E_MODULE_READ]: cannot load support_expect.my: NotFound
+  import support_expect as ex
+         ^
+src/support_sort_test.my:2:8: error[E_MODULE_READ]: cannot load support_sort.my: NotFound
+  import support_sort as ss
+         ^
+src/support_strs_test.my:2:8: error[E_MODULE_READ]: cannot load support_expect.my: NotFound
+  import support_expect as ex
+         ^
+src/uuid_test.my:3:8: error[E_MODULE_READ]: cannot load uuid.my: NotFound
+  import uuid
+         ^
+src/zipfile_test.my:2:8: error[E_MODULE_READ]: cannot load zipfile.my: NotFound
+  import zipfile as m
+         ^
+src/board_layers.my:2:8: error[E_MODULE_READ]: cannot load support_strs.my: NotFound
+  import support_strs as strs
+         ^
+src/decouple_key.my:2:8: error[E_MODULE_READ]: cannot load support_strs.my: NotFound
+  import support_strs as strs
+         ^
+src/design_model.my:2:8: error[E_MODULE_READ]: cannot load eval_env.my: NotFound
+  import eval_env as env_mod
+         ^
+src/diagram_membership.my:2:8: error[E_MODULE_READ]: cannot load eval_env.my: NotFound
+  import eval_env as env_mod
+         ^
+src/eval_electrical.my:2:8: error[E_MODULE_READ]: cannot load sexpr_ast.my: NotFound
+  import sexpr_ast as ast
+         ^
+src/eval_env.my:2:8: error[E_MODULE_READ]: cannot load sexpr_ast.my: NotFound
+  import sexpr_ast as ast
+         ^
+src/eval_net_analysis.my:2:8: error[E_MODULE_READ]: cannot load eval_env.my: NotFound
+  import eval_env as env_mod
+         ^
+src/eval_rails.my:2:8: error[E_MODULE_READ]: cannot load eval_env.my: NotFound
+  import eval_env as env_mod
+         ^
+src/export_kicad.my:2:8: error[E_MODULE_READ]: cannot load eval_env.my: NotFound
+  import eval_env as env_mod
+         ^
+src/export_kicad_footprint.my:2:8: error[E_MODULE_READ]: cannot load sexpr_ast.my: NotFound
+  import sexpr_ast as ast
+         ^
+src/export_kicad_model.my:2:8: error[E_MODULE_READ]: cannot load eval_env.my: NotFound
+  import eval_env as env_mod
+         ^
+src/export_kicad_netlist.my:2:8: error[E_MODULE_READ]: cannot load flat_netlist.my: NotFound
+  import flat_netlist
+         ^
+src/export_kicad_sch.my:2:8: error[E_MODULE_READ]: cannot load eval_env.my: NotFound
+  import eval_env as env_mod
+         ^
+src/flat_netlist.my:2:8: error[E_MODULE_READ]: cannot load eval_env.my: NotFound
+  import eval_env as env_mod
+         ^
+src/footprint_paste.my:3:8: error[E_MODULE_READ]: cannot load sexpr_ast.my: NotFound
+  import sexpr_ast as ast
+         ^
+src/infra_fs.my:2:8: error[E_MODULE_READ]: cannot load support_sha256.my: NotFound
+  import support_sha256 as sha
+         ^
+src/json_writer.my:3:8: error[E_MODULE_READ]: cannot load support_strs.my: NotFound
+  import support_strs as strs
+         ^
+src/kicad_pcb_format.my:2:8: error[E_MODULE_READ]: cannot load sexpr_ast.my: NotFound
+  import sexpr_ast as ast
+         ^
+src/kicad_sch_bank.my:2:8: error[E_MODULE_READ]: cannot load kicad_sch_shape.my: NotFound
+  import kicad_sch_shape as shape_mod
+         ^
+src/kicad_sch_compose.my:2:8: error[E_MODULE_READ]: cannot load kicad_sch_emit.my: NotFound
+  import kicad_sch_emit as emit
+         ^
+src/kicad_sch_emit.my:2:8: error[E_MODULE_READ]: cannot load eval_env.my: NotFound
+  import eval_env as env_mod
+         ^
+src/kicad_sch_gang.my:2:8: error[E_MODULE_READ]: cannot load kicad_sch_shape.my: NotFound
+  import kicad_sch_shape as shape_mod
+         ^
+src/kicad_sch_plan.my:2:8: error[E_MODULE_READ]: cannot load net_name.my: NotFound
+  import net_name
+         ^
+src/kicad_sch_project.my:2:8: error[E_MODULE_READ]: cannot load kicad_sch_emit.my: NotFound
+  import kicad_sch_emit as emit
+         ^
+src/kicad_sch_shape.my:2:8: error[E_MODULE_READ]: cannot load kicad_sym_reader.my: NotFound
+  import kicad_sym_reader as kicad_sym
+         ^
+src/kicad_sch_sheet.my:2:8: error[E_MODULE_READ]: cannot load kicad_sch_shape.my: NotFound
+  import kicad_sch_shape as shape_mod
+         ^
+src/kicad_sch_stagger.my:2:8: error[E_MODULE_READ]: cannot load kicad_sch_shape.my: NotFound
+  import kicad_sch_shape as shape
+         ^
+src/kicad_sch_stub.my:2:8: error[E_MODULE_READ]: cannot load flat_netlist.my: NotFound
+  import flat_netlist as flat
+         ^
+src/kicad_sch_textbox.my:2:8: error[E_MODULE_READ]: cannot load sexpr_ast.my: NotFound
+  import sexpr_ast as ast
+         ^
+src/kicad_sch_vendor.my:2:8: error[E_MODULE_READ]: cannot load kicad_sym_library.my: NotFound
+  import kicad_sym_library as library
+         ^
+src/kicad_sch_verify.my:2:8: error[E_MODULE_READ]: cannot load kicad_sch_textbox.my: NotFound
+  import kicad_sch_textbox as textbox
+         ^
+src/kicad_sch_wire.my:2:8: error[E_MODULE_READ]: cannot load kicad_sch_shape.my: NotFound
+  import kicad_sch_shape as shape_mod
+         ^
+src/kicad_sym_library.my:2:8: error[E_MODULE_READ]: cannot load kicad_sym_reader.my: NotFound
+  import kicad_sym_reader as reader
+         ^
+src/kicad_sym_reader.my:2:8: error[E_MODULE_READ]: cannot load sexpr_ast.my: NotFound
+  import sexpr_ast as ast
+         ^
+src/placement_geometry.my:2:8: error[E_MODULE_READ]: cannot load footprint_paste.my: NotFound
+  import footprint_paste as paste_mod
+         ^
+src/placement_pin_roles.my:2:8: error[E_MODULE_READ]: cannot load sexpr_ast.my: NotFound
+  import sexpr_ast as ast
+         ^
+src/render_block_types.my:2:8: error[E_MODULE_READ]: cannot load eval_env.my: NotFound
+  import eval_env as env_mod
+         ^
+src/render_svg_context.my:3:8: error[E_MODULE_READ]: cannot load eval_env.my: NotFound
+  import eval_env as env_mod
+         ^
+src/sexpr_parser.my:7:8: error[E_MODULE_READ]: cannot load sexpr_ast.my: NotFound
+  import sexpr_ast as ast
+         ^
+src/sexpr_tokenizer.my:8:8: error[E_MODULE_READ]: cannot load sexpr_ast.my: NotFound
+  import sexpr_ast as ast
+         ^
+src/stdlib.my:2:8: error[E_MODULE_READ]: cannot load stdlib_embed.my: NotFound
+  import stdlib_embed as embed
+         ^
+src/zipfile.my:3:8: error[E_MODULE_READ]: cannot load support_crc32.my: NotFound
+  import support_crc32 as crc_mod
+         ^
+
+STOP: no mechanical step left; fix edits 0
+hand: moved mylang.json ({"version": 1}) from the tree root into src/: headerless modules resolve imports beneath the configured project root
+round 0: fixed board_layers.my: 128 edits (E_BINDING_DECLARATION)
+round 0: fixed board_layers_test.my: 56 edits (E_BINDING_DECLARATION)
+round 0: fixed decouple_key.my: 10 edits (E_BINDING_DECLARATION)
+round 0: fixed decouple_key_test.my: 2 edits (E_FRONTEND_SYNTAX)
+round 0: fixed escape_test.my: 20 edits (E_BINDING_DECLARATION)
+round 0: fixed eval_env.my: 349 edits (E_BINDING_DECLARATION)
+round 0: fixed export_kicad_footprint.my: 189 edits (E_BINDING_DECLARATION, E_NONE_UNIT, E_FIXED_ARRAY_LITERAL)
+round 0: fixed export_kicad_footprint_test.my: 53 edits (E_BINDING_DECLARATION)
+round 0: fixed footprint_paste.my: 18 edits (E_BINDING_DECLARATION)
+round 0: fixed footprint_paste_test.my: 1 edit (E_FRONTEND_SYNTAX)
+round 0: fixed infra_fs.my: 75 edits (E_BINDING_DECLARATION, E_NONE_UNIT)
+round 0: fixed infra_fs_test.my: 35 edits (E_BINDING_DECLARATION)
+round 0: fixed json_writer.my: 12 edits (E_BINDING_DECLARATION)
+round 0: fixed json_writer_test.my: 12 edits (E_BINDING_DECLARATION)
+round 0: fixed kicad_pcb_format.my: 13 edits (E_BINDING_DECLARATION, E_NAMED_PATTERN)
+round 0: fixed kicad_pcb_format_test.my: 8 edits (E_BINDING_DECLARATION)
+round 0: fixed kicad_sch_plan.my: 46 edits (E_BINDING_DECLARATION)
+round 0: fixed kicad_sch_plan_test.my: 9 edits (E_BINDING_DECLARATION)
+round 0: fixed kicad_sch_textbox.my: 177 edits (E_BINDING_DECLARATION, E_FIXED_ARRAY_LITERAL)
+round 0: fixed kicad_sch_textbox_test.my: 23 edits (E_BINDING_DECLARATION)
+round 0: fixed kicad_sch_verify.my: 194 edits (E_BINDING_DECLARATION, E_NONE_UNIT)
+round 0: fixed kicad_sch_verify_test.my: 46 edits (E_BINDING_DECLARATION)
+round 0: fixed kicad_sym_library.my: 23 edits (E_BINDING_DECLARATION)
+round 0: fixed kicad_sym_library_test.my: 9 edits (E_BINDING_DECLARATION)
+round 0: fixed kicad_sym_reader.my: 129 edits (E_BINDING_DECLARATION)
+round 0: fixed kicad_sym_reader_test.my: 18 edits (E_BINDING_DECLARATION)
+round 0: fixed lib_limits_test.my: 3 edits (E_BINDING_DECLARATION)
+round 0: fixed net_name_test.my: 5 edits (E_FRONTEND_SYNTAX)
+round 0: fixed numeric_test.my: 18 edits (E_FRONTEND_SYNTAX)
+round 0: fixed placement_geometry.my: 164 edits (E_BINDING_DECLARATION)
+round 0: fixed placement_geometry_test.my: 38 edits (E_BINDING_DECLARATION)
+round 0: fixed poly_scanline_test.my: 14 edits (E_BINDING_DECLARATION, E_FIXED_ARRAY_LITERAL)
+round 0: fixed sexpr_ast_test.my: 3 edits (E_BINDING_DECLARATION)
+round 0: fixed sexpr_paren_span_test.my: 6 edits (E_BINDING_DECLARATION)
+round 0: fixed sexpr_parser.my: 56 edits (E_BINDING_DECLARATION)
+round 0: fixed sexpr_parser_test.my: 57 edits (E_BINDING_DECLARATION)
+round 0: fixed sexpr_tokenizer.my: 62 edits (E_BINDING_DECLARATION)
+round 0: fixed sexpr_tokenizer_test.my: 44 edits (E_BINDING_DECLARATION)
+round 0: fixed stdlib.my: 66 edits (E_BINDING_DECLARATION)
+round 0: fixed stdlib_test.my: 31 edits (E_BINDING_DECLARATION)
+round 0: fixed support_crc32_test.my: 7 edits (E_BINDING_DECLARATION)
+round 0: fixed support_expect_test.my: 3 edits (E_BINDING_DECLARATION)
+round 0: fixed support_float_fmt_test.my: 3 edits (E_FRONTEND_SYNTAX)
+round 0: fixed support_parse_test.my: 12 edits (E_BINDING_DECLARATION)
+round 0: fixed support_sha256_test.my: 15 edits (E_BINDING_DECLARATION)
+round 0: fixed support_sort_test.my: 28 edits (E_BINDING_DECLARATION)
+round 0: fixed support_strs_test.my: 8 edits (E_FRONTEND_SYNTAX)
+round 0: fixed uuid_test.my: 6 edits (E_BINDING_DECLARATION)
+round 0: fixed zipfile.my: 19 edits (E_BINDING_DECLARATION, E_NONE_UNIT)
+round 0: fixed zipfile_test.my: 38 edits (E_BINDING_DECLARATION)
+fixed board_layers.my: 128 edits (E_BINDING_DECLARATION)
+fixed board_layers_test.my: 56 edits (E_BINDING_DECLARATION)
+fixed decouple_key.my: 10 edits (E_BINDING_DECLARATION)
+fixed decouple_key_test.my: 2 edits (E_FRONTEND_SYNTAX)
+fixed escape_test.my: 20 edits (E_BINDING_DECLARATION)
+fixed eval_env.my: 349 edits (E_BINDING_DECLARATION)
+fixed export_kicad_footprint.my: 189 edits (E_BINDING_DECLARATION, E_NONE_UNIT, E_FIXED_ARRAY_LITERAL)
+fixed export_kicad_footprint_test.my: 53 edits (E_BINDING_DECLARATION)
+fixed footprint_paste.my: 18 edits (E_BINDING_DECLARATION)
+fixed footprint_paste_test.my: 1 edit (E_FRONTEND_SYNTAX)
+fixed infra_fs.my: 75 edits (E_BINDING_DECLARATION, E_NONE_UNIT)
+fixed infra_fs_test.my: 35 edits (E_BINDING_DECLARATION)
+fixed json_writer.my: 12 edits (E_BINDING_DECLARATION)
+fixed json_writer_test.my: 12 edits (E_BINDING_DECLARATION)
+fixed kicad_pcb_format.my: 13 edits (E_BINDING_DECLARATION, E_NAMED_PATTERN)
+fixed kicad_pcb_format_test.my: 8 edits (E_BINDING_DECLARATION)
+fixed kicad_sch_plan.my: 46 edits (E_BINDING_DECLARATION)
+fixed kicad_sch_plan_test.my: 9 edits (E_BINDING_DECLARATION)
+fixed kicad_sch_textbox.my: 177 edits (E_BINDING_DECLARATION, E_FIXED_ARRAY_LITERAL)
+fixed kicad_sch_textbox_test.my: 23 edits (E_BINDING_DECLARATION)
+fixed kicad_sch_verify.my: 194 edits (E_BINDING_DECLARATION, E_NONE_UNIT)
+fixed kicad_sch_verify_test.my: 46 edits (E_BINDING_DECLARATION)
+fixed kicad_sym_library.my: 23 edits (E_BINDING_DECLARATION)
+fixed kicad_sym_library_test.my: 9 edits (E_BINDING_DECLARATION)
+fixed kicad_sym_reader.my: 129 edits (E_BINDING_DECLARATION)
+fixed kicad_sym_reader_test.my: 18 edits (E_BINDING_DECLARATION)
+fixed lib_limits_test.my: 3 edits (E_BINDING_DECLARATION)
+fixed net_name_test.my: 5 edits (E_FRONTEND_SYNTAX)
+fixed numeric_test.my: 18 edits (E_FRONTEND_SYNTAX)
+fixed placement_geometry.my: 164 edits (E_BINDING_DECLARATION)
+fixed placement_geometry_test.my: 38 edits (E_BINDING_DECLARATION)
+fixed poly_scanline_test.my: 14 edits (E_BINDING_DECLARATION, E_FIXED_ARRAY_LITERAL)
+fixed sexpr_ast_test.my: 3 edits (E_BINDING_DECLARATION)
+fixed sexpr_paren_span_test.my: 6 edits (E_BINDING_DECLARATION)
+fixed sexpr_parser.my: 56 edits (E_BINDING_DECLARATION)
+fixed sexpr_parser_test.my: 57 edits (E_BINDING_DECLARATION)
+fixed sexpr_tokenizer.my: 62 edits (E_BINDING_DECLARATION)
+fixed sexpr_tokenizer_test.my: 44 edits (E_BINDING_DECLARATION)
+fixed stdlib.my: 66 edits (E_BINDING_DECLARATION)
+fixed stdlib_test.my: 31 edits (E_BINDING_DECLARATION)
+fixed support_crc32_test.my: 7 edits (E_BINDING_DECLARATION)
+fixed support_expect_test.my: 3 edits (E_BINDING_DECLARATION)
+fixed support_float_fmt_test.my: 3 edits (E_FRONTEND_SYNTAX)
+fixed support_parse_test.my: 12 edits (E_BINDING_DECLARATION)
+fixed support_sha256_test.my: 15 edits (E_BINDING_DECLARATION)
+fixed support_sort_test.my: 28 edits (E_BINDING_DECLARATION)
+fixed support_strs_test.my: 8 edits (E_FRONTEND_SYNTAX)
+fixed uuid_test.my: 6 edits (E_BINDING_DECLARATION)
+fixed zipfile.my: 19 edits (E_BINDING_DECLARATION, E_NONE_UNIT)
+fixed zipfile_test.my: 38 edits (E_BINDING_DECLARATION)
+fix: 2361 edits in 50 files over 71 rounds
+eval_env.my:908:35: error[E_SYNTAX]: unexpected token; expected a dedent
+      polygon(value: list[[2]float])at, 2][]
+                                    ^
+export_kicad_footprint.my:140:89: error[E_TYPE]: conditional arms must agree: `FixedArray[u8, 0]` here, `bytes` in the else arm
+                      byte_builder.append(mut w, b"  (descr \"" + (if (desc is None) then (b"") else (desc)) + b"\")\n")
+                                                                                          ^
+export_kicad_footprint.my:191:242: error[E_TYPE]: conditional arms must agree: `FixedArray[u8, 11]` here, `FixedArray[u8, 7]` in the else arm
+      byte_builder.append(mut w, b"  (zone\n    (layer \"" + layer + b"\")\n    (hatch full 0.508)\n    (connect_pads (clearance 0))\n    (min_thickness 0.254)\n    (keepout\n      (tracks allowed)\n      (vias " + (if (vias_not_allowed) then (b"not_allowed") else (b"allowed")) + b")\n      (pads allowed)\n      (copperpour not_allowed)\n      (footprints allowed)\n    )\n    (polygon (pts\n")
+                                                                                                                                                                                                                                                   ^
+export_kicad_footprint.my:273:52: error[E_TYPE]: conditional arms must agree: `FixedArray[u8, 4]` here, `bytes` in the else arm
+      mut emit_shape = (if (shape == b"custom") then (b"rect") else (shape))
+                                                     ^
+kicad_sym_reader.my:118:20: error[E_SYMBOL_KIND]: declaration has the wrong kind for this reference
+          out.append(Unit(number=number, pins=acc.pins, graphics=acc.graphics))
+                     ^
+  note: kicad_sym_reader.my:61:15: declaration is here
+kicad_sym_reader.my:124:14: error[E_TYPE]: operation requires a record value
+      return x.number < y.number
+               ^
+kicad_sym_reader_test.my:24:39: error[E_TYPE]: operation requires a record value
+      if not ex.eq_int(out, "common", u.number, 0):
+                                        ^
+kicad_sym_reader_test.my:58:57: error[E_TYPE]: operation requires a record value
+          if not ex.eq_int(out, "sorted number", units[i].number, i):
+                                                          ^
+kicad_sym_reader_test.my:76:30: error[E_TYPE]: operation requires a record value
+      mut g = syms[0].units[0].graphics
+                               ^
+
+STOP: no mechanical step left; fix edits 2361
+hand: eval_env.my:908: 'polygon(value: list[[2]float])at, 2][]' (fixer overlapped the variant and fixed-array edits) -> 'polygon(value: FixedArray[float, 2][])'
+hand: export_kicad_footprint.my: three conditional expressions with byte-literal arms typed FixedArray[u8, N] (E_TYPE: arms must agree) -> hoisted into `const NAME: bytes = (if ...)` declarations (descr, vias) and `mut emit_shape: bytes = ...`; the conditions and earlier operands are pure, so evaluation order is unchanged
+hand: record `Unit` is now the builtin unit type's name (E_SYMBOL_KIND): kicad_sch_shape.Unit -> ShapeUnit, kicad_sym_reader.Unit -> SymbolUnit, with every qualified reference (61 lines in 11 files)
+round 0: fixed design_model.my: 160 edits (E_BINDING_DECLARATION)
+round 0: fixed diagram_membership.my: 72 edits (E_BINDING_DECLARATION)
+round 0: fixed diagram_membership_test.my: 16 edits (E_BINDING_DECLARATION)
+round 0: fixed eval_electrical.my: 27 edits (E_BINDING_DECLARATION)
+round 0: fixed eval_electrical_test.my: 35 edits (E_BINDING_DECLARATION)
+round 0: fixed eval_env_test.my: 23 edits (E_BINDING_DECLARATION, E_NAMED_FIELDS)
+round 0: fixed eval_net_analysis.my: 72 edits (E_BINDING_DECLARATION)
+round 0: fixed eval_net_analysis_test.my: 31 edits (E_BINDING_DECLARATION)
+round 0: fixed eval_rails.my: 58 edits (E_BINDING_DECLARATION)
+round 0: fixed eval_rails_test.my: 63 edits (E_BINDING_DECLARATION)
+round 0: fixed export_kicad_footprint.my: 1 edit (E_NONE_UNIT)
+round 0: fixed export_kicad_model.my: 72 edits (E_BINDING_DECLARATION)
+round 0: fixed export_kicad_netlist.my: 27 edits (E_BINDING_DECLARATION)
+round 0: fixed export_kicad_netlist_test.my: 55 edits (E_BINDING_DECLARATION)
+round 0: fixed export_kicad_sch.my: 296 edits (E_BINDING_DECLARATION)
+round 0: fixed flat_netlist.my: 101 edits (E_BINDING_DECLARATION)
+round 0: fixed flat_netlist_test.my: 5 edits (E_BINDING_DECLARATION)
+round 0: fixed kicad_sch_bank.my: 46 edits (E_BINDING_DECLARATION)
+round 0: fixed kicad_sch_bank_test.my: 26 edits (E_BINDING_DECLARATION)
+round 0: fixed kicad_sch_compose.my: 323 edits (E_BINDING_DECLARATION)
+round 0: fixed kicad_sch_compose_test.my: 3 edits (E_BINDING_DECLARATION)
+round 0: fixed kicad_sch_emit.my: 187 edits (E_BINDING_DECLARATION)
+round 0: fixed kicad_sch_emit_test.my: 23 edits (E_BINDING_DECLARATION)
+round 0: fixed kicad_sch_gang.my: 32 edits (E_BINDING_DECLARATION)
+round 0: fixed kicad_sch_gang_test.my: 18 edits (E_BINDING_DECLARATION)
+round 0: fixed kicad_sch_glyph_test.my: 13 edits (E_BINDING_DECLARATION)
+round 0: fixed kicad_sch_project.my: 9 edits (E_BINDING_DECLARATION)
+round 0: fixed kicad_sch_project_test.my: 14 edits (E_BINDING_DECLARATION)
+round 0: fixed kicad_sch_shape.my: 213 edits (E_BINDING_DECLARATION)
+round 0: fixed kicad_sch_shape_test.my: 41 edits (E_BINDING_DECLARATION)
+round 0: fixed kicad_sch_sheet.my: 27 edits (E_BINDING_DECLARATION)
+round 0: fixed kicad_sch_sheet_test.my: 11 edits (E_BINDING_DECLARATION)
+round 0: fixed kicad_sch_stagger.my: 46 edits (E_BINDING_DECLARATION)
+round 0: fixed kicad_sch_stagger_test.my: 30 edits (E_BINDING_DECLARATION)
+round 0: fixed kicad_sch_stub.my: 12 edits (E_BINDING_DECLARATION)
+round 0: fixed kicad_sch_stub_test.my: 10 edits (E_BINDING_DECLARATION)
+round 0: fixed kicad_sch_vendor.my: 101 edits (E_BINDING_DECLARATION)
+round 0: fixed kicad_sch_vendor_test.my: 25 edits (E_BINDING_DECLARATION)
+round 0: fixed kicad_sch_wire.my: 89 edits (E_BINDING_DECLARATION)
+round 0: fixed kicad_sch_wire_test.my: 28 edits (E_BINDING_DECLARATION)
+round 0: fixed placement_pin_roles.my: 126 edits (E_BINDING_DECLARATION)
+round 0: fixed placement_pin_roles_test.my: 28 edits (E_BINDING_DECLARATION)
+round 0: fixed render_block_types.my: 32 edits (E_BINDING_DECLARATION)
+round 0: fixed render_svg_context.my: 340 edits (E_BINDING_DECLARATION)
+round 0: fixed render_svg_context_test.my: 17 edits (E_BINDING_DECLARATION, E_NAMED_PATTERN)
+round 0: fixed render_svg_draw_test.my: 8 edits (E_BINDING_DECLARATION)
+fixed design_model.my: 160 edits (E_BINDING_DECLARATION)
+fixed diagram_membership.my: 72 edits (E_BINDING_DECLARATION)
+fixed diagram_membership_test.my: 16 edits (E_BINDING_DECLARATION)
+fixed eval_electrical.my: 27 edits (E_BINDING_DECLARATION)
+fixed eval_electrical_test.my: 35 edits (E_BINDING_DECLARATION)
+fixed eval_env_test.my: 23 edits (E_BINDING_DECLARATION, E_NAMED_FIELDS)
+fixed eval_net_analysis.my: 72 edits (E_BINDING_DECLARATION)
+fixed eval_net_analysis_test.my: 31 edits (E_BINDING_DECLARATION)
+fixed eval_rails.my: 58 edits (E_BINDING_DECLARATION)
+fixed eval_rails_test.my: 63 edits (E_BINDING_DECLARATION)
+fixed export_kicad_footprint.my: 1 edit (E_NONE_UNIT)
+fixed export_kicad_model.my: 72 edits (E_BINDING_DECLARATION)
+fixed export_kicad_netlist.my: 27 edits (E_BINDING_DECLARATION)
+fixed export_kicad_netlist_test.my: 55 edits (E_BINDING_DECLARATION)
+fixed export_kicad_sch.my: 296 edits (E_BINDING_DECLARATION)
+fixed flat_netlist.my: 101 edits (E_BINDING_DECLARATION)
+fixed flat_netlist_test.my: 5 edits (E_BINDING_DECLARATION)
+fixed kicad_sch_bank.my: 46 edits (E_BINDING_DECLARATION)
+fixed kicad_sch_bank_test.my: 26 edits (E_BINDING_DECLARATION)
+fixed kicad_sch_compose.my: 323 edits (E_BINDING_DECLARATION)
+fixed kicad_sch_compose_test.my: 3 edits (E_BINDING_DECLARATION)
+fixed kicad_sch_emit.my: 187 edits (E_BINDING_DECLARATION)
+fixed kicad_sch_emit_test.my: 23 edits (E_BINDING_DECLARATION)
+fixed kicad_sch_gang.my: 32 edits (E_BINDING_DECLARATION)
+fixed kicad_sch_gang_test.my: 18 edits (E_BINDING_DECLARATION)
+fixed kicad_sch_glyph_test.my: 13 edits (E_BINDING_DECLARATION)
+fixed kicad_sch_project.my: 9 edits (E_BINDING_DECLARATION)
+fixed kicad_sch_project_test.my: 14 edits (E_BINDING_DECLARATION)
+fixed kicad_sch_shape.my: 213 edits (E_BINDING_DECLARATION)
+fixed kicad_sch_shape_test.my: 41 edits (E_BINDING_DECLARATION)
+fixed kicad_sch_sheet.my: 27 edits (E_BINDING_DECLARATION)
+fixed kicad_sch_sheet_test.my: 11 edits (E_BINDING_DECLARATION)
+fixed kicad_sch_stagger.my: 46 edits (E_BINDING_DECLARATION)
+fixed kicad_sch_stagger_test.my: 30 edits (E_BINDING_DECLARATION)
+fixed kicad_sch_stub.my: 12 edits (E_BINDING_DECLARATION)
+fixed kicad_sch_stub_test.my: 10 edits (E_BINDING_DECLARATION)
+fixed kicad_sch_vendor.my: 101 edits (E_BINDING_DECLARATION)
+fixed kicad_sch_vendor_test.my: 25 edits (E_BINDING_DECLARATION)
+fixed kicad_sch_wire.my: 89 edits (E_BINDING_DECLARATION)
+fixed kicad_sch_wire_test.my: 28 edits (E_BINDING_DECLARATION)
+fixed placement_pin_roles.my: 126 edits (E_BINDING_DECLARATION)
+fixed placement_pin_roles_test.my: 28 edits (E_BINDING_DECLARATION)
+fixed render_block_types.my: 32 edits (E_BINDING_DECLARATION)
+fixed render_svg_context.my: 340 edits (E_BINDING_DECLARATION)
+fixed render_svg_context_test.my: 17 edits (E_BINDING_DECLARATION, E_NAMED_PATTERN)
+fixed render_svg_draw_test.my: 8 edits (E_BINDING_DECLARATION)
+fix: 2992 edits in 46 files over 51 rounds
+design_model.my:58:27: error[E_TRY_POSITION]: extract this fallible operation into a declaration using 'try' before the enclosing expression
+              design = Some(string_arg(mut diag, child, b"design")?)
+                            ^
+export_kicad_sch.my:277:110: error[E_SYNTAX]: unexpected token; expected a newline
+      return [for part in src.parts yield shape_mod.PartSpec(title=part.name, pads=[p.pin for p in part.pins])]parts]
+                                                                                                               ^
+
+STOP: no mechanical step left; fix edits 2992
+hand: export_kicad_sch.my:277: nested comprehension mangled by the fixer ('...pads=[p.pin for p in part.pins])]parts]') -> '[for part in src.parts yield shape_mod.PartSpec(title=part.name, pads=[for p in part.pins yield p.pin])]'
+hand: export_kicad_sch.my:574: mut it = group[i]
+hand: design_model.my:58: design = Some(string_arg(mut diag, child, b"design")?) -> mut design_value = try ...; design = Some(design_value)
+round 1: fixed export_kicad.my: 106 edits (E_BINDING_DECLARATION, E_NONE_UNIT)
+round 1: fixed export_kicad_model.my: 1 edit (E_NONE_UNIT)
+round 1: fixed export_kicad_sch.my: 1 edit (E_NONE_UNIT)
+round 1: fixed export_kicad_sch_test.my: 148 edits (E_BINDING_DECLARATION)
+round 1: fixed export_kicad_test.my: 25 edits (E_BINDING_DECLARATION)
+hand: design_model.my:63: block = Some(read_block(mut diag, child)?) -> mut block_value = try ...; block = Some(block_value)
+hand: design_model.my:135: instances.append(read_instance(mut diag, child)?) -> mut instances_item = try ...; instances.append(instances_item)
+hand: design_model.my:138: nets.append(read_net(mut diag, child)?) -> mut nets_item = try ...; nets.append(nets_item)
+hand: design_model.my:148: sections.append(read_section(mut diag, child)?) -> mut sections_item = try ...; sections.append(sections_item)
+fix: nothing to fix
+design_model.my:180:30: error[E_TRY_POSITION]: extract this fallible operation into a declaration using 'try' before the enclosing expression
+              inst.component = string_arg(mut diag, child, head)?
+                               ^
+
+STOP: no mechanical step left; fix edits 281
+hand: design_model.my:180: inst.component = string_arg(mut diag, child, head)? -> mut component_value = try ...; inst.component = component_value
+hand: design_model.my:183: inst.value = string_arg(mut diag, child, head)? -> mut value_value = try ...; inst.value = value_value
+hand: design_model.my:186: inst.footprint = string_arg(mut diag, child, head)? -> mut footprint_value = try ...; inst.footprint = footprint_value
+hand: design_model.my:189: inst.symbol = string_arg(mut diag, child, head)? -> mut symbol_value = try ...; inst.symbol = symbol_value
+hand: design_model.my:192: inst.pinout = string_arg(mut diag, child, head)? -> mut pinout_value = try ...; inst.pinout = pinout_value
+hand: design_model.my:195: inst.origin_key = string_arg(mut diag, child, head)? -> mut origin_key_value = try ...; inst.origin_key = origin_key_value
+hand: design_model.my:198: inst.id = string_arg(mut diag, child, head)? -> mut id_value = try ...; inst.id = id_value
+hand: design_model.my:201: inst.uuid = string_arg(mut diag, child, head)? -> mut uuid_value = try ...; inst.uuid = uuid_value
+hand: design_model.my:225: parts.append(read_part(mut diag, child)?) -> mut parts_item = try ...; parts.append(parts_item)
+hand: design_model.my:277: groups.append(read_pin_group(mut diag, child)?) -> mut groups_item = try ...; groups.append(groups_item)
+hand: design_model.my:295: hosts.append(string_arg(mut diag, child, head)?) -> mut hosts_item = try ...; hosts.append(hosts_item)
+hand: design_model.my:298: subs.append(read_section(mut diag, child)?) -> mut subs_item = try ...; subs.append(subs_item)
+round 12: fixed design_model.my: 1 edit (E_NAMED_PATTERN)
+round 12: fixed design_model_test.my: 15 edits (E_BINDING_DECLARATION)
+round 12: fixed main.my: 26 edits (E_BINDING_DECLARATION, E_NONE_UNIT)
+round 12: fixed main_test.my: 3 edits (E_BINDING_DECLARATION)
+clean after 13 fix runs; fix edits 45
