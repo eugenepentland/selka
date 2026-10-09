@@ -141,6 +141,9 @@ pub const Compilation = struct {
     /// formatted with the module grammar rather than rejected at its first word.
     pub fn format(self: *Compilation, allocator: std.mem.Allocator) FormatError![]u8 {
         if (opensAsModule(self.src.bytes)) return self.formatModule(allocator);
+        const original = self.src;
+        self.src = self.formattingSource();
+        defer self.src = original;
         try self.parse();
         return @import("formatter.zig").format(allocator, self.src.bytes, self.tokens.?, self.syntax.?.types);
     }
@@ -150,9 +153,19 @@ pub const Compilation = struct {
         var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
         defer self.diagnostics = sink.items;
         const tokens = try lexer.lex(sink.allocator, self.src.bytes, &sink);
-        var p: parser.Parser = .{ .src = self.src, .storage = self.arena.allocator(), .tokens = tokens, .sink = &sink };
+        var p: parser.Parser = .{ .src = self.formattingSource(), .storage = self.arena.allocator(), .tokens = tokens, .sink = &sink };
         const syntax = try p.parseModule();
         return @import("formatter.zig").format(allocator, self.src.bytes, tokens, syntax.types);
+    }
+
+    // Project checking selects embedded standard modules. Formatting reads
+    // disk bytes, so grant that context only to a complete name/byte match.
+    fn formattingSource(self: *const Compilation) source.Source {
+        var src = self.src;
+        if (@import("standard_library.zig").source(std.fs.path.basename(src.path))) |embedded| {
+            src.trusted_intrinsics = src.trusted_intrinsics or std.mem.eql(u8, src.bytes, embedded);
+        }
+        return src;
     }
 
     /// Parse one module or single-file program and allocate its declaration listing.

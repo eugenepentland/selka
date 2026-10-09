@@ -90,6 +90,7 @@ default, `report`, leaves the inner loop untouched.
 
 | Rule | Code | Default (`agent`) | What it finds |
 | --- | --- | --- | --- |
+| `noalloc-allocates` | `L_NOALLOC_ALLOCATES` | block in every profile | A written `noalloc` function has a Core allocation witness, unresolved call, or unsupported concrete body. Plain lint reports it; `--gate` exits 3 unless waived with a reason. |
 | `untested-export` | `L_UNTESTED_EXPORT` | report; block under `strict` | An exported function or public domain method that no discovered test reaches, directly or transitively, under `agent`; under `strict` and `safety` one that no test calls directly, where an export only reached transitively is reported with that wording instead. |
 | `dead-private` | `L_DEAD_PRIVATE` | block | A private function with no call site anywhere in the project. |
 | `undocumented-export` | `L_UNDOCUMENTED_EXPORT` | report; block under `strict` | An exported function, record, union or domain with no docstring, one under `lint.min_chars` non-whitespace characters, or one that merely restates the name. |

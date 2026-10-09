@@ -626,13 +626,9 @@ fn recordUnitTypedNodes(init: Context, compilation: *const language.Compilation)
 /// `main` of any signature is always checked as an entry point.
 fn checkUnit(parsed: Parsed, compilation: *language.Compilation, semantic: *language.semantic_cache.Cache) language.diagnostic.Error!void {
     const as_library = parsed.command == .check and !compilation.declaresMain();
-    const program = if (as_library) try compilation.checkLibraryProgram() else result: {
-        try compilation.checkWithCache(semantic);
-        break :result compilation.program.?;
-    };
-    var sink: language.diagnostic.Sink = .{ .allocator = compilation.arena.allocator(), .items = compilation.diagnostics };
-    defer compilation.diagnostics = sink.items;
-    try mylang_core.checkAllocationContracts(sink.allocator, program, compilation.src, &sink);
+    if (as_library) {
+        _ = try compilation.checkLibraryProgram();
+    } else try compilation.checkWithCache(semantic);
 }
 
 fn report(init: Context, compilation: *const language.Compilation) !void {
@@ -1918,14 +1914,14 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
         const semantic_before = if (functions) |f| f.statistics else null;
         // `check` needs no checked trees: unchanged bodies are stood in by the
         // summaries the entry's last successful check left.
-        var summaries: language.semantic_summary.Request = .{ .body_policy = .allocation_contracts };
+        var summaries: language.semantic_summary.Request = .{ .body_policy = if (parsed.command == .lint) .allocation_contracts else .summaries };
         try openSummaries(init, parsed, &project, functions, &summaries);
         defer closeSummaries(functions);
         // `context` answers about a project that does not check: it publishes the
         // declarations and diagnostics it did recover and names the reason the
         // resolved relationships are missing, rather than failing like a gate.
         var unchecked_reason: ?[]const u8 = null;
-        compilation.checkWithCache(functions) catch |err| switch (err) {
+        checkCommandProgram(&compilation, functions, parsed.command) catch |err| switch (err) {
             error.SourceError => {
                 recordCheckWork(init, functions, semantic_before, compilation.program);
                 if (try checkFailure(init, parsed, &compilation, files.inputs)) |status| return status;
@@ -1933,13 +1929,9 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
             },
             else => return err,
         };
-        if (unchecked_reason == null) mylang_core.checkAllocationContracts(compilation.diagnostics.allocator, compilation.program.?, compilation.src, &compilation.diagnostics) catch |err| switch (err) {
-            error.SourceError => {
-                if (try checkFailure(init, parsed, &compilation, files.inputs)) |status| return status;
-                unchecked_reason = "allocation contract did not check";
-            },
-            else => return err,
-        };
+        if (unchecked_reason == null and parsed.command == .lint) {
+            try mylang_core.checkAllocationContracts(compilation.diagnostics.allocator, compilation.program.?, compilation.src, &compilation.diagnostics);
+        }
         recordCheckWork(init, functions, semantic_before, compilation.program);
         try rememberSummaries(init, frontend, &project, &summaries);
         if (try checkedCommand(init, parsed, &compilation, unchecked_reason, &files, &configured)) |status| return status;
@@ -1974,6 +1966,13 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
     return 0;
 }
 
+/// Lint also inspects library bodies; only executable commands require main.
+fn checkCommandProgram(compilation: *language.project_compile.Compilation, functions: ?*language.semantic_cache.Cache, command: Command) language.project_compile.CheckError!void {
+    if (command == .lint and !compilation.declaresMain()) {
+        compilation.program = try compilation.checkLibraryProgram();
+    } else try compilation.checkWithCache(functions);
+}
+
 /// Finish project commands that do not need an executable checked program.
 fn earlyProjectCheck(init: Context, parsed: Parsed, compilation: *language.project_compile.Compilation, functions: ?*language.semantic_cache.Cache, files: *ModuleFiles, configured: *const ConfiguredPolicy) !?u8 {
     return switch (parsed.command) {
@@ -1986,14 +1985,7 @@ fn earlyProjectCheck(init: Context, parsed: Parsed, compilation: *language.proje
 
 /// Check a library without recording an executable verdict or lowering its bodies.
 fn checkLibraryProject(init: Context, parsed: Parsed, compilation: *language.project_compile.Compilation, files: *ModuleFiles, configured: *const ConfiguredPolicy) !u8 {
-    const library_program = compilation.checkLibraryProgram() catch |err| switch (err) {
-        error.SourceError => {
-            try reportProject(init, compilation);
-            return 1;
-        },
-        else => return err,
-    };
-    mylang_core.checkAllocationContracts(compilation.diagnostics.allocator, library_program, compilation.src, &compilation.diagnostics) catch |err| switch (err) {
+    _ = compilation.checkLibraryProgram() catch |err| switch (err) {
         error.SourceError => {
             try reportProject(init, compilation);
             return 1;

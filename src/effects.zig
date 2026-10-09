@@ -523,7 +523,7 @@ fn appendDerivedViolation(allocator: std.mem.Allocator, ctx: BoundContext, index
 /// parameters imply is `W_DERIVED_EFFECTS` because it says nothing.
 fn appendClauseDiagnostics(allocator: std.mem.Allocator, src: source.Source, function: typed.Function, derived: sets.Mask, sink: *diagnostic.Sink) diagnostic.Error!bool {
     const bound = function.policy.effect_bound orelse return false;
-    if (!writtenClause(src, bound.span)) return false;
+    if (!writtenClause(src, bound.span) or sets.coreAllocationBound(src, bound)) return false;
     const clause = src.text(bound.span);
     if (!negativeClause(src, bound.span)) {
         const unsupplied = bound.allowed & ~derived;
@@ -648,13 +648,13 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, request: Requ
     const mutation_violated = try mutationPass(allocator, program, request, &graph);
     // Exported declarations are no longer required to spell out a ceiling. The
     // inferred transitive mask is frozen onto the checked function below and is
-    // what interfaces/fingerprints publish; an explicit `noalloc`, `noio` or
+    // what interfaces/fingerprints publish; an explicit `noio` or
     // `effects(...)` remains an opt-in upper bound enforced by the loop below.
     // The signature is the whole contract: every checked function is held to the
     // ceiling its parameter list implies (a `mut` parameter permits `mutation`,
     // a capability parameter its effect, a callback parameter its declared
-    // ceiling, and allocation is always permitted). An explicit `noalloc`,
-    // `noio` or `effects(...)` clause may only narrow that set, and the inferred
+    // ceiling, and allocation is always permitted). An explicit `noio` or
+    // `effects(...)` clause may only narrow that set, and the inferred
     // transitive mask stays a checked body fact for diagnostics.
     for (@constCast(program.functions), 0..) |*function, index| {
         function.policy.effects = graph.states[index].mask;

@@ -532,6 +532,51 @@ fn refusedBinding(text: []const u8) !void {
     }
 }
 
+fn refusedNamedBinding(text: []const u8, name: []const u8) !void {
+    var compilation = try language.Compilation.init(t.allocator, migration_path, text);
+    defer compilation.deinit();
+    try parseLegacy(&compilation);
+    var sink: diagnostic.Sink = .{ .allocator = compilation.arena.allocator() };
+    try t.expect(try @import("frontend_binding_migration.zig").publish(compilation.src, compilation.syntax.?, &sink));
+    var refused: usize = 0;
+    for (sink.items.items) |item| {
+        if (!std.mem.eql(u8, compilation.src.text(item.span), name)) continue;
+        try t.expectEqualStrings("E_BINDING_SCOPE_MIGRATION", item.code);
+        try t.expect(item.provenance.fix == null);
+        refused += 1;
+    }
+    try t.expectEqual(@as(usize, 2), refused);
+}
+
+// spec-case: FRONTEND-BINDING-MIGRATION-2
+test "F5 binding migration refuses branch locals used by augmented assignment" {
+    try refusedNamedBinding("func main() -> int:\n    c = True\n    if c:\n        n = 1\n    else:\n        n = 2\n    n += 10\n    return 0\n", "n");
+}
+
+// spec-case: FRONTEND-BINDING-MIGRATION-2
+test "F5 binding migration refuses branch locals used by a method receiver" {
+    try refusedNamedBinding("func main() -> int:\n    c = True\n    if c:\n        xs = [1]\n    else:\n        xs = [2]\n    xs.append(3)\n    return 0\n", "xs");
+}
+
+// spec-case: FRONTEND-BINDING-MIGRATION-2
+test "F5 binding migration resolves call and operation owners and field and index targets" {
+    for ([_][]const u8{ "n()", "n.append(3)", "n.read()", "read_resource[Read](n)", "write_resource[Write](n, 3)", "n.field = 2", "n[0] = 2", "n.field += 2", "n[0] += 2", "n.field.update()" }) |use| {
+        const text = try std.fmt.allocPrint(t.allocator, "func main() -> int:\n    if True:\n        n = 1\n    else:\n        n = 2\n    {s}\n    return 0\n", .{use});
+        defer t.allocator.free(text);
+        try refusedNamedBinding(text, "n");
+    }
+}
+
+// spec-case: FRONTEND-BINDING-MIGRATION-2
+test "F5 binding migration keeps independent assignment declarations repairable" {
+    const result = try migrated("func main() -> int:\n    if False:\n        n = 1\n        n += 2\n    n = 3\n    n += 4\n    return n\n");
+    defer t.allocator.free(result);
+    try t.expectEqualStrings("func main() -> int:\n    if False:\n        mut n = 1\n        n += 2\n    mut n = 3\n    n += 4\n    return n\n", result);
+    var compilation = try language.Compilation.init(t.allocator, migration_path, result);
+    defer compilation.deinit();
+    try compilation.checkLibrary();
+}
+
 // spec-case: FRONTEND-BINDING-MIGRATION-2
 test "frontend binding migration refuses escaping state and preinitialization reads" {
     try refusedBinding("func main() -> int:\n    if True:\n        token = 1\n    return token\n");
@@ -771,15 +816,24 @@ const OverlapImports = struct {
     }
 };
 
+/// Every edit the recovered parser diagnostics carry, each on its own diagnostic.
+fn repairCount(recovered: []const diagnostic.Diagnostic) usize {
+    var repairs: usize = 0;
+    for (recovered) |item| repairs += if (item.provenance.fix) |fix| fix.count() else 0;
+    return repairs;
+}
+
 // spec-case: FIX-MIGRATION-OVERLAP-1
-test "an imported module's parser repairs travel on one problem without colliding edits" {
+test "an imported module's overlapping parser repairs stay whole on separate diagnostics" {
     var files: OverlapImports = .{ .library = "public def pick(c: bool, d: bool) -> int:\n    return 1 if c else (2 if d else 3)\n\n\npublic def magnitudes(xs: list[int]) -> list[int]:\n    return [x if x > 0 else -x for x in xs]\n" };
     var project = language.project.Project.init(t.allocator);
     defer project.deinit();
     try project.load(.{ .context = &files, .read = OverlapImports.read }, "app", .{});
     try t.expectError(error.SourceError, language.interfaces.build(&project));
     const problem = project.problem.?;
-    const fix: diagnostic.Fix = .{ .edit = problem.fix.?, .more = problem.fix_more };
-    try t.expect(!fix.collides(&.{}));
-    try t.expectEqual(@as(usize, 6), fix.count());
+    // Each repair stays whole on its own diagnostic; the problem's fix is only
+    // the first repair, never the outer and inner conditionals merged.
+    try t.expectEqual(@as(usize, 8), repairCount(problem.recovered));
+    try t.expectEqual(@as(usize, 0), problem.fix_more.len);
+    try t.expectEqual(problem.recovered[0].provenance.fix.?.edit.span.start, problem.fix.?.span.start);
 }

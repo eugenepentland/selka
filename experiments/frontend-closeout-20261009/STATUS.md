@@ -27,3 +27,9 @@ case membership and verdicts match. The pre-existing custom range CFG refusal
 remains documented. Historical timing work stays unfinished outside this plan.
 
 Guardian feedback: guardian-zig commit 675dac5. No mylang main merge or push.
+
+## Archived full evidence
+
+Full captures and the original version of this report remain in commit `0bbfeb740`,
+reachable from `main` and `codex/frontend-followthrough-20261009`.
+Retrieve any archived path with `git show 0bbfeb740:PATH` (paths are repository-relative).

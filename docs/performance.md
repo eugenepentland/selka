@@ -272,14 +272,18 @@ not known up front. A `bytes` value is the immutable byte-shaped alternative.
 compiles a C source and links it into the program. A C library function such as
 `hypot` needs no flag:
 
-```console
-$ cat > hyp.my <<'EOF'
+Save this program as `hyp.my`:
+
+```mylang
+# doc: expect 63
 extern func hypot(host: Host, a: float, b: float) -> float effects(host)
 
 
 func main(host: Host) -> int:
     return int(hypot(host, 3.0, 4.0)) * 10 + int(hypot(host, 5.0, 12.0))
-EOF
+```
+
+```console
 $ mylang run hyp.my --print-result
 63
 $ mylang build hyp.my -o hyp --link kernels.c    # your own C, compiled at the program's level

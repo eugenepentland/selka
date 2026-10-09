@@ -1,3 +1,0 @@
-@stdlib/sort.my:5:8: error[E_CORE_ALLOCATION_BOUND]: allocation contract of sort::compare_strs is exceeded by sort::compare_strs: static Core site may allocate (unresolved call)
-      if min(a, b) == a:
-         ^

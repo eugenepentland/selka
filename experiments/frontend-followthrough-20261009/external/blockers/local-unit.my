@@ -1,8 +1,0 @@
-public record Unit:
-    x: int
-
-func make() -> Unit:
-    return Unit(x=1)
-
-func main() -> int:
-    return make().x

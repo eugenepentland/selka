@@ -1,8 +1,0 @@
-func main() -> int:
-    if True:
-        token = 1
-        return token
-    if False:
-        token = 2
-        return token
-    return 0

@@ -1,0 +1,248 @@
+{
+  "baseline_source_commit": "d9deb9b70",
+  "baseline_compiler": "/home/epentland/.cache/mylang/frontend-fixes-20261009/before/bin/mylang",
+  "baseline_compiler_sha256": "a55d605102bbec6bd0af5237ccaa2a643b8dc06eaf78fb1e67189ec061f312dc",
+  "frozen_reference_sha256": "b6703c9fc0f135844131130cab4c0c8e263d2966ac5e85d24d380ae5deece3bc",
+  "migration_commit": "a9c1109e8ab92a33a6375f38ccf8200849f5663e",
+  "name_mappings": {
+    "dict_comprehensions::test_nested_clauses_read_left_to_right": "dict_comprehensions::test_explicit_nested_loops_read_left_to_right",
+    "dict_comprehensions::test_two_names_and_several_filters_in_a_list_comprehension": "dict_comprehensions::test_destructuring_loops_and_combined_comprehension_filter"
+  },
+  "sources_sha256": {
+    "frontend_mut": "631fc8a63023a847da9885aeff0dd9ca9d650e695a14295ca751812ae83ba12d",
+    "frontend_numbers": "b1f410b601cac56f95bf34fe57cecaf8ddfeb28d9f337499cbc987eda71f0b6c",
+    "frontend_type_helpers": "bb7abc0f0f32fdbb21b779f477f967ba91e33249fe2858ab9615ea3b1774d98a",
+    "frontend_types": "4aac036ec35f8a35de5f0bc21ab5e79189ede97027b44a9309b8c7ee6d99fd2b",
+    "dict_comprehensions": "ce413b41122e34431ca9d3b2f051ce03fbbe8cbafee3cd2719700de8087d2c91"
+  },
+  "files": {
+    "frontend_mut": {
+      "tests": [
+        [
+          "frontend_mut::test_block_scope_allows_separate_siblings",
+          "passed",
+          ""
+        ],
+        [
+          "frontend_mut::test_dynamic_mut_disjoint_targets",
+          "passed",
+          ""
+        ],
+        [
+          "frontend_mut::test_mut_callback_updates_caller_scalar",
+          "passed",
+          ""
+        ],
+        [
+          "frontend_mut::test_mut_snapshot_independence",
+          "passed",
+          ""
+        ],
+        [
+          "frontend_mut::test_named_callback_evaluates_in_written_order",
+          "passed",
+          ""
+        ],
+        [
+          "frontend_mut::test_named_mut_interior_places_preserve_storage_and_written_order",
+          "passed",
+          ""
+        ],
+        [
+          "frontend_mut::test_readonly_input_is_independent_of_mut_input",
+          "passed",
+          ""
+        ],
+        [
+          "frontend_mut::test_scalar_and_nested_mut_writeback",
+          "passed",
+          ""
+        ],
+        [
+          "frontend_mut::test_snapshot_survives_whole_mut_rebinding",
+          "passed",
+          ""
+        ],
+        [
+          "frontend_mut::test_whole_collection_rebinding",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "frontend_numbers": {
+      "tests": [
+        [
+          "frontend_numbers::test_frontend_generic_parsing",
+          "passed",
+          ""
+        ],
+        [
+          "frontend_numbers::test_frontend_numeric_conversion",
+          "passed",
+          ""
+        ],
+        [
+          "frontend_numbers::test_frontend_text_parsing",
+          "passed",
+          ""
+        ]
+      ]
+    },
+    "frontend_type_helpers": {
+      "tests": []
+    },
+    "frontend_types": {
+      "tests": [
+        [
+          "frontend_types::test_frontend_array_optional",
+          "passed",
+          ""
+        ],
+        [
+          "frontend_types::test_frontend_deep_product",
+          "passed",
+          ""
+        ],
+        [
+          "frontend_types::test_frontend_disjoint_wildcard_product",
+          "passed",
+          ""
+        ],
+        [
+          "frontend_types::test_frontend_dynamic_fixed_array",
+          "passed",
+          ""
+        ],
+        [
+          "frontend_types::test_frontend_dynamic_fixed_array_mismatch",
+          "passed",
+          ""
+        ],
+        [
+          "frontend_types::test_frontend_failure_success",
+          "passed",
+          ""
+        ],
+        [
+          "frontend_types::test_frontend_fixed_array",
+          "passed",
+          ""
+        ],
+        [
+          "frontend_types::test_frontend_grouped_none",
+          "passed",
+          ""
+        ],
+        [
+          "frontend_types::test_frontend_imported_nominal_suffix",
+          "passed",
+          ""
+        ],
+        [
+          "frontend_types::test_frontend_match_value",
+          "passed",
+          ""
+        ],
+        [
+          "frontend_types::test_frontend_named_enum_pattern",
+          "passed",
+          ""
+        ],
+        [
+          "frontend_types::test_frontend_nested_failure",
+          "passed",
+          ""
+        ],
+        [
+          "frontend_types::test_frontend_nested_optional",
+          "passed",
+          ""
+        ],
+        [
+          "frontend_types::test_frontend_nested_product",
+          "passed",
+          ""
+        ],
+        [
+          "frontend_types::test_frontend_optional_unit",
+          "passed",
+          ""
+        ],
+        [
+          "frontend_types::test_frontend_product_row_binders",
+          "passed",
+          ""
+        ]
+      ]
+    }
+  },
+  "runs": [
+    {
+      "file": "frontend_mut",
+      "mode": "debug",
+      "status": 0,
+      "tests": 10,
+      "stdout_sha256": "5b3fc392b2a38e4408369b3622972dc56cd2b28dbfd94da64b7782b43577d1ba",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "frontend_mut",
+      "mode": "release",
+      "status": 0,
+      "tests": 10,
+      "stdout_sha256": "5b3fc392b2a38e4408369b3622972dc56cd2b28dbfd94da64b7782b43577d1ba",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "frontend_numbers",
+      "mode": "debug",
+      "status": 0,
+      "tests": 3,
+      "stdout_sha256": "7d081693bac4d74d872c692012683fa597cc0488c72bc2b2401896252e304529",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "frontend_numbers",
+      "mode": "release",
+      "status": 0,
+      "tests": 3,
+      "stdout_sha256": "7d081693bac4d74d872c692012683fa597cc0488c72bc2b2401896252e304529",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "frontend_type_helpers",
+      "mode": "debug",
+      "status": 3,
+      "tests": 0,
+      "stdout_sha256": "e451249712ca31b0aeb1121a5b233759a6156229a93ba5408ab401a387a0a619",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "frontend_type_helpers",
+      "mode": "release",
+      "status": 3,
+      "tests": 0,
+      "stdout_sha256": "e451249712ca31b0aeb1121a5b233759a6156229a93ba5408ab401a387a0a619",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "frontend_types",
+      "mode": "debug",
+      "status": 0,
+      "tests": 16,
+      "stdout_sha256": "4de8b30fdb69386fa6592a2f4b7d14e9dfae11742be1429e4672cf7cc6ae4fff",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "frontend_types",
+      "mode": "release",
+      "status": 0,
+      "tests": 16,
+      "stdout_sha256": "4de8b30fdb69386fa6592a2f4b7d14e9dfae11742be1429e4672cf7cc6ae4fff",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "original_cases_per_mode": 1518,
+  "additional_cases_per_mode": 29
+}

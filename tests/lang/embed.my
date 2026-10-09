@@ -24,6 +24,7 @@ func generic_length[T](value: T) -> int noalloc:
     return len(embed_bytes("embed_fixtures/binary.bin"))
 
 
+@allow("test-conditional", reason="This language regression intentionally exercises conditional failure paths.")
 # spec-case: EMBED-1
 public func test_embed_bytes_keeps_every_byte_including_nul() -> bool:
     if len(NUL) != 5:
@@ -33,6 +34,7 @@ public func test_embed_bytes_keeps_every_byte_including_nul() -> bool:
     return NUL == b"ab\x00cd" and NUL[1:4] == b"b\x00c"
 
 
+@allow("test-conditional", reason="This language regression intentionally exercises conditional failure paths.")
 # spec-case: EMBED-1
 public func test_embed_bytes_carries_bytes_that_are_not_utf8() -> bool:
     if len(BINARY) != 5:
@@ -49,6 +51,7 @@ public func test_embed_bytes_carries_bytes_that_are_not_utf8() -> bool:
             return True
 
 
+@allow("test-conditional", reason="This language regression intentionally exercises conditional failure paths.")
 # spec-case: EMBED-1
 public func test_embed_str_reads_multibyte_text_as_scalars() -> bool:
     if MULTI != "héllo 🙂 日本":
@@ -59,6 +62,7 @@ public func test_embed_str_reads_multibyte_text_as_scalars() -> bool:
     return len(text.encode()) == 18 and text[1] == "é"
 
 
+@allow("test-conditional", reason="This language regression intentionally exercises conditional failure paths.")
 # spec-case: EMBED-1
 public func test_embed_of_an_empty_file_is_empty() -> bool:
     if len(EMPTY) != 0 or EMPTY != b"":
@@ -76,6 +80,7 @@ public func test_embed_is_allowed_where_allocation_is_not() -> bool:
     return pure_length() == 25 and generic_length(3) == 5 and generic_length(NUL) == 5
 
 
+@allow("test-conditional", reason="This language regression intentionally exercises conditional failure paths.")
 # spec-case: EMBED-1
 public func test_embedded_constants_are_readable_from_another_module() -> bool:
     if embed_support.SUPPORT != b"shared fixture\n":
@@ -85,6 +90,7 @@ public func test_embedded_constants_are_readable_from_another_module() -> bool:
     return embed_support.GREETING == MULTI and embed_support.SUPPORT == embed_bytes("embed_fixtures/support.txt")
 
 
+@allow("test-conditional", reason="This language regression intentionally exercises conditional failure paths.")
 # spec-case: EMBED-1
 public func test_one_file_embeds_as_bytes_and_as_text() -> bool:
     mut raw = embed_bytes("embed_fixtures/multi.txt")

@@ -87,15 +87,15 @@ test "PY-BYTES-1 byte strings are immutable and never convert through str" {
     try rejected("func main() -> int:\n    return len(bytes(\"ab\"))\n", "E_BYTES_CONVERSION");
     try rejected("func main() -> int:\n    return len(b\"ab\".encode())\n", "E_COLLECTION_METHOD");
     try rejected(
-        "func build() -> int noalloc:\n    mut raw = b\"ab\"\n    return len(raw)\nfunc main() -> int:\n    return build()\n",
+        "func build() -> int effects():\n    mut raw = b\"ab\"\n    return len(raw)\nfunc main() -> int:\n    return build()\n",
         effect_bound,
     );
     try rejected(
-        "func grow(a: bytes, b: bytes) -> int noalloc:\n    return len(a + b)\nfunc main() -> int:\n    return grow(b\"a\", b\"b\")\n",
+        "func grow(a: bytes, b: bytes) -> int effects():\n    return len(a + b)\nfunc main() -> int:\n    return grow(b\"a\", b\"b\")\n",
         effect_bound,
     );
     try rejected(
-        "func cut(a: bytes) -> int noalloc:\n    return len(a[0:1])\nfunc main() -> int:\n    return cut(b\"ab\")\n",
+        "func cut(a: bytes) -> int effects():\n    return len(a[0:1])\nfunc main() -> int:\n    return cut(b\"ab\")\n",
         effect_bound,
     );
 }
@@ -266,7 +266,7 @@ test "PY-BYTES-7 views and copies exist only on the immutable byte string" {
 }
 
 // spec-case: PY-BYTES-9
-test "PY-BYTES-9 numeric parsing is accepted under noalloc and a view is not" {
+test "PY-BYTES-9 numeric parsing is accepted under noalloc and an explicit ceiling rejects a view" {
     try t.expectEqual(@as(i64, 42), try value(
         "func parse(text: str) -> int noalloc:\n" ++
             "    match parse_int(text):\n" ++
@@ -325,7 +325,7 @@ test "PY-BYTES-9 numeric parsing is accepted under noalloc and a view is not" {
             "func main() -> int:\n" ++
             "    return parse(b\"2.5\")\n",
     ));
-    try rejected("func peek(raw: bytes) -> int noalloc:\n    return len(raw.view(0, 1))\nfunc main() -> int:\n    return peek(b\"abc\")\n", effect_bound);
+    try rejected("func peek(raw: bytes) -> int effects():\n    return len(raw.view(0, 1))\nfunc main() -> int:\n    return peek(b\"abc\")\n", effect_bound);
 }
 
 // spec-case: FRONTEND-CORE-NOALLOC-1
@@ -417,7 +417,7 @@ test "PY-BYTES-RANGE-1 range parsing and scalar counting clamp without a view al
             "            return 2\n",
     ));
     try rejected(
-        "func measure(raw: bytes) -> int noalloc:\n" ++
+        "func measure(raw: bytes) -> int effects():\n" ++
             "    match raw.scalar_count_range(0, len(raw)):\n" ++
             "        case Ok(width):\n" ++
             "            return width\n" ++
@@ -473,7 +473,7 @@ test "PY-BYTES-FUSED-RANGE-1 immediate slices and views parse under noalloc" {
             "            return 11\n",
     ));
     try rejected(
-        "func retained(raw: bytes) -> int noalloc:\n" ++
+        "func retained(raw: bytes) -> int effects():\n" ++
             "    mut part = raw[0:2]\n" ++
             "    match part.parse_int():\n" ++
             "        case Some(number):\n" ++
@@ -485,7 +485,7 @@ test "PY-BYTES-FUSED-RANGE-1 immediate slices and views parse under noalloc" {
         effect_bound,
     );
     try rejected(
-        "func retained(raw: bytes) -> int noalloc:\n" ++
+        "func retained(raw: bytes) -> int effects():\n" ++
             "    mut part = raw.view(0, 2)\n" ++
             "    match part.parse_int():\n" ++
             "        case Some(number):\n" ++
@@ -497,7 +497,7 @@ test "PY-BYTES-FUSED-RANGE-1 immediate slices and views parse under noalloc" {
         effect_bound,
     );
     try rejected(
-        "func mutable(data: byte_buffer) -> int noalloc:\n" ++
+        "func mutable(data: byte_buffer) -> int effects():\n" ++
             "    match data[0:2].parse_int():\n" ++
             "        case Some(number):\n" ++
             "            return number\n" ++

@@ -1,0 +1,22 @@
+{
+  "command": "PYTHONDONTWRITEBYTECODE=1 python3 experiments/frontend-fixes-20261009/test_s5_frontend_reference.py",
+  "runs": [
+    {
+      "phase": "red",
+      "status": 1,
+      "tests": 3,
+      "log_sha256": "a53ffa0071944a4d047cd382c1cf0ac8b5c5ca441465f629152aa8402927b504",
+      "log_bytes": 5157
+    },
+    {
+      "phase": "green",
+      "status": 0,
+      "tests": 3,
+      "log_sha256": "33060fd73862c5e1af97335504d5b45211fce6d229657f556d8deceeadc52ce4",
+      "log_bytes": 101
+    }
+  ],
+  "real_reference_cases_per_mode": 1547,
+  "frozen_cases_per_mode": 1518,
+  "additional_cases_per_mode": 29
+}

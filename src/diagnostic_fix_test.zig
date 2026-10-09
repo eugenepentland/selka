@@ -399,22 +399,3 @@ test "a removed spelling is still renamed when the file only uses the new name" 
     try keptRename("def g(fs: Filesystem, other: filesystem_cap) -> Filesystem:\n    return fs\n", "other: Filesystem");
     try keptRename("module main\n\n\ndef root(x: float) -> float:\n    return f64_sqrt(x)\n", "return sqrt(x)");
 }
-
-// spec-case: FIX-MIGRATION-OVERLAP-1
-test "fix edits collide when they overlap or share an insertion point, never when identical" {
-    const Edit = language.diagnostic.Edit;
-    const outer: Edit = .{ .span = .{ .start = 10, .end = 40 }, .text = "x" };
-    const inner: Edit = .{ .span = .{ .start = 20, .end = 30 }, .text = "y" };
-    const after: Edit = .{ .span = .{ .start = 40, .end = 41 }, .text = "" };
-    const insert: Edit = .{ .span = .{ .start = 10, .end = 10 }, .text = "mut " };
-    try t.expect(outer.collides(inner));
-    try t.expect(!outer.collides(after));
-    try t.expect(outer.collides(insert));
-    try t.expect(outer.same(outer));
-    try t.expect(!outer.collides(outer));
-    const whole: language.diagnostic.Fix = .{ .edit = outer, .more = &.{after} };
-    try t.expect(!whole.collides(&.{}));
-    try t.expect(whole.collides(&.{inner}));
-    const broken: language.diagnostic.Fix = .{ .edit = outer, .more = &.{inner} };
-    try t.expect(broken.collides(&.{}));
-}

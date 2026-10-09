@@ -1639,36 +1639,21 @@ fn moduleSyntax(project: *graph.Project, module_id: usize, cache: ?*SyntaxCache,
         if (err != error.SourceError) return err;
         const problem = sink.items.items[0];
         const failure = project.fail(problem.code, problem.message, .{ .module = module_id, .span = problem.span }, null);
-        try preserveParserFixes(project, sink.items.items);
+        preserveParserDiagnostics(project, sink.items.items);
         return failure;
     };
     if (cache) |retained| try retained.remember(module.src, module.header.body_start, syntax);
     if (frontend) |disk| try disk.rememberSyntax(module.src, module.header.body_start, syntax);
     return syntax;
 }
-/// Carry a module's parser repairs on its one reported problem. A repair joins
-/// whole or not at all, and only when none of its edits collides with an edit
-/// already carried or with another of its own: a nested legacy expression and
-/// its enclosing one replace overlapping bytes, so the later repair waits for
-/// the next `mylang fix` round, which reparses the updated file
-/// (FIX-MIGRATION-OVERLAP-1).
-fn preserveParserFixes(project: *graph.Project, problems: []const diagnostic.Diagnostic) std.mem.Allocator.Error!void {
-    var edits: std.ArrayList(diagnostic.Edit) = .empty;
-    const allocator = project.arena.allocator();
-    for (problems) |problem| {
-        const fix = problem.provenance.fix orelse continue;
-        if (fix.collides(edits.items)) continue;
-        for (0..fix.count()) |index| {
-            const edit = fix.at(index);
-            const repeated = for (edits.items) |kept| {
-                if (kept.same(edit)) break true;
-            } else false;
-            if (!repeated) try edits.append(allocator, edit);
-        }
+// The sink's storage and every diagnostic payload belong to the project arena.
+// Keep each repair on its diagnostic instead of merging unrelated edits.
+fn preserveParserDiagnostics(project: *graph.Project, problems: []const diagnostic.Diagnostic) void {
+    project.problem.?.recovered = problems;
+    if (problems[0].provenance.fix) |fix| {
+        project.problem.?.fix = fix.edit;
+        project.problem.?.fix_more = fix.more;
     }
-    if (edits.items.len == 0) return;
-    project.problem.?.fix = edits.items[0];
-    project.problem.?.fix_more = edits.items[1..];
 }
 
 fn parseModule(project: *graph.Project, module_id: usize, sink: *diagnostic.Sink) diagnostic.Error!ast.Program {

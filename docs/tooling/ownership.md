@@ -10,11 +10,11 @@ refuses a program: what it cannot prove it answers the conservative way.
 ## What the pass decides
 
 - **Moves and borrows.** Every managed value (a list, dictionary, set, string, byte
-  buffer, or a record or union holding one) is owned, borrowed or immortal. A call
+  buffer, or a record or enum holding one) is owned, borrowed or immortal. A call
   borrows its arguments; the last use of an owned value that consumes it (a store, a
   return, an update) moves it; any other consuming use takes a `retain` first, and a
   value that dies without one is released where it dies, on every path, including
-  early returns and `?`.
+  early returns and `try` propagation.
 - **Copy-on-write.** Each in-place update of a list (`append`, an element write,
   `pop`) takes one of three forms: in place with no test when the list is provably
   unique (fresh from a constructor, a copy or another update, and never shared);
@@ -33,20 +33,25 @@ list the pass updated in place without a test really was unique.
 updates in place without a test, updates behind a uniqueness test, updates on a
 copy, retains and releases emitted, pairs elided, and lists placed on the stack.
 
-```console
-$ cat fill.my
-func fill(n: int) -> list[int]:
-    out: list[int] = []
+Save this program as `fill.my`:
+
+```mylang
+# doc: expect 21
+func fill(n: int) -> int[]:
+    mut out: int[] = []
     for i in range(n):
         out.append(i * i)
     return out
 
 
 func main() -> int:
-    squares = fill(10)
-    copy = squares
+    const squares = fill(10)
+    mut copy = squares
     copy.append(1)
     return len(squares) + len(copy)
+```
+
+```console
 $ mylang build fill.my -o fill --release --stats
 mylang-core: inlined 0 calls, unswitched 0 loops, versioned 0 loops, proved 5 checks, vectorized 0 loops
 mylang-core: ownership: 1 updates in place, 0 tested, 1 copied; 0 retains, 2 releases (0 pairs elided); 0 lists on the stack

@@ -1,5 +1,0 @@
-extern func myl_core_parse_int_range(host: Host) -> int effects(host)
-
-
-func bounded(host: Host) -> int noalloc:
-    return myl_core_parse_int_range(host)

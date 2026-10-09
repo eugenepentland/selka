@@ -831,6 +831,12 @@ pub fn build(b: *std.Build) void {
     fmt_step.dependOn(&fmt_tests.step);
     test_step.dependOn(&my_fmt.step);
     test_step.dependOn(&fmt_tests.step);
+    const noalloc_step = b.step("test-noalloc-lint", "Lint every live allocation-contract source");
+    const noalloc_lint = driver(b, "lint live noalloc contracts", rss.script, "noalloc_lint");
+    noalloc_lint.addArgs(&.{ "python3", "scripts/check_noalloc.py", "--compiler" });
+    noalloc_lint.addArtifactArg(exe);
+    noalloc_step.dependOn(&noalloc_lint.step);
+    test_step.dependOn(&noalloc_lint.step);
     const embedded_step = b.step("test-embedded-migration", "Verify embedded source extraction and guarded compiler-driven migration");
     const embedded_tests = driver(b, "verify embedded migration staging", rss.script, "embedded_migration");
     embedded_tests.addArgs(&.{ "python3", "tests/test_migrate_embedded.py" });

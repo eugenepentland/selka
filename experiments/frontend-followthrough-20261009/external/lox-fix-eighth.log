@@ -1,7 +1,0 @@
-{"version":"diagnostic-v1","kind":"diagnostic","diagnostic":{"code":"E_BINDING_SCOPE_MIGRATION","severity":"error","message":"this implicit local is used outside its block; declare the state in the enclosing block or rewrite the branches as a value expression","location":{"path":"resolver.my","start":{"line":147,"column":13},"end":{"line":147,"column":20},"bytes":{"start":4095,"end":4102}},"notes":[],"stack":{"frames":[],"omitted":0}}}
-{"version":"diagnostic-v1","kind":"diagnostic","diagnostic":{"code":"E_SHADOWING","severity":"error","message":"binding shadows an active local or top-level function","location":{"path":"parser.my","start":{"line":194,"column":19},"end":{"line":194,"column":27},"bytes":{"start":6814,"end":6822}},"notes":[],"stack":{"frames":[],"omitted":0}}}
-fixed experiments/frontend-followthrough-20261009/external/sources/lox/benchmarks/lox/ports/mylang/ast.my: 3 edits (E_NAMED_PATTERN)
-fixed experiments/frontend-followthrough-20261009/external/sources/lox/benchmarks/lox/ports/mylang/parser.my: 31 edits (E_NAMED_FIELDS, E_NAMED_PATTERN)
-fixed experiments/frontend-followthrough-20261009/external/sources/lox/benchmarks/lox/ports/mylang/parser_test.my: 12 edits (E_BINDING_DECLARATION, E_NAMED_PATTERN)
-fixed experiments/frontend-followthrough-20261009/external/sources/lox/benchmarks/lox/ports/mylang/resolver.my: 64 edits (E_BINDING_DECLARATION)
-fix: 110 edits in 4 files over 9 rounds

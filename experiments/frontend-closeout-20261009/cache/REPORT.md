@@ -91,3 +91,9 @@ source on immutable compiler
 21319448ba51241f917c040004d1a3c7123e5516d5f0a766d7cff557294793f2.
 Cold checked/stored are one/one; relocated reuse becomes one while cumulative
 checked remains one. Both requests pass. Checkpoint final receipts are preserved.
+
+## Archived full evidence
+
+Full captures and the original version of this report remain in commit `0bbfeb740`,
+reachable from `main` and `codex/frontend-followthrough-20261009`.
+Retrieve any archived path with `git show 0bbfeb740:PATH` (paths are repository-relative).

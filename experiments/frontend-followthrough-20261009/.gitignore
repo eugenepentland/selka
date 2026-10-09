@@ -1,7 +1,0 @@
-# Reproducible local source snapshots and compiled products. Patches, source
-# manifests, all raw qualification receipts and rejected attempts are versioned.
-external/artifacts/
-external/sources/
-external/native-cache/
-external/*/cache/
-**/__pycache__/

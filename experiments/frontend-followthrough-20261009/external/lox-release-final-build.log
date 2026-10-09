@@ -1,3 +1,0 @@
-build-slot: all 3 build slot(s) busy; waiting (0s so far)
-build-slot: build slot 2 after 30s (all 3 build slot(s) busy)
-{"version":"cache-report-v1","program":"linked","units":1,"reused":1,"compiled":0,"verified":0,"processes":1}

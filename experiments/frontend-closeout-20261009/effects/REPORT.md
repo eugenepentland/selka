@@ -107,15 +107,15 @@ already include guest allocation. No blanket annotation widening remains.
 ## Validation
 
 Focused logs preserve compile mistakes, slot admission waits and superseded
-queued requests cancelled before admission. `test-session.log` passed 6/6 Core
-regressions in 7.43s before the noalloc-only correction. `test-summary-final.log`
+queued requests cancelled before admission. `0bbfeb740:experiments/frontend-closeout-20261009/effects/test-session.log` passed 6/6 Core
+regressions in 7.43s before the noalloc-only correction. `0bbfeb740:experiments/frontend-closeout-20261009/effects/test-summary-final.log`
 passed 8/8 (one named regression plus seven mandatory unnamed blocks) in 9.32s.
 Actual CLI checks are in cli-check-results.json and per-case logs: COW JSON
 points to line2,column5 and scratch text points to the helper line2,column12.
 Final noalloc-only Core suite passed 7/7 in test-final-seven.log (11.00s including compilation), including the legacy effects-list cold/warm positive and strict noalloc cold/warm/edit rejection. cli-final-results.json records the final source-built compiler: legacy effects COW/callback library exits0; explicit noalloc COW and cold scratch each exit1; spoofed runtime extern exits1 with E_EXTERN_SYMBOL.
 The coordinator owns full gates, corpus qualification and Guardian feedback.
 
-The final compatibility unit run `test-compatibility-final.log` passed 9/9 in13.64s: the unchanged managed_lists_test fixed-slot positive uses legacy effects(mutation), and the noalloc summary/reorder regression passes with the exact source-spelling predicate. No edit to that legacy test fixture was needed.
+The final compatibility unit run `0bbfeb740:experiments/frontend-closeout-20261009/effects/test-compatibility-final.log` passed 9/9 in13.64s: the unchanged managed_lists_test fixed-slot positive uses legacy effects(mutation), and the noalloc summary/reorder regression passes with the exact source-spelling predicate. No edit to that legacy test fixture was needed.
 
 ## Full gate 2 followup: fixed UTF-8 diagnostic and resource contracts
 
@@ -146,3 +146,9 @@ receipts. The coordinator owns fresh installation, full gate and followup commit
 Exactly seven resource function ceilings changed: two source-test mains, one IO-test main, two fixture mains, and two example mains; the documentation reproduces the resource-io example.
 
 Followup unit validation passed 13/13 selected tests (including seven mandatory unnamed blocks), exit0, in test-fullgate2-fixes.log: 418.75s total including slot admission. The native invalid UTF-8 exact error payload and existing PY-BYTES-9 valid/numeric cases passed; resource ownership acquisition/completion/move/read assertions passed. The harness printed a failed-command description after its PASS result despite successful outer exit; the complete receipt is preserved. The static Core regression then passed with all eight selected Core allocation contract tests in test-fullgate2-core.log, exit0, 9.27s: unused scalar-count root has zero allocation sites and unused noalloc capability attenuation remains rejected.
+
+## Archived full evidence
+
+Full captures and the original version of this report remain in commit `0bbfeb740`,
+reachable from `main` and `codex/frontend-followthrough-20261009`.
+Retrieve any archived path with `git show 0bbfeb740:PATH` (paths are repository-relative).

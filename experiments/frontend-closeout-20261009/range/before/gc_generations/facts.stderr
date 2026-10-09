@@ -1,3 +1,0 @@
-gc_generations.my:1:1: error[E_MAIN]: the program requires an entry point: func main() -> int; `mylang check FILE` type-checks a library that has no main
-  # The collector is generational: a survivor stays marked and old, and a minor
-  ^

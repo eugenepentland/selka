@@ -46,20 +46,20 @@ duplicated validation without weakening either stage.
 
 Focused validation through build-slot/pinned Zig:
 
-- `initial.log`: first compile waited 180 seconds for shared slots, then hit a
+- `0bbfeb740:experiments/frontend-closeout-20261009/range/initial.log`: first compile waited 180 seconds for shared slots, then hit a
   coordinator's concurrent developerFailure error-set syntax edit; corrected
   separately by the coordinator.
-- `second.log`: 31/33 tests passed. Two existing byte-range noalloc tests failed
+- `0bbfeb740:experiments/frontend-closeout-20261009/range/second.log`: 31/33 tests passed. Two existing byte-range noalloc tests failed
   because the new Core allocation bridge classified intrinsic calls as unresolved;
   the effects package corrected the audited allocation-free helper list.
-- `third.log`: 39/39 range/shared-dir/recovery tests passed, including source spans,
+- `0bbfeb740:experiments/frontend-closeout-20261009/range/third.log`: 39/39 range/shared-dir/recovery tests passed, including source spans,
   endpoint/stride walking order, native results and a bounded nested-token mutation
   regression checking every diagnostic span and no published partial AST.
-- `final-focused.log`: **210/210** range/shared-dir/recovery/semantic/navigation/
+- `0bbfeb740:experiments/frontend-closeout-20261009/range/final-focused.log`: **210/210** range/shared-dir/recovery/semantic/navigation/
   quality/duplicate tests passed after final boxing; 17.98 seconds test wall,
   exit status 0. Includes cached/fresh agreement, relocation, independent ownership,
   allocation failure, generic publication rollback and durable header corruption.
-- `sizes-final.log`: actual final before/after size proof, exit 0.
+- `0bbfeb740:experiments/frontend-closeout-20261009/range/sizes-final.log`: actual final before/after size proof, exit 0.
 
 The durable corruption regression writes deliberately malformed payloads with valid
 checksums. Empty and multiple owned plans become damaged misses; one plan succeeds.
@@ -68,11 +68,11 @@ consumer invokes the exact-one accessor. SPEC primary is `TYPED-RANGE-1`.
 
 Differential evidence compares the qualified immutable compiler SHA
 5e072ee17b825cfbd40ed5533c3bce9f166ce4ae576395020cd5e435cc45ed11 to
-source-bound closeout candidates. `compare.py` enumerates all 86 original
+source-bound closeout candidates. `0bbfeb740:experiments/frontend-closeout-20261009/range/compare.py` enumerates all 86 original
 `tests/lang` sources containing ` in range(` and retains every raw Core/facts
 command/output, source SHA, compiler SHA, exit and elapsed time. Baseline has
 **100 accepted commands and 72 rejected commands** (mostly library sources with
-no standalone main); `baseline-rejections.json` explicitly preserves rejections.
+no standalone main); `0bbfeb740:experiments/frontend-closeout-20261009/range/baseline-rejections.json` explicitly preserves rejections.
 Against candidate 1, **92 accepted outputs are byte-identical** and eight commands
 were newly rejected by allocation contracts, with no different successful output.
 Those eight belong to four files: keyed_sorting, stable_sorting,
@@ -85,10 +85,10 @@ Final comparison against immutable SHA
 aca89445a3f2d4f2dddbf68b6441c3473374cd37b2e6cde68929e0690def737f
 has **100/100 accepted outputs byte-identical** and **72/72 baseline rejection
 statuses preserved**, with the same main-source byte hashes in each pair.
-`comparison-final.json` binds every comparison, including final baseline receipts;
+`0bbfeb740:experiments/frontend-closeout-20261009/range/comparison-final.json` binds every comparison, including final baseline receipts;
 no output text normalization is applied.
 
-`llvm_compare.py` compares raw Core, optimized facts and release LLVM plus native
+`0bbfeb740:experiments/frontend-closeout-20261009/range/llvm_compare.py` compares raw Core, optimized facts and release LLVM plus native
 stdout/stderr/exit for loop_rebinding, bounded_loop_ranges, array_negative_index,
 rc_scalar_loops and an exact-copy Python-expression library driver. Candidate1
 matches all five byte for byte, including stepped directions/overflow, nested
@@ -110,7 +110,7 @@ LLVM and native equality. `native-final` proves the five existing probes against
 the final compiler; `native-endpoints` proves the sixth. The original immutable
 iteration-assignment and later CFG-rejected attempts remain separate evidence.
 
-`dwarf-old-size.log` additionally corroborates the qualified old binary's actual
+`0bbfeb740:experiments/frontend-closeout-20261009/range/dwarf-old-size.log` additionally corroborates the qualified old binary's actual
 80-byte typed.Statement debug record at old source line634.
 
 The integrated full gate/source gate and final immutable candidate qualification
@@ -124,11 +124,17 @@ After the integrated gate exposed unrelated UTF-8 cold-diagnostic allocation and
 resource-contract issues, the corrected frozen compiler was replayed separately:
 `artifacts/mylang-qualified`, SHA256
 `21319448ba51241f917c040004d1a3c7123e5516d5f0a766d7cff557294793f2`.
-The preceding checkpoint and its receipts remain unchanged. `final2.json` and
-`comparison-final2.json` again prove all 100 accepted Core/facts outputs exact
+The preceding checkpoint and its receipts remain unchanged. `0bbfeb740:experiments/frontend-closeout-20261009/range/final2.json` and
+`0bbfeb740:experiments/frontend-closeout-20261009/range/comparison-final2.json` again prove all 100 accepted Core/facts outputs exact
 against old5e and preserve all 72 baseline rejection statuses (172 commands).
 `native-final2` and `native-endpoints-final2` again prove exact Core, release LLVM
 and native outputs for the six accepted probes. The custom v2 release CFG
 rejection remains in both compilers and is still excluded from success counts.
 External replay and the corrected 614-file source guard are recorded separately
-under `../external-final2/`.
+under `0bbfeb740:experiments/frontend-closeout-20261009/external-final2`.
+
+## Archived full evidence
+
+Full captures and the original version of this report remain in commit `0bbfeb740`,
+reachable from `main` and `codex/frontend-followthrough-20261009`.
+Retrieve any archived path with `git show 0bbfeb740:PATH` (paths are repository-relative).
