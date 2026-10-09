@@ -328,6 +328,22 @@ test "PY-BYTES-9 numeric parsing is accepted under noalloc and a view is not" {
     try rejected("func peek(raw: bytes) -> int noalloc:\n    return len(raw.view(0, 1))\nfunc main() -> int:\n    return peek(b\"abc\")\n", effect_bound);
 }
 
+// spec-case: FRONTEND-CORE-NOALLOC-1
+test "noalloc scalar counting preserves the fixed invalid UTF8 payload" {
+    try t.expectEqual(@as(i64, 42), try value(
+        "func measure(raw: bytes) -> int noalloc:\n" ++
+            "    match raw.scalar_count():\n" ++
+            "        case Ok(width):\n" ++
+            "            return width\n" ++
+            "        case Err(message):\n" ++
+            "            if message == \"invalid UTF-8 in byte string\":\n" ++
+            "                return 42\n" ++
+            "            return 0\n" ++
+            "func main() -> int:\n" ++
+            "    return measure(b\"\\xff\")\n",
+    ));
+}
+
 // spec: PY-BYTES-RANGE-1
 test "PY-BYTES-RANGE-1 range parsing and scalar counting clamp without a view allocation" {
     try t.expectEqual(@as(i64, 42), try value(

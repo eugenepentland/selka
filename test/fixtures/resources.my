@@ -24,7 +24,7 @@ func retry(file: File) -> Finish effects(filesystem):
             return Err(failure)
 
 
-func main(fs: Filesystem) -> int noalloc:
+func main(fs: Filesystem) -> int effects(filesystem):
     mut request: FixedArray[u8, 1] = FixedArray[u8, 1]([42u8])
     match acquire_resource[Open](fs, request):
         case Open.ok(file):

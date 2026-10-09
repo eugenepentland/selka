@@ -460,3 +460,27 @@ test "Core allocation contracts distinguish compiler runtime scalar helpers from
     module.functions.items[0].span = 0;
     try std.testing.expectEqual(cost.Allocation.never, cost.allocation(&module, &module.functions.items[0], call));
 }
+
+// spec-case: FRONTEND-CORE-NOALLOC-1
+test "Core allocation contracts pool fixed UTF8 errors and reject capability block allocation" {
+    const language = @import("mylang");
+    const contracts = @import("allocation_contract.zig");
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const scalar_source = "func measure(raw: bytes) -> int noalloc:\n    match raw.scalar_count():\n        case Ok(width):\n            return width\n        case Err(_):\n            return 0\nfunc main() -> int:\n    return 0\n";
+    var parsed = try language.Compilation.init(a, "count.my", scalar_source);
+    try parsed.check();
+    try std.testing.expectEqual(@as(?contracts.Violation, null), try contracts.checkProgram(a, parsed.program.?, parsed.src));
+    var refusal: build.Refusal = .{};
+    // Build the bounded root: main does not call this unused body.
+    var owned = try build.buildRootsSource(a, parsed.program.?, &.{@fromBackingInt(0)}, parsed.src, &refusal);
+    const bounded_outcome = try passes.debug(a, &owned);
+    const bounded_report = try cost.measure(a, &owned, &bounded_outcome, "measure");
+    try std.testing.expectEqual(@as(u32, 0), bounded_report.totals.allocation.sites);
+    var restricted = try language.Compilation.init(a, "cap.my", "func bounded(fs: Filesystem) -> int noalloc:\n    _ = fs.read_only()\n    return 0\n");
+    const restricted_program = try restricted.checkLibraryProgram();
+    const failure = (try contracts.checkProgram(a, restricted_program, restricted.src)).?;
+    try std.testing.expectEqualStrings("bounded", failure.function);
+    try std.testing.expect(failure.unsupported == null);
+}

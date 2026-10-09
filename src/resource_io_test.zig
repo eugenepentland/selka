@@ -95,7 +95,7 @@ const source = declarations ++ requests ++
     \\    return Ok(i64(first.length) + i64(first.bytes[0]) + i64(first.bytes[1]) + i64(first.bytes[2]) + i64(first.bytes[3]) + i64(count))
     \\
     \\
-    \\func main(fs: Filesystem) -> i64 noalloc:
+    \\func main(fs: Filesystem) -> i64 effects(filesystem):
     \\    match work(fs):
     \\        case Status.ok(value):
     \\            return value

@@ -82,7 +82,7 @@ const retry = declarations ++
     \\            return e
     \\
     \\
-    \\func main(fs: Filesystem) -> i64 noalloc:
+    \\func main(fs: Filesystem) -> i64 effects(filesystem):
     \\    return attempt(fs) * 100 + attempt(fs.read_only())
 ;
 fn retryScenario(allocator: std.mem.Allocator) !void {
@@ -120,7 +120,7 @@ const complete_once = declarations ++ helpers ++
     \\            return e
     \\
     \\
-    \\func main(fs: Filesystem) -> i64 noalloc:
+    \\func main(fs: Filesystem) -> i64 effects(filesystem):
     \\    return attempt(fs) * 100 + attempt(fs.read_only())
 ;
 
