@@ -1,0 +1,126 @@
+module f2_fields
+
+# Whole-program field intervals (lane F2, NEW-CORE-F2-FIELD-1): a record field's interval
+# is the hull of every value any write in the program stores into it. Each scenario below
+# writes a field far from where it is read: through a `mut` callee, an element field store,
+# a copy changed afterwards, recursion, and a function value. `main` runs every scenario;
+# a first argument names one, and each further argument makes it larger.
+
+
+record Pos:
+    i: int
+    tag: int
+
+
+record Slot:
+    index: int
+
+
+record Holder:
+    pos: Pos
+    weight: int
+
+
+record Small:
+    v: int
+
+
+def step(p: mut Pos, limit: int):
+    if p.i < limit:
+        p.i = p.i + 1
+
+
+# A far-away write through a `mut` callee: the field becomes negative and the read wraps.
+def reset(p: mut Pos):
+    p.i = -1
+
+
+def walk(xs: list[int], rounds: int, negative: bool) -> int:
+    p = Pos(i=0, tag=7)
+    total = 0
+    for k in range(rounds):
+        step(mut p, len(xs) - 1)
+        total = total + xs[p.i]
+    if negative:
+        reset(mut p)
+    return total * 100 + xs[p.i]
+
+
+# An element field store and a copy changed afterwards.
+def elements(xs: list[int], size: int) -> int:
+    ps = [Pos(i=1, tag=0), Pos(i=2, tag=1)]
+    ps[size % 2].i = -2
+    q = ps[0]
+    q.i = q.i - 1
+    hs = [Holder(pos=q, weight=3)]
+    hs[0].pos.i = hs[0].pos.i - size
+    return xs[ps[0].i] * 10000 + xs[q.i] * 100 + xs[hs[0].pos.i]
+
+
+# Recursion moves the field down by one per level.
+def descend(xs: list[int], p: Pos, depth: int) -> int:
+    if depth == 0:
+        return xs[p.i]
+    lower = p
+    lower.i = p.i - 1
+    return descend(xs, lower, depth - 1)
+
+
+def make(v: int) -> Pos:
+    return Pos(i=v, tag=v)
+
+
+# A record made through a function value.
+def through_value(xs: list[int], v: int) -> int:
+    maker = make
+    p = maker(v)
+    return xs[p.i]
+
+
+# Every write stores `k % 4` with `k >= 0`: the index is in [0, 3] wherever it is read,
+# here in a function that sees only its parameter.
+def pick(s: Slot) -> int:
+    table = [5, 6, 7, 8]
+    return table[s.index]
+
+
+def slots(rounds: int) -> int:
+    total = 0
+    s = Slot(index=0)
+    for k in range(rounds):
+        s.index = k % 4
+        total = total + pick(s)
+    return total
+
+
+# Only 3 and 7 are ever stored: the field lies in [3, 7].
+def small(big: bool) -> int:
+    s = Small(v=3)
+    if big:
+        s.v = 7
+    return s.v * 2
+
+
+def scenario(name: str, size: int, out: Stream) -> int:
+    xs = [10, 20, 30, 40, 50 + size]
+    if name == "walk" or name == "all":
+        out.print(walk(xs, 3 + size, False), walk(xs, 9 + size, True))
+    if name == "elements" or name == "all":
+        out.print(elements(xs, size))
+    if name == "descend" or name == "all":
+        out.print(descend(xs, make(2), 3 + size), descend(xs, make(4), 1))
+    if name == "value" or name == "all":
+        out.print(through_value(xs, -2 - size), through_value(xs, 1))
+    if name == "slots" or name == "all":
+        out.print(slots(10 + size))
+    if name == "small" or name == "all":
+        out.print(small(size > 0), small(False))
+    if name == "deep":
+        out.print(descend(xs, make(0), 6 + size))
+    return 0
+
+
+def main(args: list[str], out: Stream) -> int:
+    if len(args) == 0:
+        return scenario("all", 0, out)
+    return scenario(args[0], len(args) - 1, out)

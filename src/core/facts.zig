@@ -332,6 +332,8 @@ const Analysis = struct {
     element_changes: []u8 = &.{},
     /// Value, index and list length identities (`index_keys`, NEW-CORE-F2-INDEX-2).
     keys: ?index_keys.Keys = null,
+    /// Whole-program field intervals (`Options.fields`).
+    fields: FieldIntervals = .{},
 
     fn inst(self: *Analysis, ref: ir.Ref) ir.Inst {
         return self.f.inst(self.f.resolve(ref));
@@ -539,7 +541,61 @@ pub const Options = struct {
     /// Turn the checks the facts rule out into `proven` and fold decided
     /// comparisons; false computes the facts without changing the function.
     mark: bool = true,
+    /// Whole-program integer field intervals (`fields.zig`, NEW-CORE-F2-FIELD-1).
+    fields: FieldIntervals = .{},
 };
+
+/// Whole-program intervals of integer and boolean record fields (`fields.zig`,
+/// NEW-CORE-F2-FIELD-1): per record type, by compound index, per field, the hull of every
+/// value any write in the module stores there; null where unknown.
+pub const FieldIntervals = struct {
+    module: ?*const ir.Module = null,
+    types: []const ?[]const ?Interval = &.{},
+
+    /// The interval of field `field` of every record of type `ty`, when known.
+    pub fn get(self: FieldIntervals, ty: ir.Type, field: u64) ?Interval {
+        if (!ty.isCompound()) return null;
+        const index = @backingInt(ty) - ir.Type.first_compound;
+        if (index >= self.types.len) return null;
+        const table = self.types[index] orelse return null;
+        if (field >= table.len) return null;
+        return table[@intCast(field)];
+    }
+
+    /// The interval of the value at `path` inside an element of type `element`, when the
+    /// path ends in a field of a record.
+    pub fn atPath(self: FieldIntervals, element: ir.Type, path: ir.FieldPath) ?Interval {
+        const module = self.module orelse return null;
+        const last = pathField(module, element, path) orelse return null;
+        return self.get(last.record, last.field);
+    }
+};
+
+/// The record type and field the last step of `path` inside an `element` value selects,
+/// or null when the last step is not a record field (a union tag or payload, an array element).
+pub fn pathField(module: *const ir.Module, element: ir.Type, path: ir.FieldPath) ?struct { record: ir.Type, field: u32 } {
+    var current = element;
+    const steps = path.slice();
+    for (steps, 0..) |step, k| {
+        const kind = module.kind(current) orelse return null;
+        switch (kind) {
+            .record => {
+                const fields = module.compound(current).record;
+                if (step >= fields.len) return null;
+                if (k + 1 == steps.len) return .{ .record = current, .field = step };
+                current = fields[step];
+            },
+            .array => current = module.compound(current).array.elem,
+            .@"union" => {
+                const cases = module.compound(current).@"union";
+                if (step == 0 or step - 1 >= cases.len) return null;
+                current = cases[step - 1];
+            },
+            else => return null,
+        }
+    }
+    return null;
+}
 
 /// The deliberately wrong rules (`--sabotage-facts`, `--sabotage-facts=widening`, `=length`).
 pub const Sabotage = enum {
@@ -557,6 +613,8 @@ pub const Sabotage = enum {
     overflow,
     /// A passed bounds check is taken to cover the next index up too (`index_checks`).
     index,
+    /// A record field's whole-program interval loses its top (`fields.zig`).
+    field,
 };
 
 /// The bounds a widened interval may stop at before its type's own: 0, the
@@ -658,6 +716,7 @@ pub fn analyze(arena: std.mem.Allocator, f: *ir.Function, options: Options) Erro
         .arena = arena,
         .sabotage = options.sabotage,
         .returns = options.returns,
+        .fields = options.fields,
         .f = f,
         .shape = try shape(arena, f),
         .facts = .{
@@ -913,9 +972,22 @@ fn transfer(a: *Analysis, ref: ir.Ref, block: ir.BlockId) ?Interval {
         .dict_entry_value => a.facts.aggregates.dicts[a.liveOperand(i.a).index()].values orelse full,
         .str_len => .{ .lo = 0, .hi = max_list_length },
         .record_get => blk: {
-            const table = fieldsOf(a, i.a) orelse break :blk full;
-            if (i.data >= table.len) break :blk full;
-            const field = table[@intCast(i.data)] orelse break :blk full;
+            // This function's own view of the record, and every record of its type's (NEW-CORE-F2-FIELD-1).
+            const global = a.fields.get(a.inst(i.a).ty, i.data);
+            const table = fieldsOf(a, i.a) orelse &.{};
+            const local: ?Interval = if (i.data < table.len) table[@intCast(i.data)] else null;
+            var field = local orelse global orelse break :blk full;
+            if (local != null and global != null) {
+                const both = field.meet(global.?);
+                if (both.lo <= both.hi) field = both;
+            }
+            break :blk if (full) |limits| field.meet(limits) else field;
+        },
+        .list_get_field => blk: {
+            const list_type = a.inst(i.a).ty;
+            const module = a.fields.module orelse break :blk full;
+            if (module.kind(list_type) != .list) break :blk full;
+            const field = a.fields.atPath(module.compound(list_type).list, ir.FieldPath.unpack(i.data & ~@import("flags.zig").place_read)) orelse break :blk full;
             break :blk if (full) |limits| field.meet(limits) else field;
         },
         .float_to_int => blk: {

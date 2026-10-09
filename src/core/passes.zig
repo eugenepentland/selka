@@ -10,6 +10,7 @@ const vector = @import("vector.zig");
 const version = @import("version.zig");
 const own = @import("own.zig");
 const index_checks = @import("index_checks.zig");
+const fields = @import("fields.zig");
 const effects = @import("effects.zig");
 const origins = @import("inline_origins.zig");
 
@@ -20,8 +21,9 @@ pub const Error = std.mem.Allocator.Error;
 /// comparisons unfolded and plans no vectors; `sabotage`, `sabotage_widening` and
 /// `sabotage_length` are verify with one wrong rule (`facts.Sabotage`), and
 /// `sabotage_overflow` verify with the overflow facts' rules off by one, and `sabotage_index`
-/// verify with a dominating check taken to cover the next index too (`index_checks`).
-pub const Mode = enum { off, trusted, verify, sabotage, sabotage_widening, sabotage_length, sabotage_overflow, sabotage_index };
+/// verify with a dominating check taken to cover the next index too (`index_checks`), and
+/// `sabotage_field` verify with each field interval's top dropped (`fields.zig`).
+pub const Mode = enum { off, trusted, verify, sabotage, sabotage_widening, sabotage_length, sabotage_overflow, sabotage_index, sabotage_field };
 
 /// What the passes produced, per function, and what they did.
 pub const Result = struct {
@@ -102,6 +104,7 @@ pub fn run(arena: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Resul
         .sabotage_length => .length,
         .sabotage_overflow => .overflow,
         .sabotage_index => .index,
+        .sabotage_field => .field,
         else => .none,
     };
     // A first fact pass with every parameter unknown gives each call site's argument
@@ -118,11 +121,19 @@ pub fn run(arena: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Resul
         result.per_function[index].counts.unswitched = changed;
         result.counts.unswitched += changed;
     }
-    for (try calleesFirst(arena, module)) |index| {
-        const function = &module.functions.items[index];
-        const known = try facts.analyze(arena, function, .{ .fold = !verify, .sabotage = sabotage, .mark = false, .returns = returns });
-        first[index] = known;
-        returns[index] = facts.returnRange(&known, function, sabotage);
+    // The whole-program field intervals (NEW-CORE-F2-FIELD-1) come from the writes under the
+    // first pass's facts; a second round sees them, and each round's hulls hold on their own.
+    const order = try calleesFirst(arena, module);
+    const closed = try fields.closedTypes(arena, module);
+    var field_table: facts.FieldIntervals = .{ .module = module };
+    for (0..2) |_| {
+        for (order) |index| {
+            const function = &module.functions.items[index];
+            const known = try facts.analyze(arena, function, .{ .fold = !verify, .sabotage = sabotage, .mark = false, .returns = returns, .fields = field_table });
+            first[index] = known;
+            returns[index] = facts.returnRange(&known, function, sabotage);
+        }
+        field_table = try fields.hulls(arena, module, first, closed, sabotage == .field);
     }
     const parameters = try parameterRanges(arena, module, first);
     // Closed caller bounds can prove an affine callback safe only after the
@@ -132,7 +143,7 @@ pub fn run(arena: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Resul
     const summaries = try effects.analyze(arena, module);
     for (module.functions.items, result.known, result.plans, parameters, 0..) |*function, *slot, *plan, params, index| {
         if (function.signature.linkage != .internal) continue;
-        const options: facts.Options = .{ .fold = !verify, .sabotage = sabotage, .params = params, .returns = returns };
+        const options: facts.Options = .{ .fold = !verify, .sabotage = sabotage, .params = params, .returns = returns, .fields = field_table };
         var known = try facts.analyze(arena, function, options);
         if (!verify and @import("byte_index.zig").forward(module, function, &known) != 0) {
             // The existing fact and vector rules now see the original counted index.

@@ -308,3 +308,95 @@ test "F2 index: a verify build catches a dominating check taken to cover the nex
     const plain = try leakChecked(a, root, "f2_index", &.{ "--release", "--verify-facts" }, &.{"next_trap"});
     try std.testing.expect(contains(plain.stderr, "error[R_LIST_BOUNDS]"));
 }
+
+const field_writes =
+    \\record Slot:
+    \\    index: int
+    \\
+    \\
+    \\record Loose:
+    \\    v: int
+    \\
+    \\
+    \\def pick(s: Slot) -> int:
+    \\    table = [5, 6, 7, 8]
+    \\    return table[s.index]
+    \\
+    \\
+    \\def use(b: Loose) -> int:
+    \\    table = [5, 6]
+    \\    return table[b.v]
+    \\
+    \\
+    \\def main(args: list[str], out: Stream) -> int:
+    \\    s = Slot(index=0)
+    \\    total = 0
+    \\    for k in range(len(args) + 3):
+    \\        s.index = k % 4
+    \\        total = total + pick(s)
+    \\    reader = use
+    \\    out.print(total, reader(Loose(v=1)), use(Loose(v=0)))
+    \\    return 0
+    \\
+;
+
+// spec: NEW-CORE-F2-FIELD-1
+test "F2 index: a field read takes the hull of every value the program writes into the field: no wrap, no check" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const text = try support.optimizedText(arena.allocator(), field_writes);
+    // `pick` sees only its parameter, but every `Slot.index` written is `k % 4` with `k >= 0`:
+    // the normalization from the end is folded away and the read of a 4-element list is proven.
+    const pick = functionIr(text, "pick");
+    try std.testing.expect(contains(pick, "list_get.proven"));
+    try std.testing.expect(!contains(pick, "cmp.lt bool"));
+}
+
+// spec: NEW-CORE-F2-FIELD-2
+test "F2 index: a record type a value from outside the program may hold has no field interval" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const text = try support.optimizedText(arena.allocator(), field_writes);
+    // `use` is a function value, so it may be called with a `Loose` the program did not
+    // make: its field keeps the type's range, and the read keeps its normalization and check.
+    const use = functionIr(text, "use");
+    try std.testing.expect(contains(use, "list_get.exact"));
+    try std.testing.expect(contains(use, "cmp.lt bool"));
+}
+
+// spec-case: NEW-CORE-F2-FIELD-1
+test "F2 index: field intervals keep every answer: fields written negative far away, element field stores, copies, recursion, function values" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
+    for (modes) |flags| {
+        const plain = try leakChecked(a, root, "f2_fields", flags, &.{});
+        try std.testing.expectEqualStrings("9040 39050\n403030\n50 40\n40 20\n63\n6 6\n", plain.stdout);
+        try std.testing.expectEqualStrings("", plain.stderr);
+        const more = try leakChecked(a, root, "f2_fields", flags, &.{ "all", "x" });
+        try std.testing.expectEqualStrings("14151 44751\n201051\n40 40\n30 20\n70\n14 6\n", more.stdout);
+        const deep = try leakChecked(a, root, "f2_fields", flags, &.{"deep"});
+        try std.testing.expectEqual(@as(u8, 1), deep.status);
+        try std.testing.expect(contains(deep.stderr, "f2_fields.my:63:16: error[R_LIST_BOUNDS]: native execution failed (index -6, length 5)"));
+    }
+}
+
+// spec: NEW-CORE-F2-FIELD-3
+test "F2 index: a verify build catches a field interval that lost its top" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
+    const sabotaged: []const []const u8 = &.{ "--release", "--sabotage-facts=field" };
+    const slots = try leakChecked(a, root, "f2_fields", sabotaged, &.{"slots"});
+    try std.testing.expectEqual(@as(u8, 1), slots.status);
+    try std.testing.expect(contains(slots.stderr, "f2_fields.my:84:18: error[R_CORE_FACT]: native execution failed (range [0, 2]: value 3"));
+    const small = try leakChecked(a, root, "f2_fields", sabotaged, &.{ "small", "x" });
+    try std.testing.expectEqual(@as(u8, 1), small.status);
+    try std.testing.expect(contains(small.stderr, "error[R_CORE_FACT]: native execution failed (range [3, 6]: value 7"));
+}
