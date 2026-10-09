@@ -2,6 +2,8 @@
 
 [Juice](juice.md) combines this static report with short, verified workload
 runs to compare application and backend changes without an elapsed-time gate.
+The [collection and text workflow](cost-workflow.md) shows how to combine a
+source entry, static sites, runtime counters and equivalent completed work.
 
 `mylang cost ENTRY.my [FUNCTION]` runs the same reachable Core construction and
 release passes as `mylang build ENTRY.my --release --stats`, then compiles the

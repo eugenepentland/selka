@@ -895,3 +895,59 @@ test "conditional indexed conditions do not look like applied constructors" {
     defer compilation.deinit();
     try compilation.parse();
 }
+
+// spec: TYPED-RANGE-1
+test "source shaped typed ranges retain endpoint spans and walker call order" {
+    const input =
+        \\func first() -> int:
+        \\    return 1
+        \\
+        \\func last() -> int:
+        \\    return 4
+        \\
+        \\func stride() -> int:
+        \\    return 1
+        \\
+        \\func main() -> int:
+        \\    mut total = 0
+        \\    for item in range(first(), last(), stride()):
+        \\        total += item
+        \\    return total
+    ;
+    var compilation = try language.Compilation.init(t.allocator, "typed-range.my", input);
+    defer compilation.deinit();
+    try compilation.check();
+    const checked = compilation.program.?;
+    var calls = try assertRangeShape(compilation.src, checked);
+    defer calls.deinit(t.allocator);
+    try t.expectEqual(@as(usize, 3), calls.items.len);
+    try t.expectEqualStrings("first", calls.items[0]);
+    try t.expectEqualStrings("last", calls.items[1]);
+    try t.expectEqualStrings("stride", calls.items[2]);
+    try t.expectEqual(@as(i64, 6), (try native.run(&compilation)).value);
+}
+
+fn assertRangeShape(src: source.Source, checked: language.typed.Program) !std.ArrayList([]const u8) {
+    var found = false;
+    for (checked.statements) |statement| {
+        if (statement.data != .range_loop) continue;
+        const range = statement.data.range_loop;
+        found = true;
+        try t.expectEqualStrings("item", src.text(range.plan().binding));
+        try t.expectEqualStrings("first()", src.text(checked.nodes[@backingInt(range.plan().start.value)].span));
+        try t.expectEqualStrings("last()", src.text(checked.nodes[@backingInt(range.plan().end.value)].span));
+    }
+    try t.expect(found);
+    var walker = try @import("typed_walk.zig").Walker.init(t.allocator, checked, checked.functions[@backingInt(checked.main)].scope.body);
+    defer walker.deinit();
+    var calls: std.ArrayList([]const u8) = .empty;
+    errdefer calls.deinit(t.allocator);
+    while (try walker.next()) |item| switch (item) {
+        .expression => |id| {
+            const node = checked.nodes[@backingInt(id)];
+            if (node.data == .call) try calls.append(t.allocator, checked.functions[@backingInt(node.data.call.function)].name);
+        },
+        else => {},
+    };
+    return calls;
+}

@@ -1510,14 +1510,15 @@ fn reuseBody(
     return function;
 }
 /// Open the stand-in plan for a request whose cache carries a summary request.
-fn openPlan(cache: ?*semantic_cache.Cache, session: *?semantic_cache.Session, allocator: std.mem.Allocator, main: usize) Error!?sema_summaries.Plan {
+fn openPlan(cache: ?*semantic_cache.Cache, session: *?semantic_cache.Session, allocator: std.mem.Allocator, main: usize, syntax: ast.Program) Error!?sema_summaries.Plan {
     const c = cache orelse return null;
     const request = c.context.summaries orelse return null;
     const queries = if (session.*) |*opened| opened else return null;
     const timing = activeTiming(cache);
     const start = timingStart(timing);
     defer timingAdd(timing, "stand_in_planning", start);
-    const plan = try sema_summaries.Plan.init(allocator, request, queries, main);
+    var plan = try sema_summaries.Plan.init(allocator, request, queries, main);
+    try plan.requireAllocationBodies(allocator, syntax);
     return plan;
 }
 /// Mark a failed stand-in attempt for a full retry and pass the error on. A
@@ -1703,7 +1704,12 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
 /// Check every library declaration and body without creating an executable entry.
 /// Checked trees are discarded; library success cannot seed executable caches.
 pub fn checkLibrary(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, names: ?*Names) Error!void {
-    _ = try checkCore(allocator, src, program, sink, .{ .names = names, .entry_required = false });
+    _ = try checkLibraryProgram(allocator, src, program, sink, names);
+}
+
+/// Library tree for backend contract verification; never an executable entry.
+pub fn checkLibraryProgram(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, names: ?*Names) Error!typed.Program {
+    return checkCore(allocator, src, program, sink, .{ .names = names, .entry_required = false });
 }
 
 /// Whether the entry unit declares a free function named `main`, the lookup
@@ -1829,7 +1835,7 @@ fn checkProgram(allocator: std.mem.Allocator, src: source.Source, program: ast.P
     // A library has no executable entry. This placeholder remains internal:
     // library checking neither adapts, returns nor caches the checked program.
     const main = if (options.entry_required) try checkEntry(&checker, module_names, failed) else @as(typed.FunctionId, @fromBackingInt(0));
-    var plan = try openPlan(cache, &session, allocator, @backingInt(main));
+    var plan = try openPlan(cache, &session, allocator, @backingInt(main), program);
     const functions = try checkBodies(.{
         .checker = &checker,
         .session = &session,

@@ -32,6 +32,31 @@ const Dumper = struct {
         for (0..depth) |_| try self.out.appendSlice(self.allocator, "  ");
     }
 
+    fn rangeStatement(self: *Dumper, range: typed.RangeLoop, depth: usize) std.mem.Allocator.Error!void {
+        const header = range.plan();
+        try self.out.print(self.allocator, " binding={d} id={d}\n", .{ header.binding.start, range.plan().loop.id });
+        try self.label("start:", depth + 1);
+        try self.node(header.start.value, depth + 2);
+        try self.label("end:", depth + 1);
+        try self.node(header.end.value, depth + 2);
+        try self.label("setup:", depth + 1);
+        for (header.setup) |setup| try self.statement(setup, depth + 2);
+        try self.label("loop:", depth + 1);
+        try self.label("condition:", depth + 2);
+        try self.node(range.plan().loop.condition, depth + 3);
+        try self.label("body:", depth + 2);
+        try self.statement(range.plan().loop.body, depth + 3);
+        if (range.plan().loop.step) |step| {
+            try self.label("step:", depth + 2);
+            try self.statement(step, depth + 3);
+        }
+    }
+
+    fn label(self: *Dumper, text: []const u8, depth: usize) std.mem.Allocator.Error!void {
+        try self.indent(depth);
+        try self.out.print(self.allocator, "{s}\n", .{text});
+    }
+
     fn statement(self: *Dumper, id: typed.StatementId, depth: usize) std.mem.Allocator.Error!void {
         const s = self.program.statements[@backingInt(id)];
         try self.indent(depth);
@@ -55,6 +80,7 @@ const Dumper = struct {
                 try self.statement(branch.then_body, depth + 1);
                 if (branch.else_body) |other| try self.statement(other, depth + 1);
             },
+            .range_loop => |range| try self.rangeStatement(range, depth),
             .loop => |loop| {
                 try self.out.print(self.allocator, " id={d}\n", .{loop.id});
                 try self.node(loop.condition, depth + 1);

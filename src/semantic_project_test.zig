@@ -312,3 +312,42 @@ test "adding an unrelated import directive does not invalidate ordinary bodies" 
     try t.expectEqual(before + 2, cache.statistics.reused);
     try t.expectEqual(@as(usize, 2), cache.statistics.checked);
 }
+
+// spec-case: SEMANTIC-CACHE-12
+test "nominal specialization arguments isolate same spelled declarations in different modules" {
+    const entry =
+        \\import left
+        \\import right
+        \\
+        \\constraint HasValue[T] = copy + field(value: int)
+        \\
+        \\func read[T: HasValue](x: T) -> int:
+        \\    return x.value
+        \\
+        \\func main() -> int:
+        \\    return read[left.Item](left.Item(value=3)) + read[right.Item](right.Item(value=4))
+        \\
+    ;
+    var entries = [_]File{
+        .{ .path = "main.my", .bytes = entry },
+        .{ .path = "left.my", .bytes = "public record Item:\n    value: int\n" },
+        .{ .path = "right.my", .bytes = "public record Item:\n    value: int\n" },
+    };
+    var files: Files = .{ .entries = &entries };
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    try agree(&files, &cache);
+    const before = cache.reuse.specializations.statistics;
+    try t.expectEqual(@as(usize, 2), before.checked);
+    try t.expectEqual(@as(usize, 2), before.stored);
+    entries[0].bytes = "# relocate\n" ++ entry;
+    try agree(&files, &cache);
+    const moved = cache.reuse.specializations.statistics;
+    try t.expectEqual(before.reused + 2, moved.reused);
+    try t.expectEqual(before.checked, moved.checked);
+    entries[1].bytes = "public record Item:\n    value: int\n    extra: int = 0\n";
+    try agree(&files, &cache);
+    const changed = cache.reuse.specializations.statistics;
+    try t.expectEqual(moved.reused + 1, changed.reused);
+    try t.expectEqual(moved.checked + 1, changed.checked);
+}

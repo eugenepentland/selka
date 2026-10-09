@@ -47,7 +47,7 @@ Memory safety combines automatic reclamation (one-count reference counting) with
 the runtime's checked pool handles and generations. The language has no guest spawn syntax. The native runtime can use a bounded
 worker pool for compiler-selected collection work; independent guest programs and
 tests can also run in separate processes.
-`noalloc` restricts managed guest allocation, not all compiler/runtime/host allocation.
+Explicit `noalloc` declarations are checked against unoptimized Core after ownership expansion. They reject managed backing allocation, runtime scratch allocation and unresolved foreign or callback calls, including internal callees and cold paths. This is a static may-allocate contract for the function, not a measured allocation count or a promise about compiler allocation or process startup. Existing `effects(...)` lists retain guest-level effect semantics.
 C functions called through `extern func` are trusted implementations of their
 declared signatures. These limits are
 part of the current model, not guarantees supplied by a future thread system.

@@ -63,16 +63,7 @@ const unknown_method = "unknown collection method";
 fn keywordSort(self: anytype, input_call: Call) bool {
     return input_call.owner != null and input_call.arguments.len != 0 and std.mem.eql(u8, self.src.text(input_call.name), "sort");
 }
-/// Reject a literal `dir()` path that could leave a scoped root, mirroring `scopedPath`.
-fn scopedDirectoryPath(bytes: []const u8) bool {
-    if (bytes.len == 0) return true;
-    if (std.mem.indexOfAny(u8, bytes, "\\\x00") != null) return false;
-    var parts = std.mem.splitScalar(u8, bytes, '/');
-    while (parts.next()) |part| {
-        if (part.len == 0 or std.mem.eql(u8, part, ".") or std.mem.eql(u8, part, "..")) return false;
-    }
-    return true;
-}
+const scopedDirectoryPath = @import("scoped_directory.zig").valid;
 const FunctionMap = std.StringHashMapUnmanaged(usize);
 
 const Pending = struct { available: bool, transfer_span: ?source.Span };

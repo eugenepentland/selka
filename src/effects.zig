@@ -215,6 +215,11 @@ fn inferFacts(allocator: std.mem.Allocator, program: typed.Program, function: ty
                 try mutation.insertPosition(&mutate_positions, allocator, position);
             }
             switch (statement.data) {
+                .range_loop => |range| for ([_]typed.Store{ range.plan().start, range.plan().end }) |store| {
+                    if (@backingInt(store.slot) >= fresh.len) continue;
+                    fresh[@backingInt(store.slot)] = isFreshValue(program, store.value, 0);
+                    origins[@backingInt(store.slot)] = valueOrigin(program, function, store.value, origins, 0);
+                },
                 .initialize => |store| if (@backingInt(store.slot) < fresh.len) {
                     fresh[@backingInt(store.slot)] = isFreshValue(program, store.value, 0);
                     origins[@backingInt(store.slot)] = valueOrigin(program, function, store.value, origins, 0);

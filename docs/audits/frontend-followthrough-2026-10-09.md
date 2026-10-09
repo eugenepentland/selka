@@ -79,9 +79,31 @@ Lox/EDA qualification. The full report and rejected attempts are preserved in
 `experiments/frontend-followthrough-20261009/REPORT.md`. External migrations
 are reviewed patches against the frozen pins; application worktrees are unchanged.
 
-Next work starts with parser recovery and source ownership. Before any new
-typed-IR corpus audit, resolve the configured-root module-loading discrepancy:
-`dump-ir` fails on EDA's `src.` imports while normal check/build succeeds. Native
-executable identity, not failed dump output, qualified EDA for this batch.
-Then measure current incremental behavior before changing cache keys. Later
-effect/lowering phases remain separate reviewable batches.
+## Remaining phases implementation
+
+The closeout implements phases 2–6 in bounded steps. Parser recovery keeps the
+original source and span-bearing tokens as the lossless basis and refuses to
+publish a partially recovered AST. Nominal specialization reuse validates fresh
+resolved provider identities and schemas; absent identities remain misses.
+Developer dumps, coverage and Core check now share configured entry resolution,
+source budgets and policy with normal builds, resolving EDA's `src.` imports.
+
+Explicitly written `noalloc` contracts receive the stronger Core allocation
+check, including ownership expansion, cold paths and transitive calls. Existing
+`effects(...)` lists retain their guest-level meaning. Inferred facts with live
+capability, mutation, ownership and cache consumers remain in place.
+
+Range loops are the first source-shaped checked lowering family. Their checked
+endpoints and loop plan survive until Core lowering; the shared directory-path
+validator removes one genuinely duplicated generic/concrete check. The semantic
+payload format changes once, to v4. Further construct families and removal of
+necessary symbolic generic checking are not implied by this step.
+
+Selected Lox, EDA, stdlib and operation entry graphs refresh the typed cost
+census. A worked Juice/counter example distinguishes static sites, managed
+allocation events and whole-process instructions. It does not establish an
+application speedup or justify new copy annotations.
+
+Implementation, source-bound qualification, changed verdicts and limitations
+are recorded in `experiments/frontend-closeout-20261009/REPORT.md`. That report
+is the authoritative closeout record; earlier failed candidates remain evidence.

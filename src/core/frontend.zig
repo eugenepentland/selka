@@ -122,7 +122,7 @@ pub const Session = struct {
     /// Validation-only commands can omit unchanged bodies; builds/tests retain
     /// the default complete typed trees and use summaries for pass facts only.
     pub fn validationOnly(self: *Session) void {
-        if (self.cache) |*state| state.request.facts_only = false;
+        if (self.cache) |*state| state.request.body_policy = .allocation_contracts;
     }
 
     /// Attach opt-in phase instrumentation without changing checking behavior.
@@ -170,7 +170,7 @@ pub const Session = struct {
                 return error.SourceError;
             },
         };
-        return .{ .program = unit.program.?, .src = unit.src };
+        return self.checkAllocationContracts(allocator, .{ .program = unit.program.?, .src = unit.src }, report);
     }
 
     fn checkSourceBudget(self: *Session, allocator: std.mem.Allocator, path: []const u8, size: usize, report: *std.ArrayList(u8)) Error!void {
@@ -234,7 +234,16 @@ pub const Session = struct {
         };
         if (self.graph.profile) |profile| profile.end();
         if (self.cache) |*state| try state.finish(&self.project);
-        return .{ .program = self.graph.compilation.program.?, .src = self.graph.compilation.src };
+        return self.checkAllocationContracts(allocator, .{ .program = self.graph.compilation.program.?, .src = self.graph.compilation.src }, report);
+    }
+
+    fn checkAllocationContracts(self: *Session, allocator: std.mem.Allocator, checked: Checked, report: *std.ArrayList(u8)) Error!Checked {
+        if (try @import("allocation_contract.zig").checkProgram(allocator, checked.program, checked.src)) |failure| {
+            const item = try @import("allocation_contract.zig").diagnostic(allocator, failure);
+            try report.appendSlice(allocator, try language.diagnostic_output.render(allocator, item, checked.src, self.graph.settings.format));
+            return error.SourceError;
+        }
+        return checked;
     }
 
     /// The file provider: the disk, with `entry_suffix` appended to the entry file when set.

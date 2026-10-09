@@ -135,7 +135,7 @@ pub const Request = struct {
     /// A command that lowers the checked program needs every body's checked
     /// tree: its bodies are all checked, and summaries stand in only for the
     /// cross-function facts (and the pass diagnostics) of unchanged ones.
-    facts_only: bool = false,
+    body_policy: enum { summaries, concrete, allocation_contracts } = .summaries,
     /// The request's prepared declaration identities (stable keys,
     /// dependency contexts, region digests), kept for the build's
     /// lowering-free unit reuse (`EMIT-STANDIN-1`); allocated in the check's arena.

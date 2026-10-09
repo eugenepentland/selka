@@ -273,3 +273,59 @@ test "a build --release executable drops debug lines, a debug build and a run ke
     try std.testing.expectEqualStrings("42\n", ran.stdout);
     try std.testing.expect(contains(ran.stderr, "debugging 41\n"));
 }
+
+// spec: FRONTEND-DEVELOPER-PROJECT-1
+test "developer views and coverageCommand check configured project identity and policy before output" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const context: Context = .{ .arena = arena.allocator(), .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", arena.allocator()) };
+    try temporary.dir.createDirPath(std.testing.io, "src");
+    try context.write("src/main.my", "import src.helper as helper\nfunc main() -> int:\n    return helper.value()\n");
+    try context.write("src/helper.my", "public func value() -> int:\n    return 7\n");
+    try context.write("mylang.json", "{\"version\":1}");
+    const commands = [_][]const u8{ "dump-ir", "dump-typed", "coverage", "check" };
+    try checkDeveloperViews(context, &commands);
+    try context.write("mylang.json", "{\"version\":1,\"import_policy\":\"policy.json\"}");
+    try context.write("policy.json", "{\"version\":1,\"default_action\":\"deny\",\"rules\":[]}");
+    try denyDeveloperViews(context, &commands);
+    try context.write("mylang.json", "{");
+    for (commands[0..2]) |command| {
+        const invalid = try context.compiler(&.{ command, "src/main.my" });
+        try std.testing.expectEqual(@as(u8, 2), invalid.status);
+        try std.testing.expectEqualStrings("", invalid.stdout);
+        try std.testing.expect(contains(invalid.stderr, "E_PROJECT_CONFIG"));
+    }
+    try context.write("mylang.json", "{\"version\":1,\"budgets\":{\"max_file_bytes\":8}}");
+    const bounded = try context.compiler(&.{ "dump-typed", "src/main.my" });
+    try std.testing.expectEqual(@as(u8, 1), bounded.status);
+    try std.testing.expectEqualStrings("", bounded.stdout);
+    try std.testing.expect(contains(bounded.stderr, "E_PROJECT"));
+}
+
+fn checkDeveloperViews(context: Context, commands: []const []const u8) !void {
+    for (commands) |command| {
+        const result = try context.compiler(&.{ command, "src/main.my" });
+        try std.testing.expectEqual(@as(u8, 0), result.status);
+        try std.testing.expectEqualStrings("", result.stderr);
+        if (!std.mem.eql(u8, command, "check")) {
+            try std.testing.expect(result.stdout.len > 0);
+            try std.testing.expect(!contains(result.stdout, "frontend "));
+        }
+    }
+}
+
+fn denyDeveloperViews(context: Context, commands: []const []const u8) !void {
+    for (commands) |command| {
+        const denied = try context.compiler(&.{ command, "src/main.my" });
+        if (std.mem.eql(u8, command, "coverage")) {
+            try std.testing.expect(contains(denied.stdout, "frontend "));
+            try std.testing.expect(!contains(denied.stdout, "ok "));
+        } else {
+            try std.testing.expectEqual(@as(u8, 3), denied.status);
+            try std.testing.expectEqualStrings("", denied.stdout);
+            try std.testing.expect(denied.stderr.len > 0);
+        }
+    }
+}

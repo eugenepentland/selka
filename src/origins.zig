@@ -253,6 +253,12 @@ fn applyBlockStatements(context: *const Context, function: typed.Function, origi
             applyBlockStatements(context, function, origins, branch.then_body, depth + 1);
             if (branch.else_body) |otherwise| applyBlockStatements(context, function, origins, otherwise, depth + 1);
         },
+        .range_loop => |range| {
+            _ = bindStatement(context, function, origins, statement, depth + 1);
+            for (range.plan().setup) |setup| applyBlockStatements(context, function, origins, setup, depth + 1);
+            applyBlockStatements(context, function, origins, range.plan().loop.body, depth + 1);
+            if (range.plan().loop.step) |step| applyBlockStatements(context, function, origins, step, depth + 1);
+        },
         .loop => |loop| {
             applyBlockStatements(context, function, origins, loop.body, depth + 1);
             if (loop.step) |step| applyBlockStatements(context, function, origins, step, depth + 1);
@@ -274,6 +280,15 @@ fn bindStatement(context: *const Context, function: typed.Function, origins: []O
             if (copiedHome(context.program, function, store.slot)) return false;
             const value = context.nodeOrigin(function, origins, store.value, depth);
             return widen(origins, @backingInt(store.slot), value);
+        },
+        .range_loop => |range| {
+            var grew = false;
+            for ([_]typed.Store{ range.plan().start, range.plan().end }) |store| {
+                if (copiedHome(context.program, function, store.slot)) continue;
+                const value = context.nodeOrigin(function, origins, store.value, depth);
+                grew = widen(origins, @backingInt(store.slot), value) or grew;
+            }
+            return grew;
         },
         .match => |matched| {
             var grew = false;

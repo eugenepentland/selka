@@ -938,7 +938,7 @@ fn testUnique(e: Editor, module: *const ir.Module, update: ir.Ref) Error!void {
     const copy_block = try e.newBlock();
     if (e.origin) |origin| try origin.setBlock(e.arena, @intCast(copy_block.index()), e.frameAt(update));
     try e.terminate(at.head, .{ .op = .branch, .ty = .void, .a = unique, .data = ir.packTargets(at.tail, copy_block), .span = instruction.span }, &.{ at.tail, copy_block });
-    const marker = try e.append(copy_block, .{ .op = .copy, .ty = ty, .a = list });
+    const marker = try e.append(copy_block, .{ .op = .copy, .ty = ty, .a = list, .span = instruction.span });
     const copy = try copyBefore(e, module, marker, list);
     _ = try e.append(copy_block, .{ .op = .release, .ty = .void, .a = list, .span = instruction.span });
     try e.terminate(copy_block, .{ .op = .jump, .ty = .void, .data = @backingInt(at.tail), .span = instruction.span }, &.{at.tail});

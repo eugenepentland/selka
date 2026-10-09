@@ -209,18 +209,23 @@ fn lookupSpecialization(
     var shapes: semantic_key.Shapes = .{ .allocator = allocator, .records = self.catalog.records };
     defer shapes.deinit();
     for (entry.payload.refs.record_refs) |reference| {
-        if (reference.index >= self.initial_record_count) {
-            reuse.noteMiss(.interned_record);
-            return null;
+        // Body checking may have already instantiated this resolved nominal
+        // application. Its old ordinal says nothing about fresh availability.
+        // Search the current catalog and validate the complete provider shape;
+        // absent or ambiguous identities remain conservative misses.
+        var found: ?usize = null;
+        for (self.catalog.records, 0..) |record, candidate| {
+            if (!std.mem.eql(u8, record.name, reference.key)) continue;
+            if (found != null) {
+                reuse.noteMiss(.ambiguous_record);
+                return null;
+            }
+            found = candidate;
         }
-        const fresh = self.record_by_name.get(reference.key) orelse {
+        const fresh = found orelse {
             reuse.noteMiss(.missing_record);
             return null;
         };
-        if (fresh == std.math.maxInt(usize)) {
-            reuse.noteMiss(.ambiguous_record);
-            return null;
-        }
         const shape = (try shapes.digest(fresh)) orelse {
             reuse.noteMiss(.missing_record);
             return null;
@@ -317,7 +322,15 @@ fn publishSpecializations(comptime Checker: type, self: *Checker, reuse: *generi
         var shapes: semantic_key.Shapes = .{ .allocator = allocator, .records = program.records };
         defer shapes.deinit();
         while (record_iterator.next()) |record_index| {
-            if (record_index.* >= self.initial_record_count or record_index.* >= program.records.len) {
+            if (record_index.* >= program.records.len) {
+                stable_records = false;
+                break;
+            }
+            var matches: usize = 0;
+            for (program.records) |record| {
+                if (std.mem.eql(u8, record.name, program.records[record_index.*].name)) matches += 1;
+            }
+            if (matches != 1) {
                 stable_records = false;
                 break;
             }

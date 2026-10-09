@@ -105,7 +105,7 @@ source error.
 | `mutation` | writing caller-owned managed state reachable from an input, subject to the declared `mut` parameter set |
 
 `noalloc` and `noio` are shorthands for the two common ceilings. `noalloc`
-excludes `managed_allocation` and permits everything else. `noio` excludes
+excludes `managed_allocation`; compiler commands also verify its concrete Core body for managed backing and runtime scratch allocation after debug ownership expansion, before release optimization. Every internal callee and every block contributes, including cold paths. Existing `effects(...)` lists describe guest-level effects even when allocation is omitted; they do not opt into the stronger Core promise. `noio` excludes
 `filesystem`, `network` and `output` together, and permits allocation, the clock,
 randomness and the environment. Neither promises determinism, termination, bounded
 memory or freedom from traps. Writing definitely-fresh local storage or fixed
@@ -147,9 +147,20 @@ func main() -> int:
 
 - A function takes at most one effect annotation, and it is a ceiling on the
   inferred set rather than a signature the callee must match exactly.
-- `managed_allocation` is a guest-level classification. It says nothing about the
-  host allocations the runtime makes for frames, stack slots or result wrappers,
-  so a `noalloc` function is not a promise of an allocation-free process.
+- Frontend `managed_allocation` facts remain guest-level facts for capabilities,
+  generic abstract checking and interface summaries. Compiler commands additionally
+  enforce explicitly written `noalloc` promises through the shared Core cost classifier.
+  Stack storage is permitted; managed heap and runtime scratch may-allocate sites
+  are rejected. This does not constrain compiler allocation or process startup.
+- Core allocation failures use `E_CORE_ALLOCATION_BOUND` at the allocation site.
+  Copy-on-write branches count even if a particular run would take the unique
+  branch. Unresolved callbacks and foreign calls are conservative. A concrete
+  bounded body that Core cannot lower is rejected with the unsupported construct,
+  rather than treated as allocation-free. Abstract generic bodies retain frontend
+  checking; instantiated bounded bodies receive the concrete check.
+- The low-level frontend-only `Compilation.check` and `checkLibrary` APIs expose
+  frontend effect verdicts. CLI check/build/run/test/cost commands add the Core
+  check for explicit `noalloc` declarations; frontend library checking itself never retains an executable.
 - The bound is not an authority grant. A function annotated `effects(filesystem)`
   still needs a `Filesystem` value to do anything with the filesystem, and that
   value comes from the entry point's parameters — which `mylang run` provisions
