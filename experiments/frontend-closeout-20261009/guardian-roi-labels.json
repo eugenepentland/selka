@@ -1,0 +1,34 @@
+[
+  {
+    "subject": "subj_29383e0b443ced9e224f51ad",
+    "category": "useful-review",
+    "reason": "Restored the public Core statement-lowering documentation after extracting storeStatement; no policy change.",
+    "status": 0,
+    "stdout": "Labeled subject subj_29383e0b443ced9e224f51ad as useful-review.\n",
+    "stderr": ""
+  },
+  {
+    "subject": "subj_536a9cdecd1480a471852961",
+    "category": "useful-review",
+    "reason": "Added a module header describing source ownership, incremental reuse and noalloc checks as the frontend test module grew past 200 lines.",
+    "status": 0,
+    "stdout": "Labeled subject subj_536a9cdecd1480a471852961 as useful-review.\n",
+    "stderr": ""
+  },
+  {
+    "subject": "subj_da447d2a0984e35198863bf1",
+    "category": "false-positive",
+    "reason": "The CLI regression already exercised the new coverageCommand error path. Only adding coverageCommand to its test name was required; no assertion or behavior changed.",
+    "status": 0,
+    "stdout": "Labeled subject subj_da447d2a0984e35198863bf1 as false-positive.\n",
+    "stderr": ""
+  },
+  {
+    "subject": "subj_b8b3a40bf424be2a33fb7230",
+    "category": "useful-review",
+    "reason": "Passed the allocator into the serialized range-header corruption helper instead of using a hidden global test allocator.",
+    "status": 0,
+    "stdout": "Labeled subject subj_b8b3a40bf424be2a33fb7230 as useful-review.\n",
+    "stderr": ""
+  }
+]
