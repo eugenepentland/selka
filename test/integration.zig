@@ -10147,3 +10147,40 @@ test "F1 unsupported unused bounded bodies warn with a reason and still block li
     try testing.expectEqual(@as(usize, 2), std.mem.count(u8, result.stderr, "L_NOALLOC_ALLOCATES"));
     try testing.expect(std.mem.indexOf(u8, result.stderr, "Core does not support rendering a non-value source type") != null);
 }
+
+// spec-case: PARSE-RECOVERY-1
+test "F3 project and module checks report both recovered syntax errors" {
+    const source = "public func first() -> int:\n    const x = )\n    return 0\n\npublic func second() -> int:\n    const x = )\n    return 0\n";
+    for ([_][]const u8{ "check", "check-project" }) |command| {
+        const result = try runFixture(command, source, &.{});
+        defer freeRun(result);
+        try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, result.term);
+        try testing.expectEqual(@as(usize, 2), std.mem.count(u8, result.stderr, "error["));
+        try testing.expect(std.mem.indexOf(u8, result.stderr, ":2:15:") != null);
+        try testing.expect(std.mem.indexOf(u8, result.stderr, ":6:15:") != null);
+        const structured = try runFixture(command, source, &.{"--diagnostics=json"});
+        defer freeRun(structured);
+        try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, structured.term);
+        try testing.expectEqual(@as(usize, 2), std.mem.count(u8, structured.stderr, "\"kind\":\"diagnostic\""));
+        try testing.expect(std.mem.indexOf(u8, structured.stderr, "\"line\":2,\"column\":15") != null);
+        try testing.expect(std.mem.indexOf(u8, structured.stderr, "\"line\":6,\"column\":15") != null);
+    }
+}
+
+// spec-case: PARSE-RECOVERY-1
+test "F3 project migration edits belong to their own diagnostic" {
+    const result = try runFixture("check", "public func first() -> int:\n    x = 1\n    return x\n\npublic func second() -> int:\n    y = 2\n    return y\n", &.{"--diagnostics=json"});
+    defer freeRun(result);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, result.term);
+    var lines = std.mem.tokenizeScalar(u8, result.stderr, '\n');
+    var count: usize = 0;
+    while (lines.next()) |line| {
+        const parsed = try std.json.parseFromSlice(std.json.Value, testing.allocator, line, .{});
+        defer parsed.deinit();
+        const data = parsed.value.object.get("diagnostic").?;
+        try testing.expectEqualStrings("E_BINDING_DECLARATION", data.object.get("code").?.string);
+        try testing.expectEqual(@as(usize, 1), data.object.get("fix").?.object.get("edits").?.array.items.len);
+        count += 1;
+    }
+    try testing.expectEqual(@as(usize, 2), count);
+}

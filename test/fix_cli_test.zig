@@ -310,7 +310,7 @@ test "CLI fix migrates the pinned pre-marker Lox corpus with no hand edits" {
     try testing.expectEqual(@as(u8, 0), migrated.status);
     try testing.expectEqualStrings("", migrated.stderr);
     try testing.expect(contains(migrated.stdout, "fix: 412 edits in 9 files over 30 rounds"));
-    try testing.expect(contains(migrated.stdout, "fixed heap.my: 147 edits (E_MODULE_HEADER, E_BINDING_DECLARATION, E_MUTATION_MARKER, E_NAMED_PATTERN, E_NAMED_FIELDS)"));
+    try testing.expect(contains(migrated.stdout, "fixed heap.my: 147 edits (E_MODULE_HEADER, E_BINDING_DECLARATION, E_FRONTEND_SYNTAX, E_MUTATION_MARKER, E_NAMED_PATTERN, E_NAMED_FIELDS)"));
     // After: every entry checks, and a second pass finds nothing to do.
     try testing.expectEqual(@as(usize, 0), try rejectedFiles(&project));
     const settled = try project.run("fix", ".", &.{"--check"});

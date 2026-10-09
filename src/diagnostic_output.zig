@@ -204,6 +204,16 @@ pub fn renderProject(allocator: std.mem.Allocator, loaded: *project.Project, for
     if (format == .text) return loaded.renderProblem(allocator);
     const problem = loaded.problem orelse return error.NoProblem;
     const src = loaded.modules.items[problem.site.module].src;
+    if (problem.recovered.len != 0) {
+        var rendered: std.ArrayList(u8) = .empty;
+        errdefer rendered.deinit(allocator);
+        for (problem.recovered) |item| {
+            const text = try render(allocator, item, src, format);
+            defer allocator.free(text);
+            try rendered.appendSlice(allocator, text);
+        }
+        return rendered.toOwnedSlice(allocator);
+    }
     var data = payload(.{ .code = problem.code, .message = problem.message, .span = problem.site.span }, src);
     var notes: [1]Note = undefined;
     if (problem.related) |related| {

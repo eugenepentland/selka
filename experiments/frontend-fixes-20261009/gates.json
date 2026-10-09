@@ -267,5 +267,117 @@
     "failures": [],
     "log_sha256": "2427c3a7832effc9d27d5afc79ecf3799892c2b961af14571ffb9ce87964e270",
     "log_bytes": 397346
+  },
+  {
+    "phase": "F3-red",
+    "command": "scripts/build-slot.sh build zig build test-cli -Dtest-filter=\"F3 \" --summary all",
+    "source_commit": "bc14327e8d3468c95b507ea734b94e88aac609cf",
+    "status": 1,
+    "summary": "Build Summary: 6/8 steps succeeded (1 failed); 2/4 tests passed (2 failed)",
+    "test_verdicts": {
+      "passed": 2,
+      "failed": 2,
+      "skipped": 0
+    },
+    "failures": [
+      "integration.test.F3 project and module checks report both recovered syntax errors",
+      "integration.test.F3 project migration edits belong to their own diagnostic"
+    ],
+    "log_sha256": "ef98f05eb5f02dc4a3c8a37b7cacc45bf88c7913d744d6fcba23542dcadc5df7",
+    "log_bytes": 3527
+  },
+  {
+    "phase": "F3-green",
+    "command": "scripts/build-slot.sh build zig build test-cli -Dtest-filter=\"F3 \" --summary all",
+    "source_commit": "bc14327e8d3468c95b507ea734b94e88aac609cf",
+    "status": 0,
+    "summary": "Build Summary: 8/8 steps succeeded; 4/4 tests passed",
+    "test_verdicts": {
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "e16df649800d2f063bf30acc170f5419c0ff269801480306b920dacaace2ca38",
+    "log_bytes": 1582
+  },
+  {
+    "phase": "F3-first-full",
+    "command": "scripts/build-slot.sh gate zig build test --summary all",
+    "source_commit": "bc14327e8d3468c95b507ea734b94e88aac609cf",
+    "status": 1,
+    "summary": "Build Summary: 42/95 steps succeeded (3 failed); 2287/23550 tests passed (21262 skipped, 1 failed)",
+    "test_verdicts": {
+      "passed": 2287,
+      "failed": 1,
+      "skipped": 0
+    },
+    "failures": [
+      "fix_cli_test.test.CLI fix migrates the pinned pre-marker Lox corpus with no hand edits"
+    ],
+    "log_sha256": "ec7fc65e0018ad0aaff354335f5b998148286d3ca99ead2943307d8955edafac",
+    "log_bytes": 82050
+  },
+  {
+    "phase": "F3-second-full",
+    "command": "scripts/build-slot.sh gate zig build test --summary all",
+    "source_commit": "bc14327e8d3468c95b507ea734b94e88aac609cf",
+    "status": 1,
+    "summary": "Build Summary: 93/95 steps succeeded (1 failed); 2296/23559 tests passed (21262 skipped, 1 failed)",
+    "test_verdicts": {
+      "passed": 2296,
+      "failed": 1,
+      "skipped": 0
+    },
+    "failures": [
+      "fix_cli_test.test.CLI fix migrates the pinned pre-marker Lox corpus with no hand edits"
+    ],
+    "log_sha256": "a59dbfff56f5f9e9b90bcb7d3cc4947fe39c39b30973a1aad5748d6bb10f3635",
+    "log_bytes": 398194
+  },
+  {
+    "phase": "F3-existing-repairs",
+    "command": "scripts/build-slot.sh build zig build test-units -Dtest-filter=\"project parser\" --summary all",
+    "source_commit": "bc14327e8d3468c95b507ea734b94e88aac609cf",
+    "status": 0,
+    "summary": "Build Summary: 8/8 steps succeeded; 9/9 tests passed",
+    "test_verdicts": {
+      "passed": 9,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "14ed832b9cf5cc98e80cc0e4fdc64feaef14ea16e8ed932b0d7432a616d1d081",
+    "log_bytes": 1670
+  },
+  {
+    "phase": "F3-lox-migration",
+    "command": "scripts/build-slot.sh build zig build test-cli -Dtest-filter=\"pinned pre-marker Lox\" --summary all",
+    "source_commit": "bc14327e8d3468c95b507ea734b94e88aac609cf",
+    "status": 0,
+    "summary": "Build Summary: 8/8 steps succeeded; 3/3 tests passed",
+    "test_verdicts": {
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "ec3bdb164a6f77f03595af5d8d1be399cfb40427d71210b46ba5748d3c307a7e",
+    "log_bytes": 1740
+  },
+  {
+    "phase": "F3-full",
+    "command": "scripts/build-slot.sh gate zig build test --summary all",
+    "source_commit": "bc14327e8d3468c95b507ea734b94e88aac609cf",
+    "status": 0,
+    "summary": "Build Summary: 95/95 steps succeeded; 851/6306 tests passed (5455 skipped)",
+    "test_verdicts": {
+      "passed": 851,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "e6ca22d78ed81233f8cd5b9de19beeb55809cb8d1d2fb074fc9ca7feb538a4e4",
+    "log_bytes": 332478
   }
 ]

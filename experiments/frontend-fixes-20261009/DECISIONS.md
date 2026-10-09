@@ -76,3 +76,11 @@ Options: add a body-policy enum case, widen the shared request, or remember the 
 Evidence: the new three-run regression passes in validation mode and fails in allocation-contract mode because the edited run publishes no summaries. The plan currently has six fields.
 Choice: add one allocation_fallback flag to the plan, set only when a new/changed noalloc body requests concrete trees. Publication remains enabled for that run. Existing concrete lowering requests keep their publication rule. The regression requires third-run stand-ins and cold/warm equality in both modes.
 Reversibility: a local planning flag, no persistent format or language semantics change.
+
+## D10 — F3 preserves parser diagnostics as a batch
+
+Question: how can project loading retain every parser error and its own edits while preserving existing single-problem callers?
+Options: replace the project's problem API, or retain the parser batch beside its first problem.
+Evidence: new CLI tests report one error instead of two at 2:15 and 6:15, and attach both binding repairs to the first diagnostic. Project already has seven fields; Problem has six.
+Choice: retain the arena-owned parser diagnostic slice in Problem's seventh field. Text and JSON rendering visit the batch. The primary problem and its own fix remain available to existing callers; unrelated edits are never flattened into it. No partial syntax is published. The existing variant-batch test keeps its minimum of three edits, counted across diagnostics instead of requiring all edits on the first one. The pinned Lox migration still makes 412 edits in 9 files over 30 rounds (heap: 147); its log now correctly includes E_FRONTEND_SYNTAX, whose repairs were previously misattributed to the first diagnostic.
+Reversibility: in-memory diagnostic transport only, no cache format or syntax change.
