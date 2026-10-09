@@ -92,3 +92,11 @@ Options: restart at each newline, or honor braces like the existing parentheses 
 Evidence: the four-line dictionary regression produces four diagnostics instead of one and never publishes syntax.
 Choice: count opening and closing braces in the existing recovery scan. The same regression requires exactly one diagnostic on the damaged entry and no partial syntax.
 Reversibility: recovery synchronization only; accepted syntax is unchanged.
+
+## D12 — F5 shares term matching and separately scans assignment targets
+
+Question: which AST uses must the binding migration resolve before offering a block-local declaration?
+Options: enumerate only expression names, or share arena term matching and include statement targets.
+Evidence: both requested regressions initially offer E_BINDING_DECLARATION instead of E_BINDING_SCOPE_MIGRATION. arena_fix.termNamed covers directly stored call/operation owners; method receivers and field/index targets also have child nodes in the complete node array. Simple and augmented assignments instead store their target on the statement.
+Choice: share termNamed, scan assignment targets, and resolve both against declarations available in the containing lexical block. Skip initial assignment targets themselves: they declare independent identities, as the existing sibling-scope migration contract requires. A new outer plain assignment remains repairable; an unresolved augmented assignment does not. Cover call, buffer/file/resource owners, nested receivers, field/index writes and independent declarations in tests.
+Reversibility: migration diagnostic/fix eligibility only; no accepted syntax or runtime semantics change.

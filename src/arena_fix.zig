@@ -137,7 +137,9 @@ fn nodeBindsName(src: source.Source, node: ast.Node, name: source.Span) bool {
     };
 }
 
-fn termNamed(src: source.Source, node: ast.Node, name: source.Span) bool {
+/// Match names stored directly on terms. Receivers and field/index targets
+/// represented by child nodes are visited by the caller's complete node scan.
+pub fn termNamed(src: source.Source, node: ast.Node, name: source.Span) bool {
     return switch (node.data) {
         .name => |term| sameName(src, term, name),
         .call => |call| sameName(src, call.owner orelse call.name, name),

@@ -426,5 +426,53 @@
     "failures": [],
     "log_sha256": "66eaff5a4b36186086e9fb816deb0c43e89444c7e989e6f4a30aeea2434b6468",
     "log_bytes": 395725
+  },
+  {
+    "phase": "F5-red",
+    "command": "zig build test-units -Dtest-filter=F5 binding --summary all",
+    "source_commit": "811f0aa1d0cf5bef140f32484e6d3985fd16c015",
+    "status": 1,
+    "summary": "Build Summary: 6/8 steps succeeded (1 failed); 7/9 tests passed (2 failed)",
+    "test_verdicts": {
+      "passed": 7,
+      "failed": 2,
+      "skipped": 0
+    },
+    "failures": [
+      "frontend_migration_test.test.F5 binding migration refuses branch locals used by augmented assignment",
+      "frontend_migration_test.test.F5 binding migration refuses branch locals used by a method receiver"
+    ],
+    "log_sha256": "f9f579629993d88dc64e91a4b92218fa777d0dd0cb41f96a45341030618abe4a",
+    "log_bytes": 4667
+  },
+  {
+    "phase": "F5-focused",
+    "command": "zig build test-units -Dtest-filter=binding migration --summary all",
+    "source_commit": "811f0aa1d0cf5bef140f32484e6d3985fd16c015",
+    "status": 0,
+    "summary": "Build Summary: 8/8 steps succeeded; 15/15 tests passed",
+    "test_verdicts": {
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "08e634f2483235e929c5c30870cfff98ace66ab77101c37ea130c88eefe34cd1",
+    "log_bytes": 1803
+  },
+  {
+    "phase": "F5-full",
+    "command": "zig build test --summary all",
+    "source_commit": "811f0aa1d0cf5bef140f32484e6d3985fd16c015",
+    "status": 0,
+    "summary": "Build Summary: 95/95 steps succeeded; 2302/23619 tests passed (21317 skipped)",
+    "test_verdicts": {
+      "passed": 2302,
+      "failed": 0,
+      "skipped": 0
+    },
+    "failures": [],
+    "log_sha256": "2aa8781e4dd6dd6df16d104523bc094bc2903f0dba936a099eecb5c883b81c71",
+    "log_bytes": 395198
   }
 ]
