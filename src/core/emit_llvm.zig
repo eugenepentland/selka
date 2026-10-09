@@ -3178,7 +3178,7 @@ const FunctionEmitter = struct {
     }
 
     /// Plain counts update inline after one threshold test. Shared counts and plain
-    /// saturation use cold helpers; immortal constants never call out or get written.
+    /// saturation use one cold preserve-most call; immortal constants stay read-only.
     fn countBlock(self: *FunctionEmitter, out: *Out, mode: Counting, block: []const u8, block_type: ir.Type) !void {
         if (self.may_be_empty) {
             // An `undef` value is all null pointers (`undefValue`): nothing to count.
@@ -3196,14 +3196,12 @@ const FunctionEmitter = struct {
         }
         const count = try self.fresh("%rc");
         const plain = try self.fresh("%rp");
-        const saturated = try self.fresh("%rs");
         const update = try self.fresh(if (mode == .retain) "rc.inc" else "rc.dec");
         const slow = try self.fresh("rc.slow");
-        const shared = try self.fresh("rc.shared");
         const done = try self.fresh(self.label);
         const next = try self.fresh("%rn");
         try out.print(self.a(), count_load_line, .{ count, block });
-        try out.print(self.a(), "  {s} = icmp ult i32 {s}, {d}\n  br i1 {s}, label %{s}, label %{s}\n{s}:\n", .{ plain, count, @as(u32, if (mode == .retain) 0x7ffffffe else 0x80000000), plain, update, slow, update });
+        try out.print(self.a(), "  {s} = icmp ult i32 {s}, {d}\n  br i1 {s}, label %{s}, label %{s}, !prof !10\n{s}:\n", .{ plain, count, @as(u32, if (mode == .retain) 0x7ffffffe else 0x80000000), plain, update, slow, update });
         if (mode == .retain) {
             try out.print(self.a(), "  {s} = add nuw i32 {s}, 1\n  store i32 {s}, ptr {s}, align 8, " ++ tbaa_count ++ "\n  br label %{s}\n", .{ next, count, next, block, done });
         } else {
@@ -3214,8 +3212,8 @@ const FunctionEmitter = struct {
             try out.print(self.a(), "{s}:\n  store i32 {s}, ptr {s}, align 8, " ++ tbaa_count ++ "\n  br label %{s}\n", .{ keep, next, block, done });
             try out.print(self.a(), "{s}:\n  call void @myl_core_free(ptr {s})\n  br label %{s}\n", .{ free, block, done });
         }
-        try out.print(self.a(), "{s}:\n  {s} = icmp eq i32 {s}, -1\n  br i1 {s}, label %{s}, label %{s}\n{s}:\n", .{ slow, saturated, count, saturated, done, shared, shared });
-        try out.print(self.a(), "  call void @myl_core_{s}_slow(ptr {s})\n  br label %{s}\n{s}:\n", .{ @tagName(mode), block, done, done });
+        try out.print(self.a(), "{s}:\n", .{slow});
+        try out.print(self.a(), "  call preserve_mostcc void @myl_core_{s}_slow(ptr {s})\n  br label %{s}\n{s}:\n", .{ @tagName(mode), block, done, done });
         self.label = done;
     }
 
@@ -3676,8 +3674,8 @@ const Debug = struct {
 /// here (the leak check counts free-list entries at exit).
 const runtime_fast_paths =
     \\@myl_core_free_lists = external global [33 x ptr]
-    \\declare void @myl_core_retain_slow(ptr) nounwind cold
-    \\declare void @myl_core_release_slow(ptr) nounwind cold
+    \\declare preserve_mostcc void @myl_core_retain_slow(ptr) nounwind cold
+    \\declare preserve_mostcc void @myl_core_release_slow(ptr) nounwind cold
     \\declare ptr @myl_core_list_new_slow(i64, i64) nounwind
     \\declare ptr @myl_core_list_grow(ptr, i64) nounwind
     \\declare void @myl_core_free_block(ptr) nounwind cold

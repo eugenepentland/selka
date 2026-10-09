@@ -101,7 +101,7 @@ static bool count_can_cache(const myl_block *block) { return count_load(block) <
 /* CAS keeps immortality sticky even if a retain saturates while a release is
    in flight. An unconditional fetch-add/sub after testing for immortality
    could wrap or decrement the immortal sentinel. Both operations are cold. */
-__attribute__((cold, noinline)) void myl_core_retain_slow(myl_block *block) {
+__attribute__((cold, noinline, preserve_most)) void myl_core_retain_slow(myl_block *block) {
     uint32_t count = count_load(block);
     if (count < MYL_SHARED) {
         block->count = MYL_SATURATED;
@@ -149,7 +149,7 @@ static bool count_release(myl_block *block) {
 }
 
 __attribute__((cold)) void myl_core_free_block(myl_block *block);
-__attribute__((cold, noinline)) void myl_core_release_slow(myl_block *block) {
+__attribute__((cold, noinline, preserve_most)) void myl_core_release_slow(myl_block *block) {
     if (count_release_shared(block)) myl_core_free_block(block);
 }
 

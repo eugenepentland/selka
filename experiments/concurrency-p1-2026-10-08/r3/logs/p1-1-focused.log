@@ -1,0 +1,15 @@
+test-core
++- run test w
+guardian/test: 10 test(s) selected
+guardian/test: SLOW  7.91s  driver_cache_test.test.layout changes rebuild units and runtime and returning to a layout reuses objects programs and replay
+guardian/test: test wall 15.41s; slowest over 50ms:
+guardian/test:   7.91s  driver_cache_test.test.layout changes rebuild units and runtime and returning to a layout reuses objects programs and replay
+guardian/test:   2.71s  shared_counts_test.test.shared counts saturate permanently, update atomically and free shared children iteratively
+guardian/test:   2.29s  shared_counts_test.test.shared count emission uses unordered reads, plain thresholds and cold helpers
+guardian/test:   2.22s  shared_counts_test.test.shared count source guard permits only typed helper and initialization accesses
+guardian/test:   0.13s  test_runner_project_test.test.providers preserve private parameter layouts of marked property tests
+guardian/test:   0.12s  test_runner_project_test.test.providers preserve exported record layouts behind unchanged function signatures
+guardian/test: PASS — 10 passed
+guardian/test: RESULT {"passed":10,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/cfd61ddd4d7a8423465dc7133edbf653/test --cache-dir=./.zig-cache --seed=0x3e4fb6ab --listen=-
+

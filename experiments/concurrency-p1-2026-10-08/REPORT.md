@@ -1,4 +1,13 @@
-# P1 report — stopped at the P1-1 early tax gate
+# P1 report — revision 3 in progress
+
+## Current progress — 2026-10-09
+
+- **Done:** Fast-forwarded to `0ee93b396`; read §4.8 and §9.1 before the launch instructions. Implemented R9 variant B and the isolated C comparison; R10's internal switch reaches both clang compile paths and all native cache identities. Added paired-layout adapters for every tax corpus.
+- **Measured:** Ten focused layout/shared-count tests pass, including all three alignments and return-to-layout replay/object/program reuse. Guardian's 88 build checks pass after extracting the layout-variable name. No new tax samples yet; all results below remain historical.
+- **Decided:** Keep the original evidence directory and preserve earlier results. Use exact CE-X inputs and rounds with each base/candidate pair at K=4,5,6. See [DECISIONS.md](DECISIONS.md). `main` moved from `12bf3f60b` to `cafe7fea7` during compiler preparation; a real merge and a corresponding updated comparison baseline precede further checks.
+- **Next:** Merge the moved main; rebuild baseline/B/C; select R9 on five cells and code size; complete the P1-1 tax and correctness checkpoint, then P1-2 through P1-6 and P2-0.
+
+## Historical P1-1 report (before revisions 2 and 3)
 
 2026-10-08. **P1-1 is implemented; package P1 is not complete or qualified.**
 The original early tax run passed the corpus geomean limit (0.998711×) but

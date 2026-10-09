@@ -1,0 +1,20 @@
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 1b6c13222675)
+guardian: diff-scoped vs 12bf3f60b6fce5d11a8a9d04367c19002b66558e: 0/525 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 14 finding(s), none in scope — report-only (--verbose for detail)
+guardian: type-size: 1 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 1/88 failed (spec) — diff-scoped vs 12bf3f60b6fce5d11a8a9d04367c19002b66558e, 0 file(s) in scope
+guardian: failures grouped by check (1):
+  spec (1 finding)
+    - unverified: New core copy elimination: lists - [LAYOUT-SWITCH-1] The internal measurement environment `MYLANG_CORE_LAYOUT=4|5|6` passes `-mllvm -align-all-functions=K` to every emitted-unit and runtime compile. Layout participates in runtime, unit, program and replay cache identities; changing K compiles fresh objects and returning to a previous K reuses them. Other values are rejected before native compilation. An unset switch preserves default flags and cache identities.
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them
+install
++- run ../guardian-zig/zig-out/bin/guardian-check failure
+error: process exited with code 1
+failed command: ../guardian-zig/zig-out/bin/guardian-check all . --quiet
+
+Build Summary: 6/9 steps succeeded (1 failed)
+install transitive failure
++- install mylang transitive failure
+|  +- run ../guardian-zig/zig-out/bin/guardian-check failure
++- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+

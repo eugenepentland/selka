@@ -165,8 +165,8 @@ pub const epilogue = "  store ptr %myl.cnt.saved, ptr @myl_count_current, align 
 /// through the runtime, which counts it. Pushes with room stay inline.
 pub const fast_paths =
     \\@myl_core_free_lists = external global [33 x ptr]
-    \\declare void @myl_core_retain_slow(ptr) nounwind cold
-    \\declare void @myl_core_release_slow(ptr) nounwind cold
+    \\declare preserve_mostcc void @myl_core_retain_slow(ptr) nounwind cold
+    \\declare preserve_mostcc void @myl_core_release_slow(ptr) nounwind cold
     \\declare ptr @myl_core_list_new_slow(i64, i64) nounwind
     \\declare ptr @myl_core_list_grow(ptr, i64) nounwind
     \\declare void @myl_core_free_block(ptr) nounwind cold

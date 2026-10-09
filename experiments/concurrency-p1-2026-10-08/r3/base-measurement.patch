@@ -1,0 +1,162 @@
+diff --git a/src/core/driver.zig b/src/core/driver.zig
+index 1ac74579f..e344038f5 100644
+--- a/src/core/driver.zig
++++ b/src/core/driver.zig
+@@ -129,6 +129,7 @@ const Object = struct { path: []const u8, digest: Digest };
+ 
+ /// Compile and link `request.units` into `request.output`; failures append the tool's stderr to `log`.
+ pub fn link(allocator: std.mem.Allocator, io: std.Io, environ: *const std.process.Environ.Map, request: Request, log: *std.ArrayList(u8)) Error!Outcome {
++    try validateLayout(allocator, environ, log);
+     const cwd = std.Io.Dir.cwd();
+     cwd.createDirPath(io, request.work) catch return error.WriteFailed;
+     var environment = environ.clone(allocator) catch return error.OutOfMemory;
+@@ -159,7 +160,7 @@ pub fn link(allocator: std.mem.Allocator, io: std.Io, environ: *const std.proces
+     };
+     var needs: Dependencies = .{};
+     for (request.units) |unit| needs = .{ .number = needs.number or unit.number, .math = needs.math or unit.math, .counting = needs.counting or unit.counting };
+-    const runtime = try runtimeFor(allocator, needs.counting, log);
++    const runtime = try runtimeFor(allocator, needs.counting, environ, log);
+     const settings: unit_cache.Settings = .{ .tool = guest.digest, .cpu = guest.native_target, .release = request.release, .runtime = runtime.abi };
+     var objects: std.ArrayList(Object) = .empty;
+     try objects.append(allocator, try runtimeObject(native, places.shared, runtime));
+@@ -201,7 +202,7 @@ const Dependencies = struct { number: bool = false, math: bool = false, counting
+ /// unit emitted with `--counters` the counting runtime (`count_runtime.zig`).
+ const Runtime = struct { source: []const u8, abi: Digest };
+ 
+-fn runtimeFor(allocator: std.mem.Allocator, counting: bool, log: *std.ArrayList(u8)) Error!Runtime {
++fn runtimeFor(allocator: std.mem.Allocator, counting: bool, environment: *const std.process.Environ.Map, log: *std.ArrayList(u8)) Error!Runtime {
+     const source = if (!counting) runtime_source else count_runtime.source(allocator, runtime_source) catch |err| switch (err) {
+         error.OutOfMemory => return error.OutOfMemory,
+         error.AnchorMissing => {
+@@ -210,10 +211,31 @@ fn runtimeFor(allocator: std.mem.Allocator, counting: bool, log: *std.ArrayList(
+         },
+     };
+     var abi: Digest = undefined;
+-    std.crypto.hash.Blake3.hash(source, &abi, .{});
++    var hash = std.crypto.hash.Blake3.init(.{});
++    hash.update(source);
++    for (layoutArguments(environment)) |argument| unit_cache.field(&hash, argument);
++    hash.final(&abi);
+     return .{ .source = source, .abi = abi };
+ }
+ 
++// LAYOUT-SWITCH-1: internal paired-measurement control, also salted into the
++// runtime ABI so all unit, runtime and program stores distinguish the options.
++const layout_variable = "MYLANG_CORE_LAYOUT";
++
++fn layoutArguments(environment: *const std.process.Environ.Map) []const []const u8 {
++    const value = environment.get(layout_variable) orelse return &.{};
++    if (std.mem.eql(u8, value, "4")) return &.{ "-mllvm", "-align-all-functions=4" };
++    if (std.mem.eql(u8, value, "5")) return &.{ "-mllvm", "-align-all-functions=5" };
++    if (std.mem.eql(u8, value, "6")) return &.{ "-mllvm", "-align-all-functions=6" };
++    return &.{};
++}
++
++fn validateLayout(a: std.mem.Allocator, environment: *const std.process.Environ.Map, log: *std.ArrayList(u8)) Error!void {
++    if (environment.get(layout_variable) == null or layoutArguments(environment).len != 0) return;
++    try log.appendSlice(a, "error: MYLANG_CORE_LAYOUT must be 4, 5 or 6\n");
++    return error.ToolFailed;
++}
++
+ /// Optional LLVM optimization records from a separate compile of the exact units.
+ /// Failure or a tool that accepts the flags but writes no YAML leaves it unknown.
+ /// This never replaces a cached object, changes emitted text, or enters the link.
+@@ -222,6 +244,7 @@ pub const OptimizationRemarks = struct { yaml: ?[]const u8 = null, processes: u3
+ /// Compile only when requested by cost/--stats; identical-input remark caching is
+ /// deferred until timings justify it. Every spawn is timed and tool-validated.
+ pub fn optimizationRemarks(a: std.mem.Allocator, io: std.Io, environ: *const std.process.Environ.Map, request: Request) std.mem.Allocator.Error!OptimizationRemarks {
++    if (environ.get(layout_variable) != null and layoutArguments(environ).len == 0) return .{};
+     const staging = privateDirectory(a, io, request.work, "llvm-remarks") catch |err| {
+         if (err == error.OutOfMemory) return error.OutOfMemory;
+         return .{};
+@@ -379,6 +402,7 @@ fn compileArguments(native: Native, release: bool, object: []const u8, source: [
+     var argv: std.ArrayList([]const u8) = .empty;
+     try argv.appendSlice(native.arena, &.{ native.zig, "cc", "-c", unit_cache.level(release), "-target", target_policy.native_link_target });
+     try argv.appendSlice(native.arena, target.cpu_flags);
++    try argv.appendSlice(native.arena, layoutArguments(native.environment));
+     try argv.appendSlice(native.arena, &.{ "-Wno-override-module", "-o", object, source });
+     return argv.items;
+ }
+@@ -623,6 +647,7 @@ fn runtimeObject(native: Native, directory: []const u8, runtime: Runtime) Error!
+     try argv.appendSlice(allocator, &.{ native.zig, "cc", "-c", "-O2", "-g0", "-falign-functions=64" });
+     try argv.appendSlice(allocator, &.{ "-target", target_policy.native_link_target });
+     try argv.appendSlice(allocator, target.cpu_flags);
++    try argv.appendSlice(allocator, layoutArguments(native.environment));
+     try argv.appendSlice(allocator, &.{ "-std=c11", "-o", partial, source });
+     try run(native, argv.items);
+     try native.guard.check(native.log);
+@@ -729,6 +754,30 @@ fn testNative(a: std.mem.Allocator, environment: *const std.process.Environ.Map,
+     return .{ .arena = a, .io = std.testing.io, .environment = environment, .zig = "zig", .log = log, .guard = .{ .resources = resources, .identity = identity }, .counts = counts };
+ }
+ 
++// spec-case: LAYOUT-SWITCH-1
++test "layout compile arguments and runtime identity include the internal alignment switch" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    const a = arena.allocator();
++    var environment: std.process.Environ.Map = .init(a);
++    var log: std.ArrayList(u8) = .empty;
++    var counts: Counts = .{};
++    const native = testNative(a, &environment, &log, &counts);
++    const default = try runtimeFor(a, false, &environment, &log);
++    var expected: Digest = undefined;
++    std.crypto.hash.Blake3.hash(runtime_source, &expected, .{});
++    try std.testing.expectEqualSlices(u8, &expected, &default.abi);
++    try environment.put("MYLANG_CORE_LAYOUT", "5");
++    const aligned = try runtimeFor(a, false, &environment, &log);
++    try std.testing.expect(!std.mem.eql(u8, &default.abi, &aligned.abi));
++    const arguments = try compileArguments(native, true, "out.o", "in.ll");
++    try std.testing.expectEqualStrings("-mllvm", arguments[arguments.len - 6]);
++    try std.testing.expectEqualStrings("-align-all-functions=5", arguments[arguments.len - 5]);
++    try environment.put("MYLANG_CORE_LAYOUT", "7");
++    try std.testing.expectError(error.ToolFailed, validateLayout(a, &environment, &log));
++    try std.testing.expectEqualStrings("error: MYLANG_CORE_LAYOUT must be 4, 5 or 6\n", log.items);
++}
++
+ // spec-case: NEW-CORE-S4-CACHE-1
+ test "publishOutput reports an unwritable output and servedForeign misses on damaged or stale manifests" {
+     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+diff --git a/src/core/driver_cache_test.zig b/src/core/driver_cache_test.zig
+index 42cd42a46..5b6ec5470 100644
+--- a/src/core/driver_cache_test.zig
++++ b/src/core/driver_cache_test.zig
+@@ -93,6 +93,39 @@ const Project = struct {
+ /// The numbers of one `--cache-report` line.
+ const Report = struct { units: u32, reused: u32, compiled: u32, verified: u32, program: []const u8, processes: u32, replayed: bool };
+ 
++// spec: LAYOUT-SWITCH-1
++test "layout changes rebuild units and runtime and returning to a layout reuses objects programs and replay" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    var directory = std.testing.tmpDir(.{});
++    defer directory.cleanup();
++    var project = try Project.prepare(arena.allocator(), &directory, true);
++    try project.environment.put("MYLANG_CORE_LAYOUT", "4");
++    const four = try report(try project.build(&.{}));
++    const expected = try project.output();
++    try std.testing.expectEqual(four.units, four.compiled);
++    try std.testing.expectEqual(four.compiled + 2, four.processes);
++    try std.testing.expect((try report(try project.build(&.{}))).replayed);
++    try project.environment.put("MYLANG_CORE_LAYOUT", "5");
++    const five = try report(try project.build(&.{}));
++    try std.testing.expectEqual(five.units, five.compiled);
++    try std.testing.expectEqual(five.compiled + 2, five.processes);
++    try std.testing.expectEqualStrings(expected, try project.output());
++    try project.environment.put("MYLANG_CORE_LAYOUT", "6");
++    const six = try report(try project.build(&.{}));
++    try std.testing.expectEqual(six.units, six.compiled);
++    try std.testing.expectEqual(six.compiled + 2, six.processes);
++    try std.testing.expectEqualStrings(expected, try project.output());
++    try project.environment.put("MYLANG_CORE_LAYOUT", "4");
++    try std.testing.expect((try report(try project.build(&.{}))).replayed);
++    try project.forgetReplays();
++    const reused = try report(try project.build(&.{}));
++    try std.testing.expectEqual(@as(u32, 0), reused.processes);
++    try std.testing.expectEqual(four.units, reused.reused);
++    try std.testing.expectEqualStrings("reused", reused.program);
++    try std.testing.expectEqualStrings(expected, try project.output());
++}
++
+ fn report(stderr: []const u8) !Report {
+     if (std.mem.indexOf(u8, stderr, "mylang-core: cache: replayed") != null) return .{ .units = 0, .reused = 0, .compiled = 0, .verified = 0, .program = "replayed", .processes = 0, .replayed = true };
+     const start = std.mem.indexOf(u8, stderr, "mylang-core: cache: ") orelse return error.NoCacheReport;

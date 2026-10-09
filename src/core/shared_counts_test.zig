@@ -123,8 +123,8 @@ test "shared count emission uses unordered reads, plain thresholds and cold help
     try std.testing.expect(std.mem.indexOf(u8, text, "unordered, align 8, !tbaa !3, !range !8") != null);
     try std.testing.expect(std.mem.indexOf(u8, text, ", 2147483646\n") != null);
     try std.testing.expect(std.mem.indexOf(u8, text, ", 2147483648\n") != null);
-    try std.testing.expect(std.mem.indexOf(u8, text, "call void @myl_core_retain_slow(ptr") != null);
-    try std.testing.expect(std.mem.indexOf(u8, text, "call void @myl_core_release_slow(ptr") != null);
+    try std.testing.expect(std.mem.indexOf(u8, text, "call preserve_mostcc void @myl_core_retain_slow(ptr") != null);
+    try std.testing.expect(std.mem.indexOf(u8, text, "call preserve_mostcc void @myl_core_release_slow(ptr") != null);
 }
 
 // The compiler supplies the type checking: rename just myl_block.count, plus
