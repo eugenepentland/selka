@@ -1,3 +1,0 @@
-main.my:5:8: error[E_MODULE_READ]: cannot load src/design_model.my: NotFound
-  import src.design_model as design_model
-         ^

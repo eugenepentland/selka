@@ -1,0 +1,350 @@
+{
+  "source_commit": "350a9e05786b8d4f8b69335069b5f3f75964915b",
+  "references_sha256": "b6703c9fc0f135844131130cab4c0c8e263d2966ac5e85d24d380ae5deece3bc",
+  "compiler": "zig-out/bin/mylang",
+  "core_shards": 32,
+  "results": [
+    {
+      "command": [
+        "scripts/build-slot.sh",
+        "gate",
+        "--",
+        "bash",
+        "-c",
+        "\"$@\"; result=$?; exit \"$result\"",
+        "--",
+        "scripts/build-slot.sh",
+        "build",
+        "--",
+        "python3",
+        "experiments/new-core-s3-20261006/wave-a/exclusive_core.py",
+        "--",
+        "/usr/bin/time",
+        "-q",
+        "-f",
+        "%e",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fixes-20261009/experiments/frontend-fixes-20261009/s5-final2/install-core.seconds",
+        "zig",
+        "build",
+        "install",
+        "--summary",
+        "all"
+      ],
+      "log": "experiments/frontend-fixes-20261009/s5-final2/install-core.log",
+      "status": 0,
+      "seconds": 1.2,
+      "wall_including_admission": 1148.7092663841322
+    },
+    {
+      "command": [
+        "scripts/build-slot.sh",
+        "gate",
+        "--",
+        "bash",
+        "-c",
+        "\"$@\"; result=$?; exit \"$result\"",
+        "--",
+        "scripts/build-slot.sh",
+        "build",
+        "--",
+        "/usr/bin/time",
+        "-q",
+        "-f",
+        "%e",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fixes-20261009/experiments/frontend-fixes-20261009/s5-final2/test-core.seconds",
+        "zig",
+        "build",
+        "test-core",
+        "-Dcore-shards=32",
+        "--summary",
+        "all"
+      ],
+      "log": "experiments/frontend-fixes-20261009/s5-final2/test-core.log",
+      "status": 0,
+      "seconds": 40.99,
+      "wall_including_admission": 49.6226923239883,
+      "build_inspection": {
+        "build_summaries": [
+          "39/39 steps succeeded; 600/19200 tests passed (18600 skipped)"
+        ],
+        "maxrss": [
+          {
+            "line": "+- run test 19 pass, 581 skip (600 total) 4s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "|  +- compile test debug native cached 7ms MaxRSS:42M",
+            "display": "42M",
+            "bytes": 44040192.0,
+            "test_run": false
+          },
+          {
+            "line": "|     |  +- compile exe build-identity debug native cached 5ms MaxRSS:40M",
+            "display": "40M",
+            "bytes": 41943040.0,
+            "test_run": false
+          },
+          {
+            "line": "|     |  +- compile exe mylang debug native cached 6ms MaxRSS:42M",
+            "display": "42M",
+            "bytes": 44040192.0,
+            "test_run": false
+          },
+          {
+            "line": "|     |     +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 5ms MaxRSS:41M",
+            "display": "41M",
+            "bytes": 42991616.0,
+            "test_run": false
+          },
+          {
+            "line": "+- run test 19 pass, 581 skip (600 total) 24s MaxRSS:164M",
+            "display": "164M",
+            "bytes": 171966464.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 19 pass, 581 skip (600 total) 11s MaxRSS:161M",
+            "display": "161M",
+            "bytes": 168820736.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 19 pass, 581 skip (600 total) 13s MaxRSS:160M",
+            "display": "160M",
+            "bytes": 167772160.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 19 pass, 581 skip (600 total) 5s MaxRSS:203M",
+            "display": "203M",
+            "bytes": 212860928.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 19 pass, 581 skip (600 total) 9s MaxRSS:204M",
+            "display": "204M",
+            "bytes": 213909504.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 19 pass, 581 skip (600 total) 8s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 19 pass, 581 skip (600 total) 6s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 19 pass, 581 skip (600 total) 4s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 19 pass, 581 skip (600 total) 17s MaxRSS:171M",
+            "display": "171M",
+            "bytes": 179306496.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 19 pass, 581 skip (600 total) 5s MaxRSS:80M",
+            "display": "80M",
+            "bytes": 83886080.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 19 pass, 581 skip (600 total) 7s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 19 pass, 581 skip (600 total) 4s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 19 pass, 581 skip (600 total) 2s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 19 pass, 581 skip (600 total) 13s MaxRSS:262M",
+            "display": "262M",
+            "bytes": 274726912.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 19 pass, 581 skip (600 total) 15s MaxRSS:578M",
+            "display": "578M",
+            "bytes": 606076928.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 19 pass, 581 skip (600 total) 11s MaxRSS:266M",
+            "display": "266M",
+            "bytes": 278921216.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 19 pass, 581 skip (600 total) 9s MaxRSS:262M",
+            "display": "262M",
+            "bytes": 274726912.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 19 pass, 581 skip (600 total) 9s MaxRSS:258M",
+            "display": "258M",
+            "bytes": 270532608.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 19 pass, 581 skip (600 total) 9s MaxRSS:267M",
+            "display": "267M",
+            "bytes": 279969792.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 19 pass, 581 skip (600 total) 4s MaxRSS:259M",
+            "display": "259M",
+            "bytes": 271581184.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 19 pass, 581 skip (600 total) 12s MaxRSS:256M",
+            "display": "256M",
+            "bytes": 268435456.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 19 pass, 581 skip (600 total) 10s MaxRSS:256M",
+            "display": "256M",
+            "bytes": 268435456.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 19 pass, 581 skip (600 total) 24s MaxRSS:133M",
+            "display": "133M",
+            "bytes": 139460608.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 18 pass, 582 skip (600 total) 22s MaxRSS:269M",
+            "display": "269M",
+            "bytes": 282066944.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 18 pass, 582 skip (600 total) 27s MaxRSS:459M",
+            "display": "459M",
+            "bytes": 481296384.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 18 pass, 582 skip (600 total) 11s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 18 pass, 582 skip (600 total) 3s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 18 pass, 582 skip (600 total) 8s MaxRSS:207M",
+            "display": "207M",
+            "bytes": 217055232.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 18 pass, 582 skip (600 total) 12s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 18 pass, 582 skip (600 total) 3s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 18 pass, 582 skip (600 total) 2s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          }
+        ],
+        "rss_overrun_notices": [],
+        "reported_admission_seconds": {
+          "gate": 0,
+          "build": 0
+        },
+        "errors": []
+      },
+      "longest_shard_seconds": 27.38,
+      "tests": {
+        "passed": 600,
+        "failed": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "command": [
+        "scripts/build-slot.sh",
+        "gate",
+        "--",
+        "bash",
+        "-c",
+        "\"$@\"; result=$?; exit \"$result\"",
+        "--",
+        "scripts/build-slot.sh",
+        "build",
+        "--",
+        "/usr/bin/time",
+        "-q",
+        "-f",
+        "%e",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fixes-20261009/experiments/frontend-fixes-20261009/s5-final2/full-conformance.seconds",
+        "python3",
+        "experiments/new-core-s5-20261007/tools/conformance_ref.py",
+        "--references",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fixes-20261009/experiments/new-core-s5-20261007/references/conformance-v1.json",
+        "--set",
+        "all",
+        "--core",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fixes-20261009/zig-out/bin/mylang",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fixes-20261009/.mylang-cache/s5/integration-qualify/s5-final2/conformance",
+        "--jobs",
+        "4",
+        "--why",
+        "--leakcheck",
+        "--verify",
+        "--frontend-reference",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fixes-20261009/experiments/frontend-fixes-20261009/s5-frontend-reference.json",
+        "--frontend-journal",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-fixes-20261009/experiments/frontend-fixes-20261009/s5-final2/frontend-conformance.json"
+      ],
+      "log": "experiments/frontend-fixes-20261009/s5-final2/full-conformance.log",
+      "status": 0,
+      "seconds": 20.77,
+      "wall_including_admission": 25.823483831016347
+    }
+  ],
+  "qualified": true,
+  "core_sha256": "a156c8c0351757a787dc2cea9c54a6e8f2cba45432c1bb491b1f92d73969a923"
+}

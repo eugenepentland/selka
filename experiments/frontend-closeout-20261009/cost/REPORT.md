@@ -59,21 +59,21 @@ and 554 opaque nodes; stdlib has 20 opaque unit nodes. These omissions prevent
 claims of absence, complete source counts or direct numerical comparison with
 the historical all-source FP2 tables.
 
-`tools/count_typed.py` was narrowly adapted from the preserved historical
+`0bbfeb740:experiments/frontend-closeout-20261009/cost/tools/count_typed.py` was narrowly adapted from the preserved historical
 frontend-fp2-20261008 walker. No historical branch was merged. The old corpus
 collector's automatic library main stubs and old import routing were not reused;
 the current developer loader resolves the selected entries directly.
 
 ## Static sites, counters and Juice
 
-`operations/main.my` processes 32 input records four times. It builds a list and
+`0bbfeb740:experiments/frontend-closeout-20261009/cost/operations/main.my` processes 32 input records four times. It builds a list and
 text, sums records, performs equality/membership and byte slice/view operations.
 Its fixed oracle is exit 0, stdout `2144\n`, empty stderr and 128 completed
 input records. The manifest fixes that result and
 `core-count-p1-c26c95de7` counter semantics.
 
 The completed source-bound Juice record is
-`juice-evidence/qualified/record.json`. All three ordinary samples and the
+`0bbfeb740:experiments/frontend-closeout-20261009/cost/juice-evidence/qualified/record.json`. All three ordinary samples and the
 separate counted executable match the oracle. Raw perf records, sample streams,
 counted streams and counters are preserved beside it. Generated build binaries
 and local cache stay in the ignored `juice-cache/`; executable hashes and build
@@ -123,3 +123,9 @@ recollected on the qualified immutable compiler. Counts, opaque/unknown observat
 static cost and semantic runtime counters match both candidate 1 and checkpoint final; these captures
 are independent functional qualifications, not a performance comparison.
 A subsequent production compiler change would require another qualification.
+
+## Archived full evidence
+
+Full captures and the original version of this report remain in commit `0bbfeb740`,
+reachable from `main` and `codex/frontend-followthrough-20261009`.
+Retrieve any archived path with `git show 0bbfeb740:PATH` (paths are repository-relative).

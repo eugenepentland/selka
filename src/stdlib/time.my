@@ -1,5 +1,3 @@
-
-
 # A signed span of wall-clock time, counted in nanoseconds.
 public record Duration:
     nanoseconds: int

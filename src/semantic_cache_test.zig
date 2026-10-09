@@ -8,6 +8,38 @@ const semantic_key = @import("semantic_key.zig");
 const cache_key = @import("cache_key.zig");
 const semantic_store = @import("semantic_store.zig");
 const Cache = language.semantic_cache.Cache;
+
+fn specializationRecords(allocator: std.mem.Allocator) ![]u8 {
+    var text: std.ArrayList(u8) = .empty;
+    errdefer text.deinit(allocator);
+    var line: [256]u8 = undefined;
+    for (0..8) |index| try text.appendSlice(allocator, try std.fmt.bufPrint(&line, "record R{d}:\n    value: int\n", .{index}));
+    try text.appendSlice(allocator, "record Box[T]:\n    value: T\nfunc identity[T](value: T) -> T:\n    return value\nfunc boxed[T](value: T) -> Box[T]:\n    return Box[T](value=value)\nfunc main() -> int:\n    mut total = 0\n");
+    for (0..8) |index| try text.appendSlice(allocator, try std.fmt.bufPrint(&line, "    const b{d} = boxed(identity(R{d}(value={d})))\n    total += b{d}.value.value\n", .{ index, index, index, index }));
+    try text.appendSlice(allocator, "    return total\n");
+    return text.toOwnedSlice(allocator);
+}
+
+// spec: SPECIALIZATION-NAME-INDEX-1
+test "F10 specialization record name work is linear in each fresh catalog" {
+    const bytes = try specializationRecords(t.allocator);
+    defer t.allocator.free(bytes);
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    for (0..2) |iteration| {
+        const before = cache.reuse.specializations.statistics;
+        var compilation = try language.Compilation.init(t.allocator, "records.my", bytes);
+        defer compilation.deinit();
+        try compilation.checkWithCache(&cache);
+        const after = cache.reuse.specializations.statistics;
+        const visits = after.record_name_visits - before.record_name_visits;
+        std.debug.print("F10 request {d}: {d} record name visits, {d} records, {d} checked, {d} reused\n", .{ iteration, visits, compilation.program.?.records.len, after.checked - before.checked, after.reused - before.reused });
+        try t.expect(visits <= compilation.program.?.records.len);
+        try t.expectEqual(@as(usize, 16), after.checked - before.checked + after.reused - before.reused);
+        try t.expectEqual(@as(usize, iteration * 16), after.reused - before.reused);
+        try t.expectEqual(@as(i64, 28), (try native.run(&compilation)).value);
+    }
+}
 const prefix =
     \\func helper(n: i64) -> i64:
     \\    return n + 1

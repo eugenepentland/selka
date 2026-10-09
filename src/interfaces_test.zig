@@ -1945,7 +1945,7 @@ test "cross module effect and recoverable result obligations are enforced" {
         \\import units
         \\
         \\
-        \\func main() -> i64 noalloc:
+        \\func main() -> i64 effects():
         \\    return units.allocate()
     ,
         \\
@@ -2097,7 +2097,7 @@ test "exported functions publish their inferred ceiling while explicit ceilings 
     const narrowed =
         \\
         \\
-        \\public func value() -> i64 noalloc:
+        \\public func value() -> i64 effects():
         \\    mut items: i64[] = []
         \\    items.append(7)
         \\    return items[0]

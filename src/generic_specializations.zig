@@ -91,6 +91,8 @@ pub const Statistics = struct {
     reused: usize = 0,
     stored: usize = 0,
     bypassed: usize = 0,
+    /// Catalog name visits for specialization identity indexing/resolution.
+    record_name_visits: usize = 0,
     misses: MissCounts = @splat(0),
 };
 

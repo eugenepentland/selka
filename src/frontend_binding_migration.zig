@@ -222,14 +222,29 @@ const Pass = struct {
     fn escapes(self: *const Pass, binding: Declaration) bool {
         for (self.program.nodes.items) |node| {
             if (node.span.start < self.function.start or node.span.end > self.function.end) continue;
-            if (node.data != .name or !std.mem.eql(u8, self.src.text(node.data.name), self.src.text(binding.name))) continue;
-            var resolved: ?Declaration = null;
-            for (self.bindings.declarations.items) |other| {
-                if (!std.mem.eql(u8, self.src.text(other.name), self.src.text(binding.name))) continue;
-                if (node.span.start < other.available or node.span.start < other.scope.start or node.span.end > other.scope.end) continue;
-                if (resolved == null or other.scope.end - other.scope.start < resolved.?.scope.end - resolved.?.scope.start) resolved = other;
-            }
-            if (resolved == null) return true;
+            if (@import("arena_fix.zig").termNamed(self.src, node, binding.name) and !self.resolved(binding.name, node.span)) return true;
+        }
+        for (self.program.statements.items) |statement| {
+            if (statement.span.start < self.function.start or statement.span.end > self.function.end) continue;
+            if (statement.data != .assignment) continue;
+            const name = statement.data.assignment.name;
+            if (!std.mem.eql(u8, self.src.text(name), self.src.text(binding.name))) continue;
+            // An initial assignment declares a fresh identity in its block;
+            // only subsequent writes (including +=) use an existing binding.
+            if (!self.declarationTarget(name) and !self.resolved(binding.name, name)) return true;
+        }
+        return false;
+    }
+
+    fn declarationTarget(self: *const Pass, name: Span) bool {
+        for (self.bindings.declarations.items) |binding| if (binding.name.start == name.start) return true;
+        return false;
+    }
+
+    fn resolved(self: *const Pass, name: Span, use: Span) bool {
+        for (self.bindings.declarations.items) |other| {
+            if (!std.mem.eql(u8, self.src.text(other.name), self.src.text(name))) continue;
+            if (use.start >= other.available and use.start >= other.scope.start and use.end <= other.scope.end) return true;
         }
         return false;
     }

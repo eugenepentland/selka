@@ -33,7 +33,7 @@ This is the first implementation batch of the revised October 9 plan.
 Final compiler SHA-256:
 `5e072ee17b825cfbd40ed5533c3bce9f166ce4ae576395020cd5e435cc45ed11`.
 
-- Full repository gate: **94/94 steps passed** (`full-gate-2.log`), 63.23 s
+- Full repository gate: **94/94 steps passed** (`0bbfeb740:experiments/frontend-followthrough-20261009/full-gate-2.log`), 63.23 s
   gate body and 72.87 s including admission. The earlier full run passed all
   2,235 selected Zig tests but failed three migration-driver tests; those
   failures exposed the external-path selection bug described below. The final
@@ -41,8 +41,8 @@ Final compiler SHA-256:
   Skipped/enumerated counts are not executed-test counts.
 - Formatting: all 752 selected `.my` sources pass, with 257 reasoned exclusions;
   the first formatting gate passed 15/15 steps. The final receipt is
-  `fmt-check-3.log` (15/15 steps, exit 0).
-- Whole-tree Guardian: 88 checks passed, exit 0 (`guardian-full-2.log`);
+  `0bbfeb740:experiments/frontend-followthrough-20261009/fmt-check-3.log` (15/15 steps, exit 0).
+- Whole-tree Guardian: 88 checks passed, exit 0 (`0bbfeb740:experiments/frontend-followthrough-20261009/guardian-full-2.log`);
   configured report-only findings remain disclosed in that receipt.
 - Focused checks: 79 frontend, 21 arena and nine CLI fix tests passed, followed
   by 18 arena-retirement tests after the final capture guard. Filter totals
@@ -116,14 +116,20 @@ artifacts and source snapshots remain local and ignored; the patches bind the
 snapshots to verified Git pins.
 
 The shared disk filled after the successful full gate. The first final Guardian
-attempt returned exit 1 without a captured log, and `fmt-check-2.log` records
+attempt returned exit 1 without a captured log, and `0bbfeb740:experiments/frontend-followthrough-20261009/fmt-check-2.log` records
 `NoSpaceLeft`. Neither is a pass. Only this worktree's inactive, reproducible
 unit/Core and external native/mode caches were removed to recover space; raw
 receipts, shared caches, historical evidence and other worktrees were preserved.
-Fresh final check receipts are `guardian-full-2.log` and `fmt-check-3.log`.
+Fresh final check receipts are `0bbfeb740:experiments/frontend-followthrough-20261009/guardian-full-2.log` and `0bbfeb740:experiments/frontend-followthrough-20261009/fmt-check-3.log`.
 
 Guardian usage feedback was appended and committed separately as `cea9ab5749c5bc69d99b4d805a77105adb28711e`.
 
-`patch-whitespace-audit.json` records the whitespace check on archived patches:
+`0bbfeb740:experiments/frontend-followthrough-20261009/patch-whitespace-audit.json` records the whitespace check on archived patches:
 all findings are required unified-diff context prefixes on blank lines. The
 implementation diff passed its whitespace check; patch bytes remain intact.
+
+## Archived full evidence
+
+Full captures and the original version of this report remain in commit `0bbfeb740`,
+reachable from `main` and `codex/frontend-followthrough-20261009`.
+Retrieve any archived path with `git show 0bbfeb740:PATH` (paths are repository-relative).

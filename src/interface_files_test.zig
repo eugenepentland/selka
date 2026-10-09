@@ -149,7 +149,7 @@ const shapes_interface =
     \\
     \\@requires(rect.width >= 0, "width is never negative")
     \\@ensures(result >= 0)
-    \\public func area(rect: Rect, named scale: int = 1) -> int noalloc ceiling()
+    \\public func area(rect: Rect, named scale: int = 1) -> int noalloc ceiling(managed_allocation)
     \\
     \\public func draw(mut canvas: Canvas[int], out: Stream) -> int ceiling(managed_allocation,output,mutation)
     \\
@@ -230,7 +230,7 @@ test "an interface file is byte-identical after a body, private, comment or form
 test "signature, contract, field, ceiling and deprecation edits change the interface file" {
     const signature = try renderEdited(t.allocator, "scale: int = 1)", "scale: int = 2)");
     defer t.allocator.free(signature);
-    try t.expect(std.mem.indexOf(u8, signature, "public func area(rect: Rect, named scale: int = 2) -> int noalloc ceiling()\n") != null);
+    try t.expect(std.mem.indexOf(u8, signature, "public func area(rect: Rect, named scale: int = 2) -> int noalloc ceiling(managed_allocation)\n") != null);
     const contract = try renderEdited(t.allocator, "@ensures(result >= 0)", "@ensures(result > 0)");
     defer t.allocator.free(contract);
     try t.expect(std.mem.indexOf(u8, contract, "\n@ensures(result > 0)\npublic func area(") != null);

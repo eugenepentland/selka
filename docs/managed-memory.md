@@ -26,12 +26,12 @@ snapshot, never an interior pointer into growable storage. Use a `mut`
 parameter with a marked call when a helper must change its caller's value
 ([value semantics](value-semantics.md)).
 
-Use `list[Node]` for application collections and `nodes: list[Node] = []`
+Use `Node[]` for application collections and `mut nodes: Node[] = []`
 for an empty list. Read with `nodes[index]`, write with `nodes[index] = value`,
 append with `nodes.append(value)`, and count with `len(nodes)`. An empty literal
 needs an expected list type from an annotation, return type, or parameter.
 
-Capacity is a reserve hint, not a fixed limit. Mutations return `None`. Invalid
+Capacity is a reserve hint, not a fixed limit. Mutations such as `append` return `Unit`; `pop` returns the removed element. Invalid
 indices trap with `R_LIST_BOUNDS`. Allocation failure ends the program with
 status 1 (`R_MEMORY_BUDGET` under a byte ceiling, `fatal: out of memory` without
 one) rather than returning a recoverable collection result. Keep
@@ -41,10 +41,11 @@ List elements can be ordinary copyable values, records, and other managed lists.
 Recursive record types are supported, but stored values are independent; use
 explicit pool handles for identity-bearing graphs:
 
-```text
+```mylang
+# doc: check
 record Node:
     value: int
-    children: list[Node]
+    children: Node[]
 ```
 
 `record` and its mutable managed fields are values. The builtin `Cell` and `class`
@@ -87,9 +88,12 @@ Every `scratch` list and every interpolated string in that program is released w
 field or element annotations.
 
 Managed construction and append carry the transitive `managed_allocation` effect.
-`noalloc` excludes it, meaning "performs no managed allocation". It does not promise
-zero allocation for runtime bookkeeping. Reads and fixed-slot writes are permitted
-under that bound. Managed mutation is not a promise of purity or exclusive access.
+`noalloc` promises "performs no managed allocation". Builds and runs warn with
+`W_NOALLOC_ALLOCATES` when ownership-expanded Core finds a may-allocate site;
+`lint --gate` blocks on the corresponding `noalloc-allocates` rule. `check` does
+not compute this contract. The promise excludes runtime bookkeeping. Reads can
+be allocation-free; a fixed-slot write may allocate when copy-on-write is needed.
+Managed mutation is not a promise of purity or exclusive access.
 Every process that runs a program under `mylang run` or `mylang test` has a byte
 ceiling ([guest memory ceilings](tooling/runtime-budgets.md#guest-memory-ceilings)).
 

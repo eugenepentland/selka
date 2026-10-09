@@ -1,3 +1,0 @@
-byte_iteration_reductions.my:1:1: error[E_MAIN]: the program requires an entry point: func main() -> int; `mylang check FILE` type-checks a library that has no main
-  func reduce(raw: bytes, mask: int, seed: int) -> int:
-  ^

@@ -48,6 +48,8 @@ pub const Plan = struct {
     checked: std.ArrayList(Checked) = .empty,
     /// Instance index of the entry point, which is always checked.
     main: usize,
+    /// A bounded-body fallback still replaces the summaries that caused it.
+    allocation_fallback: bool = false,
 
     /// Plan stand-ins for one request. `main` is the entry point's instance.
     pub fn init(allocator: std.mem.Allocator, request: *summary.Request, session: *semantic_cache.Session, main: usize) error{OutOfMemory}!Plan {
@@ -105,11 +107,13 @@ pub const Plan = struct {
             const bound = syntax.functions[ast_index].policy.effect_bound orelse continue;
             if (!@import("effect_set.zig").coreAllocationBound(self.session.src, bound)) continue;
             const position = previous.find(self.prepared.keys[ast_index]) orelse {
+                self.allocation_fallback = true;
                 self.request.body_policy = .concrete;
                 return;
             };
             const stored = previous.summaries[position];
             if (!std.mem.eql(u8, &stored.context, &self.prepared.contexts[ast_index]) or !std.mem.eql(u8, &stored.region.digest, &self.prepared.recalled.digests[ast_index])) {
+                self.allocation_fallback = true;
                 self.request.body_policy = .concrete;
                 return;
             }
@@ -249,7 +253,7 @@ pub const Plan = struct {
     /// lowers publishes one only when it had none to stand in (or repeated in
     /// full), so the next such command does not repeat the passes again.
     pub fn publishes(self: *const Plan) bool {
-        return self.request.body_policy != .concrete or self.request.previous == null;
+        return self.allocation_fallback or self.request.body_policy != .concrete or self.request.previous == null;
     }
 
     /// This request's summary table, one entry per ordinary instance in order.
