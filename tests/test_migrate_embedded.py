@@ -11,14 +11,26 @@ import tempfile
 import unittest
 from unittest import mock
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
+REPO = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO / 'scripts'))
 import migrate_embedded as migration
 import spelling_census
 
 
+def scratch_parent():
+    """A directory for scratch trees that lies outside this checkout.
+
+    The external-tree tests need their sources outside the repository: under a
+    TMPDIR inside the checkout (as agent worktrees use) every scratch path would
+    be repository-relative and take the repository's exclusions.
+    """
+    default = Path(tempfile.gettempdir()).resolve()
+    return REPO.parent if default.is_relative_to(REPO) else None
+
+
 class EmbeddedMigrationTests(unittest.TestCase):
     def setUp(self):
-        self.scratch = tempfile.TemporaryDirectory()
+        self.scratch = tempfile.TemporaryDirectory(dir=scratch_parent())
         self.addCleanup(self.scratch.cleanup)
         self.root = Path(self.scratch.name)
         self.compiler = self.root / 'compiler'
