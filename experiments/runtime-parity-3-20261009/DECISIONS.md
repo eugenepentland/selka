@@ -135,3 +135,11 @@
 - Evidence: the two owned row-build workers waited more than 10 and 4 minutes at one checkpoint, while 118 completed counting/plain binaries were already available.
 - Choice: stop only the owned waiting build and continuation processes, hash all retained binaries and the compiler in count-build-resume.json, and finish through build_count_batch.py inside scripts/build-slot.sh build. The batch asserts that it owns a build-slot descriptor, runs only one compiler at a time, and verifies every reused hash. The supported one-second poll setting changes admission responsiveness; slot counts, memory thresholds, affinity restrictions, workloads and gates are unchanged.
 - Reversibility: scheduling/tooling only; the complete counting and output gates still follow the build.
+
+## M0-018 — report the standalone recursive-tree arm without an invented reference
+
+- Question: the current parity registry has 28 benchmarks, but binary_trees_recursive contains only its mylang arm. The historical geomean covers 27 reference-bearing primary arms.
+- Options: drop the standalone arm, invent a peer, or keep its timing/output coverage and mark the relative gate unavailable.
+- Evidence: bench_parity.discover/arms_for yields 153 arms, including all 45 mylang programs; binary_trees_recursive is the sole benchmark without Zig or Rust arms.
+- Choice: keep all 45 mylang programs in timing and the gap table, mark the standalone relative gate unavailable, and compute the reference geomeans over the 27 primary arms with Zig RS/RF references. No speed result or passing gate is inferred for missing coverage.
+- Reversibility: reporting correction only; no benchmark, oracle, threshold, or runner changes.

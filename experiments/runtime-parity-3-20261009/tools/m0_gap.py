@@ -23,18 +23,17 @@ def gm(values):
 
 def row(label, own, refs, limit):
     ratios = {name: own / value for name, value in refs.items() if value is not None}
-    rs = ratios.get('zig-safe')
-    checked = ratios.get('rust-checked')
-    passed = rs is not None and rs <= limit and (checked is None or checked <= limit)
+    gated = [ratios[key] for key in ('zig-safe', 'rust-checked') if key in ratios]
+    verdict = 'unavailable' if not gated else ('met' if all(value <= limit for value in gated) else 'over')
     cells = ['—' if key not in ratios else f"{ratios[key]:.3f}" for key in ('zig-safe', 'rust-checked', 'zig-fast', 'rust', 'go')]
-    return '| ' + ' | '.join([label, *cells, f'{limit:.2f}', 'met' if passed else 'over']) + ' |', ratios
+    return '| ' + ' | '.join([label, *cells, f'{limit:.2f}', verdict]) + ' |', ratios
 
 
 def main():
     lines = ['# M0 gap — current-main base', '',
              'Base: `41ed360fb361c49938488ad111795bad8a726b73`. Ratios below divide mylang by the named reference; smaller is faster.', '',
              'CPU 10 runs hold the timing lock and all build/gate slots. Parity uses 9 rounds and 2 warmups; Lox 3 rounds; EDA 10 rounds and 1 warmup. Rows use the median of three 7-round batches, after startup subtraction, in cycles per unit.', '',
-             'A dash means the corpus has no such arm. Lox and EDA provide plain Rust only; its ratio is evidence, not a checked-Rust gate result. The `met` column applies only to the available gated references. Missing checked-Rust coverage remains explicit.', '']
+             'A dash means the corpus has no such arm. Lox and EDA provide plain Rust only; its ratio is evidence, not a checked-Rust gate result. The `met` column applies only to the available gated references. Missing checked-Rust coverage remains explicit. binary_trees_recursive has only a mylang arm; it is timed and qualified, but its relative gate is unavailable and it is excluded from reference geomeans.', '']
     header = ['| program / arm | ÷ Zig RS | ÷ rust-checked | ÷ Zig RF | ÷ plain Rust | ÷ Go | limit | available gate |',
               '|---|---:|---:|---:|---:|---:|---:|---|']
     parity = read('parity-base.json')
@@ -50,9 +49,10 @@ def main():
             n += 1
             line, ratios = row(name + '/' + key, value['wall_median'], refs, 1.1)
             lines.append(line)
-            if key == 'my': main_ratios.append(ratios)
+            if key == 'my' and 'zig-safe' in ratios and 'zig-fast' in ratios:
+                main_ratios.append(ratios)
     assert n == 45, n
-    lines += ['', f"Primary-arm geomean ÷ Zig RS: {gm([r['zig-safe'] for r in main_ratios]):.3f}; ÷ Zig RF: {gm([r['zig-fast'] for r in main_ratios]):.3f}.", '']
+    lines += ['', f"Primary-arm geomean ({len(main_ratios)} programs with both Zig references) ÷ Zig RS: {gm([r['zig-safe'] for r in main_ratios]):.3f}; ÷ Zig RF: {gm([r['zig-fast'] for r in main_ratios]):.3f}.", '']
     lox = read('lox-base.json')
     assert not lox['failures'] and len(lox['summary']) == 26
     lines += ['## Lox', '', *header]

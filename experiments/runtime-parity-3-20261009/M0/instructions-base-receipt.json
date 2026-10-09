@@ -6,5 +6,8 @@
  "all_samples_status_zero": true,
  "all_instruction_and_cycle_samples_positive": true,
  "receipt": "M0/instructions-base.json.gz",
- "sha256": "a1b8bebdb761abb2ddecd5734e1bf4bd57630ea4f7b31049261980f7ebd4b998"
+ "sha256": "a1b8bebdb761abb2ddecd5734e1bf4bd57630ea4f7b31049261980f7ebd4b998",
+ "maximum_instruction_sample_spread": 1.000123336218715,
+ "maximum_spread_cell": "eda/blinky-breakout",
+ "cells_above_1_03_sample_spread": 0
 }
