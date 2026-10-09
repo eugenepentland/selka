@@ -1,6 +1,6 @@
 # Structured concurrency, phase 1: packages P1 and P2, 2026-10-08
 
-Status: **P1 is ready to resume at P1-1 (revision 2, 2026-10-08).** P1-1 (`07b0b3dc3`) stopped correctly at its early tax gate. The 46-row geomean was 0.9987×, but `json_transform` was about 4% slower in every batch, and three other cells crossed 1.03× in one run only. See [the P1 report](../../experiments/concurrency-p1-2026-10-08/REPORT.md). Revision 2 (§4.8 R9–R11) shrinks the slow path, adds a layout control to the tax protocol and accepts the compare-exchange helpers. Revision 1's R1–R8 stand. P2 is fully specified here, but it starts only after the front-end plan's F4 exit and the user's go (§6).
+Status: **P1 is ready to resume at P1-1 (revisions 2 and 3, 2026-10-09).** Revision 3 (§9, §9.1) lets Codex run P1 to its end on its own: it decides and logs, and stops only for the hard stops in §9.1. P1-1 (`07b0b3dc3`) stopped correctly at its early tax gate. The 46-row geomean was 0.9987×, but `json_transform` was about 4% slower in every batch, and three other cells crossed 1.03× in one run only. See [the P1 report](../../experiments/concurrency-p1-2026-10-08/REPORT.md). Revision 2 (§4.8 R9–R11) shrinks the slow path, adds a layout control to the tax protocol and accepts the compare-exchange helpers. Revision 1's R1–R8 stand. P2 is fully specified here, but it starts only after the front-end plan's F4 exit and the user's go (§6).
 - **Decisions:** C1–C7, accepted by the user on 2026-10-08 (§2).
 - **What it delivers:** CPU fork/join parallelism. `parallel.map` and task groups run on a work-stealing pool of OS threads. Only values that cross into a task get atomic counts.
 - **Size (estimates):** P1 about 25–40 h; P2 about 30–45 h. Each package ends with a stop for the user.
@@ -8,15 +8,16 @@ Status: **P1 is ready to resume at P1-1 (revision 2, 2026-10-08).** P1-1 (`07b0b
 
 ## Launch instruction (for Codex)
 
-> **Resuming P1 (revision 2).** Fast-forward `codex/concurrency-p1` to `claude/concurrency-plan`, which already contains your P1-0 and P1-1 commits. Read §4.8 R9–R11, then redo P1-1's slow path and its tax gate as §5 P1-1 now says. Everything else is unchanged.
->
-> **Now, package P1 only.** Implement package P1 of `docs/audits/concurrency-plan-2026-10-08.md` (branch `claude/concurrency-plan`) on `codex/concurrency-p1`, created from `claude/concurrency-plan`.
-> - If `main` has moved, merge `main` into it first with a real merge commit.
-> - Follow §9's rules.
+> **Run package P1 to its end (revision 3).**
+> - Fast-forward `codex/concurrency-p1` to `claude/concurrency-plan`. It already contains your P1-0 and P1-1 commits.
+> - Read §4.8 (R9–R11) and §9.1 (autonomy), then work through §5 from P1-1's revision-2 redo to P1-6, and then P2-0 as a read-only analysis (§5, "After P1").
+> - **Do not stop to ask.** Where the plan is silent or a step fails, investigate, decide, log the decision in `DECISIONS.md` (§9.1) and keep going.
+> - Stop only at a hard stop in §9.1, or when P1 and the P2-0 analysis are done.
+> - Commit at every step with an updated progress section in `REPORT.md`, so the run can be inspected without being interrupted.
+> - If `main` moves, merge it with a real merge commit and rerun the current step's gates.
 > - Never merge into `main` and never push.
-> - Finish with P1's report (§8) and stop.
 >
-> **Later, package P2,** only when the user says so: on `codex/concurrency-p2`, created from P1's tip merged with the `main` of that day. Start with P2-0, follow §9, finish with P2's report and stop.
+> **Later, package P2,** only when the user says so: on `codex/concurrency-p2`, created from P1's tip merged with the `main` of that day. §9.1 applies to it too.
 
 ## 1. Where it starts
 
@@ -426,10 +427,11 @@ P1-1's stop was correct, and its gate result stands as recorded. What it showed:
 - **Then:**
   1. Choose R9's variant on the five cells and on `json::read_value`'s size.
   2. Measure the single-threaded tax under R10's protocol on **every** corpus of §7.1: the 46 rows, EDA, both Lox engines and parity. Use the merged resume base `54eda9012` (or its successor if `main` is merged again) built with the same switch.
-- **Stop rule:**
-  - a per-corpus geomean above 1.010, or any cell's median ratio above 1.03×, stops the package with a report;
-  - the report names, for each such cell, its three per-alignment ratios.
-- **If the gate passes,** run P1-1's correctness gates again (§7.3, without the TSan suite), then continue with P1-2.
+- **Checkpoint, not a stop** (revision 3):
+  - **A cell above 1.03×, or a corpus geomean between 1.010 and 1.03:** investigate. Try R9's variants and any other change to the emitted count paths or the runtime that §9.1 allows, for up to about 6 hours. Then log the result, whether fixed or not, and continue with P1-2. P1-2 changes the runtime again, so P1-6 measures the tax once more, and that measurement is the binding one.
+  - **A corpus geomean above 1.03 after that investigation is a hard stop** (§9.1). It would contradict C3's premise.
+  - Every measurement's table goes into the report, including the failures.
+- **Then** run P1-1's correctness gates again (§7.3, without the TSan suite), and continue with P1-2.
 
 **P1-2. Per-thread runtime state (§4.3).**
 - The TLS free lists, measuring initial-exec against local-exec on the tax rows.
@@ -448,9 +450,16 @@ P1-1's stop was correct, and its gate result stands as recorded. What it showed:
 - The same tests and the C stress tests run under `MYLANG_CORE_SANITIZE=thread`, **100 repetitions at 8 threads, 0 reports**.
 - At 1 thread, the results equal the sequential computation.
 
-**P1-6. Measurement and the report** (§7, §8), then **stop**.
+**P1-6. Measurement and the report** (§7, §8). The tax measured here, under R10's protocol on every corpus, is P1's binding tax result.
+- **If it misses** the thresholds after a further bounded investigation (about 6 hours), the report says so, with the cells, the per-alignment ratios and what was tried. The package still finishes; whether to merge is the user's call.
 
-**P1 owns** (extended in revision 1):
+**After P1: P2-0 as a read-only analysis** (about 2–4 h).
+- Write `experiments/concurrency-p1-<date>/P2-0.md`: how each P2 construct lowers to P1's ABI with today's Core IR (helper calls, `func_ref`, `box_make`/`box_get`, generated thunks, the R4 bridge, R5's return-address sites); which builder and checker files P2 will touch; and any IR gap.
+- Prove the lowering on hand-built IR. P1-5's tests already call the ABI, so extend them with a `parallel.map`-shaped thunk over a range.
+- **No front-end edits.** The front-end plan owns those files until its F4 exit.
+- **Then stop.** This is the end of the run.
+
+**P1's expected files** (extended in revisions 1 and 2; revision 3 makes this a guide, not a fence; see §9.1):
 - `src/core/runtime/core_rt.c`, `core_test.c`, `core_text.c` (whole file: counts, caches, the ASCII table; R2) and the new `core_tasks.c`;
 - `core_io.c`: locks, provider serialisation, frozen startup state and the provider's `pairs` in the child iterator (R7);
 - `core_dict.c`, `core_bytes.c`, `core_values.c`: count sites and cache rules only;
@@ -468,7 +477,7 @@ P1-1's stop was correct, and its gate result stands as recorded. What it showed:
 - `SPEC.md` (§7.2 tags), `docs/tooling/native-build.md` (one paragraph on the TSan switch, as internal), and this plan's Status line;
 - `experiments/concurrency-p1-<date>/`.
 
-Nothing in the front end, `own.zig` or `ir.zig`.
+**Never changed in P1** (§9.1 hard stops): the front end (`src/*.zig` outside `src/core/`), `src/core/ir.zig` and `src/core/own.zig`. Changes to any other file are allowed, provided they are logged in `DECISIONS.md`.
 
 **Overlap with CE2.** If CE2 merges into `main` during P1, merge `main` into `codex/concurrency-p1` with a real merge commit and rerun P1's gates. In `emit_llvm.zig`, keep to the functions listed above.
 
@@ -591,6 +600,7 @@ Nothing in the front end, `own.zig` or `ir.zig`.
 4. the tax table, base against package per row and corpus, with load; for P1 also the TLS-model comparison;
 5. for P2, the scaling table and the EDA entry's speedup and shared-count counters;
 6. anything surprising, and what phase 2 should know.
+7. a summary of `DECISIONS.md`: the decisions that changed the plan, files changed outside the expected list, and every hard stop reached or narrowly avoided (§9.1).
 
 Evidence stays under 10 MB per package. Subagents cannot write `REPORT.md` files: a subagent returns the text, and the coordinator writes it.
 
@@ -613,9 +623,48 @@ Evidence stays under 10 MB per package. Subagents cannot write `REPORT.md` files
   - no wall clock or RNG outside sanctioned code;
   - every new file reachable from a Guardian root;
   - straight-line test bodies with at least one `expect`.
-- **Correctness first.** A race TSan reports, a result that differs between thread counts, or a conformance difference is a stop-and-fix before any timing counts.
-- **The slow-step rule:** a step over about 5 minutes gets a speed investigation before it is repeated.
-- **Scope:** stay inside §5's and §6's "owns" lists. A needed change elsewhere is a stop and a report.
+- **Correctness first.** A race TSan reports, a result that differs between thread counts, or a conformance difference must be fixed before any timing counts. This is fix-and-continue, not a stop for the user (§9.1).
+- **The slow-step rule:** a step over about 5 minutes gets a speed investigation before it is repeated. Log what was found; it is not a stop.
+
+### 9.1 Autonomy (revision 3, 2026-10-09)
+
+The user wants Codex to run long and decide for itself. The default is **decide, log, continue**.
+
+**You decide, without stopping:**
+- **Implementation choices** where the plan is silent, ambiguous or wrong in a detail. Choose the simplest option consistent with C1–C7 and R1–R11, prefer the one the evidence favours, and measure where you can.
+- **Files.** Any file in the repository may change except the hard-stop list below. Each file outside a package's expected list gets a `DECISIONS.md` line explaining why.
+- **Gate failures.** Investigate, fix and rerun:
+  - a correctness gate (Guardian, the full gate, conformance, fuzz, TSan, Lox, EDA, parity) must end green;
+  - a tax gate follows P1-1's and P1-6's checkpoint rules.
+  
+  Flaky-looking failures: rerun once. If one repeats, it is a real failure.
+- **Order within the package.** Steps may be reordered or overlapped when that is faster, provided every gate still runs on the final tree.
+- **Infrastructure:** harness scripts, measurement tools and internal switches needed to measure or test. Make each internal and spec-tagged.
+
+**Hard stops: write the report and stop only for these:**
+1. **A semantic change.** Anything that would change C1–C7, a user-visible behaviour, or a revision decision (R1–R11) in substance rather than in detail.
+2. **A forbidden file.** A change to the front end (`src/*.zig` outside `src/core/`), `src/core/ir.zig` or `src/core/own.zig`. These are frozen by, or shared with, the front-end plan and the CE lanes.
+3. **A relaxed gate.** Lowering a numeric threshold or skipping a gate. Measuring a gate better, as R10 does, is allowed and gets logged.
+4. **A broken premise:** a corpus tax geomean above 1.03 after investigation.
+5. **An unfixable failure:** a correctness failure that about 8 hours of investigation does not fix.
+6. **A touch outside the branch:** anything that would need a merge into `main`, a push, or a change to a Claude worktree or branch.
+7. **Resources:** exhausted disk, memory or build slots that cannot be recovered within your own files and processes.
+
+**The decision log.** `experiments/concurrency-p1-<date>/DECISIONS.md` (`…-p2-…` for P2) gets one entry per decision, appended as it is made:
+- the date and step;
+- the question;
+- the options considered;
+- the evidence (measurements, test results, file and line);
+- the choice;
+- whether it is easy to reverse.
+
+Claude and the user review this log after the run, so make each entry stand alone.
+
+**Checkpoints.**
+- Commit after each step, with `REPORT.md`'s progress section updated: done, measured, decided, next.
+- Never wait for a reply. Nobody will answer mid-run, so a question goes into the log as a decision.
+
+**Self-review before P1-6.** Reread the diff of the whole package against this plan. Check every count access path, every runtime global and every fatal path against §4.3, §4.7 and §4.8. Fix what you find before the final measurements.
 
 ## 10. Out of scope (phase 2, each decided later on data)
 
