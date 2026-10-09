@@ -1,0 +1,81 @@
+{
+  "kind": "number",
+  "cases_requested": 50,
+  "seed": 3308,
+  "cases_seen": 1,
+  "accepted": 0,
+  "old_rejected": 0,
+  "core_refused": 0,
+  "core_build_failed": 1,
+  "comparisons_expected": 750,
+  "native_runs": 0,
+  "harness": {},
+  "harness_status": 1,
+  "complete": false,
+  "qualified": false,
+  "error": "QualificationFailure: core_build_failed: ['/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/.mylang-cache/fuport/main-debug', 'build', '/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/.mylang-cache/s5/fuzz/20261009T155317Z-823854505752/number/tmp/core-fuzz-s1.ry41cvd0/records_unions_propagate_mut_alias0.my', '-o', '/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/.mylang-cache/s5/fuzz/20261009T155317Z-823854505752/number/tmp/core-fuzz-s1.ry41cvd0/records_unions_propagate_mut_alias0.debug', '--cache-dir', '/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/.mylang-cache/s5/fuzz/20261009T155317Z-823854505752/number/tmp/core-fuzz-s1.ry41cvd0/cache-core']; retained source: /home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/fu-port-20261009/fuzz50-main-raw/number/failures/records_unions_propagate_mut_alias0-140e3e22a786.my",
+  "failures": [
+    {
+      "kind": "core_build_failed",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/.mylang-cache/fuport/main-debug",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/.mylang-cache/s5/fuzz/20261009T155317Z-823854505752/number/tmp/core-fuzz-s1.ry41cvd0/records_unions_propagate_mut_alias0.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/.mylang-cache/s5/fuzz/20261009T155317Z-823854505752/number/tmp/core-fuzz-s1.ry41cvd0/records_unions_propagate_mut_alias0.debug",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/.mylang-cache/s5/fuzz/20261009T155317Z-823854505752/number/tmp/core-fuzz-s1.ry41cvd0/cache-core"
+      ],
+      "returncode": 1,
+      "stderr_b64": "L2hvbWUvZXBlbnRsYW5kL2FpL2Nhbm9weS9teWxhbmctd29ya3RyZWVzL2NsYXVkZS1tYWluLWNlLy5teWxhbmctY2FjaGUvczUvZnV6ei8yMDI2MTAwOVQxNTUzMTdaLTgyMzg1NDUwNTc1Mi9udW1iZXIvdG1wL2NvcmUtZnV6ei1zMS5yeTQxY3ZkMC9yZWNvcmRzX3VuaW9uc19wcm9wYWdhdGVfbXV0X2FsaWFzMC5teTo5OjU6IGVycm9yW0VfQklORElOR19ERUNMQVJBVElPTl06IGRlY2xhcmUgdGhpcyB3cml0YWJsZSBsb2NhbCB3aXRoICdtdXQnCiAgICAgIHNlZWQgPSBudW1iZXIoYXJnc1syXSwgNykKICAgICAgXgovaG9tZS9lcGVudGxhbmQvYWkvY2Fub3B5L215bGFuZy13b3JrdHJlZXMvY2xhdWRlLW1haW4tY2UvLm15bGFuZy1jYWNoZS9zNS9mdXp6LzIwMjYxMDA5VDE1NTMxN1otODIzODU0NTA1NzUyL251bWJlci90bXAvY29yZS1mdXp6LXMxLnJ5NDFjdmQwL3JlY29yZHNfdW5pb25zX3Byb3BhZ2F0ZV9tdXRfYWxpYXMwLm15OjEwOjU6IGVycm9yW0VfQklORElOR19ERUNMQVJBVElPTl06IGRlY2xhcmUgdGhpcyB3cml0YWJsZSBsb2NhbCB3aXRoICdtdXQnCiAgICAgIHRleHRzID0gWyI5MjIzMzcyMDM2ODU0Nzc1ODA3IiwgIjkyMjMzNzIwMzY4NTQ3NzU4MDgiLCAiLTkyMjMzNzIwMzY4NTQ3NzU4MDgiLCAiLTkyMjMzNzIwMzY4NTQ3NzU4MDkiLCAiMTg0NDY3NDQwNzM3MDk1NTE2MTUiLCAiMTg0NDY3NDQwNzM3MDk1NTE2MTYiLCAiKyIsICItIiwgIiIsICIxX18yIiwgIl8xIiwgIjFfIiwgIsOpMTIiLCAiIFx0LTAwMV8wMjNcclxuIiwgIjAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMSIsICIgXHQtOVxyXG4iLCAiKzIweCIsICItNTQ1IiwgIi05MDdfMSIsICIrMTU3NTEiLCAiKzE0MzgwNSIsICIgXHQtMDAxNTI1OFxyXG4iLCAiKzYzOTcxNjE3IiwgIi0wNDY2OTAzMDciLCAiLTEwMzM2NjQ4MV80IiwgIjA3MzM4MzkyNDEzXyIsICIrNjkxMzMzMTgwNzAyIiwgIis4MTAxODEwODc3NTU28J+ZgiIsICIrODQ0MjA1ODcxMjcyMDXwn5mCIiwgIiBcdCsyMTgxNTA3NTUwNzU5MTBcclxuIiwgIi03OTkzNTg4MTI4NzkwNzI1IiwgIjk3NDgzNTIwNTA4ODM5NzIzIiwgIjUyNTA2NDY5OTQyMDE3NDE3XzgiLCAiLTE4NjAzNjg5MjI1NTY1MTE2OV8yIl0KICAgICAgXgovaG9tZS9lcGVudGxhbmQvYWkvY2Fub3B5L215bGFuZy13b3JrdHJlZXMvY2xhdWRlLW1haW4tY2UvLm15bGFuZy1jYWNoZS9zNS9mdXp6LzIwMjYxMDA5VDE1NTMxN1otODIzODU0NTA1NzUyL251bWJlci90bXAvY29yZS1mdXp6LXMxLnJ5NDFjdmQwL3JlY29yZHNfdW5pb25zX3Byb3BhZ2F0ZV9tdXRfYWxpYXMwLm15OjEyOjU6IGVycm9yW0VfQklORElOR19ERUNMQVJBVElPTl06IGRlY2xhcmUgdGhpcyB3cml0YWJsZSBsb2NhbCB3aXRoICdtdXQnCiAgICAgIGFjYyA9IDAKICAgICAgXgovaG9tZS9lcGVudGxhbmQvYWkvY2Fub3B5L215bGFuZy13b3JrdHJlZXMvY2xhdWRlLW1haW4tY2UvLm15bGFuZy1jYWNoZS9zNS9mdXp6LzIwMjYxMDA5VDE1NTMxN1otODIzODU0NTA1NzUyL251bWJlci90bXAvY29yZS1mdXp6LXMxLnJ5NDFjdmQwL3JlY29yZHNfdW5pb25zX3Byb3BhZ2F0ZV9tdXRfYWxpYXMwLm15OjE3OjE3OiBlcnJvcltFX0JJTkRJTkdfREVDTEFSQVRJT05dOiBkZWNsYXJlIHRoaXMgd3JpdGFibGUgbG9jYWwgd2l0aCAnbXV0JwogICAgICAgICAgICAgICAgICBzaG93biA9IHN0cih2YWx1ZSkKICAgICAgICAgICAgICAgICAgXgovaG9tZS9lcGVudGxhbmQvYWkvY2Fub3B5L215bGFuZy13b3JrdHJlZXMvY2xhdWRlLW1haW4tY2UvLm15bGFuZy1jYWNoZS9zNS9mdXp6LzIwMjYxMDA5VDE1NTMxN1otODIzODU0NTA1NzUyL251bWJlci90bXAvY29yZS1mdXp6LXMxLnJ5NDFjdmQwL3JlY29yZHNfdW5pb25zX3Byb3BhZ2F0ZV9tdXRfYWxpYXMwLm15OjIzOjU6IGVycm9yW0VfQklORElOR19ERUNMQVJBVElPTl06IGRlY2xhcmUgdGhpcyB3cml0YWJsZSBsb2NhbCB3aXRoICdtdXQnCiAgICAgIGZsb2F0X3RleHRzID0gWyIwIiwgIi0wLjAiLCAiKzAiLCAibmFuIiwgIi1OYU4iLCAiK0lORklOSVRZIiwgIi1pbmYiLCAiMC4xMjUiLCAiMi42NzUiLCAiOS45OTUiLCAiMS43OTc2OTMxMzQ4NjIzMTU3ZTMwOCIsICIxLjc5NzY5MzEzNDg2MjMxNTllMzA4IiwgIjIuMjI1MDczODU4NTA3MjAxNGUtMzA4IiwgIjQuOTQwNjU2NDU4NDEyNDY1NGUtMzI0IiwgIjIuNDcwMzI4MjI5MjA2MjMyN2UtMzI0IiwgIjFlLTk5OSIsICIxZSs5OTkiLCAiICAtMV8yLjVlKzFcdCIsICIxZSsiLCAiXzEuMCIsICIxX18yIiwgIjEuMl8iLCAi2aEuMCIsICIxXHUwMDAwLjAiLCAiOTQ1NTQzLjE4MDY5NzE0MzIxMTI5NTNlMjg3IiwgIis5MjE5MjAuOTY4NTgwNDgxZS03MCIsICI3LjJlMTYwIiwgIjA2NDE1OTk1MjguMjYwMzA4NTNlNzIiLCAiLTIuODA4NTQ5ZS0xNzciLCAiMzIyMDA1NC44MzQ4MzQ2M2UtMzA1IiwgIi01MzUxNDUwNy5lOTUiLCAiLTEwOS45MDgzMTY5NGUxNzMiLCAiMC4wMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMWUrNzQwIl0KICAgICAgXgovaG9tZS9lcGVudGxhbmQvYWkvY2Fub3B5L215bGFuZy13b3JrdHJlZXMvY2xhdWRlLW1haW4tY2UvLm15bGFuZy1jYWNoZS9zNS9mdXp6LzIwMjYxMDA5VDE1NTMxN1otODIzODU0NTA1NzUyL251bWJlci90bXAvY29yZS1mdXp6LXMxLnJ5NDFjdmQwL3JlY29yZHNfdW5pb25zX3Byb3BhZ2F0ZV9tdXRfYWxpYXMwLm15OjI1Ojk6IGVycm9yW0VfQklORElOR19ERUNMQVJBVElPTl06IGRlY2xhcmUgdGhpcyB3cml0YWJsZSBsb2NhbCB3aXRoICdtdXQnCiAgICAgICAgICBmcmFtZWQgPSAoInByZWZpeCIgKyB0ZXh0ICsgInN1ZmZpeCIpLmVuY29kZSgpCiAgICAgICAgICBeCi9ob21lL2VwZW50bGFuZC9haS9jYW5vcHkvbXlsYW5nLXdvcmt0cmVlcy9jbGF1ZGUtbWFpbi1jZS8ubXlsYW5nLWNhY2hlL3M1L2Z1enovMjAyNjEwMDlUMTU1MzE3Wi04MjM4NTQ1MDU3NTIvbnVtYmVyL3RtcC9jb3JlLWZ1enotczEucnk0MWN2ZDAvcmVjb3Jkc191bmlvbnNfcHJvcGFnYXRlX211dF9hbGlhczAubXk6MzU6MTc6IGVycm9yW0VfQklORElOR19ERUNMQVJBVElPTl06IGRlY2xhcmUgdGhpcyB3cml0YWJsZSBsb2NhbCB3aXRoICdtdXQnCiAgICAgICAgICAgICAgICAgIGJ1ZmZlciA9IGJ5dGVfYnVmZmVyKFtdKQogICAgICAgICAgICAgICAgICBeCi9ob21lL2VwZW50bGFuZC9haS9jYW5vcHkvbXlsYW5nLXdvcmt0cmVlcy9jbGF1ZGUtbWFpbi1jZS8ubXlsYW5nLWNhY2hlL3M1L2Z1enovMjAyNjEwMDlUMTU1MzE3Wi04MjM4NTQ1MDU3NTIvbnVtYmVyL3RtcC9jb3JlLWZ1enotczEucnk0MWN2ZDAvcmVjb3Jkc191bmlvbnNfcHJvcGFnYXRlX211dF9hbGlhczAubXk6MToxOiBlcnJvcltFX0ZST05URU5EX1NZTlRBWF06IGRlY2xhcmUgYSBmdW5jdGlvbiBvciBjYWxsYWJsZSB0eXBlIHdpdGggJ2Z1bmMnCiAgZGVmIG51bWJlcih0ZXh0OiBzdHIsIGZhbGxiYWNrOiBpbnQpIC0+IGludDoKICBeCi9ob21lL2VwZW50bGFuZC9haS9jYW5vcHkvbXlsYW5nLXdvcmt0cmVlcy9jbGF1ZGUtbWFpbi1jZS8ubXlsYW5nLWNhY2hlL3M1L2Z1enovMjAyNjEwMDlUMTU1MzE3Wi04MjM4NTQ1MDU3NTIvbnVtYmVyL3RtcC9jb3JlLWZ1enotczEucnk0MWN2ZDAvcmVjb3Jkc191bmlvbnNfcHJvcGFnYXRlX211dF9hbGlhczAubXk6ODoxOiBlcnJvcltFX0ZST05URU5EX1NZTlRBWF06IGRlY2xhcmUgYSBmdW5jdGlvbiBvciBjYWxsYWJsZSB0eXBlIHdpdGggJ2Z1bmMnCiAgZGVmIG1haW4oYXJnczogbGlzdFtzdHJdLCBvdXQ6IFN0cmVhbSkgLT4gaW50OgogIF4KL2hvbWUvZXBlbnRsYW5kL2FpL2Nhbm9weS9teWxhbmctd29ya3RyZWVzL2NsYXVkZS1tYWluLWNlLy5teWxhbmctY2FjaGUvczUvZnV6ei8yMDI2MTAwOVQxNTUzMTdaLTgyMzg1NDUwNTc1Mi9udW1iZXIvdG1wL2NvcmUtZnV6ei1zMS5yeTQxY3ZkMC9yZWNvcmRzX3VuaW9uc19wcm9wYWdhdGVfbXV0X2FsaWFzMC5teTo4OjE2OiBlcnJvcltFX0ZST05URU5EX1NZTlRBWF06IHVzZSB0aGUgY2Fub25pY2FsIGFycmF5LCBvcHRpb25hbCBvciBVbml0IHR5cGUgc3BlbGxpbmcKICBkZWYgbWFpbihhcmdzOiBsaXN0W3N0cl0sIG91dDogU3RyZWFtKSAtPiBpbnQ6CiAgICAgICAgICAgICAgICAgXgo=",
+      "retained_source": "/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/fu-port-20261009/fuzz50-main-raw/number/failures/records_unions_propagate_mut_alias0-140e3e22a786.my"
+    }
+  ],
+  "elapsed_seconds": 0.010901323985308409,
+  "cache_root": "/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/.mylang-cache/s5/fuzz/20261009T155317Z-823854505752/number",
+  "tmpdir": "/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/.mylang-cache/s5/fuzz/20261009T155317Z-823854505752/number/tmp",
+  "saved_sources": "/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/fu-port-20261009/fuzz50-main-raw/number/sources",
+  "zig_local_cache": "/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/.mylang-cache/s5/fuzz/20261009T155317Z-823854505752/number/zig",
+  "affinity": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "oracles": {
+    "old": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/new-core-s5-20261007/tools/frozen-old-core",
+      "sha256": "ca55bbb15d1ef6accc6aa834f23651d5b3182ddf2e59136b93115ac3e41a7091"
+    },
+    "new": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/.mylang-cache/fuport/main-debug",
+      "sha256": "a55243552ec8a19f1495ba59ad74aae2cfaf9511e35523d59203fc0a5eb6e98b"
+    }
+  },
+  "oracle_unchanged": true,
+  "harness_path": "/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/new-core-s2-20261005/wave-b/s2-t2/fuzz_number.py",
+  "harness_sha256": "ac061245708125e9f79bb2893759ae453005ad401f62588dce5664bfe74b95f5",
+  "native_comparisons": 0,
+  "native_complete": false,
+  "command_count": 2,
+  "references": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/new-core-s5-20261007/references/fuzz-v1.json.gz",
+    "sha256": "f8db2bd9ccebf42d5f4fbbf3974a15980d97204d46a4f8ac3ca5d93f41d8c1b0",
+    "oracle": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-finish/.mylang-cache/s3/oracle/mylang",
+      "sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79"
+    }
+  }
+}

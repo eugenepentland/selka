@@ -1,0 +1,13 @@
+main e23651f6a Debug compiler through the migrating wrapper, start 15:53:58
+evidence=/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/fu-port-20261009/fuzz50-main-migrated
+source_commit=fb37996737d27c8af7279df2822c41fcb5314e17
+s0: PASS; 36.38884825911373s
+number: PASS; 46.449037251994014s
+rc: PASS; 28.904537685913965s
+s1: PASS; 56.074721991084516s
+rebinding: PASS; 47.237335574114695s
+iteration: PASS; 63.99504802399315s
+text: PASS; 46.119514640187845s
+dict: PASS; 77.37242210912518s
+functions: PASS; 37.09044292708859s
+fuzz50=0 15:56:49
