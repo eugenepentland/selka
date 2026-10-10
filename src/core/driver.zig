@@ -891,7 +891,11 @@ test "publishOutput reports an unwritable output and servedForeign misses on dam
     var environment: std.process.Environ.Map = .init(a);
     var log: std.ArrayList(u8) = .empty;
     var counts: Counts = .{};
-    const native = testNative(a, &environment, &log, &counts);
+    var native = testNative(a, &environment, &log, &counts);
+    try dir.dir.writeFile(std.testing.io, .{ .sub_path = "tool", .data = "fixture tool" });
+    try dir.dir.setFilePermissions(std.testing.io, "tool", .executable_file, .{});
+    native.guard.resources.executable = try std.fs.path.join(a, &.{ root, "tool" });
+    native.guard.identity = try tool_identity.capture(native.guard.resources);
     try dir.dir.writeFile(std.testing.io, .{ .sub_path = "program", .data = "binary" });
     const program = try std.fs.path.join(a, &.{ root, "program" });
     try std.testing.expectError(error.WriteFailed, publishOutput(native, program, try std.fs.path.join(a, &.{ root, "missing", "out" })));
