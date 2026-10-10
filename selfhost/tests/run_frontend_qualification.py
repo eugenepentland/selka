@@ -162,6 +162,9 @@ class Qualification:
                     f'{name}/{mode}: frontend differs: reference={reference!r}, actual={actual!r}')
             self.comparisons += 1
         self.records.append({'workflow': name, 'phase': self.phase, 'status': reference[0],
+                             'stdout_bytes': len(reference[1]), 'stderr_bytes': len(reference[2]),
+                             'serialized_ast_values': int.from_bytes(reference[1][8:12], 'little')
+                             if reference[1].startswith(b'SLKAST01') else None,
                              'stdout_sha256': hashlib.sha256(reference[1]).hexdigest(),
                              'stderr_sha256': hashlib.sha256(reference[2]).hexdigest()})
         return reference

@@ -99,6 +99,7 @@ def transport(args, work, empty):
                 require(actual == baseline, 'parser transport is nonrepeatable')
                 samples.append(elapsed)
             rows.append({'source': name, 'source_bytes': len(body), 'reply_bytes': len(baseline[1]),
+                         'serialized_ast_values': int.from_bytes(baseline[1][8:12], 'little'),
                          'mode': mode, 'scope': 'complete CLI dump-syntax; lexer reference; parser mode selected',
                          **distribution(samples)})
     return rows
