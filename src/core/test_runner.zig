@@ -63,7 +63,7 @@ const case_expectation = run_tests.expectation;
 const IdentityResources = struct { scratch: std.mem.Allocator, io: std.Io, prebuilt: ?@import("ir.zig").Module = null };
 /// What selection and execution share: the receipts, their base key, and a directory
 /// run's test process permits when the entry runs in its process.
-const SelectionContext = struct { receipt: receipt.Context, base: [32]u8, permits: ?*root_share.Permits = null };
+const SelectionContext = struct { receipt: receipt.Context, base: [32]u8, permits: ?*root_share.Permits = null, catalog: ?*const lowering_cache.Catalog = null };
 
 /// Check, discover, build and run the tests of `options.path`, print the report, and return
 /// the process exit status: 0 ok, 1 a test failed or the file does not check, 2 unreadable
@@ -106,6 +106,11 @@ const Setup = struct {
     fn view(self: Setup) ?root_share.View {
         const directed = self.directed orelse return null;
         return directed.view;
+    }
+
+    /// The declaration prefix borrowed from this entry's shared checked snapshot.
+    fn catalog(self: Setup) ?*const lowering_cache.Catalog {
+        return if (self.view()) |shared_view| shared_view.catalog else null;
     }
 };
 
@@ -239,7 +244,7 @@ fn finish(init: std.process.Init, ready: Ready, setup: Setup) Error!u8 {
     var collected: Collected = .{ .before = before };
     try collected.warnings.appendSlice(allocator, checked.allocation_warnings);
     try addSources(allocator, &collected.sources, context, loaded);
-    const selection_context: SelectionContext = .{ .receipt = context, .base = base, .permits = setup.permits() };
+    const selection_context: SelectionContext = .{ .receipt = context, .base = base, .permits = setup.permits(), .catalog = setup.catalog() };
     const shared: GroupRun = .{ .init = init, .selection = selection_context, .session = &session, .base_checked = base_checked, .discovery = checked, .entry = entry_text, .cases = configured_cases };
     for (groups) |group| {
         if (base_checked == null and group.providers.len == 0) return failWith(init, problems.items, 1);
@@ -692,7 +697,7 @@ fn select(init: std.process.Init, options: Options, checked: frontend.Checked, c
             .settings = configured,
         };
     }
-    if (!perTestKeys(init.environ_map)) if (try sharedKeys(init, options, checked, chosen, selection.base, context.identity.cache_plan.?)) |keys| {
+    if (!perTestKeys(init.environ_map)) if (try sharedKeys(init, options, checked, chosen, selection.base, .{ .planner = context.identity.cache_plan.?, .catalog = selection.catalog })) |keys| {
         if (try receipt.hit(context, keys.whole.key)) {
             for (chosen, keys.tests) |*item, key| if (item.ready) {
                 item.* = .{ .case = item.case, .verdict = .{ .name = item.case.name, .status = .cached }, .ready = false, .identity = key, .cache_reason = "whole-receipt-hit", .settings = item.settings, .key_method = keys.method };
@@ -740,6 +745,7 @@ fn perTestKeys(environment: *const std.process.Environ.Map) bool {
 
 /// Every ready test's configured key (null for the others), and the whole-file key.
 const Keys = struct { tests: []const ?[32]u8, whole: Whole, work: *const key_work.Work, method: []const u8 };
+const KeyPlanning = struct { planner: planner.Bound, catalog: ?*const lowering_cache.Catalog = null };
 
 /// NEW-CORE-TEST-KEYS-1 and NEW-CORE-TEST-WHOLE-1: lower every ready test of the
 /// program once, digest each function canonically, and key each test on the functions
@@ -747,7 +753,8 @@ const Keys = struct { tests: []const ?[32]u8, whole: Whole, work: *const key_wor
 /// Null when no test is ready, one may call `Host`, the builder refuses a function or
 /// a result, or the lowering carries metadata the digests do not know, so each test is
 /// keyed and reported from its own lowering.
-fn sharedKeys(init: std.process.Init, options: Options, checked: frontend.Checked, chosen: []const Selected, base: [32]u8, cache_plan: planner.Bound) Error!?Keys {
+fn sharedKeys(init: std.process.Init, options: Options, checked: frontend.Checked, chosen: []const Selected, base: [32]u8, planning_input: KeyPlanning) Error!?Keys {
+    const cache_plan = planning_input.planner;
     const a = init.arena.allocator();
     var scratch = std.heap.ArenaAllocator.init(init.gpa);
     defer scratch.deinit();
@@ -771,7 +778,7 @@ fn sharedKeys(init: std.process.Init, options: Options, checked: frontend.Checke
     var store = try stage_store.Store.initWithOptions(init.gpa, init.io, cache_root, .{ .compression = compression });
     defer store.deinit();
     const roots = try rootsFor(s, checked.program, cases.items);
-    const produced = try sharedFacts(s, checked, roots, &store, cache_plan.mode, work) orelse return null;
+    const produced = try sharedFacts(s, .{ .checked = checked, .roots = roots, .catalog = planning_input.catalog }, &store, cache_plan.mode, work) orelse return null;
     const reachable = produced.module;
     const shared = produced.shared;
     if (!readableRoots(&reachable, chosen)) return null;
@@ -892,12 +899,15 @@ fn attachWork(verdicts: []report.Verdict, ranges: []const WorkRange) void {
 }
 
 const Produced = struct { module: @import("ir.zig").Module, shared: test_keys.Shared, identities: ?[]const ?test_keys.Digest = null };
+const FactInput = struct { checked: frontend.Checked, roots: []const typed.FunctionId, catalog: ?*const lowering_cache.Catalog = null };
 
 /// Header discovery validates raw input receipts before individual canonical fact lookup.
-fn sharedFacts(a: std.mem.Allocator, checked: frontend.Checked, roots: []const typed.FunctionId, store: *const stage_store.Store, mode: planner.Mode, work: *key_work.Work) Error!?Produced {
+fn sharedFacts(a: std.mem.Allocator, input: FactInput, store: *const stage_store.Store, mode: planner.Mode, work: *key_work.Work) Error!?Produced {
+    const checked = input.checked;
+    const roots = input.roots;
     if (mode == .reference) return eagerFacts(a, checked, roots, store.io, work);
     var deferred: lowering_cache.Deferred = .{ .arena = a, .store = store };
-    var cache: lowering_cache.Cache = .{ .store = store, .lazy = &deferred };
+    var cache: lowering_cache.Cache = .{ .store = store, .lazy = &deferred, .catalog = input.catalog };
     var why: build.Refusal = .{};
     const lowering_start = stage_metrics.now(store.io);
     var module = build.buildRootsCached(a, roots, .{ .program = checked.program, .source = checked.src }, &why, &cache) catch |err| {
@@ -1315,7 +1325,12 @@ fn firstLine(allocator: std.mem.Allocator, text: []const u8) std.mem.Allocator.E
 
 fn rootsFor(a: std.mem.Allocator, program: typed.Program, cases: []const discover.Case) Error![]const typed.FunctionId {
     var roots: std.ArrayList(typed.FunctionId) = .empty;
-    for (cases) |case| try roots.append(a, case.function);
+    var generated = false;
+    for (cases) |case| {
+        try roots.append(a, case.function);
+        generated = generated or std.mem.indexOfScalar(u8, case.parameters, 255) != null;
+    }
+    if (!generated) return roots.toOwnedSlice(a);
     const schema = try property_types.Schema.init(a, try property_schema.definitions(a, program));
     for (program.functions) |candidate| {
         const prefix = "@invariant:";
@@ -1346,6 +1361,47 @@ fn qualifyHeaderless(allocator: std.mem.Allocator, module: *@import("ir.zig").Mo
         if (!std.ascii.isAlphabetic(function.name[0]) or std.mem.indexOf(u8, function.name, "::") != null) continue;
         function.name = try std.mem.concat(allocator, u8, &.{ prefix, function.name });
     }
+}
+
+// spec-case: NEW-CORE-TEST-KEYS-1
+// spec-case: PROPERTY-TEST-2
+test "rootsFor preserves plain root order and duplicates and includes only reachable generated invariants" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const text =
+        \\@invariant(self.low <= self.high)
+        \\record Interval:
+        \\    low: int
+        \\    high: int
+        \\
+        \\@invariant(self.value >= 0)
+        \\record Unrelated:
+        \\    value: int
+        \\
+        \\public func test_generated(value: Interval) -> bool:
+        \\    return value.low <= value.high
+        \\
+        \\public func test_plain() -> bool:
+        \\    return True
+        \\
+        \\func main() -> int:
+        \\    return 0
+        \\
+    ;
+    var unit = try @import("mylang").Compilation.init(a, "roots.my", text);
+    defer unit.deinit();
+    try unit.check();
+    const program = unit.program.?;
+    const cases = try discover.discover(a, program, "roots", &.{.{ .name = "roots", .text = text }});
+    try std.testing.expectEqual(@as(usize, 2), cases.len);
+    try std.testing.expectEqual(@as(usize, 0), (try rootsFor(a, program, &.{})).len);
+    const plain = try rootsFor(a, program, &.{ cases[1], cases[1] });
+    try std.testing.expectEqualSlices(typed.FunctionId, &.{ cases[1].function, cases[1].function }, plain);
+    const generated = try rootsFor(a, program, &.{ cases[0], cases[1] });
+    try std.testing.expectEqual(@as(usize, 3), generated.len);
+    try std.testing.expectEqualSlices(typed.FunctionId, &.{ cases[0].function, cases[1].function }, generated[0..2]);
+    try std.testing.expectEqualStrings("@invariant:Interval", program.functions[@backingInt(generated[2])].name);
 }
 
 // spec-case: NEW-CORE-S4-TEST-3

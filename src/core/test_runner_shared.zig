@@ -17,7 +17,7 @@ pub const Module = frontend.Module;
 /// One root's share of a check several roots share: the checked program of their
 /// union, and the modules (standard ones included) the root's own import graph
 /// reaches, which are the modules its own check would have loaded.
-pub const View = struct { checked: frontend.Checked, modules: []const *const Module };
+pub const View = struct { checked: frontend.Checked, modules: []const *const Module, catalog: ?*const @import("lowering_cache.zig").Catalog = null };
 
 /// What a directory run hands a root it runs in process: the toolchain the run
 /// identified, the shared check when the root took part in one, and the run's test

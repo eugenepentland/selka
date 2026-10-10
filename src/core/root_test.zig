@@ -35,6 +35,7 @@ comptime {
     _ = @import("passes.zig");
     _ = @import("stage_store_test.zig");
     _ = @import("lowering_cache_test.zig");
+    _ = @import("test_runner.zig");
     _ = @import("optimization_cache_test.zig");
     _ = @import("deferred_facts_test.zig");
     _ = @import("vector_test.zig");

@@ -23,7 +23,7 @@ pub const Error = error{
 };
 /// Explicit independently qualified execution mode.
 pub const Mode = enum { reference, component, shadow };
-/// Borrowable run-scoped binding; its allocated paths live with the binding allocator.
+/// Borrowable run-scoped binding; paths and verified bytes live with its allocator.
 pub const Bound = struct {
     identity: wire.Digest,
     mode: Mode,
@@ -31,10 +31,12 @@ pub const Bound = struct {
     environ: *const std.process.Environ.Map,
     directory: ?[]u8,
     artifact: ?launch.Verified,
-    /// Release paths once after all borrowed copies have expired; arenas may omit this.
+    snapshot: ?[]const u8 = null,
+    /// Release memory once after all borrowed copies have expired; arenas may omit this.
     pub fn deinit(self: *Bound, a: std.mem.Allocator) void {
         if (self.directory) |directory| a.free(directory);
         if (self.artifact) |artifact| a.free(artifact.path);
+        if (self.snapshot) |snapshot| a.free(snapshot);
     }
     /// Revalidate deployment before accepting replay or publishing new receipts.
     pub fn validate(self: Bound, a: std.mem.Allocator) Error!void {
@@ -102,11 +104,9 @@ pub const Bound = struct {
         defer discard(self.io, directory);
         // Seal the verified bytes before launch; disk copies can race sibling forks
         // retaining their write descriptors and fail exec with ETXTBSY.
-        const contents = std.Io.Dir.cwd().readFileAlloc(self.io, self.artifact.?.path, scratch, .limited(64 << 20)) catch |err| return ioFailure(self.io, "read verified executable", err);
-        var digest: wire.Digest = undefined;
-        std.crypto.hash.sha2.Sha256.hash(contents, &digest, .{});
-        if (!std.mem.eql(u8, &digest, &self.artifact.?.digest)) return error.ComponentChanged;
-        const file = launch.sealedExecutable(self.io, contents) catch |err| return ioFailure(self.io, "seal executable snapshot", err);
+        // Binding retained the exact digest-verified bytes. Full deployment
+        // validation still runs before and after execution.
+        const file = launch.sealedExecutable(self.io, self.snapshot.?) catch |err| return ioFailure(self.io, "seal executable snapshot", err);
         defer file.close(self.io);
         // The parent's proc path survives child CLOEXEC, including shebang interpreters.
         const executable = try std.fmt.allocPrint(scratch, "/proc/{d}/fd/{d}", .{ std.os.linux.getpid(), file.handle });
@@ -154,7 +154,9 @@ pub fn bind(a: std.mem.Allocator, io: std.Io, environ: *const std.process.Enviro
             defer a.free(executable);
             break :blk try std.fs.path.join(a, &.{ executable, "..", "libexec", "mylang", "components" });
         };
-        result.artifact = try launch.artifact(a, io, result.directory.?, "cache-plan");
+        const snapshot = try launch.artifactSnapshot(a, io, result.directory.?, "cache-plan");
+        result.artifact = snapshot.verified;
+        result.snapshot = snapshot.contents;
         hash.update(&result.artifact.?.digest);
     }
     hash.final(&result.identity);

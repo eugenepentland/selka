@@ -47,20 +47,67 @@ const Header = struct { wire: Wire, local_positions: bool, source_max: ?u32 };
 /// Inputs needed to publish one successful function without repeating arguments.
 pub const Publication = struct { key: stage.Digest, before: Before, checked: typed.Function };
 
+/// A durable store and counters for one build, with optional shared checked input.
 /// Counters report actual fresh lowering and accepted artifact replay.
-/// A durable store and counters for one build; no typed or IR tree is retained.
 pub const Cache = struct {
     store: *const stage.Store,
     lowered: usize = 0,
     reused: usize = 0,
     demand: ?*demand.Context = null,
     lazy: ?*Deferred = null,
+    catalog: ?*const Catalog = null,
+    catalog_reused: bool = false,
 
     /// Bind immutable durable storage; counters start empty for this build.
     pub fn init(store: *const stage.Store) Cache {
         return .{ .store = store };
     }
 };
+
+/// Declaration hashing shared only by roots of the same immutable checked snapshot.
+/// The snapshot's tables must remain unchanged until every borrower has finished;
+/// a newly checked or copied catalog falls back to hashing its own declarations.
+/// Source, locator, asset and physical discovery guards remain per-root inputs.
+pub const Catalog = struct {
+    program: typed.Program,
+    prefix: std.crypto.hash.Blake3,
+
+    /// Hash exactly the declaration prefix used by ordinary lowering sessions.
+    pub fn prepare(program: typed.Program) Error!Catalog {
+        // Catalog hashing ignores spans and never reads Core types or locations.
+        var module: ir.Module = .{};
+        var hash = TreeHash.init(program, .{ .module = &module }, null);
+        try hashDeclarations(&hash);
+        return .{ .program = program, .prefix = hash.hash };
+    }
+
+    /// Accept only the same immutable tables, never another snapshot's contents.
+    pub fn matches(self: *const Catalog, program: typed.Program) bool {
+        return sameTable(self.program.functions, program.functions) and
+            sameTable(self.program.records, program.records) and
+            sameTable(self.program.nodes, program.nodes) and
+            sameTable(self.program.statements, program.statements) and
+            sameTable(self.program.aliases, program.aliases) and self.program.main == program.main;
+    }
+};
+
+fn sameTable(left: anytype, right: @TypeOf(left)) bool {
+    return left.ptr == right.ptr and left.len == right.len;
+}
+
+fn hashDeclarations(hash: *TreeHash) Error!void {
+    try hash.value(hash.program.records);
+    try hash.value(hash.program.functions.len);
+    for (hash.program.functions) |function| {
+        try hash.value(function.id);
+        try hash.value(normalizedName(function.name));
+        try hash.value(function.type_arguments);
+        try hash.value(function.policy);
+        try hash.value(function.signature);
+        try hash.value(function.scope.parameter_labels);
+        for (function.scope.locals[0..function.signature.parameter_count]) |local| try hash.value(local.ty);
+    }
+}
 
 const Handle = struct { key: stage.Digest, first: usize, start: usize, old_strings: usize, new_strings: usize, string_count: usize };
 
@@ -205,17 +252,12 @@ pub const Session = struct {
     /// exact ordered catalog, including generic instances and inferred summaries.
     pub fn prepare(cache: *Cache, mb: Context) Error!Session {
         var h = TreeHash.init(mb.input.program, .{ .module = mb.module, .source = mb.input.source }, null);
-        try h.value(mb.input.program.records);
-        try h.value(mb.input.program.functions.len);
-        for (mb.input.program.functions) |f| {
-            try h.value(f.id);
-            try h.value(normalizedName(f.name));
-            try h.value(f.type_arguments);
-            try h.value(f.policy);
-            try h.value(f.signature);
-            try h.value(f.scope.parameter_labels);
-            for (f.scope.locals[0..f.signature.parameter_count]) |local| try h.value(local.ty);
-        }
+        cache.catalog_reused = false;
+        if (cache.catalog) |catalog| if (catalog.matches(mb.input.program)) {
+            h.hash = catalog.prefix;
+            cache.catalog_reused = true;
+        };
+        if (!cache.catalog_reused) try hashDeclarations(&h);
         if (mb.input.source) |source| {
             try h.value(source.path);
             for (source.origins) |origin| try h.value(origin.original.path);

@@ -15,6 +15,7 @@
 //! process as before, where its own check reports its own diagnostics.
 //! `MYLANG_TEST_CHILDREN=1` runs every root in a child, the differential oracle.
 const std = @import("std");
+const lowering_cache = @import("lowering_cache.zig");
 const language = @import("mylang");
 const frontend = @import("frontend.zig");
 const project_entry = @import("project_entry.zig");
@@ -229,11 +230,24 @@ fn together(context: Context, checks: *Checks, eligible: []const ?Root, members:
     std.Io.File.stderr().writeStreamingAll(init.io, problems.items) catch return error.WriteFailed;
     try checks.sessions.append(a, session);
     if (checked.src.origins.len == 0) return;
+    const catalog = try sharedCatalog(context, checked.program);
     for (members) |index| {
         const modules = try shared.closure(a, session.project.modules.items, eligible[index].?.located.name);
         if (modules.len == 0) continue;
-        plans[index] = .{ .together = .{ .checked = try rooted(a, checked, modules[0].src.path), .modules = modules } };
+        plans[index] = .{ .together = .{ .checked = try rooted(a, checked, modules[0].src.path), .modules = modules, .catalog = catalog } };
     }
+}
+
+/// Prepare a catalog only for the shared durable facts path that consumes it.
+fn sharedCatalog(context: Context, program: language.typed.Program) Error!?*const lowering_cache.Catalog {
+    const bound = context.cache_plan orelse return null;
+    if (bound.mode == .reference or std.mem.eql(u8, context.init.environ_map.get("MYLANG_TEST_KEYS") orelse "", "per-test")) return null;
+    const catalog = try context.init.arena.allocator().create(lowering_cache.Catalog);
+    catalog.* = lowering_cache.Catalog.prepare(program) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        return null;
+    };
+    return catalog;
 }
 
 /// `checked` as root `path` reads it. The merged source's first segment is its
@@ -282,6 +296,7 @@ fn allChildren(plans: []const Plan) bool {
 }
 
 // spec-case: NEW-CORE-TEST-UNION-1
+// spec-case: NEW-CORE-TEST-FACTS-1
 test "plan checks eligible roots together after their replays miss (eligibility, Replays.drain) and leaves the rest and a failed shared check to children" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
@@ -302,7 +317,14 @@ test "plan checks eligible roots together after their replays miss (eligibility,
     const init: std.process.Init = .{ .minimal = .{ .environ = .empty, .args = .{ .vector = &.{} } }, .arena = &arena, .gpa = std.testing.allocator, .io = std.testing.io, .environ_map = &environment, .preopens = .empty };
     const guest: tool_identity.Identity = .{ .path = "zig", .digest = @splat(0), .generation = @splat(0), .native_target = @splat(0), .inputs = 0, .memo_hit = false };
     const cache = try std.fs.path.join(a, &.{ root, "cache" });
-    const context: Context = .{ .init = init, .controls = .{ .path = root, .build = .{ .zig = "zig", .cache = cache } }, .guest = guest, .run_root = nothingRecorded, .workers = 2 };
+    const context: Context = .{
+        .init = init,
+        .controls = .{ .path = root, .build = .{ .zig = "zig", .cache = cache } },
+        .guest = guest,
+        .cache_plan = .{ .identity = @splat(0), .mode = .component, .io = std.testing.io, .environ = &environment, .directory = null, .artifact = null },
+        .run_root = nothingRecorded,
+        .workers = 2,
+    };
     const names = [_][]const u8{ "a_test.my", "app.my", "b_test.my", "c_test.my" };
     var paths: [names.len][]const u8 = undefined;
     for (names, &paths) |name, *path| path.* = try std.fs.path.join(a, &.{ root, name });
@@ -313,6 +335,15 @@ test "plan checks eligible roots together after their replays miss (eligibility,
     // `app` declares `main` and keeps its own check; headerless test roots share.
     try std.testing.expect(plans[0] == .together and plans[2] == .together and plans[3] == .together);
     try std.testing.expect(plans[1] == .child);
+    try std.testing.expect(plans[0].together.catalog != null);
+    try std.testing.expect(plans[0].together.catalog == plans[2].together.catalog and plans[0].together.catalog == plans[3].together.catalog);
+    try std.testing.expect(plans[0].together.catalog.?.matches(plans[0].together.checked.program));
+    try std.testing.expect(plans[2].together.catalog.?.matches(plans[2].together.checked.program));
+    var reference = context;
+    reference.cache_plan.?.mode = .reference;
+    try std.testing.expect(try sharedCatalog(reference, plans[0].together.checked.program) == null);
+    reference.cache_plan = null;
+    try std.testing.expect(try sharedCatalog(reference, plans[0].together.checked.program) == null);
     // Each root's share holds only its own graph.
     try std.testing.expect(holds(plans[0].together, "dep") and !holds(plans[0].together, "other") and !holds(plans[0].together, "b_test"));
     try std.testing.expect(holds(plans[2].together, "other") and !holds(plans[2].together, "dep"));

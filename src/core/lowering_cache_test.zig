@@ -102,6 +102,165 @@ const arithmetic =
     \\
 ;
 
+const CatalogEvidence = struct { digest: stage.Digest, assets: stage.Digest, reused: bool };
+const catalog_record =
+    \\record Item:
+    \\    value: int = 42
+    \\
+    \\func identity[T](x: T) -> T:
+    \\    return x
+    \\
+    \\func main(out: Stream) -> int:
+    \\    out.print("ready")
+    \\    return identity[int](Item().value)
+    \\
+;
+
+fn catalogEvidence(store: *const stage.Store, program: language.typed.Program, source: ?language.source.Source, catalog: ?*const lowering.Catalog) !CatalogEvidence {
+    var module: ir.Module = .{};
+    var discovery: lowering.Discovery = .{};
+    var types: std.AutoHashMapUnmanaged(language.typed.Type, ir.Type) = .empty;
+    var cache = lowering.Cache.init(store);
+    cache.catalog = catalog;
+    const session = try lowering.Session.prepare(&cache, .{
+        .arena = store.backing,
+        .input = .{ .program = program, .source = source, .drop_debug = false },
+        .module = &module,
+        .discovery = &discovery,
+        .types = &types,
+    });
+    return .{ .digest = session.catalog, .assets = session.assets, .reused = cache.catalog_reused };
+}
+
+fn catalogEquivalent(store: *const stage.Store, program: language.typed.Program, source: ?language.source.Source, catalog: *const lowering.Catalog) !CatalogEvidence {
+    const ordinary = try catalogEvidence(store, program, source, null);
+    const shared = try catalogEvidence(store, program, source, catalog);
+    try std.testing.expectEqualSlices(u8, &ordinary.digest, &shared.digest);
+    try std.testing.expectEqualSlices(u8, &ordinary.assets, &shared.assets);
+    return shared;
+}
+
+// spec-case: NEW-CORE-TEST-FACTS-1
+// spec-case: NEW-CORE-STAGE-CACHE-3
+test "shared checked catalog keeps per-root origins and assets in ordinary lowering fingerprints" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var store = try stage.Store.init(std.testing.allocator, std.testing.io, try temporary.dir.realPathFileAlloc(std.testing.io, ".", a));
+    defer store.deinit();
+    var unit = try language.Compilation.init(a, source_name, arithmetic);
+    defer unit.deinit();
+    try unit.check();
+    const catalog = try lowering.Catalog.prepare(unit.program.?);
+    const plain = try catalogEquivalent(&store, unit.program.?, unit.src, &catalog);
+    try std.testing.expect(plain.reused);
+    const merged = try language.source.Source.initMapped(a, &.{ try language.source.Source.init(a, "directory.my", "import body\n"), unit.src });
+    const first = try catalogEquivalent(&store, unit.program.?, merged, &catalog);
+    try std.testing.expect(first.reused);
+    var rooted = merged;
+    const origins = try a.dupe(language.source.Source.Origin, merged.origins);
+    origins[0].original.path = "another_root.my";
+    rooted.origins = origins;
+    const second = try catalogEquivalent(&store, unit.program.?, rooted, &catalog);
+    try std.testing.expect(second.reused);
+    try std.testing.expect(!std.mem.eql(u8, &first.digest, &second.digest));
+    rooted.embeds = &.{.{ .literal = .{ .start = 0, .end = 0 }, .path = "asset.txt", .status = .ok, .digest = @splat(1), .contents = "changed" }};
+    const embedded = try catalogEquivalent(&store, unit.program.?, rooted, &catalog);
+    try std.testing.expect(embedded.reused);
+    try std.testing.expect(!std.mem.eql(u8, &second.assets, &embedded.assets));
+}
+
+fn changedCatalog(store: *const stage.Store, original: CatalogEvidence, program: language.typed.Program, catalog: *const lowering.Catalog) !void {
+    const changed = try catalogEquivalent(store, program, null, catalog);
+    try std.testing.expect(!changed.reused);
+    try std.testing.expect(!std.mem.eql(u8, &original.digest, &changed.digest));
+}
+
+fn catalogMutations(a: std.mem.Allocator, store: *const stage.Store, program: language.typed.Program, catalog: *const lowering.Catalog) !void {
+    const original = try catalogEquivalent(store, program, null, catalog);
+    const functions = try a.dupe(language.typed.Function, program.functions);
+    var changed = program;
+    changed.functions = functions;
+    functions[0].signature.return_type = .bool;
+    try changedCatalog(store, original, changed, catalog);
+    functions[0] = program.functions[0];
+    functions[0].policy.effects ^= 1;
+    try changedCatalog(store, original, changed, catalog);
+    functions[0] = program.functions[0];
+    functions[0].signature.constant_arguments = &.{1};
+    try changedCatalog(store, original, changed, catalog);
+    changed = program;
+    const records = try a.dupe(language.typed.Record, program.records);
+    changed.records = records;
+    records[0].name = "changed nominal declaration";
+    try changedCatalog(store, original, changed, catalog);
+    records[0] = program.records[0];
+    const fields = try a.dupe(language.typed.Field, records[0].fields);
+    try std.testing.expect(fields.len > 0 and fields[0].default_value != null);
+    records[0].fields = fields;
+    fields[0].default_value = null;
+    try changedCatalog(store, original, changed, catalog);
+    // Separate table storage is a new snapshot even when its catalog bytes agree.
+    changed = program;
+    changed.nodes = try a.dupe(language.typed.Node, program.nodes);
+    const copied = try catalogEquivalent(store, changed, null, catalog);
+    try std.testing.expect(!copied.reused);
+    try std.testing.expectEqualSlices(u8, &original.digest, &copied.digest);
+    changed = program;
+    changed.functions = functions[0 .. functions.len - 1];
+    try changedCatalog(store, original, changed, catalog);
+}
+
+// spec-case: NEW-CORE-TEST-FACTS-1
+// spec-case: NEW-CORE-STAGE-CACHE-3
+test "shared checked catalog rejects changed signatures effects defaults records and table snapshots" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var store = try stage.Store.init(std.testing.allocator, std.testing.io, try temporary.dir.realPathFileAlloc(std.testing.io, ".", a));
+    defer store.deinit();
+    var unit = try language.Compilation.init(a, source_name, catalog_record);
+    defer unit.deinit();
+    try unit.check();
+    const catalog = try lowering.Catalog.prepare(unit.program.?);
+    try std.testing.expect(catalog.matches(unit.program.?));
+    try catalogMutations(a, &store, unit.program.?, &catalog);
+}
+
+// spec-case: NEW-CORE-TEST-FACTS-1
+// spec-case: NEW-CORE-STAGE-CACHE-3
+test "shared checked catalog replays ordinary lowering artifacts including record defaults and generic calls" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var store = try stage.Store.init(std.testing.allocator, std.testing.io, try temporary.dir.realPathFileAlloc(std.testing.io, ".", a));
+    defer store.deinit();
+    var unit = try language.Compilation.init(a, source_name, catalog_record);
+    defer unit.deinit();
+    try unit.check();
+    const input: build.Input = .{ .program = unit.program.?, .source = unit.src };
+    var refusal: build.Refusal = .{};
+    var ordinary = lowering.Cache.init(&store);
+    const first = try build.buildExecutableCached(a, input, &refusal, &ordinary);
+    try std.testing.expect(ordinary.lowered > 0);
+    const catalog = try lowering.Catalog.prepare(unit.program.?);
+    var shared = lowering.Cache.init(&store);
+    shared.catalog = &catalog;
+    const second = try build.buildExecutableCached(a, input, &refusal, &shared);
+    try std.testing.expect(shared.catalog_reused);
+    try std.testing.expectEqual(@as(usize, 0), shared.lowered);
+    try std.testing.expectEqual(ordinary.lowered, shared.reused);
+    const fresh = try build.buildExecutable(a, input, &refusal);
+    try sameModule(a, &second, &first);
+    try sameModule(a, &second, &fresh);
+}
+
 // spec-case: NEW-CORE-STAGE-CACHE-3
 test "demand raw headers materialize only requested bodies and reject lost payloads" {
     var dir = std.testing.tmpDir(.{});

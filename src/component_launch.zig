@@ -116,11 +116,27 @@ fn terminate(io: std.Io, child: *std.process.Child) void {
 
 /// Verified executable deployment identity and owned path.
 pub const Verified = struct { path: []u8, digest: [32]u8 };
+/// Verified deployment and its allocator-owned immutable executable bytes.
+pub const Snapshot = struct {
+    verified: Verified,
+    contents: []const u8,
+    /// Release both owned allocations after all borrowers have finished.
+    pub fn deinit(self: Snapshot, a: std.mem.Allocator) void {
+        a.free(self.verified.path);
+        a.free(self.contents);
+    }
+};
 /// Shared deployment validation failures.
 pub const Error = error{ OutOfMemory, ComponentMissing, ComponentManifest, ComponentDigest };
 const Manifest = struct { format: u32, component: []const u8, protocol: u32, schema: u32, artifact: []const u8, sha256: []const u8 };
 /// Verify manifest and binary SHA-256, returning an allocator-owned path.
 pub fn artifact(a: std.mem.Allocator, io: std.Io, directory: []const u8, component: []const u8) Error!Verified {
+    const snapshot = try artifactSnapshot(a, io, directory, component);
+    a.free(snapshot.contents);
+    return snapshot.verified;
+}
+/// Verify once and retain the exact bytes associated with the deployment digest.
+pub fn artifactSnapshot(a: std.mem.Allocator, io: std.Io, directory: []const u8, component: []const u8) Error!Snapshot {
     const filename = try std.fmt.allocPrint(a, "{s}.json", .{component});
     defer a.free(filename);
     const path = try std.fs.path.join(a, &.{ directory, filename });
@@ -140,11 +156,11 @@ pub fn artifact(a: std.mem.Allocator, io: std.Io, directory: []const u8, compone
     const binary = try std.fs.path.join(a, &.{ directory, m.artifact });
     errdefer a.free(binary);
     const contents = std.Io.Dir.cwd().readFileAlloc(io, binary, a, .limited(64 << 20)) catch |err| return mapFailure(err, error.ComponentMissing);
-    defer a.free(contents);
+    errdefer a.free(contents);
     var digest: [32]u8 = undefined;
     std.crypto.hash.sha2.Sha256.hash(contents, &digest, .{});
     if (!std.mem.eql(u8, &digest, &expected)) return error.ComponentDigest;
-    return .{ .path = binary, .digest = digest };
+    return .{ .verified = .{ .path = binary, .digest = digest }, .contents = contents };
 }
 
 fn mapFailure(err: anyerror, fallback: Error) Error {

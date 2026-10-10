@@ -3,6 +3,7 @@ const std = @import("std");
 const wire = @import("cache_plan_protocol.zig");
 const contract = @import("cache_plan_contract.zig");
 const adapter = @import("cache_plan_adapter.zig");
+const component_name = "cache-plan";
 comptime {
     _ = @import("cache_plan_protocol_v2_test.zig");
 }
@@ -115,8 +116,8 @@ test "incremental component transport binds correlated v2 replies and rejects fa
 }
 fn fixture(a: std.mem.Allocator, dir: std.Io.Dir, script: []const u8) !void {
     const io = std.testing.io;
-    try dir.writeFile(io, .{ .sub_path = "cache-plan", .data = script });
-    const file = try dir.openFile(io, "cache-plan", .{});
+    try dir.writeFile(io, .{ .sub_path = component_name, .data = script });
+    const file = try dir.openFile(io, component_name, .{});
     defer file.close(io);
     try file.setPermissions(io, .fromMode(0o700));
     var digest: wire.Digest = undefined;
@@ -124,6 +125,104 @@ fn fixture(a: std.mem.Allocator, dir: std.Io.Dir, script: []const u8) !void {
     const manifest = try std.fmt.allocPrint(a, "{{\"format\":1,\"component\":\"cache-plan\",\"protocol\":2,\"schema\":2,\"artifact\":\"cache-plan\",\"sha256\":\"{s}\"}}", .{std.fmt.bytesToHex(digest, .lower)});
     defer a.free(manifest);
     try dir.writeFile(io, .{ .sub_path = "cache-plan.json", .data = manifest });
+}
+// spec-case: SELFHOST-CACHE-PLAN-2
+test "planner retained snapshot supports borrowed bindings and rejects same-length replacement" {
+    const a = std.testing.allocator;
+    const io = std.testing.io;
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(io, ".", a);
+    defer a.free(directory);
+    var environ: std.process.Environ.Map = .init(a);
+    defer environ.deinit();
+    try environ.put("MYLANG_COMPONENT_DIR", directory);
+    const script =
+        \\#!/usr/bin/python3
+        \\import sys,struct
+        \\b=open(sys.argv[2],'rb').read()
+        \\n=64 if b[:8]==b'SLKCP002' else 4
+        \\sys.stdout.buffer.write(b[:16]+struct.pack('<II',1,n)+b[24:64]+b'\0'*n)
+        \\# original
+        \\
+    ;
+    try fixture(a, temporary.dir, script);
+    var bound = try adapter.bind(a, io, &environ);
+    defer bound.deinit(a);
+    try std.testing.expectEqualStrings(script, bound.snapshot.?);
+    const borrowed = bound;
+    for (0..2) |_| {
+        var legacy = try borrowed.batch(a, .{ .digests = &.{}, .callees = &.{} }, &.{});
+        defer legacy.deinit();
+        const input: adapter.incremental_protocol.Incremental = .{ .graph = .{ .digests = &.{}, .callees = &.{} }, .roots = &.{}, .topology = @splat(1), .changed = &.{}, .candidates = &.{} };
+        var incremental = try borrowed.incremental(a, input);
+        defer incremental.deinit();
+    }
+    const replacement = try a.dupe(u8, script);
+    defer a.free(replacement);
+    replacement[replacement.len - 2] = 'X';
+    try temporary.dir.writeFile(io, .{ .sub_path = component_name, .data = replacement });
+    try std.testing.expectEqualStrings(script, bound.snapshot.?);
+    try std.testing.expectError(error.ComponentDigest, borrowed.batch(a, .{ .digests = &.{}, .callees = &.{} }, &.{}));
+}
+
+// spec-case: SELFHOST-CACHE-PLAN-2
+test "planner retained snapshot post-validation detects same-size mutation with restored timestamps" {
+    const a = std.testing.allocator;
+    const io = std.testing.io;
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(io, ".", a);
+    defer a.free(directory);
+    var environ: std.process.Environ.Map = .init(a);
+    defer environ.deinit();
+    try environ.put("MYLANG_COMPONENT_DIR", directory);
+    const deployment = try std.fs.path.join(a, &.{ directory, component_name });
+    defer a.free(deployment);
+    try environ.put("PLANNER_TEST_DEPLOYMENT", deployment);
+    const script =
+        \\#!/usr/bin/python3
+        \\import os,sys,struct
+        \\p=os.environ['PLANNER_TEST_DEPLOYMENT'];s=os.stat(p)
+        \\c=bytearray(open(p,'rb').read());c[-2]=ord('X')
+        \\open(p,'wb').write(c);os.utime(p,ns=(s.st_atime_ns,s.st_mtime_ns))
+        \\b=open(sys.argv[2],'rb').read()
+        \\sys.stdout.buffer.write(b[:16]+struct.pack('<II',1,4)+b[24:64]+b'\0'*4)
+        \\# original
+        \\
+    ;
+    try fixture(a, temporary.dir, script);
+    var bound = try adapter.bind(a, io, &environ);
+    defer bound.deinit(a);
+    try std.testing.expectError(error.ComponentDigest, bound.batch(a, .{ .digests = &.{}, .callees = &.{} }, &.{}));
+    try std.testing.expectEqualStrings(script, bound.snapshot.?);
+}
+
+// spec-case: SELFHOST-CACHE-PLAN-2
+test "planner artifactSnapshot and bind release owned bytes on every allocation failure" {
+    const a = std.testing.allocator;
+    const io = std.testing.io;
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(io, ".", a);
+    defer a.free(directory);
+    var environ: std.process.Environ.Map = .init(a);
+    defer environ.deinit();
+    try environ.put("MYLANG_COMPONENT_DIR", directory);
+    try fixture(a, temporary.dir, "#!/bin/sh\nexit 0\n");
+    try std.testing.checkAllAllocationFailures(a, snapshotAllocations, .{ directory, &environ });
+}
+
+fn snapshotAllocations(a: std.mem.Allocator, directory: []const u8, environ: *const std.process.Environ.Map) !void {
+    const launch = @import("component_launch.zig");
+    const snapshot = try launch.artifactSnapshot(a, std.testing.io, directory, component_name);
+    defer snapshot.deinit(a);
+    const verified = try launch.artifact(a, std.testing.io, directory, component_name);
+    defer a.free(verified.path);
+    var bound = try adapter.bind(a, std.testing.io, environ);
+    defer bound.deinit(a);
+    try std.testing.expectEqualSlices(u8, snapshot.contents, bound.snapshot.?);
+    try std.testing.expectEqualSlices(u8, &snapshot.verified.digest, &bound.artifact.?.digest);
 }
 // spec-case: SELFHOST-CACHE-PLAN-1
 test "verified planner binds mode and implementation; corrupt or changed deployment fails closed" {
@@ -163,7 +262,7 @@ test "verified planner binds mode and implementation; corrupt or changed deploym
     var malformed = try adapter.bind(a, io, &environ);
     defer malformed.deinit(a);
     try std.testing.expectError(error.ComponentProtocol, malformed.batch(a, .{ .digests = &.{}, .callees = &.{} }, &.{}));
-    try temporary.dir.writeFile(io, .{ .sub_path = "cache-plan", .data = "corrupt" });
+    try temporary.dir.writeFile(io, .{ .sub_path = component_name, .data = "corrupt" });
     try std.testing.expectError(error.ComponentDigest, adapter.bind(a, io, &environ));
 }
 
