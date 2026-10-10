@@ -5,7 +5,7 @@ typedef struct { size_t size; } s2_sort_element;
 typedef struct { size_t length, capacity; uint64_t generation; void *storage; const s2_sort_element *element; } s2_sort_list;
 static int s2_sort_block_compare(const myl_block *a, const myl_block *b) {
     size_t n = (size_t)(a->len < b->len ? a->len : b->len);
-    int order = memcmp(block_data(a), block_data(b), n);
+    int order = memcmp((const unsigned char *)a+MYL_HEADER, (const unsigned char *)b+MYL_HEADER, n);
     return order ? order : a->len < b->len ? -1 : a->len > b->len;
 }
 static int s2_compare_signed(const unsigned char *a, const unsigned char *b, size_t size) {

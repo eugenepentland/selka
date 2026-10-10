@@ -192,8 +192,8 @@ const substring_source =
     \\    return 0
 ;
 
-// spec: NEW-CORE-S2-VIEW-2
-test "S2 stored byte substrings own their parent across nested slices and aliases" {
+// spec-case: NEW-CORE-S2-VIEW-1
+test "S2 escaped byte slices preserve nested values and aliases" {
     try check(std.testing.allocator, substring_source, "b'cde' 3 99 101 True 7\n636465 b'cdecde' b'cde!' 1 True\nb'de' b'' Ok('cde')\n");
 }
 
@@ -247,8 +247,8 @@ const substring_sort_source =
     \\    return 0
 ;
 
-// spec-case: NEW-CORE-S2-VIEW-2
-test "S2 escaped long byte substrings sort by values with normal reverse and keyed order" {
+// spec-case: NEW-CORE-S2-VIEW-1
+test "S2 escaped long byte slices sort by values with normal reverse and keyed order" {
     try check(std.testing.allocator, substring_sort_source, "True True True\nTrue True\nTrue True True\nTrue True\n");
 }
 
@@ -262,7 +262,7 @@ const substring_numbers =
     \\    return 0
 ;
 
-// spec-case: NEW-CORE-S2-VIEW-2
-test "S2 stored byte substrings parse numeric values and bounded numeric ranges" {
+// spec-case: NEW-CORE-S2-VIEW-1
+test "S2 escaped byte slices parse numeric values and bounded numeric ranges" {
     try check(std.testing.allocator, substring_numbers, "Some(1.25) Some(1.2) Some(-123) Some(123)\n");
 }

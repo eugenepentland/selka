@@ -2,7 +2,7 @@
 #include <inttypes.h>
 int64_t myl_core_octets_compare(const myl_block *a, const myl_block *b) {
     size_t n = (size_t)(a->len < b->len ? a->len : b->len);
-    int order = memcmp(block_data(a), block_data(b), n);
+    int order = memcmp((const unsigned char *)a + MYL_HEADER, (const unsigned char *)b + MYL_HEADER, n);
     return order ? (order > 0 ? 1 : -1) : (a->len > b->len) - (a->len < b->len);
 }
 
@@ -12,7 +12,7 @@ myl_block *myl_core_octets_repeat_unsigned(const myl_block *source, uint64_t cou
     myl_block *result = block_new(MYL_KIND_STR, (int64_t)n + 1, 1);
     result->len = (int64_t)n;
     unsigned char *data = block_data(result);
-    for (size_t at = 0; at < n; at += (size_t)source->len) memcpy(data + at, block_data(source), (size_t)source->len);
+    for (size_t at = 0; at < n; at += (size_t)source->len) memcpy(data + at, (const unsigned char *)source + MYL_HEADER, (size_t)source->len);
     data[n] = 0;
     return result;
 }
@@ -290,7 +290,7 @@ static void value_render_octets(core_render_buffer *output, const myl_block *blo
     bool quoted = bytes || depth != 0;
     if (bytes) value_render_text(output, "b");
     if (quoted) value_render_text(output, "'");
-    const unsigned char *data = block_data(block);
+    const unsigned char *data = (const unsigned char *)block + MYL_HEADER;
     for (int64_t i = 0; i < block->len; ++i) {
         unsigned char byte = data[i];
         if (quoted && (byte == '\'' || byte == '\\')) {

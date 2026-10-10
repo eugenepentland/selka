@@ -1,0 +1,1438 @@
+{
+ "cpu": 8,
+ "rounds": 5,
+ "events": [
+  "instructions",
+  "cycles",
+  "branches",
+  "branch-misses",
+  "L1-dcache-loads",
+  "L1-dcache-load-misses",
+  "LLC-load-misses",
+  "mem_inst_retired.all_stores"
+ ],
+ "arms": [
+  {
+   "program": "parity/knucleotide",
+   "arm": "base",
+   "status": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "median": {
+    "instructions": 1194703565,
+    "cycles": 581668399,
+    "branches": 211996559,
+    "branch-misses": 1136157,
+    "L1-dcache-loads": 251147744,
+    "L1-dcache-load-misses": 9061252,
+    "LLC-load-misses": 131816,
+    "mem_inst_retired.all_stores": 92098968
+   },
+   "samples": [
+    {
+     "status": 0,
+     "instructions": 1194703540,
+     "cycles": 597615792,
+     "branches": 211996534,
+     "branch-misses": 1129929,
+     "L1-dcache-loads": 251147719,
+     "L1-dcache-load-misses": 9161843,
+     "LLC-load-misses": 91595,
+     "mem_inst_retired.all_stores": 92098968
+    },
+    {
+     "status": 0,
+     "instructions": 1194703580,
+     "cycles": 580457937,
+     "branches": 211996574,
+     "branch-misses": 1136157,
+     "L1-dcache-loads": 251147759,
+     "L1-dcache-load-misses": 8983681,
+     "LLC-load-misses": 131816,
+     "mem_inst_retired.all_stores": 92098968
+    },
+    {
+     "status": 0,
+     "instructions": 1194703604,
+     "cycles": 581668399,
+     "branches": 211996598,
+     "branch-misses": 1142499,
+     "L1-dcache-loads": 251147783,
+     "L1-dcache-load-misses": 9074886,
+     "LLC-load-misses": 139189,
+     "mem_inst_retired.all_stores": 92098968
+    },
+    {
+     "status": 0,
+     "instructions": 1194703552,
+     "cycles": 587715661,
+     "branches": 211996546,
+     "branch-misses": 1135722,
+     "L1-dcache-loads": 251147731,
+     "L1-dcache-load-misses": 9061252,
+     "LLC-load-misses": 109916,
+     "mem_inst_retired.all_stores": 92098968
+    },
+    {
+     "status": 0,
+     "instructions": 1194703565,
+     "cycles": 516631712,
+     "branches": 211996559,
+     "branch-misses": 1235120,
+     "L1-dcache-loads": 251147744,
+     "L1-dcache-load-misses": 8474505,
+     "LLC-load-misses": 168465,
+     "mem_inst_retired.all_stores": 92098968
+    }
+   ]
+  },
+  {
+   "program": "parity/knucleotide",
+   "arm": "s2-prefix",
+   "status": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "median": {
+    "instructions": 1206375257,
+    "cycles": 588452885,
+    "branches": 217979180,
+    "branch-misses": 1141522,
+    "L1-dcache-loads": 255144532,
+    "L1-dcache-load-misses": 8976648,
+    "LLC-load-misses": 151591,
+    "mem_inst_retired.all_stores": 91529070
+   },
+   "samples": [
+    {
+     "status": 0,
+     "instructions": 1206375313,
+     "cycles": 634061619,
+     "branches": 217979236,
+     "branch-misses": 1141522,
+     "L1-dcache-loads": 255144588,
+     "L1-dcache-load-misses": 9243685,
+     "LLC-load-misses": 313222,
+     "mem_inst_retired.all_stores": 91529070
+    },
+    {
+     "status": 0,
+     "instructions": 1206375230,
+     "cycles": 591823263,
+     "branches": 217979153,
+     "branch-misses": 1139567,
+     "L1-dcache-loads": 255144505,
+     "L1-dcache-load-misses": 9054639,
+     "LLC-load-misses": 112098,
+     "mem_inst_retired.all_stores": 91529070
+    },
+    {
+     "status": 0,
+     "instructions": 1206375291,
+     "cycles": 585535602,
+     "branches": 217979214,
+     "branch-misses": 1143973,
+     "L1-dcache-loads": 255144566,
+     "L1-dcache-load-misses": 8936967,
+     "LLC-load-misses": 151591,
+     "mem_inst_retired.all_stores": 91529070
+    },
+    {
+     "status": 0,
+     "instructions": 1206375226,
+     "cycles": 588452885,
+     "branches": 217979149,
+     "branch-misses": 1133788,
+     "L1-dcache-loads": 255144501,
+     "L1-dcache-load-misses": 8976648,
+     "LLC-load-misses": 115529,
+     "mem_inst_retired.all_stores": 91529070
+    },
+    {
+     "status": 0,
+     "instructions": 1206375257,
+     "cycles": 524219678,
+     "branches": 217979180,
+     "branch-misses": 1250000,
+     "L1-dcache-loads": 255144532,
+     "L1-dcache-load-misses": 8534000,
+     "LLC-load-misses": 199496,
+     "mem_inst_retired.all_stores": 91529070
+    }
+   ]
+  },
+  {
+   "program": "parity/text_ops",
+   "arm": "base",
+   "status": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "median": {
+    "instructions": 764342914,
+    "cycles": 293536893,
+    "branches": 156389186,
+    "branch-misses": 165750,
+    "L1-dcache-loads": 167030004,
+    "L1-dcache-load-misses": 955925,
+    "LLC-load-misses": 211382,
+    "mem_inst_retired.all_stores": 118479594
+   },
+   "samples": [
+    {
+     "status": 0,
+     "instructions": 764342931,
+     "cycles": 299109385,
+     "branches": 156389203,
+     "branch-misses": 166213,
+     "L1-dcache-loads": 167030021,
+     "L1-dcache-load-misses": 955925,
+     "LLC-load-misses": 202931,
+     "mem_inst_retired.all_stores": 118479592
+    },
+    {
+     "status": 0,
+     "instructions": 764342914,
+     "cycles": 295183241,
+     "branches": 156389186,
+     "branch-misses": 164007,
+     "L1-dcache-loads": 167030004,
+     "L1-dcache-load-misses": 941660,
+     "LLC-load-misses": 215462,
+     "mem_inst_retired.all_stores": 118479594
+    },
+    {
+     "status": 0,
+     "instructions": 764342919,
+     "cycles": 293536893,
+     "branches": 156389191,
+     "branch-misses": 165750,
+     "L1-dcache-loads": 167030009,
+     "L1-dcache-load-misses": 951934,
+     "LLC-load-misses": 200917,
+     "mem_inst_retired.all_stores": 118479594
+    },
+    {
+     "status": 0,
+     "instructions": 764342894,
+     "cycles": 293507885,
+     "branches": 156389166,
+     "branch-misses": 166147,
+     "L1-dcache-loads": 167029984,
+     "L1-dcache-load-misses": 962852,
+     "LLC-load-misses": 211382,
+     "mem_inst_retired.all_stores": 118479594
+    },
+    {
+     "status": 0,
+     "instructions": 764342901,
+     "cycles": 258205828,
+     "branches": 156389173,
+     "branch-misses": 150930,
+     "L1-dcache-loads": 167029991,
+     "L1-dcache-load-misses": 986148,
+     "LLC-load-misses": 243784,
+     "mem_inst_retired.all_stores": 118479581
+    }
+   ]
+  },
+  {
+   "program": "parity/text_ops",
+   "arm": "s2-prefix",
+   "status": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "median": {
+    "instructions": 538782644,
+    "cycles": 212994853,
+    "branches": 120706770,
+    "branch-misses": 165137,
+    "L1-dcache-loads": 114574125,
+    "L1-dcache-load-misses": 613934,
+    "LLC-load-misses": 143748,
+    "mem_inst_retired.all_stores": 71536771
+   },
+   "samples": [
+    {
+     "status": 0,
+     "instructions": 538782651,
+     "cycles": 213785944,
+     "branches": 120706777,
+     "branch-misses": 164111,
+     "L1-dcache-loads": 114574132,
+     "L1-dcache-load-misses": 623462,
+     "LLC-load-misses": 138454,
+     "mem_inst_retired.all_stores": 71536771
+    },
+    {
+     "status": 0,
+     "instructions": 538782680,
+     "cycles": 217613903,
+     "branches": 120706806,
+     "branch-misses": 165137,
+     "L1-dcache-loads": 114574161,
+     "L1-dcache-load-misses": 652091,
+     "LLC-load-misses": 143748,
+     "mem_inst_retired.all_stores": 71536771
+    },
+    {
+     "status": 0,
+     "instructions": 538782644,
+     "cycles": 212994853,
+     "branches": 120706770,
+     "branch-misses": 167216,
+     "L1-dcache-loads": 114574125,
+     "L1-dcache-load-misses": 597737,
+     "LLC-load-misses": 143414,
+     "mem_inst_retired.all_stores": 71536771
+    },
+    {
+     "status": 0,
+     "instructions": 538782644,
+     "cycles": 212063775,
+     "branches": 120706770,
+     "branch-misses": 168243,
+     "L1-dcache-loads": 114574125,
+     "L1-dcache-load-misses": 613934,
+     "LLC-load-misses": 149147,
+     "mem_inst_retired.all_stores": 71536771
+    },
+    {
+     "status": 0,
+     "instructions": 538782602,
+     "cycles": 134962513,
+     "branches": 120706728,
+     "branch-misses": 144177,
+     "L1-dcache-loads": 114574083,
+     "L1-dcache-load-misses": 497203,
+     "LLC-load-misses": 221588,
+     "mem_inst_retired.all_stores": 71536771
+    }
+   ]
+  },
+  {
+   "program": "parity/scan_split",
+   "arm": "base",
+   "status": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "median": {
+    "instructions": 873237580,
+    "cycles": 350152193,
+    "branches": 190248701,
+    "branch-misses": 298558,
+    "L1-dcache-loads": 190576550,
+    "L1-dcache-load-misses": 1228747,
+    "LLC-load-misses": 234366,
+    "mem_inst_retired.all_stores": 137196850
+   },
+   "samples": [
+    {
+     "status": 0,
+     "instructions": 873237583,
+     "cycles": 348978192,
+     "branches": 190248704,
+     "branch-misses": 306415,
+     "L1-dcache-loads": 190576553,
+     "L1-dcache-load-misses": 1406375,
+     "LLC-load-misses": 233468,
+     "mem_inst_retired.all_stores": 137196850
+    },
+    {
+     "status": 0,
+     "instructions": 873237580,
+     "cycles": 357085290,
+     "branches": 190248701,
+     "branch-misses": 297970,
+     "L1-dcache-loads": 190576550,
+     "L1-dcache-load-misses": 1183942,
+     "LLC-load-misses": 234366,
+     "mem_inst_retired.all_stores": 137196850
+    },
+    {
+     "status": 0,
+     "instructions": 873237540,
+     "cycles": 350907695,
+     "branches": 190248661,
+     "branch-misses": 303554,
+     "L1-dcache-loads": 190576510,
+     "L1-dcache-load-misses": 1167252,
+     "LLC-load-misses": 161907,
+     "mem_inst_retired.all_stores": 137196850
+    },
+    {
+     "status": 0,
+     "instructions": 873237520,
+     "cycles": 331416753,
+     "branches": 190248641,
+     "branch-misses": 298558,
+     "L1-dcache-loads": 190576490,
+     "L1-dcache-load-misses": 1238005,
+     "LLC-load-misses": 316064,
+     "mem_inst_retired.all_stores": 137196850
+    },
+    {
+     "status": 0,
+     "instructions": 873237809,
+     "cycles": 350152193,
+     "branches": 190248930,
+     "branch-misses": 286357,
+     "L1-dcache-loads": 190576779,
+     "L1-dcache-load-misses": 1228747,
+     "LLC-load-misses": 325425,
+     "mem_inst_retired.all_stores": 137196850
+    }
+   ]
+  },
+  {
+   "program": "parity/scan_split",
+   "arm": "s2-prefix",
+   "status": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "median": {
+    "instructions": 286506965,
+    "cycles": 104680327,
+    "branches": 70966736,
+    "branch-misses": 29031,
+    "L1-dcache-loads": 53829829,
+    "L1-dcache-load-misses": 264140,
+    "LLC-load-misses": 915,
+    "mem_inst_retired.all_stores": 23475982
+   },
+   "samples": [
+    {
+     "status": 0,
+     "instructions": 286506965,
+     "cycles": 104680327,
+     "branches": 70966736,
+     "branch-misses": 29594,
+     "L1-dcache-loads": 53829829,
+     "L1-dcache-load-misses": 198531,
+     "LLC-load-misses": 915,
+     "mem_inst_retired.all_stores": 23475982
+    },
+    {
+     "status": 0,
+     "instructions": 286506977,
+     "cycles": 104427310,
+     "branches": 70966748,
+     "branch-misses": 29358,
+     "L1-dcache-loads": 53829841,
+     "L1-dcache-load-misses": 208665,
+     "LLC-load-misses": 636,
+     "mem_inst_retired.all_stores": 23475982
+    },
+    {
+     "status": 0,
+     "instructions": 286506965,
+     "cycles": 105947623,
+     "branches": 70966736,
+     "branch-misses": 29031,
+     "L1-dcache-loads": 53829829,
+     "L1-dcache-load-misses": 287465,
+     "LLC-load-misses": 720,
+     "mem_inst_retired.all_stores": 23475982
+    },
+    {
+     "status": 0,
+     "instructions": 286506959,
+     "cycles": 106447156,
+     "branches": 70966730,
+     "branch-misses": 27871,
+     "L1-dcache-loads": 53829823,
+     "L1-dcache-load-misses": 268085,
+     "LLC-load-misses": 1207,
+     "mem_inst_retired.all_stores": 23475982
+    },
+    {
+     "status": 0,
+     "instructions": 286506946,
+     "cycles": 96669805,
+     "branches": 70966717,
+     "branch-misses": 22174,
+     "L1-dcache-loads": 53829810,
+     "L1-dcache-load-misses": 264140,
+     "LLC-load-misses": 990,
+     "mem_inst_retired.all_stores": 23475982
+    }
+   ]
+  },
+  {
+   "program": "lox/vm/string_equality",
+   "arm": "base",
+   "status": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "median": {
+    "instructions": 31489084604,
+    "cycles": 8918985857,
+    "branches": 7471004624,
+    "branch-misses": 602359,
+    "L1-dcache-loads": 6504021955,
+    "L1-dcache-load-misses": 11985396,
+    "LLC-load-misses": 4543,
+    "mem_inst_retired.all_stores": 2127197422
+   },
+   "samples": [
+    {
+     "status": 0,
+     "instructions": 31489084604,
+     "cycles": 8987906562,
+     "branches": 7471004624,
+     "branch-misses": 602359,
+     "L1-dcache-loads": 6504021955,
+     "L1-dcache-load-misses": 12047392,
+     "LLC-load-misses": 4565,
+     "mem_inst_retired.all_stores": 2127197421
+    },
+    {
+     "status": 0,
+     "instructions": 31489084752,
+     "cycles": 8900471687,
+     "branches": 7471004772,
+     "branch-misses": 582670,
+     "L1-dcache-loads": 6504022104,
+     "L1-dcache-load-misses": 11993180,
+     "LLC-load-misses": 4543,
+     "mem_inst_retired.all_stores": 2127197422
+    },
+    {
+     "status": 0,
+     "instructions": 31489084760,
+     "cycles": 8954022390,
+     "branches": 7471004780,
+     "branch-misses": 632951,
+     "L1-dcache-loads": 6504022109,
+     "L1-dcache-load-misses": 11760820,
+     "LLC-load-misses": 3817,
+     "mem_inst_retired.all_stores": 2127197419
+    },
+    {
+     "status": 0,
+     "instructions": 31489084360,
+     "cycles": 8918985857,
+     "branches": 7471004380,
+     "branch-misses": 602664,
+     "L1-dcache-loads": 6504021712,
+     "L1-dcache-load-misses": 11985396,
+     "LLC-load-misses": 4483,
+     "mem_inst_retired.all_stores": 2127197422
+    },
+    {
+     "status": 0,
+     "instructions": 31489082489,
+     "cycles": 4818074481,
+     "branches": 7471002509,
+     "branch-misses": 247491,
+     "L1-dcache-loads": 6504019841,
+     "L1-dcache-load-misses": 8088342,
+     "LLC-load-misses": 5304,
+     "mem_inst_retired.all_stores": 2127197422
+    }
+   ]
+  },
+  {
+   "program": "lox/vm/string_equality",
+   "arm": "s2-prefix",
+   "status": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "median": {
+    "instructions": 31490113565,
+    "cycles": 9457989270,
+    "branches": 7471177354,
+    "branch-misses": 739360,
+    "L1-dcache-loads": 6504123096,
+    "L1-dcache-load-misses": 12213321,
+    "LLC-load-misses": 5745,
+    "mem_inst_retired.all_stores": 2127217972
+   },
+   "samples": [
+    {
+     "status": 0,
+     "instructions": 31490113565,
+     "cycles": 9504534401,
+     "branches": 7471177354,
+     "branch-misses": 712437,
+     "L1-dcache-loads": 6504123096,
+     "L1-dcache-load-misses": 12213321,
+     "LLC-load-misses": 4477,
+     "mem_inst_retired.all_stores": 2127217972
+    },
+    {
+     "status": 0,
+     "instructions": 31490114162,
+     "cycles": 9452025904,
+     "branches": 7471177951,
+     "branch-misses": 739360,
+     "L1-dcache-loads": 6504123691,
+     "L1-dcache-load-misses": 13337678,
+     "LLC-load-misses": 6002,
+     "mem_inst_retired.all_stores": 2127217970
+    },
+    {
+     "status": 0,
+     "instructions": 31490113638,
+     "cycles": 9518723865,
+     "branches": 7471177427,
+     "branch-misses": 744533,
+     "L1-dcache-loads": 6504123169,
+     "L1-dcache-load-misses": 12120955,
+     "LLC-load-misses": 5536,
+     "mem_inst_retired.all_stores": 2127217972
+    },
+    {
+     "status": 0,
+     "instructions": 31490113426,
+     "cycles": 9457989270,
+     "branches": 7471177215,
+     "branch-misses": 746906,
+     "L1-dcache-loads": 6504122957,
+     "L1-dcache-load-misses": 13310984,
+     "LLC-load-misses": 5745,
+     "mem_inst_retired.all_stores": 2127217972
+    },
+    {
+     "status": 0,
+     "instructions": 31490111233,
+     "cycles": 5289109103,
+     "branches": 7471175022,
+     "branch-misses": 481750,
+     "L1-dcache-loads": 6504120764,
+     "L1-dcache-load-misses": 10662051,
+     "LLC-load-misses": 5892,
+     "mem_inst_retired.all_stores": 2127217972
+    }
+   ]
+  },
+  {
+   "program": "lox/tree/string_equality",
+   "arm": "base",
+   "status": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "median": {
+    "instructions": 10042528049,
+    "cycles": 3183262309,
+    "branches": 2294495303,
+    "branch-misses": 688776,
+    "L1-dcache-loads": 2617428666,
+    "L1-dcache-load-misses": 27766726,
+    "LLC-load-misses": 22245,
+    "mem_inst_retired.all_stores": 1339142042
+   },
+   "samples": [
+    {
+     "status": 0,
+     "instructions": 10042527863,
+     "cycles": 3196788577,
+     "branches": 2294495117,
+     "branch-misses": 688776,
+     "L1-dcache-loads": 2617428480,
+     "L1-dcache-load-misses": 27766005,
+     "LLC-load-misses": 21608,
+     "mem_inst_retired.all_stores": 1339142042
+    },
+    {
+     "status": 0,
+     "instructions": 10042528066,
+     "cycles": 3178861286,
+     "branches": 2294495320,
+     "branch-misses": 633410,
+     "L1-dcache-loads": 2617428683,
+     "L1-dcache-load-misses": 27766726,
+     "LLC-load-misses": 26439,
+     "mem_inst_retired.all_stores": 1339142042
+    },
+    {
+     "status": 0,
+     "instructions": 10042528087,
+     "cycles": 3198422079,
+     "branches": 2294495341,
+     "branch-misses": 735883,
+     "L1-dcache-loads": 2617428704,
+     "L1-dcache-load-misses": 27756441,
+     "LLC-load-misses": 21262,
+     "mem_inst_retired.all_stores": 1339142042
+    },
+    {
+     "status": 0,
+     "instructions": 10042527985,
+     "cycles": 3183262309,
+     "branches": 2294495239,
+     "branch-misses": 823152,
+     "L1-dcache-loads": 2617428602,
+     "L1-dcache-load-misses": 27933646,
+     "LLC-load-misses": 22245,
+     "mem_inst_retired.all_stores": 1339142042
+    },
+    {
+     "status": 0,
+     "instructions": 10042528049,
+     "cycles": 2893710495,
+     "branches": 2294495303,
+     "branch-misses": 585018,
+     "L1-dcache-loads": 2617428666,
+     "L1-dcache-load-misses": 28141337,
+     "LLC-load-misses": 121746,
+     "mem_inst_retired.all_stores": 1339142042
+    }
+   ]
+  },
+  {
+   "program": "lox/tree/string_equality",
+   "arm": "s2-prefix",
+   "status": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "median": {
+    "instructions": 10078175557,
+    "cycles": 3198536913,
+    "branches": 2299225539,
+    "branch-misses": 658095,
+    "L1-dcache-loads": 2626319628,
+    "L1-dcache-load-misses": 27883909,
+    "LLC-load-misses": 23038,
+    "mem_inst_retired.all_stores": 1339445115
+   },
+   "samples": [
+    {
+     "status": 0,
+     "instructions": 10078175557,
+     "cycles": 3198536913,
+     "branches": 2299225539,
+     "branch-misses": 657767,
+     "L1-dcache-loads": 2626319628,
+     "L1-dcache-load-misses": 27883909,
+     "LLC-load-misses": 23638,
+     "mem_inst_retired.all_stores": 1339445115
+    },
+    {
+     "status": 0,
+     "instructions": 10078175444,
+     "cycles": 3225774359,
+     "branches": 2299225426,
+     "branch-misses": 658095,
+     "L1-dcache-loads": 2626319515,
+     "L1-dcache-load-misses": 27821626,
+     "LLC-load-misses": 23038,
+     "mem_inst_retired.all_stores": 1339445115
+    },
+    {
+     "status": 0,
+     "instructions": 10078175590,
+     "cycles": 3252750805,
+     "branches": 2299225572,
+     "branch-misses": 623952,
+     "L1-dcache-loads": 2626319661,
+     "L1-dcache-load-misses": 27688948,
+     "LLC-load-misses": 19346,
+     "mem_inst_retired.all_stores": 1339445115
+    },
+    {
+     "status": 0,
+     "instructions": 10078175730,
+     "cycles": 2886641106,
+     "branches": 2299225712,
+     "branch-misses": 698237,
+     "L1-dcache-loads": 2626319801,
+     "L1-dcache-load-misses": 27932821,
+     "LLC-load-misses": 168525,
+     "mem_inst_retired.all_stores": 1339445115
+    },
+    {
+     "status": 0,
+     "instructions": 10078174726,
+     "cycles": 1762625235,
+     "branches": 2299224708,
+     "branch-misses": 2919489,
+     "L1-dcache-loads": 2626318797,
+     "L1-dcache-load-misses": 28662346,
+     "LLC-load-misses": 14726,
+     "mem_inst_retired.all_stores": 1339445115
+    }
+   ]
+  },
+  {
+   "program": "eda/labstation",
+   "arm": "base",
+   "status": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "median": {
+    "instructions": 736081455,
+    "cycles": 351610022,
+    "branches": 147973612,
+    "branch-misses": 756471,
+    "L1-dcache-loads": 150048791,
+    "L1-dcache-load-misses": 2137164,
+    "LLC-load-misses": 158497,
+    "mem_inst_retired.all_stores": 108515190
+   },
+   "samples": [
+    {
+     "status": 0,
+     "instructions": 736081365,
+     "cycles": 355966619,
+     "branches": 147973617,
+     "branch-misses": 753523,
+     "L1-dcache-loads": 150048791,
+     "L1-dcache-load-misses": 2160873,
+     "LLC-load-misses": 171319,
+     "mem_inst_retired.all_stores": 108515190
+    },
+    {
+     "status": 0,
+     "instructions": 736081461,
+     "cycles": 351610022,
+     "branches": 147973612,
+     "branch-misses": 776358,
+     "L1-dcache-loads": 150048795,
+     "L1-dcache-load-misses": 2125097,
+     "LLC-load-misses": 145378,
+     "mem_inst_retired.all_stores": 108515202
+    },
+    {
+     "status": 0,
+     "instructions": 736081399,
+     "cycles": 344739623,
+     "branches": 147973599,
+     "branch-misses": 784458,
+     "L1-dcache-loads": 150048773,
+     "L1-dcache-load-misses": 2137164,
+     "LLC-load-misses": 95896,
+     "mem_inst_retired.all_stores": 108515190
+    },
+    {
+     "status": 0,
+     "instructions": 736081455,
+     "cycles": 351482627,
+     "branches": 147973597,
+     "branch-misses": 756471,
+     "L1-dcache-loads": 150048771,
+     "L1-dcache-load-misses": 2141398,
+     "LLC-load-misses": 158497,
+     "mem_inst_retired.all_stores": 108515190
+    },
+    {
+     "status": 0,
+     "instructions": 736081844,
+     "cycles": 371476491,
+     "branches": 147974033,
+     "branch-misses": 696600,
+     "L1-dcache-loads": 150049216,
+     "L1-dcache-load-misses": 2021346,
+     "LLC-load-misses": 369540,
+     "mem_inst_retired.all_stores": 108515202
+    }
+   ]
+  },
+  {
+   "program": "eda/labstation",
+   "arm": "s2-prefix",
+   "status": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "median": {
+    "instructions": 848232008,
+    "cycles": 410101133,
+    "branches": 186016197,
+    "branch-misses": 841849,
+    "L1-dcache-loads": 193646550,
+    "L1-dcache-load-misses": 2295406,
+    "LLC-load-misses": 189366,
+    "mem_inst_retired.all_stores": 119636378
+   },
+   "samples": [
+    {
+     "status": 0,
+     "instructions": 848231958,
+     "cycles": 417014359,
+     "branches": 186016192,
+     "branch-misses": 879894,
+     "L1-dcache-loads": 193646542,
+     "L1-dcache-load-misses": 2216036,
+     "LLC-load-misses": 210487,
+     "mem_inst_retired.all_stores": 119636378
+    },
+    {
+     "status": 0,
+     "instructions": 848231936,
+     "cycles": 408885506,
+     "branches": 186016154,
+     "branch-misses": 841849,
+     "L1-dcache-loads": 193646504,
+     "L1-dcache-load-misses": 2295406,
+     "LLC-load-misses": 114236,
+     "mem_inst_retired.all_stores": 119636378
+    },
+    {
+     "status": 0,
+     "instructions": 848232008,
+     "cycles": 419538120,
+     "branches": 186016200,
+     "branch-misses": 851061,
+     "L1-dcache-loads": 193646550,
+     "L1-dcache-load-misses": 2300506,
+     "LLC-load-misses": 189366,
+     "mem_inst_retired.all_stores": 119636378
+    },
+    {
+     "status": 0,
+     "instructions": 848232224,
+     "cycles": 410101133,
+     "branches": 186016197,
+     "branch-misses": 811430,
+     "L1-dcache-loads": 193646628,
+     "L1-dcache-load-misses": 2339779,
+     "LLC-load-misses": 172869,
+     "mem_inst_retired.all_stores": 119636486
+    },
+    {
+     "status": 0,
+     "instructions": 848232263,
+     "cycles": 396979754,
+     "branches": 186016228,
+     "branch-misses": 789259,
+     "L1-dcache-loads": 193646659,
+     "L1-dcache-load-misses": 2152608,
+     "LLC-load-misses": 253697,
+     "mem_inst_retired.all_stores": 119636486
+    }
+   ]
+  },
+  {
+   "program": "eda/rds3+flat",
+   "arm": "base",
+   "status": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "median": {
+    "instructions": 983127374,
+    "cycles": 469462464,
+    "branches": 216049284,
+    "branch-misses": 778027,
+    "L1-dcache-loads": 202474855,
+    "L1-dcache-load-misses": 2479138,
+    "LLC-load-misses": 364602,
+    "mem_inst_retired.all_stores": 121194105
+   },
+   "samples": [
+    {
+     "status": 0,
+     "instructions": 983127397,
+     "cycles": 470562785,
+     "branches": 216049291,
+     "branch-misses": 778027,
+     "L1-dcache-loads": 202474856,
+     "L1-dcache-load-misses": 2506600,
+     "LLC-load-misses": 405243,
+     "mem_inst_retired.all_stores": 121194105
+    },
+    {
+     "status": 0,
+     "instructions": 983127374,
+     "cycles": 469462464,
+     "branches": 216049284,
+     "branch-misses": 806557,
+     "L1-dcache-loads": 202474855,
+     "L1-dcache-load-misses": 2479138,
+     "LLC-load-misses": 364602,
+     "mem_inst_retired.all_stores": 121194113
+    },
+    {
+     "status": 0,
+     "instructions": 983127429,
+     "cycles": 470590050,
+     "branches": 216049295,
+     "branch-misses": 787007,
+     "L1-dcache-loads": 202474866,
+     "L1-dcache-load-misses": 2513583,
+     "LLC-load-misses": 361394,
+     "mem_inst_retired.all_stores": 121194113
+    },
+    {
+     "status": 0,
+     "instructions": 983127352,
+     "cycles": 421188607,
+     "branches": 216049246,
+     "branch-misses": 764298,
+     "L1-dcache-loads": 202474811,
+     "L1-dcache-load-misses": 2448295,
+     "LLC-load-misses": 383088,
+     "mem_inst_retired.all_stores": 121194105
+    },
+    {
+     "status": 0,
+     "instructions": 983127353,
+     "cycles": 394430481,
+     "branches": 216049267,
+     "branch-misses": 713493,
+     "L1-dcache-loads": 202474832,
+     "L1-dcache-load-misses": 2034628,
+     "LLC-load-misses": 356774,
+     "mem_inst_retired.all_stores": 121194105
+    }
+   ]
+  },
+  {
+   "program": "eda/rds3+flat",
+   "arm": "s2-prefix",
+   "status": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "median": {
+    "instructions": 1107183506,
+    "cycles": 529241801,
+    "branches": 258000909,
+    "branch-misses": 885889,
+    "L1-dcache-loads": 252425353,
+    "L1-dcache-load-misses": 2606892,
+    "LLC-load-misses": 383689,
+    "mem_inst_retired.all_stores": 133262628
+   },
+   "samples": [
+    {
+     "status": 0,
+     "instructions": 1107183347,
+     "cycles": 529687509,
+     "branches": 258000882,
+     "branch-misses": 899153,
+     "L1-dcache-loads": 252425290,
+     "L1-dcache-load-misses": 2587406,
+     "LLC-load-misses": 383214,
+     "mem_inst_retired.all_stores": 133262580
+    },
+    {
+     "status": 0,
+     "instructions": 1107184160,
+     "cycles": 529713877,
+     "branches": 258001555,
+     "branch-misses": 885889,
+     "L1-dcache-loads": 252425999,
+     "L1-dcache-load-misses": 2606892,
+     "LLC-load-misses": 425466,
+     "mem_inst_retired.all_stores": 133262628
+    },
+    {
+     "status": 0,
+     "instructions": 1107183506,
+     "cycles": 529241801,
+     "branches": 258000909,
+     "branch-misses": 870179,
+     "L1-dcache-loads": 252425353,
+     "L1-dcache-load-misses": 2722619,
+     "LLC-load-misses": 365442,
+     "mem_inst_retired.all_stores": 133262628
+    },
+    {
+     "status": 0,
+     "instructions": 1107183338,
+     "cycles": 525822577,
+     "branches": 258000875,
+     "branch-misses": 888634,
+     "L1-dcache-loads": 252425283,
+     "L1-dcache-load-misses": 2612529,
+     "LLC-load-misses": 383689,
+     "mem_inst_retired.all_stores": 133262580
+    },
+    {
+     "status": 0,
+     "instructions": 1107183937,
+     "cycles": 519144258,
+     "branches": 258001344,
+     "branch-misses": 837893,
+     "L1-dcache-loads": 252425788,
+     "L1-dcache-load-misses": 2404934,
+     "LLC-load-misses": 503224,
+     "mem_inst_retired.all_stores": 133262628
+    }
+   ]
+  },
+  {
+   "program": "parity/text_ops",
+   "arm": "zig-safe",
+   "status": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "median": {
+    "instructions": 367474140,
+    "cycles": 126034069,
+    "branches": 98452648,
+    "branch-misses": 148297,
+    "L1-dcache-loads": 51849966,
+    "L1-dcache-load-misses": 34037,
+    "LLC-load-misses": 393,
+    "mem_inst_retired.all_stores": 32382985
+   },
+   "samples": [
+    {
+     "status": 0,
+     "instructions": 367474141,
+     "cycles": 121002406,
+     "branches": 98452649,
+     "branch-misses": 148297,
+     "L1-dcache-loads": 51849967,
+     "L1-dcache-load-misses": 39674,
+     "LLC-load-misses": 582,
+     "mem_inst_retired.all_stores": 32382985
+    },
+    {
+     "status": 0,
+     "instructions": 367474137,
+     "cycles": 126803927,
+     "branches": 98452645,
+     "branch-misses": 146941,
+     "L1-dcache-loads": 51849963,
+     "L1-dcache-load-misses": 34037,
+     "LLC-load-misses": 393,
+     "mem_inst_retired.all_stores": 32382985
+    },
+    {
+     "status": 0,
+     "instructions": 367474147,
+     "cycles": 127027243,
+     "branches": 98452652,
+     "branch-misses": 149712,
+     "L1-dcache-loads": 51849969,
+     "L1-dcache-load-misses": 35852,
+     "LLC-load-misses": 337,
+     "mem_inst_retired.all_stores": 32382986
+    },
+    {
+     "status": 0,
+     "instructions": 367474140,
+     "cycles": 126034069,
+     "branches": 98452648,
+     "branch-misses": 148420,
+     "L1-dcache-loads": 51849966,
+     "L1-dcache-load-misses": 26995,
+     "LLC-load-misses": 351,
+     "mem_inst_retired.all_stores": 32382985
+    },
+    {
+     "status": 0,
+     "instructions": 367474118,
+     "cycles": 72890040,
+     "branches": 98452626,
+     "branch-misses": 140544,
+     "L1-dcache-loads": 51849944,
+     "L1-dcache-load-misses": 18473,
+     "LLC-load-misses": 528,
+     "mem_inst_retired.all_stores": 32382985
+    }
+   ]
+  },
+  {
+   "program": "parity/scan_split",
+   "arm": "zig-safe",
+   "status": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "median": {
+    "instructions": 717599832,
+    "cycles": 289591189,
+    "branches": 126663700,
+    "branch-misses": 129791,
+    "L1-dcache-loads": 103675070,
+    "L1-dcache-load-misses": 247585,
+    "LLC-load-misses": 1096,
+    "mem_inst_retired.all_stores": 228049100
+   },
+   "samples": [
+    {
+     "status": 0,
+     "instructions": 717599830,
+     "cycles": 289591189,
+     "branches": 126663698,
+     "branch-misses": 132334,
+     "L1-dcache-loads": 103675068,
+     "L1-dcache-load-misses": 244671,
+     "LLC-load-misses": 1096,
+     "mem_inst_retired.all_stores": 228049100
+    },
+    {
+     "status": 0,
+     "instructions": 717599832,
+     "cycles": 287212367,
+     "branches": 126663700,
+     "branch-misses": 130105,
+     "L1-dcache-loads": 103675070,
+     "L1-dcache-load-misses": 240301,
+     "LLC-load-misses": 1164,
+     "mem_inst_retired.all_stores": 228049100
+    },
+    {
+     "status": 0,
+     "instructions": 717599867,
+     "cycles": 296776438,
+     "branches": 126663732,
+     "branch-misses": 129791,
+     "L1-dcache-loads": 103675101,
+     "L1-dcache-load-misses": 247585,
+     "LLC-load-misses": 975,
+     "mem_inst_retired.all_stores": 228049101
+    },
+    {
+     "status": 0,
+     "instructions": 717599832,
+     "cycles": 291753821,
+     "branches": 126663700,
+     "branch-misses": 128784,
+     "L1-dcache-loads": 103675070,
+     "L1-dcache-load-misses": 254384,
+     "LLC-load-misses": 924,
+     "mem_inst_retired.all_stores": 228049100
+    },
+    {
+     "status": 0,
+     "instructions": 717599778,
+     "cycles": 222132123,
+     "branches": 126663643,
+     "branch-misses": 125177,
+     "L1-dcache-loads": 103675012,
+     "L1-dcache-load-misses": 570757,
+     "LLC-load-misses": 2682,
+     "mem_inst_retired.all_stores": 228049101
+    }
+   ]
+  },
+  {
+   "program": "parity/text_ops",
+   "arm": "rung3",
+   "status": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "median": {
+    "instructions": 226254066,
+    "cycles": 89326059,
+    "branches": 38967637,
+    "branch-misses": 97911,
+    "L1-dcache-loads": 28936746,
+    "L1-dcache-load-misses": 192059,
+    "LLC-load-misses": 13909,
+    "mem_inst_retired.all_stores": 22881094
+   },
+   "samples": [
+    {
+     "status": 0,
+     "instructions": 226254069,
+     "cycles": 87724070,
+     "branches": 38967640,
+     "branch-misses": 98401,
+     "L1-dcache-loads": 28936749,
+     "L1-dcache-load-misses": 198076,
+     "LLC-load-misses": 16933,
+     "mem_inst_retired.all_stores": 22881094
+    },
+    {
+     "status": 0,
+     "instructions": 226254066,
+     "cycles": 89326059,
+     "branches": 38967637,
+     "branch-misses": 97553,
+     "L1-dcache-loads": 28936746,
+     "L1-dcache-load-misses": 192059,
+     "LLC-load-misses": 13909,
+     "mem_inst_retired.all_stores": 22881094
+    },
+    {
+     "status": 0,
+     "instructions": 226254065,
+     "cycles": 89809315,
+     "branches": 38967636,
+     "branch-misses": 98659,
+     "L1-dcache-loads": 28936745,
+     "L1-dcache-load-misses": 204181,
+     "LLC-load-misses": 13892,
+     "mem_inst_retired.all_stores": 22881094
+    },
+    {
+     "status": 0,
+     "instructions": 226254065,
+     "cycles": 89806790,
+     "branches": 38967636,
+     "branch-misses": 97911,
+     "L1-dcache-loads": 28936745,
+     "L1-dcache-load-misses": 168768,
+     "LLC-load-misses": 13159,
+     "mem_inst_retired.all_stores": 22881094
+    },
+    {
+     "status": 0,
+     "instructions": 226254068,
+     "cycles": 79036023,
+     "branches": 38967639,
+     "branch-misses": 94538,
+     "L1-dcache-loads": 28936748,
+     "L1-dcache-load-misses": 160274,
+     "LLC-load-misses": 17937,
+     "mem_inst_retired.all_stores": 22881094
+    }
+   ]
+  }
+ ],
+ "checks": {
+  "parity/knucleotide": {
+   "base": {
+    "status": 0,
+    "stdout_sha256": "85ef61714a76ad7ce4c0b54cc49ec081c54c2966978de102da6a53e2d208c0bb",
+    "stderr": ""
+   },
+   "candidate": {
+    "status": 0,
+    "stdout_sha256": "85ef61714a76ad7ce4c0b54cc49ec081c54c2966978de102da6a53e2d208c0bb",
+    "stderr": ""
+   },
+   "equal_stdout": true
+  },
+  "parity/text_ops": {
+   "base": {
+    "status": 0,
+    "stdout_sha256": "0967b572d16c244fceff04c57b479c96e1e0fc0580feae10a3dbaa6c6e0a76bf",
+    "stderr": ""
+   },
+   "candidate": {
+    "status": 0,
+    "stdout_sha256": "0967b572d16c244fceff04c57b479c96e1e0fc0580feae10a3dbaa6c6e0a76bf",
+    "stderr": ""
+   },
+   "equal_stdout": true
+  },
+  "parity/scan_split": {
+   "base": {
+    "status": 0,
+    "stdout_sha256": "acd0b3e0d83a905f4007e5ade083a9293c977a9e53239489b3ab0b8c5f951a0d",
+    "stderr": ""
+   },
+   "candidate": {
+    "status": 0,
+    "stdout_sha256": "acd0b3e0d83a905f4007e5ade083a9293c977a9e53239489b3ab0b8c5f951a0d",
+    "stderr": ""
+   },
+   "equal_stdout": true
+  },
+  "lox/vm/string_equality": {
+   "base": {
+    "status": 0,
+    "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+    "stderr": ""
+   },
+   "candidate": {
+    "status": 0,
+    "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+    "stderr": ""
+   },
+   "equal_stdout": true
+  },
+  "lox/tree/string_equality": {
+   "base": {
+    "status": 0,
+    "stdout_sha256": "876e13f4e07bb39705302c01f445ffd2d2c3b180a207e4d959d6b671c67da09b",
+    "stderr": ""
+   },
+   "candidate": {
+    "status": 0,
+    "stdout_sha256": "876e13f4e07bb39705302c01f445ffd2d2c3b180a207e4d959d6b671c67da09b",
+    "stderr": ""
+   },
+   "equal_stdout": true
+  },
+  "eda/labstation": {
+   "base": {
+    "status": 0,
+    "stdout_sha256": "c611d1102db3d81a2d8d4de4c34c700bb8f308dd8951b5171116f8d9a4ddeb3a",
+    "stderr": "[W] export-kicad-sch: vendor symbol 'GSB1C41110SSHR' does not draw 2 pad(s) the design uses \u2014 adding them as unit 2\n[W] export-kicad-sch: vendor symbol 'ARJM11D7-009-AB-EW2' does not draw 2 pad(s) the design uses \u2014 adding them as unit 2\n[W] export-kicad-sch: vendor symbol 'TFM-120-02-L-D-WT-K-TR' does not draw 11 pad(s) the design uses \u2014 adding them as unit 2\n[I] export-kicad-sch: labstation: 33/58 components drawn from vendor symbols (138 libraries indexed)\n"
+   },
+   "candidate": {
+    "status": 0,
+    "stdout_sha256": "c611d1102db3d81a2d8d4de4c34c700bb8f308dd8951b5171116f8d9a4ddeb3a",
+    "stderr": "[W] export-kicad-sch: vendor symbol 'GSB1C41110SSHR' does not draw 2 pad(s) the design uses \u2014 adding them as unit 2\n[W] export-kicad-sch: vendor symbol 'ARJM11D7-009-AB-EW2' does not draw 2 pad(s) the design uses \u2014 adding them as unit 2\n[W] export-kicad-sch: vendor symbol 'TFM-120-02-L-D-WT-K-TR' does not draw 11 pad(s) the design uses \u2014 adding them as unit 2\n[I] export-kicad-sch: labstation: 33/58 components drawn from vendor symbols (138 libraries indexed)\n"
+   },
+   "equal_stdout": true,
+   "matches_goldens": true
+  },
+  "eda/rds3+flat": {
+   "base": {
+    "status": 0,
+    "stdout_sha256": "8252e32fd878510b55978b452ddb5813882028d0291406d0fb8f15c2e2f85283",
+    "stderr": "[W] export-kicad-sch: vendor symbol 'W55RP20-EVB-PICO' does not draw 1 pad(s) the design uses \u2014 adding them as unit 2\n[I] export-kicad-sch: rds3: 15/35 components drawn from vendor symbols (138 libraries indexed)\n[I] export-kicad-sch: rds3: root: 1 overlapping text pairs of 4160 drawn texts (e.g. caption \"External Calibration\" over caption \"RF Connector Banks\" at 557,12)\n[I] export-kicad-sch: rds3: 1 overlapping text pairs across 1 sheets\n"
+   },
+   "candidate": {
+    "status": 0,
+    "stdout_sha256": "8252e32fd878510b55978b452ddb5813882028d0291406d0fb8f15c2e2f85283",
+    "stderr": "[W] export-kicad-sch: vendor symbol 'W55RP20-EVB-PICO' does not draw 1 pad(s) the design uses \u2014 adding them as unit 2\n[I] export-kicad-sch: rds3: 15/35 components drawn from vendor symbols (138 libraries indexed)\n[I] export-kicad-sch: rds3: root: 1 overlapping text pairs of 4160 drawn texts (e.g. caption \"External Calibration\" over caption \"RF Connector Banks\" at 557,12)\n[I] export-kicad-sch: rds3: 1 overlapping text pairs across 1 sheets\n"
+   },
+   "equal_stdout": true,
+   "matches_goldens": true
+  }
+ },
+ "compiler_sha256": "56d61a4b6ff103a1a5877031d3965885e95d296a86c56ee7b3b2824dd1b62d45"
+}

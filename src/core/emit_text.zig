@@ -32,7 +32,7 @@ pub fn instruction(context: anytype, out: anytype, name: []const u8, inst: ir.In
             const partial = try context.fresh("%view");
             if (context.function.inst(context.function.resolve(inst.a)).ty == .str_view) {
                 try out.print(a, "  {s} = extractvalue {{ ptr, i64 }} {s}, 0\n", .{ data, try context.value(inst.a) });
-            } else try context.octetData(out, data, inst.a);
+            } else try out.print(a, "  {s} = getelementptr inbounds i8, ptr {s}, i64 32\n", .{ data, try context.value(inst.a) });
             try out.print(a, "  {s} = getelementptr inbounds i8, ptr {s}, i64 {s}\n", .{ pointer, data, try context.value(inst.b) });
             try out.print(a, "  {s} = insertvalue {{ ptr, i64 }} poison, ptr {s}, 0\n  {s} = insertvalue {{ ptr, i64 }} {s}, i64 {s}, 1\n", .{ partial, pointer, name, partial, try context.value(context.function.operands(inst.data)[0]) });
         },
@@ -105,8 +105,7 @@ fn sliceView(comptime Context: type, comptime Output: type, context: Context, ou
     const data = try context.fresh("%slicedata");
     const pointer = try context.fresh("%slicedata");
     const partial = try context.fresh("%sliceview");
-    try context.octetData(out, data, inst.a);
-    try out.print(a, "  {s} = getelementptr inbounds i8, ptr {s}, i64 {s}\n", .{ pointer, data, at });
+    try out.print(a, "  {s} = getelementptr inbounds i8, ptr {s}, i64 32\n  {s} = getelementptr inbounds i8, ptr {s}, i64 {s}\n", .{ data, text, pointer, data, at });
     try out.print(a, "  {s} = insertvalue {{ ptr, i64 }} poison, ptr {s}, 0\n  {s} = insertvalue {{ ptr, i64 }} {s}, i64 {s}, 1\n", .{ partial, pointer, name, partial, width_joined });
     context.label = join;
 }
