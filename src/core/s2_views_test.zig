@@ -266,3 +266,30 @@ const substring_numbers =
 test "S2 escaped byte slices parse numeric values and bounded numeric ranges" {
     try check(std.testing.allocator, substring_numbers, "Some(1.25) Some(1.2) Some(-123) Some(123)\n");
 }
+
+const split_declarations =
+    \\func main(out: Stream) -> int:
+    \\    mut counts: dict[str, int] = {}
+    \\    for word in "one two".split():
+    \\        counts[word] = 1
+    \\    for word in "one,two".split(","):
+    \\        out.print(len(word))
+    \\    return 0
+;
+
+// spec-case: NEW-CORE-S2-SPLIT-1
+test "S2 split declarations keep whitespace authorization beside explicit cursor lowering" {
+    var state = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer state.deinit();
+    const arena = state.allocator();
+    var refusal: @import("build.zig").Refusal = .{};
+    var module = try support.buildSource(arena, split_declarations, &refusal);
+    for (module.functions.items) |*function| {
+        if (std.mem.eql(u8, function.name, "myl_core_str_split_whitespace")) function.signature.linkage = .extern_c;
+    }
+    _ = try support.runPasses(arena, &module, .trusted);
+    const text = try @import("print.zig").module(arena, &module);
+    try std.testing.expect(std.mem.indexOf(u8, text, "myl_core_split_ws_start") == null);
+    try std.testing.expect(std.mem.indexOf(u8, text, "myl_core_str_split_whitespace") != null);
+    try std.testing.expect(std.mem.indexOf(u8, text, "myl_core_split_start") != null);
+}

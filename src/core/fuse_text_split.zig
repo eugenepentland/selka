@@ -97,6 +97,7 @@ fn splitCall(f: *const ir.Function, module: *const ir.Module, ref: ir.Ref) bool 
     const target = module.functions.items[inst.a.index()];
     if (target.signature.linkage == .internal or target.signature.owned != 0 or target.signature.views != 0) return false;
     const explicit = std.mem.eql(u8, target.name, "myl_core_str_split");
+    if (!explicit and target.signature.linkage != .runtime_c) return false;
     if (!explicit and !std.mem.eql(u8, target.name, "myl_core_str_split_whitespace")) return false;
     return std.mem.eql(ir.Type, target.signature.params, if (explicit) &.{ .str, .str } else &.{.str}) and module.kind(target.signature.ret) == .list and module.compound(target.signature.ret).list == .str;
 }
