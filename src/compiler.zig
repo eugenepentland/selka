@@ -201,24 +201,31 @@ pub const Compilation = struct {
         const original = self.src;
         self.src = self.formattingSource();
         defer self.src = original;
+        const verified = try self.prepareFrontend();
         // Formatting needs token storage even when an earlier syntax-only cache hit did not retain it.
         self.tokens = null;
         self.syntax = null;
         self.program = null;
         self.diagnostics.clearRetainingCapacity();
         try self.parse();
-        return @import("formatter.zig").format(allocator, self.src.bytes, self.tokens.?, self.syntax.?.types);
+        const formatted = try @import("formatter.zig").format(allocator, self.src.bytes, self.tokens.?, self.syntax.?.types);
+        errdefer allocator.free(formatted);
+        try self.confirmFrontend(verified);
+        return formatted;
     }
 
     /// Parse module syntax and allocate its canonical formatting with the caller allocator.
     pub fn formatModule(self: *Compilation, allocator: std.mem.Allocator) FormatError![]u8 {
-        _ = try self.prepareFrontend();
+        const verified = try self.prepareFrontend();
         var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
         defer self.diagnostics = sink.items;
         const tokens = try frontend_runtime.lex(sink.allocator, self.src, &sink, self.frontendRuntime());
         var p: parser.Parser = .{ .src = self.formattingSource(), .storage = self.arena.allocator(), .tokens = tokens, .sink = &sink };
         const syntax = try frontend_runtime.parse(&p, true, self.frontendRuntime());
-        return @import("formatter.zig").format(allocator, self.src.bytes, tokens, syntax.types);
+        const formatted = try @import("formatter.zig").format(allocator, self.src.bytes, tokens, syntax.types);
+        errdefer allocator.free(formatted);
+        try self.confirmFrontend(verified);
+        return formatted;
     }
 
     // Project checking selects embedded standard modules. Formatting reads
@@ -233,11 +240,14 @@ pub const Compilation = struct {
 
     /// Parse one module or single-file program and allocate its declaration listing.
     pub fn listDeclarations(self: *Compilation, allocator: std.mem.Allocator) declarations.Error![]u8 {
-        _ = try self.prepareFrontend();
+        const verified = try self.prepareFrontend();
         var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
         defer self.diagnostics = sink.items;
         const tokens = try frontend_runtime.lex(sink.allocator, self.src, &sink, self.frontendRuntime());
-        return declarations.renderUsing(allocator, &self.arena, self.src, tokens, &sink, self.frontendRuntime());
+        const listing = try declarations.renderUsing(allocator, &self.arena, self.src, tokens, &sink, self.frontendRuntime());
+        errdefer allocator.free(listing);
+        try self.confirmFrontend(verified);
+        return listing;
     }
 
     /// Lazily type-check parsed syntax and retain the checked program.
@@ -249,23 +259,33 @@ pub const Compilation = struct {
     /// may be skipped.
     pub fn checkWithFrontend(self: *Compilation, cache: ?*frontend_cache.Cache) frontend_runtime.Error!void {
         const verified = try self.prepareFrontend();
-        if (self.program != null and verified.reuse) return;
+        if (self.program != null and verified.reuse) {
+            try self.confirmFrontend(verified);
+            return;
+        }
         for (self.diagnostics.items) |item| if (item.severity == .err) return error.SourceError;
         try self.parseCached(cache);
         var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
         defer self.diagnostics = sink.items;
-        self.program = try sema.checkCached(sink.allocator, self.src, self.syntax.?, &sink, null, null);
+        const program = try sema.checkCached(sink.allocator, self.src, self.syntax.?, &sink, null, null);
+        try self.confirmFrontend(verified);
+        self.program = program;
     }
     /// Reuse independently owned checked bodies after supported source edits.
     pub fn checkWithCache(self: *Compilation, cache: ?*semantic_cache.Cache) frontend_runtime.Error!void {
         const verified = try self.prepareFrontend();
         if (cache) |semantic| try semantic.setFrontend(verified);
-        if (self.program != null and verified.reuse) return;
+        if (self.program != null and verified.reuse) {
+            try self.confirmFrontend(verified);
+            return;
+        }
         for (self.diagnostics.items) |item| if (item.severity == .err) return error.SourceError;
         try self.parse();
         var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
         defer self.diagnostics = sink.items;
-        self.program = try sema.checkCached(sink.allocator, self.src, self.syntax.?, &sink, null, cache);
+        const program = try sema.checkCached(sink.allocator, self.src, self.syntax.?, &sink, null, cache);
+        try self.confirmFrontend(verified);
+        self.program = program;
     }
 
     /// Whether the unit declares a free function named `main`, whatever its signature.
@@ -275,24 +295,27 @@ pub const Compilation = struct {
 
     /// Return library trees for backend validation without retaining an executable.
     pub fn checkLibraryProgram(self: *Compilation) frontend_runtime.Error!typed.Program {
-        _ = try self.prepareFrontend();
+        const verified = try self.prepareFrontend();
         for (self.diagnostics.items) |item| if (item.severity == .err) return error.SourceError;
         try self.parse();
         var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
         defer self.diagnostics = sink.items;
-        return sema.checkLibraryProgram(sink.allocator, self.src, self.syntax.?, &sink, null);
+        const program = try sema.checkLibraryProgram(sink.allocator, self.src, self.syntax.?, &sink, null);
+        try self.confirmFrontend(verified);
+        return program;
     }
 
     /// Type-check a unit that has no `main` as a library: every declaration and body,
     /// effects and public type boundaries, with no executable entry. The checked tree is
     /// discarded, so `program` stays null and no caller can lower or run the result.
     pub fn checkLibrary(self: *Compilation) frontend_runtime.Error!void {
-        _ = try self.prepareFrontend();
+        const verified = try self.prepareFrontend();
         for (self.diagnostics.items) |item| if (item.severity == .err) return error.SourceError;
         try self.parse();
         var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
         defer self.diagnostics = sink.items;
         try sema.checkLibrary(sink.allocator, self.src, self.syntax.?, &sink, null);
+        try self.confirmFrontend(verified);
     }
 };
 

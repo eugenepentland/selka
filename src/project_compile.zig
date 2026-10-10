@@ -53,6 +53,7 @@ pub const Compilation = struct {
         // Verification returns no owned allocation; merged storage belongs to the project arena.
         _ = index.verifyFrontend(index.project.arena.allocator()) catch |err| return err;
         const merged = try syntax.build(index);
+        _ = index.verifyFrontend(index.project.arena.allocator()) catch |err| return err;
         return .{ .index = index, .src = merged.src, .syntax = merged.syntax, .diagnostics = .{ .allocator = index.project.arena.allocator() } };
     }
     /// Type-check merged module bodies and enforce exported signature boundaries.
@@ -64,7 +65,9 @@ pub const Compilation = struct {
         _ = try self.index.verifyFrontend(self.index.project.arena.allocator());
         for (self.diagnostics.items.items) |item| if (item.severity == .err) return error.SourceError;
         var names: Names = .{ .index = self.index, .src = self.src };
-        return sema.checkLibraryProgram(self.index.project.arena.allocator(), self.src, self.syntax, &self.diagnostics, &names);
+        const program = try sema.checkLibraryProgram(self.index.project.arena.allocator(), self.src, self.syntax, &self.diagnostics, &names);
+        _ = try self.index.verifyFrontend(self.index.project.arena.allocator());
+        return program;
     }
 
     /// Validate library bodies, imports, effects and exports without requiring main.
@@ -74,6 +77,7 @@ pub const Compilation = struct {
         for (self.diagnostics.items.items) |item| if (item.severity == .err) return error.SourceError;
         var names: Names = .{ .index = self.index, .src = self.src };
         try sema.checkLibrary(self.index.project.arena.allocator(), self.src, self.syntax, &self.diagnostics, &names);
+        _ = try self.index.verifyFrontend(self.index.project.arena.allocator());
     }
     /// Whether the entry module (the first input) declares a free function named `main`.
     pub fn declaresMain(self: *const Compilation) bool {
@@ -83,7 +87,10 @@ pub const Compilation = struct {
     pub fn checkWithCache(self: *Compilation, cache: ?*semantic_cache.Cache) CheckError!void {
         const verified = try self.index.verifyFrontend(self.index.project.arena.allocator());
         if (cache) |semantic| try semantic.setFrontend(verified);
-        if (self.program != null and verified.reuse) return;
+        if (self.program != null and verified.reuse) {
+            _ = try self.index.verifyFrontend(self.index.project.arena.allocator());
+            return;
+        }
         _ = try self.index.verifyFrontend(self.index.project.arena.allocator());
         for (self.diagnostics.items.items) |item| if (item.severity == .err) return error.SourceError;
         var names: Names = .{ .index = self.index, .src = self.src };
@@ -92,7 +99,7 @@ pub const Compilation = struct {
         if (cache) |semantic| semantic.resolution = self.index;
         const before = self.diagnostics.items.items.len;
         const counters = if (cache) |semantic| Counters.save(semantic) else null;
-        self.program = sema.checkCached(self.index.project.arena.allocator(), self.src, self.syntax, &self.diagnostics, &names, cache) catch |err| retry: {
+        const program = sema.checkCached(self.index.project.arena.allocator(), self.src, self.syntax, &self.diagnostics, &names, cache) catch |err| retry: {
             // A check whose stood-in bodies met a changed cross-function fact
             // repeats in full, from the same diagnostics and work counters.
             const semantic = cache orelse return err;
@@ -103,6 +110,8 @@ pub const Compilation = struct {
             request.* = .{ .body_policy = request.body_policy };
             break :retry try sema.checkCached(self.index.project.arena.allocator(), self.src, self.syntax, &self.diagnostics, &names, cache);
         };
+        _ = try self.index.verifyFrontend(self.index.project.arena.allocator());
+        self.program = program;
     }
 
     /// Work counters a repeated check restores, so it reports one check's work.
