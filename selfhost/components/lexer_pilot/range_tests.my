@@ -25,6 +25,14 @@ public func test_range_full_source_number_extent() -> bool:
             return False
 
 
+public func test_range_leading_dot_uses_full_source_extent() -> bool:
+    match lexer.lex_range(source.make(b".5"), 0, 1):
+        case Ok(tokens):
+            return len(tokens) == 2 and tokens[0].kind == "integer" and tokens[0].start == 0 and tokens[0].end == 2 and tokens[1].kind == "eof" and tokens[1].start == 2
+        case Err(item):
+            return False
+
+
 public func test_range_error_absolute_location() -> bool:
     match lexer.lex_range(source.make(b"a\n  $\n"), 4, 5):
         case Ok(tokens):

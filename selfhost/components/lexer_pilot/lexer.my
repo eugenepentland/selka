@@ -403,7 +403,7 @@ func tokenize(src: source.Source, begin: int, finish: int) -> token.Token[] fail
             kind = try classify_word(src, word, start, index)
             tokens.append(token.Token(kind=kind, start=start, end=index))
             continue
-        if is_digit(ch) or (ch == 46 and index + 1 < limit and is_digit(raw[index + 1]) and not follows_operand(tokens, start)):
+        if is_digit(ch) or (ch == 46 and index + 1 < len(raw) and is_digit(raw[index + 1]) and not follows_operand(tokens, start)):
             index = float_end(src, start)
             tokens.append(token.Token(kind="integer", start=start, end=index))
             continue
