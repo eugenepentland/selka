@@ -1,0 +1,15 @@
+{
+ "disposition": "rejected_regression",
+ "measurement_complete": false,
+ "time": 1791645923.911152,
+ "reason": "Both completed tree_build_walk/4096 batch ratios exceed1.03; median of three cannot pass regardless of third batch. Exact timed binaries also increase cycles in seven strict CPU8 diagnostic rounds. Reject current candidate and rerun all final gates/timing after repair. No performance acceptance claimed.",
+ "review_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.tmp/rp3/timing-run-02-early-tree-review.json",
+ "review_sha256": "f1bf773eccb6fe235304d1b48c384557ee7ad8f2e77f8d4d9d8136d9fe962e7d",
+ "terminated_owned_waiter": {
+  "pid": 1176108,
+  "command": "python3 /home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/tools/quiet.py -- python3 experiments/runtime-parity-3-20261009/tools/rows_allrefs.py --mylang /home/epentland/.cache/mylang/rp3-base-41ed360fb/bin/mylang --core /home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/compilers/final-fix-main-serial-01/release-fast/bin/mylang --runner /home/epentland/.cache/mylang/rp3-rows-41ed360fb/bin --bin /home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/all46 --json /home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/results/all46-3.json ",
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3",
+  "children": [],
+  "row3_sample_log_bytes": 0
+ }
+}

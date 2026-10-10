@@ -1,0 +1,215 @@
+{
+ "method": "Exact rejected partial outputs relocated; non-gzip command/JSON outputs losslessly compressed. No measurements removed or accepted.",
+ "receipt_sha256": "52c9b39fb1cf2222a8b586612fef8a05612ad28a944ec22ae736eb123f56beff",
+ "rejected_receipt_sha256": "d33a3c810b94b0d2528f36cdfcc32d6be2e73d8c5e47dfcebe56dc42c84391a1",
+ "files": [
+  {
+   "original": "experiments/runtime-parity-3-20261009/X/compile-times.json",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-02/outputs/compile-times.json.gz",
+   "bytes": 2696,
+   "sha256": "851f1566905a0459d2c0d6f8aa169c478482702e75f32577a8afc6f8377f0398",
+   "original_sha256": "15f69f6cb3bad60cb97ae13f4997e91d7b8ffad2aaadc24f8f6629213c7ab2b4",
+   "raw_sha256": "15f69f6cb3bad60cb97ae13f4997e91d7b8ffad2aaadc24f8f6629213c7ab2b4"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/X/final-exit-counts.json",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-02/outputs/final-exit-counts.json.gz",
+   "bytes": 6317,
+   "sha256": "8aceb1f82efc3c33788cdcde98df589819efaa905635dc8e92ef4f717bfc044d",
+   "original_sha256": "be83b7d4c12c0ac68108fb9c6a9aac9962f05cf8e0e6a564e372b608f3a21154",
+   "raw_sha256": "be83b7d4c12c0ac68108fb9c6a9aac9962f05cf8e0e6a564e372b608f3a21154"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/X/hot-counts.json",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-02/outputs/hot-counts.json.gz",
+   "bytes": 1688,
+   "sha256": "3635abcc5b26f719fdd429a28be2700d18dda1b446b40a7bdf3ce2c1ab7cadea",
+   "original_sha256": "be76a16ca34e638f314f8c495726e78cec978a4be9abb9cca08dffd228cb3296",
+   "raw_sha256": "be76a16ca34e638f314f8c495726e78cec978a4be9abb9cca08dffd228cb3296"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/X/hot-counts.md",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-02/outputs/hot-counts.md",
+   "bytes": 2445,
+   "sha256": "fcd0df3d2c3f0637b4b3847293737cb27a46c4f8f5dd1233bf4bee8e85b2a9a4",
+   "original_sha256": "fcd0df3d2c3f0637b4b3847293737cb27a46c4f8f5dd1233bf4bee8e85b2a9a4",
+   "raw_sha256": "fcd0df3d2c3f0637b4b3847293737cb27a46c4f8f5dd1233bf4bee8e85b2a9a4"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/X/profile-alloc-base.json",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-02/outputs/profile-alloc-base.json.gz",
+   "bytes": 2076,
+   "sha256": "375afa006c3f8a18f2f71b90f8f4f163a16df949d633d5e3175724d71b1c4d29",
+   "original_sha256": "76b285ee6f0d6e76c70813a5aaf8735d62cbd4523228c645f9463ace635aa43c",
+   "raw_sha256": "76b285ee6f0d6e76c70813a5aaf8735d62cbd4523228c645f9463ace635aa43c"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/X/profile-alloc-final.json",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-02/outputs/profile-alloc-final.json.gz",
+   "bytes": 2170,
+   "sha256": "098004ba6a3e1132b8319b05d123aef196541746064155323cadadec8eaad53b",
+   "original_sha256": "c1b3c4cbff71fb2489c5f3778e561694b50616efeb9a73485709a919b888362f",
+   "raw_sha256": "c1b3c4cbff71fb2489c5f3778e561694b50616efeb9a73485709a919b888362f"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/X/profile-text-base.json",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-02/outputs/profile-text-base.json.gz",
+   "bytes": 2230,
+   "sha256": "fa7cd8a5ef9edab07cdbba2aacb07530cecba5504ce3fa61c6a865a5a2704dde",
+   "original_sha256": "965a1d8da5dfa67a1d2d3bb80becf175461c0699efffe83285221df8bd14a514",
+   "raw_sha256": "965a1d8da5dfa67a1d2d3bb80becf175461c0699efffe83285221df8bd14a514"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/X/profile-text-final.json",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-02/outputs/profile-text-final.json.gz",
+   "bytes": 2198,
+   "sha256": "cdd5c038751a2556a122feaf85cfdadc10a299fe68aac644fd793187eec31cb6",
+   "original_sha256": "86a9e78e52c3dd5ed9626e9965ecd2ada26987473d210cc52380cd42c7d38e87",
+   "raw_sha256": "86a9e78e52c3dd5ed9626e9965ecd2ada26987473d210cc52380cd42c7d38e87"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/X/r5-four-arms.json",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-02/outputs/r5-four-arms.json.gz",
+   "bytes": 612,
+   "sha256": "df68d98d3594e6a56942e5fb959e6fb7b34ae402a18a2d425eae6f9aeb50dda3",
+   "original_sha256": "56b7fb11655fb118d2b81c90fbee8e019b1be5440652725b81a90c7392ee5080",
+   "raw_sha256": "56b7fb11655fb118d2b81c90fbee8e019b1be5440652725b81a90c7392ee5080"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/X/r5-timed-identities.json",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-02/outputs/r5-timed-identities.json.gz",
+   "bytes": 392,
+   "sha256": "ebee0cfd6ed056fe13ce17564fc19f79e1751805664ec3a0bfaa3a4a66459804",
+   "original_sha256": "4361846033c49ebc7b23320df40fcbfa720f53e4a99ff8ae660f2ee92384dc9a",
+   "raw_sha256": "4361846033c49ebc7b23320df40fcbfa720f53e4a99ff8ae660f2ee92384dc9a"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/X/r5-cpu8.json",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-02/outputs/r5-cpu8.json.gz",
+   "bytes": 4743,
+   "sha256": "41f26ece5b270491474299d78757d6fbea36ef71aa797285bc9bc0be45ad0824",
+   "original_sha256": "46f9049af3c21537840d9326eabf23ab5a432fe9f97a65ed6ca10b3ed6145918",
+   "raw_sha256": "46f9049af3c21537840d9326eabf23ab5a432fe9f97a65ed6ca10b3ed6145918"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/X/text-ops-bound-spec.json",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-02/outputs/text-ops-bound-spec.json.gz",
+   "bytes": 311,
+   "sha256": "806937b0e32fc03d5602f3e082b3e908e5038a40536a0afb3aa7d900536c6978",
+   "original_sha256": "985e7c91be071cb976012668047cfc85f51c854ec1b43fdd8a381ee918a2a706",
+   "raw_sha256": "985e7c91be071cb976012668047cfc85f51c854ec1b43fdd8a381ee918a2a706"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/X/nbody-bound-spec.json",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-02/outputs/nbody-bound-spec.json.gz",
+   "bytes": 333,
+   "sha256": "3bbf4c1da89af2e2827f80947a4bfd6a8453f81ddeb388af81b758c2cd874628",
+   "original_sha256": "48acb98cc297db88c1a4122e697870f1f6ce2060299f23cd4f0345cf4c01452b",
+   "raw_sha256": "48acb98cc297db88c1a4122e697870f1f6ce2060299f23cd4f0345cf4c01452b"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/results/all46-1.json.gz",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-02/results/all46-1.json.gz",
+   "bytes": 198697,
+   "sha256": "ac1092b5f137d40283c6b2fea0ca6aa24f04411ccf64ef89e2df17aa382e57e8",
+   "original_sha256": "ac1092b5f137d40283c6b2fea0ca6aa24f04411ccf64ef89e2df17aa382e57e8",
+   "raw_sha256": "ad10c9f39cff0251507c82f8081da14fa5e81e022bb40c42f1fd6a468e02ff5f"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/results/all46-2.json.gz",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-02/results/all46-2.json.gz",
+   "bytes": 198741,
+   "sha256": "5741c8352d0330cd21e2e965a6d1208b36b2bad3e68fe5fe32b55b153f3b61b7",
+   "original_sha256": "5741c8352d0330cd21e2e965a6d1208b36b2bad3e68fe5fe32b55b153f3b61b7",
+   "raw_sha256": "22de9751cca162eb22a883b9b54f43db40c0970d6be112cdc631538db55aa4b3"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/results/base-debug-eda.json.gz",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-02/results/base-debug-eda.json.gz",
+   "bytes": 1391,
+   "sha256": "c9fa7e477d77ff8da528379d6ef502dc4a0cbc10ba82a6b019a35b49ce744741",
+   "original_sha256": "c9fa7e477d77ff8da528379d6ef502dc4a0cbc10ba82a6b019a35b49ce744741",
+   "raw_sha256": "58448d1ef58cf9a2fb20f54c8c0a16e406316ff8da2251ff80a585b27503304f"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/results/base-parity.json.gz",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-02/results/base-parity.json.gz",
+   "bytes": 1644,
+   "sha256": "f9d2fbbe8e3fd249969cf5b68e424916b68acd252cbf20c24ba4b7bb73fdd2ac",
+   "original_sha256": "f9d2fbbe8e3fd249969cf5b68e424916b68acd252cbf20c24ba4b7bb73fdd2ac",
+   "raw_sha256": "68d79cb73b8d68e5d7afe19958831df94103773c25d2af0dfd7d640835f90b2c"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/results/eda-runtime.json.gz",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-02/results/eda-runtime.json.gz",
+   "bytes": 11099,
+   "sha256": "31a7a893082cd37bc7e7101450c866157e078ff0bd2d437c231aad40b3e7662a",
+   "original_sha256": "31a7a893082cd37bc7e7101450c866157e078ff0bd2d437c231aad40b3e7662a",
+   "raw_sha256": "222d22422231c80d23f68f2b42d750b3eda8a34bacd5e1917916f76e6204901c"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/results/lox-runtime.json.gz",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-02/results/lox-runtime.json.gz",
+   "bytes": 59768,
+   "sha256": "c1deba2c12b54a5177b8bf5e7a8d643b13fa6984fbbf1d43a3dec74c3f6da95b",
+   "original_sha256": "c1deba2c12b54a5177b8bf5e7a8d643b13fa6984fbbf1d43a3dec74c3f6da95b",
+   "raw_sha256": "f7798a451222c185a4fee8e84f740af5d124e258c310e105e5aa3ec904cc668d"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/results/parity-pair.json.gz",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-02/results/parity-pair.json.gz",
+   "bytes": 60477,
+   "sha256": "ed65ede5f366640a7763212762e223b0b3999246f0f383a6847aad4626b5ea6a",
+   "original_sha256": "ed65ede5f366640a7763212762e223b0b3999246f0f383a6847aad4626b5ea6a",
+   "raw_sha256": "f269de6829f3a10483615dbda9ba368d1a3bea3e145c3d7e55a7715bc1d95df2"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/logs/all46-1.log",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-02/logs/all46-1.log.gz",
+   "bytes": 4233,
+   "sha256": "7ebdb97a900db302811c6fd5409225c45ece22f2dcc31f35f715ac5fe8d70437",
+   "original_sha256": "b27eaddb7706301bc430c26d3837ce058e6d6e6b1693268f1ca13a1b3a5bcc0e",
+   "raw_sha256": "b27eaddb7706301bc430c26d3837ce058e6d6e6b1693268f1ca13a1b3a5bcc0e"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/logs/all46-2.log",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-02/logs/all46-2.log.gz",
+   "bytes": 4285,
+   "sha256": "4ac463872c5728702c3bf065212d25aa6c5c14697ddbee8654968f34e7596ecf",
+   "original_sha256": "3ae81b451326b08decea93f66987307633c52f1ee91ecb8ada6d30dc33a30cde",
+   "raw_sha256": "3ae81b451326b08decea93f66987307633c52f1ee91ecb8ada6d30dc33a30cde"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/logs/all46-3.log",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-02/logs/all46-3.log.gz",
+   "bytes": 20,
+   "sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+   "original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/logs/all46-build.log",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-02/logs/all46-build.log.gz",
+   "bytes": 540,
+   "sha256": "cec072cdf8ca3f38554847033e71f44be6dac860c7f4e76ea0fe7c8bad4fe865",
+   "original_sha256": "8a19d2b41002bf06b8a474774a3c535b3590ab957e11eb4dbfc8bbfb3a704609",
+   "raw_sha256": "8a19d2b41002bf06b8a474774a3c535b3590ab957e11eb4dbfc8bbfb3a704609"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/logs/parity-pair.stderr.txt",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-02/logs/parity-pair.stderr.txt.gz",
+   "bytes": 1245,
+   "sha256": "73157e366d2cc7879394e0422613b4bd735dd763aa839a5a96e39dc6e42017dc",
+   "original_sha256": "c42f38d46810238df3a0f017ad1fc7e3cef4861f7684ef2ef647dea4bc3132be",
+   "raw_sha256": "c42f38d46810238df3a0f017ad1fc7e3cef4861f7684ef2ef647dea4bc3132be"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/logs/parity-pair.stdout.txt",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-02/logs/parity-pair.stdout.txt.gz",
+   "bytes": 2728,
+   "sha256": "c006c074e08cc00c0838e377a7e65f87de2d1b1741589aee72e3c6c457a1bd5f",
+   "original_sha256": "16edbeaba6d280a31c68eb5647dc80456542ac03e9ffc4b97eb91485c86fb209",
+   "raw_sha256": "16edbeaba6d280a31c68eb5647dc80456542ac03e9ffc4b97eb91485c86fb209"
+  }
+ ]
+}

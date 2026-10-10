@@ -1,0 +1,101 @@
+{
+ "method": "Lossless compression of completed historical manifests and command summaries; exact raw bytes unchanged.",
+ "files": [
+  {
+   "original": "X/tool-audit/completed-evidence-archive-03.json",
+   "archive": "X/tool-audit/completed-evidence-archive-03.json.gz",
+   "raw_sha256": "e3fa8e62c305ee75ddea0092910c23c46b7962d07d45cd03ce3ca0c38e8818e3",
+   "gzip_sha256": "d4cb1f062b535a52affd5766e59fba31c3e38dd24c9958e9122f42c3f04e6eaa",
+   "raw_bytes": 119940,
+   "gzip_bytes": 35910
+  },
+  {
+   "original": "X/timing-run-01/binary-preservation.json",
+   "archive": "X/timing-run-01/binary-preservation.json.gz",
+   "raw_sha256": "9d7ae8f935f749266fcdb49a0140abc501ecd6ada5568743a9bd97f071b9fb82",
+   "gzip_sha256": "859d082149da9f513e53df4d73d1d0a1b0ed9604446a15cff21e8e8e722bd65b",
+   "raw_bytes": 118893,
+   "gzip_bytes": 14853
+  },
+  {
+   "original": "X/timing-run-01/binary-preservation-supplement.json",
+   "archive": "X/timing-run-01/binary-preservation-supplement.json.gz",
+   "raw_sha256": "3b06a8363f17c8ba5678f38874fd6af9084e6fb1f8caaed6457c84d3ee08e9de",
+   "gzip_sha256": "ae4f5c4b07ef5b97845ef82f43dde7c5bdc83fdae3aa7fd32e4dda852a15ce31",
+   "raw_bytes": 35093,
+   "gzip_bytes": 4156
+  },
+  {
+   "original": "M0/parity-build-manifest.json",
+   "archive": "M0/parity-build-manifest.json.gz",
+   "raw_sha256": "f51ac993409ea696edb742889f84470df2f9499f5aef815f954e5759ec974c27",
+   "gzip_sha256": "96cf4447685e7970534810c9c103a9062b519d5bf15fc9be251df8bd57f55e94",
+   "raw_bytes": 37908,
+   "gzip_bytes": 11970
+  },
+  {
+   "original": "X/gates-final-fix-main-serial-01/evidence-snapshot.json",
+   "archive": "X/gates-final-fix-main-serial-01/evidence-snapshot.json.gz",
+   "raw_sha256": "eaf1ff63e160544c4a3dde586a74ca20d2839a8c5979fead6cc720c65a353a59",
+   "gzip_sha256": "4a45e80b17f7ada10569a48f9277e0e002c056b245a11d47a634b692790e7246",
+   "raw_bytes": 32018,
+   "gzip_bytes": 7760
+  },
+  {
+   "original": "R/full-test-03.log.summary.json",
+   "archive": "R/full-test-03.log.summary.json.gz",
+   "raw_sha256": "46dac18511baea095417a471f5368f0eb02b8057b95088144f3e69222afe5ba6",
+   "gzip_sha256": "d109023c542360a8f517973224e1e320aaea4ab5c6f82fd372104e8a6e64faf8",
+   "raw_bytes": 42208,
+   "gzip_bytes": 2187
+  },
+  {
+   "original": "R/full-test-01.log.summary.json",
+   "archive": "R/full-test-01.log.summary.json.gz",
+   "raw_sha256": "74dda4490ce1a03b46470a2e46ebdcb82d816017f372301b386f490775238a46",
+   "gzip_sha256": "14665a72fef92711183facf0812da95e6d74f3d4d2b84803bc7dd039c1e16613",
+   "raw_bytes": 42077,
+   "gzip_bytes": 2113
+  },
+  {
+   "original": "U2/full-test-cd.log.summary.json",
+   "archive": "U2/full-test-cd.log.summary.json.gz",
+   "raw_sha256": "453733a8eaad54d866ac27a9f9146fbda2d0b821a237671f87400560345eb90f",
+   "gzip_sha256": "c446ec39271d93c2df04983d29f0c7a7b86b90b84bded7bbf367cbb3dbc35ee1",
+   "raw_bytes": 42081,
+   "gzip_bytes": 2117
+  },
+  {
+   "original": "X/gates-final-fix-main-01/repository.partial.log.summary.json",
+   "archive": "X/gates-final-fix-main-01/repository.partial.log.summary.json.gz",
+   "raw_sha256": "2c74eed67e5b378028187ef58230447f64ab74ad06e653657226c96cf0d660e3",
+   "gzip_sha256": "3b93c1c776d26a6763380c2d2a07b8d74619cbbb69a35293590f5ac7e2e55476",
+   "raw_bytes": 31826,
+   "gzip_bytes": 2148
+  },
+  {
+   "original": "X/gates-final-fix-01/repository.partial.log.summary.json",
+   "archive": "X/gates-final-fix-01/repository.partial.log.summary.json.gz",
+   "raw_sha256": "49c02003003599fa76ab3373e6959f2499dcab79026a29c87792dfeca52c8b79",
+   "gzip_sha256": "4102d1d193d2673f1fb4f97a170f0194a1d6d027d89327064f16b3668de2ffc4",
+   "raw_bytes": 32682,
+   "gzip_bytes": 2117
+  },
+  {
+   "original": "S2/gates/s2-final-01-repository.log.summary.json",
+   "archive": "S2/gates/s2-final-01-repository.log.summary.json.gz",
+   "raw_sha256": "473bf95d5c2a64ccdf706b3bb4e93d555ba339c0d02916d4da36e704ff0640f6",
+   "gzip_sha256": "ddbd8bbb0de6ca29a8174671ddb26898410815c234b25895ea65997024302dc5",
+   "raw_bytes": 42416,
+   "gzip_bytes": 2303
+  },
+  {
+   "original": "S2/gates/s2-final-02-repository.log.summary.json",
+   "archive": "S2/gates/s2-final-02-repository.log.summary.json.gz",
+   "raw_sha256": "fa015d0f4946df13edbb7f8f6ece16bef9eae9e40311f65ca8d1e770baf71fc9",
+   "gzip_sha256": "ba964ec3d3a133737744ceecf7d3792c82969d0ba4dabbb5d711703063610b9e",
+   "raw_bytes": 42244,
+   "gzip_bytes": 2174
+  }
+ ]
+}

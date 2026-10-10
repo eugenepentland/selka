@@ -1,0 +1,114 @@
+{
+ "purpose": "Retrospective illustration for user discussion; no gate or calibration changed.",
+ "limitation": "Six cells selected because primary timing exceeded 1.03; not held-out validation, population recall, specificity, or a runtime guarantee. One text_ops timing flag had a separate within-threshold confirmation. CPU8 counters use seven rounds; primary row metric follows inherited startup-subtracted CPU10 method.",
+ "inputs": [
+  {
+   "path": "experiments/runtime-parity-3-20261009/X/timing-run-01/outputs/gap.json.gz",
+   "sha256": "d9060e3c764d59199c97f0ae5a5b5f5f3d174882e2807b560f65ae06e2d8b15e"
+  },
+  {
+   "path": "experiments/runtime-parity-3-20261009/X/timing-run-01/outputs/review-perf.json.gz",
+   "sha256": "b05c2608e13abf2324455a32debd9c16f5cacacd094c81ebf1f0450c63a49ff1"
+  }
+ ],
+ "rows": [
+  {
+   "cell": "parity/text_ops/my-tuned",
+   "timing_ratio": 1.0492626209258857,
+   "counter_ratios": {
+    "instructions": 0.999999479590912,
+    "cycles": 1.024397691664999,
+    "branches": 0.9999999803539684,
+    "branch-misses": 0.9991909036917171,
+    "L1-dcache-loads": 0.9999993951765475,
+    "L1-dcache-load-misses": 0.9868045267803962,
+    "LLC-load-misses": 0.8675964937769384,
+    "mem_inst_retired.all_stores": 0.9999997691710734
+   },
+   "instruction_flag": false,
+   "cycle_flag": false
+  },
+  {
+   "cell": "rows/mutate_nested/4096",
+   "timing_ratio": 1.0695766635454786,
+   "counter_ratios": {
+    "instructions": 0.7765225423690254,
+    "cycles": 1.0481581572233742,
+    "branches": 0.9998612577170456,
+    "branch-misses": 0.8691236215902496,
+    "L1-dcache-loads": 0.8149557107904135,
+    "L1-dcache-load-misses": 0.8808198925640994,
+    "LLC-load-misses": 0.8875,
+    "mem_inst_retired.all_stores": 0.7594149844293827
+   },
+   "instruction_flag": false,
+   "cycle_flag": true
+  },
+  {
+   "cell": "rows/mutate_nested/64",
+   "timing_ratio": 1.0537586798300371,
+   "counter_ratios": {
+    "instructions": 0.8020968295046106,
+    "cycles": 1.0538425330377175,
+    "branches": 1.0008917965868616,
+    "branch-misses": 1.0217206876762233,
+    "L1-dcache-loads": 0.8365172579156499,
+    "L1-dcache-load-misses": 1.0837457175485345,
+    "LLC-load-misses": 0.6896551724137931,
+    "mem_inst_retired.all_stores": 0.8268224057659873
+   },
+   "instruction_flag": false,
+   "cycle_flag": true
+  },
+  {
+   "cell": "rows/result_propagate/4096",
+   "timing_ratio": 1.0494690889414842,
+   "counter_ratios": {
+    "instructions": 1.0000000466872025,
+    "cycles": 1.0554965088609982,
+    "branches": 1.0000000975772223,
+    "branch-misses": 1.0087599386246338,
+    "L1-dcache-loads": 1.0000002493333173,
+    "L1-dcache-load-misses": 0.9123875834058601,
+    "LLC-load-misses": 1.0588235294117647,
+    "mem_inst_retired.all_stores": 1.0000000677710754
+   },
+   "instruction_flag": false,
+   "cycle_flag": true
+  },
+  {
+   "cell": "rows/sort_int/64",
+   "timing_ratio": 2.0829015049659008,
+   "counter_ratios": {
+    "instructions": 1.9584148234040244,
+    "cycles": 1.9845206874137769,
+    "branches": 1.0964104480080594,
+    "branch-misses": 0.3162175214913552,
+    "L1-dcache-loads": 2.160107508925648,
+    "L1-dcache-load-misses": 1.1685761047463175,
+    "LLC-load-misses": 1.5384615384615385,
+    "mem_inst_retired.all_stores": 4.8023156398416935
+   },
+   "instruction_flag": true,
+   "cycle_flag": true
+  },
+  {
+   "cell": "rows/sort_records/64",
+   "timing_ratio": 1.0328402406069983,
+   "counter_ratios": {
+    "instructions": 1.010460429046903,
+    "cycles": 1.0580813362149661,
+    "branches": 1.0000000725512155,
+    "branch-misses": 0.9173947047153975,
+    "L1-dcache-loads": 1.043199865427757,
+    "L1-dcache-load-misses": 1.0200156985871272,
+    "LLC-load-misses": 1.0576923076923077,
+    "mem_inst_retired.all_stores": 0.9992684856183301
+   },
+   "instruction_flag": false,
+   "cycle_flag": true
+  }
+ ],
+ "counter_quality_limit": "Historical pstat.py requested eight events with default perf scaling and retained integer counts without per-event running percentages/raw perf output. These observations do not establish Juice-style unscaled, full-running PMU validity and are unsuitable as validated calibration evidence.",
+ "independent_review": "S2 verified both archived input hashes, the review-to-gap raw hash, all six ratios and one instruction/five cycle flags. Selection and PMU-quality limits remain explicit."
+}

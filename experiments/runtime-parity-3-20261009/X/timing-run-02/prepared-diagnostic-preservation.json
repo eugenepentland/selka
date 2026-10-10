@@ -1,0 +1,76 @@
+{
+ "method": "R5 artifacts match completed CPU8 receipt; other artifacts were prepared but CPU10 bound timing never ran.",
+ "r5_cpu8_sha256": "46f9049af3c21537840d9326eabf23ab5a432fe9f97a65ed6ca10b3ed6145918",
+ "files": [
+  {
+   "original": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/R/base-probes/row-option_handle/base.exe",
+   "preserved": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/timing-run-02-binaries/f3c41b82bebfeb4d98cedf4d45a2aa88d3158eddf8284b6395c09762cecd8492",
+   "sha256": "f3c41b82bebfeb4d98cedf4d45a2aa88d3158eddf8284b6395c09762cecd8492",
+   "cpu8_recorded_sha256": "f3c41b82bebfeb4d98cedf4d45a2aa88d3158eddf8284b6395c09762cecd8492",
+   "cpu10_timing_completed": false
+  },
+  {
+   "original": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/R/base-probes/row-option_handle/no-barrier.exe",
+   "preserved": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/timing-run-02-binaries/f3c41b82bebfeb4d98cedf4d45a2aa88d3158eddf8284b6395c09762cecd8492",
+   "sha256": "f3c41b82bebfeb4d98cedf4d45a2aa88d3158eddf8284b6395c09762cecd8492",
+   "cpu8_recorded_sha256": "f3c41b82bebfeb4d98cedf4d45a2aa88d3158eddf8284b6395c09762cecd8492",
+   "cpu10_timing_completed": false
+  },
+  {
+   "original": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/R/base-probes/row-result_propagate/base.exe",
+   "preserved": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/timing-run-02-binaries/ada7ce9fa6fcf445f6f0a91aa0e12f0b74cacf3ea6bef4dd7ed8127bffd57744",
+   "sha256": "ada7ce9fa6fcf445f6f0a91aa0e12f0b74cacf3ea6bef4dd7ed8127bffd57744",
+   "cpu8_recorded_sha256": "ada7ce9fa6fcf445f6f0a91aa0e12f0b74cacf3ea6bef4dd7ed8127bffd57744",
+   "cpu10_timing_completed": false
+  },
+  {
+   "original": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/R/base-probes/row-result_propagate/no-barrier.exe",
+   "preserved": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/timing-run-02-binaries/ada7ce9fa6fcf445f6f0a91aa0e12f0b74cacf3ea6bef4dd7ed8127bffd57744",
+   "sha256": "ada7ce9fa6fcf445f6f0a91aa0e12f0b74cacf3ea6bef4dd7ed8127bffd57744",
+   "cpu8_recorded_sha256": "ada7ce9fa6fcf445f6f0a91aa0e12f0b74cacf3ea6bef4dd7ed8127bffd57744",
+   "cpu10_timing_completed": false
+  },
+  {
+   "original": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/R/nbody-ladder/0",
+   "preserved": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/timing-run-02-binaries/c5a66f8f0486b676ce2a759ff57be971d06fd893794788c44efbe739607eb054",
+   "sha256": "c5a66f8f0486b676ce2a759ff57be971d06fd893794788c44efbe739607eb054",
+   "cpu8_recorded_sha256": null,
+   "cpu10_timing_completed": false
+  },
+  {
+   "original": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/R/nbody-ladder/1",
+   "preserved": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/timing-run-02-binaries/9c019699d9192cd650d87b045b838c1396c9d3e95ab587bc444aef0cd3e85e88",
+   "sha256": "9c019699d9192cd650d87b045b838c1396c9d3e95ab587bc444aef0cd3e85e88",
+   "cpu8_recorded_sha256": null,
+   "cpu10_timing_completed": false
+  },
+  {
+   "original": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/R/nbody-ladder/2",
+   "preserved": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/timing-run-02-binaries/84afa1247d0494de07b7b930eb01348ddca80b67c038594b2b27402885bb1631",
+   "sha256": "84afa1247d0494de07b7b930eb01348ddca80b67c038594b2b27402885bb1631",
+   "cpu8_recorded_sha256": null,
+   "cpu10_timing_completed": false
+  },
+  {
+   "original": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/s2-ladder/text_ops.r3",
+   "preserved": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/timing-run-02-binaries/a8f3682e123c348f4b7e4f6922fc9ed5258e34d2be219499b0c43562baf8c849",
+   "sha256": "a8f3682e123c348f4b7e4f6922fc9ed5258e34d2be219499b0c43562baf8c849",
+   "cpu8_recorded_sha256": null,
+   "cpu10_timing_completed": false
+  },
+  {
+   "original": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/ce/bin/base/row-option_handle-plain",
+   "preserved": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/timing-run-02-binaries/da79591fd5fdad92324ce3ea47a5c2b6b1d5b55d16a268210ac58616acba8ef5",
+   "sha256": "da79591fd5fdad92324ce3ea47a5c2b6b1d5b55d16a268210ac58616acba8ef5",
+   "cpu8_recorded_sha256": "da79591fd5fdad92324ce3ea47a5c2b6b1d5b55d16a268210ac58616acba8ef5",
+   "cpu10_timing_completed": false
+  },
+  {
+   "original": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/ce/bin/base/row-result_propagate-plain",
+   "preserved": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/timing-run-02-binaries/768f59bf6d9a71b04cb25cd6ad12bde67f6159544a2fc6cc30ecf0acf20a9b4d",
+   "sha256": "768f59bf6d9a71b04cb25cd6ad12bde67f6159544a2fc6cc30ecf0acf20a9b4d",
+   "cpu8_recorded_sha256": "768f59bf6d9a71b04cb25cd6ad12bde67f6159544a2fc6cc30ecf0acf20a9b4d",
+   "cpu10_timing_completed": false
+  }
+ ]
+}
