@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import statistics
 import re
+import shutil
 import subprocess
 import sys
 import time
@@ -27,11 +28,32 @@ benchmark = module('benchmark', Path(__file__).parents[1] / 'incremental-stages-
 capacity = module('capacity', Path(__file__).parents[1] / 'checkpoint-reuse-20261009/single_build_cache.py')
 
 
+def copy_setup_objects(previous, destination, setup):
+    """Copy only setup's new objects; historical edited objects would bias timings."""
+    files = {}
+    for recorded in setup['new_objects']:
+        source = previous / 'units-v1' / Path(recorded).name
+        assert source.resolve() == Path(recorded).resolve()
+        assert re.fullmatch(r'[0-9a-f]{64}\.o', source.name)
+        checksum = Path(str(source) + '.sum')
+        lines = checksum.read_text().splitlines()
+        assert len(lines) == 3 and lines[0] == 'core-unit-sum-v1'
+        assert int(lines[1]) == source.stat().st_size and re.fullmatch(r'[0-9a-f]{64}', lines[2])
+        for original in (source, checksum):
+            target = destination / 'units-v1' / original.name
+            shutil.copy2(original, target)
+            files[str(target.relative_to(destination))] = benchmark.sha(target)
+    return {'source': str(previous), 'unit_object_count': len(setup['new_objects']),
+            'copied_files_sha256': files,
+            'verification': 'Only objects first published during validated setup copied; all historical edited objects excluded. Native cache validates BLAKE3 checksums on reuse.'}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--baseline', type=Path, required=True)
     parser.add_argument('--candidate', type=Path, required=True)
     parser.add_argument('--native-seed', type=Path, required=True)
+    parser.add_argument('--candidate-native-extra', type=Path, help='Completed paired comparison whose validated candidate objects can seed setup')
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--copies', type=int, nargs='+', default=[12, 32])
     parser.add_argument('--repeats', type=int, default=3)
@@ -61,6 +83,10 @@ def main():
     env = {k: v for k, v in os.environ.items() if not k.startswith(('MYLANG_', 'MYL_CORE_', 'ZIG_'))}
     env.update(MYLANG_JOBS='4', TMPDIR=str(root / 'tmp'))
     seed_report = json.loads((args.native_seed / 'results.json').read_text())
+    extra_report = json.loads((args.candidate_native_extra / 'results.json').read_text()) if args.candidate_native_extra else None
+    if extra_report:
+        assert 'completed_utc' in extra_report, 'Additional native seed must be complete'
+        assert not args.capture_setup_cache, 'A historical native seed cannot measure one-build cache capacity'
     seed_files = [x['path'] for x in json.loads(benchmark.DEPENDENCIES.read_text())['inputs']
                   if not x['path'].startswith('@')]
     golden_manifest = benchmark.GOLDENS / 'manifest.json'
@@ -73,7 +99,7 @@ def main():
               'repeats': args.repeats, 'golden_manifest_sha256': benchmark.sha(golden_manifest),
               'cache_compression': compression,
               'method': 'Same source paths and identical edits for both compilers; separate per-compiler frontend, stage and native caches. '
-                        'Native caches seeded only with validated original cold objects. Fresh intermediate-cache setup is excluded from '
+                        'Native caches seeded with validated original cold objects and, when recorded below, completed comparison objects. Fresh intermediate-cache setup is excluded from '
                         'incremental medians. Edits change source length on every sample; baseline/candidate order alternates. '
                         'Wall time and RSS exclude source writes, '
                         'binary hashing, usage and golden/leak validation. Cross-version native/executable audits are diagnostic: '
@@ -89,6 +115,10 @@ def main():
         for key in ['sizes', 'native_seeds', 'records']:
             report[key] = saved_setup[key]
         report['resumed_setup'] = str(root / 'setup-audit-failure.json')
+    if extra_report:
+        report['additional_native_seed'] = {'path': str(args.candidate_native_extra.resolve()),
+                                            'compiler': extra_report['compilers']['candidate'],
+                                            'method': 'Only new objects from completed setup; historical edited objects excluded. Checksum validation remains enabled. Setup excluded from timings; no one-build disk measurement.'}
 
     if prior:
         assert prior['compilers'] == report['compilers'], 'Compiler binaries changed'
@@ -135,6 +165,7 @@ def main():
         previous_binary = benchmark.sha(binary) if phase == 'eager_verification' else None
         if phase == 'eager_verification':
             command.append('--verify-cache')
+            (directory / 'cache/programs-v1').rename(output / 'programs-before-verification')
         metrics = output / 'metrics.json'
         timed = ['/usr/bin/time', '-f', '{"peak_rss_kb":%M,"user_s":%U,"system_s":%S}', '-o', metrics, *command]
         load = Path('/proc/loadavg').read_text().strip()
@@ -163,6 +194,7 @@ def main():
         record['execution_check'] = validate(binary, output, copies, token)
         if phase == 'eager_verification':
             assert cache['verified'] == cache['units'] and cache['compiled'] == 0, cache
+            assert cache['program'] == 'linked', cache
             assert record['binary_sha256'] == previous_binary, 'Eager and incremental executables differ'
             record['eager_native_and_executable_check'] = 'passed: every native unit verified; executable byte-identical'
         if phase == 'setup' and args.capture_setup_cache:
@@ -204,6 +236,12 @@ def main():
             previous = args.native_seed / str(copies) / 'optimized_debug'
             report['native_seeds'][f'{copies}/{variant}'] = benchmark.copy_native_seed(
                 previous / 'native', native, previous / 'cold-0.metrics.json', seed_record['cache']['units'])
+            if variant == 'candidate' and extra_report:
+                records = [r for r in extra_report['records'] if r['copies'] == copies and r['variant'] == 'candidate']
+                assert records and all(r.get('execution_check') for r in records)
+                previous = args.candidate_native_extra / str(copies) / 'candidate/native'
+                setup = next(r for r in records if r['phase'] == 'setup')
+                report['native_seeds'][f'{copies}/{variant}/extra'] = copy_setup_objects(previous, native, setup)
         save()
         paths = [source / 'c000/src/main.my', source / 'c000/src/support_strs.my', source / 'c001/src/support_strs.my']
         if prior:
@@ -253,7 +291,9 @@ def main():
                     result['paired_executable_audit'] = binary_check
                 save()
         if copies == 12:
-            build(copies, source, 'candidate', 'eager_verification', 0, token)
+            verification_sample = (1 + max(r['sample'] for r in prior['records']
+                                          if r['copies'] == copies and r['phase'] == 'eager_verification')) if prior else 0
+            build(copies, source, 'candidate', 'eager_verification', verification_sample, token)
         for variant in compilers:
             report['summary'][f'{copies}/{variant}'] = {}
             for phase in ['entry_edit', 'helper_edit', 'three_file_edit']:
