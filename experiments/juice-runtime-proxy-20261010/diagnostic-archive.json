@@ -1,0 +1,7 @@
+{
+  "file": "diagnostic-evidence.tar.gz",
+  "sha256": "b3a3023915e243ad71a214630a5bd171562164d070313ed7e36d2f514ced4a55",
+  "bytes": 295077,
+  "summary_sha256": "9a1cee665b2206b5fec52ac84ca596844f499c6ee14c989b01e0d1a17c34e60f",
+  "scope": "Six diagnostic runs, every raw profile and output, exact runner snapshots, observations and methods; unrolled control source, patch, recipe and executable hash. Executables excluded."
+}

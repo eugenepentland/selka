@@ -135,7 +135,7 @@ The [third run](../../experiments/juice-runtime-proxy-20261010/quiet-rerun-metho
 repeated the same seven executable pairs with unchanged capture and analysis
 binaries, CPU, scheduling policy, sample counts, estimator and thresholds.
 Before measurement, a one-second sample showed 0.8% aggregate CPU use and
-about 1% use on CPU 10 and its sibling; this is a starting observation, not
+about 1% use on CPUs 2 and 10; this is a starting observation, not
 continuous host isolation.
 
 Diagnostic median error improved to **0.69%**, with maximum **2.17%**. All seven
@@ -160,6 +160,80 @@ the rerun; the older capture executable's unpaired log summary is superseded by
 the paired analysis. This improves the evidence for the selected cases, but
 uncertain estimates remain diagnostic and the same-case repeat does not
 establish accuracy on unseen changes or workload families.
+
+### Noise diagnostics (2026-10-10)
+
+Six bounded diagnostic experiments retained **702 executions**, including one
+warmup pair and twelve measured pairs per condition. They used the same input
+binaries on CPU 10, except for an explicitly separate unrolled-copy control.
+Each execution checked its output and recorded continuously scheduled grouped
+hardware counters, task CPU time, context switches, migrations and page faults.
+Conditions alternated baseline/candidate order and shuffled condition order
+with a recorded seed. Address randomization was disabled only in individual
+`setarch -R` processes; global settings stayed unchanged. The tree's longer
+scenario increased iterations from 272 to 4,352, keeping size and seed fixed;
+an independent node-contribution oracle checked its new checksum.
+
+The copying fixtures' variation tracks **instruction-front-end delivery**.
+In diagnostic-04, candidate cycle counts correlated with unfilled instruction
+delivery slots at Pearson r > 0.9998 in all four size/layout conditions.
+In diagnostic-05, slower runs received fewer operations from the loop-stream
+detector (r = -0.90 to -0.999). These interpretations follow
+[Intel's Alder Lake counter definitions](https://perfmon-events.intel.com/platforms/alderlake/core-events/p-core/).
+The memory and branch probes did not show enough cache-stall, store-forwarding,
+branch-recovery or store-buffer-stall activity to explain the large variation.
+Disabling ASLR did not eliminate it. The recorded sibling CPU 11 was idle during
+the memory and front-end probes; a brief sibling activity sample in the branch
+probe remains in the evidence. There were no measured CPU migrations or major
+page faults in any phase.
+
+An intervention expanded the eight volatile stores into eight explicit statements,
+preserving their order and subsequent load. The control used the same compiler
+flags and output oracle. Individual candidate cycle spreads fell substantially:
+
+| Fixture | Original loop, ASLR on | Explicit stores, ASLR on | Original loop, ASLR off | Explicit stores, ASLR off |
+|---|---:|---:|---:|---:|
+| Copying | 26.47% | 0.59% | 14.23% | 1.00% |
+| Larger copying working set | 14.59% | 0.63% | 10.31% | 0.52% |
+
+These are diagnostic-05 versus diagnostic-06 spreads, not prediction errors.
+Together, the counters and intervention strongly implicate the tiny loop's
+interaction with front-end delivery. They do not identify the exact hardware
+trigger for changes in loop-cache use. The control is a different executable,
+so it does not replace or qualify the original noisy cases.
+
+The remaining noise also includes **real scheduling interruptions**. One
+explicit-store run took 82.96 ms elapsed versus 70.54 ms of task CPU time and
+recorded 467 context switches. A long, fixed-layout tree run took 302.96 ms
+elapsed versus 291.32 ms of task CPU time, with 407 context switches. The latter
+condition had only 1.12% spread in paired reference-cycle ratios but 3.67% in
+the tree's internal elapsed-time ratios. Thus even a stable CPU-cost estimate
+can miss the repeatability limit when the process is interrupted. These probes
+do not identify the competing process or the cause of the earlier run's delays.
+
+Lengthening the tree improved randomized-layout internal timing spread from
+6.08% to 2.50% in diagnostic-03. However, the initial longer trial still had
+5.75% spread, and a short fixed-layout trial had an on-CPU outlier retained in
+full. Longer runs help with short-duration sensitivity but do not ensure
+repeatability. The atomic diagnostic had 0.15% paired cycle spread, 2.76%
+reference-cycle spread and 2.95% instrumented elapsed spread; it provides no
+evidence of intrinsically unstable atomic work in this run.
+
+[Summary and correlations](../../experiments/juice-runtime-proxy-20261010/diagnostic-summary.json),
+[archive receipt](../../experiments/juice-runtime-proxy-20261010/diagnostic-archive.json),
+and the [diagnostic runner](../../experiments/juice-runtime-proxy-20261010/diagnose.py)
+retain all phases, including failures to stabilize a case. The archive includes
+the exact runner version per phase, raw profiles, outputs, source intervention
+and build identity. The earlier quiet-host observation sampled CPU 2, not the
+currently reported sibling CPU 11; the description above is corrected accordingly.
+
+These instrumented elapsed times are **not independent accuracy labels**. No
+5% accuracy or 3% repeatability threshold changed, and the seven-case
+qualification remains three accepted and four uncertain. Next qualification
+should retain the original difficult cases, add the explicit-store control as
+a separate fixture, and use longer tree batches with scheduling telemetry and
+stronger CPU isolation. Neither ASLR suppression nor dropping outliers is
+supported as a general fix by these results.
 
 ## First comparison
 
