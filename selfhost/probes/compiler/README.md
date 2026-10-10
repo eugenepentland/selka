@@ -93,3 +93,51 @@ The first fmt-check also found two new modules with formatting differences;
 formatting them through the current compiler corrected both. Those failures were
 fixed, not exclusions. Full gate is coordinated by the parent
 in the combined integration worktree; no independent full gate or timings claimed.
+
+
+## Bounded declaration primitives
+
+The declaration pilot's [indexed.my](../../components/declaration_index/indexed.my)
+replaces the quadratic probe workaround with a bounded batch index, without
+qualifying native dictionaries or native sorting. `make(bytes[])` preserves
+original IDs and stable duplicate ordering in `Index.order`; `lookup` returns
+the first original ID or -1. `bounds` returns an interval in that permutation,
+so a declaration consumer can inspect every duplicate and apply its own scope
+and prior-declaration rules. Inputs are capped at 65,536 names and 1,048,576 total
+name bytes; queries are capped at 1,048,576 bytes. Checked failures carry
+`Problem{code:str,message:str}`. Index names and order must remain logically
+immutable after construction. Retained inputs and nested index snapshots are
+independent through ordinary COW mutation.
+
+Bottom-up merge sort builds once, with at most N*ceil(log2(N)) name comparator
+calls and exactly N*(ceil(log2(N))+2) ID-slot writes for nonempty input (zero for
+empty input). `octets` counts paired byte positions compared, not allocator
+traffic or machine instructions. Each merge comparison can be charged to the
+winning name, bounding construction octets by total_name_bytes*ceil(log2(N)).
+Lookup uses at most ceil(log2(N+1))+1 comparator calls; duplicate bounds use at
+most twice ceil(log2(N+1)). Comparisons inspect raw unsigned bytes, including
+empty names, NUL, invalid UTF-8 and prefix ties. No growing sorted insertion,
+dictionary, native sort, Unicode decoding or native hashing is used.
+
+`source(bytes)` records LF line starts once, under a 1 MiB source cap.
+`locate(Source,offset)` binary-searches that table and reports one-based byte
+line/column plus its comparison count. Interior UTF-8 positions, CRLF, lone CR,
+no final newline, empty source and EOF have explicit tests. Offsets outside
+[0,len(raw)] fail `E_OFFSET`; source construction fails `E_SOURCE_LIMIT` above
+the cap. Sources must come from `source` and their line tables stay immutable;
+these pure helpers do not repeatedly validate user-constructed index records.
+
+Qualification obtains the immutable seed through the native coordinator:
+
+```sh
+scripts/build-slot.sh build zig-out/tools/selka-components --root "$PWD" --zig /home/epentland/.local/bin/zig --seed-only
+scripts/build-slot.sh build "$verified_seed" test selfhost/components/declaration_index/indexed_tests.my --force --no-cache --max-steps=100000000
+MYL_CORE_LEAKCHECK=1 scripts/build-slot.sh build "$verified_seed" test selfhost/components/declaration_index/indexed_tests.my --force --no-cache --max-steps=100000000 --release --verify-facts
+```
+
+The explicit step budget is necessary for the exact 65,536-name and 1 MiB
+boundary tests; the default budget traps three such tests. Tests check work
+bounds at 16, 128, 1024, 4096 and 65,536 names, with exact limit acceptance and
+first-excess rejection. These counters and forced debug/release fact/leak tests
+are algorithm and ownership evidence; physical allocation/copy cost and elapsed
+performance still require isolated measurement.

@@ -1,0 +1,202 @@
+import indexed
+
+func rounds(size: int) -> int:
+    mut width = 1
+    mut count = 0
+    while width < size:
+        width *= 2
+        count += 1
+    return count
+
+
+func key(value: int) -> bytes:
+    return bytes(byte_buffer([value // 256, value % 256]))
+
+
+func scale(size: int) -> bool fails indexed.Problem:
+    mut names: bytes[] = []
+    for at in range(size):
+        names.append(key(size - at - 1))
+    const table = try indexed.make(names)
+    const levels = rounds(size)
+    if table.comparisons > size * levels or table.octets > size * 2 * levels:
+        return False
+    if table.writes != size * (levels + 2):
+        return False
+    for at in range(size):
+        if table.order[at] != size - at - 1:
+            return False
+    const first = try indexed.lookup(table, key(0))
+    const last = try indexed.lookup(table, key(size - 1))
+    const missing = try indexed.lookup(table, b"\xff\xff\xff")
+    return first.id == size - 1 and last.id == 0 and missing.id == -1 and first.comparisons <= levels + 2 and last.comparisons <= levels + 2 and missing.comparisons <= levels + 2
+
+
+func raw(size: int) -> bytes:
+    mut block = byte_buffer([120])
+    for at in range(12):
+        const previous = bytes(block)
+        _ = block.append_range(previous, 0, len(previous))
+    const chunk = bytes(block)
+    mut empty: int[] = []
+    mut buffer = byte_buffer(empty)
+    _ = buffer.reserve(size)
+    for at in range(size // len(chunk)):
+        _ = buffer.append_range(chunk, 0, len(chunk))
+    _ = buffer.append_range(chunk, 0, size % len(chunk))
+    return bytes(buffer)
+
+
+public func test_empty_singleton_and_absent_names() -> bool fails indexed.Problem:
+    const empty = try indexed.make([])
+    const missing = try indexed.lookup(empty, b"x")
+    const no_bounds = try indexed.bounds(empty, b"x")
+    const one = try indexed.make([b"one"])
+    const found = try indexed.lookup(one, b"one")
+    const absent = try indexed.lookup(one, b"two")
+    return len(empty.order) == 0 and empty.writes == 0 and missing.id == -1 and missing.comparisons == 0 and no_bounds.start == 0 and no_bounds.end == 0 and one.order == [0] and one.comparisons == 0 and one.writes == 2 and found.id == 0 and absent.id == -1
+
+
+public func test_stable_duplicates_prefixes_and_arbitrary_bytes() -> bool fails indexed.Problem:
+    const table = try indexed.make([b"b", b"a", b"b", b"a", b"", b"a\0", b"\xff", b"\0"])
+    const duplicate = try indexed.bounds(table, b"a")
+    const first = try indexed.lookup(table, b"a")
+    const zero = try indexed.lookup(table, b"\0")
+    const prefix = try indexed.lookup(table, b"a\0")
+    const high = try indexed.lookup(table, b"\xff")
+    return table.order == [4, 7, 1, 3, 5, 0, 2, 6] and duplicate.start == 2 and duplicate.end == 4 and table.order[duplicate.start:duplicate.end] == [1, 3] and first.id == 1 and zero.id == 7 and prefix.id == 5 and high.id == 6
+
+
+public func test_all_equal_bounds_remain_stable() -> bool fails indexed.Problem:
+    const table = try indexed.make([b"same", b"same", b"same", b"same", b"same"])
+    const found = try indexed.bounds(table, b"same")
+    const first = try indexed.lookup(table, b"same")
+    return table.order == [0, 1, 2, 3, 4] and found.start == 0 and found.end == 5 and first.id == 0 and found.comparisons <= 6
+
+
+public func test_retained_input_index_and_nested_snapshots() -> bool fails indexed.Problem:
+    mut names: bytes[] = [b"z", b"a", b"z"]
+    const table = try indexed.make(names)
+    names[0] = b"changed"
+    names.append(b"new")
+    mut copy = table
+    const retained = copy
+    copy.names[0] = b"other"
+    copy.order[0] = 2
+    const original = try indexed.lookup(table, b"z")
+    return table.names == [b"z", b"a", b"z"] and retained.names == table.names and retained.order == [1, 0, 2] and original.id == 0 and copy.names[0] == b"other" and names[0] == b"changed"
+
+
+public func test_scale_16() -> bool fails indexed.Problem:
+    return try scale(16)
+
+
+public func test_scale_128() -> bool fails indexed.Problem:
+    return try scale(128)
+
+
+public func test_scale_1024() -> bool fails indexed.Problem:
+    return try scale(1024)
+
+
+public func test_scale_4096() -> bool fails indexed.Problem:
+    return try scale(4096)
+
+
+public func test_exact_name_count_limit_and_first_excess() -> bool fails indexed.Problem:
+    const maximum = try scale(65536)
+    if not maximum:
+        return False
+    mut names: bytes[] = []
+    for at in range(65537):
+        names.append(b"")
+    match indexed.make(names):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "E_INDEX_LIMIT"
+
+
+public func test_exact_name_byte_limit_and_first_excess() -> bool fails indexed.Problem:
+    const boundary = raw(1048576)
+    const table = try indexed.make([boundary])
+    const found = try indexed.lookup(table, boundary)
+    if found.id != 0 or found.octets != 2097152:
+        return False
+    match indexed.make([boundary, b"x"]):
+        case Ok(value):
+            return False
+        case Err(problem):
+            if problem.code != "E_INDEX_LIMIT":
+                return False
+    match indexed.lookup(table, raw(1048577)):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "E_INDEX_LIMIT"
+
+
+public func test_location_utf8_interior_eof_and_empty() -> bool fails indexed.Problem:
+    const src = try indexed.source(b"a\xc3\xa9\n\xf0\x9f\x98\x80z\n")
+    const interior = try indexed.locate(src, 6)
+    const before_eof = try indexed.locate(src, 9)
+    const eof = try indexed.locate(src, 10)
+    const empty = try indexed.source(b"")
+    const origin = try indexed.locate(empty, 0)
+    return src.line_starts == [0, 4, 10] and interior.line == 2 and interior.column == 3 and before_eof.line == 2 and before_eof.column == 6 and eof.line == 3 and eof.column == 1 and origin.line == 1 and origin.column == 1
+
+
+public func test_location_crlf_lone_cr_and_no_final_newline() -> bool fails indexed.Problem:
+    const src = try indexed.source(b"a\r\nb\rc")
+    const newline = try indexed.locate(src, 2)
+    const next = try indexed.locate(src, 3)
+    const end = try indexed.locate(src, 6)
+    return src.line_starts == [0, 3] and newline.line == 1 and newline.column == 3 and next.line == 2 and next.column == 1 and end.line == 2 and end.column == 4
+
+
+public func test_location_invalid_offsets_are_checked() -> bool fails indexed.Problem:
+    const src = try indexed.source(b"x")
+    match indexed.locate(src, -1):
+        case Ok(value):
+            return False
+        case Err(problem):
+            if problem.code != "E_OFFSET":
+                return False
+    match indexed.locate(src, 2):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "E_OFFSET"
+
+
+public func test_line_table_lookup_work_and_source_snapshot() -> bool fails indexed.Problem:
+    mut buffer = byte_buffer([])
+    for at in range(4096):
+        _ = buffer.append_range(b"x\n", 0, 2)
+    const src = try indexed.source(bytes(buffer))
+    _ = buffer.append_range(b"changed", 0, 7)
+    const middle = try indexed.locate(src, 4096)
+    const eof = try indexed.locate(src, 8192)
+    return len(src.raw) == 8192 and len(src.line_starts) == 4097 and middle.line == 2049 and middle.column == 1 and eof.line == 4097 and eof.column == 1 and middle.comparisons <= 13 and eof.comparisons <= 13
+
+
+public func test_exact_source_limit_and_first_excess() -> bool fails indexed.Problem:
+    const src = try indexed.source(raw(1048576))
+    const eof = try indexed.locate(src, 1048576)
+    if eof.line != 1 or eof.column != 1048577:
+        return False
+    match indexed.source(raw(1048577)):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "E_SOURCE_LIMIT"
+
+
+public func test_missing_before_between_and_prefix_ranges() -> bool fails indexed.Problem:
+    const table = try indexed.make([b"b", b"dd", b"bb", b"dd"])
+    const before = try indexed.lookup(table, b"a")
+    const between = try indexed.lookup(table, b"c")
+    const prefix = try indexed.lookup(table, b"d")
+    const gap = try indexed.bounds(table, b"c")
+    const duplicate = try indexed.bounds(table, b"dd")
+    return before.id == -1 and between.id == -1 and prefix.id == -1 and gap.start == 2 and gap.end == 2 and duplicate.start == 2 and duplicate.end == 4 and table.order[duplicate.start:duplicate.end] == [1, 3]

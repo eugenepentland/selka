@@ -1,0 +1,195 @@
+# Frozen component-v1 primitives: raw byte names, immutable insertion IDs,
+# stable bottom-up merge sorting, and precomputed byte locations.
+public record Problem:
+    code: str
+    message: str
+
+
+public record Index:
+    names: bytes[]
+    order: int[]
+    comparisons: int
+    octets: int
+    writes: int
+
+
+public record Lookup:
+    id: int
+    comparisons: int
+    octets: int
+
+
+public record Bounds:
+    start: int
+    end: int
+    comparisons: int
+    octets: int
+
+
+record Compared:
+    ordering: int
+    octets: int
+
+
+record Search:
+    position: int
+    comparisons: int
+    octets: int
+
+
+func compare(left: bytes, right: bytes) -> Compared:
+    mut at = 0
+    while at < len(left) and at < len(right):
+        if left[at] < right[at]:
+            return Compared(ordering=-1, octets=at + 1)
+        if left[at] > right[at]:
+            return Compared(ordering=1, octets=at + 1)
+        at += 1
+    if len(left) < len(right):
+        return Compared(ordering=-1, octets=at)
+    if len(left) > len(right):
+        return Compared(ordering=1, octets=at)
+    return Compared(ordering=0, octets=at)
+
+
+# IDs never change: order is a stable permutation of input positions.
+# Costs count comparator calls, paired byte comparisons, and ID-slot writes.
+public func make(names: bytes[]) -> Index fails Problem:
+    if len(names) > 65536:
+        fail Problem(code="E_INDEX_LIMIT", message="name count exceeds 65536")
+    mut total = 0
+    for name in names:
+        if len(name) > 1048576 - total:
+            fail Problem(code="E_INDEX_LIMIT", message="name bytes exceed 1048576")
+        total += len(name)
+    mut order: int[] = []
+    mut scratch: int[] = []
+    for id in range(len(names)):
+        order.append(id)
+        scratch.append(0)
+    mut comparisons = 0
+    mut octets = 0
+    mut writes = len(names) * 2
+    mut width = 1
+    while width < len(names):
+        mut begin = 0
+        while begin < len(names):
+            mut middle = begin + width
+            if middle > len(names):
+                middle = len(names)
+            mut end = begin + width * 2
+            if end > len(names):
+                end = len(names)
+            mut left = begin
+            mut right = middle
+            mut output = begin
+            while left < middle and right < end:
+                const compared = compare(names[order[left]], names[order[right]])
+                comparisons += 1
+                octets += compared.octets
+                if compared.ordering <= 0:
+                    scratch[output] = order[left]
+                    left += 1
+                else:
+                    scratch[output] = order[right]
+                    right += 1
+                output += 1
+                writes += 1
+            while left < middle:
+                scratch[output] = order[left]
+                left += 1
+                output += 1
+                writes += 1
+            while right < end:
+                scratch[output] = order[right]
+                right += 1
+                output += 1
+                writes += 1
+            begin = end
+        const previous = order
+        order = scratch
+        scratch = previous
+        width *= 2
+    return Index(names=names, order=order, comparisons=comparisons, octets=octets, writes=writes)
+
+
+# Precondition: index was constructed by make and its names/order stay immutable.
+func search(index: Index, name: bytes, after: bool) -> Search:
+    mut low = 0
+    mut high = len(index.order)
+    mut comparisons = 0
+    mut octets = 0
+    while low < high:
+        const middle = low + (high - low) // 2
+        const compared = compare(index.names[index.order[middle]], name)
+        comparisons += 1
+        octets += compared.octets
+        if compared.ordering < 0 or (after and compared.ordering == 0):
+            low = middle + 1
+        else:
+            high = middle
+    return Search(position=low, comparisons=comparisons, octets=octets)
+
+
+# Return the first original ID for a name, or -1. Empty byte names are valid.
+public func lookup(index: Index, name: bytes) -> Lookup fails Problem:
+    if len(name) > 1048576:
+        fail Problem(code="E_INDEX_LIMIT", message="query bytes exceed 1048576")
+    const found = search(index, name, False)
+    if found.position == len(index.order):
+        return Lookup(id=-1, comparisons=found.comparisons, octets=found.octets)
+    const compared = compare(index.names[index.order[found.position]], name)
+    mut id = -1
+    if compared.ordering == 0:
+        id = index.order[found.position]
+    return Lookup(id=id, comparisons=found.comparisons + 1, octets=found.octets + compared.octets)
+
+
+# Matching IDs are index.order[start:end], stable even for duplicate definitions.
+public func bounds(index: Index, name: bytes) -> Bounds fails Problem:
+    if len(name) > 1048576:
+        fail Problem(code="E_INDEX_LIMIT", message="query bytes exceed 1048576")
+    const first = search(index, name, False)
+    const last = search(index, name, True)
+    return Bounds(start=first.position, end=last.position, comparisons=first.comparisons + last.comparisons, octets=first.octets + last.octets)
+
+
+public record Source:
+    raw: bytes
+    line_starts: int[]
+
+
+public record Location:
+    line: int
+    column: int
+    comparisons: int
+
+
+# LF starts a new line; CR and every other octet remain ordinary byte columns.
+public func source(raw: bytes) -> Source fails Problem:
+    if len(raw) > 1048576:
+        fail Problem(code="E_SOURCE_LIMIT", message="source bytes exceed 1048576")
+    mut starts: int[] = [0]
+    for at in range(len(raw)):
+        if raw[at] == 10:
+            starts.append(at + 1)
+    return Source(raw=raw, line_starts=starts)
+
+
+# Precondition: src was constructed by source and its line table stays immutable.
+# Valid offsets include EOF and interior UTF-8 bytes; columns count raw bytes.
+public func locate(src: Source, offset: int) -> Location fails Problem:
+    if offset < 0 or offset > len(src.raw):
+        fail Problem(code="E_OFFSET", message="source offset out of bounds")
+    mut low = 0
+    mut high = len(src.line_starts)
+    mut comparisons = 0
+    while low < high:
+        const middle = low + (high - low) // 2
+        comparisons += 1
+        if src.line_starts[middle] <= offset:
+            low = middle + 1
+        else:
+            high = middle
+    const line = low - 1
+    return Location(line=line + 1, column=offset - src.line_starts[line] + 1, comparisons=comparisons)
