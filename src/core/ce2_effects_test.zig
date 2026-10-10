@@ -220,7 +220,7 @@ fn fixture(arena: std.mem.Allocator, root: []const u8, flags: []const []const u8
 }
 
 /// Debug, release, and release with the facts verified.
-const modes = [_][]const []const u8{ &.{}, &.{"--release"}, &.{ "--release", "--verify-facts" } };
+const modes = [_][]const []const u8{ &.{"--unoptimized"}, &.{"--release"}, &.{ "--release", "--verify-facts" } };
 
 /// What the base compiler (`claude/copy-elim-2` 9f9667b1b) prints for `ce2_effects.my`, by section.
 const fields_expected =

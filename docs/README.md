@@ -71,7 +71,7 @@ $ mylang reference --query E_MODULE_NAME   # one feature or error code, from the
 
 ## Building, testing and tools
 
-- [Native builds](tooling/native-build.md): debug builds one LLVM unit per module,
+- [Native builds](tooling/native-build.md): optimized debug builds one LLVM unit per module,
   `--release` for the optimized whole-program build, the caches, `--report` and
   `--verify-cache`. [Performance](performance.md) says when and how to measure.
 - [Guest tests](tooling/guest-tests.md);

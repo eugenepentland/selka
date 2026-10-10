@@ -66,18 +66,18 @@ changed copy of an argument the caller still reads.
 
 ## Build for speed
 
-`mylang build`, `mylang run` and `mylang test` build in **debug** mode by default: one
+`mylang build`, `mylang run` and `mylang test` build in **optimized debug** mode by default: one
 LLVM unit per source module (plus units for generic instances, adapters and the
-entry), compiled without optimization, so an edit recompiles only the units whose
-text changed. `--release` (also spelled `--mode ReleaseFast`) builds the whole
+entry), after Core optimization and LLVM `-O2`. An edit recompiles units whose
+text changed, including callers affected by inlining or propagated facts. `--release` (also spelled `--mode ReleaseFast`) builds the whole
 program as one LLVM unit and optimizes it: the core's release passes run first
 (inlining, the fact pass that proves checks, loop unswitching and versioning,
 ownership), then LLVM optimizes across every module boundary.
 
 ```bash
-mylang build prog.my -o prog                  # debug: the edit-loop build
+mylang build prog.my -o prog                  # optimized debug: the edit-loop build
 mylang build prog.my -o prog-fast --release   # optimized whole program
-mylang build prog.my -o prog-dev --optimize-debug  # experimental: Core passes + per-module -O2
+mylang build prog.my -o prog-plain --unoptimized  # optimizer-off diagnostic build
 mylang run prog.my --release
 mylang test tests/ --release
 ```
@@ -85,28 +85,28 @@ mylang test tests/ --release
 Use `--release` for a binary you ship or time, and the default in the edit loop: a
 release build recompiles the whole program after any change, while a debug build
 recompiles only the changed modules. C sources passed with `--link` are compiled at
-the program's requested level (`-O0` in debug, `-O2` with `--optimize-debug`, `-O3`
+the program's requested level (`-O2` by default, `-O0` with `--unoptimized`, `-O3`
 in release); the runtime is compiled once per machine at `-O2` in every mode.
 The pinned Zig driver maps both requested `-O2` and `-O3` to Clang `-O2`, so the
 current Release advantage comes from whole-program compilation and omitting
 `debug(...)` output from standalone builds, not a higher LLVM optimization level.
 See the [driver qualification](tooling/native-build.md#effective-optimization-levels).
 
-The experimental `--optimize-debug` mode keeps module units and `debug(...)` lines
-while applying the Core optimization passes and LLVM `-O2`. It also works for
-`run` and `test`, including with `--verify-facts`. This targets programs that spend
-too long running in the default debug mode. It adds optimization work to builds;
-inlining and propagated facts may also invalidate callers after an edit. Compare
-runtime and rebuild time on your project. Source locations in trap traces are
-retained. GDB qualification found that variable inspection and normal statement
-stepping are unavailable in both ordinary and optimized Debug; optimization also
-removes some helper-function breakpoints. See the
+The default keeps module units and `debug(...)` lines while applying Core passes
+and LLVM `-O2`. `--optimize-debug` remains a compatibility alias, including on
+`run` and `test`. Use `--unoptimized` to disable optimization when investigating
+an optimizer bug or comparing compile costs. Optimization adds work to builds;
+inlining and propagated facts may also invalidate callers after an edit.
+Source locations in trap traces are retained. GDB qualification found that
+variable inspection and normal statement stepping are unavailable in both
+unoptimized and optimized Debug; optimization also removes some helper-function
+breakpoints. See the
 [debugger results](tooling/native-build.md#interactive-debugger-qualification).
 
 Nothing about the language's safety changes with the mode. Overflow, narrowing-cast,
 bounds, division-by-zero and budget checks run in every build and trap with the same
 code and message, so a program's result never depends on the mode; `--unchecked` is
-refused. What a release build does differently is prove checks away: a check the fact
+refused. Optimized debug and release can prove checks away: a check the fact
 pass shows can never fail is not emitted.
 
 ```mylang

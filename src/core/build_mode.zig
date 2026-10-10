@@ -17,9 +17,10 @@ pub const Mode = enum {
         };
     }
 
-    /// Select a CLI mode, rejecting incompatible optimization switches.
-    pub fn select(self: *Mode, requested: Mode) error{Usage}!void {
-        if (self.* != .debug and requested != .debug and self.* != requested) return error.Usage;
+    /// Select a CLI mode, rejecting a different mode only after an explicit selection.
+    pub fn select(self: *Mode, explicit: *bool, requested: Mode) error{Usage}!void {
+        if (explicit.* and self.* != requested) return error.Usage;
         self.* = requested;
+        explicit.* = true;
     }
 };

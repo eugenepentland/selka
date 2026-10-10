@@ -10,7 +10,7 @@ fn qualified(arena: std.mem.Allocator) !void {
     const source = try std.fs.path.join(arena, &.{ options.fixtures, "d_scalar_stores.my" });
     var environment = try std.testing.environ.createMap(arena);
     try environment.put("MYL_CORE_LEAKCHECK", "1");
-    for ([_][]const []const u8{ &.{}, &.{"--release"}, &.{ "--release", "--verify-facts" } }) |mode| {
+    for ([_][]const []const u8{ &.{"--unoptimized"}, &.{"--release"}, &.{ "--release", "--verify-facts" } }) |mode| {
         var argv: std.ArrayList([]const u8) = .empty;
         try argv.appendSlice(arena, &.{ options.core_path, "test", source, "--json", "--cache-dir", root });
         try argv.appendSlice(arena, mode);

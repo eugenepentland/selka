@@ -56,7 +56,7 @@ fn succeeded(ran: std.process.RunResult) bool {
 
 /// Debug, release, and release with the facts verified.
 // Optimized debug (`--optimize-debug`) runs the same passes as release over module units.
-const modes = [_][]const []const u8{ &.{}, &.{"--release"}, &.{ "--release", "--verify-facts" }, &.{"--optimize-debug"}, &.{ "--verify-facts", "--optimize-debug" } };
+const modes = [_][]const []const u8{ &.{"--unoptimized"}, &.{"--release"}, &.{ "--release", "--verify-facts" }, &.{"--optimize-debug"}, &.{ "--verify-facts", "--optimize-debug" } };
 
 // spec: NEW-CORE-U1-GROW-1
 test "a large byte buffer grows with realloc, and every append, reserve and shared append keeps its answer" {

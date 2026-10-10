@@ -19,7 +19,8 @@ const cli_run = @import("cli_run.zig");
 const cache_dir_flag = "--cache-dir";
 
 const usage =
-    \\usage: mylang build FILE.my -o OUT [--release | --optimize-debug] [--link FILE.c]... [--emit-llvm PATH] [--no-facts | --verify-facts] [--stats] [--zig PATH] [--cache-dir DIR] [--verify-cache] [--cache-report]
+    \\usage: mylang build FILE.my -o OUT [--release | --unoptimized | --optimize-debug] [--link FILE.c]... [--emit-llvm PATH] [--no-facts | --verify-facts] [--stats] [--zig PATH] [--cache-dir DIR] [--verify-cache] [--cache-report]
+    \\Default: optimized debug; --optimize-debug is a compatibility alias; --unoptimized disables optimization.
     \\       mylang check FILE.my [--typed] [--stats] [--timings=json] [--cache-dir DIR] [--no-cache]
     \\       mylang test FILE.my|DIR [options]   (`mylang test` alone lists them)
     \\       mylang coverage FILE.my...   (one line per function: ok with its checks, or the refusal reason)
@@ -31,7 +32,8 @@ const usage =
 /// `mylang test`'s usage: every flag `testCommand` and the CLI accept.
 const test_usage =
     \\usage: mylang test <entry.my|directory> [--filter SUBSTRING|GLOB] [--cases FILE] [--json]
-    \\  --release | --optimize-debug           --mode Debug|ReleaseFast
+    \\Default: optimized debug; --optimize-debug and --mode Debug select the same mode.
+    \\  --release | --unoptimized | --optimize-debug           --mode Debug|ReleaseFast
     \\  --no-facts | --verify-facts
     \\  --affected --against REF                run only tests reaching a declaration changed since REF
     \\  --jobs N                                tests at once (default: CPUs, capped by free memory)
@@ -170,20 +172,27 @@ pub fn buildCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
     const allocator = init.arena.allocator();
     var options: pipeline.Options = .{ .zig = init.environ_map.get("ZIG") orelse "zig" };
     var links: std.ArrayList([]const u8) = .empty;
+    var explicit_mode = false;
     var path: ?[]const u8 = null;
     var index: usize = 0;
     while (index < args.len) : (index += 1) {
         const arg = args[index];
         const has_value = index + 1 < args.len;
         if (std.mem.eql(u8, arg, "--release")) {
-            options.mode.select(.release) catch return 2;
+            options.mode.select(&explicit_mode, .release) catch return 2;
         } else if (std.mem.eql(u8, arg, "--optimize-debug")) {
-            options.mode.select(.optimized_debug) catch return 2;
+            options.mode.select(&explicit_mode, .optimized_debug) catch return 2;
+        } else if (std.mem.eql(u8, arg, "--unoptimized")) {
+            options.mode.select(&explicit_mode, .debug) catch return 2;
         } else if (std.mem.eql(u8, arg, "--project")) {
             // Project configuration and graph checks are always applied.
         } else if (std.mem.eql(u8, arg, "--mode") and has_value) {
             index += 1;
-            if (std.mem.eql(u8, args[index], "ReleaseFast")) options.mode.select(.release) catch return 2 else if (std.mem.eql(u8, args[index], "Debug")) options.mode.select(.debug) catch return 2 else return 2;
+            if (std.mem.eql(u8, args[index], "ReleaseFast")) {
+                options.mode.select(&explicit_mode, .release) catch return 2;
+            } else if (std.mem.eql(u8, args[index], "Debug")) {
+                options.mode.select(&explicit_mode, .optimized_debug) catch return 2;
+            } else return 2;
         } else if (std.mem.eql(u8, arg, "--no-facts")) {
             options.facts = .off;
         } else if (std.mem.eql(u8, arg, "--generic-vectors")) {
@@ -240,16 +249,19 @@ pub fn buildCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
     return status;
 }
 
+const mode_conflict = "--release, --unoptimized and --optimize-debug/--mode Debug are mutually exclusive";
+
 /// `mylang-core test` and `mylang test`: the per-test conformance runner (`test_runner.zig`).
 pub fn testCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
     var options: test_runner.Options = .{ .path = "", .build = .{ .zig = init.environ_map.get("ZIG") orelse "zig" } };
     var links: std.ArrayList([]const u8) = .empty;
+    var explicit_mode = false;
     var affected = false;
     var no_cache = false;
     var index: usize = 0;
     while (index < args.len) : (index += 1) {
         const start = index;
-        if (testControls(&options, args, &index) catch return invalidValue(init, args, start, index)) continue;
+        if (testControls(&options, args, &index, &explicit_mode) catch return invalidValue(init, args, start, index)) continue;
         const arg = args[index];
         const has_value = index + 1 < args.len;
         if (std.mem.eql(u8, arg, "--affected")) {
@@ -259,9 +271,11 @@ pub fn testCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
         } else if (flagValue(args, &index, "--against")) |reference| {
             options.controls.against = reference;
         } else if (std.mem.eql(u8, arg, "--release")) {
-            options.build.mode.select(.release) catch return testUsage(init, "--release and --optimize-debug are mutually exclusive");
+            options.build.mode.select(&explicit_mode, .release) catch return testUsage(init, mode_conflict);
         } else if (std.mem.eql(u8, arg, "--optimize-debug")) {
-            options.build.mode.select(.optimized_debug) catch return testUsage(init, "--release and --optimize-debug are mutually exclusive");
+            options.build.mode.select(&explicit_mode, .optimized_debug) catch return testUsage(init, mode_conflict);
+        } else if (std.mem.eql(u8, arg, "--unoptimized")) {
+            options.build.mode.select(&explicit_mode, .debug) catch return testUsage(init, mode_conflict);
         } else if (std.mem.eql(u8, arg, "--json")) {
             options.json = true;
         } else if (std.mem.eql(u8, arg, "--no-facts")) {
@@ -327,12 +341,16 @@ fn takesValue(arg: []const u8) bool {
     return false;
 }
 
-fn testControls(options: *test_runner.Options, args: []const []const u8, index: *usize) error{Usage}!bool {
+fn testControls(options: *test_runner.Options, args: []const []const u8, index: *usize, explicit_mode: *bool) error{Usage}!bool {
     const arg = args[index.*];
     const has_value = index.* + 1 < args.len;
     if (std.mem.eql(u8, arg, "--mode") and has_value) {
         index.* += 1;
-        if (std.mem.eql(u8, args[index.*], "ReleaseFast")) try options.build.mode.select(.release) else if (std.mem.eql(u8, args[index.*], "Debug")) try options.build.mode.select(.debug) else return error.Usage;
+        if (std.mem.eql(u8, args[index.*], "ReleaseFast")) {
+            try options.build.mode.select(explicit_mode, .release);
+        } else if (std.mem.eql(u8, args[index.*], "Debug")) {
+            try options.build.mode.select(explicit_mode, .optimized_debug);
+        } else return error.Usage;
     } else if (std.mem.eql(u8, arg, "--force")) {
         options.controls.force = true;
     } else if (std.mem.eql(u8, arg, "--cases") and has_value) {
