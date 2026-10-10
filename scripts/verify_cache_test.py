@@ -4,6 +4,7 @@ import contextlib
 import copy
 import fcntl
 import io
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -36,13 +37,14 @@ if phase=='plan':
     path.write_bytes((root/'gate-contract.json').read_bytes())
 elif phase=='prepare':
     artifacts={{}}
+    values=json.loads((root/'.artifact-values.json').read_text()) if (root/'.artifact-values.json').exists() else {{}}
     for name in ['mylang','units','cli','core']:
         path=root/'zig-out/bin'/name; path.parent.mkdir(parents=True,exist_ok=True)
-        path.write_bytes(b'fake-native-'+name.encode()); artifacts[name]=str(path)
+        path.write_bytes(b'fake-native-'+name.encode()+values.get(name,'').encode()); artifacts[name]=str(path)
     (root/'zig-out/verification/artifacts.json').write_text(json.dumps({{'version':1,'artifacts':artifacts}}))
     package=root/'zig-out/libexec/mylang/components'; package.mkdir(parents=True,exist_ok=True)
     for name in ['test-index','cache-plan']:
-        (package/name).write_bytes(b'fake-component')
+        (package/name).write_bytes(b'fake-component'+values.get('component:'+name,'').encode())
         (package/(name+'.json')).write_text(json.dumps({{'artifact':name}}))
 elif (root/'.failure').exists():
     raise SystemExit(int((root/'.failure').read_text()))
@@ -97,7 +99,7 @@ class VerificationCoordinator(unittest.TestCase):
     def save_plan(self):
         self.write('gate-contract.json', json.dumps(self.plan))
 
-    def admit(self, root, kind, argv, env, unchanged):
+    def admit(self, root, kind, argv, env, unchanged, timings=None):
         self.admissions.append((kind, argv))
         if kind == 'gate' and self.before_gate:
             self.before_gate()
@@ -109,6 +111,10 @@ class VerificationCoordinator(unittest.TestCase):
                                 stderr=subprocess.PIPE, timeout=10).returncode
         if kind == 'gate' and self.after_gate:
             self.after_gate()
+        if timings is not None:
+            timings.append({'kind': kind, 'status': status, 'admitted': True,
+                            'admission_wait_seconds': 0.0, 'validation_seconds': 0.0,
+                            'worker_seconds': 0.0, 'observed_held_seconds': 0.0, 'elapsed_seconds': 0.0})
         return status, 0.0
 
     def execute(self, options=None, force=False):
@@ -152,6 +158,74 @@ class VerificationCoordinator(unittest.TestCase):
         self.assertEqual(self.states(), {'unit': 'execute', 'docs': 'reused'})
         self.assertEqual(len(self.events('prepare')), 1)
         self.assertIn('-Dtest-rerun=true', self.events('gate')[-1]['argv'])
+
+    def artifact_cohorts(self):
+        self.plan['groups'][0]['artifacts'] = ['units']
+        self.plan['groups'][1]['artifacts'] = ['cli']
+        self.plan['groups'].extend([dict(group('pure', ['inputs/docs/']), artifacts=[]),
+                                    group('conservative', ['inputs/docs/'])])
+        self.plan['coverage'].update(required_actions=4, registered_actions=4)
+        self.save_plan()
+
+    def test_artifact_change_executes_only_dependent_and_conservative_cohorts(self):
+        self.artifact_cohorts()
+        self.assertEqual(self.execute(), 0)
+        self.write('.artifact-values.json', json.dumps({'units': '-changed'}))
+        (self.root / 'zig-out/bin/units').write_bytes(b'fake-native-units-changed')
+        self.assertEqual(self.execute(), 0)
+        self.assertEqual(self.states(), {'unit': 'execute', 'docs': 'reused', 'pure': 'reused', 'conservative': 'execute'})
+        argv = self.events('gate')[-1]['argv']
+        self.assertIn('verification-unit', argv)
+        self.assertIn('verification-conservative', argv)
+        self.assertNotIn('verification-docs', argv)
+        self.assertNotIn('verification-pure', argv)
+        self.assertEqual(self.execute(), 0)
+        self.assertEqual(set(self.states().values()), {'reused'})
+
+    def test_narrowed_cohorts_still_invalidate_for_configuration_change(self):
+        self.artifact_cohorts()
+        self.assertEqual(self.execute(), 0)
+        self.write('config.zig', 'changed configuration')
+        self.assertEqual(self.execute(), 0)
+        self.assertEqual(set(self.states().values()), {'execute'})
+
+    def test_component_change_invalidates_selected_provider_but_preserves_pure_cohort(self):
+        self.artifact_cohorts()
+        self.plan['groups'][0]['artifacts'] = ['components']
+        self.save_plan()
+        self.assertEqual(self.execute(), 0)
+        self.write('.artifact-values.json', json.dumps({'component:cache-plan': '-changed'}))
+        (self.root / 'zig-out/libexec/mylang/components/cache-plan').write_bytes(b'fake-component-changed')
+        self.assertEqual(self.execute(), 0)
+        self.assertEqual(self.states(), {'unit': 'execute', 'docs': 'reused', 'pure': 'reused', 'conservative': 'execute'})
+
+    def test_narrowed_cohorts_keep_aba_guard_on_unselected_artifacts(self):
+        self.artifact_cohorts()
+        artifact = self.root / 'zig-out/bin/core'
+        self.after_gate = lambda: artifact.write_bytes(b'changed unrelated provider during execution')
+        self.assertEqual(self.execute(), coordinator.RETRY)
+        self.assertEqual(self.receipts(), [])
+
+    def test_unknown_artifact_selector_fails_closed_before_gate_execution(self):
+        self.plan['groups'][0]['artifacts'] = ['not-a-provider']
+        self.save_plan()
+        with self.assertRaisesRegex(coordinator.VerificationError, 'unavailable artifact provider'):
+            self.execute()
+        self.assertEqual(self.events('gate'), [])
+        self.assertEqual(self.receipts(), [])
+
+    def test_admission_and_snapshot_phases_are_reported_without_warm_admission(self):
+        self.assertEqual(self.execute(), 0)
+        report = coordinator.read_record(self.cache / 'last-run.json')
+        self.assertEqual([event['kind'] for event in report['admissions']], ['build', 'build', 'gate'])
+        for name in ['source_snapshot_seconds', 'action_input_snapshot_seconds',
+                     'prepare_lookup_outside_admission_seconds', 'final_validation_seconds', 'publication_seconds']:
+            self.assertGreaterEqual(report['timings'][name], 0)
+        self.assertEqual(self.execute(), 0)
+        warm = coordinator.read_record(self.cache / 'last-run.json')
+        self.assertEqual(warm['admissions'], [])
+        self.assertEqual(warm['build_admitted_seconds'], 0)
+        self.assertEqual(warm['gate_admitted_seconds'], 0)
 
     def test_changed_options_environment_and_tool_each_invalidate(self):
         self.assertEqual(self.execute(), 0)
@@ -307,11 +381,17 @@ class VerificationCoordinator(unittest.TestCase):
         bash = shutil.which('bash', path=environment['PATH'])
         self.assertIsNotNone(bash)
         command = [bash, '-c', 'printf shell-clean > "$1"', 'verification-shell', str(completion)]
-        status, _ = REAL_ADMISSION(self.root, 'gate', command, environment, lambda: True)
+        timings = []
+        status, held = REAL_ADMISSION(self.root, 'gate', command, environment, lambda: True, timings=timings)
         self.assertEqual(status, 0)
         self.assertEqual(completion.read_text(), 'shell-clean')
         self.assertFalse(startup_marker.exists())
         self.assertFalse(function_marker.exists())
+        self.assertEqual(len(timings), 1)
+        self.assertEqual(timings[0]['observed_held_seconds'], held)
+        self.assertGreater(timings[0]['worker_seconds'], 0)
+        self.assertGreaterEqual(held, timings[0]['validation_seconds'] + timings[0]['worker_seconds'])
+        self.assertAlmostEqual(timings[0]['elapsed_seconds'], timings[0]['admission_wait_seconds'] + held)
 
     def test_new_earlier_path_directory_cannot_shadow_normalized_worker_tool(self):
         tool = self.write('tools/existing/identity-tool', '#!/bin/sh\nprintf selected-tool\n')
@@ -458,6 +538,10 @@ class VerificationCoordinator(unittest.TestCase):
         boolean_version = copy.deepcopy(self.plan)
         boolean_version['version'] = True
         cases.append(boolean_version)
+        for selection in [True, ['units', 'units'], ['']]:
+            invalid_selector = copy.deepcopy(self.plan)
+            invalid_selector['groups'][0]['artifacts'] = selection
+            cases.append(invalid_selector)
         for index, value in enumerate(cases):
             with self.subTest(case=index):
                 path = self.write('invalid-inventory.json', json.dumps(value))
@@ -471,6 +555,34 @@ class VerificationCoordinator(unittest.TestCase):
         with self.assertRaises(coordinator.VerificationError):
             coordinator.inventory(path)
 
+    def test_fixture_membership_coverage_cannot_be_declared_cacheable(self):
+        self.plan['groups'].append(group('coverage', ['inputs/unit/'], True))
+        self.plan['coverage'].update(required_actions=3, registered_actions=3)
+        self.save_plan()
+        with self.assertRaisesRegex(coordinator.VerificationError, 'coverage must always execute'):
+            self.execute()
+        self.assertEqual(self.events('gate'), [])
+        self.plan['groups'][-1]['cacheable'] = False
+        self.save_plan()
+        self.assertEqual(self.execute(), 0)
+        self.assertEqual(self.execute(), 0)
+        self.assertEqual(self.states(), {'unit': 'reused', 'docs': 'reused', 'coverage': 'fresh'})
+
+    def test_coverage_verdict_changes_when_a_negative_fixture_lookup_becomes_present(self):
+        specification = importlib.util.spec_from_file_location('coverage_fixture', REPOSITORY / 'tests/test_inputs_coverage.py')
+        coverage = importlib.util.module_from_spec(specification)
+        specification.loader.exec_module(coverage)
+        self.write('coverage-fixture/src/root.zig', 'test "fixture" {\n    _ = "experiments/new.my";\n}\n')
+        inputs = self.write('coverage-fixture/build_test_inputs.zig', 'pub const root = [_][]const u8{"src/"};\n')
+        fixture = self.root / 'coverage-fixture'
+        with patch.object(coverage, 'ROOT', fixture), patch.object(coverage, 'INPUTS', inputs), \
+                patch.object(coverage, 'ROOTS', {'src/root.zig': 'root'}):
+            self.assertEqual(coverage.gaps(), [])
+            self.write('coverage-fixture/experiments/new.my', 'func main() -> int: return 0\n')
+            problems = coverage.gaps()
+            self.assertEqual(len(problems), 1)
+            self.assertIn('experiments/new.my', problems[0])
+
     def test_private_slot_handshake_revalidates_after_queue_and_never_launches_changed_worker(self):
         slots = self.root / '.slots'
         slots.mkdir()
@@ -479,13 +591,13 @@ class VerificationCoordinator(unittest.TestCase):
                            MYLANG_TIMING_CPUS='')
         marker = self.root / '.worker-started'
         command = [sys.executable, '-c', 'from pathlib import Path; Path(__import__("sys").argv[1]).touch()', str(marker)]
-        results, errors = [], []
+        results, errors, timings = [], [], []
         with (slots / 'gate1.lock').open('w') as lock, Snapshot(self.root, ['inputs/unit/fixture.txt']) as snapshot:
             fcntl.flock(lock, fcntl.LOCK_EX)
 
             def admitted():
                 try:
-                    results.append(coordinator.run_admitted(self.root, 'gate', command, environment, snapshot.unchanged))
+                    results.append(coordinator.run_admitted(self.root, 'gate', command, environment, snapshot.unchanged, timings=timings))
                 except BaseException as error:
                     errors.append(error)
 
@@ -507,6 +619,10 @@ class VerificationCoordinator(unittest.TestCase):
         self.assertEqual(errors, [])
         self.assertEqual(results[0][0], coordinator.RETRY)
         self.assertFalse(marker.exists())
+        self.assertEqual(len(timings), 1)
+        self.assertEqual(timings[0]['worker_seconds'], 0)
+        self.assertTrue(timings[0]['admitted'])
+        self.assertGreater(timings[0]['admission_wait_seconds'], 0)
         self.assertEqual(list((slots / 'queue-gate').glob('*.wait')), [])
 
 

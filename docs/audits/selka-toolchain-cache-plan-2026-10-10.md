@@ -25,6 +25,23 @@ on the feature branch.
 See the [original Wave 2 evidence](../../experiments/cache-wave2-20261010/REPORT.md)
 and [completed optimization correctness pass](../../experiments/cache-wave2-performance-20261010/REPORT.md).
 
+Wave 3's first implementation was committed as `11b684eea`. The complete gate
+passed 110 steps and 2,601 native tests, plus 49 coordinator/snapshot regressions.
+Its unchanged rerun reused 29 cohorts, selected nine fresh cohorts, requested no
+build admission and held gate admission for 21.097 seconds. These operational
+observations are not isolated edit-loop benchmarks; see the
+[Wave 3 qualification](../../experiments/cache-wave3-20261010/REPORT.md).
+
+The user subsequently resumed the measurement and lock-occupancy follow-ups.
+Main `0488ebb2b` was merged as `8a0bdb487`, bringing Juice runtime collectors and
+compile-only estimation experiments. The follow-up explicitly inventories the
+new runtime check, narrows reviewed cohorts' artifact dependencies, records
+admission/validation/worker timing separately, and moves pack preparation outside
+its interprocess publication lock. It retains conservative dependencies for
+unreviewed native cohorts and requires live input-coverage membership checks.
+Qualification and measured limits are recorded in
+[the lock-occupancy follow-up](../../experiments/cache-lock-followup-20261010/REPORT.md).
+
 ## Objective and contract
 
 After a cold qualification, reuse every completed deterministic computation

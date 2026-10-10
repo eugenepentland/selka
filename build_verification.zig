@@ -9,6 +9,8 @@ pub const Group = struct {
     target: []const u8,
     label: []const u8,
     inputs: []const []const u8,
+    /// Null keeps all prepared artifacts; explicit labels narrow reviewed cohorts.
+    artifacts: ?[]const []const u8 = null,
     cacheable: bool,
     reason: []const u8,
 };
@@ -57,6 +59,17 @@ pub const Registry = struct {
             }
         }
         @panic("verification action has no declared input list");
+    }
+
+    /// Opt a reviewed whole cohort into exact prepared artifact dependencies.
+    pub fn artifactDependencies(self: *Registry, id: []const u8, labels: []const []const u8) void {
+        for (self.entries.items) |*entry| {
+            if (std.mem.eql(u8, entry.group.id, id)) {
+                entry.group.artifacts = labels;
+                return;
+            }
+        }
+        @panic("verification artifact dependencies name an unregistered cohort");
     }
 
     /// Export only original test/fmt dependencies and preserve unknown checks.

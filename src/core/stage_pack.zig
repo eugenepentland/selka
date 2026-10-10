@@ -26,6 +26,18 @@ const Validation = struct { stat: std.Io.File.Stat, length: u64, digest: Digest 
 const File = struct { validation: ?Validation = null, name: []const u8, kind: enum { journal, pack }, scanned: u64 = 0, blocks: []const Block = &.{} };
 const Location = struct { file: u32, record: Record };
 const CachedBlock = struct { file: u32, block: u32, bytes: []const u8, stat: std.Io.File.Stat };
+const Prepared = struct { bytes: []const u8, index: Index };
+const Pending = struct { prepared: Prepared, name: []const u8, final_path: []const u8, temporary: []const u8 };
+const Source = struct { file: std.Io.File, path: []const u8, stat: std.Io.File.Stat };
+/// Deterministic publication work; preparation counters exclude the sequence lock.
+pub const Publication = struct {
+    filename_lookups: u64 = 0,
+    refreshes: u64 = 0,
+    packs_prepared: u64 = 0,
+    pack_bytes_prepared: u64 = 0,
+    save_bytes_prepared: u64 = 0,
+    sequence_locks: u64 = 0,
+};
 /// Packed-block work, excluding direct journal reads and ordinary cache metadata.
 pub const Statistics = struct {
     packed_bytes_read: u64 = 0,
@@ -33,6 +45,7 @@ pub const Statistics = struct {
     blocks_decoded: u64 = 0,
     payload_bytes_returned: u64 = 0,
     block_cache_hits: u64 = 0,
+    publication: Publication = .{},
 };
 const Journal = struct { file: u32, length: u64 = journal_header, records: std.ArrayList(Record) = .empty, bytes: usize = 0 };
 
@@ -40,7 +53,14 @@ const Journal = struct { file: u32, length: u64 = journal_header, records: std.A
 pub const State = struct {
     config: struct { a: std.mem.Allocator, io: std.Io, root: []const u8, identity: Digest, compression: compression.Policy },
     mutex: std.Io.Mutex = .init,
-    catalog: struct { files: std.ArrayList(File) = .empty, entries: std.AutoHashMapUnmanaged(Digest, Location) = .empty, sequence: u64 = 0, max_sequence: u64 = 0, scanned: bool = false } = .{},
+    catalog: struct {
+        files: std.ArrayList(File) = .empty,
+        names: std.StringHashMapUnmanaged(u32) = .empty,
+        entries: std.AutoHashMapUnmanaged(Digest, Location) = .empty,
+        sequence: u64 = 0,
+        max_sequence: u64 = 0,
+        scanned: bool = false,
+    } = .{},
     journal: ?Journal = null,
     cached: struct { blocks: [32]?CachedBlock = @splat(null), statistics: Statistics = .{} } = .{},
 
@@ -61,6 +81,7 @@ pub const State = struct {
         }
         for (self.cached.blocks) |cached| if (cached) |block| a.free(block.bytes);
         self.catalog.files.deinit(a);
+        self.catalog.names.deinit(a);
         self.catalog.entries.deinit(a);
         a.destroy(self);
     }
@@ -91,6 +112,7 @@ pub const State = struct {
     fn refresh(self: *State, a: std.mem.Allocator, force: bool) Error!void {
         const sequence = try self.counter();
         if (!force and self.catalog.scanned and sequence == self.catalog.sequence) return;
+        self.cached.statistics.publication.refreshes += 1;
         var directory = std.Io.Dir.cwd().openDir(self.config.io, self.config.root, .{ .iterate = true }) catch return;
         defer directory.close(self.config.io);
         var iterator = directory.iterate();
@@ -108,11 +130,15 @@ pub const State = struct {
     }
 
     fn fileId(self: *State, file: File) Error!u32 {
-        for (self.catalog.files.items, 0..) |known, index| if (std.mem.eql(u8, known.name, file.name)) return @intCast(index);
+        self.cached.statistics.publication.filename_lookups += 1;
+        if (self.catalog.names.get(file.name)) |id| return id;
+        try self.catalog.names.ensureUnusedCapacity(self.config.a, 1);
+        try self.catalog.files.ensureUnusedCapacity(self.config.a, 1);
         const name = try self.config.a.dupe(u8, file.name);
-        errdefer self.config.a.free(name);
-        try self.catalog.files.append(self.config.a, .{ .name = name, .kind = file.kind });
-        return @intCast(self.catalog.files.items.len - 1);
+        const id: u32 = @intCast(self.catalog.files.items.len);
+        self.catalog.files.appendAssumeCapacity(.{ .name = name, .kind = file.kind });
+        self.catalog.names.putAssumeCapacity(name, id);
+        return id;
     }
 
     fn admit(self: *State, id: u32, record: Record) Error!void {
@@ -304,7 +330,9 @@ pub const State = struct {
 
     fn sequenceLock(self: *State, a: std.mem.Allocator) Error!?std.Io.File {
         std.Io.Dir.cwd().createDirPath(self.config.io, self.config.root) catch return null;
-        return std.Io.Dir.cwd().createFile(self.config.io, try self.path(a, "sequence"), .{ .read = true, .truncate = false, .lock = .exclusive }) catch null;
+        const file = std.Io.Dir.cwd().createFile(self.config.io, try self.path(a, "sequence"), .{ .read = true, .truncate = false, .lock = .exclusive }) catch return null;
+        self.cached.statistics.publication.sequence_locks += 1;
+        return file;
     }
 
     fn writeCounter(self: *State, file: std.Io.File, sequence: u64) bool {
@@ -369,6 +397,10 @@ pub const State = struct {
         var scratch = std.heap.ArenaAllocator.init(self.config.a);
         defer scratch.deinit();
         const a = scratch.allocator();
+        const payload_checksum = checksum(payload);
+        const bytes = try a.alloc(u8, record_header + payload.len);
+        @memcpy(bytes[record_header..], payload);
+        self.cached.statistics.publication.save_bytes_prepared += payload.len;
         const lock = try self.sequenceLock(a) orelse return false;
         defer lock.close(self.config.io);
         try self.refresh(a, false);
@@ -379,14 +411,12 @@ pub const State = struct {
         // Reserve before publication so OOM cannot leave a successful unindexed save.
         try journal.records.ensureUnusedCapacity(self.config.a, 1);
         try self.catalog.entries.ensureUnusedCapacity(self.config.a, 1);
-        const record: Record = .{ .key = key, .checksum = checksum(payload), .sequence = sequence, .offset = journal.length + record_header, .length = @intCast(payload.len) };
-        const bytes = try a.alloc(u8, record_header + payload.len);
+        const record: Record = .{ .key = key, .checksum = payload_checksum, .sequence = sequence, .offset = journal.length + record_header, .length = @intCast(payload.len) };
         std.mem.writeInt(u64, bytes[0..8], payload.len, .little);
         std.mem.writeInt(u64, bytes[8..16], sequence, .little);
         @memcpy(bytes[16..48], &key);
         @memcpy(bytes[48..80], &record.checksum);
         @memcpy(bytes[80..112], &checksum(bytes[0..80]));
-        @memcpy(bytes[record_header..], payload);
         file.writePositionalAll(self.config.io, bytes, journal.length) catch return false;
         if (!self.writeCounter(lock, sequence)) return false;
         journal.length += bytes.len;
@@ -399,7 +429,61 @@ pub const State = struct {
         return true;
     }
 
-    /// Seal a bounded journal; failure leaves its durable records available.
+    fn openSource(self: *State, a: std.mem.Allocator) Error!?Source {
+        const journal = self.journal.?;
+        const name = self.catalog.files.items[journal.file].name;
+        const path_name = try self.path(a, name);
+        const file = std.Io.Dir.cwd().openFile(self.config.io, path_name, .{ .follow_symlinks = false }) catch return null;
+        const stat = file.stat(self.config.io) catch {
+            file.close(self.config.io);
+            return null;
+        };
+        const source: Source = .{ .file = file, .path = path_name, .stat = stat };
+        if (!self.validSource(source) or !self.validJournal(file, journal.length)) {
+            file.close(self.config.io);
+            return null;
+        }
+        return source;
+    }
+
+    fn validSource(self: *State, source: Source) bool {
+        const opened = source.file.stat(self.config.io) catch return false;
+        const current = std.Io.Dir.cwd().statFile(self.config.io, source.path, .{ .follow_symlinks = false }) catch return false;
+        return current.kind == .file and sameStat(source.stat, opened) and sameStat(source.stat, current) and
+            self.validJournal(source.file, source.stat.size);
+    }
+
+    fn nextSequence(self: *State) ?u64 {
+        return std.math.add(u64, @max(self.catalog.sequence, self.catalog.max_sequence), 1) catch null;
+    }
+
+    fn commitPack(self: *State, a: std.mem.Allocator, pending: Pending, source: Source) Error!bool {
+        const lock = try self.sequenceLock(a) orelse return false;
+        defer lock.close(self.config.io);
+        try self.refresh(a, false);
+        if (!self.validSource(source)) return false;
+        const sequence = self.nextSequence() orelse return false;
+        if (!try self.publishBytes(pending)) return false;
+        if (!self.writeCounter(lock, sequence)) return false;
+        self.catalog.sequence = sequence;
+        return true;
+    }
+
+    fn finishJournal(self: *State, a: std.mem.Allocator, source: Source) Error!bool {
+        const lock = try self.sequenceLock(a) orelse return false;
+        defer lock.close(self.config.io);
+        try self.refresh(a, false);
+        if (!self.validSource(source)) return false;
+        const sequence = self.nextSequence() orelse return false;
+        if (!self.writeCounter(lock, sequence)) return false;
+        std.Io.Dir.cwd().deleteFile(self.config.io, source.path) catch return false;
+        self.journal.?.records.deinit(self.config.a);
+        self.journal = null;
+        self.catalog.sequence = sequence;
+        return true;
+    }
+
+    /// Prepare bounded packs outside the publication lock; retain the journal until every commit succeeds.
     pub fn flush(self: *State) Error!bool {
         self.mutex.lockUncancelable(self.config.io);
         defer self.mutex.unlock(self.config.io);
@@ -407,13 +491,9 @@ pub const State = struct {
         var scratch = std.heap.ArenaAllocator.init(self.config.a);
         defer scratch.deinit();
         const a = scratch.allocator();
-        const lock = try self.sequenceLock(a) orelse return false;
-        defer lock.close(self.config.io);
-        try self.refresh(a, false);
+        const source = try self.openSource(a) orelse return false;
+        defer source.file.close(self.config.io);
         const journal = &self.journal.?;
-        const source_name = self.catalog.files.items[journal.file].name;
-        const source = std.Io.Dir.cwd().openFile(self.config.io, try self.path(a, source_name), .{}) catch return false;
-        defer source.close(self.config.io);
         var first: usize = 0;
         while (first < journal.records.items.len) {
             var end = first;
@@ -421,19 +501,17 @@ pub const State = struct {
             while (end < journal.records.items.len and (bytes < pack_target or end == first)) : (end += 1) bytes += record_header + journal.records.items[end].length;
             var chunk = std.heap.ArenaAllocator.init(self.config.a);
             defer chunk.deinit();
-            if (!try self.publish(chunk.allocator(), source, journal.records.items[first..end])) return false;
+            const work = chunk.allocator();
+            const prepared = try self.prepare(work, source.file, journal.records.items[first..end]) orelse return false;
+            const pending = try self.stageBytes(work, prepared) orelse return false;
+            defer self.discard(pending.temporary);
+            if (!try self.commitPack(work, pending, source)) return false;
             first = end;
         }
-        const sequence = std.math.add(u64, @max(self.catalog.sequence, self.catalog.max_sequence), 1) catch return false;
-        if (!self.writeCounter(lock, sequence)) return false;
-        std.Io.Dir.cwd().deleteFile(self.config.io, try self.path(a, source_name)) catch return false;
-        journal.records.deinit(self.config.a);
-        self.journal = null;
-        self.catalog.sequence = sequence;
-        return true;
+        return self.finishJournal(a, source);
     }
 
-    fn publish(self: *State, a: std.mem.Allocator, source: std.Io.File, input: []const Record) Error!bool {
+    fn prepare(self: *State, a: std.mem.Allocator, source: std.Io.File, input: []const Record) Error!?Prepared {
         const records = try a.dupe(Record, input);
         std.mem.sort(Record, records, {}, smallerRecord);
         var blocks: std.ArrayList(Block) = .empty;
@@ -448,11 +526,11 @@ pub const State = struct {
             var offset: usize = 0;
             for (records[first..end]) |record| {
                 const size = record_header + record.length;
-                if ((source.readPositionalAll(self.config.io, plain[offset..][0..size], record.offset - record_header) catch return false) != size) return false;
+                if ((source.readPositionalAll(self.config.io, plain[offset..][0..size], record.offset - record_header) catch return null) != size) return null;
                 const header: *const [record_header]u8 = plain[offset..][0..record_header];
-                if (!validRecordHeader(header)) return false;
-                if (!std.meta.eql(record, readRecord(header, record.offset))) return false;
-                if (!std.mem.eql(u8, &checksum(plain[offset + record_header ..][0..record.length]), &record.checksum)) return false;
+                if (!validRecordHeader(header)) return null;
+                if (!std.meta.eql(record, readRecord(header, record.offset))) return null;
+                if (!std.mem.eql(u8, &checksum(plain[offset + record_header ..][0..record.length]), &record.checksum)) return null;
                 var next = record;
                 next.block = @intCast(blocks.items.len);
                 next.offset = offset + record_header;
@@ -474,7 +552,7 @@ pub const State = struct {
         }
         writer.bytes.clearRetainingCapacity();
         try writer.write(Index, .{ .blocks = blocks.items, .records = adjusted.items });
-        if (writer.bytes.items.len != index_length or index_length > maximum_index) return false;
+        if (writer.bytes.items.len != index_length or index_length > maximum_index) return null;
         const bytes = try a.alloc(u8, @intCast(offset));
         @memcpy(bytes[0..pack_magic.len], pack_magic);
         @memcpy(bytes[pack_magic.len..][0..32], &self.config.identity);
@@ -482,7 +560,7 @@ pub const State = struct {
         @memcpy(bytes[pack_magic.len + 40 ..][0..32], &checksum(writer.bytes.items));
         @memcpy(bytes[pack_header..][0..index_length], writer.bytes.items);
         for (blocks.items, encoded.items) |block, content| @memcpy(bytes[@intCast(block.offset)..][0..content.len], content);
-        return self.publishBytes(a, bytes, .{ .blocks = blocks.items, .records = adjusted.items });
+        return .{ .bytes = bytes, .index = .{ .blocks = blocks.items, .records = adjusted.items } };
     }
 
     fn sameStat(lhs: std.Io.File.Stat, rhs: std.Io.File.Stat) bool {
@@ -513,30 +591,38 @@ pub const State = struct {
         return self.cached.statistics;
     }
 
-    fn publishBytes(self: *State, a: std.mem.Allocator, bytes: []const u8, index: Index) Error!bool {
+    fn stageBytes(self: *State, a: std.mem.Allocator, prepared: Prepared) Error!?Pending {
         var nonce: [16]u8 = undefined;
         std.Io.random(self.config.io, &nonce);
         const name = try std.fmt.allocPrint(a, "{s}{s}", .{ std.fmt.bytesToHex(nonce, .lower), pack_suffix });
         const temporary = try std.fmt.allocPrint(a, "{s}.partial", .{name});
         const final_path = try self.path(a, name);
         const temp_path = try self.path(a, temporary);
-        defer self.discard(temp_path);
-        const id = try self.fileId(.{ .name = name, .kind = .pack });
+        std.Io.Dir.cwd().writeFile(self.config.io, .{ .sub_path = temp_path, .data = prepared.bytes }) catch {
+            self.discard(temp_path);
+            return null;
+        };
+        self.cached.statistics.publication.packs_prepared += 1;
+        self.cached.statistics.publication.pack_bytes_prepared += prepared.bytes.len;
+        return .{ .prepared = prepared, .name = name, .final_path = final_path, .temporary = temp_path };
+    }
+
+    fn publishBytes(self: *State, pending: Pending) Error!bool {
+        const index = pending.prepared.index;
+        const bytes = pending.prepared.bytes;
+        const id = try self.fileId(.{ .name = pending.name, .kind = .pack });
+        try self.catalog.entries.ensureUnusedCapacity(self.config.a, @intCast(index.records.len));
         const blocks = try self.config.a.dupe(Block, index.blocks);
         var owned = true;
         errdefer if (owned) self.config.a.free(blocks);
-        std.Io.Dir.cwd().writeFile(self.config.io, .{ .sub_path = temp_path, .data = bytes }) catch {
-            self.config.a.free(blocks);
-            return false;
-        };
-        std.Io.Dir.cwd().rename(temp_path, std.Io.Dir.cwd(), final_path, self.config.io) catch {
+        std.Io.Dir.cwd().rename(pending.temporary, std.Io.Dir.cwd(), pending.final_path, self.config.io) catch {
             self.config.a.free(blocks);
             return false;
         };
         self.catalog.files.items[id].blocks = blocks;
         owned = false;
         self.catalog.files.items[id].scanned = bytes.len;
-        const stat = std.Io.Dir.cwd().statFile(self.config.io, final_path, .{}) catch return false;
+        const stat = std.Io.Dir.cwd().statFile(self.config.io, pending.final_path, .{}) catch return false;
         self.catalog.files.items[id].validation = .{ .stat = stat, .length = std.mem.readInt(u64, bytes[pack_magic.len + 32 ..][0..8], .little), .digest = bytes[pack_magic.len + 40 ..][0..32].* };
         for (index.records) |record| try self.admit(id, record);
         return true;

@@ -1,0 +1,30 @@
+{
+  "scope": "Compact committed evidence and primary retained raw records after final restoration check",
+  "files": {
+    "PLAN.json": "7ae9b34e38114d38c1d62336884f705dba79cc70e97dfe2a7be22e453417624f",
+    "REPORT.md": "718c6c64fcfda777fe79da6f894d71d0361cef07b9304efe1103cdad820b7f29",
+    "fixture-original-hashes.json": "938a08163f249ac77521adde154a5120fbfd3977581802eb6cb2f634f5f7082b",
+    "harness-hashes.json": "89540b6ca59b3fe83978fc772b0eb1c41f6f410b2aab32d3d4e972c3c5645384",
+    "paired-summary.json": "7a194de57029184c549cbcc84370d6493a0009bf848e8fb640dca32b7d983b63",
+    "post-benchmark-identity.json": "7bbd0b4577e32024494e151a681834d9f857acb2df79fa86c5b719f5cac6e042",
+    "profile-after-summary.json": "e2b03c43688fb988f86e4b4c0d3397dec0fdac7b33e07266d714bd5bddb1485d",
+    "profile-before-summary.json": "bd14bf10c799259ccaf6c2866e88be376a5bc35dd17136f97c60b91c35592f86",
+    "profile-comparison.json": "092b2c06088bb422a7bd28e331fcbe69529966b67bbabcce651069ea29adc121",
+    "profile-fixture-parity.json": "ff55e0f7ac1d5464b7948f9a9ffab00c157ac3cf46d9b2cb0169553935cc0a6d",
+    "profile-qualification.json": "8ea199b4c25aed9b81745ee5338eaa26b448cce552d89c0aaeabe521618409d0",
+    "retention.json": "f5fab46b97152f5a95356564f87ee01bdf812a6c5899bb873daa1d1a2c9477b4",
+    "run_with_admission.py": "b46d5c0092a1a8f6c2d8046fbd0097880df00f4ed5b3610a8bcf6cfb8a32fd84",
+    "summarize.py": "7852ec24acf9c4199cde2bc348302c2038720039f1f0b57976a02ccc616066ea"
+  },
+  "primary_raw_files": {
+    "admission-paired-510k/results.json": "0f9a618b4e2b9b6258b9261bddc7ea9cd27cbed7be15f3e5f2eac2b0bd7e0c17",
+    "admission-profile-optimized-510k/results.json": "10ca6231aa593e020ec6a653e01c6acf7ce742d885c13de0082cee7aae391afc",
+    "paired-510k/results.json": "1a50b99b096dfeab242565357a309dd24bfe5c6c5f51377347a73e07f2435033",
+    "profile-optimized-510k/helper.perf-report.txt": "f7df63028295682792eb6cb7dd8c04eb49f9455246cdc30d8d9bc5888c16279c",
+    "profile-optimized-510k/helper.perf.data": "3a419763e0f1dd047ca023dcd328981417cad806750beb4f69d69f585668fdbd",
+    "profile-optimized-510k/results.json": "612e37e43a46f6aac9989169924e86eb01dd34929395923a5cebaa33fd2b5e8d",
+    "profile-optimized-510k/revert-helper.perf-report.txt": "5988da142c8482736bbd3807d54beb46777f91bb3cf0b91795df8e16371655ca",
+    "profile-optimized-510k/revert-helper.perf.data": "c35e41003e7ab843b403277eeea15f174af22917c9608473f52831e119972cd8"
+  },
+  "source_final_restore_confirmed": true
+}

@@ -1,0 +1,8 @@
+{
+  "before_source": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave2-validation/wave2-synthetic-510436/synthetic-510436/source",
+  "after_source": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-lock-followup-20261010/wave2/paired-510k/synthetic-510436/source",
+  "relative_source_bytes_equal": true,
+  "file_count": 333,
+  "corpus_sha256": "5de745eb2f19246e4f590a8920e6c399ae7f99f8442a88a292f25f51dbdcee08",
+  "limit": "Different absolute paths and separately populated compiler-identity-bound caches; diagnostics are not paired timings."
+}

@@ -818,6 +818,7 @@ pub fn build(b: *std.Build) void {
     juice_step.dependOn(&juice_native_run.step);
     const juice_runtime_run = bounded(b.addSystemCommand(&.{ "python3", "tests/test_juice_runtime_bench.py" }), rss.script);
     juice_runtime_run.setCwd(b.path("."));
+    verification_registry.?.register("juice-runtime", &juice_runtime_run.step, &test_inputs.juice_runtime, false, "runtime collectors observe CPU, scheduler and current host state");
     juice_step.dependOn(&juice_runtime_run.step);
     test_step.dependOn(juice_step);
     // The compiler's `compiler_identity` comes from a make-phase run of
@@ -846,6 +847,7 @@ pub fn build(b: *std.Build) void {
     coverage_self.addArgs(&.{ "python3", "tests/test_inputs_coverage.py", "--self-test" });
     coverage_step.dependOn(&coverage_self.step);
     const coverage_run = driver(b, "python3 tests/test_inputs_coverage.py", rss.script, "coverage");
+    verification_registry.?.register("coverage", &coverage_run.step, &test_inputs.coverage, false, "fixture membership and negative path lookups outside source recipes require freshness");
     const manifest_self = driver(b, "python3 tests/input_manifest.py --self-test", rss.script, "manifest_self");
     manifest_self.addArgs(&.{ "python3", "tests/input_manifest.py", "--self-test" });
     coverage_step.dependOn(&manifest_self.step);
@@ -971,6 +973,16 @@ pub fn build(b: *std.Build) void {
         .{ .label = "component-builder", .binary = component_tool },
     }, &.{ &install_exe.step, &install_component_tool.step });
     requireLiveEnvironment(b);
+    // These scripts use declared source fixtures and isolated stand-ins, and
+    // never execute a prepared native compiler or test binary. Unknown/new
+    // cohorts retain the complete artifact identity until explicitly reviewed.
+    for ([_][]const u8{ "idioms_self", "friction", "affected", "coverage_self", "manifest_self", "verification_cache", "embedded_migration" }) |id| {
+        verification_registry.?.artifactDependencies(id, &.{});
+    }
+    verification_registry.?.artifactDependencies("memory_budget", &.{ "memory-budget", "components" });
+    verification_registry.?.artifactDependencies("component-support", &.{"component-support"});
+    verification_registry.?.artifactDependencies("component_builder", &.{ "component-builder", "components" });
+    verification_registry.?.artifactDependencies("component_native", &.{ "component-builder", "components" });
     verification.registerInfrastructure(&verification_registry.?, &.{ test_step, fmt_step });
     verification_registry.?.exportPlan(&.{ test_step, fmt_step }, verification_preparation);
 }

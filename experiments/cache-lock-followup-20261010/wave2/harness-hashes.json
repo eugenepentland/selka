@@ -1,0 +1,8 @@
+{
+  "experiments/cache-wave2-20261010/benchmark.py": "e9c83980a09b0df88ab73e5d2d90343256273a92c7a1099a0e23cd7f44897b3a",
+  "experiments/cache-wave2-20261010/qualify.py": "e903cf0022aa6f0f24508294a9924849baf8a788928e942b083b6e40096a6efc",
+  "experiments/cache-wave2-performance-20261010/profile.py": "bb91262e8a56674189ca8b879455202022735329a68c4f10c3e7f95769078be9",
+  "experiments/cache-wave2-performance-20261010/profile_summary.py": "d2b52f7d89ce65ff1045f2b2344b21a70b37347dc2fcb8995e7339f0a131306d",
+  "experiments/cache-lock-followup-20261010/wave2/run_with_admission.py": "b46d5c0092a1a8f6c2d8046fbd0097880df00f4ed5b3610a8bcf6cfb8a32fd84",
+  "scripts/build-slot.sh": "b7af91659a0b0d75b20d2080432dc1c4884a3161fcc083c8f148295a644a9489"
+}

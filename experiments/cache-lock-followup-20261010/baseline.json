@@ -1,0 +1,54 @@
+{
+  "baseline": "8a0bdb487e65ea59ea0b5cdf0117d4e1c3ef7058",
+  "main": "0488ebb2b59ebdd188d19ff612c75b580d6f0101",
+  "artifacts": {
+    "mylang": {
+      "source": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.zig-cache/o/9de5514a25f9e3ecd4da60bf6819f10c/mylang",
+      "frozen": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-lock-followup-20261010/baseline/bin/mylang",
+      "sha256": "eded2d615aec2269347269cfbf2aad50f5557718ef123115d7c65fc5d67d8351",
+      "bytes": 225482701
+    },
+    "units": {
+      "source": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.zig-cache/o/fa3d774b7266f2d4d266c87ffaec59cf/test",
+      "frozen": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-lock-followup-20261010/baseline/bin/units",
+      "sha256": "03bbc1d20f9f044d38b13bc2610e64f61fb60ac300a5048c5db60f291c4f44d0",
+      "bytes": 195400248
+    },
+    "cli": {
+      "source": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.zig-cache/o/14710e0da1dde18f3f651df754cb9eda/test",
+      "frozen": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-lock-followup-20261010/baseline/bin/cli",
+      "sha256": "94bcde76dfa1f1f33ff5d92dd3bc3b2ed56c36ccadd45ee0171e88cb162d5e0b",
+      "bytes": 31104909
+    },
+    "core": {
+      "source": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.zig-cache/o/dab1ee6ce2b293b9e50f9a0863092cd9/test",
+      "frozen": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-lock-followup-20261010/baseline/bin/core",
+      "sha256": "a813aa07e3b270c5b2607198ac392353c7b26129331b846e27190f6bef8ceae0",
+      "bytes": 228520459
+    },
+    "golden": {
+      "source": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.zig-cache/o/8df66ccf936efe1c7e5a2a81722192f0/test",
+      "frozen": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-lock-followup-20261010/baseline/bin/golden",
+      "sha256": "929af5cdd5a143f3f517726ff795953fb4d1bd9b0cb43b5dfe407a2f71367fa0",
+      "bytes": 20255736
+    },
+    "memory-budget": {
+      "source": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.zig-cache/o/4a03f092ccb5ef6deb43358176872a75/test",
+      "frozen": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-lock-followup-20261010/baseline/bin/memory-budget",
+      "sha256": "d211dc21ff0e275083ed4345e4321e14eb1fbd0fd7cc623002f6b8ae602a4f58",
+      "bytes": 17553464
+    },
+    "component-support": {
+      "source": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.zig-cache/o/a2e2d29ebd3470cd0660ad87c6fb1b46/test",
+      "frozen": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-lock-followup-20261010/baseline/bin/component-support",
+      "sha256": "66f80e939337b9767def3ca763f2fb3c8d0cf33f448424cc3b66db83787c0a20",
+      "bytes": 20474040
+    },
+    "component-builder": {
+      "source": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.zig-cache/o/2ecd722ce01240aa65d48334d1933c23/selka-components",
+      "frozen": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-lock-followup-20261010/baseline/bin/component-builder",
+      "sha256": "5d4a9aa3106c681b0fedee2fa83894fdfb8e12b41a6b0a64a6e94eb9247b12f4",
+      "bytes": 4501816
+    }
+  }
+}

@@ -121,7 +121,7 @@ gate invocation, retaining the build graph's dependency and memory scheduling.
 New unregistered checks force execution of the original complete gate.
 
 The output distinguishes `reused`, `execute`, and `fresh`. Guardian, git-history
-checks, generated-output validation, and guest suites with execution-time effect
+checks, input-coverage membership checks, generated-output validation, and guest suites with execution-time effect
 decisions remain fresh. Guest suites retain their compiler-managed per-test
 receipts; fact/leak runs preserve their existing modes. `--force` discards prior
 action evidence and executes the full inventory. Filtered and explicit
@@ -140,10 +140,25 @@ contains only the absolute, existing directories covered by the tool watches.
 These normalized
 settings are also the settings executed by workers.
 
+Reviewed cohorts can declare their own prepared artifact dependencies. A pure
+script check need not repeat because an unrelated native executable changed;
+selected component checks bind their builder, component or test executable.
+Unreviewed cohorts keep the complete artifact identity. Build configuration,
+inventory, tools, environment and host identity still invalidate all cohorts,
+and the complete artifact snapshot remains watched through publication. The
+input-coverage checker stays fresh because it probes whether source-named paths
+exist, including paths outside its explicit source list.
+
 Evidence lives in `.mylang-cache/verification-v1/`. `last-run.json` records every
 required cohort, the verdict, elapsed time, and admitted build/gate seconds.
 These durations include admission validation and are operational observations,
-not isolated performance benchmarks. Two coordinators for one checkout serialize
+not isolated performance benchmarks. Admission events separate wait/startup,
+validation after admission, worker time and the observed held interval. The held
+interval starts at the admitted child's greeting, so it excludes the wrapper's
+short startup after acquiring the slot. Phase timings also show source/action
+snapshotting, preparation/lookup outside admission, final validation and
+publication; nested phase durations must not be added as independent intervals.
+Two coordinators for one checkout serialize
 on a local lock before requesting shared server slots. Normal `zig build test`
 and `zig build fmt-check` remain supported.
 

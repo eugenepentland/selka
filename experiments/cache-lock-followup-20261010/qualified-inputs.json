@@ -1,0 +1,16 @@
+{
+  "baseline": "8a0bdb487e65ea59ea0b5cdf0117d4e1c3ef7058",
+  "qualified_files": {
+    "SPEC.md": "546f4593805c7ef84747044822566599092726996bb445827367079abbc44692",
+    "build.zig": "d35c7d19d6e31cdb2f340d6c1fc0a09efd00dd0081a9097b593609fb01919c83",
+    "build_test_inputs.zig": "2e6523439e423ad1ecc626770835ceec685bdf2f235317b9b219d7dd850e808b",
+    "build_verification.zig": "fa9019f12ae76672393c4ae007cf0d0f311aee3befbd119abbfc18ed32dffec3",
+    "docs/audits/selka-toolchain-cache-plan-2026-10-10.md": "40a2a93f2fd7b03c3157dcd37f7cf8c3b8403f510cb9f2fcf94cba2ae163f6a6",
+    "docs/tooling/many-agents.md": "e17d27f59b538289c338679f8ee2630b0d0cb1f3680ecbd4dbf82484f63e0da9",
+    "scripts/verify_cache.py": "282fec8cbf2ce071b9deb67a0dddd9c5a668358343a9cc46302d5319b6aaaf9b",
+    "scripts/verify_cache_test.py": "ca3a0e3ba818cd18e0349420994450a5c803eb4a878b4e49484e8a8da6df18d5",
+    "src/core/stage_pack.zig": "76c5489a412824f3945ca910f6258df1e261cfa2f2f9f1c03fc4d1ea97733e5a",
+    "src/core/stage_store_test.zig": "d10f5bb6978054e61f1a59c5b213a34d1745cc37616e963a995276c1117cb722"
+  },
+  "note": "Candidate frozen before live verification; experiment evidence excluded."
+}

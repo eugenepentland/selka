@@ -486,6 +486,198 @@ fn rehashPackIndex(bytes: []u8) void {
     std.crypto.hash.Blake3.hash(bytes[89..][0..length], bytes[57..89], .{});
 }
 
+// spec: NEW-CORE-STAGE-PACK-2
+test "stage store filename indexing keeps bounded lookup work across many packs and external updates" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a);
+    var writer = try store.Store.init(std.testing.allocator, std.testing.io, root);
+    defer writer.deinit();
+    var keys: [48]store.Digest = undefined;
+    for (&keys, 0..) |*key, index| {
+        const discriminator: [1]u8 = .{@intCast(index)};
+        key.* = writer.key("indexed-filename", &.{&discriminator});
+        try std.testing.expect(try writer.save(key.*, &discriminator));
+        try std.testing.expect(try writer.flush());
+    }
+    var reader = try store.Store.init(std.testing.allocator, std.testing.io, root);
+    defer reader.deinit();
+    try expectIndexedPayloads(&reader, a, &keys);
+    const before = reader.statistics().publication;
+    try std.testing.expectEqual(@as(u64, keys.len), before.filename_lookups);
+    try std.testing.expect(try writer.save(keys[0], "newer"));
+    try std.testing.expectEqualStrings("newer", (try reader.load(a, keys[0])).?);
+    const after = reader.statistics().publication;
+    try std.testing.expectEqual(@as(u64, keys.len + 1), after.filename_lookups - before.filename_lookups);
+    const lost = (try reader.artifactPath(a, keys[1])).?;
+    try std.Io.Dir.cwd().deleteFile(std.testing.io, lost);
+    try std.testing.expect((try reader.load(a, keys[1])) == null);
+    try std.testing.expectEqualStrings("newer", (try reader.load(a, keys[0])).?);
+}
+
+fn expectIndexedPayloads(reader: *store.Store, a: std.mem.Allocator, keys: []const store.Digest) !void {
+    for (keys, 0..) |key, index| {
+        const expected: [1]u8 = .{@intCast(index)};
+        try std.testing.expectEqualSlices(u8, &expected, (try reader.load(a, key)).?);
+    }
+}
+
+const FlushAction = union(enum) {
+    publish: struct { writer: *store.Store, key: store.Digest },
+    mutate: struct { path: []const u8, replace: bool },
+
+    fn run(self: FlushAction, backing: std.mem.Allocator) !void {
+        switch (self) {
+            .publish => |input| try std.testing.expect(try input.writer.save(input.key, "newer")),
+            .mutate => |input| {
+                const io = std.testing.io;
+                const dir = std.Io.Dir.cwd();
+                const before = try dir.statFile(io, input.path, .{});
+                const bytes = try dir.readFileAlloc(io, input.path, backing, .limited(1 << 20));
+                defer backing.free(bytes);
+                if (input.replace) {
+                    var file = try dir.createFileAtomic(io, input.path, .{ .replace = true });
+                    defer file.deinit(io);
+                    try file.file.writeStreamingAll(io, bytes);
+                    try file.replace(io);
+                } else try dir.writeFile(io, .{ .sub_path = input.path, .data = bytes });
+                try dir.setTimestamps(io, input.path, .{ .modify_timestamp = .{ .new = before.mtime } });
+            },
+        }
+    }
+};
+
+const FlushProbe = struct {
+    parent: std.mem.Allocator,
+    sequence_path: []const u8,
+    action: FlushAction,
+    owner: ?*store.Store = null,
+    state: struct { armed: bool = false, checks: usize = 0, blocked: bool = false, acted: bool = false, failed: bool = false } = .{},
+
+    fn check(self: *FlushProbe) void {
+        const lock = std.Io.Dir.cwd().createFile(std.testing.io, self.sequence_path, .{
+            .read = true,
+            .truncate = false,
+            .lock = .exclusive,
+            .lock_nonblocking = true,
+        }) catch |err| {
+            if (err == error.WouldBlock) self.state.blocked = true else self.state.failed = true;
+            self.state.armed = false;
+            return;
+        };
+        lock.close(std.testing.io);
+        self.state.checks += 1;
+        if (!self.state.acted) {
+            self.state.acted = true;
+            self.action.run(self.parent) catch {
+                self.state.failed = true;
+            };
+        }
+    }
+
+    fn allocator(self: *FlushProbe) std.mem.Allocator {
+        return .{ .ptr = self, .vtable = &.{ .alloc = alloc, .resize = resize, .remap = remap, .free = free } };
+    }
+
+    fn alloc(context: *anyopaque, len: usize, alignment: std.mem.Alignment, ra: usize) ?[*]u8 {
+        const self: *FlushProbe = @ptrCast(@alignCast(context));
+        // Probe all large preparation allocations, including compressor storage; stop at staging completion.
+        if (self.state.armed and len >= 16 << 10 and self.owner.?.storage.cached.statistics.publication.packs_prepared == 0) self.check();
+        return self.parent.rawAlloc(len, alignment, ra);
+    }
+    fn resize(_: *anyopaque, _: []u8, _: std.mem.Alignment, _: usize, _: usize) bool {
+        return false;
+    }
+    fn remap(_: *anyopaque, _: []u8, _: std.mem.Alignment, _: usize, _: usize) ?[*]u8 {
+        return null;
+    }
+    fn free(context: *anyopaque, bytes: []u8, alignment: std.mem.Alignment, ra: usize) void {
+        const self: *FlushProbe = @ptrCast(@alignCast(context));
+        self.parent.rawFree(bytes, alignment, ra);
+    }
+};
+
+// spec-case: NEW-CORE-STAGE-PACK-2
+test "stage store pack preparation releases sequence lock and independent newer publication wins" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a);
+    var independent = try store.Store.init(std.testing.allocator, std.testing.io, root);
+    defer independent.deinit();
+    const key = independent.key("prepare-unlocked", &.{});
+    var probe: FlushProbe = .{
+        .parent = std.testing.allocator,
+        .sequence_path = try std.fs.path.join(a, &.{ independent.root, "sequence" }),
+        .action = .{ .publish = .{ .writer = &independent, .key = key } },
+    };
+    var storage = try store.Store.init(probe.allocator(), std.testing.io, root);
+    defer storage.deinit();
+    probe.owner = &storage;
+    const payload = try a.alloc(u8, 256 << 10);
+    @memset(payload, 37);
+    try std.testing.expect(try storage.save(key, payload));
+    probe.state.armed = true;
+    try std.testing.expect(try storage.flush());
+    probe.state.armed = false;
+    try std.testing.expect(!probe.state.blocked and !probe.state.failed);
+    try std.testing.expect(probe.state.acted and probe.state.checks >= 2);
+    try std.testing.expectEqualStrings("newer", (try storage.load(a, key)).?);
+    var fresh = try store.Store.init(std.testing.allocator, std.testing.io, root);
+    defer fresh.deinit();
+    try std.testing.expectEqualStrings("newer", (try fresh.load(a, key)).?);
+    try std.testing.expectEqual(@as(u64, 1), storage.statistics().publication.packs_prepared);
+}
+
+// spec-case: NEW-CORE-STAGE-PACK-2
+test "stage store unlocked preparation rejects restored bytes and atomic source replacement before commit" {
+    for ([_]bool{ false, true }) |replace| try sourceMutationDuringPrepare(std.testing.allocator, replace);
+}
+
+fn sourceMutationDuringPrepare(backing: std.mem.Allocator, replace: bool) !void {
+    var arena = std.heap.ArenaAllocator.init(backing);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a);
+    const packed_root = try std.fs.path.join(a, &.{ root, "stages-packed-v1" });
+    var probe: FlushProbe = .{
+        .parent = backing,
+        .sequence_path = try std.fs.path.join(a, &.{ packed_root, "sequence" }),
+        .action = .{ .mutate = .{ .path = "", .replace = replace } },
+    };
+    var storage = try store.Store.init(probe.allocator(), std.testing.io, root);
+    defer storage.deinit();
+    probe.owner = &storage;
+    const key = storage.key("prepare-source-mutation", &.{});
+    const payload = try a.alloc(u8, 256 << 10);
+    @memset(payload, 19);
+    try std.testing.expect(try storage.save(key, payload));
+    const journal_path = (try storage.artifactPath(a, key)).?;
+    probe.action.mutate.path = journal_path;
+    const before = try std.Io.Dir.cwd().statFile(std.testing.io, journal_path, .{});
+    probe.state.armed = true;
+    const sealed = try storage.flush();
+    probe.state.armed = false;
+    try std.testing.expect(!sealed and probe.state.acted and !probe.state.failed and !probe.state.blocked);
+    const after = try std.Io.Dir.cwd().statFile(std.testing.io, journal_path, .{});
+    try std.testing.expectEqual(before.mtime.nanoseconds, after.mtime.nanoseconds);
+    try std.testing.expect(if (replace) before.inode != after.inode else before.ctime.nanoseconds != after.ctime.nanoseconds);
+    try std.testing.expectEqualStrings(journal_path, (try storage.artifactPath(a, key)).?);
+    try std.testing.expectEqualSlices(u8, payload, (try storage.load(a, key)).?);
+    // A clean retry may seal the surviving journal; rejection must not discard durable records.
+    try std.testing.expect(try storage.flush());
+    var fresh = try store.Store.init(backing, std.testing.io, root);
+    defer fresh.deinit();
+    try std.testing.expectEqualSlices(u8, payload, (try fresh.load(a, key)).?);
+}
+
 // spec-case: NEW-CORE-STAGE-PACK-1
 test "stage store body blocks bound collateral decoding and count payload cache hits" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);

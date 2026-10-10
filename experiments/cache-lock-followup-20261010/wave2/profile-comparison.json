@@ -1,0 +1,78 @@
+{
+  "scope": "Historical diagnostic flat self sample percentages; different populated caches and absolute paths, equal relative fixture bytes; no wall-time or current-main claim",
+  "rows": [
+    {
+      "label": "helper",
+      "before": {
+        "recorded_samples": 1664,
+        "lost_samples": 0,
+        "self_pct_groups": {
+          "blake3": 43.68,
+          "sha2": 1.7,
+          "treehash": 3.09,
+          "unresolved_including_zig": 13.07,
+          "memfd_planner": 0.32,
+          "mylang_host_dso": 86.64,
+          "zig": 11.67,
+          "blake3_plus_sha2": 45.38,
+          "hashing_plus_named_treehash_self": 48.47
+        }
+      },
+      "after": {
+        "recorded_samples": 706,
+        "lost_samples": 0,
+        "self_pct_groups": {
+          "blake3": 13.3,
+          "sha2": 2.28,
+          "treehash": 0.26,
+          "unresolved_including_zig": 32.79,
+          "memfd_planner": 0.26,
+          "mylang_host_dso": 66.76,
+          "zig": 29.48,
+          "blake3_plus_sha2": 15.58,
+          "hashing_plus_named_treehash_self": 15.84
+        }
+      }
+    },
+    {
+      "label": "revert-helper",
+      "before": {
+        "recorded_samples": 1106,
+        "lost_samples": 0,
+        "self_pct_groups": {
+          "blake3": 55.78,
+          "sha2": 3.0,
+          "treehash": 2.61,
+          "unresolved_including_zig": 1.24,
+          "memfd_planner": 0.45,
+          "mylang_host_dso": 98.7,
+          "zig": 0,
+          "blake3_plus_sha2": 58.78,
+          "hashing_plus_named_treehash_self": 61.39
+        }
+      },
+      "after": {
+        "recorded_samples": 400,
+        "lost_samples": 0,
+        "self_pct_groups": {
+          "blake3": 16.98,
+          "sha2": 6.65,
+          "treehash": 0.95,
+          "unresolved_including_zig": 3.85,
+          "memfd_planner": 0.84,
+          "mylang_host_dso": 96.12,
+          "zig": 0,
+          "blake3_plus_sha2": 23.63,
+          "hashing_plus_named_treehash_self": 24.58
+        }
+      }
+    }
+  ],
+  "limitations": [
+    "Flat reports cannot recover per-event DWARF stack coverage or establish hash callers; stack_coverage is null. Equal children/self percentages on host hash rows provide no cumulative caller attribution.",
+    "Unresolved and planner memfd self samples cannot be attributed to component functions. Category totals overlap except the combined hashing categories, whose inputs are disjoint; do not sum all categories.",
+    "CPU and wall include perf/snapshot overhead. Paired uninstrumented benchmarks are required for performance claims.",
+    "Perf header decoding diagnostics are retained; successful flat decoding does not repair missing event metadata.",
+    "Symbol-cache diagnostics are retained even when buildid-cache exits zero; exit zero alone does not prove symbol indexing succeeded."
+  ]
+}

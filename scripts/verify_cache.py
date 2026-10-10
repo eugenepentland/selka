@@ -122,7 +122,9 @@ def inventory(path: Path) -> dict:
         raise VerificationError("verification inventory has no required actions")
     ids, targets = set(), set()
     for group in groups:
-        if not isinstance(group, dict) or set(group) != {"id", "target", "label", "inputs", "cacheable", "reason"}:
+        required_fields = {"id", "target", "label", "inputs", "cacheable", "reason"}
+        if (not isinstance(group, dict) or not required_fields <= group.keys()
+                or group.keys() - required_fields - {"artifacts"}):
             raise VerificationError("invalid action contract")
         if (not all(isinstance(group[x], str) for x in ("id", "target", "label", "reason"))
                 or not re.fullmatch(r"[a-zA-Z0-9_-]+", group["id"])
@@ -132,6 +134,11 @@ def inventory(path: Path) -> dict:
                 or not all(isinstance(x, str) and x for x in group["inputs"])
                 or group["id"] in ids or group["target"] in targets):
             raise VerificationError("invalid or duplicate action in inventory")
+        providers = group.get("artifacts")
+        if (providers is not None and (not isinstance(providers, list)
+                or not all(isinstance(name, str) and name for name in providers)
+                or len(set(providers)) != len(providers))):
+            raise VerificationError("invalid artifact dependency selector")
         ids.add(group["id"])
         targets.add(group["target"])
     coverage = value.get("coverage", {})
@@ -145,6 +152,8 @@ def inventory(path: Path) -> dict:
         raise VerificationError("inventory does not cover the original gate")
     if any(group["id"] == "unclassified" and group["cacheable"] for group in groups):
         raise VerificationError("unclassified actions must always execute the original gate")
+    if any(group["id"] == "coverage" and group["cacheable"] for group in groups):
+        raise VerificationError("fixture membership coverage must always execute")
     return value
 
 
@@ -266,7 +275,8 @@ def admitted_child(fd: int) -> int:
     return 2
 
 
-def run_admitted(root: Path, kind: str, argv: list[str], env: dict[str, str], unchanged) -> tuple[int, float]:
+def run_admitted(root: Path, kind: str, argv: list[str], env: dict[str, str], unchanged,
+                 timings: list[dict] | None = None) -> tuple[int, float]:
     """Hold the normal slot only for selected work, checking again after queueing."""
     parent, child = socket.socketpair()
     # build-slot reserves descriptors 7/8/9. Keep this handshake out of its range.
@@ -274,9 +284,12 @@ def run_admitted(root: Path, kind: str, argv: list[str], env: dict[str, str], un
     child.close()
     command = [str(root / "scripts/build-slot.sh"), kind, sys.executable,
                str(Path(__file__).resolve()), "--admitted", str(fd)]
+    submitted_at = time.monotonic()
     process = subprocess.Popen(command, cwd=root, env=env, pass_fds=(fd,), start_new_session=True)
     os.close(fd)
     admitted_at = None
+    validation_seconds = 0.0
+    worker_at = None
     try:
         parent.settimeout(1)
         greeting = b""
@@ -291,12 +304,23 @@ def run_admitted(root: Path, kind: str, argv: list[str], env: dict[str, str], un
                     break
         if greeting == b"admitted\n":
             admitted_at = time.monotonic()
-            if unchanged():
+            valid = unchanged()
+            validation_seconds = time.monotonic() - admitted_at
+            if valid:
                 parent.sendall(encoded({"argv": argv, "env": env, "cwd": str(root)}))
+                worker_at = time.monotonic()
             parent.shutdown(socket.SHUT_WR)
         parent.close()
         status = process.wait()
-        return status, 0.0 if admitted_at is None else time.monotonic() - admitted_at
+        ended_at = time.monotonic()
+        held = 0.0 if admitted_at is None else ended_at - admitted_at
+        if timings is not None:
+            timings.append({"kind": kind, "status": status, "admitted": admitted_at is not None,
+                            "admission_wait_seconds": (admitted_at or ended_at) - submitted_at,
+                            "validation_seconds": validation_seconds,
+                            "worker_seconds": 0.0 if worker_at is None else ended_at - worker_at,
+                            "observed_held_seconds": held, "elapsed_seconds": ended_at - submitted_at})
+        return status, held
     except BaseException:
         parent.close()
         try:
@@ -330,6 +354,30 @@ def artifact_paths(root: Path) -> list[Path]:
     return sorted(set(paths))
 
 
+def artifact_providers(root: Path, snapshot: Snapshot) -> dict[str, list[dict]]:
+    """Project only declared providers; retain the complete snapshot for ABA checks."""
+    record = read_record(root / "zig-out/verification/artifacts.json")
+    if not record or not isinstance(record.get("artifacts"), dict):
+        raise VerificationError("prepared artifact inventory changed during provider selection")
+    paths = {name: [Path(path)] for name, path in record["artifacts"].items()}
+    paths["mylang"].append(root / "zig-out/bin/mylang")
+    paths["components"] = []
+    for name in ("test-index", "cache-plan"):
+        manifest_path = root / "zig-out/libexec/mylang/components" / (name + ".json")
+        manifest = read_record(manifest_path)
+        if not manifest or not isinstance(manifest.get("artifact"), str):
+            raise VerificationError("component manifest changed during provider selection")
+        paths["components"].extend([manifest_path, manifest_path.parent / manifest["artifact"]])
+    files = {os.path.abspath(root / item["path"]): item for item in snapshot.identity["files"]}
+    providers = {}
+    for name, members in paths.items():
+        try:
+            providers[name] = [files[path] for path in sorted({os.path.abspath(path) for path in members})]
+        except KeyError as error:
+            raise VerificationError("artifact provider is outside the prepared snapshot: " + name) from error
+    return providers
+
+
 def matches_recipe(path: str, recipe: str, root: Path) -> bool:
     """Select a cohort's members from the single watched, hashed union."""
     normalized = os.path.normpath(os.path.join(root, path))
@@ -346,11 +394,16 @@ def matches_recipe(path: str, recipe: str, root: Path) -> bool:
     return normalized == value
 
 
-def action_identity(group: dict, snapshot: Snapshot, common: dict, root: Path) -> str:
+def action_identity(group: dict, snapshot: Snapshot, common: dict, root: Path,
+                    providers: dict[str, list[dict]] | None = None) -> str:
     files = [item for item in snapshot.identity["files"]
              if any(matches_recipe(item["path"], recipe, root) for recipe in group["inputs"])]
-    return key({"domain": "selka-verification-action-v1", "contract": group,
-                "common": common, "files": files})
+    selected = group.get("artifacts")
+    if selected is not None:
+        if providers is None or any(name not in providers for name in selected):
+            raise VerificationError("action names an unavailable artifact provider: " + group["id"])
+        common = dict(common, artifacts={name: providers[name] for name in selected})
+    return key({"domain": "selka-verification-action-v2", "contract": group, "common": common, "files": files})
 
 
 def check_all(snapshots: list[Snapshot]) -> bool:
@@ -380,7 +433,8 @@ def zig_command(zig: Path, targets: list[str], options: list[str], rerun: bool =
 
 
 def prepare(root: Path, cache: Path, zig: Path, options: list[str], env: dict[str, str],
-            common: dict, snapshots: list[Snapshot], stack: ExitStack) -> tuple[dict, Snapshot, float]:
+            common: dict, snapshots: list[Snapshot], stack: ExitStack,
+            timings: list[dict] | None = None, phases: dict | None = None) -> tuple[dict, Snapshot, float]:
     config = stack.enter_context(Snapshot(root, CONFIG_INPUTS + COORDINATOR_INPUTS))
     snapshots.append(config)
     common["build_configuration"] = key(config.identity)
@@ -399,13 +453,16 @@ def prepare(root: Path, cache: Path, zig: Path, options: list[str], env: dict[st
     held = 0.0
     if plan is None:
         status, seconds = run_admitted(root, "build", zig_command(zig, ["verification-plan"], options),
-                                       env, lambda: check_all(snapshots))
+                                       env, lambda: check_all(snapshots), timings=timings)
         held += seconds
         if status or not check_all(snapshots):
             raise VerificationError("inventory preparation failed or its inputs changed (exit %d)" % status)
         plan = inventory(plan_path)
         publish_checked(plan_receipt, {"key": config_key, "inventory": key(plan)}, snapshots)
+    source_started = time.monotonic()
     sources = stack.enter_context(Snapshot(root, PREPARE_INPUTS))
+    if phases is not None:
+        phases["source_snapshot_seconds"] = time.monotonic() - source_started
     snapshots.append(sources)
     preparation_key = key({"configuration": config_key, "sources": sources.identity})
     saved = read_record(cache / "preparation.json")
@@ -421,7 +478,7 @@ def prepare(root: Path, cache: Path, zig: Path, options: list[str], env: dict[st
             pass
     if artifacts is None:
         status, seconds = run_admitted(root, "build", zig_command(zig, ["verification-prepare"], options),
-                                       env, lambda: check_all(snapshots))
+                                       env, lambda: check_all(snapshots), timings=timings)
         held += seconds
         if status or not check_all(snapshots):
             raise VerificationError("artifact preparation failed or its inputs changed (exit %d)" % status)
@@ -434,6 +491,7 @@ def prepare(root: Path, cache: Path, zig: Path, options: list[str], env: dict[st
 
 def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool = False) -> int:
     started = time.monotonic()
+    admissions, phases = [], {}
     (root / "zig-out/verification").mkdir(parents=True, exist_ok=True)
     env = normalized_environment(root)
     env["ZIG"] = str(zig)
@@ -449,12 +507,15 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
                   "environment": key(env), "platform": host.identity,
                   "tools": key(tools.identity),
                   "implementation": [LOADED_CODE_SHA256, verification_snapshot.LOADED_CODE_SHA256]}
-        plan, artifacts, build_seconds = prepare(root, cache, zig, options, env, common, snapshots, stack)
+        plan, artifacts, build_seconds = prepare(root, cache, zig, options, env, common, snapshots, stack, admissions, phases)
         common["artifacts"] = key(artifacts.identity)
         common["inventory"] = key(plan)
+        providers = artifact_providers(root, artifacts)
         groups = plan["groups"]
         recipes = sorted({entry for group in groups for entry in group["inputs"]})
+        input_started = time.monotonic()
         inputs = stack.enter_context(Snapshot(root, recipes))
+        phases["action_input_snapshot_seconds"] = time.monotonic() - input_started
         snapshots.append(inputs)
         unsupported = [name for name in UNTRACKED_ENV if env.get(name)]
         force = force or "-Dtest-rerun=true" in options or bool(plan.get("configuration", {}).get("filtered"))
@@ -465,7 +526,7 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
                 path.unlink(missing_ok=True)
         results, selected, keys = [], [], {}
         for group in groups:
-            action_key = action_identity(group, inputs, common, root)
+            action_key = action_identity(group, inputs, common, root, providers)
             keys[group["id"]] = action_key
             reusable = group["cacheable"] and not force and not unsupported
             hit = reusable and valid_receipt(cache / "actions" / (action_key + ".json"), action_key)
@@ -481,6 +542,8 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
                 selected.append(group)
         if not check_all(snapshots):
             raise VerificationError("inputs changed during cache lookup; rerun verification")
+        phases["prepare_lookup_outside_admission_seconds"] = (time.monotonic() - started
+                                                              - sum(event["elapsed_seconds"] for event in admissions))
         status, gate_seconds = 0, 0.0
         if selected:
             # Force chosen Run steps: an outer miss (tool/environment/ABA) must not
@@ -489,10 +552,13 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
                        else [group["target"] for group in selected])
             status, gate_seconds = run_admitted(root, "gate",
                 zig_command(zig, targets, options, rerun=True),
-                env, lambda: check_all(snapshots))
+                env, lambda: check_all(snapshots), timings=admissions)
+        validation_started = time.monotonic()
         stable = check_all(snapshots)
+        phases["final_validation_seconds"] = time.monotonic() - validation_started
         if status == 0 and not stable:
             status = RETRY
+        publication_started = time.monotonic()
         if status == 0:
             published = []
             publication_valid = False
@@ -510,9 +576,11 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
                 if not publication_valid:
                     for path in published:
                         path.unlink(missing_ok=True)
+        phases["publication_seconds"] = time.monotonic() - publication_started
         report = {"version": VERSION, "success": status == 0, "status": status,
                   "actions": results, "inputs_stable": stable,
                   "build_admitted_seconds": build_seconds, "gate_admitted_seconds": gate_seconds,
+                  "admissions": admissions, "timings": phases,
                   "elapsed_seconds": time.monotonic() - started}
         atomic_record(cache / "last-run.json", report)
         print("verification: %s; %d reused, %d selected; build admitted %.3fs, gate admitted %.3fs" %

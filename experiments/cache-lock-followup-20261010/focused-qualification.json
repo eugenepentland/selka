@@ -1,0 +1,38 @@
+{
+  "logs": [
+    {
+      "path": ".mylang-cache/cache-lock-followup-20261010/candidate-prepare-final.log",
+      "sha256": "575f81c043af3be5623dd5f9786cfbd046bb90cdc115a4ec85696767e1a5c828",
+      "build_summaries": [
+        "Build Summary: 40/40 steps succeeded"
+      ],
+      "python_test_counts": [
+        "37",
+        "20"
+      ],
+      "native_results": [],
+      "guardian_summaries": [
+        "guardian: diff-scoped vs 0488ebb2b59ebdd188d19ff612c75b580d6f0101: 43/633 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification \u2014 use --full, or `guardian-check commit`.",
+        "guardian: run-all: 88 check(s) passed \u2014 diff-scoped vs 0488ebb2b59ebdd188d19ff612c75b580d6f0101, 43 file(s) in scope"
+      ]
+    },
+    {
+      "path": ".mylang-cache/cache-lock-followup-20261010/focused-store-final.log",
+      "sha256": "493ac9e4824c424e5ef766debedafa6b435dae7c71877ecfb399055bed5d265b",
+      "build_summaries": [
+        "Build Summary: 22/22 steps succeeded; 20/20 tests passed"
+      ],
+      "python_test_counts": [
+        "6"
+      ],
+      "native_results": [
+        "{\"passed\":20,\"failed\":0,\"skipped\":0}"
+      ],
+      "guardian_summaries": [
+        "guardian: diff-scoped vs 0488ebb2b59ebdd188d19ff612c75b580d6f0101: 43/633 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification \u2014 use --full, or `guardian-check commit`.",
+        "guardian: run-all: 88 check(s) passed \u2014 diff-scoped vs 0488ebb2b59ebdd188d19ff612c75b580d6f0101, 43 file(s) in scope"
+      ]
+    }
+  ],
+  "note": "Final successful focused runs after all product edits. Full gate and live edit matrix are recorded separately."
+}

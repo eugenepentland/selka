@@ -1,0 +1,39 @@
+{
+  "baseline_commit": "8a0bdb487e65ea59ea0b5cdf0117d4e1c3ef7058",
+  "optimization": "ReleaseFast",
+  "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+  "harness": "experiments/cache-lock-followup-20261010/pack_bench.zig",
+  "codec_shim": "experiments/cache-lock-followup-20261010/pack_codec.zig",
+  "codec": "src/persist_codec.zig",
+  "baseline_pack": ".mylang-cache/cache-lock-followup-20261010/baseline/src/core/stage_pack.zig",
+  "candidate_pack": "src/core/stage_pack.zig",
+  "shared_compression": "src/core/stage_compression.zig",
+  "command_template": [
+    "scripts/build-slot.sh",
+    "build",
+    "ZIG",
+    "build-exe",
+    "-O",
+    "ReleaseFast",
+    "-lc",
+    "--dep",
+    "pack",
+    "-Mroot=HARNESS",
+    "--dep",
+    "mylang",
+    "-Mpack=ARM_PACK",
+    "--dep",
+    "codec",
+    "-Mmylang=SHIM",
+    "-Mcodec=CODEC",
+    "-femit-bin=ARM_OUTPUT"
+  ],
+  "source_sha256": {
+    "experiments/cache-lock-followup-20261010/pack_bench.zig": "0d594a26eaca588e8be0f455bda047bd856c2adb96256850c2b991ddae918bdd",
+    "experiments/cache-lock-followup-20261010/pack_codec.zig": "462603d5ee8b12e78c90783b31d4e9a7521db7e77f8784c67f599c77fae804eb",
+    "src/persist_codec.zig": "caf9ec0aba03f54c851f12b010e15a482003a094bc957ed40f7770fd1b82b0f1",
+    ".mylang-cache/cache-lock-followup-20261010/baseline/src/core/stage_pack.zig": "ae8acab35ee580ce8c7903c6a5d257de40c5f853ef8884eb38f3769e9ed78906",
+    "src/core/stage_pack.zig": "76c5489a412824f3945ca910f6258df1e261cfa2f2f9f1c03fc4d1ea97733e5a",
+    "src/core/stage_compression.zig": "a229487c76fc46888a7f22716025ec5e28c457ce7cc359c8572ef5a75de115de"
+  }
+}
