@@ -225,7 +225,6 @@ fn value(hash: *std.crypto.hash.Blake3, item: anytype) void {
 pub const Compact = struct {
     guard: Digest,
     context: @import("emission_cache.zig").Context,
-    sources: std.StringHashMapUnmanaged(Digest) = .empty,
 
     /// Prepare one conservative metadata guard shared by all unit receipts.
     pub fn init(a: std.mem.Allocator, module: *const ir.Module, options: llvm.Options, catalog: *const constants.Catalog, exported: []const bool, context: @import("emission_cache.zig").Context) std.mem.Allocator.Error!?Compact {
@@ -233,7 +232,7 @@ pub const Compact = struct {
         const layout = receipt.layout;
         const summaries = options.analysis.effects orelse return null;
         var hash = std.crypto.hash.Blake3.init(.{});
-        value(&hash, "core-emission-receipt-v1");
+        value(&hash, "core-emission-receipt-v2");
         value(&hash, layout);
         value(&hash, options.target);
         value(&hash, options.verify);
@@ -272,8 +271,8 @@ pub const Compact = struct {
         return .{ .guard = guard, .context = context };
     }
 
-    /// Bind selected final handles and their source files without body walks.
-    pub fn key(self: *Compact, a: std.mem.Allocator, module: *const ir.Module, options: llvm.Options, selection: llvm.Selection) std.mem.Allocator.Error!?Digest {
+    /// Bind exact final bodies, ancestry and current source scopes without body walks.
+    pub fn key(self: *Compact, _: std.mem.Allocator, module: *const ir.Module, options: llvm.Options, selection: llvm.Selection) std.mem.Allocator.Error!?Digest {
         var hash = std.crypto.hash.Blake3.init(.{});
         value(&hash, self.guard);
         value(&hash, selection.source_path);
@@ -282,10 +281,17 @@ pub const Compact = struct {
         for (selection.functions) |index| {
             const function = module.functions.items[index];
             value(&hash, selection.symbols[index]);
-            const path = options.locator.locate(options.locator.context, function.span).path;
-            const source = try self.sourceIdentity(a, if (path.len == 0) options.source_path else path) orelse return null;
-            value(&hash, source);
+            value(&hash, options.locator.locate(options.locator.context, function.span));
             if (index < self.context.receipts.?.finals.len) if (self.context.receipts.?.finals[index]) |final| {
+                const render = final.render orelse return null;
+                value(&hash, render.ancestry);
+                value(&hash, render.scopes.len);
+                for (render.scopes) |scope| {
+                    if (scope >= module.functions.items.len) return null;
+                    const declaration = module.functions.items[scope];
+                    value(&hash, declaration.name);
+                    value(&hash, options.locator.locate(options.locator.context, declaration.span));
+                }
                 value(&hash, final.key);
                 value(&hash, final.body);
                 value(&hash, final.analysis.digest);
@@ -308,20 +314,6 @@ pub const Compact = struct {
         }
         var digest: Digest = undefined;
         hash.final(&digest);
-        return self.context.store.key("llvm-compact-receipt-v1", &.{&digest});
-    }
-
-    fn sourceIdentity(self: *Compact, a: std.mem.Allocator, path: []const u8) std.mem.Allocator.Error!?Digest {
-        if (self.sources.get(path)) |digest| return digest;
-        const source = self.context.receipts.?.source;
-        const original = if (source.origins.len == 0) source else blk: {
-            for (source.origins) |*origin| if (std.mem.eql(u8, origin.original.path, path)) break :blk &origin.original;
-            return null;
-        };
-        if (!std.mem.eql(u8, original.path, path)) return null;
-        var digest: Digest = undefined;
-        std.crypto.hash.Blake3.hash(original.bytes, &digest, .{});
-        try self.sources.put(a, path, digest);
-        return digest;
+        return self.context.store.key("llvm-compact-receipt-v2", &.{&digest});
     }
 };

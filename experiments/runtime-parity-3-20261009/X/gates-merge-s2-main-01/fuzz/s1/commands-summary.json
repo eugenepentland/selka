@@ -1,0 +1,205 @@
+{
+ "method": "Completed command journal retained in owned cache; matrix.json retains every family's native comparison and qualification totals. No failed or incomplete run is compacted.",
+ "command_count": 4800,
+ "source_paths": 200,
+ "counts": [
+  {
+   "role": "debug",
+   "building": false,
+   "status": "0",
+   "count": 99
+  },
+  {
+   "role": "debug",
+   "building": false,
+   "status": "1",
+   "count": 318
+  },
+  {
+   "role": "debug",
+   "building": false,
+   "status": "2",
+   "count": 89
+  },
+  {
+   "role": "debug",
+   "building": false,
+   "status": "3",
+   "count": 284
+  },
+  {
+   "role": "debug",
+   "building": false,
+   "status": "4",
+   "count": 72
+  },
+  {
+   "role": "debug",
+   "building": false,
+   "status": "5",
+   "count": 74
+  },
+  {
+   "role": "debug",
+   "building": false,
+   "status": "6",
+   "count": 64
+  },
+  {
+   "role": "debug",
+   "building": true,
+   "status": "0",
+   "count": 200
+  },
+  {
+   "role": "old",
+   "building": false,
+   "status": "0",
+   "count": 99
+  },
+  {
+   "role": "old",
+   "building": false,
+   "status": "1",
+   "count": 318
+  },
+  {
+   "role": "old",
+   "building": false,
+   "status": "2",
+   "count": 89
+  },
+  {
+   "role": "old",
+   "building": false,
+   "status": "3",
+   "count": 284
+  },
+  {
+   "role": "old",
+   "building": false,
+   "status": "4",
+   "count": 72
+  },
+  {
+   "role": "old",
+   "building": false,
+   "status": "5",
+   "count": 74
+  },
+  {
+   "role": "old",
+   "building": false,
+   "status": "6",
+   "count": 64
+  },
+  {
+   "role": "old",
+   "building": true,
+   "status": "0",
+   "count": 200
+  },
+  {
+   "role": "release",
+   "building": false,
+   "status": "0",
+   "count": 99
+  },
+  {
+   "role": "release",
+   "building": false,
+   "status": "1",
+   "count": 318
+  },
+  {
+   "role": "release",
+   "building": false,
+   "status": "2",
+   "count": 89
+  },
+  {
+   "role": "release",
+   "building": false,
+   "status": "3",
+   "count": 284
+  },
+  {
+   "role": "release",
+   "building": false,
+   "status": "4",
+   "count": 72
+  },
+  {
+   "role": "release",
+   "building": false,
+   "status": "5",
+   "count": 74
+  },
+  {
+   "role": "release",
+   "building": false,
+   "status": "6",
+   "count": 64
+  },
+  {
+   "role": "release",
+   "building": true,
+   "status": "0",
+   "count": 200
+  },
+  {
+   "role": "verify",
+   "building": false,
+   "status": "0",
+   "count": 99
+  },
+  {
+   "role": "verify",
+   "building": false,
+   "status": "1",
+   "count": 318
+  },
+  {
+   "role": "verify",
+   "building": false,
+   "status": "2",
+   "count": 89
+  },
+  {
+   "role": "verify",
+   "building": false,
+   "status": "3",
+   "count": 284
+  },
+  {
+   "role": "verify",
+   "building": false,
+   "status": "4",
+   "count": 72
+  },
+  {
+   "role": "verify",
+   "building": false,
+   "status": "5",
+   "count": 74
+  },
+  {
+   "role": "verify",
+   "building": false,
+   "status": "6",
+   "count": 64
+  },
+  {
+   "role": "verify",
+   "building": true,
+   "status": "0",
+   "count": 200
+  }
+ ],
+ "uncompressed_bytes": 4046335,
+ "uncompressed_sha256": "c20672d3a9815d4729ac121ca08f5d36fc8ef87356c1f1185414f67f798b4515",
+ "gzip_sha256": "c1891afa1d4e878dc37361e7cf5932c041b5bbab7a56db5ea2d5553169626636",
+ "raw_scratch": ".mylang-cache/rp3/fuzz-journals/X/gates-merge-s2-main-01/fuzz/s1/commands.jsonl.gz",
+ "worker_qualified": true,
+ "native_complete": true
+}

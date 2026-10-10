@@ -174,7 +174,7 @@ pub const Retention = struct {
     /// namespace so it can never collide with an ordinary checked body.
     symbolic: generic_cache.Table = .{},
     /// C3 concrete-specialization results. Same durable store and retention
-    /// budget, under the `specialization-v1` kind and its own key namespace.
+    /// budget, under the `specialization-v2` kind and its own key namespace.
     specializations: generic_specializations.Table = .{},
 };
 
@@ -472,7 +472,10 @@ pub const Session = struct {
         // whole-project body set.
         const functions = try allocator.alloc(copy.FunctionRemap, entry.meta.function_refs.len);
         for (entry.meta.function_refs, functions) |reference, *out| {
-            const fresh = self.remap.functions.get(reference.key) orelse return self.reason(.missing_function);
+            const fresh = if (reference.template != null)
+                @backingInt((try self.resolveSpecialization(reference)) orelse return self.reason(.missing_function))
+            else
+                self.remap.functions.get(reference.key) orelse return self.reason(.missing_function);
             if (fresh == std.math.maxInt(usize)) return self.reason(.ambiguous_function);
             out.* = .{ .old = @backingInt(reference.id), .fresh = @fromBackingInt(fresh) };
         }
@@ -517,6 +520,10 @@ pub const Session = struct {
         self.reuse.functions[index] = true;
         self.cache.statistics.reused += 1;
         return function;
+    }
+    fn resolveSpecialization(self: *Session, reference: owned.FunctionRef) error{ OutOfMemory, InternalError }!?typed.FunctionId {
+        const resolver = self.reuse.resolver orelse return null;
+        return resolver.resolve(resolver.context, reference);
     }
     /// A summary identity names nominal records directly. Callable spellings
     /// omit return origins, so include their exact schema to distinguish them.
@@ -595,6 +602,11 @@ pub const Session = struct {
         var specialization = false;
         while (function_iterator.next()) |id| {
             if (id.* >= self.prepared.ordinary_ast.len) {
+                if (self.reuse.resolver) |resolver| if (try resolver.capture(resolver.context, @fromBackingInt(id.*))) |reference| {
+                    function_refs[function_count] = reference;
+                    function_count += 1;
+                    continue;
+                };
                 specialization = true;
                 break;
             }
@@ -605,6 +617,7 @@ pub const Session = struct {
             function_count += 1;
         }
         if (specialization) return self.freshMiss(.generic_specialization);
+        owned.sortFunctionRefs(owned.FunctionRef, function_refs[0..function_count]);
         // Every referenced aggregate must have a stable identity that exists
         // before checking. A declared callback, record or prelude type does;
         // a callable contract or structural array interned while checking does
@@ -890,6 +903,7 @@ const Reuse = struct {
     functions: []bool,
     /// Bodies a check summary stood in for: there is no checked tree to retain.
     stood_in: []bool,
+    resolver: ?ReferenceResolver = null,
 };
 
 /// Whether one referenced aggregate is a declared callable-typed slot. Declared
@@ -930,3 +944,10 @@ test "semantic cache duplicate callable names require one exact shape" {
     shapes.memo.clearRetainingCapacity();
     try t.expectEqual(@as(?usize, null), try uniqueRecordShape(&shapes, records[0].name, first));
 }
+
+/// Request-local bridge to validated specialization registration; never retained or persisted.
+pub const ReferenceResolver = struct {
+    context: *anyopaque,
+    capture: *const fn (*anyopaque, typed.FunctionId) error{OutOfMemory}!?owned.FunctionRef,
+    resolve: *const fn (*anyopaque, owned.FunctionRef) error{ OutOfMemory, InternalError }!?typed.FunctionId,
+};

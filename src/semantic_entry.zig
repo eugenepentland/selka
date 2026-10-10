@@ -8,7 +8,7 @@ const diagnostic = @import("diagnostic.zig");
 const effect_set = @import("effect_set.zig");
 
 /// One stable function identity exchanged for a fresh catalog ordinal at lookup time.
-pub const FunctionRef = struct { id: typed.FunctionId, key: []const u8 };
+pub const FunctionRef = struct { id: typed.FunctionId, key: []const u8, template: ?[]const u8 = null };
 /// One stable nominal-type identity exchanged for a fresh catalog ordinal.
 /// `shape` is the record's transitive shape digest when the tree was checked
 /// (`semantic_key.Shapes`); a changed shape makes the tree stale.
@@ -74,7 +74,7 @@ pub const Entry = struct {
         const statements = mapper.value(arena_allocator, []const typed.Statement, program.statements[range.statements.start..range.statements.end]) catch |err| return classify(err);
         const notes = noteWarnings(arena_allocator, saved_function) catch |err| return classify(err);
         const function_refs = try arena_allocator.alloc(FunctionRef, spec.function_refs.len);
-        for (spec.function_refs, function_refs) |ref, *out| out.* = .{ .id = ref.id, .key = try arena_allocator.dupe(u8, ref.key) };
+        for (spec.function_refs, function_refs) |ref, *out| out.* = .{ .id = ref.id, .key = try arena_allocator.dupe(u8, ref.key), .template = if (ref.template) |template| try arena_allocator.dupe(u8, template) else null };
         const record_refs = try arena_allocator.alloc(RecordRef, spec.record_refs.len);
         for (spec.record_refs, record_refs) |ref, *out| out.* = .{ .index = ref.index, .key = try arena_allocator.dupe(u8, ref.key), .shape = ref.shape };
         const identity = Identity{
@@ -386,11 +386,11 @@ fn symbolicSpanValid(span: RelativeSpan, region_len: usize) bool {
 /// durable store but lives under its own stable-key namespace and payload
 /// version so it can never be confused with an ordinary checked body or an
 /// abstract symbolic template.
-pub const specialization_kind = "specialization-v1";
+pub const specialization_kind = "specialization-v2";
 /// Prefix applied to a canonical specialization fingerprint for durable keys.
 /// Embedded version invalidates every retained concrete result when the
 /// specialization encoding or remap rules change.
-pub const specialization_key_prefix = "spec\x1fv1\x1f";
+pub const specialization_key_prefix = "spec\x1fv2\x1f";
 
 /// Whether one stored function reference names an ordinary declaration or a
 /// concrete specialization. The stable key is a semantic declaration key for
@@ -402,7 +402,7 @@ pub const FunctionRefKind = enum(u8) { ordinary = 0, specialization = 1 };
 /// One stored function reference: `key` is a stable semantic declaration key
 /// for ordinary functions and a canonical specialization fingerprint for
 /// specializations; `id` only indexes the relocation table.
-pub const SpecializationFunctionRef = struct { kind: FunctionRefKind, id: typed.FunctionId, key: []const u8 };
+pub const SpecializationFunctionRef = struct { kind: FunctionRefKind, id: typed.FunctionId, key: []const u8, template: ?[]const u8 = null };
 
 /// Stable identity of one concrete specialization. `fingerprint` is the
 /// canonical key over template identity, ordered positional descriptors,
@@ -505,6 +505,8 @@ fn validSpecializationRefs(refs: SpecializationRefs, counts: SpecializationCount
     for (refs.function_refs) |reference| {
         if (@backingInt(reference.id) >= counts.old_function_count) return false;
         if (reference.key.len == 0 or reference.key.len > max_entry_bytes) return false;
+        if (reference.template) |template| if (template.len == 0 or template.len > max_entry_bytes) return false;
+        if (reference.kind == .specialization and reference.template == null) return false;
     }
     for (refs.record_refs) |reference| {
         if (reference.index >= counts.old_record_count) return false;
@@ -546,7 +548,7 @@ pub fn createSpecialization(
     const nodes = mapper.value(a, []const typed.Node, program.nodes[range.nodes.start..range.nodes.end]) catch |err| return classify(err);
     const statements = mapper.value(a, []const typed.Statement, program.statements[range.statements.start..range.statements.end]) catch |err| return classify(err);
     const function_refs = try a.alloc(SpecializationFunctionRef, spec.function_refs.len);
-    for (spec.function_refs, function_refs) |reference, *out| out.* = .{ .kind = reference.kind, .id = reference.id, .key = try a.dupe(u8, reference.key) };
+    for (spec.function_refs, function_refs) |reference, *out| out.* = .{ .kind = reference.kind, .id = reference.id, .key = try a.dupe(u8, reference.key), .template = if (reference.template) |template| try a.dupe(u8, template) else null };
     const record_refs = try a.alloc(RecordRef, spec.record_refs.len);
     for (spec.record_refs, record_refs) |reference, *out| out.* = .{ .index = reference.index, .key = try a.dupe(u8, reference.key), .shape = reference.shape };
     const arguments = try a.alloc([]const u8, spec.identity.arguments.len);
@@ -578,4 +580,13 @@ pub fn createSpecialization(
             .counts = .{ .old_function_count = spec.old_function_count, .old_record_count = spec.old_record_count },
         },
     };
+}
+
+/// Preserve previously validated instance discovery order instead of hash-set iteration order.
+pub fn sortFunctionRefs(comptime Reference: type, references: []Reference) void {
+    std.mem.sort(Reference, references, {}, struct {
+        fn less(_: void, left: Reference, right: Reference) bool {
+            return @backingInt(left.id) < @backingInt(right.id);
+        }
+    }.less);
 }

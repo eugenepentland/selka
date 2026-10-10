@@ -211,7 +211,7 @@ fn runInternal(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir
             .returns = returns,
             .shortcut = if (shortcut) |*state| state else null,
             .provenance = &result.provenance,
-        }, &temporary, &scratch, &parameter_summary);
+        }, .{ .temporary = &temporary, .scratch = &scratch, .parameters = &parameter_summary, .inlined = inlined, .result = &result });
         break :blk facts.FieldIntervals{};
     };
     const parameters = parameter_summary.finish();
@@ -282,8 +282,8 @@ fn fieldInput(arena: std.mem.Allocator, table_digest: [32]u8, returns: []const ?
     return digest;
 }
 
-/// A changed global field dependency resumes every candidate at its exact pre-fact body.
-fn demoteFields(arena: std.mem.Allocator, shortcut: ?*shortcut_mod.Index, inlined: []u32, result: *Result) CachedError!void {
+/// A changed exploratory dependency resumes candidates at their exact pre-fact bodies.
+fn demoteExploration(arena: std.mem.Allocator, shortcut: ?*shortcut_mod.Index, inlined: []u32, result: *Result) CachedError!void {
     const state = shortcut orelse return;
     const prior = try arena.dupe(bool, state.green);
     for (state.green, state.context.source.module.functions.items) |*green, function| {
@@ -298,7 +298,32 @@ fn demoteFields(arena: std.mem.Allocator, shortcut: ?*shortcut_mod.Index, inline
     };
 }
 
-const FieldWork = struct {
+fn explorationTargets(a: std.mem.Allocator, module: *ir.Module, shortcut: ?*shortcut_mod.Index, index: u32) Error![]const u32 {
+    if (shortcut) |state| if (state.green[index] and state.context.lazy.raw != null) {
+        const history = state.entries[index].demand.history orelse return state.entries[index].demand.graph.direct_calls;
+        return if (history.outputs[2]) |checkpoint| checkpoint.graph.calls else state.entries[index].demand.graph.direct_calls;
+    };
+    return shortcut_mod.Index.targetsOf(a, &module.functions.items[index], .call);
+}
+
+fn summaryInput(a: std.mem.Allocator, module: *ir.Module, input: Exploration, index: u32, table_digest: [32]u8) Error!?[32]u8 {
+    const context = input.cache orelse return null;
+    if (context.lazy.raw == null) return null;
+    const targets = try explorationTargets(a, module, input.shortcut, index);
+    const digest = try fieldInput(a, table_digest, input.returns, targets);
+    return digest;
+}
+
+fn savedSummary(state: *shortcut_mod.Index, module: *ir.Module, index: usize, dependency: ?[32]u8) ?cache_mod.Summary {
+    const summary = state.entries[index].summary orelse return null;
+    if (state.context.lazy.raw == null) return summary;
+    const expected = state.entries[index].summary_input orelse return null;
+    const current = dependency orelse return null;
+    if (!std.mem.eql(u8, &expected, &current) or !summary.valid(module)) return null;
+    return summary;
+}
+
+const ExplorationWork = struct {
     temporary: *std.heap.ArenaAllocator,
     scratch: *std.heap.ArenaAllocator,
     parameters: *ParameterSummary,
@@ -314,7 +339,7 @@ fn savedFieldRound(module: *const ir.Module, state: *shortcut_mod.Index, index: 
 }
 
 /// Two whole-program field rounds retain compact evidence instead of fact arrays or bodies.
-fn fieldSummaries(arena: std.mem.Allocator, module: *ir.Module, input: Exploration, work: FieldWork) CachedError!facts.FieldIntervals {
+fn fieldSummaries(arena: std.mem.Allocator, module: *ir.Module, input: Exploration, work: ExplorationWork) CachedError!facts.FieldIntervals {
     const temporary = work.temporary;
     const scratch = work.scratch;
     const parameters = work.parameters;
@@ -331,18 +356,12 @@ fn fieldSummaries(arena: std.mem.Allocator, module: *ir.Module, input: Explorati
             if (function.signature.linkage != .internal) try parameters.add(arena, module, function, null);
         }
         for (order) |index| {
-            const targets = if (input.shortcut) |state| blk: {
-                if (state.green[index] and state.context.lazy.raw != null) {
-                    const history = state.entries[index].demand.history orelse break :blk state.entries[index].demand.graph.direct_calls;
-                    break :blk if (history.outputs[2]) |checkpoint| checkpoint.graph.calls else state.entries[index].demand.graph.direct_calls;
-                }
-                break :blk try shortcut_mod.Index.targetsOf(temporary.allocator(), &module.functions.items[index], .call);
-            } else try shortcut_mod.Index.targetsOf(temporary.allocator(), &module.functions.items[index], .call);
+            const targets = try explorationTargets(temporary.allocator(), module, input.shortcut, index);
             const dependency = try fieldInput(temporary.allocator(), table_digest, input.returns, targets);
             var record: ?shortcut_mod.FieldRound = null;
             if (input.shortcut) |state| if (state.green[index]) {
                 record = savedFieldRound(module, state, index, round, dependency);
-                if (record == null) try demoteFields(arena, input.shortcut, inlined, result);
+                if (record == null) try demoteExploration(arena, input.shortcut, inlined, result);
             };
             if (record == null) {
                 const function = &module.functions.items[index];
@@ -376,11 +395,11 @@ fn fieldSummaries(arena: std.mem.Allocator, module: *ir.Module, input: Explorati
         for (state.entries, state.green, module.functions.items) |entry, green, function| {
             if (!green or function.signature.linkage != .internal) continue;
             if (entry.demand.fields.final == null) {
-                try demoteFields(arena, input.shortcut, inlined, result);
+                try demoteExploration(arena, input.shortcut, inlined, result);
                 break;
             }
             if (!std.mem.eql(u8, &entry.demand.fields.final.?, &final_digest)) {
-                try demoteFields(arena, input.shortcut, inlined, result);
+                try demoteExploration(arena, input.shortcut, inlined, result);
                 break;
             }
         }
@@ -486,7 +505,7 @@ fn finalFunctions(memory: FinalMemory, module: *ir.Module, cache: ?*cache_mod.Co
             result.counts.versioned += cached.state.counts.versioned;
             result.counts.vectorized += cached.state.counts.vectorized;
             result.own.add(cached.state.own);
-            if (shortcut) |state| if (key) |digest| try rememberFinal(arena, cache.?, state, index, .{ .key = digest, .state = cached.state, .analysis = cached.analysis });
+            if (shortcut) |state| if (key) |digest| try rememberFinal(arena, cache.?, state, index, .{ .key = digest, .state = cached.state, .analysis = cached.analysis, .provenance = &result.provenance });
             _ = temporary.reset(.retain_capacity);
             continue;
         }
@@ -554,6 +573,7 @@ fn finalFunctions(memory: FinalMemory, module: *ir.Module, cache: ?*cache_mod.Co
         }
         if (shortcut) |state| if (key) |digest| if (artifact) |encoded| try rememberFinal(arena, cache.?, state, index, .{
             .key = digest,
+            .provenance = &result.provenance,
             .state = .{ .known = null, .plans = plan.*, .counts = result.per_function[index].counts, .own = result.per_function[index].own },
             .analysis = .{ .digest = encoded.digest, .loop_ids = encoded.loop_ids },
         });
@@ -561,8 +581,28 @@ fn finalFunctions(memory: FinalMemory, module: *ir.Module, cache: ?*cache_mod.Co
     }
 }
 
+// Split fusions can append compound types and helper requests outside the slice
+// recorder. Load these raw catalogs eagerly until replay covers all producers;
+// ordinary per-stage and emission caches still operate after the exact fusions.
+fn splitFusionCatalog(module: *const ir.Module) bool {
+    for (module.functions.items) |function| {
+        const sig = function.signature;
+        if (sig.linkage == .internal or sig.owned != 0 or sig.views != 0) continue;
+        if (module.kind(sig.ret) != .list or module.compound(sig.ret).list != .str) continue;
+        const explicit = std.mem.eql(u8, function.name, "myl_core_str_split");
+        const whitespace = sig.linkage == .runtime_c and std.mem.eql(u8, function.name, "myl_core_str_split_whitespace");
+        if (!explicit and !whitespace) continue;
+        if (std.mem.eql(ir.Type, sig.params, if (explicit) &.{ .str, .str } else &.{.str})) return true;
+    }
+    return false;
+}
+
 fn prepareOptimizer(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir.Module, mode: Mode, cache: ?*cache_mod.Context) CachedError!?shortcut_mod.Index {
-    var shortcut: ?shortcut_mod.Index = if (cache) |context| if (context.lazy.raw != null and (mode == .verify or mode == .trusted)) try shortcut_mod.Index.prepareDemand(arena, context, @backingInt(mode)) else null else null;
+    const eager_splits = cache != null and cache.?.lazy.raw != null and splitFusionCatalog(module);
+    var shortcut: ?shortcut_mod.Index = if (cache) |context| blk: {
+        if (eager_splits or context.lazy.raw == null or (mode != .verify and mode != .trusted)) break :blk null;
+        break :blk try shortcut_mod.Index.prepareDemand(arena, context, @backingInt(mode), hasRecordTypes(module));
+    } else null;
     if (shortcut == null) if (cache) |context| if (context.lazy.raw) |handles| {
         for (module.functions.items, 0..) |_, index| try handles.ensure(@intCast(index));
     };
@@ -572,8 +612,8 @@ fn prepareOptimizer(arena: std.mem.Allocator, backing: std.mem.Allocator, module
     @memset(before_fusions, null);
     if (shortcut) |state| for (state.green, 0..) |green_body, index| {
         // A matching lowering key binds this body and the full raw catalog.
-        // Fusions read no other bodies or parameter facts, so their prior identity
-        // remains valid even when later inlining makes the function non-green.
+        // Fusions read no other bodies or parameter facts, so their prior base
+        // identity remains valid when later inlining makes the function non-green.
         if (green_body or state.entries[index].raw != null) continue;
         before_fusions[index] = @import("ir_snapshot.zig").digest(fusion_scratch.allocator(), cache.?.source, module.functions.items[index]) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
@@ -581,12 +621,21 @@ fn prepareOptimizer(arena: std.mem.Allocator, backing: std.mem.Allocator, module
         };
         _ = fusion_scratch.reset(.retain_capacity);
     };
+    const seeded = if (shortcut) |state| state.catalog.layout != null and hasDeferredBodies(&state, module) else false;
+    if (seeded) {
+        try @import("fusion_checkpoint.zig").seed(arena, module, shortcut.?.catalog);
+    } else if (shortcut) |*state| state.catalog = .{ .raw_count = module.functions.items.len };
     try @import("fuse_text.zig").whitespace(arena, module);
     try @import("split_views.zig").run(arena, module);
-    _ = try @import("fuse_slice_key.zig").run(arena, module);
+    const fusion_requests: ?[]std.ArrayList(u32) = if (shortcut != null)
+        try arena.alloc(std.ArrayList(u32), before_fusions.len)
+    else
+        null;
+    if (fusion_requests) |requests| @memset(requests, .empty);
+    _ = try @import("fuse_slice_key.zig").runRecording(arena, module, fusion_requests);
     if (cache) |context| try context.prepare(arena);
     if (shortcut) |*state| {
-        if (state.layout) |old| if (hasDeferredBodies(state, module)) {
+        if (state.catalog.layout) |old| if (seeded) {
             const current = cache.?.layoutDigest() orelse return error.CacheMiss;
             if (!std.mem.eql(u8, &old, &current)) return error.CacheMiss;
         };
@@ -605,10 +654,38 @@ fn prepareOptimizer(arena: std.mem.Allocator, backing: std.mem.Allocator, module
                 error.InvalidSnapshot => null,
             };
             _ = fusion_scratch.reset(.retain_capacity);
-            entry.demand.fused_identity = before_fusions[index] != null and after != null and std.mem.eql(u8, &before_fusions[index].?, &after.?);
+            entry.demand.fusion.identity = before_fusions[index] != null and after != null and std.mem.eql(u8, &before_fusions[index].?, &after.?);
         }
-    } else shortcut = try prepareShortcut(arena, cache, mode);
+        try finishFusionInputs(arena, &fusion_scratch, state, .{ .seeded = seeded, .requests = fusion_requests.? });
+    } else if (!eager_splits) shortcut = try prepareShortcut(arena, cache, mode);
     return shortcut;
+}
+
+fn finishFusionInputs(arena: std.mem.Allocator, temporary: *std.heap.ArenaAllocator, state: *shortcut_mod.Index, replay: struct { seeded: bool, requests: []const std.ArrayList(u32) }) CachedError!void {
+    const scratch = temporary.allocator();
+    const fusion = @import("fusion_checkpoint.zig");
+    const module = state.context.source.module;
+    const raw_count = state.catalog.raw_count;
+    if (raw_count > module.functions.items.len) return error.CacheMiss;
+    const requests = try arena.alloc([]const u32, raw_count);
+    for (state.entries[0..raw_count], state.green[0..raw_count], requests, 0..) |*entry, green, *inventory, index| {
+        if (green and module.functions.items[index].signature.linkage == .internal) {
+            inventory.* = state.catalog.requests[index];
+            continue;
+        }
+        inventory.* = replay.requests[index].items;
+        if (replay.seeded and !std.mem.eql(u32, inventory.*, state.catalog.requests[index])) return error.CacheMiss;
+        if (!entry.demand.fusion.identity) if (entry.demand.lowered) |lowered| if (entry.raw) |output| {
+            entry.demand.fusion.key = try fusion.save(scratch, state.context, @intCast(index), lowered, output);
+        };
+        _ = temporary.reset(.retain_capacity);
+    }
+    const declarations = try arena.alloc(fusion.Declaration, module.functions.items.len - raw_count);
+    for (module.functions.items[raw_count..], declarations) |function, *declaration| {
+        if (function.signature.linkage != .runtime_c) return error.CacheMiss;
+        declaration.* = .{ .name = function.name, .signature = function.signature };
+    }
+    state.catalog = .{ .layout = state.context.layoutDigest(), .raw_count = raw_count, .declarations = declarations, .requests = requests };
 }
 
 fn hasDeferredBodies(state: *const shortcut_mod.Index, module: *const ir.Module) bool {
@@ -655,7 +732,7 @@ fn retainEmissionEffects(arena: std.mem.Allocator, module: *ir.Module, cache: ?*
     };
 }
 
-const FinalInput = struct { key: [32]u8, state: cache_mod.FinalState, analysis: cache_mod.Analysis };
+const FinalInput = struct { key: [32]u8, state: cache_mod.FinalState, analysis: cache_mod.Analysis, provenance: *const origins.Table };
 
 fn rememberFinal(arena: std.mem.Allocator, context: *cache_mod.Context, shortcut: *shortcut_mod.Index, index: usize, input: FinalInput) Error!void {
     const state = input.state;
@@ -669,6 +746,7 @@ fn rememberFinal(arena: std.mem.Allocator, context: *cache_mod.Context, shortcut
         .key = input.key,
         .body = body,
         .outgoing = try shortcut_mod.Index.targets(arena, &context.source.module.functions.items[index]),
+        .render = try context.renderMetadata(arena, @intCast(index), input.provenance) orelse return,
         .analysis = .{ .digest = analysis.digest, .loop_ids = try arena.dupe(usize, analysis.loop_ids) },
         .state = retained,
     };
@@ -705,8 +783,12 @@ const Exploration = struct {
     fields: facts.FieldIntervals = .{},
 };
 
-fn exploratorySummaries(arena: std.mem.Allocator, module: *ir.Module, input: Exploration, temporary: *std.heap.ArenaAllocator, scratch: *std.heap.ArenaAllocator, parameter_summary: *ParameterSummary) Error!void {
+fn exploratorySummaries(arena: std.mem.Allocator, module: *ir.Module, input: Exploration, work: ExplorationWork) CachedError!void {
+    const temporary = work.temporary;
+    const scratch = work.scratch;
+    const parameter_summary = work.parameters;
     const green: []const bool = if (input.shortcut) |index| index.green else &.{};
+    const table_digest = try fieldDigest(temporary.allocator(), input.fields);
     // Unanalysed callers still invalidate their callees' parameter intervals.
     for (module.functions.items) |*function| {
         if (function.signature.linkage != .internal) try parameter_summary.add(arena, module, function, null);
@@ -721,11 +803,15 @@ fn exploratorySummaries(arena: std.mem.Allocator, module: *ir.Module, input: Exp
             _ = scratch.reset(.retain_capacity);
             continue;
         }
+        const dependency = try summaryInput(temporary.allocator(), module, input, index, table_digest);
         if (index < green.len and green[index]) {
-            const summary = input.shortcut.?.entries[index].summary.?;
-            try parameter_summary.addSummary(arena, summary);
-            input.returns[index] = summary.returned;
-            continue;
+            if (savedSummary(input.shortcut.?, module, index, dependency)) |summary| {
+                try parameter_summary.addSummary(arena, summary);
+                input.returns[index] = summary.returned;
+                _ = temporary.reset(.retain_capacity);
+                continue;
+            }
+            try demoteExploration(arena, input.shortcut, work.inlined, work.result);
         }
         const key = if (input.cache) |context| try context.key(temporary.allocator(), .{
             .stage = .first_facts,
@@ -742,7 +828,10 @@ fn exploratorySummaries(arena: std.mem.Allocator, module: *ir.Module, input: Exp
             .key = key,
         });
         try parameter_summary.addSummary(arena, summary);
-        if (input.shortcut) |state| try state.summary(arena, index, summary);
+        if (input.shortcut) |state| {
+            try state.summary(arena, index, summary);
+            state.entries[index].summary_input = dependency;
+        }
         input.returns[index] = summary.returned;
         _ = temporary.reset(.retain_capacity);
         _ = scratch.reset(.retain_capacity);

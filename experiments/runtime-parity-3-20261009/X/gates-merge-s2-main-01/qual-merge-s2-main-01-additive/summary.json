@@ -1,0 +1,542 @@
+{
+  "source_commit": "74adf3466317b4883371046ff675ad6a53a45903",
+  "references_sha256": "b6703c9fc0f135844131130cab4c0c8e263d2966ac5e85d24d380ae5deece3bc",
+  "compiler": "zig-out/bin/mylang",
+  "core_shards": 64,
+  "results": [
+    {
+      "command": [
+        "scripts/build-slot.sh",
+        "gate",
+        "--",
+        "bash",
+        "-c",
+        "\"$@\"; result=$?; exit \"$result\"",
+        "--",
+        "scripts/build-slot.sh",
+        "build",
+        "--",
+        "python3",
+        "experiments/new-core-s3-20261006/wave-a/exclusive_core.py",
+        "--",
+        "/usr/bin/time",
+        "-q",
+        "-f",
+        "%e",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/X/gates-merge-s2-main-01/qual-merge-s2-main-01-additive/install-core.seconds",
+        "zig",
+        "build",
+        "install",
+        "--summary",
+        "all"
+      ],
+      "log": "experiments/runtime-parity-3-20261009/X/gates-merge-s2-main-01/qual-merge-s2-main-01-additive/install-core.log",
+      "status": 0,
+      "seconds": 1.12,
+      "wall_including_admission": 6.207955342018977
+    },
+    {
+      "command": [
+        "scripts/build-slot.sh",
+        "gate",
+        "--",
+        "bash",
+        "-c",
+        "\"$@\"; result=$?; exit \"$result\"",
+        "--",
+        "scripts/build-slot.sh",
+        "build",
+        "--",
+        "/usr/bin/time",
+        "-q",
+        "-f",
+        "%e",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/X/gates-merge-s2-main-01/qual-merge-s2-main-01-additive/test-core.seconds",
+        "zig",
+        "build",
+        "test-core",
+        "-Dcore-shards=64",
+        "--summary",
+        "all"
+      ],
+      "log": "experiments/runtime-parity-3-20261009/X/gates-merge-s2-main-01/qual-merge-s2-main-01-additive/test-core.log",
+      "status": 0,
+      "seconds": 48.64,
+      "wall_including_admission": 942.8457293501124,
+      "build_inspection": {
+        "build_summaries": [
+          "71/71 steps succeeded; 712/45568 tests passed (44856 skipped)"
+        ],
+        "maxrss": [
+          {
+            "line": "+- run test 12 pass, 700 skip (712 total) 3s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "|  +- compile test debug native cached 6ms MaxRSS:41M",
+            "display": "41M",
+            "bytes": 42991616.0,
+            "test_run": false
+          },
+          {
+            "line": "|     |  +- compile exe build-identity debug native cached 9ms MaxRSS:41M",
+            "display": "41M",
+            "bytes": 42991616.0,
+            "test_run": false
+          },
+          {
+            "line": "|     |  +- compile exe mylang debug native cached 8ms MaxRSS:41M",
+            "display": "41M",
+            "bytes": 42991616.0,
+            "test_run": false
+          },
+          {
+            "line": "|     |     +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 6ms MaxRSS:42M",
+            "display": "42M",
+            "bytes": 44040192.0,
+            "test_run": false
+          },
+          {
+            "line": "+- run test 12 pass, 700 skip (712 total) 6s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 700 skip (712 total) 7s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 700 skip (712 total) 4s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 700 skip (712 total) 4s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 700 skip (712 total) 3s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 700 skip (712 total) 2s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 700 skip (712 total) 5s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 2s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 3s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 5s MaxRSS:76M",
+            "display": "76M",
+            "bytes": 79691776.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 4s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 3s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 1s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 4s MaxRSS:73M",
+            "display": "73M",
+            "bytes": 76546048.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 2s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 2s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 9s MaxRSS:53M",
+            "display": "53M",
+            "bytes": 55574528.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 1s MaxRSS:51M",
+            "display": "51M",
+            "bytes": 53477376.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 2s MaxRSS:53M",
+            "display": "53M",
+            "bytes": 55574528.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 1s MaxRSS:53M",
+            "display": "53M",
+            "bytes": 55574528.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 1s MaxRSS:53M",
+            "display": "53M",
+            "bytes": 55574528.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 5s MaxRSS:80M",
+            "display": "80M",
+            "bytes": 83886080.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 4s MaxRSS:80M",
+            "display": "80M",
+            "bytes": 83886080.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 15s MaxRSS:54M",
+            "display": "54M",
+            "bytes": 56623104.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 1s MaxRSS:53M",
+            "display": "53M",
+            "bytes": 55574528.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 2s MaxRSS:48M",
+            "display": "48M",
+            "bytes": 50331648.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 13s MaxRSS:258M",
+            "display": "258M",
+            "bytes": 270532608.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 17s MaxRSS:577M",
+            "display": "577M",
+            "bytes": 605028352.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 8s MaxRSS:266M",
+            "display": "266M",
+            "bytes": 278921216.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 9s MaxRSS:266M",
+            "display": "266M",
+            "bytes": 278921216.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 8s MaxRSS:238M",
+            "display": "238M",
+            "bytes": 249561088.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 8s MaxRSS:267M",
+            "display": "267M",
+            "bytes": 279969792.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 7s MaxRSS:259M",
+            "display": "259M",
+            "bytes": 271581184.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 26s MaxRSS:501M",
+            "display": "501M",
+            "bytes": 525336576.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 7s MaxRSS:262M",
+            "display": "262M",
+            "bytes": 274726912.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 2s MaxRSS:48M",
+            "display": "48M",
+            "bytes": 50331648.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 9s MaxRSS:270M",
+            "display": "270M",
+            "bytes": 283115520.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 10s MaxRSS:265M",
+            "display": "265M",
+            "bytes": 277872640.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 9s MaxRSS:75M",
+            "display": "75M",
+            "bytes": 78643200.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 2s MaxRSS:63M",
+            "display": "63M",
+            "bytes": 66060288.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 6s MaxRSS:209M",
+            "display": "209M",
+            "bytes": 219152384.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 431ms MaxRSS:29M",
+            "display": "29M",
+            "bytes": 30408704.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 17s MaxRSS:166M",
+            "display": "166M",
+            "bytes": 174063616.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 10s MaxRSS:160M",
+            "display": "160M",
+            "bytes": 167772160.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 10s MaxRSS:166M",
+            "display": "166M",
+            "bytes": 174063616.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 9s MaxRSS:261M",
+            "display": "261M",
+            "bytes": 273678336.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 8s MaxRSS:163M",
+            "display": "163M",
+            "bytes": 170917888.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 2s MaxRSS:70M",
+            "display": "70M",
+            "bytes": 73400320.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 6s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 1s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 15s MaxRSS:171M",
+            "display": "171M",
+            "bytes": 179306496.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 2s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 4s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 2s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 3s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 5s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 20s MaxRSS:97M",
+            "display": "97M",
+            "bytes": 101711872.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 4s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 5s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 4s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 11s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 2s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 701 skip (712 total) 2s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          }
+        ],
+        "rss_overrun_notices": [],
+        "reported_admission_seconds": {
+          "gate": 889,
+          "build": 0
+        },
+        "errors": []
+      },
+      "longest_shard_seconds": 26.41,
+      "tests": {
+        "passed": 712,
+        "failed": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "command": [
+        "scripts/build-slot.sh",
+        "gate",
+        "--",
+        "bash",
+        "-c",
+        "\"$@\"; result=$?; exit \"$result\"",
+        "--",
+        "scripts/build-slot.sh",
+        "build",
+        "--",
+        "/usr/bin/time",
+        "-q",
+        "-f",
+        "%e",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/X/gates-merge-s2-main-01/qual-merge-s2-main-01-additive/full-conformance.seconds",
+        "python3",
+        "experiments/new-core-s5-20261007/tools/conformance_ref.py",
+        "--references",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/new-core-s5-20261007/references/conformance-v1.json",
+        "--set",
+        "all",
+        "--core",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/zig-out/bin/mylang",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/s5/integration-qualify/qual-merge-s2-main-01-additive/conformance",
+        "--jobs",
+        "4",
+        "--why",
+        "--leakcheck",
+        "--verify",
+        "--frontend-reference",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/frontend-fixes-20261009/s5-frontend-reference.json",
+        "--frontend-journal",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/X/gates-merge-s2-main-01/qual-merge-s2-main-01-additive/frontend-conformance.json"
+      ],
+      "log": "experiments/runtime-parity-3-20261009/X/gates-merge-s2-main-01/qual-merge-s2-main-01-additive/full-conformance.log",
+      "status": 0,
+      "seconds": 22.31,
+      "wall_including_admission": 27.369275944074616
+    }
+  ],
+  "qualified": true,
+  "core_sha256": "3aecdeae1f8dee954ae3841ad3924873d2221c3516d0f67cf6558cc845dd047d"
+}

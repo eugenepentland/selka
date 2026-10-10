@@ -1,0 +1,14 @@
+source_commit=74adf3466317b4883371046ff675ad6a53a45903
+$ /home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/scripts/build-slot.sh build -- nice -n 10 /usr/bin/python3 /home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/new-core-s5-20261007/tools/fuzz_frozen.py --kind iteration --references /home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/new-core-s5-20261007/references/fuzz-v1.json.gz --cases 200 --seed 3305 --old /home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/new-core-s5-20261007/tools/frozen-old-core --new /home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/tools/mylang-migrating --evidence /home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/X/gates-merge-s2-main-01/fuzz/iteration --cache-root /home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/s5/fuzz/20261010T044406Z-6320520f4c39/iteration
+qualification progress: iteration: seen=25 elapsed=41.17s
+qualification progress: iteration: seen=50 elapsed=86.54s
+qualification progress: iteration: seen=75 elapsed=134.04s
+qualification progress: iteration: seen=100 elapsed=222.45s
+qualification progress: iteration: seen=125 elapsed=303.99s
+qualification progress: iteration: seen=150 elapsed=361.52s
+qualification progress: iteration: seen=175 elapsed=419.51s
+qualification progress: iteration: seen=200 elapsed=478.27s
+mut,records,alias                  cases=200 old_rejected=0 refused=0 compared=3000 mismatch=0 fact=0 traps=328 caught=0
+qualification {"kind": "iteration", "qualified": true, "accepted": 200, "native_comparisons": 3000, "elapsed_seconds": 480.95845941011794}
+
+exit=0

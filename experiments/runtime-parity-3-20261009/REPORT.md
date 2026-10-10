@@ -1,6 +1,6 @@
 # Runtime parity wave 3 — 2026-10-09
 
-Status: M0, U2, S2 and R complete. X is in progress. The real U2 merge passes all merged-tree correctness and instruction checks. S2 is merged. Main advanced to `1ab0d92e7`; its mandatory integration and fresh combined gates are in progress. The R merge and final CPU-10 timing remain.
+Status: M0, U2, S2 and R complete. X is in progress. U2 is fully qualified after integration; S2 is merged. Main advanced again to `fa1160602`; its integration passes four focused cache compatibility regressions and fresh full combined gates are next. The R merge and final CPU-10 timing remain.
 
 Base: `main` `41ed360fb361c49938488ad111795bad8a726b73`. Integration branch: `codex/runtime-parity-3`.
 Worktree: `/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3` (locked, prune-keep).
@@ -86,6 +86,9 @@ Historical checkpoints are retained below; the current state is stated above.
 - S2 integration attempt `merge-s2-01` passes build 9/9, repository 95/95 (2,349 tests; 21,688 routing skips) and formatting. Conformance does not execute: the inherited qualifier keys temporary storage only by evidence basename, so `raw`/`additive` collide with the prior U2 run. Exit status 1 alone is not qualification; this attempt remains incomplete. The owned driver now uses globally unique leaf names and validates raw totals immediately. `merge-s2-02` reruns the entire sequence on the unchanged compiler implementation. Failure logs and analysis remain committed.
 
 - Main advances to `1ab0d92e7a7120abaffba358933d8401b953251a` with incremental stage/frontend caches and reclaimable analysis/emission storage. `merge-s2-02` is canceled while its repository wrapper is verified unadmitted; no repository/conformance result is claimed. Integrate new main with a real merge, preserve accepted U2/S2 behavior in ownership and pass-pipeline conflicts, and rerun complete combined gates. The original M0 base/compiler/corpora stay fixed. All three implementation lanes are complete; their branches and accepted hand-offs remain unchanged.
+
+- The U2+S2+main1ab tree `74adf3466` passes build9/9, repository95/95 (2,459 tests;22,554 routing skips), fmt15/15, exact raw1516/4/0 and additive1547/0/0 in both modes,64shards/712 core tests, and frozen9×200 (1,800 cases;25,800 comparisons;35,600 runs;42,800 commands) with unchanged source/oracles. Main advances to `fa1160602` during fuzz; the completed matrix is retained and compacted, then the driver correctly stops at its main-identity check before external/counting/instruction stages. This is a partial integration checkpoint, not complete qualification.
+- The second mandatory main merge resolves `passes.zig`/`fuse_slice_key.zig` while preserving U2/S2 behavior. New demand-level fusion replay does not cover S2-generated compound types, all split-helper requests, or duplicate count helpers. A narrow eager-preparation fallback for eligible split catalogs retains ordinary stage/emission caches; byte/slice-only catalogs keep demand reuse. All four new cache regressions pass in trusted and verify modes (8/8 build steps;4/4 host tests), including cold/warm, dirty helper-order changes, and unaffected byte-only reuse. `X/main-fa116-merge-review.json` records the compatibility bound. Complete fresh `merge-s2-main-02` gates still precede the R merge.
 
 ## Lane exits at current checkpoints
 

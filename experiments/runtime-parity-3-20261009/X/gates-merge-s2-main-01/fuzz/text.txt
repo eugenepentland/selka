@@ -1,0 +1,18 @@
+source_commit=74adf3466317b4883371046ff675ad6a53a45903
+$ /home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/scripts/build-slot.sh build -- nice -n 10 /usr/bin/python3 /home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/new-core-s5-20261007/tools/fuzz_frozen.py --kind text --references /home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/new-core-s5-20261007/references/fuzz-v1.json.gz --cases 200 --seed 3307 --old /home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/new-core-s5-20261007/tools/frozen-old-core --new /home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/tools/mylang-migrating --evidence /home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/X/gates-merge-s2-main-01/fuzz/text --cache-root /home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/s5/fuzz/20261010T044406Z-6320520f4c39/text --harness /home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/new-core-s3-20261006/wave-c/s3-char/fuzz_char.py
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: all 3 build slot(s) busy; waiting (60s so far)
+build-slot: all 3 build slot(s) busy; waiting (120s so far)
+build-slot: build slot 1 after 172s (all 3 build slot(s) busy)
+qualification progress: text: seen=25 elapsed=26.94s
+qualification progress: text: seen=50 elapsed=55.55s
+qualification progress: text: seen=75 elapsed=87.09s
+qualification progress: text: seen=100 elapsed=118.19s
+qualification progress: text: seen=125 elapsed=150.96s
+qualification progress: text: seen=150 elapsed=188.79s
+qualification progress: text: seen=175 elapsed=220.72s
+qualification progress: text: seen=200 elapsed=253.37s
+cases=200 compared=3000 mismatch=0 fact=0 old_rejected=0 new_refused=0
+qualification {"kind": "text", "qualified": true, "accepted": 200, "native_comparisons": 3000, "elapsed_seconds": 255.09074510005303}
+
+exit=0

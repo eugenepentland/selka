@@ -1,0 +1,44 @@
+[
+ {
+  "path": "experiments/runtime-parity-3-20261009/X/gates-merge-s2-main-01/qual-merge-s2-main-01-additive/full-conformance.log",
+  "raw_sha256": "97281750d1e84d3da464c68a2e654daa1d3332b6fb5c964cda4c9dba1ed3dcff",
+  "gzip_sha256": "48a6eb0027d8ff1c473af19b4b826daa16d11ba1f366e957f0117d20fa0a5121",
+  "raw_bytes": 47036,
+  "gzip_bytes": 3995
+ },
+ {
+  "path": "experiments/runtime-parity-3-20261009/X/gates-merge-s2-main-01/qual-merge-s2-main-01-additive/install-core.log",
+  "raw_sha256": "ea3a59e8caea7d0fccf11ff24f78fc4770c42f020cbbf5dbe5f5a19f592081a9",
+  "gzip_sha256": "18010877edb7eda462b262c4b110435dfede53acde7cd58124706b819ff1501b",
+  "raw_bytes": 1869,
+  "gzip_bytes": 888
+ },
+ {
+  "path": "experiments/runtime-parity-3-20261009/X/gates-merge-s2-main-01/qual-merge-s2-main-01-additive/test-core.log",
+  "raw_sha256": "67fd48d003c726a414126f0e87e09e4383d48ef9ff27dad9a9ee43a9990a9101",
+  "gzip_sha256": "551f9ecff3af4681bbb176417d3a41f74f461edea9467e73215961ccaf405fbb",
+  "raw_bytes": 85391,
+  "gzip_bytes": 16529
+ },
+ {
+  "path": "experiments/runtime-parity-3-20261009/X/gates-merge-s2-main-01/qual-merge-s2-main-01-raw/full-conformance.log",
+  "raw_sha256": "cfd64bf8f3d5d054dae301c58ac904d691aea704f1a2dfbf13ee44eec7463fbb",
+  "gzip_sha256": "800ac6deaa95f8720fe7d558632ff7a96dd1cf45734bce844ed24a14394571c8",
+  "raw_bytes": 48119,
+  "gzip_bytes": 4174
+ },
+ {
+  "path": "experiments/runtime-parity-3-20261009/X/gates-merge-s2-main-01/qual-merge-s2-main-01-raw/install-core.log",
+  "raw_sha256": "949494ae43be29501ad4035f6211b2e64ba8a68d343bad683eca1ab13729b48e",
+  "gzip_sha256": "018b010b25fa26be7b70b19eb3bf6de7ec0d3861b33e585d9f3403650731cc73",
+  "raw_bytes": 1861,
+  "gzip_bytes": 884
+ },
+ {
+  "path": "experiments/runtime-parity-3-20261009/X/gates-merge-s2-main-01/qual-merge-s2-main-01-raw/test-core.log",
+  "raw_sha256": "a7ffd8d0599ab31b816abcc50ef60ddd22af1f5f106463ce37a8684082e49a12",
+  "gzip_sha256": "e1f287f046ec95299c26a3b85ceee5cce7a918dd452f57ee94e1547b5ddf7039",
+  "raw_bytes": 85318,
+  "gzip_bytes": 16620
+ }
+]

@@ -91,7 +91,7 @@ contract fingerprint = SHA256(compiler_identity, bootstrap-v1, target, runtime-a
 ```
 
 The fingerprint is folded into the persistent syntax key, the whole-program
-verdict key, the durable `semantic-cache-v2` checked-body key and header, the
+verdict key, the durable `semantic-cache-v5` checked-body key and header, the
 generic-specialization key and the native object identity. The checked-body store
 also embeds the M1/M2 mutation-contract version. Changing any dimension
 invalidates those entries even when every source byte is identical. The
@@ -101,9 +101,9 @@ cannot silently reuse an older entry.
 
 ### Durable checked-body entries
 
-C2 persists one ordinary function body per `semantic-cache-v2` file. C3 adds two
+C2 persists one ordinary function body per `semantic-cache-v5` file. C3 adds two
 more payload kinds in the same contract namespace: `symbolic-template-v1` for
-abstract generic templates and `specialization-v1` for concrete specializations.
+abstract generic templates and `specialization-v2` for concrete specializations.
 The specialization key is canonical over the template identity, the ordered
 positional type/length descriptors, the transitive name-ordered provider
 contracts, the template constraint dependency, the declared
@@ -111,13 +111,16 @@ effect/mutation/return-origin contract and the build context, with every boundar
 length-prefixed. A concrete reuse is admitted only when the defining template's
 declaration region/body bytes are byte-identical, the template dependency context
 matches, and every stored function/record reference remaps to exactly one fresh
-identity; a missing or ambiguous remap, a nested specialization that the fresh
-run has not instantiated, or a synthesized lambda reference is a conservative
-miss. The whole-graph effect and mutation passes are never cached: they rerun from
+identity. A missing nested instance may be preregistered only from a validated
+recipe whose fresh template, source bytes, context, current arguments and
+re-derived canonical fingerprint all match. The normal bounded instance registry
+resolves cycles without recursive body checking. Missing or ambiguous remaps,
+unavailable structural arguments and synthesized lambda references remain
+conservative misses. The whole-graph effect and mutation passes are never cached: they rerun from
 the combined fresh and replayed trees on every request, so a changed provider or
 callee body can never inherit a stale transitive verdict.
 
-C2 persists one ordinary function body per `semantic-cache-v2` file. The header
+C2 persists one ordinary function body per `semantic-cache-v5` file. The header
 repeats the format version, cache-contract fingerprint, mutation-contract version,
 stable declaration key, dependency context, entry count, payload length and
 checksum. The payload contains the owned relocatable `typed.Function` tree, node

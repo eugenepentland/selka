@@ -547,6 +547,7 @@ const Checker = struct {
     }
     const specialization_checks = @import("sema_specialize.zig").Checks(Checker);
     pub const lookupSpecialization = specialization_checks.lookupSpecialization;
+    pub const bindOrdinaryReferences = specialization_checks.bindOrdinaryReferences;
     pub const publishSpecializations = specialization_checks.publishSpecializations;
     pub const specialize = specialization_checks.specialize;
     /// Whether a value of this type must be consumed or handled (a Result or resource).
@@ -1457,6 +1458,7 @@ fn initSpecializationReuse(
 ) Error!void {
     checker.prepared = if (session.*) |*queries| &queries.prepared else null;
     checker.spec_build = if (spec_session.*) |*reuse| reuse.backend.build else "";
+    if (session.*) |*queries| if (spec_session.*) |*reuse| try checker.bindOrdinaryReferences(queries, reuse);
     if (checker.prepared) |prepared| for (prepared.ordinary_ast, 0..) |ast_index, instance| {
         const entry = try checker.ordinary_instance_by_key.getOrPut(allocator, prepared.keys[ast_index]);
         if (entry.found_existing) entry.value_ptr.* = std.math.maxInt(usize) else entry.value_ptr.* = instance;

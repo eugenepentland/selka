@@ -501,7 +501,7 @@ const ModuleState = struct {
 
     fn literal(self: *ModuleState, index: u32, raw: bool) ![]const u8 {
         for (self.local.strings.items, 0..) |*known, i| {
-            if (known.original != index) continue;
+            if (!std.mem.eql(u8, self.module.strings.items[known.original], self.module.strings.items[index])) continue;
             known.raw = known.raw or raw;
             return std.fmt.allocPrint(self.allocator, "@myl.str.{d}", .{i});
         }

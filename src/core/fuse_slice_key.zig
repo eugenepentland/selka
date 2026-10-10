@@ -37,13 +37,19 @@ const span_forms = [_]SpanForm{
 
 /// Rewrite every qualifying slice of every internal function; returns how many changed.
 pub fn run(arena: std.mem.Allocator, module: *ir.Module) std.mem.Allocator.Error!u32 {
+    return runRecording(arena, module, null);
+}
+
+/// Record every helper declaration request in its original producer traversal order.
+pub fn runRecording(arena: std.mem.Allocator, module: *ir.Module, requests: ?[]std.ArrayList(u32)) std.mem.Allocator.Error!u32 {
     var changed: u32 = 0;
     const count = module.functions.items.len;
     for (0..count) |index| {
         // Declaring a span helper may move the module's function array.
         var function = module.functions.items[index];
         if (function.signature.linkage != .internal) continue;
-        changed += try rewriteFunction(arena, module, &function);
+        const events = if (requests) |all| if (index < all.len) &all[index] else null else null;
+        changed += if (events) |capture| try rewriteRecording(arena, module, &function, capture) else try rewriteFunction(arena, module, &function);
         module.functions.items[index] = function;
     }
     return changed;
@@ -51,13 +57,17 @@ pub fn run(arena: std.mem.Allocator, module: *ir.Module) std.mem.Allocator.Error
 
 /// Rewrite the qualifying slices of one function; returns how many changed.
 pub fn rewriteFunction(arena: std.mem.Allocator, module: *ir.Module, f: *ir.Function) std.mem.Allocator.Error!u32 {
+    return rewriteRecording(arena, module, f, null);
+}
+
+fn rewriteRecording(arena: std.mem.Allocator, module: *ir.Module, f: *ir.Function, requests: ?*std.ArrayList(u32)) std.mem.Allocator.Error!u32 {
     var changed: u32 = 0;
     const count = f.insts.items.len;
     for (0..count) |index| {
         const inst = f.insts.items[index];
         if (inst.op == .str_from_view and onlyReads(f, module, @fromBackingInt(@intCast(index)))) {
             f.insts.items[index] = .{ .op = .copy, .ty = .str_view, .a = inst.a, .span = inst.span };
-            try rewriteUses(arena, f, module, f.resolve(inst.a));
+            try rewriteUsesRecording(arena, f, module, f.resolve(inst.a), requests);
             changed += 1;
             continue;
         }
@@ -77,7 +87,7 @@ pub fn rewriteFunction(arena: std.mem.Allocator, module: *ir.Module, f: *ir.Func
         }
         f.insts.items[index].op = .str_slice_view;
         f.insts.items[index].ty = .str_view;
-        try rewriteUses(arena, f, module, ref);
+        try rewriteUsesRecording(arena, f, module, ref, requests);
         changed += 1;
     }
     return changed;
@@ -193,6 +203,10 @@ fn spanCallee(arena: std.mem.Allocator, module: *ir.Module, text: ir.Signature, 
 /// Retype the view's copies, call each reading helper's span form, and give each insert
 /// a key materialized from the view.
 pub fn rewriteUses(arena: std.mem.Allocator, f: *ir.Function, module: *ir.Module, view: ir.Ref) std.mem.Allocator.Error!void {
+    return rewriteUsesRecording(arena, f, module, view, null);
+}
+
+fn rewriteUsesRecording(arena: std.mem.Allocator, f: *ir.Function, module: *ir.Module, view: ir.Ref, requests: ?*std.ArrayList(u32)) std.mem.Allocator.Error!void {
     const count = f.insts.items.len;
     for (0..count) |index| {
         const inst = f.insts.items[index];
@@ -203,7 +217,9 @@ pub fn rewriteUses(arena: std.mem.Allocator, f: *ir.Function, module: *ir.Module
         if (inst.op == .list_len and f.resolve(inst.a) == view) f.insts.items[index].op = .str_len;
         if (inst.op == .call and usesValue(f, inst, view)) {
             const form = spanForm(module, inst) orelse continue;
-            f.insts.items[index].a = try spanCallee(arena, module, module.functions.items[inst.a.index()].signature, form.span);
+            const callee = try spanCallee(arena, module, module.functions.items[inst.a.index()].signature, form.span);
+            f.insts.items[index].a = callee;
+            if (requests) |events| try events.append(arena, @intCast(callee.index()));
             continue;
         }
         if (inst.op != .dict_insert or f.resolve(f.operands(inst.data)[0]) != view) continue;
