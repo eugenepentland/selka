@@ -1,0 +1,42 @@
+Profile commit: 85e15c43b006b361210208f466ab33db59e74da4
+Working directory: /home/epentland/.codex/worktrees/selka-parser-pilot/mylang
+Qualified seed: /home/epentland/.cache/mylang/components/seeds/99a0c5875f1543cbb9c55694eb744328012fd1454b83a451ea11c6b2f96963fc/source/zig-out/focus/mylang
+Seed SHA256: c4f1ea0b6618cb7b146bbb8e035220eb36b99ff078d4a959d8bf0948d0c6d98b
+Zig: /home/epentland/.local/bin/zig (pinned .zigversion)
+
+Common environment on all admitted commands:
+TMPDIR=/home/epentland/.codex/worktrees/selka-parser-pilot/mylang/.profile-tmp
+ZIG_LOCAL_CACHE_DIR=/home/epentland/.codex/worktrees/selka-parser-pilot/mylang/.zig-cache-routing
+ZIG_GLOBAL_CACHE_DIR=/home/epentland/ai/canopy/.zig-global-cache
+Admission prefix: scripts/build-slot.sh build
+
+Command: zig build test-units -Dtest-filter=component
+Log: profile-components.log
+Verdict: 40 passed (33 named +7 unnamed), 0 failed, 0 skipped; process exit0.
+Temporary matched dependency: component_launch frontend manifest schema2 expectation only. Restored before commit; final integration uses lexer launch commit ec20468b3.
+
+Command: zig build test-units '-Dtest-filter=parser values'
+Log: profile-codec-final.log
+Verdict: 15 passed (8 named +7 unnamed), 0 failed, 0 skipped; process exit0.
+Includes final aggregate edge-budget test. Zig logs print 'failed command' despite PASS; process completion independently confirmed exit0.
+
+Command: QUALIFIED_SEED test selfhost/components/parser_pilot/profile_tests.my --force --no-cache --max-steps 500000000 --max-memory 1G
+Log: profile-pure.log
+Verdict: 3 passed, 0 cached, 0 failed, 0 skipped; process exit0.
+
+Command: QUALIFIED_SEED test selfhost/components/parser_pilot/profile_tests.my --force --no-cache --release --verify-facts --max-steps 500000000 --max-memory 1G
+Additional environment: MYL_CORE_LEAKCHECK=1
+Log: profile-pure-release.log
+Verdict: 3 passed, 0 cached, 0 failed, 0 skipped; process exit0.
+
+Prior command: QUALIFIED_SEED test selfhost/components/parser_pilot/profile_tests.my --force --no-cache --max-steps 50000000 --max-memory 1G
+Log: profile-pure-50m.log
+Verdict: 2 passed, 1 failed. Exact-million table reached syntax_codec.put during encoding and failed R_STEP_LIMIT. Test-only instruction ceiling increased to500M; memory ceiling stayed1G. Both final modes pass.
+Initial invocation also used unsupported --project test option; rejected before tests. Recorded in profile-pure-invocation-failure.txt.
+
+Command: ../guardian-zig/zig-out/bin/guardian-check all . --gate
+Log: guardian-final.log
+Verdict: 88 checks passed, process exit0; commit hook reused cached green verdict.
+Initial manual invocation omitted 'all' and ran no checks; diagnostic log guardian.log retained.
+
+Scope: million scalar-value test proves codec admission/excess refusal, not AST parity. Larger dense native/installed parity and external AS qualification belong to parent/probes. Standalone seed binaries do not obtain a memory ceiling from MYLANG_MEMORY_LIMIT alone; pure test CLI --max-memory1G supplies its actual test ceiling. No timing claim.

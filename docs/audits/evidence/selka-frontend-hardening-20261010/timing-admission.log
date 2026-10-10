@@ -1,0 +1,27 @@
+build-slot: gate slot 1, FIFO ticket 62 after 0s
+build reservation 2 admitted: PID 1355821, FD9 /run/user/1000/mylang-slots/build2.lock
+build reservation 3 admitted: PID 1355822, FD9 /run/user/1000/mylang-slots/build3.lock
+waiting for 1 build reservations; 40 seconds
+waiting for 1 build reservations; 80 seconds
+build reservation 1 admitted: PID 1355820, FD9 /run/user/1000/mylang-slots/build1.lock
+outer gate and all FIFO build reservations held; timing isolated
+START baseline
+{"measurement": "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/hardening-timing-baseline.json", "host_sha256": "51c207cb030c5c5c9cf19ef041d7eeaea3ddb5924c05d991f46a665e06b97b19", "parser_transport_cases": 9, "application_cases": 9, "coordinator_cases": 3}
+DONE baseline
+START candidate
+{"measurement": "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/hardening-timing-candidate.json", "host_sha256": "4f41c951fa3dd9e5b2b6f17e12cc958d91e3858734f1a3439549e4b3211bdfec", "parser_transport_cases": 21, "application_cases": 9, "coordinator_cases": 3}
+DONE candidate
+build reservation 1 exit 0; admission receipt /home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/hardening-timing-build-slot-1.log
+build-slot: FIFO ticket 765, position 3; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 765, position 1; all 3 build slot(s) busy; waiting (60s so far)
+build-slot: build slot 1, FIFO ticket 765 after 80s
+
+build reservation 2 exit 0; admission receipt /home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/hardening-timing-build-slot-2.log
+build-slot: FIFO ticket 763, position 1; waiting for memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 2, FIFO ticket 763 after 5s
+
+build reservation 3 exit 0; admission receipt /home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/hardening-timing-build-slot-3.log
+build-slot: FIFO ticket 764, position 2; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 3, FIFO ticket 764 after 10s
+
+all FIFO build reservations released

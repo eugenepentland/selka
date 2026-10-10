@@ -1,0 +1,236 @@
+{
+  "status": "completed",
+  "root_source_sha": "137c9f53e28919e49364627207a6f2b2c2151f3c",
+  "baseline_source_sha": "a0a4a80c5",
+  "baseline_source_closure": "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/hardening-baseline-source",
+  "scripts": {
+    "measurement": {
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/tests/measure_frontend_adoption.py",
+      "sha256": "09ed43e4d48c861716b58052bae37ff2db031bf8a16471c399d19be679acf792"
+    },
+    "qualification": {
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/tests/run_frontend_qualification.py",
+      "sha256": "d7418f1116dac2e0d9c9377d2f51cdb92a0e94c773f9624211e2f9aeeb0bcca4"
+    },
+    "reservation": {
+      "path": "/home/epentland/.codex/worktrees/selka-compiler-probes/mylang/.tmp/frontend-qualification/hardening_isolated_measure.py",
+      "sha256": "8c6b6b1aa839aab34fd996c7f205503c419759e5e11fc1099f0fec15bcd9af0b"
+    },
+    "matched_runner": {
+      "path": "/home/epentland/.codex/worktrees/selka-compiler-probes/mylang/.tmp/frontend-qualification/hardening_matched_measure.py",
+      "sha256": "2d489a57aee82541f238a7a005653a31b886fb00fb06f9c653c343e506b33a80"
+    }
+  },
+  "affinity": [
+    2,
+    3,
+    10,
+    11
+  ],
+  "reservation_policy": "FIFO gate plus all three FIFO build holders; deterministic outer gate FD30 retained; admission receipts saved; no raw flock bypass",
+  "commands": {
+    "launcher": "TMPDIR=$PWD/.tmp/frontend-qualification ZIG_LOCAL_CACHE_DIR=$PWD/.zig-cache ZIG_GLOBAL_CACHE_DIR=/home/epentland/ai/canopy/.zig-global-cache scripts/build-slot.sh gate python3 .tmp/frontend-qualification/hardening_isolated_measure.py taskset -c 2,3,10,11 python3 .tmp/frontend-qualification/hardening_matched_measure.py"
+  },
+  "hosts": {
+    "baseline": {
+      "prefix": "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/adoption-release",
+      "host_sha256": "51c207cb030c5c5c9cf19ef041d7eeaea3ddb5924c05d991f46a665e06b97b19",
+      "builder_sha256": "23f89af9f36ace4bced078647264bfb81dd3ba1515760e6eb303cc2f20d29be9",
+      "packages": {
+        "cache-plan.json": {
+          "artifact": "cache-plan-b3a89b78e7b9c8ab8ce8417989ff01a81af798bf79491eaf0881cc0d0b9735f1",
+          "component": "cache-plan",
+          "format": 1,
+          "key": "2fb5bddb154affe5fb2c444227a836185c453fc253fdc7538feb4fceaab53f06",
+          "protocol": 2,
+          "schema": 2,
+          "sha256": "b3a89b78e7b9c8ab8ce8417989ff01a81af798bf79491eaf0881cc0d0b9735f1"
+        },
+        "lexer-pilot.json": {
+          "artifact": "lexer-pilot-d38b6cea72cf16bd2340aac130c92025a6a6de6411af78f419d00c752b5b256c",
+          "component": "lexer-pilot",
+          "format": 1,
+          "key": "37cf9af3de71f6909ef96c7dbf32aa3a82a4b86c347d74db14641b32e980ecdf",
+          "protocol": 1,
+          "schema": 1,
+          "sha256": "d38b6cea72cf16bd2340aac130c92025a6a6de6411af78f419d00c752b5b256c"
+        },
+        "parser-pilot.json": {
+          "artifact": "parser-pilot-b39a7679b87f79b5bbc974d22d62a47490df9986d0575127039daf9a7618561d",
+          "component": "parser-pilot",
+          "format": 1,
+          "key": "1de5754a51a8c7b79aea29245ce9d04f0ea722340b40aa291ec7cfe9163d4546",
+          "protocol": 1,
+          "schema": 1,
+          "sha256": "b39a7679b87f79b5bbc974d22d62a47490df9986d0575127039daf9a7618561d"
+        },
+        "test-index.json": {
+          "artifact": "test-index-573aff0eec0be296c888a44b18d71c37796b8ceb446ccff6709537e385c43aac",
+          "component": "test-index",
+          "format": 1,
+          "key": "e92a5cbe7846a26fd3419a2da9ed576d4cb06f0447cbc88912c9668d70d6fc42",
+          "protocol": 1,
+          "schema": 1,
+          "sha256": "573aff0eec0be296c888a44b18d71c37796b8ceb446ccff6709537e385c43aac"
+        }
+      },
+      "measured_host_sha256": "51c207cb030c5c5c9cf19ef041d7eeaea3ddb5924c05d991f46a665e06b97b19",
+      "measured_packages": {
+        "test-index": {
+          "artifact": "test-index-573aff0eec0be296c888a44b18d71c37796b8ceb446ccff6709537e385c43aac",
+          "component": "test-index",
+          "format": 1,
+          "key": "e92a5cbe7846a26fd3419a2da9ed576d4cb06f0447cbc88912c9668d70d6fc42",
+          "protocol": 1,
+          "schema": 1,
+          "sha256": "573aff0eec0be296c888a44b18d71c37796b8ceb446ccff6709537e385c43aac"
+        },
+        "cache-plan": {
+          "artifact": "cache-plan-b3a89b78e7b9c8ab8ce8417989ff01a81af798bf79491eaf0881cc0d0b9735f1",
+          "component": "cache-plan",
+          "format": 1,
+          "key": "2fb5bddb154affe5fb2c444227a836185c453fc253fdc7538feb4fceaab53f06",
+          "protocol": 2,
+          "schema": 2,
+          "sha256": "b3a89b78e7b9c8ab8ce8417989ff01a81af798bf79491eaf0881cc0d0b9735f1"
+        },
+        "lexer-pilot": {
+          "artifact": "lexer-pilot-d38b6cea72cf16bd2340aac130c92025a6a6de6411af78f419d00c752b5b256c",
+          "component": "lexer-pilot",
+          "format": 1,
+          "key": "37cf9af3de71f6909ef96c7dbf32aa3a82a4b86c347d74db14641b32e980ecdf",
+          "protocol": 1,
+          "schema": 1,
+          "sha256": "d38b6cea72cf16bd2340aac130c92025a6a6de6411af78f419d00c752b5b256c"
+        },
+        "parser-pilot": {
+          "artifact": "parser-pilot-b39a7679b87f79b5bbc974d22d62a47490df9986d0575127039daf9a7618561d",
+          "component": "parser-pilot",
+          "format": 1,
+          "key": "1de5754a51a8c7b79aea29245ce9d04f0ea722340b40aa291ec7cfe9163d4546",
+          "protocol": 1,
+          "schema": 1,
+          "sha256": "b39a7679b87f79b5bbc974d22d62a47490df9986d0575127039daf9a7618561d"
+        }
+      },
+      "final_host_sha256": "51c207cb030c5c5c9cf19ef041d7eeaea3ddb5924c05d991f46a665e06b97b19"
+    },
+    "candidate": {
+      "prefix": "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/hardening-release",
+      "host_sha256": "4f41c951fa3dd9e5b2b6f17e12cc958d91e3858734f1a3439549e4b3211bdfec",
+      "builder_sha256": "2b7d782812ea1bd0a794340a4f553d71caf3f64651496d16e9522939744b2f3e",
+      "packages": {
+        "cache-plan.json": {
+          "artifact": "cache-plan-0742881fbd3df17bf75c0ba75552aa3fdf85754f1cc1cb3eaaa843928ccb9c79",
+          "component": "cache-plan",
+          "format": 1,
+          "key": "b444cecae6b404fe1d0a52312980d131159de169925e62d885958c1c092bba83",
+          "protocol": 2,
+          "schema": 2,
+          "sha256": "0742881fbd3df17bf75c0ba75552aa3fdf85754f1cc1cb3eaaa843928ccb9c79"
+        },
+        "lexer-pilot.json": {
+          "artifact": "lexer-pilot-86dc5463f3d79840c1e7c22c84105c831a6cf0108a52c294f75de7dc2dbbd576",
+          "component": "lexer-pilot",
+          "format": 1,
+          "key": "d5aa0e6ec44431469b81809e217a48a9940b576484d7f5d186c63f37f2f28c69",
+          "protocol": 1,
+          "schema": 2,
+          "sha256": "86dc5463f3d79840c1e7c22c84105c831a6cf0108a52c294f75de7dc2dbbd576"
+        },
+        "parser-pilot.json": {
+          "artifact": "parser-pilot-8e169db44f50c29511e2a998e363d64c2d705387321ee6bcd55da862f99a1c0e",
+          "component": "parser-pilot",
+          "format": 1,
+          "key": "7819001ae9e8bdd36136fb1c2bfb14ebd2b25e393f4c48dad3f1c132181d9a8b",
+          "protocol": 1,
+          "schema": 2,
+          "sha256": "8e169db44f50c29511e2a998e363d64c2d705387321ee6bcd55da862f99a1c0e"
+        },
+        "test-index.json": {
+          "artifact": "test-index-eb287f7b37cbc5574f0eb23c53fa9bb37245192f9e7e21da3c4982a019055a0c",
+          "component": "test-index",
+          "format": 1,
+          "key": "bd66059250ae3ea24ee9ea2089e4da375fbce68dbc4d74fd6b35fd7f790ffa3d",
+          "protocol": 1,
+          "schema": 1,
+          "sha256": "eb287f7b37cbc5574f0eb23c53fa9bb37245192f9e7e21da3c4982a019055a0c"
+        }
+      },
+      "measured_host_sha256": "4f41c951fa3dd9e5b2b6f17e12cc958d91e3858734f1a3439549e4b3211bdfec",
+      "measured_packages": {
+        "test-index": {
+          "artifact": "test-index-eb287f7b37cbc5574f0eb23c53fa9bb37245192f9e7e21da3c4982a019055a0c",
+          "component": "test-index",
+          "format": 1,
+          "key": "bd66059250ae3ea24ee9ea2089e4da375fbce68dbc4d74fd6b35fd7f790ffa3d",
+          "protocol": 1,
+          "schema": 1,
+          "sha256": "eb287f7b37cbc5574f0eb23c53fa9bb37245192f9e7e21da3c4982a019055a0c"
+        },
+        "cache-plan": {
+          "artifact": "cache-plan-0742881fbd3df17bf75c0ba75552aa3fdf85754f1cc1cb3eaaa843928ccb9c79",
+          "component": "cache-plan",
+          "format": 1,
+          "key": "b444cecae6b404fe1d0a52312980d131159de169925e62d885958c1c092bba83",
+          "protocol": 2,
+          "schema": 2,
+          "sha256": "0742881fbd3df17bf75c0ba75552aa3fdf85754f1cc1cb3eaaa843928ccb9c79"
+        },
+        "lexer-pilot": {
+          "artifact": "lexer-pilot-86dc5463f3d79840c1e7c22c84105c831a6cf0108a52c294f75de7dc2dbbd576",
+          "component": "lexer-pilot",
+          "format": 1,
+          "key": "d5aa0e6ec44431469b81809e217a48a9940b576484d7f5d186c63f37f2f28c69",
+          "protocol": 1,
+          "schema": 2,
+          "sha256": "86dc5463f3d79840c1e7c22c84105c831a6cf0108a52c294f75de7dc2dbbd576"
+        },
+        "parser-pilot": {
+          "artifact": "parser-pilot-8e169db44f50c29511e2a998e363d64c2d705387321ee6bcd55da862f99a1c0e",
+          "component": "parser-pilot",
+          "format": 1,
+          "key": "7819001ae9e8bdd36136fb1c2bfb14ebd2b25e393f4c48dad3f1c132181d9a8b",
+          "protocol": 1,
+          "schema": 2,
+          "sha256": "8e169db44f50c29511e2a998e363d64c2d705387321ee6bcd55da862f99a1c0e"
+        }
+      },
+      "final_host_sha256": "4f41c951fa3dd9e5b2b6f17e12cc958d91e3858734f1a3439549e4b3211bdfec"
+    }
+  },
+  "seed": {
+    "path": "/home/epentland/.cache/mylang/components/seeds/99a0c5875f1543cbb9c55694eb744328012fd1454b83a451ea11c6b2f96963fc/source/zig-out/focus/mylang",
+    "sha256": "c4f1ea0b6618cb7b146bbb8e035220eb36b99ff078d4a959d8bf0948d0c6d98b",
+    "verification": "both measurement runs completed native coordinator --seed-only verification before validated samples"
+  },
+  "exit_status": 0,
+  "qualified_production_source_sha": "137c9f53e",
+  "outputs": {
+    "hardening-timing-baseline.json": {
+      "path": "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/hardening-timing-baseline.json",
+      "sha256": "e9957b78c1b96dcf3996c100e84eb369bcaa1dce39d59356e5fbbcc5e1c13c19"
+    },
+    "hardening-timing-candidate.json": {
+      "path": "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/hardening-timing-candidate.json",
+      "sha256": "5c3d02567c74b2ce71a7f90726b21dd09e684f0adebe8b6c28aec4d4e0286429"
+    },
+    "hardening-timing.log": {
+      "path": "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/hardening-timing.log",
+      "sha256": "638a1c2d70596cc7f398e028cf1ab1d527a70e33135d12087c2d55b801005516"
+    },
+    "hardening-timing-build-slot-1.log": {
+      "path": "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/hardening-timing-build-slot-1.log",
+      "sha256": "690b2262a7fa92bc0473d2b2652b49eaa821918feda21086a2f17ab36a8349ca"
+    },
+    "hardening-timing-build-slot-2.log": {
+      "path": "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/hardening-timing-build-slot-2.log",
+      "sha256": "74fdbd47880096d54528a0b635ec8b4e4abac49908f1b6d4c91337129ef71e40"
+    },
+    "hardening-timing-build-slot-3.log": {
+      "path": "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/hardening-timing-build-slot-3.log",
+      "sha256": "3d58f03914094329ccc38a5ab6cd2065cdc3d53c62a675571132726b8bf415b9"
+    }
+  },
+  "reservation_result": "gate62 and build FIFO tickets765/763/764; all holders exit0, all reservations released"
+}

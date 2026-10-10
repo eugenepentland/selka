@@ -1,0 +1,35 @@
+Frontend performance lane validation, 2026-10-10 UTC
+Worktree: /home/epentland/.codex/worktrees/selka-lexer-pilot/mylang
+Branch: codex/selka-frontend-performance-20261010
+Baseline: a0a4a80c5
+
+All Zig execution admitted through scripts/build-slot.sh build.
+TMPDIR=/home/epentland/.cache/selka-lexer-tmp
+ZIG_LOCAL_CACHE_DIR=/home/epentland/.codex/worktrees/selka-lexer-pilot/mylang/.zig-cache
+ZIG_GLOBAL_CACHE_DIR=/home/epentland/ai/canopy/.zig-global-cache
+
+Ticket617: zig build test-units -Dtest-filter='component SHA matches' --summary all
+PASS8/8:1named+7unnamed. Initial helper, before explicit native-entry upper-lane clearing.
+Ticket630: zig build test-units -Dtest-filter=artifact --summary all
+PASS12/12:5named+7unnamed. Final helper; fixed-storage authentication and snapshot agreement,
+exact/over limit, same-path corruption, existing artifact/deadline/allocation failure regressions.
+Ticket642: zig build test-units -Dtest-filter='component SHA matches' --summary all
+PASS8/8:1named+7unnamed. Final helper. Raw output: frontend-performance-sha-final.log.
+Differential covers13lengths,7chunk sizes,empty chunks,known empty SHA-256 vector.
+
+Initial ticket607 failed with zero named tests because component_launch was not explicitly
+imported by the unit root. Explicit unit imports now ensure both added tests are selected.
+No empty-filter opt-out, no numerical benchmark and no timing reservation used.
+Raw artifact-run output was retained in the tool trace; this file is a result summary, not raw output.
+
+Disassembly baseline host SHA-256:
+4be9e89a596bb413c675083d0fc7a1584cc9236065e6e53baebeb16f493f02d8
+Round at0x19da350 interleaves VEX vector instructions and legacy hardware SHA instructions.
+This separate native host is not the frozen ReleaseFast benchmark host51c207cb... .
+Final helper object .zig-cache/o/8999dfc45e66b88c7bf9dee25936ec38/component_sha256.o
+has vzeroupper at each private exported helper entry.
+
+Root must run integrated schema2 lexer/parser suites, whole gate, ReleaseFast installation
+and isolated baseline/candidate measurements. Allocation/digest correctness is qualified here;
+numerical speedup is not claimed. No default mode switch, seed repin, metadata trust or
+producer memory-budget change. Parser/root profile changes supply matching schema2 deployment.

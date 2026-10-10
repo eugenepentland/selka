@@ -80,14 +80,14 @@ artifact digest while all three unrelated package manifests and the host digest
 stay unchanged. The complete workflow matrix then runs against that private
 installation. No installed manifest or shared source tree is edited.
 
-The present qualified lexer bound is 262,144 source bytes. An exact-bound valid
+The current lexer/parser profile admits 1,048,576 source bytes. An exact-bound valid
 source must succeed; the same valid source plus one byte must produce a repeatable
 bounded host failure in shadow/component modes while reference accepts it.
 The report records this narrower acceptance as a default-adoption limitation,
 not as language parity. The component profile and schema must be explicitly
 requalified before widening that bound.
 
-Ten adversarial harness tests run through
+Fourteen adversarial harness tests run through
 `python3 -m unittest selfhost/tests/frontend_qualification_test.py`. They reject
 empty/incomplete/cached forced verdicts, malformed artifact basenames/digests,
 inherited oracle/routing controls and stderr differences hidden by equal stdout.

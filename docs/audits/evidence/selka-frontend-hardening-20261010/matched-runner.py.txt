@@ -1,0 +1,13 @@
+import subprocess, sys
+from pathlib import Path
+root=Path("/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang")
+scratch=Path("/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots")
+script=root/"selfhost/tests/measure_frontend_adoption.py"
+common=[sys.executable, str(script), "--isolated", "--component", "--zig", "/home/epentland/.local/bin/zig"]
+for label, prefix, source, schema, extra in [
+ ("baseline", scratch/"adoption-release", scratch/"hardening-baseline-source", "1", []),
+ ("candidate", scratch/"hardening-release", root, "2", ["--large-profile"])]:
+ command=common+["--candidate-label",label,"--frontend-schema",schema,"--compiler",str(prefix/"bin/mylang"),"--builder",str(prefix/"tools/selka-components"),"--component-dir",str(prefix/"libexec/mylang/components"),"--source-root",str(source),"--output",str(scratch/("hardening-timing-"+label+".json"))]+extra
+ print("START "+label,flush=True)
+ subprocess.run(command,check=True,pass_fds=(30,))
+ print("DONE "+label,flush=True)

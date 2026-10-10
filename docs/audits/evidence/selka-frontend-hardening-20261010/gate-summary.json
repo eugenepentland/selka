@@ -1,0 +1,177 @@
+{
+  "source_commit": "137c9f53e28919e49364627207a6f2b2c2151f3c",
+  "command": "scripts/build-slot.sh gate zig build test --summary all -j4 --maxrss 8589934592",
+  "exit_code": 0,
+  "build_summary": [
+    "Build Summary: 122/122 steps succeeded; 2653/26799 tests passed (24146 skipped)"
+  ],
+  "guardian_native_verdicts": [
+    {
+      "passed": 10,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 130,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 129,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 130,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 129,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 130,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 130,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 130,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 137,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 130,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 101,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 101,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 129,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 130,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 129,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 100,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 100,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 100,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 101,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 100,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 101,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 7,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 44,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 47,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 44,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 43,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 43,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 44,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0
+    }
+  ],
+  "native_totals": {
+    "passed": 2651,
+    "failed": 0,
+    "skipped": 0
+  },
+  "ordinary_zig_passes": 2,
+  "shard_slots_skipped": 24146,
+  "frontend_workflows": [
+    "frontend qualification: 34 workflows, 68 comparisons, 60 warm deployment checks, 8 live session checks; 0 failed, 0 skipped",
+    "frontend qualification: 34 workflows, 136 comparisons, 60 warm deployment checks, 8 live session checks; 0 failed, 0 skipped"
+  ],
+  "pilot_lanes": [
+    "pilot gate parser: 89 pure tests in each of two modes; qualification passed",
+    "pilot gate probes: 11 pure tests in each of two modes; qualification passed",
+    "pilot gate lexer: 18 pure tests in each of two modes; qualification passed"
+  ],
+  "count_scope": "Guardian verdicts count selected native tests only; the build aggregate also counts two ordinary Zig tests and excludes slots assigned to other shards.",
+  "guardian_static": {
+    "checks_passed": 88,
+    "scope": "diff-scoped versus 1d202d41bfff888ee91354f706cb74e860dc4b94; 59/647 files for 50 per-file checks, 38 whole-tree checks"
+  },
+  "host_sha256": "43d935c604b0b03b68bba1afa192ae473fad12d5bebe77a9eab8c1388ff5eeb4"
+}

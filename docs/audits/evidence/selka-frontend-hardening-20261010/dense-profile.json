@@ -1,0 +1,135 @@
+{
+  "source_bytes": 440060,
+  "source_sha256": "60c5039b5aa48678476d8de4f9d30b63186a5c8011709b0a6304b1290a9f5780",
+  "host_sha256": "4f41c951fa3dd9e5b2b6f17e12cc958d91e3858734f1a3439549e4b3211bdfec",
+  "packages": {
+    "test-index": {
+      "artifact": "test-index-eb287f7b37cbc5574f0eb23c53fa9bb37245192f9e7e21da3c4982a019055a0c",
+      "component": "test-index",
+      "format": 1,
+      "key": "bd66059250ae3ea24ee9ea2089e4da375fbce68dbc4d74fd6b35fd7f790ffa3d",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "eb287f7b37cbc5574f0eb23c53fa9bb37245192f9e7e21da3c4982a019055a0c"
+    },
+    "cache-plan": {
+      "artifact": "cache-plan-0742881fbd3df17bf75c0ba75552aa3fdf85754f1cc1cb3eaaa843928ccb9c79",
+      "component": "cache-plan",
+      "format": 1,
+      "key": "b444cecae6b404fe1d0a52312980d131159de169925e62d885958c1c092bba83",
+      "protocol": 2,
+      "schema": 2,
+      "sha256": "0742881fbd3df17bf75c0ba75552aa3fdf85754f1cc1cb3eaaa843928ccb9c79"
+    },
+    "lexer-pilot": {
+      "artifact": "lexer-pilot-86dc5463f3d79840c1e7c22c84105c831a6cf0108a52c294f75de7dc2dbbd576",
+      "component": "lexer-pilot",
+      "format": 1,
+      "key": "d5aa0e6ec44431469b81809e217a48a9940b576484d7f5d186c63f37f2f28c69",
+      "protocol": 1,
+      "schema": 2,
+      "sha256": "86dc5463f3d79840c1e7c22c84105c831a6cf0108a52c294f75de7dc2dbbd576"
+    },
+    "parser-pilot": {
+      "artifact": "parser-pilot-8e169db44f50c29511e2a998e363d64c2d705387321ee6bcd55da862f99a1c0e",
+      "component": "parser-pilot",
+      "format": 1,
+      "key": "7819001ae9e8bdd36136fb1c2bfb14ebd2b25e393f4c48dad3f1c132181d9a8b",
+      "protocol": 1,
+      "schema": 2,
+      "sha256": "8e169db44f50c29511e2a998e363d64c2d705387321ee6bcd55da862f99a1c0e"
+    }
+  },
+  "address_space_budget": 2147483648,
+  "modes": [
+    {
+      "command": "check",
+      "mode": "reference",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "cumulative_children_peak_rss_kib": 90020
+    },
+    {
+      "command": "check",
+      "mode": "shadow",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "cumulative_children_peak_rss_kib": 497812
+    },
+    {
+      "command": "check",
+      "mode": "component",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "cumulative_children_peak_rss_kib": 497812
+    },
+    {
+      "command": "dump-tokens",
+      "mode": "reference",
+      "status": 0,
+      "stdout_bytes": 6895294,
+      "stderr_bytes": 0,
+      "stdout_sha256": "8db0c88a25e4d9ea85a53ed83abf0e0728e089bdfe481cb03439a92def8fa77b",
+      "cumulative_children_peak_rss_kib": 497812,
+      "token_count": 100017
+    },
+    {
+      "command": "dump-tokens",
+      "mode": "shadow",
+      "status": 0,
+      "stdout_bytes": 6895294,
+      "stderr_bytes": 0,
+      "stdout_sha256": "8db0c88a25e4d9ea85a53ed83abf0e0728e089bdfe481cb03439a92def8fa77b",
+      "cumulative_children_peak_rss_kib": 497812,
+      "token_count": 100017
+    },
+    {
+      "command": "dump-tokens",
+      "mode": "component",
+      "status": 0,
+      "stdout_bytes": 6895294,
+      "stderr_bytes": 0,
+      "stdout_sha256": "8db0c88a25e4d9ea85a53ed83abf0e0728e089bdfe481cb03439a92def8fa77b",
+      "cumulative_children_peak_rss_kib": 497812,
+      "token_count": 100017
+    },
+    {
+      "command": "dump-syntax",
+      "mode": "reference",
+      "status": 0,
+      "stdout_bytes": 29303242,
+      "stderr_bytes": 0,
+      "stdout_sha256": "005c4a18463c95a1a4937b3b913ee5e01553b3032089bd6d037aa211c9fe332b",
+      "cumulative_children_peak_rss_kib": 497812,
+      "ast_values": 900093
+    },
+    {
+      "command": "dump-syntax",
+      "mode": "shadow",
+      "status": 0,
+      "stdout_bytes": 29303242,
+      "stderr_bytes": 0,
+      "stdout_sha256": "005c4a18463c95a1a4937b3b913ee5e01553b3032089bd6d037aa211c9fe332b",
+      "cumulative_children_peak_rss_kib": 497812,
+      "ast_values": 900093
+    },
+    {
+      "command": "dump-syntax",
+      "mode": "component",
+      "status": 0,
+      "stdout_bytes": 29303242,
+      "stderr_bytes": 0,
+      "stdout_sha256": "005c4a18463c95a1a4937b3b913ee5e01553b3032089bd6d037aa211c9fe332b",
+      "cumulative_children_peak_rss_kib": 497812,
+      "ast_values": 900093
+    }
+  ],
+  "failed": 0,
+  "rss_scope": "cumulative child high-water across ordered commands, not per-process peak"
+}
