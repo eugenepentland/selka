@@ -49,6 +49,11 @@ def transport(binary, work, env):
                  valid[:20] + struct.pack('<I', 67108864) + valid[24:]]
     for offset, value in ((8,4097),(12,1),(16,4097),(20,1)):
         changed=bytearray(payload);struct.pack_into('<I',changed,offset,value);malformed.append(frame(changed))
+    trusted_at = 20 + 4 + len(blob(b'input')) + len(blob(b'input.my'))
+    for offset,value in ((trusted_at,2),(trusted_at+4,2),(trusted_at+4,1)):
+        changed=bytearray(payload);struct.pack_into('<I',changed,offset,value);malformed.append(frame(changed))
+    empty_name = struct.pack('<I',0)+blob(b'')+blob(b'input.my')+struct.pack('<II',0,0)+blob(b'')
+    malformed.append(frame(b'SLKTYI01'+struct.pack('<III',1,0,1)+empty_name+struct.pack('<'+'I'*14,*([0]*14))))
     # Each admitted slice has a distinct bound and must reject before reading rows.
     for position in range(14):
         changed=bytearray(payload)

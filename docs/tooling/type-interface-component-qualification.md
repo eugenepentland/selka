@@ -29,7 +29,7 @@ schema changes, digest corruption and authenticated wrong-protocol replacement.
 Four live session checks mutate the same verified deployment after two successful
 checks. Cache-enabled test receipts are separate from fact/leak qualification.
 
-The transport suite uses one valid empty catalog module and 31 malformed frames,
+The transport suite uses one valid empty catalog module and 35 malformed frames,
 counts, source/path/string bounds and module-order failures. Four pinned-Zig native
 forged components echo correct correlation and package authentication, then return
 invalid order, count, outcome or identity metadata. Both selected modes must

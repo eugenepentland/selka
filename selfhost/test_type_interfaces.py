@@ -29,7 +29,7 @@ def require_summary(output, edit=False):
     expected = len(fixtures) + sum(bool(value.get('interfaces')) for value in fixtures.values()) + 6 + 6 + 2 + 3 + 3
     if len(fixtures) < 20 or workflows != expected or comparisons!=(4 if edit else 2)*workflows or warm!=30 or live!=4:
         raise RuntimeError('incomplete type_interface qualification selection')
-    if re.findall(r'^type_interface transport: (\d+) valid, (\d+) malformed; 0 failed, 0 skipped$', output, re.M) != [('1', '31')]:
+    if re.findall(r'^type_interface transport: (\d+) valid, (\d+) malformed; 0 failed, 0 skipped$', output, re.M) != [('1', '35')]:
         raise RuntimeError('missing/incomplete type_interface transport selection')
     if re.findall(r'^type_interface forged replies: (\d+) rejected; 0 failed, 0 skipped$', output, re.M) != ['8']:
         raise RuntimeError('missing/incomplete hostile type_interface reply selection')
