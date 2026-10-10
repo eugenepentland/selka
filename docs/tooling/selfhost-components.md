@@ -40,6 +40,28 @@ slowdown, so a custom Zig without LLVM cannot build the coordinator. This settin
 is independent of the host's optimization mode and the seed/component recipes;
 it does not change the Zig pin or the progressive self-hosting boundary.
 
+Host artifact verification uses a narrow LLVM ReleaseSafe SHA-256 object, while
+other host code retains its selected backend and optimization mode. Three private
+functions initialize, update and finish opaque fixed hash storage. They use the
+pinned standard SHA-256 implementation; differential tests cover empty input,
+padding and block boundaries, and independent stream chunk sizes. On x86 hosts
+with AVX, each private entry clears upper lanes before SHA work, so native callers
+need not supply LLVM's AVX/SSE call discipline. Identity checks
+read executable content through a 64 KiB buffer without retaining executable-sized
+allocations. Launches still authenticate, retain and seal the exact executable
+bytes, and final cache/output checks authenticate current content again. No check
+uses timestamps or inode metadata as a substitute for the manifest and digest.
+
+Static evidence from a separate native host used for disassembly (SHA-256
+`4be9e89a596bb413c675083d0fc7a1584cc9236065e6e53baebeb16f493f02d8`)
+shows `vpaddd` and `vpsrldq` interleaved with legacy `sha256msg*` and
+`sha256rnds2` instructions in the native SHA round at address `0x19da350`.
+This is separate from the frozen ReleaseFast benchmark host
+`51c207cb030c5c5c9cf19ef041d7eeaea3ddb5924c05d991f46a665e06b97b19`.
+The narrow object avoids applying LLVM to the whole compiler. Numerical overhead
+comparisons require isolated baseline/candidate runs; allocation and digest tests
+alone do not establish a speedup.
+
 The builder provisions a separate ReleaseFast seed from the immutable source
 commit in `selfhost/component-seed.json`. It verifies the source archive,
 toolchain and locally qualified executable before reuse. The first seed build

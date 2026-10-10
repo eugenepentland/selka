@@ -506,6 +506,20 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
     core.addImport("memory_budget", budget);
+    // Isolate the pinned native backend's AVX/SSE SHA transition issue from the host.
+    const component_sha = b.addObject(.{
+        .name = "component_sha256",
+        .max_rss = rss.compile,
+        .use_llvm = true,
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/component_digest_impl.zig"),
+            .target = target,
+            .optimize = .ReleaseSafe,
+            .pic = true,
+        }),
+    });
+    core.addObject(component_sha);
+
     const exe = b.addExecutable(.{
         .max_rss = if (optimize == .fast) rss.compiler_fast else rss.compile,
         .name = "mylang",
@@ -591,6 +605,7 @@ pub fn build(b: *std.Build) void {
             .optimize = optimize,
         }),
     });
+    unit.root_module.addObject(component_sha);
     unit.root_module.addImport("build_identity", identity);
     unit.root_module.addImport("memory_budget", budget);
     unit.root_module.addImport("compiler_root", unit.root_module);
