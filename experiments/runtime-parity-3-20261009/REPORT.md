@@ -1,6 +1,6 @@
 # Runtime parity wave 3 — 2026-10-09
 
-Status: M0 complete. U2, S2 and R are next; no implementation lane has started yet.
+Status: M0 complete. U2, S2 and R are running in parallel; X preparation is in progress.
 
 Base: `main` `41ed360fb361c49938488ad111795bad8a726b73`. Integration branch: `codex/runtime-parity-3`.
 Worktree: `/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3` (locked, prune-keep).
@@ -30,7 +30,8 @@ Final head: pending X.
 - validate_qualification.py checks later raw and additive receipts against the exact M0 totals and PROBLEM lines, all 64 core shards, leak/fact flags, and matching compiler hashes. The validator passes on the saved M0 receipts.
 - EDA CPU-10 baseline completed: all 34 designs × 5 implementations × 10 timed rounds, plus warmup and RSS rounds, match their golden files. Mylang geomean 1.171× Zig RS.
 - CPU-10 counterfactuals set U2 final/base limits: invocation 0.803193, fib 0.863836, method_call 0.816397, tree/equality 0.761930. All three complete row-reference timing batches are valid: 3,780 checked timing samples per batch and unchanged hashes for all 126 binaries. The median-of-within-batch-ratios base control geomean is 0.999347; no median exceeds 1.03. csv_aggregate at both sizes remains above Zig RS. A single sort_records/4096 batch was noisy despite identical binaries; one separate confirmation passed the original threshold and replaces none of the full batches.
-- U2, S2, R: M0 exit is satisfied; parallel worktrees will branch from this final M0 checkpoint.
+- M0 final checkpoint: `f42bac79740d1c5363680025d1c2ac67c717b944`.
+- U2, S2, R: launched from that checkpoint in locked, prune-kept worktrees `codex-rp3-u2`, `codex-rp3-s2`, and `codex-rp3-r`, under `/home/epentland/ai/canopy/mylang-worktrees/`. Their branches are `codex/rp3-u2`, `codex/rp3-s2`, and `codex/rp3-r`. Each received the exact M0 corpora manifest and the 186 base counting/plain guest binaries. Each lane owns its source changes and machine evidence; the coordinator writes the reports and decision log.
 - X: pending lane hand-offs.
 
 ## M0 outcome
@@ -40,7 +41,7 @@ Final head: pending X.
 - Primary parity geomean: 0.741× Zig RS and 0.893× Zig RF. Lox VM: 1.595× Zig RS; tree: 0.972×. EDA: 1.171× Zig RS. These are baseline gaps, not achieved wave-3 exits.
 - All 153 parity arms match output and have nine CPU-10 timing rounds. The native runner omits the reference-free recursive-tree arm; an additive adapter measures it with the same timing primitive. Its relative gate remains unavailable. The native report's five historical speed-threshold misses are retained separately from the wave-3 targets.
 - Correctness: repository 95/95 steps; conformance exact raw baseline and additive 1547/0/0 in both modes; 64 core shards / 600 tests; fuzz 9×50; Lox 974/974 plus 65 port tests; EDA 310 tests plus 34 goldens; parity 45/45; counting 199/199. Full CPU-8 instruction coverage is 151/151, three rounds, with maximum repeat variation 0.0124%.
-- Measurement corrections and invalid diagnostic attempts are documented in DECISIONS.md. No hard stop was reached. No compiler, runtime, benchmark, frozen oracle, or other worktree was edited.
+- Measurement corrections and invalid diagnostic attempts are documented in DECISIONS.md. No hard stop was reached. M0 changed no compiler, runtime, live benchmark, frozen oracle, or other worktree; the two private row syntax repairs are recorded above.
 - Main remains 41ed360fb361c49938488ad111795bad8a726b73. Evidence is approximately 4.1 MB at the M0 checkpoint. Base compilers, owned guest binaries and exact count journals remain available for all lanes and X.
 
 ## Receipts
