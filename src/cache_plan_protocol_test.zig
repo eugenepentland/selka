@@ -3,6 +3,9 @@ const std = @import("std");
 const wire = @import("cache_plan_protocol.zig");
 const contract = @import("cache_plan_contract.zig");
 const adapter = @import("cache_plan_adapter.zig");
+comptime {
+    _ = @import("cache_plan_protocol_v2_test.zig");
+}
 // spec: SELFHOST-CACHE-PLAN-1
 test "planner reach preserves equal digests, duplicate roots, cycles and batch isolation" {
     const a = std.testing.allocator;
@@ -76,6 +79,40 @@ test "planner eagerly binds explicit reference and fails closed for unavailable 
     var result = try bound.batch(a, .{ .digests = &.{}, .callees = &.{} }, &.{});
     defer result.deinit();
 }
+
+// spec-case: SELFHOST-CACHE-PLAN-2
+test "incremental component transport binds correlated v2 replies and rejects failed execution" {
+    const a = std.testing.allocator;
+    const io = std.testing.io;
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var buffer: [4096]u8 = undefined;
+    const directory = buffer[0..try temporary.dir.realPath(io, &buffer)];
+    var environ: std.process.Environ.Map = .init(a);
+    defer environ.deinit();
+    try environ.put("MYLANG_COMPONENT_DIR", directory);
+    const script =
+        \\#!/usr/bin/python3
+        \\import sys,struct
+        \\b=open(sys.argv[2],'rb').read()
+        \\sys.stdout.buffer.write(b[:16]+struct.pack('<II',1,64)+b[24:64]+b'\0'*64)
+        \\
+    ;
+    try fixture(a, temporary.dir, script);
+    try environ.put("MYLANG_CACHE_PLAN_MODE", "shadow");
+    var bound = try adapter.bind(a, io, &environ);
+    defer bound.deinit(a);
+    const input: adapter.incremental_protocol.Incremental = .{ .graph = .{ .digests = &.{}, .callees = &.{} }, .roots = &.{}, .topology = @splat(1), .changed = &.{}, .candidates = &.{} };
+    var result = try bound.incremental(a, input);
+    defer result.deinit();
+    try std.testing.expectEqual(@as(u64, 1), result.transport.startups);
+    try std.testing.expectEqual(@as(u64, 124), result.transport.request_bytes);
+    try std.testing.expectEqual(@as(u64, 128), result.transport.reply_bytes);
+    try fixture(a, temporary.dir, "#!/bin/sh\nexit 7\n");
+    var failing = try adapter.bind(a, io, &environ);
+    defer failing.deinit(a);
+    try std.testing.expectError(error.ComponentFailed, failing.incremental(a, input));
+}
 fn fixture(a: std.mem.Allocator, dir: std.Io.Dir, script: []const u8) !void {
     const io = std.testing.io;
     try dir.writeFile(io, .{ .sub_path = "cache-plan", .data = script });
@@ -84,7 +121,7 @@ fn fixture(a: std.mem.Allocator, dir: std.Io.Dir, script: []const u8) !void {
     try file.setPermissions(io, .fromMode(0o700));
     var digest: wire.Digest = undefined;
     std.crypto.hash.sha2.Sha256.hash(script, &digest, .{});
-    const manifest = try std.fmt.allocPrint(a, "{{\"format\":1,\"component\":\"cache-plan\",\"protocol\":1,\"schema\":1,\"artifact\":\"cache-plan\",\"sha256\":\"{s}\"}}", .{std.fmt.bytesToHex(digest, .lower)});
+    const manifest = try std.fmt.allocPrint(a, "{{\"format\":1,\"component\":\"cache-plan\",\"protocol\":2,\"schema\":2,\"artifact\":\"cache-plan\",\"sha256\":\"{s}\"}}", .{std.fmt.bytesToHex(digest, .lower)});
     defer a.free(manifest);
     try dir.writeFile(io, .{ .sub_path = "cache-plan.json", .data = manifest });
 }

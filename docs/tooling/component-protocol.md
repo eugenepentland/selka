@@ -61,7 +61,9 @@ codec tests with `mylang test selfhost/components/test_index/tests.my --force`.
 
 ## Core cache planner v1
 
-`selfhost/components/cache_plan/main.my` implements `cache-plan-v1`. The
+`selfhost/components/cache_plan/main.my` supports the legacy `cache-plan-v1`
+exchange below and the incremental v2 exchange described in the next section.
+Its installed manifest now declares protocol/schema 2. The
 coordinator builds it independently with the same qualified seed and installs
 `cache-plan` and `cache-plan.json` beside `test-index`. The host retains Core IR
 canonicalization and graph extraction, including both calls and function
@@ -143,7 +145,7 @@ stderr, and is killed and reaped on timeout. Component failure has no automatic
 reference fallback.
 
 `mylang test --json` adds a `cache` object to each verdict with `action`,
-`reason`, `key`, `component` and `key_method`. `component` identifies the bound
+`reason`, `key`, `component`, `key_method` and optional `work`. `component` identifies the bound
 planner, including its mode. Typical reasons are `no-success-receipt`,
 `receipt-hit`, `whole-report-hit`, `force`, `verify-facts`, `leak-check`,
 `native-links` and `live-effects`. Whole-report reuse reports the current reuse
@@ -162,3 +164,47 @@ forced pure tests, native debug/release builds and independent protocol oracles.
 The host protocol/identity tests and Core edited-program receipt tests run in
 `zig build test`. Python is used by qualification drivers only; source install
 and installed compiler commands remain Python-free.
+
+## Incremental Core cache planner v2
+
+The envelope is 64 bytes with magic `SLKCP002`, protocol 2 and schema 2.
+Correlation and policy codes retain the v1 meaning. The request payload is:
+
+1. Three u32 policy codes, then a 32-byte ordered-topology digest.
+2. u32 node, batch and changed-node counts, then u32 `has_prior` (0 or 1).
+3. Each node's 32-byte canonical digest and counted u32 outgoing-edge list.
+4. Each batch's u32 candidate flag and counted ordered u32 root list.
+5. The changed node IDs, as u32 values.
+6. When present, the prior 32-byte topology digest, one u32 group representative
+   per node, and each node's counted u32 reverse-edge list.
+
+The reply begins with seven u64 work counters: index nodes, index edges,
+affected nodes, closure nodes, closure edges, reused tests and planned tests.
+It then contains u32 node/batch counts, one u32 group representative per node,
+counted reverse-edge lists, and each batch's u32 reuse flag plus counted nonroot
+list. A reused batch has an empty list; Zig uses its already validated exact
+key. A newly planned batch retains the v1 canonical key contribution.
+
+Zig admits an entire prior graph generation before sending candidates. It binds
+each old key to its test envelope, compares complete logical edges and canonical
+digests, and remaps identities into current IDs. A topology change discards old
+numeric indexes. Selka propagates changes through the current reverse graph and
+shares closure work among recursive groups. Retained groups must be strongly
+connected in both directions with an acyclic quotient; an invalid partition is
+recomputed. The Zig shadow algorithm independently uses Tarjan grouping and
+per-test traversal, and shadow key checks use fresh complete lowering.
+
+Limits remain 100,000 nodes/batches and 1,000,000 edges/root occurrences. Requests
+may occupy 32 MiB, replies 64 MiB, and aggregate index, propagation and closure
+work is limited to 64,000,000 operations. There is one batch exchange per
+provider group, with no resident process or persistent numeric handle. The
+current complete graph is still validated and transmitted. Version 1 remains
+available for the conservative full-lowering path.
+
+The manifest version, schema, mode and verified artifact bind every early test
+replay path. Only `cache-plan` changes to v2; `test-index` remains v1. Facts and
+graph chunks are disposable metadata in source-specific packed stores beneath
+`<cache>/test-keys`; their presence never certifies a passing test. Lost metadata
+recomputes. The current-invocation `cache.work` report appears once per provider
+group and is omitted on whole-report replay; see
+[guest test work reporting](guest-tests.md#reusing-unaffected-results).

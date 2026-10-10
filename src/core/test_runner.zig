@@ -39,6 +39,12 @@ const case_settings = @import("test_runner_cases.zig");
 const affected = @import("test_runner_affected.zig");
 const v = @import("property_value.zig");
 const test_contracts = @import("test_runner_contracts.zig");
+const graph_cache = @import("test_runner_graph.zig");
+const canonical_facts = @import("test_runner_facts.zig");
+const key_work = @import("test_runner_work.zig");
+const stage_store = @import("stage_store.zig");
+const stage_metrics = @import("stage_metrics.zig");
+const lowering_cache = @import("lowering_cache.zig");
 
 /// The old runner's stub, appended to a file that defines no `main` of its own.
 pub const check_stub = "\n\nfunc main() -> int:\n    return 0\n";
@@ -257,6 +263,7 @@ fn finish(init: std.process.Init, ready: Ready, setup: Setup) Error!u8 {
         if (unchanged and item.verdict.status == .passed) if (item.identity) |identity| try receipt.save(context, identity);
     }
     for (collected.wholes.items) |range| if (unchanged and wholePassed(range.whole, chosen.items[range.start..][0..range.len])) try receipt.save(context, range.whole.key);
+    attachWork(verdicts, collected.works.items);
     const json = try report.jsonSources(allocator, verdicts, sources.items);
     if (successful and unchanged and options.controls.against == null) try receipt.remember(context, base, before.items, json, collected.warnings.items);
     const out = if (options.json) json else try report.text(allocator, verdicts);
@@ -287,7 +294,9 @@ const Collected = struct {
     chosen: std.ArrayList(Selected) = .empty,
     /// Each provider group's whole-file key and the range of `chosen` it covers.
     wholes: std.ArrayList(WholeRange) = .empty,
+    works: std.ArrayList(WorkRange) = .empty,
 };
+const WorkRange = struct { first: usize, work: *const key_work.Work };
 /// A whole-file key and the slice of a run's chosen tests it was computed for.
 const WholeRange = struct { whole: Whole, start: usize, len: usize };
 
@@ -342,6 +351,7 @@ const GroupRun = struct {
             item.verdict.identity = known;
         };
         if (selected.whole) |whole| try out.wholes.append(a, .{ .whole = whole, .start = out.chosen.items.len, .len = items.len });
+        if (items.len != 0) if (selected.work) |work| try out.works.append(a, .{ .first = out.chosen.items.len, .work = work });
         try out.chosen.appendSlice(a, items);
         return null;
     }
@@ -662,7 +672,7 @@ fn programIdentity(resources: IdentityResources, options: Options, checked: fron
 
 /// What `select` chose: every case's verdict so far, and the whole-file key to save
 /// when every ready test passes (null when it hit or there is none).
-const Chosen = struct { items: []Selected, whole: ?Whole = null };
+const Chosen = struct { items: []Selected, whole: ?Whole = null, work: ?*const key_work.Work = null };
 /// A program's whole-file key and how many ready tests it covers (NEW-CORE-TEST-WHOLE-1).
 const Whole = struct { key: [32]u8, ready: usize };
 
@@ -685,18 +695,19 @@ fn select(init: std.process.Init, options: Options, checked: frontend.Checked, c
     if (!perTestKeys(init.environ_map)) if (try sharedKeys(init, options, checked, chosen, selection.base, context.identity.cache_plan.?)) |keys| {
         if (try receipt.hit(context, keys.whole.key)) {
             for (chosen, keys.tests) |*item, key| if (item.ready) {
-                item.* = .{ .case = item.case, .verdict = .{ .name = item.case.name, .status = .cached }, .ready = false, .identity = key, .cache_reason = "whole-receipt-hit", .settings = item.settings };
+                item.* = .{ .case = item.case, .verdict = .{ .name = item.case.name, .status = .cached }, .ready = false, .identity = key, .cache_reason = "whole-receipt-hit", .settings = item.settings, .key_method = keys.method };
             };
-            return .{ .items = chosen };
+            return .{ .items = chosen, .work = keys.work };
         }
         for (chosen, keys.tests) |*item, key| if (item.ready) {
+            item.key_method = keys.method;
             item.identity = key;
             if (try receipt.hit(context, key.?)) {
                 item.verdict = .{ .name = item.case.name, .status = .cached };
                 item.ready = false;
             }
         };
-        return .{ .items = chosen, .whole = keys.whole };
+        return .{ .items = chosen, .whole = keys.whole, .work = keys.work };
     };
     for (chosen) |*item| {
         item.key_method = "per-test-ir-fallback";
@@ -728,7 +739,7 @@ fn perTestKeys(environment: *const std.process.Environ.Map) bool {
 }
 
 /// Every ready test's configured key (null for the others), and the whole-file key.
-const Keys = struct { tests: []const ?[32]u8, whole: Whole };
+const Keys = struct { tests: []const ?[32]u8, whole: Whole, work: *const key_work.Work, method: []const u8 };
 
 /// NEW-CORE-TEST-KEYS-1 and NEW-CORE-TEST-WHOLE-1: lower every ready test of the
 /// program once, digest each function canonically, and key each test on the functions
@@ -747,23 +758,23 @@ fn sharedKeys(init: std.process.Init, options: Options, checked: frontend.Checke
         try cases.append(s, item.case);
     };
     if (cases.items.len == 0) return null;
-    var why: build.Refusal = .{};
-    const roots = try rootsFor(s, checked.program, cases.items);
-    const reachable = build.buildRootsSource(s, checked.program, roots, checked.src, &why) catch |err| {
-        if (err == error.OutOfMemory) return error.OutOfMemory;
-        return null;
-    };
-    // `rootsFor` lists the cases first, so ready case `i` is function `i`.
-    var root: u32 = 0;
-    for (chosen) |item| if (item.ready) {
-        if (!expects(item.settings) and !entry.readable(&reachable, reachable.functions.items[root].signature.ret)) return null;
-        root += 1;
-    };
-    const shared = test_keys.Shared.build(s, &reachable, pipeline.locator(&checked.src)) catch |err| {
-        if (err == error.OutOfMemory) return error.OutOfMemory;
-        return null;
-    };
+    const started = stage_metrics.now(init.io);
+    const work = try a.create(key_work.Work);
+    work.* = .{ .scope = try workScope(a, options.path, cases.items) };
     const source_path = std.Io.Dir.cwd().realPathFileAlloc(init.io, options.path, s) catch options.path;
+    var source_scope: test_keys.Digest = undefined;
+    std.crypto.hash.Blake3.hash(source_path, &source_scope, .{});
+    // Each directory root opens its own store, including child processes. Bound
+    // catalog scans to that root instead of indexing every other root's facts.
+    const cache_root = try std.fs.path.join(s, &.{ options.build.cache, "test-keys", &std.fmt.bytesToHex(source_scope, .lower) });
+    const compression = @import("stage_compression.zig").Policy.parse(init.environ_map.get("MYLANG_STAGE_CACHE_COMPRESSION")) catch return null;
+    var store = try stage_store.Store.initWithOptions(init.gpa, init.io, cache_root, .{ .compression = compression });
+    defer store.deinit();
+    const roots = try rootsFor(s, checked.program, cases.items);
+    const produced = try sharedFacts(s, checked, roots, &store, cache_plan.mode, work) orelse return null;
+    const reachable = produced.module;
+    const shared = produced.shared;
+    if (!readableRoots(&reachable, chosen)) return null;
     var schema: ?property_types.Schema = null;
     const tests = try a.alloc(?[32]u8, chosen.len);
     const requests = try s.alloc(test_keys.Test, chosen.len);
@@ -782,27 +793,189 @@ fn sharedKeys(init: std.process.Init, options: Options, checked: frontend.Checke
         root_set.* = indices;
         request.* = .{ .base = base, .name = item.case.name, .source_path = source_path, .entry = entryDigest(target), .schema = if (needsSchema(target)) try schemaDigest(s, schema.?, target) else null, .roots = indices };
     }
-    var planned = cache_plan.batch(s, .{ .digests = shared.digests, .callees = shared.callees }, root_sets) catch |err| {
+    const graph_start = stage_metrics.now(init.io);
+    var saved: ?graph_cache.Prepared = if (produced.identities) |ids| graph_cache.prepare(s, &store, shared, ids, requests, &work.graph) catch |err| blk: {
         if (err == error.OutOfMemory) return error.OutOfMemory;
-        try writeAll(init, std.Io.File.stderr(), try std.fmt.allocPrint(a, "error: cache-plan component: {s}\n", .{@errorName(err)}));
-        return error.ComponentUnavailable;
-    };
-    defer planned.deinit();
+        break :blk null;
+    } else null;
+    work.nanoseconds.graph = stage_metrics.elapsed(init.io, graph_start);
+    const derived = try s.alloc(?test_keys.Digest, chosen.len);
+    @memset(derived, null);
+    if (saved) |*cached| {
+        const planning = stage_metrics.now(init.io);
+        var planned = cache_plan.incremental(s, cached.request(shared, root_sets)) catch |err| return planFailure(init, err);
+        defer planned.deinit();
+        work.nanoseconds.planner = stage_metrics.elapsed(init.io, planning);
+        work.planner = planned.work;
+        work.transport = planned.transport;
+        const hashing = stage_metrics.now(init.io);
+        for (chosen, requests, derived, 0..) |item, request, *key, index| {
+            if (!item.ready) continue;
+            key.* = if (planned.reused[index]) cached.keys[index] orelse return planFailure(init, error.ComponentProtocol) else test_keys.plannedKey(shared, request, planned.batches[index]) catch |err| {
+                if (err == error.OutOfMemory) return error.OutOfMemory;
+                return null;
+            };
+        }
+        work.nanoseconds.keys = stage_metrics.elapsed(init.io, hashing);
+        if (cache_plan.mode == .shadow) try verifyShared(init, checked, roots, requests, derived);
+        const publication = stage_metrics.now(init.io);
+        @memcpy(cached.keys, derived);
+        cached.publish(s, &store, planned.indexes, &work.graph) catch |err| {
+            if (err == error.OutOfMemory) return error.OutOfMemory;
+            return planFailure(init, error.ComponentProtocol);
+        };
+        _ = try store.flush();
+        work.nanoseconds.publication = stage_metrics.elapsed(init.io, publication);
+    } else {
+        if (!try deriveLegacy(init, cache_plan, .{ .shared = shared, .requests = requests, .roots = root_sets }, derived, work)) return null;
+        if (cache_plan.mode == .shadow) try verifyShared(init, checked, roots, requests, derived);
+    }
+
     var whole = std.crypto.hash.Blake3.init(.{});
     whole.update("core-test-whole-v2");
-    for (chosen, tests, requests, planned.batches) |item, *slot, request, reached| {
+    for (chosen, tests, derived) |item, *slot, key| {
         slot.* = null;
-        if (!item.ready) continue;
-        const derived = test_keys.plannedKey(shared, request, reached) catch |err| {
-            if (err == error.OutOfMemory) return error.OutOfMemory;
-            return null;
-        };
-        slot.* = receipt.configuredKey(derived, try std.json.Stringify.valueAlloc(s, item.settings, .{}));
-        whole.update(&slot.*.?);
+        if (key) |value| {
+            slot.* = receipt.configuredKey(value, try std.json.Stringify.valueAlloc(s, item.settings, .{}));
+            whole.update(&slot.*.?);
+        }
     }
     var key: [32]u8 = undefined;
     whole.final(&key);
-    return .{ .tests = tests, .whole = .{ .key = key, .ready = cases.items.len } };
+    work.storage = store.statistics();
+    work.nanoseconds.total = stage_metrics.elapsed(init.io, started);
+    return .{ .tests = tests, .whole = .{ .key = key, .ready = cases.items.len }, .work = work, .method = if (saved != null) "canonical-facts" else "reachable-ir" };
+}
+
+/// `rootsFor` lists cases first, so ready case `i` is physical function `i`.
+fn readableRoots(module: *const @import("ir.zig").Module, chosen: []const Selected) bool {
+    var root: usize = 0;
+    for (chosen) |item| if (item.ready) {
+        if (!expects(item.settings) and !entry.readable(module, module.functions.items[root].signature.ret)) return false;
+        root += 1;
+    };
+    return true;
+}
+
+const LegacyInput = struct { shared: test_keys.Shared, requests: []const test_keys.Test, roots: []const []const u32 };
+
+fn deriveLegacy(init: std.process.Init, bound: planner.Bound, input: LegacyInput, derived: []?test_keys.Digest, work: *key_work.Work) Error!bool {
+    const planning = stage_metrics.now(init.io);
+    var planned = bound.batch(init.arena.allocator(), .{ .digests = input.shared.digests, .callees = input.shared.callees }, input.roots) catch |err| return planFailure(init, err);
+    defer planned.deinit();
+    work.nanoseconds.planner = stage_metrics.elapsed(init.io, planning);
+    work.transport = planned.transport;
+    const hashing = stage_metrics.now(init.io);
+    for (input.requests, derived, planned.batches) |request, *key, reached| {
+        if (request.roots.len == 0) continue;
+        key.* = test_keys.plannedKey(input.shared, request, reached) catch |err| {
+            if (err == error.OutOfMemory) return error.OutOfMemory;
+            return false;
+        };
+        work.planner.planned_tests += 1;
+        work.planner.closure_nodes += reached.len;
+        for (reached) |node| work.planner.closure_edges += input.shared.callees[node].len;
+        for (request.roots, 0..) |root, index| {
+            if (std.mem.indexOfScalar(u32, request.roots[0..index], root) != null) continue;
+            work.planner.closure_nodes += 1;
+            work.planner.closure_edges += input.shared.callees[root].len;
+        }
+    }
+    work.nanoseconds.keys = stage_metrics.elapsed(init.io, hashing);
+    return true;
+}
+
+fn attachWork(verdicts: []report.Verdict, ranges: []const WorkRange) void {
+    for (ranges) |range| if (verdicts[range.first].cache) |*explanation| {
+        explanation.work = range.work;
+    };
+}
+
+const Produced = struct { module: @import("ir.zig").Module, shared: test_keys.Shared, identities: ?[]const ?test_keys.Digest = null };
+
+/// Header discovery validates raw input receipts before individual canonical fact lookup.
+fn sharedFacts(a: std.mem.Allocator, checked: frontend.Checked, roots: []const typed.FunctionId, store: *const stage_store.Store, mode: planner.Mode, work: *key_work.Work) Error!?Produced {
+    if (mode == .reference) return eagerFacts(a, checked, roots, store.io, work);
+    var deferred: lowering_cache.Deferred = .{ .arena = a, .store = store };
+    var cache: lowering_cache.Cache = .{ .store = store, .lazy = &deferred };
+    var why: build.Refusal = .{};
+    const lowering_start = stage_metrics.now(store.io);
+    var module = build.buildRootsCached(a, roots, .{ .program = checked.program, .source = checked.src }, &why, &cache) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        work.nanoseconds.lowering += stage_metrics.elapsed(store.io, lowering_start);
+        work.producer.lowering.fresh = cache.lowered;
+        work.producer.lowering.reused = cache.reused;
+        work.producer.facts.fallback += 1;
+        return eagerFacts(a, checked, roots, store.io, work);
+    };
+    try deferred.prepare(&module, checked.src);
+    work.nanoseconds.lowering = stage_metrics.elapsed(store.io, lowering_start);
+    work.producer.lowering.fresh = cache.lowered;
+    work.producer.lowering.reused = cache.reused;
+    const fact_start = stage_metrics.now(store.io);
+    const facts = canonical_facts.build(a, &module, pipeline.locator(&checked.src), &deferred, &work.producer.facts) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        work.producer.lowering.materialized = deferred.restored;
+        work.nanoseconds.facts += stage_metrics.elapsed(store.io, fact_start);
+        work.producer.facts.fallback += 1;
+        return eagerFacts(a, checked, roots, store.io, work);
+    };
+    work.producer.lowering.materialized = deferred.restored;
+    work.nanoseconds.facts = stage_metrics.elapsed(store.io, fact_start);
+    return .{ .module = module, .shared = facts.shared, .identities = facts.identities };
+}
+
+fn workScope(a: std.mem.Allocator, path: []const u8, cases: []const discover.Case) Error![]const u8 {
+    var hash = std.crypto.hash.Blake3.init(.{});
+    for (cases) |case| {
+        hash.update(case.name);
+        hash.update("\x00");
+    }
+    var digest: [32]u8 = undefined;
+    hash.final(&digest);
+    return std.fmt.allocPrint(a, "{s}#{s}", .{ path, std.fmt.bytesToHex(digest, .lower) });
+}
+
+/// Complete independent lowering remains the conservative path for unknown facts.
+fn eagerFacts(a: std.mem.Allocator, checked: frontend.Checked, roots: []const typed.FunctionId, io: std.Io, work: *key_work.Work) Error!?Produced {
+    var why: build.Refusal = .{};
+    const lowering_start = stage_metrics.now(io);
+    const module = build.buildRootsSource(a, checked.program, roots, checked.src, &why) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        return null;
+    };
+    work.nanoseconds.lowering += stage_metrics.elapsed(io, lowering_start);
+    for (module.functions.items) |function| if (function.signature.linkage == .internal) {
+        work.producer.lowering.fresh += 1;
+    };
+    const facts_start = stage_metrics.now(io);
+    const shared = test_keys.Shared.build(a, &module, pipeline.locator(&checked.src)) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        return null;
+    };
+    work.producer.facts.fresh += shared.digests.len;
+    work.nanoseconds.facts += stage_metrics.elapsed(io, facts_start);
+    return .{ .module = module, .shared = shared };
+}
+
+/// Shadow keys come from independent eager lowering with all new metadata disabled.
+fn verifyShared(init: std.process.Init, checked: frontend.Checked, roots: []const typed.FunctionId, requests: []const test_keys.Test, derived: []const ?test_keys.Digest) Error!void {
+    var scratch = std.heap.ArenaAllocator.init(init.gpa);
+    defer scratch.deinit();
+    const a = scratch.allocator();
+    var why: build.Refusal = .{};
+    const module = build.buildRootsSource(a, checked.program, roots, checked.src, &why) catch |err| return planFailure(init, err);
+    const shared = test_keys.Shared.build(a, &module, pipeline.locator(&checked.src)) catch |err| return planFailure(init, err);
+    for (requests, derived) |request, cached| if (cached) |key| {
+        const expected = test_keys.key(shared, a, request) catch |err| return planFailure(init, err);
+        if (!std.mem.eql(u8, &expected, &key)) return planFailure(init, error.ComponentShadowMismatch);
+    };
+}
+
+fn planFailure(init: std.process.Init, err: anyerror) Error {
+    if (err == error.OutOfMemory) return error.OutOfMemory;
+    writeAll(init, std.Io.File.stderr(), std.fmt.allocPrint(init.arena.allocator(), "error: cache-plan component: {s}\n", .{@errorName(err)}) catch return error.OutOfMemory) catch return error.WriteFailed;
+    return error.ComponentUnavailable;
 }
 
 /// Whether a test's entry reads or writes values through the copied-value adapters,

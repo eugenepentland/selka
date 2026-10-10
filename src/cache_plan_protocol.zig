@@ -16,10 +16,13 @@ pub const max_work = 16_000_000;
 pub const Identity = struct { request_id: u64, snapshot: Digest };
 /// Owned request frame and expected reply correlation.
 pub const Request = struct { bytes: []u8, identity: Identity };
+/// Actual batch transport costs, absent for explicit reference execution.
+pub const Transport = struct { request_bytes: u64 = 0, reply_bytes: u64 = 0, startups: u64 = 0 };
 /// Arena-owned, canonically sorted nonroot node IDs for each requested batch.
 pub const Results = struct {
     arena: std.heap.ArenaAllocator,
     batches: []const []const u32,
+    transport: Transport = .{},
     /// Release all result storage.
     pub fn deinit(self: *Results) void {
         self.arena.deinit();

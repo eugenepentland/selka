@@ -1,10 +1,16 @@
 import graph
 import codec
+import incremental
+import codec_v2
 
 func exchange(fs: Filesystem, path: str) -> bytes fails str:
     mut data = b""
     with try fs.open(path, "rb") as file:
-        data = file.read(16777217)
+        data = file.read(33554433)
+    if len(data) >= 8 and data[:8] == b"SLKCP002":
+        mut request_v2 = try codec_v2.decode(data)
+        mut result_v2 = try incremental.build(request_v2.input)
+        return try codec_v2.encode(request_v2, result_v2)
     mut request = try codec.decode(data)
     mut reached = try graph.build(request.digests, request.adjacency, request.batches)
     return try codec.encode(request, reached)

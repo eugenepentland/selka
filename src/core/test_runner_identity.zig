@@ -117,7 +117,7 @@ fn before(_: void, left: Digest, right: Digest) bool {
 }
 
 /// The distinct functions `function` calls directly or takes the address of.
-fn calls(a: std.mem.Allocator, function: ir.Function) Error![]const u32 {
+pub fn calls(a: std.mem.Allocator, function: ir.Function) Error![]const u32 {
     var targets: std.ArrayList(u32) = .empty;
     for (function.insts.items) |inst| {
         const target: u32 = switch (inst.op) {

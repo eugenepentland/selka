@@ -1,0 +1,25 @@
+Final Wave 2 gate, pinned Zig 0.17.0-dev.1683+5ceec001b
+scripts/build-slot.sh gate zig build test fmt-check -j6 --maxrss 8589934592 --summary all
+Exit status: 0
+Selected lines from wave2-full-gate-final.log (full log SHA-256 in qualification-summary.json):
+
+guardian: run-all: 88 check(s) passed — diff-scoped vs e9011d9c6513f63ae02881d0cfc8258c668e6b5e, 39 file(s) in scope
+guardian: run-all: 88 check(s) passed — diff-scoped vs e9011d9c6513f63ae02881d0cfc8258c668e6b5e, 39 file(s) in scope
+140 passed, 0 cached, 0 failed, 0 skipped
+140 passed, 0 cached, 0 failed, 0 skipped
+1534 passed, 0 cached, 0 failed, 0 skipped
+6 passed, 0 cached, 0 failed, 0 skipped
+6 passed, 0 cached, 0 failed, 0 skipped
+14 passed, 0 cached, 0 failed, 0 skipped
+14 passed, 0 cached, 0 failed, 0 skipped
+incremental v2: 408 independent cold/retained/warm batches, 3 coherent invalid SCC partitions, creation/splitting, 13 malformed frames: passed
+100000-node single-root chain: closure_nodes=200000 closure_edges=99999 time=0.119486s
+100000-node retained chain: index_nodes=700000 index_edges=599994 closure_work=0 time=0.070088s
+incremental v2: 408 independent cold/retained/warm batches, 3 coherent invalid SCC partitions, creation/splitting, 13 malformed frames: passed
+100000-node single-root chain: closure_nodes=200000 closure_edges=99999 time=0.113811s
+100000-node retained chain: index_nodes=700000 index_edges=599994 closure_work=0 time=0.087356s
+98 passed, 0 cached, 0 failed, 0 skipped
+98 passed, 0 cached, 0 failed, 0 skipped
+42 passed, 0 cached, 0 failed, 0 skipped
+1534 passed, 0 cached, 0 failed, 0 skipped
+Build Summary: 104/104 steps succeeded; 2543/25789 tests passed (23246 skipped)

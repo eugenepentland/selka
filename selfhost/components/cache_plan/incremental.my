@@ -1,0 +1,361 @@
+# Generation-bound admission and SCC-shared closure work.
+# spec: SELFHOST-CACHE-PLAN-2
+public record Graph:
+    digests: bytes[]
+    adjacency: int[][]
+    topology: bytes
+
+
+public record Indexes:
+    topology: bytes
+    reverse: int[][]
+    groups: int[]
+
+
+public record Input:
+    graph: Graph
+    roots: int[][]
+    candidates: bool[]
+    changed: int[]
+    prior: Indexes
+
+
+public record Work:
+    index_nodes: int
+    index_edges: int
+    affected_nodes: int
+    closure_nodes: int
+    closure_edges: int
+    reused_tests: int
+    planned_tests: int
+
+
+public record Result:
+    indexes: Indexes
+    batches: int[][]
+    reused: bool[]
+    work: Work
+
+
+func check_work(work: Work) fails str:
+    if work.index_nodes + work.index_edges + work.affected_nodes + work.closure_nodes + work.closure_edges > 64000000:
+        fail "incremental planning work exceeds limit"
+
+
+func empty_rows(count: int) -> int[][]:
+    mut rows: int[][] = []
+    for node in range(count):
+        mut values: int[] = []
+        rows.append(values)
+    return rows
+
+
+func transpose(adjacency: int[][], mut work: Work) -> int[][] fails str:
+    mut reverse: int[][] = empty_rows(len(adjacency))
+    for node in range(len(adjacency)):
+        work.index_nodes += 1
+        for target in adjacency[node]:
+            if target < 0 or target >= len(adjacency):
+                fail "invalid callee function index"
+            reverse[target].append(node)
+            work.index_edges += 1
+            try check_work(work)
+    return reverse
+
+
+# Iterative Kosaraju keeps a long dependency chain off the native call stack.
+func scc(adjacency: int[][], reverse: int[][], mut work: Work) -> int[] fails str:
+    mut seen: bool[] = [for node in range(len(adjacency)) yield False]
+    mut finished: int[] = []
+    for start in range(len(adjacency)):
+        if not seen[start]:
+            mut pending: int[] = [start]
+            mut cursors: int[] = [0]
+            seen[start] = True
+            while len(pending) > 0:
+                mut last = len(pending) - 1
+                mut node = pending[last]
+                mut edge = cursors[last]
+                if edge < len(adjacency[node]):
+                    cursors[last] += 1
+                    mut target = adjacency[node][edge]
+                    work.index_edges += 1
+                    try check_work(work)
+                    if not seen[target]:
+                        seen[target] = True
+                        pending.append(target)
+                        cursors.append(0)
+                else:
+                    finished.append(node)
+                    _ = pending.pop()
+                    _ = cursors.pop()
+                    work.index_nodes += 1
+                    try check_work(work)
+    mut groups: int[] = [for node in range(len(adjacency)) yield - 1]
+    mut position = len(finished)
+    while position > 0:
+        position -= 1
+        mut start = finished[position]
+        if groups[start] < 0:
+            mut members: int[] = [start]
+            mut next = 0
+            mut representative = start
+            groups[start] = start
+            while next < len(members):
+                mut node = members[next]
+                next += 1
+                work.index_nodes += 1
+                if node < representative:
+                    representative = node
+                for source in reverse[node]:
+                    work.index_edges += 1
+                    try check_work(work)
+                    if groups[source] < 0:
+                        groups[source] = start
+                        members.append(source)
+            for node in members:
+                groups[node] = representative
+    return groups
+
+
+# Every claimed group must be reachable from its representative in both directions.
+func connected_groups(adjacency: int[][], groups: int[], mut work: Work) -> bool fails str:
+    mut seen: bool[] = [for node in range(len(adjacency)) yield False]
+    for start in range(len(adjacency)):
+        if groups[start] == start:
+            mut pending: int[] = [start]
+            mut next = 0
+            seen[start] = True
+            while next < len(pending):
+                mut node = pending[next]
+                next += 1
+                work.index_nodes += 1
+                for target in adjacency[node]:
+                    work.index_edges += 1
+                    try check_work(work)
+                    if groups[target] == start and not seen[target]:
+                        seen[target] = True
+                        pending.append(target)
+    for value in seen:
+        if not value:
+            return False
+    return True
+
+
+# Strongly connected groups are maximal exactly when their quotient has no cycle.
+func acyclic_groups(adjacency: int[][], groups: int[], mut work: Work) -> bool fails str:
+    mut outgoing = empty_rows(len(adjacency))
+    mut indegree: int[] = [for node in range(len(adjacency)) yield 0]
+    mut count = 0
+    for node in range(len(adjacency)):
+        work.index_nodes += 1
+        if groups[node] == node:
+            count += 1
+        for target in adjacency[node]:
+            work.index_edges += 1
+            try check_work(work)
+            if groups[node] != groups[target]:
+                outgoing[groups[node]].append(groups[target])
+                indegree[groups[target]] += 1
+    mut pending: int[] = []
+    for node in range(len(adjacency)):
+        if groups[node] == node and indegree[node] == 0:
+            pending.append(node)
+    mut next = 0
+    while next < len(pending):
+        mut group = pending[next]
+        next += 1
+        work.index_nodes += 1
+        for target in outgoing[group]:
+            work.index_edges += 1
+            try check_work(work)
+            indegree[target] -= 1
+            if indegree[target] == 0:
+                pending.append(target)
+    return next == count
+
+
+func valid_groups(adjacency: int[][], reverse: int[][], groups: int[], mut work: Work) -> bool fails str:
+    for node in range(len(groups)):
+        work.index_nodes += 1
+        mut group = groups[node]
+        if group < 0 or group > node or group >= len(groups):
+            return False
+        if groups[group] != group:
+            return False
+    mut forward = try connected_groups(adjacency, groups, mut work)
+    if not forward:
+        return False
+    mut backward = try connected_groups(reverse, groups, mut work)
+    if not backward:
+        return False
+    return try acyclic_groups(adjacency, groups, mut work)
+
+
+func order_nodes(digests: bytes[], nodes: int[]) -> int[]:
+    mut sortable: bytes[] = []
+    for node in nodes:
+        mut empty: int[] = []
+        mut suffix = byte_buffer(empty)
+        _ = suffix.append_byte((node // 16777216) % 256)
+        _ = suffix.append_byte((node // 65536) % 256)
+        _ = suffix.append_byte((node // 256) % 256)
+        _ = suffix.append_byte(node % 256)
+        sortable.append(digests[node] + bytes(suffix))
+    sortable.sort()
+    return [for entry in sortable yield entry[32] * 16777216 + entry[33] * 65536 + entry[34] * 256 + entry[35]]
+
+
+record Closures:
+    members: int[][]
+    successors: int[][]
+    values: int[][]
+    state: int[]
+    seen: int[]
+    generation: int
+    group_seen: int[]
+
+
+func prepare_groups(adjacency: int[][], groups: int[], mut work: Work) -> Closures fails str:
+    mut members: int[][] = empty_rows(len(adjacency))
+    mut successors: int[][] = empty_rows(len(adjacency))
+    for node in range(len(adjacency)):
+        members[groups[node]].append(node)
+        work.index_nodes += 1
+        for target in adjacency[node]:
+            work.index_edges += 1
+            try check_work(work)
+            if groups[node] != groups[target]:
+                successors[groups[node]].append(groups[target])
+    return Closures(members=members, successors=successors, values=empty_rows(len(adjacency)), state=[for node in range(len(adjacency)) yield 0], seen=[for node in range(len(adjacency)) yield 0], generation=0, group_seen=[for node in range(len(adjacency)) yield 0])
+
+
+# Materialize only demanded root groups. A long single-root chain stays linear;
+# later requested groups can consume exact completed summaries they encounter.
+func close_group(mut closures: Closures, group: int, mut work: Work) fails str:
+    if closures.state[group] == 2:
+        return
+    closures.generation += 1
+    mut generation = closures.generation
+    mut pending: int[] = [group]
+    closures.group_seen[group] = generation
+    mut reached: int[] = []
+    mut next = 0
+    while next < len(pending):
+        mut current = pending[next]
+        next += 1
+        if closures.state[current] == 2:
+            for node in closures.values[current]:
+                work.closure_nodes += 1
+                try check_work(work)
+                if closures.seen[node] != generation:
+                    closures.seen[node] = generation
+                    reached.append(node)
+        else:
+            for node in closures.members[current]:
+                work.closure_nodes += 1
+                try check_work(work)
+                if closures.seen[node] != generation:
+                    closures.seen[node] = generation
+                    reached.append(node)
+            for target in closures.successors[current]:
+                work.closure_edges += 1
+                try check_work(work)
+                if closures.group_seen[target] != generation:
+                    closures.group_seen[target] = generation
+                    pending.append(target)
+    closures.values[group] = reached
+    closures.state[group] = 2
+
+
+public func build(input: Input) -> Result fails str:
+    mut work = Work(index_nodes=0, index_edges=0, affected_nodes=0, closure_nodes=0, closure_edges=0, reused_tests=0, planned_tests=0)
+    mut adjacency = input.graph.adjacency
+    if len(adjacency) != len(input.graph.digests) or len(input.roots) != len(input.candidates):
+        fail "invalid incremental tables"
+    for digest in input.graph.digests:
+        if len(digest) != 32:
+            fail "invalid function digest"
+    mut reverse = try transpose(adjacency, mut work)
+    mut groups: int[] = []
+    if len(input.prior.topology) > 0:
+        if input.prior.topology != input.graph.topology or len(input.prior.reverse) != len(reverse) or len(input.prior.groups) != len(adjacency):
+            fail "invalid retained graph indexes"
+        for node in range(len(reverse)):
+            work.index_nodes += 1
+            work.index_edges += len(reverse[node])
+            try check_work(work)
+            if input.prior.reverse[node] != reverse[node]:
+                fail "invalid retained graph indexes"
+        mut valid = try valid_groups(adjacency, reverse, input.prior.groups, mut work)
+        if valid:
+            groups = input.prior.groups
+        else:
+            groups = try scc(adjacency, reverse, mut work)
+    else:
+        groups = try scc(adjacency, reverse, mut work)
+    mut dirty: bool[] = [for node in range(len(adjacency)) yield False]
+    mut pending: int[] = []
+    for node in input.changed:
+        if node < 0 or node >= len(adjacency):
+            fail "invalid changed function index"
+        if dirty[node]:
+            fail "duplicate changed function index"
+        dirty[node] = True
+        pending.append(node)
+    mut next = 0
+    while next < len(pending):
+        mut node = pending[next]
+        next += 1
+        work.affected_nodes += 1
+        for source in reverse[node]:
+            work.index_edges += 1
+            try check_work(work)
+            if not dirty[source]:
+                dirty[source] = True
+                pending.append(source)
+    mut reused: bool[] = []
+    for batch in range(len(input.roots)):
+        mut reuse = input.candidates[batch]
+        for root in input.roots[batch]:
+            if root < 0 or root >= len(adjacency):
+                fail "invalid root function index"
+            if dirty[root]:
+                reuse = False
+        reused.append(reuse)
+        if reuse:
+            work.reused_tests += 1
+        else:
+            work.planned_tests += 1
+    mut batches: int[][] = empty_rows(len(reused))
+    mut payload_size = 128 + len(groups) * 8 + len(batches) * 8
+    for row in reverse:
+        payload_size += len(row) * 4
+    if payload_size > 67108800:
+        fail "response frame exceeds limit"
+    if work.planned_tests > 0:
+        mut closures = try prepare_groups(adjacency, groups, mut work)
+        mut seen: int[] = [for node in range(len(adjacency)) yield 0]
+        mut seen_groups: int[] = [for node in range(len(adjacency)) yield 0]
+        for batch in range(len(reused)):
+            if not reused[batch]:
+                mut generation = batch + 1
+                for root in input.roots[batch]:
+                    seen[root] = generation
+                mut reached: int[] = []
+                for root in input.roots[batch]:
+                    mut group = groups[root]
+                    if seen_groups[group] != generation:
+                        seen_groups[group] = generation
+                        try close_group(mut closures, group, mut work)
+                        for node in closures.values[group]:
+                            work.closure_nodes += 1
+                            try check_work(work)
+                            if seen[node] != generation:
+                                seen[node] = generation
+                                reached.append(node)
+                                payload_size += 4
+                                if payload_size > 67108800:
+                                    fail "response frame exceeds limit"
+                batches[batch] = order_nodes(input.graph.digests, reached)
+    return Result(indexes=Indexes(topology=input.graph.topology, reverse=reverse, groups=groups), batches=batches, reused=reused, work=work)

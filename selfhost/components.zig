@@ -202,6 +202,7 @@ const components = [_]Component{
 };
 
 fn component(ctx: *Context, config: Config, seed: Seed, descriptor: Component) ![]const u8 {
+    const version: i64 = if (std.mem.eql(u8, descriptor.name, "cache-plan")) 2 else 1;
     const sources = try ctx.path(&.{ config.root, "selfhost", "components", descriptor.source });
     const tool = try std.process.executablePathAlloc(ctx.io, ctx.a);
     var flags = std.json.Array.init(ctx.a);
@@ -212,8 +213,8 @@ fn component(ctx: *Context, config: Config, seed: Seed, descriptor: Component) !
         .{ .name = "format", .value = files.integer(2) },
         .{ .name = "component", .value = files.string(descriptor.name) },
         .{ .name = "build_cache_root", .value = files.string(config.cache) },
-        .{ .name = "protocol", .value = files.integer(1) },
-        .{ .name = "schema", .value = files.integer(1) },
+        .{ .name = "protocol", .value = files.integer(version) },
+        .{ .name = "schema", .value = files.integer(version) },
         .{ .name = "target", .value = try nativeTarget(ctx) },
         .{ .name = "flags", .value = .{ .array = flags } },
         .{ .name = "seed", .value = seed.qualification },
@@ -284,7 +285,7 @@ fn component(ctx: *Context, config: Config, seed: Seed, descriptor: Component) !
     } else try files.copy(ctx.io, executable, installed, 0o555);
     const manifest = try files.object(ctx.a, &.{
         .{ .name = "format", .value = files.integer(1) },                    .{ .name = "component", .value = files.string(descriptor.name) },
-        .{ .name = "protocol", .value = files.integer(1) },                  .{ .name = "schema", .value = files.integer(1) },
+        .{ .name = "protocol", .value = files.integer(version) },            .{ .name = "schema", .value = files.integer(version) },
         .{ .name = "artifact", .value = files.string(name) },                .{ .name = "sha256", .value = files.string(expected) },
         .{ .name = "key", .value = files.string(try ctx.a.dupe(u8, &key)) },
     });

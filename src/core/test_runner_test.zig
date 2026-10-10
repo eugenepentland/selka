@@ -268,7 +268,7 @@ const CacheProject = struct {
         var digest: [32]u8 = undefined;
         std.crypto.hash.sha2.Sha256.hash(contents, &digest, .{});
         const hex = std.fmt.bytesToHex(digest, .lower);
-        const manifest = try std.json.Stringify.valueAlloc(self.arena, .{ .format = 1, .component = "cache-plan", .protocol = 1, .schema = 1, .artifact = "cache-plan", .sha256 = @as([]const u8, &hex) }, .{});
+        const manifest = try std.json.Stringify.valueAlloc(self.arena, .{ .format = 1, .component = "cache-plan", .protocol = 2, .schema = 2, .artifact = "cache-plan", .sha256 = @as([]const u8, &hex) }, .{});
         try std.Io.Dir.cwd().writeFile(std.testing.io, .{ .sub_path = try self.path("components/cache-plan.json"), .data = manifest });
     }
 
@@ -308,6 +308,7 @@ fn cacheExplanation(value: std.json.Value, name: []const u8) !std.json.Value {
 
 // spec: SELFHOST-CACHE-REPORT-1
 // spec-case: SELFHOST-CACHE-PLAN-1
+// spec-case: NEW-CORE-TEST-FACTS-1
 test "cache planner cacheExplanation reuses unrelated tests after a helper edit and explains current invocation" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
@@ -331,6 +332,67 @@ test "cache planner cacheExplanation reuses unrelated tests after a helper edit 
     try expectVerdict(changed, "app::test_unrelated", "cached", "");
     try std.testing.expectEqualStrings("execute", (try cacheExplanation(changed, "test_dependent")).object.get("action").?.string);
     try std.testing.expectEqualStrings("reuse", (try cacheExplanation(changed, "test_unrelated")).object.get("action").?.string);
+    try qualifyDirectoryNamespaces(&project, temporary.dir);
+}
+
+fn keyNamespace(project: CacheProject, source: []const u8) ![]const u8 {
+    const absolute = try std.Io.Dir.cwd().realPathFileAlloc(std.testing.io, try project.path(source), project.arena);
+    var digest: [32]u8 = undefined;
+    std.crypto.hash.Blake3.hash(absolute, &digest, .{});
+    return project.path(try std.fs.path.join(project.arena, &.{ "cache/test-keys", &std.fmt.bytesToHex(digest, .lower), "stages-packed-v1" }));
+}
+
+fn namespaceSequence(project: CacheProject, source: []const u8) ![]const u8 {
+    const path = try std.fs.path.join(project.arena, &.{ try keyNamespace(project, source), "sequence" });
+    return std.Io.Dir.cwd().readFileAlloc(std.testing.io, path, project.arena, .limited(64));
+}
+
+fn damageNamespace(project: CacheProject, source: []const u8) !void {
+    var directory = try std.Io.Dir.cwd().openDir(std.testing.io, try keyNamespace(project, source), .{ .iterate = true });
+    defer directory.close(std.testing.io);
+    var entries = directory.iterate();
+    var damaged: usize = 0;
+    while (try entries.next(std.testing.io)) |item| {
+        if (!std.mem.endsWith(u8, item.name, ".pack")) continue;
+        try directory.writeFile(std.testing.io, .{ .sub_path = item.name, .data = "damaged namespace pack" });
+        damaged += 1;
+    }
+    try std.testing.expect(damaged != 0);
+}
+
+fn qualifyDirectoryNamespaces(project: *CacheProject, directory: std.Io.Dir) !void {
+    const left = "tests/left.my";
+    const right = "tests/right.my";
+    const jobs: []const []const u8 = &.{"--jobs=1"};
+    try directory.createDir(std.testing.io, "tests", .default_dir);
+    try directory.writeFile(std.testing.io, .{ .sub_path = left, .data = cache_source });
+    try directory.writeFile(std.testing.io, .{ .sub_path = right, .data = cache_source });
+    const cold = try cacheReport(project.arena, try project.run("tests", jobs));
+    try std.testing.expectEqual(@as(i64, 4), cold.object.get("passed").?.integer);
+    const left_before = try namespaceSequence(project.*, left);
+    const right_before = try namespaceSequence(project.*, right);
+    try std.testing.expectEqual(@as(usize, 48), left_before.len);
+    try std.testing.expectEqual(@as(usize, 48), right_before.len);
+    try std.testing.expect(!std.mem.eql(u8, try keyNamespace(project.*, left), try keyNamespace(project.*, right)));
+    const edited = try project.arena.dupe(u8, cache_source);
+    const literal = std.mem.indexOf(u8, edited, "return 1").? + "return ".len;
+    edited[literal] = '2';
+    try directory.writeFile(std.testing.io, .{ .sub_path = left, .data = edited });
+    const changed = try cacheReport(project.arena, try project.run("tests", jobs));
+    try expectVerdict(changed, "left::test_dependent", "passed", "");
+    try expectVerdict(changed, "right::test_dependent", "cached", "");
+    try std.testing.expect(!std.mem.eql(u8, left_before, try namespaceSequence(project.*, left)));
+    try std.testing.expectEqualSlices(u8, right_before, try namespaceSequence(project.*, right));
+    const left_after = try namespaceSequence(project.*, left);
+    try damageNamespace(project.*, right);
+    edited[literal] = '0';
+    try directory.writeFile(std.testing.io, .{ .sub_path = right, .data = edited });
+    const damaged = try project.run("tests", jobs);
+    try std.testing.expectEqual(std.process.Child.Term{ .exited = 1 }, damaged.term);
+    const repaired = try std.json.parseFromSliceLeaky(std.json.Value, project.arena, damaged.stdout, .{});
+    try expectVerdict(repaired, "right::test_dependent", "failed", "expected true, got false");
+    try expectVerdict(repaired, "left::test_dependent", "cached", "");
+    try std.testing.expectEqualSlices(u8, left_after, try namespaceSequence(project.*, left));
 }
 
 // spec: SELFHOST-CACHE-IDENTITY-1
@@ -447,7 +509,7 @@ const callback_cache_source =
 
 // spec-case: SELFHOST-CACHE-PLAN-1
 // spec-case: SELFHOST-CACHE-IDENTITY-1
-test "cache planner qualifies reference shadow and component modes with callback constants and discovery edits" {
+test "sharedFacts eagerFacts and deriveLegacy qualify reference shadow and component modes with callback constants and discovery edits" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const a = arena.allocator();

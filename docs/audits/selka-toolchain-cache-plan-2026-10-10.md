@@ -1,10 +1,18 @@
 # Selka toolchain caching plan
 
-Status: Wave 1 implemented and qualified on the integration branch, 2026-10-10.
-Wave 2 re-reviewed against committed `main` at `e9011d9c6` on 2026-10-10:
-proceed with the revised scope below after integrating and qualifying Wave 1.
-Wave 1 is not yet on `main`. Later waves remain proposals; this review changes
-the plan only and does not qualify the combined implementation.
+Status: Wave 1 qualified together with `main` at `e9011d9c6` on 2026-10-10;
+integration commit `ed76d2a9c` passed the full gate (83 steps, 2,512 executed
+Zig tests) and all 88 Guardian checks. The expanded shadow qualification passed
+123 matrix invocations, warning parity and concurrent-edit rejection.
+Wave 2 is implemented on `codex/selka-cache-wave2`: canonical producer facts,
+generation-bound graph metadata, a Selka v2 incremental planner and unaffected
+test-key reuse. The full gate passed 104 steps and 2,543 executed Zig tests;
+Debug/raw and ReleaseFast/zlib shadow matrices each passed 99 invocations.
+All 318 paired benchmark/oracle invocations passed. Current edit medians are
+about 1–39% slower on the measured directories despite substantial fact reuse;
+reducing server lock occupancy is the next priority, not a claimed Wave 2 win. Neither wave is on `main`;
+later waves remain proposals.
+See `experiments/cache-wave2-20261010/REPORT.md` for identities and evidence.
 
 ## Objective and contract
 
@@ -34,7 +42,44 @@ function results. Live external services require fresh observations. These
 distinctions belong in the result model, rather than appearing as exceptions to
 an unconditional “everything passed” cache.
 
-## Current main review — 2026-10-10
+## Server admission and lock duration — priority added during qualification
+
+Minimize serialized server occupancy as well as command latency. Record queue
+wait, total request-to-result time, build-slot occupancy, gate-lock occupancy and
+exclusive performance-measurement occupancy separately. Overlapping slot times
+are resource usage, not elapsed wall time. A planner microbenchmark or fewer
+canonical digests is insufficient if the admitted command holds its lock longer.
+
+The current `scripts/build-slot.sh` holds a build/gate slot around the complete
+wrapped command. The first priority after Wave 2 qualification is to measure
+which admitted actions actually execute, which replay and which dominate lock
+occupancy. The gate already reuses many results; do not assume every step runs
+on every request. Address the observed obsolete-generation catalog scanning and
+conservative directory-discovery transitions alongside action-level reuse.
+
+Wave 3 should decide the required action inventory and validate reusable receipts
+before expensive admission wherever practical. Prepare immutable inputs outside
+the scarce resource window, then revalidate the source, tool, environment and
+configuration snapshot when admitted and before publishing success. An edit
+while queued must restart invalidated planning; it cannot inherit an old pass.
+Split execution into dependency-ordered admitted actions, preserving existing
+memory limits and every required gate check. Shorter per-action holds must not
+increase total occupied time through redundant preparation or repeated builds.
+
+Performance setup, fixture generation, receipt lookup and result formatting can
+normally precede or follow measurement admission. Preserve exclusive access for
+the actual measured operation and the environmental stabilization it requires.
+A compiler-build benchmark must still isolate the measured build itself; moving
+that work outside the lock would invalidate the experiment. Determining whether
+an old performance observation is admissible remains Wave 5's context contract.
+
+Before starting broader coverage, establish cold, unchanged, private-edit,
+shared-dependency, test-addition and documentation-only baselines in lock-held
+seconds. Prioritize removing expensive unnecessary actions over optimizing
+already cheap graph operations. Wave 2's observed metadata/planning overhead
+means it is a correctness foundation, not yet evidence of shorter server locks.
+
+## Main review before integration — 2026-10-10
 
 Reviewed committed `main` at
 `e9011d9c6513f63ae02881d0cfc8258c668e6b5e`, using the clean checkout at
@@ -99,12 +144,13 @@ still run. Ordinary native units still group source-module functions;
 `emit_units.Kind` remains module/generic/helper/entry/program. Nothing in the
 new evidence means all work is confined to the edited function.
 
-### Integration prerequisite
+### Integration prerequisite — completed
 
-A `git merge-tree --write-tree --name-only c3107e4cf e9011d9c6` preview reports
+A `git merge-tree --write-tree --name-only c3107e4cf e9011d9c6` preview reported
 conflicts in exactly `build.zig`, `build_test_inputs.zig` and
-`src/core/test_runner.zig`. No branch or worktree was merged. A clean textual
-merge elsewhere is not proof of runtime compatibility.
+`src/core/test_runner.zig`. The subsequent integration commit `ed76d2a9c`
+resolves those conflicts and passed the combined full gate and shadow matrix
+recorded at the top of this plan.
 
 As a focused compatibility check, all eight `.my` files under
 `selfhost/components/{cache_plan,test_index}` pass `fmt --check` with main's
@@ -443,8 +489,9 @@ component's own unverified skip decisions.
 
 ### Wave 1 — Establish the reuse contract and self-host Core traversal
 
-Implemented on the Wave 1 branch. It creates the extension point used below;
-its original qualification does not cover integration with newer main changes.
+Implemented and qualified with reviewed main in `ed76d2a9c`. It creates the
+extension point used below; the integration evidence supersedes the original
+branch-only qualification for this main revision.
 
 1. Pin the latest qualified incremental and self-hosting revisions on an
    integration branch. Record baseline work counts and current cache admission.
@@ -475,8 +522,12 @@ correctly. A component edit rebuilds independently of the Zig host.
 
 ### Wave 2 — Persist validated dependency facts and reuse test-key derivation
 
-Start with the integration prerequisite above. Then deliver the following
-changes in order, with a reference path available throughout.
+Implemented against the qualified integration above. The following describes
+the delivered contract; the qualification report records the precise limits.
+Metadata is namespaced by source path, graph batches are still validated in full,
+and exact retained keys stand in for recomputing unaffected closures. Global
+semantic checks and conservative discovery/source guards remain active. The
+independent eager reference path remains available for qualification.
 
 **2A. Publish compact producer facts.** Add records while frontend/lowering
 already performs its required work, or when an existing validated receipt
@@ -580,6 +631,10 @@ function recompiled.
 
 ### Wave 3 — Cover the entire verification command
 
+Prioritize reductions in measured gate/build lock occupancy using the admission
+boundary above. Move validated no-work decisions ahead of execution admission;
+keep freshness-required checks and complete snapshot validation.
+
 Register adapters for guest tests, compiler Zig tests, CLI/integration tests,
 doctests, format/lint checks, generated interfaces, fixture generation and
 Guardian checks. Preserve their current commands and success criteria. The
@@ -612,6 +667,9 @@ Exit: an unchanged normal gate launches no cacheable test/check workers, while
 still checking its inventory and running actions explicitly requiring freshness.
 Fixtures, added/deleted tests, environment, rules and tool changes invalidate the
 right actions. A new compiler may still invalidate a broad suite legitimately.
+Report lock-held seconds and executed actions for the same edit matrix before
+and after; shorter hold per action alone is not sufficient if total occupancy
+or end-to-end latency grows.
 
 ### Wave 4 — Incremental property testing and fuzzing
 
@@ -799,11 +857,14 @@ under the repository's build slots and timing isolation, with the same hardware,
 cache state and fixtures on both sides. Define numerical latency budgets from
 those baselines rather than inventing a universal sub-millisecond target.
 
-Wave 1 has ended at the reuse and future-durability contract boundary. The next
-implementation starts with integration qualification, then ends at Wave 2's
-persisted-facts and test-key reuse milestone. An application workflow runtime
+Wave 1 has ended at the reuse and future-durability contract boundary. Wave 2
+has implemented the persisted-facts and test-key reuse milestone against the
+qualified main integration. An application workflow runtime
 remains Wave 7: the packed cache's recovery journal is disposable cache storage,
-not durable application progress. Waves 2 and 3 produce the main edit-loop
-savings; fuzzing and Juice can then consume the same dependency facts.
+not durable application progress. Wave 2 establishes reusable facts and keys,
+but measurements currently show metadata/planning overhead and conservative
+directory discovery transitions can outweigh saved computation. Address those
+measured costs before promising a faster edit loop. Wave 3 extends reuse to the
+whole verification command; fuzzing and Juice can then consume its facts.
 The later storage, daemon and public memo work should be driven by measured
 overhead and reuse, not prerequisites for getting the first safe wins.

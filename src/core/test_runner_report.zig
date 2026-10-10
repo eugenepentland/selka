@@ -37,6 +37,7 @@ pub const Cache = struct {
     key: ?[]const u8 = null,
     component: []const u8,
     key_method: []const u8 = "reachable-ir",
+    work: ?*const @import("test_runner_work.zig").Work = null,
 };
 
 /// The identities of a provider test's acceptance, as hex digests: the production

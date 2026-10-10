@@ -89,7 +89,8 @@ fn buildRootsInput(allocator: std.mem.Allocator, roots: []const typed.FunctionId
     };
 }
 
-fn buildRootsCached(allocator: std.mem.Allocator, roots: []const typed.FunctionId, input: Input, refusal: *Refusal, cache: ?*lowering_cache.Cache) CachedError!ir.Module {
+/// Lower selected roots with optional validated artifact and discovery reuse.
+pub fn buildRootsCached(allocator: std.mem.Allocator, roots: []const typed.FunctionId, input: Input, refusal: *Refusal, cache: ?*lowering_cache.Cache) CachedError!ir.Module {
     const program = input.program;
     var mb: ModuleBuilder = .{ .allocator = allocator, .input = input, .refusal = refusal, .discovery = .{ .enabled = cache != null } };
     defer mb.discovery.ids.deinit(allocator);

@@ -513,16 +513,37 @@ A receipt's identity (NEW-CORE-S4-TEST-3) is:
   `ZIG_LIB_DIR`, `SOURCE_DATE_EPOCH` and the like). A shell's `_` or `OLDPWD`,
   a terminal's variables or a wrapper such as `time` leave receipts valid.
 
-A program lowers all its ready tests once and derives each test's key from that
-lowering (NEW-CORE-TEST-KEYS-1): every function gets a digest of what it means
+A program discovers the functions needed by all its ready tests together and
+derives each test's key from their canonical facts (NEW-CORE-TEST-KEYS-1,
+NEW-CORE-TEST-FACTS-1): every function gets a digest of what it means
 (its callees by name and signature, its strings by their bytes, its types by
 structure), and a test's key hashes the digests of the functions it reaches. The
 key changes exactly when the test's own program above does, so an edit to a
-function only some tests reach reruns only those, and finding the keys costs one
-lowering for the file instead of one per test. The program also keeps one key for
+function only some tests reach reruns only those. Validated facts live under
+`<cache>/test-keys` in the existing packed store. An eligible edit lowers and
+digests changed functions while reusing unchanged facts without restoring their
+instruction bodies. Unknown metadata takes the complete-lowering path; source
+movement, type changes and source-proof changes can require broader recomputation.
+The program also keeps one key for
 all its ready tests together (NEW-CORE-TEST-WHOLE-1): when it has a receipt, every
 test is reused with a single lookup. `MYLANG_TEST_KEYS=per-test` keys each test
 from its own lowering instead, as the check the derived keys are tested against.
+
+The Selka cache planner retains a complete dependency graph and uses reverse
+dependencies to reuse unaffected test keys (NEW-CORE-TEST-GRAPH-1,
+SELFHOST-CACHE-PLAN-2). Lost or corrupt metadata causes recomputation. These
+records describe key derivation; passing receipts still authorize test reuse.
+Global semantic checks continue to run after source changes.
+
+`--json` includes current key-derivation work at `cache.work` on the first test
+of each provider group. Its `scope` identifies that group. The report counts
+fresh/reused canonical facts, raw bodies restored, graph and closure work, and
+planner request/reply bytes and process starts. `nanoseconds` contains monotonic
+wall intervals; `storage` counts packed block reads and decoding, excluding
+direct journal reads and ordinary cache metadata. A whole-report replay omits
+historic work. `MYLANG_CACHE_PLAN_MODE=shadow` independently lowers and hashes
+the complete graph to check derived keys; `reference` uses the uncached Zig
+path. These modes change the execution identity and are qualification tools.
 
 Output and capabilities do not prevent reuse. A test that prints through a
 `Stream` parameter is reused like any other, because its output is discarded on

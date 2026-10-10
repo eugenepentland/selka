@@ -4,6 +4,9 @@ The first progressive self-hosting component computes informational test
 reachability for `tests-for`, `context`, lint notes and checked interface reports. The
 normal commands use its native Selka executable. Discovery, source checking,
 graph extraction and formatting remain in the Zig host.
+The separate `cache-plan` component plans Core dependency closures and reuse of
+unaffected test keys. Canonical fact extraction, storage and execution remain in
+Zig. Both components can be rebuilt without rebuilding the compiler host.
 
 ## Build and install
 
@@ -16,7 +19,7 @@ zig build
 ```
 
 Installation contains `tools/selka-components`, `bin/mylang` and
-`libexec/mylang/components/test-index.json` with its content-named executable.
+`libexec/mylang/components/{test-index,cache-plan}.json` with their content-named executables.
 Keep those directories together when relocating the installation. `--prefix`
 selects another installation root. A copied host executable alone is incomplete
 for commands that need the component; other compiler commands do not launch it.
@@ -42,7 +45,7 @@ Zig toolchain, Git history containing the pinned commit (or a verified source
 archive below), and the repository's sibling `guardian-zig` build dependency.
 The original historical `selfhost/stage0-pin.json` is unchanged.
 
-Component inputs live under `selfhost/components/test_index/`. After an edit:
+Component inputs live under `selfhost/components/{test_index,cache_plan}/`. After an edit:
 
 ```sh
 zig build components
@@ -130,11 +133,14 @@ component artifact while preserving the host executable's digest.
 
 ## Scope
 
-This component is a navigation aid. It does not control actual test selection,
+`test-index` is a navigation aid. It does not control actual test selection,
 execution receipts, compiler object caching or early report replay. The
 embedded-only `reference` command retains its pure renderer to preserve its
 filesystem-independent contract. The Core runner uses a different dependency
-graph, including function references. A later
-migration must preserve that graph and add component identity to every relevant
-cache lookup before enabling reuse. Persistent workers and an in-process C ABI
-are separate future features.
+graph, including function references, through `cache-plan`. Its verified identity
+binds every relevant cache lookup. `MYLANG_CACHE_PLAN_MODE` selects component,
+reference or shadow execution independently of `MYLANG_TEST_INDEX_MODE`.
+The [incremental v2 protocol](component-protocol.md#incremental-core-cache-planner-v2)
+supports persisted canonical facts, complete graph generations and unaffected
+test-key reuse. Persistent workers, an in-process C ABI and application durable
+execution remain separate future features.

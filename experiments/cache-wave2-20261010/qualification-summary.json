@@ -1,0 +1,190 @@
+{
+  "baseline_main": "e9011d9c6513f63ae02881d0cfc8258c668e6b5e",
+  "integration_commit": "ed76d2a9c",
+  "zig": "0.17.0-dev.1683+5ceec001b",
+  "qualification": {
+    "wave2-debug-raw-final": {
+      "compiler": {
+        "path": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/zig-out/bin/mylang",
+        "sha256": "a2eb26371f36257b8b7964d8c60abaeb2a4eea8569d86d81a551b425b8a8285b"
+      },
+      "compression": "none",
+      "planner_mode": "shadow",
+      "started_utc": "2026-10-10T12:18:14.304330+00:00",
+      "completed_utc": "2026-10-10T12:19:37.182060+00:00",
+      "main_invocations": 86,
+      "private_invocations": 4,
+      "warning_invocations": 6,
+      "concurrent_invocations": 3,
+      "corruption": {
+        "directory": "test-keys",
+        "payload_count": 65
+      },
+      "private_counts": {
+        "passed": 2,
+        "cached": 1
+      },
+      "private_work": [
+        {
+          "scope": "combined_test.my#4dd7b4e044abace956c56a64af279e37f200d1a1dfc3bcdc9de6d9bfc25226ce",
+          "producer": {
+            "facts": {
+              "fresh": 1,
+              "reused": 7,
+              "fallback": 1,
+              "decoded": 7
+            },
+            "lowering": {
+              "fresh": 1,
+              "reused": 7,
+              "materialized": 0
+            }
+          },
+          "graph": {
+            "nodes_read": 8,
+            "nodes_unchanged": 7,
+            "changed_nodes": 1,
+            "candidate_tests": 3,
+            "shards_read": 3,
+            "shards_written": 2
+          },
+          "planner": {
+            "index_nodes": 64,
+            "index_edges": 53,
+            "affected_nodes": 5,
+            "closure_nodes": 18,
+            "closure_edges": 7,
+            "reused_tests": 1,
+            "planned_tests": 2
+          },
+          "storage": {
+            "packed_bytes_read": 10233,
+            "decoded_bytes": 10232,
+            "blocks_decoded": 1,
+            "payload_bytes_returned": 4047,
+            "block_cache_hits": 18
+          },
+          "nanoseconds": {
+            "lowering": 1374643,
+            "facts": 380914,
+            "graph": 298354,
+            "planner": 198941620,
+            "keys": 32365,
+            "publication": 676032,
+            "total": 202231341
+          },
+          "transport": {
+            "request_bytes": 604,
+            "reply_bytes": 272,
+            "startups": 1
+          }
+        }
+      ],
+      "raw_results_sha256": "499cbf2a7eea364f977e69c6b1ed20b4ef4036286374811c27c153f23e8783d1"
+    },
+    "wave2-release-zlib-final": {
+      "compiler": {
+        "path": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave2-validation/candidate/bin/mylang",
+        "sha256": "92dd45fc92a79bca7eb2f273ec9ffdf6cac454526302b521b5bf33b88e0bc8c6"
+      },
+      "compression": "zlib",
+      "planner_mode": "shadow",
+      "started_utc": "2026-10-10T12:23:06.416658+00:00",
+      "completed_utc": "2026-10-10T12:24:02.425203+00:00",
+      "main_invocations": 86,
+      "private_invocations": 4,
+      "warning_invocations": 6,
+      "concurrent_invocations": 3,
+      "corruption": {
+        "directory": "test-keys",
+        "payload_count": 65
+      },
+      "private_counts": {
+        "passed": 2,
+        "cached": 1
+      },
+      "private_work": [
+        {
+          "scope": "combined_test.my#4dd7b4e044abace956c56a64af279e37f200d1a1dfc3bcdc9de6d9bfc25226ce",
+          "producer": {
+            "facts": {
+              "fresh": 1,
+              "reused": 7,
+              "fallback": 1,
+              "decoded": 7
+            },
+            "lowering": {
+              "fresh": 1,
+              "reused": 7,
+              "materialized": 0
+            }
+          },
+          "graph": {
+            "nodes_read": 8,
+            "nodes_unchanged": 7,
+            "changed_nodes": 1,
+            "candidate_tests": 3,
+            "shards_read": 3,
+            "shards_written": 2
+          },
+          "planner": {
+            "index_nodes": 64,
+            "index_edges": 53,
+            "affected_nodes": 5,
+            "closure_nodes": 18,
+            "closure_edges": 7,
+            "reused_tests": 1,
+            "planned_tests": 2
+          },
+          "storage": {
+            "packed_bytes_read": 4836,
+            "decoded_bytes": 10232,
+            "blocks_decoded": 1,
+            "payload_bytes_returned": 4047,
+            "block_cache_hits": 18
+          },
+          "nanoseconds": {
+            "lowering": 386568,
+            "facts": 95920,
+            "graph": 58893,
+            "planner": 3334613,
+            "keys": 4411,
+            "publication": 401456,
+            "total": 4402688
+          },
+          "transport": {
+            "request_bytes": 604,
+            "reply_bytes": 272,
+            "startups": 1
+          }
+        }
+      ],
+      "raw_results_sha256": "dd75fa15e1cb159972d94e2f5b86cbf9d1026090b6f35eb476e010a9abfeaad1"
+    }
+  },
+  "full_gate": {
+    "command": "scripts/build-slot.sh gate zig build test fmt-check -j6 --maxrss 8589934592 --summary all",
+    "steps": 104,
+    "executed_zig_tests": 2543,
+    "shard_skips": 23246,
+    "guardian_checks": 88,
+    "log_sha256": "eb0e0c6f734709db75692393f2b3baea0ad05108df46037172170fcf1aa15972",
+    "local_log": ".mylang-cache/cache-wave2-validation/wave2-full-gate-final.log"
+  },
+  "qualification_cache_cleanup": {
+    "time": "2026-10-10T12:39:40.886896+00:00",
+    "source": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/unit-tests/core/build/stages-packed-v1",
+    "archive": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave2-validation/foreign-stage-packs",
+    "current_identity": "d16155420cd1eb353a43ab9a81520ca08c2aedb81a4fe4cdab6496f20f7bbfb4",
+    "quarantined": {
+      "9e5eda0f56ad090deebae15d79916de05e0599285e72ff587322fb2f57138b5b": {
+        "files": 1285,
+        "bytes": 13068332
+      },
+      "23072ff8860045d890d3e222f6216d91823a46aa8bd5284072f120394e3c5af2": {
+        "files": 1286,
+        "bytes": 13063834
+      }
+    }
+  }
+}

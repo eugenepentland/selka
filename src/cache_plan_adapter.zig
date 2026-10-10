@@ -3,6 +3,9 @@ const std = @import("std");
 const wire = @import("cache_plan_protocol.zig");
 const launch = @import("component_launch.zig");
 const config = @import("config/component_runtime.zig");
+/// Incremental batch DTOs and generation-bound wire contract.
+pub const incremental_protocol = @import("cache_plan_protocol_v2.zig");
+const incremental_reference = @import("cache_plan_reference_v2.zig");
 /// Failures never authorize replay or an empty affected set.
 pub const Error = error{
     OutOfMemory,
@@ -53,7 +56,40 @@ pub const Bound = struct {
         }
         return actual;
     }
+    /// Approve persisted keys or plan affected closures in one generation-bound batch.
+    pub fn incremental(self: Bound, a: std.mem.Allocator, input: incremental_protocol.Incremental) Error!incremental_protocol.IncrementalResults {
+        if (self.mode == .reference) return incremental_reference.plan(a, input);
+        try self.validate(a);
+        var nonce: [8]u8 = undefined;
+        std.Io.random(self.io, &nonce);
+        const request = try incremental_protocol.request(a, input, std.mem.readInt(u64, &nonce, .little));
+        defer a.free(request.bytes);
+        const output = try self.runRequest(a, request.bytes);
+        defer a.free(output);
+        var actual = try incremental_protocol.reply(a, output, request.identity, input);
+        errdefer actual.deinit();
+        actual.transport = .{ .request_bytes = request.bytes.len, .reply_bytes = output.len, .startups = 1 };
+        if (self.mode == .shadow) {
+            var expected = try incremental_reference.plan(a, input);
+            defer expected.deinit();
+            if (!std.mem.eql(bool, actual.reused, expected.reused) or !std.mem.eql(u32, actual.indexes.groups, expected.indexes.groups)) return error.ComponentShadowMismatch;
+            for (actual.indexes.reverse, expected.indexes.reverse) |left, right| if (!std.mem.eql(u32, left, right)) return error.ComponentShadowMismatch;
+            for (actual.batches, expected.batches) |left, right| if (!std.mem.eql(u32, left, right)) return error.ComponentShadowMismatch;
+        }
+        return actual;
+    }
     fn execute(self: Bound, a: std.mem.Allocator, graph: wire.Graph, roots: []const []const u32) Error!wire.Results {
+        var nonce: [8]u8 = undefined;
+        std.Io.random(self.io, &nonce);
+        const request = try wire.request(a, graph, roots, std.mem.readInt(u64, &nonce, .little));
+        defer a.free(request.bytes);
+        const output = try self.runRequest(a, request.bytes);
+        defer a.free(output);
+        var result = try wire.reply(a, output, request.identity, graph, roots);
+        result.transport = .{ .request_bytes = request.bytes.len, .reply_bytes = output.len, .startups = 1 };
+        return result;
+    }
+    fn runRequest(self: Bound, a: std.mem.Allocator, bytes: []const u8) Error![]u8 {
         var arena = std.heap.ArenaAllocator.init(a);
         defer arena.deinit();
         const scratch = arena.allocator();
@@ -74,9 +110,8 @@ pub const Bound = struct {
         defer file.close(self.io);
         // The parent's proc path survives child CLOEXEC, including shebang interpreters.
         const executable = try std.fmt.allocPrint(scratch, "/proc/{d}/fd/{d}", .{ std.os.linux.getpid(), file.handle });
-        const request = try wire.request(scratch, graph, roots, std.mem.readInt(u64, nonce[0..8], .little));
         const path = try std.fs.path.join(scratch, &.{ directory, "request.bin" });
-        std.Io.Dir.cwd().writeFile(self.io, .{ .sub_path = path, .data = request.bytes }) catch |err| return ioFailure(self.io, "write request", err);
+        std.Io.Dir.cwd().writeFile(self.io, .{ .sub_path = path, .data = bytes }) catch |err| return ioFailure(self.io, "write request", err);
         const timeout: std.Io.Timeout = .{ .duration = .{ .clock = .awake, .raw = .fromMilliseconds(30000) } };
         const result = launch.runBounded(scratch, self.io, .{
             .argv = &.{ executable, "--request", path },
@@ -96,7 +131,7 @@ pub const Bound = struct {
         };
         if (!successful) return error.ComponentFailed;
         try self.validate(scratch);
-        return wire.reply(a, result.stdout, request.identity, graph, roots);
+        return a.dupe(u8, result.stdout);
     }
 };
 /// Eagerly bind explicit mode, schema, and verified implementation before any replay.
@@ -109,10 +144,10 @@ pub fn bind(a: std.mem.Allocator, io: std.Io, environ: *const std.process.Enviro
     var result: Bound = .{ .identity = undefined, .mode = mode, .io = io, .environ = environ, .directory = null, .artifact = null };
     errdefer result.deinit(a);
     var hash = std.crypto.hash.sha2.Sha256.init(.{});
-    hash.update("selka-cache-plan-v1/pure/disposable/success-only/");
+    hash.update("selka-cache-plan-v2/pure/disposable/success-only/");
     hash.update(@tagName(mode));
     if (mode == .reference) {
-        hash.update("host-reach-v1/sorted-digest-id/ordered-roots");
+        hash.update("host-incremental-v2/tarjan/bfs/sorted-digest-id/ordered-roots");
     } else {
         result.directory = if (environ.get("MYLANG_COMPONENT_DIR")) |directory| try a.dupe(u8, directory) else blk: {
             const executable = std.process.executableDirPathAlloc(io, a) catch |err| return ioFailure(io, "locate executable directory", err);

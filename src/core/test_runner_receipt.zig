@@ -678,7 +678,7 @@ test "validatePlan returns ComponentUnavailable when a verified component change
     var digest: Digest = undefined;
     std.crypto.hash.sha2.Sha256.hash("original planner", &digest, .{});
     const hex = std.fmt.bytesToHex(digest, .lower);
-    const manifest = try std.json.Stringify.valueAlloc(a, .{ .format = 1, .component = "cache-plan", .protocol = 1, .schema = 1, .artifact = "cache-plan", .sha256 = @as([]const u8, &hex) }, .{});
+    const manifest = try std.json.Stringify.valueAlloc(a, .{ .format = 1, .component = "cache-plan", .protocol = 2, .schema = 2, .artifact = "cache-plan", .sha256 = @as([]const u8, &hex) }, .{});
     try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "cache-plan.json", .data = manifest });
     var context = try fakeToolContext(a, root, &environment);
     context.identity.cache_plan = try planner.bind(a, std.testing.io, &environment);

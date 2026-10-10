@@ -130,7 +130,8 @@ pub fn artifact(a: std.mem.Allocator, io: std.Io, directory: []const u8, compone
     const parsed = std.json.parseFromSlice(Manifest, a, bytes, .{ .ignore_unknown_fields = true }) catch |err| return mapFailure(err, error.ComponentManifest);
     defer parsed.deinit();
     const m = parsed.value;
-    if (m.format != 1 or m.protocol != 1 or m.schema != 1) return error.ComponentManifest;
+    const version: u32 = if (std.mem.eql(u8, component, "cache-plan")) 2 else 1;
+    if (m.format != 1 or m.protocol != version or m.schema != version) return error.ComponentManifest;
     if (!std.mem.eql(u8, m.component, component) or m.sha256.len != 64) return error.ComponentManifest;
     if (m.artifact.len == 0 or std.mem.indexOfAny(u8, m.artifact, "/\\") != null) return error.ComponentManifest;
     if (std.mem.eql(u8, m.artifact, ".") or std.mem.eql(u8, m.artifact, "..")) return error.ComponentManifest;

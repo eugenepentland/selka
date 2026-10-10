@@ -67,6 +67,8 @@ comptime {
     _ = @import("property_render.zig");
     _ = @import("property_ir.zig");
     _ = @import("test_runner_identity.zig");
+    _ = @import("test_runner_facts_test.zig");
+    _ = @import("test_runner_graph_test.zig");
     _ = @import("test_runner_execute.zig");
     _ = @import("process_spawn.zig");
     _ = @import("test_runner_shared.zig");
