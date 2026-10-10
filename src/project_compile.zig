@@ -24,12 +24,7 @@ pub const FactsError = CheckError || error{WriteFailed};
 /// test and export, `.closure` the tests and exported `bench_` functions alone.
 pub const FactsScope = enum { all, closure };
 /// Failures returned by publicValueType; callers must handle these boundary errors.
-pub const PublicValueTypeError = error{
-    OutOfMemory,
-    SourceError,
-    UnknownPublicValueType,
-    InternalError,
-};
+pub const PublicValueTypeError = CheckError || error{UnknownPublicValueType};
 
 const std = @import("std");
 const ast = @import("ast.zig");
