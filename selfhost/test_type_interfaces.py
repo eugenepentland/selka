@@ -33,6 +33,8 @@ def require_summary(output, edit=False):
         raise RuntimeError('missing/incomplete type_interface transport selection')
     if re.findall(r'^type_interface forged replies: (\d+) rejected; 0 failed, 0 skipped$', output, re.M) != ['8']:
         raise RuntimeError('missing/incomplete hostile type_interface reply selection')
+    if re.findall(r'^type_interface publication: (\d+) host failures; 0 failed, 0 skipped$', output, re.M) != ['2']:
+        raise RuntimeError('missing/incomplete cross-boundary publication selection')
 
 
 def main():
@@ -52,7 +54,7 @@ def main():
     for release in (False,True):
         flags=['--release','--verify-facts'] if release else []
         for source,count in roots:
-            budget = ['--max-steps', '100000000'] if source.name == 'indexed_tests.my' else []
+            budget = ['--max-steps', '100000000'] if source.name in ('indexed_tests.my', 'profile_tests.my') else []
             require_guest(execute([seed,'test',source,'--force','--no-cache',*flags,*budget],env),count)
         command=[sys.executable,ROOT/'selfhost/tests/run_type_interface_qualification.py','--compiler',args.compiler.resolve(),'--builder',args.builder.resolve(),'--component-dir',args.component_dir.resolve(),'--zig',args.zig]
         if args.report_dir:

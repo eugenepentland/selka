@@ -57,3 +57,10 @@ The dotted import fixture distinguishes syntax admission from type resolution: `
 resolves, while `shared . types . Thing` is rejected by the parser with `E_SYNTAX` before the signature boundary. A single
 qualifier with spacing still resolves. This is parity with the existing boundary,
 not a new normalization policy.
+
+Two additional publication checks wrap the authentic type producer and forward
+its valid unknown-constraint diagnostic reply unchanged, removing the selected
+lexer manifest only after the real child finishes. Both type modes must reject
+publication with host status 2. The wrapper and deployment are private native
+fixtures; the installed host and packages remain unchanged. These checks are
+counted separately from the sixty workflows.

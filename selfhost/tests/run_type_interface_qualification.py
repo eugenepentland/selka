@@ -261,6 +261,45 @@ def forged_replies(args, q):
     return checked
 
 
+def publication_checks(args, q):
+    binary = q.work / 'publication-reply'
+    compiled = F.execute([args.zig, 'cc', FIXTURES / 'publication_reply.c', '-O2', '-o', binary],
+                         coordinator_environment(), q.work, 180)
+    F.require(compiled[0] == 0, 'native publication fixture compilation failed')
+    real = q.work / 'publication-real-type-interface'
+    original = packages(args.component_dir)[COMPONENT]
+    shutil.copyfile(args.component_dir / original['artifact'], real)
+    real.chmod(0o700)
+    private = q.work / 'publication-deployment'
+    records = []
+    for mode in q.modes:
+        F.restore_deployment(args.component_dir, private)
+        manifest_path = private / f'{COMPONENT}.json'
+        manifest = json.loads(manifest_path.read_text())
+        artifact = private / manifest['artifact']
+        artifact.chmod(0o700)
+        shutil.copyfile(binary, artifact)
+        manifest['sha256'] = F.digest(artifact)
+        manifest_path.write_text(json.dumps(manifest))
+        packages(private)
+        env = environment(mode, private, q.empty_path)
+        env.update(MYLANG_LEXER_MODE='component', TYPE_INTERFACE_REAL=str(real),
+                   TYPE_INTERFACE_MUTATE=str(private / 'lexer-pilot.json'),
+                   TYPE_INTERFACE_CAPTURE=str(q.work / ('publication-capture-' + mode + '.bin')))
+        result = F.execute([q.compiler, 'check-project', q.source / 'unknown_constraint.my', '--diagnostics=json'],
+                           env, q.work)
+        capture = Path(env['TYPE_INTERFACE_CAPTURE']).read_bytes()
+        F.require(capture[:8] == b'SLKTIF01' and capture[64:72] == b'SLKTYR01' and
+                  struct.unpack('<I', capture[72:76])[0] == 1 and b'E_GENERIC_REQUIREMENT' in capture,
+                  'publication wrapper did not capture the authentic source diagnostic')
+        F.require(result[0] == 2 and not result[1] and result[2] and not (private / 'lexer-pilot.json').exists(),
+                  f'{mode}: diagnostic reply published after selected lexer changed: {result!r}')
+        records.append({'mode': mode, 'status': result[0], 'stderr': result[2].decode(),
+                        'reply_sha256': F.hashlib.sha256(capture).hexdigest(), 'reply_bytes': len(capture),
+                        'mutation': 'selected lexer manifest removed after real valid reply'})
+    return records
+
+
 def main():
     ap = argparse.ArgumentParser()
     for name in ('compiler', 'builder', 'component-dir', 'zig'):
@@ -290,6 +329,7 @@ def main():
         protocol = transport(args.component_dir / manifests[COMPONENT]['artifact'], q.work,
                              environment('component', args.component_dir, q.empty_path))
         forged = forged_replies(args, q)
+        publication = publication_checks(args, q)
         edit = coordinator_edit(args, q) if args.edit_check else None
         report = {'host_sha256': host, 'packages': manifests, 'workflows': workflows,
                   'verified_seed_sha256': seed_sha256, 'release_facts_leaks': args.release,
@@ -298,6 +338,7 @@ def main():
                   'records': q.records, 'failed': 0, 'skipped': 0}
         report['transport'] = protocol
         report['forged_reply_checks'] = forged
+        report['publication_checks'] = publication
         report['coordinator_edit'] = edit
     F.require(F.digest(args.compiler) == host and packages(args.component_dir) == manifests, 'installed inputs changed')
     if args.report:
@@ -306,6 +347,7 @@ def main():
     print(f'type_interface qualification: {workflows} workflows, {q.comparisons} comparisons, {q.deployment} warm deployment checks, {q.sessions} live session checks; 0 failed, 0 skipped')
     print(f'type_interface transport: {protocol["valid"]} valid, {protocol["malformed"]} malformed; 0 failed, 0 skipped')
     print(f'type_interface forged replies: {forged} rejected; 0 failed, 0 skipped')
+    print(f'type_interface publication: {len(publication)} host failures; 0 failed, 0 skipped')
 
 
 if __name__ == '__main__':
