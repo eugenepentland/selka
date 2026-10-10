@@ -31,7 +31,6 @@ const emit_constants = @import("emit_constants.zig");
 const emit_count = @import("emit_count.zig");
 const origins = @import("inline_origins.zig");
 const emit_homes = @import("emit_homes.zig");
-const emit_payload = @import("emit_payload.zig");
 const emit_state = @import("emit_state.zig");
 const effects = @import("effects.zig");
 const fuse = @import("fuse.zig");
@@ -261,12 +260,9 @@ const tbaa_metadata =
     \\
 ;
 /// `  %x = load i64, ptr %at` of one data word (a union's tag word or payload word).
-const memory_word_load = "  {s} = load i64, ptr {s}, align 8, ";
-const payload_pointer = "%payload";
-const word_load_line = memory_word_load ++ tbaa_data ++ "\n";
+const word_load_line = "  {s} = load i64, ptr {s}, align 8, " ++ tbaa_data ++ "\n";
 /// A union's tag word loaded from memory, then its tag byte.
-const truncate_tag_line = "  {s} = trunc i64 {s} to i8\n";
-const tag_load_line = word_load_line ++ truncate_tag_line;
+const tag_load_line = word_load_line ++ "  {s} = trunc i64 {s} to i8\n";
 /// Whether a union's tag byte names case `k`.
 const case_test_line = "  {s} = icmp eq i8 {s}, {d}\n";
 /// Non-tearing count reads after task publication; unordered preserves loop hoisting.
@@ -311,7 +307,6 @@ fn render(allocator: std.mem.Allocator, module: *const ir.Module, given: Options
         options.analysis.effects = summaries;
     }
     var state: ModuleState = .{ .allocator = allocator, .module = module, .options = options, .local = .{ .selection = selection }, .debug = .{ .fallback = if (selection) |chosen| chosen.source_path else options.source_path } };
-    if (selection == null) state.local.payloads = try emit_payload.shapes(allocator, module);
     var body: Out = .empty;
     if (selection) |chosen| {
         for (chosen.functions) |index| try renderFunction(&state, &body, index);
@@ -366,7 +361,6 @@ const Local = struct {
     strings: std.ArrayList(Literal) = .empty,
     dictionaries: std.ArrayList(ir.Type) = .empty,
     zeros: u32 = 0,
-    payloads: []const ?emit_payload.Shape = &.{},
 };
 
 const ModuleState = struct {
@@ -856,7 +850,6 @@ const InOutCalls = struct {
     /// An in-out call whose result record must also hold the final values (something reads it
     /// other than one `record_get` per final value).
     complete: []bool = &.{},
-    payloads: std.AutoHashMapUnmanaged(u32, emit_payload.Destination) = .empty,
 };
 
 /// How a signature passes its `mut` parameters over four words (CE-A P7): by a pointer to the
@@ -1206,7 +1199,6 @@ const FunctionEmitter = struct {
                 try out.print(self.a(), "{s}ptr {s}readonly align 8 %p{d}", .{ separator, if (shared == i) "" else "noalias ", i });
             } else try out.print(self.a(), "{s}{s} %p{d}", .{ separator, try self.ty(param), i });
         }
-        if (self.payloadShape(self.index) != null) try out.appendSlice(self.a(), ", ptr noalias %payload");
     }
 
     /// Count uses, decide which constructions are stored straight into their consumer, find each
@@ -1215,7 +1207,6 @@ const FunctionEmitter = struct {
     fn analyzeMemory(self: *FunctionEmitter) !void {
         try self.prepareMemory();
         self.memory.homes = try self.planMemory(true);
-        try self.detachPayloadHomes();
         try self.nameHomes();
     }
 
@@ -1481,9 +1472,7 @@ const FunctionEmitter = struct {
     /// The entry-block name of `%ret` at `offset`: the home of values built where a `ret` stores them (CE2-B).
     fn retPlace(self: *FunctionEmitter, offset: u32) ![]const u8 {
         const name = try self.fresh("%home");
-        const payload = self.payloadShape(self.index);
-        const relocated = payload != null and offset >= payload.?.offset and offset < payload.?.offset + payload.?.size;
-        try self.state.allocas.print(self.a(), header_pointer_line, .{ name, if (relocated) payload_pointer else "%ret", if (relocated) offset - payload.?.offset else offset });
+        try self.state.allocas.print(self.a(), header_pointer_line, .{ name, "%ret", offset });
         return name;
     }
 
@@ -1686,7 +1675,7 @@ const FunctionEmitter = struct {
             .@"union" => |cases| {
                 const word = try self.fresh("%cw");
                 const tag = try self.fresh("%ct");
-                try out.print(self.a(), word_load_line ++ truncate_tag_line, .{ word, ptr, tag, word });
+                try out.print(self.a(), word_load_line ++ "  {s} = trunc i64 {s} to i8\n", .{ word, ptr, tag, word });
                 for (cases, 0..) |case, k| {
                     if (!m.managed(case)) continue;
                     const here = try self.fresh("%cc");
@@ -1700,59 +1689,6 @@ const FunctionEmitter = struct {
                 try self.countedAt(out, mode, array.elem, try self.offsetPointer(out, ptr, @as(u32, @intCast(i)) * m.size(array.elem)));
             },
             .list, .box, .dict, .@"fn" => unreachable,
-        }
-    }
-
-    /// Ownership reads follow the split payload without reassembling a whole result.
-    fn countedOperand(self: *FunctionEmitter, out: *Out, mode: Counting, raw: ir.Ref) Error!void {
-        const part = emit_payload.projection(self.state.module, self.function, raw);
-        if (part) |p| if (self.memory.in_out.payloads.get(@intCast(p.call.index()))) |split| {
-            return self.countedSplit(out, mode, self.typeOf(raw), .{ .base = try self.value(p.call), .destination = split, .offset = p.offset });
-        };
-        return self.countedMemory(out, mode, self.typeOf(raw), try self.value(raw));
-    }
-
-    fn splitChild(read: emit_payload.Read, offset: u32) emit_payload.Read {
-        var child = read;
-        child.offset += offset;
-        return child;
-    }
-
-    fn splitPointer(self: *FunctionEmitter, out: *Out, read: emit_payload.Read) Error![]const u8 {
-        const at = read.destination;
-        if (read.offset >= at.offset and read.offset < at.offset + at.size) return self.offsetPointer(out, at.pointer, read.offset - at.offset);
-        return self.offsetPointer(out, read.base, read.offset);
-    }
-
-    fn countedSplit(self: *FunctionEmitter, out: *Out, mode: Counting, value_type: ir.Type, read: emit_payload.Read) Error!void {
-        const m = self.state.module;
-        if (!m.managed(value_type)) return;
-        const at = read.destination;
-        const end = read.offset + m.size(value_type);
-        if (end <= at.offset or read.offset >= at.offset + at.size or (read.offset >= at.offset and end <= at.offset + at.size)) {
-            return self.countedAt(out, mode, value_type, try self.splitPointer(out, read));
-        }
-        switch (m.compound(value_type)) {
-            .record => |fields| for (fields, 0..) |field, i| {
-                try self.countedSplit(out, mode, field, splitChild(read, m.fieldOffset(value_type, i)));
-            },
-            .array => |array| for (0..array.n) |i| {
-                try self.countedSplit(out, mode, array.elem, splitChild(read, @as(u32, @intCast(i)) * m.size(array.elem)));
-            },
-            .@"union" => |cases| {
-                const word = try self.fresh("%cw");
-                const tag = try self.fresh("%ct");
-                try out.print(self.a(), word_load_line ++ truncate_tag_line, .{ word, try self.splitPointer(out, read), tag, word });
-                for (cases, 0..) |case, k| {
-                    if (!m.managed(case)) continue;
-                    const here = try self.fresh("%cc");
-                    try out.print(self.a(), case_test_line, .{ here, tag, k });
-                    const join = try self.enterIf(out, here);
-                    try self.countedSplit(out, mode, case, splitChild(read, 8));
-                    try self.leaveIf(out, join);
-                }
-            },
-            else => unreachable,
         }
     }
 
@@ -2167,10 +2103,7 @@ const FunctionEmitter = struct {
             },
             .union_make => if (!self.memory.fused[ref.index()]) try self.unionMake(out, name, inst),
             .union_tag => try self.unionTag(out, name, inst.a),
-            .union_payload => {
-                if (!try self.payloadRead(out, name, ref, inst) and !try self.viewOf(out, name, ref, 8))
-                    try self.unionPayload(out, .{ .result = name, .union_type = self.typeOf(inst.a), .value = try self.value(inst.a), .case = @intCast(inst.data) });
-            },
+            .union_payload => if (!try self.viewOf(out, name, ref, 8)) try self.unionPayload(out, .{ .result = name, .union_type = self.typeOf(inst.a), .value = try self.value(inst.a), .case = @intCast(inst.data) }),
             .record_make => if (!self.memory.fused[ref.index()]) try self.recordMake(out, name, inst),
             .record_get => try self.recordGet(out, name, ref, inst),
             .record_set => try self.recordSet(out, name, ref, inst),
@@ -2192,7 +2125,7 @@ const FunctionEmitter = struct {
                 if (inst.op == .release and inst.data == unique_release) {
                     try self.freeUnique(out, inst);
                 } else if (self.state.module.passedInMemory(self.typeOf(inst.a))) {
-                    try self.countedOperand(out, mode, inst.a);
+                    try self.countedMemory(out, mode, self.typeOf(inst.a), try self.value(inst.a));
                 } else try self.counted(out, mode, self.typeOf(inst.a), try self.value(inst.a));
             },
             .is_unique => try self.isUnique(out, name, inst),
@@ -2239,7 +2172,7 @@ const FunctionEmitter = struct {
             // whole in a temporary first.
             const temporary = try self.stackSlot(m.size(signature.ret));
             try self.storeOperand(out, signature.ret, inst.a, temporary);
-            try self.storeReturnBytes(out, signature.ret, temporary, 0);
+            try self.copyBytes(out, "%ret", temporary, m.size(signature.ret), false);
         } else if (sret) try self.storeAtRet(out, signature.ret, inst.a, 0);
         if (self.count_fn != null) try out.appendSlice(self.a(), emit_count.epilogue);
         if (inst.a == .none or sret or abi.whole) return out.appendSlice(self.a(), "  ret void\n");
@@ -2255,7 +2188,7 @@ const FunctionEmitter = struct {
         const ref = f.resolve(raw);
         if (!self.memory.fused[ref.index()]) {
             if (self.memory.homes.retOffset(ref) == offset) return;
-            return self.storePayloadReturn(out, value_type, ref, offset);
+            return self.storeValue(out, value_type, try self.value(ref), try self.offsetPointer(out, "%ret", offset));
         }
         const inst = f.inst(ref);
         if (m.kind(inst.ty) == .array) {
@@ -2268,7 +2201,7 @@ const FunctionEmitter = struct {
                 try self.storeAtRet(out, field, operand, offset + m.fieldOffset(inst.ty, i));
             },
             .union_make => {
-                try out.print(self.a(), "  store i64 {d}, ptr {s}, align 8, " ++ tbaa_data ++ "\n", .{ inst.data, try self.payloadReturnPointer(out, offset) });
+                try out.print(self.a(), "  store i64 {d}, ptr {s}, align 8, " ++ tbaa_data ++ "\n", .{ inst.data, try self.offsetPointer(out, "%ret", offset) });
                 if (inst.a == .none) return;
                 try self.storeAtRet(out, m.compound(inst.ty).@"union"[@intCast(inst.data)], inst.a, offset + 8);
             },
@@ -3674,192 +3607,6 @@ const FunctionEmitter = struct {
         return self.state.rangeNode(info.bits, range);
     }
 
-    fn payloadShape(self: *FunctionEmitter, index: u32) ?emit_payload.Shape {
-        const shapes = self.state.local.payloads;
-        return if (index < shapes.len) shapes[index] else null;
-    }
-
-    /// Composite homes may contain the split hole only when their producer already
-    /// obeys the same ABI. Other composites retain contiguous temporary storage.
-    fn detachPayloadHomes(self: *FunctionEmitter) !void {
-        const payload = self.payloadShape(self.index) orelse return;
-        const plan = &self.memory.homes;
-        const m = self.state.module;
-        for (plan.homes, 0..) |*home, class| {
-            const offset: u32 = switch (home.*) {
-                .ret => 0,
-                .ret_at => |at| at,
-                else => continue,
-            };
-            var size: u32 = 0;
-            var calls_only = true;
-            for (plan.class, 0..) |member, index| {
-                if (member != class) continue;
-                const inst = self.function.insts.items[index];
-                size = @max(size, m.size(inst.ty));
-                const child = if (inst.op == .call) self.payloadShape(@intCast(inst.a.index())) else null;
-                if (child == null or !emit_payload.compatible(payload, child.?, offset)) calls_only = false;
-                const ref: ir.Ref = @fromBackingInt(@as(u32, @intCast(index)));
-                if (child != null and !emit_payload.projectedOnly(m, self.function, ref, child.?.offset, true)) calls_only = false;
-            }
-            if (offset >= payload.offset + payload.size or offset + size <= payload.offset) continue;
-            if (offset >= payload.offset and offset + size <= payload.offset + payload.size) continue;
-            if (!calls_only) home.* = .{ .slot = size };
-        }
-    }
-
-    fn payloadReturnPointer(self: *FunctionEmitter, out: *Out, offset: u32) Error![]const u8 {
-        if (self.payloadShape(self.index)) |payload| {
-            if (offset >= payload.offset and offset < payload.offset + payload.size) return self.offsetPointer(out, payload_pointer, offset - payload.offset);
-        }
-        return self.offsetPointer(out, "%ret", offset);
-    }
-
-    fn storePayloadReturn(self: *FunctionEmitter, out: *Out, value_type: ir.Type, ref: ir.Ref, offset: u32) Error!void {
-        return self.storeReturnBytes(out, value_type, try self.value(ref), offset);
-    }
-
-    fn storeReturnBytes(self: *FunctionEmitter, out: *Out, value_type: ir.Type, source: []const u8, offset: u32) Error!void {
-        const size = self.state.module.size(value_type);
-        if (self.payloadShape(self.index)) |payload| {
-            const first = @max(offset, payload.offset);
-            const last = @min(offset + size, payload.offset + payload.size);
-            if (first < last and (first != offset or last != offset + size)) {
-                const memory = if (self.state.module.passedInMemory(value_type)) source else try self.stackSlot(size);
-                if (!self.state.module.passedInMemory(value_type)) try self.storeValue(out, value_type, source, memory);
-                if (first > offset) try self.copyBytes(out, try self.offsetPointer(out, "%ret", offset), memory, first - offset, false);
-                try self.copyBytes(out, try self.offsetPointer(out, payload_pointer, first - payload.offset), try self.offsetPointer(out, memory, first - offset), last - first, false);
-                if (last < offset + size) try self.copyBytes(out, try self.offsetPointer(out, "%ret", last), try self.offsetPointer(out, memory, last - offset), offset + size - last, false);
-                return;
-            }
-        }
-        try self.storeValue(out, value_type, source, try self.payloadReturnPointer(out, offset));
-    }
-
-    fn payloadRead(self: *FunctionEmitter, out: *Out, name: []const u8, ref: ir.Ref, inst: ir.Inst) Error!bool {
-        const projection = emit_payload.projection(self.state.module, self.function, ref) orelse return false;
-        const at = self.memory.in_out.payloads.get(@intCast(projection.call.index())) orelse return false;
-        if (projection.offset != at.offset) return false;
-        var pointer = at.pointer;
-        const size = self.state.module.size(inst.ty);
-        if (size > at.size) {
-            pointer = try self.stackSlot(size);
-            try self.copyBytes(out, pointer, at.pointer, at.size, false);
-            const tail = try self.offsetPointer(out, try self.value(projection.call), at.offset + at.size);
-            try self.copyBytes(out, try self.offsetPointer(out, pointer, at.size), tail, size - at.size, false);
-        }
-        if (self.state.module.passedInMemory(inst.ty)) {
-            try out.print(self.a(), identity_line, .{ name, pointer });
-        } else try self.loadValue(out, inst.ty, pointer, name);
-        return true;
-    }
-
-    /// A unique list with spare room lends its uncommitted next slot. No allocation
-    /// or length store precedes the call; sharing or growth uses the ordinary result.
-    fn payloadDestination(self: *FunctionEmitter, out: *Out, inst: ir.Inst, result: []const u8, payload: emit_payload.Shape) Error![]const u8 {
-        if (self.payloadShape(self.index)) |own_payload| {
-            if (self.memory.homes.retOffset(self.current)) |offset| {
-                if (emit_payload.compatible(own_payload, payload, offset)) return payload_pointer;
-            }
-        }
-        const fallback = try self.offsetPointer(out, result, payload.offset);
-        if (!emit_payload.projectedOnly(self.state.module, self.function, self.current, payload.offset, false)) return fallback;
-        const list = (try self.payloadList(self.current, payload.ty)) orelse return fallback;
-        const element = self.state.module.compound(self.typeOf(list)).list;
-        if (payload.size > self.state.stride(element)) return fallback;
-        const block = try self.value(list);
-        const length = try self.fresh("%payload.len");
-        const capacity = try self.fresh("%payload.cap");
-        if (self.memory.states.of(list)) |slots| {
-            try out.print(self.a(), "  {s} = load i64, ptr {s}, align 8\n  {s} = load i64, ptr {s}, align 8\n", .{ length, slots.len, capacity, slots.cap });
-        } else {
-            const len_at = try self.offsetPointer(out, block, len_offset);
-            const cap_at = try self.offsetPointer(out, block, cap_offset);
-            try out.print(self.a(), memory_word_load ++ tbaa_header ++ "\n  {s} = load i64, ptr {s}, align 8, " ++ tbaa_header ++ "\n", .{ length, len_at, capacity, cap_at });
-        }
-        const unique = try self.fresh("%payload.unique");
-        try self.isUnique(out, unique, .{ .op = .is_unique, .ty = .bool, .a = list, .span = inst.span });
-        const room = try self.fresh("%payload.room");
-        const ready = try self.fresh("%payload.ready");
-        const slot = try self.elementSlot(out, block, length, element);
-        const chosen = try self.fresh("%payload.dst");
-        try out.print(self.a(), "  {s} = icmp ult i64 {s}, {s}\n  {s} = and i1 {s}, {s}\n  {s} = select i1 {s}, ptr {s}, ptr {s}\n", .{ room, length, capacity, ready, room, unique, chosen, ready, slot, fallback });
-        return chosen;
-    }
-
-    fn payloadList(self: *FunctionEmitter, call_ref: ir.Ref, value_type: ir.Type) Error!?ir.Ref {
-        const f = self.function;
-        const m = self.state.module;
-        for (f.insts.items) |inst| {
-            const push = emit_payload.pushed(m, f, inst) orelse continue;
-            if (push.call != call_ref or f.inst(push.payload).ty != value_type) continue;
-            if (!self.payloadUses(push.payload)) continue;
-            const list = self.priorPayloadList(push.list, call_ref, 16) orelse continue;
-            for (f.operands(f.inst(call_ref).data)) |argument| {
-                if (emit_payload.reaches(m, self.typeOf(argument), self.typeOf(list), 12)) return null;
-            }
-            if (!try emit_payload.safeLifetime(self.a(), m, f, push, self.typeOf(list))) continue;
-            return list;
-        }
-        return null;
-    }
-
-    fn payloadUses(self: *FunctionEmitter, payload: ir.Ref) bool {
-        var pushes: usize = 0;
-        for (self.function.insts.items) |user| {
-            if (user.op == .copy) continue;
-            const operands = self.function.valueOperands(user);
-            for (0..operands.len()) |i| {
-                if (self.function.resolve(operands.get(i)) != payload) continue;
-                if (user.op == .retain or user.op == .release) continue;
-                if (user.op != .list_push or self.function.resolve(user.b) != payload) return false;
-                pushes += 1;
-            }
-        }
-        return pushes == 1;
-    }
-
-    /// Strip only ownership's copy-or-original join after the producer. The original
-    /// list must already dominate the call, and every alternative must name it.
-    fn priorPayloadList(self: *FunctionEmitter, raw: ir.Ref, call_ref: ir.Ref, budget: usize) ?ir.Ref {
-        if (budget == 0) return null;
-        const f = self.function;
-        const ref = f.resolve(raw);
-        const shape = self.memory.shape orelse return null;
-        const definition = shape.block_of[ref.index()] orelse return null;
-        const call_block = shape.block_of[call_ref.index()] orelse return null;
-        if (self.blockDominates(@intCast(definition.index()), @intCast(call_block.index()))) {
-            if (definition != call_block) return ref;
-            for (f.blocks.items[definition.index()].insts.items) |at| {
-                if (at == ref) return ref;
-                if (at == call_ref) break;
-            }
-        }
-        const inst = f.inst(ref);
-        if (inst.op == .list_copy) return self.priorPayloadList(inst.a, call_ref, budget - 1);
-        if (inst.op != .phi) return null;
-        var common: ?ir.Ref = null;
-        for (f.operands(inst.data)) |operand| {
-            const source = self.priorPayloadList(operand, call_ref, budget - 1) orelse return null;
-            if (common != null and common.? != source) return null;
-            common = source;
-        }
-        return common;
-    }
-
-    fn storePushPayload(self: *FunctionEmitter, out: *Out, value_type: ir.Type, raw: ir.Ref, slot: []const u8) Error!void {
-        const projection = emit_payload.projection(self.state.module, self.function, raw);
-        const relocated = if (projection) |p| self.memory.in_out.payloads.get(@intCast(p.call.index())) else null;
-        if (relocated == null or projection.?.offset != relocated.?.offset or !self.state.module.passedInMemory(value_type)) return self.storeOperand(out, value_type, raw, slot);
-        const different = try self.fresh("%payload.copy");
-        const copy = try self.fresh("payload.copy");
-        const join = try self.fresh(self.label);
-        try out.print(self.a(), "  {s} = icmp ne ptr {s}, {s}\n  br i1 {s}, label %{s}, label %{s}\n{s}:\n", .{ different, slot, relocated.?.pointer, different, copy, join, copy });
-        try self.storeOperand(out, value_type, raw, slot);
-        try out.print(self.a(), "  br label %{s}\n{s}:\n", .{ join, join });
-        self.label = join;
-    }
-
     /// Append in place: `myl_core_list_reserve` returns a block with room for one more element.
     fn listPush(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
         // A push that is one of a web's updates (`emit_state.zig`), not merely of a web value.
@@ -3884,7 +3631,7 @@ const FunctionEmitter = struct {
         const saved = self.tagElements(true);
         defer _ = self.tagElements(saved);
         if (element == .bool or element.isCompound()) {
-            try self.storePushPayload(out, element, inst.b, slot);
+            try self.storeOperand(out, element, inst.b, slot);
         } else {
             try out.print(self.a(), "  store {s}, ptr {s}, align {d}, {s}\n", .{ try self.typedValue(inst.b), slot, elementSize(element), self.dataTag(storageType(element)) });
         }
@@ -3919,7 +3666,7 @@ const FunctionEmitter = struct {
         const saved = self.tagElements(true);
         defer _ = self.tagElements(saved);
         if (element == .bool or element.isCompound()) {
-            try self.storePushPayload(out, element, inst.b, slot);
+            try self.storeOperand(out, element, inst.b, slot);
         } else {
             try out.print(self.a(), "  store {s}, ptr {s}, align {d}, {s}\n", .{ try self.typedValue(inst.b), slot, elementSize(element), self.dataTag(storageType(element)) });
         }
@@ -3944,7 +3691,7 @@ const FunctionEmitter = struct {
         const mismatch = try self.fresh("%fill.mismatch");
         const full = try self.fresh("%fill.full");
         const failed = try self.fresh("%fill.failed");
-        try out.print(self.a(), memory_word_load ++ tbaa_header ++ "\n", .{ actual, len_at });
+        try out.print(self.a(), "  {s} = load i64, ptr {s}, align 8, " ++ tbaa_header ++ "\n", .{ actual, len_at });
         try out.print(self.a(), header_load_line, .{ cap_at, list, cap_offset, cap, cap_at });
         try out.print(self.a(), "  {s} = icmp ne i64 {s}, {s}\n  {s} = icmp uge i64 {s}, {s}\n  {s} = or i1 {s}, {s}\n", .{ mismatch, actual, index, full, index, cap, failed, mismatch, full });
         try self.trapIf(out, failed, try self.site(.fact, inst, "counted fill capacity and index"), index, cap);
@@ -3968,10 +3715,8 @@ const FunctionEmitter = struct {
         const signature = if (inst.op == .call_indirect) m.compound(self.typeOf(inst.a)).@"fn" else m.functions.items[inst.a.index()].signature;
         const external = signature.linkage != .internal;
         const program = !external or (inst.op == .call and emit_values.generated(&m.functions.items[inst.a.index()]));
-        if (inst.op == .call) {
-            try self.state.dependency(@intCast(inst.a.index()));
-            try emit_cap.beforeCall(@TypeOf(self), self, out, inst);
-        }
+        if (inst.op == .call) try self.state.dependency(@intCast(inst.a.index()));
+        if (inst.op == .call) try emit_cap.beforeCall(@TypeOf(self), self, out, inst);
         if (try emit_bytes.runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst)) return;
         if (try emit_text_split.runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst)) return;
         const borrowed_bytes = external and signature.ret == .bytes and signature.owned == 0;
@@ -4010,7 +3755,6 @@ const FunctionEmitter = struct {
             }
             try arguments.print(self.a(), "{s}{s}", .{ separator, try self.scalarArgument(out, argument, param, c_function) });
         }
-        try self.appendPayloadArgument(out, &arguments, inst, result_slot);
         const target = if (inst.op == .call_indirect)
             try self.value(inst.a)
         else
@@ -4026,14 +3770,6 @@ const FunctionEmitter = struct {
             try out.print(self.a(), "  {s} = {s}call {s}{s} {s}({s}){s}\n", .{ name, tail, if (program) "fastcc " else "", try self.ty(ret), target, arguments.items, try self.callLocation(inst.span) });
         }
         if (sret) try self.completeResult(out, name, signature, .{ .result = result_slot, .places = places });
-    }
-
-    fn appendPayloadArgument(self: *FunctionEmitter, out: *Out, arguments: *Out, inst: ir.Inst, slot: []const u8) Error!void {
-        if (inst.op != .call) return;
-        const payload = self.payloadShape(@intCast(inst.a.index())) orelse return;
-        const pointer = try self.payloadDestination(out, inst, slot, payload);
-        try arguments.print(self.a(), ", ptr {s}", .{pointer});
-        try self.memory.in_out.payloads.put(self.a(), @intCast(self.current.index()), .{ .pointer = pointer, .offset = payload.offset, .size = payload.size });
     }
 
     /// A register argument: widened or sign-marked for a C function, its NaN made canonical.

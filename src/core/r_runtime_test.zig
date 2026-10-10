@@ -1,4 +1,4 @@
-//! Runtime-parity R: fixed-array storage, integer sorting and payload destinations.
+//! Runtime-parity R: fixed-array storage, integer sorting and fallible payload lifetimes.
 const std = @import("std");
 const support = @import("test_support.zig");
 const passes = @import("passes.zig");
@@ -170,12 +170,12 @@ const payloads =
 ;
 
 // spec: NEW-CORE-R-PUSH-1
-test "R payload destinations preserve fallible construction, growth and shared list snapshots" {
+test "R ordinary return storage preserves fallible construction, growth and shared list snapshots" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const llvm = try support.llvmText(arena.allocator(), payloads);
-    try std.testing.expect(std.mem.indexOf(u8, llvm, "ptr noalias %payload") != null);
-    try std.testing.expect(std.mem.indexOf(u8, llvm, "%payload.dst") != null);
+    try std.testing.expect(std.mem.indexOf(u8, llvm, "ptr noalias %payload") == null);
+    try std.testing.expect(std.mem.indexOf(u8, llvm, "ptr noalias sret(") != null);
     try std.testing.expectEqualStrings("31 14 529 15\n", try runFixture(arena.allocator(), payloads, .debug));
     try std.testing.expectEqualStrings("31 14 529 15\n", try runFixture(arena.allocator(), payloads, .optimize_debug));
     try std.testing.expectEqualStrings("31 14 529 15\n", try runFixture(arena.allocator(), payloads, .optimize_debug_verify));
@@ -390,8 +390,8 @@ test "R wider managed error payloads preserve detached bytes and ordinary suffix
     try std.testing.expectEqualStrings("1 suffix-1\n3 suffix-3\n5 suffix-5\n3 4\n", try runFixture(arena.allocator(), source, .verify));
 }
 
-/// Two callers seed different variants of the same union. The forwarding parent
-/// must stage the wider child's whole result before splitting its own small region.
+/// Two callers consume differently sized variants of the same forwarded union.
+/// Ordinary contiguous return storage preserves the wider variant's suffix fields.
 fn differentPayloadRegions(arena: std.mem.Allocator, mode: Mode) ![]const u8 {
     const ir = @import("ir.zig");
     var module: ir.Module = .{};
@@ -438,9 +438,6 @@ fn differentPayloadRegions(arena: std.mem.Allocator, mode: Mode) ![]const u8 {
     try main.printValues(out, &.{suffix});
     _ = try main.emit(.{ .op = .ret, .ty = .void, .a = try main.int(.i64, 0) });
     module.entry = try main.finish();
-    const selected = try @import("emit_payload.zig").shapes(arena, &module);
-    try std.testing.expectEqual(@as(u32, 56), selected[child_index].?.size);
-    try std.testing.expectEqual(@as(u32, 40), selected[parent_index].?.size);
     const verify = mode == .verify or mode == .optimize_debug_verify;
     var passed = if (mode != .debug)
         try passes.run(arena, &module, if (verify) .verify else .trusted)
@@ -452,7 +449,7 @@ fn differentPayloadRegions(arena: std.mem.Allocator, mode: Mode) ![]const u8 {
 }
 
 // spec-case: NEW-CORE-R-PUSH-1
-test "R independently selected union variants require compatible forwarded regions" {
+test "R differently sized union variants survive forwarding through fallible producers" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     try std.testing.expectEqualStrings("1\n77\n", try differentPayloadRegions(arena.allocator(), .debug));
