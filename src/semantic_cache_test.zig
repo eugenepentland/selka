@@ -321,7 +321,10 @@ test "semantic cache keeps inferred callback schemas fresh across changed bodies
         \\
         \\
     ++ caller, 42);
-    try t.expectEqual(@as(usize, 0), cache.statistics.reused);
+    // The caller reconstructs its callback type from the current declaration;
+    // only the edited helper needs a new checked body.
+    try t.expectEqual(@as(usize, 1), cache.statistics.reused);
+    try t.expectEqual(@as(usize, 3), cache.statistics.checked);
 }
 
 // spec-case: SEMANTIC-CACHE-2
@@ -660,7 +663,7 @@ test "declared callback slots and matching function values reuse when the contra
 }
 
 // spec-case: SEMANTIC-CACHE-7
-test "a function value with no matching declared callback misses with its exact reason" {
+test "a function value with no matching declared callback replays its fresh slot recipe" {
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
     defer cache.deinit();
     const program =
@@ -677,13 +680,12 @@ test "a function value with no matching declared callback misses with its exact 
         \\    return apply(one, 41)
     ;
     try compare(t.allocator, &cache, program, 42);
-    // `one`'s own contract differs from the declared callback parameter, so its
-    // callable contract record is interned while checking and cannot be remapped.
-    try t.expect(cache.statistics.rejections.total[@backingInt(language.semantic_cache.MissReason.function_value)] > 0);
+    // The implementation differs from its slot. Replay reconstructs the
+    // implementation from the fresh target and the expected slot from `apply`.
+    try t.expectEqual(@as(usize, 0), cache.statistics.rejections.total[@backingInt(language.semantic_cache.MissReason.function_value)]);
     const before = cache.statistics.reused;
     try compare(t.allocator, &cache, program, 42);
-    // `apply` and `one` reuse; `main` is rechecked with its reported reason.
-    try t.expectEqual(before + 2, cache.statistics.reused);
+    try t.expectEqual(before + 3, cache.statistics.reused);
 }
 
 // C3 specialization half: concrete specialization bodies are currently a
@@ -1822,6 +1824,18 @@ test "semantic body relocation resolves only the references the body carries" {
     try t.expectError(error.InvalidRelocation, mapper.copy(arena.allocator(), typed.FunctionId, @fromBackingInt(3)));
     try t.expectEqual(@as(typed.Type, @fromBackingInt(typed.Type.record_base + 3)), try mapper.copy(arena.allocator(), typed.Type, @fromBackingInt(typed.Type.record_base + 1)));
     try t.expectError(error.InvalidRelocation, mapper.copy(arena.allocator(), typed.Type, @fromBackingInt(typed.Type.record_base + 2)));
+
+    // Reserved scalar storage needs no allocator calls. This rejects a
+    // regression that clones an outer slice before copying into its destination.
+    var no_allocations = t.FailingAllocator.init(t.allocator, .{ .fail_index = 0 });
+    var destinations: [2]typed.FunctionId = undefined;
+    var failure: relocation.Failure = .none;
+    try mapper.copySliceInto(no_allocations.allocator(), typed.FunctionId, &.{ @fromBackingInt(2), @fromBackingInt(2) }, &destinations, &failure);
+    try t.expectEqual(@as(typed.FunctionId, @fromBackingInt(7)), destinations[0]);
+    try t.expectEqual(@as(typed.FunctionId, @fromBackingInt(7)), destinations[1]);
+    try t.expectEqual(@as(usize, 0), no_allocations.allocations);
+    try t.expectError(error.InvalidRelocation, mapper.copySliceInto(no_allocations.allocator(), typed.FunctionId, &.{ @fromBackingInt(2), @fromBackingInt(3) }, &destinations, &failure));
+    try t.expectEqual(@as(usize, 3), failure.function);
 }
 
 /// An ordinary body, a template and a concrete call, so one check exercises
@@ -2540,4 +2554,239 @@ test "specialization open releases decoded durable entry on reserve OutOfMemory"
     failing.fail_index = std.math.maxInt(usize);
     try t.expect((try session.open(identity.fingerprint, identity.context)) != null);
     try t.expectEqual(@as(usize, 1), memory.entries.items.len);
+}
+
+// spec-case: SEMANTIC-CACHE-7
+test "portable type recipes reuse inferred tuples and reject malformed children" {
+    const program =
+        \\func main() -> int:
+        \\    const pair = (40, 2)
+        \\    const left, right = pair
+        \\    return left + right
+    ;
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    try compare(t.allocator, &cache, program, 42);
+    const before = cache.statistics.reused;
+    try compare(t.allocator, &cache, program, 42);
+    try t.expectEqual(before + 1, cache.statistics.reused);
+    const entry = &cache.entries[0];
+    const references = @constCast(entry.meta.record_refs);
+    var changed = false;
+    for (references) |*reference| {
+        if (reference.recipes.len != 0) {
+            const recipe = reference.recipes[0];
+            if (recipe != .tuple) continue;
+            const elements = @constCast(recipe.tuple);
+            elements[0] = @fromBackingInt(checked_typed.Type.record_base + reference.index);
+            changed = true;
+            break;
+        }
+    }
+    try t.expect(changed);
+    const rejected_before = cache.statistics.rejections.total[@backingInt(language.semantic_cache.MissReason.relocation_failed)];
+    try compare(t.allocator, &cache, program, 42);
+    try t.expect(cache.statistics.rejections.total[@backingInt(language.semantic_cache.MissReason.relocation_failed)] > rejected_before);
+}
+
+// spec-case: SEMANTIC-CACHE-7
+test "portable callable recipes validate fresh target signatures and expected effect slots" {
+    const program =
+        \\func apply(f: func(i64) -> i64 effects(output), x: i64) -> i64 effects(output):
+        \\    return f(x)
+        \\
+        \\func one(x: i64) -> i64 effects():
+        \\    return x + 1
+        \\
+        \\func main(out: Stream) -> i64:
+        \\    _ = out
+        \\    return apply(one, 41)
+    ;
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    try compare(t.allocator, &cache, program, 42);
+    try compare(t.allocator, &cache, program, 42);
+    const bad_signature = try std.mem.replaceOwned(u8, t.allocator, program, "one(x: i64)", "one(x: u64)");
+    defer t.allocator.free(bad_signature);
+    try compare(t.allocator, &cache, bad_signature, null);
+    const bad_effect = try std.mem.replaceOwned(u8, t.allocator, program, "i64 effects():", "i64 effects(random):");
+    defer t.allocator.free(bad_effect);
+    try compare(t.allocator, &cache, bad_effect, null);
+    const narrower_slot = try std.mem.replaceOwned(u8, t.allocator, program, "effects(output)", "effects()");
+    defer t.allocator.free(narrower_slot);
+    try compare(t.allocator, &cache, narrower_slot, 42);
+}
+
+// spec-case: SEMANTIC-CACHE-7
+test "portable tuple recipes invalidate when a nominal child shape changes" {
+    const program =
+        \\record R:
+        \\    value: i64
+        \\
+        \\func sum(r: R) -> i64:
+        \\    const pair = (r, 2)
+        \\    const left, right = pair
+        \\    return left.value + right
+        \\
+        \\func main() -> i64:
+        \\    return sum(R(value=40))
+    ;
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    try compare(t.allocator, &cache, program, 42);
+    try compare(t.allocator, &cache, program, 42);
+    const changed = try std.mem.replaceOwned(u8, t.allocator, program, "value: i64", "value: u64");
+    defer t.allocator.free(changed);
+    try compare(t.allocator, &cache, changed, null);
+}
+
+// spec-case: SEMANTIC-CACHE-7
+test "portable callable recipes reject malformed sites without speculative diagnostics" {
+    const program =
+        \\func apply(f: func(i64) -> i64 effects(output), x: i64) -> i64 effects(output):
+        \\    return f(x)
+        \\
+        \\func one(x: i64) -> i64 effects():
+        \\    return x + 1
+        \\
+        \\func main(out: Stream) -> i64:
+        \\    _ = out
+        \\    return apply(one, 41)
+    ;
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    try compare(t.allocator, &cache, program, 42);
+    var changed = false;
+    for (cache.entries) |*entry| {
+        for (entry.meta.record_refs) |reference| {
+            if (reference.recipes.len == 0 or reference.recipes[0] != .callable) continue;
+            const recipes = @constCast(reference.recipes);
+            recipes[0] = .{ .callable = .{ .start = entry.meta.identity.region.start, .end = entry.meta.identity.region.start + 1 } };
+            changed = true;
+        }
+    }
+    try t.expect(changed);
+    try compare(t.allocator, &cache, program, 42);
+}
+
+// spec-case: SEMANTIC-CACHE-7
+// spec-case: SEMANTIC-CACHE-8
+test "portable recipes retain original array sites and restore durable tuples" {
+    const program =
+        \\func lookup(env: Environment) -> i64 effects(environment):
+        \\    const value = env.get("PORTABLE_TYPE_RECIPE")
+        \\    _ = value
+        \\    return 0
+        \\
+        \\func main() -> i64:
+        \\    const values = (40, 2)
+        \\    const left, right = values
+        \\    return left + right
+    ;
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    const contract = cache_key.Contract.default;
+    const fingerprint = try contract.fingerprint(t.allocator);
+    defer t.allocator.free(fingerprint);
+    for (0..2) |run| {
+        var store = semantic_store.Store.init(t.allocator, t.io, root, contract, language.semantic_cache.mutation_contract_version);
+        defer store.deinit();
+        var cache = Cache.initWithContract(t.allocator, 4 * 1024 * 1024, fingerprint);
+        defer cache.deinit();
+        cache.context.persistent = &store;
+        try compare(t.allocator, &cache, program, 42);
+        if (run == 0) {
+            var has_array = false;
+            for (cache.entries) |entry| for (entry.meta.record_refs) |reference| {
+                if (reference.recipes.len == 0 or reference.recipes[0] != .array) continue;
+                const site = reference.recipes[0].array.site;
+                try t.expectEqualStrings("\"PORTABLE_TYPE_RECIPE\"", program[site.start..site.end]);
+                has_array = true;
+            };
+            try t.expect(has_array);
+        } else {
+            try t.expectEqual(@as(usize, 1), cache.statistics.reused);
+            try t.expectEqual(@as(usize, 1), cache.statistics.checked);
+        }
+    }
+}
+
+// spec-case: SEMANTIC-CACHE-7
+test "portable callable generic consumers revalidate changed effect slots" {
+    const program =
+        \\func apply[T](x: T, f: func(T) -> T) -> T:
+        \\    return f(x)
+        \\
+        \\func one(x: i64) -> i64:
+        \\    return x + 1
+        \\
+        \\func main() -> i64:
+        \\    return apply(41, one)
+    ;
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    try compare(t.allocator, &cache, program, 42);
+    try compare(t.allocator, &cache, program, 42);
+    try t.expectEqual(@as(usize, 3), cache.statistics.reused);
+    try t.expectEqual(@as(usize, 3), cache.statistics.checked);
+    const narrower = try std.mem.replaceOwned(u8, t.allocator, program, "func(T) -> T", "func(T) -> T effects()");
+    defer t.allocator.free(narrower);
+    try compare(t.allocator, &cache, narrower, 42);
+    const invalid = try std.mem.replaceOwned(u8, t.allocator, program, "func(T) -> T", "func(T) -> bool");
+    defer t.allocator.free(invalid);
+    try compare(t.allocator, &cache, invalid, null);
+}
+
+// spec-case: SEMANTIC-CACHE-7
+test "portable nominal references fall back when their current shape is absent" {
+    const program =
+        \\record Item:
+        \\    value: i64
+        \\record Box[T]:
+        \\    value: T
+        \\func boxed[T](value: T) -> Box[T]:
+        \\    return Box[T](value=value)
+        \\func main() -> i64:
+        \\    const box = boxed(Item(value=42))
+        \\    return box.value.value
+    ;
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    try compare(t.allocator, &cache, program, 42);
+    const checked = cache.statistics.checked;
+    try compare(t.allocator, &cache, program, 42);
+    try t.expectEqual(checked + 1, cache.statistics.checked);
+    const changed = try std.mem.replaceOwned(u8, t.allocator, program, "value: i64", "value: bool");
+    defer t.allocator.free(changed);
+    try compare(t.allocator, &cache, changed, null);
+}
+
+// spec-case: SEMANTIC-CACHE-7
+test "portable nominal references reuse a type materialized by an earlier fresh body" {
+    const program =
+        \\record Item:
+        \\    value: i64
+        \\record Box[T]:
+        \\    value: T
+        \\func boxed[T](value: T) -> Box[T]:
+        \\    return Box[T](value=value)
+        \\func first() -> i64:
+        \\    const box = boxed(Item(value=20))
+        \\    return box.value.value
+        \\func main() -> i64:
+        \\    const box = boxed(Item(value=22))
+        \\    return first() + box.value.value
+    ;
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    try compare(t.allocator, &cache, program, 42);
+    try t.expectEqual(@as(usize, 3), cache.statistics.checked);
+    try compare(t.allocator, &cache, program, 42);
+    try t.expectEqual(@as(usize, 4), cache.statistics.checked);
+    try t.expectEqual(@as(usize, 2), cache.statistics.reused);
+    const changed = try std.mem.replaceOwned(u8, t.allocator, program, "value: i64", "value: u64");
+    defer t.allocator.free(changed);
+    try compare(t.allocator, &cache, changed, null);
 }

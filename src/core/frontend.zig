@@ -127,8 +127,8 @@ pub const Session = struct {
         return &self.graph.index;
     }
 
-    /// Validation-only commands can omit unchanged bodies; builds/tests retain
-    /// the default complete typed trees and use summaries for pass facts only.
+    /// Validation-only commands can omit unchanged bodies. Builds retain typed
+    /// trees unless their lowering host admits safe artifacts through demand.
     pub fn validationOnly(self: *Session) void {
         self.graph.settings.allocation_contracts = false;
         if (self.cache) |*state| state.request.body_policy = .summaries;

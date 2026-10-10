@@ -16,6 +16,7 @@ const diagnostic = @import("diagnostic.zig");
 const Error = diagnostic.Error;
 const instances = @import("generic_instances.zig");
 const impl = @This();
+const type_recipe = @import("semantic_type_recipe.zig");
 
 /// Extend one request's name index as checking appends catalog records. A
 /// duplicate remains ambiguous, and every record name is visited exactly once.
@@ -63,7 +64,14 @@ pub fn Checks(comptime Checker: type) type {
         pub fn bindOrdinaryReferences(self: *Checker, queries: *@import("semantic_cache.zig").Session, reuse: *generic_specializations.Session) error{OutOfMemory}!void {
             const bridge = try self.allocator.create(ReferenceBridge(Checker));
             bridge.* = .{ .checker = self, .reuse = reuse };
-            queries.reuse.resolver = .{ .context = bridge, .capture = ReferenceBridge(Checker).capture, .resolve = ReferenceBridge(Checker).resolve };
+            queries.reuse.resolver = .{
+                .context = bridge,
+                .capture = ReferenceBridge(Checker).capture,
+                .resolve = ReferenceBridge(Checker).resolve,
+                .resolve_type = ReferenceBridge(Checker).resolveType,
+                .type_shape = ReferenceBridge(Checker).typeShape,
+                .resolve_record = ReferenceBridge(Checker).resolveRecord,
+            };
         }
         /// Capture every specialization freshly checked by this request and publish
         /// them after the whole graph passed. A tree that references a synthesized
@@ -295,11 +303,14 @@ fn lookupSpecialization(
         .functions = functions,
         .records = record_remaps,
     };
-    const function = mapper.copy(allocator, typed.Function, entry.payload.body.function) catch |err| return specializationRelocationMiss(reuse, err);
-    const copied_nodes = mapper.copy(allocator, []const typed.Node, entry.payload.body.nodes) catch |err| return specializationRelocationMiss(reuse, err);
-    const copied_statements = mapper.copy(allocator, []const typed.Statement, entry.payload.body.statements) catch |err| return specializationRelocationMiss(reuse, err);
-    try nodes.appendSlice(allocator, copied_nodes);
-    try statements.appendSlice(allocator, copied_statements);
+    try nodes.ensureUnusedCapacity(allocator, entry.payload.body.nodes.len);
+    try statements.ensureUnusedCapacity(allocator, entry.payload.body.statements.len);
+    var failure: sem_copy.Failure = .none;
+    const function = mapper.copyWithFailure(allocator, typed.Function, entry.payload.body.function, &failure) catch |err| return specializationRelocationMiss(reuse, err);
+    mapper.copySliceInto(allocator, typed.Node, entry.payload.body.nodes, nodes.unusedCapacitySlice()[0..entry.payload.body.nodes.len], &failure) catch |err| return specializationRelocationMiss(reuse, err);
+    mapper.copySliceInto(allocator, typed.Statement, entry.payload.body.statements, statements.unusedCapacitySlice()[0..entry.payload.body.statements.len], &failure) catch |err| return specializationRelocationMiss(reuse, err);
+    nodes.items.len += entry.payload.body.nodes.len;
+    statements.items.len += entry.payload.body.statements.len;
     reuse.noteReused();
     return function;
 }
@@ -537,6 +548,40 @@ fn ReferenceBridge(comptime Checker: type) type {
     return struct {
         checker: *Checker,
         reuse: *generic_specializations.Session,
+        type_sites: type_recipe.Sites = .{},
+        record_names: std.StringHashMapUnmanaged(usize) = .empty,
+        indexed_records: usize = 0,
+        fn resolveRecord(context: *anyopaque, name: []const u8, expected: [32]u8) error{OutOfMemory}!?typed.Type {
+            const self: *@This() = @ptrCast(@alignCast(context));
+            const records = self.checker.catalog.records;
+            _ = try indexRecordNames(self.checker.allocator, &self.record_names, &self.indexed_records, records);
+            const index = self.record_names.get(name) orelse return null;
+            if (index == std.math.maxInt(usize)) return null;
+            var shapes: semantic_key.Shapes = .{ .allocator = self.checker.allocator, .records = records };
+            defer shapes.deinit();
+            const actual = (try shapes.digest(index)) orelse return null;
+            if (!std.mem.eql(u8, &actual, &expected)) return null;
+            return records[index].id;
+        }
+        fn typeShape(context: *anyopaque, ty: typed.Type) error{OutOfMemory}!?[32]u8 {
+            const self: *@This() = @ptrCast(@alignCast(context));
+            if (!ty.isAggregate()) return null;
+            var shapes: semantic_key.Shapes = .{ .allocator = self.checker.allocator, .records = self.checker.catalog.records };
+            defer shapes.deinit();
+            return shapes.digest(ty.recordIndex());
+        }
+        fn resolveType(context: *anyopaque, recipe: sem_entry.TypeRecipe, before: source.Span, after: source.Span, remaps: []const sem_copy.RecordRemap) error{ OutOfMemory, InternalError }!?typed.Type {
+            const self: *@This() = @ptrCast(@alignCast(context));
+            const diagnostics_before = self.checker.sink.items.items.len;
+            return type_recipe.resolve(Checker, self.checker, &self.type_sites, recipe, before, after, remaps) catch |err| switch (err) {
+                error.SourceError => failed: {
+                    self.checker.sink.items.shrinkRetainingCapacity(diagnostics_before);
+                    break :failed null;
+                },
+                error.OutOfMemory => return error.OutOfMemory,
+                error.InternalError => return error.InternalError,
+            };
+        }
         fn capture(context: *anyopaque, id: typed.FunctionId) error{OutOfMemory}!?sem_entry.FunctionRef {
             const self: *@This() = @ptrCast(@alignCast(context));
             const index = @backingInt(id);

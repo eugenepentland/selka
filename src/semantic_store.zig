@@ -27,7 +27,7 @@ const owned = @import("semantic_entry.zig");
 const cache_key = @import("cache_key.zig");
 
 /// On-disk format version. Bump for any layout, tag or validation change.
-pub const format_version = "semantic-cache-v5";
+pub const format_version = "semantic-cache-v6";
 /// Default root for ordinary one-shot commands; `--cache-dir=DIR` maps to
 /// `DIR/semantic` through the same shared cache-root option.
 pub const default_directory = ".mylang-cache/semantic";
@@ -360,6 +360,7 @@ pub const Store = struct {
     }
 
     fn validRefs(self: *Store, body: StoredBody) bool {
+        if (!owned.validTypeRecipes(body.meta, max_declarations)) return false;
         if (body.meta.old_function_count > max_declarations or body.meta.old_record_count > max_declarations) return false;
         if (body.meta.function_refs.len > max_declarations or body.meta.record_refs.len > max_declarations) return false;
         for (body.meta.function_refs) |reference| {
@@ -679,7 +680,7 @@ pub const Store = struct {
             if (note.message.len == 0 or note.message.len > self.limits.max_entry_bytes) return false;
             if (note.span.start > note.span.end or note.span.end > entry.source.old_len) return false;
         }
-        return owned.validRangeHeaders(entry.statements);
+        return owned.validRangeHeaders(entry.statements) and owned.validTypeRecipes(entry.meta, max_declarations);
     }
 
     /// Bound the contract namespace by bytes and entry count. Trimming is a

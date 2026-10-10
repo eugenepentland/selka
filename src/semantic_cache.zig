@@ -445,6 +445,7 @@ pub const Session = struct {
 
     fn copyEntry(self: *Session, allocator: std.mem.Allocator, index: usize, entry: *const owned.Entry, nodes: *std.ArrayList(typed.Node), statements: *std.ArrayList(typed.Statement)) error{ OutOfMemory, InternalError }!?typed.Function {
         const ast_index = self.prepared.ordinary_ast[index];
+        if (!owned.validTypeRecipes(entry.meta, semantic_store.max_declarations)) return self.reason(.relocation_failed);
         // Cheap rejections first. The dependency digest is a 32-byte compare that
         // also carries the mutation and effect contract, and both stored lengths
         // are integer compares; only a request that survives all three touches
@@ -481,8 +482,25 @@ pub const Session = struct {
         }
         copy.sortFunctionRemaps(functions);
         const records = try allocator.alloc(copy.RecordRemap, entry.meta.record_refs.len);
-        for (entry.meta.record_refs, records) |reference, *out| {
-            var fresh = self.remap.records.get(reference.key) orelse return self.reason(.missing_record);
+        for (entry.meta.record_refs, records, 0..) |reference, *out, position| {
+            if (reference.recipes.len != 0) {
+                const recipe = reference.recipes[0];
+                const resolver = self.reuse.resolver orelse return self.reason(.interned_record);
+                const resolve_type = resolver.resolve_type orelse return self.reason(.interned_record);
+                const fresh_type = (try resolve_type(resolver.context, recipe, old_region, new_region, records[0..position])) orelse return self.reason(.interned_record);
+                const type_shape = resolver.type_shape orelse return self.reason(.missing_record);
+                const shape = (try type_shape(resolver.context, fresh_type)) orelse return self.reason(.missing_record);
+                if (!std.mem.eql(u8, &shape, &reference.shape)) return self.reason(.record_shape_changed);
+                out.* = .{ .old = reference.index, .fresh = fresh_type };
+                continue;
+            }
+            var fresh = self.remap.records.get(reference.key) orelse {
+                const resolver = self.reuse.resolver orelse return self.reason(.missing_record);
+                const resolve_record = resolver.resolve_record orelse return self.reason(.missing_record);
+                const ty = (try resolve_record(resolver.context, reference.key, reference.shape)) orelse return self.reason(.missing_record);
+                out.* = .{ .old = reference.index, .fresh = ty };
+                continue;
+            };
             if (fresh == std.math.maxInt(usize)) fresh = (try uniqueRecordShape(&self.remap.shapes, reference.key, reference.shape)) orelse return self.reason(.ambiguous_record);
             const shape = (try self.remap.shapes.digest(fresh)) orelse return self.reason(.missing_record);
             if (!std.mem.eql(u8, &shape, &reference.shape)) return self.reason(.record_shape_changed);
@@ -506,17 +524,19 @@ pub const Session = struct {
             .record_remaps = records,
         };
         var failure: copy.Failure = .none;
+        try nodes.ensureUnusedCapacity(allocator, entry.nodes.len);
+        try statements.ensureUnusedCapacity(allocator, entry.statements.len);
         const function = mapper.copyWithFailure(allocator, typed.Function, entry.function, &failure) catch |err| {
             return self.relocationMiss(err, failure);
         };
-        const copied_nodes = mapper.copyWithFailure(allocator, []const typed.Node, entry.nodes, &failure) catch |err| {
+        mapper.copySliceInto(allocator, typed.Node, entry.nodes, nodes.unusedCapacitySlice()[0..entry.nodes.len], &failure) catch |err| {
             return self.relocationMiss(err, failure);
         };
-        const copied_statements = mapper.copyWithFailure(allocator, []const typed.Statement, entry.statements, &failure) catch |err| {
+        mapper.copySliceInto(allocator, typed.Statement, entry.statements, statements.unusedCapacitySlice()[0..entry.statements.len], &failure) catch |err| {
             return self.relocationMiss(err, failure);
         };
-        try nodes.appendSlice(allocator, copied_nodes);
-        try statements.appendSlice(allocator, copied_statements);
+        nodes.items.len += entry.nodes.len;
+        statements.items.len += entry.statements.len;
         self.reuse.functions[index] = true;
         self.cache.statistics.reused += 1;
         return function;
@@ -583,7 +603,7 @@ pub const Session = struct {
     /// conservative miss and return null. Every temporary key slice is copied
     /// into the entry arena by `Entry.create`, so the temporaries can be freed
     /// before return.
-    fn buildFreshEntry(self: *Session, program: typed.Program, i: usize, range: copy.Range) error{ OutOfMemory, InternalError }!?owned.Entry {
+    fn buildFreshEntry(self: *Session, program: typed.Program, i: usize, range: copy.Range, shapes: *key.Shapes) error{ OutOfMemory, InternalError }!?owned.Entry {
         const cache = self.cache;
         const ast_index = self.prepared.ordinary_ast[i];
         const stable_key = self.prepared.keys[ast_index];
@@ -618,48 +638,9 @@ pub const Session = struct {
         }
         if (specialization) return self.freshMiss(.generic_specialization);
         owned.sortFunctionRefs(owned.FunctionRef, function_refs[0..function_count]);
-        // Every referenced aggregate must have a stable identity that exists
-        // before checking. A declared callback, record or prelude type does;
-        // a callable contract or structural array interned while checking does
-        // not, so the body stays fresh with the exact reason.
-        const record_refs = try cache.allocator.alloc(owned.RecordRef, refs.records.count());
-        defer cache.allocator.free(record_refs);
-        var record_iterator = refs.records.keyIterator();
-        var record_count: usize = 0;
-        var unstable: ?MissReason = null;
-        while (record_iterator.next()) |index| {
-            if (index.* >= program.records.len) {
-                unstable = .missing_record;
-                break;
-            }
-            if (index.* >= self.remap.initial_record_count) {
-                const callable = declaredCallback(program.records, index.*);
-                unstable = if (callable and (refs.function_values or refs.invokes)) .function_value else .interned_record;
-                break;
-            }
-            const name = program.records[index.*].name;
-            var fresh_index = self.remap.records.get(name) orelse {
-                unstable = .missing_record;
-                break;
-            };
-            if (fresh_index == std.math.maxInt(usize)) {
-                const expected = (try self.remap.shapes.digest(index.*)) orelse {
-                    unstable = .missing_record;
-                    break;
-                };
-                fresh_index = (try uniqueRecordShape(&self.remap.shapes, name, expected)) orelse {
-                    unstable = .ambiguous_record;
-                    break;
-                };
-            }
-            const shape = (try self.remap.shapes.digest(fresh_index)) orelse {
-                unstable = .missing_record;
-                break;
-            };
-            record_refs[record_count] = .{ .index = index.*, .key = name, .shape = shape };
-            record_count += 1;
-        }
-        if (unstable) |why| return self.freshMiss(why);
+        var record_arena = std.heap.ArenaAllocator.init(cache.allocator);
+        defer record_arena.deinit();
+        const record_refs = (try self.buildRecordRefs(program, .{ .ast_index = ast_index, .range = range, .shapes = shapes }, &refs, record_arena.allocator())) orelse return null;
         const source_refs = try self.remap.sources.capture(cache.allocator, self.prepared.regions[ast_index], &refs.sources.items);
         defer cache.allocator.free(source_refs);
         const spec: owned.Spec = .{
@@ -676,6 +657,77 @@ pub const Session = struct {
         };
         const entry = try owned.Entry.create(cache.allocator, self.src.bytes, program, i, range, spec);
         return entry;
+    }
+    fn recordMiss(self: *Session, why: MissReason) ?[]const owned.RecordRef {
+        _ = self.freshMiss(why);
+        return null;
+    }
+    fn collectRecordIndices(self: *Session, program: typed.Program, refs: *copy.RefSet, allocator: std.mem.Allocator) error{ OutOfMemory, InternalError }!?[]usize {
+        var indices: std.ArrayList(usize) = .empty;
+
+        var referenced = refs.records.keyIterator();
+        while (referenced.next()) |index| try indices.append(allocator, index.*);
+        var cursor: usize = 0;
+        while (cursor < indices.items.len) : (cursor += 1) {
+            const index = indices.items[cursor];
+            if (index >= program.records.len) return null;
+            if (index < self.remap.initial_record_count) continue;
+            const record = program.records[index];
+            const dependencies: []const typed.Type = if (record.shape.array) |array| &.{array.element} else if (record.shape.tuple) tuple: {
+                // Insert fields directly: their slice cannot escape this block.
+                for (record.fields) |field| try addRecordDependency(refs, &indices, allocator, field.ty);
+                break :tuple &.{};
+            } else &.{};
+            for (dependencies) |dependency| try addRecordDependency(refs, &indices, allocator, dependency);
+        }
+        const result = try indices.toOwnedSlice(allocator);
+        return result;
+    }
+    const RecordCapture = struct { ast_index: usize, range: copy.Range, shapes: *key.Shapes };
+    fn addRecordDependency(refs: *copy.RefSet, indices: *std.ArrayList(usize), allocator: std.mem.Allocator, dependency: typed.Type) error{OutOfMemory}!void {
+        if (!dependency.isAggregate()) return;
+        const child = dependency.recordIndex();
+        if (refs.records.contains(child)) return;
+        try refs.records.put(refs.allocator, child, {});
+        try indices.append(allocator, child);
+    }
+    fn buildRecordRefs(self: *Session, program: typed.Program, capture: RecordCapture, refs: *copy.RefSet, allocator: std.mem.Allocator) error{ OutOfMemory, InternalError }!?[]const owned.RecordRef {
+        const indices = (try self.collectRecordIndices(program, refs, allocator)) orelse return self.recordMiss(.missing_record);
+        std.mem.sort(usize, indices, {}, struct {
+            fn less(_: void, a: usize, b: usize) bool {
+                return a < b;
+            }
+        }.less);
+        const record_refs = try allocator.alloc(owned.RecordRef, indices.len);
+        for (indices, record_refs) |index, *reference| {
+            const record = program.records[index];
+            const shape = (try (if (index < self.remap.initial_record_count) &self.remap.shapes else capture.shapes).digest(index)) orelse return self.recordMiss(.missing_record);
+            reference.* = .{ .index = index, .key = record.name, .shape = shape };
+            if (index < self.remap.initial_record_count) continue;
+            if (record.shape.array == null and !record.shape.tuple and record.contract.callback == null) continue;
+            const recipes = try allocator.alloc(owned.TypeRecipe, 1);
+            reference.recipes = recipes;
+            if (record.shape.array) |array| {
+                if (array.key != null) return self.recordMiss(.interned_record);
+                const region = self.prepared.regions[capture.ast_index];
+                if (record.declaration.start < region.start or record.declaration.end > region.end) return self.recordMiss(.interned_record);
+                if (array.length > record.declaration.end - record.declaration.start) return self.recordMiss(.interned_record);
+                recipes[0] = .{ .array = .{ .element = array.element, .length = array.length, .site = record.declaration } };
+            } else if (record.shape.tuple) {
+                const elements = try allocator.alloc(typed.Type, record.fields.len);
+                for (record.fields, elements) |field, *element| element.* = field.ty;
+                recipes[0] = .{ .tuple = elements };
+            } else if (record.contract.callback != null) {
+                var site: ?source.Span = null;
+                for (program.nodes[capture.range.nodes.start..capture.range.nodes.end]) |node| {
+                    if (node.ty != record.id or node.data != .function_value) continue;
+                    site = node.span;
+                    break;
+                }
+                recipes[0] = .{ .callable = site orelse return self.recordMiss(.function_value) };
+            } else return self.recordMiss(.interned_record);
+        }
+        return record_refs;
     }
     /// Count one body that cannot be retained, with the exact conservative reason.
     fn freshMiss(self: *Session, why: MissReason) ?owned.Entry {
@@ -699,6 +751,8 @@ pub const Session = struct {
         // Hosts may opt lowering requests into tree reuse independently of the
         // unchanged pass facts their summaries stand in for.
         if (cache.context.summaries) |request| if (request.body_policy != .concrete or !cache.context.retain_summary_trees) return;
+        var shapes: key.Shapes = .{ .allocator = cache.allocator, .records = program.records };
+        defer shapes.deinit();
         const generic_bytes = cache.reuse.symbolic.retainedBytes() + cache.reuse.specializations.retainedBytes();
         const ordinary_budget = cache.reuse.max_bytes -| generic_bytes;
         const ordinary_count = self.prepared.ordinary_ast.len;
@@ -747,7 +801,7 @@ pub const Session = struct {
             };
             const range = self.ranges[i];
             if (range.nodes.end > program.nodes.len or range.statements.end > program.statements.len) return error.InternalError;
-            const entry = (try self.buildFreshEntry(program, i, range)) orelse continue;
+            const entry = (try self.buildFreshEntry(program, i, range, &shapes)) orelse continue;
             const cost = owned.entryCost(entry);
             if (!fitsOrdinaryBudget(running, cost, pending.items.len + 1, ordinary_budget)) {
                 var dropped = entry;
@@ -777,7 +831,7 @@ pub const Session = struct {
             const previous = owned.retained(cache.entries) + owned.hashIndexBytes(cache.index.capacity());
             if (previous <= ordinary_budget) {
                 cache.statistics.bypassed += 1;
-                try self.persistUnretained(program, stopped_at);
+                try self.persistUnretained(program, stopped_at, &shapes);
                 return;
             }
             cache.statistics.retention.evicted += cache.entries.len;
@@ -803,12 +857,12 @@ pub const Session = struct {
         published = true;
         cache.recountRetention();
         try persistFresh(cache, fresh.items);
-        try self.persistUnretained(program, stopped_at);
+        try self.persistUnretained(program, stopped_at, &shapes);
     }
 
     /// Persist checked bodies beyond the in-memory prefix, with one temporary
     /// owned entry at a time. Successful durable hits need no publication.
-    fn persistUnretained(self: *Session, program: typed.Program, start: usize) error{ OutOfMemory, InternalError }!void {
+    fn persistUnretained(self: *Session, program: typed.Program, start: usize, shapes: *key.Shapes) error{ OutOfMemory, InternalError }!void {
         const persistent = self.cache.context.persistent orelse return;
         var started = false;
         errdefer if (started) {
@@ -821,7 +875,7 @@ pub const Session = struct {
             if (self.reuse.stood_in[i] or self.reuse.functions[i]) continue;
             const range = self.ranges[i];
             if (range.nodes.end > program.nodes.len or range.statements.end > program.statements.len) return error.InternalError;
-            var entry = (try self.buildFreshEntry(program, i, range)) orelse continue;
+            var entry = (try self.buildFreshEntry(program, i, range, shapes)) orelse continue;
             defer entry.deinit();
             if (!started) {
                 try persistent.beginBatch();
@@ -950,4 +1004,7 @@ pub const ReferenceResolver = struct {
     context: *anyopaque,
     capture: *const fn (*anyopaque, typed.FunctionId) error{OutOfMemory}!?owned.FunctionRef,
     resolve: *const fn (*anyopaque, owned.FunctionRef) error{ OutOfMemory, InternalError }!?typed.FunctionId,
+    resolve_type: ?*const fn (*anyopaque, owned.TypeRecipe, source.Span, source.Span, []const copy.RecordRemap) error{ OutOfMemory, InternalError }!?typed.Type = null,
+    type_shape: ?*const fn (*anyopaque, typed.Type) error{OutOfMemory}!?[32]u8 = null,
+    resolve_record: ?*const fn (*anyopaque, []const u8, [32]u8) error{OutOfMemory}!?typed.Type = null,
 };

@@ -175,11 +175,18 @@ and is not stood in unless every one of them still has that shape. Renaming a
 field of a record a body reaches only through `o.items[0]` therefore re-checks
 that body.
 
-`build`, `run`, `run-project` and `test` read the same summaries but check every
-body, because building Core IR needs the checked tree; a summary stands in only for an unchanged body's facts and pass
-diagnostics, so the passes walk only changed bodies. Such a command writes the
-slot only when it had no summaries or repeated in full. A request served by
-summaries neither reads nor publishes the checked-body store below.
+Native builds also use lowering receipts to omit unchanged checked trees when
+cached Core IR can supply the body. The receipts validate the declaration's
+dependency context and source region. External debug locations additionally
+require the same original source file, origin order and exact file bytes; this
+lets an unchanged body use locations in another declaration without restoring
+its typed tree. Changed or missing authority requires a complete body. If later
+lowering needs an omitted body and its cached IR is unavailable, the build
+repeats with complete frontend bodies. Allocation-bounded functions and their
+transitive callees retain concrete trees for allocation diagnostics.
+
+Where a complete tree is needed, the checked-body store below can replay it.
+The summary facts still avoid repeating global pass work for unchanged bodies.
 
 `checked_bodies.reused` in the work report counts stood-in bodies; `performed`
 counts the bodies actually checked. After a one-line body edit only that body
@@ -204,7 +211,7 @@ checked program without summaries (above), and native-test preparation use the
 same checked-body query path. The durable store lives under
 `<cache-dir>/semantic/` when `--cache-dir` (or `MYLANG_FRONTEND_CACHE`) is given
 and `.mylang-cache/semantic/` otherwise; it is one contract-namespaced directory of
-versioned `semantic-cache-v5` files. Each file contains one stable declaration
+versioned `semantic-cache-v6` files. Each file contains one stable declaration
 key, the dependency context, the checked contract digest, the owned relocatable
 `typed.Function`/node/statement tree, referenced stable identities, source
 region/body bytes, the body-local binding-warning notes (code, severity, span and
@@ -225,6 +232,19 @@ body whose touched record changed shape misses as `record-shape-changed`. The
 fresh project's effect, mutation, codec and
 binding-warning passes always run over the copied body, so a replayed body cannot
 carry an obsolete global verdict and warning locations relocate with the source.
+
+Supported dynamic arrays, tuples and function-value types store portable
+interner inputs alongside their shape digests. Replay reconstructs them through
+the current checker and verifies their fresh shapes before accepting the body.
+Function-value contracts come from current declarations and the current use
+site, including its expected callback type where available. Generic call sites
+can reuse the target's standalone contract when its complete fresh shape
+matches. Dynamic nominal types must already exist in the current catalog with
+the same unique name and transitive shape; replay never expands a nominal graph
+speculatively. Unsupported or ambiguous recipes fall back to checking.
+Replayed nodes and statements are copied directly into
+their final arrays, avoiding an intermediate outer-array allocation. The v6
+format requires older checked-body entries to be repopulated once.
 
 ```console
 $ mylang check app/main.my --cache-dir=.mylang-cache/demo --report

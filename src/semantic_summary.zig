@@ -129,6 +129,9 @@ pub const Prepared = semantic_key.Prepared;
 pub const Demand = struct {
     context: *const anyopaque,
     allow: *const fn (context: *const anyopaque, key: []const u8, context_digest: [32]u8, region_digest: [32]u8) bool,
+    /// Bind the fresh source catalog once before consulting body receipts.
+    /// Hosts use it to prove debug locations outside an unchanged body.
+    prepare_sources: ?*const fn (*const anyopaque, source.Source) error{OutOfMemory}!void = null,
     omitted: []bool = &.{},
 };
 

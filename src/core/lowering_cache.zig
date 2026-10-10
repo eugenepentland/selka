@@ -11,6 +11,7 @@ const flags = @import("flags.zig");
 const render = @import("build_render.zig");
 const demand = @import("lowering_demand.zig");
 const demand_ir = @import("demand_ir.zig");
+const demand_sources = @import("demand_sources.zig");
 
 const Error = snapshot.Error;
 /// Checked-to-physical type mapping, recorded in discovery order.
@@ -41,7 +42,7 @@ const Delta = struct {
     functions: []FunctionBinding,
     types: []TypeBinding,
 };
-const Wire = struct { function: Function, delta: Delta };
+const Wire = struct { function: Function, delta: Delta, sources: []const demand_sources.Proof = &.{} };
 const Header = struct { wire: Wire, local_positions: bool, source_max: ?u32 };
 /// Inputs needed to publish one successful function without repeating arguments.
 pub const Publication = struct { key: stage.Digest, before: Before, checked: typed.Function };
@@ -61,7 +62,7 @@ pub const Cache = struct {
     }
 };
 
-const Handle = struct { key: stage.Digest, start: usize, old_strings: usize, new_strings: usize, string_count: usize };
+const Handle = struct { key: stage.Digest, first: usize, start: usize, old_strings: usize, new_strings: usize, string_count: usize };
 
 /// Compact discovery survives without decoding unchanged instruction arrays.
 /// The owning pipeline updates module/source after moving and retaining them.
@@ -73,6 +74,7 @@ pub const Deferred = struct {
         handles: std.ArrayList(?Handle) = .empty,
         keys: std.ArrayList(?stage.Digest) = .empty,
         source_max: std.ArrayList(?u32) = .empty,
+        sources: std.ArrayList([]const demand_sources.Proof) = .empty,
         loaded: std.ArrayList(bool) = .empty,
     } = .{},
     context: demand_ir.Context = undefined,
@@ -80,18 +82,21 @@ pub const Deferred = struct {
     force_eager: bool = false,
 
     fn extend(self: *Deferred, count: usize) std.mem.Allocator.Error!void {
+        while (self.tables.sources.items.len < count) try self.tables.sources.append(self.arena, &.{});
         while (self.tables.keys.items.len < count) {
             try self.tables.keys.append(self.arena, null);
             try self.tables.source_max.append(self.arena, null);
+
             try self.tables.handles.append(self.arena, null);
             try self.tables.loaded.append(self.arena, true);
         }
     }
 
-    fn record(self: *Deferred, index: usize, key: stage.Digest, handle: ?Handle, source_max: ?u32) std.mem.Allocator.Error!void {
+    fn record(self: *Deferred, index: usize, key: stage.Digest, handle: ?Handle, source_max: ?u32, proofs: []const demand_sources.Proof) std.mem.Allocator.Error!void {
         try self.extend(index + 1);
         self.tables.keys.items[index] = key;
         self.tables.source_max.items[index] = source_max;
+        self.tables.sources.items[index] = try clone(self.arena, []const demand_sources.Proof, proofs);
         self.tables.handles.items[index] = handle;
         self.tables.loaded.items[index] = handle == null;
     }
@@ -135,6 +140,13 @@ pub const Deferred = struct {
             };
             key.* = self.store.key("demand-raw-v1", &.{ &raw, &layout, &digests[origin] });
         }
+        // External debug authority survives independently of the owning file.
+        for (self.tables.sources.items, self.tables.keys.items) |proofs, *key| {
+            if (proofs.len == 0 or key.* == null) continue;
+            var writer = codec.Writer.init(scratch.allocator());
+            try writer.write([]const demand_sources.Proof, proofs);
+            key.* = self.store.key("demand-raw-external-v1", &.{ &key.*.?, writer.bytes.items });
+        }
         self.context = .{ .pointer = self, .ensure_fn = ensure, .keys = self.tables.keys.items, .loaded = self.tables.loaded.items, .force_eager = self.force_eager };
     }
 
@@ -145,6 +157,10 @@ pub const Deferred = struct {
         defer scratch.deinit();
         const a = scratch.allocator();
         const wire = try self.store.loadValue(a, handle.key, Wire) orelse return error.CacheMiss;
+        var sources: demand_sources.Cache = .{ .arena = a };
+        if (self.input.source) |source| sources.bind(source);
+        if (!sameSourceProofs(wire.sources, self.tables.sources.items[index])) return error.CacheMiss;
+        if (!try validWireSources(&sources, wire, handle.first)) return error.CacheMiss;
         var prefix = self.input.module.*;
         if (handle.new_strings > prefix.strings.items.len or handle.string_count > prefix.strings.items.len - handle.new_strings) return error.CacheMiss;
         prefix.strings.items = prefix.strings.items[0 .. handle.new_strings + handle.string_count];
@@ -182,6 +198,7 @@ pub const Session = struct {
     catalog: stage.Digest,
     assets: stage.Digest,
     guard: stage.Digest = @splat(0),
+    sources: demand_sources.Cache,
 
     /// Hash the complete checked declaration/type graph once, excluding bodies
     /// and absolute source positions. Numeric IDs are accepted only under this
@@ -209,7 +226,8 @@ pub const Session = struct {
             frame(&assets, &embed.digest);
             frame(&assets, embed.contents);
         };
-        var result: Session = .{ .cache = cache, .catalog = h.finish(), .assets = undefined };
+        var result: Session = .{ .cache = cache, .catalog = h.finish(), .assets = undefined, .sources = .{ .arena = mb.arena } };
+        if (mb.input.source) |source| result.sources.bind(source);
         assets.final(&result.assets);
         return result;
     }
@@ -233,34 +251,40 @@ pub const Session = struct {
 
     /// Checked nodes/statements are dereferenced, so allocator order and global
     /// node ordinals cannot invalidate unrelated bodies. Local spans relocate.
-    pub fn key(self: *const Session, mb: Context, checked: typed.Function) Error!stage.Digest {
+    pub fn key(self: *Session, mb: Context, checked: typed.Function) Error!stage.Digest {
         const body = if (self.cache.demand) |queries| if (queries.omitted(checked.id))
             queries.body(checked.id) orelse return error.InvalidSnapshot
         else
             try self.bodyKey(mb, checked) else try self.bodyKey(mb, checked);
         if (self.cache.demand) |queries| if (queries.omitted(checked.id)) try queries.record(checked.id, body);
         const debug = [_]u8{@intFromBool(mb.input.drop_debug)};
-        return self.cache.store.key("lowered-function-v2", &.{ &self.catalog, &self.guard, &self.assets, &body, &debug });
+        return self.cache.store.key("lowered-function-v3", &.{ &self.catalog, &self.guard, &self.assets, &body, &debug });
     }
 
-    fn bodyKey(self: *const Session, mb: Context, checked: typed.Function) Error!stage.Digest {
+    fn bodyKey(self: *Session, mb: Context, checked: typed.Function) Error!stage.Digest {
         var h = TreeHash.init(mb.input.program, .{ .module = mb.module, .source = mb.input.source }, checked);
+        var proofs: std.ArrayList(demand_sources.Proof) = .empty;
+        h.sources = &self.sources;
+        h.proofs = &proofs;
         try h.value(checked);
+        try h.value(proofs.items);
         const digest = h.finish();
-        if (h.local_positions) if (self.cache.demand) |queries| try queries.record(checked.id, digest);
+        if (h.proven) if (self.cache.demand) |queries| {
+            try queries.record(checked.id, digest);
+            try queries.addSources(checked.id, proofs.items);
+        };
         return digest;
     }
 
     /// Decode and validate with private scratch and temporary discovery deltas.
     /// Every accepted pointer is then copied onto the result arena.
     pub fn restore(self: *Session, scratch: std.mem.Allocator, key_value: stage.Digest, mb: Context, checked: typed.Function, declared: ir.Function) std.mem.Allocator.Error!?ir.Function {
-        const header = if (self.cache.lazy != null and !self.cache.lazy.?.force_eager) try self.cache.store.loadValue(scratch, self.cache.store.key("lowered-header-source-v2", &.{&key_value}), Header) else null;
+        const header = if (self.cache.lazy != null and !self.cache.lazy.?.force_eager) try self.cache.store.loadValue(scratch, self.cache.store.key("lowered-header-source-v3", &.{&key_value}), Header) else null;
         const wire = if (header) |metadata| metadata.wire else try self.cache.store.loadValue(scratch, key_value, Wire) orelse return null;
         const before = Before.init(mb);
-        if (!(if (header) |metadata| metadata.local_positions else localPositions(wire, before.functions))) if (self.cache.demand) |queries| {
-            queries.reject(checked.id);
-            if (queries.omitted(checked.id)) return null;
-        };
+        for (wire.sources) |proof| _ = try self.sources.get(proof.origin);
+        if (!try validWireSources(&self.sources, wire, before.functions)) return null;
+        if (self.cache.demand) |queries| try queries.addSources(checked.id, wire.sources);
         // Temporarily expose only the discovery delta, using the result arena
         // for table capacity. Roll back lengths before decoded scratch expires
         // on every miss/error. Never copy the module's growing catalog prefix.
@@ -315,11 +339,12 @@ pub const Session = struct {
         };
         if (self.cache.lazy) |lazy| try lazy.record(mb.discovery.ids.get(@backingInt(checked.id)).?, key_value, if (header != null) .{
             .key = key_value,
+            .first = before.functions,
             .start = checked.declaration.start,
             .old_strings = wire.delta.string_start,
             .new_strings = before.strings,
             .string_count = wire.delta.strings.len,
-        } else null, if (header) |metadata| metadata.source_max else sourceMaximum(wire, before.functions));
+        } else null, if (header) |metadata| metadata.source_max else sourceMaximum(wire, before.functions), wire.sources);
         return result;
     }
 
@@ -339,7 +364,7 @@ pub const Session = struct {
         };
         const functions = try a.alloc(FunctionBinding, mb.discovery.pending.items.len - before.pending);
         for (functions, mb.discovery.pending.items[before.pending..]) |*binding, id| binding.* = .{ .checked = id, .physical = mb.discovery.ids.get(@backingInt(id)).? };
-        const wire: Wire = .{
+        var wire: Wire = .{
             .function = function,
             .delta = .{
                 .declarations = declarations,
@@ -350,7 +375,11 @@ pub const Session = struct {
                 .types = mb.discovery.types.items[before.types..],
             },
         };
-        if (!localPositions(wire, before.functions)) if (self.cache.demand) |queries| queries.reject(checked.id);
+        wire.sources = (try wireSources(&self.sources, wire, before.functions)) orelse {
+            if (self.cache.demand) |queries| queries.reject(checked.id);
+            return;
+        };
+        if (self.cache.demand) |queries| try queries.addSources(checked.id, wire.sources);
         try self.cache.store.storeValue(publication.key, Wire, wire);
         var header = wire;
         header.function.value.insts = &.{};
@@ -358,12 +387,12 @@ pub const Session = struct {
         header.function.value.extra = &.{};
         header.function.value.loops = &.{};
         header.function.positions = function.positions[0..1];
-        try self.cache.store.storeValue(self.cache.store.key("lowered-header-source-v2", &.{&publication.key}), Header, .{
+        try self.cache.store.storeValue(self.cache.store.key("lowered-header-source-v3", &.{&publication.key}), Header, .{
             .wire = header,
             .local_positions = localPositions(wire, before.functions),
             .source_max = sourceMaximum(wire, before.functions),
         });
-        if (self.cache.lazy) |lazy| try lazy.record(mb.discovery.ids.get(@backingInt(checked.id)).?, publication.key, null, sourceMaximum(wire, before.functions));
+        if (self.cache.lazy) |lazy| try lazy.record(mb.discovery.ids.get(@backingInt(checked.id)).?, publication.key, null, sourceMaximum(wire, before.functions), wire.sources);
     }
 };
 
@@ -408,6 +437,56 @@ fn localPositions(wire: Wire, first: usize) bool {
             };
             if (!bound) return false;
         }
+    }
+    return true;
+}
+
+/// Ordinary declaration sites are replaced from the fresh checked catalog.
+/// Every other external position must carry exact original-file authority.
+fn wireSources(sources: *demand_sources.Cache, wire: Wire, first: usize) std.mem.Allocator.Error!?[]const demand_sources.Proof {
+    var proofs: std.ArrayList(demand_sources.Proof) = .empty;
+    for (wire.function.positions) |at| if (at == .external) {
+        if (!try sources.collect(&proofs, at.external)) return null;
+    };
+    for (wire.delta.declarations, 0..) |decl, index| {
+        for (decl.positions, 0..) |at, position_index| {
+            if (at != .external) continue;
+            if (position_index == 0) {
+                var bound = false;
+                for (wire.delta.functions) |binding| if (binding.physical == first + index) {
+                    bound = true;
+                    break;
+                };
+                if (bound) continue;
+            }
+            if (!try sources.collect(&proofs, at.external)) return null;
+        }
+    }
+    return proofs.items;
+}
+
+// Header and payload share one captured wire, so proof ordering is canonical
+// for this artifact. Require every proof used by the raw key to match exactly.
+fn sameSourceProofs(a: []const demand_sources.Proof, b: []const demand_sources.Proof) bool {
+    if (a.len != b.len) return false;
+    for (a, b) |left, right| {
+        if (left.origin != right.origin) return false;
+        if (!std.mem.eql(u8, left.path, right.path) or !std.mem.eql(u8, &left.digest, &right.digest)) return false;
+    }
+    return true;
+}
+
+fn validWireSources(sources: *demand_sources.Cache, wire: Wire, first: usize) std.mem.Allocator.Error!bool {
+    for (wire.sources) |proof| _ = try sources.get(proof.origin);
+    if (!sources.matches(wire.sources)) return false;
+    const required = try wireSources(sources, wire, first) orelse return false;
+    for (required) |proof| {
+        var found = false;
+        for (wire.sources) |stored| if (stored.origin == proof.origin) {
+            found = true;
+            break;
+        };
+        if (!found) return false;
     }
     return true;
 }
@@ -609,6 +688,9 @@ const TreeHash = struct {
     context: snapshot.Context,
     checked: ?typed.Function,
     local_positions: bool = true,
+    proven: bool = true,
+    sources: ?*demand_sources.Cache = null,
+    proofs: ?*std.ArrayList(demand_sources.Proof) = null,
 
     fn init(program: typed.Program, context: snapshot.Context, checked: ?typed.Function) TreeHash {
         return .{ .program = program, .context = context, .checked = checked };
@@ -627,7 +709,12 @@ const TreeHash = struct {
         if (T == language.source.Span) {
             if (self.checked) |checked| {
                 const at = try position(self.context, self.program, checked, std.math.cast(u32, v.start) orelse return error.InvalidSnapshot);
-                if (at == .external) self.local_positions = false;
+                if (at == .external) {
+                    self.local_positions = false;
+                    if (self.sources) |sources| {
+                        if (!try sources.collect(self.proofs.?, at.external)) self.proven = false;
+                    }
+                }
                 try self.value(at);
                 try self.value(v.end - v.start);
             }
