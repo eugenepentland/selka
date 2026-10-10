@@ -20,7 +20,7 @@ const declaration_interface_domain = "mylang-declaration-interface-v1";
 const function_kind = "function";
 
 /// Identity allocation or schema derivation failed.
-pub const Error = error{ OutOfMemory, SourceError, InternalError };
+pub const Error = @import("frontend_runtime.zig").Error;
 /// SHA-256 identity bytes.
 pub const Hash = [32]u8;
 

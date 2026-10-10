@@ -3,7 +3,7 @@ const std = @import("std");
 const graph = @import("schema_graph.zig");
 const Compilation = @import("project_compile.zig").Compilation;
 /// Errors returned while checking and rendering the public schema.
-pub const RenderError = graph.RenderError;
+pub const RenderError = graph.RenderError || @import("frontend_runtime.zig").HostError;
 /// Allocate the public schema from a checked project and its resolved export roots.
 pub fn render(allocator: std.mem.Allocator, compilation: *Compilation) RenderError![]u8 {
     try compilation.check();

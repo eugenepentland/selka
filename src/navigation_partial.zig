@@ -1,10 +1,14 @@
 //! Best-effort lexical declarations when complete body parsing fails.
 const std = @import("std");
 const project = @import("project.zig");
-const lexer = @import("lexer.zig");
+const frontend = @import("frontend_runtime.zig");
+const component = @import("parser_component.zig");
 const diagnostic = @import("diagnostic.zig");
 const receipt = @import("source_receipt.zig");
 const navigation = @import("navigation.zig");
+
+/// Lexical recovery preserves component host failures separately from source errors.
+pub const Error = navigation.Error || component.Error;
 
 /// The top-level names a lexer pass recovered after body parsing failed. The
 /// bytes belong to the arena until `deinit`, and nothing here claims a resolved
@@ -25,18 +29,21 @@ pub const Candidates = struct {
 /// indentation-zero `def`/`class`/`union`/`enum`/`domain` names and the managed
 /// resource families are published; every candidate keeps the default
 /// `lexical-only` analysis status, because no body was resolved.
-pub fn candidates(allocator: std.mem.Allocator, loaded: *const project.Project) navigation.Error!Candidates {
+pub fn candidates(allocator: std.mem.Allocator, loaded: *const project.Project) Error!Candidates {
     var arena = std.heap.ArenaAllocator.init(allocator);
     errdefer arena.deinit();
     const scratch = arena.allocator();
+    _ = try frontend.verify(scratch, loaded.frontendRuntime());
     var symbols: std.ArrayList(navigation.Symbol) = .empty;
     var omitted: std.ArrayList([]const u8) = .empty;
     for (loaded.modules.items) |module| {
         var sink: diagnostic.Sink = .{ .allocator = scratch };
-        const tokens = lexer.lex(scratch, module.src.bytes, &sink) catch |err| {
-            if (err == error.OutOfMemory) return error.OutOfMemory;
-            try omitted.append(scratch, module.src.path);
-            continue;
+        const tokens = frontend.lex(scratch, module.src, &sink, loaded.frontendRuntime()) catch |err| switch (err) {
+            error.SourceError => {
+                try omitted.append(scratch, module.src.path);
+                continue;
+            },
+            else => |failure| return failure,
         };
         var depth: usize = 0;
         for (tokens, 0..) |token, i| {
@@ -82,7 +89,7 @@ pub fn pin(arena: std.mem.Allocator, loaded: *const project.Project, identity: r
 }
 
 /// Complete loaded-source receipts are retained, but no semantic edges are invented.
-pub fn render(allocator: std.mem.Allocator, loaded: *const project.Project, identity: receipt.Identity) navigation.Error![]u8 {
+pub fn render(allocator: std.mem.Allocator, loaded: *const project.Project, identity: receipt.Identity) Error![]u8 {
     var out: std.Io.Writer.Allocating = .init(allocator);
     errdefer out.deinit();
     write(&out.writer, allocator, loaded, identity) catch |err| switch (err) {
@@ -93,7 +100,7 @@ pub fn render(allocator: std.mem.Allocator, loaded: *const project.Project, iden
 }
 
 /// Stream the complete lexical `navigation-v1` document `render` returns.
-pub fn write(writer: *std.Io.Writer, allocator: std.mem.Allocator, loaded: *const project.Project, identity: receipt.Identity) (navigation.Error || error{WriteFailed})!void {
+pub fn write(writer: *std.Io.Writer, allocator: std.mem.Allocator, loaded: *const project.Project, identity: receipt.Identity) (Error || error{WriteFailed})!void {
     var recovered = try candidates(allocator, loaded);
     defer recovered.deinit();
     const pinned = try pin(recovered.arena.allocator(), loaded, identity);

@@ -22,7 +22,7 @@ const Selection = struct { entries: []const []const u8, tested: []const []const 
 const Orphan = struct { path: []const u8, closure: []const []const u8 };
 const Outcome = root_share.Outcome;
 const Fanout = struct { compiler: []const u8, directory: []const u8, controls: options.Options, jobs: usize, ticket: []const u8, run_root: root_share.RunRoot, identity: struct { guest: tool_identity.Identity, cache_plan: planner.Bound } };
-const Discovery = struct { allocator: std.mem.Allocator, gpa: std.mem.Allocator, io: std.Io };
+const Discovery = struct { allocator: std.mem.Allocator, gpa: std.mem.Allocator, io: std.Io, frontend: ?language.frontend_runtime.Runtime = null };
 const Snapshot = struct {
     allocator: std.mem.Allocator,
     io: std.Io,
@@ -92,12 +92,15 @@ pub fn selected(io: std.Io, path: []const u8) bool {
 /// else in child processes.
 pub fn run(init: std.process.Init, opts: options.Options, run_root: root_share.RunRoot) Error!u8 {
     const a = init.arena.allocator();
+    const runtime: language.frontend_runtime.Runtime = .{ .io = init.io, .environ = init.environ_map };
+    const boundary = try language.frontend_runtime.verify(a, runtime);
     if (opts.controls.cases != null) {
         try write(init.io, std.Io.File.stderr(), "error: --cases requires a single test entry\n");
         return 2;
     }
     var diagnostics: std.ArrayList(u8) = .empty;
     const selection = programs(init, opts, &diagnostics) catch |err| {
+        if (language.frontend_runtime.hostFailure(err)) |failure| return failure;
         if (err == error.OutOfMemory) return error.OutOfMemory;
         try diagnostics.print(a, "error: directory test discovery failed: {s}\n", .{@errorName(err)});
         try write(init.io, std.Io.File.stderr(), diagnostics.items);
@@ -157,6 +160,8 @@ pub fn run(init: std.process.Init, opts: options.Options, run_root: root_share.R
         try write(init.io, std.Io.File.stderr(), try std.fmt.allocPrint(a, "error: cache-plan component: {s}\n", .{@errorName(err)}));
         return 2;
     };
+    const current = try language.frontend_runtime.verify(a, runtime);
+    if (!std.mem.eql(u8, &boundary.identity, &current.identity)) return error.ComponentChanged;
     return summarize(init, opts, selection, outcomes, unchanged);
 }
 
@@ -245,13 +250,13 @@ fn closure(init: std.process.Init, path: []const u8, reading: Reading) ![]const 
     const bytes = try std.Io.Dir.cwd().readFileAlloc(init.io, path, a, .limited(64 << 20));
     if (!language.opensAsModule(bytes)) {
         var src = try language.source.Source.init(a, std.fs.path.basename(path), bytes);
-        src.embeds = try language.embed.scan(a, src);
+        src.embeds = try language.embed.scanWithRuntime(a, src, .{ .io = init.io, .environ = init.environ_map });
         const module_path = try language.project.modulePath(a, located.name);
         try language.embed.resolve(a, .{ .io = init.io, .import_root = located.root, .root = if (located.configuration) |file| std.fs.path.dirname(file.path).? else located.root }, module_path, @constCast(src.embeds));
         try snapshot.source(located.path, src, false);
         return a.dupe([]const u8, &.{located.path});
     }
-    const resources: Discovery = .{ .allocator = a, .gpa = init.gpa, .io = init.io };
+    const resources: Discovery = .{ .allocator = a, .gpa = init.gpa, .io = init.io, .frontend = .{ .io = init.io, .environ = init.environ_map } };
     const paths = reading.share orelse try loadedClosure(resources, located, &.{}, snapshot);
     for (try case_settings.providerSets(a, cases, filter)) |providers| _ = try loadedClosure(resources, located, providers, snapshot);
     return paths;
@@ -311,11 +316,13 @@ fn loadTogether(init: std.process.Init, entries: []const ?project_entry.Entry, m
     const names = try a.alloc([]const u8, members.len);
     for (members, names) |index, *name| name.* = entries[index].?.name;
     var session = frontend.Session.init(init.gpa, init.io, first.root);
+    session.configureFrontend(.{ .io = init.io, .environ = init.environ_map });
     defer session.deinit();
     first.configure(&session);
     const providers = [_]frontend.Provider{.{ .path = together.entry_name ++ ".my", .text = try together.entryText(a, names) }};
     var overlay: Overlay = .{ .files = &session.files, .providers = &providers };
     session.project.load(overlay.provider(), together.entry_name, first.limits()) catch |err| {
+        if (language.frontend_runtime.hostFailure(err)) |failure| return failure;
         if (err == error.OutOfMemory) return error.OutOfMemory;
         return;
     };
@@ -345,6 +352,7 @@ fn recordModule(a: std.mem.Allocator, located: project_entry.Entry, module: *con
 fn loadedClosure(resources: Discovery, located: project_entry.Entry, providers: []const frontend.Provider, snapshot: *Snapshot) ![]const []const u8 {
     const a = resources.allocator;
     var session = frontend.Session.init(resources.gpa, resources.io, located.root);
+    if (resources.frontend) |runtime| session.configureFrontend(runtime);
     defer session.deinit();
     located.configure(&session);
     var overlay: Overlay = .{ .files = &session.files, .providers = providers };
@@ -352,6 +360,28 @@ fn loadedClosure(resources: Discovery, located: project_entry.Entry, providers: 
     var paths: std.ArrayList([]const u8) = .empty;
     for (session.project.modules.items) |*module| if (try recordModule(a, located, module, providers, snapshot)) |path| try paths.append(a, path);
     return paths.items;
+}
+
+// spec-case: SELFHOST-FRONTEND-AUX-1
+test "frontend directory discovery preserves component failures in shared and ordinary loads" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const io = std.testing.io;
+    const root = try temporary.dir.realPathFileAlloc(io, ".", a);
+    try temporary.dir.writeFile(io, .{ .sub_path = "app_test.my", .data = "public func test_a() -> bool:\n    return True\n" });
+    var environment: std.process.Environ.Map = .init(a);
+    defer environment.deinit();
+    try environment.put("MYLANG_LEXER_MODE", "invalid-mode");
+    const entry: project_entry.Entry = .{ .path = try std.fs.path.join(a, &.{ root, "app_test.my" }), .root = root, .name = "app_test" };
+    var snapshot: Snapshot = .{ .allocator = a, .io = io };
+    const resources: Discovery = .{ .allocator = a, .gpa = std.testing.allocator, .io = io, .frontend = .{ .io = io, .environ = &environment } };
+    try std.testing.expectError(error.ComponentMode, loadedClosure(resources, entry, &.{}, &snapshot));
+    const init: std.process.Init = .{ .minimal = .{ .environ = .empty, .args = .{ .vector = &.{} } }, .arena = &arena, .gpa = std.testing.allocator, .io = io, .environ_map = &environment, .preopens = .empty };
+    var found = [_]?[]const []const u8{null};
+    try std.testing.expectError(error.ComponentMode, loadTogether(init, &.{entry}, &.{0}, &snapshot, &found));
 }
 
 fn configurationInputs(snapshot: *Snapshot, entry: project_entry.Entry) !void {

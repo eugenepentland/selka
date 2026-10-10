@@ -100,7 +100,7 @@ pub const Answer = struct { bytes: []u8, status: Status };
 /// Failures a context run reports. `RecheckUnavailable` is separate from a
 /// changed source: the answer could not be confirmed, rather than being known
 /// to describe another version.
-pub const Error = error{ OutOfMemory, InternalError, IncompleteProject, NavigationLimit, BudgetTooSmall, InvalidBaseline, RecheckUnavailable } || component_adapter.Error;
+pub const Error = error{ OutOfMemory, InternalError, IncompleteProject, NavigationLimit, BudgetTooSmall, InvalidBaseline, RecheckUnavailable } || component_adapter.Error || navigation_partial.Error;
 
 /// Smallest budget the envelope and its identity metadata fit in.
 pub const minimum_context_bytes = 1024;
@@ -314,6 +314,7 @@ fn runPartial(allocator: std.mem.Allocator, loaded: *const project.Project, iden
         error.OutOfMemory => return error.OutOfMemory,
         error.NavigationLimit => return error.NavigationLimit,
         error.InternalError, error.IncompleteProject => return error.IncompleteProject,
+        else => return err,
     };
     session.lexical = .{ .loaded = loaded, .candidates = recovered };
     var snapshot_project = loaded.*;

@@ -37,6 +37,20 @@ const fixture =
     \\    mut b = data.Box(value=3)
     \\    return read(data.read(b))
 ;
+
+// spec-case: SELFHOST-FRONTEND-AUX-1
+test "frontend auxiliary lexical navigation preserves component host failure" {
+    var files: Files = .{ .main = "func broken() -> int:\n    return +\n" };
+    var project = graph.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(.{ .context = &files, .read = Files.read }, "main", .{});
+    var environ: std.process.Environ.Map = .init(t.allocator);
+    defer environ.deinit();
+    try environ.put("MYLANG_LEXER_MODE", "invalid-mode");
+    project.configureFrontend(.{ .io = t.io, .environ = &environ });
+    try t.expectError(error.ComponentMode, @import("navigation_partial.zig").candidates(t.allocator, &project));
+    try t.expectError(error.ComponentMode, @import("navigation_partial.zig").render(t.allocator, &project, identity));
+}
 fn emitted(allocator: std.mem.Allocator, compilation: *pc.Compilation) !void {
     const bytes = try navigation.render(allocator, compilation, identity, .{});
     defer allocator.free(bytes);

@@ -22,10 +22,11 @@ const summary = @import("semantic_summary.zig");
 const entry_adapter = @import("entry_adapter.zig");
 const iface = @import("module_interface.zig");
 const builder = @import("module_interface_build.zig");
+const frontend = @import("frontend_runtime.zig");
 
 /// Failures of loading, checking or comparing. `SourceError` means the project
 /// did not load or check; its problem or diagnostics are on the value.
-pub const Error = error{ OutOfMemory, InternalError, SourceError };
+pub const Error = frontend.Error;
 
 /// The module a per-module check synthesizes as its entry when the module
 /// under check is not the project's entry: it imports that module and has an
@@ -177,7 +178,7 @@ const Parts = struct {
         limits.standard_from_provider = if (sources.library) |library| library.standardServed() else false;
         self.project.load(.{ .context = sources, .read = Sources.read, .embed = if (sources.assets != null) Sources.readEmbed else null }, self.entry, limits) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
-            else => return error.SourceError,
+            else => return frontend.hostFailure(err) orelse error.SourceError,
         };
     }
 
@@ -185,7 +186,7 @@ const Parts = struct {
     fn check(self: Parts) Error!void {
         self.index.* = interfaces.buildWithCache(self.project, null, null) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
-            else => return error.SourceError,
+            else => return frontend.hostFailure(err) orelse error.SourceError,
         };
         // MODULE-INTERFACE-CUTOFF-1: every name the check looks up in a
         // module; the index's own validation above resolves only types.
@@ -194,15 +195,11 @@ const Parts = struct {
         self.index.lookups = lookups;
         self.compilation.* = project_compile.Compilation.init(self.index) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
-            else => return error.InternalError,
+            else => return frontend.hostFailure(err) orelse error.InternalError,
         };
         self.cache.context.summaries = self.request;
         defer self.cache.context.summaries = null;
-        self.compilation.checkWithCache(self.cache) catch |err| switch (err) {
-            error.OutOfMemory => return error.OutOfMemory,
-            error.SourceError => return error.SourceError,
-            error.InternalError => return error.InternalError,
-        };
+        try self.compilation.checkWithCache(self.cache);
     }
 };
 

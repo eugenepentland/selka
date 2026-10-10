@@ -52,7 +52,7 @@ pub const Request = struct { view: View = .summary, entry: []const u8 = "" };
 pub const Status = enum { ok, missing, ambiguous };
 
 /// Navigation failures, plus a stdout that refused the document.
-pub const Error = navigation.VisitError;
+pub const Error = navigation.VisitError || navigation_partial.Error;
 
 /// The tables one pass published, whichever path produced them.
 const Published = struct {

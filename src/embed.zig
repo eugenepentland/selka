@@ -14,6 +14,7 @@ const lexer = @import("lexer.zig");
 const byte_literal = @import("byte_literal.zig");
 const format_strings = @import("format_strings.zig");
 const diagnostic = @import("diagnostic.zig");
+const component = @import("lexer_component.zig");
 const Blake3 = std.crypto.hash.Blake3;
 
 /// Builtin spelling that embeds a file as `bytes`.
@@ -207,12 +208,22 @@ fn collectHoles(allocator: std.mem.Allocator, src: source.Source, span: source.S
 /// Lex `src` and find its embed calls, or none without lexing when the source
 /// never spells `embed_`. A lexing failure yields no sites: the parser reports it.
 pub fn scan(allocator: std.mem.Allocator, src: source.Source) std.mem.Allocator.Error![]source.Embed {
+    return scanWithRuntime(allocator, src, null) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => return &.{},
+    };
+}
+
+/// Find embed sites using the selected full-source lexer. Source failures are
+/// left to parsing; component failures propagate even when no site is present.
+pub fn scanWithRuntime(allocator: std.mem.Allocator, src: source.Source, runtime: ?component.Runtime) (diagnostic.Error || component.Error)![]source.Embed {
+    if (runtime) |capabilities| _ = try component.identity(allocator, capabilities);
     if (!mayEmbed(src.bytes)) return &.{};
     var scratch: diagnostic.Sink = .{ .allocator = allocator };
     defer scratch.deinit();
-    const tokens = lexer.lex(allocator, src.bytes, &scratch) catch |err| switch (err) {
-        error.OutOfMemory => return error.OutOfMemory,
-        else => return &.{},
+    const tokens = (if (runtime) |capabilities| component.lex(allocator, src, &scratch, capabilities) else lexer.lex(allocator, src.bytes, &scratch)) catch |err| switch (err) {
+        error.SourceError => return &.{},
+        else => return err,
     };
     defer allocator.free(tokens);
     return sites(allocator, src, tokens);

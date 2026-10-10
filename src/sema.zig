@@ -115,6 +115,7 @@ const diagnostic = @import("diagnostic.zig");
 const records = @import("records.zig");
 const record_layouts = @import("record_layouts.zig");
 const Error = diagnostic.Error;
+const FrontendError = @import("frontend_runtime.zig").Error;
 const instances = @import("generic_instances.zig");
 const semantic_cache = @import("semantic_cache.zig");
 const sema_summaries = @import("sema_summaries.zig");
@@ -1388,7 +1389,7 @@ fn normalizeDiagnostics(sink: *diagnostic.Sink) void {
 /// Syntax size above which checking reserves its checked tables up front.
 const presize_threshold = 1 << 14;
 /// Type-check a single source unit, returning arena-owned resolved instructions.
-pub fn check(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink) Error!typed.Program {
+pub fn check(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink) FrontendError!typed.Program {
     return checkWithNames(allocator, src, program, sink, null);
 }
 fn checkGenericContracts(
@@ -1648,7 +1649,7 @@ fn publishSpecializationSession(
     if (spec_session.*) |*reuse| try checker.publishSpecializations(reuse, allocator, program);
 }
 /// Type-check linked module names and validate ownership, effects, and domain codecs.
-pub fn checkWithNames(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, module_names: ?*Names) Error!typed.Program {
+pub fn checkWithNames(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, module_names: ?*Names) FrontendError!typed.Program {
     return checkCached(allocator, src, program, sink, module_names, null);
 }
 /// Return the index of the first capability parameter after an optional argv list.
@@ -1699,18 +1700,18 @@ fn exportedFunctions(allocator: std.mem.Allocator, module_names: ?*Names, functi
 }
 
 /// Reuse supported checked bodies, then rerun all cross-function validation passes.
-pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, module_names: ?*Names, cache: ?*semantic_cache.Cache) Error!typed.Program {
+pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, module_names: ?*Names, cache: ?*semantic_cache.Cache) FrontendError!typed.Program {
     return checkCore(allocator, src, program, sink, .{ .names = module_names, .cache = cache });
 }
 
 /// Check every library declaration and body without creating an executable entry.
 /// Checked trees are discarded; library success cannot seed executable caches.
-pub fn checkLibrary(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, names: ?*Names) Error!void {
+pub fn checkLibrary(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, names: ?*Names) FrontendError!void {
     _ = try checkLibraryProgram(allocator, src, program, sink, names);
 }
 
 /// Library tree for backend contract verification; never an executable entry.
-pub fn checkLibraryProgram(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, names: ?*Names) Error!typed.Program {
+pub fn checkLibraryProgram(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, names: ?*Names) FrontendError!typed.Program {
     return checkCore(allocator, src, program, sink, .{ .names = names, .entry_required = false });
 }
 
@@ -1737,7 +1738,7 @@ const CheckOptions = struct {
     entry_required: bool = true,
 };
 
-fn checkCore(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, options: CheckOptions) Error!typed.Program {
+fn checkCore(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, options: CheckOptions) FrontendError!typed.Program {
     defer normalizeDiagnostics(sink);
     const checked = checkProgram(allocator, src, program, sink, options) catch |err| {
         // Removal repairs remain available even when an unrelated body fails.
@@ -1749,7 +1750,7 @@ fn checkCore(allocator: std.mem.Allocator, src: source.Source, program: ast.Prog
     return checked;
 }
 
-fn checkProgram(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, options: CheckOptions) Error!typed.Program {
+fn checkProgram(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, options: CheckOptions) FrontendError!typed.Program {
     const cache = options.cache;
     const module_names = options.names;
     const timing = activeTiming(cache);
@@ -1873,6 +1874,7 @@ fn checkProgram(allocator: std.mem.Allocator, src: source.Source, program: ast.P
     timingAdd(timing, "domain_codec_validation", codecs_start);
     const warnings_start = timingStart(timing);
     try warnBindings(allocator, functions, stubs, sink);
+    if (module_names) |names| try names.index.recoverImportUsage(sink.allocator);
     try warnImports(module_names, sink);
     const pass_items: []const diagnostic.Diagnostic = if (plan != null) try allocator.dupe(diagnostic.Diagnostic, sink.items.items[pass_start..]) else &.{};
     std.mem.sort(diagnostic.Diagnostic, sink.items.items, {}, warningLess);
@@ -2013,7 +2015,6 @@ fn warnBindings(allocator: std.mem.Allocator, functions: []const typed.Function,
 fn warnImports(module_names: ?*Names, sink: *diagnostic.Sink) Error!void {
     const names = module_names orelse return;
     const index = names.index;
-    index.recoverImportUsage(sink.allocator);
     for (index.project.order.items) |module| {
         const imports = index.project.modules.items[module].imports;
         for (imports, 0..) |imported, import_index| {

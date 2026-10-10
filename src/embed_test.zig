@@ -8,6 +8,22 @@ const native = @import("native_execute.zig");
 const embed = @import("embed.zig");
 const semantic_key = @import("semantic_key.zig");
 
+// spec: SELFHOST-FRONTEND-AUX-1
+test "frontend auxiliary embed scan propagates component failures" {
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var environ: std.process.Environ.Map = .init(a);
+    defer environ.deinit();
+    try environ.put("MYLANG_LEXER_MODE", "invalid-mode");
+    const runtime: language.lexer_component.Runtime = .{ .io = t.io, .environ = &environ };
+    const plain = try language.source.Source.init(a, "main.my", "func main() -> int:\n    return 0\n");
+    const embedding = try language.source.Source.init(a, "main.my", "const DATA = embed_bytes(\"data.bin\")\n");
+    try t.expectError(error.ComponentMode, embed.scanWithRuntime(a, plain, runtime));
+    try t.expectError(error.ComponentMode, embed.scanWithRuntime(a, embedding, runtime));
+    try t.expectEqual(@as(usize, 1), (try embed.scanWithRuntime(a, embedding, null)).len);
+}
+
 /// A compilation of `text` whose embed calls were read from `directory`.
 fn compile(allocator: std.mem.Allocator, directory: []const u8, text: []const u8) !language.Compilation {
     var compilation = try language.Compilation.init(allocator, "main.my", text);
