@@ -1,12 +1,9 @@
-
 # `set[T]` is an insertion-ordered set over any hashable element type: a
 # dictionary from its elements to unit, so membership, `add`, `remove` and
 # `discard` are the dictionary's expected-constant-time probes. These programs
 # cover the literal and comprehension forms, every method and operator, the
 # Python rendering, sharing and `mut`, arenas, and the structural keys that
 # dictionaries and sets now accept.
-
-
 record SetPoint:
     x: int
     y: int

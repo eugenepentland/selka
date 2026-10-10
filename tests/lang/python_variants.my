@@ -1,5 +1,3 @@
-
-
 record ShapePoint:
     x: i64
     y: i64

@@ -1,4 +1,3 @@
-
 # Loops whose index, counter and accumulator the compiler can prove: every
 # program here keeps the answer the unproven loop gives. These are the
 # value-returning programs of the retired QBE loop-versioning tests
@@ -7,8 +6,6 @@
 # detail) cannot be expected from a guest test, so each program below keeps the
 # nearest input that does not trap and the exact edge value it reaches. The
 # loops run at least 16 iterations, so a guarded fast copy is entered.
-
-
 func total(xs: int[]) -> int:
     mut t = 0
     for i in range(len(xs)):

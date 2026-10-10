@@ -1,4 +1,3 @@
-
 # Value semantics of a copied collection or record: a copy shares nothing
 # observable, so the first write through either name leaves the other alone,
 # however the write is reached (an append, an element or nested element store, a
@@ -7,8 +6,6 @@
 # collector (`cow_test.zig`, D9 stage 3b), which also read the emitted IL for
 # the checks, shares and pins; reference counting, the default runtime, is the
 # only one left (RC-DEFAULT-1) and gives each program the same answer.
-
-
 func copy_then_append() -> int:
     mut xs: int[] = [1, 2]
     mut ys = xs

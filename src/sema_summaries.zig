@@ -49,7 +49,7 @@ pub const Plan = struct {
     /// Instance index of the entry point, which is always checked.
     main: usize,
     /// Previous summary positions invalidated through their actual consumers.
-    history: struct { affected: []bool = &.{}, current: []const ?u32 = &.{} } = .{},
+    history: struct { affected: []bool = &.{}, current: []const ?u32 = &.{}, allocation_fallback: bool = false } = .{},
 
     /// Plan stand-ins for one request. `main` is the entry point's instance.
     pub fn init(allocator: std.mem.Allocator, request: *summary.Request, session: *semantic_cache.Session, main: usize) error{OutOfMemory}!Plan {
@@ -93,7 +93,10 @@ pub const Plan = struct {
         var plan: Plan = .{ .request = request, .prepared = prepared, .session = session, .stand_ins = stand_ins, .main = main };
         plan.history.current = try plan.currentPositions(allocator);
         if (!request.policy.declared) try plan.prepareConsumers(allocator);
-        if (request.policy.demand != null) try plan.prepareDemand(allocator);
+        if (request.policy.demand) |demand| {
+            if (demand.prepare_sources) |prepare| try prepare(demand.context, session.src);
+            try plan.prepareDemand(allocator);
+        }
         return plan;
     }
 
@@ -133,6 +136,51 @@ pub const Plan = struct {
         }
     }
 
+    /// Keep bounded bodies and their callees concrete for Core allocation checks.
+    /// Previous edges live in the previous table; remap by stable key, never by
+    /// current declaration position. A changed bounded body has unknown new edges
+    /// and conservatively requests concrete trees (ordinary body reuse still works).
+    pub fn requireAllocationBodies(self: *Plan, allocator: std.mem.Allocator, syntax: ast.Program) error{OutOfMemory}!void {
+        if ((self.request.body_policy != .allocation_contracts and self.request.policy.demand == null) or self.request.policy.declared) return;
+        const previous = self.request.previous orelse return;
+        const required = try allocator.alloc(bool, previous.summaries.len);
+        defer allocator.free(required);
+        @memset(required, false);
+        var pending: std.ArrayList(u32) = .empty;
+        defer pending.deinit(allocator);
+        for (self.prepared.ordinary_ast) |ast_index| {
+            const bound = syntax.functions[ast_index].policy.effect_bound orelse continue;
+            if (!@import("effect_set.zig").coreAllocationBound(self.session.src, bound)) continue;
+            const position = previous.find(self.prepared.keys[ast_index]) orelse {
+                self.history.allocation_fallback = true;
+                self.request.body_policy = .concrete;
+                if (self.request.policy.demand) |demand| @memset(demand.omitted, false);
+                return;
+            };
+            const stored = previous.summaries[position];
+            if (!std.mem.eql(u8, &stored.context, &self.prepared.contexts[ast_index]) or !std.mem.eql(u8, &stored.region.digest, &self.prepared.recalled.digests[ast_index])) {
+                self.history.allocation_fallback = true;
+                self.request.body_policy = .concrete;
+                if (self.request.policy.demand) |demand| @memset(demand.omitted, false);
+                return;
+            }
+            try pending.append(allocator, position);
+        }
+        while (pending.pop()) |position| {
+            if (required[position]) continue;
+            required[position] = true;
+            for (previous.summaries[position].uses.callees) |callee| if (callee < required.len and !required[callee]) try pending.append(allocator, callee);
+        }
+        for (self.prepared.ordinary_ast, self.stand_ins, 0..) |ast_index, *position, instance| {
+            const previous_position = previous.find(self.prepared.keys[ast_index]) orelse continue;
+            if (required[previous_position] and position.* != null) {
+                if (self.request.policy.demand) |demand| demand.omitted[instance] = false;
+                position.* = null;
+                self.request.stood_in -= 1;
+            }
+        }
+    }
+
     /// The previous summary standing in for ordinary instance `i`'s
     /// cross-function facts, or null when the passes compute them.
     pub fn standIn(self: *const Plan, i: usize) ?*const summary.Summary {
@@ -145,9 +193,10 @@ pub const Plan = struct {
     /// body, or null when checking needs its tree. A lowering host must admit
     /// a safe persisted artifact before a demand request may omit the body.
     pub fn bodyStandIn(self: *const Plan, i: usize) ?*const summary.Summary {
+        if (self.history.allocation_fallback) return null;
         if (self.request.policy.demand) |demand| {
             if (i >= demand.omitted.len or !demand.omitted[i]) return null;
-        } else if (self.request.facts_only) return null;
+        } else if (self.request.body_policy == .concrete) return null;
         return self.standIn(i);
     }
 
@@ -257,7 +306,7 @@ pub const Plan = struct {
     /// lowers publishes one only when it had none to stand in (or repeated in
     /// full), so the next such command does not repeat the passes again.
     pub fn publishes(self: *const Plan) bool {
-        return self.request.policy.demand != null or !self.request.facts_only or self.request.previous == null;
+        return self.history.allocation_fallback or self.request.policy.demand != null or self.request.body_policy != .concrete or self.request.previous == null;
     }
 
     /// This request's summary table, one entry per ordinary instance in order.

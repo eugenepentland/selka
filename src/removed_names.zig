@@ -78,6 +78,8 @@ pub fn rejectMarker(sink: *diagnostic.Sink, bytes: []const u8, span: Span) diagn
 }
 
 const removed_code = "E_REMOVED_SPELLING";
+/// The diagnostic code every removed spelling reports.
+pub const code = removed_code;
 
 /// Whether `rejectLexical` would reject this spelling.
 pub fn removedLexically(spelling: []const u8) bool {

@@ -230,10 +230,11 @@ adopted on 2026-09-06 and reversed on 2026-09-14; read it as history. The gate i
 
 **Current model.** Ordinary expressions should have understandable costs, and APIs
 should make potentially allocating operations recognizable. Ordinary data uses value
-semantics; managed strings, lists and dictionaries are shared references reclaimed by
-a nonmoving tracing collector, with optional `with arena()` regions for bulk release
-([managed memory](managed-memory.md), [retired arenas](managed-memory.md#retired-arenas)). Recoverable errors are
-values with convenient propagation and no exception unwinding.
+semantics; managed strings, arrays and dictionaries use one-count reference counting
+and copy-on-write. Arena regions are removed
+([managed memory](managed-memory.md), [retired arenas](managed-memory.md#retired-arenas)).
+Recoverable errors use declared `fails E` results and boundary `try`, without
+exception unwinding.
 
 **Removed storage-tier goals (2026-09-13).** The earlier direction required an
 allocator capability for heap allocation, deterministic cleanup with no mandatory
@@ -252,8 +253,8 @@ Experiment with small function contracts for no I/O and no allocation. Verify th
 
 **Removed storage-tier direction (2026-09-13):** owned values, shared and exclusive
 borrows, references, slices, pools and typed integer handles. The current model relies
-on the tracing collector, runtime checked handles/generations/leases, and managed
-arenas instead ([managed memory](managed-memory.md), [retired arenas](managed-memory.md#retired-arenas)). Do not
+on one-count reference counting with copy-on-write and runtime checked pool
+handles/generations ([managed memory](managed-memory.md), [retired arenas](managed-memory.md#retired-arenas)). Do not
 promise a borrow checker with no complexity, and prototype any lifetime rule on
 realistic graph, arena and container examples before making the syntax permanent. Raw
 pointers and hardware access still require explicit unsafe operations and documented

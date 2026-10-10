@@ -1,7 +1,5 @@
 # The knucleotide count (NEW-CORE-S1-VIEW-1): a counting build of it allocates in
 # `frequencies` only for the keys it inserts and for the table's growth.
-
-
 func generate(length: int) -> str:
     mut parts: str[] = []
     mut seed = 42

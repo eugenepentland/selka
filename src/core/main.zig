@@ -3,12 +3,14 @@
 //! `typed.Program`: the Core IR, its facts, LLVM emission and the native build.
 const std = @import("std");
 const frontend = @import("frontend.zig");
+const project_entry = @import("project_entry.zig");
 const typed_dump = @import("typed_dump.zig");
 const build = @import("build.zig");
 const print = @import("print.zig");
 const pipeline = @import("pipeline.zig");
 const passes = @import("passes.zig");
 const facts = @import("facts.zig");
+const ir = @import("ir.zig");
 const test_runner = @import("test_runner.zig");
 const check_command = @import("check_command.zig");
 const cli_run = @import("cli_run.zig");
@@ -42,7 +44,7 @@ const test_usage =
 
 /// What stops a command before it has a status: memory, an unwritable stream, or a
 /// test the runner cannot encode.
-pub const Error = test_runner.Error || std.Io.File.Writer.Error || frontend.Error || build.Error || error{ReadFailed};
+pub const Error = test_runner.Error || std.Io.File.Writer.Error || frontend.Error || project_entry.Error || build.Error || error{ReadFailed};
 
 /// Dispatch one command; the process exit status is its result.
 pub fn main(init: std.process.Init) !u8 {
@@ -66,19 +68,24 @@ pub fn developer(init: std.process.Init, args: []const []const u8) Error!u8 {
     return 2;
 }
 
+fn developerFailure(init: std.process.Init, report: []const u8, err: (project_entry.Error || frontend.Error || error{ReadFailed})) Error!u8 {
+    if (err == error.OutOfMemory) return error.OutOfMemory;
+    if (err == error.InternalError) return error.InternalError;
+    try std.Io.File.stderr().writeStreamingAll(init.io, report);
+    return switch (err) {
+        error.ConfigurationFailed => 2,
+        error.PolicyDenied => 3,
+        else => 1,
+    };
+}
+
 fn dumpTyped(init: std.process.Init, path: []const u8, filter: ?[]const u8) !u8 {
     const allocator = init.arena.allocator();
-    const entry = frontend.entryOf(path);
+    var report: std.ArrayList(u8) = .empty;
+    const entry = project_entry.resolve(allocator, init.io, path, &report) catch |err| return developerFailure(init, report.items, err);
     var session = frontend.Session.init(init.gpa, init.io, entry.root);
     defer session.deinit();
-    var report: std.ArrayList(u8) = .empty;
-    const checked = session.checkFile(allocator, path, &report) catch |err| switch (err) {
-        error.SourceError, error.ReadFailed => {
-            try std.Io.File.stderr().writeStreamingAll(init.io, report.items);
-            return 1;
-        },
-        else => return err,
-    };
+    const checked = entry.check(allocator, &session, &report) catch |err| return developerFailure(init, report.items, err);
     const text = try typed_dump.render(allocator, checked.program, filter);
     try std.Io.File.stdout().writeStreamingAll(init.io, text);
     return 0;
@@ -86,17 +93,11 @@ fn dumpTyped(init: std.process.Init, path: []const u8, filter: ?[]const u8) !u8 
 
 fn dumpIr(init: std.process.Init, path: []const u8, with_facts: bool) !u8 {
     const allocator = init.arena.allocator();
-    const entry = frontend.entryOf(path);
+    var report: std.ArrayList(u8) = .empty;
+    const entry = project_entry.resolve(allocator, init.io, path, &report) catch |err| return developerFailure(init, report.items, err);
     var session = frontend.Session.init(init.gpa, init.io, entry.root);
     defer session.deinit();
-    var report: std.ArrayList(u8) = .empty;
-    const checked = session.checkFile(allocator, path, &report) catch |err| switch (err) {
-        error.SourceError, error.ReadFailed => {
-            try std.Io.File.stderr().writeStreamingAll(init.io, report.items);
-            return 1;
-        },
-        else => return err,
-    };
+    const checked = entry.check(allocator, &session, &report) catch |err| return developerFailure(init, report.items, err);
     var refusal: build.Refusal = .{};
     var module = build.buildModuleSource(allocator, checked.program, checked.src, &refusal) catch |err| switch (err) {
         error.Unsupported => {
@@ -108,8 +109,10 @@ fn dumpIr(init: std.process.Init, path: []const u8, with_facts: bool) !u8 {
         else => return err,
     };
     var ranges: std.ArrayList(u8) = .empty;
+    var result_known: []const ?facts.Facts = &.{};
     if (with_facts) {
         const result = try passes.runWithScratch(allocator, init.gpa, &module, .trusted);
+        result_known = result.known;
         for (module.functions.items, result.known) |function, maybe| {
             const known = maybe orelse continue;
             try ranges.print(allocator, "facts {s}:", .{function.name});
@@ -128,6 +131,17 @@ fn dumpIr(init: std.process.Init, path: []const u8, with_facts: bool) !u8 {
             }
         }
     }
+    if (with_facts) {
+        // Whole-program field intervals (NEW-CORE-F2-FIELD-1), from the final facts' writes.
+        const table = try @import("fields.zig").hulls(allocator, &module, result_known, try @import("fields.zig").closedTypes(allocator, &module), false);
+        for (table.types, 0..) |maybe, k| {
+            const fields = maybe orelse continue;
+            for (fields, 0..) |range, field| if (range) |r| {
+                const full = facts.typeRange(module.compound(@fromBackingInt(@as(u32, @intCast(k + ir.Type.first_compound)))).record[field]) orelse continue;
+                if (r.lo > full.lo or r.hi < full.hi) try ranges.print(allocator, "field type{d}.{d}: [{d}, {d}]\n", .{ k + ir.Type.first_compound, field, r.lo, r.hi });
+            };
+        }
+    }
     const text = try print.module(allocator, &module);
     try std.Io.File.stdout().writeStreamingAll(init.io, text);
     try std.Io.File.stdout().writeStreamingAll(init.io, ranges.items);
@@ -141,6 +155,9 @@ fn sabotageFlag(arg: []const u8) ?@FieldType(pipeline.Options, "facts") {
         .{ "--sabotage-facts=widening", .sabotage_widening },
         .{ "--sabotage-facts=length", .sabotage_length },
         .{ "--sabotage-facts=overflow", .sabotage_overflow },
+        .{ "--sabotage-facts=index", .sabotage_index },
+        .{ "--sabotage-facts=field", .sabotage_field },
+        .{ "--sabotage-facts=version", .sabotage_version },
     };
     for (flags) |flag| if (std.mem.eql(u8, arg, flag[0])) return flag[1];
     return null;
@@ -371,11 +388,15 @@ fn coverageCommand(init: std.process.Init, arguments: []const []const u8) !u8 {
         var scratch = std.heap.ArenaAllocator.init(init.gpa);
         defer scratch.deinit();
         const allocator = scratch.allocator();
-        const entry = frontend.entryOf(path);
+        var report: std.ArrayList(u8) = .empty;
+        const entry = project_entry.resolve(allocator, init.io, path, &report) catch |err| {
+            if (err == error.OutOfMemory) return err;
+            try out.print(init.arena.allocator(), "frontend {s}\t{s}\n", .{ path, std.mem.sliceTo(report.items, '\n') });
+            continue;
+        };
         var session = frontend.Session.init(init.gpa, init.io, entry.root);
         defer session.deinit();
-        var report: std.ArrayList(u8) = .empty;
-        const checked = session.checkFile(allocator, path, &report) catch |err| switch (err) {
+        const checked = entry.check(allocator, &session, &report) catch |err| switch (err) {
             error.OutOfMemory => return err,
             else => {
                 const first = std.mem.sliceTo(report.items, '\n');

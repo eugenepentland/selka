@@ -1,11 +1,9 @@
-
 extern func runtime_bench_now(host: Host) -> i64 effects(host)
+
 
 # Row `option_handle` of benchmarks/runtime/expanded/compute/main.my as a program of its own, like compute_s0.my: arguments
 # `size iterations seed` (the original takes the row name first), the same setup, kernel,
 # checksum and output `checksum elapsed`. The frames, flags, ordered values and function value other rows need are left out; none of them reaches this checksum.
-
-
 func optional(x: int, phase: int) -> int?:
     if x % 4 == 0:
         return None

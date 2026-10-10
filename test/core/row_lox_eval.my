@@ -1,15 +1,16 @@
-
 # Split from benchmarks/runtime/expanded/collections/main.my; identical timed work.
-
 extern func runtime_bench_now(host: Host) -> i64 effects(host)
+
 
 enum Value:
     integer(value: int)
     boolean(value: bool)
 
+
 record Instruction:
     op: int
     arg: int
+
 
 func integer(value: Value) -> int:
     match value:
@@ -18,12 +19,14 @@ func integer(value: Value) -> int:
         case Value.boolean(value=_):
             return 0
 
+
 func boolean(value: Value) -> bool:
     match value:
         case Value.boolean(value=b):
             return b
         case Value.integer(value=_):
             return False
+
 
 func execute(program: Instruction[], size: int, seed: int) -> int:
     mut stack: Value[] = []
@@ -70,6 +73,7 @@ func execute(program: Instruction[], size: int, seed: int) -> int:
             return integer(stack.pop())
     return 0
 
+
 func parse_number(text: str) -> int:
     match parse_int(text):
         case Some(n):
@@ -77,8 +81,10 @@ func parse_number(text: str) -> int:
         case None:
             return 0
 
+
 func batch_result(size: int, batch: int, seed: int, program: Instruction[]) -> int:
     return execute(program, size, seed + batch)
+
 
 func main(args: str[], host: Host, out: Stream) -> int:
     if len(args) != 3:

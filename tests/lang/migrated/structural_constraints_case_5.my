@@ -1,36 +1,40 @@
-
-
 constraint Prices[P] = copy + op(price(policy: P, subtotal: int) -> int effects())
+
 
 func checkout[P: Prices](policy: P, subtotal: int) -> int effects():
     return P.price(policy, subtotal) + 500
 
+
 func forward[Q: Prices](policy: Q, subtotal: int) -> int effects():
     return checkout[Q](policy, subtotal)
+
 
 func inline_checkout[P: copy + op(price(policy: P, subtotal: int) -> int effects())](policy: P, subtotal: int) -> int effects():
     return P.price(policy, subtotal) + 500
 
+
 func named_to_inline[P: Prices](policy: P, subtotal: int) -> int effects():
     return inline_checkout[P](policy, subtotal)
+
 
 func inline_to_named[P: copy + op(price(policy: P, subtotal: int) -> int effects())](policy: P, subtotal: int) -> int effects():
     return forward[P](policy, subtotal)
 
+
 domain DiscountPrices: int:
     func make(discount: int) -> DiscountPrices:
         return wrap[DiscountPrices](discount)
-
     func price(policy: DiscountPrices, subtotal: int) -> int effects():
         return subtotal - unwrap(policy)
+
 
 domain FixedPrices: int:
     func make(amount: int) -> FixedPrices:
         return wrap[FixedPrices](amount)
-
     func price(policy: FixedPrices, subtotal: int) -> int effects():
         _ = subtotal
         return unwrap(policy)
+
 
 public func program() -> int:
     mut real = DiscountPrices.make(250)

@@ -1,7 +1,5 @@
 # scan_split: str.split(separator) over LIB.md's 4 MB text. Each piece is a
 # fresh str until shared string slices land (plan section 5.4).
-
-
 func shared_text() -> str:
     mut block = "".join([for i in range(2000) yield f"item{i},{(i * 7919) % 100003},{'xxxxxx'[:i % 7]}\n"])
     return "".join([for _ in range(110) yield block])

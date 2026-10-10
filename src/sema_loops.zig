@@ -408,16 +408,17 @@ fn statementForRange(comptime Checker: type, self: *Checker, stmt: ast.Statement
     self.restorePending(before);
     const step: typed.StatementId = if (stepped.lower) |lower| try lower.advance(index, limit) else @fromBackingInt(self.statements.items.len);
     if (stepped.lower == null) try self.statements.append(self.allocator, .{ .span = range.name, .terminates = false, .data = .{ .assign = .{ .slot = index, .value = next } } });
-    var children: std.ArrayList(typed.StatementId) = .empty;
-    try children.append(self.allocator, @fromBackingInt(self.statements.items.len));
-    try self.statements.append(self.allocator, .{ .span = range.name, .terminates = false, .data = .{ .initialize = .{ .slot = index, .value = start } } });
-    try children.append(self.allocator, @fromBackingInt(self.statements.items.len));
-    try self.statements.append(self.allocator, .{ .span = range.name, .terminates = false, .data = .{ .initialize = .{ .slot = limit, .value = end } } });
-    try children.appendSlice(self.allocator, try stepped.setup());
+    const setup = try stepped.setup();
     const iteration = if (rebound) try rebindFirst(Checker, self, range.name, variable, index_node, body.id) else body.id;
-    try children.append(self.allocator, @fromBackingInt(self.statements.items.len));
-    try self.statements.append(self.allocator, .{ .span = stmt.span, .terminates = false, .data = .{ .loop = .{ .id = loop_id, .condition = condition, .body = iteration, .step = step } } });
-    return .{ .block = try children.toOwnedSlice(self.allocator) };
+    return .{ .range_loop = .{
+        .parts = try self.allocator.dupe(typed.RangeParts, &.{.{
+            .binding = range.name,
+            .start = .{ .slot = index, .value = start },
+            .end = .{ .slot = limit, .value = end },
+            .setup = setup,
+            .loop = .{ .id = loop_id, .condition = condition, .body = iteration, .step = step },
+        }}),
+    } };
 }
 /// PY-FOR-REBIND-1: the visible loop variable of a counting loop whose body
 /// assigns it: an ordinary mutable local, bound for the whole body.

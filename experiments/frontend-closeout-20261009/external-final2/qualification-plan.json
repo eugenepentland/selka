@@ -1,0 +1,19 @@
+{
+  "state": "complete; all checks pass; source guard unchanged",
+  "previous_checkpoint": "external/REPORT.md",
+  "external_output": "external-final2",
+  "range_core_label": "final2",
+  "range_native_trials": [
+    "native-final2",
+    "native-endpoints-final2"
+  ],
+  "mode_commands": 450,
+  "eda_property_seed": 8679566789041942096,
+  "native_cases": {
+    "lox": 974,
+    "eda": 34
+  },
+  "baseline_compiler_sha256": "5e072ee17b825cfbd40ed5533c3bce9f166ce4ae576395020cd5e435cc45ed11",
+  "prior_checkpoint_compiler_sha256": "aca89445a3f2d4f2dddbf68b6441c3473374cd37b2e6cde68929e0690def737f",
+  "compiler_sha256": "21319448ba51241f917c040004d1a3c7123e5516d5f0a766d7cff557294793f2"
+}

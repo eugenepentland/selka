@@ -4,7 +4,7 @@
 //! type and length arguments. Its checked body is keyed by the canonical
 //! specialization fingerprint (`semantic_key.specializationFingerprint`) and
 //! persisted in the shared `semantic-cache-v2` durable store under the explicit
-//! `specialization-v1` payload kind. Replay requires:
+//! `specialization-v2` payload kind. Replay requires:
 //!
 //! * the canonical fingerprint to be re-derived from fresh inputs;
 //! * the defining template's declaration region/body bytes to be byte-identical;
@@ -91,6 +91,8 @@ pub const Statistics = struct {
     reused: usize = 0,
     stored: usize = 0,
     bypassed: usize = 0,
+    /// Catalog name visits for specialization identity indexing/resolution.
+    record_name_visits: usize = 0,
     misses: MissCounts = @splat(0),
 };
 
@@ -280,10 +282,11 @@ pub const Session = struct {
                 self.noteMiss(.no_entry);
                 return null;
             };
-            const decoded = (try persistent.lookupSpecialization(self.allocator, stable, context)) orelse {
+            var decoded = (try persistent.lookupSpecialization(self.allocator, stable, context)) orelse {
                 self.noteMiss(.no_entry);
                 return null;
             };
+            errdefer decoded.deinit();
             try self.backend.memory.reserve(1);
             self.backend.memory.rememberAssumeCapacity(decoded, self.nextSequence());
             break :blk self.backend.memory.entries.items.len - 1;

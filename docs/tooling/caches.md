@@ -51,8 +51,8 @@ identity, bootstrap-language version, target, runtime ABI, effects/capabilities
 contract and invoking flags. The contract fingerprint is mixed into every syntax,
 verdict, checked-body and specialization key, so changing any
 dimension invalidates an entry even when the source bytes are identical. The
-on-disk format is `mylang-frontend-cache-v3`; the runtime ABI dimension is
-`runtime-abi-v0-unfrozen` until Wave 4 freezes `runtime-abi-v1`. See
+on-disk format is `mylang-frontend-cache-v7`; the runtime ABI dimension is
+`runtime-abi-v3` and changes when the native ABI changes. See
 [the incremental contract](../experiments/incremental-contract.md#cache-key-contract).
 
 | layer | stored | key also includes | skipped on a hit | still runs fresh |
@@ -61,7 +61,7 @@ on-disk format is `mylang-frontend-cache-v3`; the runtime ABI dimension is
 | project verdict | the rendered warning text of one successful `check-project` | every loaded module's name, exact path and exact bytes, plus the diagnostic format | declaration/interface resolution and the entire semantic check | loading every module from disk and recomputing the key |
 
 Single-file commands (`check`, `run`) key syntax with body start `0`;
-project commands key it with the module header's body start, so the two shapes
+project commands key it with the body start after imports, so the two shapes
 never alias. A syntax hit returns independently owned AST storage: the two
 growable `Program` lists are persisted as exact-length owned slices, so a restored
 list owns exactly its items and never advertises capacity it did not allocate.
@@ -165,8 +165,8 @@ a type interned while checking are always checked.
 Two independent guards keep a stand-in from outliving a type it depends on.
 The dependency context is transitive: a declaration's fingerprint covers every
 declaration it reaches, in an order-independent way (so recursive and mutually
-recursive types are covered), a composite type spelling such as `list[Inner]`,
-`dict[str, Inner]`, `Option[Inner]`, a tuple, an array or a callback type
+recursive types are covered), a composite type spelling such as `Inner[]`,
+`dict[str, Inner]`, `Inner?`, `FixedArray[Inner, N]` or a callable type
 references each component type, a type declaration's fingerprint covers its
 source text, and a facade's re-exported name binds the declaration it names.
 Independently, a summary records the transitive shape digest of every catalog
@@ -175,11 +175,18 @@ and is not stood in unless every one of them still has that shape. Renaming a
 field of a record a body reaches only through `o.items[0]` therefore re-checks
 that body.
 
-`build`, `run`, `run-project` and `test` read the same summaries but check every
-body, because building Core IR needs the checked tree; a summary stands in only for an unchanged body's facts and pass
-diagnostics, so the passes walk only changed bodies. Such a command writes the
-slot only when it had no summaries or repeated in full. A request served by
-summaries neither reads nor publishes the checked-body store below.
+Native builds also use lowering receipts to omit unchanged checked trees when
+cached Core IR can supply the body. The receipts validate the declaration's
+dependency context and source region. External debug locations additionally
+require the same original source file, origin order and exact file bytes; this
+lets an unchanged body use locations in another declaration without restoring
+its typed tree. Changed or missing authority requires a complete body. If later
+lowering needs an omitted body and its cached IR is unavailable, the build
+repeats with complete frontend bodies. Allocation-bounded functions and their
+transitive callees retain concrete trees for allocation diagnostics.
+
+Where a complete tree is needed, the checked-body store below can replay it.
+The summary facts still avoid repeating global pass work for unchanged bodies.
 
 `checked_bodies.reused` in the work report counts stood-in bodies; `performed`
 counts the bodies actually checked. After a one-line body edit only that body
@@ -204,7 +211,7 @@ checked program without summaries (above), and native-test preparation use the
 same checked-body query path. The durable store lives under
 `<cache-dir>/semantic/` when `--cache-dir` (or `MYLANG_FRONTEND_CACHE`) is given
 and `.mylang-cache/semantic/` otherwise; it is one contract-namespaced directory of
-versioned `semantic-cache-v3` files. Each file contains one stable declaration
+versioned `semantic-cache-v6` files. Each file contains one stable declaration
 key, the dependency context, the checked contract digest, the owned relocatable
 `typed.Function`/node/statement tree, referenced stable identities, source
 region/body bytes, the body-local binding-warning notes (code, severity, span and
@@ -226,6 +233,19 @@ fresh project's effect, mutation, codec and
 binding-warning passes always run over the copied body, so a replayed body cannot
 carry an obsolete global verdict and warning locations relocate with the source.
 
+Supported dynamic arrays, tuples and function-value types store portable
+interner inputs alongside their shape digests. Replay reconstructs them through
+the current checker and verifies their fresh shapes before accepting the body.
+Function-value contracts come from current declarations and the current use
+site, including its expected callback type where available. Generic call sites
+can reuse the target's standalone contract when its complete fresh shape
+matches. Dynamic nominal types must already exist in the current catalog with
+the same unique name and transitive shape; replay never expands a nominal graph
+speculatively. Unsupported or ambiguous recipes fall back to checking.
+Replayed nodes and statements are copied directly into
+their final arrays, avoiding an intermediate outer-array allocation. The v6
+format requires older checked-body entries to be repopulated once.
+
 ```console
 $ mylang check app/main.my --cache-dir=.mylang-cache/demo --report
 {"version":"work-report-v1","command":"check","reused":false,...,"checked_bodies":{"status":"miss","performed":3,"reused":0},...}
@@ -234,7 +254,7 @@ $ mylang check app/main.my --cache-dir=.mylang-cache/demo --report
 ```
 
 Retained in-memory storage is governed by one shared budget: ordinary checked
-bodies, `symbolic-template-v1` templates and `specialization-v1` instances all
+bodies, `symbolic-template-v1` templates and `specialization-v2` instances all
 charge their owned entry rows, exact arena backing allocations including
 per-chunk allocator bookkeeping, stable keys, and the exact stable-key
 hash-index backing allocation — including the standard map's minimum capacity,
@@ -255,17 +275,18 @@ abstract-checker version. Scoped-bound resolution, structural validation and the
 whole-graph effect propagation still run on every request, so a replayed template
 never carries a stale transitive verdict.
 
-A third entry kind, `specialization-v1`, stores one checked concrete
+A third entry kind, `specialization-v2`, stores one checked concrete
 specialization under the canonical key over the template identity, ordered
 positional type/length descriptors, transitive name-ordered provider contracts,
 template constraint dependencies, declared effect/mutation/return-origin
 contracts and build context. Replay additionally requires the defining template's
 declaration region/body to be byte-identical and every stored function/record
 reference to remap to exactly one fresh identity. Ordinary callees remap by
-stable declaration key; nested specializations remap by canonical fingerprint
-only when the fresh run has already instantiated them, so a nested or mutually
-recursive chain is a conservative miss when its dependency is not yet present,
-while a self-recursive specialization remaps to its own fresh instance. Missing,
+stable declaration key; nested specializations remap by canonical fingerprint. Missing instances may
+be preregistered from a validated durable recipe only after matching the fresh
+template, source bytes, context, current type arguments and re-derived fingerprint.
+Registration uses the normal bounded instance registry, so recursive references
+resolve to their existing fresh instance without recursively checking bodies. Missing,
 ambiguous, interned-catalog or synthesized-lambda references fall back to a fresh
 check. The specialization payload stores no effect or mutation verdict: the whole
 graph `effects.check` and `origins.check` passes always rerun over the combined
@@ -299,8 +320,7 @@ its body start, and reused only when all three match exactly; no hash comparison
 can produce a false hit. A hit skips the interface phase's second lexer pass and
 the body parser, and deep-copies the syntax into the fresh project, so returned
 syntax never borrows retained storage and clearing or eviction cannot invalidate
-it. Everything else still runs: source is reloaded and re-lexed for module
-headers, and symbols, exports, resolution, visibility, ownership, effects and
+it. Everything else still runs: source is reloaded and re-lexed for import discovery, and symbols, exports, resolution, visibility, ownership, effects and
 every body are checked again. Retention is 256 entries and 16 MiB of entry arena
 capacity with oldest-insertion eviction; larger entries are bypassed rather than
 stored. In the session below the two-module project is checked, then `main.my` is

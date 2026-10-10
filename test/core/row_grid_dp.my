@@ -1,11 +1,9 @@
-
 extern func runtime_bench_now(host: Host) -> i64 effects(host)
+
 
 # Row `grid_dp` (CONTRACT.md): a minimum-cost path DP over two nested dynamic grids.
 # Arguments `size iterations seed`; output `checksum elapsed`. Both grids are `list[list[int]]`,
 # built row by row and released inside every batch.
-
-
 # The largest w with w * w <= n, the same integer loop in every language.
 func isqrt(n: int) -> int:
     mut w = 0

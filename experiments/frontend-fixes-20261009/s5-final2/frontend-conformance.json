@@ -1,0 +1,26 @@
+{
+  "expected_per_mode": 1547,
+  "original_per_mode": 1518,
+  "additional_per_mode": 29,
+  "reference_sha256": "b6703c9fc0f135844131130cab4c0c8e263d2966ac5e85d24d380ae5deece3bc",
+  "frontend_reference_sha256": "670f7feb5d02526605ee426294e2f52e31173567585440452275c313d34d3402",
+  "compiler_sha256": "a156c8c0351757a787dc2cea9c54a6e8f2cba45432c1bb491b1f92d73969a923",
+  "name_mappings": {
+    "dict_comprehensions::test_nested_clauses_read_left_to_right": "dict_comprehensions::test_explicit_nested_loops_read_left_to_right",
+    "dict_comprehensions::test_two_names_and_several_filters_in_a_list_comprehension": "dict_comprehensions::test_destructuring_loops_and_combined_comprehension_filter"
+  },
+  "totals": {
+    "debug": {
+      "match": 1547,
+      "mismatch": 0,
+      "unsupported": 0
+    },
+    "release": {
+      "match": 1547,
+      "mismatch": 0,
+      "unsupported": 0
+    }
+  },
+  "source_guard": true,
+  "qualified": true
+}

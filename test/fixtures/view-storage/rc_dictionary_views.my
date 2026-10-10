@@ -1,5 +1,3 @@
-
-
 func mapping_of(view: DictValues[int, int]) -> dict[int, int]:
     return view.mapping
 
@@ -45,11 +43,10 @@ record HeldPair:
 
 
 func escape_held_pair() -> HeldPair:
-    with arena() as scratch:
-        mut mapping = {1: [7, 8]}
-        mut view = mapping.values()
-        mut result = HeldPair(values=view, items=mapping.items(), saved=[view, view])
-        return scratch.escape(result)
+    mut mapping = {1: [7, 8]}
+    mut view = mapping.values()
+    mut result = HeldPair(values=view, items=mapping.items(), saved=[view, view])
+    return result
 
 
 # spec-case: DICT-VIEWS-1
@@ -84,9 +81,8 @@ record HeldOuter:
 
 
 func held_through_arena(mapping: dict[int, int]) -> HeldOuter:
-    with arena() as scratch:
-        mut result = HeldOuter(view=mapping.values())
-        return scratch.escape(result)
+    mut result = HeldOuter(view=mapping.values())
+    return result
 
 
 # spec-case: DICT-VIEWS-1

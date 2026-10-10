@@ -1,21 +1,37 @@
-
 # Python's numeric literal spellings: hexadecimal, octal and binary integers,
 # underscores between digits, and leading-dot, trailing-dot and underscored
 # floats. Each spelling has the value of its decimal form and the same typing
 # rules, and an unsuffixed literal that fits the expected type takes it, in a
 # `const` initializer as in a typed local.
-
 import number_literal_helpers
 
 const MASK: u32 = 4278190080
+
+
 const TOP: u32 = 0xFF000000
+
+
 const LOW: u8 = 0xFF
+
+
 const WIDE: u64 = 0xFFFF_FFFF_FFFF_FFFF
+
+
 const FLOOR: i8 = -0x80
+
+
 const SUM: u32 = 0xFF + 1
+
+
 const NEXT: u32 = TOP + 1
+
+
 const AREA: u64 = 0x10 * 0x10
+
+
 const ABOVE: bool = 0x10 > 0xF
+
+
 const EXTENT: i64 = 0b1000_0000
 
 
@@ -40,8 +56,14 @@ func repeat(value: u32) -> u32:
 
 
 const DOUBLED: u32 = twice(0x10)
+
+
 const TWICE_MORE: u32 = twice(DOUBLED) + 1
+
+
 const CLAMPED: u8 = clamp_low(0x20)
+
+
 const REPEATED: u32 = repeat(0x10)
 
 

@@ -1,7 +1,6 @@
 import random
 import time
 
-
 func sample(clock: Clock, rng: Entropy) -> Result[int, str] effects(clock, random, managed_allocation):
     match time.now(clock):
         case Ok(instant):

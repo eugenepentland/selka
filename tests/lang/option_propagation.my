@@ -1,10 +1,7 @@
-
 # Prefix `try` propagates `None` from an optional-returning function:
 # `None` has no payload, so the optional element types need not agree. The
 # class cases run under `--gc-stress`, where every allocation collects, so the
 # unwrapped reference must stay alive across the allocation that follows it.
-
-
 record Node:
     value: int
     left: Node?

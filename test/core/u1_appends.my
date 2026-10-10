@@ -1,0 +1,162 @@
+# Appends in loops with the length and capacity in registers (NEW-CORE-U1-STATE-2):
+# the header must be current wherever anything else reads the list, frees it or hands
+# it on. Every answer here is the base compiler's (main 35df839be). Any argument makes
+# `main` trap in a loop that appends.
+record Item:
+    key: int
+    name: str
+    weight: float
+
+
+func total(xs: int[]) -> int:
+    mut t = 0
+    for x in xs:
+        t = (t * 31 + x) % 1000003
+    return t
+
+
+func checksum(b: byte_buffer) -> int:
+    mut t = 0
+    for i in range(len(b)):
+        t = (t * 31 + b[i]) % 1000003
+    return t
+
+
+func squares(n: int) -> int[]:
+    mut xs: int[] = []
+    for i in range(n):
+        xs.append(i * i)
+    return xs
+
+
+# Two lists filled in one loop, one only on some iterations.
+func split(n: int) -> int:
+    mut evens: int[] = []
+    mut odds: int[] = []
+    for i in range(n):
+        if i % 2 == 0:
+            evens.append(i)
+        else:
+            odds.append(i * 3)
+    return total(evens) * 1000 + total(odds) + len(evens) * 7 + len(odds)
+
+
+# Break, continue and an early return out of an appending loop.
+func control(n: int, stop: int) -> int:
+    mut xs = [100]
+    for i in range(n):
+        if i % 5 == 0:
+            continue
+        if i == stop:
+            break
+        xs.append(i)
+        if len(xs) > 1000:
+            return -1
+    for i in range(n):
+        xs.append(i)
+        if i * i > stop:
+            return total(xs) + len(xs)
+    return total(xs) * 3 + len(xs)
+
+
+# Nested loops appending to one list, and a read between two appending loops.
+func nested(n: int) -> int:
+    mut xs: int[] = []
+    for i in range(n):
+        xs.append(-i)
+        for j in range(i):
+            xs.append(j)
+    mut middle = len(xs)
+    for i in range(n):
+        xs.append(middle + i)
+    return total(xs) + middle * 1000
+
+
+# Records and lists as elements: the list's release frees what its length covers.
+func records(n: int) -> int:
+    mut items: Item[] = []
+    mut rows: int[][] = []
+    for i in range(n):
+        items.append(Item(key=i, name=str(i), weight=float(i) * 0.5))
+        rows.append([i, i + 1])
+    mut t = 0
+    for it in items:
+        t = t + it.key + len(it.name)
+    for row in rows:
+        t = t + row[1]
+    return t * 10 + len(items) + len(rows)
+
+
+# A buffer filled from pieces in a loop, then a list loop that builds another buffer.
+func buffers(n: int) -> int:
+    mut empty: int[] = []
+    mut out = byte_buffer(empty)
+    mut piece = b"abcdefghijklmnop"
+    for i in range(n):
+        _ = out.append_range(piece, i % 5, 5 + i % 11)
+    mut second = byte_buffer(empty)
+    for i in range(n):
+        _ = second.append_range(piece, 0, 1 + i % 16)
+        if i % 100 == 99:
+            _ = second.append_range(out, 0, 7)
+    return checksum(out) * 1000 + checksum(second) + len(out) + len(second)
+
+
+# A loop that reads its own list's length keeps the header current every time.
+func bounded(n: int) -> int:
+    mut xs: int[] = []
+    while len(xs) < n:
+        xs.append(len(xs) * 2)
+    return total(xs)
+
+
+# The list handed to a call on some iterations.
+func handed(n: int) -> int:
+    mut xs: int[] = []
+    mut seen = 0
+    for i in range(n):
+        xs.append(i)
+        if i % 10 == 9:
+            seen = seen + total(xs)
+    return seen + len(xs)
+
+
+# Appends after a loop, between two loops and after both: ordinary appends of a value
+# whose loop kept its length in slots.
+func tails(n: int) -> int:
+    mut xs: int[] = []
+    for i in range(n):
+        xs.append(i)
+        xs.append(i + 1)
+    xs.append(7)
+    xs.append(8)
+    for i in range(n):
+        xs.append(-i)
+    xs.append(9)
+    mut empty: int[] = []
+    mut b = byte_buffer(empty)
+    for i in range(n):
+        _ = b.append_range(b"xyz", i % 3, 3)
+    _ = b.append_range(b"tail", 0, 4)
+    return total(xs) * 10 + len(xs) + checksum(b) * 100000 + len(b)
+
+
+func trap_in_loop(n: int, limit: int) -> int:
+    mut xs: int[] = []
+    for i in range(n):
+        xs.append(i)
+        if i == limit:
+            mut ys = [1]
+            xs.append(ys[i])
+    return len(xs)
+
+
+func main(args: str[], out: Stream) -> int:
+    mut n = 300 + len(args) * 2000
+    out.print(total(squares(n)), split(n), control(n, 37), control(n, n * n))
+    out.print(nested(n // 10), records(n), buffers(n), bounded(n), handed(n), tails(n))
+    mut limit = n * 2
+    if len(args) > 0:
+        limit = 1234
+    out.print(trap_in_loop(n, limit))
+    return 0

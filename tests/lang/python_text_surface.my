@@ -1,37 +1,47 @@
-
 const TEXT: str = "aéaéa"
+
+
 const OCTETS: bytes = b"a\xffa\xffa"
+
 
 record Tagged:
     word: bytes
     tag: int
 
+
 func byte_key(value: Tagged) -> bytes:
     return value.word
+
 
 func mixed_key(value: Tagged) -> tuple[bytes, str, int]:
     return value.word, "same", 0
 
-func generic_text[T:integer](value: T) -> str:
+
+func generic_text[T: integer](value: T) -> str:
     return repr(value)
 
-func generic_methods[T:copy](marker: T, text: str, raw: bytes) -> bool:
+
+func generic_methods[T: copy](marker: T, text: str, raw: bytes) -> bool:
     _ = marker
     return text.rfind("é", 1, -1) == 3 and raw.strip(b"a") == b"\xffa\xff"
 
-func generic_sorted[T:copy](marker: T) -> bytes[]:
+
+func generic_sorted[T: copy](marker: T) -> bytes[]:
     _ = marker
     return sorted([b"\xff", b"a", b""])
 
-func generic_existing[T:copy](marker: T, values: bytes[]) -> bytes[]:
+
+func generic_existing[T: copy](marker: T, values: bytes[]) -> bytes[]:
     _ = marker
     mut copied = values
     copied.sort(reverse=True)
     return sorted(copied)
 
-func generic_reprs[T:copy](marker: T, raw: bytes, value: float) -> str:
+
+func generic_reprs[T: copy](marker: T, raw: bytes, value: float) -> str:
     _ = marker
     return repr(raw) + repr(value)
+
 
 # spec: PY-BYTES-SORT-1
 public func test_sorted_bytes_unsigned_prefix_order_and_value_copy() -> bool:
@@ -39,12 +49,14 @@ public func test_sorted_bytes_unsigned_prefix_order_and_value_copy() -> bool:
     mut answer = sorted(values)
     return answer == [b"", b"a", b"a\x00", b"\x80", b"\xff"] and values[0] == b"\xff"
 
+
 # spec-case: PY-BYTES-SORT-1
 public func test_sort_bytes_in_place_and_reverse() -> bool:
     mut values = [b"a", b"\xff", b"", b"a"]
     mut alias = values
     values.sort()
     return values == [b"", b"a", b"a", b"\xff"] and alias[0] == b"a" and sorted(values, reverse=True)[0] == b"\xff"
+
 
 # spec-case: PY-BYTES-SORT-1
 public func test_bytes_key_and_tuple_keys_preserve_equal_key_order() -> bool:
@@ -54,9 +66,11 @@ public func test_bytes_key_and_tuple_keys_preserve_equal_key_order() -> bool:
     values.sort(key=byte_key, reverse=True)
     return first[0].tag == 2 and first[1].tag == 1 and first[2].tag == 3 and reverse[0].tag == 1 and reverse[1].tag == 3 and values[1].tag == 3
 
+
 # spec-case: PY-BYTES-SORT-1
 public func test_bytes_sort_and_keys_in_generic_body() -> bool:
     return generic_sorted(1) == [b"", b"a", b"\xff"]
+
 
 # spec: PY-TEXT-TRIM-1
 public func test_charset_is_a_set_empty_set_and_aliases() -> bool:
@@ -64,59 +78,72 @@ public func test_charset_is_a_set_empty_set_and_aliases() -> bool:
     mut alias = text
     return text.strip("abéa") == "value" and text.lstrip("éab") == "valueéba" and text.rstrip("éab") == "abévalue" and text.strip("") == text and alias == text
 
+
 # spec-case: PY-TEXT-TRIM-1
 public func test_unicode_default_whitespace_and_bytes_ascii_whitespace() -> bool:
     mut text = "\u001c\u0085\u00a0\u1680\u2007value\u2028\u202f\u205f\u3000"
     return text.strip() == "value" and b"\x1c\x85\xa0 value \xa0".strip() == b"\x1c\x85\xa0 value \xa0" and b" \tvalue\n ".strip() == b"value"
+
 
 # spec-case: PY-TEXT-TRIM-1
 public func test_byte_charset_invalid_utf8_nul_and_empty() -> bool:
     mut value = b"\xff\x00ab\x00\xff"
     return value.strip(b"\xff\x00") == b"ab" and value.lstrip(b"\xff\x00") == b"ab\x00\xff" and value.rstrip(b"\xff\x00") == b"\xff\x00ab" and value.strip(b"") == value and b"".strip(b"\xff") == b""
 
+
 # spec: PY-TEXT-RANGE-1
 public func test_ranges_count_scalars_and_return_global_positions() -> bool:
     return TEXT.find("é", 2) == 3 and TEXT.rfind("é", 0, -1) == 3 and TEXT.index("é", -4, 4) == 1 and TEXT.rindex("é", 1, 4) == 3 and TEXT.count("a", 1, -1) == 1
+
 
 # spec-case: PY-TEXT-RANGE-1
 public func test_empty_needles_at_end_and_beyond_end_are_distinct() -> bool:
     mut text = "abc"
     return text.find("", 3, 3) == 3 and text.rfind("", 3, 3) == 3 and text.count("", 3, 3) == 1 and text.startswith("", 3, 3) and text.find("", 4, 9) == -1 and text.count("", 4, 9) == 0 and not text.endswith("", 4, 9)
 
+
 # spec-case: PY-TEXT-RANGE-1
 public func test_empty_needles_reversed_and_extreme_ranges() -> bool:
     mut text = "abc"
     return text.find("", 3, 2) == -1 and text.rfind("", -100, 100) == 3 and text.count("", -100, 100) == 4 and text.find("", -9223372036854775808, 9223372036854775807) == 0 and "".rfind("") == 0 and "".count("") == 1
+
 
 # spec-case: PY-TEXT-RANGE-1
 public func test_ranged_affixes_and_overlapping_reverse_search() -> bool:
     mut text = "ababa"
     return text.rfind("aba") == 2 and text.count("aba") == 1 and text.startswith("ba", 1, 3) and text.endswith("ba", 0, 3) and not text.startswith("aba", 1, 2) and text.rfind("z") == -1
 
+
 # spec-case: PY-TEXT-RANGE-1
 public func test_byte_ranges_views_and_constant_receivers() -> bool:
     mut view = OCTETS.view(1, 5)
     return OCTETS.find(b"\xff", 2) == 3 and OCTETS.rindex(b"\xff", 1, 4) == 3 and view.rfind(b"\xff") == 2 and view.count(b"", -100, 100) == 5 and view.endswith(b"a", 1, 4)
 
+
 # spec-case: PY-TEXT-RANGE-1
 public func test_generic_methods_and_expression_receivers() -> bool:
     return generic_methods(1, TEXT, OCTETS) and ("a" + "éaéa").rfind("é", 0, 4) == 3
+
 
 # spec: PRELUDE-REPR-1
 public func test_repr_quote_selection_escapes_and_printable_unicode() -> bool:
     return repr("'") == "\"'\"" and repr("\"'") == "'\"\\\''" and repr("é😀") == "'é😀'" and repr("\t\n\r\\") == "'\\t\\n\\r\\\\'" and repr("\u00a0\u2028\U000e0001") == "'\\xa0\\u2028\\U000e0001'"
 
+
 # spec-case: PRELUDE-REPR-1
 public func test_repr_bytes_all_octet_classes_and_quotes() -> bool:
     return repr(b"\x00\x1f\x7f\x80\xff\t\n\r") == "b'\\x00\\x1f\\x7f\\x80\\xff\\t\\n\\r'" and repr(b"'") == "b\"'\"" and repr(b"\"'") == "b'\"\\\''" and repr(b"") == "b''"
+
 
 # spec-case: PRELUDE-REPR-1
 public func test_repr_integer_widths_boolean_and_generic() -> bool:
     return repr(-9223372036854775808) == "-9223372036854775808" and repr(18446744073709551615u64) == "18446744073709551615" and repr(True) == "True" and repr(False) == "False" and generic_text(42) == "42"
 
+
 # spec-case: PRELUDE-REPR-1
 public func test_repr_float_shortest_exponents_signed_zero_and_nonfinite() -> bool:
     return repr(-0.0) == "-0.0" and repr(1.0) == "1.0" and repr(1e-5) == "1e-05" and repr(1e-4) == "0.0001" and repr(1e16) == "1e+16" and repr(1.0000000000000002) == "1.0000000000000002" and repr(1.0 / 0.0) == "inf" and repr(0.0 / 0.0) == "nan"
+
 
 # spec-case: PRELUDE-REPR-1
 public func test_repr_large_unicode_result_is_indexed_and_survives_views() -> bool:
@@ -124,15 +151,18 @@ public func test_repr_large_unicode_result_is_indexed_and_survives_views() -> bo
     mut rendered = repr(text[1:-1])
     return len(rendered) == 4096 and rendered[1] == "😀" and rendered[-2] == "é" and rendered.rfind("😀") == 4093
 
+
 # spec-case: PY-TEXT-RANGE-1
 public func test_unsigned64_bounds_saturate_positive_instead_of_becoming_negative() -> bool:
     mut maximum = 18446744073709551615u64
     return "abc".find("", maximum) == -1 and "abc".rfind("", 0, maximum) == 3 and b"abc".count(b"", maximum, maximum) == 0
 
+
 # spec-case: PY-BYTES-SORT-1
 public func test_generic_nominal_bytes_inputs_sort_and_repr() -> bool:
     mut values = [b"x", b"a", b""]
     return generic_existing(1, values) == [b"", b"a", b"x"] and generic_reprs(1, b"x", -0.0) == "b'x'-0.0"
+
 
 # spec-case: PY-TEXT-RANGE-1
 public func test_contextual_octet_declarations_keep_legacy_text_compatibility() -> bool:

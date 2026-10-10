@@ -6,12 +6,14 @@
 const std = @import("std");
 const language = @import("mylang");
 const stage = @import("stage_store.zig");
+const sources = @import("demand_sources.zig");
 
 const Receipt = struct {
     key: []const u8,
     context: stage.Digest,
     region: stage.Digest,
     kind: union(enum) { lowered: stage.Digest, @"unreachable" },
+    sources: []const sources.Proof = &.{},
 };
 const Inputs = struct {
     prepared: ?language.semantic_summary.Prepared = null,
@@ -28,11 +30,12 @@ pub const Context = struct {
     previous: std.StringHashMapUnmanaged(Receipt) = .empty,
     input: Inputs = .{},
     next: std.ArrayList(Receipt) = .empty,
+    sources: sources.Cache,
 
     /// Load the last complete lowering manifest for this entry and debug policy.
     pub fn init(arena: std.mem.Allocator, store: *const stage.Store, entry: []const u8, drop_debug: bool) std.mem.Allocator.Error!Context {
-        const key = store.key("lowering-demand-v2", &.{ entry, &.{@intFromBool(drop_debug)} });
-        var self: Context = .{ .arena = arena, .store = store, .key = key };
+        const key = store.key("lowering-demand-v3", &.{ entry, &.{@intFromBool(drop_debug)} });
+        var self: Context = .{ .arena = arena, .store = store, .key = key, .sources = .{ .arena = arena } };
         errdefer self.previous.deinit(arena);
         const receipts = try store.loadValue(arena, key, []const Receipt) orelse return self;
         for (receipts) |receipt| {
@@ -49,13 +52,22 @@ pub const Context = struct {
     /// Offer constant-time receipt lookup to the frontend's dependency planner.
     /// Keep this context at a stable address until checking finishes.
     pub fn callback(self: *const Context) language.semantic_summary.Demand {
-        return .{ .context = self, .allow = allows };
+        return .{ .context = self, .allow = allows, .prepare_sources = prepareSources };
+    }
+
+    fn prepareSources(context: *const anyopaque, source: language.source.Source) std.mem.Allocator.Error!void {
+        const self: *Context = @ptrCast(@alignCast(@constCast(context)));
+        self.sources.bind(source);
+        var receipts = self.previous.valueIterator();
+        while (receipts.next()) |receipt| for (receipt.sources) |proof| {
+            _ = try self.sources.get(proof.origin);
+        };
     }
 
     fn allows(context: *const anyopaque, key: []const u8, dependency: stage.Digest, region: stage.Digest) bool {
         const self: *const Context = @ptrCast(@alignCast(context));
         const receipt = self.previous.get(key) orelse return false;
-        return std.mem.eql(u8, &receipt.context, &dependency) and std.mem.eql(u8, &receipt.region, &region);
+        return std.mem.eql(u8, &receipt.context, &dependency) and std.mem.eql(u8, &receipt.region, &region) and self.sources.matches(receipt.sources);
     }
 
     /// Attach fresh declaration identities and the bodies actually omitted by
@@ -103,7 +115,29 @@ pub const Context = struct {
     pub fn record(self: *Context, id: language.typed.FunctionId, digest: stage.Digest) std.mem.Allocator.Error!void {
         var receipt = self.identity(id) orelse return;
         receipt.kind = .{ .lowered = digest };
+        if (self.omitted(id)) if (self.previous.get(receipt.key)) |previous| {
+            receipt.sources = previous.sources;
+        };
         try self.next.append(self.arena, receipt);
+    }
+
+    /// Add authority for both checked-tree and synthesized lowering sites.
+    pub fn addSources(self: *Context, id: language.typed.FunctionId, proofs: []const sources.Proof) std.mem.Allocator.Error!void {
+        const identity_value = self.identity(id) orelse return;
+        if (self.next.items.len == 0) return;
+        const receipt = &self.next.items[self.next.items.len - 1];
+        if (!std.mem.eql(u8, receipt.key, identity_value.key)) return;
+        var combined: std.ArrayList(sources.Proof) = .empty;
+        try combined.appendSlice(self.arena, receipt.sources);
+        for (proofs) |proof| {
+            var found = false;
+            for (combined.items) |existing| if (existing.origin == proof.origin) {
+                found = true;
+                break;
+            };
+            if (!found) try combined.append(self.arena, proof);
+        }
+        receipt.sources = combined.items;
     }
 
     /// Discard the current receipt if lowering discovered source metadata that

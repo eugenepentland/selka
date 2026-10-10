@@ -42,7 +42,7 @@ The broad removals recorded here:
   emission, the bytecode IR, the QBE-to-LLVM translator, the tracing collector,
   two-count reference counting, runtime selection (`--gc-runtime`, `--gc-stress`,
   `--rc-runtime`), legacy sharing (`class`, `Cell`, `--legacy-sharing`), arena
-  regions (`with arena()` now warns `W_ARENA_RETIRED` and runs as a plain block),
+  regions (`with arena()` is rejected with `E_ARENA_REMOVED`),
   host functions (`host def`, `mylang invoke`, `--library`, `--provider`,
   `--link-library`, `--library-path`), the host applications `board-trial`,
   `schematic-svg` and `mylang-io`, per-module `compile-module`/`link-modules`

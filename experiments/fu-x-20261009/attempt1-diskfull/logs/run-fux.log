@@ -1,0 +1,38 @@
+STEP start f1ddb9baf 12:21:30 load 2.72 3.43 4.74
+STEP releasefast=0 12:25:09
+STEP part1a finished 12:37:13
+STEP part1b and prep finished 12:47:24
+FAIL gate exit 0
+FAIL gate all steps
+ok   fmt exit 0
+FAIL qualify exit 0
+FAIL conformance debug 1518/0/0
+FAIL conformance release 1518/0/0
+ok   fuzz200 exit 0
+ok   fuzz200 nine kinds PASS
+ok   fuzz200 no FAIL or STOP
+FAIL build final
+FAIL build base
+FAIL lox conformance exit 0
+FAIL lox vm normal 246/246
+FAIL lox vm gc-stress 246/246
+FAIL lox tree normal 241/241
+FAIL lox tree gc-stress 241/241
+FAIL lox port tests exit 0
+FAIL lox port tests 65 passed
+FAIL eda tests exit 0
+FAIL eda tests 310 passed
+FAIL run final exit 0
+FAIL run final lox: 48, 0 not identical
+FAIL run final eda: 34, 0 not identical
+FAIL run final parity: 4, 0 not identical
+FAIL run final rows: 46, 0 not identical
+FAIL identity exit 0
+FAIL identity lox: 48 cells, 48 identical
+FAIL identity eda: 34 cells, 34 identical
+FAIL identity parity: 4 cells, 4 identical
+FAIL identity rows: 46 cells, 46 identical
+ok   part1b done
+ok   timing-prep lox builds
+ok   timing-prep rows build
+STEP STOPPED: a Part 1 check failed, no timing 12:47:24

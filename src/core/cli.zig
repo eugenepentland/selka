@@ -207,3 +207,10 @@ fn testCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
     const status = try core_main.testCommand(init, normalized.items);
     return status;
 }
+
+/// Append Core allocation warnings for lint; validation-only commands do not call this.
+pub fn checkAllocationContracts(a: std.mem.Allocator, program: @import("mylang").typed.Program, source: @import("mylang").source.Source, sink: *@import("mylang").diagnostic.Sink) std.mem.Allocator.Error!void {
+    for (try @import("allocation_contract.zig").collectProgram(a, program, source)) |failure| {
+        try sink.items.append(sink.allocator, try @import("allocation_contract.zig").diagnostic(a, failure));
+    }
+}

@@ -48,7 +48,7 @@ Memory is one-count reference counting with copy-on-write: lists, dictionaries,
 sets, strings and records are values, released when their last owner goes away.
 Stage S5 of the new core (2026-10) retired the old back end: QBE, the bytecode IR,
 the QBE-to-LLVM adapter, the tracing collector, two-count reference counting,
-`with arena()` regions (now a plain block that warns `W_ARENA_RETIRED`), host
+`with arena()` regions (rejected with `E_ARENA_REMOVED`), host
 functions (`host func`, `mylang invoke`) and the host applications built on them
 ([removed features](docs/legacy/README.md)). C interop is `extern func` with
 `--link FILE.c` ([direct C imports](docs/c-ffi.md)).
@@ -372,8 +372,8 @@ snapshots, explicit EOF, and actual write counts while retaining ownership.
 Operating-system adapters remain separate work.
 
 [Managed arenas](docs/managed-memory.md#retired-arenas), which freed a phase of work's allocations in one
-step, were retired in S5: `with arena():` now runs as an ordinary block and warns
-`W_ARENA_RETIRED`; `mylang fix` removes them.
+step, were retired in S5: `with arena():` is now rejected with
+`E_ARENA_REMOVED`; `mylang fix` removes it.
 
 [Approximate discovery](docs/experiments/approximate-discovery.md) is available with
 `discover-duplicates --approximate`. It reports canonical edits between near matches

@@ -1,7 +1,6 @@
 import app.report
 import core.shapes
 
-
 func main(out: Stream) -> int:
     mut boxes = [core.shapes.Box(width=3, height=4), core.shapes.Box(width=5, height=2)]
     mut area = app.report.describe(out, boxes)

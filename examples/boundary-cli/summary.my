@@ -1,4 +1,3 @@
-
 func line_count(source: str) -> int:
     if len(source) == 0:
         return 0

@@ -22,6 +22,7 @@ const Settings = struct {
     /// Name a header-less file by the path it was given, as the `mylang` CLI does,
     /// rather than by its base name (`mylang-core`).
     given_path: bool = false,
+    allocation_contracts: bool = true,
 };
 const Graph = struct {
     index: language.interfaces.Index = undefined,
@@ -37,6 +38,7 @@ pub const Module = language.project.Module;
 pub const Checked = struct {
     program: language.typed.Program,
     src: language.source.Source,
+    allocation_warnings: []const u8 = "",
 };
 
 /// Prepared declaration identities and actual body omissions from a demand check.
@@ -125,10 +127,11 @@ pub const Session = struct {
         return &self.graph.index;
     }
 
-    /// Validation-only commands can omit unchanged bodies; builds/tests retain
-    /// the default complete typed trees and use summaries for pass facts only.
+    /// Validation-only commands can omit unchanged bodies. Builds retain typed
+    /// trees unless their lowering host admits safe artifacts through demand.
     pub fn validationOnly(self: *Session) void {
-        if (self.cache) |*state| state.request.facts_only = false;
+        self.graph.settings.allocation_contracts = false;
+        if (self.cache) |*state| state.request.body_policy = .summaries;
     }
 
     /// Let a lowering host admit unchanged body artifacts before checking.
@@ -189,7 +192,7 @@ pub const Session = struct {
                 return error.SourceError;
             },
         };
-        return .{ .program = unit.program.?, .src = unit.src };
+        return self.checkAllocationContracts(allocator, .{ .program = unit.program.?, .src = unit.src }, report);
     }
 
     fn checkSourceBudget(self: *Session, allocator: std.mem.Allocator, path: []const u8, size: usize, report: *std.ArrayList(u8)) Error!void {
@@ -253,7 +256,19 @@ pub const Session = struct {
         };
         if (self.graph.profile) |profile| profile.end();
         if (self.cache) |*state| try state.finish(&self.project);
-        return .{ .program = self.graph.compilation.program.?, .src = self.graph.compilation.src };
+        return self.checkAllocationContracts(allocator, .{ .program = self.graph.compilation.program.?, .src = self.graph.compilation.src }, report);
+    }
+
+    fn checkAllocationContracts(self: *Session, allocator: std.mem.Allocator, checked: Checked, report: *std.ArrayList(u8)) Error!Checked {
+        if (!self.graph.settings.allocation_contracts) return checked;
+        const start = report.items.len;
+        for (try @import("allocation_contract.zig").collectProgram(allocator, checked.program, checked.src)) |failure| {
+            const item = try @import("allocation_contract.zig").diagnostic(allocator, failure);
+            try report.appendSlice(allocator, try language.diagnostic_output.render(allocator, item, checked.src, self.graph.settings.format));
+        }
+        var result = checked;
+        result.allocation_warnings = try allocator.dupe(u8, report.items[start..]);
+        return result;
     }
 
     /// The file provider: the disk, with `entry_suffix` appended to the entry file when set.

@@ -5,8 +5,6 @@
 # printed line is byte-identical to `list_records.my`; the accumulator can no
 # longer trap, which is what lets the optimizer vectorise the reduction. This is
 # the "checked arithmetic floor" evidence for the performance roadmap.
-
-
 record Row:
     a: int
     b: int

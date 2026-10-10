@@ -1,9 +1,7 @@
-
 # The value-semantics rules (VALUE-SEMANTICS-2..5), ported from the P3
 # prototype. `zig build test-value-semantics` runs this directory with
 # `--value-semantics`; these tests assert value semantics, which the default
 # model does not have, so they are not part of tests/lang.
-
 record Counter:
     n: int
     items: int[]

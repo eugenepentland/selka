@@ -1,9 +1,6 @@
-
 # Element data tagged by scalar type (NEW-CORE-F1-TBAA-1, -2): adversarial shapes
 # where a wrong alias fact would change an answer. Every answer here is the base
 # compiler's (main cafe7fea7, one generic data tag).
-
-
 record P:
     x: float
     n: int

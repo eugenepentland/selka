@@ -1,5 +1,3 @@
-
-
 public func program() -> i64:
     mut text: str = b"hé🙂"
     mut part: str = b"é🙂"

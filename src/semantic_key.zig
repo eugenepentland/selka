@@ -27,7 +27,7 @@ pub const functions_domain = "semantic-functions-v8";
 /// indexed and per-declaration scan oracle hash the same prefix.
 const export_domain = "export-v1";
 /// Domain for the canonical C3 specialization key engine.
-pub const specialization_domain = "semantic-specialization-v2";
+pub const specialization_domain = "semantic-specialization-v3";
 
 /// Per-function dependency facts for one fresh compilation.
 pub const Prepared = struct {
@@ -283,7 +283,13 @@ pub fn specializationKey(
 /// is present for a constant length parameter.
 pub fn argumentDescriptor(allocator: std.mem.Allocator, ty: typed.Type, length: ?usize, records: []const typed.Record) error{OutOfMemory}![]const u8 {
     if (length) |value| return std.fmt.allocPrint(allocator, "L:{d}", .{value});
-    return std.fmt.allocPrint(allocator, "T:{s}", .{typed.typeName(ty, records)});
+    if (!ty.isAggregate()) return std.fmt.allocPrint(allocator, "T:{s}", .{@tagName(ty)});
+    // Catalog names identify declarations; the resolved transitive schema is
+    // also required. Display spelling alone loses callback labels, mutation
+    // positions and changes to the nominal arguments' provider contracts.
+    const provider = try providerIdentity(allocator, &.{ty}, records);
+    defer allocator.free(provider);
+    return std.fmt.allocPrint(allocator, "T:resolved:{s}:{s}", .{ typed.typeName(ty, records), provider });
 }
 
 /// Canonical resolved provider identity over the transitive nominal records

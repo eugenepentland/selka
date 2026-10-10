@@ -1,5 +1,3 @@
-
-
 func reduce(raw: bytes, mask: int, seed: int) -> int:
     mut total = seed
     for value in raw:

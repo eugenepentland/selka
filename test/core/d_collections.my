@@ -1,10 +1,11 @@
-
 record Holder:
     values: dict[int, int[]]
+
 
 func change(mut d: dict[int, int], value: int):
     d = {7: value}
     d[8] = value + 1
+
 
 func test_order_copy_remove_reinsert() -> bool:
     mut d: dict[int, int] = {2: 7, 1: 9}
@@ -16,6 +17,7 @@ func test_order_copy_remove_reinsert() -> bool:
     for key in d:
         order = order * 10 + key
     return saved[2] == 7 and saved[1] == 9 and d[2] == 13 and order == 21
+
 
 func test_index_growth_tombstones() -> bool:
     mut d: dict[int, int] = {}
@@ -32,6 +34,7 @@ func test_index_growth_tombstones() -> bool:
         total += value + key
     return len(d) == 100 and total == 5050 + 17 * 4950
 
+
 func test_managed_values_and_nested_places() -> bool:
     mut d: dict[int, int[]] = {}
     d[1] = [for j in range(2) yield 3]
@@ -43,11 +46,13 @@ func test_managed_values_and_nested_places() -> bool:
     h.values[2] = before
     return len(saved.values[1]) == 2 and len(h.values[1]) == 3 and h.values[1][2] == 9 and before[0] == 4
 
+
 func test_mut_whole_rebind() -> bool:
     mut d: dict[int, int] = {2: 3}
     mut saved = d
     change(mut d, 19)
     return len(saved) == 1 and saved[2] == 3 and len(d) == 2 and d[7] == 19
+
 
 func test_set_and_defaults() -> bool:
     mut values: set[int] = set()
@@ -59,22 +64,27 @@ func test_set_and_defaults() -> bool:
     values.discard(1)
     return len(other) == 2 and len(values) == 1 and 3 in values and 1 in other
 
+
 func test_missing_key_trap() -> bool:
     mut d: dict[int, int] = {}
     return d[7] == 0
+
 
 record PlainKey:
     high: u64
     low: i16
 
+
 record TextKey:
     label: str
     number: int
+
 
 enum Choice:
     Empty
     Number(value: int)
     Named(value: TextKey)
+
 
 public func test_structural_hashes_ignore_padding_and_inactive_payloads() -> bool:
     mut points: set[PlainKey] = set()
@@ -86,6 +96,7 @@ public func test_structural_hashes_ignore_padding_and_inactive_payloads() -> boo
     choices[Choice.Number(value=3)] = 17
     _ = choices.pop(Choice.Named(value=TextKey(label="ke" + "y", number=8)))
     return len(points) == 45 and PlainKey(high=u64(8), low=i16(4)) in points and texts[TextKey(label="abc", number=7)] == 13 and choices[Choice.Empty] == 1 and choices[Choice.Number(value=3)] == 17 and len(saved) == 3 and saved[Choice.Number(value=3)] == 2
+
 
 public func test_bound_dictionary_views_refresh_values_and_explicit_snapshots() -> bool:
     mut mapping = {"a": 10, "b": 20}

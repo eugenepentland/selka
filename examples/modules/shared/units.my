@@ -1,4 +1,3 @@
-
 public domain Distance: int:
     private func raw(value: int) -> Distance:
         return wrap[Distance](value)

@@ -1,11 +1,9 @@
-
 extern func runtime_bench_now(host: Host) -> i64 effects(host)
+
 
 # Row `record_reads` of benchmarks/runtime/ports/main.my as a program of its own, like compute_s0.my: arguments
 # `size iterations seed` (the original takes the row name first), the same setup, kernel,
 # checksum and output `checksum elapsed`. Setup that only other rows use is left out.
-
-
 record Item:
     code: int
     bias: int

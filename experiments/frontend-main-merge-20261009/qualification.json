@@ -1,0 +1,30 @@
+{
+  "frontend_head": "0bbfeb740a1a90cbcd3c8b990dcbb2bf0b30d588",
+  "main_before": "e23651f6a568d7d479de83b986ea7c02abc20d63",
+  "merge_conflicts": [],
+  "source_tree": "7fb239a88dab669e84c258403dd9650c1edbfed7",
+  "full_gate": {
+    "exit_code": 0,
+    "steps_passed": 94,
+    "steps_total": 94,
+    "executed_zig_test_entries": 2259,
+    "shard_skips": 21008,
+    "enumerated_entries": 23267,
+    "body_seconds": 114.86,
+    "outer_seconds": 132.47
+  },
+  "formatting": {
+    "exit_code": 0,
+    "steps_passed": 15,
+    "steps_total": 15,
+    "body_seconds": 1.85,
+    "outer_seconds": 3.73
+  },
+  "compiler_sha256": "f64eeb53ade4df65b4cc9b572f13bf83c3716673276f03d796cafcae42d64f71",
+  "receipt_sha256": {
+    "full-gate-1.log": "03bacf27b07729fcd6ae73eddc6715d373095a2db216ec1c40fe0c85835ed9d6",
+    "fmt-check.log": "bd96175df627c240eb60e6218f5bd6397fb9c0238a0b768d97b10da5190c0ed7"
+  },
+  "performance_claim": false,
+  "qualification_scope": "Merged-tree full gate and formatting; prior external-corpus captures remain source-bound to their original compiler."
+}

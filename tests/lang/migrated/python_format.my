@@ -1,21 +1,21 @@
-
-
 import python_format_case_1 as c1
 import python_format_case_2 as c2
 import python_format_case_3 as c3
-
 
 # spec-case: PY-FSTRING-1
 public func test_an_f_before_anything_but_a_quote_stays_an_or() -> bool:
     return c1.program() == 42
 
+
 # spec: PY-FSTRING-2
 public func test_doubled_braces_are_literal_and_an_empty_form() -> bool:
     return c2.program() == 7
 
+
 # spec: PY-FSTRING-1
 public func test_format_strings_interpolate_expressions_and_r() -> bool:
     return c3.program() == 31
+
 
 func main() -> int:
     return 0

@@ -1,4 +1,3 @@
-
 record Cell:
     code: int
     weight: int

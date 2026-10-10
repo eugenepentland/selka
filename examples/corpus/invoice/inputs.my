@@ -1,4 +1,3 @@
-
 public func books() -> int effects():
     return 2
 

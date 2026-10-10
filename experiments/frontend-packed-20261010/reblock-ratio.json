@@ -1,0 +1,9 @@
+{
+  "codec": "Python system zlib1 approximation only; compression ratios, no pinned stdlib speed claim",
+  "plain": 156159449,
+  "original_stdlib_encoded": 30044728,
+  "original_zlib1_encoded": 29770210,
+  "body64k_zlib1_encoded": 30375135,
+  "original_blocks": 550,
+  "body64k_blocks": 1626
+}

@@ -371,6 +371,59 @@ test "bindPlan and sharedKeys ComponentUnavailable prevent warm file and directo
     try std.testing.expect(std.mem.indexOf(u8, failed.stderr, "ComponentFailed") != null);
 }
 
+const WarningReport = struct { value: std.json.Value, warnings: []const u8 };
+
+/// Check execution or replay counts and retain the exact observable warning bytes.
+fn allocationWarningReport(project: *CacheProject, path: []const u8, extra: []const []const u8, cached: bool) !WarningReport {
+    const result = try project.run(path, extra);
+    const value = try cacheReport(project.arena, result);
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, result.stderr, "warning[W_NOALLOC_ALLOCATES]"));
+    try std.testing.expectEqual(@as(i64, @intFromBool(!cached)), value.object.get("passed").?.integer);
+    try std.testing.expectEqual(@as(i64, @intFromBool(cached)), value.object.get("cached").?.integer);
+    try std.testing.expectEqual(@as(usize, 1), value.object.get("tests").?.array.items.len);
+    const explanation = try cacheExplanation(value, "test_one");
+    try std.testing.expectEqualStrings(if (cached) "reuse" else "execute", explanation.object.get("action").?.string);
+    return .{ .value = value, .warnings = result.stderr };
+}
+
+// spec-case: FRONTEND-CORE-NOALLOC-1
+// spec-case: SELFHOST-CACHE-IDENTITY-1
+// spec-case: SELFHOST-CACHE-REPORT-1
+test "allocation warnings survive cold file and directory replay with a planner-only identity change" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var project = try CacheProject.init(a, try temporary.dir.realPathFileAlloc(std.testing.io, ".", a));
+    try temporary.dir.createDir(std.testing.io, "tests", .default_dir);
+    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "tests/app.my", .data = "func bounded() -> int noalloc:\n    const xs = [1]\n    return len(xs)\npublic func test_one() -> bool:\n    return bounded() == 1\n" });
+    const cold = try allocationWarningReport(&project, "tests/app.my", &.{}, false);
+    const file_replay = try allocationWarningReport(&project, "tests/app.my", &.{}, true);
+    const directory_replay = try allocationWarningReport(&project, "tests", &.{"--jobs=1"}, true);
+    try std.testing.expectEqualStrings(cold.warnings, file_replay.warnings);
+    try std.testing.expectEqualStrings(cold.warnings, directory_replay.warnings);
+    const directory_cold = try allocationWarningReport(&project, "tests", &.{ "--jobs=1", "--force" }, false);
+    try std.testing.expectEqualStrings(cold.warnings, directory_cold.warnings);
+
+    const binary = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, try project.path("components/cache-plan"), a, .limited(64 << 20));
+    // Trailing ELF bytes preserve behavior while changing only the planner artifact.
+    try project.deploy(try std.mem.concat(a, u8, &.{ binary, "\nallocation-warning-identity-only\n" }));
+    const changed = try allocationWarningReport(&project, "tests/app.my", &.{}, false);
+    const changed_file_replay = try allocationWarningReport(&project, "tests/app.my", &.{}, true);
+    const changed_directory_replay = try allocationWarningReport(&project, "tests", &.{"--jobs=1"}, true);
+    const changed_directory_cold = try allocationWarningReport(&project, "tests", &.{ "--jobs=1", "--force" }, false);
+    try std.testing.expectEqualStrings(cold.warnings, changed.warnings);
+    try std.testing.expectEqualStrings(cold.warnings, changed_file_replay.warnings);
+    try std.testing.expectEqualStrings(cold.warnings, changed_directory_replay.warnings);
+    try std.testing.expectEqualStrings(cold.warnings, changed_directory_cold.warnings);
+    const before = (try cacheExplanation(file_replay.value, "test_one")).object.get("component").?.string;
+    const after = (try cacheExplanation(changed.value, "test_one")).object.get("component").?.string;
+    try std.testing.expect(!std.mem.eql(u8, before, after));
+    try std.testing.expectEqualStrings(after, (try cacheExplanation(changed_file_replay.value, "test_one")).object.get("component").?.string);
+    try std.testing.expectEqualStrings(after, (try cacheExplanation(changed_directory_replay.value, "test_one")).object.get("component").?.string);
+}
+
 const callback_cache_source =
     \\const NUMBER: int = 3
     \\

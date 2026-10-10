@@ -6,6 +6,7 @@ const language = @import("compiler.zig");
 const diagnostic = @import("diagnostic.zig");
 const migration = @import("frontend_migration.zig");
 const migration_path = "migration.my";
+const numeric_parse_code = @import("numeric_surface.zig").numeric_parse_code;
 
 // spec-case: FRONTEND-NUMBERS-1
 test "frontend text conversion repair changes only the builtin callee" {
@@ -13,7 +14,7 @@ test "frontend text conversion repair changes only the builtin callee" {
     defer compilation.deinit();
     try t.expectError(error.SourceError, compilation.checkLibrary());
     const item = compilation.diagnostics.items[0];
-    try t.expectEqualStrings("E_NUMERIC_PARSE", item.code);
+    try t.expectEqualStrings(numeric_parse_code, item.code);
     const edit = item.provenance.fix.?.edit;
     try t.expectEqualStrings("int", compilation.src.text(edit.span));
     try t.expectEqualStrings("parse_int", edit.text);
@@ -446,4 +447,393 @@ test "frontend imported enum operand and discard pattern labels repair and conve
     const third = try repairImported(second);
     defer t.allocator.free(third);
     try t.expectEqualStrings(second, third);
+}
+
+// spec: FRONTEND-BINDING-MIGRATION-2
+test "frontend binding migration repairs independent branch locals and converges" {
+    const original =
+        \\func main() -> int:
+        \\    if True:
+        \\        token = 1
+        \\        return token
+        \\    if False:
+        \\        token = 2
+        \\        return token
+        \\    return 0
+        \\
+    ;
+    const first = try migrated(original);
+    defer t.allocator.free(first);
+    try t.expectEqualStrings(
+        \\func main() -> int:
+        \\    if True:
+        \\        mut token = 1
+        \\        return token
+        \\    if False:
+        \\        mut token = 2
+        \\        return token
+        \\    return 0
+        \\
+    , first);
+    var compilation = try language.Compilation.init(t.allocator, migration_path, first);
+    defer compilation.deinit();
+    try compilation.checkLibrary();
+    const second = try migrated(first);
+    defer t.allocator.free(second);
+    try t.expectEqualStrings(first, second);
+}
+
+// spec-case: FRONTEND-BINDING-MIGRATION-2
+test "frontend binding migration resolves sibling match and loop identities" {
+    const original =
+        \\enum Kind:
+        \\    first
+        \\    second
+        \\func choose(kind: Kind) -> int:
+        \\    match kind:
+        \\        case Kind.first:
+        \\            token = 1
+        \\            return token
+        \\        case Kind.second:
+        \\            token = 2
+        \\            return token
+        \\func looped() -> int:
+        \\    if False:
+        \\        token = 3
+        \\        return token
+        \\    for token in range(2):
+        \\        return token
+        \\    return 0
+        \\
+    ;
+    const first = try migrated(original);
+    defer t.allocator.free(first);
+    try t.expect(std.mem.indexOf(u8, first, "mut token = 1") != null);
+    try t.expect(std.mem.indexOf(u8, first, "mut token = 2") != null);
+    try t.expect(std.mem.indexOf(u8, first, "mut token = 3") != null);
+    var compilation = try language.Compilation.init(t.allocator, migration_path, first);
+    defer compilation.deinit();
+    try compilation.checkLibrary();
+    const second = try migrated(first);
+    defer t.allocator.free(second);
+    try t.expectEqualStrings(first, second);
+}
+
+fn refusedBinding(text: []const u8) !void {
+    var compilation = try language.Compilation.init(t.allocator, migration_path, text);
+    defer compilation.deinit();
+    try parseLegacy(&compilation);
+    var sink: diagnostic.Sink = .{ .allocator = compilation.arena.allocator() };
+    try t.expect(try @import("frontend_binding_migration.zig").publish(compilation.src, compilation.syntax.?, &sink));
+    try t.expect(sink.items.items.len > 0);
+    for (sink.items.items) |item| {
+        try t.expectEqualStrings("E_BINDING_SCOPE_MIGRATION", item.code);
+        try t.expect(item.provenance.fix == null);
+    }
+}
+
+fn refusedNamedBinding(text: []const u8, name: []const u8) !void {
+    var compilation = try language.Compilation.init(t.allocator, migration_path, text);
+    defer compilation.deinit();
+    try parseLegacy(&compilation);
+    var sink: diagnostic.Sink = .{ .allocator = compilation.arena.allocator() };
+    try t.expect(try @import("frontend_binding_migration.zig").publish(compilation.src, compilation.syntax.?, &sink));
+    var refused: usize = 0;
+    for (sink.items.items) |item| {
+        if (!std.mem.eql(u8, compilation.src.text(item.span), name)) continue;
+        try t.expectEqualStrings("E_BINDING_SCOPE_MIGRATION", item.code);
+        try t.expect(item.provenance.fix == null);
+        refused += 1;
+    }
+    try t.expectEqual(@as(usize, 2), refused);
+}
+
+// spec-case: FRONTEND-BINDING-MIGRATION-2
+test "F5 binding migration refuses branch locals used by augmented assignment" {
+    try refusedNamedBinding("func main() -> int:\n    c = True\n    if c:\n        n = 1\n    else:\n        n = 2\n    n += 10\n    return 0\n", "n");
+}
+
+// spec-case: FRONTEND-BINDING-MIGRATION-2
+test "F5 binding migration refuses branch locals used by a method receiver" {
+    try refusedNamedBinding("func main() -> int:\n    c = True\n    if c:\n        xs = [1]\n    else:\n        xs = [2]\n    xs.append(3)\n    return 0\n", "xs");
+}
+
+// spec-case: FRONTEND-BINDING-MIGRATION-2
+test "F5 binding migration resolves call and operation owners and field and index targets" {
+    for ([_][]const u8{ "n()", "n.append(3)", "n.read()", "read_resource[Read](n)", "write_resource[Write](n, 3)", "n.field = 2", "n[0] = 2", "n.field += 2", "n[0] += 2", "n.field.update()" }) |use| {
+        const text = try std.fmt.allocPrint(t.allocator, "func main() -> int:\n    if True:\n        n = 1\n    else:\n        n = 2\n    {s}\n    return 0\n", .{use});
+        defer t.allocator.free(text);
+        try refusedNamedBinding(text, "n");
+    }
+}
+
+// spec-case: FRONTEND-BINDING-MIGRATION-2
+test "F5 binding migration keeps independent assignment declarations repairable" {
+    const result = try migrated("func main() -> int:\n    if False:\n        n = 1\n        n += 2\n    n = 3\n    n += 4\n    return n\n");
+    defer t.allocator.free(result);
+    try t.expectEqualStrings("func main() -> int:\n    if False:\n        mut n = 1\n        n += 2\n    mut n = 3\n    n += 4\n    return n\n", result);
+    var compilation = try language.Compilation.init(t.allocator, migration_path, result);
+    defer compilation.deinit();
+    try compilation.checkLibrary();
+}
+
+// spec-case: FRONTEND-BINDING-MIGRATION-2
+test "frontend binding migration refuses escaping state and preinitialization reads" {
+    try refusedBinding("func main() -> int:\n    if True:\n        token = 1\n    return token\n");
+    try refusedBinding("func main() -> int:\n    if True:\n        token = 1\n    if False:\n        token = 2\n    return token\n");
+    try refusedBinding("func main() -> int:\n    const before = token\n    token = 1\n    return before\n");
+    try refusedBinding("func main() -> int:\n    token = token + 1\n    return token\n");
+}
+
+// spec: FRONTEND-VARIANT-MIGRATION-1
+test "frontend variant migration keeps newlines comments and canonical nested payload types" {
+    const original =
+        \\union Tag:
+        \\    list: list[int], # keep this case comment
+        \\    atom: bytes,
+        \\    unit
+        \\
+        \\union Region:
+        \\    board,
+        \\    polygon: list[[2]float]
+        \\
+        \\func main() -> int:
+        \\    return 0
+        \\
+    ;
+    const expected =
+        \\enum Tag:
+        \\    list(value: int[]) # keep this case comment
+        \\    atom(value: bytes)
+        \\    unit
+        \\
+        \\enum Region:
+        \\    board
+        \\    polygon(value: FixedArray[float, 2][])
+        \\
+        \\func main() -> int:
+        \\    return 0
+        \\
+    ;
+    const result = try migrated(original);
+    defer t.allocator.free(result);
+    try t.expectEqualStrings(expected, result);
+    const second = try migrated(result);
+    defer t.allocator.free(second);
+    try t.expectEqualStrings(result, second);
+    var compilation = try language.Compilation.init(t.allocator, migration_path, result);
+    defer compilation.deinit();
+    try compilation.checkLibrary();
+    try t.expectEqual(@as(usize, 0), compilation.diagnostics.items.len);
+}
+
+// spec: FRONTEND-NESTED-COMPREHENSION-MIGRATION-1
+test "frontend nested comprehension migration repairs inside out without overlapping edits" {
+    const original =
+        \\record Item:
+        \\    values: int[]
+        \\
+        \\func main() -> int:
+        \\    const xs = [[1], [2]]
+        \\    const ys = [Item(values=[v for v in x]) for x in xs]
+        \\    return len(ys)
+        \\
+    ;
+    const first = try migrated(original);
+    defer t.allocator.free(first);
+    try t.expect(std.mem.indexOf(u8, first, "[Item(values=[for v in x yield v]) for x in xs]") != null);
+    const result = try migrated(first);
+    defer t.allocator.free(result);
+    try t.expect(std.mem.indexOf(u8, result, "[for x in xs yield Item(values=[for v in x yield v])]") != null);
+    const third = try migrated(result);
+    defer t.allocator.free(third);
+    try t.expectEqualStrings(result, third);
+    var compilation = try language.Compilation.init(t.allocator, migration_path, result);
+    defer compilation.deinit();
+    try compilation.checkLibrary();
+    try t.expectEqual(@as(usize, 0), compilation.diagnostics.items.len);
+}
+
+// spec-case: FRONTEND-BINDING-MIGRATION-2
+test "frontend binding migration separates comprehension and generator binders from later locals" {
+    const original =
+        \\func main() -> int:
+        \\    const group = [1, 2]
+        \\    const canonical = [for it in group if it > 0 yield it]
+        \\    const legacy = [it for it in group if it > 0]
+        \\    const total = sum(it for it in group if it > 0)
+        \\    for i in range(len(group)):
+        \\        it = group[i]
+        \\        if it > 0:
+        \\            return len(canonical) + len(legacy) + total + it
+        \\    return 0
+        \\
+    ;
+    const first = try migrated(original);
+    defer t.allocator.free(first);
+    try t.expect(std.mem.indexOf(u8, first, "mut it = group[i]") != null);
+    try t.expect(std.mem.indexOf(u8, first, "[for it in group if it > 0 yield it]") != null);
+    var compilation = try language.Compilation.init(t.allocator, migration_path, first);
+    defer compilation.deinit();
+    try compilation.checkLibrary();
+    const second = try migrated(first);
+    defer t.allocator.free(second);
+    try t.expectEqualStrings(first, second);
+}
+
+// spec-case: FRONTEND-BINDING-MIGRATION-2
+test "frontend comprehension binder does not hide a source read before initialization" {
+    try refusedBinding("func main() -> int:\n    const values = [for it in it yield it]\n    it = [1]\n    return len(values)\n");
+    try refusedBinding("func main() -> int:\n    const total = sum(it for it in it if it > 0)\n    it = [1]\n    return total\n");
+}
+
+/// Apply a text-conversion repair whose bare parser name is claimed, and
+/// require the str method form `expected` and a clean check of the result.
+fn methodNumericRepair(text: []const u8, expected: []const u8) !void {
+    var compilation = try language.Compilation.init(t.allocator, migration_path, text);
+    defer compilation.deinit();
+    try t.expectError(error.SourceError, compilation.checkLibrary());
+    const item = compilation.diagnostics.items[0];
+    try t.expectEqualStrings(numeric_parse_code, item.code);
+    try t.expect(std.mem.indexOf(u8, item.message, "str method") != null);
+    const repaired = try repairedFields(text);
+    defer t.allocator.free(repaired);
+    try t.expect(std.mem.indexOf(u8, repaired, expected) != null);
+    var fixed = try language.Compilation.init(t.allocator, migration_path, repaired);
+    defer fixed.deinit();
+    try fixed.checkLibrary();
+}
+
+// spec: FRONTEND-NUMERIC-MIGRATION-3
+test "frontend numeric migration calls the str method inside parse wrappers instead of recursing" {
+    try methodNumericRepair("func parse_int(text: str) -> int?:\n    return int(text)\n", "    return text.parse_int()\n");
+    try methodNumericRepair("func parse_float(text: str) -> float?:\n    return float(text)\n", "    return text.parse_float()\n");
+}
+
+// spec-case: FRONTEND-NUMERIC-MIGRATION-3
+test "frontend numeric method repair parenthesizes an operand that is not primary" {
+    try methodNumericRepair("func parse_int(text: str) -> int?:\n    return int(text.strip())\n", "    return text.strip().parse_int()\n");
+    try methodNumericRepair("func parse_int(sign: str, text: str) -> int?:\n    return int(sign + text)\n", "    return (sign + text).parse_int()\n");
+    try methodNumericRepair("func parse_float(texts: str[]) -> float?:\n    return float(texts[0])\n", "    return texts[0].parse_float()\n");
+    try methodNumericRepair("func parse_int() -> int?:\n    return int(\"12\")\n", "    return \"12\".parse_int()\n");
+}
+
+// spec: FRONTEND-NUMERIC-MIGRATION-2
+test "frontend numeric migration takes the method form where parameters and locals claim the name" {
+    try methodNumericRepair("func parse(text: str, parse_int: int) -> int?:\n    return int(text)\n", "    return text.parse_int()\n");
+    try methodNumericRepair("func parse(text: str) -> float?:\n    const parse_float = 7\n    return float(text)\n", "    return text.parse_float()\n");
+}
+
+fn refusedNumericRepair(text: []const u8) !void {
+    var compilation = try language.Compilation.init(t.allocator, migration_path, text);
+    defer compilation.deinit();
+    try t.expectError(error.SourceError, compilation.checkLibrary());
+    const item = compilation.diagnostics.items[0];
+    try t.expectEqualStrings(numeric_parse_code, item.code);
+    try t.expect(item.provenance.fix == null);
+    try t.expect(std.mem.indexOf(u8, item.message, "rename that binding") != null);
+}
+
+// spec-case: FRONTEND-NUMERIC-MIGRATION-2
+test "frontend numeric migration withholds a claimed repair inside generic bodies" {
+    try refusedNumericRepair("func parse_int[T](text: str, value: T) -> int?:\n    return int(text)\n");
+    try refusedNumericRepair("func parse_float[T](text: str, value: T) -> float?:\n    return float(text)\n");
+    try refusedNumericRepair("func parse[T](text: str, parse_int: T) -> int?:\n    return int(text)\n");
+    try refusedNumericRepair("func parse[T](text: str, value: T) -> float?:\n    const parse_float = value\n    return float(text)\n");
+}
+
+const NumericImports = struct {
+    app: []const u8,
+    fn read(context: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
+        const self: *NumericImports = @ptrCast(@alignCast(context.?));
+        if (std.mem.eql(u8, path, "app.my")) return allocator.dupe(u8, self.app);
+        if (std.mem.eql(u8, path, "helper.my")) return allocator.dupe(u8, "public func answer() -> int:\n    return 42\n");
+        return error.NotFound;
+    }
+};
+
+fn importedNumericRepair(text: []const u8, target: []const u8) !void {
+    var files: NumericImports = .{ .app = text };
+    var project = language.project.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(.{ .context = &files, .read = NumericImports.read }, "app", .{});
+    var index = try language.interfaces.build(&project);
+    var compilation = try language.project_compile.Compilation.init(&index);
+    try t.expectError(error.SourceError, compilation.checkLibrary());
+    for (compilation.diagnostics.items.items) |item| {
+        if (!std.mem.eql(u8, item.code, numeric_parse_code)) continue;
+        const fix = item.provenance.fix orelse return error.TestUnexpectedResult;
+        return t.expectEqualStrings(target, fix.edit.text);
+    }
+    return t.expect(false);
+}
+
+// spec-case: FRONTEND-NUMERIC-MIGRATION-2
+test "frontend numeric migration checks import aliases in ordinary and generic module contexts" {
+    try importedNumericRepair("import helper as parse_int\nfunc parse(text: str) -> int?:\n    return int(text)\n", "text.parse_int()");
+    try importedNumericRepair("import helper as parse_float\nfunc parse(text: str) -> float?:\n    return float(text)\n", "text.parse_float()");
+    try importedNumericRepair("import helper\nfunc parse(text: str) -> int?:\n    return int(text)\n", "parse_int");
+    try importedNumericRepair("import helper\nfunc parse[T](text: str, value: T) -> float?:\n    return float(text)\n", "parse_float");
+}
+
+// spec-case: FRONTEND-NUMERIC-MIGRATION-2
+test "frontend unshadowed float text repair converges to the builtin parser" {
+    const repaired = try repairedFields("func parse(text: str) -> float?:\n    return float(text)\n");
+    defer t.allocator.free(repaired);
+    try t.expectEqualStrings("func parse(text: str) -> float?:\n    return parse_float(text)\n", repaired);
+    var compilation = try language.Compilation.init(t.allocator, migration_path, repaired);
+    defer compilation.deinit();
+    try compilation.checkLibrary();
+}
+
+// spec-case: FRONTEND-NUMERIC-MIGRATION-2
+test "frontend rejectTextConversion propagates allocation failure for the method repair" {
+    const conversion: @import("numeric_surface.zig").TextConversion = .{ .name = .{ .start = 0, .end = 3 }, .call = .{ .start = 0, .end = 9 }, .operand = "a + b", .primary = false };
+    var failing = t.FailingAllocator.init(t.allocator, .{ .fail_index = 0 });
+    var sink: diagnostic.Sink = .{ .allocator = failing.allocator() };
+    try t.expect(@import("numeric_surface.zig").rejectTextConversion(&sink, conversion, "parse_int", true) == error.OutOfMemory);
+    var later_failing = t.FailingAllocator.init(t.allocator, .{ .fail_index = 1 });
+    var later_sink: diagnostic.Sink = .{ .allocator = later_failing.allocator() };
+    try t.expect(@import("numeric_surface.zig").rejectTextConversion(&later_sink, conversion, "parse_int", true) == error.OutOfMemory);
+}
+
+// spec-case: FIX-MIGRATION-OVERLAP-1
+test "frontend migration still repairs a legacy conditional whose value was migrated first" {
+    const repaired = try migrated("func main() -> int:\n    const c = True\n    return (if (not c) then (1) else (2)) if c else 3\n");
+    defer t.allocator.free(repaired);
+    try t.expectEqualStrings("func main() -> int:\n    const c = True\n    return (if (c) then ((if (not c) then (1) else (2))) else (3))\n", repaired);
+}
+
+/// An entry importing a legacy library whose nested conditional and
+/// comprehension repairs would overlap if they travelled in one pass.
+const OverlapImports = struct {
+    library: []const u8,
+    fn read(context: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
+        const self: *OverlapImports = @ptrCast(@alignCast(context.?));
+        if (std.mem.eql(u8, path, "app.my")) return allocator.dupe(u8, "import lib\nfunc main() -> int:\n    return lib.pick(True, False)\n");
+        if (std.mem.eql(u8, path, "lib.my")) return allocator.dupe(u8, self.library);
+        return error.NotFound;
+    }
+};
+
+/// Every edit the recovered parser diagnostics carry, each on its own diagnostic.
+fn repairCount(recovered: []const diagnostic.Diagnostic) usize {
+    var repairs: usize = 0;
+    for (recovered) |item| repairs += if (item.provenance.fix) |fix| fix.count() else 0;
+    return repairs;
+}
+
+// spec-case: FIX-MIGRATION-OVERLAP-1
+test "an imported module's overlapping parser repairs stay whole on separate diagnostics" {
+    var files: OverlapImports = .{ .library = "public def pick(c: bool, d: bool) -> int:\n    return 1 if c else (2 if d else 3)\n\n\npublic def magnitudes(xs: list[int]) -> list[int]:\n    return [x if x > 0 else -x for x in xs]\n" };
+    var project = language.project.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(.{ .context = &files, .read = OverlapImports.read }, "app", .{});
+    try t.expectError(error.SourceError, language.interfaces.build(&project));
+    const problem = project.problem.?;
+    // Each repair stays whole on its own diagnostic; the problem's fix is only
+    // the first repair, never the outer and inner conditionals merged.
+    try t.expectEqual(@as(usize, 8), repairCount(problem.recovered));
+    try t.expectEqual(@as(usize, 0), problem.fix_more.len);
+    try t.expectEqual(problem.recovered[0].provenance.fix.?.edit.span.start, problem.fix.?.span.start);
 }

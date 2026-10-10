@@ -187,7 +187,7 @@ fn measureStatement(allocator: std.mem.Allocator, program: typed.Program, metric
     const statement = program.statements[@backingInt(id)];
     while (controls.items.len != 0 and statement.span.start >= controls.items[controls.items.len - 1]) _ = controls.pop();
     const control = switch (statement.data) {
-        .branch, .loop => blk: {
+        .branch, .loop, .range_loop => blk: {
             metrics.structure.decisions += 1;
             break :blk true;
         },

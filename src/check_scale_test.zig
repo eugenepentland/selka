@@ -44,7 +44,7 @@ const Outcome = struct {
 
 /// How a check runs: as `check` (summaries stand in for bodies) or as a command
 /// that lowers the program (every body checked, summaries stand in for facts).
-const Mode = enum { check, lowering, demand, demand_missing };
+const Mode = enum { check, lowering, allocation_contracts, demand, demand_missing };
 
 fn admitDemand(context: *const anyopaque, key: []const u8, _: [32]u8, _: [32]u8) bool {
     const mode: *const Mode = @ptrCast(@alignCast(context));
@@ -71,7 +71,11 @@ fn checkProject(files: []const File, previous: ?[]const u8, mode: Mode) !Outcome
     defer cache.deinit();
     var arena_state = std.heap.ArenaAllocator.init(t.allocator);
     defer arena_state.deinit();
-    var request: summary.Request = .{ .facts_only = mode != .check };
+    var request: summary.Request = .{ .body_policy = switch (mode) {
+        .check => .summaries,
+        .lowering, .demand, .demand_missing => .concrete,
+        .allocation_contracts => .allocation_contracts,
+    } };
     if (mode == .demand or mode == .demand_missing) request.policy.demand = .{ .context = &mode, .allow = admitDemand };
     var decoded: summary.Index = .{};
     if (previous) |payload| {
@@ -166,7 +170,7 @@ const mid_source =
     \\    return lib.gather(n) + lib.gather(n + 1)
     \\
     \\
-    \\public func bounded(n: int) -> int noalloc:
+    \\public func bounded(n: int) -> int effects():
     \\    return lib.plain(n) * 2
     \\
     \\
@@ -250,7 +254,7 @@ test "a record shape edit re-checks every body that uses the record" {
 // spec-case: CHECK-SUMMARY-1
 test "a callee whose inferred effects change makes the check repeat in full" {
     const original = projectFiles(lib_source);
-    // `plain` now allocates, which the stood-in `noalloc` caller `bounded` forbids.
+    // `plain` now allocates, which the stood-in `effects()` caller `bounded` forbids.
     const allocating = projectFiles(libEdited("    return n + 1\n", "    mut ws: int[] = [n]\n    return ws[0] + 1\n"));
     const outcome = try checkAfterEdit(&original, &allocating);
     defer outcome.warm.deinit();
@@ -291,13 +295,13 @@ fn aliasProject(user: []const u8) [4]File {
 
 // spec: SEMANTIC-KEY-IDENTITY-1
 test "an import alias retargeted to an identical declaration elsewhere re-checks its users" {
-    const through_alpha = aliasProject("import alpha as source\n\n\npublic func bounded() -> Unit noalloc:\n    source.value()\n");
-    const through_beta = aliasProject("import beta as source\n\n\npublic func bounded() -> Unit noalloc:\n    source.value()\n");
+    const through_alpha = aliasProject("import alpha as source\n\n\npublic func bounded() -> Unit effects():\n    source.value()\n");
+    const through_beta = aliasProject("import beta as source\n\n\npublic func bounded() -> Unit effects():\n    source.value()\n");
     const outcome = try checkAfterEdit(&through_alpha, &through_beta);
     defer outcome.warm.deinit();
     defer outcome.cold.deinit();
     // `bounded`'s region and the callee's text are unchanged, but the callee
-    // is another declaration, which allocates under `noalloc`.
+    // is another declaration, which allocates under `effects()`.
     try t.expect(std.mem.indexOf(u8, outcome.warm.diagnostics, "E_EFFECT_BOUND") != null);
     try t.expectEqualStrings(outcome.cold.diagnostics, outcome.warm.diagnostics);
 }
@@ -341,7 +345,7 @@ test "a lowering command whose edit changes a callee's facts publishes the facts
     try t.expectEqual(@as(usize, 0), outcome.warm.stood_in);
     try t.expectEqualStrings(outcome.cold.facts, outcome.warm.facts);
     try t.expectEqualStrings(outcome.cold.diagnostics, outcome.warm.diagnostics);
-    // The edit breaks `bounded`'s `noalloc`, so nothing is published.
+    // The edit breaks `bounded`'s `effects()`, so nothing is published.
     try t.expect(outcome.warm.summaries == null);
     // `spread` stops allocating: a changed fact in a still-valid program. The
     // command repeats in full and publishes, so the next one stands in again.
@@ -715,6 +719,60 @@ test "reserved words removed spellings and layout lex exactly as before the keyw
         .kw_def, .ident, .lparen, .rparen, .arrow, .ident, .indent, .ident, .equal, .bytes, .kw_return, .ident, .dedent, .ident, .equal, .integer, .eof,
     };
     try t.expectEqualSlices(lexer.Tag, &layout_expected, layout);
+}
+
+// spec-case: FRONTEND-CORE-NOALLOC-1
+test "allocation contract summaries retain concrete bounded closures across reordered declarations" {
+    var original = projectFiles(lib_source);
+    original[1].bytes = try std.mem.replaceOwned(u8, t.allocator, mid_source, "effects()", "noalloc");
+    defer t.allocator.free(original[1].bytes);
+    const unchanged = try checkAfterEditAs(&original, &original, .allocation_contracts);
+    defer unchanged.warm.deinit();
+    defer unchanged.cold.deinit();
+    try t.expectEqual(@as(usize, 3), unchanged.warm.checked);
+    try t.expectEqual(@as(usize, 4), unchanged.warm.stood_in);
+    try t.expectEqualStrings(unchanged.cold.facts, unchanged.warm.facts);
+    const gather_at = comptime std.mem.indexOf(u8, lib_source, "public func gather").?;
+    const plain_at = comptime std.mem.indexOf(u8, lib_source, "public func plain").?;
+    const reordered_source = lib_source[0..gather_at] ++ lib_source[plain_at..] ++ "\n\n" ++ lib_source[gather_at..plain_at];
+    var reordered = projectFiles(reordered_source);
+    reordered[1].bytes = original[1].bytes;
+    const moved = try checkAfterEditAs(&original, &reordered, .allocation_contracts);
+    defer moved.warm.deinit();
+    defer moved.cold.deinit();
+    try t.expectEqual(@as(usize, 3), moved.warm.checked);
+    try t.expectEqual(@as(usize, 4), moved.warm.stood_in);
+    try t.expectEqualStrings(moved.cold.facts, moved.warm.facts);
+    try t.expectEqualStrings(moved.cold.diagnostics, moved.warm.diagnostics);
+}
+
+// spec: FRONTEND-ALLOCATION-SUMMARY-1
+test "F2 bounded body edits publish summaries for the next unrelated edit" {
+    for ([_]Mode{ .check, .allocation_contracts }) |mode| try boundedSummarySequence(mode);
+}
+
+fn boundedSummarySequence(mode: Mode) !void {
+    var original = projectFiles(lib_source);
+    original[1].bytes = try std.mem.replaceOwned(u8, t.allocator, mid_source, "effects()", "noalloc");
+    defer t.allocator.free(original[1].bytes);
+    const seed = try checkProject(&original, null, mode);
+    defer seed.deinit();
+    var edited = original;
+    edited[1].bytes = try std.mem.replaceOwned(u8, t.allocator, original[1].bytes, "lib.plain(n) * 2", "lib.plain(n) * 3");
+    defer t.allocator.free(edited[1].bytes);
+    const changed = try checkProject(&edited, seed.summaries.?, mode);
+    defer changed.deinit();
+    try t.expect(changed.summaries != null);
+    var unrelated = edited;
+    unrelated[2].bytes = libEdited("    return n + 1\n", "    return n + 2\n");
+    const third = try checkProject(&unrelated, changed.summaries.?, mode);
+    defer third.deinit();
+    const cold = try checkProject(&unrelated, null, mode);
+    defer cold.deinit();
+    try t.expect(third.stood_in > 0);
+    try t.expect(third.summaries != null);
+    try t.expectEqualStrings(cold.facts, third.facts);
+    try t.expectEqualStrings(cold.diagnostics, third.diagnostics);
 }
 
 // spec: FRONTEND-DEMAND-1

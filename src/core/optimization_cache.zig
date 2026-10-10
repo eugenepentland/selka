@@ -22,7 +22,7 @@ pub const Statistics = struct {
     bypassed: usize = 0,
     active_functions: usize = 0,
     fresh_work: usize = 0,
-    restores: struct { final: usize = 0, checkpoints: usize = 0 } = .{},
+    restores: struct { final: usize = 0, checkpoints: usize = 0, fusions: usize = 0 } = .{},
     final_loaded: usize = 0,
 };
 /// Outside facts and earlier pass events consulted by the requested stage.
@@ -30,6 +30,7 @@ pub const Inputs = struct {
     parameters: []const ?facts.Interval = &.{},
     returns: []const ?facts.Interval = &.{},
     effects: ?*const effects.Summaries = null,
+    fields: ?[32]u8 = null,
     events: [2]u32 = .{ 0, 0 },
 };
 
@@ -138,6 +139,7 @@ pub const Context = struct {
         defer writer.deinit();
         try writer.write(u8, request.mode);
         try writer.write([2]u32, inputs.events);
+        try writer.write(?[32]u8, inputs.fields);
         try writer.write([]const ?facts.Interval, inputs.parameters);
         const ancestry = Provenance.capture(a, self.source, provenance, function) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
@@ -235,6 +237,29 @@ pub const Context = struct {
         });
     }
 
+    /// Retain exact ancestry identity and only the declarations LLVM may consult.
+    pub fn renderMetadata(self: *Context, arena: std.mem.Allocator, function: u32, provenance: *const origins.Table) std.mem.Allocator.Error!?RenderMetadata {
+        var temporary = std.heap.ArenaAllocator.init(self.store.backing);
+        defer temporary.deinit();
+        const a = temporary.allocator();
+        const ancestry = Provenance.capture(a, self.source, provenance, function) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            error.InvalidSnapshot => return null,
+        };
+        var scopes: std.ArrayList(u32) = .empty;
+        for (ancestry.frames) |frame| {
+            if (frame.function >= self.source.module.functions.items.len) return null;
+            if (std.mem.indexOfScalar(u32, scopes.items, frame.function) == null) try scopes.append(a, frame.function);
+        }
+        var writer = codec.Writer.init(a);
+        defer writer.deinit();
+        // Source-origin ordinals are guarded by the complete source-path catalog.
+        try writer.write(Provenance, ancestry);
+        var digest: [32]u8 = undefined;
+        std.crypto.hash.Blake3.hash(writer.bytes.items, &digest, .{});
+        return .{ .ancestry = digest, .scopes = try arena.dupe(u32, scopes.items) };
+    }
+
     /// Bind a canonical fact payload independently of the final metadata record.
     pub fn factsKey(self: *const Context, digest: [32]u8) [32]u8 {
         return self.store.key("final-facts", &.{&digest});
@@ -305,9 +330,12 @@ pub const FinalMetadata = struct {
     body: [32]u8,
     outgoing: []const u32 = &.{},
     emission_effect: ?effects.Reused = null,
+    render: ?RenderMetadata = null,
     analysis: Analysis,
     state: FinalState,
 };
+/// Inline ancestry is immutable; referenced scope declarations are checked fresh.
+pub const RenderMetadata = struct { ancestry: [32]u8, scopes: []const u32 };
 /// Complete final-stage artifact with portable function and inline ancestry.
 pub const Final = struct { function: snapshot.Wire, provenance: Provenance, state: FinalState, analysis: ?Analysis = null };
 /// Canonical fact identity and the original checker IDs excluded from that identity.

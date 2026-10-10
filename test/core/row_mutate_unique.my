@@ -1,11 +1,9 @@
-
 extern func runtime_bench_now(host: Host) -> i64 effects(host)
+
 
 # Row `mutate_unique` of benchmarks/runtime/ports/main.my as a program of its own, like compute_s0.my: arguments
 # `size iterations seed` (the original takes the row name first), the same setup, kernel,
 # checksum and output `checksum elapsed`. The original also holds mutate_shared in the same branch; this program is the unique half.
-
-
 func parse_number(text: str) -> int:
     match parse_int(text):
         case Some(value):

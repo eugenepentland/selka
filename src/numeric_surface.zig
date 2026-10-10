@@ -5,6 +5,56 @@ const ast = @import("ast.zig");
 const Span = @import("source.zig").Span;
 const diagnostic = @import("diagnostic.zig");
 const number_literal = @import("number_literal.zig");
+/// The code every legacy text conversion reports.
+pub const numeric_parse_code = "E_NUMERIC_PARSE";
+
+/// A legacy text conversion, `int(text)` or `float(text)`: where its callee
+/// name and whole call sit, its one operand's source text, whether that
+/// operand binds as tightly as a method receiver, and whether the checker
+/// accepts the `str` method form at this call (generic bodies do not yet).
+pub const TextConversion = struct { name: Span, call: Span, operand: []const u8, primary: bool, method: bool = true };
+
+/// Diagnose a legacy text conversion with the repair that reaches the builtin
+/// parser. The bare `parse_int(text)` spelling is offered only when nothing in
+/// scope claims that name; otherwise a user function such as a `parse_int`
+/// wrapper would capture the call and recurse, so the repair calls the
+/// builtin as a `str` method, `text.parse_int()`, which no declaration can
+/// shadow and which builds the same Core IR (FRONTEND-NUMERIC-MIGRATION-3).
+/// Where the method form is not accepted the claimed repair is withheld.
+pub fn rejectTextConversion(sink: *diagnostic.Sink, conversion: TextConversion, target: []const u8, claimed: bool) diagnostic.Error {
+    if (claimed and !conversion.method) {
+        const message = std.fmt.allocPrint(
+            sink.allocator,
+            "cannot automatically replace this text conversion with {s}: {s} resolves to a user declaration or binding; " ++
+                "rename that binding to expose the builtin, or edit the parsing call explicitly",
+            .{ target, target },
+        ) catch return error.OutOfMemory;
+        return sink.fail(numeric_parse_code, conversion.name, message);
+    }
+    if (claimed) {
+        const open, const close = if (conversion.primary) .{ "", "" } else .{ "(", ")" };
+        const text = std.fmt.allocPrint(sink.allocator, "{s}{s}{s}.{s}()", .{ open, conversion.operand, close, target }) catch return error.OutOfMemory;
+        const message = std.fmt.allocPrint(
+            sink.allocator,
+            "parse text explicitly: {s} names a user declaration or binding here, so call the builtin parser as a str method",
+            .{target},
+        ) catch {
+            sink.allocator.free(text);
+            return error.OutOfMemory;
+        };
+        return sink.failFix(numeric_parse_code, conversion.name, message, .{ .span = conversion.call, .text = text });
+    }
+    return sink.failFix(numeric_parse_code, conversion.name, "parse text explicitly with parse_int or parse_float; int and float convert numbers", .{ .span = conversion.name, .text = target });
+}
+
+/// Whether an operand's syntax binds at least as tightly as a method call's
+/// receiver, so `operand.parse_int()` needs no parentheses around it.
+pub fn primaryOperand(node: ast.Node) bool {
+    return switch (node.data) {
+        .name, .field, .call, .method_call, .index, .slice, .text, .format => true,
+        else => false,
+    };
+}
 
 /// Ordinary float is a compiler-created binary64 domain, independent of user domains.
 pub fn isFloat(ty: typed.Type, records: []const typed.Record) bool {

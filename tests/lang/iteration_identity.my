@@ -1,5 +1,3 @@
-
-
 public func test_nonstructural_dictionary_writes_remain_visible() -> bool:
     mut values = {1: 10, 2: 20}
     mut total = 0

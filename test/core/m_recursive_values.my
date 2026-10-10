@@ -1,28 +1,33 @@
-
 record Link:
     value: int
     next: Link?
+
 
 enum Tree[T]:
     leaf(value: T)
     branch(left: Tree[T], right: Tree[T])
 
+
 domain Distance: u16:
     func make(value: u16) -> Distance:
         return wrap[Distance](value)
 
+
 record UnitSlot:
     value: Distance
     empty: Unit
+
 
 enum Unusual:
     some
     none(value: int)
     unit(value: Unit)
 
+
 record Cursor:
     rows: int[][]
     ticks: int
+
 
 record MixedUnits:
     scalar: int
@@ -30,30 +35,37 @@ record MixedUnits:
     row: FixedArray[int, 2]
     empty: Unit
 
+
 func tick(mut cursor: Cursor) -> int:
     cursor.ticks += 1
     return 0
 
+
 func add(mut row: int[], ignored: int) -> Unit:
     row.append(9)
+
 
 func add_reverse(ignored: int, mut row: int[]) -> Unit:
     row.append(9)
 
+
 func tick_row(mut row: int[]) -> int:
     row.append(7)
     return 0
+
 
 func conditional_ancestor(flag: bool) -> Cursor:
     mut cursor = Cursor(rows=[[1], [2]], ticks=0)
     add(mut cursor.rows[-1], if (flag) then (tick(mut cursor)) else (0))
     return cursor
 
+
 func chain(n: int) -> Link?:
     mut result: Link? = None
     for i in range(n):
         result = Some(Link(value=i, next=result))
     return result
+
 
 # spec: NEW-CORE-S3-VALUES-1
 public func test_deep_hashing_and_nominal_rendering() -> bool:
@@ -62,6 +74,7 @@ public func test_deep_hashing_and_nominal_rendering() -> bool:
     mut distinct = chain(2999)
     mut values: set[Link?] = {a, b, distinct}
     return a == b and a != distinct and len(values) == 2 and f"{chain(1)}" == "Some(Link(value=0, next=None))"
+
 
 # spec-case: NEW-CORE-S3-VALUES-1
 public func test_shared_nan_is_not_reflexive() -> bool:
@@ -74,6 +87,7 @@ public func test_shared_nan_is_not_reflexive() -> bool:
         plus = Tree.branch(left=plus, right=plus)
     return nan != nan and zero == plus
 
+
 # spec-case: NEW-CORE-S3-VALUES-1
 public func test_repeated_list_snapshots_stay_independent() -> bool:
     mut a = [1, 2]
@@ -85,6 +99,7 @@ public func test_repeated_list_snapshots_stay_independent() -> bool:
     mut numbers = [nan, -0.0]
     mut units: Unit[] = [()]
     return a == [1, 2] and joined == [8, 2] and repeated == [1, 9, 1, 2] and nan not in numbers and 0.0 in numbers and () in units
+
 
 # spec-case: NEW-CORE-S3-VALUES-1
 public func test_source_types_keep_unit_payloads_and_domain_names() -> bool:
@@ -106,11 +121,13 @@ public func test_source_types_keep_unit_payloads_and_domain_names() -> bool:
     mut dictionary: dict[int, Unit] = {1: ()}
     return f"{slot}" == "UnitSlot(value=Distance(3), empty=None)" and f"{distances}" == "[Distance(3), Distance(4)]" and f"{dictionary}" == "{1: None}" and f"{Distance.make(3u16)}" == "Distance(3)"
 
+
 # spec-case: NEW-CORE-S3-VALUES-1
 public func test_negative_index_capture_is_superseded_by_scalar_ancestor_write() -> bool:
     mut cursor = Cursor(rows=[[1], [2]], ticks=0)
     add(mut cursor.rows[-1], tick(mut cursor))
     return cursor.rows == [[1], [2]] and cursor.ticks == 1
+
 
 # spec-case: NEW-CORE-MUT-1
 public func test_sibling_write_preserves_capture_and_same_place_reads_current_value() -> bool:
@@ -122,11 +139,13 @@ public func test_sibling_write_preserves_capture_and_same_place_reads_current_va
     add(mut mapping[20], tick_row(mut mapping[10]))
     return rows == [[1, 7], [2, 9]] and same == [[1], [2, 7, 9]] and mapping == {10: [1, 7], 20: [2, 9]}
 
+
 # spec-case: NEW-CORE-MUT-1
 public func test_untaken_ancestor_write_keeps_publication_live() -> bool:
     mut untouched = conditional_ancestor(False)
     mut changed = conditional_ancestor(True)
     return untouched.rows == [[1], [2, 9]] and untouched.ticks == 0 and changed.rows == [[1], [2]] and changed.ticks == 1
+
 
 # spec-case: NEW-CORE-MUT-1
 public func test_keyword_temporaries_capture_in_source_order() -> bool:
@@ -135,6 +154,7 @@ public func test_keyword_temporaries_capture_in_source_order() -> bool:
     mut cursor = Cursor(rows=[[1], [2]], ticks=0)
     add_reverse(row=mut cursor.rows[-1], ignored=tick(mut cursor))
     return rows == [[1, 7], [2, 9]] and cursor.rows == [[1], [2]] and cursor.ticks == 1
+
 
 # spec-case: NEW-CORE-S3-VALUES-1
 public func test_unit_assignment_through_nested_list_places_survives_control_flow() -> bool:
@@ -153,6 +173,7 @@ public func test_unit_assignment_through_nested_list_places_survives_control_flo
     values[0].values = [12]
     values[0].scalar = 13
     return values[0].scalar == 13 and values[0].values == [12] and values[0].row[1] == 11 and before[0].scalar == 1 and before[0].values == [4] and before[0].row[1] == 3 and f"{values[0].empty}" == "None"
+
 
 # spec-case: NEW-CORE-S3-NUMERIC-1
 public func test_subtraction_and_multiplication_saturate_at_each_width() -> bool:

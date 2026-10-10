@@ -1,6 +1,6 @@
-
 record Rows:
     rows: int[][]
+
 
 # spec-case: NEW-CORE-PLACE-S4-1
 public func test_nested_unique_and_shared_paths() -> bool:
@@ -20,6 +20,7 @@ public func test_nested_unique_and_shared_paths() -> bool:
     mut old_mapping = mapping
     mapping["x"][0][1] = 4
     return a == [[1, 8], [9, 4]] and saved == [[1, 8], [3, 4]] and repeated == [[0, 7], [0, 0]] and row == [0, 0] and deep == [[[6, 1]]] and old_deep == [[[0, 1]]] and record.rows[0][0] == 5 and a[0][0] == 1 and mapping["x"][0][1] == 4 and old_mapping["x"][0][1] == 1
+
 
 func main() -> int:
     return 0

@@ -1,9 +1,7 @@
-
 # `wb = owner.f; change(mut wb); owner.f = wb` is a move of `owner.f` under
 # RC when nothing can observe the emptied field before the store-back
 # (RC-CLOSED-FIELD-TRANSFER-2). Every test here also runs under GC and
 # `--gc-stress`; the near misses must keep plain value semantics.
-
 record Note:
     words: str[]
 

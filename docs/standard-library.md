@@ -1,9 +1,9 @@
 # Standard library
 
-Fourteen modules ship inside the compiler. They are ordinary Python-style guest source
-built on the managed types described in the [Python-style guide](python-syntax.md),
-[managed memory](managed-memory.md) and [managed byte strings](bytes.md): `list`,
-`dict`, `str`, `bytes`, value `record` records, `Option` and `Result`. There is no
+Fourteen modules ship inside the compiler. They are ordinary guest source
+built on the managed types described in the [language guide](python-syntax.md),
+[managed memory](managed-memory.md) and [managed byte strings](bytes.md): growable arrays (`T[]`),
+`dict`, `str`, `bytes`, value records, optional values (`T?`) and checked results. There is no
 allocator to thread and no storage tier to choose.
 
 Import a module by name; projects do not copy these files.
@@ -33,7 +33,7 @@ so code that takes a `Clock` or a `Filesystem` can be tested by passing one; see
 [deterministic stand-ins](effects.md#deterministic-stand-ins) and
 [capability parameters in tests](tooling/guest-tests.md#capability-parameters).
 
-Managed-value modules report conversion failures using `Result` or `Option`.
+Managed-value modules report conversion failures using checked results or optional values.
 The byte builder's checked append operations return a success flag. The network
 module uses the resource-result types documented below.
 
@@ -43,14 +43,14 @@ module uses the resource-result types documented below.
 # doc: not-mylang
 record Builder: ...
 create() -> Builder
-append(builder: mut Builder, data: bytes) -> None
-append_range(builder: mut Builder, data: bytes, start: int, end: int) -> bool
-append_text(builder: mut Builder, text: str) -> None
-append_int(builder: mut Builder, value: int) -> None
-append_byte(builder: mut Builder, value: int) -> bool
-append_float(builder: mut Builder, value: float) -> bool
-append_spaces(builder: mut Builder, count: int) -> bool
-reserve(builder: mut Builder, extra: int) -> bool
+append(mut builder: Builder, data: bytes) -> Unit
+append_range(mut builder: Builder, data: bytes, start: int, end: int) -> bool
+append_text(mut builder: Builder, text: str) -> Unit
+append_int(mut builder: Builder, value: int) -> Unit
+append_byte(mut builder: Builder, value: int) -> bool
+append_float(mut builder: Builder, value: float) -> bool
+append_spaces(mut builder: Builder, count: int) -> bool
+reserve(mut builder: Builder, extra: int) -> bool
 finish(builder: Builder) -> bytes
 ```
 
@@ -154,7 +154,7 @@ func main() -> int:
             return 0 - len(message)
 ```
 
-`sqrt` calls the binary64 `f64_sqrt` intrinsic on its ordinary `float` argument,
+`sqrt` calls the internal binary64 square-root helper on its ordinary `float` argument,
 so it is the correctly rounded square root. `pow` takes an integer exponent and
 squares repeatedly; magnitudes above 4096 saturate to a same-parity magnitude,
 which preserves the sign and the overflow or underflow outcome.
@@ -186,16 +186,16 @@ is_digit(text: str) -> bool          is_alpha(text: str) -> bool
 is_alnum(text: str) -> bool          is_space(text: str) -> bool
 starts_with(text: str, prefix: str) -> bool
 ends_with(text: str, suffix: str) -> bool
-find(text: str, needle: str) -> Option[int]
+find(text: str, needle: str) -> int?
 count(text: str, needle: str) -> int
 strip(text: str) -> str              lstrip(text: str) -> str
-rstrip(text: str) -> str             lines(text: str) -> list[str]
+rstrip(text: str) -> str             lines(text: str) -> str[]
 upper(text: str) -> str              lower(text: str) -> str
 repeat(text: str, times: int) -> Result[str, Error]
 pad_left(text: str, width: int, fill: str) -> Result[str, Error]
 pad_right(text: str, width: int, fill: str) -> Result[str, Error]
 substitute(text: str, needle: str, insertion: str) -> Result[str, Error]
-to_int(text: str) -> Option[int]     to_float(text: str) -> Option[float]
+to_int(text: str) -> int?     to_float(text: str) -> float?
 format_int(value: int, base: int) -> Result[str, Error]
 format_float(value: float, decimals: int) -> Result[str, Error]
 ord(text: str) -> Result[int, Error]
@@ -255,17 +255,17 @@ sign of a negative zero (`"-0.00"`).
 ```text
 # doc: not-mylang
 compare_strs(a: str, b: str) -> int
-sort_ints(values: list[int]) -> list[int]
-sort_floats(values: list[float]) -> list[float]
-sort_strs(values: list[str]) -> list[str]
-sort_by_key[T: copy + storable](values: list[T], key: func(T) -> int effects()) -> list[T]
-is_sorted_ints(values: list[int]) -> bool
-binary_search(values: list[int], target: int) -> Option[int]
-min_int(values: list[int]) -> Option[int]
-max_int(values: list[int]) -> Option[int]
-min_str(values: list[str]) -> Option[str]
-unique_ints(values: list[int]) -> list[int]
-unique_strs(values: list[str]) -> list[str]
+sort_ints(values: int[]) -> int[]
+sort_floats(values: float[]) -> float[]
+sort_strs(values: str[]) -> str[]
+sort_by_key[T: copy + storable](values: T[], key: func(T) -> int effects()) -> T[]
+is_sorted_ints(values: int[]) -> bool
+binary_search(values: int[], target: int) -> int?
+min_int(values: int[]) -> int?
+max_int(values: int[]) -> int?
+min_str(values: str[]) -> str?
+unique_ints(values: int[]) -> int[]
+unique_strs(values: str[]) -> str[]
 ```
 
 The concrete `sort_ints`, `sort_floats` and `sort_strs` wrappers delegate to the
@@ -325,10 +325,10 @@ record Split:
     extension: str
 
 separator() -> str                   is_absolute(value: str) -> bool
-join(left: str, right: str) -> str   join_all(parts: list[str]) -> str
+join(left: str, right: str) -> str   join_all(parts: str[]) -> str
 basename(value: str) -> str          dirname(value: str) -> str
 splitext(value: str) -> Split        stem(value: str) -> str
-extension(value: str) -> str         components(value: str) -> list[str]
+extension(value: str) -> str         components(value: str) -> str[]
 normalize(value: str) -> str
 ```
 
@@ -429,7 +429,7 @@ func refused() -> int:
 # doc: not-mylang
 union Json:
     null, boolean: bool, integer: int, number: float,
-    text: str, array: list[Json], object: dict[str, Json]
+    text: str, array: Json[], object: dict[str, Json]
 
 union Error:
     Malformed: str
@@ -440,14 +440,14 @@ dumps(value: Json) -> str
 max_depth() -> int                   type_name(value: Json) -> str
 null_value() -> Json                 boolean(value: bool) -> Json
 integer(value: int) -> Json          number(value: float) -> Json
-text(value: str) -> Json             array(items: list[Json]) -> Json
+text(value: str) -> Json             array(items: Json[]) -> Json
 object(fields: dict[str, Json]) -> Json
-is_null(value: Json) -> bool         as_bool(value: Json) -> Option[bool]
-as_int(value: Json) -> Option[int]   as_float(value: Json) -> Option[float]
-as_str(value: Json) -> Option[str]   as_list(value: Json) -> Option[list[Json]]
-as_dict(value: Json) -> Option[dict[str, Json]]
-get(value: Json, key: str) -> Option[Json]
-at(value: Json, index: int) -> Option[Json]
+is_null(value: Json) -> bool         as_bool(value: Json) -> bool?
+as_int(value: Json) -> int?   as_float(value: Json) -> float?
+as_str(value: Json) -> str?   as_list(value: Json) -> Json[]?
+as_dict(value: Json) -> dict[str, Json]?
+get(value: Json, key: str) -> Json?
+at(value: Json, index: int) -> Json?
 ```
 
 `loads` parses strict RFC 8259: no comments, no trailing commas, no leading zero,
@@ -516,15 +516,15 @@ the same value, written without an exponent.
 # doc: not-mylang
 record Pool[T: copy + storable]: ...  record Handle[T: copy + storable]: ...
 
-create[T: copy + storable](values: list[T]) -> Pool[T]
-insert[T: copy + storable](store: Pool[T], value: T) -> Handle[T]
-get[T: copy + storable](store: Pool[T], handle: Handle[T]) -> Option[T]
-set[T: copy + storable](store: Pool[T], handle: Handle[T], value: T) -> bool
-remove[T: copy + storable](store: Pool[T], handle: Handle[T]) -> bool
+create[T: copy + storable](values: T[]) -> Pool[T]
+insert[T: copy + storable](mut store: Pool[T], value: T) -> Handle[T]
+get[T: copy + storable](store: Pool[T], handle: Handle[T]) -> T?
+set[T: copy + storable](mut store: Pool[T], handle: Handle[T], value: T) -> bool
+remove[T: copy + storable](mut store: Pool[T], handle: Handle[T]) -> bool
 occupied[T: copy + storable](store: Pool[T], handle: Handle[T]) -> bool
 count[T: copy + storable](store: Pool[T]) -> int
 capacity[T: copy + storable](store: Pool[T]) -> int
-handles[T: copy + storable](store: Pool[T]) -> list[Handle[T]]
+handles[T: copy + storable](store: Pool[T]) -> Handle[T][]
 ```
 
 A pool is the escape hatch for graphs and entity tables that values cannot
@@ -638,10 +638,10 @@ record Random: ...
 seeded(seed: int) -> Random          from_word(word: u64) -> Random
 from_entropy(capability: random_cap) -> Result[Random, str] effects(random, managed_allocation)
 seeded_entropy(seed: int) -> Entropy
-next_word(generator: mut Random) -> u64  random(generator: mut Random) -> float
-randint(generator: mut Random, low: int, high: int) -> Result[int, str]
-choice[T: copy + storable](generator: mut Random, items: list[T]) -> Option[T]
-shuffle[T: copy + storable](generator: mut Random, items: mut list[T])
+next_word(mut generator: Random) -> u64  random(mut generator: Random) -> float
+randint(mut generator: Random, low: int, high: int) -> Result[int, str]
+choice[T: copy + storable](mut generator: Random, items: T[]) -> T?
+shuffle[T: copy + storable](mut generator: Random, mut items: T[])
 ```
 
 The stream is SplitMix64: deterministic simulation state, not a cryptographic
@@ -712,7 +712,7 @@ after(start: Instant, duration: Duration) -> Result[Instant, str]
 elapsed(start: Instant, end: Instant) -> Result[Duration, str]
 expired(deadline: Instant, current: Instant) -> bool
 simulated_clock(start: Instant) -> Clock
-advance(clock: Clock, duration: Duration) -> Result[None, str]
+advance(clock: Clock, duration: Duration) -> Result[Unit, str]
 ```
 
 Both records count signed nanoseconds, which spans roughly 292 years either side

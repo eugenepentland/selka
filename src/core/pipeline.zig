@@ -40,8 +40,11 @@ pub const Options = struct {
     /// or `sabotage` (`--sabotage-facts`, test only: verify with one wrong rule), with
     /// `sabotage_widening` and `sabotage_length` for the other wrong rules of `facts.Sabotage`
     /// (`--sabotage-facts=widening`, `--sabotage-facts=length`), and `sabotage_overflow`
-    /// for the overflow facts' rules (`--sabotage-facts=overflow`).
-    facts: enum { on, off, verify, sabotage, sabotage_widening, sabotage_length, sabotage_overflow } = .on,
+    /// for the overflow facts' rules (`--sabotage-facts=overflow`), and `sabotage_index` for
+    /// the dominating-check rule (`--sabotage-facts=index`), and `sabotage_field` for the
+    /// whole-program field intervals (`--sabotage-facts=field`), and `sabotage_version` for
+    /// the bounds versioning guard (`--sabotage-facts=version`).
+    facts: enum { on, off, verify, sabotage, sabotage_widening, sabotage_length, sabotage_overflow, sabotage_index, sabotage_field, sabotage_version } = .on,
 };
 
 /// Extra outputs of a build.
@@ -125,11 +128,15 @@ const BuildRequest = struct {
 
 fn buildAttempt(init: std.process.Init, path: []const u8, options: Options, budget: ?run_budget.RunBudget, report: *std.ArrayList(u8), allow_lazy: bool) Error!u8 {
     const allocator = init.arena.allocator();
+    const compression = @import("stage_compression.zig").Policy.parse(init.environ_map.get("MYLANG_STAGE_CACHE_COMPRESSION")) catch {
+        try report.appendSlice(allocator, "mylang-core: MYLANG_STAGE_CACHE_COMPRESSION must be 'zlib' or 'none'\n");
+        return error.ConfigurationFailed;
+    };
     const entry = try project_entry.resolve(allocator, init.io, path, report);
     const replaying = options.show.llvm == null;
     const context: build_replay.Context = .{ .arena = allocator, .io = init.io, .environment = init.environ_map, .cache = options.cache, .zig = options.zig, .flags = try flags(init, options, budget), .entry = entry };
     if (try replayBuild(context, options, report)) return 0;
-    var storage = try stage_store.Store.init(init.gpa, init.io, options.cache);
+    var storage = try stage_store.Store.initWithOptions(init.gpa, init.io, options.cache, .{ .compression = compression });
     defer storage.deinit();
     var stages: stage_metrics.Report = .{};
     if (!allow_lazy) stages.lowering.fallbacks = 1;
@@ -211,19 +218,22 @@ fn buildAttempt(init: std.process.Init, path: []const u8, options: Options, budg
     };
     const outcome = try linkEmittedCached(init, module, prepared.unit, options, caches, report);
     materializationMetrics(&stages, prepared.lazy);
+    const flush_start = stage_metrics.now(init.io);
+    const flushed = try storage.flush();
+    const publication: stage_metrics.Storage = .{ .flush_nanoseconds = stage_metrics.elapsed(init.io, flush_start), .flush_succeeded = flushed, .reads = storage.statistics(), .compression = @tagName(compression) };
     // A record that cannot be written costs the next build its replay, nothing more.
     if (replaying) build_replay.remember(context, prepared.sources, outcome.tool, .{ .program = outcome.program, .foreign = outcome.foreign }, report.items) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         error.WriteFailed => {},
     };
-    if (options.show.cache_report != .off) try cacheReport(allocator, options.show.cache_report, outcome, &stages, report);
+    if (options.show.cache_report != .off) try cacheReport(allocator, options.show.cache_report, outcome, &stages, &publication, report);
     return 0;
 }
 
 fn replayBuild(context: build_replay.Context, options: Options, report: *std.ArrayList(u8)) Error!bool {
     if (options.show.llvm != null or options.show.verify_cache) return false;
     if (!try build_replay.replay(context, options.output, report)) return false;
-    if (options.show.cache_report != .off) try cacheReport(context.arena, options.show.cache_report, null, null, report);
+    if (options.show.cache_report != .off) try cacheReport(context.arena, options.show.cache_report, null, null, null, report);
     return true;
 }
 
@@ -297,7 +307,7 @@ fn flags(init: std.process.Init, options: Options, budget: ?run_budget.RunBudget
 /// Say what the caches served: for a replayed build (`outcome` null) that it replayed,
 /// else the units linked, reused, compiled and verified, whether the program store
 /// served the executable, and the tool processes started.
-fn cacheReport(allocator: std.mem.Allocator, form: CacheReport, outcome: ?driver.Outcome, stages: ?*const stage_metrics.Report, report: *std.ArrayList(u8)) Error!void {
+fn cacheReport(allocator: std.mem.Allocator, form: CacheReport, outcome: ?driver.Outcome, stages: ?*const stage_metrics.Report, storage: ?*const stage_metrics.Storage, report: *std.ArrayList(u8)) Error!void {
     const c = if (outcome) |built| built.counts else driver.Counts{};
     const program = if (outcome) |built| (if (built.program_reused) "reused" else "linked") else "replayed";
     if (form == .json) {
@@ -310,6 +320,7 @@ fn cacheReport(allocator: std.mem.Allocator, form: CacheReport, outcome: ?driver
             .verified = c.verified,
             .processes = c.processes,
             .stages = stages,
+            .storage = storage,
         }, .{}) catch return error.OutOfMemory;
         try report.print(allocator, "{s}\n", .{record});
         return;
@@ -417,6 +428,9 @@ fn emittedCached(memory: Memory, module: *ir.Module, unit: Unit, options: Option
         .sabotage_widening => .sabotage_widening,
         .sabotage_length => .sabotage_length,
         .sabotage_overflow => .sabotage_overflow,
+        .sabotage_index => .sabotage_index,
+        .sabotage_field => .sabotage_field,
+        .sabotage_version => .sabotage_version,
     };
     const optimized = options.mode != .debug;
     const ordinary_optimized = options.mode == .optimized_debug and options.facts == .on;

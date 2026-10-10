@@ -1,5 +1,3 @@
-
-
 record Bag:
     name: str
     items: int[]

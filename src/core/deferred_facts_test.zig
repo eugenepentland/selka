@@ -1,5 +1,6 @@
 //! Compact final facts preserve dense results without retaining analysis scratch.
 const std = @import("std");
+const stage_loss = @import("stage_loss_test_support.zig");
 const facts = @import("facts.zig");
 const ir = @import("ir.zig");
 const deferred = @import("deferred_facts.zig");
@@ -85,8 +86,7 @@ test "deferArtifact retains only durable fact handles and load rejects cache los
     try std.testing.expect(artifact.bytes.len > @sizeOf(deferred.Handle) * 100);
     _ = scratch.reset(.free_all);
     try std.testing.expectEqualDeep(expected, (try table.load(a, 0)).?);
-    const name = try std.fmt.allocPrint(a, "stages-v1/{s}.stage", .{std.fmt.bytesToHex(key, .lower)});
-    try directory.dir.deleteFile(std.testing.io, name);
+    try stage_loss.remove(a, &store, key);
     try std.testing.expectEqual(identity, table.identity(0).?);
     try std.testing.expectError(error.CacheMiss, table.load(a, 0));
     try std.testing.expect(try store.save(key, "changed payload with a valid stage checksum"));

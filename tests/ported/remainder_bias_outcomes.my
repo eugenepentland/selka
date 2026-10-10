@@ -1,4 +1,3 @@
-
 # A list built by appending `(seed + offset + i * 13) % 1009` in a loop: the
 # first and last elements for negative, positive, extreme and empty runs, a
 # modulus wider than 2^62, and scaled seeds at both endpoints of the proven
@@ -6,8 +5,6 @@
 # remainder bias tests (`qbe_loop_remainder_bias_test.zig`). The traps those
 # tests also pinned (R_OVERFLOW when the seed sits at the integer limit, and
 # R_MEMORY_BUDGET under a 1 MiB ceiling) cannot be expected from a guest test.
-
-
 func calculate(n: int, seed: int, offset: int) -> int:
     mut values: int[] = []
     for i in range(n):

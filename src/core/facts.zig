@@ -15,6 +15,7 @@
 //! constants below, which are the stated assumptions of the S0 design.
 const std = @import("std");
 const ir = @import("ir.zig");
+const index_keys = @import("index_keys.zig");
 
 /// A list holds at most this many elements: elements of at least one byte in the
 /// target's user address space (2^47 on x86-64 Linux, L4; see `target.zig`).
@@ -294,6 +295,40 @@ fn successorsOf(f: *const ir.Function, block: ir.BlockId) Successors {
     return out;
 }
 
+/// The index the program wrote when `phi`, in block `join`, is the builder's Python
+/// normalization of it (NEW-CORE-F2-WRAP-1): a phi of two predecessors whose operand from
+/// `test` is `raw`, where `test` ends in `branch raw < 0, adjust, join` and `adjust`, entered
+/// only from `test`, jumps to `join`. On every path where `raw >= 0` the phi is `raw` itself,
+/// whatever `adjust` computes. Null for any other value, and once the facts folded the test.
+pub fn normalizedRaw(f: *const ir.Function, join: ir.BlockId, phi: ir.Ref) ?ir.Ref {
+    const inst = f.inst(f.resolve(phi));
+    if (inst.op != .phi or inst.ty != .i64) return null;
+    const operands = f.operands(inst.data);
+    const preds = f.blocks.items[join.index()].preds.items;
+    if (operands.len != 2 or preds.len != 2) return null;
+    for (0..2) |k| {
+        const raw = f.resolve(operands[k]);
+        const test_block = f.blocks.items[preds[k].index()];
+        const adjust = preds[1 - k];
+        const adjust_block = f.blocks.items[adjust.index()];
+        if (test_block.insts.items.len == 0 or adjust_block.insts.items.len == 0) continue;
+        if (adjust_block.preds.items.len != 1 or adjust_block.preds.items[0] != preds[k]) continue;
+        const leave = f.inst(adjust_block.insts.items[adjust_block.insts.items.len - 1]);
+        if (leave.op != .jump or leave.data != @backingInt(join)) continue;
+        const last = f.inst(test_block.insts.items[test_block.insts.items.len - 1]);
+        if (last.op != .branch) continue;
+        const targets = ir.unpackTargets(last.data);
+        if (targets.then != adjust or targets.otherwise != join) continue;
+        const condition = f.inst(f.resolve(last.a));
+        if (condition.op != .cmp or @as(ir.Predicate, @fromBackingInt(@intCast(condition.data))) != .lt) continue;
+        if (f.resolve(condition.a) != raw) continue;
+        const zero = f.inst(f.resolve(condition.b));
+        if (zero.op != .iconst or zero.data != 0 or f.inst(raw).ty != .i64) continue;
+        return raw;
+    }
+    return null;
+}
+
 /// A counted loop: `counter = phi(start, counter + 1)` in the header, `counter < bound` its condition.
 pub const Counted = struct { loop: ir.Loop, counter: ir.Ref, start: ir.Ref, bound: ir.Ref };
 
@@ -317,6 +352,10 @@ const Analysis = struct {
     round: usize = 0,
     /// Per list phi, how many times its element hull or common length changed (widened past eight).
     element_changes: []u8 = &.{},
+    /// Value, index and list length identities (`index_keys`, NEW-CORE-F2-INDEX-2).
+    keys: ?index_keys.Keys = null,
+    /// Whole-program field intervals (`Options.fields`).
+    fields: FieldIntervals = .{},
 
     fn inst(self: *Analysis, ref: ir.Ref) ir.Inst {
         return self.f.inst(self.f.resolve(ref));
@@ -524,7 +563,66 @@ pub const Options = struct {
     /// Turn the checks the facts rule out into `proven` and fold decided
     /// comparisons; false computes the facts without changing the function.
     mark: bool = true,
+    /// Whole-program integer field intervals (`fields.zig`, NEW-CORE-F2-FIELD-1).
+    fields: FieldIntervals = .{},
 };
+
+/// Whole-program intervals of integer and boolean record fields (`fields.zig`,
+/// NEW-CORE-F2-FIELD-1): per record type, by compound index, per field, the hull of every
+/// value any write in the module stores there; null where unknown.
+pub const FieldIntervals = struct {
+    module: ?*const ir.Module = null,
+    types: []const ?[]const ?Interval = &.{},
+
+    /// The interval of field `field` of every record of type `ty`, when known.
+    pub fn get(self: FieldIntervals, ty: ir.Type, field: u64) ?Interval {
+        const fields = self.table(ty) orelse return null;
+        if (field >= fields.len) return null;
+        return fields[@intCast(field)];
+    }
+
+    /// The intervals of every field of every record of type `ty`, when it has any.
+    pub fn table(self: FieldIntervals, ty: ir.Type) ?[]const ?Interval {
+        if (!ty.isCompound()) return null;
+        const index = @backingInt(ty) - ir.Type.first_compound;
+        if (index >= self.types.len) return null;
+        return self.types[index];
+    }
+
+    /// The interval of the value at `path` inside an element of type `element`, when the
+    /// path ends in a field of a record.
+    pub fn atPath(self: FieldIntervals, element: ir.Type, path: ir.FieldPath) ?Interval {
+        const module = self.module orelse return null;
+        const last = pathField(module, element, path) orelse return null;
+        return self.get(last.record, last.field);
+    }
+};
+
+/// The record type and field the last step of `path` inside an `element` value selects,
+/// or null when the last step is not a record field (a union tag or payload, an array element).
+pub fn pathField(module: *const ir.Module, element: ir.Type, path: ir.FieldPath) ?struct { record: ir.Type, field: u32 } {
+    var current = element;
+    const steps = path.slice();
+    for (steps, 0..) |step, k| {
+        const kind = module.kind(current) orelse return null;
+        switch (kind) {
+            .record => {
+                const fields = module.compound(current).record;
+                if (step >= fields.len) return null;
+                if (k + 1 == steps.len) return .{ .record = current, .field = step };
+                current = fields[step];
+            },
+            .array => current = module.compound(current).array.elem,
+            .@"union" => {
+                const cases = module.compound(current).@"union";
+                if (step == 0 or step - 1 >= cases.len) return null;
+                current = cases[step - 1];
+            },
+            else => return null,
+        }
+    }
+    return null;
+}
 
 /// The deliberately wrong rules (`--sabotage-facts`, `--sabotage-facts=widening`, `=length`).
 pub const Sabotage = enum {
@@ -540,6 +638,12 @@ pub const Sabotage = enum {
     /// inside: a counter's per-iteration growth is one less, `x * x <= y` bounds `x` by
     /// one less than its square root, and a callee's return interval loses its top.
     overflow,
+    /// A passed bounds check is taken to cover the next index up too (`index_checks`).
+    index,
+    /// A record field's whole-program interval loses its top (`fields.zig`).
+    field,
+    /// A bounds versioning guard admits one index past the end (`version.zig`).
+    version,
 };
 
 /// The bounds a widened interval may stop at before its type's own: 0, the
@@ -647,6 +751,7 @@ pub fn analyzeWithScratch(arena: std.mem.Allocator, scratch: std.mem.Allocator, 
         .storage = .{ .scratch = scratch, .results = arena },
         .sabotage = options.sabotage,
         .returns = options.returns,
+        .fields = options.fields,
         .f = f,
         .shape = try shape(scratch, f),
         .facts = .{
@@ -672,6 +777,7 @@ pub fn analyzeWithScratch(arena: std.mem.Allocator, scratch: std.mem.Allocator, 
         if (inst.op == .param and inst.data < options.params.len) a.facts.ranges[index] = options.params[@intCast(inst.data)];
     }
     try findCounted(&a);
+    a.keys = try index_keys.compute(scratch, f, a.shape.rpo);
     const changes = try scratch.alloc(u8, f.insts.items.len);
     @memset(changes, 0);
     a.element_changes = try scratch.alloc(u8, f.insts.items.len);
@@ -901,9 +1007,22 @@ fn transfer(a: *Analysis, ref: ir.Ref, block: ir.BlockId) ?Interval {
         .dict_entry_value => a.facts.aggregates.dicts[a.liveOperand(i.a).index()].values orelse full,
         .str_len => .{ .lo = 0, .hi = max_list_length },
         .record_get => blk: {
-            const table = fieldsOf(a, i.a) orelse break :blk full;
-            if (i.data >= table.len) break :blk full;
-            const field = table[@intCast(i.data)] orelse break :blk full;
+            // This function's own view of the record, and every record of its type's (NEW-CORE-F2-FIELD-1).
+            const global = a.fields.get(a.inst(i.a).ty, i.data);
+            const table = fieldsOf(a, i.a) orelse &.{};
+            const local: ?Interval = if (i.data < table.len) table[@intCast(i.data)] else null;
+            var field = local orelse global orelse break :blk full;
+            if (local != null and global != null) {
+                const both = field.meet(global.?);
+                if (both.lo <= both.hi) field = both;
+            }
+            break :blk if (full) |limits| field.meet(limits) else field;
+        },
+        .list_get_field => blk: {
+            const list_type = a.inst(i.a).ty;
+            const module = a.fields.module orelse break :blk full;
+            if (module.kind(list_type) != .list) break :blk full;
+            const field = a.fields.atPath(module.compound(list_type).list, ir.FieldPath.unpack(i.data & ~@import("flags.zig").place_read)) orelse break :blk full;
             break :blk if (full) |limits| field.meet(limits) else field;
         },
         .float_to_int => blk: {
@@ -987,9 +1106,13 @@ fn transferFloat(a: *Analysis, ref: ir.Ref, block: ir.BlockId) ?FloatInterval {
     };
 }
 
-/// The field intervals of record value `raw`, when known.
+/// The field intervals of record value `raw`, when known: this function's own, else every
+/// record of its type's (`FieldIntervals`, NEW-CORE-F2-FIELD-1), so a record a parameter,
+/// call or element read brings in starts from them and its updates and joins keep them.
 fn fieldsOf(a: *Analysis, raw: ir.Ref) ?[]const ?Interval {
-    return a.facts.aggregates.fields[a.f.resolve(raw).index()];
+    const ref = a.f.resolve(raw);
+    if (a.facts.aggregates.fields[ref.index()]) |own| return own;
+    return a.fields.table(a.f.inst(ref).ty);
 }
 
 /// The interval of an integer or boolean operand, null for any other type.
@@ -1626,8 +1749,16 @@ fn provableAccess(a: *Analysis, i: ir.Inst, block: ir.BlockId) bool {
             // dominating `index < y` (or `index <= y` with `y` strictly bounded) and `y`'s bound.
             const bound = (a.facts.bounds[index.index()] orelse LengthBound{}).best(lessBound(a, index, block));
             if (bound.list == list and bound.strict) return true;
+            // A dominating `index < len(other)` for a list of the same length (NEW-CORE-F2-INDEX-2).
+            if (belowLength(a, index, list, block)) return true;
             const length = a.facts.aggregates.lists[list.index()].length;
             if (length == .none) return false;
+            // A fill loop's length holds only once the loop has exited (NEW-CORE-F2-INDEX-1).
+            if (!lengthHolds(a, list, block)) return false;
+            // The list has `max(length, 0)` elements, so an index below `length`'s least value is in it.
+            if (a.rangeAt(length, block)) |least| {
+                if (range.hi < least.lo) return true;
+            }
             if (a.knownLess(index, length, block)) return true;
             // `x % n` is below a positive `n`, and `n` is the list's length.
             const producer = a.inst(index);
@@ -1644,6 +1775,111 @@ fn provableAccess(a: *Analysis, i: ir.Inst, block: ir.BlockId) bool {
         },
         else => return false,
     }
+}
+
+/// Whether a dominating branch edge says `index < len(other)` (or `len(other) > index`), for
+/// a list `other` with the length of `list` and an index equal to `index` (`index_keys`).
+fn belowLength(a: *Analysis, index: ir.Ref, list: ir.Ref, block: ir.BlockId) bool {
+    const keys = a.keys orelse return false;
+    const wanted = keys.index(index);
+    const length = keys.length(list);
+    var b: ?ir.BlockId = block;
+    while (b) |current| {
+        if (a.edgeCondition(current)) |edge| {
+            var predicate: ir.Predicate = @fromBackingInt(@intCast(edge.cmp.data));
+            if (!edge.taken) predicate = switch (predicate) {
+                .lt => .ge,
+                .le => .gt,
+                .gt => .le,
+                .ge => .lt,
+                .eq => .ne,
+                .ne => .eq,
+            };
+            const pair: ?[2]ir.Ref = switch (predicate) {
+                .lt => .{ edge.cmp.a, edge.cmp.b },
+                .gt => .{ edge.cmp.b, edge.cmp.a },
+                else => null,
+            };
+            if (pair) |operands| {
+                if (lengthOf(a, operands[1])) |measured| {
+                    if (std.meta.eql(keys.length(measured), length) and std.meta.eql(keys.index(operands[0]), wanted)) return true;
+                }
+            }
+        }
+        if (current.index() == 0) break;
+        b = a.shape.idom[current.index()];
+    }
+    return false;
+}
+
+/// The list whose `len` value `raw` is, through value-preserving conversions.
+fn lengthOf(a: *Analysis, raw: ir.Ref) ?ir.Ref {
+    var ref = a.f.resolve(raw);
+    var steps: usize = 0;
+    while (steps < 4) : (steps += 1) {
+        const inst = a.f.inst(ref);
+        switch (inst.op) {
+            .list_len => return a.f.resolve(inst.a),
+            // A checked conversion traps instead of changing the value; `len` always fits `i64`.
+            .convert => {
+                if (inst.check == .none and inst.ty != .i64) return null;
+                ref = a.f.resolve(inst.a);
+            },
+            else => return null,
+        }
+    }
+    return null;
+}
+
+/// Whether the `length` fact of `list` holds where `block` runs (NEW-CORE-F2-INDEX-1): every
+/// counted fill loop the fact comes from had exited where the value was made. Inside its
+/// fill loop the list has as many elements as iterations so far, fewer than the fill bound.
+/// A copy or write keeps the length its operand had where it ran; a phi takes each operand
+/// as it was at the end of that operand's predecessor.
+fn lengthHolds(a: *Analysis, list: ir.Ref, block: ir.BlockId) bool {
+    const Pending = struct { ref: ir.Ref, at: ir.BlockId };
+    var stack: [64]Pending = undefined;
+    var depth: usize = 1;
+    var seen: [64]ir.Ref = undefined;
+    var seen_count: usize = 0;
+    stack[0] = .{ .ref = a.f.resolve(list), .at = block };
+    while (depth != 0) {
+        depth -= 1;
+        const item = stack[depth];
+        const ref = a.f.resolve(item.ref);
+        const fact = a.facts.aggregates.lists[ref.index()];
+        if (fact.length == .none) continue;
+        if (fact.pattern) {
+            const header = a.shape.block_of[ref.index()] orelse return false;
+            const exit = for (a.counted.items) |counted| {
+                if (counted.loop.header == header) break counted.loop.exit;
+            } else return false;
+            if (!a.dominates(exit, item.at)) return false;
+            continue;
+        }
+        // Anything but a fill phi holds or fails the same way wherever it is asked about.
+        if (std.mem.indexOfScalar(ir.Ref, seen[0..seen_count], ref) != null) continue;
+        if (seen_count == seen.len) return false;
+        seen[seen_count] = ref;
+        seen_count += 1;
+        const inst = a.f.inst(ref);
+        const here = a.shape.block_of[ref.index()] orelse return false;
+        switch (inst.op) {
+            .list_copy, .list_set => {
+                if (depth == stack.len) return false;
+                stack[depth] = .{ .ref = inst.a, .at = here };
+                depth += 1;
+            },
+            .phi => for (a.f.operands(inst.data), a.f.blocks.items[here.index()].preds.items) |operand, pred| {
+                if (depth == stack.len) return false;
+                stack[depth] = .{ .ref = operand, .at = pred };
+                depth += 1;
+            },
+            // A child's length is `completedFill`'s; nothing else carries a length.
+            else => {},
+        }
+    }
+    return true;
 }
 
 fn provable(a: *Analysis, i: ir.Inst, block: ir.BlockId) bool {

@@ -1,8 +1,6 @@
 # matmul_flat: matmul over one list[float] per matrix, indexed i * n + j,
 # C = A * B by the i-k-j loop; prints the trace and the sum of C, each scaled
 # by 1000.
-
-
 func lcg(seed: int) -> int:
     return (seed * 3877 + 29573) % 139968
 

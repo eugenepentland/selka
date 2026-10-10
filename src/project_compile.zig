@@ -57,6 +57,13 @@ pub const Compilation = struct {
     pub fn check(self: *Compilation) CheckError!void {
         return self.checkWithCache(null);
     }
+    /// Return library trees for backend validation without setting executable program.
+    pub fn checkLibraryProgram(self: *Compilation) CheckError!typed.Program {
+        for (self.diagnostics.items.items) |item| if (item.severity == .err) return error.SourceError;
+        var names: Names = .{ .index = self.index, .src = self.src };
+        return sema.checkLibraryProgram(self.index.project.arena.allocator(), self.src, self.syntax, &self.diagnostics, &names);
+    }
+
     /// Validate library bodies, imports, effects and exports without requiring main.
     /// Success is deliberately not retained as an executable checked program.
     pub fn checkLibrary(self: *Compilation) CheckError!void {
@@ -86,7 +93,7 @@ pub const Compilation = struct {
             if (err != error.SourceError or !request.retry) return err;
             self.diagnostics.items.shrinkRetainingCapacity(before);
             counters.?.restore(semantic);
-            request.* = .{ .facts_only = request.facts_only };
+            request.* = .{ .body_policy = request.body_policy };
             break :retry try sema.checkCached(self.index.project.arena.allocator(), self.src, self.syntax, &self.diagnostics, &names, cache);
         };
     }

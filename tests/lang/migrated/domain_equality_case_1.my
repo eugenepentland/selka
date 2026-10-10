@@ -1,5 +1,3 @@
-
-
 public domain Id: u64:
     func make(n: u64) -> Id effects():
         return wrap[Id](n)

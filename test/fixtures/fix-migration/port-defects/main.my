@@ -1,0 +1,28 @@
+module main
+
+import parsing
+import shapes
+
+
+def main() -> int:
+    total = 0
+    parsed = parsing.parse_int("12")
+    if parsed is not None:
+        total = total + parsed
+    wide = parsing.parse_u32("4294967296")
+    if wide is None:
+        total = total + 1
+    ratio = parsing.parse_float(" 2.5 ")
+    if ratio is not None and ratio == 2.5:
+        total = total + 2
+    signed = parsing.parse_signed("-", "3")
+    if signed is not None:
+        total = total + signed
+    parts = [shapes.Part(name=b"U1", pins=[1, 2]), shapes.Part(name=b"R1", pins=[5])]
+    made = shapes.specs(parts)
+    total = total + len(made) + made[0].pads[1] + made[1].pads[0]
+    total = total + shapes.pick(False, False) + shapes.pick(True, True)
+    total = total + sum(shapes.magnitudes([-4, 5]))
+    total = total + len(shapes.describe(None, True)) + len(shapes.emit_shape(b"custom"))
+    total = total + shapes.weight_of(shapes.leaf(7)) + shapes.corners(shapes.Region.board)
+    return total

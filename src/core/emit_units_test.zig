@@ -1,5 +1,6 @@
 //! Unit purity, stable names and native linking across actual source modules.
 const std = @import("std");
+const stage_loss = @import("stage_loss_test_support.zig");
 const language = @import("mylang");
 const frontend = @import("frontend.zig");
 const build = @import("build.zig");
@@ -573,6 +574,8 @@ test "S4 nested consuming helpers retain all frames under fact verification" {
 }
 
 const stages = @import("stage_store.zig");
+const optimization = @import("optimization_cache.zig");
+const inline_origins = @import("inline_origins.zig");
 const emission_cache = @import("emission_cache.zig");
 const emission_key = @import("emission_key.zig");
 const deferred_facts = @import("deferred_facts.zig");
@@ -599,8 +602,7 @@ fn loseDurableFacts(a: std.mem.Allocator, store: *const stages.Store, table: *co
     defer seen.deinit(a);
     for (table.handles) |entry| if (entry) |handle| {
         if ((try seen.getOrPut(a, handle.key)).found_existing) continue;
-        const path = try std.fmt.allocPrint(a, "{s}/{s}.stage", .{ store.root, std.fmt.bytesToHex(handle.key, .lower) });
-        try std.Io.Dir.cwd().deleteFile(std.testing.io, path);
+        try stage_loss.remove(a, store, handle.key);
     };
 }
 
@@ -822,7 +824,7 @@ test "S4 emission inputs canonicalize global identities and invalidate effect an
     options.analysis.effects = &changed_effects;
     try std.testing.expect(!std.mem.eql(u8, &first, &try fixtureKey(a, original, options)));
     options.analysis.effects = null;
-    var ancestry: @import("inline_origins.zig").Table = .{};
+    var ancestry: inline_origins.Table = .{};
     try ancestry.frames.append(a, .{ .function = original.callee, .call_span = 11, .parent = null });
     try ancestry.setBlock(a, original.root, 0, 0);
     options.analysis.provenance = &ancestry;
@@ -857,14 +859,15 @@ const FinalLoaderFixture = struct {
     }
 };
 
-fn receiptFinals(a: std.mem.Allocator, module: *const ir.Module, locator: emitter.Locator) ![]?@import("optimization_cache.zig").FinalMetadata {
-    const finals = try a.alloc(?@import("optimization_cache.zig").FinalMetadata, module.functions.items.len);
+fn receiptFinals(a: std.mem.Allocator, module: *const ir.Module, locator: emitter.Locator) ![]?optimization.FinalMetadata {
+    const finals = try a.alloc(?optimization.FinalMetadata, module.functions.items.len);
     var canon = try @import("canonical_ir.zig").Canon.prepare(a, module, locator);
     for (finals, 0..) |*final, index| {
         const digest = try canon.functionDigest(@intCast(index));
         final.* = .{
             .key = digest,
             .body = digest,
+            .render = .{ .ancestry = @splat(0), .scopes = &.{} },
             .outgoing = try @import("optimizer_shortcut.zig").Index.targets(a, &module.functions.items[index]),
             .analysis = .{ .digest = @splat(0), .loop_ids = &.{} },
             .state = .{ .known = null, .plans = &.{}, .counts = .{}, .own = .{} },
@@ -873,20 +876,9 @@ fn receiptFinals(a: std.mem.Allocator, module: *const ir.Module, locator: emitte
     return finals;
 }
 
-fn removeExactEmissionArtifacts(a: std.mem.Allocator, directory: std.Io.Dir, store: *const stages.Store) !void {
-    var files = try directory.openDir(std.testing.io, "stages-v1", .{ .iterate = true });
-    defer files.close(std.testing.io);
-    var iterator = files.iterate();
-    var removals: std.ArrayList([]const u8) = .empty;
-    while (try iterator.next(std.testing.io)) |entry| {
-        if (entry.kind != .file or !std.mem.endsWith(u8, entry.name, ".stage")) continue;
-        var digest: stages.Digest = undefined;
-        _ = try std.fmt.hexToBytes(&digest, entry.name[0..64]);
-        if (try store.loadValue(a, digest, emission_cache.Receipt) == null)
-            try removals.append(a, try a.dupe(u8, entry.name));
-    }
-    try std.testing.expect(removals.items.len != 0);
-    for (removals.items) |name| try files.deleteFile(std.testing.io, name);
+fn removeExactEmissionArtifacts(a: std.mem.Allocator, artifacts: []const units.Unit, store: *const stages.Store) !void {
+    try std.testing.expect(artifacts.len != 0);
+    for (artifacts) |unit| try stage_loss.remove(a, store, unit.artifact.?.key);
 }
 
 fn sameNativeHandles(expected: []const units.Unit, actual: []const units.Unit) !void {
@@ -902,7 +894,7 @@ fn sameNativeHandles(expected: []const units.Unit, actual: []const units.Unit) !
 }
 
 // spec-case: NEW-CORE-STAGE-CACHE-5
-test "S4 emissionJob compact emission receipts leave untouched final bodies deferred and reject changed source" {
+test "S4 emissionJob compact emission receipts leave untouched bodies deferred across unrelated source edits" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const a = arena.allocator();
@@ -964,11 +956,14 @@ test "S4 emissionJob compact emission receipts leave untouched final bodies defe
     var moved: emission_cache.Counts = .{};
     context.counts = &moved;
     _ = try units.emitCached(a, std.testing.allocator, &module, options, context);
-    try std.testing.expectEqual(@as(usize, 32), loader.restored);
-    try std.testing.expectEqual(@as(u32, 32), moved.work.keys_built);
+    try std.testing.expectEqual(@as(usize, 0), loader.restored);
+    try std.testing.expectEqual(@as(u32, 0), moved.work.keys_built);
     // Remove exact artifacts while keeping compact receipts. A receipt cannot
     // authorize rendering an empty body: the coordinator must retry eagerly.
-    try removeExactEmissionArtifacts(a, directory.dir, &store);
+    context.native_handles = true;
+    const physical = try units.emitCached(a, std.testing.allocator, &module, options, context);
+    context.native_handles = false;
+    try removeExactEmissionArtifacts(a, physical, &store);
     loader.hide();
     try std.testing.expectError(error.CacheMiss, units.emitCached(a, std.testing.allocator, &module, options, context));
     try std.testing.expectEqual(@as(usize, 0), loader.restored);
@@ -980,4 +975,87 @@ test "S4 emissionJob compact emission receipts leave untouched final bodies defe
     try std.testing.expectEqual(@as(u32, 33), native_counts.work.native_handles);
     try std.testing.expectEqual(@as(u64, 0), native_counts.work.llvm_loaded_bytes);
     try std.testing.expectEqual(@as(usize, 0), loader.restored);
+}
+
+fn scopeReceiptFinals(a: std.mem.Allocator, context: *optimization.Context, options: emitter.Options) ![]?optimization.FinalMetadata {
+    const finals = try receiptFinals(a, context.source.module, options.locator);
+    for (finals, 0..) |*metadata, index| {
+        metadata.*.?.render = try context.renderMetadata(a, @intCast(index), options.analysis.provenance.?);
+        try std.testing.expect(metadata.*.?.render != null);
+    }
+    return finals;
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-5
+test "S4 emissionJob compact receipts track inline declaration locations ancestry and malformed scope IDs" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
+    var store = try stages.Store.init(std.testing.allocator, std.testing.io, root);
+    defer store.deinit();
+    var module = try unitLifetimeModule(a);
+    module.functions.items[2].span = 8;
+    const bodies = try a.dupe(ir.Function, module.functions.items);
+    var loader: FinalLoaderFixture = .{ .module = &module, .bodies = bodies };
+    var source = try language.source.Source.init(a, "lifetime.my", "aaaaaaaabbbbbbbb\n");
+    var ancestry: inline_origins.Table = .{};
+    try ancestry.frames.append(a, .{ .function = 2, .call_span = 1, .parent = null });
+    try ancestry.setBlock(a, 7, 0, 0);
+    const summaries = try @import("effects.zig").analyze(a, &module);
+    const options: emitter.Options = .{
+        .locator = .{ .context = &source, .locate = locate },
+        .source_path = "lifetime.my",
+        .main = .{},
+        .analysis = .{ .effects = &summaries, .provenance = &ancestry },
+    };
+    var optimizer = optimization.Context.init(&store, try @import("ir_snapshot.zig").Context.init(a, &module, source), options.locator);
+    const finals = try scopeReceiptFinals(a, &optimizer, options);
+    var context: emission_cache.Context = .{
+        .store = &store,
+        .receipts = .{
+            .finals = finals,
+            .source = &source,
+            .layout = try @import("ir_snapshot.zig").layout(a, optimizer.source),
+            .loader = .{ .pointer = &loader, .ensure_fn = FinalLoaderFixture.ensure },
+        },
+        .lanes = 2,
+    };
+    const cold = try units.emitCached(a, std.testing.allocator, &module, options, context);
+    loader.hide();
+    try sameUnits(cold, try units.emitCached(a, std.testing.allocator, &module, options, context));
+    try std.testing.expectEqual(@as(usize, 0), loader.restored);
+    // Only the declaration at offset8 moves; the inline call at offset1 stays put.
+    source = try language.source.Source.init(a, "lifetime.my", "aaaa\naaaabbbbbbb\n");
+    optimizer.source.source = source;
+    loader.hide();
+    var moved: emission_cache.Counts = .{};
+    context.counts = &moved;
+    const relocated = try units.emitCached(a, std.testing.allocator, &module, options, context);
+    try std.testing.expectEqual(@as(usize, 2), loader.restored);
+    try std.testing.expectEqual(@as(u32, 2), moved.work.keys_built);
+    loader.restoreAll();
+    try sameUnits(try units.emitWithScratch(a, std.testing.allocator, &module, options), relocated);
+    // A new parent changes debug ancestry even when instructions and source stay put.
+    try ancestry.frames.append(a, .{ .function = 3, .call_span = 1, .parent = null });
+    ancestry.frames.items[0].parent = 1;
+    finals[7].?.render = try optimizer.renderMetadata(a, 7, &ancestry);
+    loader.hide();
+    var parent: emission_cache.Counts = .{};
+    context.counts = &parent;
+    const nested = try units.emitCached(a, std.testing.allocator, &module, options, context);
+    try std.testing.expectEqual(@as(usize, 1), loader.restored);
+    try std.testing.expectEqual(@as(u32, 1), parent.work.keys_built);
+    loader.restoreAll();
+    try sameUnits(try units.emitWithScratch(a, std.testing.allocator, &module, options), nested);
+    // Malformed compact metadata must fall back to a real body before exact-key reuse.
+    finals[7].?.render.?.scopes = &.{std.math.maxInt(u32)};
+    loader.hide();
+    var invalid: emission_cache.Counts = .{};
+    context.counts = &invalid;
+    try sameUnits(nested, try units.emitCached(a, std.testing.allocator, &module, options, context));
+    try std.testing.expectEqual(@as(usize, 1), loader.restored);
+    try std.testing.expectEqual(@as(u32, 1), invalid.work.keys_built);
 }

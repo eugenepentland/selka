@@ -1,11 +1,8 @@
-
 # Operands evaluate left to right and each operand's value is fixed when it is
 # evaluated (VALUE-SEMANTICS-14): a lent read-only operand whose root a later
 # operand of the same expression writes in place is copied when it is read.
 # Both runtimes agree.
-
 import operand_snapshot_helpers
-
 
 record Pair:
     items: int[]

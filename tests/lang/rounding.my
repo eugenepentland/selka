@@ -1,4 +1,3 @@
-
 import math
 
 # `round(value)` answers the nearest integral float, with halves away from zero
@@ -7,8 +6,6 @@ import math
 # as `round-half-away-from-zero`. These tests pin the language's own documented
 # rule, so the contract is verified without CPython and outlives the divergence
 # entry. The tie cases are .5 and -.5; 1.4/1.6 are the non-tie cases.
-
-
 func rounded(value: float) -> float:
     return round(value)
 

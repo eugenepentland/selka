@@ -1,5 +1,3 @@
-
-
 func replace_list(mut items: int[], other: int[]) -> int[]:
     items.append(5)
     items = other

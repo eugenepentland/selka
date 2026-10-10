@@ -1,8 +1,6 @@
 # fannkuch_redux: the benchmarks-game C algorithm over three small list[int]s.
 # Flips prefixes of every permutation of 0..n-1 in the incremental order the C
 # program generates; prints the alternating flip checksum and the maximum.
-
-
 func fannkuch(n: int) -> tuple[int, int]:
     mut perm = [for _ in range(n) yield 0]
     mut perm1 = list(range(n))

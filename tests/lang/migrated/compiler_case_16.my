@@ -1,5 +1,3 @@
-
-
 public func program() -> i64:
     mut flag: bool = True
     flag = not flag

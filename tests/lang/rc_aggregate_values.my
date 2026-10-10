@@ -200,11 +200,10 @@ func pinned_pair(mut items: int[]) -> Pair:
 
 
 func arena_pinned_pair() -> Pair:
-    with arena() as scratch:
-        mut items = [17, 23]
-        mut result = pinned_pair(mut items)
-        assert items == [17, 23, 29]
-        return scratch.escape(result)
+    mut items = [17, 23]
+    mut result = pinned_pair(mut items)
+    assert items == [17, 23, 29]
+    return result
 
 
 func main() -> int:

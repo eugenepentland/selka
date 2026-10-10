@@ -1,14 +1,11 @@
-
 # A capability held in a record field takes method syntax exactly as a bare local
 # does (SPEC.md CAPABILITY-FIELD-METHOD-1): `ctx.fs.read_text(path)` builds the
 # same checked call as `fs = ctx.fs` followed by `fs.read_text(path)`.
-
 import environment
 import filesystem
 import network
 import random
 import time
-
 
 record Ports:
     fs: Filesystem

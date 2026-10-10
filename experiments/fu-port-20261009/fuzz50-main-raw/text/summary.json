@@ -1,0 +1,81 @@
+{
+  "kind": "text",
+  "cases_requested": 50,
+  "seed": 3307,
+  "cases_seen": 1,
+  "accepted": 0,
+  "old_rejected": 0,
+  "core_refused": 0,
+  "core_build_failed": 1,
+  "comparisons_expected": 750,
+  "native_runs": 5,
+  "harness": {},
+  "harness_status": 1,
+  "complete": false,
+  "qualified": false,
+  "error": "QualificationFailure: core_build_failed: ['/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/.mylang-cache/fuport/main-debug', 'build', '/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/.mylang-cache/s5/fuzz/20261009T155317Z-823854505752/text/sources/text_0000.my', '-o', '/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/.mylang-cache/s5/fuzz/20261009T155317Z-823854505752/text/tmp/fuzz-text.8snqv3z0/debug', '--cache-dir', '/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/.mylang-cache/s5/fuzz/20261009T155317Z-823854505752/text/tmp/fuzz-text.8snqv3z0/core-cache']; retained source: /home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/fu-port-20261009/fuzz50-main-raw/text/failures/text_0000-4c52d5b96e86.my",
+  "failures": [
+    {
+      "kind": "core_build_failed",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/.mylang-cache/fuport/main-debug",
+        "build",
+        "/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/.mylang-cache/s5/fuzz/20261009T155317Z-823854505752/text/sources/text_0000.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/.mylang-cache/s5/fuzz/20261009T155317Z-823854505752/text/tmp/fuzz-text.8snqv3z0/debug",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/.mylang-cache/s5/fuzz/20261009T155317Z-823854505752/text/tmp/fuzz-text.8snqv3z0/core-cache"
+      ],
+      "returncode": 1,
+      "stderr_b64": "dGV4dF8wMDAwLm15OjE6MTogZXJyb3JbRV9NT0RVTEVfSEVBREVSXTogbW9kdWxlIG5hbWVzIGNvbWUgZnJvbSBmaWxlIHBhdGhzOyByZW1vdmUgdGhlIHJlZHVuZGFudCBtb2R1bGUgaGVhZGVyCiAgbW9kdWxlIHRleHRfMDAwMAogIF4K",
+      "retained_source": "/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/fu-port-20261009/fuzz50-main-raw/text/failures/text_0000-4c52d5b96e86.my"
+    }
+  ],
+  "elapsed_seconds": 0.007239704020321369,
+  "cache_root": "/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/.mylang-cache/s5/fuzz/20261009T155317Z-823854505752/text",
+  "tmpdir": "/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/.mylang-cache/s5/fuzz/20261009T155317Z-823854505752/text/tmp",
+  "saved_sources": "/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/fu-port-20261009/fuzz50-main-raw/text/sources",
+  "zig_local_cache": "/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/.mylang-cache/s5/fuzz/20261009T155317Z-823854505752/text/zig",
+  "affinity": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "oracles": {
+    "old": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/new-core-s5-20261007/tools/frozen-old-core",
+      "sha256": "ca55bbb15d1ef6accc6aa834f23651d5b3182ddf2e59136b93115ac3e41a7091"
+    },
+    "new": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/.mylang-cache/fuport/main-debug",
+      "sha256": "a55243552ec8a19f1495ba59ad74aae2cfaf9511e35523d59203fc0a5eb6e98b"
+    }
+  },
+  "oracle_unchanged": true,
+  "harness_path": "/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/new-core-s3-20261006/wave-c/s3-char/fuzz_char.py",
+  "harness_sha256": "83d322042b9d2a32c2898a5eb018cf30f4bdd7e5a3bc799e7bc8e9d51cd60959",
+  "native_comparisons": 0,
+  "native_complete": false,
+  "command_count": 7,
+  "references": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/new-core-s5-20261007/references/fuzz-v1.json.gz",
+    "sha256": "f8db2bd9ccebf42d5f4fbbf3974a15980d97204d46a4f8ac3ca5d93f41d8c1b0",
+    "oracle": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-finish/.mylang-cache/s3/oracle/mylang",
+      "sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79"
+    }
+  }
+}

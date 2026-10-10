@@ -1,4 +1,3 @@
-
 # Fixed arrays take Python's negative indices exactly as lists do
 # (PY-ARRAY-NEGATIVE-1): a read, every element-write form, and `replace`.
 # Also pinned here: augmented assignment to a field of an element
@@ -6,8 +5,6 @@
 # (PY-ARRAY-ITER-2), element and field targets in a destructuring assignment
 # (PY-DESTRUCTURE-PLACE-1) and element writes through a record or class field
 # (QBE-ARRAYWRITE-2). The traced element types run under `--gc-stress`.
-
-
 enum Status:
     ok
     missing
@@ -129,7 +126,7 @@ public func test_an_array_inside_a_list_slot_takes_a_negative_index() -> bool:
 
 # spec-case: PY-ARRAY-NEGATIVE-1
 public func test_an_enum_table_is_still_indexed_by_its_key() -> bool:
-    mut table: [Status]i64 = {Status.ok: 1, Status.missing: 2, Status.failed: 3}
+    mut table: [Status] i64 = {Status.ok: 1, Status.missing: 2, Status.failed: 3}
     table[Status.failed] += 10
     return table[Status.failed] == 13 and table[Status.ok] == 1
 

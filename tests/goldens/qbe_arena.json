@@ -2,7 +2,7 @@
  "entries": {
   "0aae5d4ec1f4c39a5286b08fcb004544": {
    "case": [
-    "func main() -> int:\n    mut kept: int[][] = []\n    with arena() as scratch:\n        mut cycle: int[][] = []\n        cycle.append([1, 2])\n        kept = scratch.escape(cycle)\n    return len(kept) + len(kept[0])\n",
+    "func main() -> int:\n    mut kept: int[][] = []\n    mut cycle: int[][] = []\n    cycle.append([1, 2])\n    kept = cycle\n    return len(kept) + len(kept[0])\n",
     []
    ],
    "returncode": 3,
@@ -23,7 +23,7 @@
   },
   "0f5465e679c8d3a7a9afb54ed2d0a985": {
    "case": [
-    "func build(limit: int) -> Result[int, int]:\n    mut total = 0\n    with arena() as scratch:\n        mut values: int[] = []\n        for index in range(limit):\n            values.append(index)\n        if limit > 3:\n            return Err(len(values))\n        total = len(values)\n    return Ok(total)\n\nfunc chain(limit: int) -> Result[int, int]:\n    mut answer = 0\n    with arena() as outer:\n        mut noise: int[] = [limit]\n        const built = try build(limit)\n        answer = built + len(noise)\n    return Ok(answer * 2)\n\nfunc main() -> int:\n    match chain(3):\n        case Ok(value):\n            match chain(9):\n                case Ok(other):\n                    return other\n                case Err(code):\n                    return value * 10 + code\n        case Err(code):\n            return 0 - code\n",
+    "func build(limit: int) -> Result[int, int]:\n    mut total = 0\n    mut values: int[] = []\n    for index in range(limit):\n        values.append(index)\n    if limit > 3:\n        return Err(len(values))\n    total = len(values)\n    return Ok(total)\n\nfunc chain(limit: int) -> Result[int, int]:\n    mut answer = 0\n    mut noise: int[] = [limit]\n    const built = try build(limit)\n    answer = built + len(noise)\n    return Ok(answer * 2)\n\nfunc main() -> int:\n    match chain(3):\n        case Ok(value):\n            match chain(9):\n                case Ok(other):\n                    return other\n                case Err(code):\n                    return value * 10 + code\n        case Err(code):\n            return 0 - code\n",
     []
    ],
    "returncode": 89,
@@ -32,7 +32,7 @@
   },
   "2b343b748606899bbcc5f007f2fc6559": {
    "case": [
-    "record Holder:\n    label: str\n    samples: int[]\n    flag: bool\n\nfunc main() -> int:\n    mut kept = Holder(label=\"\", samples=[], flag=False)\n    mut older: int[] = [5]\n    with arena() as scratch:\n        mut inner: int[] = [1, 2]\n        kept = scratch.escape(Holder(label=\"deep\", samples=inner, flag=True))\n    older.append(6)\n    kept.samples.append(3)\n    return len(kept.label) + len(kept.samples) * 10 + len(older)\n",
+    "record Holder:\n    label: str\n    samples: int[]\n    flag: bool\n\nfunc main() -> int:\n    mut kept = Holder(label=\"\", samples=[], flag=False)\n    mut older: int[] = [5]\n    mut inner: int[] = [1, 2]\n    kept = Holder(label=\"deep\", samples=inner, flag=True)\n    older.append(6)\n    kept.samples.append(3)\n    return len(kept.label) + len(kept.samples) * 10 + len(older)\n",
     []
    ],
    "returncode": 36,
@@ -59,7 +59,7 @@
   },
   "6c55b0021d5ed868571a0a8ebed536d2": {
    "case": [
-    "func grow(mut outer: int[], count: int) -> Unit:\n    for index in range(count):\n        outer.append(index)\n\nfunc main() -> int:\n    mut keeper: int[] = []\n    with arena() as scratch:\n        grow(mut keeper, 40)\n        mut noise: int[] = []\n        for index in range(40):\n            noise.append(index)\n    mut total = 0\n    for value in keeper:\n        total = total + value\n    return total\n",
+    "func grow(mut outer: int[], count: int) -> Unit:\n    for index in range(count):\n        outer.append(index)\n\nfunc main() -> int:\n    mut keeper: int[] = []\n    grow(mut keeper, 40)\n    mut noise: int[] = []\n    for index in range(40):\n        noise.append(index)\n    mut total = 0\n    for value in keeper:\n        total = total + value\n    return total\n",
     []
    ],
    "returncode": 12,
@@ -68,7 +68,7 @@
   },
   "6e52fe21c1654619f755a88c87b174bf": {
    "case": [
-    "func stash(mut outer: int[][], inner: int[]) -> Unit:\n    outer.append(inner)\n\nfunc main() -> int:\n    mut keeper: int[][] = []\n    mut older: int[] = [3]\n    with arena() as scratch:\n        stash(mut keeper, older)\n        mut temp: int[] = [1]\n    return len(keeper) + keeper[0][0]\n",
+    "func stash(mut outer: int[][], inner: int[]) -> Unit:\n    outer.append(inner)\n\nfunc main() -> int:\n    mut keeper: int[][] = []\n    mut older: int[] = [3]\n    stash(mut keeper, older)\n    mut temp: int[] = [1]\n    return len(keeper) + keeper[0][0]\n",
     []
    ],
    "returncode": 4,
@@ -77,7 +77,7 @@
   },
   "6ee3189c788409c7abcf021609bc097c": {
    "case": [
-    "func squares(limit: int) -> int[]:\n    mut values: int[] = []\n    for index in range(limit):\n        values.append(index * index)\n    return values\n\nfunc main() -> int:\n    mut total = 0\n    with arena() as scratch:\n        mut values = squares(9)\n        for value in values:\n            total = total + value\n    return total\n",
+    "func squares(limit: int) -> int[]:\n    mut values: int[] = []\n    for index in range(limit):\n        values.append(index * index)\n    return values\n\nfunc main() -> int:\n    mut total = 0\n    mut values = squares(9)\n    for value in values:\n        total = total + value\n    return total\n",
     []
    ],
    "returncode": 204,
@@ -107,7 +107,7 @@
   },
   "892f973ceb23bee4dab8aeece253f3f3": {
    "case": [
-    "record Reading:\n    sensor: int\n    samples: int[]\n\nfunc collect(sensors: int, per_sensor: int) -> Reading[]:\n    mut readings: Reading[] = []\n    for sensor in range(sensors):\n        mut samples: int[] = []\n        for index in range(per_sensor):\n            samples.append(sensor * per_sensor + index)\n        readings.append(Reading(sensor=sensor, samples=samples))\n    return readings\n\nfunc main() -> int:\n    mut kept: int[] = []\n    with arena() as scratch:\n        mut readings = collect(3, 4)\n        kept = scratch.escape(readings[2].samples)\n    mut total = 0\n    for sample in kept:\n        total = total + sample\n    return total\n",
+    "record Reading:\n    sensor: int\n    samples: int[]\n\nfunc collect(sensors: int, per_sensor: int) -> Reading[]:\n    mut readings: Reading[] = []\n    for sensor in range(sensors):\n        mut samples: int[] = []\n        for index in range(per_sensor):\n            samples.append(sensor * per_sensor + index)\n        readings.append(Reading(sensor=sensor, samples=samples))\n    return readings\n\nfunc main() -> int:\n    mut kept: int[] = []\n    mut readings = collect(3, 4)\n    kept = readings[2].samples\n    mut total = 0\n    for sample in kept:\n        total = total + sample\n    return total\n",
     []
    ],
    "returncode": 38,
@@ -116,7 +116,7 @@
   },
   "8f695fe4635a50578ae72ee2aece125d": {
    "case": [
-    "func main() -> int:\n    mut total = 0\n    for round in range(6):\n        with arena() as scratch:\n            mut values: int[] = [round, round]\n            if round == 2:\n                continue\n            if round == 4:\n                break\n            total = total + len(values) + round\n    return total\n",
+    "func main() -> int:\n    mut total = 0\n    for round in range(6):\n        mut values: int[] = [round, round]\n        if round == 2:\n            continue\n        if round == 4:\n            break\n        total = total + len(values) + round\n    return total\n",
     []
    ],
    "returncode": 10,
@@ -125,7 +125,7 @@
   },
   "a386f3c8158b93d4ccbd5520646775c4": {
    "case": [
-    "func inner(limit: int) -> int:\n    with arena() as scratch:\n        mut values: int[] = []\n        for index in range(limit):\n            values.append(index)\n        return len(values)\n\nfunc main() -> int:\n    mut total = 0\n    for round in range(20):\n        total = total + inner(round)\n    return total\n",
+    "func inner(limit: int) -> int:\n    mut values: int[] = []\n    for index in range(limit):\n        values.append(index)\n    return len(values)\n\nfunc main() -> int:\n    mut total = 0\n    for round in range(20):\n        total = total + inner(round)\n    return total\n",
     []
    ],
    "returncode": 190,
@@ -134,7 +134,7 @@
   },
   "b61bed54b6984282db006df52f41a712": {
    "case": [
-    "func sized(limit: int) -> int[]:\n    mut values: int[] = []\n    for index in range(limit):\n        values.append(index)\n    return values\n\nfunc main() -> int:\n    mut total = 0\n    with arena() as outer:\n        mut first = sized(3)\n        with arena() as inner:\n            mut second = sized(4)\n            total = total + len(second)\n        total = total + len(first)\n    return total\n",
+    "func sized(limit: int) -> int[]:\n    mut values: int[] = []\n    for index in range(limit):\n        values.append(index)\n    return values\n\nfunc main() -> int:\n    mut total = 0\n    mut first = sized(3)\n    mut second = sized(4)\n    total = total + len(second)\n    total = total + len(first)\n    return total\n",
     []
    ],
    "returncode": 7,
@@ -143,7 +143,7 @@
   },
   "b64382e10dcd97e67e0ca537161ca691": {
    "case": [
-    "func main() -> int:\n    mut total = 0\n    with arena() as scratch:\n        mut words: str[] = [\"alpha\", \"beta\", \"gamma\"]\n        for word in words:\n            total = total + len(word)\n    return total\n",
+    "func main() -> int:\n    mut total = 0\n    mut words: str[] = [\"alpha\", \"beta\", \"gamma\"]\n    for word in words:\n        total = total + len(word)\n    return total\n",
     []
    ],
    "returncode": 14,
@@ -152,7 +152,7 @@
   },
   "ba5ee629cb968baf0e72c14be42881af": {
    "case": [
-    "func main() -> int:\n    with arena() as scratch:\n        mut values: int[] = [1]\n        return values[5]\n",
+    "func main() -> int:\n    mut values: int[] = [1]\n    return values[5]\n",
     []
    ],
    "returncode": 1,
@@ -161,7 +161,7 @@
   },
   "efd9db61f97172576dffce6982f8e4f7": {
    "case": [
-    "func main() -> int:\n    mut kept: dict[str, bytes] = {}\n    with arena() as scratch:\n        mut table: dict[str, bytes] = {}\n        table[\"a\"] = b\"\\x01\\x02\"\n        table[\"b\"] = (\"x\" + \"y\").encode()\n        kept = scratch.escape(table)\n    mut total = 0\n    for value in kept[\"a\"]:\n        total += value\n    return total + len(kept[\"b\"]) + len(kept)\n",
+    "func main() -> int:\n    mut kept: dict[str, bytes] = {}\n    mut table: dict[str, bytes] = {}\n    table[\"a\"] = b\"\\x01\\x02\"\n    table[\"b\"] = (\"x\" + \"y\").encode()\n    kept = table\n    mut total = 0\n    for value in kept[\"a\"]:\n        total += value\n    return total + len(kept[\"b\"]) + len(kept)\n",
     []
    ],
    "returncode": 7,

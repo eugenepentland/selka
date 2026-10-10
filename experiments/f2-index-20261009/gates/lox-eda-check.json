@@ -1,0 +1,211 @@
+{
+ "eda": {
+  "Cyclops-Flex": {
+   "golden": true,
+   "same": true,
+   "status": 0
+  },
+  "adf5901": {
+   "golden": true,
+   "same": true,
+   "status": 0
+  },
+  "barracuda": {
+   "golden": true,
+   "same": true,
+   "status": 0
+  },
+  "barracuda-base": {
+   "golden": true,
+   "same": true,
+   "status": 0
+  },
+  "barracuda-via-fence": {
+   "golden": true,
+   "same": true,
+   "status": 0
+  },
+  "black-canyon": {
+   "golden": true,
+   "same": true,
+   "status": 0
+  },
+  "black-canyon+flat": {
+   "golden": true,
+   "same": true,
+   "status": 0
+  },
+  "blinky-breakout": {
+   "golden": true,
+   "same": true,
+   "status": 0
+  },
+  "cyclops-analog": {
+   "golden": true,
+   "same": true,
+   "status": 0
+  },
+  "cyclops-analog+no-vendor-symbols": {
+   "golden": true,
+   "same": true,
+   "status": 0
+  },
+  "cyclops-breakout": {
+   "golden": true,
+   "same": true,
+   "status": 0
+  },
+  "cyclops-digital-pcb": {
+   "golden": true,
+   "same": true,
+   "status": 0
+  },
+  "cyclops-interposer": {
+   "golden": true,
+   "same": true,
+   "status": 0
+  },
+  "cyclops-kband": {
+   "golden": true,
+   "same": true,
+   "status": 0
+  },
+  "cyclops-kband-breakout": {
+   "golden": true,
+   "same": true,
+   "status": 0
+  },
+  "cyclops-kband-pcb": {
+   "golden": true,
+   "same": true,
+   "status": 0
+  },
+  "cyclops-xband-sip": {
+   "golden": true,
+   "same": true,
+   "status": 0
+  },
+  "dual-flash": {
+   "golden": true,
+   "same": true,
+   "status": 0
+  },
+  "labstation": {
+   "golden": true,
+   "same": true,
+   "status": 0
+  },
+  "labstation+no-vendor-symbols": {
+   "golden": true,
+   "same": true,
+   "status": 0
+  },
+  "lmk05318b-clock": {
+   "golden": true,
+   "same": true,
+   "status": 0
+  },
+  "max860-inverter": {
+   "golden": true,
+   "same": true,
+   "status": 0
+  },
+  "poe-pd-flyback-tps23757": {
+   "golden": true,
+   "same": true,
+   "status": 0
+  },
+  "rds3": {
+   "golden": true,
+   "same": true,
+   "status": 0
+  },
+  "rds3+flat": {
+   "golden": true,
+   "same": true,
+   "status": 0
+  },
+  "rds3-rf-selector": {
+   "golden": true,
+   "same": true,
+   "status": 0
+  },
+  "remora-base": {
+   "golden": true,
+   "same": true,
+   "status": 0
+  },
+  "remora-rf": {
+   "golden": true,
+   "same": true,
+   "status": 0
+  },
+  "rf-switch-8way": {
+   "golden": true,
+   "same": true,
+   "status": 0
+  },
+  "rf-switch-eval": {
+   "golden": true,
+   "same": true,
+   "status": 0
+  },
+  "stm32n6": {
+   "golden": true,
+   "same": true,
+   "status": 0
+  },
+  "straps": {
+   "golden": true,
+   "same": true,
+   "status": 0
+  },
+  "straps-base": {
+   "golden": true,
+   "same": true,
+   "status": 0
+  },
+  "w55rp20": {
+   "golden": true,
+   "same": true,
+   "status": 0
+  }
+ },
+ "lox": {
+  "tree/equality.300000": {
+   "same": true,
+   "status": 0,
+   "stdout_sha256": "2d5c043a952d70ef9564858b25a01a30613abfb3d1562f67ef8d089646bbf786"
+  },
+  "tree/invocation.150000": {
+   "same": true,
+   "status": 0,
+   "stdout_sha256": "aceaf168c6709487a120d0059d87a99ab4aad4ee7f8a4d05a91c8ee20161ef75"
+  },
+  "vm/fib.34": {
+   "same": true,
+   "status": 0,
+   "stdout_sha256": "3e01be60139c8e55182a9388e0133537d417649b097c820c766aaf403dcdfc11"
+  },
+  "vm/invocation.1500000": {
+   "same": true,
+   "status": 0,
+   "stdout_sha256": "1acf1e94660bf03b23b1265ac476eeb5c504e8b4a0e7ba3e2667bf1a59ea9895"
+  },
+  "vm/method_call.500000": {
+   "same": true,
+   "status": 0,
+   "stdout_sha256": "21d91041c5d1a59661f8936571ee5c87e96f6f0c7a532b52ec17c5b9bea8220b"
+  },
+  "vm/step.10000000": {
+   "same": true,
+   "status": 0,
+   "stdout_sha256": "c5980dce7780da7890dc91de45b151697a24521da34216575d8fcbc5524c7203"
+  },
+  "vm/string_equality.100000": {
+   "same": true,
+   "status": 0,
+   "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597"
+  }
+ }
+}

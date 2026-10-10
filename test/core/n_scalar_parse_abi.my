@@ -1,15 +1,18 @@
-
 func integer(raw: bytes, start: int, end: int) -> int? noalloc:
     return raw.parse_int_range(start, end)
 
+
 func floating(raw: bytes, start: int, end: int) -> float? noalloc:
     return raw.parse_float_range(start, end)
+
 
 # spec-case: NEW-CORE-S3-NUMBER-1
 public func test_integer_option_c_abi_keeps_signed_limits_and_none_tags() -> bool:
     return integer(b"-9223372036854775808", 0, 20) == Some(-9223372036854775808) and integer(b"9223372036854775807", 0, 19) == Some(9223372036854775807) and integer(b"9223372036854775808", 0, 19) == None and integer(b"garbage", 0, 7) == None
 
+
 # spec-case: NEW-CORE-S3-NUMBER-1
+@allow("test-conditional", reason="This language regression intentionally exercises conditional failure paths.")
 public func test_float_option_c_abi_keeps_signed_zero_nonfinite_and_none_tags() -> bool:
     match floating(b"-0.0", 0, 4):
         case Some(value):
@@ -30,6 +33,7 @@ public func test_float_option_c_abi_keeps_signed_zero_nonfinite_and_none_tags() 
         case None:
             return False
     return floating(b"1e+", 0, 3) == None and floating(b"0.125", 0, 5) == Some(0.125)
+
 
 func main() -> int:
     return 0

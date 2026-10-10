@@ -1,5 +1,3 @@
-
-
 public func test_indexing_and_slicing() -> bool effects(managed_allocation):
     mut header = b"my"
     mut body = b"lang"

@@ -44,7 +44,7 @@ func work(fs: Filesystem) -> Status effects(filesystem):
     return Ok(int(chunk.length) + int(written))
 
 
-func main(fs: Filesystem) -> int noalloc:
+func main(fs: Filesystem) -> int effects(filesystem):
     match work(fs):
         case Status.ok(value):
             return value
@@ -104,8 +104,11 @@ These operations do not silently upgrade fallback cleanup into successful
 completion.
 
 Reads, writes, and cleanup contribute the resource kind's filesystem/network effect,
-including through wrappers and helper calls. `noio` rejects them; `noalloc` retains
-its guest buffer-backing meaning and does not constrain trusted adapter allocation.
+including through wrappers and helper calls. `noio` rejects them. The examples
+use `effects(filesystem)` to describe guest authority; this legacy effect list
+permits implementation allocation by resource adapters and result boxes.
+Explicit `noalloc` additionally forbids those Core may-allocate sites, including
+permission attenuation that creates a new capability block.
 Lowering validates mutable owner metadata, result/input schemas, and independently
 recomputes effects before emission. Read results reuse the bounded byte-record
 validation and byte conversion shared with environment lookup. Exact discovery is

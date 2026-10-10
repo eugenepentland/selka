@@ -146,3 +146,31 @@ pub const component_builder = [_][]const u8{ "selfhost/*.zig", "selfhost/test_co
 
 /// Qualified-seed pure tests and native protocol oracle.
 pub const component_native = [_][]const u8{ "selfhost/components/", "selfhost/*.zig", "selfhost/component-seed.json", "selfhost/test_component_native.py", "selfhost/tests/run_test_index_component.py", "selfhost/tests/run_cache_plan_component.py" };
+
+/// The live .my formatting corpus, selection script and deliberate exclusions.
+pub const my_format = [_][]const u8{
+    "scripts/check_my_format.py",
+    "scripts/my_format_exclusions.json",
+    "bench/**/*.my",
+    "benchmarks/**/*.my",
+    "docs/**/*.my",
+    "examples/**/*.my",
+    "selfhost/**/*.my",
+    "src/**/*.my",
+    "test/**/*.my",
+    "tests/**/*.my",
+    "velocity/**/*.my",
+};
+
+/// Synthetic corpus selection and real formatter failure propagation.
+pub const my_format_self = [_][]const u8{ "scripts/check_my_format.py", "tests/test_my_format.py" };
+
+/// Embedded migration extraction, census evidence and atomic staging checks.
+pub const embedded_migration = [_][]const u8{
+    "scripts/migrate_embedded.py",
+    "scripts/spelling_census.py",
+    "tests/test_migrate_embedded.py",
+};
+
+/// All live sources and selection policy read by the allocation-contract lint gate.
+pub const noalloc_lint = my_format ++ [_][]const u8{"scripts/check_noalloc.py"};

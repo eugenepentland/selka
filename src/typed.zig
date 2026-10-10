@@ -630,6 +630,28 @@ fn nameLessThan(_: void, left: []const u8, right: []const u8) bool {
 /// the value rebuilds the local from its own current value with one element
 /// changed, so the write is a mutation of the binding rather than a rebinding.
 pub const Store = struct { slot: LocalId, value: NodeId, element: bool = false };
+/// A checked source range keeps its endpoints and binding together. The
+/// normalized loop plan preserves the checked direction, overflow and exits.
+pub const RangeParts = struct {
+    binding: Span,
+    start: Store,
+    end: Store,
+    setup: []const StatementId,
+    loop: Loop,
+};
+/// The single owned plan avoids growing every statement's tagged union.
+/// Persisted decoders validate exact-one ownership before publishing a tree.
+pub const RangeLoop = struct {
+    parts: []const RangeParts,
+
+    /// Checked source plan shared by traversal and lowering. Construction owns one.
+    pub fn plan(self: RangeLoop) RangeParts {
+        std.debug.assert(self.parts.len == 1);
+        return self.parts[0];
+    }
+};
+/// Checked loop control shared by while and source range lowering.
+pub const Loop = struct { id: usize = 0, condition: NodeId, body: StatementId, step: ?StatementId = null };
 /// Checked control flow, ownership operations, and expression statements.
 pub const Statement = struct {
     span: Span,
@@ -642,7 +664,8 @@ pub const Statement = struct {
         discard: NodeId,
         branch: struct { condition: NodeId, then_body: StatementId, else_body: ?StatementId },
         match: struct { value: NodeId, arms: []const MatchArm, borrowed: bool = false },
-        loop: struct { id: usize = 0, condition: NodeId, body: StatementId, step: ?StatementId = null },
+        loop: Loop,
+        range_loop: RangeLoop,
         loop_exit: struct { target: usize, continuing: bool },
         initialize: Store,
         assign: Store,

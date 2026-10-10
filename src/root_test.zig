@@ -77,6 +77,7 @@ test {
     _ = @import("domain_equality_test.zig");
     _ = @import("diagnostic_output_test.zig");
     _ = @import("diagnostic_fix_test.zig");
+    _ = @import("fix_plan_test.zig");
     _ = @import("diagnostic_recovery_test.zig");
     _ = @import("generic_inference_test.zig");
     _ = @import("flow_inference_test.zig");

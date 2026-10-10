@@ -1,0 +1,22 @@
+{
+  "compiler-build": {
+    "source": "/home/epentland/ai/canopy/mylang-frontend-packed-20261010/compiler-policy-build.log",
+    "archive": "compiler-build.log.gz",
+    "sha256": "762095417786d368e39cd4959c7e4194bc1ab9f33ecb97628065bbc81d63b63b"
+  },
+  "store-tests": {
+    "source": "/tmp/mylang-compression-policy-store-tests.log",
+    "archive": "store-tests.log.gz",
+    "sha256": "7bb9f4aac376ca9b1b986d11140a6f7ffd1bdd1ccb0c7609fd578e02eae5c39e"
+  },
+  "cli-test": {
+    "source": "/tmp/mylang-compression-policy-cli-test.log",
+    "archive": "cli-test.log.gz",
+    "sha256": "a0d8d5ff49dfbed6c3261fbe942ec6d6b38b114f9ef0a96543496f4cdb04a644"
+  },
+  "guardian": {
+    "source": "/tmp/mylang-compression-policy-guardian.log",
+    "archive": "guardian.log.gz",
+    "sha256": "893769f45185176c7da5a0e95ed362fed10c0aaa4bd4ce971d0d16b88c259b0f"
+  }
+}

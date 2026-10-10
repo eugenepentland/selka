@@ -1,12 +1,10 @@
-
 extern func runtime_bench_now(host: Host) -> i64 effects(host)
+
 
 # Row `mutate_nested` of benchmarks/runtime/expanded/collections/main.my as a program of its own, like
 # compute_s0.my: arguments `size iterations seed` (the original takes the row name first), the same
 # setup, kernel (the row's branch of `batch_result`), checksum and output `checksum elapsed`.
 # The dictionaries, keys and Lox program the original builds for other rows are left out.
-
-
 func batch_result(size: int, batch: int, seed: int, mut nested: int[][]) -> int:
     mut snapshot = nested
     mut index = (seed + batch * 17) % size

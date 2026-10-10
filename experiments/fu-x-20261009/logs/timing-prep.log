@@ -1,0 +1,15 @@
+/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/.tmp/lox-bench/cache/mylang-release/lox-release
+lox build mylang:release=0
+/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/.tmp/lox-bench/cache/mylang-base-release/lox-release
+lox build mylang-base:release=0
+/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/.tmp/lox-bench/cache/zig-release/out-release/bin/lox
+lox build zig:release=0
+/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/.tmp/lox-bench/cache/zig-release-safe/out-release-safe/bin/lox
+lox build zig:release-safe=0
+    Finished `release` profile [optimized] target(s) in 0.04s
+/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/.tmp/lox-bench/cache/rust-release/target/release/lox
+lox build rust:release=0
+/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/.tmp/lox-bench/cache/go-release/bin/lox
+lox build go:release=0
+rows build=0
+prep done 13:38:16

@@ -1,5 +1,5 @@
 //! Verified, content-addressed intermediate compiler artifacts. Cache failures
-//! lose reuse, never a build: records are bounded, checked, and atomically renamed.
+//! lose reuse, never a build: bounded, checked journal records become immutable packs.
 const std = @import("std");
 const codec = @import("mylang").persist_codec;
 const unit_cache = @import("unit_cache.zig");
@@ -10,9 +10,10 @@ pub const Digest = [32]u8;
 pub const Error = std.mem.Allocator.Error;
 
 const magic = "mylang-stage-v1\n";
-const header_size = magic.len + 32 + 32;
-const maximum_bytes = 256 << 20;
-const artifact_suffix = ".stage";
+const packs = @import("stage_pack.zig");
+
+/// Store-local diagnostic write settings; existing blocks retain their encoding.
+pub const Options = struct { compression: @import("stage_compression.zig").Policy = .zlib };
 
 /// Immutable shared store settings. Backing must support concurrent callers when
 /// emission workers share this store; each operation uses a private scratch arena.
@@ -21,17 +22,25 @@ pub const Store = struct {
     io: std.Io,
     root: []const u8,
     identity: Digest,
+    storage: *packs.State,
 
     /// Prepare a lazily created store bound to the complete compiler identity.
     pub fn init(backing: std.mem.Allocator, io: std.Io, cache_root: []const u8) Error!Store {
-        const root = try std.fs.path.join(backing, &.{ cache_root, "stages-v1" });
+        return initWithOptions(backing, io, cache_root, .{});
+    }
+
+    /// Select new block encoding while preserving stage keys and read compatibility.
+    pub fn initWithOptions(backing: std.mem.Allocator, io: std.Io, cache_root: []const u8, options: Options) Error!Store {
+        const root = try std.fs.path.join(backing, &.{ cache_root, "stages-packed-v1" });
+        errdefer backing.free(root);
         var identity: Digest = undefined;
         std.crypto.hash.Blake3.hash(@import("frontend_reuse.zig").compiler_identity, &identity, .{});
-        return .{ .backing = backing, .io = io, .root = root, .identity = identity };
+        return .{ .backing = backing, .io = io, .root = root, .identity = identity, .storage = try packs.State.init(backing, io, root, identity, options.compression) };
     }
 
     /// Release the owned path after all users of the store finish.
     pub fn deinit(self: *Store) void {
+        self.storage.deinit();
         self.backing.free(self.root);
     }
 
@@ -47,8 +56,19 @@ pub const Store = struct {
         return digest;
     }
 
-    fn path(self: *const Store, a: std.mem.Allocator, digest: Digest) Error![]const u8 {
-        return std.fmt.allocPrint(a, "{s}/{s}{s}", .{ self.root, std.fmt.bytesToHex(digest, .lower), artifact_suffix });
+    /// Publish pending journal records as immutable compressed packs.
+    pub fn flush(self: *const Store) Error!bool {
+        return self.storage.flush();
+    }
+
+    /// Physical packed reads and block decoding expose warm-path amplification.
+    pub fn statistics(self: *const Store) packs.Statistics {
+        return self.storage.statistics();
+    }
+
+    /// Locate the durable file containing a key for diagnostics and loss tests.
+    pub fn artifactPath(self: *const Store, a: std.mem.Allocator, digest: Digest) Error!?[]const u8 {
+        return self.storage.artifactPath(a, digest);
     }
 
     /// Read an owned payload after validating its complete key and checksum.
@@ -60,63 +80,20 @@ pub const Store = struct {
     /// Validate a known canonical payload digest during the ordinary checksum
     /// pass, avoiding a second hash by callers that already know its identity.
     pub fn loadExpected(self: *const Store, a: std.mem.Allocator, digest: Digest, expected: ?Digest) Error!?[]u8 {
-        const bytes = try self.loadRecord(digest, expected) orelse return null;
-        defer self.backing.free(bytes);
-        const owned = try a.dupe(u8, bytes[header_size..]);
-        return owned;
+        return self.storage.load(a, digest, expected);
     }
 
-    // Keep the verified record owned until decoding finishes; slice fields are
-    // copied by Reader into the caller's arena rather than borrowing this buffer.
-    fn loadRecord(self: *const Store, digest: Digest, expected: ?Digest) Error!?[]u8 {
-        var scratch = std.heap.ArenaAllocator.init(self.backing);
-        defer scratch.deinit();
-        const bytes = std.Io.Dir.cwd().readFileAlloc(self.io, try self.path(scratch.allocator(), digest), self.backing, .limited(maximum_bytes + header_size)) catch |err| {
-            if (err == error.OutOfMemory) return error.OutOfMemory;
-            return null;
-        };
-        var retained = false;
-        defer if (!retained) self.backing.free(bytes);
-        if (bytes.len < header_size or !std.mem.eql(u8, bytes[0..magic.len], magic)) return null;
-        if (!std.mem.eql(u8, bytes[magic.len..][0..32], &digest)) return null;
-        if (expected) |known| if (!std.mem.eql(u8, bytes[magic.len + 32 ..][0..32], &known)) return null;
-        var actual: Digest = undefined;
-        std.crypto.hash.Blake3.hash(bytes[header_size..], &actual, .{});
-        if (!std.mem.eql(u8, bytes[magic.len + 32 ..][0..32], &actual)) return null;
-        retained = true;
-        return bytes;
-    }
-
-    /// Publish one complete record by an atomic rename on the cache filesystem.
-    /// An unavailable cache returns false; the freshly computed result remains valid.
+    /// Publish a complete journal record before returning; cache I/O fails closed.
     pub fn save(self: *const Store, digest: Digest, payload: []const u8) Error!bool {
-        if (payload.len > maximum_bytes) return false;
-        var scratch = std.heap.ArenaAllocator.init(self.backing);
-        defer scratch.deinit();
-        const a = scratch.allocator();
-        const cwd = std.Io.Dir.cwd();
-        cwd.createDirPath(self.io, self.root) catch return false;
-        const final_path = try self.path(a, digest);
-        var nonce: [16]u8 = undefined;
-        std.Io.random(self.io, &nonce);
-        const partial = try std.fmt.allocPrint(a, "{s}.{s}.partial", .{ final_path, std.fmt.bytesToHex(nonce, .lower) });
-        defer discard(self.io, partial);
-        const bytes = try a.alloc(u8, header_size + payload.len);
-        @memcpy(bytes[0..magic.len], magic);
-        @memcpy(bytes[magic.len..][0..32], &digest);
-        std.crypto.hash.Blake3.hash(payload, bytes[magic.len + 32 ..][0..32], .{});
-        @memcpy(bytes[header_size..], payload);
-        cwd.writeFile(self.io, .{ .sub_path = partial, .data = bytes }) catch return false;
-        cwd.rename(partial, cwd, final_path, self.io) catch return false;
-        return true;
+        return self.storage.save(digest, payload);
     }
 
     /// Decode plain slice-owned data into the caller's arena; invalid schemas miss.
     /// Callers validate stage-specific indices before applying the restored value.
     pub fn loadValue(self: *const Store, arena: std.mem.Allocator, digest: Digest, comptime T: type) Error!?T {
-        const bytes = try self.loadRecord(digest, null) orelse return null;
+        const bytes = try self.load(self.backing, digest) orelse return null;
         defer self.backing.free(bytes);
-        var reader = codec.Reader.init(arena, bytes[header_size..]);
+        var reader = codec.Reader.init(arena, bytes);
         const value = reader.read(T) catch |err| {
             if (err == error.OutOfMemory) return error.OutOfMemory;
             return null;
@@ -134,7 +111,3 @@ pub const Store = struct {
         _ = try self.save(digest, writer.bytes.items);
     }
 };
-
-fn discard(io: std.Io, path: []const u8) void {
-    std.Io.Dir.cwd().deleteFile(io, path) catch return;
-}

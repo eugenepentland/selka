@@ -82,7 +82,7 @@ const retry = declarations ++
     \\            return e
     \\
     \\
-    \\func main(fs: Filesystem) -> i64 noalloc:
+    \\func main(fs: Filesystem) -> i64 effects(filesystem):
     \\    return attempt(fs) * 100 + attempt(fs.read_only())
 ;
 fn retryScenario(allocator: std.mem.Allocator) !void {
@@ -120,7 +120,7 @@ const complete_once = declarations ++ helpers ++
     \\            return e
     \\
     \\
-    \\func main(fs: Filesystem) -> i64 noalloc:
+    \\func main(fs: Filesystem) -> i64 effects(filesystem):
     \\    return attempt(fs) * 100 + attempt(fs.read_only())
 ;
 
@@ -574,4 +574,36 @@ test "generic bodies derive a dir scope and resolve under it" {
     try genericDirScenario(t.allocator);
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), genericDirScenario, .{});
+}
+
+const ScopedLiteralCase = struct { text: []const u8, valid: bool };
+
+fn assertScopedLiteral(path: ScopedLiteralCase) !void {
+    for ([_][]const u8{ "", "[T]" }) |generic| {
+        const input = try std.fmt.allocPrint(t.allocator, "func scoped{s}(fs: Filesystem) -> Unit:\n    _ = fs.dir(\"{s}\")\n\nfunc main() -> int:\n    return 0\n", .{ generic, path.text });
+        defer t.allocator.free(input);
+        var compilation = try language.Compilation.init(t.allocator, "shared-dir.my", input);
+        defer compilation.deinit();
+        if (path.valid) {
+            try compilation.check();
+        } else {
+            try t.expectError(error.SourceError, compilation.check());
+            try t.expectEqualStrings("E_FILESYSTEM_DIR", compilation.diagnostics.items[0].code);
+            const text = compilation.src.text(compilation.diagnostics.items[0].span);
+            try t.expectEqualStrings(path.text, text[1 .. text.len - 1]);
+        }
+    }
+}
+
+// spec-case: FILESYSTEM-DIR-1
+test "shared dir validator agrees for concrete and unused generic literal paths" {
+    const paths = [_]ScopedLiteralCase{
+        .{ .text = "", .valid = true },
+        .{ .text = "資料/λ", .valid = true },
+        .{ .text = "../escape", .valid = false },
+        .{ .text = "data/./raw", .valid = false },
+        .{ .text = "data//raw", .valid = false },
+        .{ .text = "/absolute", .valid = false },
+    };
+    for (paths) |path| try assertScopedLiteral(path);
 }

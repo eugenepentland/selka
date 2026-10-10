@@ -1,14 +1,20 @@
-
 import constant_methods_support as support
 
 # A `str` or `bytes` module constant takes the same methods as a local bound to it:
 # `NAME.split(...)`, `NAME.upper()`, `NAME.startswith(...)`, and the same through an
 # import and for an embedded file.
-
 const GREETING: str = "Hello, World"
+
+
 const TABLE: bytes = b"a=1\nb=2\nc=3"
+
+
 const LINES: bytes = embed_bytes("embed_fixtures/lines.txt")
+
+
 const TEXT: str = embed_str("embed_fixtures/multi.txt")
+
+
 const EMPTY: str = ""
 
 

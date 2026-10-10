@@ -1,4 +1,3 @@
-
 # Independent packaging tariff; changes are reviewed separately from delivery.
 public func fee(items: int) -> int effects():
     mut cents = 100

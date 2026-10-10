@@ -1,5 +1,6 @@
 //! Independently owned function snapshots, each owning its own source slices.
 const std = @import("std");
+const sources = @import("semantic_sources.zig");
 const typed = @import("typed.zig");
 const source = @import("source.zig");
 const copy = @import("semantic_copy.zig");
@@ -7,11 +8,18 @@ const diagnostic = @import("diagnostic.zig");
 const effect_set = @import("effect_set.zig");
 
 /// One stable function identity exchanged for a fresh catalog ordinal at lookup time.
-pub const FunctionRef = struct { id: typed.FunctionId, key: []const u8 };
+pub const FunctionRef = struct { id: typed.FunctionId, key: []const u8, template: ?[]const u8 = null };
 /// One stable nominal-type identity exchanged for a fresh catalog ordinal.
 /// `shape` is the record's transitive shape digest when the tree was checked
 /// (`semantic_key.Shapes`); a changed shape makes the tree stale.
-pub const RecordRef = struct { index: usize, key: []const u8, shape: [32]u8 = @splat(0) };
+pub const RecordRef = struct { index: usize, key: []const u8, shape: [32]u8 = @splat(0), recipes: []const TypeRecipe = &.{} };
+/// Portable inputs to the normal type interners. Callable contracts are rebuilt
+/// from fresh syntax at the value site, never from a retained effect ceiling.
+pub const TypeRecipe = union(enum) {
+    array: struct { element: typed.Type, length: usize, site: source.Span },
+    tuple: []const typed.Type,
+    callable: source.Span,
+};
 /// Relocatable declaration facts retained for one checked function.
 pub const Identity = struct { key: []const u8, context: [32]u8, body: source.Span, region: source.Span, checked_contract: [32]u8 = @splat(0) };
 /// One persisted body-local diagnostic/warning. Warnings are derived from the
@@ -35,19 +43,22 @@ pub const Metadata = struct {
     notes: []const Note = &.{},
 };
 /// Inputs for `Entry.create`; bundles the changing snapshot facts.
-pub const Spec = struct { identity: Identity, function_refs: []const FunctionRef, record_refs: []const RecordRef };
+pub const Spec = struct { identity: Identity, function_refs: []const FunctionRef, record_refs: []const RecordRef, source_refs: []const sources.Reference = &.{} };
 
 /// Source bytes owned by one entry: its original length plus the body and
 /// declaration-region slices used to prove the entry still matches fresh source.
-/// Each entry copies only the two slices it needs, so retention accounting is a
+/// Each entry owns its byte slices and source proofs, so retention accounting is a
 /// plain per-entry sum and releasing one entry never invalidates another.
 pub const SourceRef = struct {
     old_len: usize = 0,
     body_bytes: []const u8 = &.{},
     region_bytes: []const u8 = &.{},
+    trailing_bytes: []const u8 = &.{},
+    /// Independently validated original files for nonlocal source provenance.
+    modules: []const sources.Reference = &.{},
 };
 /// One local checked tree owns its metadata, stable dependency identities and
-/// the two source slices that validate it.
+/// the source bytes and proofs that validate it.
 pub const Entry = struct {
     arena: std.heap.ArenaAllocator,
     function: typed.Function,
@@ -70,9 +81,13 @@ pub const Entry = struct {
         const statements = mapper.value(arena_allocator, []const typed.Statement, program.statements[range.statements.start..range.statements.end]) catch |err| return classify(err);
         const notes = noteWarnings(arena_allocator, saved_function) catch |err| return classify(err);
         const function_refs = try arena_allocator.alloc(FunctionRef, spec.function_refs.len);
-        for (spec.function_refs, function_refs) |ref, *out| out.* = .{ .id = ref.id, .key = try arena_allocator.dupe(u8, ref.key) };
+        for (spec.function_refs, function_refs) |ref, *out| out.* = .{ .id = ref.id, .key = try arena_allocator.dupe(u8, ref.key), .template = if (ref.template) |template| try arena_allocator.dupe(u8, template) else null };
         const record_refs = try arena_allocator.alloc(RecordRef, spec.record_refs.len);
-        for (spec.record_refs, record_refs) |ref, *out| out.* = .{ .index = ref.index, .key = try arena_allocator.dupe(u8, ref.key), .shape = ref.shape };
+        for (spec.record_refs, record_refs) |ref, *out| {
+            out.* = ref;
+            out.key = try arena_allocator.dupe(u8, ref.key);
+            out.recipes = mapper.value(arena_allocator, []const TypeRecipe, ref.recipes) catch |err| return classify(err);
+        }
         const identity = Identity{
             .key = try arena_allocator.dupe(u8, spec.identity.key),
             .context = spec.identity.context,
@@ -84,6 +99,12 @@ pub const Entry = struct {
         if (identity.region.start > identity.region.end or identity.region.end > bytes.len) return error.InternalError;
         const body_bytes = try arena_allocator.dupe(u8, bytes[identity.body.start..identity.body.end]);
         const region_bytes = try arena_allocator.dupe(u8, bytes[identity.region.start..identity.region.end]);
+        const trailing_bytes = try arena_allocator.dupe(u8, bytes[identity.region.end..@min(bytes.len, identity.region.end +| 3)]);
+        const source_refs = try arena_allocator.alloc(sources.Reference, spec.source_refs.len);
+        for (spec.source_refs, source_refs) |reference, *out| {
+            out.* = reference;
+            out.path = try arena_allocator.dupe(u8, reference.path);
+        }
         return .{
             .arena = arena,
             .function = saved_function,
@@ -94,6 +115,8 @@ pub const Entry = struct {
                 .old_len = bytes.len,
                 .body_bytes = body_bytes,
                 .region_bytes = region_bytes,
+                .trailing_bytes = trailing_bytes,
+                .modules = source_refs,
             },
             .meta = .{
                 .identity = identity,
@@ -374,11 +397,11 @@ fn symbolicSpanValid(span: RelativeSpan, region_len: usize) bool {
 /// durable store but lives under its own stable-key namespace and payload
 /// version so it can never be confused with an ordinary checked body or an
 /// abstract symbolic template.
-pub const specialization_kind = "specialization-v1";
+pub const specialization_kind = "specialization-v2";
 /// Prefix applied to a canonical specialization fingerprint for durable keys.
 /// Embedded version invalidates every retained concrete result when the
 /// specialization encoding or remap rules change.
-pub const specialization_key_prefix = "spec\x1fv1\x1f";
+pub const specialization_key_prefix = "spec\x1fv2\x1f";
 
 /// Whether one stored function reference names an ordinary declaration or a
 /// concrete specialization. The stable key is a semantic declaration key for
@@ -390,7 +413,7 @@ pub const FunctionRefKind = enum(u8) { ordinary = 0, specialization = 1 };
 /// One stored function reference: `key` is a stable semantic declaration key
 /// for ordinary functions and a canonical specialization fingerprint for
 /// specializations; `id` only indexes the relocation table.
-pub const SpecializationFunctionRef = struct { kind: FunctionRefKind, id: typed.FunctionId, key: []const u8 };
+pub const SpecializationFunctionRef = struct { kind: FunctionRefKind, id: typed.FunctionId, key: []const u8, template: ?[]const u8 = null };
 
 /// Stable identity of one concrete specialization. `fingerprint` is the
 /// canonical key over template identity, ordered positional descriptors,
@@ -451,6 +474,12 @@ pub const SpecializationEntry = struct {
     }
 };
 
+/// Validate owned source-range headers before decoded statements reach a consumer.
+pub fn validRangeHeaders(statements: []const typed.Statement) bool {
+    for (statements) |statement| if (statement.data == .range_loop and statement.data.range_loop.parts.len != 1) return false;
+    return true;
+}
+
 /// Whether one specialization payload is internally consistent. Called by the
 /// store before a decoded entry can reach the checker; a false result is a
 /// miss, never a trusted unchecked identity.
@@ -476,6 +505,7 @@ pub fn validSpecialization(payload: StoredSpecialization, max_declarations: usiz
     if (payload.body.range.nodes.end - payload.body.range.nodes.start != payload.body.nodes.len) return false;
     if (payload.body.range.statements.start > payload.body.range.statements.end) return false;
     if (payload.body.range.statements.end - payload.body.range.statements.start != payload.body.statements.len) return false;
+    if (!validRangeHeaders(payload.body.statements)) return false;
     if (!validSpecializationRefs(payload.refs, payload.counts, max_declarations, max_entry_bytes)) return false;
     return true;
 }
@@ -486,6 +516,8 @@ fn validSpecializationRefs(refs: SpecializationRefs, counts: SpecializationCount
     for (refs.function_refs) |reference| {
         if (@backingInt(reference.id) >= counts.old_function_count) return false;
         if (reference.key.len == 0 or reference.key.len > max_entry_bytes) return false;
+        if (reference.template) |template| if (template.len == 0 or template.len > max_entry_bytes) return false;
+        if (reference.kind == .specialization and reference.template == null) return false;
     }
     for (refs.record_refs) |reference| {
         if (reference.index >= counts.old_record_count) return false;
@@ -527,7 +559,7 @@ pub fn createSpecialization(
     const nodes = mapper.value(a, []const typed.Node, program.nodes[range.nodes.start..range.nodes.end]) catch |err| return classify(err);
     const statements = mapper.value(a, []const typed.Statement, program.statements[range.statements.start..range.statements.end]) catch |err| return classify(err);
     const function_refs = try a.alloc(SpecializationFunctionRef, spec.function_refs.len);
-    for (spec.function_refs, function_refs) |reference, *out| out.* = .{ .kind = reference.kind, .id = reference.id, .key = try a.dupe(u8, reference.key) };
+    for (spec.function_refs, function_refs) |reference, *out| out.* = .{ .kind = reference.kind, .id = reference.id, .key = try a.dupe(u8, reference.key), .template = if (reference.template) |template| try a.dupe(u8, template) else null };
     const record_refs = try a.alloc(RecordRef, spec.record_refs.len);
     for (spec.record_refs, record_refs) |reference, *out| out.* = .{ .index = reference.index, .key = try a.dupe(u8, reference.key), .shape = reference.shape };
     const arguments = try a.alloc([]const u8, spec.identity.arguments.len);
@@ -559,4 +591,89 @@ pub fn createSpecialization(
             .counts = .{ .old_function_count = spec.old_function_count, .old_record_count = spec.old_record_count },
         },
     };
+}
+
+/// Preserve previously validated instance discovery order instead of hash-set iteration order.
+pub fn sortFunctionRefs(comptime Reference: type, references: []Reference) void {
+    std.mem.sort(Reference, references, {}, struct {
+        fn less(_: void, left: Reference, right: Reference) bool {
+            return @backingInt(left.id) < @backingInt(right.id);
+        }
+    }.less);
+}
+
+/// Bound portable recipe inputs before any normal interner can see them. Each
+/// aggregate child must already have a validated earlier reference; absent,
+/// duplicated, forward and cyclic identities never reach catalog operations.
+pub fn validTypeRecipes(meta: Metadata, max_items: usize) bool {
+    var has_recipes = false;
+    for (meta.record_refs) |reference| if (reference.recipes.len != 0) {
+        has_recipes = true;
+        break;
+    };
+    var previous: ?usize = null;
+    for (meta.record_refs, 0..) |reference, position| {
+        if (reference.index >= meta.old_record_count) return false;
+        // Legacy specialization references need not be sorted. Ordinary recipe
+        // snapshots use a complete sorted table, which the remapper requires.
+        if (has_recipes) {
+            if (previous) |old| if (reference.index <= old) return false;
+        }
+        previous = reference.index;
+        if (reference.recipes.len > 1) return false;
+        if (reference.recipes.len == 0) continue;
+        const recipe = reference.recipes[0];
+        const prefix = meta.record_refs[0..position];
+        switch (recipe) {
+            .array => |array| {
+                if (!recipeSpan(array.site, meta.identity.region)) return false;
+                if (array.length > array.site.end - array.site.start) return false;
+                if (!recipeChild(array.element, prefix)) return false;
+            },
+            .tuple => |elements| {
+                if (elements.len > max_items) return false;
+                for (elements) |element| if (!recipeChild(element, prefix)) return false;
+            },
+            .callable => |site| if (!recipeSpan(site, meta.identity.region) or site.start == site.end) return false,
+        }
+    }
+    return true;
+}
+fn recipeSpan(span: source.Span, region: source.Span) bool {
+    return span.start >= region.start and span.end >= span.start and span.end <= region.end;
+}
+fn recipeChild(ty: typed.Type, references: []const RecordRef) bool {
+    if (!ty.isAggregate()) return true;
+    for (references) |reference| if (reference.index == ty.recordIndex()) return true;
+    return false;
+}
+
+test "portable type recipes reject missing forward cyclic and out of region inputs" {
+    const testing = std.testing;
+    var recipe: TypeRecipe = .{ .array = .{ .element = .i64, .length = 1, .site = .{ .start = 2, .end = 3 } } };
+    var refs = [_]RecordRef{ .{ .index = 0, .key = "R" }, .{ .index = 1, .key = "array", .recipes = @as(*[1]TypeRecipe, @ptrCast(&recipe)) } };
+    const meta: Metadata = .{
+        .identity = .{ .key = "f", .context = @splat(0), .body = .{ .start = 1, .end = 5 }, .region = .{ .start = 1, .end = 5 } },
+        .old_function_count = 1,
+        .old_record_count = 3,
+        .function_refs = &.{},
+        .record_refs = &refs,
+    };
+    try testing.expect(validTypeRecipes(meta, 8));
+    recipe.array.length = std.math.maxInt(usize);
+    try testing.expect(!validTypeRecipes(meta, 8));
+    recipe.array.length = 1;
+    recipe.array.element = @fromBackingInt(typed.Type.record_base);
+    try testing.expect(validTypeRecipes(meta, 8));
+    recipe.array.element = @fromBackingInt(typed.Type.record_base + 1);
+    try testing.expect(!validTypeRecipes(meta, 8));
+    recipe.array.element = @fromBackingInt(typed.Type.record_base + 2);
+    try testing.expect(!validTypeRecipes(meta, 8));
+    recipe = .{ .callable = .{ .start = 0, .end = 2 } };
+    try testing.expect(!validTypeRecipes(meta, 8));
+    recipe = .{ .tuple = &.{ .i64, .bool } };
+    try testing.expect(!validTypeRecipes(meta, 1));
+    try testing.expect(validTypeRecipes(meta, 2));
+    refs[0].index = 2;
+    try testing.expect(!validTypeRecipes(meta, 2));
 }

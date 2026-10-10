@@ -19,6 +19,7 @@
 //! missing or ambiguous remap as a miss; this module never integrates a decoded
 //! body by itself.
 const std = @import("std");
+const sources = @import("semantic_sources.zig");
 const typed = @import("typed.zig");
 const source = @import("source.zig");
 const codec = @import("persist_codec.zig");
@@ -26,7 +27,7 @@ const owned = @import("semantic_entry.zig");
 const cache_key = @import("cache_key.zig");
 
 /// On-disk format version. Bump for any layout, tag or validation change.
-pub const format_version = "semantic-cache-v3";
+pub const format_version = "semantic-cache-v6";
 /// Default root for ordinary one-shot commands; `--cache-dir=DIR` maps to
 /// `DIR/semantic` through the same shared cache-root option.
 pub const default_directory = ".mylang-cache/semantic";
@@ -52,6 +53,8 @@ pub const SourceBytes = struct {
     old_len: usize = 0,
     body: []const u8 = &.{},
     region: []const u8 = &.{},
+    modules: []const sources.Reference = &.{},
+    trailing: []const u8 = &.{},
 };
 
 /// Persisted payload for one checked body. It carries the complete relocatable
@@ -209,7 +212,7 @@ pub const Store = struct {
             .nodes = body.nodes,
             .statements = body.statements,
             .range = body.range,
-            .source = .{ .old_len = body.source_bytes.old_len, .body_bytes = body.source_bytes.body, .region_bytes = body.source_bytes.region },
+            .source = .{ .old_len = body.source_bytes.old_len, .body_bytes = body.source_bytes.body, .region_bytes = body.source_bytes.region, .modules = body.source_bytes.modules, .trailing_bytes = body.source_bytes.trailing },
             .meta = body.meta,
         };
     }
@@ -342,6 +345,9 @@ pub const Store = struct {
         const identity = body.meta.identity;
         if (identity.key.len == 0 or identity.key.len > self.limits.max_entry_bytes) return false;
         if (body.source_bytes.old_len == 0) return false;
+        if (body.source_bytes.trailing.len > 3 or body.source_bytes.trailing.len > body.source_bytes.old_len -| body.meta.identity.region.end) return false;
+        if (body.source_bytes.modules.len > max_declarations) return false;
+        if (!sources.valid(body.source_bytes.modules, body.source_bytes.old_len)) return false;
         if (identity.body.start > identity.body.end or identity.body.end > body.source_bytes.old_len) return false;
         if (identity.region.start > identity.region.end or identity.region.end > body.source_bytes.old_len) return false;
         if (identity.body.end - identity.body.start != body.source_bytes.body.len) return false;
@@ -350,15 +356,17 @@ pub const Store = struct {
         if (body.range.nodes.end - body.range.nodes.start != body.nodes.len) return false;
         if (body.range.statements.start > body.range.statements.end) return false;
         if (body.range.statements.end - body.range.statements.start != body.statements.len) return false;
-        return self.validRefs(body) and self.validNotes(body);
+        return owned.validRangeHeaders(body.statements) and self.validRefs(body) and self.validNotes(body);
     }
 
     fn validRefs(self: *Store, body: StoredBody) bool {
+        if (!owned.validTypeRecipes(body.meta, max_declarations)) return false;
         if (body.meta.old_function_count > max_declarations or body.meta.old_record_count > max_declarations) return false;
         if (body.meta.function_refs.len > max_declarations or body.meta.record_refs.len > max_declarations) return false;
         for (body.meta.function_refs) |reference| {
             if (@backingInt(reference.id) >= body.meta.old_function_count) return false;
             if (reference.key.len == 0 or reference.key.len > self.limits.max_entry_bytes) return false;
+            if (reference.template) |template| if (template.len == 0 or template.len > self.limits.max_entry_bytes) return false;
         }
         for (body.meta.record_refs) |reference| {
             if (reference.index >= body.meta.old_record_count) return false;
@@ -400,7 +408,7 @@ pub const Store = struct {
             .nodes = entry.nodes,
             .statements = entry.statements,
             .range = entry.range,
-            .source_bytes = .{ .old_len = entry.source.old_len, .body = entry.source.body_bytes, .region = entry.source.region_bytes },
+            .source_bytes = .{ .old_len = entry.source.old_len, .body = entry.source.body_bytes, .region = entry.source.region_bytes, .modules = entry.source.modules, .trailing = entry.source.trailing_bytes },
         }) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
         };
@@ -647,6 +655,9 @@ pub const Store = struct {
     fn validOwned(self: *Store, entry: *const owned.Entry) bool {
         if (entry.meta.identity.key.len == 0 or entry.meta.identity.key.len > self.limits.max_entry_bytes) return false;
         if (entry.source.old_len == 0) return false;
+        if (entry.source.trailing_bytes.len > 3 or entry.source.trailing_bytes.len > entry.source.old_len -| entry.meta.identity.region.end) return false;
+        if (entry.source.modules.len > max_declarations) return false;
+        if (!sources.valid(entry.source.modules, entry.source.old_len)) return false;
         if (entry.meta.identity.body.start > entry.meta.identity.body.end or entry.meta.identity.body.end > entry.source.old_len) return false;
         if (entry.meta.identity.region.start > entry.meta.identity.region.end or entry.meta.identity.region.end > entry.source.old_len) return false;
         if (entry.source.body_bytes.len != entry.meta.identity.body.end - entry.meta.identity.body.start) return false;
@@ -659,6 +670,7 @@ pub const Store = struct {
         if (entry.meta.function_refs.len > max_declarations or entry.meta.record_refs.len > max_declarations or entry.meta.notes.len > max_declarations) return false;
         for (entry.meta.function_refs) |reference| {
             if (reference.key.len == 0 or reference.key.len > self.limits.max_entry_bytes) return false;
+            if (reference.template) |template| if (template.len == 0 or template.len > self.limits.max_entry_bytes) return false;
         }
         for (entry.meta.record_refs) |reference| {
             if (reference.key.len == 0 or reference.key.len > self.limits.max_entry_bytes) return false;
@@ -668,7 +680,7 @@ pub const Store = struct {
             if (note.message.len == 0 or note.message.len > self.limits.max_entry_bytes) return false;
             if (note.span.start > note.span.end or note.span.end > entry.source.old_len) return false;
         }
-        return true;
+        return owned.validRangeHeaders(entry.statements) and owned.validTypeRecipes(entry.meta, max_declarations);
     }
 
     /// Bound the contract namespace by bytes and entry count. Trimming is a
@@ -734,4 +746,63 @@ const DiskEntry = struct { name: []const u8, size: usize, mtime: i128 };
 
 fn oldestFirst(_: void, a: DiskEntry, b: DiskEntry) bool {
     return a.mtime < b.mtime;
+}
+
+fn rangeHeaderImage(allocator: std.mem.Allocator, store: *Store, count: usize) !void {
+    const header: typed.RangeParts = .{
+        .binding = .{ .start = 0, .end = 1 },
+        .start = .{ .slot = @fromBackingInt(0), .value = @fromBackingInt(0) },
+        .end = .{ .slot = @fromBackingInt(1), .value = @fromBackingInt(0) },
+        .setup = &.{},
+        .loop = .{ .condition = @fromBackingInt(1), .body = @fromBackingInt(1) },
+    };
+    const headers = [_]typed.RangeParts{ header, header };
+    const statements = [_]typed.Statement{
+        .{ .span = .{ .start = 0, .end = 1 }, .terminates = false, .data = .{ .range_loop = .{
+            .parts = headers[0..count],
+        } } },
+        .{ .span = .{ .start = 0, .end = 1 }, .terminates = true, .data = .{ .ret = @fromBackingInt(0) } },
+    };
+    const nodes = [_]typed.Node{
+        .{ .span = .{ .start = 0, .end = 1 }, .ty = .i64, .data = .{ .integer = 0 } },
+        .{ .span = .{ .start = 0, .end = 1 }, .ty = .bool, .data = .{ .boolean = false } },
+    };
+    const body: StoredBody = .{
+        .meta = .{
+            .identity = .{ .key = "range-header", .context = @splat(0), .body = .{ .start = 0, .end = 1 }, .region = .{ .start = 0, .end = 1 } },
+            .old_function_count = 1,
+            .old_record_count = 0,
+            .function_refs = &.{},
+            .record_refs = &.{},
+        },
+        .function = .{ .id = @fromBackingInt(0), .name = "main", .declaration = .{ .start = 0, .end = 1 }, .scope = .{ .body = @fromBackingInt(0) } },
+        .nodes = &nodes,
+        .statements = &statements,
+        .range = .{ .nodes = .{ .start = 0, .end = 2 }, .statements = .{ .start = 0, .end = 2 } },
+        .source_bytes = .{ .old_len = 1, .body = "x", .region = "x" },
+    };
+    var payload = codec.Writer.init(allocator);
+    defer payload.deinit();
+    try payload.write(StoredBody, body);
+    try std.testing.expect(try store.publishPayload("range-header", @splat(0), payload.bytes.items));
+}
+
+// spec-case: TYPED-RANGE-1
+test "durable range header corruption is a miss for empty and multiple owned headers" {
+    const t = std.testing;
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    var store = Store.init(t.allocator, t.io, root, cache_key.Contract.default, "range-header-test");
+    defer store.deinit();
+    try rangeHeaderImage(t.allocator, &store, 0);
+    try t.expect((try store.lookup(t.allocator, "range-header", @splat(0))) == null);
+    try rangeHeaderImage(t.allocator, &store, 2);
+    try t.expect((try store.lookup(t.allocator, "range-header", @splat(0))) == null);
+    try t.expectEqual(@as(usize, 2), store.statistics.damaged);
+    try rangeHeaderImage(t.allocator, &store, 1);
+    var entry = (try store.lookup(t.allocator, "range-header", @splat(0))).?;
+    defer entry.deinit();
+    try t.expectEqual(@as(usize, 1), entry.statements[0].data.range_loop.parts.len);
 }

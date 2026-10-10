@@ -406,3 +406,173 @@ test "formatter round-trips triple-quoted docstrings with newlines and hashes" {
         \\
     );
 }
+
+// spec: PARSE-RECOVERY-1
+test "parser recovery reports independent statements across newline and dedent" {
+    const input =
+        \\func broken() -> int:
+        \\    const first = +
+        \\    if True:
+        \\        const nested = +
+        \\    const last = +
+        \\    return 0
+        \\
+        \\func another() -> int:
+        \\    const separate = +
+        \\    return 0
+    ;
+    var compilation = try language.Compilation.init(t.allocator, "recovery.my", input);
+    defer compilation.deinit();
+    try t.expectError(error.SourceError, compilation.parse());
+    try t.expect(compilation.syntax == null);
+    try t.expectEqual(@as(usize, 4), compilation.diagnostics.items.len);
+    const lines = [_]usize{ 2, 4, 5, 9 };
+    for (compilation.diagnostics.items, lines) |diagnostic, line| {
+        try t.expectEqualStrings("E_EXPRESSION", diagnostic.code);
+        try t.expectEqual(line, compilation.src.locate(diagnostic.span.start).line);
+        try t.expect(diagnostic.span.end <= input.len);
+    }
+    try t.expectEqualStrings(input, compilation.src.bytes);
+}
+
+// spec-case: PARSE-RECOVERY-1
+test "parser recovery rejects formatting and recovers declaration headers" {
+    const input =
+        \\func bad(first int) -> int:
+        \\    return 0
+        \\
+        \\func second() -> int:
+        \\    const value = +
+        \\    return 0
+    ;
+    var compilation = try language.Compilation.init(t.allocator, "headers.my", input);
+    defer compilation.deinit();
+    try t.expectError(error.SourceError, compilation.format(t.allocator));
+    try t.expect(compilation.syntax == null);
+    try t.expectEqual(@as(usize, 2), compilation.diagnostics.items.len);
+    try t.expectEqual(@as(usize, 1), compilation.src.locate(compilation.diagnostics.items[0].span.start).line);
+    try t.expectEqual(@as(usize, 5), compilation.src.locate(compilation.diagnostics.items[1].span.start).line);
+    try t.expectEqualStrings(input, compilation.src.bytes);
+}
+
+// spec-case: PARSE-RECOVERY-1
+test "parser recovery withholds structural migration fixes from malformed syntax" {
+    const input =
+        \\def legacy() -> i64:
+        \\    return 0
+        \\
+        \\func broken() -> int:
+        \\    const value = +
+    ;
+    var compilation = try language.Compilation.init(t.allocator, "migration.my", input);
+    defer compilation.deinit();
+    try t.expectError(error.SourceError, compilation.parse());
+    try t.expectEqual(@as(usize, 1), compilation.diagnostics.items.len);
+    try t.expect(compilation.diagnostics.items[0].provenance.fix == null);
+    try t.expect(compilation.syntax == null);
+}
+
+// spec-case: PARSE-RECOVERY-1
+test "parser recovery preserves next statement when missing expression consumed its head" {
+    const input =
+        \\func broken() -> int:
+        \\    const first =
+        \\    const second = +
+        \\    return 0
+    ;
+    var compilation = try language.Compilation.init(t.allocator, "missing.my", input);
+    defer compilation.deinit();
+    try t.expectError(error.SourceError, compilation.parse());
+    try t.expectEqual(@as(usize, 2), compilation.diagnostics.items.len);
+    try t.expectEqualStrings("const", compilation.src.text(compilation.diagnostics.items[0].span));
+    try t.expectEqualStrings("+", compilation.src.text(compilation.diagnostics.items[1].span));
+}
+
+fn boundedRecoveryMutations() !void {
+    const input =
+        \\func helper(value: int) -> int:
+        \\    if value > 0:
+        \\        while value > 2:
+        \\            return value
+        \\    return 0
+        \\
+        \\func main() -> int:
+        \\    const answer = helper(4)
+        \\    return answer
+    ;
+    const mutations = [_]u8{ '\n', ')', ',', '+', ':' };
+    for (mutations) |byte| for (input, 0..) |original, at| {
+        if (original == ' ' or original == '\n') continue;
+        var changed: [input.len]u8 = input.*;
+        changed[at] = byte;
+        var compilation = try language.Compilation.init(t.allocator, "bounded-recovery.my", &changed);
+        defer compilation.deinit();
+        compilation.parse() catch |err| {
+            try t.expectEqual(error.SourceError, err);
+            try t.expect(compilation.syntax == null);
+            try t.expect(compilation.diagnostics.items.len > 0);
+            for (compilation.diagnostics.items) |diagnostic| {
+                try t.expect(diagnostic.span.start <= diagnostic.span.end);
+                try t.expect(diagnostic.span.end <= changed.len);
+            }
+            continue;
+        };
+        try t.expect(compilation.syntax != null);
+        try t.expectEqualStrings(&changed, compilation.src.bytes);
+    };
+}
+
+// spec-case: PARSE-RECOVERY-1
+test "parser recovery bounded nested token mutations keep all diagnostic spans owned" {
+    try boundedRecoveryMutations();
+}
+
+// spec-case: PARSE-RECOVERY-1
+test "F4 parser recovery counts braces in a four-line dictionary literal" {
+    const input = "func main() -> int:\n    const values = {\n        1: ,\n        2: 3,\n    }\n    return 0\n";
+    var compilation = try language.Compilation.init(t.allocator, "braces.my", input);
+    defer compilation.deinit();
+    try t.expectError(error.SourceError, compilation.parse());
+    try t.expect(compilation.syntax == null);
+    try t.expectEqual(@as(usize, 1), compilation.diagnostics.items.len);
+    try t.expectEqual(@as(usize, 3), compilation.src.locate(compilation.diagnostics.items[0].span.start).line);
+}
+
+// spec-case: PARSE-RECOVERY-1
+test "F6 parser recovery skips continuations after a malformed elif header" {
+    const input = "func main() -> int:\n    const a = 1\n    if a == 1:\n        pass\n    elif a == = 2:\n        pass\n    else:\n        pass\n    return 0\n";
+    var compilation = try language.Compilation.init(t.allocator, "continuations.my", input);
+    defer compilation.deinit();
+    try t.expectError(error.SourceError, compilation.parse());
+    try t.expect(compilation.syntax == null);
+    try t.expectEqual(@as(usize, 1), compilation.diagnostics.items.len);
+    try t.expectEqual(@as(usize, 5), compilation.src.locate(compilation.diagnostics.items[0].span.start).line);
+}
+
+// spec-case: PARSE-RECOVERY-1
+test "F6 parser recovery skips compound continuations but retains later independent errors" {
+    for ([_][]const u8{ "elif True", "else", "except Error", "finally", "case Choice.one" }) |header| {
+        const input = try std.fmt.allocPrint(t.allocator, "func main() -> int:\n    if True == = False:\n        pass\n    {s}:\n        pass\n    const except = )\n    const finally = )\n    return 0\n", .{header});
+        defer t.allocator.free(input);
+        var compilation = try language.Compilation.init(t.allocator, "continuations.my", input);
+        defer compilation.deinit();
+        try t.expectError(error.SourceError, compilation.parse());
+        try t.expect(compilation.syntax == null);
+        try t.expectEqual(@as(usize, 3), compilation.diagnostics.items.len);
+        for (compilation.diagnostics.items, [_]usize{ 2, 6, 7 }) |item, line| {
+            try t.expectEqual(line, compilation.src.locate(item.span.start).line);
+        }
+    }
+}
+
+// spec-case: PARSE-RECOVERY-1
+test "F6 parser recovery preserves assignment statements named except and finally" {
+    const input = "func main() -> int:\n    mut except = 0\n    mut finally = 0\n    const broken = )\n    except += )\n    finally += )\n    return 0\n";
+    var compilation = try language.Compilation.init(t.allocator, "names.my", input);
+    defer compilation.deinit();
+    try t.expectError(error.SourceError, compilation.parse());
+    try t.expectEqual(@as(usize, 3), compilation.diagnostics.items.len);
+    for (compilation.diagnostics.items, [_]usize{ 4, 5, 6 }) |item, line| {
+        try t.expectEqual(line, compilation.src.locate(item.span.start).line);
+    }
+}

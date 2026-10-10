@@ -1,12 +1,9 @@
-
 import sort
 
 # Python's keyed sorting: `values.sort(key=..., reverse=...)` in place and
 # `sorted(values, key=..., reverse=...)` on a copy, with int, float, str, bool,
 # narrower integer and tuple keys (SPEC.md LIST-SORT-KEY-1..3, GENERIC-BODY-4,
 # SYNTAX-METHOD-KEYWORDS-1). Every test states its expected order in full.
-
-
 record Entry:
     rank: int
     id: int

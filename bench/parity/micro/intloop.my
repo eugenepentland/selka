@@ -1,7 +1,5 @@
 # intloop: checked integer arithmetic over a loop-carried dependency.
 # total = (total + i * 7) % 1000003 for i in 0..N
-
-
 func main(out: Stream) -> int:
     mut total = 0
     for i in range(30000000):

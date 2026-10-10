@@ -260,7 +260,9 @@ test "a bounds trap recovers the index the program wrote on the trap's cold path
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const text = try support.llvmText(arena.allocator(), from_end_index);
-    const block = blockOf(text, "%fromend") orelse return error.TestExpectedRecovery;
+    // A list index is tested as written first (NEW-CORE-F2-WRAP-1), so its trap reports the
+    // written index `%p1` itself, from the trap's cold block, with nothing to recover.
+    const block = blockOf(text, "i64 %p1, i64 %len") orelse return error.TestExpectedRecovery;
     try std.testing.expect(std.mem.startsWith(u8, block, "trap"));
 }
 
@@ -291,4 +293,51 @@ test "a source extern's i8, i16, u8, u16 and bool parameters carry their SysV ex
     try std.testing.expect(std.mem.indexOf(u8, text, "call i64 @pack(i8 signext %") != null);
     try std.testing.expect(std.mem.indexOf(u8, text, ", i16 zeroext 7, i1 zeroext %") != null);
     try std.testing.expect(std.mem.indexOf(u8, text, ", i32 -1)") != null);
+}
+
+/// Separate physical entries reproduce a fresh lowering pool before snapshot interning.
+fn repeatedLiteralModule(a: std.mem.Allocator, second: ir.Type) !ir.Module {
+    var module: ir.Module = .{};
+    try module.strings.appendSlice(a, &.{ "abc", "abc" });
+    for ([_]ir.Type{ .str, second }, 0..) |ty, index| {
+        var h = try support.Hand.init(a, &module, if (index == 0) "first" else "second", .{ .params = &.{}, .ret = ty });
+        const literal = try h.loose(.{ .op = .str_const, .ty = ty, .data = index });
+        _ = try h.emit(.{ .op = .ret, .ty = .void, .a = literal });
+        _ = try h.finish();
+    }
+    module.entry = 2;
+    var main = try support.Hand.init(a, &module, "main", .{ .params = &.{}, .ret = .i64 });
+    _ = try main.emit(.{ .op = .ret, .ty = .void, .a = try main.int(.i64, 0) });
+    _ = try main.finish();
+    return module;
+}
+
+// spec-case: NEW-CORE-LLVM-1
+test "equal literal bytes emit identical pools before and after snapshot interning" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var module = try repeatedLiteralModule(a, .str);
+    const fresh = try emitHand(a, std.testing.allocator, &module);
+    const snapshot = @import("ir_snapshot.zig");
+    const context = try snapshot.Context.init(a, &module, null);
+    const wire = try snapshot.capture(a, context, module.functions.items[1]);
+    module.functions.items[1] = try snapshot.restore(a, context, wire);
+    try std.testing.expectEqual(@as(u64, 0), module.functions.items[1].insts.items[0].data);
+    const restored = try emitHand(a, std.testing.allocator, &module);
+    try std.testing.expectEqualStrings(fresh, restored);
+    try std.testing.expect(std.mem.indexOf(u8, fresh, "@myl.str.1") == null);
+}
+
+// spec-case: NEW-CORE-LLVM-1
+test "equal string and byte literals preserve shared raw metadata across physical IDs" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var module = try repeatedLiteralModule(a, .bytes);
+    const separate = try emitHand(a, std.testing.allocator, &module);
+    module.functions.items[1].insts.items[0].data = 0;
+    const shared = try emitHand(a, std.testing.allocator, &module);
+    try std.testing.expectEqualStrings(shared, separate);
+    try std.testing.expect(std.mem.indexOf(u8, separate, "@myl.str.1") == null);
 }

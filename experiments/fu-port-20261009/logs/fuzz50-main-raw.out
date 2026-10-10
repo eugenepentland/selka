@@ -1,0 +1,14 @@
+main e23651f6a Debug compiler a55243552ec8a19f start 15:53:17
+evidence=/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/fu-port-20261009/fuzz50-main-raw
+source_commit=fb37996737d27c8af7279df2822c41fcb5314e17
+s1: STOP; 0.010293608997017145s
+number: STOP; 0.010901323985308409s
+s0: STOP; 0.005835127085447311s
+rc: STOP; 0.00843365304172039s
+rebinding: STOP; 0.011245355010032654s
+iteration: STOP; 0.014047126052901149s
+dict: STOP; 0.010686639929190278s
+text: STOP; 0.007239704020321369s
+functions: STOP; 0.013138500042259693s
+STOP: strict matrix failed; inspect retained evidence
+fuzz50=1 15:53:58

@@ -1,5 +1,3 @@
-
-
 public func program() -> int:
     mut sorted = 4
     return sorted + 1

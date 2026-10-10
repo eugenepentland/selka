@@ -1,6 +1,5 @@
 import math
 
-
 # The ten decimal digits, in value order.
 public func digits() -> str:
     return "0123456789"

@@ -1,0 +1,111 @@
+{
+  "recorded_utc": "2026-10-10T04:44:11.956477+00:00",
+  "baseline_main_commit": "1ab0d92e7a7120abaffba358933d8401b953251a",
+  "candidate_production_commit": "aff944405",
+  "candidate_schema_fixture_documentation_commit": "7e0dc06a8",
+  "compiler_build": {
+    "host_mode": "ReleaseFast",
+    "steps_succeeded": 9,
+    "exit_code": 0,
+    "log": "evidence/recursion-final-compiler-build.log.gz"
+  },
+  "full_suite": {
+    "command": [
+      "scripts/build-slot.sh",
+      "gate",
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "build",
+      "test",
+      "fmt-check",
+      "-j2",
+      "--maxrss",
+      "8589934592",
+      "--summary",
+      "all"
+    ],
+    "exit_code": 0,
+    "summary": "Build Summary: 97/97 steps succeeded; 2462/25073 tests passed (22611 skipped)",
+    "guardian_test_runner_records": 28,
+    "executed_tests_passed": 2462,
+    "failed": 0,
+    "shard_exclusions": 22611,
+    "log": "evidence/recursion-final-full-tests-green.log.gz"
+  },
+  "focused": {
+    "optimizer_demand_tests": 18,
+    "semantic_cache_tests": 77,
+    "semantic_project_tests": 15,
+    "cache_schema_cli_tests": 10,
+    "decoded_entry_reserve_oom_regression": "passed"
+  },
+  "guardian_whole_tree": {
+    "checks_passed": 88,
+    "logs": [
+      "evidence/recursion-production-commit.log.gz",
+      "evidence/recursion-schema-commit.log.gz"
+    ],
+    "policy_suppressions_or_baselines_weakened": false
+  },
+  "benchmark": {
+    "records": 41,
+    "edit_builds": 36,
+    "candidate_edit_builds": 18,
+    "compression": "none",
+    "runtime_c_optimization": "O2",
+    "candidate_max_edit_s": 12.444157561985776,
+    "all_execution_checks_passed": true,
+    "all_edited_native_objects_byte_identical_between_versions": true,
+    "uncompressed_results_sha256": "44964b595e2596ca14b2d1932f5e3604aca441acdbdf31130a84e6e176ff8f0b",
+    "compilers": {
+      "baseline": {
+        "path": "/home/epentland/ai/canopy/mylang-incremental-gap-20261010/merged-final-compiler/bin/mylang",
+        "sha256": "64d28c910e80957b5d059171d0ba394e36c7cbe5dfe13fbb351df8dcb37f5eb1"
+      },
+      "candidate": {
+        "path": "/home/epentland/ai/canopy/mylang-incremental-gap-20261010/recursion-final-compiler/bin/mylang",
+        "sha256": "08f87380ec11cb0de2a8ce0e8dc00a8f0a0abef68d62ca0b1736fb2b78955182"
+      }
+    }
+  },
+  "fresh_link_verification": {
+    "method": "Independent follow-up: moved linked-program cache aside, eagerly regenerated and verified every native unit, forced fresh linking, compared whole executable bytes and executed usage/export/leak checks. Excluded from all edit timing medians.",
+    "native_units_regenerated_and_verified": 760,
+    "native_cache_misses": 0,
+    "program": "linked",
+    "processes": 761,
+    "executable_sha256": "167aaff4ebb61c5d9972fe71373cc48df207baa57ecc6da1100657183027d1ae",
+    "matches_incremental_executable": true,
+    "execution_check": "passed: every replica executed; usage, export hashes and leak check passed",
+    "seconds_excluded_from_edit_medians": 136.6706894680392,
+    "report": "evidence/eager-fresh-link-verification.json.gz"
+  },
+  "frontend_probe": {
+    "replicas": 1,
+    "semantic_budget_bytes": 134217728,
+    "fresh_bodies_after_entry_edit": 12,
+    "fresh_bodies_after_prefix_only_edit": 11,
+    "specialization_bodies_reused_per_edit": 19,
+    "remaining_ordinary_retention_rejections_per_replica": {
+      "interned-record": 5,
+      "function-value": 6
+    },
+    "note": "First rejection per body; not distinct type counts. Check-session counters are cumulative where specified."
+  },
+  "evidence_sha256": {
+    "evidence/eager-fresh-link-verification.json.gz": "75e0af4eb6b86dc7f2c6470e12c788c9785db0cf06dc6fd57ceb7736f4ac3115",
+    "evidence/eager-fresh-link-verification.log.gz": "1b63d3ac0633ad76f2344d86b6f9a9b30f5bb6c5c100f1b63499d72509347d5c",
+    "evidence/frontend-preregister-cache-all.log.gz": "dff504553752792e112ce11a7026e47a281c7bf36f42893e8ae97a1b9e3e3f39",
+    "evidence/frontend-preregister-project.log.gz": "61e6393e5816eeda6c6415802f014ae5c55d750aa0b0d661ef0a536fcbe87a44",
+    "evidence/frontend-preregister-spec-probe.json.gz": "963adc36c04a6ad5f706a3ae7d339f159a8d44eafd73cc304fca49449e3add72",
+    "evidence/frontend-preregister-spec-probe.py.gz": "f9324aa4a3a63da0641769fce29edc032c1253233b15c739a5bcbee263c559cd",
+    "evidence/frontend-schema-cli.log.gz": "a8a405e6a8a6f07dd4f03c06764c9cdd06d6296c9488d3007e8fc06113a13efe",
+    "evidence/frontend-specialization-open-oom.log.gz": "f4bfca76eedc95f17102048adc88358b5cf1c5ef0d572d091ad81fe206984524",
+    "evidence/general-return-receipts-demand.log.gz": "6f0a9012a9934e424787e3639727b82e8481c70104970d6f58b75de09b1638bc",
+    "evidence/general-return-receipts-guardian.log.gz": "d24822ca527c58dab2427eef1520c111c630436fe01d7ce8a7055eb04a624020",
+    "evidence/recursion-final-compiler-build.log.gz": "24f549ecbcf11992a6617efb488350c2e800e38d0b46f4b57cfe9998b9325f70",
+    "evidence/recursion-final-full-tests-green.log.gz": "732a47c0c2ef6ee307abe3ae208997bcff3d2436573ee077e21b78c514d92793",
+    "evidence/recursion-production-commit.log.gz": "ab77af3de41d6da6ebde6c6a9843ea9d0fa51d0384e08ec2d88ea12f3e63716a",
+    "evidence/recursion-schema-commit.log.gz": "305b2547177989e1cc9308a5588a7883846ea4a5cff06eaa51bbbd66507ab59c",
+    "evidence/verify_fresh_link.py.gz": "dc27d11c797cfba7e4a887d4925f0fc4081daa1cad028603820315b3625bad0d"
+  }
+}

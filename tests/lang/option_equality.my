@@ -1,9 +1,6 @@
-
 # `==` and `!=` give a `Some(...)`, `None`, `Ok(...)` or `Err(...)` operand the
 # type of the operand beside it, in either order, whatever that operand is: a
 # call, a conversion, a field or a local.
-
-
 func half(value: int) -> int?:
     if value % 2 == 0:
         return Some(value // 2)

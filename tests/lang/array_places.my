@@ -1,11 +1,8 @@
-
 # Fixed arrays written, iterated and passed `mut` with the list spelling
 # (PY-ARRAY-WRITE-1, PY-ARRAY-ITER-1, PY-ARRAY-MUT-1). Every write keeps the
 # value semantics of `replace`: an earlier copy keeps its value, a callee
 # handed a plain array writes its own copy, and a `mut` parameter is the
 # caller's own variable. The traced element types run under `--gc-stress`.
-
-
 enum Status:
     ok
     missing
@@ -170,7 +167,7 @@ public func test_an_array_inside_a_list_slot_is_written_where_the_list_holds_it(
 
 # spec-case: PY-ARRAY-WRITE-1
 public func test_an_enum_table_entry_is_written_by_its_key() -> bool:
-    mut codes: [Status]i64 = {Status.failed: 500, Status.ok: 200, Status.missing: 404}
+    mut codes: [Status] i64 = {Status.failed: 500, Status.ok: 200, Status.missing: 404}
     codes[Status.ok] = 201
     codes[Status.failed] += 1
     return codes[Status.ok] == 201 and codes[Status.missing] == 404 and codes[Status.failed] == 501

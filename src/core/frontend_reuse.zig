@@ -24,7 +24,7 @@ pub const State = struct {
     semantic: language.semantic_cache.Cache,
     store: language.semantic_cache.Store,
     frontend: language.frontend_cache.Cache,
-    request: language.semantic_summary.Request = .{ .facts_only = true },
+    request: language.semantic_summary.Request = .{ .body_policy = .concrete },
     contract: []const u8,
     identity: [32]u8,
 

@@ -1,4 +1,3 @@
-
 record History:
     live: DictValues[int, int]
     snapshot: dict[int, int]
@@ -108,28 +107,25 @@ public func test_heap_read_only_projection_does_not_detach_a_live_mapping() -> b
 
 
 public func test_arena_read_only_projection_does_not_detach_a_live_mapping() -> bool:
-    with arena():
-        mut mapping = {1: 7}
-        mut live = mapping.values()
-        mut size = len(live.mapping)
-        mapping[1] = 13
-        return size == 1 and list(live) == [13]
+    mut mapping = {1: 7}
+    mut live = mapping.values()
+    mut size = len(live.mapping)
+    mapping[1] = 13
+    return size == 1 and list(live) == [13]
 
 
 public func test_arena_snapshot_then_owner_mutation_keeps_the_shared_original() -> bool:
-    with arena():
-        mut mapping = {1: 7}
-        mut live = mapping.values()
-        mut result = History(live, live.mapping)
-        result.snapshot[1] = 11
-        mapping[1] = 13
-        return list(result.live) == [7] and result.snapshot[1] == 11 and mapping[1] == 13
+    mut mapping = {1: 7}
+    mut live = mapping.values()
+    mut result = History(live, live.mapping)
+    result.snapshot[1] = 11
+    mapping[1] = 13
+    return list(result.live) == [7] and result.snapshot[1] == 11 and mapping[1] == 13
 
 
 public func test_arena_append_of_a_fresh_mapping_does_not_create_a_semantic_snapshot() -> bool:
-    with arena():
-        mut rows: dict[int, int][] = []
-        rows.append({1: 7})
-        mut live = rows[0].values()
-        rows[0][1] = 13
-        return list(live) == [13] and rows[0][1] == 13
+    mut rows: dict[int, int][] = []
+    rows.append({1: 7})
+    mut live = rows[0].values()
+    rows[0][1] = 13
+    return list(live) == [13] and rows[0][1] == 13

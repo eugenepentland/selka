@@ -1,9 +1,6 @@
-
 # Loop variables and match bindings hold copies (VALUE-SEMANTICS-2); writing
 # through one is rejected (VALUE-SEMANTICS-4), so a change goes through the
 # collection's place or through a local copy.
-
-
 record Point:
     x: int
     y: int

@@ -157,8 +157,9 @@ fn start(init: std.process.Init, requested: Options, setup: Setup) Error!Started
 }
 
 /// Print a replayed report and answer its status, 0.
-fn emitted(init: std.process.Init, setup: Setup, cached: []const u8) Error!u8 {
-    try emit(init, setup, cached);
+fn emitted(init: std.process.Init, setup: Setup, cached: receipt.Replay) Error!u8 {
+    try writeAll(init, std.Io.File.stderr(), cached.warnings);
+    try emit(init, setup, cached.report);
     return 0;
 }
 
@@ -201,6 +202,7 @@ fn finish(init: std.process.Init, ready: Ready, setup: Setup) Error!u8 {
         else => if (provider_sets.len == 0) return failWith(init, problems.items, 1) else null,
     };
     const checked = base_checked orelse try providerGraph(init, options, located, entry_text, provider_sets[0], &first_provider) orelse return failWith(init, problems.items, 1);
+    if (base_checked != null) try writeAll(init, std.Io.File.stderr(), problems.items);
     const loaded: Loaded = if (view) |share| .{ .modules = share.modules } else try Loaded.of(allocator, &session);
     var before: std.ArrayList(receipt.Dependency) = .empty;
     try before.appendSlice(allocator, try checkedInputs(context, loaded, entry_text.overlay, bytes));
@@ -229,6 +231,7 @@ fn finish(init: std.process.Init, ready: Ready, setup: Setup) Error!u8 {
         return 2;
     };
     var collected: Collected = .{ .before = before };
+    try collected.warnings.appendSlice(allocator, checked.allocation_warnings);
     try addSources(allocator, &collected.sources, context, loaded);
     const selection_context: SelectionContext = .{ .receipt = context, .base = base, .permits = setup.permits() };
     const shared: GroupRun = .{ .init = init, .selection = selection_context, .session = &session, .base_checked = base_checked, .discovery = checked, .entry = entry_text, .cases = configured_cases };
@@ -255,7 +258,7 @@ fn finish(init: std.process.Init, ready: Ready, setup: Setup) Error!u8 {
     }
     for (collected.wholes.items) |range| if (unchanged and wholePassed(range.whole, chosen.items[range.start..][0..range.len])) try receipt.save(context, range.whole.key);
     const json = try report.jsonSources(allocator, verdicts, sources.items);
-    if (successful and unchanged and options.controls.against == null) try receipt.remember(context, base, before.items, json);
+    if (successful and unchanged and options.controls.against == null) try receipt.remember(context, base, before.items, json, collected.warnings.items);
     const out = if (options.json) json else try report.text(allocator, verdicts);
     try emit(init, setup, out);
     try siblingHint(init, loaded, located, verdicts.len);
@@ -278,6 +281,7 @@ const EntryText = struct {
 /// What a run's provider groups add up: the inputs their verdicts depend on, the
 /// sources the report lists and the selected tests.
 const Collected = struct {
+    warnings: std.ArrayList(u8) = .empty,
     before: std.ArrayList(receipt.Dependency),
     sources: std.ArrayList([]const u8) = .empty,
     chosen: std.ArrayList(Selected) = .empty,
@@ -318,6 +322,8 @@ const GroupRun = struct {
             try provider_session.enableCache(init.gpa, context.options.build.cache);
             self.entry.apply(&provider_session, overlays);
             program = checkEntry(&provider_session, a, located, &problems) catch |err| return checkFailure(init, err, problems.items, 1);
+            try writeAll(init, std.Io.File.stderr(), problems.items);
+            try out.warnings.appendSlice(a, program.allocation_warnings);
             try out.before.appendSlice(a, try receipt.captured(context, &provider_session, overlays));
             located.validate(a, &provider_session, &problems) catch |err| return checkFailure(init, err, problems.items, project_entry.status(err));
             const discovered = try discover.discover(a, program.program, entry_module, try moduleSources(a, try Loaded.of(a, &provider_session), entry_module));
@@ -420,7 +426,10 @@ fn providerGraph(init: std.process.Init, options: Options, located: project_entr
     located.configure(session);
     try session.enableCache(init.gpa, options.build.cache);
     entry_text.apply(session, try std.mem.concat(a, frontend.Provider, &.{ set, entry_text.overlay }));
-    if (checkEntry(session, a, located, &problems)) |checked| return checked else |err| _ = try checkFailure(init, err, problems.items, 1);
+    if (checkEntry(session, a, located, &problems)) |checked| {
+        try writeAll(init, std.Io.File.stderr(), problems.items);
+        return checked;
+    } else |err| _ = try checkFailure(init, err, problems.items, 1);
     return null;
 }
 
@@ -535,12 +544,12 @@ fn bindPlan(init: std.process.Init) Error!planner.Bound {
 }
 
 /// The whole run's recorded report, unless `--affected` selects by unrecorded git state.
-fn replayRun(context: receipt.Context, base: [32]u8) Error!?[]const u8 {
+fn replayRun(context: receipt.Context, base: [32]u8) Error!?receipt.Replay {
     if (context.options.controls.against != null) return null;
     return receipt.replay(context, base);
 }
 
-fn cachedReplay(init: std.process.Init, options: Options, located: project_entry.Entry, case_bytes: []const u8, cache_plan: planner.Bound) Error!?[]const u8 {
+fn cachedReplay(init: std.process.Init, options: Options, located: project_entry.Entry, case_bytes: []const u8, cache_plan: planner.Bound) Error!?receipt.Replay {
     if (options.controls.against != null) return null;
     const borrowed = try borrowedReplay(init, options, located, case_bytes, cache_plan);
     // The private transport never reaches native guests or a persistent key.
@@ -548,7 +557,7 @@ fn cachedReplay(init: std.process.Init, options: Options, located: project_entry
     return borrowed orelse try localReplay(init, options, located, case_bytes, cache_plan);
 }
 
-fn borrowedReplay(init: std.process.Init, requested: Options, located: project_entry.Entry, case_bytes: []const u8, cache_plan: planner.Bound) Error!?[]const u8 {
+fn borrowedReplay(init: std.process.Init, requested: Options, located: project_entry.Entry, case_bytes: []const u8, cache_plan: planner.Bound) Error!?receipt.Replay {
     const a = init.arena.allocator();
     const resources: tool_identity.Request = .{ .arena = a, .io = init.io, .environment = init.environ_map, .executable = requested.build.zig, .cache = requested.build.cache };
     const guest = try tool_ticket.borrow(.{ .tool = resources, .compiler_identity = frontend.compiler_identity, .component_identity = cache_plan.identity }) orelse return null;
@@ -557,7 +566,7 @@ fn borrowedReplay(init: std.process.Init, requested: Options, located: project_e
 
 /// The recorded report of an entry under `guest`, the toolchain its directory run
 /// identified and validates once for every root.
-fn directedReplay(init: std.process.Init, requested: Options, located: project_entry.Entry, case_bytes: []const u8, guest: tool_identity.Identity, cache_plan: planner.Bound) Error!?[]const u8 {
+fn directedReplay(init: std.process.Init, requested: Options, located: project_entry.Entry, case_bytes: []const u8, guest: tool_identity.Identity, cache_plan: planner.Bound) Error!?receipt.Replay {
     if (requested.controls.against != null) return null;
     const a = init.arena.allocator();
     var options = requested;
@@ -567,7 +576,7 @@ fn directedReplay(init: std.process.Init, requested: Options, located: project_e
     return receipt.replayProvisional(context, try receipt.settings(context, &native_inputs));
 }
 
-fn localReplay(init: std.process.Init, requested: Options, located: project_entry.Entry, case_bytes: []const u8, cache_plan: planner.Bound) Error!?[]const u8 {
+fn localReplay(init: std.process.Init, requested: Options, located: project_entry.Entry, case_bytes: []const u8, cache_plan: planner.Bound) Error!?receipt.Replay {
     const a = init.arena.allocator();
     const resources: tool_identity.Request = .{ .arena = a, .io = init.io, .environment = init.environ_map, .executable = requested.build.zig, .cache = requested.build.cache };
     const guest = tool_identity.lookupReplayCandidate(resources) catch |err| {

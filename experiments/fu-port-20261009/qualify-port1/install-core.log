@@ -1,0 +1,30 @@
+source_commit=18655425d12cd23cf98b8d3374bd53f086a6ee1c
+$ scripts/build-slot.sh gate -- bash -c '"$@"; result=$?; exit "$result"' -- scripts/build-slot.sh build -- python3 experiments/new-core-s3-20261006/wave-a/exclusive_core.py -- /usr/bin/time -f %e -o /home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/fu-port-20261009/qualify-port1/install-core.seconds zig build install --summary all
+build-slot: all 1 gate slot(s) busy; waiting (0s so far)
+build-slot: all 1 gate slot(s) busy; waiting (60s so far)
+build-slot: all 1 gate slot(s) busy; waiting (120s so far)
+build-slot: all 1 gate slot(s) busy; waiting (180s so far)
+build-slot: all 1 gate slot(s) busy; waiting (240s so far)
+build-slot: all 1 gate slot(s) busy; waiting (300s so far)
+build-slot: gate slot 1 after 305s (all 1 gate slot(s) busy)
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 2 after 50s (all 3 build slot(s) busy)
+core-exclusive: all 3 build slots held; other-build wait=5.260s; gate wrapper excludes gate execution
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source a624fa6f37bc)
+guardian: diff-scoped vs e23651f6a568d7d479de83b986ea7c02abc20d63: 20/570 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 15 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 1 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 625 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs e23651f6a568d7d479de83b986ea7c02abc20d63, 20 file(s) in scope
+Build Summary: 9/9 steps succeeded
+install success
++- install mylang cached
+|  +- compile exe mylang debug native cached 9ms MaxRSS:38M
+|  |  +- run exe build-identity (build_identity) cached
+|  |  |  +- compile exe build-identity debug native cached 7ms MaxRSS:37M
+|  |  +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 7ms MaxRSS:38M
+|  +- run ../guardian-zig/zig-out/bin/guardian-check success 919ms
+|     +- guardian-selfcheck success
+|        +- run ../guardian-zig/zig-out/bin/guardian-check success 7ms
++- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+

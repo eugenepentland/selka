@@ -1,4 +1,3 @@
-
 # spec-case: PY-COLLECTIONS-15
 public func test_in_place_sort_scales_and_preserves_explicit_snapshot() -> bool:
     mut values: int[] = []

@@ -1,5 +1,4 @@
-
-
+# lint: allow dead-private reason="This declaration is exercised during constant evaluation or through a callback value, outside direct runtime call edges."
 func build(n: int) -> int effects():
     return n * 2
 
@@ -24,6 +23,7 @@ func scale(value: int) -> int noalloc:
     return add(value, value) * 3
 
 
+@allow("test-conditional", reason="This language regression intentionally exercises conditional failure paths.")
 public func test_callbacks() -> bool effects():
     mut callback = identity(build)
     if apply(callback, 7) != 14:
@@ -31,6 +31,7 @@ public func test_callbacks() -> bool effects():
     return double_apply(callback, 3) == 12
 
 
+@allow("test-conditional", reason="This language regression intentionally exercises conditional failure paths.")
 public func test_effect_ceilings() -> bool effects():
     if scale(7) != 42:
         return False

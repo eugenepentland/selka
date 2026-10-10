@@ -139,6 +139,7 @@ pub const Parser = struct {
         /// Bit 0/1 records a top-level `func len`/`func replace`, indexed once at
         /// parse start so each prelude call does not rescan the token stream.
         shadowing: u2 = 0,
+        recovered: bool = false,
     } = .{},
     module_syntax: bool = false,
     syntax: struct {
@@ -831,149 +832,165 @@ pub const Parser = struct {
         _ = try self.expect(.semicolon);
         return true;
     }
+    const Declarations = struct {
+        functions: std.ArrayList(ast.Function) = .empty,
+        records: std.ArrayList(ast.Record) = .empty,
+        domains: std.ArrayList(ast.Domain) = .empty,
+        resources: std.ArrayList(ast.Domain) = .empty,
+        variants: std.ArrayList(ast.Variants) = .empty,
+        constraints: std.ArrayList(ast.Constraint) = .empty,
+        attribute_table: std.ArrayList(ast.DeclarationAttributes) = .empty,
+        public_names: std.ArrayList(Span) = .empty,
+    };
+
+    fn parseDeclaration(self: *Parser, lists: *Declarations) diagnostic.Error!void {
+        const pending = try self.attributes();
+        try self.checkAttributeTarget(pending, false);
+        // A leading `public` publishes the declaration that follows, so a
+        // module marks visibility on the declaration itself. It is not a way
+        // to spell the separate `export NAME` directive.
+        const declare_public = try self.takePublic();
+        if (try self.reexportDirective()) return;
+        if (self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "constraint")) {
+            const head = self.current().span;
+            self.cursor.pos += 1;
+            const constraint = try self.constraintDeclaration(head);
+            try self.markPublic(&lists.public_names, declare_public, constraint.name);
+            try lists.constraints.append(self.storage, constraint);
+            return;
+        }
+        if (self.take(.kw_type)) {
+            const name = (try self.expect(.ident)).span;
+            _ = try self.expect(.equal);
+            const target = try self.typeName();
+            _ = try self.expect(.semicolon);
+            try self.markPublic(&lists.public_names, declare_public, name);
+            try self.syntax.types.aliases.append(self.storage, .{ .name = name, .target = target });
+            return;
+        }
+        if (self.take(.kw_const)) {
+            const name = (try self.expect(.ident)).span;
+            _ = try self.expect(.colon);
+            const ty = try self.typeName();
+            _ = try self.expect(.equal);
+            const value = try self.expression(0);
+            const end = (try self.expect(.semicolon)).span;
+            const ret = try self.addStatement(.{ .span = .join(name, end), .data = .{ .ret = value } });
+            const statements = try self.storage.alloc(ast.StatementId, 1);
+            statements[0] = ret;
+            const body = try self.addStatement(.{ .span = .join(name, end), .data = .{ .block = statements } });
+            const literal = self.syntax.nodes.items[@backingInt(value)].data;
+            // Managed literal getters allocate on read; scalar getters remain pure, and
+            // so does an embedded file, which is static data (`EMBED-1`).
+            const embedded = literal == .call and literal.call.owner == null and embed.kindOf(self.src.text(literal.call.name)) != null;
+            const allowed = if ((literal == .text or literal == .bytes) and !embedded) effects.bit(.managed_allocation) else 0;
+            try self.markPublic(&lists.public_names, declare_public, name);
+            try lists.functions.append(self.storage, .{ .policy = .{ .constant = true, .effect_bound = .{ .allowed = allowed, .span = name } }, .signature = .{ .parameters = &.{}, .return_type = ty }, .name = name, .body = body });
+            return;
+        }
+        if (self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "resource")) {
+            self.cursor.pos += 1;
+            const name = try self.expect(.ident);
+            _ = try self.expect(.colon);
+            const kind = try self.expect(.ident);
+            _ = try self.expect(.semicolon);
+            try self.markPublic(&lists.public_names, declare_public, name.span);
+            try lists.resources.append(self.storage, .{ .name = name.span, .backing = kind.span });
+            return;
+        }
+        const fallible = self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "result");
+        if (self.current().tag == .kw_enum or self.current().tag == .kw_union or fallible) {
+            var is_union = self.current().tag != .kw_enum;
+            self.cursor.pos += 1;
+            const name = try self.expect(.ident);
+            const type_parameters = try self.typeParameters();
+            _ = try self.expect(.indent);
+            try self.recordDocstring(name.span);
+            var cases: std.ArrayList(ast.Variant) = .empty;
+            if (self.current().tag != .dedent) while (true) {
+                const tag = try self.expect(.ident);
+                var fields: []const ast.Parameter = &.{};
+                var payload: ?Span = null;
+                if (self.take(.lparen)) {
+                    fields = try self.caseFields();
+                    is_union = true;
+                } else if (is_union and self.take(.colon)) {
+                    payload = try self.typeName();
+                }
+                try cases.append(self.storage, .{ .name = tag.span, .payload = payload, .fields = fields });
+                if (!self.nextVariantCase(tag.span)) break;
+            };
+            _ = try self.expect(.dedent);
+            try self.markPublic(&lists.public_names, declare_public, name.span);
+            try lists.variants.append(self.storage, .{ .type_parameters = type_parameters, .name = name.span, .fallible = fallible, .is_union = is_union, .cases = try cases.toOwnedSlice(self.storage) });
+            return;
+        }
+        if (self.take(.kw_domain)) {
+            const name = try self.expect(.ident);
+            _ = try self.expect(.colon);
+            const backing = try self.typeName();
+            _ = try self.expect(.indent);
+            try self.recordDocstring(name.span);
+            var codec: ?ast.Codec = null;
+            // `pass` spells an empty suite here as it does in a record.
+            if (self.take(.kw_pass)) _ = try self.expect(.semicolon);
+            while (self.current().tag != .dedent) {
+                if (self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "codec")) {
+                    if (codec != null) return self.sink.fail("E_DUPLICATE_CODEC", self.current().span, "a domain declares at most one codec");
+                    self.cursor.pos += 1;
+                    codec = try self.parseCodec();
+                } else try lists.functions.append(self.storage, try self.domainMember(name.span, &lists.attribute_table));
+            }
+            _ = try self.expect(.dedent);
+            try self.attach(&lists.attribute_table, name.span, pending);
+            try self.markPublic(&lists.public_names, declare_public, name.span);
+            try lists.domains.append(self.storage, .{ .name = name.span, .backing = backing, .codec = codec });
+            return;
+        }
+        const managed_record = self.take(.kw_class);
+        if (managed_record or self.takeRecordHead()) {
+            const name = try self.expect(.ident);
+            const type_parameters = try self.typeParameters();
+            try self.rejectGenericInvariant(pending, type_parameters);
+            _ = try self.expect(.indent);
+            try self.recordDocstring(name.span);
+            const fields = try self.recordFields();
+            _ = try self.expect(.dedent);
+            try self.attach(&lists.attribute_table, name.span, pending);
+            try self.markPublic(&lists.public_names, declare_public, name.span);
+            try lists.records.append(self.storage, .{ .managed = managed_record, .type_parameters = type_parameters, .name = name.span, .fields = fields });
+            return;
+        }
+        if (self.pythonDeclarationHead()) |form| return self.hintHere(form);
+        const declared_function = try self.function(null);
+        try self.markPublic(&lists.public_names, declare_public, declared_function.name);
+        try lists.functions.append(self.storage, declared_function);
+        try self.attach(&lists.attribute_table, declared_function.name, pending);
+    }
+
     /// Parse a complete source program, retaining syntax and diagnostics in the supplied allocator.
     pub fn parse(self: *Parser) diagnostic.Error!ast.Program {
         self.indexShadowingDeclarations();
         // A leading string statement documents the module itself. The module has
         // no declaration name, so it is keyed on the empty sentinel span.
         try self.recordDocstring(ast.module_docstring_span);
-        var functions: std.ArrayList(ast.Function) = .empty;
-        var records: std.ArrayList(ast.Record) = .empty;
-        var domains: std.ArrayList(ast.Domain) = .empty;
-        var resources: std.ArrayList(ast.Domain) = .empty;
-        var variants: std.ArrayList(ast.Variants) = .empty;
-        var constraints: std.ArrayList(ast.Constraint) = .empty;
-        var attribute_table: std.ArrayList(ast.DeclarationAttributes) = .empty;
-        var public_names: std.ArrayList(Span) = .empty;
+        var lists: Declarations = .{};
         while (self.current().tag != .eof) {
-            const pending = try self.attributes();
-            try self.checkAttributeTarget(pending, false);
-            // A leading `public` publishes the declaration that follows, so a
-            // module marks visibility on the declaration itself. It is not a way
-            // to spell the separate `export NAME` directive.
-            const declare_public = try self.takePublic();
-            if (try self.reexportDirective()) continue;
-            if (self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "constraint")) {
-                const head = self.current().span;
-                self.cursor.pos += 1;
-                const constraint = try self.constraintDeclaration(head);
-                try self.markPublic(&public_names, declare_public, constraint.name);
-                try constraints.append(self.storage, constraint);
-                continue;
-            }
-            if (self.take(.kw_type)) {
-                const name = (try self.expect(.ident)).span;
-                _ = try self.expect(.equal);
-                const target = try self.typeName();
-                _ = try self.expect(.semicolon);
-                try self.markPublic(&public_names, declare_public, name);
-                try self.syntax.types.aliases.append(self.storage, .{ .name = name, .target = target });
-                continue;
-            }
-            if (self.take(.kw_const)) {
-                const name = (try self.expect(.ident)).span;
-                _ = try self.expect(.colon);
-                const ty = try self.typeName();
-                _ = try self.expect(.equal);
-                const value = try self.expression(0);
-                const end = (try self.expect(.semicolon)).span;
-                const ret = try self.addStatement(.{ .span = .join(name, end), .data = .{ .ret = value } });
-                const statements = try self.storage.alloc(ast.StatementId, 1);
-                statements[0] = ret;
-                const body = try self.addStatement(.{ .span = .join(name, end), .data = .{ .block = statements } });
-                const literal = self.syntax.nodes.items[@backingInt(value)].data;
-                // Managed literal getters allocate on read; scalar getters remain pure, and
-                // so does an embedded file, which is static data (`EMBED-1`).
-                const embedded = literal == .call and literal.call.owner == null and embed.kindOf(self.src.text(literal.call.name)) != null;
-                const allowed = if ((literal == .text or literal == .bytes) and !embedded) effects.bit(.managed_allocation) else 0;
-                try self.markPublic(&public_names, declare_public, name);
-                try functions.append(self.storage, .{ .policy = .{ .constant = true, .effect_bound = .{ .allowed = allowed, .span = name } }, .signature = .{ .parameters = &.{}, .return_type = ty }, .name = name, .body = body });
-                continue;
-            }
-            if (self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "resource")) {
-                self.cursor.pos += 1;
-                const name = try self.expect(.ident);
-                _ = try self.expect(.colon);
-                const kind = try self.expect(.ident);
-                _ = try self.expect(.semicolon);
-                try self.markPublic(&public_names, declare_public, name.span);
-                try resources.append(self.storage, .{ .name = name.span, .backing = kind.span });
-                continue;
-            }
-            const fallible = self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "result");
-            if (self.current().tag == .kw_enum or self.current().tag == .kw_union or fallible) {
-                var is_union = self.current().tag != .kw_enum;
-                self.cursor.pos += 1;
-                const name = try self.expect(.ident);
-                const type_parameters = try self.typeParameters();
-                _ = try self.expect(.indent);
-                try self.recordDocstring(name.span);
-                var cases: std.ArrayList(ast.Variant) = .empty;
-                if (self.current().tag != .dedent) while (true) {
-                    const tag = try self.expect(.ident);
-                    var fields: []const ast.Parameter = &.{};
-                    var payload: ?Span = null;
-                    if (self.take(.lparen)) {
-                        fields = try self.caseFields();
-                        is_union = true;
-                    } else if (is_union and self.take(.colon)) {
-                        payload = try self.typeName();
-                    }
-                    try cases.append(self.storage, .{ .name = tag.span, .payload = payload, .fields = fields });
-                    if (!self.nextVariantCase(tag.span)) break;
-                };
-                _ = try self.expect(.dedent);
-                try self.markPublic(&public_names, declare_public, name.span);
-                try variants.append(self.storage, .{ .type_parameters = type_parameters, .name = name.span, .fallible = fallible, .is_union = is_union, .cases = try cases.toOwnedSlice(self.storage) });
-                continue;
-            }
-            if (self.take(.kw_domain)) {
-                const name = try self.expect(.ident);
-                _ = try self.expect(.colon);
-                const backing = try self.typeName();
-                _ = try self.expect(.indent);
-                try self.recordDocstring(name.span);
-                var codec: ?ast.Codec = null;
-                // `pass` spells an empty suite here as it does in a record.
-                if (self.take(.kw_pass)) _ = try self.expect(.semicolon);
-                while (self.current().tag != .dedent) {
-                    if (self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "codec")) {
-                        if (codec != null) return self.sink.fail("E_DUPLICATE_CODEC", self.current().span, "a domain declares at most one codec");
-                        self.cursor.pos += 1;
-                        codec = try self.parseCodec();
-                    } else try functions.append(self.storage, try self.domainMember(name.span, &attribute_table));
-                }
-                _ = try self.expect(.dedent);
-                try self.attach(&attribute_table, name.span, pending);
-                try self.markPublic(&public_names, declare_public, name.span);
-                try domains.append(self.storage, .{ .name = name.span, .backing = backing, .codec = codec });
-                continue;
-            }
-            const managed_record = self.take(.kw_class);
-            if (managed_record or self.takeRecordHead()) {
-                const name = try self.expect(.ident);
-                const type_parameters = try self.typeParameters();
-                try self.rejectGenericInvariant(pending, type_parameters);
-                _ = try self.expect(.indent);
-                try self.recordDocstring(name.span);
-                const fields = try self.recordFields();
-                _ = try self.expect(.dedent);
-                try self.attach(&attribute_table, name.span, pending);
-                try self.markPublic(&public_names, declare_public, name.span);
-                try records.append(self.storage, .{ .managed = managed_record, .type_parameters = type_parameters, .name = name.span, .fields = fields });
-                continue;
-            }
-            if (self.pythonDeclarationHead()) |form| return self.hintHere(form);
-            const declared_function = try self.function(null);
-            try self.markPublic(&public_names, declare_public, declared_function.name);
-            try functions.append(self.storage, declared_function);
-            try self.attach(&attribute_table, declared_function.name, pending);
+            const start = self.cursor.pos;
+            self.parseDeclaration(&lists) catch |err| switch (err) {
+                error.SourceError => {
+                    self.recover(start);
+                    if (self.cursor.pos == start and self.current().tag != .eof) self.cursor.pos += 1;
+                },
+                else => return err,
+            };
         }
+        if (self.cursor.recovered) return error.SourceError;
         const program: ast.Program = .{
             .types = .{
-                .resources = try resources.toOwnedSlice(self.storage),
-                .variants = try variants.toOwnedSlice(self.storage),
-                .domains = try domains.toOwnedSlice(self.storage),
+                .resources = try lists.resources.toOwnedSlice(self.storage),
+                .variants = try lists.variants.toOwnedSlice(self.storage),
+                .domains = try lists.domains.toOwnedSlice(self.storage),
                 .expressions = .{
                     .callbacks = try self.syntax.types.callbacks.toOwnedSlice(self.storage),
                     .suffixes = try self.syntax.types.suffixes.toOwnedSlice(self.storage),
@@ -982,16 +999,16 @@ pub const Parser = struct {
                     .aliases = try self.syntax.types.aliases.toOwnedSlice(self.storage),
                     .tuples = try self.syntax.types.tuples.toOwnedSlice(self.storage),
                 },
-                .records = try records.toOwnedSlice(self.storage),
-                .constraints = try constraints.toOwnedSlice(self.storage),
-                .public_declarations = try public_names.toOwnedSlice(self.storage),
+                .records = try lists.records.toOwnedSlice(self.storage),
+                .constraints = try lists.constraints.toOwnedSlice(self.storage),
+                .public_declarations = try lists.public_names.toOwnedSlice(self.storage),
             },
 
             .nodes = try self.settle(ast.Node, &self.syntax.nodes),
             .statements = try self.settle(ast.Statement, &self.syntax.statements),
-            .functions = try functions.toOwnedSlice(self.storage),
+            .functions = try lists.functions.toOwnedSlice(self.storage),
             .lambdas = try self.syntax.lambdas.toOwnedSlice(self.storage),
-            .attributes = try attribute_table.toOwnedSlice(self.storage),
+            .attributes = try lists.attribute_table.toOwnedSlice(self.storage),
             .docstrings = try self.syntax.docstrings.toOwnedSlice(self.storage),
         };
         if (self.cursor.dialect == .target and try @import("frontend_migration.zig").publish(self.src, program, self.tokens, self.sink)) return error.SourceError;
@@ -1357,7 +1374,8 @@ pub const Parser = struct {
         const spelling = self.src.text(token.span);
         if (std.mem.eql(u8, spelling, "noalloc") or std.mem.eql(u8, spelling, "noio")) {
             self.cursor.pos += 1;
-            const excluded = if (std.mem.eql(u8, spelling, "noalloc")) sets.bit(.managed_allocation) else sets.io;
+            // Written noalloc is a Core warning contract, not a checker ceiling.
+            const excluded = if (std.mem.eql(u8, spelling, "noalloc")) 0 else sets.io;
             return .{ .span = token.span, .allowed = sets.all & ~excluded };
         }
         if (!std.mem.eql(u8, spelling, "effects")) return null;
@@ -1420,6 +1438,57 @@ pub const Parser = struct {
             .span = token.span,
         });
     }
+    // PARSE-RECOVERY-1: rescan from the failed construct's start so consumed
+    // indents still count. A newline at its own depth or its suite's dedent is
+    // safe; an enclosing dedent belongs to the caller and must stay unconsumed.
+    fn recover(self: *Parser, start: usize) void {
+        self.cursor.recovered = true;
+        self.cursor.delimiters = 0;
+        var nesting: usize = 0;
+        var delimiters: usize = 0;
+        var at = start;
+        while (self.tokens[at].tag != .eof) {
+            const tag = self.tokens[at].tag;
+            if (tag == .dedent and nesting == 0) break;
+            const newline_boundary = at > start and nesting == 0 and delimiters == 0 and tag != .indent;
+            if (newline_boundary and !self.recoveryContinuation(at) and lex.implicitTerminator(self.src.bytes, self.tokens, at)) break;
+            at += 1;
+            switch (tag) {
+                .lparen, .lbracket, .lbrace => delimiters += 1,
+                .rparen, .rbracket, .rbrace => delimiters -|= 1,
+                .indent => nesting += 1,
+                .dedent => {
+                    nesting -= 1;
+                    if (nesting == 0 and at >= self.cursor.pos and !self.recoveryContinuation(at)) break;
+                },
+                .semicolon => if (nesting == 0 and at >= self.cursor.pos) break,
+                else => {},
+            }
+        }
+        self.cursor.pos = at;
+    }
+
+    /// A continuation belongs to the damaged compound statement, so neither a
+    /// newline nor the preceding suite's dedent can restart parsing there.
+    fn recoveryContinuation(self: *const Parser, at: usize) bool {
+        const token = self.tokens[at];
+        switch (token.tag) {
+            .kw_elif, .kw_else, .kw_case => return true,
+            .ident => {},
+            else => return false,
+        }
+        // Exception clauses are unsupported syntax, not reserved names. Only
+        // skip their header form; a local named `except` or `finally` is valid.
+        const text = self.src.text(token.span);
+        if (!std.mem.eql(u8, text, "except") and !std.mem.eql(u8, text, "finally")) return false;
+        var next = at + 1;
+        while (self.tokens[next].tag != .eof and self.tokens[next].tag != .dedent) : (next += 1) {
+            if (self.tokens[next].tag == .indent) return true;
+            if (lex.implicitTerminator(self.src.bytes, self.tokens, next)) return false;
+        }
+        return false;
+    }
+
     fn block(self: *Parser, owner: ?Span) diagnostic.Error!ast.StatementId {
         try self.enter();
         defer self.cursor.depth -= 1;
@@ -1430,7 +1499,15 @@ pub const Parser = struct {
         var statements: std.ArrayList(ast.StatementId) = .empty;
         while (self.current().tag != .dedent) {
             if (self.current().tag == .eof) return self.sink.fail(syntax_code, self.current().span, "block is not closed before the end of the file");
-            try statements.append(self.storage, try self.statement());
+            const start = self.cursor.pos;
+            const statement_id = self.statement() catch |err| switch (err) {
+                error.SourceError => {
+                    self.recover(start);
+                    continue;
+                },
+                else => return err,
+            };
+            try statements.append(self.storage, statement_id);
         }
         _ = try self.expect(.dedent);
         // A dedent stands at the next declaration, so the blank lines and comments

@@ -1,11 +1,8 @@
-
 # The dictionary carries an open-addressing index beside its insertion-ordered
 # entry list. These programs are sized so a linear scan would still answer them,
 # but they exercise every path that has to keep the index and the entry list
 # describing the same entries: growth, rehash, pop's rebuild, clear, copy,
 # escape out of an arena, and lookups that must still miss.
-
-
 func counted(size: i64) -> dict[str, i64]:
     mut counts: dict[str, i64] = {}
     for i in range(size):

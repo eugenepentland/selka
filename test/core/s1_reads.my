@@ -1,8 +1,6 @@
 # Slices that are only read borrow their source (NEW-CORE-S1-VIEW-4): equality, length,
 # prefixes, suffixes and containment over ASCII and non-ASCII text, clamped, empty and
 # reversed bounds, and slices of slices. CPython's answers.
-
-
 func reads(s: str, t: str) -> str:
     mut out: str[] = []
     mut n = len(s)

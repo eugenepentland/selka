@@ -1,0 +1,17 @@
+{
+  "answers_sha256": "f54838f37be08689996e1008fe9130b1b3557beac19f7f608e7a246692de54f0",
+  "binary_sha256": "676d910fbc6dddad5a9fd512da421a6327dcf1cad6de818681fee294e54b9d82",
+  "binary_unchanged": true,
+  "build": {
+    "seconds": 8.641190852969885,
+    "status": 0,
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "case_membership_sha256": "ba7897eaf08221d2832c01c9d7cf90b9b401c0fcabd4bf6660d9093711b80d0a",
+  "cases": 974,
+  "mismatches": [],
+  "passed": true,
+  "reference_answers_sha256": "f54838f37be08689996e1008fe9130b1b3557beac19f7f608e7a246692de54f0",
+  "reference_file_sha256": "279768e8be1785480e80e5be3b4d942def54a2af686688a5e2c79f7f15dbdf6e"
+}

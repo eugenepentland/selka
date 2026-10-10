@@ -1,8 +1,5 @@
-
 # Ported from the retired QBE byte-iteration tests: exact sums across lengths,
 # masks beyond a byte and extreme seeds.
-
-
 func reduce(raw: bytes, mask: int, seed: int) -> int:
     mut total = seed
     for value in raw:

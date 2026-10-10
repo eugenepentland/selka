@@ -2,15 +2,19 @@ record Point:
     x: int
     values: int[]
 
+
 func replace(mut value: int, named next: int) -> Unit:
     value = next
+
 
 func replace_points(mut values: int[]) -> Unit:
     values = [7, 8]
 
+
 func change_pair(mut left: int, mut right: int) -> Unit:
     left += 10
     right += 20
+
 
 public func test_scalar_and_nested_mut_writeback() -> bool:
     mut value = 1
@@ -20,16 +24,19 @@ public func test_scalar_and_nested_mut_writeback() -> bool:
     replace(mut point.values[1], next=9)
     return value == 5 and point.x == 8 and point.values == [3, 9]
 
+
 public func test_mut_snapshot_independence() -> bool:
     const original = Point(x=1, values=[2, 3])
     mut changed = original
     changed.values[0] = 9
     return original.values == [2, 3] and changed.values == [9, 3]
 
+
 public func test_whole_collection_rebinding() -> bool:
     mut values = [1]
     replace_points(mut values)
     return values == [7, 8]
+
 
 public func test_dynamic_mut_disjoint_targets() -> bool:
     mut values = [1, 2]
@@ -37,6 +44,7 @@ public func test_dynamic_mut_disjoint_targets() -> bool:
     const right = 1
     change_pair(mut values[left], mut values[right])
     return values == [11, 22]
+
 
 public func test_block_scope_allows_separate_siblings() -> bool:
     mut result = 0
@@ -48,12 +56,15 @@ public func test_block_scope_allows_separate_siblings() -> bool:
         result += item
     return result == 7
 
+
 func labelled(named left: int, named right: int) -> int:
     return left * 10 + right
+
 
 func next_value(mut counter: int) -> int:
     counter += 1
     return counter
+
 
 public func test_named_callback_evaluates_in_written_order() -> bool:
     const operation: func(named left: int, named right: int) -> int = labelled
@@ -61,8 +72,10 @@ public func test_named_callback_evaluates_in_written_order() -> bool:
     const value = operation(right=next_value(mut counter), left=next_value(mut counter))
     return value == 21 and counter == 2
 
+
 func increment(mut value: int) -> Unit:
     value += 1
+
 
 public func test_mut_callback_updates_caller_scalar() -> bool:
     const operation: func(mut value: int) -> Unit = increment
@@ -70,24 +83,29 @@ public func test_mut_callback_updates_caller_scalar() -> bool:
     operation(mut value)
     return value == 3
 
+
 public func test_snapshot_survives_whole_mut_rebinding() -> bool:
     mut values = [1, 2]
     const original = values
     replace_points(mut values)
     return original == [1, 2] and values == [7, 8]
 
+
 func observe_snapshot(before: int[], mut changed: int[]) -> int:
     changed = [9]
     return before[0]
+
 
 public func test_readonly_input_is_independent_of_mut_input() -> bool:
     mut values = [1, 2]
     const observed = observe_snapshot(values, mut values)
     return observed == 1 and values == [9]
 
+
 func change_named(named mut left: int, named mut right: int) -> Unit:
     left += 10
     right += 20
+
 
 public func test_named_mut_interior_places_preserve_storage_and_written_order() -> bool:
     const operation: func(named mut left: int, named mut right: int) -> Unit = change_named

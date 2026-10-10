@@ -1,7 +1,5 @@
 # A text copied from part of another inherits its ASCII flag (NEW-CORE-S1-ASCII-1): every
 # length, index and search below depends on the flag being exactly right. CPython's answers.
-
-
 func describe(p: str) -> str:
     mut last = ""
     if len(p) > 0:

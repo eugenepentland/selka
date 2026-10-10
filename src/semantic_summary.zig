@@ -129,6 +129,9 @@ pub const Prepared = semantic_key.Prepared;
 pub const Demand = struct {
     context: *const anyopaque,
     allow: *const fn (context: *const anyopaque, key: []const u8, context_digest: [32]u8, region_digest: [32]u8) bool,
+    /// Bind the fresh source catalog once before consulting body receipts.
+    /// Hosts use it to prove debug locations outside an unchanged body.
+    prepare_sources: ?*const fn (*const anyopaque, source.Source) error{OutOfMemory}!void = null,
     omitted: []bool = &.{},
 };
 
@@ -146,10 +149,10 @@ pub const Request = struct {
     retry: bool = false,
     /// Bodies a summary stood in for in the check that produced the result.
     stood_in: usize = 0,
-    /// Lowering requires complete trees unless the optional demand host proves
-    /// an unchanged body's artifact reusable. Otherwise summaries supply only
-    /// cross-function facts and pass diagnostics, and every tree is checked.
-    facts_only: bool = false,
+    /// A command that lowers the checked program needs every body's checked
+    /// tree: its bodies are all checked, and summaries stand in only for the
+    /// cross-function facts (and the pass diagnostics) of unchanged ones.
+    body_policy: enum { summaries, concrete, allocation_contracts } = .summaries,
     /// The request's prepared declaration identities (stable keys,
     /// dependency contexts, region digests), kept for the build's
     /// lowering-free unit reuse (`EMIT-STANDIN-1`); allocated in the check's arena.

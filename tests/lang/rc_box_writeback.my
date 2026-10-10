@@ -1,4 +1,3 @@
-
 record Node:
     mapping: dict[int, int]
     child: Node?

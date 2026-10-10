@@ -157,6 +157,7 @@ test "no-cache builds runs and tests through a private cache it removes and publ
 }
 
 // spec: NEW-CORE-S5-REPORT-1
+// spec-case: NEW-CORE-STAGE-PACK-1
 test "report prints the cache report as one JSON line and says when a build replayed" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
@@ -172,6 +173,10 @@ test "report prints the cache report as one JSON line and says when a build repl
     try std.testing.expectEqualStrings("linked", record.object.get("program").?.string);
     try std.testing.expect(record.object.get("units").?.integer > 0);
     try std.testing.expect(record.object.get("processes").?.integer > 0);
+    const storage = record.object.get("storage").?.object;
+    try std.testing.expect(storage.get("flush_succeeded").?.bool);
+    try std.testing.expect(storage.get("flush_nanoseconds").?.integer >= 0);
+    try std.testing.expect(storage.get("reads").?.object.get("decoded_bytes").?.integer >= 0);
     const stages = record.object.get("stages").?.object;
     try std.testing.expectEqualStrings("stage-report-v3", stages.get("version").?.string);
     try std.testing.expect(stages.get("lowering").?.object.get("materialized").?.integer > 0);
@@ -343,4 +348,82 @@ test "a build --release executable drops debug lines, a debug build and a run ke
     const ran = try context.compiler(&.{ "run", "main.my", "--release" });
     try std.testing.expectEqualStrings("42\n", ran.stdout);
     try std.testing.expect(contains(ran.stderr, "debugging 41\n"));
+}
+
+// spec: FRONTEND-DEVELOPER-PROJECT-1
+test "developer views and coverageCommand check configured project identity and policy before output" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const context: Context = .{ .arena = arena.allocator(), .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", arena.allocator()) };
+    try temporary.dir.createDirPath(std.testing.io, "src");
+    try context.write("src/main.my", "import src.helper as helper\nfunc main() -> int:\n    return helper.value()\n");
+    try context.write("src/helper.my", "public func value() -> int:\n    return 7\n");
+    try context.write("mylang.json", "{\"version\":1}");
+    const commands = [_][]const u8{ "dump-ir", "dump-typed", "coverage", "check" };
+    try checkDeveloperViews(context, &commands);
+    try context.write("mylang.json", "{\"version\":1,\"import_policy\":\"policy.json\"}");
+    try context.write("policy.json", "{\"version\":1,\"default_action\":\"deny\",\"rules\":[]}");
+    try denyDeveloperViews(context, &commands);
+    try context.write("mylang.json", "{");
+    for (commands[0..2]) |command| {
+        const invalid = try context.compiler(&.{ command, "src/main.my" });
+        try std.testing.expectEqual(@as(u8, 2), invalid.status);
+        try std.testing.expectEqualStrings("", invalid.stdout);
+        try std.testing.expect(contains(invalid.stderr, "E_PROJECT_CONFIG"));
+    }
+    try context.write("mylang.json", "{\"version\":1,\"budgets\":{\"max_file_bytes\":8}}");
+    const bounded = try context.compiler(&.{ "dump-typed", "src/main.my" });
+    try std.testing.expectEqual(@as(u8, 1), bounded.status);
+    try std.testing.expectEqualStrings("", bounded.stdout);
+    try std.testing.expect(contains(bounded.stderr, "E_PROJECT"));
+}
+
+fn checkDeveloperViews(context: Context, commands: []const []const u8) !void {
+    for (commands) |command| {
+        const result = try context.compiler(&.{ command, "src/main.my" });
+        try std.testing.expectEqual(@as(u8, 0), result.status);
+        try std.testing.expectEqualStrings("", result.stderr);
+        if (!std.mem.eql(u8, command, "check")) {
+            try std.testing.expect(result.stdout.len > 0);
+            try std.testing.expect(!contains(result.stdout, "frontend "));
+        }
+    }
+}
+
+fn denyDeveloperViews(context: Context, commands: []const []const u8) !void {
+    for (commands) |command| {
+        const denied = try context.compiler(&.{ command, "src/main.my" });
+        if (std.mem.eql(u8, command, "coverage")) {
+            try std.testing.expect(contains(denied.stdout, "frontend "));
+            try std.testing.expect(!contains(denied.stdout, "ok "));
+        } else {
+            try std.testing.expectEqual(@as(u8, 3), denied.status);
+            try std.testing.expectEqualStrings("", denied.stdout);
+            try std.testing.expect(denied.stderr.len > 0);
+        }
+    }
+}
+
+// spec-case: NEW-CORE-STAGE-PACK-1
+test "CLI rejects invalid stage compression with a configuration diagnostic" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const executable = try std.Io.Dir.cwd().realPathFileAlloc(std.testing.io, tools.core_path, a);
+    var environment = try std.testing.environ.createMap(a);
+    defer environment.deinit();
+    try environment.put("MYLANG_STAGE_CACHE_COMPRESSION", "invalid");
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "app.my", .data = "func main() -> int:\n    return 0\n" });
+    const source = try temporary.dir.realPathFileAlloc(std.testing.io, "app.my", a);
+    const result = try std.process.run(a, std.testing.io, .{
+        .argv = &.{ executable, "build", source, "-o", "unused-compression-test" },
+        .environ_map = &environment,
+    });
+    try std.testing.expect(result.term == .exited);
+    try std.testing.expect(result.term.exited != 0);
+    try std.testing.expect(contains(result.stderr, "MYLANG_STAGE_CACHE_COMPRESSION must be 'zlib' or 'none'"));
 }

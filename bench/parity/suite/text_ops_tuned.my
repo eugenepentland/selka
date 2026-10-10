@@ -10,8 +10,6 @@
 # - The rewrite appends the unchanged runs between matches into a second
 #   byte_buffer (bytes has no replace), and ",1" is counted with the same scan.
 # The text is ASCII, so byte lengths equal the str lengths text_ops.my prints.
-
-
 func build(lines: int) -> bytes:
     mut empty: int[] = []
     mut buffer = byte_buffer(empty)

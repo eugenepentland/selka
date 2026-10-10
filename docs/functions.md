@@ -85,6 +85,9 @@ it earlier, or group related parameters into a record and pass that.
 ## Unit procedures
 
 A procedure produces `Unit`. Write `-> Unit` or omit the return annotation.
+`Unit` is a builtin scalar type name, like `int` and `bool`; choose a different
+name for an application record, because a nominal declaration cannot override
+its meaning in type annotations.
 The unit value is `()`. Falling off the body or a bare `return` succeeds with
 unit, and ordinary cleanup runs on both paths. A fallible procedure writes
 `func save(...) fails SaveError:` and uses `fail error` for failure.

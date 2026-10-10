@@ -53,6 +53,7 @@ written out. An unknown directive name fails the run.
 | `# doc: check` | Type-check only. Also the default when the block declares no `main`. |
 | `# doc: project <name>` | Group this block with the other blocks of the same document and name into one project. |
 | `# doc: file <name>.my` | Name this block's file inside its project; `main.my` is the entry. |
+| `# doc: entry <name>.my` | Select one declared project file as the entry instead of `main.my`, for example a private test module. |
 | `# doc: skip <reason>` | Do not execute. The reason is mandatory and appears in the report. |
 | `# doc: not-mylang` | Prose block that only looks like guest source; exempt from the mis-tag lint. |
 | `# doc: allow-read <dir>` | Run under `--restrict` with `--allow-read=docs/fixtures/<dir>`, granting only that fixture directory. |
@@ -95,6 +96,11 @@ func main() -> int:
 ```
 
 ## The mis-tag lint
+
+Console, bash and sh fences that embed source after a `cat` command naming a
+`.my` file are also rejected. Put the program in a checked `mylang` fence and
+keep the commands and their output in a separate console fence. Use project/file
+directives when the example spans several source files.
 
 A block tagged `text`, `rust`, `python`, `go`, or left untagged, whose content has
 `func main`, `fn main` or `module ` at the start of a line, is reported as a mis-tagged

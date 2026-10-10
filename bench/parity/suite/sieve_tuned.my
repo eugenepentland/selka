@@ -6,8 +6,6 @@
 # the store; in main that chain is 7 four-word records per write, in the
 # two-parameter helper it is 2. Nothing else differs. (Replacing
 # `j = j + step` with wrapping_add measured within noise, so it is not used.)
-
-
 func cross_off(mut flags: bool[], start: int, step: int, n: int) -> Unit:
     mut j = start
     while j <= n:

@@ -2,8 +2,6 @@
 # collection-bearing recursive boxes transfers their immutable pointers
 # without a depth trap. Projecting each box remains safe and a later write
 # leaves the copy's outer list unchanged.
-
-
 record Node:
     items: int[]
     next: Node?

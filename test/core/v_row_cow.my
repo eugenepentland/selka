@@ -1,10 +1,7 @@
-
 # A write to an element of an inner list never changes another variable that holds
 # that inner list (NEW-CORE-ROW-COW-1, NEW-CORE-ROW-COW-2): the row a nested store
 # updates in place is unique only when nothing read it out and kept it, and when every
 # store that built the outer list ran in place.
-
-
 record Bag:
     n: int
     items: int[]

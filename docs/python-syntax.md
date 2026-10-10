@@ -570,8 +570,8 @@ message from `run`, `build --run` and a built executable: it names the `--allow-
 flag to pass, and the process exits 2.
 
 `with` opens a file and closes it when the block ends; see
-[files](io.md#files). `with arena():` is retired: it runs as an ordinary block and
-warns `W_ARENA_RETIRED`; remove the `with arena():` line and dedent its body.
+[files](io.md#files). `with arena():` is retired: it is rejected with
+`E_ARENA_REMOVED`; remove the `with arena():` line and dedent its body.
 
 Ten modules ship inside the compiler and are imported by name: `math`, `strings`,
 `sort`, `path`, `hex`, `base64`, `json`, `pool`, `random` and `time`. They are

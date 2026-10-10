@@ -1,4 +1,3 @@
-
 # Assignment preserves a list value; a marked call changes only its receiver.
 func add_pin(mut pins: int[], pin: int):
     pins.append(pin)

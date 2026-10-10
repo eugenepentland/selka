@@ -1,5 +1,3 @@
-
-
 func parse_number(text: str) -> int:
     match parse_int(text):
         case Some(value):

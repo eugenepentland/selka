@@ -1,0 +1,21 @@
+source_commit=1d257723c28586bf21fc144ad999ec5dd5d70afa
+$ scripts/build-slot.sh gate -- bash -c '"$@"; result=$?; exit "$result"' -- scripts/build-slot.sh build -- python3 experiments/new-core-s3-20261006/wave-a/exclusive_core.py -- /usr/bin/time -f %e -o /home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/experiments/fu-x-20261009/qualify-fux2/install-core.seconds zig build install --summary all
+core-exclusive: all 3 build slots held; other-build wait=39.852s; gate wrapper excludes gate execution
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source a624fa6f37bc)
+guardian: diff-scoped vs ab85c16c24802ef07606614b976ee85129e5585e: 20/557 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 14 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 1 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 622 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs ab85c16c24802ef07606614b976ee85129e5585e, 20 file(s) in scope
+Build Summary: 9/9 steps succeeded
+install success
++- install mylang cached
+|  +- compile exe mylang debug native cached 8ms MaxRSS:41M
+|  |  +- run exe build-identity (build_identity) cached
+|  |  |  +- compile exe build-identity debug native cached 4ms MaxRSS:41M
+|  |  +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 7ms MaxRSS:42M
+|  +- run ../guardian-zig/zig-out/bin/guardian-check success 945ms
+|     +- guardian-selfcheck success
+|        +- run ../guardian-zig/zig-out/bin/guardian-check success 5ms
++- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+

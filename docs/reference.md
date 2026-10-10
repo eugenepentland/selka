@@ -44,7 +44,7 @@ presented as a fact.
 | `analysis` (per declaration) | `checked` — the inferred `effects` are the checker's own for a checked instantiation; `template` — the declaration is generic and nothing instantiated it here, so no inferred set is published (its `ceiling` still is); `declaration-only` — bodies were not checked; `declared` — a type, resource or constraint declaration, which has no body. |
 | `effects` | The checked inferred effect set. `null` whenever `analysis` is not `checked`; `[]` means "inferred: no effects", which is a fact, not a gap. |
 | `ceiling` | The ceiling the signature implies — one effect per capability parameter, `mutation` per `mut` parameter, a callback parameter's bounded ceiling, and `managed_allocation`, which is always permitted — narrowed by an explicit `noalloc`, `noio` or `effects(...)` clause. It follows from the declaration alone, so it is published whether or not bodies were checked. |
-| `mutates` | The declaration's mutation footprint: the zero-based positions of its `name: mut T` parameters, or `null` for a declaration with no parameter list of its own. |
+| `mutates` | The declaration's mutation footprint: the zero-based positions of its `mut name: T` parameters, or `null` for a declaration with no parameter list of its own. |
 
 The conservative full effect vocabulary the compiler falls back to when it could not
 infer anything is deliberately **not** published as an inference: a generic template

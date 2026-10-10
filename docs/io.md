@@ -436,8 +436,8 @@ func main(fs: Filesystem) -> int noio:
 ```
 
 `with` on anything that is not an open file is rejected with `E_WITH_RESOURCE`
-(the retired `with arena():` still runs as a plain block and warns
-`W_ARENA_RETIRED`):
+(the retired `with arena():` is rejected with
+`E_ARENA_REMOVED`):
 
 ```mylang
 # doc: expect-error E_WITH_RESOURCE

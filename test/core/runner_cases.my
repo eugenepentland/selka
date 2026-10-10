@@ -1,7 +1,6 @@
 # Fixture of `mylang-core test` (NEW-CORE-TEST-*): one test of every verdict. The old core
 # reports the same passes, failures and trap codes, and runs the tests marked
 # `unsupported` in the new core's report too (they use a dict, which is S2).
-
 func get(xs: int[], index: int) -> int:
     return xs[index]
 

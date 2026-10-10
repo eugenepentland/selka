@@ -247,12 +247,12 @@ fn checkNumericConversion(comptime Checker: type, self: *Checker, node: ast.Node
     const parses = std.mem.startsWith(u8, self.src.text(call.name), "parse_");
     if (ty_value.isAggregate() and self.catalog.records[ty_value.recordIndex()].collection.kind == .string) {
         if (!parses) {
-            try self.sink.appendFix(.{
-                .code = "E_NUMERIC_PARSE",
-                .span = call.name,
-                .message = "parse text explicitly with parse_int or parse_float; int and float convert numbers",
-            }, .{ .span = call.name, .text = if (floating) "parse_float" else "parse_int" });
-            return error.SourceError;
+            const target = if (floating) "parse_float" else "parse_int";
+            const claimed = self.active.contains(target) or self.functions.contains(target) or self.catalog.names.contains(target) or self.catalog.templates.names.contains(target) or
+                if (self.catalog.module_names) |names| try names.topLevelSpelling(call.name, target) else false;
+            const operand = self.syntax.nodes.items[@backingInt(call.arguments[0])];
+            const conversion: numeric_surface.TextConversion = .{ .name = call.name, .call = node.span, .operand = self.src.text(operand.span), .primary = numeric_surface.primaryOperand(operand) };
+            return numeric_surface.rejectTextConversion(self.sink, conversion, target, claimed);
         }
         const builder: collections.Builder(Checker) = .{ .checker = self, .span = node.span };
         out.* = try builder.access(value, if (floating) .parse_float else .parse_int, &.{}, false);

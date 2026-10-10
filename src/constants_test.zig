@@ -145,7 +145,7 @@ test "managed constants require matching literal types and keep byte or generic 
     // returns one, still contributes managed_allocation.
     try acceptConstant("const S: str = \"x\"\nfunc main() -> int noalloc:\n    return len(S)\n");
     try rejectConstant("const B: bytes = b\"x\"\nfunc main() -> int effects():\n    return len(B)\n", "E_EFFECT_BOUND");
-    try rejectConstant("const S: str = \"x\"\nfunc unused[T]() -> str noalloc:\n    return S\nfunc main() -> int:\n    return 0\n", "E_EFFECT_BOUND");
+    try rejectConstant("const S: str = \"x\"\nfunc unused[T]() -> str effects():\n    return S\nfunc main() -> int:\n    return 0\n", "E_EFFECT_BOUND");
     try rejectConstant("const B: bytes = b\"x\"\nfunc unused[T]() -> bytes effects():\n    return B\nfunc main() -> int:\n    return 0\n", "E_EFFECT_BOUND");
 }
 

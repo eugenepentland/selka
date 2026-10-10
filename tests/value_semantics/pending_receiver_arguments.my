@@ -1,14 +1,15 @@
 # Pending receiver snapshots across later argument callbacks.
-
 func save_pending_rows(rows: int[][], mut saved: int[][][]) -> int:
     saved.append(rows)
     return 2
+
 
 public func test_callback_snapshot_keeps_captured_receiver_independent() -> bool:
     mut rows = [[1]]
     mut saved: int[][][] = []
     rows[0].append(save_pending_rows(rows, mut saved))
     return rows[0] == [1, 2] and saved[0][0] == [1]
+
 
 func main() -> int:
     if test_callback_snapshot_keeps_captured_receiver_independent():

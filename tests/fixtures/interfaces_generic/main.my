@@ -1,7 +1,6 @@
 import items
 import slots
 
-
 func main() -> int:
     mut first = items.Item(id=1, weight=5)
     mut store = slots.open([first, items.Item(id=2, weight=3)])

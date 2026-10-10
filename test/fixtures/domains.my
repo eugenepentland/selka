@@ -1,16 +1,13 @@
 domain Millimeters: u32:
     private func raw(value: u32) -> Millimeters:
         return wrap[Millimeters](value)
-
     func from(value: u32) -> Millimeters:
         # Clamp to the range this domain promises to represent.
         if value > 1000u32:
             return Millimeters.raw(1000u32)
         return Millimeters.raw(value)
-
     func number(value: Millimeters) -> u32:
         return unwrap(value)
-
     func add(a: Millimeters, b: Millimeters) -> Millimeters:
         return Millimeters.from(unwrap(a) + unwrap(b))
 
@@ -18,7 +15,6 @@ domain Millimeters: u32:
 domain Seconds: u32:
     func from(value: u32) -> Seconds:
         return wrap[Seconds](value)
-
     func number(value: Seconds) -> u32:
         return unwrap(value)
 

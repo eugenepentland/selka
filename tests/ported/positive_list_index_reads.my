@@ -1,7 +1,5 @@
-
 # Ported from the retired QBE positive-index tests: reads at both ends of a list
 # and a write made before the replacing call.
-
 record Frame:
     code: int[]
     ip: int

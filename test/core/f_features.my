@@ -1,4 +1,3 @@
-
 record Row:
     key: int
     ordinal: int

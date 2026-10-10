@@ -1,6 +1,5 @@
 import pool
 
-
 record Node:
     label: str
     weight: int

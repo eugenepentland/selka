@@ -1,4 +1,3 @@
-
 # Fields read through a list element: a snapshot of an element keeps its value
 # across a later element write, growth and many allocations; bytes fields and
 # nested records are read through negative indices; an in-bounds read of either
@@ -11,8 +10,6 @@
 # ceiling) cannot be expected from a guest test. The `with arena():` block of
 # the original is retired (S5-D3) and runs as an ordinary block, so its body is
 # dedented here.
-
-
 record Inner:
     value: int
     other: int

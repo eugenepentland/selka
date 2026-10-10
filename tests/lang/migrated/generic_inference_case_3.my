@@ -1,5 +1,3 @@
-
-
 record Chunk[T, const N: u64]:
     items: [N]T
 

@@ -1,0 +1,666 @@
+{
+ "compilers": {
+  "A": "/home/epentland/.cache/mylang/main-ab85c16c/bin/mylang",
+  "X": "/home/epentland/.cache/mylang/fu-final-x/bin/mylang",
+  "M": "/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/.mylang-cache/compilers/main-e23651f6/bin/mylang",
+  "P": "/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/.mylang-cache/compilers/port-a4636591/bin/mylang"
+ },
+ "programs": {
+  "parity-suite-binary_trees": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": true,
+   "P==M": true,
+   "P==X with names": true
+  },
+  "parity-suite-binary_trees_arena": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": true,
+   "P==M": true,
+   "P==X with names": true
+  },
+  "parity-suite-binary_trees_recursive": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": true,
+   "P==M": true,
+   "P==X with names": true
+  },
+  "parity-suite-fannkuch_redux": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": true
+  },
+  "parity-suite-fannkuch_redux_array": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": true,
+   "P==M": true,
+   "P==X with names": true
+  },
+  "parity-suite-fannkuch_redux_tuned": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": true,
+   "P==M": true,
+   "P==X with names": true
+  },
+  "parity-suite-knucleotide": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": false
+  },
+  "parity-suite-knucleotide_arena": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": false
+  },
+  "parity-suite-knucleotide_tuned": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": false
+  },
+  "parity-suite-mandelbrot": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": true,
+   "P==M": true,
+   "P==X with names": true
+  },
+  "parity-suite-matmul": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": true
+  },
+  "parity-suite-matmul_flat": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": true
+  },
+  "parity-suite-matmul_tuned": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": true
+  },
+  "parity-suite-nbody": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": true
+  },
+  "parity-suite-nbody_class": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": true
+  },
+  "parity-suite-raytrace": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": true
+  },
+  "parity-suite-raytrace_tuned": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": true,
+   "P==M": true,
+   "P==X with names": true
+  },
+  "parity-suite-sieve": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": true
+  },
+  "parity-suite-sieve_tuned": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": true
+  },
+  "parity-suite-sort_builtin": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": true
+  },
+  "parity-suite-sort_quick": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": true
+  },
+  "parity-suite-sort_records": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": true
+  },
+  "parity-suite-sort_records_keyed": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": false
+  },
+  "parity-suite-sort_records_sorted": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": false
+  },
+  "parity-suite-spectral_norm": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": true
+  },
+  "parity-suite-spectral_norm_tuned": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": true
+  },
+  "parity-suite-text_ops": {
+   "P==X": false,
+   "M==A": false,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": false
+  },
+  "parity-suite-text_ops_tuned": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": true
+  },
+  "parity-micro-alloc_churn": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": true
+  },
+  "parity-micro-alloc_churn_arena": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": true
+  },
+  "parity-micro-bytes_scan": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": true
+  },
+  "parity-micro-bytes_scan_wrapping": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": true
+  },
+  "parity-micro-calls": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": true,
+   "P==M": true,
+   "P==X with names": true
+  },
+  "parity-micro-dict_count": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": true
+  },
+  "parity-micro-fib": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": true,
+   "P==M": true,
+   "P==X with names": true
+  },
+  "parity-micro-float_loop": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": true,
+   "P==M": true,
+   "P==X with names": true
+  },
+  "parity-micro-intloop": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": true,
+   "P==M": true,
+   "P==X with names": true
+  },
+  "parity-micro-list_append_sum": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": true
+  },
+  "parity-micro-list_records": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": true
+  },
+  "parity-micro-list_records_wrapping": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": true
+  },
+  "parity-micro-records": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": true
+  },
+  "parity-micro-str_build": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": true
+  },
+  "parity-lib-scan_count": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": true
+  },
+  "parity-lib-scan_replace": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": true
+  },
+  "parity-lib-scan_split": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": true
+  },
+  "row-alloc_retained": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": false
+  },
+  "row-alloc_short": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": false
+  },
+  "row-buffer_write": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": false
+  },
+  "row-bytes_scan": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": true,
+   "P==M": true,
+   "P==X with names": false
+  },
+  "row-call_indirect": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": false
+  },
+  "row-cow": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": true
+  },
+  "row-csv_aggregate": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": false
+  },
+  "row-dict_lookup": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": false
+  },
+  "row-dict_lookup_str": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": false
+  },
+  "row-dict_update": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": false
+  },
+  "row-dict_update_str": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": false
+  },
+  "row-float_format": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": true,
+   "P==M": true,
+   "P==X with names": false
+  },
+  "row-grid_dp": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": false
+  },
+  "row-int_format": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": false
+  },
+  "row-int_parse": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": false
+  },
+  "row-json_transform": {
+   "missing": [
+    "M",
+    "P"
+   ]
+  },
+  "row-list_append": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": true,
+   "P==M": true,
+   "P==X with names": false
+  },
+  "row-list_filter": {
+   "P==X": false,
+   "M==A": false,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": false
+  },
+  "row-list_scan": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": false
+  },
+  "row-lox_eval": {
+   "P==X": false,
+   "M==A": false,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": false
+  },
+  "row-mutate_nested": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": false
+  },
+  "row-mutate_shared": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": false
+  },
+  "row-mutate_unique": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": false
+  },
+  "row-option_handle": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": false
+  },
+  "row-packet_decode": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": false
+  },
+  "row-record_construct": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": false
+  },
+  "row-record_pass": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": false
+  },
+  "row-record_reads": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": false
+  },
+  "row-record_update": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": false
+  },
+  "row-result_propagate": {
+   "P==X": false,
+   "M==A": false,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": false
+  },
+  "row-set_dedup": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": false
+  },
+  "row-sort_int": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": false
+  },
+  "row-sort_records": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": false
+  },
+  "row-string_equal": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": true,
+   "P==M": true,
+   "P==X with names": false
+  },
+  "row-string_join": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": true,
+   "P==M": true,
+   "P==X with names": false
+  },
+  "row-string_search": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": false
+  },
+  "row-string_split": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": false
+  },
+  "row-tagged_stack": {
+   "P==X": false,
+   "M==A": false,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": false
+  },
+  "row-tree_build_walk": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": true,
+   "P==M": true,
+   "P==X with names": false
+  },
+  "row-union_find": {
+   "missing": [
+    "M",
+    "P"
+   ]
+  },
+  "row-word_count": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": true,
+   "P==M": true,
+   "P==X with names": false
+  },
+  "row-binary_search": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": false
+  },
+  "row-int_math": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": false
+  },
+  "row-float_math": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": false
+  },
+  "row-call_direct": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": false
+  },
+  "row-branch_mixed": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": false
+  },
+  "row-branch_predictable": {
+   "P==X": true,
+   "M==A": true,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": false
+  },
+  "lox": {
+   "P==X": false,
+   "M==A": false,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": false
+  },
+  "eda": {
+   "P==X": false,
+   "M==A": false,
+   "X==A": false,
+   "P==M": false,
+   "P==X with names": false
+  }
+ }
+}

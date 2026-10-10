@@ -1,6 +1,4 @@
 # scan_replace: str.replace over LIB.md's 4 MB text.
-
-
 func shared_text() -> str:
     mut block = "".join([for i in range(2000) yield f"item{i},{(i * 7919) % 100003},{'xxxxxx'[:i % 7]}\n"])
     return "".join([for _ in range(110) yield block])

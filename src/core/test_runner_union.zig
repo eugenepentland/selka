@@ -226,6 +226,7 @@ fn together(context: Context, checks: *Checks, eligible: []const ?Root, members:
         if (err == error.OutOfMemory) return error.OutOfMemory;
         return;
     };
+    std.Io.File.stderr().writeStreamingAll(init.io, problems.items) catch return error.WriteFailed;
     try checks.sessions.append(a, session);
     if (checked.src.origins.len == 0) return;
     for (members) |index| {

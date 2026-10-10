@@ -1,7 +1,8 @@
-
 # Float constants that float_constants.my reads through an import.
 public const TAU: float = 6.28
 
+
 public const RADIUS: float = 2.0
+
 
 public const AREA: float = TAU / 2.0 * RADIUS * RADIUS

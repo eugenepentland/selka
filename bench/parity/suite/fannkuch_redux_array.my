@@ -9,8 +9,6 @@
 # since wave 3 (`lang/fixed-array-writes`) they compile to the same in-place
 # store `fannkuch_redux_tuned.my` spells as `perm = replace(perm, i, x)`, and
 # the "perm[i] = perm1[i] for all i" copy is still the list version's loop.
-
-
 func fannkuch() -> tuple[int, int]:
     mut n = 10
     mut perm: FixedArray[int, 10] = FixedArray[int, 10]([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])

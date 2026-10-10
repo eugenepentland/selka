@@ -34,13 +34,18 @@ The diagnostics that carry a fix today:
 | `E_BINDING_DECLARATION` | introduce `mut` where an implicit local is confined to its block |
 | `E_FRONTEND_VARIANT` | migrate a local union declaration and its known payload fields to named enum syntax |
 | `E_NAMED_FIELDS`, `E_NAMED_PATTERN` | add labels from the resolved record or enum field declaration, preserving operand order |
-| `E_NUMERIC_PARSE` | replace text calls to numeric casts with `parse_int` or `parse_float` |
+| `E_NUMERIC_PARSE` | replace text calls to numeric casts with `parse_int` or `parse_float`; where a declaration or binding claims that name, call the builtin as a `str` method instead (`s.parse_int()`) |
 | `E_FIXED_ARRAY_LITERAL` | wrap a known fixed-length literal in an explicit `FixedArray[T, N]` constructor |
 | `E_NONE_UNIT` | replace an old Unit value `None` with `()` where its expected type is known |
-| `E_REMOVED_SPELLING` | rename `push`→`append`, `List`→`list`, `filesystem_cap` and the other `*_cap` names→their capability types, `f64_sqrt`/`floor`/`ceil`/`trunc`/`abs`→the float builtin; `&value` in an argument→`mut value`; a declaration's `mutates(a, b)` clause→`mut` on `a` and `b` |
+| `E_REMOVED_SPELLING` | rename `push`→`append`, `List`→`list`, `filesystem_cap` and the other `*_cap` names→their capability types, `f64_sqrt`/`floor`/`ceil`/`trunc`/`abs`→the float builtin, unless the file declares or binds the new name; `&value` in an argument→`mut value`; a declaration's `mutates(a, b)` clause→`mut` on `a` and `b` |
 | `E_EXPLICIT_DISCARD_REQUIRED` | insert `_ = ` before a standalone value that is not a result |
 | `E_KEYWORD_ONLY` | insert `name=` before each positional operand that reaches a keyword-only parameter |
 | `W_UNUSED_IMPORT` | delete the import's line when it holds only that import |
+
+A fix never captures a user declaration. A wrapper named for the builtin it
+wraps, such as `func parse_int(s: str) -> int?` around `int(s)`, gets
+`s.parse_int()`, not a call of itself; a removed float helper inside a user
+`func abs` keeps its diagnostic without a fix, for a hand edit.
 
 A repair that needs judgement carries no fix: an escaping implicit block local
 (`E_BINDING_SCOPE_MIGRATION`) or embedded propagation (`E_TRY_POSITION`) needs
@@ -88,7 +93,9 @@ one aliasing rewrite the compiler cannot choose for you.
   lines; `--cache-dir=DIR` and `--no-cache` apply to the checks it runs.
 - Within a round, a fix whose edits would overlap another's waits for the next
   round, which sees the updated file; the same edit reported twice (a generic
-  function's instances) is applied once.
+  function's instances) is applied once. A nested legacy expression and the one
+  around it therefore migrate in successive rounds. A fix whose own edits
+  overlap is never applied: `fix` names it on stderr and leaves the file alone.
 
 Exit status: 0 when nothing is left to fix and every entry checks (warnings
 allowed), 1 when errors remain or `--check` found a change, 2 on a usage or host
@@ -126,15 +133,42 @@ The gate proves this on real code (`FIX-MIGRATION-2`).
 `test/fixtures/fix-migration/lox/` pins nine modules and tests of the Lox
 interpreter port with every call-site `mut` marker stripped, as a program
 written before the markers were required reads; the test copies them, runs
-`mylang fix` on the directory, and requires all 91 markers restored, every entry checking clean, and a second `mylang fix --check`
-finding nothing. The per-change scripts under `scripts/` (such as
+`mylang fix` on the directory, and requires the current declarations and call
+markers, every entry checking clean, and a second `mylang fix --check` finding
+nothing. The per-change scripts under `scripts/` (such as
 `migrate_mut_arguments.py`) are superseded by the fixes the compiler carries.
 
 A retired feature migrates the same way. `with arena():` blocks were retired in
-S5 and warn `W_ARENA_RETIRED`; the warning carries the edit that deletes the
+S5 and now report `E_ARENA_REMOVED`; the error carries the edit that deletes the
 `with` line, dedents the block's body and rewrites `name.escape(value)` to
 `value`, so `mylang fix` turns pre-S5 arena code into a clean check
 (`NEW-CORE-S5-ARENA-3`, corpus `test/fixtures/fix-migration/arenas.my`). Where the
 edit is not certain (tab indentation, a triple-quoted string in the body, a
-header that shares its line with code) the warning carries no fix and the block
+header that shares its line with code, shadowed arena names, or declarations
+that would collide after dedenting) the error carries no fix and the block
 is left for a hand edit.
+
+## Embedded sources
+
+The developer helper stages guest programs from `.my` files, Markdown fences,
+Zig multiline strings and golden JSON sources, runs the compiler's own fixes,
+and checks the result before replacing a file. It does not implement a second
+set of syntax rewrites. Preview a selected group with:
+
+```bash
+scripts/build-slot.sh build python3 scripts/migrate_embedded.py \
+  --compiler ./zig-out/bin/mylang --dry-run \
+  --report .mylang-cache/migration-preview.json docs/functions.md
+```
+
+Remove `--dry-run` to apply validated edits. The report records exclusions,
+unsafe source shapes and each compiler invocation. Headerless embedded modules
+need unambiguous host path bindings; quoted or concatenated host strings that
+cannot be rewritten safely are reported for explicit handling. Golden IDs,
+options and expected results stay fixed. Writes replace one validated file
+atomically and refuse a file changed since it was read.
+
+The repository's `zig build fmt-check` also checks live `.my` sources. Its
+reasoned exclusions in `scripts/my_format_exclusions.json` preserve migration
+inputs, deliberate rejections, internal builtin syntax and recorded source spans.
+New files under the selected live roots join the check automatically.

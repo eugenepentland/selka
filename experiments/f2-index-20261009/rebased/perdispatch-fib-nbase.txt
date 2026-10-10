@@ -1,0 +1,46 @@
+dispatches 221459153
+bounds_check: 7.875 per dispatch
+overflow_check: 7.375 per dispatch
+unique_test: 1.750 per dispatch
+   1.542 bounds_check    vm::read_byte             253 list_get
+   1.542 overflow_check  vm::read_byte             254 add
+   1.250 overflow_check  heap::peek                111 sub
+   1.000 bounds_check    vm::run                   433 list_get
+   1.000 overflow_check  vm::run                   433 sub
+   1.000 overflow_check  vm::run                   534 sub
+   1.000 bounds_check    vm::run                   534 list_get
+   0.833 unique_test     vm::run                   433 is_unique
+   0.833 bounds_check    vm::run                   433 list_set_field
+   0.750 unique_test     heap::push                101 is_unique
+   0.750 bounds_check    heap::push                101 list_set
+   0.750 overflow_check  heap::push                102 add
+   0.625 bounds_check    heap::peek                111 list_get
+   0.583 overflow_check  heap::pop                 106 sub
+   0.583 bounds_check    heap::pop                 107 list_get
+   0.250 bounds_check    vm::read_constant         264 list_get
+   0.208 bounds_check    vm::run                   446 list_get
+   0.208 overflow_check  vm::run                   446 add
+   0.167 overflow_check  vm::call                  141 sub
+   0.167 bounds_check    heap::closure_obj         153 list_get_field
+   0.167 overflow_check  vm::read_short            260 sub
+   0.167 bounds_check    vm::read_short            260 list_get
+   0.083 bounds_check    heap::string_obj          135 list_get_field
+   0.083 bounds_check    table::find_entry          46 list_get
+   0.083 bounds_check    heap::function_obj        144 list_get_field
+   0.083 overflow_check  vm::call                  134 add
+   0.083 unique_test     vm::call                  135 is_unique
+   0.083 bounds_check    vm::call                  135 list_set
+   0.083 overflow_check  vm::run                   519 sub
+   0.083 bounds_check    table::get                 62 list_get_field
+   0.083 unique_test     vm::run                   493 is_unique
+   0.083 overflow_check  vm::run                   496 sub
+   0.083 bounds_check    vm::run                   496 list_get
+   0.083 bounds_check    vm::run                   525 list_get
+   0.083 overflow_check  vm::read_short            259 add
+   0.083 overflow_check  vm::read_short            260 mul
+   0.083 overflow_check  vm::read_short            260 add
+   0.083 overflow_check  vm::run                   493 sub
+   0.083 overflow_check  vm::run                   525 sub
+   0.083 bounds_check    vm::run                   493 list_set_field
+   0.083 bounds_check    vm::call_value            149 list_get_field
+   0.042 overflow_check  vm::run                   487 add

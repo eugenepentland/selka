@@ -87,15 +87,15 @@ test "PY-BYTES-1 byte strings are immutable and never convert through str" {
     try rejected("func main() -> int:\n    return len(bytes(\"ab\"))\n", "E_BYTES_CONVERSION");
     try rejected("func main() -> int:\n    return len(b\"ab\".encode())\n", "E_COLLECTION_METHOD");
     try rejected(
-        "func build() -> int noalloc:\n    mut raw = b\"ab\"\n    return len(raw)\nfunc main() -> int:\n    return build()\n",
+        "func build() -> int effects():\n    mut raw = b\"ab\"\n    return len(raw)\nfunc main() -> int:\n    return build()\n",
         effect_bound,
     );
     try rejected(
-        "func grow(a: bytes, b: bytes) -> int noalloc:\n    return len(a + b)\nfunc main() -> int:\n    return grow(b\"a\", b\"b\")\n",
+        "func grow(a: bytes, b: bytes) -> int effects():\n    return len(a + b)\nfunc main() -> int:\n    return grow(b\"a\", b\"b\")\n",
         effect_bound,
     );
     try rejected(
-        "func cut(a: bytes) -> int noalloc:\n    return len(a[0:1])\nfunc main() -> int:\n    return cut(b\"ab\")\n",
+        "func cut(a: bytes) -> int effects():\n    return len(a[0:1])\nfunc main() -> int:\n    return cut(b\"ab\")\n",
         effect_bound,
     );
 }
@@ -266,7 +266,7 @@ test "PY-BYTES-7 views and copies exist only on the immutable byte string" {
 }
 
 // spec-case: PY-BYTES-9
-test "PY-BYTES-9 numeric parsing is accepted under noalloc and a view is not" {
+test "PY-BYTES-9 numeric parsing is accepted under noalloc and an explicit ceiling rejects a view" {
     try t.expectEqual(@as(i64, 42), try value(
         "func parse(text: str) -> int noalloc:\n" ++
             "    match parse_int(text):\n" ++
@@ -325,7 +325,23 @@ test "PY-BYTES-9 numeric parsing is accepted under noalloc and a view is not" {
             "func main() -> int:\n" ++
             "    return parse(b\"2.5\")\n",
     ));
-    try rejected("func peek(raw: bytes) -> int noalloc:\n    return len(raw.view(0, 1))\nfunc main() -> int:\n    return peek(b\"abc\")\n", effect_bound);
+    try rejected("func peek(raw: bytes) -> int effects():\n    return len(raw.view(0, 1))\nfunc main() -> int:\n    return peek(b\"abc\")\n", effect_bound);
+}
+
+// spec-case: FRONTEND-CORE-NOALLOC-1
+test "noalloc scalar counting preserves the fixed invalid UTF8 payload" {
+    try t.expectEqual(@as(i64, 42), try value(
+        "func measure(raw: bytes) -> int noalloc:\n" ++
+            "    match raw.scalar_count():\n" ++
+            "        case Ok(width):\n" ++
+            "            return width\n" ++
+            "        case Err(message):\n" ++
+            "            if message == \"invalid UTF-8 in byte string\":\n" ++
+            "                return 42\n" ++
+            "            return 0\n" ++
+            "func main() -> int:\n" ++
+            "    return measure(b\"\\xff\")\n",
+    ));
 }
 
 // spec: PY-BYTES-RANGE-1
@@ -401,7 +417,7 @@ test "PY-BYTES-RANGE-1 range parsing and scalar counting clamp without a view al
             "            return 2\n",
     ));
     try rejected(
-        "func measure(raw: bytes) -> int noalloc:\n" ++
+        "func measure(raw: bytes) -> int effects():\n" ++
             "    match raw.scalar_count_range(0, len(raw)):\n" ++
             "        case Ok(width):\n" ++
             "            return width\n" ++
@@ -457,7 +473,7 @@ test "PY-BYTES-FUSED-RANGE-1 immediate slices and views parse under noalloc" {
             "            return 11\n",
     ));
     try rejected(
-        "func retained(raw: bytes) -> int noalloc:\n" ++
+        "func retained(raw: bytes) -> int effects():\n" ++
             "    mut part = raw[0:2]\n" ++
             "    match part.parse_int():\n" ++
             "        case Some(number):\n" ++
@@ -469,7 +485,7 @@ test "PY-BYTES-FUSED-RANGE-1 immediate slices and views parse under noalloc" {
         effect_bound,
     );
     try rejected(
-        "func retained(raw: bytes) -> int noalloc:\n" ++
+        "func retained(raw: bytes) -> int effects():\n" ++
             "    mut part = raw.view(0, 2)\n" ++
             "    match part.parse_int():\n" ++
             "        case Some(number):\n" ++
@@ -481,7 +497,7 @@ test "PY-BYTES-FUSED-RANGE-1 immediate slices and views parse under noalloc" {
         effect_bound,
     );
     try rejected(
-        "func mutable(data: byte_buffer) -> int noalloc:\n" ++
+        "func mutable(data: byte_buffer) -> int effects():\n" ++
             "    match data[0:2].parse_int():\n" ++
             "        case Some(number):\n" ++
             "            return number\n" ++
@@ -536,4 +552,40 @@ test "PY-BYTES-FUSED-RANGE-1 generic noalloc bodies accept immediate ranges" {
             "func main() -> int:\n" ++
             "    return generic[int](b\"xx42\", 0)\n",
     ));
+}
+
+// spec: FRONTEND-BYTES-PARENS-1
+test "frontend parenthesized byte literals retain bytes identity through inferred conditionals" {
+    try run(
+        \\func choose(flag: bool) -> bytes:
+        \\    const value = b"prefix" + (if flag then ((b"not_allowed")) else ((b"allowed")))
+        \\    return value
+        \\func main() -> int:
+        \\    if choose(True) != b"prefixnot_allowed" or choose(False) != b"prefixallowed":
+        \\        return 1
+        \\    const raw = ((b"ab"))
+        \\    return if raw == b"ab" then 42 else 2
+    , 42);
+}
+
+// spec-case: FRONTEND-BYTES-PARENS-1
+test "frontend parenthesized byte conditional arms respect contextual bytes and optional bytes" {
+    try run(
+        \\func choose(flag: bool) -> bytes:
+        \\    return if flag then ((b"a")) else ((b"long"))
+        \\func optional(flag: bool) -> bytes?:
+        \\    return if flag then ((b"present")) else None
+        \\func main() -> int:
+        \\    const raw: bytes = if False then ((b"a")) else ((b"long"))
+        \\    const present = optional(True)
+        \\    if present is None:
+        \\        return 1
+        \\    return if raw == choose(False) and present == b"present" and optional(False) is None then 42 else 2
+    , 42);
+}
+
+// spec-case: FRONTEND-BYTES-PARENS-1
+test "frontend byte conditional fix preserves fixed array lengths and incompatible arm rejection" {
+    try rejected("func main() -> int:\n    const values = if True then FixedArray[u8, 1]([1u8]) else FixedArray[u8, 2]([1u8, 2u8])\n    return len(values)\n", "E_TYPE");
+    try rejected("func main() -> int:\n    const raw: bytes = if True then ((b\"a\")) else \"text\"\n    return len(raw)\n", "E_TYPE");
 }

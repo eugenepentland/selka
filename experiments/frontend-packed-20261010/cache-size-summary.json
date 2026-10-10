@@ -1,0 +1,48 @@
+[
+  {
+    "lines": 191416,
+    "baseline": {
+      "allocated_bytes": 1306664960,
+      "logical_file_bytes": 1004243702,
+      "files": 89589
+    },
+    "candidate": {
+      "allocated_bytes": 407449600,
+      "logical_file_bytes": 369852378,
+      "files": 15929
+    },
+    "allocated_reduction_percent": 68.81759192501802,
+    "file_reduction_percent": 82.2199153913985,
+    "candidate_peak_rss_gib": 2.437335968017578,
+    "candidate_cold_seconds": 255.00188981904648,
+    "journal_samples": {
+      "interval_seconds": 0.1,
+      "samples": 2530,
+      "largest_file_bytes": 43656774,
+      "total_bytes": 43656774
+    }
+  },
+  {
+    "lines": 510436,
+    "baseline": {
+      "allocated_bytes": 3472842752,
+      "logical_file_bytes": 2669950508,
+      "files": 237589
+    },
+    "candidate": {
+      "allocated_bytes": 1081946112,
+      "logical_file_bytes": 982136114,
+      "files": 42377
+    },
+    "allocated_reduction_percent": 68.84551967183339,
+    "file_reduction_percent": 82.16373653662417,
+    "candidate_peak_rss_gib": 5.229015350341797,
+    "candidate_cold_seconds": 500.0864233369939,
+    "journal_samples": {
+      "interval_seconds": 0.1,
+      "samples": 4975,
+      "largest_file_bytes": 42951582,
+      "total_bytes": 42951582
+    }
+  }
+]

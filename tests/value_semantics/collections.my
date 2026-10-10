@@ -1,9 +1,6 @@
-
 # Every collection type is an independent value under `--value-semantics`
 # (VALUE-SEMANTICS-2): assignment, argument passing, returns and stores never
 # make two names reach the same list, dict, set or byte_buffer.
-
-
 func with_item(xs: int[], value: int) -> int[]:
     mut copy = xs
     copy.append(value)

@@ -1,0 +1,12 @@
+evidence=/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/experiments/fu-port-20261009/fuzz50-port-migrated
+source_commit=0acc4e41850e919fbe2a59770e914531813bb8e9
+s1: STOP; 0.06328046810813248s
+s0: PASS; 34.31470167497173s
+rc: PASS; 26.795397855108604s
+number: PASS; 42.424383158097044s
+rebinding: PASS; 46.603340157074854s
+iteration: PASS; 65.74850032711402s
+dict: PASS; 77.96674900595099s
+text: PASS; 46.01043784478679s
+functions: PASS; 37.557295008096844s
+STOP: strict matrix failed; inspect retained evidence

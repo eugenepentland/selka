@@ -1,5 +1,5 @@
-
 extern func runtime_bench_now(host: Host) -> i64 effects(host)
+
 
 func parse_number(text: str) -> int:
     match parse_int(text):
@@ -7,6 +7,7 @@ func parse_number(text: str) -> int:
             return value
         case None:
             return 0
+
 
 func affine_a(x: int) -> int:
     return x * 3 + 7

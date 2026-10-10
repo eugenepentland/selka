@@ -1,12 +1,9 @@
-
 # Variant values keep their payload when the stored element is replaced after a
 # copy was taken, when a held list payload is appended to through a binding, and
 # when a `Result` carries an error record with bytes. This is the executed
 # program of the retired QBE native variant snapshot test
 # (`qbe_rc_native_variant_test.zig`, `RC-NATIVE-VARIANT-1`), which also read the
 # emitted IL and the layout proofs of the native tag helpers.
-
-
 record Fault:
     message: bytes
 

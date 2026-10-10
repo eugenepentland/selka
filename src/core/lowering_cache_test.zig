@@ -1,6 +1,7 @@
 //! Durable lowering replay is compared with the uncached builder, including
 //! declaration/string order, source spans and complete emitted LLVM text.
 const std = @import("std");
+const stage_loss = @import("stage_loss_test_support.zig");
 const language = @import("mylang");
 const build = @import("build.zig");
 const lowering = @import("lowering_cache.zig");
@@ -138,18 +139,9 @@ test "demand raw headers materialize only requested bodies and reject lost paylo
     cache.lazy = &lost;
     var replayed = try build.buildExecutableCached(a, input, &refusal, &cache);
     try lost.prepare(&replayed, unit.src);
-    try damagePayloads(store.root);
+    try std.testing.expect(try stage_loss.damage(&store) > 0);
     try std.testing.expectError(error.CacheMiss, lost.context.ensure(replayed.entry));
     try std.testing.expect(!lost.tables.loaded.items[replayed.entry]);
-}
-
-fn damagePayloads(root: []const u8) !void {
-    var directory = try std.Io.Dir.cwd().openDir(std.testing.io, root, .{ .iterate = true });
-    defer directory.close(std.testing.io);
-    var iterator = directory.iterate();
-    while (try iterator.next(std.testing.io)) |entry| {
-        if (entry.kind == .file) try directory.writeFile(std.testing.io, .{ .sub_path = entry.name, .data = "damaged after admission" });
-    }
 }
 
 // spec: NEW-CORE-STAGE-CACHE-3
@@ -228,17 +220,9 @@ test "damaged lowering entries miss without changing the uncached result" {
     const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", std.testing.allocator);
     defer std.testing.allocator.free(root);
     _ = try compare(root, std.testing.allocator, arithmetic, false);
-    var stages = try dir.dir.openDir(std.testing.io, "stages-v1", .{ .iterate = true });
-    defer stages.close(std.testing.io);
-    var iterator = stages.iterate();
-    var count: usize = 0;
-    while (try iterator.next(std.testing.io)) |entry| {
-        if (entry.kind != .file) continue;
-        try stages.writeFile(std.testing.io, .{ .sub_path = entry.name, .data = "damaged" });
-        count += 1;
-    }
-    // Each of the three functions publishes a body and a discovery header.
-    try std.testing.expectEqual(@as(usize, 6), count);
+    var storage = try stage.Store.init(std.testing.allocator, std.testing.io, root);
+    defer storage.deinit();
+    try std.testing.expect(try stage_loss.damage(&storage) > 0);
     try std.testing.expectEqualDeep(Work{ .lowered = 3, .reused = 0 }, try compare(root, std.testing.allocator, arithmetic, false));
     try std.testing.expectEqualDeep(Work{ .lowered = 0, .reused = 3 }, try compare(root, std.testing.allocator, arithmetic, false));
 }
@@ -254,7 +238,7 @@ test "lowered generic and default bodies preserve mapped origins across another 
     try std.testing.expectEqualDeep(Work{ .lowered = 2, .reused = 0 }, try compareMapped(root, std.testing.allocator, templates, entry));
     try std.testing.expectEqualDeep(Work{ .lowered = 0, .reused = 2 }, try compareMapped(root, std.testing.allocator, templates, entry));
     const grown = templates ++ "\n\n\n";
-    try std.testing.expectEqualDeep(Work{ .lowered = 0, .reused = 2 }, try compareMapped(root, std.testing.allocator, grown, entry));
+    try std.testing.expectEqualDeep(Work{ .lowered = 1, .reused = 1 }, try compareMapped(root, std.testing.allocator, grown, entry));
     const edited = try std.testing.allocator.dupe(u8, grown);
     defer std.testing.allocator.free(edited);
     edited[std.mem.indexOf(u8, edited, "value: int = 42").? + 14] = '3';
@@ -405,4 +389,348 @@ test "demand raw headers relocate strings after preceding function adds a string
     const edited = "func main(out: Stream) -> int:\n    out.print(\"before\")\n    out.print(\"new neighbor string\")\n    return helper(out)\n";
     const work = try compareDemandMapped(root, std.testing.allocator, edited, demand_helper);
     try std.testing.expectEqualDeep(Work{ .lowered = 1, .reused = 1 }, work);
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-1
+test "raw source prefix retains unrelated same file edits but catches equal length newlines" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const original = try language.source.Source.init(a, "sites.my", "func owner():\n    x = 1\nother 2\n");
+    const unrelated = try language.source.Source.init(a, "sites.my", "func owner():\n    x = 1\nother 3\n");
+    const newline = try language.source.Source.init(a, "sites.my", "func owner():\n\n   x = 1\nother 2\n");
+    const maximum: u32 = 21;
+    const proof = try lowering.sourceProof(original, 0, maximum);
+    try std.testing.expectEqual(proof, try lowering.sourceProof(unrelated, 0, maximum));
+    try std.testing.expect(!std.mem.eql(u8, &proof, &try lowering.sourceProof(newline, 0, maximum)));
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-1
+test "raw source prefix catches declaration line column and path movement" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const original = try language.source.Source.init(a, "sites.my", "func owner():\n    x = 1\n");
+    const later_line = try language.source.Source.init(a, "sites.my", "\nfunc owner():\n    x = 1\n");
+    const later_column = try language.source.Source.init(a, "sites.my", " func owner():\n    x = 1\n");
+    const renamed = try language.source.Source.init(a, "renamed.my", original.bytes);
+    const proof = try lowering.sourceProof(original, 0, 21);
+    const others = [_]stage.Digest{
+        try lowering.sourceProof(later_line, 1, 21),
+        try lowering.sourceProof(later_column, 1, 21),
+        try lowering.sourceProof(renamed, 0, 21),
+    };
+    for (others) |other| try std.testing.expect(!std.mem.eql(u8, &proof, &other));
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-1
+test "raw source prefix rejects malformed bounds and binds the maximum" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const source = try language.source.Source.init(a, "sites.my", "func owner():\n    x = 1\n");
+    try std.testing.expectError(error.InvalidSnapshot, lowering.sourceProof(source, 0, std.math.maxInt(u32)));
+    try std.testing.expectError(error.InvalidSnapshot, lowering.sourceProof(source, @intCast(source.bytes.len + 1), 0));
+    const complete = try lowering.sourceProof(source, 0, 21);
+    const understated = try lowering.sourceProof(source, 0, 0);
+    try std.testing.expect(!std.mem.eql(u8, &complete, &understated));
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-1
+test "raw source authority prepares omitted instruction standins without reading a body" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var storage = try stage.Store.init(std.testing.allocator, std.testing.io, try temporary.dir.realPathFileAlloc(std.testing.io, ".", a));
+    defer storage.deinit();
+    const source = try language.source.Source.init(a, "sites.my", "func owner():\n    x = 1\n");
+    var module: ir.Module = .{};
+    try module.functions.append(a, .{ .name = "owner", .signature = .{ .params = &.{}, .ret = .i64, .linkage = .internal }, .span = 0 });
+    var deferred: lowering.Deferred = .{ .arena = a, .store = &storage };
+    try deferred.tables.keys.append(a, storage.key("typed-semantic", &.{}));
+    try deferred.tables.source_max.append(a, 21);
+    try deferred.tables.handles.append(a, null);
+    try deferred.tables.loaded.append(a, false);
+    try deferred.prepare(&module, source);
+    try std.testing.expect(deferred.context.keys[0] != null);
+    try std.testing.expect(!deferred.context.loaded[0]);
+    try std.testing.expectEqual(@as(usize, 0), module.functions.items[0].insts.items.len);
+    try std.testing.expectEqual(@as(usize, 0), deferred.restored);
+}
+
+fn preparedSourceKeys(a: std.mem.Allocator, backing: std.mem.Allocator, root: []const u8, bytes: []const u8) ![]const ?stage.Digest {
+    var unit = try language.Compilation.init(a, source_name, bytes);
+    defer unit.deinit();
+    try unit.check();
+    var storage = try stage.Store.init(backing, std.testing.io, root);
+    defer storage.deinit();
+    var deferred: lowering.Deferred = .{ .arena = a, .store = &storage };
+    var cache = lowering.Cache.init(&storage);
+    cache.lazy = &deferred;
+    var refusal: build.Refusal = .{};
+    var module = try build.buildExecutableCached(a, .{ .program = unit.program.?, .source = unit.src }, &refusal, &cache);
+    try deferred.prepare(&module, unit.src);
+    return a.dupe(?stage.Digest, deferred.context.keys);
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-1
+test "raw demand source keys retain unchanged function across same file literal edits" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a);
+    const before = "func helper() -> int:\n    return 7\nfunc main() -> int:\n    return helper() + 1\n";
+    const after = "func helper() -> int:\n    return 7\nfunc main() -> int:\n    return helper() + 2\n";
+    const cold = try preparedSourceKeys(a, std.testing.allocator, root, before);
+    const warm = try preparedSourceKeys(a, std.testing.allocator, root, before);
+    const edited = try preparedSourceKeys(a, std.testing.allocator, root, after);
+    try std.testing.expectEqualDeep(cold, warm);
+    try std.testing.expectEqual(cold[1], edited[1]);
+    try std.testing.expect(!std.mem.eql(u8, &cold[0].?, &edited[0].?));
+}
+
+const SourceRun = struct { keys: []const ?stage.Digest, headers: []const ?stage.Digest, omitted: usize, allocation_warnings: []const u8 };
+
+fn frontendSourceKeys(a: std.mem.Allocator, backing: std.mem.Allocator, root: []const u8) !SourceRun {
+    const front = @import("frontend.zig");
+    const queries = @import("lowering_demand.zig");
+    const cache_root = try std.fs.path.join(a, &.{ root, "cache" });
+    var storage = try stage.Store.init(backing, std.testing.io, cache_root);
+    defer storage.deinit();
+    var demand = try queries.Context.init(a, &storage, try std.fs.path.join(a, &.{ root, "main.my" }), false);
+    var session = front.Session.init(backing, std.testing.io, root);
+    defer session.deinit();
+    try session.enableCache(backing, cache_root);
+    session.configureDemand(demand.callback());
+    var diagnostics: std.ArrayList(u8) = .empty;
+    const checked = try session.check(a, "main", &diagnostics);
+    const state = session.demandState().?;
+    demand.attach(state.prepared, state.omitted);
+    var deferred: lowering.Deferred = .{ .arena = a, .store = &storage };
+    var cache = lowering.Cache.init(&storage);
+    cache.demand = &demand;
+    cache.lazy = &deferred;
+    var refusal: build.Refusal = .{};
+    var module = try build.buildExecutableCached(a, .{ .program = checked.program, .source = checked.src }, &refusal, &cache);
+    const headers = try a.alloc(?stage.Digest, deferred.tables.keys.items.len);
+    for (headers, deferred.tables.keys.items) |*header, raw| header.* = if (raw) |key| storage.key("lowered-header-source-v3", &.{&key}) else null;
+    try deferred.prepare(&module, checked.src);
+    const keys = try a.dupe(?stage.Digest, deferred.context.keys);
+    // Materialize only after recording compact authority, then compare replay
+    // from genuinely omitted typed bodies with an independent complete check.
+    for (0..module.functions.items.len) |index| try deferred.context.ensure(@intCast(index));
+    var eager = front.Session.init(backing, std.testing.io, root);
+    defer eager.deinit();
+    const fresh = try eager.check(a, "main", &diagnostics);
+    try std.testing.expectEqualStrings(fresh.allocation_warnings, checked.allocation_warnings);
+    const expected = try build.buildExecutable(a, .{ .program = fresh.program, .source = fresh.src }, &refusal);
+    try sameModule(a, &module, &expected);
+    try demand.finish();
+    return .{ .keys = keys, .headers = headers, .omitted = demand.count(), .allocation_warnings = checked.allocation_warnings };
+}
+
+// spec-case: FRONTEND-CORE-NOALLOC-1
+test "demand frontend keeps allocation bounded transitive callees concrete after edits and reordering" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
+    const bounded = "func bounded(mut values: int[]) -> Unit noalloc:\n    middle(mut values)\n";
+    const middle = "func middle(mut values: int[]) -> Unit:\n    deep(mut values)\n";
+    const pure = "func deep(mut values: int[]) -> Unit:\n    _ = values[0]\n";
+    const allocating = "func deep(mut values: int[]) -> Unit:\n    values[0] = 42\n";
+    const entry = "func spare() -> int:\n    return 7\nfunc main() -> int:\n    mut values = [1, 2]\n    bounded(mut values)\n    return 0\n";
+    const before = try std.mem.concat(a, u8, &.{ bounded, middle, pure, entry });
+    try directory.dir.writeFile(std.testing.io, .{ .sub_path = "main.my", .data = before });
+    const cold = try frontendSourceKeys(a, std.testing.allocator, root);
+    try std.testing.expectEqualStrings("", cold.allocation_warnings);
+    const warm = try frontendSourceKeys(a, std.testing.allocator, root);
+    try std.testing.expect(warm.omitted > 0);
+    const after = try std.mem.concat(a, u8, &.{ allocating, middle, bounded, entry });
+    try directory.dir.writeFile(std.testing.io, .{ .sub_path = "main.my", .data = after });
+    const changed = try frontendSourceKeys(a, std.testing.allocator, root);
+    try std.testing.expect(changed.allocation_warnings.len > 0);
+    const changed_warm = try frontendSourceKeys(a, std.testing.allocator, root);
+    try std.testing.expect(changed_warm.omitted > 0);
+    try std.testing.expectEqualStrings(changed.allocation_warnings, changed_warm.allocation_warnings);
+}
+
+const source_proof_before = "func helper() -> int:\n    return 7\n\nfunc main() -> int:\n    return helper() + 1\n";
+const source_proof_after = "func helper() -> int:\n    return 7\n\nfunc main() -> int:\n    return helper() + 2\n";
+
+// spec-case: NEW-CORE-STAGE-CACHE-1
+test "raw source authority preserves genuine omitted frontend bodies after unrelated edits" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
+    try directory.dir.writeFile(std.testing.io, .{ .sub_path = "main.my", .data = source_proof_before });
+    const cold = try frontendSourceKeys(a, std.testing.allocator, root);
+    const warm = try frontendSourceKeys(a, std.testing.allocator, root);
+    try std.testing.expect(warm.omitted > 0);
+    try std.testing.expectEqualDeep(cold.keys, warm.keys);
+    try directory.dir.writeFile(std.testing.io, .{ .sub_path = "main.my", .data = source_proof_after });
+    const edited = try frontendSourceKeys(a, std.testing.allocator, root);
+    try std.testing.expect(edited.omitted > 0);
+    try std.testing.expectEqual(warm.keys[1], edited.keys[1]);
+    try std.testing.expect(!std.mem.eql(u8, &warm.keys[0].?, &edited.keys[0].?));
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-1
+test "raw source authority demotes valid checksum understated header maxima" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
+    try directory.dir.writeFile(std.testing.io, .{ .sub_path = "main.my", .data = source_proof_before });
+    _ = try frontendSourceKeys(a, std.testing.allocator, root);
+    const warm = try frontendSourceKeys(a, std.testing.allocator, root);
+    var storage = try stage.Store.init(std.testing.allocator, std.testing.io, try std.fs.path.join(a, &.{ root, "cache" }));
+    defer storage.deinit();
+    const header = (try storage.load(a, warm.headers[1].?)).?;
+    try std.testing.expectEqual(@as(u8, 1), header[header.len - 5]);
+    @memset(header[header.len - 4 ..], 0);
+    // save recomputes the physical checksum; this is malformed metadata rather
+    // than an ordinary damaged-record miss.
+    try std.testing.expect(try storage.save(warm.headers[1].?, header));
+    const damaged = try frontendSourceKeys(a, std.testing.allocator, root);
+    try std.testing.expect(!std.mem.eql(u8, &warm.keys[1].?, &damaged.keys[1].?));
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-1
+test "raw source authority maps independent original files and bounds each prefix" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const originals = [_]language.source.Source{
+        try language.source.Source.init(a, "first.my", "first\n"),
+        try language.source.Source.init(a, "second.my", "func owner():\n    x = 1\n"),
+    };
+    const mapped = try language.source.Source.initMapped(a, &originals);
+    const start: u32 = @intCast(std.mem.indexOf(u8, mapped.bytes, "func owner").?);
+    try std.testing.expectEqual(try lowering.sourceProof(originals[1], 0, 21), try lowering.sourceProof(mapped, start, 21));
+    try std.testing.expectError(error.InvalidSnapshot, lowering.sourceProof(mapped, start, @intCast(originals[1].bytes.len + 1)));
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-3
+test "raw source authority keeps conservative mapped default initializer replay" {
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", std.testing.allocator);
+    defer std.testing.allocator.free(root);
+    const templates = "record Item:\n    value: int = 42\n";
+    const entry = "func main() -> int:\n    return Item().value\n";
+    _ = try compareMapped(root, std.testing.allocator, templates, entry);
+    const warm = try compareDemandMapped(root, std.testing.allocator, templates, entry);
+    try std.testing.expectEqual(@as(usize, 0), warm.lowered);
+    // Moving a default initializer's original site cannot be attested from
+    // the caller's local prefix: full typed replay remains the safe path.
+    const moved = try compareDemandMapped(root, std.testing.allocator, "\n" ++ templates, entry);
+    try std.testing.expect(moved.lowered > 0);
+    const changed = try compareDemandMapped(root, std.testing.allocator, "record Item:\n    value: int = 43\n", entry);
+    try std.testing.expect(changed.lowered > 0);
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-3
+test "demand frontend proves external default source files before omitting checked bodies" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
+    const entry = "import model as m\nfunc helper() -> int:\n    return m.Item().value\nfunc main() -> int:\n    return helper()\n";
+    const model = "public record Item:\n    value: int = 42\n";
+    try directory.dir.writeFile(std.testing.io, .{ .sub_path = "main.my", .data = entry });
+    try directory.dir.writeFile(std.testing.io, .{ .sub_path = "model.my", .data = model });
+    _ = try frontendSourceKeys(a, std.testing.allocator, root);
+    const warm = try frontendSourceKeys(a, std.testing.allocator, root);
+    try std.testing.expect(warm.omitted > 0);
+    // The body digest and debug locations remain reusable while every external
+    // original file agrees with the receipt; file growth rejects that proof.
+    try directory.dir.writeFile(std.testing.io, .{ .sub_path = "model.my", .data = "\n" ++ model });
+    const moved = try frontendSourceKeys(a, std.testing.allocator, root);
+    try std.testing.expectEqual(@as(usize, 0), moved.omitted);
+    try directory.dir.writeFile(std.testing.io, .{ .sub_path = "model.my", .data = "public record Item:\n    value: int = 43\n" });
+    const changed = try frontendSourceKeys(a, std.testing.allocator, root);
+    try std.testing.expectEqual(@as(usize, 0), changed.omitted);
+    const changed_warm = try frontendSourceKeys(a, std.testing.allocator, root);
+    try std.testing.expect(changed_warm.omitted > 0);
+    try directory.dir.writeFile(std.testing.io, .{ .sub_path = "extra.my", .data = "# unrelated source\n" });
+    try directory.dir.writeFile(std.testing.io, .{ .sub_path = "main.my", .data = "import extra\n" ++ entry });
+    const reordered = try frontendSourceKeys(a, std.testing.allocator, root);
+    try std.testing.expectEqual(@as(usize, 0), reordered.omitted);
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-3
+test "external source authority rejects reordered origins missing provenance and changed paths" {
+    const sources = @import("demand_sources.zig");
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const first = try language.source.Source.init(a, "first.my", "first\n");
+    const second = try language.source.Source.init(a, "second.my", "second\n");
+    var cache: sources.Cache = .{ .arena = a };
+    cache.bind(try language.source.Source.initMapped(a, &.{ first, second }));
+    const proof = (try cache.get(0)).?;
+    try std.testing.expect(cache.matches(&.{proof}));
+    cache.bind(try language.source.Source.initMapped(a, &.{ second, first }));
+    _ = try cache.get(0);
+    try std.testing.expect(!cache.matches(&.{proof}));
+    try std.testing.expectEqual(@as(?sources.Proof, null), try cache.get(null));
+    try std.testing.expectEqual(@as(?sources.Proof, null), try cache.get(2));
+    const renamed = try language.source.Source.init(a, "renamed.my", first.bytes);
+    cache.bind(try language.source.Source.initMapped(a, &.{ renamed, second }));
+    _ = try cache.get(0);
+    try std.testing.expect(!cache.matches(&.{proof}));
+    cache.bind(first);
+    try std.testing.expectEqual(@as(?sources.Proof, null), try cache.get(0));
+}
+// spec-case: NEW-CORE-STAGE-CACHE-3
+test "demand raw payload rejects valid checksummed provenance spliced after header admission" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
+    var storage = try stage.Store.init(std.testing.allocator, std.testing.io, root);
+    defer storage.deinit();
+    var unit = try language.Compilation.init(a, "proof.my", "func main() -> int:\n    return 7\n");
+    defer unit.deinit();
+    try unit.check();
+    var refusal: build.Refusal = .{};
+    const input: build.Input = .{ .program = unit.program.?, .source = unit.src };
+    var cold = lowering.Cache.init(&storage);
+    _ = try build.buildExecutableCached(a, input, &refusal, &cold);
+    var deferred: lowering.Deferred = .{ .arena = a, .store = &storage };
+    var warm = lowering.Cache.init(&storage);
+    warm.lazy = &deferred;
+    var module = try build.buildExecutableCached(a, input, &refusal, &warm);
+    try deferred.prepare(&module, unit.src);
+    const handle = deferred.tables.handles.items[0].?;
+    const wire = (try storage.load(a, handle.key)).?;
+    const demand_sources = @import("demand_sources.zig");
+    var sources: demand_sources.Cache = .{ .arena = a };
+    sources.bind(unit.src);
+    const proof = (try sources.get(null)).?;
+    try std.testing.expectEqual(@as(u64, 0), std.mem.readInt(u64, wire[wire.len - 8 ..][0..8], .little));
+    var writer = language.persist_codec.Writer.init(a);
+    try writer.write([]const demand_sources.Proof, &.{proof});
+    const spliced = try std.mem.concat(a, u8, &.{ wire[0 .. wire.len - 8], writer.bytes.items });
+    // The substituted proof is valid for the current source and the store
+    // recomputes its checksum. It differs from the admitted header's authority.
+    try std.testing.expect(sources.matches(&.{proof}));
+    try std.testing.expect(try storage.save(handle.key, spliced));
+    try std.testing.expectError(error.CacheMiss, deferred.context.ensure(0));
 }

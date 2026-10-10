@@ -3,6 +3,7 @@ import network
 # Raw provider I/O goes through the trusted standard-library wrappers.
 extern func final_status(host: Host) -> int effects(host)
 
+
 func main(net: Network, host: Host) -> int:
     match network.connect(net.host("127.0.0.1:1234")):
         case network.Connected.err(_):

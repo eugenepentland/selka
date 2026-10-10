@@ -149,21 +149,26 @@ otherwise, so a compiler defect fails loudly instead of swapping; the `zig cc`
 children a build spawns complete under that inherited ceiling, while the program it
 runs gets the caller's limit back before applying its own.
 
-```console
-$ cat grow.my
-func grow(values: mut list[int], rounds: int) -> int:
+Save this checked program as `grow.my`:
+
+```mylang
+# doc: check
+func grow(mut values: int[], rounds: int) -> int:
     for r in range(rounds):
         values.append(r)
     return len(values)
 
 
 func main() -> int:
-    values: list[int] = []
+    mut values: int[] = []
     return grow(mut values, 100000000)
+```
+
+```console
 $ mylang build grow.my --run --max-memory=64M
-error[R_MEMORY_BUDGET]: native execution failed
+error[R_MEMORY_BUDGET]: memory budget exhausted; raise it with --max-memory=SIZE
+  in grow at grow.my:1:0
   in main at grow.my:9:12
-memory budget exhausted; raise it with --max-memory=SIZE
 $ echo $?
 1
 ```

@@ -175,7 +175,7 @@ const Checker = struct {
     spec_fresh: std.ArrayList(usize) = .empty,
     ordinary_instance_by_key: std.StringHashMapUnmanaged(usize) = .empty,
     record_by_name: std.StringHashMapUnmanaged(usize) = .empty,
-    initial_record_count: usize = 0,
+    indexed_record_count: usize = 0,
     ordinary_ids: []?typed.FunctionId,
     ordinary_count: usize = 0,
     current_function: ?typed.FunctionId = null,
@@ -547,6 +547,7 @@ const Checker = struct {
     }
     const specialization_checks = @import("sema_specialize.zig").Checks(Checker);
     pub const lookupSpecialization = specialization_checks.lookupSpecialization;
+    pub const bindOrdinaryReferences = specialization_checks.bindOrdinaryReferences;
     pub const publishSpecializations = specialization_checks.publishSpecializations;
     pub const specialize = specialization_checks.specialize;
     /// Whether a value of this type must be consumed or handled (a Result or resource).
@@ -1372,12 +1373,8 @@ fn warningLess(_: void, a: diagnostic.Diagnostic, b: diagnostic.Diagnostic) bool
 // source diagnostic once, ordered independently of specialization discovery.
 fn normalizeDiagnostics(sink: *diagnostic.Sink) void {
     std.mem.sort(diagnostic.Diagnostic, sink.items.items, {}, warningLess);
-    // NEW-CORE-S5-ARENA-1: a rejected program reports its errors as before; the
-    // retired-arena advice is for a program that otherwise checks.
-    const rejected = reportedError(sink.items.items);
     var count: usize = 0;
     for (sink.items.items) |item| {
-        if (rejected and std.mem.eql(u8, item.code, @import("arena_fix.zig").retired_code)) continue;
         if (count != 0) {
             const previous = sink.items.items[count - 1];
             if (previous.span.start == item.span.start and previous.span.end == item.span.end and
@@ -1456,21 +1453,16 @@ fn deinitSpecialization(session: *?generic_specializations.Session) void {
 fn initSpecializationReuse(
     checker: *Checker,
     allocator: std.mem.Allocator,
-    catalog_records: []const typed.Record,
     session: *?semantic_cache.Session,
     spec_session: *?generic_specializations.Session,
 ) Error!void {
     checker.prepared = if (session.*) |*queries| &queries.prepared else null;
     checker.spec_build = if (spec_session.*) |*reuse| reuse.backend.build else "";
-    checker.initial_record_count = catalog_records.len;
+    if (session.*) |*queries| if (spec_session.*) |*reuse| try checker.bindOrdinaryReferences(queries, reuse);
     if (checker.prepared) |prepared| for (prepared.ordinary_ast, 0..) |ast_index, instance| {
         const entry = try checker.ordinary_instance_by_key.getOrPut(allocator, prepared.keys[ast_index]);
         if (entry.found_existing) entry.value_ptr.* = std.math.maxInt(usize) else entry.value_ptr.* = instance;
     };
-    for (catalog_records, 0..) |record, index| {
-        const entry = try checker.record_by_name.getOrPut(allocator, record.name);
-        if (entry.found_existing) entry.value_ptr.* = std.math.maxInt(usize) else entry.value_ptr.* = index;
-    }
 }
 /// Active opt-in phase recorder, if any. Timing never changes semantic results.
 fn activeTiming(cache: ?*semantic_cache.Cache) ?*timings.Profile {
@@ -1520,14 +1512,15 @@ fn reuseBody(
     return function;
 }
 /// Open the stand-in plan for a request whose cache carries a summary request.
-fn openPlan(cache: ?*semantic_cache.Cache, session: *?semantic_cache.Session, allocator: std.mem.Allocator, main: usize) Error!?sema_summaries.Plan {
+fn openPlan(cache: ?*semantic_cache.Cache, session: *?semantic_cache.Session, allocator: std.mem.Allocator, main: usize, syntax: ast.Program) Error!?sema_summaries.Plan {
     const c = cache orelse return null;
     const request = c.context.summaries orelse return null;
     const queries = if (session.*) |*opened| opened else return null;
     const timing = activeTiming(cache);
     const start = timingStart(timing);
     defer timingAdd(timing, "stand_in_planning", start);
-    const plan = try sema_summaries.Plan.init(allocator, request, queries, main);
+    var plan = try sema_summaries.Plan.init(allocator, request, queries, main);
+    try plan.requireAllocationBodies(allocator, syntax);
     return plan;
 }
 /// Mark a failed stand-in attempt for a full retry and pass the error on. A
@@ -1713,7 +1706,12 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
 /// Check every library declaration and body without creating an executable entry.
 /// Checked trees are discarded; library success cannot seed executable caches.
 pub fn checkLibrary(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, names: ?*Names) Error!void {
-    _ = try checkCore(allocator, src, program, sink, .{ .names = names, .entry_required = false });
+    _ = try checkLibraryProgram(allocator, src, program, sink, names);
+}
+
+/// Library tree for backend contract verification; never an executable entry.
+pub fn checkLibraryProgram(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, names: ?*Names) Error!typed.Program {
+    return checkCore(allocator, src, program, sink, .{ .names = names, .entry_required = false });
 }
 
 /// Whether the entry unit declares a free function named `main`, the lookup
@@ -1741,6 +1739,17 @@ const CheckOptions = struct {
 
 fn checkCore(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, options: CheckOptions) Error!typed.Program {
     defer normalizeDiagnostics(sink);
+    const checked = checkProgram(allocator, src, program, sink, options) catch |err| {
+        // Removal repairs remain available even when an unrelated body fails.
+        if (err == error.SourceError) try @import("arena_fix.zig").reject(allocator, src, program, sink);
+        return err;
+    };
+    try @import("arena_fix.zig").reject(allocator, src, program, sink);
+    if (reportedError(sink.items.items)) return error.SourceError;
+    return checked;
+}
+
+fn checkProgram(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, options: CheckOptions) Error!typed.Program {
     const cache = options.cache;
     const module_names = options.names;
     const timing = activeTiming(cache);
@@ -1792,7 +1801,7 @@ fn checkCore(allocator: std.mem.Allocator, src: source.Source, program: ast.Prog
     }
     // C3 reuse: prepared declaration facts and fresh identity maps are
     // per-request; only populated when a semantic cache is attached.
-    try initSpecializationReuse(&checker, allocator, catalog.records, &session, &spec_session);
+    try initSpecializationReuse(&checker, allocator, &session, &spec_session);
     for (program.functions, 0..) |function, i| {
         const name = if (module_names) |names| try names.functionDeclaration(function.policy.owner, function.name) else try functionName(allocator, src, function.policy.owner, function.name);
         // The builtin `set` type is new beside programs that already declare a
@@ -1828,7 +1837,7 @@ fn checkCore(allocator: std.mem.Allocator, src: source.Source, program: ast.Prog
     // A library has no executable entry. This placeholder remains internal:
     // library checking neither adapts, returns nor caches the checked program.
     const main = if (options.entry_required) try checkEntry(&checker, module_names, failed) else @as(typed.FunctionId, @fromBackingInt(0));
-    var plan = try openPlan(cache, &session, allocator, @backingInt(main));
+    var plan = try openPlan(cache, &session, allocator, @backingInt(main), program);
     const functions = checkBodies(.{
         .checker = &checker,
         .session = &session,
@@ -1865,7 +1874,6 @@ fn checkCore(allocator: std.mem.Allocator, src: source.Source, program: ast.Prog
     const warnings_start = timingStart(timing);
     try warnBindings(allocator, functions, stubs, sink);
     try warnImports(module_names, sink);
-    try @import("arena_fix.zig").warn(allocator, src, program, sink);
     const pass_items: []const diagnostic.Diagnostic = if (plan != null) try allocator.dupe(diagnostic.Diagnostic, sink.items.items[pass_start..]) else &.{};
     std.mem.sort(diagnostic.Diagnostic, sink.items.items, {}, warningLess);
     timingAdd(timing, "warning_derivation", warnings_start);

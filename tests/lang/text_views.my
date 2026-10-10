@@ -1,4 +1,3 @@
-
 # A slice, a split piece, a line, a stripped text and a field may share their
 # receiver's octets instead of copying them (SPEC.md TEXT-VIEW-1..4). None of
 # that is observable: every answer below is what a copy answers. The inputs are
@@ -6,8 +5,6 @@
 # when a piece is shared rather than copied. The runner collects at every
 # allocation (`--gc-stress`), so a piece whose receiver is no longer referenced
 # anywhere else is read after many collections.
-
-
 # `times` copies of `piece` by doubling, so a long input costs a logarithmic
 # number of guest steps.
 func repeated(piece: str, times: int) -> str:

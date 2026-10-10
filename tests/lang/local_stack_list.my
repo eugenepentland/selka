@@ -1,4 +1,3 @@
-
 func closed(value: int, index: int) -> int:
     mut values = [value, value + 1, value + 2]
     mut alias = values

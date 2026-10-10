@@ -1,4 +1,3 @@
-
 result A:
     ok: i64[],
     err: i64
@@ -27,6 +26,7 @@ func main() -> i64:
                 return code
         i += 1
     return 42
+
 
 # spec: UNIT-4
 public func test_unit_fallthrough_and_early_return_release_ma() -> bool:

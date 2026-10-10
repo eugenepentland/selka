@@ -34,6 +34,14 @@ pub const Entry = struct {
         session.configureProject(self.limits(), self.name);
     }
 
+    /// Check a developer view with the same budgets, module identity and policy as builds.
+    pub fn check(self: Entry, allocator: std.mem.Allocator, session: *frontend.Session, report: *std.ArrayList(u8)) (Error || frontend.Error || error{ReadFailed})!frontend.Checked {
+        self.configure(session);
+        const checked = try session.checkFile(allocator, self.path, report);
+        try self.validate(allocator, session, report);
+        return checked;
+    }
+
     /// The same source limits apply to discovery and full checking.
     pub fn limits(self: Entry) language.project.Options {
         var options: language.project.Options = .{};

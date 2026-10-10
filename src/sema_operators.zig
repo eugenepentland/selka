@@ -172,10 +172,8 @@ fn checkDictionaryLiteral(comptime Checker: type, self: *Checker, node: ast.Node
     }
     out.data = .{ .array = items };
 }
-/// A `b"..."` literal is always the managed bytes type; plain text keeps its array form.
+/// Parsed byte literals keep managed bytes identity even when their span includes parentheses.
 fn byteLiteralType(comptime Checker: type, self: *Checker, node: ast.Node) Error!typed.Type {
-    const spelling = self.src.text(node.span);
-    if (spelling.len == 0 or spelling[0] != 'b') return self.ty(node.span);
     return collections.preludeType(&self.catalog, "bytes", node.span);
 }
 fn checkTextLiteral(comptime Checker: type, self: *Checker, node: ast.Node, bytes: []const u8, out: *typed.Node) Error!void {

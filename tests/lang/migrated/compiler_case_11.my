@@ -1,5 +1,3 @@
-
-
 func f(n: i64) -> i64:
     mut x = n + 2
     _ = g(x)

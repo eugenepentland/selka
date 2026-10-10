@@ -1,5 +1,3 @@
-
-
 # The no-argument split breaks on runs of ASCII whitespace and drops empty parts.
 # spec: PY-SPLIT-1
 public func test_whitespace_split_drops_empty_parts() -> bool:

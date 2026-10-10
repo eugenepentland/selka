@@ -1,4 +1,3 @@
-
 record Wide:
     a: int
     b: int

@@ -8,6 +8,39 @@ const semantic_key = @import("semantic_key.zig");
 const cache_key = @import("cache_key.zig");
 const semantic_store = @import("semantic_store.zig");
 const Cache = language.semantic_cache.Cache;
+const edited_path = "edited.my";
+
+fn specializationRecords(allocator: std.mem.Allocator) ![]u8 {
+    var text: std.ArrayList(u8) = .empty;
+    errdefer text.deinit(allocator);
+    var line: [256]u8 = undefined;
+    for (0..8) |index| try text.appendSlice(allocator, try std.fmt.bufPrint(&line, "record R{d}:\n    value: int\n", .{index}));
+    try text.appendSlice(allocator, "record Box[T]:\n    value: T\nfunc identity[T](value: T) -> T:\n    return value\nfunc boxed[T](value: T) -> Box[T]:\n    return Box[T](value=value)\nfunc main() -> int:\n    mut total = 0\n");
+    for (0..8) |index| try text.appendSlice(allocator, try std.fmt.bufPrint(&line, "    const b{d} = boxed(identity(R{d}(value={d})))\n    total += b{d}.value.value\n", .{ index, index, index, index }));
+    try text.appendSlice(allocator, "    return total\n");
+    return text.toOwnedSlice(allocator);
+}
+
+// spec: SPECIALIZATION-NAME-INDEX-1
+test "F10 specialization record name work is linear in each fresh catalog" {
+    const bytes = try specializationRecords(t.allocator);
+    defer t.allocator.free(bytes);
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    for (0..2) |iteration| {
+        const before = cache.reuse.specializations.statistics;
+        var compilation = try language.Compilation.init(t.allocator, "records.my", bytes);
+        defer compilation.deinit();
+        try compilation.checkWithCache(&cache);
+        const after = cache.reuse.specializations.statistics;
+        const visits = after.record_name_visits - before.record_name_visits;
+        std.debug.print("F10 request {d}: {d} record name visits, {d} records, {d} checked, {d} reused\n", .{ iteration, visits, compilation.program.?.records.len, after.checked - before.checked, after.reused - before.reused });
+        try t.expect(visits <= compilation.program.?.records.len);
+        try t.expectEqual(@as(usize, 16), after.checked - before.checked + after.reused - before.reused);
+        try t.expectEqual(@as(usize, iteration * 16), after.reused - before.reused);
+        try t.expectEqual(@as(i64, 28), (try native.run(&compilation)).value);
+    }
+}
 const prefix =
     \\func helper(n: i64) -> i64:
     \\    return n + 1
@@ -53,9 +86,9 @@ const Steady = struct {
     }
 };
 fn compare(allocator: std.mem.Allocator, cache: *Cache, bytes: []const u8, expected: ?i64) !void {
-    var cached = try language.Compilation.init(allocator, "edited.my", bytes);
+    var cached = try language.Compilation.init(allocator, edited_path, bytes);
     defer cached.deinit();
-    var fresh = try language.Compilation.init(allocator, "edited.my", bytes);
+    var fresh = try language.Compilation.init(allocator, edited_path, bytes);
     defer fresh.deinit();
     if (expected) |number| {
         try cached.checkWithCache(cache);
@@ -288,7 +321,10 @@ test "semantic cache keeps inferred callback schemas fresh across changed bodies
         \\
         \\
     ++ caller, 42);
-    try t.expectEqual(@as(usize, 0), cache.statistics.reused);
+    // The caller reconstructs its callback type from the current declaration;
+    // only the edited helper needs a new checked body.
+    try t.expectEqual(@as(usize, 1), cache.statistics.reused);
+    try t.expectEqual(@as(usize, 3), cache.statistics.checked);
 }
 
 // spec-case: SEMANTIC-CACHE-2
@@ -627,7 +663,7 @@ test "declared callback slots and matching function values reuse when the contra
 }
 
 // spec-case: SEMANTIC-CACHE-7
-test "a function value with no matching declared callback misses with its exact reason" {
+test "a function value with no matching declared callback replays its fresh slot recipe" {
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
     defer cache.deinit();
     const program =
@@ -644,13 +680,12 @@ test "a function value with no matching declared callback misses with its exact 
         \\    return apply(one, 41)
     ;
     try compare(t.allocator, &cache, program, 42);
-    // `one`'s own contract differs from the declared callback parameter, so its
-    // callable contract record is interned while checking and cannot be remapped.
-    try t.expect(cache.statistics.rejections.total[@backingInt(language.semantic_cache.MissReason.function_value)] > 0);
+    // The implementation differs from its slot. Replay reconstructs the
+    // implementation from the fresh target and the expected slot from `apply`.
+    try t.expectEqual(@as(usize, 0), cache.statistics.rejections.total[@backingInt(language.semantic_cache.MissReason.function_value)]);
     const before = cache.statistics.reused;
     try compare(t.allocator, &cache, program, 42);
-    // `apply` and `one` reuse; `main` is rechecked with its reported reason.
-    try t.expectEqual(before + 2, cache.statistics.reused);
+    try t.expectEqual(before + 3, cache.statistics.reused);
 }
 
 // C3 specialization half: concrete specialization bodies are currently a
@@ -659,7 +694,8 @@ test "a function value with no matching declared callback misses with its exact 
 // reused. The durable concrete entry kind, typed FunctionRef instantiation and
 // fresh instance remap are the reported remaining work.
 // spec-case: SEMANTIC-CACHE-7
-test "generic specialization bodies reuse while their callers miss with their exact reason" {
+// spec-case: SEMANTIC-CACHE-12
+test "generic specialization bodies and ordinary callers reuse validated instances" {
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
     defer cache.deinit();
     const program =
@@ -671,16 +707,14 @@ test "generic specialization bodies reuse while their callers miss with their ex
         \\    return identity[i64](42)
     ;
     try compare(t.allocator, &cache, program, 42);
-    try t.expect(cache.statistics.rejections.total[@backingInt(language.semantic_cache.MissReason.generic_specialization)] > 0);
+    try t.expectEqual(@as(usize, 0), cache.statistics.rejections.total[@backingInt(language.semantic_cache.MissReason.generic_specialization)]);
     const before = cache.statistics.reused;
     const before_specialization = cache.reuse.specializations.statistics.reused;
     try compare(t.allocator, &cache, program, 42);
-    // C3: the leaf specialization body itself is reused. Its caller is still a
-    // conservative miss because ordinary bodies that reference a specialization
-    // are not retained without a validated instance-key remap.
-    try t.expectEqual(before + 1, cache.statistics.reused);
+    // The ordinary call edge registers a validated fresh instance before copying.
+    try t.expectEqual(before + 2, cache.statistics.reused);
     try t.expectEqual(before_specialization + 1, cache.reuse.specializations.statistics.reused);
-    try t.expect(cache.statistics.rejections.total[@backingInt(language.semantic_cache.MissReason.generic_specialization)] > 0);
+    try t.expectEqual(@as(usize, 0), cache.statistics.rejections.total[@backingInt(language.semantic_cache.MissReason.generic_specialization)]);
 }
 
 // spec-case: SEMANTIC-CACHE-7
@@ -826,7 +860,8 @@ fn transientDurableRun(root: []const u8, bytes: []const u8, expected: i64) !Dura
 }
 
 // spec-case: SEMANTIC-CACHE-9
-test "durable bodies restore falls back for defaults outside the declaration region" {
+// spec-case: SEMANTIC-CACHE-3
+test "copyEntry restores exact default source proofs outside declaration region" {
     var temporary = t.tmpDir(.{});
     defer temporary.cleanup();
     const root = try temporary.dir.realPathFileAlloc(t.io, ".", t.allocator);
@@ -843,9 +878,14 @@ test "durable bodies restore falls back for defaults outside the declaration reg
     ;
     _ = try transientDurableRun(root, bytes, 42);
     const warm = try transientDurableRun(root, bytes, 42);
-    try t.expectEqual(@as(usize, 1), warm.checked);
-    try t.expectEqual(@as(usize, 1), warm.reused);
-    try t.expectEqual(@as(usize, 1), warm.misses[@backingInt(language.semantic_cache.MissReason.relocation_failed)]);
+    try t.expectEqual(@as(usize, 0), warm.checked);
+    try t.expectEqual(@as(usize, 2), warm.reused);
+    try t.expectEqual(@as(usize, 0), warm.misses[@backingInt(language.semantic_cache.MissReason.relocation_failed)]);
+    const edited = try t.allocator.dupe(u8, bytes);
+    defer t.allocator.free(edited);
+    edited[std.mem.indexOf(u8, edited, "42").? + 1] = '3';
+    const changed = try transientDurableRun(root, edited, 43);
+    try t.expect(changed.checked > 0);
 }
 
 // spec-case: SEMANTIC-CACHE-9
@@ -1409,7 +1449,8 @@ test "createSpecialization rejects an out-of-range function index" {
 const spec_stats = language.semantic_cache.specializations.Statistics;
 const spec_reason = language.semantic_cache.specializations.MissReason;
 
-test "nested concrete specializations conservatively miss and self-recursion remaps" {
+// spec-case: SEMANTIC-CACHE-12
+test "nested concrete specializations preregister validated dependencies and self-recursion remaps" {
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
     defer cache.deinit();
     const nested =
@@ -1428,11 +1469,11 @@ test "nested concrete specializations conservatively miss and self-recursion rem
     const nested_before: spec_stats = cache.reuse.specializations.statistics;
     try compare(t.allocator, &cache, nested, 4);
     const nested_after: spec_stats = cache.reuse.specializations.statistics;
-    // `inner[i64]` is reachable once `outer[i64]` is checked; at `outer`'s
-    // lookup the nested instance key does not exist yet, so it conservatively
-    // misses while the leaf instance replays.
-    try t.expectEqual(nested_before.reused + 1, nested_after.reused);
-    try t.expect(nested_after.misses[@backingInt(spec_reason.missing_specialization)] > nested_before.misses[@backingInt(spec_reason.missing_specialization)]);
+    // The cached parent's validated callee recipe registers the nested instance
+    // before remapping either tree; both bodies replay without fresh checking.
+    try t.expectEqual(nested_before.reused + 2, nested_after.reused);
+    try t.expectEqual(nested_before.checked, nested_after.checked);
+    try t.expectEqual(nested_before.misses[@backingInt(spec_reason.missing_specialization)], nested_after.misses[@backingInt(spec_reason.missing_specialization)]);
 
     const recursive =
         \\func recur[T](x: T, n: i64) -> i64:
@@ -1453,7 +1494,7 @@ test "nested concrete specializations conservatively miss and self-recursion rem
     try t.expectEqual(recursive_before.reused + 1, recursive_after.reused);
 }
 
-test "const-length specialization keys keep identity and nominal generics miss conservatively" {
+test "const-length specialization keys and resolved nominal generics reuse" {
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
     defer cache.deinit();
     const size_fn =
@@ -1499,10 +1540,21 @@ test "const-length specialization keys keep identity and nominal generics miss c
     const nominal_before: spec_stats = cache.reuse.specializations.statistics;
     try compare(t.allocator, &cache, nominal, 3);
     const nominal_after: spec_stats = cache.reuse.specializations.statistics;
-    // The body instantiates a nominal application while checking, so its
-    // record reference has no pre-collected stable identity and stays fresh.
-    try t.expectEqual(nominal_before.reused, nominal_after.reused);
-    try t.expect(nominal_after.misses[@backingInt(spec_reason.interned_record)] > nominal_before.misses[@backingInt(spec_reason.interned_record)]);
+    // Resolving the fresh specialization signature creates Box[i64] before
+    // lookup. Its validated provider identity remaps the retained body.
+    try t.expectEqual(nominal_before.reused + 1, nominal_after.reused);
+    try t.expectEqual(nominal_before.checked, nominal_after.checked);
+    try t.expectEqual(nominal_before.misses[@backingInt(spec_reason.interned_record)], nominal_after.misses[@backingInt(spec_reason.interned_record)]);
+    try compare(t.allocator, &cache, "record Unrelated:\n    value: bool\n\n" ++ nominal, 3);
+    const reordered = cache.reuse.specializations.statistics;
+    try t.expectEqual(nominal_after.reused + 1, reordered.reused);
+    try t.expectEqual(nominal_after.checked, reordered.checked);
+    const changed = try std.mem.replaceOwned(u8, t.allocator, nominal, "value: T", "value: T\n    extra: int = 0");
+    defer t.allocator.free(changed);
+    try compare(t.allocator, &cache, changed, 3);
+    const invalidated = cache.reuse.specializations.statistics;
+    try t.expectEqual(reordered.reused, invalidated.reused);
+    try t.expectEqual(reordered.checked + 1, invalidated.checked);
 }
 
 const owned_entry = @import("semantic_entry.zig");
@@ -1772,6 +1824,18 @@ test "semantic body relocation resolves only the references the body carries" {
     try t.expectError(error.InvalidRelocation, mapper.copy(arena.allocator(), typed.FunctionId, @fromBackingInt(3)));
     try t.expectEqual(@as(typed.Type, @fromBackingInt(typed.Type.record_base + 3)), try mapper.copy(arena.allocator(), typed.Type, @fromBackingInt(typed.Type.record_base + 1)));
     try t.expectError(error.InvalidRelocation, mapper.copy(arena.allocator(), typed.Type, @fromBackingInt(typed.Type.record_base + 2)));
+
+    // Reserved scalar storage needs no allocator calls. This rejects a
+    // regression that clones an outer slice before copying into its destination.
+    var no_allocations = t.FailingAllocator.init(t.allocator, .{ .fail_index = 0 });
+    var destinations: [2]typed.FunctionId = undefined;
+    var failure: relocation.Failure = .none;
+    try mapper.copySliceInto(no_allocations.allocator(), typed.FunctionId, &.{ @fromBackingInt(2), @fromBackingInt(2) }, &destinations, &failure);
+    try t.expectEqual(@as(typed.FunctionId, @fromBackingInt(7)), destinations[0]);
+    try t.expectEqual(@as(typed.FunctionId, @fromBackingInt(7)), destinations[1]);
+    try t.expectEqual(@as(usize, 0), no_allocations.allocations);
+    try t.expectError(error.InvalidRelocation, mapper.copySliceInto(no_allocations.allocator(), typed.FunctionId, &.{ @fromBackingInt(2), @fromBackingInt(3) }, &destinations, &failure));
+    try t.expectEqual(@as(usize, 3), failure.function);
 }
 
 /// An ordinary body, a template and a concrete call, so one check exercises
@@ -2093,6 +2157,41 @@ test "callback provider identities retain named labels and mutation positions" {
     const renamed = try semantic_key.providerIdentity(t.allocator, &.{callback_type}, &changed);
     defer t.allocator.free(renamed);
     try t.expect(!std.mem.eql(u8, original, renamed));
+    const argument = try semantic_key.argumentDescriptor(t.allocator, callback_type, null, &records);
+    defer t.allocator.free(argument);
+    const renamed_argument = try semantic_key.argumentDescriptor(t.allocator, callback_type, null, &changed);
+    defer t.allocator.free(renamed_argument);
+    try t.expect(!std.mem.eql(u8, argument, renamed_argument));
+    changed[0].contract.callback.?.labels = &.{"amount"};
+    changed[0].contract.callback.?.mutates = &.{0};
+    const mutable_argument = try semantic_key.argumentDescriptor(t.allocator, callback_type, null, &changed);
+    defer t.allocator.free(mutable_argument);
+    try t.expect(!std.mem.eql(u8, argument, mutable_argument));
+}
+
+// spec-case: SEMANTIC-CACHE-12
+test "resolved argument descriptors distinguish schema changes and survive catalog reordering" {
+    const typed = @import("typed.zig");
+    const first: typed.Type = @fromBackingInt(typed.Type.record_base);
+    const second: typed.Type = @fromBackingInt(typed.Type.record_base + 1);
+    const original = [_]typed.Record{.{ .id = first, .name = "pkg::Value", .declaration = .{ .start = 0, .end = 0 }, .fields = &.{.{ .name = "item", .declaration = .{ .start = 0, .end = 0 }, .ty = .i64 }} }};
+    const reordered = [_]typed.Record{
+        .{ .id = first, .name = "other::Value", .declaration = .{ .start = 0, .end = 0 }, .fields = &.{} },
+        .{ .id = second, .name = "pkg::Value", .declaration = .{ .start = 50, .end = 60 }, .fields = original[0].fields },
+    };
+    const descriptor = try semantic_key.argumentDescriptor(t.allocator, first, null, &original);
+    defer t.allocator.free(descriptor);
+    const moved = try semantic_key.argumentDescriptor(t.allocator, second, null, &reordered);
+    defer t.allocator.free(moved);
+    try t.expectEqualStrings(descriptor, moved);
+    var changed = original;
+    changed[0].fields = &.{.{ .name = "item", .declaration = .{ .start = 0, .end = 0 }, .ty = .bool }};
+    const incompatible = try semantic_key.argumentDescriptor(t.allocator, first, null, &changed);
+    defer t.allocator.free(incompatible);
+    try t.expect(!std.mem.eql(u8, descriptor, incompatible));
+    const unrelated = try semantic_key.argumentDescriptor(t.allocator, first, null, &reordered);
+    defer t.allocator.free(unrelated);
+    try t.expect(!std.mem.eql(u8, descriptor, unrelated));
 }
 
 test "summary callable record identities distinguish return origins and reject shape changes" {
@@ -2122,4 +2221,572 @@ test "summary callable record identities distinguish return origins and reject s
     records[1].contract.callback.?.effects = 1;
     var changed = try cache.begin(a, unit.src, unit.syntax.?, &records);
     try t.expect((try changed.shapeOf(identity)) == null);
+}
+
+const DefaultFiles = struct {
+    main: []const u8,
+    model: []const u8,
+    fn read(context: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) language.project.ReadError![]u8 {
+        const self: *DefaultFiles = @ptrCast(@alignCast(context.?));
+        const bytes = if (std.mem.eql(u8, path, "main.my")) self.main else if (std.mem.eql(u8, path, "model.my")) self.model else return error.NotFound;
+        if (bytes.len > limit) return error.TooLarge;
+        return allocator.dupe(u8, bytes);
+    }
+};
+
+fn compareDefaults(cache: *Cache, files: *DefaultFiles, expected: i64) !void {
+    var cached_project = language.project.Project.init(t.allocator);
+    defer cached_project.deinit();
+    try cached_project.load(.{ .context = files, .read = DefaultFiles.read }, "main", .{});
+    var cached_index = try language.interfaces.build(&cached_project);
+    var cached = try language.project_compile.Compilation.init(&cached_index);
+    try cached.checkWithCache(cache);
+    var fresh_project = language.project.Project.init(t.allocator);
+    defer fresh_project.deinit();
+    try fresh_project.load(.{ .context = files, .read = DefaultFiles.read }, "main", .{});
+    var fresh_index = try language.interfaces.build(&fresh_project);
+    var fresh = try language.project_compile.Compilation.init(&fresh_index);
+    try fresh.check();
+    try t.expectEqual(expected, (try native.run(&cached)).value);
+    try t.expectEqual(expected, (try native.run(&fresh)).value);
+    try t.expectEqual(fresh.diagnostics.items.items.len, cached.diagnostics.items.items.len);
+    for (fresh.diagnostics.items.items, cached.diagnostics.items.items) |left, right| {
+        const a = try language.diagnostic_output.render(t.allocator, left, fresh.src, .json);
+        defer t.allocator.free(a);
+        const b = try language.diagnostic_output.render(t.allocator, right, cached.src, .json);
+        defer t.allocator.free(b);
+        try t.expectEqualStrings(a, b);
+    }
+}
+
+// spec-case: SEMANTIC-CACHE-9
+// spec-case: SEMANTIC-CACHE-15
+// spec-case: SEMANTIC-CACHE-3
+test "imported defaults retain exact source proof across importer edits and invalidate changed defaults" {
+    var files: DefaultFiles = .{
+        .main = "import model\nfunc helper() -> i64:\n    return 0\n\nfunc main() -> i64:\n    return model.Item().n + helper()\n",
+        .model = "public record Item:\n    n: i64 = 42\n",
+    };
+    var cache = Cache.init(t.allocator, 4 << 20);
+    defer cache.deinit();
+    try compareDefaults(&cache, &files, 42);
+    const checked = cache.statistics.checked;
+    try compareDefaults(&cache, &files, 42);
+    try t.expectEqual(checked, cache.statistics.checked);
+    files.main = "import model\nfunc helper() -> i64:\n    return 1\n\nfunc main() -> i64:\n    return model.Item().n + helper()\n";
+    try compareDefaults(&cache, &files, 43);
+    try t.expectEqual(checked + 1, cache.statistics.checked);
+    files.model = "# moved default\npublic record Item:\n    n: i64 = 43\n";
+    try compareDefaults(&cache, &files, 44);
+    try t.expect(cache.statistics.checked > checked + 1);
+}
+
+// spec-case: SEMANTIC-CACHE-9
+// spec-case: SEMANTIC-CACHE-15
+// spec-case: SEMANTIC-CACHE-3
+test "copyEntry parser trailing span proof reuses matched body after another body changes" {
+    var files: DefaultFiles = .{
+        .main = "import model\nfunc helper() -> i64:\n    return 42\n\nfunc main() -> i64:\n    return model.keep(Some(helper()))\n",
+        .model = "public func keep(n: i64?) -> i64:\n    match n:\n        case Some(value):\n            return value\n        case None:\n            return 0\n\n\npublic func unused() -> i64:\n    return 0\n",
+    };
+    var cache = Cache.init(t.allocator, 4 << 20);
+    defer cache.deinit();
+    try compareDefaults(&cache, &files, 42);
+    var saw_trailing_span = false;
+    for (cache.entries) |entry| {
+        var refs = @import("semantic_copy.zig").RefSet.init(t.allocator);
+        defer refs.deinit();
+        refs.sources.enabled = true;
+        try refs.collect([]const checked_typed.Node, entry.nodes);
+        try refs.collect([]const checked_typed.Statement, entry.statements);
+        var spans = refs.sources.items.keyIterator();
+        while (spans.next()) |span| {
+            if (span.end == entry.meta.identity.region.end + 3) saw_trailing_span = true;
+        }
+    }
+    try t.expect(saw_trailing_span);
+    const checked = cache.statistics.checked;
+    files.model = "public func keep(n: i64?) -> i64:\n    match n:\n        case Some(value):\n            return value\n        case None:\n            return 0\n\n\npublic func unused() -> i64:\n    return 1\n";
+    try compareDefaults(&cache, &files, 42);
+    try t.expectEqual(checked + 1, cache.statistics.checked);
+    try t.expectEqual(@as(usize, 0), cache.statistics.rejections.total[@backingInt(language.semantic_cache.MissReason.relocation_failed)]);
+}
+
+// spec-case: SEMANTIC-CACHE-9
+// spec-case: SEMANTIC-CACHE-15
+// spec-case: SEMANTIC-CACHE-3
+test "source proof rejects renamed ambiguous edited and malformed module provenance" {
+    const source = @import("source.zig");
+    const provenance = @import("semantic_sources.zig");
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const model = try source.Source.init(a, "model.my", "n=42");
+    const main = try source.Source.init(a, "main.my", "get()");
+    const original = try source.Source.initMapped(a, &.{ model, main });
+    var before = try provenance.Catalog.init(t.allocator, original);
+    defer before.deinit();
+    var spans: std.AutoHashMapUnmanaged(source.Span, void) = .empty;
+    defer spans.deinit(t.allocator);
+    try spans.put(t.allocator, .{ .start = 2, .end = 4 }, {});
+    const refs = try before.capture(t.allocator, .{ .start = 5, .end = 10 }, &spans);
+    defer t.allocator.free(refs);
+    try t.expectEqual(@as(usize, 1), refs.len);
+    const moved = try source.Source.initMapped(a, &.{ main, model });
+    var after = try provenance.Catalog.init(t.allocator, moved);
+    defer after.deinit();
+    const local: @import("semantic_copy.zig").Segment = .{ .before = .{ .start = 5, .end = 10 }, .after = 0 };
+    const mapped = try after.segments(t.allocator, refs, local);
+    defer t.allocator.free(mapped);
+    try t.expectEqual(@as(usize, 2), mapped.len);
+    try t.expectEqual(@as(usize, 6), mapped[0].after);
+    const changed = try source.Source.init(a, "model.my", "n=43");
+    const renamed = try source.Source.init(a, "other.my", "n=42");
+    for ([_]source.Source{
+        try source.Source.initMapped(a, &.{ main, changed }),
+        try source.Source.initMapped(a, &.{ main, renamed }),
+        try source.Source.initMapped(a, &.{ model, main, model }),
+    }) |fresh| {
+        var catalog = try provenance.Catalog.init(t.allocator, fresh);
+        defer catalog.deinit();
+        const rejected_segments = try catalog.segments(t.allocator, refs, local);
+        defer t.allocator.free(rejected_segments);
+        try t.expectEqual(@as(usize, 1), rejected_segments.len);
+    }
+    var malformed = refs[0];
+    malformed.before.end = original.bytes.len + 1;
+    try t.expect(!provenance.valid(&.{malformed}, original.bytes.len));
+    try t.expect(!provenance.valid(&.{ refs[0], refs[0] }, original.bytes.len));
+}
+
+const prereg_nested =
+    \\func inner[T](x: T) -> T:
+    \\    return x
+    \\func outer[T](x: T) -> T:
+    \\    return inner[T](x)
+    \\func main() -> i64:
+    \\    return outer[i64](42)
+;
+
+fn retainedSpecialization(cache: *Cache, name: []const u8) !*owned_entry.SpecializationEntry {
+    for (cache.reuse.specializations.entries.items, 0..) |*entry, index| {
+        if (cache.reuse.specializations.index.get(entry.payload.identity.key) != index) continue;
+        if (std.mem.eql(u8, entry.payload.body.function.name, name)) return entry;
+    }
+    return error.TestUnexpectedResult;
+}
+
+// spec-case: SEMANTIC-CACHE-12
+test "specialization preregistration missing and damaged callee recipes stay fresh" {
+    var cache = Cache.init(t.allocator, 4 << 20);
+    defer cache.deinit();
+    try compare(t.allocator, &cache, prereg_nested, 42);
+    const callee = try retainedSpecialization(&cache, "inner[i64]");
+    _ = cache.reuse.specializations.index.remove(callee.payload.identity.key);
+    const missing = cache.reuse.specializations.statistics;
+    try compare(t.allocator, &cache, prereg_nested, 42);
+    try t.expectEqual(missing.checked + 2, cache.reuse.specializations.statistics.checked);
+    const damaged = try retainedSpecialization(&cache, "inner[i64]");
+    damaged.payload.identity.template = "unrelated-template";
+    const before = cache.reuse.specializations.statistics;
+    try compare(t.allocator, &cache, prereg_nested, 42);
+    try t.expect(cache.reuse.specializations.statistics.checked > before.checked);
+}
+
+// spec-case: SEMANTIC-CACHE-12
+test "specialization preregistration validates provider shape and edited dependency bodies" {
+    var cache = Cache.init(t.allocator, 4 << 20);
+    defer cache.deinit();
+    const templates =
+        \\func inner[T](x: T) -> i64:
+        \\    _ = x
+        \\    return 41
+        \\func outer[T](x: T) -> i64:
+        \\    return inner[T](x)
+        \\func main() -> i64:
+        \\    return outer[Box](Box(value=VALUE))
+    ;
+    const first = try std.mem.replaceOwned(u8, t.allocator, "record Box:\n    value: i64\n" ++ templates, "VALUE", "1");
+    defer t.allocator.free(first);
+    try compare(t.allocator, &cache, first, 41);
+    const before = cache.reuse.specializations.statistics;
+    const provider = try std.mem.replaceOwned(u8, t.allocator, "record Box:\n    value: bool\n" ++ templates, "VALUE", "True");
+    defer t.allocator.free(provider);
+    try compare(t.allocator, &cache, provider, 41);
+    try t.expectEqual(before.checked + 2, cache.reuse.specializations.statistics.checked);
+    const changed = try std.mem.replaceOwned(u8, t.allocator, provider, "return 41", "return 42");
+    defer t.allocator.free(changed);
+    try compare(t.allocator, &cache, changed, 42);
+}
+
+// spec-case: SEMANTIC-CACHE-12
+test "specialization preregistration mutual dependency cycles use the bounded instance queue" {
+    var cache = Cache.init(t.allocator, 4 << 20);
+    defer cache.deinit();
+    const cycle =
+        \\func first[T](x: T, n: i64) -> i64:
+        \\    if n == 0:
+        \\        return 42
+        \\    return second[T](x, n - 1)
+        \\func second[T](x: T, n: i64) -> i64:
+        \\    if n == 0:
+        \\        return 42
+        \\    return first[T](x, n - 1)
+        \\func main() -> i64:
+        \\    return first[i64](1, 4)
+    ;
+    try compare(t.allocator, &cache, cycle, 42);
+    const before = cache.reuse.specializations.statistics;
+    try compare(t.allocator, &cache, cycle, 42);
+    try t.expectEqual(before.checked, cache.reuse.specializations.statistics.checked);
+    try t.expectEqual(before.reused + 2, cache.reuse.specializations.statistics.reused);
+}
+
+fn preregChain(a: std.mem.Allocator, count: usize) ![]u8 {
+    var text: std.Io.Writer.Allocating = .init(a);
+    defer text.deinit();
+    for (0..count) |i| {
+        try text.writer.print("func chain{d}[T](x: T) -> T:\n    return ", .{i});
+        if (i + 1 == count) try text.writer.writeAll("x\n") else try text.writer.print("chain{d}[T](x)\n", .{i + 1});
+    }
+    try text.writer.writeAll("func main() -> i64:\n    return chain0[i64](42)\n");
+    return a.dupe(u8, text.written());
+}
+
+// spec-case: SEMANTIC-CACHE-12
+test "specialization preregistration durable dependency loads keep parent payloads valid across table growth" {
+    var directory = t.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    const bytes = try preregChain(t.allocator, 20);
+    defer t.allocator.free(bytes);
+    var store = semantic_store.Store.init(t.allocator, t.io, root, cache_key.Contract.default, language.semantic_cache.mutation_contract_version);
+    defer store.deinit();
+    var seed = Cache.init(t.allocator, 4 << 20);
+    defer seed.deinit();
+    seed.context.persistent = &store;
+    try compare(t.allocator, &seed, bytes, 42);
+    var cache = Cache.init(t.allocator, 4 << 20);
+    defer cache.deinit();
+    cache.context.persistent = &store;
+    try compare(t.allocator, &cache, bytes, 42);
+    try t.expectEqual(@as(usize, 0), cache.reuse.specializations.statistics.checked);
+    try t.expectEqual(@as(usize, 20), cache.reuse.specializations.statistics.reused);
+}
+
+// spec-case: SEMANTIC-CACHE-7
+// spec-case: SEMANTIC-CACHE-12
+test "specialization preregistration ordinary multi-type callers retain eager discovery and native results" {
+    var cache = Cache.init(t.allocator, 4 << 20);
+    defer cache.deinit();
+    const program =
+        \\record Box:
+        \\    value: i64
+        \\func inner[T](x: T) -> T:
+        \\    return x
+        \\func outer[T](x: T) -> T:
+        \\    return inner[T](x)
+        \\func main() -> i64:
+        \\    mut box = outer[Box](Box(value=20))
+        \\    mut n = outer[i64](21)
+        \\    mut b = outer[bool](True)
+        \\    return box.value + n + (if b then 1 else 0)
+    ;
+    try compare(t.allocator, &cache, program, 42);
+    const before = cache.statistics.checked;
+    try compare(t.allocator, &cache, program, 42);
+    try t.expectEqual(before, cache.statistics.checked);
+    try compare(t.allocator, &cache, "\n" ++ program, 42);
+    try t.expectEqual(before, cache.statistics.checked);
+    try sameInstanceOrder(&cache, "\n" ++ program);
+}
+
+fn sameInstanceOrder(cache: *Cache, bytes: []const u8) !void {
+    var cached = try language.Compilation.init(t.allocator, edited_path, bytes);
+    defer cached.deinit();
+    var fresh = try language.Compilation.init(t.allocator, edited_path, bytes);
+    defer fresh.deinit();
+    try cached.checkWithCache(cache);
+    try fresh.check();
+    try t.expectEqual(fresh.program.?.functions.len, cached.program.?.functions.len);
+    for (fresh.program.?.functions, cached.program.?.functions) |left, right| {
+        try t.expectEqualStrings(left.name, right.name);
+    }
+}
+
+// spec-case: SEMANTIC-CACHE-12
+test "specialization open releases decoded durable entry on reserve OutOfMemory" {
+    const specializations = @import("generic_specializations.zig");
+    var directory = t.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    const bytes = try preregChain(t.allocator, 1);
+    defer t.allocator.free(bytes);
+    var store = semantic_store.Store.init(t.allocator, t.io, root, cache_key.Contract.default, language.semantic_cache.mutation_contract_version);
+    defer store.deinit();
+    var seed = Cache.init(t.allocator, 4 << 20);
+    defer seed.deinit();
+    seed.context.persistent = &store;
+    try compare(t.allocator, &seed, bytes, 42);
+    const identity = seed.reuse.specializations.entries.items[0].payload.identity;
+    var failing = t.FailingAllocator.init(t.allocator, .{ .fail_index = 0 });
+    var memory: specializations.Table = .{ .allocator = failing.allocator() };
+    defer memory.deinit();
+    const prepared: semantic_key.Prepared = .{
+        .bodies = &.{},
+        .regions = &.{},
+        .keys = &.{},
+        .contexts = &.{},
+        .ordinary_ast = &.{},
+        .nominal_syntax = false,
+    };
+    var session = try specializations.Session.init(t.allocator, &prepared, .{
+        .memory = &memory,
+        .persistent = &store,
+        .enabled = true,
+        .build = "",
+    });
+    defer session.deinit();
+    try t.expectError(error.OutOfMemory, session.open(identity.fingerprint, identity.context));
+    try t.expectEqual(@as(usize, 0), memory.entries.items.len);
+    failing.fail_index = std.math.maxInt(usize);
+    try t.expect((try session.open(identity.fingerprint, identity.context)) != null);
+    try t.expectEqual(@as(usize, 1), memory.entries.items.len);
+}
+
+// spec-case: SEMANTIC-CACHE-7
+test "portable type recipes reuse inferred tuples and reject malformed children" {
+    const program =
+        \\func main() -> int:
+        \\    const pair = (40, 2)
+        \\    const left, right = pair
+        \\    return left + right
+    ;
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    try compare(t.allocator, &cache, program, 42);
+    const before = cache.statistics.reused;
+    try compare(t.allocator, &cache, program, 42);
+    try t.expectEqual(before + 1, cache.statistics.reused);
+    const entry = &cache.entries[0];
+    const references = @constCast(entry.meta.record_refs);
+    var changed = false;
+    for (references) |*reference| {
+        if (reference.recipes.len != 0) {
+            const recipe = reference.recipes[0];
+            if (recipe != .tuple) continue;
+            const elements = @constCast(recipe.tuple);
+            elements[0] = @fromBackingInt(checked_typed.Type.record_base + reference.index);
+            changed = true;
+            break;
+        }
+    }
+    try t.expect(changed);
+    const rejected_before = cache.statistics.rejections.total[@backingInt(language.semantic_cache.MissReason.relocation_failed)];
+    try compare(t.allocator, &cache, program, 42);
+    try t.expect(cache.statistics.rejections.total[@backingInt(language.semantic_cache.MissReason.relocation_failed)] > rejected_before);
+}
+
+// spec-case: SEMANTIC-CACHE-7
+test "portable callable recipes validate fresh target signatures and expected effect slots" {
+    const program =
+        \\func apply(f: func(i64) -> i64 effects(output), x: i64) -> i64 effects(output):
+        \\    return f(x)
+        \\
+        \\func one(x: i64) -> i64 effects():
+        \\    return x + 1
+        \\
+        \\func main(out: Stream) -> i64:
+        \\    _ = out
+        \\    return apply(one, 41)
+    ;
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    try compare(t.allocator, &cache, program, 42);
+    try compare(t.allocator, &cache, program, 42);
+    const bad_signature = try std.mem.replaceOwned(u8, t.allocator, program, "one(x: i64)", "one(x: u64)");
+    defer t.allocator.free(bad_signature);
+    try compare(t.allocator, &cache, bad_signature, null);
+    const bad_effect = try std.mem.replaceOwned(u8, t.allocator, program, "i64 effects():", "i64 effects(random):");
+    defer t.allocator.free(bad_effect);
+    try compare(t.allocator, &cache, bad_effect, null);
+    const narrower_slot = try std.mem.replaceOwned(u8, t.allocator, program, "effects(output)", "effects()");
+    defer t.allocator.free(narrower_slot);
+    try compare(t.allocator, &cache, narrower_slot, 42);
+}
+
+// spec-case: SEMANTIC-CACHE-7
+test "portable tuple recipes invalidate when a nominal child shape changes" {
+    const program =
+        \\record R:
+        \\    value: i64
+        \\
+        \\func sum(r: R) -> i64:
+        \\    const pair = (r, 2)
+        \\    const left, right = pair
+        \\    return left.value + right
+        \\
+        \\func main() -> i64:
+        \\    return sum(R(value=40))
+    ;
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    try compare(t.allocator, &cache, program, 42);
+    try compare(t.allocator, &cache, program, 42);
+    const changed = try std.mem.replaceOwned(u8, t.allocator, program, "value: i64", "value: u64");
+    defer t.allocator.free(changed);
+    try compare(t.allocator, &cache, changed, null);
+}
+
+// spec-case: SEMANTIC-CACHE-7
+test "portable callable recipes reject malformed sites without speculative diagnostics" {
+    const program =
+        \\func apply(f: func(i64) -> i64 effects(output), x: i64) -> i64 effects(output):
+        \\    return f(x)
+        \\
+        \\func one(x: i64) -> i64 effects():
+        \\    return x + 1
+        \\
+        \\func main(out: Stream) -> i64:
+        \\    _ = out
+        \\    return apply(one, 41)
+    ;
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    try compare(t.allocator, &cache, program, 42);
+    var changed = false;
+    for (cache.entries) |*entry| {
+        for (entry.meta.record_refs) |reference| {
+            if (reference.recipes.len == 0 or reference.recipes[0] != .callable) continue;
+            const recipes = @constCast(reference.recipes);
+            recipes[0] = .{ .callable = .{ .start = entry.meta.identity.region.start, .end = entry.meta.identity.region.start + 1 } };
+            changed = true;
+        }
+    }
+    try t.expect(changed);
+    try compare(t.allocator, &cache, program, 42);
+}
+
+// spec-case: SEMANTIC-CACHE-7
+// spec-case: SEMANTIC-CACHE-8
+test "portable recipes retain original array sites and restore durable tuples" {
+    const program =
+        \\func lookup(env: Environment) -> i64 effects(environment):
+        \\    const value = env.get("PORTABLE_TYPE_RECIPE")
+        \\    _ = value
+        \\    return 0
+        \\
+        \\func main() -> i64:
+        \\    const values = (40, 2)
+        \\    const left, right = values
+        \\    return left + right
+    ;
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    const contract = cache_key.Contract.default;
+    const fingerprint = try contract.fingerprint(t.allocator);
+    defer t.allocator.free(fingerprint);
+    for (0..2) |run| {
+        var store = semantic_store.Store.init(t.allocator, t.io, root, contract, language.semantic_cache.mutation_contract_version);
+        defer store.deinit();
+        var cache = Cache.initWithContract(t.allocator, 4 * 1024 * 1024, fingerprint);
+        defer cache.deinit();
+        cache.context.persistent = &store;
+        try compare(t.allocator, &cache, program, 42);
+        if (run == 0) {
+            var has_array = false;
+            for (cache.entries) |entry| for (entry.meta.record_refs) |reference| {
+                if (reference.recipes.len == 0 or reference.recipes[0] != .array) continue;
+                const site = reference.recipes[0].array.site;
+                try t.expectEqualStrings("\"PORTABLE_TYPE_RECIPE\"", program[site.start..site.end]);
+                has_array = true;
+            };
+            try t.expect(has_array);
+        } else {
+            try t.expectEqual(@as(usize, 1), cache.statistics.reused);
+            try t.expectEqual(@as(usize, 1), cache.statistics.checked);
+        }
+    }
+}
+
+// spec-case: SEMANTIC-CACHE-7
+test "portable callable generic consumers revalidate changed effect slots" {
+    const program =
+        \\func apply[T](x: T, f: func(T) -> T) -> T:
+        \\    return f(x)
+        \\
+        \\func one(x: i64) -> i64:
+        \\    return x + 1
+        \\
+        \\func main() -> i64:
+        \\    return apply(41, one)
+    ;
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    try compare(t.allocator, &cache, program, 42);
+    try compare(t.allocator, &cache, program, 42);
+    try t.expectEqual(@as(usize, 3), cache.statistics.reused);
+    try t.expectEqual(@as(usize, 3), cache.statistics.checked);
+    const narrower = try std.mem.replaceOwned(u8, t.allocator, program, "func(T) -> T", "func(T) -> T effects()");
+    defer t.allocator.free(narrower);
+    try compare(t.allocator, &cache, narrower, 42);
+    const invalid = try std.mem.replaceOwned(u8, t.allocator, program, "func(T) -> T", "func(T) -> bool");
+    defer t.allocator.free(invalid);
+    try compare(t.allocator, &cache, invalid, null);
+}
+
+// spec-case: SEMANTIC-CACHE-7
+test "portable nominal references fall back when their current shape is absent" {
+    const program =
+        \\record Item:
+        \\    value: i64
+        \\record Box[T]:
+        \\    value: T
+        \\func boxed[T](value: T) -> Box[T]:
+        \\    return Box[T](value=value)
+        \\func main() -> i64:
+        \\    const box = boxed(Item(value=42))
+        \\    return box.value.value
+    ;
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    try compare(t.allocator, &cache, program, 42);
+    const checked = cache.statistics.checked;
+    try compare(t.allocator, &cache, program, 42);
+    try t.expectEqual(checked + 1, cache.statistics.checked);
+    const changed = try std.mem.replaceOwned(u8, t.allocator, program, "value: i64", "value: bool");
+    defer t.allocator.free(changed);
+    try compare(t.allocator, &cache, changed, null);
+}
+
+// spec-case: SEMANTIC-CACHE-7
+test "portable nominal references reuse a type materialized by an earlier fresh body" {
+    const program =
+        \\record Item:
+        \\    value: i64
+        \\record Box[T]:
+        \\    value: T
+        \\func boxed[T](value: T) -> Box[T]:
+        \\    return Box[T](value=value)
+        \\func first() -> i64:
+        \\    const box = boxed(Item(value=20))
+        \\    return box.value.value
+        \\func main() -> i64:
+        \\    const box = boxed(Item(value=22))
+        \\    return first() + box.value.value
+    ;
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    try compare(t.allocator, &cache, program, 42);
+    try t.expectEqual(@as(usize, 3), cache.statistics.checked);
+    try compare(t.allocator, &cache, program, 42);
+    try t.expectEqual(@as(usize, 4), cache.statistics.checked);
+    try t.expectEqual(@as(usize, 2), cache.statistics.reused);
+    const changed = try std.mem.replaceOwned(u8, t.allocator, program, "value: i64", "value: u64");
+    defer t.allocator.free(changed);
+    try compare(t.allocator, &cache, changed, null);
 }

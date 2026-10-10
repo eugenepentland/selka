@@ -1,5 +1,3 @@
-
-
 func list() -> int:
     return 9
 

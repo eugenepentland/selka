@@ -545,7 +545,7 @@
     "generic-nominals": {
       "kind": "language",
       "summary": "Record and enum declarations take type parameters and specialize by argument identity.",
-      "doc": "docs/generics.md#generic-records-and-unions"
+      "doc": "docs/generics.md#generic-records-and-enums"
     },
     "structural-contracts": {
       "kind": "language",
@@ -699,7 +699,7 @@
     },
     "canonical-specialization-keys": {
       "kind": "tooling",
-      "summary": "Concrete specialization keys are canonical over template identity, ordered positional descriptors, provider contracts, constraints, declared contracts and build context; validated concrete specialization bodies replay under specialization-v1 with typed remap and conservatively miss on unresolved references.",
+      "summary": "Concrete specialization keys are canonical over template identity, ordered positional descriptors, provider contracts, constraints, declared contracts and build context; validated concrete specialization bodies replay under specialization-v2 with typed remap and conservatively miss on unresolved references.",
       "doc": "docs/tooling/work-report.md#compiler-work-and-reuse-report"
     },
     "shared-semantic-retention-budget": {
@@ -719,7 +719,7 @@
     },
     "persistent-checked-bodies": {
       "kind": "tooling",
-      "summary": "Ordinary checked bodies persist across compiler processes as versioned, validated semantic-cache-v2 entries with atomic publication, remap-or-miss decoding, contract isolation and --no-cache correctness.",
+      "summary": "Ordinary checked bodies persist across compiler processes as versioned, validated semantic-cache-v6 entries with atomic publication, remap-or-miss decoding, contract isolation and --no-cache correctness.",
       "doc": "docs/tooling/caches.md#persistent-checked-body-store"
     },
     "native-test-preparation-reuse": {
@@ -1019,7 +1019,7 @@
     },
     "derived-effect-ceilings": {
       "kind": "language",
-      "summary": "A function's effect ceiling is derived from its parameter list - a capability parameter permits its effect, a `mut` parameter `mutation`, a callback parameter its declared ceiling, and allocation is always permitted - so a body that exceeds it is rejected in that body with the parameter to add; `noalloc`, `noio` and `effects(...)` only narrow it, a clause that restates it warns `W_DERIVED_EFFECTS`, a clause naming an effect no parameter supplies is `E_DERIVED_EFFECTS`, and a capability parameter the body never reads is `E_UNUSED_CAPABILITY`.",
+      "summary": "A function's effect ceiling is derived from its parameter list - a capability parameter permits its effect, a `mut` parameter `mutation`, a callback parameter its declared ceiling, and allocation is always permitted - so a body that exceeds it is rejected in that body with the parameter to add; `noio` and `effects(...)` narrow it; noalloc is checked at build/run/test time as W_NOALLOC_ALLOCATES and blocks lint --gate via noalloc-allocates, with no Core allocation work in check, a clause that restates it warns `W_DERIVED_EFFECTS`, a clause naming an effect no parameter supplies is `E_DERIVED_EFFECTS`, and a capability parameter the body never reads is `E_UNUSED_CAPABILITY`.",
       "doc": "docs/effects.md#the-signature-is-the-ceiling"
     },
     "test-file-private-access": {
@@ -1070,7 +1070,7 @@
     "generic_calls": "explicit arguments or complete inference from call inputs; ambiguous and unmaterialized phantom arguments require explicit specialization",
     "unit": "Unit/() procedures; None is only an optional absence; main accepts int or Unit, optionally fails E, and explicit Result return types",
     "container_elements": "managed list/dict elements: copyable values without must-handle obligations, owned resources, or capability grants",
-    "noalloc": "managed-backing-operations-only",
+    "noalloc": "ownership-expanded Core may-allocate warnings at build/run/test; lint noalloc-allocates blocks every profile; check does not compute this contract",
     "type_aliases": "non-parameterized",
     "constants": "bounded-scalar-expressions-and-nongeneric-source-functions-plus-str-bytes-literals",
     "iteration": "range(end/start,end), list/str/dict/fixed-array foreach and enumerate; fixed bounds and structural mutation checks",
@@ -1089,7 +1089,7 @@
     "generators": "generator expressions only as the argument of sum, any, all, min, max, sorted, list, set, dict or str.join; no suspended generator functions or stored generator values; yield belongs to source-first array comprehensions and match-expression arms",
     "native_tests": "one native process per test; exported test_ functions returning bool or Result[bool, E]; positive deterministic receipts keyed by the test program's Core IR, settings, toolchain and outcome-relevant environment; a run with --link or --verify-facts never reuses a receipt; directory runs share one worker budget (--jobs, MYLANG_JOBS or CPUs)",
     "standard_library": "fourteen embedded modules using the canonical frontend: math, strings, sort, path, hex, base64, json, pool, random, time, byte_builder, filesystem, network, environment",
-    "memory": "one-count reference counting with copy-on-write; no tracing collector; value semantics prevents cycles, and identity graphs use pool handles; `with arena()` is a retired plain block"
+    "memory": "one-count reference counting with copy-on-write; no tracing collector; value semantics prevents cycles, and identity graphs use pool handles; `with arena()` is removed; its diagnostic carries a migration fix"
   },
   "removed": {
     "explicit-storage-tier": {
@@ -1162,7 +1162,7 @@
     },
     "managed-arenas": {
       "date": "2026-10-08",
-      "note": "Retired with the old back end in new-core stage S5 (2026-10): `with arena() as name:` regions and their escape checks (`E_ARENA_ESCAPE`). The block still runs as an ordinary block and warns `W_ARENA_RETIRED`."
+      "note": "Retired with the old back end in new-core stage S5 (2026-10): `with arena() as name:` regions and their escape checks (`E_ARENA_ESCAPE`). The spelling is rejected with `E_ARENA_REMOVED`; `mylang fix` removes the block and unwraps escapes."
     },
     "managed-class-records": {
       "date": "2026-10-08",

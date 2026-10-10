@@ -1,8 +1,6 @@
-
 # A borrow whose value is on the operand stack when its root is written sees
 # nothing of that write: the value is read after the write, so the borrow is a
 # real copy (OWNERSHIP-MUT-RECORD-WRITE-3). Both runtimes agree.
-
 record Box:
     tag: int
     names: int[]

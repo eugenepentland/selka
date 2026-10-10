@@ -1,43 +1,214 @@
-//! The `W_ARENA_RETIRED` warning of a retired `with arena():` block (S5-D3)
+//! The `E_ARENA_REMOVED` error for a removed `with arena():` block (S5-D3)
 //! and the `mylang fix` repair it carries: delete the `with` line, dedent the
 //! block's body by one level and rewrite each `name.escape(value)` of that
 //! arena to `value`. The repair is offered only where the edit is certain: a
 //! header alone on its line, space indentation, and no multi-line string
-//! literal in the body. Both are derived from the syntax after the bodies are
-//! checked, so a body the semantic cache reuses still reports them.
+//! literal in the body, and bindings that stay unambiguous after dedent. Both
+//! are derived from syntax even when a body fails semantic checking or its
+//! checked summary is reused.
 const std = @import("std");
 const ast = @import("ast.zig");
 const diagnostic = @import("diagnostic.zig");
 const source = @import("source.zig");
 
-/// The warning a `with arena():` block carries (NEW-CORE-S5-ARENA-1).
-pub const retired_code = "W_ARENA_RETIRED";
-/// The `W_ARENA_RETIRED` message: what an arena block now does and how to drop it.
-const retired_message = "`with arena():` is retired (S5-D3): the block runs as an ordinary block and frees nothing early; remove the `with arena():` line and dedent its body";
+/// The removal error a `with arena():` block carries (NEW-CORE-S5-ARENA-1).
+pub const removed_code = "E_ARENA_REMOVED";
+/// The `E_ARENA_REMOVED` message: what an arena block now does and how to drop it.
+const removed_message = "`with arena():` was removed; use ordinary statements: remove the `with arena():` line and dedent its body";
 
-/// Report `W_ARENA_RETIRED` at every `with arena()` block of `syntax`, with the
+/// Report `E_ARENA_REMOVED` at every `with arena()` block of `syntax`, with the
 /// repair `mylang fix` applies when its edits are certain (NEW-CORE-S5-ARENA-3).
-pub fn warn(allocator: std.mem.Allocator, src: source.Source, syntax: ast.Program, sink: *diagnostic.Sink) std.mem.Allocator.Error!void {
+pub fn reject(allocator: std.mem.Allocator, src: source.Source, syntax: ast.Program, sink: *diagnostic.Sink) std.mem.Allocator.Error!void {
     for (syntax.statements.items) |statement| {
         if (statement.data != .with_scope or statement.data.with_scope.resource != null) continue;
         const scope = statement.data.with_scope;
         const body = syntax.statements.items[@backingInt(scope.body)];
         var fix: ?diagnostic.Fix = null;
-        if (body.data == .block and body.data.block.len != 0) {
+        if (body.data == .block and body.data.block.len != 0 and bindingsCertain(src, syntax, statement, body)) {
             var escapes: std.ArrayList(diagnostic.Edit) = .empty;
             if (scope.name) |name| try findEscapes(allocator, src, syntax, .{ .name = src.text(name), .region = body.span }, &escapes);
             const first = syntax.statements.items[@backingInt(body.data.block[0])].span.start;
             fix = try retirementFix(allocator, src.bytes, .{ .with_start = statement.span.start, .body_start = first, .body_end = body.span.end }, escapes.items);
         }
-        try sink.items.append(allocator, .{ .severity = .warning, .code = retired_code, .span = statement.span, .message = retired_message, .provenance = .{ .fix = fix } });
+        try sink.items.append(allocator, .{ .severity = .err, .code = removed_code, .span = statement.span, .message = removed_message, .provenance = .{ .fix = fix } });
     }
+}
+
+/// Withhold structural repairs that would erase an ambiguous arena binding or
+/// merge declarations formerly isolated by the arena's lexical block.
+fn bindingsCertain(src: source.Source, syntax: ast.Program, statement: ast.Statement, body: ast.Statement) bool {
+    const region = functionRegion(syntax, statement.span.start) orelse return false;
+    if (statement.data.with_scope.name) |name| {
+        if (parameterNamed(src, syntax, region, name) or lambdaNamed(src, syntax, region, name)) return false;
+        for (syntax.statements.items) |other| {
+            if (other.span.start == statement.span.start or !inside(other.span, region)) continue;
+            // Disjoint resource scopes can reuse a name without shadowing this
+            // binding. Nested scopes still make escape ownership ambiguous.
+            if (other.data == .with_scope) {
+                const nested = inside(other.span, statement.span) or inside(statement.span, other.span);
+                if (!nested) continue;
+            }
+            if (bindsName(src, other, name)) return false;
+            if (other.data == .assignment and sameName(src, other.data.assignment.name, name)) return false;
+        }
+        for (syntax.nodes.items) |node| {
+            if (inside(node.span, region) and nodeBindsName(src, node, name)) return false;
+        }
+    }
+    for (body.data.block) |id| {
+        const lifted = syntax.statements.items[@backingInt(id)];
+        if (lifted.data == .discard) {
+            const expression = syntax.nodes.items[@backingInt(lifted.data.discard)];
+            if (expression.data == .field_assignment and expression.data.field_assignment.declaration != null) return false;
+        }
+        const name = switch (lifted.data) {
+            .binding => |binding| binding.name,
+            .assignment => |assignment| if (knownMutable(src, syntax, statement.span.start, assignment.name)) continue else assignment.name,
+            else => continue,
+        };
+        if (parameterNamed(src, syntax, region, name) or lambdaNamed(src, syntax, region, name)) return false;
+        for (syntax.statements.items) |other| {
+            if (other.span.start == lifted.span.start or !inside(other.span, region)) continue;
+            if (bindsName(src, other, name)) return false;
+            if (!inside(other.span, body.span) and other.data == .assignment and sameName(src, other.data.assignment.name, name)) return false;
+        }
+        for (syntax.nodes.items) |node| {
+            if (!inside(node.span, region)) continue;
+            if (nodeBindsName(src, node, name)) return false;
+            // An explicit block-local binding gains visibility after dedent.
+            // Legacy implicit assignments intentionally migrate their old scope.
+            if (lifted.data == .binding and node.span.start >= body.span.end and termNamed(src, node, name)) return false;
+        }
+    }
+    return true;
+}
+
+fn functionRegion(syntax: ast.Program, point: usize) ?source.Span {
+    for (syntax.functions) |function| {
+        const span = syntax.statements.items[@backingInt(function.body)].span;
+        if (point >= span.start and point < span.end) return span;
+    }
+    return null;
+}
+
+fn inside(span: source.Span, region: source.Span) bool {
+    return span.start >= region.start and span.end <= region.end;
+}
+
+fn sameName(src: source.Source, left: source.Span, right: source.Span) bool {
+    return std.mem.eql(u8, src.text(left), src.text(right));
+}
+
+fn parameterNamed(src: source.Source, syntax: ast.Program, region: source.Span, name: source.Span) bool {
+    for (syntax.functions) |function| {
+        const body = syntax.statements.items[@backingInt(function.body)].span;
+        if (body.start != region.start or body.end != region.end) continue;
+        for (function.signature.parameters) |parameter| {
+            if (sameName(src, parameter.name, name)) return true;
+        }
+    }
+    return false;
+}
+
+fn bindsName(src: source.Source, statement: ast.Statement, name: source.Span) bool {
+    return switch (statement.data) {
+        .binding => |binding| sameName(src, binding.name, name),
+        .for_each => |loop| sameName(src, loop.name, name) or (if (loop.index_name) |index| sameName(src, index, name) else false),
+        .for_range => |loop| sameName(src, loop.name, name),
+        .with_scope => |scope| if (scope.name) |binding| sameName(src, binding, name) else false,
+        .match => |match| arms: {
+            for (match.arms) |arm| {
+                if (armNamed(src, arm, name)) break :arms true;
+            }
+            break :arms false;
+        },
+        else => false,
+    };
+}
+
+fn nodeBindsName(src: source.Source, node: ast.Node, name: source.Span) bool {
+    return switch (node.data) {
+        .comprehension => |value| sameName(src, value.name, name),
+        // Gather clauses and destructuring declarations carry lowered or
+        // speculative spans. Withhold rather than infer their lexical binding.
+        .gather => true,
+        .field_assignment => |value| value.declaration != null,
+        .match_expression => |match| arms: {
+            for (match.arms) |arm| {
+                if (armNamed(src, arm, name)) break :arms true;
+            }
+            break :arms false;
+        },
+        else => false,
+    };
+}
+
+/// Match names stored directly on terms. Receivers and field/index targets
+/// represented by child nodes are visited by the caller's complete node scan.
+pub fn termNamed(src: source.Source, node: ast.Node, name: source.Span) bool {
+    return switch (node.data) {
+        .name => |term| sameName(src, term, name),
+        .call => |call| sameName(src, call.owner orelse call.name, name),
+        .buffer_operation => |operation| sameName(src, operation.owner, name),
+        .file_operation => |operation| sameName(src, operation.owner, name),
+        .resource_io => |operation| sameName(src, operation.owner, name),
+        .arena_escape => |escape| sameName(src, escape.arena, name),
+        .record => |record| sameName(src, record.name, name),
+        else => false,
+    };
+}
+
+fn armNamed(src: source.Source, arm: ast.MatchArm, name: source.Span) bool {
+    for (arm.bindings) |binding| {
+        if (binding) |span| if (sameName(src, span, name)) return true;
+    }
+    return patternsNamed(src, arm.payload_patterns, name);
+}
+
+fn lambdaNamed(src: source.Source, syntax: ast.Program, region: source.Span, name: source.Span) bool {
+    for (syntax.lambdas) |lambda| {
+        if (!inside(lambda.span, region)) continue;
+        for (lambda.parameters) |parameter| {
+            if (sameName(src, parameter, name)) return true;
+        }
+    }
+    return false;
+}
+
+fn knownMutable(src: source.Source, syntax: ast.Program, point: usize, name: source.Span) bool {
+    for (syntax.functions) |function| {
+        const body = syntax.statements.items[@backingInt(function.body)].span;
+        if (point < body.start or point >= body.end) continue;
+        for (function.signature.parameters) |parameter| {
+            if (parameter.mut and sameName(src, parameter.name, name)) return true;
+        }
+    }
+    for (syntax.statements.items) |scope| {
+        if (scope.data != .block or point < scope.span.start or point >= scope.span.end) continue;
+        for (scope.data.block) |id| {
+            const earlier = syntax.statements.items[@backingInt(id)];
+            if (earlier.span.start >= point or earlier.data != .binding) continue;
+            if (earlier.data.binding.mutable and sameName(src, earlier.data.binding.name, name)) return true;
+        }
+    }
+    return false;
+}
+
+fn patternsNamed(src: source.Source, fields: []const ast.PatternField, name: source.Span) bool {
+    for (fields) |field| switch (field.pattern.data) {
+        .binding => |binding| if (binding) |span| {
+            if (sameName(src, span, name)) return true;
+        },
+        .variant => |variant| if (patternsNamed(src, variant.fields, name)) return true,
+    };
+    return false;
 }
 
 /// One arena binding's name and the body it is visible in.
 const Binding = struct { name: []const u8, region: source.Span };
 
 /// Append the rewrite of every `name.escape(value)` call inside the arena's
-/// body. Arena names cannot shadow one another, so the spelling decides.
+/// body after binding checks establish that no declaration shadows its name.
 fn findEscapes(allocator: std.mem.Allocator, src: source.Source, syntax: ast.Program, binding: Binding, escapes: *std.ArrayList(diagnostic.Edit)) std.mem.Allocator.Error!void {
     for (syntax.nodes.items) |node| {
         if (node.data != .call or node.span.start < binding.region.start or node.span.end > binding.region.end) continue;

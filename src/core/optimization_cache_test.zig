@@ -1,8 +1,11 @@
 //! Persistent optimizer stages are checked against the uncached pass oracle.
 const std = @import("std");
+const stage_loss = @import("stage_loss_test_support.zig");
 const demand_ir = @import("demand_ir.zig");
 const support = @import("test_support.zig");
 const passes = @import("passes.zig");
+const facts = @import("facts.zig");
+const fields = @import("fields.zig");
 const cache = @import("optimization_cache.zig");
 const store = @import("stage_store.zig");
 const snapshot = @import("ir_snapshot.zig");
@@ -85,7 +88,7 @@ fn compile(a: std.mem.Allocator, backing: std.mem.Allocator, text: []const u8, s
         try passes.debugWithScratch(a, backing, &module);
     try support.verified(a, &module, result.plans);
     const llvm = try emit.emitModuleWithScratch(a, backing, &module, .{ .locator = locator, .source_path = "test.my", .main = .{ .parameters = &.{"out"} }, .analysis = support.analysis(&result), .verify = result.emission.verifying });
-    return .{ .llvm = llvm, .core = try print.module(a, &module), .result = result, .statistics = if (storage != null) context.statistics else .{}, .ancestry = try canonicalAncestry(a, &module, &result.provenance) };
+    return .{ .llvm = llvm, .core = try canonicalCore(a, &module), .result = result, .statistics = if (storage != null) context.statistics else .{}, .ancestry = try canonicalAncestry(a, &module, &result.provenance) };
 }
 
 fn canonicalAncestry(a: std.mem.Allocator, module: *@import("ir.zig").Module, provenance: *const @import("inline_origins.zig").Table) ![]const cache.Provenance {
@@ -205,7 +208,7 @@ fn compileDeferred(a: std.mem.Allocator, backing: std.mem.Allocator, text: []con
         .analysis = support.analysis(&result),
     });
     return .{
-        .output = .{ .llvm = llvm, .core = try print.module(a, &module), .result = result, .statistics = context.statistics, .ancestry = try canonicalAncestry(a, &module, &result.provenance) },
+        .output = .{ .llvm = llvm, .core = try canonicalCore(a, &module), .result = result, .statistics = context.statistics, .ancestry = try canonicalAncestry(a, &module, &result.provenance) },
         .fact_key = fact_key.?,
     };
 }
@@ -230,8 +233,7 @@ test "optimizer stage deferred cold and warm results match eager and missing or 
     const repaired = try compileDeferred(a, std.testing.allocator, basic, &storage);
     try equal(oracle, repaired.output);
     try std.testing.expect(repaired.output.statistics.misses[@backingInt(cache.Stage.final)] > 0);
-    const path = try std.fmt.allocPrint(a, "{s}/{s}.stage", .{ storage.root, std.fmt.bytesToHex(cold.fact_key, .lower) });
-    try std.Io.Dir.cwd().deleteFile(std.testing.io, path);
+    try stage_loss.remove(a, &storage, cold.fact_key);
     const missing = try compileDeferred(a, std.testing.allocator, basic, &storage);
     try equal(oracle, missing.output);
     try std.testing.expect(missing.output.statistics.misses[@backingInt(cache.Stage.final)] > 0);
@@ -326,7 +328,7 @@ fn compileLocated(a: std.mem.Allocator, backing: std.mem.Allocator, text: []cons
     const ancestry = try a.alloc(cache.Provenance, module.functions.items.len);
     const locations: snapshot.Context = .{ .module = &module, .source = src };
     for (ancestry, 0..) |*scopes, index| scopes.* = try cache.Provenance.capture(a, locations, &result.provenance, @intCast(index));
-    return .{ .llvm = llvm, .core = try print.module(a, &module), .result = result, .statistics = if (storage != null) context.statistics else .{}, .ancestry = ancestry };
+    return .{ .llvm = llvm, .core = try canonicalCore(a, &module), .result = result, .statistics = if (storage != null) context.statistics else .{}, .ancestry = ancestry };
 }
 
 fn hasNestedAncestry(result: *const passes.Result) bool {
@@ -359,7 +361,7 @@ test "optimizer cache relocates later declarations and nested inline ancestry af
     try std.testing.expectEqual(@as(usize, 0), total(&repeated.statistics.misses));
 }
 
-const DemandProduced = struct { output: Produced, loaded: usize, omitted: usize, emission: @import("emission_cache.zig").Counts, final_restored: usize };
+const DemandProduced = struct { output: Produced, loaded: usize, omitted: usize, emission: @import("emission_cache.zig").Counts, final_restored: usize, deferred_functions: []const []const u8 };
 const DemandFinalLoader = struct {
     arena: std.mem.Allocator,
     context: *cache.Context,
@@ -430,8 +432,12 @@ fn compileDemandGuarded(a: std.mem.Allocator, backing: std.mem.Allocator, text: 
     var materialized: usize = 0;
     for (loaded) |present| materialized += @intFromBool(present);
     var omitted: usize = 0;
+    var deferred_functions: std.ArrayList([]const u8) = .empty;
     for (module.functions.items, 0..) |function, index| {
-        if (function.signature.linkage == .internal and !context.lazy.loaded[index]) omitted += 1;
+        if (function.signature.linkage == .internal and !context.lazy.loaded[index]) {
+            omitted += 1;
+            try deferred_functions.append(a, function.name);
+        }
     }
     var final_loader: DemandFinalLoader = .{ .arena = a, .context = &context, .result = &result };
     const original_source = try source.Source.init(a, "test.my", text);
@@ -478,9 +484,10 @@ fn compileDemandGuarded(a: std.mem.Allocator, backing: std.mem.Allocator, text: 
     return .{
         .loaded = materialized,
         .omitted = omitted,
+        .deferred_functions = deferred_functions.items,
         .emission = emission_counts,
         .final_restored = emission_restored,
-        .output = .{ .llvm = llvm, .core = try print.module(a, &module), .result = result, .statistics = context.statistics, .ancestry = try canonicalAncestry(a, &module, &result.provenance) },
+        .output = .{ .llvm = llvm, .core = try canonicalCore(a, &module), .result = result, .statistics = context.statistics, .ancestry = try canonicalAncestry(a, &module, &result.provenance) },
     };
 }
 
@@ -576,10 +583,10 @@ test "optimizer demand rejects a stale postfusion catalog guard and an eager rec
     var storage = try store.Store.init(std.testing.allocator, std.testing.io, try directory.dir.realPathFileAlloc(std.testing.io, ".", a));
     defer storage.deinit();
     _ = try compileDemand(a, std.testing.allocator, basic, &storage, false);
-    const DemandRecord = struct { entries: []shortcut_mod.Entry, layout: ?store.Digest };
+    const DemandRecord = shortcut_mod.DemandIndex;
     const index_key = storage.key(demand_scope, &.{ "", &.{@backingInt(passes.Mode.verify)} });
     var record = (try storage.loadValue(a, index_key, DemandRecord)).?;
-    record.layout.?[0] ^= 1;
+    record.catalog.layout.?[0] ^= 1;
     // The stage checksum is valid, but the independently checked final catalog
     // guard is stale. No deferred body may be used under this index.
     try storage.storeValue(index_key, DemandRecord, record);
@@ -595,11 +602,11 @@ test "optimizer demand rejects a stale postfusion catalog guard and an eager rec
 fn savedFusionIdentity(a: std.mem.Allocator, storage: *store.Store, text: []const u8, name: []const u8) !bool {
     var refusal: build.Refusal = .{};
     const module = try support.buildSource(a, text, &refusal);
-    const Saved = struct { entries: []shortcut_mod.Entry, layout: ?store.Digest };
+    const Saved = shortcut_mod.DemandIndex;
     const key = storage.key(demand_scope, &.{ "", &.{@backingInt(passes.Mode.verify)} });
     const saved = (try storage.loadValue(a, key, Saved)) orelse return error.TestUnexpectedResult;
     for (module.functions.items, 0..) |function, index| {
-        if (std.mem.eql(u8, function.name, name)) return saved.entries[index].demand.fused_identity;
+        if (std.mem.eql(u8, function.name, name)) return saved.entries[index].demand.fusion.identity;
     }
     return error.TestUnexpectedResult;
 }
@@ -668,8 +675,7 @@ fn checkpointFixture(a: std.mem.Allocator, callee_first: bool) ![]const u8 {
 }
 
 fn savedCheckpoint(a: std.mem.Allocator, text: []const u8, storage: *store.Store, mode: passes.Mode, stage_index: usize) !?cache.Checkpoint {
-    const Entry = shortcut_mod.Entry;
-    const Envelope = struct { entries: []Entry, layout: ?store.Digest };
+    const Envelope = shortcut_mod.DemandIndex;
     const saved = (try storage.loadValue(a, storage.key(demand_scope, &.{ "", &.{@backingInt(mode)} }), Envelope)).?;
     var refusal: build.Refusal = .{};
     const module = try support.buildSource(a, text, &refusal);
@@ -734,8 +740,7 @@ test "optimizer demand missing nonidentity checkpoint falls back and eager recov
     const text = try checkpointFixture(a, true);
     _ = try compileDemand(a, std.testing.allocator, text, &storage, false);
     const stage = (try savedCheckpoint(a, text, &storage, .verify, 0)).?;
-    const path = try std.fmt.allocPrint(a, "{s}/{s}.stage", .{ storage.root, std.fmt.bytesToHex(stage.key, .lower) });
-    try std.Io.Dir.cwd().deleteFile(std.testing.io, path);
+    try stage_loss.remove(a, &storage, stage.key);
     const edited = try std.mem.replaceOwned(u8, a, text, "+ 1", "+ 2");
     try std.testing.expectError(error.CacheMiss, compileDemand(a, std.testing.allocator, edited, &storage, true));
     const recovered = try compileDemandGuarded(a, std.testing.allocator, edited, &storage, .{ .omit = false, .force_eager = true });
@@ -763,8 +768,7 @@ test "optimizer demand rejects checksummed identity alias ancestry corruption be
     try storage.storeValue(alias.key, cache.Transform, value);
     const edited = try std.mem.replaceOwned(u8, a, text, "+ 1", "+ 2");
     try std.testing.expectError(error.CacheMiss, compileDemand(a, std.testing.allocator, edited, &storage, true));
-    const path = try std.fmt.allocPrint(a, "{s}/{s}.stage", .{ storage.root, std.fmt.bytesToHex(alias.key, .lower) });
-    try std.Io.Dir.cwd().deleteFile(std.testing.io, path);
+    try stage_loss.remove(a, &storage, alias.key);
     const repaired = try compileDemandGuarded(a, std.testing.allocator, edited, &storage, .{ .omit = false, .force_eager = true });
     try equal(try compile(a, std.testing.allocator, edited, null, .verify), repaired.output);
 }
@@ -785,9 +789,8 @@ const checkpoint_printing =
     \\    return 0
 ;
 
-fn savedWrapperParameters(a: std.mem.Allocator, text: []const u8, storage: *store.Store, mode: passes.Mode) !?[]const ?@import("facts.zig").Interval {
-    const Entry = shortcut_mod.Entry;
-    const Envelope = struct { entries: []Entry, layout: ?store.Digest };
+fn savedWrapperParameters(a: std.mem.Allocator, text: []const u8, storage: *store.Store, mode: passes.Mode) !?[]const ?facts.Interval {
+    const Envelope = shortcut_mod.DemandIndex;
     const saved = (try storage.loadValue(a, storage.key(demand_scope, &.{ "", &.{@backingInt(mode)} }), Envelope)).?;
     var refusal: build.Refusal = .{};
     const module = try support.buildSource(a, text, &refusal);
@@ -871,4 +874,547 @@ test "optimizer demand reuses nonidentity CFG and unswitch checkpoints with exac
         const relocated = try compileDemandGuarded(a, std.testing.allocator, moved, &storage, .{ .omit = true, .mode = mode });
         try equal(try compile(a, std.testing.allocator, moved, null, mode), relocated.output);
     }
+}
+
+// A writer with no call edge to reader still changes reader's global field facts.
+// spec-case: NEW-CORE-F2-FIELD-1
+test "optimizer demand field summaries retain warm bodies and invalidate unrelated writer bounds" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const before =
+        \\record State:
+        \\    x: int
+        \\
+        \\func writer() -> State:
+        \\    return State(x=7)
+        \\
+        \\func reader(s: State) -> int:
+        \\    return s.x + 1
+        \\
+        \\func idle() -> int:
+        \\    return 42
+        \\
+        \\func main(out: Stream) -> int:
+        \\    out.print(reader(State(x=3)), idle(), writer().x)
+        \\    return 0
+    ;
+    const after = try std.mem.replaceOwned(u8, a, before, "State(x=7)", "State(x=9)");
+    for ([_]passes.Mode{ .verify, .trusted }) |mode| {
+        var temporary = std.testing.tmpDir(.{});
+        defer temporary.cleanup();
+        var storage = try store.Store.init(std.testing.allocator, std.testing.io, try temporary.dir.realPathFileAlloc(std.testing.io, ".", a));
+        defer storage.deinit();
+        const oracle = try compile(a, std.testing.allocator, before, null, mode);
+        const cold = try compileDemandGuarded(a, std.testing.allocator, before, &storage, .{ .mode = mode, .omit = false });
+        const warm = try compileDemandGuarded(a, std.testing.allocator, before, &storage, .{ .mode = mode, .omit = true });
+        try equal(oracle, cold.output);
+        try equal(oracle, warm.output);
+        try std.testing.expect(warm.loaded < cold.loaded);
+        try std.testing.expect(warm.omitted > 0);
+        const edited_oracle = try compile(a, std.testing.allocator, after, null, mode);
+        const edited = try compileDemandGuarded(a, std.testing.allocator, after, &storage, .{ .mode = mode, .omit = true });
+        try equal(edited_oracle, edited.output);
+        try std.testing.expect(edited.output.statistics.restores.checkpoints > 0);
+        const repaired_warm = try compileDemandGuarded(a, std.testing.allocator, after, &storage, .{ .mode = mode, .omit = true });
+        try equal(edited_oracle, repaired_warm.output);
+        try std.testing.expect(repaired_warm.loaded < edited.loaded);
+    }
+}
+
+// spec-case: NEW-CORE-F2-FIELD-1
+test "field summaries sparse contributions match original dense hulls for writes reachability opening operations and escaped functions" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const ir = @import("ir.zig");
+    const Builder = @import("test_builder.zig").Builder;
+    var module: ir.Module = .{};
+    const record = try module.intern(a, .{ .record = &.{.i64} });
+    const escaped = try module.intern(a, .{ .record = &.{ .i64, .bool } });
+    const outside = try module.intern(a, .{ .record = &.{ .i64, .i64 } });
+    const list = try module.intern(a, .{ .list = record });
+    const array = try module.intern(a, .{ .array = .{ .elem = .i64, .n = 2 } });
+    const callback = try module.intern(a, .{ .@"fn" = .{ .params = &.{escaped}, .ret = .i64 } });
+    const parsed = try module.option(a, .i64);
+    try module.strings.append(a, "7");
+    var b: Builder = .{ .arena = a, .function = .{ .name = "writer", .signature = .{ .params = &.{}, .ret = .void } } };
+    const live = try b.block();
+    const dead = try b.block();
+    const zero = try b.constant(.u64, 0);
+    const three = try b.constant(.i64, 3);
+    const seven = try b.constant(.i64, 7);
+    const nine = try b.constant(.i64, 9);
+    const ignored = try b.constant(.i64, 99);
+    _ = try b.put(live, .{ .op = .record_make, .ty = array, .data = try b.extra(&.{ three, seven }) });
+    const made = try b.put(live, .{ .op = .record_make, .ty = record, .data = try b.extra(&.{three}) });
+    const changed = try b.put(live, .{ .op = .record_set, .ty = record, .a = made, .b = seven, .data = 0 });
+    const empty = try b.put(live, .{ .op = .list_new, .ty = list, .a = zero });
+    const filled = try b.put(live, .{ .op = .list_push, .ty = list, .a = empty, .b = changed });
+    const path = try b.constant(.u64, @bitCast(ir.FieldPath.init(&.{0}).?.pack()));
+    _ = try b.put(live, .{ .op = .list_set_field, .ty = list, .a = filled, .b = zero, .data = try b.extra(&.{ nine, path }) });
+    _ = try b.put(live, .{ .op = .func_ref, .ty = callback, .data = 1 });
+    const text = try b.put(live, .{ .op = .str_const, .ty = .str, .data = 0 });
+    _ = try b.put(live, .{ .op = .str_parse_int, .ty = parsed, .a = text });
+    _ = try b.put(live, .{ .op = .ret, .ty = .void });
+    _ = try b.put(dead, .{ .op = .record_make, .ty = record, .data = try b.extra(&.{ignored}) });
+    _ = try b.put(dead, .{ .op = .ret, .ty = .void });
+    try module.functions.append(a, b.function);
+    var callback_body: Builder = .{ .arena = a, .function = .{ .name = "callback", .signature = .{ .params = &.{escaped}, .ret = .i64 } } };
+    const home = try callback_body.block();
+    _ = try callback_body.put(home, .{ .op = .ret, .ty = .void, .a = try callback_body.constant(.i64, 0) });
+    try module.functions.append(a, callback_body.function);
+    try module.functions.append(a, .{ .name = "external", .signature = .{ .params = &.{outside}, .ret = outside, .linkage = .extern_c } });
+    const evidence = try fieldOracleEvidence(a, &module);
+    const known = evidence.known;
+    const compact = evidence.compact;
+    try std.testing.expect(!known[0].?.reachable[dead.index()]);
+    try std.testing.expect(compact[0].?.valid(&module));
+    try std.testing.expectEqual(@as(usize, 3), compact[0].?.writes.len);
+    try std.testing.expect(compact[0].?.opens.len > 0);
+    try std.testing.expectEqual(@as(usize, 1), compact[0].?.references.len);
+    const closed = try fields.closedTypes(a, &module);
+    for ([_]bool{ false, true }) |sabotage| {
+        const dense = try fields.hulls(a, &module, known, closed, sabotage);
+        const sparse = try fields.fromContributions(a, &module, compact, sabotage);
+        try std.testing.expectEqualDeep(dense.types, sparse.types);
+        const bound = sparse.get(record, 0).?;
+        try std.testing.expectEqual(@as(i128, 3), bound.lo);
+        try std.testing.expectEqual(@as(i128, if (sabotage) 8 else 9), bound.hi);
+        try std.testing.expect(sparse.table(escaped) == null);
+        try std.testing.expect(sparse.table(outside) == null);
+    }
+}
+
+const FieldOracleEvidence = struct {
+    known: []?facts.Facts,
+    compact: []?fields.Contribution,
+};
+
+fn fieldOracleEvidence(a: std.mem.Allocator, module: *@import("ir.zig").Module) std.mem.Allocator.Error!FieldOracleEvidence {
+    const known = try a.alloc(?facts.Facts, module.functions.items.len);
+    const compact = try a.alloc(?fields.Contribution, known.len);
+    @memset(known, null);
+    @memset(compact, null);
+    for (module.functions.items, known, compact) |*function, *facts_slot, *evidence| {
+        if (function.signature.linkage != .internal) continue;
+        facts_slot.* = try facts.analyze(a, function, .{ .mark = false });
+        evidence.* = try fields.contribution(a, module, function, &facts_slot.*.?);
+    }
+    return .{ .known = known, .compact = compact };
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-8
+test "optimizer demand field summaries ignore fusion runtime entries and retain spectator final bodies" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var storage = try store.Store.init(std.testing.allocator, std.testing.io, try temporary.dir.realPathFileAlloc(std.testing.io, ".", a));
+    defer storage.deinit();
+    const before =
+        \\record State:
+        \\    x: int
+        \\func borrow(s: str) -> bool:
+        \\    return s[0:1] == "x"
+        \\func reader(s: State) -> int:
+        \\    return s.x + 1
+        \\func idle() -> int:
+        \\    return 42
+        \\func main(out: Stream) -> int:
+        \\    out.print(reader(State(x=3)), idle(), borrow("abc"))
+        \\    return 0
+    ;
+    const after = try std.mem.replaceOwned(u8, a, before, "borrow(\"abc\")", "borrow(\"abd\")");
+    const oracle = try compile(a, std.testing.allocator, before, null, .verify);
+    const cold = try compileDemand(a, std.testing.allocator, before, &storage, false);
+    try equal(oracle, cold.output);
+    const Envelope = shortcut_mod.DemandIndex;
+    const saved = (try storage.loadValue(a, storage.key(demand_scope, &.{ "", &.{@backingInt(passes.Mode.verify)} }), Envelope)).?;
+    var refusal: build.Refusal = .{};
+    const raw = try support.buildSource(a, before, &refusal);
+    try std.testing.expect(saved.entries.len > raw.functions.items.len);
+    const warm = try compileDemand(a, std.testing.allocator, before, &storage, true);
+    try equal(oracle, warm.output);
+    try std.testing.expect(warm.output.statistics.bypassed > 0);
+    try std.testing.expect(deferredName(warm, "idle"));
+    try std.testing.expectEqual(warm.omitted, warm.deferred_functions.len);
+    const edited = try compileDemand(a, std.testing.allocator, after, &storage, true);
+    try equal(try compile(a, std.testing.allocator, after, null, .verify), edited.output);
+    try std.testing.expect(edited.output.statistics.bypassed > 0);
+    try std.testing.expect(deferredName(edited, "idle"));
+    try std.testing.expectEqual(edited.omitted, edited.deferred_functions.len);
+    const eager_cold = try compile(a, std.testing.allocator, before, &storage, .verify);
+    const eager_warm = try compile(a, std.testing.allocator, before, &storage, .verify);
+    try equal(oracle, eager_cold);
+    try equal(oracle, eager_warm);
+    try std.testing.expect(eager_warm.statistics.bypassed > 0);
+}
+
+fn deferredName(value: DemandProduced, name: []const u8) bool {
+    for (value.deferred_functions) |function| if (std.mem.eql(u8, function, name)) return true;
+    return false;
+}
+
+const fusion_fixture =
+    \\func main(out: Stream) -> int:
+    \\    out.print(keep_slice("abc"), borrow("abc"), idle())
+    \\    return 0
+    \\func keep_slice(s: str) -> str:
+    \\    return s[0:1]
+    \\func borrow(s: str) -> bool:
+    \\    return s[0:1] == "x"
+    \\func idle() -> int:
+    \\    return 42
+;
+
+fn fusionEntry(a: std.mem.Allocator, storage: *store.Store, text: []const u8) !?shortcut_mod.Entry {
+    const saved = (try storage.loadValue(a, storage.key(demand_scope, &.{ "", &.{@backingInt(passes.Mode.verify)} }), shortcut_mod.DemandIndex)).?;
+    var refusal: build.Refusal = .{};
+    const module = try support.buildSource(a, text, &refusal);
+    for (module.functions.items, 0..) |function, index| {
+        if (std.mem.eql(u8, function.name, "borrow")) return saved.entries[index];
+    }
+    return null;
+}
+
+fn damageFusionLiteral(wire: *snapshot.Wire) bool {
+    for (wire.function.insts) |*inst| {
+        if (inst.op != .iconst) continue;
+        inst.data ^= 1;
+        return true;
+    }
+    return false;
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-8
+test "optimizer demand fused base rejects checksummed changed instructions and missing snapshots" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    var storage = try store.Store.init(std.testing.allocator, std.testing.io, try directory.dir.realPathFileAlloc(std.testing.io, ".", a));
+    defer storage.deinit();
+    const cold = try compileDemand(a, std.testing.allocator, fusion_fixture, &storage, false);
+    const warm = try compileDemand(a, std.testing.allocator, fusion_fixture, &storage, true);
+    try equal(cold.output, warm.output);
+    try std.testing.expect(warm.loaded < cold.loaded);
+    const changed = try std.mem.replaceOwned(u8, a, fusion_fixture, "abc", "abd");
+    const edited = try compileDemand(a, std.testing.allocator, changed, &storage, true);
+    try equal(try compile(a, std.testing.allocator, changed, null, .verify), edited.output);
+    try std.testing.expect(edited.output.statistics.restores.fusions > 0);
+    const entry = (try fusionEntry(a, &storage, changed)).?;
+    try std.testing.expect(!entry.demand.fusion.identity);
+    const key = entry.demand.fusion.key.?;
+    var wire = (try storage.loadValue(a, key, snapshot.Wire)).?;
+    try std.testing.expect(damageFusionLiteral(&wire));
+    try storage.storeValue(key, snapshot.Wire, wire);
+    const inspect_corrupted = try std.mem.replaceOwned(u8, a, fusion_fixture, "abc", "abe");
+    try std.testing.expectError(error.CacheMiss, compileDemand(a, std.testing.allocator, inspect_corrupted, &storage, true));
+    const repaired = try compileDemandGuarded(a, std.testing.allocator, fusion_fixture, &storage, .{ .omit = false, .force_eager = true });
+    try equal(cold.output, repaired.output);
+    const repaired_entry = (try fusionEntry(a, &storage, fusion_fixture)).?;
+    try stage_loss.remove(a, &storage, repaired_entry.demand.fusion.key.?);
+    const inspect_missing = try std.mem.replaceOwned(u8, a, fusion_fixture, "abc", "abf");
+    try std.testing.expectError(error.CacheMiss, compileDemand(a, std.testing.allocator, inspect_missing, &storage, true));
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-8
+test "optimizer demand changed fusion helper inventory retries with exact eager declaration catalog" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    var storage = try store.Store.init(std.testing.allocator, std.testing.io, try directory.dir.realPathFileAlloc(std.testing.io, ".", a));
+    defer storage.deinit();
+    _ = try compileDemand(a, std.testing.allocator, fusion_fixture, &storage, false);
+    const changed = try std.mem.replaceOwned(u8, a, fusion_fixture, "s[0:1] == \"x\"", "s == \"x\"");
+    var refusal: build.Refusal = .{};
+    var original_raw = try support.buildSource(a, fusion_fixture, &refusal);
+    var changed_raw = try support.buildSource(a, changed, &refusal);
+    try std.testing.expectEqual(original_raw.functions.items.len, changed_raw.functions.items.len);
+    const original_layout = try snapshot.layout(a, try snapshot.Context.init(a, &original_raw, null));
+    const changed_layout = try snapshot.layout(a, try snapshot.Context.init(a, &changed_raw, null));
+    try std.testing.expectEqual(original_layout, changed_layout);
+    try std.testing.expectError(error.CacheMiss, compileDemand(a, std.testing.allocator, changed, &storage, true));
+    const repaired = try compileDemandGuarded(a, std.testing.allocator, changed, &storage, .{ .omit = false, .force_eager = true });
+    const oracle = try compile(a, std.testing.allocator, changed, null, .verify);
+    try equal(oracle, repaired.output);
+    const saved = (try storage.loadValue(a, storage.key(demand_scope, &.{ "", &.{@backingInt(passes.Mode.verify)} }), shortcut_mod.DemandIndex)).?;
+    try std.testing.expectEqual(@as(usize, 0), saved.catalog.declarations.len);
+    const warm = try compileDemand(a, std.testing.allocator, changed, &storage, true);
+    try equal(oracle, warm.output);
+    try std.testing.expect(warm.output.statistics.bypassed > 0);
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-8
+test "optimizer demand field summaries ignore FixedArray producers and preserve deferred record spectators" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    var storage = try store.Store.init(std.testing.allocator, std.testing.io, try directory.dir.realPathFileAlloc(std.testing.io, ".", a));
+    defer storage.deinit();
+    const text =
+        \\record State:
+        \\    x: int
+        \\func pair() -> FixedArray[int, 2]:
+        \\    return FixedArray[int, 2]([7, 9])
+        \\func idle() -> int:
+        \\    return 42
+        \\func reader(s: State) -> int:
+        \\    return s.x + 1
+        \\func main(out: Stream) -> int:
+        \\    out.print(pair()[0], reader(State(x=3)), idle())
+        \\    return 0
+    ;
+    const cold = try compileDemand(a, std.testing.allocator, text, &storage, false);
+    const warm = try compileDemand(a, std.testing.allocator, text, &storage, true);
+    try equal(try compile(a, std.testing.allocator, text, null, .verify), cold.output);
+    try equal(cold.output, warm.output);
+    try std.testing.expect(warm.output.statistics.bypassed > 0);
+    try std.testing.expect(deferredName(warm, "idle"));
+    var refusal: build.Refusal = .{};
+    var module = try support.buildSource(a, text, &refusal);
+    const evidence = try fieldOracleEvidence(a, &module);
+    const closed = try fields.closedTypes(a, &module);
+    const dense = try fields.hulls(a, &module, evidence.known, closed, false);
+    const sparse = try fields.fromContributions(a, &module, evidence.compact, false);
+    try std.testing.expectEqualDeep(dense.types, sparse.types);
+    try validFieldEvidence(&module, evidence.compact);
+}
+
+fn validFieldEvidence(module: *const @import("ir.zig").Module, compact: []const ?fields.Contribution) error{TestUnexpectedResult}!void {
+    for (compact) |entry| if (entry) |value| try std.testing.expect(value.valid(module));
+}
+
+fn literalLess(_: void, left: []const u8, right: []const u8) bool {
+    return std.mem.order(u8, left, right) == .lt;
+}
+
+fn canonicalCore(a: std.mem.Allocator, module: *const @import("ir.zig").Module) std.mem.Allocator.Error![]const u8 {
+    const ir = @import("ir.zig");
+    const literals = try usedLiteralValues(a, module);
+    std.mem.sort([]const u8, literals, {}, literalLess);
+    var unique: std.ArrayList([]const u8) = .empty;
+    var slots: std.StringHashMapUnmanaged(u64) = .empty;
+    defer slots.deinit(a);
+    for (literals) |literal| {
+        if (slots.contains(literal)) continue;
+        try slots.put(a, literal, unique.items.len);
+        try unique.append(a, literal);
+    }
+    var canonical = module.*;
+    canonical.strings = unique;
+    canonical.functions.items = try a.dupe(ir.Function, module.functions.items);
+    for (canonical.functions.items) |*function| {
+        function.insts.items = try a.dupe(ir.Inst, function.insts.items);
+        for (function.insts.items) |*inst| {
+            const original = literalSlot(inst.*) orelse continue;
+            const slot = slots.get(module.strings.items[@intCast(original)]).?;
+            inst.data = if (inst.op == .str_const) slot else (inst.data & 0xffffffff00000000) | slot;
+        }
+    }
+    var values = @import("mylang").persist_codec.Writer.init(a);
+    defer values.deinit();
+    try values.write([]const []const u8, unique.items);
+    return std.mem.concat(a, u8, &.{ try print.module(a, &canonical), "\ncanonical literal bytes\n", values.bytes.items });
+}
+
+fn literalSlot(inst: @import("ir.zig").Inst) ?u64 {
+    if (inst.op == .str_const) return inst.data;
+    if (inst.op == .@"unreachable" and inst.data & @import("flags.zig").assertion_trap != 0) return @as(u32, @truncate(inst.data));
+    return null;
+}
+
+fn usedLiteralValues(a: std.mem.Allocator, module: *const @import("ir.zig").Module) std.mem.Allocator.Error![][]const u8 {
+    var values: std.ArrayList([]const u8) = .empty;
+    for (module.functions.items) |function| for (function.insts.items) |inst| {
+        const slot = literalSlot(inst) orelse continue;
+        try values.append(a, module.strings.items[@intCast(slot)]);
+    };
+    return values.items;
+}
+
+const creation_fixture =
+    \\func probe(s: str) -> bool:
+    \\    mut first = s[0:1]
+    \\    mut second = s[1:2]
+    \\    mut equal = second == "x"
+    \\    mut starts = first.startswith("y")
+    \\    return equal or starts
+    \\func idle() -> int:
+    \\    return 42
+    \\func main(out: Stream) -> int:
+    \\    out.print(probe("abc"), idle())
+    \\    return 0
+;
+
+fn creationProbe(a: std.mem.Allocator, module: *@import("ir.zig").Module) ![]const u32 {
+    _ = try @import("fuse_slice_key.zig").run(a, module);
+    for (module.functions.items) |*function| {
+        if (std.mem.eql(u8, function.name, "probe")) return shortcut_mod.Index.targetsOf(a, function, .call);
+    }
+    return error.TestUnexpectedResult;
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-8
+test "optimizer demand fusion declaration requests reject producer reordering despite unchanged downstream helper calls" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    var storage = try store.Store.init(std.testing.allocator, std.testing.io, try directory.dir.realPathFileAlloc(std.testing.io, ".", a));
+    defer storage.deinit();
+    _ = try compileDemand(a, std.testing.allocator, creation_fixture, &storage, false);
+    const key = storage.key(demand_scope, &.{ "", &.{@backingInt(passes.Mode.verify)} });
+    const prior = (try storage.loadValue(a, key, shortcut_mod.DemandIndex)).?;
+    try std.testing.expectEqual(@as(usize, 2), prior.catalog.declarations.len);
+    const changed = try std.mem.replaceOwned(u8, a, creation_fixture, "    mut first = s[0:1]\n    mut second = s[1:2]", "    mut second = s[1:2]\n    mut first = s[0:1]");
+    var refusal: build.Refusal = .{};
+    var original_raw = try support.buildSource(a, creation_fixture, &refusal);
+    var changed_raw = try support.buildSource(a, changed, &refusal);
+    const original_layout = try snapshot.layout(a, try snapshot.Context.init(a, &original_raw, null));
+    const changed_layout = try snapshot.layout(a, try snapshot.Context.init(a, &changed_raw, null));
+    try std.testing.expectEqual(original_layout, changed_layout);
+    try @import("fusion_checkpoint.zig").seed(a, &original_raw, prior.catalog);
+    try @import("fusion_checkpoint.zig").seed(a, &changed_raw, prior.catalog);
+    try std.testing.expectEqualSlices(u32, try creationProbe(a, &original_raw), try creationProbe(a, &changed_raw));
+    try std.testing.expectError(error.CacheMiss, compileDemand(a, std.testing.allocator, changed, &storage, true));
+    const repaired = try compileDemandGuarded(a, std.testing.allocator, changed, &storage, .{ .omit = false, .force_eager = true });
+    try equal(try compile(a, std.testing.allocator, changed, null, .verify), repaired.output);
+    const next = (try storage.loadValue(a, key, shortcut_mod.DemandIndex)).?;
+    try std.testing.expect(!std.mem.eql(u8, prior.catalog.declarations[0].name, next.catalog.declarations[0].name));
+    try equal(repaired.output, (try compileDemand(a, std.testing.allocator, changed, &storage, true)).output);
+}
+
+const field_cycle_fixture =
+    \\record State:
+    \\    x: int
+    \\func entry(out: Stream, n: int):
+    \\    out.print(left(n), right(n))
+    \\func left(n: int) -> int:
+    \\    if n <= 0:
+    \\        return 0
+    \\    return right(n - 1) % 3
+    \\func right(n: int) -> int:
+    \\    if n <= 0:
+    \\        return 0
+    \\    return left(n - 1) % 7
+    \\func spectator(s: State) -> int:
+    \\    return s.x + 1
+    \\func main(out: Stream) -> int:
+    \\    mut left_ref = left
+    \\    mut right_ref = right
+    \\    entry(out, 5)
+    \\    out.print(spectator(State(x=3)))
+    \\    return 0
+;
+
+fn checkSummaryCycle(a: std.mem.Allocator, backing: std.mem.Allocator, mode: passes.Mode, text: []const u8) !void {
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    var storage = try store.Store.init(backing, std.testing.io, try directory.dir.realPathFileAlloc(std.testing.io, ".", a));
+    defer storage.deinit();
+    const cold = try compileDemandGuarded(a, backing, text, &storage, .{ .mode = mode, .omit = false });
+    const warm = try compileDemandGuarded(a, backing, text, &storage, .{ .mode = mode, .omit = true });
+    try equal(cold.output, warm.output);
+    try std.testing.expect(deferredName(warm, "left"));
+    try std.testing.expect(warm.loaded < cold.loaded);
+    try std.testing.expect(warm.output.statistics.bypassed > 0);
+    const changed = try std.mem.replaceOwned(u8, a, text, "out.print(left(n), right(n))", "out.print(right(n), left(n))");
+    var refusal: build.Refusal = .{};
+    var original_raw = try support.buildSource(a, text, &refusal);
+    var changed_raw = try support.buildSource(a, changed, &refusal);
+    try std.testing.expectEqual(
+        try snapshot.layout(a, try snapshot.Context.init(a, &original_raw, null)),
+        try snapshot.layout(a, try snapshot.Context.init(a, &changed_raw, null)),
+    );
+    const edited = try compileDemandGuarded(a, backing, changed, &storage, .{ .mode = mode, .omit = true });
+    const oracle = try compile(a, backing, changed, null, mode);
+    try equal(oracle, edited.output);
+    try std.testing.expect(edited.output.statistics.restores.checkpoints > 0);
+    const repaired = try compileDemandGuarded(a, backing, changed, &storage, .{ .mode = mode, .omit = true });
+    try equal(oracle, repaired.output);
+    try std.testing.expect(repaired.output.statistics.bypassed > 0);
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-8
+test "optimizer demand field receipts reuse recursive cycles and reject changed exploration entry return inputs" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    for ([_]passes.Mode{ .verify, .trusted }) |mode| try checkSummaryCycle(arena.allocator(), std.testing.allocator, mode, field_cycle_fixture);
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-8
+test "optimizer demand ordered return input receipts preserve record and record-free self recursion" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    var storage = try store.Store.init(std.testing.allocator, std.testing.io, try directory.dir.realPathFileAlloc(std.testing.io, ".", a));
+    defer storage.deinit();
+    _ = try compileDemand(a, std.testing.allocator, recursive, &storage, false);
+    const conservative = try compileDemand(a, std.testing.allocator, recursive, &storage, true);
+    try equal(try compile(a, std.testing.allocator, recursive, null, .verify), conservative.output);
+    try std.testing.expect(deferredName(conservative, "recurse"));
+    const records = try std.mem.concat(a, u8, &.{ "record State:\n    x: int\n", recursive });
+    const with_field = try std.mem.replaceOwned(u8, a, records, "out.print(recurse(7), idle())", "out.print(State(x=3).x, recurse(7), idle())");
+    _ = try compileDemand(a, std.testing.allocator, with_field, &storage, false);
+    const proven = try compileDemand(a, std.testing.allocator, with_field, &storage, true);
+    try equal(try compile(a, std.testing.allocator, with_field, null, .verify), proven.output);
+    try std.testing.expect(deferredName(proven, "recurse"));
+    try std.testing.expectEqual(@as(usize, 0), proven.loaded);
+    try std.testing.expectEqual(@as(usize, 0), conservative.loaded);
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-8
+test "optimizer demand record-free summary receipts reject changed recursive traversal return inputs" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const without_record = try std.mem.replaceOwned(u8, a, field_cycle_fixture, "record State:\n    x: int\n", "");
+    const integer_argument = try std.mem.replaceOwned(u8, a, without_record, "s: State", "s: int");
+    const integer_body = try std.mem.replaceOwned(u8, a, integer_argument, "return s.x + 1", "return s + 1");
+    const text = try std.mem.replaceOwned(u8, a, integer_body, "spectator(State(x=3))", "spectator(3)");
+    for ([_]passes.Mode{ .verify, .trusted }) |mode| try checkSummaryCycle(a, std.testing.allocator, mode, text);
+}
+
+fn removeSummaryReceipt(a: std.mem.Allocator, storage: *store.Store, text: []const u8, name: []const u8) !void {
+    const key = storage.key(demand_scope, &.{ "", &.{@backingInt(passes.Mode.verify)} });
+    const saved = (try storage.loadValue(a, key, shortcut_mod.DemandIndex)).?;
+    var refusal: build.Refusal = .{};
+    const module = try support.buildSource(a, text, &refusal);
+    for (module.functions.items, saved.entries) |function, *entry| {
+        if (std.mem.eql(u8, function.name, name)) entry.summary_input = null;
+    }
+    try storage.storeValue(key, shortcut_mod.DemandIndex, saved);
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-8
+test "optimizer demand missing record-free summary input receipt restores recursive bodies and repairs admission" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    var storage = try store.Store.init(std.testing.allocator, std.testing.io, try directory.dir.realPathFileAlloc(std.testing.io, ".", a));
+    defer storage.deinit();
+    const cold = try compileDemand(a, std.testing.allocator, recursive, &storage, false);
+    const warm = try compileDemand(a, std.testing.allocator, recursive, &storage, true);
+    try std.testing.expect(deferredName(warm, "recurse"));
+    try removeSummaryReceipt(a, &storage, recursive, "recurse");
+    const recovered = try compileDemand(a, std.testing.allocator, recursive, &storage, true);
+    try equal(cold.output, recovered.output);
+    try std.testing.expect(!deferredName(recovered, "recurse"));
+    try std.testing.expect(recovered.loaded > warm.loaded);
+    const repaired = try compileDemand(a, std.testing.allocator, recursive, &storage, true);
+    try equal(cold.output, repaired.output);
+    try std.testing.expect(deferredName(repaired, "recurse"));
 }

@@ -1,0 +1,14 @@
+source_commit=1d257723c28586bf21fc144ad999ec5dd5d70afa
+$ /home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/scripts/build-slot.sh build -- nice -n 10 /usr/bin/python3 /home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/experiments/new-core-s5-20261007/tools/fuzz_frozen.py --kind dict --references /home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/experiments/new-core-s5-20261007/references/fuzz-v1.json.gz --cases 200 --seed 3306 --old /home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/experiments/new-core-s5-20261007/tools/frozen-old-core --new /home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/cex/mylang-debug --evidence /home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/experiments/fu-x-20261009/fuzz200-fux2/dict --cache-root /home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/s5/fuzz/20261009T130539Z-ffdf2e56a25d/dict
+qualification progress: dict: seen=25 elapsed=32.73s
+qualification progress: dict: seen=50 elapsed=66.98s
+qualification progress: dict: seen=75 elapsed=102.40s
+qualification progress: dict: seen=100 elapsed=133.97s
+qualification progress: dict: seen=125 elapsed=167.51s
+qualification progress: dict: seen=150 elapsed=198.15s
+qualification progress: dict: seen=175 elapsed=229.61s
+qualification progress: dict: seen=200 elapsed=259.88s
+records,unions,propagate,mut,alias cases=200 old_rejected=0 refused=0 compared=3000 mismatch=0 fact=0 traps=78 caught=0
+qualification {"kind": "dict", "qualified": true, "accepted": 200, "native_comparisons": 3000, "elapsed_seconds": 260.9735996189993}
+
+exit=0

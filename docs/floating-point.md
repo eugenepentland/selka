@@ -152,7 +152,7 @@ spellings that took and returned `u64` bit patterns are removed and rejected wit
 a module constant reports a located constant-arithmetic diagnostic where the
 running program would trap with `R_FLOAT_CONVERSION`.
 
-Virtual-machine floating arithmetic uses strict host binary64 operations.
+Native floating arithmetic uses strict host binary64 operations.
 Supported execution requires round-to-nearest and gradual underflow; embedders
 must preserve that environment. Native emission includes math support only when
 required, rejects fast-math and nonbinary64 C implementations, and traps with

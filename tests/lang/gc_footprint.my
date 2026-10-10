@@ -1,4 +1,3 @@
-
 # The collector's footprint rules: an object is promoted only after it
 # survives two minor collections, empty segments serve any size class, a
 # coallocated text's payload is not cleared before its builder fills it, a
@@ -9,8 +8,6 @@
 # nested arenas that open and close under a large outer one — and check every
 # value. The runner also runs them under `--gc-stress`, where every allocation
 # collects and every third collection is full.
-
-
 record Node:
     left: Node?
     right: Node?

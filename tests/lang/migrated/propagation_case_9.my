@@ -1,5 +1,3 @@
-
-
 enum Detail:
     Malformed(value: str)
     Code(value: i64)

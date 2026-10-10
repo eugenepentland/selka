@@ -16,6 +16,39 @@ const diagnostic = @import("diagnostic.zig");
 const Error = diagnostic.Error;
 const instances = @import("generic_instances.zig");
 const impl = @This();
+const type_recipe = @import("semantic_type_recipe.zig");
+
+/// Extend one request's name index as checking appends catalog records. A
+/// duplicate remains ambiguous, and every record name is visited exactly once.
+fn indexRecordNames(allocator: std.mem.Allocator, names: *std.StringHashMapUnmanaged(usize), indexed: *usize, records: []const typed.Record) std.mem.Allocator.Error!usize {
+    const before = indexed.*;
+    while (indexed.* < records.len) : (indexed.* += 1) {
+        const entry = try names.getOrPut(allocator, records[indexed.*].name);
+        entry.value_ptr.* = if (entry.found_existing) std.math.maxInt(usize) else indexed.*;
+    }
+    return indexed.* - before;
+}
+
+// spec-case: SPECIALIZATION-NAME-INDEX-1
+test "F10 specialization name index retains appended duplicates as ambiguous" {
+    const testing = std.testing;
+    var records: [3]typed.Record = undefined;
+    for ([_][]const u8{ "First", "Second", "First" }, 0..) |name, index| {
+        records[index] = .{ .id = @fromBackingInt(typed.Type.record_base + index), .name = name, .declaration = .{ .start = 0, .end = 0 }, .fields = &.{} };
+    }
+    var names: std.StringHashMapUnmanaged(usize) = .empty;
+    defer names.deinit(testing.allocator);
+    var indexed: usize = 0;
+    try testing.expectEqual(@as(usize, 2), try indexRecordNames(testing.allocator, &names, &indexed, records[0..2]));
+    try testing.expectEqual(@as(?usize, 0), names.get("First"));
+    try testing.expectEqual(@as(usize, 1), try indexRecordNames(testing.allocator, &names, &indexed, &records));
+    try testing.expectEqual(@as(?usize, std.math.maxInt(usize)), names.get("First"));
+    try testing.expectEqual(@as(?usize, 1), names.get("Second"));
+    try testing.expectEqual(@as(?usize, null), names.get("Missing"));
+    try testing.expectEqual(@as(usize, 0), try indexRecordNames(testing.allocator, &names, &indexed, &records));
+    try testing.expectEqual(@as(?usize, std.math.maxInt(usize)), names.get("First"));
+}
+
 /// Bind generic specialization to the concrete checker without an import cycle.
 pub fn Checks(comptime Checker: type) type {
     return struct {
@@ -26,6 +59,19 @@ pub fn Checks(comptime Checker: type) type {
         /// miss; an unvalidated specialization is never reused.
         pub fn lookupSpecialization(self: *Checker, reuse: *generic_specializations.Session, allocator: std.mem.Allocator, index: usize, nodes: *std.ArrayList(typed.Node), statements: *std.ArrayList(typed.Statement)) Error!?typed.Function {
             return impl.lookupSpecialization(Checker, self, reuse, allocator, index, nodes, statements);
+        }
+        /// Install a borrowed request bridge so ordinary callers can retain validated instance edges.
+        pub fn bindOrdinaryReferences(self: *Checker, queries: *@import("semantic_cache.zig").Session, reuse: *generic_specializations.Session) error{OutOfMemory}!void {
+            const bridge = try self.allocator.create(ReferenceBridge(Checker));
+            bridge.* = .{ .checker = self, .reuse = reuse };
+            queries.reuse.resolver = .{
+                .context = bridge,
+                .capture = ReferenceBridge(Checker).capture,
+                .resolve = ReferenceBridge(Checker).resolve,
+                .resolve_type = ReferenceBridge(Checker).resolveType,
+                .type_shape = ReferenceBridge(Checker).typeShape,
+                .resolve_record = ReferenceBridge(Checker).resolveRecord,
+            };
         }
         /// Capture every specialization freshly checked by this request and publish
         /// them after the whole graph passed. A tree that references a synthesized
@@ -78,16 +124,28 @@ fn specialize(comptime Checker: type, self: *Checker, declaration: instances.Dec
         .sink = self.sink,
         .lengths = lengths,
     }).accepts(self.allocator, argument, parameter, function.signature.type_parameters, arguments);
-    const instance = self.generic_registry.intern(self.allocator, .{ .declaration = declaration, .arguments = arguments, .lengths = lengths }) catch |err| switch (err) {
+    const fingerprint = try specializationFingerprint(Checker, self, @backingInt(declaration), arguments, lengths);
+    return registerInstance(Checker, self, declaration, arguments, lengths, fingerprint) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
+        error.InternalError => return error.InternalError,
         else => return self.sink.fail("E_GENERIC_LIMIT", span, "generic specialization exceeds instance or type argument budget"),
     };
+}
+/// Register only fresh, validated arguments; the existing bounded worklist checks or replays the body.
+fn registerInstance(
+    comptime Checker: type,
+    self: *Checker,
+    declaration: instances.DeclarationId,
+    arguments: []const typed.Type,
+    lengths: []const ?usize,
+    fingerprint: ?[]const u8,
+) error{ OutOfMemory, InternalError, TooManyInstances, TooManyTypeArguments }!typed.FunctionId {
+    const instance = try self.generic_registry.intern(self.allocator, .{ .declaration = declaration, .arguments = arguments, .lengths = lengths });
     const index = self.ordinary_count + @backingInt(instance);
     if (index == self.instance_keys.items.len) {
         const owned_key = self.generic_registry.get(instance) catch return error.InternalError;
         try self.instance_keys.append(self.allocator, owned_key);
         try self.spec_ranges.append(self.allocator, .{ .nodes = .{ .start = 0, .end = 0 }, .statements = .{ .start = 0, .end = 0 } });
-        const fingerprint = try specializationFingerprint(Checker, self, @backingInt(declaration), arguments, lengths);
         try self.spec_fingerprints.append(self.allocator, fingerprint);
         if (fingerprint) |canonical| {
             const entry = try self.spec_index.getOrPut(self.allocator, canonical);
@@ -96,7 +154,7 @@ fn specialize(comptime Checker: type, self: *Checker, declaration: instances.Dec
     }
     return @fromBackingInt(index);
 }
-/// Canonical `specialization-v1` fingerprint of one fresh instance. Null
+/// Canonical `specialization-v2` fingerprint of one fresh instance. Null
 /// when no semantic cache (and therefore no prepared declaration facts) is
 /// attached. The template identity, ordered positional descriptors, resolved
 /// provider contracts, template constraint dependency, declared
@@ -142,7 +200,9 @@ fn lookupSpecialization(
     const instance = self.instance_keys.items[index];
     const declaration = @backingInt(instance.declaration);
     const context = prepared.contexts[declaration];
-    const entry = (try reuse.open(fingerprint, context)) orelse return null;
+    // Dependency opens may grow the table; retain payload slices, never its row pointer.
+    const opened = (try reuse.open(fingerprint, context)) orelse return null;
+    const entry = opened.*;
     if (!std.mem.eql(u8, entry.payload.identity.fingerprint, fingerprint)) {
         reuse.noteMiss(.stale_identity);
         return null;
@@ -196,7 +256,7 @@ fn lookupSpecialization(
                 functions[id] = @fromBackingInt(fresh);
             },
             .specialization => {
-                const fresh = self.spec_index.get(reference.key) orelse {
+                const fresh = (try preregister(Checker, self, reuse, reference)) orelse {
                     reuse.noteMiss(.missing_specialization);
                     return null;
                 };
@@ -208,11 +268,12 @@ fn lookupSpecialization(
     @memset(record_remaps, null);
     var shapes: semantic_key.Shapes = .{ .allocator = allocator, .records = self.catalog.records };
     defer shapes.deinit();
+    reuse.backend.memory.statistics.record_name_visits += try indexRecordNames(self.allocator, &self.record_by_name, &self.indexed_record_count, self.catalog.records);
     for (entry.payload.refs.record_refs) |reference| {
-        if (reference.index >= self.initial_record_count) {
-            reuse.noteMiss(.interned_record);
-            return null;
-        }
+        // Body checking may have already instantiated this resolved nominal
+        // application. Its old ordinal says nothing about fresh availability.
+        // Index the current catalog and validate the complete provider shape;
+        // absent or ambiguous identities remain conservative misses.
         const fresh = self.record_by_name.get(reference.key) orelse {
             reuse.noteMiss(.missing_record);
             return null;
@@ -242,14 +303,79 @@ fn lookupSpecialization(
         .functions = functions,
         .records = record_remaps,
     };
-    const function = mapper.copy(allocator, typed.Function, entry.payload.body.function) catch |err| return specializationRelocationMiss(reuse, err);
-    const copied_nodes = mapper.copy(allocator, []const typed.Node, entry.payload.body.nodes) catch |err| return specializationRelocationMiss(reuse, err);
-    const copied_statements = mapper.copy(allocator, []const typed.Statement, entry.payload.body.statements) catch |err| return specializationRelocationMiss(reuse, err);
-    try nodes.appendSlice(allocator, copied_nodes);
-    try statements.appendSlice(allocator, copied_statements);
+    try nodes.ensureUnusedCapacity(allocator, entry.payload.body.nodes.len);
+    try statements.ensureUnusedCapacity(allocator, entry.payload.body.statements.len);
+    var failure: sem_copy.Failure = .none;
+    const function = mapper.copyWithFailure(allocator, typed.Function, entry.payload.body.function, &failure) catch |err| return specializationRelocationMiss(reuse, err);
+    mapper.copySliceInto(allocator, typed.Node, entry.payload.body.nodes, nodes.unusedCapacitySlice()[0..entry.payload.body.nodes.len], &failure) catch |err| return specializationRelocationMiss(reuse, err);
+    mapper.copySliceInto(allocator, typed.Statement, entry.payload.body.statements, statements.unusedCapacitySlice()[0..entry.payload.body.statements.len], &failure) catch |err| return specializationRelocationMiss(reuse, err);
+    nodes.items.len += entry.payload.body.nodes.len;
+    statements.items.len += entry.payload.body.statements.len;
     reuse.noteReused();
     return function;
 }
+/// A referenced instance can be registered only from its validated retained recipe.
+/// Bodies are left on the bounded checker queue; cycles reuse the registry's existing ID.
+fn preregister(comptime Checker: type, self: *Checker, reuse: *generic_specializations.Session, reference: sem_entry.SpecializationFunctionRef) Error!?typed.FunctionId {
+    if (self.spec_index.get(reference.key)) |id| return id;
+    const template = reference.template orelse return null;
+    const declaration = uniqueTemplate(Checker, self, template) orelse return null;
+    const prepared = self.prepared orelse return null;
+    const context = prepared.contexts[declaration];
+    const opened = (try reuse.open(reference.key, context)) orelse return null;
+    const entry = opened.payload;
+    if (!std.mem.eql(u8, entry.identity.template, template) or !std.mem.eql(u8, &entry.identity.context, &context)) return null;
+    if (!std.mem.eql(u8, entry.identity.fingerprint, reference.key)) return null;
+    if (!sameTemplateSource(Checker, self, declaration, entry.source)) return null;
+    const old_arguments = entry.body.function.type_arguments;
+    if (old_arguments.len != self.syntax.functions[declaration].signature.type_parameters.len or old_arguments.len == 0) return null;
+    if (entry.identity.lengths.len != 0 and entry.identity.lengths.len != old_arguments.len) return null;
+    const arguments = try self.allocator.alloc(typed.Type, old_arguments.len);
+    reuse.backend.memory.statistics.record_name_visits += try indexRecordNames(self.allocator, &self.record_by_name, &self.indexed_record_count, self.catalog.records);
+    var shapes: semantic_key.Shapes = .{ .allocator = self.allocator, .records = self.catalog.records };
+    defer shapes.deinit();
+    for (old_arguments, arguments) |old, *fresh| fresh.* = (try recipeArgument(Checker, self, &shapes, old, entry.refs.record_refs)) orelse return null;
+    const fingerprint = (try specializationFingerprint(Checker, self, declaration, arguments, entry.identity.lengths)) orelse return null;
+    // This covers fresh providers, constraints, declared contracts and compiler context.
+    if (!std.mem.eql(u8, fingerprint, reference.key)) return null;
+    return registerInstance(Checker, self, @fromBackingInt(declaration), arguments, entry.identity.lengths, fingerprint) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        error.InternalError => return error.InternalError,
+        else => return null,
+    };
+}
+
+fn uniqueTemplate(comptime Checker: type, self: *Checker, template: []const u8) ?usize {
+    const prepared = self.prepared orelse return null;
+    var found: ?usize = null;
+    for (prepared.keys, 0..) |key, declaration| {
+        if (!std.mem.eql(u8, key, template)) continue;
+        if (found != null or self.syntax.functions[declaration].signature.type_parameters.len == 0) return null;
+        found = declaration;
+    }
+    return found;
+}
+
+fn sameTemplateSource(comptime Checker: type, self: *Checker, declaration: usize, stored: sem_entry.SymbolicSource) bool {
+    const prepared = self.prepared orelse return false;
+    const region = prepared.regions[declaration];
+    const body = prepared.bodies[declaration];
+    return std.mem.eql(u8, stored.region_bytes, self.src.bytes[region.start..region.end]) and std.mem.eql(u8, stored.body_bytes, self.src.bytes[body.start..body.end]);
+}
+
+fn recipeArgument(comptime Checker: type, self: *Checker, shapes: *semantic_key.Shapes, old: typed.Type, references: []const sem_entry.RecordRef) error{OutOfMemory}!?typed.Type {
+    if (!old.isAggregate()) return old;
+    for (references) |reference| {
+        if (reference.index != old.recordIndex()) continue;
+        const fresh = self.record_by_name.get(reference.key) orelse return null;
+        if (fresh == std.math.maxInt(usize)) return null;
+        const digest = (try shapes.digest(fresh)) orelse return null;
+        if (!std.mem.eql(u8, &digest, &reference.shape)) return null;
+        return @fromBackingInt(fresh + typed.Type.record_base);
+    }
+    return null;
+}
+
 fn specializationRelocationMiss(reuse: *generic_specializations.Session, err: sem_copy.Error) error{ OutOfMemory, InternalError }!?typed.Function {
     return switch (err) {
         error.InvalidRelocation => blk: {
@@ -269,6 +395,7 @@ fn publishSpecializations(comptime Checker: type, self: *Checker, reuse: *generi
     // `--no-cache` never reads or writes a specialization entry.
     if (!reuse.backend.enabled) return;
     const prepared = self.prepared orelse return;
+    reuse.backend.memory.statistics.record_name_visits += try indexRecordNames(self.allocator, &self.record_by_name, &self.indexed_record_count, program.records);
     for (self.spec_fresh.items) |index| {
         if (index >= self.spec_fingerprints.items.len) continue;
         const fingerprint = self.spec_fingerprints.items[index] orelse continue;
@@ -301,7 +428,7 @@ fn publishSpecializations(comptime Checker: type, self: *Checker, reuse: *generi
                     representable = false;
                     break;
                 };
-                function_refs[function_count] = .{ .kind = .specialization, .id = @fromBackingInt(old), .key = canonical };
+                function_refs[function_count] = .{ .kind = .specialization, .id = @fromBackingInt(old), .key = canonical, .template = prepared.keys[@backingInt(self.instance_keys.items[old].declaration)] };
             }
             function_count += 1;
         }
@@ -309,6 +436,7 @@ fn publishSpecializations(comptime Checker: type, self: *Checker, reuse: *generi
             reuse.noteMiss(.lambda_reference);
             continue;
         }
+        sem_entry.sortFunctionRefs(sem_entry.SpecializationFunctionRef, function_refs[0..function_count]);
         const record_refs = allocator.alloc(sem_entry.RecordRef, refs.records.count()) catch return error.OutOfMemory;
         defer allocator.free(record_refs);
         var record_iterator = refs.records.keyIterator();
@@ -317,7 +445,11 @@ fn publishSpecializations(comptime Checker: type, self: *Checker, reuse: *generi
         var shapes: semantic_key.Shapes = .{ .allocator = allocator, .records = program.records };
         defer shapes.deinit();
         while (record_iterator.next()) |record_index| {
-            if (record_index.* >= self.initial_record_count or record_index.* >= program.records.len) {
+            if (record_index.* >= program.records.len) {
+                stable_records = false;
+                break;
+            }
+            if (self.record_by_name.get(program.records[record_index.*].name) != record_index.*) {
                 stable_records = false;
                 break;
             }
@@ -410,4 +542,62 @@ test "a cached body that cannot be relocated is a counted miss, not an error" {
     try std.testing.expectEqual(1, table.statistics.misses[miss]);
     try std.testing.expectError(error.OutOfMemory, specializationRelocationMiss(&reuse, error.OutOfMemory));
     try std.testing.expectEqual(1, table.statistics.misses[miss]);
+}
+
+fn ReferenceBridge(comptime Checker: type) type {
+    return struct {
+        checker: *Checker,
+        reuse: *generic_specializations.Session,
+        type_sites: type_recipe.Sites = .{},
+        record_names: std.StringHashMapUnmanaged(usize) = .empty,
+        indexed_records: usize = 0,
+        fn resolveRecord(context: *anyopaque, name: []const u8, expected: [32]u8) error{OutOfMemory}!?typed.Type {
+            const self: *@This() = @ptrCast(@alignCast(context));
+            const records = self.checker.catalog.records;
+            _ = try indexRecordNames(self.checker.allocator, &self.record_names, &self.indexed_records, records);
+            const index = self.record_names.get(name) orelse return null;
+            if (index == std.math.maxInt(usize)) return null;
+            var shapes: semantic_key.Shapes = .{ .allocator = self.checker.allocator, .records = records };
+            defer shapes.deinit();
+            const actual = (try shapes.digest(index)) orelse return null;
+            if (!std.mem.eql(u8, &actual, &expected)) return null;
+            return records[index].id;
+        }
+        fn typeShape(context: *anyopaque, ty: typed.Type) error{OutOfMemory}!?[32]u8 {
+            const self: *@This() = @ptrCast(@alignCast(context));
+            if (!ty.isAggregate()) return null;
+            var shapes: semantic_key.Shapes = .{ .allocator = self.checker.allocator, .records = self.checker.catalog.records };
+            defer shapes.deinit();
+            return shapes.digest(ty.recordIndex());
+        }
+        fn resolveType(context: *anyopaque, recipe: sem_entry.TypeRecipe, before: source.Span, after: source.Span, remaps: []const sem_copy.RecordRemap) error{ OutOfMemory, InternalError }!?typed.Type {
+            const self: *@This() = @ptrCast(@alignCast(context));
+            const diagnostics_before = self.checker.sink.items.items.len;
+            return type_recipe.resolve(Checker, self.checker, &self.type_sites, recipe, before, after, remaps) catch |err| switch (err) {
+                error.SourceError => failed: {
+                    self.checker.sink.items.shrinkRetainingCapacity(diagnostics_before);
+                    break :failed null;
+                },
+                error.OutOfMemory => return error.OutOfMemory,
+                error.InternalError => return error.InternalError,
+            };
+        }
+        fn capture(context: *anyopaque, id: typed.FunctionId) error{OutOfMemory}!?sem_entry.FunctionRef {
+            const self: *@This() = @ptrCast(@alignCast(context));
+            const index = @backingInt(id);
+            if (index >= self.checker.spec_fingerprints.items.len) return null;
+            const key = self.checker.spec_fingerprints.items[index] orelse return null;
+            const prepared = self.checker.prepared orelse return null;
+            const declaration = @backingInt(self.checker.instance_keys.items[index].declaration);
+            return .{ .id = id, .key = key, .template = prepared.keys[declaration] };
+        }
+        fn resolve(context: *anyopaque, reference: sem_entry.FunctionRef) error{ OutOfMemory, InternalError }!?typed.FunctionId {
+            const self: *@This() = @ptrCast(@alignCast(context));
+            return preregister(Checker, self.checker, self.reuse, .{ .kind = .specialization, .id = reference.id, .key = reference.key, .template = reference.template }) catch |err| switch (err) {
+                error.SourceError => null,
+                error.OutOfMemory => return error.OutOfMemory,
+                error.InternalError => return error.InternalError,
+            };
+        }
+    };
 }

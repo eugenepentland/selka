@@ -137,7 +137,11 @@ fn decodeResult(comptime Context: type, b: Context, site: DecodeSite) Error!ir.R
     try b.write(slot, good, try b.emit(.{ .op = .union_make, .ty = ty, .a = value, .data = 0, .span = span }));
     try b.jump(join);
     b.current = bad;
-    const message = try b.runtimeCall("myl_core_bytes_utf8_error", &.{}, .str, &.{}, span);
+    // A fixed validation message needs no managed backing, including this cold
+    // failure path. Pool it exactly like source string literals.
+    const message_index = b.mb.module.strings.items.len;
+    try b.mb.module.strings.append(b.allocator(), "invalid UTF-8 in byte string");
+    const message = try b.emit(.{ .op = .str_const, .ty = .str, .data = message_index, .span = span });
     try b.write(slot, bad, try b.emit(.{ .op = .union_make, .ty = ty, .a = message, .data = 1, .span = span }));
     _ = try b.emit(.{ .op = .err_trace, .ty = .void, .data = @backingInt(ir.TraceMode.runtime), .span = span });
     try b.jump(join);

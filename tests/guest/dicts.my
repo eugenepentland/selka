@@ -1,5 +1,3 @@
-
-
 public func test_insertion_order() -> bool effects(managed_allocation):
     mut counts: dict[str, int] = {}
     counts["pear"] = 2

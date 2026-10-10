@@ -1,0 +1,9 @@
+qualification progress: number: seen=25 elapsed=15.03s
+qualification progress: number: seen=50 elapsed=31.34s
+qualification progress: number: seen=75 elapsed=50.82s
+qualification progress: number: seen=100 elapsed=71.41s
+qualification progress: number: seen=125 elapsed=92.46s
+qualification progress: number: seen=150 elapsed=112.88s
+qualification progress: number: seen=175 elapsed=133.56s
+qualification progress: number: seen=200 elapsed=151.45s
+records,unions,propagate,mut,alias cases=200 old_rejected=0 refused=0 compared=3000 mismatch=0 fact=0 traps=0 caught=0

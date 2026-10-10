@@ -77,6 +77,9 @@ const Pass = struct {
     }
 
     fn comprehension(self: *Pass, span: Span, name: Span, output: ast.NodeId, filters: []const ast.NodeId, input_node: ?ast.NodeId) diagnostic.Error!void {
+        // Repair innermost legacy expressions first. The fix loop reparses before
+        // migrating their enclosing comprehension, so byte offsets never overlap.
+        if (self.nestedLegacy(span)) return;
         if (self.hasComments(span)) return self.reject(span, "rewrite this comprehension in source-first order while preserving its comments");
         const input = if (input_node) |id| self.src.text(self.program.nodes.items[@backingInt(id)].span) else self.sourceText(span, name) orelse return self.reject(span, "rewrite the comprehension as `[for name in source yield value]`");
         var text: std.ArrayList(u8) = .empty;
@@ -91,6 +94,18 @@ const Pass = struct {
         try text.appendSlice(self.sink.allocator, "]");
         const replacement = try self.sink.allocator.dupe(u8, text.items);
         try self.repair(span, replacement, "write array comprehensions in source-first order");
+    }
+
+    fn nestedLegacy(self: *const Pass, span: Span) bool {
+        for (self.program.nodes.items) |node| {
+            if (node.span.start <= span.start or node.span.end >= span.end) continue;
+            switch (node.data) {
+                .comprehension => |value| if (!value.set and !self.sourceFirst(node.span)) return true,
+                .gather => |value| if (value.shape == .list and !self.sourceFirst(node.span)) return true,
+                else => {},
+            }
+        }
+        return false;
     }
 
     fn filtersText(self: *Pass, out: *std.ArrayList(u8), filters: []const ast.NodeId) diagnostic.Error!void {

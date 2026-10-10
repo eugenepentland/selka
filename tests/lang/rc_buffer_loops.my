@@ -1,7 +1,5 @@
 # Byte-buffer append loops whose uniqueness check runs at the loop entry
 # (RC-BUFFER-HOIST-1). Each result is the same under the collector and RC.
-
-
 func repeated(count: int, piece: bytes) -> byte_buffer:
     mut empty: int[] = []
     mut buffer = byte_buffer(empty)

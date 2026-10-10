@@ -1,8 +1,6 @@
 # raytrace: small value records returned from small functions (SUITE.md
 # section 10). Vec3 and Sphere are value records; the spheres live in a
 # list[Sphere] and every vector operation returns a fresh Vec3.
-
-
 record Vec3:
     x: float
     y: float
@@ -81,14 +79,7 @@ func mix(c: int, v: int) -> int:
 
 
 func main(out: Stream) -> int:
-    mut spheres = [
-        Sphere(center=Vec3(x=0.0, y=-1000.0, z=0.0), radius=999.0, color=Vec3(x=0.5, y=0.5, z=0.5)),
-        Sphere(center=Vec3(x=0.0, y=0.0, z=-3.0), radius=1.0, color=Vec3(x=1.0, y=0.2, z=0.2)),
-        Sphere(center=Vec3(x=-2.0, y=0.0, z=-4.0), radius=1.0, color=Vec3(x=0.2, y=1.0, z=0.2)),
-        Sphere(center=Vec3(x=2.0, y=0.0, z=-4.0), radius=1.0, color=Vec3(x=0.2, y=0.2, z=1.0)),
-        Sphere(center=Vec3(x=0.0, y=2.0, z=-6.0), radius=1.5, color=Vec3(x=1.0, y=1.0, z=0.2)),
-        Sphere(center=Vec3(x=-1.5, y=-0.5, z=-2.0), radius=0.5, color=Vec3(x=0.2, y=1.0, z=1.0)),
-    ]
+    mut spheres = [Sphere(center=Vec3(x=0.0, y=-1000.0, z=0.0), radius=999.0, color=Vec3(x=0.5, y=0.5, z=0.5)), Sphere(center=Vec3(x=0.0, y=0.0, z=-3.0), radius=1.0, color=Vec3(x=1.0, y=0.2, z=0.2)), Sphere(center=Vec3(x=-2.0, y=0.0, z=-4.0), radius=1.0, color=Vec3(x=0.2, y=1.0, z=0.2)), Sphere(center=Vec3(x=2.0, y=0.0, z=-4.0), radius=1.0, color=Vec3(x=0.2, y=0.2, z=1.0)), Sphere(center=Vec3(x=0.0, y=2.0, z=-6.0), radius=1.5, color=Vec3(x=1.0, y=1.0, z=0.2)), Sphere(center=Vec3(x=-1.5, y=-0.5, z=-2.0), radius=0.5, color=Vec3(x=0.2, y=1.0, z=1.0))]
     mut light = normalize(Vec3(x=1.0, y=1.0, z=1.0))
     mut width = 1920
     mut height = 1080

@@ -1,7 +1,7 @@
-
 # spec: CORE-1
 public func test_precedence_grouping_left_associativity_and_o_1() -> bool:
     return 1 + 2 * 3 == 7
+
 
 func main() -> int:
     return 0

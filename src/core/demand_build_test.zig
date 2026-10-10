@@ -1,5 +1,6 @@
 //! Demand body omission must preserve the full builder's IR, LLVM and warnings.
 const std = @import("std");
+const stage_loss = @import("stage_loss_test_support.zig");
 const frontend = @import("frontend.zig");
 const build = @import("build.zig");
 const lowering = @import("lowering_cache.zig");
@@ -48,19 +49,6 @@ fn check(session: *frontend.Session, a: std.mem.Allocator) !frontend.Checked {
     };
 }
 
-fn damageStages(root: []const u8) !usize {
-    var directory = try std.Io.Dir.cwd().openDir(std.testing.io, root, .{ .iterate = true });
-    defer directory.close(std.testing.io);
-    var iterator = directory.iterate();
-    var count: usize = 0;
-    while (try iterator.next(std.testing.io)) |entry| {
-        if (entry.kind != .file or !std.mem.endsWith(u8, entry.name, ".stage")) continue;
-        try directory.writeFile(std.testing.io, .{ .sub_path = entry.name, .data = "truncated" });
-        count += 1;
-    }
-    return count;
-}
-
 fn compare(backing: std.mem.Allocator, directory: *std.testing.TmpDir, corrupt_after_check: bool) !Work {
     var arena = std.heap.ArenaAllocator.init(backing);
     defer arena.deinit();
@@ -82,7 +70,7 @@ fn compare(backing: std.mem.Allocator, directory: *std.testing.TmpDir, corrupt_a
     const warnings = try session.warnings(a);
     // Admission has already happened, so this exercises an omitted artifact
     // failing during replay, rather than merely a missing receipt at admission.
-    if (corrupt_after_check) try std.testing.expect(try damageStages(store.root) > 0);
+    if (corrupt_after_check) try std.testing.expect(try stage_loss.damage(&store) > 0);
     var lower = lowering.Cache.init(&store);
     lower.demand = &proof;
     var refusal: build.Refusal = .{};
@@ -196,7 +184,7 @@ test "demand omission preserves moved warnings and changed effect facts" {
 }
 
 // spec-case: NEW-CORE-DEMAND-1
-test "demand receipts reject external default origins while independent bodies reuse" {
+test "demand receipts reuse unchanged external default origins and reject edited sources" {
     var directory = std.testing.tmpDir(.{});
     defer directory.cleanup();
     const defaults = "public record Item:\n    value: int = 42\n";
@@ -205,11 +193,11 @@ test "demand receipts reject external default origins while independent bodies r
     try directory.dir.writeFile(std.testing.io, .{ .sub_path = "defaults.my", .data = defaults });
     _ = try compare(std.testing.allocator, &directory, false);
     const warm = try compare(std.testing.allocator, &directory, false);
-    try std.testing.expectEqual(@as(usize, 1), warm.omitted);
+    try std.testing.expectEqual(@as(usize, 2), warm.omitted);
     try directory.dir.writeFile(std.testing.io, .{ .sub_path = "defaults.my", .data = "\n\n" ++ defaults });
     try std.testing.expectEqual(@as(usize, 1), (try compare(std.testing.allocator, &directory, false)).omitted);
     try directory.dir.writeFile(std.testing.io, .{ .sub_path = "defaults.my", .data = "\n\npublic record Item:\n    value: int = 43\n" });
-    _ = try compare(std.testing.allocator, &directory, false);
+    try std.testing.expectEqual(@as(usize, 1), (try compare(std.testing.allocator, &directory, false)).omitted);
 }
 
 // spec-case: NEW-CORE-DEMAND-1

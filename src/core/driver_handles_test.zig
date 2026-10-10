@@ -1,5 +1,6 @@
 //! Verified native handles survive LLVM loss and recover only from valid inputs.
 const std = @import("std");
+const stage_loss = @import("stage_loss_test_support.zig");
 const driver = @import("driver.zig");
 const emission = @import("emission_cache.zig");
 const stage = @import("stage_store.zig");
@@ -51,14 +52,14 @@ test "native artifact handles verify objects recover LLVM and honor verify cache
     unit.artifact = .{ .store = &storage, .key = key };
     const artifact: emission.Artifact = .{ .text = text, .number = unit.dependencies.number, .math = unit.dependencies.math, .counting = unit.dependencies.counting };
     try storage.storeValue(key, emission.Artifact, artifact);
-    const payload = try std.fmt.allocPrint(a, "{s}/{s}.stage", .{ storage.root, std.fmt.bytesToHex(key, .lower) });
+    _ = try stage_loss.isolatedPath(a, &storage, key);
     var request: driver.Request = .{ .zig = environment.get("MYLANG_ZIG") orelse "zig", .work = root, .output = output, .mode = .optimized_debug, .links = &.{}, .units = &.{unit} };
     var log: std.ArrayList(u8) = .empty;
     const cold = try driver.link(a, io, &environment, request, &log);
     try std.testing.expectEqual(@as(u32, 1), cold.counts.compiled);
     try executes(a, output, &environment);
 
-    try cwd.deleteFile(io, payload);
+    try stage_loss.remove(a, &storage, key);
     unit.llvm = "";
     request.units = &.{unit};
     const warm = try driver.link(a, io, &environment, request, &log);
@@ -73,7 +74,7 @@ test "native artifact handles verify objects recover LLVM and honor verify cache
     try std.testing.expectEqual(@as(u32, 1), repaired.counts.compiled);
     try executes(a, output, &environment);
 
-    try cwd.deleteFile(io, payload);
+    try stage_loss.remove(a, &storage, key);
     request.verify = true;
     try std.testing.expectError(error.CacheMiss, driver.link(a, io, &environment, request, &log));
     try storage.storeValue(key, emission.Artifact, artifact);

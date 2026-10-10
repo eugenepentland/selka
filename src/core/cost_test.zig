@@ -337,3 +337,150 @@ fn deletionCount(a: std.mem.Allocator) !void {
     // The ownership copy branch and the dictionary's own deletion scratch count.
     try std.testing.expectEqual(@as(u32, 2), named(report, "remove").allocation.sites);
 }
+
+// spec: FRONTEND-CORE-NOALLOC-1
+test "Core allocation contracts visit internal callees cold blocks and recursive graphs" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const contracts = @import("allocation_contract.zig");
+    var module: ir.Module = .{};
+    for ([_][]const u8{ "bounded", "helper", "cold" }) |name| {
+        var function: ir.Function = .{ .name = name, .signature = .{ .params = &.{}, .ret = .void } };
+        try function.blocks.append(a, .{});
+        try module.functions.append(a, function);
+    }
+    try module.functions.items[0].insts.append(a, .{ .op = .call, .ty = .void, .a = @fromBackingInt(1) });
+    try module.functions.items[0].blocks.items[0].insts.append(a, @fromBackingInt(0));
+    // The recursive edge must terminate; a disconnected block still contributes.
+    try module.functions.items[1].insts.append(a, .{ .op = .call, .ty = .void, .a = @fromBackingInt(0) });
+    try module.functions.items[1].blocks.items[0].insts.append(a, @fromBackingInt(0));
+    try module.functions.items[1].blocks.append(a, .{});
+    try module.functions.items[1].insts.append(a, .{ .op = .call, .ty = .void, .a = @fromBackingInt(2) });
+    try module.functions.items[1].blocks.items[1].insts.append(a, @fromBackingInt(1));
+    try module.functions.items[2].insts.append(a, .{ .op = .buffer_new, .ty = .void, .span = 91 });
+    try module.functions.items[2].blocks.items[0].insts.append(a, @fromBackingInt(0));
+    const failure = (try contracts.witness(a, &module, 0)).?;
+    try std.testing.expectEqualStrings("cold", failure.callee);
+    try std.testing.expectEqual(@as(u32, 91), failure.span);
+    module.functions.items[2].insts.items[0].op = .ret;
+    try std.testing.expectEqual(@as(?contracts.Violation, null), try contracts.witness(a, &module, 0));
+    module.functions.items[2].signature.linkage = .extern_c;
+    try std.testing.expect((try contracts.witness(a, &module, 0)).?.unresolved);
+}
+
+// spec-case: FRONTEND-CORE-NOALLOC-1
+test "Core allocation contracts check unused library bodies and expose ownership copies" {
+    const language = @import("mylang");
+    const contracts = @import("allocation_contract.zig");
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var pure = try language.Compilation.init(a, "library.my", "func scalar(value: int) -> int noalloc:\n    return value + 1\n");
+    const pure_program = try pure.checkLibraryProgram();
+    try std.testing.expect(pure.program == null);
+    try std.testing.expectEqual(@as(?contracts.Violation, null), try contracts.checkProgram(a, pure_program, pure.src));
+    var copied = try language.Compilation.init(a, "library.my", "func fixed(mut values: int[]) -> Unit noalloc:\n    values[0] = 42\n");
+    const copied_program = try copied.checkLibraryProgram();
+    const failure = (try contracts.checkProgram(a, copied_program, copied.src)).?;
+    try std.testing.expectEqualStrings("fixed", failure.function);
+    try std.testing.expect(!failure.unresolved);
+    try std.testing.expect(failure.unsupported == null);
+    try std.testing.expectEqual(@as(u32, 2), @import("frontend.zig").position(copied.src, .{ .start = failure.span, .end = failure.span }).line);
+}
+
+// spec-case: FRONTEND-CORE-NOALLOC-1
+test "Core allocation contracts reject compound dictionary scratch on cold internal paths" {
+    const language = @import("mylang");
+    const contracts = @import("allocation_contract.zig");
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const source =
+        \\func probe(values: dict[FixedArray[Unit, 2], int], key: FixedArray[Unit, 2]) -> bool:
+        \\    return key in values
+        \\func bounded(values: dict[FixedArray[Unit, 2], int], key: FixedArray[Unit, 2]) -> bool noalloc:
+        \\    if False:
+        \\        return probe(values, key)
+        \\    return False
+    ;
+    var unit = try language.Compilation.init(a, "scratch.my", source);
+    const scratch_program = try unit.checkLibraryProgram();
+    const failure = (try contracts.checkProgram(a, scratch_program, unit.src)).?;
+    try std.testing.expectEqualStrings("bounded", failure.function);
+    try std.testing.expectEqualStrings("probe", failure.callee);
+    try std.testing.expect(failure.unsupported == null);
+    try std.testing.expect(!failure.unresolved);
+}
+
+// spec-case: FRONTEND-CORE-NOALLOC-1
+test "Core allocation contracts conservatively reject typed unresolved callbacks and preserve ordinary calls" {
+    const language = @import("mylang");
+    const contracts = @import("allocation_contract.zig");
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var bounded = try language.Compilation.init(a, "callback.my", "func apply(f: func(int) -> int effects(), x: int) -> int noalloc:\n    return f(x)\n");
+    const bounded_program = try bounded.checkLibraryProgram();
+    const failure = (try contracts.checkProgram(a, bounded_program, bounded.src)).?;
+    try std.testing.expect(failure.unresolved);
+    try std.testing.expectEqualStrings("apply", failure.function);
+    var ordinary = try language.Compilation.init(a, "callback.my", "func apply(f: func(int) -> int effects(), x: int) -> int:\n    return f(x)\n");
+    const ordinary_program = try ordinary.checkLibraryProgram();
+    try std.testing.expectEqual(@as(?contracts.Violation, null), try contracts.checkProgram(a, ordinary_program, ordinary.src));
+    var generic = try language.Compilation.init(a, "generic.my", "func identity[T: integer](value: T) -> T noalloc:\n    return value\nfunc scalar() -> int noalloc:\n    return identity(3)\n");
+    var legacy = try language.Compilation.init(a, "legacy.my", "func fixed(mut values: int[]) -> Unit effects(mutation):\n    values[0] = 42\nfunc apply(f: func(int) -> int effects(), x: int) -> int effects():\n    return f(x)\n");
+    const legacy_program = try legacy.checkLibraryProgram();
+    try std.testing.expectEqual(@as(?contracts.Violation, null), try contracts.checkProgram(a, legacy_program, legacy.src));
+    const generic_program = try generic.checkLibraryProgram();
+    try std.testing.expectEqual(@as(?contracts.Violation, null), try contracts.checkProgram(a, generic_program, generic.src));
+}
+
+// spec-case: FRONTEND-CORE-NOALLOC-1
+test "Core allocation contracts distinguish compiler runtime scalar helpers from source extern names" {
+    const language = @import("mylang");
+    const contracts = @import("allocation_contract.zig");
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var parsed = try language.Compilation.init(a, "parse.my", "func parse(raw: bytes) -> int? noalloc:\n    return raw.parse_int()\n");
+    const parsed_program = try parsed.checkLibraryProgram();
+    try std.testing.expectEqual(@as(?contracts.Violation, null), try contracts.checkProgram(a, parsed_program, parsed.src));
+    var compare = try language.Compilation.init(a, "compare.my", "func choose(a: str, b: str) -> str noalloc:\n    return min(a, b)\n");
+    const compare_program = try compare.checkLibraryProgram();
+    try std.testing.expectEqual(@as(?contracts.Violation, null), try contracts.checkProgram(a, compare_program, compare.src));
+    var foreign = try language.Compilation.init(a, "foreign.my", "extern func myl_core_parse_int_range(host: Host) -> int effects(host)\nfunc bounded(host: Host) -> int noalloc:\n    return myl_core_parse_int_range(host)\n");
+    try std.testing.expectError(error.SourceError, foreign.checkLibraryProgram());
+    try std.testing.expectEqualStrings("E_EXTERN_SYMBOL", foreign.diagnostics.items[0].code);
+    // The classifier also refuses a source-spanned declaration in raw Core.
+    var module: ir.Module = .{};
+    try module.functions.append(a, .{ .name = "myl_core_parse_int_range", .span = 13, .signature = .{ .params = &.{}, .ret = .void, .linkage = .extern_c } });
+    const call: ir.Inst = .{ .op = .call, .ty = .void, .a = @fromBackingInt(0) };
+    try std.testing.expectEqual(cost.Allocation.unresolved, cost.allocation(&module, &module.functions.items[0], call));
+    module.functions.items[0].span = 0;
+    try std.testing.expectEqual(cost.Allocation.never, cost.allocation(&module, &module.functions.items[0], call));
+}
+
+// spec-case: FRONTEND-CORE-NOALLOC-1
+test "Core allocation contracts pool fixed UTF8 errors and reject capability block allocation" {
+    const language = @import("mylang");
+    const contracts = @import("allocation_contract.zig");
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const scalar_source = "func measure(raw: bytes) -> int noalloc:\n    match raw.scalar_count():\n        case Ok(width):\n            return width\n        case Err(_):\n            return 0\nfunc main() -> int:\n    return 0\n";
+    var parsed = try language.Compilation.init(a, "count.my", scalar_source);
+    try parsed.check();
+    try std.testing.expectEqual(@as(?contracts.Violation, null), try contracts.checkProgram(a, parsed.program.?, parsed.src));
+    var refusal: build.Refusal = .{};
+    // Build the bounded root: main does not call this unused body.
+    var owned = try build.buildRootsSource(a, parsed.program.?, &.{@fromBackingInt(0)}, parsed.src, &refusal);
+    const bounded_outcome = try passes.debug(a, &owned);
+    const bounded_report = try cost.measure(a, &owned, &bounded_outcome, "measure");
+    try std.testing.expectEqual(@as(u32, 0), bounded_report.totals.allocation.sites);
+    var restricted = try language.Compilation.init(a, "cap.my", "func bounded(fs: Filesystem) -> int noalloc:\n    _ = fs.read_only()\n    return 0\n");
+    const restricted_program = try restricted.checkLibraryProgram();
+    const failure = (try contracts.checkProgram(a, restricted_program, restricted.src)).?;
+    try std.testing.expectEqualStrings("bounded", failure.function);
+    try std.testing.expect(failure.unsupported == null);
+}

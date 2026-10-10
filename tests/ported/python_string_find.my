@@ -1,4 +1,3 @@
-
 # `str.find` answers the first scalar index for one-scalar, multi-scalar and
 # longer-than-the-receiver needles, including multi-byte scalars whose low byte
 # also occurs inside another scalar (from the retired `qbe_text_test.zig`).

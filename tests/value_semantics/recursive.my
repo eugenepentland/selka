@@ -1,4 +1,3 @@
-
 record Branch:
     items: int[]
     next: Branch?

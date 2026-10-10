@@ -1,7 +1,5 @@
 # RC-ELEMENT-BORROW-3: an element of a read-only list parameter may be read in
 # place even when it owns references; everything else keeps its copy.
-
-
 record Span:
     source: bytes
     start: int

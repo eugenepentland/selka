@@ -92,7 +92,7 @@ fn statementWithFile(comptime Checker: type, self: *Checker, stmt: ast.Statement
 fn statementWithScope(comptime Checker: type, self: *Checker, stmt: ast.Statement, scope: @FieldType(@FieldType(ast.Statement, "data"), "with_scope"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
     if (scope.resource != null) return statementWithFile(Checker, self, stmt, scope, flow);
     // NEW-CORE-S5-ARENA-1: the new core runs an arena block as an ordinary block
-    // (S5-D3); `arena_fix.warn` reports it after the bodies are checked.
+    // (S5-D3); `arena_fix.reject` reports its removal even when a body fails.
     var name: []const u8 = "";
     if (scope.name) |declared| {
         name = self.src.text(declared);

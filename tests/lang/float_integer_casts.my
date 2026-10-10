@@ -1,6 +1,11 @@
-
 const SMALL: i8 = i8(-128.5)
+
+
+# lint: allow dead-private reason="This declaration is exercised during constant evaluation or through a callback value, outside direct runtime call edges."
 const ZERO: u8 = u8(-0.5)
+
+
+# lint: allow dead-private reason="This declaration is exercised during constant evaluation or through a callback value, outside direct runtime call edges."
 const WIDE: u64 = u64(18446744073709549568.0)
 
 

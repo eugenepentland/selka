@@ -1,4 +1,3 @@
-
 public func test_scale() -> bool effects():
     return bench_sum(4) == 6
 

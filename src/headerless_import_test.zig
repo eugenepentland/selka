@@ -156,5 +156,13 @@ test "project parser retains every edit in a variant migration batch" {
     try loaded.load(files.provider(), "main", .{});
     try t.expectError(error.SourceError, @import("interfaces.zig").build(&loaded));
     try t.expect(loaded.problem.?.fix != null);
-    try t.expect(loaded.problem.?.fix_more.len >= 2);
+    try t.expect(parserRepairCount(loaded.problem.?.recovered) >= 3);
+}
+
+fn parserRepairCount(problems: []const diagnostic.Diagnostic) usize {
+    var edits: usize = 0;
+    for (problems) |item| if (item.provenance.fix) |fix| {
+        edits += fix.count();
+    };
+    return edits;
 }

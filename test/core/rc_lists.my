@@ -1,5 +1,3 @@
-
-
 func shared_tail(xs: int[], extra: int) -> int[]:
     mut ys = xs
     ys.append(extra)

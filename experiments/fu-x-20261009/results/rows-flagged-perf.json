@@ -1,0 +1,50 @@
+{
+ "result_propagate/4096": {
+  "instructions": 0.9999668018199753,
+  "cycles": 1.080844015950411,
+  "branch_misses": [
+   71646,
+   209426
+  ]
+ },
+ "result_propagate/64": {
+  "instructions": 0.9986098708606755,
+  "cycles": 0.9988785969294316,
+  "branch_misses": [
+   3769,
+   3759
+  ]
+ },
+ "sort_int/4096": {
+  "instructions": 0.992291113511679,
+  "cycles": 0.9966111143210922,
+  "branch_misses": [
+   108743,
+   109106
+  ]
+ },
+ "sort_int/64": {
+  "instructions": 0.9808042432579425,
+  "cycles": 0.9827730457688297,
+  "branch_misses": [
+   44142,
+   49083
+  ]
+ },
+ "packet_decode/4096": {
+  "instructions": 1.0102790923985516,
+  "cycles": 1.063310844731766,
+  "branch_misses": [
+   4215,
+   4169
+  ]
+ },
+ "packet_decode/64": {
+  "instructions": 1.0107665324409456,
+  "cycles": 1.0433387749649023,
+  "branch_misses": [
+   28712,
+   28654
+  ]
+ }
+}

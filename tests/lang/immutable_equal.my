@@ -1,4 +1,3 @@
-
 func retained_text() -> str:
     mut source = "prefix-λ-日本語-😀-abcdefghijklmnop-suffix" + "!"
     return source[7:33]

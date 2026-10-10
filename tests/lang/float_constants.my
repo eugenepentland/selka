@@ -1,39 +1,117 @@
-
 import float_constants_support as support
 
 # `float` module constants: the initializer folds at check time with the same binary64
 # operations the running program uses, so a constant and the same expression computed
 # at run time are the same number.
-
 type Real = float
 
+
 const PI: float = 3.14
+
+
+# lint: allow dead-private reason="This declaration is exercised during constant evaluation or through a callback value, outside direct runtime call edges."
 const TWO_PI: float = PI * 2.0
+
+
+# lint: allow dead-private reason="This declaration is exercised during constant evaluation or through a callback value, outside direct runtime call edges."
 const HALF: float = 1 / 2
+
+
+# lint: allow dead-private reason="This declaration is exercised during constant evaluation or through a callback value, outside direct runtime call edges."
 const WHOLE: float = 2
+
+
+# lint: allow dead-private reason="This declaration is exercised during constant evaluation or through a callback value, outside direct runtime call edges."
 const NEGATIVE: float = -2.5
+
+
+# lint: allow dead-private reason="This declaration is exercised during constant evaluation or through a callback value, outside direct runtime call edges."
 const NEGATIVE_WHOLE: float = -5
+
+
+# lint: allow dead-private reason="This declaration is exercised during constant evaluation or through a callback value, outside direct runtime call edges."
 const TINY: float = 1e-9
+
+
+# lint: allow dead-private reason="This declaration is exercised during constant evaluation or through a callback value, outside direct runtime call edges."
 const GROUPED: float = 1_000.5
+
+
+# lint: allow dead-private reason="This declaration is exercised during constant evaluation or through a callback value, outside direct runtime call edges."
 const LEADING_DOT: float = .25
+
+
+# lint: allow dead-private reason="This declaration is exercised during constant evaluation or through a callback value, outside direct runtime call edges."
 const RATIO: float = TWO_PI / PI
+
+
+# lint: allow dead-private reason="This declaration is exercised during constant evaluation or through a callback value, outside direct runtime call edges."
 const MEAN: float = (PI + TWO_PI) / 2
+
+
+# lint: allow dead-private reason="This declaration is exercised during constant evaluation or through a callback value, outside direct runtime call edges."
 const FLOORED: float = 7.5 // 2.0
+
+
+# lint: allow dead-private reason="This declaration is exercised during constant evaluation or through a callback value, outside direct runtime call edges."
 const REMAINDER: float = -7.5 % 2.0
+
+
+# lint: allow dead-private reason="This declaration is exercised during constant evaluation or through a callback value, outside direct runtime call edges."
 const ROOT: float = sqrt(2.0)
+
+
+# lint: allow dead-private reason="This declaration is exercised during constant evaluation or through a callback value, outside direct runtime call edges."
 const CEILED: float = ceil(2.1)
+
+
+# lint: allow dead-private reason="This declaration is exercised during constant evaluation or through a callback value, outside direct runtime call edges."
 const SUM: float = 0.1 + 0.2
+
+
+# lint: allow dead-private reason="This declaration is exercised during constant evaluation or through a callback value, outside direct runtime call edges."
 const THIRD: float = 1 / 3
+
+
+# lint: allow dead-private reason="This declaration is exercised during constant evaluation or through a callback value, outside direct runtime call edges."
 const ROUNDED: float = float(9007199254740993)
+
+
+# lint: allow dead-private reason="This declaration is exercised during constant evaluation or through a callback value, outside direct runtime call edges."
 const UNSIGNED_WIDE: float = float(18446744073709551615u64)
+
+
+# lint: allow dead-private reason="This declaration is exercised during constant evaluation or through a callback value, outside direct runtime call edges."
 const INTEGER_FIRST: float = PI * 2
+
+
+# lint: allow dead-private reason="This declaration is exercised during constant evaluation or through a callback value, outside direct runtime call edges."
 const NEGATIVE_ZERO: float = -0.0
+
+
+# lint: allow dead-private reason="This declaration is exercised during constant evaluation or through a callback value, outside direct runtime call edges."
 const ALIASED: Real = 2.718
+
+
+# lint: allow dead-private reason="This declaration is exercised during constant evaluation or through a callback value, outside direct runtime call edges."
 const BELOW: bool = PI < 3.15
+
+
+# lint: allow dead-private reason="This declaration is exercised during constant evaluation or through a callback value, outside direct runtime call edges."
 const EQUAL: bool = TWO_PI == PI * 2.0
+
+
+# lint: allow dead-private reason="This declaration is exercised during constant evaluation or through a callback value, outside direct runtime call edges."
 const UNORDERED: bool = (0.0 / 0.0) != (0.0 / 0.0)
+
+
+# lint: allow dead-private reason="This declaration is exercised during constant evaluation or through a callback value, outside direct runtime call edges."
 const HUNDRED_PI: int = int(PI * 100.0)
+
+
+# lint: allow dead-private reason="This declaration is exercised during constant evaluation or through a callback value, outside direct runtime call edges."
 const BACK: float = float(HUNDRED_PI)
+
 
 record Circle:
     radius: float
@@ -132,8 +210,15 @@ public func test_a_float_constant_read_does_not_allocate() -> bool noalloc:
     return PI == 3.14 and TWO_PI == 6.28
 
 
+# lint: allow dead-private reason="This declaration is exercised during constant evaluation or through a callback value, outside direct runtime call edges."
 const FLOAT_CHAIN: bool = 0.0 < PI < TWO_PI
+
+
+# lint: allow dead-private reason="This declaration is exercised during constant evaluation or through a callback value, outside direct runtime call edges."
 const MIXED_CHAIN: bool = 0 < PI <= TWO_PI
+
+
+# lint: allow dead-private reason="This declaration is exercised during constant evaluation or through a callback value, outside direct runtime call edges."
 const SKIPPED_FLOAT_CHAIN: bool = PI < 0.0 < 1 // 0
 
 

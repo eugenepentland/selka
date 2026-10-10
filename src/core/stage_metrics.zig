@@ -4,8 +4,11 @@ const optimization = @import("optimization_cache.zig");
 const emission = @import("emission_cache.zig");
 const language = @import("mylang");
 
-/// Wall times include lookup, hashing, decoding, and publication for each stage.
+/// Wall times include lookup, hashing, decoding, journal publication, and bounded
+/// pack sealing for each stage. The final partial flush is reported by Storage.
 pub const Times = struct { frontend: u64 = 0, lowering: u64 = 0, optimizer: u64 = 0, emission: u64 = 0, native: u64 = 0, linker: u64 = 0, frontend_phases: []const FrontendPhase = &.{} };
+/// Final cache maintenance runs before a successful build's replay receipt.
+pub const Storage = struct { flush_nanoseconds: u64, flush_succeeded: bool, compression: []const u8 = "zlib", reads: @import("stage_pack.zig").Statistics };
 /// Frontend intervals may nest; inclusive entries must not be added to their children.
 pub const FrontendPhase = struct { name: []const u8, nanoseconds: u64, inclusive: bool };
 /// Counts reflect work actually restored or computed during this build.

@@ -70,7 +70,7 @@ pub const Site = struct { module: usize, span: source.Span };
 pub const ModuleName = struct { text: []const u8, last: []const u8, span: source.Span };
 /// Project diagnostic, optional related declaration/import location, and the
 /// exact edit that repairs it, indexing the problem module's own bytes.
-pub const Problem = struct { code: []const u8, message: []const u8, site: Site, related: ?Site = null, fix: ?diagnostic.Edit = null, fix_more: []const diagnostic.Edit = &.{} };
+pub const Problem = struct { code: []const u8, message: []const u8, site: Site, related: ?Site = null, fix: ?diagnostic.Edit = null, fix_more: []const diagnostic.Edit = &.{}, recovered: []const diagnostic.Diagnostic = &.{} };
 /// Declared public name and its source location. A re-export directive
 /// (`export shared.units.Distance`) records `name` as the final member and
 /// `alias` as the imported module qualifier; a plain `export Name` leaves
@@ -270,7 +270,14 @@ pub const Project = struct {
         const tokens = lex.lex(scratch.allocator(), src.bytes, &sink) catch |err| {
             if (err == error.OutOfMemory) return err;
             const problem = sink.items.items[0];
-            return self.fail(problem.code, problem.message, .{ .module = id, .span = problem.span }, null);
+            const failure = self.fail(problem.code, problem.message, .{ .module = id, .span = problem.span }, null);
+            // A removed spelling's rename stays a structured fix in a project
+            // module too, so `mylang fix` migrates it (FIX-MIGRATION-CAPTURE-1).
+            if (problem.provenance.fix) |fix| {
+                self.problem.?.fix = fix.edit;
+                self.problem.?.fix_more = fix.more;
+            }
+            return failure;
         };
         var scanner: Scanner = .{ .project = self, .id = id, .tokens = tokens };
         _ = try self.moduleDeclaration(&scanner, options.legacy_headers);
@@ -359,6 +366,16 @@ pub const Project = struct {
     /// Allocate the current project diagnostic with source locations.
     pub fn renderProblem(self: *Project, allocator: std.mem.Allocator) RenderProblemError![]u8 {
         const problem = self.problem orelse return error.NoProblem;
+        if (problem.recovered.len != 0) {
+            var output: std.ArrayList(u8) = .empty;
+            errdefer output.deinit(allocator);
+            for (problem.recovered) |item| {
+                const text = try item.render(allocator, self.modules.items[problem.site.module].src);
+                defer allocator.free(text);
+                try output.appendSlice(allocator, text);
+            }
+            return output.toOwnedSlice(allocator);
+        }
         const diag: diagnostic.Diagnostic = .{ .code = problem.code, .span = problem.site.span, .message = problem.message };
         const primary = try diag.render(allocator, self.modules.items[problem.site.module].src);
         if (problem.related) |related| {

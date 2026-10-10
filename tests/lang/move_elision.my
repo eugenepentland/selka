@@ -1,10 +1,7 @@
-
 # Aggregate copies the ownership analysis proves unobserved are not emitted
 # (`QBE-MOVE-ELIDE-1`). Every case here writes a record where the old value
 # could still be observed if a skipped copy were not in fact dead, and checks
 # that every name keeps the value it would have had with the copies.
-
-
 public record Point:
     x: int
     y: int

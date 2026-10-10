@@ -1,4 +1,5 @@
-//! Front-end adapter tests.
+//! Frontend adapter regressions for loaded sources, durable body reuse and
+//! allocation contracts across cold, warm and edited validation sessions.
 const std = @import("std");
 const frontend = @import("frontend.zig");
 const language = @import("mylang");
@@ -183,4 +184,61 @@ test "frontend nested project entry and source providers enforce fresh loader bu
     var rejected: std.ArrayList(u8) = .empty;
     try std.testing.expectError(error.SourceError, limited.check(arena.allocator(), "main", &rejected));
     try std.testing.expect(std.mem.indexOf(u8, rejected.items, "E_PROJECT_BYTES") != null);
+}
+
+// spec-case: FRONTEND-CORE-NOALLOC-1
+test "F1 validation sessions omit Core allocation contracts after a bounded body edit" {
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", arena.allocator());
+    const cache = try std.fs.path.join(arena.allocator(), &.{ root, "cache" });
+    const source =
+        \\func helper(values: dict[FixedArray[Unit, 2], int], key: FixedArray[Unit, 2]) -> bool:
+        \\    return True
+        \\func bounded(values: dict[FixedArray[Unit, 2], int], key: FixedArray[Unit, 2]) -> bool noalloc:
+        \\    return helper(values, key)
+        \\func main() -> int:
+        \\    return 0
+    ;
+    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "main.my", .data = source });
+    const cold = try checkProject(std.testing.allocator, root, cache, true);
+    defer cold.deinit(std.testing.allocator);
+    const warm = try checkProject(std.testing.allocator, root, cache, true);
+    defer warm.deinit(std.testing.allocator);
+    try std.testing.expect(warm.work.summaries > 0);
+    // Guest effects stay unchanged; the edit introduces runtime hash scratch.
+    const changed = try std.mem.replaceOwned(u8, arena.allocator(), source, "return True", "return key in values");
+    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "main.my", .data = changed });
+    var session = frontend.Session.init(std.testing.allocator, std.testing.io, root);
+    defer session.deinit();
+    try session.enableCache(std.testing.allocator, cache);
+    session.validationOnly();
+    var diagnostics: std.ArrayList(u8) = .empty;
+    _ = try session.check(arena.allocator(), "main", &diagnostics);
+    try std.testing.expectEqual(@as(usize, 0), diagnostics.items.len);
+}
+
+// spec-case: FRONTEND-CORE-NOALLOC-1
+test "Core allocation contracts preserve legacy effects lists in cold and warm validation sessions" {
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", arena.allocator());
+    const cache = try std.fs.path.join(arena.allocator(), &.{ root, "cache" });
+    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "main.my", .data =
+        \\func fixed(mut values: int[]) -> Unit effects(mutation):
+        \\    values[0] = 42
+        \\func apply(f: func(int) -> int effects(), x: int) -> int effects():
+        \\    return f(x)
+        \\func main() -> int:
+        \\    return 0
+    });
+    const cold = try checkProject(std.testing.allocator, root, cache, true);
+    defer cold.deinit(std.testing.allocator);
+    const warm = try checkProject(std.testing.allocator, root, cache, true);
+    defer warm.deinit(std.testing.allocator);
+    try std.testing.expect(warm.work.summaries > 0);
 }

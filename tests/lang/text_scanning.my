@@ -1,5 +1,3 @@
-
-
 # `times` copies of `piece` by doubling, so a long input costs a logarithmic
 # number of guest steps and stays inside a test's instruction budget.
 func repeated(piece: str, times: int) -> str:
