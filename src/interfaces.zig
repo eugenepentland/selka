@@ -1,5 +1,6 @@
 //! Module declaration identities and export boundaries, before body type checking.
 const std = @import("std");
+const frontend_runtime = @import("frontend_runtime.zig");
 const component_adapter = @import("component_adapter.zig");
 const eGenericArity = "E_GENERIC_ARITY";
 /// Error code for an export directive that names no visible declaration.
@@ -122,6 +123,7 @@ pub const Lookup = struct { module: usize, name: []const u8 };
 pub const Index = struct {
     project: *graph.Project,
     units: []Unit,
+    frontend_context: ?[32]u8 = null,
     /// MODULE-INTERFACE-CUTOFF-1: when set, every name `resolve` (and a
     /// kind or constant probe) looks up in a module, found or missing, and
     /// the declaration a re-export resolves to, in project-arena storage.
@@ -130,6 +132,15 @@ pub const Index = struct {
     /// each unannotated callable's frozen inferred ceiling instead of demanding
     /// the author retype it. Null during pure interface pre-validation.
     program: ?typed.Program = null,
+    /// Reject runtime, authority or source changes after declaration syntax was admitted.
+    pub fn verifyFrontend(self: *const Index, allocator: std.mem.Allocator) frontend_runtime.Error!frontend_runtime.Verified {
+        const verified = try frontend_runtime.verify(allocator, self.project.frontendRuntime());
+        const current = frontendContext(self.project, verified);
+        if (self.frontend_context) |previous| {
+            if (!std.mem.eql(u8, &previous, &current)) return error.ComponentChanged;
+        }
+        return verified;
+    }
     fn add(self: *Index, module: usize, span: source.Span, kind: Kind, owner: ?source.Span, restricted: bool) diagnostic.Error!void {
         const allocator = self.project.arena.allocator();
         const src = self.project.modules.items[module].src;
@@ -225,7 +236,7 @@ pub const Index = struct {
     /// dotted path. A local binding cannot shadow an import alias
     /// (`E_SHADOWING`), and comments and string literals are single tokens, so a
     /// match is a resolved qualified reference rather than a bare identifier.
-    pub fn recoverImportUsage(self: *Index, backing: std.mem.Allocator) void {
+    pub fn recoverImportUsage(self: *Index, backing: std.mem.Allocator) frontend_runtime.Error!void {
         if (self.project.problem != null) return;
         var arena = std.heap.ArenaAllocator.init(backing);
         defer arena.deinit();
@@ -240,7 +251,10 @@ pub const Index = struct {
                 continue;
             }
             var sink: diagnostic.Sink = .{ .allocator = scratch };
-            const tokens = lexer.lex(scratch, module.src.bytes, &sink) catch continue;
+            const tokens = frontend_runtime.lex(scratch, module.src, &sink, self.project.frontendRuntime()) catch |err| {
+                if (frontend_runtime.hostFailure(err)) |host| return host;
+                continue;
+            };
             var index: usize = 0;
             while (index < tokens.len) : (index += 1) {
                 if (tokens[index].tag != .ident) continue;
@@ -1542,13 +1556,13 @@ fn parameterCopy(src: source.Source, parameter: ast.TypeParameter) bool {
     return false;
 }
 /// Parse and index every module before checking exported signature visibility.
-pub fn build(project: *graph.Project) (diagnostic.Error || error{IncompleteProject})!Index {
+pub fn build(project: *graph.Project) (frontend_runtime.Error || error{IncompleteProject})!Index {
     return buildWithCache(project, null, null);
 }
 /// Reuse unchanged parse tables from either an in-process syntax cache, a
 /// persistent content-addressed frontend cache, or both, while rebuilding every
 /// symbol, export and exported signature check.
-pub fn buildWithCache(project: *graph.Project, cache: ?*SyntaxCache, frontend: ?*FrontendCache) (diagnostic.Error || error{IncompleteProject})!Index {
+pub fn buildWithCache(project: *graph.Project, cache: ?*SyntaxCache, frontend: ?*FrontendCache) (frontend_runtime.Error || error{IncompleteProject})!Index {
     return buildWithCacheTimed(project, cache, frontend, null);
 }
 /// Same as `buildWithCache`, with optional opt-in phase timing. Syntax replay and
@@ -1560,13 +1574,14 @@ pub fn buildWithCacheTimed(
     cache: ?*SyntaxCache,
     frontend: ?*FrontendCache,
     timing: ?*@import("timings.zig").Profile,
-) (diagnostic.Error || error{IncompleteProject})!Index {
+) (frontend_runtime.Error || error{IncompleteProject})!Index {
     if (!project.progress.complete or project.problem != null) return error.IncompleteProject;
     const allocator = project.arena.allocator();
     const include_timing = if (timing) |profile| profile.enabled else false;
     const total_start = if (include_timing) timing.?.now() else std.Io.Timestamp.zero;
     var syntax_ns: i96 = 0;
-    var index: Index = .{ .project = project, .units = try allocator.alloc(Unit, project.modules.items.len) };
+    const verified = try frontend_runtime.verify(allocator, project.frontendRuntime());
+    var index: Index = .{ .project = project, .units = try allocator.alloc(Unit, project.modules.items.len), .frontend_context = frontendContext(project, verified) };
     for (project.order.items) |module_id| {
         const module = project.modules.items[module_id];
         const syntax_start = if (include_timing) timing.?.now() else std.Io.Timestamp.zero;
@@ -1618,6 +1633,7 @@ pub fn buildWithCacheTimed(
         const elapsed = total_start.durationTo(timing.?.now()).nanoseconds;
         timing.?.add("declarations_interfaces", @max(0, elapsed - syntax_ns), false);
     }
+    _ = try index.verifyFrontend(allocator);
     return index;
 }
 
@@ -1626,20 +1642,45 @@ fn sameOwner(local: bool, owner: ?[]const u8, declared: []const u8) bool {
     return std.mem.eql(u8, owner orelse return false, declared);
 }
 
-fn moduleSyntax(project: *graph.Project, module_id: usize, cache: ?*SyntaxCache, frontend: ?*FrontendCache, replayed: *bool) diagnostic.Error!ast.Program {
+fn frontendContext(project: *const graph.Project, verified: frontend_runtime.Verified) [32]u8 {
+    var hash = std.crypto.hash.sha2.Sha256.init(.{});
+    hash.update(&verified.identity);
+    for (project.modules.items) |module| {
+        hash.update(std.mem.asBytes(&module.src.path.len));
+        hash.update(module.src.path);
+        hash.update(std.mem.asBytes(&module.src.bytes.len));
+        hash.update(module.src.bytes);
+        hash.update(&.{@intFromBool(module.src.trusted_intrinsics)});
+    }
+    var digest: [32]u8 = undefined;
+    hash.final(&digest);
+    return digest;
+}
+
+fn confirmFrontend(project: *const graph.Project, before: frontend_runtime.Verified) frontend_runtime.Error!void {
+    const after = try frontend_runtime.verify(project.arena.child_allocator, project.frontendRuntime());
+    if (!std.mem.eql(u8, &before.identity, &after.identity)) return error.ComponentChanged;
+}
+
+fn moduleSyntax(project: *graph.Project, module_id: usize, cache: ?*SyntaxCache, frontend: ?*FrontendCache, replayed: *bool) frontend_runtime.Error!ast.Program {
     const module = project.modules.items[module_id];
     const allocator = project.arena.allocator();
     replayed.* = false;
-    if (cache) |retained| {
+    const verified = try frontend_runtime.verify(allocator, project.frontendRuntime());
+    if (cache) |retained| retained.setFrontend(verified);
+    if (frontend) |disk| disk.setFrontend(verified);
+    if (if (verified.reuse) cache else null) |retained| {
         if (try retained.lookup(allocator, module.src, module.header.body_start)) |syntax| {
+            try confirmFrontend(project, verified);
             replayed.* = true;
             return syntax;
         }
     }
     // A persistent hit still rebuilds every symbol and signature check below; it
     // only skips lexing and parsing. A rejected or damaged entry is a miss.
-    if (frontend) |disk| {
+    if (if (verified.reuse) frontend else null) |disk| {
         if (try disk.lookupSyntax(allocator, module.src, module.header.body_start)) |syntax| {
+            try confirmFrontend(project, verified);
             replayed.* = true;
             return syntax;
         }
@@ -1652,8 +1693,9 @@ fn moduleSyntax(project: *graph.Project, module_id: usize, cache: ?*SyntaxCache,
         preserveParserDiagnostics(project, sink.items.items);
         return failure;
     };
-    if (cache) |retained| try retained.remember(module.src, module.header.body_start, syntax);
-    if (frontend) |disk| try disk.rememberSyntax(module.src, module.header.body_start, syntax);
+    try confirmFrontend(project, verified);
+    if (if (verified.reuse) cache else null) |retained| try retained.remember(module.src, module.header.body_start, syntax);
+    if (if (verified.reuse) frontend else null) |disk| try disk.rememberSyntax(module.src, module.header.body_start, syntax);
     return syntax;
 }
 // The sink's storage and every diagnostic payload belong to the project arena.
@@ -1666,15 +1708,15 @@ fn preserveParserDiagnostics(project: *graph.Project, problems: []const diagnost
     }
 }
 
-fn parseModule(project: *graph.Project, module_id: usize, sink: *diagnostic.Sink) diagnostic.Error!ast.Program {
+fn parseModule(project: *graph.Project, module_id: usize, sink: *diagnostic.Sink) frontend_runtime.Error!ast.Program {
     const module = project.modules.items[module_id];
     // ARENA-BOUNDED-1: the syntax outlives the tokens, which nothing reads after
     // the parse, so they come from the child allocator and go back at once
     // instead of staying in the project arena (about 420 MB at a million lines).
     const scratch = project.arena.child_allocator;
-    const tokens = try lexer.lex(scratch, module.src.bytes, sink);
+    const tokens = try frontend_runtime.lex(scratch, module.src, sink, project.frontendRuntime());
     defer scratch.free(tokens);
     var parse: parser.Parser = .{ .src = module.src, .storage = project.arena.allocator(), .tokens = tokens, .sink = sink, .syntax = .{ .growth = scratch } };
     defer parse.release();
-    return parse.parseModule();
+    return frontend_runtime.parse(&parse, true, project.frontendRuntime());
 }

@@ -1,7 +1,7 @@
 //! Deterministic module-header discovery. This graph does not yet resolve exports
 //! or type-check multi-file bodies. Provider paths are normalized relative names.
 /// Failures returned by load; callers must handle these boundary errors.
-pub const LoadError = error{
+pub const LoadError = frontend_runtime.Error || error{
     InvalidModuleBudget,
     InvalidModuleName,
     OutOfMemory,
@@ -26,6 +26,7 @@ pub const ModulePathError = error{
 };
 
 const std = @import("std");
+const frontend_runtime = @import("frontend_runtime.zig");
 const ChunkedArena = @import("chunked_arena.zig").ChunkedArena;
 const source = @import("source.zig");
 const lex = @import("lexer.zig");
@@ -124,7 +125,15 @@ pub const Project = struct {
     names: std.StringHashMapUnmanaged(usize) = .empty,
     problem: ?Problem = null,
     counts: struct { bytes: usize = 0, embedded_bytes: usize = 0, imports: usize = 0 } = .{},
-    progress: struct { started: bool = false, complete: bool = false } = .{},
+    progress: struct { started: bool = false, complete: bool = false, frontend: ?frontend_runtime.Runtime = null } = .{},
+    /// Explicit syntax capabilities belong to this loader request lifecycle.
+    pub fn configureFrontend(self: *Project, runtime: frontend_runtime.Runtime) void {
+        self.progress.frontend = runtime;
+    }
+    /// Runtime capabilities selected for this loader request.
+    pub fn frontendRuntime(self: *const Project) ?frontend_runtime.Runtime {
+        return self.progress.frontend;
+    }
     /// Create an empty project arena; release all project storage with deinit.
     pub fn init(allocator: std.mem.Allocator) Project {
         return .{ .arena = .init(allocator) };
@@ -137,7 +146,7 @@ pub const Project = struct {
         self.problem = .{ .code = code, .message = message, .site = site, .related = related };
         return error.SourceError;
     }
-    fn intern(self: *Project, provider: Provider, name: []const u8, origin: ?Site, options: Options, scratch: *std.heap.ArenaAllocator) diagnostic.Error!usize {
+    fn intern(self: *Project, provider: Provider, name: []const u8, origin: ?Site, options: Options, scratch: *std.heap.ArenaAllocator) frontend_runtime.Error!usize {
         if (self.names.get(name)) |id| return id;
         const allocator = self.arena.allocator();
         if (self.modules.items.len >= options.max_modules) return self.fail("E_MODULE_LIMIT", "module count exceeds the project budget", origin orelse .{ .module = 0, .span = .{ .start = 0, .end = 0 } }, null);
@@ -204,6 +213,7 @@ pub const Project = struct {
     }
     /// Load the reachable import graph iteratively while enforcing source, embedded-file and graph limits.
     pub fn load(self: *Project, provider: Provider, entry: []const u8, options: Options) LoadError!void {
+        _ = try frontend_runtime.verify(self.arena.allocator(), self.frontendRuntime());
         if (self.progress.started) return error.ProjectAlreadyLoaded;
         self.progress.started = true;
         if (!validName(entry)) return error.InvalidModuleName;
@@ -259,7 +269,7 @@ pub const Project = struct {
         }
         self.progress.complete = true;
     }
-    fn header(self: *Project, id: usize, options: Options, _: bool, scratch: *std.heap.ArenaAllocator) diagnostic.Error!void {
+    fn header(self: *Project, id: usize, options: Options, _: bool, scratch: *std.heap.ArenaAllocator) frontend_runtime.Error!void {
         const allocator = self.arena.allocator();
         const src = self.modules.items[id].src;
         // Diagnostics outlive the header in the project arena; only the tokens
@@ -267,8 +277,8 @@ pub const Project = struct {
         // allocate (to keep one retained chunk), and that failure is reported.
         var sink: diagnostic.Sink = .{ .allocator = allocator };
         if (!scratch.reset(.retain_capacity)) return error.OutOfMemory;
-        const tokens = lex.lex(scratch.allocator(), src.bytes, &sink) catch |err| {
-            if (err == error.OutOfMemory) return err;
+        const tokens = frontend_runtime.lex(scratch.allocator(), src, &sink, self.frontendRuntime()) catch |err| {
+            if (err != error.SourceError) return err;
             const problem = sink.items.items[0];
             const failure = self.fail(problem.code, problem.message, .{ .module = id, .span = problem.span }, null);
             // A removed spelling's rename stays a structured fix in a project

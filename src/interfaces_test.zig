@@ -2388,3 +2388,37 @@ test "constant hints inspect declaration policy without recording project proble
     try t.expect(!try names.isConstant(merged.syntax.functions[2].name));
     try t.expect(project.problem == null);
 }
+
+// spec-case: SELFHOST-FRONTEND-ROUTING-1
+test "recoverImportUsage preserves component deployment failure" {
+    const a = std.testing.allocator;
+    var project = graph.Project.init(a);
+    defer project.deinit();
+    var environment: std.process.Environ.Map = .init(a);
+    defer environment.deinit();
+    try environment.put("MYLANG_LEXER_MODE", "shadow");
+    project.configureFrontend(.{ .io = std.testing.io, .environ = &environment, .component_dir = "/nonexistent/mylang-component-import-usage" });
+    const storage = project.arena.allocator();
+    const imports = try storage.alloc(graph.Import, 1);
+    imports[0] = .{ .name = "dependency", .alias = "dependency", .span = .{ .start = 0, .end = 0 } };
+    try project.modules.append(storage, .{ .name = "main", .src = try @import("source.zig").Source.init(storage, "main.my", "func main() -> int:\n    return dependency.value()\n"), .imports = imports });
+    try project.order.append(storage, 0);
+    const admitted_units = try storage.alloc(interfaces.Unit, 1);
+    admitted_units[0] = .{ .syntax = .{ .nodes = .empty, .statements = .empty, .functions = &.{} } };
+    var index: interfaces.Index = .{ .project = &project, .units = admitted_units };
+    try std.testing.expectError(error.ComponentMissing, index.recoverImportUsage(a));
+}
+
+// spec-case: SELFHOST-FRONTEND-ROUTING-1
+test "verified frontend rejects retained index authority changes" {
+    const a = std.testing.allocator;
+    var project = graph.Project.init(a);
+    defer project.deinit();
+    const storage = project.arena.allocator();
+    try project.modules.append(storage, .{ .name = "main", .src = try @import("source.zig").Source.init(storage, "main.my", "func main() -> int:\n    return 0\n") });
+    try project.order.append(storage, 0);
+    project.progress.complete = true;
+    var index = try interfaces.build(&project);
+    project.modules.items[0].src.trusted_intrinsics = true;
+    try std.testing.expectError(error.ComponentChanged, index.verifyFrontend(a));
+}

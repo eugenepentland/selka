@@ -1,7 +1,7 @@
 //! Full semantic checking over relocated module syntax and explicit namespaces.
 const invariant_callbacks = @import("invariant_callbacks.zig");
 /// Failures returned by init; callers must handle these boundary errors.
-pub const InitError = error{
+pub const InitError = @import("frontend_runtime.zig").Error || error{
     EmptySourceMap,
     IncompleteProject,
     InvalidNodeId,
@@ -13,7 +13,7 @@ pub const InitError = error{
     Overflow,
 };
 /// Failures returned by check; callers must handle these boundary errors.
-pub const CheckError = error{
+pub const CheckError = @import("frontend_runtime.zig").Error || error{
     OutOfMemory,
     SourceError,
     InternalError,
@@ -50,6 +50,8 @@ pub const Compilation = struct {
     program: ?typed.Program = null,
     /// Merge indexed modules into a compilation whose storage belongs to the project arena.
     pub fn init(index: *interfaces.Index) InitError!Compilation {
+        // Verification returns no owned allocation; merged storage belongs to the project arena.
+        _ = index.verifyFrontend(index.project.arena.allocator()) catch |err| return err;
         const merged = try syntax.build(index);
         return .{ .index = index, .src = merged.src, .syntax = merged.syntax, .diagnostics = .{ .allocator = index.project.arena.allocator() } };
     }
@@ -59,6 +61,7 @@ pub const Compilation = struct {
     }
     /// Return library trees for backend validation without setting executable program.
     pub fn checkLibraryProgram(self: *Compilation) CheckError!typed.Program {
+        _ = try self.index.verifyFrontend(self.index.project.arena.allocator());
         for (self.diagnostics.items.items) |item| if (item.severity == .err) return error.SourceError;
         var names: Names = .{ .index = self.index, .src = self.src };
         return sema.checkLibraryProgram(self.index.project.arena.allocator(), self.src, self.syntax, &self.diagnostics, &names);
@@ -67,6 +70,7 @@ pub const Compilation = struct {
     /// Validate library bodies, imports, effects and exports without requiring main.
     /// Success is deliberately not retained as an executable checked program.
     pub fn checkLibrary(self: *Compilation) CheckError!void {
+        _ = try self.index.verifyFrontend(self.index.project.arena.allocator());
         for (self.diagnostics.items.items) |item| if (item.severity == .err) return error.SourceError;
         var names: Names = .{ .index = self.index, .src = self.src };
         try sema.checkLibrary(self.index.project.arena.allocator(), self.src, self.syntax, &self.diagnostics, &names);
@@ -77,7 +81,10 @@ pub const Compilation = struct {
     }
     /// Reuse supported function queries while checking fresh module/type/effect dependencies.
     pub fn checkWithCache(self: *Compilation, cache: ?*semantic_cache.Cache) CheckError!void {
-        if (self.program != null) return;
+        const verified = try self.index.verifyFrontend(self.index.project.arena.allocator());
+        if (cache) |semantic| try semantic.setFrontend(verified);
+        if (self.program != null and verified.reuse) return;
+        _ = try self.index.verifyFrontend(self.index.project.arena.allocator());
         for (self.diagnostics.items.items) |item| if (item.severity == .err) return error.SourceError;
         var names: Names = .{ .index = self.index, .src = self.src };
         // Bind this project's lexical module/import identities so semantic

@@ -9,7 +9,8 @@ const source = @import("source.zig");
 const diagnostic = @import("diagnostic.zig");
 
 /// Failures returned by render; callers must handle these boundary errors.
-pub const Error = diagnostic.Error;
+pub const Error = frontend_runtime.Error;
+const frontend_runtime = @import("frontend_runtime.zig");
 
 /// Stable lowercase kind names for every top-level construct the parser accepts.
 pub const Kind = enum {
@@ -120,10 +121,16 @@ fn hasExportDirective(bytes: []const u8) bool {
 
 /// Parse one file and allocate its declarations-v1 listing with the caller's allocator.
 pub fn render(allocator: std.mem.Allocator, arena: *std.heap.ArenaAllocator, src: source.Source, tokens: []const lex.Token, sink: *diagnostic.Sink) Error![]u8 {
+    return renderUsing(allocator, arena, src, tokens, sink, null);
+}
+
+/// Declaration rendering through an explicit verified syntax boundary.
+pub fn renderUsing(allocator: std.mem.Allocator, arena: *std.heap.ArenaAllocator, src: source.Source, tokens: []const lex.Token, sink: *diagnostic.Sink, runtime: ?frontend_runtime.Runtime) Error![]u8 {
+    _ = try frontend_runtime.verify(arena.allocator(), runtime);
     var scan: Scan = .{ .src = src, .tokens = tokens };
     const module_file = @import("module_syntax.zig").usesModuleSyntax(src.bytes) or hasExportDirective(src.bytes);
     var syntax_parser: parser.Parser = .{ .src = src, .storage = arena.allocator(), .tokens = tokens, .sink = sink };
-    const syntax = if (module_file) try syntax_parser.parseModule() else try syntax_parser.parse();
+    const syntax = try frontend_runtime.parse(&syntax_parser, module_file, runtime);
     var scratch = std.heap.ArenaAllocator.init(allocator);
     defer scratch.deinit();
     const work = scratch.allocator();

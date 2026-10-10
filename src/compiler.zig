@@ -2,7 +2,7 @@
 //! new core (`src/core/`) lowers the checked program from here.
 pub const allocation_budget = @import("codec_memory.zig");
 /// Failures returned by format; callers must handle these boundary errors.
-pub const FormatError = error{
+pub const FormatError = frontend_runtime.Error || error{
     OutOfMemory,
     SourceError,
     InternalError,
@@ -59,6 +59,8 @@ pub const tokens_dump = @import("tokens_dump.zig");
 /// Exact AST oracle with opt-in independently built parser comparison.
 pub const syntax_dump = @import("syntax_dump.zig");
 const parser = @import("parser.zig");
+/// Explicit verified frontend capability, absent for native library callers.
+pub const frontend_runtime = @import("frontend_runtime.zig");
 const ast = @import("ast.zig");
 /// The checked program the new compiler core (`src/core/`) lowers from.
 pub const typed = @import("typed.zig");
@@ -99,6 +101,7 @@ pub const context = @import("context.zig");
 pub const Compilation = struct {
     arena: std.heap.ArenaAllocator,
     src: source.Source,
+    frontend: struct { runtime: ?frontend_runtime.Runtime = null, context: ?[32]u8 = null } = .{},
     diagnostics: std.ArrayList(diagnostic.Diagnostic) = .empty,
     tokens: ?[]const lexer.Token = null,
     syntax: ?ast.Program = null,
@@ -120,30 +123,74 @@ pub const Compilation = struct {
         return result;
     }
 
+    /// Reconfigure an explicit runtime; retained trees are checked against its identity before reuse.
+    pub fn configureFrontend(self: *Compilation, runtime: ?frontend_runtime.Runtime) void {
+        self.frontend.runtime = runtime;
+    }
+    /// Runtime capabilities selected for this compilation request.
+    pub fn frontendRuntime(self: *const Compilation) ?frontend_runtime.Runtime {
+        return self.frontend.runtime;
+    }
+    fn prepareFrontend(self: *Compilation) frontend_runtime.Error!frontend_runtime.Verified {
+        const verified = try frontend_runtime.verify(self.arena.allocator(), self.frontendRuntime());
+        var hash = std.crypto.hash.sha2.Sha256.init(.{});
+        hash.update(&verified.identity);
+        hash.update(std.mem.asBytes(&self.src.path.len));
+        hash.update(self.src.path);
+        hash.update(std.mem.asBytes(&self.src.bytes.len));
+        hash.update(self.src.bytes);
+        hash.update(&.{@intFromBool(self.src.trusted_intrinsics)});
+        var context_digest: [32]u8 = undefined;
+        hash.final(&context_digest);
+        const changed = if (self.frontend.context) |previous| !std.mem.eql(u8, &previous, &context_digest) else true;
+        if (changed or !verified.reuse) {
+            self.tokens = null;
+            self.syntax = null;
+            self.program = null;
+            self.diagnostics.clearRetainingCapacity();
+        }
+        self.frontend.context = context_digest;
+        return verified;
+    }
+
+    fn confirmFrontend(self: *Compilation, before: frontend_runtime.Verified) frontend_runtime.Error!void {
+        const after = try frontend_runtime.verify(self.arena.allocator(), self.frontendRuntime());
+        if (!std.mem.eql(u8, &before.identity, &after.identity)) return error.ComponentChanged;
+    }
+
     pub fn deinit(self: *Compilation) void {
         self.arena.deinit();
     }
 
     /// Lazily tokenize and parse the source, retaining syntax and source diagnostics.
-    pub fn parse(self: *Compilation) diagnostic.Error!void {
+    pub fn parse(self: *Compilation) frontend_runtime.Error!void {
         return self.parseCached(null);
     }
     /// Parse through an optional persistent cache. A disk hit still rebuilds all
     /// interface, resolution and semantic state; only the lexer and parser are skipped.
-    pub fn parseCached(self: *Compilation, cache: ?*frontend_cache.Cache) diagnostic.Error!void {
-        if (self.syntax != null) return;
-        if (cache) |disk| {
-            if (try disk.lookupSyntax(self.arena.allocator(), self.src, 0)) |syntax| {
+    pub fn parseCached(self: *Compilation, cache: ?*frontend_cache.Cache) frontend_runtime.Error!void {
+        const verified = try self.prepareFrontend();
+        if (cache) |disk| disk.setFrontend(verified);
+        if (self.syntax != null and verified.reuse) {
+            try self.confirmFrontend(verified);
+            return;
+        }
+        if (if (verified.reuse) cache else null) |disk| {
+            if (try disk.lookupUnitSyntax(self.arena.allocator(), self.src, 0)) |syntax| {
+                try self.confirmFrontend(verified);
                 self.syntax = syntax;
                 return;
             }
         }
         var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
         defer self.diagnostics = sink.items;
-        self.tokens = try lexer.lex(sink.allocator, self.src.bytes, &sink);
-        var p: parser.Parser = .{ .src = self.src, .storage = self.arena.allocator(), .tokens = self.tokens.?, .sink = &sink };
-        self.syntax = try p.parse();
-        if (cache) |disk| try disk.rememberSyntax(self.src, 0, self.syntax.?);
+        const tokens = try frontend_runtime.lex(sink.allocator, self.src, &sink, self.frontendRuntime());
+        var p: parser.Parser = .{ .src = self.src, .storage = self.arena.allocator(), .tokens = tokens, .sink = &sink };
+        const syntax = try frontend_runtime.parse(&p, false, self.frontendRuntime());
+        try self.confirmFrontend(verified);
+        self.tokens = tokens;
+        self.syntax = syntax;
+        if (if (verified.reuse) cache else null) |disk| try disk.rememberUnitSyntax(self.src, 0, self.syntax.?);
     }
 
     /// Allocate the canonical formatting of this unit. A file that opens with a
@@ -154,17 +201,23 @@ pub const Compilation = struct {
         const original = self.src;
         self.src = self.formattingSource();
         defer self.src = original;
+        // Formatting needs token storage even when an earlier syntax-only cache hit did not retain it.
+        self.tokens = null;
+        self.syntax = null;
+        self.program = null;
+        self.diagnostics.clearRetainingCapacity();
         try self.parse();
         return @import("formatter.zig").format(allocator, self.src.bytes, self.tokens.?, self.syntax.?.types);
     }
 
     /// Parse module syntax and allocate its canonical formatting with the caller allocator.
     pub fn formatModule(self: *Compilation, allocator: std.mem.Allocator) FormatError![]u8 {
+        _ = try self.prepareFrontend();
         var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
         defer self.diagnostics = sink.items;
-        const tokens = try lexer.lex(sink.allocator, self.src.bytes, &sink);
+        const tokens = try frontend_runtime.lex(sink.allocator, self.src, &sink, self.frontendRuntime());
         var p: parser.Parser = .{ .src = self.formattingSource(), .storage = self.arena.allocator(), .tokens = tokens, .sink = &sink };
-        const syntax = try p.parseModule();
+        const syntax = try frontend_runtime.parse(&p, true, self.frontendRuntime());
         return @import("formatter.zig").format(allocator, self.src.bytes, tokens, syntax.types);
     }
 
@@ -180,21 +233,23 @@ pub const Compilation = struct {
 
     /// Parse one module or single-file program and allocate its declaration listing.
     pub fn listDeclarations(self: *Compilation, allocator: std.mem.Allocator) declarations.Error![]u8 {
+        _ = try self.prepareFrontend();
         var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
         defer self.diagnostics = sink.items;
-        const tokens = try lexer.lex(sink.allocator, self.src.bytes, &sink);
-        return declarations.render(allocator, &self.arena, self.src, tokens, &sink);
+        const tokens = try frontend_runtime.lex(sink.allocator, self.src, &sink, self.frontendRuntime());
+        return declarations.renderUsing(allocator, &self.arena, self.src, tokens, &sink, self.frontendRuntime());
     }
 
     /// Lazily type-check parsed syntax and retain the checked program.
-    pub fn check(self: *Compilation) diagnostic.Error!void {
+    pub fn check(self: *Compilation) frontend_runtime.Error!void {
         return self.checkWithCache(null);
     }
     /// Check through an optional persistent syntax cache. Declaration, interface
     /// and whole-program validation always run; only source lexing and parsing
     /// may be skipped.
-    pub fn checkWithFrontend(self: *Compilation, cache: ?*frontend_cache.Cache) diagnostic.Error!void {
-        if (self.program != null) return;
+    pub fn checkWithFrontend(self: *Compilation, cache: ?*frontend_cache.Cache) frontend_runtime.Error!void {
+        const verified = try self.prepareFrontend();
+        if (self.program != null and verified.reuse) return;
         for (self.diagnostics.items) |item| if (item.severity == .err) return error.SourceError;
         try self.parseCached(cache);
         var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
@@ -202,8 +257,10 @@ pub const Compilation = struct {
         self.program = try sema.checkCached(sink.allocator, self.src, self.syntax.?, &sink, null, null);
     }
     /// Reuse independently owned checked bodies after supported source edits.
-    pub fn checkWithCache(self: *Compilation, cache: ?*semantic_cache.Cache) diagnostic.Error!void {
-        if (self.program != null) return;
+    pub fn checkWithCache(self: *Compilation, cache: ?*semantic_cache.Cache) frontend_runtime.Error!void {
+        const verified = try self.prepareFrontend();
+        if (cache) |semantic| try semantic.setFrontend(verified);
+        if (self.program != null and verified.reuse) return;
         for (self.diagnostics.items) |item| if (item.severity == .err) return error.SourceError;
         try self.parse();
         var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
@@ -217,7 +274,8 @@ pub const Compilation = struct {
     }
 
     /// Return library trees for backend validation without retaining an executable.
-    pub fn checkLibraryProgram(self: *Compilation) diagnostic.Error!typed.Program {
+    pub fn checkLibraryProgram(self: *Compilation) frontend_runtime.Error!typed.Program {
+        _ = try self.prepareFrontend();
         for (self.diagnostics.items) |item| if (item.severity == .err) return error.SourceError;
         try self.parse();
         var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
@@ -228,7 +286,8 @@ pub const Compilation = struct {
     /// Type-check a unit that has no `main` as a library: every declaration and body,
     /// effects and public type boundaries, with no executable entry. The checked tree is
     /// discarded, so `program` stays null and no caller can lower or run the result.
-    pub fn checkLibrary(self: *Compilation) diagnostic.Error!void {
+    pub fn checkLibrary(self: *Compilation) frontend_runtime.Error!void {
+        _ = try self.prepareFrontend();
         for (self.diagnostics.items) |item| if (item.severity == .err) return error.SourceError;
         try self.parse();
         var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
@@ -273,4 +332,38 @@ pub const module_syntax = @import("module_syntax.zig");
 /// Recognize leading project directives with the same rules as CLI routing.
 pub fn opensAsModule(source_bytes: []const u8) bool {
     return module_syntax.usesModuleSyntax(source_bytes);
+}
+
+// spec: SELFHOST-FRONTEND-ROUTING-1
+test "verified frontend reauthenticates retained syntax before reuse" {
+    const a = std.testing.allocator;
+    var compilation = try Compilation.init(a, "main.my", "func main() -> int:\n    return 0\n");
+    defer compilation.deinit();
+    try compilation.parse();
+    var environment: std.process.Environ.Map = .init(a);
+    defer environment.deinit();
+    try environment.put("MYLANG_PARSER_MODE", "shadow");
+    compilation.configureFrontend(.{ .io = std.testing.io, .environ = &environment, .component_dir = "/nonexistent/mylang-retained-syntax-component" });
+    try std.testing.expectError(error.ComponentMissing, compilation.parse());
+}
+
+// spec-case: SELFHOST-FRONTEND-ROUTING-1
+test "verified frontend declaration listing preserves host failure" {
+    const a = std.testing.allocator;
+    var compilation = try Compilation.init(a, "main.my", "func main() -> int:\n    return 0\n");
+    defer compilation.deinit();
+    var environment: std.process.Environ.Map = .init(a);
+    defer environment.deinit();
+    try environment.put("MYLANG_PARSER_MODE", "shadow");
+    compilation.configureFrontend(.{ .io = std.testing.io, .environ = &environment, .component_dir = "/nonexistent/mylang-declaration-component" });
+    try std.testing.expectError(error.ComponentMissing, compilation.listDeclarations(a));
+}
+
+// spec-case: SELFHOST-FRONTEND-ROUTING-1
+test "verified frontend retained syntax respects changed intrinsic authority" {
+    var compilation = try Compilation.initTrusted(std.testing.allocator, "main.my", "func main() -> int:\n    return __stand_in[int](0)\n");
+    defer compilation.deinit();
+    try compilation.parse();
+    compilation.src.trusted_intrinsics = false;
+    try std.testing.expectError(error.SourceError, compilation.parse());
 }

@@ -480,6 +480,7 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
     }
     init.timings.begin(frontend_label, false);
     var compilation = try language.Compilation.init(allocator, parsed.path, bytes);
+    compilation.configureFrontend(.{ .io = init.io, .environ = init.environ });
     defer compilation.deinit();
     if (parsed.command == .fmt or parsed.command == .@"fmt-module") {
         init.timings.begin("format_inclusive", true);
@@ -622,7 +623,7 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
 /// directory and may not leave the nearest `mylang.json` directory.
 fn attachEmbeds(init: Context, compilation: *language.Compilation, path: []const u8) !void {
     const arena = compilation.arena.allocator();
-    const found = try language.embed.scan(arena, compilation.src);
+    const found = try language.embed.scanWithRuntime(arena, compilation.src, compilation.frontendRuntime());
     if (found.len == 0) return;
     const import_root = std.fs.path.dirname(path) orelse ".";
     const roots: language.embed.Roots = .{ .io = init.io, .import_root = import_root, .root = (try embedRoot(init, path)) orelse import_root };
@@ -653,7 +654,7 @@ fn recordUnitTypedNodes(init: Context, compilation: *const language.Compilation)
 /// library check (`CHECK-LIBRARY-2`): the bodies, effects and boundaries
 /// `check-module` verifies, with no executable program retained. A declared
 /// `main` of any signature is always checked as an entry point.
-fn checkUnit(parsed: Parsed, compilation: *language.Compilation, semantic: *language.semantic_cache.Cache) language.diagnostic.Error!void {
+fn checkUnit(parsed: Parsed, compilation: *language.Compilation, semantic: *language.semantic_cache.Cache) language.frontend_runtime.Error!void {
     const as_library = parsed.command == .check and !compilation.declaresMain();
     if (as_library) {
         _ = try compilation.checkLibraryProgram();
@@ -1931,8 +1932,17 @@ const Lifetime = enum {
     session,
 };
 
+fn bindFrontendCaches(init: Context, syntax: ?*language.syntax_cache.Cache, frontend: ?*language.frontend_cache.Cache, functions: ?*language.semantic_cache.Cache, verdict: ?*language.check_cache.Cache) !void {
+    const boundary = try language.frontend_runtime.verify(init.gpa, .{ .io = init.io, .environ = init.environ });
+    if (syntax) |opened| opened.setFrontend(boundary);
+    if (frontend) |opened| opened.setFrontend(boundary);
+    if (functions) |opened| try opened.setFrontend(boundary);
+    if (verdict) |opened| opened.setFrontend(boundary);
+}
+
 fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_cache.Cache, verdict: ?*language.check_cache.Cache, functions: ?*language.semantic_cache.Cache, lifetime: Lifetime) !u8 {
     const frontend = parsed.frontend;
+    try bindFrontendCaches(init, cache, frontend, functions, verdict);
     const frontend_start = if (parsed.reporting.timings) std.Io.Timestamp.now(init.io, .awake) else std.Io.Timestamp.zero;
     const path = parsed.path;
     const basename = std.fs.path.basename(path);
@@ -1946,6 +1956,7 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
     var files: ModuleFiles = .{ .io = init.io, .root = location.root, .embed_root = try embedRoot(init, path) };
     files.inputs = (try prepareInputs(init, parsed, location.name)) orelse return 2;
     var project = language.project.Project.init(init.gpa);
+    project.configureFrontend(.{ .io = init.io, .environ = init.environ });
     defer if (lifetime == .session or std.debug.runtime_safety) project.deinit();
     if (try loadModules(init, &project, &files, location.name, try projectLimits(init, parsed))) |status| return status;
     init.timings.counts.modules = project.modules.items.len;
@@ -2262,7 +2273,10 @@ fn listInterfaces(init: Context, project: *language.project.Project, parsed: Par
     // bodies type-check, and it never reports body diagnostics.
     var attached: ?language.project_compile.Compilation = language.project_compile.Compilation.init(&index) catch |err| switch (err) {
         error.OutOfMemory => return err,
-        else => null,
+        else => skipped: {
+            if (language.frontend_runtime.hostFailure(err)) |host| return host;
+            break :skipped null;
+        },
     };
     if (attached) |*compilation| {
         // Body checking may record a project problem; the interface gate owns
@@ -2271,6 +2285,7 @@ fn listInterfaces(init: Context, project: *language.project.Project, parsed: Par
         compilation.check() catch |err| switch (err) {
             error.OutOfMemory => return err,
             error.SourceError, error.InternalError => {},
+            else => return err,
         };
         project.problem = saved_problem;
         index.program = compilation.program;
@@ -2345,6 +2360,7 @@ fn apiFiles(init: Context, project: *language.project.Project, parsed: Parsed, s
 /// propagates, a declaration error prints the project diagnostics (1), and a
 /// file-system failure is a host failure (2).
 fn apiFailure(init: Context, project: *language.project.Project, err: language.api_files.Error) !u8 {
+    if (language.frontend_runtime.hostFailure(err)) |host| return host;
     switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         error.HostIo => {
@@ -2437,6 +2453,7 @@ const Replayed = struct {
 /// A requested explanation must compare receipts, so it never replays a stored
 /// verdict before the checked compilation produces one.
 fn replayStoredVerdict(init: Context, parsed: Parsed, project: *const language.project.Project, stores: Replayed) !bool {
+    if (!language.frontend_runtime.reusable(project.frontendRuntime())) return false;
     if (try replayCheck(init, parsed.command, project, stores.verdict)) return true;
     if (parsed.reporting.explain_invalidation) return false;
     return replayFrontendVerdict(init, parsed.command, project, stores.frontend);
@@ -2558,6 +2575,7 @@ fn formatProject(init: Context, project: *language.project.Project) !u8 {
     for (project.order.items) |module_id| {
         const src = project.modules.items[module_id].src;
         var compilation = try language.Compilation.init(init.gpa, src.path, src.bytes);
+        compilation.configureFrontend(project.frontendRuntime());
         defer compilation.deinit();
         const formatted = compilation.formatModule(init.gpa) catch |err| switch (err) {
             error.SourceError => {

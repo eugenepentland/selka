@@ -48,7 +48,7 @@ pub const DemandState = struct {
 };
 
 /// Why a load stopped: diagnostics were already rendered into `report`.
-pub const Error = error{ SourceError, OutOfMemory, InternalError };
+pub const Error = language.frontend_runtime.Error;
 
 /// Owns the project arena every checked node lives in; keep it alive while the
 /// IR builder reads the program, and release it with `deinit`.
@@ -68,6 +68,12 @@ pub const Session = struct {
     /// Prepare to load the module graph rooted at `root` (the entry file's directory).
     pub fn init(allocator: std.mem.Allocator, io: std.Io, root: []const u8) Session {
         return .{ .project = language.project.Project.init(allocator), .files = .{ .io = io, .root = root } };
+    }
+
+    /// Configure explicit verified frontend components for this session.
+    pub fn configureFrontend(self: *Session, runtime: language.frontend_runtime.Runtime) void {
+        self.project.configureFrontend(runtime);
+        if (self.single) |*unit| unit.configureFrontend(runtime);
     }
 
     /// Release the project arena and everything checked from it.
@@ -158,6 +164,11 @@ pub const Session = struct {
         return if (self.cache) |*state| state.statistics() else .{};
     }
 
+    fn prepareFrontend(self: *Session, allocator: std.mem.Allocator) Error!void {
+        const verified = try language.frontend_runtime.verify(allocator, self.project.frontendRuntime());
+        if (self.cache) |*state| try state.setFrontend(verified);
+    }
+
     fn syntaxCache(self: *Session) ?*language.frontend_cache.Cache {
         return if (self.cache) |*state| &state.frontend else null;
     }
@@ -169,6 +180,7 @@ pub const Session = struct {
     /// Check `path` alone when it opens without a `module` header, else as the
     /// entry of its module graph (`check`).
     pub fn checkFile(self: *Session, allocator: std.mem.Allocator, path: []const u8, report: *std.ArrayList(u8)) (Error || error{ReadFailed})!Checked {
+        try self.prepareFrontend(allocator);
         const bytes = std.Io.Dir.cwd().readFileAlloc(self.files.io, path, allocator, .limited(64 << 20)) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
             else => {
@@ -184,10 +196,12 @@ pub const Session = struct {
         const name = if (self.graph.settings.given_path) path else std.fs.path.basename(path);
         self.single = try language.Compilation.init(self.project.arena.child_allocator, name, full);
         const unit = &self.single.?;
+        unit.configureFrontend(self.project.frontendRuntime());
         try self.attachEmbeds(unit, path);
         self.checkSingle(unit) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
             else => {
+                if (language.frontend_runtime.hostFailure(err)) |host| return host;
                 try self.renderAll(allocator, unit.diagnostics.items, unit.src, report);
                 return error.SourceError;
             },
@@ -206,9 +220,9 @@ pub const Session = struct {
     /// Read the files a header-less unit's `embed_bytes`/`embed_str` calls name, against
     /// the unit's own directory and confined to the configuration's root, as the old
     /// CLI did (NEW-CORE-S5-EMBED-1).
-    fn attachEmbeds(self: *Session, unit: *language.Compilation, path: []const u8) error{OutOfMemory}!void {
+    fn attachEmbeds(self: *Session, unit: *language.Compilation, path: []const u8) Error!void {
         const arena = unit.arena.allocator();
-        const found = try language.embed.scan(arena, unit.src);
+        const found = try language.embed.scanWithRuntime(arena, unit.src, unit.frontendRuntime());
         if (found.len == 0) return;
         const import_root = std.fs.path.dirname(path) orelse ".";
         const roots: language.embed.Roots = .{ .io = self.files.io, .import_root = import_root, .root = self.files.embed_root orelse import_root };
@@ -216,7 +230,7 @@ pub const Session = struct {
         unit.src.embeds = found;
     }
 
-    fn checkSingle(self: *Session, unit: *language.Compilation) language.diagnostic.Error!void {
+    fn checkSingle(self: *Session, unit: *language.Compilation) Error!void {
         try unit.parseCached(self.syntaxCache());
         try unit.checkWithCache(self.semanticCache());
     }
@@ -233,6 +247,7 @@ pub const Session = struct {
     /// (`interfaceIndex` is then valid). On a source error the rendered
     /// diagnostics are appended to `report` and `SourceError` returns.
     pub fn declare(self: *Session, allocator: std.mem.Allocator, entry: []const u8, report: *std.ArrayList(u8)) Error!void {
+        try self.prepareFrontend(allocator);
         if (self.entry_suffix.len != 0) self.entry_file = language.project.modulePath(allocator, entry) catch |err| return self.loadFailure(allocator, err, report);
         if (self.graph.profile) |profile| profile.begin("load", false);
         self.project.load(self.provider(), entry, self.graph.settings.options) catch |err| return self.loadFailure(allocator, err, report);
@@ -242,6 +257,7 @@ pub const Session = struct {
 
     /// Check the bodies of the graph `declare` loaded; diagnostics as `check`.
     pub fn checkDeclared(self: *Session, allocator: std.mem.Allocator, report: *std.ArrayList(u8)) Error!Checked {
+        try self.prepareFrontend(allocator);
         if (self.graph.profile) |profile| profile.begin("merge", false);
         self.graph.compilation = language.project_compile.Compilation.init(&self.graph.index) catch |err| return self.loadFailure(allocator, err, report);
         if (self.graph.profile) |profile| profile.end();
@@ -250,6 +266,7 @@ pub const Session = struct {
         self.graph.compilation.checkWithCache(self.semanticCache()) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
             else => {
+                if (language.frontend_runtime.hostFailure(err)) |host| return host;
                 try self.renderAll(allocator, self.graph.compilation.diagnostics.items.items, self.graph.compilation.src, report);
                 return error.SourceError;
             },
@@ -297,6 +314,7 @@ pub const Session = struct {
 
     fn loadFailure(self: *Session, allocator: std.mem.Allocator, err: anyerror, report: *std.ArrayList(u8)) Error {
         if (err == error.OutOfMemory) return error.OutOfMemory;
+        if (language.frontend_runtime.hostFailure(err)) |host| return host;
         if (self.project.problem != null) {
             const text = language.diagnostic_output.renderProject(allocator, &self.project, self.graph.settings.format) catch return error.OutOfMemory;
             defer allocator.free(text);
