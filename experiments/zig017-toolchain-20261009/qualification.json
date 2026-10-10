@@ -1,0 +1,286 @@
+{
+  "checks": [
+    {
+      "compiler": "custom-Debug",
+      "fixture": "recursive_values.my",
+      "exit": 0
+    },
+    {
+      "compiler": "custom-ReleaseSafe",
+      "fixture": "recursive_values.my",
+      "exit": 0
+    },
+    {
+      "compiler": "pinned-Debug",
+      "fixture": "recursive_values.my",
+      "exit": 0
+    },
+    {
+      "compiler": "pinned-ReleaseSafe",
+      "fixture": "recursive_values.my",
+      "exit": 0
+    },
+    {
+      "compiler": "pinned-llvm-ReleaseSafe",
+      "fixture": "recursive_values.my",
+      "exit": 0
+    },
+    {
+      "compiler": "release-Debug",
+      "fixture": "recursive_values.my",
+      "exit": 0
+    },
+    {
+      "compiler": "release-ReleaseSafe",
+      "fixture": "recursive_values.my",
+      "exit": 0
+    },
+    {
+      "compiler": "release-llvm-ReleaseSafe",
+      "fixture": "recursive_values.my",
+      "exit": 0
+    },
+    {
+      "compiler": "custom-Debug",
+      "fixture": "callbacks.my",
+      "exit": 0
+    },
+    {
+      "compiler": "custom-ReleaseSafe",
+      "fixture": "callbacks.my",
+      "exit": 0
+    },
+    {
+      "compiler": "pinned-Debug",
+      "fixture": "callbacks.my",
+      "exit": 0
+    },
+    {
+      "compiler": "pinned-ReleaseSafe",
+      "fixture": "callbacks.my",
+      "exit": 0
+    },
+    {
+      "compiler": "pinned-llvm-ReleaseSafe",
+      "fixture": "callbacks.my",
+      "exit": 0
+    },
+    {
+      "compiler": "release-Debug",
+      "fixture": "callbacks.my",
+      "exit": 0
+    },
+    {
+      "compiler": "release-ReleaseSafe",
+      "fixture": "callbacks.my",
+      "exit": 0
+    },
+    {
+      "compiler": "release-llvm-ReleaseSafe",
+      "fixture": "callbacks.my",
+      "exit": 0
+    },
+    {
+      "compiler": "custom-Debug",
+      "fixture": "callback_slots.my",
+      "exit": 0
+    },
+    {
+      "compiler": "custom-ReleaseSafe",
+      "fixture": "callback_slots.my",
+      "exit": 0
+    },
+    {
+      "compiler": "pinned-Debug",
+      "fixture": "callback_slots.my",
+      "exit": 0
+    },
+    {
+      "compiler": "pinned-ReleaseSafe",
+      "fixture": "callback_slots.my",
+      "exit": 0
+    },
+    {
+      "compiler": "pinned-llvm-ReleaseSafe",
+      "fixture": "callback_slots.my",
+      "exit": 0
+    },
+    {
+      "compiler": "release-Debug",
+      "fixture": "callback_slots.my",
+      "exit": 0
+    },
+    {
+      "compiler": "release-ReleaseSafe",
+      "fixture": "callback_slots.my",
+      "exit": 0
+    },
+    {
+      "compiler": "release-llvm-ReleaseSafe",
+      "fixture": "callback_slots.my",
+      "exit": 0
+    },
+    {
+      "compiler": "custom-Debug",
+      "fixture": "rc_match_scalars.my",
+      "exit": 0
+    },
+    {
+      "compiler": "custom-ReleaseSafe",
+      "fixture": "rc_match_scalars.my",
+      "exit": 0
+    },
+    {
+      "compiler": "pinned-Debug",
+      "fixture": "rc_match_scalars.my",
+      "exit": 0
+    },
+    {
+      "compiler": "pinned-ReleaseSafe",
+      "fixture": "rc_match_scalars.my",
+      "exit": 0
+    },
+    {
+      "compiler": "pinned-llvm-ReleaseSafe",
+      "fixture": "rc_match_scalars.my",
+      "exit": 0
+    },
+    {
+      "compiler": "release-Debug",
+      "fixture": "rc_match_scalars.my",
+      "exit": 0
+    },
+    {
+      "compiler": "release-ReleaseSafe",
+      "fixture": "rc_match_scalars.my",
+      "exit": 0
+    },
+    {
+      "compiler": "release-llvm-ReleaseSafe",
+      "fixture": "rc_match_scalars.my",
+      "exit": 0
+    },
+    {
+      "compiler": "custom-Debug",
+      "fixture": "migrated/generic_arrays.my",
+      "exit": 0
+    },
+    {
+      "compiler": "custom-ReleaseSafe",
+      "fixture": "migrated/generic_arrays.my",
+      "exit": 0
+    },
+    {
+      "compiler": "pinned-Debug",
+      "fixture": "migrated/generic_arrays.my",
+      "exit": 0
+    },
+    {
+      "compiler": "pinned-ReleaseSafe",
+      "fixture": "migrated/generic_arrays.my",
+      "exit": 0
+    },
+    {
+      "compiler": "pinned-llvm-ReleaseSafe",
+      "fixture": "migrated/generic_arrays.my",
+      "exit": 0
+    },
+    {
+      "compiler": "release-Debug",
+      "fixture": "migrated/generic_arrays.my",
+      "exit": 0
+    },
+    {
+      "compiler": "release-ReleaseSafe",
+      "fixture": "migrated/generic_arrays.my",
+      "exit": 0
+    },
+    {
+      "compiler": "release-llvm-ReleaseSafe",
+      "fixture": "migrated/generic_arrays.my",
+      "exit": 0
+    },
+    {
+      "compiler": "custom-Debug",
+      "fixture": "migrated/generic_inference_case_1.my",
+      "exit": 0
+    },
+    {
+      "compiler": "custom-ReleaseSafe",
+      "fixture": "migrated/generic_inference_case_1.my",
+      "exit": 0
+    },
+    {
+      "compiler": "pinned-Debug",
+      "fixture": "migrated/generic_inference_case_1.my",
+      "exit": 0
+    },
+    {
+      "compiler": "pinned-ReleaseSafe",
+      "fixture": "migrated/generic_inference_case_1.my",
+      "exit": 0
+    },
+    {
+      "compiler": "pinned-llvm-ReleaseSafe",
+      "fixture": "migrated/generic_inference_case_1.my",
+      "exit": 0
+    },
+    {
+      "compiler": "release-Debug",
+      "fixture": "migrated/generic_inference_case_1.my",
+      "exit": 0
+    },
+    {
+      "compiler": "release-ReleaseSafe",
+      "fixture": "migrated/generic_inference_case_1.my",
+      "exit": 0
+    },
+    {
+      "compiler": "release-llvm-ReleaseSafe",
+      "fixture": "migrated/generic_inference_case_1.my",
+      "exit": 0
+    },
+    {
+      "compiler": "custom-Debug",
+      "fixture": "migrated/structural_constraints_case_1.my",
+      "exit": 0
+    },
+    {
+      "compiler": "custom-ReleaseSafe",
+      "fixture": "migrated/structural_constraints_case_1.my",
+      "exit": 0
+    },
+    {
+      "compiler": "pinned-Debug",
+      "fixture": "migrated/structural_constraints_case_1.my",
+      "exit": 0
+    },
+    {
+      "compiler": "pinned-ReleaseSafe",
+      "fixture": "migrated/structural_constraints_case_1.my",
+      "exit": 0
+    },
+    {
+      "compiler": "pinned-llvm-ReleaseSafe",
+      "fixture": "migrated/structural_constraints_case_1.my",
+      "exit": 0
+    },
+    {
+      "compiler": "release-Debug",
+      "fixture": "migrated/structural_constraints_case_1.my",
+      "exit": 0
+    },
+    {
+      "compiler": "release-ReleaseSafe",
+      "fixture": "migrated/structural_constraints_case_1.my",
+      "exit": 0
+    },
+    {
+      "compiler": "release-llvm-ReleaseSafe",
+      "fixture": "migrated/structural_constraints_case_1.my",
+      "exit": 0
+    }
+  ],
+  "sources_unchanged": true,
+  "binaries_unchanged": true
+}

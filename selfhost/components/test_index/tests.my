@@ -1,0 +1,48 @@
+import graph
+import codec
+
+public func test_empty() -> bool fails str:
+    mut index = try graph.build([], [])
+    return index.direct == [] and index.reached == []
+
+
+public func test_discovery_duplicates_cycle_and_root() -> bool fails str:
+    mut index = try graph.build([[1, 1], [2], [1], []], [2, 0, 2])
+    return index.direct == [[], [2, 0, 0, 2], [], []] and index.reached == [[0], [2, 0, 2], [2, 0, 2], []]
+
+
+public func test_self_recursion_and_disconnected() -> bool fails str:
+    mut index = try graph.build([[0, 0], [], []], [1, 0])
+    return index.direct == [[0, 0], [], []] and index.reached == [[0], [1], []]
+
+
+public func test_diamond_reaches_once() -> bool fails str:
+    mut index = try graph.build([[1, 2], [3], [3], []], [0])
+    return index.direct == [[], [0], [0], []] and index.reached == [[0], [0], [0], [0]]
+
+
+public func test_empty_protocol_golden() -> bool fails str:
+    mut data = b"SLKIDX01\x01\0\0\0\x01\0\0\0\0\0\0\0\x08\0\0\0" + b"\xff" * 40 + b"\0" * 8
+    mut request = try codec.decode(data)
+    mut index = try graph.build(request.adjacency, request.tests)
+    mut reply = try codec.encode(request, index)
+    return reply == b"SLKIDX01\x01\0\0\0\x01\0\0\0\x01\0\0\0\x04\0\0\0" + b"\xff" * 40 + b"\0" * 4
+
+
+public func test_malformed_requests_rejected() -> bool:
+    mut data = b"SLKIDX01\x01\0\0\0\x01\0\0\0\0\0\0\0\x08\0\0\0" + b"\0" * 48
+    match codec.decode(data + b"\0"):
+        case Ok(value):
+            return False
+        case Err(message):
+            pass
+    match codec.decode(data[:71]):
+        case Ok(value):
+            return False
+        case Err(message):
+            pass
+    match codec.decode(b"BADIDX01" + data[8:]):
+        case Ok(value):
+            return False
+        case Err(message):
+            return True

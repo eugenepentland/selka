@@ -68,6 +68,8 @@ pub const navigation_partial = @import("navigation_partial.zig");
 pub const navigation_views = @import("navigation_views.zig");
 /// Syntax-derived test reachability for a project whose bodies do not check.
 pub const navigation_syntax = @import("navigation_syntax.zig");
+/// Explicit native Selka component boundary for informational test reachability.
+pub const component_adapter = @import("component_adapter.zig");
 pub const quality = @import("quality.zig");
 pub const duplicates = @import("duplicates.zig");
 /// `mylang lint` driver, rule registry and profiles.

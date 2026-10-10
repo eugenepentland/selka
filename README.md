@@ -191,18 +191,27 @@ zig build fmt-check
 `zig build test` runs the checker, actual CLI, and runtime/tooling integration
 acceptance. CI uses this default suite in Debug and ReleaseFast.
 
-Building and using mylang needs only the pinned Zig: `zig build` runs no Python,
-and the installed compiler's `check`, `build`, `run`, `test`, `fmt`, `docs`,
-`index-project`, `context` and `packages` run none either, `--release` included
-(`USE-WITHOUT-PYTHON-1` and the `PACKAGES-*` tests check them under an empty
-`PATH`). Python 3 is used only by some `zig build test` drivers,
-developer scripts and experiments.
+Building from source needs the pinned Zig; ordinary builds run no Python.
+A small native Zig coordinator provisions a separately pinned compiler seed,
+then compiles the Selka test-index component; the first seed build takes
+several minutes. Git history containing the pinned commit and the sibling
+`guardian-zig` checkout are needed for cold provisioning. See
+[component builds and source archives](docs/tooling/selfhost-components.md).
+Python is used by some test drivers, developer scripts and experiments.
+
+The installed compiler and components need no Python: `check`, `build`, `run`,
+`test`, `fmt`, `docs`, `index-project`, `context` and `packages` work without an
+interpreter, `--release` included (`USE-WITHOUT-PYTHON-1` and the `PACKAGES-*`
+tests check them under an empty `PATH`). Keep `bin/` and `libexec/` together
+when moving an installation. To rebuild just the Selka component after an edit,
+run `zig build components`; this does not rebuild the Zig host.
 
 While iterating, `-Dtest-filter=SUBSTRING` narrows the Zig suites to the tests
 whose name contains that text: `zig build test-core -Dtest-filter=…` for the new
 core's tests, `zig build test-units -Dtest-filter=…` for `src/root_test.zig` and
-`zig build test-cli -Dtest-filter=…` for `test/integration.zig`; none of them runs
-the Python drivers. A filter that
+`zig build test-cli -Dtest-filter=…` for `test/integration.zig`; these skip the
+Python acceptance drivers. Suites that run the CLI provision its components
+through the native coordinator. A filter that
 selects nothing fails rather than reporting a green run, so narrow one root at a
 time. `-Dtest-filter` applies to `zig build test` and `test-compile` too.
 

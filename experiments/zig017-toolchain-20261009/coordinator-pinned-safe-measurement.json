@@ -1,0 +1,30 @@
+{
+  "name": "pinned-safe-native",
+  "rep": 1,
+  "kind": "coordinator",
+  "exit": 0,
+  "wall_s": 2.225271404022351,
+  "rss_kib": 34984,
+  "user_s": 0.31,
+  "sys_s": 0.27,
+  "stdout_sha256": "2e793adc86119e462c7e2c30d82e12a9231a43f975da81dff155a8e2a07a9e5a",
+  "load": [
+    6.2490234375,
+    4.7080078125,
+    4.18017578125
+  ],
+  "sibling_busy": 0.004566210045662156,
+  "stderr": "",
+  "perf": "# started on Fri Oct  9 23:55:37 2026\n\n2134775460,,cpu_core/cycles/,565423038,100.00,,\n2455812420,,cpu_core/instructions/,565423038,100.00,,\n1,,cpu_core/assists.sse_avx_mix/,565423038,100.00,,\n",
+  "output": "/home/epentland/.cache/mylang/components/seeds/99a0c5875f1543cbb9c55694eb744328012fd1454b83a451ea11c6b2f96963fc/source/zig-out/focus/mylang\n",
+  "command": [
+    "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/zig017-toolchain-20261009/coordinators/pinned-safe-native",
+    "--root",
+    "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang",
+    "--zig",
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "--cache-dir",
+    "/home/epentland/.cache/mylang/components",
+    "--seed-only"
+  ]
+}

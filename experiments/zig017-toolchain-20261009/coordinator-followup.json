@@ -1,0 +1,218 @@
+[
+  {
+    "name": "pinned-baseline",
+    "rep": 0,
+    "kind": "coordinator-followup",
+    "exit": 0,
+    "wall_s": 1.3957927441224456,
+    "rss_kib": 39224,
+    "user_s": 1.31,
+    "sys_s": 0.08,
+    "stdout_sha256": "2e793adc86119e462c7e2c30d82e12a9231a43f975da81dff155a8e2a07a9e5a",
+    "load": [
+      1.65283203125,
+      2.8212890625,
+      3.48828125
+    ],
+    "sibling_busy": 0.0,
+    "stderr": ""
+  },
+  {
+    "name": "pinned-safe-native",
+    "rep": 0,
+    "kind": "coordinator-followup",
+    "exit": 0,
+    "wall_s": 0.40094084292650223,
+    "rss_kib": 39224,
+    "user_s": 0.31,
+    "sys_s": 0.08,
+    "stdout_sha256": "2e793adc86119e462c7e2c30d82e12a9231a43f975da81dff155a8e2a07a9e5a",
+    "load": [
+      1.65283203125,
+      2.8212890625,
+      3.48828125
+    ],
+    "sibling_busy": 0.0,
+    "stderr": ""
+  },
+  {
+    "name": "release-native",
+    "rep": 0,
+    "kind": "coordinator-followup",
+    "exit": 0,
+    "wall_s": 0.3621153130661696,
+    "rss_kib": 39224,
+    "user_s": 0.27,
+    "sys_s": 0.08,
+    "stdout_sha256": "2e793adc86119e462c7e2c30d82e12a9231a43f975da81dff155a8e2a07a9e5a",
+    "load": [
+      1.65283203125,
+      2.8212890625,
+      3.48828125
+    ],
+    "sibling_busy": 0.0,
+    "stderr": ""
+  },
+  {
+    "name": "release-native",
+    "rep": 1,
+    "kind": "coordinator-followup",
+    "exit": 0,
+    "wall_s": 0.38560448586940765,
+    "rss_kib": 39224,
+    "user_s": 0.3,
+    "sys_s": 0.07,
+    "stdout_sha256": "2e793adc86119e462c7e2c30d82e12a9231a43f975da81dff155a8e2a07a9e5a",
+    "load": [
+      1.6806640625,
+      2.8076171875,
+      3.47998046875
+    ],
+    "sibling_busy": 0.0,
+    "stderr": ""
+  },
+  {
+    "name": "pinned-safe-native",
+    "rep": 1,
+    "kind": "coordinator-followup",
+    "exit": 0,
+    "wall_s": 0.4086335839238018,
+    "rss_kib": 39224,
+    "user_s": 0.31,
+    "sys_s": 0.09,
+    "stdout_sha256": "2e793adc86119e462c7e2c30d82e12a9231a43f975da81dff155a8e2a07a9e5a",
+    "load": [
+      1.6806640625,
+      2.8076171875,
+      3.47998046875
+    ],
+    "sibling_busy": 0.0,
+    "stderr": ""
+  },
+  {
+    "name": "pinned-baseline",
+    "rep": 1,
+    "kind": "coordinator-followup",
+    "exit": 0,
+    "wall_s": 1.3904946679249406,
+    "rss_kib": 39224,
+    "user_s": 1.31,
+    "sys_s": 0.07,
+    "stdout_sha256": "2e793adc86119e462c7e2c30d82e12a9231a43f975da81dff155a8e2a07a9e5a",
+    "load": [
+      1.6806640625,
+      2.8076171875,
+      3.47998046875
+    ],
+    "sibling_busy": 0.021276595744680882,
+    "stderr": ""
+  },
+  {
+    "name": "pinned-baseline",
+    "rep": 2,
+    "kind": "coordinator-followup",
+    "exit": 0,
+    "wall_s": 1.3630299849901348,
+    "rss_kib": 39224,
+    "user_s": 1.28,
+    "sys_s": 0.07,
+    "stdout_sha256": "2e793adc86119e462c7e2c30d82e12a9231a43f975da81dff155a8e2a07a9e5a",
+    "load": [
+      1.6806640625,
+      2.8076171875,
+      3.47998046875
+    ],
+    "sibling_busy": 0.0,
+    "stderr": ""
+  },
+  {
+    "name": "pinned-safe-native",
+    "rep": 2,
+    "kind": "coordinator-followup",
+    "exit": 0,
+    "wall_s": 0.40037900395691395,
+    "rss_kib": 39224,
+    "user_s": 0.31,
+    "sys_s": 0.08,
+    "stdout_sha256": "2e793adc86119e462c7e2c30d82e12a9231a43f975da81dff155a8e2a07a9e5a",
+    "load": [
+      1.6806640625,
+      2.8076171875,
+      3.47998046875
+    ],
+    "sibling_busy": 0.0,
+    "stderr": ""
+  },
+  {
+    "name": "release-native",
+    "rep": 2,
+    "kind": "coordinator-followup",
+    "exit": 0,
+    "wall_s": 0.3921768961008638,
+    "rss_kib": 39224,
+    "user_s": 0.3,
+    "sys_s": 0.08,
+    "stdout_sha256": "2e793adc86119e462c7e2c30d82e12a9231a43f975da81dff155a8e2a07a9e5a",
+    "load": [
+      1.6806640625,
+      2.8076171875,
+      3.47998046875
+    ],
+    "sibling_busy": 0.0,
+    "stderr": ""
+  },
+  {
+    "name": "release-native",
+    "rep": 3,
+    "kind": "coordinator-followup",
+    "exit": 0,
+    "wall_s": 0.35710672405548394,
+    "rss_kib": 39224,
+    "user_s": 0.26,
+    "sys_s": 0.08,
+    "stdout_sha256": "2e793adc86119e462c7e2c30d82e12a9231a43f975da81dff155a8e2a07a9e5a",
+    "load": [
+      1.6806640625,
+      2.8076171875,
+      3.47998046875
+    ],
+    "sibling_busy": 0.0,
+    "stderr": ""
+  },
+  {
+    "name": "pinned-safe-native",
+    "rep": 3,
+    "kind": "coordinator-followup",
+    "exit": 0,
+    "wall_s": 0.4052375550381839,
+    "rss_kib": 39224,
+    "user_s": 0.3,
+    "sys_s": 0.09,
+    "stdout_sha256": "2e793adc86119e462c7e2c30d82e12a9231a43f975da81dff155a8e2a07a9e5a",
+    "load": [
+      1.70654296875,
+      2.7939453125,
+      3.4716796875
+    ],
+    "sibling_busy": 0.0,
+    "stderr": ""
+  },
+  {
+    "name": "pinned-baseline",
+    "rep": 3,
+    "kind": "coordinator-followup",
+    "exit": 0,
+    "wall_s": 1.4000582289882004,
+    "rss_kib": 39224,
+    "user_s": 1.31,
+    "sys_s": 0.08,
+    "stdout_sha256": "2e793adc86119e462c7e2c30d82e12a9231a43f975da81dff155a8e2a07a9e5a",
+    "load": [
+      1.70654296875,
+      2.7939453125,
+      3.4716796875
+    ],
+    "sibling_busy": 0.0,
+    "stderr": ""
+  }
+]

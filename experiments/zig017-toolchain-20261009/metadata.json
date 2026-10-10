@@ -1,0 +1,30 @@
+{
+  "timestamp": "2026-10-09T23:42:04.698994+00:00",
+  "root": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang",
+  "base": "0689d3407c17df34915aeb2a92e309af3a04921c",
+  "snapshot": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/zig017-toolchain-20261009/source",
+  "tools": {
+    "pinned": {
+      "path": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+      "version": "0.17.0-dev.1683+5ceec001b",
+      "sha2_sha256": "df7808039a9024fe68a7e2f5ca6c9129056c5db1a7210e474f71759628aaec4a"
+    },
+    "custom": {
+      "path": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b-eda-286f77f2-8f4af965/zig",
+      "sha256": "8f4af9650b5358abcdd8a283976d30b5dcdca2b400e44af25953b2e34101e7d4",
+      "version": "0.17.0-dev.1683+5ceec001b",
+      "sha2_sha256": "df7808039a9024fe68a7e2f5ca6c9129056c5db1a7210e474f71759628aaec4a"
+    },
+    "release": {
+      "path": "/home/epentland/zig-toolchains/0.17.0-download/zig-x86_64-linux-0.17.0/zig",
+      "sha256": "7c61539af19fa4082c94848f1c2b57b89e76dc6cfd5bd4c57764c3caf8f82272",
+      "version": "0.17.0",
+      "sha2_sha256": "df7808039a9024fe68a7e2f5ca6c9129056c5db1a7210e474f71759628aaec4a"
+    }
+  },
+  "cpuinfo": "processor\t: 0\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 154\nmodel name\t: 12th Gen Intel(R) Core(TM) i7-12700H\nstepping\t: 3\nmicrocode\t: 0x43b\ncpu MHz\t\t: 1365.789\ncache size\t: 24576 KB\nphysical id\t: 0\nsiblings\t: 20\ncore id\t\t: 0\ncpu cores\t: 14\napicid\t\t: 0\ninitial apicid\t: 0\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 32\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs eibrs_pbrsb rfds bhi spectre_v2_user vmscape\nbogomips\t: 5376.00\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:",
+  "runtime_cpu": 2,
+  "release_archive_sha256": "1cbe9df9f27e6b78d14ccbca43b6703a404ef79ef1c463de901d7f088d4e2026",
+  "release_index": "https://ziglang.org/download/index.json"
+}

@@ -20,6 +20,7 @@ const navigation = @import("navigation.zig");
 const navigation_partial = @import("navigation_partial.zig");
 const fact_status = @import("fact_status.zig");
 const tests_index = @import("tests_index.zig");
+const component_adapter = @import("component_adapter.zig");
 const api_diff = @import("api_diff.zig");
 const effect_set = @import("effect_set.zig");
 const diagnostic = @import("diagnostic.zig");
@@ -99,7 +100,7 @@ pub const Answer = struct { bytes: []u8, status: Status };
 /// Failures a context run reports. `RecheckUnavailable` is separate from a
 /// changed source: the answer could not be confirmed, rather than being known
 /// to describe another version.
-pub const Error = error{ OutOfMemory, InternalError, IncompleteProject, NavigationLimit, BudgetTooSmall, InvalidBaseline, RecheckUnavailable };
+pub const Error = error{ OutOfMemory, InternalError, IncompleteProject, NavigationLimit, BudgetTooSmall, InvalidBaseline, RecheckUnavailable } || component_adapter.Error;
 
 /// Smallest budget the envelope and its identity metadata fit in.
 pub const minimum_context_bytes = 1024;
@@ -210,6 +211,7 @@ const Session = struct {
     gpa: std.mem.Allocator,
     arena: std.mem.Allocator,
     options: Options,
+    adapter: component_adapter.Adapter = .reference,
     source: Subject = .{},
     diagnosis: Diagnosis = .{},
     /// Present only when body syntax failed before any declaration merged.
@@ -260,7 +262,12 @@ const Selecting = struct {
 /// diagnostics that cover the selection, which is what makes the command useful
 /// on a project that does not currently build.
 pub fn render(allocator: std.mem.Allocator, compilation: *pc.Compilation, identity: receipt.Identity, options: Options) Error!Answer {
-    return run(allocator, compilation, identity, options);
+    return renderUsing(allocator, compilation, identity, options, .reference);
+}
+
+/// Render with the explicit informational graph implementation chosen by the host.
+pub fn renderUsing(allocator: std.mem.Allocator, compilation: *pc.Compilation, identity: receipt.Identity, options: Options, adapter: component_adapter.Adapter) Error!Answer {
+    return run(allocator, compilation, identity, options, adapter);
 }
 
 /// Render the answer for a project whose body syntax failed before any
@@ -270,11 +277,11 @@ pub fn renderPartial(allocator: std.mem.Allocator, loaded: *const project.Projec
     return runPartial(allocator, loaded, identity, options);
 }
 
-fn run(allocator: std.mem.Allocator, compilation: *pc.Compilation, identity: receipt.Identity, options: Options) Error!Answer {
+fn run(allocator: std.mem.Allocator, compilation: *pc.Compilation, identity: receipt.Identity, options: Options, adapter: component_adapter.Adapter) Error!Answer {
     if (options.context_bytes < minimum_context_bytes) return error.BudgetTooSmall;
     var arena = std.heap.ArenaAllocator.init(allocator);
     defer arena.deinit();
-    var session: Session = .{ .gpa = allocator, .arena = arena.allocator(), .options = options };
+    var session: Session = .{ .gpa = allocator, .arena = arena.allocator(), .options = options, .adapter = adapter };
     session.source.compilation = compilation;
     var selecting: Selecting = .{ .session = &session };
     var facts = navigation.collect(allocator, compilation, identity, .{ .edges = .{ .visit = selecting.visitor() } }) catch |err| switch (err) {
@@ -1185,7 +1192,8 @@ fn collectTests(session: *Session) Error!void {
     const modules = compilation.index.moduleSyntax(session.arena) catch return error.OutOfMemory;
     const graph = tests_index.callGraph(session.arena, program) catch return error.OutOfMemory;
     const discovered = tests_index.discoveredTests(session.arena, program, modules) catch return error.OutOfMemory;
-    var index = tests_index.build(session.arena, program, graph, discovered) catch return error.OutOfMemory;
+    var index = try session.adapter.build(session.arena, program, graph, discovered);
+    defer index.deinit();
     const answer = index.answer(target);
     for (answer.direct) |name| try session.diagnosis.records.tests.append(session.arena, try testValue(session, "direct", name));
     for (answer.reached) |name| try session.diagnosis.records.tests.append(session.arena, try testValue(session, "reached", name));

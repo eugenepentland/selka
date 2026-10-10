@@ -1,0 +1,102 @@
+[
+  {
+    "name": "release-llvm-ReleaseSafe",
+    "rep": 1,
+    "state": "clean",
+    "command": [
+      "/home/epentland/zig-toolchains/0.17.0-download/zig-x86_64-linux-0.17.0/zig",
+      "build",
+      "-Doptimize=ReleaseSafe",
+      "--cache-dir",
+      "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/zig017-toolchain-20261009/compiler-cache/release-llvm-ReleaseSafe",
+      "--prefix",
+      "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/zig017-toolchain-20261009/compilers/release-llvm-ReleaseSafe",
+      "-j2",
+      "--summary",
+      "all",
+      "-Dllvm=true"
+    ],
+    "exit": 0,
+    "wall_s": 218.81,
+    "rss_kib": 3588948,
+    "user_s": 210.76,
+    "sys_s": 7.95,
+    "binary_sha256": "e905cdc3e11762450edadbff2a4e7fdc7a5b89d7bef9b1c1836070da6738d775",
+    "binary_size": 45754320
+  },
+  {
+    "name": "release-llvm-ReleaseSafe",
+    "rep": 1,
+    "state": "unchanged",
+    "command": [
+      "/home/epentland/zig-toolchains/0.17.0-download/zig-x86_64-linux-0.17.0/zig",
+      "build",
+      "-Doptimize=ReleaseSafe",
+      "--cache-dir",
+      "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/zig017-toolchain-20261009/compiler-cache/release-llvm-ReleaseSafe",
+      "--prefix",
+      "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/zig017-toolchain-20261009/compilers/release-llvm-ReleaseSafe",
+      "-j2",
+      "--summary",
+      "all",
+      "-Dllvm=true"
+    ],
+    "exit": 0,
+    "wall_s": 0.03,
+    "rss_kib": 37128,
+    "user_s": 0.01,
+    "sys_s": 0.02,
+    "binary_sha256": "e905cdc3e11762450edadbff2a4e7fdc7a5b89d7bef9b1c1836070da6738d775",
+    "binary_size": 45754320
+  },
+  {
+    "name": "pinned-llvm-ReleaseSafe",
+    "rep": 1,
+    "state": "clean",
+    "command": [
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "build",
+      "-Doptimize=ReleaseSafe",
+      "--cache-dir",
+      "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/zig017-toolchain-20261009/compiler-cache/pinned-llvm-ReleaseSafe",
+      "--prefix",
+      "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/zig017-toolchain-20261009/compilers/pinned-llvm-ReleaseSafe",
+      "-j2",
+      "--summary",
+      "all",
+      "-Dllvm=true"
+    ],
+    "exit": 0,
+    "wall_s": 196.88,
+    "rss_kib": 3555752,
+    "user_s": 191.14,
+    "sys_s": 6.64,
+    "binary_sha256": "1ba81efbcac6b45165b2e8a2c3d3af223e310cf97a9c73670c1708f83f3f8ef0",
+    "binary_size": 43617632
+  },
+  {
+    "name": "pinned-llvm-ReleaseSafe",
+    "rep": 1,
+    "state": "unchanged",
+    "command": [
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "build",
+      "-Doptimize=ReleaseSafe",
+      "--cache-dir",
+      "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/zig017-toolchain-20261009/compiler-cache/pinned-llvm-ReleaseSafe",
+      "--prefix",
+      "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/zig017-toolchain-20261009/compilers/pinned-llvm-ReleaseSafe",
+      "-j2",
+      "--summary",
+      "all",
+      "-Dllvm=true"
+    ],
+    "exit": 0,
+    "wall_s": 0.02,
+    "rss_kib": 42132,
+    "user_s": 0.0,
+    "sys_s": 0.02,
+    "binary_sha256": "1ba81efbcac6b45165b2e8a2c3d3af223e310cf97a9c73670c1708f83f3f8ef0",
+    "binary_size": 43617632
+  }
+]

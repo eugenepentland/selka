@@ -1,0 +1,74 @@
+{
+  "pinned-Debug-native": {
+    "median_s": 1.840498061152175,
+    "median_rss_kib": 4244
+  },
+  "pinned-Debug-baseline": {
+    "median_s": 1.0274539361707866,
+    "median_rss_kib": 4544
+  },
+  "pinned-ReleaseSafe-native": {
+    "median_s": 0.016132164048030972,
+    "median_rss_kib": 2048
+  },
+  "pinned-ReleaseSafe-baseline": {
+    "median_s": 0.06014568102546036,
+    "median_rss_kib": 2060
+  },
+  "pinned-ReleaseFast-native": {
+    "median_s": 1.3351042559370399,
+    "median_rss_kib": 2060
+  },
+  "pinned-ReleaseFast-baseline": {
+    "median_s": 0.06158282794058323,
+    "median_rss_kib": 2060
+  },
+  "custom-Debug-native": {
+    "median_s": 1.831155151128769,
+    "median_rss_kib": 4268
+  },
+  "custom-Debug-baseline": {
+    "median_s": 0.5446119830012321,
+    "median_rss_kib": 4388
+  },
+  "custom-ReleaseSafe-native": {
+    "median_s": 1.817107368959114,
+    "median_rss_kib": 2060
+  },
+  "custom-ReleaseSafe-baseline": {
+    "median_s": 0.5638021510094404,
+    "median_rss_kib": 2060
+  },
+  "custom-ReleaseFast-native": {
+    "median_s": 1.7961373559664935,
+    "median_rss_kib": 2048
+  },
+  "custom-ReleaseFast-baseline": {
+    "median_s": 0.44436864904128015,
+    "median_rss_kib": 2060
+  },
+  "release-Debug-native": {
+    "median_s": 1.7855697008781135,
+    "median_rss_kib": 4352
+  },
+  "release-Debug-baseline": {
+    "median_s": 0.8655573769938201,
+    "median_rss_kib": 4536
+  },
+  "release-ReleaseSafe-native": {
+    "median_s": 0.016056549036875367,
+    "median_rss_kib": 2048
+  },
+  "release-ReleaseSafe-baseline": {
+    "median_s": 0.060731494799256325,
+    "median_rss_kib": 2048
+  },
+  "release-ReleaseFast-native": {
+    "median_s": 0.015702606877312064,
+    "median_rss_kib": 2060
+  },
+  "release-ReleaseFast-baseline": {
+    "median_s": 0.0610935699660331,
+    "median_rss_kib": 2048
+  }
+}

@@ -155,12 +155,35 @@ const process_start = @import("wiring/process_start.zig");
 fn dispatchCommandLine(init: std.process.Init) void {
     _ = budget.guardHost(init.environ_map);
     const status = dispatch(init) catch |err| status: {
+        if (componentDiagnostic(err)) |detail| {
+            std.Io.File.stderr().writeStreamingAll(init.io, "mylang: ") catch break :status @as(u8, 2);
+            std.Io.File.stderr().writeStreamingAll(init.io, detail) catch break :status @as(u8, 2);
+            std.Io.File.stderr().writeStreamingAll(init.io, "\n") catch break :status @as(u8, 2);
+            break :status @as(u8, 2);
+        }
         var buffer: [256]u8 = undefined;
         const message = std.fmt.bufPrint(&buffer, "mylang: host failure: {s}\n", .{@errorName(err)}) catch "mylang: host failure\n";
         std.Io.File.stderr().writeStreamingAll(init.io, message) catch break :status @as(u8, 2);
         break :status @as(u8, 2);
     };
     if (status != 0) std.process.exit(status);
+}
+
+/// Component failures remain recognizable at the public command boundary.
+fn componentDiagnostic(err: anyerror) ?[]const u8 {
+    return switch (err) {
+        error.ComponentMissing,
+        error.ComponentManifest,
+        error.ComponentDigest,
+        error.ComponentProtocol,
+        error.ComponentTimeout,
+        error.ComponentFailed,
+        error.ComponentIo,
+        error.ComponentShadowMismatch,
+        error.ComponentMode,
+        => language.component_adapter.diagnostic(@errorCast(err)),
+        else => null,
+    };
 }
 
 const project_config = @import("mylang").project_config;
@@ -288,7 +311,10 @@ fn dispatch(process: std.process.Init) !u8 {
         .diagnostics = parsed.reporting.diagnostics orelse .text,
     };
     const status = run(init, parsed) catch |err| status: {
-        const message = try std.fmt.allocPrint(init.gpa, "mylang: host failure: {s}\n", .{@errorName(err)});
+        const message = if (componentDiagnostic(err)) |detail|
+            try std.fmt.allocPrint(init.gpa, "mylang: {s}\n", .{detail})
+        else
+            try std.fmt.allocPrint(init.gpa, "mylang: host failure: {s}\n", .{@errorName(err)});
         defer init.gpa.free(message);
         try init.text(message);
         break :status @as(u8, 2);
@@ -1606,7 +1632,7 @@ fn lintProject(init: Context, parsed: Parsed, compilation: *language.project_com
         }
     }
     const settings: ?*const language.lint_config.Config = if (parsed_lint) |*value| value else null;
-    return language.lint.run(.{
+    return language.lint.runUsing(.{
         .memory = init.gpa,
         .io = init.io,
         .compilation = compilation,
@@ -1614,7 +1640,7 @@ fn lintProject(init: Context, parsed: Parsed, compilation: *language.project_com
         .entry_path = parsed.path,
         .options = parsed.lint,
         .diagnostics = init.diagnostics,
-    });
+    }, language.component_adapter.configured(init.io, init.environ));
 }
 
 /// Print the discovered tests that reach one declaration, spelled
@@ -1629,17 +1655,14 @@ fn testsFor(init: Context, parsed: Parsed, compilation: *language.project_compil
     const navigation = language.navigation;
     const rendered = if (compilation.program) |program| checked: {
         const resolved = (try testsSubject(init, try navigation.resolveSpelling(scratch, subject, try navigation.functionNames(scratch, program)), "checked ")) orelse return 2;
-        break :checked navigation.renderTestsFor(init.gpa, compilation, resolved) catch |err| switch (err) {
-            error.OutOfMemory => return error.OutOfMemory,
-            else => return error.InternalError,
-        };
+        break :checked try navigation.renderTestsForUsing(init.gpa, compilation, resolved, language.component_adapter.configured(init.io, init.environ));
     } else syntax: {
         const graph = language.navigation_syntax.build(scratch, compilation) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
             error.InternalError => return error.InternalError,
         };
         const resolved = (try testsSubject(init, try navigation.resolveSpelling(scratch, subject, graph.names), "")) orelse return 2;
-        break :syntax try language.navigation_syntax.renderTestsFor(init.gpa, graph, resolved);
+        break :syntax try language.navigation_syntax.renderTestsForUsing(init.gpa, graph, resolved, language.component_adapter.configured(init.io, init.environ));
     };
     const answer = rendered orelse {
         try init.text("tests-for: no checked declaration has that qualified name\n");
@@ -1744,7 +1767,7 @@ fn contextCommand(init: Context, parsed: Parsed, compilation: *language.project_
     };
     defer request.release(init.gpa);
     request.options.unavailable_reason = unavailable;
-    const answer = language.context.render(init.gpa, compilation, try compilerIdentity(init.io), request.options) catch |err| return contextError(init, err);
+    const answer = language.context.renderUsing(init.gpa, compilation, try compilerIdentity(init.io), request.options, language.component_adapter.configured(init.io, init.environ)) catch |err| return contextError(init, err);
     const status = try emitContext(init, answer);
     return status;
 }
@@ -1806,6 +1829,7 @@ fn emitContext(init: Context, answer: language.context.Answer) !u8 {
 /// an unreadable baseline or an unconfirmable source snapshot is a usage
 /// failure, and anything else is internal.
 fn contextError(init: Context, err: language.context.Error) !u8 {
+    if (componentDiagnostic(err) != null) return err;
     switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         error.BudgetTooSmall => {
@@ -2203,7 +2227,7 @@ fn listInterfaces(init: Context, project: *language.project.Project, parsed: Par
         project.problem = saved_problem;
         index.program = compilation.program;
     }
-    const text = try index.render(init.gpa);
+    const text = try index.renderUsing(init.gpa, language.component_adapter.configured(init.io, init.environ));
     defer init.gpa.free(text);
     return interfaceListing(init, text, parsed);
 }

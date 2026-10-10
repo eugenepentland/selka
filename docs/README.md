@@ -85,6 +85,8 @@ $ mylang reference --query E_MODULE_NAME   # one feature or error code, from the
   [linting](tooling/lint.md), [import policy](tooling/import-policy.md).
 - Compiler behaviour: [caches](tooling/caches.md), [phase timings](tooling/timings.md),
   [work and reuse reports](tooling/work-report.md), [module interfaces](tooling/module-interfaces.md).
+- Progressive self-hosting: [building Selka components](tooling/selfhost-components.md)
+  and their [binary protocol](tooling/component-protocol.md).
 - C interop: [direct C imports](c-ffi.md) (`extern func` with `--link FILE.c`).
   Host functions, `mylang invoke` and the host applications were retired; their
   pages are in [`legacy/`](legacy/README.md).

@@ -1,0 +1,93 @@
+import graph
+
+public record Request:
+    identity: bytes
+    adjacency: int[][]
+    tests: int[]
+
+
+func read_u32(data: bytes, at: int) -> int:
+    return data[at] + data[at + 1] * 256 + data[at + 2] * 65536 + data[at + 3] * 16777216
+
+
+public func decode(data: bytes) -> Request fails str:
+    if len(data) < 72 or len(data) > 16777216:
+        fail "invalid request frame size"
+    if data[:8] != b"SLKIDX01":
+        fail "invalid component magic"
+    if read_u32(data, 8) != 1 or read_u32(data, 12) != 1:
+        fail "unsupported component protocol or schema"
+    if read_u32(data, 16) != 0:
+        fail "invalid request message kind"
+    if read_u32(data, 20) != len(data) - 64:
+        fail "invalid request payload length"
+    mut nodes = read_u32(data, 64)
+    mut test_count = read_u32(data, 68)
+    if nodes > 100000 or test_count > 100000:
+        fail "request table count exceeds limit"
+    mut at = 72
+    if test_count > (len(data) - at) // 4:
+        fail "truncated test table"
+    mut tests: int[] = []
+    for item in range(test_count):
+        mut test = read_u32(data, at)
+        at += 4
+        if test >= nodes:
+            fail "invalid test function index"
+        tests.append(test)
+    mut adjacency: int[][] = []
+    mut edges = 0
+    for node in range(nodes):
+        if len(data) - at < 4:
+            fail "truncated adjacency list"
+        mut count = read_u32(data, at)
+        at += 4
+        edges += count
+        if edges > 1000000:
+            fail "request edge count exceeds limit"
+        if count > (len(data) - at) // 4:
+            fail "truncated adjacency edges"
+        mut callees: int[] = []
+        for edge in range(count):
+            mut callee = read_u32(data, at)
+            at += 4
+            if callee >= nodes:
+                fail "invalid callee function index"
+            callees.append(callee)
+        adjacency.append(callees)
+    if at != len(data):
+        fail "trailing request bytes"
+    return Request(identity=data[24:64], adjacency=adjacency, tests=tests)
+
+
+func put_u32(mut buffer: byte_buffer, value: int):
+    mut rest = value
+    for octet in range(4):
+        _ = buffer.append_byte(rest % 256)
+        rest = rest // 256
+
+
+public func encode(request: Request, index: graph.Index) -> bytes fails str:
+    mut payload_size = 4
+    for node in range(len(index.direct)):
+        payload_size += 8 + 4 * (len(index.direct[node]) + len(index.reached[node]))
+        if payload_size > 67108800:
+            fail "response frame exceeds limit"
+    mut empty: int[] = []
+    mut buffer = byte_buffer(empty)
+    _ = buffer.reserve(payload_size + 64)
+    _ = buffer.append_range(b"SLKIDX01", 0, 8)
+    put_u32(mut buffer, 1)
+    put_u32(mut buffer, 1)
+    put_u32(mut buffer, 1)
+    put_u32(mut buffer, payload_size)
+    _ = buffer.append_range(request.identity, 0, 40)
+    put_u32(mut buffer, len(index.direct))
+    for node in range(len(index.direct)):
+        put_u32(mut buffer, len(index.direct[node]))
+        for test in index.direct[node]:
+            put_u32(mut buffer, test)
+        put_u32(mut buffer, len(index.reached[node]))
+        for test in index.reached[node]:
+            put_u32(mut buffer, test)
+    return bytes(buffer)

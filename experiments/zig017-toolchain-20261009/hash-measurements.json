@@ -1,0 +1,1442 @@
+[
+  {
+    "name": "pinned-Debug-native",
+    "rep": 0,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 1.8363751180004328,
+    "rss_kib": 4264,
+    "user_s": 1.82,
+    "sys_s": 0.0,
+    "stdout_sha256": "552179e6a43b3785b394dbecdd1ef9f8f9fb13ea6ab1d6905249ccc278823305",
+    "load": [
+      3.06201171875,
+      2.29443359375,
+      3.46923828125
+    ],
+    "sibling_busy": 0.016393442622950838,
+    "stderr": "",
+    "backend": "stage2_x86_64",
+    "optimize": "debug"
+  },
+  {
+    "name": "pinned-Debug-baseline",
+    "rep": 0,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 1.0153336611110717,
+    "rss_kib": 4388,
+    "user_s": 1.0,
+    "sys_s": 0.0,
+    "stdout_sha256": "552179e6a43b3785b394dbecdd1ef9f8f9fb13ea6ab1d6905249ccc278823305",
+    "load": [
+      3.06201171875,
+      2.29443359375,
+      3.46923828125
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_x86_64",
+    "optimize": "debug"
+  },
+  {
+    "name": "pinned-ReleaseSafe-native",
+    "rep": 0,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 0.01700792694464326,
+    "rss_kib": 2048,
+    "user_s": 0.01,
+    "sys_s": 0.0,
+    "stdout_sha256": "3193f2ba510cff50a1ca114a86e6a4b648aedb6ba72535ccbc9c0fc608095edf",
+    "load": [
+      3.06201171875,
+      2.29443359375,
+      3.46923828125
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_llvm",
+    "optimize": "safe"
+  },
+  {
+    "name": "pinned-ReleaseSafe-baseline",
+    "rep": 0,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 0.0625711779575795,
+    "rss_kib": 2044,
+    "user_s": 0.06,
+    "sys_s": 0.0,
+    "stdout_sha256": "3193f2ba510cff50a1ca114a86e6a4b648aedb6ba72535ccbc9c0fc608095edf",
+    "load": [
+      3.06201171875,
+      2.29443359375,
+      3.46923828125
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_llvm",
+    "optimize": "safe"
+  },
+  {
+    "name": "pinned-ReleaseFast-native",
+    "rep": 0,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 1.475679500028491,
+    "rss_kib": 2060,
+    "user_s": 1.47,
+    "sys_s": 0.0,
+    "stdout_sha256": "67c2c2c6a865b8b0bbca159641a2d17738d03c8e39cea7a338fbab38c67dc323",
+    "load": [
+      3.06201171875,
+      2.29443359375,
+      3.46923828125
+    ],
+    "sibling_busy": 0.27210884353741494,
+    "stderr": "",
+    "backend": "stage2_llvm",
+    "optimize": "fast"
+  },
+  {
+    "name": "pinned-ReleaseFast-baseline",
+    "rep": 0,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 0.10650481097400188,
+    "rss_kib": 2048,
+    "user_s": 0.1,
+    "sys_s": 0.0,
+    "stdout_sha256": "67c2c2c6a865b8b0bbca159641a2d17738d03c8e39cea7a338fbab38c67dc323",
+    "load": [
+      3.06201171875,
+      2.29443359375,
+      3.46923828125
+    ],
+    "sibling_busy": 1.0,
+    "stderr": "",
+    "backend": "stage2_llvm",
+    "optimize": "fast"
+  },
+  {
+    "name": "custom-Debug-native",
+    "rep": 0,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 2.244169620098546,
+    "rss_kib": 4268,
+    "user_s": 2.22,
+    "sys_s": 0.0,
+    "stdout_sha256": "552179e6a43b3785b394dbecdd1ef9f8f9fb13ea6ab1d6905249ccc278823305",
+    "load": [
+      3.29736328125,
+      2.35595703125,
+      3.48291015625
+    ],
+    "sibling_busy": 0.8214285714285714,
+    "stderr": "",
+    "backend": "stage2_x86_64",
+    "optimize": "debug"
+  },
+  {
+    "name": "custom-Debug-baseline",
+    "rep": 0,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 0.5432771481573582,
+    "rss_kib": 4260,
+    "user_s": 0.53,
+    "sys_s": 0.0,
+    "stdout_sha256": "552179e6a43b3785b394dbecdd1ef9f8f9fb13ea6ab1d6905249ccc278823305",
+    "load": [
+      3.29736328125,
+      2.35595703125,
+      3.48291015625
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_x86_64",
+    "optimize": "debug"
+  },
+  {
+    "name": "custom-ReleaseSafe-native",
+    "rep": 0,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 1.7278148331679404,
+    "rss_kib": 2048,
+    "user_s": 1.72,
+    "sys_s": 0.0,
+    "stdout_sha256": "b06e589268fc5c319eb2bfb0905fe3d61ae197fbaae5a4dc2212a7a13d55d402",
+    "load": [
+      3.29736328125,
+      2.35595703125,
+      3.48291015625
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_x86_64",
+    "optimize": "safe"
+  },
+  {
+    "name": "custom-ReleaseSafe-baseline",
+    "rep": 0,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 0.5267746460158378,
+    "rss_kib": 2048,
+    "user_s": 0.51,
+    "sys_s": 0.0,
+    "stdout_sha256": "b06e589268fc5c319eb2bfb0905fe3d61ae197fbaae5a4dc2212a7a13d55d402",
+    "load": [
+      3.29736328125,
+      2.35595703125,
+      3.48291015625
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_x86_64",
+    "optimize": "safe"
+  },
+  {
+    "name": "custom-ReleaseFast-native",
+    "rep": 0,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 1.722331427037716,
+    "rss_kib": 2048,
+    "user_s": 1.71,
+    "sys_s": 0.0,
+    "stdout_sha256": "70fdb9f8037c96b66f3d88fc063fc0e9e71afe5aca75712906be6b0a48263a50",
+    "load": [
+      3.35400390625,
+      2.38330078125,
+      3.48583984375
+    ],
+    "sibling_busy": 0.011560693641618491,
+    "stderr": "",
+    "backend": "stage2_x86_64",
+    "optimize": "fast"
+  },
+  {
+    "name": "custom-ReleaseFast-baseline",
+    "rep": 0,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 0.45800885697826743,
+    "rss_kib": 2048,
+    "user_s": 0.45,
+    "sys_s": 0.0,
+    "stdout_sha256": "70fdb9f8037c96b66f3d88fc063fc0e9e71afe5aca75712906be6b0a48263a50",
+    "load": [
+      3.35400390625,
+      2.38330078125,
+      3.48583984375
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_x86_64",
+    "optimize": "fast"
+  },
+  {
+    "name": "release-Debug-native",
+    "rep": 0,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 1.8631746280007064,
+    "rss_kib": 4404,
+    "user_s": 1.85,
+    "sys_s": 0.0,
+    "stdout_sha256": "552179e6a43b3785b394dbecdd1ef9f8f9fb13ea6ab1d6905249ccc278823305",
+    "load": [
+      3.35400390625,
+      2.38330078125,
+      3.48583984375
+    ],
+    "sibling_busy": 0.027027027027026973,
+    "stderr": "",
+    "backend": "stage2_x86_64",
+    "optimize": "debug"
+  },
+  {
+    "name": "release-Debug-baseline",
+    "rep": 0,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 0.8876318051479757,
+    "rss_kib": 4620,
+    "user_s": 0.88,
+    "sys_s": 0.0,
+    "stdout_sha256": "552179e6a43b3785b394dbecdd1ef9f8f9fb13ea6ab1d6905249ccc278823305",
+    "load": [
+      3.35400390625,
+      2.38330078125,
+      3.48583984375
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_x86_64",
+    "optimize": "debug"
+  },
+  {
+    "name": "release-ReleaseSafe-native",
+    "rep": 0,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 0.01598968799225986,
+    "rss_kib": 2048,
+    "user_s": 0.01,
+    "sys_s": 0.0,
+    "stdout_sha256": "3193f2ba510cff50a1ca114a86e6a4b648aedb6ba72535ccbc9c0fc608095edf",
+    "load": [
+      3.35400390625,
+      2.38330078125,
+      3.48583984375
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_llvm",
+    "optimize": "safe"
+  },
+  {
+    "name": "release-ReleaseSafe-baseline",
+    "rep": 0,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 0.061631590127944946,
+    "rss_kib": 2060,
+    "user_s": 0.05,
+    "sys_s": 0.0,
+    "stdout_sha256": "3193f2ba510cff50a1ca114a86e6a4b648aedb6ba72535ccbc9c0fc608095edf",
+    "load": [
+      3.35400390625,
+      2.38330078125,
+      3.48583984375
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_llvm",
+    "optimize": "safe"
+  },
+  {
+    "name": "release-ReleaseFast-native",
+    "rep": 0,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 0.01646551792509854,
+    "rss_kib": 2060,
+    "user_s": 0.01,
+    "sys_s": 0.0,
+    "stdout_sha256": "67c2c2c6a865b8b0bbca159641a2d17738d03c8e39cea7a338fbab38c67dc323",
+    "load": [
+      3.35400390625,
+      2.38330078125,
+      3.48583984375
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_llvm",
+    "optimize": "fast"
+  },
+  {
+    "name": "release-ReleaseFast-baseline",
+    "rep": 0,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 0.060668117832392454,
+    "rss_kib": 2060,
+    "user_s": 0.05,
+    "sys_s": 0.0,
+    "stdout_sha256": "67c2c2c6a865b8b0bbca159641a2d17738d03c8e39cea7a338fbab38c67dc323",
+    "load": [
+      3.35400390625,
+      2.38330078125,
+      3.48583984375
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_llvm",
+    "optimize": "fast"
+  },
+  {
+    "name": "release-ReleaseFast-baseline",
+    "rep": 1,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 0.0610935699660331,
+    "rss_kib": 2060,
+    "user_s": 0.05,
+    "sys_s": 0.0,
+    "stdout_sha256": "67c2c2c6a865b8b0bbca159641a2d17738d03c8e39cea7a338fbab38c67dc323",
+    "load": [
+      3.40576171875,
+      2.41015625,
+      3.48876953125
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_llvm",
+    "optimize": "fast"
+  },
+  {
+    "name": "release-ReleaseFast-native",
+    "rep": 1,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 0.015495739178732038,
+    "rss_kib": 2048,
+    "user_s": 0.01,
+    "sys_s": 0.0,
+    "stdout_sha256": "67c2c2c6a865b8b0bbca159641a2d17738d03c8e39cea7a338fbab38c67dc323",
+    "load": [
+      3.40576171875,
+      2.41015625,
+      3.48876953125
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_llvm",
+    "optimize": "fast"
+  },
+  {
+    "name": "release-ReleaseSafe-baseline",
+    "rep": 1,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 0.061321947956457734,
+    "rss_kib": 1800,
+    "user_s": 0.05,
+    "sys_s": 0.0,
+    "stdout_sha256": "3193f2ba510cff50a1ca114a86e6a4b648aedb6ba72535ccbc9c0fc608095edf",
+    "load": [
+      3.40576171875,
+      2.41015625,
+      3.48876953125
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_llvm",
+    "optimize": "safe"
+  },
+  {
+    "name": "release-ReleaseSafe-native",
+    "rep": 1,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 0.016056549036875367,
+    "rss_kib": 2044,
+    "user_s": 0.01,
+    "sys_s": 0.0,
+    "stdout_sha256": "3193f2ba510cff50a1ca114a86e6a4b648aedb6ba72535ccbc9c0fc608095edf",
+    "load": [
+      3.40576171875,
+      2.41015625,
+      3.48876953125
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_llvm",
+    "optimize": "safe"
+  },
+  {
+    "name": "release-Debug-baseline",
+    "rep": 1,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 0.8655573769938201,
+    "rss_kib": 4528,
+    "user_s": 0.85,
+    "sys_s": 0.0,
+    "stdout_sha256": "552179e6a43b3785b394dbecdd1ef9f8f9fb13ea6ab1d6905249ccc278823305",
+    "load": [
+      3.40576171875,
+      2.41015625,
+      3.48876953125
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_x86_64",
+    "optimize": "debug"
+  },
+  {
+    "name": "release-Debug-native",
+    "rep": 1,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 1.7840124189388007,
+    "rss_kib": 4352,
+    "user_s": 1.78,
+    "sys_s": 0.0,
+    "stdout_sha256": "552179e6a43b3785b394dbecdd1ef9f8f9fb13ea6ab1d6905249ccc278823305",
+    "load": [
+      3.40576171875,
+      2.41015625,
+      3.48876953125
+    ],
+    "sibling_busy": 0.011173184357541888,
+    "stderr": "",
+    "backend": "stage2_x86_64",
+    "optimize": "debug"
+  },
+  {
+    "name": "custom-ReleaseFast-baseline",
+    "rep": 1,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 0.4557084229309112,
+    "rss_kib": 2060,
+    "user_s": 0.45,
+    "sys_s": 0.0,
+    "stdout_sha256": "70fdb9f8037c96b66f3d88fc063fc0e9e71afe5aca75712906be6b0a48263a50",
+    "load": [
+      3.40576171875,
+      2.41015625,
+      3.48876953125
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_x86_64",
+    "optimize": "fast"
+  },
+  {
+    "name": "custom-ReleaseFast-native",
+    "rep": 1,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 1.81850615888834,
+    "rss_kib": 2048,
+    "user_s": 1.81,
+    "sys_s": 0.0,
+    "stdout_sha256": "70fdb9f8037c96b66f3d88fc063fc0e9e71afe5aca75712906be6b0a48263a50",
+    "load": [
+      3.45361328125,
+      2.43701171875,
+      3.49169921875
+    ],
+    "sibling_busy": 0.01098901098901095,
+    "stderr": "",
+    "backend": "stage2_x86_64",
+    "optimize": "fast"
+  },
+  {
+    "name": "custom-ReleaseSafe-baseline",
+    "rep": 1,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 0.5638021510094404,
+    "rss_kib": 2060,
+    "user_s": 0.55,
+    "sys_s": 0.0,
+    "stdout_sha256": "b06e589268fc5c319eb2bfb0905fe3d61ae197fbaae5a4dc2212a7a13d55d402",
+    "load": [
+      3.45361328125,
+      2.43701171875,
+      3.49169921875
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_x86_64",
+    "optimize": "safe"
+  },
+  {
+    "name": "custom-ReleaseSafe-native",
+    "rep": 1,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 1.7991633040364832,
+    "rss_kib": 2044,
+    "user_s": 1.79,
+    "sys_s": 0.0,
+    "stdout_sha256": "b06e589268fc5c319eb2bfb0905fe3d61ae197fbaae5a4dc2212a7a13d55d402",
+    "load": [
+      3.45361328125,
+      2.43701171875,
+      3.49169921875
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_x86_64",
+    "optimize": "safe"
+  },
+  {
+    "name": "custom-Debug-baseline",
+    "rep": 1,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 0.5342936299275607,
+    "rss_kib": 4388,
+    "user_s": 0.52,
+    "sys_s": 0.0,
+    "stdout_sha256": "552179e6a43b3785b394dbecdd1ef9f8f9fb13ea6ab1d6905249ccc278823305",
+    "load": [
+      3.45361328125,
+      2.43701171875,
+      3.49169921875
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_x86_64",
+    "optimize": "debug"
+  },
+  {
+    "name": "custom-Debug-native",
+    "rep": 1,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 1.7905950481072068,
+    "rss_kib": 4268,
+    "user_s": 1.78,
+    "sys_s": 0.0,
+    "stdout_sha256": "552179e6a43b3785b394dbecdd1ef9f8f9fb13ea6ab1d6905249ccc278823305",
+    "load": [
+      3.45361328125,
+      2.43701171875,
+      3.49169921875
+    ],
+    "sibling_busy": 0.03910614525139666,
+    "stderr": "",
+    "backend": "stage2_x86_64",
+    "optimize": "debug"
+  },
+  {
+    "name": "pinned-ReleaseFast-baseline",
+    "rep": 1,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 0.06158282794058323,
+    "rss_kib": 2060,
+    "user_s": 0.05,
+    "sys_s": 0.0,
+    "stdout_sha256": "67c2c2c6a865b8b0bbca159641a2d17738d03c8e39cea7a338fbab38c67dc323",
+    "load": [
+      3.45361328125,
+      2.43701171875,
+      3.49169921875
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_llvm",
+    "optimize": "fast"
+  },
+  {
+    "name": "pinned-ReleaseFast-native",
+    "rep": 1,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 1.3351042559370399,
+    "rss_kib": 2060,
+    "user_s": 1.32,
+    "sys_s": 0.0,
+    "stdout_sha256": "67c2c2c6a865b8b0bbca159641a2d17738d03c8e39cea7a338fbab38c67dc323",
+    "load": [
+      3.49755859375,
+      2.46337890625,
+      3.49462890625
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_llvm",
+    "optimize": "fast"
+  },
+  {
+    "name": "pinned-ReleaseSafe-baseline",
+    "rep": 1,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 0.0600506030023098,
+    "rss_kib": 2056,
+    "user_s": 0.05,
+    "sys_s": 0.0,
+    "stdout_sha256": "3193f2ba510cff50a1ca114a86e6a4b648aedb6ba72535ccbc9c0fc608095edf",
+    "load": [
+      3.49755859375,
+      2.46337890625,
+      3.49462890625
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_llvm",
+    "optimize": "safe"
+  },
+  {
+    "name": "pinned-ReleaseSafe-native",
+    "rep": 1,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 0.016132164048030972,
+    "rss_kib": 2044,
+    "user_s": 0.01,
+    "sys_s": 0.0,
+    "stdout_sha256": "3193f2ba510cff50a1ca114a86e6a4b648aedb6ba72535ccbc9c0fc608095edf",
+    "load": [
+      3.49755859375,
+      2.46337890625,
+      3.49462890625
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_llvm",
+    "optimize": "safe"
+  },
+  {
+    "name": "pinned-Debug-baseline",
+    "rep": 1,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 1.0214052631054074,
+    "rss_kib": 4512,
+    "user_s": 1.01,
+    "sys_s": 0.0,
+    "stdout_sha256": "552179e6a43b3785b394dbecdd1ef9f8f9fb13ea6ab1d6905249ccc278823305",
+    "load": [
+      3.49755859375,
+      2.46337890625,
+      3.49462890625
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_x86_64",
+    "optimize": "debug"
+  },
+  {
+    "name": "pinned-Debug-native",
+    "rep": 1,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 1.8454723749309778,
+    "rss_kib": 4244,
+    "user_s": 1.82,
+    "sys_s": 0.0,
+    "stdout_sha256": "552179e6a43b3785b394dbecdd1ef9f8f9fb13ea6ab1d6905249ccc278823305",
+    "load": [
+      3.49755859375,
+      2.46337890625,
+      3.49462890625
+    ],
+    "sibling_busy": 0.010869565217391353,
+    "stderr": "",
+    "backend": "stage2_x86_64",
+    "optimize": "debug"
+  },
+  {
+    "name": "pinned-Debug-native",
+    "rep": 2,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 1.840498061152175,
+    "rss_kib": 4244,
+    "user_s": 1.83,
+    "sys_s": 0.0,
+    "stdout_sha256": "552179e6a43b3785b394dbecdd1ef9f8f9fb13ea6ab1d6905249ccc278823305",
+    "load": [
+      3.5380859375,
+      2.4892578125,
+      3.49755859375
+    ],
+    "sibling_busy": 0.03825136612021862,
+    "stderr": "",
+    "backend": "stage2_x86_64",
+    "optimize": "debug"
+  },
+  {
+    "name": "pinned-Debug-baseline",
+    "rep": 2,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 1.039541875012219,
+    "rss_kib": 4544,
+    "user_s": 1.03,
+    "sys_s": 0.0,
+    "stdout_sha256": "552179e6a43b3785b394dbecdd1ef9f8f9fb13ea6ab1d6905249ccc278823305",
+    "load": [
+      3.5380859375,
+      2.4892578125,
+      3.49755859375
+    ],
+    "sibling_busy": 0.009615384615384581,
+    "stderr": "",
+    "backend": "stage2_x86_64",
+    "optimize": "debug"
+  },
+  {
+    "name": "pinned-ReleaseSafe-native",
+    "rep": 2,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 0.017404993996024132,
+    "rss_kib": 2056,
+    "user_s": 0.01,
+    "sys_s": 0.0,
+    "stdout_sha256": "3193f2ba510cff50a1ca114a86e6a4b648aedb6ba72535ccbc9c0fc608095edf",
+    "load": [
+      3.5380859375,
+      2.4892578125,
+      3.49755859375
+    ],
+    "sibling_busy": 0.5,
+    "stderr": "",
+    "backend": "stage2_llvm",
+    "optimize": "safe"
+  },
+  {
+    "name": "pinned-ReleaseSafe-baseline",
+    "rep": 2,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 0.07921973592601717,
+    "rss_kib": 2060,
+    "user_s": 0.07,
+    "sys_s": 0.0,
+    "stdout_sha256": "3193f2ba510cff50a1ca114a86e6a4b648aedb6ba72535ccbc9c0fc608095edf",
+    "load": [
+      3.5380859375,
+      2.4892578125,
+      3.49755859375
+    ],
+    "sibling_busy": 0.625,
+    "stderr": "",
+    "backend": "stage2_llvm",
+    "optimize": "safe"
+  },
+  {
+    "name": "pinned-ReleaseFast-native",
+    "rep": 2,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 1.376426356146112,
+    "rss_kib": 2060,
+    "user_s": 1.37,
+    "sys_s": 0.0,
+    "stdout_sha256": "67c2c2c6a865b8b0bbca159641a2d17738d03c8e39cea7a338fbab38c67dc323",
+    "load": [
+      3.5380859375,
+      2.4892578125,
+      3.49755859375
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_llvm",
+    "optimize": "fast"
+  },
+  {
+    "name": "pinned-ReleaseFast-baseline",
+    "rep": 2,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 0.06576620414853096,
+    "rss_kib": 2056,
+    "user_s": 0.06,
+    "sys_s": 0.0,
+    "stdout_sha256": "67c2c2c6a865b8b0bbca159641a2d17738d03c8e39cea7a338fbab38c67dc323",
+    "load": [
+      3.5380859375,
+      2.4892578125,
+      3.49755859375
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_llvm",
+    "optimize": "fast"
+  },
+  {
+    "name": "custom-Debug-native",
+    "rep": 2,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 1.8337825788185,
+    "rss_kib": 4268,
+    "user_s": 1.82,
+    "sys_s": 0.0,
+    "stdout_sha256": "552179e6a43b3785b394dbecdd1ef9f8f9fb13ea6ab1d6905249ccc278823305",
+    "load": [
+      3.6552734375,
+      2.53125,
+      3.505859375
+    ],
+    "sibling_busy": 0.005464480874316946,
+    "stderr": "",
+    "backend": "stage2_x86_64",
+    "optimize": "debug"
+  },
+  {
+    "name": "custom-Debug-baseline",
+    "rep": 2,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 0.5481251920573413,
+    "rss_kib": 4388,
+    "user_s": 0.54,
+    "sys_s": 0.0,
+    "stdout_sha256": "552179e6a43b3785b394dbecdd1ef9f8f9fb13ea6ab1d6905249ccc278823305",
+    "load": [
+      3.6552734375,
+      2.53125,
+      3.505859375
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_x86_64",
+    "optimize": "debug"
+  },
+  {
+    "name": "custom-ReleaseSafe-native",
+    "rep": 2,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 1.817107368959114,
+    "rss_kib": 2060,
+    "user_s": 1.81,
+    "sys_s": 0.0,
+    "stdout_sha256": "b06e589268fc5c319eb2bfb0905fe3d61ae197fbaae5a4dc2212a7a13d55d402",
+    "load": [
+      3.6552734375,
+      2.53125,
+      3.505859375
+    ],
+    "sibling_busy": 0.01098901098901095,
+    "stderr": "",
+    "backend": "stage2_x86_64",
+    "optimize": "safe"
+  },
+  {
+    "name": "custom-ReleaseSafe-baseline",
+    "rep": 2,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 0.560451383003965,
+    "rss_kib": 2060,
+    "user_s": 0.55,
+    "sys_s": 0.0,
+    "stdout_sha256": "b06e589268fc5c319eb2bfb0905fe3d61ae197fbaae5a4dc2212a7a13d55d402",
+    "load": [
+      3.6552734375,
+      2.53125,
+      3.505859375
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_x86_64",
+    "optimize": "safe"
+  },
+  {
+    "name": "custom-ReleaseFast-native",
+    "rep": 2,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 1.7961373559664935,
+    "rss_kib": 2048,
+    "user_s": 1.79,
+    "sys_s": 0.0,
+    "stdout_sha256": "70fdb9f8037c96b66f3d88fc063fc0e9e71afe5aca75712906be6b0a48263a50",
+    "load": [
+      3.68310546875,
+      2.5556640625,
+      3.5087890625
+    ],
+    "sibling_busy": 0.011173184357541888,
+    "stderr": "",
+    "backend": "stage2_x86_64",
+    "optimize": "fast"
+  },
+  {
+    "name": "custom-ReleaseFast-baseline",
+    "rep": 2,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 0.444002308184281,
+    "rss_kib": 2060,
+    "user_s": 0.43,
+    "sys_s": 0.0,
+    "stdout_sha256": "70fdb9f8037c96b66f3d88fc063fc0e9e71afe5aca75712906be6b0a48263a50",
+    "load": [
+      3.68310546875,
+      2.5556640625,
+      3.5087890625
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_x86_64",
+    "optimize": "fast"
+  },
+  {
+    "name": "release-Debug-native",
+    "rep": 2,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 1.8484770951326936,
+    "rss_kib": 4352,
+    "user_s": 1.84,
+    "sys_s": 0.0,
+    "stdout_sha256": "552179e6a43b3785b394dbecdd1ef9f8f9fb13ea6ab1d6905249ccc278823305",
+    "load": [
+      3.68310546875,
+      2.5556640625,
+      3.5087890625
+    ],
+    "sibling_busy": 0.05945945945945941,
+    "stderr": "",
+    "backend": "stage2_x86_64",
+    "optimize": "debug"
+  },
+  {
+    "name": "release-Debug-baseline",
+    "rep": 2,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 0.9776121829636395,
+    "rss_kib": 4536,
+    "user_s": 0.96,
+    "sys_s": 0.0,
+    "stdout_sha256": "552179e6a43b3785b394dbecdd1ef9f8f9fb13ea6ab1d6905249ccc278823305",
+    "load": [
+      3.68310546875,
+      2.5556640625,
+      3.5087890625
+    ],
+    "sibling_busy": 0.27083333333333337,
+    "stderr": "",
+    "backend": "stage2_x86_64",
+    "optimize": "debug"
+  },
+  {
+    "name": "release-ReleaseSafe-native",
+    "rep": 2,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 0.01629544608294964,
+    "rss_kib": 2048,
+    "user_s": 0.01,
+    "sys_s": 0.0,
+    "stdout_sha256": "3193f2ba510cff50a1ca114a86e6a4b648aedb6ba72535ccbc9c0fc608095edf",
+    "load": [
+      3.68310546875,
+      2.5556640625,
+      3.5087890625
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_llvm",
+    "optimize": "safe"
+  },
+  {
+    "name": "release-ReleaseSafe-baseline",
+    "rep": 2,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 0.06034046015702188,
+    "rss_kib": 2060,
+    "user_s": 0.05,
+    "sys_s": 0.0,
+    "stdout_sha256": "3193f2ba510cff50a1ca114a86e6a4b648aedb6ba72535ccbc9c0fc608095edf",
+    "load": [
+      3.68310546875,
+      2.5556640625,
+      3.5087890625
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_llvm",
+    "optimize": "safe"
+  },
+  {
+    "name": "release-ReleaseFast-native",
+    "rep": 2,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 0.01604581018909812,
+    "rss_kib": 2060,
+    "user_s": 0.01,
+    "sys_s": 0.0,
+    "stdout_sha256": "67c2c2c6a865b8b0bbca159641a2d17738d03c8e39cea7a338fbab38c67dc323",
+    "load": [
+      3.68310546875,
+      2.5556640625,
+      3.5087890625
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_llvm",
+    "optimize": "fast"
+  },
+  {
+    "name": "release-ReleaseFast-baseline",
+    "rep": 2,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 0.06080220895819366,
+    "rss_kib": 2044,
+    "user_s": 0.05,
+    "sys_s": 0.0,
+    "stdout_sha256": "67c2c2c6a865b8b0bbca159641a2d17738d03c8e39cea7a338fbab38c67dc323",
+    "load": [
+      3.68310546875,
+      2.5556640625,
+      3.5087890625
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_llvm",
+    "optimize": "fast"
+  },
+  {
+    "name": "release-ReleaseFast-baseline",
+    "rep": 3,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 0.061924329958856106,
+    "rss_kib": 2048,
+    "user_s": 0.06,
+    "sys_s": 0.0,
+    "stdout_sha256": "67c2c2c6a865b8b0bbca159641a2d17738d03c8e39cea7a338fbab38c67dc323",
+    "load": [
+      3.68310546875,
+      2.5556640625,
+      3.5087890625
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_llvm",
+    "optimize": "fast"
+  },
+  {
+    "name": "release-ReleaseFast-native",
+    "rep": 3,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 0.015702606877312064,
+    "rss_kib": 2060,
+    "user_s": 0.01,
+    "sys_s": 0.0,
+    "stdout_sha256": "67c2c2c6a865b8b0bbca159641a2d17738d03c8e39cea7a338fbab38c67dc323",
+    "load": [
+      3.68310546875,
+      2.5556640625,
+      3.5087890625
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_llvm",
+    "optimize": "fast"
+  },
+  {
+    "name": "release-ReleaseSafe-baseline",
+    "rep": 3,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 0.060731494799256325,
+    "rss_kib": 2048,
+    "user_s": 0.05,
+    "sys_s": 0.0,
+    "stdout_sha256": "3193f2ba510cff50a1ca114a86e6a4b648aedb6ba72535ccbc9c0fc608095edf",
+    "load": [
+      3.68310546875,
+      2.5556640625,
+      3.5087890625
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_llvm",
+    "optimize": "safe"
+  },
+  {
+    "name": "release-ReleaseSafe-native",
+    "rep": 3,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 0.015554026933386922,
+    "rss_kib": 2048,
+    "user_s": 0.01,
+    "sys_s": 0.0,
+    "stdout_sha256": "3193f2ba510cff50a1ca114a86e6a4b648aedb6ba72535ccbc9c0fc608095edf",
+    "load": [
+      3.68310546875,
+      2.5556640625,
+      3.5087890625
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_llvm",
+    "optimize": "safe"
+  },
+  {
+    "name": "release-Debug-baseline",
+    "rep": 3,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 0.8613266739994287,
+    "rss_kib": 4536,
+    "user_s": 0.85,
+    "sys_s": 0.0,
+    "stdout_sha256": "552179e6a43b3785b394dbecdd1ef9f8f9fb13ea6ab1d6905249ccc278823305",
+    "load": [
+      3.68310546875,
+      2.5556640625,
+      3.5087890625
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_x86_64",
+    "optimize": "debug"
+  },
+  {
+    "name": "release-Debug-native",
+    "rep": 3,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 1.7855697008781135,
+    "rss_kib": 4352,
+    "user_s": 1.77,
+    "sys_s": 0.0,
+    "stdout_sha256": "552179e6a43b3785b394dbecdd1ef9f8f9fb13ea6ab1d6905249ccc278823305",
+    "load": [
+      3.70849609375,
+      2.580078125,
+      3.51171875
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_x86_64",
+    "optimize": "debug"
+  },
+  {
+    "name": "custom-ReleaseFast-baseline",
+    "rep": 3,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 0.44436864904128015,
+    "rss_kib": 2060,
+    "user_s": 0.43,
+    "sys_s": 0.0,
+    "stdout_sha256": "70fdb9f8037c96b66f3d88fc063fc0e9e71afe5aca75712906be6b0a48263a50",
+    "load": [
+      3.70849609375,
+      2.580078125,
+      3.51171875
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_x86_64",
+    "optimize": "fast"
+  },
+  {
+    "name": "custom-ReleaseFast-native",
+    "rep": 3,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 1.7932996889576316,
+    "rss_kib": 2060,
+    "user_s": 1.78,
+    "sys_s": 0.0,
+    "stdout_sha256": "70fdb9f8037c96b66f3d88fc063fc0e9e71afe5aca75712906be6b0a48263a50",
+    "load": [
+      3.70849609375,
+      2.580078125,
+      3.51171875
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_x86_64",
+    "optimize": "fast"
+  },
+  {
+    "name": "custom-ReleaseSafe-baseline",
+    "rep": 3,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 0.5638405089266598,
+    "rss_kib": 2060,
+    "user_s": 0.55,
+    "sys_s": 0.0,
+    "stdout_sha256": "b06e589268fc5c319eb2bfb0905fe3d61ae197fbaae5a4dc2212a7a13d55d402",
+    "load": [
+      3.70849609375,
+      2.580078125,
+      3.51171875
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_x86_64",
+    "optimize": "safe"
+  },
+  {
+    "name": "custom-ReleaseSafe-native",
+    "rep": 3,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 1.8245419498998672,
+    "rss_kib": 2060,
+    "user_s": 1.8,
+    "sys_s": 0.0,
+    "stdout_sha256": "b06e589268fc5c319eb2bfb0905fe3d61ae197fbaae5a4dc2212a7a13d55d402",
+    "load": [
+      3.73193359375,
+      2.60400390625,
+      3.5146484375
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_x86_64",
+    "optimize": "safe"
+  },
+  {
+    "name": "custom-Debug-baseline",
+    "rep": 3,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 0.5446119830012321,
+    "rss_kib": 4384,
+    "user_s": 0.53,
+    "sys_s": 0.0,
+    "stdout_sha256": "552179e6a43b3785b394dbecdd1ef9f8f9fb13ea6ab1d6905249ccc278823305",
+    "load": [
+      3.73193359375,
+      2.60400390625,
+      3.5146484375
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_x86_64",
+    "optimize": "debug"
+  },
+  {
+    "name": "custom-Debug-native",
+    "rep": 3,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 1.831155151128769,
+    "rss_kib": 4268,
+    "user_s": 1.82,
+    "sys_s": 0.0,
+    "stdout_sha256": "552179e6a43b3785b394dbecdd1ef9f8f9fb13ea6ab1d6905249ccc278823305",
+    "load": [
+      3.73193359375,
+      2.60400390625,
+      3.5146484375
+    ],
+    "sibling_busy": 0.05464480874316935,
+    "stderr": "",
+    "backend": "stage2_x86_64",
+    "optimize": "debug"
+  },
+  {
+    "name": "pinned-ReleaseFast-baseline",
+    "rep": 3,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 0.060140724992379546,
+    "rss_kib": 2060,
+    "user_s": 0.05,
+    "sys_s": 0.0,
+    "stdout_sha256": "67c2c2c6a865b8b0bbca159641a2d17738d03c8e39cea7a338fbab38c67dc323",
+    "load": [
+      3.73193359375,
+      2.60400390625,
+      3.5146484375
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_llvm",
+    "optimize": "fast"
+  },
+  {
+    "name": "pinned-ReleaseFast-native",
+    "rep": 3,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 1.327499101869762,
+    "rss_kib": 2048,
+    "user_s": 1.32,
+    "sys_s": 0.0,
+    "stdout_sha256": "67c2c2c6a865b8b0bbca159641a2d17738d03c8e39cea7a338fbab38c67dc323",
+    "load": [
+      3.73193359375,
+      2.60400390625,
+      3.5146484375
+    ],
+    "sibling_busy": 0.1515151515151515,
+    "stderr": "",
+    "backend": "stage2_llvm",
+    "optimize": "fast"
+  },
+  {
+    "name": "pinned-ReleaseSafe-baseline",
+    "rep": 3,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 0.06014568102546036,
+    "rss_kib": 2060,
+    "user_s": 0.05,
+    "sys_s": 0.0,
+    "stdout_sha256": "3193f2ba510cff50a1ca114a86e6a4b648aedb6ba72535ccbc9c0fc608095edf",
+    "load": [
+      3.73193359375,
+      2.60400390625,
+      3.5146484375
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_llvm",
+    "optimize": "safe"
+  },
+  {
+    "name": "pinned-ReleaseSafe-native",
+    "rep": 3,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 0.015639077872037888,
+    "rss_kib": 2048,
+    "user_s": 0.01,
+    "sys_s": 0.0,
+    "stdout_sha256": "3193f2ba510cff50a1ca114a86e6a4b648aedb6ba72535ccbc9c0fc608095edf",
+    "load": [
+      3.73193359375,
+      2.60400390625,
+      3.5146484375
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_llvm",
+    "optimize": "safe"
+  },
+  {
+    "name": "pinned-Debug-baseline",
+    "rep": 3,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 1.0274539361707866,
+    "rss_kib": 4544,
+    "user_s": 1.02,
+    "sys_s": 0.0,
+    "stdout_sha256": "552179e6a43b3785b394dbecdd1ef9f8f9fb13ea6ab1d6905249ccc278823305",
+    "load": [
+      3.75341796875,
+      2.62744140625,
+      3.517578125
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "backend": "stage2_x86_64",
+    "optimize": "debug"
+  },
+  {
+    "name": "pinned-Debug-native",
+    "rep": 3,
+    "kind": "hash",
+    "exit": 0,
+    "wall_s": 1.8028446519747376,
+    "rss_kib": 4244,
+    "user_s": 1.79,
+    "sys_s": 0.0,
+    "stdout_sha256": "552179e6a43b3785b394dbecdd1ef9f8f9fb13ea6ab1d6905249ccc278823305",
+    "load": [
+      3.75341796875,
+      2.62744140625,
+      3.517578125
+    ],
+    "sibling_busy": 0.005494505494505475,
+    "stderr": "",
+    "backend": "stage2_x86_64",
+    "optimize": "debug"
+  }
+]

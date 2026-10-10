@@ -1,0 +1,3078 @@
+record Acc:
+    total: int
+    count: int
+
+func f0(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 1 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + k % 1000
+
+func f1(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 2 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f0(k - 1) % 1000
+
+func f2(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 3 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f1(k - 1) % 1000
+
+func f3(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 4 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f2(k - 1) % 1000
+
+func f4(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 5 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f3(k - 1) % 1000
+
+func f5(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 6 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f4(k - 1) % 1000
+
+func f6(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 7 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f5(k - 1) % 1000
+
+func f7(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 1 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f6(k - 1) % 1000
+
+func f8(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 2 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f7(k - 1) % 1000
+
+func f9(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 3 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f8(k - 1) % 1000
+
+func f10(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 4 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f9(k - 1) % 1000
+
+func f11(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 5 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f10(k - 1) % 1000
+
+func f12(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 6 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f11(k - 1) % 1000
+
+func f13(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 7 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f12(k - 1) % 1000
+
+func f14(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 1 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f13(k - 1) % 1000
+
+func f15(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 2 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f14(k - 1) % 1000
+
+func f16(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 3 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f15(k - 1) % 1000
+
+func f17(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 4 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f16(k - 1) % 1000
+
+func f18(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 5 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f17(k - 1) % 1000
+
+func f19(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 6 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f18(k - 1) % 1000
+
+func f20(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 7 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f19(k - 1) % 1000
+
+func f21(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 1 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f20(k - 1) % 1000
+
+func f22(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 2 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f21(k - 1) % 1000
+
+func f23(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 3 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f22(k - 1) % 1000
+
+func f24(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 4 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f23(k - 1) % 1000
+
+func f25(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 5 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f24(k - 1) % 1000
+
+func f26(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 6 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f25(k - 1) % 1000
+
+func f27(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 7 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f26(k - 1) % 1000
+
+func f28(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 1 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f27(k - 1) % 1000
+
+func f29(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 2 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f28(k - 1) % 1000
+
+func f30(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 3 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f29(k - 1) % 1000
+
+func f31(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 4 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f30(k - 1) % 1000
+
+func f32(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 5 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f31(k - 1) % 1000
+
+func f33(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 6 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f32(k - 1) % 1000
+
+func f34(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 7 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f33(k - 1) % 1000
+
+func f35(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 1 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f34(k - 1) % 1000
+
+func f36(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 2 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f35(k - 1) % 1000
+
+func f37(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 3 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f36(k - 1) % 1000
+
+func f38(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 4 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f37(k - 1) % 1000
+
+func f39(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 5 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f38(k - 1) % 1000
+
+func f40(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 6 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f39(k - 1) % 1000
+
+func f41(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 7 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f40(k - 1) % 1000
+
+func f42(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 1 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f41(k - 1) % 1000
+
+func f43(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 2 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f42(k - 1) % 1000
+
+func f44(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 3 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f43(k - 1) % 1000
+
+func f45(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 4 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f44(k - 1) % 1000
+
+func f46(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 5 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f45(k - 1) % 1000
+
+func f47(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 6 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f46(k - 1) % 1000
+
+func f48(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 7 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f47(k - 1) % 1000
+
+func f49(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 1 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f48(k - 1) % 1000
+
+func f50(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 2 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f49(k - 1) % 1000
+
+func f51(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 3 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f50(k - 1) % 1000
+
+func f52(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 4 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f51(k - 1) % 1000
+
+func f53(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 5 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f52(k - 1) % 1000
+
+func f54(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 6 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f53(k - 1) % 1000
+
+func f55(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 7 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f54(k - 1) % 1000
+
+func f56(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 1 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f55(k - 1) % 1000
+
+func f57(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 2 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f56(k - 1) % 1000
+
+func f58(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 3 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f57(k - 1) % 1000
+
+func f59(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 4 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f58(k - 1) % 1000
+
+func f60(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 5 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f59(k - 1) % 1000
+
+func f61(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 6 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f60(k - 1) % 1000
+
+func f62(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 7 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f61(k - 1) % 1000
+
+func f63(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 1 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f62(k - 1) % 1000
+
+func f64(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 2 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f63(k - 1) % 1000
+
+func f65(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 3 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f64(k - 1) % 1000
+
+func f66(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 4 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f65(k - 1) % 1000
+
+func f67(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 5 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f66(k - 1) % 1000
+
+func f68(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 6 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f67(k - 1) % 1000
+
+func f69(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 7 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f68(k - 1) % 1000
+
+func f70(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 1 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f69(k - 1) % 1000
+
+func f71(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 2 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f70(k - 1) % 1000
+
+func f72(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 3 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f71(k - 1) % 1000
+
+func f73(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 4 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f72(k - 1) % 1000
+
+func f74(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 5 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f73(k - 1) % 1000
+
+func f75(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 6 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f74(k - 1) % 1000
+
+func f76(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 7 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f75(k - 1) % 1000
+
+func f77(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 1 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f76(k - 1) % 1000
+
+func f78(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 2 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f77(k - 1) % 1000
+
+func f79(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 3 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f78(k - 1) % 1000
+
+func f80(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 4 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f79(k - 1) % 1000
+
+func f81(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 5 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f80(k - 1) % 1000
+
+func f82(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 6 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f81(k - 1) % 1000
+
+func f83(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 7 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f82(k - 1) % 1000
+
+func f84(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 1 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f83(k - 1) % 1000
+
+func f85(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 2 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f84(k - 1) % 1000
+
+func f86(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 3 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f85(k - 1) % 1000
+
+func f87(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 4 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f86(k - 1) % 1000
+
+func f88(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 5 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f87(k - 1) % 1000
+
+func f89(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 6 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f88(k - 1) % 1000
+
+func f90(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 7 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f89(k - 1) % 1000
+
+func f91(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 1 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f90(k - 1) % 1000
+
+func f92(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 2 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f91(k - 1) % 1000
+
+func f93(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 3 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f92(k - 1) % 1000
+
+func f94(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 4 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f93(k - 1) % 1000
+
+func f95(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 5 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f94(k - 1) % 1000
+
+func f96(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 6 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f95(k - 1) % 1000
+
+func f97(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 7 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f96(k - 1) % 1000
+
+func f98(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 1 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f97(k - 1) % 1000
+
+func f99(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 2 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f98(k - 1) % 1000
+
+func f100(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 3 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f99(k - 1) % 1000
+
+func f101(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 4 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f100(k - 1) % 1000
+
+func f102(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 5 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f101(k - 1) % 1000
+
+func f103(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 6 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f102(k - 1) % 1000
+
+func f104(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 7 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f103(k - 1) % 1000
+
+func f105(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 1 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f104(k - 1) % 1000
+
+func f106(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 2 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f105(k - 1) % 1000
+
+func f107(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 3 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f106(k - 1) % 1000
+
+func f108(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 4 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f107(k - 1) % 1000
+
+func f109(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 5 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f108(k - 1) % 1000
+
+func f110(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 6 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f109(k - 1) % 1000
+
+func f111(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 7 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f110(k - 1) % 1000
+
+func f112(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 1 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f111(k - 1) % 1000
+
+func f113(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 2 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f112(k - 1) % 1000
+
+func f114(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 3 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f113(k - 1) % 1000
+
+func f115(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 4 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f114(k - 1) % 1000
+
+func f116(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 5 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f115(k - 1) % 1000
+
+func f117(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 6 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f116(k - 1) % 1000
+
+func f118(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 7 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f117(k - 1) % 1000
+
+func f119(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 1 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f118(k - 1) % 1000
+
+func f120(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 2 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f119(k - 1) % 1000
+
+func f121(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 3 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f120(k - 1) % 1000
+
+func f122(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 4 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f121(k - 1) % 1000
+
+func f123(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 5 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f122(k - 1) % 1000
+
+func f124(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 6 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f123(k - 1) % 1000
+
+func f125(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 7 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f124(k - 1) % 1000
+
+func f126(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 1 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f125(k - 1) % 1000
+
+func f127(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 2 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f126(k - 1) % 1000
+
+func f128(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 3 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f127(k - 1) % 1000
+
+func f129(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 4 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f128(k - 1) % 1000
+
+func f130(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 5 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f129(k - 1) % 1000
+
+func f131(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 6 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f130(k - 1) % 1000
+
+func f132(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 7 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f131(k - 1) % 1000
+
+func f133(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 1 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f132(k - 1) % 1000
+
+func f134(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 2 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f133(k - 1) % 1000
+
+func f135(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 3 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f134(k - 1) % 1000
+
+func f136(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 4 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f135(k - 1) % 1000
+
+func f137(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 5 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f136(k - 1) % 1000
+
+func f138(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 6 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f137(k - 1) % 1000
+
+func f139(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 7 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f138(k - 1) % 1000
+
+func f140(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 1 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f139(k - 1) % 1000
+
+func f141(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 2 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f140(k - 1) % 1000
+
+func f142(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 3 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f141(k - 1) % 1000
+
+func f143(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 4 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f142(k - 1) % 1000
+
+func f144(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 5 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f143(k - 1) % 1000
+
+func f145(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 6 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f144(k - 1) % 1000
+
+func f146(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 7 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f145(k - 1) % 1000
+
+func f147(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 1 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f146(k - 1) % 1000
+
+func f148(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 2 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f147(k - 1) % 1000
+
+func f149(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 3 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f148(k - 1) % 1000
+
+func f150(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 4 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f149(k - 1) % 1000
+
+func f151(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 5 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f150(k - 1) % 1000
+
+func f152(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 6 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f151(k - 1) % 1000
+
+func f153(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 7 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f152(k - 1) % 1000
+
+func f154(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 1 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f153(k - 1) % 1000
+
+func f155(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 2 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f154(k - 1) % 1000
+
+func f156(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 3 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f155(k - 1) % 1000
+
+func f157(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 4 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f156(k - 1) % 1000
+
+func f158(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 5 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f157(k - 1) % 1000
+
+func f159(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 6 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f158(k - 1) % 1000
+
+func f160(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 7 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f159(k - 1) % 1000
+
+func f161(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 1 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f160(k - 1) % 1000
+
+func f162(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 2 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f161(k - 1) % 1000
+
+func f163(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 3 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f162(k - 1) % 1000
+
+func f164(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 4 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f163(k - 1) % 1000
+
+func f165(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 5 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f164(k - 1) % 1000
+
+func f166(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 6 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f165(k - 1) % 1000
+
+func f167(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 7 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f166(k - 1) % 1000
+
+func f168(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 1 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f167(k - 1) % 1000
+
+func f169(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 2 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f168(k - 1) % 1000
+
+func f170(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 3 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f169(k - 1) % 1000
+
+func f171(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 4 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f170(k - 1) % 1000
+
+func f172(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 5 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f171(k - 1) % 1000
+
+func f173(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 6 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f172(k - 1) % 1000
+
+func f174(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 7 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f173(k - 1) % 1000
+
+func f175(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 1 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f174(k - 1) % 1000
+
+func f176(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 2 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f175(k - 1) % 1000
+
+func f177(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 3 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f176(k - 1) % 1000
+
+func f178(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 4 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f177(k - 1) % 1000
+
+func f179(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 5 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f178(k - 1) % 1000
+
+func f180(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 6 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f179(k - 1) % 1000
+
+func f181(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 7 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f180(k - 1) % 1000
+
+func f182(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 1 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f181(k - 1) % 1000
+
+func f183(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 2 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f182(k - 1) % 1000
+
+func f184(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 3 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f183(k - 1) % 1000
+
+func f185(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 4 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f184(k - 1) % 1000
+
+func f186(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 5 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f185(k - 1) % 1000
+
+func f187(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 6 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f186(k - 1) % 1000
+
+func f188(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 7 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f187(k - 1) % 1000
+
+func f189(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 1 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f188(k - 1) % 1000
+
+func f190(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 2 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f189(k - 1) % 1000
+
+func f191(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 3 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f190(k - 1) % 1000
+
+func f192(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 4 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f191(k - 1) % 1000
+
+func f193(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 5 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f192(k - 1) % 1000
+
+func f194(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 6 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f193(k - 1) % 1000
+
+func f195(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 7 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f194(k - 1) % 1000
+
+func f196(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 1 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f195(k - 1) % 1000
+
+func f197(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 2 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f196(k - 1) % 1000
+
+func f198(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 3 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f197(k - 1) % 1000
+
+func f199(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 4 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f198(k - 1) % 1000
+
+func f200(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 5 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f199(k - 1) % 1000
+
+func f201(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 6 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f200(k - 1) % 1000
+
+func f202(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 7 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f201(k - 1) % 1000
+
+func f203(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 1 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f202(k - 1) % 1000
+
+func f204(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 2 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f203(k - 1) % 1000
+
+func f205(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 3 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f204(k - 1) % 1000
+
+func f206(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 4 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f205(k - 1) % 1000
+
+func f207(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 5 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f206(k - 1) % 1000
+
+func f208(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 6 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f207(k - 1) % 1000
+
+func f209(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 7 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f208(k - 1) % 1000
+
+func f210(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 1 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f209(k - 1) % 1000
+
+func f211(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 2 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f210(k - 1) % 1000
+
+func f212(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 3 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f211(k - 1) % 1000
+
+func f213(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 4 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f212(k - 1) % 1000
+
+func f214(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 5 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f213(k - 1) % 1000
+
+func f215(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 6 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f214(k - 1) % 1000
+
+func f216(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 7 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f215(k - 1) % 1000
+
+func f217(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 1 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f216(k - 1) % 1000
+
+func f218(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 2 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f217(k - 1) % 1000
+
+func f219(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 3 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f218(k - 1) % 1000
+
+func f220(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 4 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f219(k - 1) % 1000
+
+func f221(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 5 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f220(k - 1) % 1000
+
+func f222(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 6 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f221(k - 1) % 1000
+
+func f223(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 7 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f222(k - 1) % 1000
+
+func f224(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 1 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f223(k - 1) % 1000
+
+func f225(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 2 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f224(k - 1) % 1000
+
+func f226(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 3 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f225(k - 1) % 1000
+
+func f227(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 4 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f226(k - 1) % 1000
+
+func f228(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 5 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f227(k - 1) % 1000
+
+func f229(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 6 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f228(k - 1) % 1000
+
+func f230(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 7 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f229(k - 1) % 1000
+
+func f231(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 1 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f230(k - 1) % 1000
+
+func f232(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 2 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f231(k - 1) % 1000
+
+func f233(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 3 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f232(k - 1) % 1000
+
+func f234(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 4 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f233(k - 1) % 1000
+
+func f235(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 5 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f234(k - 1) % 1000
+
+func f236(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 6 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f235(k - 1) % 1000
+
+func f237(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 7 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f236(k - 1) % 1000
+
+func f238(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 1 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f237(k - 1) % 1000
+
+func f239(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 2 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f238(k - 1) % 1000
+
+func f240(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 3 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f239(k - 1) % 1000
+
+func f241(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 4 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f240(k - 1) % 1000
+
+func f242(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 5 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f241(k - 1) % 1000
+
+func f243(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 6 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f242(k - 1) % 1000
+
+func f244(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 7 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f243(k - 1) % 1000
+
+func f245(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 1 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f244(k - 1) % 1000
+
+func f246(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 2 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f245(k - 1) % 1000
+
+func f247(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 3 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f246(k - 1) % 1000
+
+func f248(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 4 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f247(k - 1) % 1000
+
+func f249(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 5 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f248(k - 1) % 1000
+
+func f250(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 6 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f249(k - 1) % 1000
+
+func f251(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 7 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f250(k - 1) % 1000
+
+func f252(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 1 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f251(k - 1) % 1000
+
+func f253(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 2 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f252(k - 1) % 1000
+
+func f254(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 3 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f253(k - 1) % 1000
+
+func f255(k: int) -> int:
+    mut items: int[] = []
+    for j in range(k % 17 + 3):
+        items.append(j * 4 + k)
+    mut acc = Acc(total=0, count=0)
+    for v in items:
+        if v % 3 == 0:
+            acc = Acc(total=acc.total + v, count=acc.count + 1)
+        else:
+            acc = Acc(total=acc.total - 1, count=acc.count)
+    return acc.total + acc.count + f254(k - 1) % 1000
+
+func main() -> int:
+    return f255(40)

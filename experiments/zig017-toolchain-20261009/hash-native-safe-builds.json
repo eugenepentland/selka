@@ -1,0 +1,38 @@
+[
+  {
+    "name": "pinned-ReleaseSafe-native-no-llvm",
+    "command": [
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "build-exe",
+      "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/experiments/zig017-toolchain-20261009/hash_probe.zig",
+      "-OReleaseSafe",
+      "-fno-llvm",
+      "-mcpu=native",
+      "-femit-bin=/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/zig017-toolchain-20261009/hash/pinned-ReleaseSafe-native-no-llvm",
+      "--cache-dir",
+      "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/zig017-toolchain-20261009/hash-cache/pinned",
+      "--global-cache-dir",
+      "/home/epentland/ai/canopy/.zig-global-cache"
+    ],
+    "exit": 0,
+    "stderr": ""
+  },
+  {
+    "name": "release-ReleaseSafe-native-no-llvm",
+    "command": [
+      "/home/epentland/zig-toolchains/0.17.0-download/zig-x86_64-linux-0.17.0/zig",
+      "build-exe",
+      "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/experiments/zig017-toolchain-20261009/hash_probe.zig",
+      "-OReleaseSafe",
+      "-fno-llvm",
+      "-mcpu=native",
+      "-femit-bin=/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/zig017-toolchain-20261009/hash/release-ReleaseSafe-native-no-llvm",
+      "--cache-dir",
+      "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/zig017-toolchain-20261009/hash-cache/release",
+      "--global-cache-dir",
+      "/home/epentland/ai/canopy/.zig-global-cache"
+    ],
+    "exit": 0,
+    "stderr": ""
+  }
+]

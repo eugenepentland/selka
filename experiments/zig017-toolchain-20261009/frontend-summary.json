@@ -1,0 +1,66 @@
+{
+  "custom-Debug/check": {
+    "median_s": 0.2285460070706904,
+    "median_rss_kib": 40168
+  },
+  "custom-Debug/ir": {
+    "median_s": 0.1870909279678017,
+    "median_rss_kib": 47904
+  },
+  "custom-ReleaseSafe/check": {
+    "median_s": 0.24904202483594418,
+    "median_rss_kib": 40008
+  },
+  "custom-ReleaseSafe/ir": {
+    "median_s": 0.19221332692541182,
+    "median_rss_kib": 47624
+  },
+  "pinned-Debug/check": {
+    "median_s": 0.25363816786557436,
+    "median_rss_kib": 41348
+  },
+  "pinned-Debug/ir": {
+    "median_s": 0.22204190492630005,
+    "median_rss_kib": 49016
+  },
+  "pinned-ReleaseSafe/check": {
+    "median_s": 0.2530685409437865,
+    "median_rss_kib": 40424
+  },
+  "pinned-ReleaseSafe/ir": {
+    "median_s": 0.23373847198672593,
+    "median_rss_kib": 48040
+  },
+  "pinned-llvm-ReleaseSafe/check": {
+    "median_s": 0.03814350813627243,
+    "median_rss_kib": 31752
+  },
+  "pinned-llvm-ReleaseSafe/ir": {
+    "median_s": 0.04220021399669349,
+    "median_rss_kib": 38984
+  },
+  "release-Debug/check": {
+    "median_s": 0.24529838212765753,
+    "median_rss_kib": 41684
+  },
+  "release-Debug/ir": {
+    "median_s": 0.21451664716005325,
+    "median_rss_kib": 49560
+  },
+  "release-ReleaseSafe/check": {
+    "median_s": 0.24430774012580514,
+    "median_rss_kib": 40520
+  },
+  "release-ReleaseSafe/ir": {
+    "median_s": 0.23565705702640116,
+    "median_rss_kib": 48332
+  },
+  "release-llvm-ReleaseSafe/check": {
+    "median_s": 0.03729638294316828,
+    "median_rss_kib": 31988
+  },
+  "release-llvm-ReleaseSafe/ir": {
+    "median_s": 0.04179447889328003,
+    "median_rss_kib": 39348
+  }
+}

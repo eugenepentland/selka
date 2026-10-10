@@ -1,0 +1,8 @@
+Build Summary: 6/6 steps succeeded
+install success
++- install mylang success
+   +- compile exe mylang debug native success 4s MaxRSS:545M
+      +- run exe build-identity (build_identity) success 35ms
+      |  +- compile exe build-identity debug native success 332ms MaxRSS:156M
+      +- compile obj core_number_text fast x86_64-linux-gnu.2.31 success 70ms MaxRSS:111M
+

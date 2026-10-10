@@ -157,6 +157,14 @@ fn enclosing(ranges: []const Range, position: usize) ?usize {
 /// the checked answer's three lines plus the `basis` line that labels it.
 /// Returns null when no declaration carries that exact name.
 pub fn renderTestsFor(allocator: std.mem.Allocator, graph: Graph, subject: []const u8) Error!?[]u8 {
+    return renderTestsForUsing(allocator, graph, subject, .reference) catch |err| switch (err) {
+        error.OutOfMemory => error.OutOfMemory,
+        else => error.InternalError,
+    };
+}
+
+/// The command host supplies the same component adapter as checked navigation.
+pub fn renderTestsForUsing(allocator: std.mem.Allocator, graph: Graph, subject: []const u8, adapter: @import("component_adapter.zig").Adapter) (Error || @import("component_adapter.zig").Error)!?[]u8 {
     var target: ?usize = null;
     for (graph.names, 0..) |name, index| {
         if (std.mem.eql(u8, name, subject)) {
@@ -165,7 +173,7 @@ pub fn renderTestsFor(allocator: std.mem.Allocator, graph: Graph, subject: []con
         }
     }
     const found = target orelse return null;
-    var index = try tests_index.buildNamed(allocator, graph.names, graph.calls, graph.tests);
+    var index = try adapter.buildNamed(allocator, graph.names, graph.calls, graph.tests);
     defer index.deinit();
     const rendered = try @import("navigation.zig").formatTestsFor(allocator, subject, index.answer(@fromBackingInt(found)), basis);
     return rendered;

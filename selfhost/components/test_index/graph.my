@@ -1,0 +1,35 @@
+# Informational call graph inversion. IDs are local to one immutable snapshot.
+public record Index:
+    direct: int[][]
+    reached: int[][]
+
+
+public func build(adjacency: int[][], tests: int[]) -> Index fails str:
+    mut direct: int[][] = []
+    mut reached: int[][] = []
+    for node in range(len(adjacency)):
+        direct.append([])
+        reached.append([])
+    mut payload_size = 4 + 8 * len(adjacency)
+    for test in tests:
+        mut visited: bool[] = []
+        for node in range(len(adjacency)):
+            visited.append(False)
+        mut pending: int[] = [test]
+        visited[test] = True
+        while len(pending) > 0:
+            mut current = pending.pop()
+            payload_size += 4
+            if payload_size > 67108800:
+                fail "response frame exceeds limit"
+            reached[current].append(test)
+            for callee in adjacency[current]:
+                if not visited[callee]:
+                    visited[callee] = True
+                    pending.append(callee)
+        for callee in adjacency[test]:
+            payload_size += 4
+            if payload_size > 67108800:
+                fail "response frame exceeds limit"
+            direct[callee].append(test)
+    return Index(direct=direct, reached=reached)

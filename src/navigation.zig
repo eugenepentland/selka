@@ -621,17 +621,24 @@ fn findFunction(program: typed.Program, subject: []const u8) ?typed.FunctionId {
 /// tests that call it directly and every test that reaches it transitively.
 /// Returns null when no checked function carries that name.
 pub fn renderTestsFor(allocator: std.mem.Allocator, compilation: *pc.Compilation, subject: []const u8) Error!?[]u8 {
+    return renderTestsForUsing(allocator, compilation, subject, .reference) catch |err| switch (err) {
+        error.OutOfMemory => error.OutOfMemory,
+        else => error.InternalError,
+    };
+}
+
+/// Render using an explicit component adapter supplied by the command host.
+pub fn renderTestsForUsing(allocator: std.mem.Allocator, compilation: *pc.Compilation, subject: []const u8, adapter: @import("component_adapter.zig").Adapter) (Error || @import("component_adapter.zig").Error)!?[]u8 {
     const program = compilation.program.?;
     const target = findFunction(program, subject) orelse return null;
-    // The reachability walk lives in `tests_index.zig` so lint's related notes
-    // and `list-interfaces`'s tests column answer identically.
+    // Discovery and graph extraction stay native; the adapter owns inversion.
     var scratch_arena = std.heap.ArenaAllocator.init(allocator);
     defer scratch_arena.deinit();
     const scratch = scratch_arena.allocator();
     const modules = try compilation.index.moduleSyntax(scratch);
     const graph = try tests_index.callGraph(scratch, program);
     const discovered = try tests_index.discoveredTests(scratch, program, modules);
-    var index = try tests_index.build(allocator, program, graph, discovered);
+    var index = try adapter.build(allocator, program, graph, discovered);
     defer index.deinit();
     const rendered = try formatTestsFor(allocator, subject, index.answer(target), null);
     return rendered;

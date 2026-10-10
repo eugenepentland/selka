@@ -1,0 +1,76 @@
+--- a/src/callables.zig
++++ b/src/callables.zig
+@@ -132,7 +132,9 @@
+     name.writer.writeByte(')') catch return error.OutOfMemory;
+     writeMutates(&name.writer, contract.mutates) catch return error.OutOfMemory;
+     const id: typed.Type = @fromBackingInt(typed.Type.record_base + catalog.records.len);
+-    var storage: std.ArrayList(typed.Record) = .{ .items = catalog.records, .capacity = catalog.record_capacity };
++    var storage: std.ArrayList(typed.Record) = .empty;
++    storage.items = catalog.records;
++    storage.capacity = catalog.record_capacity;
+     defer {
+         catalog.records = storage.items;
+         catalog.record_capacity = storage.capacity;
+--- a/src/nominal_catalog.zig
++++ b/src/nominal_catalog.zig
+@@ -148,7 +148,9 @@
+             };
+             self.identities.items.items[i].visible = base_visible and self.publicArguments(node);
+         }
+-        var storage: std.ArrayList(typed.Record) = .{ .items = self.catalog.records, .capacity = self.catalog.record_capacity };
++        var storage: std.ArrayList(typed.Record) = .empty;
++        storage.items = self.catalog.records;
++        storage.capacity = self.catalog.record_capacity;
+         defer {
+             self.catalog.records = storage.items;
+             self.catalog.record_capacity = storage.capacity;
+--- a/src/type_catalog.zig
++++ b/src/type_catalog.zig
+@@ -126,7 +126,9 @@
+                 .requires_handling = length != 0 and typed.requiresHandling(element, self.records),
+             },
+         };
+-        var storage: std.ArrayList(typed.Record) = .{ .items = self.records, .capacity = self.record_capacity };
++        var storage: std.ArrayList(typed.Record) = .empty;
++        storage.items = self.records;
++        storage.capacity = self.record_capacity;
+         defer {
+             self.records = storage.items;
+             self.record_capacity = storage.capacity;
+@@ -205,7 +207,9 @@
+             .shape = .{ .tuple = true },
+             .contract = tupleContract(elements, self.records),
+         };
+-        var storage: std.ArrayList(typed.Record) = .{ .items = self.records, .capacity = self.record_capacity };
++        var storage: std.ArrayList(typed.Record) = .empty;
++        storage.items = self.records;
++        storage.capacity = self.record_capacity;
+         defer {
+             self.records = storage.items;
+             self.record_capacity = storage.capacity;
+--- a/src/frontend_patterns.zig
++++ b/src/frontend_patterns.zig
+@@ -187,8 +187,8 @@
+     const allocator = matrix.allocator();
+     const nodes = try allocator.dupe(ast.Node, syntax.nodes.items);
+     const statements = try allocator.dupe(ast.Statement, syntax.statements.items);
+-    syntax.nodes = .{ .items = nodes, .capacity = nodes.len };
+-    syntax.statements = .{ .items = statements, .capacity = statements.len };
++    syntax.nodes = std.ArrayList(ast.Node).fromOwnedSlice(nodes);
++    syntax.statements = std.ArrayList(ast.Statement).fromOwnedSlice(statements);
+ }
+ 
+ /// Compile all nested payload discriminators, retaining each source row's own binders.
+--- a/src/generic_bodies.zig
++++ b/src/generic_bodies.zig
+@@ -134,8 +134,8 @@
+         } else _ = self.active.remove(text);
+     }
+     fn checkFunction(self: *Checker, function: ast.Function) Error!void {
+-        self.program.nodes = .{ .items = try self.field_arena.allocator().dupe(ast.Node, self.program.nodes.items), .capacity = self.program.nodes.items.len };
+-        self.program.statements = .{ .items = try self.field_arena.allocator().dupe(ast.Statement, self.program.statements.items), .capacity = self.program.statements.items.len };
++        self.program.nodes = std.ArrayList(ast.Node).fromOwnedSlice(try self.field_arena.allocator().dupe(ast.Node, self.program.nodes.items));
++        self.program.statements = std.ArrayList(ast.Statement).fromOwnedSlice(try self.field_arena.allocator().dupe(ast.Statement, self.program.statements.items));
+         const sink = self.sink;
+         if (function.policy.conversion) return sink.fail(eUnsupported, function.name, "generic conversions still need abstract checking");
+         for (self.parameters) |parameter| if (try self.topLevel(parameter.name)) return sink.fail(eShadowing, parameter.name, "type parameter shadows a top-level declaration or import");

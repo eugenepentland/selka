@@ -1,0 +1,42 @@
+[
+  {
+    "name": "pinned-ReleaseSafe-native-no-llvm",
+    "rep": 1,
+    "kind": "hash-native-safe",
+    "exit": 0,
+    "wall_s": 1.692548377905041,
+    "rss_kib": 17124,
+    "user_s": 1.67,
+    "sys_s": 0.0,
+    "stdout_sha256": "b06e589268fc5c319eb2bfb0905fe3d61ae197fbaae5a4dc2212a7a13d55d402",
+    "load": [
+      4.62255859375,
+      4.43310546875,
+      4.05712890625
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "output": "341aacac661ccb210720bedaa9ead5d668fe5ea41a73532fc147c71e34040df1 stage2_x86_64 safe\n",
+    "perf": "# started on Fri Oct  9 23:51:57 2026\n\n6297616782,,cpu_core/cycles/,1675723325,100.00,,\n536949635,,cpu_core/instructions/,1675723325,100.00,,\n29360237,,cpu_core/assists.sse_avx_mix/,1675723325,100.00,,\n"
+  },
+  {
+    "name": "release-ReleaseSafe-native-no-llvm",
+    "rep": 1,
+    "kind": "hash-native-safe",
+    "exit": 0,
+    "wall_s": 1.7165638459846377,
+    "rss_kib": 17000,
+    "user_s": 1.7,
+    "sys_s": 0.0,
+    "stdout_sha256": "b06e589268fc5c319eb2bfb0905fe3d61ae197fbaae5a4dc2212a7a13d55d402",
+    "load": [
+      4.62255859375,
+      4.43310546875,
+      4.05712890625
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "output": "341aacac661ccb210720bedaa9ead5d668fe5ea41a73532fc147c71e34040df1 stage2_x86_64 safe\n",
+    "perf": "# started on Fri Oct  9 23:51:59 2026\n\n6290088891,,cpu_core/cycles/,1707211795,100.00,,\n535351966,,cpu_core/instructions/,1707211795,100.00,,\n29360235,,cpu_core/assists.sse_avx_mix/,1707211795,100.00,,\n"
+  }
+]

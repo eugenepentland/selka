@@ -1,5 +1,6 @@
 //! Module declaration identities and export boundaries, before body type checking.
 const std = @import("std");
+const component_adapter = @import("component_adapter.zig");
 const eGenericArity = "E_GENERIC_ARITY";
 /// Error code for an export directive that names no visible declaration.
 const eUnknownExport = "E_UNKNOWN_EXPORT";
@@ -645,12 +646,21 @@ pub const Index = struct {
     /// `unavailable` plus an `analysis(STATUS)` clause otherwise), `mutates(...)`
     /// parameter names, and the declared ceiling when the source wrote one.
     pub fn render(self: *Index, allocator: std.mem.Allocator) ContractError![]u8 {
+        return self.renderUsing(allocator, .reference) catch |err| switch (err) {
+            error.OutOfMemory => error.OutOfMemory,
+            error.SourceError => error.SourceError,
+            error.IncompleteProject => error.IncompleteProject,
+            else => error.InternalError,
+        };
+    }
+    /// Render with the command host's explicit test-index component boundary.
+    pub fn renderUsing(self: *Index, allocator: std.mem.Allocator, adapter: component_adapter.Adapter) (ContractError || component_adapter.Error)![]u8 {
         if (self.project.problem != null) return error.IncompleteProject;
         var output: std.Io.Writer.Allocating = .init(allocator);
         errdefer output.deinit();
         // The `tests` column reads the same reachability index `tests-for`
         // answers from; it is absent when no checked program is attached.
-        var tests: ?tests_index.Index = try self.buildTestsIndex(allocator);
+        var tests: ?tests_index.Index = try self.buildTestsIndex(allocator, adapter);
         defer {
             if (tests) |*index| index.deinit();
         }
@@ -823,13 +833,13 @@ pub const Index = struct {
     }
     /// Build the shared tests index for the attached checked program, or null
     /// when no bodies were checked.
-    fn buildTestsIndex(self: *Index, allocator: std.mem.Allocator) ContractError!?tests_index.Index {
+    fn buildTestsIndex(self: *Index, allocator: std.mem.Allocator, adapter: component_adapter.Adapter) (ContractError || component_adapter.Error)!?tests_index.Index {
         const program = self.program orelse return null;
         const scratch = self.project.arena.allocator();
         const modules = try self.moduleSyntax(scratch);
         const call_graph = try tests_index.callGraph(scratch, program);
         const discovered = try tests_index.discoveredTests(scratch, program, modules);
-        const built = try tests_index.build(allocator, program, call_graph, discovered);
+        const built = try adapter.build(allocator, program, call_graph, discovered);
         return built;
     }
     /// The parsed syntax and source of every module, the inputs the shared

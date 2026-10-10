@@ -1,0 +1,98 @@
+[
+  {
+    "name": "pinned-native",
+    "exit": 0,
+    "command": [
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "build-exe",
+      "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/selfhost/components.zig",
+      "-OReleaseFast",
+      "-mcpu=native",
+      "-femit-bin=/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/zig017-toolchain-20261009/coordinators/pinned-native",
+      "--cache-dir",
+      "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/zig017-toolchain-20261009/coordinator-cache/pinned",
+      "--global-cache-dir",
+      "/home/epentland/ai/canopy/.zig-global-cache"
+    ]
+  },
+  {
+    "name": "pinned-baseline",
+    "exit": 0,
+    "command": [
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "build-exe",
+      "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/selfhost/components.zig",
+      "-OReleaseFast",
+      "-mcpu=baseline",
+      "-femit-bin=/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/zig017-toolchain-20261009/coordinators/pinned-baseline",
+      "--cache-dir",
+      "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/zig017-toolchain-20261009/coordinator-cache/pinned",
+      "--global-cache-dir",
+      "/home/epentland/ai/canopy/.zig-global-cache"
+    ]
+  },
+  {
+    "name": "custom-native",
+    "exit": 0,
+    "command": [
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b-eda-286f77f2-8f4af965/zig",
+      "build-exe",
+      "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/selfhost/components.zig",
+      "-OReleaseFast",
+      "-mcpu=native",
+      "-femit-bin=/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/zig017-toolchain-20261009/coordinators/custom-native",
+      "--cache-dir",
+      "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/zig017-toolchain-20261009/coordinator-cache/custom",
+      "--global-cache-dir",
+      "/home/epentland/ai/canopy/.zig-global-cache"
+    ]
+  },
+  {
+    "name": "custom-baseline",
+    "exit": 0,
+    "command": [
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b-eda-286f77f2-8f4af965/zig",
+      "build-exe",
+      "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/selfhost/components.zig",
+      "-OReleaseFast",
+      "-mcpu=baseline",
+      "-femit-bin=/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/zig017-toolchain-20261009/coordinators/custom-baseline",
+      "--cache-dir",
+      "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/zig017-toolchain-20261009/coordinator-cache/custom",
+      "--global-cache-dir",
+      "/home/epentland/ai/canopy/.zig-global-cache"
+    ]
+  },
+  {
+    "name": "release-native",
+    "exit": 0,
+    "command": [
+      "/home/epentland/zig-toolchains/0.17.0-download/zig-x86_64-linux-0.17.0/zig",
+      "build-exe",
+      "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/selfhost/components.zig",
+      "-OReleaseFast",
+      "-mcpu=native",
+      "-femit-bin=/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/zig017-toolchain-20261009/coordinators/release-native",
+      "--cache-dir",
+      "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/zig017-toolchain-20261009/coordinator-cache/release",
+      "--global-cache-dir",
+      "/home/epentland/ai/canopy/.zig-global-cache"
+    ]
+  },
+  {
+    "name": "release-baseline",
+    "exit": 0,
+    "command": [
+      "/home/epentland/zig-toolchains/0.17.0-download/zig-x86_64-linux-0.17.0/zig",
+      "build-exe",
+      "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/selfhost/components.zig",
+      "-OReleaseFast",
+      "-mcpu=baseline",
+      "-femit-bin=/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/zig017-toolchain-20261009/coordinators/release-baseline",
+      "--cache-dir",
+      "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/zig017-toolchain-20261009/coordinator-cache/release",
+      "--global-cache-dir",
+      "/home/epentland/ai/canopy/.zig-global-cache"
+    ]
+  }
+]

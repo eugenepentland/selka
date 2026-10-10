@@ -1,0 +1,8 @@
+Build Summary: 6/6 steps succeeded
+install success
++- install mylang cached
+   +- compile exe mylang safe native cached 6ms MaxRSS:5M
+      +- run exe build-identity (build_identity) cached
+      |  +- compile exe build-identity debug native cached 4ms MaxRSS:4M
+      +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 3ms MaxRSS:4M
+

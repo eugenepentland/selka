@@ -1,23 +1,38 @@
 # D6: Freeze the compiler/runtime boundary
 
-Status: accepted.
+Status: accepted; restated for Core/LLVM and progressive components, October 2026.
 
 ## Rule
 
-The self-hosted compiler owns lexing, parsing, resolution, type checking, typed
-IR, lowering, and QBE text generation. `runtime-abi-v1` owns managed allocation,
-traps, capability plumbing, process startup, and platform operations. QBE owns
-machine-code generation. A thin Zig stage-0 launcher may locate resources and
-invoke the compiler.
+Self-hosted compiler logic crosses versioned value boundaries. For the first
+component, Zig owns discovery and graph extraction, process control, artifact
+verification and report formatting. Selka owns the informational test-index
+algorithm. Its contract is `component-protocol-v1` with the `test-index-v1`
+operation; each process owns its decoded values.
 
-## Rejected alternative
+The current native pipeline is checked source to Core IR to LLVM text, compiled
+by the pinned Zig toolchain's clang. Core's C runtime owns reference-counted
+allocation, copy-on-write, traps, capabilities, startup and platform operations.
+Those implementations do not move merely because a toolchain algorithm does.
+The earlier QBE and `runtime-abi-v1` embedding assumptions are retired.
 
-Reject porting the C runtime, QBE, and platform startup merely to claim that all
-code is self-hosted. Also reject allowing `.my` compiler code to call arbitrary
-Zig internals.
+## Progressive ownership
+
+Lexing, parsing, resolution, type checking and lowering can move behind qualified
+boundaries in later waves. The initial pinned Zig compiler builds each native
+Selka executable independently. Component edits do not rebuild that compiler.
+A process invocation uses one bounded request file and one framed stdout reply;
+stderr is diagnostic output. A persistent worker or in-process library needs
+additional runtime support and its own lifecycle/ownership qualification.
 
 ## Compatibility consequence
 
-The ABI and resource manifest are versioned inputs to every bootstrap stage.
-Boundary changes require an explicit ABI revision and parity work; frontend
-changes within the boundary need no Zig rewrite.
+Protocol, operation schema, seed identity and executable digest are independent
+parts of the component manifest and build recipe. Compatible schemas do not
+mean identical behavior. A component that later controls cache reuse must enter
+every relevant early cache lookup's identity before production adoption.
+
+No Zig slice, allocator, compiler tree pointer or Selka managed-object layout
+crosses the boundary. Interface revisions require parity and failure-path
+qualification. See [the source profile](../bootstrap-v1.md) and
+[the protocol](../tooling/component-protocol.md).

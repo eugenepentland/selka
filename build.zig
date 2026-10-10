@@ -78,6 +78,8 @@ const rss = struct {
 /// `MYLANG_ZIG`, which the compiler reads when neither `--zig` nor `ZIG` names one.
 var tool_zig: []const u8 = "";
 var install_all: ?*std.Build.Step = null;
+/// Independent components required by command-running focused tests.
+var install_components: ?*std.Build.Step = null;
 /// The emitted compiler binary. The cached steps that run it name it through an
 /// installed path whose bytes the cache key cannot see, so each declares its
 /// contents as an input.
@@ -136,6 +138,12 @@ fn cached(run: *std.Build.Step.Run, list: []const u8) void {
     const b = run.step.owner;
     if (list.len != 0) run.addFileInput(input_manifests.?.path(b, b.fmt("{s}.txt", .{list})));
     run.addFileInput(environment_manifest.?);
+    // The manifest includes the verified artifact digest and qualified build
+    // key. Source inputs alone cannot see a changed seed or toolchain library.
+    if (install_components) |components| {
+        run.step.dependOn(components);
+        run.addFileInput(.{ .relative = .{ .base = .install_prefix, .sub_path = "libexec/mylang/components/test-index.json" } });
+    }
     for (tool_inputs) |tool| if (tool) |path| run.addFileInput(path);
 }
 /// Prefix a command so that it runs in `zig build`'s live environment plus the
@@ -159,6 +167,12 @@ fn withTools(step: *std.Build.Step.Run) void {
     const args = arena.alloc(std.Build.Step.Run.Arg, prefix.items.len) catch @panic("out of memory");
     for (args, prefix.items) |*arg, word| arg.* = .{ .bytes = b.graph.dupeString(word) };
     step.argv.insertSlice(arena, 0, args) catch @panic("out of memory");
+    step.argv.insert(arena, args.len, .{ .decorated_directory = .{
+        .prefix = "MYLANG_COMPONENT_DIR=",
+        .suffix = "",
+        .make_absolute = true,
+        .lazy_path = .{ .relative = .{ .base = .install_prefix, .sub_path = "libexec/mylang/components" } },
+    } }) catch @panic("out of memory");
 }
 /// Give the command `withTools` wraps the variable `assignment` (`NAME=VALUE`): it
 /// goes after `sh -c SCRIPT with-tools MYLANG_ZIG=PATH`, before the command itself.
@@ -232,6 +246,7 @@ fn bounded(step: *std.Build.Step.Run, bytes: u64) *std.Build.Step.Run {
 /// graph. The test binary names the compiler it runs through a build option, so
 /// a focused test waits only on that compile, never on Guardian.
 fn focused(step: *std.Build.Step.Run, bytes: u64) *std.Build.Step.Run {
+    if (install_components) |components| step.step.dependOn(components);
     step.step.max_rss = bytes;
     withTools(step);
     // A test command must execute and report its selection; otherwise a warm
@@ -498,6 +513,39 @@ pub fn build(b: *std.Build) void {
     exe.root_module.addImport("build_identity", identity);
     const install_exe = b.addInstallArtifact(exe, .{});
     b.getInstallStep().dependOn(&install_exe.step);
+    // The pin's LLVM ReleaseSafe code avoids accelerated SHA-256's AVX/SSE
+    // transition regression. Require LLVM: native-backend ReleaseSafe still
+    // reproduces it. Seed and component build settings remain independent.
+    const component_tool = b.addExecutable(.{
+        .max_rss = rss.compile,
+        .name = "selka-components",
+        .use_llvm = true,
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("selfhost/components.zig"),
+            .target = b.resolveTargetQuery(.{}),
+            .optimize = .ReleaseSafe,
+        }),
+    });
+    const install_component_tool = b.addInstallFileWithDir(component_tool.getEmittedBin(), .{ .custom = "tools" }, "selka-components");
+    b.getInstallStep().dependOn(&install_component_tool.step);
+    b.step("component-builder", "Build the native bootstrap coordinator without provisioning a seed").dependOn(&install_component_tool.step);
+    const component_build = b.addRunArtifact(component_tool);
+    component_build.addArg("--root");
+    component_build.addDirectoryArg2(b.path("."), .{ .make_absolute = true });
+    component_build.addArgs(&.{ "--zig", b.graph.zig_exe, "--install-dir" });
+    component_build.addDirectoryArg2(.{ .relative = .{ .base = .install_prefix, .sub_path = "libexec/mylang/components" } }, .{ .make_absolute = true });
+    if (b.option([]const u8, "component-seed-source", "Verified source archive for provisioning the pinned component seed")) |archive| {
+        component_build.addArg("--seed-source");
+        component_build.addFileArg(b.path(archive));
+    }
+    component_build.setCwd(b.path("."));
+    component_build.has_side_effects = true;
+    component_build.step.max_rss = rss.compiler_fast;
+    install_components = &component_build.step;
+    b.getInstallStep().dependOn(&component_build.step);
+    const components_step = b.step("components", "Build and install pinned-seed Selka components without rebuilding the host");
+    components_step.dependOn(&component_build.step);
+    components_step.dependOn(&install_component_tool.step);
     tool_inputs = .{exe.getEmittedBin()};
     addInputManifests(b);
     addEnvironmentManifest(b);
@@ -512,6 +560,7 @@ pub fn build(b: *std.Build) void {
     const focus_exe_step = b.addInstallFileWithDir(exe.getEmittedBin(), .{ .custom = "focus" }, "mylang");
     const affected_compiler = b.step("affected-compiler", "Install only mylang to zig-out/focus, for scripts/affected_tests.py");
     affected_compiler.dependOn(&focus_exe_step.step);
+    affected_compiler.dependOn(&component_build.step);
     install_all = b.getInstallStep();
     const guardian_dep = b.dependency("guardian", .{ .target = target, .optimize = optimize });
     const guardian_exe = guardian_dep.artifact("guardian-check");
@@ -542,11 +591,12 @@ pub fn build(b: *std.Build) void {
     native_test_options.addOptionPath("compiler_path", exe.getEmittedBin());
     unit.root_module.addOptions("native_test_options", native_test_options);
     const core_tests = addCore(b, .{ .target = target, .optimize = optimize, .front_end = core, .compiler = exe, .filters = test_filters, .test_runner = guardian.testRunner(guardian_dep), .identity = identity });
-    _ = b.option(bool, "compiler-only", "Accepted for older scripts: the default install is already only mylang");
+    _ = b.option(bool, "compiler-only", "Accepted for older scripts: install mylang and its required components");
     guardian.addAllChecks(b, guardian_exe, b.getInstallStep(), .{});
     boundedChecks(b.getInstallStep());
     const options = b.addOptions();
     options.addOptionPath("compiler_path", exe.getEmittedBin());
+    options.addOptionPath("component_builder_path", component_tool.getEmittedBin());
     options.addOption([]const u8, "zig_path", b.graph.zig_exe);
     const integration = b.addTest(.{ .max_rss = rss.compile, .test_runner = guardian.testRunner(guardian_dep), .filters = test_filters, .root_module = b.createModule(.{
         .root_source_file = b.path("test/integration.zig"),
@@ -699,6 +749,35 @@ pub fn build(b: *std.Build) void {
     isolation_run.addArtifactArg(exe);
     isolation_step.dependOn(&isolation_run.step);
     test_step.dependOn(isolation_step);
+    const component_tests = driver(b, "python3 selfhost/test_components.py", rss.script, "component_builder");
+    component_tests.addArgs(&.{ "python3", "selfhost/test_components.py", "--zig", b.graph.zig_exe, "--builder" });
+    component_tests.addArtifactArg(component_tool);
+    const native_component_tests = driver(b, "pure Selka and native component qualification", rss.driver, "component_native");
+    native_component_tests.addArgs(&.{ "python3", "selfhost/test_component_native.py", "--builder" });
+    native_component_tests.addArtifactArg(component_tool);
+    native_component_tests.addArgs(&.{ "--zig", b.graph.zig_exe, "--component-dir" });
+    native_component_tests.addDirectoryArg2(.{ .relative = .{ .base = .install_prefix, .sub_path = "libexec/mylang/components" } }, .{ .make_absolute = true });
+    const component_test_step = b.step("test-components", "Test pure Selka, native protocol, cache and failure boundaries");
+    const component_support_tests = b.addTest(.{
+        .max_rss = rss.compile,
+        .test_runner = guardian.testRunner(guardian_dep),
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("selfhost/component_support_test.zig"),
+            .target = b.graph.host,
+            .optimize = .Debug,
+        }),
+    });
+    const run_component_support = b.addRunArtifact(component_support_tests);
+    run_component_support.step.max_rss = rss.driver;
+    run_component_support.has_side_effects = true;
+    b.step("test-component-support", "Test native streaming hashes, canonical identity and archive extraction").dependOn(&run_component_support.step);
+    component_test_step.dependOn(&run_component_support.step);
+    compile_tests.dependOn(&component_support_tests.step);
+    component_test_step.dependOn(&component_tests.step);
+    component_test_step.dependOn(&native_component_tests.step);
+    test_step.dependOn(&run_component_support.step);
+    test_step.dependOn(&native_component_tests.step);
+    test_step.dependOn(&component_tests.step);
     const selfhost_numeric_step = b.step("test-selfhost-numeric", "Compare bootstrap and live numeric token extents");
     const selfhost_numeric_run = driver(b, "python3 selfhost/tests/run_lexer_diff.py --compiler", rss.driver, "selfhost_numeric");
     selfhost_numeric_run.addArgs(&.{ "python3", "selfhost/tests/run_lexer_diff.py", "--compiler" });
@@ -818,7 +897,7 @@ pub fn build(b: *std.Build) void {
     guardian.addAllChecks(b, guardian_exe, doctest_step, .{});
     boundedChecks(doctest_step);
     addParityBench(b);
-    const fmt = b.addFmt(.{ .paths = &.{ b.path("build.zig"), b.path("build_identity.zig"), b.path("build_test_inputs.zig"), b.path("src"), b.path("tests"), b.path("test") }, .check = true });
+    const fmt = b.addFmt(.{ .paths = &.{ b.path("build.zig"), b.path("build_identity.zig"), b.path("build_test_inputs.zig"), b.path("src"), b.path("tests"), b.path("test"), b.path("selfhost") }, .check = true });
     b.step("fmt-check", "Check canonical Zig formatting").dependOn(&fmt.step);
     requireLiveEnvironment(b);
 }

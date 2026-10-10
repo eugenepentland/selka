@@ -1,0 +1,176 @@
+[
+  {
+    "name": "pinned-native",
+    "rep": 1,
+    "kind": "coordinator",
+    "exit": 0,
+    "wall_s": 34.826929114060476,
+    "rss_kib": 38400,
+    "user_s": 34.65,
+    "sys_s": 0.1,
+    "stdout_sha256": "2e793adc86119e462c7e2c30d82e12a9231a43f975da81dff155a8e2a07a9e5a",
+    "load": [
+      3.11865234375,
+      2.67578125,
+      3.455078125
+    ],
+    "sibling_busy": 0.02618705035971225,
+    "stderr": "",
+    "perf": "# started on Fri Oct  9 23:46:46 2026\n\n121118728151,,cpu_core/cycles/,34756915937,100.00,,\n1828182860,,cpu_core/instructions/,34756915937,100.00,,\n591707471,,cpu_core/assists.sse_avx_mix/,34756915937,100.00,,\n",
+    "command": [
+      "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/zig017-toolchain-20261009/coordinators/pinned-native",
+      "--root",
+      "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang",
+      "--zig",
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "--cache-dir",
+      "/home/epentland/.cache/mylang/components",
+      "--seed-only"
+    ]
+  },
+  {
+    "name": "release-native",
+    "rep": 1,
+    "kind": "coordinator",
+    "exit": 0,
+    "wall_s": 0.4099853429943323,
+    "rss_kib": 38400,
+    "user_s": 0.3,
+    "sys_s": 0.09,
+    "stdout_sha256": "2e793adc86119e462c7e2c30d82e12a9231a43f975da81dff155a8e2a07a9e5a",
+    "load": [
+      3.11865234375,
+      2.67578125,
+      3.455078125
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "perf": "# started on Fri Oct  9 23:47:21 2026\n\n1442435905,,cpu_core/cycles/,398677210,100.00,,\n1571633280,,cpu_core/instructions/,398677210,100.00,,\n0,,cpu_core/assists.sse_avx_mix/,398677210,100.00,,\n",
+    "command": [
+      "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/zig017-toolchain-20261009/coordinators/release-native",
+      "--root",
+      "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang",
+      "--zig",
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "--cache-dir",
+      "/home/epentland/.cache/mylang/components",
+      "--seed-only"
+    ]
+  },
+  {
+    "name": "pinned-baseline",
+    "rep": 1,
+    "kind": "coordinator",
+    "exit": 0,
+    "wall_s": 1.4920625968370587,
+    "rss_kib": 38400,
+    "user_s": 1.38,
+    "sys_s": 0.1,
+    "stdout_sha256": "2e793adc86119e462c7e2c30d82e12a9231a43f975da81dff155a8e2a07a9e5a",
+    "load": [
+      3.11865234375,
+      2.67578125,
+      3.455078125
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "perf": "# started on Fri Oct  9 23:47:21 2026\n\n5426056622,,cpu_core/cycles/,1477752445,100.00,,\n23274757391,,cpu_core/instructions/,1477752445,100.00,,\n0,,cpu_core/assists.sse_avx_mix/,1477752445,100.00,,\n",
+    "command": [
+      "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/zig017-toolchain-20261009/coordinators/pinned-baseline",
+      "--root",
+      "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang",
+      "--zig",
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "--cache-dir",
+      "/home/epentland/.cache/mylang/components",
+      "--seed-only"
+    ]
+  },
+  {
+    "name": "release-baseline",
+    "rep": 1,
+    "kind": "coordinator",
+    "exit": 0,
+    "wall_s": 1.4254589688498527,
+    "rss_kib": 38400,
+    "user_s": 1.32,
+    "sys_s": 0.09,
+    "stdout_sha256": "2e793adc86119e462c7e2c30d82e12a9231a43f975da81dff155a8e2a07a9e5a",
+    "load": [
+      3.11865234375,
+      2.67578125,
+      3.455078125
+    ],
+    "sibling_busy": 0.0,
+    "stderr": "",
+    "perf": "# started on Fri Oct  9 23:47:23 2026\n\n5425096601,,cpu_core/cycles/,1415108637,100.00,,\n23274016730,,cpu_core/instructions/,1415108637,100.00,,\n0,,cpu_core/assists.sse_avx_mix/,1415108637,100.00,,\n",
+    "command": [
+      "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/zig017-toolchain-20261009/coordinators/release-baseline",
+      "--root",
+      "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang",
+      "--zig",
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "--cache-dir",
+      "/home/epentland/.cache/mylang/components",
+      "--seed-only"
+    ]
+  },
+  {
+    "name": "custom-native",
+    "rep": 1,
+    "kind": "coordinator",
+    "exit": 0,
+    "wall_s": 49.924209570046514,
+    "rss_kib": 38400,
+    "user_s": 49.74,
+    "sys_s": 0.11,
+    "stdout_sha256": "2e793adc86119e462c7e2c30d82e12a9231a43f975da81dff155a8e2a07a9e5a",
+    "load": [
+      6.70068359375,
+      3.59228515625,
+      3.7197265625
+    ],
+    "sibling_busy": 0.01826575672420716,
+    "stderr": "",
+    "perf": "# started on Fri Oct  9 23:47:24 2026\n\n161148791703,,cpu_core/cycles/,49851688412,100.00,,\n10693152370,,cpu_core/instructions/,49851688412,100.00,,\n759313699,,cpu_core/assists.sse_avx_mix/,49851688412,100.00,,\n",
+    "command": [
+      "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/zig017-toolchain-20261009/coordinators/custom-native",
+      "--root",
+      "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang",
+      "--zig",
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "--cache-dir",
+      "/home/epentland/.cache/mylang/components",
+      "--seed-only"
+    ]
+  },
+  {
+    "name": "custom-baseline",
+    "rep": 1,
+    "kind": "coordinator",
+    "exit": 0,
+    "wall_s": 12.79529462987557,
+    "rss_kib": 38376,
+    "user_s": 12.57,
+    "sys_s": 0.14,
+    "stdout_sha256": "2e793adc86119e462c7e2c30d82e12a9231a43f975da81dff155a8e2a07a9e5a",
+    "load": [
+      6.3291015625,
+      3.662109375,
+      3.7412109375
+    ],
+    "sibling_busy": 0.007053291536050166,
+    "stderr": "",
+    "perf": "# started on Fri Oct  9 23:48:14 2026\n\n39221545101,,cpu_core/cycles/,12711283682,100.00,,\n154910312271,,cpu_core/instructions/,12711283682,100.00,,\n0,,cpu_core/assists.sse_avx_mix/,12711283682,100.00,,\n",
+    "command": [
+      "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/zig017-toolchain-20261009/coordinators/custom-baseline",
+      "--root",
+      "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang",
+      "--zig",
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "--cache-dir",
+      "/home/epentland/.cache/mylang/components",
+      "--seed-only"
+    ]
+  }
+]

@@ -1,0 +1,58 @@
+{
+  "custom-Debug": {
+    "build_s": 5.43,
+    "build_mib": 472.94921875,
+    "check_ms": 228.5460070706904,
+    "ir_ms": 187.0909279678017,
+    "ir_mib": 46.78125
+  },
+  "release-Debug": {
+    "build_s": 5.58,
+    "build_mib": 516.75,
+    "check_ms": 245.29838212765753,
+    "ir_ms": 214.51664716005325,
+    "ir_mib": 48.3984375
+  },
+  "pinned-Debug": {
+    "build_s": 5.61,
+    "build_mib": 506.26953125,
+    "check_ms": 253.63816786557436,
+    "ir_ms": 222.04190492630005,
+    "ir_mib": 47.8671875
+  },
+  "custom-ReleaseSafe": {
+    "build_s": 5.82,
+    "build_mib": 462.26171875,
+    "check_ms": 249.04202483594418,
+    "ir_ms": 192.21332692541182,
+    "ir_mib": 46.5078125
+  },
+  "release-ReleaseSafe": {
+    "build_s": 5.41,
+    "build_mib": 505.70703125,
+    "check_ms": 244.30774012580514,
+    "ir_ms": 235.65705702640116,
+    "ir_mib": 47.19921875
+  },
+  "pinned-ReleaseSafe": {
+    "build_s": 5.49,
+    "build_mib": 495.09765625,
+    "check_ms": 253.0685409437865,
+    "ir_ms": 233.73847198672593,
+    "ir_mib": 46.9140625
+  },
+  "release-llvm-ReleaseSafe": {
+    "build_s": 218.81,
+    "build_mib": 3504.83203125,
+    "check_ms": 37.29638294316828,
+    "ir_ms": 41.79447889328003,
+    "ir_mib": 38.42578125
+  },
+  "pinned-llvm-ReleaseSafe": {
+    "build_s": 196.88,
+    "build_mib": 3472.4140625,
+    "check_ms": 38.14350813627243,
+    "ir_ms": 42.20021399669349,
+    "ir_mib": 38.0703125
+  }
+}

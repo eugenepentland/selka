@@ -717,6 +717,9 @@ fn gatherLibrary(comptime language: type, arena: std.mem.Allocator, check_bodies
     // to the conservative full vocabulary when no checked instantiation exists,
     // so this engine reads its inferred effects from the checked program
     // instead and parses only the declared facts here.
+    // This embedded-only inspection intentionally uses the pure reference
+    // renderer: reference answers depend solely on embedded bytes and remain
+    // available offline without a component package or user-project traversal.
     const listing = language.interfaces.Index.render(&index, arena) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         else => return unavailable(arena, try failureReason(language, arena, project.problem, @errorName(err))),

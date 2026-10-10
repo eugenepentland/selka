@@ -24,6 +24,7 @@ const quality = @import("quality.zig");
 const ref_diff = @import("ref_diff.zig");
 const source = @import("source.zig");
 const tests_index = @import("tests_index.zig");
+const component_adapter = @import("component_adapter.zig");
 const typed = @import("typed.zig");
 const walk = @import("typed_walk.zig");
 
@@ -596,7 +597,7 @@ fn resolveMode(rule: Rule, profile: lint_config.Profile, config: ?*const lint_co
 
 /// Errors a lint run reports to the CLI: allocator failure, a wild call-graph
 /// root, a check failure while deriving facts, or a refused diagnostic write.
-pub const RunError = std.mem.Allocator.Error || quality.AnalyzeError || project_compile.CheckError || lint_store.Error || std.Io.File.Writer.Error;
+pub const RunError = std.mem.Allocator.Error || quality.AnalyzeError || project_compile.CheckError || lint_store.Error || std.Io.File.Writer.Error || component_adapter.Error;
 
 /// Findings and counts one lint evaluation produced, before any rendering.
 pub const Outcome = struct {
@@ -612,6 +613,11 @@ pub const Outcome = struct {
 /// test can drive the identical pipeline without touching the process stdout
 /// (which is the test runner's own protocol pipe).
 pub fn evaluate(request: Request, scratch: std.mem.Allocator) RunError!Outcome {
+    return evaluateUsing(request, scratch, .reference);
+}
+
+/// Evaluate with the test-index implementation chosen at the command boundary.
+pub fn evaluateUsing(request: Request, scratch: std.mem.Allocator, adapter: component_adapter.Adapter) RunError!Outcome {
     const program = request.compilation.program.?;
     const exports = try request.compilation.exportRoots(scratch);
     const tests = try request.compilation.testRoots(scratch);
@@ -647,7 +653,7 @@ pub fn evaluate(request: Request, scratch: std.mem.Allocator) RunError!Outcome {
     // the same discovered tests, call graph and inversion `mylang tests-for`
     // answers from. The `untested-export` verdict and every related note on a
     // finding read this index, so none of them can disagree with the command.
-    var reach = try buildReachabilityIndex(scratch, request.compilation);
+    var reach = try buildReachabilityIndex(scratch, request.compilation, adapter);
     defer reach.deinit();
 
     var findings: std.ArrayList(Finding) = .empty;
@@ -741,9 +747,14 @@ pub fn evaluate(request: Request, scratch: std.mem.Allocator) RunError!Outcome {
 
 /// Lint one already-checked project. Returns the process status.
 pub fn run(request: Request) RunError!u8 {
+    return runUsing(request, .reference);
+}
+
+/// Run with an explicit component adapter; production commands supply this.
+pub fn runUsing(request: Request, adapter: component_adapter.Adapter) RunError!u8 {
     var arena = std.heap.ArenaAllocator.init(request.memory);
     defer arena.deinit();
-    const outcome = try evaluate(request, arena.allocator());
+    const outcome = try evaluateUsing(request, arena.allocator(), adapter);
     try renderFindings(request, outcome.findings);
     const summary = try std.fmt.allocPrint(request.memory, "lint: {d} finding(s): {d} blocking, {d} report, {d} waived, {d} accepted\n", .{
         outcome.findings.len, outcome.blocking, outcome.reporting, outcome.waived, outcome.accepted,
@@ -1446,12 +1457,12 @@ fn callerNote(memory: std.mem.Allocator, function: typed.Function, facts: *const
 /// call graph and inversion `mylang tests-for` performs, so this run and that
 /// command answer from one walk rather than two that could drift apart. The
 /// index owns its own arena; the caller frees it with `deinit`.
-fn buildReachabilityIndex(scratch: std.mem.Allocator, compilation: *project_compile.Compilation) std.mem.Allocator.Error!tests_index.Index {
+fn buildReachabilityIndex(scratch: std.mem.Allocator, compilation: *project_compile.Compilation, adapter: component_adapter.Adapter) component_adapter.Error!tests_index.Index {
     const program = compilation.program.?;
     const modules = try compilation.index.moduleSyntax(scratch);
     const call_graph = try tests_index.callGraph(scratch, program);
     const discovered = try tests_index.discoveredTests(scratch, program, modules);
-    return tests_index.build(scratch, program, call_graph, discovered);
+    return adapter.build(scratch, program, call_graph, discovered);
 }
 
 /// Attach the discovered tests that reach a finding's declaration as a related

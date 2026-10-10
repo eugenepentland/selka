@@ -1,0 +1,5 @@
+# started on Fri Oct  9 23:51:57 2026
+
+6297616782,,cpu_core/cycles/,1675723325,100.00,,
+536949635,,cpu_core/instructions/,1675723325,100.00,,
+29360237,,cpu_core/assists.sse_avx_mix/,1675723325,100.00,,

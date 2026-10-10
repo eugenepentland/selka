@@ -2,6 +2,9 @@
 const std = @import("std");
 const testing = std.testing;
 const compiler_path = @import("test_options").compiler_path;
+test {
+    _ = @import("components.zig");
+}
 // Mirror src/semantic_store.zig's directory format: this CLI test cannot
 // import files outside its Zig module root.
 const semantic_cache_version = "semantic-cache-v3";
@@ -1580,6 +1583,8 @@ test "CLI user commands need no interpreter: check, build, run, test, fmt, docs,
     try writeProjectFile(&temporary, "text/words.my", empty_path_words);
     const root = try temporary.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
     defer testing.allocator.free(root);
+    const installed_host = try @import("components.zig").stageInstalledHost(testing.allocator, testing.io, root, compiler_path);
+    defer testing.allocator.free(installed_host);
     const entry = try std.fs.path.join(testing.allocator, &.{ root, "main.my" });
     defer testing.allocator.free(entry);
     const program = try std.fs.path.join(testing.allocator, &.{ root, "program" });
@@ -1590,21 +1595,21 @@ test "CLI user commands need no interpreter: check, build, run, test, fmt, docs,
     defer testing.allocator.free(cache_argument);
     var environment = try emptyPathEnvironment(root);
     defer environment.deinit();
-    try expectEmptyPathRun(&.{ compiler_path, "check", entry }, &environment, "");
-    try expectEmptyPathRun(&.{ compiler_path, "build", entry, "-o", program, "--cache-dir", cache, tools[0] }, &environment, "");
+    try expectEmptyPathRun(&.{ installed_host, "check", entry }, &environment, "");
+    try expectEmptyPathRun(&.{ installed_host, "build", entry, "-o", program, "--cache-dir", cache, tools[0] }, &environment, "");
     try expectEmptyPathRun(&.{program}, &environment, "words: 4\n");
-    try expectEmptyPathRun(&.{ compiler_path, "run", entry, cache_argument, tools[0] }, &environment, "words: 4\n");
-    try expectEmptyPathRun(&.{ compiler_path, "test", entry, cache_argument, tools[0] }, &environment, "2 passed");
-    try expectEmptyPathRun(&.{ compiler_path, "fmt-project", entry, "--check" }, &environment, "");
-    try expectEmptyPathRun(&.{ compiler_path, "docs", "primer" }, &environment, "mylang");
-    try expectEmptyPathRun(&.{ compiler_path, "index-project", entry }, &environment, "\"version\":\"navigation-summary-v1\"");
-    try expectEmptyPathRun(&.{ compiler_path, "context", entry, "--symbol=text.words::count_words" }, &environment, "\"status\":\"ok\"");
+    try expectEmptyPathRun(&.{ installed_host, "run", entry, cache_argument, tools[0] }, &environment, "words: 4\n");
+    try expectEmptyPathRun(&.{ installed_host, "test", entry, cache_argument, tools[0] }, &environment, "2 passed");
+    try expectEmptyPathRun(&.{ installed_host, "fmt-project", entry, "--check" }, &environment, "");
+    try expectEmptyPathRun(&.{ installed_host, "docs", "primer" }, &environment, "mylang");
+    try expectEmptyPathRun(&.{ installed_host, "index-project", entry }, &environment, "\"version\":\"navigation-summary-v1\"");
+    try expectEmptyPathRun(&.{ installed_host, "context", entry, "--symbol=text.words::count_words" }, &environment, "\"status\":\"ok\"");
     // The LLVM release path is built into the compiler (LLVM-ZIG-1): it runs no adapter.
     const release = try std.fs.path.join(testing.allocator, &.{ root, "program-release" });
     defer testing.allocator.free(release);
-    try expectEmptyPathRun(&.{ compiler_path, "build", entry, "-o", release, "--release", "--cache-dir", cache, tools[0] }, &environment, "");
+    try expectEmptyPathRun(&.{ installed_host, "build", entry, "-o", release, "--release", "--cache-dir", cache, tools[0] }, &environment, "");
     try expectEmptyPathRun(&.{release}, &environment, "words: 4\n");
-    try expectEmptyPathRun(&.{ compiler_path, "run", entry, "--release", cache_argument, tools[0] }, &environment, "words: 4\n");
+    try expectEmptyPathRun(&.{ installed_host, "run", entry, "--release", cache_argument, tools[0] }, &environment, "words: 4\n");
 }
 
 /// The shared library every packages fixture locks.
