@@ -129,6 +129,38 @@ regression limit. The next qualification needs stable independent timings and un
 and workload families, including memory pressure, system calls, concurrency and
 I/O. Broad runtime checks remain necessary until that evidence exists.
 
+### Quiet-machine rerun (2026-10-10)
+
+The [third run](../../experiments/juice-runtime-proxy-20261010/quiet-rerun-method.json)
+repeated the same seven executable pairs with unchanged capture and analysis
+binaries, CPU, scheduling policy, sample counts, estimator and thresholds.
+Before measurement, a one-second sample showed 0.8% aggregate CPU use and
+about 1% use on CPU 10 and its sibling; this is a starting observation, not
+continuous host isolation.
+
+Diagnostic median error improved to **0.69%**, with maximum **2.17%**. All seven
+point estimates were within 5%, but **three of seven** passed both accuracy and
+repeatability checks (previously two). The other four exceeded the unchanged
+3% spread limit for counters, independent timings, or both:
+
+| Case | Diagnostic relative error | Counter pair spread | Timing pair spread | Validation |
+|---|---:|---:|---:|---|
+| Identical executable | 0.29% | 0.38% | 0.69% | Within target |
+| Bit-count optimization | 2.17% | 0.46% | 1.53% | Within target |
+| Added atomics | 1.72% | 0.61% | 3.58% | Uncertain |
+| Added copying | 1.07% | 8.88% | 10.37% | Uncertain |
+| Disabled optimization | 0.69% | 0.46% | 1.48% | Within target |
+| Larger copying working set | 0.06% | 5.42% | 5.29% | Uncertain |
+| Wave 3 tree regression | 0.22% | 4.35% | 4.12% | Uncertain |
+
+[Full results](../../experiments/juice-runtime-proxy-20261010/results-03.json)
+and [archived evidence](../../experiments/juice-runtime-proxy-20261010/quiet-rerun-archive.json)
+retain all observations. These results use the paired estimator frozen before
+the rerun; the older capture executable's unpaired log summary is superseded by
+the paired analysis. This improves the evidence for the selected cases, but
+uncertain estimates remain diagnostic and the same-case repeat does not
+establish accuracy on unseen changes or workload families.
+
 ## First comparison
 
 Use a private application copy and choose a baseline label you have not used
