@@ -936,6 +936,7 @@ test "field summaries sparse contributions match original dense hulls for writes
     const escaped = try module.intern(a, .{ .record = &.{ .i64, .bool } });
     const outside = try module.intern(a, .{ .record = &.{ .i64, .i64 } });
     const list = try module.intern(a, .{ .list = record });
+    const array = try module.intern(a, .{ .array = .{ .elem = .i64, .n = 2 } });
     const callback = try module.intern(a, .{ .@"fn" = .{ .params = &.{escaped}, .ret = .i64 } });
     const parsed = try module.option(a, .i64);
     try module.strings.append(a, "7");
@@ -947,6 +948,7 @@ test "field summaries sparse contributions match original dense hulls for writes
     const seven = try b.constant(.i64, 7);
     const nine = try b.constant(.i64, 9);
     const ignored = try b.constant(.i64, 99);
+    _ = try b.put(live, .{ .op = .record_make, .ty = array, .data = try b.extra(&.{ three, seven }) });
     const made = try b.put(live, .{ .op = .record_make, .ty = record, .data = try b.extra(&.{three}) });
     const changed = try b.put(live, .{ .op = .record_set, .ty = record, .a = made, .b = seven, .data = 0 });
     const empty = try b.put(live, .{ .op = .list_new, .ty = list, .a = zero });
@@ -969,6 +971,7 @@ test "field summaries sparse contributions match original dense hulls for writes
     const known = evidence.known;
     const compact = evidence.compact;
     try std.testing.expect(!known[0].?.reachable[dead.index()]);
+    try std.testing.expect(compact[0].?.valid(&module));
     try std.testing.expectEqual(@as(usize, 3), compact[0].?.writes.len);
     try std.testing.expect(compact[0].?.opens.len > 0);
     try std.testing.expectEqual(@as(usize, 1), compact[0].?.references.len);
@@ -1054,4 +1057,46 @@ test "optimizer demand field summaries ignore fusion runtime entries and retain 
 fn deferredName(value: DemandProduced, name: []const u8) bool {
     for (value.deferred_functions) |function| if (std.mem.eql(u8, function, name)) return true;
     return false;
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-8
+test "optimizer demand field summaries ignore FixedArray producers and preserve deferred record spectators" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    var storage = try store.Store.init(std.testing.allocator, std.testing.io, try directory.dir.realPathFileAlloc(std.testing.io, ".", a));
+    defer storage.deinit();
+    const text =
+        \\record State:
+        \\    x: int
+        \\func pair() -> FixedArray[int, 2]:
+        \\    return FixedArray[int, 2]([7, 9])
+        \\func idle() -> int:
+        \\    return 42
+        \\func reader(s: State) -> int:
+        \\    return s.x + 1
+        \\func main(out: Stream) -> int:
+        \\    out.print(pair()[0], reader(State(x=3)), idle())
+        \\    return 0
+    ;
+    const cold = try compileDemand(a, std.testing.allocator, text, &storage, false);
+    const warm = try compileDemand(a, std.testing.allocator, text, &storage, true);
+    try equal(try compile(a, std.testing.allocator, text, null, .verify), cold.output);
+    try equal(cold.output, warm.output);
+    try std.testing.expect(warm.output.statistics.bypassed > 0);
+    try std.testing.expect(deferredName(warm, "idle"));
+    var refusal: build.Refusal = .{};
+    var module = try support.buildSource(a, text, &refusal);
+    const evidence = try fieldOracleEvidence(a, &module);
+    const closed = try fields.closedTypes(a, &module);
+    const dense = try fields.hulls(a, &module, evidence.known, closed, false);
+    const sparse = try fields.fromContributions(a, &module, evidence.compact, false);
+    try std.testing.expectEqualDeep(dense.types, sparse.types);
+    try validFieldEvidence(&module, evidence.compact);
+}
+
+fn validFieldEvidence(module: *const @import("ir.zig").Module, compact: []const ?fields.Contribution) error{TestUnexpectedResult}!void {
+    for (compact) |entry| if (entry) |value| try std.testing.expect(value.valid(module));
 }

@@ -95,8 +95,9 @@ pub const Contribution = struct {
     }
 };
 
-fn addWrite(arena: std.mem.Allocator, writes: *std.ArrayList(Write), record: ir.Type, field: usize, range: ?facts.Interval) std.mem.Allocator.Error!void {
-    if (!record.isCompound()) return;
+fn addWrite(arena: std.mem.Allocator, module: *const ir.Module, writes: *std.ArrayList(Write), record: ir.Type, field: usize, range: ?facts.Interval) std.mem.Allocator.Error!void {
+    if (!module.valid(record) or module.kind(record) != .record) return;
+    if (field >= module.compound(record).record.len) return;
     try writes.append(arena, .{ .record = record, .field = @intCast(field), .range = range });
 }
 
@@ -109,16 +110,16 @@ pub fn contribution(arena: std.mem.Allocator, module: *const ir.Module, function
             const inst = function.inst(ref);
             switch (inst.op) {
                 .record_make => for (function.operands(inst.data), 0..) |operand, field| {
-                    try addWrite(arena, &writes, inst.ty, field, rangeOf(function, known, operand));
+                    try addWrite(arena, module, &writes, inst.ty, field, rangeOf(function, known, operand));
                 },
-                .record_set => try addWrite(arena, &writes, inst.ty, @intCast(inst.data), rangeOf(function, known, inst.b)),
+                .record_set => try addWrite(arena, module, &writes, inst.ty, @intCast(inst.data), rangeOf(function, known, inst.b)),
                 .list_set_field => {
                     const operands = function.operands(inst.data);
                     if (operands.len != 2) continue;
                     const path_value = function.inst(function.resolve(operands[1]));
                     if (path_value.op != .iconst or module.kind(inst.ty) != .list) continue;
                     const target = facts.pathField(module, module.compound(inst.ty).list, ir.FieldPath.unpack(path_value.data)) orelse continue;
-                    try addWrite(arena, &writes, target.record, target.field, rangeOf(function, known, operands[0]));
+                    try addWrite(arena, module, &writes, target.record, target.field, rangeOf(function, known, operands[0]));
                 },
                 else => {},
             }
