@@ -213,7 +213,7 @@
 - Question: an expanded frame snapshot prints the expected answer and then crashes with the nested-borrow prototype, while M0 passes.
 - Options: abandon path-preserving borrows or correct the ownership reachability cutoff.
 - Evidence: the original frames read precedes an intermediate record definition. `Taking.clearThrough` used that intermediate definition as its cutoff, overlooking later reads through a record whose disjoint stack field was updated. LLVM consequently releases the frames block before those reads.
-- Choice: use the original owner's definition throughout the traversal. Checkpoint `4661eb368` passes all 13 focused fixtures in all five modes, including the formerly crashing case. Retain the failed probe and IR evidence; full lane gates still determine acceptance.
+- Choice: use the original owner's definition throughout the traversal. Checkpoint `4661eb368` passes all 13 focused host tests, including eight language fixtures in all five modes and the formerly crashing case. Retain the failed probe and IR evidence; full lane gates still determine acceptance.
 - Reversibility: localized ownership correction. No count-word encoding or safety contract changes.
 
 ## S2-001 — reject escaped substring blocks after measuring their overhead

@@ -131,13 +131,14 @@ def main():
     perf = g.area / 'instructions.json'
     g.run('instructions', ['python3', TOOLS / 'corpus_perf.py', '--tags', 'base,' + args.tag,
                            '--rounds', '3', '--out', perf], 'build')
-    g.run('compare-instructions', ['python3', TOOLS / 'compare_instructions.py', '--base', perf,
-                                  '--candidate', perf, '--base-tag', 'base', '--candidate-tag', args.tag,
-                                  '--out', g.area / 'instruction-comparison.json',
-                                  '--markdown', g.area / 'instruction-comparison.md'])
-    with gzip.open(perf.with_suffix('.json.gz'), 'wb', compresslevel=9) as stream:
+    compressed_perf = perf.with_suffix('.json.gz')
+    with gzip.open(compressed_perf, 'wb', compresslevel=9) as stream:
         stream.write(perf.read_bytes())
     perf.unlink()
+    g.run('compare-instructions', ['python3', TOOLS / 'compare_instructions.py', '--base', compressed_perf,
+                                  '--candidate', compressed_perf, '--base-tag', 'base', '--candidate-tag', args.tag,
+                                  '--out', g.area / 'instruction-comparison.json',
+                                  '--markdown', g.area / 'instruction-comparison.md'])
     assert digest(debug) == g.receipt['debug_compiler']['sha256']
     assert digest(final) == g.receipt['release_fast_compiler']['sha256']
     g.receipt['complete'] = True
