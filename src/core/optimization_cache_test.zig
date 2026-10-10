@@ -1239,3 +1239,182 @@ fn usedLiteralValues(a: std.mem.Allocator, module: *const @import("ir.zig").Modu
     };
     return values.items;
 }
+
+const creation_fixture =
+    \\func probe(s: str) -> bool:
+    \\    mut first = s[0:1]
+    \\    mut second = s[1:2]
+    \\    mut equal = second == "x"
+    \\    mut starts = first.startswith("y")
+    \\    return equal or starts
+    \\func idle() -> int:
+    \\    return 42
+    \\func main(out: Stream) -> int:
+    \\    out.print(probe("abc"), idle())
+    \\    return 0
+;
+
+fn creationProbe(a: std.mem.Allocator, module: *@import("ir.zig").Module) ![]const u32 {
+    _ = try @import("fuse_slice_key.zig").run(a, module);
+    for (module.functions.items) |*function| {
+        if (std.mem.eql(u8, function.name, "probe")) return shortcut_mod.Index.targetsOf(a, function, .call);
+    }
+    return error.TestUnexpectedResult;
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-8
+test "optimizer demand fusion declaration requests reject producer reordering despite unchanged downstream helper calls" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    var storage = try store.Store.init(std.testing.allocator, std.testing.io, try directory.dir.realPathFileAlloc(std.testing.io, ".", a));
+    defer storage.deinit();
+    _ = try compileDemand(a, std.testing.allocator, creation_fixture, &storage, false);
+    const key = storage.key(demand_scope, &.{ "", &.{@backingInt(passes.Mode.verify)} });
+    const prior = (try storage.loadValue(a, key, shortcut_mod.DemandIndex)).?;
+    try std.testing.expectEqual(@as(usize, 2), prior.catalog.declarations.len);
+    const changed = try std.mem.replaceOwned(u8, a, creation_fixture, "    mut first = s[0:1]\n    mut second = s[1:2]", "    mut second = s[1:2]\n    mut first = s[0:1]");
+    var refusal: build.Refusal = .{};
+    var original_raw = try support.buildSource(a, creation_fixture, &refusal);
+    var changed_raw = try support.buildSource(a, changed, &refusal);
+    const original_layout = try snapshot.layout(a, try snapshot.Context.init(a, &original_raw, null));
+    const changed_layout = try snapshot.layout(a, try snapshot.Context.init(a, &changed_raw, null));
+    try std.testing.expectEqual(original_layout, changed_layout);
+    try @import("fusion_checkpoint.zig").seed(a, &original_raw, prior.catalog);
+    try @import("fusion_checkpoint.zig").seed(a, &changed_raw, prior.catalog);
+    try std.testing.expectEqualSlices(u32, try creationProbe(a, &original_raw), try creationProbe(a, &changed_raw));
+    try std.testing.expectError(error.CacheMiss, compileDemand(a, std.testing.allocator, changed, &storage, true));
+    const repaired = try compileDemandGuarded(a, std.testing.allocator, changed, &storage, .{ .omit = false, .force_eager = true });
+    try equal(try compile(a, std.testing.allocator, changed, null, .verify), repaired.output);
+    const next = (try storage.loadValue(a, key, shortcut_mod.DemandIndex)).?;
+    try std.testing.expect(!std.mem.eql(u8, prior.catalog.declarations[0].name, next.catalog.declarations[0].name));
+    try equal(repaired.output, (try compileDemand(a, std.testing.allocator, changed, &storage, true)).output);
+}
+
+const field_cycle_fixture =
+    \\record State:
+    \\    x: int
+    \\func entry(out: Stream, n: int):
+    \\    out.print(left(n), right(n))
+    \\func left(n: int) -> int:
+    \\    if n <= 0:
+    \\        return 0
+    \\    return right(n - 1) % 3
+    \\func right(n: int) -> int:
+    \\    if n <= 0:
+    \\        return 0
+    \\    return left(n - 1) % 7
+    \\func spectator(s: State) -> int:
+    \\    return s.x + 1
+    \\func main(out: Stream) -> int:
+    \\    mut left_ref = left
+    \\    mut right_ref = right
+    \\    entry(out, 5)
+    \\    out.print(spectator(State(x=3)))
+    \\    return 0
+;
+
+fn checkSummaryCycle(a: std.mem.Allocator, backing: std.mem.Allocator, mode: passes.Mode, text: []const u8) !void {
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    var storage = try store.Store.init(backing, std.testing.io, try directory.dir.realPathFileAlloc(std.testing.io, ".", a));
+    defer storage.deinit();
+    const cold = try compileDemandGuarded(a, backing, text, &storage, .{ .mode = mode, .omit = false });
+    const warm = try compileDemandGuarded(a, backing, text, &storage, .{ .mode = mode, .omit = true });
+    try equal(cold.output, warm.output);
+    try std.testing.expect(deferredName(warm, "left"));
+    try std.testing.expect(warm.loaded < cold.loaded);
+    try std.testing.expect(warm.output.statistics.bypassed > 0);
+    const changed = try std.mem.replaceOwned(u8, a, text, "out.print(left(n), right(n))", "out.print(right(n), left(n))");
+    var refusal: build.Refusal = .{};
+    var original_raw = try support.buildSource(a, text, &refusal);
+    var changed_raw = try support.buildSource(a, changed, &refusal);
+    try std.testing.expectEqual(
+        try snapshot.layout(a, try snapshot.Context.init(a, &original_raw, null)),
+        try snapshot.layout(a, try snapshot.Context.init(a, &changed_raw, null)),
+    );
+    const edited = try compileDemandGuarded(a, backing, changed, &storage, .{ .mode = mode, .omit = true });
+    const oracle = try compile(a, backing, changed, null, mode);
+    try equal(oracle, edited.output);
+    try std.testing.expect(edited.output.statistics.restores.checkpoints > 0);
+    const repaired = try compileDemandGuarded(a, backing, changed, &storage, .{ .mode = mode, .omit = true });
+    try equal(oracle, repaired.output);
+    try std.testing.expect(repaired.output.statistics.bypassed > 0);
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-8
+test "optimizer demand field receipts reuse recursive cycles and reject changed exploration entry return inputs" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    for ([_]passes.Mode{ .verify, .trusted }) |mode| try checkSummaryCycle(arena.allocator(), std.testing.allocator, mode, field_cycle_fixture);
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-8
+test "optimizer demand ordered return input receipts preserve record and record-free self recursion" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    var storage = try store.Store.init(std.testing.allocator, std.testing.io, try directory.dir.realPathFileAlloc(std.testing.io, ".", a));
+    defer storage.deinit();
+    _ = try compileDemand(a, std.testing.allocator, recursive, &storage, false);
+    const conservative = try compileDemand(a, std.testing.allocator, recursive, &storage, true);
+    try equal(try compile(a, std.testing.allocator, recursive, null, .verify), conservative.output);
+    try std.testing.expect(deferredName(conservative, "recurse"));
+    const records = try std.mem.concat(a, u8, &.{ "record State:\n    x: int\n", recursive });
+    const with_field = try std.mem.replaceOwned(u8, a, records, "out.print(recurse(7), idle())", "out.print(State(x=3).x, recurse(7), idle())");
+    _ = try compileDemand(a, std.testing.allocator, with_field, &storage, false);
+    const proven = try compileDemand(a, std.testing.allocator, with_field, &storage, true);
+    try equal(try compile(a, std.testing.allocator, with_field, null, .verify), proven.output);
+    try std.testing.expect(deferredName(proven, "recurse"));
+    try std.testing.expectEqual(@as(usize, 0), proven.loaded);
+    try std.testing.expectEqual(@as(usize, 0), conservative.loaded);
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-8
+test "optimizer demand record-free summary receipts reject changed recursive traversal return inputs" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const without_record = try std.mem.replaceOwned(u8, a, field_cycle_fixture, "record State:\n    x: int\n", "");
+    const integer_argument = try std.mem.replaceOwned(u8, a, without_record, "s: State", "s: int");
+    const integer_body = try std.mem.replaceOwned(u8, a, integer_argument, "return s.x + 1", "return s + 1");
+    const text = try std.mem.replaceOwned(u8, a, integer_body, "spectator(State(x=3))", "spectator(3)");
+    for ([_]passes.Mode{ .verify, .trusted }) |mode| try checkSummaryCycle(a, std.testing.allocator, mode, text);
+}
+
+fn removeSummaryReceipt(a: std.mem.Allocator, storage: *store.Store, text: []const u8, name: []const u8) !void {
+    const key = storage.key(demand_scope, &.{ "", &.{@backingInt(passes.Mode.verify)} });
+    const saved = (try storage.loadValue(a, key, shortcut_mod.DemandIndex)).?;
+    var refusal: build.Refusal = .{};
+    const module = try support.buildSource(a, text, &refusal);
+    for (module.functions.items, saved.entries) |function, *entry| {
+        if (std.mem.eql(u8, function.name, name)) entry.summary_input = null;
+    }
+    try storage.storeValue(key, shortcut_mod.DemandIndex, saved);
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-8
+test "optimizer demand missing record-free summary input receipt restores recursive bodies and repairs admission" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    var storage = try store.Store.init(std.testing.allocator, std.testing.io, try directory.dir.realPathFileAlloc(std.testing.io, ".", a));
+    defer storage.deinit();
+    const cold = try compileDemand(a, std.testing.allocator, recursive, &storage, false);
+    const warm = try compileDemand(a, std.testing.allocator, recursive, &storage, true);
+    try std.testing.expect(deferredName(warm, "recurse"));
+    try removeSummaryReceipt(a, &storage, recursive, "recurse");
+    const recovered = try compileDemand(a, std.testing.allocator, recursive, &storage, true);
+    try equal(cold.output, recovered.output);
+    try std.testing.expect(!deferredName(recovered, "recurse"));
+    try std.testing.expect(recovered.loaded > warm.loaded);
+    const repaired = try compileDemand(a, std.testing.allocator, recursive, &storage, true);
+    try equal(cold.output, repaired.output);
+    try std.testing.expect(deferredName(repaired, "recurse"));
+}

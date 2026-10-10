@@ -27,7 +27,7 @@ const owned = @import("semantic_entry.zig");
 const cache_key = @import("cache_key.zig");
 
 /// On-disk format version. Bump for any layout, tag or validation change.
-pub const format_version = "semantic-cache-v4";
+pub const format_version = "semantic-cache-v5";
 /// Default root for ordinary one-shot commands; `--cache-dir=DIR` maps to
 /// `DIR/semantic` through the same shared cache-root option.
 pub const default_directory = ".mylang-cache/semantic";
@@ -365,6 +365,7 @@ pub const Store = struct {
         for (body.meta.function_refs) |reference| {
             if (@backingInt(reference.id) >= body.meta.old_function_count) return false;
             if (reference.key.len == 0 or reference.key.len > self.limits.max_entry_bytes) return false;
+            if (reference.template) |template| if (template.len == 0 or template.len > self.limits.max_entry_bytes) return false;
         }
         for (body.meta.record_refs) |reference| {
             if (reference.index >= body.meta.old_record_count) return false;
@@ -668,6 +669,7 @@ pub const Store = struct {
         if (entry.meta.function_refs.len > max_declarations or entry.meta.record_refs.len > max_declarations or entry.meta.notes.len > max_declarations) return false;
         for (entry.meta.function_refs) |reference| {
             if (reference.key.len == 0 or reference.key.len > self.limits.max_entry_bytes) return false;
+            if (reference.template) |template| if (template.len == 0 or template.len > self.limits.max_entry_bytes) return false;
         }
         for (entry.meta.record_refs) |reference| {
             if (reference.key.len == 0 or reference.key.len > self.limits.max_entry_bytes) return false;

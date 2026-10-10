@@ -34,6 +34,7 @@ pub const Entry = struct {
     } = .{},
     stable: bool = false,
     summary: ?cache.Summary = null,
+    summary_input: ?[32]u8 = null,
     parameters: []const ?facts.Interval = &.{},
     final: ?[32]u8 = null,
 };
@@ -237,7 +238,7 @@ pub const Index = struct {
     }
 
     /// Dependency-closed functions with complete checkpoint chains stay deferred.
-    pub fn prepareDemand(a: std.mem.Allocator, context: *cache.Context, mode: u8) demand_ir.Error!Index {
+    pub fn prepareDemand(a: std.mem.Allocator, context: *cache.Context, mode: u8, field_proof: bool) demand_ir.Error!Index {
         const demand = context.lazy.raw.?;
         const name = if (context.source.source) |source| source.path else "";
         const key = context.store.key("optimizer-demand-v1", &.{ name, &.{mode} });
@@ -258,7 +259,7 @@ pub const Index = struct {
                 const old = prior[index];
                 if (old.demand.lowered != null and lowered != null and std.mem.eql(u8, &old.demand.lowered.?, &lowered.?)) {
                     entry.* = old;
-                    reusable.* = reusableEntry(old, module, index, saved.?.catalog);
+                    reusable.* = reusableEntry(old, module, index, saved.?.catalog) and (field_proof or old.summary_input != null);
                 }
             };
             if (function.signature.linkage != .internal) reusable.* = true;
@@ -276,7 +277,8 @@ pub const Index = struct {
                 for (entry.demand.graph.calls) |target| if (target < count) try parents[target].append(a, @intCast(index));
             }
         }
-        try invalidateCycles(a, parents, green, &queue);
+        // Exploratory receipts validate exact current DFS return inputs before
+        // admitting a final body, including when recursion changes DFS entry.
         try invalidateCallers(a, parents, green, &queue);
         for (green, 0..) |reusable, index| if (!reusable) try demand.ensure(@intCast(index));
         return .{ .context = context, .key = key, .entries = entries, .green = green, .parents = parents, .catalog = if (saved) |value| value.catalog else .{ .raw_count = count } };

@@ -8,6 +8,7 @@ const semantic_key = @import("semantic_key.zig");
 const cache_key = @import("cache_key.zig");
 const semantic_store = @import("semantic_store.zig");
 const Cache = language.semantic_cache.Cache;
+const edited_path = "edited.my";
 
 fn specializationRecords(allocator: std.mem.Allocator) ![]u8 {
     var text: std.ArrayList(u8) = .empty;
@@ -85,9 +86,9 @@ const Steady = struct {
     }
 };
 fn compare(allocator: std.mem.Allocator, cache: *Cache, bytes: []const u8, expected: ?i64) !void {
-    var cached = try language.Compilation.init(allocator, "edited.my", bytes);
+    var cached = try language.Compilation.init(allocator, edited_path, bytes);
     defer cached.deinit();
-    var fresh = try language.Compilation.init(allocator, "edited.my", bytes);
+    var fresh = try language.Compilation.init(allocator, edited_path, bytes);
     defer fresh.deinit();
     if (expected) |number| {
         try cached.checkWithCache(cache);
@@ -691,7 +692,8 @@ test "a function value with no matching declared callback misses with its exact 
 // reused. The durable concrete entry kind, typed FunctionRef instantiation and
 // fresh instance remap are the reported remaining work.
 // spec-case: SEMANTIC-CACHE-7
-test "generic specialization bodies reuse while their callers miss with their exact reason" {
+// spec-case: SEMANTIC-CACHE-12
+test "generic specialization bodies and ordinary callers reuse validated instances" {
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
     defer cache.deinit();
     const program =
@@ -703,16 +705,14 @@ test "generic specialization bodies reuse while their callers miss with their ex
         \\    return identity[i64](42)
     ;
     try compare(t.allocator, &cache, program, 42);
-    try t.expect(cache.statistics.rejections.total[@backingInt(language.semantic_cache.MissReason.generic_specialization)] > 0);
+    try t.expectEqual(@as(usize, 0), cache.statistics.rejections.total[@backingInt(language.semantic_cache.MissReason.generic_specialization)]);
     const before = cache.statistics.reused;
     const before_specialization = cache.reuse.specializations.statistics.reused;
     try compare(t.allocator, &cache, program, 42);
-    // C3: the leaf specialization body itself is reused. Its caller is still a
-    // conservative miss because ordinary bodies that reference a specialization
-    // are not retained without a validated instance-key remap.
-    try t.expectEqual(before + 1, cache.statistics.reused);
+    // The ordinary call edge registers a validated fresh instance before copying.
+    try t.expectEqual(before + 2, cache.statistics.reused);
     try t.expectEqual(before_specialization + 1, cache.reuse.specializations.statistics.reused);
-    try t.expect(cache.statistics.rejections.total[@backingInt(language.semantic_cache.MissReason.generic_specialization)] > 0);
+    try t.expectEqual(@as(usize, 0), cache.statistics.rejections.total[@backingInt(language.semantic_cache.MissReason.generic_specialization)]);
 }
 
 // spec-case: SEMANTIC-CACHE-7
@@ -1447,7 +1447,8 @@ test "createSpecialization rejects an out-of-range function index" {
 const spec_stats = language.semantic_cache.specializations.Statistics;
 const spec_reason = language.semantic_cache.specializations.MissReason;
 
-test "nested concrete specializations conservatively miss and self-recursion remaps" {
+// spec-case: SEMANTIC-CACHE-12
+test "nested concrete specializations preregister validated dependencies and self-recursion remaps" {
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
     defer cache.deinit();
     const nested =
@@ -1466,11 +1467,11 @@ test "nested concrete specializations conservatively miss and self-recursion rem
     const nested_before: spec_stats = cache.reuse.specializations.statistics;
     try compare(t.allocator, &cache, nested, 4);
     const nested_after: spec_stats = cache.reuse.specializations.statistics;
-    // `inner[i64]` is reachable once `outer[i64]` is checked; at `outer`'s
-    // lookup the nested instance key does not exist yet, so it conservatively
-    // misses while the leaf instance replays.
-    try t.expectEqual(nested_before.reused + 1, nested_after.reused);
-    try t.expect(nested_after.misses[@backingInt(spec_reason.missing_specialization)] > nested_before.misses[@backingInt(spec_reason.missing_specialization)]);
+    // The cached parent's validated callee recipe registers the nested instance
+    // before remapping either tree; both bodies replay without fresh checking.
+    try t.expectEqual(nested_before.reused + 2, nested_after.reused);
+    try t.expectEqual(nested_before.checked, nested_after.checked);
+    try t.expectEqual(nested_before.misses[@backingInt(spec_reason.missing_specialization)], nested_after.misses[@backingInt(spec_reason.missing_specialization)]);
 
     const recursive =
         \\func recur[T](x: T, n: i64) -> i64:
@@ -2342,4 +2343,201 @@ test "source proof rejects renamed ambiguous edited and malformed module provena
     malformed.before.end = original.bytes.len + 1;
     try t.expect(!provenance.valid(&.{malformed}, original.bytes.len));
     try t.expect(!provenance.valid(&.{ refs[0], refs[0] }, original.bytes.len));
+}
+
+const prereg_nested =
+    \\func inner[T](x: T) -> T:
+    \\    return x
+    \\func outer[T](x: T) -> T:
+    \\    return inner[T](x)
+    \\func main() -> i64:
+    \\    return outer[i64](42)
+;
+
+fn retainedSpecialization(cache: *Cache, name: []const u8) !*owned_entry.SpecializationEntry {
+    for (cache.reuse.specializations.entries.items, 0..) |*entry, index| {
+        if (cache.reuse.specializations.index.get(entry.payload.identity.key) != index) continue;
+        if (std.mem.eql(u8, entry.payload.body.function.name, name)) return entry;
+    }
+    return error.TestUnexpectedResult;
+}
+
+// spec-case: SEMANTIC-CACHE-12
+test "specialization preregistration missing and damaged callee recipes stay fresh" {
+    var cache = Cache.init(t.allocator, 4 << 20);
+    defer cache.deinit();
+    try compare(t.allocator, &cache, prereg_nested, 42);
+    const callee = try retainedSpecialization(&cache, "inner[i64]");
+    _ = cache.reuse.specializations.index.remove(callee.payload.identity.key);
+    const missing = cache.reuse.specializations.statistics;
+    try compare(t.allocator, &cache, prereg_nested, 42);
+    try t.expectEqual(missing.checked + 2, cache.reuse.specializations.statistics.checked);
+    const damaged = try retainedSpecialization(&cache, "inner[i64]");
+    damaged.payload.identity.template = "unrelated-template";
+    const before = cache.reuse.specializations.statistics;
+    try compare(t.allocator, &cache, prereg_nested, 42);
+    try t.expect(cache.reuse.specializations.statistics.checked > before.checked);
+}
+
+// spec-case: SEMANTIC-CACHE-12
+test "specialization preregistration validates provider shape and edited dependency bodies" {
+    var cache = Cache.init(t.allocator, 4 << 20);
+    defer cache.deinit();
+    const templates =
+        \\func inner[T](x: T) -> i64:
+        \\    _ = x
+        \\    return 41
+        \\func outer[T](x: T) -> i64:
+        \\    return inner[T](x)
+        \\func main() -> i64:
+        \\    return outer[Box](Box(value=VALUE))
+    ;
+    const first = try std.mem.replaceOwned(u8, t.allocator, "record Box:\n    value: i64\n" ++ templates, "VALUE", "1");
+    defer t.allocator.free(first);
+    try compare(t.allocator, &cache, first, 41);
+    const before = cache.reuse.specializations.statistics;
+    const provider = try std.mem.replaceOwned(u8, t.allocator, "record Box:\n    value: bool\n" ++ templates, "VALUE", "True");
+    defer t.allocator.free(provider);
+    try compare(t.allocator, &cache, provider, 41);
+    try t.expectEqual(before.checked + 2, cache.reuse.specializations.statistics.checked);
+    const changed = try std.mem.replaceOwned(u8, t.allocator, provider, "return 41", "return 42");
+    defer t.allocator.free(changed);
+    try compare(t.allocator, &cache, changed, 42);
+}
+
+// spec-case: SEMANTIC-CACHE-12
+test "specialization preregistration mutual dependency cycles use the bounded instance queue" {
+    var cache = Cache.init(t.allocator, 4 << 20);
+    defer cache.deinit();
+    const cycle =
+        \\func first[T](x: T, n: i64) -> i64:
+        \\    if n == 0:
+        \\        return 42
+        \\    return second[T](x, n - 1)
+        \\func second[T](x: T, n: i64) -> i64:
+        \\    if n == 0:
+        \\        return 42
+        \\    return first[T](x, n - 1)
+        \\func main() -> i64:
+        \\    return first[i64](1, 4)
+    ;
+    try compare(t.allocator, &cache, cycle, 42);
+    const before = cache.reuse.specializations.statistics;
+    try compare(t.allocator, &cache, cycle, 42);
+    try t.expectEqual(before.checked, cache.reuse.specializations.statistics.checked);
+    try t.expectEqual(before.reused + 2, cache.reuse.specializations.statistics.reused);
+}
+
+fn preregChain(a: std.mem.Allocator, count: usize) ![]u8 {
+    var text: std.Io.Writer.Allocating = .init(a);
+    defer text.deinit();
+    for (0..count) |i| {
+        try text.writer.print("func chain{d}[T](x: T) -> T:\n    return ", .{i});
+        if (i + 1 == count) try text.writer.writeAll("x\n") else try text.writer.print("chain{d}[T](x)\n", .{i + 1});
+    }
+    try text.writer.writeAll("func main() -> i64:\n    return chain0[i64](42)\n");
+    return a.dupe(u8, text.written());
+}
+
+// spec-case: SEMANTIC-CACHE-12
+test "specialization preregistration durable dependency loads keep parent payloads valid across table growth" {
+    var directory = t.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    const bytes = try preregChain(t.allocator, 20);
+    defer t.allocator.free(bytes);
+    var store = semantic_store.Store.init(t.allocator, t.io, root, cache_key.Contract.default, language.semantic_cache.mutation_contract_version);
+    defer store.deinit();
+    var seed = Cache.init(t.allocator, 4 << 20);
+    defer seed.deinit();
+    seed.context.persistent = &store;
+    try compare(t.allocator, &seed, bytes, 42);
+    var cache = Cache.init(t.allocator, 4 << 20);
+    defer cache.deinit();
+    cache.context.persistent = &store;
+    try compare(t.allocator, &cache, bytes, 42);
+    try t.expectEqual(@as(usize, 0), cache.reuse.specializations.statistics.checked);
+    try t.expectEqual(@as(usize, 20), cache.reuse.specializations.statistics.reused);
+}
+
+// spec-case: SEMANTIC-CACHE-7
+// spec-case: SEMANTIC-CACHE-12
+test "specialization preregistration ordinary multi-type callers retain eager discovery and native results" {
+    var cache = Cache.init(t.allocator, 4 << 20);
+    defer cache.deinit();
+    const program =
+        \\record Box:
+        \\    value: i64
+        \\func inner[T](x: T) -> T:
+        \\    return x
+        \\func outer[T](x: T) -> T:
+        \\    return inner[T](x)
+        \\func main() -> i64:
+        \\    mut box = outer[Box](Box(value=20))
+        \\    mut n = outer[i64](21)
+        \\    mut b = outer[bool](True)
+        \\    return box.value + n + (if b then 1 else 0)
+    ;
+    try compare(t.allocator, &cache, program, 42);
+    const before = cache.statistics.checked;
+    try compare(t.allocator, &cache, program, 42);
+    try t.expectEqual(before, cache.statistics.checked);
+    try compare(t.allocator, &cache, "\n" ++ program, 42);
+    try t.expectEqual(before, cache.statistics.checked);
+    try sameInstanceOrder(&cache, "\n" ++ program);
+}
+
+fn sameInstanceOrder(cache: *Cache, bytes: []const u8) !void {
+    var cached = try language.Compilation.init(t.allocator, edited_path, bytes);
+    defer cached.deinit();
+    var fresh = try language.Compilation.init(t.allocator, edited_path, bytes);
+    defer fresh.deinit();
+    try cached.checkWithCache(cache);
+    try fresh.check();
+    try t.expectEqual(fresh.program.?.functions.len, cached.program.?.functions.len);
+    for (fresh.program.?.functions, cached.program.?.functions) |left, right| {
+        try t.expectEqualStrings(left.name, right.name);
+    }
+}
+
+// spec-case: SEMANTIC-CACHE-12
+test "specialization open releases decoded durable entry on reserve OutOfMemory" {
+    const specializations = @import("generic_specializations.zig");
+    var directory = t.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    const bytes = try preregChain(t.allocator, 1);
+    defer t.allocator.free(bytes);
+    var store = semantic_store.Store.init(t.allocator, t.io, root, cache_key.Contract.default, language.semantic_cache.mutation_contract_version);
+    defer store.deinit();
+    var seed = Cache.init(t.allocator, 4 << 20);
+    defer seed.deinit();
+    seed.context.persistent = &store;
+    try compare(t.allocator, &seed, bytes, 42);
+    const identity = seed.reuse.specializations.entries.items[0].payload.identity;
+    var failing = t.FailingAllocator.init(t.allocator, .{ .fail_index = 0 });
+    var memory: specializations.Table = .{ .allocator = failing.allocator() };
+    defer memory.deinit();
+    const prepared: semantic_key.Prepared = .{
+        .bodies = &.{},
+        .regions = &.{},
+        .keys = &.{},
+        .contexts = &.{},
+        .ordinary_ast = &.{},
+        .nominal_syntax = false,
+    };
+    var session = try specializations.Session.init(t.allocator, &prepared, .{
+        .memory = &memory,
+        .persistent = &store,
+        .enabled = true,
+        .build = "",
+    });
+    defer session.deinit();
+    try t.expectError(error.OutOfMemory, session.open(identity.fingerprint, identity.context));
+    try t.expectEqual(@as(usize, 0), memory.entries.items.len);
+    failing.fail_index = std.math.maxInt(usize);
+    try t.expect((try session.open(identity.fingerprint, identity.context)) != null);
+    try t.expectEqual(@as(usize, 1), memory.entries.items.len);
 }
