@@ -103,12 +103,23 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--tag', required=True)
     parser.add_argument('--fuzz-cases', type=int, choices=(50, 200), default=200)
+    parser.add_argument('--repository-jobs', type=int, choices=(1,),
+                        help='serialize the complete repository build graph; keeps all default test shards')
+    parser.add_argument('--rerun-repository', action='store_true',
+                        help='execute every repository test step even when its prior verdict is cached')
     args = parser.parse_args()
     g = Gates(args.tag)
     g.receipt['fuzz_cases_per_family'] = args.fuzz_cases
+    g.receipt['repository_jobs'] = args.repository_jobs
+    g.receipt['repository_test_rerun'] = args.rerun_repository
     g.save()
     g.run('build', ['zig', 'build', '--summary', 'all'], 'build')
-    g.run('repository', ['zig', 'build', 'test', '--summary', 'all'], 'gate')
+    repository = ['zig', 'build', 'test', '--summary', 'all']
+    if args.repository_jobs is not None:
+        repository.append('-j' + str(args.repository_jobs))
+    if args.rerun_repository:
+        repository.append('-Dtest-rerun=true')
+    g.run('repository', repository, 'gate')
     g.run('fmt', ['zig', 'build', 'fmt-check', '--summary', 'all'], 'build')
     qualify = ROOT / 'experiments/new-core-s5-20261007/tools/qualify_merge.py'
     # The inherited qualifier keys its temporary cache by evidence basename.

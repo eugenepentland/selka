@@ -1,0 +1,105 @@
+{
+ "source_commit": "90982ff631b68f1a47e32e5919ba949510edba99",
+ "candidate_tag": "final-fix-main-01",
+ "stage": "repository",
+ "sequence_path": ".mylang-cache/unit-tests/core/build/stages-packed-v1/sequence",
+ "lock_identity": "103:05:17229524",
+ "snapshots": [
+  {
+   "utc": "2026-10-10T12:07:26Z",
+   "owner": {
+    "pid": 3771819,
+    "state": "R",
+    "cpu": 6,
+    "utime_ticks": 564,
+    "stime_ticks": 4,
+    "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3"
+   },
+   "waiting_pids": [
+    3773478,
+    3771305,
+    3771673,
+    3771012,
+    3771900,
+    3771958,
+    3755219,
+    3750813,
+    3756084,
+    3772932
+   ]
+  },
+  {
+   "utc": "2026-10-10T12:07:27Z",
+   "owner": {
+    "pid": 3773478,
+    "state": "R",
+    "cpu": 0,
+    "utime_ticks": 266,
+    "stime_ticks": 2,
+    "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3"
+   },
+   "waiting_pids": [
+    3771305,
+    3771673,
+    3771012,
+    3771900,
+    3771958,
+    3755219,
+    3750813,
+    3756084,
+    3772932,
+    3771819
+   ]
+  },
+  {
+   "utc": "2026-10-10T12:07:27Z",
+   "owner": {
+    "pid": 3773478,
+    "state": "R",
+    "cpu": 0,
+    "utime_ticks": 316,
+    "stime_ticks": 3,
+    "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3"
+   },
+   "waiting_pids": [
+    3771305,
+    3771673,
+    3771012,
+    3771900,
+    3771958,
+    3755219,
+    3750813,
+    3756084,
+    3772932,
+    3771819
+   ]
+  },
+  {
+   "utc": "2026-10-10T12:07:28Z",
+   "owner": {
+    "pid": 3771900,
+    "state": "R",
+    "cpu": 0,
+    "utime_ticks": 822,
+    "stime_ticks": 8,
+    "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.zig-cache/tmp/YNEGXHNuH6EGPNrd"
+   },
+   "waiting_pids": [
+    3771958,
+    3755219,
+    3750813,
+    3756084,
+    3772932,
+    3771819,
+    3771305,
+    3771673,
+    3771012,
+    3773478
+   ]
+  }
+ ],
+ "stage_cache_files": 4953,
+ "stage_cache_bytes": 50869882,
+ "interpretation": "Several guest test compilers serialize on the same stage-store sequence lock. Owners change and CPU work continues, so the observation does not show a deadlock. More test workers alone cannot remove this lock bottleneck. No cache, affinity, source or test changes were made to the active suite.",
+ "followon": "Evaluate independent cache roots per test shard, retaining reuse within each test, or reducing work under the store sequence lock; neither change is implemented or measured here."
+}

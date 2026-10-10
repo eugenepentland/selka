@@ -1,0 +1,37 @@
+{
+ "source_commit": "90982ff631b68f1a47e32e5919ba949510edba99",
+ "main_commit": "e9011d9c6513f63ae02881d0cfc8258c668e6b5e",
+ "candidate_tag": "final-fix-main-01",
+ "complete": false,
+ "repository_verdict": null,
+ "reason": "Restart all qualification gates with the complete repository test graph scheduled by -j1 and fresh test verdicts. Repeated cross-process stage-cache invalidation was observed under the shared sequence lock; no test, shard, fixture, mode or threshold is removed.",
+ "completed_shard_verdicts": 17,
+ "partial_tests_passed": 1153,
+ "partial_tests_failed": 0,
+ "verified_owned_processes_terminated": 47,
+ "all_owned_processes_exited": true,
+ "process_journal_sha256": "d96707101bcde6eab1831a6b625b3456fce3d61b684aa2e251589cc2b7871341",
+ "archives": [
+  {
+   "source": ".tmp/rp3/gates-final-fix-main-01/build.log",
+   "archive": "X/gates-final-fix-main-01/build.partial.log.gz",
+   "raw_sha256": "029a7f44f0d96af62d2e220e28854a0008278190e35ea28c271e202e34a20371",
+   "gzip_sha256": "9950996ae3a96dd39be6305d285a155fa850c6d1290e44b37b16d35b807a3434",
+   "raw_bytes": 1301,
+   "gzip_bytes": 577
+  },
+  {
+   "source": ".tmp/rp3/gates-final-fix-main-01/repository.log",
+   "archive": "X/gates-final-fix-main-01/repository.partial.log.gz",
+   "raw_sha256": "bea3698de94c27144af6f5a7e2ae4b4bbc4b444a69f15e44b8b67397038f1e32",
+   "gzip_sha256": "a277ba55995431768a3808f3057da9ea4412fab8114ec2faa2b4fa2f38842b1d",
+   "raw_bytes": 357708,
+   "gzip_bytes": 72097
+  }
+ ],
+ "next_candidate_tag": "final-fix-main-serial-01",
+ "next_repository_flags": [
+  "-j1",
+  "-Dtest-rerun=true"
+ ]
+}
