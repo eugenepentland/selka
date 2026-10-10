@@ -2,9 +2,12 @@
 """Integrity checks for alternating native-capture aggregation."""
 import copy
 import importlib.util
+import os
 from pathlib import Path
 import tempfile
+import sys
 import unittest
+from unittest import mock
 
 SPEC = importlib.util.spec_from_file_location("juice_runtime_bench", Path(__file__).resolve().parents[1] / "scripts/juice_runtime_bench.py")
 bench = importlib.util.module_from_spec(SPEC)
@@ -66,6 +69,39 @@ class Aggregation(unittest.TestCase):
             bench.write(second, changed)
             with self.assertRaises(ValueError):
                 bench.combine([first, second], self.root / f"joined-{index}")
+
+
+class TimingDiagnostics(unittest.TestCase):
+    def test_timing_placement_restores_affinity_after_failure(self):
+        original = set(os.sched_getaffinity(0))
+        self.addCleanup(os.sched_setaffinity, 0, original)
+        cpu = min(original)
+        placement = bench.controller_placement(cpu)
+
+        def interrupted(*args):
+            self.assertEqual(set(os.sched_getaffinity(0)), set(placement["controller_affinity"]))
+            raise RuntimeError("timing interrupted")
+
+        with mock.patch.object(bench, "measure_elapsed_pairs", side_effect=interrupted):
+            with self.assertRaisesRegex(RuntimeError, "timing interrupted"):
+                bench.elapsed_pairs(None, None, None, None, cpu, 1)
+        self.assertEqual(set(os.sched_getaffinity(0)), original)
+
+    def test_usage_is_per_command_and_preserves_elapsed_time(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            busy, _, _ = bench.command([sys.executable, "-S", "-c",
+                "import time\nend = time.process_time() + 0.15\nwhile time.process_time() < end: pass"],
+                root / "busy")
+            sleeping, out, err = bench.command([sys.executable, "-S", "-c",
+                "import time; time.sleep(0.05); print('ok')"], root / "sleeping")
+            busy_cpu = sum(busy["resource_usage"][key] for key in ("user_seconds", "system_seconds"))
+            sleeping_cpu = sum(sleeping["resource_usage"][key] for key in ("user_seconds", "system_seconds"))
+            self.assertGreaterEqual(busy_cpu, 0.15)
+            self.assertLess(sleeping_cpu, busy_cpu)
+            self.assertGreaterEqual(sleeping["seconds"], 0.05)
+            self.assertGreaterEqual(sleeping["resource_usage"]["voluntary_context_switches"], 1)
+            self.assertEqual((sleeping["exit_code"], out, err), (0, b"ok\n", b""))
 
 
 if __name__ == "__main__":

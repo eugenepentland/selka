@@ -16,6 +16,7 @@ import json
 import os
 from pathlib import Path
 import re
+import resource
 import shutil
 import signal
 import statistics
@@ -49,6 +50,25 @@ def scheduling_policy(cpu):
     return policy
 
 
+def controller_placement(cpu):
+    """Choose controller CPUs outside the measured physical core.
+
+    Apply only during independent timing: the native collector requires the
+    requested CPU to remain in its own allowed affinity during capture.
+    """
+    topology = Path(f"/sys/devices/system/cpu/cpu{cpu}/topology/thread_siblings_list")
+    siblings = {cpu}
+    for part in topology.read_text().strip().split(","):
+        limits = [int(value) for value in part.split("-")]
+        siblings.update(range(limits[0], limits[-1] + 1))
+    original = set(os.sched_getaffinity(0))
+    available = original - siblings
+    chosen = available or original
+    return dict(original_affinity=sorted(original), controller_affinity=sorted(chosen),
+                measured_core_cpus=sorted(siblings), separated=chosen.isdisjoint(siblings),
+                scope="independent elapsed timing phase; native captures retain original affinity")
+
+
 def stats(values):
     median = statistics.median(values)
     return dict(median=median, min=min(values), max=max(values),
@@ -57,6 +77,9 @@ def stats(values):
 
 def command(argv, prefix, *, cwd=None, env=None, timeout=120):
     """Retain raw output and use communicate, avoiding wait's polling-time bias."""
+    # Commands are serial: the change in reaped-child usage belongs to this
+    # command. Read outside the elapsed interval; it is diagnostic, not a label.
+    usage_before = resource.getrusage(resource.RUSAGE_CHILDREN)
     start = time.perf_counter_ns()
     process = subprocess.Popen(list(map(str, argv)), cwd=cwd, env=env,
                                stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
@@ -68,9 +91,16 @@ def command(argv, prefix, *, cwd=None, env=None, timeout=120):
         process.communicate()
         raise
     elapsed = (time.perf_counter_ns() - start) / 1e9
+    usage_after = resource.getrusage(resource.RUSAGE_CHILDREN)
+    usage = {name: getattr(usage_after, field) - getattr(usage_before, field)
+             for name, field in (("user_seconds", "ru_utime"), ("system_seconds", "ru_stime"),
+                                 ("voluntary_context_switches", "ru_nvcsw"),
+                                 ("involuntary_context_switches", "ru_nivcsw"),
+                                 ("minor_faults", "ru_minflt"), ("major_faults", "ru_majflt"))}
     Path(str(prefix) + ".stdout").write_bytes(stdout)
     Path(str(prefix) + ".stderr").write_bytes(stderr)
     return dict(command=list(map(str, argv)), seconds=elapsed, exit_code=process.returncode,
+                resource_usage=usage,
                 stdout_sha256=hashlib.sha256(stdout).hexdigest(),
                 stderr_sha256=hashlib.sha256(stderr).hexdigest()), stdout, stderr
 
@@ -158,6 +188,15 @@ def check_output(case, row, stdout, stderr):
 
 
 def elapsed_pairs(case, root, binaries, run, cpu, pairs):
+    placement = controller_placement(cpu)
+    try:
+        os.sched_setaffinity(0, placement["controller_affinity"])
+        return measure_elapsed_pairs(case, root, binaries, run, cpu, pairs)
+    finally:
+        os.sched_setaffinity(0, placement["original_affinity"])
+
+
+def measure_elapsed_pairs(case, root, binaries, run, cpu, pairs):
     # Match native capture's argv, path, cwd and controlled environment. Timing
     # includes process launch/loader/exit. Collector wall_seconds is never a label.
     environment = dict(PATH=os.defpath, LC_ALL="C", LANG="C", TZ="UTC",
@@ -250,6 +289,7 @@ def main():
     parser.add_argument("--counter-pairs", type=int, default=5, choices=range(5, 16))
     parser.add_argument("--timing-pairs", type=int, default=9, choices=range(5, 31))
     options = parser.parse_args()
+    controller = controller_placement(options.cpu)
     options.compiler = options.compiler.resolve()
     options.output = options.output.resolve()
     cases = read(options.suite)["cases"]
@@ -266,7 +306,8 @@ def main():
     write(options.output / "suite.json", read(options.suite))
     write(options.output / "method.json", dict(compiler_sha256=compiler_identity, cpu=options.cpu,
           counter_pairs=options.counter_pairs, timing_pairs=options.timing_pairs,
-          scheduling_policy=scheduling_policy(options.cpu)))
+          scheduling_policy=scheduling_policy(options.cpu), controller_placement=controller,
+          timing_diagnostics="Per-command RUSAGE_CHILDREN deltas; serial execution; not subtracted from elapsed labels or used to filter samples."))
     # One bounded, nonblocking lease: never silently queue behind a long run.
     lock_path = Path.home() / ".cache/mylang/runtime-parity-timing.lock"
     lock_path.parent.mkdir(parents=True, exist_ok=True)

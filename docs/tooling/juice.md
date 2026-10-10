@@ -87,6 +87,30 @@ without external input files. It uses five alternating counter pairs (two
 samples per arm per pair), nine independent timing pairs, and one discarded
 warmup pair per phase. All failed or uncertain cases remain in the results.
 
+During independent timing, the driver keeps its controller off the measured CPU
+and its SMT siblings when the inherited affinity allows it. The workload still
+runs on the requested CPU; native capture retains its original affinity because
+the collector validates the requested CPU against that mask. Placement is
+recorded in `method.json`, and the original affinity is restored after timing,
+including on failure. This reduces interference from the controller without
+reserving CPUs from other applications.
+
+Each `timing-runs.json` entry includes user/system CPU time, voluntary/involuntary
+context switches and minor/major page faults. These are per-command deltas from
+`getrusage(RUSAGE_CHILDREN)` in the serial driver, sampled outside the elapsed
+interval. They help diagnose interruptions; they neither replace elapsed-time
+labels nor cause automatic sample exclusion.
+
+Stronger scheduling isolation belongs on the nightly benchmark host: reserve a
+physical core and its SMT siblings from other workloads, and use a dedicated
+runner where possible. Linux's
+[exclusive cpuset partitions](https://docs.kernel.org/admin-guide/cgroup-v2.html#cpuset)
+can prevent tasks outside the partition from using its CPUs; isolated partitions
+also disable scheduler load balancing and exclude unbound workqueues. CPU
+affinity alone does not provide that guarantee. Longer batches help amortize
+startup effects, but neither priority nor a longer scheduling slice guarantees
+uninterrupted execution. This driver changes no machine-wide scheduling policy.
+
 For eventual merge screening, use short scenarios that preserve production
 working sets and algorithm boundaries. Use independent longer runs on nightly
 builds to test new changes and families and track error, missed regressions,
@@ -234,6 +258,41 @@ should retain the original difficult cases, add the explicit-store control as
 a separate fixture, and use longer tree batches with scheduling telemetry and
 stronger CPU isolation. Neither ASLR suppression nor dropping outliers is
 supported as a general fix by these results.
+
+### Implemented copy fixture fix (2026-10-10)
+
+The `EXTRA_COPY` path in `examples/juice/native/kernel.c` now uses eight explicit
+volatile stores, preserving their order and the subsequent load. This applies
+the successful diagnostic control to the fixture; it is not a compiler runtime
+optimization. The historical loop measurements remain retained.
+
+Both arms were rebuilt from the updated source, with the original compiler flags,
+and measured under distinct `copy-unrolled` and `large-copy-unrolled` case names.
+The standard five counter pairs and nine independent timing pairs were used with
+the existing paired estimator and thresholds, plus the controller placement and
+timing diagnostics described above:
+
+| Fixed fixture | Prediction error | Paired cycle spread | Paired reference-cycle spread | Timing ratio spread | Verdict |
+|---|---:|---:|---:|---:|---|
+| Copying | 0.33% | 0.36% | 2.45% | 1.68% | Within target |
+| Larger working set | 1.14% | 0.60% | 3.07% | 2.41% | Uncertain |
+
+The larger case's diagnostic point estimate is within 5%, but its reference-cycle
+spread slightly exceeds the unchanged 3% repeatability limit. No retry or sample
+exclusion was used to turn that verdict into a pass. Independent timing runs
+recorded two to five involuntary context switches per execution, plus one
+voluntary switch. These observations do not isolate the effect of controller
+placement from other host changes. Both fixture oracles passed throughout.
+
+[Results](../../experiments/juice-runtime-proxy-20261010/copy-fix-results.json)
+and [archived evidence](../../experiments/juice-runtime-proxy-20261010/copy-fix-archive.json)
+include raw captures, timing diagnostics, source/build identities, and paired
+reanalysis. The frozen older capture executable's unpaired log summary is
+superseded by this paired analysis. An initial integration attempt was rejected
+before measurement because applying controller affinity during native capture
+excluded the requested CPU; the final driver restricts placement to independent
+timing, and the rejected attempt is retained separately. These two updated cases
+do not requalify the other five or establish accuracy on unseen workloads.
 
 ## First comparison
 
