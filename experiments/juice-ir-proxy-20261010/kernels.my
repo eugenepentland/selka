@@ -1,0 +1,196 @@
+extern func runtime_bench_now(host: Host) -> i64 effects(host)
+
+func cal_depth2(n: int, seed: int) -> int:
+    mut x0 = bit_xor(seed, 0)
+    for i in range(n):
+        x0 = bit_xor(x0, shift_left(x0, 13))
+        x0 = bit_xor(x0, shift_right(x0, 7))
+    return x0
+
+func cal_depth4(n: int, seed: int) -> int:
+    mut x0 = bit_xor(seed, 0)
+    for i in range(n):
+        x0 = bit_xor(x0, shift_left(x0, 13))
+        x0 = bit_xor(x0, shift_right(x0, 7))
+        x0 = bit_xor(x0, shift_left(x0, 17))
+        x0 = bit_xor(x0, shift_right(x0, 11))
+    return x0
+
+func one(n: int, seed: int) -> int:
+    mut x0 = bit_xor(seed, 0)
+    for i in range(n):
+        x0 = bit_xor(x0, shift_left(x0, 13))
+    return x0
+
+func one_unroll2(n: int, seed: int) -> int:
+    mut x0 = bit_xor(seed, 0)
+    for i in range(n):
+        x0 = bit_xor(x0, shift_left(x0, 13))
+        x0 = bit_xor(x0, shift_left(x0, 13))
+    return x0
+
+func three(n: int, seed: int) -> int:
+    mut x0 = bit_xor(seed, 0)
+    for i in range(n):
+        x0 = bit_xor(x0, shift_left(x0, 13))
+        x0 = bit_xor(x0, shift_right(x0, 7))
+        x0 = bit_xor(x0, shift_left(x0, 17))
+    return x0
+
+func three_unroll4(n: int, seed: int) -> int:
+    mut x0 = bit_xor(seed, 0)
+    for i in range(n):
+        x0 = bit_xor(x0, shift_left(x0, 13))
+        x0 = bit_xor(x0, shift_right(x0, 7))
+        x0 = bit_xor(x0, shift_left(x0, 17))
+        x0 = bit_xor(x0, shift_left(x0, 13))
+        x0 = bit_xor(x0, shift_right(x0, 7))
+        x0 = bit_xor(x0, shift_left(x0, 17))
+        x0 = bit_xor(x0, shift_left(x0, 13))
+        x0 = bit_xor(x0, shift_right(x0, 7))
+        x0 = bit_xor(x0, shift_left(x0, 17))
+        x0 = bit_xor(x0, shift_left(x0, 13))
+        x0 = bit_xor(x0, shift_right(x0, 7))
+        x0 = bit_xor(x0, shift_left(x0, 17))
+    return x0
+
+func lanes2_separate(n: int, seed: int) -> int:
+    mut x0 = bit_xor(seed, 0)
+    mut x1 = bit_xor(seed, 1)
+    for i0 in range(n):
+        x0 = bit_xor(x0, shift_left(x0, 13))
+        x0 = bit_xor(x0, shift_right(x0, 7))
+        x0 = bit_xor(x0, shift_left(x0, 17))
+    for i1 in range(n):
+        x1 = bit_xor(x1, shift_left(x1, 13))
+        x1 = bit_xor(x1, shift_right(x1, 7))
+        x1 = bit_xor(x1, shift_left(x1, 17))
+    return bit_xor(x0, x1)
+
+func lanes2_fused(n: int, seed: int) -> int:
+    mut x0 = bit_xor(seed, 0)
+    mut x1 = bit_xor(seed, 1)
+    for i in range(n):
+        x0 = bit_xor(x0, shift_left(x0, 13))
+        x0 = bit_xor(x0, shift_right(x0, 7))
+        x0 = bit_xor(x0, shift_left(x0, 17))
+        x1 = bit_xor(x1, shift_left(x1, 13))
+        x1 = bit_xor(x1, shift_right(x1, 7))
+        x1 = bit_xor(x1, shift_left(x1, 17))
+    return bit_xor(x0, x1)
+
+func lanes4_separate(n: int, seed: int) -> int:
+    mut x0 = bit_xor(seed, 0)
+    mut x1 = bit_xor(seed, 1)
+    mut x2 = bit_xor(seed, 2)
+    mut x3 = bit_xor(seed, 3)
+    for i0 in range(n):
+        x0 = bit_xor(x0, shift_left(x0, 13))
+        x0 = bit_xor(x0, shift_right(x0, 7))
+        x0 = bit_xor(x0, shift_left(x0, 17))
+    for i1 in range(n):
+        x1 = bit_xor(x1, shift_left(x1, 13))
+        x1 = bit_xor(x1, shift_right(x1, 7))
+        x1 = bit_xor(x1, shift_left(x1, 17))
+    for i2 in range(n):
+        x2 = bit_xor(x2, shift_left(x2, 13))
+        x2 = bit_xor(x2, shift_right(x2, 7))
+        x2 = bit_xor(x2, shift_left(x2, 17))
+    for i3 in range(n):
+        x3 = bit_xor(x3, shift_left(x3, 13))
+        x3 = bit_xor(x3, shift_right(x3, 7))
+        x3 = bit_xor(x3, shift_left(x3, 17))
+    return bit_xor(bit_xor(bit_xor(x0, x1), x2), x3)
+
+func lanes4_fused(n: int, seed: int) -> int:
+    mut x0 = bit_xor(seed, 0)
+    mut x1 = bit_xor(seed, 1)
+    mut x2 = bit_xor(seed, 2)
+    mut x3 = bit_xor(seed, 3)
+    for i in range(n):
+        x0 = bit_xor(x0, shift_left(x0, 13))
+        x0 = bit_xor(x0, shift_right(x0, 7))
+        x0 = bit_xor(x0, shift_left(x0, 17))
+        x1 = bit_xor(x1, shift_left(x1, 13))
+        x1 = bit_xor(x1, shift_right(x1, 7))
+        x1 = bit_xor(x1, shift_left(x1, 17))
+        x2 = bit_xor(x2, shift_left(x2, 13))
+        x2 = bit_xor(x2, shift_right(x2, 7))
+        x2 = bit_xor(x2, shift_left(x2, 17))
+        x3 = bit_xor(x3, shift_left(x3, 13))
+        x3 = bit_xor(x3, shift_right(x3, 7))
+        x3 = bit_xor(x3, shift_left(x3, 17))
+    return bit_xor(bit_xor(bit_xor(x0, x1), x2), x3)
+
+func nested32(n: int, seed: int) -> int:
+    mut x0 = bit_xor(seed, 0)
+    for i in range(n):
+        for j in range(32):
+            x0 = bit_xor(x0, shift_left(x0, 13))
+            x0 = bit_xor(x0, shift_right(x0, 7))
+            x0 = bit_xor(x0, shift_left(x0, 17))
+    return x0
+
+func data_exit(n: int, seed: int) -> int:
+    mut x = seed
+    for i in range(n):
+        if x == 0:
+            break
+        x = bit_xor(x, shift_left(x, 13))
+    return x
+
+func triangular(n: int, seed: int) -> int:
+    mut x = seed
+    for i in range(n):
+        for j in range(i):
+            x = bit_xor(x, shift_left(x, 13))
+    return x
+
+func parse_number(text: str) -> int:
+    match parse_int(text):
+        case Some(n):
+            return n
+        case None:
+            return -1
+
+func main(args: str[], host: Host, out: Stream) -> int:
+    if len(args) != 3:
+        return 2
+    mut mode = parse_number(args[0])
+    mut n = parse_number(args[1])
+    mut seed = parse_number(args[2])
+    if n < 0 or seed < 0:
+        return 2
+    mut value = 0
+    mut start = runtime_bench_now(host)
+    if mode == 0:
+        value = cal_depth2(n, seed)
+    elif mode == 1:
+        value = cal_depth4(n, seed)
+    elif mode == 2:
+        value = one(n, seed)
+    elif mode == 3:
+        value = one_unroll2(n, seed)
+    elif mode == 4:
+        value = three(n, seed)
+    elif mode == 5:
+        value = three_unroll4(n, seed)
+    elif mode == 6:
+        value = lanes2_separate(n, seed)
+    elif mode == 7:
+        value = lanes2_fused(n, seed)
+    elif mode == 8:
+        value = lanes4_separate(n, seed)
+    elif mode == 9:
+        value = lanes4_fused(n, seed)
+    elif mode == 10:
+        value = nested32(n, seed)
+    elif mode == 11:
+        value = data_exit(n, seed)
+    elif mode == 12:
+        value = triangular(n, seed)
+    else:
+        return 2
+    mut elapsed = runtime_bench_now(host) - start
+    out.print(value, elapsed)
+    return 0

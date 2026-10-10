@@ -1,0 +1,197 @@
+[
+  {
+    "schema": "juice-ir-estimate-v1",
+    "function": "batch_result",
+    "ir_sha256": "89db64e8f777aef4a10b4dd7d616d4c0c6b16e13efaa8a01b16cf0c0fd7cfe4d",
+    "parameters": {},
+    "model": {
+      "name": "scalar-recurrence-v1",
+      "issue_width": 4,
+      "latencies": {
+        "add": 1,
+        "sub": 1,
+        "mul": 3,
+        "bit_xor": 1,
+        "bit_and": 1,
+        "bit_or": 1,
+        "shift_left": 1,
+        "shift_right": 1,
+        "cmp": 1,
+        "convert": 1,
+        "branch": 1,
+        "ret": 1,
+        "jump": 0,
+        "phi": 0,
+        "iconst": 0
+      }
+    },
+    "limitations": [
+      "Heuristic score, not guaranteed cycles or wall time.",
+      "Counts assume declared parameters and normal completion without traps.",
+      "Symbolic counts require non-overflowing bound arithmetic and induction.",
+      "No LLVM folding/vectorization, instruction selection, cache, frequency or OS model."
+    ],
+    "status": "unknown",
+    "reason": "b0: unsupported operation list_len u64",
+    "source": "test/core/row_list_scan.my",
+    "source_sha256": "97615e1cb976a86e706dc7842dd37f6ad1526e4cab7fcee22a2268d544ac2984",
+    "compiler_sha256": "8aaba75a83e27eb28ff58496cbde58d9222852d42845be0adf3dec9055f0e115",
+    "compile_ir_ns": 3195878
+  },
+  {
+    "schema": "juice-ir-estimate-v1",
+    "function": "bytes_job",
+    "ir_sha256": "1afc4537373789cd4136e4ad844cce8449a5ce1e366fc14d47cbc1ebc9851d87",
+    "parameters": {},
+    "model": {
+      "name": "scalar-recurrence-v1",
+      "issue_width": 4,
+      "latencies": {
+        "add": 1,
+        "sub": 1,
+        "mul": 3,
+        "bit_xor": 1,
+        "bit_and": 1,
+        "bit_or": 1,
+        "shift_left": 1,
+        "shift_right": 1,
+        "cmp": 1,
+        "convert": 1,
+        "branch": 1,
+        "ret": 1,
+        "jump": 0,
+        "phi": 0,
+        "iconst": 0
+      }
+    },
+    "limitations": [
+      "Heuristic score, not guaranteed cycles or wall time.",
+      "Counts assume declared parameters and normal completion without traps.",
+      "Symbolic counts require non-overflowing bound arithmetic and induction.",
+      "No LLVM folding/vectorization, instruction selection, cache, frequency or OS model."
+    ],
+    "status": "unknown",
+    "reason": "b0: unsupported operation list_len u64",
+    "source": "test/core/row_bytes_scan.my",
+    "source_sha256": "8da090d70b019eef3f053b87c2ac074955a265e64ccd63918fb134e774dca84b",
+    "compiler_sha256": "8aaba75a83e27eb28ff58496cbde58d9222852d42845be0adf3dec9055f0e115",
+    "compile_ir_ns": 3420541
+  },
+  {
+    "schema": "juice-ir-estimate-v1",
+    "function": "batch_result",
+    "ir_sha256": "be415bdec3f92e17300b26d88187128f7051aa65815d840d31dd6f4b2b29f76d",
+    "parameters": {},
+    "model": {
+      "name": "scalar-recurrence-v1",
+      "issue_width": 4,
+      "latencies": {
+        "add": 1,
+        "sub": 1,
+        "mul": 3,
+        "bit_xor": 1,
+        "bit_and": 1,
+        "bit_or": 1,
+        "shift_left": 1,
+        "shift_right": 1,
+        "cmp": 1,
+        "convert": 1,
+        "branch": 1,
+        "ret": 1,
+        "jump": 0,
+        "phi": 0,
+        "iconst": 0
+      }
+    },
+    "limitations": [
+      "Heuristic score, not guaranteed cycles or wall time.",
+      "Counts assume declared parameters and normal completion without traps.",
+      "Symbolic counts require non-overflowing bound arithmetic and induction.",
+      "No LLVM folding/vectorization, instruction selection, cache, frequency or OS model."
+    ],
+    "status": "unknown",
+    "reason": "b2: unproven arithmetic check mul.exact",
+    "source": "test/core/row_dict_lookup.my",
+    "source_sha256": "aef015904597bca08038238c65b74d939b003cc63d84ded7cf0c9881dee21d3f",
+    "compiler_sha256": "8aaba75a83e27eb28ff58496cbde58d9222852d42845be0adf3dec9055f0e115",
+    "compile_ir_ns": 3466777
+  },
+  {
+    "schema": "juice-ir-estimate-v1",
+    "function": "walk",
+    "ir_sha256": "818f103d85cfce36c7b0e3f285a985fbecf48034fe725a58c1c77f3d994f7513",
+    "parameters": {},
+    "model": {
+      "name": "scalar-recurrence-v1",
+      "issue_width": 4,
+      "latencies": {
+        "add": 1,
+        "sub": 1,
+        "mul": 3,
+        "bit_xor": 1,
+        "bit_and": 1,
+        "bit_or": 1,
+        "shift_left": 1,
+        "shift_right": 1,
+        "cmp": 1,
+        "convert": 1,
+        "branch": 1,
+        "ret": 1,
+        "jump": 0,
+        "phi": 0,
+        "iconst": 0
+      }
+    },
+    "limitations": [
+      "Heuristic score, not guaranteed cycles or wall time.",
+      "Counts assume declared parameters and normal completion without traps.",
+      "Symbolic counts require non-overflowing bound arithmetic and induction.",
+      "No LLVM folding/vectorization, instruction selection, cache, frequency or OS model."
+    ],
+    "status": "unknown",
+    "reason": "b0: unsupported operation union_tag u32",
+    "source": "test/core/row_tree_build_walk.my",
+    "source_sha256": "50dabc8fc3307f043fa3b7ae039e97cfc44d80633c538e4b1192362059b7a28e",
+    "compiler_sha256": "8aaba75a83e27eb28ff58496cbde58d9222852d42845be0adf3dec9055f0e115",
+    "compile_ir_ns": 2829943
+  },
+  {
+    "schema": "juice-ir-estimate-v1",
+    "function": "batch_result",
+    "ir_sha256": "ee1c505bc9b6bdf2613a3926bd28a310770fc4a31b44b63920b7bf0715bce6b6",
+    "parameters": {},
+    "model": {
+      "name": "scalar-recurrence-v1",
+      "issue_width": 4,
+      "latencies": {
+        "add": 1,
+        "sub": 1,
+        "mul": 3,
+        "bit_xor": 1,
+        "bit_and": 1,
+        "bit_or": 1,
+        "shift_left": 1,
+        "shift_right": 1,
+        "cmp": 1,
+        "convert": 1,
+        "branch": 1,
+        "ret": 1,
+        "jump": 0,
+        "phi": 0,
+        "iconst": 0
+      }
+    },
+    "limitations": [
+      "Heuristic score, not guaranteed cycles or wall time.",
+      "Counts assume declared parameters and normal completion without traps.",
+      "Symbolic counts require non-overflowing bound arithmetic and induction.",
+      "No LLVM folding/vectorization, instruction selection, cache, frequency or OS model."
+    ],
+    "status": "unknown",
+    "reason": "b0: data-dependent branch (no path probabilities)",
+    "source": "test/core/row_list_filter.my",
+    "source_sha256": "7836c1afd11e99787b6e9e4a93e875ab3f3f1290608bc3c24f8f08f73c8da4ca",
+    "compiler_sha256": "8aaba75a83e27eb28ff58496cbde58d9222852d42845be0adf3dec9055f0e115",
+    "compile_ir_ns": 3019083
+  }
+]

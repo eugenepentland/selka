@@ -15,6 +15,13 @@ loaded libraries. Comparing, validating and calibrating saved JSON needs only
 the compiler binary. The original `scripts/juice` Python tool remains a developer
 reference for differential tests, not an installed dependency.
 
+An experimental [compile-only IR estimator](../../experiments/juice-ir-proxy-20261010/README.md)
+derives counts for canonical scalar loops and adds a dependency-based cost score.
+It runs no guest code. The first five-transformation evaluation had 16.1% median
+timing-ratio error, substantial outliers and excessive timing spread; it does not
+meet the 5% target or replace runtime validation. Collection operations and
+data-dependent paths currently produce `unknown`.
+
 ## Runtime proxy and the 5% target
 
 `record --profile runtime` adds a separate CPU runtime proxy. The default

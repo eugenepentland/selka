@@ -1,0 +1,191 @@
+{
+  "schema": "juice-ir-evaluation-v1",
+  "calibration": [
+    {
+      "function": "cal_depth2",
+      "mode": 0,
+      "n": 160000000,
+      "seed": 17,
+      "oracle": {
+        "depth": 2,
+        "lanes": 1,
+        "steps": 160000000
+      }
+    },
+    {
+      "function": "cal_depth4",
+      "mode": 1,
+      "n": 160000000,
+      "seed": 17,
+      "oracle": {
+        "depth": 4,
+        "lanes": 1,
+        "steps": 160000000
+      }
+    }
+  ],
+  "cases": [
+    {
+      "name": "identity",
+      "base": {
+        "function": "three",
+        "mode": 4,
+        "n": 160000000,
+        "seed": 17,
+        "oracle": {
+          "depth": 3,
+          "lanes": 1,
+          "steps": 160000000
+        }
+      },
+      "candidate": {
+        "function": "three",
+        "mode": 4,
+        "n": 160000000,
+        "seed": 17,
+        "oracle": {
+          "depth": 3,
+          "lanes": 1,
+          "steps": 160000000
+        }
+      }
+    },
+    {
+      "name": "unroll2-short-chain",
+      "base": {
+        "function": "one",
+        "mode": 2,
+        "n": 800000000,
+        "seed": 17,
+        "oracle": {
+          "depth": 1,
+          "lanes": 1,
+          "steps": 800000000
+        }
+      },
+      "candidate": {
+        "function": "one_unroll2",
+        "mode": 3,
+        "n": 400000000,
+        "seed": 17,
+        "oracle": {
+          "depth": 1,
+          "lanes": 1,
+          "steps": 800000000
+        }
+      }
+    },
+    {
+      "name": "unroll4-long-chain",
+      "base": {
+        "function": "three",
+        "mode": 4,
+        "n": 160000000,
+        "seed": 17,
+        "oracle": {
+          "depth": 3,
+          "lanes": 1,
+          "steps": 160000000
+        }
+      },
+      "candidate": {
+        "function": "three_unroll4",
+        "mode": 5,
+        "n": 40000000,
+        "seed": 17,
+        "oracle": {
+          "depth": 3,
+          "lanes": 1,
+          "steps": 160000000
+        }
+      }
+    },
+    {
+      "name": "fuse-two-lanes",
+      "base": {
+        "function": "lanes2_separate",
+        "mode": 6,
+        "n": 160000000,
+        "seed": 17,
+        "oracle": {
+          "depth": 3,
+          "lanes": 2,
+          "steps": 160000000
+        }
+      },
+      "candidate": {
+        "function": "lanes2_fused",
+        "mode": 7,
+        "n": 160000000,
+        "seed": 17,
+        "oracle": {
+          "depth": 3,
+          "lanes": 2,
+          "steps": 160000000
+        }
+      }
+    },
+    {
+      "name": "fuse-four-lanes",
+      "base": {
+        "function": "lanes4_separate",
+        "mode": 8,
+        "n": 160000000,
+        "seed": 17,
+        "oracle": {
+          "depth": 3,
+          "lanes": 4,
+          "steps": 160000000
+        }
+      },
+      "candidate": {
+        "function": "lanes4_fused",
+        "mode": 9,
+        "n": 160000000,
+        "seed": 17,
+        "oracle": {
+          "depth": 3,
+          "lanes": 4,
+          "steps": 160000000
+        }
+      }
+    },
+    {
+      "name": "flatten-nested-loop",
+      "base": {
+        "function": "nested32",
+        "mode": 10,
+        "n": 5000000,
+        "seed": 17,
+        "oracle": {
+          "depth": 3,
+          "lanes": 1,
+          "steps": 160000000
+        }
+      },
+      "candidate": {
+        "function": "three",
+        "mode": 4,
+        "n": 160000000,
+        "seed": 17,
+        "oracle": {
+          "depth": 3,
+          "lanes": 1,
+          "steps": 160000000
+        }
+      }
+    }
+  ],
+  "abstentions": [
+    "data_exit",
+    "triangular"
+  ],
+  "timing": {
+    "pairs": 9,
+    "calibration_samples": 9,
+    "warmup_pairs": 1,
+    "maximum_pair_spread": 0.03,
+    "target_relative_ratio_error": 0.05
+  },
+  "diagnostic": "One predeclared longer-duration repeat after short run showed 4-16% pair spread; same model and cases, no refitting."
+}
