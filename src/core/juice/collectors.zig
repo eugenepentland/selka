@@ -79,6 +79,20 @@ fn initImpl(c: *C, kind: []const u8, cpu: ?usize, perf: []const u8, valgrind: []
 fn append(c: *C, argv: *std.ArrayList([]const u8), format: []const u8, value: []const u8) !void {
     try argv.append(c.a, try std.mem.concat(c.a, u8, &.{ format, value }));
 }
+/// Opt in to a simultaneous fixed-counter group; preserve legacy instruction records.
+pub fn selectProfile(c: *C, collector: *Collector, name: []const u8) d.Error!void {
+    return profileImpl(c, collector, name) catch |err| d.failure(c, err);
+}
+fn profileImpl(c: *C, collector: *Collector, name: []const u8) !void {
+    if (std.mem.eql(u8, name, "work")) return;
+    if (!std.mem.eql(u8, name, "runtime") or !std.mem.eql(u8, collector.kind, "perf")) return c.fail("runtime profile requires perf; profile must be work or runtime");
+    const instruction_event = try d.str(d.get(collector.identity, "event"));
+    const cycles = try std.mem.replaceOwned(u8, c.a, instruction_event, d.key_instructions, "cycles");
+    const reference = try std.mem.replaceOwned(u8, c.a, instruction_event, d.key_instructions, "ref-cycles");
+    try d.put(c, &collector.identity, "event_group", d.string(try std.fmt.allocPrint(c.a, "{{{s},{s},{s}}}", .{ instruction_event, cycles, reference })));
+    try d.put(c, &collector.identity, "profile", d.string("runtime"));
+    try d.put(c, &collector.identity, "scope", d.string("user instructions, cycles and reference cycles; process and inherited children; whole workload"));
+}
 /// Record one measured run and retain all raw profiles before parsing them.
 pub fn collect(c: *C, collector: Collector, options: p.Run, workload: V) d.Error!V {
     return collectImpl(c, collector, options, workload) catch |err| d.failure(c, err);
@@ -92,7 +106,9 @@ fn collectImpl(c: *C, collector: Collector, options: p.Run, workload: V) !V {
     var argv: std.ArrayList([]const u8) = .empty;
     try argv.append(c.a, tool);
     if (is_perf) {
-        try argv.appendSlice(c.a, &.{ "stat", "--no-big-num", "--no-scale", "-x", ";", "-e", try d.str(d.get(collector.identity, "event")), "-o", raw, "--" });
+        const group = d.get(collector.identity, "event_group");
+        const selected = if (group == .null) d.get(collector.identity, "event") else group;
+        try argv.appendSlice(c.a, &.{ "stat", "--no-big-num", "--no-scale", "-x", ";", "-e", try d.str(selected), "-o", raw, "--" });
     } else {
         try append(c, &argv, "--tool=", collector.kind);
         try argv.appendSlice(c.a, &.{ "--trace-children=yes", "--cache-sim=no", "--branch-sim=no" });
@@ -116,11 +132,14 @@ fn collectImpl(c: *C, collector: Collector, options: p.Run, workload: V) !V {
     if (try d.num(d.get(result, "exit_code")) != 0) return c.fail("collector or program exited unsuccessfully; raw output retained");
     if (is_perf) {
         try p.copy(c, raw, try std.fmt.allocPrint(c.a, "{s}.perf", .{options.prefix}));
-        try d.put(c, &result, "metrics", try profiles.perf(c, try c.readBytes(raw), try d.str(d.get(collector.identity, "event"))));
+        const bytes = try c.readBytes(raw);
+        const selected = try d.str(d.get(collector.identity, "event"));
+        const measured = if (d.is(d.get(collector.identity, "profile"), "runtime")) try profiles.runtime(c, bytes, selected) else try profiles.perf(c, bytes, selected);
+        try d.put(c, &result, "metrics", measured);
     } else {
         try readGrind(c, &result, options);
     }
-    _ = try d.positive(d.get(d.get(result, "metrics"), "instructions"));
+    _ = try d.positive(d.get(d.get(result, "metrics"), d.key_instructions));
     return result;
 }
 fn readGrind(c: *C, result: *V, options: p.Run) !void {
@@ -156,6 +175,23 @@ fn readGrind(c: *C, result: *V, options: p.Run) !void {
 pub fn context(c: *C, collector: Collector, work: []const u8, libraries: V) d.Error!V {
     return contextImpl(c, collector, work, libraries) catch |err| d.failure(c, err);
 }
+fn schedulingPolicy(c: *C, cpu: usize) !V {
+    var result = d.object();
+    for ([_][]const u8{ "scaling_driver", "scaling_governor", "scaling_min_freq", "scaling_max_freq" }) |key| {
+        const path = try std.fmt.allocPrint(c.a, "/sys/devices/system/cpu/cpu{d}/cpufreq/{s}", .{ cpu, key });
+        const value = c.readBytes(path) catch "unavailable";
+        try d.put(c, &result, key, d.string(std.mem.trim(u8, value, " \r\n\t")));
+    }
+    const scheduler = c.readBytes("/proc/self/sched") catch return result;
+    var lines = std.mem.splitScalar(u8, scheduler, '\n');
+    while (lines.next()) |line| if (std.mem.indexOfScalar(u8, line, ':')) |at| {
+        const key = std.mem.trim(u8, line[0..at], " \t");
+        for ([_][]const u8{ "policy", "prio", "uclamp.min", "uclamp.max", "effective uclamp.min", "effective uclamp.max" }) |name| {
+            if (std.mem.eql(u8, key, name)) try d.put(c, &result, name, d.string(std.mem.trim(u8, line[at + 1 ..], " \t")));
+        }
+    };
+    return result;
+}
 fn contextImpl(c: *C, collector: Collector, work: []const u8, libraries: V) !V {
     const text = try c.readBytes("/proc/cpuinfo");
     var blocks = std.mem.splitSequence(u8, text, "\n\n");
@@ -174,7 +210,7 @@ fn contextImpl(c: *C, collector: Collector, work: []const u8, libraries: V) !V {
         break;
     }
     if (cpu.object.count() == 0) return c.fail(try std.fmt.allocPrint(c.a, "cannot identify selected CPU {d} in {d} bytes", .{ collector.cpu, text.len }));
-    return c.value(.{
+    var result = try c.value(.{
         .system = "Linux",
         .kernel = std.mem.trim(u8, try c.readBytes("/proc/sys/kernel/osrelease"), "\r\n"),
         .machine = "x86_64",
@@ -183,4 +219,6 @@ fn contextImpl(c: *C, collector: Collector, work: []const u8, libraries: V) !V {
         .execution_path = work,
         .collector = collector.identity,
     });
+    if (d.is(d.get(collector.identity, "profile"), "runtime")) try d.put(c, &result, "scheduling_policy", try schedulingPolicy(c, collector.cpu));
+    return result;
 }

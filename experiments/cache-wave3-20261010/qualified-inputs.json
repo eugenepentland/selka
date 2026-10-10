@@ -1,0 +1,23 @@
+{
+  "baseline": "0d9ababf7eb434d2e02e1b2b45fe5c6593715e7a",
+  "branch": "codex/selka-cache-wave3",
+  "changed_file_sha256": {
+    "CLAUDE.md": "67f6867107419e6a6516005c091952200cb8ad0d56df850bea9bb08363199818",
+    "build.zig": "c4e047f871205526fbd969ed260847545f7ee001fca74827e391da9181cea57a",
+    "build.zig.zon": "ce238ef90c68bf0ff94d92721d0bfd0288006c728ca028476fc8d52aa2cc259e",
+    "build_test_inputs.zig": "a11cc591cbf8469010e8ae178ea3993c1b9419e0d2900c89204de812a5062cda",
+    "build_verification.zig": "da50dca742dacdef191c114d90028c2bd50914573b22e8a10d4aca5c7abeb320",
+    "docs/audits/selka-incremental-selfhost-parallel-work-2026-10-10.md": "4a7a9a3e5ba25f0ae5c283a136aed3c66b38d177cfcc21abebf30794c701ea7d",
+    "docs/audits/selka-toolchain-cache-plan-2026-10-10.md": "46b1477d6615ace9cf0ee7f3c0e450fd3980b790774fba328d0c63ec914b8292",
+    "docs/tooling/many-agents.md": "9f494bfa90487629386cc632f6dd2428bfa79cb404b61f5ea07db2ee78a0a93c",
+    "scripts/verification_artifacts.py": "33e7b6401e9df4d8ec4d144fcc71ba7d6c344d22d459ea182118d17c754a7a3a",
+    "scripts/verification_snapshot.py": "a092dc7eaa891f329f9e82d859ae8293d3e4849e1a1aae28108a33ccb0579497",
+    "scripts/verification_snapshot_test.py": "ccb34b2e7bcc10f186d16ebeda4e1f63252247137f5cff1ead3d715093e93b51",
+    "scripts/verify_cache.py": "1fac3901c37e25c6e32806898701efdae788a97177c2644d1de7a9bbcc5fab8e",
+    "scripts/verify_cache_test.py": "d7d3efe29afe8e128151e263fee1a5746e9b3195a4cc15031402585aa657611f",
+    "selfhost/component_files.zig": "5abb3f52b1bd2cec6c7911d153aa93f34a90eb7209946ea77ecf347480c88def",
+    "selfhost/component_support_test.zig": "e6adb0c37bf79fbc42034c898f70d05271e75e600ce1267b6aef4ea746c2615a"
+  },
+  "note": "Qualification candidate files; evidence files in this directory are excluded to avoid self-reference.",
+  "zig_pin": "0.17.0-dev.1683+5ceec001b"
+}

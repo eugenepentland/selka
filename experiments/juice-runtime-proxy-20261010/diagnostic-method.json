@@ -1,0 +1,10 @@
+{
+  "source_commit": "96d41862ccbf407f12ddbf7d8006d417a87959f8",
+  "all_commands_prefixed_by": "uclampset -m 1024 -M 1024",
+  "diagnostic_01_command": "python3 diagnose.py .tmp/juice/suite.json --output .tmp/juice/diagnostic-01 --cpu 10 (archived initial runner version)",
+  "original_inputs": "Same suite and input executable hashes as quiet-machine run-03.",
+  "control": "diagnostic-06 changes only copy candidates to the explicit-store executable; original failed cases remain retained.",
+  "event_reference": "https://perfmon-events.intel.com/platforms/alderlake/core-events/p-core/",
+  "analyst_script_sha256": "a2d4cf5a7a02657078f224cf2df4365956ed14a5055fa26728d05978b44e570c",
+  "scope": "Exploratory diagnostics and intervention, not independent runtime-proxy qualification. Perf-instrumented elapsed time is not an independent label. No sample filtering beyond the declared warmup pair."
+}

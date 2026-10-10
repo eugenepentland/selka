@@ -1,0 +1,125 @@
+{
+  "version": 1,
+  "scope": "Historical Wave2 deferred frozen three-arm 510k measurement and optimized diagnostic profile; not a current-main claim",
+  "cwd": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang",
+  "commands": [
+    [
+      "python3",
+      "experiments/cache-lock-followup-20261010/wave2/run_with_admission.py",
+      "--output",
+      ".mylang-cache/cache-lock-followup-20261010/wave2/admission-paired-510k",
+      "--kind",
+      "gate",
+      "--label",
+      "historical-wave2-paired-510k",
+      "--",
+      "taskset",
+      "-c",
+      "2,10",
+      "python3",
+      "experiments/cache-wave2-20261010/benchmark.py",
+      "--baseline",
+      ".mylang-cache/cache-wave2-validation/baseline/bin/mylang",
+      "--comparison",
+      ".mylang-cache/cache-wave2-validation/candidate/bin/mylang",
+      "--candidate",
+      ".mylang-cache/cache-wave2-performance-20261010/optimized/bin/mylang",
+      "--output",
+      ".mylang-cache/cache-lock-followup-20261010/wave2/paired-510k",
+      "--skip-corpora",
+      "--sizes",
+      "510436",
+      "--large-rounds",
+      "3",
+      "--candidate-encodings",
+      "zlib"
+    ],
+    [
+      "python3",
+      "experiments/cache-lock-followup-20261010/wave2/run_with_admission.py",
+      "--output",
+      ".mylang-cache/cache-lock-followup-20261010/wave2/admission-profile-optimized-510k",
+      "--kind",
+      "gate",
+      "--label",
+      "historical-wave2-optimized-profile",
+      "--",
+      "taskset",
+      "-c",
+      "2,10",
+      "python3",
+      "experiments/cache-wave2-performance-20261010/profile.py",
+      "--benchmark",
+      ".mylang-cache/cache-lock-followup-20261010/wave2/paired-510k",
+      "--output",
+      ".mylang-cache/cache-lock-followup-20261010/wave2/profile-optimized-510k",
+      "--variant",
+      "candidate-zlib",
+      "--phase",
+      "helper",
+      "--token",
+      "9000002",
+      "--mode",
+      "perf"
+    ]
+  ],
+  "compilers": [
+    {
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave2-validation/baseline/bin/mylang",
+      "sha256": "079ee95624c5a2ff0eabd83ebaad590e7ab8e70e4b20d8eba6c939e097c4cce1",
+      "components": {
+        "cache-plan.json": {
+          "manifest_sha256": "2de9ec8a9a247ed9fd5adbb54123118b5fcfa48c4b833325380d51e41394281e",
+          "artifact_sha256": "f3f8876939b2e02c4fc0c06faba035251766237b11975ba737056f685184ee4b"
+        },
+        "test-index.json": {
+          "manifest_sha256": "50b97baa0e1d62a8cfdad3b507e2c0c447c57cf97defc4b657295ee43207b2fc",
+          "artifact_sha256": "338ab73763f6d923e57f534c03d7bd152563232345204d70d7996197baf8d779"
+        }
+      }
+    },
+    {
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave2-validation/candidate/bin/mylang",
+      "sha256": "92dd45fc92a79bca7eb2f273ec9ffdf6cac454526302b521b5bf33b88e0bc8c6",
+      "components": {
+        "cache-plan.json": {
+          "manifest_sha256": "b66d199b8e02e8ee47b6a2672dcc32535a50db82d66183ac77c8bf954e504bb4",
+          "artifact_sha256": "ae849b2a65b47130b80d03cf2e7575572934c66179a5232e2d81e766bd635e78"
+        },
+        "test-index.json": {
+          "manifest_sha256": "2eeebec74ff33e76b1c8e2a355b67295e18ef95820e1fe877d00198634e9f171",
+          "artifact_sha256": "9168670ded516942da60c6726941453cca12a77799c5e55cb9f2b3756b5c5540"
+        }
+      }
+    },
+    {
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave2-performance-20261010/optimized/bin/mylang",
+      "sha256": "df45161f422a6421a7f945163c412a61617f782fa2464e9bce30419bafde1c54",
+      "components": {
+        "cache-plan.json": {
+          "manifest_sha256": "b66d199b8e02e8ee47b6a2672dcc32535a50db82d66183ac77c8bf954e504bb4",
+          "artifact_sha256": "ae849b2a65b47130b80d03cf2e7575572934c66179a5232e2d81e766bd635e78"
+        },
+        "test-index.json": {
+          "manifest_sha256": "2eeebec74ff33e76b1c8e2a355b67295e18ef95820e1fe877d00198634e9f171",
+          "artifact_sha256": "9168670ded516942da60c6726941453cca12a77799c5e55cb9f2b3756b5c5540"
+        }
+      }
+    }
+  ],
+  "expected_invocations": {
+    "benchmark": 69,
+    "profile": 2
+  },
+  "expected_duration_s": [
+    900,
+    1200
+  ],
+  "expected_fresh_storage_gib": [
+    4,
+    6
+  ],
+  "admission": "Normal FIFO gate admission separately for each batch; reserved CPUs 2,10. Parent will run no gate; unrelated focused builds may run on excluded timing CPUs.",
+  "cleanup_smoke": "Owned session sleeping process interrupted and reaped; unrelated processes unchanged",
+  "limits": "Cold application/native stores only, not machine-cold; 3 samples; RSS is max individual process; perf callgraphs can remain unresolved"
+}

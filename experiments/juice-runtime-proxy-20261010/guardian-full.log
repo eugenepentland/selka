@@ -1,0 +1,6 @@
+build-slot: build slot 1, FIFO ticket 19 after 0s
+guardian: file-size: 16 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 21 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 9161 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 2 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed

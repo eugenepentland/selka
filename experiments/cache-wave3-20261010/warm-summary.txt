@@ -1,0 +1,86 @@
+guardian: diff-scoped vs 5174fd03fb0f9dcae4f4fa51d7cb76ba649a988f: 41/632 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: run-all: 88 check(s) passed — diff-scoped vs 5174fd03fb0f9dcae4f4fa51d7cb76ba649a988f, 41 file(s) in scope
+guardian: diff-scoped vs 5174fd03fb0f9dcae4f4fa51d7cb76ba649a988f: 41/632 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: run-all: 88 check(s) passed — diff-scoped vs 5174fd03fb0f9dcae4f4fa51d7cb76ba649a988f, 41 file(s) in scope
+
+Build Summary: 38/38 steps succeeded
+verification-guardian success
++- run ../guardian-zig/zig-out/bin/guardian-check success 1s
+|  +- guardian-selfcheck success
+|     +- run ../guardian-zig/zig-out/bin/guardian-check success 4ms
++- run ../guardian-zig/zig-out/bin/guardian-check success 1s
+|  +- guardian-selfcheck (+1 more reused dependencies)
++- run ../guardian-zig/zig-out/bin/guardian-check (reused)
+verification-language success
++- mylang test tests/lang success 748ms
+|  +- compile exe mylang debug native cached 8ms MaxRSS:41M
+|  |  +- run exe build-identity (build_identity) cached
+|  |  |  +- compile exe build-identity debug native cached 7ms MaxRSS:41M
+|  |  +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 6ms MaxRSS:42M
+|  +- install success
+|     +- install mylang cached
+|     |  +- compile exe mylang debug native (+2 more reused dependencies)
+|     |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|     +- install generated to selka-components cached
+|     |  +- compile exe selka-components safe native cached 7ms MaxRSS:42M
+|     +- run exe selka-components success 359ms
+|     |  +- compile exe selka-components safe native (reused)
+|     +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- mylang test tests/lang --unoptimized success 764ms
+|  +- compile exe mylang debug native (+2 more reused dependencies)
+|  +- install (+4 more reused dependencies)
++- mylang test tests/lang --release --verify-facts (leak check) success 8s
+|  +- install (+4 more reused dependencies)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- mylang test tests/value_semantics success 218ms
+|  +- compile exe mylang debug native (+2 more reused dependencies)
+|  +- install (+4 more reused dependencies)
++- mylang test tests/value_semantics --unoptimized success 197ms
+|  +- compile exe mylang debug native (+2 more reused dependencies)
+|  +- install (+4 more reused dependencies)
++- mylang test tests/value_semantics --release --verify-facts (leak check) success 840ms
+|  +- install (+4 more reused dependencies)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- mylang test tests/ported success 311ms
+|  +- compile exe mylang debug native (+2 more reused dependencies)
+|  +- install (+4 more reused dependencies)
++- mylang test tests/ported --unoptimized success 240ms
+|  +- compile exe mylang debug native (+2 more reused dependencies)
+|  +- install (+4 more reused dependencies)
++- mylang test tests/ported --release --verify-facts (leak check) success 1s
+   +- install (+4 more reused dependencies)
+   +- compile exe mylang debug native (+2 more reused dependencies)
+verification-guest success
++- run exe mylang success 181ms
+   +- compile exe mylang debug native (+2 more reused dependencies)
+   +- install (+4 more reused dependencies)
+verification-identity-qualification success
++- run python3 cached
+   +- install (+4 more reused dependencies)
+   +- record the test environment success 3ms
+verification-juice success
++- python3 tests/test_juice.py success 910ms
+|  +- install (+4 more reused dependencies)
+|  +- hash declared test inputs success 367ms
+|  +- record the test environment (reused)
+|  +- run exe selka-components (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- python3 tests/test_juice_native.py success 1s
+|  +- install (+4 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- run exe selka-components (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- python3 tests/test_juice_native.py (+6 more reused dependencies)
+verification-spec-history success
++- run python3 success 2s
+   +- install (+4 more reused dependencies)
+verification-environment-discovery success
++- record the test environment (reused)
+verification-input-discovery success
++- hash declared test inputs (reused)
+verification-component-preparation success
++- run exe selka-components (+1 more reused dependencies)
+
+verification: PASS; 29 reused, 9 selected; build admitted 0.000s, gate admitted 21.097s

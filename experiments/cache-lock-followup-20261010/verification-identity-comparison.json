@@ -1,0 +1,298 @@
+{
+  "all_artifacts_eligible_changes": 28,
+  "artifact_snapshot_sha256": "20fbfb97b7009a8f482e22ae8d1ba1f1780b76c97f81f6b974e7dca74ca25979",
+  "groups": [
+    {
+      "all_artifacts_key_changes": true,
+      "artifacts": null,
+      "cacheable": false,
+      "id": "component-preparation",
+      "scoped_key_changes": true
+    },
+    {
+      "all_artifacts_key_changes": true,
+      "artifacts": null,
+      "cacheable": false,
+      "id": "input-discovery",
+      "scoped_key_changes": true
+    },
+    {
+      "all_artifacts_key_changes": true,
+      "artifacts": null,
+      "cacheable": false,
+      "id": "environment-discovery",
+      "scoped_key_changes": true
+    },
+    {
+      "all_artifacts_key_changes": true,
+      "artifacts": null,
+      "cacheable": true,
+      "id": "core",
+      "scoped_key_changes": true
+    },
+    {
+      "all_artifacts_key_changes": true,
+      "artifacts": [
+        "memory-budget",
+        "components"
+      ],
+      "cacheable": true,
+      "id": "memory_budget",
+      "scoped_key_changes": false
+    },
+    {
+      "all_artifacts_key_changes": true,
+      "artifacts": null,
+      "cacheable": true,
+      "id": "unit",
+      "scoped_key_changes": true
+    },
+    {
+      "all_artifacts_key_changes": true,
+      "artifacts": null,
+      "cacheable": true,
+      "id": "cli",
+      "scoped_key_changes": true
+    },
+    {
+      "all_artifacts_key_changes": true,
+      "artifacts": null,
+      "cacheable": true,
+      "id": "golden",
+      "scoped_key_changes": true
+    },
+    {
+      "all_artifacts_key_changes": true,
+      "artifacts": [],
+      "cacheable": true,
+      "id": "idioms_self",
+      "scoped_key_changes": false
+    },
+    {
+      "all_artifacts_key_changes": true,
+      "artifacts": null,
+      "cacheable": true,
+      "id": "idioms",
+      "scoped_key_changes": true
+    },
+    {
+      "all_artifacts_key_changes": true,
+      "artifacts": null,
+      "cacheable": true,
+      "id": "incremental",
+      "scoped_key_changes": true
+    },
+    {
+      "all_artifacts_key_changes": true,
+      "artifacts": null,
+      "cacheable": true,
+      "id": "interfaces",
+      "scoped_key_changes": true
+    },
+    {
+      "all_artifacts_key_changes": true,
+      "artifacts": null,
+      "cacheable": true,
+      "id": "interface_oracle",
+      "scoped_key_changes": true
+    },
+    {
+      "all_artifacts_key_changes": true,
+      "artifacts": null,
+      "cacheable": true,
+      "id": "parser_hints",
+      "scoped_key_changes": true
+    },
+    {
+      "all_artifacts_key_changes": true,
+      "artifacts": [],
+      "cacheable": true,
+      "id": "friction",
+      "scoped_key_changes": false
+    },
+    {
+      "all_artifacts_key_changes": true,
+      "artifacts": null,
+      "cacheable": true,
+      "id": "tooling_isolation",
+      "scoped_key_changes": true
+    },
+    {
+      "all_artifacts_key_changes": true,
+      "artifacts": [
+        "component-builder",
+        "components"
+      ],
+      "cacheable": true,
+      "id": "component_builder",
+      "scoped_key_changes": false
+    },
+    {
+      "all_artifacts_key_changes": true,
+      "artifacts": [
+        "component-builder",
+        "components"
+      ],
+      "cacheable": true,
+      "id": "component_native",
+      "scoped_key_changes": false
+    },
+    {
+      "all_artifacts_key_changes": true,
+      "artifacts": [
+        "component-support"
+      ],
+      "cacheable": true,
+      "id": "component-support",
+      "scoped_key_changes": false
+    },
+    {
+      "all_artifacts_key_changes": true,
+      "artifacts": null,
+      "cacheable": true,
+      "id": "selfhost_numeric",
+      "scoped_key_changes": true
+    },
+    {
+      "all_artifacts_key_changes": true,
+      "artifacts": null,
+      "cacheable": false,
+      "id": "spec-history",
+      "scoped_key_changes": true
+    },
+    {
+      "all_artifacts_key_changes": true,
+      "artifacts": null,
+      "cacheable": false,
+      "id": "juice",
+      "scoped_key_changes": true
+    },
+    {
+      "all_artifacts_key_changes": true,
+      "artifacts": null,
+      "cacheable": false,
+      "id": "juice-runtime",
+      "scoped_key_changes": true
+    },
+    {
+      "all_artifacts_key_changes": true,
+      "artifacts": null,
+      "cacheable": false,
+      "id": "identity-qualification",
+      "scoped_key_changes": true
+    },
+    {
+      "all_artifacts_key_changes": true,
+      "artifacts": [],
+      "cacheable": true,
+      "id": "affected",
+      "scoped_key_changes": false
+    },
+    {
+      "all_artifacts_key_changes": true,
+      "artifacts": [],
+      "cacheable": true,
+      "id": "coverage_self",
+      "scoped_key_changes": false
+    },
+    {
+      "all_artifacts_key_changes": true,
+      "artifacts": null,
+      "cacheable": false,
+      "id": "coverage",
+      "scoped_key_changes": true
+    },
+    {
+      "all_artifacts_key_changes": true,
+      "artifacts": [],
+      "cacheable": true,
+      "id": "manifest_self",
+      "scoped_key_changes": false
+    },
+    {
+      "all_artifacts_key_changes": true,
+      "artifacts": [],
+      "cacheable": true,
+      "id": "verification_cache",
+      "scoped_key_changes": false
+    },
+    {
+      "all_artifacts_key_changes": true,
+      "artifacts": null,
+      "cacheable": true,
+      "id": "doc-coverage",
+      "scoped_key_changes": true
+    },
+    {
+      "all_artifacts_key_changes": true,
+      "artifacts": null,
+      "cacheable": false,
+      "id": "guest",
+      "scoped_key_changes": true
+    },
+    {
+      "all_artifacts_key_changes": true,
+      "artifacts": null,
+      "cacheable": false,
+      "id": "language",
+      "scoped_key_changes": true
+    },
+    {
+      "all_artifacts_key_changes": true,
+      "artifacts": null,
+      "cacheable": true,
+      "id": "doctest",
+      "scoped_key_changes": true
+    },
+    {
+      "all_artifacts_key_changes": true,
+      "artifacts": null,
+      "cacheable": true,
+      "id": "zig-format",
+      "scoped_key_changes": true
+    },
+    {
+      "all_artifacts_key_changes": true,
+      "artifacts": null,
+      "cacheable": true,
+      "id": "my_format",
+      "scoped_key_changes": true
+    },
+    {
+      "all_artifacts_key_changes": true,
+      "artifacts": null,
+      "cacheable": true,
+      "id": "my_format_self",
+      "scoped_key_changes": true
+    },
+    {
+      "all_artifacts_key_changes": true,
+      "artifacts": null,
+      "cacheable": true,
+      "id": "noalloc_lint",
+      "scoped_key_changes": true
+    },
+    {
+      "all_artifacts_key_changes": true,
+      "artifacts": [],
+      "cacheable": true,
+      "id": "embedded_migration",
+      "scoped_key_changes": false
+    },
+    {
+      "all_artifacts_key_changes": true,
+      "artifacts": null,
+      "cacheable": false,
+      "id": "guardian",
+      "scoped_key_changes": true
+    }
+  ],
+  "hypothetical_changed_compiler_paths": [
+    ".zig-cache/o/33108e6f082e09e98dbf9d391f862efe/mylang",
+    "zig-out/bin/mylang"
+  ],
+  "input_scope": "real candidate inventory and prepared artifact metadata; other inputs held fixed",
+  "inventory_sha256": "a03fb5df349ca251abf82f57fa8fdb0d87ba26d54c0db91e256ee39fe1ad88b4",
+  "method": "identity comparison only; no artifact mutation, worker invocation or timing",
+  "scoped_eligible_changes": 17
+}

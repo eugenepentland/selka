@@ -69,6 +69,20 @@ pub const cli = [_][]const u8{
     "test/fixtures/",
 };
 
+/// Conservative fixtures and embedded runtime inputs for the complete Core root.
+pub const core = unit ++ [_][]const u8{
+    "test/", "tests/", "examples/", "bench/", "benchmarks/", "selfhost/", "velocity/",
+};
+
+/// Document navigation and complete feature/standard-library coverage scope.
+pub const doc_coverage = [_][]const u8{ "README.md", "SPEC.md", "docs/", "src/" };
+
+/// Every Zig file selected by the normal format gate, including new files.
+pub const zig_format = [_][]const u8{
+    "build.zig",    "build_identity.zig", "build_test_inputs.zig", "build_verification.zig",
+    "src/**/*.zig", "tests/**/*.zig",     "test/**/*.zig",         "selfhost/**/*.zig",
+};
+
 /// `test/golden_parity.zig` (`test-golden`): the golden corpora and the
 /// repository fixtures their entries name.
 pub const golden = [_][]const u8{ "selfhost/components/", "selfhost/*.zig", "selfhost/component-seed.json", "src/", "tests/goldens/", "examples/", "test/fixtures/" };
@@ -109,6 +123,9 @@ pub const friction = [_][]const u8{ "tests/test_friction_harvest.py", "velocity/
 /// Juice's isolated runner, format, comparison and calibration tests.
 pub const juice = [_][]const u8{ "tests/test_juice.py", "tests/test_juice_native.py", "scripts/juice", "scripts/juice_tool/", "scripts/juice_validate.py", "examples/juice/" };
 
+/// Runtime collector experiments observe CPU, scheduler and current host state.
+pub const juice_runtime = [_][]const u8{ "tests/test_juice_runtime_bench.py", "scripts/juice_tool/", "scripts/juice_runtime_bench.py" };
+
 /// `mylang doctest .`: every page it walks.
 pub const doctest = [_][]const u8{ "README.md", "SPEC.md", "docs/**/*.md" };
 
@@ -131,6 +148,17 @@ pub const coverage = [_][]const u8{
 
 /// `tests/test_inputs_coverage.py --self-test`.
 pub const coverage_self = [_][]const u8{"tests/test_inputs_coverage.py"};
+
+/// Receipt admission and immutable-snapshot adversarial tests use fake actions.
+pub const verification_cache = [_][]const u8{
+    "scripts/verify_cache.py",
+    "scripts/verification_snapshot.py",
+    "scripts/verification_artifacts.py",
+    "scripts/verify_cache_test.py",
+    "scripts/verification_snapshot_test.py",
+    "scripts/build-slot.sh",
+    "tests/test_inputs_coverage.py",
+};
 
 /// `tests/input_manifest.py --self-test`.
 pub const manifest_self = [_][]const u8{"tests/input_manifest.py"};

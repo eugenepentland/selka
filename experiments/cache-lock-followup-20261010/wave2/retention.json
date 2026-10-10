@@ -1,0 +1,46 @@
+{
+  "reason": "Paired benchmark, after-profile, independent verdict/key/restoration validation and identity checks complete; temporary stores no longer needed",
+  "removed_stores": [
+    {
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-lock-followup-20261010/wave2/paired-510k/synthetic-510436/baseline",
+      "files": 21329,
+      "logical_bytes": 943684852,
+      "allocated_bytes": 1011044352,
+      "path_size_allocation_inventory_sha256": "0cabea9221b973b30db199ac41f07a90fe68cd241ef3f5331cc1b115eecfa450",
+      "removed": true
+    },
+    {
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-lock-followup-20261010/wave2/paired-510k/synthetic-510436/comparison",
+      "files": 25969,
+      "logical_bytes": 1020893603,
+      "allocated_bytes": 1100910592,
+      "path_size_allocation_inventory_sha256": "9e9755f0b02bab380d34066b01fe7ea9e84f2735f2e5d14fc16bc54e3762fab5",
+      "removed": true
+    },
+    {
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-lock-followup-20261010/wave2/paired-510k/synthetic-510436/oracle-candidate-zlib",
+      "files": 24633,
+      "logical_bytes": 1019563698,
+      "allocated_bytes": 1094889472,
+      "path_size_allocation_inventory_sha256": "2684b374ef8be62a142a1538866facdf977ef65e875cbba4d4d56f363e703295",
+      "removed": true
+    },
+    {
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-lock-followup-20261010/wave2/paired-510k/synthetic-510436/candidate-zlib",
+      "files": 28948,
+      "logical_bytes": 1141277961,
+      "allocated_bytes": 1231044608,
+      "path_size_allocation_inventory_sha256": "1c521ed1f4a731f169f8f488e900ddc5bd08213570f0deee5e151670e2018ab9",
+      "removed": true
+    }
+  ],
+  "released_allocated_bytes": 4437889024,
+  "retained": [
+    "source",
+    "raw benchmark reports and results",
+    "raw perf data/reports and symbol copies",
+    "admission evidence",
+    "compact summaries and qualification hashes"
+  ],
+  "inventory_limit": "Digest covers relative paths, sizes and allocated bytes; temporary cache payload contents were not archived or independently rehashed."
+}

@@ -1,0 +1,12 @@
+{
+  "successful_invocations": 2,
+  "tests_per_invocation": 662,
+  "normalized_verdicts_agree": true,
+  "helper_executes_all": true,
+  "restore_reuses_all": true,
+  "helper_key_map_changed": true,
+  "restored_original_key_map": true,
+  "all_333_fixture_files_restored": true,
+  "frozen_compiler_component_and_harness_hashes_unchanged": true,
+  "evidence_sha256": "612e37e43a46f6aac9989169924e86eb01dd34929395923a5cebaa33fd2b5e8d"
+}

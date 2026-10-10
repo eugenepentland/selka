@@ -1,5 +1,6 @@
 //! Platform-independent comparisons. Work is an instruction ratio, never a time ratio.
 const std = @import("std");
+const key_uncertain = "uncertain";
 const key_function = "function";
 const key_delta_per_unit = "delta_per_unit";
 const key_candidate = "candidate";
@@ -10,6 +11,7 @@ const key_workloads = "workloads";
 const key_instruction_ratio = "instruction_ratio";
 const key_juice_comparison_v1 = "juice-comparison-v1";
 const d = @import("data.zig");
+const runtime = @import("runtime.zig");
 const C = d.Context;
 const V = d.Value;
 const contextual = [_][]const u8{ "alloc_bytes", "free_bytes", "realloc_added_bytes", "realloc_moves", "realloc_moved_bytes", "peak_live_bytes" };
@@ -248,6 +250,7 @@ fn workload(c: *C, a: V, b: V, risks_initial: V, options: Options) !V {
         .functions = try attribution(c, d.get(a, d.key_functions), d.get(b, d.key_functions), au, bu),
         .lines = try attribution(c, d.get(a, "lines"), d.get(b, "lines"), au, bu),
         .coverage = "measured scenario only; whole-job representativeness unverified",
+        .runtime_proxy = try runtime.estimate(c, a, b),
     });
     for (try d.keys(c, more)) |k| try d.put(c, &result, k, d.get(more, k));
     return result;
@@ -396,20 +399,30 @@ fn renderImpl(c: *C, report: V) ![]const u8 {
     });
     for (try d.keys(c, d.get(report, key_workloads))) |name| {
         const cell = d.get(d.get(report, key_workloads), name);
+        const proxy = d.get(cell, "runtime_proxy");
+        const cycles = d.get(proxy, "cycles");
+        if (cycles != .null) {
+            try out.print(c.a, "\n- {s}: CPU cycle cost {d:.3}× baseline (maximum observed spread {d:.2}%).\n", .{ name, try d.num(d.get(cycles, "ratio")), 100 * try d.num(d.get(cycles, "max_spread")) });
+        }
+        if (d.is(d.get(proxy, "status"), "estimated")) {
+            try out.print(c.a, "\n- {s}: CPU runtime proxy {d:.3}× baseline; 5% accuracy target is unvalidated.\n", .{ name, try d.num(d.get(proxy, "estimated_ratio")) });
+        } else if (d.is(d.get(proxy, "status"), key_uncertain)) {
+            try out.print(c.a, "\n- {s}: CPU runtime proxy uncertain; reference-cycle measurement spread exceeds 3%.\n", .{name});
+        }
         for (try d.items(d.get(cell, "risks"))) |r| try out.print(c.a, "\n- {s}: {s}\n", .{ name, try d.str(r) });
         const rows = try d.items(d.get(cell, d.key_functions));
         for (rows[0..@min(rows.len, 5)]) |r| try out.print(c.a, "- {s}: {s}, {d:.3} instructions/{s} ({s})\n", .{
             name, try d.str(d.get(r, key_function)), try d.num(d.get(r, key_delta_per_unit)), try d.str(d.get(cell, "unit")), try d.str(d.get(r, "file")),
         });
     }
-    try out.print(c.a, "\nRuntime estimate: {s}. See JSON for all semantic sites, functions and model details.\n", .{try d.str(d.get(d.get(report, "runtime_prediction"), "status"))});
+    try out.print(c.a, "\nInstruction-calibrated runtime model: {s}. See JSON for all semantic sites, functions and model details.\n", .{try d.str(d.get(d.get(report, "runtime_prediction"), "status"))});
     return out.toOwnedSlice(c.a);
 }
 
 fn directionOf(stable: bool, low: f64, high: f64, minimum: f64) []const u8 {
-    if (!stable) return "uncertain";
+    if (!stable) return key_uncertain;
     if (low >= 1 - minimum and high <= 1 + minimum) return "unchanged";
     if (high < 1 - minimum) return "less-work";
     if (low > 1 + minimum) return "more-work";
-    return "uncertain";
+    return key_uncertain;
 }

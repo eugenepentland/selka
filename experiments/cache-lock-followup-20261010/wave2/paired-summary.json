@@ -1,0 +1,4049 @@
+{
+  "scope": "Frozen historical Wave2 optimization; independent of current-main follow-up changes",
+  "started_utc": "2026-10-10T18:31:36.151494+00:00",
+  "completed_utc": "2026-10-10T18:43:40.998352+00:00",
+  "compilers": {
+    "baseline": {
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave2-validation/baseline/bin/mylang",
+      "sha256": "079ee95624c5a2ff0eabd83ebaad590e7ab8e70e4b20d8eba6c939e097c4cce1"
+    },
+    "candidate": {
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave2-performance-20261010/optimized/bin/mylang",
+      "sha256": "df45161f422a6421a7f945163c412a61617f782fa2464e9bce30419bafde1c54"
+    },
+    "comparison": {
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave2-validation/candidate/bin/mylang",
+      "sha256": "92dd45fc92a79bca7eb2f273ec9ffdf6cac454526302b521b5bf33b88e0bc8c6"
+    }
+  },
+  "execution_context": {
+    "affinity": [
+      2,
+      10
+    ],
+    "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.43",
+    "jobs": 4
+  },
+  "fixture": {
+    "kind": "synthetic reachable private chains; distinct from EDA replicas",
+    "physical_lines": 510436,
+    "functions": 85293,
+    "test_roots": 662,
+    "maximum_chain_depth": 256,
+    "test_modules": 331,
+    "structure": "two overlapping roots per module; a same-line head edit leaves the tail root unaffected",
+    "estimated_total_closure_visits": 128269
+  },
+  "corpus_sha256": "5de745eb2f19246e4f590a8920e6c399ae7f99f8442a88a292f25f51dbdcee08",
+  "correctness": {
+    "successful_invocations": 69,
+    "normalized_verdicts_agree": true,
+    "tests_per_invocation": 662,
+    "candidate_forced_key_pairs": 9,
+    "restored_original_key_pairs": 27,
+    "fresh_edit_signatures": 27,
+    "source_restored": true
+  },
+  "admission": {
+    "queue_s": 0.048955638,
+    "held_s": 725.213135712,
+    "command_wall_s": 725.192822405,
+    "wrapper_exit": 0
+  },
+  "summed_compiler_wall_s": 705.950621270109,
+  "measurements": {
+    "baseline": {
+      "cold": {
+        "samples": 1,
+        "counts": [
+          {
+            "passed": 662
+          }
+        ],
+        "raw": [
+          {
+            "label": "synthetic-510436-baseline-cold-0",
+            "new_native_objects": 2318,
+            "new_guest_unit_objects": 2317,
+            "new_runtime_objects": 1,
+            "retained_cache": {
+              "files": 7395,
+              "logical_bytes": 224100392,
+              "allocated_bytes": 244056064
+            },
+            "work_totals": {}
+          }
+        ],
+        "wall_s": {
+          "median": 38.606121961027384,
+          "min": 38.606121961027384,
+          "max": 38.606121961027384,
+          "samples": [
+            38.606121961027384
+          ]
+        },
+        "user_s": {
+          "median": 42.51,
+          "min": 42.51,
+          "max": 42.51,
+          "samples": [
+            42.51
+          ]
+        },
+        "system_s": {
+          "median": 28.5,
+          "min": 28.5,
+          "max": 28.5,
+          "samples": [
+            28.5
+          ]
+        },
+        "peak_rss_kb": {
+          "median": 679080,
+          "min": 679080,
+          "max": 679080,
+          "samples": [
+            679080
+          ]
+        }
+      },
+      "noop": {
+        "samples": 1,
+        "counts": [
+          {
+            "cached": 662
+          }
+        ],
+        "raw": [
+          {
+            "label": "synthetic-510436-baseline-noop-0",
+            "new_native_objects": 0,
+            "new_guest_unit_objects": 0,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 7395,
+              "logical_bytes": 224100392,
+              "allocated_bytes": 244056064
+            },
+            "work_totals": {}
+          }
+        ],
+        "wall_s": {
+          "median": 0.2284652639646083,
+          "min": 0.2284652639646083,
+          "max": 0.2284652639646083,
+          "samples": [
+            0.2284652639646083
+          ]
+        },
+        "user_s": {
+          "median": 0.18,
+          "min": 0.18,
+          "max": 0.18,
+          "samples": [
+            0.18
+          ]
+        },
+        "system_s": {
+          "median": 0.07,
+          "min": 0.07,
+          "max": 0.07,
+          "samples": [
+            0.07
+          ]
+        },
+        "peak_rss_kb": {
+          "median": 39416,
+          "min": 39416,
+          "max": 39416,
+          "samples": [
+            39416
+          ]
+        }
+      },
+      "private": {
+        "samples": 3,
+        "counts": [
+          {
+            "passed": 1,
+            "cached": 661
+          },
+          {
+            "passed": 1,
+            "cached": 661
+          },
+          {
+            "passed": 1,
+            "cached": 661
+          }
+        ],
+        "raw": [
+          {
+            "label": "synthetic-510436-baseline-private-0",
+            "new_native_objects": 2,
+            "new_guest_unit_objects": 2,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 7403,
+              "logical_bytes": 224612108,
+              "allocated_bytes": 244592640
+            },
+            "work_totals": {}
+          },
+          {
+            "label": "synthetic-510436-baseline-private-1",
+            "new_native_objects": 1,
+            "new_guest_unit_objects": 1,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 12047,
+              "logical_bytes": 464471186,
+              "allocated_bytes": 500252672
+            },
+            "work_totals": {}
+          },
+          {
+            "label": "synthetic-510436-baseline-private-2",
+            "new_native_objects": 1,
+            "new_guest_unit_objects": 1,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 16691,
+              "logical_bytes": 704332291,
+              "allocated_bytes": 755912704
+            },
+            "work_totals": {}
+          }
+        ],
+        "wall_s": {
+          "median": 0.2988633180502802,
+          "min": 0.2710196019615978,
+          "max": 0.3011493789963424,
+          "samples": [
+            0.2710196019615978,
+            0.3011493789963424,
+            0.2988633180502802
+          ]
+        },
+        "user_s": {
+          "median": 0.2,
+          "min": 0.19,
+          "max": 0.22,
+          "samples": [
+            0.2,
+            0.22,
+            0.19
+          ]
+        },
+        "system_s": {
+          "median": 0.11,
+          "min": 0.08,
+          "max": 0.12,
+          "samples": [
+            0.12,
+            0.08,
+            0.11
+          ]
+        },
+        "peak_rss_kb": {
+          "median": 59868,
+          "min": 59176,
+          "max": 59868,
+          "samples": [
+            59176,
+            59868,
+            59868
+          ]
+        }
+      },
+      "helper": {
+        "samples": 3,
+        "counts": [
+          {
+            "passed": 662
+          },
+          {
+            "passed": 662
+          },
+          {
+            "passed": 662
+          }
+        ],
+        "raw": [
+          {
+            "label": "synthetic-510436-baseline-helper-0",
+            "new_native_objects": 331,
+            "new_guest_unit_objects": 331,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 9720,
+              "logical_bytes": 344136506,
+              "allocated_bytes": 372002816
+            },
+            "work_totals": {}
+          },
+          {
+            "label": "synthetic-510436-baseline-helper-1",
+            "new_native_objects": 331,
+            "new_guest_unit_objects": 331,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 14364,
+              "logical_bytes": 583997963,
+              "allocated_bytes": 627662848
+            },
+            "work_totals": {}
+          },
+          {
+            "label": "synthetic-510436-baseline-helper-2",
+            "new_native_objects": 331,
+            "new_guest_unit_objects": 331,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 19008,
+              "logical_bytes": 823859736,
+              "allocated_bytes": 883322880
+            },
+            "work_totals": {}
+          }
+        ],
+        "wall_s": {
+          "median": 13.565216071903706,
+          "min": 12.181910767918453,
+          "max": 15.644504467956722,
+          "samples": [
+            13.565216071903706,
+            15.644504467956722,
+            12.181910767918453
+          ]
+        },
+        "user_s": {
+          "median": 9.4,
+          "min": 9.0,
+          "max": 11.17,
+          "samples": [
+            9.4,
+            11.17,
+            9.0
+          ]
+        },
+        "system_s": {
+          "median": 14.18,
+          "min": 12.37,
+          "max": 16.26,
+          "samples": [
+            14.18,
+            16.26,
+            12.37
+          ]
+        },
+        "peak_rss_kb": {
+          "median": 678676,
+          "min": 678316,
+          "max": 678992,
+          "samples": [
+            678992,
+            678676,
+            678316
+          ]
+        }
+      },
+      "three-file": {
+        "samples": 3,
+        "counts": [
+          {
+            "passed": 662
+          },
+          {
+            "passed": 662
+          },
+          {
+            "passed": 662
+          }
+        ],
+        "raw": [
+          {
+            "label": "synthetic-510436-baseline-three-file-0",
+            "new_native_objects": 333,
+            "new_guest_unit_objects": 333,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 12041,
+              "logical_bytes": 463964290,
+              "allocated_bytes": 499724288
+            },
+            "work_totals": {}
+          },
+          {
+            "label": "synthetic-510436-baseline-three-file-1",
+            "new_native_objects": 333,
+            "new_guest_unit_objects": 333,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 16685,
+              "logical_bytes": 703826735,
+              "allocated_bytes": 755384320
+            },
+            "work_totals": {}
+          },
+          {
+            "label": "synthetic-510436-baseline-three-file-2",
+            "new_native_objects": 333,
+            "new_guest_unit_objects": 333,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 21329,
+              "logical_bytes": 943687161,
+              "allocated_bytes": 1011044352
+            },
+            "work_totals": {}
+          }
+        ],
+        "wall_s": {
+          "median": 13.0664497341495,
+          "min": 12.994157060049474,
+          "max": 13.159912850009277,
+          "samples": [
+            13.159912850009277,
+            12.994157060049474,
+            13.0664497341495
+          ]
+        },
+        "user_s": {
+          "median": 9.18,
+          "min": 9.09,
+          "max": 9.2,
+          "samples": [
+            9.2,
+            9.18,
+            9.09
+          ]
+        },
+        "system_s": {
+          "median": 13.7,
+          "min": 13.57,
+          "max": 13.86,
+          "samples": [
+            13.86,
+            13.57,
+            13.7
+          ]
+        },
+        "peak_rss_kb": {
+          "median": 678324,
+          "min": 677752,
+          "max": 679020,
+          "samples": [
+            679020,
+            678324,
+            677752
+          ]
+        }
+      },
+      "restore-private": {
+        "samples": 3,
+        "counts": [
+          {
+            "cached": 662
+          },
+          {
+            "cached": 662
+          },
+          {
+            "cached": 662
+          }
+        ],
+        "raw": [
+          {
+            "label": "synthetic-510436-baseline-restore-private-0",
+            "new_native_objects": 0,
+            "new_guest_unit_objects": 0,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 7403,
+              "logical_bytes": 224612108,
+              "allocated_bytes": 244592640
+            },
+            "work_totals": {}
+          },
+          {
+            "label": "synthetic-510436-baseline-restore-private-1",
+            "new_native_objects": 0,
+            "new_guest_unit_objects": 0,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 12047,
+              "logical_bytes": 464471186,
+              "allocated_bytes": 500252672
+            },
+            "work_totals": {}
+          },
+          {
+            "label": "synthetic-510436-baseline-restore-private-2",
+            "new_native_objects": 0,
+            "new_guest_unit_objects": 0,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 16691,
+              "logical_bytes": 704332294,
+              "allocated_bytes": 755912704
+            },
+            "work_totals": {}
+          }
+        ],
+        "wall_s": {
+          "median": 0.21159629500471056,
+          "min": 0.20954348798841238,
+          "max": 0.22311718785203993,
+          "samples": [
+            0.21159629500471056,
+            0.22311718785203993,
+            0.20954348798841238
+          ]
+        },
+        "user_s": {
+          "median": 0.17,
+          "min": 0.16,
+          "max": 0.18,
+          "samples": [
+            0.16,
+            0.18,
+            0.17
+          ]
+        },
+        "system_s": {
+          "median": 0.09,
+          "min": 0.08,
+          "max": 0.09,
+          "samples": [
+            0.09,
+            0.09,
+            0.08
+          ]
+        },
+        "peak_rss_kb": {
+          "median": 44400,
+          "min": 44096,
+          "max": 44544,
+          "samples": [
+            44544,
+            44400,
+            44096
+          ]
+        }
+      },
+      "restore-helper": {
+        "samples": 3,
+        "counts": [
+          {
+            "cached": 662
+          },
+          {
+            "cached": 662
+          },
+          {
+            "cached": 662
+          }
+        ],
+        "raw": [
+          {
+            "label": "synthetic-510436-baseline-restore-helper-0",
+            "new_native_objects": 0,
+            "new_guest_unit_objects": 0,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 9720,
+              "logical_bytes": 344134852,
+              "allocated_bytes": 372002816
+            },
+            "work_totals": {}
+          },
+          {
+            "label": "synthetic-510436-baseline-restore-helper-1",
+            "new_native_objects": 0,
+            "new_guest_unit_objects": 0,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 14364,
+              "logical_bytes": 583995960,
+              "allocated_bytes": 627662848
+            },
+            "work_totals": {}
+          },
+          {
+            "label": "synthetic-510436-baseline-restore-helper-2",
+            "new_native_objects": 0,
+            "new_guest_unit_objects": 0,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 19008,
+              "logical_bytes": 823857068,
+              "allocated_bytes": 883322880
+            },
+            "work_totals": {}
+          }
+        ],
+        "wall_s": {
+          "median": 6.796923897927627,
+          "min": 6.514341522939503,
+          "max": 7.284973185043782,
+          "samples": [
+            6.514341522939503,
+            6.796923897927627,
+            7.284973185043782
+          ]
+        },
+        "user_s": {
+          "median": 3.19,
+          "min": 3.03,
+          "max": 3.46,
+          "samples": [
+            3.03,
+            3.19,
+            3.46
+          ]
+        },
+        "system_s": {
+          "median": 7.47,
+          "min": 7.04,
+          "max": 7.85,
+          "samples": [
+            7.04,
+            7.47,
+            7.85
+          ]
+        },
+        "peak_rss_kb": {
+          "median": 678476,
+          "min": 678144,
+          "max": 679024,
+          "samples": [
+            679024,
+            678476,
+            678144
+          ]
+        }
+      },
+      "restore-three-file": {
+        "samples": 3,
+        "counts": [
+          {
+            "cached": 662
+          },
+          {
+            "cached": 662
+          },
+          {
+            "cached": 662
+          }
+        ],
+        "raw": [
+          {
+            "label": "synthetic-510436-baseline-restore-three-file-0",
+            "new_native_objects": 0,
+            "new_guest_unit_objects": 0,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 12041,
+              "logical_bytes": 463962636,
+              "allocated_bytes": 499724288
+            },
+            "work_totals": {}
+          },
+          {
+            "label": "synthetic-510436-baseline-restore-three-file-1",
+            "new_native_objects": 0,
+            "new_guest_unit_objects": 0,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 16685,
+              "logical_bytes": 703823744,
+              "allocated_bytes": 755384320
+            },
+            "work_totals": {}
+          },
+          {
+            "label": "synthetic-510436-baseline-restore-three-file-2",
+            "new_native_objects": 0,
+            "new_guest_unit_objects": 0,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 21329,
+              "logical_bytes": 943684852,
+              "allocated_bytes": 1011044352
+            },
+            "work_totals": {}
+          }
+        ],
+        "wall_s": {
+          "median": 6.520244930172339,
+          "min": 6.442278030095622,
+          "max": 6.6275705739390105,
+          "samples": [
+            6.520244930172339,
+            6.6275705739390105,
+            6.442278030095622
+          ]
+        },
+        "user_s": {
+          "median": 3.06,
+          "min": 3.03,
+          "max": 3.1,
+          "samples": [
+            3.1,
+            3.06,
+            3.03
+          ]
+        },
+        "system_s": {
+          "median": 7.04,
+          "min": 6.99,
+          "max": 7.08,
+          "samples": [
+            7.04,
+            7.08,
+            6.99
+          ]
+        },
+        "peak_rss_kb": {
+          "median": 678260,
+          "min": 677940,
+          "max": 678984,
+          "samples": [
+            678984,
+            678260,
+            677940
+          ]
+        }
+      }
+    },
+    "comparison": {
+      "cold": {
+        "samples": 1,
+        "counts": [
+          {
+            "passed": 662
+          }
+        ],
+        "raw": [
+          {
+            "label": "synthetic-510436-comparison-cold-0",
+            "new_native_objects": 2318,
+            "new_guest_unit_objects": 2317,
+            "new_runtime_objects": 1,
+            "retained_cache": {
+              "files": 8057,
+              "logical_bytes": 295764694,
+              "allocated_bytes": 317186048
+            },
+            "work_totals": {
+              "producer": {
+                "facts": {
+                  "fresh": 85623,
+                  "reused": 0,
+                  "fallback": 85623,
+                  "decoded": 0
+                },
+                "lowering": {
+                  "fresh": 85623,
+                  "reused": 0,
+                  "materialized": 0
+                }
+              },
+              "graph": {
+                "nodes_read": 0,
+                "nodes_unchanged": 0,
+                "changed_nodes": 85623,
+                "candidate_tests": 0,
+                "shards_read": 0,
+                "shards_written": 1653
+              },
+              "planner": {
+                "index_nodes": 342492,
+                "index_edges": 426460,
+                "affected_nodes": 85623,
+                "closure_nodes": 256538,
+                "closure_edges": 127607,
+                "reused_tests": 0,
+                "planned_tests": 662
+              },
+              "storage": {
+                "packed_bytes_read": 0,
+                "decoded_bytes": 0,
+                "blocks_decoded": 0,
+                "payload_bytes_returned": 0,
+                "block_cache_hits": 0
+              },
+              "nanoseconds": {
+                "lowering": 27010579102,
+                "facts": 3745601175,
+                "graph": 47977711,
+                "planner": 16966510875,
+                "keys": 8195445,
+                "publication": 4341152126,
+                "total": 53819239273
+              },
+              "transport": {
+                "request_bytes": 3815076,
+                "reply_bytes": 1584244,
+                "startups": 331
+              }
+            }
+          }
+        ],
+        "wall_s": {
+          "median": 51.35285234590992,
+          "min": 51.35285234590992,
+          "max": 51.35285234590992,
+          "samples": [
+            51.35285234590992
+          ]
+        },
+        "user_s": {
+          "median": 60.15,
+          "min": 60.15,
+          "max": 60.15,
+          "samples": [
+            60.15
+          ]
+        },
+        "system_s": {
+          "median": 35.7,
+          "min": 35.7,
+          "max": 35.7,
+          "samples": [
+            35.7
+          ]
+        },
+        "peak_rss_kb": {
+          "median": 679264,
+          "min": 679264,
+          "max": 679264,
+          "samples": [
+            679264
+          ]
+        }
+      },
+      "noop": {
+        "samples": 1,
+        "counts": [
+          {
+            "cached": 662
+          }
+        ],
+        "raw": [
+          {
+            "label": "synthetic-510436-comparison-noop-0",
+            "new_native_objects": 0,
+            "new_guest_unit_objects": 0,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 8057,
+              "logical_bytes": 295764694,
+              "allocated_bytes": 317186048
+            },
+            "work_totals": {}
+          }
+        ],
+        "wall_s": {
+          "median": 0.2851813391316682,
+          "min": 0.2851813391316682,
+          "max": 0.2851813391316682,
+          "samples": [
+            0.2851813391316682
+          ]
+        },
+        "user_s": {
+          "median": 0.23,
+          "min": 0.23,
+          "max": 0.23,
+          "samples": [
+            0.23
+          ]
+        },
+        "system_s": {
+          "median": 0.11,
+          "min": 0.11,
+          "max": 0.11,
+          "samples": [
+            0.11
+          ]
+        },
+        "peak_rss_kb": {
+          "median": 39240,
+          "min": 39240,
+          "max": 39240,
+          "samples": [
+            39240
+          ]
+        }
+      },
+      "private": {
+        "samples": 3,
+        "counts": [
+          {
+            "passed": 1,
+            "cached": 661
+          },
+          {
+            "passed": 1,
+            "cached": 661
+          },
+          {
+            "passed": 1,
+            "cached": 661
+          }
+        ],
+        "raw": [
+          {
+            "label": "synthetic-510436-comparison-private-0",
+            "new_native_objects": 2,
+            "new_guest_unit_objects": 2,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 8066,
+              "logical_bytes": 296490449,
+              "allocated_bytes": 317939712
+            },
+            "work_totals": {
+              "producer": {
+                "facts": {
+                  "fresh": 259,
+                  "reused": 0,
+                  "fallback": 259,
+                  "decoded": 0
+                },
+                "lowering": {
+                  "fresh": 259,
+                  "reused": 0,
+                  "materialized": 0
+                }
+              },
+              "graph": {
+                "nodes_read": 259,
+                "nodes_unchanged": 258,
+                "changed_nodes": 1,
+                "candidate_tests": 2,
+                "shards_read": 5,
+                "shards_written": 2
+              },
+              "planner": {
+                "index_nodes": 2072,
+                "index_edges": 1807,
+                "affected_nodes": 2,
+                "closure_nodes": 516,
+                "closure_edges": 257,
+                "reused_tests": 1,
+                "planned_tests": 1
+              },
+              "storage": {
+                "packed_bytes_read": 133544,
+                "decoded_bytes": 293295,
+                "blocks_decoded": 2,
+                "payload_bytes_returned": 36144,
+                "block_cache_hits": 7
+              },
+              "nanoseconds": {
+                "lowering": 7653752,
+                "facts": 3489967,
+                "graph": 1575823,
+                "planner": 3786505,
+                "keys": 12761,
+                "publication": 4411559,
+                "total": 21419956
+              },
+              "transport": {
+                "request_bytes": 13644,
+                "reply_bytes": 4276,
+                "startups": 1
+              }
+            }
+          },
+          {
+            "label": "synthetic-510436-comparison-private-1",
+            "new_native_objects": 1,
+            "new_guest_unit_objects": 1,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 14036,
+              "logical_bytes": 538137260,
+              "allocated_bytes": 579112960
+            },
+            "work_totals": {
+              "producer": {
+                "facts": {
+                  "fresh": 1,
+                  "reused": 258,
+                  "fallback": 1,
+                  "decoded": 258
+                },
+                "lowering": {
+                  "fresh": 1,
+                  "reused": 258,
+                  "materialized": 0
+                }
+              },
+              "graph": {
+                "nodes_read": 259,
+                "nodes_unchanged": 258,
+                "changed_nodes": 1,
+                "candidate_tests": 2,
+                "shards_read": 5,
+                "shards_written": 2
+              },
+              "planner": {
+                "index_nodes": 2072,
+                "index_edges": 1807,
+                "affected_nodes": 2,
+                "closure_nodes": 516,
+                "closure_edges": 257,
+                "reused_tests": 1,
+                "planned_tests": 1
+              },
+              "storage": {
+                "packed_bytes_read": 248005,
+                "decoded_bytes": 555683,
+                "blocks_decoded": 4,
+                "payload_bytes_returned": 139585,
+                "block_cache_hits": 521
+              },
+              "nanoseconds": {
+                "lowering": 6232620,
+                "facts": 1069781,
+                "graph": 1233612,
+                "planner": 3539391,
+                "keys": 11885,
+                "publication": 702932,
+                "total": 12813870
+              },
+              "transport": {
+                "request_bytes": 13644,
+                "reply_bytes": 4276,
+                "startups": 1
+              }
+            }
+          },
+          {
+            "label": "synthetic-510436-comparison-private-2",
+            "new_native_objects": 1,
+            "new_guest_unit_objects": 1,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 20006,
+              "logical_bytes": 779779842,
+              "allocated_bytes": 840286208
+            },
+            "work_totals": {
+              "producer": {
+                "facts": {
+                  "fresh": 1,
+                  "reused": 258,
+                  "fallback": 1,
+                  "decoded": 258
+                },
+                "lowering": {
+                  "fresh": 1,
+                  "reused": 258,
+                  "materialized": 0
+                }
+              },
+              "graph": {
+                "nodes_read": 259,
+                "nodes_unchanged": 258,
+                "changed_nodes": 1,
+                "candidate_tests": 2,
+                "shards_read": 5,
+                "shards_written": 2
+              },
+              "planner": {
+                "index_nodes": 2072,
+                "index_edges": 1807,
+                "affected_nodes": 2,
+                "closure_nodes": 516,
+                "closure_edges": 257,
+                "reused_tests": 1,
+                "planned_tests": 1
+              },
+              "storage": {
+                "packed_bytes_read": 248005,
+                "decoded_bytes": 555683,
+                "blocks_decoded": 4,
+                "payload_bytes_returned": 139585,
+                "block_cache_hits": 521
+              },
+              "nanoseconds": {
+                "lowering": 6118887,
+                "facts": 1045473,
+                "graph": 1273674,
+                "planner": 3639894,
+                "keys": 12233,
+                "publication": 665848,
+                "total": 12780228
+              },
+              "transport": {
+                "request_bytes": 13644,
+                "reply_bytes": 4276,
+                "startups": 1
+              }
+            }
+          }
+        ],
+        "wall_s": {
+          "median": 0.348912401124835,
+          "min": 0.331348923034966,
+          "max": 0.35030909697525203,
+          "samples": [
+            0.331348923034966,
+            0.348912401124835,
+            0.35030909697525203
+          ]
+        },
+        "user_s": {
+          "median": 0.26,
+          "min": 0.26,
+          "max": 0.27,
+          "samples": [
+            0.26,
+            0.27,
+            0.26
+          ]
+        },
+        "system_s": {
+          "median": 0.12,
+          "min": 0.12,
+          "max": 0.16,
+          "samples": [
+            0.16,
+            0.12,
+            0.12
+          ]
+        },
+        "peak_rss_kb": {
+          "median": 59868,
+          "min": 59116,
+          "max": 59868,
+          "samples": [
+            59116,
+            59868,
+            59868
+          ]
+        }
+      },
+      "helper": {
+        "samples": 3,
+        "counts": [
+          {
+            "passed": 662
+          },
+          {
+            "passed": 662
+          },
+          {
+            "passed": 662
+          }
+        ],
+        "raw": [
+          {
+            "label": "synthetic-510436-comparison-helper-0",
+            "new_native_objects": 331,
+            "new_guest_unit_objects": 331,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 10715,
+              "logical_bytes": 416692472,
+              "allocated_bytes": 446722048
+            },
+            "work_totals": {
+              "producer": {
+                "facts": {
+                  "fresh": 331,
+                  "reused": 85292,
+                  "fallback": 331,
+                  "decoded": 85292
+                },
+                "lowering": {
+                  "fresh": 331,
+                  "reused": 85292,
+                  "materialized": 0
+                }
+              },
+              "graph": {
+                "nodes_read": 85623,
+                "nodes_unchanged": 85292,
+                "changed_nodes": 331,
+                "candidate_tests": 662,
+                "shards_read": 1653,
+                "shards_written": 662
+              },
+              "planner": {
+                "index_nodes": 684984,
+                "index_edges": 682336,
+                "affected_nodes": 85623,
+                "closure_nodes": 256538,
+                "closure_edges": 127607,
+                "reused_tests": 0,
+                "planned_tests": 662
+              },
+              "storage": {
+                "packed_bytes_read": 44049840,
+                "decoded_bytes": 96985928,
+                "blocks_decoded": 663,
+                "payload_bytes_returned": 54974099,
+                "block_cache_hits": 172896
+              },
+              "nanoseconds": {
+                "lowering": 19573776690,
+                "facts": 1025975583,
+                "graph": 476263111,
+                "planner": 14260179901,
+                "keys": 6871480,
+                "publication": 389791474,
+                "total": 36887296711
+              },
+              "transport": {
+                "request_bytes": 4510652,
+                "reply_bytes": 1584244,
+                "startups": 331
+              }
+            }
+          },
+          {
+            "label": "synthetic-510436-comparison-helper-1",
+            "new_native_objects": 331,
+            "new_guest_unit_objects": 331,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 16685,
+              "logical_bytes": 658334819,
+              "allocated_bytes": 707895296
+            },
+            "work_totals": {
+              "producer": {
+                "facts": {
+                  "fresh": 331,
+                  "reused": 85292,
+                  "fallback": 331,
+                  "decoded": 85292
+                },
+                "lowering": {
+                  "fresh": 331,
+                  "reused": 85292,
+                  "materialized": 0
+                }
+              },
+              "graph": {
+                "nodes_read": 85623,
+                "nodes_unchanged": 85292,
+                "changed_nodes": 331,
+                "candidate_tests": 662,
+                "shards_read": 1653,
+                "shards_written": 662
+              },
+              "planner": {
+                "index_nodes": 684984,
+                "index_edges": 682336,
+                "affected_nodes": 85623,
+                "closure_nodes": 256538,
+                "closure_edges": 127607,
+                "reused_tests": 0,
+                "planned_tests": 662
+              },
+              "storage": {
+                "packed_bytes_read": 44160381,
+                "decoded_bytes": 97095578,
+                "blocks_decoded": 993,
+                "payload_bytes_returned": 54974099,
+                "block_cache_hits": 172566
+              },
+              "nanoseconds": {
+                "lowering": 19469712410,
+                "facts": 876587217,
+                "graph": 522582530,
+                "planner": 14026853335,
+                "keys": 13017265,
+                "publication": 446984037,
+                "total": 36371628939
+              },
+              "transport": {
+                "request_bytes": 4510652,
+                "reply_bytes": 1584244,
+                "startups": 331
+              }
+            }
+          },
+          {
+            "label": "synthetic-510436-comparison-helper-2",
+            "new_native_objects": 331,
+            "new_guest_unit_objects": 331,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 22655,
+              "logical_bytes": 899977834,
+              "allocated_bytes": 969068544
+            },
+            "work_totals": {
+              "producer": {
+                "facts": {
+                  "fresh": 331,
+                  "reused": 85292,
+                  "fallback": 331,
+                  "decoded": 85292
+                },
+                "lowering": {
+                  "fresh": 331,
+                  "reused": 85292,
+                  "materialized": 0
+                }
+              },
+              "graph": {
+                "nodes_read": 85623,
+                "nodes_unchanged": 85292,
+                "changed_nodes": 331,
+                "candidate_tests": 662,
+                "shards_read": 1653,
+                "shards_written": 662
+              },
+              "planner": {
+                "index_nodes": 684984,
+                "index_edges": 682336,
+                "affected_nodes": 85623,
+                "closure_nodes": 256538,
+                "closure_edges": 127607,
+                "reused_tests": 0,
+                "planned_tests": 662
+              },
+              "storage": {
+                "packed_bytes_read": 44160382,
+                "decoded_bytes": 97095578,
+                "blocks_decoded": 993,
+                "payload_bytes_returned": 54974099,
+                "block_cache_hits": 172566
+              },
+              "nanoseconds": {
+                "lowering": 21230240370,
+                "facts": 803819663,
+                "graph": 435303488,
+                "planner": 14295785143,
+                "keys": 7393265,
+                "publication": 362377849,
+                "total": 38262847401
+              },
+              "transport": {
+                "request_bytes": 4510652,
+                "reply_bytes": 1584244,
+                "startups": 331
+              }
+            }
+          }
+        ],
+        "wall_s": {
+          "median": 18.147707936819643,
+          "min": 18.136417085072026,
+          "max": 18.977471423102543,
+          "samples": [
+            18.147707936819643,
+            18.136417085072026,
+            18.977471423102543
+          ]
+        },
+        "user_s": {
+          "median": 18.46,
+          "min": 18.27,
+          "max": 19.46,
+          "samples": [
+            18.27,
+            18.46,
+            19.46
+          ]
+        },
+        "system_s": {
+          "median": 14.51,
+          "min": 14.4,
+          "max": 15.02,
+          "samples": [
+            14.51,
+            14.4,
+            15.02
+          ]
+        },
+        "peak_rss_kb": {
+          "median": 678184,
+          "min": 677716,
+          "max": 678828,
+          "samples": [
+            678828,
+            678184,
+            677716
+          ]
+        }
+      },
+      "three-file": {
+        "samples": 3,
+        "counts": [
+          {
+            "passed": 662
+          },
+          {
+            "passed": 662
+          },
+          {
+            "passed": 662
+          }
+        ],
+        "raw": [
+          {
+            "label": "synthetic-510436-comparison-three-file-0",
+            "new_native_objects": 333,
+            "new_guest_unit_objects": 333,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 13698,
+              "logical_bytes": 537419523,
+              "allocated_bytes": 577208320
+            },
+            "work_totals": {
+              "producer": {
+                "facts": {
+                  "fresh": 333,
+                  "reused": 85290,
+                  "fallback": 333,
+                  "decoded": 85290
+                },
+                "lowering": {
+                  "fresh": 333,
+                  "reused": 85290,
+                  "materialized": 0
+                }
+              },
+              "graph": {
+                "nodes_read": 85623,
+                "nodes_unchanged": 85290,
+                "changed_nodes": 333,
+                "candidate_tests": 662,
+                "shards_read": 1653,
+                "shards_written": 664
+              },
+              "planner": {
+                "index_nodes": 684984,
+                "index_edges": 682336,
+                "affected_nodes": 85623,
+                "closure_nodes": 256538,
+                "closure_edges": 127607,
+                "reused_tests": 0,
+                "planned_tests": 662
+              },
+              "storage": {
+                "packed_bytes_read": 44160384,
+                "decoded_bytes": 97095578,
+                "blocks_decoded": 993,
+                "payload_bytes_returned": 54919519,
+                "block_cache_hits": 172560
+              },
+              "nanoseconds": {
+                "lowering": 18898136089,
+                "facts": 979310608,
+                "graph": 634216085,
+                "planner": 13969580114,
+                "keys": 6832939,
+                "publication": 348701513,
+                "total": 35845013390
+              },
+              "transport": {
+                "request_bytes": 4510660,
+                "reply_bytes": 1584244,
+                "startups": 331
+              }
+            }
+          },
+          {
+            "label": "synthetic-510436-comparison-three-file-1",
+            "new_native_objects": 333,
+            "new_guest_unit_objects": 333,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 19668,
+              "logical_bytes": 779063123,
+              "allocated_bytes": 838381568
+            },
+            "work_totals": {
+              "producer": {
+                "facts": {
+                  "fresh": 333,
+                  "reused": 85290,
+                  "fallback": 333,
+                  "decoded": 85290
+                },
+                "lowering": {
+                  "fresh": 333,
+                  "reused": 85290,
+                  "materialized": 0
+                }
+              },
+              "graph": {
+                "nodes_read": 85623,
+                "nodes_unchanged": 85290,
+                "changed_nodes": 333,
+                "candidate_tests": 662,
+                "shards_read": 1653,
+                "shards_written": 664
+              },
+              "planner": {
+                "index_nodes": 684984,
+                "index_edges": 682336,
+                "affected_nodes": 85623,
+                "closure_nodes": 256538,
+                "closure_edges": 127607,
+                "reused_tests": 0,
+                "planned_tests": 662
+              },
+              "storage": {
+                "packed_bytes_read": 44160385,
+                "decoded_bytes": 97095578,
+                "blocks_decoded": 993,
+                "payload_bytes_returned": 54919519,
+                "block_cache_hits": 172560
+              },
+              "nanoseconds": {
+                "lowering": 19124282520,
+                "facts": 963640370,
+                "graph": 851948927,
+                "planner": 14019372271,
+                "keys": 10489156,
+                "publication": 291609379,
+                "total": 36349948675
+              },
+              "transport": {
+                "request_bytes": 4510660,
+                "reply_bytes": 1584244,
+                "startups": 331
+              }
+            }
+          },
+          {
+            "label": "synthetic-510436-comparison-three-file-2",
+            "new_native_objects": 333,
+            "new_guest_unit_objects": 333,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 25638,
+              "logical_bytes": 1020704730,
+              "allocated_bytes": 1099554816
+            },
+            "work_totals": {
+              "producer": {
+                "facts": {
+                  "fresh": 333,
+                  "reused": 85290,
+                  "fallback": 333,
+                  "decoded": 85290
+                },
+                "lowering": {
+                  "fresh": 333,
+                  "reused": 85290,
+                  "materialized": 0
+                }
+              },
+              "graph": {
+                "nodes_read": 85623,
+                "nodes_unchanged": 85290,
+                "changed_nodes": 333,
+                "candidate_tests": 662,
+                "shards_read": 1653,
+                "shards_written": 664
+              },
+              "planner": {
+                "index_nodes": 684984,
+                "index_edges": 682336,
+                "affected_nodes": 85623,
+                "closure_nodes": 256538,
+                "closure_edges": 127607,
+                "reused_tests": 0,
+                "planned_tests": 662
+              },
+              "storage": {
+                "packed_bytes_read": 44160380,
+                "decoded_bytes": 97095578,
+                "blocks_decoded": 993,
+                "payload_bytes_returned": 54919519,
+                "block_cache_hits": 172560
+              },
+              "nanoseconds": {
+                "lowering": 19231440204,
+                "facts": 915635449,
+                "graph": 658990528,
+                "planner": 13650174904,
+                "keys": 6858889,
+                "publication": 323516358,
+                "total": 35835189268
+              },
+              "transport": {
+                "request_bytes": 4510660,
+                "reply_bytes": 1584244,
+                "startups": 331
+              }
+            }
+          }
+        ],
+        "wall_s": {
+          "median": 17.84952733712271,
+          "min": 17.833154563093558,
+          "max": 18.146700339158997,
+          "samples": [
+            17.84952733712271,
+            18.146700339158997,
+            17.833154563093558
+          ]
+        },
+        "user_s": {
+          "median": 18.07,
+          "min": 17.99,
+          "max": 18.17,
+          "samples": [
+            17.99,
+            18.17,
+            18.07
+          ]
+        },
+        "system_s": {
+          "median": 14.59,
+          "min": 14.31,
+          "max": 14.71,
+          "samples": [
+            14.59,
+            14.71,
+            14.31
+          ]
+        },
+        "peak_rss_kb": {
+          "median": 677916,
+          "min": 677880,
+          "max": 678968,
+          "samples": [
+            678968,
+            677916,
+            677880
+          ]
+        }
+      },
+      "restore-private": {
+        "samples": 3,
+        "counts": [
+          {
+            "cached": 662
+          },
+          {
+            "cached": 662
+          },
+          {
+            "cached": 662
+          }
+        ],
+        "raw": [
+          {
+            "label": "synthetic-510436-comparison-restore-private-0",
+            "new_native_objects": 0,
+            "new_guest_unit_objects": 0,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 8067,
+              "logical_bytes": 296491890,
+              "allocated_bytes": 317943808
+            },
+            "work_totals": {
+              "producer": {
+                "facts": {
+                  "fresh": 1,
+                  "reused": 258,
+                  "fallback": 1,
+                  "decoded": 258
+                },
+                "lowering": {
+                  "fresh": 1,
+                  "reused": 258,
+                  "materialized": 0
+                }
+              },
+              "graph": {
+                "nodes_read": 259,
+                "nodes_unchanged": 258,
+                "changed_nodes": 1,
+                "candidate_tests": 2,
+                "shards_read": 5,
+                "shards_written": 0
+              },
+              "planner": {
+                "index_nodes": 2072,
+                "index_edges": 1807,
+                "affected_nodes": 2,
+                "closure_nodes": 516,
+                "closure_edges": 257,
+                "reused_tests": 1,
+                "planned_tests": 1
+              },
+              "storage": {
+                "packed_bytes_read": 265567,
+                "decoded_bytes": 582347,
+                "blocks_decoded": 4,
+                "payload_bytes_returned": 166611,
+                "block_cache_hits": 523
+              },
+              "nanoseconds": {
+                "lowering": 4015472,
+                "facts": 1078996,
+                "graph": 1766834,
+                "planner": 3616000,
+                "keys": 12088,
+                "publication": 294179,
+                "total": 10807731
+              },
+              "transport": {
+                "request_bytes": 13644,
+                "reply_bytes": 4276,
+                "startups": 1
+              }
+            }
+          },
+          {
+            "label": "synthetic-510436-comparison-restore-private-1",
+            "new_native_objects": 0,
+            "new_guest_unit_objects": 0,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 14037,
+              "logical_bytes": 538137850,
+              "allocated_bytes": 579117056
+            },
+            "work_totals": {
+              "producer": {
+                "facts": {
+                  "fresh": 0,
+                  "reused": 259,
+                  "fallback": 0,
+                  "decoded": 259
+                },
+                "lowering": {
+                  "fresh": 0,
+                  "reused": 259,
+                  "materialized": 0
+                }
+              },
+              "graph": {
+                "nodes_read": 259,
+                "nodes_unchanged": 258,
+                "changed_nodes": 1,
+                "candidate_tests": 2,
+                "shards_read": 5,
+                "shards_written": 0
+              },
+              "planner": {
+                "index_nodes": 2072,
+                "index_edges": 1807,
+                "affected_nodes": 2,
+                "closure_nodes": 516,
+                "closure_edges": 257,
+                "reused_tests": 1,
+                "planned_tests": 1
+              },
+              "storage": {
+                "packed_bytes_read": 267651,
+                "decoded_bytes": 585601,
+                "blocks_decoded": 6,
+                "payload_bytes_returned": 167013,
+                "block_cache_hits": 523
+              },
+              "nanoseconds": {
+                "lowering": 4013110,
+                "facts": 1179838,
+                "graph": 1640654,
+                "planner": 3994545,
+                "keys": 13457,
+                "publication": 355521,
+                "total": 11224905
+              },
+              "transport": {
+                "request_bytes": 13644,
+                "reply_bytes": 4276,
+                "startups": 1
+              }
+            }
+          },
+          {
+            "label": "synthetic-510436-comparison-restore-private-2",
+            "new_native_objects": 0,
+            "new_guest_unit_objects": 0,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 20007,
+              "logical_bytes": 779780421,
+              "allocated_bytes": 840290304
+            },
+            "work_totals": {
+              "producer": {
+                "facts": {
+                  "fresh": 0,
+                  "reused": 259,
+                  "fallback": 0,
+                  "decoded": 259
+                },
+                "lowering": {
+                  "fresh": 0,
+                  "reused": 259,
+                  "materialized": 0
+                }
+              },
+              "graph": {
+                "nodes_read": 259,
+                "nodes_unchanged": 258,
+                "changed_nodes": 1,
+                "candidate_tests": 2,
+                "shards_read": 5,
+                "shards_written": 0
+              },
+              "planner": {
+                "index_nodes": 2072,
+                "index_edges": 1807,
+                "affected_nodes": 2,
+                "closure_nodes": 516,
+                "closure_edges": 257,
+                "reused_tests": 1,
+                "planned_tests": 1
+              },
+              "storage": {
+                "packed_bytes_read": 267653,
+                "decoded_bytes": 585601,
+                "blocks_decoded": 6,
+                "payload_bytes_returned": 167013,
+                "block_cache_hits": 523
+              },
+              "nanoseconds": {
+                "lowering": 3792862,
+                "facts": 1073121,
+                "graph": 1501890,
+                "planner": 3856391,
+                "keys": 12518,
+                "publication": 323195,
+                "total": 10585956
+              },
+              "transport": {
+                "request_bytes": 13644,
+                "reply_bytes": 4276,
+                "startups": 1
+              }
+            }
+          }
+        ],
+        "wall_s": {
+          "median": 0.27507756906561553,
+          "min": 0.26925458502955735,
+          "max": 0.28031296585686505,
+          "samples": [
+            0.26925458502955735,
+            0.28031296585686505,
+            0.27507756906561553
+          ]
+        },
+        "user_s": {
+          "median": 0.23,
+          "min": 0.23,
+          "max": 0.24,
+          "samples": [
+            0.24,
+            0.23,
+            0.23
+          ]
+        },
+        "system_s": {
+          "median": 0.11,
+          "min": 0.1,
+          "max": 0.13,
+          "samples": [
+            0.1,
+            0.13,
+            0.11
+          ]
+        },
+        "peak_rss_kb": {
+          "median": 44336,
+          "min": 44052,
+          "max": 44984,
+          "samples": [
+            44984,
+            44336,
+            44052
+          ]
+        }
+      },
+      "restore-helper": {
+        "samples": 3,
+        "counts": [
+          {
+            "cached": 662
+          },
+          {
+            "cached": 662
+          },
+          {
+            "cached": 662
+          }
+        ],
+        "raw": [
+          {
+            "label": "synthetic-510436-comparison-restore-helper-0",
+            "new_native_objects": 0,
+            "new_guest_unit_objects": 0,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 11046,
+              "logical_bytes": 416882238,
+              "allocated_bytes": 448077824
+            },
+            "work_totals": {
+              "producer": {
+                "facts": {
+                  "fresh": 0,
+                  "reused": 85623,
+                  "fallback": 0,
+                  "decoded": 85623
+                },
+                "lowering": {
+                  "fresh": 0,
+                  "reused": 85623,
+                  "materialized": 0
+                }
+              },
+              "graph": {
+                "nodes_read": 85623,
+                "nodes_unchanged": 85292,
+                "changed_nodes": 331,
+                "candidate_tests": 662,
+                "shards_read": 1653,
+                "shards_written": 0
+              },
+              "planner": {
+                "index_nodes": 684984,
+                "index_edges": 682336,
+                "affected_nodes": 85623,
+                "closure_nodes": 256538,
+                "closure_edges": 127607,
+                "reused_tests": 0,
+                "planned_tests": 662
+              },
+              "storage": {
+                "packed_bytes_read": 44514595,
+                "decoded_bytes": 97638884,
+                "blocks_decoded": 996,
+                "payload_bytes_returned": 55212943,
+                "block_cache_hits": 173887
+              },
+              "nanoseconds": {
+                "lowering": 19325081268,
+                "facts": 921826698,
+                "graph": 709788905,
+                "planner": 14310589116,
+                "keys": 10588133,
+                "publication": 663571954,
+                "total": 36856169241
+              },
+              "transport": {
+                "request_bytes": 4510652,
+                "reply_bytes": 1584244,
+                "startups": 331
+              }
+            }
+          },
+          {
+            "label": "synthetic-510436-comparison-restore-helper-1",
+            "new_native_objects": 0,
+            "new_guest_unit_objects": 0,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 17016,
+              "logical_bytes": 658524341,
+              "allocated_bytes": 709251072
+            },
+            "work_totals": {
+              "producer": {
+                "facts": {
+                  "fresh": 0,
+                  "reused": 85623,
+                  "fallback": 0,
+                  "decoded": 85623
+                },
+                "lowering": {
+                  "fresh": 0,
+                  "reused": 85623,
+                  "materialized": 0
+                }
+              },
+              "graph": {
+                "nodes_read": 85623,
+                "nodes_unchanged": 85292,
+                "changed_nodes": 331,
+                "candidate_tests": 662,
+                "shards_read": 1653,
+                "shards_written": 0
+              },
+              "planner": {
+                "index_nodes": 684984,
+                "index_edges": 682336,
+                "affected_nodes": 85623,
+                "closure_nodes": 256538,
+                "closure_edges": 127607,
+                "reused_tests": 0,
+                "planned_tests": 662
+              },
+              "storage": {
+                "packed_bytes_read": 45304680,
+                "decoded_bytes": 98894480,
+                "blocks_decoded": 1072,
+                "payload_bytes_returned": 55212943,
+                "block_cache_hits": 173811
+              },
+              "nanoseconds": {
+                "lowering": 20119677006,
+                "facts": 798684088,
+                "graph": 976722329,
+                "planner": 15194528176,
+                "keys": 7204160,
+                "publication": 492628951,
+                "total": 38511148659
+              },
+              "transport": {
+                "request_bytes": 4510652,
+                "reply_bytes": 1584244,
+                "startups": 331
+              }
+            }
+          },
+          {
+            "label": "synthetic-510436-comparison-restore-helper-2",
+            "new_native_objects": 0,
+            "new_guest_unit_objects": 0,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 22986,
+              "logical_bytes": 900166680,
+              "allocated_bytes": 970424320
+            },
+            "work_totals": {
+              "producer": {
+                "facts": {
+                  "fresh": 0,
+                  "reused": 85623,
+                  "fallback": 0,
+                  "decoded": 85623
+                },
+                "lowering": {
+                  "fresh": 0,
+                  "reused": 85623,
+                  "materialized": 0
+                }
+              },
+              "graph": {
+                "nodes_read": 85623,
+                "nodes_unchanged": 85292,
+                "changed_nodes": 331,
+                "candidate_tests": 662,
+                "shards_read": 1653,
+                "shards_written": 0
+              },
+              "planner": {
+                "index_nodes": 684984,
+                "index_edges": 682336,
+                "affected_nodes": 85623,
+                "closure_nodes": 256538,
+                "closure_edges": 127607,
+                "reused_tests": 0,
+                "planned_tests": 662
+              },
+              "storage": {
+                "packed_bytes_read": 45200835,
+                "decoded_bytes": 98729270,
+                "blocks_decoded": 1062,
+                "payload_bytes_returned": 55212943,
+                "block_cache_hits": 173821
+              },
+              "nanoseconds": {
+                "lowering": 23131803464,
+                "facts": 886978257,
+                "graph": 785315441,
+                "planner": 14582475092,
+                "keys": 8203164,
+                "publication": 383088753,
+                "total": 41067661782
+              },
+              "transport": {
+                "request_bytes": 4510652,
+                "reply_bytes": 1584244,
+                "startups": 331
+              }
+            }
+          }
+        ],
+        "wall_s": {
+          "median": 11.836411030963063,
+          "min": 11.386587023036554,
+          "max": 12.808884816942737,
+          "samples": [
+            11.386587023036554,
+            11.836411030963063,
+            12.808884816942737
+          ]
+        },
+        "user_s": {
+          "median": 11.95,
+          "min": 11.72,
+          "max": 13.71,
+          "samples": [
+            11.72,
+            11.95,
+            13.71
+          ]
+        },
+        "system_s": {
+          "median": 8.58,
+          "min": 8.1,
+          "max": 8.63,
+          "samples": [
+            8.1,
+            8.63,
+            8.58
+          ]
+        },
+        "peak_rss_kb": {
+          "median": 678228,
+          "min": 677908,
+          "max": 678956,
+          "samples": [
+            678956,
+            678228,
+            677908
+          ]
+        }
+      },
+      "restore-three-file": {
+        "samples": 3,
+        "counts": [
+          {
+            "cached": 662
+          },
+          {
+            "cached": 662
+          },
+          {
+            "cached": 662
+          }
+        ],
+        "raw": [
+          {
+            "label": "synthetic-510436-comparison-restore-three-file-0",
+            "new_native_objects": 0,
+            "new_guest_unit_objects": 0,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 14029,
+              "logical_bytes": 537608951,
+              "allocated_bytes": 578564096
+            },
+            "work_totals": {
+              "producer": {
+                "facts": {
+                  "fresh": 0,
+                  "reused": 85623,
+                  "fallback": 0,
+                  "decoded": 85623
+                },
+                "lowering": {
+                  "fresh": 0,
+                  "reused": 85623,
+                  "materialized": 0
+                }
+              },
+              "graph": {
+                "nodes_read": 85623,
+                "nodes_unchanged": 85290,
+                "changed_nodes": 333,
+                "candidate_tests": 662,
+                "shards_read": 1653,
+                "shards_written": 0
+              },
+              "planner": {
+                "index_nodes": 684984,
+                "index_edges": 682336,
+                "affected_nodes": 85623,
+                "closure_nodes": 256538,
+                "closure_edges": 127607,
+                "reused_tests": 0,
+                "planned_tests": 662
+              },
+              "storage": {
+                "packed_bytes_read": 45757528,
+                "decoded_bytes": 99611652,
+                "blocks_decoded": 1114,
+                "payload_bytes_returned": 55212943,
+                "block_cache_hits": 173769
+              },
+              "nanoseconds": {
+                "lowering": 18746810375,
+                "facts": 925737842,
+                "graph": 691437230,
+                "planner": 15028594076,
+                "keys": 6866925,
+                "publication": 567830857,
+                "total": 36828366789
+              },
+              "transport": {
+                "request_bytes": 4510660,
+                "reply_bytes": 1584244,
+                "startups": 331
+              }
+            }
+          },
+          {
+            "label": "synthetic-510436-comparison-restore-three-file-1",
+            "new_native_objects": 0,
+            "new_guest_unit_objects": 0,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 19999,
+              "logical_bytes": 779251515,
+              "allocated_bytes": 839737344
+            },
+            "work_totals": {
+              "producer": {
+                "facts": {
+                  "fresh": 0,
+                  "reused": 85623,
+                  "fallback": 0,
+                  "decoded": 85623
+                },
+                "lowering": {
+                  "fresh": 0,
+                  "reused": 85623,
+                  "materialized": 0
+                }
+              },
+              "graph": {
+                "nodes_read": 85623,
+                "nodes_unchanged": 85290,
+                "changed_nodes": 333,
+                "candidate_tests": 662,
+                "shards_read": 1653,
+                "shards_written": 0
+              },
+              "planner": {
+                "index_nodes": 684984,
+                "index_edges": 682336,
+                "affected_nodes": 85623,
+                "closure_nodes": 256538,
+                "closure_edges": 127607,
+                "reused_tests": 0,
+                "planned_tests": 662
+              },
+              "storage": {
+                "packed_bytes_read": 45175579,
+                "decoded_bytes": 98686476,
+                "blocks_decoded": 1058,
+                "payload_bytes_returned": 55212943,
+                "block_cache_hits": 173825
+              },
+              "nanoseconds": {
+                "lowering": 19815450617,
+                "facts": 864503912,
+                "graph": 1205299985,
+                "planner": 15114399126,
+                "keys": 6894575,
+                "publication": 374944717,
+                "total": 38350165094
+              },
+              "transport": {
+                "request_bytes": 4510660,
+                "reply_bytes": 1584244,
+                "startups": 331
+              }
+            }
+          },
+          {
+            "label": "synthetic-510436-comparison-restore-three-file-2",
+            "new_native_objects": 0,
+            "new_guest_unit_objects": 0,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 25969,
+              "logical_bytes": 1020893603,
+              "allocated_bytes": 1100910592
+            },
+            "work_totals": {
+              "producer": {
+                "facts": {
+                  "fresh": 0,
+                  "reused": 85623,
+                  "fallback": 0,
+                  "decoded": 85623
+                },
+                "lowering": {
+                  "fresh": 0,
+                  "reused": 85623,
+                  "materialized": 0
+                }
+              },
+              "graph": {
+                "nodes_read": 85623,
+                "nodes_unchanged": 85290,
+                "changed_nodes": 333,
+                "candidate_tests": 662,
+                "shards_read": 1653,
+                "shards_written": 0
+              },
+              "planner": {
+                "index_nodes": 684984,
+                "index_edges": 682336,
+                "affected_nodes": 85623,
+                "closure_nodes": 256538,
+                "closure_edges": 127607,
+                "reused_tests": 0,
+                "planned_tests": 662
+              },
+              "storage": {
+                "packed_bytes_read": 45092189,
+                "decoded_bytes": 98554308,
+                "blocks_decoded": 1050,
+                "payload_bytes_returned": 55212943,
+                "block_cache_hits": 173833
+              },
+              "nanoseconds": {
+                "lowering": 19552251458,
+                "facts": 825222195,
+                "graph": 535730808,
+                "planner": 15638717562,
+                "keys": 7049005,
+                "publication": 605524874,
+                "total": 38416605426
+              },
+              "transport": {
+                "request_bytes": 4510660,
+                "reply_bytes": 1584244,
+                "startups": 331
+              }
+            }
+          }
+        ],
+        "wall_s": {
+          "median": 11.681535779032856,
+          "min": 11.417074744822457,
+          "max": 11.764904394978657,
+          "samples": [
+            11.417074744822457,
+            11.681535779032856,
+            11.764904394978657
+          ]
+        },
+        "user_s": {
+          "median": 11.81,
+          "min": 11.78,
+          "max": 11.91,
+          "samples": [
+            11.78,
+            11.81,
+            11.91
+          ]
+        },
+        "system_s": {
+          "median": 8.47,
+          "min": 8.36,
+          "max": 8.51,
+          "samples": [
+            8.36,
+            8.51,
+            8.47
+          ]
+        },
+        "peak_rss_kb": {
+          "median": 677920,
+          "min": 677660,
+          "max": 678860,
+          "samples": [
+            678860,
+            677920,
+            677660
+          ]
+        }
+      }
+    },
+    "candidate-zlib": {
+      "cold": {
+        "samples": 1,
+        "counts": [
+          {
+            "passed": 662
+          }
+        ],
+        "raw": [
+          {
+            "label": "synthetic-510436-candidate-zlib-cold-0",
+            "new_native_objects": 2318,
+            "new_guest_unit_objects": 2317,
+            "new_runtime_objects": 1,
+            "retained_cache": {
+              "files": 8057,
+              "logical_bytes": 295764790,
+              "allocated_bytes": 317186048
+            },
+            "work_totals": {
+              "producer": {
+                "facts": {
+                  "fresh": 85623,
+                  "reused": 0,
+                  "fallback": 85623,
+                  "decoded": 0
+                },
+                "lowering": {
+                  "fresh": 85623,
+                  "reused": 0,
+                  "materialized": 0
+                }
+              },
+              "graph": {
+                "nodes_read": 0,
+                "nodes_unchanged": 0,
+                "changed_nodes": 85623,
+                "candidate_tests": 0,
+                "shards_read": 0,
+                "shards_written": 1653
+              },
+              "planner": {
+                "index_nodes": 342492,
+                "index_edges": 426460,
+                "affected_nodes": 85623,
+                "closure_nodes": 256538,
+                "closure_edges": 127607,
+                "reused_tests": 0,
+                "planned_tests": 662
+              },
+              "storage": {
+                "packed_bytes_read": 0,
+                "decoded_bytes": 0,
+                "blocks_decoded": 0,
+                "payload_bytes_returned": 0,
+                "block_cache_hits": 0
+              },
+              "nanoseconds": {
+                "lowering": 7643694390,
+                "facts": 3720828983,
+                "graph": 173715831,
+                "planner": 16920098587,
+                "keys": 6903936,
+                "publication": 3547708083,
+                "total": 32060181305
+              },
+              "transport": {
+                "request_bytes": 3815076,
+                "reply_bytes": 1584244,
+                "startups": 331
+              }
+            }
+          }
+        ],
+        "wall_s": {
+          "median": 41.53332334710285,
+          "min": 41.53332334710285,
+          "max": 41.53332334710285,
+          "samples": [
+            41.53332334710285
+          ]
+        },
+        "user_s": {
+          "median": 44.82,
+          "min": 44.82,
+          "max": 44.82,
+          "samples": [
+            44.82
+          ]
+        },
+        "system_s": {
+          "median": 31.69,
+          "min": 31.69,
+          "max": 31.69,
+          "samples": [
+            31.69
+          ]
+        },
+        "peak_rss_kb": {
+          "median": 678304,
+          "min": 678304,
+          "max": 678304,
+          "samples": [
+            678304
+          ]
+        }
+      },
+      "noop": {
+        "samples": 1,
+        "counts": [
+          {
+            "cached": 662
+          }
+        ],
+        "raw": [
+          {
+            "label": "synthetic-510436-candidate-zlib-noop-0",
+            "new_native_objects": 0,
+            "new_guest_unit_objects": 0,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 8057,
+              "logical_bytes": 295764790,
+              "allocated_bytes": 317186048
+            },
+            "work_totals": {}
+          }
+        ],
+        "wall_s": {
+          "median": 0.2823814461007714,
+          "min": 0.2823814461007714,
+          "max": 0.2823814461007714,
+          "samples": [
+            0.2823814461007714
+          ]
+        },
+        "user_s": {
+          "median": 0.21,
+          "min": 0.21,
+          "max": 0.21,
+          "samples": [
+            0.21
+          ]
+        },
+        "system_s": {
+          "median": 0.1,
+          "min": 0.1,
+          "max": 0.1,
+          "samples": [
+            0.1
+          ]
+        },
+        "peak_rss_kb": {
+          "median": 38972,
+          "min": 38972,
+          "max": 38972,
+          "samples": [
+            38972
+          ]
+        }
+      },
+      "private": {
+        "samples": 3,
+        "counts": [
+          {
+            "passed": 1,
+            "cached": 661
+          },
+          {
+            "passed": 1,
+            "cached": 661
+          },
+          {
+            "passed": 1,
+            "cached": 661
+          }
+        ],
+        "raw": [
+          {
+            "label": "synthetic-510436-candidate-zlib-private-0",
+            "new_native_objects": 2,
+            "new_guest_unit_objects": 2,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 8066,
+              "logical_bytes": 296490564,
+              "allocated_bytes": 317939712
+            },
+            "work_totals": {
+              "producer": {
+                "facts": {
+                  "fresh": 259,
+                  "reused": 0,
+                  "fallback": 259,
+                  "decoded": 0
+                },
+                "lowering": {
+                  "fresh": 259,
+                  "reused": 0,
+                  "materialized": 0
+                }
+              },
+              "graph": {
+                "nodes_read": 259,
+                "nodes_unchanged": 258,
+                "changed_nodes": 1,
+                "candidate_tests": 2,
+                "shards_read": 5,
+                "shards_written": 2
+              },
+              "planner": {
+                "index_nodes": 2072,
+                "index_edges": 1807,
+                "affected_nodes": 2,
+                "closure_nodes": 516,
+                "closure_edges": 257,
+                "reused_tests": 1,
+                "planned_tests": 1
+              },
+              "storage": {
+                "packed_bytes_read": 133565,
+                "decoded_bytes": 293295,
+                "blocks_decoded": 2,
+                "payload_bytes_returned": 36144,
+                "block_cache_hits": 7
+              },
+              "nanoseconds": {
+                "lowering": 7829866,
+                "facts": 3384181,
+                "graph": 1606723,
+                "planner": 3505794,
+                "keys": 13470,
+                "publication": 4386522,
+                "total": 20740400
+              },
+              "transport": {
+                "request_bytes": 13644,
+                "reply_bytes": 4276,
+                "startups": 1
+              }
+            }
+          },
+          {
+            "label": "synthetic-510436-candidate-zlib-private-1",
+            "new_native_objects": 1,
+            "new_guest_unit_objects": 1,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 14036,
+              "logical_bytes": 538136839,
+              "allocated_bytes": 579112960
+            },
+            "work_totals": {
+              "producer": {
+                "facts": {
+                  "fresh": 1,
+                  "reused": 258,
+                  "fallback": 1,
+                  "decoded": 258
+                },
+                "lowering": {
+                  "fresh": 1,
+                  "reused": 258,
+                  "materialized": 0
+                }
+              },
+              "graph": {
+                "nodes_read": 259,
+                "nodes_unchanged": 258,
+                "changed_nodes": 1,
+                "candidate_tests": 2,
+                "shards_read": 5,
+                "shards_written": 2
+              },
+              "planner": {
+                "index_nodes": 2072,
+                "index_edges": 1807,
+                "affected_nodes": 2,
+                "closure_nodes": 516,
+                "closure_edges": 257,
+                "reused_tests": 1,
+                "planned_tests": 1
+              },
+              "storage": {
+                "packed_bytes_read": 248045,
+                "decoded_bytes": 555683,
+                "blocks_decoded": 4,
+                "payload_bytes_returned": 139585,
+                "block_cache_hits": 521
+              },
+              "nanoseconds": {
+                "lowering": 3230448,
+                "facts": 1048938,
+                "graph": 1189881,
+                "planner": 3187605,
+                "keys": 12255,
+                "publication": 767645,
+                "total": 9452260
+              },
+              "transport": {
+                "request_bytes": 13644,
+                "reply_bytes": 4276,
+                "startups": 1
+              }
+            }
+          },
+          {
+            "label": "synthetic-510436-candidate-zlib-private-2",
+            "new_native_objects": 1,
+            "new_guest_unit_objects": 1,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 20006,
+              "logical_bytes": 779778573,
+              "allocated_bytes": 840286208
+            },
+            "work_totals": {
+              "producer": {
+                "facts": {
+                  "fresh": 1,
+                  "reused": 258,
+                  "fallback": 1,
+                  "decoded": 258
+                },
+                "lowering": {
+                  "fresh": 1,
+                  "reused": 258,
+                  "materialized": 0
+                }
+              },
+              "graph": {
+                "nodes_read": 259,
+                "nodes_unchanged": 258,
+                "changed_nodes": 1,
+                "candidate_tests": 2,
+                "shards_read": 5,
+                "shards_written": 2
+              },
+              "planner": {
+                "index_nodes": 2072,
+                "index_edges": 1807,
+                "affected_nodes": 2,
+                "closure_nodes": 516,
+                "closure_edges": 257,
+                "reused_tests": 1,
+                "planned_tests": 1
+              },
+              "storage": {
+                "packed_bytes_read": 248045,
+                "decoded_bytes": 555683,
+                "blocks_decoded": 4,
+                "payload_bytes_returned": 139585,
+                "block_cache_hits": 521
+              },
+              "nanoseconds": {
+                "lowering": 6369921,
+                "facts": 1019786,
+                "graph": 1200139,
+                "planner": 3057622,
+                "keys": 12257,
+                "publication": 721329,
+                "total": 12396731
+              },
+              "transport": {
+                "request_bytes": 13644,
+                "reply_bytes": 4276,
+                "startups": 1
+              }
+            }
+          }
+        ],
+        "wall_s": {
+          "median": 0.35178339714184403,
+          "min": 0.33822304103523493,
+          "max": 0.3761945669539273,
+          "samples": [
+            0.3761945669539273,
+            0.33822304103523493,
+            0.35178339714184403
+          ]
+        },
+        "user_s": {
+          "median": 0.26,
+          "min": 0.26,
+          "max": 0.27,
+          "samples": [
+            0.26,
+            0.27,
+            0.26
+          ]
+        },
+        "system_s": {
+          "median": 0.13,
+          "min": 0.12,
+          "max": 0.15,
+          "samples": [
+            0.15,
+            0.12,
+            0.13
+          ]
+        },
+        "peak_rss_kb": {
+          "median": 59868,
+          "min": 59868,
+          "max": 59932,
+          "samples": [
+            59932,
+            59868,
+            59868
+          ]
+        }
+      },
+      "helper": {
+        "samples": 3,
+        "counts": [
+          {
+            "passed": 662
+          },
+          {
+            "passed": 662
+          },
+          {
+            "passed": 662
+          }
+        ],
+        "raw": [
+          {
+            "label": "synthetic-510436-candidate-zlib-helper-0",
+            "new_native_objects": 331,
+            "new_guest_unit_objects": 331,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 10715,
+              "logical_bytes": 416692210,
+              "allocated_bytes": 446722048
+            },
+            "work_totals": {
+              "producer": {
+                "facts": {
+                  "fresh": 331,
+                  "reused": 85292,
+                  "fallback": 331,
+                  "decoded": 85292
+                },
+                "lowering": {
+                  "fresh": 331,
+                  "reused": 85292,
+                  "materialized": 0
+                }
+              },
+              "graph": {
+                "nodes_read": 85623,
+                "nodes_unchanged": 85292,
+                "changed_nodes": 331,
+                "candidate_tests": 662,
+                "shards_read": 1653,
+                "shards_written": 662
+              },
+              "planner": {
+                "index_nodes": 684984,
+                "index_edges": 682336,
+                "affected_nodes": 85623,
+                "closure_nodes": 256538,
+                "closure_edges": 127607,
+                "reused_tests": 0,
+                "planned_tests": 662
+              },
+              "storage": {
+                "packed_bytes_read": 44050202,
+                "decoded_bytes": 96985928,
+                "blocks_decoded": 663,
+                "payload_bytes_returned": 54974099,
+                "block_cache_hits": 172896
+              },
+              "nanoseconds": {
+                "lowering": 3700613178,
+                "facts": 1036086241,
+                "graph": 434945907,
+                "planner": 13650722741,
+                "keys": 7409246,
+                "publication": 548512283,
+                "total": 19418809569
+              },
+              "transport": {
+                "request_bytes": 4510652,
+                "reply_bytes": 1584244,
+                "startups": 331
+              }
+            }
+          },
+          {
+            "label": "synthetic-510436-candidate-zlib-helper-1",
+            "new_native_objects": 331,
+            "new_guest_unit_objects": 331,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 16685,
+              "logical_bytes": 658333989,
+              "allocated_bytes": 707895296
+            },
+            "work_totals": {
+              "producer": {
+                "facts": {
+                  "fresh": 331,
+                  "reused": 85292,
+                  "fallback": 331,
+                  "decoded": 85292
+                },
+                "lowering": {
+                  "fresh": 331,
+                  "reused": 85292,
+                  "materialized": 0
+                }
+              },
+              "graph": {
+                "nodes_read": 85623,
+                "nodes_unchanged": 85292,
+                "changed_nodes": 331,
+                "candidate_tests": 662,
+                "shards_read": 1653,
+                "shards_written": 662
+              },
+              "planner": {
+                "index_nodes": 684984,
+                "index_edges": 682336,
+                "affected_nodes": 85623,
+                "closure_nodes": 256538,
+                "closure_edges": 127607,
+                "reused_tests": 0,
+                "planned_tests": 662
+              },
+              "storage": {
+                "packed_bytes_read": 44160733,
+                "decoded_bytes": 97095578,
+                "blocks_decoded": 993,
+                "payload_bytes_returned": 54974099,
+                "block_cache_hits": 172566
+              },
+              "nanoseconds": {
+                "lowering": 3512543470,
+                "facts": 1065137397,
+                "graph": 600047385,
+                "planner": 13086186119,
+                "keys": 7201448,
+                "publication": 640997790,
+                "total": 18953057777
+              },
+              "transport": {
+                "request_bytes": 4510652,
+                "reply_bytes": 1584244,
+                "startups": 331
+              }
+            }
+          },
+          {
+            "label": "synthetic-510436-candidate-zlib-helper-2",
+            "new_native_objects": 331,
+            "new_guest_unit_objects": 331,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 22655,
+              "logical_bytes": 899976350,
+              "allocated_bytes": 969068544
+            },
+            "work_totals": {
+              "producer": {
+                "facts": {
+                  "fresh": 331,
+                  "reused": 85292,
+                  "fallback": 331,
+                  "decoded": 85292
+                },
+                "lowering": {
+                  "fresh": 331,
+                  "reused": 85292,
+                  "materialized": 0
+                }
+              },
+              "graph": {
+                "nodes_read": 85623,
+                "nodes_unchanged": 85292,
+                "changed_nodes": 331,
+                "candidate_tests": 662,
+                "shards_read": 1653,
+                "shards_written": 662
+              },
+              "planner": {
+                "index_nodes": 684984,
+                "index_edges": 682336,
+                "affected_nodes": 85623,
+                "closure_nodes": 256538,
+                "closure_edges": 127607,
+                "reused_tests": 0,
+                "planned_tests": 662
+              },
+              "storage": {
+                "packed_bytes_read": 44160727,
+                "decoded_bytes": 97095578,
+                "blocks_decoded": 993,
+                "payload_bytes_returned": 54974099,
+                "block_cache_hits": 172566
+              },
+              "nanoseconds": {
+                "lowering": 4010211419,
+                "facts": 1213205059,
+                "graph": 614543457,
+                "planner": 12425720871,
+                "keys": 6904647,
+                "publication": 504207274,
+                "total": 18802191135
+              },
+              "transport": {
+                "request_bytes": 4510652,
+                "reply_bytes": 1584244,
+                "startups": 331
+              }
+            }
+          }
+        ],
+        "wall_s": {
+          "median": 13.558609465137124,
+          "min": 13.205706471111625,
+          "max": 13.957973083946854,
+          "samples": [
+            13.957973083946854,
+            13.558609465137124,
+            13.205706471111625
+          ]
+        },
+        "user_s": {
+          "median": 9.49,
+          "min": 9.17,
+          "max": 9.62,
+          "samples": [
+            9.62,
+            9.49,
+            9.17
+          ]
+        },
+        "system_s": {
+          "median": 14.36,
+          "min": 13.96,
+          "max": 14.95,
+          "samples": [
+            14.95,
+            14.36,
+            13.96
+          ]
+        },
+        "peak_rss_kb": {
+          "median": 678396,
+          "min": 677692,
+          "max": 678408,
+          "samples": [
+            678396,
+            678408,
+            677692
+          ]
+        }
+      },
+      "three-file": {
+        "samples": 3,
+        "counts": [
+          {
+            "passed": 662
+          },
+          {
+            "passed": 662
+          },
+          {
+            "passed": 662
+          }
+        ],
+        "raw": [
+          {
+            "label": "synthetic-510436-candidate-zlib-three-file-0",
+            "new_native_objects": 333,
+            "new_guest_unit_objects": 333,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 13698,
+              "logical_bytes": 537418803,
+              "allocated_bytes": 577208320
+            },
+            "work_totals": {
+              "producer": {
+                "facts": {
+                  "fresh": 333,
+                  "reused": 85290,
+                  "fallback": 333,
+                  "decoded": 85290
+                },
+                "lowering": {
+                  "fresh": 333,
+                  "reused": 85290,
+                  "materialized": 0
+                }
+              },
+              "graph": {
+                "nodes_read": 85623,
+                "nodes_unchanged": 85290,
+                "changed_nodes": 333,
+                "candidate_tests": 662,
+                "shards_read": 1653,
+                "shards_written": 664
+              },
+              "planner": {
+                "index_nodes": 684984,
+                "index_edges": 682336,
+                "affected_nodes": 85623,
+                "closure_nodes": 256538,
+                "closure_edges": 127607,
+                "reused_tests": 0,
+                "planned_tests": 662
+              },
+              "storage": {
+                "packed_bytes_read": 44160728,
+                "decoded_bytes": 97095578,
+                "blocks_decoded": 993,
+                "payload_bytes_returned": 54919519,
+                "block_cache_hits": 172560
+              },
+              "nanoseconds": {
+                "lowering": 3501574130,
+                "facts": 928071810,
+                "graph": 654203975,
+                "planner": 13636316674,
+                "keys": 7100164,
+                "publication": 640763051,
+                "total": 19413465563
+              },
+              "transport": {
+                "request_bytes": 4510660,
+                "reply_bytes": 1584244,
+                "startups": 331
+              }
+            }
+          },
+          {
+            "label": "synthetic-510436-candidate-zlib-three-file-1",
+            "new_native_objects": 333,
+            "new_guest_unit_objects": 333,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 19668,
+              "logical_bytes": 779061915,
+              "allocated_bytes": 838381568
+            },
+            "work_totals": {
+              "producer": {
+                "facts": {
+                  "fresh": 333,
+                  "reused": 85290,
+                  "fallback": 333,
+                  "decoded": 85290
+                },
+                "lowering": {
+                  "fresh": 333,
+                  "reused": 85290,
+                  "materialized": 0
+                }
+              },
+              "graph": {
+                "nodes_read": 85623,
+                "nodes_unchanged": 85290,
+                "changed_nodes": 333,
+                "candidate_tests": 662,
+                "shards_read": 1653,
+                "shards_written": 664
+              },
+              "planner": {
+                "index_nodes": 684984,
+                "index_edges": 682336,
+                "affected_nodes": 85623,
+                "closure_nodes": 256538,
+                "closure_edges": 127607,
+                "reused_tests": 0,
+                "planned_tests": 662
+              },
+              "storage": {
+                "packed_bytes_read": 44160732,
+                "decoded_bytes": 97095578,
+                "blocks_decoded": 993,
+                "payload_bytes_returned": 54919519,
+                "block_cache_hits": 172560
+              },
+              "nanoseconds": {
+                "lowering": 4054903588,
+                "facts": 940746404,
+                "graph": 696374295,
+                "planner": 14346881411,
+                "keys": 8018326,
+                "publication": 704298414,
+                "total": 20799551970
+              },
+              "transport": {
+                "request_bytes": 4510660,
+                "reply_bytes": 1584244,
+                "startups": 331
+              }
+            }
+          },
+          {
+            "label": "synthetic-510436-candidate-zlib-three-file-2",
+            "new_native_objects": 333,
+            "new_guest_unit_objects": 333,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 25638,
+              "logical_bytes": 1020702774,
+              "allocated_bytes": 1099554816
+            },
+            "work_totals": {
+              "producer": {
+                "facts": {
+                  "fresh": 333,
+                  "reused": 85290,
+                  "fallback": 333,
+                  "decoded": 85290
+                },
+                "lowering": {
+                  "fresh": 333,
+                  "reused": 85290,
+                  "materialized": 0
+                }
+              },
+              "graph": {
+                "nodes_read": 85623,
+                "nodes_unchanged": 85290,
+                "changed_nodes": 333,
+                "candidate_tests": 662,
+                "shards_read": 1653,
+                "shards_written": 664
+              },
+              "planner": {
+                "index_nodes": 684984,
+                "index_edges": 682336,
+                "affected_nodes": 85623,
+                "closure_nodes": 256538,
+                "closure_edges": 127607,
+                "reused_tests": 0,
+                "planned_tests": 662
+              },
+              "storage": {
+                "packed_bytes_read": 44160731,
+                "decoded_bytes": 97095578,
+                "blocks_decoded": 993,
+                "payload_bytes_returned": 54919519,
+                "block_cache_hits": 172560
+              },
+              "nanoseconds": {
+                "lowering": 3397922041,
+                "facts": 909946171,
+                "graph": 680889263,
+                "planner": 13101452441,
+                "keys": 11023824,
+                "publication": 490967070,
+                "total": 18609127680
+              },
+              "transport": {
+                "request_bytes": 4510660,
+                "reply_bytes": 1584244,
+                "startups": 331
+              }
+            }
+          }
+        ],
+        "wall_s": {
+          "median": 13.582265204982832,
+          "min": 13.40621196012944,
+          "max": 14.80212000804022,
+          "samples": [
+            13.582265204982832,
+            14.80212000804022,
+            13.40621196012944
+          ]
+        },
+        "user_s": {
+          "median": 9.41,
+          "min": 9.17,
+          "max": 10.29,
+          "samples": [
+            9.41,
+            10.29,
+            9.17
+          ]
+        },
+        "system_s": {
+          "median": 14.54,
+          "min": 14.25,
+          "max": 15.96,
+          "samples": [
+            14.54,
+            15.96,
+            14.25
+          ]
+        },
+        "peak_rss_kb": {
+          "median": 678180,
+          "min": 677468,
+          "max": 678444,
+          "samples": [
+            678444,
+            678180,
+            677468
+          ]
+        }
+      },
+      "restore-private": {
+        "samples": 3,
+        "counts": [
+          {
+            "cached": 662
+          },
+          {
+            "cached": 662
+          },
+          {
+            "cached": 662
+          }
+        ],
+        "raw": [
+          {
+            "label": "synthetic-510436-candidate-zlib-restore-private-0",
+            "new_native_objects": 0,
+            "new_guest_unit_objects": 0,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 8067,
+              "logical_bytes": 296492003,
+              "allocated_bytes": 317943808
+            },
+            "work_totals": {
+              "producer": {
+                "facts": {
+                  "fresh": 1,
+                  "reused": 258,
+                  "fallback": 1,
+                  "decoded": 258
+                },
+                "lowering": {
+                  "fresh": 1,
+                  "reused": 258,
+                  "materialized": 0
+                }
+              },
+              "graph": {
+                "nodes_read": 259,
+                "nodes_unchanged": 258,
+                "changed_nodes": 1,
+                "candidate_tests": 2,
+                "shards_read": 5,
+                "shards_written": 0
+              },
+              "planner": {
+                "index_nodes": 2072,
+                "index_edges": 1807,
+                "affected_nodes": 2,
+                "closure_nodes": 516,
+                "closure_edges": 257,
+                "reused_tests": 1,
+                "planned_tests": 1
+              },
+              "storage": {
+                "packed_bytes_read": 265607,
+                "decoded_bytes": 582347,
+                "blocks_decoded": 4,
+                "payload_bytes_returned": 166611,
+                "block_cache_hits": 523
+              },
+              "nanoseconds": {
+                "lowering": 3252421,
+                "facts": 1040154,
+                "graph": 1310105,
+                "planner": 3142754,
+                "keys": 12205,
+                "publication": 306592,
+                "total": 9080248
+              },
+              "transport": {
+                "request_bytes": 13644,
+                "reply_bytes": 4276,
+                "startups": 1
+              }
+            }
+          },
+          {
+            "label": "synthetic-510436-candidate-zlib-restore-private-1",
+            "new_native_objects": 0,
+            "new_guest_unit_objects": 0,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 14037,
+              "logical_bytes": 538137424,
+              "allocated_bytes": 579117056
+            },
+            "work_totals": {
+              "producer": {
+                "facts": {
+                  "fresh": 0,
+                  "reused": 259,
+                  "fallback": 0,
+                  "decoded": 259
+                },
+                "lowering": {
+                  "fresh": 0,
+                  "reused": 259,
+                  "materialized": 0
+                }
+              },
+              "graph": {
+                "nodes_read": 259,
+                "nodes_unchanged": 258,
+                "changed_nodes": 1,
+                "candidate_tests": 2,
+                "shards_read": 5,
+                "shards_written": 0
+              },
+              "planner": {
+                "index_nodes": 2072,
+                "index_edges": 1807,
+                "affected_nodes": 2,
+                "closure_nodes": 516,
+                "closure_edges": 257,
+                "reused_tests": 1,
+                "planned_tests": 1
+              },
+              "storage": {
+                "packed_bytes_read": 267688,
+                "decoded_bytes": 585601,
+                "blocks_decoded": 6,
+                "payload_bytes_returned": 167013,
+                "block_cache_hits": 523
+              },
+              "nanoseconds": {
+                "lowering": 3993681,
+                "facts": 1173169,
+                "graph": 1569700,
+                "planner": 3435703,
+                "keys": 42990,
+                "publication": 327236,
+                "total": 10561649
+              },
+              "transport": {
+                "request_bytes": 13644,
+                "reply_bytes": 4276,
+                "startups": 1
+              }
+            }
+          },
+          {
+            "label": "synthetic-510436-candidate-zlib-restore-private-2",
+            "new_native_objects": 0,
+            "new_guest_unit_objects": 0,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 20007,
+              "logical_bytes": 779779148,
+              "allocated_bytes": 840290304
+            },
+            "work_totals": {
+              "producer": {
+                "facts": {
+                  "fresh": 0,
+                  "reused": 259,
+                  "fallback": 0,
+                  "decoded": 259
+                },
+                "lowering": {
+                  "fresh": 0,
+                  "reused": 259,
+                  "materialized": 0
+                }
+              },
+              "graph": {
+                "nodes_read": 259,
+                "nodes_unchanged": 258,
+                "changed_nodes": 1,
+                "candidate_tests": 2,
+                "shards_read": 5,
+                "shards_written": 0
+              },
+              "planner": {
+                "index_nodes": 2072,
+                "index_edges": 1807,
+                "affected_nodes": 2,
+                "closure_nodes": 516,
+                "closure_edges": 257,
+                "reused_tests": 1,
+                "planned_tests": 1
+              },
+              "storage": {
+                "packed_bytes_read": 267690,
+                "decoded_bytes": 585601,
+                "blocks_decoded": 6,
+                "payload_bytes_returned": 167013,
+                "block_cache_hits": 523
+              },
+              "nanoseconds": {
+                "lowering": 3667579,
+                "facts": 1018749,
+                "graph": 1411358,
+                "planner": 3592297,
+                "keys": 13041,
+                "publication": 289472,
+                "total": 10010141
+              },
+              "transport": {
+                "request_bytes": 13644,
+                "reply_bytes": 4276,
+                "startups": 1
+              }
+            }
+          }
+        ],
+        "wall_s": {
+          "median": 0.275133304996416,
+          "min": 0.2715942170470953,
+          "max": 0.29577470710501075,
+          "samples": [
+            0.29577470710501075,
+            0.2715942170470953,
+            0.275133304996416
+          ]
+        },
+        "user_s": {
+          "median": 0.23,
+          "min": 0.22,
+          "max": 0.24,
+          "samples": [
+            0.24,
+            0.23,
+            0.22
+          ]
+        },
+        "system_s": {
+          "median": 0.12,
+          "min": 0.09,
+          "max": 0.13,
+          "samples": [
+            0.09,
+            0.12,
+            0.13
+          ]
+        },
+        "peak_rss_kb": {
+          "median": 44284,
+          "min": 43508,
+          "max": 44552,
+          "samples": [
+            44552,
+            44284,
+            43508
+          ]
+        }
+      },
+      "restore-helper": {
+        "samples": 3,
+        "counts": [
+          {
+            "cached": 662
+          },
+          {
+            "cached": 662
+          },
+          {
+            "cached": 662
+          }
+        ],
+        "raw": [
+          {
+            "label": "synthetic-510436-candidate-zlib-restore-helper-0",
+            "new_native_objects": 0,
+            "new_guest_unit_objects": 0,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 11046,
+              "logical_bytes": 416881954,
+              "allocated_bytes": 448077824
+            },
+            "work_totals": {
+              "producer": {
+                "facts": {
+                  "fresh": 0,
+                  "reused": 85623,
+                  "fallback": 0,
+                  "decoded": 85623
+                },
+                "lowering": {
+                  "fresh": 0,
+                  "reused": 85623,
+                  "materialized": 0
+                }
+              },
+              "graph": {
+                "nodes_read": 85623,
+                "nodes_unchanged": 85292,
+                "changed_nodes": 331,
+                "candidate_tests": 662,
+                "shards_read": 1653,
+                "shards_written": 0
+              },
+              "planner": {
+                "index_nodes": 684984,
+                "index_edges": 682336,
+                "affected_nodes": 85623,
+                "closure_nodes": 256538,
+                "closure_edges": 127607,
+                "reused_tests": 0,
+                "planned_tests": 662
+              },
+              "storage": {
+                "packed_bytes_read": 44493878,
+                "decoded_bytes": 97605842,
+                "blocks_decoded": 994,
+                "payload_bytes_returned": 55212943,
+                "block_cache_hits": 173889
+              },
+              "nanoseconds": {
+                "lowering": 3942076281,
+                "facts": 908551469,
+                "graph": 1212508033,
+                "planner": 12440725421,
+                "keys": 6944748,
+                "publication": 1073813269,
+                "total": 19676654316
+              },
+              "transport": {
+                "request_bytes": 4510652,
+                "reply_bytes": 1584244,
+                "startups": 331
+              }
+            }
+          },
+          {
+            "label": "synthetic-510436-candidate-zlib-restore-helper-1",
+            "new_native_objects": 0,
+            "new_guest_unit_objects": 0,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 17016,
+              "logical_bytes": 658523576,
+              "allocated_bytes": 709251072
+            },
+            "work_totals": {
+              "producer": {
+                "facts": {
+                  "fresh": 0,
+                  "reused": 85623,
+                  "fallback": 0,
+                  "decoded": 85623
+                },
+                "lowering": {
+                  "fresh": 0,
+                  "reused": 85623,
+                  "materialized": 0
+                }
+              },
+              "graph": {
+                "nodes_read": 85623,
+                "nodes_unchanged": 85292,
+                "changed_nodes": 331,
+                "candidate_tests": 662,
+                "shards_read": 1653,
+                "shards_written": 0
+              },
+              "planner": {
+                "index_nodes": 684984,
+                "index_edges": 682336,
+                "affected_nodes": 85623,
+                "closure_nodes": 256538,
+                "closure_edges": 127607,
+                "reused_tests": 0,
+                "planned_tests": 662
+              },
+              "storage": {
+                "packed_bytes_read": 45283940,
+                "decoded_bytes": 98861438,
+                "blocks_decoded": 1070,
+                "payload_bytes_returned": 55212943,
+                "block_cache_hits": 173813
+              },
+              "nanoseconds": {
+                "lowering": 5331969684,
+                "facts": 1166911160,
+                "graph": 1505376196,
+                "planner": 12001043177,
+                "keys": 7128645,
+                "publication": 716424614,
+                "total": 20828239650
+              },
+              "transport": {
+                "request_bytes": 4510652,
+                "reply_bytes": 1584244,
+                "startups": 331
+              }
+            }
+          },
+          {
+            "label": "synthetic-510436-candidate-zlib-restore-helper-2",
+            "new_native_objects": 0,
+            "new_guest_unit_objects": 0,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 22986,
+              "logical_bytes": 900165082,
+              "allocated_bytes": 970424320
+            },
+            "work_totals": {
+              "producer": {
+                "facts": {
+                  "fresh": 0,
+                  "reused": 85623,
+                  "fallback": 0,
+                  "decoded": 85623
+                },
+                "lowering": {
+                  "fresh": 0,
+                  "reused": 85623,
+                  "materialized": 0
+                }
+              },
+              "graph": {
+                "nodes_read": 85623,
+                "nodes_unchanged": 85292,
+                "changed_nodes": 331,
+                "candidate_tests": 662,
+                "shards_read": 1653,
+                "shards_written": 0
+              },
+              "planner": {
+                "index_nodes": 684984,
+                "index_edges": 682336,
+                "affected_nodes": 85623,
+                "closure_nodes": 256538,
+                "closure_edges": 127607,
+                "reused_tests": 0,
+                "planned_tests": 662
+              },
+              "storage": {
+                "packed_bytes_read": 45159320,
+                "decoded_bytes": 98663186,
+                "blocks_decoded": 1058,
+                "payload_bytes_returned": 55212943,
+                "block_cache_hits": 173825
+              },
+              "nanoseconds": {
+                "lowering": 5579396458,
+                "facts": 1169567226,
+                "graph": 1146259569,
+                "planner": 12890017575,
+                "keys": 7257180,
+                "publication": 764754671,
+                "total": 21588655819
+              },
+              "transport": {
+                "request_bytes": 4510652,
+                "reply_bytes": 1584244,
+                "startups": 331
+              }
+            }
+          }
+        ],
+        "wall_s": {
+          "median": 7.5543991380836815,
+          "min": 7.357362364884466,
+          "max": 7.737235290929675,
+          "samples": [
+            7.357362364884466,
+            7.5543991380836815,
+            7.737235290929675
+          ]
+        },
+        "user_s": {
+          "median": 3.67,
+          "min": 3.6,
+          "max": 3.78,
+          "samples": [
+            3.6,
+            3.67,
+            3.78
+          ]
+        },
+        "system_s": {
+          "median": 8.48,
+          "min": 8.04,
+          "max": 8.49,
+          "samples": [
+            8.04,
+            8.49,
+            8.48
+          ]
+        },
+        "peak_rss_kb": {
+          "median": 678216,
+          "min": 677596,
+          "max": 678404,
+          "samples": [
+            678404,
+            678216,
+            677596
+          ]
+        }
+      },
+      "restore-three-file": {
+        "samples": 3,
+        "counts": [
+          {
+            "cached": 662
+          },
+          {
+            "cached": 662
+          },
+          {
+            "cached": 662
+          }
+        ],
+        "raw": [
+          {
+            "label": "synthetic-510436-candidate-zlib-restore-three-file-0",
+            "new_native_objects": 0,
+            "new_guest_unit_objects": 0,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 14029,
+              "logical_bytes": 537608519,
+              "allocated_bytes": 578564096
+            },
+            "work_totals": {
+              "producer": {
+                "facts": {
+                  "fresh": 0,
+                  "reused": 85623,
+                  "fallback": 0,
+                  "decoded": 85623
+                },
+                "lowering": {
+                  "fresh": 0,
+                  "reused": 85623,
+                  "materialized": 0
+                }
+              },
+              "graph": {
+                "nodes_read": 85623,
+                "nodes_unchanged": 85290,
+                "changed_nodes": 333,
+                "candidate_tests": 662,
+                "shards_read": 1653,
+                "shards_written": 0
+              },
+              "planner": {
+                "index_nodes": 684984,
+                "index_edges": 682336,
+                "affected_nodes": 85623,
+                "closure_nodes": 256538,
+                "closure_edges": 127607,
+                "reused_tests": 0,
+                "planned_tests": 662
+              },
+              "storage": {
+                "packed_bytes_read": 45653619,
+                "decoded_bytes": 99446442,
+                "blocks_decoded": 1104,
+                "payload_bytes_returned": 55212943,
+                "block_cache_hits": 173779
+              },
+              "nanoseconds": {
+                "lowering": 4017801964,
+                "facts": 1042608451,
+                "graph": 1011460029,
+                "planner": 12174648490,
+                "keys": 8514493,
+                "publication": 988991722,
+                "total": 19322130475
+              },
+              "transport": {
+                "request_bytes": 4510660,
+                "reply_bytes": 1584244,
+                "startups": 331
+              }
+            }
+          },
+          {
+            "label": "synthetic-510436-candidate-zlib-restore-three-file-1",
+            "new_native_objects": 0,
+            "new_guest_unit_objects": 0,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 19999,
+              "logical_bytes": 779250241,
+              "allocated_bytes": 839737344
+            },
+            "work_totals": {
+              "producer": {
+                "facts": {
+                  "fresh": 0,
+                  "reused": 85623,
+                  "fallback": 0,
+                  "decoded": 85623
+                },
+                "lowering": {
+                  "fresh": 0,
+                  "reused": 85623,
+                  "materialized": 0
+                }
+              },
+              "graph": {
+                "nodes_read": 85623,
+                "nodes_unchanged": 85290,
+                "changed_nodes": 333,
+                "candidate_tests": 662,
+                "shards_read": 1653,
+                "shards_written": 0
+              },
+              "planner": {
+                "index_nodes": 684984,
+                "index_edges": 682336,
+                "affected_nodes": 85623,
+                "closure_nodes": 256538,
+                "closure_edges": 127607,
+                "reused_tests": 0,
+                "planned_tests": 662
+              },
+              "storage": {
+                "packed_bytes_read": 45196309,
+                "decoded_bytes": 98719518,
+                "blocks_decoded": 1060,
+                "payload_bytes_returned": 55212943,
+                "block_cache_hits": 173823
+              },
+              "nanoseconds": {
+                "lowering": 4533231541,
+                "facts": 1256750547,
+                "graph": 1191591479,
+                "planner": 11965049002,
+                "keys": 6995707,
+                "publication": 1122685313,
+                "total": 20137909990
+              },
+              "transport": {
+                "request_bytes": 4510660,
+                "reply_bytes": 1584244,
+                "startups": 331
+              }
+            }
+          },
+          {
+            "label": "synthetic-510436-candidate-zlib-restore-three-file-2",
+            "new_native_objects": 0,
+            "new_guest_unit_objects": 0,
+            "new_runtime_objects": 0,
+            "retained_cache": {
+              "files": 25969,
+              "logical_bytes": 1020891952,
+              "allocated_bytes": 1100910592
+            },
+            "work_totals": {
+              "producer": {
+                "facts": {
+                  "fresh": 0,
+                  "reused": 85623,
+                  "fallback": 0,
+                  "decoded": 85623
+                },
+                "lowering": {
+                  "fresh": 0,
+                  "reused": 85623,
+                  "materialized": 0
+                }
+              },
+              "graph": {
+                "nodes_read": 85623,
+                "nodes_unchanged": 85290,
+                "changed_nodes": 333,
+                "candidate_tests": 662,
+                "shards_read": 1653,
+                "shards_written": 0
+              },
+              "planner": {
+                "index_nodes": 684984,
+                "index_edges": 682336,
+                "affected_nodes": 85623,
+                "closure_nodes": 256538,
+                "closure_edges": 127607,
+                "reused_tests": 0,
+                "planned_tests": 662
+              },
+              "storage": {
+                "packed_bytes_read": 45092175,
+                "decoded_bytes": 98554308,
+                "blocks_decoded": 1050,
+                "payload_bytes_returned": 55212943,
+                "block_cache_hits": 173833
+              },
+              "nanoseconds": {
+                "lowering": 4675615168,
+                "facts": 940007251,
+                "graph": 1049979790,
+                "planner": 13692977442,
+                "keys": 7475352,
+                "publication": 1238068300,
+                "total": 21677231341
+              },
+              "transport": {
+                "request_bytes": 4510660,
+                "reply_bytes": 1584244,
+                "startups": 331
+              }
+            }
+          }
+        ],
+        "wall_s": {
+          "median": 7.352743783034384,
+          "min": 7.136475368170068,
+          "max": 7.751144635025412,
+          "samples": [
+            7.136475368170068,
+            7.352743783034384,
+            7.751144635025412
+          ]
+        },
+        "user_s": {
+          "median": 3.69,
+          "min": 3.59,
+          "max": 3.78,
+          "samples": [
+            3.69,
+            3.59,
+            3.78
+          ]
+        },
+        "system_s": {
+          "median": 8.15,
+          "min": 7.62,
+          "max": 8.43,
+          "samples": [
+            7.62,
+            8.15,
+            8.43
+          ]
+        },
+        "peak_rss_kb": {
+          "median": 678212,
+          "min": 677552,
+          "max": 678292,
+          "samples": [
+            678292,
+            678212,
+            677552
+          ]
+        }
+      }
+    }
+  },
+  "evidence": {
+    ".mylang-cache/cache-lock-followup-20261010/wave2/paired-510k/results.json": "1a50b99b096dfeab242565357a309dd24bfe5c6c5f51377347a73e07f2435033",
+    ".mylang-cache/cache-lock-followup-20261010/wave2/admission-paired-510k/results.json": "0f9a618b4e2b9b6258b9261bddc7ea9cd27cbed7be15f3e5f2eac2b0bd7e0c17",
+    "experiments/cache-lock-followup-20261010/wave2/fixture-original-hashes.json": "938a08163f249ac77521adde154a5120fbfd3977581802eb6cb2f634f5f7082b"
+  },
+  "limitations": [
+    "Three first-edit samples per phase, with reversed arm order on alternating rounds; no significance claim.",
+    "Cold application/native/Zig stores, with existing installed toolchain and operating-system page cache.",
+    "GNU time RSS is maximum individual process RSS, not concurrent process-tree memory.",
+    "Unrelated focused builds may execute on CPUs excluding reserved timing CPUs; no parallel gate.",
+    "Aggregate held time includes oracle, inventory, serialization and harness overhead; it is not a direct compiler speedup measure."
+  ],
+  "optimized_over_comparison_wall_ratio": {
+    "cold": 0.8087831824284408,
+    "noop": 0.9901820608619694,
+    "private": 1.0082284149481457,
+    "helper": 0.7471251748342413,
+    "three-file": 0.7609313652095985,
+    "restore-private": 1.0002026189594075,
+    "restore-helper": 0.6382339307347475,
+    "restore-three-file": 0.6294329720097075
+  }
+}

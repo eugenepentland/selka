@@ -1,0 +1,6 @@
+{
+  "archive_sha256": "b3a3023915e243ad71a214630a5bd171562164d070313ed7e36d2f514ced4a55",
+  "verified_raw_executions": 702,
+  "summary_reproduced_exactly": true,
+  "scope": "Offline replay from extracted archive; no workload executions or additional sampling."
+}

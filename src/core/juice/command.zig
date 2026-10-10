@@ -7,6 +7,7 @@ const calibration = @import("calibration.zig");
 const collectors = @import("collectors.zig");
 const manifest = @import("manifest.zig");
 const engine = @import("engine.zig");
+const runtime = @import("runtime.zig");
 const help =
     \\usage: mylang juice <command> [options]
     \\  doctor [--collector perf|callgrind|cachegrind] [--cpu N]
@@ -15,8 +16,9 @@ const help =
     \\  compare BASE.json CANDIDATE.json --output REPORT.json [--mode application|backend|combined]
     \\  validate QUICK.json LARGER.json --output REPORT.json [--tolerance N]
     \\  calibrate DATASET.json --output MODEL.json
+    \\  validate-runtime COMPARISON.json TIMINGS.json --output REPORT.json
     \\Build options: --compiler PATH --cache-dir DIR
-    \\Record options: --workload NAME (repeatable) --static --collector KIND --cpu N --perf PATH --valgrind PATH
+    \\Record options: --workload NAME (repeatable) --static --collector KIND --profile work|runtime --cpu N --perf PATH --valgrind PATH
     \\Compare options: --max-spread N --min-change N --fail-above N --model MODEL.json
     \\Juice measures instructions per completed unit. Baseline 100; it is not a runtime percentage.
     \\Capture currently supports Linux x86_64. Reporting requires no external tools.
@@ -32,12 +34,13 @@ fn contains(words: []const u8, word: []const u8) bool {
     return false;
 }
 fn allowed(command: []const u8) ?[]const u8 {
-    if (std.mem.eql(u8, command, "doctor")) return "collector cpu perf valgrind";
-    if (std.mem.eql(u8, command, "record")) return "name compiler cache-dir tier repeats workload static collector cpu perf valgrind";
+    if (std.mem.eql(u8, command, "doctor")) return "collector cpu perf valgrind profile";
+    if (std.mem.eql(u8, command, "record")) return "name compiler cache-dir tier repeats workload static collector cpu perf valgrind profile";
     if (std.mem.eql(u8, command, "analyze")) return "compiler cache-dir output against";
     if (std.mem.eql(u8, command, "compare")) return "mode output max-spread min-change fail-above model";
     if (std.mem.eql(u8, command, "validate")) return "tolerance output";
     if (std.mem.eql(u8, command, "calibrate")) return "output";
+    if (std.mem.eql(u8, command, "validate-runtime")) return "output";
     return null;
 }
 /// Reject unknown, duplicated and mis-scoped flags instead of silently ignoring them.
@@ -80,7 +83,7 @@ fn parseImpl(c: *d.Context, args: []const []const u8) !Request {
             try d.put(c, &options, key, d.string(value));
         }
     }
-    const count: usize = if (contains("doctor", args[0])) 0 else if (contains("compare validate", args[0])) 2 else 1;
+    const count: usize = if (contains("doctor", args[0])) 0 else if (contains("compare validate validate-runtime", args[0])) 2 else 1;
     if (positional.array.items.len != count) return c.fail(help);
     return .{ .command = args[0], .options = options, .positional = positional };
 }
@@ -119,6 +122,13 @@ fn output(c: *d.Context, r: Request) ![]const u8 {
     return absolute;
 }
 fn execute(c: *d.Context, r: Request) !u8 {
+    if (std.mem.eql(u8, r.command, "validate-runtime")) {
+        const destination = try output(c, r);
+        const result = try runtime.validate(c, try c.read(try input(r, 0)), try c.read(try input(r, 1)));
+        try c.write(destination, result);
+        try std.Io.File.stdout().writeStreamingAll(c.io, try std.fmt.allocPrint(c.a, "Runtime proxy validation: {s}\n", .{try d.str(d.get(result, "status"))}));
+        return if (d.equal(d.get(result, "passed"), .{ .bool = true })) 0 else 1;
+    }
     if (std.mem.eql(u8, r.command, "compare")) {
         const destination = try output(c, r);
         const mode = option(r, "mode", "combined");
@@ -208,7 +218,9 @@ fn integer(r: Request, key: []const u8, fallback: usize, low: usize, high: usize
 }
 fn collector(c: *d.Context, r: Request) !collectors.Collector {
     const cpu = if (d.get(r.options, "cpu") == .null) null else try integer(r, "cpu", 0, 0, 1023);
-    return collectors.init(c, option(r, "collector", "perf"), cpu, option(r, "perf", "perf"), option(r, "valgrind", c.env.get("JUICE_VALGRIND") orelse "valgrind"));
+    var selected = try collectors.init(c, option(r, "collector", "perf"), cpu, option(r, "perf", "perf"), option(r, "valgrind", c.env.get("JUICE_VALGRIND") orelse "valgrind"));
+    try collectors.selectProfile(c, &selected, option(r, "profile", "work"));
+    return selected;
 }
 /// Native entry point called directly by the compiler dispatcher.
 pub fn run(init: std.process.Init, args: []const []const u8) Error!u8 {

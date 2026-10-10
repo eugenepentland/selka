@@ -101,6 +101,72 @@ python3 -B scripts/build_slot_test.py -v
 They use real processes and private lock directories under `.tmp/`, so they do
 not occupy or alter the machine's live slots.
 
+## Reuse verification evidence before admission
+
+`python3 scripts/verify_cache.py --zig /path/to/pinned/zig` owns admission for
+the complete `test` plus `fmt-check` inventory. Run it directly, after setting
+the worktree's `TMPDIR` and Zig cache directories as usual. Optional build
+controls follow `--`, for example `-- -j3 --maxrss 8589934592`. Do not put a
+second `build-slot.sh` around this command.
+The coordinator fixes Zig's test/scheduling seed to `0`; `-- --seed=123` selects
+another seed and a separate evidence identity. Native CPU features, process
+limits, CPU affinity and umask also participate in that identity.
+
+The coordinator exports the actual build graph with `verification-plan` and
+prepares exact native executable identities with `verification-prepare` under
+build admission when needed. Valid unchanged preparation skips that admission.
+It then checks each registered action's inputs and successful receipt outside
+the gate slot. Missing and freshness-required actions share one normal FIFO
+gate invocation, retaining the build graph's dependency and memory scheduling.
+New unregistered checks force execution of the original complete gate.
+
+The output distinguishes `reused`, `execute`, and `fresh`. Guardian, git-history
+checks, input-coverage membership checks, generated-output validation, and guest suites with execution-time effect
+decisions remain fresh. Guest suites retain their compiler-managed per-test
+receipts; fact/leak runs preserve their existing modes. `--force` discards prior
+action evidence and executes the full inventory. Filtered and explicit
+`-Dtest-rerun=true` requests cannot supply ordinary full-gate receipts.
+
+Keys include declared file membership/content, native artifacts, toolchain and
+host-tool contents, loader libraries, environment, configuration and inventory.
+Linux inotify watches span hashing, queueing, execution and publication. Input
+changes, including changes restored to their original bytes, reject publication;
+rerun the command after edits settle. Missing inputs, unknown schemas and watcher
+failures cannot certify a pass. Host tool overrides that lack a complete contract
+force fresh actions. Fixture Git commands use isolated global/system config and
+empty templates; Python user-site loading and timestamp-bytecode reads are
+disabled. Shell startup hooks and exported Bash functions are removed, and PATH
+contains only the absolute, existing directories covered by the tool watches.
+These normalized
+settings are also the settings executed by workers.
+
+Reviewed cohorts can declare their own prepared artifact dependencies. A pure
+script check need not repeat because an unrelated native executable changed;
+selected component checks bind their builder, component or test executable.
+Unreviewed cohorts keep the complete artifact identity. Build configuration,
+inventory, tools, environment and host identity still invalidate all cohorts,
+and the complete artifact snapshot remains watched through publication. The
+input-coverage checker stays fresh because it probes whether source-named paths
+exist, including paths outside its explicit source list.
+
+Evidence lives in `.mylang-cache/verification-v1/`. `last-run.json` records every
+required cohort, the verdict, elapsed time, and admitted build/gate seconds.
+These durations include admission validation and are operational observations,
+not isolated performance benchmarks. Admission events separate wait/startup,
+validation after admission, worker time and the observed held interval. The held
+interval starts at the admitted child's greeting, so it excludes the wrapper's
+short startup after acquiring the slot. Phase timings also show source/action
+snapshotting, preparation/lookup outside admission, final validation and
+publication; nested phase durations must not be added as independent intervals.
+Two coordinators for one checkout serialize
+on a local lock before requesting shared server slots. Normal `zig build test`
+and `zig build fmt-check` remain supported.
+
+The coordinator is developer tooling; it adds no Python dependency to compiler
+installation or installed Selka commands. Run its lightweight adversarial tests
+with `python3 -B scripts/verify_cache_test.py` and
+`python3 -B scripts/verification_snapshot_test.py`; they are also in the gate.
+
 ## Reserved timing cores
 
 On the i7-12700H, CPUs 0–11 are six P-cores with two SMT threads each, and the

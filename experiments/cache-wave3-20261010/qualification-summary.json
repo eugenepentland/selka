@@ -1,0 +1,62 @@
+{
+  "baseline": "0d9ababf7eb434d2e02e1b2b45fe5c6593715e7a",
+  "qualification_input_files_verified": 15,
+  "runs": {
+    "cold": {
+      "action_states": {
+        "execute": 29,
+        "fresh": 9
+      },
+      "build_summaries": [
+        "Build Summary: 3/3 steps succeeded",
+        "Build Summary: 32/32 steps succeeded",
+        "Build Summary: 110/110 steps succeeded; 2601/26251 tests passed (23650 skipped)"
+      ],
+      "coordinator_verdict": "verification: PASS; 0 reused, 38 selected; build admitted 1.874s, gate admitted 3430.843s",
+      "guardian_scope_and_results": [
+        "guardian: diff-scoped vs 5174fd03fb0f9dcae4f4fa51d7cb76ba649a988f: 41/632 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification \u2014 use --full, or `guardian-check commit`.",
+        "guardian: run-all: 88 check(s) passed \u2014 diff-scoped vs 5174fd03fb0f9dcae4f4fa51d7cb76ba649a988f, 41 file(s) in scope",
+        "guardian: diff-scoped vs 5174fd03fb0f9dcae4f4fa51d7cb76ba649a988f: 41/632 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification \u2014 use --full, or `guardian-check commit`.",
+        "guardian: run-all: 88 check(s) passed \u2014 diff-scoped vs 5174fd03fb0f9dcae4f4fa51d7cb76ba649a988f, 41 file(s) in scope",
+        "guardian: diff-scoped vs 5174fd03fb0f9dcae4f4fa51d7cb76ba649a988f: 41/632 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification \u2014 use --full, or `guardian-check commit`.",
+        "guardian: run-all: 88 check(s) passed \u2014 diff-scoped vs 5174fd03fb0f9dcae4f4fa51d7cb76ba649a988f, 41 file(s) in scope"
+      ],
+      "log_path": ".mylang-cache/cache-wave3/cold-qualified.log",
+      "log_sha256": "d60d04da46aafac1657ea66015dbb630ac224b5a48b5447b99b3c6004587f31f",
+      "native_result_groups": 29,
+      "native_results": {
+        "failed": 0,
+        "passed": 2601,
+        "skipped": 0
+      },
+      "run_report": "cold-run.json"
+    },
+    "warm": {
+      "action_states": {
+        "fresh": 9,
+        "reused": 29
+      },
+      "build_summaries": [
+        "Build Summary: 38/38 steps succeeded"
+      ],
+      "coordinator_verdict": "verification: PASS; 29 reused, 9 selected; build admitted 0.000s, gate admitted 21.097s",
+      "guardian_scope_and_results": [
+        "guardian: diff-scoped vs 5174fd03fb0f9dcae4f4fa51d7cb76ba649a988f: 41/632 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification \u2014 use --full, or `guardian-check commit`.",
+        "guardian: run-all: 88 check(s) passed \u2014 diff-scoped vs 5174fd03fb0f9dcae4f4fa51d7cb76ba649a988f, 41 file(s) in scope",
+        "guardian: diff-scoped vs 5174fd03fb0f9dcae4f4fa51d7cb76ba649a988f: 41/632 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification \u2014 use --full, or `guardian-check commit`.",
+        "guardian: run-all: 88 check(s) passed \u2014 diff-scoped vs 5174fd03fb0f9dcae4f4fa51d7cb76ba649a988f, 41 file(s) in scope"
+      ],
+      "log_path": ".mylang-cache/cache-wave3/warm-qualified.log",
+      "log_sha256": "4b6e2f1efa3d5c2f36fe397246aa5949738705f7d92c0a921e0ed0612c939b54",
+      "native_result_groups": 0,
+      "native_results": {
+        "failed": 0,
+        "passed": 0,
+        "skipped": 0
+      },
+      "run_report": "warm-run.json"
+    }
+  },
+  "version": 1,
+  "zig_pin": "0.17.0-dev.1683+5ceec001b"
+}

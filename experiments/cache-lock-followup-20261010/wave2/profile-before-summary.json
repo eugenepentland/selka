@@ -1,0 +1,330 @@
+{
+  "started_utc": "2026-10-10T14:48:57.640796+00:00",
+  "completed_utc": "2026-10-10T14:49:26.950446+00:00",
+  "compiler": {
+    "path": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave2-validation/candidate/bin/mylang",
+    "sha256": "92dd45fc92a79bca7eb2f273ec9ffdf6cac454526302b521b5bf33b88e0bc8c6"
+  },
+  "benchmark": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave2-validation/wave2-synthetic-510436",
+  "variant": "candidate-zlib",
+  "phase": "helper",
+  "token": 9000001,
+  "affinity": [
+    2,
+    10
+  ],
+  "queue_s": 139.622358351,
+  "held_s": 29.747795755,
+  "original_source_sha256": "fc14e5a601683b58d58e18ef795123a9ca8a7def170e1dccfaea481582d700f6",
+  "restored_source_sha256": "fc14e5a601683b58d58e18ef795123a9ca8a7def170e1dccfaea481582d700f6",
+  "evidence": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave2-performance-20261010/profile-helper-510k/results.json",
+  "evidence_sha256": "4c9bf55d9ca55c7cb0861133b51654de764ee0861351e5bc5b2abb063ac168ba",
+  "method": "Diagnostic inherited-process profile. Categories sum flat event-weighted self percentages only; children percentages are retained for context and never summed. Report percentages are rounded, not wall-time percentages. GNU time RSS is maximum individual process RSS.",
+  "profiles": [
+    {
+      "label": "helper",
+      "wall_s": 17.180904909,
+      "user_s": 17.61,
+      "system_s": 13.21,
+      "peak_rss_kb": 677048,
+      "exit": 0,
+      "counts": {
+        "passed": 662
+      },
+      "recorded_samples": 1664,
+      "lost_samples": 0,
+      "event_headers": [
+        "# Samples: 1K of event 'cpu_core/cycles/u'"
+      ],
+      "self_pct_groups": {
+        "blake3": 43.68,
+        "sha2": 1.7,
+        "treehash": 3.09,
+        "unresolved_including_zig": 13.07,
+        "memfd_planner": 0.32,
+        "mylang_host_dso": 86.64,
+        "zig": 11.67,
+        "blake3_plus_sha2": 45.38,
+        "hashing_plus_named_treehash_self": 48.47
+      },
+      "top_self": [
+        {
+          "children_pct": 24.55,
+          "self_pct": 24.55,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "crypto.blake3.compressPre"
+        },
+        {
+          "children_pct": 11.81,
+          "self_pct": 11.81,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "crypto.blake3.ChunkState.update"
+        },
+        {
+          "children_pct": 6.05,
+          "self_pct": 6.05,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "compiler_rt.memcpy.memcpyFast"
+        },
+        {
+          "children_pct": 5.79,
+          "self_pct": 5.79,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "test_runner.rootsFor"
+        },
+        {
+          "children_pct": 5.68,
+          "self_pct": 5.68,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "crypto.blake3.Blake3.update"
+        },
+        {
+          "children_pct": 3.35,
+          "self_pct": 3.35,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "build.buildRootsCached"
+        },
+        {
+          "children_pct": 2.52,
+          "self_pct": 2.52,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "test_runner_discover.within"
+        },
+        {
+          "children_pct": 2.06,
+          "self_pct": 2.06,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "mem.eqlBytes"
+        },
+        {
+          "children_pct": 1.78,
+          "self_pct": 1.78,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "emit_llvm.fastPaths"
+        },
+        {
+          "children_pct": 1.7,
+          "self_pct": 1.7,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "crypto.sha2.Sha2x32(.{ 1779033703, 3144134277, 1013904242, 2773480762, 1359893119, 2600822924, 528734635, 1541459225 },256).round"
+        },
+        {
+          "children_pct": 1.7,
+          "self_pct": 1.7,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "lowering_cache.TreeHash.value__anon_91845"
+        },
+        {
+          "children_pct": 1.65,
+          "self_pct": 1.65,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "heap.ArenaAllocator.alloc"
+        }
+      ],
+      "flat_row_count": 301,
+      "rounded_self_pct_total": 99.71,
+      "host_hash_rows_with_distinct_children": 0,
+      "stack_coverage": null,
+      "header_diagnostics": [
+        "Invalid HEADER_EVENT_DESC: nre=3 sz=144 (min 64)",
+        "# event desc: not available or unable to read"
+      ],
+      "perf_exits": {
+        "perf_report_exit": 0,
+        "perf_buildids_exit": 0,
+        "perf_headers_exit": 0
+      },
+      "raw_report": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave2-performance-20261010/profile-helper-510k/helper.perf-report.txt",
+      "raw_report_sha256": "95e5e59a1b0da01a95707f6897669cb966d7b1a877106049cee81945412edca9"
+    },
+    {
+      "label": "revert-helper",
+      "wall_s": 10.825394765,
+      "user_s": 11.42,
+      "system_s": 7.42,
+      "peak_rss_kb": 677064,
+      "exit": 0,
+      "counts": {
+        "cached": 662
+      },
+      "recorded_samples": 1106,
+      "lost_samples": 0,
+      "event_headers": [
+        "# Samples: 1K of event 'cpu_core/cycles/u'"
+      ],
+      "self_pct_groups": {
+        "blake3": 55.78,
+        "sha2": 3.0,
+        "treehash": 2.61,
+        "unresolved_including_zig": 1.24,
+        "memfd_planner": 0.45,
+        "mylang_host_dso": 98.7,
+        "zig": 0,
+        "blake3_plus_sha2": 58.78,
+        "hashing_plus_named_treehash_self": 61.39
+      },
+      "top_self": [
+        {
+          "children_pct": 33.53,
+          "self_pct": 33.53,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "crypto.blake3.compressPre"
+        },
+        {
+          "children_pct": 12.98,
+          "self_pct": 12.98,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "crypto.blake3.ChunkState.update"
+        },
+        {
+          "children_pct": 8.07,
+          "self_pct": 8.07,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "crypto.blake3.Blake3.update"
+        },
+        {
+          "children_pct": 7.5,
+          "self_pct": 7.5,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "compiler_rt.memcpy.memcpyFast"
+        },
+        {
+          "children_pct": 4.78,
+          "self_pct": 4.78,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "test_runner.rootsFor"
+        },
+        {
+          "children_pct": 4.34,
+          "self_pct": 4.34,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "build.buildRootsCached"
+        },
+        {
+          "children_pct": 4.08,
+          "self_pct": 4.08,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "test_runner_discover.within"
+        },
+        {
+          "children_pct": 3.0,
+          "self_pct": 3.0,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "crypto.sha2.Sha2x32(.{ 1779033703, 3144134277, 1013904242, 2773480762, 1359893119, 2600822924, 528734635, 1541459225 },256).round"
+        },
+        {
+          "children_pct": 2.3,
+          "self_pct": 2.3,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "lowering_cache.normalizedName"
+        },
+        {
+          "children_pct": 1.67,
+          "self_pct": 1.67,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "compress.flate.Decompress.streamInner"
+        },
+        {
+          "children_pct": 1.43,
+          "self_pct": 1.43,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "lowering_cache.TreeHash.value__anon_91839"
+        },
+        {
+          "children_pct": 1.23,
+          "self_pct": 1.23,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "frontend_migration.publish"
+        }
+      ],
+      "flat_row_count": 106,
+      "rounded_self_pct_total": 99.94,
+      "host_hash_rows_with_distinct_children": 0,
+      "stack_coverage": null,
+      "header_diagnostics": [
+        "Invalid HEADER_EVENT_DESC: nre=3 sz=144 (min 64)",
+        "# event desc: not available or unable to read"
+      ],
+      "perf_exits": {
+        "perf_report_exit": 0,
+        "perf_buildids_exit": 0,
+        "perf_headers_exit": 0
+      },
+      "raw_report": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave2-performance-20261010/profile-helper-510k/revert-helper.perf-report.txt",
+      "raw_report_sha256": "15cdd0d8ddb47e666f30aabf5fa01e3152bee303ca0a62167058e427fa6ea81f"
+    }
+  ],
+  "symbolization": [
+    {
+      "name": "mylang",
+      "original": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave2-validation/candidate/bin/mylang",
+      "copy": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave2-performance-20261010/profile-helper-510k/symbols/mylang",
+      "sha256": "92dd45fc92a79bca7eb2f273ec9ffdf6cac454526302b521b5bf33b88e0bc8c6",
+      "buildid_cache_exit": 0,
+      "buildid_cache_stderr": "Couldn't add /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave2-performance-20261010/profile-helper-510k/symbols/mylang: Success\n"
+    },
+    {
+      "name": "cache-plan",
+      "original": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave2-validation/candidate/libexec/mylang/components/cache-plan-ae849b2a65b47130b80d03cf2e7575572934c66179a5232e2d81e766bd635e78",
+      "copy": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave2-performance-20261010/profile-helper-510k/symbols/cache-plan",
+      "sha256": "ae849b2a65b47130b80d03cf2e7575572934c66179a5232e2d81e766bd635e78",
+      "buildid_cache_exit": 0,
+      "buildid_cache_stderr": "Couldn't add /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave2-performance-20261010/profile-helper-510k/symbols/cache-plan: Success\n"
+    }
+  ],
+  "limitations": [
+    "Flat reports cannot recover per-event DWARF stack coverage or establish hash callers; stack_coverage is null. Equal children/self percentages on host hash rows provide no cumulative caller attribution.",
+    "Unresolved and planner memfd self samples cannot be attributed to component functions. Category totals overlap except the combined hashing categories, whose inputs are disjoint; do not sum all categories.",
+    "CPU and wall include perf/snapshot overhead. Paired uninstrumented benchmarks are required for performance claims.",
+    "Perf header decoding diagnostics are retained; successful flat decoding does not repair missing event metadata.",
+    "Symbol-cache diagnostics are retained even when buildid-cache exits zero; exit zero alone does not prove symbol indexing succeeded."
+  ]
+}

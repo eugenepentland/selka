@@ -1,0 +1,38 @@
+{
+  "source": "/home/epentland/ai/canopy/mylang-worktrees/codex-juice-runtime-proxy/examples/juice/native/kernel.c",
+  "source_sha256": "abf65c46eba3da5c95a4b5de9de1a0c427105deacb335a978b9932f5993d9673",
+  "recipes": {
+    "bits": [
+      "-DSLOW=1"
+    ],
+    "fast": [
+      "-DSLOW=0"
+    ],
+    "atomic": [
+      "-DSLOW=0",
+      "-DATOMIC=1"
+    ],
+    "copy": [
+      "-DSLOW=0",
+      "-DEXTRA_COPY=1"
+    ],
+    "unoptimized": [
+      "-DSLOW=0",
+      "-O0"
+    ]
+  },
+  "common_flags": [
+    "-O2",
+    "-g"
+  ],
+  "compiler_path": "/usr/bin/x86_64-linux-gnu-gcc-15",
+  "compiler_version": "cc (Ubuntu 15.2.0-16ubuntu1) 15.2.0\nCopyright (C) 2025 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+  "compiler_identity_observation": "post-build; exact executable input hashes also recorded in suites",
+  "oracle": "Initialize uint32 state 0x12345678; for each item apply xorshift32 shifts 13,-17,5 with uint32 wrapping, sum Python int.bit_count(), multiply by rounds. Wave3 tree oracle comes from its retained reviewed record.",
+  "first_command": "python3 scripts/juice_runtime_bench.py .tmp/juice/suite.json --compiler zig-out/bin/mylang --output .tmp/juice/qualification-01 --cpu 10",
+  "second_command": "uclampset -m 1024 -M 1024 python3 scripts/juice_runtime_bench.py .tmp/juice/suite.json --compiler .tmp/juice/fast/bin/mylang --output .tmp/juice/qualification-02 --cpu 10",
+  "timing_scope": "whole process, including launch/loader/exit; not startup-subtracted historical Wave3 timings",
+  "reanalysis": "All original captures and timing pairs reused, with paired aggregation added after exploratory measurement; no held-out accuracy claim.",
+  "limits": "Single i7-12700H CPU10 on a shared host; selected cases include a known regression; five of seven controlled-run cases remain uncertain. No global frequency policy modified.",
+  "compiler_sha256": "b5f1b773a7c733738352000c92a077dc5852a1a2fc6d836b1e411be1e9ec5f88"
+}

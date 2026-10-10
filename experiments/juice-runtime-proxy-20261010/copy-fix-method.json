@@ -1,0 +1,10 @@
+{
+  "parent_commit": "3c56a160aa2c93a90e4b47cf4591605955a94f3c",
+  "runner_sha256": "7a1291d5185b9344c4df15bbfe0b9e80cd82c5c454df840a89bb184ddafb1c1e",
+  "source_sha256": "90e47a781ee3f1f0c10c68b53a48d10e426c4a19b1ee5cbc9d652a139b7ca853",
+  "capture_command": "uclampset -m 1024 -M 1024 python3 scripts/juice_runtime_bench.py .tmp/juice/copy-fix-inputs/suite.json --compiler .tmp/juice/fast/bin/mylang --cpu 10 --output .tmp/juice/copy-fix-capture-02",
+  "analysis_command": "python3 experiments/juice-runtime-proxy-20261010/reanalyse.py .tmp/juice/copy-fix-capture-02 --compiler zig-out/bin/mylang --output .tmp/juice/copy-fix-paired",
+  "result": "One of two updated fixtures meets accuracy and repeatability. Larger fixture remains uncertain at 3.0695% reference-cycle pair spread, despite 1.1395% diagnostic error. No thresholds changed.",
+  "first_attempt": "copy-fix-capture rejected before workload measurement: placing the controller away from CPU10 during native capture violated the collector affinity check. Corrected by applying placement only to independent elapsed timing.",
+  "scope": "New fixture and executable identities. Original loop cases remain archived. Two-case validation does not qualify other cases or unseen workloads."
+}
