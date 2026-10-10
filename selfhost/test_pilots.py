@@ -108,7 +108,11 @@ def qualify(args):
         for release in (False, True):
             flags = ['--release', '--verify-facts'] if release else []
             for source, count in roots:
-                pure = execute([seed, 'test', source, '--force', '--no-cache', *flags], environment)
+                # The expanded parser profile deliberately reaches a million
+                # value records; retain default budgets for every other root.
+                budget = (['--max-steps', '50000000', '--max-memory', '1G']
+                          if args.lane == 'parser' and source.name == 'profile_tests.my' else [])
+                pure = execute([seed, 'test', source, '--force', '--no-cache', *flags, *budget], environment)
                 require_guest(pure, count)
             command = [sys.executable, ROOT / f'selfhost/tests/run_{args.lane}_pilot.py',
                        '--builder', args.builder, '--zig', args.zig]

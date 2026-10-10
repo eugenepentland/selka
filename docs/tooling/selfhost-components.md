@@ -6,8 +6,9 @@ normal commands use its native Selka executable. Discovery, source checking,
 graph extraction and formatting remain in the Zig host.
 The separate `cache-plan` component plans Core dependency closures and reuse of
 unaffected test keys. Canonical fact extraction, storage and execution remain in
-Zig. The lexer and parser pilots add opt-in frontend comparison commands. All four
-components can be rebuilt without rebuilding the compiler host.
+Zig. The lexer and parser pilots supply opt-in frontend comparison and component
+modes across compiler commands. All four components can be rebuilt without
+rebuilding the compiler host.
 
 ## Build and install
 
@@ -101,12 +102,19 @@ The host verifies the executable digest, enforces a 30-second deadline and
 bounded output, validates the full reply, and removes the temporary directory.
 The [wire protocol](component-protocol.md) specifies identities and limits.
 
-## Frontend comparison commands
+## Frontend selection
 
-`dump-tokens` uses `MYLANG_LEXER_MODE=reference|shadow`; `dump-syntax` uses
-`MYLANG_PARSER_MODE=reference|shadow`. Both default to reference and fail explicitly
-on a selected shadow mismatch or deployment failure. Ordinary compilation and
-formatting retain the reference frontend. See the [pilot gates](selfhost-pilot-gates.md),
+`MYLANG_LEXER_MODE` and `MYLANG_PARSER_MODE` each accept `reference`, `shadow`
+or `component`. Both default to reference. Whole-source compilation, module
+loading, formatting and tooling use the selected frontend. Shadow compares
+against the native implementation; component adopts validated tokens or syntax.
+Selected deployment failures and comparison mismatches are explicit host errors.
+Cache identities include the verified producers; shadow bypasses frontend and
+executable/test replay so a warm hit cannot suppress comparison.
+
+The [frontend qualification guide](frontend-adoption-qualification.md) describes
+the admitted source/resource profile and workflow checks. See also the
+[pilot gates](selfhost-pilot-gates.md),
 [lexer contract](../../selfhost/components/lexer_pilot/README.md), and
 [complete syntax values](parser-syntax-values.md).
 

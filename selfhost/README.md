@@ -1,12 +1,23 @@
 # Self-hosting stages
 
-The self-hosted compiler owns the frontend through QBE text generation. The
-managed runtime, platform adapters, QBE, and a thin Zig launcher remain explicit
-bootstrap boundaries; see [`runtime-abi-v1`](../docs/adr/D6-runtime-boundary.md).
+The current compiler is progressively self-hosted through independently built
+Selka components. Test reachability and cache planning run in Selka; the lexer
+and full parser have explicit comparison and component modes across compiler
+commands. Their pinned native seed builds without these components. See the
+[component guide](../docs/tooling/selfhost-components.md) and
+[frontend qualification](../docs/tooling/frontend-adoption-qualification.md).
 
-## Stage model
+The complete compiler has **not** compiled itself. Checking, Core lowering,
+optimization, LLVM emission, command coordination and much tooling remain in
+Zig. The historical QBE port and prototype sources are salvage material, not
+evidence of a current staged bootstrap. The current native pipeline and C runtime
+boundary are defined by [D6](../docs/adr/D6-runtime-boundary.md).
 
-1. **Stage 0** is the pinned Zig compiler and launcher. It compiles the first
+## Target stage model
+
+These stages describe the future full-compiler bootstrap proof:
+
+1. **Stage 0** is an independently rebuildable pinned native compiler. It compiles the first
    `.my` compiler from clean source and the versioned runtime/resource manifest.
 2. **Stage 1** is the compiler artifact produced by stage 0. It compiles the same
    source to produce stage 2.
@@ -16,18 +27,19 @@ bootstrap boundaries; see [`runtime-abi-v1`](../docs/adr/D6-runtime-boundary.md)
    equivalent under the documented artifact comparison, and both must pass the
    compiler corpus and diagnostic parity suite.
 
-Every stage records compiler identity, source and ABI hashes, resource manifest,
+Every completed stage must record compiler identity, source and ABI hashes, resource manifest,
 commands, exit status, output hashes, peak memory, and cold/warm timings. Reuse
 receipts are correctness evidence: expected declaration and object reuse counts
 must agree as well as outputs.
 
 ## Bootstrap rule
 
-All compiler `.my` code stays inside the exact whitelist in
+Component `.my` code stays inside its independently qualified source profile in
 [`docs/bootstrap-v1.md`](../docs/bootstrap-v1.md). Implementing a broader language
-feature does not authorize its use here. Under the one-version delay, stage 0 must
-have shipped and exercised a feature for one compatibility release before the
-next compiler source may depend on it.
+feature does not authorize its use by the component's own bootstrap seed.
+The future full compiler retains the one-version feature delay from
+[D7](../docs/adr/D7-feature-delay.md); independently seeded components follow the
+separate qualification rule documented there.
 
 If compiler work needs a construct outside the subset, first record the concrete
 workaround and measured cost. Amend the bootstrap contract and its ADR only after
