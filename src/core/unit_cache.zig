@@ -33,7 +33,7 @@ pub const Settings = struct {
     /// The resolved host CPU and code-generation flags (`tool_identity.nativeTarget`),
     /// so a store copied to another machine cannot serve an object for the wrong CPU.
     cpu: Digest,
-    mode: @import("build_mode.zig").Mode = .debug,
+    mode: @import("build_mode.zig").Mode = .optimized_debug,
     /// The core runtime's ABI, identified by its complete source.
     runtime: Digest,
 };

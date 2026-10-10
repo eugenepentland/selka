@@ -142,7 +142,9 @@ fn write(init: std.process.Init, text: []const u8) Error!void {
 }
 
 const build_usage =
-    \\usage: mylang build <file.my> (-o <output> | --run [run options] [-- ARGS...]) [--release | --optimize-debug] [--link FILE.c]... [--emit-llvm PATH]
+    \\usage: mylang build <file.my> (-o <output> | --run [run options] [-- ARGS...]) [--release | --unoptimized | --optimize-debug] [--link FILE.c]... [--emit-llvm PATH]
+    \\Default: optimized debug; --optimize-debug and --mode Debug select the same mode.
+    \\--unoptimized disables Core and LLVM optimization; --release optimizes the whole program.
     \\       [--cache-dir DIR] [--no-cache] [--zig PATH] [--report] [--cache-report] [--verify-cache] [--stats] [--diagnostics=text|json]
     \\
 ;

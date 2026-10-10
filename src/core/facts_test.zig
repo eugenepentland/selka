@@ -275,3 +275,20 @@ test "a reduction whose bound exceeds every integer type is clamped, not overflo
     const text = try support.optimizedText(arena.allocator(), huge_reduction);
     try std.testing.expect(std.mem.indexOf(u8, text, "add.exact i64") != null);
 }
+
+// spec-case: DEBUG-OPTIMIZE-1
+test "unsigned negation is provable only for zero across every integer width" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    for ([_][]const u8{ "u8", "u16", "u32", "u64" }) |ty| {
+        const source = try std.fmt.allocPrint(arena.allocator(), "func negate(x: {s}) -> {s}:\n    return -x\n\n" ++
+            "func zero() -> {s}:\n    mut x = 0{s}\n    return -x\n\n" ++
+            "func one() -> {s}:\n    mut x = 1{s}\n    return -x\n\n" ++
+            "func main(args: str[], out: Stream) -> int:\n    out.print(negate({s}(len(args))), zero(), one())\n    return 0\n", .{ ty, ty, ty, ty, ty, ty, ty });
+        const text = try support.factsText(arena.allocator(), source);
+        const exact = try std.fmt.allocPrint(arena.allocator(), "neg.exact {s}", .{ty});
+        const proven = try std.fmt.allocPrint(arena.allocator(), "neg.proven {s}", .{ty});
+        try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, text, exact));
+        try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, text, proven));
+    }
+}

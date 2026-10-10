@@ -11,15 +11,15 @@ guides with it: `mylang docs` lists them and `mylang docs syntax` (or `io`,
 ```bash
 mylang check prog.my                  # type-check a program, or a library that has no main (fast)
 mylang run prog.my -- ARG1 ARG2       # build and run; the program's arguments go after --
-mylang build prog.my -o prog          # native executable (debug build)
+mylang build prog.my -o prog          # native executable (optimized debug build)
 mylang build prog.my -o prog --release  # optimized whole program, for shipping or timing
 mylang test prog.my                   # run the public test_* functions; `mylang test DIR` runs every file
 mylang fmt prog.my --check            # formatter (drop --check to print the formatted file)
 mylang docs primer                    # this page; `mylang --help` lists every command
 ```
 
-`run`, `build` and `test` make a debug build unless you pass `--release`: one unit
-per module, so an edit recompiles only what changed. `--release` optimizes the
+`run`, `build` and `test` make an optimized debug build by default: one unit
+per module, so an edit recompiles only what changed. Use `--unoptimized` for an optimizer-off diagnostic build. `--release` optimizes the
 whole program as one unit and recompiles all of it after any change. Both keep
 every overflow, cast and bounds check.
 A file argument that is missing, unreadable or a directory is refused by every

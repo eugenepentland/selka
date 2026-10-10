@@ -4,7 +4,7 @@ const support = @import("test_support.zig");
 const options = @import("core_test_options");
 const report = std.debug.print;
 
-const modes = [_][]const []const u8{ &.{}, &.{"--optimize-debug"}, &.{"--release"}, &.{ "--release", "--verify-facts" }, &.{ "--optimize-debug", "--verify-facts" } };
+const modes = [_][]const []const u8{ &.{"--unoptimized"}, &.{"--optimize-debug"}, &.{"--release"}, &.{ "--release", "--verify-facts" }, &.{ "--optimize-debug", "--verify-facts" } };
 
 fn check(allocator: std.mem.Allocator, source: []const u8, expected: []const u8) !void {
     try checkRun(allocator, source, expected, "");

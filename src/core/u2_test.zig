@@ -76,7 +76,7 @@ fn nativeModes(a: std.mem.Allocator, fixture: Fixture) !void {
     defer dir.cleanup();
     try dir.dir.writeFile(std.testing.io, .{ .sub_path = "borrow.my", .data = fixture.source });
     const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
-    for ([_][]const []const u8{ &.{}, &.{"--release"}, &.{ "--release", "--verify-facts" }, &.{"--optimize-debug"}, &.{ "--optimize-debug", "--verify-facts" } }) |flags| try native(a, root, flags, fixture);
+    for ([_][]const []const u8{ &.{"--unoptimized"}, &.{"--release"}, &.{ "--release", "--verify-facts" }, &.{"--optimize-debug"}, &.{ "--optimize-debug", "--verify-facts" } }) |flags| try native(a, root, flags, fixture);
 }
 
 // spec-case: NEW-CORE-U2-BORROW-1

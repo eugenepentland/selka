@@ -55,7 +55,7 @@ fn leakChecked(arena: std.mem.Allocator, root: []const u8, name: []const u8, fla
 }
 
 /// Debug, release, and release with the facts verified.
-const modes = [_][]const []const u8{ &.{}, &.{"--release"}, &.{ "--release", "--verify-facts" } };
+const modes = [_][]const []const u8{ &.{"--unoptimized"}, &.{"--release"}, &.{ "--release", "--verify-facts" } };
 
 const tagged_elements =
     \\record P:

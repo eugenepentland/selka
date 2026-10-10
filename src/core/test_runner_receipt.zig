@@ -604,9 +604,9 @@ test "receipt settings ignore shell and terminal variables and key toolchain and
     const context = try fakeToolContext(a, try temporary.dir.realPathFileAlloc(std.testing.io, ".", a), &environment);
     var inputs: std.ArrayList(Dependency) = .empty;
     const plain = try settings(context, &inputs);
-    var optimized = context;
-    optimized.options.build.mode = .optimized_debug;
-    try std.testing.expect(!std.mem.eql(u8, &plain, &try settings(optimized, &inputs)));
+    var unoptimized = context;
+    unoptimized.options.build.mode = .debug;
+    try std.testing.expect(!std.mem.eql(u8, &plain, &try settings(unoptimized, &inputs)));
     try environment.put("_", "/usr/bin/time");
     try environment.put("OLDPWD", "/elsewhere");
     try environment.put("MYLANG_JOBS", "3");

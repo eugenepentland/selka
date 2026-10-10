@@ -43,7 +43,7 @@ pub const Request = struct {
     /// The build's cache directory: foreign objects, linked programs and staging.
     work: []const u8,
     output: []const u8,
-    mode: @import("build_mode.zig").Mode = .debug,
+    mode: @import("build_mode.zig").Mode = .optimized_debug,
     /// Extra C sources to compile and link (`--link`).
     links: []const []const u8,
     /// Independent LLVM inputs, in link order (`emit_units`, or `wholeUnit`).

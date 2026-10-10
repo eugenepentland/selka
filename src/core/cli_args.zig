@@ -114,6 +114,7 @@ const Parser = struct {
     failure: *Failure,
     /// The run settings collected so far; `options` joins them at the end.
     pending: Run = .{},
+    explicit_mode: bool = false,
     links: std.ArrayList([]const u8) = .empty,
     options: std.ArrayList([]const u8) = .empty,
 
@@ -146,7 +147,11 @@ const Parser = struct {
         } else if (eql(name, "--qbe")) {
             // The new core builds with LLVM; a QBE path names a tool it never runs.
         } else if (eql(name, "--mode")) {
-            if (eql(value, "ReleaseFast")) try build.mode.select(.release) else if (eql(value, "Debug")) try build.mode.select(.debug) else return self.usage();
+            if (eql(value, "ReleaseFast")) {
+                try build.mode.select(&self.explicit_mode, .release);
+            } else if (eql(value, "Debug")) {
+                try build.mode.select(&self.explicit_mode, .optimized_debug);
+            } else return self.usage();
         } else if (eql(name, "--max-memory")) {
             if (self.pending.limits.memory != null) return self.usage();
             self.pending.limits.memory = memory_budget.parse(value) catch return self.usage();
@@ -160,9 +165,11 @@ const Parser = struct {
     fn flag(self: *Parser, arg: []const u8) error{ OutOfMemory, Usage }!void {
         const build = &self.request.build;
         if (eql(arg, "--release")) {
-            try build.mode.select(.release);
+            try build.mode.select(&self.explicit_mode, .release);
         } else if (eql(arg, "--optimize-debug")) {
-            try build.mode.select(.optimized_debug);
+            try build.mode.select(&self.explicit_mode, .optimized_debug);
+        } else if (eql(arg, "--unoptimized")) {
+            try build.mode.select(&self.explicit_mode, .debug);
         } else if (eql(arg, "--print-result") or grant(arg)) {
             // A repeated grant or switch is refused, as the old CLI refused it.
             if (contains(self.options.items, arg)) return self.usage();
@@ -206,7 +213,7 @@ const Parser = struct {
 pub fn unported(arg: []const u8) ?[]const u8 {
     const name = arg[0 .. std.mem.indexOfScalar(u8, arg, '=') orelse arg.len];
     for ([_][]const u8{ "--backend", "--llvm-opt", "--lto", "--target", "--keep-symbols", "--step-accounting" }) |old| {
-        if (eql(name, old)) return "the new core always builds with LLVM: use --release or --optimize-debug for optimization; this QBE/LLVM build control was retired";
+        if (eql(name, old)) return "the new core always builds with LLVM: builds default to optimized debug; use --release or --unoptimized; this QBE/LLVM build control was retired";
     }
     if (eql(name, "--explain-invalidation")) return "--explain-invalidation compared the old back end's nine stage fingerprints (retired, S5-B2); `--report` says what the new core's caches served";
     if (eql(name, "--friction-log")) return "--friction-log is recorded by `mylang check` only (S5-B2): run `mylang check FILE.my --friction-log=PATH`";
@@ -274,23 +281,46 @@ fn eql(a: []const u8, b: []const u8) bool {
 }
 
 // spec: DEBUG-OPTIMIZE-1
-test "optimize-debug accepts build and run but rejects a simultaneous release mode" {
+test "optimized debug is the default and unoptimized remains explicit" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const a = arena.allocator();
     var failure: Failure = .usage;
-    const built = try parse(a, .build, &.{ "app.my", "-o", "out", "--optimize-debug" }, "zig", &failure);
-    try std.testing.expect(built.build.mode == .optimized_debug);
-    const ran = try parse(a, .run, &.{ "app.my", "--optimize-debug", "--verify-facts" }, "zig", &failure);
-    try std.testing.expect(ran.build.mode == .optimized_debug and ran.build.facts == .verify);
+    const built = try parse(a, .build, &.{ "app.my", "-o", "out" }, "zig", &failure);
+    try std.testing.expectEqual(.optimized_debug, built.build.mode);
+    for ([_][]const []const u8{ &.{"app.my"}, &.{ "app.my", "--optimize-debug" }, &.{ "app.my", "--mode", "Debug" } }) |args| {
+        const ran = try parse(a, .run, args, "zig", &failure);
+        try std.testing.expectEqual(.optimized_debug, ran.build.mode);
+    }
+    const unoptimized = try parse(a, .run, &.{ "app.my", "--unoptimized", "--unoptimized" }, "zig", &failure);
+    try std.testing.expectEqual(.debug, unoptimized.build.mode);
+    const released = try parse(a, .run, &.{ "app.my", "--release", "--mode=ReleaseFast" }, "zig", &failure);
+    try std.testing.expectEqual(.release, released.build.mode);
+    const verified = try parse(a, .run, &.{ "app.my", "--verify-facts" }, "zig", &failure);
+    try std.testing.expect(verified.build.mode == .optimized_debug and verified.build.facts == .verify);
+    const guest = try parse(a, .run, &.{ "app.my", "--", "--unoptimized" }, "zig", &failure);
+    try std.testing.expectEqual(.optimized_debug, guest.build.mode);
+    try std.testing.expectEqualStrings("--unoptimized", guest.run.?.arguments[0]);
+}
+
+// spec-case: DEBUG-OPTIMIZE-1
+test "select refuses conflicting explicit build modes in either order" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var failure: Failure = .usage;
     for ([_][]const []const u8{
         &.{ "app.my", "--optimize-debug", "--release" },
         &.{ "app.my", "--release", "--optimize-debug" },
-        &.{ "app.my", "--mode=ReleaseFast", "--optimize-debug" },
+        &.{ "app.my", "--unoptimized", "--release" },
+        &.{ "app.my", "--release", "--unoptimized" },
+        &.{ "app.my", "--unoptimized", "--optimize-debug" },
+        &.{ "app.my", "--optimize-debug", "--unoptimized" },
+        &.{ "app.my", "--mode=ReleaseFast", "--mode=Debug" },
+        &.{ "app.my", "--mode=Debug", "--mode=ReleaseFast" },
+        &.{ "app.my", "--unoptimized", "--mode=Debug" },
+        &.{ "app.my", "--mode=Debug", "--unoptimized" },
     }) |args| try std.testing.expectError(error.Usage, parse(a, .run, args, "zig", &failure));
-    const guest = try parse(a, .run, &.{ "app.my", "--", "--optimize-debug" }, "zig", &failure);
-    try std.testing.expect(guest.build.mode == .debug);
-    try std.testing.expectEqualStrings("--optimize-debug", guest.run.?.arguments[0]);
 }
 
 // twin-drift-ok: `src/runtime_options.zig` belongs to the old back end, which S5-D deletes, and the core cannot import it.
@@ -328,7 +358,7 @@ test "build and run command lines parse in the old spellings into one new-core r
     const ran = try parse(a, .run, &.{ "p.my", "--max-steps", "9", "--timeout=3", "--restrict", "--allow-read=d", "--print-result", "--", "--release", "x" }, "zig", &failure);
     try std.testing.expectEqual(@as(?u64, 9), ran.run.?.limits.steps);
     try std.testing.expectEqual(@as(?u64, 3), ran.run.?.limits.timeout);
-    try std.testing.expect(ran.build.mode == .debug);
+    try std.testing.expect(ran.build.mode == .optimized_debug);
     try std.testing.expectEqual(@as(usize, 3), ran.run.?.options.len);
     try std.testing.expectEqual(@as(usize, 2), ran.run.?.arguments.len);
     const through = try parse(a, .build, &.{ "p.my", "--run", "--max-memory=1G", "--", "a" }, "zig", &failure);

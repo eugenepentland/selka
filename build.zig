@@ -769,9 +769,9 @@ pub fn build(b: *std.Build) void {
     test_step.dependOn(&guest_tests.step);
     guardian.addAllChecks(b, guardian_exe, guest_step, .{});
     boundedChecks(guest_step);
-    const lang_step = b.step("test-lang", "Run tests/lang, tests/value_semantics and tests/ported through mylang test, at debug and at release with the leak and fact checks");
-    // S5-C: the language-level guest tests run on the new core in both of its
-    // modes: the debug build, and the release build with its facts asserted
+    const lang_step = b.step("test-lang", "Run tests/lang, tests/value_semantics and tests/ported through mylang test, at optimized debug, unoptimized and release with the leak and fact checks");
+    // The language-level guest tests run in default optimized debug, explicit
+    // unoptimized mode, and release with its facts asserted
     // (`--verify-facts`) and the runtime's leak check on (`MYL_CORE_LEAKCHECK=1`:
     // a test that ends with blocks live fails). The retired runtime switches went
     // with their steps (S5-D4): `test-lang-gc` (`--gc-runtime --gc-stress`),
@@ -793,6 +793,13 @@ pub fn build(b: *std.Build) void {
         debug.has_side_effects = true;
         lang_step.dependOn(&debug.step);
         test_step.dependOn(&debug.step);
+        const unoptimized = bounded(b.addRunArtifact(exe), rss.suite);
+        unoptimized.setName(b.fmt("mylang test {s} --unoptimized", .{suite.dir}));
+        unoptimized.addArgs(&.{ "test", suite.dir, "--unoptimized", "--cache-dir", b.fmt("{s}-unoptimized", .{suite.cache}) });
+        unoptimized.setCwd(b.path("."));
+        unoptimized.has_side_effects = true;
+        lang_step.dependOn(&unoptimized.step);
+        test_step.dependOn(&unoptimized.step);
         // The variable reaches the test children through `env`, since a Run step
         // may not carry an environment map of its own (`requireLiveEnvironment`).
         const release = bounded(b.addSystemCommand(&.{ "env", "MYL_CORE_LEAKCHECK=1" }), rss.suite);

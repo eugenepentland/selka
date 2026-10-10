@@ -38,7 +38,7 @@ func main(args: str[], out: Stream) -> int:
     return 0
 """,
 }
-MODES = {"debug": [], "optimized_debug": ["--optimize-debug"], "release": ["--release"]}
+MODES = {"debug": ["--unoptimized"], "optimized_debug": [], "release": ["--release"]}
 SCENARIOS = {
     "function_step": ("main", ["break compute::calculate", "run a b", "bt", "info args",
                                 "info locals", "print seed", "print first", "step", "bt", "continue"]),

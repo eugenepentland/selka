@@ -70,3 +70,21 @@ test "an escaped callback caller keeps unproved arithmetic as real source callee
     try std.testing.expect(std.mem.indexOf(u8, text, "call i64 first") != null);
     try std.testing.expect(std.mem.indexOf(u8, text, "call i64 second") != null);
 }
+
+// spec-case: DEBUG-OPTIMIZE-1
+test "loop optimization preserves early returns when the latch is unreachable" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const source =
+        \\func choose(xs: int[], flag: int) -> int:
+        \\    for value in reversed(xs):
+        \\        if flag > 0:
+        \\            return value
+        \\        return 0
+        \\    return 7
+        \\func main() -> int:
+        \\    return choose([1, 2, 3], 1)
+    ;
+    const text = try support.optimizedText(arena.allocator(), source);
+    try std.testing.expect(std.mem.indexOf(u8, text, "ret") != null);
+}
