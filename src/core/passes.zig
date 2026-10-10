@@ -486,7 +486,7 @@ fn finalFunctions(memory: FinalMemory, module: *ir.Module, cache: ?*cache_mod.Co
             result.counts.versioned += cached.state.counts.versioned;
             result.counts.vectorized += cached.state.counts.vectorized;
             result.own.add(cached.state.own);
-            if (shortcut) |state| if (key) |digest| try rememberFinal(arena, cache.?, state, index, .{ .key = digest, .state = cached.state, .analysis = cached.analysis });
+            if (shortcut) |state| if (key) |digest| try rememberFinal(arena, cache.?, state, index, .{ .key = digest, .state = cached.state, .analysis = cached.analysis, .provenance = &result.provenance });
             _ = temporary.reset(.retain_capacity);
             continue;
         }
@@ -553,6 +553,7 @@ fn finalFunctions(memory: FinalMemory, module: *ir.Module, cache: ?*cache_mod.Co
         }
         if (shortcut) |state| if (key) |digest| if (artifact) |encoded| try rememberFinal(arena, cache.?, state, index, .{
             .key = digest,
+            .provenance = &result.provenance,
             .state = .{ .known = null, .plans = plan.*, .counts = result.per_function[index].counts, .own = result.per_function[index].own },
             .analysis = .{ .digest = encoded.digest, .loop_ids = encoded.loop_ids },
         });
@@ -571,8 +572,8 @@ fn prepareOptimizer(arena: std.mem.Allocator, backing: std.mem.Allocator, module
     @memset(before_fusions, null);
     if (shortcut) |state| for (state.green, 0..) |green_body, index| {
         // A matching lowering key binds this body and the full raw catalog.
-        // Fusions read no other bodies or parameter facts, so their prior identity
-        // remains valid even when later inlining makes the function non-green.
+        // Fusions read no other bodies or parameter facts, so their prior base
+        // identity remains valid when later inlining makes the function non-green.
         if (green_body or state.entries[index].raw != null) continue;
         before_fusions[index] = @import("ir_snapshot.zig").digest(fusion_scratch.allocator(), cache.?.source, module.functions.items[index]) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
@@ -580,11 +581,15 @@ fn prepareOptimizer(arena: std.mem.Allocator, backing: std.mem.Allocator, module
         };
         _ = fusion_scratch.reset(.retain_capacity);
     };
+    const seeded = if (shortcut) |state| state.catalog.layout != null and hasDeferredBodies(&state, module) else false;
+    if (seeded) {
+        try @import("fusion_checkpoint.zig").seed(arena, module, shortcut.?.catalog);
+    } else if (shortcut) |*state| state.catalog = .{ .raw_count = module.functions.items.len };
     try @import("fuse_text.zig").whitespace(arena, module);
     _ = try @import("fuse_slice_key.zig").run(arena, module);
     if (cache) |context| try context.prepare(arena);
     if (shortcut) |*state| {
-        if (state.layout) |old| if (hasDeferredBodies(state, module)) {
+        if (state.catalog.layout) |old| if (seeded) {
             const current = cache.?.layoutDigest() orelse return error.CacheMiss;
             if (!std.mem.eql(u8, &old, &current)) return error.CacheMiss;
         };
@@ -603,10 +608,38 @@ fn prepareOptimizer(arena: std.mem.Allocator, backing: std.mem.Allocator, module
                 error.InvalidSnapshot => null,
             };
             _ = fusion_scratch.reset(.retain_capacity);
-            entry.demand.fused_identity = before_fusions[index] != null and after != null and std.mem.eql(u8, &before_fusions[index].?, &after.?);
+            entry.demand.fusion.identity = before_fusions[index] != null and after != null and std.mem.eql(u8, &before_fusions[index].?, &after.?);
         }
+        try finishFusionInputs(arena, &fusion_scratch, state, seeded);
     } else shortcut = try prepareShortcut(arena, cache, mode);
     return shortcut;
+}
+
+fn finishFusionInputs(arena: std.mem.Allocator, temporary: *std.heap.ArenaAllocator, state: *shortcut_mod.Index, seeded: bool) CachedError!void {
+    const scratch = temporary.allocator();
+    const fusion = @import("fusion_checkpoint.zig");
+    const module = state.context.source.module;
+    const raw_count = state.catalog.raw_count;
+    if (raw_count > module.functions.items.len) return error.CacheMiss;
+    const uses = try arena.alloc([32]u8, raw_count);
+    for (state.entries[0..raw_count], state.green[0..raw_count], uses, 0..) |*entry, green, *inventory, index| {
+        if (green and module.functions.items[index].signature.linkage == .internal) {
+            inventory.* = state.catalog.uses[index];
+            continue;
+        }
+        inventory.* = try fusion.usage(scratch, &module.functions.items[index], raw_count);
+        if (seeded and !std.mem.eql(u8, inventory, &state.catalog.uses[index])) return error.CacheMiss;
+        if (!entry.demand.fusion.identity) if (entry.demand.lowered) |lowered| if (entry.raw) |output| {
+            entry.demand.fusion.key = try fusion.save(scratch, state.context, @intCast(index), lowered, output);
+        };
+        _ = temporary.reset(.retain_capacity);
+    }
+    const declarations = try arena.alloc(fusion.Declaration, module.functions.items.len - raw_count);
+    for (module.functions.items[raw_count..], declarations) |function, *declaration| {
+        if (function.signature.linkage != .runtime_c) return error.CacheMiss;
+        declaration.* = .{ .name = function.name, .signature = function.signature };
+    }
+    state.catalog = .{ .layout = state.context.layoutDigest(), .raw_count = raw_count, .declarations = declarations, .uses = uses };
 }
 
 fn hasDeferredBodies(state: *const shortcut_mod.Index, module: *const ir.Module) bool {
@@ -653,7 +686,7 @@ fn retainEmissionEffects(arena: std.mem.Allocator, module: *ir.Module, cache: ?*
     };
 }
 
-const FinalInput = struct { key: [32]u8, state: cache_mod.FinalState, analysis: cache_mod.Analysis };
+const FinalInput = struct { key: [32]u8, state: cache_mod.FinalState, analysis: cache_mod.Analysis, provenance: *const origins.Table };
 
 fn rememberFinal(arena: std.mem.Allocator, context: *cache_mod.Context, shortcut: *shortcut_mod.Index, index: usize, input: FinalInput) Error!void {
     const state = input.state;
@@ -667,6 +700,7 @@ fn rememberFinal(arena: std.mem.Allocator, context: *cache_mod.Context, shortcut
         .key = input.key,
         .body = body,
         .outgoing = try shortcut_mod.Index.targets(arena, &context.source.module.functions.items[index]),
+        .render = try context.renderMetadata(arena, @intCast(index), input.provenance) orelse return,
         .analysis = .{ .digest = analysis.digest, .loop_ids = try arena.dupe(usize, analysis.loop_ids) },
         .state = retained,
     };

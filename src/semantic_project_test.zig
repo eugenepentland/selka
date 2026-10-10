@@ -351,3 +351,129 @@ test "nominal specialization arguments isolate same spelled declarations in diff
     try t.expectEqual(moved.reused + 1, changed.reused);
     try t.expectEqual(moved.checked + 1, changed.checked);
 }
+
+const case_left =
+    \\public enum Packet:
+    \\    data(value: i64)
+    \\    none
+    \\
+    \\public func value(p: Packet) -> i64:
+    \\    match p:
+    \\        case Packet.data(value=n):
+    \\            return n
+    \\        case _:
+    \\            return 0
+;
+const case_right =
+    \\public enum Packet:
+    \\    data(value: bool)
+    \\    none
+    \\
+    \\public func value(p: Packet) -> i64:
+    \\    match p:
+    \\        case Packet.data(value=n):
+    \\            if n:
+    \\                return 2
+    \\            return 0
+    \\        case _:
+    \\            return 0
+;
+const case_main =
+    \\import left
+    \\import right
+    \\
+    \\func main() -> i64:
+    \\    return left.value(left.Packet.data(value=40)) + right.value(right.Packet.data(value=True))
+;
+
+fn expectCaseIdentity(files: *Files) !void {
+    var project = language.project.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(.{ .context = files, .read = Files.read }, "main", .{});
+    var index = try language.interfaces.build(&project);
+    var compilation = try language.project_compile.Compilation.init(&index);
+    try compilation.check();
+    const records = compilation.program.?.records;
+    var payloads: [2]?language.typed.Type = .{ null, null };
+    for ([_][]const u8{ "left", "right" }, 0..) |module, side| {
+        const parent_name = try std.fmt.allocPrint(t.allocator, "{s}::Packet", .{module});
+        defer t.allocator.free(parent_name);
+        const payload_name = try std.fmt.allocPrint(t.allocator, "{s}.data", .{parent_name});
+        defer t.allocator.free(payload_name);
+        for (records) |record| {
+            if (!std.mem.eql(u8, record.name, parent_name)) continue;
+            const variants = record.shape.variants.?;
+            try t.expectEqualStrings("data", variants.cases[0].name);
+            try t.expect(variants.cases[0].fielded);
+            const payload = variants.cases[0].payload.?;
+            payloads[side] = payload;
+            try t.expectEqualStrings(payload_name, language.typed.typeName(payload, records));
+            try t.expectEqualStrings("value", records[payload.recordIndex()].fields[0].name);
+        }
+        const id = project.names.get(module).?;
+        // The synthetic name is a catalog identity, never a source declaration.
+        try t.expect(!index.units[id].names.contains("Packet.data"));
+    }
+    try t.expect(payloads[0] != null and payloads[1] != null);
+    try t.expect(payloads[0].? != payloads[1].?);
+}
+
+// spec-case: SEMANTIC-CACHE-7
+// spec-case: NOMINAL-INSTANCE-1
+test "synthetic enum payload identities retain defining modules across warm replay and relocation" {
+    var entries = [_]File{
+        .{ .path = "main.my", .bytes = case_main },
+        .{ .path = "left.my", .bytes = case_left },
+        .{ .path = "right.my", .bytes = case_right },
+    };
+    var files: Files = .{ .entries = &entries };
+    var cache = Cache.init(t.allocator, 4 << 20);
+    defer cache.deinit();
+    try expectCaseIdentity(&files);
+    const initial = try evaluate(&files, null);
+    defer t.allocator.free(initial);
+    try t.expectEqualStrings("value:42", initial);
+    try agree(&files, &cache);
+    const checked = cache.statistics.checked;
+    try agree(&files, &cache);
+    try t.expectEqual(checked, cache.statistics.checked);
+    try t.expectEqual(@as(usize, 0), cache.statistics.rejections.total[@backingInt(language.semantic_cache.MissReason.ambiguous_record)]);
+    // Input/module ordinals change; the defining enum identities do not.
+    entries[0].bytes = "import right\nimport left\n" ++ case_main["import left\nimport right\n".len..];
+    entries[1].bytes = "record Unrelated:\n    n: bool\n\n" ++ case_left;
+    try expectCaseIdentity(&files);
+    try agree(&files, &cache);
+    try t.expectEqual(checked, cache.statistics.checked);
+    // Changing one provider invalidates its own payload and every real consumer.
+    entries[1].bytes = case_right;
+    entries[0].bytes = "import left\nimport right\nfunc main() -> i64:\n    return left.value(left.Packet.data(value=True)) + right.value(right.Packet.data(value=True))\n";
+    try agree(&files, &cache);
+    try t.expect(cache.statistics.checked > checked);
+    const value = try evaluate(&files, null);
+    defer t.allocator.free(value);
+    try t.expectEqualStrings("value:4", value);
+}
+
+// spec-case: SEMANTIC-CACHE-7
+// spec-case: NOMINAL-INSTANCE-1
+test "synthetic enum payload qualification preserves nominal separation and imported privacy" {
+    var entries = [_]File{
+        .{ .path = "main.my", .bytes = "import left\nimport right\nfunc main() -> i64:\n    return left.value(left.Packet.data(value=40)) + right.value(right.Packet.data(value=2))\n" },
+        .{ .path = "left.my", .bytes = case_left },
+        .{ .path = "right.my", .bytes = case_left },
+    };
+    var files: Files = .{ .entries = &entries };
+    var cache = Cache.init(t.allocator, 4 << 20);
+    defer cache.deinit();
+    try expectCaseIdentity(&files);
+    try agree(&files, &cache);
+    entries[0].bytes = "import left\nimport right\nfunc main() -> i64:\n    return left.value(right.Packet.data(value=42))\n";
+    try agree(&files, &cache);
+    const rejected = try evaluate(&files, null);
+    defer t.allocator.free(rejected);
+    try t.expect(!std.mem.startsWith(u8, rejected, "value:"));
+    entries[0].bytes = "import left\nimport right\nfunc main() -> i64:\n    return left.value(left.Packet.data(value=40)) + right.value(right.Packet.data(value=2))\n";
+    entries[1].bytes = case_left["public ".len..];
+    try t.expectError(error.SourceError, evaluate(&files, &cache));
+    try t.expectError(error.SourceError, evaluate(&files, null));
+}

@@ -1,12 +1,13 @@
-//! A compact previous-build index bypasses identity prepasses without changing
-//! the intermediate bodies that a dirty caller sees. Mutating prepasses retain
-//! the ordered stage-cache path; changed callees invalidate their callers.
+//! A compact previous-build index bypasses validated prepasses while retaining
+//! exact post-fusion and ordered mutation checkpoints for dirty caller inspection.
+//! Changed source, callees and runtime helper inventories lose demand reuse.
 const std = @import("std");
 const facts = @import("facts.zig");
 const cache = @import("optimization_cache.zig");
 const effects = @import("effects.zig");
 const demand_ir = @import("demand_ir.zig");
 const origins = @import("inline_origins.zig");
+const fusion = @import("fusion_checkpoint.zig");
 const Counts = @import("pass_statistics.zig").Counts;
 /// Stage outputs preceding ownership/final facts; base is post-fusion raw IR.
 pub const Phase = enum { base, leaf, cfg, unswitch, parameter };
@@ -24,7 +25,7 @@ pub const Entry = struct {
     raw: ?[32]u8 = null,
     demand: struct {
         lowered: ?[32]u8 = null,
-        fused_identity: bool = false,
+        fusion: fusion.Body = .{},
         fields: struct { rounds: [2]?FieldRound = .{ null, null }, final: ?[32]u8 = null } = .{},
         graph: struct { calls: []const u32 = &.{}, direct_calls: []const u32 = &.{}, references: []const u32 = &.{} } = .{},
         effect: ?effects.Reused = null,
@@ -51,7 +52,7 @@ pub const Index = struct {
     entries: []Entry,
     green: []bool,
     parents: []const std.ArrayList(u32),
-    layout: ?[32]u8 = null,
+    catalog: fusion.Catalog = .{},
     runtime: ?Runtime = null,
 
     /// Attach phase-aware callbacks only for the lifetime of the optimizer.
@@ -107,7 +108,22 @@ pub const Index = struct {
         if (phase == .base) {
             // A previously loaded later checkpoint cannot be replaced by ensureRaw.
             if (runtime.loaded[index] != null) return error.CacheMiss;
-            try self.context.lazy.raw.?.ensureRaw(index);
+            if (self.entries[index].demand.fusion.identity) {
+                try self.context.lazy.raw.?.ensureRaw(index);
+            } else {
+                const key = self.entries[index].demand.fusion.key orelse return error.CacheMiss;
+                var scratch = std.heap.ArenaAllocator.init(runtime.backing);
+                defer scratch.deinit();
+                const wire = try self.context.store.loadValue(scratch.allocator(), key, @import("ir_snapshot.zig").Wire) orelse return error.CacheMiss;
+                const empty: cache.Provenance = .{ .frames = &.{}, .blocks = &.{}, .instructions = &.{}, .present = false };
+                const restored = try self.context.restore(runtime.arena, index, wire, empty, runtime.provenance) orelse return error.CacheMiss;
+                self.context.source.module.functions.items[index] = restored;
+                const digest = try self.context.bodyDigest(index) orelse return error.CacheMiss;
+                const expected = self.entries[index].raw orelse return error.CacheMiss;
+                if (!std.mem.eql(u8, &digest, &expected)) return error.CacheMiss;
+                self.context.statistics.restores.fusions += 1;
+                if (index < self.context.lazy.raw.?.loaded.len) self.context.lazy.raw.?.loaded[index] = true;
+            }
             runtime.loaded[index] = .base;
             return;
         }
@@ -242,7 +258,7 @@ pub const Index = struct {
                 const old = prior[index];
                 if (old.demand.lowered != null and lowered != null and std.mem.eql(u8, &old.demand.lowered.?, &lowered.?)) {
                     entry.* = old;
-                    reusable.* = reusableEntry(old, module, index);
+                    reusable.* = reusableEntry(old, module, index, saved.?.catalog);
                 }
             };
             if (function.signature.linkage != .internal) reusable.* = true;
@@ -263,7 +279,7 @@ pub const Index = struct {
         try invalidateCycles(a, parents, green, &queue);
         try invalidateCallers(a, parents, green, &queue);
         for (green, 0..) |reusable, index| if (!reusable) try demand.ensure(@intCast(index));
-        return .{ .context = context, .key = key, .entries = entries, .green = green, .parents = parents, .layout = if (saved) |value| value.layout else null };
+        return .{ .context = context, .key = key, .entries = entries, .green = green, .parents = parents, .catalog = if (saved) |value| value.catalog else .{ .raw_count = count } };
     }
 
     /// Optimizer fusions may append immutable runtime declarations.
@@ -347,20 +363,21 @@ pub const Index = struct {
     /// Atomically replace the advisory index; absent final artifacts still miss normally.
     pub fn save(self: *const Index) std.mem.Allocator.Error!void {
         if (self.context.lazy.raw != null) {
-            try self.context.store.storeValue(self.key, DemandIndex, .{ .entries = self.entries, .layout = self.context.layoutDigest() });
+            try self.context.store.storeValue(self.key, DemandIndex, .{ .entries = self.entries, .catalog = self.catalog });
         } else try self.context.store.storeValue(self.key, []Entry, self.entries);
     }
 };
 
-const DemandIndex = struct { entries: []Entry, layout: ?[32]u8 };
+/// Portable admission metadata and the post-fusion declaration proof.
+pub const DemandIndex = struct { entries: []Entry, catalog: fusion.Catalog };
 
-fn reusableEntry(entry: Entry, module: *const @import("ir.zig").Module, index: usize) bool {
-    if (!entry.demand.fused_identity) return false;
+fn reusableEntry(entry: Entry, module: *const @import("ir.zig").Module, index: usize, catalog: fusion.Catalog) bool {
+    if (!entry.demand.fusion.identity and entry.demand.fusion.key == null) return false;
     const history = entry.demand.history orelse return false;
     for (history.outputs) |checkpoint| if (checkpoint == null) return false;
     if (entry.raw == null or entry.final == null) return false;
     const summary = entry.summary orelse return false;
-    if (!summary.valid(module)) return false;
+    if (!validDemandSummary(summary, module, catalog)) return false;
     const effect = entry.demand.effect orelse return false;
     if (effect.params.len != module.functions.items[index].signature.params.len) return false;
     const metadata = entry.demand.metadata orelse return false;
@@ -419,4 +436,19 @@ fn invalidateCycles(a: std.mem.Allocator, parents: []const std.ArrayList(u32), g
             }
         }
     }
+}
+
+fn validDemandSummary(summary: cache.Summary, module: *const @import("ir.zig").Module, catalog: fusion.Catalog) bool {
+    for (summary.calls) |call| {
+        const arity = if (call.callee < module.functions.items.len)
+            module.functions.items[call.callee].signature.params.len
+        else blk: {
+            if (catalog.raw_count != module.functions.items.len) return false;
+            const helper = call.callee - catalog.raw_count;
+            if (helper >= catalog.declarations.len) return false;
+            break :blk catalog.declarations[helper].signature.params.len;
+        };
+        if (call.ranges.len != arity) return false;
+    }
+    return true;
 }

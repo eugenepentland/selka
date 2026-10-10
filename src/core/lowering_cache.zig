@@ -42,7 +42,7 @@ const Delta = struct {
     types: []TypeBinding,
 };
 const Wire = struct { function: Function, delta: Delta };
-const Header = struct { wire: Wire, local_positions: bool };
+const Header = struct { wire: Wire, local_positions: bool, source_max: ?u32 };
 /// Inputs needed to publish one successful function without repeating arguments.
 pub const Publication = struct { key: stage.Digest, before: Before, checked: typed.Function };
 
@@ -72,6 +72,7 @@ pub const Deferred = struct {
     tables: struct {
         handles: std.ArrayList(?Handle) = .empty,
         keys: std.ArrayList(?stage.Digest) = .empty,
+        source_max: std.ArrayList(?u32) = .empty,
         loaded: std.ArrayList(bool) = .empty,
     } = .{},
     context: demand_ir.Context = undefined,
@@ -81,20 +82,22 @@ pub const Deferred = struct {
     fn extend(self: *Deferred, count: usize) std.mem.Allocator.Error!void {
         while (self.tables.keys.items.len < count) {
             try self.tables.keys.append(self.arena, null);
+            try self.tables.source_max.append(self.arena, null);
             try self.tables.handles.append(self.arena, null);
             try self.tables.loaded.append(self.arena, true);
         }
     }
 
-    fn record(self: *Deferred, index: usize, key: stage.Digest, handle: ?Handle) std.mem.Allocator.Error!void {
+    fn record(self: *Deferred, index: usize, key: stage.Digest, handle: ?Handle, source_max: ?u32) std.mem.Allocator.Error!void {
         try self.extend(index + 1);
         self.tables.keys.items[index] = key;
+        self.tables.source_max.items[index] = source_max;
         self.tables.handles.items[index] = handle;
         self.tables.loaded.items[index] = handle == null;
     }
 
-    /// Final catalog and each original file guard debug locations and numeric IDs.
-    /// Merged offsets may shift while an unchanged original file remains reusable.
+    /// Bind the final catalog and exact source prefix governing every local site.
+    /// Nonlocal replay retains conservative original-file authority.
     pub fn prepare(self: *Deferred, module: *ir.Module, source: ?language.source.Source) std.mem.Allocator.Error!void {
         self.input.module = module;
         self.input.source = source;
@@ -104,12 +107,18 @@ pub const Deferred = struct {
         const layout = try snapshot.layout(scratch.allocator(), .{ .module = module, .source = source });
         const count = if (source) |s| @max(1, s.origins.len) else 1;
         const digests = try scratch.allocator().alloc(stage.Digest, count);
-        if (source) |s| {
-            if (s.origins.len == 0) std.crypto.hash.Blake3.hash(s.bytes, &digests[0], .{}) else {
-                for (s.origins, digests) |origin, *digest| std.crypto.hash.Blake3.hash(origin.original.bytes, digest, .{});
-            }
-        } else @memset(digests, @splat(0));
-        for (self.tables.keys.items, module.functions.items) |*key, function| {
+        const ready = try scratch.allocator().alloc(bool, count);
+        @memset(ready, false);
+        @memset(digests, @splat(0));
+        for (self.tables.keys.items, module.functions.items, 0..) |*key, function, index| {
+            if (source) |current| if (self.tables.source_max.items[index]) |maximum| {
+                const proof = sourceProof(current, function.span, maximum) catch {
+                    key.* = null;
+                    continue;
+                };
+                if (key.*) |raw| key.* = self.store.key("demand-raw-source-v2", &.{ &raw, &layout, &proof });
+                continue;
+            };
             const raw = key.* orelse continue;
             var origin: usize = 0;
             if (source) |s| if (s.origins.len != 0) {
@@ -118,6 +127,11 @@ pub const Deferred = struct {
                     continue;
                 };
                 origin = at.input;
+            };
+            if (!ready[origin]) if (source) |s| {
+                const original = if (s.origins.len == 0) s else s.origins[origin].original;
+                std.crypto.hash.Blake3.hash(original.bytes, &digests[origin], .{});
+                ready[origin] = true;
             };
             key.* = self.store.key("demand-raw-v1", &.{ &raw, &layout, &digests[origin] });
         }
@@ -240,7 +254,7 @@ pub const Session = struct {
     /// Decode and validate with private scratch and temporary discovery deltas.
     /// Every accepted pointer is then copied onto the result arena.
     pub fn restore(self: *Session, scratch: std.mem.Allocator, key_value: stage.Digest, mb: Context, checked: typed.Function, declared: ir.Function) std.mem.Allocator.Error!?ir.Function {
-        const header = if (self.cache.lazy != null and !self.cache.lazy.?.force_eager) try self.cache.store.loadValue(scratch, self.cache.store.key("lowered-header-v1", &.{&key_value}), Header) else null;
+        const header = if (self.cache.lazy != null and !self.cache.lazy.?.force_eager) try self.cache.store.loadValue(scratch, self.cache.store.key("lowered-header-source-v2", &.{&key_value}), Header) else null;
         const wire = if (header) |metadata| metadata.wire else try self.cache.store.loadValue(scratch, key_value, Wire) orelse return null;
         const before = Before.init(mb);
         if (!(if (header) |metadata| metadata.local_positions else localPositions(wire, before.functions))) if (self.cache.demand) |queries| {
@@ -305,7 +319,7 @@ pub const Session = struct {
             .old_strings = wire.delta.string_start,
             .new_strings = before.strings,
             .string_count = wire.delta.strings.len,
-        } else null);
+        } else null, if (header) |metadata| metadata.source_max else sourceMaximum(wire, before.functions));
         return result;
     }
 
@@ -344,11 +358,12 @@ pub const Session = struct {
         header.function.value.extra = &.{};
         header.function.value.loops = &.{};
         header.function.positions = function.positions[0..1];
-        try self.cache.store.storeValue(self.cache.store.key("lowered-header-v1", &.{&publication.key}), Header, .{
+        try self.cache.store.storeValue(self.cache.store.key("lowered-header-source-v2", &.{&publication.key}), Header, .{
             .wire = header,
             .local_positions = localPositions(wire, before.functions),
+            .source_max = sourceMaximum(wire, before.functions),
         });
-        if (self.cache.lazy) |lazy| try lazy.record(mb.discovery.ids.get(@backingInt(checked.id)).?, publication.key, null);
+        if (self.cache.lazy) |lazy| try lazy.record(mb.discovery.ids.get(@backingInt(checked.id)).?, publication.key, null, sourceMaximum(wire, before.functions));
     }
 };
 
@@ -656,3 +671,49 @@ const TreeHash = struct {
         }
     }
 };
+
+/// Exact current source authority for replayed offsets, without retaining a body.
+/// Bytes before the maximum site determine every local site's line and column.
+pub fn sourceProof(source: language.source.Source, span: u32, maximum: u32) snapshot.Error!stage.Digest {
+    const mapped = if (source.origins.len == 0) null else source.originalSpan(.{ .start = span, .end = span }) catch return error.InvalidSnapshot;
+    const original = if (mapped) |at| source.origins[at.input].original else source;
+    const start = if (mapped) |at| at.span.start else span;
+    if (start > original.bytes.len or maximum > original.bytes.len - start) return error.InvalidSnapshot;
+    // Do not let a mapped slice's extent exceed the original source it attests.
+    const point = original.physicalLocation(start);
+    var hash = std.crypto.hash.Blake3.init(.{});
+    const max_bytes = std.mem.toBytes(std.mem.nativeToLittle(u32, maximum));
+    const line = std.mem.toBytes(std.mem.nativeToLittle(u64, point.line));
+    const column = std.mem.toBytes(std.mem.nativeToLittle(u64, point.column));
+    hash.update("lowered-local-source-v1\x00");
+    hash.update(&max_bytes);
+    hash.update(&line);
+    hash.update(&column);
+    hash.update(original.path);
+    hash.update("\x00");
+    hash.update(original.bytes[start..][0..maximum]);
+    var digest: stage.Digest = undefined;
+    hash.final(&digest);
+    return digest;
+}
+
+fn sourceMaximum(wire: Wire, first: usize) ?u32 {
+    if (!localPositions(wire, first)) return null;
+    var maximum: u32 = 0;
+    for (wire.function.positions) |at| if (at == .local) {
+        maximum = @max(maximum, at.local);
+    };
+    for (wire.delta.declarations, 0..) |decl, index| {
+        // Bound ordinary declarations get fresh positions from the checked table.
+        var bound = false;
+        for (wire.delta.functions) |binding| if (binding.physical == first + index) {
+            bound = true;
+            break;
+        };
+        for (decl.positions, 0..) |at, position_index| {
+            if (bound and position_index == 0) continue;
+            if (at == .local) maximum = @max(maximum, at.local);
+        }
+    }
+    return maximum;
+}

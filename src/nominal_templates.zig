@@ -522,7 +522,11 @@ pub const Index = struct {
                 .default_value = if (input.default_value) |value| @backingInt(value) else null,
             };
         }
-        const display = try std.fmt.allocPrint(ctx.allocator, "{s}.{s}", .{ ctx.src.text(self.declarations.items[union_id].name), ctx.src.text(case_name) });
+        const parent = self.declarations.items[union_id];
+        // Synthetic payloads are nominal children of their defining enum,
+        // including its module. Equal bare case names in imports must differ.
+        const owner = if (parent.builtin_name) |builtin| builtin else if (ctx.names) |module_names| try module_names.declaration(parent.name) else ctx.src.text(parent.name);
+        const display = try std.fmt.allocPrint(ctx.allocator, "{s}.{s}", .{ owner, ctx.src.text(case_name) });
         const id = self.declarations.items.len;
         try self.synthetic.put(ctx.allocator, id, {});
         try self.declarations.append(ctx.allocator, .{

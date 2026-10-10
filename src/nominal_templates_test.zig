@@ -506,3 +506,38 @@ test "nominal metadata preserves distinct imported template identities and relat
         }
     }
 }
+
+// spec-case: NOMINAL-INSTANCE-1
+test "synthetic enum payload identity preserves standalone display and source visibility" {
+    var compilation = try language.Compilation.init(t.allocator, "standalone.my",
+        \\enum Packet:
+        \\    data(value: i64)
+        \\    none
+        \\
+        \\func main() -> i64:
+        \\    match Packet.data(value=42):
+        \\        case Packet.data(value=n):
+        \\            return n
+        \\        case _:
+        \\            return 0
+    );
+    defer compilation.deinit();
+    var sink: language.diagnostic.Sink = .{ .allocator = compilation.arena.allocator() };
+    const index = try collect(&compilation, &sink);
+    var found = false;
+    for (index.declarations.items, 0..) |declaration, id| {
+        if (!index.isSynthetic(id)) continue;
+        if (declaration.builtin_name) |name| {
+            if (std.mem.eql(u8, name, "Packet.data")) found = true;
+        }
+    }
+    try t.expect(found);
+    try t.expect(!index.names.contains("Packet.data"));
+    try compilation.check();
+    try t.expect(hasRecordName(compilation.program.?.records, "Packet.data"));
+}
+
+fn hasRecordName(records: []const language.typed.Record, name: []const u8) bool {
+    for (records) |record| if (std.mem.eql(u8, record.name, name)) return true;
+    return false;
+}
