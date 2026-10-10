@@ -28,6 +28,18 @@ def git(*args):
     return subprocess.check_output(['git', *args], cwd=ROOT, text=True).strip()
 
 
+def corpora_identity():
+    manifest = AREA / 'M0/corpora-source-sha256.json'
+    expected = json.loads(manifest.read_text())
+    count = 0
+    for corpus, files in expected.items():
+        for relative, sha in files.items():
+            path = ROOT / '.mylang-cache' / corpus / relative
+            assert digest(path) == sha, ('corpus changed', path)
+            count += 1
+    return {'manifest_sha256': digest(manifest), 'files_checked': count}
+
+
 class Gates:
     def __init__(self, tag):
         if not tag or any(c not in 'abcdefghijklmnopqrstuvwxyz0123456789-' for c in tag):
@@ -46,6 +58,7 @@ class Gates:
                         MYLANG_CORE_RUNTIME_CACHE=str(ROOT / '.mylang-cache' / ('runtime-' + tag)))
         Path(self.env['MYLANG_CORE_RUNTIME_CACHE']).mkdir(parents=True, exist_ok=True)
         self.receipt = {'source_commit': self.head, 'tag': tag, 'complete': False, 'steps': self.records}
+        self.receipt['corpora'] = corpora_identity()
 
     def unchanged(self):
         if git('rev-parse', 'HEAD') != self.head or git('status', '--porcelain', '--untracked-files=no'):
@@ -148,6 +161,8 @@ def main():
     assert digest(debug) == g.receipt['debug_compiler']['sha256']
     assert digest(final) == g.receipt['release_fast_compiler']['sha256']
     assert all(digest(bins / name) == sha for name, sha in binaries.items())
+    assert corpora_identity() == g.receipt['corpora']
+    g.receipt['corpora']['unchanged_after_gates'] = True
     g.receipt['guest_binaries']['unchanged_after_gates'] = True
     g.receipt['complete'] = True
     g.save()

@@ -68,6 +68,8 @@ Final head: pending X.
 - S2's fresh guest compile comparison records EDA 1.03713× base wall time and Lox 0.90774×, with all 16 reports showing one compiled unit and zero reuse. R records Lox 0.9390× wall / 0.9386× child CPU and EDA 0.9237× / 0.9239×, with the same fresh-unit proof. No lane shows a >10% compile-time increase; shared-machine wall ranges and all samples remain explicit.
 - U2 raw/additive qualification is validated: raw 1516/4/0 in both modes with the exact 12 baseline PROBLEM lines, additive 1547/0/0 in both, and 613 passing core tests in each 64-shard run. S2 raw qualification also exactly matches M0 with 613 core tests; additive is underway. U2's frozen 9×50 matrix is queued. Preliminary U2/S2 merge-tree inspection finds no textual conflicts; no real merge has occurred.
 
+- Pre-integration identity audit checks all 683 frozen copied corpus files in the coordinator and each lane: all four copies exactly match M0. Integration qualification now checks the manifest and every listed file before and after each merged-tree run.
+
 ## Lane exits at current checkpoints
 
 These checkpoints precede final hand-offs and integration. X's CPU-10 column remains pending.
