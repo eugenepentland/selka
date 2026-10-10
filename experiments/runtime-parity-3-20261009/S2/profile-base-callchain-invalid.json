@@ -1,0 +1,84 @@
+{
+  "labstation": {
+    "samples": 3365,
+    "materialization_samples": 0,
+    "materialization_share": 0.0,
+    "inclusive": {},
+    "top_inclusive": [
+      [
+        "[unknown]",
+        188
+      ],
+      [
+        "realloc",
+        6
+      ],
+      [
+        "__libc_calloc",
+        2
+      ],
+      [
+        "aligned_alloc",
+        2
+      ],
+      [
+        "read",
+        1
+      ],
+      [
+        "malloc",
+        1
+      ],
+      [
+        "openat64",
+        1
+      ],
+      [
+        "cfree",
+        1
+      ]
+    ],
+    "perf_data": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/s2-profile/base/labstation.perf"
+  },
+  "rds3+flat": {
+    "samples": 5317,
+    "materialization_samples": 0,
+    "materialization_share": 0.0,
+    "inclusive": {},
+    "top_inclusive": [
+      [
+        "[unknown]",
+        225
+      ],
+      [
+        "realloc",
+        4
+      ],
+      [
+        "__libc_calloc",
+        2
+      ],
+      [
+        "readdir64",
+        1
+      ],
+      [
+        "getenv",
+        1
+      ],
+      [
+        "strncmp@plt",
+        1
+      ],
+      [
+        "cfree",
+        1
+      ],
+      [
+        "malloc",
+        1
+      ]
+    ],
+    "perf_data": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/s2-profile/base/rds3+flat.perf"
+  }
+}

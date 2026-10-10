@@ -1,0 +1,28 @@
+{
+  "text_ops": {
+    "check": "base",
+    "arms": {
+      "rung0": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/s2-ladder/text_ops.r0"
+      ],
+      "rung1": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/s2-ladder/text_ops.r1"
+      ],
+      "rung2": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/s2-ladder/text_ops.r2"
+      ],
+      "rung3": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/s2-ladder/text_ops.r3"
+      ],
+      "rung4": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/s2-ladder/text_ops.r4"
+      ],
+      "rung5": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/s2-ladder/text_ops.r5"
+      ],
+      "base": [
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/ce/bin/base/parity-text_ops-plain"
+      ]
+    }
+  }
+}

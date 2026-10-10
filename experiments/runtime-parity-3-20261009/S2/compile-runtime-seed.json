@@ -1,0 +1,49 @@
+{
+ "method": "Untimed setup only: seed runtime objects before independent native-cold timed arms. Unit objects created here are excluded by the helper\u2019s top-level-only file copy.",
+ "samples": [
+  {
+   "program": "eda",
+   "status": 0,
+   "seconds": 35.37038351711817,
+   "command": [
+    "/home/epentland/.cache/mylang/rp3-base-41ed360fb/bin/mylang",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/eda-src/src/main.my",
+    "--release",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/s2-compile-runtime-seed/cache",
+    "--cache-report",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/s2-compile-runtime-seed/eda"
+   ],
+   "compiler_sha256": "b6db112b3faeab165422d2da80e64afa94c4135cf83cd7abe3eb41cd15308131",
+   "runtime_cache": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/ce/runtime/b6db112b3faeab16",
+   "stderr_sha256": "926c92685033f4e1a62dd5803fc99a70cf8a22dee72b71334449639f13aa9477",
+   "cache_report": [
+    "mylang-core: cache: 1 units, 0 reused, 1 compiled, 0 verified; program linked; 3 processes"
+   ]
+  },
+  {
+   "program": "lox",
+   "status": 0,
+   "seconds": 9.606371517060325,
+   "command": [
+    "/home/epentland/.cache/mylang/rp3-base-41ed360fb/bin/mylang",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/lox/ports/mylang/main.my",
+    "--release",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/s2-compile-runtime-seed/cache",
+    "--cache-report",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/s2-compile-runtime-seed/lox"
+   ],
+   "compiler_sha256": "b6db112b3faeab165422d2da80e64afa94c4135cf83cd7abe3eb41cd15308131",
+   "runtime_cache": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/ce/runtime/b6db112b3faeab16",
+   "stderr_sha256": "fb5921a9bf000b39d38efec7f79662f694af10733408a5a8e5f48ff9456022cc",
+   "cache_report": [
+    "mylang-core: cache: 1 units, 0 reused, 1 compiled, 0 verified; program linked; 2 processes"
+   ]
+  }
+ ]
+}

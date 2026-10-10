@@ -1,0 +1,53 @@
+{
+ ".tmp/rp3/s2-prefix-build.log": {
+  "sha256": "b58a8f11f7526113b6ad4e711cbafad104a39fbb037cfe111a4dd8445d3ca9ad",
+  "summary": [
+   "guardian: run-all: 1/88 failed (error-discipline) \u2014 diff-scoped vs 41ed360fb361c49938488ad111795bad8a726b73, 14 file(s) in scope",
+   "  error-discipline (1 finding)",
+   "error: process exited with code 1",
+   "Build Summary: 6/9 steps succeeded (1 failed)"
+  ]
+ },
+ ".tmp/rp3/s2-prefix-fast.log": {
+  "sha256": "39a81874047b4b16979dd6ce3c9aa9be7e9e1d59e7a37a16bd6af618ad14904d",
+  "summary": [
+   "guardian: run-all: 1/88 failed (error-discipline) \u2014 diff-scoped vs 41ed360fb361c49938488ad111795bad8a726b73, 14 file(s) in scope",
+   "  error-discipline (1 finding)",
+   "error: process exited with code 1",
+   "S2 canceled verified own remaining compiler process tree after Guardian had already rejected inferred public error set; corrected green rebuild is queued."
+  ]
+ },
+ ".tmp/rp3/s2-prefix-build2.log": {
+  "sha256": "18cf264ecb4c98f4824392caf9c50b4615c73a08ca2728d5c92d9fb6fbc094e7",
+  "summary": [
+   "guardian: run-all: 88 check(s) passed \u2014 diff-scoped vs 41ed360fb361c49938488ad111795bad8a726b73, 14 file(s) in scope",
+   "Build Summary: 9/9 steps succeeded"
+  ]
+ },
+ ".tmp/rp3/s2-prefix-02.log": {
+  "sha256": "8e9041156465f3973037c82214bfed2ab0cc7a2c003c944af888283074bf6c2a",
+  "summary": [
+   "src/core/split_views.zig:140:11: error: expected 'an identifier', found 'test'",
+   "error: 1 compilation errors",
+   "Build Summary: 3/8 steps succeeded (1 failed)"
+  ]
+ },
+ ".tmp/rp3/s2-prefix-03.log": {
+  "sha256": "66a692d2c979a58df3867d7a4e3cab32ef16f9f705ac8e147117fb0219d0c463",
+  "summary": [
+   "Build Summary: 8/8 steps succeeded; 47/47 tests passed"
+  ]
+ },
+ ".tmp/rp3/s2-prefix-04.log": {
+  "sha256": "751ed14730928ecdc877e3705858f57d5ac04eb935b2b181d386a1276cfc7286",
+  "summary": [
+   "Build Summary: 8/8 steps succeeded; 48/48 tests passed"
+  ]
+ },
+ ".tmp/rp3/s2-substring-probes.log": {
+  "sha256": "12a5bf469b07a519544fbe6e9840f273bcf6d3bc4519332a17012bd0c82c6e8e",
+  "summary": [
+   "RuntimeError: {'parity/knucleotide': {'base': {'status': 0, 'stdout_sha256': '85ef61714a76ad7ce4c0b54cc49ec081c54c2966978de102da6a53e2d208c0bb', 'stderr': ''}, 'candidate': {'status': 0, 'stdout_sha256': '85ef61714a76ad7ce4c0b54cc49ec081c54c2966978de102da6a53e2d208c0bb', 'stderr': ''}, 'equal_stdout': True}, 'parity/text_ops': {'base': {'status': 0, 'stdout_sha256': '0967b572d16c244fceff04c57b479c96e1e0fc0580feae10a3dbaa6c6e0a76bf', 'stderr': ''}, 'candidate': {'status': 0, 'stdout_sha256': '0967b572d16c244fceff04c57b479c96e1e0fc0580feae10a3dbaa6c6e0a76bf', 'stderr': ''}, 'equal_stdout': True}, 'parity/scan_split': {'base': {'status': 0, 'stdout_sha256': 'acd0b3e0d83a905f4007e5ade083a9293c977a9e53239489b3ab0b8c5f951a0d', 'stderr': ''}, 'candidate': {'status': 0, 'stdout_sha256': 'acd0b3e0d83a905f4007e5ade083a9293c977a9e53239489b3ab0b8c5f951a0d', 'stderr': ''}, 'equal_stdout': True}, 'lox/vm/string_equality': {'base': {'status': 0, 'stdout_sha256': 'b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597', 'stderr': ''}, 'candidate': {'status': 0, 'stdout_sha256': 'b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597', 'stderr': ''}, 'equal_stdout': True}, 'lox/tree/string_equality': {'base': {'status': 0, 'stdout_sha256': '876e13f4e07bb39705302c01f445ffd2d2c3b180a207e4d959d6b671c67da09b', 'stderr': ''}, 'candidate': {'status': 0, 'stdout_sha256': '876e13f4e07bb39705302c01f445ffd2d2c3b180a207e4d959d6b671c67da09b', 'stderr': ''}, 'equal_stdout': True}, 'eda/labstation': {'base': {'status': 0, 'stdout_sha256': 'c611d1102db3d81a2d8d4de4c34c700bb8f308dd8951b5171116f8d9a4ddeb3a', 'stderr': \"[W] export-kicad-sch: vendor symbol 'GSB1C41110SSHR' does not draw 2 pad(s) the design uses \u2014 adding them as unit 2\\n[W] export-kicad-sch: vendor symbol 'ARJM11D7-009-AB-EW2' does not draw 2 pad(s) the design uses \u2014 adding them as unit 2\\n[W] export-kicad-sch: vendor symbol 'TFM-120-02-L-D-WT-K-TR' does not draw 11 pad(s) the design uses \u2014 adding them as unit 2\\n[I] export-kicad-sch: labstation: 33/58 components drawn from vendor symbols (138 libraries indexed)\\n\"}, 'candidate': {'status': 1, 'stdout_sha256': 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', 'stderr': 'port-kicad-sch: vendor symbol library W5500.kicad_sym is unreadable (InvalidNumber)\\n[W] export-kicad-sch: vendor symbol library W55RP20-EVB-PICO.kicad_sym is unreadable (InvalidNumber)\\n[W] export-kicad-sch: vendor symbol library W55RP20-S2E.kicad_sym is unreadable (InvalidNumber)\\n[W] export-kicad-sch: vendor symbol library WA-SMSI_9774XXX360.kicad_sym is unreadable (InvalidNumber)\\n[W] export-kicad-sch: vendor symbol library WS2812B-V5.kicad_sym is unreadable (InvalidNumber)\\n[W] export-kicad-sch: vendor symbol library YAT-6A+.kicad_sym is unreadable (InvalidNumber)\\n[W] export-kicad-sch: vendor symbol library bgs12p2l6e6327xtsa1.kicad_sym is unreadable (InvalidNumber)\\n[W] export-kicad-sch: vendor symbol library bk13h-40.kicad_sym is unreadable (InvalidNumber)\\n[W] export-kicad-sch: vendor symbol library cyclops-debug-header-2x25.kicad_sym is unreadable (InvalidNumber)\\n[W] export-kicad-sch: vendor symbol library sky13575-639lf.kicad_sym is unreadable (InvalidNumber)\\neda-sch: InvalidNumber\\n'}, 'equal_stdout': False}}"
+  ]
+ }
+}

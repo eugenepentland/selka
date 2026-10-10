@@ -1,0 +1,498 @@
+{
+  "labstation": {
+    "sampled_instruction_period": 404212126,
+    "materialization_period": 31900957,
+    "materialization_share": 0.07892132607619991,
+    "exclusive": {
+      "my.sexpr_parser::next_token": {
+        "period": 71902157,
+        "share": 0.17788223651657595
+      },
+      "my.sexpr_tokenizer::advance": {
+        "period": 28600858,
+        "share": 0.07075705096486888
+      },
+      "myl_core_bytes_slice": {
+        "period": 16600498,
+        "share": 0.04106877783275606
+      },
+      "myl_core_str_concat": {
+        "period": 7100213,
+        "share": 0.01756556160316675
+      },
+      "my.sexpr_tokenizer::is_unit_letter": {
+        "period": 4100123,
+        "share": 0.010143493320138546
+      },
+      "core_text_append_bytes": {
+        "period": 3700111,
+        "share": 0.009153884215734785
+      },
+      "myl_core_bytes_decode_text": {
+        "period": 2900087,
+        "share": 0.007174666006927264
+      },
+      "core_text_known": {
+        "period": 900027,
+        "share": 0.002226620484908461
+      },
+      "myl_core_bytes_concat": {
+        "period": 600018,
+        "share": 0.0014844136566056407
+      },
+      "myl_core_ir_str_from_span": {
+        "period": 100003,
+        "share": 0.00024740227610094015
+      },
+      "myl_core_ir_str_slice_span": {
+        "period": 100003,
+        "share": 0.00024740227610094015
+      }
+    },
+    "top_exclusive": [
+      [
+        "my.sexpr_parser::next_token",
+        71902157
+      ],
+      [
+        "myl_core_free_block",
+        37101113
+      ],
+      [
+        "my.sexpr_parser::parse_node",
+        31000930
+      ],
+      [
+        "block_alloc",
+        29900897
+      ],
+      [
+        "my.sexpr_tokenizer::advance",
+        28600858
+      ],
+      [
+        "reference_at",
+        18100543
+      ],
+      [
+        "myl_core_bytes_slice",
+        16600498
+      ],
+      [
+        "myl_core_parse_float_range",
+        12900387
+      ],
+      [
+        "fmt.parse_float.parseFloat__anon_1373",
+        9000270
+      ],
+      [
+        "myl_core_str_eq",
+        8200246
+      ],
+      [
+        "my.support_sha256::compress",
+        7200216
+      ],
+      [
+        "myl_core_str_concat",
+        7100213
+      ],
+      [
+        "my.kicad_sch_compose::join_sites",
+        7000210
+      ],
+      [
+        "my.kicad_sch_verify::grid_scan",
+        6400192
+      ],
+      [
+        "my.kicad_sch_verify::check",
+        6300189
+      ],
+      [
+        "block_free",
+        4400132
+      ],
+      [
+        "myl_core_list_grow",
+        4300129
+      ],
+      [
+        "my.sexpr_tokenizer::is_unit_letter",
+        4100123
+      ],
+      [
+        "core_text_append_bytes",
+        3700111
+      ],
+      [
+        "myl_core_bytes_decode_text",
+        2900087
+      ],
+      [
+        "myl_core_buffer_push_checked",
+        2700081
+      ],
+      [
+        "myl_core_bytes_valid_list",
+        2400072
+      ],
+      [
+        "my.flat_netlist::uuid_from_id",
+        2100063
+      ],
+      [
+        "my.sexpr_parser::parse_number_node",
+        2000060
+      ],
+      [
+        "myl_core_bytes_from_list",
+        2000060
+      ],
+      [
+        "myl_core_span_utf8_count",
+        1800054
+      ],
+      [
+        "core_buffer_owned",
+        1700051
+      ],
+      [
+        "myl_core_dict_insert",
+        1700051
+      ],
+      [
+        "my.byte_builder::append",
+        1600048
+      ],
+      [
+        "myl_core_str_from_i64",
+        1500045
+      ]
+    ],
+    "perf_data": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/s2-profile/s2-prefix/labstation.lbr.perf",
+    "perf_sha256": "d02b290f4c21d8445c13571aad0d04e1b71d876e5ae332afb98467e49d80a546",
+    "binary": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/ce/bin/s2-prefix/eda-plain",
+    "binary_sha256": "5abec05c8095eb544bf29b3368ce3b51eecd0a98ba74409ab874e710a3bdb462",
+    "materialization_symbols": [
+      "core_octets_copy",
+      "core_text_append_bytes",
+      "core_text_known",
+      "core_text_publish",
+      "myl_core_bytes_concat",
+      "myl_core_bytes_decode_text",
+      "myl_core_bytes_slice",
+      "myl_core_ir_str_from_span",
+      "myl_core_ir_str_from_view",
+      "myl_core_ir_str_slice",
+      "myl_core_str_concat",
+      "myl_core_str_join",
+      "str_from"
+    ],
+    "definition": "normalized-inline-family-union-v2",
+    "limitation": "LBR reconstructs bounded hardware call chains with inline symbols. Family union counts each instruction sample once; truncated chains can underattribute descendants. Baseline and candidate use this identical method.",
+    "inclusive_periods": {
+      "total": 404212126,
+      "material_inclusive": 54301629,
+      "bytes_slice_inclusive": 30600918,
+      "stored_token_slice_inclusive": 21900657
+    },
+    "inclusive_shares": {
+      "total": 1.0,
+      "material_inclusive": 0.1343394359228105,
+      "bytes_slice_inclusive": 0.07570509648688768,
+      "stored_token_slice_inclusive": 0.05418109846610589
+    },
+    "stored_token_examples": [
+      [
+        "myl_core_bytes_slice",
+        "sexpr_tokenizer::make_token",
+        "sexpr_tokenizer::next_in",
+        "sexpr_tokenizer::next",
+        "sexpr_parser::next_token",
+        "sexpr_parser::parse_list",
+        "sexpr_parser::parse_node",
+        "sexpr_parser::parse_list",
+        "sexpr_parser::parse_node"
+      ],
+      [
+        "block_alloc",
+        "myl_core_bytes_slice",
+        "sexpr_tokenizer::make_token",
+        "sexpr_tokenizer::next_in",
+        "sexpr_tokenizer::next",
+        "sexpr_parser::next_token",
+        "sexpr_parser::parse_list",
+        "sexpr_parser::parse_node",
+        "sexpr_parser::parse_list",
+        "sexpr_parser::parse_node",
+        "sexpr_parser::parse_list",
+        "sexpr_parser::parse_node"
+      ]
+    ]
+  },
+  "rds3+flat": {
+    "sampled_instruction_period": 579117373,
+    "materialization_period": 39801194,
+    "materialization_share": 0.06872733552063547,
+    "exclusive": {
+      "my.sexpr_parser::next_token": {
+        "period": 96602898,
+        "share": 0.1668105681229494
+      },
+      "my.sexpr_tokenizer::advance": {
+        "period": 39001170,
+        "share": 0.06734588154032119
+      },
+      "myl_core_bytes_slice": {
+        "period": 20200606,
+        "share": 0.03488171300293559
+      },
+      "myl_core_str_concat": {
+        "period": 9500285,
+        "share": 0.016404766016232083
+      },
+      "my.sexpr_tokenizer::is_unit_letter": {
+        "period": 5300159,
+        "share": 0.00915213261958211
+      },
+      "myl_core_bytes_decode_text": {
+        "period": 4700141,
+        "share": 0.008116042134346399
+      },
+      "core_text_append_bytes": {
+        "period": 3600108,
+        "share": 0.006216542911414264
+      },
+      "core_text_known": {
+        "period": 1200036,
+        "share": 0.002072180970471421
+      },
+      "myl_core_ir_str_slice_span": {
+        "period": 800024,
+        "share": 0.0013814539803142809
+      },
+      "myl_core_bytes_concat": {
+        "period": 500015,
+        "share": 0.0008634087376964255
+      },
+      "myl_core_ir_str_slice": {
+        "period": 100003,
+        "share": 0.0001726817475392851
+      }
+    },
+    "top_exclusive": [
+      [
+        "my.sexpr_parser::next_token",
+        96602898
+      ],
+      [
+        "myl_core_free_block",
+        47801434
+      ],
+      [
+        "my.sexpr_parser::parse_node",
+        39901197
+      ],
+      [
+        "my.sexpr_tokenizer::advance",
+        39001170
+      ],
+      [
+        "block_alloc",
+        37501125
+      ],
+      [
+        "my.kicad_sch_compose::join_sites",
+        32800984
+      ],
+      [
+        "my.kicad_sch_verify::check",
+        32200966
+      ],
+      [
+        "reference_at",
+        22400672
+      ],
+      [
+        "myl_core_bytes_slice",
+        20200606
+      ],
+      [
+        "myl_core_parse_float_range",
+        15000450
+      ],
+      [
+        "myl_core_str_eq",
+        14000420
+      ],
+      [
+        "fmt.parse_float.parseFloat__anon_1373",
+        10600318
+      ],
+      [
+        "myl_core_str_concat",
+        9500285
+      ],
+      [
+        "my.support_sha256::compress",
+        8600258
+      ],
+      [
+        "my.kicad_sch_verify::grid_scan",
+        8200246
+      ],
+      [
+        "myl_core_list_grow",
+        7100213
+      ],
+      [
+        "block_free",
+        5300159
+      ],
+      [
+        "my.sexpr_tokenizer::is_unit_letter",
+        5300159
+      ],
+      [
+        "myl_core_bytes_decode_text",
+        4700141
+      ],
+      [
+        "core_text_append_bytes",
+        3600108
+      ],
+      [
+        "myl_core_buffer_push_checked",
+        3500105
+      ],
+      [
+        "my.flat_netlist::uuid_from_id",
+        3400102
+      ],
+      [
+        "my.kicad_sch_compose::compose",
+        3100093
+      ],
+      [
+        "my.kicad_sch_verify::on_grid",
+        3000090
+      ],
+      [
+        "myl_core_bytes_from_list",
+        3000090
+      ],
+      [
+        "my.sexpr_parser::parse_number_node",
+        2800084
+      ],
+      [
+        "my.kicad_sch_emit::render",
+        2700081
+      ],
+      [
+        "myl_core_bytes_valid_list",
+        2600078
+      ],
+      [
+        "core_buffer_owned",
+        2400072
+      ],
+      [
+        "0x0000000000197a00",
+        2400072
+      ]
+    ],
+    "perf_data": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/s2-profile/s2-prefix/rds3+flat.lbr.perf",
+    "perf_sha256": "d52fa969c6ee6f0b302f8b6010f93dd6f6733c828f8f0ce2c2ed7b4f76f9a465",
+    "binary": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/ce/bin/s2-prefix/eda-plain",
+    "binary_sha256": "5abec05c8095eb544bf29b3368ce3b51eecd0a98ba74409ab874e710a3bdb462",
+    "materialization_symbols": [
+      "core_octets_copy",
+      "core_text_append_bytes",
+      "core_text_known",
+      "core_text_publish",
+      "myl_core_bytes_concat",
+      "myl_core_bytes_decode_text",
+      "myl_core_bytes_slice",
+      "myl_core_ir_str_from_span",
+      "myl_core_ir_str_from_view",
+      "myl_core_ir_str_slice",
+      "myl_core_str_concat",
+      "myl_core_str_join",
+      "str_from"
+    ],
+    "definition": "normalized-inline-family-union-v2",
+    "limitation": "LBR reconstructs bounded hardware call chains with inline symbols. Family union counts each instruction sample once; truncated chains can underattribute descendants. Baseline and candidate use this identical method.",
+    "inclusive_periods": {
+      "total": 579117373,
+      "material_inclusive": 70202106,
+      "bytes_slice_inclusive": 37901137,
+      "stored_token_slice_inclusive": 25400762
+    },
+    "inclusive_shares": {
+      "total": 1.0,
+      "material_inclusive": 0.12122258677257813,
+      "bytes_slice_inclusive": 0.06544638231738906,
+      "stored_token_slice_inclusive": 0.04386116387497842
+    },
+    "stored_token_examples": [
+      [
+        "block_alloc",
+        "myl_core_bytes_slice",
+        "sexpr_tokenizer::make_token",
+        "sexpr_tokenizer::read_number",
+        "sexpr_tokenizer::next_in",
+        "sexpr_tokenizer::next",
+        "sexpr_parser::next_token",
+        "sexpr_parser::parse_list",
+        "sexpr_parser::parse_node",
+        "sexpr_parser::parse_list",
+        "sexpr_parser::parse_node",
+        "sexpr_parser::parse_list",
+        "sexpr_parser::parse_node",
+        "sexpr_parser::parse_list",
+        "sexpr_parser::parse_node",
+        "sexpr_parser::parse_list",
+        "sexpr_parser::parse_node",
+        "sexpr_parser::parse_list",
+        "sexpr_parser::parse_node",
+        "sexpr_parser::parse_list",
+        "sexpr_parser::parse_node",
+        "sexpr_parser::parse_inner",
+        "sexpr_parser::parse_diag",
+        "sexpr_parser::parse",
+        "kicad_sym_reader::parse_library",
+        "kicad_sym_library::index_file",
+        "kicad_sym_library::load",
+        "export_kicad_sch::export_sch"
+      ],
+      [
+        "myl_core_bytes_slice",
+        "sexpr_tokenizer::make_token",
+        "sexpr_tokenizer::read_number",
+        "sexpr_tokenizer::next_in",
+        "sexpr_tokenizer::next",
+        "sexpr_parser::next_token",
+        "sexpr_parser::parse_list",
+        "sexpr_parser::parse_node",
+        "sexpr_parser::parse_list",
+        "sexpr_parser::parse_node",
+        "sexpr_parser::parse_list",
+        "sexpr_parser::parse_node",
+        "sexpr_parser::parse_list",
+        "sexpr_parser::parse_node",
+        "sexpr_parser::parse_list",
+        "sexpr_parser::parse_node",
+        "sexpr_parser::parse_list",
+        "sexpr_parser::parse_node",
+        "sexpr_parser::parse_inner",
+        "sexpr_parser::parse_diag",
+        "sexpr_parser::parse",
+        "kicad_sch_verify::check",
+        "export_kicad_sch::render_sheet"
+      ]
+    ]
+  }
+}

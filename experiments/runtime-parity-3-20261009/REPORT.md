@@ -1,6 +1,6 @@
 # Runtime parity wave 3 — 2026-10-09
 
-Status: M0, U2, S2 and R complete. X is in progress. The real U2 merge passes all merged-tree correctness and instruction checks; S2 and R merges and final CPU-10 timing remain.
+Status: M0, U2, S2 and R complete. X is in progress. The real U2 merge passes all merged-tree correctness and instruction checks. S2 is now merged; its merged-tree gates, the R merge and final CPU-10 timing remain.
 
 Base: `main` `41ed360fb361c49938488ad111795bad8a726b73`. Integration branch: `codex/runtime-parity-3`.
 Worktree: `/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3` (locked, prune-keep).
@@ -80,6 +80,8 @@ Historical checkpoints are retained below; the current state is stated above.
 - R hand-off accepted at `e83dfeb6dda34f7ff26a873174fbae506dff9d26`, with production source `09ed227098f3b5447643317ab640eec85c4f6772` and frozen-fuzz qualified head `fa5bf207d328d1918416db3909127c23a9167965`. All lane gates pass, including exact raw/additive qualification and the final 450 frozen cases / 6,450 comparisons / 8,900 runs with unchanged source/oracles. Compiler-input continuity to the hand-off is verified in `X/tool-audit/accepted-handoffs.json`.
 - First integrated tree `2cd674292291ad2e7078d32a9c8b43ce65a643ac` passes Debug/ReleaseFast 9/9, repository 95/95 (2,336 tests), formatting 15/15, exact raw 1516/4/0 and additive 1547/0/0 in both modes, 64 core shards / 613 tests, frozen fuzz 9×200 (1,800 cases; 25,800 comparisons; 35,600 runs), Lox 974 plus 65 tests, EDA 310 tests plus 34 goldens, all 199 counting/output cells and all 151 paired instruction cells. Maximum instruction ratio is 1.002906666 on rows/string_split; zero exceeds 1.03. All 683 copied source files, compiler hashes and 186 guest binaries remain unchanged. Full receipt: `X/gates-merge-u2-01/receipt.json`.
 - Measurement audit before final timing strengthens parity execution checks and independently recomputes row startup-subtracted values; no threshold changes. The strict U2 profile reparse corrects the historical broad allocation/free classification to labstation 25.786% → 21.707% and rds3+flat 23.504% → 20.082%; the 15% exit remains missed. Exact original receipts remain available. `X/tool-audit/` retains the proofs and source-interaction reviews.
+
+- X second real merge: qualified S2 hand-off `04c1f88807def016245a20140a57506ad8425ec0`, with U2 and both histories retained. Textual merge succeeds. `qualify_tree.py --tag merge-s2-01` runs the complete merged-tree correctness/instruction sequence, including another 9×200 frozen matrix; results are pending.
 
 ## Lane exits at current checkpoints
 
