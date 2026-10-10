@@ -219,3 +219,17 @@ public func test_many_exports_and_public_markers_use_indexes() -> bool fails ind
         req.facts.public_spans.append(at(2, 3))
     const result = try indexing.index(req)
     return result.problem.code == "" and len(result.symbols) == 2 and result.symbols[0].exported and result.symbols[1].exported
+
+
+public func test_repeated_large_owner_keys_rejected_before_construction() -> bool:
+    mut raw = byte_buffer([])
+    for i in range(4096):
+        _ = raw.append_byte(65)
+    mut req = request(bytes(raw), [])
+    for i in range(256):
+        req.facts.declarations.append(model.Declaration(category=6, name=at(0, 4096), owner=at(0, 4096), restricted=False))
+    match indexing.index(req):
+        case Err(problem):
+            return problem.code == "P_TRANSPORT"
+        case Ok(result):
+            return False

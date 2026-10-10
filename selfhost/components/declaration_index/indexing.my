@@ -73,6 +73,38 @@ func prepare(request: model.Request) -> Prepared fails indexed.Problem:
             fail transport()
         if declaration.restricted and declaration.owner.start < 0:
             fail transport()
+    # Admit all name storage before constructing keys or sorted indexes.
+    mut admitted_bytes = len(request.context.name)
+    mut admitted_symbols = 0
+    mut admitted_keys = len(facts.declarations)
+    for imported in facts.imports:
+        admitted_bytes = admitted_bytes + len(imported.name) + len(imported.alias)
+        if admitted_bytes > 1048576:
+            fail transport()
+    for exported in facts.exports:
+        admitted_bytes = admitted_bytes + len(exported.name) + len(exported.alias)
+        if len(exported.alias) > 0:
+            admitted_keys = admitted_keys + 1
+            admitted_bytes = admitted_bytes + len(exported.name)
+        if admitted_bytes > 1048576 or admitted_keys > 65536:
+            fail transport()
+    for declaration in facts.declarations:
+        admitted_bytes = admitted_bytes + declaration.name.end - declaration.name.start
+        if declaration.owner.start >= 0:
+            admitted_bytes = admitted_bytes + declaration.owner.end - declaration.owner.start + 1
+        if admitted_bytes > 1048576:
+            fail transport()
+    for dependency in request.dependencies:
+        admitted_symbols = admitted_symbols + len(dependency.symbols)
+        admitted_bytes = admitted_bytes + len(dependency.name)
+        if admitted_symbols > 65536 or admitted_bytes > 1048576:
+            fail transport()
+        for symbol in dependency.symbols:
+            admitted_bytes = admitted_bytes + len(symbol.name) + len(symbol.owner)
+            if admitted_bytes > 1048576:
+                fail transport()
+    if admitted_bytes > 1048576:
+        fail transport()
     mut declarations: model.Declaration[] = []
     mut names: bytes[] = []
     for category in range(7):
