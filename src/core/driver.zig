@@ -895,6 +895,7 @@ test "publishOutput reports an unwritable output and servedForeign misses on dam
     try dir.dir.writeFile(std.testing.io, .{ .sub_path = "tool", .data = "fixture tool" });
     try dir.dir.setFilePermissions(std.testing.io, "tool", .executable_file, .{});
     native.guard.resources.executable = try std.fs.path.join(a, &.{ root, "tool" });
+    native.guard.resources.cache = root;
     native.guard.identity = try tool_identity.capture(native.guard.resources);
     try dir.dir.writeFile(std.testing.io, .{ .sub_path = "program", .data = "binary" });
     const program = try std.fs.path.join(a, &.{ root, "program" });
