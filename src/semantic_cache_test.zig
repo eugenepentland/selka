@@ -113,7 +113,7 @@ fn compare(allocator: std.mem.Allocator, cache: *Cache, bytes: []const u8, expec
         try t.expectEqualStrings(left, right);
     }
 }
-fn rejected(result: language.diagnostic.Error!void) !void {
+fn rejected(result: language.frontend_runtime.Error!void) !void {
     if (result) |_| return error.TestUnexpectedResult else |err| {
         if (err == error.OutOfMemory) return error.OutOfMemory;
         try t.expectEqual(error.SourceError, err);
@@ -148,6 +148,8 @@ fn scenario(allocator: std.mem.Allocator) !void {
 }
 // spec: SEMANTIC-CACHE-1
 test "semantic cache reuses unchanged checked bodies after edits and preserves diagnostics and ownership under allocation failures" {
+    try rejected(error.SourceError);
+    try t.expectError(error.OutOfMemory, rejected(error.OutOfMemory));
     try scenario(t.allocator);
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), scenario, .{});
