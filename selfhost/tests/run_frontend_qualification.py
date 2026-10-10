@@ -102,6 +102,7 @@ class Qualification:
         self.calls = self.comparisons = self.deployment = 0
         self.sessions = 0
         self.records = []
+        self.phase = 'installed'
         self.empty_path = work / 'empty-path'
         self.empty_path.mkdir()
         self.source = work / 'source'
@@ -134,7 +135,7 @@ class Qualification:
             require(actual == reference,
                     f'{name}/{mode}: frontend differs: reference={reference!r}, actual={actual!r}')
             self.comparisons += 1
-        self.records.append({'workflow': name, 'status': reference[0],
+        self.records.append({'workflow': name, 'phase': self.phase, 'status': reference[0],
                              'stdout_sha256': hashlib.sha256(reference[1]).hexdigest(),
                              'stderr_sha256': hashlib.sha256(reference[2]).hexdigest()})
         return reference
@@ -156,6 +157,17 @@ class Qualification:
             for command in ('check', 'check-project'):
                 result = self.compare(f'{command}/{source}', [command, self.source / source, '--diagnostics=json'], 1)
                 require(b'"kind":"diagnostic"' in result[2], 'source error lost diagnostics')
+        helper = self.source / 'helper.my'
+        original_helper = helper.read_bytes()
+        try:
+            for name, body in [('imported-syntax-error', b'    return 2 ** 3\n'),
+                               ('imported-type-error', '    return "éλ"\n'.encode())]:
+                helper.write_bytes(b'public func value() -> int:\n' + body)
+                result = self.compare(name, ['check-project', main, '--diagnostics=json'], 1)
+                require(b'"kind":"diagnostic"' in result[2] and b'helper.my' in result[2],
+                        'imported source error lost dependency location')
+        finally:
+            helper.write_bytes(original_helper)
         # Lexical invalidity is classified by the reference on every run. It may
         # be accepted in comments; qualification asserts exact bytes either way.
         args = ['check', self.source / 'invalid_utf8.my', '--diagnostics=json']
@@ -226,6 +238,14 @@ class Qualification:
                 for command in commands:
                     command += ['--release', '--verify-facts']
             for command in commands:
+                # A different mode has already published into this exact cache.
+                # Subsequent frontend authentication cannot trust its verdict.
+                native = self.run('reference', command)
+                if command[0] == 'test':
+                    test_counts(native, allow_cached=True)
+                else:
+                    require(native == ((7, b'7\n', b'') if command[0] == 'run-project' else (0, b'', b'')),
+                            'reference cache priming failed')
                 for _ in range(2):
                     result = self.run(mode, command)
                     if command[0] == 'test':
@@ -352,7 +372,9 @@ def coordinator_edit(args, qualification):
             'parser-only edit rebuilt unrelated package identities')
     original = qualification.components
     qualification.components = installation
+    qualification.phase = 'coordinator-edit'
     qualification.matrix()
+    qualification.phase = 'installed'
     qualification.components = original
     require(digest(args.compiler) == host_before, 'component-only coordinator rebuild changed host')
     return {'host_sha256': host_before, 'before': before['parser-pilot'], 'after': after['parser-pilot']}

@@ -27,11 +27,13 @@ large comment sources, dense declaration pools and exact transport limits are
 included. Fixture `.input` files preserve malformed/noncanonical source bytes;
 all eight are materialized as `.my` sources in private scratch. Command status,
 stdout and stderr compare byte-for-byte where the command is informational.
+Imported syntax/type failures must retain the dependency's diagnostic location.
 Build/run/tests additionally assert observable guest results and nonempty test
 counts. Forced tests refuse cached, skipped or unsupported verdicts.
 
 Warm build, run and test commands are primed twice with stable paths and a
-populated private application cache. Each frontend package is then independently
+populated private application cache, after reference mode publishes into that
+same cache. Each frontend package is then independently
 made unavailable, given an unsupported schema, corrupted without updating its
 digest, or replaced with the other native producer under a matching new digest.
 Every command must fail with host status 2 and no result stdout. These checks
