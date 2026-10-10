@@ -1,0 +1,21 @@
+{
+  "command_provenance": "Exact outer negative build and worker command vectors were not retained; no replacement commands are asserted. Internal minimization commands and reproduction output are retained in worker logs.",
+  "date": "2026-10-10",
+  "engine_sha256_at_execution": "a5f5a3ccf91b3925b03bb105c8ee5a556f93981b7521adea9aa6e3e67ad4eccf",
+  "expected_engine_status": 77,
+  "initial_input": {
+    "path": "initial-input",
+    "sha256": "6e8a9b09003232e351f44e20798838d1b8f660e123fa037b057d70f6bae1907b",
+    "size": 22
+  },
+  "kind": "real-libfuzzer-native-negative-smoke",
+  "minimized_input": {
+    "path": "artifacts/minimized-0",
+    "sha256": "bb7208bc9b5d7c04f1236a82a0093a5e33f40423d5ba8d4266f7092c3ba43b62",
+    "size": 1
+  },
+  "scope": "Intentional C fixture abort; failure classification, original input retention and one-byte reproducing minimization. Not compiler fuzz coverage.",
+  "source_directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash",
+  "toolchain_context": "parent-native-smoke-provenance.json records the parent native smoke toolchain/package/runtime provenance; its positive-target commands and executable hash are not the negative-target commands or hash.",
+  "version": 1
+}

@@ -1,0 +1,13 @@
+build-slot: FIFO ticket 586, position 2; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 586 after 15s
+{
+ "steps": 2,
+ "seed": 1984496162,
+ "accepted": 2,
+ "rejected": 0,
+ "mutations": {
+  "body no-op": 1,
+  "constant value": 1
+ },
+ "violations": []
+}

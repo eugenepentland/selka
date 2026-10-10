@@ -1,0 +1,10 @@
+{
+ "steps": 2,
+ "seed": 993807206,
+ "accepted": 1,
+ "rejected": 1,
+ "mutations": {
+  "public addition": 1
+ },
+ "violations": []
+}

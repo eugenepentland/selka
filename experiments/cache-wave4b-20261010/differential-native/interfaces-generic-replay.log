@@ -1,0 +1,12 @@
+build-slot: FIFO ticket 589, position 1; waiting for memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 589 after 5s
+{
+ "steps": 2,
+ "seed": 1,
+ "accepted": 1,
+ "rejected": 1,
+ "mutations": {
+  "comment between declarations": 1
+ },
+ "violations": []
+}

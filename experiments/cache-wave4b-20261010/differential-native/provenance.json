@@ -1,0 +1,196 @@
+{
+  "candidate": {
+    "description": "Existing installed Wave 4A compiler; no compiler rebuild was part of these direct smokes.",
+    "digest_note": "Executable digest was not captured at execution; the currently installed executable may have changed.",
+    "path": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/zig-out/bin/mylang",
+    "sha256": null
+  },
+  "command_provenance": "Reconstructed from the execution transcript; argv was not echoed in the preserved worker logs.",
+  "commands": [
+    {
+      "argv": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/scripts/build-slot.sh",
+        "build",
+        "/usr/bin/python3",
+        "-B",
+        "tests/incremental_diff.py",
+        "--strict-campaign",
+        "--steps",
+        "2",
+        "--seed",
+        "1984496162",
+        "--project",
+        "tests/fixtures/incremental",
+        "--corpus-out",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/producer-smoke-isolated/incremental.corpus.json",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/zig-out/bin/mylang"
+      ],
+      "log": "incremental-explore.log",
+      "operation": "explore",
+      "target": "incremental"
+    },
+    {
+      "argv": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/scripts/build-slot.sh",
+        "build",
+        "/usr/bin/python3",
+        "-B",
+        "tests/incremental_diff.py",
+        "--strict-campaign",
+        "--steps",
+        "0",
+        "--replay-corpus",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/producer-smoke-isolated/incremental.corpus.json",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/zig-out/bin/mylang"
+      ],
+      "log": "incremental-replay.log",
+      "operation": "replay",
+      "target": "incremental"
+    },
+    {
+      "argv": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/scripts/build-slot.sh",
+        "build",
+        "/usr/bin/python3",
+        "-B",
+        "tests/incremental_diff.py",
+        "--strict-campaign",
+        "--steps",
+        "2",
+        "--seed",
+        "1984496162",
+        "--project",
+        "tests/fixtures/module_projects",
+        "--corpus-out",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/producer-smoke-isolated/module-projects.corpus.json",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/zig-out/bin/mylang"
+      ],
+      "log": "module-projects-explore.log",
+      "operation": "explore",
+      "target": "module-projects"
+    },
+    {
+      "argv": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/scripts/build-slot.sh",
+        "build",
+        "/usr/bin/python3",
+        "-B",
+        "tests/incremental_diff.py",
+        "--strict-campaign",
+        "--steps",
+        "0",
+        "--replay-corpus",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/producer-smoke-isolated/module-projects.corpus.json",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/zig-out/bin/mylang"
+      ],
+      "log": "module-projects-replay.log",
+      "operation": "replay",
+      "target": "module-projects"
+    },
+    {
+      "argv": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/scripts/build-slot.sh",
+        "build",
+        "/usr/bin/python3",
+        "-B",
+        "tests/interface_diff.py",
+        "--strict-campaign",
+        "--steps",
+        "2",
+        "--seed",
+        "1984496162",
+        "--project",
+        "tests/fixtures/interfaces",
+        "--corpus-out",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/producer-smoke-isolated/interfaces.corpus.json",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/zig-out/bin/mylang"
+      ],
+      "log": "interfaces-explore.log",
+      "operation": "explore",
+      "target": "interfaces"
+    },
+    {
+      "argv": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/scripts/build-slot.sh",
+        "build",
+        "/usr/bin/python3",
+        "-B",
+        "tests/interface_diff.py",
+        "--strict-campaign",
+        "--steps",
+        "0",
+        "--replay-corpus",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/producer-smoke-isolated/interfaces.corpus.json",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/zig-out/bin/mylang"
+      ],
+      "log": "interfaces-replay.log",
+      "operation": "replay",
+      "target": "interfaces"
+    },
+    {
+      "argv": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/scripts/build-slot.sh",
+        "build",
+        "/usr/bin/python3",
+        "-B",
+        "tests/interface_diff.py",
+        "--strict-campaign",
+        "--steps",
+        "2",
+        "--seed",
+        "1984496162",
+        "--project",
+        "tests/fixtures/interfaces_generic",
+        "--corpus-out",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/producer-smoke-isolated/interfaces-generic.corpus.json",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/zig-out/bin/mylang"
+      ],
+      "log": "interfaces-generic-explore.log",
+      "operation": "explore",
+      "target": "interfaces-generic"
+    },
+    {
+      "argv": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/scripts/build-slot.sh",
+        "build",
+        "/usr/bin/python3",
+        "-B",
+        "tests/interface_diff.py",
+        "--strict-campaign",
+        "--steps",
+        "0",
+        "--replay-corpus",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/producer-smoke-isolated/interfaces-generic.corpus.json",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/zig-out/bin/mylang"
+      ],
+      "log": "interfaces-generic-replay.log",
+      "operation": "replay",
+      "target": "interfaces-generic"
+    }
+  ],
+  "cwd": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang",
+  "date": "2026-10-10",
+  "environment_note": "Other environment values were inherited and were not recorded.",
+  "environment_overrides": {
+    "MYLANG_COMPONENT_DIR": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/zig-out/libexec/mylang/components",
+    "MYLANG_ZIG": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "PYTHONPYCACHEPREFIX": "/dev/null",
+    "TMPDIR": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/tmp/producer-ambient-boundary",
+    "ZIG": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache"
+  },
+  "kind": "direct-differential-native-smoke",
+  "scope": "Tiny direct driver qualification of native compiler checks and retained-case replay, not coordinator reuse qualification or a performance measurement.",
+  "seed": 1984496162,
+  "seed_note": "Explicit execution seed. Derived at execution from the then-current identity.seed(1, 0); later identity policy changes may produce a different value.",
+  "source_directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/producer-smoke-isolated",
+  "summary": {
+    "explored_attempts": 8,
+    "replayed_attempts": 8,
+    "successful_commands": 8,
+    "targets": 4
+  },
+  "version": 1
+}

@@ -7,6 +7,10 @@ measurements and optimized profile are complete; see the
 Wave 4A now implements opt-in indexed property campaigns with bounded completed
 prefixes, before broader differential or coverage-guided fuzzing. Its scope and
 qualification are in the [Wave 4A plan](../../experiments/cache-wave4a-20261010/PLAN.md).
+Wave 4B adds independent differential and libFuzzer seed shards, concrete corpus
+replay, and evidence lookup before admission. The developer interface and its
+coverage-target boundary are documented in [fuzz campaigns](../tooling/fuzz-campaigns.md);
+qualification is recorded in the [Wave 4B report](../../experiments/cache-wave4b-20261010/REPORT.md).
 Historical review sections below retain their original baselines.
 
 Status: Wave 1 qualified together with `main` at `e9011d9c6` on 2026-10-10;

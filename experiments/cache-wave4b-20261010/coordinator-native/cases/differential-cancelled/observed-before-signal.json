@@ -1,0 +1,43 @@
+{
+  "actions": [
+    {
+      "evidence": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/coordinator-native/cancellation-cache/runs/action-pphdf53q",
+      "explored": 2,
+      "key": "ea334e71a604f81d8245e2d25aa963289cbfb942571ed213b0a26b338d726a95",
+      "operation": "explore",
+      "replayed": 0,
+      "state": "executed",
+      "success": true,
+      "target": "incremental",
+      "value": 0
+    }
+  ],
+  "admissions": [
+    {
+      "admission_wait_seconds": 5.570691599044949,
+      "admitted": true,
+      "elapsed_seconds": 6.811869899975136,
+      "kind": "gate",
+      "observed_held_seconds": 1.241178300930187,
+      "status": 0,
+      "validation_seconds": 0.07946744398213923,
+      "worker_seconds": 1.1615830739028752
+    }
+  ],
+  "complete": false,
+  "corpus_recovery": [],
+  "counts": {
+    "executed_replays": 0,
+    "executed_shards": 1,
+    "explored": 2,
+    "replayed": 0,
+    "reused_replays": 0,
+    "reused_shards": 0
+  },
+  "freshness_reasons": [],
+  "kind": "differential",
+  "policy": "independent-seed-shards-v1",
+  "requested_shards": 128,
+  "success": false,
+  "version": 1
+}

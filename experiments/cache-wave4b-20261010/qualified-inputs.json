@@ -1,0 +1,24 @@
+{
+  "baseline": "028b7a3f7d0d36305aa80be1d9661235b5e5bec6",
+  "branch": "codex/selka-cache-wave4b",
+  "compiler_sha256": "8d8b2520407639305ad840a7ff6dd7cb271807957a73efe91f5e625c3c7e3660",
+  "inputs": {
+    "build.zig": "487036b1de21a5f58dfbc345137a7f62b3d584e67fcbaf431f31930167ecab86",
+    "build_test_inputs.zig": "ada96bfe485e61ff991c24b1df5c964d14b23f3c4973a7f62162f6115ca9be9f",
+    "docs/audits/selka-toolchain-cache-plan-2026-10-10.md": "a850ce98d67bdf5414b7f3f64d184e0e280ce1c45d2c76fde7f058d177d2a926",
+    "docs/tooling/fuzz-campaigns.md": "8d3c8f9ce6c5ea9d67521ae4f4e5b2f27719dff509fed091b1b952f672a3a0d0",
+    "scripts/fuzz_campaign.py": "fd92317c29e8300af4fddd4dd3639c88dd829332e5127b1bcdbcc0ab0666166a",
+    "scripts/fuzz_campaign_identity.py": "b1bf179b53a0aa45e7dc162909ebe9e4f275f294f836d749ef667a77c1d75d62",
+    "scripts/fuzz_campaign_store.py": "f567a93eeaa9da67bc50d8f34bf2f443d5bea0efef51a964721a79e22ec0b2ad",
+    "scripts/fuzz_campaign_store_test.py": "23a4681a02330e1dde6423f2d6c95cf06d94ba1d1d11a77eadd6cf801f4ced0e",
+    "scripts/fuzz_campaign_test.py": "2c72416ffb8dd68b742c3bd354a8299a640509d1f1628dcc448fe4cfcc2d7bfe",
+    "scripts/fuzz_coverage.py": "2114617ed4fcd781125f848624c95379e9830fd4b5dc8931975233b7ff940310",
+    "scripts/fuzz_coverage_test.py": "669d6dc226ed725ef3ce9820c1d87de06eabe18dc43d1ed865dceeb139850a6e",
+    "test/fixtures/fuzz-campaign/libfuzzer_target.c": "735ab6ac50d3da612625c5074ced0c198f8522ecba1f5cfe3a8d65418f45de69",
+    "tests/differential_corpus.py": "3763c3727ce7a3de5cf125f9e4fbf7f2c6ca629504a5addab8102b0599830a86",
+    "tests/incremental_diff.py": "205ee0a5054cae5d9fe8decd17bbaef76bd477281d56671140458c9604b268a1",
+    "tests/interface_diff.py": "16b146b0a53ee09e6d307222897b494c567aab5f79f2d9e53eec79da9fda5d5f",
+    "tests/test_differential_corpus.py": "40fa0fb0f0731aec0268751c4140f71dccdfdedfda6707684a14d2fb755c9418"
+  },
+  "zig_pin": "0.17.0-dev.1683+5ceec001b"
+}

@@ -1,0 +1,12 @@
+fuzz: execute incremental explore 0
+build-slot: gate slot 1, FIFO ticket 34 after 0s
+fuzz: execute module-projects explore 0
+build-slot: FIFO ticket 35, position 1; waiting for memory-accounting settle delay; waiting (0s so far)
+build-slot: gate slot 1, FIFO ticket 35 after 5s
+fuzz: execute interfaces explore 0
+build-slot: FIFO ticket 36, position 1; waiting for memory-accounting settle delay; waiting (0s so far)
+build-slot: gate slot 1, FIFO ticket 36 after 5s
+fuzz: execute interfaces-generic explore 0
+build-slot: FIFO ticket 37, position 1; waiting for memory-accounting settle delay; waiting (0s so far)
+build-slot: gate slot 1, FIFO ticket 37 after 5s
+{"complete": true, "counts": {"executed_replays": 0, "executed_shards": 4, "explored": 8, "replayed": 0, "reused_replays": 0, "reused_shards": 0}, "report": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/coordinator-native/cases/differential-cold/report.json", "success": true}

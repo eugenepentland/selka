@@ -1,0 +1,666 @@
+{
+  "cases": [
+    {
+      "admissions": [
+        {
+          "admission_wait_seconds": 0.37902124389074743,
+          "admitted": true,
+          "elapsed_seconds": 1.3111424329690635,
+          "kind": "gate",
+          "observed_held_seconds": 0.9321211890783161,
+          "status": 0,
+          "validation_seconds": 0.07755141006782651,
+          "worker_seconds": 0.8544928461778909
+        },
+        {
+          "admission_wait_seconds": 5.389954969985411,
+          "admitted": true,
+          "elapsed_seconds": 6.55215915502049,
+          "kind": "gate",
+          "observed_held_seconds": 1.1622041850350797,
+          "status": 0,
+          "validation_seconds": 0.08159523387439549,
+          "worker_seconds": 1.0805070491041988
+        },
+        {
+          "admission_wait_seconds": 5.388735989108682,
+          "admitted": true,
+          "elapsed_seconds": 6.425966676091775,
+          "kind": "gate",
+          "observed_held_seconds": 1.0372306869830936,
+          "status": 0,
+          "validation_seconds": 0.08162779198028147,
+          "worker_seconds": 0.955511077074334
+        },
+        {
+          "admission_wait_seconds": 5.3718462500255555,
+          "admitted": true,
+          "elapsed_seconds": 6.272233966970816,
+          "kind": "gate",
+          "observed_held_seconds": 0.9003877169452608,
+          "status": 0,
+          "validation_seconds": 0.0428660640027374,
+          "worker_seconds": 0.8574491341132671
+        }
+      ],
+      "command": [
+        "/usr/bin/python3",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/scripts/fuzz_campaign.py",
+        "differential",
+        "--cache-dir",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/coordinator-native/differential-cache",
+        "--shards",
+        "1",
+        "--seed",
+        "17",
+        "--compiler",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/zig-out/bin/mylang",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--steps",
+        "2",
+        "--deadline",
+        "600",
+        "--report",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/coordinator-native/cases/differential-cold/report.json"
+      ],
+      "counts": {
+        "executed_replays": 0,
+        "executed_shards": 4,
+        "explored": 8,
+        "replayed": 0,
+        "reused_replays": 0,
+        "reused_shards": 0
+      },
+      "exit": 0,
+      "log": "cases/differential-cold/output.log",
+      "log_sha256": "02b1b3a704e5cca149ce3e749fbd9875f4c6a4e377e2222d3249f7511a1e1070",
+      "name": "differential-cold",
+      "process_tree": {
+        "max_rss_kib": 132160,
+        "system_seconds": 3.31,
+        "user_seconds": 17.51,
+        "wall_seconds": 36.33
+      },
+      "report": "cases/differential-cold/report.json",
+      "report_sha256": "48343ed6ef6d3fe0cedd06d1e105140f48dfcf057746500fb681597e2ba9323a"
+    },
+    {
+      "admissions": [],
+      "command": [
+        "/usr/bin/python3",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/scripts/fuzz_campaign.py",
+        "differential",
+        "--cache-dir",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/coordinator-native/differential-cache",
+        "--shards",
+        "1",
+        "--seed",
+        "17",
+        "--compiler",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/zig-out/bin/mylang",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--steps",
+        "2",
+        "--deadline",
+        "600",
+        "--report",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/coordinator-native/cases/differential-warm/report.json"
+      ],
+      "counts": {
+        "executed_replays": 0,
+        "executed_shards": 0,
+        "explored": 0,
+        "replayed": 0,
+        "reused_replays": 4,
+        "reused_shards": 4
+      },
+      "exit": 0,
+      "log": "cases/differential-warm/output.log",
+      "log_sha256": "422289042fe76d2dda0246d9373fcfa7ceb9a90123e7224aae19e4bc433b3598",
+      "name": "differential-warm",
+      "process_tree": {
+        "max_rss_kib": 132168,
+        "system_seconds": 1.76,
+        "user_seconds": 7.55,
+        "wall_seconds": 9.32
+      },
+      "report": "cases/differential-warm/report.json",
+      "report_sha256": "562e17e6f99db8ad05270150780db05b2a49bdd6531bbb0349c16c65d5c50296"
+    },
+    {
+      "admissions": [
+        {
+          "admission_wait_seconds": 0.3066198530141264,
+          "admitted": true,
+          "elapsed_seconds": 1.0418688100762665,
+          "kind": "gate",
+          "observed_held_seconds": 0.7352489570621401,
+          "status": 0,
+          "validation_seconds": 0.04862076509743929,
+          "worker_seconds": 0.6865470779594034
+        },
+        {
+          "admission_wait_seconds": 10.455133751034737,
+          "admitted": true,
+          "elapsed_seconds": 11.683658883208409,
+          "kind": "gate",
+          "observed_held_seconds": 1.2285251321736723,
+          "status": 0,
+          "validation_seconds": 0.09134277910925448,
+          "worker_seconds": 1.1370588121935725
+        },
+        {
+          "admission_wait_seconds": 5.362142957048491,
+          "admitted": true,
+          "elapsed_seconds": 6.161091618007049,
+          "kind": "gate",
+          "observed_held_seconds": 0.7989486609585583,
+          "status": 0,
+          "validation_seconds": 0.04346135491505265,
+          "worker_seconds": 0.7554123410955071
+        },
+        {
+          "admission_wait_seconds": 5.3888078110758215,
+          "admitted": true,
+          "elapsed_seconds": 6.162487335968763,
+          "kind": "gate",
+          "observed_held_seconds": 0.7736795248929411,
+          "status": 0,
+          "validation_seconds": 0.08653315901756287,
+          "worker_seconds": 0.687054157955572
+        }
+      ],
+      "command": [
+        "/usr/bin/python3",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/scripts/fuzz_campaign.py",
+        "differential",
+        "--cache-dir",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/coordinator-native/differential-cache",
+        "--shards",
+        "2",
+        "--seed",
+        "17",
+        "--compiler",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/zig-out/bin/mylang",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--steps",
+        "2",
+        "--deadline",
+        "600",
+        "--report",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/coordinator-native/cases/differential-extended/report.json"
+      ],
+      "counts": {
+        "executed_replays": 0,
+        "executed_shards": 4,
+        "explored": 8,
+        "replayed": 0,
+        "reused_replays": 4,
+        "reused_shards": 4
+      },
+      "exit": 0,
+      "log": "cases/differential-extended/output.log",
+      "log_sha256": "fda7f4f2e0c07451659f608bf4dfaa15df0656e7ecf22293c8c425fc5cb94aba",
+      "name": "differential-extended",
+      "process_tree": {
+        "max_rss_kib": 132508,
+        "system_seconds": 3.22,
+        "user_seconds": 13.37,
+        "wall_seconds": 36.75
+      },
+      "report": "cases/differential-extended/report.json",
+      "report_sha256": "40197ea698ed5dd85e847201dc625c948ec12541f24fbd6f2f0f461051cfa62a"
+    },
+    {
+      "admissions": [
+        {
+          "admission_wait_seconds": 10.401818442158401,
+          "admitted": true,
+          "elapsed_seconds": 10.748318549944088,
+          "kind": "gate",
+          "observed_held_seconds": 0.34650010778568685,
+          "status": 0,
+          "validation_seconds": 0.004324809880927205,
+          "worker_seconds": 0.3420841828919947
+        }
+      ],
+      "command": [
+        "/usr/bin/python3",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/scripts/fuzz_campaign.py",
+        "coverage",
+        "--cache-dir",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/coordinator-native/coverage-cache",
+        "--shards",
+        "1",
+        "--seed",
+        "17",
+        "--name",
+        "qualification-native",
+        "--engine",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/coordinator-native/inputs/libfuzzer",
+        "--corpus",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/coordinator-native/inputs/initial-corpus",
+        "--hermetic",
+        "--runs",
+        "32",
+        "--timeout",
+        "2",
+        "--max-len",
+        "4096",
+        "--report",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/coordinator-native/cases/coverage-cold/report.json"
+      ],
+      "counts": {
+        "executed_replays": 0,
+        "executed_shards": 1,
+        "explored": 32,
+        "replayed": 0,
+        "reused_replays": 0,
+        "reused_shards": 0
+      },
+      "exit": 0,
+      "log": "cases/coverage-cold/output.log",
+      "log_sha256": "f9c58627b45974719da2f6502f15a4e1c36b44645dc27a5852c5566feda69bcf",
+      "name": "coverage-cold",
+      "process_tree": {
+        "max_rss_kib": 34196,
+        "system_seconds": 0.67,
+        "user_seconds": 1.81,
+        "wall_seconds": 12.45
+      },
+      "report": "cases/coverage-cold/report.json",
+      "report_sha256": "ab853af1ec2cca84eb0ba8ac7202b947e61e4b76437cf11aa9193320f222ac6b"
+    },
+    {
+      "admissions": [],
+      "command": [
+        "/usr/bin/python3",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/scripts/fuzz_campaign.py",
+        "coverage",
+        "--cache-dir",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/coordinator-native/coverage-cache",
+        "--shards",
+        "1",
+        "--seed",
+        "17",
+        "--name",
+        "qualification-native",
+        "--engine",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/coordinator-native/inputs/libfuzzer",
+        "--corpus",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/coordinator-native/inputs/initial-corpus",
+        "--hermetic",
+        "--runs",
+        "32",
+        "--timeout",
+        "2",
+        "--max-len",
+        "4096",
+        "--report",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/coordinator-native/cases/coverage-warm/report.json"
+      ],
+      "counts": {
+        "executed_replays": 0,
+        "executed_shards": 0,
+        "explored": 0,
+        "replayed": 0,
+        "reused_replays": 1,
+        "reused_shards": 1
+      },
+      "exit": 0,
+      "log": "cases/coverage-warm/output.log",
+      "log_sha256": "8dbace8b0ffdba6ca075a9a8fcccda76691d2840b8e607ac2dbfa07da2e5a01a",
+      "name": "coverage-warm",
+      "process_tree": {
+        "max_rss_kib": 34300,
+        "system_seconds": 0.54,
+        "user_seconds": 1.07,
+        "wall_seconds": 1.59
+      },
+      "report": "cases/coverage-warm/report.json",
+      "report_sha256": "f38db484c9aa9822912df6d33f8aa539537a132289c0c2d9e63b7d807b17e652"
+    },
+    {
+      "admissions": [
+        {
+          "admission_wait_seconds": 5.551475137937814,
+          "admitted": true,
+          "elapsed_seconds": 6.04256515414454,
+          "kind": "gate",
+          "observed_held_seconds": 0.49109001620672643,
+          "status": 0,
+          "validation_seconds": 0.004494716180488467,
+          "worker_seconds": 0.4864398171193898
+        }
+      ],
+      "command": [
+        "/usr/bin/python3",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/scripts/fuzz_campaign.py",
+        "coverage",
+        "--cache-dir",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/coordinator-native/coverage-cache",
+        "--shards",
+        "2",
+        "--seed",
+        "17",
+        "--name",
+        "qualification-native",
+        "--engine",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/coordinator-native/inputs/libfuzzer",
+        "--corpus",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/coordinator-native/inputs/initial-corpus",
+        "--hermetic",
+        "--runs",
+        "32",
+        "--timeout",
+        "2",
+        "--max-len",
+        "4096",
+        "--report",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/coordinator-native/cases/coverage-extended/report.json"
+      ],
+      "counts": {
+        "executed_replays": 0,
+        "executed_shards": 1,
+        "explored": 32,
+        "replayed": 0,
+        "reused_replays": 1,
+        "reused_shards": 1
+      },
+      "exit": 0,
+      "log": "cases/coverage-extended/output.log",
+      "log_sha256": "eeeb991b54c9de5fd35b4caa797ffeee9854d9eadd763c48f694def0dc443f72",
+      "name": "coverage-extended",
+      "process_tree": {
+        "max_rss_kib": 34488,
+        "system_seconds": 0.64,
+        "user_seconds": 1.88,
+        "wall_seconds": 7.65
+      },
+      "report": "cases/coverage-extended/report.json",
+      "report_sha256": "c2f53685b09fc1d95934e111c9881aafb49e72eb8daaaa5926ec1b7a7a8ac0f9"
+    },
+    {
+      "admissions": [
+        {
+          "admission_wait_seconds": 10.382380821043625,
+          "admitted": true,
+          "elapsed_seconds": 10.813554909080267,
+          "kind": "gate",
+          "observed_held_seconds": 0.4311740880366415,
+          "status": 0,
+          "validation_seconds": 0.0048998871352523565,
+          "worker_seconds": 0.4261878828983754
+        },
+        {
+          "admission_wait_seconds": 5.361155208898708,
+          "admitted": true,
+          "elapsed_seconds": 5.762544588884339,
+          "kind": "gate",
+          "observed_held_seconds": 0.4013893799856305,
+          "status": 0,
+          "validation_seconds": 0.0023644750472158194,
+          "worker_seconds": 0.39896408189088106
+        },
+        {
+          "admission_wait_seconds": 5.353670051088557,
+          "admitted": true,
+          "elapsed_seconds": 5.784041806124151,
+          "kind": "gate",
+          "observed_held_seconds": 0.4303717550355941,
+          "status": 0,
+          "validation_seconds": 0.0024467939510941505,
+          "worker_seconds": 0.42786219203844666
+        },
+        {
+          "admission_wait_seconds": 5.358017368009314,
+          "admitted": true,
+          "elapsed_seconds": 5.8228926518931985,
+          "kind": "gate",
+          "observed_held_seconds": 0.46487528388388455,
+          "status": 0,
+          "validation_seconds": 0.0047730798833072186,
+          "worker_seconds": 0.4600083539262414
+        }
+      ],
+      "command": [
+        "/usr/bin/python3",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/scripts/fuzz_campaign.py",
+        "coverage",
+        "--cache-dir",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/coordinator-native/coverage-cache",
+        "--shards",
+        "2",
+        "--seed",
+        "17",
+        "--name",
+        "qualification-native",
+        "--engine",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/coordinator-native/inputs/libfuzzer",
+        "--corpus",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/coordinator-native/inputs/initial-corpus",
+        "--hermetic",
+        "--runs",
+        "32",
+        "--timeout",
+        "2",
+        "--max-len",
+        "4096",
+        "--report",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/coordinator-native/cases/coverage-engine-changed/report.json"
+      ],
+      "counts": {
+        "executed_replays": 2,
+        "executed_shards": 2,
+        "explored": 64,
+        "replayed": 8,
+        "reused_replays": 0,
+        "reused_shards": 0
+      },
+      "exit": 0,
+      "log": "cases/coverage-engine-changed/output.log",
+      "log_sha256": "72c5ee2604dac6026e8ea8d0c6bb9e03ca83c6e0f20c55e8a4a1187eb1f54baa",
+      "name": "coverage-engine-changed",
+      "process_tree": {
+        "max_rss_kib": 34484,
+        "system_seconds": 1.08,
+        "user_seconds": 3.99,
+        "wall_seconds": 30.26
+      },
+      "report": "cases/coverage-engine-changed/report.json",
+      "report_sha256": "707c2ed7cf144052dcd93ec3fa545261e10434d89f3ccd2ba918626979234c7a"
+    },
+    {
+      "admissions": [
+        {
+          "admission_wait_seconds": 5.570691599044949,
+          "admitted": true,
+          "elapsed_seconds": 6.811869899975136,
+          "kind": "gate",
+          "observed_held_seconds": 1.241178300930187,
+          "status": 0,
+          "validation_seconds": 0.07946744398213923,
+          "worker_seconds": 1.1615830739028752
+        }
+      ],
+      "command": [
+        "/usr/bin/python3",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/scripts/fuzz_campaign.py",
+        "differential",
+        "--cache-dir",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/coordinator-native/cancellation-cache",
+        "--shards",
+        "128",
+        "--seed",
+        "17",
+        "--compiler",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/zig-out/bin/mylang",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--steps",
+        "2",
+        "--deadline",
+        "600",
+        "--target",
+        "incremental",
+        "--report",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/coordinator-native/cases/differential-cancelled/report.json"
+      ],
+      "counts": {
+        "executed_replays": 0,
+        "executed_shards": 1,
+        "explored": 2,
+        "replayed": 0,
+        "reused_replays": 0,
+        "reused_shards": 0
+      },
+      "exit": 143,
+      "log": "cases/differential-cancelled/output.log",
+      "log_sha256": "612ecf162984daf603a6bd6a6b2311c0896851b6ceb997b4299bbad6dd0d742b",
+      "name": "differential-cancelled",
+      "observed_completed_shards": 1,
+      "process_tree": {
+        "max_rss_kib": 131796,
+        "system_seconds": 1.94,
+        "user_seconds": 10.67,
+        "wall_seconds": 18.0
+      },
+      "report": "cases/differential-cancelled/report.json",
+      "report_sha256": "676cd139d975d277208489172c50d19720b605450616526869221bba684e43dc"
+    },
+    {
+      "admissions": [
+        {
+          "admission_wait_seconds": 0.3265191069804132,
+          "admitted": true,
+          "elapsed_seconds": 1.1441474880557507,
+          "kind": "gate",
+          "observed_held_seconds": 0.8176283810753375,
+          "status": 0,
+          "validation_seconds": 0.04397096298635006,
+          "worker_seconds": 0.7735767571721226
+        }
+      ],
+      "command": [
+        "/usr/bin/python3",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/scripts/fuzz_campaign.py",
+        "differential",
+        "--cache-dir",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/coordinator-native/cancellation-cache",
+        "--shards",
+        "2",
+        "--seed",
+        "17",
+        "--compiler",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/zig-out/bin/mylang",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--steps",
+        "2",
+        "--deadline",
+        "600",
+        "--target",
+        "incremental",
+        "--report",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/coordinator-native/cases/differential-resumed/report.json"
+      ],
+      "counts": {
+        "executed_replays": 0,
+        "executed_shards": 1,
+        "explored": 2,
+        "replayed": 0,
+        "reused_replays": 1,
+        "reused_shards": 1
+      },
+      "exit": 0,
+      "log": "cases/differential-resumed/output.log",
+      "log_sha256": "03d659f74f3acac4329cdcd32b201e273f4f6d3dc1f2db18309787e25b22125c",
+      "name": "differential-resumed",
+      "process_tree": {
+        "max_rss_kib": 131984,
+        "system_seconds": 2.34,
+        "user_seconds": 14.56,
+        "wall_seconds": 17.12
+      },
+      "report": "cases/differential-resumed/report.json",
+      "report_sha256": "c68d488c0791cc687b09f295804f2649715bb00490d31a08128c73293061a3a1"
+    },
+    {
+      "admissions": [],
+      "command": [
+        "/usr/bin/python3",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/scripts/fuzz_campaign.py",
+        "differential",
+        "--cache-dir",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/coordinator-native/cancellation-cache",
+        "--shards",
+        "2",
+        "--seed",
+        "17",
+        "--compiler",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/zig-out/bin/mylang",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--steps",
+        "2",
+        "--deadline",
+        "600",
+        "--target",
+        "incremental",
+        "--report",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/coordinator-native/cases/differential-resumed-warm/report.json"
+      ],
+      "counts": {
+        "executed_replays": 0,
+        "executed_shards": 0,
+        "explored": 0,
+        "replayed": 0,
+        "reused_replays": 2,
+        "reused_shards": 2
+      },
+      "exit": 0,
+      "log": "cases/differential-resumed-warm/output.log",
+      "log_sha256": "013a95e85127375b2d0e83c394142c240958cadf2c5e71a0406a8d0b0ab0a7ec",
+      "name": "differential-resumed-warm",
+      "process_tree": {
+        "max_rss_kib": 131864,
+        "system_seconds": 1.41,
+        "user_seconds": 7.12,
+        "wall_seconds": 8.52
+      },
+      "report": "cases/differential-resumed-warm/report.json",
+      "report_sha256": "944fbf5f213d3570626d33bba2de7bbe88949d8e6c201a01af61f859e144dfbc"
+    }
+  ],
+  "complete": true,
+  "coordinator_invocations": 10,
+  "engine_identity_edit": {
+    "after": "76653a2ecb4a8ee343899bbf83814d93a943d45978fe2d9c09b17f849ced7a66",
+    "before": "fb1dc90226f96f537f2015d7baed1ea76e992d966ab5d4241ae6484e257c94b6",
+    "method": "append one harmless ELF trailer byte, no semantic edit"
+  },
+  "inputs": {
+    "compiler": {
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/zig-out/bin/mylang",
+      "sha256": "8d8b2520407639305ad840a7ff6dd7cb271807957a73efe91f5e625c3c7e3660"
+    },
+    "coordinator": "fd92317c29e8300af4fddd4dd3639c88dd829332e5127b1bcdbcc0ab0666166a",
+    "engine": {
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/target",
+      "sha256": "fb1dc90226f96f537f2015d7baed1ea76e992d966ab5d4241ae6484e257c94b6"
+    },
+    "fixture": {
+      "path": "test/fixtures/fuzz-campaign/libfuzzer_target.c",
+      "sha256": "735ab6ac50d3da612625c5074ced0c198f8522ecba1f5cfe3a8d65418f45de69"
+    },
+    "harness": "5c253f160af3e04ae224a34df371ed3c711be393ca421028bd852c822efaead4",
+    "initial_input_sha256": "38164fbd17603d73f696b8b4d72664d735bb6a7c88577687fd2ae33fd6964153",
+    "worker": "f15aa2abdc26294e618a2a66c461acf398b4589ba1e9b52cf950343f0ca29e33"
+  },
+  "scope": "actual coordinator correctness; no performance comparison",
+  "success": true,
+  "version": 1
+}

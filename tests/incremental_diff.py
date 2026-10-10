@@ -23,6 +23,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
+import differential_corpus as corpus
 
 DEF = re.compile(r"^(public )?func (\w+)\((.*)\)( -> [^:]+)?:$", re.M)
 FIELD = re.compile(r"^    (\w+): ([\w\[\]., ?]+)$", re.M)
@@ -77,12 +78,22 @@ def main():
     parser.add_argument("--project", default=str(Path(__file__).resolve().parent / "fixtures" / "incremental"))
     parser.add_argument("--entry", default="main.my")
     parser.add_argument("--keep", default=None)
+    parser.add_argument("--corpus-out", type=Path)
+    parser.add_argument("--replay-corpus", type=Path)
+    parser.add_argument("--strict-campaign", action="store_true")
     args = parser.parse_args()
+    if args.strict_campaign and not 0 <= args.steps <= corpus.MAX_CASES:
+        parser.error("strict campaign steps must be 0.." + str(corpus.MAX_CASES))
     compiler = str(Path(args.compiler).resolve())
     rng = random.Random(args.seed)
     work = Path(tempfile.mkdtemp(prefix="incremental-diff-"))
     try:
         return run(compiler, args, rng, work)
+    except (corpus.CorpusError, subprocess.TimeoutExpired) as error:
+        if not args.strict_campaign and not isinstance(error, corpus.CorpusError):
+            raise
+        print("incremental-diff: harness error: " + str(error), file=sys.stderr)
+        return 2
     finally:
         shutil.rmtree(work, ignore_errors=True)
 
@@ -90,38 +101,72 @@ def main():
 def run(compiler, args, rng, work):
     tree = work / "tree"
     cache = work / "cache"
-    shutil.copytree(args.project, tree)
+    retained = corpus.Corpus.load(args.replay_corpus, "incremental-v1") if args.replay_corpus else None
+    if retained is not None:
+        retained.restore(tree)
+    else:
+        corpus.copy_baseline(args.project, tree, strict=args.strict_campaign)
+    if args.strict_campaign:
+        corpus.safe_path(args.entry)
+        corpus.isolate_baseline(tree)
+    exported = corpus.Corpus.capture(tree, "incremental-v1") if args.corpus_out else None
     pristine = {str(path.relative_to(tree)): path.read_text() for path in sorted(tree.rglob("*.my")) if ".mylang-cache" not in path.relative_to(tree).parts}
     environment = dict(os.environ)
 
     def check(cached):
+        if args.strict_campaign:
+            corpus.isolate_baseline(tree)
         flags = [f"--cache-dir={cache}"] if cached else ["--no-cache"]
         done = subprocess.run([compiler, "check", args.entry] + flags, cwd=tree, capture_output=True, env=environment, timeout=300)
+        if args.strict_campaign:
+            corpus.require_worker(done)
         return done.returncode, done.stdout, done.stderr
 
     def restore():
         for name, text in pristine.items():
             (tree / name).write_text(text)
 
+    try:
+        return steps(compiler, args, rng, work, tree, pristine, retained, exported, check, restore)
+    finally:
+        if exported is not None:
+            exported.save(args.corpus_out)
+
+
+def steps(compiler, args, rng, work, tree, pristine, retained, exported, check, restore):
     status, _, stderr = check(False)
     if status != 0:
         print(f"incremental-diff: the unmutated project does not check:\n{stderr.decode(errors='replace')}")
         return 2
     mismatches = 0
     outcomes = {"clean": 0, "rejected": 0}
-    for step in range(1, args.steps + 1):
-        restore()
+    replay = retained.cases if retained is not None else []
+    total_steps = len(replay) + args.steps
+    for step in range(1, total_steps + 1):
+        if retained is not None:
+            retained.restore(tree)
+        else:
+            restore()
         check(True)
         applied = []
-        for _ in range(1 if rng.random() < 0.6 else 2):
-            name = rng.choice(sorted(pristine))
-            text = (tree / name).read_text()
-            candidates = mutations(text, rng)
-            if not candidates:
-                continue
-            label, mutated = rng.choice(candidates)
-            (tree / name).write_text(mutated)
-            applied.append(f"{name}: {label}")
+        changes = {}
+        if step <= len(replay):
+            retained.restore(tree, replay[step - 1])
+            applied = replay[step - 1]["labels"]
+            changes = {row["path"]: corpus.decode_file(row) for row in replay[step - 1]["changes"]}
+        else:
+            for _ in range(1 if rng.random() < 0.6 else 2):
+                name = rng.choice(sorted(pristine))
+                text = (tree / name).read_text()
+                candidates = mutations(text, rng)
+                if not candidates:
+                    continue
+                label, mutated = rng.choice(candidates)
+                (tree / name).write_text(mutated)
+                changes[name] = (tree / name).read_bytes()
+                applied.append(f"{name}: {label}")
+        if exported is not None:
+            exported.append(exported.changes(tree), applied)
         cached = check(True)
         cold = check(False)
         outcomes["clean" if cold[0] == 0 else "rejected"] += 1
@@ -135,7 +180,7 @@ def run(compiler, args, rng, work):
             snapshot = Path(args.keep) / f"mismatch-{step}"
             shutil.rmtree(snapshot, ignore_errors=True)
             shutil.copytree(tree, snapshot, ignore=shutil.ignore_patterns(".mylang-cache"))
-    print(f"incremental-diff: {args.steps} steps (seed {args.seed}), {mismatches} mismatches; cold check clean {outcomes['clean']}, rejected {outcomes['rejected']}")
+    print(f"incremental-diff: {total_steps} steps (seed {args.seed}), {mismatches} mismatches; cold check clean {outcomes['clean']}, rejected {outcomes['rejected']}")
     return 1 if mismatches else 0
 
 

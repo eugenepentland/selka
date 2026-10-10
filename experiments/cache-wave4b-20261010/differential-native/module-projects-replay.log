@@ -1,0 +1,3 @@
+build-slot: FIFO ticket 584, position 1; waiting for memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 584 after 5s
+incremental-diff: 2 steps (seed 1), 0 mismatches; cold check clean 1, rejected 1

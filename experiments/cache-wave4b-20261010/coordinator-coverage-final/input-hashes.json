@@ -1,0 +1,60 @@
+{
+  "files": [
+    {
+      "bytes": 26123,
+      "path": "scripts/fuzz_campaign.py",
+      "sha256": "fd92317c29e8300af4fddd4dd3639c88dd829332e5127b1bcdbcc0ab0666166a"
+    },
+    {
+      "bytes": 4676,
+      "path": "scripts/fuzz_campaign_identity.py",
+      "sha256": "b1bf179b53a0aa45e7dc162909ebe9e4f275f294f836d749ef667a77c1d75d62"
+    },
+    {
+      "bytes": 12266,
+      "path": "scripts/fuzz_campaign_store.py",
+      "sha256": "f567a93eeaa9da67bc50d8f34bf2f443d5bea0efef51a964721a79e22ec0b2ad"
+    },
+    {
+      "bytes": 18164,
+      "path": "scripts/fuzz_coverage.py",
+      "sha256": "2114617ed4fcd781125f848624c95379e9830fd4b5dc8931975233b7ff940310"
+    },
+    {
+      "bytes": 20128,
+      "path": "scripts/fuzz_coverage_test.py",
+      "sha256": "669d6dc226ed725ef3ce9820c1d87de06eabe18dc43d1ed865dceeb139850a6e"
+    },
+    {
+      "bytes": 17030,
+      "path": "scripts/verification_snapshot.py",
+      "sha256": "a092dc7eaa891f329f9e82d859ae8293d3e4849e1a1aae28108a33ccb0579497"
+    },
+    {
+      "bytes": 32672,
+      "path": "scripts/verify_cache.py",
+      "sha256": "282fec8cbf2ce071b9deb67a0dddd9c5a668358343a9cc46302d5319b6aaaf9b"
+    },
+    {
+      "bytes": 9916,
+      "path": "scripts/build-slot.sh",
+      "sha256": "b7af91659a0b0d75b20d2080432dc1c4884a3161fcc083c8f148295a644a9489"
+    },
+    {
+      "bytes": 293,
+      "path": "test/fixtures/fuzz-campaign/libfuzzer_target.c",
+      "sha256": "735ab6ac50d3da612625c5074ced0c198f8522ecba1f5cfe3a8d65418f45de69"
+    },
+    {
+      "bytes": 14290,
+      "path": "experiments/cache-wave4b-20261010/qualify_campaigns.py",
+      "sha256": "ccc8bdbd719b6c21ae89505157b5c8a1a6a31014ced9beb25029940159fef4e0"
+    },
+    {
+      "bytes": 332696,
+      "path": ".mylang-cache/cache-wave4b/native-smoke/target",
+      "sha256": "fb1dc90226f96f537f2015d7baed1ea76e992d966ab5d4241ae6484e257c94b6"
+    }
+  ],
+  "version": 1
+}

@@ -1,0 +1,9 @@
+{
+  "command": "TMPDIR=\"$PWD/.mylang-cache/cache-wave4b/tmp\" PYTHONPYCACHEPREFIX=/dev/null PYTHONDONTWRITEBYTECODE=1 scripts/build-slot.sh build python3 scripts/fuzz_coverage_test.py",
+  "log": "worker-tests-final.log",
+  "log_sha256": "52d29fc7e57bfa740fc7360246ec24c32c67f6a58268615e6529a33d94a59b2f",
+  "note": "The suite passed. A separate explicit py_compile invocation afterward failed because the intentionally non-directory PYTHONPYCACHEPREFIX=/dev/null prohibits bytecode writes; ast.parse independently verified harness syntax. This was not a test failure.",
+  "success": true,
+  "tests": 25,
+  "version": 1
+}

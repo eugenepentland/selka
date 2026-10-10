@@ -1,0 +1,1 @@
+{"complete": true, "counts": {"executed_replays": 0, "executed_shards": 0, "explored": 0, "replayed": 0, "reused_replays": 1, "reused_shards": 1}, "report": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/coordinator-coverage-final/cases/coverage-warm/report.json", "success": true}

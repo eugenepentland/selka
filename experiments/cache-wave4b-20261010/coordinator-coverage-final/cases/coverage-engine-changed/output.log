@@ -1,0 +1,13 @@
+fuzz: execute qualification-native replay 18b49e02ad68c100ef130876132fc076bad3b1ade42f9933f67a2dd9716a2acf
+build-slot: FIFO ticket 52, position 1; waiting for memory-accounting settle delay; waiting (0s so far)
+build-slot: gate slot 1, FIFO ticket 52 after 5s
+fuzz: execute qualification-native replay 2d99ec6d05d072cf94556e1931cd02aa924f138fb303524d20d325b4a1405949
+build-slot: FIFO ticket 53, position 1; waiting for memory-accounting settle delay; waiting (0s so far)
+build-slot: gate slot 1, FIFO ticket 53 after 5s
+fuzz: execute qualification-native explore 0
+build-slot: FIFO ticket 54, position 1; waiting for memory-accounting settle delay; waiting (0s so far)
+build-slot: gate slot 1, FIFO ticket 54 after 5s
+fuzz: execute qualification-native explore 1
+build-slot: FIFO ticket 55, position 1; waiting for memory-accounting settle delay; waiting (0s so far)
+build-slot: gate slot 1, FIFO ticket 55 after 5s
+{"complete": true, "counts": {"executed_replays": 2, "executed_shards": 2, "explored": 64, "replayed": 8, "reused_replays": 0, "reused_shards": 0}, "report": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/coordinator-coverage-final/cases/coverage-engine-changed/report.json", "success": true}

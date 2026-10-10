@@ -36,6 +36,9 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
+import differential_corpus as corpus
+
+STRICT_CAMPAIGN = False
 
 DEF = re.compile(r"^(public )?func (\w+)(\[[^\]]*\])?\((.*)\)( -> [^:]+)?:$", re.M)
 SHOW_FUNCTION = re.compile(r"^  (\S+)::(\S+) (declared|template|constant|conversion|foreign|inlined|evaluated)( exported)? effects=\{([^}]*)\}")
@@ -45,7 +48,11 @@ LITERAL = re.compile(r"(?<![\w.])(\d+)(?![\w.])")
 def run(cmd, cwd=None):
     env = dict(os.environ)
     env.setdefault("TMPDIR", tempfile.gettempdir())
-    return subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, env=env)
+    result = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, env=env,
+                            timeout=300 if STRICT_CAMPAIGN else None)
+    if STRICT_CAMPAIGN:
+        corpus.require_worker(result)
+    return result
 
 
 def emit(compiler, project, out):
@@ -162,21 +169,40 @@ def imports(sources):
 
 
 def main():
+    global STRICT_CAMPAIGN
     parser = argparse.ArgumentParser()
     parser.add_argument("compiler")
     parser.add_argument("--steps", type=int, default=60)
     parser.add_argument("--seed", type=int, default=1)
     parser.add_argument("--project", default=str(Path(__file__).resolve().parent / "fixtures" / "interfaces"))
     parser.add_argument("--keep", default=None)
+    parser.add_argument("--corpus-out", type=Path)
+    parser.add_argument("--replay-corpus", type=Path)
+    parser.add_argument("--strict-campaign", action="store_true")
     args = parser.parse_args()
+    if args.strict_campaign and not 0 <= args.steps <= corpus.MAX_CASES:
+        parser.error("strict campaign steps must be 0.." + str(corpus.MAX_CASES))
+    STRICT_CAMPAIGN = args.strict_campaign
     compiler = str(Path(args.compiler).resolve())
     project = Path(args.project)
     rng = random.Random(args.seed)
-    sources = {p.stem: p.read_text() for p in sorted(project.glob("*.my"))}
-    importers = imports(sources)
     work = Path(tempfile.mkdtemp(prefix="interface-diff-"))
     violations, accepted, rejected, kinds = [], 0, 0, {}
+    exported = None
     try:
+        retained = corpus.Corpus.load(args.replay_corpus, "interfaces-v1") if args.replay_corpus else None
+        if retained is not None:
+            project = work / "retained"
+            retained.restore(project)
+        elif args.strict_campaign:
+            project = work / "declared"
+            corpus.copy_baseline(args.project, project, strict=True)
+        if args.strict_campaign:
+            corpus.isolate_baseline(project)
+        sources = {p.stem: p.read_text() for p in sorted(project.glob("*.my"))}
+        importers = imports(sources)
+        if args.corpus_out:
+            exported = corpus.Corpus.capture(project, "interfaces-v1")
         base_dir = work / "base"
         shutil.copytree(project, base_dir)
         base = emit(compiler, base_dir, work / "base-out")
@@ -197,15 +223,27 @@ def main():
         for module in base:
             roles[module], shapes_of[module] = show(compiler, work / "base-out" / f"{module}.myi")
         by_label = {}
-        for candidate in catalog(sources, roles, rng):
-            by_label.setdefault(candidate[0], []).append(candidate)
+        if args.steps > 0:
+            for candidate in catalog(sources, roles, rng):
+                by_label.setdefault(candidate[0], []).append(candidate)
         labels = sorted(by_label)
-        for step in range(args.steps):
+        replay = retained.cases if retained is not None else []
+        total_steps = len(replay) + args.steps
+        for step in range(total_steps):
             # Pick the class first, so rare classes are drawn as often as common ones.
-            label, expect, module, text, shape = rng.choice(by_label[rng.choice(labels)])
+            if step < len(replay):
+                case = replay[step]
+                label, expect, module, shape = case["labels"][0], case["expect"], case["module"], case["shape"]
+                changed = {row["path"]: corpus.decode_file(row) for row in case["changes"]}
+                text = changed.get(module + ".my", sources[module].encode()).decode()
+            else:
+                label, expect, module, text, shape = rng.choice(by_label[rng.choice(labels)])
             step_dir = work / f"step-{step}"
             shutil.copytree(project, step_dir)
             (step_dir / f"{module}.my").write_text(text)
+            if exported is not None:
+                exported.append({module + ".my": (step_dir / f"{module}.my").read_bytes()},
+                                [label], expect=expect, module=module, shape=shape)
             after = emit(compiler, step_dir, step_dir / "out")
             if after is None:
                 rejected += 1
@@ -249,9 +287,16 @@ def main():
                     shutil.rmtree(target, ignore_errors=True)
                     shutil.copytree(step_dir, target)
             shutil.rmtree(step_dir)
+    except (corpus.CorpusError, subprocess.TimeoutExpired) as error:
+        print("interface-diff: harness error: " + str(error), file=sys.stderr)
+        return 2
     finally:
-        shutil.rmtree(work, ignore_errors=True)
-    print(json.dumps({"steps": args.steps, "seed": args.seed, "accepted": accepted, "rejected": rejected,
+        try:
+            if exported is not None:
+                exported.save(args.corpus_out)
+        finally:
+            shutil.rmtree(work, ignore_errors=True)
+    print(json.dumps({"steps": total_steps, "seed": args.seed, "accepted": accepted, "rejected": rejected,
                       "mutations": dict(sorted(kinds.items())), "violations": violations}, indent=1))
     return 1 if violations else 0
 

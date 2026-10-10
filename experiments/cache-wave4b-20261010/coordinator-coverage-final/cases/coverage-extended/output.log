@@ -1,0 +1,4 @@
+fuzz: execute qualification-native explore 1
+build-slot: FIFO ticket 51, position 1; waiting for memory-accounting settle delay; waiting (0s so far)
+build-slot: gate slot 1, FIFO ticket 51 after 5s
+{"complete": true, "counts": {"executed_replays": 0, "executed_shards": 1, "explored": 32, "replayed": 0, "reused_replays": 1, "reused_shards": 1}, "report": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/coordinator-coverage-final/cases/coverage-extended/report.json", "success": true}

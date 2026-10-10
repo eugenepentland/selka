@@ -1,0 +1,315 @@
+{
+  "files": [
+    {
+      "bytes": 332696,
+      "path": ".mylang-cache/cache-wave4b/native-smoke/target",
+      "sha256": "fb1dc90226f96f537f2015d7baed1ea76e992d966ab5d4241ae6484e257c94b6"
+    },
+    {
+      "bytes": 9916,
+      "path": "scripts/build-slot.sh",
+      "sha256": "b7af91659a0b0d75b20d2080432dc1c4884a3161fcc083c8f148295a644a9489"
+    },
+    {
+      "bytes": 26123,
+      "path": "scripts/fuzz_campaign.py",
+      "sha256": "fd92317c29e8300af4fddd4dd3639c88dd829332e5127b1bcdbcc0ab0666166a"
+    },
+    {
+      "bytes": 4676,
+      "path": "scripts/fuzz_campaign_identity.py",
+      "sha256": "b1bf179b53a0aa45e7dc162909ebe9e4f275f294f836d749ef667a77c1d75d62"
+    },
+    {
+      "bytes": 12266,
+      "path": "scripts/fuzz_campaign_store.py",
+      "sha256": "f567a93eeaa9da67bc50d8f34bf2f443d5bea0efef51a964721a79e22ec0b2ad"
+    },
+    {
+      "bytes": 18135,
+      "path": "scripts/fuzz_coverage.py",
+      "sha256": "f15aa2abdc26294e618a2a66c461acf398b4589ba1e9b52cf950343f0ca29e33"
+    },
+    {
+      "bytes": 17030,
+      "path": "scripts/verification_snapshot.py",
+      "sha256": "a092dc7eaa891f329f9e82d859ae8293d3e4849e1a1aae28108a33ccb0579497"
+    },
+    {
+      "bytes": 32672,
+      "path": "scripts/verify_cache.py",
+      "sha256": "282fec8cbf2ce071b9deb67a0dddd9c5a668358343a9cc46302d5319b6aaaf9b"
+    },
+    {
+      "bytes": 4196,
+      "path": "src/stdlib/base64.my",
+      "sha256": "1eefad34b7b64f0f423581bfeb50effc7f8ffceba315117d7653321d7138f94e"
+    },
+    {
+      "bytes": 3986,
+      "path": "src/stdlib/byte_builder.my",
+      "sha256": "389b91e14ef959257f42c2ef10fcf40007d0be8dcac568e32d014aeb248e3c85"
+    },
+    {
+      "bytes": 736,
+      "path": "src/stdlib/environment.my",
+      "sha256": "2e8f14ec25b0debfb50df2577a4336c16b618b67b5ec6e9d60b4f9270f561be9"
+    },
+    {
+      "bytes": 420,
+      "path": "src/stdlib/filesystem.my",
+      "sha256": "3a34084645f346fad34d79a175796474b620218a2498aa9eb77ea8232e6d1a14"
+    },
+    {
+      "bytes": 6416,
+      "path": "src/stdlib/fixtures/byte_builder.my",
+      "sha256": "0fd97544353fef9d959ad96979865701fda873eff9e9aa4ae71fbb30eb9b2ce0"
+    },
+    {
+      "bytes": 2404,
+      "path": "src/stdlib/fixtures/codecs.my",
+      "sha256": "15d1be0954ea2f46abe09cf679a19c866cc7840d8bfce596c3dd3c1264982eed"
+    },
+    {
+      "bytes": 1667,
+      "path": "src/stdlib/fixtures/integer_extrema.my",
+      "sha256": "6d5ecc8e225b828152404291d1924c69d6984f956aa7d781aff048f378bab1b0"
+    },
+    {
+      "bytes": 5737,
+      "path": "src/stdlib/fixtures/json.my",
+      "sha256": "e64f4fd7109a902bdc65936974e22b0125a8140081761b72fa0becbc6af81ba6"
+    },
+    {
+      "bytes": 4369,
+      "path": "src/stdlib/fixtures/math.my",
+      "sha256": "37a47ca724998fef0eb5c84707a6cd60bfea2d3858a99c26ae7b4f209f51dd02"
+    },
+    {
+      "bytes": 1922,
+      "path": "src/stdlib/fixtures/path.my",
+      "sha256": "aecc9799c0e114e98c5f7c78e87227f309cff7ad2a19d17c197177a90bc4a19b"
+    },
+    {
+      "bytes": 3874,
+      "path": "src/stdlib/fixtures/pool.my",
+      "sha256": "3abc9fed9e74b68f1317d59d9dd18e8a1c4b45d17041b847d0d6658864a020f1"
+    },
+    {
+      "bytes": 3283,
+      "path": "src/stdlib/fixtures/sort.my",
+      "sha256": "1e966e156f458334e3bbc153fe7cf535a2996f0e316028e5eb547145ef703567"
+    },
+    {
+      "bytes": 5794,
+      "path": "src/stdlib/fixtures/strings.my",
+      "sha256": "48e88a4c0f6003e82ee2a938fe8e6b9a312f273d5f49b7b9b0d771c6fcc78a5e"
+    },
+    {
+      "bytes": 6290,
+      "path": "src/stdlib/fixtures/time_random.my",
+      "sha256": "5ea19319d282f9eb98ac0430600387558cf249999b6ad6039865cd5b4fd8ca95"
+    },
+    {
+      "bytes": 1011,
+      "path": "src/stdlib/fixtures/time_random_provider.my",
+      "sha256": "c00a39d7b71a7c9ff0cacd4a0d2144e9a8d35562a6fdb3bb1fc52bcacbb9f3ba"
+    },
+    {
+      "bytes": 691,
+      "path": "src/stdlib/hex.my",
+      "sha256": "f525eb8531d12b9389bd487dec5b985d9694464d9034662779d522e4f2d4b9ad"
+    },
+    {
+      "bytes": 23245,
+      "path": "src/stdlib/json.my",
+      "sha256": "07461b8e7db5ecb0b474bc0cdad0b51fe8dc209957634d2880f67dfd50d974bb"
+    },
+    {
+      "bytes": 7129,
+      "path": "src/stdlib/math.my",
+      "sha256": "741732e76fb167f265ac325443579ae85ed038526c28bec0e8679bc36b3333ff"
+    },
+    {
+      "bytes": 2780,
+      "path": "src/stdlib/network.my",
+      "sha256": "31a966bc568b692ec1b0b48382fea4e5c07614e7e50db3b01095a8c6c869fea0"
+    },
+    {
+      "bytes": 3150,
+      "path": "src/stdlib/path.my",
+      "sha256": "020449caca2922560753a6746507eb9be6758eaa028baf8245bd0bb2496aa842"
+    },
+    {
+      "bytes": 3848,
+      "path": "src/stdlib/pool.my",
+      "sha256": "2aab071a1e38414a53d2eb24445e05ed0733b611536eba244ac7c5deac20ed5a"
+    },
+    {
+      "bytes": 4557,
+      "path": "src/stdlib/random.my",
+      "sha256": "bf232b307cc9b91d3111a8a764d44143b84024d60de9f5c6a7486a8676c5b5f5"
+    },
+    {
+      "bytes": 3320,
+      "path": "src/stdlib/sort.my",
+      "sha256": "daf6dafc8efc97ab991026b3ea262ef9c62d155cf023ae4874d9c34cdc49131b"
+    },
+    {
+      "bytes": 10674,
+      "path": "src/stdlib/strings.my",
+      "sha256": "008e8bb6f842100112359395fa74ff8ba8de4b647b8d09ba11dabc2853626bb5"
+    },
+    {
+      "bytes": 5908,
+      "path": "src/stdlib/time.my",
+      "sha256": "06d409f0d3316fe69a2c3728be4bc3859eb84651407559ce64f70ed3f2d6b4a8"
+    },
+    {
+      "bytes": 293,
+      "path": "test/fixtures/fuzz-campaign/libfuzzer_target.c",
+      "sha256": "735ab6ac50d3da612625c5074ced0c198f8522ecba1f5cfe3a8d65418f45de69"
+    },
+    {
+      "bytes": 12574,
+      "path": "tests/differential_corpus.py",
+      "sha256": "3763c3727ce7a3de5cf125f9e4fbf7f2c6ca629504a5addab8102b0599830a86"
+    },
+    {
+      "bytes": 32,
+      "path": "tests/fixtures/incremental/api.my",
+      "sha256": "c09efbce2c5a719bd497107d50408ac8d8d17f11e59d744c92552e3907d043a4"
+    },
+    {
+      "bytes": 429,
+      "path": "tests/fixtures/incremental/main.my",
+      "sha256": "09701ae2aff4aaf6bae397f1a0a0e50b75af7568112547b3ae73ba8e07993b7c"
+    },
+    {
+      "bytes": 760,
+      "path": "tests/fixtures/incremental/make.my",
+      "sha256": "7d210c90b8f0b5ac8ab937c90d39bc5da43c2eae8e9eebf721e28c1401dc984d"
+    },
+    {
+      "bytes": 1138,
+      "path": "tests/fixtures/incremental/measure.my",
+      "sha256": "b36568cbf5c395aa2ebe63eec959f8ee3eb295e5939d8bc3141dd90ca02a8b6a"
+    },
+    {
+      "bytes": 404,
+      "path": "tests/fixtures/incremental/model.my",
+      "sha256": "89f065cf2386bd8157ceb60401a615c9e1d2dc343de88fb26e83f30725521c5c"
+    },
+    {
+      "bytes": 34,
+      "path": "tests/fixtures/interfaces/api.my",
+      "sha256": "a5e90aa84c6d979cc5d03688967841bbcf84ffbc3663ff7c6727f173af0f8321"
+    },
+    {
+      "bytes": 318,
+      "path": "tests/fixtures/interfaces/dom.my",
+      "sha256": "b9e83f3fceff30b02bfd0c66e031415ff9fc83bc2bf4335f69e02fb1c701837a"
+    },
+    {
+      "bytes": 961,
+      "path": "tests/fixtures/interfaces/lib.my",
+      "sha256": "da506ff92a174e5f2a0a74a588a48b50f2015d231181103b819564d3c6e664cc"
+    },
+    {
+      "bytes": 971,
+      "path": "tests/fixtures/interfaces/main.my",
+      "sha256": "d964c57671deeaade715686ff50aa6587142b7685a3f4f614282e5602d10b48e"
+    },
+    {
+      "bytes": 858,
+      "path": "tests/fixtures/interfaces/reach.my",
+      "sha256": "d52ed7d66b0c5d464036ecca78dda62c127efc1891be1d61d62c1a3f2fc26041"
+    },
+    {
+      "bytes": 392,
+      "path": "tests/fixtures/interfaces/shapes.my",
+      "sha256": "c11ad22a908431ed0230732db87e708a8d127113be80e9cf22ec3b7098f4e08f"
+    },
+    {
+      "bytes": 125,
+      "path": "tests/fixtures/interfaces_generic/items.my",
+      "sha256": "dbf411cd060a63a3f9912317ce0880c3267156e9f9b574e79e447b61e6634691"
+    },
+    {
+      "bytes": 575,
+      "path": "tests/fixtures/interfaces_generic/main.my",
+      "sha256": "de2a11a90734d2e007f06f38b51806c248cfb488818e376d01ade29d39d68f98"
+    },
+    {
+      "bytes": 1403,
+      "path": "tests/fixtures/interfaces_generic/slots.my",
+      "sha256": "597eec46e86b8ebb307ea78fdeaaeb01dc7d67e725b0736284bef05be4a31429"
+    },
+    {
+      "bytes": 302,
+      "path": "tests/fixtures/module_projects/app/report.my",
+      "sha256": "b5bb4df223901bcd058a47f8d13a36c7f842c1aba68f2b9a5bf21a6aa1239c49"
+    },
+    {
+      "bytes": 596,
+      "path": "tests/fixtures/module_projects/core/shapes.my",
+      "sha256": "0265f4b93603e983a87f682d166989e03438808ec003deabb8474cb824c96365"
+    },
+    {
+      "bytes": 483,
+      "path": "tests/fixtures/module_projects/core/stats.my",
+      "sha256": "734d56ee387c5103e2c9c60118abd2db0b31cf496e03700ea55e702b6fd47654"
+    },
+    {
+      "bytes": 306,
+      "path": "tests/fixtures/module_projects/main.my",
+      "sha256": "524e5cf8000afa5d09f2f955c083c983ab827da3fd1c6f813f7ffd6b360d5251"
+    },
+    {
+      "bytes": 194,
+      "path": "tests/fixtures/module_projects/mylang.json",
+      "sha256": "eedd5ac2a6ae96d2cd756f9a2ac613ea6bcdda4a714e6fc4eedfadd1bd1fdfbe"
+    },
+    {
+      "bytes": 286,
+      "path": "tests/fixtures/module_projects/policy.json",
+      "sha256": "157ac17ae60dabf6edb8fd9e4b37d688b80883e993b87c43f274ba28b4c06ea5"
+    },
+    {
+      "bytes": 8823,
+      "path": "tests/incremental_diff.py",
+      "sha256": "205ee0a5054cae5d9fe8decd17bbaef76bd477281d56671140458c9604b268a1"
+    },
+    {
+      "bytes": 16905,
+      "path": "tests/interface_diff.py",
+      "sha256": "16b146b0a53ee09e6d307222897b494c567aab5f79f2d9e53eec79da9fda5d5f"
+    },
+    {
+      "bytes": 225782370,
+      "path": "zig-out/bin/mylang",
+      "sha256": "8d8b2520407639305ad840a7ff6dd7cb271807957a73efe91f5e625c3c7e3660"
+    },
+    {
+      "bytes": 613624,
+      "path": "zig-out/libexec/mylang/components/cache-plan-9547f2891976644ba9fc7db8d6a1468b8d6ed753e6e6c132809a2e7e9de48d50",
+      "sha256": "9547f2891976644ba9fc7db8d6a1468b8d6ed753e6e6c132809a2e7e9de48d50"
+    },
+    {
+      "bytes": 300,
+      "path": "zig-out/libexec/mylang/components/cache-plan.json",
+      "sha256": "8f932b66d28c8883f90a0ffd7465c4182878dbb0352735c1389ed66bb1aae9ae"
+    },
+    {
+      "bytes": 323608,
+      "path": "zig-out/libexec/mylang/components/test-index-61646063c5151c914285a5883331cc6e60e14423fd760ab3b2f85bbf368201c2",
+      "sha256": "61646063c5151c914285a5883331cc6e60e14423fd760ab3b2f85bbf368201c2"
+    },
+    {
+      "bytes": 300,
+      "path": "zig-out/libexec/mylang/components/test-index.json",
+      "sha256": "3a829f2f74b6626b01d5993ea0c5dc335a0ebd8b2c0db20d627f04cbb30f1bf8"
+    }
+  ],
+  "version": 1
+}

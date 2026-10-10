@@ -1,0 +1,11 @@
+{
+ "steps": 2,
+ "seed": 993807206,
+ "accepted": 2,
+ "rejected": 0,
+ "mutations": {
+  "body no-op": 1,
+  "shape: field retyped": 1
+ },
+ "violations": []
+}

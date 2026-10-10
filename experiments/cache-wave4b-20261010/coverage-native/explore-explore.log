@@ -1,0 +1,20 @@
+WARNING: Failed to find function "__sanitizer_acquire_crash_state".
+WARNING: Failed to find function "__sanitizer_print_stack_trace".
+WARNING: Failed to find function "__sanitizer_set_death_callback".
+INFO: Running with entropic power schedule (0xFF, 100).
+INFO: Seed: 17
+INFO: Loaded 1 modules   (6 inline 8-bit counters): 6 [0x1046be3, 0x1046be9), 
+INFO: Loaded 1 PC tables (6 PCs): 6 [0x1046bf0,0x1046c50), 
+INFO:        1 files found in /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/explore/working-corpus
+INFO: seed corpus: files: 1 min: 2b max: 2b total: 2b rss: 27Mb
+#2	INITED cov: 2 ft: 2 corp: 1/2b exec/s: 0 rss: 27Mb
+#3	NEW    cov: 3 ft: 3 corp: 2/4b lim: 4 exec/s: 0 rss: 27Mb L: 2/2 MS: 1 ChangeByte-
+#9	NEW    cov: 4 ft: 4 corp: 3/5b lim: 4 exec/s: 0 rss: 27Mb L: 1/2 MS: 1 EraseBytes-
+#27	NEW    cov: 5 ft: 5 corp: 4/6b lim: 4 exec/s: 0 rss: 27Mb L: 1/2 MS: 3 InsertByte-EraseBytes-EraseBytes-
+#32	DONE   cov: 5 ft: 5 corp: 4/6b lim: 4 exec/s: 0 rss: 27Mb
+Done 32 runs in 0 second(s)
+stat::number_of_executed_units: 32
+stat::average_exec_per_sec:     0
+stat::new_units_added:          3
+stat::slowest_unit_time_sec:    0
+stat::peak_rss_mb:              27

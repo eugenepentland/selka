@@ -1,0 +1,66 @@
+[
+  {
+    "target": "incremental",
+    "operation": "explore",
+    "status": 0,
+    "cases": 2,
+    "retained_config": true,
+    "log": ".mylang-cache/cache-wave4b/producer-smoke-isolated/incremental-explore.log"
+  },
+  {
+    "target": "incremental",
+    "operation": "replay",
+    "status": 0,
+    "cases": 2,
+    "retained_config": true,
+    "log": ".mylang-cache/cache-wave4b/producer-smoke-isolated/incremental-replay.log"
+  },
+  {
+    "target": "module-projects",
+    "operation": "explore",
+    "status": 0,
+    "cases": 2,
+    "retained_config": true,
+    "log": ".mylang-cache/cache-wave4b/producer-smoke-isolated/module-projects-explore.log"
+  },
+  {
+    "target": "module-projects",
+    "operation": "replay",
+    "status": 0,
+    "cases": 2,
+    "retained_config": true,
+    "log": ".mylang-cache/cache-wave4b/producer-smoke-isolated/module-projects-replay.log"
+  },
+  {
+    "target": "interfaces",
+    "operation": "explore",
+    "status": 0,
+    "cases": 2,
+    "retained_config": true,
+    "log": ".mylang-cache/cache-wave4b/producer-smoke-isolated/interfaces-explore.log"
+  },
+  {
+    "target": "interfaces",
+    "operation": "replay",
+    "status": 0,
+    "cases": 2,
+    "retained_config": true,
+    "log": ".mylang-cache/cache-wave4b/producer-smoke-isolated/interfaces-replay.log"
+  },
+  {
+    "target": "interfaces-generic",
+    "operation": "explore",
+    "status": 0,
+    "cases": 2,
+    "retained_config": true,
+    "log": ".mylang-cache/cache-wave4b/producer-smoke-isolated/interfaces-generic-explore.log"
+  },
+  {
+    "target": "interfaces-generic",
+    "operation": "replay",
+    "status": 0,
+    "cases": 2,
+    "retained_config": true,
+    "log": ".mylang-cache/cache-wave4b/producer-smoke-isolated/interfaces-generic-replay.log"
+  }
+]

@@ -861,6 +861,16 @@ pub fn build(b: *std.Build) void {
         verification_tests.dependOn(&verification_run.step);
     }
     test_step.dependOn(verification_tests);
+    const fuzz_tests = b.step("test-fuzz-campaign", "Verify independent fuzz shards, retained corpus replay and qualified completion");
+    for ([_][]const u8{
+        "scripts/fuzz_campaign_store_test.py", "scripts/fuzz_campaign_test.py",
+        "scripts/fuzz_coverage_test.py",       "tests/test_differential_corpus.py",
+    }) |script| {
+        const fuzz_run = driver(b, b.fmt("python3 {s}", .{script}), rss.script, "fuzz_campaign");
+        fuzz_run.addArgs(&.{ "python3", script });
+        fuzz_tests.dependOn(&fuzz_run.step);
+    }
+    test_step.dependOn(fuzz_tests);
     const doc_coverage = bounded(b.addRunArtifact(exe), rss.driver);
     doc_coverage.addArgs(&.{ "doc-coverage", "." });
     doc_coverage.setCwd(b.path("."));
@@ -976,7 +986,7 @@ pub fn build(b: *std.Build) void {
     // These scripts use declared source fixtures and isolated stand-ins, and
     // never execute a prepared native compiler or test binary. Unknown/new
     // cohorts retain the complete artifact identity until explicitly reviewed.
-    for ([_][]const u8{ "idioms_self", "friction", "affected", "coverage_self", "manifest_self", "verification_cache", "embedded_migration" }) |id| {
+    for ([_][]const u8{ "idioms_self", "friction", "affected", "coverage_self", "manifest_self", "verification_cache", "fuzz_campaign", "embedded_migration" }) |id| {
         verification_registry.?.artifactDependencies(id, &.{});
     }
     verification_registry.?.artifactDependencies("memory_budget", &.{ "memory-budget", "components" });

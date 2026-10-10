@@ -1,0 +1,5 @@
+fuzz: execute incremental explore 0
+build-slot: FIFO ticket 48, position 1; waiting for memory-accounting settle delay; waiting (0s so far)
+build-slot: gate slot 1, FIFO ticket 48 after 5s
+{"complete": false, "counts": {"executed_replays": 0, "executed_shards": 1, "explored": 2, "replayed": 0, "reused_replays": 0, "reused_shards": 0}, "report": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/coordinator-native/cases/differential-cancelled/report.json", "success": false}
+fuzz: interrupted; only completed actions can be reused

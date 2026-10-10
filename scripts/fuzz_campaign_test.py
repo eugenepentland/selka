@@ -1,0 +1,404 @@
+#!/usr/bin/env python3
+"""Coordinator boundary tests with simulated workers and real filesystem watches."""
+from contextlib import ExitStack, redirect_stdout
+import io
+import hashlib
+import json
+import os
+from pathlib import Path
+import signal
+import subprocess
+import sys
+import tempfile
+import unittest
+from unittest.mock import patch
+
+import fuzz_campaign as campaign
+import fuzz_campaign_identity as identity
+import fuzz_campaign_store as evidence
+
+
+class StableHost:
+    identity = {"test-host": 1}
+
+    def unchanged(self):
+        return True
+
+
+class CampaignTests(unittest.TestCase):
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory(prefix="fuzz-coordinator-")
+        self.addCleanup(self.temporary.cleanup)
+        self.root = Path(self.temporary.name)
+        self.binary = self.root / "candidate"
+        self.binary.write_text("#!/bin/sh\nexit 0\n")
+        self.binary.chmod(0o755)
+        self.components = self.root / "components"
+        self.components.mkdir()
+        for name in ("test-index", "cache-plan"):
+            (self.components / (name + ".json")).write_text(json.dumps({"artifact": "." + name}))
+            (self.components / ("." + name)).write_bytes(name.encode())
+        for script, project, _adapter, _entry in campaign.DIFFERENTIAL.values():
+            (self.root / script).parent.mkdir(parents=True, exist_ok=True)
+            (self.root / script).write_text("# simulated adapter\n")
+            (self.root / project).mkdir(parents=True, exist_ok=True)
+            (self.root / project / "main.my").write_text("func main() -> int:\n    return 0\n")
+        (self.root / "tests/differential_corpus.py").write_text("# corpus contract\n")
+        (self.root / "src/stdlib").mkdir(parents=True)
+        (self.root / "src/stdlib/fixture.my").write_text("# runtime input\n")
+        (self.root / "coordinator.py").write_text("# common code\n")
+        (self.root / "scripts").mkdir()
+        (self.root / "scripts/fuzz_coverage.py").write_text("# simulated coverage adapter\n")
+        self.initial = self.root / "initial"
+        self.initial.mkdir()
+        (self.initial / "seed").write_bytes(b"seed")
+        self.environment = {"PATH": os.environ["PATH"], "HOME": str(self.root)}
+        self.calls = []
+        self.failure = False
+        self.interrupt_at = None
+        self.before = None
+        self.after = None
+        self.stack = ExitStack()
+        self.addCleanup(self.stack.close)
+        self.stack.enter_context(patch.object(campaign, "ROOT", self.root))
+        self.stack.enter_context(patch.object(identity, "COMMON_INPUTS", ["coordinator.py"]))
+        self.stack.enter_context(patch.object(identity, "tools", side_effect=lambda _env, binaries, _zig: ([], binaries)))
+        self.stack.enter_context(patch.object(campaign.verification, "normalized_environment", side_effect=lambda _root: dict(self.environment)))
+        self.stack.enter_context(patch.object(campaign.verification, "HostContext", StableHost))
+        self.stack.enter_context(patch.object(campaign.verification, "run_admitted", side_effect=self.admitted))
+        self.store = evidence.Store(self.root / "cache/evidence")
+
+    def admitted(self, root, kind, command, environment, unchanged, timings):
+        self.assertEqual("gate", kind)
+        request_path = Path(command[-2])
+        request = campaign.worker_request(request_path, command[-1])
+        if self.before:
+            self.before(request, request_path)
+        self.assertTrue(unchanged())
+        self.calls.append(request)
+        if self.interrupt_at == len(self.calls):
+            raise KeyboardInterrupt
+        output = Path(request["output"])
+        replay = request["operation"] == "replay"
+        if replay:
+            bundle = Path(request["bundle"])
+            count = json.loads(bundle.read_text())["count"]
+        else:
+            count = request.get("steps", request.get("runs"))
+            bundle = output / "corpus.json"
+            bundle.write_text(json.dumps({"simulation-only": True, "target": request["name"],
+                                           "seed": request["seed"], "count": count}))
+        result = {"version": 1, "complete": not self.failure, "success": not self.failure,
+                  "explored": 0 if replay else count, "replayed": count if replay else 0,
+                  "bundle": str(bundle), "engine": {"coverage_schema": "libfuzzer-inline8-log-v1"}}
+        (output / "result.json").write_text(json.dumps(result))
+        timings.append({"kind": kind, "observed_held_seconds": 0.01})
+        if self.after:
+            self.after(request)
+        return (1 if self.failure else 0), 0.01
+
+    def run_campaign(self, *extra, coverage=False):
+        if coverage:
+            argv = ["coverage", "--name", "example", "--engine", str(self.binary),
+                    "--corpus", str(self.initial), "--runs", "4"]
+        else:
+            argv = ["differential", "--compiler", str(self.binary), "--zig", str(self.binary),
+                    "--components", str(self.components), "--steps", "2"]
+        argv += ["--cache-dir", str(self.root / "cache"), *extra]
+        with redirect_stdout(io.StringIO()):
+            status = campaign.execute(campaign.options(argv))
+        return status, json.loads((self.root / "cache/last-run.json").read_text())
+
+    def test_completed_shards_reuse_before_admission_and_extension_only_adds_one(self):
+        status, cold = self.run_campaign("--target", "incremental", "--shards", "2")
+        self.assertEqual(0, status)
+        self.assertEqual(2, cold["counts"]["executed_shards"])
+        self.calls.clear()
+        with patch.object(evidence.Store, "retain_corpus", side_effect=AssertionError("warm catalog rewrite")):
+            status, warm = self.run_campaign("--target", "incremental", "--shards", "2")
+        self.assertEqual((0, []), (status, self.calls))
+        self.assertEqual(2, warm["counts"]["reused_shards"])
+        self.assertEqual([], warm["admissions"])
+        status, extended = self.run_campaign("--target", "incremental", "--shards", "3")
+        self.assertEqual(0, status)
+        self.assertEqual(1, len(self.calls))
+        self.assertEqual(identity.seed(1, 2), self.calls[0]["seed"])
+        self.assertEqual(2, extended["counts"]["reused_shards"])
+
+    def test_worker_request_digest_is_checked_before_decode_or_dispatch(self):
+        path = self.root / "request.json"
+        original = b'{"kind":"differential","output":"unused"}\n'
+        path.write_bytes(original)
+        digest = hashlib.sha256(original).hexdigest()
+        self.assertEqual(campaign.worker_request(path, digest),
+                         {"kind": "differential", "output": "unused"})
+        path.write_bytes(b'not even valid JSON')
+        with patch.object(campaign, "differential_worker") as dispatch:
+            with self.assertRaisesRegex(ValueError, "request SHA256 mismatch"):
+                campaign.worker(path, digest)
+            dispatch.assert_not_called()
+        path.write_bytes(original)
+        with self.assertRaisesRegex(ValueError, "invalid expected"):
+            campaign.worker_request(path, "../bad-digest")
+
+    def test_worker_request_rejects_nonregular_and_oversized_bytes(self):
+        path = self.root / "request.json"
+        path.write_bytes(b'{}\n')
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        with patch.object(evidence, "METADATA_MAX_BYTES", 2):
+            with self.assertRaisesRegex(ValueError, "bounded regular"):
+                campaign.worker_request(path, digest)
+        path.unlink()
+        os.mkfifo(path)
+        with self.assertRaisesRegex(ValueError, "bounded regular"):
+            campaign.worker_request(path, digest)
+
+    def test_request_aba_while_queued_prevents_execution_and_publication(self):
+        def change(_request, path):
+            original = path.read_bytes()
+            path.write_bytes(b'{"different":"request"}\n')
+            path.write_bytes(original)
+        self.before = change
+        with self.assertRaises(evidence.InputsChanged):
+            self.run_campaign("--target", "incremental")
+        self.assertEqual(self.calls, [])
+        self.assertFalse((self.store.root / "success").exists())
+
+    def test_staged_replay_bundle_aba_prevents_new_target_success(self):
+        self.run_campaign("--target", "incremental")
+        prior = set((self.store.root / "success").iterdir())
+        self.binary.write_text("#!/bin/sh\nexit 1\n")
+        def change(request):
+            self.assertEqual(request["operation"], "replay")
+            path = Path(request["bundle"])
+            original = path.read_bytes()
+            path.write_bytes(b'different retained bytes')
+            path.write_bytes(original)
+        self.after = change
+        with self.assertRaises(evidence.InputsChanged):
+            self.run_campaign("--target", "incremental")
+        self.assertEqual(prior, set((self.store.root / "success").iterdir()))
+        self.assertFalse(json.loads((self.root / "cache/last-run.json").read_text())["success"])
+
+    def test_staged_initial_corpus_aba_prevents_hermetic_coverage_success(self):
+        def change(request):
+            path = next(Path(request["initial_corpus"]).iterdir())
+            original = path.read_bytes()
+            path.write_bytes(b'different initial input')
+            path.write_bytes(original)
+        self.after = change
+        with self.assertRaises(evidence.InputsChanged):
+            self.run_campaign("--hermetic", coverage=True)
+        self.assertFalse((self.store.root / "success").exists())
+
+    def test_coverage_request_binds_only_the_staged_initial_digests(self):
+        self.run_campaign("--hermetic", coverage=True)
+        request = self.calls[0]
+        digest = hashlib.sha256(b"seed").hexdigest()
+        self.assertEqual(request["initial_digests"], [digest])
+        self.assertEqual((Path(request["initial_corpus"]) / digest).read_bytes(), b"seed")
+
+    def test_initial_copy_edit_before_watch_cannot_replace_original_input_identity(self):
+        stage = campaign.initial_corpus
+        def corrupt(*args):
+            expected = stage(*args)
+            next(iter(expected)).write_bytes(b'different staged bytes')
+            return expected
+        with patch.object(campaign, "initial_corpus", side_effect=corrupt):
+            with self.assertRaisesRegex(evidence.InputsChanged, "during capture"):
+                self.run_campaign("--hermetic", coverage=True)
+        self.assertEqual(self.calls, [])
+        self.assertFalse((self.store.root / "success").exists())
+
+    def test_staged_request_watch_survives_until_post_publication_guard(self):
+        publish = evidence.Store.publish_success
+        def changing_guard(store, key, result, blobs, validate):
+            checks = []
+            def guard():
+                checks.append(1)
+                if len(checks) == 2:
+                    path = Path(self.calls[-1]["output"]) / "request.json"
+                    original = path.read_bytes()
+                    path.write_bytes(b'different bytes after publication')
+                    path.write_bytes(original)
+                return validate()
+            return publish(store, key, result, blobs, guard)
+        with patch.object(evidence.Store, "publish_success", new=changing_guard):
+            with self.assertRaises(evidence.InputsChanged):
+                self.run_campaign("--target", "incremental")
+        self.assertEqual(list((self.store.root / "success").iterdir()), [])
+        self.assertFalse(json.loads((self.root / "cache/last-run.json").read_text())["success"])
+
+    def test_staged_initial_directory_new_input_while_queued_prevents_execution(self):
+        def change(request, _path):
+            (Path(request["initial_corpus"]) / "unbound-input").write_bytes(b'new')
+        self.before = change
+        with self.assertRaises(evidence.InputsChanged):
+            self.run_campaign("--hermetic", coverage=True)
+        self.assertEqual(self.calls, [])
+        self.assertFalse((self.store.root / "success").exists())
+
+    def test_staging_write_to_watch_gap_cannot_bless_modified_request(self):
+        atomic = campaign.verification.atomic_record
+        def corrupt(path, value):
+            atomic(path, value)
+            if path.name == "request.json":
+                value = dict(value, binary="different compiler")
+                atomic(path, value)
+        with patch.object(campaign.verification, "atomic_record", side_effect=corrupt):
+            with self.assertRaisesRegex(evidence.InputsChanged, "during capture"):
+                self.run_campaign("--target", "incremental")
+        self.assertEqual(self.calls, [])
+        self.assertFalse((self.store.root / "success").exists())
+
+    def test_seed_and_execution_settings_change_action_identity(self):
+        self.run_campaign("--target", "incremental")
+        self.calls.clear()
+        _, changed = self.run_campaign("--target", "incremental", "--seed", "2")
+        self.assertEqual(["replay", "explore"], [r["operation"] for r in self.calls])
+        self.assertEqual(1, changed["counts"]["executed_shards"])
+        self.calls.clear()
+        self.run_campaign("--target", "incremental", "--seed", "2", "--steps", "3")
+        self.assertEqual("explore", self.calls[-1]["operation"])
+
+    def test_target_edit_replays_only_its_corpus_and_keeps_other_target_reuse(self):
+        self.run_campaign("--target", "incremental", "--target", "interfaces")
+        self.calls.clear()
+        (self.root / "tests/fixtures/incremental/main.my").write_text("changed fixture\n")
+        _, result = self.run_campaign("--target", "incremental", "--target", "interfaces")
+        self.assertEqual([("incremental", "replay"), ("incremental", "explore")],
+                         [(r["name"], r["operation"]) for r in self.calls])
+        self.assertEqual(1, result["counts"]["reused_shards"])
+
+    def test_candidate_and_hidden_component_bytes_invalidate_completed_actions(self):
+        self.run_campaign("--target", "incremental")
+        self.calls.clear()
+        (self.components / ".cache-plan").write_bytes(b"new component")
+        self.run_campaign("--target", "incremental")
+        self.assertEqual(["replay", "explore"], [r["operation"] for r in self.calls])
+        self.calls.clear()
+        self.binary.write_text("#!/bin/sh\nexit 1\n")
+        self.run_campaign("--target", "incremental")
+        self.assertEqual(["replay", "explore"], [r["operation"] for r in self.calls])
+
+    def test_interruption_keeps_completed_shard_but_no_complete_report(self):
+        self.interrupt_at = 2
+        with self.assertRaises(KeyboardInterrupt):
+            self.run_campaign("--target", "incremental", "--shards", "2")
+        report = json.loads((self.root / "cache/last-run.json").read_text())
+        self.assertFalse(report["complete"])
+        self.interrupt_at = None
+        self.calls.clear()
+        _, resumed = self.run_campaign("--target", "incremental", "--shards", "2")
+        self.assertEqual(1, len(self.calls))
+        self.assertEqual(1, resumed["counts"]["reused_shards"])
+
+    def test_failure_repairing_missing_blob_cannot_resurrect_old_success(self):
+        _, cold = self.run_campaign("--target", "incremental")
+        action = cold["actions"][0]["key"]
+        digest = self.store.load_success(action)["corpus"]
+        (self.store.root / "blobs" / digest).unlink()
+        self.failure = True
+        status, failed = self.run_campaign("--target", "incremental", "--discard-corrupt-corpus")
+        self.assertEqual(1, status)
+        self.assertFalse(failed["complete"])
+        self.assertIsNotNone(self.store.read_blob(digest))
+        self.assertIsNone(self.store.load_success(action))
+        self.failure = False
+        self.calls.clear()
+        self.run_campaign("--target", "incremental")
+        self.assertEqual(["replay", "explore"], [r["operation"] for r in self.calls])
+
+    def test_force_failure_invalidates_requested_old_shard(self):
+        _, cold = self.run_campaign("--target", "incremental")
+        action = cold["actions"][0]["key"]
+        self.failure = True
+        status, _ = self.run_campaign("--target", "incremental", "--force")
+        self.assertEqual(1, status)
+        self.assertIsNone(self.store.load_success(action))
+
+    def test_input_aba_during_worker_prevents_publication(self):
+        source = self.root / "tests/fixtures/incremental/main.my"
+        original = source.read_bytes()
+        def change(_request):
+            source.write_bytes(b"changed\n")
+            source.write_bytes(original)
+        self.after = change
+        with self.assertRaises(evidence.InputsChanged):
+            self.run_campaign("--target", "incremental")
+        self.assertFalse((self.store.root / "success").exists())
+        self.assertFalse(json.loads((self.root / "cache/last-run.json").read_text())["success"])
+
+    def test_completed_target_remains_watched_during_later_target(self):
+        source = self.root / "tests/fixtures/incremental/main.my"
+        def change(request):
+            if request["name"] == "interfaces":
+                source.write_text("edit after first target completed\n")
+        self.after = change
+        with self.assertRaises(evidence.InputsChanged):
+            self.run_campaign("--target", "incremental", "--target", "interfaces")
+        self.assertFalse(json.loads((self.root / "cache/last-run.json").read_text())["success"])
+
+    def test_valid_envelope_with_wrong_result_shape_is_a_miss(self):
+        _, cold = self.run_campaign("--target", "incremental")
+        key = cold["actions"][0]["key"]
+        self.store.discard_success(key)
+        self.store.publish_success(key, {}, [], lambda: True)
+        self.calls.clear()
+        self.run_campaign("--target", "incremental")
+        self.assertEqual(["explore"], [r["operation"] for r in self.calls])
+
+    def test_corrupt_catalog_recovers_from_qualified_shard_without_execution(self):
+        self.run_campaign("--target", "incremental")
+        family = identity.family(self.root, "differential", "incremental")
+        (self.store.root / "corpus" / (family + ".json")).write_bytes(b"truncated")
+        self.calls.clear()
+        with self.assertRaises(evidence.CorpusError):
+            self.run_campaign("--target", "incremental")
+        _, result = self.run_campaign("--target", "incremental", "--discard-corrupt-corpus")
+        self.assertEqual([], self.calls)
+        self.assertEqual(1, len(result["corpus_recovery"]))
+        self.assertEqual(1, len(self.store.load_corpus(family)))
+
+    def test_coverage_unknown_inputs_stay_fresh_and_hermetic_contract_can_reuse(self):
+        _, first = self.run_campaign(coverage=True)
+        self.assertTrue(first["freshness_reasons"])
+        self.calls.clear()
+        self.run_campaign(coverage=True)
+        self.assertEqual(["replay", "explore"], [r["operation"] for r in self.calls])
+        self.run_campaign("--hermetic", coverage=True)
+        self.calls.clear()
+        _, warm = self.run_campaign("--hermetic", coverage=True)
+        self.assertEqual([], self.calls)
+        self.assertEqual(1, warm["counts"]["reused_shards"])
+
+    def test_unsupported_loader_override_prevents_all_evidence_reuse(self):
+        self.run_campaign("--target", "incremental")
+        self.environment["LD_PRELOAD"] = "unknown-provider"
+        self.calls.clear()
+        _, result = self.run_campaign("--target", "incremental")
+        self.assertIn("LD_PRELOAD", result["freshness_reasons"])
+        self.assertEqual(["replay", "explore"], [r["operation"] for r in self.calls])
+
+    def test_leak_qualification_stays_fresh(self):
+        self.run_campaign("--target", "incremental")
+        self.environment["MYL_CORE_LEAKCHECK"] = "1"
+        _, result = self.run_campaign("--target", "incremental")
+        self.assertIn("MYL_CORE_LEAKCHECK", result["freshness_reasons"])
+        self.assertEqual(1, result["counts"]["executed_shards"])
+
+    def test_component_manifest_refuses_escaping_artifact(self):
+        (self.components / "cache-plan.json").write_text('{"artifact":"../outside"}')
+        with self.assertRaises(campaign.verification.VerificationError):
+            identity.components(self.components)
+
+    def test_seed_shards_are_stable_and_nonzero(self):
+        seeds = [identity.seed(1, ordinal) for ordinal in range(64)]
+        self.assertEqual(seeds, [identity.seed(1, ordinal) for ordinal in range(64)])
+        self.assertEqual(64, len(set(seeds)))
+        self.assertTrue(all(0 < seed <= 0xffffffff for seed in seeds))
+        self.assertNotEqual(seeds[0], identity.seed(2, 0))
+
+
+if __name__ == "__main__":
+    unittest.main()

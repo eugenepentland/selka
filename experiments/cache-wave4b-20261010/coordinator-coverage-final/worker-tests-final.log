@@ -1,0 +1,11 @@
+build-slot: FIFO ticket 629, position 11; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 629, position 8; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 629, position 7; earlier build tickets must run first; waiting (120s so far)
+build-slot: FIFO ticket 629, position 7; earlier build tickets must run first; waiting (181s so far)
+build-slot: FIFO ticket 629, position 2; earlier build tickets must run first; waiting (241s so far)
+build-slot: build slot 2, FIFO ticket 629 after 271s
+.........................
+----------------------------------------------------------------------
+Ran 25 tests in 6.269s
+
+OK

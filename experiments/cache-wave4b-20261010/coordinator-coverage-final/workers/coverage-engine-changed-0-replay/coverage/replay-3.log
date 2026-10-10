@@ -1,0 +1,19 @@
+WARNING: Failed to find function "__sanitizer_acquire_crash_state".
+WARNING: Failed to find function "__sanitizer_print_stack_trace".
+WARNING: Failed to find function "__sanitizer_set_death_callback".
+INFO: Running with entropic power schedule (0xFF, 100).
+INFO: Seed: 2567633614
+INFO: Loaded 1 modules   (6 inline 8-bit counters): 6 [0x1046be3, 0x1046be9), 
+INFO: Loaded 1 PC tables (6 PCs): 6 [0x1046bf0,0x1046c50), 
+/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/coordinator-coverage-final/inputs/libfuzzer: Running 1 inputs 1 time(s) each.
+Running: /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/coordinator-coverage-final/coverage-cache/runs/action-ykoheu_2/coverage/replay-inputs/f8c7d8fae874f2946e2f07e04cb6b759801a351cc1a5e4bc938e0247cfa237d1
+Executed /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/coordinator-coverage-final/coverage-cache/runs/action-ykoheu_2/coverage/replay-inputs/f8c7d8fae874f2946e2f07e04cb6b759801a351cc1a5e4bc938e0247cfa237d1 in 0 ms
+***
+*** NOTE: fuzzing was not performed, you have only
+***       executed the target code on a fixed set of inputs.
+***
+stat::number_of_executed_units: 1
+stat::average_exec_per_sec:     0
+stat::new_units_added:          0
+stat::slowest_unit_time_sec:    0
+stat::peak_rss_mb:              27

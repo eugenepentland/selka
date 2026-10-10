@@ -1,0 +1,21 @@
+WARNING: Failed to find function "__sanitizer_acquire_crash_state".
+WARNING: Failed to find function "__sanitizer_print_stack_trace".
+WARNING: Failed to find function "__sanitizer_set_death_callback".
+INFO: Running with entropic power schedule (0xFF, 100).
+INFO: Seed: 3435787411
+INFO: Loaded 1 modules   (4 inline 8-bit counters): 4 [0x1046be3, 0x1046be7), 
+INFO: Loaded 1 PC tables (4 PCs): 4 [0x1046be8,0x1046c28), 
+/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/crash-target: Running 1 inputs 1 time(s) each.
+Running: /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/minimized-0
+==341857== ERROR: libFuzzer: deadly signal
+NOTE: libFuzzer has rudimentary signal handlers.
+      Combine libFuzzer with AddressSanitizer or similar for better crash reports.
+SUMMARY: libFuzzer: deadly signal
+MS: 0 ; base unit: 0000000000000000000000000000000000000000
+0x21,
+!
+stat::number_of_executed_units: 1
+stat::average_exec_per_sec:     0
+stat::new_units_added:          0
+stat::slowest_unit_time_sec:    0
+stat::peak_rss_mb:              27

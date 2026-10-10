@@ -91,10 +91,10 @@ pub const golden = [_][]const u8{ "selfhost/components/", "selfhost/*.zig", "sel
 pub const idioms = [_][]const u8{ "tests/idiom_probes.py", "tests/fixtures/idioms/" };
 
 /// `tests/incremental_diff.py`: the mutation walk and its fixture project.
-pub const incremental = [_][]const u8{ "tests/incremental_diff.py", "tests/fixtures/incremental/", "tests/fixtures/module_projects/" };
+pub const incremental = [_][]const u8{ "tests/incremental_diff.py", "tests/differential_corpus.py", "tests/fixtures/incremental/", "tests/fixtures/module_projects/" };
 
 /// `tests/interface_diff.py`: the interface-hash mutation walk and its fixture.
-pub const interfaces = [_][]const u8{ "tests/interface_diff.py", "tests/fixtures/interfaces/", "tests/fixtures/interfaces_generic/" };
+pub const interfaces = [_][]const u8{ "tests/interface_diff.py", "tests/differential_corpus.py", "tests/fixtures/interfaces/", "tests/fixtures/interfaces_generic/" };
 
 /// `tests/interface_oracle.py`: the per-module check oracle over `tests/lang`
 /// and the interface fixtures.
@@ -158,6 +158,25 @@ pub const verification_cache = [_][]const u8{
     "scripts/verification_snapshot_test.py",
     "scripts/build-slot.sh",
     "tests/test_inputs_coverage.py",
+};
+
+/// Independent fuzz shards, concrete replay, evidence and native-worker lifecycle.
+pub const fuzz_campaign = [_][]const u8{
+    "scripts/fuzz_campaign.py",
+    "scripts/fuzz_campaign_identity.py",
+    "scripts/fuzz_campaign_store.py",
+    "scripts/fuzz_campaign_store_test.py",
+    "scripts/fuzz_campaign_test.py",
+    "scripts/fuzz_coverage.py",
+    "scripts/fuzz_coverage_test.py",
+    "scripts/verify_cache.py",
+    "scripts/verification_snapshot.py",
+    "scripts/build-slot.sh",
+    "tests/differential_corpus.py",
+    "tests/test_differential_corpus.py",
+    "tests/incremental_diff.py",
+    "tests/interface_diff.py",
+    "test/fixtures/fuzz-campaign/",
 };
 
 /// `tests/input_manifest.py --self-test`.

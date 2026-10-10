@@ -1,0 +1,57 @@
+{
+  "commands": {
+    "build": "TMPDIR=\"$PWD/.mylang-cache/cache-wave4b/tmp\" scripts/build-slot.sh build /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig cc -fsanitize=fuzzer -O1 -g .mylang-cache/cache-wave4b/native-smoke/target.c .mylang-cache/cache-wave4b/native-smoke/runtime/usr/lib/llvm-19/lib/clang/19/lib/linux/libclang_rt.fuzzer-x86_64.a /usr/lib/x86_64-linux-gnu/libstdc++.so.6 -lpthread -ldl -lm -o .mylang-cache/cache-wave4b/native-smoke/target",
+    "download": "apt-get download libclang-rt-19-dev",
+    "explore": "TMPDIR=\"$PWD/.mylang-cache/cache-wave4b/tmp\" scripts/build-slot.sh build python3 scripts/fuzz_coverage.py explore --engine .mylang-cache/cache-wave4b/native-smoke/target --corpus .mylang-cache/cache-wave4b/native-smoke/corpus --output .mylang-cache/cache-wave4b/native-smoke/explore --seed 17 --runs 32",
+    "extract": "dpkg-deb -x libclang-rt-19-dev_1%3a19.1.7-20ubuntu4_amd64.deb runtime",
+    "replay": "TMPDIR=\"$PWD/.mylang-cache/cache-wave4b/tmp\" scripts/build-slot.sh build python3 scripts/fuzz_coverage.py replay --engine .mylang-cache/cache-wave4b/native-smoke/target --bundle .mylang-cache/cache-wave4b/native-smoke/explore/corpus.json --output .mylang-cache/cache-wave4b/native-smoke/replay"
+  },
+  "date": "2026-10-10",
+  "engine": {
+    "coverage_schema": "libfuzzer-inline8-log-v1",
+    "libstdcxx_path": "/usr/lib/x86_64-linux-gnu/libstdc++.so.6",
+    "libstdcxx_sha256": "5bb0d21308f123b6ad46c6f35b42cedfcb8d6d439a53aa3dae04d880aaffdde3",
+    "path": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/target",
+    "runtime_archive_sha256": "85866f234b5900411cbb3f7e93a8920b05584e0b0d51dce6c839dd1db8b62aa9",
+    "sha256": "fb1dc90226f96f537f2015d7baed1ea76e992d966ab5d4241ae6484e257c94b6"
+  },
+  "initial_corpus": {
+    "inputs": [
+      {
+        "data_base64": "QUI=",
+        "filename": "seed",
+        "sha256": "38164fbd17603d73f696b8b4d72664d735bb6a7c88577687fd2ae33fd6964153"
+      }
+    ],
+    "path": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/corpus"
+  },
+  "kind": "real-libfuzzer-native-smoke",
+  "limitations": [
+    "Native smoke target only; not a compiler correctness campaign.",
+    "No ASan instrumentation; runtime warns about unavailable sanitizer stack/death callbacks.",
+    "Rebuilding with another source pathname changes debug information and executable hash.",
+    "Zig -fsanitize=fuzzer alone failed to link main; -lstdc++ selected incompatible libc++, so the explicit system libstdc++.so.6 was linked."
+  ],
+  "package": {
+    "installation": "downloaded/extracted under ignored cache; no system installation",
+    "name": "libclang-rt-19-dev",
+    "sha256": "29aca813fcf96c0c04e48981e07d1b69cdf037afb055cefd71cadc67f368dc50",
+    "url": "http://us.archive.ubuntu.com/ubuntu/pool/universe/l/llvm-toolchain-19/libclang-rt-19-dev_19.1.7-20ubuntu4_amd64.deb",
+    "version": "1:19.1.7-20ubuntu4"
+  },
+  "results": {
+    "explore": "explore-result.json",
+    "replay": "replay-result.json"
+  },
+  "scope": "adapter engine completion, raw-input exploration and fixed-input replay; not compiler fuzz coverage",
+  "source": {
+    "compiled_path": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/target.c",
+    "path": "test/fixtures/fuzz-campaign/libfuzzer_target.c",
+    "sha256": "735ab6ac50d3da612625c5074ced0c198f8522ecba1f5cfe3a8d65418f45de69"
+  },
+  "toolchain": {
+    "version": "0.17.0-dev.1683+5ceec001b",
+    "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+  },
+  "version": 1
+}

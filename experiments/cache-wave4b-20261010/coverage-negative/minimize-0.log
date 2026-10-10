@@ -1,0 +1,217 @@
+WARNING: Failed to find function "__sanitizer_acquire_crash_state".
+WARNING: Failed to find function "__sanitizer_print_stack_trace".
+WARNING: Failed to find function "__sanitizer_set_death_callback".
+INFO: Running with entropic power schedule (0xFF, 100).
+INFO: Seed: 3165910573
+INFO: Loaded 1 modules   (4 inline 8-bit counters): 4 [0x1046be3, 0x1046be7), 
+INFO: Loaded 1 PC tables (4 PCs): 4 [0x1046be8,0x1046c28), 
+CRASH_MIN: minimizing crash input: '/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/crash-aeb8fd4473f913f06750ee017a762a38b71aeae6' (22 bytes)
+CRASH_MIN: executing: /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/crash-target -timeout=10 -max_len=4096 -rss_limit_mb=1024 -malloc_limit_mb=256 -reload=0 -print_final_stats=1 -runs=256 -max_total_time=5 /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/crash-aeb8fd4473f913f06750ee017a762a38b71aeae6 2>&1
+CRASH_MIN: '/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/crash-aeb8fd4473f913f06750ee017a762a38b71aeae6' (22 bytes) caused a crash. Will try to minimize it further
+CRASH_MIN: executing: /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/crash-target -timeout=10 -max_len=4096 -rss_limit_mb=1024 -malloc_limit_mb=256 -reload=0 -print_final_stats=1 -runs=256 -max_total_time=5 /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/crash-aeb8fd4473f913f06750ee017a762a38b71aeae6 -minimize_crash_internal_step=1 -exact_artifact_path=/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/minimized-0 2>&1
+WARNING: Failed to find function "__sanitizer_acquire_crash_state".
+WARNING: Failed to find function "__sanitizer_print_stack_trace".
+WARNING: Failed to find function "__sanitizer_set_death_callback".
+INFO: Running with entropic power schedule (0xFF, 100).
+INFO: Seed: 3191771121
+INFO: Loaded 1 modules   (4 inline 8-bit counters): 4 [0x1046be3, 0x1046be7), 
+INFO: Loaded 1 PC tables (4 PCs): 4 [0x1046be8,0x1046c28), 
+INFO: Starting MinimizeCrashInputInternalStep: 22
+INFO: -max_len is not provided; libFuzzer will not generate inputs larger than 22 bytes
+==341813== ERROR: libFuzzer: deadly signal
+NOTE: libFuzzer has rudimentary signal handlers.
+      Combine libFuzzer with AddressSanitizer or similar for better crash reports.
+SUMMARY: libFuzzer: deadly signal
+MS: 1 EraseBytes-; base unit: 0000000000000000000000000000000000000000
+0x21,0x6f,0x72,0x69,0x67,0x69,0x6e,0x61,0x6c,0x2d,0x74,0x69,0x76,0x65,0x2d,0x63,0x72,0x61,0x73,0x68,
+!original-tive-crash
+artifact_prefix='./'; Test unit written to /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/minimized-0
+Base64: IW9yaWdpbmFsLXRpdmUtY3Jhc2g=
+stat::number_of_executed_units: 1
+stat::average_exec_per_sec:     0
+stat::new_units_added:          0
+stat::slowest_unit_time_sec:    0
+stat::peak_rss_mb:              27
+*********************************
+CRASH_MIN: minimizing crash input: '/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/minimized-0' (20 bytes)
+CRASH_MIN: executing: /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/crash-target -timeout=10 -max_len=4096 -rss_limit_mb=1024 -malloc_limit_mb=256 -reload=0 -print_final_stats=1 -runs=256 -max_total_time=5 /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/minimized-0 2>&1
+CRASH_MIN: '/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/minimized-0' (20 bytes) caused a crash. Will try to minimize it further
+CRASH_MIN: executing: /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/crash-target -timeout=10 -max_len=4096 -rss_limit_mb=1024 -malloc_limit_mb=256 -reload=0 -print_final_stats=1 -runs=256 -max_total_time=5 /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/minimized-0 -minimize_crash_internal_step=1 -exact_artifact_path=/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/minimized-0 2>&1
+WARNING: Failed to find function "__sanitizer_acquire_crash_state".
+WARNING: Failed to find function "__sanitizer_print_stack_trace".
+WARNING: Failed to find function "__sanitizer_set_death_callback".
+INFO: Running with entropic power schedule (0xFF, 100).
+INFO: Seed: 3215724212
+INFO: Loaded 1 modules   (4 inline 8-bit counters): 4 [0x1046be3, 0x1046be7), 
+INFO: Loaded 1 PC tables (4 PCs): 4 [0x1046be8,0x1046c28), 
+INFO: Starting MinimizeCrashInputInternalStep: 20
+INFO: -max_len is not provided; libFuzzer will not generate inputs larger than 20 bytes
+==341819== ERROR: libFuzzer: deadly signal
+NOTE: libFuzzer has rudimentary signal handlers.
+      Combine libFuzzer with AddressSanitizer or similar for better crash reports.
+SUMMARY: libFuzzer: deadly signal
+MS: 1 EraseBytes-; base unit: 0000000000000000000000000000000000000000
+0x21,0x6f,0x72,0x69,0x67,0x69,0x6e,0x61,0x6c,0x2d,0x68,
+!original-h
+artifact_prefix='./'; Test unit written to /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/minimized-0
+Base64: IW9yaWdpbmFsLWg=
+stat::number_of_executed_units: 1
+stat::average_exec_per_sec:     0
+stat::new_units_added:          0
+stat::slowest_unit_time_sec:    0
+stat::peak_rss_mb:              27
+*********************************
+CRASH_MIN: minimizing crash input: '/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/minimized-0' (11 bytes)
+CRASH_MIN: executing: /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/crash-target -timeout=10 -max_len=4096 -rss_limit_mb=1024 -malloc_limit_mb=256 -reload=0 -print_final_stats=1 -runs=256 -max_total_time=5 /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/minimized-0 2>&1
+CRASH_MIN: '/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/minimized-0' (11 bytes) caused a crash. Will try to minimize it further
+CRASH_MIN: executing: /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/crash-target -timeout=10 -max_len=4096 -rss_limit_mb=1024 -malloc_limit_mb=256 -reload=0 -print_final_stats=1 -runs=256 -max_total_time=5 /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/minimized-0 -minimize_crash_internal_step=1 -exact_artifact_path=/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/minimized-0 2>&1
+WARNING: Failed to find function "__sanitizer_acquire_crash_state".
+WARNING: Failed to find function "__sanitizer_print_stack_trace".
+WARNING: Failed to find function "__sanitizer_set_death_callback".
+INFO: Running with entropic power schedule (0xFF, 100).
+INFO: Seed: 3239083636
+INFO: Loaded 1 modules   (4 inline 8-bit counters): 4 [0x1046be3, 0x1046be7), 
+INFO: Loaded 1 PC tables (4 PCs): 4 [0x1046be8,0x1046c28), 
+INFO: Starting MinimizeCrashInputInternalStep: 11
+INFO: -max_len is not provided; libFuzzer will not generate inputs larger than 11 bytes
+==341825== ERROR: libFuzzer: deadly signal
+NOTE: libFuzzer has rudimentary signal handlers.
+      Combine libFuzzer with AddressSanitizer or similar for better crash reports.
+SUMMARY: libFuzzer: deadly signal
+MS: 1 EraseBytes-; base unit: 0000000000000000000000000000000000000000
+0x21,0x6f,0x72,0x69,0x67,0x61,0x6c,0x2d,0x68,
+!origal-h
+artifact_prefix='./'; Test unit written to /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/minimized-0
+Base64: IW9yaWdhbC1o
+stat::number_of_executed_units: 1
+stat::average_exec_per_sec:     0
+stat::new_units_added:          0
+stat::slowest_unit_time_sec:    0
+stat::peak_rss_mb:              27
+*********************************
+CRASH_MIN: minimizing crash input: '/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/minimized-0' (9 bytes)
+CRASH_MIN: executing: /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/crash-target -timeout=10 -max_len=4096 -rss_limit_mb=1024 -malloc_limit_mb=256 -reload=0 -print_final_stats=1 -runs=256 -max_total_time=5 /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/minimized-0 2>&1
+CRASH_MIN: '/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/minimized-0' (9 bytes) caused a crash. Will try to minimize it further
+CRASH_MIN: executing: /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/crash-target -timeout=10 -max_len=4096 -rss_limit_mb=1024 -malloc_limit_mb=256 -reload=0 -print_final_stats=1 -runs=256 -max_total_time=5 /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/minimized-0 -minimize_crash_internal_step=1 -exact_artifact_path=/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/minimized-0 2>&1
+WARNING: Failed to find function "__sanitizer_acquire_crash_state".
+WARNING: Failed to find function "__sanitizer_print_stack_trace".
+WARNING: Failed to find function "__sanitizer_set_death_callback".
+INFO: Running with entropic power schedule (0xFF, 100).
+INFO: Seed: 3263165232
+INFO: Loaded 1 modules   (4 inline 8-bit counters): 4 [0x1046be3, 0x1046be7), 
+INFO: Loaded 1 PC tables (4 PCs): 4 [0x1046be8,0x1046c28), 
+INFO: Starting MinimizeCrashInputInternalStep: 9
+INFO: -max_len is not provided; libFuzzer will not generate inputs larger than 9 bytes
+==341831== ERROR: libFuzzer: deadly signal
+NOTE: libFuzzer has rudimentary signal handlers.
+      Combine libFuzzer with AddressSanitizer or similar for better crash reports.
+SUMMARY: libFuzzer: deadly signal
+MS: 1 EraseBytes-; base unit: 0000000000000000000000000000000000000000
+0x21,0x6f,0x72,0x69,0x67,
+!orig
+artifact_prefix='./'; Test unit written to /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/minimized-0
+Base64: IW9yaWc=
+stat::number_of_executed_units: 1
+stat::average_exec_per_sec:     0
+stat::new_units_added:          0
+stat::slowest_unit_time_sec:    0
+stat::peak_rss_mb:              27
+*********************************
+CRASH_MIN: minimizing crash input: '/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/minimized-0' (5 bytes)
+CRASH_MIN: executing: /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/crash-target -timeout=10 -max_len=4096 -rss_limit_mb=1024 -malloc_limit_mb=256 -reload=0 -print_final_stats=1 -runs=256 -max_total_time=5 /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/minimized-0 2>&1
+CRASH_MIN: '/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/minimized-0' (5 bytes) caused a crash. Will try to minimize it further
+CRASH_MIN: executing: /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/crash-target -timeout=10 -max_len=4096 -rss_limit_mb=1024 -malloc_limit_mb=256 -reload=0 -print_final_stats=1 -runs=256 -max_total_time=5 /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/minimized-0 -minimize_crash_internal_step=1 -exact_artifact_path=/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/minimized-0 2>&1
+WARNING: Failed to find function "__sanitizer_acquire_crash_state".
+WARNING: Failed to find function "__sanitizer_print_stack_trace".
+WARNING: Failed to find function "__sanitizer_set_death_callback".
+INFO: Running with entropic power schedule (0xFF, 100).
+INFO: Seed: 3288563524
+INFO: Loaded 1 modules   (4 inline 8-bit counters): 4 [0x1046be3, 0x1046be7), 
+INFO: Loaded 1 PC tables (4 PCs): 4 [0x1046be8,0x1046c28), 
+INFO: Starting MinimizeCrashInputInternalStep: 5
+INFO: -max_len is not provided; libFuzzer will not generate inputs larger than 5 bytes
+==341837== ERROR: libFuzzer: deadly signal
+NOTE: libFuzzer has rudimentary signal handlers.
+      Combine libFuzzer with AddressSanitizer or similar for better crash reports.
+SUMMARY: libFuzzer: deadly signal
+MS: 1 EraseBytes-; base unit: 0000000000000000000000000000000000000000
+0x21,0x6f,0x67,
+!og
+artifact_prefix='./'; Test unit written to /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/minimized-0
+Base64: IW9n
+stat::number_of_executed_units: 6
+stat::average_exec_per_sec:     0
+stat::new_units_added:          0
+stat::slowest_unit_time_sec:    0
+stat::peak_rss_mb:              27
+*********************************
+CRASH_MIN: minimizing crash input: '/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/minimized-0' (3 bytes)
+CRASH_MIN: executing: /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/crash-target -timeout=10 -max_len=4096 -rss_limit_mb=1024 -malloc_limit_mb=256 -reload=0 -print_final_stats=1 -runs=256 -max_total_time=5 /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/minimized-0 2>&1
+CRASH_MIN: '/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/minimized-0' (3 bytes) caused a crash. Will try to minimize it further
+CRASH_MIN: executing: /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/crash-target -timeout=10 -max_len=4096 -rss_limit_mb=1024 -malloc_limit_mb=256 -reload=0 -print_final_stats=1 -runs=256 -max_total_time=5 /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/minimized-0 -minimize_crash_internal_step=1 -exact_artifact_path=/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/minimized-0 2>&1
+WARNING: Failed to find function "__sanitizer_acquire_crash_state".
+WARNING: Failed to find function "__sanitizer_print_stack_trace".
+WARNING: Failed to find function "__sanitizer_set_death_callback".
+INFO: Running with entropic power schedule (0xFF, 100).
+INFO: Seed: 3312367040
+INFO: Loaded 1 modules   (4 inline 8-bit counters): 4 [0x1046be3, 0x1046be7), 
+INFO: Loaded 1 PC tables (4 PCs): 4 [0x1046be8,0x1046c28), 
+INFO: Starting MinimizeCrashInputInternalStep: 3
+INFO: -max_len is not provided; libFuzzer will not generate inputs larger than 3 bytes
+==341843== ERROR: libFuzzer: deadly signal
+NOTE: libFuzzer has rudimentary signal handlers.
+      Combine libFuzzer with AddressSanitizer or similar for better crash reports.
+SUMMARY: libFuzzer: deadly signal
+MS: 1 EraseBytes-; base unit: 0000000000000000000000000000000000000000
+0x21,0x67,
+!g
+artifact_prefix='./'; Test unit written to /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/minimized-0
+Base64: IWc=
+stat::number_of_executed_units: 6
+stat::average_exec_per_sec:     0
+stat::new_units_added:          0
+stat::slowest_unit_time_sec:    0
+stat::peak_rss_mb:              27
+*********************************
+CRASH_MIN: minimizing crash input: '/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/minimized-0' (2 bytes)
+CRASH_MIN: executing: /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/crash-target -timeout=10 -max_len=4096 -rss_limit_mb=1024 -malloc_limit_mb=256 -reload=0 -print_final_stats=1 -runs=256 -max_total_time=5 /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/minimized-0 2>&1
+CRASH_MIN: '/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/minimized-0' (2 bytes) caused a crash. Will try to minimize it further
+CRASH_MIN: executing: /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/crash-target -timeout=10 -max_len=4096 -rss_limit_mb=1024 -malloc_limit_mb=256 -reload=0 -print_final_stats=1 -runs=256 -max_total_time=5 /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/minimized-0 -minimize_crash_internal_step=1 -exact_artifact_path=/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/minimized-0 2>&1
+WARNING: Failed to find function "__sanitizer_acquire_crash_state".
+WARNING: Failed to find function "__sanitizer_print_stack_trace".
+WARNING: Failed to find function "__sanitizer_set_death_callback".
+INFO: Running with entropic power schedule (0xFF, 100).
+INFO: Seed: 3336718141
+INFO: Loaded 1 modules   (4 inline 8-bit counters): 4 [0x1046be3, 0x1046be7), 
+INFO: Loaded 1 PC tables (4 PCs): 4 [0x1046be8,0x1046c28), 
+INFO: Starting MinimizeCrashInputInternalStep: 2
+INFO: -max_len is not provided; libFuzzer will not generate inputs larger than 2 bytes
+==341849== ERROR: libFuzzer: deadly signal
+NOTE: libFuzzer has rudimentary signal handlers.
+      Combine libFuzzer with AddressSanitizer or similar for better crash reports.
+SUMMARY: libFuzzer: deadly signal
+MS: 1 EraseBytes-; base unit: 0000000000000000000000000000000000000000
+0x21,
+!
+artifact_prefix='./'; Test unit written to /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/minimized-0
+Base64: IQ==
+stat::number_of_executed_units: 16
+stat::average_exec_per_sec:     0
+stat::new_units_added:          0
+stat::slowest_unit_time_sec:    0
+stat::peak_rss_mb:              27
+*********************************
+CRASH_MIN: minimizing crash input: '/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/minimized-0' (1 bytes)
+CRASH_MIN: executing: /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/crash-target -timeout=10 -max_len=4096 -rss_limit_mb=1024 -malloc_limit_mb=256 -reload=0 -print_final_stats=1 -runs=256 -max_total_time=5 /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/minimized-0 2>&1
+CRASH_MIN: '/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/minimized-0' (1 bytes) caused a crash. Will try to minimize it further
+CRASH_MIN: executing: /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/crash-target -timeout=10 -max_len=4096 -rss_limit_mb=1024 -malloc_limit_mb=256 -reload=0 -print_final_stats=1 -runs=256 -max_total_time=5 /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/minimized-0 -minimize_crash_internal_step=1 -exact_artifact_path=/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/minimized-0 2>&1
+WARNING: Failed to find function "__sanitizer_acquire_crash_state".
+WARNING: Failed to find function "__sanitizer_print_stack_trace".
+WARNING: Failed to find function "__sanitizer_set_death_callback".
+INFO: Running with entropic power schedule (0xFF, 100).
+INFO: Seed: 3364472406
+INFO: Loaded 1 modules   (4 inline 8-bit counters): 4 [0x1046be3, 0x1046be7), 
+INFO: Loaded 1 PC tables (4 PCs): 4 [0x1046be8,0x1046c28), 
+INFO: Starting MinimizeCrashInputInternalStep: 1
+INFO: The input is small enough, exiting
+CRASH_MIN: failed to minimize beyond /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/native-smoke/native-crash/artifacts/minimized-0 (1 bytes), exiting

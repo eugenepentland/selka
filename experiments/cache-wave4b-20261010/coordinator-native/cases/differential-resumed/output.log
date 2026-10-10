@@ -1,0 +1,3 @@
+fuzz: execute incremental explore 1
+build-slot: gate slot 1, FIFO ticket 49 after 0s
+{"complete": true, "counts": {"executed_replays": 0, "executed_shards": 1, "explored": 2, "replayed": 0, "reused_replays": 1, "reused_shards": 1}, "report": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave4b/coordinator-native/cases/differential-resumed/report.json", "success": true}
