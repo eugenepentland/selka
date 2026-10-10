@@ -1,0 +1,26 @@
+{
+ "complete": true,
+ "cpu": 10,
+ "rounds": 10,
+ "warmup_rounds": 1,
+ "cases": 34,
+ "timed_runs": 1700,
+ "all_outputs_match": true,
+ "rss_rounds": 1,
+ "geomean_over_zig_rs": 1.1707,
+ "load_avg": {
+  "before": [
+   5.0732421875,
+   4.52490234375,
+   4.12890625
+  ],
+  "after": [
+   2.53515625,
+   3.8623046875,
+   3.92431640625
+  ]
+ },
+ "elapsed_s": 70.1,
+ "quiet_log": ".tmp/rp3/eda-base-timing.log",
+ "quiet_log_sha256": "45578a95081d5f67dec23ee0c658ff5f95c78620080fd767df32fa7249db15c7"
+}

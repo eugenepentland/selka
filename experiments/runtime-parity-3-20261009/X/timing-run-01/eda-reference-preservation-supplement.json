@@ -1,0 +1,39 @@
+{
+ "captured_utc": "2026-10-10T13:57:31.832072+00:00",
+ "source_result": "experiments/runtime-parity-3-20261009/X/timing-run-01/results/eda-runtime.json.gz",
+ "source_result_sha256": "0f44507287faecad6a2399ce0dd67b00d8b0fe09109cc0603853bef94850222e",
+ "files": [
+  {
+   "configuration": "zig-fast",
+   "original": "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/.cache/release/zig-fast/bin/eda-sch",
+   "preserved": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/timing-run-01-binaries/a67a28006cf5815b76ff658564118cbb13d22df729ad4df19a8f6ac73a129138",
+   "sha256": "a67a28006cf5815b76ff658564118cbb13d22df729ad4df19a8f6ac73a129138",
+   "mtime_utc": "2026-10-08T08:33:49.806570+00:00",
+   "capture_scope": "Read-only external reference; hash recovered after first timing, before next preparation."
+  },
+  {
+   "configuration": "zig-safe",
+   "original": "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/.cache/release/zig-safe/bin/eda-sch",
+   "preserved": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/timing-run-01-binaries/d520d6a084a49d9962d240a2c6effc84ccd40321ff0c46ff6422b84110971771",
+   "sha256": "d520d6a084a49d9962d240a2c6effc84ccd40321ff0c46ff6422b84110971771",
+   "mtime_utc": "2026-10-08T08:34:30.371098+00:00",
+   "capture_scope": "Read-only external reference; hash recovered after first timing, before next preparation."
+  },
+  {
+   "configuration": "rust",
+   "original": "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/.cache/release/rust-target/release/eda-sch",
+   "preserved": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/timing-run-01-binaries/c63f2735c1f6799264e3839a93e0c23c6b50c5ca07b8b40bce45c5dd01f69c22",
+   "sha256": "c63f2735c1f6799264e3839a93e0c23c6b50c5ca07b8b40bce45c5dd01f69c22",
+   "mtime_utc": "2026-10-08T20:04:07.672617+00:00",
+   "capture_scope": "Read-only external reference; hash recovered after first timing, before next preparation."
+  },
+  {
+   "configuration": "go",
+   "original": "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/.cache/release/go/eda-sch",
+   "preserved": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/timing-run-01-binaries/0ea7d48bc5aff1b7952d9572ae0beb169316df674287b9de537b51d2b4b1054e",
+   "sha256": "0ea7d48bc5aff1b7952d9572ae0beb169316df674287b9de537b51d2b4b1054e",
+   "mtime_utc": "2026-10-08T20:04:13.501837+00:00",
+   "capture_scope": "Read-only external reference; hash recovered after first timing, before next preparation."
+  }
+ ]
+}

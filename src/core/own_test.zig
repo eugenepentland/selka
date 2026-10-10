@@ -250,8 +250,8 @@ test "records, unions and boxes with managed parts are counted field by field an
     try std.testing.expectEqualStrings(values_output, release.stdout);
     try std.testing.expectEqualStrings("", release.stderr);
     // The list of records and the list of unions carry element layouts for the runtime.
-    try std.testing.expect(contains(release.llvm, "@myl.layout.0 = private constant [7 x i32] [i32 24, i32 2, i32 0, i32 8, i32 0, i32 16, i32 0]"));
-    try std.testing.expect(contains(release.llvm, "[i32 16, i32 1, i32 1, i32 8, i32 1, i32 0, i32 1, i32 0]"));
+    try std.testing.expect(contains(release.llvm, "@myl.layout.0 = private constant { [7 x i32], ptr, ptr, ptr } { [7 x i32] [i32 24, i32 2, i32 -1, i32 8, i32 0, i32 16, i32 0]"));
+    try std.testing.expect(contains(release.llvm, "[i32 16, i32 1, i32 -2, i32 8, i32 1, i32 0, i32 1, i32 0]"));
 }
 
 // spec-case: NEW-CORE-RC-3

@@ -18,6 +18,7 @@ const c_abi = @import("c_abi.zig");
 const flags = @import("flags.zig");
 const elements = @import("elements.zig");
 const emit_dict = @import("emit_dict.zig");
+const emit_release = @import("emit_release.zig");
 const emit_bytes = @import("emit_bytes.zig");
 const emit_text_split = @import("emit_text_split.zig");
 const emit_text = @import("emit_text.zig");
@@ -487,12 +488,9 @@ const ModuleState = struct {
         try layoutParts(self.allocator, self.module, ty, 0, 0, &parts);
         const index = self.layouts.types.items.len;
         try self.layouts.types.append(self.allocator, ty);
-        const words = 3 + 2 * parts.refs.items.len + 3 * parts.guards.items.len;
-        try self.layouts.text.print(self.allocator, "@myl.layout.{d} = private constant [{d} x i32] [i32 {d}, i32 {d}, i32 {d}", .{ index, words, @max(1, self.module.size(ty)), parts.refs.items.len, parts.guards.items.len });
-        for (parts.refs.items) |ref| try self.layouts.text.print(self.allocator, ", i32 {d}, i32 {d}", .{ ref[0], ref[1] });
-        for (parts.guards.items) |g| try self.layouts.text.print(self.allocator, ", i32 {d}, i32 {d}, i32 {d}", .{ g[0], g[1], g[2] });
-        try self.layouts.text.appendSlice(self.allocator, "], align 4\n");
-        return std.fmt.allocPrint(self.allocator, "@myl.layout.{d}", .{index});
+        const name = try std.fmt.allocPrint(self.allocator, "@myl.layout.{d}", .{index});
+        try emit_release.emit(self.allocator, &self.layouts.text, name, @max(1, self.module.size(ty)), .{ .refs = parts.refs.items, .guards = parts.guards.items });
+        return name;
     }
 
     /// Register a trap site for an operation sub-emitter.
@@ -569,6 +567,8 @@ const ModuleState = struct {
             \\declare void @myl_core_s2_unsupported(i32) noreturn nounwind cold
             \\declare ptr @myl_core_dict_new(i64, ptr) nounwind
             \\declare i32 @llvm.cttz.i32(i32, i1 immarg) nounwind readnone
+            \\declare void @myl_core_span_split_fill(ptr, i64, ptr, i64, ptr, i64) nounwind
+            \\declare ptr @memchr(ptr, i32, i64) nounwind willreturn memory(argmem: read)
             \\declare zeroext i1 @myl_core_str_eq(ptr, ptr) nounwind
             \\declare i32 @myl_core_str_hash(ptr) nounwind
             \\declare void @llvm.memset.p0.i64(ptr, i8, i64, i1) nounwind
@@ -594,6 +594,7 @@ const ModuleState = struct {
             \\declare ptr @myl_core_s2_sort_in_place(ptr, i64, i1 zeroext) nounwind
             \\declare ptr @myl_core_list_copy(ptr, i64) nounwind
             \\declare zeroext i1 @myl_core_str_parse_int(ptr, ptr) nounwind
+            \\declare zeroext i1 @myl_core_span_parse_int(ptr, i64, ptr) nounwind
             \\declare void @myl_core_print_i64(i64, i64) nounwind
             \\declare void @myl_core_print_u64(i64, i64) nounwind
             \\declare void @myl_core_print_bool(i64, i1 zeroext) nounwind
@@ -606,6 +607,7 @@ const ModuleState = struct {
             \\declare void @myl_core_assert_fail(ptr) noreturn nounwind cold
             \\declare void @llvm.memcpy.p0.p0.i64(ptr noalias nocapture writeonly, ptr noalias nocapture readonly, i64, i1 immarg)
             \\declare void @llvm.memmove.p0.p0.i64(ptr nocapture writeonly, ptr nocapture readonly, i64, i1 immarg)
+            \\declare void @myl_core_release_child_pending(ptr, ptr) nounwind
             \\declare void @myl_core_release(ptr) nounwind
             \\declare void @myl_core_main_error_i64(i64) nounwind cold
             \\declare void @myl_core_main_error_u64(i64) nounwind cold
@@ -1033,11 +1035,8 @@ const FunctionEmitter = struct {
         var parts: LayoutParts = .{};
         try layoutParts(self.a(), self.state.module, shape.key, 0, 0, &parts);
         try layoutParts(self.a(), self.state.module, shape.value, value_offset, 0, &parts);
-        const words = 3 + 2 * parts.refs.items.len + 3 * parts.guards.items.len;
-        try self.state.layouts.text.print(self.a(), "{s}.layout = private constant [{d} x i32] [i32 {d}, i32 {d}, i32 {d}", .{ name, words, stride, parts.refs.items.len, parts.guards.items.len });
-        for (parts.refs.items) |reference| try self.state.layouts.text.print(self.a(), ", i32 {d}, i32 {d}", .{ reference[0], reference[1] });
-        for (parts.guards.items) |guard| try self.state.layouts.text.print(self.a(), ", i32 {d}, i32 {d}, i32 {d}", .{ guard[0], guard[1], guard[2] });
-        try self.state.layouts.text.appendSlice(self.a(), "], align 4\n");
+        const layout_name = try std.fmt.allocPrint(self.a(), "{s}.layout", .{name});
+        try emit_release.emit(self.a(), &self.state.layouts.text, layout_name, stride, .{ .refs = parts.refs.items, .guards = parts.guards.items, .split = value_offset });
         const structural = shape.key.integer() == null and shape.key != .bool and shape.key != .str and shape.key != .bytes;
         const hash = if (structural) try std.fmt.allocPrint(self.a(), "{s}.key.hash", .{name}) else "null";
         const same = if (structural) try std.fmt.allocPrint(self.a(), "{s}.key.same", .{name}) else "null";
@@ -2113,7 +2112,13 @@ const FunctionEmitter = struct {
                 const parsed = try self.fresh("%int");
                 const tag = try self.fresh("%tag");
                 const partial = try self.fresh("%opt");
-                try out.print(self.a(), "  {s} = call fastcc i1 @myl_core_parse_int_inline(ptr {s}, ptr %slot)\n  {s} = load i64, ptr %slot, align 8\n  {s} = zext i1 {s} to i8\n", .{ ok, try self.value(inst.a), parsed, tag, ok });
+                if (self.typeOf(inst.a) == .str_view) {
+                    const data = try self.fresh("%parsedata");
+                    const len = try self.fresh("%parselen");
+                    try out.print(self.a(), "  {s} = extractvalue {{ ptr, i64 }} {s}, 0\n  {s} = extractvalue {{ ptr, i64 }} {s}, 1\n" ++
+                        "  {s} = call fastcc i1 @myl_core_parse_span_inline(ptr {s}, i64 {s}, ptr %slot)\n", .{ data, try self.value(inst.a), len, try self.value(inst.a), ok, data, len });
+                } else try out.print(self.a(), "  {s} = call fastcc i1 @myl_core_parse_int_inline(ptr {s}, ptr %slot)\n", .{ ok, try self.value(inst.a) });
+                try out.print(self.a(), "  {s} = load i64, ptr %slot, align 8\n  {s} = zext i1 {s} to i8\n", .{ parsed, tag, ok });
                 try out.print(self.a(), "  {s} = insertvalue {{ i8, i64 }} poison, i8 {s}, 0\n  {s} = insertvalue {{ i8, i64 }} {s}, i64 {s}, 1\n", .{ partial, tag, name, partial, parsed });
             },
             .union_make => if (!self.memory.fused[ref.index()]) try self.unionMake(out, name, inst),
@@ -2925,6 +2930,18 @@ const FunctionEmitter = struct {
         try self.loadValue(out, inst.ty, at, name);
     }
 
+    /// The backing storage of a memory-sized fixed array access. Reads address the existing
+    /// array; writes reuse a proven dead input's home, copying only a still-live snapshot.
+    pub fn arrayStorage(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) Error![]const u8 {
+        const old = self.function.resolve(inst.a);
+        if (inst.op == .array_get) return self.value(old);
+        const size = self.state.module.size(inst.ty);
+        const into = try self.destination(name, size);
+        if (!self.memory.homes.holds(self.current, 0, old)) try self.copyBytes(out, into.ptr, try self.value(old), size, false);
+        if (into.fresh) try out.print(self.a(), identity_line, .{ name, into.ptr });
+        return into.ptr;
+    }
+
     /// `record_set`: `insertvalue` for a record in registers. A record in memory is copied into
     /// the new value's home and the field stored there; when the old value shares that home
     /// (it has no later reader, `emit_homes.zig`) the field is written where it is.
@@ -3721,6 +3738,7 @@ const FunctionEmitter = struct {
         if (inst.op == .call) try self.state.dependency(@intCast(inst.a.index()));
         if (inst.op == .call) try emit_cap.beforeCall(@TypeOf(self), self, out, inst);
         if (try emit_bytes.runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst)) return;
+        if (try emit_text.runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst)) return;
         if (try emit_text_split.runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst)) return;
         const borrowed_bytes = external and signature.ret == .bytes and signature.owned == 0;
         const text_parameter = signature.params.len == 1 and signature.params[0] == .str;
@@ -3784,7 +3802,7 @@ const FunctionEmitter = struct {
     }
 
     /// A borrowed `(data, byte_length)` span argument of an extern-C `str` parameter.
-    fn spanArgument(self: *FunctionEmitter, out: *Out, argument: ir.Ref) ![]const u8 {
+    pub fn spanArgument(self: *FunctionEmitter, out: *Out, argument: ir.Ref) Error![]const u8 {
         const data = try self.fresh("%span");
         const len = try self.fresh("%span");
         const text = try self.value(argument);

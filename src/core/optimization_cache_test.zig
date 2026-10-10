@@ -1418,3 +1418,275 @@ test "optimizer demand missing record-free summary input receipt restores recurs
     try equal(cold.output, repaired.output);
     try std.testing.expect(deferredName(repaired, "recurse"));
 }
+
+const split_catalog_fixture =
+    \\func indexed(s: str, at: int) -> int:
+    \\    mut parts = s.split(",")
+    \\    return len(parts[at]) + len(parts)
+    \\func prefix(s: str) -> int:
+    \\    mut parts = s.split(",")
+    \\    return len(parts[1])
+    \\func count_pair(s: str) -> int:
+    \\    return len(s.split(",")) + len(s.split("|"))
+    \\func lazy(s: str, separator: str) -> int:
+    \\    mut n = 0
+    \\    for part in s.split(separator):
+    \\        n += len(part)
+    \\    return n
+    \\func idle() -> int:
+    \\    return 42
+    \\func main(out: Stream) -> int:
+    \\    out.print(indexed("a|b,c|d", 1), prefix("a,b"), count_pair("a|b,c|d"), lazy("a,b", ","), idle())
+    \\    return 0
+;
+
+const whitespace_catalog_fixture =
+    \\func words(s: str) -> dict[str, int]:
+    \\    mut counts: dict[str, int] = {}
+    \\    for word in s.split():
+    \\        counts[word] = counts.get(word, 0) + 1
+    \\    return counts
+    \\func idle() -> int:
+    \\    return 42
+    \\func main(out: Stream) -> int:
+    \\    mut counts = words("a b a")
+    \\    out.print(counts["a"], idle())
+    \\    return 0
+;
+
+fn checkSplitDemand(backing: std.mem.Allocator, text: []const u8, mode: passes.Mode) !void {
+    var arena = std.heap.ArenaAllocator.init(backing);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    var storage = try store.Store.init(backing, std.testing.io, try directory.dir.realPathFileAlloc(std.testing.io, ".", a));
+    defer storage.deinit();
+    const oracle = try compile(a, backing, text, null, mode);
+    const cold = try compileDemandGuarded(a, backing, text, &storage, .{ .omit = false, .mode = mode });
+    const warm = try compileDemandGuarded(a, backing, text, &storage, .{ .omit = true, .mode = mode });
+    try equal(oracle, cold.output);
+    try equal(oracle, warm.output);
+    try std.testing.expectEqual(cold.loaded, warm.loaded);
+    try std.testing.expectEqual(@as(usize, 0), warm.omitted);
+    try std.testing.expect(total(&warm.output.statistics.hits) > 0);
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-8
+// spec-case: NEW-CORE-S2-SPLIT-2
+test "RP3 cache integration split catalogs preserve compound offsets prefixes duplicate counts and lazy loops across cold and warm caches" {
+    try checkSplitDemand(std.testing.allocator, split_catalog_fixture, .verify);
+    try checkSplitDemand(std.testing.allocator, split_catalog_fixture, .trusted);
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-8
+// spec-case: NEW-CORE-S2-SPLIT-3
+test "RP3 cache integration whitespace only catalogs retain probe once insertion with ordinary stage cache reuse" {
+    try checkSplitDemand(std.testing.allocator, whitespace_catalog_fixture, .verify);
+    try checkSplitDemand(std.testing.allocator, whitespace_catalog_fixture, .trusted);
+}
+
+const split_creation_fixture =
+    \\func ordered(s: str) -> int:
+    \\    mut first = s.split(",")
+    \\    mut second = s.split("|")
+    \\    return len(first[0]) + len(second[1])
+    \\func spectator(s: str) -> int:
+    \\    return len(s.split(",")[0])
+    \\func idle() -> int:
+    \\    return 42
+    \\func main(out: Stream) -> int:
+    \\    out.print(ordered("a|b,c|d"), spectator("a,b"), idle())
+    \\    return 0
+;
+
+fn splitCreationNames(a: std.mem.Allocator, text: []const u8) ![]const []const u8 {
+    var refusal: build.Refusal = .{};
+    var module = try support.buildSource(a, text, &refusal);
+    const count = module.functions.items.len;
+    try @import("fuse_text.zig").whitespace(a, &module);
+    try @import("split_views.zig").run(a, &module);
+    var names: std.ArrayList([]const u8) = .empty;
+    for (module.functions.items[count..]) |function| {
+        if (std.mem.startsWith(u8, function.name, "myl_core_str_split_prefix_")) try names.append(a, function.name);
+    }
+    return names.items;
+}
+
+fn checkSplitCreation(backing: std.mem.Allocator, mode: passes.Mode) !void {
+    var arena = std.heap.ArenaAllocator.init(backing);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    var storage = try store.Store.init(backing, std.testing.io, try directory.dir.realPathFileAlloc(std.testing.io, ".", a));
+    defer storage.deinit();
+    const changed = try std.mem.replaceOwned(u8, a, split_creation_fixture, "len(first[0]) + len(second[1])", "len(first[1]) + len(second[0])");
+    const before_names = try splitCreationNames(a, split_creation_fixture);
+    const after_names = try splitCreationNames(a, changed);
+    try std.testing.expectEqual(@as(usize, 2), before_names.len);
+    try std.testing.expectEqual(@as(usize, 2), after_names.len);
+    try std.testing.expectEqualStrings("myl_core_str_split_prefix_1", before_names[0]);
+    try std.testing.expectEqualStrings("myl_core_str_split_prefix_2", before_names[1]);
+    try std.testing.expectEqualStrings(before_names[1], after_names[0]);
+    try std.testing.expectEqualStrings(before_names[0], after_names[1]);
+    var refusal: build.Refusal = .{};
+    var before_raw = try support.buildSource(a, split_creation_fixture, &refusal);
+    var after_raw = try support.buildSource(a, changed, &refusal);
+    try std.testing.expectEqual(try snapshot.layout(a, try snapshot.Context.init(a, &before_raw, null)), try snapshot.layout(a, try snapshot.Context.init(a, &after_raw, null)));
+    const cold = try compileDemandGuarded(a, backing, split_creation_fixture, &storage, .{ .omit = false, .mode = mode });
+    const prior = try compileDemandGuarded(a, backing, split_creation_fixture, &storage, .{ .omit = true, .mode = mode });
+    try equal(cold.output, prior.output);
+    const oracle = try compile(a, backing, changed, null, mode);
+    const edited = try compileDemandGuarded(a, backing, changed, &storage, .{ .omit = true, .mode = mode });
+    const repeated = try compileDemandGuarded(a, backing, changed, &storage, .{ .omit = true, .mode = mode });
+    try equal(oracle, edited.output);
+    try equal(oracle, repeated.output);
+    try std.testing.expectEqual(cold.loaded, edited.loaded);
+    try std.testing.expectEqual(@as(usize, 0), edited.omitted);
+    try std.testing.expect(total(&repeated.output.statistics.hits) > 0);
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-8
+// spec-case: NEW-CORE-S2-SPLIT-2
+test "RP3 cache integration dirty split producers reorder helpers exactly while unchanged spectators remain correct" {
+    try checkSplitCreation(std.testing.allocator, .verify);
+    try checkSplitCreation(std.testing.allocator, .trusted);
+}
+
+const bytes_demand_fixture =
+    \\func borrow(s: bytes) -> bool:
+    \\    return s[0:1] == b"x"
+    \\func idle() -> int:
+    \\    return 42
+    \\func main(out: Stream) -> int:
+    \\    out.print(borrow(b"abc"), idle())
+    \\    return 0
+;
+
+fn checkByteDemand(backing: std.mem.Allocator, mode: passes.Mode) !void {
+    var arena = std.heap.ArenaAllocator.init(backing);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    var storage = try store.Store.init(backing, std.testing.io, try directory.dir.realPathFileAlloc(std.testing.io, ".", a));
+    defer storage.deinit();
+    const oracle = try compile(a, backing, bytes_demand_fixture, null, mode);
+    const cold = try compileDemandGuarded(a, backing, bytes_demand_fixture, &storage, .{ .omit = false, .mode = mode });
+    const warm = try compileDemandGuarded(a, backing, bytes_demand_fixture, &storage, .{ .omit = true, .mode = mode });
+    try equal(oracle, cold.output);
+    try equal(oracle, warm.output);
+    try std.testing.expect(warm.loaded < cold.loaded);
+    try std.testing.expect(deferredName(warm, "idle"));
+    const changed = try std.mem.replaceOwned(u8, a, bytes_demand_fixture, "abc", "abd");
+    const edited = try compileDemandGuarded(a, backing, changed, &storage, .{ .omit = true, .mode = mode });
+    const repeated = try compileDemandGuarded(a, backing, changed, &storage, .{ .omit = true, .mode = mode });
+    const changed_oracle = try compile(a, backing, changed, null, mode);
+    try equal(changed_oracle, edited.output);
+    try equal(changed_oracle, repeated.output);
+    try std.testing.expect(deferredName(edited, "idle"));
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-8
+// spec-case: NEW-CORE-S2-VIEW-1
+test "RP3 cache integration byte views retain demand checkpoint reuse and dirty caller equality" {
+    try checkByteDemand(std.testing.allocator, .verify);
+    try checkByteDemand(std.testing.allocator, .trusted);
+}
+
+const array_only =
+    \\func sum() -> int:
+    \\    mut xs = FixedArray[int, 5]([0, 1, 2, 3, 4])
+    \\    xs[2] = -7
+    \\    return xs[3]
+    \\
+    \\func main(out: Stream) -> int:
+    \\    out.print(sum())
+    \\    return 0
+;
+
+fn expectArrayOnly(backing: std.mem.Allocator) !void {
+    var arena = std.heap.ArenaAllocator.init(backing);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var refusal: build.Refusal = .{};
+    const module = try support.buildSource(a, array_only, &refusal);
+    var found_array = false;
+    for (module.compounds.items) |compound| {
+        try std.testing.expect(compound != .record);
+        found_array = found_array or compound == .array;
+    }
+    try std.testing.expect(found_array);
+}
+
+fn expectArrayHulls(value: Produced) !void {
+    var literal = false;
+    var updated = false;
+    for (value.result.known) |optional| if (optional) |known| {
+        for (known.aggregates.lists) |aggregate| {
+            const length = aggregate.len orelse continue;
+            if (length.lo != 5 or length.hi != 5) continue;
+            const elements = aggregate.elements orelse continue;
+            literal = literal or std.meta.eql(elements, facts.Interval{ .lo = 0, .hi = 4 });
+            updated = updated or std.meta.eql(elements, facts.Interval{ .lo = -7, .hi = 4 });
+        }
+    };
+    try std.testing.expect(literal);
+    try std.testing.expect(updated);
+}
+
+// spec-case: NEW-CORE-R-ARRAY-2
+test "R array-only modules preserve literal and update facts through deferred cold and warm caches" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    var storage = try store.Store.init(std.testing.allocator, std.testing.io, try directory.dir.realPathFileAlloc(std.testing.io, ".", a));
+    defer storage.deinit();
+    try expectArrayOnly(std.testing.allocator);
+    const oracle = try compile(a, std.testing.allocator, array_only, null, .trusted);
+    try expectArrayHulls(oracle);
+    try std.testing.expect(std.mem.indexOf(u8, oracle.llvm, "icmp uge i64") == null);
+    const cold = try compileDeferred(a, std.testing.allocator, array_only, &storage);
+    const warm = try compileDeferred(a, std.testing.allocator, array_only, &storage);
+    try equal(oracle, cold.output);
+    try equal(oracle, warm.output);
+    try std.testing.expect(total(&warm.output.statistics.hits) > 0);
+    try std.testing.expectEqual(@as(usize, 0), total(&warm.output.statistics.misses));
+    const demand_cold = try compileDemandGuarded(a, std.testing.allocator, array_only, &storage, .{ .mode = .trusted, .omit = false });
+    const demand_warm = try compileDemandGuarded(a, std.testing.allocator, array_only, &storage, .{ .mode = .trusted, .omit = true });
+    try equal(oracle, demand_cold.output);
+    try equal(oracle, demand_warm.output);
+    try std.testing.expect(demand_warm.omitted > 0);
+    try std.testing.expectEqual(@as(usize, 0), demand_warm.final_restored);
+    try std.testing.expectEqual(@as(u32, 0), demand_warm.emission.work.keys_built);
+}
+
+// spec-case: NEW-CORE-R-ARRAY-2
+test "R cached array-only verify builds restore bounds checks while retaining the same array hulls" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    var storage = try store.Store.init(std.testing.allocator, std.testing.io, try directory.dir.realPathFileAlloc(std.testing.io, ".", a));
+    defer storage.deinit();
+    const oracle = try compile(a, std.testing.allocator, array_only, null, .verify);
+    try expectArrayHulls(oracle);
+    try std.testing.expect(std.mem.indexOf(u8, oracle.llvm, "icmp uge i64") != null);
+    const cold = try compile(a, std.testing.allocator, array_only, &storage, .verify);
+    const warm = try compile(a, std.testing.allocator, array_only, &storage, .verify);
+    try equal(oracle, cold);
+    try equal(oracle, warm);
+    try std.testing.expect(total(&warm.statistics.hits) > 0);
+    try std.testing.expectEqual(@as(usize, 0), total(&warm.statistics.misses));
+    const demand_cold = try compileDemandGuarded(a, std.testing.allocator, array_only, &storage, .{ .mode = .verify, .omit = false });
+    const demand_warm = try compileDemandGuarded(a, std.testing.allocator, array_only, &storage, .{ .mode = .verify, .omit = true });
+    try equal(oracle, demand_cold.output);
+    try equal(oracle, demand_warm.output);
+    try std.testing.expect(demand_warm.omitted > 0);
+    try std.testing.expectEqual(@as(usize, 0), demand_warm.final_restored);
+    try std.testing.expectEqual(@as(u32, 0), demand_warm.emission.work.keys_built);
+}

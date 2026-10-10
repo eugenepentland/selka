@@ -1,0 +1,70 @@
+{
+ "cpu": 10,
+ "rounds": 3,
+ "cells": 26,
+ "timed_runs": 390,
+ "all_outputs_match": true,
+ "quiet_log": ".tmp/rp3/lox-base-timing.log",
+ "quiet_log_sha256": "fc382409c8c582f9a93828dce541f7d8d4569dbf2eeb0f8295f55f4065793ab6",
+ "loadavg_per_round": [
+  [
+   2.4248046875,
+   4.85986328125,
+   5.1513671875
+  ],
+  [
+   2.07763671875,
+   3.98681640625,
+   4.77685546875
+  ],
+  [
+   0.99169921875,
+   2.5927734375,
+   4.09912109375
+  ],
+  [
+   0.58203125,
+   1.75,
+   3.52685546875
+  ]
+ ],
+ "quiet_waits": [],
+ "ratios": {
+  "vm": {
+   "geomean_over_zig_rs": 1.594902375297087,
+   "ratios_over_zig_rs": {
+    "binary_trees/vm": 0.8974665450365731,
+    "closures/vm": 1.316319811211342,
+    "equality/vm": 1.721364166917096,
+    "fib/vm": 1.8783840858069534,
+    "instantiation/vm": 1.7596853380412363,
+    "invocation/vm": 2.0536377181317365,
+    "method_call/vm": 1.8611110726922844,
+    "properties/vm": 1.8613264902587394,
+    "string_equality/vm": 1.8828799729951184,
+    "strings/vm": 0.9055212389614514,
+    "trees/vm": 1.6737794753554864,
+    "zoo/vm": 1.777030644018794,
+    "zoo_batch/vm": 1.7817156202955262
+   }
+  },
+  "tree": {
+   "geomean_over_zig_rs": 0.972154200708766,
+   "ratios_over_zig_rs": {
+    "binary_trees/tree": 0.8622852480373311,
+    "closures/tree": 1.0102555476023676,
+    "equality/tree": 1.4153618185844083,
+    "fib/tree": 0.8564972352718309,
+    "instantiation/tree": 0.7196240039355825,
+    "invocation/tree": 0.6806836802992128,
+    "method_call/tree": 1.006466124769417,
+    "properties/tree": 0.8304906210578108,
+    "string_equality/tree": 2.4201662838374665,
+    "strings/tree": 0.9480511376762676,
+    "trees/tree": 1.0031907279098653,
+    "zoo/tree": 0.821151280177652,
+    "zoo_batch/tree": 0.8476427918519572
+   }
+  }
+ }
+}

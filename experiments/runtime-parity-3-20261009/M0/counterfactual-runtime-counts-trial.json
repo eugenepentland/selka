@@ -1,0 +1,12 @@
+{
+ "status": 1,
+ "golden_match": false,
+ "stderr": "[W] export-kicad-sch: vendor symbol 'W55RP20-EVB-PICO' does not draw 1 pad(s) the design uses \u2014 adding them as unit 2\n[I] export-kicad-sch: rds3: 15/35 components drawn from vendor symbols (138 libraries indexed)\neda-sch: WireNotOrthogonal\n",
+ "actual": {},
+ "runtime_helpers_stubbed": [
+  "count_retain",
+  "count_release",
+  "myl_core_retain_slow",
+  "myl_core_release_slow"
+ ]
+}

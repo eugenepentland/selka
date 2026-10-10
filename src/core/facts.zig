@@ -1029,7 +1029,7 @@ fn transfer(a: *Analysis, ref: ir.Ref, block: ir.BlockId) ?Interval {
             const converted = toInt(floatOf(a, i.a) orelse break :blk full) orelse break :blk full;
             break :blk converted.meet(full.?);
         },
-        .list_get => blk: {
+        .list_get, .array_get => blk: {
             const list = a.liveOperand(i.a);
             break :blk a.facts.aggregates.lists[list.index()].elements orelse full;
         },
@@ -1181,6 +1181,17 @@ fn listFact(a: *Analysis, ref: ir.Ref, block: ir.BlockId) ListFact {
     const i = a.f.inst(ref);
     const none: ListFact = .{};
     switch (i.op) {
+        .record_make => {
+            const module = a.fields.module orelse return none;
+            if (module.kind(i.ty) != .array) return none;
+            const operands = a.f.operands(i.data);
+            var hull: ?Interval = null;
+            for (operands, 0..) |operand, index| {
+                const value = scalarRange(a, operand, block);
+                hull = if (index == 0) value else hullOf(hull, value);
+            }
+            return .{ .len = Interval.point(@intCast(operands.len)), .elements = hull, .settled = true };
+        },
         .list_new => return .{ .len = Interval.point(0), .settled = true },
         .list_copy => {
             var copied = a.facts.aggregates.lists[a.f.resolve(i.a).index()];
@@ -1208,7 +1219,7 @@ fn listFact(a: *Analysis, ref: ir.Ref, block: ir.BlockId) ListFact {
             if (old.len) |len| out.len = .{ .lo = @max(len.lo - 1, 0), .hi = @max(len.hi - 1, 0) };
             return out;
         },
-        .list_set => {
+        .list_set, .array_set => {
             const old = a.facts.aggregates.lists[a.f.resolve(i.a).index()];
             const value = scalarRange(a, a.f.operands(i.data)[0], block);
             var out: ListFact = .{ .length = old.length, .len = old.len, .settled = !pendingList(a, i.a) };
@@ -1288,7 +1299,7 @@ fn recomputeAggregates(a: *Analysis, ref: ir.Ref, block: ir.BlockId, changes: []
         else => {},
     }
     switch (i.op) {
-        .list_new, .list_copy, .list_push, .list_pop, .list_set, .list_get => {
+        .record_make, .array_set, .list_new, .list_copy, .list_push, .list_pop, .list_set, .list_get => {
             const next = listFact(a, ref, block);
             if (!std.meta.eql(a.facts.aggregates.lists[ref.index()], next)) {
                 a.facts.aggregates.lists[ref.index()] = next;
@@ -1389,7 +1400,7 @@ fn pendingDict(a: *Analysis, operand: ir.Ref) bool {
 fn pendingList(a: *Analysis, operand: ir.Ref) bool {
     const ref = a.f.resolve(operand);
     return switch (a.f.inst(ref).op) {
-        .list_new, .list_copy, .list_push, .list_pop, .list_set, .list_get, .phi => !a.facts.aggregates.lists[ref.index()].settled,
+        .array_set, .list_new, .list_copy, .list_push, .list_pop, .list_set, .list_get, .phi => !a.facts.aggregates.lists[ref.index()].settled,
         else => false,
     };
 }
@@ -1884,6 +1895,11 @@ fn lengthHolds(a: *Analysis, list: ir.Ref, block: ir.BlockId) bool {
 
 fn provable(a: *Analysis, i: ir.Inst, block: ir.BlockId) bool {
     switch (i.op) {
+        .array_get, .array_set => {
+            const module = a.fields.module orelse return false;
+            const range = a.rangeAt(i.b, block) orelse return false;
+            return range.lo >= 0 and range.hi < module.compound(a.inst(i.a).ty).array.n;
+        },
         .list_get, .list_get_field, .list_set, .list_pop => return provableAccess(a, i, block),
         else => {},
     }

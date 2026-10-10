@@ -1,0 +1,18 @@
+{
+ "complete": true,
+ "completed_utc": "2026-10-10T00:23:13.840149+00:00",
+ "source_base": "41ed360fb361c49938488ad111795bad8a726b73",
+ "production_source_unchanged": true,
+ "correctness_gates_green": true,
+ "parity_timing_arms": 153,
+ "lox_timing_cells": 26,
+ "eda_timing_designs": 34,
+ "row_batches": 3,
+ "row_size_cells": 92,
+ "counting_cells": 199,
+ "instruction_cells": 151,
+ "counterfactual_cells": 8,
+ "gap": "M0/gap.md",
+ "counterfactual_table": "M0/counterfactuals.md",
+ "hard_stops": []
+}

@@ -1,0 +1,8 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: all 3 build slot(s) busy; waiting (60s so far)
+build-slot: all 3 build slot(s) busy; waiting (120s so far)
+build-slot: build slot 2 after 161s (all 3 build slot(s) busy)
+conformance engine=vm gc=normal: 246/246 passed
+conformance engine=vm gc=gc-stress: 246/246 passed
+conformance engine=tree gc=normal: 241/241 passed
+conformance engine=tree gc=gc-stress: 241/241 passed

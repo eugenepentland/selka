@@ -1,0 +1,8 @@
+{
+  "status": 134,
+  "reason": "Existing dump-ir typeName recursively expands list[record] cycles (ast.Node children). This diagnostic command produced no IR; native builds and all EDA goldens completed successfully.",
+  "log_sha256": "42a690a43ace6581952597694dee13e279ce24f0aa3fc4e3b06ff7af445f0687",
+  "bytes": 2900209,
+  "log_gzip": "experiments/runtime-parity-3-20261009/R/r4e-ir.log.gz",
+  "signal": "SIGABRT after Zig reports stack-overflow SIGSEGV"
+}

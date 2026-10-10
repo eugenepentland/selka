@@ -1,0 +1,127 @@
+{
+ "development_accepted": true,
+ "qualification_pending": true,
+ "full_timing_pending": true,
+ "source_parent": "af898b6dbe561a2c5d53e2f1317307de8c0b6a9d",
+ "runtime_patch_sha256": "44f8ee55b8137c6b3e3073b5ebfc37616ce24ac2361fd914894b38c1dd81327d",
+ "cpu10": {
+  "sort_int/512": {
+   "base": 1.0,
+   "first": 0.5591870404636154,
+   "candidate": 0.5713180869087522
+  },
+  "sort_int/48": {
+   "base": 1.0,
+   "first": 1.6993519378136597,
+   "candidate": 0.9901917274149251
+  },
+  "sort_int/256": {
+   "base": 1.0,
+   "first": 0.7643849179777795,
+   "candidate": 0.997736477476587
+  },
+  "sort_int/255": {
+   "base": 1.0,
+   "first": 0.7666965712184317,
+   "candidate": 0.9966269658150959
+  },
+  "sort_int/4096": {
+   "base": 1.0,
+   "first": 0.4046217988867464,
+   "candidate": 0.398027234742429
+  },
+  "sort_records/64": {
+   "base": 1.0,
+   "first": 1.034193510322463,
+   "candidate": 1.0143572091322075
+  },
+  "sort_int/257": {
+   "base": 1.0,
+   "first": 0.7750684273627367,
+   "candidate": 0.7700367586419714
+  },
+  "sort_int/65": {
+   "base": 1.0,
+   "first": 2.1192996281879477,
+   "candidate": 0.9649113364180254
+  },
+  "option_handle/64": {
+   "base": 1.0,
+   "first": 0.9741001155658603,
+   "candidate": 0.9882211291244448
+  },
+  "sort_records/4096": {
+   "base": 1.0,
+   "first": 1.0068319867762419,
+   "candidate": 0.9960157239832286
+  },
+  "sort_int/128": {
+   "base": 1.0,
+   "first": 1.108256191214092,
+   "candidate": 0.988413527470627
+  },
+  "mutate_nested/4096": {
+   "base": 1.0,
+   "first": 1.0904354230237046,
+   "candidate": 0.8180410766688919
+  },
+  "sort_int/63": {
+   "base": 1.0,
+   "first": 1.921216087800168,
+   "candidate": 0.9873377718325689
+  },
+  "mutate_nested/64": {
+   "base": 1.0,
+   "first": 1.0577148828771763,
+   "candidate": 0.9016060717660702
+  },
+  "result_propagate/4096": {
+   "base": 1.0,
+   "first": 1.0513387131702967,
+   "candidate": 0.9973428225171054
+  },
+  "sort_int/32": {
+   "base": 1.0,
+   "first": 1.0285549976574693,
+   "candidate": 1.049845478434559
+  },
+  "option_handle/4096": {
+   "base": 1.0,
+   "first": 1.0007616878176984,
+   "candidate": 1.0008326939033518
+  },
+  "sort_int/64": {
+   "base": 1.0,
+   "first": 2.05093458752624,
+   "candidate": 0.940486982073645
+  },
+  "result_propagate/64": {
+   "base": 1.0,
+   "first": 1.0209184976638366,
+   "candidate": 0.9986025043859064
+  },
+  "sort_int/33": {
+   "base": 1.0,
+   "first": 1.8648480800354128,
+   "candidate": 0.9929265301427462
+  }
+ },
+ "sort_builtin_cpu10": {
+  "candidate": 0.4017845432430852,
+  "base": 1.0,
+  "first": 0.4018992224198138
+ },
+ "size32_confirmation": {
+  "base": 1.0,
+  "first": 0.9965679957858996,
+  "candidate": 0.9885275353371841,
+  "prior-candidate": 1.0162788275981371
+ },
+ "size32_review": "Initial candidate/base 1.049845 conflicts with probe01 0.931326 and has a 1.29512 instruction ratio inherited from short insertion. One independent confirmation is 0.988528, first/base 0.996568, prior-candidate/base 1.016279. The threshold crossing is unconfirmed; all observations remain, with no automatic replacement or acceptance of the full X guard.",
+ "native_review": {
+  "sort_records": "All 916 normalized keyed-sort instructions match M0, versus first 928. Same main and cached width/scatter schedule; CPU8 instruction/load counts equal M0 at both official sizes.",
+  "result_propagate": "Repeated loop remains byte-identical across M0, first, and candidate (SHA256 faa90044e494cf8d7eaea237865c2345e95de5fa6f47b480a49cccfad3b576a7). Candidate main 0x103c210, window 0x103c450, inner loop 0x103c480, origin/append 0x103bbc0/0x103bc00, clock 0x103c6b0. Specific placement mechanism remains unproved; the observed first slowdown is absent in this candidate.",
+  "sort_builtin": "Unchanged main constructs 2000000 elements and reaches the same 265 normalized radix instructions as first. The small-sort dispatch now selects merges for 33 through 256; large-sort gain is retained."
+ },
+ "tradeoff": "The 256 cutoff is tied to one radix histogram width, not asserted to be a universal crossover. Sizes255/256 return to base performance from first roughly0.765; ordered small inputs again allocate at most1KiB scratch before mutation, as M0 did. Sizes257/512/4096 retain radix and measured gains. Both source changes remain reversible; no semantic or gate changes."
+}

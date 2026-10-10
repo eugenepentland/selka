@@ -426,7 +426,7 @@ const Verifier = struct {
         for (0..operands.len()) |i| {
             if (self.typeOf(operands.get(i)) != .str_view) continue;
             const admitted = switch (s.inst.op) {
-                .str_from_view, .str_len, .copy => i == 0,
+                .str_from_view, .str_len, .str_parse_int, .str_view_of, .copy => i == 0,
                 .dict_find => i == 1 and if (self.compoundOf(s.a, .dict)) |dict| dict.key == .str else false,
                 .call => s.inst.a.index() < self.module.functions.items.len and admittedView(self.module.functions.items[s.inst.a.index()].signature, i),
                 else => false,
@@ -471,8 +471,8 @@ const Verifier = struct {
             .str_append => inst.ty == .str and s.a == .str and s.b == .str,
             .str_append_char => inst.ty == .str and s.a == .str and s.b == .str and self.typesMatch(s.extra, &.{.u64}),
             .str_slice => inst.ty == .str and s.a == .str and s.b == .i64 and self.typesMatch(s.extra, &.{.i64}),
-            .str_view_of => inst.ty == .str_view and s.a == .str and s.b == .u64 and self.typesMatch(s.extra, &.{.u64}),
-            .str_slice_view => inst.ty == .str_view and s.a == .str and s.b == .i64 and self.typesMatch(s.extra, &.{.i64}),
+            .str_view_of => inst.ty == .str_view and (s.a == .str or s.a == .str_view) and s.b == .u64 and self.typesMatch(s.extra, &.{.u64}),
+            .str_slice_view => inst.ty == .str_view and (s.a == .str or s.a == .bytes) and s.b == .i64 and self.typesMatch(s.extra, &.{.i64}),
             .str_from_view => inst.ty == .str and s.a == .str_view,
             .list_sort => self.compoundOf(s.a, .list) != null and inst.ty == s.a and s.b == .bool,
             .array_get => if (self.compoundOf(s.a, .array)) |array| inst.ty == array.elem and isInteger(s.b) else false,
@@ -526,7 +526,7 @@ const Verifier = struct {
             .float_to_int => isInteger(inst.ty) and s.a == .f64,
             .convert => isInteger(inst.ty) and isInteger(s.a),
             .str_len => isInteger(inst.ty) and (s.a == .str or s.a == .str_view),
-            .str_parse_int => s.a == .str and self.compoundOf(inst.ty, .@"union") != null,
+            .str_parse_int => (s.a == .str or s.a == .str_view) and self.compoundOf(inst.ty, .@"union") != null,
             else => null,
         };
     }
@@ -573,7 +573,8 @@ const Verifier = struct {
                 if (inst.ty != callee.ret or s.extra.len != callee.params.len) break :blk false;
                 for (s.extra, callee.params, 0..) |argument, param, i| {
                     const ty = self.typeOf(argument);
-                    if (ty != param and !(ty == .str_view and admittedView(callee, i))) break :blk false;
+                    const span_input = (ty == .str_view or ty == .bytes) and admittedView(callee, i);
+                    if (ty != param and !span_input) break :blk false;
                 }
                 break :blk true;
             },

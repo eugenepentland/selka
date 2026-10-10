@@ -1,0 +1,10 @@
+guardian: diff-scoped vs 41ed360fb361c49938488ad111795bad8a726b73: 8/577 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 15 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 1 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 386 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 1/88 failed (cognitive-complexity) — diff-scoped vs 41ed360fb361c49938488ad111795bad8a726b73, 8 file(s) in scope
+guardian: failures grouped by check (1):
+  cognitive-complexity (1 finding)
+    - src/core/emit_llvm.zig: fn call cognitive complexity 26 (limit: 25)
+      fix: extract helpers; reduce nested control flow.
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them

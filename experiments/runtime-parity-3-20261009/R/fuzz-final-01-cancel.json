@@ -1,0 +1,10 @@
+{
+ "reason": "Mistyped full qualified-head argument in queued command. Cancelled owned waiting wrapper before any gate admission or fuzz manifest/case; retry derives actual HEAD from git.",
+ "actual_head": "fa5bf207d328d1918416db3909127c23a9167965",
+ "cancelled": [
+  {
+   "pid": 3722450,
+   "command": "bash scripts/build-slot.sh gate python3 experiments/new-core-s5-20261007/tools/fuzz_matrix.py --references experiments/new-core-s5-20261007/references/fuzz-v1.json.gz --cases 50 --new experiments/runtime-parity-3-20261009/tools/mylang-migrating --qualified-head fa5bf207d5b4c648050a213b600910f535ba601d --evidence /home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/experiments/runtime-parity-3-20261009/R/fuzz-final-01 --jobs 3 "
+  }
+ ]
+}

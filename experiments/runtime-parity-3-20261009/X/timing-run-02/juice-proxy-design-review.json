@@ -1,0 +1,21 @@
+{
+ "reviewer": "S2",
+ "read_only": true,
+ "implementation_authorized": false,
+ "recommendation": "Preserve instruction work score; add optional instructions+cycles recording with per-event full-running/unscaled checks, raw output and collector event identity; expose separate cycle ratio, repeatability and targeted-timing warning. Validate prospectively against quiet nightly timings before any gate policy change.",
+ "already_available": "Generic metric summaries/report JSON; dynamic allocation/copy/shared-RC totals, Callgrind memory/atomic counts and static Core/native diagnostics. Static sites do not measure hotness.",
+ "source_refs": {
+  "collector": "src/core/juice/collectors.zig:38",
+  "parser": "src/core/juice/profiles.zig:18",
+  "metric_summary": "src/core/juice/engine.zig:235",
+  "report": "src/core/juice/report.zig:229",
+  "calibration": "src/core/juice/calibration.zig:91"
+ },
+ "limits": [
+  "Cycles depend on cache state, SMT contention, frequency and scheduling; current context identity excludes transient frequency/load.",
+  "Absent/unstable cycles must be unavailable or uncertain, never passed.",
+  "Interleave baseline/candidate; preselect controls, improvements and regressions across families and hold out commits/families.",
+  "Current power-law model cannot represent flat instructions with slower execution; six selected historical cases are insufficient training or validation.",
+  "Historical eight-event perf review discarded running percentages and permits scaling; retrospective ratios illustrate value but do not validate a proxy."
+ ]
+}

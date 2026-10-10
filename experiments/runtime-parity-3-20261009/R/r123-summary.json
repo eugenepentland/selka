@@ -1,0 +1,35 @@
+{
+ "parity-fannkuch_redux": {
+  "instructions": 1.0000000260837127,
+  "cycles": 1.0041941671389834
+ },
+ "parity-fannkuch_redux_array": {
+  "instructions": 0.14702521438670169,
+  "cycles": 0.28765086639756704
+ },
+ "parity-fannkuch_redux_tuned": {
+  "instructions": 0.17237328129124438,
+  "cycles": 0.3158210291182116
+ },
+ "parity-sort_builtin": {
+  "instructions": 0.31345849061150727,
+  "cycles": 0.2959803353465556
+ },
+ "parity-records": {
+  "instructions": 1.0000000246761485,
+  "cycles": 1.0006098029181447
+ },
+ "row-record_pass": {
+  "instructions": 1.2064917363134546,
+  "cycles": 1.1741311979644748
+ },
+ "row-sort_records": {
+  "instructions": 1.0140937432769912,
+  "cycles": 1.0757597008337398
+ },
+ "decision": {
+  "sret_sharing": "disabled; record_pass fails both instruction and cycle acceptance",
+  "array_to_primary": 1.1575709696160845,
+  "tuned_to_primary": 1.055268676745652
+ }
+}

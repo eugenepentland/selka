@@ -1,0 +1,30 @@
+{
+ "base_main": "fa11606022ed217896a27976f8fe6d95db95f465",
+ "incoming_main": "e9011d9c6513f63ae02881d0cfc8258c668e6b5e",
+ "incoming_commits": [
+  "9a77dc754",
+  "e9011d9c6"
+ ],
+ "merge_preview_tree": "e555934e7c8ff9c36c75bd684b059583d80590bc",
+ "textual_conflicts": [],
+ "production_edits_beyond_incoming_main": false,
+ "static_review": {
+  "U2": "No actionable type/ownership interaction found. Fresh shape/contract checks, current nominal identity and remapped IDs feed unchanged U2 ownership/release code; omitted-body raw keys retain the exact ordered catalog and source proofs.",
+  "S2": "No actionable intrinsic or view interaction found. Linkage/owned/views/params/return metadata remains part of signature authority; external source proofs are checked before delayed body replay. Preserve X-014 split-catalog eager fallback and all four RP3 cache integration tests."
+ },
+ "incoming_validation": {
+  "repository_steps": "97/97",
+  "executed_tests": 2475,
+  "failures": 0,
+  "guardian_checks": 88,
+  "evidence_hashes_verified": 20,
+  "scope": "Incoming main evidence only; no merged qualification or performance claim."
+ },
+ "coverage_limits": [
+  "No new dedicated fixture combines U2 live nested snapshot/disjoint writes, warm portable-type replay and declaration reordering. Existing tests separately cover those contracts.",
+  "No new dedicated fixture combines imported record defaults, S2 split replay and dirty edits. Preserve existing warm/demand integration regressions and run the full merged suite."
+ ],
+ "qualification_tag": "final-fix-main-01",
+ "measurement_run": "timing-run-02",
+ "no_gate_or_threshold_change": true
+}

@@ -1,0 +1,47 @@
+{
+ "actual_m0_batches_passed": 3,
+ "rows_per_batch": 46,
+ "sizes": [
+  "4096",
+  "64"
+ ],
+ "validated_row_size_cells": 276,
+ "rejected_corruptions": [
+  "changed normalized cycles",
+  "startup subtraction omitted",
+  "startup checksum mismatch",
+  "workload checksum mismatch",
+  "whole-batch workload checksum drift",
+  "wrong registered iterations",
+  "wrong workload command iterations",
+  "wrong startup command iterations",
+  "wrong seed",
+  "wrong unit",
+  "raw cycles disagree with parsed counter",
+  "missing startup run",
+  "missing size64",
+  "unregistered replacement row"
+ ],
+ "floating_serialization_tolerance_accepted": true,
+ "native_or_guest_processes_launched": 0,
+ "tracked_files_edited": 0,
+ "inputs": [
+  {
+   "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/M0/rows-base-1.json.gz",
+   "sha256": "fedba3ce40aad3d18d098d3696edaf2cb865244810da0ae188a3b9bbebbe2710"
+  },
+  {
+   "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/M0/rows-base-2.json.gz",
+   "sha256": "65d2c111951ef74c95c6cc0eacd58dc5ac3b72943aa27b0c53fdbf14a9064b4d"
+  },
+  {
+   "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/M0/rows-base-3.json.gz",
+   "sha256": "5d437bea0e98e4e336603d67e0bd0533ae989028bd55124a9e3050ff91ae368f"
+  }
+ ],
+ "files": {
+  "timing_data.py": "e23c08012803ed0b1ece3591a7aea3e7c1365ec09229bf08cb0cdb89f21689d0",
+  "timing_data.proposed.py": "03cd12eb6b194a2ec643142b84473cbaef636f24b208faa782d76d953717c1d5",
+  "validate-row-timing.patch": "067247f97ca351c25239b6f9f83f3780a07b030782dec09abe6be4d5118dc1d6"
+ }
+}

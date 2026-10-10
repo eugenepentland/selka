@@ -1,0 +1,5 @@
+guardian: diff-scoped vs 41ed360fb361c49938488ad111795bad8a726b73: 8/577 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 15 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 1 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 410 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs 41ed360fb361c49938488ad111795bad8a726b73, 8 file(s) in scope

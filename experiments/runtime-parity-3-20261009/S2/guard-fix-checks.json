@@ -1,0 +1,40 @@
+{
+ "source_commit": "73ee7212a0bf300c002fad95b60e822094b42f74",
+ "commit_guardian": {
+  "status": 0,
+  "checks_passed": 88,
+  "preceding_rejected_commit": {
+   "status": 1,
+   "findings": [
+    "bool-ops-per-condition: four operators exceeded cap three; split into sequential guards",
+    "change-classification: changed behavior required spec-tagged coverage in same commit; added mixed whitespace/explicit declaration IR fixture"
+   ]
+  }
+ },
+ "focused": {
+  "command": [
+   "scripts/build-slot.sh",
+   "build",
+   "zig",
+   "build",
+   "test-core",
+   "-Dtest-filter=S2",
+   "--summary",
+   "all"
+  ],
+  "status": 0,
+  "steps": [
+   8,
+   8
+  ],
+  "host_tests": [
+   49,
+   49
+  ],
+  "guest_source_fixtures": 12,
+  "guest_modes_per_fixture": 5,
+  "guest_compile_run_checks": 60,
+  "log": ".tmp/rp3/s2-final-02-focused.log",
+  "log_sha256": "47b1ae867ad8e485bf21227ac5185f0dc7e2c2af97c58d5b73af6228924135a2"
+ }
+}

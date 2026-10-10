@@ -1,0 +1,26 @@
+{
+ "U2": {
+  "head": "6f5aad8fe58c6f50c6e8d64af866f12612122faa",
+  "qualified": "4661eb368f949e44e43dc39954bac7e75aef9770",
+  "production": "4661eb368f949e44e43dc39954bac7e75aef9770",
+  "src_tree": "9e05a7c35096c35c0a1487beca0e26b344027e97",
+  "later_changes_evidence_only_for_compiler_inputs": true,
+  "all_required_lane_gates_pass": true
+ },
+ "S2": {
+  "head": "04c1f88807def016245a20140a57506ad8425ec0",
+  "qualified": "5977fe4bdf72ec37ee0c6c624eddcd45160d574d",
+  "production": "73ee7212a0bf300c002fad95b60e822094b42f74",
+  "src_tree": "5584fa552f0021f774c88f51d96c04d59fe11cf1",
+  "later_changes_evidence_only_for_compiler_inputs": true,
+  "all_required_lane_gates_pass": true
+ },
+ "R": {
+  "head": "e83dfeb6dda34f7ff26a873174fbae506dff9d26",
+  "qualified": "fa5bf207d328d1918416db3909127c23a9167965",
+  "production": "09ed227098f3b5447643317ab640eec85c4f6772",
+  "src_tree": "fe0b181189883547ffd4b576793f3c8403357fbf",
+  "later_changes_evidence_only_for_compiler_inputs": true,
+  "all_required_lane_gates_pass": true
+ }
+}

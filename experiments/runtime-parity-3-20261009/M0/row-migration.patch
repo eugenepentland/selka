@@ -1,0 +1,29 @@
+--- test/core/row_json_transform.my
++++ experiments/runtime-parity-3-20261009/M0/row-sources/row_json_transform.my
+@@ -13,7 +13,7 @@
+ 
+ 
+ func number(text: str) -> int:
+-    match int(text):
++    match parse_int(text):
+         case Some(value):
+             return value
+         case None:
+--- test/core/row_union_find.my
++++ experiments/runtime-parity-3-20261009/M0/row-sources/row_union_find.my
+@@ -5,10 +5,11 @@
+ # Arguments `size iterations seed`; output `checksum elapsed`. `parent` is one fresh list per batch
+ # and `find` takes it as `mut`, so every call site writes `find(mut parent, x)`.
+ func find(mut parent: int[], x: int) -> int:
+-    while parent[x] != x:
+-        parent[x] = parent[parent[x]]
+-        x = parent[x]
+-    return x
++    mut current = x
++    while parent[current] != current:
++        parent[current] = parent[parent[current]]
++        current = parent[current]
++    return current
+ 
+ 
+ func batch_result(size: int, batch: int, seed: int) -> int:

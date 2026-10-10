@@ -1,0 +1,11 @@
+{
+ "pid": 2887821,
+ "command": "bash scripts/build-slot.sh gate -- bash -c \"$@\"; result=$?; exit \"$result\" -- scripts/build-slot.sh build -- python3 experiments/new-core-s3-20261006/wave-a/exclusive_core.py -- /usr/bin/time -q -f %e -o /home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/experiments/runtime-parity-3-20261009/R/qual-ordinary-09ed-02-raw/install-core.seconds zig build install --summary all ",
+ "signal": "SIGSTOP",
+ "admitted": false,
+ "reason": "Yield unadmitted raw qualification to U2 queued frozen fuzz after current full suite; resume on U2 admission.",
+ "paused_at": 1791599344.772707,
+ "resumed_at": 1791599618.7338383,
+ "resume_signal": "SIGCONT",
+ "u2_fuzz_admitted_pid": 2701942
+}

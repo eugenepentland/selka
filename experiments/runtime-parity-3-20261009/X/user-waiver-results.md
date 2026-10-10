@@ -1,0 +1,217 @@
+# Wave 3 measured results at user-directed closeout
+
+Performance acceptance is waived by the user. This is the retained partial result, not a completed or passing final performance gate. Ratios below1 are faster. All recorded outputs match.
+
+| Completed group | Cells | Final/base geomean | Final/Zig RS geomean |
+|---|---:|---:|---:|
+| parity | 45 | 0.891860 | 0.670104 |
+| lox/vm | 13 | 0.911994 | 1.436802 |
+| lox/tree | 13 | 0.994560 | 0.964053 |
+| eda | 34 | 0.957185 | 1.104656 |
+
+| Completed cell | Final/base | Final/Zig RS | Final/checked Rust | Reference target |
+|---|---:|---:|---:|---|
+| eda/Cyclops-Flex | 0.943399 | 1.112283 | — | over |
+| eda/adf5901 | 0.946164 | 1.114494 | — | over |
+| eda/barracuda | 0.969974 | 1.039298 | — | met |
+| eda/barracuda-base | 0.964417 | 1.030052 | — | met |
+| eda/barracuda-via-fence | 0.957865 | 1.057607 | — | met |
+| eda/black-canyon | 0.955978 | 1.005113 | — | met |
+| eda/black-canyon+flat | 0.955607 | 1.047453 | — | met |
+| eda/blinky-breakout | 0.948339 | 1.462494 | — | over |
+| eda/cyclops-analog | 0.961244 | 1.094521 | — | met |
+| eda/cyclops-analog+no-vendor-symbols | 0.962799 | 1.107487 | — | over |
+| eda/cyclops-breakout | 0.941873 | 1.130803 | — | over |
+| eda/cyclops-digital-pcb | 0.971671 | 1.280354 | — | over |
+| eda/cyclops-interposer | 0.970120 | 1.026177 | — | met |
+| eda/cyclops-kband | 0.965461 | 1.092864 | — | met |
+| eda/cyclops-kband-breakout | 0.959490 | 1.010212 | — | met |
+| eda/cyclops-kband-pcb | 0.956135 | 1.145033 | — | over |
+| eda/cyclops-xband-sip | 0.955960 | 1.087427 | — | met |
+| eda/dual-flash | 0.936018 | 1.119624 | — | over |
+| eda/labstation | 0.969949 | 1.035662 | — | met |
+| eda/labstation+no-vendor-symbols | 0.972087 | 1.043312 | — | met |
+| eda/lmk05318b-clock | 0.947138 | 1.119667 | — | over |
+| eda/max860-inverter | 0.942368 | 1.159956 | — | over |
+| eda/poe-pd-flyback-tps23757 | 0.944491 | 1.085987 | — | met |
+| eda/rds3 | 0.964462 | 1.018486 | — | met |
+| eda/rds3+flat | 0.983466 | 1.240773 | — | over |
+| eda/rds3-rf-selector | 0.940714 | 1.118201 | — | over |
+| eda/remora-base | 0.955134 | 1.076011 | — | met |
+| eda/remora-rf | 0.964156 | 1.066449 | — | met |
+| eda/rf-switch-8way | 0.943578 | 1.122997 | — | over |
+| eda/rf-switch-eval | 0.942750 | 1.134416 | — | over |
+| eda/stm32n6 | 0.963991 | 1.090602 | — | met |
+| eda/straps | 0.966443 | 1.109540 | — | over |
+| eda/straps-base | 0.976416 | 1.210567 | — | over |
+| eda/w55rp20 | 0.947093 | 1.067657 | — | met |
+| lox/tree/binary_trees | 0.996477 | 0.861610 | — | met |
+| lox/tree/closures | 1.002069 | 0.993211 | — | met |
+| lox/tree/equality | 0.994734 | 1.382011 | — | over |
+| lox/tree/fib | 0.969049 | 0.847945 | — | met |
+| lox/tree/instantiation | 1.001965 | 0.751239 | — | met |
+| lox/tree/invocation | 1.034206 | 0.716552 | — | met |
+| lox/tree/method_call | 1.004472 | 0.995206 | — | met |
+| lox/tree/properties | 1.028246 | 0.840396 | — | met |
+| lox/tree/string_equality | 0.893449 | 2.143231 | — | over |
+| lox/tree/strings | 0.974848 | 0.918158 | — | met |
+| lox/tree/trees | 0.997767 | 0.985476 | — | met |
+| lox/tree/zoo | 1.020320 | 0.825622 | — | met |
+| lox/tree/zoo_batch | 1.019814 | 0.859493 | — | met |
+| lox/vm/binary_trees | 0.926964 | 0.829735 | — | met |
+| lox/vm/closures | 0.938237 | 1.231636 | — | met |
+| lox/vm/equality | 0.822601 | 1.385447 | — | met |
+| lox/vm/fib | 0.911027 | 1.676779 | — | over |
+| lox/vm/instantiation | 0.952743 | 1.661239 | — | over |
+| lox/vm/invocation | 0.958512 | 1.915913 | — | over |
+| lox/vm/method_call | 0.901002 | 1.660501 | — | over |
+| lox/vm/properties | 0.910218 | 1.664714 | — | over |
+| lox/vm/string_equality | 0.981105 | 1.825907 | — | over |
+| lox/vm/strings | 0.869514 | 0.798811 | — | met |
+| lox/vm/trees | 0.888537 | 1.455064 | — | met |
+| lox/vm/zoo | 0.906943 | 1.579609 | — | over |
+| lox/vm/zoo_batch | 0.899725 | 1.588289 | — | over |
+| parity/alloc_churn/my | 0.999714 | 0.762221 | 0.656112 | met |
+| parity/alloc_churn/my-arena | 1.002441 | 0.764787 | 0.658320 | met |
+| parity/binary_trees/my | 1.021991 | 0.876446 | 0.579297 | met |
+| parity/binary_trees/my-arena | 1.026310 | 0.881610 | 0.582710 | met |
+| parity/binary_trees_recursive/my | 1.019571 | — | — | unavailable |
+| parity/bytes_scan/my | 0.985841 | 0.336217 | 0.303549 | met |
+| parity/bytes_scan/my-wrapping | 0.993054 | 0.342589 | 0.309302 | met |
+| parity/calls/my | 0.998753 | 0.986660 | 1.232512 | over |
+| parity/dict_count/my | 0.998832 | 0.281514 | 0.174989 | met |
+| parity/fannkuch_redux/my | 0.997180 | 0.679018 | 0.810291 | met |
+| parity/fannkuch_redux/my-array | 0.290896 | 0.787342 | 0.939558 | met |
+| parity/fannkuch_redux/my-tuned | 0.320921 | 0.726887 | 0.867415 | met |
+| parity/fib/my | 0.997164 | 0.897490 | 0.784121 | met |
+| parity/float_loop/my | 0.998727 | 0.999504 | 1.002554 | met |
+| parity/intloop/my | 0.999488 | 1.026652 | 1.213321 | over |
+| parity/knucleotide/my | 1.001864 | 0.910658 | 0.759795 | met |
+| parity/knucleotide/my-arena | 0.994054 | 0.909957 | 0.759210 | met |
+| parity/knucleotide/my-tuned | 0.995745 | 0.600039 | 0.500634 | met |
+| parity/list_append_sum/my | 1.019859 | 0.944515 | 0.886133 | met |
+| parity/list_records/my | 1.012086 | 1.049198 | 0.988205 | met |
+| parity/list_records/my-wrapping | 1.003828 | 0.849812 | 0.800409 | met |
+| parity/mandelbrot/my | 1.000668 | 1.004134 | 0.972581 | met |
+| parity/matmul/my | 0.997991 | 0.330168 | 0.180560 | met |
+| parity/matmul/my-flat | 1.005770 | 0.320628 | 0.175342 | met |
+| parity/matmul/my-tuned | 0.996447 | 1.668376 | 0.912388 | over |
+| parity/nbody/my | 1.006804 | 1.380619 | 1.195719 | over |
+| parity/nbody/my-class | 1.002324 | 1.382029 | 1.196941 | over |
+| parity/raytrace/my | 1.000125 | 1.014202 | 1.071641 | met |
+| parity/raytrace/my-tuned | 1.000481 | 1.013524 | 1.070925 | met |
+| parity/records/my | 1.001633 | 0.908314 | 1.103916 | over |
+| parity/scan_count/my | 0.821341 | 0.391293 | — | met |
+| parity/scan_replace/my | 0.865581 | 0.232607 | — | met |
+| parity/scan_split/my | 0.317134 | 0.450555 | — | met |
+| parity/sieve/my | 1.018946 | 0.811760 | 0.858743 | met |
+| parity/sieve/my-tuned | 1.000485 | 0.793194 | 0.839102 | met |
+| parity/sort_builtin/my | 0.365262 | 0.157635 | 0.617936 | met |
+| parity/sort_quick/my | 1.003931 | 0.956666 | 1.188360 | over |
+| parity/sort_records/my | 1.004591 | 0.234680 | 0.715903 | met |
+| parity/sort_records/my-keyed | 0.999155 | 0.232937 | 0.710585 | met |
+| parity/sort_records/my-sorted | 0.992087 | 0.231775 | 0.707040 | met |
+| parity/spectral_norm/my | 0.998960 | 0.724775 | 0.844938 | met |
+| parity/spectral_norm/my-tuned | 1.007480 | 0.729819 | 0.850818 | met |
+| parity/str_build/my | 1.000988 | 0.766246 | 0.907086 | met |
+| parity/text_ops/my | 0.670264 | 1.776190 | 0.942548 | over |
+| parity/text_ops/my-tuned | 1.014361 | 0.903920 | 0.479672 | met |
+
+## Rows: two completed batches only
+
+The prescribed statistic requires three batches. None is invented or reported here. The tree/4096 result cannot pass1.03 because both completed ratios exceed it.
+
+| Row/size | Batch1 final/base | Batch2 final/base | Final statistic |
+|---|---:|---:|---|
+| alloc_retained/4096 | 0.969034 | 0.927409 | incomplete / waived |
+| alloc_retained/64 | 0.949648 | 0.953384 | incomplete / waived |
+| alloc_short/4096 | 0.992635 | 1.014804 | incomplete / waived |
+| alloc_short/64 | 0.993646 | 0.996092 | incomplete / waived |
+| binary_search/4096 | 1.033443 | 1.027320 | incomplete / waived |
+| binary_search/64 | 0.972570 | 0.972703 | incomplete / waived |
+| branch_mixed/4096 | 1.002421 | 0.996698 | incomplete / waived |
+| branch_mixed/64 | 1.001046 | 1.000284 | incomplete / waived |
+| branch_predictable/4096 | 1.000980 | 1.001663 | incomplete / waived |
+| branch_predictable/64 | 0.996449 | 1.001466 | incomplete / waived |
+| buffer_write/4096 | 1.000319 | 1.000041 | incomplete / waived |
+| buffer_write/64 | 0.996154 | 1.003221 | incomplete / waived |
+| bytes_scan/4096 | 0.941173 | 0.934259 | incomplete / waived |
+| bytes_scan/64 | 0.978327 | 1.019488 | incomplete / waived |
+| call_direct/4096 | 0.999073 | 0.999277 | incomplete / waived |
+| call_direct/64 | 1.003761 | 0.996812 | incomplete / waived |
+| call_indirect/4096 | 1.001797 | 1.001347 | incomplete / waived |
+| call_indirect/64 | 0.994740 | 0.996289 | incomplete / waived |
+| csv_aggregate/4096 | 0.978196 | 0.984822 | incomplete / waived |
+| csv_aggregate/64 | 0.975480 | 0.976112 | incomplete / waived |
+| dict_lookup/4096 | 0.995943 | 1.002416 | incomplete / waived |
+| dict_lookup/64 | 0.995591 | 0.993450 | incomplete / waived |
+| dict_lookup_str/4096 | 1.001174 | 0.986819 | incomplete / waived |
+| dict_lookup_str/64 | 1.000845 | 1.000830 | incomplete / waived |
+| dict_update/4096 | 0.991796 | 0.996627 | incomplete / waived |
+| dict_update/64 | 0.986470 | 0.987865 | incomplete / waived |
+| dict_update_str/4096 | 0.976726 | 0.973041 | incomplete / waived |
+| dict_update_str/64 | 0.969677 | 0.972001 | incomplete / waived |
+| float_format/4096 | 0.998353 | 1.001955 | incomplete / waived |
+| float_format/64 | 1.000640 | 0.998966 | incomplete / waived |
+| float_math/4096 | 1.000407 | 1.002703 | incomplete / waived |
+| float_math/64 | 0.999064 | 0.995154 | incomplete / waived |
+| grid_dp/4096 | 1.011036 | 0.992422 | incomplete / waived |
+| grid_dp/64 | 0.913169 | 0.908868 | incomplete / waived |
+| int_format/4096 | 0.999483 | 0.999150 | incomplete / waived |
+| int_format/64 | 1.000058 | 1.000224 | incomplete / waived |
+| int_math/4096 | 1.000939 | 1.004015 | incomplete / waived |
+| int_math/64 | 0.998073 | 1.001418 | incomplete / waived |
+| int_parse/4096 | 0.975549 | 0.979530 | incomplete / waived |
+| int_parse/64 | 0.991383 | 0.991102 | incomplete / waived |
+| json_transform/4096 | 0.976845 | 0.973620 | incomplete / waived |
+| json_transform/64 | 0.961278 | 0.962989 | incomplete / waived |
+| list_append/4096 | 0.992142 | 0.995465 | incomplete / waived |
+| list_append/64 | 1.003522 | 1.003389 | incomplete / waived |
+| list_filter/4096 | 0.986207 | 0.987145 | incomplete / waived |
+| list_filter/64 | 1.005327 | 0.997950 | incomplete / waived |
+| list_scan/4096 | 1.003373 | 0.999785 | incomplete / waived |
+| list_scan/64 | 1.003236 | 1.000068 | incomplete / waived |
+| lox_eval/4096 | 0.999153 | 1.000146 | incomplete / waived |
+| lox_eval/64 | 1.000862 | 1.001496 | incomplete / waived |
+| mutate_nested/4096 | 0.799214 | 0.809433 | incomplete / waived |
+| mutate_nested/64 | 0.905740 | 0.900980 | incomplete / waived |
+| mutate_shared/4096 | 1.009885 | 0.999066 | incomplete / waived |
+| mutate_shared/64 | 1.009437 | 1.013446 | incomplete / waived |
+| mutate_unique/4096 | 1.001340 | 1.000136 | incomplete / waived |
+| mutate_unique/64 | 1.001614 | 0.999686 | incomplete / waived |
+| option_handle/4096 | 1.000288 | 0.999520 | incomplete / waived |
+| option_handle/64 | 0.981789 | 0.963902 | incomplete / waived |
+| packet_decode/4096 | 0.959953 | 1.000251 | incomplete / waived |
+| packet_decode/64 | 0.986176 | 0.937575 | incomplete / waived |
+| record_construct/4096 | 0.999757 | 1.000658 | incomplete / waived |
+| record_construct/64 | 0.999586 | 0.999807 | incomplete / waived |
+| record_pass/4096 | 1.000465 | 0.999587 | incomplete / waived |
+| record_pass/64 | 1.004785 | 1.005342 | incomplete / waived |
+| record_reads/4096 | 0.999966 | 1.001009 | incomplete / waived |
+| record_reads/64 | 1.001275 | 1.001116 | incomplete / waived |
+| record_update/4096 | 1.000386 | 1.000545 | incomplete / waived |
+| record_update/64 | 1.000577 | 1.000119 | incomplete / waived |
+| result_propagate/4096 | 1.000318 | 1.006904 | incomplete / waived |
+| result_propagate/64 | 0.996916 | 1.000452 | incomplete / waived |
+| set_dedup/4096 | 0.988273 | 0.980610 | incomplete / waived |
+| set_dedup/64 | 0.989352 | 0.991094 | incomplete / waived |
+| sort_int/4096 | 0.421178 | 0.406636 | incomplete / waived |
+| sort_int/64 | 0.984828 | 0.941381 | incomplete / waived |
+| sort_records/4096 | 0.995463 | 0.994955 | incomplete / waived |
+| sort_records/64 | 1.013551 | 1.011225 | incomplete / waived |
+| string_equal/4096 | 1.000721 | 1.000419 | incomplete / waived |
+| string_equal/64 | 0.976343 | 0.978649 | incomplete / waived |
+| string_join/4096 | 0.994014 | 1.001379 | incomplete / waived |
+| string_join/64 | 0.998104 | 0.993756 | incomplete / waived |
+| string_search/4096 | 1.007637 | 1.007126 | incomplete / waived |
+| string_search/64 | 0.850967 | 0.848953 | incomplete / waived |
+| string_split/4096 | 0.963594 | 0.964663 | incomplete / waived |
+| string_split/64 | 0.931439 | 0.934451 | incomplete / waived |
+| tagged_stack/4096 | 0.999758 | 1.001519 | incomplete / waived |
+| tagged_stack/64 | 1.000025 | 1.000631 | incomplete / waived |
+| tree_build_walk/4096 | 1.075945 | 1.057436 | incomplete / waived |
+| tree_build_walk/64 | 1.012566 | 1.008239 | incomplete / waived |
+| union_find/4096 | 0.999521 | 0.998652 | incomplete / waived |
+| union_find/64 | 1.010227 | 1.005644 | incomplete / waived |
+| word_count/4096 | 1.003397 | 1.003391 | incomplete / waived |
+| word_count/64 | 0.963179 | 0.954450 | incomplete / waived |

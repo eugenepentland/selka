@@ -1,0 +1,106 @@
+{
+ "files": [
+  {
+   "original": ".tmp/rp3/timing-run-02/compile-times.log",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-02/driver-logs/compile-times.log.gz",
+   "raw_sha256": "e53d8b897721d9b340dbc1bb4a47f819ad78c40475f05eedd993e0e0bdf22252",
+   "sha256": "162bef35beda6ea7f155f88393bda2c50b5c06304fcb17709102ff96ffc78650"
+  },
+  {
+   "original": ".tmp/rp3/timing-run-02/exit-counts.log",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-02/driver-logs/exit-counts.log.gz",
+   "raw_sha256": "eef4009d364e68d126fa8e2d513474b0e122b59994c6425b561c3d2298e91296",
+   "sha256": "6b0b21937d9c3202568b2764c3c34c727c31c682d3b6c8a23f5f54b7e26c7ed9"
+  },
+  {
+   "original": ".tmp/rp3/timing-run-02/hot-counts.log",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-02/driver-logs/hot-counts.log.gz",
+   "raw_sha256": "6ccc52033ad885f8eba323d88873a01c0bcbdb5a19e834914bd053b0e46b1151",
+   "sha256": "f8797f8f317c09df600c5cd521d1f600f7aa89802e236aca0ae6d1b978847c65"
+  },
+  {
+   "original": ".tmp/rp3/timing-run-02/profile-alloc-base.log",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-02/driver-logs/profile-alloc-base.log.gz",
+   "raw_sha256": "1a168e3ab09da865b94f94ac55bbf501c95d4258bf7b016a6e179c56d3a0fc25",
+   "sha256": "17e6549e86d1a12b114320daee917e70388fa1801022b1235c5944078ebac3a9"
+  },
+  {
+   "original": ".tmp/rp3/timing-run-02/profile-text-base.log",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-02/driver-logs/profile-text-base.log.gz",
+   "raw_sha256": "3a5c5341c350bcff23596d825398abede709a3a10cb66fa928077a62bc4e7bcb",
+   "sha256": "407ad2dc58a02fe43975f963b540744d9deb00c747e8ee62b1662da5cdb5bbfa"
+  },
+  {
+   "original": ".tmp/rp3/timing-run-02/profile-alloc-final.log",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-02/driver-logs/profile-alloc-final.log.gz",
+   "raw_sha256": "9234681cfbded9dee5622ef6f41f0417064df9edf40093abe33fff06d3ed62f2",
+   "sha256": "a64ca95c1534dd9e027225ebdf603bc289131f427c59175cef97c4d5eaf20e4e"
+  },
+  {
+   "original": ".tmp/rp3/timing-run-02/profile-text-final.log",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-02/driver-logs/profile-text-final.log.gz",
+   "raw_sha256": "8f031c38324f9dba1ef20b821c1b4ccb35b8bcd4666ca056f02cb8065d3cfa6a",
+   "sha256": "a7de1e4141029ad8f2ecd1c1463c3a6875e19413e30e2358c561ce7b931f7931"
+  },
+  {
+   "original": ".tmp/rp3/timing-run-02/timing-prep.log",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-02/driver-logs/timing-prep.log.gz",
+   "raw_sha256": "49d580a33fbc3496bf4b61f9c22002f039da4647c9d62b977e0afb5ea4c5d0af",
+   "sha256": "389545a251e0a7526aa7eba1df48203e07cebb66cfd755998d67bfc8f23f2189"
+  },
+  {
+   "original": ".tmp/rp3/timing-run-02/r5-cpu8.log",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-02/driver-logs/r5-cpu8.log.gz",
+   "raw_sha256": "50eb62f51917bce8f4b09a71df65ef360e7dd69d8a8b9bc585213eb91830b57f",
+   "sha256": "ede74fdbb7010999edc4d3b85b6d7ddcbf592f06a78fae3c224d4af42b2c4645"
+  },
+  {
+   "original": ".tmp/rp3/timing-run-02/lox.log",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-02/driver-logs/lox.log.gz",
+   "raw_sha256": "9986e6fd4f427eafa9d7dcf0ece34cea8760ef9d57a3dfb3e1c8e3c6114320f6",
+   "sha256": "5747e96d89bd9c2f6d7759ca93798948091d9c5a82b80a3490d085e9e8d3c2dc"
+  },
+  {
+   "original": ".tmp/rp3/timing-run-02/eda.log",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-02/driver-logs/eda.log.gz",
+   "raw_sha256": "6eece5e61e46dd9239a63ea49f805e4e7d09afc95ae36a2cbd081c0f5a30ec73",
+   "sha256": "ab251401099a4c8c930c9affeb7abe7c1e4854764d37b503fca4ff32a0b83d57"
+  },
+  {
+   "original": ".tmp/rp3/timing-run-02/parity.log",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-02/driver-logs/parity.log.gz",
+   "raw_sha256": "3528f6c61f4634985576345a08b8c18255dc715bb14897247eaf3ea022bb21a0",
+   "sha256": "7943cebfad2ca0ddf308a32e0b6ca2853dcce1909dae40633c8d6aae5daa6ba3"
+  },
+  {
+   "original": ".tmp/rp3/timing-run-02/rows-1.log",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-02/driver-logs/rows-1.log.gz",
+   "raw_sha256": "941e1c2cf921d7ca2d846d85e8b521c4e7a70f91d7effd2509db1d442d0db5a9",
+   "sha256": "e2dcf19d6468c870754d31b6f7cb7408451603ea9d995764b7adf5f8e31b74f0"
+  },
+  {
+   "original": ".tmp/rp3/timing-run-02/rows-2.log",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-02/driver-logs/rows-2.log.gz",
+   "raw_sha256": "a1ad19482ffc3bc7803644bd7fc7bd7f34971f150be062a63f1da24a949fcd9f",
+   "sha256": "2506ef5be1570f3a7d6a54a9dd9109a4199f1f89b829140a929d8279cc373b49"
+  },
+  {
+   "original": ".tmp/rp3/timing-run-02/rows-3.log",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-02/driver-logs/rows-3.log.gz",
+   "raw_sha256": "6dc0b3868601be39e7205bb126d9c115ef9099393ea266a7a361db60b37b880b",
+   "sha256": "a33618b6213bae2332ec8cdb8b2b9bca1f862a1d688a7251beb484871f26d129"
+  },
+  {
+   "original": ".tmp/rp3/measure-final-fix-main-serial-01-timing-run-02.log",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-02/driver-logs/measure-final-fix-main-serial-01-timing-run-02.log.gz",
+   "raw_sha256": "67ee96e9de14b489411c429a8b8ec5038e6b809b33d732bcfbf669e0c8dfb66c",
+   "sha256": "fbeac3065e52ae9a5a84d5f94f73f478871f530ec98eb864acab93a7fae502b4"
+  },
+  {
+   "original": ".tmp/rp3/early-tree-review.log",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-02/driver-logs/early-tree-review.log.gz",
+   "raw_sha256": "daf61011259116ace1c77e537c835ffaefcf7d3f1138c8a0e1ff1dd6e315efcf",
+   "sha256": "4a77302ba37777b1b94db65736f4c1d54441bc9a03590e218f67e9343d4be390"
+  }
+ ]
+}

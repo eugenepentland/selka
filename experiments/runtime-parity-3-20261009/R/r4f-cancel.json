@@ -1,0 +1,6 @@
+{
+  "time": 1791597813.6487346,
+  "pid": 2277411,
+  "command": "bash scripts/build-slot.sh build bash -c python3 experiments/runtime-parity-3-20261009/R/fixtures.py --compiler zig-out/bin/mylang --tag r4f && zig build test-core -Dtest-filter=\"R recursive produced nodes\" --summary all ",
+  "reason": "Still queued; replace mutable zig-out compiler path with the stable Debug07 prototype snapshot before the ordinary-ABI control installs. No test ran in this wrapper."
+}
