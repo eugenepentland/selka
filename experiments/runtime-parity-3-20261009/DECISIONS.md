@@ -159,3 +159,11 @@
 - Evidence: all 153 arms build and match output, but the unmodified runner records timing for only 152. The standalone mylang binary matches its build-manifest hash and expected output.
 - Choice: retain the complete original runner receipt as parity-native27.json.gz and add the missing 9 rounds / 2 warmups with the same run_timed/measure primitives under the quiet lock. The adapter verifies output before and after, checks every timed status, and invents no reference arm or ratio. The completed receipt now passes all 28-benchmark / 153-arm coverage checks. parity_pair.py uses the same adapter while retaining its lock, interleaving base and candidate for this program at X. Historical speed-threshold failures remain in the native and completed receipts; no thresholds changed.
 - Reversibility: additive measurement only. No native benchmark source or runner is edited.
+
+## X-001 — review the exact timed binaries and row sizes
+
+- Question: the complete 151-program instruction corpus measures each row at one registered size, while X has 92 row/size timing cells. A small-row regression cannot be diagnosed by substituting the large-row run.
+- Options: reuse generic corpus counters for every wall-time flag, or add exact-command CPU-8 review for each flagged timing cell.
+- Evidence: row timing receipts retain every binary, size, iteration count and seed; parity build receipts identify the exact output binary, and Lox/EDA receipts retain their binary commands. M0's sort_records result already demonstrated that instruction and cycle evidence must be attributed precisely.
+- Choice: x_gap.py validates every expected arm and sample, retains paired ratios, and lists every final/base result above 1.03. review_perf.py uses the actual timed binaries (hashed before and after), exact row sizes/iterations, and matching Lox/EDA workloads for interleaved CPU-8 instructions, cycles and branch misses. It requires build-slot admission. No automatic noise classification is made; the coordinator reviews the evidence. X timing scripts require an explicit final compiler instead of silently defaulting to the base.
+- Reversibility: additive validation/reporting only; no runtime, workloads, or thresholds change.

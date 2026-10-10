@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# CE-X Part 3: wall time, final against base, every timed process on CPU 10 under cpu10.lock.
+# Wave-3 X: final against base, every timed process on CPU 10 under cpu10.lock.
 # No build runs while the lock is held: every binary comes from timing-prep.sh / ce.py, the Lox
 # harness runs with LOX_PREBUILT=1, and parity_locked.py takes the lock only for the timing.
 #   part3.sh feasible | lox | eda | parity | rows N
@@ -7,11 +7,14 @@ set -eu
 WT=/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3
 source $WT/experiments/runtime-parity-3-20261009/tools/env.sh
 X=$WT/experiments/runtime-parity-3-20261009
-C=${RP3_FINAL:-/home/epentland/.cache/mylang/rp3-base-41ed360fb/bin/mylang}
+: "${RP3_FINAL:?set RP3_FINAL to the final ReleaseFast compiler}"
+C=$RP3_FINAL
 B=/home/epentland/.cache/mylang/rp3-base-41ed360fb/bin/mylang
 LOCK=/run/user/1000/mylang-slots/cpu10.lock
 L=$WT/.mylang-cache/lox
 EDA=/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore
+test -x "$C"
+mkdir -p "$X/results" "$X/logs"
 load() { echo "$(date -u +%T) $1 load $(cut -d' ' -f1-3 /proc/loadavg)"; }
 case ${1:-} in
 feasible)
@@ -29,7 +32,7 @@ lox)
   load "lox runtime end"; ls -td results/*-runtime | head -1 ;;
 eda)
   R=$EDA/.cache/release
-  export TMPDIR=$WT/.tmp
+  export TMPDIR=$WT/.tmp/rp3
   load "eda runtime start"
   python3 "$X/tools/quiet.py" -- python3 $WT/experiments/bench-newcore-20261008/eda/runtime.py --repo $EDA --rounds 10 --cpu 10 \
     --work $WT/.mylang-cache/rp3/eda-runtime-out --out $X/results/eda-runtime.json \

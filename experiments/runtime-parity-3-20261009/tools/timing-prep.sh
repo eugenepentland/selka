@@ -8,11 +8,13 @@ set -eu
 WT=/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3
 source $WT/experiments/runtime-parity-3-20261009/tools/env.sh
 X=$WT/experiments/runtime-parity-3-20261009
-C=${RP3_FINAL:-/home/epentland/.cache/mylang/rp3-base-41ed360fb/bin/mylang}
+: "${RP3_FINAL:?set RP3_FINAL to the final ReleaseFast compiler}"
+C=$RP3_FINAL
 B=/home/epentland/.cache/mylang/rp3-base-41ed360fb/bin/mylang
 SLOT=$WT/scripts/build-slot.sh
 L=$WT/.mylang-cache/lox
-mkdir -p "$L/.tmp/lox-bench/tmp"
+test -x "$C"
+mkdir -p "$L/.tmp/lox-bench/tmp" "$X/results" "$X/logs"
 cd $L
 export LOX_BENCH_MYLANG=$C XDG_CACHE_HOME=$L/.tmp/xdg PYTHONDONTWRITEBYTECODE=1 PATH=$HOME/.cargo/bin:$PATH
 export TMPDIR=$L/.tmp/lox-bench/tmp

@@ -33,6 +33,7 @@ Final head: pending X.
 - M0 final checkpoint: `f42bac79740d1c5363680025d1c2ac67c717b944`.
 - U2, S2, R: launched from that checkpoint in locked, prune-kept worktrees `codex-rp3-u2`, `codex-rp3-s2`, and `codex-rp3-r`, under `/home/epentland/ai/canopy/mylang-worktrees/`. Their branches are `codex/rp3-u2`, `codex/rp3-s2`, and `codex/rp3-r`. Each received the exact M0 corpora manifest and the 186 base counting/plain guest binaries. Each lane owns its source changes and machine evidence; the coordinator writes the reports and decision log.
 - X: pending lane hand-offs.
+- X preparation: complete-coverage comparison tooling validates all 197 cells, retains M0 and paired-base reference columns, and produces the >1.03 review queue. Regression review uses the exact timed guest binaries and both registered row sizes. A synthetic base-control check validated coverage and rejection of incomplete Lox timing; it is scratch validation only, not X evidence. X remains unmeasured.
 
 ## M0 outcome
 
