@@ -1,0 +1,4 @@
+func first() -> int:
+    return f()
+func second() -> int:
+    return 0

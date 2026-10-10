@@ -1,0 +1,76 @@
+import parser
+
+record Reader:
+    data: bytes
+    pos: int
+
+
+func number(mut r: Reader, separator: int) -> int fails str:
+    mut n = 0
+    mut digits = 0
+    while r.pos < len(r.data) and r.data[r.pos] != separator:
+        const ch = r.data[r.pos]
+        if ch < 48 or ch > 57 or digits >= 7:
+            fail "P_TRANSPORT"
+        n = n * 10 + ch - 48
+        digits = digits + 1
+        r.pos = r.pos + 1
+    if digits == 0 or r.pos == len(r.data):
+        fail "P_TRANSPORT"
+    r.pos = r.pos + 1
+    return n
+
+
+func exchange(fs: Filesystem, path: str) -> parser.Node[] fails str:
+    mut data = b""
+    with try fs.open(path, "rb") as file:
+        data = file.read(262145)
+    if len(data) > 262144:
+        fail "P_TRANSPORT"
+    mut r = Reader(data=data, pos=0)
+    const size = try number(mut r, 10)
+    if size > 1048576 or r.pos + size >= len(r.data):
+        fail "P_TRANSPORT"
+    const source = r.data[r.pos:r.pos + size]
+    r.pos = r.pos + size
+    if r.data[r.pos] != 10:
+        fail "P_TRANSPORT"
+    r.pos = r.pos + 1
+    mut tokens: parser.Token[] = []
+    while r.pos < len(r.data):
+        mut kind = ""
+        while r.pos < len(r.data) and r.data[r.pos] != 32:
+            const ch = r.data[r.pos]
+            if len(kind) >= 40 or (ch != 95 and (ch < 97 or ch > 122) and (ch < 48 or ch > 57)):
+                fail "P_TRANSPORT"
+            if ch == 95:
+                kind = kind + "_"
+            elif ch >= 48 and ch <= 57:
+                kind = kind + "0123456789"[ch - 48]
+            else:
+                kind = kind + "abcdefghijklmnopqrstuvwxyz"[ch - 97]
+            r.pos = r.pos + 1
+        if kind == "" or r.pos == len(r.data) or len(tokens) >= 4096:
+            fail "P_TRANSPORT"
+        r.pos = r.pos + 1
+        const start = try number(mut r, 32)
+        const end = try number(mut r, 10)
+        tokens.append(parser.Token(kind=kind, start=start, end=end))
+    return try parser.parse(tokens, source)
+
+
+func main(args: str[], fs: Filesystem, out: Stream, err: Stream) -> int:
+    if len(args) != 2 or args[0] != "--request":
+        err.print("parser-pilot: expected --request FILE")
+        return 2
+    match exchange(fs, args[1]):
+        case Ok(nodes):
+            for node in nodes:
+                mut children = ""
+                for child in node.children:
+                    children = children + " " + parser.decimal(child)
+                out.print(node.kind + " " + parser.decimal(node.start) + " " + parser.decimal(node.end) + children)
+            return 0
+        case Err(message):
+            err.print(message)
+            return 2

@@ -1,0 +1,18 @@
+82
+kw_def 22 26
+ident 27 31
+lparen 31 32
+rparen 32 33
+arrow 34 36
+ident 37 40
+indent 40 41
+kw_const 46 51
+ident 52 53
+equal 54 55
+integer 56 60
+plus 61 62
+integer 63 68
+kw_return 73 79
+ident 80 81
+dedent 82 82
+eof 82 82

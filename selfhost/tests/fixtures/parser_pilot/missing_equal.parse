@@ -1,0 +1,3 @@
+func main() -> int:
+    const value 1
+    return value

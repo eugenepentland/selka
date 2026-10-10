@@ -1,0 +1,5 @@
+func yes() -> bool:
+    return True
+func no() -> bool:
+    const value = False
+    return value

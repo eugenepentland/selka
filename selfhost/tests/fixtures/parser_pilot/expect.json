@@ -1,0 +1,17 @@
+{
+  "precedence.parse": "ok",
+  "literals.parse": "ok",
+  "missing_expression.parse": "error",
+  "missing_paren.parse": "error",
+  "unsupported.parse": "unsupported",
+  "associativity.parse": "ok",
+  "empty_call.parse": "ok",
+  "missing_equal.parse": "error",
+  "unsupported_list.parse": "expression-rejected",
+  "unsupported_i64.parse": "unsupported",
+  "same_line_return.parse": "error",
+  "newline_operator.parse": "unsupported",
+  "semicolon.parse": "unsupported",
+  "byte_spans.parse": "ok",
+  "eof_and_cr.parse": "ok"
+}

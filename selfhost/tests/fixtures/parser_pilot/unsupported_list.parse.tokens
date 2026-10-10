@@ -1,0 +1,16 @@
+38
+kw_def 0 4
+ident 5 9
+lparen 9 10
+rparen 10 11
+arrow 12 14
+ident 15 18
+indent 18 19
+kw_return 24 30
+lbracket 31 32
+integer 32 33
+comma 33 34
+integer 35 36
+rbracket 36 37
+dedent 38 38
+eof 38 38

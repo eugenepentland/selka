@@ -1,0 +1,74 @@
+import parser
+
+public func test_empty() -> bool fails str:
+    const result = try parser.parse([parser.Token(kind="eof", start=0, end=0)], b"")
+    return len(result) == 1 and result[0].kind == "program" and result[0].children == []
+
+
+public func test_bad_span() -> bool:
+    match parser.parse([parser.Token(kind="eof", start=2, end=1)], b"x"):
+        case Ok(value):
+            return False
+        case Err(message):
+            return message == "P_TRANSPORT"
+
+
+public func test_missing_eof() -> bool:
+    match parser.parse([], b""):
+        case Ok(value):
+            return False
+        case Err(message):
+            return message == "P_TRANSPORT"
+
+
+public func test_unsupported() -> bool:
+    match parser.parse([parser.Token(kind="ident", start=0, end=6), parser.Token(kind="eof", start=6, end=6)], b"import"):
+        case Ok(value):
+            return False
+        case Err(message):
+            return message == "E_SYNTAX 0 6"
+
+
+public func test_embedded_eof() -> bool:
+    match parser.parse([parser.Token(kind="eof", start=0, end=0), parser.Token(kind="eof", start=0, end=0)], b""):
+        case Ok(value):
+            return False
+        case Err(message):
+            return message == "P_TRANSPORT"
+
+
+public func test_unknown_kind() -> bool:
+    match parser.parse([parser.Token(kind="unknown", start=0, end=1), parser.Token(kind="eof", start=1, end=1)], b"x"):
+        case Ok(value):
+            return False
+        case Err(message):
+            return message == "P_TRANSPORT"
+
+
+public func test_overlapping_tokens() -> bool:
+    match parser.parse([parser.Token(kind="integer", start=0, end=2), parser.Token(kind="ident", start=1, end=2), parser.Token(kind="eof", start=2, end=2)], b"12"):
+        case Ok(value):
+            return False
+        case Err(message):
+            return message == "P_TRANSPORT"
+
+
+public func test_limit() -> bool:
+    mut tokens: parser.Token[] = []
+    for i in range(4097):
+        tokens.append(parser.Token(kind="eof", start=0, end=0))
+    match parser.parse(tokens, b""):
+        case Ok(value):
+            return False
+        case Err(message):
+            return message == "P_TRANSPORT"
+
+
+public func test_precedence_spans_and_call() -> bool fails str:
+    const tokens = [parser.Token(kind="kw_def", start=0, end=4), parser.Token(kind="ident", start=5, end=9), parser.Token(kind="lparen", start=9, end=10), parser.Token(kind="rparen", start=10, end=11), parser.Token(kind="arrow", start=12, end=14), parser.Token(kind="ident", start=15, end=18), parser.Token(kind="indent", start=18, end=19), parser.Token(kind="kw_const", start=24, end=29), parser.Token(kind="ident", start=30, end=31), parser.Token(kind="colon", start=31, end=32), parser.Token(kind="ident", start=33, end=36), parser.Token(kind="equal", start=37, end=38), parser.Token(kind="integer", start=39, end=40), parser.Token(kind="plus", start=41, end=42), parser.Token(kind="integer", start=43, end=44), parser.Token(kind="star", start=45, end=46), parser.Token(kind="integer", start=47, end=48), parser.Token(kind="ident", start=53, end=56), parser.Token(kind="ident", start=57, end=58), parser.Token(kind="equal", start=59, end=60), parser.Token(kind="lparen", start=61, end=62), parser.Token(kind="ident", start=62, end=63), parser.Token(kind="minus", start=64, end=65), parser.Token(kind="integer", start=66, end=67), parser.Token(kind="rparen", start=67, end=68), parser.Token(kind="star", start=69, end=70), parser.Token(kind="minus", start=71, end=72), parser.Token(kind="integer", start=72, end=73), parser.Token(kind="kw_return", start=78, end=84), parser.Token(kind="ident", start=85, end=86), parser.Token(kind="plus", start=87, end=88), parser.Token(kind="ident", start=89, end=90), parser.Token(kind="lparen", start=90, end=91), parser.Token(kind="integer", start=91, end=92), parser.Token(kind="comma", start=92, end=93), parser.Token(kind="ident", start=94, end=95), parser.Token(kind="rparen", start=95, end=96), parser.Token(kind="dedent", start=97, end=97), parser.Token(kind="eof", start=97, end=97)]
+    const result = try parser.parse(tokens, b"func main() -> int:\n    const x: int = 1 + 2 * 3\n    mut y = (x - 4) * -2\n    return y + f(1, x)\n")
+    return result[8].kind == "add" and result[8].children == [4, 7] and result[7].kind == "mul" and result[8].start == 39 and result[8].end == 48 and result[22].kind == "call" and result[22].children == [19, 20, 21] and result[27].kind == "program"
+
+
+public func test_decimal() -> bool:
+    return parser.decimal(0) == "0" and parser.decimal(1048576) == "1048576"

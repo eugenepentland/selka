@@ -1,0 +1,4 @@
+# café: byte offsets
+func main() -> int:
+    const x = 0x10 + 1_000
+    return x

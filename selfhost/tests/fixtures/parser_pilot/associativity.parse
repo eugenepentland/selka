@@ -1,0 +1,5 @@
+func main() -> int:
+    const a = 8 - 3 - 1
+    const b = 24 / 3 / 2
+    const c = 17 % 5 * 2 + -a
+    return f(g(1 + 2), (b + c) * 3)

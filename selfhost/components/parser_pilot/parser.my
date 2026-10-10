@@ -1,0 +1,243 @@
+# Pure indexed syntax pilot. Token kinds follow the Zig lexer.
+public record Token:
+    kind: str
+    start: int
+    end: int
+
+
+public record Node:
+    kind: str
+    start: int
+    end: int
+    children: int[]
+
+
+record State:
+    tokens: Token[]
+    pos: int
+    nodes: Node[]
+    depth: int
+    source: bytes
+
+
+# Decimal rendering uses profile arithmetic and string indexing only.
+public func decimal(value: int) -> str:
+    if value == 0:
+        return "0"
+    mut remaining = value
+    mut text = ""
+    while remaining > 0:
+        text = "0123456789"[remaining % 10] + text
+        remaining = remaining // 10
+    return text
+
+
+func known(kind: str) -> bool:
+    const kinds = ["eof", "ident", "integer", "bytes", "format", "kw_def", "kw_none", "kw_pass", "kw_assert", "kw_elif", "kw_case", "kw_arena", "kw_with", "kw_as", "kw_enum", "kw_union", "kw_match", "kw_domain", "kw_private", "kw_wrap", "kw_todo", "kw_codec_encode", "kw_codec_decode", "kw_unwrap", "kw_class", "kw_conversion", "kw_replace", "kw_len", "kw_return", "kw_true", "kw_false", "kw_i64", "kw_i8", "kw_i16", "kw_i32", "kw_u8", "kw_u16", "kw_u32", "kw_u64", "kw_filesystem_cap", "kw_network_cap", "kw_acquire_resource", "kw_complete_resource", "kw_environment_cap", "kw_environment_get", "kw_restrict_resource", "kw_read_resource", "kw_write_resource", "kw_clock_cap", "kw_random_cap", "kw_clock_now", "kw_random_u64", "kw_stand_in", "kw_clock_advance", "kw_bit_and", "kw_bit_or", "kw_bit_xor", "kw_shift_left", "kw_shift_right", "kw_wrapping_add", "kw_wrapping_sub", "kw_wrapping_mul", "kw_saturating_add", "kw_saturating_sub", "kw_saturating_mul", "kw_f64_add", "kw_f64_sub", "kw_f64_mul", "kw_f64_div", "kw_f64_eq", "kw_f64_lt", "kw_f64_le", "kw_f64_sqrt", "kw_f64_floor", "kw_f64_ceil", "kw_f64_trunc", "kw_f64_abs", "kw_f64_neg", "kw_f64_from_u64", "kw_f64_to_u64", "kw_f64_sin", "kw_f64_cos", "kw_bool", "kw_if", "kw_else", "kw_while", "kw_break", "kw_continue", "kw_const", "kw_for", "kw_in", "kw_is", "kw_type", "at", "lparen", "rparen", "lbracket", "rbracket", "lbrace", "rbrace", "indent", "dedent", "arrow", "fat_arrow", "semicolon", "colon", "comma", "dot", "plus", "minus", "star", "slash", "slash_slash", "percent", "ampersand", "pipe", "caret", "and_and", "or_or", "plus_equal", "minus_equal", "star_equal", "slash_equal", "slash_slash_equal", "percent_equal", "equal", "eq_eq", "bang", "bang_eq", "question", "lt", "le", "gt", "ge"]
+    for value in kinds:
+        if kind == value:
+            return True
+    return False
+
+
+func peek(p: State) -> Token:
+    return p.tokens[p.pos]
+
+
+func take(mut p: State, kind: str) -> Token fails str:
+    const t = peek(p)
+    if t.kind != kind:
+        fail "E_SYNTAX " + decimal(t.start) + " " + decimal(t.end)
+    p.pos = p.pos + 1
+    return t
+
+
+func add(mut p: State, kind: str, start: int, end: int, children: int[]) -> int fails str:
+    if len(p.nodes) >= 4096:
+        fail "P_LIMIT"
+    const id = len(p.nodes)
+    p.nodes.append(Node(kind=kind, start=start, end=end, children=children))
+    return id
+
+
+func precedence(kind: str) -> int:
+    if kind == "plus" or kind == "minus":
+        return 10
+    if kind == "star" or kind == "slash" or kind == "percent":
+        return 20
+    return 0
+
+
+func operator(kind: str) -> str:
+    if kind == "plus":
+        return "add"
+    if kind == "minus":
+        return "sub"
+    if kind == "star":
+        return "mul"
+    if kind == "slash":
+        return "python_div"
+    return "floor_rem"
+
+
+func same_line(p: State) -> bool:
+    if p.pos == 0:
+        return True
+    const start = p.tokens[p.pos - 1].end
+    const end = peek(p).start
+    for ch in p.source[start:end]:
+        if ch == 10:
+            return False
+    return True
+
+
+func statement_end(mut p: State) -> int fails str:
+    if peek(p).kind == "semicolon":
+        const t = peek(p)
+        fail "P_UNSUPPORTED " + decimal(t.start) + " " + decimal(t.end)
+    if peek(p).kind == "eof" or peek(p).kind == "dedent" or not same_line(p):
+        return p.tokens[p.pos - 1].end
+    const t = peek(p)
+    fail "E_SYNTAX " + decimal(t.start) + " " + decimal(t.end)
+
+
+func expression(mut p: State, minimum: int) -> int fails str:
+    if not same_line(p) and peek(p).kind != "dedent" and peek(p).kind != "eof":
+        const t = peek(p)
+        fail "P_UNSUPPORTED " + decimal(t.start) + " " + decimal(t.end)
+    if p.depth >= 128:
+        fail "P_LIMIT"
+    p.depth = p.depth + 1
+    const first = peek(p)
+    mut left = -1
+    if first.kind == "integer" or first.kind == "ident" or first.kind == "kw_true" or first.kind == "kw_false":
+        p.pos = p.pos + 1
+        mut kind = "name"
+        if first.kind == "integer":
+            kind = "integer"
+        if first.kind == "kw_true":
+            kind = "true"
+        if first.kind == "kw_false":
+            kind = "false"
+        left = try add(mut p, kind, first.start, first.end, [])
+        if first.kind == "ident" and peek(p).kind == "lparen" and same_line(p):
+            _ = try take(mut p, "lparen")
+            mut arguments: int[] = []
+            if peek(p).kind != "rparen":
+                const argument = try expression(mut p, 1)
+                arguments.append(argument)
+                while peek(p).kind == "comma":
+                    _ = try take(mut p, "comma")
+                    const next_argument = try expression(mut p, 1)
+                    arguments.append(next_argument)
+            const close = try take(mut p, "rparen")
+            # The name node is deliberately retained; calls reference it first.
+            mut children = [left]
+            for value in arguments:
+                children.append(value)
+            left = try add(mut p, "call", first.start, close.end, children)
+    elif first.kind == "lparen":
+        _ = try take(mut p, "lparen")
+        left = try expression(mut p, 1)
+        const close = try take(mut p, "rparen")
+        p.nodes[left].start = first.start
+        p.nodes[left].end = close.end
+    elif first.kind == "minus":
+        _ = try take(mut p, "minus")
+        const value = try expression(mut p, 30)
+        left = try add(mut p, "neg", first.start, p.nodes[value].end, [value])
+    else:
+        fail "E_EXPRESSION " + decimal(first.start) + " " + decimal(first.end)
+    while precedence(peek(p).kind) >= minimum and same_line(p):
+        const op = peek(p)
+        p.pos = p.pos + 1
+        const right = try expression(mut p, precedence(op.kind) + 1)
+        left = try add(mut p, operator(op.kind), p.nodes[left].start, p.nodes[right].end, [left, right])
+    p.depth = p.depth - 1
+    return left
+
+
+func statement(mut p: State) -> int fails str:
+    const first = peek(p)
+    if first.kind == "kw_return":
+        _ = try take(mut p, "kw_return")
+        const value = try expression(mut p, 1)
+        const result = try add(mut p, "return", first.start, p.nodes[value].end, [value])
+        const end = try statement_end(mut p)
+        p.nodes[result].end = end
+        return result
+    if first.kind == "kw_const" or (first.kind == "ident" and p.source[first.start:first.end] == b"mut"):
+        p.pos = p.pos + 1
+        const name = try take(mut p, "ident")
+        const name_id = try add(mut p, "name", name.start, name.end, [])
+        mut children = [name_id]
+        if peek(p).kind == "colon":
+            _ = try take(mut p, "colon")
+            const ty = peek(p)
+            if ty.kind != "ident" and ty.kind != "kw_bool":
+                fail "P_UNSUPPORTED " + decimal(ty.start) + " " + decimal(ty.end)
+            p.pos = p.pos + 1
+            const type_node = try add(mut p, "type", ty.start, ty.end, [])
+            children.append(type_node)
+        _ = try take(mut p, "equal")
+        const value = try expression(mut p, 1)
+        children.append(value)
+        mut kind = "const"
+        if (first.kind == "ident" and p.source[first.start:first.end] == b"mut"):
+            kind = "mut"
+        const result = try add(mut p, kind, first.start, p.nodes[value].end, children)
+        const end = try statement_end(mut p)
+        p.nodes[result].end = end
+        return result
+    fail "P_UNSUPPORTED " + decimal(first.start) + " " + decimal(first.end)
+
+
+public func parse(tokens: Token[], source: bytes) -> Node[] fails str:
+    const source_size = len(source)
+    if source_size < 0 or source_size > 1048576 or len(tokens) == 0 or len(tokens) > 4096:
+        fail "P_TRANSPORT"
+    mut previous = 0
+    mut token_index = 0
+    for t in tokens:
+        if t.kind == "eof" and token_index != len(tokens) - 1:
+            fail "P_TRANSPORT"
+        token_index = token_index + 1
+        if not known(t.kind) or t.start < previous or t.end < t.start or t.end > source_size:
+            fail "P_TRANSPORT"
+        if t.kind == "dedent" and t.start != t.end:
+            fail "P_TRANSPORT"
+        if t.start == t.end and t.kind != "eof" and t.kind != "dedent" and t.kind != "indent" and t.kind != "semicolon":
+            fail "P_TRANSPORT"
+        previous = t.end
+    if tokens[len(tokens) - 1].kind != "eof" or tokens[len(tokens) - 1].start != source_size or tokens[len(tokens) - 1].end != source_size:
+        fail "P_TRANSPORT"
+    mut p = State(tokens=tokens, pos=0, nodes=[], depth=0, source=source)
+    mut functions: int[] = []
+    while peek(p).kind != "eof":
+        if peek(p).kind == "semicolon":
+            _ = try take(mut p, "semicolon")
+        else:
+            _ = try take(mut p, "kw_def")
+            const name = try take(mut p, "ident")
+            const name_id = try add(mut p, "name", name.start, name.end, [])
+            _ = try take(mut p, "lparen")
+            _ = try take(mut p, "rparen")
+            _ = try take(mut p, "arrow")
+            const ty = peek(p)
+            if ty.kind != "ident" and ty.kind != "kw_bool":
+                fail "P_UNSUPPORTED " + decimal(ty.start) + " " + decimal(ty.end)
+            p.pos = p.pos + 1
+            const type_id = try add(mut p, "type", ty.start, ty.end, [])
+            _ = try take(mut p, "indent")
+            mut body: int[] = []
+            while peek(p).kind != "dedent" and peek(p).kind != "eof":
+                const child = try statement(mut p)
+                body.append(child)
+            const close = try take(mut p, "dedent")
+            if len(body) == 0:
+                fail "E_SYNTAX " + decimal(close.start) + " " + decimal(close.end)
+            const block = try add(mut p, "block", p.nodes[body[0]].start, p.nodes[body[len(body) - 1]].end, body)
+            const function = try add(mut p, "function", name.start, p.nodes[block].end, [name_id, type_id, block])
+            functions.append(function)
+    _ = try add(mut p, "program", 0, source_size, functions)
+    return p.nodes
