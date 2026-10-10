@@ -8,9 +8,11 @@ const diagnostic = @import("diagnostic.zig");
 /// A malformed, over-budget syntax value or an allocation failure.
 pub const Error = error{ ComponentProtocol, OutOfMemory };
 /// Maximum encoded reply size, including the value-table header.
-pub const value_wire_limit = 32 * 1024 * 1024;
+pub const value_wire_limit = 64 * 1024 * 1024;
 /// Maximum number of postorder values in one reply.
-pub const max_values = 262144;
+pub const max_values = 1048576;
+/// Maximum aggregate child references in one syntax value table.
+pub const max_edges = 4194304;
 const max_depth = 256;
 const magic = "SLKAST01";
 const error_magic = "SLKERR01";
@@ -27,6 +29,7 @@ const Encoder = struct {
     writer: codec.Writer,
     scratch: std.mem.Allocator,
     count: u32 = 0,
+    edges: usize = 0,
 
     fn blob(self: *Encoder, data: []const u8) Error!void {
         if (data.len > value_wire_limit) return error.ComponentProtocol;
@@ -34,7 +37,8 @@ const Encoder = struct {
         try self.writer.raw(data);
     }
     fn append(self: *Encoder, item: Value) Error!u32 {
-        if (self.count >= max_values) return error.ComponentProtocol;
+        if (self.count >= max_values or item.children.len > max_edges - self.edges) return error.ComponentProtocol;
+        self.edges += item.children.len;
         try self.writer.integer(@as(u8, @backingInt(item.kind)));
         try self.writer.integer(item.integer);
         try self.blob(item.data);
@@ -116,8 +120,9 @@ fn encodeTree(allocator: std.mem.Allocator, comptime T: type, value: T, signatur
 }
 
 const Budget = struct {
-    remaining: usize = 128 * 1024 * 1024,
+    remaining: usize = 512 * 1024 * 1024,
     visits: usize = 4 * max_values,
+    edges: usize = max_edges,
 
     fn allocate(self: *Budget, allocator: std.mem.Allocator, comptime T: type, count: usize) Error![]T {
         if (count > self.remaining / @max(1, @sizeOf(T))) return error.ComponentProtocol;
@@ -145,7 +150,8 @@ const Reader = struct {
         const integer_value = try self.integer(i64);
         const data = try self.blob();
         const count = try self.integer(u32);
-        if (count > max_values) return error.ComponentProtocol;
+        if (count > max_values or count > self.budget.edges) return error.ComponentProtocol;
+        self.budget.edges -= count;
         const children = try self.budget.allocate(self.wire.allocator, u32, count);
         for (children) |*child| {
             child.* = try self.integer(u32);
@@ -357,4 +363,20 @@ pub fn decodeErrors(allocator: std.mem.Allocator, bytes: []const u8, source_len:
 /// Canonicalize a decoded error reply so producer table ordering is irrelevant.
 pub fn encodeReport(allocator: std.mem.Allocator, report: ErrorReport) Error![]u8 {
     return encodeTree(allocator, ErrorReport, report, error_magic);
+}
+
+// spec-case: SELFHOST-FRONTEND-PROFILE-1
+test "parser values enforce aggregate edge budget across otherwise valid rows" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var bytes: [25]u8 = @splat(0);
+    bytes[0] = 6;
+    std.mem.writeInt(u32, bytes[13..17], 1, .little);
+    var budget: Budget = .{ .edges = 1 };
+    var first: Reader = .{ .wire = .init(arena.allocator(), &bytes), .budget = &budget };
+    const admitted = try first.value(1);
+    try std.testing.expectEqual(@as(usize, 1), admitted.children.len);
+    try std.testing.expectEqual(@as(usize, 0), budget.edges);
+    var excess: Reader = .{ .wire = .init(arena.allocator(), &bytes), .budget = &budget };
+    try std.testing.expectError(error.ComponentProtocol, excess.value(1));
 }

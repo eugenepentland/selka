@@ -18,14 +18,14 @@ starts; diagnostic line and byte column are one based. Raw bytes are retained
 without Unicode decoding, normalization or input repair.
 
 Only the adapter `main.my` accesses files/streams. Invoke `BINARY --request FILE`
-with one immutable raw-source file, at most 262,144 bytes. It reads one sentinel
+with one immutable raw-source file, at most 1,048,576 bytes. It reads one sentinel
 byte beyond that bound. Success prints ASCII `kind start end` rows including
 EOF. Source errors print exactly `error code line column start end`, exit 0.
 Malformed arguments, missing files, oversize requests or invalid library output
 produce stderr and exit 2, without a success response. Tokens/errors are fully
-validated before printing. The adapter bounds tokens at 524,545 and kind/code
-length at 32; spans are at most six decimal digits, so token output is under
-25 MiB. The receiver separately bounds each stream to 32 MiB during execution
+validated before printing. The adapter bounds tokens at 1,048,833 and kind/code
+length at 32; spans are at most seven decimal digits, so token output is under
+51 MiB. The receiver separately bounds each stream to 64 MiB during execution
 and applies a 30 second deadline. This is a provisional process/value protocol,
 not an installed component manifest or frozen production ABI.
 
@@ -130,11 +130,11 @@ No compiler rebuild, hidden source compilation or fallback occurs during launch.
 
 The packaged executable retains `--request FILE` for the original standalone
 corpus and adds `--exchange FILE` for a framed binary operation. The 64-byte
-`SLKLEX01` header has little-endian u32 protocol=1 at 8, schema=1 at 12,
+`SLKLEX01` header has little-endian u32 protocol=1 at 8, schema=2 at 12,
 kind=0 request / 1 reply at 16, exact payload length at 20, correlation bytes at
 24..32, and SHA-256 of immutable source bytes at 32..64. The component echoes
 all 40 identity bytes; the host requires exact correlation and snapshot identity.
-The request payload is raw source (at most 262,144 bytes). Successful reply
+The request payload is raw source (at most 1,048,576 bytes). Successful reply
 payloads contain u32 status=0, token count, then u32 stable kind ID, start, end
 per token. IDs follow the explicit `wire.my`/`lexer_component_protocol.zig`
 kind tables, never the host enum's incidental ordinal. Source-error payloads
@@ -192,3 +192,5 @@ in each guest mode, with six transport and two host configuration checks;
 12 pure tests passed in both debug and release/fact/leak modes. The coordinator
 reproduced all three component executables from fresh private caches. Full
 combined gate and isolated measurements remain coordinated by the parent.
+
+The admitted whole-source profile is `whole-source-1m-v1`: 1,048,576 source bytes and 1,048,833 token rows. Binary replies are at most 12,586,068 bytes (72-byte header plus 12 bytes per token). Source bytes cover all nonempty raw tokens; each inserted dedent corresponds to a colon opening a suite and consumes whitespace before its first statement. The additional 257 rows conservatively cover EOF and the maximum layout stack. Outer binary schema is 2; authenticated source-tree and artifact digests identify the changed package profile. Schema 1 packages are rejected during manifest authentication before a request is issued.

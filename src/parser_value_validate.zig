@@ -9,7 +9,7 @@ const Validator = struct {
     program: ast.Program,
     source_len: usize,
     colors: []u8,
-    visits: usize = 1048576,
+    visits: usize = 4194304,
 
     fn vertex(self: *Validator, id: usize, depth: usize) Error!void {
         if (id >= self.colors.len or depth > 256) return error.ComponentProtocol;

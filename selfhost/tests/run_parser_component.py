@@ -14,7 +14,7 @@ import subprocess
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[2]
-LIMIT = 33554496
+LIMIT = 67108928
 
 
 def digest(path):
@@ -40,7 +40,7 @@ def require(ok, message):
 def installed(directory):
     manifest = json.loads((directory / 'parser-pilot.json').read_text())
     require(all(manifest.get(k) == v for k, v in
-                {'format': 1, 'component': 'parser-pilot', 'protocol': 1, 'schema': 1}.items()),
+                {'format': 1, 'component': 'parser-pilot', 'protocol': 1, 'schema': 2}.items()),
             'invalid installed parser manifest identity')
     name = manifest['artifact']
     require(name not in ('', '.', '..') and '/' not in name and '\\' not in name,
@@ -58,7 +58,7 @@ def copy_artifact(source, target):
 
 
 def request(source, rows, path=b'qualification.my', module=1, trusted=0):
-    require(len(source) <= 1048576 and 0 < len(rows) <= 100000 and len(path) <= 16384,
+    require(len(source) <= 1048576 and 0 < len(rows) <= 1048833 and len(path) <= 16384,
             'request bounds exceeded')
     payload = bytearray(b'SLKPAR01' + struct.pack('<IIIII', len(source), len(rows), module, trusted, len(path)))
     payload.extend(path)
@@ -67,13 +67,13 @@ def request(source, rows, path=b'qualification.my', module=1, trusted=0):
         name = row['kind'].encode('ascii')
         payload.extend(struct.pack('<I', len(name)) + name + struct.pack('<II', row['start'], row['end']))
     identity = b'qualify1' + hashlib.sha256(payload).digest()
-    return b'SLKPRS01' + struct.pack('<IIII', 1, 1, 0, len(payload)) + identity + payload
+    return b'SLKPRS01' + struct.pack('<IIII', 1, 2, 0, len(payload)) + identity + payload
 
 
 def reply(data, frame):
     require(80 <= len(data) <= LIMIT, 'reply bounds')
     require(data[:8] == b'SLKPRS01', 'reply magic')
-    require(struct.unpack('<IIII', data[8:24]) == (1, 1, 1, len(data) - 64), 'reply envelope')
+    require(struct.unpack('<IIII', data[8:24]) == (1, 2, 1, len(data) - 64), 'reply envelope')
     require(data[24:64] == frame[24:64], 'reply request identity')
     require(data[64:72] in (b'SLKAST01', b'SLKERR01'), 'reply value magic')
     return data[64:]
@@ -133,10 +133,10 @@ def transport(binary, compiler, fixtures, work):
     empty = request(b'', [{'kind': 'eof', 'start': 0, 'end': 0}])
     cases = [b'', empty[:63], empty[:-1], empty + b'x']
     for offset, value in [(0, b'BADMAGIC'), (8, struct.pack('<I', 2)),
-                          (12, struct.pack('<I', 2)), (16, struct.pack('<I', 1)),
+                          (12, struct.pack('<I', 1)), (16, struct.pack('<I', 1)),
                           (20, struct.pack('<I', 0)), (64, b'BADINNER'),
                           (72, struct.pack('<I', 1048577)), (76, struct.pack('<I', 0)),
-                          (76, struct.pack('<I', 100001)), (80, struct.pack('<I', 2)),
+                          (76, struct.pack('<I', 1048834)), (80, struct.pack('<I', 2)),
                           (84, struct.pack('<I', 2)), (88, struct.pack('<I', 16385))]:
         cases.append(empty[:offset] + value + empty[offset + len(value):])
     for source, rows in [
@@ -165,7 +165,7 @@ def transport(binary, compiler, fixtures, work):
 def self_test():
     frame = request(b'', [{'kind': 'eof', 'start': 0, 'end': 0}])
     payload = b'SLKAST01' + bytes(8)
-    good = b'SLKPRS01' + struct.pack('<IIII', 1, 1, 1, len(payload)) + frame[24:64] + payload
+    good = b'SLKPRS01' + struct.pack('<IIII', 1, 2, 1, len(payload)) + frame[24:64] + payload
     require(reply(good, frame) == payload, 'self-test valid frame')
     for bad in (good[:-1], b'BADMAGIC' + good[8:], good[:24] + bytes(40) + good[64:]):
         try:
@@ -216,7 +216,7 @@ def main():
             if variant != 'missing':
                 private = dict(manifest)
                 if variant == 'manifest':
-                    private['schema'] = 2
+                    private['schema'] = 1
                 copy_artifact(binary, deployment / manifest['artifact'])
                 if variant == 'digest':
                     with (deployment / manifest['artifact']).open('ab') as file:

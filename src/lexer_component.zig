@@ -79,7 +79,7 @@ fn directory(a: std.mem.Allocator, runtime: Runtime) Error![]u8 {
 pub fn identity(a: std.mem.Allocator, runtime: Runtime) Error![32]u8 {
     const mode = runtime.environ.get("MYLANG_LEXER_MODE") orelse reference_mode;
     var hash = std.crypto.hash.sha2.Sha256.init(.{});
-    hash.update("selka-lexer-pilot-v1/full-source/");
+    hash.update("selka-lexer-pilot-v1/whole-source-1m-v1/schema2/");
     hash.update(mode);
     if (std.mem.eql(u8, mode, "shadow") or std.mem.eql(u8, mode, component_mode)) {
         const dir = try directory(a, runtime);

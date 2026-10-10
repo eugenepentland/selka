@@ -63,6 +63,7 @@ test "parser component binds full request and validates canonical syntax frame" 
     var actual = try wire.reply(a, bytes, request.identity, src.bytes.len);
     defer actual.deinit();
     try adapter.compare(a, actual, program, &.{});
+    try t.expectError(error.ComponentProtocol, wire.reply(a, try changed(a, bytes, 12, 1), request.identity, src.bytes.len));
     try t.expectError(error.ComponentProtocol, wire.reply(a, try changed(a, bytes, 8, 2), request.identity, src.bytes.len));
     try t.expectError(error.ComponentProtocol, wire.reply(a, try changed(a, bytes, 24, 8), request.identity, src.bytes.len));
     try t.expectError(error.ComponentProtocol, wire.reply(a, bytes[0 .. bytes.len - 1], request.identity, src.bytes.len));
@@ -93,7 +94,7 @@ fn fixture(a: std.mem.Allocator, dir: std.Io.Dir, script: []const u8) !void {
     try file.setPermissions(io, .fromMode(0o700));
     var digest: [32]u8 = undefined;
     std.crypto.hash.sha2.Sha256.hash(script, &digest, .{});
-    const manifest = try std.fmt.allocPrint(a, "{{\"format\":1,\"component\":\"parser-pilot\",\"protocol\":1,\"schema\":1,\"artifact\":\"parser-pilot\",\"sha256\":\"{s}\"}}", .{std.fmt.bytesToHex(digest, .lower)});
+    const manifest = try std.fmt.allocPrint(a, "{{\"format\":1,\"component\":\"parser-pilot\",\"protocol\":1,\"schema\":2,\"artifact\":\"parser-pilot\",\"sha256\":\"{s}\"}}", .{std.fmt.bytesToHex(digest, .lower)});
     defer a.free(manifest);
     try dir.writeFile(io, .{ .sub_path = "parser-pilot.json", .data = manifest });
 }
@@ -212,4 +213,54 @@ test "parser component adoption owns syntax and complete diagnostic repair bytes
     try t.expectError(error.SourceError, adapter.adopt(&p, .{ .failure = failure }));
     failure.deinit();
     try t.expectEqualStrings(errors, try values.encodeErrors(a, sink.items.items));
+}
+
+// spec-case: SELFHOST-FRONTEND-PROFILE-1
+test "frontend profile parser admits one MiB source with matching lexer token bounds" {
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const raw = try a.alloc(u8, wire.source_limit + 1);
+    @memset(raw, ' ');
+    const exact = try source.Source.init(a, "profile", raw[0..wire.source_limit]);
+    const tokens = [_]lexer.Token{.{ .tag = .eof, .span = .{ .start = wire.source_limit, .end = wire.source_limit } }};
+    const request = try wire.request(a, .{ .src = exact, .tokens = &tokens }, @splat(0));
+    try t.expectEqual(@as(usize, 1048576 + 92 + 7 + 15), request.bytes.len);
+    try t.expectEqual(@import("lexer_component_protocol.zig").token_limit, wire.token_limit);
+    const over = try source.Source.init(a, "profile", raw);
+    try t.expectError(error.ComponentProtocol, wire.request(a, .{ .src = over, .tokens = &tokens }, @splat(0)));
+}
+
+fn denseRequest(a: std.mem.Allocator, count: usize, dedents: usize) !wire.Request {
+    const raw = try a.alloc(u8, count);
+    @memset(raw, ';');
+    const tokens = try a.alloc(lexer.Token, count + dedents + 1);
+    for (tokens[0..count], 0..) |*token, index| token.* = .{ .tag = .semicolon, .span = .{ .start = index, .end = index + 1 } };
+    for (tokens[count .. count + dedents]) |*token| token.* = .{ .tag = .dedent, .span = .{ .start = count, .end = count } };
+    tokens[count + dedents] = .{ .tag = .eof, .span = .{ .start = count, .end = count } };
+    return wire.request(a, .{ .src = try source.Source.init(a, "dense", raw), .tokens = tokens }, @splat(0));
+}
+
+// spec-case: SELFHOST-FRONTEND-PROFILE-1
+test "frontend profile dense token transport exceeds old source and row limits" {
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const request = try denseRequest(arena.allocator(), 300000, 0);
+    try t.expect(request.bytes.len > 300000);
+    try t.expect(request.bytes.len < wire.request_limit);
+    try t.expectEqual(@as(u32, 300001), std.mem.readInt(u32, request.bytes[76..80], .little));
+    try t.expectEqual(@as(u32, 2), std.mem.readInt(u32, request.bytes[12..16], .little));
+    try t.expectEqual(@as(usize, 1048576), values.max_values);
+    try t.expectEqual(@as(usize, 4194304), values.max_edges);
+    try t.expectEqual(@as(usize, 64 * 1024 * 1024), values.value_wire_limit);
+}
+
+// spec-case: SELFHOST-FRONTEND-PROFILE-1
+test "frontend profile token table admits exact bound and rejects first excess row" {
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const exact = try denseRequest(a, wire.source_limit, 256);
+    try t.expectEqual(@as(u32, wire.token_limit), std.mem.readInt(u32, exact.bytes[76..80], .little));
+    try t.expectError(error.ComponentProtocol, denseRequest(a, wire.source_limit, 257));
 }

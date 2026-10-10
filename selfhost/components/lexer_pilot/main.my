@@ -5,13 +5,13 @@ import wire
 func exchange(fs: Filesystem, path: str, out: Stream) -> int fails str:
     mut data = b""
     with try fs.open(path, "rb") as file:
-        data = file.read(262145)
-    if len(data) > 262144:
-        fail "lexer transport: source exceeds 262144 bytes"
+        data = file.read(1048577)
+    if len(data) > 1048576:
+        fail "lexer transport: source exceeds 1048576 bytes"
     const src = source.make(data)
     match lexer.lex(src):
         case Ok(tokens):
-            if len(tokens) == 0 or len(tokens) > 524545:
+            if len(tokens) == 0 or len(tokens) > 1048833:
                 fail "lexer transport: invalid token count"
             mut previous = 0
             for item in tokens:
@@ -55,7 +55,7 @@ func main(args: str[], fs: Filesystem, out: Stream, err: Stream) -> int:
 func framed_exchange(fs: Filesystem, path: str) -> bytes fails str:
     mut data = b""
     with try fs.open(path, "rb") as file:
-        data = file.read(262209)
+        data = file.read(1048641)
     const raw = try wire.decode(data)
     match lexer.lex(source.make(raw)):
         case Ok(items):

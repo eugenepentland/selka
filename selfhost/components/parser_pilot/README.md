@@ -28,14 +28,14 @@ A request is `SLKPAR01`, five little-endian u32 fields (source byte length,
 token count, module mode, trusted intrinsic flag, source path length), path
 bytes, source bytes, then token records (u32 tag length, ASCII tag, u32 start,
 u32 end). `--request FILE` accepts this payload. `--exchange FILE` uses the
-64-byte `SLKPRS01` envelope: version/schema/direction/payload length and an
+64-byte `SLKPRS01` envelope: protocol 1/schema 2/direction/payload length and an
 opaque nonce plus request SHA256. Replies echo the 40 identity bytes and
 change only direction and payload length. The host verifies correlation;
 the producer treats identity as opaque and validates framing before parsing.
 No parse flag or path is inferred from ambient environment variables.
 
-Bounds are 1 MiB source, 100,000 tokens, 16,384 path bytes, 32 MiB payload,
-262,144 values and depth 256. Invalid spans, unknown tags, zero-width ordinary
+Bounds are 1 MiB source, 1,048,833 tokens, 16,384 path bytes, 64 MiB framed request,
+1,048,576 values and depth 256; replies are at most 64 MiB plus the outer 64-byte header. Invalid spans, unknown tags, zero-width ordinary
 tokens, nonzero-width dedents, embedded EOF, and incorrect final EOF are
 `P_TRANSPORT`. Transport/process/profile refusals emit no AST and exit 2;
 source diagnostics are a successful framed `SLKERR01` response. Tokens are
@@ -232,3 +232,5 @@ qualification drivers, and fixture manifests. The coordinator packages
 `full_adapter.my` as the parser component; installed qualification compares
 the sealed producer with the native syntax boundary. Timing is deferred: no
 isolated timing admission was obtained, and no speedup claim is made.
+
+The whole-source profile is `whole-source-1m-v1`, using outer binary schema 2 and authenticated package content to bind its limits. Source admission does not remove independent resource limits: 1,048,576 syntax values, 4,194,304 child edges, 64 MiB value data/field names and serialized reply, 512 MiB host decoding allocation, and depth 256. Exhaustion produces an explicit profile/transport failure, never a partial AST or native fallback. Historical projection limits are unchanged.

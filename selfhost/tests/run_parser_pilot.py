@@ -49,7 +49,7 @@ def wire_tree(data):
     if data[:8] not in (b'SLKAST01', b'SLKERR01'):
         raise AssertionError('unexpected syntax wire magic')
     count, root = struct.unpack_from('<II', data, 8)
-    if not 0 < count <= 262144 or root >= count:
+    if not 0 < count <= 1048576 or root >= count:
         raise AssertionError('invalid syntax value count/root')
     position = 16
     values = []

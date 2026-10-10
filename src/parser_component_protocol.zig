@@ -6,9 +6,9 @@ const values = @import("parser_value.zig");
 /// Maximum full source bytes in a parser operation.
 pub const source_limit = 1048576;
 /// Maximum request token rows.
-pub const token_limit = 100000;
+pub const token_limit = @import("lexer_component_protocol.zig").token_limit;
 /// Maximum complete request envelope and payload.
-pub const request_limit = 32 * 1024 * 1024;
+pub const request_limit = 64 * 1024 * 1024;
 /// Maximum complete reply envelope and syntax value payload.
 pub const reply_limit = 64 + values.value_wire_limit;
 /// Full source context, independently parsed tokens and top-level grammar mode.
@@ -58,7 +58,7 @@ pub fn request(a: std.mem.Allocator, input: Input, nonce: [8]u8) values.Error!Re
     const bytes = try a.alloc(u8, 64 + size);
     @memcpy(bytes[0..8], "SLKPRS01");
     put(bytes, 8, 1);
-    put(bytes, 12, 1);
+    put(bytes, 12, 2);
     put(bytes, 16, 0);
     put(bytes, 20, @intCast(size));
     @memcpy(bytes[24..32], &nonce);
@@ -90,7 +90,7 @@ pub fn request(a: std.mem.Allocator, input: Input, nonce: [8]u8) values.Error!Re
 /// Require exact framing/identity before validating the complete returned AST or errors.
 pub fn reply(a: std.mem.Allocator, bytes: []const u8, identity: [40]u8, source_size: usize) values.Error!Reply {
     if (bytes.len < 80 or bytes.len > reply_limit) return error.ComponentProtocol;
-    if (!std.mem.eql(u8, bytes[0..8], "SLKPRS01") or get(bytes, 8) != 1 or get(bytes, 12) != 1) return error.ComponentProtocol;
+    if (!std.mem.eql(u8, bytes[0..8], "SLKPRS01") or get(bytes, 8) != 1 or get(bytes, 12) != 2) return error.ComponentProtocol;
     if (get(bytes, 16) != 1 or get(bytes, 20) != bytes.len - 64) return error.ComponentProtocol;
     if (!std.mem.eql(u8, bytes[24..64], &identity)) return error.ComponentProtocol;
     if (std.mem.startsWith(u8, bytes[64..], "SLKERR01")) return .{ .failure = try values.decodeErrors(a, bytes[64..], source_size) };

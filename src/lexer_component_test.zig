@@ -33,6 +33,8 @@ test "lexer component validates envelope identity kinds spans and shadow mismatc
     const bytes = try replyBytes(a, request);
     const actual = try wire.reply(a, bytes, request.identity, src);
     try t.expectEqual(@as(usize, 1), actual.tokens.len);
+    try t.expectError(error.ComponentProtocol, wire.reply(a, try changed(a, bytes, 12, 1), request.identity, src));
+    try t.expectError(error.ComponentProtocol, wire.reply(a, try changed(a, bytes, 68, wire.token_limit + 1), request.identity, src));
     try adapter.compare(actual, actual.tokens, &.{}, src);
     try t.expectError(error.ComponentShadowMismatch, adapter.compare(actual, &.{}, &.{}, src));
     try t.expectError(error.ComponentProtocol, wire.reply(a, try changed(a, bytes, 8, 2), request.identity, src));
@@ -49,7 +51,7 @@ fn fixture(a: std.mem.Allocator, dir: std.Io.Dir, script: []const u8) !void {
     try file.setPermissions(io, .fromMode(0o700));
     var digest: [32]u8 = undefined;
     std.crypto.hash.sha2.Sha256.hash(script, &digest, .{});
-    const manifest = try std.fmt.allocPrint(a, "{{\"format\":1,\"component\":\"lexer-pilot\",\"protocol\":1,\"schema\":1,\"artifact\":\"lexer-pilot\",\"sha256\":\"{s}\"}}", .{std.fmt.bytesToHex(digest, .lower)});
+    const manifest = try std.fmt.allocPrint(a, "{{\"format\":1,\"component\":\"lexer-pilot\",\"protocol\":1,\"schema\":2,\"artifact\":\"lexer-pilot\",\"sha256\":\"{s}\"}}", .{std.fmt.bytesToHex(digest, .lower)});
     defer a.free(manifest);
     try dir.writeFile(io, .{ .sub_path = "lexer-pilot.json", .data = manifest });
 }
@@ -185,4 +187,17 @@ test "lexer component mode returns validated tokens and enriches matching errors
     try t.expectEqual(@as(usize, 1), tokens.len);
     try t.expectError(error.SourceError, adapter.lex(a, try source.Source.init(a, "fixture", "f64_abs"), &sink, runtime));
     try t.expect(sink.items.items[0].provenance.fix != null);
+}
+
+// spec: SELFHOST-FRONTEND-PROFILE-1
+test "frontend profile admits exactly one MiB source and rejects the sentinel byte" {
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const raw = try a.alloc(u8, wire.source_limit + 1);
+    @memset(raw, ' ');
+    const exact = try wire.request(a, raw[0..wire.source_limit], @splat(0));
+    try t.expectEqual(@as(usize, 1048576 + 64), exact.bytes.len);
+    try t.expectEqual(@as(usize, 1048833), wire.token_limit);
+    try t.expectError(error.ComponentProtocol, wire.request(a, raw, @splat(0)));
 }

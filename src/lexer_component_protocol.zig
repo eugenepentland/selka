@@ -139,9 +139,11 @@ const kinds = [_]lexer.Tag{
     .ge,
 };
 /// Maximum immutable source bytes accepted by the qualified pilot.
-pub const source_limit = 262144;
+pub const source_limit = 1048576;
+/// Maximum token rows, including bounded layout stack and EOF.
+pub const token_limit = source_limit + 257;
 /// Maximum complete binary reply size.
-pub const reply_limit = 64 + 8 + 12 * 262401;
+pub const reply_limit = 64 + 8 + 12 * token_limit;
 /// Located lexical failure without diagnostic prose or structured migration fixes.
 pub const Failure = struct { code: []const u8, line: usize, column: usize, span: source.Span };
 /// Allocator-owned token list or a lexical failure value.
@@ -156,7 +158,7 @@ pub fn request(a: std.mem.Allocator, raw: []const u8, nonce: [8]u8) error{ OutOf
     const bytes = try a.alloc(u8, raw.len + 64);
     @memcpy(bytes[0..8], "SLKLEX01");
     put(bytes, 8, 1);
-    put(bytes, 12, 1);
+    put(bytes, 12, 2);
     put(bytes, 16, 0);
     put(bytes, 20, @intCast(raw.len));
     @memcpy(bytes[24..32], &nonce);
@@ -173,7 +175,7 @@ fn put(bytes: []u8, at: usize, value: u32) void {
 /// Validate the entire reply, including kinds, ordering, EOF, locations and identity.
 pub fn reply(a: std.mem.Allocator, bytes: []const u8, identity: [40]u8, src: source.Source) error{ OutOfMemory, ComponentProtocol }!Outcome {
     if (bytes.len < 72 or bytes.len > reply_limit) return error.ComponentProtocol;
-    if (!std.mem.eql(u8, bytes[0..8], "SLKLEX01") or get(bytes, 8) != 1 or get(bytes, 12) != 1) return error.ComponentProtocol;
+    if (!std.mem.eql(u8, bytes[0..8], "SLKLEX01") or get(bytes, 8) != 1 or get(bytes, 12) != 2) return error.ComponentProtocol;
     if (get(bytes, 16) != 1 or get(bytes, 20) != bytes.len - 64) return error.ComponentProtocol;
     if (!std.mem.eql(u8, bytes[24..64], &identity)) return error.ComponentProtocol;
     const count = get(bytes, 68);
@@ -185,7 +187,7 @@ pub fn reply(a: std.mem.Allocator, bytes: []const u8, identity: [40]u8, src: sou
         if (get(bytes, 76) != loc.line or get(bytes, 80) != loc.column) return error.ComponentProtocol;
         return .{ .failure = .{ .code = codes[get(bytes, 72)], .line = loc.line, .column = loc.column, .span = span } };
     }
-    if (get(bytes, 64) != 0 or count == 0 or count > 262401 or bytes.len != 72 + @as(usize, count) * 12) return error.ComponentProtocol;
+    if (get(bytes, 64) != 0 or count == 0 or count > token_limit or bytes.len != 72 + @as(usize, count) * 12) return error.ComponentProtocol;
     const tokens = try a.alloc(lexer.Token, count);
     errdefer a.free(tokens);
     var previous: usize = 0;

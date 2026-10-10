@@ -1,0 +1,39 @@
+import syntax_value
+import syntax_codec
+
+# The resource test deliberately reaches the table bound with scalar values;
+# it tests serialization admission, not a fabricated ast.Program projection.
+public func test_profile_exact_value_limit_and_first_excess() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    for i in range(1048576):
+        _ = try syntax_value.integer(mut pool, i)
+    const encoded = try syntax_codec.encode(pool)
+    if len(encoded) != 16 + 21 * 1048576:
+        return False
+    match syntax_value.integer(mut pool, 0):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "P_SYNTAX_LIMIT"
+
+
+public func test_profile_first_excess_data_rejected() -> bool:
+    mut pool = syntax_value.empty()
+    # Accounted fields may already consume the full independent data budget.
+    pool.bytes_used = 67108864
+    match syntax_value.octets(mut pool, b"x"):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "P_SYNTAX_LIMIT"
+
+
+public func test_profile_first_excess_edge_rejected() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const child = try syntax_value.integer(mut pool, 0)
+    pool.edges_used = 4194304
+    match syntax_value.sequence(mut pool, [child]):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "P_SYNTAX_LIMIT"

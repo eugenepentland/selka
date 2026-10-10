@@ -6,9 +6,9 @@ public func read_u32(data: bytes, at: int) -> int:
 
 
 public func decode(data: bytes) -> bytes fails str:
-    if len(data) < 64 or len(data) > 262208:
+    if len(data) < 64 or len(data) > 1048640:
         fail "invalid lexer request size"
-    if data[:8] != b"SLKLEX01" or read_u32(data, 8) != 1 or read_u32(data, 12) != 1 or read_u32(data, 16) != 0 or read_u32(data, 20) != len(data) - 64:
+    if data[:8] != b"SLKLEX01" or read_u32(data, 8) != 1 or read_u32(data, 12) != 2 or read_u32(data, 16) != 0 or read_u32(data, 20) != len(data) - 64:
         fail "invalid lexer request envelope"
     return data[64:]
 
@@ -312,7 +312,7 @@ func header(request: bytes, size: int) -> byte_buffer:
     _ = buffer.reserve(size + 64)
     _ = buffer.append_range(b"SLKLEX01", 0, 8)
     put_u32(mut buffer, 1)
-    put_u32(mut buffer, 1)
+    put_u32(mut buffer, 2)
     put_u32(mut buffer, 1)
     put_u32(mut buffer, size)
     _ = buffer.append_range(request, 24, 64)
@@ -321,7 +321,7 @@ func header(request: bytes, size: int) -> byte_buffer:
 
 public func tokens(request: bytes, items: token.Token[]) -> bytes fails str:
     const size = len(request) - 64
-    if len(items) == 0 or len(items) > 262401:
+    if len(items) == 0 or len(items) > 1048833:
         fail "invalid lexer token count"
     mut buffer = header(request, 8 + len(items) * 12)
     put_u32(mut buffer, 0)

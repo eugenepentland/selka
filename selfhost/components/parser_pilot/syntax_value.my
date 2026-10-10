@@ -26,14 +26,14 @@ public func empty() -> Pool:
 
 
 func push(mut pool: Pool, value: Value) -> int fails Problem:
-    if len(pool.values) >= 262144:
+    if len(pool.values) >= 1048576:
         fail Problem(code="P_SYNTAX_LIMIT", start=0, end=0, message="P_SYNTAX_LIMIT")
-    if pool.bytes_used + len(value.data) > 33554432:
+    if pool.bytes_used + len(value.data) > 67108864:
         fail Problem(code="P_SYNTAX_LIMIT", start=0, end=0, message="P_SYNTAX_LIMIT")
     mut added_bytes = len(value.data)
     for name in value.names:
         added_bytes = added_bytes + len(name)
-    if pool.bytes_used + added_bytes > 33554432 or pool.edges_used + len(value.children) > 1048576:
+    if pool.bytes_used + added_bytes > 67108864 or pool.edges_used + len(value.children) > 4194304:
         fail Problem(code="P_SYNTAX_LIMIT", start=0, end=0, message="P_SYNTAX_LIMIT")
     for child in value.children:
         if child < 0 or child >= len(pool.values):

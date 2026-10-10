@@ -14,7 +14,7 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[2]
 FIX = ROOT / 'selfhost/tests/fixtures/lexer_pilot'
-MAX_REPLY = 33554432
+MAX_REPLY = 67108864
 
 
 def run(command, **kw):
@@ -126,13 +126,13 @@ def main():
             p = component_run([binary, *request])
             assert p.returncode == 2 and not p.stdout and b'lexer transport:' in p.stderr
         over = Path(directory)/'oversize'
-        over.write_bytes(b' ' * 262145)
+        over.write_bytes(b' ' * 1048577)
         p = component_run([binary, '--request', over])
         assert p.returncode == 2 and not p.stdout and b'exceeds' in p.stderr
         boundary = Path(directory)/'exact-limit'
-        boundary.write_bytes(b' ' * 262144)
+        boundary.write_bytes(b' ' * 1048576)
         p = component_run([binary, '--request', boundary])
-        assert p.returncode == 0 and p.stdout == b'eof 262144 262144\n'
+        assert p.returncode == 0 and p.stdout == b'eof 1048576 1048576\n'
         assert p.stdout.decode().splitlines() == oracle(args.compiler.resolve(), boundary)
         if args.edit_check:
             host_digest = hashlib.sha256(args.compiler.resolve().read_bytes()).digest()

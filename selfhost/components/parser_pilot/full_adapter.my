@@ -48,7 +48,7 @@ func tag(data: bytes) -> str fails syntax_value.Problem:
 
 func read_request(fs: Filesystem, path: str) -> bytes fails str:
     with try fs.open(path, "rb") as file:
-        return file.read(33554497)
+        return file.read(67108865)
 
 
 func exchange(fs: Filesystem, path: str, framed: bool) -> bytes fails syntax_value.Problem:
@@ -60,18 +60,18 @@ func exchange(fs: Filesystem, path: str, framed: bool) -> bytes fails syntax_val
             fail syntax_value.Problem(code="P_IO", start=0, end=0, message=message)
     mut identity = b""
     if framed:
-        if len(data) < 64 or len(data) > 33554496 or data[:8] != b"SLKPRS01":
+        if len(data) < 64 or len(data) > 67108864 or data[:8] != b"SLKPRS01":
             fail transport()
         mut envelope = Reader(data=data, pos=8)
         const protocol = try read_u32(mut envelope)
         const schema = try read_u32(mut envelope)
         const direction = try read_u32(mut envelope)
         const payload_len = try read_u32(mut envelope)
-        if protocol != 1 or schema != 1 or direction != 0 or payload_len != len(data) - 64:
+        if protocol != 1 or schema != 2 or direction != 0 or payload_len != len(data) - 64:
             fail transport()
         identity = data[24:64]
         data = data[64:]
-    if len(data) > 33554432 or len(data) < 28 or data[:8] != b"SLKPAR01":
+    if len(data) > 67108800 or len(data) < 28 or data[:8] != b"SLKPAR01":
         fail transport()
     mut r = Reader(data=data, pos=8)
     const source_len = try read_u32(mut r)
@@ -79,7 +79,7 @@ func exchange(fs: Filesystem, path: str, framed: bool) -> bytes fails syntax_val
     const module_mode = try read_u32(mut r)
     const trusted = try read_u32(mut r)
     const path_len = try read_u32(mut r)
-    if source_len > 1048576 or token_count == 0 or token_count > 100000 or module_mode > 1 or trusted > 1 or path_len > 16384:
+    if source_len > 1048576 or token_count == 0 or token_count > 1048833 or module_mode > 1 or trusted > 1 or path_len > 16384:
         fail transport()
     const source_path = try take(mut r, path_len)
     const source = try take(mut r, source_len)
@@ -113,7 +113,7 @@ func exchange(fs: Filesystem, path: str, framed: bool) -> bytes fails syntax_val
     _ = reply.reserve(len(payload) + 64)
     _ = reply.append_range(b"SLKPRS01", 0, 8)
     put_u32(mut reply, 1)
-    put_u32(mut reply, 1)
+    put_u32(mut reply, 2)
     put_u32(mut reply, 1)
     put_u32(mut reply, len(payload))
     _ = reply.append_range(identity, 0, 40)

@@ -1518,7 +1518,7 @@ func function_value(mut p: full_model.State, owner: full_model.Token) -> full_mo
 
 
 public func parse(tokens: full_model.Token[], raw_source: bytes, module_syntax: bool, trusted_intrinsics: bool, source_path: bytes) -> Outcome fails syntax_value.Problem:
-    if len(tokens) == 0 or len(tokens) > 100000 or len(raw_source) > 1048576:
+    if len(tokens) == 0 or len(tokens) > 1048833 or len(raw_source) > 1048576:
         fail syntax_value.Problem(code="P_TRANSPORT", start=0, end=0, message="invalid token/raw_source count")
     mut previous_end = 0
     mut index = 0
