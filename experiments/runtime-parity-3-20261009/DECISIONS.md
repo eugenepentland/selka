@@ -191,3 +191,19 @@
 - Evidence: the prescribed cells are result_propagate/4096 and option_handle/64; M0 retains their full workloads, startup checksums and measured checksums. R's probe receipts identify prebuilt baseline and barrier-removed binaries.
 - Choice: confirm_rows_bound.py validates those exact cells and binary hashes, uses the inherited CPU-10 sample function, takes three startup samples and seven shuffled rounds per batch, and reports the median of three within-batch ratios. Every output must match M0's corresponding checksum. It runs with the updated quiet guard and final X binaries. A prepare-only check validates command construction; actual X measurement remains pending.
 - Reversibility: additive comparison only; it replaces none of the full row timing batches.
+
+## X-005 — separate R5 compiler-recipe controls
+
+- Question: R's reconstructed baseline and barrier-removed probe binaries match each other, but neither matches the actual M0 row binary.
+- Options: treat the reconstructed baseline as M0, or retain both identities as separate controls.
+- Evidence: `R/row-probe-controls.json` attributes differences to the native-clock compilation flags, runtime/LLVM/clock link order, and link flags. Reachability markers show no small-free barrier execution in result_propagate/4096 and one timed execution in option_handle/64. The probe pair is byte-identical, so it provides no measured code-generation improvement.
+- Choice: preserve all recipes, identities and original receipts. X's R5 confirmation includes actual M0, reconstructed baseline, barrier-removed and final arms with the inherited row method. Report recipe/layout effects independently from any production change; keep F1's barrier unless a narrower sound alternative is established.
+- Reversibility: additive controls and attribution only; no safety or timing threshold changes.
+
+## X-006 — attribute sampled instruction families consistently
+
+- Question: allocation/free and text-materialization exits depend on which sampled stacks count toward a family, including allocator helpers and inlined symbols.
+- Options: reuse incomplete name matching, or state and apply one exact family to both arms.
+- Evidence: coordinator review found that the draft U2 classifier omitted `block_alloc`, `small_alloc` and `aligned_alloc`; the first accounts for a material fraction of EDA's base instructions. S2's exact-name matching also needed normalization of `(inlined)` and symbol-offset suffixes. Saved raw profiles permit reparsing without replacing evidence.
+- Choice: include the allocator helpers before U2's first admitted profile, normalize S2 symbols identically in both arms, and retain family definitions plus binary/raw profile hashes. Preserve S2's original receipt alongside its normalized result. Treat LBR attribution as a sampled lower bound where inlining or truncated stacks hide work; do not claim the absolute share exits from an incomplete family alone.
+- Reversibility: measurement attribution only; original samples and invalid attempts remain available.
