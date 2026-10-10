@@ -1,0 +1,22 @@
+import model
+import indexes
+
+func request() -> model.Request:
+    const module = model.Module(context=model.Context(module=0, name=b"input", path=b"input.my", source=b"A", trusted_intrinsics=False, imported=False), imports=[], symbols=[], import_used=[], syntax=model.empty_catalog())
+    return model.Request(order=[0], modules=[module])
+
+
+# Admission-only test: the exact nested-edge cap includes scalar constructor leaves.
+public func test_exact_nested_edge_budget_and_scalar_overflow() -> bool fails model.Problem:
+    mut input = request()
+    mut elements: model.Span[] = []
+    for i in range(65536):
+        elements.append(model.Span(start=0, end=0))
+    input.modules[0].syntax.types.tuples = [model.Tuple(span=model.Span(start=0, end=1), elements=elements)]
+    const accepted = try indexes.prepare(input)
+    input.modules[0].syntax.types.arrays = [model.Array(span=model.Span(start=0, end=1), index=model.absent_span(), element=model.Span(start=1, end=1))]
+    match indexes.prepare(input):
+        case Err(problem):
+            return len(accepted.tables[0].types.names) == 1 and problem.code == "P_TRANSPORT"
+        case Ok(result):
+            return False

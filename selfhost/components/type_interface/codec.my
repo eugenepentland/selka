@@ -81,6 +81,13 @@ func count(mut reader: Reader, category: int) -> int fails model.Problem:
     return value
 
 
+func scalar_edges(mut reader: Reader, amount: int) -> bool fails model.Problem:
+    reader.counts[0] = reader.counts[0] + amount
+    if reader.counts[0] > 65536:
+        fail transport()
+    return True
+
+
 func optional_span(mut reader: Reader) -> model.Span fails model.Problem:
     const present = try boolean(mut reader)
     if present:
@@ -180,6 +187,7 @@ func catalog(mut reader: Reader) -> model.Catalog fails model.Problem:
     for i in range(constraints_count):
         const value0 = try span(mut reader)
         const value1 = try span(mut reader)
+        _ = try scalar_edges(mut reader, 1)
         const value2 = try generic(mut reader)
         constraints.append(model.Constraint(name=value0, span=value1, subject=value2))
     const functions_count = try count(mut reader, 2)
@@ -197,6 +205,7 @@ func catalog(mut reader: Reader) -> model.Catalog fails model.Problem:
     for i in range(suffixes_count):
         const value0 = try span(mut reader)
         const value1 = try span(mut reader)
+        _ = try scalar_edges(mut reader, 1)
         suffixes.append(model.Suffix(span=value0, base=value1))
     const callbacks_count = try count(mut reader, 1)
     mut callbacks: model.Callback[] = []
@@ -205,6 +214,9 @@ func catalog(mut reader: Reader) -> model.Catalog fails model.Problem:
         const value1 = try spans(mut reader)
         const value2 = try span(mut reader)
         const value3 = try optional_span(mut reader)
+        _ = try scalar_edges(mut reader, 1)
+        if value3.start >= 0:
+            _ = try scalar_edges(mut reader, 1)
         callbacks.append(model.Callback(span=value0, parameters=value1, return_type=value2, failure_type=value3))
     const arrays_count = try count(mut reader, 1)
     mut arrays: model.Array[] = []
@@ -212,6 +224,9 @@ func catalog(mut reader: Reader) -> model.Catalog fails model.Problem:
         const value0 = try span(mut reader)
         const value1 = try optional_span(mut reader)
         const value2 = try span(mut reader)
+        _ = try scalar_edges(mut reader, 1)
+        if value1.start >= 0:
+            _ = try scalar_edges(mut reader, 1)
         arrays.append(model.Array(span=value0, index=value1, element=value2))
     const applications_count = try count(mut reader, 1)
     mut applications: model.Application[] = []
@@ -219,6 +234,7 @@ func catalog(mut reader: Reader) -> model.Catalog fails model.Problem:
         const value0 = try span(mut reader)
         const value1 = try span(mut reader)
         const value2 = try spans(mut reader)
+        _ = try scalar_edges(mut reader, 1)
         applications.append(model.Application(span=value0, name=value1, arguments=value2))
     const tuples_count = try count(mut reader, 1)
     mut tuples: model.Tuple[] = []

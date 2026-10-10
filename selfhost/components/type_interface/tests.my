@@ -71,9 +71,9 @@ public func test_generic_parameter_leaf_and_suffix() -> bool fails model.Problem
 
 public func test_builtin_application_arity() -> bool fails model.Problem:
     mut request = base()
-    request.modules[0].context.source = b"f A B T copy int list"
-    request.modules[0].syntax.declarations.functions = [function(at(17, 21))]
-    request.modules[0].syntax.types.applications = [model.Application(span=at(17, 21), name=at(17, 21), arguments=[])]
+    request.modules[0].context.source = b"f A B T copy int list[]"
+    request.modules[0].syntax.declarations.functions = [function(at(17, 23))]
+    request.modules[0].syntax.types.applications = [model.Application(span=at(17, 23), name=at(17, 21), arguments=[])]
     const result = try checking.check(request)
     return result.problem.code == "E_GENERIC_ARITY" and result.problem.message == "builtin type argument count does not match"
 
@@ -93,8 +93,8 @@ public func test_type_parameter_constructor_rejected() -> bool fails model.Probl
     request.modules[0].syntax.declarations.functions = [item]
     request.modules[0].syntax.types.applications = [model.Application(span=at(6, 7), name=at(6, 7), arguments=[at(13, 16)])]
     # An exact binder spelling wins before application, matching native ordering.
-    request.modules[0].syntax.types.applications[0].span = at(6, 8)
-    request.modules[0].syntax.declarations.functions[0].return_type = at(6, 8)
+    request.modules[0].syntax.types.applications[0].span = at(6, 16)
+    request.modules[0].syntax.declarations.functions[0].return_type = at(6, 16)
     const result = try checking.check(request)
     return result.problem.code == "E_TYPE_APPLICATION"
 
@@ -180,8 +180,8 @@ public func test_wrong_kind_named_constraint_strips_related() -> bool fails mode
 
 public func test_callback_checks_inputs_before_return() -> bool fails model.Problem:
     mut request = base()
-    request.modules[0].syntax.declarations.functions = [function(at(6, 7))]
-    request.modules[0].syntax.types.callbacks = [model.Callback(span=at(6, 7), parameters=[at(4, 5)], return_type=at(2, 3), failure_type=model.absent_span())]
+    request.modules[0].syntax.declarations.functions = [function(at(2, 16))]
+    request.modules[0].syntax.types.callbacks = [model.Callback(span=at(2, 16), parameters=[at(4, 5)], return_type=at(2, 3), failure_type=model.absent_span())]
     const result = try checking.check(request)
     return result.problem.site.span == at(4, 5) and result.problem.code == "E_PRIVATE_INTERFACE"
 
@@ -198,7 +198,7 @@ public func test_cycle_is_bounded_transport_failure() -> bool:
     request.modules[0].syntax.types.suffixes = [model.Suffix(span=at(2, 3), base=at(2, 3))]
     match checking.check(request):
         case Err(problem):
-            return problem.code == "P_DEPTH"
+            return problem.code == "P_TRANSPORT"
         case Ok(result):
             return False
 
@@ -280,9 +280,9 @@ public func test_depth_256_leaf_inclusive_then_257_refusal() -> bool fails model
     request.modules[0].context.source = bytes(raw)
     request.modules[0].symbols = []
     for i in range(255):
-        request.modules[0].syntax.types.suffixes.append(model.Suffix(span=at(i, i + 1), base=at(i + 1, i + 2)))
+        request.modules[0].syntax.types.suffixes.append(model.Suffix(span=at(i, 256), base=at(i + 1, 256)))
     const accepted = try checking.check(request)
-    request.modules[0].syntax.types.suffixes.append(model.Suffix(span=at(255, 256), base=at(0, 0)))
+    request.modules[0].syntax.types.suffixes.append(model.Suffix(span=at(255, 256), base=at(256, 256)))
     match checking.check(request):
         case Err(problem):
             return accepted.problem.code == "" and problem.code == "P_DEPTH"
@@ -298,3 +298,20 @@ public func test_forged_imported_context_flag_is_transport_failure() -> bool:
             return problem.code == "P_TRANSPORT"
         case Ok(result):
             return False
+
+
+public func test_child_outside_parent_is_transport_failure() -> bool:
+    mut request = base()
+    request.modules[0].syntax.types.suffixes = [model.Suffix(span=at(2, 4), base=at(4, 5))]
+    match checking.check(request):
+        case Err(problem):
+            return problem.code == "P_TRANSPORT"
+        case Ok(result):
+            return False
+
+
+public func test_zero_length_child_at_parent_end_is_allowed() -> bool fails model.Problem:
+    mut request = base()
+    request.modules[0].syntax.types.arrays = [model.Array(span=at(2, 4), index=model.absent_span(), element=at(4, 4))]
+    const result = try checking.check(request)
+    return result.problem.code == ""

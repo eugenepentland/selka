@@ -56,3 +56,11 @@ private disk scratch/local Zig cache, and release fact/leak checks. Installed
 workflow parity and raw framing qualification are recorded by the separate
 `run_type_interface_qualification.py` driver. No performance or default-adoption
 claim is made here.
+
+Type-expression rows require a nonempty parent span. Each child must be contained
+within that parent and differ from it; a zero-length leaf at either boundary is
+allowed. The nested budget counts scalar suffix bases, callback results/failures,
+array elements/indexes, application constructor names and each constraint subject
+in addition to list rows. `profile_tests.my` admits exactly 65536 nested edges and
+rejects one additional scalar edge. That root is qualified with an explicit
+100-million-step test budget; ordinary tests retain their default budget.

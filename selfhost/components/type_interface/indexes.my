@@ -66,6 +66,13 @@ func spans(mut budget: Budget, values: model.Span[], size: int) -> bool fails mo
     return True
 
 
+func inside(child: model.Span, parent: model.Span, size: int) -> bool fails model.Problem:
+    _ = try valid_span(child, size, False)
+    if child.start < parent.start or child.end > parent.end or child == parent:
+        fail resolve.bad()
+    return True
+
+
 func catalog(mut budget: Budget, syntax: model.Catalog, size: int) -> bool fails model.Problem:
     const declarations = syntax.declarations
     const types = syntax.types
@@ -102,24 +109,43 @@ func catalog(mut budget: Budget, syntax: model.Catalog, size: int) -> bool fails
         _ = try valid_span(item.return_type, size, False)
         _ = try valid_span(item.failure_type, size, True)
     for item in types.suffixes:
-        _ = try valid_span(item.span, size, False)
-        _ = try valid_span(item.base, size, False)
+        _ = try name(item.span, size)
+        _ = try edges(mut budget, 1)
+        _ = try inside(item.base, item.span, size)
     for item in types.callbacks:
-        _ = try valid_span(item.span, size, False)
+        _ = try name(item.span, size)
         _ = try spans(mut budget, item.parameters, size)
-        _ = try valid_span(item.return_type, size, False)
-        _ = try valid_span(item.failure_type, size, True)
+        for input in item.parameters:
+            _ = try inside(input, item.span, size)
+        _ = try edges(mut budget, 1)
+        _ = try inside(item.return_type, item.span, size)
+        if item.failure_type.start >= 0:
+            _ = try edges(mut budget, 1)
+            _ = try inside(item.failure_type, item.span, size)
+        else:
+            _ = try valid_span(item.failure_type, size, True)
     for item in types.arrays:
-        _ = try valid_span(item.span, size, False)
-        _ = try valid_span(item.index, size, True)
-        _ = try valid_span(item.element, size, False)
+        _ = try name(item.span, size)
+        _ = try edges(mut budget, 1)
+        _ = try inside(item.element, item.span, size)
+        if item.index.start >= 0:
+            _ = try edges(mut budget, 1)
+            _ = try inside(item.index, item.span, size)
+        else:
+            _ = try valid_span(item.index, size, True)
     for item in types.applications:
-        _ = try valid_span(item.span, size, False)
-        _ = try valid_span(item.name, size, False)
+        _ = try name(item.span, size)
+        _ = try edges(mut budget, 1)
+        _ = try name(item.name, size)
+        _ = try inside(item.name, item.span, size)
         _ = try spans(mut budget, item.arguments, size)
+        for argument in item.arguments:
+            _ = try inside(argument, item.span, size)
     for item in types.tuples:
-        _ = try valid_span(item.span, size, False)
+        _ = try name(item.span, size)
         _ = try spans(mut budget, item.elements, size)
+        for element in item.elements:
+            _ = try inside(element, item.span, size)
     return True
 
 
