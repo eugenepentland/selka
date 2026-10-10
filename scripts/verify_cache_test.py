@@ -43,7 +43,7 @@ elif phase=='prepare':
         path.write_bytes(b'fake-native-'+name.encode()+values.get(name,'').encode()); artifacts[name]=str(path)
     (root/'zig-out/verification/artifacts.json').write_text(json.dumps({{'version':1,'artifacts':artifacts}}))
     package=root/'zig-out/libexec/mylang/components'; package.mkdir(parents=True,exist_ok=True)
-    for name in ['test-index','cache-plan']:
+    for name in ['test-index','cache-plan','lexer-pilot','parser-pilot']:
         (package/name).write_bytes(b'fake-component'+values.get('component:'+name,'').encode())
         (package/(name+'.json')).write_text(json.dumps({{'artifact':name}}))
 elif (root/'.failure').exists():
@@ -205,6 +205,31 @@ class VerificationCoordinator(unittest.TestCase):
         self.after_gate = lambda: artifact.write_bytes(b'changed unrelated provider during execution')
         self.assertEqual(self.execute(), coordinator.RETRY)
         self.assertEqual(self.receipts(), [])
+
+    def test_frontend_component_changes_invalidate_warm_verdicts(self):
+        self.artifact_cohorts()
+        self.plan['groups'][0]['artifacts'] = ['components']
+        self.save_plan()
+        self.assertEqual(self.execute(), 0)
+        values = {}
+        for name in ['lexer-pilot', 'parser-pilot']:
+            with self.subTest(component=name):
+                values['component:' + name] = '-changed'
+                self.write('.artifact-values.json', json.dumps(values))
+                (self.root / 'zig-out/libexec/mylang/components' / name).write_bytes(b'fake-component-changed')
+                self.assertEqual(self.execute(), 0)
+                self.assertEqual(self.states(), {'unit': 'execute', 'docs': 'reused', 'pure': 'reused', 'conservative': 'execute'})
+                self.assertEqual(self.execute(), 0)
+                self.assertEqual(set(self.states().values()), {'reused'})
+
+    def test_missing_frontend_component_requires_preparation_before_reuse(self):
+        self.assertEqual(self.execute(), 0)
+        for name in ['lexer-pilot', 'parser-pilot']:
+            with self.subTest(component=name):
+                prepared = len(self.events('prepare'))
+                (self.root / 'zig-out/libexec/mylang/components' / name).unlink()
+                self.assertEqual(self.execute(), 0)
+                self.assertEqual(len(self.events('prepare')), prepared + 1)
 
     def test_unknown_artifact_selector_fails_closed_before_gate_execution(self):
         self.plan['groups'][0]['artifacts'] = ['not-a-provider']

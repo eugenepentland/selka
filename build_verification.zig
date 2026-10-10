@@ -54,7 +54,11 @@ pub const Registry = struct {
     pub fn declared(self: *Registry, step: *std.Build.Step, list: []const u8) void {
         inline for (comptime std.meta.declarations(test_inputs)) |name| {
             if (std.mem.eql(u8, list, name)) {
-                self.register(name, step, &@field(test_inputs, name), true, "complete declared whole-action inputs");
+                const seed = requiresQualifiedSeed(name);
+                self.register(name, step, &@field(test_inputs, name), !seed, if (seed)
+                    "external qualified seed receipt must be verified before reuse"
+                else
+                    "complete declared whole-action inputs");
                 return;
             }
         }
@@ -132,6 +136,21 @@ pub const Registry = struct {
         groups.append(self.build.allocator, group) catch @panic("verification allocation");
     }
 };
+
+fn requiresQualifiedSeed(list: []const u8) bool {
+    for ([_][]const u8{ "pilot_lexer", "pilot_parser", "pilot_probes" }) |lane| {
+        if (std.mem.eql(u8, list, lane)) return true;
+    }
+    return false;
+}
+
+test "qualified pilot seed checks stay fresh across action receipt reuse" {
+    try std.testing.expect(requiresQualifiedSeed("pilot_lexer"));
+    try std.testing.expect(requiresQualifiedSeed("pilot_parser"));
+    try std.testing.expect(requiresQualifiedSeed("pilot_probes"));
+    try std.testing.expect(!requiresQualifiedSeed("pilot_registration"));
+    try std.testing.expect(!requiresQualifiedSeed("unit"));
+}
 
 fn sameRecipes(left: []const []const u8, right: []const []const u8) bool {
     if (left.len != right.len) return false;

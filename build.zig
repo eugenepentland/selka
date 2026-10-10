@@ -876,6 +876,19 @@ pub fn build(b: *std.Build) void {
     coverage_step.dependOn(&coverage_run.step);
     test_step.dependOn(coverage_step);
     const verification_tests = b.step("test-verification-cache", "Verify action receipt admission and immutable input snapshots");
+    const registry_tests = b.addTest(.{
+        .max_rss = rss.compile,
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("build_verification.zig"),
+            .target = b.graph.host,
+            .optimize = .Debug,
+        }),
+    });
+    const registry_run = bounded(b.addRunArtifact(registry_tests), rss.driver);
+    cached(registry_run, "verification_registry");
+    b.step("test-verification-registry", "Verify complete registry coverage and always-fresh seed lanes").dependOn(&registry_run.step);
+    verification_tests.dependOn(&registry_run.step);
+    compile_tests.dependOn(&registry_tests.step);
     for ([_][]const u8{ "scripts/verify_cache_test.py", "scripts/verification_snapshot_test.py" }) |script| {
         const verification_run = driver(b, b.fmt("python3 {s}", .{script}), rss.script, "verification_cache");
         verification_run.addArgs(&.{ "python3", script });
@@ -992,6 +1005,7 @@ pub fn build(b: *std.Build) void {
         .{ .label = "memory-budget", .binary = budget_unit },
         .{ .label = "component-support", .binary = component_support_tests },
         .{ .label = "component-builder", .binary = component_tool },
+        .{ .label = "verification-registry", .binary = registry_tests },
     }, &.{ &install_exe.step, &install_component_tool.step });
     requireLiveEnvironment(b);
     // These scripts use declared source fixtures and isolated stand-ins, and

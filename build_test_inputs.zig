@@ -160,6 +160,9 @@ pub const verification_cache = [_][]const u8{
     "tests/test_inputs_coverage.py",
 };
 
+/// Registry action coverage and qualified seed freshness policy.
+pub const verification_registry = [_][]const u8{ "build_verification.zig", "build_test_inputs.zig" };
+
 /// `tests/input_manifest.py --self-test`.
 pub const manifest_self = [_][]const u8{"tests/input_manifest.py"};
 

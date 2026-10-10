@@ -60,13 +60,17 @@ registration self-tests can cache against their complete declared input closure.
 
 ## Cache Wave 3 merge handoff
 
-Registration is based on the committed pilot integration revision, without
-copying the dirty cache Wave 3 worktree. That worktree currently adds a
-verification registry through `build_verification.zig`, registers `cached()`
-steps by input-list name, and wraps eligible actions in persisted receipts.
-These changes overlap the shared build files but do not replace this gate.
+The frontend adoption branch integrates the committed cache work through
+`1d202d41b`. Its verification registry in `build_verification.zig` registers
+`cached()` steps by input-list name and wraps eligible actions in persisted
+receipts. The integrated registry marks the three seed-dependent pilot lanes
+non-cacheable; registration self-tests remain eligible for reuse. The registry
+policy and action coverage have a dedicated `test-verification-registry` target
+that also runs in the complete gate. Verification preparation tracks the
+installed manifests and executable bytes of all four components, including
+`lexer-pilot` and `parser-pilot`.
 
-When merging Wave 3, preserve the three `pilot_*` input lists and
+Future changes must preserve the three `pilot_*` input lists and
 `pilot_registration`, the aggregate/full-test dependencies and the per-lane
 commands. Register lane actions as **non-cacheable** in the verification
 registry with reason "external qualified seed receipt must be verified before

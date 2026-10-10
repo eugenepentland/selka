@@ -37,6 +37,7 @@ ROOT = Path(__file__).resolve().parents[1]
 VERSION = 1
 RETRY = 75
 MAX_RECORD = 32 * 1024 * 1024
+COMPONENTS = ("test-index", "cache-plan", "lexer-pilot", "parser-pilot")
 CONFIG_INPUTS = ["./*.zig", "build.zig.zon", ".zigversion", "guardian.toml",
                  "src/user_docs.zig", "selfhost/*.zig", "../guardian-zig/build.zig",
                  "../guardian-zig/build.zig.zon", "../guardian-zig/src/"]
@@ -345,7 +346,7 @@ def artifact_paths(root: Path) -> list[Path]:
         raise VerificationError("prepared artifacts must have exact absolute paths")
     paths = [Path(p) for p in artifacts.values()]
     paths.extend([root / "zig-out/bin/mylang", root / "zig-out/verification/artifacts.json"])
-    for name in ("test-index", "cache-plan"):
+    for name in COMPONENTS:
         path = root / "zig-out/libexec/mylang/components" / (name + ".json")
         manifest = read_record(path)
         if not manifest or not isinstance(manifest.get("artifact"), str) or Path(manifest["artifact"]).name != manifest["artifact"]:
@@ -362,7 +363,7 @@ def artifact_providers(root: Path, snapshot: Snapshot) -> dict[str, list[dict]]:
     paths = {name: [Path(path)] for name, path in record["artifacts"].items()}
     paths["mylang"].append(root / "zig-out/bin/mylang")
     paths["components"] = []
-    for name in ("test-index", "cache-plan"):
+    for name in COMPONENTS:
         manifest_path = root / "zig-out/libexec/mylang/components" / (name + ".json")
         manifest = read_record(manifest_path)
         if not manifest or not isinstance(manifest.get("artifact"), str):
