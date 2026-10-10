@@ -1,0 +1,6 @@
+import bounds
+public func identity[T: bounds . Copy](value:T)->T effects():
+    return value
+
+func main()->int:
+    return 0

@@ -1,0 +1,8 @@
+# UTF-8 location: é
+public domain Distance: int:
+    pass
+public record API:
+    value: Distance
+
+func main() -> int:
+    return 0

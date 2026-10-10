@@ -130,6 +130,7 @@ def oracle_environment(source, module=False, trusted=False):
     env['PILOT_SOURCE'] = str(source)
     env['MYLANG_LEXER_MODE'] = 'reference'
     env['MYLANG_PARSER_MODE'] = 'reference'
+    env['MYLANG_TYPE_INTERFACE_MODE'] = 'reference'
     if module:
         env['PILOT_MODULE'] = '1'
     if trusted:

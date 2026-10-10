@@ -1,0 +1,7 @@
+# UTF-8 location: é
+constraint Copy[T] = copy
+public func identity[T: Copy](value: T) -> T:
+    return value
+
+func main() -> int:
+    return 0

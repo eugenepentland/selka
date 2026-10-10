@@ -1,0 +1,6 @@
+# UTF-8 location: é
+func value[T: field(value: int)](item: T) -> int:
+    return item.value
+
+func main() -> int:
+    return 0

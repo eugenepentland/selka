@@ -31,7 +31,7 @@ def main():
     args=ap.parse_args()
     D.F.require(args.isolated and args.iterations>=5 and args.edit_iterations>=1,'requires isolated nonempty measurement')
     for name in ('compiler','builder','component_dir','zig','source_root'):setattr(args,name,getattr(args,name).resolve())
-    manifests=D.packages(args.component_dir,include_declaration=not args.baseline)
+    manifests=D.packages(args.component_dir,include_declaration=not args.baseline, include_type_interface=False)
     provision=execute([args.builder,'--root',args.source_root,'--zig',args.zig,'--seed-only'],D.coordinator_environment(),args.source_root,timeout=600)
     lines=provision[1].decode().strip().splitlines()
     D.F.require(provision[0]==0 and len(lines)==1 and Path(lines[0]).is_file(),'missing verified seed receipt')
@@ -67,7 +67,7 @@ def main():
                 elapsed,result=sample(interfaces,env,work,0,prime[1]);D.F.require(result==prime,'interface metadata differs');samples.append(elapsed)
             rows.append({'mode':mode,'phase':'interfaces','stdout_sha256':D.F.hashlib.sha256(prime[1]).hexdigest(),**distribution(samples)})
     D.F.require(D.F.digest(args.compiler)==host,'measurement changed host')
-    D.F.require(D.packages(args.component_dir,include_declaration=not args.baseline)==manifests,'measurement changed packages')
+    D.F.require(D.packages(args.component_dir,include_declaration=not args.baseline, include_type_interface=False)==manifests,'measurement changed packages')
     evidence={'label':args.label,'baseline_reference_only':args.baseline,'host_sha256':host,'packages':manifests,'verified_seed_sha256':seed_sha256,
               'fixed_modes':{'lexer':'reference','parser':'reference','test-index':'reference','cache-plan':'reference'},
               'fact_leak_checks':'disabled for timings, qualified independently',

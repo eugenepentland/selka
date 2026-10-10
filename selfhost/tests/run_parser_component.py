@@ -80,7 +80,7 @@ def reply(data, frame):
 
 
 def host(compiler, path, directory, mode, lexer='reference'):
-    env = dict(os.environ, MYLANG_PARSER_MODE=mode, MYLANG_LEXER_MODE=lexer,
+    env = dict(os.environ, MYLANG_TYPE_INTERFACE_MODE='reference', MYLANG_PARSER_MODE=mode, MYLANG_LEXER_MODE=lexer,
                MYLANG_COMPONENT_DIR=str(directory))
     return run([compiler, 'dump-syntax', path, '--diagnostics=json'], env)
 
@@ -109,7 +109,7 @@ def compare(compiler, directory, fixtures):
 def transport(binary, compiler, fixtures, work):
     checked = 0
     for path in fixtures:
-        token_env = dict(os.environ, MYLANG_LEXER_MODE='reference', MYLANG_PARSER_MODE='reference')
+        token_env = dict(os.environ, MYLANG_LEXER_MODE='reference', MYLANG_TYPE_INTERFACE_MODE='reference', MYLANG_PARSER_MODE='reference')
         code, out, err = run([compiler, 'dump-tokens', path, '--diagnostics=json'], token_env)
         if code != 0:
             continue  # Host comparison covers lexical diagnostics; parser request needs tokens.

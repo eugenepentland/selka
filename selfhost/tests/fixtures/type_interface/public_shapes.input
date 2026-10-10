@@ -1,0 +1,12 @@
+# UTF-8 location: é
+public record Box[T: copy]:
+    value: T
+
+public record API:
+    values: int[]
+    fixed: FixedArray[int, 2]
+    pair: tuple[int, bool]
+    callback: func(int) -> int effects()
+
+func main() -> int:
+    return 0

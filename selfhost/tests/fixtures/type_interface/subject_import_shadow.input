@@ -1,0 +1,6 @@
+# UTF-8 location: é
+import bounds
+constraint Prices[bounds] = copy
+
+func main() -> int:
+    return 0

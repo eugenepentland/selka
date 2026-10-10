@@ -1,0 +1,6 @@
+# UTF-8 location: é
+public func identity[T: copy](value: T) -> T effects():
+    return value
+
+func main() -> int:
+    return 0

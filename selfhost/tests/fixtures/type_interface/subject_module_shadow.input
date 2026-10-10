@@ -1,0 +1,7 @@
+# UTF-8 location: é
+record P:
+    pass
+constraint Prices[P] = copy
+
+func main() -> int:
+    return 0

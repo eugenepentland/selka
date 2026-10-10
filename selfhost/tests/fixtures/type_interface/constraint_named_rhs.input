@@ -1,0 +1,6 @@
+# UTF-8 location: é
+constraint Copy[T] = copy
+constraint Other[T] = Copy
+
+func main() -> int:
+    return 0

@@ -1,0 +1,6 @@
+# UTF-8 location: é
+public record Box[T: copy]:
+    value: T[int]
+
+func main() -> int:
+    return 0

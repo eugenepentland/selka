@@ -1,0 +1,7 @@
+# UTF-8 location: é
+import bounds
+func value[T: bounds.Copy + field(value: int)](item: T) -> int:
+    return item.value
+
+func main() -> int:
+    return 0

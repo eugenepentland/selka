@@ -1,0 +1,137 @@
+{
+  "public_shapes.my": {
+    "status": 0,
+    "boundary": "checkSignatures",
+    "interfaces": true
+  },
+  "public_alias.my": {
+    "status": 0,
+    "boundary": "checkSignatures",
+    "interfaces": true
+  },
+  "public_domain.my": {
+    "status": 0,
+    "boundary": "checkSignatures",
+    "interfaces": true
+  },
+  "generic_function.my": {
+    "status": 0,
+    "boundary": "checkSignatures",
+    "interfaces": true
+  },
+  "imported_constraint.my": {
+    "status": 0,
+    "boundary": "checkSignatures",
+    "interfaces": true
+  },
+  "facade_constraint.my": {
+    "status": 0,
+    "boundary": "checkSignatures",
+    "interfaces": true
+  },
+  "structural_copy.my": {
+    "status": 0,
+    "boundary": "checkSignatures",
+    "interfaces": true
+  },
+  "private_record_leak.my": {
+    "status": 1,
+    "boundary": "checkSignatures",
+    "code": "E_PRIVATE_INTERFACE"
+  },
+  "private_array_leak.my": {
+    "status": 1,
+    "boundary": "checkSignatures",
+    "code": "E_PRIVATE_INTERFACE"
+  },
+  "private_callback_leak.my": {
+    "status": 1,
+    "boundary": "checkSignatures",
+    "code": "E_PRIVATE_INTERFACE"
+  },
+  "private_constraint_leak.my": {
+    "status": 1,
+    "boundary": "checkSignatures",
+    "code": "E_PRIVATE_INTERFACE"
+  },
+  "unknown_constraint.my": {
+    "status": 1,
+    "boundary": "checkSignatures",
+    "code": "E_GENERIC_REQUIREMENT"
+  },
+  "constraint_wrong_kind.my": {
+    "status": 1,
+    "boundary": "checkSignatures",
+    "code": "E_SYMBOL_KIND"
+  },
+  "nominal_named_bound.my": {
+    "status": 1,
+    "boundary": "checkSignatures",
+    "code": "E_GENERIC_REQUIREMENT"
+  },
+  "structural_without_copy.my": {
+    "status": 1,
+    "boundary": "checkSignatures",
+    "code": "E_GENERIC_REQUIREMENT"
+  },
+  "private_generic_unknown.my": {
+    "status": 1,
+    "boundary": "checkSignatures",
+    "code": "E_GENERIC_REQUIREMENT"
+  },
+  "private_imported_constraint.my": {
+    "status": 1,
+    "boundary": "checkSignatures",
+    "code": "E_PRIVATE_SYMBOL"
+  },
+  "generic_arity.my": {
+    "status": 1,
+    "boundary": "checkSignatures",
+    "code": "E_GENERIC_ARITY"
+  },
+  "parameter_constructor.my": {
+    "status": 1,
+    "boundary": "checkSignatures",
+    "code": "E_TYPE_APPLICATION"
+  },
+  "unknown_public_type.my": {
+    "status": 1,
+    "boundary": "checkSignatures",
+    "code": "E_UNKNOWN_SYMBOL"
+  },
+  "subject_module_shadow.my": {
+    "status": 1,
+    "code": "E_SHADOWING",
+    "boundary": "checkSignatures"
+  },
+  "subject_import_shadow.my": {
+    "status": 1,
+    "code": "E_SHADOWING",
+    "boundary": "checkSignatures"
+  },
+  "subject_builtin_shadow.my": {
+    "status": 1,
+    "code": "E_GENERIC_PARAMETER",
+    "boundary": "checkSignatures"
+  },
+  "constraint_named_rhs.my": {
+    "status": 1,
+    "code": "E_GENERIC_REQUIREMENT",
+    "boundary": "checkSignatures"
+  },
+  "qualified_spacing.my": {
+    "status": 0,
+    "interfaces": true,
+    "boundary": "checkSignatures"
+  },
+  "qualified_comment.my": {
+    "status": 0,
+    "interfaces": true,
+    "boundary": "checkSignatures"
+  },
+  "private_bounds_test.my": {
+    "status": 0,
+    "interfaces": true,
+    "boundary": "checkSignatures"
+  }
+}

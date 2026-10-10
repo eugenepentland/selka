@@ -1,0 +1,6 @@
+# UTF-8 location: é
+func identity[T: Missing](value: T) -> T:
+    return value
+
+func main() -> int:
+    return 0

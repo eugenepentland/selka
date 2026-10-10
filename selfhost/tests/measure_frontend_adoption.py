@@ -156,7 +156,7 @@ def components(args, work):
     command = [args.builder, '--root', source, '--zig', args.zig, '--cache-dir', cache,
                '--install-dir', installation]
     host_before = digest(args.compiler)
-    env = dict(os.environ, MYLANG_LEXER_MODE='reference', MYLANG_PARSER_MODE='reference', MYL_CORE_LEAKCHECK='0')
+    env = dict(os.environ, MYLANG_LEXER_MODE='reference', MYLANG_TYPE_INTERFACE_MODE='reference', MYLANG_PARSER_MODE='reference', MYL_CORE_LEAKCHECK='0')
     elapsed, _ = sample(command, env, work)
     before = packages(installation, args.frontend_schema)
     rows = [{'phase': 'cold-artifacts', 'scope': 'native coordinator verifies reused seed and builds/installs all four packages',

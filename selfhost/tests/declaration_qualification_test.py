@@ -62,7 +62,7 @@ class DeclarationQualificationTests(unittest.TestCase):
             raise ValueError('abort')
         self.assertEqual((D.F.FRONTENDS, D.F.environment, D.F.packages), original)
 
-    def test_five_packages_required(self):
+    def test_six_packages_required(self):
         with tempfile.TemporaryDirectory() as temporary:
             with self.assertRaises(FileNotFoundError):
                 D.packages(Path(temporary))

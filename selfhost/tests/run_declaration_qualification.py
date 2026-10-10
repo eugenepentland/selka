@@ -71,16 +71,18 @@ def environment(mode, components, empty):
            if not k.startswith(('PILOT_', 'MYLANG_'))}
     env.update(PATH=str(empty), MYLANG_COMPONENT_DIR=str(components),
                MYLANG_LEXER_MODE='reference', MYLANG_PARSER_MODE='reference',
-               MYLANG_DECLARATION_MODE=mode, MYLANG_TEST_INDEX_MODE='reference',
+               MYLANG_TYPE_INTERFACE_MODE='reference', MYLANG_DECLARATION_MODE=mode, MYLANG_TEST_INDEX_MODE='reference',
                MYLANG_CACHE_PLAN_MODE='reference', MYL_CORE_LEAKCHECK='1')
     return env
 
 
-def packages(directory, include_declaration=True):
+def packages(directory, include_declaration=True, include_type_interface=True):
     result = {}
     versions = {'test-index': (1, 1), 'cache-plan': (2, 2),
-                'lexer-pilot': (1, 2), 'parser-pilot': (1, 2), COMPONENT: (1, 1)}
+                'lexer-pilot': (1, 2), 'parser-pilot': (1, 2), COMPONENT: (1, 1), 'type-interface': (1, 1)}
     for name, (protocol, schema) in versions.items():
+        if name == 'type-interface' and not include_type_interface:
+            continue  # Explicit historical measurement package inventory.
         if name == COMPONENT and not include_declaration:
             continue  # Explicit frozen pre-boundary measurement profile only.
         value = json.loads((directory / f'{name}.json').read_text())
@@ -226,7 +228,7 @@ def coordinator_edit(args, q):
     F.require(all(before[name] == after[name] for name in before if name != COMPONENT), 'unrelated packages changed')
     q.components, q.phase = installation, 'coordinator-edit'
     q.matrix()
-    return {'before': before[COMPONENT], 'after': after[COMPONENT], 'other_packages_unchanged': 4}
+    return {'before': before[COMPONENT], 'after': after[COMPONENT], 'other_packages_unchanged': 5}
 
 
 def forged_replies(args, q):

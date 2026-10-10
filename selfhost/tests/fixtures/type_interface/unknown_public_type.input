@@ -1,0 +1,6 @@
+# UTF-8 location: é
+public record API:
+    value: Missing
+
+func main() -> int:
+    return 0

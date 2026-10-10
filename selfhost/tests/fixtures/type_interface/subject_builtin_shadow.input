@@ -1,0 +1,5 @@
+# UTF-8 location: é
+constraint Prices[int] = copy
+
+func main() -> int:
+    return 0

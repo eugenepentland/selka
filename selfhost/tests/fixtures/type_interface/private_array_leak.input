@@ -1,0 +1,8 @@
+# UTF-8 location: é
+record Secret:
+    value: int
+public record API:
+    values: Secret[]
+
+func main() -> int:
+    return 0

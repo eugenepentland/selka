@@ -1,0 +1,8 @@
+# UTF-8 location: é
+public type Count = int
+public type Counts = Count[]
+public record API:
+    values: Counts
+
+func main() -> int:
+    return 0

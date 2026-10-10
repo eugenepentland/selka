@@ -1,0 +1,7 @@
+# UTF-8 location: é
+public constraint Copy[T] = copy
+public record Box[T: Copy]:
+    value: T
+
+func main() -> int:
+    return 0

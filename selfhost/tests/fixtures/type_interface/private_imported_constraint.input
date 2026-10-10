@@ -1,0 +1,7 @@
+# UTF-8 location: é
+import private_bounds
+func identity[T: private_bounds.Copy](value: T) -> T:
+    return value
+
+func main() -> int:
+    return 0
