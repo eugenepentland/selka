@@ -673,7 +673,7 @@ fn dumpTokens(init: Context, parsed: Parsed, bytes: []const u8) !u8 {
     const src = try language.source.Source.init(init.arena.allocator(), parsed.path, bytes);
     var sink: language.diagnostic.Sink = .{ .allocator = init.gpa };
     defer sink.deinit();
-    const tokens = language.lexer.lex(init.gpa, bytes, &sink) catch |err| switch (err) {
+    const tokens = language.lexer_component.lex(init.gpa, src, &sink, .{ .io = init.io, .environ = init.environ }) catch |err| switch (err) {
         error.SourceError => {
             for (sink.items.items) |item| {
                 const rendered = try language.diagnostic_output.render(init.gpa, item, src, init.diagnostics);
@@ -682,7 +682,13 @@ fn dumpTokens(init: Context, parsed: Parsed, bytes: []const u8) !u8 {
             }
             return 1;
         },
-        else => return err,
+        error.OutOfMemory => return error.OutOfMemory,
+        else => {
+            const message = try std.fmt.allocPrint(init.gpa, "mylang: lexer component comparison failed: {s}\n", .{@errorName(err)});
+            defer init.gpa.free(message);
+            try std.Io.File.stderr().writeStreamingAll(init.io, message);
+            return 2;
+        },
     };
     defer init.gpa.free(tokens);
     const document = try language.tokens_dump.render(init.gpa, parsed.path, src, tokens);

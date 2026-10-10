@@ -52,6 +52,8 @@ pub const diagnostic_output = @import("diagnostic_output.zig");
 pub const declarations = @import("declarations.zig");
 /// Checked mechanical translation from the legacy brace surface to Python syntax.
 pub const lexer = @import("lexer.zig");
+/// Verified opt-in full-source lexer comparison boundary.
+pub const lexer_component = @import("lexer_component.zig");
 /// `tokens-v1` machine output used as the stage-0 lexer oracle.
 pub const tokens_dump = @import("tokens_dump.zig");
 const parser = @import("parser.zig");

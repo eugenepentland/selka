@@ -1,5 +1,6 @@
 import lexer
 import source
+import wire
 
 func exchange(fs: Filesystem, path: str, out: Stream) -> int fails str:
     mut data = b""
@@ -32,6 +33,14 @@ func exchange(fs: Filesystem, path: str, out: Stream) -> int fails str:
 
 
 func main(args: str[], fs: Filesystem, out: Stream, err: Stream) -> int:
+    if len(args) == 2 and args[0] == "--exchange":
+        match framed_exchange(fs, args[1]):
+            case Ok(reply):
+                _ = out.write(reply)
+                return 0
+            case Err(message):
+                err.print("lexer transport:", message)
+                return 2
     if len(args) != 2 or args[0] != "--request":
         err.print("lexer transport: expected --request FILE")
         return 2
@@ -41,3 +50,15 @@ func main(args: str[], fs: Filesystem, out: Stream, err: Stream) -> int:
         case Err(message):
             err.print("lexer transport:", message)
             return 2
+
+
+func framed_exchange(fs: Filesystem, path: str) -> bytes fails str:
+    mut data = b""
+    with try fs.open(path, "rb") as file:
+        data = file.read(262209)
+    const raw = try wire.decode(data)
+    match lexer.lex(source.make(raw)):
+        case Ok(items):
+            return try wire.tokens(data, items)
+        case Err(item):
+            return try wire.lexical_error(data, item)

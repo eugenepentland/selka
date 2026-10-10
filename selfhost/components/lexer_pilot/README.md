@@ -107,3 +107,85 @@ on the current installed host and coordinator; declare this driver, the
 release differential invocation with leak checks. The coordinator must remain
 the receipt authority; do not substitute the current compiler for the seed.
 No production adapter/routing should be added until a separate adoption review.
+
+## Verified host comparison preparation
+
+The coordinator now independently builds and installs `lexer-pilot.json` and its
+content-named executable alongside the existing components. Ordinary installation
+requires no Python. `MYLANG_LEXER_MODE=reference` (the default) uses the native
+lexer; `MYLANG_LEXER_MODE=shadow mylang dump-tokens FILE --diagnostics=json`
+executes the independently qualified component, compares the result, and renders
+the reference tokens or original diagnostic records. Messages, migration fixes,
+and captured-name withholding remain exactly native. `component` and unknown
+modes are refused: this is adoption preparation, not direct production adoption.
+`MYLANG_COMPONENT_DIR` selects the installed manifests. Host launch verifies the
+manifest/schema and artifact SHA-256, seals those verified bytes in a Linux
+memfd, captures at most 3,148,884 reply bytes and 65,536 stderr bytes, and races
+the entire child lifecycle against a 30 second deadline. After execution it
+revalidates the deployment before accepting a reply. Success stderr must be empty.
+No compiler rebuild, hidden source compilation or fallback occurs during launch.
+
+The packaged executable retains `--request FILE` for the original standalone
+corpus and adds `--exchange FILE` for a framed binary operation. The 64-byte
+`SLKLEX01` header has little-endian u32 protocol=1 at 8, schema=1 at 12,
+kind=0 request / 1 reply at 16, exact payload length at 20, correlation bytes at
+24..32, and SHA-256 of immutable source bytes at 32..64. The component echoes
+all 40 identity bytes; the host requires exact correlation and snapshot identity.
+The request payload is raw source (at most 262,144 bytes). Successful reply
+payloads contain u32 status=0, token count, then u32 stable kind ID, start, end
+per token. IDs follow the explicit `wire.my`/`lexer_component_protocol.zig`
+kind tables, never the host enum's incidental ordinal. Source-error payloads
+contain status=1, count=0, error ID, physical byte line, physical byte column,
+start, end. Error IDs are `E_TOKEN`, `E_INDENTATION`, `E_BYTE_LITERAL`,
+`E_NESTING_LIMIT`, `E_REMOVED_SPELLING` in that order. Physical locations allow
+mapped-source callers to retain their native original-source diagnostic mapping.
+Unknown IDs, truncated/trailing frames, stale identity, overlapping/out-of-range
+spans, zero-width real tokens, misplaced EOF or wrong byte locations are rejected.
+Protocol/schema/table changes require separate qualification.
+
+`language.lexer_component.lex(allocator, source, sink, Runtime)` is reusable by
+later callers. It returns the native token allocation or native `SourceError`,
+with component boundary errors distinguished. `identity` binds operation/schema,
+mode and the verified component digest; future persistent caches must include
+this producer identity and bind the host compiler digest for reference mode.
+It is not yet wired into syntax cache validity or compilation. Absolute
+`lexRange` without layout is still required by parser format holes, embed-hole
+scanning, incremental declaration/function normalization and interface stub
+construction. Project discovery, module-name normalization, partial navigation,
+formatting and retained/persistent syntax also need explicit adoption review.
+These are concrete remaining requirements; shadowing dump-tokens does not prove
+that those consumers or full compilation use the component.
+
+Native tests cover successful sealed execution, exact shadow comparison,
+retained migration fixes, identity separation, malformed/truncated/stale frames,
+unknown token IDs/spans, artifact/manifest corruption, unsuccessful children,
+stdout/stderr overflow and deadline expiry after child output streams close.
+The standalone seed corpus continues to operate on unchanged raw fixture bytes.
+
+For isolated measurements after correctness and the gate, stop competing gates
+and builds, obtain coordinator timing admission, and run on reserved timing CPUs:
+
+```sh
+taskset -c 2,3,10,11 python3 selfhost/components/lexer_pilot/measure_transport.py --compiler zig-out/bin/mylang --component-dir zig-out/libexec/mylang/components --isolated --iterations 20
+```
+
+This reports medians for complete CLI reference/shadow exchanges and their
+incremental latency for a small source, 64 KiB comments and 64 KiB token-rich
+source. It checks output stability while measuring. It does not compile or
+claim parser/end-to-end adoption. For the edit loop, separately time a warm
+`zig-out/tools/selka-components --root . --zig PATH` under the same isolation,
+then a real private lexer algorithm edit/rebuild with the host digest unchanged;
+`run_lexer_pilot.py --edit-check --host-shadow` provides correctness evidence,
+but its combined wall time is not a component-build-only measurement.
+
+Stage 2 qualification commands (through `scripts/build-slot.sh build`) are
+`zig build`, `zig build test-units -Dtest-filter='lexer component'`,
+`python3 selfhost/tests/run_lexer_pilot.py --edit-check --host-shadow`, the same
+pilot command with `--release` and `MYL_CORE_LEAKCHECK=1`, coordinator
+`--root . --zig PATH --uncached`, and the seed pure-test commands above.
+Results: five named native boundary tests plus seven unnamed initialization
+blocks passed (12 total); 79 immutable fixtures/1,714 token/error rows passed
+in each guest mode, with six transport and two host configuration checks;
+12 pure tests passed in both debug and release/fact/leak modes. The coordinator
+reproduced all three component executables from fresh private caches. Full
+combined gate and isolated measurements remain coordinated by the parent.

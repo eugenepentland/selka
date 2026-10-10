@@ -199,6 +199,7 @@ const Component = struct { source: []const u8, name: []const u8 };
 const components = [_]Component{
     .{ .source = "test_index", .name = "test-index" },
     .{ .source = "cache_plan", .name = "cache-plan" },
+    .{ .source = "lexer_pilot", .name = "lexer-pilot" },
 };
 
 fn component(ctx: *Context, config: Config, seed: Seed, descriptor: Component) ![]const u8 {

@@ -1,0 +1,358 @@
+import token
+import diagnostic
+
+public func read_u32(data: bytes, at: int) -> int:
+    return data[at] + data[at + 1] * 256 + data[at + 2] * 65536 + data[at + 3] * 16777216
+
+
+public func decode(data: bytes) -> bytes fails str:
+    if len(data) < 64 or len(data) > 262208:
+        fail "invalid lexer request size"
+    if data[:8] != b"SLKLEX01" or read_u32(data, 8) != 1 or read_u32(data, 12) != 1 or read_u32(data, 16) != 0 or read_u32(data, 20) != len(data) - 64:
+        fail "invalid lexer request envelope"
+    return data[64:]
+
+
+func put_u32(mut buffer: byte_buffer, value: int):
+    mut rest = value
+    for octet in range(4):
+        _ = buffer.append_byte(rest % 256)
+        rest = rest // 256
+
+
+func kind_id(name: str) -> int fails str:
+    if name == "eof":
+        return 0
+    if name == "ident":
+        return 1
+    if name == "integer":
+        return 2
+    if name == "bytes":
+        return 3
+    if name == "format":
+        return 4
+    if name == "kw_def":
+        return 5
+    if name == "kw_none":
+        return 6
+    if name == "kw_pass":
+        return 7
+    if name == "kw_assert":
+        return 8
+    if name == "kw_elif":
+        return 9
+    if name == "kw_case":
+        return 10
+    if name == "kw_arena":
+        return 11
+    if name == "kw_with":
+        return 12
+    if name == "kw_as":
+        return 13
+    if name == "kw_enum":
+        return 14
+    if name == "kw_union":
+        return 15
+    if name == "kw_match":
+        return 16
+    if name == "kw_domain":
+        return 17
+    if name == "kw_private":
+        return 18
+    if name == "kw_wrap":
+        return 19
+    if name == "kw_todo":
+        return 20
+    if name == "kw_codec_encode":
+        return 21
+    if name == "kw_codec_decode":
+        return 22
+    if name == "kw_unwrap":
+        return 23
+    if name == "kw_class":
+        return 24
+    if name == "kw_conversion":
+        return 25
+    if name == "kw_replace":
+        return 26
+    if name == "kw_len":
+        return 27
+    if name == "kw_return":
+        return 28
+    if name == "kw_true":
+        return 29
+    if name == "kw_false":
+        return 30
+    if name == "kw_i64":
+        return 31
+    if name == "kw_i8":
+        return 32
+    if name == "kw_i16":
+        return 33
+    if name == "kw_i32":
+        return 34
+    if name == "kw_u8":
+        return 35
+    if name == "kw_u16":
+        return 36
+    if name == "kw_u32":
+        return 37
+    if name == "kw_u64":
+        return 38
+    if name == "kw_filesystem_cap":
+        return 39
+    if name == "kw_network_cap":
+        return 40
+    if name == "kw_acquire_resource":
+        return 41
+    if name == "kw_complete_resource":
+        return 42
+    if name == "kw_environment_cap":
+        return 43
+    if name == "kw_environment_get":
+        return 44
+    if name == "kw_restrict_resource":
+        return 45
+    if name == "kw_read_resource":
+        return 46
+    if name == "kw_write_resource":
+        return 47
+    if name == "kw_clock_cap":
+        return 48
+    if name == "kw_random_cap":
+        return 49
+    if name == "kw_clock_now":
+        return 50
+    if name == "kw_random_u64":
+        return 51
+    if name == "kw_stand_in":
+        return 52
+    if name == "kw_clock_advance":
+        return 53
+    if name == "kw_bit_and":
+        return 54
+    if name == "kw_bit_or":
+        return 55
+    if name == "kw_bit_xor":
+        return 56
+    if name == "kw_shift_left":
+        return 57
+    if name == "kw_shift_right":
+        return 58
+    if name == "kw_wrapping_add":
+        return 59
+    if name == "kw_wrapping_sub":
+        return 60
+    if name == "kw_wrapping_mul":
+        return 61
+    if name == "kw_saturating_add":
+        return 62
+    if name == "kw_saturating_sub":
+        return 63
+    if name == "kw_saturating_mul":
+        return 64
+    if name == "kw_f64_add":
+        return 65
+    if name == "kw_f64_sub":
+        return 66
+    if name == "kw_f64_mul":
+        return 67
+    if name == "kw_f64_div":
+        return 68
+    if name == "kw_f64_eq":
+        return 69
+    if name == "kw_f64_lt":
+        return 70
+    if name == "kw_f64_le":
+        return 71
+    if name == "kw_f64_sqrt":
+        return 72
+    if name == "kw_f64_floor":
+        return 73
+    if name == "kw_f64_ceil":
+        return 74
+    if name == "kw_f64_trunc":
+        return 75
+    if name == "kw_f64_abs":
+        return 76
+    if name == "kw_f64_neg":
+        return 77
+    if name == "kw_f64_from_u64":
+        return 78
+    if name == "kw_f64_to_u64":
+        return 79
+    if name == "kw_f64_sin":
+        return 80
+    if name == "kw_f64_cos":
+        return 81
+    if name == "kw_bool":
+        return 82
+    if name == "kw_if":
+        return 83
+    if name == "kw_else":
+        return 84
+    if name == "kw_while":
+        return 85
+    if name == "kw_break":
+        return 86
+    if name == "kw_continue":
+        return 87
+    if name == "kw_const":
+        return 88
+    if name == "kw_for":
+        return 89
+    if name == "kw_in":
+        return 90
+    if name == "kw_is":
+        return 91
+    if name == "kw_type":
+        return 92
+    if name == "at":
+        return 93
+    if name == "lparen":
+        return 94
+    if name == "rparen":
+        return 95
+    if name == "lbracket":
+        return 96
+    if name == "rbracket":
+        return 97
+    if name == "lbrace":
+        return 98
+    if name == "rbrace":
+        return 99
+    if name == "indent":
+        return 100
+    if name == "dedent":
+        return 101
+    if name == "arrow":
+        return 102
+    if name == "fat_arrow":
+        return 103
+    if name == "semicolon":
+        return 104
+    if name == "colon":
+        return 105
+    if name == "comma":
+        return 106
+    if name == "dot":
+        return 107
+    if name == "plus":
+        return 108
+    if name == "minus":
+        return 109
+    if name == "star":
+        return 110
+    if name == "slash":
+        return 111
+    if name == "slash_slash":
+        return 112
+    if name == "percent":
+        return 113
+    if name == "ampersand":
+        return 114
+    if name == "pipe":
+        return 115
+    if name == "caret":
+        return 116
+    if name == "and_and":
+        return 117
+    if name == "or_or":
+        return 118
+    if name == "plus_equal":
+        return 119
+    if name == "minus_equal":
+        return 120
+    if name == "star_equal":
+        return 121
+    if name == "slash_equal":
+        return 122
+    if name == "slash_slash_equal":
+        return 123
+    if name == "percent_equal":
+        return 124
+    if name == "equal":
+        return 125
+    if name == "eq_eq":
+        return 126
+    if name == "bang":
+        return 127
+    if name == "bang_eq":
+        return 128
+    if name == "question":
+        return 129
+    if name == "lt":
+        return 130
+    if name == "le":
+        return 131
+    if name == "gt":
+        return 132
+    if name == "ge":
+        return 133
+    fail "unknown lexer wire name"
+
+
+func error_id(name: str) -> int fails str:
+    if name == "E_TOKEN":
+        return 0
+    if name == "E_INDENTATION":
+        return 1
+    if name == "E_BYTE_LITERAL":
+        return 2
+    if name == "E_NESTING_LIMIT":
+        return 3
+    if name == "E_REMOVED_SPELLING":
+        return 4
+    fail "unknown lexer wire name"
+
+
+func header(request: bytes, size: int) -> byte_buffer:
+    const empty: int[] = []
+    mut buffer = byte_buffer(empty)
+    _ = buffer.reserve(size + 64)
+    _ = buffer.append_range(b"SLKLEX01", 0, 8)
+    put_u32(mut buffer, 1)
+    put_u32(mut buffer, 1)
+    put_u32(mut buffer, 1)
+    put_u32(mut buffer, size)
+    _ = buffer.append_range(request, 24, 64)
+    return buffer
+
+
+public func tokens(request: bytes, items: token.Token[]) -> bytes fails str:
+    const size = len(request) - 64
+    if len(items) == 0 or len(items) > 262401:
+        fail "invalid lexer token count"
+    mut buffer = header(request, 8 + len(items) * 12)
+    put_u32(mut buffer, 0)
+    put_u32(mut buffer, len(items))
+    mut previous = 0
+    for item in items:
+        if item.start < previous or item.end < item.start or item.end > size:
+            fail "invalid lexer token span"
+        if (item.kind == "eof" or item.kind == "dedent") and item.start != item.end:
+            fail "invalid lexer virtual span"
+        previous = item.start
+        const kind = try kind_id(item.kind)
+        put_u32(mut buffer, kind)
+        put_u32(mut buffer, item.start)
+        put_u32(mut buffer, item.end)
+    const last = items[len(items) - 1]
+    if last.kind != "eof" or last.start != size:
+        fail "invalid lexer eof"
+    return bytes(buffer)
+
+
+public func lexical_error(request: bytes, item: diagnostic.Diagnostic) -> bytes fails str:
+    if item.start < 0 or item.end < item.start or item.end > len(request) - 64 or item.line < 1 or item.column < 1:
+        fail "invalid lexer error span"
+    mut buffer = header(request, 28)
+    put_u32(mut buffer, 1)
+    put_u32(mut buffer, 0)
+    const code = try error_id(item.code)
+    put_u32(mut buffer, code)
+    put_u32(mut buffer, item.line)
+    put_u32(mut buffer, item.column)
+    put_u32(mut buffer, item.start)
+    put_u32(mut buffer, item.end)
+    return bytes(buffer)

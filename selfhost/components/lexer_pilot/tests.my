@@ -1,5 +1,6 @@
 import lexer
 import source
+import wire
 
 public func test_empty_eof() -> bool:
     match lexer.lex(source.make(b"")):
@@ -76,3 +77,33 @@ public func test_escapes_are_later_phase() -> bool:
             return len(tokens) == 2 and tokens[0].kind == "bytes" and tokens[0].end == 4
         case Err(item):
             return False
+
+
+public func test_wire_empty_tokens_identity() -> bool:
+    const empty: int[] = []
+    mut buffer = byte_buffer(empty)
+    _ = buffer.append_range(b"SLKLEX01\x01\0\0\0\x01\0\0\0\0\0\0\0\0\0\0\0", 0, 24)
+    for index in range(40):
+        _ = buffer.append_byte(255)
+    const request = bytes(buffer)
+    match wire.decode(request):
+        case Ok(raw):
+            match lexer.lex(source.make(raw)):
+                case Ok(items):
+                    match wire.tokens(request, items):
+                        case Ok(reply):
+                            return len(reply) == 84 and wire.read_u32(reply, 16) == 1 and wire.read_u32(reply, 20) == 20 and reply[24:64] == request[24:64] and wire.read_u32(reply, 68) == 1 and wire.read_u32(reply, 72) == 0
+                        case Err(message):
+                            return False
+                case Err(item):
+                    return False
+        case Err(message):
+            return False
+
+
+public func test_wire_truncation_is_transport_error() -> bool:
+    match wire.decode(b"SLKLEX01"):
+        case Ok(raw):
+            return False
+        case Err(message):
+            return message == "invalid lexer request size"

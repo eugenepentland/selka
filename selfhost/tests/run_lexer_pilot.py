@@ -36,7 +36,7 @@ def component_run(command):
 
 
 def oracle(compiler, path):
-    p = run([compiler, 'dump-tokens', path, '--diagnostics=json'])
+    p = run([compiler, 'dump-tokens', path, '--diagnostics=json'], env=dict(os.environ, MYLANG_LEXER_MODE='reference'))
     if p.returncode == 0:
         return ['{} {} {}'.format(t['kind'], t['start'], t['end'])
                 for t in json.loads(p.stdout)['tokens']]
@@ -74,6 +74,7 @@ def main():
     parser.add_argument('--builder', type=Path, default=ROOT/'zig-out/tools/selka-components')
     parser.add_argument('--zig', type=Path, default=Path(os.environ.get('ZIG') or shutil.which('zig') or 'zig'))
     parser.add_argument('--release', action='store_true')
+    parser.add_argument('--host-shadow', action='store_true', help='also compare the installed verified host shadow boundary, including full diagnostics/fixes')
     parser.add_argument('--edit-check', action='store_true', help='rebuild a private algorithm edit; verify host identity stays unchanged')
     args = parser.parse_args()
     # Coordinator verifies the immutable source/toolchain/compiler receipt before reuse.
@@ -108,6 +109,11 @@ def main():
                 rows = actual.stdout.decode('ascii').splitlines()
                 validate(rows, len(original))
                 assert rows == expected, f'expected {expected[:12]!r}, actual {rows[:12]!r}'
+                if args.host_shadow:
+                    command = [args.compiler.resolve(), 'dump-tokens', path, '--diagnostics=json']
+                    reference = run(command, env=dict(os.environ, MYLANG_LEXER_MODE='reference'))
+                    shadow = run(command, env=dict(os.environ, MYLANG_LEXER_MODE='shadow'))
+                    assert (shadow.returncode, shadow.stdout, shadow.stderr) == (reference.returncode, reference.stdout, reference.stderr), shadow.stderr.decode(errors='replace')
                 assert path.read_bytes() == original
                 token_lines += len(rows)
             except (AssertionError, ValueError) as error:
@@ -152,6 +158,12 @@ def main():
                 p = component_run([edited_binary, '--request', path])
                 assert p.returncode == 0 and p.stdout.decode().splitlines() == oracle(args.compiler.resolve(), path)
             print('algorithm edit rebuilt with changed artifact, unchanged host; full corpus still matches')
+        if args.host_shadow:
+            path = FIX/manifest[0]['file']
+            for mode in ('component', 'invalid'):
+                p = run([args.compiler.resolve(), 'dump-tokens', path], env=dict(os.environ, MYLANG_LEXER_MODE=mode))
+                assert p.returncode == 2 and not p.stdout and b'ComponentMode' in p.stderr
+            print('host shadow: full exit/stdout/stderr parity for 79 fixtures; 2 invalid-mode checks passed')
         print(f'lexer pilot: {len(manifest)} fixtures, {token_lines} token/error lines, {failed} failures, 0 skipped; 6 transport checks passed')
     return bool(failed)
 
