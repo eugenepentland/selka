@@ -310,3 +310,12 @@
 - Choice: supply the existing module to both contexts. The change carries type information, performs no extra record rounds, and keeps main's demand/compact cache path. Accepted R1/R2 runtime behavior and all safety checks remain subject to the full final gates.
 - Evidence: two focused cache regressions pass (8/8 steps) after the real conflict-free R merge. They assert absence of record compounds, literal/update array hulls, trusted check removal, verify-mode restoration, and eager/cold/warm/demand cache equivalence including compact emission. Proposal, hashes and focused log are in `X/r-main-merge-review.json`.
 - Reversibility: localized compiler-context plumbing plus regression tests; no benchmark, language, task ABI, count encoding, or threshold changes. The final combined 9x200 qualification and CPU-10 measurements are still required.
+
+
+## X-016 — Preserve the complete first timing run and repair confirmed regressions
+
+Question: the fully qualified integrated source passes all correctness and 151 instruction cells, but CPU10 exposes small-size and runtime-dispatch regressions. Options were to waive the crossings from overall gains, stop with incomplete X, or preserve the complete run and repair actual regressions. The plan requires the last option.
+
+Evidence: `X/timing-run-01/regression-ratios.json`, the three complete row batches, and seven exact-binary CPU8 rounds. `sort_int/64` is 2.082902× base (1.958415× instructions): radix setup replaced an adaptive two-run merge. `mutate_nested` is 1.069577× / 1.053759× at4096/64 despite reduced instructions; generated per-element release dispatch is the actionable changed path. `sort_records/64` and `result_propagate/4096` remain under review. The tuned-text primary crossing does not recur in its already-recorded independent confirmation; both observations remain.
+
+Choice: snapshot all first-run identities, results and logs; test restoring typed powersort for33–64 integer words and direct release of provably guardless one-pointer list elements using existing count primitives. Preserve callback coverage and add boundary/lifetime tests. No threshold, benchmark input, count encoding or task ABI changes. Fresh complete qualification and affected timing follow any accepted source fix; the first-run report is not final acceptance. The changes remain reversible and must demonstrate improvement before shipping.

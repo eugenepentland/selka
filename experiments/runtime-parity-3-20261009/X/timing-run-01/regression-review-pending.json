@@ -1,0 +1,31 @@
+{
+ "complete_review": false,
+ "repair_required": true,
+ "cells": {
+  "parity/text_ops/my-tuned": {
+   "disposition": "primary threshold crossing unconfirmed; keep primary and independent confirmation",
+   "confirmation_final_over_base": 1.0198783233547424,
+   "analysis": "Main 4495 bytes/1044 instructions unchanged except seven equivalent literal addresses and one U2 descriptor address. Direct buffer/search/parse helpers normalize identically. Free path changes786\u2192865 bytes; counting realloc moves4\u21925 adds262174bytes, not evidence of timed allocation behavior. CPU8 final/base cycles1.024398. Exact placement cause unproven."
+  },
+  "rows/mutate_nested/4096": {
+   "disposition": "confirmed regression; repair required",
+   "analysis": "Generated pointer-list layout changes each child release from inline count handling after reference_at to indirect callback plus tail boundary. Same counters and copies; fewer instructions but repeated higher cycles. Candidate recognizes guardless generated stride8/reference-at0 lists and calls existing core_release_child inline; retain other descriptors/visitor paths."
+  },
+  "rows/mutate_nested/64": {
+   "disposition": "confirmed regression; repair required",
+   "analysis": "Same compiled release loop, repeated across all three CPU10 batches. Candidate as size4096; no snapshot or count removal."
+  },
+  "rows/result_propagate/4096": {
+   "disposition": "persistent slowdown; native-body identity established, causal layout mechanism unresolved",
+   "analysis": "Repeated timed loop bytes and normalized trace/clock helpers unchanged; seven-round CPU8 confirms cycles1.055497 with instructions1.00000005 and branch misses1.00876. R5 separate probe numeric bound passes, but final/actual-M0 remains slower. Do not infer causal layout mechanism from flat instructions."
+  },
+  "rows/sort_int/64": {
+   "disposition": "confirmed regression; repair required",
+   "analysis": "Inputs are ordered or two ascending separated runs from mod1009/step13; radix for>32 loses old natural-run path. CPU8I1.958415/cycles1.984521/stores4.802316. Candidate restores typed stable powersort for33\u201364, preserving insertion<=32 and radix>64; verify signed/unsigned, packed/wide decorated paths and boundary ladder."
+  },
+  "rows/sort_records/64": {
+   "disposition": "persistent threshold crossing under review",
+   "analysis": "Modulo17 keys take counting sort, not small radix. CPU8I1.010460/cycles1.058081/loads1.043200. Native counting path/inlining/spills need review; do not classify as layout-only without evidence."
+  }
+ }
+}

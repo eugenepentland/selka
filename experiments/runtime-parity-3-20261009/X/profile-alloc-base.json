@@ -1,0 +1,492 @@
+{
+ "tag": "base",
+ "cpu": 8,
+ "event": "cpu_core/instructions/u",
+ "period": 100003,
+ "repeat": 40,
+ "attribution": "Strict allocator/free frames and their visible descendants. Shared traversal and release-only helpers without a strict ancestor are reported separately as ambiguous. Each instruction period counted at most once.",
+ "limitation": "Bounded LBR stacks may omit ancestors. Emitted inline allocator/free code without distinct inline metadata stays in its guest symbol, so this is a measured lower bound, not proof of a share below15%.",
+ "family": [
+  "__libc_calloc",
+  "__libc_free",
+  "__libc_malloc",
+  "__libc_realloc",
+  "_int_free",
+  "_int_malloc",
+  "_int_realloc",
+  "aligned_alloc",
+  "block_alloc",
+  "block_free",
+  "block_new",
+  "block_new_slow",
+  "calloc",
+  "core_dict_finalize",
+  "core_free_pending",
+  "core_release_child",
+  "count_free_shared",
+  "free",
+  "malloc",
+  "myl_core_box_new",
+  "myl_core_free",
+  "myl_core_free_block",
+  "myl_core_list_grow",
+  "myl_core_list_new",
+  "myl_core_list_new_slow",
+  "myl_core_release_child_pending",
+  "realloc",
+  "small_alloc"
+ ],
+ "ambiguous_family": [
+  "core_children",
+  "core_dict_children",
+  "dict_release_part",
+  "guard_holds",
+  "myl_core_release",
+  "reference_at"
+ ],
+ "designs": {
+  "labstation": {
+   "total_period": 213806414,
+   "allocation_release_period": 61001830,
+   "allocation_release_share_lower_bound": 0.2853133769878391,
+   "ambiguous_period": 300009,
+   "ambiguous_share": 0.001403180542563143,
+   "exclusive_family": {
+    "block_alloc": 22900687,
+    "block_free": 1200036,
+    "myl_core_free_block": 18200546,
+    "myl_core_list_grow": 3100093,
+    "malloc": 300009,
+    "realloc": 100003,
+    "myl_core_list_new_slow": 200006
+   },
+   "top_exclusive": [
+    [
+     "sexpr_tokenizer::next_in",
+     24800744
+    ],
+    [
+     "block_alloc",
+     22900687
+    ],
+    [
+     "sexpr_parser::parse_node",
+     18300549
+    ],
+    [
+     "myl_core_free_block",
+     18200546
+    ],
+    [
+     "[unknown]",
+     16500495
+    ],
+    [
+     "reference_at",
+     11900357
+    ],
+    [
+     "myl_core_bytes_slice",
+     8600258
+    ],
+    [
+     "myl_core_str_eq",
+     4900147
+    ],
+    [
+     "sexpr_parser::next_token",
+     4800144
+    ],
+    [
+     "kicad_sch_wire::route",
+     3300099
+    ],
+    [
+     "support_sha256::compress",
+     3200096
+    ],
+    [
+     "sexpr_tokenizer::is_unit_letter",
+     3100093
+    ],
+    [
+     "myl_core_list_grow",
+     3100093
+    ],
+    [
+     "myl_core_bytes_concat",
+     3100093
+    ],
+    [
+     "kicad_sch_verify::grid_scan",
+     2800084
+    ],
+    [
+     "sexpr_parser::parse_list",
+     2500075
+    ],
+    [
+     "memcpy@plt",
+     2400072
+    ],
+    [
+     "kicad_sch_textbox::scan",
+     2100063
+    ],
+    [
+     "core_text_append_bytes",
+     2000060
+    ],
+    [
+     "myl_core_buffer_push_checked",
+     1800054
+    ],
+    [
+     "myl_core_str_from_i64",
+     1800054
+    ],
+    [
+     "kicad_sch_verify::check_wires",
+     1600048
+    ],
+    [
+     "sexpr_tokenizer::make_token",
+     1400042
+    ],
+    [
+     "myl_core_bytes_from_list",
+     1400042
+    ],
+    [
+     "take__anon_9678",
+     1400042
+    ],
+    [
+     "sexpr_parser::parse_number_node",
+     1300039
+    ],
+    [
+     "myl_core_bytes_decode_text",
+     1300039
+    ],
+    [
+     "block_free",
+     1200036
+    ],
+    [
+     "run__anon_9672",
+     1200036
+    ],
+    [
+     "parseFloat__anon_1373",
+     1200036
+    ],
+    [
+     "myl_core_span_utf8_count",
+     1000030
+    ],
+    [
+     "byte_builder::append",
+     1000030
+    ],
+    [
+     "myl_core_bytes_valid_list",
+     1000030
+    ],
+    [
+     "floatingOf__anon_9579",
+     900027
+    ],
+    [
+     "canonical__anon_9620",
+     900027
+    ]
+   ],
+   "examples": [
+    [
+     "block_alloc",
+     "myl_core_bytes_slice",
+     "sexpr_tokenizer::make_token",
+     "sexpr_tokenizer::next_in",
+     "sexpr_tokenizer::next",
+     "sexpr_parser::next_token",
+     "sexpr_parser::parse_list",
+     "sexpr_parser::parse_node",
+     "sexpr_parser::parse_list",
+     "sexpr_parser::parse_node",
+     "sexpr_parser::parse_list",
+     "sexpr_parser::parse_node",
+     "sexpr_parser::parse_inner",
+     "sexpr_parser::parse_diag",
+     "design_model::load",
+     "main::run",
+     "main::main",
+     "myl.entry",
+     "[unknown]",
+     "__libc_start_main",
+     "_start"
+    ],
+    [
+     "block_alloc",
+     "myl_core_list_grow",
+     "sexpr_parser::parse_node",
+     "sexpr_parser::parse_list",
+     "sexpr_parser::parse_node",
+     "sexpr_parser::parse_list",
+     "sexpr_parser::parse_node",
+     "sexpr_parser::parse_list",
+     "sexpr_parser::parse_node",
+     "sexpr_parser::parse_list",
+     "sexpr_parser::parse_node",
+     "sexpr_parser::parse_list",
+     "sexpr_parser::parse_node",
+     "sexpr_parser::parse_inner",
+     "sexpr_parser::parse_diag",
+     "design_model::load",
+     "main::run",
+     "main::main",
+     "myl.entry",
+     "[unknown]",
+     "__libc_start_main",
+     "_start"
+    ],
+    [
+     "block_free",
+     "myl_core_free_block",
+     "flat_netlist::apply_net_ties_mapped",
+     "flat_netlist::flatten_and_merge_nets_mapped",
+     "flat_netlist::flatten_and_merge_nets",
+     "export_kicad_sch::export_sch",
+     "main::run",
+     "main::main",
+     "myl.entry",
+     "[unknown]",
+     "__libc_start_main",
+     "_start"
+    ]
+   ],
+   "binary_sha256": "c3ccfaf6f06044d3531cef33b84b4ea080e9a2b103b3b3355f34b3903c2c1ca7",
+   "raw_sha256": "498d59424c4b6beeb657dc80e3307cf9243cc14e39e93d119ecd1a9350330f77",
+   "raw_scratch": ".mylang-cache/u2/profile/base/labstation.perf"
+  },
+  "rds3+flat": {
+   "total_period": 332609978,
+   "allocation_release_period": 78202346,
+   "allocation_release_share_lower_bound": 0.23511725796752855,
+   "ambiguous_period": 100003,
+   "ambiguous_share": 0.0003006614552014432,
+   "exclusive_family": {
+    "myl_core_free_block": 25200756,
+    "block_alloc": 28900867,
+    "myl_core_list_grow": 4200126,
+    "block_free": 1700051,
+    "myl_core_list_new_slow": 700021
+   },
+   "top_exclusive": [
+    [
+     "sexpr_tokenizer::next_in",
+     39101173
+    ],
+    [
+     "block_alloc",
+     28900867
+    ],
+    [
+     "myl_core_free_block",
+     25200756
+    ],
+    [
+     "sexpr_parser::parse_node",
+     25100753
+    ],
+    [
+     "kicad_sch_wire::route",
+     20200606
+    ],
+    [
+     "[unknown]",
+     19800594
+    ],
+    [
+     "kicad_sch_verify::check_wires",
+     16700501
+    ],
+    [
+     "reference_at",
+     15100453
+    ],
+    [
+     "myl_core_str_eq",
+     9800294
+    ],
+    [
+     "myl_core_bytes_slice",
+     9300279
+    ],
+    [
+     "sexpr_parser::next_token",
+     8600258
+    ],
+    [
+     "support_sha256::compress",
+     7000210
+    ],
+    [
+     "myl_core_bytes_concat",
+     6000180
+    ],
+    [
+     "sexpr_parser::parse_list",
+     5300159
+    ],
+    [
+     "kicad_sch_verify::grid_scan",
+     5300159
+    ],
+    [
+     "myl_core_list_grow",
+     4200126
+    ],
+    [
+     "take__anon_9678",
+     3000090
+    ],
+    [
+     "sexpr_tokenizer::is_unit_letter",
+     2700081
+    ],
+    [
+     "run__anon_9672",
+     2600078
+    ],
+    [
+     "memcpy@plt",
+     2600078
+    ],
+    [
+     "myl_core_bytes_decode_text",
+     2400072
+    ],
+    [
+     "kicad_sch_textbox::scan",
+     2400072
+    ],
+    [
+     "core_text_append_bytes",
+     2200066
+    ],
+    [
+     "kicad_sch_verify::on_grid",
+     2200066
+    ],
+    [
+     "parseFloat__anon_1373",
+     2200066
+    ],
+    [
+     "myl_core_bytes_valid_list",
+     2100063
+    ],
+    [
+     "myl_core_span_utf8_count",
+     1800054
+    ],
+    [
+     "block_free",
+     1700051
+    ],
+    [
+     "myl_core_bytes_find",
+     1500045
+    ],
+    [
+     "sexpr_ast::is_form",
+     1500045
+    ],
+    [
+     "sexpr_tokenizer::make_token",
+     1500045
+    ],
+    [
+     "myl_core_str_from_i64",
+     1400042
+    ],
+    [
+     "kicad_sch_emit::connections",
+     1400042
+    ],
+    [
+     "myl_core_buffer_push_checked",
+     1400042
+    ],
+    [
+     "myl_core_bytes_from_list",
+     1300039
+    ]
+   ],
+   "examples": [
+    [
+     "myl_core_free_block",
+     "flat_netlist::apply_net_ties_mapped",
+     "flat_netlist::flatten_and_merge_nets_mapped",
+     "flat_netlist::flatten_and_merge_nets",
+     "export_kicad_sch::export_sch",
+     "main::run",
+     "main::main",
+     "myl.entry",
+     "[unknown]",
+     "__libc_start_main",
+     "_start"
+    ],
+    [
+     "myl_core_free_block",
+     "kicad_sym_reader::read_symbol",
+     "kicad_sym_reader::parse_library",
+     "kicad_sym_library::index_file",
+     "kicad_sym_library::load",
+     "export_kicad_sch::export_sch",
+     "main::run",
+     "main::main",
+     "myl.entry",
+     "[unknown]",
+     "__libc_start_main",
+     "_start"
+    ],
+    [
+     "block_alloc",
+     "myl_core_bytes_from_list",
+     "sexpr_tokenizer::is_unit_letter",
+     "sexpr_tokenizer::si_suffix_len",
+     "sexpr_tokenizer::read_number",
+     "sexpr_tokenizer::next_in",
+     "sexpr_tokenizer::next",
+     "sexpr_parser::next_token",
+     "sexpr_parser::parse_list",
+     "sexpr_parser::parse_node",
+     "sexpr_parser::parse_list",
+     "sexpr_parser::parse_node",
+     "sexpr_parser::parse_list",
+     "sexpr_parser::parse_node",
+     "sexpr_parser::parse_list",
+     "sexpr_parser::parse_node",
+     "sexpr_parser::parse_inner",
+     "sexpr_parser::parse_diag",
+     "sexpr_parser::parse",
+     "export_kicad_netlist::extract_footprint_name",
+     "export_kicad_sch::load_footprints",
+     "export_kicad_sch::build",
+     "export_kicad_sch::export_sch",
+     "main::run",
+     "main::main",
+     "myl.entry",
+     "[unknown]",
+     "__libc_start_main",
+     "_start"
+    ]
+   ],
+   "binary_sha256": "c3ccfaf6f06044d3531cef33b84b4ea080e9a2b103b3b3355f34b3903c2c1ca7",
+   "raw_sha256": "69f92727496be7cc19d819b8fae376bb2cab4d712f8e525ad25da7f17db3c281",
+   "raw_scratch": ".mylang-cache/u2/profile/base/rds3+flat.perf"
+  }
+ }
+}

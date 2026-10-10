@@ -1,0 +1,34 @@
+{
+ "name": "nbody fixed-N ladder",
+ "expected_stdout_sha256": "179a443bca1492bd09db9648ca9f9d7f3ae224f95c6e59a3bcb3601907c98245",
+ "reference": "base",
+ "arms": {
+  "base": [
+   "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/parity/pair/bin/nbody.base-my"
+  ],
+  "final": [
+   "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/parity/pair/bin/nbody.my"
+  ],
+  "final-class": [
+   "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/parity/pair/bin/nbody.my-class"
+  ],
+  "zig-safe": [
+   "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/parity/pair/bin/nbody.zig-safe"
+  ],
+  "rust-checked": [
+   "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/parity/pair/bin/nbody.rust-checked"
+  ],
+  "rung0": [
+   "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/R/nbody-ladder/0",
+   "5"
+  ],
+  "rung1": [
+   "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/R/nbody-ladder/1",
+   "5"
+  ],
+  "rung2": [
+   "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/R/nbody-ladder/2",
+   "5"
+  ]
+ }
+}

@@ -1,0 +1,92 @@
+{
+ "parity/text_ops/my-tuned": {
+  "wall_ratio": 1.0492626209258857,
+  "ratios": {
+   "instructions": 0.999999479590912,
+   "cycles": 1.024397691664999,
+   "branches": 0.9999999803539684,
+   "branch-misses": 0.9991909036917171,
+   "L1-dcache-loads": 0.9999993951765475,
+   "L1-dcache-load-misses": 0.9868045267803962,
+   "LLC-load-misses": 0.8675964937769384,
+   "mem_inst_retired.all_stores": 0.9999997691710734
+  },
+  "base_sha256": "2de03b46fbce63ced85ea2c20a8c5a686c2cc4c0988b463f9a2f6a3aff964544",
+  "final_sha256": "749dbb1d8f9e036d528e304437e7b92411f02dd616a34b85a7215041b9aaaee6"
+ },
+ "rows/mutate_nested/4096": {
+  "wall_ratio": 1.0695766635454786,
+  "ratios": {
+   "instructions": 0.7765225423690254,
+   "cycles": 1.0481581572233742,
+   "branches": 0.9998612577170456,
+   "branch-misses": 0.8691236215902496,
+   "L1-dcache-loads": 0.8149557107904135,
+   "L1-dcache-load-misses": 0.8808198925640994,
+   "LLC-load-misses": 0.8875,
+   "mem_inst_retired.all_stores": 0.7594149844293827
+  },
+  "base_sha256": "d668210ca1d9a5220e1466f136341518b9c41947e8cab02040e00556b9fcbdc0",
+  "final_sha256": "43fa2de17733613bcf7c6c7d3ba4e0e8b75e4bf9cc548aad5c5b82f3fd4c0c60"
+ },
+ "rows/mutate_nested/64": {
+  "wall_ratio": 1.0537586798300371,
+  "ratios": {
+   "instructions": 0.8020968295046106,
+   "cycles": 1.0538425330377175,
+   "branches": 1.0008917965868616,
+   "branch-misses": 1.0217206876762233,
+   "L1-dcache-loads": 0.8365172579156499,
+   "L1-dcache-load-misses": 1.0837457175485345,
+   "LLC-load-misses": 0.6896551724137931,
+   "mem_inst_retired.all_stores": 0.8268224057659873
+  },
+  "base_sha256": "d668210ca1d9a5220e1466f136341518b9c41947e8cab02040e00556b9fcbdc0",
+  "final_sha256": "43fa2de17733613bcf7c6c7d3ba4e0e8b75e4bf9cc548aad5c5b82f3fd4c0c60"
+ },
+ "rows/result_propagate/4096": {
+  "wall_ratio": 1.0494690889414842,
+  "ratios": {
+   "instructions": 1.0000000466872025,
+   "cycles": 1.0554965088609982,
+   "branches": 1.0000000975772223,
+   "branch-misses": 1.0087599386246338,
+   "L1-dcache-loads": 1.0000002493333173,
+   "L1-dcache-load-misses": 0.9123875834058601,
+   "LLC-load-misses": 1.0588235294117647,
+   "mem_inst_retired.all_stores": 1.0000000677710754
+  },
+  "base_sha256": "768f59bf6d9a71b04cb25cd6ad12bde67f6159544a2fc6cc30ecf0acf20a9b4d",
+  "final_sha256": "83552597facb15bbc7247540530cc920fc30120f3264160710eb05d7ef777130"
+ },
+ "rows/sort_int/64": {
+  "wall_ratio": 2.0829015049659008,
+  "ratios": {
+   "instructions": 1.9584148234040244,
+   "cycles": 1.9845206874137769,
+   "branches": 1.0964104480080594,
+   "branch-misses": 0.3162175214913552,
+   "L1-dcache-loads": 2.160107508925648,
+   "L1-dcache-load-misses": 1.1685761047463175,
+   "LLC-load-misses": 1.5384615384615385,
+   "mem_inst_retired.all_stores": 4.8023156398416935
+  },
+  "base_sha256": "bc09e46a3ee79418412514294b3e781e87d192c555d86ec830a0a2333bd67b8e",
+  "final_sha256": "3a53db44e1a592dd1a5fe9f40309f95a9f81f153695883907cd196282e8ca883"
+ },
+ "rows/sort_records/64": {
+  "wall_ratio": 1.0328402406069983,
+  "ratios": {
+   "instructions": 1.010460429046903,
+   "cycles": 1.0580813362149661,
+   "branches": 1.0000000725512155,
+   "branch-misses": 0.9173947047153975,
+   "L1-dcache-loads": 1.043199865427757,
+   "L1-dcache-load-misses": 1.0200156985871272,
+   "LLC-load-misses": 1.0576923076923077,
+   "mem_inst_retired.all_stores": 0.9992684856183301
+  },
+  "base_sha256": "8f900581c0adca405b03aaba325e5f6c6e2341ba78483b1c82d2de141b3e629e",
+  "final_sha256": "87fb8cf3901ce70794b92392753a3a2bf5354640e796c09a9d8f52189825d620"
+ }
+}

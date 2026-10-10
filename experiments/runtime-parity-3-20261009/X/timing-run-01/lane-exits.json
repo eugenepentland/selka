@@ -1,0 +1,1133 @@
+{
+ "qualified_source": "20e7c340eb8d93320de4493f7b50665c7979ef2b",
+ "integrated_main": "fa11606022ed217896a27976f8fe6d95db95f465",
+ "regression_review_pending": true,
+ "groups": {
+  "parity": {
+   "cells": 45,
+   "final_over_base": 0.8921460889527496,
+   "zig-safe": 0.6727736267106788,
+   "rust-checked": 0.7160071977310488,
+   "zig-fast": 0.8080790915701532,
+   "rust": 0.8154952781063312
+  },
+  "lox": {
+   "cells": 26,
+   "final_over_base": 0.9510004284898375,
+   "zig-safe": 1.173439653882892,
+   "zig-fast": 1.8245449139248315,
+   "rust": 1.3280904664290267,
+   "go": 1.3417357686801394
+  },
+  "lox/vm": {
+   "cells": 13,
+   "final_over_base": 0.9086839043940674,
+   "zig-safe": 1.425390503256636,
+   "zig-fast": 2.1351004032422365,
+   "rust": 1.4474870109503493,
+   "go": 1.500034122149419
+  },
+  "lox/tree": {
+   "cells": 13,
+   "final_over_base": 0.9952875918837052,
+   "zig-safe": 0.9660234287788605,
+   "zig-fast": 1.55916046752359,
+   "rust": 1.2185423935940047,
+   "go": 1.2001426143400495
+  },
+  "eda": {
+   "cells": 34,
+   "final_over_base": 0.9554679209062071,
+   "zig-safe": 1.1019775282515165,
+   "zig-fast": 1.2130752596470171,
+   "rust": 1.0995843304989836,
+   "go": 0.4517883427344212
+  },
+  "rows": {
+   "cells": 92,
+   "final_over_base": 0.9936840435956045,
+   "zig-safe": 0.36845568658783584,
+   "zig-fast": 0.5231217270552224,
+   "rust": 0.5286097427444278,
+   "go": 0.3349992324123585
+  },
+  "parity-primary": {
+   "cells": 27,
+   "zig-safe": 0.6679501041361834,
+   "zig-fast": 0.8155481327061307
+  }
+ },
+ "u2": {
+  "counterfactual_closure": {
+   "lox/vm/invocation": {
+    "norc_over_real": 0.6719885892585126,
+    "final_over_base_limit": 0.8031931535551076,
+    "final_over_base": 0.9284471675846625,
+    "fraction_closed": 0.21814129043129468,
+    "met": false
+   },
+   "lox/vm/fib": {
+    "norc_over_real": 0.7730593250766989,
+    "final_over_base_limit": 0.8638355950460194,
+    "final_over_base": 0.9026631790456092,
+    "fraction_closed": 0.4289086607647026,
+    "met": false
+   },
+   "lox/vm/method_call": {
+    "norc_over_real": 0.6939952552812031,
+    "final_over_base_limit": 0.8163971531687219,
+    "final_over_base": 0.8997700130965026,
+    "fraction_closed": 0.32754389803858674,
+    "met": false
+   },
+   "lox/tree/equality": {
+    "norc_over_real": 0.6032165368104605,
+    "final_over_base_limit": 0.7619299220862763,
+    "final_over_base": 0.9912794862128884,
+    "fraction_closed": 0.021978017221312172,
+    "met": false
+   }
+  },
+  "read_constant_zero_all": true,
+  "vm_cells": 37,
+  "frames": {
+   "lox-vm-invocation-1500000": {
+    "base_bytes": 10080000224,
+    "final_bytes": 10080000224,
+    "reduction": 0.0,
+    "unclassified_base": [
+     {
+      "function": "vm::run",
+      "origin": "vm::run",
+      "path": "vm.my",
+      "line": 429,
+      "column": 6,
+      "kind": "record_copy",
+      "detail": "jump",
+      "count": 1,
+      "bytes": 200,
+      "extra": 0
+     },
+     {
+      "function": "vm::run",
+      "origin": "heap::pop",
+      "path": "heap.my",
+      "line": 106,
+      "column": 5,
+      "kind": "record_copy",
+      "detail": "record_set",
+      "count": 1,
+      "bytes": 200,
+      "extra": 0
+     }
+    ],
+    "unclassified_final": [
+     {
+      "function": "vm::run",
+      "origin": "vm::run",
+      "path": "vm.my",
+      "line": 429,
+      "column": 6,
+      "kind": "record_copy",
+      "detail": "jump",
+      "count": 1,
+      "bytes": 200,
+      "extra": 0
+     },
+     {
+      "function": "vm::run",
+      "origin": "heap::pop",
+      "path": "heap.my",
+      "line": 106,
+      "column": 5,
+      "kind": "record_copy",
+      "detail": "record_set",
+      "count": 1,
+      "bytes": 200,
+      "extra": 0
+     }
+    ]
+   },
+   "lox-vm-method_call-500000": {
+    "base_bytes": 4853334440,
+    "final_bytes": 4853334440,
+    "reduction": 0.0,
+    "unclassified_base": [
+     {
+      "function": "vm::run",
+      "origin": "vm::run",
+      "path": "vm.my",
+      "line": 429,
+      "column": 6,
+      "kind": "record_copy",
+      "detail": "jump",
+      "count": 2,
+      "bytes": 400,
+      "extra": 0
+     },
+     {
+      "function": "vm::run",
+      "origin": "heap::pop",
+      "path": "heap.my",
+      "line": 106,
+      "column": 5,
+      "kind": "record_copy",
+      "detail": "record_set",
+      "count": 2,
+      "bytes": 400,
+      "extra": 0
+     }
+    ],
+    "unclassified_final": [
+     {
+      "function": "vm::run",
+      "origin": "vm::run",
+      "path": "vm.my",
+      "line": 429,
+      "column": 6,
+      "kind": "record_copy",
+      "detail": "jump",
+      "count": 2,
+      "bytes": 400,
+      "extra": 0
+     },
+     {
+      "function": "vm::run",
+      "origin": "heap::pop",
+      "path": "heap.my",
+      "line": 106,
+      "column": 5,
+      "kind": "record_copy",
+      "detail": "record_set",
+      "count": 2,
+      "bytes": 400,
+      "extra": 0
+     }
+    ]
+   }
+  },
+  "alloc_profiles": {
+   "labstation": {
+    "base": {
+     "total_period": 213806414,
+     "allocation_release_share_lower_bound": 0.2853133769878391,
+     "ambiguous_share": 0.001403180542563143
+    },
+    "final": {
+     "total_period": 206006180,
+     "allocation_release_share_lower_bound": 0.24514563106796117,
+     "ambiguous_share": 0.0
+    },
+    "interpretation": "miss"
+   },
+   "rds3+flat": {
+    "base": {
+     "total_period": 332609978,
+     "allocation_release_share_lower_bound": 0.23511725796752855,
+     "ambiguous_share": 0.0003006614552014432
+    },
+    "final": {
+     "total_period": 323609708,
+     "allocation_release_share_lower_bound": 0.2122991347342398,
+     "ambiguous_share": 0.00030902348578491963
+    },
+    "interpretation": "miss"
+   }
+  }
+ },
+ "s2": {
+  "text_profiles": {
+   "labstation": {
+    "shares": {
+     "base": 0.17727987421383648,
+     "final": 0.18151016456921587
+    },
+    "final_over_base": 1.0238622143327831,
+    "required_final_share": 0.06,
+    "meets_sampled_share": false,
+    "limitation": "LBR reconstructs bounded hardware call chains with inline symbols. Family union counts each instruction sample once; truncated chains can underattribute descendants. Baseline and candidate use this identical method."
+   },
+   "rds3+flat": {
+    "shares": {
+     "base": 0.15208207604103802,
+     "final": 0.16155481324020649
+    },
+    "final_over_base": 1.0622870061072307,
+    "required_final_share": 0.06,
+    "meets_sampled_share": false,
+    "limitation": "LBR reconstructs bounded hardware call chains with inline symbols. Family union counts each instruction sample once; truncated chains can underattribute descendants. Baseline and candidate use this identical method."
+   }
+  },
+  "knucleotide": {
+   "base": {
+    "allocs": 283187,
+    "positions": 6999961,
+    "allocs_per_position": 0.04045551110927618
+   },
+   "final": {
+    "allocs": 283187,
+    "positions": 6999961,
+    "allocs_per_position": 0.04045551110927618
+   }
+  },
+  "text_ops_rung3": 1.7846915613469352
+ },
+ "r": {
+  "copy_counts": {
+   "parity-fannkuch_redux_array": {
+    "base": {
+     "copies": 622322576,
+     "bytes": 49785806080,
+     "sites": [
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_array.my",
+       "line": 12,
+       "column": 6,
+       "kind": "record_copy",
+       "detail": "jump",
+       "count": 2606501,
+       "bytes": 208520080,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_array.my",
+       "line": 23,
+       "column": 13,
+       "kind": "record_copy",
+       "detail": "array_set",
+       "count": 2606501,
+       "bytes": 208520080,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_array.my",
+       "line": 23,
+       "column": 13,
+       "kind": "record_copy",
+       "detail": "array_set",
+       "count": 2606501,
+       "bytes": 208520080,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_array.my",
+       "line": 26,
+       "column": 23,
+       "kind": "record_copy",
+       "detail": "array_get",
+       "count": 36288000,
+       "bytes": 2903040000,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_array.my",
+       "line": 26,
+       "column": 13,
+       "kind": "record_copy",
+       "detail": "array_set",
+       "count": 36288000,
+       "bytes": 2903040000,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_array.my",
+       "line": 26,
+       "column": 13,
+       "kind": "record_copy",
+       "detail": "array_set",
+       "count": 36288000,
+       "bytes": 2903040000,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_array.my",
+       "line": 12,
+       "column": 6,
+       "kind": "record_copy",
+       "detail": "jump",
+       "count": 36288000,
+       "bytes": 2903040000,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_array.my",
+       "line": 28,
+       "column": 17,
+       "kind": "record_copy",
+       "detail": "array_get",
+       "count": 3628800,
+       "bytes": 290304000,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_array.my",
+       "line": 32,
+       "column": 28,
+       "kind": "record_copy",
+       "detail": "array_get",
+       "count": 57996463,
+       "bytes": 4639717040,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_array.my",
+       "line": 36,
+       "column": 17,
+       "kind": "record_copy",
+       "detail": "array_get",
+       "count": 22169434,
+       "bytes": 1773554720,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_array.my",
+       "line": 33,
+       "column": 27,
+       "kind": "record_copy",
+       "detail": "array_get",
+       "count": 57996463,
+       "bytes": 4639717040,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_array.my",
+       "line": 33,
+       "column": 17,
+       "kind": "record_copy",
+       "detail": "array_set",
+       "count": 57996463,
+       "bytes": 4639717040,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_array.my",
+       "line": 33,
+       "column": 17,
+       "kind": "record_copy",
+       "detail": "array_set",
+       "count": 57996463,
+       "bytes": 4639717040,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_array.my",
+       "line": 34,
+       "column": 17,
+       "kind": "record_copy",
+       "detail": "array_set",
+       "count": 57996463,
+       "bytes": 4639717040,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_array.my",
+       "line": 34,
+       "column": 17,
+       "kind": "record_copy",
+       "detail": "array_set",
+       "count": 57996463,
+       "bytes": 4639717040,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_array.my",
+       "line": 12,
+       "column": 6,
+       "kind": "record_copy",
+       "detail": "jump",
+       "count": 3628800,
+       "bytes": 290304000,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_array.my",
+       "line": 12,
+       "column": 6,
+       "kind": "record_copy",
+       "detail": "jump",
+       "count": 2606501,
+       "bytes": 208520080,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_array.my",
+       "line": 42,
+       "column": 25,
+       "kind": "record_copy",
+       "detail": "array_get",
+       "count": 6235300,
+       "bytes": 498824000,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_array.my",
+       "line": 12,
+       "column": 6,
+       "kind": "record_copy",
+       "detail": "jump",
+       "count": 6235300,
+       "bytes": 498824000,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_array.my",
+       "line": 44,
+       "column": 28,
+       "kind": "record_copy",
+       "detail": "array_get",
+       "count": 9864090,
+       "bytes": 789127200,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_array.my",
+       "line": 44,
+       "column": 17,
+       "kind": "record_copy",
+       "detail": "array_set",
+       "count": 9864090,
+       "bytes": 789127200,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_array.my",
+       "line": 44,
+       "column": 17,
+       "kind": "record_copy",
+       "detail": "array_set",
+       "count": 9864090,
+       "bytes": 789127200,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_array.my",
+       "line": 12,
+       "column": 6,
+       "kind": "record_copy",
+       "detail": "jump",
+       "count": 9864090,
+       "bytes": 789127200,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_array.my",
+       "line": 45,
+       "column": 13,
+       "kind": "record_copy",
+       "detail": "array_set",
+       "count": 6235300,
+       "bytes": 498824000,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_array.my",
+       "line": 45,
+       "column": 13,
+       "kind": "record_copy",
+       "detail": "array_set",
+       "count": 6235300,
+       "bytes": 498824000,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_array.my",
+       "line": 46,
+       "column": 24,
+       "kind": "record_copy",
+       "detail": "array_get",
+       "count": 6235300,
+       "bytes": 498824000,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_array.my",
+       "line": 46,
+       "column": 13,
+       "kind": "record_copy",
+       "detail": "array_set",
+       "count": 6235300,
+       "bytes": 498824000,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_array.my",
+       "line": 46,
+       "column": 13,
+       "kind": "record_copy",
+       "detail": "array_set",
+       "count": 6235300,
+       "bytes": 498824000,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_array.my",
+       "line": 47,
+       "column": 16,
+       "kind": "record_copy",
+       "detail": "array_get",
+       "count": 6235300,
+       "bytes": 498824000,
+       "extra": 0
+      }
+     ]
+    },
+    "final": {
+     "copies": 0,
+     "bytes": 0,
+     "sites": []
+    }
+   },
+   "parity-fannkuch_redux_tuned": {
+    "base": {
+     "copies": 480799376,
+     "bytes": 38463950080,
+     "sites": [
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_tuned.my",
+       "line": 16,
+       "column": 6,
+       "kind": "record_copy",
+       "detail": "jump",
+       "count": 2606501,
+       "bytes": 208520080,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_tuned.my",
+       "line": 31,
+       "column": 17,
+       "kind": "record_copy",
+       "detail": "array_get",
+       "count": 3628800,
+       "bytes": 290304000,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_tuned.my",
+       "line": 16,
+       "column": 6,
+       "kind": "record_copy",
+       "detail": "jump",
+       "count": 3628800,
+       "bytes": 290304000,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_tuned.my",
+       "line": 27,
+       "column": 21,
+       "kind": "record_copy",
+       "detail": "array_set",
+       "count": 2606501,
+       "bytes": 208520080,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_tuned.my",
+       "line": 27,
+       "column": 21,
+       "kind": "record_copy",
+       "detail": "array_set",
+       "count": 2606501,
+       "bytes": 208520080,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_tuned.my",
+       "line": 35,
+       "column": 28,
+       "kind": "record_copy",
+       "detail": "array_get",
+       "count": 57996463,
+       "bytes": 4639717040,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_tuned.my",
+       "line": 39,
+       "column": 17,
+       "kind": "record_copy",
+       "detail": "array_get",
+       "count": 22169434,
+       "bytes": 1773554720,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_tuned.my",
+       "line": 36,
+       "column": 41,
+       "kind": "record_copy",
+       "detail": "array_get",
+       "count": 57996463,
+       "bytes": 4639717040,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_tuned.my",
+       "line": 36,
+       "column": 24,
+       "kind": "record_copy",
+       "detail": "array_set",
+       "count": 57996463,
+       "bytes": 4639717040,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_tuned.my",
+       "line": 36,
+       "column": 24,
+       "kind": "record_copy",
+       "detail": "array_set",
+       "count": 57996463,
+       "bytes": 4639717040,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_tuned.my",
+       "line": 37,
+       "column": 24,
+       "kind": "record_copy",
+       "detail": "array_set",
+       "count": 57996463,
+       "bytes": 4639717040,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_tuned.my",
+       "line": 37,
+       "column": 24,
+       "kind": "record_copy",
+       "detail": "array_set",
+       "count": 57996463,
+       "bytes": 4639717040,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_tuned.my",
+       "line": 16,
+       "column": 6,
+       "kind": "record_copy",
+       "detail": "jump",
+       "count": 3628800,
+       "bytes": 290304000,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_tuned.my",
+       "line": 16,
+       "column": 6,
+       "kind": "record_copy",
+       "detail": "jump",
+       "count": 2606501,
+       "bytes": 208520080,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_tuned.my",
+       "line": 45,
+       "column": 25,
+       "kind": "record_copy",
+       "detail": "array_get",
+       "count": 6235300,
+       "bytes": 498824000,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_tuned.my",
+       "line": 16,
+       "column": 6,
+       "kind": "record_copy",
+       "detail": "jump",
+       "count": 6235300,
+       "bytes": 498824000,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_tuned.my",
+       "line": 47,
+       "column": 43,
+       "kind": "record_copy",
+       "detail": "array_get",
+       "count": 9864090,
+       "bytes": 789127200,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_tuned.my",
+       "line": 47,
+       "column": 25,
+       "kind": "record_copy",
+       "detail": "array_set",
+       "count": 9864090,
+       "bytes": 789127200,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_tuned.my",
+       "line": 47,
+       "column": 25,
+       "kind": "record_copy",
+       "detail": "array_set",
+       "count": 9864090,
+       "bytes": 789127200,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_tuned.my",
+       "line": 16,
+       "column": 6,
+       "kind": "record_copy",
+       "detail": "jump",
+       "count": 9864090,
+       "bytes": 789127200,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_tuned.my",
+       "line": 48,
+       "column": 21,
+       "kind": "record_copy",
+       "detail": "array_set",
+       "count": 6235300,
+       "bytes": 498824000,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_tuned.my",
+       "line": 48,
+       "column": 21,
+       "kind": "record_copy",
+       "detail": "array_set",
+       "count": 6235300,
+       "bytes": 498824000,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_tuned.my",
+       "line": 49,
+       "column": 39,
+       "kind": "record_copy",
+       "detail": "array_get",
+       "count": 6235300,
+       "bytes": 498824000,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_tuned.my",
+       "line": 49,
+       "column": 21,
+       "kind": "record_copy",
+       "detail": "array_set",
+       "count": 6235300,
+       "bytes": 498824000,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_tuned.my",
+       "line": 49,
+       "column": 21,
+       "kind": "record_copy",
+       "detail": "array_set",
+       "count": 6235300,
+       "bytes": 498824000,
+       "extra": 0
+      },
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_tuned.my",
+       "line": 50,
+       "column": 16,
+       "kind": "record_copy",
+       "detail": "array_get",
+       "count": 6235300,
+       "bytes": 498824000,
+       "extra": 0
+      }
+     ]
+    },
+    "final": {
+     "copies": 3628800,
+     "bytes": 290304000,
+     "sites": [
+      {
+       "function": "fannkuch",
+       "origin": "fannkuch",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/bench/parity/suite/fannkuch_redux_tuned.my",
+       "line": 16,
+       "column": 6,
+       "kind": "record_copy",
+       "detail": "jump",
+       "count": 3628800,
+       "bytes": 290304000,
+       "extra": 0
+      }
+     ]
+    }
+   },
+   "row-record_pass": {
+    "base": {
+     "copies": 3780608,
+     "bytes": 362938368,
+     "sites": [
+      {
+       "function": "batch_result",
+       "origin": "batch_result",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/test/core/row_record_pass.my",
+       "line": 32,
+       "column": 6,
+       "kind": "record_copy",
+       "detail": "jump",
+       "count": 3780608,
+       "bytes": 362938368,
+       "extra": 0
+      }
+     ]
+    },
+    "final": {
+     "copies": 3780608,
+     "bytes": 362938368,
+     "sites": [
+      {
+       "function": "batch_result",
+       "origin": "batch_result",
+       "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/test/core/row_record_pass.my",
+       "line": 32,
+       "column": 6,
+       "kind": "record_copy",
+       "detail": "jump",
+       "count": 3780608,
+       "bytes": 362938368,
+       "extra": 0
+      }
+     ]
+    }
+   }
+  },
+  "p6": {
+   "base": 444833472,
+   "final": 444833472
+  },
+  "r5_cpu10": {
+   "result_propagate/4096": {
+    "actual-m0": 0.9349573730565143,
+    "reconstructed": 1.006048500851981,
+    "probe": 1.0,
+    "final": 0.9789592791717953
+   },
+   "option_handle/64": {
+    "actual-m0": 1.0040619843188825,
+    "reconstructed": 1.0016083895864314,
+    "probe": 1.0,
+    "final": 0.9604143566981467
+   }
+  },
+  "nbody_bound": {
+   "base": 1.0,
+   "final": 1.0038379449802493,
+   "final-class": 0.9997385449238895,
+   "zig-safe": 0.7296425281633284,
+   "rust-checked": 0.841883630318523,
+   "rung0": 1.0018486106575806,
+   "rung1": 0.9957031984370043,
+   "rung2": 0.9796948878824058
+  },
+  "array_relative_to_my": {
+   "my-array": 1.1617628529326696,
+   "my-tuned": 1.0719910730282458
+  }
+ },
+ "compile_times": {
+  "lox": {
+   "medians": {
+    "base": {
+     "wall_seconds": 2.9684459399431944,
+     "cpu_seconds": 2.9741860000000004
+    },
+    "candidate": {
+     "wall_seconds": 3.069067446049303,
+     "cpu_seconds": 3.0748219999999984
+    }
+   },
+   "candidate_over_base": {
+    "wall_seconds": 1.033897031693302,
+    "cpu_seconds": 1.0338364850079982
+   },
+   "above_1_10_wall": false
+  },
+  "eda": {
+   "medians": {
+    "base": {
+     "wall_seconds": 14.593585608992726,
+     "cpu_seconds": 14.594273000000005
+    },
+    "candidate": {
+     "wall_seconds": 15.191719950875267,
+     "cpu_seconds": 15.18953699999999
+    }
+   },
+   "candidate_over_base": {
+    "wall_seconds": 1.0409861125228856,
+    "cpu_seconds": 1.0407875061676581
+   },
+   "above_1_10_wall": false
+  }
+ },
+ "instruction_guard": {
+  "complete": true,
+  "instruction_gate_met": true,
+  "regressions": []
+ },
+ "regressions": [
+  "parity/text_ops/my-tuned",
+  "rows/mutate_nested/4096",
+  "rows/mutate_nested/64",
+  "rows/result_propagate/4096",
+  "rows/sort_int/64",
+  "rows/sort_records/64"
+ ],
+ "remaining": [
+  "parity/matmul/my-tuned",
+  "parity/nbody/my",
+  "parity/nbody/my-class",
+  "parity/sort_quick/my",
+  "parity/text_ops/my",
+  "parity/calls/my",
+  "parity/intloop/my",
+  "parity/records/my",
+  "lox/tree/equality",
+  "lox/vm/fib",
+  "lox/vm/instantiation",
+  "lox/vm/invocation",
+  "lox/vm/method_call",
+  "lox/vm/properties",
+  "lox/vm/string_equality",
+  "lox/tree/string_equality",
+  "lox/vm/zoo",
+  "lox/vm/zoo_batch",
+  "eda/blinky-breakout",
+  "eda/cyclops-breakout",
+  "eda/cyclops-digital-pcb",
+  "eda/cyclops-kband-pcb",
+  "eda/rf-switch-8way",
+  "eda/rf-switch-eval",
+  "eda/straps-base",
+  "eda/Cyclops-Flex",
+  "eda/dual-flash",
+  "eda/lmk05318b-clock",
+  "eda/max860-inverter",
+  "eda/rds3+flat",
+  "rows/sort_int/64"
+ ],
+ "unavailable": [
+  "parity/binary_trees_recursive/my"
+ ]
+}

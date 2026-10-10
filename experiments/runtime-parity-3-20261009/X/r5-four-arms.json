@@ -1,0 +1,51 @@
+{
+ "ready": true,
+ "cells": [
+  {
+   "row": "result_propagate",
+   "size": 4096,
+   "reference": "probe",
+   "arms": {
+    "actual-m0": {
+     "binary": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/ce/bin/base/row-result_propagate-plain",
+     "sha256": "768f59bf6d9a71b04cb25cd6ad12bde67f6159544a2fc6cc30ecf0acf20a9b4d"
+    },
+    "reconstructed": {
+     "binary": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/R/base-probes/row-result_propagate/base.exe",
+     "sha256": "ada7ce9fa6fcf445f6f0a91aa0e12f0b74cacf3ea6bef4dd7ed8127bffd57744"
+    },
+    "probe": {
+     "binary": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/R/base-probes/row-result_propagate/no-barrier.exe",
+     "sha256": "ada7ce9fa6fcf445f6f0a91aa0e12f0b74cacf3ea6bef4dd7ed8127bffd57744"
+    },
+    "final": {
+     "binary": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/all46/row_result_propagate_new",
+     "sha256": "83552597facb15bbc7247540530cc920fc30120f3264160710eb05d7ef777130"
+    }
+   }
+  },
+  {
+   "row": "option_handle",
+   "size": 64,
+   "reference": "probe",
+   "arms": {
+    "actual-m0": {
+     "binary": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/ce/bin/base/row-option_handle-plain",
+     "sha256": "da79591fd5fdad92324ce3ea47a5c2b6b1d5b55d16a268210ac58616acba8ef5"
+    },
+    "reconstructed": {
+     "binary": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/R/base-probes/row-option_handle/base.exe",
+     "sha256": "f3c41b82bebfeb4d98cedf4d45a2aa88d3158eddf8284b6395c09762cecd8492"
+    },
+    "probe": {
+     "binary": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/R/base-probes/row-option_handle/no-barrier.exe",
+     "sha256": "f3c41b82bebfeb4d98cedf4d45a2aa88d3158eddf8284b6395c09762cecd8492"
+    },
+    "final": {
+     "binary": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/all46/row_option_handle_new",
+     "sha256": "4222be42350a4329992b99bf799e64dd9628bc3e5ac2e865e833196e108a29e0"
+    }
+   }
+  }
+ ]
+}

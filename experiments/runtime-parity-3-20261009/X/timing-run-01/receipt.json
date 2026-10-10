@@ -1,0 +1,478 @@
+{
+ "complete": true,
+ "source_commit": "8a9f1947cce42774779726134a07e8d721abed13",
+ "qualified_commit": "20e7c340eb8d93320de4493f7b50665c7979ef2b",
+ "integrated_main": "fa11606022ed217896a27976f8fe6d95db95f465",
+ "base_sha256": "b6db112b3faeab165422d2da80e64afa94c4135cf83cd7abe3eb41cd15308131",
+ "final_sha256": "bca29e42f40b55e93126e229d48e57c02375cf89536ca89ac7fdf1e00f3ed3b7",
+ "corpora": {
+  "manifest_sha256": "421c9677c860447fe0b36f982cd14d3342c7d6048859d6f440eaebd313ffce5c",
+  "files_checked": 683
+ },
+ "evidence_only_changes_after_qualification": [
+  "experiments/runtime-parity-3-20261009/M0/qualify-base-41ed360fb-01/full-conformance.log",
+  "experiments/runtime-parity-3-20261009/M0/qualify-base-41ed360fb-01/full-conformance.log.gz",
+  "experiments/runtime-parity-3-20261009/M0/qualify-base-41ed360fb-01/install-core.log",
+  "experiments/runtime-parity-3-20261009/M0/qualify-base-41ed360fb-01/install-core.log.gz",
+  "experiments/runtime-parity-3-20261009/M0/qualify-base-41ed360fb-01/test-core.log",
+  "experiments/runtime-parity-3-20261009/M0/qualify-base-41ed360fb-01/test-core.log.gz",
+  "experiments/runtime-parity-3-20261009/M0/qualify-base-additive-41ed360fb-02/full-conformance.log",
+  "experiments/runtime-parity-3-20261009/M0/qualify-base-additive-41ed360fb-02/full-conformance.log.gz",
+  "experiments/runtime-parity-3-20261009/M0/qualify-base-additive-41ed360fb-02/install-core.log",
+  "experiments/runtime-parity-3-20261009/M0/qualify-base-additive-41ed360fb-02/install-core.log.gz",
+  "experiments/runtime-parity-3-20261009/M0/qualify-base-additive-41ed360fb-02/test-core.log",
+  "experiments/runtime-parity-3-20261009/M0/qualify-base-additive-41ed360fb-02/test-core.log.gz",
+  "experiments/runtime-parity-3-20261009/M0/rows-qualification.json",
+  "experiments/runtime-parity-3-20261009/M0/rows-qualification.json.gz",
+  "experiments/runtime-parity-3-20261009/M0/rows-reference-rebuild.json",
+  "experiments/runtime-parity-3-20261009/M0/rows-reference-rebuild.json.gz",
+  "experiments/runtime-parity-3-20261009/M0/rows-summary.json",
+  "experiments/runtime-parity-3-20261009/M0/rows-summary.json.gz",
+  "experiments/runtime-parity-3-20261009/REPORT.md",
+  "experiments/runtime-parity-3-20261009/S2/final-compile-times.json",
+  "experiments/runtime-parity-3-20261009/S2/final-compile-times.json.gz",
+  "experiments/runtime-parity-3-20261009/S2/prefix-cpu8.json",
+  "experiments/runtime-parity-3-20261009/S2/prefix-cpu8.json.gz",
+  "experiments/runtime-parity-3-20261009/X/gates-final/counting-gate.json",
+  "experiments/runtime-parity-3-20261009/X/gates-final/counts.json.gz",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/dict.txt",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/dict/commands-summary.json",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/dict/harness.txt",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/dict/sources.tar.gz",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/dict/summary.json",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/functions.txt",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/functions/commands-summary.json",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/functions/harness.txt",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/functions/sources.tar.gz",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/functions/summary.json",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/iteration.txt",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/iteration/commands-summary.json",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/iteration/harness.txt",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/iteration/sources.tar.gz",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/iteration/summary.json",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/manifest.json",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/matrix.json",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/number.txt",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/number/commands-summary.json",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/number/harness.txt",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/number/sources.tar.gz",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/number/summary.json",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/rc.txt",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/rc/commands-summary.json",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/rc/harness.txt",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/rc/sources.tar.gz",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/rc/summary.json",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/rebinding.txt",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/rebinding/commands-summary.json",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/rebinding/harness.txt",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/rebinding/sources.tar.gz",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/rebinding/summary.json",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/s0.txt",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/s0/commands-summary.json",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/s0/harness.txt",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/s0/sources.tar.gz",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/s0/summary.json",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/s1.txt",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/s1/commands-summary.json",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/s1/harness.txt",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/s1/sources.tar.gz",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/s1/summary.json",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/text.txt",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/text/commands-summary.json",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/text/harness.txt",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/text/sources.tar.gz",
+  "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/text/summary.json",
+  "experiments/runtime-parity-3-20261009/X/gates-final/instruction-comparison.json",
+  "experiments/runtime-parity-3-20261009/X/gates-final/instruction-comparison.md",
+  "experiments/runtime-parity-3-20261009/X/gates-final/instructions.json.gz",
+  "experiments/runtime-parity-3-20261009/X/gates-final/log-archive.json",
+  "experiments/runtime-parity-3-20261009/X/gates-final/qual-final-additive/frontend-conformance.json",
+  "experiments/runtime-parity-3-20261009/X/gates-final/qual-final-additive/full-conformance.log.gz",
+  "experiments/runtime-parity-3-20261009/X/gates-final/qual-final-additive/full-conformance.seconds",
+  "experiments/runtime-parity-3-20261009/X/gates-final/qual-final-additive/install-core.log.gz",
+  "experiments/runtime-parity-3-20261009/X/gates-final/qual-final-additive/install-core.seconds",
+  "experiments/runtime-parity-3-20261009/X/gates-final/qual-final-additive/summary.json",
+  "experiments/runtime-parity-3-20261009/X/gates-final/qual-final-additive/test-core.log.gz",
+  "experiments/runtime-parity-3-20261009/X/gates-final/qual-final-additive/test-core.seconds",
+  "experiments/runtime-parity-3-20261009/X/gates-final/qual-final-raw/full-conformance.log.gz",
+  "experiments/runtime-parity-3-20261009/X/gates-final/qual-final-raw/full-conformance.seconds",
+  "experiments/runtime-parity-3-20261009/X/gates-final/qual-final-raw/install-core.log.gz",
+  "experiments/runtime-parity-3-20261009/X/gates-final/qual-final-raw/install-core.seconds",
+  "experiments/runtime-parity-3-20261009/X/gates-final/qual-final-raw/summary.json",
+  "experiments/runtime-parity-3-20261009/X/gates-final/qual-final-raw/test-core.log.gz",
+  "experiments/runtime-parity-3-20261009/X/gates-final/qual-final-raw/test-core.seconds",
+  "experiments/runtime-parity-3-20261009/X/gates-final/receipt.json",
+  "experiments/runtime-parity-3-20261009/X/gates-merge-s2-main-02/instruction-comparison.json",
+  "experiments/runtime-parity-3-20261009/X/gates-merge-s2-main-02/instruction-comparison.json.gz",
+  "experiments/runtime-parity-3-20261009/X/gates-merge-u2-01/instruction-comparison.json",
+  "experiments/runtime-parity-3-20261009/X/gates-merge-u2-01/instruction-comparison.json.gz",
+  "experiments/runtime-parity-3-20261009/X/tool-audit/completed-evidence-archive-01.json",
+  "experiments/runtime-parity-3-20261009/X/tool-audit/final-owned-path-audit.json",
+  "experiments/runtime-parity-3-20261009/X/tool-audit/final-workload-source-audit.json",
+  "experiments/runtime-parity-3-20261009/results/final/eda.json",
+  "experiments/runtime-parity-3-20261009/results/final/lox.json",
+  "experiments/runtime-parity-3-20261009/results/final/parity.json",
+  "experiments/runtime-parity-3-20261009/results/final/rows.json"
+ ],
+ "steps": [
+  {
+   "name": "compile-times",
+   "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/scripts/build-slot.sh",
+    "build",
+    "/usr/bin/python3",
+    "-B",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/tools/compile_times.py",
+    "--base",
+    "/home/epentland/.cache/mylang/rp3-base-41ed360fb/bin/mylang",
+    "--candidate",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/compilers/final/release-fast/bin/mylang",
+    "--tag",
+    "x-final-compile-01",
+    "--out",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/X/compile-times.json"
+   ],
+   "status": 0,
+   "seconds": 143.97096300125122,
+   "log": ".tmp/rp3/timing-run-01/compile-times.log",
+   "log_sha256": "374d4790de8e656b61b761cf6556ba30f4727c79ba311c63236d6628d4fc4985"
+  },
+  {
+   "name": "exit-counts",
+   "command": [
+    "/usr/bin/python3",
+    "-B",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/tools/final_exit_counts.py",
+    "--base-tag",
+    "base",
+    "--candidate-tag",
+    "final",
+    "--out",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/X/final-exit-counts.json"
+   ],
+   "status": 0,
+   "seconds": 0.14858102798461914,
+   "log": ".tmp/rp3/timing-run-01/exit-counts.log",
+   "log_sha256": "eef4009d364e68d126fa8e2d513474b0e122b59994c6425b561c3d2298e91296"
+  },
+  {
+   "name": "hot-counts",
+   "command": [
+    "/usr/bin/python3",
+    "-B",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/tools/hot_counts.py",
+    "--tag",
+    "final",
+    "--out",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/X"
+   ],
+   "status": 0,
+   "seconds": 0.28589820861816406,
+   "log": ".tmp/rp3/timing-run-01/hot-counts.log",
+   "log_sha256": "6ccc52033ad885f8eba323d88873a01c0bcbdb5a19e834914bd053b0e46b1151"
+  },
+  {
+   "name": "profile-alloc-base",
+   "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/scripts/build-slot.sh",
+    "build",
+    "/usr/bin/python3",
+    "-B",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/U2/profile_alloc.py",
+    "--tag",
+    "base",
+    "--repeat",
+    "40",
+    "--out",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/X/profile-alloc-base.json"
+   ],
+   "status": 0,
+   "seconds": 6.783987283706665,
+   "log": ".tmp/rp3/timing-run-01/profile-alloc-base.log",
+   "log_sha256": "8446f15273918ac6c491146d991500b95b3ccda2cb9ebd28e7a641100131b5a7"
+  },
+  {
+   "name": "profile-text-base",
+   "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/scripts/build-slot.sh",
+    "build",
+    "/usr/bin/python3",
+    "-B",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/S2/profile_text.py",
+    "--tag",
+    "base",
+    "--repeat",
+    "40",
+    "--out",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/X/profile-text-base.json"
+   ],
+   "status": 0,
+   "seconds": 6.619652986526489,
+   "log": ".tmp/rp3/timing-run-01/profile-text-base.log",
+   "log_sha256": "239fa0e271436e5c97e13ba3964100e080d4ece66f9626c6556cfe2c9e45c090"
+  },
+  {
+   "name": "profile-alloc-final",
+   "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/scripts/build-slot.sh",
+    "build",
+    "/usr/bin/python3",
+    "-B",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/U2/profile_alloc.py",
+    "--tag",
+    "final",
+    "--repeat",
+    "40",
+    "--out",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/X/profile-alloc-final.json"
+   ],
+   "status": 0,
+   "seconds": 5.925875425338745,
+   "log": ".tmp/rp3/timing-run-01/profile-alloc-final.log",
+   "log_sha256": "96625516d37adf2d36faf2fc01a379009e5bff9f371e4dbf2f8ccf6f7e356db8"
+  },
+  {
+   "name": "profile-text-final",
+   "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/scripts/build-slot.sh",
+    "build",
+    "/usr/bin/python3",
+    "-B",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/S2/profile_text.py",
+    "--tag",
+    "final",
+    "--repeat",
+    "40",
+    "--out",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/X/profile-text-final.json"
+   ],
+   "status": 0,
+   "seconds": 6.132199287414551,
+   "log": ".tmp/rp3/timing-run-01/profile-text-final.log",
+   "log_sha256": "80671466d12d3c73b21361342a2ec3e7648fc4b277d1ba5335efc78637171301"
+  },
+  {
+   "name": "timing-prep",
+   "command": [
+    "bash",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/tools/timing-prep.sh"
+   ],
+   "status": 0,
+   "seconds": 111.5141670703888,
+   "log": ".tmp/rp3/timing-run-01/timing-prep.log",
+   "log_sha256": "48e045429d3272d1dab217ed719329e270a9a5ad1149121421920b2b888d1863"
+  },
+  {
+   "name": "r5-cpu8",
+   "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/scripts/build-slot.sh",
+    "build",
+    "/usr/bin/python3",
+    "-B",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/tools/r5_cpu8.py",
+    "--tools",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/tools",
+    "--spec",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/X/r5-four-arms.json",
+    "--out",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/X/r5-cpu8.json"
+   ],
+   "status": 0,
+   "seconds": 1.1050024032592773,
+   "log": ".tmp/rp3/timing-run-01/r5-cpu8.log",
+   "log_sha256": "50eb62f51917bce8f4b09a71df65ef360e7dd69d8a8b9bc585213eb91830b57f"
+  },
+  {
+   "name": "lox",
+   "command": [
+    "bash",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/tools/part3.sh",
+    "lox"
+   ],
+   "status": 0,
+   "seconds": 577.6939868927002,
+   "log": ".tmp/rp3/timing-run-01/lox.log",
+   "log_sha256": "2ce29fd7936fd1b06225c337886b1c7696f4fc4902a4676b470533dd56ac39b0"
+  },
+  {
+   "name": "eda",
+   "command": [
+    "bash",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/tools/part3.sh",
+    "eda"
+   ],
+   "status": 0,
+   "seconds": 78.20922255516052,
+   "log": ".tmp/rp3/timing-run-01/eda.log",
+   "log_sha256": "89997ec5f9364f0e85787313ab8a5e351065413a551c71d9cd18e11a6c73eb24"
+  },
+  {
+   "name": "parity",
+   "command": [
+    "bash",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/tools/part3.sh",
+    "parity"
+   ],
+   "status": 0,
+   "seconds": 1285.4904236793518,
+   "log": ".tmp/rp3/timing-run-01/parity.log",
+   "log_sha256": "878345400f8e4fb10f63d4776eabf382ff957502ec3312da7217d06462bdee9f"
+  },
+  {
+   "name": "rows-1",
+   "command": [
+    "bash",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/tools/part3.sh",
+    "rows",
+    "1"
+   ],
+   "status": 0,
+   "seconds": 224.08061480522156,
+   "log": ".tmp/rp3/timing-run-01/rows-1.log",
+   "log_sha256": "9490a522abccccf7c5ae18233a793a0f6b6ec7d5f4ec3807ecd873c5d0533fcc"
+  },
+  {
+   "name": "rows-2",
+   "command": [
+    "bash",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/tools/part3.sh",
+    "rows",
+    "2"
+   ],
+   "status": 0,
+   "seconds": 224.1939651966095,
+   "log": ".tmp/rp3/timing-run-01/rows-2.log",
+   "log_sha256": "a66d74464f43f0a5b9fe9fcbf66dc0c1cf50c6c0abbcf950664c32c87e3dad65"
+  },
+  {
+   "name": "rows-3",
+   "command": [
+    "bash",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/tools/part3.sh",
+    "rows",
+    "3"
+   ],
+   "status": 0,
+   "seconds": 224.46297526359558,
+   "log": ".tmp/rp3/timing-run-01/rows-3.log",
+   "log_sha256": "789be43d3cfb4f56e3126192366c65f1bac1a1f866b8aa0023ed452a1189dac8"
+  },
+  {
+   "name": "text-ops-bound",
+   "command": [
+    "/usr/bin/python3",
+    "-B",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/tools/confirm_bound.py",
+    "--spec",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/X/text-ops-bound-spec.json",
+    "--out",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/X/text-ops-bound.json"
+   ],
+   "status": 0,
+   "seconds": 1.893669843673706,
+   "log": ".tmp/rp3/timing-run-01/text-ops-bound.log",
+   "log_sha256": "c55b5f78dc59fe2b279100e7908a5bcd2259bb33fbad6b99e703e559693c3782"
+  },
+  {
+   "name": "nbody-bound",
+   "command": [
+    "/usr/bin/python3",
+    "-B",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/tools/confirm_bound.py",
+    "--spec",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/X/nbody-bound-spec.json",
+    "--out",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/X/nbody-bound.json"
+   ],
+   "status": 0,
+   "seconds": 14.683359146118164,
+   "log": ".tmp/rp3/timing-run-01/nbody-bound.log",
+   "log_sha256": "668489d2c3ca2ec06d40ec3f49464ea666faf23697ca858434a647ddbf7c3aa0"
+  },
+  {
+   "name": "r5-cpu10",
+   "command": [
+    "/usr/bin/python3",
+    "-B",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/tools/confirm_rows_bound.py",
+    "--spec",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/X/r5-four-arms.json",
+    "--out",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/X/r5-cpu10.json"
+   ],
+   "status": 0,
+   "seconds": 3.4456496238708496,
+   "log": ".tmp/rp3/timing-run-01/r5-cpu10.log",
+   "log_sha256": "310667265eb4a239818f41122d1c9d384d6620c515745c366368ac47f469b4cf"
+  },
+  {
+   "name": "gap",
+   "command": [
+    "/usr/bin/python3",
+    "-B",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/tools/x_gap.py",
+    "--input",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/results",
+    "--out",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/X"
+   ],
+   "status": 0,
+   "seconds": 0.3378489017486572,
+   "log": ".tmp/rp3/timing-run-01/gap.log",
+   "log_sha256": "78a0e8cfe9d1eb48734a0a88be1035a601c145b64c93d2331de1fe7bb2715e77"
+  },
+  {
+   "name": "review-perf",
+   "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/scripts/build-slot.sh",
+    "build",
+    "/usr/bin/python3",
+    "-B",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/tools/review_perf.py",
+    "--gap",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/X/gap.json",
+    "--rounds",
+    "7",
+    "--out",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/X/review-perf.json"
+   ],
+   "status": 0,
+   "seconds": 1.5571129322052002,
+   "log": ".tmp/rp3/timing-run-01/review-perf.log",
+   "log_sha256": "c911bfeb204f4ce94b7347514bd6543d2b3a996bc94a65cff1632cc19568ad55"
+  }
+ ],
+ "archives": [
+  {
+   "path": "experiments/runtime-parity-3-20261009/results/lox-runtime.json.gz",
+   "raw_sha256": "8df657e4ad04107cca03712256186a0efc03bfc7ed38378b30ab8cd9781b162b",
+   "gzip_sha256": "6cbd97ee5c15715c27a8e960ecc818d041b9532fbe2aaa04b1595e4239f25dad"
+  },
+  {
+   "path": "experiments/runtime-parity-3-20261009/results/eda-runtime.json.gz",
+   "raw_sha256": "2f7b3509e88d23a7644260a0a66053110008019d66d851af7b972f5a3b4c91b9",
+   "gzip_sha256": "0f44507287faecad6a2399ce0dd67b00d8b0fe09109cc0603853bef94850222e"
+  },
+  {
+   "path": "experiments/runtime-parity-3-20261009/results/parity-pair.json.gz",
+   "raw_sha256": "68a9cd5b162a9597f3af7d341f38d0cc98e6b37571cadb2475ad6653b9b14cdd",
+   "gzip_sha256": "88df43bd6f2d5e9ef0a6f58c816315571d0a03c7626678a26631d99ed1591a7c"
+  },
+  {
+   "path": "experiments/runtime-parity-3-20261009/results/all46-1.json.gz",
+   "raw_sha256": "a80c03cbadc38e1eb2e6e0018cc0d9d225a9f76a63674771bee201e3b6bb2ede",
+   "gzip_sha256": "1fc7c3a0272af9328e41fbda5d806c0b732385e9978d688bca638734793a8606"
+  },
+  {
+   "path": "experiments/runtime-parity-3-20261009/results/all46-2.json.gz",
+   "raw_sha256": "874cababb226799ea57b0ddac40e7004292570c52c618e029c9e8a49203b8cc0",
+   "gzip_sha256": "9fafc1433cacd4fc96c202f1bf3320050c7d76d638ea070c6ce62b8cbc8cd0c3"
+  },
+  {
+   "path": "experiments/runtime-parity-3-20261009/results/all46-3.json.gz",
+   "raw_sha256": "91b4545fcceed8a53ccae1eca6c0b9669249bf19106db1a2b70777e2a15afc35",
+   "gzip_sha256": "4d54c643328e6a5f221c89cddf1e20698290506e69d2e9791fe31c01a42ade77"
+  }
+ ],
+ "analysis_pending": true
+}

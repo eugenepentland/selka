@@ -1,0 +1,767 @@
+{
+ "complete": true,
+ "source_commit": "8a9f1947cce42774779726134a07e8d721abed13",
+ "compiler_sha256": {
+  "base": "b6db112b3faeab165422d2da80e64afa94c4135cf83cd7abe3eb41cd15308131",
+  "candidate": "bca29e42f40b55e93126e229d48e57c02375cf89536ca89ac7fdf1e00f3ed3b7"
+ },
+ "samples": [
+  {
+   "round": 0,
+   "tag": "base",
+   "program": "eda",
+   "status": 0,
+   "wall_seconds": 14.138801618013531,
+   "cpu_seconds": 14.139615,
+   "command": [
+    "/home/epentland/.cache/mylang/rp3-base-41ed360fb/bin/mylang",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/eda-src/src/main.my",
+    "--release",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/compile-times/x-final-compile-01/0-base-eda/program",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/compile-times/x-final-compile-01/0-base-eda/cache",
+    "--cache-report"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/eda-src",
+   "runtime_seed": [
+    {
+     "name": "core_number_text-ee8cb41de3c72ee64b3ce278cfaa65b66fe3156e5c48dc734430b3d2edc712cb.o",
+     "sha256": "45628fd3b156083efcd4965028be389535090e8a741244e3242db603b29650c7"
+    },
+    {
+     "name": "core_rt-d7cb25f9c7740caca1b6bf7286c30e63b492f932558291c54d667d3f6415aae0.c",
+     "sha256": "52f1c6c2db529fe7b374a78d87f2dc37f56b95fbd4b4200a79c9d74b00de6fec"
+    },
+    {
+     "name": "core_rt-d7cb25f9c7740caca1b6bf7286c30e63b492f932558291c54d667d3f6415aae0.o",
+     "sha256": "0ad98a096174e3b91e3bb90c43bfb8f9dc24fea7d0795a69502bce3f8f23495e"
+    },
+    {
+     "name": "core_rt-ec8f0cb49860e22ad2691ee0e825135abe17d099529b6fec7d9fe5098181739d.c",
+     "sha256": "71b949311a468701c2d0ca1851cd03e9465b1d5dc020397d29e9fa14a1c52042"
+    },
+    {
+     "name": "core_rt-ec8f0cb49860e22ad2691ee0e825135abe17d099529b6fec7d9fe5098181739d.o",
+     "sha256": "77735f5514066cf5b3ad997e94d5c583903d0944744659b75058b9d26a8fcaed"
+    }
+   ],
+   "cache_report": "mylang-core: cache: 1 units, 0 reused, 1 compiled, 0 verified; program linked; 2 processes\n",
+   "scratch": ".mylang-cache/rp3/compile-times/x-final-compile-01/0-base-eda",
+   "binary_sha256": "c3ccfaf6f06044d3531cef33b84b4ea080e9a2b103b3b3355f34b3903c2c1ca7"
+  },
+  {
+   "round": 0,
+   "tag": "candidate",
+   "program": "eda",
+   "status": 0,
+   "wall_seconds": 15.08278448600322,
+   "cpu_seconds": 15.083523,
+   "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/compilers/final/release-fast/bin/mylang",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/eda-src/src/main.my",
+    "--release",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/compile-times/x-final-compile-01/0-candidate-eda/program",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/compile-times/x-final-compile-01/0-candidate-eda/cache",
+    "--cache-report"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/eda-src",
+   "runtime_seed": [
+    {
+     "name": "core_number_text-ee8cb41de3c72ee64b3ce278cfaa65b66fe3156e5c48dc734430b3d2edc712cb.o",
+     "sha256": "45628fd3b156083efcd4965028be389535090e8a741244e3242db603b29650c7"
+    },
+    {
+     "name": "core_rt-ca98adc99d0a06b0a0c67200e49554cf5c1a816a7ea6e79d5ac6bfb3f5bee81b.c",
+     "sha256": "095e78d38784704f513d0ebec6eb049a3c40a359742444e189140511cc98d846"
+    },
+    {
+     "name": "core_rt-ca98adc99d0a06b0a0c67200e49554cf5c1a816a7ea6e79d5ac6bfb3f5bee81b.o",
+     "sha256": "5cbd3eeb143ca5565b6febede38b255ef354443c3ae7da45c04f7578fe7a8a75"
+    },
+    {
+     "name": "core_rt-fafa3d1ef3df5e5d499c74d93bb6b2b6d45a151db134e1b1fe1493f33d089900.c",
+     "sha256": "bec591e5a378bfe5e66b269d6c0b89ca8a63d35c022672578ee3772b6fcce26c"
+    },
+    {
+     "name": "core_rt-fafa3d1ef3df5e5d499c74d93bb6b2b6d45a151db134e1b1fe1493f33d089900.o",
+     "sha256": "7ccc4cc0fe0d932d31cae206f9105ede965737a43163d7050507502857d94aec"
+    }
+   ],
+   "cache_report": "mylang-core: cache: 1 units, 0 reused, 1 compiled, 0 verified; program linked; 2 processes\n",
+   "scratch": ".mylang-cache/rp3/compile-times/x-final-compile-01/0-candidate-eda",
+   "binary_sha256": "56775ba9468e2e8a8e0800837275b003b3c95ab5897371e9f7be50d51b52a761"
+  },
+  {
+   "round": 0,
+   "tag": "base",
+   "program": "lox",
+   "status": 0,
+   "wall_seconds": 2.954909485997632,
+   "cpu_seconds": 2.9596950000000026,
+   "command": [
+    "/home/epentland/.cache/mylang/rp3-base-41ed360fb/bin/mylang",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/lox/ports/mylang/main.my",
+    "--release",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/compile-times/x-final-compile-01/0-base-lox/program",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/compile-times/x-final-compile-01/0-base-lox/cache",
+    "--cache-report"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/lox/ports/mylang",
+   "runtime_seed": [
+    {
+     "name": "core_number_text-ee8cb41de3c72ee64b3ce278cfaa65b66fe3156e5c48dc734430b3d2edc712cb.o",
+     "sha256": "45628fd3b156083efcd4965028be389535090e8a741244e3242db603b29650c7"
+    },
+    {
+     "name": "core_rt-d7cb25f9c7740caca1b6bf7286c30e63b492f932558291c54d667d3f6415aae0.c",
+     "sha256": "52f1c6c2db529fe7b374a78d87f2dc37f56b95fbd4b4200a79c9d74b00de6fec"
+    },
+    {
+     "name": "core_rt-d7cb25f9c7740caca1b6bf7286c30e63b492f932558291c54d667d3f6415aae0.o",
+     "sha256": "0ad98a096174e3b91e3bb90c43bfb8f9dc24fea7d0795a69502bce3f8f23495e"
+    },
+    {
+     "name": "core_rt-ec8f0cb49860e22ad2691ee0e825135abe17d099529b6fec7d9fe5098181739d.c",
+     "sha256": "71b949311a468701c2d0ca1851cd03e9465b1d5dc020397d29e9fa14a1c52042"
+    },
+    {
+     "name": "core_rt-ec8f0cb49860e22ad2691ee0e825135abe17d099529b6fec7d9fe5098181739d.o",
+     "sha256": "77735f5514066cf5b3ad997e94d5c583903d0944744659b75058b9d26a8fcaed"
+    }
+   ],
+   "cache_report": "mylang-core: cache: 1 units, 0 reused, 1 compiled, 0 verified; program linked; 2 processes\n",
+   "scratch": ".mylang-cache/rp3/compile-times/x-final-compile-01/0-base-lox",
+   "binary_sha256": "45217de8c35a115af62cc2a140d2d62a6f891af3526ede9b06ee6ed0d02befe7"
+  },
+  {
+   "round": 0,
+   "tag": "candidate",
+   "program": "lox",
+   "status": 0,
+   "wall_seconds": 3.0581673360429704,
+   "cpu_seconds": 3.0564180000000034,
+   "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/compilers/final/release-fast/bin/mylang",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/lox/ports/mylang/main.my",
+    "--release",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/compile-times/x-final-compile-01/0-candidate-lox/program",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/compile-times/x-final-compile-01/0-candidate-lox/cache",
+    "--cache-report"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/lox/ports/mylang",
+   "runtime_seed": [
+    {
+     "name": "core_number_text-ee8cb41de3c72ee64b3ce278cfaa65b66fe3156e5c48dc734430b3d2edc712cb.o",
+     "sha256": "45628fd3b156083efcd4965028be389535090e8a741244e3242db603b29650c7"
+    },
+    {
+     "name": "core_rt-ca98adc99d0a06b0a0c67200e49554cf5c1a816a7ea6e79d5ac6bfb3f5bee81b.c",
+     "sha256": "095e78d38784704f513d0ebec6eb049a3c40a359742444e189140511cc98d846"
+    },
+    {
+     "name": "core_rt-ca98adc99d0a06b0a0c67200e49554cf5c1a816a7ea6e79d5ac6bfb3f5bee81b.o",
+     "sha256": "5cbd3eeb143ca5565b6febede38b255ef354443c3ae7da45c04f7578fe7a8a75"
+    },
+    {
+     "name": "core_rt-fafa3d1ef3df5e5d499c74d93bb6b2b6d45a151db134e1b1fe1493f33d089900.c",
+     "sha256": "bec591e5a378bfe5e66b269d6c0b89ca8a63d35c022672578ee3772b6fcce26c"
+    },
+    {
+     "name": "core_rt-fafa3d1ef3df5e5d499c74d93bb6b2b6d45a151db134e1b1fe1493f33d089900.o",
+     "sha256": "7ccc4cc0fe0d932d31cae206f9105ede965737a43163d7050507502857d94aec"
+    }
+   ],
+   "cache_report": "mylang-core: cache: 1 units, 0 reused, 1 compiled, 0 verified; program linked; 2 processes\n",
+   "scratch": ".mylang-cache/rp3/compile-times/x-final-compile-01/0-candidate-lox",
+   "binary_sha256": "6aafbb4f41766b876626f6491b70dfaa4eeff7ca9232e73db0fee32c8346f4ce"
+  },
+  {
+   "round": 1,
+   "tag": "base",
+   "program": "lox",
+   "status": 0,
+   "wall_seconds": 2.9622472249902785,
+   "cpu_seconds": 2.967918000000001,
+   "command": [
+    "/home/epentland/.cache/mylang/rp3-base-41ed360fb/bin/mylang",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/lox/ports/mylang/main.my",
+    "--release",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/compile-times/x-final-compile-01/1-base-lox/program",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/compile-times/x-final-compile-01/1-base-lox/cache",
+    "--cache-report"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/lox/ports/mylang",
+   "runtime_seed": [
+    {
+     "name": "core_number_text-ee8cb41de3c72ee64b3ce278cfaa65b66fe3156e5c48dc734430b3d2edc712cb.o",
+     "sha256": "45628fd3b156083efcd4965028be389535090e8a741244e3242db603b29650c7"
+    },
+    {
+     "name": "core_rt-d7cb25f9c7740caca1b6bf7286c30e63b492f932558291c54d667d3f6415aae0.c",
+     "sha256": "52f1c6c2db529fe7b374a78d87f2dc37f56b95fbd4b4200a79c9d74b00de6fec"
+    },
+    {
+     "name": "core_rt-d7cb25f9c7740caca1b6bf7286c30e63b492f932558291c54d667d3f6415aae0.o",
+     "sha256": "0ad98a096174e3b91e3bb90c43bfb8f9dc24fea7d0795a69502bce3f8f23495e"
+    },
+    {
+     "name": "core_rt-ec8f0cb49860e22ad2691ee0e825135abe17d099529b6fec7d9fe5098181739d.c",
+     "sha256": "71b949311a468701c2d0ca1851cd03e9465b1d5dc020397d29e9fa14a1c52042"
+    },
+    {
+     "name": "core_rt-ec8f0cb49860e22ad2691ee0e825135abe17d099529b6fec7d9fe5098181739d.o",
+     "sha256": "77735f5514066cf5b3ad997e94d5c583903d0944744659b75058b9d26a8fcaed"
+    }
+   ],
+   "cache_report": "mylang-core: cache: 1 units, 0 reused, 1 compiled, 0 verified; program linked; 2 processes\n",
+   "scratch": ".mylang-cache/rp3/compile-times/x-final-compile-01/1-base-lox",
+   "binary_sha256": "45217de8c35a115af62cc2a140d2d62a6f891af3526ede9b06ee6ed0d02befe7"
+  },
+  {
+   "round": 1,
+   "tag": "candidate",
+   "program": "eda",
+   "status": 0,
+   "wall_seconds": 15.191719950875267,
+   "cpu_seconds": 15.18953699999999,
+   "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/compilers/final/release-fast/bin/mylang",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/eda-src/src/main.my",
+    "--release",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/compile-times/x-final-compile-01/1-candidate-eda/program",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/compile-times/x-final-compile-01/1-candidate-eda/cache",
+    "--cache-report"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/eda-src",
+   "runtime_seed": [
+    {
+     "name": "core_number_text-ee8cb41de3c72ee64b3ce278cfaa65b66fe3156e5c48dc734430b3d2edc712cb.o",
+     "sha256": "45628fd3b156083efcd4965028be389535090e8a741244e3242db603b29650c7"
+    },
+    {
+     "name": "core_rt-ca98adc99d0a06b0a0c67200e49554cf5c1a816a7ea6e79d5ac6bfb3f5bee81b.c",
+     "sha256": "095e78d38784704f513d0ebec6eb049a3c40a359742444e189140511cc98d846"
+    },
+    {
+     "name": "core_rt-ca98adc99d0a06b0a0c67200e49554cf5c1a816a7ea6e79d5ac6bfb3f5bee81b.o",
+     "sha256": "5cbd3eeb143ca5565b6febede38b255ef354443c3ae7da45c04f7578fe7a8a75"
+    },
+    {
+     "name": "core_rt-fafa3d1ef3df5e5d499c74d93bb6b2b6d45a151db134e1b1fe1493f33d089900.c",
+     "sha256": "bec591e5a378bfe5e66b269d6c0b89ca8a63d35c022672578ee3772b6fcce26c"
+    },
+    {
+     "name": "core_rt-fafa3d1ef3df5e5d499c74d93bb6b2b6d45a151db134e1b1fe1493f33d089900.o",
+     "sha256": "7ccc4cc0fe0d932d31cae206f9105ede965737a43163d7050507502857d94aec"
+    }
+   ],
+   "cache_report": "mylang-core: cache: 1 units, 0 reused, 1 compiled, 0 verified; program linked; 2 processes\n",
+   "scratch": ".mylang-cache/rp3/compile-times/x-final-compile-01/1-candidate-eda",
+   "binary_sha256": "56775ba9468e2e8a8e0800837275b003b3c95ab5897371e9f7be50d51b52a761"
+  },
+  {
+   "round": 1,
+   "tag": "base",
+   "program": "eda",
+   "status": 0,
+   "wall_seconds": 14.593585608992726,
+   "cpu_seconds": 14.594273000000005,
+   "command": [
+    "/home/epentland/.cache/mylang/rp3-base-41ed360fb/bin/mylang",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/eda-src/src/main.my",
+    "--release",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/compile-times/x-final-compile-01/1-base-eda/program",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/compile-times/x-final-compile-01/1-base-eda/cache",
+    "--cache-report"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/eda-src",
+   "runtime_seed": [
+    {
+     "name": "core_number_text-ee8cb41de3c72ee64b3ce278cfaa65b66fe3156e5c48dc734430b3d2edc712cb.o",
+     "sha256": "45628fd3b156083efcd4965028be389535090e8a741244e3242db603b29650c7"
+    },
+    {
+     "name": "core_rt-d7cb25f9c7740caca1b6bf7286c30e63b492f932558291c54d667d3f6415aae0.c",
+     "sha256": "52f1c6c2db529fe7b374a78d87f2dc37f56b95fbd4b4200a79c9d74b00de6fec"
+    },
+    {
+     "name": "core_rt-d7cb25f9c7740caca1b6bf7286c30e63b492f932558291c54d667d3f6415aae0.o",
+     "sha256": "0ad98a096174e3b91e3bb90c43bfb8f9dc24fea7d0795a69502bce3f8f23495e"
+    },
+    {
+     "name": "core_rt-ec8f0cb49860e22ad2691ee0e825135abe17d099529b6fec7d9fe5098181739d.c",
+     "sha256": "71b949311a468701c2d0ca1851cd03e9465b1d5dc020397d29e9fa14a1c52042"
+    },
+    {
+     "name": "core_rt-ec8f0cb49860e22ad2691ee0e825135abe17d099529b6fec7d9fe5098181739d.o",
+     "sha256": "77735f5514066cf5b3ad997e94d5c583903d0944744659b75058b9d26a8fcaed"
+    }
+   ],
+   "cache_report": "mylang-core: cache: 1 units, 0 reused, 1 compiled, 0 verified; program linked; 2 processes\n",
+   "scratch": ".mylang-cache/rp3/compile-times/x-final-compile-01/1-base-eda",
+   "binary_sha256": "c3ccfaf6f06044d3531cef33b84b4ea080e9a2b103b3b3355f34b3903c2c1ca7"
+  },
+  {
+   "round": 1,
+   "tag": "candidate",
+   "program": "lox",
+   "status": 0,
+   "wall_seconds": 3.069067446049303,
+   "cpu_seconds": 3.0748219999999984,
+   "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/compilers/final/release-fast/bin/mylang",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/lox/ports/mylang/main.my",
+    "--release",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/compile-times/x-final-compile-01/1-candidate-lox/program",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/compile-times/x-final-compile-01/1-candidate-lox/cache",
+    "--cache-report"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/lox/ports/mylang",
+   "runtime_seed": [
+    {
+     "name": "core_number_text-ee8cb41de3c72ee64b3ce278cfaa65b66fe3156e5c48dc734430b3d2edc712cb.o",
+     "sha256": "45628fd3b156083efcd4965028be389535090e8a741244e3242db603b29650c7"
+    },
+    {
+     "name": "core_rt-ca98adc99d0a06b0a0c67200e49554cf5c1a816a7ea6e79d5ac6bfb3f5bee81b.c",
+     "sha256": "095e78d38784704f513d0ebec6eb049a3c40a359742444e189140511cc98d846"
+    },
+    {
+     "name": "core_rt-ca98adc99d0a06b0a0c67200e49554cf5c1a816a7ea6e79d5ac6bfb3f5bee81b.o",
+     "sha256": "5cbd3eeb143ca5565b6febede38b255ef354443c3ae7da45c04f7578fe7a8a75"
+    },
+    {
+     "name": "core_rt-fafa3d1ef3df5e5d499c74d93bb6b2b6d45a151db134e1b1fe1493f33d089900.c",
+     "sha256": "bec591e5a378bfe5e66b269d6c0b89ca8a63d35c022672578ee3772b6fcce26c"
+    },
+    {
+     "name": "core_rt-fafa3d1ef3df5e5d499c74d93bb6b2b6d45a151db134e1b1fe1493f33d089900.o",
+     "sha256": "7ccc4cc0fe0d932d31cae206f9105ede965737a43163d7050507502857d94aec"
+    }
+   ],
+   "cache_report": "mylang-core: cache: 1 units, 0 reused, 1 compiled, 0 verified; program linked; 2 processes\n",
+   "scratch": ".mylang-cache/rp3/compile-times/x-final-compile-01/1-candidate-lox",
+   "binary_sha256": "6aafbb4f41766b876626f6491b70dfaa4eeff7ca9232e73db0fee32c8346f4ce"
+  },
+  {
+   "round": 2,
+   "tag": "base",
+   "program": "lox",
+   "status": 0,
+   "wall_seconds": 2.9684459399431944,
+   "cpu_seconds": 2.9741860000000004,
+   "command": [
+    "/home/epentland/.cache/mylang/rp3-base-41ed360fb/bin/mylang",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/lox/ports/mylang/main.my",
+    "--release",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/compile-times/x-final-compile-01/2-base-lox/program",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/compile-times/x-final-compile-01/2-base-lox/cache",
+    "--cache-report"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/lox/ports/mylang",
+   "runtime_seed": [
+    {
+     "name": "core_number_text-ee8cb41de3c72ee64b3ce278cfaa65b66fe3156e5c48dc734430b3d2edc712cb.o",
+     "sha256": "45628fd3b156083efcd4965028be389535090e8a741244e3242db603b29650c7"
+    },
+    {
+     "name": "core_rt-d7cb25f9c7740caca1b6bf7286c30e63b492f932558291c54d667d3f6415aae0.c",
+     "sha256": "52f1c6c2db529fe7b374a78d87f2dc37f56b95fbd4b4200a79c9d74b00de6fec"
+    },
+    {
+     "name": "core_rt-d7cb25f9c7740caca1b6bf7286c30e63b492f932558291c54d667d3f6415aae0.o",
+     "sha256": "0ad98a096174e3b91e3bb90c43bfb8f9dc24fea7d0795a69502bce3f8f23495e"
+    },
+    {
+     "name": "core_rt-ec8f0cb49860e22ad2691ee0e825135abe17d099529b6fec7d9fe5098181739d.c",
+     "sha256": "71b949311a468701c2d0ca1851cd03e9465b1d5dc020397d29e9fa14a1c52042"
+    },
+    {
+     "name": "core_rt-ec8f0cb49860e22ad2691ee0e825135abe17d099529b6fec7d9fe5098181739d.o",
+     "sha256": "77735f5514066cf5b3ad997e94d5c583903d0944744659b75058b9d26a8fcaed"
+    }
+   ],
+   "cache_report": "mylang-core: cache: 1 units, 0 reused, 1 compiled, 0 verified; program linked; 2 processes\n",
+   "scratch": ".mylang-cache/rp3/compile-times/x-final-compile-01/2-base-lox",
+   "binary_sha256": "45217de8c35a115af62cc2a140d2d62a6f891af3526ede9b06ee6ed0d02befe7"
+  },
+  {
+   "round": 2,
+   "tag": "candidate",
+   "program": "eda",
+   "status": 0,
+   "wall_seconds": 15.146455223904923,
+   "cpu_seconds": 15.146868999999992,
+   "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/compilers/final/release-fast/bin/mylang",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/eda-src/src/main.my",
+    "--release",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/compile-times/x-final-compile-01/2-candidate-eda/program",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/compile-times/x-final-compile-01/2-candidate-eda/cache",
+    "--cache-report"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/eda-src",
+   "runtime_seed": [
+    {
+     "name": "core_number_text-ee8cb41de3c72ee64b3ce278cfaa65b66fe3156e5c48dc734430b3d2edc712cb.o",
+     "sha256": "45628fd3b156083efcd4965028be389535090e8a741244e3242db603b29650c7"
+    },
+    {
+     "name": "core_rt-ca98adc99d0a06b0a0c67200e49554cf5c1a816a7ea6e79d5ac6bfb3f5bee81b.c",
+     "sha256": "095e78d38784704f513d0ebec6eb049a3c40a359742444e189140511cc98d846"
+    },
+    {
+     "name": "core_rt-ca98adc99d0a06b0a0c67200e49554cf5c1a816a7ea6e79d5ac6bfb3f5bee81b.o",
+     "sha256": "5cbd3eeb143ca5565b6febede38b255ef354443c3ae7da45c04f7578fe7a8a75"
+    },
+    {
+     "name": "core_rt-fafa3d1ef3df5e5d499c74d93bb6b2b6d45a151db134e1b1fe1493f33d089900.c",
+     "sha256": "bec591e5a378bfe5e66b269d6c0b89ca8a63d35c022672578ee3772b6fcce26c"
+    },
+    {
+     "name": "core_rt-fafa3d1ef3df5e5d499c74d93bb6b2b6d45a151db134e1b1fe1493f33d089900.o",
+     "sha256": "7ccc4cc0fe0d932d31cae206f9105ede965737a43163d7050507502857d94aec"
+    }
+   ],
+   "cache_report": "mylang-core: cache: 1 units, 0 reused, 1 compiled, 0 verified; program linked; 2 processes\n",
+   "scratch": ".mylang-cache/rp3/compile-times/x-final-compile-01/2-candidate-eda",
+   "binary_sha256": "56775ba9468e2e8a8e0800837275b003b3c95ab5897371e9f7be50d51b52a761"
+  },
+  {
+   "round": 2,
+   "tag": "base",
+   "program": "eda",
+   "status": 0,
+   "wall_seconds": 14.582625315990299,
+   "cpu_seconds": 14.583044,
+   "command": [
+    "/home/epentland/.cache/mylang/rp3-base-41ed360fb/bin/mylang",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/eda-src/src/main.my",
+    "--release",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/compile-times/x-final-compile-01/2-base-eda/program",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/compile-times/x-final-compile-01/2-base-eda/cache",
+    "--cache-report"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/eda-src",
+   "runtime_seed": [
+    {
+     "name": "core_number_text-ee8cb41de3c72ee64b3ce278cfaa65b66fe3156e5c48dc734430b3d2edc712cb.o",
+     "sha256": "45628fd3b156083efcd4965028be389535090e8a741244e3242db603b29650c7"
+    },
+    {
+     "name": "core_rt-d7cb25f9c7740caca1b6bf7286c30e63b492f932558291c54d667d3f6415aae0.c",
+     "sha256": "52f1c6c2db529fe7b374a78d87f2dc37f56b95fbd4b4200a79c9d74b00de6fec"
+    },
+    {
+     "name": "core_rt-d7cb25f9c7740caca1b6bf7286c30e63b492f932558291c54d667d3f6415aae0.o",
+     "sha256": "0ad98a096174e3b91e3bb90c43bfb8f9dc24fea7d0795a69502bce3f8f23495e"
+    },
+    {
+     "name": "core_rt-ec8f0cb49860e22ad2691ee0e825135abe17d099529b6fec7d9fe5098181739d.c",
+     "sha256": "71b949311a468701c2d0ca1851cd03e9465b1d5dc020397d29e9fa14a1c52042"
+    },
+    {
+     "name": "core_rt-ec8f0cb49860e22ad2691ee0e825135abe17d099529b6fec7d9fe5098181739d.o",
+     "sha256": "77735f5514066cf5b3ad997e94d5c583903d0944744659b75058b9d26a8fcaed"
+    }
+   ],
+   "cache_report": "mylang-core: cache: 1 units, 0 reused, 1 compiled, 0 verified; program linked; 2 processes\n",
+   "scratch": ".mylang-cache/rp3/compile-times/x-final-compile-01/2-base-eda",
+   "binary_sha256": "c3ccfaf6f06044d3531cef33b84b4ea080e9a2b103b3b3355f34b3903c2c1ca7"
+  },
+  {
+   "round": 2,
+   "tag": "candidate",
+   "program": "lox",
+   "status": 0,
+   "wall_seconds": 3.0675567709840834,
+   "cpu_seconds": 3.073509999999997,
+   "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/compilers/final/release-fast/bin/mylang",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/lox/ports/mylang/main.my",
+    "--release",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/compile-times/x-final-compile-01/2-candidate-lox/program",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/compile-times/x-final-compile-01/2-candidate-lox/cache",
+    "--cache-report"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/lox/ports/mylang",
+   "runtime_seed": [
+    {
+     "name": "core_number_text-ee8cb41de3c72ee64b3ce278cfaa65b66fe3156e5c48dc734430b3d2edc712cb.o",
+     "sha256": "45628fd3b156083efcd4965028be389535090e8a741244e3242db603b29650c7"
+    },
+    {
+     "name": "core_rt-ca98adc99d0a06b0a0c67200e49554cf5c1a816a7ea6e79d5ac6bfb3f5bee81b.c",
+     "sha256": "095e78d38784704f513d0ebec6eb049a3c40a359742444e189140511cc98d846"
+    },
+    {
+     "name": "core_rt-ca98adc99d0a06b0a0c67200e49554cf5c1a816a7ea6e79d5ac6bfb3f5bee81b.o",
+     "sha256": "5cbd3eeb143ca5565b6febede38b255ef354443c3ae7da45c04f7578fe7a8a75"
+    },
+    {
+     "name": "core_rt-fafa3d1ef3df5e5d499c74d93bb6b2b6d45a151db134e1b1fe1493f33d089900.c",
+     "sha256": "bec591e5a378bfe5e66b269d6c0b89ca8a63d35c022672578ee3772b6fcce26c"
+    },
+    {
+     "name": "core_rt-fafa3d1ef3df5e5d499c74d93bb6b2b6d45a151db134e1b1fe1493f33d089900.o",
+     "sha256": "7ccc4cc0fe0d932d31cae206f9105ede965737a43163d7050507502857d94aec"
+    }
+   ],
+   "cache_report": "mylang-core: cache: 1 units, 0 reused, 1 compiled, 0 verified; program linked; 2 processes\n",
+   "scratch": ".mylang-cache/rp3/compile-times/x-final-compile-01/2-candidate-lox",
+   "binary_sha256": "6aafbb4f41766b876626f6491b70dfaa4eeff7ca9232e73db0fee32c8346f4ce"
+  },
+  {
+   "round": 3,
+   "tag": "candidate",
+   "program": "lox",
+   "status": 0,
+   "wall_seconds": 3.0938520489726216,
+   "cpu_seconds": 3.094783000000005,
+   "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/compilers/final/release-fast/bin/mylang",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/lox/ports/mylang/main.my",
+    "--release",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/compile-times/x-final-compile-01/3-candidate-lox/program",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/compile-times/x-final-compile-01/3-candidate-lox/cache",
+    "--cache-report"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/lox/ports/mylang",
+   "runtime_seed": [
+    {
+     "name": "core_number_text-ee8cb41de3c72ee64b3ce278cfaa65b66fe3156e5c48dc734430b3d2edc712cb.o",
+     "sha256": "45628fd3b156083efcd4965028be389535090e8a741244e3242db603b29650c7"
+    },
+    {
+     "name": "core_rt-ca98adc99d0a06b0a0c67200e49554cf5c1a816a7ea6e79d5ac6bfb3f5bee81b.c",
+     "sha256": "095e78d38784704f513d0ebec6eb049a3c40a359742444e189140511cc98d846"
+    },
+    {
+     "name": "core_rt-ca98adc99d0a06b0a0c67200e49554cf5c1a816a7ea6e79d5ac6bfb3f5bee81b.o",
+     "sha256": "5cbd3eeb143ca5565b6febede38b255ef354443c3ae7da45c04f7578fe7a8a75"
+    },
+    {
+     "name": "core_rt-fafa3d1ef3df5e5d499c74d93bb6b2b6d45a151db134e1b1fe1493f33d089900.c",
+     "sha256": "bec591e5a378bfe5e66b269d6c0b89ca8a63d35c022672578ee3772b6fcce26c"
+    },
+    {
+     "name": "core_rt-fafa3d1ef3df5e5d499c74d93bb6b2b6d45a151db134e1b1fe1493f33d089900.o",
+     "sha256": "7ccc4cc0fe0d932d31cae206f9105ede965737a43163d7050507502857d94aec"
+    }
+   ],
+   "cache_report": "mylang-core: cache: 1 units, 0 reused, 1 compiled, 0 verified; program linked; 2 processes\n",
+   "scratch": ".mylang-cache/rp3/compile-times/x-final-compile-01/3-candidate-lox",
+   "binary_sha256": "6aafbb4f41766b876626f6491b70dfaa4eeff7ca9232e73db0fee32c8346f4ce"
+  },
+  {
+   "round": 3,
+   "tag": "candidate",
+   "program": "eda",
+   "status": 0,
+   "wall_seconds": 15.268141513923183,
+   "cpu_seconds": 15.270776999999999,
+   "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/compilers/final/release-fast/bin/mylang",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/eda-src/src/main.my",
+    "--release",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/compile-times/x-final-compile-01/3-candidate-eda/program",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/compile-times/x-final-compile-01/3-candidate-eda/cache",
+    "--cache-report"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/eda-src",
+   "runtime_seed": [
+    {
+     "name": "core_number_text-ee8cb41de3c72ee64b3ce278cfaa65b66fe3156e5c48dc734430b3d2edc712cb.o",
+     "sha256": "45628fd3b156083efcd4965028be389535090e8a741244e3242db603b29650c7"
+    },
+    {
+     "name": "core_rt-ca98adc99d0a06b0a0c67200e49554cf5c1a816a7ea6e79d5ac6bfb3f5bee81b.c",
+     "sha256": "095e78d38784704f513d0ebec6eb049a3c40a359742444e189140511cc98d846"
+    },
+    {
+     "name": "core_rt-ca98adc99d0a06b0a0c67200e49554cf5c1a816a7ea6e79d5ac6bfb3f5bee81b.o",
+     "sha256": "5cbd3eeb143ca5565b6febede38b255ef354443c3ae7da45c04f7578fe7a8a75"
+    },
+    {
+     "name": "core_rt-fafa3d1ef3df5e5d499c74d93bb6b2b6d45a151db134e1b1fe1493f33d089900.c",
+     "sha256": "bec591e5a378bfe5e66b269d6c0b89ca8a63d35c022672578ee3772b6fcce26c"
+    },
+    {
+     "name": "core_rt-fafa3d1ef3df5e5d499c74d93bb6b2b6d45a151db134e1b1fe1493f33d089900.o",
+     "sha256": "7ccc4cc0fe0d932d31cae206f9105ede965737a43163d7050507502857d94aec"
+    }
+   ],
+   "cache_report": "mylang-core: cache: 1 units, 0 reused, 1 compiled, 0 verified; program linked; 2 processes\n",
+   "scratch": ".mylang-cache/rp3/compile-times/x-final-compile-01/3-candidate-eda",
+   "binary_sha256": "56775ba9468e2e8a8e0800837275b003b3c95ab5897371e9f7be50d51b52a761"
+  },
+  {
+   "round": 3,
+   "tag": "base",
+   "program": "lox",
+   "status": 0,
+   "wall_seconds": 2.9779636771418154,
+   "cpu_seconds": 2.9839499999999965,
+   "command": [
+    "/home/epentland/.cache/mylang/rp3-base-41ed360fb/bin/mylang",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/lox/ports/mylang/main.my",
+    "--release",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/compile-times/x-final-compile-01/3-base-lox/program",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/compile-times/x-final-compile-01/3-base-lox/cache",
+    "--cache-report"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/lox/ports/mylang",
+   "runtime_seed": [
+    {
+     "name": "core_number_text-ee8cb41de3c72ee64b3ce278cfaa65b66fe3156e5c48dc734430b3d2edc712cb.o",
+     "sha256": "45628fd3b156083efcd4965028be389535090e8a741244e3242db603b29650c7"
+    },
+    {
+     "name": "core_rt-d7cb25f9c7740caca1b6bf7286c30e63b492f932558291c54d667d3f6415aae0.c",
+     "sha256": "52f1c6c2db529fe7b374a78d87f2dc37f56b95fbd4b4200a79c9d74b00de6fec"
+    },
+    {
+     "name": "core_rt-d7cb25f9c7740caca1b6bf7286c30e63b492f932558291c54d667d3f6415aae0.o",
+     "sha256": "0ad98a096174e3b91e3bb90c43bfb8f9dc24fea7d0795a69502bce3f8f23495e"
+    },
+    {
+     "name": "core_rt-ec8f0cb49860e22ad2691ee0e825135abe17d099529b6fec7d9fe5098181739d.c",
+     "sha256": "71b949311a468701c2d0ca1851cd03e9465b1d5dc020397d29e9fa14a1c52042"
+    },
+    {
+     "name": "core_rt-ec8f0cb49860e22ad2691ee0e825135abe17d099529b6fec7d9fe5098181739d.o",
+     "sha256": "77735f5514066cf5b3ad997e94d5c583903d0944744659b75058b9d26a8fcaed"
+    }
+   ],
+   "cache_report": "mylang-core: cache: 1 units, 0 reused, 1 compiled, 0 verified; program linked; 2 processes\n",
+   "scratch": ".mylang-cache/rp3/compile-times/x-final-compile-01/3-base-lox",
+   "binary_sha256": "45217de8c35a115af62cc2a140d2d62a6f891af3526ede9b06ee6ed0d02befe7"
+  },
+  {
+   "round": 3,
+   "tag": "base",
+   "program": "eda",
+   "status": 0,
+   "wall_seconds": 14.700015305075794,
+   "cpu_seconds": 14.700539000000008,
+   "command": [
+    "/home/epentland/.cache/mylang/rp3-base-41ed360fb/bin/mylang",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/eda-src/src/main.my",
+    "--release",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/compile-times/x-final-compile-01/3-base-eda/program",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/compile-times/x-final-compile-01/3-base-eda/cache",
+    "--cache-report"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/eda-src",
+   "runtime_seed": [
+    {
+     "name": "core_number_text-ee8cb41de3c72ee64b3ce278cfaa65b66fe3156e5c48dc734430b3d2edc712cb.o",
+     "sha256": "45628fd3b156083efcd4965028be389535090e8a741244e3242db603b29650c7"
+    },
+    {
+     "name": "core_rt-d7cb25f9c7740caca1b6bf7286c30e63b492f932558291c54d667d3f6415aae0.c",
+     "sha256": "52f1c6c2db529fe7b374a78d87f2dc37f56b95fbd4b4200a79c9d74b00de6fec"
+    },
+    {
+     "name": "core_rt-d7cb25f9c7740caca1b6bf7286c30e63b492f932558291c54d667d3f6415aae0.o",
+     "sha256": "0ad98a096174e3b91e3bb90c43bfb8f9dc24fea7d0795a69502bce3f8f23495e"
+    },
+    {
+     "name": "core_rt-ec8f0cb49860e22ad2691ee0e825135abe17d099529b6fec7d9fe5098181739d.c",
+     "sha256": "71b949311a468701c2d0ca1851cd03e9465b1d5dc020397d29e9fa14a1c52042"
+    },
+    {
+     "name": "core_rt-ec8f0cb49860e22ad2691ee0e825135abe17d099529b6fec7d9fe5098181739d.o",
+     "sha256": "77735f5514066cf5b3ad997e94d5c583903d0944744659b75058b9d26a8fcaed"
+    }
+   ],
+   "cache_report": "mylang-core: cache: 1 units, 0 reused, 1 compiled, 0 verified; program linked; 2 processes\n",
+   "scratch": ".mylang-cache/rp3/compile-times/x-final-compile-01/3-base-eda",
+   "binary_sha256": "c3ccfaf6f06044d3531cef33b84b4ea080e9a2b103b3b3355f34b3903c2c1ca7"
+  }
+ ],
+ "method": "One excluded warmup and three measured rounds, shuffled across both compilers and programs. Every arm gets fresh guest front-end/unit/program stores and only compiler-hash runtime top-level seed files. Cache reports must show one compiled unit, zero reuse and a linked program. All builds are serial within one admitted build slot. Shared-machine load can affect wall time; child CPU time is retained separately.",
+ "summary": {
+  "lox": {
+   "medians": {
+    "base": {
+     "wall_seconds": 2.9684459399431944,
+     "cpu_seconds": 2.9741860000000004
+    },
+    "candidate": {
+     "wall_seconds": 3.069067446049303,
+     "cpu_seconds": 3.0748219999999984
+    }
+   },
+   "candidate_over_base": {
+    "wall_seconds": 1.033897031693302,
+    "cpu_seconds": 1.0338364850079982
+   },
+   "above_1_10_wall": false
+  },
+  "eda": {
+   "medians": {
+    "base": {
+     "wall_seconds": 14.593585608992726,
+     "cpu_seconds": 14.594273000000005
+    },
+    "candidate": {
+     "wall_seconds": 15.191719950875267,
+     "cpu_seconds": 15.18953699999999
+    }
+   },
+   "candidate_over_base": {
+    "wall_seconds": 1.0409861125228856,
+    "cpu_seconds": 1.0407875061676581
+   },
+   "above_1_10_wall": false
+  }
+ }
+}

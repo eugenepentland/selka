@@ -1,10 +1,10 @@
 # Runtime parity wave 3 — 2026-10-09
 
-Status: M0, U2, S2 and R complete. All three lanes and main `fa1160602` are integrated and fully qualified at `20e7c340e`. X now proceeds to binding CPU-10 timing, regression review and the final report.
+Status: M0, U2, S2 and R complete. All three lanes and main `fa1160602` are integrated and fully qualified at `20e7c340e`. The first complete X timing run identifies confirmed small-sort and nested-mutation regressions. Repairs, fresh qualification and final timing review remain mandatory.
 
 Base: `main` `41ed360fb361c49938488ad111795bad8a726b73`. Integration branch: `codex/runtime-parity-3`.
 Worktree: `/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3` (locked, prune-keep).
-Qualified final source: `20e7c340eb8d93320de4493f7b50665c7979ef2b`. Subsequent receipt/report commits contain evidence only; binding X timing remains pending.
+Qualified final source: `20e7c340eb8d93320de4493f7b50665c7979ef2b`. Subsequent receipt/report commits contain evidence only; the first X timing run is complete but its performance guard is not accepted.
 
 ## Progress
 
@@ -131,3 +131,5 @@ All three lane hand-offs are accepted. These measured lane checkpoints precede f
 - Preflight: 402 GiB available on the workspace filesystem; external migrated Lox and EDA sources exist.
 - Tools: Zig `0.17.0-dev.1683+5ceec001b`; admission through `scripts/build-slot.sh`.
 - Completed M0 correctness and measurement claims are limited to the receipts listed above. Lane changes and final parity claims remain pending.
+
+- First complete X measurement on source `20e7c340e` finishes all six suites/bounds and exact-binary CPU8 review (`X/timing-run-01/receipt.json`). All timed outputs match. Of197cells,6exceed1.03×: tuned text_ops1.049263 (independent confirmation1.019878), mutate_nested4096/64 1.069577/1.053759, result_propagate4096 1.049469, sort_int64 2.082902 and sort_records64 1.032840. CPU8 confirms real extra work in small radix sorting and higher cycles in generated pointer-list release. These require repairs; no performance guard or X completion is claimed. Every raw first-run observation is retained. VM/tree/EDA/parity45/rows geomean final/base is 0.908684/0.995288/0.955468/0.892146/0.993684. All lane exits are measured in the first-run snapshot, with known misses retained.

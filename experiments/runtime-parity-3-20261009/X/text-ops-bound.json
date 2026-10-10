@@ -1,0 +1,123 @@
+{
+ "spec": {
+  "name": "text_ops reachable rung 3 bound",
+  "expected_stdout_sha256": "0967b572d16c244fceff04c57b479c96e1e0fc0580feae10a3dbaa6c6e0a76bf",
+  "reference": "rung3",
+  "arms": {
+   "rung3": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/s2-ladder/text_ops.r3"
+   ],
+   "base": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/parity/pair/bin/text_ops.base-my"
+   ],
+   "final": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/parity/pair/bin/text_ops.my"
+   ],
+   "zig-safe": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/parity/pair/bin/text_ops.zig-safe"
+   ],
+   "rust-checked": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/parity/pair/bin/text_ops.rust-checked"
+   ]
+  }
+ },
+ "cpu": 10,
+ "rounds": 9,
+ "warmups": 2,
+ "binary_sha256": {
+  "rung3": "a8f3682e123c348f4b7e4f6922fc9ed5258e34d2be219499b0c43562baf8c849",
+  "base": "25cc5bbbd214c98c4ca02c149448d1e47d04ab9c74a97e86c2eac94d6536bc9a",
+  "final": "b099d3d6188b54b5f259aaa87c50ed946e76edc7649f7f3163ca32d61969778e",
+  "zig-safe": "0ddc699220752da5cdc5142ad7218df50a6be54a71d7a2e32abb8ccdb5f5614a",
+  "rust-checked": "ca3bc24597d84009230b19c7be033a1dce3e0bd9e3219d15663bbc4f2aa80e2f"
+ },
+ "complete": true,
+ "load_start": [
+  1.267578125,
+  1.12744140625,
+  1.1015625
+ ],
+ "load_end": [
+  1.267578125,
+  1.12744140625,
+  1.1015625
+ ],
+ "arms": {
+  "rung3": {
+   "samples_s": [
+    0.021031181,
+    0.020416202,
+    0.019971404,
+    0.020396297,
+    0.020265829,
+    0.020197438,
+    0.020241364,
+    0.020284183,
+    0.020001931
+   ],
+   "median_s": 0.020265829,
+   "ratio_to_reference": 1.0
+  },
+  "base": {
+   "samples_s": [
+    0.053115947,
+    0.054467356,
+    0.052796708,
+    0.0526125,
+    0.052883179,
+    0.052430877,
+    0.052300816,
+    0.052357474,
+    0.052012856
+   ],
+   "median_s": 0.0526125,
+   "ratio_to_reference": 2.5961188165556908
+  },
+  "final": {
+   "samples_s": [
+    0.036030424,
+    0.037552537,
+    0.036439898,
+    0.036168254,
+    0.036151725,
+    0.036200996,
+    0.036062931,
+    0.035722632,
+    0.036760591
+   ],
+   "median_s": 0.036168254,
+   "ratio_to_reference": 1.7846915613469352
+  },
+  "zig-safe": {
+   "samples_s": [
+    0.020550827,
+    0.020356235,
+    0.02006836,
+    0.021019914,
+    0.020174797,
+    0.020960151,
+    0.020244433,
+    0.019893639,
+    0.019662484
+   ],
+   "median_s": 0.020244433,
+   "ratio_to_reference": 0.9989442326785645
+  },
+  "rust-checked": {
+   "samples_s": [
+    0.037410547,
+    0.039050366,
+    0.03854662,
+    0.037810021,
+    0.037592162,
+    0.038267623,
+    0.038172417,
+    0.037731727,
+    0.037329255
+   ],
+   "median_s": 0.037810021,
+   "ratio_to_reference": 1.865703149868678
+  }
+ },
+ "all_outputs_match": true
+}
