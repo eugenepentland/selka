@@ -1,0 +1,17 @@
+{
+ "method": "Lossless compression after user stops all performance work. Owned-cache binary manifest remains plain; archived raw identities are unchanged.",
+ "files": [
+  {
+   "original": "X/timing-run-02/binary-preservation.json",
+   "archive": "X/timing-run-02/binary-preservation.json.gz",
+   "raw_sha256": "d5504a4369edf94ed528780b72ee858fe60ea12248e67daa02ca1573b326abc6",
+   "gzip_sha256": "5b641433c56e343e737b98a206177c7e67e128f1c17b81f95e5a08c3447a7fa9"
+  },
+  {
+   "original": "X/timing-run-02/before-timing-binaries.json",
+   "archive": "X/timing-run-02/before-timing-binaries.json.gz",
+   "raw_sha256": "a7c09fc0a8c2d9c83a727e112df9a15beeb173ae48ab46b5851b55b8f5d3fdd0",
+   "gzip_sha256": "5635dc67d5f3cc97b4075deaa369282759f9beade1f7b7fda06b9cf4dc00574a"
+  }
+ ]
+}
