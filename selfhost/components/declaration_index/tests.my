@@ -1,0 +1,212 @@
+import model
+import indexing
+import indexed
+import codec
+
+func at(start: int, end: int) -> model.Span:
+    return model.Span(start=start, end=end)
+
+
+func declaration(category: int, start: int, end: int) -> model.Declaration:
+    return model.Declaration(category=category, name=at(start, end), owner=model.absent_span(), restricted=False)
+
+
+func request(raw: bytes, declarations: model.Declaration[]) -> model.Request:
+    return model.Request(context=model.Context(module=0, name=b"input", path=b"input.my", trusted_intrinsics=False, imported=False, source=raw), facts=model.Facts(declarations=declarations, imports=[], exports=[], public_spans=[]), dependencies=[])
+
+
+func dependent(name: bytes, kind: int, exported: bool) -> model.Symbol:
+    return model.Symbol(name=name, kind=kind, span=at(2, 3), exported=exported, owner=b"", restricted=False, re_export=model.absent_identity())
+
+
+func reexport(target: model.Symbol) -> model.Request:
+    mut req = request(b"A", [])
+    req.facts.imports = [model.Import(name=b"pkg", alias=b"p", span=at(0, 1), target=7)]
+    req.facts.exports = [model.Export(name=b"A", alias=b"p", span=at(0, 1))]
+    req.dependencies = [model.Dependency(module=7, name=b"pkg", source_len=8, symbols=[target])]
+    return req
+
+
+public func test_empty_module() -> bool fails indexed.Problem:
+    const result = try indexing.index(request(b"", []))
+    return result == model.success([], [])
+
+
+public func test_native_category_order_and_kinds() -> bool fails indexed.Problem:
+    const req = request(b"f V D R A C U", [declaration(6, 0, 1), declaration(2, 2, 3), declaration(1, 4, 5), declaration(0, 6, 7), declaration(4, 8, 9), declaration(5, 10, 11), declaration(3, 12, 13)])
+    const result = try indexing.index(req)
+    mut names: bytes[] = []
+    mut kinds: int[] = []
+    for symbol in result.symbols:
+        names.append(symbol.name)
+        kinds.append(symbol.kind)
+    return names == [b"R", b"D", b"V", b"U", b"A", b"C", b"f"] and kinds == [0, 0, 0, 0, 0, 2, 1]
+
+
+public func test_duplicate_precedes_import_alias_conflict() -> bool fails indexed.Problem:
+    mut req = request(b"A A", [declaration(6, 2, 3), declaration(0, 0, 1)])
+    # First declaration collides only with import full name, which is permitted.
+    req.facts.imports = [model.Import(name=b"A", alias=b"p", span=at(0, 1), target=7)]
+    req.dependencies = [model.Dependency(module=7, name=b"A", source_len=0, symbols=[])]
+    const result = try indexing.index(req)
+    return result.problem.code == "E_DUPLICATE_SYMBOL" and result.problem.site.span == at(2, 3) and result.problem.related == model.Site(module=0, span=at(0, 1))
+
+
+public func test_import_alias_conflict_related_span() -> bool fails indexed.Problem:
+    mut req = request(b"A p", [declaration(0, 0, 1)])
+    req.facts.imports = [model.Import(name=b"pkg", alias=b"A", span=at(2, 3), target=7)]
+    req.dependencies = [model.Dependency(module=7, name=b"pkg", source_len=0, symbols=[])]
+    const result = try indexing.index(req)
+    return result.problem.code == "E_IMPORT_ALIAS" and result.problem.message == "declaration conflicts with an import alias" and result.problem.related.span == at(2, 3)
+
+
+public func test_public_then_plain_export_duplicate() -> bool fails indexed.Problem:
+    mut req = request(b"A A", [declaration(0, 0, 1)])
+    req.facts.public_spans = [at(0, 1)]
+    req.facts.exports = [model.Export(name=b"A", alias=b"", span=at(2, 3))]
+    const result = try indexing.index(req)
+    return result.problem.code == "E_DUPLICATE_EXPORT" and result.problem.site.span == at(2, 3) and result.problem.related.module == -1
+
+
+public func test_direct_export_and_public_visibility() -> bool fails indexed.Problem:
+    mut req = request(b"A B", [declaration(0, 0, 1), declaration(0, 2, 3)])
+    req.facts.exports = [model.Export(name=b"A", alias=b"", span=at(0, 1)), model.Export(name=b"A", alias=b"", span=at(0, 1))]
+    req.facts.public_spans = [at(2, 3)]
+    const result = try indexing.index(req)
+    return result.symbols[0].exported and result.symbols[1].exported
+
+
+public func test_unknown_direct_export_before_public() -> bool fails indexed.Problem:
+    mut req = request(b"A", [])
+    req.facts.exports = [model.Export(name=b"A", alias=b"", span=at(0, 1))]
+    req.facts.public_spans = [at(0, 1)]
+    const result = try indexing.index(req)
+    return result.problem.message == "export names no local declaration"
+
+
+public func test_unknown_public_declaration() -> bool fails indexed.Problem:
+    mut req = request(b"A", [])
+    req.facts.public_spans = [at(0, 1)]
+    const result = try indexing.index(req)
+    return result.problem.code == "E_UNKNOWN_EXPORT" and result.problem.message == "public declaration names no local declaration"
+
+
+public func test_domain_owner_visibility_and_restriction() -> bool fails indexed.Problem:
+    mut req = request(b"D f g", [declaration(1, 0, 1), model.Declaration(category=6, name=at(2, 3), owner=at(0, 1), restricted=False), model.Declaration(category=6, name=at(4, 5), owner=at(0, 1), restricted=True)])
+    req.facts.public_spans = [at(0, 1)]
+    const result = try indexing.index(req)
+    return result.symbols[1].name == b"D.f" and result.symbols[1].owner == b"D" and result.symbols[1].exported and not result.symbols[2].exported
+
+
+public func test_reexport_canonical_identity_and_used_import() -> bool fails indexed.Problem:
+    mut target = dependent(b"A", 2, True)
+    target.re_export = model.Identity(module=42, symbol=11)
+    const result = try indexing.index(reexport(target))
+    return result.symbols[0].kind == 2 and result.symbols[0].re_export == target.re_export and result.symbols[0].exported and result.import_used == [True]
+
+
+public func test_reexport_privacy_before_local_duplicate() -> bool fails indexed.Problem:
+    mut req = reexport(dependent(b"A", 0, False))
+    req.facts.declarations = [declaration(0, 0, 1)]
+    const result = try indexing.index(req)
+    return result.problem.code == "E_PRIVATE_SYMBOL" and result.problem.related == model.Site(module=7, span=at(2, 3))
+
+
+public func test_reexport_restricted_function() -> bool fails indexed.Problem:
+    mut target = dependent(b"A", 1, True)
+    target.owner = b"D"
+    target.restricted = True
+    const result = try indexing.index(reexport(target))
+    return result.problem.code == "E_PRIVATE_FUNCTION" and result.problem.message == "private domain function requires the same declaring domain"
+
+
+public func test_reexport_unknown_alias_and_name() -> bool fails indexed.Problem:
+    mut req = reexport(dependent(b"B", 0, True))
+    const missing_name = try indexing.index(req)
+    req.facts.exports[0].alias = b"unknown"
+    const missing_alias = try indexing.index(req)
+    return missing_name.problem.code == "E_UNKNOWN_EXPORT" and missing_alias.problem.message == "re-export names no exported imported declaration"
+
+
+public func test_test_module_private_reexport_exception_and_inbound_guard() -> bool fails indexed.Problem:
+    mut req = reexport(dependent(b"A", 0, False))
+    req.context.name = b"pkg_test"
+    const allowed = try indexing.index(req)
+    req.context.imported = True
+    const denied = try indexing.index(req)
+    return len(allowed.symbols) == 1 and denied.problem.code == "E_PRIVATE_SYMBOL"
+
+
+public func test_first_import_match_alias_or_full_name() -> bool fails indexed.Problem:
+    mut req = reexport(dependent(b"A", 0, True))
+    req.facts.imports = [model.Import(name=b"pkg", alias=b"p", span=at(0, 1), target=7), model.Import(name=b"other", alias=b"pkg", span=at(0, 1), target=8)]
+    req.facts.exports[0].alias = b"pkg"
+    req.dependencies.append(model.Dependency(module=8, name=b"other", source_len=8, symbols=[dependent(b"A", 1, True)]))
+    const result = try indexing.index(req)
+    return result.symbols[0].kind == 0 and result.symbols[0].re_export.module == 7 and result.import_used == [True, False]
+
+
+public func test_immutable_inputs_and_prior_result_snapshot() -> bool fails indexed.Problem:
+    mut req = request(b"A B", [declaration(0, 0, 1)])
+    req.facts.public_spans = [at(0, 1)]
+    const first = try indexing.index(req)
+    req.facts.declarations.append(declaration(0, 2, 3))
+    const second = try indexing.index(req)
+    return len(first.symbols) == 1 and len(second.symbols) == 2 and first.symbols[0].exported
+
+
+public func test_malformed_dependency_and_span_fail_closed() -> bool:
+    mut req = request(b"A", [declaration(0, 0, 2)])
+    match indexing.index(req):
+        case Ok(result):
+            return False
+        case Err(problem):
+            if problem.code != "P_TRANSPORT":
+                return False
+    req = reexport(dependent(b"A", 0, True))
+    req.dependencies.append(req.dependencies[0])
+    match indexing.index(req):
+        case Ok(result):
+            return False
+        case Err(problem):
+            return problem.code == "P_TRANSPORT"
+
+
+public func test_codec_empty_reply_and_reexport_diagnostic_prose() -> bool fails indexed.Problem:
+    const empty = try codec.encode(model.success([], []))
+    if empty != b"SLKDCR01\0\0\0\0\0\0\0\0\0\0\0\0":
+        return False
+    const result = try indexing.index(reexport(dependent(b"B", 0, True)))
+    const bytes = try codec.encode(result)
+    return bytes[:12] == b"SLKDCR01\x01\0\0\0" and len(bytes) > 60
+
+
+public func test_codec_truncated_and_bad_magic_requests() -> bool:
+    match codec.decode(b"SLKDCL01"):
+        case Ok(result):
+            return False
+        case Err(problem):
+            if problem.code != "P_TRANSPORT":
+                return False
+    match codec.request_payload(b"SLKDIX01"):
+        case Ok(payload):
+            return False
+        case Err(problem):
+            return problem.code == "P_TRANSPORT"
+
+
+public func test_utf8_name_bytes_and_owner_are_preserved() -> bool fails indexed.Problem:
+    mut req = request(b"\xc3\xa9 f", [declaration(1, 0, 2), model.Declaration(category=6, name=at(3, 4), owner=at(0, 2), restricted=False)])
+    req.facts.public_spans = [at(0, 2)]
+    const result = try indexing.index(req)
+    return result.symbols[1].name == b"\xc3\xa9.f" and result.symbols[1].owner == b"\xc3\xa9" and result.symbols[1].exported
+
+
+public func test_duplicate_import_alias_is_transport_not_source_error() -> bool:
+    mut req = reexport(dependent(b"A", 0, True))
+    req.facts.imports.append(model.Import(name=b"other", alias=b"p", span=at(0, 1), target=7))
+    match indexing.index(req):
+        case Ok(result):
+            return False
+        case Err(problem):
+            return problem.code == "P_TRANSPORT"

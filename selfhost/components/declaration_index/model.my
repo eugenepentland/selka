@@ -1,0 +1,105 @@
+public record Span:
+    start: int
+    end: int
+
+
+public record Site:
+    module: int
+    span: Span
+
+
+public record Problem:
+    code: str
+    message: str
+    site: Site
+    related: Site
+
+
+public record Identity:
+    module: int
+    symbol: int
+
+
+public record Declaration:
+    category: int
+    name: Span
+    owner: Span
+    restricted: bool
+
+
+public record Import:
+    name: bytes
+    alias: bytes
+    span: Span
+    target: int
+
+
+public record Export:
+    name: bytes
+    alias: bytes
+    span: Span
+
+
+public record Symbol:
+    name: bytes
+    kind: int
+    span: Span
+    exported: bool
+    owner: bytes
+    restricted: bool
+    re_export: Identity
+
+
+public record Dependency:
+    module: int
+    name: bytes
+    source_len: int
+    symbols: Symbol[]
+
+
+public record Context:
+    module: int
+    name: bytes
+    imported: bool
+    source: bytes
+    path: bytes
+    trusted_intrinsics: bool
+
+
+public record Facts:
+    declarations: Declaration[]
+    imports: Import[]
+    exports: Export[]
+    public_spans: Span[]
+
+
+public record Request:
+    context: Context
+    facts: Facts
+    dependencies: Dependency[]
+
+
+public record Outcome:
+    symbols: Symbol[]
+    import_used: bool[]
+    problem: Problem
+
+
+public func absent_span() -> Span:
+    return Span(start=-1, end=-1)
+
+
+public func absent_identity() -> Identity:
+    return Identity(module=-1, symbol=-1)
+
+
+public func absent_site() -> Site:
+    return Site(module=-1, span=absent_span())
+
+
+public func success(symbols: Symbol[], used: bool[]) -> Outcome:
+    return Outcome(symbols=symbols, import_used=used, problem=Problem(code="", message="", site=absent_site(), related=absent_site()))
+
+
+public func failure(code: str, message: str, module: int, span: Span, related: Site) -> Outcome:
+    return Outcome(symbols=[], import_used=[], problem=Problem(code=code, message=message, site=Site(module=module, span=span), related=related))

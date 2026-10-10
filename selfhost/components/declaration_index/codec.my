@@ -1,0 +1,274 @@
+import model
+import indexed
+
+record Reader:
+    data: bytes
+    pos: int
+
+
+func transport() -> indexed.Problem:
+    return indexed.Problem(code="P_TRANSPORT", message="malformed declaration frame")
+
+
+func read_u32(mut reader: Reader) -> int fails indexed.Problem:
+    if len(reader.data) - reader.pos < 4:
+        fail transport()
+    const at = reader.pos
+    reader.pos = reader.pos + 4
+    return reader.data[at] + reader.data[at + 1] * 256 + reader.data[at + 2] * 65536 + reader.data[at + 3] * 16777216
+
+
+func take(mut reader: Reader, size: int) -> bytes fails indexed.Problem:
+    if size < 0 or size > len(reader.data) - reader.pos:
+        fail transport()
+    const data = reader.data[reader.pos:reader.pos + size]
+    reader.pos = reader.pos + size
+    return data
+
+
+func blob(mut reader: Reader) -> bytes fails indexed.Problem:
+    const size = try read_u32(mut reader)
+    return try take(mut reader, size)
+
+
+func boolean(mut reader: Reader) -> bool fails indexed.Problem:
+    const value = try read_u32(mut reader)
+    if value > 1:
+        fail transport()
+    return value == 1
+
+
+func span(mut reader: Reader) -> model.Span fails indexed.Problem:
+    const start = try read_u32(mut reader)
+    const end = try read_u32(mut reader)
+    return model.Span(start=start, end=end)
+
+
+func symbol(mut reader: Reader) -> model.Symbol fails indexed.Problem:
+    const name = try blob(mut reader)
+    const kind = try read_u32(mut reader)
+    const location = try span(mut reader)
+    const exported = try boolean(mut reader)
+    const has_owner = try boolean(mut reader)
+    mut owner = b""
+    if has_owner:
+        owner = try blob(mut reader)
+        if len(owner) == 0:
+            fail transport()
+    const restricted = try boolean(mut reader)
+    const has_origin = try boolean(mut reader)
+    mut origin = model.absent_identity()
+    if has_origin:
+        const module = try read_u32(mut reader)
+        const id = try read_u32(mut reader)
+        origin = model.Identity(module=module, symbol=id)
+    return model.Symbol(name=name, kind=kind, span=location, exported=exported, owner=owner, restricted=restricted, re_export=origin)
+
+
+public func decode(data: bytes) -> model.Request fails indexed.Problem:
+    if len(data) > 33554368 or len(data) < 8 or data[:8] != b"SLKDCL01":
+        fail transport()
+    mut reader = Reader(data=data, pos=8)
+    const module = try read_u32(mut reader)
+    const imported = try boolean(mut reader)
+    const name = try blob(mut reader)
+    const path = try blob(mut reader)
+    const trusted = try boolean(mut reader)
+    const raw = try blob(mut reader)
+    if len(raw) > 1048576 or len(path) > 16384:
+        fail transport()
+    const declaration_count = try read_u32(mut reader)
+    const import_count = try read_u32(mut reader)
+    const export_count = try read_u32(mut reader)
+    const public_count = try read_u32(mut reader)
+    const dependency_count = try read_u32(mut reader)
+    if declaration_count > 65536 or import_count > 4096 or export_count > 65536 or public_count > 65536 or dependency_count > 4096:
+        fail transport()
+    mut declarations: model.Declaration[] = []
+    for i in range(declaration_count):
+        const category = try read_u32(mut reader)
+        const name_span = try span(mut reader)
+        const has_owner = try boolean(mut reader)
+        const owner_span = try span(mut reader)
+        const restricted = try boolean(mut reader)
+        mut owner = model.absent_span()
+        if has_owner:
+            owner = owner_span
+        elif owner_span.start != 0 or owner_span.end != 0:
+            fail transport()
+        declarations.append(model.Declaration(category=category, name=name_span, owner=owner, restricted=restricted))
+    mut imports: model.Import[] = []
+    for i in range(import_count):
+        const imported_name = try blob(mut reader)
+        const alias = try blob(mut reader)
+        const at = try span(mut reader)
+        const target = try read_u32(mut reader)
+        imports.append(model.Import(name=imported_name, alias=alias, span=at, target=target))
+    mut exports: model.Export[] = []
+    for i in range(export_count):
+        const exported_name = try blob(mut reader)
+        const has_alias = try boolean(mut reader)
+        mut alias = b""
+        if has_alias:
+            alias = try blob(mut reader)
+            if len(alias) == 0:
+                fail transport()
+        const at = try span(mut reader)
+        exports.append(model.Export(name=exported_name, alias=alias, span=at))
+    mut public_spans: model.Span[] = []
+    for i in range(public_count):
+        const at = try span(mut reader)
+        public_spans.append(at)
+    mut dependencies: model.Dependency[] = []
+    mut total_symbols = 0
+    for i in range(dependency_count):
+        const id = try read_u32(mut reader)
+        const dep_name = try blob(mut reader)
+        const source_len = try read_u32(mut reader)
+        const count = try read_u32(mut reader)
+        total_symbols = total_symbols + count
+        if total_symbols > 65536:
+            fail transport()
+        mut symbols: model.Symbol[] = []
+        for j in range(count):
+            const value = try symbol(mut reader)
+            symbols.append(value)
+        dependencies.append(model.Dependency(module=id, name=dep_name, source_len=source_len, symbols=symbols))
+    if reader.pos != len(data):
+        fail transport()
+    return model.Request(context=model.Context(module=module, name=name, path=path, trusted_intrinsics=trusted, imported=imported, source=raw), facts=model.Facts(declarations=declarations, imports=imports, exports=exports, public_spans=public_spans), dependencies=dependencies)
+
+
+func put(mut buffer: byte_buffer, value: int):
+    mut rest = value
+    for octet in range(4):
+        _ = buffer.append_byte(rest % 256)
+        rest = rest // 256
+
+
+func write_blob(mut buffer: byte_buffer, data: bytes):
+    put(mut buffer, len(data))
+    _ = buffer.append_range(data, 0, len(data))
+
+
+func ascii(text: str) -> bytes fails indexed.Problem:
+    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz ;-"
+    mut buffer = byte_buffer([])
+    for ch in text:
+        mut found = False
+        for i in range(len(alphabet)):
+            if ch == alphabet[i]:
+                mut value = 65 + i
+                if i == 26:
+                    value = 95
+                elif i >= 27 and i < 53:
+                    value = 97 + i - 27
+                elif i == 53:
+                    value = 32
+                elif i == 54:
+                    value = 59
+                elif i == 55:
+                    value = 45
+                _ = buffer.append_byte(value)
+                found = True
+                break
+        if not found:
+            fail transport()
+    return bytes(buffer)
+
+
+func write_span(mut buffer: byte_buffer, at: model.Span):
+    put(mut buffer, at.start)
+    put(mut buffer, at.end)
+
+
+func write_site(mut buffer: byte_buffer, site: model.Site):
+    put(mut buffer, site.module)
+    write_span(mut buffer, site.span)
+
+
+func write_symbol(mut buffer: byte_buffer, value: model.Symbol):
+    write_blob(mut buffer, value.name)
+    put(mut buffer, value.kind)
+    write_span(mut buffer, value.span)
+    mut exported = 0
+    if value.exported:
+        exported = 1
+    put(mut buffer, exported)
+    mut owner = 0
+    if len(value.owner) > 0:
+        owner = 1
+    put(mut buffer, owner)
+    if owner == 1:
+        write_blob(mut buffer, value.owner)
+    mut restricted = 0
+    if value.restricted:
+        restricted = 1
+    put(mut buffer, restricted)
+    mut origin = 0
+    if value.re_export.module >= 0:
+        origin = 1
+    put(mut buffer, origin)
+    if origin == 1:
+        put(mut buffer, value.re_export.module)
+        put(mut buffer, value.re_export.symbol)
+
+
+public func encode(result: model.Outcome) -> bytes fails indexed.Problem:
+    mut buffer = byte_buffer([])
+    _ = buffer.append_range(b"SLKDCR01", 0, 8)
+    if len(result.problem.code) == 0:
+        put(mut buffer, 0)
+        put(mut buffer, len(result.symbols))
+        put(mut buffer, len(result.import_used))
+        for value in result.symbols:
+            write_symbol(mut buffer, value)
+        for used in result.import_used:
+            mut flag = 0
+            if used:
+                flag = 1
+            put(mut buffer, flag)
+    else:
+        put(mut buffer, 1)
+        const code = try ascii(result.problem.code)
+        write_blob(mut buffer, code)
+        const message = try ascii(result.problem.message)
+        write_blob(mut buffer, message)
+        write_site(mut buffer, result.problem.site)
+        mut related = 0
+        if result.problem.related.module >= 0:
+            related = 1
+        put(mut buffer, related)
+        if related == 1:
+            write_site(mut buffer, result.problem.related)
+    if len(buffer) > 33554368:
+        fail transport()
+    return bytes(buffer)
+
+
+public func request_payload(data: bytes) -> bytes fails indexed.Problem:
+    if len(data) < 64 or len(data) > 33554432 or data[:8] != b"SLKDIX01":
+        fail transport()
+    mut reader = Reader(data=data, pos=8)
+    const protocol = try read_u32(mut reader)
+    const schema = try read_u32(mut reader)
+    const direction = try read_u32(mut reader)
+    const size = try read_u32(mut reader)
+    if protocol != 1 or schema != 1 or direction != 0 or size != len(data) - 64:
+        fail transport()
+    return data[64:]
+
+
+public func framed_reply(request: bytes, payload: bytes) -> bytes fails indexed.Problem:
+    _ = try request_payload(request)
+    if len(payload) > 33554368:
+        fail transport()
+    mut buffer = byte_buffer([])
+    _ = buffer.append_range(b"SLKDIX01", 0, 8)
+    put(mut buffer, 1)
+    put(mut buffer, 1)
+    put(mut buffer, 1)
+    put(mut buffer, len(payload))
+    _ = buffer.append_range(request, 24, 64)
+    _ = buffer.append_range(payload, 0, len(payload))
+    return bytes(buffer)

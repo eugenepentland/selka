@@ -1,0 +1,234 @@
+import model
+import indexed
+
+record Prepared:
+    declarations: model.Declaration[]
+    names: indexed.Index
+    aliases: indexed.Index
+    qualifiers: indexed.Index
+    dependencies: indexed.Index[]
+
+
+func transport() -> indexed.Problem:
+    return indexed.Problem(code="P_TRANSPORT", message="malformed declaration projection")
+
+
+func span_valid(span: model.Span, size: int) -> bool:
+    return span.start >= 0 and span.end > span.start and span.end <= size
+
+
+func joined(owner: bytes, name: bytes) -> bytes:
+    mut buffer = byte_buffer([])
+    _ = buffer.append_range(owner, 0, len(owner))
+    _ = buffer.append_range(b".", 0, 1)
+    _ = buffer.append_range(name, 0, len(name))
+    return bytes(buffer)
+
+
+func text(request: model.Request, span: model.Span) -> bytes:
+    return request.context.source[span.start:span.end]
+
+
+func declaration_key(request: model.Request, declaration: model.Declaration) -> bytes:
+    const name = text(request, declaration.name)
+    if declaration.owner.start < 0:
+        return name
+    return joined(text(request, declaration.owner), name)
+
+
+func prepare(request: model.Request) -> Prepared fails indexed.Problem:
+    const facts = request.facts
+    const size = len(request.context.source)
+    if size > 1048576 or len(request.context.path) > 16384 or request.context.module < 0 or len(request.context.name) == 0:
+        fail transport()
+    if len(facts.declarations) > 65536 or len(facts.imports) > 4096 or len(request.dependencies) > 4096 or len(facts.exports) > 65536 or len(facts.public_spans) > 65536:
+        fail transport()
+    for declaration in facts.declarations:
+        if declaration.category < 0 or declaration.category > 6 or not span_valid(declaration.name, size):
+            fail transport()
+        if declaration.owner.start >= 0:
+            if declaration.category != 6 or not span_valid(declaration.owner, size):
+                fail transport()
+        elif declaration.owner.end != -1 or declaration.owner.start != -1:
+            fail transport()
+        if declaration.restricted and declaration.owner.start < 0:
+            fail transport()
+    mut declarations: model.Declaration[] = []
+    mut names: bytes[] = []
+    for category in range(7):
+        for declaration in facts.declarations:
+            if declaration.category == category:
+                declarations.append(declaration)
+                names.append(declaration_key(request, declaration))
+    for exported in facts.exports:
+        if len(exported.name) == 0 or not span_valid(exported.span, size):
+            fail transport()
+        if len(exported.alias) > 0:
+            names.append(exported.name)
+    if len(names) > 65536:
+        fail transport()
+    mut aliases: bytes[] = []
+    mut qualifiers: bytes[] = []
+    mut full_names: bytes[] = []
+    for imported in facts.imports:
+        if len(imported.name) == 0 or len(imported.alias) == 0 or imported.target < 0 or not span_valid(imported.span, size):
+            fail transport()
+        aliases.append(imported.alias)
+        full_names.append(imported.name)
+        qualifiers.append(imported.alias)
+        qualifiers.append(imported.name)
+    for span in facts.public_spans:
+        if not span_valid(span, size):
+            fail transport()
+    mut dep_indexes: indexed.Index[] = []
+    mut dep_count = 0
+    mut name_bytes = len(request.context.name)
+    for imported in facts.imports:
+        name_bytes = name_bytes + len(imported.name) + len(imported.alias)
+    for exported in facts.exports:
+        name_bytes = name_bytes + len(exported.name) + len(exported.alias)
+    for name in names:
+        name_bytes = name_bytes + len(name)
+    for dependency in request.dependencies:
+        if dependency.module < 0 or dependency.module == request.context.module or len(dependency.name) == 0 or dependency.source_len < 0 or dependency.source_len > 1048576:
+            fail transport()
+        for previous in request.dependencies[:len(dep_indexes)]:
+            if previous.module == dependency.module:
+                fail transport()
+        mut used = False
+        for imported in facts.imports:
+            if imported.target == dependency.module:
+                used = True
+        if not used:
+            fail transport()
+        dep_count = dep_count + len(dependency.symbols)
+        name_bytes = name_bytes + len(dependency.name)
+        mut dep_names: bytes[] = []
+        for symbol in dependency.symbols:
+            if len(symbol.name) == 0 or symbol.kind < 0 or symbol.kind > 2 or not span_valid(symbol.span, dependency.source_len):
+                fail transport()
+            if symbol.restricted and (len(symbol.owner) == 0 or symbol.kind != 1):
+                fail transport()
+            if symbol.re_export.module < -1 or symbol.re_export.symbol < -1 or (symbol.re_export.module == -1) != (symbol.re_export.symbol == -1):
+                fail transport()
+            name_bytes = name_bytes + len(symbol.name) + len(symbol.owner)
+            dep_names.append(symbol.name)
+        const dep_index = try indexed.make(dep_names)
+        for position in range(len(dep_names)):
+            const hit = try indexed.lookup(dep_index, dep_names[position])
+            if hit.id != position:
+                fail transport()
+        dep_indexes.append(dep_index)
+    for imported in facts.imports:
+        mut found = False
+        for dependency in request.dependencies:
+            if imported.target == dependency.module:
+                found = True
+        if not found:
+            fail transport()
+    if dep_count > 65536 or name_bytes > 1048576:
+        fail transport()
+    const name_index = try indexed.make(names)
+    const alias_index = try indexed.make(aliases)
+    const full_name_index = try indexed.make(full_names)
+    for i in range(len(aliases)):
+        const alias_hit = try indexed.lookup(alias_index, aliases[i])
+        const name_hit = try indexed.lookup(full_name_index, full_names[i])
+        if alias_hit.id != i or name_hit.id != i:
+            fail transport()
+    const qualifier_index = try indexed.make(qualifiers)
+    return Prepared(declarations=declarations, names=name_index, aliases=alias_index, qualifiers=qualifier_index, dependencies=dep_indexes)
+
+
+func is_public(request: model.Request, span: model.Span) -> bool:
+    for marked in request.facts.public_spans:
+        if marked.start == span.start and marked.end == span.end:
+            return True
+    return False
+
+
+func dependency_position(request: model.Request, module: int) -> int:
+    for i in range(len(request.dependencies)):
+        if request.dependencies[i].module == module:
+            return i
+    return -1
+
+
+func tests_module(request: model.Request, dependency: model.Dependency) -> bool:
+    if request.context.imported:
+        return False
+    mut buffer = byte_buffer([])
+    _ = buffer.append_range(dependency.name, 0, len(dependency.name))
+    _ = buffer.append_range(b"_test", 0, 5)
+    return request.context.name == bytes(buffer)
+
+
+public func index(request: model.Request) -> model.Outcome fails indexed.Problem:
+    const prepared = try prepare(request)
+    mut symbols: model.Symbol[] = []
+    mut used: bool[] = []
+    for imported in request.facts.imports:
+        used.append(False)
+    const module = request.context.module
+    for declaration in prepared.declarations:
+        const key = declaration_key(request, declaration)
+        const hit = try indexed.lookup(prepared.names, key)
+        if hit.id < len(symbols):
+            return model.failure("E_DUPLICATE_SYMBOL", "module declaration name is already bound", module, declaration.name, model.Site(module=module, span=symbols[hit.id].span))
+        mut owner = b""
+        if declaration.owner.start >= 0:
+            owner = text(request, declaration.owner)
+        else:
+            const alias = try indexed.lookup(prepared.aliases, key)
+            if alias.id >= 0:
+                return model.failure("E_IMPORT_ALIAS", "declaration conflicts with an import alias", module, declaration.name, model.Site(module=module, span=request.facts.imports[alias.id].span))
+        mut kind = 0
+        if declaration.category == 5:
+            kind = 2
+        elif declaration.category == 6:
+            kind = 1
+        symbols.append(model.Symbol(name=key, kind=kind, span=declaration.name, exported=False, owner=owner, restricted=declaration.restricted, re_export=model.absent_identity()))
+    for exported in request.facts.exports:
+        if len(exported.alias) == 0:
+            const local = try indexed.lookup(prepared.names, exported.name)
+            if local.id < 0 or local.id >= len(symbols):
+                return model.failure("E_UNKNOWN_EXPORT", "export names no local declaration", module, exported.span, model.absent_site())
+            if is_public(request, symbols[local.id].span):
+                return model.failure("E_DUPLICATE_EXPORT", "declaration is already public", module, exported.span, model.absent_site())
+            symbols[local.id].exported = True
+            continue
+        const qualifier = try indexed.lookup(prepared.qualifiers, exported.alias)
+        if qualifier.id < 0:
+            return model.failure("E_UNKNOWN_EXPORT", "re-export names no exported imported declaration", module, exported.span, model.absent_site())
+        const import_id = qualifier.id // 2
+        used[import_id] = True
+        const dep_id = dependency_position(request, request.facts.imports[import_id].target)
+        const dependency = request.dependencies[dep_id]
+        const target_id = try indexed.lookup(prepared.dependencies[dep_id], exported.name)
+        if target_id.id < 0:
+            return model.failure("E_UNKNOWN_EXPORT", "re-export names no exported imported declaration", module, exported.span, model.absent_site())
+        const target = dependency.symbols[target_id.id]
+        const related = model.Site(module=dependency.module, span=target.span)
+        if not target.exported and not tests_module(request, dependency):
+            return model.failure("E_PRIVATE_SYMBOL", "declaration is private to its module", module, exported.span, related)
+        if target.restricted:
+            return model.failure("E_PRIVATE_FUNCTION", "private domain function requires the same declaring domain", module, exported.span, related)
+        const previous = try indexed.lookup(prepared.names, exported.name)
+        if previous.id < len(symbols):
+            return model.failure("E_DUPLICATE_SYMBOL", "module declaration name is already bound", module, exported.span, model.Site(module=module, span=symbols[previous.id].span))
+        mut origin = model.Identity(module=dependency.module, symbol=target_id.id)
+        if target.re_export.module >= 0:
+            origin = target.re_export
+        symbols.append(model.Symbol(name=exported.name, kind=target.kind, span=exported.span, exported=True, owner=b"", restricted=False, re_export=origin))
+    for span in request.facts.public_spans:
+        const hit = try indexed.lookup(prepared.names, text(request, span))
+        if hit.id < 0 or hit.id >= len(symbols):
+            return model.failure("E_UNKNOWN_EXPORT", "public declaration names no local declaration", module, span, model.absent_site())
+        symbols[hit.id].exported = True
+    for i in range(len(symbols)):
+        if len(symbols[i].owner) > 0:
+            const owner = try indexed.lookup(prepared.names, symbols[i].owner)
+            if owner.id < 0 or owner.id >= len(symbols):
+                fail transport()
+            symbols[i].exported = not symbols[i].restricted and symbols[owner.id].exported
+    return model.success(symbols, used)
