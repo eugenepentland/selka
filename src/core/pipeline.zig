@@ -29,7 +29,7 @@ const backend_owned = @import("backend_owned.zig");
 pub const Options = struct {
     zig: []const u8,
     output: []const u8 = "",
-    mode: @import("build_mode.zig").Mode = .debug,
+    mode: @import("build_mode.zig").Mode = .optimized_debug,
     links: []const []const u8 = &.{},
     /// What to show besides the executable.
     show: Show = .{},

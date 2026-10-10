@@ -275,7 +275,7 @@ test "test names a bad flag value or unknown option before printing its own usag
 const debug_line = "func main(out: Stream) -> int:\n    debug(\"debugging\", 41)\n    out.print(42)\n    return 0\n";
 
 // spec-case: DEBUG-OPTIMIZE-1
-test "optimize-debug separates cached builds and test receipts and keeps debug output" {
+test "default optimized debug aliases reuse caches while unoptimized and release stay distinct" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     var temporary = std.testing.tmpDir(.{});
@@ -284,22 +284,28 @@ test "optimize-debug separates cached builds and test receipts and keeps debug o
     try context.write("main.my", debug_line);
     try std.Io.Dir.cwd().createDirPath(std.testing.io, try context.path("suite"));
     try context.write("suite/check.my", "func test_answer() -> bool:\n    return 6 * 7 == 42\n");
-    for ([_][]const []const u8{ &.{}, &.{"--optimize-debug"}, &.{"--release"} }) |mode| {
-        const build_args = try std.mem.concat(context.arena, []const u8, &.{ &.{ "build", "main.my", "-o", "program", "--cache-dir", "cache", "--report" }, mode });
+    const ModeCase = struct { flags: []const []const u8, replay: bool = false, release: bool = false };
+    for ([_]ModeCase{
+        .{ .flags = &.{} },
+        .{ .flags = &.{"--optimize-debug"}, .replay = true },
+        .{ .flags = &.{ "--mode", "Debug" }, .replay = true },
+        .{ .flags = &.{"--unoptimized"} },
+        .{ .flags = &.{"--release"}, .release = true },
+    }) |mode| {
+        const build_args = try std.mem.concat(context.arena, []const u8, &.{ &.{ "build", "main.my", "-o", "program", "--cache-dir", "cache", "--report" }, mode.flags });
         const first = try context.compiler(build_args);
         try std.testing.expectEqual(@as(u8, 0), first.status);
-        try std.testing.expect(contains(first.stderr, "\"program\":\"linked\""));
+        try std.testing.expect(contains(first.stderr, if (mode.replay) "\"program\":\"replayed\"" else "\"program\":\"linked\""));
         const again = try context.compiler(build_args);
         try std.testing.expectEqual(@as(u8, 0), again.status);
         try std.testing.expect(contains(again.stderr, "\"program\":\"replayed\""));
         const ran = try context.spawn(&.{try context.path("program")});
         try std.testing.expectEqualStrings("42\n", ran.stdout);
-        const release = mode.len != 0 and std.mem.eql(u8, mode[0], "--release");
-        try std.testing.expectEqualStrings(if (release) "" else "debugging 41\n", ran.stderr);
-        const test_args = try std.mem.concat(context.arena, []const u8, &.{ &.{ "test", "suite", "--cache-dir", "cache" }, mode });
+        try std.testing.expectEqualStrings(if (mode.release) "" else "debugging 41\n", ran.stderr);
+        const test_args = try std.mem.concat(context.arena, []const u8, &.{ &.{ "test", "suite", "--cache-dir", "cache" }, mode.flags });
         const tested = try context.compiler(test_args);
         try std.testing.expectEqual(@as(u8, 0), tested.status);
-        try std.testing.expect(contains(tested.stdout, "1 passed, 0 cached"));
+        try std.testing.expect(contains(tested.stdout, if (mode.replay) "0 passed, 1 cached" else "1 passed, 0 cached"));
         const cached = try context.compiler(test_args);
         try std.testing.expectEqual(@as(u8, 0), cached.status);
         try std.testing.expect(contains(cached.stdout, "0 passed, 1 cached"));
@@ -307,26 +313,49 @@ test "optimize-debug separates cached builds and test receipts and keeps debug o
 }
 
 // spec-case: DEBUG-OPTIMIZE-1
-test "optimize-debug run commands retain debug output and test rejects conflicting modes" {
+test "default and unoptimized run commands retain debug output" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     var temporary = std.testing.tmpDir(.{});
     defer temporary.cleanup();
     const context: Context = .{ .arena = arena.allocator(), .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", arena.allocator()) };
     try context.write("main.my", debug_line);
-    for ([_][]const u8{ "run", "run-project" }) |command| {
-        const ran = try context.compiler(&.{ command, "main.my", "--optimize-debug", "--verify-facts" });
+    for ([_][]const []const u8{
+        &.{ "run", "main.my", "--verify-facts" },
+        &.{ "run-project", "main.my", "--verify-facts" },
+        &.{ "build", "main.my", "--run" },
+        &.{ "run", "main.my", "--unoptimized" },
+        &.{ "run-project", "main.my", "--unoptimized" },
+        &.{ "build", "main.my", "--run", "--unoptimized" },
+    }) |args| {
+        const ran = try context.compiler(args);
         try std.testing.expectEqual(@as(u8, 0), ran.status);
         try std.testing.expectEqualStrings("42\n", ran.stdout);
         try std.testing.expect(contains(ran.stderr, "debugging 41\n"));
     }
-    const through = try context.compiler(&.{ "build", "main.my", "--run", "--optimize-debug" });
-    try std.testing.expectEqual(@as(u8, 0), through.status);
-    try std.testing.expectEqualStrings("42\n", through.stdout);
-    try std.testing.expect(contains(through.stderr, "debugging 41\n"));
-    const conflict = try context.compiler(&.{ "test", "check.my", "--release", "--optimize-debug" });
-    try std.testing.expectEqual(@as(u8, 2), conflict.status);
-    try std.testing.expect(contains(conflict.stderr, "mutually exclusive"));
+}
+
+// spec-case: DEBUG-OPTIMIZE-1
+test "explicit modes conflict for tests and developer builds" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const context: Context = .{ .arena = arena.allocator(), .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", arena.allocator()) };
+    for ([_][]const []const u8{
+        &.{ "--release", "--optimize-debug" },
+        &.{ "--optimize-debug", "--release" },
+        &.{ "--release", "--unoptimized" },
+        &.{ "--unoptimized", "--release" },
+        &.{ "--optimize-debug", "--unoptimized" },
+        &.{ "--unoptimized", "--optimize-debug" },
+    }) |flags| {
+        const tested = try context.compiler(try std.mem.concat(context.arena, []const u8, &.{ &.{ "test", "check.my" }, flags }));
+        try std.testing.expectEqual(@as(u8, 2), tested.status);
+        try std.testing.expect(contains(tested.stderr, "mutually exclusive"));
+        const developer = try context.compiler(try std.mem.concat(context.arena, []const u8, &.{ &.{ "build", "main.my", "-o", "out", "--generic-vectors" }, flags }));
+        try std.testing.expectEqual(@as(u8, 2), developer.status);
+    }
 }
 
 // spec: NEW-CORE-S5-DEBUG-RELEASE-1
@@ -426,4 +455,20 @@ test "CLI rejects invalid stage compression with a configuration diagnostic" {
     try std.testing.expect(result.term == .exited);
     try std.testing.expect(result.term.exited != 0);
     try std.testing.expect(contains(result.stderr, "MYLANG_STAGE_CACHE_COMPRESSION must be 'zlib' or 'none'"));
+}
+
+// spec-case: DEBUG-OPTIMIZE-1
+test "unsigned negation traps in default unoptimized release and verified builds" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const context: Context = .{ .arena = arena.allocator(), .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", arena.allocator()) };
+    try context.write("negate.my", "func main() -> int:\n    _ = -1u8\n    return 0\n");
+    for ([_][]const []const u8{ &.{}, &.{"--unoptimized"}, &.{"--release"}, &.{"--verify-facts"}, &.{ "--release", "--verify-facts" } }) |flags| {
+        const args = try std.mem.concat(context.arena, []const u8, &.{ &.{ "build", "negate.my", "--run" }, flags });
+        const result = try context.compiler(args);
+        try std.testing.expectEqual(@as(u8, 1), result.status);
+        try std.testing.expect(contains(result.stderr, "R_OVERFLOW"));
+    }
 }

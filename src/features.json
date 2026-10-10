@@ -679,7 +679,7 @@
     },
     "release-builds": {
       "kind": "tooling",
-      "summary": "`mylang build`, `run` and `test` build debug by default, one LLVM unit per source module so an edit recompiles only the units whose text changed; `--release` (or `--mode ReleaseFast`) builds the whole program as one optimized LLVM unit, keeping every check its facts do not prove.",
+      "summary": "`mylang build`, `run` and `test` default to optimized debug: Core passes and per-module LLVM -O2, preserving debug output; `--optimize-debug` is an alias and `--unoptimized` retains an optimizer-off diagnostic mode; `--release` (or `--mode ReleaseFast`) builds the whole program as one optimized LLVM unit, keeping every check its facts do not prove.",
       "doc": "docs/tooling/native-build.md#debug-and-release-builds"
     },
     "docs-command": {

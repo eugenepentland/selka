@@ -511,7 +511,7 @@ fn argv(a: std.mem.Allocator, fanout: Fanout, path: []const u8) Error![]const []
     if (ceilings.explicit_memory) try arguments.appendSlice(a, &.{ "--max-memory", try std.fmt.allocPrint(a, "{d}", .{ceilings.memory}) });
     try arguments.appendSlice(a, &.{ "--property-runs", try std.fmt.allocPrint(a, "{d}", .{opts.property_runs}) });
     if (opts.build.mode == .release) try arguments.append(a, "--release");
-    if (opts.build.mode == .optimized_debug) try arguments.append(a, "--optimize-debug");
+    if (opts.build.mode == .debug) try arguments.append(a, "--unoptimized");
     if (opts.build.facts == .verify) try arguments.append(a, "--verify-facts");
     if (opts.build.facts == .off) try arguments.append(a, "--no-facts");
     if (opts.controls.force) try arguments.append(a, "--force");

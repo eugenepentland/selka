@@ -1918,6 +1918,8 @@ fn provable(a: *Analysis, i: ir.Inst, block: ir.BlockId) bool {
         },
         .neg => {
             const x = a.rangeAt(i.a, block) orelse return false;
+            // Unsigned negation fits only for zero; positive operands must trap.
+            if (limits.lo == 0) return x.lo == 0 and x.hi == 0;
             return x.lo > limits.lo;
         },
         .floor_div, .floor_rem, .div, .rem => {

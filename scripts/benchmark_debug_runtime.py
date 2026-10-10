@@ -15,7 +15,7 @@ import time
 
 
 REPO = Path(__file__).resolve().parents[1]
-MODES = {"debug": [], "optimized_debug": ["--optimize-debug"], "release": ["--release"]}
+MODES = {"debug": ["--unoptimized"], "optimized_debug": [], "release": ["--release"]}
 SOURCES = [
     REPO / "bench/parity" / group / f"{name}.my"
     for group, name in [

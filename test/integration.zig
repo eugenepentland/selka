@@ -9959,7 +9959,9 @@ test "run on the new core keeps the exit, argument, budget and grant contract" {
     try invoke("run", "func main() -> int:\n    mut xs = [1]\n    return xs[3]\n", 1, "", "error[R_LIST_BOUNDS]");
     try invokeOptions("run", "func main(args: str[], out: Stream) -> int:\n    out.print(len(args), args[1])\n    return 0\n", &.{ "--", "--release", "b" }, 0, "2 b\n0\n", "");
     try invokeOptions("run", s5_loop, &.{"--max-steps=1000"}, 1, "", "R_STEP_LIMIT");
-    try invokeOptions("run", s5_loop, &.{ "--timeout", "1" }, 1, "", "R_TIMEOUT");
+    // A counting loop can be optimized directly to its eventual overflow trap.
+    const endless = "func main() -> int:\n    while True:\n        pass\n    return 0\n";
+    try invokeOptions("run", endless, &.{ "--timeout", "1" }, 1, "", "R_TIMEOUT");
     const deep = "func down(n: int) -> int:\n    if n == 0:\n        return 0\n    return down(n - 1) + 1\n\nfunc main() -> int:\n    return down(100000)\n";
     try invokeOptions("run", deep, &.{"--max-frames=100"}, 1, "", "R_FRAME_LIMIT");
     const grow = "func main() -> int:\n    mut xs: int[] = []\n    mut i = 0\n    while i < 100000000:\n        xs.append(i)\n        i = i + 1\n    return len(xs)\n";

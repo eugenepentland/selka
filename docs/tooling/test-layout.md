@@ -1,11 +1,12 @@
 # Where tests live: Zig or mylang
 
 Language behaviour is tested in the language, under `tests/lang`, and run by
-`mylang test`. `zig build test-lang` runs `tests/lang` and `tests/value_semantics`
-twice each: a debug run, and a release run with `--release --verify-facts` under
+`mylang test`. `zig build test-lang` runs `tests/lang`, `tests/value_semantics`
+and `tests/ported` in three modes: default optimized debug, `--unoptimized`,
+and release with `--release --verify-facts` under
 `MYL_CORE_LEAKCHECK=1`, so a test that ends with blocks still live fails. Each run
-keeps its own result cache (`.mylang-cache/lang-tests`, `lang-tests-release`,
-`value-semantics-tests` and `value-semantics-tests-release`). The compiler's machinery is tested in Zig, under
+keeps its own result cache under `.mylang-cache`, with `-unoptimized` and
+`-release` suffixes for the explicit alternatives. The compiler's machinery is tested in Zig, under
 `src/root_test.zig`. This page states that rule, shows the inner loop each side
 gives you, and lists the Zig tests that still belong on the mylang side as of
 2026-09-18.

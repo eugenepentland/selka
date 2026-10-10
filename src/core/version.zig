@@ -135,6 +135,8 @@ fn packOperands(arena: std.mem.Allocator, f: *ir.Function, refs: []const ir.Ref)
 /// The loop's preheader: the header's predecessor outside the loop, ending in a jump to it.
 fn preheaderOf(f: *const ir.Function, loop: ir.Loop) ?ir.BlockId {
     const preds = f.blocks.items[loop.header.index()].preds.items;
+    if (preds.len != 2) return null;
+    if (preds[0] != loop.latch and preds[1] != loop.latch) return null;
     const index: usize = if (preds[0] == loop.latch) 1 else 0;
     const block = preds[index];
     const insts = f.blocks.items[block.index()].insts.items;
@@ -161,6 +163,9 @@ const Guard = struct { insts: []const ir.Ref, condition: ir.Ref };
 fn duplicate(arena: std.mem.Allocator, f: *ir.Function, loop: ir.Loop, guard_insts: Guard, provenance: origins.Context, frame: ?u32) Error!?Copies {
     const preheader = preheaderOf(f, loop) orelse return null;
     const inside = try members(arena, f, loop);
+    // A body that always returns can leave an unreachable recorded latch.
+    // Such a loop has no complete cycle to clone.
+    if (!inside[loop.latch.index()]) return null;
     // The exit may also be entered by earlier copies of this loop; it must be entered from it.
     var exits = false;
     for (f.blocks.items[loop.exit.index()].preds.items) |pred| exits = exits or inside[pred.index()];
