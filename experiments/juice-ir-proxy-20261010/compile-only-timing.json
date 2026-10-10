@@ -1,0 +1,52 @@
+{
+  "note": "Warm compiler/filesystem caches; compiler subprocess plus estimator call; no guest program execution; 32 trillion inner iterations described, never iterated. Excludes CLI startup/provenance hashing.",
+  "samples": [
+    {
+      "compile_ir_ns": 5399518,
+      "analyze_ns": 1446463,
+      "total_ns": 6845981
+    },
+    {
+      "compile_ir_ns": 4863073,
+      "analyze_ns": 728423,
+      "total_ns": 5591496
+    },
+    {
+      "compile_ir_ns": 4946447,
+      "analyze_ns": 778089,
+      "total_ns": 5724536
+    },
+    {
+      "compile_ir_ns": 4871447,
+      "analyze_ns": 682493,
+      "total_ns": 5553940
+    },
+    {
+      "compile_ir_ns": 6306352,
+      "analyze_ns": 708306,
+      "total_ns": 7014658
+    },
+    {
+      "compile_ir_ns": 4597170,
+      "analyze_ns": 675611,
+      "total_ns": 5272781
+    },
+    {
+      "compile_ir_ns": 4764701,
+      "analyze_ns": 690783,
+      "total_ns": 5455484
+    },
+    {
+      "compile_ir_ns": 4850810,
+      "analyze_ns": 718265,
+      "total_ns": 5569075
+    },
+    {
+      "compile_ir_ns": 4829960,
+      "analyze_ns": 682621,
+      "total_ns": 5512581
+    }
+  ],
+  "median_total_ms": 5.569075,
+  "median_analysis_ms": 0.708306
+}

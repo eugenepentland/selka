@@ -19,6 +19,9 @@ pub fn perf(c: *C, text: []const u8, event: []const u8) d.Error!V {
     return perfImpl(c, text, event) catch |err| d.failure(c, err);
 }
 fn perfImpl(c: *C, text: []const u8, event: []const u8) !V {
+    return c.value(.{ .instructions = try perfCount(c, text, event) });
+}
+fn perfCount(c: *C, text: []const u8, event: []const u8) !f64 {
     var lines = std.mem.splitScalar(u8, text, '\n');
     var found: usize = 0;
     var instructions: f64 = 0;
@@ -28,15 +31,28 @@ fn perfImpl(c: *C, text: []const u8, event: []const u8) !V {
         _ = fields.next() orelse continue;
         const name = fields.next() orelse continue;
         if (!std.mem.eql(u8, std.mem.trim(u8, name, " \t"), event)) continue;
-        const runtime = try std.fmt.parseFloat(f64, std.mem.trim(u8, fields.next() orelse return error.InvalidExperiment, " \t"));
+        const running_ns = try std.fmt.parseFloat(f64, std.mem.trim(u8, fields.next() orelse return error.InvalidExperiment, " \t"));
         const fraction = try std.fmt.parseFloat(f64, std.mem.trim(u8, fields.next() orelse return error.InvalidExperiment, " \t"));
         instructions = try count(value);
-        const valid_runtime = std.math.isFinite(runtime) and runtime > 0;
+        const valid_runtime = std.math.isFinite(running_ns) and running_ns > 0;
         if (instructions <= 0 or !valid_runtime or fraction != 100) return c.fail("invalid or multiplexed perf count");
         found += 1;
     }
     if (found != 1) return c.fail("expected exactly one fully counted perf event");
-    return c.value(.{ .instructions = instructions });
+    return instructions;
+}
+/// Require every grouped runtime event exactly once, positive and fully counted.
+pub fn runtime(c: *C, text: []const u8, instruction_event: []const u8) d.Error!V {
+    return runtimeImpl(c, text, instruction_event) catch |err| d.failure(c, err);
+}
+fn runtimeImpl(c: *C, text: []const u8, instruction_event: []const u8) !V {
+    const cycles = try std.mem.replaceOwned(u8, c.a, instruction_event, "instructions", "cycles");
+    const reference = try std.mem.replaceOwned(u8, c.a, instruction_event, "instructions", "ref-cycles");
+    return c.value(.{
+        .instructions = try perfCount(c, text, instruction_event),
+        .cycles = try perfCount(c, text, cycles),
+        .reference_cycles = try perfCount(c, text, reference),
+    });
 }
 fn resolve(c: *C, names: *V, value: []const u8) !V {
     if (value.len < 3 or value[0] != '(' or !std.ascii.isDigit(value[1])) return d.string(value);

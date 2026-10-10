@@ -1,0 +1,48 @@
+{
+  "archive_sha256": "12f1e9b2a4150c2eb0db2f628bd08a03c36680a2cc422e4409e8e1d7d1f17de6",
+  "checks": [
+    {
+      "case": "algorithm",
+      "comparison_reproduced": true,
+      "validation_reproduced": true,
+      "validation_status": "within-target"
+    },
+    {
+      "case": "atomic",
+      "comparison_reproduced": true,
+      "validation_reproduced": true,
+      "validation_status": "uncertain"
+    },
+    {
+      "case": "copy",
+      "comparison_reproduced": true,
+      "validation_reproduced": true,
+      "validation_status": "uncertain"
+    },
+    {
+      "case": "identical",
+      "comparison_reproduced": true,
+      "validation_reproduced": true,
+      "validation_status": "within-target"
+    },
+    {
+      "case": "large-copy",
+      "comparison_reproduced": true,
+      "validation_reproduced": true,
+      "validation_status": "uncertain"
+    },
+    {
+      "case": "optimization",
+      "comparison_reproduced": true,
+      "validation_reproduced": true,
+      "validation_status": "within-target"
+    },
+    {
+      "case": "wave3-tree",
+      "comparison_reproduced": true,
+      "validation_reproduced": true,
+      "validation_status": "uncertain"
+    }
+  ],
+  "scope": "Offline replay from extracted retained evidence; no benchmark reruns or sample filtering."
+}

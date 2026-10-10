@@ -34,7 +34,16 @@ __attribute__((noinline)) uint64_t process_records(const uint32_t *data, size_t 
             uint32_t value = data[i];
 #if EXTRA_COPY
             volatile uint32_t copy[8];
-            for (unsigned j = 0; j < 8; ++j) copy[j] = value;
+            /* Keep the copying fixture independent of tiny-loop delivery
+             * variability. Volatile preserves all eight stores and the load. */
+            copy[0] = value;
+            copy[1] = value;
+            copy[2] = value;
+            copy[3] = value;
+            copy[4] = value;
+            copy[5] = value;
+            copy[6] = value;
+            copy[7] = value;
             value = copy[round % 8];
 #endif
             unsigned bits = bit_count(value);

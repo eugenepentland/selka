@@ -1,0 +1,7 @@
+{
+  "file": "quiet-rerun-evidence.tar.gz",
+  "sha256": "12f1e9b2a4150c2eb0db2f628bd08a03c36680a2cc422e4409e8e1d7d1f17de6",
+  "bytes": 571145,
+  "files": 2174,
+  "scope": "All run-03 native records, raw counter profiles and outputs, independent timings, and paired reanalysis. Executables and build caches excluded; executable hashes retained in suite and records."
+}

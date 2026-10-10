@@ -1,0 +1,36 @@
+{
+  "source_commit": "c387192093b2c9ca5709b6cb8fd27bf8f745a082",
+  "measurement_command": "uclampset -m 1024 -M 1024 python3 scripts/juice_runtime_bench.py .tmp/juice/suite.json --compiler .tmp/juice/fast/bin/mylang --output .tmp/juice/qualification-03 --cpu 10",
+  "analysis_command": "python3 experiments/juice-runtime-proxy-20261010/reanalyse.py .tmp/juice/qualification-03 --compiler zig-out/bin/mylang --output .tmp/juice/paired-03",
+  "measurement_method": {
+    "compiler_sha256": "8aaba75a83e27eb28ff58496cbde58d9222852d42845be0adf3dec9055f0e115",
+    "cpu": 10,
+    "counter_pairs": 5,
+    "timing_pairs": 9,
+    "scheduling_policy": {
+      "scaling_driver": "intel_pstate",
+      "scaling_governor": "powersave",
+      "scaling_min_freq": "400000",
+      "scaling_max_freq": "4600000",
+      "uclamp.min": "1024",
+      "uclamp.max": "1024",
+      "effective uclamp.min": "1024",
+      "effective uclamp.max": "1024",
+      "policy": "0",
+      "prio": "120"
+    }
+  },
+  "analysis_compiler_sha256": "0f7249cc1e9dbf17f63e5696d1776fdb39a0e62a8ba5fae688a96fe3197c7201",
+  "source_suite_sha256": "90aba7c993fd5dd6bafdb6b31c0b362f8f0afda625e891e4a6332d19e785bb71",
+  "comparison_to_run_02": "Same seven executable pairs and suite, capture compiler, analysis compiler, CPU, pair counts and recorded scheduling policy. Executable hashes verified before capture. No rebuild, estimator change or threshold change.",
+  "analysis": "Use results-03.json and paired-03 for the frozen paired estimator. The unchanged older capture executable produces an unpaired summary in benchmark-03.log; that summary is not the final paired result.",
+  "host_observation": "quiet-rerun-host.json records a one-second CPU activity sample before measurement, not continuous proof of host isolation.",
+  "scope": "Repeat on the same selected cases with an estimator frozen before this run; not held-out workload-family validation. All observations retained, including uncertain cases.",
+  "result": {
+    "passed": 3,
+    "total": 7,
+    "uncertain": 4,
+    "diagnostic_median_relative_error": 0.006927385417024978,
+    "diagnostic_max_relative_error": 0.021667651350533723
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "file": "raw-evidence.tar.gz",
+  "sha256": "dacd8c59d2291f5455a936bd7d5a4770f9ab31a61044f8bc25ac0ae609c77fe4",
+  "bytes": 1150187,
+  "scope": "Original native records and raw profiles/output, independent timings, paired reanalysis and final collector smoke capture. Executables and build cache excluded; their hashes and source recipes retained."
+}

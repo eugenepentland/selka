@@ -1,0 +1,15 @@
+{
+  "focused_tests": {
+    "native_zig": 7,
+    "legacy_reference": 38,
+    "native_cli": 16,
+    "benchmark_driver": 3,
+    "total": 64,
+    "build_steps": "19/19"
+  },
+  "guardian": "full tree: 88 checks passed",
+  "archive_replay": "raw hashes verified; algorithm comparison and validation reproduced exactly after archive extraction",
+  "final_collector_smoke": "complete; instructions, cycles and reference_cycles; scheduling policy captured",
+  "fifo_merge": "229ad2f6a0040ccea27d314b27524ffb3285d6f2",
+  "fifo_merge_still_ancestor_of_main": true
+}
