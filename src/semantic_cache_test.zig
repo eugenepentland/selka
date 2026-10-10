@@ -826,7 +826,8 @@ fn transientDurableRun(root: []const u8, bytes: []const u8, expected: i64) !Dura
 }
 
 // spec-case: SEMANTIC-CACHE-9
-test "durable bodies restore falls back for defaults outside the declaration region" {
+// spec-case: SEMANTIC-CACHE-3
+test "copyEntry restores exact default source proofs outside declaration region" {
     var temporary = t.tmpDir(.{});
     defer temporary.cleanup();
     const root = try temporary.dir.realPathFileAlloc(t.io, ".", t.allocator);
@@ -843,9 +844,14 @@ test "durable bodies restore falls back for defaults outside the declaration reg
     ;
     _ = try transientDurableRun(root, bytes, 42);
     const warm = try transientDurableRun(root, bytes, 42);
-    try t.expectEqual(@as(usize, 1), warm.checked);
-    try t.expectEqual(@as(usize, 1), warm.reused);
-    try t.expectEqual(@as(usize, 1), warm.misses[@backingInt(language.semantic_cache.MissReason.relocation_failed)]);
+    try t.expectEqual(@as(usize, 0), warm.checked);
+    try t.expectEqual(@as(usize, 2), warm.reused);
+    try t.expectEqual(@as(usize, 0), warm.misses[@backingInt(language.semantic_cache.MissReason.relocation_failed)]);
+    const edited = try t.allocator.dupe(u8, bytes);
+    defer t.allocator.free(edited);
+    edited[std.mem.indexOf(u8, edited, "42").? + 1] = '3';
+    const changed = try transientDurableRun(root, edited, 43);
+    try t.expect(changed.checked > 0);
 }
 
 // spec-case: SEMANTIC-CACHE-9
@@ -2122,4 +2128,140 @@ test "summary callable record identities distinguish return origins and reject s
     records[1].contract.callback.?.effects = 1;
     var changed = try cache.begin(a, unit.src, unit.syntax.?, &records);
     try t.expect((try changed.shapeOf(identity)) == null);
+}
+
+const DefaultFiles = struct {
+    main: []const u8,
+    model: []const u8,
+    fn read(context: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) language.project.ReadError![]u8 {
+        const self: *DefaultFiles = @ptrCast(@alignCast(context.?));
+        const bytes = if (std.mem.eql(u8, path, "main.my")) self.main else if (std.mem.eql(u8, path, "model.my")) self.model else return error.NotFound;
+        if (bytes.len > limit) return error.TooLarge;
+        return allocator.dupe(u8, bytes);
+    }
+};
+
+fn compareDefaults(cache: *Cache, files: *DefaultFiles, expected: i64) !void {
+    var cached_project = language.project.Project.init(t.allocator);
+    defer cached_project.deinit();
+    try cached_project.load(.{ .context = files, .read = DefaultFiles.read }, "main", .{});
+    var cached_index = try language.interfaces.build(&cached_project);
+    var cached = try language.project_compile.Compilation.init(&cached_index);
+    try cached.checkWithCache(cache);
+    var fresh_project = language.project.Project.init(t.allocator);
+    defer fresh_project.deinit();
+    try fresh_project.load(.{ .context = files, .read = DefaultFiles.read }, "main", .{});
+    var fresh_index = try language.interfaces.build(&fresh_project);
+    var fresh = try language.project_compile.Compilation.init(&fresh_index);
+    try fresh.check();
+    try t.expectEqual(expected, (try native.run(&cached)).value);
+    try t.expectEqual(expected, (try native.run(&fresh)).value);
+    try t.expectEqual(fresh.diagnostics.items.items.len, cached.diagnostics.items.items.len);
+    for (fresh.diagnostics.items.items, cached.diagnostics.items.items) |left, right| {
+        const a = try language.diagnostic_output.render(t.allocator, left, fresh.src, .json);
+        defer t.allocator.free(a);
+        const b = try language.diagnostic_output.render(t.allocator, right, cached.src, .json);
+        defer t.allocator.free(b);
+        try t.expectEqualStrings(a, b);
+    }
+}
+
+// spec-case: SEMANTIC-CACHE-9
+// spec-case: SEMANTIC-CACHE-15
+// spec-case: SEMANTIC-CACHE-3
+test "imported defaults retain exact source proof across importer edits and invalidate changed defaults" {
+    var files: DefaultFiles = .{
+        .main = "import model\nfunc helper() -> i64:\n    return 0\n\nfunc main() -> i64:\n    return model.Item().n + helper()\n",
+        .model = "public record Item:\n    n: i64 = 42\n",
+    };
+    var cache = Cache.init(t.allocator, 4 << 20);
+    defer cache.deinit();
+    try compareDefaults(&cache, &files, 42);
+    const checked = cache.statistics.checked;
+    try compareDefaults(&cache, &files, 42);
+    try t.expectEqual(checked, cache.statistics.checked);
+    files.main = "import model\nfunc helper() -> i64:\n    return 1\n\nfunc main() -> i64:\n    return model.Item().n + helper()\n";
+    try compareDefaults(&cache, &files, 43);
+    try t.expectEqual(checked + 1, cache.statistics.checked);
+    files.model = "# moved default\npublic record Item:\n    n: i64 = 43\n";
+    try compareDefaults(&cache, &files, 44);
+    try t.expect(cache.statistics.checked > checked + 1);
+}
+
+// spec-case: SEMANTIC-CACHE-9
+// spec-case: SEMANTIC-CACHE-15
+// spec-case: SEMANTIC-CACHE-3
+test "copyEntry parser trailing span proof reuses matched body after another body changes" {
+    var files: DefaultFiles = .{
+        .main = "import model\nfunc helper() -> i64:\n    return 42\n\nfunc main() -> i64:\n    return model.keep(Some(helper()))\n",
+        .model = "public func keep(n: i64?) -> i64:\n    match n:\n        case Some(value):\n            return value\n        case None:\n            return 0\n\n\npublic func unused() -> i64:\n    return 0\n",
+    };
+    var cache = Cache.init(t.allocator, 4 << 20);
+    defer cache.deinit();
+    try compareDefaults(&cache, &files, 42);
+    var saw_trailing_span = false;
+    for (cache.entries) |entry| {
+        var refs = @import("semantic_copy.zig").RefSet.init(t.allocator);
+        defer refs.deinit();
+        refs.sources.enabled = true;
+        try refs.collect([]const checked_typed.Node, entry.nodes);
+        try refs.collect([]const checked_typed.Statement, entry.statements);
+        var spans = refs.sources.items.keyIterator();
+        while (spans.next()) |span| {
+            if (span.end == entry.meta.identity.region.end + 3) saw_trailing_span = true;
+        }
+    }
+    try t.expect(saw_trailing_span);
+    const checked = cache.statistics.checked;
+    files.model = "public func keep(n: i64?) -> i64:\n    match n:\n        case Some(value):\n            return value\n        case None:\n            return 0\n\n\npublic func unused() -> i64:\n    return 1\n";
+    try compareDefaults(&cache, &files, 42);
+    try t.expectEqual(checked + 1, cache.statistics.checked);
+    try t.expectEqual(@as(usize, 0), cache.statistics.rejections.total[@backingInt(language.semantic_cache.MissReason.relocation_failed)]);
+}
+
+// spec-case: SEMANTIC-CACHE-9
+// spec-case: SEMANTIC-CACHE-15
+// spec-case: SEMANTIC-CACHE-3
+test "source proof rejects renamed ambiguous edited and malformed module provenance" {
+    const source = @import("source.zig");
+    const provenance = @import("semantic_sources.zig");
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const model = try source.Source.init(a, "model.my", "n=42");
+    const main = try source.Source.init(a, "main.my", "get()");
+    const original = try source.Source.initMapped(a, &.{ model, main });
+    var before = try provenance.Catalog.init(t.allocator, original);
+    defer before.deinit();
+    var spans: std.AutoHashMapUnmanaged(source.Span, void) = .empty;
+    defer spans.deinit(t.allocator);
+    try spans.put(t.allocator, .{ .start = 2, .end = 4 }, {});
+    const refs = try before.capture(t.allocator, .{ .start = 5, .end = 10 }, &spans);
+    defer t.allocator.free(refs);
+    try t.expectEqual(@as(usize, 1), refs.len);
+    const moved = try source.Source.initMapped(a, &.{ main, model });
+    var after = try provenance.Catalog.init(t.allocator, moved);
+    defer after.deinit();
+    const local: @import("semantic_copy.zig").Segment = .{ .before = .{ .start = 5, .end = 10 }, .after = 0 };
+    const mapped = try after.segments(t.allocator, refs, local);
+    defer t.allocator.free(mapped);
+    try t.expectEqual(@as(usize, 2), mapped.len);
+    try t.expectEqual(@as(usize, 6), mapped[0].after);
+    const changed = try source.Source.init(a, "model.my", "n=43");
+    const renamed = try source.Source.init(a, "other.my", "n=42");
+    for ([_]source.Source{
+        try source.Source.initMapped(a, &.{ main, changed }),
+        try source.Source.initMapped(a, &.{ main, renamed }),
+        try source.Source.initMapped(a, &.{ model, main, model }),
+    }) |fresh| {
+        var catalog = try provenance.Catalog.init(t.allocator, fresh);
+        defer catalog.deinit();
+        const rejected_segments = try catalog.segments(t.allocator, refs, local);
+        defer t.allocator.free(rejected_segments);
+        try t.expectEqual(@as(usize, 1), rejected_segments.len);
+    }
+    var malformed = refs[0];
+    malformed.before.end = original.bytes.len + 1;
+    try t.expect(!provenance.valid(&.{malformed}, original.bytes.len));
+    try t.expect(!provenance.valid(&.{ refs[0], refs[0] }, original.bytes.len));
 }

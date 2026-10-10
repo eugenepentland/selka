@@ -211,19 +211,22 @@ fn buildAttempt(init: std.process.Init, path: []const u8, options: Options, budg
     };
     const outcome = try linkEmittedCached(init, module, prepared.unit, options, caches, report);
     materializationMetrics(&stages, prepared.lazy);
+    const flush_start = stage_metrics.now(init.io);
+    const flushed = try storage.flush();
+    const publication: stage_metrics.Storage = .{ .flush_nanoseconds = stage_metrics.elapsed(init.io, flush_start), .flush_succeeded = flushed, .reads = storage.statistics() };
     // A record that cannot be written costs the next build its replay, nothing more.
     if (replaying) build_replay.remember(context, prepared.sources, outcome.tool, .{ .program = outcome.program, .foreign = outcome.foreign }, report.items) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         error.WriteFailed => {},
     };
-    if (options.show.cache_report != .off) try cacheReport(allocator, options.show.cache_report, outcome, &stages, report);
+    if (options.show.cache_report != .off) try cacheReport(allocator, options.show.cache_report, outcome, &stages, &publication, report);
     return 0;
 }
 
 fn replayBuild(context: build_replay.Context, options: Options, report: *std.ArrayList(u8)) Error!bool {
     if (options.show.llvm != null or options.show.verify_cache) return false;
     if (!try build_replay.replay(context, options.output, report)) return false;
-    if (options.show.cache_report != .off) try cacheReport(context.arena, options.show.cache_report, null, null, report);
+    if (options.show.cache_report != .off) try cacheReport(context.arena, options.show.cache_report, null, null, null, report);
     return true;
 }
 
@@ -297,7 +300,7 @@ fn flags(init: std.process.Init, options: Options, budget: ?run_budget.RunBudget
 /// Say what the caches served: for a replayed build (`outcome` null) that it replayed,
 /// else the units linked, reused, compiled and verified, whether the program store
 /// served the executable, and the tool processes started.
-fn cacheReport(allocator: std.mem.Allocator, form: CacheReport, outcome: ?driver.Outcome, stages: ?*const stage_metrics.Report, report: *std.ArrayList(u8)) Error!void {
+fn cacheReport(allocator: std.mem.Allocator, form: CacheReport, outcome: ?driver.Outcome, stages: ?*const stage_metrics.Report, storage: ?*const stage_metrics.Storage, report: *std.ArrayList(u8)) Error!void {
     const c = if (outcome) |built| built.counts else driver.Counts{};
     const program = if (outcome) |built| (if (built.program_reused) "reused" else "linked") else "replayed";
     if (form == .json) {
@@ -310,6 +313,7 @@ fn cacheReport(allocator: std.mem.Allocator, form: CacheReport, outcome: ?driver
             .verified = c.verified,
             .processes = c.processes,
             .stages = stages,
+            .storage = storage,
         }, .{}) catch return error.OutOfMemory;
         try report.print(allocator, "{s}\n", .{record});
         return;

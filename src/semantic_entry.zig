@@ -1,5 +1,6 @@
 //! Independently owned function snapshots, each owning its own source slices.
 const std = @import("std");
+const sources = @import("semantic_sources.zig");
 const typed = @import("typed.zig");
 const source = @import("source.zig");
 const copy = @import("semantic_copy.zig");
@@ -35,19 +36,22 @@ pub const Metadata = struct {
     notes: []const Note = &.{},
 };
 /// Inputs for `Entry.create`; bundles the changing snapshot facts.
-pub const Spec = struct { identity: Identity, function_refs: []const FunctionRef, record_refs: []const RecordRef };
+pub const Spec = struct { identity: Identity, function_refs: []const FunctionRef, record_refs: []const RecordRef, source_refs: []const sources.Reference = &.{} };
 
 /// Source bytes owned by one entry: its original length plus the body and
 /// declaration-region slices used to prove the entry still matches fresh source.
-/// Each entry copies only the two slices it needs, so retention accounting is a
+/// Each entry owns its byte slices and source proofs, so retention accounting is a
 /// plain per-entry sum and releasing one entry never invalidates another.
 pub const SourceRef = struct {
     old_len: usize = 0,
     body_bytes: []const u8 = &.{},
     region_bytes: []const u8 = &.{},
+    trailing_bytes: []const u8 = &.{},
+    /// Independently validated original files for nonlocal source provenance.
+    modules: []const sources.Reference = &.{},
 };
 /// One local checked tree owns its metadata, stable dependency identities and
-/// the two source slices that validate it.
+/// the source bytes and proofs that validate it.
 pub const Entry = struct {
     arena: std.heap.ArenaAllocator,
     function: typed.Function,
@@ -84,6 +88,12 @@ pub const Entry = struct {
         if (identity.region.start > identity.region.end or identity.region.end > bytes.len) return error.InternalError;
         const body_bytes = try arena_allocator.dupe(u8, bytes[identity.body.start..identity.body.end]);
         const region_bytes = try arena_allocator.dupe(u8, bytes[identity.region.start..identity.region.end]);
+        const trailing_bytes = try arena_allocator.dupe(u8, bytes[identity.region.end..@min(bytes.len, identity.region.end +| 3)]);
+        const source_refs = try arena_allocator.alloc(sources.Reference, spec.source_refs.len);
+        for (spec.source_refs, source_refs) |reference, *out| {
+            out.* = reference;
+            out.path = try arena_allocator.dupe(u8, reference.path);
+        }
         return .{
             .arena = arena,
             .function = saved_function,
@@ -94,6 +104,8 @@ pub const Entry = struct {
                 .old_len = bytes.len,
                 .body_bytes = body_bytes,
                 .region_bytes = region_bytes,
+                .trailing_bytes = trailing_bytes,
+                .modules = source_refs,
             },
             .meta = .{
                 .identity = identity,

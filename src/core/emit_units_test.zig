@@ -1,5 +1,6 @@
 //! Unit purity, stable names and native linking across actual source modules.
 const std = @import("std");
+const stage_loss = @import("stage_loss_test_support.zig");
 const language = @import("mylang");
 const frontend = @import("frontend.zig");
 const build = @import("build.zig");
@@ -599,8 +600,7 @@ fn loseDurableFacts(a: std.mem.Allocator, store: *const stages.Store, table: *co
     defer seen.deinit(a);
     for (table.handles) |entry| if (entry) |handle| {
         if ((try seen.getOrPut(a, handle.key)).found_existing) continue;
-        const path = try std.fmt.allocPrint(a, "{s}/{s}.stage", .{ store.root, std.fmt.bytesToHex(handle.key, .lower) });
-        try std.Io.Dir.cwd().deleteFile(std.testing.io, path);
+        try stage_loss.remove(a, store, handle.key);
     };
 }
 
@@ -873,20 +873,9 @@ fn receiptFinals(a: std.mem.Allocator, module: *const ir.Module, locator: emitte
     return finals;
 }
 
-fn removeExactEmissionArtifacts(a: std.mem.Allocator, directory: std.Io.Dir, store: *const stages.Store) !void {
-    var files = try directory.openDir(std.testing.io, "stages-v1", .{ .iterate = true });
-    defer files.close(std.testing.io);
-    var iterator = files.iterate();
-    var removals: std.ArrayList([]const u8) = .empty;
-    while (try iterator.next(std.testing.io)) |entry| {
-        if (entry.kind != .file or !std.mem.endsWith(u8, entry.name, ".stage")) continue;
-        var digest: stages.Digest = undefined;
-        _ = try std.fmt.hexToBytes(&digest, entry.name[0..64]);
-        if (try store.loadValue(a, digest, emission_cache.Receipt) == null)
-            try removals.append(a, try a.dupe(u8, entry.name));
-    }
-    try std.testing.expect(removals.items.len != 0);
-    for (removals.items) |name| try files.deleteFile(std.testing.io, name);
+fn removeExactEmissionArtifacts(a: std.mem.Allocator, artifacts: []const units.Unit, store: *const stages.Store) !void {
+    try std.testing.expect(artifacts.len != 0);
+    for (artifacts) |unit| try stage_loss.remove(a, store, unit.artifact.?.key);
 }
 
 fn sameNativeHandles(expected: []const units.Unit, actual: []const units.Unit) !void {
@@ -968,7 +957,10 @@ test "S4 emissionJob compact emission receipts leave untouched final bodies defe
     try std.testing.expectEqual(@as(u32, 32), moved.work.keys_built);
     // Remove exact artifacts while keeping compact receipts. A receipt cannot
     // authorize rendering an empty body: the coordinator must retry eagerly.
-    try removeExactEmissionArtifacts(a, directory.dir, &store);
+    context.native_handles = true;
+    const physical = try units.emitCached(a, std.testing.allocator, &module, options, context);
+    context.native_handles = false;
+    try removeExactEmissionArtifacts(a, physical, &store);
     loader.hide();
     try std.testing.expectError(error.CacheMiss, units.emitCached(a, std.testing.allocator, &module, options, context));
     try std.testing.expectEqual(@as(usize, 0), loader.restored);

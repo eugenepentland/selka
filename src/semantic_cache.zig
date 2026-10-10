@@ -14,6 +14,7 @@ const generic_cache = @import("generic_cache.zig");
 const generic_specializations = @import("generic_specializations.zig");
 const timings = @import("timings.zig");
 const summary = @import("semantic_summary.zig");
+const sources = @import("semantic_sources.zig");
 
 /// Re-exported so host wiring can bind the full contract without depending on
 /// the compiler module's internal file layout.
@@ -122,6 +123,8 @@ pub const MissDetail = struct {
     total: MissCounts = @splat(0),
     lookup: MissCounts = @splat(0),
     retention: MissCounts = @splat(0),
+    /// First rejected identity by semantic_copy.Failure tag (none is slot zero).
+    relocation: [copy.failure_count]usize = @splat(0),
 };
 
 /// Per-kind retained storage and eviction detail exposed beside the existing
@@ -390,6 +393,7 @@ pub const Cache = struct {
                 .functions = function_map,
                 .records = record_map,
                 .initial_record_count = records.len,
+                .sources = try sources.Catalog.init(allocator, src),
                 .shapes = .{ .allocator = allocator, .records = try allocator.dupe(typed.Record, records) },
             },
         };
@@ -407,6 +411,7 @@ const Remap = struct {
     initial_record_count: usize,
     /// Transitive shape digests of the fresh catalog's records.
     shapes: key.Shapes,
+    sources: sources.Catalog,
 };
 
 /// Per-function reuse state for one check request.
@@ -481,9 +486,14 @@ pub const Session = struct {
             out.* = .{ .old = reference.index, .fresh = @fromBackingInt(fresh + typed.Type.record_base) };
         }
         copy.sortRecordRemaps(records);
-        var segment = [_]copy.Segment{.{ .before = old_region, .after = new_region.start }};
+        var proven_region = old_region;
+        const trailing = entry.source.trailing_bytes;
+        if (trailing.len <= self.src.bytes.len - new_region.end and std.mem.eql(u8, trailing, self.src.bytes[new_region.end..][0..trailing.len])) {
+            proven_region.end += trailing.len;
+        }
+        const segments = try self.remap.sources.segments(allocator, entry.source.modules, .{ .before = proven_region, .after = new_region.start });
         const mapper: copy.Mapper = .{
-            .segments = &segment,
+            .segments = segments,
             .before = entry.range,
             .after = .{
                 .nodes = .{ .start = nodes.items.len, .end = nodes.items.len + entry.nodes.len },
@@ -492,9 +502,16 @@ pub const Session = struct {
             .function_remaps = functions,
             .record_remaps = records,
         };
-        const function = mapper.copy(allocator, typed.Function, entry.function) catch |err| return self.relocationMiss(err);
-        const copied_nodes = mapper.copy(allocator, []const typed.Node, entry.nodes) catch |err| return self.relocationMiss(err);
-        const copied_statements = mapper.copy(allocator, []const typed.Statement, entry.statements) catch |err| return self.relocationMiss(err);
+        var failure: copy.Failure = .none;
+        const function = mapper.copyWithFailure(allocator, typed.Function, entry.function, &failure) catch |err| {
+            return self.relocationMiss(err, failure);
+        };
+        const copied_nodes = mapper.copyWithFailure(allocator, []const typed.Node, entry.nodes, &failure) catch |err| {
+            return self.relocationMiss(err, failure);
+        };
+        const copied_statements = mapper.copyWithFailure(allocator, []const typed.Statement, entry.statements, &failure) catch |err| {
+            return self.relocationMiss(err, failure);
+        };
         try nodes.appendSlice(allocator, copied_nodes);
         try statements.appendSlice(allocator, copied_statements);
         self.reuse.functions[index] = true;
@@ -545,9 +562,12 @@ pub const Session = struct {
         self.cache.statistics.rejections.total[@backingInt(why)] += 1;
         return null;
     }
-    fn relocationMiss(self: *Session, err: copy.Error) error{ OutOfMemory, InternalError }!?typed.Function {
+    fn relocationMiss(self: *Session, err: copy.Error, failure: copy.Failure) error{ OutOfMemory, InternalError }!?typed.Function {
         return switch (err) {
-            error.InvalidRelocation => self.reason(.relocation_failed),
+            error.InvalidRelocation => blk: {
+                self.cache.statistics.rejections.relocation[@backingInt(std.meta.activeTag(failure))] += 1;
+                break :blk self.reason(.relocation_failed);
+            },
             error.OutOfMemory => error.OutOfMemory,
             error.InternalError => error.InternalError,
         };
@@ -561,6 +581,8 @@ pub const Session = struct {
         const ast_index = self.prepared.ordinary_ast[i];
         const stable_key = self.prepared.keys[ast_index];
         var refs = copy.RefSet.init(cache.allocator);
+        refs.sources.enabled = true;
+        refs.sources.local = self.prepared.regions[ast_index];
         defer refs.deinit();
         try copy.collectRefs(cache.allocator, program.functions[i], program.nodes[range.nodes.start..range.nodes.end], program.statements[range.statements.start..range.statements.end], &refs);
         // A body that references a concrete specialization cannot be reused
@@ -625,7 +647,10 @@ pub const Session = struct {
             record_count += 1;
         }
         if (unstable) |why| return self.freshMiss(why);
+        const source_refs = try self.remap.sources.capture(cache.allocator, self.prepared.regions[ast_index], &refs.sources.items);
+        defer cache.allocator.free(source_refs);
         const spec: owned.Spec = .{
+            .source_refs = source_refs,
             .identity = .{
                 .key = stable_key,
                 .context = self.prepared.contexts[ast_index],

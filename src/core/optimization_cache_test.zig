@@ -1,5 +1,6 @@
 //! Persistent optimizer stages are checked against the uncached pass oracle.
 const std = @import("std");
+const stage_loss = @import("stage_loss_test_support.zig");
 const demand_ir = @import("demand_ir.zig");
 const support = @import("test_support.zig");
 const passes = @import("passes.zig");
@@ -230,8 +231,7 @@ test "optimizer stage deferred cold and warm results match eager and missing or 
     const repaired = try compileDeferred(a, std.testing.allocator, basic, &storage);
     try equal(oracle, repaired.output);
     try std.testing.expect(repaired.output.statistics.misses[@backingInt(cache.Stage.final)] > 0);
-    const path = try std.fmt.allocPrint(a, "{s}/{s}.stage", .{ storage.root, std.fmt.bytesToHex(cold.fact_key, .lower) });
-    try std.Io.Dir.cwd().deleteFile(std.testing.io, path);
+    try stage_loss.remove(a, &storage, cold.fact_key);
     const missing = try compileDeferred(a, std.testing.allocator, basic, &storage);
     try equal(oracle, missing.output);
     try std.testing.expect(missing.output.statistics.misses[@backingInt(cache.Stage.final)] > 0);
@@ -734,8 +734,7 @@ test "optimizer demand missing nonidentity checkpoint falls back and eager recov
     const text = try checkpointFixture(a, true);
     _ = try compileDemand(a, std.testing.allocator, text, &storage, false);
     const stage = (try savedCheckpoint(a, text, &storage, .verify, 0)).?;
-    const path = try std.fmt.allocPrint(a, "{s}/{s}.stage", .{ storage.root, std.fmt.bytesToHex(stage.key, .lower) });
-    try std.Io.Dir.cwd().deleteFile(std.testing.io, path);
+    try stage_loss.remove(a, &storage, stage.key);
     const edited = try std.mem.replaceOwned(u8, a, text, "+ 1", "+ 2");
     try std.testing.expectError(error.CacheMiss, compileDemand(a, std.testing.allocator, edited, &storage, true));
     const recovered = try compileDemandGuarded(a, std.testing.allocator, edited, &storage, .{ .omit = false, .force_eager = true });
@@ -763,8 +762,7 @@ test "optimizer demand rejects checksummed identity alias ancestry corruption be
     try storage.storeValue(alias.key, cache.Transform, value);
     const edited = try std.mem.replaceOwned(u8, a, text, "+ 1", "+ 2");
     try std.testing.expectError(error.CacheMiss, compileDemand(a, std.testing.allocator, edited, &storage, true));
-    const path = try std.fmt.allocPrint(a, "{s}/{s}.stage", .{ storage.root, std.fmt.bytesToHex(alias.key, .lower) });
-    try std.Io.Dir.cwd().deleteFile(std.testing.io, path);
+    try stage_loss.remove(a, &storage, alias.key);
     const repaired = try compileDemandGuarded(a, std.testing.allocator, edited, &storage, .{ .omit = false, .force_eager = true });
     try equal(try compile(a, std.testing.allocator, edited, null, .verify), repaired.output);
 }

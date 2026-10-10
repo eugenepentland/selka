@@ -4,7 +4,7 @@ const testing = std.testing;
 const compiler_path = @import("test_options").compiler_path;
 // Mirror src/semantic_store.zig's directory format: this CLI test cannot
 // import files outside its Zig module root.
-const semantic_cache_version = "semantic-cache-v3";
+const semantic_cache_version = "semantic-cache-v4";
 
 // spec: VALUE-SEMANTICS-11
 test "a scalar-only mut record parameter writes the caller" {

@@ -1,5 +1,6 @@
 //! Native receipt policy separation and integrity recovery.
 const std = @import("std");
+const stage_loss = @import("stage_loss_test_support.zig");
 const receipt = @import("native_receipt.zig");
 const emission = @import("emission_cache.zig");
 const store = @import("stage_store.zig");
@@ -9,7 +10,7 @@ const settings: units.Settings = .{ .tool = @splat(1), .cpu = @splat(2), .runtim
 const artifact: emission.Artifact = .{ .text = "define i32 @f() { ret i32 7 }", .number = true, .math = false, .counting = false };
 
 fn path(a: std.mem.Allocator, storage: *const store.Store, key: store.Digest) ![]const u8 {
-    return std.fmt.allocPrint(a, "{s}/{s}.stage", .{ storage.root, std.fmt.bytesToHex(key, .lower) });
+    return stage_loss.isolatedPath(a, storage, key);
 }
 
 // spec-case: NEW-CORE-STAGE-CACHE-9
@@ -49,7 +50,7 @@ test "native receipts preserve exact keys and isolate every native setting" {
     try receipt.remember(handle, settings, exact);
     try std.Io.Dir.cwd().writeFile(std.testing.io, .{ .sub_path = try path(a, &storage, map_key), .data = "damaged" });
     try std.testing.expect((try receipt.lookup(a, handle, settings)) == null);
-    try std.Io.Dir.cwd().deleteFile(std.testing.io, try path(a, &storage, map_key));
+    try std.Io.Dir.cwd().deleteFile(std.testing.io, (try storage.artifactPath(a, map_key)).?);
     try std.testing.expect((try receipt.lookup(a, handle, settings)) == null);
 }
 

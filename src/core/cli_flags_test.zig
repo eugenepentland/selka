@@ -157,6 +157,7 @@ test "no-cache builds runs and tests through a private cache it removes and publ
 }
 
 // spec: NEW-CORE-S5-REPORT-1
+// spec-case: NEW-CORE-STAGE-PACK-1
 test "report prints the cache report as one JSON line and says when a build replayed" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
@@ -172,6 +173,10 @@ test "report prints the cache report as one JSON line and says when a build repl
     try std.testing.expectEqualStrings("linked", record.object.get("program").?.string);
     try std.testing.expect(record.object.get("units").?.integer > 0);
     try std.testing.expect(record.object.get("processes").?.integer > 0);
+    const storage = record.object.get("storage").?.object;
+    try std.testing.expect(storage.get("flush_succeeded").?.bool);
+    try std.testing.expect(storage.get("flush_nanoseconds").?.integer >= 0);
+    try std.testing.expect(storage.get("reads").?.object.get("decoded_bytes").?.integer >= 0);
     const stages = record.object.get("stages").?.object;
     try std.testing.expectEqualStrings("stage-report-v3", stages.get("version").?.string);
     try std.testing.expect(stages.get("lowering").?.object.get("materialized").?.integer > 0);

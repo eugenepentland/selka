@@ -1,6 +1,7 @@
 //! Durable lowering replay is compared with the uncached builder, including
 //! declaration/string order, source spans and complete emitted LLVM text.
 const std = @import("std");
+const stage_loss = @import("stage_loss_test_support.zig");
 const language = @import("mylang");
 const build = @import("build.zig");
 const lowering = @import("lowering_cache.zig");
@@ -138,18 +139,9 @@ test "demand raw headers materialize only requested bodies and reject lost paylo
     cache.lazy = &lost;
     var replayed = try build.buildExecutableCached(a, input, &refusal, &cache);
     try lost.prepare(&replayed, unit.src);
-    try damagePayloads(store.root);
+    try std.testing.expect(try stage_loss.damage(&store) > 0);
     try std.testing.expectError(error.CacheMiss, lost.context.ensure(replayed.entry));
     try std.testing.expect(!lost.tables.loaded.items[replayed.entry]);
-}
-
-fn damagePayloads(root: []const u8) !void {
-    var directory = try std.Io.Dir.cwd().openDir(std.testing.io, root, .{ .iterate = true });
-    defer directory.close(std.testing.io);
-    var iterator = directory.iterate();
-    while (try iterator.next(std.testing.io)) |entry| {
-        if (entry.kind == .file) try directory.writeFile(std.testing.io, .{ .sub_path = entry.name, .data = "damaged after admission" });
-    }
 }
 
 // spec: NEW-CORE-STAGE-CACHE-3
@@ -228,17 +220,9 @@ test "damaged lowering entries miss without changing the uncached result" {
     const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", std.testing.allocator);
     defer std.testing.allocator.free(root);
     _ = try compare(root, std.testing.allocator, arithmetic, false);
-    var stages = try dir.dir.openDir(std.testing.io, "stages-v1", .{ .iterate = true });
-    defer stages.close(std.testing.io);
-    var iterator = stages.iterate();
-    var count: usize = 0;
-    while (try iterator.next(std.testing.io)) |entry| {
-        if (entry.kind != .file) continue;
-        try stages.writeFile(std.testing.io, .{ .sub_path = entry.name, .data = "damaged" });
-        count += 1;
-    }
-    // Each of the three functions publishes a body and a discovery header.
-    try std.testing.expectEqual(@as(usize, 6), count);
+    var storage = try stage.Store.init(std.testing.allocator, std.testing.io, root);
+    defer storage.deinit();
+    try std.testing.expect(try stage_loss.damage(&storage) > 0);
     try std.testing.expectEqualDeep(Work{ .lowered = 3, .reused = 0 }, try compare(root, std.testing.allocator, arithmetic, false));
     try std.testing.expectEqualDeep(Work{ .lowered = 0, .reused = 3 }, try compare(root, std.testing.allocator, arithmetic, false));
 }
