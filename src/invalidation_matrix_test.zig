@@ -612,7 +612,7 @@ test "invalidation matrix damaged frontend entries recompute the clean program" 
     try first.checkWithFrontend(&cache);
     try t.expectEqual(@as(usize, 1), cache.statistics.syntax.stored);
 
-    const key = cache.syntaxKey(first.src, 0);
+    const key = cache.syntaxKeyMode(first.src, 0, false);
     const path = try cache.entryPath(key);
     defer t.allocator.free(path);
     try std.Io.Dir.cwd().writeFile(t.io, .{ .sub_path = path, .data = "damaged entry" });
