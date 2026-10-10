@@ -262,6 +262,7 @@ class Qualification:
         return {'qualified_lexer_bytes': SOURCE_LIMIT, 'reference_valid_rejected_bytes': SOURCE_LIMIT + 1,
                 'frontend_package_schema': 2, 'protocol': 1,
                 'token_limit': 1048833, 'ast_value_limit': 1048576,
+                'ast_node_table_limit': 262144, 'ast_statement_table_limit': 262144,
                 'ast_edge_limit': 4194304, 'ast_depth_limit': 256,
                 'ast_data_and_wire_bytes': 67108864,
                 'workload_bytes': {name: len(body) for name, body in profile_sources().items()},

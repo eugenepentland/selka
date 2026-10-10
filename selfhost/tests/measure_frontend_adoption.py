@@ -78,7 +78,7 @@ def transport(args, work, empty):
                        b'func main() -> int:\n    return 0\n'}
     if args.large_profile:
         bodies.update({name: body for name, body in profile_sources().items()
-                       if name != 'oversize.my'})
+                       if name in ('boundary.my', 'profile_dense.my', 'profile_comments.my', 'profile_nested.my')})
     for name, body in bodies.items():
         source = work / f'{name}.my'
         source.write_bytes(body)
