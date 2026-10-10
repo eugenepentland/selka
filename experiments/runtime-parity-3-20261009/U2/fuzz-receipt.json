@@ -1,0 +1,27 @@
+{
+ "source_commit": "4661eb368f949e44e43dc39954bac7e75aef9770",
+ "status": 0,
+ "complete": true,
+ "qualified": true,
+ "source_unchanged": true,
+ "oracles_unchanged": true,
+ "cases_per_kind": 50,
+ "kinds": 9,
+ "accepted": 450,
+ "native_comparisons": 6450,
+ "native_runs": 8900,
+ "command_count": 10700,
+ "compiler": {
+  "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-u2/.mylang-cache/u2/fuzz-compiler/mylang",
+  "sha256": "fcd73ffa3936733621f6e885043e17f8087d13007b61cdc1c5255d40e267a0c0"
+ },
+ "reference": {
+  "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-u2/experiments/new-core-s5-20261007/references/fuzz-v1.json.gz",
+  "sha256": "f8db2bd9ccebf42d5f4fbbf3974a15980d97204d46a4f8ac3ca5d93f41d8c1b0"
+ },
+ "matrix": "fuzz-cd-20261010/matrix.json",
+ "matrix_sha256": "3d463d9d45887a0d5e27868045ae7043f57e3a3469f60b70677467b024011728",
+ "log": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-u2/.mylang-cache/u2/fuzz-cd.log",
+ "log_sha256": "661d0708558c19bb63799b57b89eace125528afcab3e294f58d26778fda6e1a6",
+ "journals": "All nine completed command journals and source archives retained losslessly compressed in fuzz-cd-20261010."
+}

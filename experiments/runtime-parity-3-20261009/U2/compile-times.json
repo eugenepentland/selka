@@ -1,0 +1,234 @@
+{
+ "method": "Every round uses a fresh program cache and fresh units-v1 store. Only compiler-isolated runtime files are prewarmed. Round0 is excluded; rounds1\u20133 interleave compilers on identical source within one build slot.",
+ "medians": {
+  "lox": {
+   "median": {
+    "base": {
+     "wall_seconds": 3.7335430840030313,
+     "cpu_seconds": 3.7377110000000027
+    },
+    "u2": {
+     "wall_seconds": 3.5202408430632204,
+     "cpu_seconds": 3.5257829999999997
+    }
+   },
+   "ratios": {
+    "wall_seconds": 0.9428686809980207,
+    "cpu_seconds": 0.943300057174029
+   }
+  },
+  "eda": {
+   "median": {
+    "base": {
+     "wall_seconds": 15.18110594083555,
+     "cpu_seconds": 15.181442000000002
+    },
+    "u2": {
+     "wall_seconds": 15.260581257985905,
+     "cpu_seconds": 15.258790999999984
+    }
+   },
+   "ratios": {
+    "wall_seconds": 1.0052351467317393,
+    "cpu_seconds": 1.0050949705568142
+   }
+  }
+ },
+ "rows": [
+  {
+   "program": "lox",
+   "tag": "base",
+   "round": 0,
+   "status": 0,
+   "wall_seconds": 3.9834310710430145,
+   "cpu_seconds": 3.975333,
+   "compiler_sha256": "b6db112b3faeab165422d2da80e64afa94c4135cf83cd7abe3eb41cd15308131",
+   "binary_sha256": "45217de8c35a115af62cc2a140d2d62a6f891af3526ede9b06ee6ed0d02befe7",
+   "runtime_cache": ".mylang-cache/u2/compile-fresh/base/lox/0/runtime",
+   "stderr": "mylang-core: cache: 1 units, 0 reused, 1 compiled, 0 verified; program linked; 2 processes\n"
+  },
+  {
+   "program": "lox",
+   "tag": "u2",
+   "round": 0,
+   "status": 0,
+   "wall_seconds": 3.74928050278686,
+   "cpu_seconds": 3.749283,
+   "compiler_sha256": "539ff575ccb47504d5d6cb65903797835bb5d805f88aeba47c638d3b280f8083",
+   "binary_sha256": "598d2413478d6e805396e7b9bcae3d6843d0b88ed8e3d9298881fd8db1204ba3",
+   "runtime_cache": ".mylang-cache/u2/compile-fresh/u2/lox/0/runtime",
+   "stderr": "mylang-core: cache: 1 units, 0 reused, 1 compiled, 0 verified; program linked; 2 processes\n"
+  },
+  {
+   "program": "lox",
+   "tag": "u2",
+   "round": 1,
+   "status": 0,
+   "wall_seconds": 3.5202408430632204,
+   "cpu_seconds": 3.5257829999999997,
+   "compiler_sha256": "539ff575ccb47504d5d6cb65903797835bb5d805f88aeba47c638d3b280f8083",
+   "binary_sha256": "598d2413478d6e805396e7b9bcae3d6843d0b88ed8e3d9298881fd8db1204ba3",
+   "runtime_cache": ".mylang-cache/u2/compile-fresh/u2/lox/1/runtime",
+   "stderr": "mylang-core: cache: 1 units, 0 reused, 1 compiled, 0 verified; program linked; 2 processes\n"
+  },
+  {
+   "program": "lox",
+   "tag": "base",
+   "round": 1,
+   "status": 0,
+   "wall_seconds": 3.7335430840030313,
+   "cpu_seconds": 3.7377110000000027,
+   "compiler_sha256": "b6db112b3faeab165422d2da80e64afa94c4135cf83cd7abe3eb41cd15308131",
+   "binary_sha256": "45217de8c35a115af62cc2a140d2d62a6f891af3526ede9b06ee6ed0d02befe7",
+   "runtime_cache": ".mylang-cache/u2/compile-fresh/base/lox/1/runtime",
+   "stderr": "mylang-core: cache: 1 units, 0 reused, 1 compiled, 0 verified; program linked; 2 processes\n"
+  },
+  {
+   "program": "lox",
+   "tag": "u2",
+   "round": 2,
+   "status": 0,
+   "wall_seconds": 3.608874588040635,
+   "cpu_seconds": 3.6143749999999963,
+   "compiler_sha256": "539ff575ccb47504d5d6cb65903797835bb5d805f88aeba47c638d3b280f8083",
+   "binary_sha256": "598d2413478d6e805396e7b9bcae3d6843d0b88ed8e3d9298881fd8db1204ba3",
+   "runtime_cache": ".mylang-cache/u2/compile-fresh/u2/lox/2/runtime",
+   "stderr": "mylang-core: cache: 1 units, 0 reused, 1 compiled, 0 verified; program linked; 2 processes\n"
+  },
+  {
+   "program": "lox",
+   "tag": "base",
+   "round": 2,
+   "status": 0,
+   "wall_seconds": 3.8042399580590427,
+   "cpu_seconds": 3.7925560000000034,
+   "compiler_sha256": "b6db112b3faeab165422d2da80e64afa94c4135cf83cd7abe3eb41cd15308131",
+   "binary_sha256": "45217de8c35a115af62cc2a140d2d62a6f891af3526ede9b06ee6ed0d02befe7",
+   "runtime_cache": ".mylang-cache/u2/compile-fresh/base/lox/2/runtime",
+   "stderr": "mylang-core: cache: 1 units, 0 reused, 1 compiled, 0 verified; program linked; 2 processes\n"
+  },
+  {
+   "program": "lox",
+   "tag": "base",
+   "round": 3,
+   "status": 0,
+   "wall_seconds": 3.5240848471876234,
+   "cpu_seconds": 3.5286810000000006,
+   "compiler_sha256": "b6db112b3faeab165422d2da80e64afa94c4135cf83cd7abe3eb41cd15308131",
+   "binary_sha256": "45217de8c35a115af62cc2a140d2d62a6f891af3526ede9b06ee6ed0d02befe7",
+   "runtime_cache": ".mylang-cache/u2/compile-fresh/base/lox/3/runtime",
+   "stderr": "mylang-core: cache: 1 units, 0 reused, 1 compiled, 0 verified; program linked; 2 processes\n"
+  },
+  {
+   "program": "lox",
+   "tag": "u2",
+   "round": 3,
+   "status": 0,
+   "wall_seconds": 3.32554060802795,
+   "cpu_seconds": 3.327480999999998,
+   "compiler_sha256": "539ff575ccb47504d5d6cb65903797835bb5d805f88aeba47c638d3b280f8083",
+   "binary_sha256": "598d2413478d6e805396e7b9bcae3d6843d0b88ed8e3d9298881fd8db1204ba3",
+   "runtime_cache": ".mylang-cache/u2/compile-fresh/u2/lox/3/runtime",
+   "stderr": "mylang-core: cache: 1 units, 0 reused, 1 compiled, 0 verified; program linked; 2 processes\n"
+  },
+  {
+   "program": "eda",
+   "tag": "base",
+   "round": 0,
+   "status": 0,
+   "wall_seconds": 15.990065711084753,
+   "cpu_seconds": 15.970114000000002,
+   "compiler_sha256": "b6db112b3faeab165422d2da80e64afa94c4135cf83cd7abe3eb41cd15308131",
+   "binary_sha256": "c3ccfaf6f06044d3531cef33b84b4ea080e9a2b103b3b3355f34b3903c2c1ca7",
+   "runtime_cache": ".mylang-cache/u2/compile-fresh/base/eda/0/runtime",
+   "stderr": "mylang-core: cache: 1 units, 0 reused, 1 compiled, 0 verified; program linked; 2 processes\n"
+  },
+  {
+   "program": "eda",
+   "tag": "u2",
+   "round": 0,
+   "status": 0,
+   "wall_seconds": 15.545722048962489,
+   "cpu_seconds": 15.535705999999998,
+   "compiler_sha256": "539ff575ccb47504d5d6cb65903797835bb5d805f88aeba47c638d3b280f8083",
+   "binary_sha256": "0ade772028c57ee656202c07715943690db165b9cf6bfc58516808dbcc5dbea8",
+   "runtime_cache": ".mylang-cache/u2/compile-fresh/u2/eda/0/runtime",
+   "stderr": "mylang-core: cache: 1 units, 0 reused, 1 compiled, 0 verified; program linked; 2 processes\n"
+  },
+  {
+   "program": "eda",
+   "tag": "base",
+   "round": 1,
+   "status": 0,
+   "wall_seconds": 15.216491193976253,
+   "cpu_seconds": 15.213352999999996,
+   "compiler_sha256": "b6db112b3faeab165422d2da80e64afa94c4135cf83cd7abe3eb41cd15308131",
+   "binary_sha256": "c3ccfaf6f06044d3531cef33b84b4ea080e9a2b103b3b3355f34b3903c2c1ca7",
+   "runtime_cache": ".mylang-cache/u2/compile-fresh/base/eda/1/runtime",
+   "stderr": "mylang-core: cache: 1 units, 0 reused, 1 compiled, 0 verified; program linked; 2 processes\n"
+  },
+  {
+   "program": "eda",
+   "tag": "u2",
+   "round": 1,
+   "status": 0,
+   "wall_seconds": 15.260581257985905,
+   "cpu_seconds": 15.258790999999984,
+   "compiler_sha256": "539ff575ccb47504d5d6cb65903797835bb5d805f88aeba47c638d3b280f8083",
+   "binary_sha256": "0ade772028c57ee656202c07715943690db165b9cf6bfc58516808dbcc5dbea8",
+   "runtime_cache": ".mylang-cache/u2/compile-fresh/u2/eda/1/runtime",
+   "stderr": "mylang-core: cache: 1 units, 0 reused, 1 compiled, 0 verified; program linked; 2 processes\n"
+  },
+  {
+   "program": "eda",
+   "tag": "base",
+   "round": 2,
+   "status": 0,
+   "wall_seconds": 15.145029628882185,
+   "cpu_seconds": 15.138998000000008,
+   "compiler_sha256": "b6db112b3faeab165422d2da80e64afa94c4135cf83cd7abe3eb41cd15308131",
+   "binary_sha256": "c3ccfaf6f06044d3531cef33b84b4ea080e9a2b103b3b3355f34b3903c2c1ca7",
+   "runtime_cache": ".mylang-cache/u2/compile-fresh/base/eda/2/runtime",
+   "stderr": "mylang-core: cache: 1 units, 0 reused, 1 compiled, 0 verified; program linked; 2 processes\n"
+  },
+  {
+   "program": "eda",
+   "tag": "u2",
+   "round": 2,
+   "status": 0,
+   "wall_seconds": 15.253923228010535,
+   "cpu_seconds": 15.243223999999998,
+   "compiler_sha256": "539ff575ccb47504d5d6cb65903797835bb5d805f88aeba47c638d3b280f8083",
+   "binary_sha256": "0ade772028c57ee656202c07715943690db165b9cf6bfc58516808dbcc5dbea8",
+   "runtime_cache": ".mylang-cache/u2/compile-fresh/u2/eda/2/runtime",
+   "stderr": "mylang-core: cache: 1 units, 0 reused, 1 compiled, 0 verified; program linked; 2 processes\n"
+  },
+  {
+   "program": "eda",
+   "tag": "base",
+   "round": 3,
+   "status": 0,
+   "wall_seconds": 15.18110594083555,
+   "cpu_seconds": 15.181442000000002,
+   "compiler_sha256": "b6db112b3faeab165422d2da80e64afa94c4135cf83cd7abe3eb41cd15308131",
+   "binary_sha256": "c3ccfaf6f06044d3531cef33b84b4ea080e9a2b103b3b3355f34b3903c2c1ca7",
+   "runtime_cache": ".mylang-cache/u2/compile-fresh/base/eda/3/runtime",
+   "stderr": "mylang-core: cache: 1 units, 0 reused, 1 compiled, 0 verified; program linked; 2 processes\n"
+  },
+  {
+   "program": "eda",
+   "tag": "u2",
+   "round": 3,
+   "status": 0,
+   "wall_seconds": 15.386609054170549,
+   "cpu_seconds": 15.386812999999991,
+   "compiler_sha256": "539ff575ccb47504d5d6cb65903797835bb5d805f88aeba47c638d3b280f8083",
+   "binary_sha256": "0ade772028c57ee656202c07715943690db165b9cf6bfc58516808dbcc5dbea8",
+   "runtime_cache": ".mylang-cache/u2/compile-fresh/u2/eda/3/runtime",
+   "stderr": "mylang-core: cache: 1 units, 0 reused, 1 compiled, 0 verified; program linked; 2 processes\n"
+  }
+ ],
+ "source_commit": "4661eb368f949e44e43dc39954bac7e75aef9770",
+ "all_guest_units_compiled_fresh": true,
+ "over_10_percent_regression": false
+}

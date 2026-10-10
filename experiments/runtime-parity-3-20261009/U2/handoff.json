@@ -1,0 +1,35 @@
+{
+ "source_commit": "4661eb368f949e44e43dc39954bac7e75aef9770",
+ "lane": "U2",
+ "implementation_and_lane_gates_complete": true,
+ "performance_exits_all_met": false,
+ "binding_cpu10_owner": "Coordinator X final integrated tree",
+ "receipts": {
+  "build": "cd-build.json",
+  "lane_fixtures": "cd-source.json",
+  "repository_suite": "full-gate.json",
+  "raw_and_additive_qualification": "qualification.json",
+  "frozen_fuzz": "fuzz-receipt.json",
+  "external_suites": "external.json",
+  "counting_all_199": "counting-gate.json",
+  "instruction_all_151": "instructions.json.gz",
+  "compile_time": "compile-times.json",
+  "performance_exits": "exit.json"
+ },
+ "source_commits": [
+  "df53b2d0849bbd6cd709dcc808683b18ce3ba041",
+  "b23556a3ea2d3d53c8fe3dfbf9bed9ffd32be221",
+  "4661eb368f949e44e43dc39954bac7e75aef9770"
+ ],
+ "debug_compiler_sha256": "fcd73ffa3936733621f6e885043e17f8087d13007b61cdc1c5255d40e267a0c0",
+ "release_fast_compiler_sha256": "539ff575ccb47504d5d6cb65903797835bb5d805f88aeba47c638d3b280f8083",
+ "remaining_measured_bounds": [
+  "Actual hot frame-copy bytes unchanged: 0% reduction against 80% target. Fieldwise loop SSA and lifetime proof required.",
+  "Allocation/free instruction share lower bounds remain 20.1729% on rds3+flat and 21.7074% on labstation against 15% target."
+ ],
+ "invalid_or_failed_probes_retained": [
+  "frame-probe.json: M0 passes; initial A and pre-fix CD fail. Final source fixes original-definition lifetime cutoff and passes all gates.",
+  "compile-times-warm-units-invalid.json: invalid warm LLVM-unit pilot; valid compile-times.json uses fresh units/runtime program cache."
+ ],
+ "guardian_feedback_owner": "Coordinator appends combined wave entry; this lane does not edit the shared Guardian repository."
+}
