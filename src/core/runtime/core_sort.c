@@ -328,11 +328,62 @@ SORT_INLINE int s2_sort_elements(unsigned char *base, size_t count, s2_sort_kind
     free(scratch);
     return 1;
 }
+/* Integer keys have no identity beyond their bits. Stable radix distribution
+   keeps equal words in input order, including the position-decorated keys used
+   below. Each pass is a branchless partition into 256 buckets. Short inputs use
+   insertion; already ordered inputs need no scratch or distribution. */
+static int s2_sort_words(unsigned char *base, size_t count, uint64_t flip) {
+    uint64_t *values = (uint64_t *)base;
+    if (count < 2) return 1;
+    if (count <= 32) {
+        for (size_t i = 1; i < count; i++) {
+            uint64_t value = values[i], key = value ^ flip;
+            size_t j = i;
+            while (j && (values[j - 1] ^ flip) > key) {
+                values[j] = values[j - 1];
+                j--;
+            }
+            values[j] = value;
+        }
+        return 1;
+    }
+    uint64_t varying = 0, first = values[0], previous = first ^ flip;
+    int ordered = 1;
+    for (size_t i = 1; i < count; i++) {
+        uint64_t value = values[i], key = value ^ flip;
+        varying |= value ^ first;
+        ordered &= previous <= key;
+        previous = key;
+    }
+    if (ordered) return 1;
+    uint64_t *scratch = malloc(count * sizeof(uint64_t));
+    if (!scratch) return 0;
+    uint64_t *from = values, *to = scratch;
+    for (unsigned shift = 0; shift < 64; shift += 8) {
+        if (((varying >> shift) & 255) == 0) continue;
+        size_t buckets[256] = {0};
+        for (size_t i = 0; i < count; i++) buckets[((from[i] ^ flip) >> shift) & 255]++;
+        size_t offset = 0;
+        for (size_t i = 0; i < 256; i++) {
+            size_t length = buckets[i];
+            buckets[i] = offset;
+            offset += length;
+        }
+        for (size_t i = 0; i < count; i++) {
+            uint64_t value = from[i];
+            to[buckets[((value ^ flip) >> shift) & 255]++] = value;
+        }
+        uint64_t *held = from; from = to; to = held;
+    }
+    if (from != values) memcpy(values, from, count * sizeof(uint64_t));
+    free(scratch);
+    return 1;
+}
 static int s2_sort_i64(unsigned char *base, size_t count) {
-    return s2_sort_elements(base, count, (s2_sort_kind){ .kind = SORT_I64, .order = 0, .size = 8 });
+    return s2_sort_words(base, count, UINT64_C(1) << 63);
 }
 static int s2_sort_u64(unsigned char *base, size_t count) {
-    return s2_sort_elements(base, count, (s2_sort_kind){ .kind = SORT_U64, .order = 1, .size = 8 });
+    return s2_sort_words(base, count, 0);
 }
 static int s2_sort_f64(unsigned char *base, size_t count) {
     return s2_sort_elements(base, count, (s2_sort_kind){ .kind = SORT_F64, .order = 2, .size = 8 });

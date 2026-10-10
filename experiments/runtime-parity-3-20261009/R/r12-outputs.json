@@ -1,0 +1,58 @@
+[
+ {
+  "name": "parity-fannkuch_redux",
+  "kind": "plain",
+  "binary_sha256": "188fae86a5902a376d5f90a7fa6f68157a1ce3e9e3618b787e12073578d2e863",
+  "stdout_sha256": "26f4debed9b9f8db7609e17f35756a3f72c1d85d40977a4377a1ef34ffc4d4c8",
+  "same_output": true
+ },
+ {
+  "name": "parity-fannkuch_redux",
+  "kind": "count",
+  "binary_sha256": "c5d8d561f3d64bde11f6db80bff71bb03238144bb648408c7614a849d120dcc3",
+  "stdout_sha256": "26f4debed9b9f8db7609e17f35756a3f72c1d85d40977a4377a1ef34ffc4d4c8",
+  "same_output": true
+ },
+ {
+  "name": "parity-fannkuch_redux_array",
+  "kind": "plain",
+  "binary_sha256": "18341232a8205029af57267146f10954850ab780ed8479ba037a6f27a5f56ddf",
+  "stdout_sha256": "26f4debed9b9f8db7609e17f35756a3f72c1d85d40977a4377a1ef34ffc4d4c8",
+  "same_output": true
+ },
+ {
+  "name": "parity-fannkuch_redux_array",
+  "kind": "count",
+  "binary_sha256": "af5afc7c22641dbf4aee47a1c95bbead91afa8deef0acf77e297ed89a2c8eaf4",
+  "stdout_sha256": "26f4debed9b9f8db7609e17f35756a3f72c1d85d40977a4377a1ef34ffc4d4c8",
+  "same_output": true
+ },
+ {
+  "name": "parity-fannkuch_redux_tuned",
+  "kind": "plain",
+  "binary_sha256": "8d3de4b47aeee33d37441fd0122d32aca210ac3bca6927581d05da3708c2b5a8",
+  "stdout_sha256": "26f4debed9b9f8db7609e17f35756a3f72c1d85d40977a4377a1ef34ffc4d4c8",
+  "same_output": true
+ },
+ {
+  "name": "parity-fannkuch_redux_tuned",
+  "kind": "count",
+  "binary_sha256": "69fde8f9c380fecc5dc7363c18f71f7c996b194e1640b5e3fad7bf0d9bed2830",
+  "stdout_sha256": "26f4debed9b9f8db7609e17f35756a3f72c1d85d40977a4377a1ef34ffc4d4c8",
+  "same_output": true
+ },
+ {
+  "name": "parity-sort_builtin",
+  "kind": "plain",
+  "binary_sha256": "c7d776a624afeb6f6fec6d42554ee7f41e0989eea9c7c7301a1737895ace3458",
+  "stdout_sha256": "3ed8d60b4a0df990e6dd04272765b81f07a2851bef6265fe0625295796d2d526",
+  "same_output": true
+ },
+ {
+  "name": "parity-sort_builtin",
+  "kind": "count",
+  "binary_sha256": "c527ad6cd44fb4b7286c14b34bca5092fb19d6a523695977b91c1de0de01296c",
+  "stdout_sha256": "3ed8d60b4a0df990e6dd04272765b81f07a2851bef6265fe0625295796d2d526",
+  "same_output": true
+ }
+]

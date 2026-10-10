@@ -31,10 +31,9 @@ const effects = @import("effects.zig");
 /// updated in place, views, write-backs built in their field, and in-out `mut` records. A
 /// measurement build may switch later ones off to count what each removes
 /// (experiments/ce-records-20261008/tools/stepbuild.sh).
-/// Which home transformations are on. `share_sret` (CE2-B step 3, `Planner.shareable`) is off: a
-/// callee that shares its by-value parameter's memory with `%ret` loses `noalias` on both, and the
-/// rows' `record_pass` ran 15-19% slower than the copy it saved (CE2-X, NEW-CORE-CE2-RESULTS-5).
-pub const steps: struct { homes: bool, views: bool, write_backs: bool, in_out: bool, share_sret: bool } = .{ .homes = true, .views = true, .write_backs = true, .in_out = true, .share_sret = false };
+/// Sharing uses one noalias destination pointer as the parameter and result storage;
+/// the candidate parameter is omitted from the private, direct-call ABI (R3).
+pub const steps: struct { homes: bool, views: bool, write_backs: bool, in_out: bool, share_sret: bool } = .{ .homes = true, .views = true, .write_backs = true, .in_out = true, .share_sret = true };
 
 /// No class: a value that is not homed (a register value, a view, or one with a private slot).
 pub const none: u32 = std.math.maxInt(u32);
@@ -441,7 +440,7 @@ const Planner = struct {
     /// The operand index `defining` may read from `ref`'s own home after writing it: the record
     /// a `record_set` updates, or an in-out call's argument for its final value.
     fn exempt(self: *const Planner, ref: ir.Ref, defining: ir.Inst) u32 {
-        if (defining.op == .record_set) return 0;
+        if (defining.op == .record_set or defining.op == .array_set) return 0;
         const argument = self.places.final[ref.index()];
         if (argument == none) return none;
         // A call's arguments follow its direct operands (`call_indirect` reads its callee first).
@@ -643,7 +642,7 @@ const Planner = struct {
         const f = self.fun();
         for (self.tracked.refs.items, 0..) |ref, d| {
             const inst = f.inst(ref);
-            if (!steps.homes or inst.op != .record_set) continue;
+            if (!steps.homes or (inst.op != .record_set and inst.op != .array_set)) continue;
             const old = self.places.dense[f.resolve(inst.a).index()];
             if (old != none) _ = try self.merge(@intCast(d), old);
         }

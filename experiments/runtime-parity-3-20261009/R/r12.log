@@ -1,0 +1,10 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: all 3 build slot(s) busy; waiting (60s so far)
+build-slot: build slot 1 after 110s (all 3 build slot(s) busy)
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/experiments/runtime-parity-3-20261009/R/checkpoint.py", line 35, in <module>
+    if built.returncode: raise RuntimeError(built.stderr.decode())
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: usage: mylang build <file.my> (-o <output> | --run [run options] [-- ARGS...]) [--release | --optimize-debug] [--link FILE.c]... [--emit-llvm PATH]
+       [--cache-dir DIR] [--no-cache] [--zig PATH] [--report] [--cache-report] [--verify-cache] [--stats] [--diagnostics=text|json]
+
