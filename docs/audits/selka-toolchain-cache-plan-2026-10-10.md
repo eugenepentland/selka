@@ -17,9 +17,11 @@ shadow calls, 40 focused tests and 88 whole-tree Guardian commit-hook checks.
 Only the before-change profile ran. At the user's request, paired measurements
 and the optimized after-profile were deferred after the benchmark never acquired
 admission behind another worktree's gate. No optimization speedup, memory gain or
-shorter lock duration is established. Measure those next before judging
-performance or advancing then-current-main integration. Neither wave is on
-`main`; later waves remain proposals.
+shorter lock duration is established. Those measurements remain deferred.
+The user subsequently authorized integration of current main and cache Wave 3.
+Committed main `5174fd03f` (FIFO admission and optimized-debug default) was merged
+as `0d9ababf7`; the focused merge qualification passed. These cache waves remain
+on the feature branch.
 See the [original Wave 2 evidence](../../experiments/cache-wave2-20261010/REPORT.md)
 and [completed optimization correctness pass](../../experiments/cache-wave2-performance-20261010/REPORT.md).
 
@@ -641,6 +643,28 @@ its intended optimization quality. Do not describe one module unit as one
 function recompiled.
 
 ### Wave 3 — Cover the entire verification command
+
+The first implementation exports the actual `test`/`fmt-check` graph and exact
+native artifact locations from `build_verification.zig`. The developer entry
+point `scripts/verify_cache.py` validates preparation and whole-action successes
+before requesting FIFO admission. It batches misses/fresh actions into one gate
+invocation, preserving the original DAG, shard concurrency and memory limits.
+Unknown required nodes, including compile-only additions, force the original
+complete gate. Source, fixture, tool, environment and artifact watches remain
+active from hashing through queueing and success publication, including ABA and
+overflow rejection. Prepared native inputs include the embedded documentation.
+
+The native Zig suites remain whole-executable/cohort evidence. Guest tests keep
+the compiler's finer receipts; untracked effects, Guardian/git scope, generated
+outputs and explicit fact/leak executions retain freshness boundaries. This
+does not infer function dependencies inside Zig test binaries. Receipt lookup
+is local to a worktree, and the first adapters conservatively share native/tool
+identities; further input partitioning needs separate qualification.
+
+See [the developer command](../tooling/many-agents.md#reuse-verification-evidence-before-admission).
+Operational reports record selected/reused/fresh cohorts and admitted seconds.
+The isolated edit-matrix performance qualification below remains outstanding;
+the previously deferred Wave 2 benchmark has not been restarted.
 
 Prioritize reductions in measured gate/build lock occupancy using the admission
 boundary above. Move validated no-work decisions ahead of execution admission;

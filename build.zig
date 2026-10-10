@@ -3,6 +3,9 @@ const builtin = @import("builtin");
 const guardian = @import("guardian");
 /// The repository files each cached test step reads while it runs.
 const test_inputs = @import("build_test_inputs.zig");
+const verification = @import("build_verification.zig");
+var verification_registry: ?verification.Registry = null;
+var verification_core_binary: ?*std.Build.Step.Compile = null;
 /// One mebibyte, the unit the resident-memory ceilings below are written in.
 const mib: u64 = 1 << 20;
 /// Resident-memory ceilings declared on the steps this build runs. The build
@@ -102,6 +105,7 @@ fn addInputManifests(b: *std.Build) void {
     run.has_side_effects = true;
     run.step.max_rss = rss.script;
     input_manifests = run.addOutputDirectoryArg("test-inputs");
+    verification_registry.?.register("input-discovery", &run.step, &.{}, false, "directory membership must be discovered at execution time");
     inline for (comptime std.meta.declarations(test_inputs)) |name| {
         run.addArgs(&.{ "--list", name });
         run.addArgs(&@field(test_inputs, name));
@@ -110,10 +114,10 @@ fn addInputManifests(b: *std.Build) void {
 /// The make-time environment manifest `addEnvironmentManifest` writes on every
 /// build that runs a cached test step.
 var environment_manifest: ?std.Build.LazyPath = null;
-/// The environment variables a cached verdict depends on, printed sorted, one
-/// `NAME=value` per line, from the environment `zig build` itself runs in.
+/// Digest the complete sorted live environment, including runtime/C/loader flags.
+/// Store its digest rather than environment values in the local action cache.
 const environment_script =
-    \\env | grep -E '^(PATH|HOME|TMPDIR|XDG_CACHE_HOME|ZIG_GLOBAL_CACHE_DIR|ZIG_LOCAL_CACHE_DIR|MYLANG_[A-Za-z0-9_]*)=' | LC_ALL=C sort > "$1"
+    \\env -0 | LC_ALL=C sort -z | sha256sum > "$1"
 ;
 /// Add the step that records the make-time environment a cached test verdict
 /// depends on, once per build. A step's own environment cannot key its verdict:
@@ -127,6 +131,7 @@ fn addEnvironmentManifest(b: *std.Build) void {
     run.has_side_effects = true;
     run.step.max_rss = rss.script;
     environment_manifest = run.addOutputFileArg("environment.txt");
+    verification_registry.?.register("environment-discovery", &run.step, &.{}, false, "live inherited environment must be discovered at execution time");
 }
 /// Let a test step's verdict be cached: it re-runs only when its command, the
 /// environment variables `environment_script` records, an artifact it names,
@@ -146,6 +151,7 @@ fn cached(run: *std.Build.Step.Run, list: []const u8) void {
         run.addFileInput(.{ .relative = .{ .base = .install_prefix, .sub_path = "libexec/mylang/components/cache-plan.json" } });
     }
     for (tool_inputs) |tool| if (tool) |path| run.addFileInput(path);
+    if (list.len != 0) verification_registry.?.declared(&run.step, list);
 }
 /// Prefix a command so that it runs in `zig build`'s live environment plus the
 /// native tools a guest build needs. `Step.Run.setEnvironmentVariable` would
@@ -400,6 +406,7 @@ fn addCore(b: *std.Build, inputs: CoreInputs) *std.Build.Step {
         .optimize = inputs.optimize,
         .imports = &.{.{ .name = "mylang", .module = inputs.front_end }},
     }) });
+    verification_core_binary = unit;
     unit.root_module.addImport("core_tool_platform", platform);
     unit.root_module.addImport("build_identity", inputs.identity);
     unit.root_module.addImport("memory_budget", budget);
@@ -436,6 +443,7 @@ fn addCore(b: *std.Build, inputs: CoreInputs) *std.Build.Step {
     const shards = if (inputs.filters.len == 0) @max(1, requested) else 1;
     for (0..shards) |index| {
         const run = focused(b.addRunArtifact(unit), rss.driver);
+        verification_registry.?.declared(&run.step, "core");
         forwardFilters(b, run, inputs.filters);
         if (shards > 1) guardian.announceShard(run, index, shards);
         step.dependOn(&run.step);
@@ -477,6 +485,7 @@ pub fn build(b: *std.Build) void {
         std.process.exit(2);
     }
     test_rerun = b.option(bool, "test-rerun", "Run every cached test step even when none of its declared inputs changed") orelse false;
+    verification_registry = .{ .build = b, .controls = .{ .filtered = test_filters.len != 0, .rerun = test_rerun, .optimize = @tagName(optimize) } };
     const unit_shards = if (test_filters.len == 0) requested_shards else 1;
     // The CLI root is both smaller and coarser than the unit root, so it takes
     // half the shards; a wider fan-out oversubscribes the core budget and made
@@ -541,6 +550,7 @@ pub fn build(b: *std.Build) void {
     component_build.setCwd(b.path("."));
     component_build.has_side_effects = true;
     component_build.step.max_rss = rss.compiler_fast;
+    verification_registry.?.register("component-preparation", &component_build.step, &test_inputs.component_inputs, false, "component manifests and installed outputs require validation");
     install_components = &component_build.step;
     b.getInstallStep().dependOn(&component_build.step);
     const components_step = b.step("components", "Build and install pinned-seed Selka components without rebuilding the host");
@@ -631,6 +641,8 @@ pub fn build(b: *std.Build) void {
     compile_tests.dependOn(&budget_unit.step);
     const run_unit = focused(b.addRunArtifact(unit), rss.suite);
     forwardFilters(b, run_unit, test_filters);
+    verification_registry.?.declared(&run_unit.step, "unit");
+    verification_registry.?.declared(&run_integration.step, "cli");
     // The gate runs each slow root as several concurrent shards; `test-units`
     // and `test-cli` keep the single whole-root run, so `-Dtest-filter` behaves
     // exactly as documented and its selected-test count means what it says.
@@ -770,6 +782,7 @@ pub fn build(b: *std.Build) void {
     const run_component_support = b.addRunArtifact(component_support_tests);
     run_component_support.step.max_rss = rss.driver;
     run_component_support.has_side_effects = true;
+    verification_registry.?.register("component-support", &run_component_support.step, &test_inputs.component_builder, true, "exact native support executable and declared inputs");
     b.step("test-component-support", "Test native streaming hashes, canonical identity and archive extraction").dependOn(&run_component_support.step);
     component_test_step.dependOn(&run_component_support.step);
     compile_tests.dependOn(&component_support_tests.step);
@@ -789,6 +802,7 @@ pub fn build(b: *std.Build) void {
     const spec_merge_step = b.step("test-spec-merge", "Verify the SPEC.md merge driver, including replayed history");
     const spec_merge_run = bounded(b.addSystemCommand(&.{ "python3", "tests/test_spec_merge.py" }), rss.script);
     spec_merge_run.setCwd(b.path("."));
+    verification_registry.?.register("spec-history", &spec_merge_run.step, &.{}, false, "SPEC replay reads git history and creates repositories");
     spec_merge_step.dependOn(&spec_merge_run.step);
     test_step.dependOn(spec_merge_step);
     // Work-based performance comparisons have no PMU/Valgrind dependency in
@@ -800,6 +814,7 @@ pub fn build(b: *std.Build) void {
     const juice_native_run = driver(b, "python3 tests/test_juice_native.py", rss.script, "juice");
     juice_native_run.addArgs(&.{ "python3", "tests/test_juice_native.py" });
     juice_native_run.addArtifactArg(exe);
+    verification_registry.?.register("juice", &juice_native_run.step, &test_inputs.juice, false, "native performance collectors and host state require fresh execution");
     juice_step.dependOn(&juice_native_run.step);
     test_step.dependOn(juice_step);
     // The compiler's `compiler_identity` comes from a make-phase run of
@@ -812,6 +827,7 @@ pub fn build(b: *std.Build) void {
     identity_run.addFileInput(b.path("build_identity.zig"));
     identity_run.addFileInput(environment_manifest.?);
     identity_run.expectExitCode(0);
+    verification_registry.?.register("identity-qualification", &identity_run.step, &.{}, false, "compiler identity qualification produces temporary compiler artifacts");
     identity_step.dependOn(&identity_run.step);
     test_step.dependOn(identity_step);
     // The inner loop's own machinery: the change-to-test mapping behind
@@ -833,10 +849,18 @@ pub fn build(b: *std.Build) void {
     coverage_run.addArgs(&.{ "python3", "tests/test_inputs_coverage.py" });
     coverage_step.dependOn(&coverage_run.step);
     test_step.dependOn(coverage_step);
+    const verification_tests = b.step("test-verification-cache", "Verify action receipt admission and immutable input snapshots");
+    for ([_][]const u8{ "scripts/verify_cache_test.py", "scripts/verification_snapshot_test.py" }) |script| {
+        const verification_run = driver(b, b.fmt("python3 {s}", .{script}), rss.script, "verification_cache");
+        verification_run.addArgs(&.{ "python3", script });
+        verification_tests.dependOn(&verification_run.step);
+    }
+    test_step.dependOn(verification_tests);
     const doc_coverage = bounded(b.addRunArtifact(exe), rss.driver);
     doc_coverage.addArgs(&.{ "doc-coverage", "." });
     doc_coverage.setCwd(b.path("."));
     doc_coverage.has_side_effects = true;
+    verification_registry.?.register("doc-coverage", &doc_coverage.step, &test_inputs.doc_coverage, true, "complete document and feature-contract scope");
     b.step("test-doc-coverage", "Require a documented example for every feature and standard export").dependOn(&doc_coverage.step);
     test_step.dependOn(&doc_coverage.step);
     const guest_step = b.step("test-guest", "Run the guest-behavior tests written in the language");
@@ -844,6 +868,7 @@ pub fn build(b: *std.Build) void {
     guest_tests.addArgs(&.{ "test", "tests/guest", "--cache-dir", ".mylang-cache/guest-tests" });
     guest_tests.setCwd(b.path("."));
     guest_tests.has_side_effects = true;
+    verification_registry.?.register("guest", &guest_tests.step, &.{}, false, "guest Host and external-effect eligibility remains compiler-authoritative");
     guest_step.dependOn(&guest_tests.step);
     test_step.dependOn(&guest_tests.step);
     guardian.addAllChecks(b, guardian_exe, guest_step, .{});
@@ -870,6 +895,7 @@ pub fn build(b: *std.Build) void {
         debug.addArgs(&.{ "test", suite.dir, "--cache-dir", suite.cache });
         debug.setCwd(b.path("."));
         debug.has_side_effects = true;
+        verification_registry.?.register("language", &debug.step, &.{}, false, "guest Host and external-effect eligibility requires execution-time admission");
         lang_step.dependOn(&debug.step);
         test_step.dependOn(&debug.step);
         const unoptimized = bounded(b.addRunArtifact(exe), rss.suite);
@@ -877,6 +903,7 @@ pub fn build(b: *std.Build) void {
         unoptimized.addArgs(&.{ "test", suite.dir, "--unoptimized", "--cache-dir", b.fmt("{s}-unoptimized", .{suite.cache}) });
         unoptimized.setCwd(b.path("."));
         unoptimized.has_side_effects = true;
+        verification_registry.?.register("language", &unoptimized.step, &.{}, false, "guest Host and external-effect eligibility requires execution-time admission");
         lang_step.dependOn(&unoptimized.step);
         test_step.dependOn(&unoptimized.step);
         // The variable reaches the test children through `env`, since a Run step
@@ -887,6 +914,7 @@ pub fn build(b: *std.Build) void {
         release.addArgs(&.{ "test", suite.dir, "--release", "--verify-facts", "--cache-dir", b.fmt("{s}-release", .{suite.cache}) });
         release.setCwd(b.path("."));
         release.has_side_effects = true;
+        verification_registry.?.register("language", &release.step, &.{}, false, "guest Host and external-effect eligibility requires execution-time admission");
         lang_step.dependOn(&release.step);
         test_step.dependOn(&release.step);
     }
@@ -904,9 +932,10 @@ pub fn build(b: *std.Build) void {
     guardian.addAllChecks(b, guardian_exe, doctest_step, .{});
     boundedChecks(doctest_step);
     addParityBench(b);
-    const fmt = b.addFmt(.{ .paths = &.{ b.path("build.zig"), b.path("build_identity.zig"), b.path("build_test_inputs.zig"), b.path("src"), b.path("tests"), b.path("test"), b.path("selfhost") }, .check = true });
+    const fmt = b.addFmt(.{ .paths = &.{ b.path("build.zig"), b.path("build_identity.zig"), b.path("build_test_inputs.zig"), b.path("build_verification.zig"), b.path("src"), b.path("tests"), b.path("test"), b.path("selfhost") }, .check = true });
     const fmt_step = b.step("fmt-check", "Check canonical Zig and live .my corpus formatting");
     fmt_step.dependOn(&fmt.step);
+    verification_registry.?.register("zig-format", &fmt.step, &test_inputs.zig_format, true, "exact formatter and complete source-format scope");
     const my_fmt = driver(b, "check live .my corpus formatting", rss.script, "my_format");
     my_fmt.addArgs(&.{ "python3", "scripts/check_my_format.py", "--compiler" });
     my_fmt.addArtifactArg(exe);
@@ -928,5 +957,17 @@ pub fn build(b: *std.Build) void {
     embedded_tests.addArgs(&.{ "python3", "tests/test_migrate_embedded.py" });
     embedded_step.dependOn(&embedded_tests.step);
     test_step.dependOn(&embedded_tests.step);
+    const verification_preparation = verification.prepare(b, &.{
+        .{ .label = "mylang", .binary = exe },
+        .{ .label = "units", .binary = unit },
+        .{ .label = "cli", .binary = integration },
+        .{ .label = "core", .binary = verification_core_binary.? },
+        .{ .label = "golden", .binary = golden_unit },
+        .{ .label = "memory-budget", .binary = budget_unit },
+        .{ .label = "component-support", .binary = component_support_tests },
+        .{ .label = "component-builder", .binary = component_tool },
+    }, &.{ &install_exe.step, &install_component_tool.step });
     requireLiveEnvironment(b);
+    verification.registerInfrastructure(&verification_registry.?, &.{ test_step, fmt_step });
+    verification_registry.?.exportPlan(&.{ test_step, fmt_step }, verification_preparation);
 }

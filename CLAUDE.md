@@ -104,6 +104,12 @@ zig build test --summary all
 zig build fmt-check
 ```
 
+`python3 scripts/verify_cache.py --zig /path/to/pinned/zig` is the complete
+inventory-based verification entry point. It owns build/gate admission and
+checks reusable evidence before requesting shared slots; do not wrap it in
+`build-slot.sh`. See `docs/tooling/many-agents.md` for its freshness boundaries,
+force controls, normalized fixture environment and evidence reports.
+
 `zig build test` runs Guardian, `test-core`, the sharded `src/root_test.zig` and
 `test/integration.zig` roots, `test-lang`, `test-guest`, `mylang doc-coverage .`,
 `mylang doctest .` and the tooling drivers, all on the new core. The QBE-era steps
@@ -113,8 +119,8 @@ roots) are gone with the old back end.
 Test verdicts are cached like build outputs (`test-core` excepted: it always runs). A
 test shard, a Python driver or the
 doctest re-runs only when its test binary, the compiler it runs, its command,
-one of the environment variables it depends on (`PATH`, `HOME`, `TMPDIR`, `MYLANG_*`,
-…), or one of the repository files it reads changes; those files are declared per step in
+the live environment (recorded as a digest), or one of the repository files it
+reads changes; those files are declared per step in
 `build_test_inputs.zig`, and `zig build test` fails (`test-inputs-coverage`) when a
 test names a repository path its step does not declare. An unchanged `zig build test`
 takes seconds, and a `.my` or doc edit re-runs only what reads it. A cached step

@@ -30,6 +30,67 @@ test "canonical JSON matches sorted Python ensure_ascii Unicode golden" {
     try t.expectEqualStrings("{\"a\":[true,null,42],\"\\u4e2d\":{\"\\u00e9\":\"\\u96ea\\u0000\\ud83d\\ude00\"}}", result);
 }
 
+test "atomic JSON preserves identical inode and modification time but replaces changed bytes" {
+    if (@import("builtin").os.tag != .linux) return error.SkipZigTest;
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    const name = "metadata.json";
+    try temporary.dir.writeFile(t.io, .{ .sub_path = name, .data = "" });
+    const path = try temporary.dir.realPathFileAlloc(t.io, name, t.allocator);
+    defer t.allocator.free(path);
+    // Span multiple comparison buffers to exercise bounded streaming equality.
+    const payload: [8193]u8 = @splat('x');
+    const value = files.string(&payload);
+    try files.atomicJson(t.allocator, t.io, path, value, 0o600);
+    const before = try temporary.dir.statFile(t.io, name, .{});
+    try files.atomicJson(t.allocator, t.io, path, value, 0o600);
+    const unchanged = try temporary.dir.statFile(t.io, name, .{});
+    try t.expectEqual(before.inode, unchanged.inode);
+    try t.expectEqual(before.mtime.nanoseconds, unchanged.mtime.nanoseconds);
+    try t.expectEqual(before.ctime.nanoseconds, unchanged.ctime.nanoseconds);
+    try files.atomicJson(t.allocator, t.io, path, files.string("changed"), 0o600);
+    const changed = try temporary.dir.statFile(t.io, name, .{});
+    try t.expect(before.inode != changed.inode);
+    try t.expectEqual(@as(u32, 0o600), changed.permissions.toMode() & 0o7777);
+    const content = try temporary.dir.readFileAlloc(t.io, name, t.allocator, .limited(32));
+    defer t.allocator.free(content);
+    try t.expectEqualStrings("\"changed\"\n", content);
+}
+
+test "atomic JSON repairs corrupt missing and incorrectly permissioned metadata" {
+    if (@import("builtin").os.tag != .linux) return error.SkipZigTest;
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    const name = "metadata.json";
+    // Same length as canonical null plus newline; equality must compare actual bytes.
+    try temporary.dir.writeFile(t.io, .{ .sub_path = name, .data = "null " });
+    const path = try temporary.dir.realPathFileAlloc(t.io, name, t.allocator);
+    defer t.allocator.free(path);
+    {
+        const original = try temporary.dir.openFile(t.io, name, .{});
+        defer original.close(t.io);
+        try original.setPermissions(t.io, .fromMode(0o644));
+    }
+    const corrupt = try temporary.dir.statFile(t.io, name, .{});
+    try files.atomicJson(t.allocator, t.io, path, .null, 0o644);
+    const repaired = try temporary.dir.statFile(t.io, name, .{});
+    try t.expect(corrupt.inode != repaired.inode);
+    const file = try temporary.dir.openFile(t.io, name, .{});
+    defer file.close(t.io);
+    try file.setPermissions(t.io, .fromMode(0o600));
+    try files.atomicJson(t.allocator, t.io, path, .null, 0o644);
+    const permissions = try temporary.dir.statFile(t.io, name, .{});
+    try t.expect(repaired.inode != permissions.inode);
+    try t.expectEqual(@as(u32, 0o644), permissions.permissions.toMode() & 0o7777);
+    try temporary.dir.deleteFile(t.io, name);
+    try files.atomicJson(t.allocator, t.io, path, .null, 0o644);
+    const content = try temporary.dir.readFileAlloc(t.io, name, t.allocator, .limited(16));
+    defer t.allocator.free(content);
+    try t.expectEqualStrings("null\n", content);
+    const recreated = try temporary.dir.statFile(t.io, name, .{});
+    try t.expectEqual(@as(u32, 0o644), recreated.permissions.toMode() & 0o7777);
+}
+
 fn octal(bytes: []u8, value: usize) void {
     @memset(bytes, '0');
     bytes[bytes.len - 1] = 0;

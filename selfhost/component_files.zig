@@ -154,10 +154,50 @@ pub fn readJson(a: std.mem.Allocator, io: std.Io, path: []const u8) !Value {
     return try std.json.parseFromSliceLeaky(Value, a, text, .{ .allocate = .alloc_always });
 }
 
-/// Atomically publish bytes with explicit permissions, including before rename.
+fn sameStat(left: std.Io.File.Stat, right: std.Io.File.Stat) bool {
+    return left.inode == right.inode and left.kind == right.kind and left.size == right.size and
+        left.permissions.toMode() == right.permissions.toMode() and
+        left.mtime.nanoseconds == right.mtime.nanoseconds and left.ctime.nanoseconds == right.ctime.nanoseconds;
+}
+
+fn equalBytes(io: std.Io, file: std.Io.File, expected: []const u8) !bool {
+    var buffer: [4096]u8 = undefined;
+    var offset: usize = 0;
+    while (offset < expected.len) {
+        const limit = @min(buffer.len, expected.len - offset);
+        const n = file.readStreaming(io, &.{buffer[0..limit]}) catch |err| switch (err) {
+            error.EndOfStream => return false,
+            else => return err,
+        };
+        if (n == 0 or !std.mem.eql(u8, buffer[0..n], expected[offset..][0..n])) return false;
+        offset += n;
+    }
+    return true;
+}
+
+fn sameJson(io: std.Io, path: []const u8, text: []const u8, mode: u32) !bool {
+    const before = cwd().statFile(io, path, .{ .follow_symlinks = false }) catch |err| switch (err) {
+        error.FileNotFound => return false,
+        else => return err,
+    };
+    if (before.kind != .file or before.size != text.len + 1 or (before.permissions.toMode() & 0o7777) != mode) return false;
+    const file = try cwd().openFile(io, path, .{ .follow_symlinks = false });
+    defer file.close(io);
+    if (!sameStat(before, try file.stat(io))) return false;
+    if (!try equalBytes(io, file, text) or !try equalBytes(io, file, "\n")) return false;
+    if (!sameStat(before, try file.stat(io))) return false;
+    const after = cwd().statFile(io, path, .{ .follow_symlinks = false }) catch |err| switch (err) {
+        error.FileNotFound => return false,
+        else => return err,
+    };
+    return sameStat(before, after);
+}
+
+/// Preserve identical canonical metadata; otherwise publish atomically with explicit permissions.
 pub fn atomicJson(a: std.mem.Allocator, io: std.Io, path: []const u8, value: Value, mode: u32) !void {
     const text = try canonical(a, value);
     defer a.free(text);
+    if (try sameJson(io, path, text, mode)) return;
     var file = try cwd().createFileAtomic(io, path, .{ .permissions = .fromMode(mode), .replace = true });
     defer file.deinit(io);
     try file.file.writeStreamingAll(io, text);
