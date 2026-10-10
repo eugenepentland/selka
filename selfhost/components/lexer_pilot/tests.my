@@ -82,7 +82,7 @@ public func test_escapes_are_later_phase() -> bool:
 public func test_wire_empty_tokens_identity() -> bool:
     const empty: int[] = []
     mut buffer = byte_buffer(empty)
-    _ = buffer.append_range(b"SLKLEX01\x01\0\0\0\x01\0\0\0\0\0\0\0\0\0\0\0", 0, 24)
+    _ = buffer.append_range(b"SLKLEX01\x01\0\0\0\x02\0\0\0\0\0\0\0\0\0\0\0", 0, 24)
     for index in range(40):
         _ = buffer.append_byte(255)
     const request = bytes(buffer)
@@ -92,7 +92,7 @@ public func test_wire_empty_tokens_identity() -> bool:
                 case Ok(items):
                     match wire.tokens(request, items):
                         case Ok(reply):
-                            return len(reply) == 84 and wire.read_u32(reply, 16) == 1 and wire.read_u32(reply, 20) == 20 and reply[24:64] == request[24:64] and wire.read_u32(reply, 68) == 1 and wire.read_u32(reply, 72) == 0
+                            return len(reply) == 84 and wire.read_u32(reply, 12) == 2 and wire.read_u32(reply, 16) == 1 and wire.read_u32(reply, 20) == 20 and reply[24:64] == request[24:64] and wire.read_u32(reply, 68) == 1 and wire.read_u32(reply, 72) == 0
                         case Err(message):
                             return False
                 case Err(item):
@@ -107,3 +107,15 @@ public func test_wire_truncation_is_transport_error() -> bool:
             return False
         case Err(message):
             return message == "invalid lexer request size"
+
+
+public func test_wire_previous_profile_schema_is_transport_error() -> bool:
+    mut buffer = byte_buffer([])
+    _ = buffer.append_range(b"SLKLEX01\x01\0\0\0\x01\0\0\0\0\0\0\0\0\0\0\0", 0, 24)
+    for index in range(40):
+        _ = buffer.append_byte(0)
+    match wire.decode(bytes(buffer)):
+        case Ok(raw):
+            return False
+        case Err(message):
+            return message == "invalid lexer request envelope"
