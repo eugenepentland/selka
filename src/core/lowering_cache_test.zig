@@ -238,7 +238,7 @@ test "lowered generic and default bodies preserve mapped origins across another 
     try std.testing.expectEqualDeep(Work{ .lowered = 2, .reused = 0 }, try compareMapped(root, std.testing.allocator, templates, entry));
     try std.testing.expectEqualDeep(Work{ .lowered = 0, .reused = 2 }, try compareMapped(root, std.testing.allocator, templates, entry));
     const grown = templates ++ "\n\n\n";
-    try std.testing.expectEqualDeep(Work{ .lowered = 0, .reused = 2 }, try compareMapped(root, std.testing.allocator, grown, entry));
+    try std.testing.expectEqualDeep(Work{ .lowered = 1, .reused = 1 }, try compareMapped(root, std.testing.allocator, grown, entry));
     const edited = try std.testing.allocator.dupe(u8, grown);
     defer std.testing.allocator.free(edited);
     edited[std.mem.indexOf(u8, edited, "value: int = 42").? + 14] = '3';
@@ -493,7 +493,7 @@ test "raw demand source keys retain unchanged function across same file literal 
     try std.testing.expect(!std.mem.eql(u8, &cold[0].?, &edited[0].?));
 }
 
-const SourceRun = struct { keys: []const ?stage.Digest, headers: []const ?stage.Digest, omitted: usize };
+const SourceRun = struct { keys: []const ?stage.Digest, headers: []const ?stage.Digest, omitted: usize, allocation_warnings: []const u8 };
 
 fn frontendSourceKeys(a: std.mem.Allocator, backing: std.mem.Allocator, root: []const u8) !SourceRun {
     const front = @import("frontend.zig");
@@ -517,7 +517,7 @@ fn frontendSourceKeys(a: std.mem.Allocator, backing: std.mem.Allocator, root: []
     var refusal: build.Refusal = .{};
     var module = try build.buildExecutableCached(a, .{ .program = checked.program, .source = checked.src }, &refusal, &cache);
     const headers = try a.alloc(?stage.Digest, deferred.tables.keys.items.len);
-    for (headers, deferred.tables.keys.items) |*header, raw| header.* = if (raw) |key| storage.key("lowered-header-source-v2", &.{&key}) else null;
+    for (headers, deferred.tables.keys.items) |*header, raw| header.* = if (raw) |key| storage.key("lowered-header-source-v3", &.{&key}) else null;
     try deferred.prepare(&module, checked.src);
     const keys = try a.dupe(?stage.Digest, deferred.context.keys);
     // Materialize only after recording compact authority, then compare replay
@@ -526,10 +526,39 @@ fn frontendSourceKeys(a: std.mem.Allocator, backing: std.mem.Allocator, root: []
     var eager = front.Session.init(backing, std.testing.io, root);
     defer eager.deinit();
     const fresh = try eager.check(a, "main", &diagnostics);
+    try std.testing.expectEqualStrings(fresh.allocation_warnings, checked.allocation_warnings);
     const expected = try build.buildExecutable(a, .{ .program = fresh.program, .source = fresh.src }, &refusal);
     try sameModule(a, &module, &expected);
     try demand.finish();
-    return .{ .keys = keys, .headers = headers, .omitted = demand.count() };
+    return .{ .keys = keys, .headers = headers, .omitted = demand.count(), .allocation_warnings = checked.allocation_warnings };
+}
+
+// spec-case: FRONTEND-CORE-NOALLOC-1
+test "demand frontend keeps allocation bounded transitive callees concrete after edits and reordering" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
+    const bounded = "func bounded(mut values: int[]) -> Unit noalloc:\n    middle(mut values)\n";
+    const middle = "func middle(mut values: int[]) -> Unit:\n    deep(mut values)\n";
+    const pure = "func deep(mut values: int[]) -> Unit:\n    _ = values[0]\n";
+    const allocating = "func deep(mut values: int[]) -> Unit:\n    values[0] = 42\n";
+    const entry = "func spare() -> int:\n    return 7\nfunc main() -> int:\n    mut values = [1, 2]\n    bounded(mut values)\n    return 0\n";
+    const before = try std.mem.concat(a, u8, &.{ bounded, middle, pure, entry });
+    try directory.dir.writeFile(std.testing.io, .{ .sub_path = "main.my", .data = before });
+    const cold = try frontendSourceKeys(a, std.testing.allocator, root);
+    try std.testing.expectEqualStrings("", cold.allocation_warnings);
+    const warm = try frontendSourceKeys(a, std.testing.allocator, root);
+    try std.testing.expect(warm.omitted > 0);
+    const after = try std.mem.concat(a, u8, &.{ allocating, middle, bounded, entry });
+    try directory.dir.writeFile(std.testing.io, .{ .sub_path = "main.my", .data = after });
+    const changed = try frontendSourceKeys(a, std.testing.allocator, root);
+    try std.testing.expect(changed.allocation_warnings.len > 0);
+    const changed_warm = try frontendSourceKeys(a, std.testing.allocator, root);
+    try std.testing.expect(changed_warm.omitted > 0);
+    try std.testing.expectEqualStrings(changed.allocation_warnings, changed_warm.allocation_warnings);
 }
 
 const source_proof_before = "func helper() -> int:\n    return 7\n\nfunc main() -> int:\n    return helper() + 1\n";
@@ -610,4 +639,98 @@ test "raw source authority keeps conservative mapped default initializer replay"
     try std.testing.expect(moved.lowered > 0);
     const changed = try compareDemandMapped(root, std.testing.allocator, "record Item:\n    value: int = 43\n", entry);
     try std.testing.expect(changed.lowered > 0);
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-3
+test "demand frontend proves external default source files before omitting checked bodies" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
+    const entry = "import model as m\nfunc helper() -> int:\n    return m.Item().value\nfunc main() -> int:\n    return helper()\n";
+    const model = "public record Item:\n    value: int = 42\n";
+    try directory.dir.writeFile(std.testing.io, .{ .sub_path = "main.my", .data = entry });
+    try directory.dir.writeFile(std.testing.io, .{ .sub_path = "model.my", .data = model });
+    _ = try frontendSourceKeys(a, std.testing.allocator, root);
+    const warm = try frontendSourceKeys(a, std.testing.allocator, root);
+    try std.testing.expect(warm.omitted > 0);
+    // The body digest and debug locations remain reusable while every external
+    // original file agrees with the receipt; file growth rejects that proof.
+    try directory.dir.writeFile(std.testing.io, .{ .sub_path = "model.my", .data = "\n" ++ model });
+    const moved = try frontendSourceKeys(a, std.testing.allocator, root);
+    try std.testing.expectEqual(@as(usize, 0), moved.omitted);
+    try directory.dir.writeFile(std.testing.io, .{ .sub_path = "model.my", .data = "public record Item:\n    value: int = 43\n" });
+    const changed = try frontendSourceKeys(a, std.testing.allocator, root);
+    try std.testing.expectEqual(@as(usize, 0), changed.omitted);
+    const changed_warm = try frontendSourceKeys(a, std.testing.allocator, root);
+    try std.testing.expect(changed_warm.omitted > 0);
+    try directory.dir.writeFile(std.testing.io, .{ .sub_path = "extra.my", .data = "# unrelated source\n" });
+    try directory.dir.writeFile(std.testing.io, .{ .sub_path = "main.my", .data = "import extra\n" ++ entry });
+    const reordered = try frontendSourceKeys(a, std.testing.allocator, root);
+    try std.testing.expectEqual(@as(usize, 0), reordered.omitted);
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-3
+test "external source authority rejects reordered origins missing provenance and changed paths" {
+    const sources = @import("demand_sources.zig");
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const first = try language.source.Source.init(a, "first.my", "first\n");
+    const second = try language.source.Source.init(a, "second.my", "second\n");
+    var cache: sources.Cache = .{ .arena = a };
+    cache.bind(try language.source.Source.initMapped(a, &.{ first, second }));
+    const proof = (try cache.get(0)).?;
+    try std.testing.expect(cache.matches(&.{proof}));
+    cache.bind(try language.source.Source.initMapped(a, &.{ second, first }));
+    _ = try cache.get(0);
+    try std.testing.expect(!cache.matches(&.{proof}));
+    try std.testing.expectEqual(@as(?sources.Proof, null), try cache.get(null));
+    try std.testing.expectEqual(@as(?sources.Proof, null), try cache.get(2));
+    const renamed = try language.source.Source.init(a, "renamed.my", first.bytes);
+    cache.bind(try language.source.Source.initMapped(a, &.{ renamed, second }));
+    _ = try cache.get(0);
+    try std.testing.expect(!cache.matches(&.{proof}));
+    cache.bind(first);
+    try std.testing.expectEqual(@as(?sources.Proof, null), try cache.get(0));
+}
+// spec-case: NEW-CORE-STAGE-CACHE-3
+test "demand raw payload rejects valid checksummed provenance spliced after header admission" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
+    var storage = try stage.Store.init(std.testing.allocator, std.testing.io, root);
+    defer storage.deinit();
+    var unit = try language.Compilation.init(a, "proof.my", "func main() -> int:\n    return 7\n");
+    defer unit.deinit();
+    try unit.check();
+    var refusal: build.Refusal = .{};
+    const input: build.Input = .{ .program = unit.program.?, .source = unit.src };
+    var cold = lowering.Cache.init(&storage);
+    _ = try build.buildExecutableCached(a, input, &refusal, &cold);
+    var deferred: lowering.Deferred = .{ .arena = a, .store = &storage };
+    var warm = lowering.Cache.init(&storage);
+    warm.lazy = &deferred;
+    var module = try build.buildExecutableCached(a, input, &refusal, &warm);
+    try deferred.prepare(&module, unit.src);
+    const handle = deferred.tables.handles.items[0].?;
+    const wire = (try storage.load(a, handle.key)).?;
+    const demand_sources = @import("demand_sources.zig");
+    var sources: demand_sources.Cache = .{ .arena = a };
+    sources.bind(unit.src);
+    const proof = (try sources.get(null)).?;
+    try std.testing.expectEqual(@as(u64, 0), std.mem.readInt(u64, wire[wire.len - 8 ..][0..8], .little));
+    var writer = language.persist_codec.Writer.init(a);
+    try writer.write([]const demand_sources.Proof, &.{proof});
+    const spliced = try std.mem.concat(a, u8, &.{ wire[0 .. wire.len - 8], writer.bytes.items });
+    // The substituted proof is valid for the current source and the store
+    // recomputes its checksum. It differs from the admitted header's authority.
+    try std.testing.expect(sources.matches(&.{proof}));
+    try std.testing.expect(try storage.save(handle.key, spliced));
+    try std.testing.expectError(error.CacheMiss, deferred.context.ensure(0));
 }

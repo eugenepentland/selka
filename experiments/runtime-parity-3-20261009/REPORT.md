@@ -1,10 +1,10 @@
 # Runtime parity wave 3 — 2026-10-09
 
-Status: M0, U2, S2 and R complete. All three lanes and main `fa1160602` are integrated and fully qualified at `20e7c340e`. The first complete X timing run identified confirmed regressions. Two runtime repairs now pass focused tests and development comparisons, including neighboring sort sizes. Fresh complete qualification and full timing run02 remain mandatory; X is still open.
+Status: M0, U2, S2 and R complete. Their integrated tree has two measured runtime repairs. Main advanced to `e9011d9c6` during fresh validation; the superseded run was cancelled without a final repository verdict. The real main merge is clean. A fresh full qualification (`final-fix-main-01`) and complete second timing run remain mandatory; X is still open.
 
 Base: `main` `41ed360fb361c49938488ad111795bad8a726b73`. Integration branch: `codex/runtime-parity-3`.
 Worktree: `/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3` (locked, prune-keep).
-Last fully qualified integrated source: `20e7c340eb8d93320de4493f7b50665c7979ef2b`. The current repair tree awaits fresh qualification. The complete first X timing run remains preserved; its performance guard was not accepted.
+Last fully qualified integrated source: `20e7c340eb8d93320de4493f7b50665c7979ef2b`. Repair source `98e9467155c802d2bb7a4f41882dc9ee68b4304e` and the third advancing-main merge await fresh combined qualification. The complete first X timing run remains preserved; its performance guard was not accepted.
 
 ## Progress
 
@@ -136,3 +136,5 @@ All three lane hand-offs are accepted. These measured lane checkpoints precede f
 
 - X repair checkpoint: generated guardless pointer-list release calls the same child primitive directly, with the generic callback walk and publication excluded. Integer sorting restores typed adaptive merges for 33–256 values, retaining insertion through 32 and radix above 256. Focused lifetime/shared-count and five-mode boundary tests pass. Development CPU10 candidate/base is 0.940487 for sort_int/64, 0.964911 for 65, 0.988414 for 128, 0.818041/0.901606 for mutate_nested/4096 and /64, 1.014357/0.996016 for sort_records/64 and /4096 and0.997343 for result_propagate/4096; sort_builtin stays 0.401785 base. The size 32 threshold crossing is not confirmed by its one independent confirmation (0.988528); all samples remain. These are development results, not final X acceptance. See `X/repair-probes/{01,02}/` and decision X-017.
 - Repeat preparation preserves 31 first-run outputs and 286 exact timed binaries, with relocation and lossless compression manifests. The second measurement selects qualified tag `final-fix-01` and fresh compile/profile namespaces while retaining all 197 cells and original sampling methods. Historical paths resolve through `X/timing-run-01/output-preservation.json` and `X/tool-audit/completed-evidence-archive-03.json`.
+
+- X third main integration: `fa1160602` → `e9011d9c6` brings portable checked-type recipes and external-source demand provenance. The merge is conflict-free; U2/S2 static reviews found no actionable interaction. Incoming main's own 97/97 steps, 2475 tests and 88 Guardian checks do not qualify this merged tree. The superseded repair qualification completed its build and 18 repository shard verdicts (1263 passes, zero failures), but no full repository verdict; exact partial logs and cancellation are retained at `X/gates-final-fix-01/`. Every X gate will rerun under a fresh basename, with no narrower scope. See `X/main-e901-review.json` and X-018.

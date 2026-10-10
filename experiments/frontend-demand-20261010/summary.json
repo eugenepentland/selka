@@ -1,0 +1,1166 @@
+{
+  "32/baseline/entry_edit": {
+    "lines": 510436,
+    "wall_s": {
+      "median": 9.555290790041909,
+      "min": 6.01106986682862,
+      "max": 11.256386632099748
+    },
+    "peak_rss_gib": 1.8191986083984375,
+    "frontend_bodies_checked": [
+      355,
+      355,
+      355
+    ],
+    "frontend_bodies_omitted": [
+      28224,
+      28224,
+      28224
+    ],
+    "frontend_trees_replayed": [
+      9122,
+      9122,
+      9122
+    ],
+    "frontend_phase_median_s": {
+      "check_summaries": 0.016773976,
+      "declarations_interfaces": 0.022558968,
+      "dependency_key_preparation": 0.341133264,
+      "domain_codec_validation": 3.32e-07,
+      "effect_origin_passes": 0.120504732,
+      "entry_adaptation": 0.002537829,
+      "fresh_body_check": 0.87318901,
+      "load": 0.216518807,
+      "merge": 0.130089405,
+      "ordinary_body_replay": 1.057210663,
+      "retention_store_io": 0.097984682,
+      "specialization_body_replay": 0.270457337,
+      "stand_in_planning": 0.161069497,
+      "symbolic_templates": 0.031605134,
+      "syntax_parse": 0.000252938,
+      "syntax_replay": 0.822519764,
+      "warning_derivation": 0.000856824
+    },
+    "raw_bodies_materialized": [
+      5,
+      5,
+      5
+    ],
+    "raw_bodies_freshly_lowered": [
+      1,
+      1,
+      1
+    ],
+    "final_bodies_materialized": [
+      6,
+      6,
+      6
+    ],
+    "checkpoint_records_decoded": [
+      6,
+      6,
+      6
+    ],
+    "fusion_checkpoints_restored": [
+      0,
+      0,
+      0
+    ],
+    "fresh_optimizer_functions": [
+      1,
+      1,
+      1
+    ],
+    "llvm_keys_built": [
+      1,
+      1,
+      1
+    ],
+    "native_units_compiled": [
+      1,
+      1,
+      1
+    ],
+    "fallbacks": [
+      0,
+      0,
+      0
+    ],
+    "stage_median_s": {
+      "frontend": 5.634704664,
+      "lowering": 0.597111408,
+      "optimizer": 0.502151765,
+      "emission": 0.225245949,
+      "native": 2.433081535,
+      "linker": 0.120405689
+    },
+    "execution_checks_passed": true
+  },
+  "32/baseline/helper_edit": {
+    "lines": 510436,
+    "wall_s": {
+      "median": 5.775325197959319,
+      "min": 5.214179161936045,
+      "max": 9.300330493133515
+    },
+    "peak_rss_gib": 1.8217277526855469,
+    "frontend_bodies_checked": [
+      353,
+      353,
+      353
+    ],
+    "frontend_bodies_omitted": [
+      28182,
+      28182,
+      28182
+    ],
+    "frontend_trees_replayed": [
+      9166,
+      9166,
+      9166
+    ],
+    "frontend_phase_median_s": {
+      "check_summaries": 0.017644202,
+      "declarations_interfaces": 0.02226766,
+      "dependency_key_preparation": 0.325403102,
+      "domain_codec_validation": 3.49e-07,
+      "effect_origin_passes": 0.126483516,
+      "entry_adaptation": 0.002528268,
+      "fresh_body_check": 0.945229203,
+      "load": 0.223664621,
+      "merge": 0.122603911,
+      "ordinary_body_replay": 0.34605277,
+      "retention_store_io": 0.041263966,
+      "specialization_body_replay": 0.207283052,
+      "stand_in_planning": 0.159903013,
+      "symbolic_templates": 0.02358907,
+      "syntax_parse": 0.000456884,
+      "syntax_replay": 0.823579277,
+      "warning_derivation": 0.000884552
+    },
+    "raw_bodies_materialized": [
+      30,
+      30,
+      30
+    ],
+    "raw_bodies_freshly_lowered": [
+      1,
+      1,
+      1
+    ],
+    "final_bodies_materialized": [
+      44,
+      44,
+      44
+    ],
+    "checkpoint_records_decoded": [
+      0,
+      0,
+      0
+    ],
+    "fusion_checkpoints_restored": [
+      0,
+      0,
+      0
+    ],
+    "fresh_optimizer_functions": [
+      1,
+      1,
+      1
+    ],
+    "llvm_keys_built": [
+      1,
+      1,
+      1
+    ],
+    "native_units_compiled": [
+      1,
+      1,
+      1
+    ],
+    "fallbacks": [
+      0,
+      0,
+      0
+    ],
+    "stage_median_s": {
+      "frontend": 4.076884485,
+      "lowering": 0.500498814,
+      "optimizer": 0.546890088,
+      "emission": 0.212275534,
+      "native": 0.295033009,
+      "linker": 0.1064046
+    },
+    "execution_checks_passed": true
+  },
+  "32/baseline/three_file_edit": {
+    "lines": 510436,
+    "wall_s": {
+      "median": 6.353531064931303,
+      "min": 6.135231368942186,
+      "max": 7.027535022003576
+    },
+    "peak_rss_gib": 1.8227882385253906,
+    "frontend_bodies_checked": [
+      357,
+      357,
+      357
+    ],
+    "frontend_bodies_omitted": [
+      28139,
+      28139,
+      28139
+    ],
+    "frontend_trees_replayed": [
+      9205,
+      9205,
+      9205
+    ],
+    "frontend_phase_median_s": {
+      "check_summaries": 0.016207129,
+      "declarations_interfaces": 0.023271394,
+      "dependency_key_preparation": 0.337941418,
+      "domain_codec_validation": 5.18e-07,
+      "effect_origin_passes": 0.11497505,
+      "entry_adaptation": 0.002509415,
+      "fresh_body_check": 0.856424906,
+      "load": 0.217235524,
+      "merge": 0.132486089,
+      "ordinary_body_replay": 0.395905461,
+      "retention_store_io": 0.037129863,
+      "specialization_body_replay": 0.206449818,
+      "stand_in_planning": 0.166034553,
+      "symbolic_templates": 0.017198999,
+      "syntax_parse": 0.001082479,
+      "syntax_replay": 0.188724923,
+      "warning_derivation": 0.000891194
+    },
+    "raw_bodies_materialized": [
+      61,
+      61,
+      61
+    ],
+    "raw_bodies_freshly_lowered": [
+      3,
+      3,
+      3
+    ],
+    "final_bodies_materialized": [
+      90,
+      90,
+      90
+    ],
+    "checkpoint_records_decoded": [
+      3,
+      3,
+      3
+    ],
+    "fusion_checkpoints_restored": [
+      0,
+      0,
+      0
+    ],
+    "fresh_optimizer_functions": [
+      3,
+      3,
+      3
+    ],
+    "llvm_keys_built": [
+      3,
+      3,
+      3
+    ],
+    "native_units_compiled": [
+      3,
+      3,
+      3
+    ],
+    "fallbacks": [
+      0,
+      0,
+      0
+    ],
+    "stage_median_s": {
+      "frontend": 3.549517082,
+      "lowering": 0.471769156,
+      "optimizer": 0.53256812,
+      "emission": 0.255510624,
+      "native": 1.426730351,
+      "linker": 0.114333521
+    },
+    "execution_checks_passed": true
+  },
+  "32/candidate/entry_edit": {
+    "lines": 510436,
+    "wall_s": {
+      "median": 7.915190524887294,
+      "min": 5.727053835056722,
+      "max": 8.296810758998618
+    },
+    "peak_rss_gib": 1.6402015686035156,
+    "frontend_bodies_checked": [
+      102,
+      102,
+      102
+    ],
+    "frontend_bodies_omitted": [
+      32898,
+      32898,
+      32898
+    ],
+    "frontend_trees_replayed": [
+      4701,
+      4701,
+      4701
+    ],
+    "frontend_phase_median_s": {
+      "check_summaries": 0.016760614,
+      "declarations_interfaces": 0.023559992,
+      "dependency_key_preparation": 0.351243063,
+      "domain_codec_validation": 3.88e-07,
+      "effect_origin_passes": 0.112465347,
+      "entry_adaptation": 0.002354633,
+      "fresh_body_check": 0.659235589,
+      "load": 0.206906281,
+      "merge": 0.130440283,
+      "ordinary_body_replay": 0.670627137,
+      "retention_store_io": 0.087919447,
+      "specialization_body_replay": 0.237569196,
+      "stand_in_planning": 0.166243335,
+      "symbolic_templates": 0.046969079,
+      "syntax_parse": 0.000308718,
+      "syntax_replay": 0.459280868,
+      "warning_derivation": 0.000847465
+    },
+    "raw_bodies_materialized": [
+      5,
+      5,
+      5
+    ],
+    "raw_bodies_freshly_lowered": [
+      2,
+      2,
+      2
+    ],
+    "final_bodies_materialized": [
+      6,
+      6,
+      6
+    ],
+    "checkpoint_records_decoded": [
+      3,
+      3,
+      3
+    ],
+    "fusion_checkpoints_restored": [
+      0,
+      0,
+      0
+    ],
+    "fresh_optimizer_functions": [
+      1,
+      1,
+      1
+    ],
+    "llvm_keys_built": [
+      1,
+      1,
+      1
+    ],
+    "native_units_compiled": [
+      1,
+      1,
+      1
+    ],
+    "fallbacks": [
+      0,
+      0,
+      0
+    ],
+    "stage_median_s": {
+      "frontend": 4.097974094,
+      "lowering": 0.424700974,
+      "optimizer": 0.509924264,
+      "emission": 0.225846779,
+      "native": 2.33854392,
+      "linker": 0.105488256
+    },
+    "execution_checks_passed": true
+  },
+  "32/candidate/helper_edit": {
+    "lines": 510436,
+    "wall_s": {
+      "median": 4.88024315610528,
+      "min": 4.318554848898202,
+      "max": 5.213830711087212
+    },
+    "peak_rss_gib": 1.6388969421386719,
+    "frontend_bodies_checked": [
+      100,
+      100,
+      100
+    ],
+    "frontend_bodies_omitted": [
+      32850,
+      32850,
+      32850
+    ],
+    "frontend_trees_replayed": [
+      4751,
+      4751,
+      4751
+    ],
+    "frontend_phase_median_s": {
+      "check_summaries": 0.017135002,
+      "declarations_interfaces": 0.023194277,
+      "dependency_key_preparation": 0.332504699,
+      "domain_codec_validation": 3.83e-07,
+      "effect_origin_passes": 0.115935556,
+      "entry_adaptation": 0.002312092,
+      "fresh_body_check": 0.690352591,
+      "load": 0.221843685,
+      "merge": 0.126136698,
+      "ordinary_body_replay": 0.232369358,
+      "retention_store_io": 0.067354326,
+      "specialization_body_replay": 0.21061044,
+      "stand_in_planning": 0.169025248,
+      "symbolic_templates": 0.018561661,
+      "syntax_parse": 0.000493719,
+      "syntax_replay": 0.220304618,
+      "warning_derivation": 0.000863488
+    },
+    "raw_bodies_materialized": [
+      30,
+      30,
+      30
+    ],
+    "raw_bodies_freshly_lowered": [
+      1,
+      1,
+      1
+    ],
+    "final_bodies_materialized": [
+      44,
+      44,
+      44
+    ],
+    "checkpoint_records_decoded": [
+      0,
+      0,
+      0
+    ],
+    "fusion_checkpoints_restored": [
+      0,
+      0,
+      0
+    ],
+    "fresh_optimizer_functions": [
+      1,
+      1,
+      1
+    ],
+    "llvm_keys_built": [
+      1,
+      1,
+      1
+    ],
+    "native_units_compiled": [
+      1,
+      1,
+      1
+    ],
+    "fallbacks": [
+      0,
+      0,
+      0
+    ],
+    "stage_median_s": {
+      "frontend": 3.266210416,
+      "lowering": 0.320869938,
+      "optimizer": 0.508494214,
+      "emission": 0.217059556,
+      "native": 0.292478867,
+      "linker": 0.112998936
+    },
+    "execution_checks_passed": true
+  },
+  "32/candidate/three_file_edit": {
+    "lines": 510436,
+    "wall_s": {
+      "median": 5.90061305090785,
+      "min": 5.221312297042459,
+      "max": 6.138913148082793
+    },
+    "peak_rss_gib": 1.6399955749511719,
+    "frontend_bodies_checked": [
+      104,
+      104,
+      104
+    ],
+    "frontend_bodies_omitted": [
+      32799,
+      32799,
+      32799
+    ],
+    "frontend_trees_replayed": [
+      4798,
+      4798,
+      4798
+    ],
+    "frontend_phase_median_s": {
+      "check_summaries": 0.017487746,
+      "declarations_interfaces": 0.022182794,
+      "dependency_key_preparation": 0.33516349,
+      "domain_codec_validation": 3.54e-07,
+      "effect_origin_passes": 0.111985151,
+      "entry_adaptation": 0.002167395,
+      "fresh_body_check": 0.654201024,
+      "load": 0.212298579,
+      "merge": 0.1183563,
+      "ordinary_body_replay": 0.247461244,
+      "retention_store_io": 0.067624223,
+      "specialization_body_replay": 0.200682545,
+      "stand_in_planning": 0.172712769,
+      "symbolic_templates": 0.018807795,
+      "syntax_parse": 0.00109844,
+      "syntax_replay": 0.214971556,
+      "warning_derivation": 0.000866677
+    },
+    "raw_bodies_materialized": [
+      61,
+      61,
+      61
+    ],
+    "raw_bodies_freshly_lowered": [
+      4,
+      4,
+      4
+    ],
+    "final_bodies_materialized": [
+      90,
+      90,
+      90
+    ],
+    "checkpoint_records_decoded": [
+      0,
+      0,
+      0
+    ],
+    "fusion_checkpoints_restored": [
+      0,
+      0,
+      0
+    ],
+    "fresh_optimizer_functions": [
+      3,
+      3,
+      3
+    ],
+    "llvm_keys_built": [
+      3,
+      3,
+      3
+    ],
+    "native_units_compiled": [
+      3,
+      3,
+      3
+    ],
+    "fallbacks": [
+      0,
+      0,
+      0
+    ],
+    "stage_median_s": {
+      "frontend": 3.203437823,
+      "lowering": 0.409101235,
+      "optimizer": 0.520573551,
+      "emission": 0.243883598,
+      "native": 1.254913323,
+      "linker": 0.107490684
+    },
+    "execution_checks_passed": true
+  },
+  "12/baseline/entry_edit": {
+    "lines": 191416,
+    "wall_s": {
+      "median": 2.7041048689279705,
+      "min": 2.5360446551349014,
+      "max": 4.727532956050709
+    },
+    "peak_rss_gib": 0.572235107421875,
+    "frontend_bodies_checked": [
+      135,
+      135,
+      135
+    ],
+    "frontend_bodies_omitted": [
+      10604,
+      10604,
+      10604
+    ],
+    "frontend_trees_replayed": [
+      3422,
+      3422,
+      3422
+    ],
+    "frontend_phase_median_s": {
+      "check_summaries": 0.006075427,
+      "declarations_interfaces": 0.009462775,
+      "dependency_key_preparation": 0.141534733,
+      "domain_codec_validation": 4.92e-07,
+      "effect_origin_passes": 0.044440555,
+      "entry_adaptation": 0.000924596,
+      "fresh_body_check": 0.140610245,
+      "load": 0.089117719,
+      "merge": 0.052177032,
+      "ordinary_body_replay": 0.088638536,
+      "retention_store_io": 0.015272949,
+      "specialization_body_replay": 0.039548867,
+      "stand_in_planning": 0.06676486,
+      "symbolic_templates": 0.007026057,
+      "syntax_parse": 0.000298772,
+      "syntax_replay": 0.069145647,
+      "warning_derivation": 0.000325855
+    },
+    "raw_bodies_materialized": [
+      5,
+      5,
+      5
+    ],
+    "raw_bodies_freshly_lowered": [
+      1,
+      1,
+      1
+    ],
+    "final_bodies_materialized": [
+      6,
+      6,
+      6
+    ],
+    "checkpoint_records_decoded": [
+      6,
+      6,
+      6
+    ],
+    "fusion_checkpoints_restored": [
+      0,
+      0,
+      0
+    ],
+    "fresh_optimizer_functions": [
+      1,
+      1,
+      1
+    ],
+    "llvm_keys_built": [
+      1,
+      1,
+      1
+    ],
+    "native_units_compiled": [
+      1,
+      1,
+      1
+    ],
+    "fallbacks": [
+      0,
+      0,
+      0
+    ],
+    "stage_median_s": {
+      "frontend": 0.947132633,
+      "lowering": 0.195476176,
+      "optimizer": 0.203133309,
+      "emission": 0.092951583,
+      "native": 1.205870286,
+      "linker": 0.049358128
+    },
+    "execution_checks_passed": true
+  },
+  "12/baseline/helper_edit": {
+    "lines": 191416,
+    "wall_s": {
+      "median": 2.068326720967889,
+      "min": 1.7377123199403286,
+      "max": 2.153967200079933
+    },
+    "peak_rss_gib": 0.5715866088867188,
+    "frontend_bodies_checked": [
+      133,
+      133,
+      133
+    ],
+    "frontend_bodies_omitted": [
+      10562,
+      10562,
+      10562
+    ],
+    "frontend_trees_replayed": [
+      3466,
+      3466,
+      3466
+    ],
+    "frontend_phase_median_s": {
+      "check_summaries": 0.007729375,
+      "declarations_interfaces": 0.009535093,
+      "dependency_key_preparation": 0.151389152,
+      "domain_codec_validation": 4.04e-07,
+      "effect_origin_passes": 0.054879615,
+      "entry_adaptation": 0.001081725,
+      "fresh_body_check": 0.164766985,
+      "load": 0.097456095,
+      "merge": 0.055150959,
+      "ordinary_body_replay": 0.102776156,
+      "retention_store_io": 0.01759603,
+      "specialization_body_replay": 0.045379598,
+      "stand_in_planning": 0.072341614,
+      "symbolic_templates": 0.008340035,
+      "syntax_parse": 0.000510667,
+      "syntax_replay": 0.069599611,
+      "warning_derivation": 0.000383691
+    },
+    "raw_bodies_materialized": [
+      30,
+      30,
+      30
+    ],
+    "raw_bodies_freshly_lowered": [
+      1,
+      1,
+      1
+    ],
+    "final_bodies_materialized": [
+      44,
+      44,
+      44
+    ],
+    "checkpoint_records_decoded": [
+      0,
+      0,
+      0
+    ],
+    "fusion_checkpoints_restored": [
+      0,
+      0,
+      0
+    ],
+    "fresh_optimizer_functions": [
+      1,
+      1,
+      1
+    ],
+    "llvm_keys_built": [
+      1,
+      1,
+      1
+    ],
+    "native_units_compiled": [
+      1,
+      1,
+      1
+    ],
+    "fallbacks": [
+      0,
+      0,
+      0
+    ],
+    "stage_median_s": {
+      "frontend": 1.123298726,
+      "lowering": 0.216968405,
+      "optimizer": 0.29281929,
+      "emission": 0.103399789,
+      "native": 0.182601211,
+      "linker": 0.058837851
+    },
+    "execution_checks_passed": true
+  },
+  "12/baseline/three_file_edit": {
+    "lines": 191416,
+    "wall_s": {
+      "median": 2.615348153980449,
+      "min": 2.551383694866672,
+      "max": 2.7671212351415306
+    },
+    "peak_rss_gib": 0.57427978515625,
+    "frontend_bodies_checked": [
+      137,
+      137,
+      137
+    ],
+    "frontend_bodies_omitted": [
+      10519,
+      10519,
+      10519
+    ],
+    "frontend_trees_replayed": [
+      3505,
+      3505,
+      3505
+    ],
+    "frontend_phase_median_s": {
+      "check_summaries": 0.006155485,
+      "declarations_interfaces": 0.008895978,
+      "dependency_key_preparation": 0.133271789,
+      "domain_codec_validation": 3.44e-07,
+      "effect_origin_passes": 0.046601531,
+      "entry_adaptation": 0.000862782,
+      "fresh_body_check": 0.119972048,
+      "load": 0.08765355,
+      "merge": 0.048231588,
+      "ordinary_body_replay": 0.089829356,
+      "retention_store_io": 0.014910422,
+      "specialization_body_replay": 0.038311468,
+      "stand_in_planning": 0.062140385,
+      "symbolic_templates": 0.006360168,
+      "syntax_parse": 0.001101182,
+      "syntax_replay": 0.069806823,
+      "warning_derivation": 0.000274145
+    },
+    "raw_bodies_materialized": [
+      61,
+      61,
+      61
+    ],
+    "raw_bodies_freshly_lowered": [
+      3,
+      3,
+      3
+    ],
+    "final_bodies_materialized": [
+      90,
+      90,
+      90
+    ],
+    "checkpoint_records_decoded": [
+      3,
+      3,
+      3
+    ],
+    "fusion_checkpoints_restored": [
+      0,
+      0,
+      0
+    ],
+    "fresh_optimizer_functions": [
+      3,
+      3,
+      3
+    ],
+    "llvm_keys_built": [
+      3,
+      3,
+      3
+    ],
+    "native_units_compiled": [
+      3,
+      3,
+      3
+    ],
+    "fallbacks": [
+      0,
+      0,
+      0
+    ],
+    "stage_median_s": {
+      "frontend": 0.910400995,
+      "lowering": 0.184439343,
+      "optimizer": 0.234883331,
+      "emission": 0.102782799,
+      "native": 1.11516093,
+      "linker": 0.047422829
+    },
+    "execution_checks_passed": true
+  },
+  "12/candidate/entry_edit": {
+    "lines": 191416,
+    "wall_s": {
+      "median": 2.6082267351448536,
+      "min": 2.5658008567988873,
+      "max": 2.974224042147398
+    },
+    "peak_rss_gib": 0.5176162719726562,
+    "frontend_bodies_checked": [
+      42,
+      42,
+      42
+    ],
+    "frontend_bodies_omitted": [
+      12358,
+      12358,
+      12358
+    ],
+    "frontend_trees_replayed": [
+      1761,
+      1761,
+      1761
+    ],
+    "frontend_phase_median_s": {
+      "check_summaries": 0.006500113,
+      "declarations_interfaces": 0.009816711,
+      "dependency_key_preparation": 0.141356073,
+      "domain_codec_validation": 4.24e-07,
+      "effect_origin_passes": 0.045452554,
+      "entry_adaptation": 0.000896224,
+      "fresh_body_check": 0.11082765,
+      "load": 0.092440637,
+      "merge": 0.053147197,
+      "ordinary_body_replay": 0.042062575,
+      "retention_store_io": 0.026270979,
+      "specialization_body_replay": 0.039687283,
+      "stand_in_planning": 0.06940177,
+      "symbolic_templates": 0.007414247,
+      "syntax_parse": 0.000308346,
+      "syntax_replay": 0.070936031,
+      "warning_derivation": 0.000332476
+    },
+    "raw_bodies_materialized": [
+      5,
+      5,
+      5
+    ],
+    "raw_bodies_freshly_lowered": [
+      2,
+      2,
+      2
+    ],
+    "final_bodies_materialized": [
+      6,
+      6,
+      6
+    ],
+    "checkpoint_records_decoded": [
+      3,
+      3,
+      3
+    ],
+    "fusion_checkpoints_restored": [
+      0,
+      0,
+      0
+    ],
+    "fresh_optimizer_functions": [
+      1,
+      1,
+      1
+    ],
+    "llvm_keys_built": [
+      1,
+      1,
+      1
+    ],
+    "native_units_compiled": [
+      1,
+      1,
+      1
+    ],
+    "fallbacks": [
+      0,
+      0,
+      0
+    ],
+    "stage_median_s": {
+      "frontend": 0.959874728,
+      "lowering": 0.126466813,
+      "optimizer": 0.1961479,
+      "emission": 0.091738027,
+      "native": 1.202887072,
+      "linker": 0.052743165
+    },
+    "execution_checks_passed": true
+  },
+  "12/candidate/helper_edit": {
+    "lines": 191416,
+    "wall_s": {
+      "median": 1.7053132660221308,
+      "min": 1.6675447991583496,
+      "max": 1.9752772299107164
+    },
+    "peak_rss_gib": 0.516082763671875,
+    "frontend_bodies_checked": [
+      40,
+      40,
+      40
+    ],
+    "frontend_bodies_omitted": [
+      12310,
+      12310,
+      12310
+    ],
+    "frontend_trees_replayed": [
+      1811,
+      1811,
+      1811
+    ],
+    "frontend_phase_median_s": {
+      "check_summaries": 0.007083056,
+      "declarations_interfaces": 0.010500397,
+      "dependency_key_preparation": 0.150292633,
+      "domain_codec_validation": 5.76e-07,
+      "effect_origin_passes": 0.051455374,
+      "entry_adaptation": 0.000972601,
+      "fresh_body_check": 0.117508299,
+      "load": 0.104461467,
+      "merge": 0.059217158,
+      "ordinary_body_replay": 0.044406615,
+      "retention_store_io": 0.023705462,
+      "specialization_body_replay": 0.040813647,
+      "stand_in_planning": 0.073604529,
+      "symbolic_templates": 0.007937174,
+      "syntax_parse": 0.000552049,
+      "syntax_replay": 0.077714882,
+      "warning_derivation": 0.000334512
+    },
+    "raw_bodies_materialized": [
+      30,
+      30,
+      30
+    ],
+    "raw_bodies_freshly_lowered": [
+      1,
+      1,
+      1
+    ],
+    "final_bodies_materialized": [
+      44,
+      44,
+      44
+    ],
+    "checkpoint_records_decoded": [
+      0,
+      0,
+      0
+    ],
+    "fusion_checkpoints_restored": [
+      0,
+      0,
+      0
+    ],
+    "fresh_optimizer_functions": [
+      1,
+      1,
+      1
+    ],
+    "llvm_keys_built": [
+      1,
+      1,
+      1
+    ],
+    "native_units_compiled": [
+      1,
+      1,
+      1
+    ],
+    "fallbacks": [
+      0,
+      0,
+      0
+    ],
+    "stage_median_s": {
+      "frontend": 0.959218686,
+      "lowering": 0.137110762,
+      "optimizer": 0.242143644,
+      "emission": 0.093130159,
+      "native": 0.223912837,
+      "linker": 0.054333114
+    },
+    "execution_checks_passed": true
+  },
+  "12/candidate/three_file_edit": {
+    "lines": 191416,
+    "wall_s": {
+      "median": 2.6113846378866583,
+      "min": 2.5054025759454817,
+      "max": 3.183259550947696
+    },
+    "peak_rss_gib": 0.5172157287597656,
+    "frontend_bodies_checked": [
+      44,
+      44,
+      44
+    ],
+    "frontend_bodies_omitted": [
+      12259,
+      12259,
+      12259
+    ],
+    "frontend_trees_replayed": [
+      1858,
+      1858,
+      1858
+    ],
+    "frontend_phase_median_s": {
+      "check_summaries": 0.006356945,
+      "declarations_interfaces": 0.009086438,
+      "dependency_key_preparation": 0.136259867,
+      "domain_codec_validation": 3.45e-07,
+      "effect_origin_passes": 0.046060459,
+      "entry_adaptation": 0.000844663,
+      "fresh_body_check": 0.095555226,
+      "load": 0.089062185,
+      "merge": 0.048711166,
+      "ordinary_body_replay": 0.059533699,
+      "retention_store_io": 0.023174169,
+      "specialization_body_replay": 0.035140971,
+      "stand_in_planning": 0.066379747,
+      "symbolic_templates": 0.006655351,
+      "syntax_parse": 0.001107256,
+      "syntax_replay": 0.064808419,
+      "warning_derivation": 0.000290462
+    },
+    "raw_bodies_materialized": [
+      61,
+      61,
+      61
+    ],
+    "raw_bodies_freshly_lowered": [
+      4,
+      4,
+      4
+    ],
+    "final_bodies_materialized": [
+      90,
+      90,
+      90
+    ],
+    "checkpoint_records_decoded": [
+      0,
+      0,
+      0
+    ],
+    "fusion_checkpoints_restored": [
+      0,
+      0,
+      0
+    ],
+    "fresh_optimizer_functions": [
+      3,
+      3,
+      3
+    ],
+    "llvm_keys_built": [
+      3,
+      3,
+      3
+    ],
+    "native_units_compiled": [
+      3,
+      3,
+      3
+    ],
+    "fallbacks": [
+      0,
+      0,
+      0
+    ],
+    "stage_median_s": {
+      "frontend": 0.904929445,
+      "lowering": 0.12556603,
+      "optimizer": 0.232563876,
+      "emission": 0.10418109,
+      "native": 1.155579153,
+      "linker": 0.047867751
+    },
+    "execution_checks_passed": true
+  }
+}

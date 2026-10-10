@@ -719,7 +719,7 @@
     },
     "persistent-checked-bodies": {
       "kind": "tooling",
-      "summary": "Ordinary checked bodies persist across compiler processes as versioned, validated semantic-cache-v5 entries with atomic publication, remap-or-miss decoding, contract isolation and --no-cache correctness.",
+      "summary": "Ordinary checked bodies persist across compiler processes as versioned, validated semantic-cache-v6 entries with atomic publication, remap-or-miss decoding, contract isolation and --no-cache correctness.",
       "doc": "docs/tooling/caches.md#persistent-checked-body-store"
     },
     "native-test-preparation-reuse": {

@@ -1,0 +1,262 @@
+{
+  "recorded_utc": "2026-10-10T06:01:04.057163+00:00",
+  "baseline_commit": "fa11606022ed217896a27976f8fe6d95db95f465",
+  "implementation_commit": "9a77dc75460bd12b35bd5e0cf850bb0eac7ee5b9",
+  "branch": "codex/frontend-demand-reuse-20261010",
+  "compilers": {
+    "baseline": {
+      "path": "/home/epentland/ai/canopy/mylang-incremental-gap-20261010/recursion-final-compiler/bin/mylang",
+      "sha256": "08f87380ec11cb0de2a8ce0e8dc00a8f0a0abef68d62ca0b1736fb2b78955182"
+    },
+    "candidate": {
+      "path": "/home/epentland/ai/canopy/mylang-frontend-demand-20261010/validated-compiler/bin/mylang",
+      "sha256": "cc303c1720c39049475293885d006c19956a59644b5be7fd16c6eb4e3c146475"
+    },
+    "shipping": {
+      "path": "/home/epentland/ai/canopy/mylang-frontend-demand-20261010/shipping-compiler/bin/mylang",
+      "sha256": "fe26b0a8d71607138216f2f59844830ed3470d540bf43a5b837b43f02c8f4de4"
+    }
+  },
+  "timed_to_shipping_difference": "After timing, the features.json checked-body format description was corrected from v5 to v6. No compilation algorithm changed. The final ReleaseFast build, feature report, and one-replica probe are independently archived.",
+  "full_suite": {
+    "command": "scripts/build-slot.sh gate /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build test fmt-check -j4 --maxrss 8589934592 --summary all",
+    "exit_code": 0,
+    "build_steps_passed": 97,
+    "build_steps_total": 97,
+    "guardian_runner_groups": 28,
+    "tests_passed": 2475,
+    "tests_failed": 0,
+    "zig_shard_exclusions_reported_as_skips": 22738,
+    "runner_results": [
+      {
+        "passed": 89,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 89,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 88,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 89,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 125,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 124,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 89,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 88,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 89,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 89,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 43,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 45,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 43,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 124,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 124,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 43,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 124,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 124,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 125,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 124,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 132,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 42,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 124,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 7,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 42,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 124,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 124,
+        "failed": 0,
+        "skipped": 0
+      }
+    ]
+  },
+  "whole_tree_guardian": {
+    "command": "guardian-check all /home/epentland/ai/canopy/mylang-worktrees/codex-frontend-demand-reuse-20261010 --full",
+    "exit_code": 0,
+    "checks_passed": 88,
+    "policy_or_baseline_changes": false
+  },
+  "focused_suites": {
+    "semantic-cache-all.log.gz": {
+      "exit_code": 0,
+      "passed": 86,
+      "build_summary": "Build Summary: 8/8 steps succeeded; 86/86 tests passed"
+    },
+    "semantic-project-all.log.gz": {
+      "exit_code": 0,
+      "passed": 15,
+      "build_summary": "Build Summary: 8/8 steps succeeded; 15/15 tests passed"
+    },
+    "demand-build-all.log.gz": {
+      "exit_code": 0,
+      "passed": 9,
+      "build_summary": "Build Summary: 8/8 steps succeeded; 9/9 tests passed"
+    },
+    "portable-type-tests.log.gz": {
+      "exit_code": 0,
+      "passed": 16,
+      "build_summary": null
+    }
+  },
+  "initial_full_suite": "Two previous cache-reuse expectations failed after the intended reuse improvement (zero cached callback bodies and one omitted default-origin body). Both were corrected; source-change fallback and eager-equivalence checks remain. The initial log and focused/final passing reruns are archived.",
+  "benchmark": {
+    "builds": 41,
+    "edited_builds": 36,
+    "execution_checks": "All builds execute every replica and pass EDA export goldens and leak checks.",
+    "expected_native_units_per_edit": {
+      "entry_edit": 1,
+      "helper_edit": 1,
+      "three_file_edit": 3
+    },
+    "edited_native_object_audit": "All 36 edited-build records match byte for byte across compiler versions.",
+    "paired_executable_audit": "All 40 setup/edit records have identical allocated executable sections; whole-file differences are runtime debug worktree paths. These represent 20 paired comparisons.",
+    "eager_verification": {
+      "copies": 12,
+      "native_units_verified": 760,
+      "compiler_and_linker_processes": 761,
+      "fresh_link": true,
+      "incremental_executable_byte_identical": true,
+      "binary_sha256": "0f55aae11937b065684c68bd428e0e7da97ba4f493465044559e9a15c6f8a1e7"
+    },
+    "guest_mode": "optimized_debug",
+    "compiler_host_mode": "ReleaseFast",
+    "cache_compression": {
+      "baseline": "none",
+      "candidate": "none"
+    },
+    "raw_results_sha256": "e61bb17e87ec6daa136d223b5efff0d0f685e5a21944c76e9a1a5881e874d919"
+  },
+  "one_replica_probe": {
+    "baseline_fresh_bodies": {
+      "entry_edit": 12,
+      "prefix_edit": 11
+    },
+    "shipping_fresh_bodies": {
+      "entry_edit": 7,
+      "prefix_edit": 6
+    },
+    "remaining_miss_reason": "missing-record-identity"
+  },
+  "evidence_sha256": {
+    "demand-build-all.log.gz": "b7988a5fc98b86793d91eb7067728fa5a56edd9a29875b65fc89d7ca8182128d",
+    "description-compiler-build.log.gz": "95ef91cfc3af3f72fb06f96e1bb9aea918f739df9f004d64545d6335bd14df6f",
+    "features-final.json.gz": "ccf683addaeca1afa7920d5ae10fec4e63f74bed421e8234b44fade52edc3e2b",
+    "frontend-baseline.json.gz": "9aafdd8988ea29abe6e6bd9ce422033a72be590b3784d7ea91622c542fcadbf6",
+    "frontend-candidate.json.gz": "f24bbdb55a504459fededfa32fe20b1dad183e314ccc5d7325ee2da796a73ad4",
+    "frontend-final-description.json.gz": "fdca629c01ab8ded58678cf4ce10f6891766db1c44e60ad8d15ed587d2b1914c",
+    "frontend-shipping.json.gz": "f24bbdb55a504459fededfa32fe20b1dad183e314ccc5d7325ee2da796a73ad4",
+    "full-tests-final.log.gz": "d195c43e95bc671196803fe98151d36efd52c5c52fb4b255f68431fb2d562657",
+    "full-tests-initial.log.gz": "77e75d137fe6d98e0836737a62f32b4fbd962fe4c66ea35fe1d6c42032d07fe5",
+    "guardian-final.log.gz": "148d2e1946c2364964ea2388c1b37ffe58f512f3a7502e167ef93d05c91e57da",
+    "guardian-whole-tree.log.gz": "148d2e1946c2364964ea2388c1b37ffe58f512f3a7502e167ef93d05c91e57da",
+    "implementation-commit.log.gz": "975d83a1b116f47814a389ecfc6d9413781a1477ca5c68b422b751d09428fc5c",
+    "paired-builds.log.gz": "5c238f7e4e1a0bfc78cffbca8a4a832fafadf0066610df2d7e24d8abdb84bb5c",
+    "paired-results.json.gz": "e9e89989ab91f833694194274140b351dc3fa3f03df1f6c140935f2183dc8bc5",
+    "portable-type-tests.log.gz": "344c3b4ff72341f505680dd28b782e5a47e84cde36d88bc993472b295535a249",
+    "semantic-cache-all.log.gz": "8b2810f971ddd6f731463c5f0986bc8d3b6ad9d6e25855a14df9d83fc05dcf3d",
+    "semantic-project-all.log.gz": "744860e89664e0ea28baab8efab55b4e4e904b1bd2ba91412eb7ab15f6a89a6b",
+    "shipping-compiler-build.log.gz": "0458565a7eb8a516b4d7d8cd92725404369fdcdceb4f0fb67841d02cabdde69d",
+    "shipping-features.json.gz": "18a22af13df3bdda60e11831499eb03924bca9dc9c5b2471c6a81f196a1327e1",
+    "timed-compiler-build.log.gz": "60c8d9229631ced270928b528a636d93c432ed0dbda5db1f3b5fe8f324134d11"
+  }
+}

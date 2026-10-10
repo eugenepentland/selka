@@ -93,7 +93,10 @@ pub const Plan = struct {
         var plan: Plan = .{ .request = request, .prepared = prepared, .session = session, .stand_ins = stand_ins, .main = main };
         plan.history.current = try plan.currentPositions(allocator);
         if (!request.policy.declared) try plan.prepareConsumers(allocator);
-        if (request.policy.demand != null) try plan.prepareDemand(allocator);
+        if (request.policy.demand) |demand| {
+            if (demand.prepare_sources) |prepare| try prepare(demand.context, session.src);
+            try plan.prepareDemand(allocator);
+        }
         return plan;
     }
 
@@ -138,7 +141,7 @@ pub const Plan = struct {
     /// current declaration position. A changed bounded body has unknown new edges
     /// and conservatively requests concrete trees (ordinary body reuse still works).
     pub fn requireAllocationBodies(self: *Plan, allocator: std.mem.Allocator, syntax: ast.Program) error{OutOfMemory}!void {
-        if (self.request.body_policy != .allocation_contracts or self.request.policy.declared) return;
+        if ((self.request.body_policy != .allocation_contracts and self.request.policy.demand == null) or self.request.policy.declared) return;
         const previous = self.request.previous orelse return;
         const required = try allocator.alloc(bool, previous.summaries.len);
         defer allocator.free(required);

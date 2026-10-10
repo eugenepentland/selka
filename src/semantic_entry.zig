@@ -12,7 +12,14 @@ pub const FunctionRef = struct { id: typed.FunctionId, key: []const u8, template
 /// One stable nominal-type identity exchanged for a fresh catalog ordinal.
 /// `shape` is the record's transitive shape digest when the tree was checked
 /// (`semantic_key.Shapes`); a changed shape makes the tree stale.
-pub const RecordRef = struct { index: usize, key: []const u8, shape: [32]u8 = @splat(0) };
+pub const RecordRef = struct { index: usize, key: []const u8, shape: [32]u8 = @splat(0), recipes: []const TypeRecipe = &.{} };
+/// Portable inputs to the normal type interners. Callable contracts are rebuilt
+/// from fresh syntax at the value site, never from a retained effect ceiling.
+pub const TypeRecipe = union(enum) {
+    array: struct { element: typed.Type, length: usize, site: source.Span },
+    tuple: []const typed.Type,
+    callable: source.Span,
+};
 /// Relocatable declaration facts retained for one checked function.
 pub const Identity = struct { key: []const u8, context: [32]u8, body: source.Span, region: source.Span, checked_contract: [32]u8 = @splat(0) };
 /// One persisted body-local diagnostic/warning. Warnings are derived from the
@@ -76,7 +83,11 @@ pub const Entry = struct {
         const function_refs = try arena_allocator.alloc(FunctionRef, spec.function_refs.len);
         for (spec.function_refs, function_refs) |ref, *out| out.* = .{ .id = ref.id, .key = try arena_allocator.dupe(u8, ref.key), .template = if (ref.template) |template| try arena_allocator.dupe(u8, template) else null };
         const record_refs = try arena_allocator.alloc(RecordRef, spec.record_refs.len);
-        for (spec.record_refs, record_refs) |ref, *out| out.* = .{ .index = ref.index, .key = try arena_allocator.dupe(u8, ref.key), .shape = ref.shape };
+        for (spec.record_refs, record_refs) |ref, *out| {
+            out.* = ref;
+            out.key = try arena_allocator.dupe(u8, ref.key);
+            out.recipes = mapper.value(arena_allocator, []const TypeRecipe, ref.recipes) catch |err| return classify(err);
+        }
         const identity = Identity{
             .key = try arena_allocator.dupe(u8, spec.identity.key),
             .context = spec.identity.context,
@@ -589,4 +600,80 @@ pub fn sortFunctionRefs(comptime Reference: type, references: []Reference) void 
             return @backingInt(left.id) < @backingInt(right.id);
         }
     }.less);
+}
+
+/// Bound portable recipe inputs before any normal interner can see them. Each
+/// aggregate child must already have a validated earlier reference; absent,
+/// duplicated, forward and cyclic identities never reach catalog operations.
+pub fn validTypeRecipes(meta: Metadata, max_items: usize) bool {
+    var has_recipes = false;
+    for (meta.record_refs) |reference| if (reference.recipes.len != 0) {
+        has_recipes = true;
+        break;
+    };
+    var previous: ?usize = null;
+    for (meta.record_refs, 0..) |reference, position| {
+        if (reference.index >= meta.old_record_count) return false;
+        // Legacy specialization references need not be sorted. Ordinary recipe
+        // snapshots use a complete sorted table, which the remapper requires.
+        if (has_recipes) {
+            if (previous) |old| if (reference.index <= old) return false;
+        }
+        previous = reference.index;
+        if (reference.recipes.len > 1) return false;
+        if (reference.recipes.len == 0) continue;
+        const recipe = reference.recipes[0];
+        const prefix = meta.record_refs[0..position];
+        switch (recipe) {
+            .array => |array| {
+                if (!recipeSpan(array.site, meta.identity.region)) return false;
+                if (array.length > array.site.end - array.site.start) return false;
+                if (!recipeChild(array.element, prefix)) return false;
+            },
+            .tuple => |elements| {
+                if (elements.len > max_items) return false;
+                for (elements) |element| if (!recipeChild(element, prefix)) return false;
+            },
+            .callable => |site| if (!recipeSpan(site, meta.identity.region) or site.start == site.end) return false,
+        }
+    }
+    return true;
+}
+fn recipeSpan(span: source.Span, region: source.Span) bool {
+    return span.start >= region.start and span.end >= span.start and span.end <= region.end;
+}
+fn recipeChild(ty: typed.Type, references: []const RecordRef) bool {
+    if (!ty.isAggregate()) return true;
+    for (references) |reference| if (reference.index == ty.recordIndex()) return true;
+    return false;
+}
+
+test "portable type recipes reject missing forward cyclic and out of region inputs" {
+    const testing = std.testing;
+    var recipe: TypeRecipe = .{ .array = .{ .element = .i64, .length = 1, .site = .{ .start = 2, .end = 3 } } };
+    var refs = [_]RecordRef{ .{ .index = 0, .key = "R" }, .{ .index = 1, .key = "array", .recipes = @as(*[1]TypeRecipe, @ptrCast(&recipe)) } };
+    const meta: Metadata = .{
+        .identity = .{ .key = "f", .context = @splat(0), .body = .{ .start = 1, .end = 5 }, .region = .{ .start = 1, .end = 5 } },
+        .old_function_count = 1,
+        .old_record_count = 3,
+        .function_refs = &.{},
+        .record_refs = &refs,
+    };
+    try testing.expect(validTypeRecipes(meta, 8));
+    recipe.array.length = std.math.maxInt(usize);
+    try testing.expect(!validTypeRecipes(meta, 8));
+    recipe.array.length = 1;
+    recipe.array.element = @fromBackingInt(typed.Type.record_base);
+    try testing.expect(validTypeRecipes(meta, 8));
+    recipe.array.element = @fromBackingInt(typed.Type.record_base + 1);
+    try testing.expect(!validTypeRecipes(meta, 8));
+    recipe.array.element = @fromBackingInt(typed.Type.record_base + 2);
+    try testing.expect(!validTypeRecipes(meta, 8));
+    recipe = .{ .callable = .{ .start = 0, .end = 2 } };
+    try testing.expect(!validTypeRecipes(meta, 8));
+    recipe = .{ .tuple = &.{ .i64, .bool } };
+    try testing.expect(!validTypeRecipes(meta, 1));
+    try testing.expect(validTypeRecipes(meta, 2));
+    refs[0].index = 2;
+    try testing.expect(!validTypeRecipes(meta, 2));
 }

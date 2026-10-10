@@ -163,6 +163,12 @@ pub const Mapper = struct {
         try self.relocate(T, &output, failure);
         return output;
     }
+    /// Clone and relocate into caller-reserved storage, avoiding an additional
+    /// owned outer slice. On failure the caller must keep this storage unpublished.
+    pub fn copySliceInto(self: Mapper, allocator: std.mem.Allocator, comptime T: type, input: []const T, output: []T, failure: *Failure) Error!void {
+        std.debug.assert(input.len == output.len);
+        for (input, output) |item, *destination| destination.* = try self.copyWithFailure(allocator, T, item, failure);
+    }
     fn relocateSpan(self: Mapper, value: *source.Span, failure: *Failure) error{InvalidRelocation}!void {
         var low: usize = 0;
         var high = self.segments.len;

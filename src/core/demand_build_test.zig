@@ -184,7 +184,7 @@ test "demand omission preserves moved warnings and changed effect facts" {
 }
 
 // spec-case: NEW-CORE-DEMAND-1
-test "demand receipts reject external default origins while independent bodies reuse" {
+test "demand receipts reuse unchanged external default origins and reject edited sources" {
     var directory = std.testing.tmpDir(.{});
     defer directory.cleanup();
     const defaults = "public record Item:\n    value: int = 42\n";
@@ -193,11 +193,11 @@ test "demand receipts reject external default origins while independent bodies r
     try directory.dir.writeFile(std.testing.io, .{ .sub_path = "defaults.my", .data = defaults });
     _ = try compare(std.testing.allocator, &directory, false);
     const warm = try compare(std.testing.allocator, &directory, false);
-    try std.testing.expectEqual(@as(usize, 1), warm.omitted);
+    try std.testing.expectEqual(@as(usize, 2), warm.omitted);
     try directory.dir.writeFile(std.testing.io, .{ .sub_path = "defaults.my", .data = "\n\n" ++ defaults });
     try std.testing.expectEqual(@as(usize, 1), (try compare(std.testing.allocator, &directory, false)).omitted);
     try directory.dir.writeFile(std.testing.io, .{ .sub_path = "defaults.my", .data = "\n\npublic record Item:\n    value: int = 43\n" });
-    _ = try compare(std.testing.allocator, &directory, false);
+    try std.testing.expectEqual(@as(usize, 1), (try compare(std.testing.allocator, &directory, false)).omitted);
 }
 
 // spec-case: NEW-CORE-DEMAND-1
