@@ -8,7 +8,8 @@ The separate `cache-plan` component plans Core dependency closures and reuse of
 unaffected test keys. Canonical fact extraction, storage and execution remain in
 Zig. The lexer and parser pilots supply opt-in frontend comparison and component
 modes across compiler commands. The declaration index adds opt-in Selka-owned
-module tables, exports and declaration diagnostics. All five components can be rebuilt without
+module tables, exports and declaration diagnostics. Type/interface analysis adds
+Selka-owned signature validation and interface name resolution. All six components can be rebuilt without
 rebuilding the compiler host.
 
 ## Build and install
@@ -22,7 +23,7 @@ zig build
 ```
 
 Installation contains `tools/selka-components`, `bin/mylang` and
-`libexec/mylang/components/{test-index,cache-plan,lexer-pilot,parser-pilot,declaration-index}.json`
+`libexec/mylang/components/{test-index,cache-plan,lexer-pilot,parser-pilot,declaration-index,type-interface}.json`
 with their content-named executables.
 Keep those directories together when relocating the installation. `--prefix`
 selects another installation root. A copied host executable alone is incomplete
@@ -144,11 +145,24 @@ the admitted source/resource profile and workflow checks. See also the
 `MYLANG_DECLARATION_MODE` also accepts `reference`, `shadow` or `component`,
 with reference as the default. It selects declaration collection, module export
 visibility and canonical re-export identities. The host supplies parsed facts and
-direct dependency tables, validates the returned values and retains signature
-and body checking. It applies the same authenticated deployment and cache rules.
+direct dependency tables and validates the returned values; signature analysis
+is selected separately from declaration collection. It applies the same authenticated deployment and cache rules.
 See [declaration qualification](declaration-component-qualification.md) for the
 1MiB source, 65,536-symbol and 32MiB framed transport profile, and run
 `zig build test-selfhost-declarations` for the pure and installed workflow gate.
+
+`MYLANG_TYPE_INTERFACE_MODE` selects `reference` (default), `shadow` or `component`
+for the whole-project signature pass after declaration indexing. Selka resolves
+interface type and constraint names, validates generic and structural requirements,
+checks application arity and enforces exported signature visibility. One batch
+contains raw signature AST catalogs and indexed module facts; no lookup starts
+its own process. Successful replies carry module coverage, import usage and
+canonical resolution receipts. Shadow compares these values and exact diagnostics.
+Body checking, effect inference and contract rendering remain native consumers.
+The [wire contract](../../selfhost/components/type_interface/WIRE.md) specifies
+bounds and provenance; `zig build test-selfhost-type-interfaces` runs pure and
+installed qualification. The producer uses the same verified deployment and
+cache invalidation rules as the other frontend components.
 
 ## Qualification
 

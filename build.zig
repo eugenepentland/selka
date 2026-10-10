@@ -152,6 +152,7 @@ fn cached(run: *std.Build.Step.Run, list: []const u8) void {
         run.addFileInput(.{ .relative = .{ .base = .install_prefix, .sub_path = "libexec/mylang/components/lexer-pilot.json" } });
         run.addFileInput(.{ .relative = .{ .base = .install_prefix, .sub_path = "libexec/mylang/components/parser-pilot.json" } });
         run.addFileInput(.{ .relative = .{ .base = .install_prefix, .sub_path = "libexec/mylang/components/declaration-index.json" } });
+        run.addFileInput(.{ .relative = .{ .base = .install_prefix, .sub_path = "libexec/mylang/components/type-interface.json" } });
     }
     for (tool_inputs) |tool| if (tool) |path| run.addFileInput(path);
     if (list.len != 0) verification_registry.?.declared(&run.step, list);
@@ -861,6 +862,23 @@ pub fn build(b: *std.Build) void {
     declarations_checks.addArgs(&.{ "python3", "-m", "unittest", "selfhost/tests/declaration_qualification_test.py" });
     declarations_step.dependOn(&declarations_checks.step);
     test_step.dependOn(declarations_step);
+
+    const type_interfaces_step = b.step("test-selfhost-type-interfaces", "Qualify type interface resolution with the verified seed and installed compiler");
+    const type_interfaces_run = driver(b, "type interface resolution pure and installed qualification", rss.driver, "type_interface_qualification");
+    type_interfaces_run.has_side_effects = true;
+    type_interfaces_run.addArgs(&.{ "python3", "selfhost/test_type_interfaces.py", "--zig", b.graph.zig_exe, "--builder" });
+    type_interfaces_run.addArtifactArg(component_tool);
+    type_interfaces_run.addArg("--compiler");
+    type_interfaces_run.addArtifactArg(exe);
+    type_interfaces_run.addArg("--component-dir");
+    type_interfaces_run.addDirectoryArg2(.{ .relative = .{ .base = .install_prefix, .sub_path = "libexec/mylang/components" } }, .{ .make_absolute = true });
+    type_interfaces_run.addArg("--report-dir");
+    _ = type_interfaces_run.addOutputDirectoryArg("type-interface-qualification");
+    type_interfaces_step.dependOn(&type_interfaces_run.step);
+    const type_interfaces_checks = driver(b, "type interface qualification verdict accounting", rss.script, "type_interface_qualification_self");
+    type_interfaces_checks.addArgs(&.{ "python3", "-m", "unittest", "selfhost/tests/type_interface_qualification_test.py" });
+    type_interfaces_step.dependOn(&type_interfaces_checks.step);
+    test_step.dependOn(type_interfaces_step);
     const selfhost_numeric_step = b.step("test-selfhost-numeric", "Compare bootstrap and live numeric token extents");
     const selfhost_numeric_run = driver(b, "python3 selfhost/tests/run_lexer_diff.py --compiler", rss.driver, "selfhost_numeric");
     selfhost_numeric_run.addArgs(&.{ "python3", "selfhost/tests/run_lexer_diff.py", "--compiler" });

@@ -9,10 +9,11 @@ const diagnostic = @import("diagnostic.zig");
 const lex_boundary = @import("lexer_component.zig");
 const parse_boundary = @import("parser_component.zig");
 const declaration_boundary = @import("declaration_component.zig");
+const type_interface_boundary = @import("type_interface_component.zig");
 /// Process capabilities for the independently installed frontend producers.
 pub const Runtime = @import("config/component_runtime.zig").Runtime;
 /// Source failures stay distinct from bounded deployment and transport failures.
-pub const HostError = lex_boundary.Error || parse_boundary.Error || declaration_boundary.Error;
+pub const HostError = lex_boundary.Error || parse_boundary.Error || declaration_boundary.Error || type_interface_boundary.Error;
 /// Combined source and host failures for lexing and parsing.
 pub const Error = diagnostic.Error || HostError;
 /// Value copied into cache contexts only after deployment authentication succeeds.
@@ -30,10 +31,17 @@ pub fn referenceIdentity() [32]u8 {
 /// Shadow configuration forces comparisons on every invocation, including warm runs.
 pub fn reusable(runtime: ?Runtime) bool {
     const capabilities = runtime orelse return true;
-    const lex_mode = capabilities.environ.get("MYLANG_LEXER_MODE") orelse reference_mode;
-    const parse_mode = capabilities.environ.get("MYLANG_PARSER_MODE") orelse reference_mode;
-    const declaration_mode = capabilities.environ.get("MYLANG_DECLARATION_MODE") orelse reference_mode;
-    return !std.mem.eql(u8, lex_mode, "shadow") and !std.mem.eql(u8, parse_mode, "shadow") and !std.mem.eql(u8, declaration_mode, "shadow");
+    for (mode_keys) |key| {
+        if (std.mem.eql(u8, capabilities.environ.get(key) orelse reference_mode, "shadow")) return false;
+    }
+    return true;
+}
+const mode_keys = [_][]const u8{ "MYLANG_LEXER_MODE", "MYLANG_PARSER_MODE", "MYLANG_DECLARATION_MODE", "MYLANG_TYPE_INTERFACE_MODE" };
+fn allReference(runtime: Runtime) bool {
+    for (mode_keys) |key| {
+        if (!std.mem.eql(u8, runtime.environ.get(key) orelse reference_mode, reference_mode)) return false;
+    }
+    return true;
 }
 /// Verify all producer identities before cache access. Reference performs no deployment I/O.
 pub fn verify(a: std.mem.Allocator, runtime: ?Runtime) HostError!Verified {
@@ -41,14 +49,14 @@ pub fn verify(a: std.mem.Allocator, runtime: ?Runtime) HostError!Verified {
     const lex_id = try lex_boundary.identity(a, capabilities);
     const parse_id = try parse_boundary.identity(a, capabilities);
     const declaration_id = try declaration_boundary.identity(a, capabilities);
-    if (std.mem.eql(u8, capabilities.environ.get("MYLANG_LEXER_MODE") orelse reference_mode, reference_mode) and
-        std.mem.eql(u8, capabilities.environ.get("MYLANG_PARSER_MODE") orelse reference_mode, reference_mode) and
-        std.mem.eql(u8, capabilities.environ.get("MYLANG_DECLARATION_MODE") orelse reference_mode, reference_mode)) return .{};
+    const type_interface_id = try type_interface_boundary.identity(a, capabilities);
+    if (allReference(capabilities)) return .{};
     var hash = std.crypto.hash.sha2.Sha256.init(.{});
-    hash.update("frontend-boundary-v2/target-profile/module-and-trust-v1/declaration-index-v1");
+    hash.update("frontend-boundary-v3/target-profile/module-and-trust-v1/type-interface-v1");
     hash.update(&lex_id);
     hash.update(&parse_id);
     hash.update(&declaration_id);
+    hash.update(&type_interface_id);
     var result: [32]u8 = undefined;
     hash.final(&result);
     return .{ .identity = result, .reuse = reusable(runtime) };
@@ -106,6 +114,22 @@ test "declaration producer verification precedes cache reuse and shadow disables
     try std.testing.expect(!reusable(runtime));
     try std.testing.expectError(error.ComponentMissing, verify(std.testing.allocator, runtime));
     try environment.put("MYLANG_DECLARATION_MODE", "component");
+    try std.testing.expect(reusable(runtime));
+    try std.testing.expectError(error.ComponentMissing, verify(std.testing.allocator, runtime));
+}
+
+// spec-case: SELFHOST-TYPE-INTERFACE-1
+test "type interface verification precedes cache reuse and shadow disables reuse" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    const runtime: Runtime = .{ .io = std.testing.io, .environ = &environment, .component_dir = "missing-type-interface-fixture" };
+    try std.testing.expectEqualDeep(Verified{}, try verify(std.testing.allocator, runtime));
+    try environment.put("MYLANG_TYPE_INTERFACE_MODE", "invalid");
+    try std.testing.expectError(error.ComponentMode, verify(std.testing.allocator, runtime));
+    try environment.put("MYLANG_TYPE_INTERFACE_MODE", "shadow");
+    try std.testing.expect(!reusable(runtime));
+    try std.testing.expectError(error.ComponentMissing, verify(std.testing.allocator, runtime));
+    try environment.put("MYLANG_TYPE_INTERFACE_MODE", "component");
     try std.testing.expect(reusable(runtime));
     try std.testing.expectError(error.ComponentMissing, verify(std.testing.allocator, runtime));
 }

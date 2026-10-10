@@ -192,6 +192,26 @@ fn reject(body: []const u8, code: []const u8) !void {
     const message = try project.renderProblem(t.allocator);
     defer t.allocator.free(message);
 }
+// spec-case: SELFHOST-TYPE-INTERFACE-1
+test "type interface checkInterfaces preserves the first signature SourceError" {
+    const body =
+        \\record Hidden:
+        \\    value: int
+        \\public func expose(value: Hidden) -> Hidden effects():
+        \\    return value
+        \\func later[T: Missing](value: T) -> T:
+        \\    return value
+    ;
+    var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = body }} };
+    var project = graph.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "main", .{});
+    try t.expectError(error.SourceError, interfaces.build(&project));
+    try t.expectEqualStrings("E_PRIVATE_INTERFACE", project.problem.?.code);
+    try t.expectEqualStrings("exported interface exposes an unexported type", project.problem.?.message);
+    try t.expectEqualStrings("Hidden", project.modules.items[0].src.text(project.problem.?.site.span));
+    try t.expectEqualStrings("Hidden", project.modules.items[0].src.text(project.problem.?.related.?.span));
+}
 // spec-case: DOC-1
 test "list-interfaces prints a declaration's first docstring line" {
     const body =

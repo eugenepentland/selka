@@ -73,3 +73,9 @@ queries require their own qualification.
 
 See [building components](tooling/selfhost-components.md) for the supported
 build, installation, recovery and verification commands.
+
+The type/interface component also uses this unchanged frozen source profile and
+protocol/schema 1/1. It consumes a whole-project batch of raw signature syntax,
+source context and indexed module facts, then resolves names and validates
+signatures independently. Its [wire contract](../selfhost/components/type_interface/WIRE.md)
+records the bounded transport; neither seed pin changes.

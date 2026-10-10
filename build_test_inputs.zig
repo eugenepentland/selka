@@ -229,3 +229,9 @@ pub const declaration_qualification = [_][]const u8{"selfhost/"};
 
 /// Adversarial verdict accounting for declaration qualification.
 pub const declaration_qualification_self = [_][]const u8{ "selfhost/test_declarations.py", "selfhost/test_pilots.py", "selfhost/tests/run_declaration_qualification.py", "selfhost/tests/run_frontend_qualification.py", "selfhost/tests/declaration_qualification_test.py", "selfhost/tests/fixtures/declaration_index/" };
+
+/// Qualified type interface pure tests and installed workflow/protocol qualification.
+pub const type_interface_qualification = [_][]const u8{"selfhost/"};
+
+/// Adversarial verdict accounting for type interface qualification.
+pub const type_interface_qualification_self = [_][]const u8{ "selfhost/test_type_interfaces.py", "selfhost/test_pilots.py", "selfhost/tests/run_type_interface_qualification.py", "selfhost/tests/run_declaration_qualification.py", "selfhost/tests/run_frontend_qualification.py", "selfhost/tests/type_interface_qualification_test.py", "selfhost/tests/fixtures/type_interface/" };

@@ -4,6 +4,9 @@ const frontend_runtime = @import("frontend_runtime.zig");
 const declaration_value = @import("declaration_value.zig");
 const declaration_boundary = @import("declaration_component.zig");
 const declaration_projection = @import("interface_declarations.zig");
+const type_interface_value = @import("type_interface_value.zig");
+const type_interface_boundary = @import("type_interface_component.zig");
+const type_interface_projection = @import("interface_types.zig");
 const component_adapter = @import("component_adapter.zig");
 const eGenericArity = "E_GENERIC_ARITY";
 /// Error code for an export directive that names no visible declaration.
@@ -135,6 +138,8 @@ pub const Index = struct {
     /// each unannotated callable's frozen inferred ceiling instead of demanding
     /// the author retype it. Null during pure interface pre-validation.
     program: ?typed.Program = null,
+    /// Successful interface resolutions captured only while checking the native oracle.
+    signature_resolutions: ?*std.ArrayList(type_interface_value.Resolution) = null,
     /// Reject runtime, authority or source changes after declaration syntax was admitted.
     pub fn verifyFrontend(self: *const Index, allocator: std.mem.Allocator) frontend_runtime.Error!frontend_runtime.Verified {
         const verified = try frontend_runtime.verify(allocator, self.project.frontendRuntime());
@@ -275,9 +280,20 @@ pub const Index = struct {
         // caller sees the defining module's identity and the facade is only a name.
         if (symbol.re_export) |identity| {
             try self.noteLookup(identity.module, self.units[identity.module].symbols.items[identity.symbol].name);
-            return identity;
+            return self.signatureResolution(request, identity);
         }
-        return .{ .module = target, .symbol = symbol_id };
+        return self.signatureResolution(request, .{ .module = target, .symbol = symbol_id });
+    }
+    fn signatureResolution(self: *Index, request: Request, identity: Identity) diagnostic.Error!Identity {
+        if (self.signature_resolutions) |resolutions| try resolutions.append(self.project.arena.allocator(), .{
+            .from = request.from,
+            .alias = request.alias,
+            .name = request.name,
+            .kind = request.kind,
+            .span = request.span,
+            .identity = identity,
+        });
+        return identity;
     }
     /// MODULE-INTERFACE-CUTOFF-1: record one name looked up in module
     /// `module`'s namespace when a caller asked for the record.
@@ -678,6 +694,52 @@ pub const Index = struct {
             for (operation.parameters) |input| try self.genericSignatureType(module, input.ty, &parameters);
             try self.genericSignatureType(module, operation.return_type, &parameters);
         }
+    }
+    fn checkInterfacesNative(self: *Index) diagnostic.Error!void {
+        for (self.project.order.items) |module| try self.checkSignatures(module);
+    }
+    fn checkInterfaces(self: *Index) frontend_runtime.Error!void {
+        const runtime = self.project.frontendRuntime();
+        const selected = try type_interface_boundary.mode(runtime);
+        if (selected == .reference) return self.checkInterfacesNative();
+        const backing = self.project.arena.child_allocator;
+        var scratch = std.heap.ArenaAllocator.init(backing);
+        defer scratch.deinit();
+        const input = try type_interface_projection.input(scratch.allocator(), self);
+        if (selected == .component) {
+            var actual = try type_interface_boundary.execute(backing, input, runtime.?);
+            defer actual.deinit();
+            switch (actual.outcome) {
+                .success => |output| try type_interface_projection.adopt(self, output),
+                .failure => |problem| return self.declarationFailure(problem),
+            }
+            return;
+        }
+        var resolutions: std.ArrayList(type_interface_value.Resolution) = .empty;
+        self.signature_resolutions = &resolutions;
+        defer self.signature_resolutions = null;
+        var failed = false;
+        self.checkInterfacesNative() catch |err| {
+            if (err != error.SourceError) return err;
+            failed = true;
+        };
+        const expected: type_interface_value.Outcome = if (failed) .{ .failure = blk: {
+            const problem = self.project.problem orelse return error.InternalError;
+            break :blk .{
+                .code = problem.code,
+                .message = problem.message,
+                .site = .{ .module = problem.site.module, .span = problem.site.span },
+                .related = if (problem.related) |related| .{ .module = related.module, .span = related.span } else null,
+            };
+        } } else .{ .success = .{
+            .order = self.project.order.items,
+            .import_used = try type_interface_projection.importUsage(scratch.allocator(), Unit, self.units),
+            .resolutions = resolutions.items,
+        } };
+        var actual = try type_interface_boundary.execute(backing, input, runtime.?);
+        defer actual.deinit();
+        try type_interface_boundary.compare(actual.outcome, expected);
+        if (failed) return error.SourceError;
     }
     fn checkSignatures(self: *Index, module: usize) diagnostic.Error!void {
         const project = self.project;
@@ -1687,9 +1749,7 @@ pub fn buildWithCacheTimed(
         ready[module_id] = true;
     }
     // Every module is indexed before checking interface dependencies.
-    for (project.order.items) |module| {
-        try index.checkSignatures(module);
-    }
+    try index.checkInterfaces();
     if (include_timing) {
         const elapsed = total_start.durationTo(timing.?.now()).nanoseconds;
         timing.?.add("declarations_interfaces", @max(0, elapsed - syntax_ns), false);

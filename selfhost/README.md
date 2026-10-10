@@ -4,7 +4,9 @@ The current compiler is progressively self-hosted through independently built
 Selka components. Test reachability and cache planning run in Selka; the lexer
 and full parser have explicit comparison and component modes across compiler
 commands. Declaration indexing, export visibility and re-export identities now
-have the same opt-in modes. Their pinned native seed builds without these components. See the
+have the same opt-in modes. Type/interface signature analysis supplies the sixth
+component, with body checking and later semantic consumers still native. Their
+pinned native seed builds without these components. See the
 [component guide](../docs/tooling/selfhost-components.md) and
 [frontend qualification](../docs/tooling/frontend-adoption-qualification.md).
 
