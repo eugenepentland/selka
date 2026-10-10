@@ -1,0 +1,2 @@
+func f() -> int effects(output, output):
+    return 0

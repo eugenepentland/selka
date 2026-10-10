@@ -1,0 +1,2 @@
+func main(value: FixedArray[int, 4]) -> int:
+    return value[0]

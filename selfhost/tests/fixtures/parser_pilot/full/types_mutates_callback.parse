@@ -1,0 +1,2 @@
+func accept(callback: func(xs: int[])->Unit mutates(xs)) -> Unit:
+    pass

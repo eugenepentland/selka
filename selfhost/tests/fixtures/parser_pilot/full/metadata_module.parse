@@ -1,0 +1,13 @@
+import shared.geometry as geometry
+import shared.tools
+"""Public module and constants."""
+public const COUNT: int = -3
+public const SCALE: float = 1.25
+public const READY: bool = True
+public const TEXT: str = "café\n"
+public const OCTETS: bytes = b"\x00\xff"
+public record Position:
+    value: geometry.Point
+public func identity(value: shared.tools.Token) -> shared.tools.Token:
+    """A public declaration document."""
+    return value

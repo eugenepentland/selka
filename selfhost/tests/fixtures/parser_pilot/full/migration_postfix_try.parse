@@ -1,0 +1,3 @@
+func main() -> int fails str:
+    const value = parse()?
+    return value

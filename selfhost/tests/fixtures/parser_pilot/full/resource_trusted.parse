@@ -1,0 +1,7 @@
+func main() -> int:
+    const a = environment_get[bytes](cap, "NAME")
+    const b = clock_now[int](cap)
+    const c = random_u64[int](cap)
+    const d = __stand_in[int](a)
+    const e = __clock_advance(b, 1)
+    return 0

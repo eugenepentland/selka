@@ -1,0 +1,5 @@
+union Choice:
+    first: int,
+    second: int
+func main() -> int:
+    return 0

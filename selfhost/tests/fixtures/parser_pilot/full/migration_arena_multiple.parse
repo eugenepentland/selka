@@ -1,0 +1,6 @@
+def main() -> int:
+    with arena():
+        const first = 1
+    with arena():
+        const second = 2
+    return 0

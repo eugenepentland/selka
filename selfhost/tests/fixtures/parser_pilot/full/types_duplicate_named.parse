@@ -1,0 +1,2 @@
+func f[T: Named + Named]() -> int:
+    return 0

@@ -1,0 +1,1 @@
+extern func foreign(value: int) -> int effects(host)

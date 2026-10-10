@@ -1,0 +1,2 @@
+func change(xs: int[]) -> Unit mutates():
+    pass

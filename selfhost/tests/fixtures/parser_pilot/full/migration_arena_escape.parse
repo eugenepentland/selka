@@ -1,0 +1,4 @@
+def main() -> int:
+    with arena() as region:
+        const value = escape(region, 1 + 2)
+    return 0

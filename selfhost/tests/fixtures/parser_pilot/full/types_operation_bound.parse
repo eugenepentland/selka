@@ -1,0 +1,2 @@
+func f[T: op(equal(x: T) -> bool)]() -> int:
+    return 0

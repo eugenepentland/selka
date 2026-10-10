@@ -1,0 +1,2 @@
+func f[T, const N: u64, U: copy + field(size: int) + op(equal(x: U) -> bool effects()) + Qualified]() -> int:
+    return 0

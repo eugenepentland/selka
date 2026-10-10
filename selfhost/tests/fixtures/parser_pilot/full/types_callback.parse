@@ -1,0 +1,2 @@
+func f() -> func(named n: int, mut xs: int[], bool) -> int fails str effects(output, mutation):
+    return 0

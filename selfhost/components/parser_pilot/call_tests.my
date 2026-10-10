@@ -1,0 +1,100 @@
+import full_model
+import full_calls
+import syntax_value
+
+func state(data: bytes, tokens: full_model.Token[]) -> full_model.State:
+    return full_model.State(tokens=tokens, source=data, cursor=full_model.Cursor(pos=0, depth=0, delimiters=0, module_syntax=True, trusted_intrinsics=False, path=b"call_tests.my"), pool=syntax_value.empty(), exprs=[], stmts=[], catalog=full_model.empty_catalog())
+
+
+func constructor() -> full_model.State:
+    const tokens: full_model.Token[] = [full_model.Token(kind="ident", start=0, end=3), full_model.Token(kind="lbracket", start=3, end=4), full_model.Token(kind="ident", start=4, end=9), full_model.Token(kind="lbracket", start=9, end=10), full_model.Token(kind="ident", start=10, end=13), full_model.Token(kind="comma", start=13, end=14), full_model.Token(kind="kw_bool", start=15, end=19), full_model.Token(kind="rbracket", start=19, end=20), full_model.Token(kind="comma", start=20, end=21), full_model.Token(kind="integer", start=22, end=23), full_model.Token(kind="rbracket", start=23, end=24), full_model.Token(kind="lparen", start=24, end=25), full_model.Token(kind="ident", start=25, end=26), full_model.Token(kind="rparen", start=26, end=27), full_model.Token(kind="eof", start=27, end=27)]
+    return state(b"Box[tuple[int, bool], 4](x)", tokens)
+
+
+func index_member() -> full_model.State:
+    const tokens: full_model.Token[] = [full_model.Token(kind="ident", start=0, end=5), full_model.Token(kind="lbracket", start=5, end=6), full_model.Token(kind="ident", start=6, end=8), full_model.Token(kind="rbracket", start=8, end=9), full_model.Token(kind="dot", start=9, end=10), full_model.Token(kind="ident", start=10, end=16), full_model.Token(kind="lparen", start=16, end=17), full_model.Token(kind="ident", start=17, end=18), full_model.Token(kind="rparen", start=18, end=19), full_model.Token(kind="eof", start=19, end=19)]
+    return state(b"items[at].append(v)", tokens)
+
+
+func member() -> full_model.State:
+    const tokens: full_model.Token[] = [full_model.Token(kind="ident", start=0, end=7), full_model.Token(kind="dot", start=7, end=8), full_model.Token(kind="ident", start=8, end=14), full_model.Token(kind="lbracket", start=14, end=15), full_model.Token(kind="ident", start=15, end=18), full_model.Token(kind="rbracket", start=18, end=19), full_model.Token(kind="lparen", start=19, end=20), full_model.Token(kind="ident", start=20, end=21), full_model.Token(kind="rparen", start=21, end=22), full_model.Token(kind="eof", start=22, end=22)]
+    return state(b"Factory.create[int](x)", tokens)
+
+
+func imported() -> full_model.State:
+    const tokens: full_model.Token[] = [full_model.Token(kind="ident", start=0, end=5), full_model.Token(kind="dot", start=5, end=6), full_model.Token(kind="ident", start=6, end=10), full_model.Token(kind="lbracket", start=10, end=11), full_model.Token(kind="ident", start=11, end=14), full_model.Token(kind="rbracket", start=14, end=15), full_model.Token(kind="lparen", start=15, end=16), full_model.Token(kind="ident", start=16, end=17), full_model.Token(kind="rparen", start=17, end=18), full_model.Token(kind="eof", start=18, end=18)]
+    return state(b"tools.make[int](x)", tokens)
+
+
+func qualified() -> full_model.State:
+    const tokens: full_model.Token[] = [full_model.Token(kind="ident", start=0, end=6), full_model.Token(kind="dot", start=6, end=7), full_model.Token(kind="ident", start=7, end=12), full_model.Token(kind="dot", start=12, end=13), full_model.Token(kind="ident", start=13, end=17), full_model.Token(kind="lbracket", start=17, end=18), full_model.Token(kind="ident", start=18, end=21), full_model.Token(kind="rbracket", start=21, end=22), full_model.Token(kind="lparen", start=22, end=23), full_model.Token(kind="ident", start=23, end=24), full_model.Token(kind="rparen", start=24, end=25), full_model.Token(kind="eof", start=25, end=25)]
+    return state(b"shared.tools.make[int](x)", tokens)
+
+
+func nested_owner() -> full_model.State:
+    const tokens: full_model.Token[] = [full_model.Token(kind="ident", start=0, end=5), full_model.Token(kind="dot", start=5, end=6), full_model.Token(kind="ident", start=6, end=13), full_model.Token(kind="dot", start=13, end=14), full_model.Token(kind="ident", start=14, end=18), full_model.Token(kind="lbracket", start=18, end=19), full_model.Token(kind="ident", start=19, end=22), full_model.Token(kind="rbracket", start=22, end=23), full_model.Token(kind="lparen", start=23, end=24), full_model.Token(kind="ident", start=24, end=25), full_model.Token(kind="rparen", start=25, end=26), full_model.Token(kind="eof", start=26, end=26)]
+    return state(b"tools.Factory.make[int](x)", tokens)
+
+
+func split_line() -> full_model.State:
+    const tokens: full_model.Token[] = [full_model.Token(kind="ident", start=0, end=3), full_model.Token(kind="lbracket", start=3, end=4), full_model.Token(kind="ident", start=4, end=7), full_model.Token(kind="rbracket", start=7, end=8), full_model.Token(kind="lparen", start=9, end=10), full_model.Token(kind="ident", start=10, end=11), full_model.Token(kind="rparen", start=11, end=12), full_model.Token(kind="eof", start=12, end=12)]
+    return state(b"Box[int]\n(x)", tokens)
+
+
+func incomplete() -> full_model.State:
+    const tokens: full_model.Token[] = [full_model.Token(kind="ident", start=0, end=3), full_model.Token(kind="lbracket", start=3, end=4), full_model.Token(kind="ident", start=4, end=7), full_model.Token(kind="eof", start=7, end=7)]
+    return state(b"Box[int", tokens)
+
+
+func arguments() -> full_model.State:
+    const tokens: full_model.Token[] = [full_model.Token(kind="lbracket", start=0, end=1), full_model.Token(kind="ident", start=1, end=4), full_model.Token(kind="comma", start=4, end=5), full_model.Token(kind="integer", start=6, end=7), full_model.Token(kind="comma", start=7, end=8), full_model.Token(kind="ident", start=9, end=14), full_model.Token(kind="lbracket", start=14, end=15), full_model.Token(kind="kw_bool", start=15, end=19), full_model.Token(kind="comma", start=19, end=20), full_model.Token(kind="ident", start=21, end=24), full_model.Token(kind="rbracket", start=24, end=25), full_model.Token(kind="rbracket", start=25, end=26), full_model.Token(kind="eof", start=26, end=26)]
+    return state(b"[int, 4, tuple[bool, int]]", tokens)
+
+
+func too_many() -> full_model.State:
+    const tokens: full_model.Token[] = [full_model.Token(kind="lbracket", start=0, end=1), full_model.Token(kind="ident", start=1, end=4), full_model.Token(kind="comma", start=4, end=5), full_model.Token(kind="ident", start=6, end=9), full_model.Token(kind="comma", start=9, end=10), full_model.Token(kind="ident", start=11, end=14), full_model.Token(kind="comma", start=14, end=15), full_model.Token(kind="ident", start=16, end=19), full_model.Token(kind="comma", start=19, end=20), full_model.Token(kind="ident", start=21, end=24), full_model.Token(kind="comma", start=24, end=25), full_model.Token(kind="ident", start=26, end=29), full_model.Token(kind="comma", start=29, end=30), full_model.Token(kind="ident", start=31, end=34), full_model.Token(kind="comma", start=34, end=35), full_model.Token(kind="ident", start=36, end=39), full_model.Token(kind="comma", start=39, end=40), full_model.Token(kind="ident", start=41, end=44), full_model.Token(kind="comma", start=44, end=45), full_model.Token(kind="ident", start=46, end=49), full_model.Token(kind="comma", start=49, end=50), full_model.Token(kind="ident", start=51, end=54), full_model.Token(kind="comma", start=54, end=55), full_model.Token(kind="ident", start=56, end=59), full_model.Token(kind="comma", start=59, end=60), full_model.Token(kind="ident", start=61, end=64), full_model.Token(kind="comma", start=64, end=65), full_model.Token(kind="ident", start=66, end=69), full_model.Token(kind="comma", start=69, end=70), full_model.Token(kind="ident", start=71, end=74), full_model.Token(kind="comma", start=74, end=75), full_model.Token(kind="ident", start=76, end=79), full_model.Token(kind="comma", start=79, end=80), full_model.Token(kind="ident", start=81, end=84), full_model.Token(kind="rbracket", start=84, end=85), full_model.Token(kind="eof", start=85, end=85)]
+    return state(b"[int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int]", tokens)
+
+
+public func test_nested_constructor_lookahead() -> bool:
+    const p = constructor()
+    return full_calls.applied_constructor_ahead(p) and not full_calls.member_application_ahead(p) and p.cursor.pos == 0
+
+
+public func test_index_member_excluded() -> bool:
+    const p = index_member()
+    return not full_calls.applied_constructor_ahead(p) and not full_calls.member_application_ahead(p)
+
+
+public func test_explicit_member_application() -> bool:
+    const p = member()
+    return full_calls.member_application_ahead(p) and full_calls.applied_constructor_ahead(p)
+
+
+public func test_import_alias_excludes_member_application() -> bool:
+    mut p = imported()
+    p.catalog.import_aliases = [b"tools"]
+    mut q = qualified()
+    q.catalog.import_aliases = [b"shared.tools"]
+    mut nested = nested_owner()
+    nested.catalog.import_aliases = [b"tools"]
+    return not full_calls.member_application_ahead(p) and not full_calls.member_application_ahead(q) and full_calls.member_application_ahead(nested)
+
+
+public func test_newline_and_incomplete_constructor() -> bool:
+    return not full_calls.applied_constructor_ahead(split_line()) and not full_calls.applied_constructor_ahead(incomplete())
+
+
+public func test_explicit_square_argument_metadata() -> bool fails syntax_value.Problem:
+    mut p = arguments()
+    const values = try full_calls.square_type_arguments(mut p)
+    return len(values) == 3 and p.pool.values[values[0]].names == ["start", "end"] and p.pool.values[p.pool.values[values[1]].children[0]].integer == 6 and len(p.catalog.types.expressions.tuples) == 1 and full_model.peek(p).kind == "eof"
+
+
+public func test_explicit_argument_limit() -> bool:
+    mut p = too_many()
+    match full_calls.square_type_arguments(mut p):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "E_GENERIC_LIMIT" and problem.start == 81 and problem.end == 84

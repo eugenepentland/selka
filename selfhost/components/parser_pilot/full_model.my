@@ -1,0 +1,298 @@
+import syntax_value
+import syntax_problem
+
+public record Token:
+    kind: str
+    start: int
+    end: int
+
+
+public record Cursor:
+    pos: int
+    depth: int
+    delimiters: int
+    module_syntax: bool
+    trusted_intrinsics: bool
+    path: bytes
+
+
+public record TypeExpressions:
+    suffixes: int[]
+    callbacks: int[]
+    arrays: int[]
+    applications: int[]
+    aliases: int[]
+    tuples: int[]
+
+
+public record Types:
+    resources: int[]
+    domains: int[]
+    variants: int[]
+    records: int[]
+    constraints: int[]
+    public_declarations: int[]
+    expressions: TypeExpressions
+
+
+public record Catalog:
+    types: Types
+    functions: int[]
+    lambdas: int[]
+    attributes: int[]
+    docstrings: int[]
+    import_aliases: bytes[]
+    problems: syntax_problem.Diagnostic[]
+
+
+public record State:
+    tokens: Token[]
+    source: bytes
+    cursor: Cursor
+    pool: syntax_value.Pool
+    exprs: int[]
+    stmts: int[]
+    catalog: Catalog
+
+
+public func empty_catalog() -> Catalog:
+    const expressions = TypeExpressions(suffixes=[], callbacks=[], arrays=[], applications=[], aliases=[], tuples=[])
+    const types = Types(resources=[], domains=[], variants=[], records=[], constraints=[], public_declarations=[], expressions=expressions)
+    return Catalog(types=types, functions=[], lambdas=[], attributes=[], docstrings=[], import_aliases=[], problems=[])
+
+
+public func problem(t: Token, code: str, message: str) -> syntax_value.Problem:
+    return syntax_value.Problem(code=code, start=t.start, end=t.end, message=message)
+
+
+public func peek(p: State) -> Token:
+    if p.cursor.pos >= len(p.tokens):
+        return p.tokens[len(p.tokens) - 1]
+    return p.tokens[p.cursor.pos]
+
+
+public func word(p: State, spelling: bytes) -> bool:
+    const t = peek(p)
+    return t.kind == "ident" and p.source[t.start:t.end] == spelling
+
+
+public func accept(mut p: State, kind: str) -> bool:
+    if peek(p).kind != kind:
+        return False
+    if kind != "eof":
+        p.cursor.pos = p.cursor.pos + 1
+    if kind == "lparen" or kind == "lbracket":
+        p.cursor.delimiters = p.cursor.delimiters + 1
+    if (kind == "rparen" or kind == "rbracket") and p.cursor.delimiters > 0:
+        p.cursor.delimiters = p.cursor.delimiters - 1
+    return True
+
+
+public func same_line(p: State) -> bool:
+    if p.cursor.delimiters > 0 or p.cursor.pos == 0:
+        return True
+    const previous = p.tokens[p.cursor.pos - 1]
+    for ch in p.source[previous.end:peek(p).start]:
+        if ch == 10:
+            return False
+    return True
+
+
+public func implicit_terminator(p: State) -> bool:
+    if p.cursor.pos == 0:
+        return False
+    const previous = p.tokens[p.cursor.pos - 1]
+    const current = peek(p)
+    if previous.kind == "dedent" or current.kind == "dedent" or current.kind == "eof":
+        return True
+    for ch in p.source[previous.end:current.start]:
+        if ch == 10:
+            return True
+    return False
+
+
+public func expect(mut p: State, kind: str) -> Token fails syntax_value.Problem:
+    if kind == "rparen" and peek(p).kind == "comma" and p.cursor.pos + 1 < len(p.tokens) and p.tokens[p.cursor.pos + 1].kind == "rparen":
+        _ = accept(mut p, "comma")
+    const t = peek(p)
+    if kind == "semicolon" and t.kind != "semicolon" and implicit_terminator(p):
+        const end = p.tokens[p.cursor.pos - 1].end
+        return Token(kind="semicolon", start=end, end=end)
+    if not accept(mut p, kind):
+        fail problem(t, "E_SYNTAX", "unexpected token; expected " + token_spelling(kind))
+    return t
+
+
+public func declared_name(mut p: State) -> Token fails syntax_value.Problem:
+    const t = peek(p)
+    if t.kind == "kw_len" or t.kind == "kw_replace":
+        p.cursor.pos = p.cursor.pos + 1
+        return t
+    return try expect(mut p, "ident")
+
+
+public func node(mut p: State, start: int, end: int, tag: bytes, payload: int) -> int fails syntax_value.Problem:
+    const span = try syntax_value.span(mut p.pool, start, end)
+    const data = try syntax_value.tagged(mut p.pool, tag, payload)
+    const value = try syntax_value.object(mut p.pool, ["span", "data"], [span, data])
+    const id = len(p.exprs)
+    p.exprs.append(value)
+    return id
+
+
+public func statement(mut p: State, start: int, end: int, tag: bytes, payload: int) -> int fails syntax_value.Problem:
+    const span = try syntax_value.span(mut p.pool, start, end)
+    const data = try syntax_value.tagged(mut p.pool, tag, payload)
+    const implicit = try syntax_value.boolean(mut p.pool, False)
+    const value = try syntax_value.object(mut p.pool, ["span", "implicit_discard", "data"], [span, implicit, data])
+    const id = len(p.stmts)
+    p.stmts.append(value)
+    return id
+
+
+public func node_start(p: State, id: int) -> int:
+    const span = p.pool.values[p.exprs[id]].children[0]
+    return p.pool.values[p.pool.values[span].children[0]].integer
+
+
+public func node_end(p: State, id: int) -> int:
+    const span = p.pool.values[p.exprs[id]].children[0]
+    return p.pool.values[p.pool.values[span].children[1]].integer
+
+
+public func node_tag(p: State, id: int) -> bytes:
+    const data = p.pool.values[p.exprs[id]].children[1]
+    return p.pool.values[data].data
+
+
+public func finish(mut p: State) -> int fails syntax_value.Problem:
+    const suffixes = try syntax_value.sequence(mut p.pool, p.catalog.types.expressions.suffixes)
+    const callbacks = try syntax_value.sequence(mut p.pool, p.catalog.types.expressions.callbacks)
+    const arrays = try syntax_value.sequence(mut p.pool, p.catalog.types.expressions.arrays)
+    const applications = try syntax_value.sequence(mut p.pool, p.catalog.types.expressions.applications)
+    const aliases = try syntax_value.sequence(mut p.pool, p.catalog.types.expressions.aliases)
+    const tuples = try syntax_value.sequence(mut p.pool, p.catalog.types.expressions.tuples)
+    const expressions = try syntax_value.object(mut p.pool, ["suffixes", "callbacks", "arrays", "applications", "aliases", "tuples"], [suffixes, callbacks, arrays, applications, aliases, tuples])
+    const resources = try syntax_value.sequence(mut p.pool, p.catalog.types.resources)
+    const domains = try syntax_value.sequence(mut p.pool, p.catalog.types.domains)
+    const variants = try syntax_value.sequence(mut p.pool, p.catalog.types.variants)
+    const records = try syntax_value.sequence(mut p.pool, p.catalog.types.records)
+    const constraints = try syntax_value.sequence(mut p.pool, p.catalog.types.constraints)
+    const public_names = try syntax_value.sequence(mut p.pool, p.catalog.types.public_declarations)
+    const types = try syntax_value.object(mut p.pool, ["resources", "domains", "variants", "expressions", "records", "constraints", "public_declarations"], [resources, domains, variants, expressions, records, constraints, public_names])
+    const nodes = try syntax_value.sequence(mut p.pool, p.exprs)
+    const statements = try syntax_value.sequence(mut p.pool, p.stmts)
+    const functions = try syntax_value.sequence(mut p.pool, p.catalog.functions)
+    const lambdas = try syntax_value.sequence(mut p.pool, p.catalog.lambdas)
+    const attributes = try syntax_value.sequence(mut p.pool, p.catalog.attributes)
+    const docstrings = try syntax_value.sequence(mut p.pool, p.catalog.docstrings)
+    return try syntax_value.object(mut p.pool, ["types", "nodes", "statements", "functions", "lambdas", "attributes", "docstrings"], [types, nodes, statements, functions, lambdas, attributes, docstrings])
+
+
+# The diagnostic vocabulary of the current native token grammar.
+public func token_spelling(kind: str) -> str:
+    if kind == "eof":
+        return "end of file"
+    if kind == "ident":
+        return "a name"
+    if kind == "integer":
+        return "a number"
+    if kind == "bytes":
+        return "a string"
+    if kind == "format":
+        return "a formatted string"
+    if kind == "kw_def":
+        return "func"
+    if kind == "kw_class":
+        return "class"
+    if kind == "kw_none":
+        return "None"
+    if kind == "kw_true":
+        return "True"
+    if kind == "kw_false":
+        return "False"
+    if kind == "at":
+        return "@"
+    if kind == "lparen":
+        return "("
+    if kind == "rparen":
+        return ")"
+    if kind == "lbracket":
+        return "["
+    if kind == "rbracket":
+        return "]"
+    if kind == "lbrace":
+        return "{"
+    if kind == "rbrace":
+        return "}"
+    if kind == "indent":
+        return "an indented block"
+    if kind == "dedent":
+        return "a dedent"
+    if kind == "arrow":
+        return "->"
+    if kind == "fat_arrow":
+        return "=>"
+    if kind == "semicolon":
+        return "a newline"
+    if kind == "colon":
+        return ":"
+    if kind == "comma":
+        return ","
+    if kind == "dot":
+        return "."
+    if kind == "plus":
+        return "+"
+    if kind == "minus":
+        return "-"
+    if kind == "star":
+        return "*"
+    if kind == "slash":
+        return "/"
+    if kind == "slash_slash":
+        return "//"
+    if kind == "percent":
+        return "%"
+    if kind == "ampersand":
+        return "&"
+    if kind == "pipe":
+        return "|"
+    if kind == "caret":
+        return "^"
+    if kind == "and_and":
+        return "and"
+    if kind == "or_or":
+        return "or"
+    if kind == "plus_equal":
+        return "+="
+    if kind == "minus_equal":
+        return "-="
+    if kind == "star_equal":
+        return "*="
+    if kind == "slash_equal":
+        return "/="
+    if kind == "slash_slash_equal":
+        return "//="
+    if kind == "percent_equal":
+        return "%="
+    if kind == "equal":
+        return "="
+    if kind == "eq_eq":
+        return "=="
+    if kind == "bang":
+        return "not"
+    if kind == "bang_eq":
+        return "!="
+    if kind == "question":
+        return "?"
+    if kind == "lt":
+        return "<"
+    if kind == "le":
+        return "<="
+    if kind == "gt":
+        return ">"
+    if kind == "ge":
+        return ">="
+    if len(kind) >= 3 and kind[:3] == "kw_":
+        return kind[3:]
+    return kind

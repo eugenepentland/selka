@@ -1,0 +1,286 @@
+import full_model
+import full_values
+import syntax_problem
+import syntax_recovery
+import syntax_value
+
+record Declaration:
+    name: full_model.Token
+    scope: full_model.Token
+    available: int
+    implicit: bool
+
+
+record Pass:
+    active: full_model.Token[]
+    declarations: Declaration[]
+    function_scope: full_model.Token
+
+
+func location(p: full_model.State, value: int, name: str) -> full_model.Token:
+    return full_values.span(p, full_values.field(p, value, name))
+
+
+func reference(p: full_model.State, value: int, name: str) -> int:
+    return full_values.integer(p, full_values.field(p, value, name))
+
+
+func collection(p: full_model.State, value: int, name: str) -> int[]:
+    return full_values.items(p, full_values.field(p, value, name))
+
+
+func same_name(p: full_model.State, first: full_model.Token, other: full_model.Token) -> bool:
+    return full_values.text(p, first) == full_values.text(p, other)
+
+
+func declare(mut scan: Pass, name: full_model.Token, scope: full_model.Token, available: int, implicit: bool):
+    scan.active.append(name)
+    scan.declarations.append(Declaration(name=name, scope=scope, available=available, implicit=implicit))
+
+
+func declared(p: full_model.State, scan: Pass, name: full_model.Token) -> bool:
+    for other in scan.active:
+        if same_name(p, name, other):
+            return True
+    return False
+
+
+func tuple_bindings(p: full_model.State, mut scan: Pass, id: int, scope: full_model.Token, available: int):
+    const tagged = full_values.node_data(p, id)
+    const value = full_values.payload(p, tagged)
+    const kind = full_values.tag(p, tagged)
+    if kind == b"name":
+        declare(mut scan, full_values.span(p, value), scope, available, False)
+    elif kind == b"tuple":
+        for child in full_values.items(p, value):
+            tuple_bindings(p, mut scan, full_values.integer(p, child), scope, available)
+
+
+func payload_pattern(p: full_model.State, mut scan: Pass, id: int, scope: full_model.Token):
+    const tagged = full_values.field(p, id, "data")
+    const value = full_values.payload(p, tagged)
+    if full_values.tag(p, tagged) == b"binding":
+        if not full_values.absent(p, value):
+            declare(mut scan, full_values.span(p, value), scope, scope.start, False)
+    else:
+        for child in collection(p, value, "fields"):
+            payload_pattern(p, mut scan, full_values.field(p, child, "pattern"), scope)
+
+
+func match_arm(p: full_model.State, mut scan: Pass, id: int):
+    const count = len(scan.active)
+    const body = reference(p, id, "body")
+    const scope = full_values.statement_span(p, body)
+    for binding in collection(p, id, "bindings"):
+        if not full_values.absent(p, binding):
+            declare(mut scan, full_values.span(p, binding), scope, scope.start, False)
+    for child in collection(p, id, "payload_patterns"):
+        payload_pattern(p, mut scan, full_values.field(p, child, "pattern"), scope)
+    walk(p, mut scan, body, scope)
+    scan.active = scan.active[:count]
+
+
+func bound_body(p: full_model.State, mut scan: Pass, name: int, body: int, scope: full_model.Token):
+    const count = len(scan.active)
+    const body_scope = full_values.statement_span(p, body)
+    if not full_values.absent(p, name):
+        declare(mut scan, full_values.span(p, name), body_scope, body_scope.start, False)
+    walk(p, mut scan, body, scope)
+    scan.active = scan.active[:count]
+
+
+func walk(p: full_model.State, mut scan: Pass, id: int, scope: full_model.Token):
+    const tagged = full_values.statement_data(p, id)
+    const kind = full_values.tag(p, tagged)
+    const value = full_values.payload(p, tagged)
+    const region = full_values.statement_span(p, id)
+    if kind == b"block":
+        const count = len(scan.active)
+        for child in full_values.items(p, value):
+            walk(p, mut scan, full_values.integer(p, child), region)
+        scan.active = scan.active[:count]
+    elif kind == b"binding":
+        declare(mut scan, location(p, value, "name"), scope, region.end, False)
+    elif kind == b"discard":
+        const expression = full_values.node_data(p, full_values.integer(p, value))
+        const contents = full_values.payload(p, expression)
+        if full_values.tag(p, expression) == b"field_assignment" and not full_values.absent(p, full_values.field(p, contents, "declaration")):
+            tuple_bindings(p, mut scan, reference(p, contents, "target"), scope, region.end)
+    elif kind == b"assignment":
+        const name = location(p, value, "name")
+        if not declared(p, scan, name) and full_values.text(p, name) != b"_" and full_values.octets(p, full_values.field(p, value, "op")) == b"set":
+            declare(mut scan, name, scope, region.end, True)
+    elif kind == b"for_each":
+        const count = len(scan.active)
+        const body = reference(p, value, "body")
+        const body_scope = full_values.statement_span(p, body)
+        declare(mut scan, location(p, value, "name"), body_scope, body_scope.start, False)
+        const second = full_values.field(p, value, "index_name")
+        if not full_values.absent(p, second):
+            declare(mut scan, full_values.span(p, second), body_scope, body_scope.start, False)
+        walk(p, mut scan, body, scope)
+        scan.active = scan.active[:count]
+    elif kind == b"for_range" or kind == b"with_scope":
+        bound_body(p, mut scan, full_values.field(p, value, "name"), reference(p, value, "body"), scope)
+    elif kind == b"match":
+        for arm in collection(p, value, "arms"):
+            match_arm(p, mut scan, arm)
+    elif kind == b"branch":
+        walk(p, mut scan, reference(p, value, "then_body"), scope)
+        const other = full_values.field(p, value, "else_body")
+        if not full_values.absent(p, other):
+            walk(p, mut scan, full_values.integer(p, other), scope)
+    elif kind == b"loop":
+        walk(p, mut scan, reference(p, value, "body"), scope)
+
+
+func expression_binding(p: full_model.State, mut scan: Pass, name: full_model.Token, id: int):
+    const scope = full_values.node_span(p, id)
+    scan.declarations.append(Declaration(name=name, scope=scope, available=scope.start, implicit=False))
+
+
+func gather_body(p: full_model.State, mut scan: Pass, name: full_model.Token, id: int):
+    const tagged = full_values.statement_data(p, id)
+    const kind = full_values.tag(p, tagged)
+    const value = full_values.payload(p, tagged)
+    if kind == b"for_each":
+        expression_binding(p, mut scan, name, reference(p, value, "iterable"))
+        gather_body(p, mut scan, name, reference(p, value, "body"))
+    elif kind == b"for_range":
+        expression_binding(p, mut scan, name, reference(p, value, "start"))
+        expression_binding(p, mut scan, name, reference(p, value, "end"))
+        const step = full_values.field(p, value, "step")
+        if not full_values.absent(p, step):
+            expression_binding(p, mut scan, name, full_values.integer(p, step))
+        gather_body(p, mut scan, name, reference(p, value, "body"))
+    elif kind == b"branch":
+        expression_binding(p, mut scan, name, reference(p, value, "condition"))
+        gather_body(p, mut scan, name, reference(p, value, "then_body"))
+        const other = full_values.field(p, value, "else_body")
+        if not full_values.absent(p, other):
+            gather_body(p, mut scan, name, full_values.integer(p, other))
+    elif kind == b"gather_step":
+        expression_binding(p, mut scan, name, reference(p, value, "value"))
+        const key = full_values.field(p, value, "key")
+        if not full_values.absent(p, key):
+            expression_binding(p, mut scan, name, full_values.integer(p, key))
+
+
+func gather_bindings(p: full_model.State, mut scan: Pass, id: int):
+    const tagged = full_values.statement_data(p, id)
+    const kind = full_values.tag(p, tagged)
+    const value = full_values.payload(p, tagged)
+    if kind == b"for_each":
+        const body = reference(p, value, "body")
+        gather_body(p, mut scan, location(p, value, "name"), body)
+        const second = full_values.field(p, value, "index_name")
+        if not full_values.absent(p, second):
+            gather_body(p, mut scan, full_values.span(p, second), body)
+        gather_bindings(p, mut scan, body)
+    elif kind == b"for_range":
+        const body = reference(p, value, "body")
+        gather_body(p, mut scan, location(p, value, "name"), body)
+        gather_bindings(p, mut scan, body)
+    elif kind == b"branch":
+        gather_bindings(p, mut scan, reference(p, value, "then_body"))
+        const other = full_values.field(p, value, "else_body")
+        if not full_values.absent(p, other):
+            gather_bindings(p, mut scan, full_values.integer(p, other))
+
+
+func inside(inner: full_model.Token, outer: full_model.Token) -> bool:
+    return inner.start >= outer.start and inner.end <= outer.end
+
+
+func expression_bindings(p: full_model.State, mut scan: Pass):
+    for id in range(len(p.exprs)):
+        if not inside(full_values.node_span(p, id), scan.function_scope):
+            continue
+        const tagged = full_values.node_data(p, id)
+        const kind = full_values.tag(p, tagged)
+        const value = full_values.payload(p, tagged)
+        if kind == b"comprehension":
+            const name = location(p, value, "name")
+            expression_binding(p, mut scan, name, reference(p, value, "output"))
+            const filter = full_values.field(p, value, "filter")
+            if not full_values.absent(p, filter):
+                expression_binding(p, mut scan, name, full_values.integer(p, filter))
+        elif kind == b"gather":
+            gather_bindings(p, mut scan, reference(p, value, "loop"))
+    for callback in p.catalog.lambdas:
+        if not inside(location(p, callback, "span"), scan.function_scope):
+            continue
+        for name in collection(p, callback, "parameters"):
+            expression_binding(p, mut scan, full_values.span(p, name), reference(p, callback, "body"))
+
+
+func term_named(p: full_model.State, id: int, name: full_model.Token) -> bool:
+    const tagged = full_values.node_data(p, id)
+    const kind = full_values.tag(p, tagged)
+    const value = full_values.payload(p, tagged)
+    mut term = -1
+    if kind == b"name":
+        term = value
+    elif kind == b"call":
+        term = full_values.field(p, value, "owner")
+        if full_values.absent(p, term):
+            term = full_values.field(p, value, "name")
+    elif kind == b"buffer_operation" or kind == b"file_operation" or kind == b"resource_io":
+        term = full_values.field(p, value, "owner")
+    elif kind == b"arena_escape":
+        term = full_values.field(p, value, "arena")
+    elif kind == b"record":
+        term = full_values.field(p, value, "name")
+    return term >= 0 and same_name(p, full_values.span(p, term), name)
+
+
+func resolved(p: full_model.State, scan: Pass, name: full_model.Token, use_span: full_model.Token) -> bool:
+    for other in scan.declarations:
+        if same_name(p, name, other.name) and use_span.start >= other.available and inside(use_span, other.scope):
+            return True
+    return False
+
+
+func declaration_target(scan: Pass, name: full_model.Token) -> bool:
+    for binding in scan.declarations:
+        if binding.name.start == name.start:
+            return True
+    return False
+
+
+func escapes(p: full_model.State, scan: Pass, binding: Declaration) -> bool:
+    for id in range(len(p.exprs)):
+        const use_span = full_values.node_span(p, id)
+        if inside(use_span, scan.function_scope) and term_named(p, id, binding.name) and not resolved(p, scan, binding.name, use_span):
+            return True
+    for id in range(len(p.stmts)):
+        if not inside(full_values.statement_span(p, id), scan.function_scope):
+            continue
+        const tagged = full_values.statement_data(p, id)
+        if full_values.tag(p, tagged) != b"assignment":
+            continue
+        const name = location(p, full_values.payload(p, tagged), "name")
+        if same_name(p, name, binding.name) and not declaration_target(scan, name) and not resolved(p, scan, binding.name, name):
+            return True
+    return False
+
+
+public func publish(mut p: full_model.State) fails syntax_value.Problem:
+    for callable in p.catalog.functions:
+        const body = reference(p, callable, "body")
+        const scope = full_values.statement_span(p, body)
+        mut scan = Pass(active=[], declarations=[], function_scope=scope)
+        const signature = full_values.field(p, callable, "signature")
+        for parsed_parameter in collection(p, signature, "parameters"):
+            declare(mut scan, location(p, parsed_parameter, "name"), scope, scope.start, False)
+        walk(p, mut scan, body, scope)
+        expression_bindings(p, mut scan)
+        for binding in scan.declarations:
+            if not binding.implicit:
+                continue
+            mut problem = full_model.problem(binding.name, "E_BINDING_DECLARATION", "declare this writable local with 'mut'")
+            mut diagnostic = syntax_problem.repaired(problem, [syntax_problem.Edit(start=binding.name.start, end=binding.name.start, text=b"mut ")])
+            if escapes(p, scan, binding):
+                problem = full_model.problem(binding.name, "E_BINDING_SCOPE_MIGRATION", "this implicit local is used outside its block; declare the state in the enclosing block or rewrite the branches as a value expression")
+                diagnostic = syntax_problem.plain(problem)
+            _ = try syntax_recovery.annotated(mut p, diagnostic)

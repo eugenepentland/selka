@@ -1,0 +1,5 @@
+func main() -> int:
+    const a = f"{{value}} {1 + 2:>8} {f(1)}"
+    const b = f"{a:}"
+    const c = f""
+    return 0

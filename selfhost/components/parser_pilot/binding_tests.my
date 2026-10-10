@@ -1,0 +1,72 @@
+import full_model
+import full_parser
+import syntax_value
+
+func fixture_safe() -> full_parser.Outcome fails syntax_value.Problem:
+    const tokens: full_model.Token[] = [full_model.Token(kind="kw_def", start=0, end=4), full_model.Token(kind="ident", start=5, end=9), full_model.Token(kind="lparen", start=9, end=10), full_model.Token(kind="rparen", start=10, end=11), full_model.Token(kind="arrow", start=12, end=14), full_model.Token(kind="ident", start=15, end=18), full_model.Token(kind="indent", start=18, end=19), full_model.Token(kind="ident", start=24, end=30), full_model.Token(kind="equal", start=31, end=32), full_model.Token(kind="integer", start=33, end=34), full_model.Token(kind="kw_return", start=39, end=45), full_model.Token(kind="ident", start=46, end=52), full_model.Token(kind="dedent", start=53, end=53), full_model.Token(kind="eof", start=53, end=53)]
+    return try full_parser.parse(tokens, b"func main() -> int:\n    answer = 1\n    return answer\n", False, False, b"binding_tests.my")
+
+
+func fixture_escape() -> full_parser.Outcome fails syntax_value.Problem:
+    const tokens: full_model.Token[] = [full_model.Token(kind="kw_def", start=0, end=4), full_model.Token(kind="ident", start=5, end=9), full_model.Token(kind="lparen", start=9, end=10), full_model.Token(kind="ident", start=10, end=14), full_model.Token(kind="colon", start=14, end=15), full_model.Token(kind="kw_bool", start=16, end=20), full_model.Token(kind="rparen", start=20, end=21), full_model.Token(kind="arrow", start=22, end=24), full_model.Token(kind="ident", start=25, end=28), full_model.Token(kind="indent", start=28, end=29), full_model.Token(kind="kw_if", start=34, end=36), full_model.Token(kind="ident", start=37, end=41), full_model.Token(kind="indent", start=41, end=42), full_model.Token(kind="ident", start=51, end=57), full_model.Token(kind="equal", start=58, end=59), full_model.Token(kind="integer", start=60, end=61), full_model.Token(kind="dedent", start=66, end=66), full_model.Token(kind="kw_return", start=66, end=72), full_model.Token(kind="ident", start=73, end=79), full_model.Token(kind="dedent", start=80, end=80), full_model.Token(kind="eof", start=80, end=80)]
+    return try full_parser.parse(tokens, b"func main(flag: bool) -> int:\n    if flag:\n        answer = 1\n    return answer\n", False, False, b"binding_tests.my")
+
+
+func fixture_before() -> full_parser.Outcome fails syntax_value.Problem:
+    const tokens: full_model.Token[] = [full_model.Token(kind="kw_def", start=0, end=4), full_model.Token(kind="ident", start=5, end=9), full_model.Token(kind="lparen", start=9, end=10), full_model.Token(kind="rparen", start=10, end=11), full_model.Token(kind="arrow", start=12, end=14), full_model.Token(kind="ident", start=15, end=18), full_model.Token(kind="indent", start=18, end=19), full_model.Token(kind="ident", start=24, end=29), full_model.Token(kind="lparen", start=29, end=30), full_model.Token(kind="ident", start=30, end=36), full_model.Token(kind="rparen", start=36, end=37), full_model.Token(kind="ident", start=42, end=48), full_model.Token(kind="equal", start=49, end=50), full_model.Token(kind="integer", start=51, end=52), full_model.Token(kind="kw_return", start=57, end=63), full_model.Token(kind="ident", start=64, end=70), full_model.Token(kind="dedent", start=71, end=71), full_model.Token(kind="eof", start=71, end=71)]
+    return try full_parser.parse(tokens, b"func main() -> int:\n    print(answer)\n    answer = 1\n    return answer\n", False, False, b"binding_tests.my")
+
+
+func fixture_siblings() -> full_parser.Outcome fails syntax_value.Problem:
+    const tokens: full_model.Token[] = [full_model.Token(kind="kw_def", start=0, end=4), full_model.Token(kind="ident", start=5, end=9), full_model.Token(kind="lparen", start=9, end=10), full_model.Token(kind="ident", start=10, end=14), full_model.Token(kind="colon", start=14, end=15), full_model.Token(kind="kw_bool", start=16, end=20), full_model.Token(kind="rparen", start=20, end=21), full_model.Token(kind="arrow", start=22, end=24), full_model.Token(kind="ident", start=25, end=28), full_model.Token(kind="indent", start=28, end=29), full_model.Token(kind="kw_if", start=34, end=36), full_model.Token(kind="ident", start=37, end=41), full_model.Token(kind="indent", start=41, end=42), full_model.Token(kind="ident", start=51, end=57), full_model.Token(kind="equal", start=58, end=59), full_model.Token(kind="integer", start=60, end=61), full_model.Token(kind="kw_return", start=70, end=76), full_model.Token(kind="ident", start=77, end=83), full_model.Token(kind="dedent", start=88, end=88), full_model.Token(kind="kw_else", start=88, end=92), full_model.Token(kind="indent", start=92, end=93), full_model.Token(kind="ident", start=102, end=108), full_model.Token(kind="equal", start=109, end=110), full_model.Token(kind="integer", start=111, end=112), full_model.Token(kind="kw_return", start=121, end=127), full_model.Token(kind="ident", start=128, end=134), full_model.Token(kind="dedent", start=135, end=135), full_model.Token(kind="dedent", start=135, end=135), full_model.Token(kind="eof", start=135, end=135)]
+    return try full_parser.parse(tokens, b"func main(flag: bool) -> int:\n    if flag:\n        answer = 1\n        return answer\n    else:\n        answer = 2\n        return answer\n", False, False, b"binding_tests.my")
+
+
+func fixture_comprehension() -> full_parser.Outcome fails syntax_value.Problem:
+    const tokens: full_model.Token[] = [full_model.Token(kind="kw_def", start=0, end=4), full_model.Token(kind="ident", start=5, end=9), full_model.Token(kind="lparen", start=9, end=10), full_model.Token(kind="ident", start=10, end=14), full_model.Token(kind="colon", start=14, end=15), full_model.Token(kind="kw_bool", start=16, end=20), full_model.Token(kind="comma", start=20, end=21), full_model.Token(kind="ident", start=22, end=28), full_model.Token(kind="colon", start=28, end=29), full_model.Token(kind="ident", start=30, end=33), full_model.Token(kind="lbracket", start=33, end=34), full_model.Token(kind="rbracket", start=34, end=35), full_model.Token(kind="rparen", start=35, end=36), full_model.Token(kind="arrow", start=37, end=39), full_model.Token(kind="ident", start=40, end=43), full_model.Token(kind="indent", start=43, end=44), full_model.Token(kind="kw_if", start=49, end=51), full_model.Token(kind="ident", start=52, end=56), full_model.Token(kind="indent", start=56, end=57), full_model.Token(kind="ident", start=66, end=72), full_model.Token(kind="equal", start=73, end=74), full_model.Token(kind="integer", start=75, end=76), full_model.Token(kind="dedent", start=81, end=81), full_model.Token(kind="kw_const", start=81, end=86), full_model.Token(kind="ident", start=87, end=92), full_model.Token(kind="equal", start=93, end=94), full_model.Token(kind="lbracket", start=95, end=96), full_model.Token(kind="kw_for", start=96, end=99), full_model.Token(kind="ident", start=100, end=106), full_model.Token(kind="kw_in", start=107, end=109), full_model.Token(kind="ident", start=110, end=116), full_model.Token(kind="kw_if", start=117, end=119), full_model.Token(kind="ident", start=120, end=126), full_model.Token(kind="gt", start=127, end=128), full_model.Token(kind="integer", start=129, end=130), full_model.Token(kind="ident", start=131, end=136), full_model.Token(kind="ident", start=137, end=143), full_model.Token(kind="rbracket", start=143, end=144), full_model.Token(kind="kw_return", start=149, end=155), full_model.Token(kind="kw_len", start=156, end=159), full_model.Token(kind="lparen", start=159, end=160), full_model.Token(kind="ident", start=160, end=165), full_model.Token(kind="rparen", start=165, end=166), full_model.Token(kind="dedent", start=167, end=167), full_model.Token(kind="eof", start=167, end=167)]
+    return try full_parser.parse(tokens, b"func main(flag: bool, values: int[]) -> int:\n    if flag:\n        answer = 1\n    const found = [for answer in values if answer > 0 yield answer]\n    return len(found)\n", False, False, b"binding_tests.my")
+
+
+func fixture_callback() -> full_parser.Outcome fails syntax_value.Problem:
+    const tokens: full_model.Token[] = [full_model.Token(kind="kw_def", start=0, end=4), full_model.Token(kind="ident", start=5, end=9), full_model.Token(kind="lparen", start=9, end=10), full_model.Token(kind="ident", start=10, end=14), full_model.Token(kind="colon", start=14, end=15), full_model.Token(kind="kw_bool", start=16, end=20), full_model.Token(kind="rparen", start=20, end=21), full_model.Token(kind="arrow", start=22, end=24), full_model.Token(kind="ident", start=25, end=28), full_model.Token(kind="indent", start=28, end=29), full_model.Token(kind="kw_if", start=34, end=36), full_model.Token(kind="ident", start=37, end=41), full_model.Token(kind="indent", start=41, end=42), full_model.Token(kind="ident", start=51, end=57), full_model.Token(kind="equal", start=58, end=59), full_model.Token(kind="integer", start=60, end=61), full_model.Token(kind="dedent", start=66, end=66), full_model.Token(kind="kw_const", start=66, end=71), full_model.Token(kind="ident", start=72, end=80), full_model.Token(kind="equal", start=81, end=82), full_model.Token(kind="ident", start=83, end=89), full_model.Token(kind="ident", start=90, end=96), full_model.Token(kind="colon", start=96, end=97), full_model.Token(kind="ident", start=98, end=104), full_model.Token(kind="plus", start=105, end=106), full_model.Token(kind="integer", start=107, end=108), full_model.Token(kind="kw_return", start=113, end=119), full_model.Token(kind="ident", start=120, end=128), full_model.Token(kind="lparen", start=128, end=129), full_model.Token(kind="integer", start=129, end=130), full_model.Token(kind="rparen", start=130, end=131), full_model.Token(kind="dedent", start=132, end=132), full_model.Token(kind="eof", start=132, end=132)]
+    return try full_parser.parse(tokens, b"func main(flag: bool) -> int:\n    if flag:\n        answer = 1\n    const callback = lambda answer: answer + 1\n    return callback(1)\n", False, False, b"binding_tests.my")
+
+
+func fixture_destructured() -> full_parser.Outcome fails syntax_value.Problem:
+    const tokens: full_model.Token[] = [full_model.Token(kind="kw_def", start=0, end=4), full_model.Token(kind="ident", start=5, end=9), full_model.Token(kind="lparen", start=9, end=10), full_model.Token(kind="rparen", start=10, end=11), full_model.Token(kind="arrow", start=12, end=14), full_model.Token(kind="ident", start=15, end=18), full_model.Token(kind="indent", start=18, end=19), full_model.Token(kind="ident", start=24, end=27), full_model.Token(kind="ident", start=28, end=32), full_model.Token(kind="comma", start=32, end=33), full_model.Token(kind="ident", start=34, end=39), full_model.Token(kind="equal", start=40, end=41), full_model.Token(kind="lparen", start=42, end=43), full_model.Token(kind="integer", start=43, end=44), full_model.Token(kind="comma", start=44, end=45), full_model.Token(kind="integer", start=46, end=47), full_model.Token(kind="rparen", start=47, end=48), full_model.Token(kind="ident", start=53, end=57), full_model.Token(kind="equal", start=58, end=59), full_model.Token(kind="integer", start=60, end=61), full_model.Token(kind="kw_return", start=66, end=72), full_model.Token(kind="ident", start=73, end=77), full_model.Token(kind="plus", start=78, end=79), full_model.Token(kind="ident", start=80, end=85), full_model.Token(kind="dedent", start=86, end=86), full_model.Token(kind="eof", start=86, end=86)]
+    return try full_parser.parse(tokens, b"func main() -> int:\n    mut left, right = (1, 2)\n    left = 3\n    return left + right\n", False, False, b"binding_tests.my")
+
+
+public func test_local_insertion_exact_bytes() -> bool fails syntax_value.Problem:
+    const result = try fixture_safe()
+    return len(result.problems) == 1 and result.problems[0].problem.code == "E_BINDING_DECLARATION" and len(result.problems[0].notes.edits) == 1 and result.problems[0].notes.edits[0].start == 24 and result.problems[0].notes.edits[0].end == 24 and result.problems[0].notes.edits[0].text == b"mut "
+
+
+public func test_escape_has_no_automatic_edit() -> bool fails syntax_value.Problem:
+    const result = try fixture_escape()
+    return len(result.problems) == 1 and result.problems[0].problem.code == "E_BINDING_SCOPE_MIGRATION" and len(result.problems[0].notes.edits) == 0
+
+
+public func test_read_before_initialization_is_escape() -> bool fails syntax_value.Problem:
+    const result = try fixture_before()
+    return len(result.problems) == 1 and result.problems[0].problem.code == "E_BINDING_SCOPE_MIGRATION"
+
+
+public func test_sibling_bindings_have_distinct_scopes() -> bool fails syntax_value.Problem:
+    const result = try fixture_siblings()
+    return len(result.problems) == 2 and result.problems[0].problem.code == "E_BINDING_DECLARATION" and result.problems[1].problem.code == "E_BINDING_DECLARATION" and result.problems[0].notes.edits[0].start < result.problems[1].notes.edits[0].start
+
+
+public func test_comprehension_binder_does_not_escape() -> bool fails syntax_value.Problem:
+    const result = try fixture_comprehension()
+    return len(result.problems) == 1 and result.problems[0].problem.code == "E_BINDING_DECLARATION"
+
+
+public func test_callback_binder_does_not_escape() -> bool fails syntax_value.Problem:
+    const result = try fixture_callback()
+    return len(result.problems) == 1 and result.problems[0].problem.code == "E_BINDING_DECLARATION"
+
+
+public func test_destructured_declarations_are_active() -> bool fails syntax_value.Problem:
+    const result = try fixture_destructured()
+    return len(result.problems) == 0

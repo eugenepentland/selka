@@ -1,0 +1,120 @@
+import full_model
+import full_patterns
+import syntax_value
+
+func state(data: bytes, tokens: full_model.Token[]) -> full_model.State:
+    return full_model.State(tokens=tokens, source=data, cursor=full_model.Cursor(pos=0, depth=0, delimiters=0, module_syntax=True, trusted_intrinsics=False, path=b"pattern_tests.my"), pool=syntax_value.empty(), exprs=[], stmts=[], catalog=full_model.empty_catalog())
+
+
+func field(pool: syntax_value.Pool, id: int, name: str) -> int:
+    const value = pool.values[id]
+    for index in range(len(value.names)):
+        if value.names[index] == name:
+            return value.children[index]
+    return -1
+
+
+func text(p: full_model.State, location: int) -> bytes:
+    const start = p.pool.values[field(p.pool, location, "start")].integer
+    const end = p.pool.values[field(p.pool, location, "end")].integer
+    return p.source[start:end]
+
+
+func nested() -> full_model.State:
+    const tokens: full_model.Token[] = [full_model.Token(kind="ident", start=0, end=5), full_model.Token(kind="dot", start=5, end=6), full_model.Token(kind="ident", start=6, end=10), full_model.Token(kind="lparen", start=10, end=11), full_model.Token(kind="ident", start=11, end=16), full_model.Token(kind="equal", start=16, end=17), full_model.Token(kind="ident", start=17, end=18), full_model.Token(kind="comma", start=18, end=19), full_model.Token(kind="ident", start=20, end=21), full_model.Token(kind="comma", start=21, end=22), full_model.Token(kind="ident", start=23, end=29), full_model.Token(kind="dot", start=29, end=30), full_model.Token(kind="ident", start=30, end=34), full_model.Token(kind="lparen", start=34, end=35), full_model.Token(kind="ident", start=35, end=40), full_model.Token(kind="equal", start=40, end=41), full_model.Token(kind="ident", start=41, end=42), full_model.Token(kind="rparen", start=42, end=43), full_model.Token(kind="comma", start=43, end=44), full_model.Token(kind="kw_none", start=45, end=49), full_model.Token(kind="rparen", start=49, end=50), full_model.Token(kind="eof", start=50, end=50)]
+    return state(b"Maybe.Some(value=x, _, Nested.Leaf(child=z), None)", tokens)
+
+
+func generic_pattern() -> full_model.State:
+    const tokens: full_model.Token[] = [full_model.Token(kind="ident", start=0, end=3), full_model.Token(kind="lbracket", start=3, end=4), full_model.Token(kind="ident", start=4, end=7), full_model.Token(kind="rbracket", start=7, end=8), full_model.Token(kind="dot", start=8, end=9), full_model.Token(kind="ident", start=9, end=13), full_model.Token(kind="lparen", start=13, end=14), full_model.Token(kind="ident", start=14, end=19), full_model.Token(kind="equal", start=19, end=20), full_model.Token(kind="ident", start=20, end=25), full_model.Token(kind="lbracket", start=25, end=26), full_model.Token(kind="ident", start=26, end=29), full_model.Token(kind="rbracket", start=29, end=30), full_model.Token(kind="dot", start=30, end=31), full_model.Token(kind="ident", start=31, end=35), full_model.Token(kind="lparen", start=35, end=36), full_model.Token(kind="ident", start=36, end=37), full_model.Token(kind="rparen", start=37, end=38), full_model.Token(kind="rparen", start=38, end=39), full_model.Token(kind="eof", start=39, end=39)]
+    return state(b"Box[int].Wrap(inner=Thing[int].Some(x))", tokens)
+
+
+func wildcard() -> full_model.State:
+    const tokens: full_model.Token[] = [full_model.Token(kind="ident", start=0, end=1), full_model.Token(kind="eof", start=1, end=1)]
+    return state(b"_", tokens)
+
+
+func none() -> full_model.State:
+    const tokens: full_model.Token[] = [full_model.Token(kind="kw_none", start=0, end=4), full_model.Token(kind="eof", start=4, end=4)]
+    return state(b"None", tokens)
+
+
+func literal() -> full_model.State:
+    const tokens: full_model.Token[] = [full_model.Token(kind="integer", start=0, end=1), full_model.Token(kind="eof", start=1, end=1)]
+    return state(b"1", tokens)
+
+
+public func test_nested_labels_bindings_and_variant_spans() -> bool fails syntax_value.Problem:
+    mut p = nested()
+    const pattern = try full_patterns.match_pattern(mut p)
+    const binding = pattern.bindings[0]
+    const nested_field = pattern.payload_patterns[2]
+    const nested_pattern = field(p.pool, nested_field, "pattern")
+    const nested_data = field(p.pool, nested_pattern, "data")
+    const nested_variant = p.pool.values[nested_data].children[0]
+    return p.source[pattern.ty.start:pattern.ty.end] == b"Maybe" and p.source[pattern.name.start:pattern.name.end] == b"Some" and len(pattern.bindings) == 4 and text(p, binding) == b"x" and p.pool.values[pattern.bindings[1]].kind == 0 and p.pool.values[pattern.bindings[2]].kind == 0 and p.pool.values[pattern.bindings[3]].kind == 0 and text(p, pattern.binding_names[0]) == b"value" and text(p, field(p.pool, nested_variant, "ty")) == b"Nested" and text(p, field(p.pool, nested_variant, "name")) == b"Leaf" and p.cursor.pos == len(p.tokens) - 1 and p.cursor.depth == 0
+
+
+public func test_generic_nested_variant_type_catalogs() -> bool fails syntax_value.Problem:
+    mut p = generic_pattern()
+    const pattern = try full_patterns.match_pattern(mut p)
+    return len(p.catalog.types.expressions.applications) == 2 and p.source[pattern.ty.start:pattern.ty.end] == b"Box[int]" and p.source[pattern.name.start:pattern.name.end] == b"Wrap" and len(pattern.payload_patterns) == 1 and p.cursor.pos == len(p.tokens) - 1
+
+
+public func test_wildcard_arm_exact_internal_metadata() -> bool fails syntax_value.Problem:
+    mut p = wildcard()
+    const pattern = try full_patterns.match_pattern(mut p)
+    const arm = try full_patterns.make_arm(mut p, pattern, 7)
+    const internal = field(p.pool, arm, "internal")
+    return pattern.ty.start == 0 and pattern.ty.end == 0 and pattern.name.end == 1 and len(pattern.bindings) == 0 and len(p.pool.values[field(p.pool, internal, "names")].children) == 0 and p.pool.values[field(p.pool, internal, "wildcard")].integer == 0 and p.pool.values[field(p.pool, arm, "body")].integer == 7
+
+
+public func test_none_contextual_pattern() -> bool fails syntax_value.Problem:
+    mut p = none()
+    const pattern = try full_patterns.match_pattern(mut p)
+    return pattern.ty.start == 0 and pattern.ty.end == 0 and pattern.name.start == 0 and pattern.name.end == 4 and len(pattern.payload_patterns) == 0
+
+
+public func test_literal_pattern_diagnostic_alternative() -> bool:
+    mut p = literal()
+    match full_patterns.match_pattern(mut p):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "E_SYNTAX" and problem.start == 0 and problem.end == 1 and len(p.catalog.problems) == 1 and len(p.catalog.problems[0].notes.related) == 1 and p.catalog.problems[0].notes.related[0].role == "alternative" and p.catalog.problems[0].notes.related[0].message == "compare literals with `if`/`elif`: `if x == 1:` then `elif x == 3:`"
+
+
+func nested_payload(count: int) -> full_model.State:
+    mut buffer = byte_buffer([])
+    mut tokens: full_model.Token[] = []
+    for index in range(count):
+        const start = index * 2
+        _ = buffer.append_range(b"C(", 0, 2)
+        tokens.append(full_model.Token(kind="ident", start=start, end=start + 1))
+        tokens.append(full_model.Token(kind="lparen", start=start + 1, end=start + 2))
+    _ = buffer.append_byte(120)
+    const middle = count * 2
+    tokens.append(full_model.Token(kind="ident", start=middle, end=middle + 1))
+    for index in range(count):
+        const start = middle + 1 + index
+        _ = buffer.append_byte(41)
+        tokens.append(full_model.Token(kind="rparen", start=start, end=start + 1))
+    const end = count * 3 + 1
+    tokens.append(full_model.Token(kind="eof", start=end, end=end))
+    return state(bytes(buffer), tokens)
+
+
+public func test_payload_nesting_boundary() -> bool fails syntax_value.Problem:
+    mut p = nested_payload(255)
+    const value = try full_patterns.payload_pattern(mut p)
+    return p.pool.values[field(p.pool, value, "data")].data == b"variant" and p.cursor.pos == len(p.tokens) - 1 and p.cursor.depth == 0
+
+
+public func test_payload_nesting_limit() -> bool:
+    mut p = nested_payload(256)
+    match full_patterns.payload_pattern(mut p):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "E_NESTING_LIMIT" and problem.start == 512 and problem.end == 513

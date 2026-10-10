@@ -1,0 +1,2 @@
+func f() -> [Kind]int?:
+    return 0

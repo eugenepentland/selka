@@ -1,0 +1,5 @@
+func transform(values: int[]) -> int:
+    const key = lambda x: if (x > 0) then (x) else (-x)
+    const pair = (1, 2)
+    const empty = ()
+    return if (values) then (key(pair[0])) else (0)

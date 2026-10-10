@@ -1,0 +1,356 @@
+import full_model
+import full_values as v
+import syntax_value
+import syntax_problem
+
+func inside(span: full_model.Token, region: full_model.Token) -> bool:
+    return span.start >= region.start and span.end <= region.end
+
+
+func same_name(p: full_model.State, first: int, second: int) -> bool:
+    return v.text(p, v.span(p, first)) == v.text(p, v.span(p, second))
+
+
+func function_region(p: full_model.State, point: int) -> full_model.Token:
+    for function in p.catalog.functions:
+        const body = v.statement_span(p, v.integer(p, v.field(p, function, "body")))
+        if point >= body.start and point < body.end:
+            return body
+    return full_model.Token(kind="", start=-1, end=-1)
+
+
+func parameter_named(p: full_model.State, region: full_model.Token, name: int) -> bool:
+    for function in p.catalog.functions:
+        const body = v.statement_span(p, v.integer(p, v.field(p, function, "body")))
+        if body.start != region.start or body.end != region.end:
+            continue
+        const signature = v.field(p, function, "signature")
+        for parameter in v.items(p, v.field(p, signature, "parameters")):
+            if same_name(p, v.field(p, parameter, "name"), name):
+                return True
+    return False
+
+
+func lambda_named(p: full_model.State, region: full_model.Token, name: int) -> bool:
+    for item in p.catalog.lambdas:
+        if not inside(v.span(p, v.field(p, item, "span")), region):
+            continue
+        for parameter in v.items(p, v.field(p, item, "parameters")):
+            if same_name(p, parameter, name):
+                return True
+    return False
+
+
+func patterns_named(p: full_model.State, fields: int[], name: int) -> bool:
+    for field in fields:
+        const pattern = v.field(p, field, "pattern")
+        const data = v.field(p, pattern, "data")
+        const payload = v.payload(p, data)
+        if v.tag(p, data) == b"binding":
+            if not v.absent(p, payload) and same_name(p, payload, name):
+                return True
+        elif v.tag(p, data) == b"variant":
+            if patterns_named(p, v.items(p, v.field(p, payload, "fields")), name):
+                return True
+    return False
+
+
+func arms_named(p: full_model.State, arms: int[], name: int) -> bool:
+    for arm in arms:
+        for binding in v.items(p, v.field(p, arm, "bindings")):
+            if not v.absent(p, binding) and same_name(p, binding, name):
+                return True
+        if patterns_named(p, v.items(p, v.field(p, arm, "payload_patterns")), name):
+            return True
+    return False
+
+
+func binds_name(p: full_model.State, id: int, name: int) -> bool:
+    const data = v.statement_data(p, id)
+    const tag = v.tag(p, data)
+    const payload = v.payload(p, data)
+    if tag == b"binding" or tag == b"for_range":
+        return same_name(p, v.field(p, payload, "name"), name)
+    if tag == b"for_each":
+        const index = v.field(p, payload, "index_name")
+        return same_name(p, v.field(p, payload, "name"), name) or (not v.absent(p, index) and same_name(p, index, name))
+    if tag == b"with_scope":
+        const binding = v.field(p, payload, "name")
+        return not v.absent(p, binding) and same_name(p, binding, name)
+    if tag == b"match":
+        return arms_named(p, v.items(p, v.field(p, payload, "arms")), name)
+    return False
+
+
+func node_binds_name(p: full_model.State, id: int, name: int) -> bool:
+    const data = v.node_data(p, id)
+    const tag = v.tag(p, data)
+    const payload = v.payload(p, data)
+    if tag == b"comprehension":
+        return same_name(p, v.field(p, payload, "name"), name)
+    if tag == b"gather":
+        return True
+    if tag == b"field_assignment":
+        return not v.absent(p, v.field(p, payload, "declaration"))
+    if tag == b"match_expression":
+        return arms_named(p, v.items(p, v.field(p, payload, "arms")), name)
+    return False
+
+
+func term_named(p: full_model.State, id: int, name: int) -> bool:
+    const data = v.node_data(p, id)
+    const tag = v.tag(p, data)
+    const payload = v.payload(p, data)
+    if tag == b"name":
+        return same_name(p, payload, name)
+    if tag == b"call":
+        mut term = v.field(p, payload, "owner")
+        if v.absent(p, term):
+            term = v.field(p, payload, "name")
+        return same_name(p, term, name)
+    if tag == b"buffer_operation" or tag == b"file_operation" or tag == b"resource_io":
+        return same_name(p, v.field(p, payload, "owner"), name)
+    if tag == b"arena_escape":
+        return same_name(p, v.field(p, payload, "arena"), name)
+    if tag == b"record":
+        return same_name(p, v.field(p, payload, "name"), name)
+    return False
+
+
+func known_mutable(p: full_model.State, point: int, name: int) -> bool:
+    for function in p.catalog.functions:
+        const body = v.statement_span(p, v.integer(p, v.field(p, function, "body")))
+        if point < body.start or point >= body.end:
+            continue
+        const signature = v.field(p, function, "signature")
+        for parameter in v.items(p, v.field(p, signature, "parameters")):
+            if v.flag(p, v.field(p, parameter, "mut")) and same_name(p, v.field(p, parameter, "name"), name):
+                return True
+    for id in range(len(p.stmts)):
+        const data = v.statement_data(p, id)
+        const span = v.statement_span(p, id)
+        if v.tag(p, data) != b"block" or point < span.start or point >= span.end:
+            continue
+        for item in v.items(p, v.payload(p, data)):
+            const earlier = v.integer(p, item)
+            const earlier_data = v.statement_data(p, earlier)
+            if v.statement_span(p, earlier).start >= point or v.tag(p, earlier_data) != b"binding":
+                continue
+            const binding = v.payload(p, earlier_data)
+            if v.flag(p, v.field(p, binding, "mutable")) and same_name(p, v.field(p, binding, "name"), name):
+                return True
+    return False
+
+
+func bindings_certain(p: full_model.State, id: int, body: int) -> bool:
+    const span = v.statement_span(p, id)
+    const body_span = v.statement_span(p, body)
+    const region = function_region(p, span.start)
+    if region.start < 0:
+        return False
+    const scope = v.payload(p, v.statement_data(p, id))
+    const scope_name = v.field(p, scope, "name")
+    if not v.absent(p, scope_name):
+        if parameter_named(p, region, scope_name) or lambda_named(p, region, scope_name):
+            return False
+        for other in range(len(p.stmts)):
+            const other_span = v.statement_span(p, other)
+            const other_data = v.statement_data(p, other)
+            if other_span.start == span.start or not inside(other_span, region):
+                continue
+            if v.tag(p, other_data) == b"with_scope" and not inside(other_span, span) and not inside(span, other_span):
+                continue
+            if binds_name(p, other, scope_name):
+                return False
+            if v.tag(p, other_data) == b"assignment" and same_name(p, v.field(p, v.payload(p, other_data), "name"), scope_name):
+                return False
+        for node in range(len(p.exprs)):
+            if inside(v.node_span(p, node), region) and node_binds_name(p, node, scope_name):
+                return False
+    const body_data = v.statement_data(p, body)
+    for item in v.items(p, v.payload(p, body_data)):
+        const lifted = v.integer(p, item)
+        const lifted_data = v.statement_data(p, lifted)
+        const lifted_span = v.statement_span(p, lifted)
+        const tag = v.tag(p, lifted_data)
+        const payload = v.payload(p, lifted_data)
+        if tag == b"discard":
+            const expression = v.node_data(p, v.integer(p, payload))
+            if v.tag(p, expression) == b"field_assignment" and not v.absent(p, v.field(p, v.payload(p, expression), "declaration")):
+                return False
+        mut name = -1
+        if tag == b"binding":
+            name = v.field(p, payload, "name")
+        elif tag == b"assignment":
+            name = v.field(p, payload, "name")
+            if known_mutable(p, span.start, name):
+                continue
+        else:
+            continue
+        if parameter_named(p, region, name) or lambda_named(p, region, name):
+            return False
+        for other in range(len(p.stmts)):
+            const other_span = v.statement_span(p, other)
+            const other_data = v.statement_data(p, other)
+            if other_span.start == lifted_span.start or not inside(other_span, region):
+                continue
+            if binds_name(p, other, name):
+                return False
+            if not inside(other_span, body_span) and v.tag(p, other_data) == b"assignment" and same_name(p, v.field(p, v.payload(p, other_data), "name"), name):
+                return False
+        for node in range(len(p.exprs)):
+            const node_span = v.node_span(p, node)
+            if not inside(node_span, region):
+                continue
+            if node_binds_name(p, node, name):
+                return False
+            if tag == b"binding" and node_span.start >= body_span.end and term_named(p, node, name):
+                return False
+    return True
+
+
+func line_start(raw: bytes, offset: int) -> int:
+    mut start = offset
+    while start > 0 and raw[start - 1] != 10:
+        start = start - 1
+    return start
+
+
+func line_end(raw: bytes, offset: int) -> int:
+    mut end = offset
+    while end < len(raw) and raw[end] != 10:
+        end = end + 1
+    return end
+
+
+func indentation(raw: bytes, start: int) -> int:
+    mut index = start
+    while index < len(raw) and raw[index] == 32:
+        index = index + 1
+    if index < len(raw) and raw[index] == 9:
+        return -1
+    return index - start
+
+
+func trim_end(raw: bytes) -> int:
+    mut end = len(raw)
+    while end > 0 and (raw[end - 1] == 32 or raw[end - 1] == 9 or raw[end - 1] == 13):
+        end = end - 1
+    return end
+
+
+func retirement_fix(raw: bytes, with_start: int, body_start: int, body_end: int, escapes: syntax_problem.Edit[]) -> syntax_problem.Edit[]:
+    const header_line = line_start(raw, with_start)
+    const outer = indentation(raw, header_line)
+    if outer < 0 or header_line + outer != with_start:
+        return []
+    const header_end = line_end(raw, with_start)
+    if header_end == len(raw) or body_start <= header_end:
+        return []
+    const header = raw[with_start:header_end]
+    mut hash = 0
+    while hash < len(header) and header[hash] != 35:
+        hash = hash + 1
+    const code_end = trim_end(header[:hash])
+    if code_end == 0 or header[code_end - 1] != 58:
+        return []
+    for ch in header[:code_end - 1]:
+        if ch == 58:
+            return []
+    const comment = header[hash:hash + trim_end(header[hash:])]
+    const body_line = line_start(raw, body_start)
+    const inner = indentation(raw, body_line)
+    if inner < 0 or body_line + inner != body_start or inner <= outer:
+        return []
+    const depth = inner - outer
+    if v.contains(raw[body_start:body_end], b"\"\"\"") or v.contains(raw[body_start:body_end], b"'''"):
+        return []
+    mut kept = b""
+    if len(comment) > 0:
+        kept = raw[header_line:with_start] + comment + b"\n"
+    mut edits = [syntax_problem.Edit(start=header_line, end=header_end + 1, text=kept)]
+    mut line = header_end + 1
+    mut last_body_line = line_start(raw, body_end - 1)
+    while line < len(raw):
+        const end = line_end(raw, line)
+        const text = raw[line:end]
+        mut blank = True
+        for ch in text:
+            if ch != 32 and ch != 9 and ch != 13:
+                blank = False
+        if line > last_body_line:
+            if blank:
+                line = end + 1
+                continue
+            const spaces = indentation(raw, line)
+            if spaces < inner or spaces >= len(text) or text[spaces] != 35:
+                break
+            last_body_line = line
+        if not blank:
+            const spaces = indentation(raw, line)
+            if spaces < 0:
+                return []
+            if spaces >= depth:
+                edits.append(syntax_problem.Edit(start=line, end=line + depth, text=b""))
+        line = end + 1
+    mut index = 0
+    for escape in escapes:
+        mut repeated = False
+        for earlier in escapes[:index]:
+            if earlier.start == escape.start and earlier.end == escape.end:
+                repeated = True
+        if not repeated:
+            edits.append(escape)
+        index = index + 1
+    return edits
+
+
+func find_escapes(p: full_model.State, name: int, region: full_model.Token) -> syntax_problem.Edit[]:
+    mut edits: syntax_problem.Edit[] = []
+    for id in range(len(p.exprs)):
+        const data = v.node_data(p, id)
+        const span = v.node_span(p, id)
+        if v.tag(p, data) != b"call" or not inside(span, region):
+            continue
+        const payload = v.payload(p, data)
+        const owner = v.field(p, payload, "owner")
+        const call_name = v.field(p, payload, "name")
+        const arguments = v.items(p, v.field(p, payload, "arguments"))
+        if v.absent(p, owner) or not same_name(p, owner, name) or v.text(p, v.span(p, call_name)) != b"escape" or len(arguments) != 1:
+            continue
+        const argument = v.integer(p, arguments[0])
+        const argument_span = v.node_span(p, argument)
+        const tag = v.tag(p, v.node_data(p, argument))
+        const simple = tag == b"name" or tag == b"call" or tag == b"method_call" or tag == b"field" or tag == b"index" or tag == b"integer" or tag == b"text" or tag == b"bytes" or tag == b"boolean"
+        if simple:
+            edits.append(syntax_problem.Edit(start=span.start, end=argument_span.start, text=b""))
+            edits.append(syntax_problem.Edit(start=argument_span.end, end=span.end, text=b""))
+        else:
+            edits.append(syntax_problem.Edit(start=span.start, end=v.span(p, call_name).end, text=b""))
+    return edits
+
+
+public func reject(mut p: full_model.State):
+    for id in range(len(p.stmts)):
+        const data = v.statement_data(p, id)
+        if v.tag(p, data) != b"with_scope":
+            continue
+        const scope = v.payload(p, data)
+        if not v.absent(p, v.field(p, scope, "resource")):
+            continue
+        const span = v.statement_span(p, id)
+        const body = v.integer(p, v.field(p, scope, "body"))
+        const body_data = v.statement_data(p, body)
+        mut edits: syntax_problem.Edit[] = []
+        if v.tag(p, body_data) == b"block" and len(v.items(p, v.payload(p, body_data))) > 0 and bindings_certain(p, id, body):
+            mut escapes: syntax_problem.Edit[] = []
+            const name = v.field(p, scope, "name")
+            if not v.absent(p, name):
+                escapes = find_escapes(p, name, v.statement_span(p, body))
+            const first = v.integer(p, v.items(p, v.payload(p, body_data))[0])
+            edits = retirement_fix(p.source, span.start, v.statement_span(p, first).start, v.statement_span(p, body).end, escapes)
+        const problem = syntax_value.Problem(code="E_ARENA_REMOVED", start=span.start, end=span.end, message="`with arena():` was removed; use ordinary statements: remove the `with arena():` line and dedent its body")
+        if len(edits) > 0:
+            p.catalog.problems.append(syntax_problem.repaired(problem, edits))
+        else:
+            p.catalog.problems.append(syntax_problem.plain(problem))

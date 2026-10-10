@@ -1,0 +1,2 @@
+func choose(flag: bool) -> str:
+    return "café" if flag else "thé"

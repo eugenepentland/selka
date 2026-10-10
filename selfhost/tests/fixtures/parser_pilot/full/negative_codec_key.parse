@@ -1,0 +1,3 @@
+domain Value: int:
+    codec bytes:
+        invalid: decode_value

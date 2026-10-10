@@ -1,0 +1,5 @@
+domain Value: int:
+    codec bytes:
+        decode: decode_value,
+        decode: other,
+        encode: encode_value

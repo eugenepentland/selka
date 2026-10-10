@@ -1,0 +1,170 @@
+import full_model
+import syntax_value
+import type_parser
+
+func state(data: bytes, tokens: full_model.Token[]) -> full_model.State:
+    return full_model.State(tokens=tokens, source=data, cursor=full_model.Cursor(pos=0, depth=0, delimiters=0, module_syntax=True, trusted_intrinsics=False, path=b"type_tests.my"), pool=syntax_value.empty(), exprs=[], stmts=[], catalog=full_model.empty_catalog())
+
+
+func field(pool: syntax_value.Pool, id: int, name: str) -> int:
+    const value = pool.values[id]
+    for index in range(len(value.names)):
+        if value.names[index] == name:
+            return value.children[index]
+    return -1
+
+
+func compound() -> full_model.State:
+    const tokens: full_model.Token[] = [full_model.Token(kind="ident", start=0, end=5), full_model.Token(kind="lbracket", start=5, end=6), full_model.Token(kind="ident", start=6, end=9), full_model.Token(kind="question", start=9, end=10), full_model.Token(kind="comma", start=10, end=11), full_model.Token(kind="ident", start=12, end=17), full_model.Token(kind="lbracket", start=17, end=18), full_model.Token(kind="rbracket", start=18, end=19), full_model.Token(kind="comma", start=19, end=20), full_model.Token(kind="ident", start=21, end=31), full_model.Token(kind="lbracket", start=31, end=32), full_model.Token(kind="kw_bool", start=32, end=36), full_model.Token(kind="comma", start=36, end=37), full_model.Token(kind="integer", start=38, end=39), full_model.Token(kind="rbracket", start=39, end=40), full_model.Token(kind="rbracket", start=40, end=41), full_model.Token(kind="eof", start=41, end=41)]
+    return state(b"tuple[int?, bytes[], FixedArray[bool, 3]]", tokens)
+
+
+func callback() -> full_model.State:
+    const tokens: full_model.Token[] = [full_model.Token(kind="kw_def", start=0, end=4), full_model.Token(kind="lparen", start=4, end=5), full_model.Token(kind="ident", start=5, end=10), full_model.Token(kind="ident", start=11, end=12), full_model.Token(kind="colon", start=12, end=13), full_model.Token(kind="ident", start=14, end=17), full_model.Token(kind="comma", start=17, end=18), full_model.Token(kind="ident", start=19, end=22), full_model.Token(kind="ident", start=23, end=25), full_model.Token(kind="colon", start=25, end=26), full_model.Token(kind="ident", start=27, end=30), full_model.Token(kind="lbracket", start=30, end=31), full_model.Token(kind="rbracket", start=31, end=32), full_model.Token(kind="comma", start=32, end=33), full_model.Token(kind="kw_bool", start=34, end=38), full_model.Token(kind="rparen", start=38, end=39), full_model.Token(kind="arrow", start=40, end=42), full_model.Token(kind="ident", start=43, end=46), full_model.Token(kind="ident", start=47, end=52), full_model.Token(kind="ident", start=53, end=56), full_model.Token(kind="ident", start=57, end=64), full_model.Token(kind="lparen", start=64, end=65), full_model.Token(kind="ident", start=65, end=71), full_model.Token(kind="comma", start=71, end=72), full_model.Token(kind="ident", start=73, end=81), full_model.Token(kind="rparen", start=81, end=82), full_model.Token(kind="eof", start=82, end=82)]
+    return state(b"func(named n: int, mut xs: int[], bool) -> int fails str effects(output, mutation)", tokens)
+
+
+func generic() -> full_model.State:
+    const tokens: full_model.Token[] = [full_model.Token(kind="lbracket", start=0, end=1), full_model.Token(kind="ident", start=1, end=2), full_model.Token(kind="comma", start=2, end=3), full_model.Token(kind="kw_const", start=4, end=9), full_model.Token(kind="ident", start=10, end=11), full_model.Token(kind="colon", start=11, end=12), full_model.Token(kind="kw_u64", start=13, end=16), full_model.Token(kind="comma", start=16, end=17), full_model.Token(kind="ident", start=18, end=19), full_model.Token(kind="colon", start=19, end=20), full_model.Token(kind="ident", start=21, end=25), full_model.Token(kind="plus", start=26, end=27), full_model.Token(kind="ident", start=28, end=33), full_model.Token(kind="lparen", start=33, end=34), full_model.Token(kind="ident", start=34, end=38), full_model.Token(kind="colon", start=38, end=39), full_model.Token(kind="ident", start=40, end=43), full_model.Token(kind="rparen", start=43, end=44), full_model.Token(kind="plus", start=45, end=46), full_model.Token(kind="ident", start=47, end=49), full_model.Token(kind="lparen", start=49, end=50), full_model.Token(kind="ident", start=50, end=55), full_model.Token(kind="lparen", start=55, end=56), full_model.Token(kind="ident", start=56, end=57), full_model.Token(kind="colon", start=57, end=58), full_model.Token(kind="ident", start=59, end=60), full_model.Token(kind="rparen", start=60, end=61), full_model.Token(kind="arrow", start=62, end=64), full_model.Token(kind="kw_bool", start=65, end=69), full_model.Token(kind="ident", start=70, end=77), full_model.Token(kind="lparen", start=77, end=78), full_model.Token(kind="rparen", start=78, end=79), full_model.Token(kind="rparen", start=79, end=80), full_model.Token(kind="plus", start=81, end=82), full_model.Token(kind="ident", start=83, end=92), full_model.Token(kind="rbracket", start=92, end=93), full_model.Token(kind="eof", start=93, end=93)]
+    return state(b"[T, const N: u64, U: copy + field(size: int) + op(equal(x: U) -> bool effects()) + Qualified]", tokens)
+
+
+func duplicate() -> full_model.State:
+    const tokens: full_model.Token[] = [full_model.Token(kind="lbracket", start=0, end=1), full_model.Token(kind="ident", start=1, end=2), full_model.Token(kind="colon", start=2, end=3), full_model.Token(kind="ident", start=4, end=8), full_model.Token(kind="plus", start=9, end=10), full_model.Token(kind="ident", start=11, end=15), full_model.Token(kind="rbracket", start=15, end=16), full_model.Token(kind="eof", start=16, end=16)]
+    return state(b"[T: copy + copy]", tokens)
+
+
+func named_duplicate() -> full_model.State:
+    const tokens: full_model.Token[] = [full_model.Token(kind="lbracket", start=0, end=1), full_model.Token(kind="ident", start=1, end=2), full_model.Token(kind="colon", start=2, end=3), full_model.Token(kind="ident", start=4, end=8), full_model.Token(kind="plus", start=9, end=10), full_model.Token(kind="ident", start=11, end=15), full_model.Token(kind="rbracket", start=15, end=16), full_model.Token(kind="eof", start=16, end=16)]
+    return state(b"[T: Same + Same]", tokens)
+
+
+func effect_duplicate() -> full_model.State:
+    const tokens: full_model.Token[] = [full_model.Token(kind="ident", start=0, end=7), full_model.Token(kind="lparen", start=7, end=8), full_model.Token(kind="ident", start=8, end=14), full_model.Token(kind="comma", start=14, end=15), full_model.Token(kind="ident", start=16, end=22), full_model.Token(kind="rparen", start=22, end=23), full_model.Token(kind="eof", start=23, end=23)]
+    return state(b"effects(output, output)", tokens)
+
+
+func noio() -> full_model.State:
+    const tokens: full_model.Token[] = [full_model.Token(kind="ident", start=0, end=4), full_model.Token(kind="eof", start=4, end=4)]
+    return state(b"noio", tokens)
+
+
+func array() -> full_model.State:
+    const tokens: full_model.Token[] = [full_model.Token(kind="lbracket", start=0, end=1), full_model.Token(kind="ident", start=1, end=5), full_model.Token(kind="rbracket", start=5, end=6), full_model.Token(kind="ident", start=6, end=9), full_model.Token(kind="question", start=9, end=10), full_model.Token(kind="eof", start=10, end=10)]
+    return state(b"[Kind]int?", tokens)
+
+
+func qualified() -> full_model.State:
+    const tokens: full_model.Token[] = [full_model.Token(kind="ident", start=0, end=3), full_model.Token(kind="dot", start=3, end=4), full_model.Token(kind="ident", start=4, end=9), full_model.Token(kind="dot", start=9, end=10), full_model.Token(kind="ident", start=10, end=14), full_model.Token(kind="lbracket", start=14, end=15), full_model.Token(kind="ident", start=15, end=18), full_model.Token(kind="rbracket", start=18, end=19), full_model.Token(kind="eof", start=19, end=19)]
+    return state(b"pkg.types.Name[int]", tokens)
+
+
+public func test_compound_type_catalogs() -> bool fails syntax_value.Problem:
+    mut p = compound()
+    const ty = try type_parser.type_name(mut p)
+    const catalogs = p.catalog.types.expressions
+    return ty.start == 0 and ty.end == len(p.source) and p.cursor.pos == len(p.tokens) - 1 and p.cursor.depth == 0 and p.cursor.delimiters == 0 and len(catalogs.suffixes) == 2 and len(catalogs.applications) == 1 and len(catalogs.tuples) == 1
+
+
+public func test_callback_modes_failure_and_effects() -> bool fails syntax_value.Problem:
+    mut p = callback()
+    const ty = try type_parser.type_name(mut p)
+    const id = p.catalog.types.expressions.callbacks[0]
+    const modes = field(p.pool, id, "parameter_modes")
+    const mutable = p.pool.values[field(p.pool, modes, "mut")].children
+    const named = p.pool.values[field(p.pool, modes, "named")].children
+    const ceiling = field(p.pool, id, "effect_bound")
+    const names = p.pool.values[field(p.pool, id, "parameter_names")].children
+    return ty.end == len(p.source) and len(mutable) == 3 and p.pool.values[mutable[0]].integer == 0 and p.pool.values[mutable[1]].integer == 1 and p.pool.values[mutable[2]].integer == 0 and p.pool.values[named[0]].integer == 1 and p.pool.values[named[1]].integer == 0 and p.pool.values[field(p.pool, ceiling, "allowed")].integer == 384 and p.pool.values[field(p.pool, id, "failure_type")].kind == 5 and p.pool.values[names[0]].kind == 5 and p.pool.values[names[2]].kind == 0
+
+
+public func test_generic_parameter_defaults_constraints() -> bool fails syntax_value.Problem:
+    mut p = generic()
+    const parameters = try type_parser.type_parameters(mut p)
+    const first = parameters[0]
+    const length = parameters[1]
+    const constrained = parameters[2]
+    const operations = p.pool.values[field(p.pool, constrained, "operation_requirements")].children
+    return len(parameters) == 3 and p.pool.values[field(p.pool, first, "default_copy")].integer == 1 and p.pool.values[field(p.pool, length, "constant_length")].integer == 1 and len(p.pool.values[field(p.pool, constrained, "requirements")].children) == 1 and len(p.pool.values[field(p.pool, constrained, "field_requirements")].children) == 1 and len(operations) == 1 and len(p.pool.values[field(p.pool, constrained, "named_requirements")].children) == 1 and p.cursor.pos == len(p.tokens) - 1
+
+
+public func test_duplicate_builtin_requirement_rejected() -> bool:
+    mut p = duplicate()
+    match type_parser.type_parameters(mut p):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "E_GENERIC_REQUIREMENT" and problem.start == 11 and problem.end == 15
+
+
+public func test_duplicate_named_requirement_rejected() -> bool:
+    mut p = named_duplicate()
+    match type_parser.type_parameters(mut p):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "E_GENERIC_REQUIREMENT" and problem.start == 11 and problem.end == 15
+
+
+public func test_duplicate_effect_rejected() -> bool:
+    mut p = effect_duplicate()
+    match type_parser.effect_bound(mut p):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "E_DUPLICATE_EFFECT" and problem.start == 16 and problem.end == 22
+
+
+public func test_noio_exact_mask_and_span() -> bool fails syntax_value.Problem:
+    mut p = noio()
+    const ceiling = try type_parser.effect_bound(mut p)
+    const location = field(p.pool, ceiling, "span")
+    return p.pool.values[field(p.pool, ceiling, "allowed")].integer == 380 and p.pool.values[field(p.pool, location, "start")].integer == 0 and p.pool.values[field(p.pool, location, "end")].integer == 4
+
+
+public func test_enum_index_array_optional_element() -> bool fails syntax_value.Problem:
+    mut p = array()
+    const ty = try type_parser.type_name(mut p)
+    const id = p.catalog.types.expressions.arrays[0]
+    return ty.end == len(p.source) and len(p.catalog.types.expressions.suffixes) == 1 and p.pool.values[field(p.pool, id, "index")].data == b"enum_type"
+
+
+public func test_qualified_nominal_type_application() -> bool fails syntax_value.Problem:
+    mut p = qualified()
+    p.catalog.import_aliases.append(b"pkg.types")
+    const ty = try type_parser.type_name(mut p)
+    const id = p.catalog.types.expressions.applications[0]
+    const name = field(p.pool, id, "name")
+    return ty.end == len(p.source) and p.pool.values[field(p.pool, name, "end")].integer == 14 and p.cursor.pos == len(p.tokens) - 1
+
+
+func nested_arrays(count: int) -> full_model.State:
+    mut empty: int[] = []
+    mut buffer = byte_buffer(empty)
+    mut tokens: full_model.Token[] = []
+    for index in range(count):
+        const start = index * 3
+        _ = buffer.append_range(b"[1]", 0, 3)
+        tokens.append(full_model.Token(kind="lbracket", start=start, end=start + 1))
+        tokens.append(full_model.Token(kind="integer", start=start + 1, end=start + 2))
+        tokens.append(full_model.Token(kind="rbracket", start=start + 2, end=start + 3))
+    _ = buffer.append_range(b"int", 0, 3)
+    const start = count * 3
+    tokens.append(full_model.Token(kind="ident", start=start, end=start + 3))
+    tokens.append(full_model.Token(kind="eof", start=start + 3, end=start + 3))
+    return state(bytes(buffer), tokens)
+
+
+public func test_type_nesting_boundary() -> bool fails syntax_value.Problem:
+    mut p = nested_arrays(255)
+    const ty = try type_parser.type_name(mut p)
+    return ty.end == len(p.source) and len(p.catalog.types.expressions.arrays) == 255 and p.cursor.depth == 0
+
+
+public func test_type_nesting_limit_rejected() -> bool:
+    mut p = nested_arrays(256)
+    match type_parser.type_name(mut p):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "E_NESTING_LIMIT" and problem.start == 768 and problem.end == 771

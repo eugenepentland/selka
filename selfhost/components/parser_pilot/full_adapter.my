@@ -1,0 +1,141 @@
+import full_model
+import full_parser
+import syntax_value
+import syntax_codec
+import syntax_diagnostics
+import syntax_problem
+
+record Reader:
+    data: bytes
+    pos: int
+
+
+func transport() -> syntax_value.Problem:
+    return syntax_value.Problem(code="P_TRANSPORT", start=0, end=0, message="malformed parser request")
+
+
+func read_u32(mut r: Reader) -> int fails syntax_value.Problem:
+    if len(r.data) - r.pos < 4:
+        fail transport()
+    const n = r.data[r.pos] + r.data[r.pos + 1] * 256 + r.data[r.pos + 2] * 65536 + r.data[r.pos + 3] * 16777216
+    r.pos = r.pos + 4
+    return n
+
+
+func take(mut r: Reader, size: int) -> bytes fails syntax_value.Problem:
+    if size > len(r.data) - r.pos:
+        fail transport()
+    const data = r.data[r.pos:r.pos + size]
+    r.pos = r.pos + size
+    return data
+
+
+func tag(data: bytes) -> str fails syntax_value.Problem:
+    if len(data) == 0 or len(data) > 64:
+        fail transport()
+    mut text = ""
+    for ch in data:
+        if ch >= 97 and ch <= 122:
+            text = text + "abcdefghijklmnopqrstuvwxyz"[ch - 97]
+        elif ch >= 48 and ch <= 57:
+            text = text + "0123456789"[ch - 48]
+        elif ch == 95:
+            text = text + "_"
+        else:
+            fail transport()
+    return text
+
+
+func read_request(fs: Filesystem, path: str) -> bytes fails str:
+    with try fs.open(path, "rb") as file:
+        return file.read(33554497)
+
+
+func exchange(fs: Filesystem, path: str, framed: bool) -> bytes fails syntax_value.Problem:
+    mut data = b""
+    match read_request(fs, path):
+        case Ok(value):
+            data = value
+        case Err(message):
+            fail syntax_value.Problem(code="P_IO", start=0, end=0, message=message)
+    mut identity = b""
+    if framed:
+        if len(data) < 64 or len(data) > 33554496 or data[:8] != b"SLKPRS01":
+            fail transport()
+        mut envelope = Reader(data=data, pos=8)
+        const protocol = try read_u32(mut envelope)
+        const schema = try read_u32(mut envelope)
+        const direction = try read_u32(mut envelope)
+        const payload_len = try read_u32(mut envelope)
+        if protocol != 1 or schema != 1 or direction != 0 or payload_len != len(data) - 64:
+            fail transport()
+        identity = data[24:64]
+        data = data[64:]
+    if len(data) > 33554432 or len(data) < 28 or data[:8] != b"SLKPAR01":
+        fail transport()
+    mut r = Reader(data=data, pos=8)
+    const source_len = try read_u32(mut r)
+    const token_count = try read_u32(mut r)
+    const module_mode = try read_u32(mut r)
+    const trusted = try read_u32(mut r)
+    const path_len = try read_u32(mut r)
+    if source_len > 1048576 or token_count == 0 or token_count > 100000 or module_mode > 1 or trusted > 1 or path_len > 16384:
+        fail transport()
+    const source_path = try take(mut r, path_len)
+    const source = try take(mut r, source_len)
+    mut tokens: full_model.Token[] = []
+    for i in range(token_count):
+        const tag_len = try read_u32(mut r)
+        const tag_bytes = try take(mut r, tag_len)
+        const kind = try tag(tag_bytes)
+        const start = try read_u32(mut r)
+        const end = try read_u32(mut r)
+        tokens.append(full_model.Token(kind=kind, start=start, end=end))
+    if r.pos != len(r.data):
+        fail transport()
+    mut outcome = full_parser.Outcome(pool=syntax_value.empty(), problems=[])
+    match full_parser.parse(tokens, source, module_mode == 1, trusted == 1, source_path):
+        case Ok(parsed):
+            outcome = parsed
+        case Err(problem):
+            if len(problem.code) >= 2 and problem.code[:2] == "P_":
+                fail problem
+            outcome.problems = [syntax_problem.plain(problem)]
+    mut payload = b""
+    if len(outcome.problems) > 0:
+        const report = try syntax_diagnostics.report(outcome.problems)
+        payload = try syntax_codec.encode_with_magic(report, b"SLKERR01")
+    else:
+        payload = try syntax_codec.encode(outcome.pool)
+    if not framed:
+        return payload
+    mut reply = byte_buffer([])
+    _ = reply.reserve(len(payload) + 64)
+    _ = reply.append_range(b"SLKPRS01", 0, 8)
+    put_u32(mut reply, 1)
+    put_u32(mut reply, 1)
+    put_u32(mut reply, 1)
+    put_u32(mut reply, len(payload))
+    _ = reply.append_range(identity, 0, 40)
+    _ = reply.append_range(payload, 0, len(payload))
+    return bytes(reply)
+
+
+func put_u32(mut buffer: byte_buffer, value: int):
+    mut rest = value
+    for i in range(4):
+        _ = buffer.append_byte(rest % 256)
+        rest = rest // 256
+
+
+func main(args: str[], fs: Filesystem, out: Stream, err: Stream) -> int:
+    if len(args) != 2 or (args[0] != "--request" and args[0] != "--exchange"):
+        err.print("parser-full: expected --request FILE or --exchange FILE")
+        return 2
+    match exchange(fs, args[1], args[0] == "--exchange"):
+        case Ok(reply):
+            _ = out.write(reply)
+            return 0
+        case Err(problem):
+            err.print(problem.code, problem.start, problem.end, problem.message)
+            return 2

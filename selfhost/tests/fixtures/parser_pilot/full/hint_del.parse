@@ -1,0 +1,4 @@
+func main() -> int:
+    mut values = [1]
+    del values[0]
+    return 0

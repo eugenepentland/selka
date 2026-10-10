@@ -1,0 +1,4 @@
+func main() -> int:
+    print(answer)
+    answer = 1
+    return answer

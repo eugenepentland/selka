@@ -1,0 +1,3 @@
+from shared.tools import helper
+func main() -> int:
+    return 1

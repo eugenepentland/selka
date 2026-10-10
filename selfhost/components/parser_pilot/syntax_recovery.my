@@ -1,0 +1,83 @@
+import full_model
+import syntax_problem
+import syntax_value
+
+func terminator(p: full_model.State, at: int) -> bool:
+    if at == 0:
+        return False
+    const current = p.tokens[at]
+    if current.kind == "dedent" or current.kind == "eof":
+        return True
+    for ch in p.source[p.tokens[at - 1].end:current.start]:
+        if ch == 10:
+            return True
+    return False
+
+
+func continuation(p: full_model.State, at: int) -> bool:
+    const token = p.tokens[at]
+    if token.kind == "kw_elif" or token.kind == "kw_else" or token.kind == "kw_case":
+        return True
+    if token.kind != "ident":
+        return False
+    const text = p.source[token.start:token.end]
+    if text != b"except" and text != b"finally":
+        return False
+    mut next = at + 1
+    while p.tokens[next].kind != "eof" and p.tokens[next].kind != "dedent":
+        if p.tokens[next].kind == "indent":
+            return True
+        if terminator(p, next):
+            return False
+        next = next + 1
+    return False
+
+
+public func record(mut p: full_model.State, problem: syntax_value.Problem) fails syntax_value.Problem:
+    if len(p.catalog.problems) > 0:
+        const previous = p.catalog.problems[len(p.catalog.problems) - 1].problem
+        if previous.code == problem.code and previous.start == problem.start and previous.end == problem.end and previous.message == problem.message:
+            return
+    if len(p.catalog.problems) >= 1024:
+        fail syntax_value.Problem(code="P_DIAGNOSTIC", start=problem.start, end=problem.end, message="parser diagnostics exceed 1024 entries")
+    p.catalog.problems.append(syntax_problem.plain(problem))
+
+
+public func annotated(mut p: full_model.State, diagnostic: syntax_problem.Diagnostic) -> syntax_value.Problem fails syntax_value.Problem:
+    if len(p.catalog.problems) >= 1024:
+        fail syntax_value.Problem(code="P_DIAGNOSTIC", start=diagnostic.problem.start, end=diagnostic.problem.end, message="parser diagnostics exceed 1024 entries")
+    p.catalog.problems.append(diagnostic)
+    return diagnostic.problem
+
+
+# Rescan from the failed construct's start so already-consumed suites count.
+# The caller supplies its saved recursion depth, reproducing Zig's defer unwind.
+public func recover(mut p: full_model.State, start: int, depth: int):
+    p.cursor.delimiters = 0
+    p.cursor.depth = depth
+    mut nesting = 0
+    mut delimiters = 0
+    mut at = start
+    while p.tokens[at].kind != "eof":
+        const kind = p.tokens[at].kind
+        if kind == "dedent" and nesting == 0:
+            break
+        const newline = at > start and nesting == 0 and delimiters == 0 and kind != "indent"
+        if newline and not continuation(p, at) and terminator(p, at):
+            break
+        at = at + 1
+        if kind == "lparen" or kind == "lbracket" or kind == "lbrace":
+            delimiters = delimiters + 1
+        elif kind == "rparen" or kind == "rbracket" or kind == "rbrace":
+            if delimiters > 0:
+                delimiters = delimiters - 1
+        elif kind == "indent":
+            nesting = nesting + 1
+        elif kind == "dedent":
+            nesting = nesting - 1
+            if nesting == 0 and at >= p.cursor.pos and not continuation(p, at):
+                break
+        elif kind == "semicolon":
+            if nesting == 0 and at >= p.cursor.pos:
+                break
+    p.cursor.pos = at

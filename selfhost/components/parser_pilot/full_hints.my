@@ -1,0 +1,105 @@
+import full_model
+import syntax_value
+import syntax_problem
+import syntax_recovery
+
+record Hint:
+    message: str
+    accepted: str
+
+
+func declaration_hint(form: str) -> Hint fails syntax_value.Problem:
+    if form == "module_constant":
+        return Hint(message="a bare assignment declares no module-level binding", accepted="declare it as a constant: const MAX: int = 42")
+    if form == "method":
+        return Hint(message="a record or class body declares fields, not methods", accepted="declare a top-level function taking the record: func norm1(p: Point) -> int")
+    if form == "from_import":
+        return Hint(message="a from-import is not a declaration", accepted="import the module and declare a record: import dataclasses")
+    if form == "chained_assignment":
+        return Hint(message="a chained assignment declares no binding", accepted="assign one name per statement: `x = 21` first, then `y = 21`")
+    if form == "exceptions":
+        return Hint(message="a try statement is not part of the language", accepted="return `Result` and match it: `case Ok(value)` and `case Err(reason)`")
+    if form == "match_literal":
+        return Hint(message="a case names a union, enum or result case, not a literal", accepted="compare literals with `if`/`elif`: `if x == 1:` then `elif x == 3:`")
+    if form == "del_statement":
+        return Hint(message="a del statement is not part of the language", accepted="remove with `_ = xs.pop(index)` for a list or `_ = d.pop(key)` for a dictionary")
+    if form == "string_prefix":
+        return Hint(message="a string prefix is not part of a literal", accepted="drop the prefix and write the escape in an ordinary quoted string")
+    if form == "main_guard":
+        return Hint(message="a module has no `__name__` guard", accepted="delete the guard: `mylang run` calls `func main()` directly")
+    if form == "option_unwrap":
+        return Hint(message="`unwrap` is a keyword here, not a method", accepted="extract with `match`: `case Ok(value)` or `case Some(value)`; prefix `try` propagates a result")
+    if form == "walrus":
+        return Hint(message="the walrus operator is not part of the language", accepted="assign the name on its own line first, then test it")
+    fail syntax_value.Problem(code="P_HINT", start=0, end=0, message="unknown parser diagnostic hint")
+
+
+public func hinted(mut p: full_model.State, form: str) -> syntax_value.Problem fails syntax_value.Problem:
+    const shape = try declaration_hint(form)
+    const problem = full_model.problem(full_model.peek(p), "E_SYNTAX", shape.message)
+    return try syntax_recovery.annotated(mut p, syntax_problem.alternative(problem, shape.accepted))
+
+
+public func declaration(mut p: full_model.State) fails syntax_value.Problem:
+    const token = full_model.peek(p)
+    if token.kind == "kw_if":
+        fail try hinted(mut p, "main_guard")
+    if token.kind == "ident":
+        const next = p.tokens[p.cursor.pos + 1].kind
+        if next == "equal" or next == "colon":
+            fail try hinted(mut p, "module_constant")
+        if p.source[token.start:token.end] == b"from":
+            fail try hinted(mut p, "from_import")
+
+
+func marker(mut p: full_model.State, token: full_model.Token) -> syntax_value.Problem fails syntax_value.Problem:
+    const problem = full_model.problem(token, "E_REMOVED_SPELLING", "`&` was removed; write `mut value`")
+    mut before = token.start
+    while before > 0 and (p.source[before - 1] == 32 or p.source[before - 1] == 9):
+        before = before - 1
+    const opens = before > 0 and (p.source[before - 1] == 40 or p.source[before - 1] == 44)
+    mut names = False
+    if token.end < len(p.source):
+        const byte = p.source[token.end]
+        names = (byte >= 65 and byte <= 90) or (byte >= 97 and byte <= 122) or byte == 95
+    if opens and names:
+        const edit = syntax_problem.Edit(start=token.start, end=token.end, text=b"mut ")
+        return try syntax_recovery.annotated(mut p, syntax_problem.repaired(problem, [edit]))
+    return problem
+
+
+public func expression_failure(mut p: full_model.State, token: full_model.Token) -> syntax_value.Problem fails syntax_value.Problem:
+    if token.kind == "ampersand":
+        return try marker(mut p, token)
+    mut previous = "eof"
+    if p.cursor.pos > 0:
+        previous = p.tokens[p.cursor.pos - 1].kind
+    mut shape = Hint(message="", accepted="")
+    if token.kind == "kw_def":
+        shape = Hint(message="a function body declares statements, not another function", accepted="declare the function at the top level and call it from the body")
+    if token.kind == "star" and previous == "star":
+        shape = Hint(message="`**` is not an operator", accepted="multiply in a loop: `total = 1` then `for i in range(exponent): total = total * base`")
+    if token.kind == "lt" and previous == "lt":
+        shape = Hint(message="`<<` and `>>` are not operators", accepted="use `shift_left(value, count)` or `shift_right(value, count)`")
+    if token.kind == "equal" and (previous == "pipe" or previous == "ampersand" or previous == "caret"):
+        shape = Hint(message="a set has no augmented assignment operator", accepted="rebind with the operator, `s = s | t`, or call `s.update(t)`")
+    if len(shape.message) > 0:
+        const problem = full_model.problem(full_model.peek(p), "E_EXPRESSION", shape.message)
+        return try syntax_recovery.annotated(mut p, syntax_problem.alternative(problem, shape.accepted))
+    return full_model.problem(token, "E_EXPRESSION", "expected an expression")
+
+
+public func statement_end(mut p: full_model.State, first: full_model.Token) -> full_model.Token fails syntax_value.Problem:
+    const token = full_model.peek(p)
+    if token.kind != "semicolon" and not full_model.implicit_terminator(p):
+        if first.kind == "ident":
+            const word = p.source[first.start:first.end]
+            if word == b"try" and token.kind == "indent":
+                fail try hinted(mut p, "exceptions")
+            if word == b"del":
+                fail try hinted(mut p, "del_statement")
+            if (token.kind == "bytes" or token.kind == "format") and p.cursor.pos > 0 and p.tokens[p.cursor.pos - 1].end == token.start:
+                fail try hinted(mut p, "string_prefix")
+        if token.kind == "equal":
+            fail try hinted(mut p, "chained_assignment")
+    return try full_model.expect(mut p, "semicolon")

@@ -1,0 +1,12 @@
+const LIMIT: int = 10
+
+@invariant(self.low <= self.high, "ordered")
+record Pair:
+    low: int
+    high: int
+
+@requires(value >= 0, "nonnegative")
+@ensures(result >= old(value))
+func add(value: int) -> int:
+    """Contract metadata."""
+    return value + LIMIT

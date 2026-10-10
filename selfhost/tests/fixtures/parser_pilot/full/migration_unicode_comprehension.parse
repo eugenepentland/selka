@@ -1,0 +1,2 @@
+func main(values: int[]) -> str[]:
+    return ["é" for value in values]

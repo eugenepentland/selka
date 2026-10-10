@@ -1,0 +1,5 @@
+func main(flag: bool) -> int:
+    if flag:
+        answer = 1
+    const callback = lambda answer: answer + 1
+    return callback(1)

@@ -1,0 +1,5 @@
+func main(flag: bool, values: int[]) -> int:
+    if flag:
+        answer = 1
+    const found = [for answer in values if answer > 0 yield answer]
+    return len(found)

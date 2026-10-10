@@ -1,0 +1,389 @@
+{
+  "arithmetic.parse": {
+    "class": "ok"
+  },
+  "signature.parse": {
+    "class": "ok"
+  },
+  "collections.parse": {
+    "class": "ok"
+  },
+  "metadata.parse": {
+    "class": "ok"
+  },
+  "types_compound.parse": {
+    "class": "ok"
+  },
+  "types_callback.parse": {
+    "class": "ok"
+  },
+  "types_generic.parse": {
+    "class": "ok"
+  },
+  "types_indexed.parse": {
+    "class": "ok"
+  },
+  "types_callback_unbounded.parse": {
+    "class": "ok"
+  },
+  "types_noio.parse": {
+    "class": "ok"
+  },
+  "types_duplicate_requirement.parse": {
+    "class": "error",
+    "code": "E_GENERIC_REQUIREMENT"
+  },
+  "types_duplicate_named.parse": {
+    "class": "error",
+    "code": "E_GENERIC_REQUIREMENT"
+  },
+  "types_duplicate_effect.parse": {
+    "class": "error",
+    "code": "E_DUPLICATE_EFFECT"
+  },
+  "types_unknown_effect.parse": {
+    "class": "error",
+    "code": "E_UNKNOWN_EFFECT"
+  },
+  "types_operation_bound.parse": {
+    "class": "error",
+    "code": "E_GENERIC_REQUIREMENT"
+  },
+  "types_duplicate_parameter.parse": {
+    "class": "error",
+    "code": "E_GENERIC_PARAMETER"
+  },
+  "types_named_missing_name.parse": {
+    "class": "error",
+    "code": "E_PARAMETER_NAME"
+  },
+  "grammar_loops.parse": {
+    "class": "ok"
+  },
+  "grammar_patterns.parse": {
+    "class": "ok"
+  },
+  "grammar_lambda.parse": {
+    "class": "ok"
+  },
+  "resource_values.parse": {
+    "class": "ok"
+  },
+  "resource_trusted.parse": {
+    "class": "ok",
+    "trusted": true
+  },
+  "resource_environment_gate.parse": {
+    "class": "error",
+    "code": "E_INTERNAL_NAME"
+  },
+  "resource_external_gate.parse": {
+    "class": "error",
+    "code": "E_INTERNAL_NAME"
+  },
+  "resource_stand_gate.parse": {
+    "class": "error",
+    "code": "E_INTERNAL_NAME"
+  },
+  "grammar_pattern_literal.parse": {
+    "class": "error",
+    "code": "E_SYNTAX"
+  },
+  "format_values.parse": {
+    "class": "ok"
+  },
+  "format_unmatched.parse": {
+    "class": "error",
+    "code": "E_FORMAT_STRING"
+  },
+  "format_empty.parse": {
+    "class": "error",
+    "code": "E_FORMAT_STRING"
+  },
+  "format_nested_spec.parse": {
+    "class": "error",
+    "code": "E_FORMAT_STRING"
+  },
+  "format_unterminated.parse": {
+    "class": "error",
+    "code": "E_FORMAT_STRING"
+  },
+  "grammar_comprehensions.parse": {
+    "class": "ok"
+  },
+  "grammar_contracts.parse": {
+    "class": "ok"
+  },
+  "metadata_markers.parse": {
+    "class": "ok"
+  },
+  "metadata_duplicate.parse": {
+    "class": "error",
+    "code": "E_DUPLICATE_ATTRIBUTE"
+  },
+  "metadata_invalid_target.parse": {
+    "class": "error",
+    "code": "E_ATTRIBUTE_TARGET"
+  },
+  "metadata_contract_target.parse": {
+    "class": "error",
+    "code": "E_CONTRACT_TARGET"
+  },
+  "metadata_invariant_target.parse": {
+    "class": "error",
+    "code": "E_CONTRACT_TARGET"
+  },
+  "metadata_generic_invariant.parse": {
+    "class": "error",
+    "code": "E_CONTRACT_TARGET"
+  },
+  "metadata_old_requires.parse": {
+    "class": "error",
+    "code": "E_CONTRACT_OLD"
+  },
+  "metadata_old_arity.parse": {
+    "class": "error",
+    "code": "E_CONTRACT_OLD"
+  },
+  "metadata_old_invariant.parse": {
+    "class": "error",
+    "code": "E_CONTRACT_OLD"
+  },
+  "metadata_module.parse": {
+    "class": "ok",
+    "module": true
+  },
+  "metadata_export_removed.parse": {
+    "class": "error",
+    "code": "E_EXPORT_REMOVED",
+    "module": true
+  },
+  "metadata_module_header.parse": {
+    "class": "error",
+    "code": "E_MODULE_HEADER",
+    "module": true
+  },
+  "metadata_unknown.parse": {
+    "class": "error",
+    "code": "E_UNKNOWN_ATTRIBUTE"
+  },
+  "grammar_generic_calls.parse": {
+    "class": "ok",
+    "module": true
+  },
+  "grammar_mut_arguments.parse": {
+    "class": "ok",
+    "module": false
+  },
+  "hint_power.parse": {
+    "class": "error",
+    "code": "E_EXPRESSION"
+  },
+  "hint_shift.parse": {
+    "class": "error",
+    "code": "E_EXPRESSION"
+  },
+  "hint_nested_function.parse": {
+    "class": "error",
+    "code": "E_EXPRESSION"
+  },
+  "hint_chained_assignment.parse": {
+    "class": "error",
+    "code": "E_SYNTAX"
+  },
+  "hint_del.parse": {
+    "class": "error",
+    "code": "E_SYNTAX"
+  },
+  "hint_raw_prefix.parse": {
+    "class": "error",
+    "code": "E_SYNTAX"
+  },
+  "hint_module_assignment.parse": {
+    "class": "error",
+    "code": "E_SYNTAX",
+    "module": true
+  },
+  "hint_from_import.parse": {
+    "class": "error",
+    "code": "E_SYNTAX",
+    "module": true
+  },
+  "hint_main_guard.parse": {
+    "class": "error",
+    "code": "E_SYNTAX",
+    "module": true
+  },
+  "types_mutates_repair.parse": {
+    "class": "error",
+    "code": "E_REMOVED_SPELLING"
+  },
+  "types_mutates_existing.parse": {
+    "class": "error",
+    "code": "E_REMOVED_SPELLING"
+  },
+  "types_mutates_unknown.parse": {
+    "class": "error",
+    "code": "E_REMOVED_SPELLING"
+  },
+  "types_mutates_callback.parse": {
+    "class": "error",
+    "code": "E_REMOVED_SPELLING"
+  },
+  "types_mutates_empty.parse": {
+    "class": "error",
+    "code": "E_REMOVED_SPELLING"
+  },
+  "types_mutates_malformed.parse": {
+    "class": "error",
+    "code": "E_REMOVED_SPELLING"
+  },
+  "binding_safe.parse": {
+    "class": "error",
+    "code": "E_BINDING_DECLARATION"
+  },
+  "binding_escape.parse": {
+    "class": "error",
+    "code": "E_BINDING_SCOPE_MIGRATION"
+  },
+  "binding_before.parse": {
+    "class": "error",
+    "code": "E_BINDING_SCOPE_MIGRATION"
+  },
+  "binding_siblings.parse": {
+    "class": "error",
+    "code": "E_BINDING_DECLARATION"
+  },
+  "binding_comprehension.parse": {
+    "class": "error",
+    "code": "E_BINDING_DECLARATION"
+  },
+  "binding_callback.parse": {
+    "class": "error",
+    "code": "E_BINDING_DECLARATION"
+  },
+  "binding_destructured.parse": {
+    "class": "ok"
+  },
+  "migration_named_star.parse": {
+    "class": "error",
+    "code": "E_FRONTEND_SYNTAX"
+  },
+  "migration_mut_parameter.parse": {
+    "class": "error",
+    "code": "E_FRONTEND_SYNTAX"
+  },
+  "migration_typed_binding.parse": {
+    "class": "error",
+    "code": "E_FRONTEND_SYNTAX"
+  },
+  "migration_postfix_try.parse": {
+    "class": "error",
+    "code": "E_FRONTEND_SYNTAX"
+  },
+  "migration_nested_try.parse": {
+    "class": "error",
+    "code": "E_TRY_POSITION"
+  },
+  "migration_unicode_conditional.parse": {
+    "class": "error",
+    "code": "E_FRONTEND_SYNTAX"
+  },
+  "migration_type_list.parse": {
+    "class": "ok"
+  },
+  "migration_type_optional.parse": {
+    "class": "error",
+    "code": "E_FRONTEND_SYNTAX"
+  },
+  "migration_type_none.parse": {
+    "class": "error",
+    "code": "E_FRONTEND_SYNTAX"
+  },
+  "migration_type_fixed.parse": {
+    "class": "ok"
+  },
+  "migration_arena_binding.parse": {
+    "class": "error",
+    "code": "E_BINDING_DECLARATION"
+  },
+  "migration_arena_escape.parse": {
+    "class": "error",
+    "code": "E_FRONTEND_SYNTAX"
+  },
+  "migration_arena_comments.parse": {
+    "class": "error",
+    "code": "E_FRONTEND_SYNTAX"
+  },
+  "migration_arena_multiple.parse": {
+    "class": "error",
+    "code": "E_FRONTEND_SYNTAX"
+  },
+  "migration_arena_duplicate.parse": {
+    "class": "error",
+    "code": "E_FRONTEND_SYNTAX"
+  },
+  "migration_variant_union.parse": {
+    "class": "error",
+    "code": "E_FRONTEND_VARIANT"
+  },
+  "migration_variant_named.parse": {
+    "class": "error",
+    "code": "E_FRONTEND_VARIANT"
+  },
+  "migration_variant_contextual.parse": {
+    "class": "error",
+    "code": "E_FRONTEND_VARIANT"
+  },
+  "migration_variant_shadow.parse": {
+    "class": "ok"
+  },
+  "migration_legacy_comprehension.parse": {
+    "class": "error",
+    "code": "E_FRONTEND_EXPRESSION"
+  },
+  "migration_unicode_comprehension.parse": {
+    "class": "error",
+    "code": "E_FRONTEND_EXPRESSION"
+  },
+  "migration_semicolons.parse": {
+    "class": "error",
+    "code": "E_FRONTEND_EXPRESSION"
+  },
+  "negative_extern_effects.parse": {
+    "class": "error",
+    "code": "E_HOST_EFFECTS"
+  },
+  "negative_extern_capability.parse": {
+    "class": "error",
+    "code": "E_HOST_CAPABILITY"
+  },
+  "negative_extern_return.parse": {
+    "class": "error",
+    "code": "E_EXTERN_SIGNATURE"
+  },
+  "negative_default_order.parse": {
+    "class": "error",
+    "code": "E_DEFAULT_ARGUMENT"
+  },
+  "negative_default_expression.parse": {
+    "class": "error",
+    "code": "E_DEFAULT_ARGUMENT"
+  },
+  "negative_todo_arity.parse": {
+    "class": "error",
+    "code": "E_SYNTAX"
+  },
+  "negative_codec_key.parse": {
+    "class": "error",
+    "code": "E_CODEC_KEY"
+  },
+  "negative_codec_missing.parse": {
+    "class": "error",
+    "code": "E_INCOMPLETE_CODEC"
+  },
+  "negative_codec_duplicate.parse": {
+    "class": "error",
+    "code": "E_DUPLICATE_CODEC_KEY"
+  }
+}

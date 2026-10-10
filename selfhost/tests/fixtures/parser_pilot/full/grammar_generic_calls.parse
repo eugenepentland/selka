@@ -1,0 +1,9 @@
+import shared.tools as tools
+func build(value: int) -> int:
+    const first = Pair[int](value, value)
+    const fixed = FixedArray[int, 4]([1, 2, 3, 4])
+    const member = Factory.create[int](value)
+    const imported = tools.make[int](value)
+    const qualified = shared.tools.make[int](value)
+    const nested = Pair[tuple[int, bool]]((value, True), (value, False))
+    return first.value + fixed[0] + member.value

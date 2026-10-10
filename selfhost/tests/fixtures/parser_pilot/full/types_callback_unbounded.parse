@@ -1,0 +1,2 @@
+func f() -> func(int) -> int:
+    return 0

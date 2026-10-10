@@ -1,0 +1,3 @@
+@requires(True)
+record Example:
+    value: int

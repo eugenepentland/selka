@@ -1,0 +1,2 @@
+func f() -> tuple[int?, bytes[], FixedArray[bool, 3]]:
+    return 0

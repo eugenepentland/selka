@@ -1,0 +1,39 @@
+import syntax_value
+
+public record Related:
+    start: int
+    end: int
+    message: str
+    role: str
+
+
+public record Edit:
+    start: int
+    end: int
+    text: bytes
+
+
+public record Notes:
+    related: Related[]
+    origin: Related[]
+    requirement: Related[]
+    edits: Edit[]
+
+
+public record Diagnostic:
+    problem: syntax_value.Problem
+    severity: str
+    notes: Notes
+
+
+public func plain(problem: syntax_value.Problem) -> Diagnostic:
+    return Diagnostic(problem=problem, severity="err", notes=Notes(related=[], origin=[], requirement=[], edits=[]))
+
+
+public func alternative(problem: syntax_value.Problem, accepted: str) -> Diagnostic:
+    const related = Related(start=problem.start, end=problem.end, message=accepted, role="alternative")
+    return Diagnostic(problem=problem, severity="err", notes=Notes(related=[related], origin=[], requirement=[], edits=[]))
+
+
+public func repaired(problem: syntax_value.Problem, edits: Edit[]) -> Diagnostic:
+    return Diagnostic(problem=problem, severity="err", notes=Notes(related=[], origin=[], requirement=[], edits=edits))

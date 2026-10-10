@@ -1,0 +1,7 @@
+func change(mut values: int[], value: int) -> int:
+    return value
+func example() -> int:
+    mut values = [1, 2]
+    const first = change(mut values, values[0])
+    const second = object.change(mut values, named=values[1])
+    return first + second

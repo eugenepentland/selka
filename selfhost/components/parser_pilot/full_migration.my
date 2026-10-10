@@ -1,0 +1,205 @@
+import full_model
+import full_values as v
+import syntax_value
+import syntax_problem
+import syntax_recovery
+import full_binding_migration
+import full_migration_types
+import full_migration_variants
+import full_migration_expressions
+import full_arena_migration
+
+func repair(mut p: full_model.State, at: full_model.Token, message: str, edit: syntax_problem.Edit) fails syntax_value.Problem:
+    const problem = full_model.problem(at, "E_FRONTEND_SYNTAX", message)
+    _ = try syntax_recovery.annotated(mut p, syntax_problem.repaired(problem, [edit]))
+
+
+func migrate_parameters(mut p: full_model.State, signature: int) fails syntax_value.Problem:
+    const parameters = v.items(p, v.field(p, signature, "parameters"))
+    const keyword = v.field(p, signature, "keyword_only_from")
+    mut first = -1
+    if not v.absent(p, keyword):
+        first = v.integer(p, keyword)
+    for index in range(len(parameters)):
+        const parameter = parameters[index]
+        const name = v.span(p, v.field(p, parameter, "name"))
+        const ty = v.span(p, v.field(p, parameter, "ty"))
+        const old_mut = v.flag(p, v.field(p, parameter, "mut")) and v.contains(p.source[name.end:ty.start], b"mut")
+        const named = first >= 0 and index >= first and not v.flag(p, v.field(p, parameter, "named"))
+        if not old_mut and not named:
+            continue
+        mut replacement = b""
+        if named:
+            replacement = b"named "
+        if old_mut:
+            replacement = replacement + b"mut "
+        replacement = replacement + v.text(p, name) + b": "
+        const edit = syntax_problem.Edit(start=name.start, end=ty.start, text=replacement)
+        try repair(mut p, name, "put 'named' and 'mut' before each parameter name", edit)
+    if first < 0 or first >= len(parameters) or v.flag(p, v.field(p, parameters[first], "named")):
+        return
+    const end = v.span(p, v.field(p, parameters[first], "name")).start
+    mut start = end - 8
+    if start < 0:
+        start = 0
+    if first > 0:
+        start = v.span(p, v.field(p, parameters[first - 1], "ty")).end
+    for index in range(len(p.tokens)):
+        const token = p.tokens[index]
+        if token.kind != "star" or token.start < start or token.end > end:
+            continue
+        if index + 1 >= len(p.tokens) or p.tokens[index + 1].kind != "comma":
+            continue
+        mut close = p.tokens[index + 1].end
+        while close < end and (p.source[close] == 32 or p.source[close] == 9):
+            close = close + 1
+        const edit = syntax_problem.Edit(start=token.start, end=close, text=b"")
+        try repair(mut p, token, "replace the '*' separator with individual 'named' parameters", edit)
+
+
+func covered(spans: full_model.Token[], at: full_model.Token) -> bool:
+    for outer in spans:
+        if outer.start <= at.start and outer.end >= at.end:
+            return True
+    return False
+
+
+func migrate_types(mut p: full_model.State) fails syntax_value.Problem:
+    mut spans: full_model.Token[] = []
+    mut previous: full_model.Token[] = []
+    for variant in p.catalog.types.variants:
+        if v.flag(p, v.field(p, variant, "fallible")):
+            continue
+        for item in v.items(p, v.field(p, variant, "cases")):
+            const payload = v.field(p, item, "payload")
+            if not v.absent(p, payload):
+                previous.append(v.span(p, payload))
+    const expressions = p.catalog.types.expressions
+    for application in expressions.applications:
+        spans.append(v.span(p, v.field(p, application, "span")))
+    for array in expressions.arrays:
+        spans.append(v.span(p, v.field(p, array, "span")))
+    for suffix in expressions.suffixes:
+        spans.append(v.span(p, v.field(p, suffix, "span")))
+    for alias in expressions.aliases:
+        spans.append(v.span(p, v.field(p, alias, "target")))
+    for callback in expressions.callbacks:
+        for parameter in v.items(p, v.field(p, callback, "parameters")):
+            spans.append(v.span(p, parameter))
+        spans.append(v.span(p, v.field(p, callback, "return_type")))
+    for function in p.catalog.functions:
+        const signature = v.field(p, function, "signature")
+        for parameter in v.items(p, v.field(p, signature, "parameters")):
+            spans.append(v.span(p, v.field(p, parameter, "ty")))
+        spans.append(v.span(p, v.field(p, signature, "return_type")))
+    for record_value in p.catalog.types.records:
+        for field_value in v.items(p, v.field(p, record_value, "fields")):
+            spans.append(v.span(p, v.field(p, field_value, "ty")))
+    for statement in p.stmts:
+        const data = v.field(p, statement, "data")
+        if v.tag(p, data) == b"binding":
+            const annotation = v.field(p, v.payload(p, data), "annotation")
+            if not v.absent(p, annotation):
+                spans.append(v.span(p, annotation))
+    for index in range(1, len(spans)):
+        const value = spans[index]
+        mut at = index
+        while at > 0 and spans[at - 1].end - spans[at - 1].start < value.end - value.start:
+            spans[at] = spans[at - 1]
+            at = at - 1
+        spans[at] = value
+    for span in spans:
+        if covered(previous, span):
+            continue
+        const replacement = try full_migration_types.render(p, span)
+        if replacement == v.text(p, span):
+            continue
+        const edit = syntax_problem.Edit(start=span.start, end=span.end, text=replacement)
+        try repair(mut p, span, "use the canonical array, optional or Unit type spelling", edit)
+        previous.append(span)
+
+
+func boundary(p: full_model.State, id: int) -> bool:
+    for statement in p.stmts:
+        const data = v.field(p, statement, "data")
+        const tag = v.tag(p, data)
+        const payload = v.payload(p, data)
+        mut value = -1
+        if tag == b"binding" or tag == b"assignment":
+            value = v.integer(p, v.field(p, payload, "value"))
+        elif tag == b"ret" or tag == b"discard":
+            value = v.integer(p, payload)
+        elif tag == b"with_scope":
+            value = v.integer(p, v.field(p, payload, "resource"))
+        if value == id:
+            return True
+    return False
+
+
+func canonical_conditional(p: full_model.State, at: full_model.Token, condition: full_model.Token, yes: full_model.Token) -> bool:
+    if condition.start != yes.start:
+        return condition.start < yes.start
+    mut start = at.start
+    while start < at.end and (p.source[start] == 40 or p.source[start] == 32 or p.source[start] == 9 or p.source[start] == 13 or p.source[start] == 10):
+        start = start + 1
+    if start + 2 > at.end or p.source[start:start + 2] != b"if":
+        return False
+    if start + 2 == at.end:
+        return True
+    const byte = p.source[start + 2]
+    return not ((byte >= 65 and byte <= 90) or (byte >= 97 and byte <= 122) or (byte >= 48 and byte <= 57) or byte == 95)
+
+
+func migrate_expressions(mut p: full_model.State) fails syntax_value.Problem:
+    for index in range(len(p.exprs)):
+        const data = v.node_data(p, index)
+        const tag = v.tag(p, data)
+        const payload = v.payload(p, data)
+        const span = v.node_span(p, index)
+        if tag == b"propagate":
+            const operand = v.node_span(p, v.integer(p, payload))
+            if span.end <= operand.end or p.source[span.end - 1] != 63:
+                continue
+            if not boundary(p, index):
+                const problem = full_model.problem(span, "E_TRY_POSITION", "extract this fallible operation into a declaration using 'try' before the enclosing expression")
+                _ = try syntax_recovery.annotated(mut p, syntax_problem.plain(problem))
+                continue
+            const edit = syntax_problem.Edit(start=span.start, end=span.end, text=b"try " + v.text(p, operand))
+            try repair(mut p, span, "propagate failure with prefix 'try'", edit)
+        elif tag == b"conditional":
+            const condition = v.node_span(p, v.integer(p, v.field(p, payload, "condition")))
+            const yes = v.node_span(p, v.integer(p, v.field(p, payload, "then_value")))
+            const no = v.node_span(p, v.integer(p, v.field(p, payload, "else_value")))
+            if canonical_conditional(p, span, condition, yes):
+                continue
+            const replacement = b"(if (" + v.text(p, condition) + b") then (" + v.text(p, yes) + b") else (" + v.text(p, no) + b"))"
+            const edit = syntax_problem.Edit(start=span.start, end=span.end, text=replacement)
+            try repair(mut p, span, "write a conditional in reading order: 'if condition then value else value'", edit)
+
+
+public func publish(mut p: full_model.State) fails syntax_value.Problem:
+    const before = len(p.catalog.problems)
+    _ = try full_binding_migration.publish(mut p)
+    _ = try full_migration_variants.publish(mut p)
+    _ = try full_migration_expressions.publish(mut p)
+    for token in p.tokens:
+        if token.kind == "kw_def" and v.text(p, token) == b"def":
+            const edit = syntax_problem.Edit(start=token.start, end=token.end, text=b"func")
+            try repair(mut p, token, "declare a function or callable type with 'func'", edit)
+    try migrate_types(mut p)
+    for function in p.catalog.functions:
+        try migrate_parameters(mut p, v.field(p, function, "signature"))
+    for statement in p.stmts:
+        const data = v.field(p, statement, "data")
+        if v.tag(p, data) != b"binding":
+            continue
+        const name = v.span(p, v.field(p, v.payload(p, data), "name"))
+        mut start = v.span(p, v.field(p, statement, "span")).start
+        while start < name.start and (p.source[start] == 32 or p.source[start] == 9):
+            start = start + 1
+        if start == name.start:
+            const edit = syntax_problem.Edit(start=name.start, end=name.start, text=b"mut ")
+            try repair(mut p, name, "declare a writable local with 'mut'", edit)
+    try migrate_expressions(mut p)
+    if len(p.catalog.problems) > before:
+        full_arena_migration.reject(mut p)

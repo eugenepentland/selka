@@ -1,0 +1,8 @@
+public func score(mut values: int[], limit: int = 10, named enabled: bool = True) -> int fails str effects(mutation):
+    const first: int = values[0]
+    if enabled and first < limit <= 100:
+        return first
+    elif first == limit:
+        return 0
+    else:
+        return -1

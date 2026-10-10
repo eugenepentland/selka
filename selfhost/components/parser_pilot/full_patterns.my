@@ -1,0 +1,110 @@
+import full_model
+import type_parser
+import syntax_value
+import syntax_problem
+import syntax_recovery
+
+public record MatchPattern:
+    ty: full_model.Token
+    name: full_model.Token
+    bindings: int[]
+    binding_names: int[]
+    payload_patterns: int[]
+
+
+func span(mut p: full_model.State, token: full_model.Token) -> int fails syntax_value.Problem:
+    return try syntax_value.span(mut p.pool, token.start, token.end)
+
+
+func look(p: full_model.State, distance: int) -> str:
+    const index = p.cursor.pos + distance
+    if index >= len(p.tokens):
+        return "eof"
+    return p.tokens[index].kind
+
+
+public func match_pattern(mut p: full_model.State) -> MatchPattern fails syntax_value.Problem:
+    const head = full_model.peek(p)
+    if head.kind != "ident" and head.kind != "kw_none":
+        const problem = full_model.problem(head, "E_SYNTAX", "a case names a union, enum or result case, not a literal")
+        const note = syntax_problem.alternative(problem, "compare literals with `if`/`elif`: `if x == 1:` then `elif x == 3:`")
+        const reported = try syntax_recovery.annotated(mut p, note)
+        fail reported
+    mut first = head
+    if not full_model.accept(mut p, "kw_none"):
+        first = try type_parser.nominal_type_name(mut p)
+    mut ty = full_model.Token(kind="type", start=first.start, end=first.start)
+    mut name = first
+    if full_model.peek(p).kind == "dot":
+        ty = first
+        _ = try full_model.expect(mut p, "dot")
+        name = try full_model.expect(mut p, "ident")
+    mut bindings: int[] = []
+    mut names: int[] = []
+    mut fields: int[] = []
+    if full_model.accept(mut p, "lparen"):
+        if full_model.peek(p).kind != "rparen":
+            mut more = True
+            while more:
+                mut label = try syntax_value.absent(mut p.pool)
+                if full_model.peek(p).kind == "ident" and look(p, 1) == "equal":
+                    const label_token = try full_model.expect(mut p, "ident")
+                    label = try span(mut p, label_token)
+                    _ = try full_model.expect(mut p, "equal")
+                const pattern = try payload_pattern(mut p)
+                const field = try syntax_value.object(mut p.pool, ["name", "pattern"], [label, pattern])
+                fields.append(field)
+                names.append(label)
+                const data = p.pool.values[pattern].children[1]
+                mut binding = try syntax_value.absent(mut p.pool)
+                if p.pool.values[data].data == b"binding":
+                    binding = p.pool.values[data].children[0]
+                bindings.append(binding)
+                more = full_model.accept(mut p, "comma") and full_model.peek(p).kind != "rparen"
+        _ = try full_model.expect(mut p, "rparen")
+    return MatchPattern(ty=ty, name=name, bindings=bindings, binding_names=names, payload_patterns=fields)
+
+
+public func payload_pattern(mut p: full_model.State) -> int fails syntax_value.Problem:
+    const head = full_model.peek(p)
+    if p.cursor.depth >= 256:
+        fail full_model.problem(head, "E_NESTING_LIMIT", "parser nesting exceeds 256 levels")
+    p.cursor.depth = p.cursor.depth + 1
+    const value = try payload_body(mut p, head)
+    p.cursor.depth = p.cursor.depth - 1
+    return value
+
+
+func payload_body(mut p: full_model.State, head: full_model.Token) -> int fails syntax_value.Problem:
+    mut location = head
+    mut data = -1
+    const next = look(p, 1)
+    if head.kind == "ident" and next != "dot" and next != "lparen" and next != "lbracket":
+        p.cursor.pos = p.cursor.pos + 1
+        mut binding = try syntax_value.absent(mut p.pool)
+        if p.source[head.start:head.end] != b"_":
+            binding = try span(mut p, head)
+        data = try syntax_value.tagged(mut p.pool, b"binding", binding)
+    else:
+        const nested = try match_pattern(mut p)
+        const ty = try span(mut p, nested.ty)
+        const name = try span(mut p, nested.name)
+        const fields = try syntax_value.sequence(mut p.pool, nested.payload_patterns)
+        const variant = try syntax_value.object(mut p.pool, ["ty", "name", "fields"], [ty, name, fields])
+        data = try syntax_value.tagged(mut p.pool, b"variant", variant)
+        location = full_model.Token(kind="pattern", start=head.start, end=p.tokens[p.cursor.pos - 1].end)
+    const location_value = try span(mut p, location)
+    return try syntax_value.object(mut p.pool, ["span", "data"], [location_value, data])
+
+
+public func make_arm(mut p: full_model.State, pattern: MatchPattern, body: int) -> int fails syntax_value.Problem:
+    const names = try syntax_value.sequence(mut p.pool, [])
+    const wildcard = try syntax_value.boolean(mut p.pool, False)
+    const internal = try syntax_value.object(mut p.pool, ["names", "wildcard"], [names, wildcard])
+    const fields = try syntax_value.sequence(mut p.pool, pattern.payload_patterns)
+    const labels = try syntax_value.sequence(mut p.pool, pattern.binding_names)
+    const ty = try span(mut p, pattern.ty)
+    const name = try span(mut p, pattern.name)
+    const bindings = try syntax_value.sequence(mut p.pool, pattern.bindings)
+    const body_id = try syntax_value.integer(mut p.pool, body)
+    return try syntax_value.object(mut p.pool, ["internal", "payload_patterns", "binding_names", "ty", "name", "bindings", "body"], [internal, fields, labels, ty, name, bindings, body_id])

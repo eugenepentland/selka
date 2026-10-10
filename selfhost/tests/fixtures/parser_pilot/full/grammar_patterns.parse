@@ -1,0 +1,15 @@
+func choose(value: Maybe[int]) -> int:
+    match value:
+        case Maybe.Some(value=Nested.Some(inner=x)):
+            return x
+        case Maybe.Empty:
+            return 0
+        case _:
+            return -1
+
+func expression(value: Maybe[int]) -> int:
+    return match value:
+        case Maybe.Some(x):
+            yield x
+        case _:
+            yield 0

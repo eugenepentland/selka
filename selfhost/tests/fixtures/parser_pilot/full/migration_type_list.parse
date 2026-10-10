@@ -1,0 +1,2 @@
+func main(values: List[int]) -> int:
+    return len(values)

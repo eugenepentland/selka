@@ -1,0 +1,3 @@
+@ensures(old(value, value) > 0)
+func example(value: int) -> int:
+    return value

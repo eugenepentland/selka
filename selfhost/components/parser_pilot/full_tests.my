@@ -1,0 +1,57 @@
+import full_parser
+import full_model
+import syntax_value
+import lexer
+import source
+
+func parsed(raw: bytes) -> full_parser.Outcome fails syntax_value.Problem:
+    mut tokens: full_model.Token[] = []
+    match lexer.lex(source.make(raw)):
+        case Ok(scanned):
+            for token in scanned:
+                tokens.append(full_model.Token(kind=token.kind, start=token.start, end=token.end))
+        case Err(problem):
+            fail syntax_value.Problem(code=problem.code, start=problem.start, end=problem.end, message=problem.message)
+    return try full_parser.parse(tokens, raw, False, False, b"tests/full.my")
+
+
+public func test_parser_catalog_and_recovery() -> bool fails syntax_value.Problem:
+    const actual = try parsed(b"func first() -> int:\n    return 1\nfunc second() -> int:\n    return 2\n")
+    const root = actual.pool.values[len(actual.pool.values) - 1]
+    return len(actual.problems) == 0 and root.names == ["types", "nodes", "statements", "functions", "lambdas", "attributes", "docstrings"]
+
+
+public func test_parser_multiple_diagnostics() -> bool fails syntax_value.Problem:
+    const actual = try parsed(b"func first() -> int:\n    const x: int = 1 return 2\nfunc second() -> int:\n    const y: int = 2 return 3\n")
+    return len(actual.problems) == 2 and actual.problems[0].problem.code == "E_SYNTAX" and actual.problems[1].problem.code == "E_SYNTAX"
+
+
+public func test_parser_nested_values() -> bool fails syntax_value.Problem:
+    const actual = try parsed(b"func values() -> tuple[int, int]:\n    const a, b = (1, 2)\n    return a, b\n")
+    return len(actual.problems) == 0
+
+
+public func test_parser_zero_width_transport() -> bool:
+    const tokens = [full_model.Token(kind="ident", start=0, end=0), full_model.Token(kind="eof", start=0, end=0)]
+    match full_parser.parse(tokens, b"", False, False, b"bad.my"):
+        case Ok(actual):
+            return False
+        case Err(problem):
+            return problem.code == "P_TRANSPORT"
+
+
+public func test_parser_embedded_eof_transport() -> bool:
+    const tokens = [full_model.Token(kind="eof", start=0, end=0), full_model.Token(kind="eof", start=0, end=0)]
+    match full_parser.parse(tokens, b"", False, False, b"bad.my"):
+        case Ok(actual):
+            return False
+        case Err(problem):
+            return problem.code == "P_TRANSPORT"
+
+
+public func test_parser_truncated_transport() -> bool:
+    match full_parser.parse([], b"", False, False, b"bad.my"):
+        case Ok(actual):
+            return False
+        case Err(problem):
+            return problem.code == "P_TRANSPORT"

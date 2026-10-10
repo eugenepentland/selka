@@ -1,0 +1,7 @@
+func collections(values: int[]) -> int:
+    const direct = [for value in values yield value * value]
+    const filtered = [for index in range(10) if index > 2 yield index]
+    const set_values = {value for value in values}
+    const mapping = {value: value + 1 for value in values if value > 0}
+    const generator = (value + 1 for value in values if value != 0)
+    return len(direct) + len(filtered) + len(set_values) + len(mapping)

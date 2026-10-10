@@ -1,0 +1,4 @@
+func main() -> int:
+    mut left, right = (1, 2)
+    left = 3
+    return left + right

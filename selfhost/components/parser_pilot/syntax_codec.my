@@ -1,0 +1,60 @@
+import syntax_value
+
+func put(mut buffer: byte_buffer, value: int, width: int):
+    mut remaining = value
+    for octet in range(width):
+        _ = buffer.append_byte(remaining % 256)
+        remaining = remaining // 256
+
+
+func ascii(text: str) -> bytes fails syntax_value.Problem:
+    const alphabet = "abcdefghijklmnopqrstuvwxyz_"
+    mut buffer = byte_buffer([])
+    for ch in text:
+        mut found = False
+        for i in range(len(alphabet)):
+            if alphabet[i] == ch:
+                mut byte = 95
+                if i < 26:
+                    byte = 97 + i
+                _ = buffer.append_byte(byte)
+                found = True
+                break
+        if not found:
+            fail syntax_value.Problem(code="P_SYNTAX_FIELDS", start=0, end=0, message="field names must be ASCII identifiers")
+    return bytes(buffer)
+
+
+public func encode_with_magic(pool: syntax_value.Pool, magic: bytes) -> bytes fails syntax_value.Problem:
+    if len(pool.values) == 0 or len(pool.values) > 262144:
+        fail syntax_value.Problem(code="P_SYNTAX_LIMIT", start=0, end=0, message="invalid syntax value count")
+    mut size = 16
+    for value in pool.values:
+        size = size + 21 + len(value.data) + 4 * len(value.children)
+        for name in value.names:
+            size = size + 4 + len(name)
+        if size > 33554432:
+            fail syntax_value.Problem(code="P_SYNTAX_LIMIT", start=0, end=0, message="syntax reply exceeds 32MiB")
+    mut buffer = byte_buffer([])
+    _ = buffer.reserve(size)
+    _ = buffer.append_range(magic, 0, 8)
+    put(mut buffer, len(pool.values), 4)
+    put(mut buffer, len(pool.values) - 1, 4)
+    for value in pool.values:
+        put(mut buffer, value.kind, 1)
+        put(mut buffer, value.integer, 8)
+        put(mut buffer, len(value.data), 4)
+        _ = buffer.append_range(value.data, 0, len(value.data))
+        put(mut buffer, len(value.children), 4)
+        for child in value.children:
+            put(mut buffer, child, 4)
+        put(mut buffer, len(value.names), 4)
+        for name in value.names:
+            const data = try ascii(name)
+            put(mut buffer, len(data), 4)
+            _ = buffer.append_range(data, 0, len(data))
+    return bytes(buffer)
+
+
+public func encode(pool: syntax_value.Pool) -> bytes fails syntax_value.Problem:
+    return try encode_with_magic(pool, b"SLKAST01")

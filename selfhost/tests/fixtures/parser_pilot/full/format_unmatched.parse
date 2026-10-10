@@ -1,0 +1,3 @@
+func main() -> int:
+    const a = f"a}b"
+    return 0

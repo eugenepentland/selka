@@ -1,0 +1,2 @@
+func main() -> int:
+    return __stand_in[int](cap)

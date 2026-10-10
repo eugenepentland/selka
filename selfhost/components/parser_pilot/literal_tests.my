@@ -1,0 +1,43 @@
+import literal_decoder
+import full_model
+import syntax_value
+
+func literal(source: bytes) -> bytes fails syntax_value.Problem:
+    const token = full_model.Token(kind="bytes", start=0, end=len(source))
+    return try literal_decoder.decode(source, token)
+
+
+public func test_escape_bytes() -> bool fails syntax_value.Problem:
+    const actual = try literal(b"b\"\\n\\r\\t\\0\\xff\"")
+    return actual == b"\n\r\t\0\xff"
+
+
+public func test_unicode_scalars() -> bool fails syntax_value.Problem:
+    const actual = try literal(b"\"\\u03bb\\U0001f600\"")
+    return actual == b"\xce\xbb\xf0\x9f\x98\x80"
+
+
+public func test_byte_unicode_is_literal() -> bool fails syntax_value.Problem:
+    const actual = try literal(b"b\"\\u03bb\"")
+    return actual == b"\\u03bb"
+
+
+public func test_triple_literal() -> bool fails syntax_value.Problem:
+    const actual = try literal(b"\"\"\"one\ntwo\"\"\"")
+    return actual == b"one\ntwo"
+
+
+public func test_malformed_span_fails() -> bool:
+    match literal(b""):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "P_LITERAL_SHAPE"
+
+
+public func test_unicode_surrogate_fails() -> bool:
+    match literal(b"\"\\ud800\""):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "E_BYTE_ESCAPE" and problem.message == "Unicode escape is not a scalar value"

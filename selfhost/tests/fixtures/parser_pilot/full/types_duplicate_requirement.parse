@@ -1,0 +1,2 @@
+func f[T: copy + copy]() -> int:
+    return 0

@@ -1,0 +1,6 @@
+func main() -> int:
+    const a = read_resource[int](handle)
+    const b = write_resource[int](handle, a)
+    const c = acquire_resource[int](cap, request)
+    const d = complete_resource[int](c)
+    return 0

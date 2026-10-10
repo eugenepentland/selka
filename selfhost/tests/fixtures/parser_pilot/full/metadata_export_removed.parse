@@ -1,0 +1,3 @@
+export example
+func example() -> int:
+    return 1

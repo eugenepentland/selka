@@ -1,0 +1,6 @@
+@test
+@allow("test-conditional", reason="metadata fixture")
+@deprecated("use newer")
+public func example() -> bool:
+    """Markers and documentation."""
+    return True

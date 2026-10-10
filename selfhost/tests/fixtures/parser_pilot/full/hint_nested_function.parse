@@ -1,0 +1,4 @@
+func main() -> int:
+    func inner() -> int:
+        return 1
+    return inner()

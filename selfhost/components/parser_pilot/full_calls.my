@@ -1,0 +1,96 @@
+import full_model
+import type_parser
+import syntax_value
+
+func type_argument_token(kind: str) -> bool:
+    const allowed = ["ident", "integer", "question", "kw_def", "lparen", "rparen", "arrow", "colon", "lbracket", "rbracket", "kw_i8", "kw_i16", "kw_i32", "kw_i64", "kw_u8", "kw_u16", "kw_u32", "kw_u64", "kw_bool", "kw_none", "kw_filesystem_cap", "kw_network_cap", "kw_environment_cap", "kw_clock_cap", "kw_random_cap"]
+    for candidate in allowed:
+        if candidate == kind:
+            return True
+    return False
+
+
+# These lookaheads only read a validated, monotonic token stream with final EOF.
+public func applied_constructor_ahead(p: full_model.State) -> bool:
+    mut position = p.cursor.pos
+    mut brackets = 0
+    mut applied = False
+    while position + 2 < len(p.tokens):
+        if position > p.cursor.pos and brackets == 0:
+            for octet in p.source[p.tokens[position - 1].end:p.tokens[position].start]:
+                if octet == 10:
+                    return False
+        const kind = p.tokens[position].kind
+        if kind == "lbracket":
+            brackets = brackets + 1
+            applied = True
+        if kind == "rbracket" and brackets > 0:
+            brackets = brackets - 1
+        if kind == "dot":
+            if applied and brackets == 0:
+                return False
+        elif kind == "comma" or kind == "colon" or kind == "rparen":
+            if brackets == 0:
+                return False
+        elif kind == "lparen":
+            if brackets == 0:
+                return applied
+        elif not type_argument_token(kind):
+            return False
+        position = position + 1
+    return False
+
+
+public func member_application_ahead(p: full_model.State) -> bool:
+    mut position = p.cursor.pos
+    if p.tokens[position].kind != "ident":
+        return False
+    mut segments = 1
+    while position + 2 < len(p.tokens) and p.tokens[position + 1].kind == "dot":
+        const kind = p.tokens[position + 2].kind
+        if kind != "ident" and kind != "kw_len" and kind != "kw_replace":
+            break
+        segments = segments + 1
+        position = position + 2
+    if segments < 2:
+        return False
+    const owner = p.source[p.tokens[p.cursor.pos].start:p.tokens[position - 2].end]
+    if p.cursor.module_syntax:
+        for alias in p.catalog.import_aliases:
+            if alias == owner:
+                return False
+    position = position + 1
+    if position >= len(p.tokens) or p.tokens[position].kind != "lbracket":
+        return False
+    mut brackets = 0
+    while position < len(p.tokens):
+        const kind = p.tokens[position].kind
+        if kind == "lbracket":
+            brackets = brackets + 1
+        elif kind == "rbracket":
+            brackets = brackets - 1
+            if brackets == 0:
+                return position + 1 < len(p.tokens) and p.tokens[position + 1].kind == "lparen"
+        elif kind != "comma" and kind != "dot" and not type_argument_token(kind):
+            return False
+        position = position + 1
+    return False
+
+
+public func square_type_arguments(mut p: full_model.State) -> int[] fails syntax_value.Problem:
+    _ = try full_model.expect(mut p, "lbracket")
+    mut arguments: int[] = []
+    mut more = True
+    while more:
+        mut argument = full_model.peek(p)
+        if argument.kind == "integer":
+            _ = try full_model.expect(mut p, "integer")
+        else:
+            argument = try type_parser.type_name(mut p)
+        if len(arguments) == 16:
+            fail full_model.problem(argument, "E_GENERIC_LIMIT", "at most 16 type arguments are permitted")
+        const location = try syntax_value.span(mut p.pool, argument.start, argument.end)
+        arguments.append(location)
+        more = full_model.accept(mut p, "comma")
+    _ = try full_model.expect(mut p, "rbracket")
+    return arguments

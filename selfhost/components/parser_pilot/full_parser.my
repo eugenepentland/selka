@@ -1,0 +1,1980 @@
+import full_model
+import syntax_value
+import type_parser
+import parser
+import literal_decoder
+import full_patterns
+import full_resource
+import full_format
+import full_header
+import full_hints
+import full_migration
+import full_calls
+import lexer
+import source as lexer_source
+import syntax_problem
+import syntax_recovery
+
+public record Outcome:
+    pool: syntax_value.Pool
+    problems: syntax_problem.Diagnostic[]
+
+
+record Parameters:
+    fields: int[]
+    mut_positions: int[]
+    keyword_only: int
+
+
+func ref(mut p: full_model.State, id: int) -> int fails syntax_value.Problem:
+    return try syntax_value.integer(mut p.pool, id)
+
+
+func optional_ref(mut p: full_model.State, id: int) -> int fails syntax_value.Problem:
+    if id < 0:
+        return try syntax_value.absent(mut p.pool)
+    return try ref(mut p, id)
+
+
+func located(mut p: full_model.State, token: full_model.Token) -> int fails syntax_value.Problem:
+    return try syntax_value.span(mut p.pool, token.start, token.end)
+
+
+func fail_at(p: full_model.State, code: str, message: str) -> syntax_value.Problem:
+    return full_model.problem(full_model.peek(p), code, message)
+
+
+func look_token(p: full_model.State, distance: int) -> full_model.Token:
+    const index = p.cursor.pos + distance
+    if index >= len(p.tokens):
+        return p.tokens[len(p.tokens) - 1]
+    return p.tokens[index]
+
+
+func previous(p: full_model.State) -> full_model.Token:
+    return p.tokens[p.cursor.pos - 1]
+
+
+func precedence(kind: str) -> int:
+    if kind == "or_or":
+        return 1
+    if kind == "and_and":
+        return 2
+    if kind == "eq_eq" or kind == "bang_eq" or kind == "lt" or kind == "le" or kind == "gt" or kind == "ge":
+        return 3
+    if kind == "pipe":
+        return 5
+    if kind == "caret":
+        return 6
+    if kind == "ampersand":
+        return 7
+    if kind == "plus" or kind == "minus":
+        return 8
+    if kind == "star" or kind == "slash" or kind == "slash_slash" or kind == "percent":
+        return 9
+    return -1
+
+
+func binary_tag(kind: str) -> bytes:
+    if kind == "plus":
+        return b"add"
+    if kind == "minus":
+        return b"sub"
+    if kind == "star":
+        return b"mul"
+    if kind == "slash":
+        return b"python_div"
+    if kind == "slash_slash":
+        return b"floor_div"
+    if kind == "percent":
+        return b"floor_rem"
+    if kind == "or_or":
+        return b"logical_or"
+    if kind == "and_and":
+        return b"logical_and"
+    if kind == "eq_eq":
+        return b"eq"
+    if kind == "bang_eq":
+        return b"ne"
+    if kind == "lt":
+        return b"lt"
+    if kind == "le":
+        return b"le"
+    if kind == "gt":
+        return b"gt"
+    if kind == "ge":
+        return b"ge"
+    if kind == "pipe":
+        return b"bit_or"
+    if kind == "caret":
+        return b"bit_xor"
+    return b"bit_and"
+
+
+func unary(mut p: full_model.State, first: full_model.Token, tag: bytes, operand: int) -> int fails syntax_value.Problem:
+    const op = try syntax_value.enumeration(mut p.pool, tag)
+    const child = try ref(mut p, operand)
+    const span = try located(mut p, first)
+    const payload = try syntax_value.object(mut p.pool, ["op", "operand", "op_span"], [op, child, span])
+    return try full_model.node(mut p, first.start, full_model.node_end(p, operand), b"unary", payload)
+
+
+func boundary_expression(mut p: full_model.State) -> int fails syntax_value.Problem:
+    const first = full_model.peek(p)
+    if full_model.word(p, b"try"):
+        p.cursor.pos = p.cursor.pos + 1
+        const child = try expression(mut p, 0)
+        const payload = try ref(mut p, child)
+        return try full_model.node(mut p, first.start, full_model.node_end(p, child), b"propagate", payload)
+    return try expression(mut p, 0)
+
+
+func ascii_tag(text: str) -> bytes:
+    mut data: int[] = []
+    const alphabet = "abcdefghijklmnopqrstuvwxyz_0123456789"
+    const codes = b"abcdefghijklmnopqrstuvwxyz_0123456789"
+    for character in text:
+        mut index = 0
+        while index < len(alphabet):
+            if character == alphabet[index]:
+                data.append(codes[index])
+                break
+            index = index + 1
+    return bytes(byte_buffer(data))
+
+
+func argument_value(mut p: full_model.State) -> int fails syntax_value.Problem:
+    const first = full_model.peek(p)
+    const next = look_token(p, 1).kind
+    const marked = next == "ident" or next == "integer" or next == "bytes" or next == "format" or next == "kw_true" or next == "kw_false" or next == "kw_none" or next == "kw_len" or next == "kw_replace" or next == "kw_todo" or next == "minus" or next == "bang" or next == "lbracket" or next == "lparen" or next == "lbrace"
+    if not full_model.word(p, b"mut") or not marked:
+        return try expression(mut p, 0)
+    p.cursor.pos = p.cursor.pos + 1
+    const value = try expression(mut p, 0)
+    const payload = try ref(mut p, value)
+    return try full_model.node(mut p, first.start, full_model.node_end(p, value), b"mut_argument", payload)
+
+
+func hole_expression(mut p: full_model.State, token: full_model.Token) -> int fails syntax_value.Problem:
+    p.cursor.pos = p.cursor.pos + 1
+    _ = try full_model.expect(mut p, "lbracket")
+    const ty = try type_parser.type_name(mut p)
+    _ = try full_model.expect(mut p, "rbracket")
+    _ = try full_model.expect(mut p, "lparen")
+    const close = try full_model.expect(mut p, "rparen")
+    const name = try located(mut p, token)
+    const ty_value = try located(mut p, ty)
+    const types = try syntax_value.sequence(mut p.pool, [ty_value])
+    const empty = try syntax_value.sequence(mut p.pool, [])
+    const absent = try syntax_value.absent(mut p.pool)
+    const payload = try syntax_value.object(mut p.pool, ["owner", "type_arguments", "name", "arguments", "argument_names", "evaluation_order"], [absent, types, name, empty, empty, empty])
+    return try full_model.node(mut p, token.start, close.end, b"call", payload)
+
+
+func default_argument(mut p: full_model.State) -> int fails syntax_value.Problem:
+    const value = try expression(mut p, 0)
+    const kind = full_model.node_tag(p, value)
+    mut literal = kind == b"integer" or kind == b"boolean" or kind == b"unit" or kind == b"text"
+    if kind == b"unary":
+        const payload = p.pool.values[p.pool.values[p.exprs[value]].children[1]].children[0]
+        const op = p.pool.values[value_field(p, payload, "op")].data
+        const operand = p.pool.values[value_field(p, payload, "operand")].integer
+        literal = op == b"neg" and full_model.node_tag(p, operand) == b"integer"
+    if not literal:
+        const token = full_model.Token(kind="default", start=full_model.node_start(p, value), end=full_model.node_end(p, value))
+        fail full_model.problem(token, "E_DEFAULT_ARGUMENT", "defaults must be immutable scalar literals")
+    return value
+
+
+func builtin_expression(mut p: full_model.State, token: full_model.Token) -> int fails syntax_value.Problem:
+    if not p.cursor.trusted_intrinsics:
+        if token.kind == "kw_f64_sqrt":
+            fail full_model.problem(token, "E_INTERNAL_NAME", "`__float_sqrt` is reserved for compiler-internal standard-library sources; use the public `sqrt` operation")
+        if token.kind == "kw_f64_sin" or token.kind == "kw_f64_cos":
+            fail full_model.problem(token, "E_INTERNAL_NAME", "this binary64 intrinsic is reserved for compiler-internal standard-library sources; use `math.sin` or `math.cos`")
+    p.cursor.pos = p.cursor.pos + 1
+    mut ty = token
+    if token.kind == "kw_wrap":
+        _ = try full_model.expect(mut p, "lbracket")
+        ty = try type_parser.type_name(mut p)
+        _ = try full_model.expect(mut p, "rbracket")
+    _ = try full_model.expect(mut p, "lparen")
+    const first = try expression(mut p, 0)
+    const first_ref = try ref(mut p, first)
+    mut tag = b""
+    mut payload = -1
+    if token.kind == "kw_wrap" or token.kind == "kw_i8" or token.kind == "kw_i16" or token.kind == "kw_i32" or token.kind == "kw_i64" or token.kind == "kw_u8" or token.kind == "kw_u16" or token.kind == "kw_u32" or token.kind == "kw_u64":
+        const ty_ref = try located(mut p, ty)
+        tag = b"cast"
+        if token.kind == "kw_wrap":
+            tag = b"wrap"
+        payload = try syntax_value.object(mut p.pool, ["ty", "value"], [ty_ref, first_ref])
+    elif token.kind == "kw_len" or token.kind == "kw_unwrap":
+        tag = b"length"
+        if token.kind == "kw_unwrap":
+            tag = b"unwrap"
+        payload = first_ref
+    elif token.kind == "kw_replace":
+        _ = try full_model.expect(mut p, "comma")
+        const index = try expression(mut p, 0)
+        _ = try full_model.expect(mut p, "comma")
+        const value = try expression(mut p, 0)
+        const index_ref = try ref(mut p, index)
+        const value_ref = try ref(mut p, value)
+        tag = b"replace"
+        payload = try syntax_value.object(mut p.pool, ["base", "index", "value"], [first_ref, index_ref, value_ref])
+    else:
+        const op = try syntax_value.enumeration(mut p.pool, ascii_tag(token.kind[3:]))
+        const op_span = try located(mut p, token)
+        const unary_operation = token.kind == "kw_f64_sqrt" or token.kind == "kw_f64_sin" or token.kind == "kw_f64_cos" or token.kind == "kw_f64_floor" or token.kind == "kw_f64_ceil" or token.kind == "kw_f64_trunc" or token.kind == "kw_f64_abs" or token.kind == "kw_f64_neg" or token.kind == "kw_f64_from_u64" or token.kind == "kw_f64_to_u64"
+        if not unary_operation:
+            _ = try full_model.expect(mut p, "comma")
+            const right = try expression(mut p, 0)
+            const right_ref = try ref(mut p, right)
+            const chained = try syntax_value.boolean(mut p.pool, False)
+            tag = b"binary"
+            payload = try syntax_value.object(mut p.pool, ["op", "left", "right", "op_span", "chained"], [op, first_ref, right_ref, op_span, chained])
+        else:
+            tag = b"unary"
+            payload = try syntax_value.object(mut p.pool, ["op", "operand", "op_span"], [op, first_ref, op_span])
+    const close = try full_model.expect(mut p, "rparen")
+    return try full_model.node(mut p, token.start, close.end, tag, payload)
+
+
+func named_builtin(p: full_model.State, token: full_model.Token) -> bool:
+    if token.kind != "kw_len" and token.kind != "kw_replace":
+        return False
+    mut depth = 0
+    for index in range(len(p.tokens) - 1):
+        const kind = p.tokens[index].kind
+        if kind == "indent":
+            depth = depth + 1
+        if kind == "dedent" and depth > 0:
+            depth = depth - 1
+        if depth == 0 and kind == "kw_def":
+            const candidate = p.tokens[index + 1]
+            if p.source[candidate.start:candidate.end] == p.source[token.start:token.end]:
+                return True
+    if token.kind != "kw_replace" or look_token(p, 1).kind != "lparen":
+        return False
+    mut index = p.cursor.pos + 2
+    depth = 1
+    while index < len(p.tokens):
+        const kind = p.tokens[index].kind
+        if kind == "lparen" or kind == "lbracket":
+            depth = depth + 1
+        if kind == "rparen" or kind == "rbracket":
+            depth = depth - 1
+            if depth == 0:
+                return False
+        if kind == "comma" and depth == 1:
+            if index + 2 >= len(p.tokens):
+                return False
+            const name = p.tokens[index + 1].kind
+            return (name == "ident" or name == "kw_len" or name == "kw_replace") and p.tokens[index + 2].kind == "equal"
+        index = index + 1
+    return False
+
+
+func builtin_kind(kind: str) -> bool:
+    return kind == "kw_wrap" or kind == "kw_len" or kind == "kw_unwrap" or kind == "kw_replace" or kind == "kw_i8" or kind == "kw_i16" or kind == "kw_i32" or kind == "kw_i64" or kind == "kw_u8" or kind == "kw_u16" or kind == "kw_u32" or kind == "kw_u64" or kind[:6] == "kw_f64" or kind == "kw_bit_and" or kind == "kw_bit_or" or kind == "kw_bit_xor" or kind == "kw_shift_left" or kind == "kw_shift_right" or kind[:12] == "kw_wrapping_" or kind[:14] == "kw_saturating_"
+
+
+func resource_expression(mut p: full_model.State, token: full_model.Token) -> int fails syntax_value.Problem:
+    _ = try full_resource.guard(p, token)
+    const signature = full_resource.signature(token.kind)
+    p.cursor.pos = p.cursor.pos + 1
+    mut ty = try syntax_value.absent(mut p.pool)
+    mut owner = try syntax_value.absent(mut p.pool)
+    if signature.typed:
+        if signature.variadic and full_model.peek(p).kind != "lbracket":
+            fail full_model.problem(token, "E_CODEC_ARITY", "codec operation requires one explicit domain type")
+        _ = try full_model.expect(mut p, "lbracket")
+        const type_token = try type_parser.type_name(mut p)
+        ty = try located(mut p, type_token)
+        _ = try full_model.expect(mut p, "rbracket")
+    _ = try full_model.expect(mut p, "lparen")
+    if signature.owner:
+        const name = try full_model.expect(mut p, "ident")
+        owner = try located(mut p, name)
+        if signature.arguments > 0:
+            _ = try full_model.expect(mut p, "comma")
+    mut args: int[] = []
+    if signature.variadic:
+        while full_model.peek(p).kind != "rparen":
+            const item = try expression(mut p, 0)
+            args.append(item)
+            if not full_model.accept(mut p, "comma"):
+                break
+    else:
+        mut index = 0
+        while index < signature.arguments:
+            if index > 0:
+                _ = try full_model.expect(mut p, "comma")
+            const item = try expression(mut p, 0)
+            args.append(item)
+            index = index + 1
+    const close = try full_model.expect(mut p, "rparen")
+    return try full_resource.build(mut p, token, close.end, ty, owner, args)
+
+
+func format_hole(mut p: full_model.State, start: int, end: int) -> int fails syntax_value.Problem:
+    mut tokens: full_model.Token[] = []
+    match lexer.lex_range(lexer_source.make(p.source), start, end):
+        case Ok(scanned):
+            for token in scanned:
+                tokens.append(full_model.Token(kind=token.kind, start=token.start, end=token.end))
+        case Err(problem):
+            fail syntax_value.Problem(code=problem.code, start=problem.start, end=problem.end, message=problem.message)
+    const outer = p.tokens
+    const position = p.cursor.pos
+    const delimiters = p.cursor.delimiters
+    p.tokens = tokens
+    p.cursor.pos = 0
+    p.cursor.delimiters = delimiters + 1
+    mut value = -1
+    mut issue = syntax_value.Problem(code="", start=0, end=0, message="")
+    match expression(mut p, 0):
+        case Ok(parsed):
+            value = parsed
+            if full_model.peek(p).kind != "eof":
+                issue = fail_at(p, "E_FORMAT_STRING", "a format string interpolation holds exactly one expression")
+        case Err(problem):
+            issue = problem
+    p.tokens = outer
+    p.cursor.pos = position
+    p.cursor.delimiters = delimiters
+    if issue.code != "":
+        fail issue
+    return value
+
+
+func format_expression(mut p: full_model.State, token: full_model.Token) -> int fails syntax_value.Problem:
+    if token.end - token.start < 3:
+        fail full_model.problem(token, "P_TRANSPORT", "invalid format token span")
+    p.cursor.pos = p.cursor.pos + 1
+    const pieces = try full_format.split(p.source, token)
+    mut parts: int[] = []
+    for index in range(len(pieces)):
+        const piece = pieces[index]
+        mut node = -1
+        if piece.kind == "literal":
+            const quoted = full_model.Token(kind="bytes", start=piece.start - 1, end=piece.end + 1)
+            const text = try literal_decoder.decode(p.source, quoted)
+            const payload = try syntax_value.octets(mut p.pool, text)
+            node = try full_model.node(mut p, piece.start, piece.end, b"text", payload)
+        elif piece.kind == "brace":
+            const text = try syntax_value.octets(mut p.pool, p.source[piece.start:piece.start + 1])
+            node = try full_model.node(mut p, piece.start, piece.end, b"text", text)
+        elif piece.kind == "hole":
+            node = try format_hole(mut p, piece.start, piece.end)
+            if index + 1 < len(pieces) and pieces[index + 1].kind == "spec" and pieces[index + 1].end > pieces[index + 1].start:
+                const spec = pieces[index + 1]
+                const span = try syntax_value.span(mut p.pool, spec.start, spec.end)
+                const value = try ref(mut p, node)
+                const payload = try syntax_value.object(mut p.pool, ["value", "spec"], [value, span])
+                node = try full_model.node(mut p, piece.start, spec.end, b"format_field", payload)
+        if node >= 0:
+            const child = try ref(mut p, node)
+            parts.append(child)
+    const payload = try syntax_value.sequence(mut p.pool, parts)
+    return try full_model.node(mut p, token.start, token.end, b"format", payload)
+
+
+func expression(mut p: full_model.State, minimum: int) -> int fails syntax_value.Problem:
+    if p.cursor.depth >= 256:
+        fail fail_at(p, "E_NESTING_LIMIT", "parser nesting exceeds 256 levels")
+    p.cursor.depth = p.cursor.depth + 1
+    const first = full_model.peek(p)
+    mut left = -1
+    if full_model.word(p, b"lambda"):
+        p.cursor.pos = p.cursor.pos + 1
+        mut parameters: int[] = []
+        if full_model.peek(p).kind != "colon":
+            while True:
+                const parameter = try full_model.expect(mut p, "ident")
+                if p.source[parameter.start:parameter.end] == b"_":
+                    fail full_model.problem(parameter, "E_LAMBDA_PARAMETER", "lambda parameters must have a usable name")
+                const value = try located(mut p, parameter)
+                parameters.append(value)
+                if not full_model.accept(mut p, "comma"):
+                    break
+        _ = try full_model.expect(mut p, "colon")
+        const body = try expression(mut p, 0)
+        const span = try syntax_value.span(mut p.pool, first.start, full_model.node_end(p, body))
+        const parameters_ref = try syntax_value.sequence(mut p.pool, parameters)
+        const body_ref = try ref(mut p, body)
+        const declaration = try syntax_value.object(mut p.pool, ["span", "parameters", "body"], [span, parameters_ref, body_ref])
+        p.catalog.lambdas.append(declaration)
+        const name = try located(mut p, first)
+        left = try full_model.node(mut p, first.start, full_model.node_end(p, body), b"name", name)
+        p.cursor.depth = p.cursor.depth - 1
+        return left
+    elif first.kind == "kw_if":
+        p.cursor.pos = p.cursor.pos + 1
+        const condition = try expression(mut p, 0)
+        if not full_model.word(p, b"then"):
+            fail fail_at(p, "E_CONDITIONAL", "conditional values require `if condition then value else value`")
+        p.cursor.pos = p.cursor.pos + 1
+        const yes = try expression(mut p, 0)
+        _ = try full_model.expect(mut p, "kw_else")
+        const no = try expression(mut p, 0)
+        const condition_ref = try ref(mut p, condition)
+        const yes_ref = try ref(mut p, yes)
+        const no_ref = try ref(mut p, no)
+        const payload = try syntax_value.object(mut p.pool, ["condition", "then_value", "else_value"], [condition_ref, yes_ref, no_ref])
+        left = try full_model.node(mut p, first.start, full_model.node_end(p, no), b"conditional", payload)
+    elif first.kind == "kw_todo":
+        left = try hole_expression(mut p, first)
+    elif full_resource.kind(first.kind):
+        left = try resource_expression(mut p, first)
+    elif builtin_kind(first.kind) and not named_builtin(p, first):
+        left = try builtin_expression(mut p, first)
+    elif first.kind == "integer" or first.kind == "kw_true" or first.kind == "kw_false" or first.kind == "kw_none":
+        p.cursor.pos = p.cursor.pos + 1
+        mut payload = -1
+        mut tag = b"integer"
+        if first.kind == "integer":
+            payload = try located(mut p, first)
+        elif first.kind == "kw_none":
+            tag = b"unit"
+            payload = try syntax_value.absent(mut p.pool)
+        else:
+            tag = b"boolean"
+            payload = try syntax_value.boolean(mut p.pool, first.kind == "kw_true")
+        left = try full_model.node(mut p, first.start, first.end, tag, payload)
+    elif first.kind == "format":
+        left = try format_expression(mut p, first)
+    elif first.kind == "bytes":
+        p.cursor.pos = p.cursor.pos + 1
+        const data = try literal_decoder.decode(p.source, first)
+        const payload = try syntax_value.octets(mut p.pool, data)
+        mut tag = b"text"
+        if p.source[first.start] == 98:
+            tag = b"bytes"
+        left = try full_model.node(mut p, first.start, first.end, tag, payload)
+    elif first.kind == "ident" or first.kind == "kw_len" or first.kind == "kw_replace":
+        if full_model.word(p, b"try"):
+            fail fail_at(p, "E_TRY_POSITION", "`try` is permitted only at a statement value boundary; extract the fallible operation into a declaration")
+        mut named_token = first
+        mut owner_token = full_model.Token(kind="", start=-1, end=-1)
+        mut explicit_types: int[] = []
+        if full_calls.member_application_ahead(p):
+            mut segments: full_model.Token[] = []
+            const segment = try full_model.expect(mut p, "ident")
+            segments.append(segment)
+            while full_model.accept(mut p, "dot"):
+                const tail = try full_model.declared_name(mut p)
+                segments.append(tail)
+            named_token = segments[len(segments) - 1]
+            owner_token = full_model.Token(kind="owner", start=segments[0].start, end=segments[len(segments) - 2].end)
+            explicit_types = try full_calls.square_type_arguments(mut p)
+        elif full_calls.applied_constructor_ahead(p):
+            named_token = try type_parser.type_name(mut p)
+        else:
+            _ = try full_model.declared_name(mut p)
+            named_token = try type_parser.qualified_tail(mut p, first)
+        if full_model.same_line(p) and full_model.peek(p).kind == "dot" and look_token(p, 2).kind == "lparen":
+            owner_token = named_token
+            p.cursor.pos = p.cursor.pos + 1
+            if full_model.peek(p).kind == "kw_union":
+                named_token = full_model.peek(p)
+                p.cursor.pos = p.cursor.pos + 1
+            else:
+                named_token = try full_model.declared_name(mut p)
+        const name = try located(mut p, named_token)
+        if full_model.same_line(p) and full_model.accept(mut p, "lparen"):
+            mut arguments: int[] = []
+            mut names: int[] = []
+            mut keyword_seen = False
+            while full_model.peek(p).kind != "rparen":
+                mut keyword = try syntax_value.absent(mut p.pool)
+                if (full_model.peek(p).kind == "ident" or full_model.peek(p).kind == "kw_len" or full_model.peek(p).kind == "kw_replace") and look_token(p, 1).kind == "equal":
+                    const key = try full_model.declared_name(mut p)
+                    _ = try full_model.expect(mut p, "equal")
+                    keyword = try located(mut p, key)
+                    keyword_seen = True
+                elif keyword_seen:
+                    fail fail_at(p, "E_CALL_ARGUMENT", "positional arguments must precede keyword arguments")
+                mut value = try argument_value(mut p)
+                if len(arguments) == 0 and not keyword_seen and full_model.peek(p).kind == "kw_for":
+                    value = try generator_value(mut p, value)
+                    if full_model.peek(p).kind == "comma":
+                        const problem = fail_at(p, "E_SYNTAX", "a generator expression passed with other arguments needs its own parentheses")
+                        const reported = try syntax_recovery.annotated(mut p, syntax_problem.alternative(problem, "parenthesize it: `sorted((x for x in xs), reverse=True)`"))
+                        fail reported
+                const value_ref = try ref(mut p, value)
+                arguments.append(value_ref)
+                names.append(keyword)
+                if not full_model.accept(mut p, "comma"):
+                    break
+            const close = try full_model.expect(mut p, "rparen")
+            const argument_values = try syntax_value.sequence(mut p.pool, arguments)
+            if not keyword_seen:
+                names = []
+            const argument_names = try syntax_value.sequence(mut p.pool, names)
+            const evaluation_order = try syntax_value.sequence(mut p.pool, [])
+            mut owner = try syntax_value.absent(mut p.pool)
+            if owner_token.start >= 0:
+                owner = try located(mut p, owner_token)
+            const type_arguments = try syntax_value.sequence(mut p.pool, explicit_types)
+            const payload = try syntax_value.object(mut p.pool, ["argument_names", "evaluation_order", "owner", "type_arguments", "name", "arguments"], [argument_names, evaluation_order, owner, type_arguments, name, argument_values])
+            left = try full_model.node(mut p, first.start, close.end, b"call", payload)
+        else:
+            left = try full_model.node(mut p, named_token.start, named_token.end, b"name", name)
+    elif first.kind == "minus" or first.kind == "bang":
+        p.cursor.pos = p.cursor.pos + 1
+        mut level = 10
+        mut tag = b"neg"
+        if first.kind == "bang":
+            tag = b"not"
+            if p.source[first.start:first.end] == b"not":
+                level = 3
+        const operand = try expression(mut p, level)
+        left = try unary(mut p, first, tag, operand)
+    elif first.kind == "kw_match":
+        const matched = try match_value(mut p)
+        left = try full_model.node(mut p, first.start, previous(p).end, b"match_expression", matched)
+    elif full_model.accept(mut p, "lparen"):
+        if full_model.accept(mut p, "rparen"):
+            const unit = try syntax_value.absent(mut p.pool)
+            left = try full_model.node(mut p, first.start, previous(p).end, b"unit", unit)
+        else:
+            left = try expression(mut p, 0)
+            if full_model.peek(p).kind == "colon" and look_token(p, 1).kind == "equal":
+                fail try full_hints.hinted(mut p, "walrus")
+            if full_model.peek(p).kind == "kw_for":
+                left = try generator_value(mut p, left)
+                const close = try full_model.expect(mut p, "rparen")
+                const old = p.pool.values[p.exprs[left]]
+                const span = try syntax_value.span(mut p.pool, first.start, close.end)
+                const widened = try syntax_value.object(mut p.pool, old.names, [span, old.children[1]])
+                p.exprs[left] = widened
+            elif full_model.peek(p).kind == "comma":
+                mut elements: int[] = []
+                const element = try ref(mut p, left)
+                elements.append(element)
+                mut comma = full_model.peek(p)
+                while full_model.accept(mut p, "comma"):
+                    comma = previous(p)
+                    if full_model.peek(p).kind == "rparen":
+                        break
+                    const item = try expression(mut p, 0)
+                    const item_ref = try ref(mut p, item)
+                    elements.append(item_ref)
+                if len(elements) < 2:
+                    fail full_model.problem(comma, "E_SYNTAX", "a one-element tuple is not a value; write the element alone or a two-element tuple")
+                const close = try full_model.expect(mut p, "rparen")
+                const payload = try syntax_value.sequence(mut p.pool, elements)
+                left = try full_model.node(mut p, first.start, close.end, b"tuple", payload)
+            else:
+                const close = try full_model.expect(mut p, "rparen")
+                const old = p.pool.values[p.exprs[left]]
+                const span = try syntax_value.span(mut p.pool, first.start, close.end)
+                const widened = try syntax_value.object(mut p.pool, old.names, [span, old.children[1]])
+                p.exprs[left] = widened
+    elif full_model.accept(mut p, "lbracket") or full_model.accept(mut p, "lbrace"):
+        mut children: int[] = []
+        mut tag = b"list_literal"
+        mut close_kind = "rbracket"
+        if first.kind == "lbrace":
+            p.cursor.delimiters = p.cursor.delimiters + 1
+            tag = b"set_literal"
+            close_kind = "rbrace"
+        if first.kind == "lbracket" and full_model.peek(p).kind == "kw_for":
+            left = try source_comprehension(mut p, first)
+        else:
+            if full_model.peek(p).kind != close_kind:
+                while True:
+                    const value = try expression(mut p, 0)
+                    const child = try ref(mut p, value)
+                    children.append(child)
+                    mut output = value
+                    mut key = -1
+                    if first.kind == "lbrace" and full_model.accept(mut p, "colon"):
+                        tag = b"dictionary_literal"
+                        const item = try expression(mut p, 0)
+                        const item_ref = try ref(mut p, item)
+                        children.append(item_ref)
+                        output = item
+                        key = value
+                    if len(children) <= 2 and full_model.peek(p).kind == "kw_for":
+                        mut shape = b"list"
+                        if first.kind == "lbrace":
+                            shape = b"set"
+                            if key >= 0:
+                                shape = b"dict"
+                        left = try collection_comprehension(mut p, first, output, key, close_kind, shape)
+                        break
+                    if not full_model.accept(mut p, "comma") or full_model.peek(p).kind == close_kind:
+                        break
+            elif first.kind == "lbrace":
+                tag = b"dictionary_literal"
+            if left < 0:
+                const close = try full_model.expect(mut p, close_kind)
+                const payload = try syntax_value.sequence(mut p.pool, children)
+                left = try full_model.node(mut p, first.start, close.end, tag, payload)
+        if first.kind == "lbrace":
+            p.cursor.delimiters = p.cursor.delimiters - 1
+    else:
+        fail try full_hints.expression_failure(mut p, first)
+    mut chain = False
+    while full_model.same_line(p):
+        const token = full_model.peek(p)
+        if precedence(token.kind) != 3:
+            chain = False
+        if full_model.accept(mut p, "question"):
+            const payload = try ref(mut p, left)
+            left = try full_model.node(mut p, full_model.node_start(p, left), token.end, b"propagate", payload)
+        elif full_model.accept(mut p, "lbracket"):
+            mut start = -1
+            mut end = -1
+            mut step = -1
+            if full_model.peek(p).kind != "colon":
+                start = try expression(mut p, 0)
+            if full_model.accept(mut p, "colon"):
+                if full_model.peek(p).kind != "rbracket" and full_model.peek(p).kind != "colon":
+                    end = try expression(mut p, 0)
+                if full_model.accept(mut p, "colon") and full_model.peek(p).kind != "rbracket":
+                    step = try expression(mut p, 0)
+                const close = try full_model.expect(mut p, "rbracket")
+                const base_ref = try ref(mut p, left)
+                const start_ref = try optional_ref(mut p, start)
+                const end_ref = try optional_ref(mut p, end)
+                const step_ref = try optional_ref(mut p, step)
+                const payload = try syntax_value.object(mut p.pool, ["base", "start", "end", "step"], [base_ref, start_ref, end_ref, step_ref])
+                left = try full_model.node(mut p, full_model.node_start(p, left), close.end, b"slice", payload)
+            else:
+                const close = try full_model.expect(mut p, "rbracket")
+                const base_ref = try ref(mut p, left)
+                const index_ref = try ref(mut p, start)
+                const payload = try syntax_value.object(mut p.pool, ["base", "index"], [base_ref, index_ref])
+                left = try full_model.node(mut p, full_model.node_start(p, left), close.end, b"index", payload)
+        elif full_model.accept(mut p, "dot"):
+            if full_model.peek(p).kind == "kw_unwrap":
+                fail try full_hints.hinted(mut p, "option_unwrap")
+            mut field = full_model.peek(p)
+            if not full_model.accept(mut p, "kw_union"):
+                field = try full_model.declared_name(mut p)
+            const base = try ref(mut p, left)
+            const name = try located(mut p, field)
+            if full_model.accept(mut p, "lparen"):
+                mut arguments: int[] = []
+                mut names: int[] = []
+                mut keyword_seen = False
+                while full_model.peek(p).kind != "rparen":
+                    mut keyword = try syntax_value.absent(mut p.pool)
+                    if (full_model.peek(p).kind == "ident" or full_model.peek(p).kind == "kw_len" or full_model.peek(p).kind == "kw_replace") and look_token(p, 1).kind == "equal":
+                        const key = try full_model.declared_name(mut p)
+                        _ = try full_model.expect(mut p, "equal")
+                        keyword = try located(mut p, key)
+                        keyword_seen = True
+                    elif keyword_seen:
+                        fail fail_at(p, "E_CALL_ARGUMENT", "positional arguments must precede keyword arguments")
+                    mut value = try argument_value(mut p)
+                    if len(arguments) == 0 and not keyword_seen and full_model.peek(p).kind == "kw_for":
+                        value = try generator_value(mut p, value)
+                        if full_model.peek(p).kind == "comma":
+                            const problem = fail_at(p, "E_SYNTAX", "a generator expression passed with other arguments needs its own parentheses")
+                            const reported = try syntax_recovery.annotated(mut p, syntax_problem.alternative(problem, "parenthesize it: `sorted((x for x in xs), reverse=True)`"))
+                            fail reported
+                    const value_ref = try ref(mut p, value)
+                    arguments.append(value_ref)
+                    names.append(keyword)
+                    if not full_model.accept(mut p, "comma"):
+                        break
+                const close = try full_model.expect(mut p, "rparen")
+                if not keyword_seen:
+                    names = []
+                const argument_values = try syntax_value.sequence(mut p.pool, arguments)
+                const argument_names = try syntax_value.sequence(mut p.pool, names)
+                const payload = try syntax_value.object(mut p.pool, ["base", "name", "arguments", "argument_names"], [base, name, argument_values, argument_names])
+                left = try full_model.node(mut p, full_model.node_start(p, left), close.end, b"method_call", payload)
+            else:
+                const payload = try syntax_value.object(mut p.pool, ["base", "name"], [base, name])
+                left = try full_model.node(mut p, full_model.node_start(p, left), field.end, b"field", payload)
+        elif minimum <= 3 and token.kind == "kw_is":
+            p.cursor.pos = p.cursor.pos + 1
+            const negate = full_model.accept(mut p, "bang")
+            const none = try full_model.expect(mut p, "kw_none")
+            const op_span = try located(mut p, token)
+            const operand = try ref(mut p, left)
+            const op = try syntax_value.enumeration(mut p.pool, b"is_none")
+            const payload = try syntax_value.object(mut p.pool, ["op", "operand", "op_span"], [op, operand, op_span])
+            left = try full_model.node(mut p, full_model.node_start(p, left), none.end, b"unary", payload)
+            if negate:
+                const inverted = try syntax_value.enumeration(mut p.pool, b"not")
+                const child = try ref(mut p, left)
+                const inversion = try syntax_value.object(mut p.pool, ["op", "operand", "op_span"], [inverted, child, op_span])
+                left = try full_model.node(mut p, full_model.node_start(p, left), none.end, b"unary", inversion)
+        elif minimum <= 3 and (token.kind == "kw_in" or (token.kind == "bang" and look_token(p, 1).kind == "kw_in")):
+            const negate = token.kind == "bang"
+            p.cursor.pos = p.cursor.pos + 1
+            if negate:
+                p.cursor.pos = p.cursor.pos + 1
+            const container = try expression(mut p, 4)
+            const needle_ref = try ref(mut p, left)
+            const container_ref = try ref(mut p, container)
+            const negate_ref = try syntax_value.boolean(mut p.pool, negate)
+            const payload = try syntax_value.object(mut p.pool, ["needle", "container", "negate"], [needle_ref, container_ref, negate_ref])
+            left = try full_model.node(mut p, full_model.node_start(p, left), full_model.node_end(p, container), b"membership", payload)
+        elif precedence(token.kind) >= minimum and precedence(token.kind) >= 0:
+            p.cursor.pos = p.cursor.pos + 1
+            const right = try expression(mut p, precedence(token.kind) + 1)
+            const op = try syntax_value.enumeration(mut p.pool, binary_tag(token.kind))
+            const left_ref = try ref(mut p, left)
+            const right_ref = try ref(mut p, right)
+            const op_span = try located(mut p, token)
+            const comparison = precedence(token.kind) == 3
+            const chained = try syntax_value.boolean(mut p.pool, chain and comparison)
+            const payload = try syntax_value.object(mut p.pool, ["op", "left", "right", "op_span", "chained"], [op, left_ref, right_ref, op_span, chained])
+            left = try full_model.node(mut p, full_model.node_start(p, left), full_model.node_end(p, right), b"binary", payload)
+            chain = comparison
+        elif token.kind == "kw_if" and minimum == 0:
+            p.cursor.pos = p.cursor.pos + 1
+            const condition = try expression(mut p, 1)
+            _ = try full_model.expect(mut p, "kw_else")
+            const otherwise = try expression(mut p, 0)
+            const condition_ref = try ref(mut p, condition)
+            const yes_ref = try ref(mut p, left)
+            const no_ref = try ref(mut p, otherwise)
+            const payload = try syntax_value.object(mut p.pool, ["condition", "then_value", "else_value"], [condition_ref, yes_ref, no_ref])
+            left = try full_model.node(mut p, full_model.node_start(p, left), full_model.node_end(p, otherwise), b"conditional", payload)
+        else:
+            break
+    p.cursor.depth = p.cursor.depth - 1
+    return left
+
+
+func stmt_end(p: full_model.State, id: int) -> int:
+    const span = p.pool.values[p.stmts[id]].children[0]
+    return p.pool.values[p.pool.values[span].children[1]].integer
+
+
+func block(mut p: full_model.State, owner: full_model.Token) -> int fails syntax_value.Problem:
+    if p.cursor.depth >= 256:
+        fail fail_at(p, "E_NESTING_LIMIT", "parser nesting exceeds 256 levels")
+    p.cursor.depth = p.cursor.depth + 1
+    const open = try full_model.expect(mut p, "indent")
+    if owner.start >= 0:
+        _ = try docstring(mut p, owner)
+    mut body: int[] = []
+    while full_model.peek(p).kind != "dedent":
+        if full_model.peek(p).kind == "eof":
+            fail fail_at(p, "E_SYNTAX", "block is not closed before the end of the file")
+        const start = p.cursor.pos
+        const depth = p.cursor.depth
+        match statement_value(mut p):
+            case Ok(statement):
+                const child = try ref(mut p, statement)
+                body.append(child)
+            case Err(problem):
+                if problem.code[:2] == "P_":
+                    fail problem
+                _ = try syntax_recovery.record(mut p, problem)
+                syntax_recovery.recover(mut p, start, depth)
+    _ = try full_model.expect(mut p, "dedent")
+    mut written = p.cursor.pos
+    while written > 1 and p.tokens[written - 1].start == p.tokens[written - 1].end:
+        written = written - 1
+    const payload = try syntax_value.sequence(mut p.pool, body)
+    p.cursor.depth = p.cursor.depth - 1
+    return try full_model.statement(mut p, open.start, p.tokens[written - 1].end, b"block", payload)
+
+
+func match_value(mut p: full_model.State) -> int fails syntax_value.Problem:
+    _ = try full_model.expect(mut p, "kw_match")
+    const value = try expression(mut p, 0)
+    _ = try full_model.expect(mut p, "indent")
+    mut arms: int[] = []
+    const no_owner = full_model.Token(kind="", start=-1, end=-1)
+    while full_model.peek(p).kind != "dedent":
+        _ = try full_model.expect(mut p, "kw_case")
+        const pattern = try full_patterns.match_pattern(mut p)
+        const body = try block(mut p, no_owner)
+        const arm = try full_patterns.make_arm(mut p, pattern, body)
+        arms.append(arm)
+    _ = try full_model.expect(mut p, "dedent")
+    const value_ref = try ref(mut p, value)
+    const arm_values = try syntax_value.sequence(mut p.pool, arms)
+    return try syntax_value.object(mut p.pool, ["value", "arms"], [value_ref, arm_values])
+
+
+func value_field(p: full_model.State, value: int, name: str) -> int:
+    mut index = 0
+    while index < len(p.pool.values[value].names):
+        if p.pool.values[value].names[index] == name:
+            return p.pool.values[value].children[index]
+        index = index + 1
+    return -1
+
+
+record LoopHeader:
+    first: full_model.Token
+    second: full_model.Token
+    input: int
+    iterable: int
+    start: int
+    end: int
+    step: int
+    enumerated: bool
+
+
+record Clause:
+    header: LoopHeader
+    filters: int[]
+    span: full_model.Token
+
+
+func loop_header(mut p: full_model.State, comprehension: bool) -> LoopHeader fails syntax_value.Problem:
+    const name = try full_model.expect(mut p, "ident")
+    mut second = full_model.Token(kind="", start=-1, end=-1)
+    if full_model.accept(mut p, "comma"):
+        second = try full_model.expect(mut p, "ident")
+    _ = try full_model.expect(mut p, "kw_in")
+    mut level = 0
+    if comprehension:
+        level = 1
+    const input = try expression(mut p, level)
+    return try classify_iteration(mut p, name, second, input, True)
+
+
+func classify_iteration(mut p: full_model.State, name: full_model.Token, second: full_model.Token, input: int, classify_collections: bool) -> LoopHeader fails syntax_value.Problem:
+    mut iterable = input
+    mut range_start = -1
+    mut range_end = -1
+    mut range_step = -1
+    mut enumerated = False
+    if full_model.node_tag(p, input) == b"call":
+        const node_value = p.pool.values[p.exprs[input]]
+        const call = p.pool.values[node_value.children[1]].children[0]
+        const owner = value_field(p, call, "owner")
+        const callee = value_field(p, call, "name")
+        const call_span = p.pool.values[callee]
+        const start = p.pool.values[call_span.children[0]].integer
+        const end = p.pool.values[call_span.children[1]].integer
+        const arguments = p.pool.values[value_field(p, call, "arguments")].children
+        const token = full_model.Token(kind="call", start=full_model.node_start(p, input), end=full_model.node_end(p, input))
+        if p.pool.values[owner].kind == 0:
+            if p.source[start:end] == b"range":
+                if len(arguments) < 1 or len(arguments) > 3:
+                    fail full_model.problem(token, "E_ARITY", "range requires end; start, end; or start, end, step")
+                if len(arguments) >= 2:
+                    range_start = p.pool.values[arguments[0]].integer
+                    range_end = p.pool.values[arguments[1]].integer
+                else:
+                    const unit = try syntax_value.absent(mut p.pool)
+                    range_start = try full_model.node(mut p, start, end, b"unit", unit)
+                    range_end = p.pool.values[arguments[0]].integer
+                if len(arguments) == 3:
+                    range_step = p.pool.values[arguments[2]].integer
+            elif classify_collections and p.source[start:end] == b"enumerate":
+                if len(arguments) != 1 or second.start < 0:
+                    fail full_model.problem(token, "E_ARITY", "enumerate requires one iterable and two iteration names")
+                iterable = p.pool.values[arguments[0]].integer
+                enumerated = True
+            elif classify_collections and p.source[start:end] == b"zip":
+                if len(arguments) != 2 or second.start < 0:
+                    fail full_model.problem(token, "E_ARITY", "zip requires two iterables and two iteration names")
+    return LoopHeader(first=name, second=second, input=input, iterable=iterable, start=range_start, end=range_end, step=range_step, enumerated=enumerated)
+
+
+func loop_statement(mut p: full_model.State, header: LoopHeader, body: int, loop_span: full_model.Token) -> int fails syntax_value.Problem:
+    const name = header.first
+    const second = header.second
+    const range_start = header.start
+    const range_end = header.end
+    const range_step = header.step
+    const iterable = header.iterable
+    const enumerated = header.enumerated
+    const body_ref = try ref(mut p, body)
+    if range_start >= 0:
+        if second.start >= 0:
+            const token = full_model.Token(kind="loop", start=loop_span.start, end=loop_span.end)
+            fail full_model.problem(token, "E_ITERATION", "range requires one iteration name")
+        const name_ref = try located(mut p, name)
+        const start_ref = try ref(mut p, range_start)
+        const end_ref = try ref(mut p, range_end)
+        const step_ref = try optional_ref(mut p, range_step)
+        const payload = try syntax_value.object(mut p.pool, ["name", "start", "end", "body", "step"], [name_ref, start_ref, end_ref, body_ref, step_ref])
+        return try full_model.statement(mut p, loop_span.start, loop_span.end, b"for_range", payload)
+    mut value_name = name
+    mut index_name = try syntax_value.absent(mut p.pool)
+    if second.start >= 0:
+        value_name = second
+        index_name = try located(mut p, name)
+    const name_ref = try located(mut p, value_name)
+    const input_ref = try ref(mut p, iterable)
+    const enumerated_ref = try syntax_value.boolean(mut p.pool, enumerated)
+    const payload = try syntax_value.object(mut p.pool, ["name", "index_name", "iterable", "body", "enumerated"], [name_ref, index_name, input_ref, body_ref, enumerated_ref])
+    return try full_model.statement(mut p, loop_span.start, loop_span.end, b"for_each", payload)
+
+
+func for_statement(mut p: full_model.State, first: full_model.Token) -> int fails syntax_value.Problem:
+    const header = try loop_header(mut p, False)
+    const no_owner = full_model.Token(kind="", start=-1, end=-1)
+    const body = try block(mut p, no_owner)
+    if full_model.peek(p).kind == "kw_else":
+        const problem = fail_at(p, "E_EXPRESSION", "a loop has no `else` clause")
+        const reported = try syntax_recovery.annotated(mut p, syntax_problem.alternative(problem, "use a flag: assign it before the loop, set it before `break`, and test it after"))
+        fail reported
+    const span = full_model.Token(kind="loop", start=first.start, end=stmt_end(p, body))
+    return try loop_statement(mut p, header, body, span)
+
+
+func source_comprehension(mut p: full_model.State, open: full_model.Token) -> int fails syntax_value.Problem:
+    _ = try full_model.expect(mut p, "kw_for")
+    const name_token = try full_model.expect(mut p, "ident")
+    _ = try full_model.expect(mut p, "kw_in")
+    const input = try expression(mut p, 1)
+    mut filter = -1
+    if full_model.accept(mut p, "kw_if"):
+        filter = try expression(mut p, 1)
+    if not full_model.word(p, b"yield"):
+        fail fail_at(p, "E_COMPREHENSION", "source-first comprehensions require `yield` before the produced value")
+    p.cursor.pos = p.cursor.pos + 1
+    const output = try expression(mut p, 0)
+    const close = try full_model.expect(mut p, "rbracket")
+    const second = full_model.Token(kind="", start=-1, end=-1)
+    const header = try classify_iteration(mut p, name_token, second, input, False)
+    const source_value = try comprehension_source(mut p, header)
+    const output_ref = try ref(mut p, output)
+    const name = try located(mut p, header.first)
+    const filter_ref = try optional_ref(mut p, filter)
+    const no = try syntax_value.boolean(mut p.pool, False)
+    const payload = try syntax_value.object(mut p.pool, ["output", "name", "source", "filter", "set"], [output_ref, name, source_value, filter_ref, no])
+    return try full_model.node(mut p, open.start, close.end, b"comprehension", payload)
+
+
+func comprehension_clauses(mut p: full_model.State) -> Clause[] fails syntax_value.Problem:
+    mut clauses: Clause[] = []
+    while full_model.peek(p).kind == "kw_for":
+        const first = try full_model.expect(mut p, "kw_for")
+        const header = try loop_header(mut p, True)
+        mut filters: int[] = []
+        while full_model.accept(mut p, "kw_if"):
+            const condition = try expression(mut p, 1)
+            filters.append(condition)
+        const span = full_model.Token(kind="clause", start=first.start, end=previous(p).end)
+        clauses.append(Clause(header=header, filters=filters, span=span))
+    return clauses
+
+
+func generator_value(mut p: full_model.State, output: int) -> int fails syntax_value.Problem:
+    const clauses = try comprehension_clauses(mut p)
+    const open = full_model.Token(kind="generator", start=full_model.node_start(p, output), end=full_model.node_end(p, output))
+    return try gather_value(mut p, open, clauses[len(clauses) - 1].span.end, clauses, output, -1, b"generator")
+
+
+func bare_tuple(mut p: full_model.State, first: int) -> int fails syntax_value.Problem:
+    if full_model.peek(p).kind != "comma":
+        return first
+    mut elements: int[] = []
+    const first_ref = try ref(mut p, first)
+    elements.append(first_ref)
+    mut comma = full_model.peek(p)
+    mut end = full_model.node_end(p, first)
+    while full_model.accept(mut p, "comma"):
+        comma = previous(p)
+        const kind = full_model.peek(p).kind
+        if kind == "semicolon" or kind == "dedent" or kind == "eof" or not full_model.same_line(p):
+            break
+        const value = try expression(mut p, 0)
+        const value_ref = try ref(mut p, value)
+        elements.append(value_ref)
+        end = full_model.node_end(p, value)
+    if len(elements) < 2:
+        fail full_model.problem(comma, "E_SYNTAX", "a one-element tuple is not a value; write the element alone or a two-element tuple")
+    const payload = try syntax_value.sequence(mut p.pool, elements)
+    return try full_model.node(mut p, full_model.node_start(p, first), end, b"tuple", payload)
+
+
+func comprehension_source(mut p: full_model.State, header: LoopHeader) -> int fails syntax_value.Problem:
+    if header.start < 0:
+        const input = try ref(mut p, header.input)
+        return try syntax_value.tagged(mut p.pool, b"iterable", input)
+    const start = try ref(mut p, header.start)
+    const end = try ref(mut p, header.end)
+    const step = try optional_ref(mut p, header.step)
+    const payload = try syntax_value.object(mut p.pool, ["start", "end", "step"], [start, end, step])
+    return try syntax_value.tagged(mut p.pool, b"range", payload)
+
+
+func gather_value(mut p: full_model.State, open: full_model.Token, end: int, clauses: Clause[], output: int, key: int, shape: bytes) -> int fails syntax_value.Problem:
+    const value_ref = try ref(mut p, output)
+    const key_ref = try optional_ref(mut p, key)
+    const step = try syntax_value.object(mut p.pool, ["value", "key"], [value_ref, key_ref])
+    mut start = full_model.node_start(p, output)
+    if key >= 0:
+        start = full_model.node_start(p, key)
+    mut body = try full_model.statement(mut p, start, full_model.node_end(p, output), b"gather_step", step)
+    mut index = len(clauses)
+    while index > 0:
+        index = index - 1
+        const clause = clauses[index]
+        mut filter_index = len(clause.filters)
+        while filter_index > 0:
+            filter_index = filter_index - 1
+            const condition = clause.filters[filter_index]
+            const condition_ref = try ref(mut p, condition)
+            const body_ref = try ref(mut p, body)
+            const no = try syntax_value.absent(mut p.pool)
+            const payload = try syntax_value.object(mut p.pool, ["condition", "then_body", "else_body"], [condition_ref, body_ref, no])
+            body = try full_model.statement(mut p, full_model.node_start(p, condition), full_model.node_end(p, condition), b"branch", payload)
+        body = try loop_statement(mut p, clause.header, body, clause.span)
+    const shape_ref = try syntax_value.enumeration(mut p.pool, shape)
+    const body_ref = try ref(mut p, body)
+    const open_ref = try located(mut p, open)
+    const payload = try syntax_value.object(mut p.pool, ["shape", "loop", "open"], [shape_ref, body_ref, open_ref])
+    return try full_model.node(mut p, open.start, end, b"gather", payload)
+
+
+func collection_comprehension(mut p: full_model.State, open: full_model.Token, output: int, key: int, close_kind: str, shape: bytes) -> int fails syntax_value.Problem:
+    const clauses = try comprehension_clauses(mut p)
+    const close = try full_model.expect(mut p, close_kind)
+    const only = clauses[0]
+    if len(clauses) == 1 and only.header.second.start < 0 and len(only.filters) == 0 and key < 0:
+        const source_value = try comprehension_source(mut p, only.header)
+        const output_ref = try ref(mut p, output)
+        const name = try located(mut p, only.header.first)
+        const filter = try syntax_value.absent(mut p.pool)
+        const set = try syntax_value.boolean(mut p.pool, shape == b"set")
+        const payload = try syntax_value.object(mut p.pool, ["output", "name", "source", "filter", "set"], [output_ref, name, source_value, filter, set])
+        return try full_model.node(mut p, open.start, close.end, b"comprehension", payload)
+    return try gather_value(mut p, open, close.end, clauses, output, key, shape)
+
+
+func assignment_tag(kind: str) -> bytes:
+    if kind == "equal":
+        return b"set"
+    if kind == "plus_equal":
+        return b"add"
+    if kind == "minus_equal":
+        return b"sub"
+    if kind == "star_equal":
+        return b"mul"
+    if kind == "slash_equal":
+        return b"div"
+    if kind == "slash_slash_equal":
+        return b"floor_div"
+    if kind == "percent_equal":
+        return b"rem"
+    return b""
+
+
+func destructuring_targets(mut p: full_model.State, first: int) -> int fails syntax_value.Problem:
+    mut elements: int[] = []
+    const first_ref = try ref(mut p, first)
+    elements.append(first_ref)
+    mut end = full_model.node_end(p, first)
+    mut comma = full_model.peek(p)
+    while full_model.accept(mut p, "comma"):
+        comma = previous(p)
+        const kind = full_model.peek(p).kind
+        if kind == "equal" or kind == "semicolon" or kind == "dedent" or kind == "eof" or not full_model.same_line(p):
+            break
+        const target = try expression(mut p, 0)
+        const tag = full_model.node_tag(p, target)
+        if tag != b"name" and tag != b"index" and tag != b"field":
+            const token = full_model.Token(kind="target", start=full_model.node_start(p, target), end=full_model.node_end(p, target))
+            fail full_model.problem(token, "E_ASSIGNMENT_TARGET", "a destructuring target is a name, an element `xs[i]` or a field `r.f`")
+        const target_ref = try ref(mut p, target)
+        elements.append(target_ref)
+        end = full_model.node_end(p, target)
+    if len(elements) < 2:
+        fail full_model.problem(comma, "E_SYNTAX", "a one-element target list is not a tuple; bind the name directly")
+    const payload = try syntax_value.sequence(mut p.pool, elements)
+    return try full_model.node(mut p, full_model.node_start(p, first), end, b"tuple", payload)
+
+
+func destructuring_from(mut p: full_model.State, first: int) -> int fails syntax_value.Problem:
+    const targets = try destructuring_targets(mut p, first)
+    if not full_model.accept(mut p, "equal"):
+        const token = full_model.Token(kind="targets", start=full_model.node_start(p, targets), end=full_model.node_end(p, targets))
+        fail full_model.problem(token, "E_SYNTAX", "a bare comma list is not an expression; write `x, y = value` or parenthesize it as a tuple")
+    const initial = try expression(mut p, 0)
+    const value = try bare_tuple(mut p, initial)
+    const target_ref = try ref(mut p, targets)
+    const value_ref = try ref(mut p, value)
+    const op = try syntax_value.enumeration(mut p.pool, b"set")
+    const declaration = try syntax_value.absent(mut p.pool)
+    const payload = try syntax_value.object(mut p.pool, ["target", "value", "op", "declaration"], [target_ref, value_ref, op, declaration])
+    return try full_model.node(mut p, full_model.node_start(p, targets), full_model.node_end(p, value), b"field_assignment", payload)
+
+
+func destructuring_declaration(mut p: full_model.State, first: full_model.Token, name: full_model.Token) -> int fails syntax_value.Problem:
+    const name_span = try located(mut p, name)
+    const head = try full_model.node(mut p, name.start, name.end, b"name", name_span)
+    const targets = try destructuring_targets(mut p, head)
+    const data = p.pool.values[p.pool.values[p.exprs[targets]].children[1]].children[0]
+    for element in p.pool.values[data].children:
+        const target = p.pool.values[element].integer
+        if full_model.node_tag(p, target) != b"name":
+            const token = full_model.Token(kind="target", start=full_model.node_start(p, target), end=full_model.node_end(p, target))
+            fail full_model.problem(token, "E_BINDING_TARGET", "a destructuring declaration binds names; use a separate assignment for fields or elements")
+    _ = try full_model.expect(mut p, "equal")
+    const initial = try boundary_expression(mut p)
+    const value = try bare_tuple(mut p, initial)
+    const end = try full_hints.statement_end(mut p, first)
+    const target_ref = try ref(mut p, targets)
+    const value_ref = try ref(mut p, value)
+    const op = try syntax_value.enumeration(mut p.pool, b"set")
+    const declaration = try syntax_value.boolean(mut p.pool, first.kind != "kw_const")
+    const payload = try syntax_value.object(mut p.pool, ["target", "value", "op", "declaration"], [target_ref, value_ref, op, declaration])
+    const assignment = try full_model.node(mut p, first.start, end.end, b"field_assignment", payload)
+    const assignment_ref = try ref(mut p, assignment)
+    return try full_model.statement(mut p, first.start, end.end, b"discard", assignment_ref)
+
+
+func assignment_expression(mut p: full_model.State) -> int fails syntax_value.Problem:
+    const target = try expression(mut p, 0)
+    if full_model.peek(p).kind == "comma" and (full_model.node_tag(p, target) == b"index" or full_model.node_tag(p, target) == b"field"):
+        return try destructuring_from(mut p, target)
+    const operator = full_model.peek(p)
+    const op_tag = assignment_tag(operator.kind)
+    if len(op_tag) == 0:
+        return target
+    p.cursor.pos = p.cursor.pos + 1
+    const value = try expression(mut p, 0)
+    const target_ref = try ref(mut p, target)
+    const value_ref = try ref(mut p, value)
+    const op = try syntax_value.enumeration(mut p.pool, op_tag)
+    const kind = full_model.node_tag(p, target)
+    if kind == b"field":
+        const declaration = try syntax_value.absent(mut p.pool)
+        const payload = try syntax_value.object(mut p.pool, ["target", "value", "op", "declaration"], [target_ref, value_ref, op, declaration])
+        return try full_model.node(mut p, full_model.node_start(p, target), full_model.node_end(p, value), b"field_assignment", payload)
+    if kind != b"index":
+        const token = full_model.Token(kind="target", start=full_model.node_start(p, target), end=full_model.node_end(p, target))
+        fail full_model.problem(token, "E_ASSIGNMENT_TARGET", "indexed assignment requires a list binding and index")
+    if op_tag != b"set":
+        const payload = try syntax_value.object(mut p.pool, ["target", "op", "value"], [target_ref, op, value_ref])
+        return try full_model.node(mut p, full_model.node_start(p, target), full_model.node_end(p, value), b"index_assignment", payload)
+    const index = p.pool.values[p.pool.values[p.exprs[target]].children[1]].children[0]
+    const base = value_field(p, index, "base")
+    const argument = value_field(p, index, "index")
+    const arguments = try syntax_value.sequence(mut p.pool, [argument, value_ref])
+    const write = try syntax_value.enumeration(mut p.pool, b"write")
+    const payload = try syntax_value.object(mut p.pool, ["base", "kind", "arguments"], [base, write, arguments])
+    return try full_model.node(mut p, full_model.node_start(p, target), full_model.node_end(p, value), b"list_operation", payload)
+
+
+func statement_value(mut p: full_model.State) -> int fails syntax_value.Problem:
+    if p.cursor.depth >= 256:
+        fail fail_at(p, "E_NESTING_LIMIT", "parser nesting exceeds 256 levels")
+    const depth = p.cursor.depth
+    p.cursor.depth = depth + 1
+    match statement_inner(mut p):
+        case Ok(value):
+            p.cursor.depth = depth
+            return value
+        case Err(problem):
+            p.cursor.depth = depth
+            fail problem
+
+
+func statement_inner(mut p: full_model.State) -> int fails syntax_value.Problem:
+    const first = full_model.peek(p)
+    const no_owner = full_model.Token(kind="", start=-1, end=-1)
+    if full_model.word(p, b"try") and look_token(p, 1).kind == "indent":
+        p.cursor.pos = p.cursor.pos + 1
+        fail try full_hints.hinted(mut p, "exceptions")
+    if full_model.accept(mut p, "kw_with"):
+        mut resource = -1
+        if full_model.accept(mut p, "kw_arena"):
+            _ = try full_model.expect(mut p, "lparen")
+            _ = try full_model.expect(mut p, "rparen")
+        else:
+            resource = try boundary_expression(mut p)
+        mut name = try syntax_value.absent(mut p.pool)
+        if full_model.accept(mut p, "kw_as"):
+            const token = try full_model.expect(mut p, "ident")
+            name = try located(mut p, token)
+        const body = try block(mut p, no_owner)
+        const body_ref = try ref(mut p, body)
+        const resource_ref = try optional_ref(mut p, resource)
+        const payload = try syntax_value.object(mut p.pool, ["resource", "name", "body"], [resource_ref, name, body_ref])
+        return try full_model.statement(mut p, first.start, stmt_end(p, body), b"with_scope", payload)
+    if full_model.accept(mut p, "kw_for"):
+        return try for_statement(mut p, first)
+    if first.kind == "kw_match":
+        const payload = try match_value(mut p)
+        return try full_model.statement(mut p, first.start, previous(p).end, b"match", payload)
+    if full_model.accept(mut p, "kw_if") or full_model.accept(mut p, "kw_elif"):
+        const condition = try expression(mut p, 0)
+        if full_model.word(p, b"then"):
+            p.cursor.pos = p.cursor.pos + 1
+            const yes = try expression(mut p, 0)
+            _ = try full_model.expect(mut p, "kw_else")
+            const no = try expression(mut p, 0)
+            const condition_ref = try ref(mut p, condition)
+            const yes_ref = try ref(mut p, yes)
+            const no_ref = try ref(mut p, no)
+            const payload = try syntax_value.object(mut p.pool, ["condition", "then_value", "else_value"], [condition_ref, yes_ref, no_ref])
+            const value = try full_model.node(mut p, first.start, full_model.node_end(p, no), b"conditional", payload)
+            const value_ref = try ref(mut p, value)
+            const end = try full_hints.statement_end(mut p, first)
+            const statement = try full_model.statement(mut p, first.start, end.end, b"discard", value_ref)
+            const old = p.pool.values[p.stmts[statement]]
+            const implicit = try syntax_value.boolean(mut p.pool, True)
+            const changed = try syntax_value.object(mut p.pool, old.names, [old.children[0], implicit, old.children[2]])
+            p.stmts[statement] = changed
+            return statement
+        const yes = try block(mut p, no_owner)
+        mut no = -1
+        if full_model.peek(p).kind == "kw_elif":
+            no = try statement_value(mut p)
+        elif full_model.accept(mut p, "kw_else"):
+            no = try block(mut p, no_owner)
+        const condition_ref = try ref(mut p, condition)
+        const yes_ref = try ref(mut p, yes)
+        const no_ref = try optional_ref(mut p, no)
+        const payload = try syntax_value.object(mut p.pool, ["condition", "then_body", "else_body"], [condition_ref, yes_ref, no_ref])
+        mut end = stmt_end(p, yes)
+        if no >= 0:
+            end = stmt_end(p, no)
+        return try full_model.statement(mut p, first.start, end, b"branch", payload)
+    if full_model.accept(mut p, "kw_while"):
+        const condition = try expression(mut p, 0)
+        const body = try block(mut p, no_owner)
+        if full_model.peek(p).kind == "kw_else":
+            const problem = fail_at(p, "E_EXPRESSION", "a loop has no `else` clause")
+            const reported = try syntax_recovery.annotated(mut p, syntax_problem.alternative(problem, "use a flag: assign it before the loop, set it before `break`, and test it after"))
+            fail reported
+        const condition_ref = try ref(mut p, condition)
+        const body_ref = try ref(mut p, body)
+        const payload = try syntax_value.object(mut p.pool, ["condition", "body"], [condition_ref, body_ref])
+        return try full_model.statement(mut p, first.start, stmt_end(p, body), b"loop", payload)
+    if first.kind == "kw_const" or full_model.word(p, b"mut"):
+        p.cursor.pos = p.cursor.pos + 1
+        const name = try full_model.declared_name(mut p)
+        if full_model.peek(p).kind == "comma":
+            return try destructuring_declaration(mut p, first, name)
+        mut annotation = try syntax_value.absent(mut p.pool)
+        if full_model.accept(mut p, "colon"):
+            const ty = try type_parser.type_name(mut p)
+            annotation = try located(mut p, ty)
+        _ = try full_model.expect(mut p, "equal")
+        const value = try boundary_expression(mut p)
+        const end = try full_hints.statement_end(mut p, first)
+        const name_ref = try located(mut p, name)
+        const mutable = try syntax_value.boolean(mut p.pool, first.kind != "kw_const")
+        const value_ref = try ref(mut p, value)
+        const payload = try syntax_value.object(mut p.pool, ["name", "annotation", "mutable", "value"], [name_ref, annotation, mutable, value_ref])
+        return try full_model.statement(mut p, first.start, end.end, b"binding", payload)
+    mut tag = b"discard"
+    mut payload = -1
+    mut implicit = False
+    if full_model.accept(mut p, "kw_assert"):
+        tag = b"assertion"
+        const condition = try expression(mut p, 0)
+        mut message = p.source[full_model.node_start(p, condition):full_model.node_end(p, condition)]
+        mut literal = try syntax_value.absent(mut p.pool)
+        mut value = -1
+        if full_model.accept(mut p, "comma"):
+            if full_model.peek(p).kind == "bytes":
+                const token = try full_model.expect(mut p, "bytes")
+                literal = try located(mut p, token)
+                message = try literal_decoder.decode(p.source, token)
+            else:
+                value = try expression(mut p, 0)
+                message = b""
+        const message_ref = try syntax_value.octets(mut p.pool, message)
+        const condition_ref = try ref(mut p, condition)
+        const value_ref = try optional_ref(mut p, value)
+        payload = try syntax_value.object(mut p.pool, ["condition", "message", "literal", "value"], [condition_ref, message_ref, literal, value_ref])
+    elif full_model.accept(mut p, "kw_return") or full_model.word(p, b"fail") or full_model.word(p, b"yield"):
+        tag = b"ret"
+        if first.kind != "kw_return":
+            p.cursor.pos = p.cursor.pos + 1
+            if p.source[first.start:first.end] == b"fail":
+                tag = b"fail"
+            else:
+                tag = b"yield_value"
+        mut value = -1
+        if first.kind == "kw_return" and (not full_model.same_line(p) or full_model.peek(p).kind == "dedent" or full_model.peek(p).kind == "eof" or full_model.peek(p).kind == "semicolon"):
+            const unit = try syntax_value.absent(mut p.pool)
+            value = try full_model.node(mut p, first.start, first.end, b"unit", unit)
+        else:
+            value = try boundary_expression(mut p)
+            if first.kind == "kw_return":
+                value = try bare_tuple(mut p, value)
+        payload = try ref(mut p, value)
+    elif full_model.accept(mut p, "kw_pass"):
+        tag = b"block"
+        payload = try syntax_value.sequence(mut p.pool, [])
+    elif full_model.accept(mut p, "kw_break") or full_model.accept(mut p, "kw_continue"):
+        tag = b"loop_exit"
+        payload = try syntax_value.boolean(mut p.pool, first.kind == "kw_continue")
+    elif first.kind == "ident" and look_token(p, 1).kind == "comma":
+        p.cursor.pos = p.cursor.pos + 1
+        const name = try located(mut p, first)
+        const head = try full_model.node(mut p, first.start, first.end, b"name", name)
+        const value = try destructuring_from(mut p, head)
+        payload = try ref(mut p, value)
+        implicit = True
+    elif first.kind == "ident" and look_token(p, 1).kind == "colon" and look_token(p, 2).kind != "colon":
+        p.cursor.pos = p.cursor.pos + 2
+        const annotation = try type_parser.type_name(mut p)
+        _ = try full_model.expect(mut p, "equal")
+        const value = try boundary_expression(mut p)
+        const name_ref = try located(mut p, first)
+        const annotation_ref = try located(mut p, annotation)
+        const mutable = try syntax_value.boolean(mut p.pool, True)
+        const value_ref = try ref(mut p, value)
+        tag = b"binding"
+        payload = try syntax_value.object(mut p.pool, ["name", "mutable", "annotation", "value"], [name_ref, mutable, annotation_ref, value_ref])
+    elif first.kind == "ident" and len(assignment_tag(look_token(p, 1).kind)) > 0:
+        const assignment_token = look_token(p, 1)
+        p.cursor.pos = p.cursor.pos + 2
+        const value = try boundary_expression(mut p)
+        const value_ref = try ref(mut p, value)
+        if p.source[first.start:first.end] == b"_" and assignment_token.kind == "equal":
+            payload = value_ref
+        else:
+            tag = b"assignment"
+            const name = try located(mut p, first)
+            const op = try syntax_value.enumeration(mut p.pool, assignment_tag(assignment_token.kind))
+            const op_span = try located(mut p, assignment_token)
+            payload = try syntax_value.object(mut p.pool, ["name", "value", "op", "op_span"], [name, value_ref, op, op_span])
+    elif full_model.word(p, b"try"):
+        const value = try boundary_expression(mut p)
+        payload = try ref(mut p, value)
+    else:
+        const value = try assignment_expression(mut p)
+        payload = try ref(mut p, value)
+        implicit = True
+    const end = try full_hints.statement_end(mut p, first)
+    const statement = try full_model.statement(mut p, first.start, end.end, tag, payload)
+    if implicit:
+        const old = p.pool.values[p.stmts[statement]]
+        const value = try syntax_value.boolean(mut p.pool, True)
+        const changed = try syntax_value.object(mut p.pool, old.names, [old.children[0], value, old.children[2]])
+        p.stmts[statement] = changed
+    return statement
+
+
+func docstring(mut p: full_model.State, owner: full_model.Token) -> bool fails syntax_value.Problem:
+    const token = full_model.peek(p)
+    if token.kind != "bytes":
+        return False
+    p.cursor.pos = p.cursor.pos + 1
+    mut quotes = 1
+    if token.end - token.start >= 6 and p.source[token.start] == p.source[token.start + 1] and p.source[token.start] == p.source[token.start + 2]:
+        quotes = 3
+    const declaration = try located(mut p, owner)
+    const text = try syntax_value.octets(mut p.pool, p.source[token.start + quotes:token.end - quotes])
+    const span = try located(mut p, token)
+    const value = try syntax_value.object(mut p.pool, ["declaration", "text", "span"], [declaration, text, span])
+    p.catalog.docstrings.append(value)
+    return True
+
+
+func function_parameters(mut p: full_model.State) -> Parameters fails syntax_value.Problem:
+    mut fields: int[] = []
+    mut positions: int[] = []
+    mut keyword_only = -1
+    mut default_seen = False
+    while full_model.peek(p).kind != "rparen":
+        if full_model.peek(p).kind == "star":
+            const star = full_model.peek(p)
+            if keyword_only >= 0:
+                fail full_model.problem(star, "E_SYNTAX", "`*` may appear once in a parameter list")
+            p.cursor.pos = p.cursor.pos + 1
+            if not full_model.accept(mut p, "comma") or full_model.peek(p).kind == "rparen":
+                fail full_model.problem(star, "E_SYNTAX", "`*` must be followed by at least one parameter")
+            keyword_only = len(fields)
+            continue
+        mut named = False
+        if full_model.word(p, b"named"):
+            named = True
+            p.cursor.pos = p.cursor.pos + 1
+            if keyword_only < 0:
+                keyword_only = len(fields)
+        mut mutable = False
+        if full_model.word(p, b"mut") and look_token(p, 1).kind == "ident":
+            mutable = True
+            p.cursor.pos = p.cursor.pos + 1
+        const name = try full_model.declared_name(mut p)
+        _ = try full_model.expect(mut p, "colon")
+        const postfix_mut = type_parser.mut_parameter(p)
+        if postfix_mut and mutable:
+            fail fail_at(p, "E_PARAMETER_MODIFIER", "write `mut` once before the parameter name")
+        if postfix_mut:
+            p.cursor.pos = p.cursor.pos + 1
+        mutable = mutable or postfix_mut
+        const ty = try type_parser.type_name(mut p)
+        mut default_value = try syntax_value.absent(mut p.pool)
+        if full_model.accept(mut p, "equal"):
+            const value = try default_argument(mut p)
+            default_value = try ref(mut p, value)
+            default_seen = True
+        elif default_seen and keyword_only < 0:
+            fail full_model.problem(name, "E_DEFAULT_ARGUMENT", "required parameters must precede parameters with defaults")
+        const named_value = try syntax_value.boolean(mut p.pool, named)
+        const name_value = try located(mut p, name)
+        const ty_value = try located(mut p, ty)
+        const mut_value = try syntax_value.boolean(mut p.pool, mutable)
+        const parameter = try syntax_value.object(mut p.pool, ["named", "default_value", "name", "ty", "mut"], [named_value, default_value, name_value, ty_value, mut_value])
+        if mutable:
+            const index = try ref(mut p, len(fields))
+            positions.append(index)
+        fields.append(parameter)
+        if not full_model.accept(mut p, "comma"):
+            break
+    return Parameters(fields=fields, mut_positions=positions, keyword_only=keyword_only)
+
+
+func function_policy(mut p: full_model.State, constant: bool, effect_bound: int) -> int fails syntax_value.Problem:
+    const constant_value = try syntax_value.boolean(mut p.pool, constant)
+    const no = try syntax_value.boolean(mut p.pool, False)
+    const host = try syntax_value.absent(mut p.pool)
+    const owner = try syntax_value.absent(mut p.pool)
+    return try syntax_value.object(mut p.pool, ["constant", "c_abi", "host", "effect_bound", "owner", "restricted", "conversion"], [constant_value, no, host, effect_bound, owner, no, no])
+
+
+func function_value(mut p: full_model.State, owner: full_model.Token) -> full_model.Token fails syntax_value.Problem:
+    const first = full_model.peek(p)
+    const external = full_model.word(p, b"extern")
+    if full_model.word(p, b"host"):
+        fail fail_at(p, "E_HOST_RETIRED", "`host func` is retired (S5-D5): host functions and their registered adapters were removed with the old back end; declare the function `extern func` and link its C implementation with `--link FILE.c`")
+    if external:
+        p.cursor.pos = p.cursor.pos + 1
+    const restriction_token = full_model.peek(p)
+    const restricted = full_model.accept(mut p, "kw_private")
+    if restricted and owner.start < 0:
+        fail full_model.problem(restriction_token, "E_PRIVATE_SCOPE", "private functions must be declared inside a domain")
+    const is_conversion = full_model.accept(mut p, "kw_conversion")
+    _ = try full_model.expect(mut p, "kw_def")
+    const name = try full_model.declared_name(mut p)
+    const type_parameters = try type_parser.type_parameters(mut p)
+    _ = try full_model.expect(mut p, "lparen")
+    const args = try function_parameters(mut p)
+    const close = try full_model.expect(mut p, "rparen")
+    mut return_type = full_model.Token(kind="type", start=close.end, end=close.end)
+    const annotated_return = full_model.accept(mut p, "arrow")
+    if annotated_return:
+        return_type = try type_parser.type_name(mut p)
+    if external:
+        if owner.start >= 0 or restricted or is_conversion:
+            fail full_model.problem(first, "E_HOST_DECLARATION", "host declarations must be ordinary top-level functions")
+        if len(type_parameters) > 0:
+            fail full_model.problem(first, "E_HOST_DECLARATION", "generic host declarations are not supported")
+        if not full_model.word(p, b"effects"):
+            fail full_model.problem(first, "E_HOST_EFFECTS", "host declarations require an explicit effects(host, ...) contract")
+    mut failure_type = try syntax_value.absent(mut p.pool)
+    if full_model.word(p, b"fails"):
+        p.cursor.pos = p.cursor.pos + 1
+        const ty = try type_parser.type_name(mut p)
+        failure_type = try located(mut p, ty)
+    const effect_bound = try type_parser.effect_bound(mut p)
+    if external:
+        const allowed = p.pool.values[value_field(p, effect_bound, "allowed")].integer
+        if allowed & 32 == 0:
+            fail full_model.problem(first, "E_HOST_EFFECTS", "host declarations must include the host effect")
+    try type_parser.reject_mutates_of(mut p, args.fields)
+    if external and not annotated_return:
+        fail full_model.problem(name, "E_EXTERN_SIGNATURE", "extern functions require an explicit return type (unit for C void)")
+    if external:
+        if len(args.fields) == 0:
+            fail full_model.problem(name, "E_HOST_CAPABILITY", "an extern or host declaration must take `host: Host` as its first parameter")
+        const ty = p.pool.values[value_field(p, args.fields[0], "ty")]
+        const start = p.pool.values[ty.children[0]].integer
+        const end = p.pool.values[ty.children[1]].integer
+        if p.source[start:end] != b"Host":
+            const token = full_model.Token(kind="type", start=start, end=end)
+            fail full_model.problem(token, "E_HOST_CAPABILITY", "an extern or host declaration must take `host: Host` as its first parameter")
+    mut body = -1
+    if external:
+        const end = try full_model.expect(mut p, "semicolon")
+        const empty = try syntax_value.sequence(mut p.pool, [])
+        body = try full_model.statement(mut p, end.start, end.end, b"block", empty)
+    else:
+        body = try block(mut p, name)
+    const no = try syntax_value.boolean(mut p.pool, False)
+    const c_abi = try syntax_value.boolean(mut p.pool, external)
+    mut host_value = try syntax_value.absent(mut p.pool)
+    if external:
+        host_value = try located(mut p, first)
+    mut owner_value = try syntax_value.absent(mut p.pool)
+    if owner.start >= 0:
+        owner_value = try located(mut p, owner)
+    const restricted_value = try syntax_value.boolean(mut p.pool, restricted)
+    const conversion_value = try syntax_value.boolean(mut p.pool, is_conversion)
+    const policy = try syntax_value.object(mut p.pool, ["constant", "c_abi", "host", "effect_bound", "owner", "restricted", "conversion"], [no, c_abi, host_value, effect_bound, owner_value, restricted_value, conversion_value])
+    const generic_parameters = try syntax_value.sequence(mut p.pool, type_parameters)
+    const parameter_values = try syntax_value.sequence(mut p.pool, args.fields)
+    const result_type = try located(mut p, return_type)
+    const positions = try syntax_value.sequence(mut p.pool, args.mut_positions)
+    const mutates = try syntax_value.sequence(mut p.pool, [])
+    const inferred = try syntax_value.object(mut p.pool, ["mutates", "mutation_writes"], [mutates, no])
+    const keyword_only = try optional_ref(mut p, args.keyword_only)
+    const signature = try syntax_value.object(mut p.pool, ["type_parameters", "parameters", "return_type", "mut_positions", "inferred", "failure_type", "keyword_only_from"], [generic_parameters, parameter_values, result_type, positions, inferred, failure_type, keyword_only])
+    const name_value = try located(mut p, name)
+    const body_ref = try ref(mut p, body)
+    const function = try syntax_value.object(mut p.pool, ["policy", "signature", "name", "body"], [policy, signature, name_value, body_ref])
+    p.catalog.functions.append(function)
+    return name
+
+
+public func parse(tokens: full_model.Token[], raw_source: bytes, module_syntax: bool, trusted_intrinsics: bool, source_path: bytes) -> Outcome fails syntax_value.Problem:
+    if len(tokens) == 0 or len(tokens) > 100000 or len(raw_source) > 1048576:
+        fail syntax_value.Problem(code="P_TRANSPORT", start=0, end=0, message="invalid token/raw_source count")
+    mut previous_end = 0
+    mut index = 0
+    for token in tokens:
+        if not parser.known(token.kind) or (token.kind == "eof" and index != len(tokens) - 1):
+            fail full_model.problem(token, "P_TRANSPORT", "invalid token kind or embedded EOF")
+        if token.start == token.end and token.kind != "dedent" and token.kind != "eof":
+            fail full_model.problem(token, "P_TRANSPORT", "zero-width source token")
+        if token.kind == "dedent" and token.start != token.end:
+            fail full_model.problem(token, "P_TRANSPORT", "nonzero-width dedent")
+        index = index + 1
+        if token.start < previous_end or token.end < token.start or token.end > len(raw_source):
+            fail full_model.problem(token, "P_TRANSPORT", "invalid token span")
+        previous_end = token.end
+    const eof = tokens[len(tokens) - 1]
+    if eof.kind != "eof" or eof.start != len(raw_source) or eof.end != len(raw_source):
+        fail full_model.problem(eof, "P_TRANSPORT", "invalid EOF token")
+    const cursor = full_model.Cursor(pos=0, depth=0, delimiters=0, module_syntax=module_syntax, trusted_intrinsics=trusted_intrinsics, path=source_path)
+    mut p = full_model.State(tokens=tokens, source=raw_source, cursor=cursor, pool=syntax_value.empty(), exprs=[], stmts=[], catalog=full_model.empty_catalog())
+    match full_header.leading(mut p):
+        case Ok(_):
+            pass
+        case Err(problem):
+            if problem.code[:2] == "P_":
+                fail problem
+            _ = try syntax_recovery.record(mut p, problem)
+            return Outcome(pool=p.pool, problems=p.catalog.problems)
+    _ = try docstring(mut p, full_model.Token(kind="", start=0, end=0))
+    while full_model.peek(p).kind != "eof":
+        const start = p.cursor.pos
+        const depth = p.cursor.depth
+        match decorated_declaration(mut p):
+            case Ok(_):
+                pass
+            case Err(problem):
+                if problem.code[:2] == "P_":
+                    fail problem
+                _ = try syntax_recovery.record(mut p, problem)
+                syntax_recovery.recover(mut p, start, depth)
+                if p.cursor.pos == start and full_model.peek(p).kind != "eof":
+                    p.cursor.pos = p.cursor.pos + 1
+    if len(p.catalog.problems) == 0:
+        try full_migration.publish(mut p)
+    if len(p.catalog.problems) == 0:
+        _ = try full_model.finish(mut p)
+    return Outcome(pool=p.pool, problems=p.catalog.problems)
+
+
+func field_parameters(mut p: full_model.State, close_kind: str) -> int[] fails syntax_value.Problem:
+    mut fields: int[] = []
+    if close_kind == "rparen" and full_model.peek(p).kind == "rparen":
+        fail fail_at(p, "E_CASE_FIELDS", "a parenthesized case declares at least one named field")
+    mut default_seen = False
+    if full_model.accept(mut p, "kw_pass"):
+        _ = try full_model.expect(mut p, "semicolon")
+        return fields
+    while full_model.peek(p).kind != close_kind:
+        if close_kind == "dedent" and full_model.peek(p).kind == "kw_def":
+            fail try full_hints.hinted(mut p, "method")
+        const name = try full_model.declared_name(mut p)
+        _ = try full_model.expect(mut p, "colon")
+        const ty = try type_parser.type_name(mut p)
+        mut default = try syntax_value.absent(mut p.pool)
+        if full_model.accept(mut p, "equal"):
+            const value = try default_argument(mut p)
+            default = try ref(mut p, value)
+            default_seen = True
+        elif default_seen:
+            fail full_model.problem(name, "E_DEFAULT_ARGUMENT", "required fields must precede fields with defaults")
+        const no = try syntax_value.boolean(mut p.pool, False)
+        const name_value = try located(mut p, name)
+        const ty_value = try located(mut p, ty)
+        const field = try syntax_value.object(mut p.pool, ["named", "default_value", "name", "ty", "mut"], [no, default, name_value, ty_value, no])
+        fields.append(field)
+        if not full_model.accept(mut p, "comma") and full_model.same_line(p):
+            break
+    return fields
+
+
+func source_column(p: full_model.State, offset: int) -> int:
+    mut start = offset
+    while start > 0 and p.source[start - 1] != 10:
+        start = start - 1
+    return offset - start + 1
+
+
+func next_variant_case(mut p: full_model.State, previous_case: full_model.Token) -> bool:
+    if full_model.accept(mut p, "comma"):
+        return full_model.peek(p).kind != "dedent"
+    const token = full_model.peek(p)
+    return token.kind == "ident" and source_column(p, token.start) == source_column(p, previous_case.start)
+
+
+func parse_declaration(mut p: full_model.State, pending: int[]) -> full_model.Token fails syntax_value.Problem:
+    const head = full_model.peek(p)
+    const no_owner = full_model.Token(kind="", start=-1, end=-1)
+    if head.kind == "kw_const":
+        return try top_constant(mut p)
+    if full_model.accept(mut p, "kw_type"):
+        const name = try full_model.declared_name(mut p)
+        _ = try full_model.expect(mut p, "equal")
+        const target = try type_parser.type_name(mut p)
+        _ = try full_model.expect(mut p, "semicolon")
+        const name_value = try located(mut p, name)
+        const target_value = try located(mut p, target)
+        const value = try syntax_value.object(mut p.pool, ["name", "target"], [name_value, target_value])
+        p.catalog.types.expressions.aliases.append(value)
+        return name
+    if full_model.word(p, b"constraint"):
+        p.cursor.pos = p.cursor.pos + 1
+        const name = try full_model.declared_name(mut p)
+        _ = try full_model.expect(mut p, "lbracket")
+        if full_model.peek(p).kind != "ident":
+            fail fail_at(p, "E_SYNTAX", "constraint subject must be one bare name")
+        const subject = try full_model.expect(mut p, "ident")
+        if full_model.peek(p).kind != "rbracket":
+            fail fail_at(p, "E_SYNTAX", "constraint subject must be one bare name with no bound, default, or const parameter")
+        _ = try full_model.expect(mut p, "rbracket")
+        _ = try full_model.expect(mut p, "equal")
+        const lists = try type_parser.requirement_list(mut p, False, name)
+        const end = try full_model.expect(mut p, "semicolon")
+        const parameter = try type_parser.type_parameter(mut p, subject, lists, False, False)
+        const name_value = try located(mut p, name)
+        const span = try syntax_value.span(mut p.pool, head.start, end.end)
+        const value = try syntax_value.object(mut p.pool, ["name", "span", "subject"], [name_value, span, parameter])
+        p.catalog.types.constraints.append(value)
+        return name
+    if full_model.word(p, b"record") or head.kind == "kw_class":
+        p.cursor.pos = p.cursor.pos + 1
+        const name = try full_model.declared_name(mut p)
+        const parameters = try type_parser.type_parameters(mut p)
+        try reject_generic_invariant(p, pending, len(parameters))
+        _ = try full_model.expect(mut p, "indent")
+        _ = try docstring(mut p, name)
+        const fields = try field_parameters(mut p, "dedent")
+        _ = try full_model.expect(mut p, "dedent")
+        const managed = try syntax_value.boolean(mut p.pool, head.kind == "kw_class")
+        const generic = try syntax_value.sequence(mut p.pool, parameters)
+        const name_value = try located(mut p, name)
+        const field_values = try syntax_value.sequence(mut p.pool, fields)
+        const value = try syntax_value.object(mut p.pool, ["managed", "type_parameters", "name", "fields"], [managed, generic, name_value, field_values])
+        p.catalog.types.records.append(value)
+        return name
+    if head.kind == "kw_enum" or head.kind == "kw_union" or full_model.word(p, b"result"):
+        p.cursor.pos = p.cursor.pos + 1
+        const name = try full_model.declared_name(mut p)
+        const parameters = try type_parser.type_parameters(mut p)
+        _ = try full_model.expect(mut p, "indent")
+        _ = try docstring(mut p, name)
+        mut cases: int[] = []
+        mut is_union = head.kind != "kw_enum"
+        while full_model.peek(p).kind != "dedent":
+            const tag = try full_model.expect(mut p, "ident")
+            mut fields: int[] = []
+            mut payload = try syntax_value.absent(mut p.pool)
+            if full_model.accept(mut p, "lparen"):
+                fields = try field_parameters(mut p, "rparen")
+                _ = try full_model.expect(mut p, "rparen")
+                is_union = True
+            elif is_union and full_model.accept(mut p, "colon"):
+                const ty = try type_parser.type_name(mut p)
+                payload = try located(mut p, ty)
+            const tag_span = try located(mut p, tag)
+            const field_values = try syntax_value.sequence(mut p.pool, fields)
+            const variant = try syntax_value.object(mut p.pool, ["name", "payload", "fields"], [tag_span, payload, field_values])
+            cases.append(variant)
+            if not next_variant_case(mut p, tag):
+                break
+        _ = try full_model.expect(mut p, "dedent")
+        const generic = try syntax_value.sequence(mut p.pool, parameters)
+        const fallible = try syntax_value.boolean(mut p.pool, p.source[head.start:head.end] == b"result")
+        const name_value = try located(mut p, name)
+        const union_value = try syntax_value.boolean(mut p.pool, is_union)
+        const case_values = try syntax_value.sequence(mut p.pool, cases)
+        const value = try syntax_value.object(mut p.pool, ["type_parameters", "fallible", "name", "is_union", "cases"], [generic, fallible, name_value, union_value, case_values])
+        p.catalog.types.variants.append(value)
+        return name
+    if full_model.word(p, b"resource") or full_model.accept(mut p, "kw_domain"):
+        const resource = p.source[head.start:head.end] == b"resource"
+        if resource:
+            p.cursor.pos = p.cursor.pos + 1
+        const name = try full_model.declared_name(mut p)
+        _ = try full_model.expect(mut p, "colon")
+        const backing = try type_parser.type_name(mut p)
+        mut codec = try syntax_value.absent(mut p.pool)
+        if resource:
+            _ = try full_model.expect(mut p, "semicolon")
+        else:
+            _ = try full_model.expect(mut p, "indent")
+            _ = try docstring(mut p, name)
+            if full_model.accept(mut p, "kw_pass"):
+                _ = try full_model.expect(mut p, "semicolon")
+            while full_model.peek(p).kind != "dedent":
+                if full_model.word(p, b"codec"):
+                    if p.pool.values[codec].kind != 0:
+                        fail fail_at(p, "E_DUPLICATE_CODEC", "a domain declares at most one codec")
+                    p.cursor.pos = p.cursor.pos + 1
+                    const wire = try type_parser.type_name(mut p)
+                    _ = try full_model.expect(mut p, "indent")
+                    mut decode = try syntax_value.absent(mut p.pool)
+                    mut encode = try syntax_value.absent(mut p.pool)
+                    while full_model.peek(p).kind != "dedent":
+                        const key = try full_model.expect(mut p, "ident")
+                        const key_text = p.source[key.start:key.end]
+                        if key_text != b"decode" and key_text != b"encode":
+                            fail full_model.problem(key, "E_CODEC_KEY", "codec entries must be decode or encode")
+                        if (key_text == b"decode" and p.pool.values[decode].kind != 0) or (key_text == b"encode" and p.pool.values[encode].kind != 0):
+                            fail full_model.problem(key, "E_DUPLICATE_CODEC_KEY", "codec entry is declared more than once")
+                        _ = try full_model.expect(mut p, "colon")
+                        const target = try full_model.expect(mut p, "ident")
+                        const target_span = try located(mut p, target)
+                        if p.source[key.start:key.end] == b"decode":
+                            decode = target_span
+                        elif p.source[key.start:key.end] == b"encode":
+                            encode = target_span
+                        else:
+                            fail full_model.problem(key, "E_CODEC_KEY", "codec entries must be decode or encode")
+                        if not full_model.accept(mut p, "comma"):
+                            break
+                    const codec_end = try full_model.expect(mut p, "dedent")
+                    if p.pool.values[decode].kind == 0 or p.pool.values[encode].kind == 0:
+                        fail full_model.problem(codec_end, "E_INCOMPLETE_CODEC", "codec requires decode and encode entries")
+                    const wire_span = try located(mut p, wire)
+                    codec = try syntax_value.object(mut p.pool, ["wire", "decode", "encode"], [wire_span, decode, encode])
+                else:
+                    const member_attributes = try attributes(mut p)
+                    try check_attribute_target(p, member_attributes, True)
+                    const member = try function_value(mut p, name)
+                    try attach_attributes(mut p, member, member_attributes)
+            _ = try full_model.expect(mut p, "dedent")
+        const managed = try syntax_value.boolean(mut p.pool, False)
+        const generic = try syntax_value.sequence(mut p.pool, [])
+        const name_span = try located(mut p, name)
+        const backing_span = try located(mut p, backing)
+        const value = try syntax_value.object(mut p.pool, ["managed", "type_parameters", "name", "backing", "codec"], [managed, generic, name_span, backing_span, codec])
+        if resource:
+            p.catalog.types.resources.append(value)
+        else:
+            p.catalog.types.domains.append(value)
+        return name
+    try full_hints.declaration(mut p)
+    return try function_value(mut p, no_owner)
+
+
+record ParsedAttribute:
+    kind: bytes
+    start: int
+    end: int
+    argument: int
+    reason: int
+    condition: int
+    olds: int[]
+
+
+func attribute_field(p: full_model.State, id: int, name: str) -> int:
+    const value = p.pool.values[id]
+    for i in range(len(value.names)):
+        if value.names[i] == name:
+            return value.children[i]
+    return -1
+
+
+func attribute_span(p: full_model.State, value: int) -> full_model.Token:
+    const span = p.pool.values[attribute_field(p, value, "span")]
+    return full_model.Token(kind="attribute", start=p.pool.values[span.children[0]].integer, end=p.pool.values[span.children[1]].integer)
+
+
+func attribute_contract(kind: bytes) -> bool:
+    return kind == b"requires" or kind == b"ensures" or kind == b"invariant"
+
+
+func contract_clause(mut p: full_model.State, mut attribute: ParsedAttribute) fails syntax_value.Problem:
+    _ = try full_model.expect(mut p, "lparen")
+    const first = len(p.exprs)
+    const condition = try expression(mut p, 0)
+    const parsed_field_1 = try ref(mut p, condition)
+    attribute.condition = parsed_field_1
+    if full_model.accept(mut p, "comma"):
+        const argument = try full_model.expect(mut p, "bytes")
+        const parsed_field_2 = try located(mut p, argument)
+        attribute.argument = parsed_field_2
+    const close = try full_model.expect(mut p, "rparen")
+    attribute.end = close.end
+    for index in range(first, len(p.exprs)):
+        if full_model.node_tag(p, index) != b"call":
+            continue
+        const node = p.pool.values[p.exprs[index]]
+        const data = p.pool.values[node.children[1]].children[0]
+        if p.pool.values[attribute_field(p, data, "owner")].kind != 0:
+            continue
+        const name = p.pool.values[attribute_field(p, data, "name")]
+        const start = p.pool.values[name.children[0]].integer
+        const end = p.pool.values[name.children[1]].integer
+        if p.source[start:end] != b"old":
+            continue
+        const at = full_model.Token(kind="call", start=full_model.node_start(p, index), end=full_model.node_end(p, index))
+        if attribute.kind != b"ensures":
+            fail full_model.problem(at, "E_CONTRACT_OLD", "`old(...)` is only legal inside `@ensures`; a precondition and an invariant already see the current value")
+        if len(p.pool.values[attribute_field(p, data, "arguments")].children) != 1:
+            fail full_model.problem(at, "E_CONTRACT_OLD", "`old` takes exactly one expression")
+        const value = try ref(mut p, index)
+        attribute.olds.append(value)
+
+
+func attributes(mut p: full_model.State) -> int[] fails syntax_value.Problem:
+    mut result: int[] = []
+    while full_model.peek(p).kind == "at":
+        const at = full_model.peek(p)
+        p.cursor.pos = p.cursor.pos + 1
+        const name = try full_model.expect(mut p, "ident")
+        const kind = p.source[name.start:name.end]
+        const clause = full_model.Token(kind="attribute", start=at.start, end=name.end)
+        if kind != b"deprecated" and kind != b"test" and kind != b"allow" and not attribute_contract(kind):
+            fail full_model.problem(clause, "E_UNKNOWN_ATTRIBUTE", "unknown attribute; expected @deprecated, @test, @allow, @requires, @ensures or @invariant")
+        if not attribute_contract(kind):
+            for existing in result:
+                if p.pool.values[attribute_field(p, existing, "kind")].data == kind:
+                    fail full_model.problem(clause, "E_DUPLICATE_ATTRIBUTE", "attribute is repeated on one declaration")
+        const absent = try syntax_value.absent(mut p.pool)
+        mut attribute = ParsedAttribute(kind=kind, start=at.start, end=name.end, argument=absent, reason=absent, condition=absent, olds=[])
+        if attribute_contract(kind):
+            try contract_clause(mut p, mut attribute)
+        elif kind == b"deprecated":
+            _ = try full_model.expect(mut p, "lparen")
+            const argument = try full_model.expect(mut p, "bytes")
+            const parsed_field_3 = try located(mut p, argument)
+            attribute.argument = parsed_field_3
+            const closing = try full_model.expect(mut p, "rparen")
+            attribute.end = closing.end
+        elif kind == b"allow":
+            _ = try full_model.expect(mut p, "lparen")
+            const argument = try full_model.expect(mut p, "bytes")
+            const parsed_field_4 = try located(mut p, argument)
+            attribute.argument = parsed_field_4
+            if full_model.accept(mut p, "comma"):
+                const key = try full_model.expect(mut p, "ident")
+                if p.source[key.start:key.end] != b"reason":
+                    fail full_model.problem(key, "E_SYNTAX", "the only @allow argument is reason=\"...\"")
+                _ = try full_model.expect(mut p, "equal")
+                const reason = try full_model.expect(mut p, "bytes")
+                const parsed_field_5 = try located(mut p, reason)
+                attribute.reason = parsed_field_5
+            const closing = try full_model.expect(mut p, "rparen")
+            attribute.end = closing.end
+        const kind_value = try syntax_value.enumeration(mut p.pool, kind)
+        const span = try syntax_value.span(mut p.pool, attribute.start, attribute.end)
+        const olds = try syntax_value.sequence(mut p.pool, attribute.olds)
+        const value = try syntax_value.object(mut p.pool, ["kind", "span", "argument", "reason", "condition", "olds"], [kind_value, span, attribute.argument, attribute.reason, attribute.condition, olds])
+        result.append(value)
+    return result
+
+
+func attribute_head(p: full_model.State) -> str:
+    mut at = p.cursor.pos
+    if p.tokens[at].kind == "ident" and p.source[p.tokens[at].start:p.tokens[at].end] == b"public":
+        at = at + 1
+    const token = p.tokens[at]
+    const text = p.source[token.start:token.end]
+    if token.kind == "kw_def" or token.kind == "kw_private" or token.kind == "kw_conversion":
+        return "function"
+    if token.kind == "kw_domain":
+        return "domain"
+    if token.kind == "ident":
+        if text == b"extern" or text == b"host":
+            return "host_function"
+        if text == b"record":
+            return "record"
+    return "other"
+
+
+func check_attribute_target(p: full_model.State, pending: int[], member: bool) fails syntax_value.Problem:
+    const head = attribute_head(p)
+    for attribute in pending:
+        const kind = p.pool.values[attribute_field(p, attribute, "kind")].data
+        const span = attribute_span(p, attribute)
+        if kind == b"invariant":
+            if head != "record" and head != "domain":
+                fail full_model.problem(span, "E_CONTRACT_TARGET", "`@invariant` attaches to a `record` or `domain` declaration; a class, union, enum, alias, constraint or function carries none")
+        elif kind == b"requires" or kind == b"ensures":
+            if head == "host_function":
+                fail full_model.problem(span, "E_CONTRACT_TARGET", "an `extern` or `host` declaration has no body to check a contract in")
+            if head != "function":
+                fail full_model.problem(span, "E_CONTRACT_TARGET", "`@requires` and `@ensures` attach to a `func` declaration")
+        else:
+            if member:
+                fail full_model.problem(span, "E_ATTRIBUTE_TARGET", "only contract clauses attach to a domain member")
+            if head != "function" and head != "host_function":
+                fail full_model.problem(span, "E_ATTRIBUTE_TARGET", "attributes attach to a function declaration")
+
+
+func reject_generic_invariant(p: full_model.State, pending: int[], parameter_count: int) fails syntax_value.Problem:
+    if parameter_count == 0:
+        return
+    for attribute in pending:
+        if p.pool.values[attribute_field(p, attribute, "kind")].data == b"invariant":
+            fail full_model.problem(attribute_span(p, attribute), "E_CONTRACT_TARGET", "`@invariant` attaches to a non-generic `record`; a generic record carries none")
+
+
+func attach_attributes(mut p: full_model.State, name: full_model.Token, pending: int[]) fails syntax_value.Problem:
+    if len(pending) == 0:
+        return
+    const declaration = try located(mut p, name)
+    const clauses = try syntax_value.sequence(mut p.pool, pending)
+    const entry = try syntax_value.object(mut p.pool, ["declaration", "attributes"], [declaration, clauses])
+    p.catalog.attributes.append(entry)
+
+
+func top_constant(mut p: full_model.State) -> full_model.Token fails syntax_value.Problem:
+    _ = try full_model.expect(mut p, "kw_const")
+    const name = try full_model.expect(mut p, "ident")
+    _ = try full_model.expect(mut p, "colon")
+    const ty = try type_parser.type_name(mut p)
+    _ = try full_model.expect(mut p, "equal")
+    const value = try expression(mut p, 0)
+    const end = try full_model.expect(mut p, "semicolon")
+    const value_ref = try ref(mut p, value)
+    const returned = try full_model.statement(mut p, name.start, end.end, b"ret", value_ref)
+    const returned_ref = try ref(mut p, returned)
+    const statements = try syntax_value.sequence(mut p.pool, [returned_ref])
+    const body = try full_model.statement(mut p, name.start, end.end, b"block", statements)
+    mut allowed = 0
+    const literal = full_model.node_tag(p, value)
+    if literal == b"text" or literal == b"bytes":
+        allowed = 64
+    const allowed_value = try syntax_value.integer(mut p.pool, allowed)
+    const name_span = try located(mut p, name)
+    const effect_bound = try syntax_value.object(mut p.pool, ["allowed", "span"], [allowed_value, name_span])
+    const policy = try function_policy(mut p, True, effect_bound)
+    const empty = try syntax_value.sequence(mut p.pool, [])
+    const no = try syntax_value.boolean(mut p.pool, False)
+    const inferred = try syntax_value.object(mut p.pool, ["mutates", "mutation_writes"], [empty, no])
+    const absent = try syntax_value.absent(mut p.pool)
+    const return_type = try located(mut p, ty)
+    const signature = try syntax_value.object(mut p.pool, ["type_parameters", "parameters", "return_type", "mut_positions", "inferred", "failure_type", "keyword_only_from"], [empty, empty, return_type, empty, inferred, absent, absent])
+    const body_value = try ref(mut p, body)
+    const function = try syntax_value.object(mut p.pool, ["policy", "signature", "name", "body"], [policy, signature, name_span, body_value])
+    p.catalog.functions.append(function)
+    return name
+
+
+func decorated_declaration(mut p: full_model.State) -> full_model.Token fails syntax_value.Problem:
+    const pending = try attributes(mut p)
+    try check_attribute_target(p, pending, False)
+    mut published = False
+    if full_model.word(p, b"public"):
+        p.cursor.pos = p.cursor.pos + 1
+        published = True
+        if full_model.word(p, b"export"):
+            fail fail_at(p, "E_SYNTAX", "`public` marks a declaration, not an export directive")
+    if not published:
+        const exported = try full_header.reexport(mut p)
+        if exported:
+            return full_model.Token(kind="export", start=0, end=0)
+    const name = try parse_declaration(mut p, pending)
+    try attach_attributes(mut p, name, pending)
+    if published:
+        const span = try located(mut p, name)
+        p.catalog.types.public_declarations.append(span)
+    return name

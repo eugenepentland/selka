@@ -1,0 +1,3 @@
+module redundant.name
+func example() -> int:
+    return 1

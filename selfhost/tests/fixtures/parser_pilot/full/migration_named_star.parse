@@ -1,0 +1,2 @@
+func choose(value: int, *, enabled: bool = True) -> int:
+    return value

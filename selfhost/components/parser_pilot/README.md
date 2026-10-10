@@ -1,9 +1,70 @@
 # Parser pilot
 
-This independent component parses a bounded syntax slice; production routing is
-unchanged. Baseline: `0d9ababf7eb434d2e02e1b2b45fe5c6593715e7a`.
+The original slice remains as a regression oracle. The full producer entry is
+`full_adapter.my`; the installed integration boundary independently validates
+its complete syntax values. Original baseline: `0d9ababf7eb434d2e02e1b2b45fe5c6593715e7a`.
 
-## Declared grammar and profile
+## Full syntax producer
+
+`full_parser.parse(tokens, raw_source, module_syntax, trusted_intrinsics,
+source_path)` produces an exact named-field `ast.Program` value graph or an
+ordered diagnostic list. Grammar modules cover declarations, generic and
+compound types, effects and structural requirements, attributes/contracts,
+patterns, literals/format strings, scalar/resource intrinsics, calls and type
+applications, mutable arguments, assignments/destructuring, control flow,
+loops, comprehensions, gathers and generators. This is syntax construction;
+name resolution and lowering remain downstream consumers.
+
+`syntax_value.my` retains every record field, union tag, enum, optional value,
+byte payload, source span and table index. `syntax_codec.my` emits `SLKAST01`;
+`syntax_diagnostics.my` emits `SLKERR01`, preserving ordered codes, severity,
+messages, spans, related sites and provenance repairs. The independent Zig
+oracle decodes and validates the reply, then compares canonical reencodings
+against the unchanged production parser. Pool order and unused serialization
+values do not affect equality; AST table order, IDs and all metadata do. This
+full comparison is separate from the original reachable-tree projection.
+
+A request is `SLKPAR01`, five little-endian u32 fields (source byte length,
+token count, module mode, trusted intrinsic flag, source path length), path
+bytes, source bytes, then token records (u32 tag length, ASCII tag, u32 start,
+u32 end). `--request FILE` accepts this payload. `--exchange FILE` uses the
+64-byte `SLKPRS01` envelope: version/schema/direction/payload length and an
+opaque nonce plus request SHA256. Replies echo the 40 identity bytes and
+change only direction and payload length. The host verifies correlation;
+the producer treats identity as opaque and validates framing before parsing.
+No parse flag or path is inferred from ambient environment variables.
+
+Bounds are 1 MiB source, 100,000 tokens, 16,384 path bytes, 32 MiB payload,
+262,144 values and depth 256. Invalid spans, unknown tags, zero-width ordinary
+tokens, nonzero-width dedents, embedded EOF, and incorrect final EOF are
+`P_TRANSPORT`. Transport/process/profile refusals emit no AST and exit 2;
+source diagnostics are a successful framed `SLKERR01` response. Tokens are
+trusted lexical facts after validation; validation does not re-tokenize the
+whole source. Format holes use the canonical lexer’s raw range API, preserving
+absolute byte offsets. Four file symlinks reuse that qualified source closure;
+component snapshots dereference and hash their contents.
+
+The full producer stays within the existing qualified component profile:
+records, explicit mutable parameters/arguments, bytes/strings and indexed
+lists, bounded loops, checked failures, integer arithmetic, byte buffers, and
+filesystem/stream capabilities. It requires no dictionary, foreign call,
+historical checker, lowerer, backend or runtime. Diagnostics use admitted
+ASCII message conversion; repair text preserves arbitrary source bytes.
+
+Qualification uses `run_parser_pilot.py --full --oracle-roundtrip --full-corpus`.
+The declared fixture manifest is exhaustive and fail-closed. `--oracle-roundtrip`
+checks production ASTs through the codec alone and is explicitly not Selka
+parity. `--full-corpus` independently requires exact producer parity for every
+selected language and embedded standard module, reports every mismatch, and
+fails for any unsupported source. The recursively selected corpus contains one
+hash-pinned, explicitly reported native lexical exclusion: the stale
+`src/stdlib/fixtures/time_random_provider.my` uses retired `clock_cap` syntax.
+It never counts as producer parity. Debug and release (`--verify-facts` plus
+`MYL_CORE_LEAKCHECK=1`) remain distinct receipts. Broad corpus parity is evidence
+for the tested corpus, not a proof for every possible malformed program.
+Installed launch/correlation/corruption checks have their own driver and receipt.
+
+## Original slice grammar and profile
 
 The slice accepts zero-parameter `func` declarations returning a simple named
 type or `bool`, nonempty indentation blocks containing `const`/contextual `mut`
@@ -166,9 +227,8 @@ fact/leak qualification. Run pure `tests.my` with that verified seed using
 `test ... --force --no-cache`, then with `--release --verify-facts` and leak
 checking. Keep worktree-local Zig cache and disk TMPDIR environment variables.
 
-Integration gate additions (separate owner): declare `parser_pilot` sources,
-`run_parser_pilot.py`, and `.parse`/token/manifest fixture inputs; add debug and
-release standalone qualification steps plus pure tests to component testing.
-The builder currently names only test-index/cache-plan: pilot manifest/build
-registration is future work. Timing is deferred: no isolated timing admission
-was obtained, and no speedup or asymptotic claim is made.
+The integration gate declares the parser and canonical lexer source closure,
+qualification drivers, and fixture manifests. The coordinator packages
+`full_adapter.my` as the parser component; installed qualification compares
+the sealed producer with the native syntax boundary. Timing is deferred: no
+isolated timing admission was obtained, and no speedup claim is made.

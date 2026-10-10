@@ -1,0 +1,4 @@
+@test
+@test
+func example() -> bool:
+    return True

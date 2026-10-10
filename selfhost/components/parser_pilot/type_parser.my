@@ -1,0 +1,531 @@
+import full_model
+import syntax_value
+import syntax_problem
+import syntax_recovery
+
+public record RequirementLists:
+    builtins: int[]
+    fields: int[]
+    operations: int[]
+    names: int[]
+
+
+func span(mut p: full_model.State, token: full_model.Token) -> int fails syntax_value.Problem:
+    return try syntax_value.span(mut p.pool, token.start, token.end)
+
+
+func joined(first: full_model.Token, last: full_model.Token) -> full_model.Token:
+    return full_model.Token(kind="type", start=first.start, end=last.end)
+
+
+func look(p: full_model.State, distance: int) -> str:
+    const index = p.cursor.pos + distance
+    if index >= len(p.tokens):
+        return "eof"
+    return p.tokens[index].kind
+
+
+func take_word(mut p: full_model.State, spelling: bytes) -> bool:
+    if not full_model.word(p, spelling):
+        return False
+    p.cursor.pos = p.cursor.pos + 1
+    return True
+
+
+func alias_present(p: full_model.State, name: bytes) -> bool:
+    for alias in p.catalog.import_aliases:
+        if alias == name:
+            return True
+    return False
+
+
+func alias_prefix(p: full_model.State, name: bytes) -> bool:
+    for alias in p.catalog.import_aliases:
+        if len(alias) > len(name) and alias[:len(name)] == name and alias[len(name)] == 46:
+            return True
+    return False
+
+
+public func qualified_tail(mut p: full_model.State, first: full_model.Token) -> full_model.Token fails syntax_value.Problem:
+    const text = p.source[first.start:first.end]
+    if not p.cursor.module_syntax or full_model.peek(p).kind != "dot" or not full_model.same_line(p):
+        return first
+    if not alias_present(p, text) and not alias_prefix(p, text):
+        return first
+    mut result = first
+    while full_model.peek(p).kind == "dot" and full_model.same_line(p):
+        const saved = p.cursor.pos
+        p.cursor.pos = p.cursor.pos + 1
+        const name = try full_model.declared_name(mut p)
+        const candidate = joined(result, name)
+        const candidate_text = p.source[candidate.start:candidate.end]
+        if alias_present(p, candidate_text):
+            result = candidate
+            if full_model.peek(p).kind == "dot" and full_model.same_line(p):
+                p.cursor.pos = p.cursor.pos + 1
+                const tail = try full_model.declared_name(mut p)
+                return joined(result, tail)
+            return result
+        if alias_prefix(p, candidate_text):
+            result = candidate
+            continue
+        if alias_present(p, p.source[result.start:result.end]):
+            return candidate
+        p.cursor.pos = saved
+        return result
+    return result
+
+
+public func type_name(mut p: full_model.State) -> full_model.Token fails syntax_value.Problem:
+    mut base = try atom(mut p)
+    mut running = True
+    while running:
+        mut kind = b""
+        if full_model.accept(mut p, "question"):
+            kind = b"optional"
+        elif full_model.peek(p).kind == "lbracket" and look(p, 1) == "rbracket":
+            p.cursor.pos = p.cursor.pos + 2
+            kind = b"growable"
+        else:
+            running = False
+        if len(kind) > 0:
+            const combined = joined(base, p.tokens[p.cursor.pos - 1])
+            const all_span = try span(mut p, combined)
+            const base_span = try span(mut p, base)
+            const tag = try syntax_value.enumeration(mut p.pool, kind)
+            const value = try syntax_value.object(mut p.pool, ["span", "base", "kind"], [all_span, base_span, tag])
+            p.catalog.types.expressions.suffixes.append(value)
+            base = combined
+    return base
+
+
+func atom(mut p: full_model.State) -> full_model.Token fails syntax_value.Problem:
+    const first = full_model.peek(p)
+    if p.cursor.depth >= 256:
+        fail full_model.problem(first, "E_NESTING_LIMIT", "parser nesting exceeds 256 levels")
+    p.cursor.depth = p.cursor.depth + 1
+    const result = try atom_body(mut p, first)
+    p.cursor.depth = p.cursor.depth - 1
+    return result
+
+
+func atom_body(mut p: full_model.State, first: full_model.Token) -> full_model.Token fails syntax_value.Problem:
+    if full_model.accept(mut p, "kw_def"):
+        return try callback(mut p, first)
+    if full_model.accept(mut p, "kw_none"):
+        return first
+    if full_model.word(p, b"tuple") and look(p, 1) == "lbracket":
+        return try tuple_type(mut p, first)
+    if full_model.accept(mut p, "lparen"):
+        const close = try full_model.expect(mut p, "rparen")
+        return joined(first, close)
+    if full_model.accept(mut p, "lbracket"):
+        mut index_type = b"enum_type"
+        mut index_token = first
+        if full_model.peek(p).kind == "integer":
+            index_type = b"length"
+            index_token = try full_model.expect(mut p, "integer")
+        else:
+            index_token = try type_name(mut p)
+        _ = try full_model.expect(mut p, "rbracket")
+        const element = try type_name(mut p)
+        const whole = joined(first, element)
+        const whole_span = try span(mut p, whole)
+        const index_span = try span(mut p, index_token)
+        const index = try syntax_value.tagged(mut p.pool, index_type, index_span)
+        const element_span = try span(mut p, element)
+        const value = try syntax_value.object(mut p.pool, ["span", "index", "element"], [whole_span, index, element_span])
+        p.catalog.types.expressions.arrays.append(value)
+        return whole
+    const builtins = ["kw_i64", "kw_bool", "kw_i8", "kw_i16", "kw_i32", "kw_u8", "kw_u16", "kw_u32", "kw_u64", "kw_filesystem_cap", "kw_network_cap", "kw_environment_cap", "kw_clock_cap", "kw_random_cap"]
+    for kind in builtins:
+        if full_model.accept(mut p, kind):
+            return first
+    if full_model.peek(p).kind == "ident":
+        return try nominal(mut p)
+    fail full_model.problem(first, "E_TYPE", "expected a built-in, declared, fixed array, or enum-indexed table type")
+
+
+func tuple_type(mut p: full_model.State, first: full_model.Token) -> full_model.Token fails syntax_value.Problem:
+    p.cursor.pos = p.cursor.pos + 1
+    _ = try full_model.expect(mut p, "lbracket")
+    mut elements: int[] = []
+    mut more = True
+    while more:
+        const element = try type_name(mut p)
+        const appended_1 = try span(mut p, element)
+        elements.append(appended_1)
+        more = full_model.accept(mut p, "comma") and full_model.peek(p).kind != "rbracket"
+    const close = try full_model.expect(mut p, "rbracket")
+    const whole = joined(first, close)
+    const whole_span = try span(mut p, whole)
+    const values = try syntax_value.sequence(mut p.pool, elements)
+    const value = try syntax_value.object(mut p.pool, ["span", "elements"], [whole_span, values])
+    p.catalog.types.expressions.tuples.append(value)
+    return whole
+
+
+func nominal(mut p: full_model.State) -> full_model.Token fails syntax_value.Problem:
+    const first = try full_model.expect(mut p, "ident")
+    const name = try qualified_tail(mut p, first)
+    if full_model.peek(p).kind == "lbracket" and look(p, 1) == "rbracket":
+        return name
+    if not full_model.accept(mut p, "lbracket"):
+        return name
+    mut arguments: int[] = []
+    mut more = True
+    while more:
+        mut argument = full_model.peek(p)
+        if argument.kind == "integer":
+            _ = try full_model.expect(mut p, "integer")
+        else:
+            argument = try type_name(mut p)
+        if len(arguments) == 16:
+            fail full_model.problem(argument, "E_GENERIC_LIMIT", "at most 16 type arguments are permitted")
+        const appended_2 = try span(mut p, argument)
+        arguments.append(appended_2)
+        more = full_model.accept(mut p, "comma")
+    const close = try full_model.expect(mut p, "rbracket")
+    const whole = joined(name, close)
+    const whole_span = try span(mut p, whole)
+    const name_span = try span(mut p, name)
+    const values = try syntax_value.sequence(mut p.pool, arguments)
+    const value = try syntax_value.object(mut p.pool, ["span", "name", "arguments"], [whole_span, name_span, values])
+    p.catalog.types.expressions.applications.append(value)
+    return whole
+
+
+public func effect_bound(mut p: full_model.State) -> int fails syntax_value.Problem:
+    const first = full_model.peek(p)
+    mut allowed = 511
+    if take_word(mut p, b"noalloc"):
+        return try bound(mut p, first, allowed)
+    if take_word(mut p, b"noio"):
+        return try bound(mut p, first, 380)
+    if not take_word(mut p, b"effects"):
+        return try syntax_value.absent(mut p.pool)
+    _ = try full_model.expect(mut p, "lparen")
+    allowed = 0
+    if full_model.peek(p).kind != "rparen":
+        mut more = True
+        while more:
+            const name = try full_model.expect(mut p, "ident")
+            const spelling = p.source[name.start:name.end]
+            const effects = [b"filesystem", b"network", b"clock", b"random", b"environment", b"host", b"managed_allocation", b"output", b"mutation"]
+            mut bit = 1
+            mut selected = 0
+            for effect in effects:
+                if effect == spelling:
+                    selected = bit
+                bit = bit * 2
+            if selected == 0:
+                fail full_model.problem(name, "E_UNKNOWN_EFFECT", "unknown effect; expected managed_allocation, filesystem, network, clock, random, environment, output, mutation, or host")
+            if allowed & selected != 0:
+                fail full_model.problem(name, "E_DUPLICATE_EFFECT", "effect appears more than once in this bound")
+            allowed = allowed | selected
+            more = full_model.accept(mut p, "comma") and full_model.peek(p).kind != "rparen"
+    const close = try full_model.expect(mut p, "rparen")
+    return try bound(mut p, joined(first, close), allowed)
+
+
+func bound(mut p: full_model.State, token: full_model.Token, allowed: int) -> int fails syntax_value.Problem:
+    const bits = try syntax_value.integer(mut p.pool, allowed)
+    const location = try span(mut p, token)
+    return try syntax_value.object(mut p.pool, ["allowed", "span"], [bits, location])
+
+
+func value_field(pool: syntax_value.Pool, value: int, name: str) -> int:
+    for index in range(len(pool.values[value].names)):
+        if pool.values[value].names[index] == name:
+            return pool.values[value].children[index]
+    return -1
+
+
+func span_start(pool: syntax_value.Pool, value: int) -> int:
+    return pool.values[value_field(pool, value, "start")].integer
+
+
+func mutates_migration(p: full_model.State, parameters: int[]) -> syntax_problem.Edit[]:
+    const at = p.cursor.pos
+    if len(parameters) == 0 or len(parameters) > 64 or at == 0 or at + 1 >= len(p.tokens) or p.tokens[at + 1].kind != "lparen":
+        return []
+    mut marked: bool[] = []
+    for ignored in parameters:
+        marked.append(False)
+    mut cursor = at + 2
+    while cursor < len(p.tokens) and p.tokens[cursor].kind == "ident":
+        const token = p.tokens[cursor]
+        const wanted = p.source[token.start:token.end]
+        mut found = -1
+        for index in range(len(parameters)):
+            const name = value_field(p.pool, parameters[index], "name")
+            if span_text(p, name) == wanted:
+                found = index
+                break
+        if found < 0:
+            return []
+        marked[found] = True
+        cursor = cursor + 1
+        if cursor >= len(p.tokens) or p.tokens[cursor].kind != "comma":
+            break
+        cursor = cursor + 1
+    if cursor >= len(p.tokens) or p.tokens[cursor].kind != "rparen":
+        return []
+    mut edits: syntax_problem.Edit[] = []
+    for index in range(len(parameters)):
+        const parsed_parameter = parameters[index]
+        const written = p.pool.values[value_field(p.pool, parsed_parameter, "mut")].integer != 0
+        if marked[index] and not written:
+            const start = span_start(p.pool, value_field(p.pool, parsed_parameter, "ty"))
+            edits.append(syntax_problem.Edit(start=start, end=start, text=b"mut "))
+    edits.append(syntax_problem.Edit(start=p.tokens[at - 1].end, end=p.tokens[cursor].end, text=b""))
+    return edits
+
+
+public func reject_mutates_of(mut p: full_model.State, parameters: int[]) fails syntax_value.Problem:
+    if not full_model.word(p, b"mutates"):
+        return
+    const problem = full_model.problem(full_model.peek(p), "E_REMOVED_SPELLING", "`mutates(...)` was removed; mark each written parameter `name: mut T`")
+    const edits = mutates_migration(p, parameters)
+    if len(edits) == 0:
+        fail problem
+    fail try syntax_recovery.annotated(mut p, syntax_problem.repaired(problem, edits))
+
+
+public func reject_mutates(mut p: full_model.State) fails syntax_value.Problem:
+    try reject_mutates_of(mut p, [])
+
+
+public func mut_parameter(p: full_model.State) -> bool:
+    if not full_model.word(p, b"mut"):
+        return False
+    const next = look(p, 1)
+    return next != "comma" and next != "rparen" and next != "equal" and next != "colon" and next != "semicolon" and next != "eof" and next != "dedent" and next != "indent"
+
+
+func callback(mut p: full_model.State, first: full_model.Token) -> full_model.Token fails syntax_value.Problem:
+    _ = try full_model.expect(mut p, "lparen")
+    mut parameters: int[] = []
+    mut names: int[] = []
+    mut mutable: int[] = []
+    mut named: int[] = []
+    if full_model.peek(p).kind != "rparen":
+        mut more = True
+        while more:
+            if len(parameters) == 16:
+                fail full_model.problem(first, "E_GENERIC_LIMIT", "callbacks support at most 16 value parameters")
+            if full_model.peek(p).kind == "star":
+                fail full_model.problem(full_model.peek(p), "E_SYNTAX", "`*` is not permitted in a callback type; declare the keyword-only parameters on a function")
+            const is_named = take_word(mut p, b"named")
+            const appended_3 = try syntax_value.boolean(mut p.pool, is_named)
+            named.append(appended_3)
+            const prefix_mut = full_model.word(p, b"mut") and look(p, 1) == "ident" and look(p, 2) == "colon"
+            if prefix_mut:
+                p.cursor.pos = p.cursor.pos + 1
+            mut name = try syntax_value.absent(mut p.pool)
+            mut has_name = False
+            if full_model.peek(p).kind == "ident" and look(p, 1) == "colon":
+                const token = try full_model.expect(mut p, "ident")
+                _ = try full_model.expect(mut p, "colon")
+                name = try span(mut p, token)
+                has_name = True
+            if is_named and not has_name:
+                fail full_model.problem(full_model.peek(p), "E_PARAMETER_NAME", "a named callable parameter requires a name and type, such as `named limit: int`")
+            const is_mut = mut_parameter(p)
+            if is_mut and prefix_mut:
+                fail full_model.problem(full_model.peek(p), "E_PARAMETER_MODIFIER", "write `mut` once before the parameter name")
+            if is_mut:
+                p.cursor.pos = p.cursor.pos + 1
+            const appended_4 = try syntax_value.boolean(mut p.pool, is_mut or prefix_mut)
+            mutable.append(appended_4)
+            const ty = try type_name(mut p)
+            const appended_5 = try span(mut p, ty)
+            parameters.append(appended_5)
+            names.append(name)
+            more = full_model.accept(mut p, "comma") and full_model.peek(p).kind != "rparen"
+    _ = try full_model.expect(mut p, "rparen")
+    _ = try full_model.expect(mut p, "arrow")
+    const result = try type_name(mut p)
+    mut failure = try syntax_value.absent(mut p.pool)
+    if take_word(mut p, b"fails"):
+        const failure_token = try type_name(mut p)
+        failure = try span(mut p, failure_token)
+    mut ceiling = try effect_bound(mut p)
+    if p.pool.values[ceiling].kind == 0:
+        ceiling = try bound(mut p, first, 511)
+    try reject_mutates(mut p)
+    const whole = joined(first, p.tokens[p.cursor.pos - 1])
+    const whole_span = try span(mut p, whole)
+    const parameters_value = try syntax_value.sequence(mut p.pool, parameters)
+    const names_value = try syntax_value.sequence(mut p.pool, names)
+    const result_span = try span(mut p, result)
+    const mut_value = try syntax_value.sequence(mut p.pool, mutable)
+    const named_value = try syntax_value.sequence(mut p.pool, named)
+    const modes = try syntax_value.object(mut p.pool, ["mut", "named"], [mut_value, named_value])
+    const value = try syntax_value.object(mut p.pool, ["failure_type", "span", "parameters", "parameter_names", "return_type", "effect_bound", "parameter_modes"], [failure, whole_span, parameters_value, names_value, result_span, ceiling, modes])
+    p.catalog.types.expressions.callbacks.append(value)
+    return whole
+
+
+public func parameter(mut p: full_model.State, name: full_model.Token, ty: full_model.Token) -> int fails syntax_value.Problem:
+    const no = try syntax_value.boolean(mut p.pool, False)
+    const absent = try syntax_value.absent(mut p.pool)
+    const name_span = try span(mut p, name)
+    const type_span = try span(mut p, ty)
+    return try syntax_value.object(mut p.pool, ["named", "default_value", "name", "ty", "mut"], [no, absent, name_span, type_span, no])
+
+
+func constraint_parameter(mut p: full_model.State) -> int fails syntax_value.Problem:
+    const name = try full_model.expect(mut p, "ident")
+    _ = try full_model.expect(mut p, "colon")
+    const ty = try type_name(mut p)
+    return try parameter(mut p, name, ty)
+
+
+func operation(mut p: full_model.State) -> int fails syntax_value.Problem:
+    _ = try full_model.expect(mut p, "lparen")
+    const name = try full_model.expect(mut p, "ident")
+    _ = try full_model.expect(mut p, "lparen")
+    mut parameters: int[] = []
+    if full_model.peek(p).kind != "rparen":
+        mut more = True
+        while more:
+            if len(parameters) == 16:
+                fail full_model.problem(full_model.peek(p), "E_GENERIC_LIMIT", "at most 16 structural operation parameters are permitted")
+            const appended_6 = try constraint_parameter(mut p)
+            parameters.append(appended_6)
+            more = full_model.accept(mut p, "comma") and full_model.peek(p).kind != "rparen"
+    _ = try full_model.expect(mut p, "rparen")
+    _ = try full_model.expect(mut p, "arrow")
+    const result = try type_name(mut p)
+    const ceiling = try effect_bound(mut p)
+    if p.pool.values[ceiling].kind == 0:
+        fail full_model.problem(name, "E_GENERIC_REQUIREMENT", "structural operations require an explicit effects bound")
+    _ = try full_model.expect(mut p, "rparen")
+    const name_span = try span(mut p, name)
+    const values = try syntax_value.sequence(mut p.pool, parameters)
+    const result_span = try span(mut p, result)
+    return try syntax_value.object(mut p.pool, ["name", "parameters", "return_type", "effect_bound"], [name_span, values, result_span, ceiling])
+
+
+func span_text(p: full_model.State, value: int) -> bytes:
+    const location = p.pool.values[value]
+    const start = p.pool.values[location.children[0]].integer
+    const end = p.pool.values[location.children[1]].integer
+    return p.source[start:end]
+
+
+func bound_reference(mut p: full_model.State, first: full_model.Token) -> int fails syntax_value.Problem:
+    mut alias = try syntax_value.absent(mut p.pool)
+    mut name = first
+    if p.cursor.module_syntax and full_model.peek(p).kind == "dot" and alias_present(p, p.source[first.start:first.end]) and full_model.same_line(p):
+        p.cursor.pos = p.cursor.pos + 1
+        alias = try span(mut p, first)
+        name = try full_model.declared_name(mut p)
+    if full_model.peek(p).kind == "lbracket":
+        fail full_model.problem(full_model.peek(p), "E_GENERIC_REQUIREMENT", "a named constraint bound cannot take type arguments")
+    const name_span = try span(mut p, name)
+    return try syntax_value.object(mut p.pool, ["alias", "name"], [alias, name_span])
+
+
+func same_reference(p: full_model.State, first: int, second: int) -> bool:
+    const one = p.pool.values[first].children
+    const two = p.pool.values[second].children
+    if span_text(p, one[1]) != span_text(p, two[1]):
+        return False
+    const one_alias = p.pool.values[one[0]].kind != 0
+    const two_alias = p.pool.values[two[0]].kind != 0
+    if one_alias != two_alias:
+        return False
+    if not one_alias:
+        return True
+    return span_text(p, one[0]) == span_text(p, two[0])
+
+
+public func requirement_list(mut p: full_model.State, allow_named: bool, owner: full_model.Token) -> RequirementLists fails syntax_value.Problem:
+    mut result = RequirementLists(builtins=[], fields=[], operations=[], names=[])
+    mut more = True
+    while more:
+        const requirement = try full_model.expect(mut p, "ident")
+        const text = p.source[requirement.start:requirement.end]
+        if len(result.builtins) + len(result.fields) + len(result.operations) + len(result.names) == 16:
+            fail full_model.problem(requirement, "E_GENERIC_LIMIT", "at most 16 requirements are permitted")
+        if text == b"field":
+            _ = try full_model.expect(mut p, "lparen")
+            const appended_7 = try constraint_parameter(mut p)
+            result.fields.append(appended_7)
+            _ = try full_model.expect(mut p, "rparen")
+        elif text == b"op":
+            const appended_8 = try operation(mut p)
+            result.operations.append(appended_8)
+        elif text == b"copy" or text == b"equality" or text == b"integer" or text == b"codec" or text == b"storable":
+            for previous in result.builtins:
+                if span_text(p, previous) == text:
+                    fail full_model.problem(requirement, "E_GENERIC_REQUIREMENT", "duplicate type requirement")
+            const appended_9 = try span(mut p, requirement)
+            result.builtins.append(appended_9)
+        else:
+            const reference = try bound_reference(mut p, requirement)
+            if not allow_named:
+                const parts = p.pool.values[reference].children
+                mut message = "a constraint definition cannot reference another named constraint"
+                if p.pool.values[parts[0]].kind == 0 and p.source[owner.start:owner.end] == span_text(p, parts[1]):
+                    message = "a constraint definition cannot refer to itself"
+                fail full_model.problem(requirement, "E_GENERIC_REQUIREMENT", message)
+            for previous in result.names:
+                if same_reference(p, previous, reference):
+                    fail full_model.problem(requirement, "E_GENERIC_REQUIREMENT", "duplicate type requirement")
+            result.names.append(reference)
+        more = full_model.accept(mut p, "plus")
+    return result
+
+
+public func type_parameter(mut p: full_model.State, name: full_model.Token, requirements: RequirementLists, default_copy: bool, constant_length: bool) -> int fails syntax_value.Problem:
+    const copy = try syntax_value.boolean(mut p.pool, default_copy)
+    const length = try syntax_value.boolean(mut p.pool, constant_length)
+    const name_span = try span(mut p, name)
+    const builtins = try syntax_value.sequence(mut p.pool, requirements.builtins)
+    const fields = try syntax_value.sequence(mut p.pool, requirements.fields)
+    const operations = try syntax_value.sequence(mut p.pool, requirements.operations)
+    const names = try syntax_value.sequence(mut p.pool, requirements.names)
+    return try syntax_value.object(mut p.pool, ["default_copy", "constant_length", "name", "requirements", "field_requirements", "operation_requirements", "named_requirements"], [copy, length, name_span, builtins, fields, operations, names])
+
+
+public func type_parameters(mut p: full_model.State) -> int[] fails syntax_value.Problem:
+    mut parameters: int[] = []
+    if not full_model.accept(mut p, "lbracket"):
+        return parameters
+    mut names: bytes[] = []
+    mut more = True
+    while more:
+        const constant_length = full_model.accept(mut p, "kw_const")
+        const name = try full_model.expect(mut p, "ident")
+        if len(parameters) == 16:
+            fail full_model.problem(name, "E_GENERIC_LIMIT", "at most 16 type parameters are permitted")
+        const text = p.source[name.start:name.end]
+        for previous in names:
+            if previous == text:
+                fail full_model.problem(name, "E_GENERIC_PARAMETER", "duplicate type parameter")
+        names.append(text)
+        mut collected = RequirementLists(builtins=[], fields=[], operations=[], names=[])
+        mut default_copy = False
+        if not constant_length and full_model.peek(p).kind != "colon":
+            default_copy = True
+        else:
+            _ = try full_model.expect(mut p, "colon")
+            if constant_length:
+                if full_model.peek(p).kind != "kw_u64":
+                    fail full_model.problem(full_model.peek(p), "E_GENERIC_REQUIREMENT", "named constraint bounds are not permitted on constant-length parameters")
+                _ = try full_model.expect(mut p, "kw_u64")
+            else:
+                collected = try requirement_list(mut p, True, name)
+        const appended_10 = try type_parameter(mut p, name, collected, default_copy, constant_length)
+        parameters.append(appended_10)
+        more = full_model.accept(mut p, "comma")
+    _ = try full_model.expect(mut p, "rbracket")
+    return parameters
+
+
+# Cases need nominal application spans without accepting optional/list suffixes.
+public func nominal_type_name(mut p: full_model.State) -> full_model.Token fails syntax_value.Problem:
+    return try nominal(mut p)

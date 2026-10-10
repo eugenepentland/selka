@@ -1,0 +1,69 @@
+import full_model
+
+# Accessors for records already constructed by this parser, never untrusted wire.
+public func field(p: full_model.State, id: int, name: str) -> int:
+    for at in range(len(p.pool.values[id].names)):
+        if p.pool.values[id].names[at] == name:
+            return p.pool.values[id].children[at]
+    return -1
+
+
+public func integer(p: full_model.State, id: int) -> int:
+    return p.pool.values[id].integer
+
+
+public func absent(p: full_model.State, id: int) -> bool:
+    return p.pool.values[id].kind == 0
+
+
+public func flag(p: full_model.State, id: int) -> bool:
+    return p.pool.values[id].integer == 1
+
+
+public func items(p: full_model.State, id: int) -> int[]:
+    return p.pool.values[id].children
+
+
+public func octets(p: full_model.State, id: int) -> bytes:
+    return p.pool.values[id].data
+
+
+public func span(p: full_model.State, id: int) -> full_model.Token:
+    return full_model.Token(kind="", start=integer(p, field(p, id, "start")), end=integer(p, field(p, id, "end")))
+
+
+public func payload(p: full_model.State, id: int) -> int:
+    return p.pool.values[id].children[0]
+
+
+public func tag(p: full_model.State, id: int) -> bytes:
+    return p.pool.values[id].data
+
+
+public func node_data(p: full_model.State, id: int) -> int:
+    return field(p, p.exprs[id], "data")
+
+
+public func statement_data(p: full_model.State, id: int) -> int:
+    return field(p, p.stmts[id], "data")
+
+
+public func node_span(p: full_model.State, id: int) -> full_model.Token:
+    return span(p, field(p, p.exprs[id], "span"))
+
+
+public func statement_span(p: full_model.State, id: int) -> full_model.Token:
+    return span(p, field(p, p.stmts[id], "span"))
+
+
+public func text(p: full_model.State, at: full_model.Token) -> bytes:
+    return p.source[at.start:at.end]
+
+
+public func contains(data: bytes, wanted: bytes) -> bool:
+    if len(wanted) > len(data):
+        return False
+    for at in range(len(data) - len(wanted) + 1):
+        if data[at:at + len(wanted)] == wanted:
+            return True
+    return False

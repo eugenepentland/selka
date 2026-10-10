@@ -1,0 +1,7 @@
+"""A module document."""
+public func main() -> int:
+    """A function document."""
+    mut value = 1
+    while value < 3:
+        value = value + 1
+    return value

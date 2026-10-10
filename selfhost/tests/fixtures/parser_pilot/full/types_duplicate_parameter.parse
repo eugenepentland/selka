@@ -1,0 +1,2 @@
+func f[T, T]() -> int:
+    return 0

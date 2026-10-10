@@ -1,0 +1,4 @@
+func main() -> int:
+    const x: int = 1 + 2 * 3
+    mut y = (x - 4) * -2
+    return y + f(1, x)

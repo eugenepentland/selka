@@ -1,0 +1,116 @@
+import full_model
+import syntax_value
+
+func failure(token: full_model.Token, message: str) -> syntax_value.Problem:
+    return full_model.problem(token, "E_BYTE_ESCAPE", message)
+
+
+func hex(ch: int) -> int:
+    if ch >= 48 and ch <= 57:
+        return ch - 48
+    if ch >= 65 and ch <= 70:
+        return ch - 55
+    if ch >= 97 and ch <= 102:
+        return ch - 87
+    return -1
+
+
+func codepoint(mut output: byte_buffer, point: int):
+    if point < 128:
+        _ = output.append_byte(point)
+    elif point < 2048:
+        _ = output.append_byte(192 + point // 64)
+        _ = output.append_byte(128 + point % 64)
+    elif point < 65536:
+        _ = output.append_byte(224 + point // 4096)
+        _ = output.append_byte(128 + point // 64 % 64)
+        _ = output.append_byte(128 + point % 64)
+    else:
+        _ = output.append_byte(240 + point // 262144)
+        _ = output.append_byte(128 + point // 4096 % 64)
+        _ = output.append_byte(128 + point // 64 % 64)
+        _ = output.append_byte(128 + point % 64)
+
+
+public func decode(source: bytes, token: full_model.Token) -> bytes fails syntax_value.Problem:
+    if token.start < 0 or token.end > len(source) or token.end - token.start < 2:
+        fail full_model.problem(token, "P_LITERAL_SHAPE", "invalid literal token span")
+    const raw = source[token.start:token.end]
+    mut prefix = 0
+    const byte_literal = raw[0] == 98
+    if byte_literal:
+        prefix = 1
+    const text = raw[prefix:]
+    if len(text) < 2:
+        fail full_model.problem(token, "P_LITERAL_SHAPE", "invalid literal delimiters")
+    mut quotes = 1
+    if len(text) >= 6 and text[0] == text[1] and text[0] == text[2]:
+        quotes = 3
+    mut output = byte_buffer([])
+    mut i = quotes
+    while i < len(text) - quotes:
+        mut value = text[i]
+        if value == 92:
+            i = i + 1
+            if i >= len(text) - quotes:
+                fail full_model.problem(token, "P_LITERAL_SHAPE", "unterminated literal escape")
+            const escaped = text[i]
+            if escaped == 117 or escaped == 85:
+                if byte_literal:
+                    _ = output.append_byte(92)
+                    _ = output.append_byte(escaped)
+                else:
+                    mut digits = 4
+                    if escaped == 85:
+                        digits = 8
+                    if i + digits >= len(text) - quotes:
+                        fail failure(token, "Unicode escape has too few hexadecimal digits")
+                    mut point = 0
+                    for n in range(digits):
+                        const digit = hex(text[i + n + 1])
+                        if digit < 0:
+                            fail failure(token, "invalid Unicode escape")
+                        point = point * 16 + digit
+                    if point > 2097151:
+                        fail failure(token, "invalid Unicode escape")
+                    if point > 1114111 or (point >= 55296 and point <= 57343):
+                        fail failure(token, "Unicode escape is not a scalar value")
+                    mut count = 1
+                    if point >= 128:
+                        count = 2
+                    if point >= 2048:
+                        count = 3
+                    if point >= 65536:
+                        count = 4
+                    if len(output) + count > 65536:
+                        fail full_model.problem(token, "E_BYTE_LITERAL_LIMIT", "literal exceeds 65536 decoded bytes")
+                    codepoint(mut output, point)
+                    i = i + digits
+                i = i + 1
+                continue
+            if escaped == 110:
+                value = 10
+            elif escaped == 114:
+                value = 13
+            elif escaped == 116:
+                value = 9
+            elif escaped == 48:
+                value = 0
+            elif escaped == 92 or escaped == 34 or escaped == 39:
+                value = escaped
+            elif escaped == 120:
+                if i + 2 >= len(text) - quotes:
+                    fail failure(token, "hex byte escape requires two digits")
+                const high = hex(text[i + 1])
+                const low = hex(text[i + 2])
+                if high < 0 or low < 0:
+                    fail failure(token, "invalid hex byte escape")
+                value = high * 16 + low
+                i = i + 2
+            else:
+                fail failure(token, "unknown byte escape")
+        if len(output) == 65536:
+            fail full_model.problem(token, "E_BYTE_LITERAL_LIMIT", "byte literal exceeds 65536 decoded bytes; use input buffers for larger text")
+        _ = output.append_byte(value)
+        i = i + 1
+    return bytes(output)

@@ -1,0 +1,48 @@
+import full_model
+import syntax_value
+import syntax_problem
+import syntax_recovery
+
+func module_name(mut p: full_model.State) -> full_model.Token fails syntax_value.Problem:
+    const first = try full_model.expect(mut p, "ident")
+    mut last = first
+    while full_model.accept(mut p, "dot"):
+        last = try full_model.expect(mut p, "ident")
+    return full_model.Token(kind="ident", start=first.start, end=last.end)
+
+
+# A parseModule failure precedes declaration recovery and terminates the source.
+public func leading(mut p: full_model.State) fails syntax_value.Problem:
+    if not p.cursor.module_syntax:
+        return
+    if full_model.word(p, b"module"):
+        const first = full_model.peek(p)
+        p.cursor.pos = p.cursor.pos + 1
+        _ = try module_name(mut p)
+        const last = try full_model.expect(mut p, "semicolon")
+        const problem = syntax_value.Problem(code="E_MODULE_HEADER", start=first.start, end=last.end, message="module names come from file paths; remove the redundant module header")
+        const fix = syntax_problem.Edit(start=first.start, end=last.end, text=b"")
+        fail try syntax_recovery.annotated(mut p, syntax_problem.repaired(problem, [fix]))
+    while full_model.word(p, b"import"):
+        p.cursor.pos = p.cursor.pos + 1
+        const path = try module_name(mut p)
+        mut alias = p.tokens[p.cursor.pos - 1]
+        if full_model.accept(mut p, "kw_as"):
+            alias = try full_model.expect(mut p, "ident")
+        p.catalog.import_aliases.append(p.source[path.start:path.end])
+        p.catalog.import_aliases.append(p.source[alias.start:alias.end])
+        _ = try full_model.expect(mut p, "semicolon")
+
+
+public func reexport(mut p: full_model.State) -> bool fails syntax_value.Problem:
+    if not p.cursor.module_syntax or not full_model.word(p, b"export"):
+        return False
+    p.cursor.pos = p.cursor.pos + 1
+    const first = try full_model.declared_name(mut p)
+    if not full_model.accept(mut p, "dot"):
+        fail full_model.problem(first, "E_EXPORT_REMOVED", "plain `export NAME` is removed; mark the declaration `public` instead")
+    _ = try full_model.declared_name(mut p)
+    while full_model.accept(mut p, "dot"):
+        _ = try full_model.declared_name(mut p)
+    _ = try full_model.expect(mut p, "semicolon")
+    return True

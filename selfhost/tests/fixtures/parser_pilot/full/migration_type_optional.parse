@@ -1,0 +1,2 @@
+func main(value: Option[int]) -> Option[int]:
+    return value

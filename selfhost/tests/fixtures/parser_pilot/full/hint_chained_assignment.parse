@@ -1,0 +1,4 @@
+func main() -> int:
+    mut first = 0
+    first = second = 3
+    return first

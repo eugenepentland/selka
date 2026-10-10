@@ -1,0 +1,4 @@
+func main(flag: bool) -> int:
+    if flag:
+        answer = 1
+    return answer

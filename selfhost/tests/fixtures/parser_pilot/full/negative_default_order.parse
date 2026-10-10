@@ -1,0 +1,2 @@
+func main(first: int = 1, second: int) -> int:
+    return first + second

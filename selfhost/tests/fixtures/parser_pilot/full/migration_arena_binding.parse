@@ -1,0 +1,4 @@
+func main() -> int:
+    with arena():
+        value = 1
+    return 0
