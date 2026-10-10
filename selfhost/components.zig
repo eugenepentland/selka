@@ -201,6 +201,7 @@ const components = [_]Component{
     .{ .source = "cache_plan", .name = "cache-plan", .protocol = 2, .schema = 2 },
     .{ .source = "lexer_pilot", .name = "lexer-pilot", .schema = 2 },
     .{ .source = "parser_pilot", .name = "parser-pilot", .entry = "full_adapter.my", .schema = 2 },
+    .{ .source = "declaration_index", .name = "declaration-index" },
 };
 
 fn component(ctx: *Context, config: Config, seed: Seed, descriptor: Component) ![]const u8 {

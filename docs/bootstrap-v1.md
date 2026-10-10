@@ -15,7 +15,7 @@ receipt containing the source/runtime/library identity, toolchain identity and
 executable digest. The builder verifies that receipt before use. The historical
 `selfhost/stage0-pin.json` remains the seed for its existing fixtures.
 
-The test-index component uses only these capabilities of the seed:
+The independently seeded components use these capabilities of the seed:
 
 - `func`, `public`, imports, records, annotated parameters and return values;
 - block-scoped `const` and `mut` bindings, explicit `mut` arguments and indexed
@@ -51,6 +51,12 @@ The component cannot use a newly implemented language feature merely because
 another compiler on `PATH` accepts it. Change the pinned profile and qualify a
 new seed before adopting such a feature. Future ports must enumerate their
 additional requirements rather than silently extending `component-v1`.
+
+The declaration index uses the same frozen source profile. Its new protocol/schema
+1 contract is separate from lexer/parser protocol 1/schema 2. It receives parsed
+declaration facts, direct dependency symbols and explicit source/module context;
+it returns symbol tables or located declaration diagnostics. Neither seed pin is
+extended. See [declaration qualification](tooling/declaration-component-qualification.md).
 
 ## Runtime boundary
 

@@ -38,6 +38,7 @@ def require_summary(output, edit=False):
 def main():
     ap=argparse.ArgumentParser()
     for name in ('builder','compiler','component-dir','zig'):ap.add_argument('--'+name,type=Path,required=True)
+    ap.add_argument('--report-dir',type=Path)
     args=ap.parse_args()
     env={k:v for k,v in os.environ.items() if not k.startswith(('MYLANG_','PILOT_')) or k=='MYLANG_COMPONENT_CACHE'}
     env.update(MYLANG_ZIG=str(args.zig),MYL_CORE_LEAKCHECK='1',MYLANG_LEXER_MODE='reference',MYLANG_PARSER_MODE='reference',MYLANG_DECLARATION_MODE='reference',MYLANG_TEST_INDEX_MODE='reference',MYLANG_CACHE_PLAN_MODE='reference',MYLANG_COMPONENT_DIR=str(args.component_dir.resolve()))
@@ -52,8 +53,11 @@ def main():
         flags=['--release','--verify-facts'] if release else []
         for source,count in roots:
             budget = ['--max-steps', '100000000'] if source.name == 'indexed_tests.my' else []
-            require_guest(execute([seed,'test',source,'--force','--no-cache','--check-leaks',*flags,*budget],env),count)
+            require_guest(execute([seed,'test',source,'--force','--no-cache',*flags,*budget],env),count)
         command=[sys.executable,ROOT/'selfhost/tests/run_declaration_qualification.py','--compiler',args.compiler.resolve(),'--builder',args.builder.resolve(),'--component-dir',args.component_dir.resolve(),'--zig',args.zig]
+        if args.report_dir:
+            report = args.report_dir.resolve() / ('release.json' if release else 'normal.json')
+            command.extend(['--report', report])
         if release:command.append('--release')
         else:command.append('--edit-check')
         require_summary(execute(command,env), edit=not release)

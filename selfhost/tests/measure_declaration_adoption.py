@@ -46,7 +46,8 @@ def main():
             env=D.environment(mode,args.component_dir,empty);env['MYL_CORE_LEAKCHECK']='0'
             cache=work/f'cache-{mode}'
             command=[args.compiler,'build',main,'--project','-o',work/'program','--cache-dir',cache,f'--zig={args.zig}','--report']
-            _,prime=sample(command,env,work,0,b'')
+            initial,prime=sample(command,env,work,0,b'')
+            rows.append({'mode':mode,'phase':'fresh-application-cache','cache_evidence':prime[2].decode(),**distribution([initial])})
             warm=[]
             for _ in range(args.iterations):
                 elapsed,result=sample(command,env,work,0,b'');warm.append(elapsed)

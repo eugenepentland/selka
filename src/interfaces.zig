@@ -1,6 +1,9 @@
 //! Module declaration identities and export boundaries, before body type checking.
 const std = @import("std");
 const frontend_runtime = @import("frontend_runtime.zig");
+const declaration_value = @import("declaration_value.zig");
+const declaration_boundary = @import("declaration_component.zig");
+const declaration_projection = @import("interface_declarations.zig");
 const component_adapter = @import("component_adapter.zig");
 const eGenericArity = "E_GENERIC_ARITY";
 /// Error code for an export directive that names no visible declaration.
@@ -66,9 +69,9 @@ pub const ContractManifest = struct {
 /// Allocation, rejected declarations and an incomplete project all prevent a manifest.
 pub const ContractError = diagnostic.Error || error{IncompleteProject};
 /// Distinguish type declarations from callable declarations during name resolution.
-pub const Kind = enum { type, function, constraint };
+pub const Kind = declaration_value.Kind;
 /// Identify a declaration by its module and local symbol index.
-pub const Identity = struct { module: usize, symbol: usize };
+pub const Identity = declaration_value.Identity;
 /// One exported declaration a listing line renders, and the module it is listed under.
 const Exported = struct { module: usize, symbol: Symbol };
 /// A checked program's functions by name: `exact` by the whole qualified name,
@@ -81,7 +84,7 @@ const FunctionTable = struct {
 /// Store declaration visibility and optional domain-owner restrictions. A
 /// re-export facade carries `re_export` pointing at the defining declaration in
 /// its own module; every consumer resolves through that identity.
-pub const Symbol = struct { name: []const u8, kind: Kind, span: source.Span, exported: bool = false, owner: ?[]const u8 = null, restricted: bool = false, re_export: ?Identity = null };
+pub const Symbol = declaration_value.Symbol;
 /// Store parsed module declarations and their local name index. `import_used`
 /// carries one flag per direct import in this module's own order; the resolver
 /// sets it when a reference actually resolves through that import, which is the
@@ -154,6 +157,81 @@ pub const Index = struct {
         };
         try unit.names.put(allocator, key, unit.symbols.items.len);
         try unit.symbols.append(allocator, .{ .name = key, .kind = kind, .span = span, .owner = owner_name, .restricted = restricted });
+    }
+    fn collectNative(self: *Index, module_id: usize) diagnostic.Error!void {
+        const module = self.project.modules.items[module_id];
+        const syntax = self.units[module_id].syntax;
+        inline for (.{ "records", "domains", "variants", "resources" }) |field| {
+            for (@field(syntax.types, field)) |declaration| try self.add(module_id, declaration.name, .type, null, false);
+        }
+        for (syntax.types.expressions.aliases) |alias| try self.add(module_id, alias.name, .type, null, false);
+        for (syntax.types.constraints) |constraint| try self.add(module_id, constraint.name, .constraint, null, false);
+        for (syntax.functions) |function| try self.add(module_id, function.name, .function, function.policy.owner, function.policy.restricted);
+        for (module.exports) |exported| {
+            if (exported.alias) |alias| {
+                const target = try self.resolveExported(module_id, alias, exported.name, exported.span);
+                try self.addFacade(module_id, exported.name, exported.span, target);
+                continue;
+            }
+            const id = self.units[module_id].names.get(exported.name) orelse return self.project.fail(eUnknownExport, "export names no local declaration", .{ .module = module_id, .span = exported.span }, null);
+            if (ast.isPublicDeclaration(syntax, self.units[module_id].symbols.items[id].span)) return self.project.fail("E_DUPLICATE_EXPORT", "declaration is already public", .{ .module = module_id, .span = exported.span }, null);
+            self.units[module_id].symbols.items[id].exported = true;
+        }
+        // A declaration marked `public` publishes itself, exactly as an `export`
+        // directive naming it would; the directive form stays accepted so an
+        // existing source keeps its meaning.
+        for (syntax.types.public_declarations) |span| {
+            const id = self.units[module_id].names.get(module.src.text(span)) orelse return self.project.fail(eUnknownExport, "public declaration names no local declaration", .{ .module = module_id, .span = span }, null);
+            self.units[module_id].symbols.items[id].exported = true;
+        }
+        for (self.units[module_id].symbols.items) |*symbol| {
+            if (symbol.owner) |owner| symbol.exported = !symbol.restricted and self.units[module_id].symbols.items[self.units[module_id].names.get(owner).?].exported;
+        }
+    }
+    fn collect(self: *Index, module_id: usize, is_imported: bool, ready: []const bool) frontend_runtime.Error!void {
+        const runtime = self.project.frontendRuntime();
+        const selected = try declaration_boundary.mode(runtime);
+        if (selected == .reference) return self.collectNative(module_id);
+        const backing = self.project.arena.child_allocator;
+        var scratch = std.heap.ArenaAllocator.init(backing);
+        defer scratch.deinit();
+        const input = try declaration_projection.input(scratch.allocator(), self, module_id, is_imported);
+        if (selected == .component) {
+            var actual = try declaration_boundary.execute(backing, input, runtime.?);
+            defer actual.deinit();
+            switch (actual.outcome) {
+                .success => |output| try declaration_projection.adopt(self, module_id, output, ready),
+                .failure => |problem| return self.declarationFailure(problem),
+            }
+            return;
+        }
+        var failed = false;
+        self.collectNative(module_id) catch |err| {
+            if (err != error.SourceError) return err;
+            failed = true;
+        };
+        const expected: declaration_value.Outcome = if (failed) .{ .failure = blk: {
+            const problem = self.project.problem orelse return error.InternalError;
+            break :blk .{
+                .code = problem.code,
+                .message = problem.message,
+                .site = .{ .module = problem.site.module, .span = problem.site.span },
+                .related = if (problem.related) |related| .{ .module = related.module, .span = related.span } else null,
+            };
+        } } else .{ .success = .{ .symbols = self.units[module_id].symbols.items, .import_used = self.units[module_id].import_used } };
+        var actual = try declaration_boundary.execute(backing, input, runtime.?);
+        defer actual.deinit();
+        try declaration_boundary.compare(actual.outcome, expected);
+        if (failed) return error.SourceError;
+    }
+    fn declarationFailure(self: *Index, problem: declaration_value.Problem) diagnostic.Error {
+        const a = self.project.arena.allocator();
+        return self.project.fail(
+            try a.dupe(u8, problem.code),
+            try a.dupe(u8, problem.message),
+            .{ .module = problem.site.module, .span = problem.site.span },
+            if (problem.related) |related| .{ .module = related.module, .span = related.span } else null,
+        );
     }
     /// Resolve a direct import alias or this module's own declaration namespace.
     /// Members use Domain.method; private domain members require the same owner.
@@ -1582,6 +1660,13 @@ pub fn buildWithCacheTimed(
     var syntax_ns: i96 = 0;
     const verified = try frontend_runtime.verify(allocator, project.frontendRuntime());
     var index: Index = .{ .project = project, .units = try allocator.alloc(Unit, project.modules.items.len), .frontend_context = frontendContext(project, verified) };
+    const imported = try allocator.alloc(bool, project.modules.items.len);
+    @memset(imported, false);
+    const ready = try allocator.alloc(bool, project.modules.items.len);
+    @memset(ready, false);
+    for (project.modules.items) |module| for (module.imports) |edge| {
+        imported[edge.target] = true;
+    };
     for (project.order.items) |module_id| {
         const module = project.modules.items[module_id];
         const syntax_start = if (include_timing) timing.?.now() else std.Io.Timestamp.zero;
@@ -1598,32 +1683,8 @@ pub fn buildWithCacheTimed(
             @memset(used, false);
             index.units[module_id].import_used = used;
         }
-        inline for (.{ "records", "domains", "variants", "resources" }) |field| {
-            for (@field(syntax.types, field)) |declaration| try index.add(module_id, declaration.name, .type, null, false);
-        }
-        for (syntax.types.expressions.aliases) |alias| try index.add(module_id, alias.name, .type, null, false);
-        for (syntax.types.constraints) |constraint| try index.add(module_id, constraint.name, .constraint, null, false);
-        for (syntax.functions) |function| try index.add(module_id, function.name, .function, function.policy.owner, function.policy.restricted);
-        for (module.exports) |exported| {
-            if (exported.alias) |alias| {
-                const target = try index.resolveExported(module_id, alias, exported.name, exported.span);
-                try index.addFacade(module_id, exported.name, exported.span, target);
-                continue;
-            }
-            const id = index.units[module_id].names.get(exported.name) orelse return project.fail(eUnknownExport, "export names no local declaration", .{ .module = module_id, .span = exported.span }, null);
-            if (ast.isPublicDeclaration(syntax, index.units[module_id].symbols.items[id].span)) return project.fail("E_DUPLICATE_EXPORT", "declaration is already public", .{ .module = module_id, .span = exported.span }, null);
-            index.units[module_id].symbols.items[id].exported = true;
-        }
-        // A declaration marked `public` publishes itself, exactly as an `export`
-        // directive naming it would; the directive form stays accepted so an
-        // existing source keeps its meaning.
-        for (syntax.types.public_declarations) |span| {
-            const id = index.units[module_id].names.get(module.src.text(span)) orelse return project.fail(eUnknownExport, "public declaration names no local declaration", .{ .module = module_id, .span = span }, null);
-            index.units[module_id].symbols.items[id].exported = true;
-        }
-        for (index.units[module_id].symbols.items) |*symbol| {
-            if (symbol.owner) |owner| symbol.exported = !symbol.restricted and index.units[module_id].symbols.items[index.units[module_id].names.get(owner).?].exported;
-        }
+        try index.collect(module_id, imported[module_id], ready);
+        ready[module_id] = true;
     }
     // Every module is indexed before checking interface dependencies.
     for (project.order.items) |module| {

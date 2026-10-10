@@ -68,8 +68,8 @@ and the compiler-wide `frontend_qualification` lanes non-cacheable;
 registration self-tests remain eligible for reuse. The registry
 policy and action coverage have a dedicated `test-verification-registry` target
 that also runs in the complete gate. Verification preparation tracks the
-installed manifests and executable bytes of all four components, including
-`lexer-pilot` and `parser-pilot`.
+installed manifests and executable bytes of all five components, including
+`lexer-pilot`, `parser-pilot` and `declaration-index`.
 
 The [frontend qualification target](frontend-adoption-qualification.md) adds
 ordinary consumers, cache transitions, deployment failures and coordinator edits

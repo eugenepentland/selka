@@ -151,6 +151,7 @@ fn cached(run: *std.Build.Step.Run, list: []const u8) void {
         run.addFileInput(.{ .relative = .{ .base = .install_prefix, .sub_path = "libexec/mylang/components/cache-plan.json" } });
         run.addFileInput(.{ .relative = .{ .base = .install_prefix, .sub_path = "libexec/mylang/components/lexer-pilot.json" } });
         run.addFileInput(.{ .relative = .{ .base = .install_prefix, .sub_path = "libexec/mylang/components/parser-pilot.json" } });
+        run.addFileInput(.{ .relative = .{ .base = .install_prefix, .sub_path = "libexec/mylang/components/declaration-index.json" } });
     }
     for (tool_inputs) |tool| if (tool) |path| run.addFileInput(path);
     if (list.len != 0) verification_registry.?.declared(&run.step, list);
@@ -844,6 +845,22 @@ pub fn build(b: *std.Build) void {
     frontend_checks.addArgs(&.{ "python3", "selfhost/tests/frontend_qualification_test.py" });
     frontend_step.dependOn(&frontend_checks.step);
     test_step.dependOn(frontend_step);
+    const declarations_step = b.step("test-selfhost-declarations", "Qualify declaration indexing with the verified seed and installed compiler");
+    const declarations_run = driver(b, "declaration indexing pure and installed qualification", rss.driver, "declaration_qualification");
+    declarations_run.has_side_effects = true;
+    declarations_run.addArgs(&.{ "python3", "selfhost/test_declarations.py", "--zig", b.graph.zig_exe, "--builder" });
+    declarations_run.addArtifactArg(component_tool);
+    declarations_run.addArg("--compiler");
+    declarations_run.addArtifactArg(exe);
+    declarations_run.addArg("--component-dir");
+    declarations_run.addDirectoryArg2(.{ .relative = .{ .base = .install_prefix, .sub_path = "libexec/mylang/components" } }, .{ .make_absolute = true });
+    declarations_run.addArg("--report-dir");
+    _ = declarations_run.addOutputDirectoryArg("declaration-qualification");
+    declarations_step.dependOn(&declarations_run.step);
+    const declarations_checks = driver(b, "declaration qualification verdict accounting", rss.script, "declaration_qualification_self");
+    declarations_checks.addArgs(&.{ "python3", "-m", "unittest", "selfhost/tests/declaration_qualification_test.py" });
+    declarations_step.dependOn(&declarations_checks.step);
+    test_step.dependOn(declarations_step);
     const selfhost_numeric_step = b.step("test-selfhost-numeric", "Compare bootstrap and live numeric token extents");
     const selfhost_numeric_run = driver(b, "python3 selfhost/tests/run_lexer_diff.py --compiler", rss.driver, "selfhost_numeric");
     selfhost_numeric_run.addArgs(&.{ "python3", "selfhost/tests/run_lexer_diff.py", "--compiler" });

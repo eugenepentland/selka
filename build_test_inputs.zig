@@ -223,3 +223,9 @@ pub const frontend_qualification = [_][]const u8{"selfhost/"};
 
 /// Adversarial checks of the frontend qualification driver's verdict accounting.
 pub const frontend_qualification_self = [_][]const u8{ "selfhost/tests/run_frontend_qualification.py", "selfhost/tests/frontend_qualification_test.py", "selfhost/tests/fixtures/frontend_qualification/" };
+
+/// Qualified declaration pure tests and installed workflow/protocol qualification.
+pub const declaration_qualification = [_][]const u8{"selfhost/"};
+
+/// Adversarial verdict accounting for declaration qualification.
+pub const declaration_qualification_self = [_][]const u8{ "selfhost/test_declarations.py", "selfhost/test_pilots.py", "selfhost/tests/run_declaration_qualification.py", "selfhost/tests/run_frontend_qualification.py", "selfhost/tests/declaration_qualification_test.py", "selfhost/tests/fixtures/declaration_index/" };

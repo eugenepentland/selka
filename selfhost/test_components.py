@@ -40,6 +40,9 @@ class ComponentCacheTests(unittest.TestCase):
         parser_sources = self.root / "selfhost/components/parser_pilot"
         parser_sources.mkdir(parents=True)
         (parser_sources / "full_adapter.my").write_text("func main() -> int:\n    return 0\n")
+        self.declaration_sources = self.root / "selfhost/components/declaration_index"
+        self.declaration_sources.mkdir(parents=True)
+        (self.declaration_sources / "main.my").write_text("func main() -> int:\n    return 0\n")
         self.cache = self.workspace / "cache"
         self.install = self.workspace / "installed"
         (self.workspace / "guardian-zig").mkdir()
@@ -112,7 +115,7 @@ class ComponentCacheTests(unittest.TestCase):
     def test_unchanged_cache_and_source_change(self):
         first = self.invoke()
         self.assertEqual(first, self.invoke())
-        self.assertEqual(self.calls(), 4)
+        self.assertEqual(self.calls(), 5)
         self.assertEqual(self.calls("seed"), 1)
         receipt = json.loads((self.cache / "artifacts" / first / "receipt.json").read_text())
         if platform.system() == "Linux":
@@ -126,7 +129,7 @@ class ComponentCacheTests(unittest.TestCase):
                 self.assertTrue(cpu.get("Features", "").strip(), "missing ARM CPU features")
         (self.sources / "graph.my").write_text("# new module\n")
         self.assertNotEqual(first, self.invoke())
-        self.assertEqual(self.calls(), 5)
+        self.assertEqual(self.calls(), 6)
 
     def test_planner_change_is_independent_of_test_index(self):
         index_key = self.invoke()
@@ -136,20 +139,34 @@ class ComponentCacheTests(unittest.TestCase):
         self.assertEqual(index_key, self.invoke())
         after = json.loads((self.install / "cache-plan.json").read_text())
         self.assertNotEqual(before["key"], after["key"])
-        self.assertEqual(self.calls(), 5)
+        self.assertEqual(self.calls(), 6)
+        self.assertEqual(self.calls("seed"), 1)
+
+    def test_declaration_change_preserves_other_component_receipts(self):
+        self.invoke()
+        packages = ("test-index", "cache-plan", "lexer-pilot", "parser-pilot", "declaration-index")
+        before = {name: (self.install / (name + ".json")).read_bytes() for name in packages}
+        (self.declaration_sources / "indexing.my").write_text("# declaration-only edit\n")
+        self.invoke()
+        after = {name: (self.install / (name + ".json")).read_bytes() for name in packages}
+        for name in packages[:-1]:
+            self.assertEqual(before[name], after[name])
+        self.assertNotEqual(json.loads(before["declaration-index"])["key"],
+                            json.loads(after["declaration-index"])["key"])
+        self.assertEqual(self.calls(), 6)
         self.assertEqual(self.calls("seed"), 1)
 
     def test_frontend_profile_is_versioned_in_manifest_and_build_receipt(self):
         self.invoke()
         for name, protocol, schema in (("test-index", 1, 1), ("cache-plan", 2, 2),
-                                      ("lexer-pilot", 1, 2), ("parser-pilot", 1, 2)):
+                                      ("lexer-pilot", 1, 2), ("parser-pilot", 1, 2), ("declaration-index", 1, 1)):
             manifest = json.loads((self.install / (name + ".json")).read_text())
             receipt = json.loads((self.cache / "artifacts" / manifest["key"] / "receipt.json").read_text())
             self.assertEqual((manifest["protocol"], manifest["schema"]), (protocol, schema))
             self.assertEqual((receipt["identity"]["protocol"], receipt["identity"]["schema"]),
                              (protocol, schema))
         self.invoke()
-        self.assertEqual(self.calls(), 4)
+        self.assertEqual(self.calls(), 5)
 
     def test_identity_covers_embedded_input_bytes(self):
         (self.sources / "schema.json").write_text('{"version":1}')
@@ -169,7 +186,7 @@ class ComponentCacheTests(unittest.TestCase):
         self.assertEqual(index_key, self.invoke())
         for name, key in before.items():
             self.assertNotEqual(key, json.loads((self.install / (name + ".json")).read_text())["key"])
-        self.assertEqual(self.calls(), 6)
+        self.assertEqual(self.calls(), 7)
         self.assertEqual(self.calls("seed"), 1)
 
     def test_toolchain_library_change_requalifies_seed(self):
@@ -200,14 +217,14 @@ class ComponentCacheTests(unittest.TestCase):
         self.artifact(key).write_bytes(b"corrupt")
         self.invoke(success=False)
         self.invoke("--uncached", success=False)
-        self.assertEqual(self.calls(), 4)
+        self.assertEqual(self.calls(), 5)
 
     def test_missing_artifact_rejected_including_uncached(self):
         key = self.invoke()
         self.artifact(key).unlink()
         self.invoke(success=False)
         self.invoke("--uncached", success=False)
-        self.assertEqual(self.calls(), 4)
+        self.assertEqual(self.calls(), 5)
 
     def test_installed_artifact_corruption_does_not_replace_selection(self):
         self.invoke()
@@ -248,14 +265,14 @@ class ComponentCacheTests(unittest.TestCase):
         self.assertIn("private-zig-global-v1", identity["flags"])
         self.environment["ZIG_GLOBAL_CACHE_DIR"] = str(self.workspace / "different-zig-global")
         self.assertEqual(first, self.invoke("--uncached"))
-        self.assertEqual(self.calls(), 8)
+        self.assertEqual(self.calls(), 10)
         self.assertFalse((self.workspace / "caller-zig-global").exists())
         self.assertFalse((self.workspace / "different-zig-global").exists())
 
     def test_uncached_build_checks_reproducibility(self):
         first = self.invoke()
         self.assertEqual(first, self.invoke("--uncached"))
-        self.assertEqual(self.calls(), 8)
+        self.assertEqual(self.calls(), 10)
         self.environment["COMPONENT_FIXTURE_OUTPUT"] = "different"
         self.invoke("--uncached", success=False)
         self.assertEqual(self.artifact(first).read_bytes(), b"native-component")
@@ -279,7 +296,7 @@ class ComponentCacheTests(unittest.TestCase):
         key = self.invoke()
         (self.cache / "artifacts" / key / "receipt.json").write_text("{")
         self.invoke(success=False)
-        self.assertEqual(self.calls(), 4)
+        self.assertEqual(self.calls(), 5)
 
     def test_seed_archive_digest_mismatch_fails_concisely(self):
         self.archive.write_bytes(b"corrupt archive")
