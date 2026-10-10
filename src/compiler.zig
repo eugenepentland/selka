@@ -56,6 +56,8 @@ pub const lexer = @import("lexer.zig");
 pub const lexer_component = @import("lexer_component.zig");
 /// `tokens-v1` machine output used as the stage-0 lexer oracle.
 pub const tokens_dump = @import("tokens_dump.zig");
+/// Exact AST oracle with opt-in independently built parser comparison.
+pub const syntax_dump = @import("syntax_dump.zig");
 const parser = @import("parser.zig");
 const ast = @import("ast.zig");
 /// The checked program the new compiler core (`src/core/`) lowers from.

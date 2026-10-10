@@ -101,6 +101,7 @@ const usage = "usage: mylang build <file.my> (-o <output> | --run [-- ARGS...]) 
     "docs [TOPIC] (list the user guides built into this executable, or print one)\n       mylang " ++
     "packages lock CONFIG.json --output LOCK.json | build ENTRY.my --lock LOCK.json [--command C] [--receipt FILE] (offline locked local packages)\n       mylang " ++
     "dump-tokens <file.my> (stage-0 `tokens-v1` JSON on stdout; lexical failures exit 1)\n       mylang " ++
+    "dump-syntax <file.my> (complete SLKAST01 binary syntax on stdout; source failures exit 1)\n       mylang " ++
     "interfaces emit|check|oracle <entry.my> | show <module.myi> (per-module interface artifacts; `mylang interfaces` prints the options)\n       mylang " ++
     "<schema-project|input-module|check|di" ++
     "scover-duplicates|discover-project-duplicates|report-project-quality|report-quality|fmt|fm" ++
@@ -456,6 +457,7 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
     // loading imports, parsing, checking or lowering. It is the reference for
     // the differential self-host lexer.
     if (parsed.command == .@"dump-tokens") return dumpTokens(init, parsed, bytes);
+    if (parsed.command == .@"dump-syntax") return dumpSyntax(init, parsed, bytes);
     // Imports, public declarations and configured interface gates select the
     // same reachable graph as `check-project`. Private standalone programs
     // retain their single-unit checking path.
@@ -559,6 +561,7 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
         .@"schema-project",
         .@"input-module",
         .@"dump-tokens",
+        .@"dump-syntax",
         .fmt,
         .@"fmt-module",
         .@"fmt-project",
@@ -697,6 +700,32 @@ fn dumpTokens(init: Context, parsed: Parsed, bytes: []const u8) !u8 {
     return 0;
 }
 
+/// Parse exactly one source, retaining complete diagnostic prose and repairs.
+fn dumpSyntax(init: Context, parsed: Parsed, bytes: []const u8) !u8 {
+    const src = try language.source.Source.init(init.arena.allocator(), parsed.path, bytes);
+    var sink: language.diagnostic.Sink = .{ .allocator = init.arena.allocator() };
+    const document = language.syntax_dump.render(init.gpa, src, &sink, .{ .io = init.io, .environ = init.environ }) catch |err| switch (err) {
+        error.SourceError => {
+            for (sink.items.items) |item| {
+                const rendered = try language.diagnostic_output.render(init.gpa, item, src, init.diagnostics);
+                defer init.gpa.free(rendered);
+                try std.Io.File.stderr().writeStreamingAll(init.io, rendered);
+            }
+            return 1;
+        },
+        error.OutOfMemory => return error.OutOfMemory,
+        else => {
+            const message = try std.fmt.allocPrint(init.gpa, "mylang: syntax component comparison failed: {s}\n", .{@errorName(err)});
+            defer init.gpa.free(message);
+            try std.Io.File.stderr().writeStreamingAll(init.io, message);
+            return 2;
+        },
+    };
+    defer init.gpa.free(document);
+    try std.Io.File.stdout().writeStreamingAll(init.io, document);
+    return 0;
+}
+
 const Command = enum {
     @"index-project",
     @"project-dependencies",
@@ -721,6 +750,7 @@ const Command = enum {
     fmt,
     check,
     @"dump-tokens",
+    @"dump-syntax",
     @"discover-duplicates",
     @"report-quality",
 };
@@ -2692,7 +2722,7 @@ fn requestedCacheBase(init: Context, parsed: Parsed) ?[]const u8 {
 /// `frontend/`), then `MYLANG_FRONTEND_CACHE` from a parent build driver, then
 /// the per-project default. The compiler identity partitions the directory.
 fn frontendRoot(init: Context, parsed: Parsed) ?[]const u8 {
-    if (parsed.no_cache) return null;
+    if (parsed.no_cache or parsed.command == .@"dump-syntax") return null;
     const base = requestedCacheBase(init, parsed) orelse language.frontend_cache.default_directory;
     if (std.mem.eql(u8, base, language.frontend_cache.default_directory)) return base;
     return std.fs.path.join(init.gpa, &.{ base, frontend_label }) catch null;
@@ -2888,7 +2918,7 @@ fn semanticCacheContract(init: Context) ![]const u8 {
 /// `--cache-dir=DIR` (or `MYLANG_FRONTEND_CACHE`) nests under `DIR/semantic`, and
 /// the default is the per-project `.mylang-cache/semantic` leaf.
 fn semanticRoot(init: Context, parsed: Parsed) ?[]const u8 {
-    if (parsed.no_cache) return null;
+    if (parsed.no_cache or parsed.command == .@"dump-syntax") return null;
     const default_directory = language.semantic_cache.default_store_directory;
     const base = requestedCacheBase(init, parsed) orelse return default_directory;
     if (std.mem.eql(u8, base, default_directory)) return default_directory;

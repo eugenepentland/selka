@@ -20,7 +20,9 @@ pub fn parse(p: *parser.Parser, module: bool, runtime: Runtime) (diagnostic.Erro
     if (std.mem.eql(u8, mode, reference_mode)) return if (module) p.parseModule() else p.parse();
     if (p.cursor.pos != 0 or p.cursor.dialect != .target or p.module_syntax) return error.ComponentProfile;
     if (p.cursor.depth != 0 or p.cursor.delimiters != 0 or p.cursor.recovered) return error.ComponentProfile;
-    const input: wire.Input = .{ .src = p.src, .tokens = p.tokens, .module = module };
+    var request_source = p.src;
+    request_source.trusted_intrinsics = p.trustedStdlib();
+    const input: wire.Input = .{ .src = request_source, .tokens = p.tokens, .module = module };
     const before = p.sink.items.items.len;
     const reference = if (module) p.parseModule() else p.parse();
     const program = reference catch |err| blk: {

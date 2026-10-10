@@ -323,7 +323,7 @@ pub const Parser = struct {
     /// Only the compiler-embedded standard modules may spell the private
     /// `__float_sqrt` intrinsic. A matching `@stdlib/` path is not enough: the
     /// source bytes must be the exact embedded module.
-    fn trustedStdlib(self: Parser) bool {
+    pub fn trustedStdlib(self: Parser) bool {
         if (self.src.trusted_intrinsics) return true;
         const prefix = "@stdlib/";
         if (!std.mem.startsWith(u8, self.src.path, prefix)) return false;

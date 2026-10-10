@@ -27,6 +27,23 @@ fn changed(a: std.mem.Allocator, bytes: []const u8, at: usize, value: u32) ![]u8
     std.mem.writeInt(u32, copy[at..][0..4], value, .little);
     return copy;
 }
+
+// spec-case: SELFHOST-PARSER-COMPONENT-1
+test "parser component trust matches exact embedded standard source and explicit authority" {
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var sink: diagnostic.Sink = .{ .allocator = a };
+    const text = @import("standard_library.zig").source("math.my").?;
+    var p: parser.Parser = .{ .storage = a, .src = try source.Source.init(a, "@stdlib/math.my", text), .tokens = &.{}, .sink = &sink };
+    try t.expect(p.trustedStdlib());
+    p.src = try source.Source.init(a, "@stdlib/math.my", "func impostor():\n    pass\n");
+    try t.expect(!p.trustedStdlib());
+    p.src = try source.Source.init(a, "math.my", text);
+    try t.expect(!p.trustedStdlib());
+    p.src.trusted_intrinsics = true;
+    try t.expect(p.trustedStdlib());
+}
 // spec: SELFHOST-PARSER-COMPONENT-1
 test "parser component binds full request and validates canonical syntax frame" {
     var arena = std.heap.ArenaAllocator.init(t.allocator);
