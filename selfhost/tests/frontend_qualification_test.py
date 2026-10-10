@@ -22,6 +22,47 @@ def report(**changes):
 
 
 class QualificationTests(unittest.TestCase):
+    def test_warm_failures_keep_primed_environment_and_path(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            work = Path(temporary)
+            installed = work / 'installed'
+            installed.mkdir()
+            for name in Q.PACKAGES:
+                binary = installed / f'{name}.bin'
+                binary.write_bytes(name.encode())
+                version = 2 if name == 'cache-plan' else 1
+                (installed / f'{name}.json').write_text(json.dumps({
+                    'format': 1, 'component': name, 'protocol': version, 'schema': version,
+                    'artifact': binary.name, 'sha256': Q.digest(binary)}))
+            manifests = Q.packages(installed)
+            q = object.__new__(Q.Qualification)
+            q.components, q.work, q.source = installed, work, work
+            q.modes, q.release, q.deployment, q.receipt_warm = ['component'], True, 0, {}
+            q.zig = Path('/native/zig')
+            calls = []
+
+            def invocation(mode, args, components=None, leakcheck=True):
+                calls.append((components, leakcheck, '--verify-facts' in args, '--release' in args))
+                try:
+                    current = Q.packages(components or installed)
+                    good = all(current[n]['sha256'] == manifests[n]['sha256'] for n in Q.FRONTENDS)
+                except (RuntimeError, OSError):
+                    good = False
+                if not good:
+                    return 2, b'', b'frontend deployment rejected'
+                if args[0] == 'test':
+                    cached = mode == 'component'
+                    return report(passed=0 if cached else 2, cached=2 if cached else 0,
+                                  tests=[{'name': 'a', 'status': 'cached' if cached else 'passed'},
+                                         {'name': 'b', 'status': 'cached' if cached else 'passed'}])
+                return (7, b'7\n', b'') if args[0] == 'run-project' else (0, b'', b'')
+
+            q.run = invocation
+            self.assertEqual(q.warm_deployments(), 30)
+            self.assertTrue(all(path == work / 'deployment' and not leak and not facts and release
+                                for path, leak, facts, release in calls))
+            self.assertEqual(q.receipt_warm, {'component': {'passed': 0, 'cached': 2}})
+
     def test_routing_and_authority_cannot_leak(self):
         with patch.dict(os.environ, {'PILOT_TRUSTED': '1', 'PILOT_REPLY': 'evil',
                                     'MYLANG_PARSER_MODE': 'component', 'MYLANG_COMPONENT_DIR': '/evil'}):

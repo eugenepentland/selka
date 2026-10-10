@@ -47,6 +47,7 @@ def transport(args, work, empty):
         reference = None
         for mode in args.modes:
             env = environment(mode, args.component_dir, empty)
+            env['MYL_CORE_LEAKCHECK'] = '0'
             env['MYLANG_LEXER_MODE'] = 'reference'  # Isolate the parser boundary.
             _, baseline = sample(command, env, work)
             require(not baseline[2] and baseline[1].startswith(b'SLKAST01'), 'invalid syntax transport baseline')
@@ -73,6 +74,7 @@ def application(args, work, empty):
     for mode in args.modes:
         helper.write_text(original)
         env = environment(mode, args.component_dir, empty)
+        env['MYL_CORE_LEAKCHECK'] = '0'
         cache = work / f'application-cache-{mode}'
         output = work / 'application-program'
         command = [args.compiler, 'build', source / 'main.my', '--project', '-o', output,
@@ -114,7 +116,7 @@ def components(args, work):
     command = [args.builder, '--root', source, '--zig', args.zig, '--cache-dir', cache,
                '--install-dir', installation]
     host_before = digest(args.compiler)
-    env = dict(os.environ, MYLANG_LEXER_MODE='reference', MYLANG_PARSER_MODE='reference')
+    env = dict(os.environ, MYLANG_LEXER_MODE='reference', MYLANG_PARSER_MODE='reference', MYL_CORE_LEAKCHECK='0')
     elapsed, _ = sample(command, env, work)
     before = packages(installation)
     rows = [{'phase': 'cold-artifacts', 'scope': 'native coordinator verifies reused seed and builds/installs all four packages',
@@ -184,6 +186,7 @@ def main():
         empty = work / 'empty-path'
         empty.mkdir()
         evidence = {'host_sha256': host, 'host_build_requirement': 'ReleaseFast, built before isolation',
+                    'measurement_checks': 'fact/leak verification disabled; every sample validates observable status/output; separate correctness gate enables facts/leaks',
                     'affinity': sorted(os.sched_getaffinity(0)), 'packages': manifests,
                     'parser_transport': transport(args, work, empty),
                     'application': application(args, work, empty),

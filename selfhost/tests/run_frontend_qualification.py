@@ -101,6 +101,7 @@ class Qualification:
         self.work, self.modes, self.release = work, modes, release
         self.calls = self.comparisons = self.deployment = 0
         self.sessions = 0
+        self.receipt_warm = {}
         self.records = []
         self.phase = 'installed'
         self.empty_path = work / 'empty-path'
@@ -121,10 +122,13 @@ class Qualification:
         (self.source / 'boundary.my').write_bytes(boundary)
         (self.source / 'oversize.my').write_bytes(boundary + b'\n')
 
-    def run(self, mode, args, components=None):
+    def run(self, mode, args, components=None, leakcheck=True):
         self.calls += 1
+        env = environment(mode, components or self.components, self.empty_path)
+        if not leakcheck:
+            env['MYL_CORE_LEAKCHECK'] = '0'
         result = execute([self.compiler, *args],
-                         environment(mode, components or self.components, self.empty_path), self.work)
+                         env, self.work)
         return result
 
     def compare(self, name, args, expected=0):
@@ -236,28 +240,34 @@ class Qualification:
             ]
             if self.release:
                 for command in commands:
-                    command += ['--release', '--verify-facts']
+                    command += ['--release']
             for command in commands:
+                restore_deployment(self.components, private)
                 # A different mode has already published into this exact cache.
                 # Subsequent frontend authentication cannot trust its verdict.
-                native = self.run('reference', command)
+                native = self.run('reference', command, private, leakcheck=False)
                 if command[0] == 'test':
                     test_counts(native, allow_cached=True)
                 else:
                     require(native == ((7, b'7\n', b'') if command[0] == 'run-project' else (0, b'', b'')),
                             'reference cache priming failed')
                 for _ in range(2):
-                    result = self.run(mode, command)
+                    result = self.run(mode, command, private, leakcheck=False)
                     if command[0] == 'test':
                         test_counts(result, allow_cached=True)
                     else:
                         require(result == ((7, b'7\n', b'') if command[0] == 'run-project' else (0, b'', b'')),
                                 f'cannot prime {mode}/{command[0]} warm state: {result!r}')
+                if command[0] == 'test':
+                    receipt = json.loads(result[1])
+                    require(receipt['cached'] == (2 if mode == 'component' else 0),
+                            f'{mode}: warm test receipt behavior not demonstrated: {receipt!r}')
+                    self.receipt_warm[mode] = {'passed': receipt['passed'], 'cached': receipt['cached']}
                 for name in FRONTENDS:
                     for variant in ('missing-manifest', 'missing-artifact', 'schema', 'digest', 'replacement'):
-                        if private.exists():
-                            shutil.rmtree(private)
-                        shutil.copytree(self.components, private)
+                        # The path and every environment value remain exactly
+                        # those used to publish the warm replay/receipt above.
+                        restore_deployment(self.components, private)
                         manifest = dict(manifests[name])
                         manifest_path = private / f'{name}.json'
                         binary = private / manifest['artifact']
@@ -277,7 +287,7 @@ class Qualification:
                             shutil.copyfile(self.components / other['artifact'], binary)
                             manifest['sha256'] = digest(binary)
                             manifest_path.write_text(json.dumps(manifest))
-                        result = self.run(mode, command, private)
+                        result = self.run(mode, command, private, leakcheck=False)
                         require(result[0] == 2 and not result[1] and result[2],
                                 f'warm {mode}/{command[0]}/{name}/{variant} hid failure: {result!r}')
                         self.deployment += 1
@@ -323,6 +333,12 @@ class Qualification:
                             child.stdout.close()
                     self.sessions += 1
         return self.sessions
+
+
+def restore_deployment(source, target):
+    if target.exists():
+        shutil.rmtree(target)
+    shutil.copytree(source, target)
 
 
 def session_command(child, command):
@@ -415,6 +431,7 @@ def main():
                   'comparisons': q.comparisons, 'host_invocations': q.calls,
                   'warm_deployment_checks': q.deployment, 'records': q.records,
                   'live_session_checks': q.sessions,
+                  'cache_enabled_test_receipts': q.receipt_warm,
                   'coordinator_edit': edit, 'failed': 0, 'skipped': 0}
         report['profile_limits'] = profile_limits
     require(digest(args.compiler) == host_before, 'qualification changed installed host')
@@ -425,6 +442,7 @@ def main():
           f'{report["warm_deployment_checks"]} warm deployment checks, {report["live_session_checks"]} live session checks; 0 failed, 0 skipped')
     print(f'host SHA256 {host_before}; verified seed SHA256 {report["seed_sha256"]}')
     print('runtime commands used empty PATH and explicit native Zig; no runtime Python required')
+    print(f'cache-enabled warm test receipts: {json.dumps(report["cache_enabled_test_receipts"], sort_keys=True)}; fact/leak qualification remains in regular matrix')
     if edit:
         print('native coordinator implementation edit: changed parser key/artifact, unrelated packages and host unchanged')
 

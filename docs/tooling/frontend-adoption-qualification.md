@@ -33,7 +33,12 @@ counts. Forced tests refuse cached, skipped or unsupported verdicts.
 
 Warm build, run and test commands are primed twice with stable paths and a
 populated private application cache, after reference mode publishes into that
-same cache. Each frontend package is then independently
+same cache. Priming and corruption both use the same private deployment path
+and identical environment. Cache probes explicitly disable leak checking and
+fact verification so neither can silently disable replay. The second
+component-mode test invocation must report two cached verdicts; shadow must
+report two executed passes because its comparison disables reuse. These probes
+are separate from the regular release/fact/leak matrix. Each frontend package is then independently
 made unavailable, given an unsupported schema, corrupted without updating its
 digest, or replaced with the other native producer under a matching new digest.
 Every command must fail with host status 2 and no result stdout. These checks
@@ -60,10 +65,12 @@ The report records this narrower acceptance as a default-adoption limitation,
 not as language parity. The component profile and schema must be explicitly
 requalified before widening that bound.
 
-Nine adversarial harness tests run through
+Ten adversarial harness tests run through
 `python3 -m unittest selfhost/tests/frontend_qualification_test.py`. They reject
 empty/incomplete/cached forced verdicts, malformed artifact basenames/digests,
 inherited oracle/routing controls and stderr differences hidden by equal stdout.
+The warm-state self-check also rejects changed deployment paths or leaked
+fact/leak settings that would turn a claimed warm failure into a cold miss.
 
 Build registration must track this driver, its unit tests and the complete
 fixture directory membership. The explicit coordinator edit additionally reads
@@ -85,7 +92,8 @@ It records all raw samples and medians for complete parser `dump-syntax`
 commands with the lexer held in reference mode, application builds through an
 empty application cache, repeated warm builds and imported-source edit loops.
 Every sample checks actual output/status; edited executables must return the
-new value. Application cache reports are retained without pretending cold
+new value. Fact/leak verification is disabled for these cache measurements and
+qualified separately by the gate. Application cache reports are retained without pretending cold
 application state is a cold machine, runtime store or toolchain.
 
 The native coordinator separately builds all four packages into an empty
