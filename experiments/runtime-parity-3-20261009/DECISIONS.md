@@ -229,7 +229,7 @@
 - Question: the private single-pointer ABI eliminates record_pass copies but increases work.
 - Options: enable it, retain dormant new machinery, or remove it under R3's conditional acceptance rule.
 - Evidence: the combined prototype records zero copies but 1.2065× base instructions and 1.1741× cycles for record_pass. Its exact LLVM, identities and copy attribution are retained under R.
-- Choice: remove the new ABI machinery and retain the original `share_sret = false` behavior. R4 uses its separately qualified payload-destination mechanism. X reports R3's negative bound rather than claiming that copy elimination alone is a gain.
+- Choice: remove the new ABI machinery and retain the original `share_sret = false` behavior. R4's separately investigated payload mechanism is subsequently rejected in R-002. X reports R3's negative bound rather than claiming that copy elimination alone is a gain.
 - Reversibility: prototype commit and evidence remain available; reintroduction requires passing the unchanged instruction and timing gates.
 
 ## X-007 — qualify each integration merge with a stable source identity
@@ -247,3 +247,11 @@
 - Evidence: M0's nine command journals are already gzip-compressed, yet constitute most of its fuzz evidence. Each worker summary records exact command counts, native comparison totals, completion, failures and qualification; the matrix also records source/oracle stability.
 - Choice: after a matrix passes completely with unchanged source/oracles, count every journal event by role/build/status and verify its count against the worker summary. Preserve uncompressed and gzip hashes, copy the exact journal to owned cache, verify its hash, and retain its location in commands-summary.json. Keep the original matrix, worker summaries and source archives. Failed or incomplete matrices cannot use this path. The operation passes on all nine completed M0 workers; integration qualification uses it after successful fuzzing.
 - Reversibility: raw journals remain byte-identical in the locked worktree's owned cache and can be restored. No cases, comparisons, seeds, or gates are omitted.
+
+## R-002 — retain ordinary returns after the payload-destination experiment
+
+- Question: can the generalized detached payload ABI safely eliminate parse_list's P6 copies?
+- Options: broaden lending despite the lifetime conflict, retain a conservative but ineffective ABI, or remove the prototype and report the blocker.
+- Evidence: the corrected conservative prototype passes the sampled EDA goldens/counting comparisons but leaves P6 at 444,833,472 bytes and increases total EDA record-copy bytes by 30.70%. On the actual parse_node error path, parse_list releases the destination children list before it reads and releases the returned error payload. The generalized ABI relocates overlapping error bytes as well as success bytes; lending there would dangle. Its initial 60-cell CPU-8 diagnostic records EDA instruction geomean 1.008163× M0; direct ordinary-control isolation is still pending.
+- Choice: preserve the corrected prototype in `07534f41b`, remove its production ABI machinery in `09ed22709`, and keep the regression fixtures. A future selected-case ABI needs tag-aware return-home placement, caller projections/ownership and a CFG/lifetime proof together. Do not weaken the conservative refusal merely to remove the measured copies.
+- Reversibility: all prototype history and attributed LLVM remain available. No language, trap, count-word or safety change is accepted.
