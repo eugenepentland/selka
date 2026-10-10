@@ -1,0 +1,8 @@
+{
+ "raw_sha256": "821bd59dfac75ad213851e96f7d88a9d2640e56d8e1fe340914ce9c30a842a1e",
+ "raw_owned": ".mylang-cache/rp3/R/journals/r4-isolation.json",
+ "archive": "R/r4-isolation.json.gz",
+ "programs": 60,
+ "rounds": 3,
+ "all_statuses_zero": true
+}

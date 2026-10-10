@@ -1,0 +1,7 @@
+{
+  "source_commit": "09ed227098f3b5447643317ab640eec85c4f6772",
+  "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/r-debug-final/bin/mylang",
+  "compiler_sha256": "629e42a9993605e4d99c7f48f67410e5aa49f553c4f52bca4c754349f5adad0f",
+  "optimization": "Debug",
+  "build_log": "R/build-final-01.log.gz"
+}

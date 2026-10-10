@@ -1,0 +1,13 @@
+{
+ "status": 0,
+ "passed": 974,
+ "journal": "R/lox-conformance-final.log",
+ "journal_sha256": "8c0c2a4228d11976093f1c013761be187d72aa6ff50b5bec9219ba0abb3311a2",
+ "compiler": {
+  "source_commit": "09ed227098f3b5447643317ab640eec85c4f6772",
+  "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/r-fast-05/bin/mylang",
+  "compiler_sha256": "00e854ac6d7f759fb3bfa2d64b21b8d703460261e1465a674244af4ac119bdf3",
+  "optimization": "ReleaseFast",
+  "build_log": "R/build-final-01.log.gz"
+ }
+}

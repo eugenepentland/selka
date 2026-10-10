@@ -1,0 +1,33 @@
+{
+ "complete": false,
+ "cancelled": true,
+ "reason": "Main advanced during repository validation; cancelled superseded work and will rerun every X gate after a real main merge. No completed repository verdict exists.",
+ "source_commit": "98e9467155c802d2bb7a4f41882dc9ee68b4304e",
+ "initial_main": "fa11606022ed217896a27976f8fe6d95db95f465",
+ "observed_main": "e9011d9c6513f63ae02881d0cfc8258c668e6b5e",
+ "cancelled_utc": "2026-10-10T11:15:33.782930+00:00",
+ "completed_shard_verdicts": 18,
+ "partial_passed": 1263,
+ "partial_failed": 0,
+ "owned_processes_terminated": 43,
+ "no_live_captured_processes": true,
+ "cancellation_journal_sha256": "929322b9e56842ae1d1dbefa740d1b4482473553976e0a77e2a37f4e7db5ffaf",
+ "logs": [
+  {
+   "original": ".tmp/rp3/gates-final-fix-01/build.log",
+   "archive": "experiments/runtime-parity-3-20261009/X/gates-final-fix-01/build.partial.log.gz",
+   "raw_sha256": "14d253dc20ac6e422515dab37680e323a61304100817b145e214a2e6faebde78",
+   "gzip_sha256": "7b0acef72bb239a168802bb0f797a7bf236e97625caaa04765d31decb8c2f5d1",
+   "raw_bytes": 1297,
+   "gzip_bytes": 569
+  },
+  {
+   "original": ".tmp/rp3/gates-final-fix-01/repository.log",
+   "archive": "experiments/runtime-parity-3-20261009/X/gates-final-fix-01/repository.partial.log.gz",
+   "raw_sha256": "2118e06db8f321ccdc09e5ec9d7ac21407272a09692773c61800146691130871",
+   "gzip_sha256": "e66e8761a7a76c3f7365f6e19fdc3593416da9c44352ae60ca8f1a73e1f55823",
+   "raw_bytes": 364102,
+   "gzip_bytes": 72440
+  }
+ ]
+}

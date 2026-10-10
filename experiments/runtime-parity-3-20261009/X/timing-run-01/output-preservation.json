@@ -1,0 +1,198 @@
+{
+ "method": "Byte-preserving relocation before reusing active output paths. Resolve historical original paths through this mapping; no original receipt contents rewritten. Binary mapping is adjacent binary-preservation.json.",
+ "receipt_sha256": "1f69bb016b49b2c0c2c47d11455008e226bf073f8699717211a39316728b1628",
+ "files": [
+  {
+   "original": "experiments/runtime-parity-3-20261009/results/lox-runtime.json.gz",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-01/results/lox-runtime.json.gz",
+   "bytes": 59665,
+   "sha256": "6cbd97ee5c15715c27a8e960ecc818d041b9532fbe2aaa04b1595e4239f25dad",
+   "raw_sha256": "8df657e4ad04107cca03712256186a0efc03bfc7ed38378b30ab8cd9781b162b"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/results/eda-runtime.json.gz",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-01/results/eda-runtime.json.gz",
+   "bytes": 11155,
+   "sha256": "0f44507287faecad6a2399ce0dd67b00d8b0fe09109cc0603853bef94850222e",
+   "raw_sha256": "2f7b3509e88d23a7644260a0a66053110008019d66d851af7b972f5a3b4c91b9"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/results/parity-pair.json.gz",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-01/results/parity-pair.json.gz",
+   "bytes": 61159,
+   "sha256": "88df43bd6f2d5e9ef0a6f58c816315571d0a03c7626678a26631d99ed1591a7c",
+   "raw_sha256": "68a9cd5b162a9597f3af7d341f38d0cc98e6b37571cadb2475ad6653b9b14cdd"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/results/all46-1.json.gz",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-01/results/all46-1.json.gz",
+   "bytes": 198653,
+   "sha256": "1fc7c3a0272af9328e41fbda5d806c0b732385e9978d688bca638734793a8606",
+   "raw_sha256": "a80c03cbadc38e1eb2e6e0018cc0d9d225a9f76a63674771bee201e3b6bb2ede"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/results/all46-2.json.gz",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-01/results/all46-2.json.gz",
+   "bytes": 198498,
+   "sha256": "9fafc1433cacd4fc96c202f1bf3320050c7d76d638ea070c6ce62b8cbc8cd0c3",
+   "raw_sha256": "874cababb226799ea57b0ddac40e7004292570c52c618e029c9e8a49203b8cc0"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/results/all46-3.json.gz",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-01/results/all46-3.json.gz",
+   "bytes": 198540,
+   "sha256": "4d54c643328e6a5f221c89cddf1e20698290506e69d2e9791fe31c01a42ade77",
+   "raw_sha256": "91b4545fcceed8a53ccae1eca6c0b9669249bf19106db1a2b70777e2a15afc35"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/X/compile-times.json",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-01/outputs/compile-times.json",
+   "bytes": 35254,
+   "sha256": "4a2924cd5f2e17f3451436b717bcd4f3c0e0b0d1b24d741089b4006a6fcafb64"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/X/final-exit-counts.json",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-01/outputs/final-exit-counts.json",
+   "bytes": 50588,
+   "sha256": "6d942a986482f4c51a823b9fd0465d0418369c4501313178e0a16c092a2ba40b"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/X/hot-counts.json",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-01/outputs/hot-counts.json",
+   "bytes": 19154,
+   "sha256": "be76a16ca34e638f314f8c495726e78cec978a4be9abb9cca08dffd228cb3296"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/X/hot-counts.md",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-01/outputs/hot-counts.md",
+   "bytes": 2426,
+   "sha256": "cc637cfce35968afcd7cc85bedd577d4f536b6d9e12192abb6ab090db620c9ec"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/X/profile-alloc-base.json",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-01/outputs/profile-alloc-base.json",
+   "bytes": 9852,
+   "sha256": "e1671415f01428929115cb548c4b6c4498a2476b1353c63fe6fc6074926572a2"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/X/profile-alloc-final.json",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-01/outputs/profile-alloc-final.json",
+   "bytes": 10868,
+   "sha256": "2504b5de9a5c93a53e414487a13edb9479f315d8cf8f08a502b1b2b8b38cdbb8"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/X/profile-text-base.json",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-01/outputs/profile-text-base.json",
+   "bytes": 13070,
+   "sha256": "54bfd379e742d86bbe9666e77d8dff067c43676281ef9a87fbf22ca20c9fa4e5"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/X/profile-text-final.json",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-01/outputs/profile-text-final.json",
+   "bytes": 13528,
+   "sha256": "c61415adae07fa90e5926e103ccb6f618e2ec6bfc67a8843c4e45251b821ef29"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/X/r5-four-arms.json",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-01/outputs/r5-four-arms.json",
+   "bytes": 2169,
+   "sha256": "108123034e16aa069f78c1158ad8b5c036bc57dab4468019bce4391b6164671c"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/X/r5-timed-identities.json",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-01/outputs/r5-timed-identities.json",
+   "bytes": 452,
+   "sha256": "2a2fed52d2e5d2dbb4198f2e867e536df93b251949399d67d115138ae9a43993"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/X/r5-cpu8.json",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-01/outputs/r5-cpu8.json",
+   "bytes": 52741,
+   "sha256": "f05e6bb88915d561ad390d3f9cec430c4ce0bb0cd3fbd88abd289b23be1d6012"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/X/r5-cpu10.json",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-01/outputs/r5-cpu10.json",
+   "bytes": 151024,
+   "sha256": "ad96ed14b1fe2404bbcf34bcc968920b70c99a94502d01c91cf155c942666c97"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/X/text-ops-bound-spec.json",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-01/outputs/text-ops-bound-spec.json",
+   "bytes": 868,
+   "sha256": "985e7c91be071cb976012668047cfc85f51c854ec1b43fdd8a381ee918a2a706"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/X/text-ops-bound.json",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-01/outputs/text-ops-bound.json",
+   "bytes": 2876,
+   "sha256": "ee1377db50f7c2624e350bb5d237c5354da14a40b90514f45f21ef3ebbcc8b34"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/X/nbody-bound-spec.json",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-01/outputs/nbody-bound-spec.json",
+   "bytes": 1232,
+   "sha256": "48acb98cc297db88c1a4122e697870f1f6ce2060299f23cd4f0345cf4c01452b"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/X/nbody-bound.json",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-01/outputs/nbody-bound.json",
+   "bytes": 4289,
+   "sha256": "eb24967dc13ec2fd1b2923e5a8be7e027972687c5a9646e845439255e6528d3a"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/X/gap.json",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-01/outputs/gap.json",
+   "bytes": 141015,
+   "sha256": "57a7ec49ff6b90acdd0faf5d96aa6a2f00fdc98ce000c9ae6ce24d576177db0c"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/X/gap.md",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-01/outputs/gap.md",
+   "bytes": 27005,
+   "sha256": "c160f2bdf2a197349c53b9a63769834e6931062d2af1b1423c7228a262f519dc"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/X/review-perf.json",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-01/outputs/review-perf.json",
+   "bytes": 32149,
+   "sha256": "882c8f27d7a302f6634b91d22d52e915201212f4d6bc9d954641dd242c48e1d7"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/logs/parity-pair.stdout.txt",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-01/logs/parity-pair.stdout.txt",
+   "bytes": 11331,
+   "sha256": "67e7f12d5df3fbfe10db2d5576e27735d5bf7d3b3c392e82d647ab2b12dfe5f6"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/logs/parity-pair.stderr.txt",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-01/logs/parity-pair.stderr.txt",
+   "bytes": 4690,
+   "sha256": "9c1e94b7087bb534b308ec07fae3611dcb3e620b68e0803b03a9074acf59d4b8"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/logs/all46-1.log",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-01/logs/all46-1.log",
+   "bytes": 23154,
+   "sha256": "90d86268a7669d76c3f952a72c15f8c5e85b4d6d4f0f37ceba92952211a522d7"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/logs/all46-2.log",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-01/logs/all46-2.log",
+   "bytes": 23157,
+   "sha256": "c9ad1f0cfec12dd4e103c88ba1ab1a53f184385fbac51d10f8539eeac7916757"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/logs/all46-3.log",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-01/logs/all46-3.log",
+   "bytes": 23153,
+   "sha256": "a478f000aa77ff739afc2bd9fe6e84ec35922d769c1fc93fc30c951c1d59a7c6"
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/logs/all46-build.log",
+   "preserved": "experiments/runtime-parity-3-20261009/X/timing-run-01/logs/all46-build.log",
+   "bytes": 3022,
+   "sha256": "8a19d2b41002bf06b8a474774a3c535b3590ab957e11eb4dbfc8bbfb3a704609"
+  }
+ ]
+}

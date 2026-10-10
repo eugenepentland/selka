@@ -1,0 +1,20 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: all 3 build slot(s) busy; waiting (60s so far)
+build-slot: all 3 build slot(s) busy; waiting (120s so far)
+build-slot: build slot 2 after 150s (all 3 build slot(s) busy)
+calls base True
+calls srem True
+intloop base True
+intloop srem True
+sort_quick base True
+sort_quick checks True
+sort_quick norc True
+sort_quick checks+norc True
+matmul_tuned base True
+matmul_tuned bounds True
+matmul_tuned checks True
+matmul_tuned inline True
+row-result_propagate base False
+row-result_propagate no-barrier False
+row-option_handle base False
+row-option_handle no-barrier False

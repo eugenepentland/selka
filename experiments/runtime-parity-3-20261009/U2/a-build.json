@@ -1,0 +1,12 @@
+{
+ "tag": "u2a",
+ "compiler_sha256": "20b54351426bf3d100ca237259289fcc83eea1eafb49f48f4ac0a49deec2804b",
+ "binaries": {
+  "lox-plain": "c4973d1c2991862f67c46aa31591f37e778372216900b15f476b66f8b15dcbea",
+  "lox-count": "1d20e5eaabf5de79368ec2c64f1cb58c38de38cb85419230370c5773785191ed"
+ },
+ "seconds": {
+  "lox-plain": 7.7509750730823725,
+  "lox-count": 8.502541929017752
+ }
+}

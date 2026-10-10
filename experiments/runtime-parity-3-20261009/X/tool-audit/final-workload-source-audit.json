@@ -1,0 +1,7 @@
+{
+ "base": "41ed360fb361c49938488ad111795bad8a726b73",
+ "head": "20e7c340eb8d93320de4493f7b50665c7979ef2b",
+ "tracked_inputs_checked": 701,
+ "differences": [],
+ "method": "Exact baseline blob versus working-tree bytes for all baseline bench/parity and benchmarks/runtime files plus test/core/row_*.my; private M0 migration copies are separately preserved."
+}

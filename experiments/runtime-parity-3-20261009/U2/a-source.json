@@ -1,0 +1,27 @@
+{
+ "commit": "df53b2d0849bbd6cd709dcc808683b18ce3ba041",
+ "files": {
+  "src/core/borrow_fields.zig": "defa03475f5b3469072b0b023af1f696bc15e34ecfa4a8a93cff5fc55eb43360",
+  "src/core/own.zig": "2d358a25bdde628ae452aa888ba50e9ad8a3038eb74c4bcc6aafaa1f8e563c2d",
+  "src/core/u2_test.zig": "2c391ee3b321a7d17d24b62cc039a77ebaa81946313f641d81e719583ada5c37"
+ },
+ "focused_tests": {
+  "passed": 3,
+  "failed": 0,
+  "modes": [
+   "debug",
+   "release",
+   "release --verify-facts",
+   "--optimize-debug",
+   "--optimize-debug --verify-facts"
+  ]
+ },
+ "guardian_commit": {
+  "checks": 88,
+  "passed": true
+ },
+ "debug_build": {
+  "steps": 9,
+  "passed": true
+ }
+}

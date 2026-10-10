@@ -1,0 +1,92 @@
+{
+ "method": "Raw command logs are summarized as allowed by launch section 9. Exact bytes remain in owned cache and Git history; no sample or verdict is changed.",
+ "files": [
+  {
+   "original": "U2/full-test-cd.log.gz",
+   "summary": "U2/full-test-cd.log.summary.json",
+   "preserved_archive": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/retained-command-logs/e5e0d47c653bd05d4cb7d5a2bc974fc3f24e5de37669fee214bd75a5d9b81027.log.gz",
+   "gzip_sha256": "e5e0d47c653bd05d4cb7d5a2bc974fc3f24e5de37669fee214bd75a5d9b81027",
+   "raw_sha256": "9e3ea60c0efdd22520bd608a88fcdb61785cd36adcbbd55374ef4901557fe2b7",
+   "raw_bytes": 401619,
+   "gzip_bytes": 79271,
+   "method": "Exact raw archive retained in owned cache; repository summary replaces repetitive command output in the under-10MB report package. Historical partial/failed logs do not qualify final source.",
+   "cancellation": null
+  },
+  {
+   "original": "R/full-test-03.log.gz",
+   "summary": "R/full-test-03.log.summary.json",
+   "preserved_archive": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/retained-command-logs/677d4ca7da9ce7d11c44b0cd593a13006b5fef549eb1ffef4eeaf93a39260554.log.gz",
+   "gzip_sha256": "677d4ca7da9ce7d11c44b0cd593a13006b5fef549eb1ffef4eeaf93a39260554",
+   "raw_sha256": "77ce81130f2222ce4b24a784936d15aa3bb511659e0e6757b9a3d07b61d869d2",
+   "raw_bytes": 398263,
+   "gzip_bytes": 78263,
+   "method": "Exact raw archive retained in owned cache; repository summary replaces repetitive command output in the under-10MB report package. Historical partial/failed logs do not qualify final source.",
+   "cancellation": null
+  },
+  {
+   "original": "R/full-test-01.log.gz",
+   "summary": "R/full-test-01.log.summary.json",
+   "preserved_archive": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/retained-command-logs/88c43cc5813fb164cba9ea920a3356b560f9ca3c78d3bccd32f69cd0be07750c.log.gz",
+   "gzip_sha256": "88c43cc5813fb164cba9ea920a3356b560f9ca3c78d3bccd32f69cd0be07750c",
+   "raw_sha256": "1ab2daa8f96c6ee75beab86d65e3d19710121c47519c30462f8f527e9d70386f",
+   "raw_bytes": 406740,
+   "gzip_bytes": 77320,
+   "method": "Exact raw archive retained in owned cache; repository summary replaces repetitive command output in the under-10MB report package. Historical partial/failed logs do not qualify final source.",
+   "cancellation": null
+  },
+  {
+   "original": "S2/gates/s2-final-01-repository.log.gz",
+   "summary": "S2/gates/s2-final-01-repository.log.summary.json",
+   "preserved_archive": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/retained-command-logs/3b10deb3318cdf7ef8bbeaecd472dbda1e2b378961e0c29d666d21cc33a53662.log.gz",
+   "gzip_sha256": "3b10deb3318cdf7ef8bbeaecd472dbda1e2b378961e0c29d666d21cc33a53662",
+   "raw_sha256": "20a950e560e13493fed960e97782327fe2646b0108c0a7737c50ae4917141a6c",
+   "raw_bytes": 399059,
+   "gzip_bytes": 77532,
+   "method": "Exact raw archive retained in owned cache; repository summary replaces repetitive command output in the under-10MB report package. Historical partial/failed logs do not qualify final source.",
+   "cancellation": null
+  },
+  {
+   "original": "S2/gates/s2-final-02-repository.log.gz",
+   "summary": "S2/gates/s2-final-02-repository.log.summary.json",
+   "preserved_archive": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/retained-command-logs/2df680e94103433f0df2784828ee373cefcf2822677909d967c427ed794de4c2.log.gz",
+   "gzip_sha256": "2df680e94103433f0df2784828ee373cefcf2822677909d967c427ed794de4c2",
+   "raw_sha256": "f388bc17d98a4806c7287a97e0ae1ec734797e0b3b20f70fb40d893e9b046a5e",
+   "raw_bytes": 399506,
+   "gzip_bytes": 74510,
+   "method": "Exact raw archive retained in owned cache; repository summary replaces repetitive command output in the under-10MB report package. Historical partial/failed logs do not qualify final source.",
+   "cancellation": null
+  },
+  {
+   "original": "X/gates-final-fix-01/repository.partial.log.gz",
+   "summary": "X/gates-final-fix-01/repository.partial.log.summary.json",
+   "preserved_archive": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/retained-command-logs/e66e8761a7a76c3f7365f6e19fdc3593416da9c44352ae60ca8f1a73e1f55823.log.gz",
+   "gzip_sha256": "e66e8761a7a76c3f7365f6e19fdc3593416da9c44352ae60ca8f1a73e1f55823",
+   "raw_sha256": "2118e06db8f321ccdc09e5ec9d7ac21407272a09692773c61800146691130871",
+   "raw_bytes": 364102,
+   "gzip_bytes": 72440,
+   "method": "Exact raw archive retained in owned cache; repository summary replaces repetitive command output in the under-10MB report package. Historical partial/failed logs do not qualify final source.",
+   "cancellation": {
+    "path": "X/gates-final-fix-01/cancelled.json",
+    "sha256": "34a4f282e316adebdbdec94b203698b98d220b87731952763bf265a8ee64381c",
+    "complete": false,
+    "reason": "Main advanced during repository validation; cancelled superseded work and will rerun every X gate after a real main merge. No completed repository verdict exists."
+   }
+  },
+  {
+   "original": "X/gates-final-fix-main-01/repository.partial.log.gz",
+   "summary": "X/gates-final-fix-main-01/repository.partial.log.summary.json",
+   "preserved_archive": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/retained-command-logs/a277ba55995431768a3808f3057da9ea4412fab8114ec2faa2b4fa2f38842b1d.log.gz",
+   "gzip_sha256": "a277ba55995431768a3808f3057da9ea4412fab8114ec2faa2b4fa2f38842b1d",
+   "raw_sha256": "bea3698de94c27144af6f5a7e2ae4b4bbc4b444a69f15e44b8b67397038f1e32",
+   "raw_bytes": 357708,
+   "gzip_bytes": 72097,
+   "method": "Exact raw archive retained in owned cache; repository summary replaces repetitive command output in the under-10MB report package. Historical partial/failed logs do not qualify final source.",
+   "cancellation": {
+    "path": "X/gates-final-fix-main-01/cancelled.json",
+    "sha256": "6cd775c3c460214cc441740ab2ab96549c3e3280b86a52176836d4c39239b453",
+    "complete": false,
+    "reason": "Restart all qualification gates with the complete repository test graph scheduled by -j1 and fresh test verdicts. Repeated cross-process stage-cache invalidation was observed under the shared sequence lock; no test, shard, fixture, mode or threshold is removed."
+   }
+  }
+ ]
+}

@@ -1,0 +1,72 @@
+{
+ "build-debug": {
+  "log_sha256": "218d97c29e555e5382adfdd14295cfd644c859a7be1c2e08ac7ee29fb2c1e20a",
+  "summary": [
+   "guardian: run-all: 88 check(s) passed \u2014 diff-scoped vs 41ed360fb361c49938488ad111795bad8a726b73, 0 file(s) in scope",
+   "Build Summary: 9/9 steps succeeded"
+  ],
+  "scratch_log": ".tmp/rp3/build-base-debug.log"
+ },
+ "build-releasefast": {
+  "log_sha256": "be1eebe638e0ce09d7f1cd9b697ea3938ec9b9b1c053d4c6526ac3aa7a52f1fa",
+  "summary": [
+   "guardian: run-all: 88 check(s) passed \u2014 diff-scoped vs 41ed360fb361c49938488ad111795bad8a726b73, 0 file(s) in scope",
+   "Build Summary: 9/9 steps succeeded"
+  ],
+  "scratch_log": ".tmp/rp3/build-base-releasefast.log"
+ },
+ "fmt": {
+  "log_sha256": "d30af5510a3ad8afc768b36d4f9b9884350f8bff9e52a0399d5e61f78b60c17a",
+  "summary": [
+   "guardian: run-all: 88 check(s) passed \u2014 diff-scoped vs 41ed360fb361c49938488ad111795bad8a726b73, 0 file(s) in scope",
+   ".my format: 818 checked, 204 deliberate exclusions, 0 failures; experiments/ is historical and outside the live roots"
+  ],
+  "scratch_log": ".tmp/rp3/gate-base-fmt.log"
+ },
+ "lox-conformance": {
+  "log_sha256": "08189b55a4fce5f74a4264e276d2f2b3ba017653bd07b7e0fb11ff3cdd48f62b",
+  "summary": [
+   "conformance engine=vm gc=normal: 246/246 passed",
+   "conformance engine=vm gc=gc-stress: 246/246 passed",
+   "conformance engine=tree gc=normal: 241/241 passed",
+   "conformance engine=tree gc=gc-stress: 241/241 passed"
+  ],
+  "scratch_log": ".tmp/rp3/lox-base-conformance.log"
+ },
+ "lox-tests": {
+  "log_sha256": "72c893bff2496df76ae44836c3365c410e069feac44f8166c4bda6ed92d52676",
+  "summary": [
+   "65 passed, 0 cached, 0 failed, 0 skipped"
+  ],
+  "scratch_log": ".tmp/rp3/lox-base-port-tests.log"
+ },
+ "eda-tests": {
+  "log_sha256": "cca8133a1642ab91053d25c76013b7bdfb552fff33331f57152567639340a2bc",
+  "summary": [
+   "310 passed, 0 cached, 0 failed, 0 skipped"
+  ],
+  "scratch_log": ".tmp/rp3/eda-base-tests.log"
+ },
+ "eda-goldens": {
+  "log_sha256": "041d43b5e0dead759f3fa55fc8f50ac72f960c061ba754052d9bc387948c1291",
+  "summary": [
+   "eda: 34 cases, 34 byte-identical to the goldens, differing: []"
+  ],
+  "scratch_log": ".tmp/rp3/eda-base-goldens.log"
+ },
+ "rows-initial-rejection": {
+  "log_sha256": "00e94deb2aed4bd8673cd2481ae15bad74571c5b487af6a4248cb69584292b58",
+  "summary": [
+   "measurement INVALID: build failed/refused: ['/home/epentland/.cache/mylang/rp3-base-41ed360fb/bin/mylang', 'build', '/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/test/core/row_json_transform.my', '-o', '/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/all46/row_json_transform_old', '--release', '--cache-dir', '/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/all46/cache/old', '--link', '/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/benchmarks/runtime/ports/native_clock.c']",
+   "row_json_transform.my:16:11: error[E_NUMERIC_PARSE]: parse text explicitly with parse_int or parse_float; int and float convert numbers"
+  ],
+  "scratch_log": ".tmp/rp3/rows-base-build.log"
+ },
+ "rows-reference-initial-rejection": {
+  "log_sha256": "b1f555b1c7a7ba33f574db35cf8e2c14b2529fc7e2ae03aaee755877cb388e5b",
+  "summary": [
+   "FAILED (no new complete report): cannot locate QBE compiler asset"
+  ],
+  "scratch_log": ".tmp/rp3/rows-references-build-01.log"
+ }
+}

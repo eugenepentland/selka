@@ -1,0 +1,9 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: all 3 build slot(s) busy; waiting (60s so far)
+build-slot: build slot 1 after 90s (all 3 build slot(s) busy)
+calls base True
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/experiments/runtime-parity-3-20261009/R/probes.py", line 39, in <module>
+    if variant!='base' and edited==text and variant!='inline': raise RuntimeError(('empty probe',name,variant))
+                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: ('empty probe', 'calls', 'srem')

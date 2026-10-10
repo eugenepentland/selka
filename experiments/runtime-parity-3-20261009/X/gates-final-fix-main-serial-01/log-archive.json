@@ -1,0 +1,44 @@
+[
+ {
+  "path": "experiments/runtime-parity-3-20261009/X/gates-final-fix-main-serial-01/qual-final-fix-main-serial-01-additive/full-conformance.log",
+  "raw_sha256": "c999419443d6b1668f6494820eea66e1ea38c2c10fa735a627b4a64f11466568",
+  "gzip_sha256": "0102dc7863f0dac914b02c581da251d96e170612d57b1192782978a1b58025ac",
+  "raw_bytes": 47076,
+  "gzip_bytes": 4002
+ },
+ {
+  "path": "experiments/runtime-parity-3-20261009/X/gates-final-fix-main-serial-01/qual-final-fix-main-serial-01-additive/install-core.log",
+  "raw_sha256": "8d8b943866571a8ecb687d9bd1890d9988f5b06c018ae3d37b697c8f3448ef2e",
+  "gzip_sha256": "63b4dcab734df76ae3eb6dbe912e42a9519b9c07576d6899a59644af3524442d",
+  "raw_bytes": 1885,
+  "gzip_bytes": 883
+ },
+ {
+  "path": "experiments/runtime-parity-3-20261009/X/gates-final-fix-main-serial-01/qual-final-fix-main-serial-01-additive/test-core.log",
+  "raw_sha256": "1e7d9ee4589f89dfee8e02107aaaf38c748191537547268e995500d886314f95",
+  "gzip_sha256": "54f5f017bd79df77bb18c03847bdc61e4fdfaa611934d7076b859989be988e34",
+  "raw_bytes": 88075,
+  "gzip_bytes": 17344
+ },
+ {
+  "path": "experiments/runtime-parity-3-20261009/X/gates-final-fix-main-serial-01/qual-final-fix-main-serial-01-raw/full-conformance.log",
+  "raw_sha256": "fd041d2195e6bb05a53130e321765e1b8b8f67eb032babb5427e22a6d333bcec",
+  "gzip_sha256": "034ea33e1144f40fb02e566b4948eba0e5fe7d5ce29c65557da44e6e703752ca",
+  "raw_bytes": 48143,
+  "gzip_bytes": 4178
+ },
+ {
+  "path": "experiments/runtime-parity-3-20261009/X/gates-final-fix-main-serial-01/qual-final-fix-main-serial-01-raw/install-core.log",
+  "raw_sha256": "db195511fd503d5e8f4bee79bb0d2fe58904409e96c86628444c2a24883851d7",
+  "gzip_sha256": "b0203d0455b0d9031ee2cabb2d9eb9c3bfc5a580a6e81d9950088a50a5beffce",
+  "raw_bytes": 1880,
+  "gzip_bytes": 882
+ },
+ {
+  "path": "experiments/runtime-parity-3-20261009/X/gates-final-fix-main-serial-01/qual-final-fix-main-serial-01-raw/test-core.log",
+  "raw_sha256": "d23a885ed0b72014f7f74fa1538f489404dbf85f2de7ff095886a8c754c34360",
+  "gzip_sha256": "4fdf960991645ed6cec00cdcb86a46cb954635f4fe4af8f8dc3d922f0a27155f",
+  "raw_bytes": 87351,
+  "gzip_bytes": 17163
+ }
+]

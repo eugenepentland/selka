@@ -1,0 +1,4 @@
+row-result_propagate base True
+row-result_propagate no-barrier True
+row-option_handle base True
+row-option_handle no-barrier True

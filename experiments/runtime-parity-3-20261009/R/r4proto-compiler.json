@@ -1,0 +1,12 @@
+{
+  "source_commit": "07534f41b",
+  "build_identity_head": "fa9da0106",
+  "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/r-fast-04/bin/mylang",
+  "compiler_sha256": "b55de469e84e337763c34597930b499cd387439db79c7d04f97a3abfec007427",
+  "source_sha256": {
+    "src/core/emit_llvm.zig": "f06c52715811b18d1514ec3b680e6a49846b004be44f5a26d8005c0b563058b9",
+    "src/core/emit_payload.zig": "6eef9a7ea39f958949202402d707666603da3362a59c0d19113731b20257b7d0",
+    "src/core/emit_homes.zig": "85895936945d457e4560c03e856c08bd2a2b6f59cd457d2bb7ad3d7062c0f383"
+  },
+  "note": "Compiler build started before the evidence checkpoint commit; production source bytes match that checkpoint."
+}

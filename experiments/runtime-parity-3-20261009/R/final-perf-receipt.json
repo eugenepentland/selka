@@ -1,0 +1,10 @@
+{
+ "source_commit": "09ed227098f3b5447643317ab640eec85c4f6772",
+ "raw_sha256": "ee6d19d92c5d41c9b3217605bc8cc4e5619e71d3a8f83cffd88b0afe91c3038a",
+ "owned_raw": ".mylang-cache/rp3/R/journals/final-corpus-cpu8.json",
+ "archive": "R/final-corpus-cpu8.json.gz",
+ "programs": 151,
+ "arms": 302,
+ "rounds": 3,
+ "instruction_gate_met": true
+}

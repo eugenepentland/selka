@@ -1,0 +1,22 @@
+{
+ "method": "Matched CPU8 LBR instruction-event profiles, 40 repeats per binding design. Union attribution counts one sampled period once, including inlined allocator/destructor family and generated callbacks. Lower bounds exceed 15%, so the exit is definitely unmet.",
+ "designs": {
+  "labstation": {
+   "base_share_lower_bound": 0.2582673970379387,
+   "candidate_share_lower_bound": 0.21707354999222517,
+   "exit_maximum": 0.15,
+   "exit_met": false
+  },
+  "rds3+flat": {
+   "base_share_lower_bound": 0.23544578640249694,
+   "candidate_share_lower_bound": 0.20172943452042325,
+   "exit_maximum": 0.15,
+   "exit_met": false
+  }
+ },
+ "remaining_lever": "Block allocation and iterative destruction still dominate. Reduce actual materialization/allocations using proved views or destination construction; specializing descriptor traversal alone cannot eliminate allocation or count primitive cost. Count primitives are unchanged.",
+ "references": [
+  "profile-base.json",
+  "profile-u2.json"
+ ]
+}

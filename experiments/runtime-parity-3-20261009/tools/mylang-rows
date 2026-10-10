@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Compile both arms from the identical migrated copies of two broken main rows.
+set -eu
+real=${RP3_ROW_REAL:?RP3_ROW_REAL names the compiler under test}
+area=$(cd -- "$(dirname -- "$0")/.." && pwd)
+if [ "${1:-}" = build ] && [ $# -ge 2 ]; then
+  case "$2" in
+    */test/core/row_json_transform.my|*/test/core/row_union_find.my)
+      source_file="$area/M0/row-sources/$(basename -- "$2")"
+      shift 2
+      exec "$real" build "$source_file" "$@"
+      ;;
+  esac
+fi
+exec "$real" "$@"

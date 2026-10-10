@@ -1,0 +1,9 @@
+qualification progress: text: seen=25 elapsed=28.17s
+qualification progress: text: seen=50 elapsed=60.19s
+qualification progress: text: seen=75 elapsed=88.25s
+qualification progress: text: seen=100 elapsed=120.58s
+qualification progress: text: seen=125 elapsed=153.33s
+qualification progress: text: seen=150 elapsed=185.02s
+qualification progress: text: seen=175 elapsed=217.22s
+qualification progress: text: seen=200 elapsed=263.41s
+cases=200 compared=3000 mismatch=0 fact=0 old_rejected=0 new_refused=0

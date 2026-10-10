@@ -1,0 +1,9 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: all 3 build slot(s) busy; waiting (60s so far)
+build-slot: all 3 build slot(s) busy; waiting (120s so far)
+build-slot: all 3 build slot(s) busy; waiting (182s so far)
+build-slot: all 3 build slot(s) busy; waiting (242s so far)
+build-slot: build slot 1 after 257s (all 3 build slot(s) busy)
+built plain
+built count
+P6 475322184 fraction 1.0685396084582413

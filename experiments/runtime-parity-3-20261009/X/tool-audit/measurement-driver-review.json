@@ -1,0 +1,23 @@
+{
+ "reviewed_by": "S2 read-only follow-on",
+ "executed": false,
+ "sha256": "4066dbc63e0c1e2f4ca6043f58d4e54ca088d1c43258c0cbe188a69f4260cdf2",
+ "fixed_before_execution": [
+  "Resolve all parity binaries by known work/bin name and verify receipt SHA, including Zig -femit-bin builds.",
+  "Require only recorded evidence changes after qualified source, and exact saved corpus identity.",
+  "Require CPU10 available on direct launch; reject existing result archives/profile caches before expensive work."
+ ],
+ "accepted": [
+  "All197 cells and required R5/ladder comparisons covered.",
+  "Gzip inputs remain readable by gap and exact-binary review tools.",
+  "Quiet CPU10 and separate build/CPU8 admission preserved.",
+  "Completion leaves regression classification and report pending."
+ ],
+ "retry_rule": "Single-use outputs: changing run name alone is insufficient. Preserve failed data and prepare an explicit continuation.",
+ "committed_driver": "tools/measure_final.py",
+ "committed_sha256": "954d3e93517c170cb5bebb9077303995d1746e2a22ba1a4079cb4f00243cf5f5",
+ "post_review_adaptations": [
+  "Bind main to the final gate receipt main_commit after the mandatory main merge.",
+  "Use the committed R5 template instead of its identical scratch copy."
+ ]
+}

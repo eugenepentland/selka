@@ -1,0 +1,102 @@
+{
+ "U2": {
+  "receipt": "U2/instructions.json.gz",
+  "cells": {
+   "lox/vm/invocation": {
+    "instructions": 0.927196725051295,
+    "cycles": 1.037941024029973,
+    "branch-misses": 0.996348058694683
+   },
+   "lox/vm/fib": {
+    "instructions": 0.9024110760920068,
+    "cycles": 0.914305064115373,
+    "branch-misses": 1.032710071363956
+   },
+   "lox/vm/method_call": {
+    "instructions": 0.9100687002281573,
+    "cycles": 0.8972940049342315,
+    "branch-misses": 1.200277435902341
+   },
+   "lox/tree/equality": {
+    "instructions": 0.9977348519135564,
+    "cycles": 1.6176842236967397,
+    "branch-misses": 0.41520000744238467
+   }
+  }
+ },
+ "S2": {
+  "receipt": "S2/final-instruction-comparison.json.gz",
+  "cells": {
+   "parity/text_ops": {
+    "instructions": 0.6705305440436403,
+    "cycles": 0.6733723703408145,
+    "branch-misses": 1.078535978471067
+   },
+   "parity/scan_split": {
+    "instructions": 0.31578573008324984,
+    "cycles": 0.3678404652560546,
+    "branch-misses": 0.08624375222262604
+   },
+   "parity/knucleotide": {
+    "instructions": 1.000000013392445,
+    "cycles": 1.0029410576468938,
+    "branch-misses": 0.9976575483882915
+   }
+  }
+ },
+ "R": {
+  "receipt": "R/final-instructions.json.gz",
+  "cells": {
+   "parity/fannkuch_redux": {
+    "instructions": 1.0000000028981904,
+    "cycles": 1.0014001279982758,
+    "branch-misses": 1.0028579539601363
+   },
+   "parity/fannkuch_redux_array": {
+    "instructions": 0.14702521562321158,
+    "cycles": 0.28571227988937126,
+    "branch-misses": 0.962902164935424
+   },
+   "parity/fannkuch_redux_tuned": {
+    "instructions": 0.17237327878040162,
+    "cycles": 0.3150831517429133,
+    "branch-misses": 0.9978315479854031
+   },
+   "parity/sort_builtin": {
+    "instructions": 0.3134584812951397,
+    "cycles": 0.30194491042075755,
+    "branch-misses": 0.0009902337171014733
+   },
+   "parity/sort_records_keyed": {
+    "instructions": 1.014560781413469,
+    "cycles": 0.9915989308264642,
+    "branch-misses": 0.8123344370860928
+   },
+   "parity/sort_records_sorted": {
+    "instructions": 1.0145608250959006,
+    "cycles": 1.0107194079259232,
+    "branch-misses": 0.8314218249283184
+   },
+   "rows/record_pass": {
+    "instructions": 1.0000024343180516,
+    "cycles": 0.998909086308823,
+    "branch-misses": 1.0011637209978907
+   },
+   "rows/sort_records": {
+    "instructions": 1.0140937564865267,
+    "cycles": 1.001206140171792,
+    "branch-misses": 0.9239606953892668
+   },
+   "parity/nbody": {
+    "instructions": 1.0000000012421322,
+    "cycles": 1.0010012264096717,
+    "branch-misses": 1.082131822863028
+   },
+   "parity/nbody_class": {
+    "instructions": 0.9999999979297798,
+    "cycles": 1.000409114576372,
+    "branch-misses": 1.0406917599186165
+   }
+  }
+ }
+}

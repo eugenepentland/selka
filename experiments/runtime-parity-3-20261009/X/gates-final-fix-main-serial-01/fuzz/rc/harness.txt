@@ -1,0 +1,9 @@
+qualification progress: rc: seen=25 elapsed=14.51s
+qualification progress: rc: seen=50 elapsed=31.34s
+qualification progress: rc: seen=75 elapsed=49.40s
+qualification progress: rc: seen=100 elapsed=69.46s
+qualification progress: rc: seen=125 elapsed=90.20s
+qualification progress: rc: seen=150 elapsed=112.84s
+qualification progress: rc: seen=175 elapsed=139.67s
+qualification progress: rc: seen=200 elapsed=165.90s
+cases=200 refused=0 rejected=0 compared=1800 mismatch=0

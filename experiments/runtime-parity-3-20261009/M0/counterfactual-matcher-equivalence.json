@@ -1,0 +1,14 @@
+[
+ {
+  "variant": "norc",
+  "exact_llvm_match": true,
+  "sha256": "c5b40c5150da0c594d5300f7d5119bc294b11df69637a4ec19ac3ccc8cc2dc90",
+  "seconds": 0.11356605193577707
+ },
+ {
+  "variant": "checks+norc",
+  "exact_llvm_match": true,
+  "sha256": "15cc10abac9a0e48a7d91d8e23be5b4abb5b21c9f4de1f370c06b8f1d7b8ce77",
+  "seconds": 0.18513645487837493
+ }
+]

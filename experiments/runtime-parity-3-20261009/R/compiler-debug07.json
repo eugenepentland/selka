@@ -1,0 +1,15 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/zig-out/bin/mylang",
+  "compiler_sha256": "860e9d55062d6de93c88cf7f19b7d8656ff352d1831c108e8ca796b4ad761dfc",
+  "head": "fa9da01062447cd7b344e0270f46152586a8c881",
+  "working_tree_source_sha256": {
+    "src/core/emit_llvm.zig": "f06c52715811b18d1514ec3b680e6a49846b004be44f5a26d8005c0b563058b9",
+    "src/core/emit_payload.zig": "6eef9a7ea39f958949202402d707666603da3362a59c0d19113731b20257b7d0",
+    "src/core/emit_homes.zig": "85895936945d457e4560c03e856c08bd2a2b6f59cd457d2bb7ad3d7062c0f383",
+    "src/core/r_runtime_test.zig": "7fcfd39d086657b4535a4bebe882ca3a2ac242337c88b77eb8e47ad1757ef2c5",
+    "src/core/facts.zig": "5c04a2ad79b6d9fd104773e968bebe31de4032e9622ff1cacd2a0964a7ea71f1",
+    "src/core/emit_fn.zig": "4c030b9bfe636b7f7488e7e18335619dfe3f4ff2164b1b7cd4abb1ff5edd7f1a",
+    "src/core/runtime/core_sort.c": "acf23c780d700244d2a109493c64f33855ecdd813a782ca79f27e50fb3f2cfcd"
+  },
+  "build_log": "R/r4e.log"
+}

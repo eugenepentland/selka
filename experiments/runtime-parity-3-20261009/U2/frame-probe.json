@@ -1,0 +1,29 @@
+[
+ {
+  "compiler": "/home/epentland/.cache/mylang/rp3-base-41ed360fb/bin/mylang",
+  "name": "base",
+  "build_status": 0,
+  "build_stderr": "",
+  "status": 0,
+  "stdout": "11 0\n11 1 91 17 0\n1 11\n",
+  "stderr": ""
+ },
+ {
+  "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-u2/.mylang-cache/u2/compiler-a/bin/mylang",
+  "name": "a",
+  "build_status": 0,
+  "build_stderr": "",
+  "status": -11,
+  "stdout": "11 0\n11 1 91 17 0\n1 11\n",
+  "stderr": ""
+ },
+ {
+  "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-u2/.zig-cache-rp3/o/8627e9809994ec0f7c43f114d94555a2/mylang",
+  "name": "cd",
+  "build_status": 0,
+  "build_stderr": "",
+  "status": -11,
+  "stdout": "11 0\n11 1 91 17 0\n1 11\n",
+  "stderr": ""
+ }
+]

@@ -1,0 +1,8 @@
+{
+ "qualified_production_commit": "09ed227098f3b5447643317ab640eec85c4f6772",
+ "fuzz_head": "fa5bf207d328d1918416db3909127c23a9167965",
+ "unchanged_src_tree": "fe0b181189883547ffd4b576793f3c8403357fbf",
+ "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/r-debug-final/bin/mylang",
+ "compiler_sha256": "629e42a9993605e4d99c7f48f67410e5aa49f553c4f52bca4c754349f5adad0f",
+ "note": "Evidence-only checkpoint; production source tree identical to full and raw/additive qualified09ed."
+}

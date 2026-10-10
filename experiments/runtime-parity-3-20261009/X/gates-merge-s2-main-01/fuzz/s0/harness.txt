@@ -1,0 +1,9 @@
+qualification progress: s0: seen=25 elapsed=23.65s
+qualification progress: s0: seen=50 elapsed=52.35s
+qualification progress: s0: seen=75 elapsed=78.88s
+qualification progress: s0: seen=100 elapsed=105.49s
+qualification progress: s0: seen=125 elapsed=134.48s
+qualification progress: s0: seen=150 elapsed=162.08s
+qualification progress: s0: seen=175 elapsed=189.37s
+qualification progress: s0: seen=200 elapsed=218.11s
+cases=200 old_rejected=0 new_refused=0 compared=3000 mismatch=0 fact=0 traps=422 caught=0 vectorized=42 versioned=10

@@ -1,0 +1,41 @@
+{
+ "cpu": 10,
+ "rounds": 9,
+ "warmups": 2,
+ "cells": 8,
+ "all_valid_outputs_match": true,
+ "valid_arms": 30,
+ "rejected_eda_arms": {
+  "eda-rds3+flat:rds3+flat": {
+   "norc": {
+    "status": -6,
+    "output_matches_real": false
+   },
+   "checks+norc": {
+    "status": -6,
+    "output_matches_real": false
+   }
+  },
+  "eda-labstation:labstation": {
+   "norc": {
+    "status": -6,
+    "output_matches_real": false
+   },
+   "checks+norc": {
+    "status": -6,
+    "output_matches_real": false
+   }
+  }
+ },
+ "load_start": [
+  2.53515625,
+  3.8623046875,
+  3.92431640625
+ ],
+ "load_end": [
+  1.4267578125,
+  2.62109375,
+  3.3916015625
+ ],
+ "quiet_log_sha256": "10f28949d672d986ca2bcf67e86dfaa1a8b129937194d1963fe0a808c436c292"
+}
