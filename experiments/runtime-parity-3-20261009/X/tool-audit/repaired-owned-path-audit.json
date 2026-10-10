@@ -1,0 +1,7 @@
+{
+ "main": "e9011d9c6513f63ae02881d0cfc8258c668e6b5e",
+ "head": "6a40a150a84e3bc4a0091a539618ee04e2ec1193",
+ "changed_paths": 1069,
+ "forbidden_path_matches": [],
+ "limitation": "Path audit only; count-word encoding and semantic safety require the separately recorded source reviews and gates."
+}
