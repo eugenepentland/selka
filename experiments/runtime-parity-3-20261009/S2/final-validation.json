@@ -1,0 +1,114 @@
+{
+ "qualified_source_commit": "5977fe4bdf72ec37ee0c6c624eddcd45160d574d",
+ "production_change_commit": "73ee7212a0bf300c002fad95b60e822094b42f74",
+ "main_checked": "41ed360fb361c49938488ad111795bad8a726b73",
+ "debug_compiler": {
+  "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/s2-final-02/mylang-debug",
+  "sha256": "9a5d06c5c3a15ba49b44a92cf7ba818e67818be957bbc0a8197efde85577df9a"
+ },
+ "release_fast_compiler": {
+  "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/s2-final-fast2/bin/mylang",
+  "sha256": "f6303202eb4c4b5f0e91e5f9840c621d431a78f1a5e7b5f25c306b53c6a5d058"
+ },
+ "required_checks": {
+  "debug_build": "9/9",
+  "release_fast_build": "9/9",
+  "full_repository": "95/95 steps; 2336 selected tests passed; core613/613",
+  "fmt": "15/15",
+  "focused_host_tests": "49/49; 12 guest fixtures x5 modes =60 executions plus IR checks",
+  "raw_conformance": {
+   "status": 1,
+   "core_shards": 64,
+   "core_tests": [
+    613,
+    0,
+    0
+   ],
+   "debug": [
+    1516,
+    4,
+    0
+   ],
+   "release": [
+    1516,
+    4,
+    0
+   ],
+   "known_problem_lines": 12
+  },
+  "additive_conformance": {
+   "status": 0,
+   "core_shards": 64,
+   "core_tests": [
+    613,
+    0,
+    0
+   ],
+   "debug": [
+    1547,
+    0,
+    0
+   ],
+   "release": [
+    1547,
+    0,
+    0
+   ]
+  },
+  "raw_additive_validator": "pass, also reparsed after gzip archival",
+  "frozen_fuzz": {
+   "kinds": 9,
+   "cases_each": 50,
+   "accepted": 450,
+   "qualified": true,
+   "source_and_oracles_unchanged": true
+  },
+  "lox_port_tests": [
+   65,
+   0,
+   0
+  ],
+  "eda_tests": [
+   310,
+   0,
+   0
+  ],
+  "lox_conformance": [
+   246,
+   246,
+   241,
+   241
+  ],
+  "eda_goldens": 34,
+  "parity_outputs": 45,
+  "counting_plain_cells": 199,
+  "all_count_cells_exit_live_bytes": 0,
+  "instruction_programs": 151,
+  "instruction_regressions": 0,
+  "native_cold_compile_arms": 16,
+  "native_unit_cache_report": "1 unit,0 reused,1 compiled,program linked,2 processes for every arm"
+ },
+ "resolved_failures": {
+  "full_suite_before_guard": "Original receipt s2-final-01-gate-receipts.json retained; source guard corrected at73ee7212a; final full suite and all dependent compiler/corpus checks rerun.",
+  "compile_time_setup": "Empty baseline runtime seed rejected before any timing; untimed baseline seed plus unchanged fresh-cache rerun passed. See compile-times-setup-failure.json,compile-runtime-seed.json,compile-times-recovery.json."
+ },
+ "timing_responsibility": "CPU10 binding comparisons deferred to integrated X at coordinator request. S2 baseline ladder CPU10 measurements and best rung3 binary remain available.",
+ "changed_source_files": [
+  "src/core/emit_llvm.zig",
+  "src/core/emit_number.zig",
+  "src/core/emit_text.zig",
+  "src/core/emit_text_split.zig",
+  "src/core/flags.zig",
+  "src/core/fuse_slice_key.zig",
+  "src/core/fuse_text_split.zig",
+  "src/core/passes.zig",
+  "src/core/root_test.zig",
+  "src/core/runtime/core_number.c",
+  "src/core/runtime/core_text.c",
+  "src/core/s2_views_test.zig",
+  "src/core/split_views.zig",
+  "src/core/verify_ir.zig"
+ ],
+ "runtime_representation": "Flat string/byte blocks. No final substring-child kind or parent visitor; generic count encoding and task/thread files unchanged.",
+ "evidence_archival": "See compressed-evidence.json for raw/archived hashes and owned cache locations."
+}

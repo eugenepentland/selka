@@ -1,0 +1,44 @@
+{
+ "text_ops": {
+  "check": "zig-safe",
+  "arms": {
+   "base": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/ce/bin/base/parity-text_ops-plain"
+   ],
+   "s2": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/ce/bin/s2/parity-text_ops-plain"
+   ],
+   "zig-safe": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/parity-base/bin/text_ops.zig-safe"
+   ],
+   "rung3": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/s2-ladder/text_ops.r3"
+   ]
+  }
+ },
+ "scan_split": {
+  "check": "zig-safe",
+  "arms": {
+   "base": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/ce/bin/base/parity-scan_split-plain"
+   ],
+   "s2": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/ce/bin/s2/parity-scan_split-plain"
+   ],
+   "zig-safe": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/parity-base/bin/scan_split.zig-safe"
+   ]
+  }
+ },
+ "knucleotide": {
+  "check": "base",
+  "arms": {
+   "base": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/ce/bin/base/parity-knucleotide-plain"
+   ],
+   "s2": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/ce/bin/s2/parity-knucleotide-plain"
+   ]
+  }
+ }
+}

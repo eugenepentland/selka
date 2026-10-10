@@ -1,0 +1,14 @@
+{
+ "command": [
+  "python3",
+  "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/experiments/runtime-parity-3-20261009/S2/compile_times.py",
+  "--candidate",
+  "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/s2-final-fast2/bin/mylang",
+  "--out",
+  "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/experiments/runtime-parity-3-20261009/S2/final-compile-times.json"
+ ],
+ "status": 0,
+ "seconds": 244.02861281996593,
+ "log": ".tmp/rp3/s2-final-compile-times-recovery.log",
+ "log_sha256": "e69607b1e30f4bbb3072f5c97c436886d858e2920aae7689637d90da9b5ec788"
+}
