@@ -24,7 +24,7 @@ def profile_sources():
     suffix = b'func main() -> int:\n    return 0\n'
     boundary = b'#' + b' ' * (SOURCE_LIMIT - len(suffix) - 2) + b'\n' + suffix
     dense = (b'func main() -> int:\n    mut total: int = 0\n' +
-             b'    total = total + 1\n' * 16000 + b'    return total\n')
+             b'    total = total + 1\n' * 20000 + b'    return total\n')
     return {'boundary.my': boundary, 'oversize.my': boundary + b'\n',
             'profile_dense.my': dense,
             'profile_nested.my': b'func main() -> int:\n    return ' + b'(' * 16 + b'0' + b')' * 16 + b'\n',
@@ -208,8 +208,14 @@ class Qualification:
         self.compare('maximum-qualified-source', ['check', self.source / 'boundary.my'])
         for source in ('profile_comments.my', 'profile_dense.my', 'profile_nested.my'):
             self.compare(source, ['check', self.source / source])
-        self.compare('profile-dense-tokens', ['dump-tokens', self.source / 'profile_dense.my'])
-        self.compare('profile-dense-ast', ['dump-syntax', self.source / 'profile_dense.my'])
+        tokens = self.compare('profile-dense-tokens', ['dump-tokens', self.source / 'profile_dense.my'])
+        token_count = len(json.loads(tokens[1])['tokens'])
+        require(token_count > 100000, 'dense profile failed to exceed the previous token bound')
+        self.records[-1]['token_count'] = token_count
+        syntax = self.compare('profile-dense-ast', ['dump-syntax', self.source / 'profile_dense.my'])
+        require(syntax[1].startswith(b'SLKAST01') and
+                262144 < int.from_bytes(syntax[1][8:12], 'little') <= 1048576,
+                'dense profile failed to cross the previous value bound within the new profile')
         formatted = self.source / 'format.my'
         original = formatted.read_bytes()
         outputs = []
