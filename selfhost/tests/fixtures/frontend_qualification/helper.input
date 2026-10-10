@@ -1,0 +1,3 @@
+# Imported declaration documentation includes Unicode: éλ.
+public func value() -> int effects():
+    return 7

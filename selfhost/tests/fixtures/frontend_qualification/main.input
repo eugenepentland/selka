@@ -1,0 +1,13 @@
+import helper
+
+public func test_snapshot() -> bool:
+    mut values = [2, 3]
+    const saved = values
+    values[0] = 9
+    return saved[0] == 2 and helper.value() == 7
+
+public func test_unicode() -> bool:
+    return "éλ" == "éλ"
+
+func main() -> int:
+    return helper.value()

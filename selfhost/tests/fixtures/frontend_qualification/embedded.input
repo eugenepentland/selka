@@ -1,0 +1,5 @@
+const DATA: bytes = embed_bytes("data.bin")
+
+func main() -> int:
+    const rendered = f"size={len(embed_bytes('data.bin'))}"
+    return len(DATA)

@@ -1,0 +1,3 @@
+func main() -> int:
+    const text = "éλ"
+    return text

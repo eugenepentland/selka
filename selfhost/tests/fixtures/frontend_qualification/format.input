@@ -1,0 +1,4 @@
+# Unicode trivia: éλ.
+func main()->int:
+    const values=[1,2,3]
+    return values[0]

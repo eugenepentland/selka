@@ -1,0 +1,4 @@
+func main() -> int:
+    const text = "éλ"
+    const values = [2, 3]
+    return values[0] + len(text)
