@@ -139,6 +139,7 @@ pub fn function(arena: std.mem.Allocator, module: *const ir.Module, f: *ir.Funct
         if (flags.transferredRead(inst) and module.managed(inst.ty)) try marks.owned_get.put(arena, @intCast(index), {});
         if (flags.transferredSlot(f, inst)) try marks.taken.put(arena, @intCast(index), {});
     }
+    if (options.effects) |summaries| try @import("borrow_fields.zig").run(arena, module, f, summaries, marks.origin);
     try mergeFieldReads(arena, f);
     try takeFields(arena, module, f, &marks);
     try hoistTests(arena, module, f, &marks);
