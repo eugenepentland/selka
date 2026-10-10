@@ -10,7 +10,7 @@ uses an empty PATH, an explicit native Zig path, and no Python runtime.
 coordinator, discovers nonempty declaration `*tests.my` roots and checks exact
 uncached pure-test verdicts in normal and release/fact/leak modes. It then runs
 `selfhost/tests/run_declaration_qualification.py` against the installed host and
-all five verified component packages. The declaration package is explicitly
+all six verified component packages. The declaration package is explicitly
 protocol/schema 1; existing lexer/parser packages remain protocol 1/schema 2.
 
 The current fifteen fixture entries cover duplicate declarations, import alias
@@ -45,7 +45,7 @@ policy.
 
 The normal lane also copies the component closure privately and uses the native
 coordinator to rebuild a dynamic declaration implementation edit. It requires
-changed declaration key and artifact bytes, unchanged other four receipts and
+changed declaration key and artifact bytes, unchanged other five receipts and
 host bytes, and exact workflow parity against the new deployment. No direct seed
 build bypass is used. Timing is separate and remains unqualified until an
 isolated ReleaseFast baseline/candidate run is explicitly performed.
@@ -73,3 +73,7 @@ precedence and local facade collisions preserve their related locations. Bare
 `export NAME` is removed by the parser: its explicit source rejection is marked
 as a parser boundary case, while repeated direct-export algorithm compatibility
 is exercised through the producer's pure projected-facts tests.
+
+The current gate holds the type/interface selector in reference mode and requires
+its sixth package identity. Historical declaration measurements retain their
+explicit four-package prior-host and five-package candidate inventories.

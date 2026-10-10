@@ -11,6 +11,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 import run_type_interface_qualification as D
 sys.path.insert(0, str(Path(__file__).parents[1]))
 import test_type_interfaces as G
+import measure_type_interface_adoption as Measurement
 
 class TypeInterfaceQualificationTests(unittest.TestCase):
     def test_type_interface_package_is_not_optional_or_boolean_versioned(self):
@@ -24,6 +25,9 @@ class TypeInterfaceQualificationTests(unittest.TestCase):
                     'schema': schema, 'component': name, 'artifact': 'producer', 'sha256': D.F.digest(binary)}))
             with self.assertRaises(FileNotFoundError):
                 D.packages(root)
+            self.assertEqual(len(Measurement.package_inventory(root, True)), 5)
+            with self.assertRaises(FileNotFoundError):
+                Measurement.package_inventory(root, False)
             (root / 'type-interface.json').write_text(json.dumps({'format': True, 'protocol': 1,
                 'schema': 1, 'component': 'type-interface', 'artifact': 'producer', 'sha256': D.F.digest(binary)}))
             with self.assertRaisesRegex(RuntimeError, 'noninteger'):
@@ -47,6 +51,11 @@ class TypeInterfaceQualificationTests(unittest.TestCase):
         self.assertEqual(struct.unpack('<IIII', frame[8:24]), (1, 1, 0, len(payload)))
         self.assertEqual(frame[32:64], D.F.hashlib.sha256(payload).digest())
         self.assertEqual(frame[64:], payload)
+        report = {'version':'cache-report-v1','program':'replayed','units':0,'reused':0,'compiled':0,'verified':0,'processes':0}
+        self.assertEqual(Measurement.cache_summary(json.dumps(report))['program'],'replayed')
+        report['reused'] = True
+        with self.assertRaises(RuntimeError):
+            Measurement.cache_summary(json.dumps(report))
 
     def test_caller_modes_and_oracle_controls_removed(self):
         with patch.dict(D.os.environ, {'MYLANG_TYPE_INTERFACE_MODE':'shadow', 'MYLANG_DECLARATION_MODE':'component', 'PILOT_REPLY':'bad'}):

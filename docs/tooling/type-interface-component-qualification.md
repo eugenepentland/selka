@@ -44,3 +44,11 @@ and artifact hashes are required. The private coordinator edit must change the
 signature package receipt and artifact while preserving the host and five other
 packages. Reports contain identities, every selected workflow, zero failed and
 zero skipped totals; no unsupported selection is silently accepted.
+
+`measure_type_interface_adoption.py` prepares a matched prior declaration host
+(reference only, five packages) and candidate host (reference and component, six
+packages). Other selectors stay reference. Each mode records one fresh application
+cache build, twenty warm builds, five body edits and twenty interface listings,
+including program behavior, native reuse reports and immutable identities. Run
+only with the outer gate and all three FIFO build reservations held; timings are
+not qualification assertions. Native toolchain/unit caches may already be warm.
