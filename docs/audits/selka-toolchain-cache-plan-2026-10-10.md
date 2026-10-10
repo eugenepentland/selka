@@ -4,15 +4,24 @@ Status: Wave 1 qualified together with `main` at `e9011d9c6` on 2026-10-10;
 integration commit `ed76d2a9c` passed the full gate (83 steps, 2,512 executed
 Zig tests) and all 88 Guardian checks. The expanded shadow qualification passed
 123 matrix invocations, warning parity and concurrent-edit rejection.
-Wave 2 is implemented on `codex/selka-cache-wave2`: canonical producer facts,
-generation-bound graph metadata, a Selka v2 incremental planner and unaffected
-test-key reuse. The full gate passed 104 steps and 2,543 executed Zig tests;
-Debug/raw and ReleaseFast/zlib shadow matrices each passed 99 invocations.
-All 318 paired benchmark/oracle invocations passed. Current edit medians are
-about 1–39% slower on the measured directories despite substantial fact reuse;
-reducing server lock occupancy is the next priority, not a claimed Wave 2 win. Neither wave is on `main`;
-later waves remain proposals.
-See `experiments/cache-wave2-20261010/REPORT.md` for identities and evidence.
+Original Wave 2 (`646b92789`) delivers canonical producer facts, generation-bound
+graph metadata, a Selka v2 incremental planner and unaffected test-key reuse.
+Its 318 benchmark/oracle invocations passed, but measured edit medians were about
+1–39% slower despite substantial fact reuse. Those measurements describe the
+original implementation, not the subsequent optimization.
+
+The completed follow-up correctness pass commits shared checked-catalog hashing,
+verified planner-byte reuse and plain-root selection work as `07927a094`.
+It passed 104 gate steps, 2,550 executed tests, 198 Debug/raw and ReleaseFast/zlib
+shadow calls, 40 focused tests and 88 whole-tree Guardian commit-hook checks.
+Only the before-change profile ran. At the user's request, paired measurements
+and the optimized after-profile were deferred after the benchmark never acquired
+admission behind another worktree's gate. No optimization speedup, memory gain or
+shorter lock duration is established. Measure those next before judging
+performance or advancing then-current-main integration. Neither wave is on
+`main`; later waves remain proposals.
+See the [original Wave 2 evidence](../../experiments/cache-wave2-20261010/REPORT.md)
+and [completed optimization correctness pass](../../experiments/cache-wave2-performance-20261010/REPORT.md).
 
 ## Objective and contract
 
@@ -524,6 +533,8 @@ correctly. A component edit rebuilds independently of the Zig host.
 
 Implemented against the qualified integration above. The following describes
 the delivered contract; the qualification report records the precise limits.
+The original measurements regressed; optimization `07927a094` is correctness
+qualified, with paired timing and its after-profile deferred at the user's request.
 Metadata is namespaced by source path, graph batches are still validated in full,
 and exact retained keys stand in for recomputing unaffected closures. Global
 semantic checks and conservative discovery/source guards remain active. The
@@ -862,9 +873,11 @@ has implemented the persisted-facts and test-key reuse milestone against the
 qualified main integration. An application workflow runtime
 remains Wave 7: the packed cache's recovery journal is disposable cache storage,
 not durable application progress. Wave 2 establishes reusable facts and keys,
-but measurements currently show metadata/planning overhead and conservative
-directory discovery transitions can outweigh saved computation. Address those
-measured costs before promising a faster edit loop. Wave 3 extends reuse to the
+but original measurements show metadata/planning overhead and conservative
+directory discovery transitions can outweigh saved computation. The subsequent
+correctness-qualified optimization is unmeasured; resume its paired comparison
+and after-profile before promising a faster edit loop or advancing integration.
+Wave 3 extends reuse to the
 whole verification command; fuzzing and Juice can then consume its facts.
 The later storage, daemon and public memo work should be driven by measured
 overhead and reuse, not prerequisites for getting the first safe wins.

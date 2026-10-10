@@ -1,0 +1,406 @@
+Build Summary: 104/104 steps succeeded; 2550/25857 tests passed (23307 skipped)
+fmt-check success
++- zig fmt --check success
++- check live .my corpus formatting cached
+|  +- install success
+|  |  +- install mylang cached
+|  |  |  +- compile exe mylang debug native cached 6ms MaxRSS:41M
+|  |  |  |  +- run exe build-identity (build_identity) cached
+|  |  |  |  |  +- compile exe build-identity debug native cached 6ms MaxRSS:41M
+|  |  |  |  +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 4ms MaxRSS:42M
+|  |  |  +- run ../guardian-zig/zig-out/bin/guardian-check success 1s
+|  |  |     +- guardian-selfcheck success
+|  |  |        +- run ../guardian-zig/zig-out/bin/guardian-check success 5ms
+|  |  +- install generated to selka-components cached
+|  |  |  +- compile exe selka-components safe native cached 6ms MaxRSS:40M
+|  |  +- run exe selka-components success 608ms
+|  |  |  +- compile exe selka-components safe native (reused)
+|  |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|  +- hash declared test inputs success 105ms
+|  +- record the test environment success 3ms
+|  +- run exe selka-components (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- verify .my formatting gate cached
+   +- install (+4 more reused dependencies)
+   +- hash declared test inputs (reused)
+   +- record the test environment (reused)
+   +- run exe selka-components (+1 more reused dependencies)
+   +- compile exe mylang debug native (+2 more reused dependencies)
+   +- compile exe mylang debug native (+2 more reused dependencies)
+test success
++- run ../guardian-zig/zig-out/bin/guardian-check success 1s
+|  +- guardian-selfcheck (+1 more reused dependencies)
++- run test 7 pass (7 total) 14ms MaxRSS:7M
+|  +- compile test debug native cached 7ms MaxRSS:40M
+|  +- install (+4 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- run exe selka-components (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 134 pass, 1391 skip (1525 total) 5m MaxRSS:38M
+|  +- compile test debug native success 3s MaxRSS:441M
+|  |  +- run exe build-identity (build_identity) (+1 more reused dependencies)
+|  |  +- options cached
+|  |     +- compile exe mylang debug native (+2 more reused dependencies)
+|  +- run exe selka-components (+1 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- run exe selka-components (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 127 pass, 1398 skip (1525 total) 6m MaxRSS:53M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- run exe selka-components (+1 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- run exe selka-components (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 127 pass, 1398 skip (1525 total) 5m MaxRSS:64M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- run exe selka-components (+1 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- run exe selka-components (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 127 pass, 1398 skip (1525 total) 53s MaxRSS:95M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- run exe selka-components (+1 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- run exe selka-components (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 127 pass, 1398 skip (1525 total) 5m MaxRSS:101M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- run exe selka-components (+1 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- run exe selka-components (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 127 pass, 1398 skip (1525 total) 59s MaxRSS:52M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- run exe selka-components (+1 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- run exe selka-components (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 126 pass, 1399 skip (1525 total) 6m MaxRSS:64M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- run exe selka-components (+1 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- run exe selka-components (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 126 pass, 1399 skip (1525 total) 6m MaxRSS:41M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- run exe selka-components (+1 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- run exe selka-components (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 126 pass, 1399 skip (1525 total) 57s MaxRSS:53M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- run exe selka-components (+1 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- run exe selka-components (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 126 pass, 1399 skip (1525 total) 2m MaxRSS:67M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- run exe selka-components (+1 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- run exe selka-components (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 126 pass, 1399 skip (1525 total) 8m MaxRSS:52M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- run exe selka-components (+1 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- run exe selka-components (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 126 pass, 1399 skip (1525 total) 2m MaxRSS:142M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- run exe selka-components (+1 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- run exe selka-components (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 47 pass, 215 skip (262 total) 7s MaxRSS:62M
+|  +- compile test debug native success 926ms MaxRSS:178M
+|  |  +- options success
+|  |     +- compile exe mylang debug native (+2 more reused dependencies)
+|  |     +- compile exe selka-components safe native (reused)
+|  +- run exe selka-components (+1 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- run exe selka-components (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 43 pass, 219 skip (262 total) 7s MaxRSS:63M
+|  +- compile test debug native (+1 more reused dependencies)
+|  +- run exe selka-components (+1 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- run exe selka-components (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 43 pass, 219 skip (262 total) 53s MaxRSS:162M
+|  +- compile test debug native (+1 more reused dependencies)
+|  +- run exe selka-components (+1 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- run exe selka-components (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 43 pass, 219 skip (262 total) 5s MaxRSS:62M
+|  +- compile test debug native (+1 more reused dependencies)
+|  +- run exe selka-components (+1 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- run exe selka-components (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 43 pass, 219 skip (262 total) 53s MaxRSS:168M
+|  +- compile test debug native (+1 more reused dependencies)
+|  +- run exe selka-components (+1 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- run exe selka-components (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 43 pass, 219 skip (262 total) 1m MaxRSS:288M
+|  +- compile test debug native (+1 more reused dependencies)
+|  +- run exe selka-components (+1 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- run exe selka-components (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- test-golden success
+|  +- run test 2 pass (2 total) 21s MaxRSS:60M
+|     +- compile test debug native success 590ms MaxRSS:155M
+|     |  +- options (+2 more reused dependencies)
+|     +- install (+4 more reused dependencies)
+|     +- hash declared test inputs (reused)
+|     +- record the test environment (reused)
+|     +- run exe selka-components (+1 more reused dependencies)
+|     +- compile exe mylang debug native (+2 more reused dependencies)
++- test-idioms success
+|  +- python3 tests/idiom_probes.py --self-test success 226ms
+|  |  +- install (+4 more reused dependencies)
+|  |  +- hash declared test inputs (reused)
+|  |  +- record the test environment (reused)
+|  |  +- run exe selka-components (+1 more reused dependencies)
+|  |  +- compile exe mylang debug native (+2 more reused dependencies)
+|  +- python3 tests/idiom_probes.py --compiler success 34s
+|     +- install (+4 more reused dependencies)
+|     +- hash declared test inputs (reused)
+|     +- record the test environment (reused)
+|     +- run exe selka-components (+1 more reused dependencies)
+|     +- compile exe mylang debug native (+2 more reused dependencies)
+|     +- compile exe mylang debug native (+2 more reused dependencies)
++- test-incremental success
+|  +- python3 tests/incremental_diff.py success 3s
+|  |  +- install (+4 more reused dependencies)
+|  |  +- hash declared test inputs (reused)
+|  |  +- record the test environment (reused)
+|  |  +- run exe selka-components (+1 more reused dependencies)
+|  |  +- compile exe mylang debug native (+2 more reused dependencies)
+|  |  +- compile exe mylang debug native (+2 more reused dependencies)
+|  +- python3 tests/incremental_diff.py --project tests/fixtures/module_projects success 4s
+|     +- install (+4 more reused dependencies)
+|     +- hash declared test inputs (reused)
+|     +- record the test environment (reused)
+|     +- run exe selka-components (+1 more reused dependencies)
+|     +- compile exe mylang debug native (+2 more reused dependencies)
+|     +- compile exe mylang debug native (+2 more reused dependencies)
++- test-interfaces success
+|  +- python3 tests/interface_diff.py success 5s
+|  |  +- install (+4 more reused dependencies)
+|  |  +- hash declared test inputs (reused)
+|  |  +- record the test environment (reused)
+|  |  +- run exe selka-components (+1 more reused dependencies)
+|  |  +- compile exe mylang debug native (+2 more reused dependencies)
+|  |  +- compile exe mylang debug native (+2 more reused dependencies)
+|  +- python3 tests/interface_diff.py --project tests/fixtures/interfaces_generic success 934ms
+|  |  +- install (+4 more reused dependencies)
+|  |  +- hash declared test inputs (reused)
+|  |  +- record the test environment (reused)
+|  |  +- run exe selka-components (+1 more reused dependencies)
+|  |  +- compile exe mylang debug native (+2 more reused dependencies)
+|  |  +- compile exe mylang debug native (+2 more reused dependencies)
+|  +- python3 tests/interface_oracle.py success 7s
+|     +- install (+4 more reused dependencies)
+|     +- hash declared test inputs (reused)
+|     +- record the test environment (reused)
+|     +- run exe selka-components (+1 more reused dependencies)
+|     +- compile exe mylang debug native (+2 more reused dependencies)
+|     +- compile exe mylang debug native (+2 more reused dependencies)
++- test-agent-usefulness success
+|  +- python3 tests/parser_hints.py success 56ms
+|  |  +- install (+4 more reused dependencies)
+|  |  +- hash declared test inputs (reused)
+|  |  +- record the test environment (reused)
+|  |  +- run exe selka-components (+1 more reused dependencies)
+|  |  +- compile exe mylang debug native (+2 more reused dependencies)
+|  +- python3 tests/parser_hints.py --compiler success 306ms
+|  |  +- install (+4 more reused dependencies)
+|  |  +- hash declared test inputs (reused)
+|  |  +- record the test environment (reused)
+|  |  +- run exe selka-components (+1 more reused dependencies)
+|  |  +- compile exe mylang debug native (+2 more reused dependencies)
+|  |  +- compile exe mylang debug native (+2 more reused dependencies)
+|  +- python3 tests/test_friction_harvest.py success 511ms
+|     +- install (+4 more reused dependencies)
+|     +- hash declared test inputs (reused)
+|     +- record the test environment (reused)
+|     +- run exe selka-components (+1 more reused dependencies)
+|     +- compile exe mylang debug native (+2 more reused dependencies)
++- test-cache-isolation success
+|  +- python3 tests/tooling_cache_isolation.py --compiler success 960ms
+|     +- install (+4 more reused dependencies)
+|     +- hash declared test inputs (reused)
+|     +- record the test environment (reused)
+|     +- run exe selka-components (+1 more reused dependencies)
+|     +- compile exe mylang debug native (+2 more reused dependencies)
+|     +- compile exe mylang debug native (+2 more reused dependencies)
++- run test 8 pass (8 total) 73ms MaxRSS:5M
+|  +- compile test debug native cached 7ms MaxRSS:40M
++- pure Selka and native component qualification success 30s
+|  +- install (+4 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- run exe selka-components (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
+|  +- compile exe selka-components safe native (reused)
++- python3 selfhost/test_components.py success 663ms
+|  +- install (+4 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- run exe selka-components (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
+|  +- compile exe selka-components safe native (reused)
++- test-selfhost-numeric success
+|  +- python3 selfhost/tests/run_lexer_diff.py --compiler success 987ms
+|     +- install (+4 more reused dependencies)
+|     +- hash declared test inputs (reused)
+|     +- record the test environment (reused)
+|     +- run exe selka-components (+1 more reused dependencies)
+|     +- compile exe mylang debug native (+2 more reused dependencies)
+|     +- compile exe mylang debug native (+2 more reused dependencies)
++- test-spec-merge success
+|  +- run python3 success 1s
+|     +- install (+4 more reused dependencies)
++- test-juice success
+|  +- python3 tests/test_juice.py success 1s
+|  |  +- install (+4 more reused dependencies)
+|  |  +- hash declared test inputs (reused)
+|  |  +- record the test environment (reused)
+|  |  +- run exe selka-components (+1 more reused dependencies)
+|  |  +- compile exe mylang debug native (+2 more reused dependencies)
+|  +- python3 tests/test_juice_native.py success 892ms
+|     +- install (+4 more reused dependencies)
+|     +- hash declared test inputs (reused)
+|     +- record the test environment (reused)
+|     +- run exe selka-components (+1 more reused dependencies)
+|     +- compile exe mylang debug native (+2 more reused dependencies)
+|     +- compile exe mylang debug native (+2 more reused dependencies)
++- test-compiler-identity success
+|  +- run python3 success 8s
+|     +- install (+4 more reused dependencies)
+|     +- record the test environment (reused)
++- test-affected-selection success
+|  +- python3 tests/test_affected_tests.py success 112ms
+|     +- install (+4 more reused dependencies)
+|     +- hash declared test inputs (reused)
+|     +- record the test environment (reused)
+|     +- run exe selka-components (+1 more reused dependencies)
+|     +- compile exe mylang debug native (+2 more reused dependencies)
++- test-inputs-coverage success
+|  +- python3 tests/test_inputs_coverage.py --self-test success 52ms
+|  |  +- install (+4 more reused dependencies)
+|  |  +- hash declared test inputs (reused)
+|  |  +- record the test environment (reused)
+|  |  +- run exe selka-components (+1 more reused dependencies)
+|  |  +- compile exe mylang debug native (+2 more reused dependencies)
+|  +- python3 tests/input_manifest.py --self-test success 44ms
+|  |  +- install (+4 more reused dependencies)
+|  |  +- hash declared test inputs (reused)
+|  |  +- record the test environment (reused)
+|  |  +- run exe selka-components (+1 more reused dependencies)
+|  |  +- compile exe mylang debug native (+2 more reused dependencies)
+|  +- python3 tests/test_inputs_coverage.py success 147ms
+|     +- install (+4 more reused dependencies)
+|     +- hash declared test inputs (reused)
+|     +- record the test environment (reused)
+|     +- run exe selka-components (+1 more reused dependencies)
+|     +- compile exe mylang debug native (+2 more reused dependencies)
++- run exe mylang success 46ms
+|  +- compile exe mylang debug native (+2 more reused dependencies)
+|  +- install (+4 more reused dependencies)
++- run exe mylang success 494ms
+|  +- compile exe mylang debug native (+2 more reused dependencies)
+|  +- install (+4 more reused dependencies)
++- mylang test tests/lang success 10s
+|  +- compile exe mylang debug native (+2 more reused dependencies)
+|  +- install (+4 more reused dependencies)
++- mylang test tests/lang --release --verify-facts (leak check) success 12s
+|  +- install (+4 more reused dependencies)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- mylang test tests/value_semantics success 1s
+|  +- compile exe mylang debug native (+2 more reused dependencies)
+|  +- install (+4 more reused dependencies)
++- mylang test tests/value_semantics --release --verify-facts (leak check) success 1s
+|  +- install (+4 more reused dependencies)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- mylang test tests/ported success 1s
+|  +- compile exe mylang debug native (+2 more reused dependencies)
+|  +- install (+4 more reused dependencies)
++- mylang test tests/ported --release --verify-facts (leak check) success 2s
+|  +- install (+4 more reused dependencies)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- test-core success
+|  +- run test 94 pass, 652 skip (746 total) 1m MaxRSS:462M
+|  |  +- compile test debug native success 8s MaxRSS:552M
+|  |  |  +- run exe build-identity (build_identity) (+1 more reused dependencies)
+|  |  |  +- options cached
+|  |  |  |  +- compile exe mylang debug native (+2 more reused dependencies)
+|  |  |  +- compile obj core_number_text fast x86_64-linux-gnu.2.31 (reused)
+|  |  +- run exe selka-components (+1 more reused dependencies)
+|  +- run test 94 pass, 652 skip (746 total) 37s MaxRSS:272M
+|  |  +- compile test debug native (+3 more reused dependencies)
+|  |  +- run exe selka-components (+1 more reused dependencies)
+|  +- run test 93 pass, 653 skip (746 total) 50s MaxRSS:267M
+|  |  +- compile test debug native (+3 more reused dependencies)
+|  |  +- run exe selka-components (+1 more reused dependencies)
+|  +- run test 93 pass, 653 skip (746 total) 33s MaxRSS:260M
+|  |  +- compile test debug native (+3 more reused dependencies)
+|  |  +- run exe selka-components (+1 more reused dependencies)
+|  +- run test 93 pass, 653 skip (746 total) 37s MaxRSS:258M
+|  |  +- compile test debug native (+3 more reused dependencies)
+|  |  +- run exe selka-components (+1 more reused dependencies)
+|  +- run test 93 pass, 653 skip (746 total) 26s MaxRSS:267M
+|  |  +- compile test debug native (+3 more reused dependencies)
+|  |  +- run exe selka-components (+1 more reused dependencies)
+|  +- run test 93 pass, 653 skip (746 total) 28s MaxRSS:267M
+|  |  +- compile test debug native (+3 more reused dependencies)
+|  |  +- run exe selka-components (+1 more reused dependencies)
+|  +- run test 93 pass, 653 skip (746 total) 38s MaxRSS:580M
+|     +- compile test debug native (+3 more reused dependencies)
+|     +- run exe selka-components (+1 more reused dependencies)
++- mylang doctest . success 3s
+|  +- install (+4 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- run exe selka-components (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- check live .my corpus formatting (+6 more reused dependencies)
++- verify .my formatting gate (+6 more reused dependencies)
++- lint live noalloc contracts success 586ms
+|  +- install (+4 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- run exe selka-components (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- verify embedded migration staging success 415ms
+   +- install (+4 more reused dependencies)
+   +- hash declared test inputs (reused)
+   +- record the test environment (reused)
+   +- run exe selka-components (+1 more reused dependencies)
+   +- compile exe mylang debug native (+2 more reused dependencies)

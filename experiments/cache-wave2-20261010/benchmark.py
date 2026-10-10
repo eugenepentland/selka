@@ -73,6 +73,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--baseline', type=Path, required=True)
     parser.add_argument('--candidate', type=Path, required=True)
+    parser.add_argument('--comparison', type=Path,
+                        help='optional third frozen compiler arm, with its own zlib cache')
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--eda', type=Path, default=qualify.EDA)
     parser.add_argument('--lox', type=Path, default=qualify.LOX)
@@ -86,16 +88,23 @@ def main():
     assert args.small_rounds > 0 and args.large_rounds > 0
     root = args.output.resolve()
     root.mkdir(parents=True, exist_ok=False)
+    compilers = [('baseline', args.baseline), ('candidate', args.candidate)]
+    if args.comparison is not None:
+        compilers.append(('comparison', args.comparison))
     report = {'started_utc': datetime.now(timezone.utc).isoformat(),
               'execution_context': {'affinity': sorted(os.sched_getaffinity(0)),
                                     'platform': platform.platform(), 'jobs': 4},
               'compilers': {name: {'path': str(path.resolve()), 'sha256': qualify.digest(path)}
-                            for name, path in [('baseline', args.baseline), ('candidate', args.candidate)]},
+                            for name, path in compilers},
               'method': 'Same source paths; separate compiler/encoding caches and native stores. Warm original once. '
                         'Every measured edit uses a never-before-used token, then restores original. '
                         'No historical edited keys or native outputs are copied. GNU time RSS is maximum individual process RSS, '
                         'not summed concurrent-tree RSS. Cold includes native compilation; populated no-op and first edits are separate.',
               'fixtures': {}, 'records': [], 'summary': {}}
+    if args.comparison is not None:
+        report['method'] += (' The optional comparison arm uses a separate zlib cache on these same source paths, '
+                             'participates in cold/no-op/edit/restore and verdict checks, and is interleaved '
+                             'with baseline and candidate in alternating arm order each round.')
 
     def save():
         (root / 'results.json').write_text(json.dumps(report, indent=2) + '\n')
@@ -116,6 +125,8 @@ def main():
         workloads.append((name, source, '.', ['--max-frames=1024'],
                           ['m0000.my', 'shared.my', 'm0001.my'], args.large_rounds))
     variants = [('baseline', args.baseline, 'zlib')]
+    if args.comparison is not None:
+        variants.append(('comparison', args.comparison, 'zlib'))
     variants += [(f'candidate-{encoding}', args.candidate, encoding) for encoding in args.candidate_encodings]
     for name, source, target, flags, edit_paths, rounds in workloads:
         originals = {relative: (source / relative).read_text() for relative in edit_paths}

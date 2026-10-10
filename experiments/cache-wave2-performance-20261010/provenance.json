@@ -1,0 +1,59 @@
+{
+  "implementation": {
+    "commit": "07927a094ae9e9c6d534834ab46c6abec4da635a",
+    "parent": "646b92789b2cce28791a9b3fcf733f20aaa4cd15",
+    "subject": "perf(cache): share checked catalog hashing across test roots",
+    "source_files": 9,
+    "additions": 442,
+    "deletions": 36,
+    "committed_source_sha256": {
+      "src/cache_plan_adapter.zig": "0edd27e1687f5fc703769607fc86051865b011df00d65a625295a9dcedd703b8",
+      "src/cache_plan_protocol_test.zig": "fafd6b2aa050642c1ef310b500c923a91310806d85ffa749d1b986e4a40ecfce",
+      "src/component_launch.zig": "35d818af72af9f290652478ab853bc0a3ff6f7d8db631a8d6a4c0bbfb9ab32e6",
+      "src/core/lowering_cache.zig": "0529dbe34d7af8b598da89363e6e0e418126469475493096544cd1aaa38014d0",
+      "src/core/lowering_cache_test.zig": "ef698c00052037ec0c0ca7224a33943a33564d62817d31ec942a90e9641247fe",
+      "src/core/root_test.zig": "df5e71d25dc42123129e1faf9368f23796e95a700c0733ab2cfd3e3efbc56074",
+      "src/core/test_runner.zig": "6ea651b1422f74775a450b8eb950410e874bfb4d7e105573f75e4273d93dae4a",
+      "src/core/test_runner_shared.zig": "eb4bcb01e34817e0f9aaf6504c4de224d264a135d15263b633e6c83b299e6cd2",
+      "src/core/test_runner_union.zig": "3d20d029fd8197a681c4da42c507addff1875ccaaa40db82d6683e1249b80d32"
+    }
+  },
+  "frozen_compilers": {
+    "baseline_pre_wave2": {
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave2-validation/baseline/bin/mylang",
+      "sha256": "079ee95624c5a2ff0eabd83ebaad590e7ab8e70e4b20d8eba6c939e097c4cce1"
+    },
+    "comparison_wave2": {
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave2-validation/candidate/bin/mylang",
+      "sha256": "92dd45fc92a79bca7eb2f273ec9ffdf6cac454526302b521b5bf33b88e0bc8c6"
+    },
+    "optimized_debug": {
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/zig-out/bin/mylang",
+      "sha256": "18c497235540973b56235675863949bac23ba857d740aaa3d759f84c1ad4d442"
+    },
+    "optimized_releasefast": {
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave2-performance-20261010/optimized/bin/mylang",
+      "sha256": "df45161f422a6421a7f945163c412a61617f782fa2464e9bce30419bafde1c54"
+    }
+  },
+  "binary_source_caveat": {
+    "change_after_binary_and_gate_freeze": "Same-line-count comment clarification in src/cache_plan_adapter.zig: full deployment validation still runs before and after execution.",
+    "executable_behavior_changed": false,
+    "source": "Coordinating agent message after implementation commit"
+  },
+  "guardian": {
+    "build_gate": {
+      "summary_file": "full-gate-summary.json",
+      "scope": "diff-scoped",
+      "checks_passed": 88
+    },
+    "implementation_commit_hook": {
+      "scope": "whole tree",
+      "checks_passed": 88,
+      "passed": true,
+      "source": "Coordinating agent observed commit hook; separate raw hook log not retained in this experiment"
+    }
+  },
+  "integration_scope": "Fixed installed compiler/runtime comparison. Integration against then-current main is a separate later qualification.",
+  "evidence_commit": "Experiment scripts, report and evidence are separate from the implementation commit."
+}

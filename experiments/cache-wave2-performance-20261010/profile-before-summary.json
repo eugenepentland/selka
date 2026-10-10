@@ -1,0 +1,294 @@
+{
+  "started_utc": "2026-10-10T14:48:57.640796+00:00",
+  "compiler": {
+    "path": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave2-validation/candidate/bin/mylang",
+    "sha256": "92dd45fc92a79bca7eb2f273ec9ffdf6cac454526302b521b5bf33b88e0bc8c6"
+  },
+  "benchmark": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave2-validation/wave2-synthetic-510436",
+  "variant": "candidate-zlib",
+  "phase": "helper",
+  "token": 9000001,
+  "affinity": [
+    2,
+    10
+  ],
+  "queue_s": 139.622358351,
+  "held_s": 29.747795755,
+  "original_source_sha256": "fc14e5a601683b58d58e18ef795123a9ca8a7def170e1dccfaea481582d700f6",
+  "restored_source_sha256": "fc14e5a601683b58d58e18ef795123a9ca8a7def170e1dccfaea481582d700f6",
+  "method": "Diagnostic inherited-process cycles:u profile at 99 Hz with requested DWARF stacks. Flat percentages are rounded perf event-weighted self samples across the captured process tree, not wall-time percentages. GNU time RSS is largest individual process.",
+  "profiles": [
+    {
+      "label": "helper",
+      "wall_s": 17.180904909,
+      "user_s": 17.61,
+      "system_s": 13.21,
+      "peak_rss_kb": 677048,
+      "exit": 0,
+      "counts": {
+        "passed": 662
+      },
+      "recorded_samples": 1664,
+      "self_pct_groups": {
+        "blake3": 43.68,
+        "sha2": 1.7,
+        "treehash": 3.09,
+        "unresolved_including_zig": 13.07,
+        "memfd_planner": 0.32,
+        "mylang_host_dso": 86.64,
+        "zig": 11.67,
+        "blake3_plus_sha2": 45.38,
+        "hashing_plus_named_treehash_self": 48.47
+      },
+      "top_self": [
+        {
+          "children_pct": 24.55,
+          "self_pct": 24.55,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "crypto.blake3.compressPre"
+        },
+        {
+          "children_pct": 11.81,
+          "self_pct": 11.81,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "crypto.blake3.ChunkState.update"
+        },
+        {
+          "children_pct": 6.05,
+          "self_pct": 6.05,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "compiler_rt.memcpy.memcpyFast"
+        },
+        {
+          "children_pct": 5.79,
+          "self_pct": 5.79,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "test_runner.rootsFor"
+        },
+        {
+          "children_pct": 5.68,
+          "self_pct": 5.68,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "crypto.blake3.Blake3.update"
+        },
+        {
+          "children_pct": 3.35,
+          "self_pct": 3.35,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "build.buildRootsCached"
+        },
+        {
+          "children_pct": 2.52,
+          "self_pct": 2.52,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "test_runner_discover.within"
+        },
+        {
+          "children_pct": 2.06,
+          "self_pct": 2.06,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "mem.eqlBytes"
+        },
+        {
+          "children_pct": 1.78,
+          "self_pct": 1.78,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "emit_llvm.fastPaths"
+        },
+        {
+          "children_pct": 1.7,
+          "self_pct": 1.7,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "crypto.sha2.Sha2x32(.{ 1779033703, 3144134277, 1013904242, 2773480762, 1359893119, 2600822924, 528734635, 1541459225 },256).round"
+        },
+        {
+          "children_pct": 1.7,
+          "self_pct": 1.7,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "lowering_cache.TreeHash.value__anon_91845"
+        },
+        {
+          "children_pct": 1.65,
+          "self_pct": 1.65,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "heap.ArenaAllocator.alloc"
+        }
+      ],
+      "stack_coverage": {
+        "events": 1664,
+        "with_any_frame": 36,
+        "with_multiple_frames": 2,
+        "with_named_frame": 1
+      },
+      "stack_read_exit": 0,
+      "stack_read_stderr": "",
+      "named_stack_examples": [
+        [
+          "\t    79af141941e9 __libc_early_init (/usr/lib/x86_64-linux-gnu/libc.so.6)"
+        ]
+      ],
+      "raw_report": ".mylang-cache/cache-wave2-performance-20261010/profile-helper-510k/helper.perf-report.txt"
+    },
+    {
+      "label": "revert-helper",
+      "wall_s": 10.825394765,
+      "user_s": 11.42,
+      "system_s": 7.42,
+      "peak_rss_kb": 677064,
+      "exit": 0,
+      "counts": {
+        "cached": 662
+      },
+      "recorded_samples": 1106,
+      "self_pct_groups": {
+        "blake3": 55.78,
+        "sha2": 3.0,
+        "treehash": 2.61,
+        "unresolved_including_zig": 1.24,
+        "memfd_planner": 0.45,
+        "mylang_host_dso": 98.7,
+        "zig": 0,
+        "blake3_plus_sha2": 58.78,
+        "hashing_plus_named_treehash_self": 61.39
+      },
+      "top_self": [
+        {
+          "children_pct": 33.53,
+          "self_pct": 33.53,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "crypto.blake3.compressPre"
+        },
+        {
+          "children_pct": 12.98,
+          "self_pct": 12.98,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "crypto.blake3.ChunkState.update"
+        },
+        {
+          "children_pct": 8.07,
+          "self_pct": 8.07,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "crypto.blake3.Blake3.update"
+        },
+        {
+          "children_pct": 7.5,
+          "self_pct": 7.5,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "compiler_rt.memcpy.memcpyFast"
+        },
+        {
+          "children_pct": 4.78,
+          "self_pct": 4.78,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "test_runner.rootsFor"
+        },
+        {
+          "children_pct": 4.34,
+          "self_pct": 4.34,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "build.buildRootsCached"
+        },
+        {
+          "children_pct": 4.08,
+          "self_pct": 4.08,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "test_runner_discover.within"
+        },
+        {
+          "children_pct": 3.0,
+          "self_pct": 3.0,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "crypto.sha2.Sha2x32(.{ 1779033703, 3144134277, 1013904242, 2773480762, 1359893119, 2600822924, 528734635, 1541459225 },256).round"
+        },
+        {
+          "children_pct": 2.3,
+          "self_pct": 2.3,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "lowering_cache.normalizedName"
+        },
+        {
+          "children_pct": 1.67,
+          "self_pct": 1.67,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "compress.flate.Decompress.streamInner"
+        },
+        {
+          "children_pct": 1.43,
+          "self_pct": 1.43,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "lowering_cache.TreeHash.value__anon_91839"
+        },
+        {
+          "children_pct": 1.23,
+          "self_pct": 1.23,
+          "command": "mylang",
+          "dso": "mylang",
+          "privilege": ".",
+          "symbol": "frontend_migration.publish"
+        }
+      ],
+      "stack_coverage": {
+        "events": 1106,
+        "with_any_frame": 10,
+        "with_multiple_frames": 2,
+        "with_named_frame": 0
+      },
+      "stack_read_exit": 0,
+      "stack_read_stderr": "",
+      "named_stack_examples": [],
+      "raw_report": ".mylang-cache/cache-wave2-performance-20261010/profile-helper-510k/revert-helper.perf-report.txt"
+    }
+  ],
+  "limitations": [
+    "No usable host DWARF caller stacks were recovered; top host hash symbols have identical children/self percentages. TreeHash is observed directly, but hash cost cannot be attributed quantitatively to catalog versus other callers.",
+    "Planner memfd mappings are captured in /proc snapshots, but their samples remain raw offsets. Host and copied component have no ELF GNU build ID; perf buildid-cache returned 0 with Could not add diagnostics. Copies preserve exact binaries for later symbolization.",
+    "perf reports zero lost samples; header-only decoding warns Invalid HEADER_EVENT_DESC and lacks event descriptions. Flat cycles:u symbol reports succeed.",
+    "CPU and wall include perf/snapshot overhead. This single diagnostic run establishes hotspots; paired uninstrumented benchmark is required for performance claims."
+  ]
+}

@@ -1,0 +1,330 @@
+{
+  "runs": {
+    "debug-none-shadow": {
+      "evidence": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave2-performance-20261010/debug-shadow/results.json",
+      "evidence_sha256": "f8833de87dc8a84354a69f394376fce983150f4fe8ec4d1d5dfaf29304eb433f",
+      "compiler": {
+        "path": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/zig-out/bin/mylang",
+        "sha256": "18c497235540973b56235675863949bac23ba857d740aaa3d759f84c1ad4d442"
+      },
+      "started_utc": "2026-10-10T14:58:35.568453+00:00",
+      "completed_utc": "2026-10-10T14:59:59.634543+00:00",
+      "planner_mode": "shadow",
+      "compression": "none",
+      "baseline": null,
+      "oracle_env": [],
+      "invocations": {
+        "main": 86,
+        "private_selected": 4,
+        "warnings": 6,
+        "concurrent": 3,
+        "total": 99
+      },
+      "test_verdict_counts_across_reported_invocations": {
+        "passed": 175,
+        "cached": 83,
+        "failed": 18
+      },
+      "main_agreement": {
+        "pairs": 43,
+        "keys_equal": true,
+        "outcomes_equal": true,
+        "warnings_bytes_equal": true
+      },
+      "private_selected": {
+        "counts": {
+          "passed": 2,
+          "cached": 1
+        },
+        "unchanged_key_tests": [
+          "combined_test::test_right"
+        ],
+        "agreement": {
+          "keys_equal": true,
+          "outcomes_equal": true,
+          "warnings_bytes_equal": true
+        },
+        "work": {
+          "combined_test.my#4dd7b4e044abace956c56a64af279e37f200d1a1dfc3bcdc9de6d9bfc25226ce": {
+            "scope": "combined_test.my#4dd7b4e044abace956c56a64af279e37f200d1a1dfc3bcdc9de6d9bfc25226ce",
+            "producer": {
+              "facts": {
+                "fresh": 1,
+                "reused": 7,
+                "fallback": 1,
+                "decoded": 7
+              },
+              "lowering": {
+                "fresh": 1,
+                "reused": 7,
+                "materialized": 0
+              }
+            },
+            "graph": {
+              "nodes_read": 8,
+              "nodes_unchanged": 7,
+              "changed_nodes": 1,
+              "candidate_tests": 3,
+              "shards_read": 3,
+              "shards_written": 2
+            },
+            "planner": {
+              "index_nodes": 64,
+              "index_edges": 53,
+              "affected_nodes": 5,
+              "closure_nodes": 18,
+              "closure_edges": 7,
+              "reused_tests": 1,
+              "planned_tests": 2
+            },
+            "storage": {
+              "packed_bytes_read": 10233,
+              "decoded_bytes": 10232,
+              "blocks_decoded": 1,
+              "payload_bytes_returned": 4047,
+              "block_cache_hits": 18
+            },
+            "nanoseconds": {
+              "lowering": 2228812,
+              "facts": 674053,
+              "graph": 485877,
+              "planner": 8431309,
+              "keys": 42627,
+              "publication": 1032871,
+              "total": 13568598
+            },
+            "transport": {
+              "request_bytes": 604,
+              "reply_bytes": 272,
+              "startups": 1
+            }
+          }
+        },
+        "noop_counts": {
+          "cached": 3
+        },
+        "noop_work": {}
+      },
+      "corruption": {
+        "directory": "test-keys",
+        "payload_count": 65,
+        "cases": {
+          "corrupt-metadata": {
+            "cached": 3
+          },
+          "evicted-metadata": {
+            "cached": 3
+          }
+        }
+      },
+      "warnings": {
+        "agreement": {
+          "pairs": 3,
+          "keys_equal": true,
+          "outcomes_equal": true,
+          "warnings_bytes_equal": true
+        },
+        "all_replays_bytes_equal": true,
+        "bytes_per_invocation": 265,
+        "sha256": "3ee21794e46889a6662e87dd35e4ab563b27323c2d25d33f8fc4477054dfba02",
+        "allocation_warning_count": 1
+      },
+      "concurrent_edit": {
+        "candidate": {
+          "interrupted_exit": 1,
+          "diagnostic": "error: SourceChanged: a test input changed during checking or execution",
+          "success_publication": false,
+          "current_counts": {
+            "failed": 2
+          },
+          "forced_counts": {
+            "failed": 2
+          },
+          "agreement": {
+            "keys_equal": true,
+            "outcomes_equal": true,
+            "warnings_bytes_equal": true
+          }
+        }
+      },
+      "admission": {
+        "evidence": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave2-performance-20261010/admission-debug-shadow/results.json",
+        "kind": "build",
+        "queue_s": 0.04684834,
+        "held_s": 84.15649228,
+        "command_wall_s": 84.131062157,
+        "wrapper_exit": 0,
+        "command_metrics": {
+          "peak_rss_kb": 282836,
+          "user_s": 97.79,
+          "system_s": 12.26,
+          "exit": 0
+        },
+        "method": "Queue is submit to admitted Python entry, including wrapper/interpreter startup. Command wall/CPU/max-process RSS excludes admission waiting. Held interval ends at command completion, while the slot is still held; final JSON/exit overhead is excluded. The standard build-slot thresholds, locks and environment are unchanged."
+      }
+    },
+    "release-zlib-shadow": {
+      "evidence": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave2-performance-20261010/release-shadow/results.json",
+      "evidence_sha256": "5bd9114663b6b85b68314ed05192056d8258ca29496c2af382fef58b9250a46c",
+      "compiler": {
+        "path": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave2-performance-20261010/optimized/bin/mylang",
+        "sha256": "df45161f422a6421a7f945163c412a61617f782fa2464e9bce30419bafde1c54"
+      },
+      "started_utc": "2026-10-10T15:05:41.417094+00:00",
+      "completed_utc": "2026-10-10T15:06:31.552160+00:00",
+      "planner_mode": "shadow",
+      "compression": "zlib",
+      "baseline": null,
+      "oracle_env": [],
+      "invocations": {
+        "main": 86,
+        "private_selected": 4,
+        "warnings": 6,
+        "concurrent": 3,
+        "total": 99
+      },
+      "test_verdict_counts_across_reported_invocations": {
+        "passed": 175,
+        "cached": 83,
+        "failed": 18
+      },
+      "main_agreement": {
+        "pairs": 43,
+        "keys_equal": true,
+        "outcomes_equal": true,
+        "warnings_bytes_equal": true
+      },
+      "private_selected": {
+        "counts": {
+          "passed": 2,
+          "cached": 1
+        },
+        "unchanged_key_tests": [
+          "combined_test::test_right"
+        ],
+        "agreement": {
+          "keys_equal": true,
+          "outcomes_equal": true,
+          "warnings_bytes_equal": true
+        },
+        "work": {
+          "combined_test.my#4dd7b4e044abace956c56a64af279e37f200d1a1dfc3bcdc9de6d9bfc25226ce": {
+            "scope": "combined_test.my#4dd7b4e044abace956c56a64af279e37f200d1a1dfc3bcdc9de6d9bfc25226ce",
+            "producer": {
+              "facts": {
+                "fresh": 1,
+                "reused": 7,
+                "fallback": 1,
+                "decoded": 7
+              },
+              "lowering": {
+                "fresh": 1,
+                "reused": 7,
+                "materialized": 0
+              }
+            },
+            "graph": {
+              "nodes_read": 8,
+              "nodes_unchanged": 7,
+              "changed_nodes": 1,
+              "candidate_tests": 3,
+              "shards_read": 3,
+              "shards_written": 2
+            },
+            "planner": {
+              "index_nodes": 64,
+              "index_edges": 53,
+              "affected_nodes": 5,
+              "closure_nodes": 18,
+              "closure_edges": 7,
+              "reused_tests": 1,
+              "planned_tests": 2
+            },
+            "storage": {
+              "packed_bytes_read": 4838,
+              "decoded_bytes": 10232,
+              "blocks_decoded": 1,
+              "payload_bytes_returned": 4047,
+              "block_cache_hits": 18
+            },
+            "nanoseconds": {
+              "lowering": 356434,
+              "facts": 90715,
+              "graph": 54814,
+              "planner": 2735674,
+              "keys": 4405,
+              "publication": 371375,
+              "total": 3699769
+            },
+            "transport": {
+              "request_bytes": 604,
+              "reply_bytes": 272,
+              "startups": 1
+            }
+          }
+        },
+        "noop_counts": {
+          "cached": 3
+        },
+        "noop_work": {}
+      },
+      "corruption": {
+        "directory": "test-keys",
+        "payload_count": 65,
+        "cases": {
+          "corrupt-metadata": {
+            "cached": 3
+          },
+          "evicted-metadata": {
+            "cached": 3
+          }
+        }
+      },
+      "warnings": {
+        "agreement": {
+          "pairs": 3,
+          "keys_equal": true,
+          "outcomes_equal": true,
+          "warnings_bytes_equal": true
+        },
+        "all_replays_bytes_equal": true,
+        "bytes_per_invocation": 265,
+        "sha256": "3ee21794e46889a6662e87dd35e4ab563b27323c2d25d33f8fc4477054dfba02",
+        "allocation_warning_count": 1
+      },
+      "concurrent_edit": {
+        "candidate": {
+          "interrupted_exit": 1,
+          "diagnostic": "error: SourceChanged: a test input changed during checking or execution",
+          "success_publication": false,
+          "current_counts": {
+            "failed": 2
+          },
+          "forced_counts": {
+            "failed": 2
+          },
+          "agreement": {
+            "keys_equal": true,
+            "outcomes_equal": true,
+            "warnings_bytes_equal": true
+          }
+        }
+      },
+      "admission": {
+        "evidence": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave2-performance-20261010/admission-release-shadow/results.json",
+        "kind": "build",
+        "queue_s": 0.042302551,
+        "held_s": 50.224979116,
+        "command_wall_s": 50.19117313,
+        "wrapper_exit": 0,
+        "command_metrics": {
+          "peak_rss_kb": 285880,
+          "user_s": 59.46,
+          "system_s": 10.76,
+          "exit": 0
+        },
+        "method": "Queue is submit to admitted Python entry, including wrapper/interpreter startup. Command wall/CPU/max-process RSS excludes admission waiting. Held interval ends at command completion, while the slot is still held; final JSON/exit overhead is excluded. The standard build-slot thresholds, locks and environment are unchanged."
+      }
+    }
+  }
+}

@@ -1,5 +1,13 @@
 # Cache Wave 2 qualification
 
+This is the historical original Wave 2 qualification and measurement report.
+The [follow-up correctness pass](../cache-wave2-performance-20261010/REPORT.md)
+commits optimization `07927a094`, verified by 2,550 full-gate tests, 198 shadow
+calls, 40 focused tests and 88 whole-tree Guardian checks. Its paired measurements
+and optimized after-profile were deferred at the user's request before benchmark
+admission. The regressions below describe the original implementation; no measured
+optimization improvement is established by the follow-up pass.
+
 This work integrates the Selka cache planner from `c3107e4cf` with `main` at
 `e9011d9c6513f63ae02881d0cfc8258c668e6b5e`, then implements the second wave of
 `docs/audits/selka-toolchain-cache-plan-2026-10-10.md`.

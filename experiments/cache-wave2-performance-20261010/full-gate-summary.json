@@ -1,0 +1,230 @@
+{
+  "evidence": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave2-performance-20261010/full-gate/results.json",
+  "evidence_sha256": "95cb5c8a446cbfb9664851d1f9578b8dcd6333d84a21afc9d318b3cad5c43c00",
+  "log": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave2-performance-20261010/full-gate/command.stderr.log",
+  "log_sha256": "672bb96046812701b53e56b9307a1993274d2c9fc19cc95b292561cef71a2e56",
+  "command": [
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "build",
+    "test",
+    "fmt-check",
+    "-j6",
+    "--maxrss",
+    "8589934592",
+    "--summary",
+    "all"
+  ],
+  "cwd": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang",
+  "started_utc": "2026-10-10T14:59:07.665734+00:00",
+  "exit": 0,
+  "build_summary": "Build Summary: 104/104 steps succeeded; 2550/25857 tests passed (23307 skipped)",
+  "steps": {
+    "passed": 104,
+    "total": 104
+  },
+  "tests": {
+    "executed": 2550,
+    "passed": 2550,
+    "reported_total": 25857,
+    "skipped": 23307,
+    "method": "Executed counts are passing tests in the successful final Zig Build Summary. Reported total includes skipped test instances, such as tests assigned to another shard."
+  },
+  "guardian": {
+    "checks_passed": true,
+    "run_all_lines": [
+      "guardian: run-all: 88 check(s) passed \u2014 diff-scoped vs e9011d9c6513f63ae02881d0cfc8258c668e6b5e, 41 file(s) in scope",
+      "guardian: run-all: 88 check(s) passed \u2014 diff-scoped vs e9011d9c6513f63ae02881d0cfc8258c668e6b5e, 41 file(s) in scope"
+    ],
+    "scope": "Exact run-all lines retain whether checks were diff scoped or whole tree.",
+    "scope_lines": [
+      "guardian: diff-scoped vs e9011d9c6513f63ae02881d0cfc8258c668e6b5e: 41/625 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification \u2014 use --full, or `guardian-check commit`.",
+      "guardian: diff-scoped vs e9011d9c6513f63ae02881d0cfc8258c668e6b5e: 41/625 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification \u2014 use --full, or `guardian-check commit`."
+    ],
+    "scope_counts": {
+      "base": "e9011d9c6513f63ae02881d0cfc8258c668e6b5e",
+      "source_files_in_scope": 41,
+      "source_files_total": 625,
+      "per_file_checks": 50,
+      "whole_tree_checks": 38,
+      "whole_tree_verification": false
+    },
+    "test_runs": [
+      {
+        "passed": 8,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 127,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 127,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 43,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 126,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 7,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 127,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 126,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 43,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 126,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 126,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 126,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 93,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 93,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 93,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 94,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 93,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 93,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 94,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 93,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 43,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 126,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 47,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 43,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 43,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 127,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 134,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "passed": 127,
+        "failed": 0,
+        "skipped": 0
+      }
+    ],
+    "test_totals": {
+      "passed": 2550,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "fmt": {
+    "passed": true,
+    "method": "Explicit fmt-check target in the successful command and final build graph.",
+    "summary_lines": [
+      "fmt-check success",
+      "+- zig fmt --check success",
+      "+- check live .my corpus formatting cached",
+      "+- verify .my formatting gate cached",
+      "+- check live .my corpus formatting (+6 more reused dependencies)",
+      "+- verify .my formatting gate (+6 more reused dependencies)"
+    ]
+  },
+  "admission": {
+    "kind": "gate",
+    "queue_s": 35.12022841,
+    "held_s": 1123.322832343,
+    "command_wall_s": 1123.295644689,
+    "command_metrics": {
+      "peak_rss_kb": 675140,
+      "user_s": 2292.67,
+      "system_s": 160.42,
+      "exit": 0
+    },
+    "method": "Queue is submit to admitted Python entry, including wrapper/interpreter startup. Command wall/CPU/max-process RSS excludes admission waiting. Held interval ends at command completion, while the slot is still held; final JSON/exit overhead is excluded. The standard build-slot thresholds, locks and environment are unchanged."
+  },
+  "full_build_summary_file": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/experiments/cache-wave2-performance-20261010/full-gate-summary.txt"
+}
