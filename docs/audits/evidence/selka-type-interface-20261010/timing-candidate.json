@@ -1,0 +1,686 @@
+{
+  "label": "candidate",
+  "measurement_script_sha256": "b62ec959112be22870e7b694cceb60955288eb37085f8ab584040c0c534cba0e",
+  "qualification_script_sha256": "5459e62cd5d68d56a1cd68455f1e99e6fbd56b55c96fd9d9feaf183b763415ec",
+  "source_root": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang",
+  "iterations": 20,
+  "edit_iterations": 5,
+  "baseline_reference_only": false,
+  "host_sha256": "16d3c3bab8160aaf30ce5e9206a7259fb3d50c85d4be7b2760c65798bc161bc3",
+  "packages": {
+    "test-index": {
+      "artifact": "test-index-f6b2aeb96650733e589f08ea116bfe88728bc68b81f1bb4abb52e878648fa4bb",
+      "component": "test-index",
+      "format": 1,
+      "key": "a744b19ecce2ff346efe24a813ff1e184ac984ab4a108de6e7da62b68d21448e",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "f6b2aeb96650733e589f08ea116bfe88728bc68b81f1bb4abb52e878648fa4bb"
+    },
+    "cache-plan": {
+      "artifact": "cache-plan-c6caf7c4e7d730c44f66692549643b57356cef2016dd143d83c9adddee39c27d",
+      "component": "cache-plan",
+      "format": 1,
+      "key": "b40aa4951b1bb340f0c9916562f3a5823a2b91ec20a4aa85ad34f3051fd9a5c7",
+      "protocol": 2,
+      "schema": 2,
+      "sha256": "c6caf7c4e7d730c44f66692549643b57356cef2016dd143d83c9adddee39c27d"
+    },
+    "lexer-pilot": {
+      "artifact": "lexer-pilot-184c9f6e48442077c65ed68a93df35550ef32ecc113e45e6d60307e7daf4c589",
+      "component": "lexer-pilot",
+      "format": 1,
+      "key": "0895eaa18aae501cd57e4ee634600251c6aa0aa0cc9703672986d8077bbf94a6",
+      "protocol": 1,
+      "schema": 2,
+      "sha256": "184c9f6e48442077c65ed68a93df35550ef32ecc113e45e6d60307e7daf4c589"
+    },
+    "parser-pilot": {
+      "artifact": "parser-pilot-470698ee902eb854c94c7f2fd29eb42767053c1b11541e584a47c9b3f30a7976",
+      "component": "parser-pilot",
+      "format": 1,
+      "key": "917d3c5241d70d71568b7cf44b7ef5114e3182dcf61ed18ab9c5f1b1027f8beb",
+      "protocol": 1,
+      "schema": 2,
+      "sha256": "470698ee902eb854c94c7f2fd29eb42767053c1b11541e584a47c9b3f30a7976"
+    },
+    "declaration-index": {
+      "artifact": "declaration-index-4cdc3e4dd7112dafeadf2ec7e923a6cfbe6d910c1ee7c51354706c19405b5c2f",
+      "component": "declaration-index",
+      "format": 1,
+      "key": "3b54e7dfbb608f634c3b09b658ee429fbb059470ca4e977949957b08ddcae99c",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "4cdc3e4dd7112dafeadf2ec7e923a6cfbe6d910c1ee7c51354706c19405b5c2f"
+    },
+    "type-interface": {
+      "artifact": "type-interface-0dbff24e43125d9bcb0f1429f109650843e43945d07ed344290ee8172e02010a",
+      "component": "type-interface",
+      "format": 1,
+      "key": "956c45e7de93c862ddebd291481b33479e29f5b1c35fafc7fe74af5ce8fd7f06",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "0dbff24e43125d9bcb0f1429f109650843e43945d07ed344290ee8172e02010a"
+    }
+  },
+  "verified_seed_sha256": "c4f1ea0b6618cb7b146bbb8e035220eb36b99ff078d4a959d8bf0948d0c6d98b",
+  "fixed_modes": {
+    "lexer": "reference",
+    "parser": "reference",
+    "test-index": "reference",
+    "cache-plan": "reference",
+    "declaration": "reference"
+  },
+  "fact_leak_checks": "disabled for timings, qualified independently",
+  "native_cache_scope": "private application cache, shared native units/runtime/toolchain may be warm; retained reports identify reuse",
+  "rows": [
+    {
+      "mode": "reference",
+      "phase": "fresh-application-cache",
+      "cache_evidence": "{\"version\":\"cache-report-v1\",\"program\":\"linked\",\"units\":3,\"reused\":3,\"compiled\":0,\"verified\":0,\"processes\":1,\"stages\":{\"version\":\"stage-report-v3\",\"nanoseconds\":{\"frontend\":796299,\"lowering\":127972,\"optimizer\":245065,\"emission\":417935,\"native\":14184924,\"linker\":11987151,\"frontend_phases\":[{\"name\":\"load\",\"nanoseconds\":41640,\"inclusive\":false},{\"name\":\"syntax_parse\",\"nanoseconds\":159480,\"inclusive\":false},{\"name\":\"declarations_interfaces\",\"nanoseconds\":31465,\"inclusive\":false},{\"name\":\"merge\",\"nanoseconds\":55688,\"inclusive\":false},{\"name\":\"dependency_key_preparation\",\"nanoseconds\":24092,\"inclusive\":false},{\"name\":\"symbolic_templates\",\"nanoseconds\":1542,\"inclusive\":false},{\"name\":\"stand_in_planning\",\"nanoseconds\":897,\"inclusive\":false},{\"name\":\"ordinary_body_replay\",\"nanoseconds\":7285,\"inclusive\":false},{\"name\":\"fresh_body_check\",\"nanoseconds\":65041,\"inclusive\":false},{\"name\":\"entry_adaptation\",\"nanoseconds\":461,\"inclusive\":false},{\"name\":\"effect_origin_passes\",\"nanoseconds\":32835,\"inclusive\":false},{\"name\":\"domain_codec_validation\",\"nanoseconds\":394,\"inclusive\":false},{\"name\":\"warning_derivation\",\"nanoseconds\":829,\"inclusive\":false},{\"name\":\"check_summaries\",\"nanoseconds\":15870,\"inclusive\":false},{\"name\":\"retention_store_io\",\"nanoseconds\":159380,\"inclusive\":false},{\"name\":\"check\",\"nanoseconds\":433343,\"inclusive\":true}]},\"frontend\":{\"checked\":4,\"reused\":0,\"summaries\":0,\"syntax_hits\":0,\"syntax_misses\":2,\"stored\":4,\"damaged\":0},\"lowering\":{\"reused\":0,\"lowered\":2,\"deferred\":0,\"fallbacks\":0,\"materialized\":2,\"unloaded\":0},\"optimizer\":{\"hits\":[0,0,0,0,0,0,0],\"misses\":[2,2,2,2,2,2,0],\"bypassed\":0,\"active_functions\":2,\"fresh_work\":2,\"restores\":{\"final\":0,\"checkpoints\":0,\"fusions\":0},\"final_loaded\":2},\"emission\":{\"units\":3,\"reused\":0,\"rendered\":3,\"seeds_reused\":0,\"seeds_rendered\":0,\"workers\":2,\"work\":{\"receipts_checked\":3,\"keys_built\":3,\"llvm_loaded_bytes\":17530,\"native_handles\":0}},\"frontend_misses\":{\"total\":[0,0,4,0,0,0,0,0,0,0,0,0,0,0,0,0],\"lookup\":[0,0,4,0,0,0,0,0,0,0,0,0,0,0,0,0],\"retention\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"relocation\":[0,0,0,0,0,0]}},\"storage\":{\"flush_nanoseconds\":493317,\"flush_succeeded\":true,\"compression\":\"zlib\",\"reads\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":2,\"refreshes\":4,\"packs_prepared\":1,\"pack_bytes_prepared\":9834,\"save_bytes_prepared\":23054,\"sequence_locks\":31}}}}\n",
+      "cache_samples": [
+        {
+          "program": "linked",
+          "units": 3,
+          "reused": 3,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 1
+        }
+      ],
+      "samples_ns": [
+        18696500
+      ],
+      "median_ns": 18696500,
+      "min_ns": 18696500,
+      "max_ns": 18696500
+    },
+    {
+      "mode": "reference",
+      "phase": "warm",
+      "cache_evidence": "{\"version\":\"cache-report-v1\",\"program\":\"replayed\",\"units\":0,\"reused\":0,\"compiled\":0,\"verified\":0,\"processes\":0,\"stages\":null,\"storage\":null}\n",
+      "cache_samples": [
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        }
+      ],
+      "samples_ns": [
+        2231628,
+        2027891,
+        2105925,
+        2152383,
+        1925605,
+        2038083,
+        2182438,
+        2062291,
+        2194470,
+        2116873,
+        2127222,
+        2101533,
+        2129212,
+        2153477,
+        2097663,
+        2161268,
+        2256222,
+        2142128,
+        2106419,
+        2046288
+      ],
+      "median_ns": 2122047.5,
+      "min_ns": 1925605,
+      "max_ns": 2256222
+    },
+    {
+      "mode": "reference",
+      "phase": "edit",
+      "cache_evidence": "{\"version\":\"cache-report-v1\",\"program\":\"linked\",\"units\":3,\"reused\":3,\"compiled\":0,\"verified\":0,\"processes\":1,\"stages\":{\"version\":\"stage-report-v3\",\"nanoseconds\":{\"frontend\":920961,\"lowering\":127327,\"optimizer\":270538,\"emission\":332640,\"native\":13574671,\"linker\":11307981,\"frontend_phases\":[{\"name\":\"load\",\"nanoseconds\":40936,\"inclusive\":false},{\"name\":\"syntax_parse\",\"nanoseconds\":73911,\"inclusive\":false},{\"name\":\"syntax_replay\",\"nanoseconds\":17986,\"inclusive\":false},{\"name\":\"declarations_interfaces\",\"nanoseconds\":32452,\"inclusive\":false},{\"name\":\"merge\",\"nanoseconds\":58214,\"inclusive\":false},{\"name\":\"dependency_key_preparation\",\"nanoseconds\":21969,\"inclusive\":false},{\"name\":\"symbolic_templates\",\"nanoseconds\":1627,\"inclusive\":false},{\"name\":\"stand_in_planning\",\"nanoseconds\":8817,\"inclusive\":false},{\"name\":\"ordinary_body_replay\",\"nanoseconds\":47409,\"inclusive\":false},{\"name\":\"fresh_body_check\",\"nanoseconds\":58095,\"inclusive\":false},{\"name\":\"entry_adaptation\",\"nanoseconds\":499,\"inclusive\":false},{\"name\":\"effect_origin_passes\",\"nanoseconds\":31942,\"inclusive\":false},{\"name\":\"domain_codec_validation\",\"nanoseconds\":56,\"inclusive\":false},{\"name\":\"warning_derivation\",\"nanoseconds\":925,\"inclusive\":false},{\"name\":\"check_summaries\",\"nanoseconds\":10133,\"inclusive\":false},{\"name\":\"retention_store_io\",\"nanoseconds\":131978,\"inclusive\":false},{\"name\":\"check\",\"nanoseconds\":439303,\"inclusive\":true}]},\"frontend\":{\"checked\":2,\"reused\":2,\"summaries\":1,\"syntax_hits\":1,\"syntax_misses\":1,\"stored\":2,\"damaged\":0},\"lowering\":{\"reused\":1,\"lowered\":1,\"deferred\":1,\"fallbacks\":0,\"materialized\":2,\"unloaded\":0},\"optimizer\":{\"hits\":[0,0,0,0,0,0,0],\"misses\":[2,2,2,2,2,2,0],\"bypassed\":0,\"active_functions\":2,\"fresh_work\":2,\"restores\":{\"final\":0,\"checkpoints\":0,\"fusions\":0},\"final_loaded\":2},\"emission\":{\"units\":3,\"reused\":1,\"rendered\":2,\"seeds_reused\":0,\"seeds_rendered\":0,\"workers\":2,\"work\":{\"receipts_checked\":3,\"keys_built\":2,\"llvm_loaded_bytes\":11516,\"native_handles\":1}},\"frontend_misses\":{\"total\":[0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,0],\"lookup\":[0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,0],\"retention\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"relocation\":[0,0,0,0,0,0]}},\"storage\":{\"flush_nanoseconds\":485462,\"flush_succeeded\":true,\"compression\":\"zlib\",\"reads\":{\"packed_bytes_read\":7656,\"decoded_bytes\":15613,\"blocks_decoded\":2,\"payload_bytes_returned\":3076,\"block_cache_hits\":4,\"publication\":{\"filename_lookups\":7,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":8201,\"save_bytes_prepared\":16284,\"sequence_locks\":26}}}}\n",
+      "cache_samples": [
+        {
+          "program": "linked",
+          "units": 3,
+          "reused": 3,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 1
+        },
+        {
+          "program": "linked",
+          "units": 3,
+          "reused": 3,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 1
+        },
+        {
+          "program": "linked",
+          "units": 3,
+          "reused": 3,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 1
+        },
+        {
+          "program": "linked",
+          "units": 3,
+          "reused": 3,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 1
+        },
+        {
+          "program": "linked",
+          "units": 3,
+          "reused": 3,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 1
+        }
+      ],
+      "samples_ns": [
+        18351455,
+        17571294,
+        17459269,
+        17834890,
+        17763270
+      ],
+      "median_ns": 17763270,
+      "min_ns": 17459269,
+      "max_ns": 18351455
+    },
+    {
+      "mode": "reference",
+      "phase": "interfaces",
+      "stdout_sha256": "4130c33874678a1f2e76d02c1d1ae19962fda3fcb255ccb906132884ddc29990",
+      "samples_ns": [
+        1707883,
+        1709949,
+        1830396,
+        1744554,
+        1613468,
+        1707181,
+        1658061,
+        1669966,
+        1686520,
+        1774236,
+        1827929,
+        1744547,
+        1671540,
+        1680085,
+        1771543,
+        1686414,
+        1700458,
+        1767979,
+        1832039,
+        1707722
+      ],
+      "median_ns": 1707802.5,
+      "min_ns": 1613468,
+      "max_ns": 1832039
+    },
+    {
+      "mode": "component",
+      "phase": "fresh-application-cache",
+      "cache_evidence": "{\"version\":\"cache-report-v1\",\"program\":\"linked\",\"units\":3,\"reused\":3,\"compiled\":0,\"verified\":0,\"processes\":1,\"stages\":{\"version\":\"stage-report-v3\",\"nanoseconds\":{\"frontend\":20473157,\"lowering\":130362,\"optimizer\":268331,\"emission\":478643,\"native\":17770830,\"linker\":12417702,\"frontend_phases\":[{\"name\":\"load\",\"nanoseconds\":966592,\"inclusive\":false},{\"name\":\"syntax_parse\",\"nanoseconds\":3923964,\"inclusive\":false},{\"name\":\"declarations_interfaces\",\"nanoseconds\":6442694,\"inclusive\":false},{\"name\":\"merge\",\"nanoseconds\":1952664,\"inclusive\":false},{\"name\":\"dependency_key_preparation\",\"nanoseconds\":29180,\"inclusive\":false},{\"name\":\"symbolic_templates\",\"nanoseconds\":1540,\"inclusive\":false},{\"name\":\"stand_in_planning\",\"nanoseconds\":1185,\"inclusive\":false},{\"name\":\"ordinary_body_replay\",\"nanoseconds\":10101,\"inclusive\":false},{\"name\":\"fresh_body_check\",\"nanoseconds\":50622,\"inclusive\":false},{\"name\":\"entry_adaptation\",\"nanoseconds\":265,\"inclusive\":false},{\"name\":\"effect_origin_passes\",\"nanoseconds\":29764,\"inclusive\":false},{\"name\":\"domain_codec_validation\",\"nanoseconds\":78,\"inclusive\":false},{\"name\":\"warning_derivation\",\"nanoseconds\":629,\"inclusive\":false},{\"name\":\"check_summaries\",\"nanoseconds\":16238,\"inclusive\":false},{\"name\":\"retention_store_io\",\"nanoseconds\":175887,\"inclusive\":false},{\"name\":\"check\",\"nanoseconds\":3315042,\"inclusive\":true}]},\"frontend\":{\"checked\":4,\"reused\":0,\"summaries\":0,\"syntax_hits\":0,\"syntax_misses\":2,\"stored\":4,\"damaged\":0},\"lowering\":{\"reused\":0,\"lowered\":2,\"deferred\":0,\"fallbacks\":0,\"materialized\":2,\"unloaded\":0},\"optimizer\":{\"hits\":[0,0,0,0,0,0,0],\"misses\":[2,2,2,2,2,2,0],\"bypassed\":0,\"active_functions\":2,\"fresh_work\":2,\"restores\":{\"final\":0,\"checkpoints\":0,\"fusions\":0},\"final_loaded\":2},\"emission\":{\"units\":3,\"reused\":0,\"rendered\":3,\"seeds_reused\":0,\"seeds_rendered\":0,\"workers\":2,\"work\":{\"receipts_checked\":3,\"keys_built\":3,\"llvm_loaded_bytes\":17530,\"native_handles\":0}},\"frontend_misses\":{\"total\":[0,0,4,0,0,0,0,0,0,0,0,0,0,0,0,0],\"lookup\":[0,0,4,0,0,0,0,0,0,0,0,0,0,0,0,0],\"retention\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"relocation\":[0,0,0,0,0,0]}},\"storage\":{\"flush_nanoseconds\":532009,\"flush_succeeded\":true,\"compression\":\"zlib\",\"reads\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":2,\"refreshes\":4,\"packs_prepared\":1,\"pack_bytes_prepared\":9836,\"save_bytes_prepared\":23054,\"sequence_locks\":31}}}}\n",
+      "cache_samples": [
+        {
+          "program": "linked",
+          "units": 3,
+          "reused": 3,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 1
+        }
+      ],
+      "samples_ns": [
+        48558670
+      ],
+      "median_ns": 48558670,
+      "min_ns": 48558670,
+      "max_ns": 48558670
+    },
+    {
+      "mode": "component",
+      "phase": "warm",
+      "cache_evidence": "{\"version\":\"cache-report-v1\",\"program\":\"replayed\",\"units\":0,\"reused\":0,\"compiled\":0,\"verified\":0,\"processes\":0,\"stages\":null,\"storage\":null}\n",
+      "cache_samples": [
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        }
+      ],
+      "samples_ns": [
+        5861313,
+        5564459,
+        5677994,
+        5803954,
+        5764021,
+        5780425,
+        5820179,
+        5821046,
+        5769183,
+        5777177,
+        5779742,
+        5663343,
+        5766425,
+        5351763,
+        5186315,
+        5319806,
+        5310878,
+        5301062,
+        5161643,
+        5178287
+      ],
+      "median_ns": 5721007.5,
+      "min_ns": 5161643,
+      "max_ns": 5861313
+    },
+    {
+      "mode": "component",
+      "phase": "edit",
+      "cache_evidence": "{\"version\":\"cache-report-v1\",\"program\":\"linked\",\"units\":3,\"reused\":3,\"compiled\":0,\"verified\":0,\"processes\":1,\"stages\":{\"version\":\"stage-report-v3\",\"nanoseconds\":{\"frontend\":17777011,\"lowering\":124695,\"optimizer\":248923,\"emission\":339637,\"native\":16146989,\"linker\":11550150,\"frontend_phases\":[{\"name\":\"load\",\"nanoseconds\":843378,\"inclusive\":false},{\"name\":\"syntax_parse\",\"nanoseconds\":1680037,\"inclusive\":false},{\"name\":\"syntax_replay\",\"nanoseconds\":1633286,\"inclusive\":false},{\"name\":\"declarations_interfaces\",\"nanoseconds\":5705126,\"inclusive\":false},{\"name\":\"merge\",\"nanoseconds\":1676994,\"inclusive\":false},{\"name\":\"dependency_key_preparation\",\"nanoseconds\":23274,\"inclusive\":false},{\"name\":\"symbolic_templates\",\"nanoseconds\":1875,\"inclusive\":false},{\"name\":\"stand_in_planning\",\"nanoseconds\":7273,\"inclusive\":false},{\"name\":\"ordinary_body_replay\",\"nanoseconds\":38244,\"inclusive\":false},{\"name\":\"fresh_body_check\",\"nanoseconds\":53889,\"inclusive\":false},{\"name\":\"entry_adaptation\",\"nanoseconds\":217,\"inclusive\":false},{\"name\":\"effect_origin_passes\",\"nanoseconds\":27086,\"inclusive\":false},{\"name\":\"domain_codec_validation\",\"nanoseconds\":65,\"inclusive\":false},{\"name\":\"warning_derivation\",\"nanoseconds\":806,\"inclusive\":false},{\"name\":\"check_summaries\",\"nanoseconds\":10259,\"inclusive\":false},{\"name\":\"retention_store_io\",\"nanoseconds\":134054,\"inclusive\":false},{\"name\":\"check\",\"nanoseconds\":2818754,\"inclusive\":true}]},\"frontend\":{\"checked\":2,\"reused\":2,\"summaries\":1,\"syntax_hits\":1,\"syntax_misses\":1,\"stored\":2,\"damaged\":0},\"lowering\":{\"reused\":1,\"lowered\":1,\"deferred\":1,\"fallbacks\":0,\"materialized\":2,\"unloaded\":0},\"optimizer\":{\"hits\":[0,0,0,0,0,0,0],\"misses\":[2,2,2,2,2,2,0],\"bypassed\":0,\"active_functions\":2,\"fresh_work\":2,\"restores\":{\"final\":0,\"checkpoints\":0,\"fusions\":0},\"final_loaded\":2},\"emission\":{\"units\":3,\"reused\":1,\"rendered\":2,\"seeds_reused\":0,\"seeds_rendered\":0,\"workers\":2,\"work\":{\"receipts_checked\":3,\"keys_built\":2,\"llvm_loaded_bytes\":11516,\"native_handles\":1}},\"frontend_misses\":{\"total\":[0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,0],\"lookup\":[0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,0],\"retention\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"relocation\":[0,0,0,0,0,0]}},\"storage\":{\"flush_nanoseconds\":411644,\"flush_succeeded\":true,\"compression\":\"zlib\",\"reads\":{\"packed_bytes_read\":7657,\"decoded_bytes\":15613,\"blocks_decoded\":2,\"payload_bytes_returned\":3076,\"block_cache_hits\":4,\"publication\":{\"filename_lookups\":7,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":8203,\"save_bytes_prepared\":16284,\"sequence_locks\":26}}}}\n",
+      "cache_samples": [
+        {
+          "program": "linked",
+          "units": 3,
+          "reused": 3,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 1
+        },
+        {
+          "program": "linked",
+          "units": 3,
+          "reused": 3,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 1
+        },
+        {
+          "program": "linked",
+          "units": 3,
+          "reused": 3,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 1
+        },
+        {
+          "program": "linked",
+          "units": 3,
+          "reused": 3,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 1
+        },
+        {
+          "program": "linked",
+          "units": 3,
+          "reused": 3,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 1
+        }
+      ],
+      "samples_ns": [
+        43445479,
+        45200504,
+        44902499,
+        42741649,
+        42742904
+      ],
+      "median_ns": 43445479,
+      "min_ns": 42741649,
+      "max_ns": 45200504
+    },
+    {
+      "mode": "component",
+      "phase": "interfaces",
+      "stdout_sha256": "4130c33874678a1f2e76d02c1d1ae19962fda3fcb255ccb906132884ddc29990",
+      "samples_ns": [
+        18087494,
+        17990227,
+        17103229,
+        17967379,
+        18352821,
+        17773122,
+        17650071,
+        18285408,
+        18272855,
+        18075659,
+        18065902,
+        17885270,
+        18010224,
+        18342280,
+        18132667,
+        18231010,
+        18310708,
+        18407893,
+        18238762,
+        18542183
+      ],
+      "median_ns": 18110080.5,
+      "min_ns": 17103229,
+      "max_ns": 18542183
+    }
+  ],
+  "affinity": [
+    2,
+    3,
+    10,
+    11
+  ],
+  "children_peak_rss_kib": 47072,
+  "rss_scope": "cumulative child high-water across complete run, not per exchange"
+}

@@ -1,0 +1,102 @@
+{
+  "status": "completed",
+  "affinity": [
+    2,
+    3,
+    10,
+    11
+  ],
+  "measurement_script_sha256": "b62ec959112be22870e7b694cceb60955288eb37085f8ab584040c0c534cba0e",
+  "qualification_script_sha256": "5459e62cd5d68d56a1cd68455f1e99e6fbd56b55c96fd9d9feaf183b763415ec",
+  "runs": [
+    {
+      "label": "baseline",
+      "command": [
+        "/usr/bin/python3",
+        "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/tests/measure_type_interface_adoption.py",
+        "--isolated",
+        "--label",
+        "baseline",
+        "--zig",
+        "/home/epentland/.local/bin/zig",
+        "--compiler",
+        "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/declaration-release/bin/mylang",
+        "--builder",
+        "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/declaration-release/tools/selka-components",
+        "--component-dir",
+        "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/declaration-release/libexec/mylang/components",
+        "--source-root",
+        "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/type-interface-baseline-source",
+        "--output",
+        "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/type-interface-timing-baseline.json",
+        "--baseline"
+      ],
+      "host_sha256": "9d4390768195d5b2022f7cc910c753c6dbb0e0487bf965536574cf1c07feb5ee",
+      "source_root": "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/type-interface-baseline-source",
+      "exit_status": 0,
+      "output_sha256": "7f126d8d9327da8f151aa6cf4246657d2af419e4cadd24ecd1f168688c847170"
+    },
+    {
+      "label": "candidate",
+      "command": [
+        "/usr/bin/python3",
+        "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/tests/measure_type_interface_adoption.py",
+        "--isolated",
+        "--label",
+        "candidate",
+        "--zig",
+        "/home/epentland/.local/bin/zig",
+        "--compiler",
+        "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/type-interface-release/bin/mylang",
+        "--builder",
+        "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/type-interface-release/tools/selka-components",
+        "--component-dir",
+        "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/type-interface-release/libexec/mylang/components",
+        "--source-root",
+        "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang",
+        "--output",
+        "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/type-interface-timing-candidate.json"
+      ],
+      "host_sha256": "16d3c3bab8160aaf30ce5e9206a7259fb3d50c85d4be7b2760c65798bc161bc3",
+      "source_root": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang",
+      "exit_status": 0,
+      "output_sha256": "fc85b97bcaa409018053618cec90a105bb1a6f6ed5c3ac84e4051264ffbd5bc9"
+    }
+  ],
+  "launcher_exit_status": 0,
+  "reservations_released": true,
+  "holder_exit_statuses": [
+    0,
+    0,
+    0
+  ],
+  "gate_ticket": 107,
+  "build_tickets": [
+    1021,
+    1020,
+    1022
+  ],
+  "launcher_command": [
+    "scripts/build-slot.sh",
+    "gate",
+    "python3",
+    ".tmp/frontend-qualification/type_interface_isolated_measure.py",
+    "taskset",
+    "-c",
+    "2,3,10,11",
+    "python3",
+    ".tmp/frontend-qualification/type_interface_matched_measure.py"
+  ],
+  "evidence_sha256": {
+    "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/type-interface-timing.log": "344418c4821c55e32a4f42cdb8292c07a832a6b0c8f00eb7a10c4a0e3a44acc0",
+    "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/type-interface-timing-baseline.json": "7f126d8d9327da8f151aa6cf4246657d2af419e4cadd24ecd1f168688c847170",
+    "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/type-interface-timing-candidate.json": "fc85b97bcaa409018053618cec90a105bb1a6f6ed5c3ac84e4051264ffbd5bc9",
+    "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/type-interface-baseline-source/qualification-source-receipt.json": "5df9aa632d8f3345a8b1358f1a9d2b4a1ecd4e3d7f9b2ef3d81a55b08b4d5d59",
+    ".tmp/frontend-qualification/type_interface_isolated_measure.py": "7249f7927b65a13b42346db21e2bcab66e22ab64a522e7451c306dd353df5244",
+    ".tmp/frontend-qualification/type_interface_matched_measure.py": "2ff5c1581d5e32776ce1cf05168d882871c30b16905022dae116ca9d2b844944",
+    ".tmp/frontend-qualification/type-interface-timing-prepared-receipt.json": "611723019992476356c99506aa7bbff4a3758d2fcfbd6148112688665d446fe1",
+    "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/type-interface-timing-build-slot-1.log": "89e771a165652307df8feab000d13ff6a85a4159287ac6a00d2aaff2fa0e211e",
+    "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/type-interface-timing-build-slot-2.log": "8caa4e85fdadc341190aca43c3bbe2016f8a94809387e3cfb4b859401819bb09",
+    "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/type-interface-timing-build-slot-3.log": "59ff7c56e34d21b44db0c8e6bb9370d95b9fbc4aff6fce0746112d5717807832"
+  }
+}

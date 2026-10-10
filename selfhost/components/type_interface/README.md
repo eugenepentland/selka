@@ -28,8 +28,8 @@ per module; 8 MiB aggregate non-source strings; and 64 MiB complete framed
 requests/replies. Recursive type depth includes the final leaf and is limited to
 256. Admission counts precede decoded list allocation and index construction;
 cycles and oversized catalogs fail closed before signature traversal. Generated
-lookup keys use a private copy of the declaration primitive with an 8 MiB index
-byte budget, while source and query lengths remain bounded to 1 MiB. Receipt
+lookup keys use a private copy of the declaration primitive with an 8 MiB byte
+budget per sorted index, while source and query lengths remain bounded to 1 MiB. Receipt
 string storage is separately bounded to 8 MiB before append.
 
 `checking.my` preserves project order and native declaration order: records,

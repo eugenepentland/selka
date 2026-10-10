@@ -1,0 +1,25 @@
+{
+  "evidence_kind": "transcription of retained tool output, not an original redirected process log",
+  "test": "private authentic type diagnostic wrapper removes selected lexer manifest after child success",
+  "mode": "shadow",
+  "observed_host_status": 1,
+  "expected_host_status": 2,
+  "stdout": "",
+  "diagnostic": {
+    "code": "E_GENERIC_REQUIREMENT",
+    "message": "unknown requirement; expected copy, equality, integer, codec, storable, or a declared constraint",
+    "path": "unknown_constraint.my",
+    "start_line": 2,
+    "start_column": 18,
+    "end_line": 2,
+    "end_column": 25,
+    "start_byte": 38,
+    "end_byte": 45
+  },
+  "developer_wrapper_exit": 0,
+  "developer_wrapper_exit_reason": "caught RuntimeError and printed EXPECTED PRE-FIX RED; source host result was 1",
+  "admission_ticket": 998,
+  "installed_host_hash": "not captured by the focused red command",
+  "original_stdout_prefix": "EXPECTED PRE-FIX RED: shadow: diagnostic reply published after selected lexer changed: (1, b'', ...)",
+  "qualification_command_scope": "scripts/build-slot.sh build python3 private helper; run_type_interface_qualification.publication_checks against root zig-out, copied unknown_constraint.input, q modes shadow/component (stopped first mode shadow)"
+}

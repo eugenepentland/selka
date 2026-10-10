@@ -1,0 +1,704 @@
+{
+  "host_sha256": "16d3c3bab8160aaf30ce5e9206a7259fb3d50c85d4be7b2760c65798bc161bc3",
+  "packages": {
+    "test-index": {
+      "artifact": "test-index-f6b2aeb96650733e589f08ea116bfe88728bc68b81f1bb4abb52e878648fa4bb",
+      "component": "test-index",
+      "format": 1,
+      "key": "a744b19ecce2ff346efe24a813ff1e184ac984ab4a108de6e7da62b68d21448e",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "f6b2aeb96650733e589f08ea116bfe88728bc68b81f1bb4abb52e878648fa4bb"
+    },
+    "cache-plan": {
+      "artifact": "cache-plan-c6caf7c4e7d730c44f66692549643b57356cef2016dd143d83c9adddee39c27d",
+      "component": "cache-plan",
+      "format": 1,
+      "key": "b40aa4951b1bb340f0c9916562f3a5823a2b91ec20a4aa85ad34f3051fd9a5c7",
+      "protocol": 2,
+      "schema": 2,
+      "sha256": "c6caf7c4e7d730c44f66692549643b57356cef2016dd143d83c9adddee39c27d"
+    },
+    "lexer-pilot": {
+      "artifact": "lexer-pilot-184c9f6e48442077c65ed68a93df35550ef32ecc113e45e6d60307e7daf4c589",
+      "component": "lexer-pilot",
+      "format": 1,
+      "key": "0895eaa18aae501cd57e4ee634600251c6aa0aa0cc9703672986d8077bbf94a6",
+      "protocol": 1,
+      "schema": 2,
+      "sha256": "184c9f6e48442077c65ed68a93df35550ef32ecc113e45e6d60307e7daf4c589"
+    },
+    "parser-pilot": {
+      "artifact": "parser-pilot-470698ee902eb854c94c7f2fd29eb42767053c1b11541e584a47c9b3f30a7976",
+      "component": "parser-pilot",
+      "format": 1,
+      "key": "917d3c5241d70d71568b7cf44b7ef5114e3182dcf61ed18ab9c5f1b1027f8beb",
+      "protocol": 1,
+      "schema": 2,
+      "sha256": "470698ee902eb854c94c7f2fd29eb42767053c1b11541e584a47c9b3f30a7976"
+    },
+    "declaration-index": {
+      "artifact": "declaration-index-4cdc3e4dd7112dafeadf2ec7e923a6cfbe6d910c1ee7c51354706c19405b5c2f",
+      "component": "declaration-index",
+      "format": 1,
+      "key": "3b54e7dfbb608f634c3b09b658ee429fbb059470ca4e977949957b08ddcae99c",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "4cdc3e4dd7112dafeadf2ec7e923a6cfbe6d910c1ee7c51354706c19405b5c2f"
+    },
+    "type-interface": {
+      "artifact": "type-interface-0dbff24e43125d9bcb0f1429f109650843e43945d07ed344290ee8172e02010a",
+      "component": "type-interface",
+      "format": 1,
+      "key": "956c45e7de93c862ddebd291481b33479e29f5b1c35fafc7fe74af5ce8fd7f06",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "0dbff24e43125d9bcb0f1429f109650843e43945d07ed344290ee8172e02010a"
+    }
+  },
+  "workflows": 60,
+  "verified_seed_sha256": "c4f1ea0b6618cb7b146bbb8e035220eb36b99ff078d4a959d8bf0948d0c6d98b",
+  "release_facts_leaks": true,
+  "comparisons": 120,
+  "warm_deployment_checks": 30,
+  "live_session_checks": 4,
+  "cache_enabled_test_receipts": {
+    "shadow": {
+      "passed": 2,
+      "cached": 0
+    },
+    "component": {
+      "passed": 0,
+      "cached": 2
+    }
+  },
+  "records": [
+    {
+      "workflow": "check",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "check-project",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list-declarations",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 465,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "79d92ee717bd3da5575a5ca92dea591a5006fb42922973cde11d2693bfa06b96",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list-modules",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 297,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "bada4c3adc657592a57f19efdd08bbae118f5100f7de6aaede9ad15a63d46c05",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "schema-project",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 898,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "f2ee714f204080db81d7eaaa99ec367e9d6d832bcf873eac8ef5633229e1ecfa",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list-interfaces",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 381,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "4130c33874678a1f2e76d02c1d1ae19962fda3fcb255ccb906132884ddc29990",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "public_shapes.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "boundary": "checkSignatures"
+    },
+    {
+      "workflow": "public_shapes.my-interfaces",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 146,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "cfa6b7da7a144e677c416cfb57e4cba2b9bd5e224aa47e39a21817e90b072aca",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "public_alias.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "boundary": "checkSignatures"
+    },
+    {
+      "workflow": "public_alias.my-interfaces",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 168,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "a635a8bdd16257e57554e1889e1e667ac51ba9370f744e1efdc1e9f21fd883fb",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "public_domain.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "boundary": "checkSignatures"
+    },
+    {
+      "workflow": "public_domain.my-interfaces",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 151,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "3c31eec9a15fc04d4afa3737d23f1794d3a9d5e78b77fa7142fbce0bf205329f",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "generic_function.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "boundary": "checkSignatures"
+    },
+    {
+      "workflow": "generic_function.my-interfaces",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 209,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "98a4152285f3bdc2d70ec78ca280d3410f552dbf205bc69389f1f6c71ffe2113",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "imported_constraint.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "boundary": "checkSignatures"
+    },
+    {
+      "workflow": "imported_constraint.my-interfaces",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 251,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "eff93b373c0d291d69c8d1d0c4f11db9f0f6a5b3d02072ad36aed60cb8a79b63",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "facade_constraint.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "boundary": "checkSignatures"
+    },
+    {
+      "workflow": "facade_constraint.my-interfaces",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 294,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "f57bae1cf1ff6342a4f6af7d150adbcca5d8375d7242f1b54b3f2be0d1d47792",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "structural_copy.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "boundary": "checkSignatures"
+    },
+    {
+      "workflow": "structural_copy.my-interfaces",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 151,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "c19cf4253155254f0de71addd467c6392eb025aa77f893058795111efdd5d467",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "private_record_leak.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 547,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "84f3dfa352d72646b8b297a6812d1bf050cd7c5105956494bd62427b5615a474",
+      "boundary": "checkSignatures"
+    },
+    {
+      "workflow": "private_array_leak.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 545,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "deeb999c49971a65b7895dc7d9f59149d33ffb8853f85775396e586132184f7f",
+      "boundary": "checkSignatures"
+    },
+    {
+      "workflow": "private_callback_leak.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 551,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "944807e677066a27225fc8302ecf6d04c288e73d5c95a6deeb1553cbdf948f05",
+      "boundary": "checkSignatures"
+    },
+    {
+      "workflow": "private_constraint_leak.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 569,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "647d8bad81827afdf670ccd4b80840b4203b1c537bc3de44dca2f3aa250e8cb5",
+      "boundary": "checkSignatures"
+    },
+    {
+      "workflow": "unknown_constraint.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 401,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "fe725dd08bf1f2be6675fc96d1983154e7c117987efc6b7bf1fbfd2544cb4fb4",
+      "boundary": "checkSignatures"
+    },
+    {
+      "workflow": "constraint_wrong_kind.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 550,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "6109e7a7ec8f978cf67e59477a3a4b56d902a95f75060b3bb37f4b8704cf3c64",
+      "boundary": "checkSignatures"
+    },
+    {
+      "workflow": "nominal_named_bound.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 363,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "38343282b91b4fd46f78830d72b0f17e70acdbd7dbdfbbdb6f21268913f2fd33",
+      "boundary": "checkSignatures"
+    },
+    {
+      "workflow": "structural_without_copy.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 400,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "a014afbb1814d423f69d657ab1f778e6a0b35584973b1a780dd5050dc4d9a77c",
+      "boundary": "checkSignatures"
+    },
+    {
+      "workflow": "private_generic_unknown.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 406,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "72ace3cdbdf5f290ba5abce1a7d9862f5872d926bf23581b854b66c44f378a75",
+      "boundary": "checkSignatures"
+    },
+    {
+      "workflow": "private_imported_constraint.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 345,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "093aee6a527f4cdd2bed6a76b70663d7d50647ea396e06053d723f62c03610ce",
+      "boundary": "checkSignatures"
+    },
+    {
+      "workflow": "generic_arity.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 550,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "1817bc715c094f1250e74d1f327b554ed2ff604585a385bdcb791e04bb9a4483",
+      "boundary": "checkSignatures"
+    },
+    {
+      "workflow": "parameter_constructor.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 356,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "828d83153f9a7cb8fa0ac9e4d48ca96138cefd0a557e49302ca9f4996c7ec562",
+      "boundary": "checkSignatures"
+    },
+    {
+      "workflow": "unknown_public_type.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 350,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "b1d33e21b7742971664e05f510121ed207db0479f34ebe5886104a69bd48e8c4",
+      "boundary": "checkSignatures"
+    },
+    {
+      "workflow": "subject_module_shadow.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 540,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "d72dab5483efba3fc3c21d5563a51fb7b3ca6de796acd04ab5cc509f316e4c04",
+      "boundary": "checkSignatures"
+    },
+    {
+      "workflow": "subject_import_shadow.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 536,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "628bddda8f92f95fd4b3a58956f8306c91bb3d65f92f4c5ffa5069b5e726e071",
+      "boundary": "checkSignatures"
+    },
+    {
+      "workflow": "subject_builtin_shadow.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 350,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "da366531f177c8629a39274c3c29e3db7a713f2492effdf0d94408dd0b76b22a",
+      "boundary": "checkSignatures"
+    },
+    {
+      "workflow": "constraint_named_rhs.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 372,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "f169ca7561b506c5960716bacbe2fb84aebd979f07609a9b360d53b6cc03bd2c",
+      "boundary": "checkSignatures"
+    },
+    {
+      "workflow": "qualified_spacing.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "boundary": "checkSignatures"
+    },
+    {
+      "workflow": "qualified_spacing.my-interfaces",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 249,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "606a8ba2be63c7cffe232ddf768624f3e1c48b5c72014323b45ca3698af4dea1",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "qualified_comment.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "boundary": "checkSignatures"
+    },
+    {
+      "workflow": "qualified_comment.my-interfaces",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 249,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "a2bff6d6ec1d3b9ca5b8de40aee2f7c26efd95eda860c78fcb95ebf5ea0c5ad0",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "private_bounds_test.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "boundary": "checkSignatures"
+    },
+    {
+      "workflow": "private_bounds_test.my-interfaces",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 138,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "0430ed710bf842883f60d3a6e31eb1a5ee1486bd4a82df8cff1909d0e8c42f5a",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "dotted_canonical.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "boundary": "checkSignatures"
+    },
+    {
+      "workflow": "dotted_canonical.my-interfaces",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 171,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "970e7c2502acee408cd52a391f8f7133115a44528136b09c4a4cc1963f317f50",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "dotted_internal_spacing.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 332,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "5c24d84bf620d5a7b24165293eca9e73e6673273230534b5a5a92499e5ec9ff5",
+      "boundary": "parser (second spaced dot rejected before signature resolution)"
+    },
+    {
+      "workflow": "component-source-test_index/main.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "component-source-cache_plan/main.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "component-source-lexer_pilot/main.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "component-source-parser_pilot/full_adapter.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "component-source-declaration_index/main.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "component-source-type_interface/main.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 2018,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "ffdc3f1845e0eeb4423091e97038c7009764b88a7ab9d3a790230b14051e6053"
+    },
+    {
+      "workflow": "interface-source-edit",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 676,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "ecd6f22f68ce71f4c49200fb34a1f49ac9e46dfb7f67f23b36b0acf65ce25f5b"
+    },
+    {
+      "workflow": "interface-source-restored",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "mixed-check-project",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "mixed-list-interfaces",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 381,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "4130c33874678a1f2e76d02c1d1ae19962fda3fcb255ccb906132884ddc29990",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "mixed-schema-project",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 898,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "f2ee714f204080db81d7eaaa99ec367e9d6d832bcf873eac8ef5633229e1ecfa",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "failed": 0,
+  "skipped": 0,
+  "transport": {
+    "valid": 1,
+    "malformed": 35,
+    "failed": 0,
+    "skipped": 0
+  },
+  "forged_reply_checks": 8,
+  "publication_checks": [
+    {
+      "mode": "shadow",
+      "status": 2,
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"message\",\"message\":\"mylang: test-index component or manifest missing; rebuild/install components or set MYLANG_COMPONENT_DIR\\n\"}\n",
+      "reply_sha256": "afadc6ab294427985377f9dac4dc045c6d5e96a5f9efc2a1cf2e4a0d814afb5f",
+      "reply_bytes": 217,
+      "mutation": "selected lexer manifest removed after real valid reply"
+    },
+    {
+      "mode": "component",
+      "status": 2,
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"message\",\"message\":\"mylang: test-index component or manifest missing; rebuild/install components or set MYLANG_COMPONENT_DIR\\n\"}\n",
+      "reply_sha256": "46d8cb02dbfa3cbcca54fefdef4c15cf5419591de6168f1866c1d680388af19d",
+      "reply_bytes": 217,
+      "mutation": "selected lexer manifest removed after real valid reply"
+    }
+  ],
+  "coordinator_edit": null
+}

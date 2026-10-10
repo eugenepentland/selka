@@ -1,0 +1,29 @@
+build-slot: FIFO ticket 107, position 2; earlier gate tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 107, position 2; earlier gate tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 107, position 2; earlier gate tickets must run first; waiting (120s so far)
+build-slot: FIFO ticket 107, position 2; earlier gate tickets must run first; waiting (180s so far)
+build-slot: FIFO ticket 107, position 2; earlier gate tickets must run first; waiting (240s so far)
+build-slot: gate slot 1, FIFO ticket 107 after 290s
+build reservation 2 admitted: PID 2614335, FD9 /run/user/1000/mylang-slots/build1.lock
+build reservation 1 admitted: PID 2614334, FD9 /run/user/1000/mylang-slots/build2.lock
+build reservation 3 admitted: PID 2614336, FD9 /run/user/1000/mylang-slots/build3.lock
+outer gate and all FIFO build reservations held; timing isolated
+START baseline
+{"measurement": "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/type-interface-timing-baseline.json", "host_sha256": "9d4390768195d5b2022f7cc910c753c6dbb0e0487bf965536574cf1c07feb5ee", "rows": 4}
+DONE baseline
+START candidate
+{"measurement": "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/type-interface-timing-candidate.json", "host_sha256": "16d3c3bab8160aaf30ce5e9206a7259fb3d50c85d4be7b2760c65798bc161bc3", "rows": 8}
+DONE candidate
+build reservation 1 exit 0; admission receipt /home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/type-interface-timing-build-slot-1.log
+build-slot: FIFO ticket 1021, position 2; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 2, FIFO ticket 1021 after 10s
+
+build reservation 2 exit 0; admission receipt /home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/type-interface-timing-build-slot-2.log
+build-slot: FIFO ticket 1020, position 1; waiting for memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 1020 after 5s
+
+build reservation 3 exit 0; admission receipt /home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/type-interface-timing-build-slot-3.log
+build-slot: FIFO ticket 1022, position 3; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 3, FIFO ticket 1022 after 15s
+
+all FIFO build reservations released

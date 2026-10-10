@@ -1,0 +1,90 @@
+{
+  "status": "completed",
+  "exit_status": 0,
+  "command": [
+    "scripts/build-slot.sh",
+    "build",
+    "python3",
+    "selfhost/tests/run_type_interface_qualification.py",
+    "--compiler",
+    "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/type-interface-release/bin/mylang",
+    "--builder",
+    "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/type-interface-release/tools/selka-components",
+    "--component-dir",
+    "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/type-interface-release/libexec/mylang/components",
+    "--zig",
+    "/home/epentland/.local/bin/zig",
+    "--release",
+    "--report",
+    "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/type-interface-release-host-qualification.json"
+  ],
+  "cwd": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang",
+  "source_sha": "8adb2c8903e839e5f46ad773a47b73e1cb2fb817",
+  "environment": {
+    "TMPDIR": "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/type-interface-probes",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/.codex/worktrees/selka-compiler-probes/mylang/.zig-cache",
+    "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache"
+  },
+  "files": {
+    "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/type-interface-release-host-qualification.json": "0b5f18bf8b761dd362c7928aedeae8be4ffdad9cfff34b715712d6e777415125",
+    "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/type-interface-release-host-qualification.log": "3245341d5ea11d0821c98924f5400263a672050eac4408ed829c890368bfe3af",
+    "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/tests/run_type_interface_qualification.py": "5459e62cd5d68d56a1cd68455f1e99e6fbd56b55c96fd9d9feaf183b763415ec"
+  },
+  "host_sha256": "16d3c3bab8160aaf30ce5e9206a7259fb3d50c85d4be7b2760c65798bc161bc3",
+  "packages": {
+    "test-index": {
+      "artifact": "test-index-f6b2aeb96650733e589f08ea116bfe88728bc68b81f1bb4abb52e878648fa4bb",
+      "component": "test-index",
+      "format": 1,
+      "key": "a744b19ecce2ff346efe24a813ff1e184ac984ab4a108de6e7da62b68d21448e",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "f6b2aeb96650733e589f08ea116bfe88728bc68b81f1bb4abb52e878648fa4bb"
+    },
+    "cache-plan": {
+      "artifact": "cache-plan-c6caf7c4e7d730c44f66692549643b57356cef2016dd143d83c9adddee39c27d",
+      "component": "cache-plan",
+      "format": 1,
+      "key": "b40aa4951b1bb340f0c9916562f3a5823a2b91ec20a4aa85ad34f3051fd9a5c7",
+      "protocol": 2,
+      "schema": 2,
+      "sha256": "c6caf7c4e7d730c44f66692549643b57356cef2016dd143d83c9adddee39c27d"
+    },
+    "lexer-pilot": {
+      "artifact": "lexer-pilot-184c9f6e48442077c65ed68a93df35550ef32ecc113e45e6d60307e7daf4c589",
+      "component": "lexer-pilot",
+      "format": 1,
+      "key": "0895eaa18aae501cd57e4ee634600251c6aa0aa0cc9703672986d8077bbf94a6",
+      "protocol": 1,
+      "schema": 2,
+      "sha256": "184c9f6e48442077c65ed68a93df35550ef32ecc113e45e6d60307e7daf4c589"
+    },
+    "parser-pilot": {
+      "artifact": "parser-pilot-470698ee902eb854c94c7f2fd29eb42767053c1b11541e584a47c9b3f30a7976",
+      "component": "parser-pilot",
+      "format": 1,
+      "key": "917d3c5241d70d71568b7cf44b7ef5114e3182dcf61ed18ab9c5f1b1027f8beb",
+      "protocol": 1,
+      "schema": 2,
+      "sha256": "470698ee902eb854c94c7f2fd29eb42767053c1b11541e584a47c9b3f30a7976"
+    },
+    "declaration-index": {
+      "artifact": "declaration-index-4cdc3e4dd7112dafeadf2ec7e923a6cfbe6d910c1ee7c51354706c19405b5c2f",
+      "component": "declaration-index",
+      "format": 1,
+      "key": "3b54e7dfbb608f634c3b09b658ee429fbb059470ca4e977949957b08ddcae99c",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "4cdc3e4dd7112dafeadf2ec7e923a6cfbe6d910c1ee7c51354706c19405b5c2f"
+    },
+    "type-interface": {
+      "artifact": "type-interface-0dbff24e43125d9bcb0f1429f109650843e43945d07ed344290ee8172e02010a",
+      "component": "type-interface",
+      "format": 1,
+      "key": "956c45e7de93c862ddebd291481b33479e29f5b1c35fafc7fe74af5ce8fd7f06",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "0dbff24e43125d9bcb0f1429f109650843e43945d07ed344290ee8172e02010a"
+    }
+  }
+}

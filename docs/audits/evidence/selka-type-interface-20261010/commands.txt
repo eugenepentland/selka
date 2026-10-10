@@ -1,0 +1,28 @@
+Production source: 8adb2c8903e839e5f46ad773a47b73e1cb2fb817
+Branch: codex/selka-type-interface-20261010
+Working directory: /home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang
+TMPDIR=/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots
+ZIG_LOCAL_CACHE_DIR=/home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots
+ZIG_GLOBAL_CACHE_DIR=/home/epentland/ai/canopy/.zig-global-cache
+Pinned Zig: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig
+
+scripts/build-slot.sh build zig build --summary all
+scripts/build-slot.sh build zig build test-units '-Dtest-filter=type interface' --summary all
+scripts/build-slot.sh build zig build test-components test-verification-cache fmt-check --summary all
+scripts/build-slot.sh gate zig build test --summary all
+scripts/build-slot.sh build zig build -Doptimize=ReleaseFast --prefix /home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/type-interface-release --summary all
+
+The full gate includes test-selfhost-type-interfaces: verified-seed pure tests in
+normal/release fact/leak modes, installed normal/release matrices, framing,
+forged replies, publication checks and a coordinator-only implementation edit.
+Release-host-qualification-receipt.json retains exact standalone argv/env and
+identities for the separately installed ReleaseFast host.
+
+Isolated timing invocation from the probes worktree:
+scripts/build-slot.sh gate python3 .tmp/frontend-qualification/type_interface_isolated_measure.py taskset -c 2,3,10,11 python3 .tmp/frontend-qualification/type_interface_matched_measure.py
+The launcher reserves all three build slots before pinning the measurement.
+The timing receipt records exact baseline/candidate argv, identities and outcomes.
+
+Final documentation/format and whole-tree Guardian checks:
+scripts/build-slot.sh build zig build test-docs fmt-check --summary all
+scripts/build-slot.sh gate /home/epentland/ai/canopy/guardian-zig/zig-out/bin/guardian-check all . --gate

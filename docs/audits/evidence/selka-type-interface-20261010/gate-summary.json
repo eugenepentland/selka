@@ -1,0 +1,31 @@
+{
+  "source_commit": "8adb2c8903e839e5f46ad773a47b73e1cb2fb817",
+  "exit_status": 0,
+  "build_summary": [
+    "Build Summary: 128/128 steps succeeded; 2684/27193 tests passed (24509 skipped)"
+  ],
+  "native_verdicts": 29,
+  "native_passed": 2684,
+  "native_failed": 0,
+  "native_selected_skipped": 0,
+  "qualification_lines": [
+    "declaration qualification: 30 workflows, 120 comparisons, 30 warm deployment checks, 4 live session checks; 0 failed, 0 skipped",
+    "declaration transport: 1 valid, 19 malformed; 0 failed, 0 skipped",
+    "declaration forged replies: 8 rejected; 0 failed, 0 skipped",
+    "declaration qualification: 30 workflows, 60 comparisons, 30 warm deployment checks, 4 live session checks; 0 failed, 0 skipped",
+    "declaration transport: 1 valid, 19 malformed; 0 failed, 0 skipped",
+    "declaration forged replies: 8 rejected; 0 failed, 0 skipped",
+    "declaration gate: 39 pure tests per mode; complete qualification passed",
+    "frontend qualification: 34 workflows, 68 comparisons, 60 warm deployment checks, 8 live session checks; 0 failed, 0 skipped",
+    "type_interface qualification: 60 workflows, 240 comparisons, 30 warm deployment checks, 4 live session checks; 0 failed, 0 skipped",
+    "type_interface transport: 1 valid, 35 malformed; 0 failed, 0 skipped",
+    "type_interface forged replies: 8 rejected; 0 failed, 0 skipped",
+    "type_interface publication: 2 host failures; 0 failed, 0 skipped",
+    "type_interface qualification: 60 workflows, 120 comparisons, 30 warm deployment checks, 4 live session checks; 0 failed, 0 skipped",
+    "type_interface transport: 1 valid, 35 malformed; 0 failed, 0 skipped",
+    "type_interface forged replies: 8 rejected; 0 failed, 0 skipped",
+    "type_interface publication: 2 host failures; 0 failed, 0 skipped",
+    "type_interface gate: 28 pure tests per mode; complete qualification passed",
+    "frontend qualification: 34 workflows, 136 comparisons, 60 warm deployment checks, 8 live session checks; 0 failed, 0 skipped"
+  ]
+}
