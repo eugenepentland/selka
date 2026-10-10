@@ -1,0 +1,149 @@
+#!/usr/bin/env python3
+"""Run all wave-3 correctness gates and instruction coverage on one clean tree.
+
+Every invocation uses a fresh evidence basename and owned compiler/cache paths.
+Build admission remains in build-slot.sh; conformance manages its own slots.
+The final CPU-10 timing and review are separate, mandatory X steps.
+"""
+import argparse
+import gzip
+import hashlib
+import json
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import time
+
+ROOT = Path(__file__).resolve().parents[3]
+AREA = Path(__file__).resolve().parents[1]
+TOOLS = AREA / 'tools'
+
+
+def digest(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def git(*args):
+    return subprocess.check_output(['git', *args], cwd=ROOT, text=True).strip()
+
+
+class Gates:
+    def __init__(self, tag):
+        if not tag or any(c not in 'abcdefghijklmnopqrstuvwxyz0123456789-' for c in tag):
+            raise ValueError('tag must contain lowercase letters, digits and hyphens')
+        if git('status', '--porcelain', '--untracked-files=no'):
+            raise RuntimeError('tracked tree must be clean')
+        self.head = git('rev-parse', 'HEAD')
+        self.area = AREA / 'X' / ('gates-' + tag)
+        self.area.mkdir(parents=True, exist_ok=False)
+        self.scratch = ROOT / '.tmp/rp3' / ('gates-' + tag)
+        self.scratch.mkdir(parents=True, exist_ok=False)
+        self.tag = tag
+        self.records = []
+        self.env = dict(os.environ, PYTHONDONTWRITEBYTECODE='1', MYLANG_SLOT_POLL='1',
+                        TMPDIR=str(self.scratch), ZIG_LOCAL_CACHE_DIR=str(ROOT / '.zig-cache-rp3'),
+                        MYLANG_CORE_RUNTIME_CACHE=str(ROOT / '.mylang-cache' / ('runtime-' + tag)))
+        Path(self.env['MYLANG_CORE_RUNTIME_CACHE']).mkdir(parents=True, exist_ok=True)
+        self.receipt = {'source_commit': self.head, 'tag': tag, 'complete': False, 'steps': self.records}
+
+    def unchanged(self):
+        if git('rev-parse', 'HEAD') != self.head or git('status', '--porcelain', '--untracked-files=no'):
+            raise RuntimeError('source changed during qualification')
+
+    def save(self):
+        (self.area / 'receipt.json').write_text(json.dumps(self.receipt, indent=1) + '\n')
+
+    def run(self, name, command, kind=None, cwd=ROOT, expected=0, extra=None):
+        self.unchanged()
+        argv = [str(x) for x in command]
+        if kind:
+            argv = [str(ROOT / 'scripts/build-slot.sh'), kind, *argv]
+        log = self.scratch / (name + '.log')
+        print('RUN', name, flush=True)
+        started = time.time()
+        with log.open('x') as stream:
+            status = subprocess.run(argv, cwd=cwd, env=dict(self.env, **(extra or {})),
+                                    stdout=stream, stderr=subprocess.STDOUT).returncode
+        text = log.read_text(errors='replace')
+        summary = [line for line in text.splitlines() if any(word in line for word in
+                   ('Build Summary:', 'guardian: run-all:', 'passed,', 'conformance engine=',
+                    '.my format:', 'matching ', 'complete:', 'qualified:', 'STOP', 'ERROR'))]
+        self.records.append({'name': name, 'command': argv, 'cwd': str(cwd), 'status': status,
+                             'expected_status': expected, 'seconds': time.time() - started,
+                             'log': str(log.relative_to(ROOT)), 'log_sha256': digest(log),
+                             'summary': summary[-25:]})
+        self.save()
+        self.unchanged()
+        if status != expected:
+            raise RuntimeError(f'{name}: status {status}, expected {expected}\n{text[-4000:]}')
+        print('PASS', name, flush=True)
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--tag', required=True)
+    parser.add_argument('--fuzz-cases', type=int, choices=(50, 200), default=200)
+    args = parser.parse_args()
+    g = Gates(args.tag)
+    g.receipt['fuzz_cases_per_family'] = args.fuzz_cases
+    g.save()
+    g.run('build', ['zig', 'build', '--summary', 'all'], 'build')
+    g.run('repository', ['zig', 'build', 'test', '--summary', 'all'], 'gate')
+    g.run('fmt', ['zig', 'build', 'fmt-check', '--summary', 'all'], 'build')
+    qualify = ROOT / 'experiments/new-core-s5-20261007/tools/qualify_merge.py'
+    raw, additive = g.area / 'raw', g.area / 'additive'
+    common = ['python3', qualify, '--shards', '64', '--compiler', 'zig-out/bin/mylang', '--install', 'install']
+    g.run('raw', [*common, '--evidence', raw], expected=1)
+    g.run('additive', [*common, '--evidence', additive, '--frontend-reference',
+                     ROOT / 'experiments/frontend-fixes-20261009/s5-frontend-reference.json'])
+    g.run('validate-qualification', ['python3', TOOLS / 'validate_qualification.py', '--raw', raw, '--additive', additive])
+    compilers = ROOT / '.mylang-cache/rp3/compilers' / args.tag
+    compilers.mkdir(parents=True, exist_ok=False)
+    debug = compilers / 'mylang-debug'
+    shutil.copy2(ROOT / 'zig-out/bin/mylang', debug)
+    g.receipt['debug_compiler'] = {'path': str(debug), 'sha256': digest(debug)}
+    fuzz = g.area / 'fuzz'
+    g.run('fuzz', ['python3', ROOT / 'experiments/new-core-s5-20261007/tools/fuzz_matrix.py',
+                  '--references', ROOT / 'experiments/new-core-s5-20261007/references/fuzz-v1.json.gz',
+                  '--cases', args.fuzz_cases, '--new', TOOLS / 'mylang-migrating', '--evidence', fuzz,
+                  '--jobs', '3', '--qualified-head', g.head], 'gate', extra={'FU_PORT_REAL': str(debug)})
+    g.run('compact-fuzz', ['python3', TOOLS / 'compact_fuzz.py', fuzz])
+    tests = ROOT / '.mylang-cache/rp3' / args.tag
+    g.run('lox-tests', [debug, 'test', 'ports/mylang', '--jobs', '4', '--cache-dir', tests / 'lox-tests'],
+          'build', ROOT / '.mylang-cache/lox')
+    g.run('eda-tests', [debug, 'test', 'src', '--jobs', '4', '--max-frames', '30000',
+                       '--max-steps', '4000000000', '--max-memory', '2G', '--cache-dir', tests / 'eda-tests'],
+          'build', ROOT / '.mylang-cache/eda-src')
+    prefix = compilers / 'release-fast'
+    g.run('release-fast', ['zig', 'build', '-Doptimize=ReleaseFast', '--prefix', prefix, '--summary', 'all'], 'build')
+    final = prefix / 'bin/mylang'
+    g.receipt['release_fast_compiler'] = {'path': str(final), 'sha256': digest(final)}
+    g.run('guest-builds', ['python3', TOOLS / 'build_count_batch.py', '--compiler', final, '--tag', args.tag], 'build')
+    lox = ROOT / '.mylang-cache/rp3/ce/bin' / args.tag / 'lox-plain'
+    g.run('lox-conformance', ['python3', 'harness/lox_bench.py', 'conformance', '--binary', lox,
+                             '--engine', 'both', '--stress', '--jobs', '4'], 'build', ROOT / '.mylang-cache/lox')
+    g.run('counting', ['python3', TOOLS / 'corpus_counts.py', '--compiler', final, '--tag', args.tag, 'run', 'all'], 'build')
+    g.run('validate-counting', ['python3', TOOLS / 'validate_counts.py', '--tag', args.tag,
+                              '--out', g.area / 'counting-gate.json'])
+    g.run('archive-counting', ['python3', TOOLS / 'archive_counts.py', '--tag', args.tag,
+                              '--out', g.area / 'counts.json.gz'])
+    perf = g.area / 'instructions.json'
+    g.run('instructions', ['python3', TOOLS / 'corpus_perf.py', '--tags', 'base,' + args.tag,
+                           '--rounds', '3', '--out', perf], 'build')
+    g.run('compare-instructions', ['python3', TOOLS / 'compare_instructions.py', '--base', perf,
+                                  '--candidate', perf, '--base-tag', 'base', '--candidate-tag', args.tag,
+                                  '--out', g.area / 'instruction-comparison.json',
+                                  '--markdown', g.area / 'instruction-comparison.md'])
+    with gzip.open(perf.with_suffix('.json.gz'), 'wb', compresslevel=9) as stream:
+        stream.write(perf.read_bytes())
+    perf.unlink()
+    assert digest(debug) == g.receipt['debug_compiler']['sha256']
+    assert digest(final) == g.receipt['release_fast_compiler']['sha256']
+    g.receipt['complete'] = True
+    g.save()
+    print('complete: correctness and instruction gates; CPU-10 timing/review remain mandatory', flush=True)
+
+
+if __name__ == '__main__':
+    main()

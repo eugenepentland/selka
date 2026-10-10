@@ -207,3 +207,35 @@
 - Evidence: coordinator review found that the draft U2 classifier omitted `block_alloc`, `small_alloc` and `aligned_alloc`; the first accounts for a material fraction of EDA's base instructions. S2's exact-name matching also needed normalization of `(inlined)` and symbol-offset suffixes. Saved raw profiles permit reparsing without replacing evidence.
 - Choice: include the allocator helpers before U2's first admitted profile, normalize S2 symbols identically in both arms, and retain family definitions plus binary/raw profile hashes. Preserve S2's original receipt alongside its normalized result. Treat LBR attribution as a sampled lower bound where inlining or truncated stacks hide work; do not claim the absolute share exits from an incomplete family alone.
 - Reversibility: measurement attribution only; original samples and invalid attempts remain available.
+
+## U2-001 — preserve the original owner cutoff through forwarded records
+
+- Question: an expanded frame snapshot prints the expected answer and then crashes with the nested-borrow prototype, while M0 passes.
+- Options: abandon path-preserving borrows or correct the ownership reachability cutoff.
+- Evidence: the original frames read precedes an intermediate record definition. `Taking.clearThrough` used that intermediate definition as its cutoff, overlooking later reads through a record whose disjoint stack field was updated. LLVM consequently releases the frames block before those reads.
+- Choice: use the original owner's definition throughout the traversal. Checkpoint `4661eb368` passes all 13 focused fixtures in all five modes, including the formerly crashing case. Retain the failed probe and IR evidence; full lane gates still determine acceptance.
+- Reversibility: localized ownership correction. No count-word encoding or safety contract changes.
+
+## S2-001 — reject escaped substring blocks after measuring their overhead
+
+- Question: base profiles make stored token slices eligible for the conditional substring experiment, but does the implementation improve EDA without regressions?
+- Options: retain the new representation, keep it disabled, or remove it while retaining split/view improvements.
+- Evidence: after fixing sorting and numeric-parser consumers, the prototype passes the sampled golden outputs but takes 1.1262× base instructions on rds3+flat and 1.1524× on labstation. Materialization shares fall from 14.875% to 12.122% and from 15.868% to 13.434%; neither meets the exit. Parent-count traffic and data resolution outweigh the avoided short copies.
+- Choice: remove the escaped substring representation in `3405f2511`. Keep the lazy/offset split, byte-view, span-parse, stack-prefix and search changes. Preserve the prototype commits and rejection receipt for the final bound; do not present eligibility evidence as an achieved benefit.
+- Reversibility: the rejected prototype remains in lane history. Reconsider only with a representation that avoids the measured overhead and passes the same gates.
+
+## R-001 — remove the regressing sret-sharing prototype
+
+- Question: the private single-pointer ABI eliminates record_pass copies but increases work.
+- Options: enable it, retain dormant new machinery, or remove it under R3's conditional acceptance rule.
+- Evidence: the combined prototype records zero copies but 1.2065× base instructions and 1.1741× cycles for record_pass. Its exact LLVM, identities and copy attribution are retained under R.
+- Choice: remove the new ABI machinery and retain the original `share_sret = false` behavior. R4 uses its separately qualified payload-destination mechanism. X reports R3's negative bound rather than claiming that copy elimination alone is a gain.
+- Reversibility: prototype commit and evidence remain available; reintroduction requires passing the unchanged instruction and timing gates.
+
+## X-007 — qualify each integration merge with a stable source identity
+
+- Question: §2 requires gates after every merge, while §7 specifies the U2, S2, R merge order before final timing.
+- Options: validate only the fully merged tree, or qualify each intermediate integration tree as well.
+- Choice: merge in the specified order and run the complete correctness/instruction sequence after each merge. `qualify_tree.py` uses a fresh evidence basename, asserts an unchanged clean tracked tree, snapshots Debug and ReleaseFast compiler identities, runs exact raw/additive conformance, 9×200 fuzz at integration, external tests/conformance, all 199 counting/output cells and all 151 instruction cells. Full repository tests include the registered lane fixtures. Fuzz holds the gate slot so it cannot run beside a full gate. Binding CPU-10 timing still runs on the complete final tree.
+- Evidence: the tool composes the already validated M0 gate adapters and checks every subprocess status; command-line/schema checks pass. No integration execution or passing gate is claimed before a lane hand-off.
+- Reversibility: orchestration only; no source, oracle, workload or threshold changes.
