@@ -1,0 +1,4 @@
+public record Token:
+    kind: str
+    start: int
+    end: int

@@ -1,0 +1,25 @@
+# Construct sources with make; raw bytes and sorted LF line starts belong together.
+public record Source:
+    raw: bytes
+    line_starts: int[]
+
+
+public record Location:
+    line: int
+    column: int
+
+
+public func make(raw: bytes) -> Source:
+    mut starts: int[] = [0]
+    for index in range(len(raw)):
+        if raw[index] == 10:
+            starts.append(index + 1)
+    return Source(raw=raw, line_starts=starts)
+
+
+# Precondition: src comes from make and 0 <= offset <= len(src.raw).
+public func locate(src: Source, offset: int) -> Location:
+    mut index = 0
+    while index + 1 < len(src.line_starts) and src.line_starts[index + 1] <= offset:
+        index += 1
+    return Location(line=index + 1, column=offset - src.line_starts[index] + 1)

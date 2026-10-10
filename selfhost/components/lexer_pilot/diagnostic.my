@@ -1,0 +1,29 @@
+# One located lexical diagnostic plus the stable code helpers this slice needs.
+public const E_TOKEN: str = "E_TOKEN"
+
+
+public const E_INDENTATION: str = "E_INDENTATION"
+
+
+public const E_BYTE_LITERAL: str = "E_BYTE_LITERAL"
+
+
+public const E_BYTE_ESCAPE: str = "E_BYTE_ESCAPE"
+
+
+public const E_BYTE_LITERAL_LIMIT: str = "E_BYTE_LITERAL_LIMIT"
+
+
+public const E_NESTING_LIMIT: str = "E_NESTING_LIMIT"
+
+
+public const E_REMOVED_SPELLING: str = "E_REMOVED_SPELLING"
+
+
+public record Diagnostic:
+    code: str
+    line: int
+    column: int
+    start: int
+    end: int
+    message: str

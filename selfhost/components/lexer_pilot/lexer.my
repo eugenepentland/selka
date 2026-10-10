@@ -1,0 +1,613 @@
+# Current-profile pilot scanner and layout lowering; spans refer to immutable raw bytes.
+# Call lex only with source.make(raw); the source record invariants are required.
+import source
+import token
+import diagnostic
+
+const TAB: int = 9
+
+
+const LF: int = 10
+
+
+const CR: int = 13
+
+
+const SPACE: int = 32
+
+
+const HASH: int = 35
+
+
+const SINGLE_QUOTE: int = 39
+
+
+const DOUBLE_QUOTE: int = 34
+
+
+const BACKSLASH: int = 92
+
+
+const LETTER_B: int = 98
+
+
+const LETTER_F: int = 102
+
+
+# ASCII letter (no underscore), the stage-0 alphabetic test.
+func is_letter(byte: int) -> bool:
+    if byte >= 65 and byte <= 90:
+        return True
+    return byte >= 97 and byte <= 122
+
+
+# ASCII identifier start: letters and underscore.
+func is_alpha(byte: int) -> bool:
+    if is_letter(byte):
+        return True
+    return byte == 95
+
+
+# ASCII identifier continuation: letters, digits and underscore.
+func is_alnum(byte: int) -> bool:
+    if is_alpha(byte):
+        return True
+    return byte >= 48 and byte <= 57
+
+
+# std.ascii.isAlphanumeric: letters and digits only, no underscore. Numeric
+# scanning retains letters and digits; number_word_end also retains underscores.
+func is_number_alnum(byte: int) -> bool:
+    if is_letter(byte):
+        return True
+    return byte >= 48 and byte <= 57
+
+
+func is_digit(byte: int) -> bool:
+    return byte >= 48 and byte <= 57
+
+
+# std.ascii.isWhitespace: space and bytes 9 through 13.
+func is_space(byte: int) -> bool:
+    if byte == SPACE:
+        return True
+    return byte >= 9 and byte <= 13
+
+
+# Metadata for one located lexical failure.
+func make_diag(src: source.Source, code: str, start: int, end: int, message: str) -> diagnostic.Diagnostic:
+    mut at = source.locate(src, start)
+    return diagnostic.Diagnostic(code=code, line=at.line, column=at.column, start=start, end=end, message=message)
+
+
+# Find the extent of a quoted byte/format literal under stage-0 termination rules.
+func byte_literal_end(src: source.Source, quote_index: int) -> int fails diagnostic.Diagnostic:
+    mut raw = src.raw
+    mut limit = len(raw)
+    mut index = quote_index + 1
+    while index < limit:
+        if raw[index] == raw[quote_index]:
+            return index + 1
+        if raw[index] == LF or raw[index] == CR:
+            break
+        if raw[index] == BACKSLASH:
+            index += 1
+            if index == limit or raw[index] == LF or raw[index] == CR:
+                break
+        index += 1
+    fail make_diag(src, diagnostic.E_BYTE_LITERAL, quote_index, index, "unterminated byte literal; escape newlines with \\n")
+
+
+# Numeric token extent matches number_literal.end in the shipped stage-0.
+# Prefix digits, underscores and malformed suffixes stay in one number token.
+func number_word_end(raw: bytes, start: int) -> int:
+    mut at = start
+    while at < len(raw) and (is_number_alnum(raw[at]) or raw[at] == 95):
+        at += 1
+    return at
+
+
+func number_digits_end(raw: bytes, start: int) -> int:
+    mut at = start
+    while at < len(raw) and (is_digit(raw[at]) or raw[at] == 95):
+        at += 1
+    return at
+
+
+func exponent_ahead(raw: bytes, start: int) -> bool:
+    if start >= len(raw) or (raw[start] != 101 and raw[start] != 69):
+        return False
+    mut at = start + 1
+    if at < len(raw) and (raw[at] == 43 or raw[at] == 45):
+        at += 1
+    return at < len(raw) and is_digit(raw[at])
+
+
+func dot_belongs(raw: bytes, dot: int) -> bool:
+    mut following = dot + 1
+    if following >= len(raw):
+        return True
+    if is_digit(raw[following]):
+        return True
+    if is_alnum(raw[following]):
+        return exponent_ahead(raw, following)
+    return True
+
+
+func float_end(src: source.Source, start: int) -> int:
+    mut raw = src.raw
+    mut limit = len(raw)
+    if raw[start] == 48 and start + 1 < limit:
+        mut base = raw[start + 1]
+        if base == 120 or base == 88 or base == 111 or base == 79 or base == 98 or base == 66:
+            return number_word_end(raw, start + 2)
+    mut at = number_digits_end(raw, start)
+    if at < limit and raw[at] == 46 and dot_belongs(raw, at):
+        at = number_digits_end(raw, at + 1)
+    if at < limit and (raw[at] == 101 or raw[at] == 69):
+        at += 1
+        if at < limit and (raw[at] == 43 or raw[at] == 45):
+            at += 1
+    return number_word_end(raw, at)
+
+
+# A directly adjacent operand keeps its dot as field-access punctuation.
+func follows_operand(tokens: token.Token[], start: int) -> bool:
+    if len(tokens) == 0:
+        return False
+    mut previous = tokens[len(tokens) - 1]
+    if previous.end != start:
+        return False
+    mut kind = previous.kind
+    return kind == "ident" or kind == "integer" or kind == "bytes" or kind == "format" or kind == "rparen" or kind == "rbracket" or kind == "rbrace" or kind == "kw_true" or kind == "kw_false" or kind == "kw_none"
+
+
+# Current baseline keyword and alias inventory; removed words fail lexically.
+func classify_word(src: source.Source, word: bytes, start: int, end: int) -> str fails diagnostic.Diagnostic:
+    if word == b"filesystem_cap":
+        fail make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end, "removed spelling")
+    if word == b"network_cap":
+        fail make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end, "removed spelling")
+    if word == b"clock_cap":
+        fail make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end, "removed spelling")
+    if word == b"random_cap":
+        fail make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end, "removed spelling")
+    if word == b"environment_cap":
+        fail make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end, "removed spelling")
+    if word == b"codec_encode":
+        fail make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end, "removed spelling")
+    if word == b"codec_decode":
+        fail make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end, "removed spelling")
+    if word == b"f64_add":
+        fail make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end, "removed spelling")
+    if word == b"f64_sub":
+        fail make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end, "removed spelling")
+    if word == b"f64_mul":
+        fail make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end, "removed spelling")
+    if word == b"f64_div":
+        fail make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end, "removed spelling")
+    if word == b"f64_eq":
+        fail make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end, "removed spelling")
+    if word == b"f64_lt":
+        fail make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end, "removed spelling")
+    if word == b"f64_le":
+        fail make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end, "removed spelling")
+    if word == b"f64_sqrt":
+        fail make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end, "removed spelling")
+    if word == b"f64_floor":
+        fail make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end, "removed spelling")
+    if word == b"f64_ceil":
+        fail make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end, "removed spelling")
+    if word == b"f64_trunc":
+        fail make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end, "removed spelling")
+    if word == b"f64_abs":
+        fail make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end, "removed spelling")
+    if word == b"f64_neg":
+        fail make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end, "removed spelling")
+    if word == b"f64_from_u64":
+        fail make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end, "removed spelling")
+    if word == b"f64_to_u64":
+        fail make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end, "removed spelling")
+    if word == b"bit_and":
+        return "kw_bit_and"
+    if word == b"bit_or":
+        return "kw_bit_or"
+    if word == b"bit_xor":
+        return "kw_bit_xor"
+    if word == b"shift_left":
+        return "kw_shift_left"
+    if word == b"shift_right":
+        return "kw_shift_right"
+    if word == b"wrapping_add":
+        return "kw_wrapping_add"
+    if word == b"wrapping_sub":
+        return "kw_wrapping_sub"
+    if word == b"wrapping_mul":
+        return "kw_wrapping_mul"
+    if word == b"saturating_add":
+        return "kw_saturating_add"
+    if word == b"saturating_sub":
+        return "kw_saturating_sub"
+    if word == b"saturating_mul":
+        return "kw_saturating_mul"
+    if word == b"return":
+        return "kw_return"
+    if word == b"i64":
+        return "kw_i64"
+    if word == b"bool":
+        return "kw_bool"
+    if word == b"if":
+        return "kw_if"
+    if word == b"else":
+        return "kw_else"
+    if word == b"while":
+        return "kw_while"
+    if word == b"break":
+        return "kw_break"
+    if word == b"continue":
+        return "kw_continue"
+    if word == b"const":
+        return "kw_const"
+    if word == b"for":
+        return "kw_for"
+    if word == b"in":
+        return "kw_in"
+    if word == b"is":
+        return "kw_is"
+    if word == b"type":
+        return "kw_type"
+    if word == b"conversion":
+        return "kw_conversion"
+    if word == b"i8":
+        return "kw_i8"
+    if word == b"i16":
+        return "kw_i16"
+    if word == b"i32":
+        return "kw_i32"
+    if word == b"u8":
+        return "kw_u8"
+    if word == b"u16":
+        return "kw_u16"
+    if word == b"u32":
+        return "kw_u32"
+    if word == b"u64":
+        return "kw_u64"
+    if word == b"acquire_resource":
+        return "kw_acquire_resource"
+    if word == b"complete_resource":
+        return "kw_complete_resource"
+    if word == b"environment_get":
+        return "kw_environment_get"
+    if word == b"restrict_resource":
+        return "kw_restrict_resource"
+    if word == b"read_resource":
+        return "kw_read_resource"
+    if word == b"write_resource":
+        return "kw_write_resource"
+    if word == b"clock_now":
+        return "kw_clock_now"
+    if word == b"random_u64":
+        return "kw_random_u64"
+    if word == b"replace":
+        return "kw_replace"
+    if word == b"len":
+        return "kw_len"
+    if word == b"domain":
+        return "kw_domain"
+    if word == b"private":
+        return "kw_private"
+    if word == b"wrap":
+        return "kw_wrap"
+    if word == b"todo":
+        return "kw_todo"
+    if word == b"unwrap":
+        return "kw_unwrap"
+    if word == b"enum":
+        return "kw_enum"
+    if word == b"union":
+        return "kw_union"
+    if word == b"match":
+        return "kw_match"
+    if word == b"arena":
+        return "kw_arena"
+    if word == b"as":
+        return "kw_as"
+    if word == b"pass":
+        return "kw_pass"
+    if word == b"elif":
+        return "kw_elif"
+    if word == b"case":
+        return "kw_case"
+    if word == b"with":
+        return "kw_with"
+    if word == b"assert":
+        return "kw_assert"
+    if word == b"func":
+        return "kw_def"
+    if word == b"def":
+        return "kw_def"
+    if word == b"class":
+        return "kw_class"
+    if word == b"True":
+        return "kw_true"
+    if word == b"False":
+        return "kw_false"
+    if word == b"None":
+        return "kw_none"
+    if word == b"and":
+        return "and_and"
+    if word == b"or":
+        return "or_or"
+    if word == b"not":
+        return "bang"
+    if word == b"__float_sqrt":
+        return "kw_f64_sqrt"
+    if word == b"__float_sin":
+        return "kw_f64_sin"
+    if word == b"__float_cos":
+        return "kw_f64_cos"
+    if word == b"__stand_in":
+        return "kw_stand_in"
+    if word == b"__clock_advance":
+        return "kw_clock_advance"
+    return "ident"
+
+
+# '=>' was removed with no replacement and fails at tokenization.
+func reject_removed_punctuation(src: source.Source, ch: int, following: int, start: int, end: int) -> int fails diagnostic.Diagnostic:
+    if ch == 61 and following == 62:
+        fail make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end + 1, "`=>` was removed and has no replacement")
+    return 0
+
+
+# Raw tokenization without indentation lowering.
+func tokenize(src: source.Source) -> token.Token[] fails diagnostic.Diagnostic:
+    mut raw = src.raw
+    mut limit = len(raw)
+    mut tokens: token.Token[] = []
+    mut index = 0
+    mut kind = "ident"
+    while index < limit:
+        mut start = index
+        mut ch = raw[index]
+        if ch == SPACE or (ch >= 9 and ch <= 13):
+            index += 1
+            continue
+        if ch == HASH:
+            while index < limit and raw[index] != LF:
+                index += 1
+            continue
+        if ch == LETTER_F and index + 1 < limit and (raw[index + 1] == DOUBLE_QUOTE or raw[index + 1] == SINGLE_QUOTE):
+            index = try byte_literal_end(src, start + 1)
+            tokens.append(token.Token(kind="format", start=start, end=index))
+            continue
+        if ch == DOUBLE_QUOTE or ch == SINGLE_QUOTE or (ch == LETTER_B and index + 1 < limit and (raw[index + 1] == DOUBLE_QUOTE or raw[index + 1] == SINGLE_QUOTE)):
+            mut quote = start
+            if ch == LETTER_B:
+                quote = start + 1
+            if ch != LETTER_B and quote + 2 < limit and raw[quote + 1] == ch and raw[quote + 2] == ch:
+                index = try triple_literal_end(src, quote)
+            else:
+                index = try byte_literal_end(src, quote)
+            tokens.append(token.Token(kind="bytes", start=start, end=index))
+            continue
+        if (ch >= 65 and ch <= 90) or (ch >= 97 and ch <= 122) or ch == 95:
+            index += 1
+            while index < limit:
+                mut byte = raw[index]
+                if (byte >= 65 and byte <= 90) or (byte >= 97 and byte <= 122) or (byte >= 48 and byte <= 57) or byte == 95:
+                    index += 1
+                    continue
+                break
+            mut word = raw[start:index]
+            kind = try classify_word(src, word, start, index)
+            tokens.append(token.Token(kind=kind, start=start, end=index))
+            continue
+        if is_digit(ch) or (ch == 46 and index + 1 < limit and is_digit(raw[index + 1]) and not follows_operand(tokens, start)):
+            index = float_end(src, start)
+            tokens.append(token.Token(kind="integer", start=start, end=index))
+            continue
+        index += 1
+        mut following = 0
+        if index < limit:
+            following = raw[index]
+        _ = try reject_removed_punctuation(src, ch, following, start, index)
+        kind = "ident"
+        if ch == 46:
+            kind = "dot"
+        elif ch == 40:
+            kind = "lparen"
+        elif ch == 41:
+            kind = "rparen"
+        elif ch == 44:
+            kind = "comma"
+        elif ch == 61:
+            if following == 61:
+                index += 1
+                kind = "eq_eq"
+            else:
+                kind = "equal"
+        elif ch == 58:
+            kind = "colon"
+        elif ch == 47:
+            if following == 47:
+                if index + 1 < limit and raw[index + 1] == 61:
+                    index += 2
+                    kind = "slash_slash_equal"
+                else:
+                    index += 1
+                    kind = "slash_slash"
+            elif following == 61:
+                index += 1
+                kind = "slash_equal"
+            else:
+                kind = "slash"
+        elif ch == 45:
+            if following == 62:
+                index += 1
+                kind = "arrow"
+            elif following == 61:
+                index += 1
+                kind = "minus_equal"
+            else:
+                kind = "minus"
+        elif ch == 43:
+            if following == 61:
+                index += 1
+                kind = "plus_equal"
+            else:
+                kind = "plus"
+        elif ch == 42:
+            if following == 61:
+                index += 1
+                kind = "star_equal"
+            else:
+                kind = "star"
+        elif ch == 37:
+            if following == 61:
+                index += 1
+                kind = "percent_equal"
+            else:
+                kind = "percent"
+        elif ch == 33:
+            if following == 61:
+                index += 1
+                kind = "bang_eq"
+            else:
+                fail make_diag(src, diagnostic.E_TOKEN, start, index, "unexpected character in source")
+        elif ch == 60:
+            if following == 61:
+                index += 1
+                kind = "le"
+            else:
+                kind = "lt"
+        elif ch == 62:
+            if following == 61:
+                index += 1
+                kind = "ge"
+            else:
+                kind = "gt"
+        elif ch == 91:
+            kind = "lbracket"
+        elif ch == 93:
+            kind = "rbracket"
+        elif ch == 123:
+            kind = "lbrace"
+        elif ch == 125:
+            kind = "rbrace"
+        elif ch == 59:
+            kind = "semicolon"
+        elif ch == 63:
+            kind = "question"
+        elif ch == 64:
+            kind = "at"
+        elif ch == 124:
+            kind = "pipe"
+        elif ch == 94:
+            kind = "caret"
+        elif ch == 38:
+            kind = "ampersand"
+        else:
+            fail make_diag(src, diagnostic.E_TOKEN, start, index, "unexpected character in source")
+        tokens.append(token.Token(kind=kind, start=start, end=index))
+    tokens.append(token.Token(kind="eof", start=index, end=index))
+    return tokens
+
+
+# Python-layout lowering: a colon at end of a logical line opens a suite, and
+# dedents close it with zero-width spans at the next significant token.
+func lower(raw_tokens: token.Token[], src: source.Source) -> token.Token[] fails diagnostic.Diagnostic:
+    mut out: token.Token[] = []
+    mut levels: int[] = [0]
+    while len(levels) < 257:
+        levels.append(0)
+    mut level = 0
+    mut delimiters = 0
+    mut previous_line = 0 - 1
+    mut pending = False
+    mut index = 0
+    mut count = len(raw_tokens)
+    # Raw tokens are in source order, so the line pointer only moves forward.
+    # One amortized O(1) walk replaces two binary searches per token.
+    mut starts = src.line_starts
+    mut line_count = len(starts)
+    mut line_ptr = 0
+    while index < count:
+        mut original = raw_tokens[index]
+        mut kind = original.kind
+        mut token_start = original.start
+        mut token_end = original.end
+        while line_ptr + 1 < line_count and starts[line_ptr + 1] <= token_start:
+            line_ptr += 1
+        mut line = starts[line_ptr]
+        if kind == "eof" or (previous_line != line and delimiters == 0):
+            mut indent = 0
+            if kind != "eof":
+                mut at = line
+                while at < token_start:
+                    mut ch = src.raw[at]
+                    if ch == TAB:
+                        fail make_diag(src, diagnostic.E_INDENTATION, token_start, token_end, "indentation uses spaces; tabs are not permitted")
+                    if ch != SPACE and ch != CR:
+                        break
+                    indent += 1
+                    at += 1
+            if pending:
+                if kind == "eof" or indent <= levels[level]:
+                    fail make_diag(src, diagnostic.E_INDENTATION, token_start, token_end, "expected an indented block after ':'")
+                if level + 1 == len(levels):
+                    fail make_diag(src, diagnostic.E_NESTING_LIMIT, token_start, token_end, "indentation exceeds 256 levels")
+                level += 1
+                levels[level] = indent
+                pending = False
+            else:
+                while indent < levels[level]:
+                    level -= 1
+                    out.append(token.Token(kind="dedent", start=token_start, end=token_start))
+                if indent != levels[level]:
+                    fail make_diag(src, diagnostic.E_INDENTATION, token_start, token_end, "unexpected indentation or dedent does not match an enclosing block")
+        previous_line = line
+        mut next_line = False
+        if index + 1 < count:
+            if raw_tokens[index + 1].kind == "eof":
+                next_line = True
+            else:
+                mut next_start = raw_tokens[index + 1].start
+                mut look = line_ptr
+                while look + 1 < line_count and starts[look + 1] <= next_start:
+                    look += 1
+                if starts[look] != line:
+                    next_line = True
+        if kind == "colon" and delimiters == 0 and next_line:
+            kind = "indent"
+            pending = True
+        else:
+            if kind == "lparen" or kind == "lbracket" or kind == "lbrace":
+                delimiters += 1
+            if kind == "rparen" or kind == "rbracket" or kind == "rbrace":
+                delimiters -= 1
+                if delimiters < 0:
+                    delimiters = 0
+        out.append(token.Token(kind=kind, start=token_start, end=token_end))
+        index += 1
+    return out
+
+
+# Full current token stream: raw tokenization followed by layout lowering.
+public func lex(src: source.Source) -> token.Token[] fails diagnostic.Diagnostic:
+    mut raw = try tokenize(src)
+    return try lower(raw, src)
+
+
+# Triple quoted text permits newlines; escapes protect the next byte.
+func triple_literal_end(src: source.Source, start: int) -> int fails diagnostic.Diagnostic:
+    const raw = src.raw
+    mut index = start + 3
+    while index < len(raw):
+        if raw[index] == BACKSLASH:
+            index += 2
+            continue
+        if raw[index] == raw[start] and index + 2 < len(raw) and raw[index + 1] == raw[start] and raw[index + 2] == raw[start]:
+            return index + 3
+        index += 1
+    fail make_diag(src, diagnostic.E_BYTE_LITERAL, start, len(raw), "unterminated triple-quoted literal; close it with three matching quotes")

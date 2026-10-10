@@ -1,0 +1,43 @@
+import lexer
+import source
+
+func exchange(fs: Filesystem, path: str, out: Stream) -> int fails str:
+    mut data = b""
+    with try fs.open(path, "rb") as file:
+        data = file.read(262145)
+    if len(data) > 262144:
+        fail "lexer transport: source exceeds 262144 bytes"
+    const src = source.make(data)
+    match lexer.lex(src):
+        case Ok(tokens):
+            if len(tokens) == 0 or len(tokens) > 524545:
+                fail "lexer transport: invalid token count"
+            mut previous = 0
+            for item in tokens:
+                if len(item.kind) == 0 or len(item.kind) > 32 or item.start < previous or item.end < item.start or item.end > len(data):
+                    fail "lexer transport: invalid token span or kind"
+                if (item.kind == "eof" or item.kind == "dedent") and item.start != item.end:
+                    fail "lexer transport: invalid virtual token span"
+                previous = item.start
+            const last = tokens[len(tokens) - 1]
+            if last.kind != "eof" or last.start != len(data):
+                fail "lexer transport: invalid eof"
+            for item in tokens:
+                out.print(item.kind, item.start, item.end)
+        case Err(item):
+            if item.start < 0 or item.end < item.start or item.end > len(data) or item.line < 1 or item.column < 1 or len(item.code) > 32:
+                fail "lexer transport: invalid lexical error"
+            out.print("error", item.code, item.line, item.column, item.start, item.end)
+    return 0
+
+
+func main(args: str[], fs: Filesystem, out: Stream, err: Stream) -> int:
+    if len(args) != 2 or args[0] != "--request":
+        err.print("lexer transport: expected --request FILE")
+        return 2
+    match exchange(fs, args[1], out):
+        case Ok(status):
+            return status
+        case Err(message):
+            err.print("lexer transport:", message)
+            return 2
