@@ -174,3 +174,15 @@ pub const embedded_migration = [_][]const u8{
 
 /// All live sources and selection policy read by the allocation-contract lint gate.
 pub const noalloc_lint = my_format ++ [_][]const u8{"scripts/check_noalloc.py"};
+
+/// Receipt-verified lexer qualification, pure tests, immutable corpus and driver.
+pub const pilot_lexer = [_][]const u8{ "selfhost/test_pilots.py", "selfhost/components/lexer_pilot/", "selfhost/tests/fixtures/lexer_pilot/", "selfhost/tests/run_lexer_pilot.py", "selfhost/*.zig", "selfhost/component-seed.json" };
+
+/// Parser qualification copies the complete production frontend oracle closure.
+pub const pilot_parser = [_][]const u8{ "selfhost/test_pilots.py", "selfhost/components/parser_pilot/", "selfhost/tests/fixtures/parser_pilot/", "selfhost/tests/run_parser_pilot.py", "selfhost/*.zig", "selfhost/component-seed.json", "src/" };
+
+/// Receipt-verified compiler-shaped pure tests and standalone driver.
+pub const pilot_probes = [_][]const u8{ "selfhost/test_pilots.py", "selfhost/probes/compiler/", "selfhost/tests/run_compiler_probes.py", "selfhost/*.zig", "selfhost/component-seed.json" };
+
+/// Adversarial pilot admission and directory-membership invalidation evidence.
+pub const pilot_registration = [_][]const u8{ "selfhost/test_pilots.py", "selfhost/test_pilots_test.py", "build_test_inputs.zig", "tests/input_manifest.py", "tests/test_inputs_coverage.py" };

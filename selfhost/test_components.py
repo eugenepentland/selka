@@ -34,6 +34,9 @@ class ComponentCacheTests(unittest.TestCase):
         self.planner_sources = self.root / "selfhost/components/cache_plan"
         self.planner_sources.mkdir(parents=True)
         (self.planner_sources / "main.my").write_text("func main() -> int:\n    return 0\n")
+        lexer_sources = self.root / "selfhost/components/lexer_pilot"
+        lexer_sources.mkdir(parents=True)
+        (lexer_sources / "main.my").write_text("func main() -> int:\n    return 0\n")
         self.cache = self.workspace / "cache"
         self.install = self.workspace / "installed"
         (self.workspace / "guardian-zig").mkdir()

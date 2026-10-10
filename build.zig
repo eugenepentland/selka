@@ -778,6 +778,23 @@ pub fn build(b: *std.Build) void {
     test_step.dependOn(&run_component_support.step);
     test_step.dependOn(&native_component_tests.step);
     test_step.dependOn(&component_tests.step);
+    const pilots_step = b.step("test-selfhost-pilots", "Qualify lexer, parser and compiler probes with verified seeds in debug and release");
+    for ([_][]const u8{ "lexer", "parser", "probes" }) |lane| {
+        const pilot = driver(b, b.fmt("qualified {s} pilot", .{lane}), rss.driver, b.fmt("pilot_{s}", .{lane}));
+        // Verify the external seed receipt every invocation, even on a warm
+        // build: repository manifests cannot observe a tampered cached seed.
+        pilot.has_side_effects = true;
+        pilot.addArgs(&.{ "python3", "selfhost/test_pilots.py", "--lane", lane, "--zig", b.graph.zig_exe, "--builder" });
+        pilot.addArtifactArg(component_tool);
+        pilot.addArg("--compiler");
+        pilot.addArtifactArg(exe);
+        b.step(b.fmt("test-selfhost-{s}-pilot", .{lane}), b.fmt("Qualify the {s} pilot independently", .{lane})).dependOn(&pilot.step);
+        pilots_step.dependOn(&pilot.step);
+    }
+    const pilot_checks = driver(b, "pilot qualification admission and input tracking", rss.script, "pilot_registration");
+    pilot_checks.addArgs(&.{ "python3", "selfhost/test_pilots_test.py" });
+    pilots_step.dependOn(&pilot_checks.step);
+    test_step.dependOn(pilots_step);
     const selfhost_numeric_step = b.step("test-selfhost-numeric", "Compare bootstrap and live numeric token extents");
     const selfhost_numeric_run = driver(b, "python3 selfhost/tests/run_lexer_diff.py --compiler", rss.driver, "selfhost_numeric");
     selfhost_numeric_run.addArgs(&.{ "python3", "selfhost/tests/run_lexer_diff.py", "--compiler" });
