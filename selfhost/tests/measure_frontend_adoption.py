@@ -12,12 +12,49 @@ import os
 from pathlib import Path
 import resource
 import shutil
+import signal
 import statistics
+import subprocess
 import tempfile
+import threading
 import time
 
 from run_frontend_qualification import (FRONTENDS, PACKAGES, ROOT, FIXTURES,
-                                       copy_sources, digest, environment, execute, packages, require)
+                                       OUTPUT_LIMIT, copy_sources, digest, environment, packages, require)
+
+
+def execute(argv, env, cwd, timeout=180):
+    """Wait directly for exit; deadline enforcement does not quantize samples."""
+    def limits():
+        resource.setrlimit(resource.RLIMIT_FSIZE, (OUTPUT_LIMIT, OUTPUT_LIMIT))
+    with tempfile.TemporaryFile() as stdout, tempfile.TemporaryFile() as stderr:
+        process = subprocess.Popen([str(a) for a in argv], env=env, cwd=cwd,
+                                   stdout=stdout, stderr=stderr, preexec_fn=limits,
+                                   start_new_session=True)
+        expired = threading.Event()
+        def terminate():
+            if process.poll() is None:
+                expired.set()
+                try:
+                    os.killpg(process.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+        watchdog = threading.Timer(timeout, terminate)
+        watchdog.daemon = True
+        watchdog.start()
+        try:
+            process.wait()
+        finally:
+            watchdog.cancel()
+            watchdog.join()
+            if process.poll() is None:
+                terminate()
+                process.wait()
+        if expired.is_set():
+            raise subprocess.TimeoutExpired(argv, timeout)
+        stdout.seek(0)
+        stderr.seek(0)
+        return process.returncode, stdout.read(OUTPUT_LIMIT), stderr.read(OUTPUT_LIMIT)
 
 
 def sample(command, env, cwd, expected=0, output=None):
