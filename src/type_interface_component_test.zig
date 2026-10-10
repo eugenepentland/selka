@@ -329,3 +329,59 @@ fn shapeAllocation(a: std.mem.Allocator) !void {
 test "type interface childrenOf allocation failures release earlier shape storage" {
     try t.checkAllAllocationFailures(t.allocator, shapeAllocation, .{});
 }
+// spec-case: SELFHOST-TYPE-INTERFACE-1
+test "type interface rejects duplicate type keys and outside parent children" {
+    var modules = [_]value.Module{module()};
+    modules[0].context.source = "xxxx";
+    modules[0].symbols = &.{};
+    modules[0].syntax = .{};
+    var rows = [_]value.Suffix{
+        .{ .span = .{ .start = 0, .end = 2 }, .base = .{ .start = 0, .end = 1 } },
+        .{ .span = .{ .start = 0, .end = 2 }, .base = .{ .start = 0, .end = 1 } },
+    };
+    modules[0].syntax.types.suffixes = &rows;
+    const in: value.Input = .{ .order = &.{0}, .modules = &modules };
+    try t.expectError(error.ComponentProtocol, validate.input(t.allocator, in));
+    modules[0].syntax.types.suffixes = rows[0..1];
+    rows[0].base = .{ .start = 2, .end = 3 };
+    try t.expectError(error.ComponentProtocol, validate.input(t.allocator, in));
+}
+fn emptyGeneric(at: Span) value.Generic {
+    return .{ .name = at, .default_copy = false, .constant_length = false, .requirements = &.{}, .fields = &.{}, .operations = &.{}, .named = &.{} };
+}
+// spec-case: SELFHOST-TYPE-INTERFACE-1
+test "type interface constraint subject counts at exact nested edge boundary" {
+    var modules = [_]value.Module{module()};
+    modules[0].context.source = "Thing C T";
+    modules[0].symbols = &.{
+        .{ .name = "Thing", .kind = .type, .span = .{ .start = 0, .end = 5 } },
+        .{ .name = "C", .kind = .constraint, .span = .{ .start = 6, .end = 7 } },
+    };
+    const fields = try t.allocator.alloc(Span, 65536);
+    defer t.allocator.free(fields);
+    @memset(fields, .{ .start = 0, .end = 0 });
+    var records = [_]value.Record{.{ .name = .{ .start = 0, .end = 5 }, .parameters = &.{}, .fields = fields[0..65535] }};
+    modules[0].syntax = .{ .declarations = .{
+        .records = &records,
+        .constraints = &.{.{ .name = .{ .start = 6, .end = 7 }, .span = .{ .start = 6, .end = 9 }, .subject = emptyGeneric(.{ .start = 8, .end = 9 }) }},
+    } };
+    const in: value.Input = .{ .order = &.{0}, .modules = &modules };
+    try validate.input(t.allocator, in);
+    records[0].fields = fields;
+    try t.expectError(error.ComponentProtocol, validate.input(t.allocator, in));
+}
+// spec-case: SELFHOST-TYPE-INTERFACE-1
+test "type interface scalar children count at exact nested edge boundary" {
+    var modules = [_]value.Module{module()};
+    modules[0].context.source = "Thing";
+    modules[0].symbols = &.{};
+    const elements = try t.allocator.alloc(Span, 65535);
+    defer t.allocator.free(elements);
+    @memset(elements, .{ .start = 0, .end = 1 });
+    var callbacks = [_]value.Callback{.{ .span = .{ .start = 0, .end = 5 }, .parameters = elements, .return_type = .{ .start = 0, .end = 1 }, .failure_type = null }};
+    modules[0].syntax = .{ .types = .{ .callbacks = &callbacks } };
+    const in: value.Input = .{ .order = &.{0}, .modules = &modules };
+    try validate.input(t.allocator, in);
+    callbacks[0].failure_type = .{ .start = 0, .end = 1 };
+    try t.expectError(error.ComponentProtocol, validate.input(t.allocator, in));
+}

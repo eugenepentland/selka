@@ -173,6 +173,7 @@ fn catalog(a: std.mem.Allocator, module: value.Module, budget: *Budget) Error!vo
     }
     inline for (.{ "aliases", "domains" }) |field| for (@field(items, field)) |item| try span(item.target, size);
     for (items.constraints) |item| {
+        try add(&budget.nested, 1, rows_limit);
         try span(item.span, size);
         try generic(item.subject, size, budget);
     }
@@ -185,7 +186,7 @@ fn catalog(a: std.mem.Allocator, module: value.Module, budget: *Budget) Error!vo
     }
     try typeCatalog(a, module, budget);
 }
-const Shape = struct { at: Span, children: []const Span, constructor_leaf: bool };
+const Shape = struct { at: Span, children: []const Span, constructor_leaf: bool, kind: u8 };
 fn inside(child: Span, parent: Span) bool {
     return child.start >= parent.start and child.end <= parent.end;
 }
@@ -196,7 +197,7 @@ fn shapes(a: std.mem.Allocator, module: value.Module, budget: *Budget) Error![]S
         for (rows.items) |row| a.free(row.children);
         rows.deinit(a);
     }
-    inline for (.{ "suffixes", "callbacks", "arrays", "applications", "tuples" }) |field| {
+    inline for (.{ "suffixes", "callbacks", "arrays", "applications", "tuples" }, 0..) |field, kind| {
         const items = @field(types, field);
         try add(&budget.types, items.len, rows_limit);
         for (items) |item| {
@@ -213,7 +214,7 @@ fn shapes(a: std.mem.Allocator, module: value.Module, budget: *Budget) Error![]S
                 try namedSpan(item.name, module.context.source.len);
                 try require(inside(item.name, item.span) and !std.meta.eql(item.name, item.span));
             }
-            try rows.append(a, .{ .at = item.span, .children = children, .constructor_leaf = @TypeOf(item) == value.Application });
+            try rows.append(a, .{ .at = item.span, .children = children, .constructor_leaf = @TypeOf(item) == value.Application, .kind = kind });
         }
     }
     return rows.toOwnedSlice(a);
@@ -251,9 +252,14 @@ fn typeCatalog(a: std.mem.Allocator, module: value.Module, budget: *Budget) Erro
         for (rows) |row| a.free(row.children);
         a.free(rows);
     }
+    const Key = struct { kind: u8, span: Span };
+    var keys: std.AutoHashMapUnmanaged(Key, void) = .empty;
+    defer keys.deinit(a);
     var by_span: std.AutoHashMapUnmanaged(Span, usize) = .empty;
     defer by_span.deinit(a);
     for (rows, 0..) |row, id| {
+        const key = try keys.getOrPut(a, .{ .kind = row.kind, .span = row.at });
+        try require(!key.found_existing);
         const entry = try by_span.getOrPut(a, row.at);
         if (!entry.found_existing) entry.value_ptr.* = id;
     }
