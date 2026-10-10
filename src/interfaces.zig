@@ -703,12 +703,14 @@ pub const Index = struct {
         const selected = try type_interface_boundary.mode(runtime);
         if (selected == .reference) return self.checkInterfacesNative();
         const backing = self.project.arena.child_allocator;
+        const captured = try self.verifyFrontend(backing);
         var scratch = std.heap.ArenaAllocator.init(backing);
         defer scratch.deinit();
         const input = try type_interface_projection.input(scratch.allocator(), self);
         if (selected == .component) {
             var actual = try type_interface_boundary.execute(backing, input, runtime.?);
             defer actual.deinit();
+            try frontend_runtime.revalidate(backing, runtime, captured);
             switch (actual.outcome) {
                 .success => |output| try type_interface_projection.adopt(self, output),
                 .failure => |problem| return self.declarationFailure(problem),
@@ -738,6 +740,7 @@ pub const Index = struct {
         } };
         var actual = try type_interface_boundary.execute(backing, input, runtime.?);
         defer actual.deinit();
+        try frontend_runtime.revalidate(backing, runtime, captured);
         try type_interface_boundary.compare(actual.outcome, expected);
         if (failed) return error.SourceError;
     }
