@@ -1,0 +1,9 @@
+qualification progress: iteration: seen=25 elapsed=43.64s
+qualification progress: iteration: seen=50 elapsed=87.38s
+qualification progress: iteration: seen=75 elapsed=134.36s
+qualification progress: iteration: seen=100 elapsed=179.15s
+qualification progress: iteration: seen=125 elapsed=223.87s
+qualification progress: iteration: seen=150 elapsed=270.42s
+qualification progress: iteration: seen=175 elapsed=315.13s
+qualification progress: iteration: seen=200 elapsed=362.98s
+mut,records,alias                  cases=200 old_rejected=0 refused=0 compared=3000 mismatch=0 fact=0 traps=328 caught=0

@@ -1,6 +1,6 @@
 # Runtime parity wave 3 — 2026-10-09
 
-Status: M0, U2 and S2 complete. R is finishing qualification. X has begun with the real U2 merge; its merged-tree gates are pending.
+Status: M0, U2, S2 and R complete. X is in progress. The real U2 merge passes all merged-tree correctness and instruction checks; S2 and R merges and final CPU-10 timing remain.
 
 Base: `main` `41ed360fb361c49938488ad111795bad8a726b73`. Integration branch: `codex/runtime-parity-3`.
 Worktree: `/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3` (locked, prune-keep).
@@ -77,19 +77,23 @@ Historical checkpoints are retained below; the current state is stated above.
 - R's final repository plus formatting run passes 97/97 steps and 2,334 tests. Its isolated payload prototype adds 0.8136% EDA instructions over the ordinary-return candidate with the same R1/R2 changes; P6 stays unchanged and record-copy bytes grow 30.70%. Raw/additive conformance and frozen fuzz remain before hand-off.
 - X first real merge: integrate qualified U2 with both parent histories preserved and no textual conflicts. Completed U2 command journals are summarized by the same strict tool used for M0; exact raw data remains in owned cache. `qualify_tree.py --tag merge-u2-01` will run the full merged-tree checks, including 9×200 frozen cases. No merged-tree passing result or CPU-10 result is claimed yet.
 
+- R hand-off accepted at `e83dfeb6dda34f7ff26a873174fbae506dff9d26`, with production source `09ed227098f3b5447643317ab640eec85c4f6772` and frozen-fuzz qualified head `fa5bf207d328d1918416db3909127c23a9167965`. All lane gates pass, including exact raw/additive qualification and the final 450 frozen cases / 6,450 comparisons / 8,900 runs with unchanged source/oracles. Compiler-input continuity to the hand-off is verified in `X/tool-audit/accepted-handoffs.json`.
+- First integrated tree `2cd674292291ad2e7078d32a9c8b43ce65a643ac` passes Debug/ReleaseFast 9/9, repository 95/95 (2,336 tests), formatting 15/15, exact raw 1516/4/0 and additive 1547/0/0 in both modes, 64 core shards / 613 tests, frozen fuzz 9×200 (1,800 cases; 25,800 comparisons; 35,600 runs), Lox 974 plus 65 tests, EDA 310 tests plus 34 goldens, all 199 counting/output cells and all 151 paired instruction cells. Maximum instruction ratio is 1.002906666 on rows/string_split; zero exceeds 1.03. All 683 copied source files, compiler hashes and 186 guest binaries remain unchanged. Full receipt: `X/gates-merge-u2-01/receipt.json`.
+- Measurement audit before final timing strengthens parity execution checks and independently recomputes row startup-subtracted values; no threshold changes. The strict U2 profile reparse corrects the historical broad allocation/free classification to labstation 25.786% → 21.707% and rds3+flat 23.504% → 20.082%; the 15% exit remains missed. Exact original receipts remain available. `X/tool-audit/` retains the proofs and source-interaction reviews.
+
 ## Lane exits at current checkpoints
 
-These checkpoints precede final hand-offs and integration. X's CPU-10 column remains pending.
+All three lane hand-offs are accepted. These measured lane checkpoints precede final integration timing; X's CPU-10 column remains pending.
 
 | lane / exit | current measured result | remaining validation or blocker |
 |---|---|---|
 | U2 / read_constant counts | 0 retains and 0 releases across 986,053,806 executions in all 37 VM cells | Final integrated counters still required. |
 | U2 / frame copies at least 80% lower | 10,080,000,224 invocation bytes and 4,853,334,440 method_call bytes, unchanged | The accepted changes eliminate no frame copies. Whole-frame phis and later writebacks need fieldwise ownership/lifetime reasoning before their storage can be lent safely. |
 | U2 / four counterfactual cell exits | CPU-8 instruction ratios: invocation 0.927197, fib 0.902411, method_call 0.910069, tree/equality 0.997735 | Binding final/base wall limits are 0.803193, 0.863836, 0.816397 and 0.761930 respectively; no wall exit is claimed. |
-| U2 / EDA at most 0.93× base | 34-design instruction geomean 0.928156× | CPU-10 wall time is pending. Allocation/free lower bounds remain 20.173–21.707%, above the separate 15% exit. |
+| U2 / EDA at most 0.93× base | 34-design instruction geomean 0.928156× | CPU-10 wall time is pending. Corrected strict allocation/free lower bounds remain 20.082–21.707%, above the separate 15% exit. |
 | S2 / split and text_ops exits | Corrected-source text_ops instructions 0.670531× base; scan_split 0.315786× | All 151 instruction cells pass; final CPU-10 results remain pending. text_ops must also be within 1.15× of the best reachable C ladder. |
 | S2 / EDA materialization at most half / 6% | Final retained-view shares: 14.637% rds3+flat, 16.381% labstation, versus 14.875% / 15.868% base | Exit missed. Stored token slices still account for 9.453% / 10.408%. The rejected substring prototype lowered shares but increased total instructions. |
-| R1 / array arms at most 1.05× my | Final lane CPU-8 cycles: array 1.156962× my, tuned 1.058519× my | The CPU-8 checkpoint exceeds 1.05; full correctness gates and binding CPU-10 confirmation remain pending. |
+| R1 / array arms at most 1.05× my | Final lane CPU-8 cycles: array 1.156962× my, tuned 1.058519× my | The CPU-8 checkpoint exceeds 1.05; lane correctness gates pass; binding CPU-10 confirmation remains pending. |
 | R2 / sort_builtin at most 1.2× rust-checked | Final lane instructions 0.313459× M0; cycles 0.301945× | Final reference-relative timing and sort_records review remain pending. |
 | R3 / sharing with zero copies and no regression | Rejected prototype: zero record_pass copies, 1.2065× instructions and 1.1741× cycles | Original disabled sharing retained; removing copies alone does not meet the exit. |
 | R4 / P6 copies at least 90% lower | Generalized prototype unchanged at 444,833,472 bytes; total EDA record-copy bytes increase 30.70% | The error-path list lifetime prevents safe lending. Prototype removed from the final candidate; a tag-aware ABI remains a follow-on lever. |

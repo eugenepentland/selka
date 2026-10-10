@@ -263,3 +263,19 @@
 - Evidence: U2's first pilot reused units-v1 and is retained as invalid. Its corrected 16 builds each report one unit compiled, zero reused, a linked program and two processes. S2's equivalent helper also rejects an empty runtime seed before timing.
 - Choice: final compile_times.py uses fresh run directories, compiler-hash runtime seeds without units-v1, one excluded warmup and three shuffled paired rounds for EDA/Lox. It records wall and child CPU time, binary/compiler hashes and exact cache reports; cached guest units fail validation. The parser accepts all 16 corrected U2 reports and rejects a reused-unit report. Actual final-tree timing remains pending.
 - Reversibility: measurement-only cache isolation. No compiler optimization or threshold changes.
+
+## X-010 — validate each timed parity execution and recompute row normalization
+
+- Question: the inherited parity timer can append a failed measured process, and the row reader trusts precomputed normalized values and startup checksums.
+- Options: trust initial qualification only, or check the actual warmups/timed executions and independently reparse row evidence.
+- Evidence: eight mocked parity execution checks and fourteen corrupted row receipts exercise the failure paths; all three original M0 row batches pass the stricter reader. Proofs and exact applied hashes are in X/tool-audit.
+- Choice: capture parity stdout in a preopened temporary file, preserve spawn/wait timing and verify output/status after timing. Invalid execution returns status 2 with an independent incomplete receipt. This changes stdout I/O from M0's /dev/null equally for all paired final/base/reference arms; final/base comes from the same new session. Rows retain their exact method, with raw command/checksum/cycle verification and recomputed startup subtraction. No baseline result or threshold changes.
+- Reversibility: measurement adapters only; historical raw receipts and proposal diffs are retained.
+
+## X-011 — separate strict allocation/free frames from ambiguous traversal
+
+- Question: reference_at and shared traversal/release helpers can also execute non-final decrements or sharing, so matching them without an allocation/free ancestor overstates the strict lower bound.
+- Options: retain broad attribution or split strict allocation/free and ambiguous-only stack periods.
+- Evidence: reparse of the exact original U2 samples reproduces all original totals. Corrected strict shares are labstation 25.786% → 21.707%, rds3+flat 23.504% → 20.082%. Seven classifier boundary checks pass.
+- Choice: use disjoint strict and ambiguous-only families for both arms. Generated dictionary key/value release callbacks require a strict ancestor; fresh X profiles hash binaries before/after recording and cannot reuse a prior recording through the old --reuse option. Preserve old broad receipts and the exact reparse provenance. These bounded LBR samples cannot prove a share below 15%; the corrected U2 strict lower bounds still exceed it.
+- Reversibility: attribution-only correction, no runtime or optimizer changes.

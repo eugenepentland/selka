@@ -1,0 +1,69 @@
+{
+ "kind": "read-only pairwise integration review",
+ "runtime_validation": "separate merged-tree gates remain mandatory",
+ "reviews": [
+  {
+   "lanes": [
+    "U2",
+    "R"
+   ],
+   "sources": [
+    "4661eb368f949e44e43dc39954bac7e75aef9770",
+    "09ed227098f3b5447643317ab640eec85c4f6772"
+   ],
+   "actionable_findings": [],
+   "boundaries": [
+    "Complete nested record paths and overlapping array writes",
+    "Whole-value array snapshot interference and exact updated field regions",
+    "array_get loads/copies elements rather than lending mutable element storage",
+    "Ownership propagation, replacement-element release and bounds trap ordering"
+   ]
+  },
+  {
+   "lanes": [
+    "U2",
+    "S2"
+   ],
+   "sources": [
+    "4661eb368f949e44e43dc39954bac7e75aef9770",
+    "04c1f88807def016245a20140a57506ad8425ec0"
+   ],
+   "actionable_findings": [],
+   "boundaries": [
+    "Forwarded record paths preserve original source lifetime",
+    "Escaping, stored and phi-carried pieces retain materialization",
+    "Offset/cursor source dependencies and source update guards",
+    "No final substring-parent layout; generated destructors see ordinary leaf blocks/scalar offset lists"
+   ]
+  },
+  {
+   "lanes": [
+    "R",
+    "S2"
+   ],
+   "sources": [
+    "09ed227098f3b5447643317ab640eec85c4f6772",
+    "04c1f88807def016245a20140a57506ad8425ec0"
+   ],
+   "actionable_findings": [],
+   "boundaries": [
+    "Split rewrites precede fact analyses; fixed-array hulls exclude records/list offsets",
+    "Escaping array-stored pieces materialize",
+    "Borrowed array_get parents preserve string view liveness before consuming updates",
+    "Bounds trap precedes inbounds GEP; verify-facts retains checks",
+    "Prefix stack slots/cursor labels are separate from typed array homes"
+   ]
+  }
+ ],
+ "coordinator_count_helper_check": {
+  "candidate": "u2",
+  "vm_cells": 37,
+  "zero_read_constant_traffic": true,
+  "frame_bytes": {
+   "invocation": 10080000224,
+   "method_call": 4853334440
+  },
+  "frame_reduction": 0,
+  "unclassified_copies": "Only unchanged vm.my:429 jump and inlined heap.my:106 record_set remain:200 bytes each for invocation;400 each for method_call."
+ }
+}

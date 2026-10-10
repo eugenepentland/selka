@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """Read complete timing receipts without silently dropping failed or missing cells."""
 import gzip
+import importlib.util
 import hashlib
 import json
 import math
 from pathlib import Path
 import statistics
+from functools import cache
 
 
 def read(path):
@@ -64,28 +66,64 @@ def eda(data, paired):
     return data['per_case']
 
 
+@cache
+def row_runner():
+    """Read the unchanged 46-row registry and strict receipt parsers, without running it."""
+    root = Path(__file__).resolve().parents[3]
+    source = root / 'experiments/new-core-s4-20261006/integration/measure_all46.py'
+    spec = importlib.util.spec_from_file_location('rp3_timing_row_registry', source)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.rows
+
+
+def row_samples(runner, arm, size, iterations, start_checksum, work_checksum):
+    for field, count, repeat, checksum in [('startup', 3, 1, start_checksum),
+                                           ('runs', 7, iterations, work_checksum)]:
+        assert len(arm[field]) == count
+        for run in arm[field]:
+            assert run['status'] == 0 and positive(run['cycles'])
+            assert run['checksum'] == checksum
+            assert run['command'][:8] == ['taskset', '-c', '10', 'perf', 'stat', '-x,', '-e', runner.EVENT]
+            assert run['command'][-3:] == [size, str(repeat), str(runner.SEED)]
+            assert runner.parse_stdout(run['stdout']) == (run['checksum'], run['elapsed_ns'])
+            assert runner.parse_perf(run['stderr']) == run['cycles']
+
+
 def row_ratios(batches):
+    runner = row_runner()
     assert len(batches) == 3
     assert all(batch['valid'] and batch['rounds'] == 7 and batch['cpu'] == 10 for batch in batches)
-    assert all(len(batch['rows']) == 46 and set(batch['rows']) == set(batches[0]['rows']) for batch in batches)
+    assert len(runner.UNITS) == 46
+    assert all(set(batch['rows']) == set(runner.UNITS) for batch in batches)
     names = {'zig-safe': 'Zig ReleaseSafe', 'zig-fast': 'Zig ReleaseFast', 'rust': 'Rust', 'go': 'Go'}
     result = {}
     for name in sorted(batches[0]['rows']):
+        suite, unit, big, small = runner.UNITS[name]
+        assert all(batch['rows'][name]['suite'] == suite and batch['rows'][name]['unit'] == unit
+                   and batch['rows'][name]['reference_name'] == runner.REFERENCE_NAMES.get(name, name) for batch in batches)
         assert all(set(batch['rows'][name]['sizes']) == {'64', '4096'} for batch in batches)
         for size in ('4096', '64'):
             cells = [batch['rows'][name]['sizes'][size] for batch in batches]
+            iterations = big if size == '4096' else small
+            assert all(cell['iterations'] == iterations for cell in cells), (name, size)
+            work_checksum = cells[0]['checksum']
+            assert all(cell['checksum'] == work_checksum for cell in cells), (name, size)
             configs = [cell['configurations'] for cell in cells]
             assert all(set(config) == set(configs[0]) for config in configs)
             expected = {'old core --release', 'new core release', 'Rust', 'Zig ReleaseSafe', 'Go'}
             if name not in {'tree_build_walk', 'record_pass', 'grid_dp', 'union_find', 'float_format', 'buffer_write'}:
                 expected.add('Zig ReleaseFast')
             assert set(configs[0]) == expected, (name, size)
-            for cell, config in zip(cells, configs):
+            start_checksum = configs[0]['old core --release']['startup'][0]['checksum']
+            per = int(size) * iterations if unit == 'element' else iterations
+            for config in configs:
                 for label, arm in config.items():
-                    assert positive(arm['cycles_per_unit']) and len(arm['runs']) == 7 and len(arm['startup']) == 3
-                    assert all(run['status'] == 0 and positive(run['cycles']) and run['checksum'] == cell['checksum']
-                               for run in arm['runs']), (name, size, label)
-                    assert all(run['status'] == 0 and positive(run['cycles']) for run in arm['startup'])
+                    row_samples(runner, arm, size, iterations, start_checksum, work_checksum)
+                    normalized = (statistics.median(run['cycles'] for run in arm['runs']) -
+                                  statistics.median(run['cycles'] for run in arm['startup'])) / per
+                    assert positive(normalized) and positive(arm['cycles_per_unit']), (name, size, label)
+                    assert math.isclose(arm['cycles_per_unit'], normalized, rel_tol=1e-12, abs_tol=1e-12), (name, size, label)
             ratios = {}
             for own, label in [('base', 'old core --release'), ('final', 'new core release')]:
                 ratios[own] = {short: statistics.median(config[label]['cycles_per_unit'] / config[ref]['cycles_per_unit']
