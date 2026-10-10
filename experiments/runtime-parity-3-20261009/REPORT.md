@@ -83,6 +83,8 @@ Historical checkpoints are retained below; the current state is stated above.
 
 - X second real merge: qualified S2 hand-off `04c1f88807def016245a20140a57506ad8425ec0`, with U2 and both histories retained. Textual merge succeeds. `qualify_tree.py --tag merge-s2-01` runs the complete merged-tree correctness/instruction sequence, including another 9×200 frozen matrix; results are pending.
 
+- S2 integration attempt `merge-s2-01` passes build 9/9, repository 95/95 (2,349 tests; 21,688 routing skips) and formatting. Conformance does not execute: the inherited qualifier keys temporary storage only by evidence basename, so `raw`/`additive` collide with the prior U2 run. Exit status 1 alone is not qualification; this attempt remains incomplete. The owned driver now uses globally unique leaf names and validates raw totals immediately. `merge-s2-02` reruns the entire sequence on the unchanged compiler implementation. Failure logs and analysis remain committed.
+
 ## Lane exits at current checkpoints
 
 All three lane hand-offs are accepted. These measured lane checkpoints precede final integration timing; X's CPU-10 column remains pending.

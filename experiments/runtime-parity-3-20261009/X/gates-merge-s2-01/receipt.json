@@ -1,0 +1,132 @@
+{
+ "source_commit": "588fddb9dc85be397994b021d7a3ac27879bb33c",
+ "tag": "merge-s2-01",
+ "complete": false,
+ "steps": [
+  {
+   "name": "build",
+   "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/scripts/build-slot.sh",
+    "build",
+    "zig",
+    "build",
+    "--summary",
+    "all"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3",
+   "status": 0,
+   "expected_status": 0,
+   "seconds": 7.588203430175781,
+   "log": ".tmp/rp3/gates-merge-s2-01/build.log",
+   "log_sha256": "332aa9ab6739f4ea9d9d80145554a0279c224dcedaddc25996921e254a887d54",
+   "summary": [
+    "guardian: run-all: 88 check(s) passed \u2014 diff-scoped vs 41ed360fb361c49938488ad111795bad8a726b73, 19 file(s) in scope",
+    "Build Summary: 9/9 steps succeeded"
+   ]
+  },
+  {
+   "name": "repository",
+   "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/scripts/build-slot.sh",
+    "gate",
+    "zig",
+    "build",
+    "test",
+    "--summary",
+    "all"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3",
+   "status": 0,
+   "expected_status": 0,
+   "seconds": 325.9398274421692,
+   "log": ".tmp/rp3/gates-merge-s2-01/repository.log",
+   "log_sha256": "e718a711fec183bfa168fcc49ed65aa3df8031a2f94f550148951fc52dd787d3",
+   "summary": [
+    "guardian: run-all: 88 check(s) passed \u2014 diff-scoped vs 41ed360fb361c49938488ad111795bad8a726b73, 19 file(s) in scope",
+    "guardian: run-all: 88 check(s) passed \u2014 diff-scoped vs 41ed360fb361c49938488ad111795bad8a726b73, 19 file(s) in scope",
+    "1534 passed, 0 cached, 0 failed, 0 skipped",
+    "1534 passed, 0 cached, 0 failed, 0 skipped",
+    "98 passed, 0 cached, 0 failed, 0 skipped",
+    "98 passed, 0 cached, 0 failed, 0 skipped",
+    "140 passed, 0 cached, 0 failed, 0 skipped",
+    ".my format: 818 checked, 204 deliberate exclusions, 0 failures; experiments/ is historical and outside the live roots",
+    "42 passed, 0 cached, 0 failed, 0 skipped",
+    "140 passed, 0 cached, 0 failed, 0 skipped",
+    "Build Summary: 95/95 steps succeeded; 2349/24037 tests passed (21688 skipped)"
+   ]
+  },
+  {
+   "name": "fmt",
+   "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/scripts/build-slot.sh",
+    "build",
+    "zig",
+    "build",
+    "fmt-check",
+    "--summary",
+    "all"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3",
+   "status": 0,
+   "expected_status": 0,
+   "seconds": 1.9720239639282227,
+   "log": ".tmp/rp3/gates-merge-s2-01/fmt.log",
+   "log_sha256": "944f3882a136875f5992d1d02d0d17e334a0ca5c49813ee2cc407a98757b1b72",
+   "summary": [
+    "guardian: run-all: 88 check(s) passed \u2014 diff-scoped vs 41ed360fb361c49938488ad111795bad8a726b73, 19 file(s) in scope",
+    "Build Summary: 15/15 steps succeeded"
+   ]
+  },
+  {
+   "name": "raw",
+   "command": [
+    "python3",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/new-core-s5-20261007/tools/qualify_merge.py",
+    "--shards",
+    "64",
+    "--compiler",
+    "zig-out/bin/mylang",
+    "--install",
+    "install",
+    "--evidence",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/X/gates-merge-s2-01/raw"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3",
+   "status": 1,
+   "expected_status": 1,
+   "seconds": 0.1405041217803955,
+   "log": ".tmp/rp3/gates-merge-s2-01/raw.log",
+   "log_sha256": "2f37cbf295c4bf2d42096a4fb8f52ad9717544dc7ec4e84a1c7e78defc44c6c4",
+   "summary": []
+  },
+  {
+   "name": "additive",
+   "command": [
+    "python3",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/new-core-s5-20261007/tools/qualify_merge.py",
+    "--shards",
+    "64",
+    "--compiler",
+    "zig-out/bin/mylang",
+    "--install",
+    "install",
+    "--evidence",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/X/gates-merge-s2-01/additive",
+    "--frontend-reference",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/frontend-fixes-20261009/s5-frontend-reference.json"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3",
+   "status": 1,
+   "expected_status": 0,
+   "seconds": 0.1243295669555664,
+   "log": ".tmp/rp3/gates-merge-s2-01/additive.log",
+   "log_sha256": "0135ef2d164da389958c5aabb598a5a8b9eabbada03d19f798ad40a89ee929e9",
+   "summary": []
+  }
+ ],
+ "corpora": {
+  "manifest_sha256": "421c9677c860447fe0b36f982cd14d3342c7d6048859d6f440eaebd313ffce5c",
+  "files_checked": 683
+ },
+ "fuzz_cases_per_family": 200
+}

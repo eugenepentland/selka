@@ -41,12 +41,15 @@ def validate(directory, expected, baseline):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--raw', type=Path, required=True)
-    parser.add_argument('--additive', type=Path, required=True)
+    parser.add_argument('--additive', type=Path)
     args = parser.parse_args()
     baseline = json.loads((AREA / 'M0/conformance-baseline.json').read_text())
     frontend = ROOT / 'experiments/frontend-fixes-20261009/s5-frontend-reference.json'
     assert hashlib.sha256(frontend.read_bytes()).hexdigest() == baseline['frontend_reference_sha256']
     raw = validate(args.raw, baseline['unadapted'], baseline)
+    if args.additive is None:
+        print('qualified: exact M0 raw differences; 64 core shards, leak/fact checks')
+        return
     additive = validate(args.additive, baseline['additive'], baseline)
     assert raw['core_sha256'] == additive['core_sha256'], 'different compilers in raw/additive qualification'
     print('qualified: exact M0 raw differences and complete additive conformance; 64 core shards, leak/fact checks')

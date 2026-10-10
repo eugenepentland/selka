@@ -279,3 +279,10 @@
 - Evidence: reparse of the exact original U2 samples reproduces all original totals. Corrected strict shares are labstation 25.786% → 21.707%, rds3+flat 23.504% → 20.082%. Seven classifier boundary checks pass.
 - Choice: use disjoint strict and ambiguous-only families for both arms. Generated dictionary key/value release callbacks require a strict ancestor; fresh X profiles hash binaries before/after recording and cannot reuse a prior recording through the old --reuse option. Preserve old broad receipts and the exact reparse provenance. These bounded LBR samples cannot prove a share below 15%; the corrected U2 strict lower bounds still exceed it.
 - Reversibility: attribution-only correction, no runtime or optimizer changes.
+
+## X-012 — isolate conformance by unique evidence leaf names
+
+- Question: the second integration run fails before conformance because the inherited qualifier uses only out.name for its temporary cache. Unique parent directories do not isolate raw/additive leaf names.
+- Evidence: merge-s2-01 passes repository95/95 with2,349 tests, then both qualifier invocations raise FileExistsError before any conformance case. Raw status1 happens to equal the known-mismatch status, but no valid summary exists and the overall run remains incomplete.
+- Choice: change only the owned orchestrator to qualify with tag-specific leaf basenames, add immediate strict raw validation, retain the failed attempt, and rerun every gate with fresh merge-s2-02 evidence. Keep the existing raw+additive cross-compiler validation and all original thresholds.
+- Reversibility: measurement orchestration only. The frozen qualifier, references and compiler implementation are unchanged.

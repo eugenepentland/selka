@@ -106,9 +106,13 @@ def main():
     g.run('repository', ['zig', 'build', 'test', '--summary', 'all'], 'gate')
     g.run('fmt', ['zig', 'build', 'fmt-check', '--summary', 'all'], 'build')
     qualify = ROOT / 'experiments/new-core-s5-20261007/tools/qualify_merge.py'
-    raw, additive = g.area / 'raw', g.area / 'additive'
+    # The inherited qualifier keys its temporary cache by evidence basename.
+    # Unique parents alone do not isolate successive integration runs.
+    raw = g.area / ('qual-' + args.tag + '-raw')
+    additive = g.area / ('qual-' + args.tag + '-additive')
     common = ['python3', qualify, '--shards', '64', '--compiler', 'zig-out/bin/mylang', '--install', 'install']
     g.run('raw', [*common, '--evidence', raw], expected=1)
+    g.run('validate-raw-qualification', ['python3', TOOLS / 'validate_qualification.py', '--raw', raw])
     g.run('additive', [*common, '--evidence', additive, '--frontend-reference',
                      ROOT / 'experiments/frontend-fixes-20261009/s5-frontend-reference.json'])
     g.run('validate-qualification', ['python3', TOOLS / 'validate_qualification.py', '--raw', raw, '--additive', additive])
