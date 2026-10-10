@@ -361,11 +361,11 @@ func reject_removed_punctuation(src: source.Source, ch: int, following: int, sta
 
 
 # Raw tokenization without indentation lowering.
-func tokenize(src: source.Source) -> token.Token[] fails diagnostic.Diagnostic:
+func tokenize(src: source.Source, begin: int, finish: int) -> token.Token[] fails diagnostic.Diagnostic:
     mut raw = src.raw
-    mut limit = len(raw)
+    mut limit = finish
     mut tokens: token.Token[] = []
-    mut index = 0
+    mut index = begin
     mut kind = "ident"
     while index < limit:
         mut start = index
@@ -595,7 +595,7 @@ func lower(raw_tokens: token.Token[], src: source.Source) -> token.Token[] fails
 
 # Full current token stream: raw tokenization followed by layout lowering.
 public func lex(src: source.Source) -> token.Token[] fails diagnostic.Diagnostic:
-    mut raw = try tokenize(src)
+    mut raw = try tokenize(src, 0, len(src.raw))
     return try lower(raw, src)
 
 
@@ -611,3 +611,11 @@ func triple_literal_end(src: source.Source, start: int) -> int fails diagnostic.
             return index + 3
         index += 1
     fail make_diag(src, diagnostic.E_BYTE_LITERAL, start, len(raw), "unterminated triple-quoted literal; close it with three matching quotes")
+
+
+# Raw lexical range with absolute byte spans, without layout lowering.
+# Requires source.make invariants and 0 <= begin <= finish <= len(src.raw).
+# Literal and numeric scanners deliberately see the original complete source,
+# matching native lexRange including a token that extends past finish.
+public func lex_range(src: source.Source, begin: int, finish: int) -> token.Token[] fails diagnostic.Diagnostic:
+    return try tokenize(src, begin, finish)
