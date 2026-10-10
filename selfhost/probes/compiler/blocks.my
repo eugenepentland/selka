@@ -1,0 +1,163 @@
+# Compiler-shaped value algorithms restricted to component-v1.
+public record Token:
+    start: int
+    end: int
+    kind: int
+
+
+public record Node:
+    token: int
+    children: int[]
+
+
+public record Names:
+    keys: bytes[]
+
+
+# IDs are insertion positions. Linear lookup is deliberately bounded by callers.
+public func intern(mut table: Names, name: bytes) -> int:
+    for index in range(len(table.keys)):
+        if table.keys[index] == name:
+            return index
+    table.keys.append(name)
+    return len(table.keys) - 1
+
+
+public record Walk:
+    nodes: int[]
+    dequeues: int
+    edges: int
+
+
+# Cursor queue: never slice away or remove the prefix.
+public func walk(edges: int[][], root: int) -> Walk:
+    mut seen: bool[] = []
+    for index in range(len(edges)):
+        seen.append(False)
+    mut queue: int[] = [root]
+    seen[root] = True
+    mut cursor = 0
+    mut inspected = 0
+    while cursor < len(queue):
+        const node = queue[cursor]
+        cursor += 1
+        for child in edges[node]:
+            inspected += 1
+            if not seen[child]:
+                seen[child] = True
+                queue.append(child)
+    return Walk(nodes=queue, dequeues=cursor, edges=inspected)
+
+
+public func traverse(edges: int[][], root: int) -> int[]:
+    return walk(edges, root).nodes
+
+
+# Source and diagnostics remain bytes; offsets never count Unicode code points.
+public func line_starts(source: bytes) -> int[]:
+    mut starts: int[] = [0]
+    for index in range(len(source)):
+        if source[index] == 10:
+            starts.append(index + 1)
+    return starts
+
+
+public record Message:
+    data: bytes
+    fragments: int
+    octets: int
+
+
+public func construct(fragments: bytes[]) -> Message:
+    mut size = 0
+    for fragment in fragments:
+        size += len(fragment)
+    mut empty: int[] = []
+    mut buffer = byte_buffer(empty)
+    _ = buffer.reserve(size)
+    mut appended = 0
+    mut octets = 0
+    for fragment in fragments:
+        _ = buffer.append_range(fragment, 0, len(fragment))
+        appended += 1
+        octets += len(fragment)
+    return Message(data=bytes(buffer), fragments=appended, octets=octets)
+
+
+public func diagnostic(fragments: bytes[]) -> bytes:
+    return construct(fragments).data
+
+
+# Return exact logical work, not a claim about allocator or runtime copy cost.
+public func growing(size: int) -> bool:
+    mut tokens: Token[] = []
+    mut nodes: Node[] = []
+    mut edges: int[][] = []
+    mut fragments: bytes[] = []
+    mut work = 0
+    for index in range(size):
+        tokens.append(Token(start=index * 2, end=index * 2 + 1, kind=1))
+        nodes.append(Node(token=index, children=[]))
+        mut children: int[] = []
+        if index + 1 < size:
+            children.append(index + 1)
+        edges.append(children)
+        fragments.append(b"x")
+        work += 1
+    for index in range(size):
+        tokens[index].kind = 2
+        nodes[index].children.append(index)
+        work += 1
+    const traversal = walk(edges, 0)
+    const visited = traversal.nodes
+    const constructed = construct(fragments)
+    const message = constructed.data
+    mut good = work == size * 2 and len(visited) == size and len(message) == size
+    good = good and traversal.dequeues == size and traversal.edges == size - 1
+    good = good and constructed.fragments == size and constructed.octets == size
+    for index in range(size):
+        good = good and visited[index] == index and tokens[index].kind == 2
+        good = good and nodes[index].children == [index] and message[index] == 120
+    return good
+
+
+# Stable insertion sort uses only admitted indexed updates and comparisons.
+public func sort_names(mut names: bytes[]):
+    for index in range(1, len(names)):
+        const key = names[index]
+        mut cursor = index
+        while cursor > 0 and names[cursor - 1] > key:
+            names[cursor] = names[cursor - 1]
+            cursor -= 1
+        names[cursor] = key
+
+
+public record Location:
+    line: int
+    column: int
+
+
+# One-based byte columns, including interior UTF-8 positions and EOF.
+public func locate(source: bytes, offset: int) -> Location fails str:
+    if offset < 0 or offset > len(source):
+        fail "source offset out of bounds"
+    mut line = 1
+    mut start = 0
+    for index in range(offset):
+        if source[index] == 10:
+            line += 1
+            start = index + 1
+    return Location(line=line, column=offset - start + 1)
+
+
+# Return IDs sorted by key; strict comparison preserves equal-key input order.
+public func stable_order(keys: bytes[]) -> int[]:
+    mut order: int[] = []
+    for index in range(len(keys)):
+        order.append(index)
+        mut cursor = index
+        while cursor > 0 and keys[order[cursor - 1]] > keys[index]:
+            order[cursor] = order[cursor - 1]
+            cursor -= 1
+        order[cursor] = index
+    return order
