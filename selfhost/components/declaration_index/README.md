@@ -104,3 +104,11 @@ artifact edits. To test an operational producer edit, the private copy can
 insert a dynamic `request.context.name` branch immediately after the public
 `indexing.index` signature; this changes executable behavior for an unused
 private marker without reserving a production module name.
+
+Public-span membership and module-ID joins use the same stable sorted index as
+symbol names. Fixed-width byte keys preserve exact span and numeric-ID equality.
+Preparation sorts public markers, dependency IDs and import targets once;
+subsequent membership and joins use binary lookup. No export scans all public
+markers, and no dependency scans every import or preceding dependency. The
+512-export/512-public-marker test checks repeated directives and publication under
+the normal instruction budget; it is a correctness workload, not a timing claim.

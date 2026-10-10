@@ -7,6 +7,8 @@ record Prepared:
     aliases: indexed.Index
     qualifiers: indexed.Index
     dependencies: indexed.Index[]
+    public_spans: indexed.Index
+    modules: indexed.Index
 
 
 func transport() -> indexed.Problem:
@@ -34,6 +36,24 @@ func declaration_key(request: model.Request, declaration: model.Declaration) -> 
     if declaration.owner.start < 0:
         return name
     return joined(text(request, declaration.owner), name)
+
+
+func number_key(number: int) -> bytes:
+    mut value = number
+    mut buffer = byte_buffer([])
+    for i in range(4):
+        _ = buffer.append_byte(value % 256)
+        value = value // 256
+    return bytes(buffer)
+
+
+func span_key(span: model.Span) -> bytes:
+    mut buffer = byte_buffer([])
+    const start = number_key(span.start)
+    _ = buffer.append_range(start, 0, 4)
+    const end = number_key(span.end)
+    _ = buffer.append_range(end, 0, 4)
+    return bytes(buffer)
 
 
 func prepare(request: model.Request) -> Prepared fails indexed.Problem:
@@ -71,15 +91,28 @@ func prepare(request: model.Request) -> Prepared fails indexed.Problem:
     mut qualifiers: bytes[] = []
     mut full_names: bytes[] = []
     for imported in facts.imports:
-        if len(imported.name) == 0 or len(imported.alias) == 0 or imported.target < 0 or not span_valid(imported.span, size):
+        if len(imported.name) == 0 or len(imported.alias) == 0 or imported.target < 0 or imported.target > 4294967295 or not span_valid(imported.span, size):
             fail transport()
         aliases.append(imported.alias)
         full_names.append(imported.name)
         qualifiers.append(imported.alias)
         qualifiers.append(imported.name)
+    mut public_keys: bytes[] = []
     for span in facts.public_spans:
         if not span_valid(span, size):
             fail transport()
+        public_keys.append(span_key(span))
+    const public_index = try indexed.make(public_keys)
+    mut module_keys: bytes[] = []
+    mut target_keys: bytes[] = []
+    for imported in facts.imports:
+        target_keys.append(number_key(imported.target))
+    for dependency in request.dependencies:
+        if dependency.module < 0 or dependency.module > 4294967295:
+            fail transport()
+        module_keys.append(number_key(dependency.module))
+    const module_index = try indexed.make(module_keys)
+    const target_index = try indexed.make(target_keys)
     mut dep_indexes: indexed.Index[] = []
     mut dep_count = 0
     mut name_bytes = len(request.context.name)
@@ -92,14 +125,11 @@ func prepare(request: model.Request) -> Prepared fails indexed.Problem:
     for dependency in request.dependencies:
         if dependency.module < 0 or dependency.module == request.context.module or len(dependency.name) == 0 or dependency.source_len < 0 or dependency.source_len > 1048576:
             fail transport()
-        for previous in request.dependencies[:len(dep_indexes)]:
-            if previous.module == dependency.module:
-                fail transport()
-        mut used = False
-        for imported in facts.imports:
-            if imported.target == dependency.module:
-                used = True
-        if not used:
+        const module_hit = try indexed.lookup(module_index, number_key(dependency.module))
+        if module_hit.id != len(dep_indexes):
+            fail transport()
+        const imported_hit = try indexed.lookup(target_index, number_key(dependency.module))
+        if imported_hit.id < 0:
             fail transport()
         dep_count = dep_count + len(dependency.symbols)
         name_bytes = name_bytes + len(dependency.name)
@@ -120,11 +150,8 @@ func prepare(request: model.Request) -> Prepared fails indexed.Problem:
                 fail transport()
         dep_indexes.append(dep_index)
     for imported in facts.imports:
-        mut found = False
-        for dependency in request.dependencies:
-            if imported.target == dependency.module:
-                found = True
-        if not found:
+        const found = try indexed.lookup(module_index, number_key(imported.target))
+        if found.id < 0:
             fail transport()
     if dep_count > 65536 or name_bytes > 1048576:
         fail transport()
@@ -137,21 +164,7 @@ func prepare(request: model.Request) -> Prepared fails indexed.Problem:
         if alias_hit.id != i or name_hit.id != i:
             fail transport()
     const qualifier_index = try indexed.make(qualifiers)
-    return Prepared(declarations=declarations, names=name_index, aliases=alias_index, qualifiers=qualifier_index, dependencies=dep_indexes)
-
-
-func is_public(request: model.Request, span: model.Span) -> bool:
-    for marked in request.facts.public_spans:
-        if marked.start == span.start and marked.end == span.end:
-            return True
-    return False
-
-
-func dependency_position(request: model.Request, module: int) -> int:
-    for i in range(len(request.dependencies)):
-        if request.dependencies[i].module == module:
-            return i
-    return -1
+    return Prepared(declarations=declarations, names=name_index, aliases=alias_index, qualifiers=qualifier_index, dependencies=dep_indexes, public_spans=public_index, modules=module_index)
 
 
 func tests_module(request: model.Request, dependency: model.Dependency) -> bool:
@@ -173,7 +186,7 @@ public func index(request: model.Request) -> model.Outcome fails indexed.Problem
     for declaration in prepared.declarations:
         const key = declaration_key(request, declaration)
         const hit = try indexed.lookup(prepared.names, key)
-        if hit.id < len(symbols):
+        if hit.id >= 0 and hit.id < len(symbols):
             return model.failure("E_DUPLICATE_SYMBOL", "module declaration name is already bound", module, declaration.name, model.Site(module=module, span=symbols[hit.id].span))
         mut owner = b""
         if declaration.owner.start >= 0:
@@ -193,7 +206,8 @@ public func index(request: model.Request) -> model.Outcome fails indexed.Problem
             const local = try indexed.lookup(prepared.names, exported.name)
             if local.id < 0 or local.id >= len(symbols):
                 return model.failure("E_UNKNOWN_EXPORT", "export names no local declaration", module, exported.span, model.absent_site())
-            if is_public(request, symbols[local.id].span):
+            const public_hit = try indexed.lookup(prepared.public_spans, span_key(symbols[local.id].span))
+            if public_hit.id >= 0:
                 return model.failure("E_DUPLICATE_EXPORT", "declaration is already public", module, exported.span, model.absent_site())
             symbols[local.id].exported = True
             continue
@@ -202,7 +216,8 @@ public func index(request: model.Request) -> model.Outcome fails indexed.Problem
             return model.failure("E_UNKNOWN_EXPORT", "re-export names no exported imported declaration", module, exported.span, model.absent_site())
         const import_id = qualifier.id // 2
         used[import_id] = True
-        const dep_id = dependency_position(request, request.facts.imports[import_id].target)
+        const dep_hit = try indexed.lookup(prepared.modules, number_key(request.facts.imports[import_id].target))
+        const dep_id = dep_hit.id
         const dependency = request.dependencies[dep_id]
         const target_id = try indexed.lookup(prepared.dependencies[dep_id], exported.name)
         if target_id.id < 0:
@@ -214,7 +229,7 @@ public func index(request: model.Request) -> model.Outcome fails indexed.Problem
         if target.restricted:
             return model.failure("E_PRIVATE_FUNCTION", "private domain function requires the same declaring domain", module, exported.span, related)
         const previous = try indexed.lookup(prepared.names, exported.name)
-        if previous.id < len(symbols):
+        if previous.id >= 0 and previous.id < len(symbols):
             return model.failure("E_DUPLICATE_SYMBOL", "module declaration name is already bound", module, exported.span, model.Site(module=module, span=symbols[previous.id].span))
         mut origin = model.Identity(module=dependency.module, symbol=target_id.id)
         if target.re_export.module >= 0:

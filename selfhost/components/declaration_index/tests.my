@@ -210,3 +210,12 @@ public func test_duplicate_import_alias_is_transport_not_source_error() -> bool:
             return False
         case Err(problem):
             return problem.code == "P_TRANSPORT"
+
+
+public func test_many_exports_and_public_markers_use_indexes() -> bool fails indexed.Problem:
+    mut req = request(b"A B", [declaration(0, 0, 1), declaration(0, 2, 3)])
+    for i in range(512):
+        req.facts.exports.append(model.Export(name=b"A", alias=b"", span=at(0, 1)))
+        req.facts.public_spans.append(at(2, 3))
+    const result = try indexing.index(req)
+    return result.problem.code == "" and len(result.symbols) == 2 and result.symbols[0].exported and result.symbols[1].exported
